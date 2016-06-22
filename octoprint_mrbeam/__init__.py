@@ -21,7 +21,21 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def get_settings_defaults(self):
 		return dict(
 			# put your plugin's default settings here
+			# from old laser_safety_notes plugin
+			agreed_to_safety_notes=False
 		)
+
+	def on_settings_load(self):
+		# from old laser_safety_notes plugin
+		cfg = dict(
+			has_agreed = self._settings.get_boolean(["agreed_to_safety_notes"]),
+		)
+		return cfg
+
+	def on_settings_save(self, data):
+		# from old laser_safety_notes plugin
+		if "has_agreed" in data:
+			self._settings.set_boolean(["agreed_to_safety_notes"], data["has_agreed"])
 
 	##~~ AssetPlugin mixin
 
@@ -31,7 +45,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return dict(
 			js=["js/mother_viewmodel.js", "js/mrbeam.js", "js/working_area.js", 
 			"js/lib/snap.svg-min.js", "js/render_fills.js", "js/matrix_oven.js", "js/drag_scale_rotate.js", 
-			"js/convert.js", "js/gcode_parser.js", "js/lib/photobooth_min.js"],
+			"js/convert.js", "js/gcode_parser.js", "js/lib/photobooth_min.js", "js/laserSafetyNotes.js"],
 			css=["css/mrbeam.css", "css/svgtogcode.css"],
 			less=["less/mrbeam.less"]
 		)
@@ -39,7 +53,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	##~~ UiPlugin mixin
 	
 	def will_handle_ui(self, request):
-        # returns True as Mr Beam Plugin should be always displayed
+		# returns True as Mr Beam Plugin should be always displayed
 		return True
 	
 	def on_ui_render(self, now, request, render_kwargs):
@@ -84,6 +98,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				pip="https://github.com/hungerpirat/Mr_Beam/archive/{target_version}.zip"
 			)
 		)
+
+	##~~ TemplatePlugin API
 
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
