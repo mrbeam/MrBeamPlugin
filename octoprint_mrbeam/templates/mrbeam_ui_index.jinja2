@@ -56,20 +56,20 @@
 									</div>
 									<div id="statusbox">
 
-									<div id="mrb_control" class="accordion-inner" data-bind="visible: isReady() || isLocked() || isFlashing()">
-										<div data-bind="visible: isLocked ">
+									<div id="mrb_control" class="accordion-inner" data-bind="visible: state.isReady() || state.isLocked() || state.isFlashing()">
+										<div data-bind="visible: state.isLocked ">
 											Mr Beam is in a locked state as it does not know its position.
 											First remove any objects blocking the gantry's travel range.
 											Then do a homing cycle.
 											<div style='text-align: center; padding:.5em;'>
 
 												<div class='btn-group'>
-													<button class="btn btn-default" data-bind="enable: isLocked() && loginState.isUser(), click: function() { $root.sendHomeCommand(['x', 'y']) }"><i class="icon-home"> Homing Cycle</i></button>
-													<!--<button class="btn btn-default" data-bind="enable: isLocked() && loginState.isUser(), click: function() { $root.sendHomeCommand(['x', 'y']) }"><i class="icon-unlock">Unlock</i></button>-->
+													<button class="btn btn-default" data-bind="enable: state.isLocked() && loginState.isUser(), click: function() { $root.sendHomeCommand(['x', 'y']) }"><i class="icon-home"> Homing Cycle</i></button>
+													<!--<button class="btn btn-default" data-bind="enable: state.isLocked() && loginState.isUser(), click: function() { $root.sendHomeCommand(['x', 'y']) }"><i class="icon-unlock">Unlock</i></button>-->
 												</div>
 											</div>
 										</div>
-										<div data-bind="visible: isFlashing() ">
+										<div data-bind="visible: state.isFlashing() ">
 											Firmware update in progress
 											<div id="flashing_progress" class="progress progress-striped active" style="width: 100%;">
 												<div class="bar" style="width: 100%;"></div>
@@ -77,7 +77,7 @@
 											<span class="icon-exclamation-sign"></span>
 											Do not power off the Machine during the flashing process.
                                         </div>
-										<div data-bind="visible: !isLocked() && !isFlashing() ">
+										<div data-bind="visible: !state.isLocked() && !state.isFlashing() ">
 											{{ _('Position') }}: <strong data-bind="text: laserPos"></strong>
 											<a href="#control_btns" style="margin-top: -5px;"
 											   class="btn btn-xs pull-right"
@@ -96,7 +96,7 @@
 													</div>
 													<div>
 														<button class="btn box pull-left" data-bind="enable: state.isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('x',-1) }"><i class="icon-arrow-left"></i></button>
-														<button class="btn box pull-left" data-bind="enable: (state.isOperational() || isLocked()) && !isPrinting() && loginState.isUser(), click: function() { $root.sendHomeCommand(['x', 'y']) }"><i class="icon-home"></i></button>
+														<button class="btn box pull-left" data-bind="enable: (state.isOperational() || state.isLocked()) && !isPrinting() && loginState.isUser(), click: function() { $root.sendHomeCommand(['x', 'y']) }"><i class="icon-home"></i></button>
 														<button class="btn box pull-left" data-bind="enable: state.isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('x',1) }"><i class="icon-arrow-right"></i></button>
 													</div>
 													<div>
@@ -104,7 +104,7 @@
 													</div>
 												</div>
 											   <div class="jog-panel" id="control_zaxis">
-												   <div data-bind="visible: showZAxis">
+												   <div data-bind="visible: control.showZAxis">
 														Z-Axis
 														<div class="btn-group-vertical" role="group" aria-label="z-axis control">
 														   <button class="btn" data-bind="enable: state.isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('z',1) }"><i class="icon-arrow-up"></i></button>
@@ -113,7 +113,7 @@
 														</div>
 												   </div>
 													<div>
-														<button id="set_coordinate_origin_btn" class="btn" data-bind="enable: state.isOperational() && !isPrinting() && loginState.isUser(), click: setCoordinateOrigin" title="set coordinate origin"><i class="icon-screenshot"></i></button>
+														<button id="set_coordinate_origin_btn" class="btn" data-bind="enable: state.isOperational() && !isPrinting() && loginState.isUser(), click: control.setCoordinateOrigin" title="set coordinate origin"><i class="icon-screenshot"></i></button>
 													</div>
 											   </div>
 
@@ -132,7 +132,7 @@
 									</div>
 
 									<div class="accordion-body in" id="mrb_connection_wrapper"
-										 data-bind="visible: !isFlashing() && isErrorOrClosed() && loginState.isUser()">
+										 data-bind="visible: !state.isFlashing() && isErrorOrClosed() && loginState.isUser()">
 										<div class="accordion-inner">
 											<label for="connection_ports" data-bind="css: {disabled: !isErrorOrClosed()}, enable: isErrorOrClosed() && loginState.isUser()">{{ _('Serial Port') }}</label>
 											<select id="connection_ports" data-bind="options: portOptions, optionsCaption: 'AUTO', value: selectedPort, css: {disabled: !isErrorOrClosed()}, enable: isErrorOrClosed() && loginState.isUser()"></select>
@@ -148,11 +148,11 @@
 										</div>
 									</div>
 
-									<div class="accordion-body collapse in" id="mrb_state_wrapper" data-bind="visible: !isErrorOrClosed() && loginState.isUser() && !isFlashing() ">
+									<div class="accordion-body collapse in" id="mrb_state_wrapper" data-bind="visible: !isErrorOrClosed() && loginState.isUser() && !state.isFlashing() ">
 										<div class="accordion-inner">
 											{{ _('Machine State') }}: <strong data-bind="text: stateString"></strong><br>
 
-											<div data-bind="visible: !isLocked() && !isConnecting()">
+											<div data-bind="visible: !state.isLocked() && !isConnecting()">
 
 												<!--
 												{{ _('File') }}: <strong data-bind="text: filename"></strong>&nbsp;<strong data-bind="visible: sd">(SD)</strong><br>
@@ -192,7 +192,7 @@
 
 
 												<div class="row-fluid print-control" style="display: none;" data-bind="visible: loginState.isUser">
-													<button class="btn btn-danger span4" data-bind="click: conversion.show_conversion_dialog, enable: state.isOperational() && isReady() && !isPrinting() && !isPaused() && loginState.isUser() && !workingArea.working_area_empty(), attr: {title: titlePrintButton}" id="job_print">
+													<button class="btn btn-danger span4" data-bind="click: conversion.show_conversion_dialog, enable: state.isOperational() && state.isReady() && !isPrinting() && !isPaused() && loginState.isUser() && !workingArea.working_area_empty(), attr: {title: titlePrintButton}" id="job_print">
 														<i class="icon-white icon-fire" data-bind="css: { 'wobble': isPrinting()}"></i> <span>{{ _('Laser') }}</span>
 														<!--<i class="icon-white" data-bind="css: {'icon-fire': !isPaused(), 'icon-undo': isPaused(), 'wobble': isPrinting()}"></i> <span data-bind="text: (isPaused() ? '{{ _('Restart') }}' : '{{ _('Laser') }}')">{{ _('Laser') }}</span>-->
 													</button>
@@ -479,8 +479,8 @@
 							<div class="span8 ">
 								<pre id="terminal-output" class="pre-scrollable" data-bind="foreach: displayedLines"><span data-bind="text: line, css: {muted: type == 'filtered'}"></span><br></pre>
 								<div class="input-append" style="display: none;" data-bind="visible: loginState.isUser">
-									<input type="text" id="terminal-command" style="width:88%;" data-bind="value: command, event: { keyup: function(d,e) { return handleKeyUp(e); }, keydown: function(d,e) { return handleKeyDown(e); } }, enable: (state.isOperational() || isLocked()) && loginState.isUser()">
-									<button class="btn" type="button" id="terminal-send" data-bind="click: sendCommandWithSafetyPopup, enable: (state.isOperational() || isLocked()) && loginState.isUser()">{{ _('Send') }}</button>
+									<input type="text" id="terminal-command" style="width:88%;" data-bind="value: command, event: { keyup: function(d,e) { return handleKeyUp(e); }, keydown: function(d,e) { return handleKeyDown(e); } }, enable: (state.isOperational() || state.isLocked()) && loginState.isUser()">
+									<button class="btn" type="button" id="terminal-send" data-bind="click: sendCommandWithSafetyPopup, enable: (state.isOperational() || state.isLocked()) && loginState.isUser()">{{ _('Send') }}</button>
 								</div>
 							</div>
 
@@ -745,8 +745,6 @@
 
 
 		<!-- Dialogs -->
-        {% include 'dialogs/confirmation.jinja2' %}
-        {% include 'dialogs/firstrun.jinja2' %}
         {#% include 'dialogs/settings.jinja2' %#}
         {% include 'dialogs/slicing.jinja2' %}
 		{% include 'dialogs/usersettings.jinja2' %}

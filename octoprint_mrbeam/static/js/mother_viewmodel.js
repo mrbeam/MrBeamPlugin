@@ -27,16 +27,22 @@ $(function(){
 //		}, this);
 
 		self.onStartup = function(){
-			self.requestData();
+			// TODO fetch machine profile on start
+			//self.requestData(); 
 			self.control.showZAxis = ko.computed(function(){
-				var has = self.currentProfileData()['zAxis']();
-				return has;
-			}); // dependency injection
+//				var has = self.currentProfileData()['zAxis']();
+//				return has;
+				return false;
+			}); 
 			
-				// TODO forward to control viewmodel
-		self.state.isLocked = ko.observable(undefined);
-		self.state.isReady = ko.observable(undefined);
-		self.state.isFlashing = ko.observable(undefined);
+			self.control.setCoordinateOrigin = function () {
+				self.control.sendCustomCommand({type: 'command', command: "G92 X0 Y0"});
+			};
+			
+			// TODO forward to control viewmodel
+			self.state.isLocked = ko.observable(undefined);
+			self.state.isReady = ko.observable(undefined);
+			self.state.isFlashing = ko.observable(undefined);
 
 		};
 		
