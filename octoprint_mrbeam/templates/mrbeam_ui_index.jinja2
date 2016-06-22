@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title data-bind="text: title">Mr Beam</title>
+
+        <link rel="shortcut icon" href="{{ url_for('plugin.mrbeam.static', filename='img/favicon.png') }}">
+        <link rel="apple-touch-icon" sizes="114x114" href="{{ url_for('static', filename='img/apple-touch-icon-114x114.png') }}">
+        <link rel="apple-touch-icon" sizes="144x144" href="{{ url_for('static', filename='img/apple-touch-icon-144x144.png') }}">
+
+		{% include 'stylesheets.jinja2' %}
+        {% include 'initscript.jinja2' %}
+    </head>
+    <body>
+		<div class="container octoprint-container">
+		<nav class="navbar navbar-default navbar-fixed-top" role="navigation" id="navbar">
+			<div class="container">
+				<div class="navbar-header brand" style="min-width: 272px;">
+					<a class="navbar-brand" href="#">
+						<img alt="Mr Beam Logo" src="{{ url_for('plugin.mrbeam.static', filename='img/mr-typo-red_x120.png') }}">
+					</a>
+				</div>
+				<!-- Navbar -->
+				<ul class="nav nav-pills">
+					<li class="active"><a href="#workingarea" data-toggle="tab" id="wa_tab_btn">working area</a></li>
+					<li><a href="#designlib" data-toggle="tab">design library</a></li>
+					<li><a href="#focus" data-toggle="tab">focus</a></li>
+					<li><a href="#term" data-toggle="tab">terminal</a></li>
+
+					{% for key in templates.navbar.order %}
+						{% set data = templates.navbar.entries[key] %}
+						{% if "custom_bindings" not in data or data["custom_bindings"] %}<!-- ko allowBindings: false -->{% endif %}
+						<li id="{{ data._div }}"
+							{% if "data_bind" in data %}data-bind="{{ data.data_bind }}"{% endif %}
+							{% if "classes" in data %}class="{{ data.classes|join(' ') }}"{% endif %}
+							{% if "styles" in data %}style="{{ data.styles|join(', ') }}"{% endif %}
+								>
+							{% include data.template ignore missing %}
+						</li>
+						{% if "custom_bindings" not in data or data["custom_bindings"] %}<!-- /ko -->{% endif %}
+					{% endfor %}
+
+				</ul>
+			</div>
+		</nav>
+
+		<div class="span12 tabbable" id="mrbeam-tabs">
+			<div class="tab-content">
+				<div class="tab-pane active" id="workingarea">
+					<div class="container-fluid">
+						<div class="row-fluid">
+							<div class="span4 accordion">
+
+								<div class="accordion-group" id="state_accordion">
+									<div class="accordion-heading">
+										<a class="accordion-toggle" data-toggle="collapse" href="#statusbox"><i class="icon-info-sign"></i> {{ _('State') }}</a>
+									</div>
+									<div id="statusbox">
+
+									<div id="mrb_control" class="accordion-inner" data-bind="visible: isReady() || isLocked() || isFlashing()">
+										<div data-bind="visible: isLocked ">
+											Mr Beam is in a locked state as it does not know its position.
+											First remove any objects blocking the gantry's travel range.
+											Then do a homing cycle.
+											<div style='text-align: center; padding:.5em;'>
+
+												<div class='btn-group'>
+													<button class="btn btn-default" data-bind="enable: isLocked() && loginState.isUser(), click: function() { $root.sendHomeCommand(['x', 'y']) }"><i class="icon-home"> Homing Cycle</i></button>
+													<!--<button class="btn btn-default" data-bind="enable: isLocked() && loginState.isUser(), click: function() { $root.sendHomeCommand(['x', 'y']) }"><i class="icon-unlock">Unlock</i></button>-->
+												</div>
+											</div>
+										</div>
+										<div data-bind="visible: isFlashing() ">
+											Firmware update in progress
+											<div id="flashing_progress" class="progress progress-striped active" style="width: 100%;">
+												<div class="bar" style="width: 100%;"></div>
+											</div>
+											<span class="icon-exclamation-sign"></span>
+											Do not power off the Machine during the flashing process.
+                                        </div>
+										<div data-bind="visible: !isLocked() && !isFlashing() ">
+											{{ _('Position') }}: <strong data-bind="text: laserPos"></strong>
+											<a href="#control_btns" style="margin-top: -5px;"
+											   class="btn btn-xs pull-right"
+											   data-toggle="collapse" aria-expanded="false">
+												<i class="icon-move sr-only"></i>
+												<span class="caret"></span>
+											</a>
+
+											<div class="clearfix"></div>
+											<div class="collapse" id="control_btns">
+
+												<div class="jog-panel" id="control_xyaxis">
+													XY-Axes
+													<div>
+														<button class="btn box" data-bind="enable: state.isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('y',1) }"><i class="icon-arrow-up"></i></button>
+													</div>
+													<div>
+														<button class="btn box pull-left" data-bind="enable: state.isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('x',-1) }"><i class="icon-arrow-left"></i></button>
+														<button class="btn box pull-left" data-bind="enable: (state.isOperational() || isLocked()) && !isPrinting() && loginState.isUser(), click: function() { $root.sendHomeCommand(['x', 'y']) }"><i class="icon-home"></i></button>
+														<button class="btn box pull-left" data-bind="enable: state.isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('x',1) }"><i class="icon-arrow-right"></i></button>
+													</div>
+													<div>
+														<button class="btn box" data-bind="enable: state.isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('y',-1) }"><i class="icon-arrow-down"></i></button>
+													</div>
+												</div>
+											   <div class="jog-panel" id="control_zaxis">
+												   <div data-bind="visible: showZAxis">
+														Z-Axis
+														<div class="btn-group-vertical" role="group" aria-label="z-axis control">
+														   <button class="btn" data-bind="enable: state.isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('z',1) }"><i class="icon-arrow-up"></i></button>
+														   <!--<button class="btn box" data-bind="enable: state.isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendHomeCommand(['z']) }"><i class="icon-home"></i></button>-->
+														   <button class="btn" data-bind="enable: state.isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('z',-1) }"><i class="icon-arrow-down"></i></button>
+														</div>
+												   </div>
+													<div>
+														<button id="set_coordinate_origin_btn" class="btn" data-bind="enable: state.isOperational() && !isPrinting() && loginState.isUser(), click: setCoordinateOrigin" title="set coordinate origin"><i class="icon-screenshot"></i></button>
+													</div>
+											   </div>
+
+												<div class="clearfix"></div>
+
+												Jog distance: <span data-bind="text: jogDistanceInMM">10</span>mm
+												<div class="distance">
+													<input type="text" id="jogDistance" />
+												</div>
+												<div class="input-append manual_position_input">
+													<input id="manual_position" placeholder="x.xx y.yy" onsubmit="manualPosition"/>
+													<button class="" data-bind="click: manualPosition">Go</button>
+												</div>
+											</div>
+										</div>
+									</div>
+
+									<div class="accordion-body in" id="mrb_connection_wrapper"
+										 data-bind="visible: !isFlashing() && isErrorOrClosed() && loginState.isUser()">
+										<div class="accordion-inner">
+											<label for="connection_ports" data-bind="css: {disabled: !isErrorOrClosed()}, enable: isErrorOrClosed() && loginState.isUser()">{{ _('Serial Port') }}</label>
+											<select id="connection_ports" data-bind="options: portOptions, optionsCaption: 'AUTO', value: selectedPort, css: {disabled: !isErrorOrClosed()}, enable: isErrorOrClosed() && loginState.isUser()"></select>
+											<label for="connection_baudrates" data-bind="css: {disabled: !isErrorOrClosed()}, enable: isErrorOrClosed() && loginState.isUser()">{{ _('Baudrate') }}</label>
+											<select id="connection_baudrates" data-bind="options: baudrateOptions, optionsCaption: 'AUTO', value: selectedBaudrate, css: {disabled: !isErrorOrClosed()}, enable: isErrorOrClosed() && loginState.isUser()"></select>
+<!--											<label class="checkbox">
+												<input type="checkbox" id="connection_save" data-bind="checked: saveSettings, css: {disabled: !isErrorOrClosed()}, enable: isErrorOrClosed() && loginState.isUser()"> {{ _('Save connection settings') }}
+											</label>-->
+											<label class="checkbox">
+												<input type="checkbox" id="connection_autoconnect" data-bind="checked: settings.serial_autoconnect, css: {disabled: !isErrorOrClosed()}, enable: isErrorOrClosed() && loginState.isUser()"> {{ _('Auto-connect on server startup') }}
+											</label>
+											<button class="btn btn-block" id="printer_connect" data-bind="click: connect, text: buttonText(), enable: loginState.isUser()">{{ _('Connect') }}</button>
+										</div>
+									</div>
+
+									<div class="accordion-body collapse in" id="mrb_state_wrapper" data-bind="visible: !isErrorOrClosed() && loginState.isUser() && !isFlashing() ">
+										<div class="accordion-inner">
+											{{ _('Machine State') }}: <strong data-bind="text: stateString"></strong><br>
+
+											<div data-bind="visible: !isLocked() && !isConnecting()">
+
+												<!--
+												{{ _('File') }}: <strong data-bind="text: filename"></strong>&nbsp;<strong data-bind="visible: sd">(SD)</strong><br>
+												{{ _('Timelapse') }}: <strong data-bind="text: timelapseString"></strong><br>
+												-->
+												{{ _('Approx. Total Job Time') }}: <strong data-bind="text: estimatedPrintTimeString"></strong><br>
+												<div data-bind="visible: isPrinting() || isPaused()">
+													
+													<div class="progress">
+														<div class="bar" id="job_progressBar" data-bind="style: { width: progressString() + '%' }">&nbsp;{{ _('Processed') }} :  <strong data-bind="text: byteString"></strong></div>
+													</div>
+													<div class="overrideSlider">
+														<input id="intensity_override_slider" type="text" data-bind="sliderValue: intensityOverride">
+														<span data-bind="text:intensityOverride()">100</span>% Intensity
+													</div>
+													<div class="overrideSlider">
+														<input id="feedrate_override_slider" type="text" data-bind="sliderValue: feedrateOverride">
+														<span data-bind="text:feedrateOverride()">100</span>% Feedrate
+													</div>
+													<div class="repeatGcode">
+														<div class="btn-group">
+															<button type="button" class="btn btn-default btn-number" data-bind="enable: numberOfPasses() > 1, click:decreasePasses">
+																<span class="icon-minus"></span>
+															</button>
+															<input type="text" class="input-mini text-right" value="1" min="1" max="10" data-bind="value:numberOfPasses()">
+															<button type="button" class="btn btn-default btn-number" data-bind="click:increasePasses">
+																<span class="icon-plus"></span>
+															</button>
+														</div>
+														<span>Passes</span>
+														
+													</div>
+
+												</div>
+												<!--                                {{ _('Print Time') }}: <strong data-bind="text: printTimeString"></strong><br>
+																				{{ _('Print Time Left') }}: <strong data-bind="text: printTimeLeftString"></strong><br>-->
+
+
+												<div class="row-fluid print-control" style="display: none;" data-bind="visible: loginState.isUser">
+													<button class="btn btn-danger span4" data-bind="click: conversion.show_conversion_dialog, enable: state.isOperational() && isReady() && !isPrinting() && !isPaused() && loginState.isUser() && !workingArea.working_area_empty(), attr: {title: titlePrintButton}" id="job_print">
+														<i class="icon-white icon-fire" data-bind="css: { 'wobble': isPrinting()}"></i> <span>{{ _('Laser') }}</span>
+														<!--<i class="icon-white" data-bind="css: {'icon-fire': !isPaused(), 'icon-undo': isPaused(), 'wobble': isPrinting()}"></i> <span data-bind="text: (isPaused() ? '{{ _('Restart') }}' : '{{ _('Laser') }}')">{{ _('Laser') }}</span>-->
+													</button>
+													<button class="btn span4" id="job_pause" data-bind="click: pause, enable: state.isOperational() && (isPrinting() || isPaused()) && loginState.isUser(), css: {active: isPaused()}, attr: {title: titlePauseButton}"><i data-bind="css: {'icon-pause': !isPaused(), 'icon-play': isPaused()}"></i> <span data-bind="visible: !isPaused()">{{ _('Pause') }}</span><span data-bind="visible: isPaused()">{{ _('Resume') }}</span></button>
+													<button class="btn span4" id="job_cancel" data-bind="click: cancel, enable: state.isOperational() && (isPrinting() || isPaused()) && loginState.isUser()" title="{{ _('Cancels the job') }}"><i class="icon-stop"></i> {{ _('Cancel') }}</button>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+
+								</div>
+
+								<div data-bind="visible: loginState.isUser" id="connection_accordion"></div>
+
+
+
+								<div class="accordion-group" id="working_area_files">
+									<div class="" data-bind="visible: !working_area_empty()">
+										<div class="accordion-heading">
+											<a class="accordion-toggle" data-toggle="collapse" href="#wa_filelist"><i class="icon-list"></i> {{ _('Files') }}</a>
+											<a class="pull-right btn btn-small" data-bind="click: clear" style="margin-right: 1em; margin-top: 4px;" ><i class="icon-remove-sign"></i> {{ _('Clear') }}</a>
+										</div>
+
+									</div>
+									<div class="accordion-body collapse in overflow_visible" id="wa_filelist">
+										<div class="accordion-inner">
+											<div class="gcode_files" data-bind="slimScrolledForeach: placedDesigns">
+												<div class="entry" data-bind="attr: { id: $data.id }, template: { name: $root.templateFor($data), data: $data }"></div>
+											</div>
+
+											<script type="text/html" id="wa_template_machinecode">
+												<div class="file_list_entry">
+													<div class="title muted pull-left" data-bind="text: name"></div>
+													<div class="btn-group action-buttons pull-right">
+														<div class="btn btn-mini" data-bind="click: function(){ $root.removeGcode($data); }"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
+													</div>
+													<div class="detail_information" ></div>
+												</div>
+											</script>
+
+											<script type="text/html" id="wa_template_model_svg">
+												<div class="file_list_entry">
+													<div class="title muted pull-left" data-bind="text: name"></div>
+													<div class="btn-group action-buttons pull-right">
+														<div class="btn btn-mini" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
+														<div class="btn btn-mini" data-bind="click: function() { $root.removeSVG($data); }"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
+													</div>
+													<div class="detail_information" >
+														<div class="local_transformation muted">
+															<i class="icon-move" title="{{ _('translation') }}"></i>
+															<span class="translation" >0,0</span>
+															<i class="icon-repeat" title="{{ _('rotation') }}"></i>
+															<span class="rotation" >0°</span></br>
+															<i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>
+															<span class="horizontal" >0mm</span>
+															<i class="icon-resize-vertical" title="{{ _('vertical') }}"></i>
+															<span class="vertical" >0mm</span>
+														</div>
+														<div class="misfit_warning" >
+															<i class="icon-exclamation-sign" style="color:red;" title="{{ _('exceeds working area') }}"> Design exceeds the working area.</i>
+															<a href="#" data-bind="click: function(){ $root.fitSVG($data) } ">Make it fit</a>
+														</div>
+													</div>
+												</div>
+											</script>
+
+											<script type="text/html" id="wa_template_model_img">
+												<div class="file_list_entry">
+													<div class="title muted pull-left" data-bind="text: name"></div>
+													<div class="btn-group action-buttons pull-right">
+														<div class="btn btn-mini" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
+														<div class="btn btn-mini" data-bind="click: function() { $root.removeIMG($data); }"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
+													</div>
+													<div class="detail_information" >
+														<div class="local_transformation muted">
+															<i class="icon-move" title="{{ _('translation') }}"></i>
+															<span class="translation" >0,0</span>
+															<i class="icon-repeat" title="{{ _('rotation') }}"></i>
+															<span class="rotation" >0°</span></br>
+															<i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>
+															<span class="horizontal" >0mm</span>
+															<i class="icon-resize-vertical" title="{{ _('vertical') }}"></i>
+															<span class="vertical" >0mm</span>
+														</div>
+														<div class="misfit_warning" >
+															<i class="icon-exclamation-sign" style="color:red;" title="{{ _('exceeds working area') }}"> Design exceeds the working area.</i>
+															<a href="#" data-bind="click: function(){ $root.fitSVG($data) } ">Make it fit</a>
+														</div>
+													</div>
+												</div>
+											</script>
+
+
+
+										</div>
+									</div>
+								</div>
+
+
+
+							</div>
+
+							<!--  end sidebar  -->
+
+							<div class="span8">
+								<svg id="area_preview" class="workingarea"
+									 data-bind="style: {
+											backgroundPosition: crosshairX()+'px'+' '+crosshairY()+'px',
+											width: workingAreaWidthPx()+'px',
+											height: workingAreaHeightPx()+'px'
+										}
+									 ">
+									<filter id="grayscale_filter">
+										<feColorMatrix in="SourceGraphic" type="saturate" values="0"/>
+									</filter>
+									<filter id="gcimage_preview">
+										<feComponentTransfer>
+											<feFuncR type="table" tableValues="1"></feFuncR>
+											<feFuncG type="table" tableValues="0.2 1"></feFuncG>
+											<feFuncB type="table" tableValues="0.2 1"></feFuncB>
+										</feComponentTransfer>
+									</filter>
+									<g id="scaleGroup" data-bind="attr: { transform: scaleMatrix() }">
+
+										<text
+											xml:space="preserve"
+											data-bind="visible: working_area_empty"
+											style="font-size:64px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#DDDDDD;fill-opacity:1;stroke:none;font-family:DIN-BoldAlternate, Helvetica, Arial, Sans-serif;"
+											x="396.81018"
+											y="552.36218"
+											id="add_designs_hint"
+											>
+										<tspan
+											  id="tspan2987" x="368.571426" y="532.36218"
+											  style="text-anchor:middle;text-align:center">add designs via </tspan>
+										<tspan
+											  x="500" y="592.36218" id="tspan2989"
+											  style="text-anchor:middle;text-align:center">the design library </tspan>
+										<tspan
+											  x="568.571426" y="652.36218" id="tspan2993"
+											  style="text-anchor:middle;text-align:center">or drag 'n' drop </tspan>
+										<tspan
+											  x="368.571426" y="712.36218" id="tspan2991"
+											  style="text-anchor:middle;text-align:center" /></text>
+										<g id="placedGcodes" data-bind="visible: !state.isPrinting() && !state.isPaused(), attr: { transform: scaleMatrixMMtoDisplay() }"></g>
+										<g id="gCodePreview" data-bind="visible: state.isPrinting() || state.isPaused(), attr: { transform: scaleMatrixMMtoDisplay() }"></g>
+										<rect data-bind="click: move_laser"
+											  id="coordGrid" x="0" y="0" width="0" height="0"
+											  stroke="none" fill="none"></rect>
+										<g id="userContent" data-bind="visible: !state.isPrinting() && !state.isPaused()"></g>
+									</g>
+								</svg>
+
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="tab-pane" id="mrb_term">
+
+					<div class="container-fluid">
+						<div class="row-fluid">
+							<div class="span4 accordion">
+								<div class="accordion-group" >
+									<div class="accordion-heading">
+										<a class="accordion-toggle" ><i class="icon-filter"></i> {{ _('Terminal filters') }}</a>
+									</div>
+								</div>
+								<label class="checkbox">
+									<input type="checkbox" id="terminal-autoscroll" data-bind="checked: autoscrollEnabled"> {{ _('Autoscroll') }}
+								</label>
+								<div data-bind="foreach: filters">
+									<label class="checkbox">
+										<input type="checkbox" data-bind="attr: { value: regex }, checked: $parent.activeFilters"> <span data-bind="text: name"></span>
+									</label>
+								</div>
+
+								<div class="accordion-group" >
+									<div class="accordion-heading">
+										<a class="accordion-toggle" data-toggle="collapse" href="#gcode_reference"><i class="icon-info-sign"></i> {{ _('GCode reference') }}</a>
+									</div>
+								</div>
+								<div id="gcode_reference">
+									<ul>
+										<li>
+											<span class="gcommand">G0</span>:
+											<span class="desc">rapid position move</span>
+											<div class="params">parameters: X,Y</div>
+											<div class="example">example: G0 X100 Y0</div>
+										</li>
+										<li>
+											<span class="gcommand">F</span>:
+											<span class="desc">set feedrate for G1,G2,G3</span>
+											<div class="params">parameters: value</div>
+											<div class="example">example: F300</div>
+										</li>
+										<li>
+											<span class="gcommand">G1</span>:
+											<span class="desc">work move, line</span>
+											<div class="params">parameters: X,Y,F</div>
+											<div class="example">example: G1 X100 Y0 F800</div>
+										</li>
+										<li>
+											<span class="gcommand">G2</span>:
+											<span class="desc">work move, arc clockwise</span>
+											<div class="params">parameters: X,Y,I,J,F</div>
+											<div class="example">example: G2 X10 Y10 I8 J5</div>
+										</li>
+										<li>
+											<span class="gcommand">G3</span>:
+											<span class="desc">work move, arc counterclockwise</span>
+											<div class="params">parameters: X,Y,I,J,F</div>
+											<div class="example">example: G3 X10 Y10 I8 J5</div>
+										</li>
+										<li>
+											<span class="gcommand">G4</span>:
+											<span class="desc">dwell</span>
+											<div class="params">parameters: P</div>
+											<div class="example">example: G4 P0.5</div>
+										</li>
+										<li>
+											<span class="gcommand">M3</span>:
+											<span class="desc">laser on</span>
+											<div class="params">parameters: S</div>
+											<div class="example">example: M3 S10</div>
+										</li>
+										<li>
+											<span class="gcommand">M5</span>:
+											<span class="desc">laser off</span>
+											<div class="params">parameters: -</div>
+											<div class="example">example: M5</div>
+										</li>
+										<li>
+											<span class="gcommand">M8</span>:
+											<span class="desc">fan on</span>
+											<div class="params">parameters: -</div>
+											<div class="example">example: M8</div>
+										</li>
+										<li>
+											<span class="gcommand">M9</span>:
+											<span class="desc">fan off</span>
+											<div class="params">parameters: -</div>
+											<div class="example">example: M9</div>
+										</li>
+										<li>
+											<span class="gcommand">M2</span>:
+											<span class="desc">machine off</span>
+											<div class="params">parameters: -</div>
+											<div class="example">example: M2</div>
+										</li>
+										<li>
+											<span class="gcommand">G90</span>:
+											<span class="desc">absolute coordinate mode</span>
+											<div class="params">parameters: -</div>
+											<div class="example">example: G90</div>
+										</li>
+										<li>
+											<span class="gcommand">G91</span>:
+											<span class="desc">relative coordinate mode</span>
+											<div class="params">parameters: -</div>
+											<div class="example">example: G91</div>
+										</li>
+										<li>
+											<span class="gcommand">G92</span>:
+											<span class="desc">set coordinate origin</span>
+											<div class="params">parameters: X,Y</div>
+											<div class="example">example: G92 X0 Y0</div>
+										</li>
+										<li>
+											<span class="gcommand">G20</span>:
+											<span class="desc">set units to inches</span>
+											<div class="params">parameters: -</div>
+											<div class="example">example: G20</div>
+										</li>
+										<li>
+											<span class="gcommand">G21</span>:
+											<span class="desc">set units to millimeters</span>
+											<div class="params">parameters: -</div>
+											<div class="example">example: G21</div>
+										</li>
+									</ul>
+								</div>
+							</div>
+							<div class="span8 ">
+								<pre id="terminal-output" class="pre-scrollable" data-bind="foreach: displayedLines"><span data-bind="text: line, css: {muted: type == 'filtered'}"></span><br></pre>
+								<div class="input-append" style="display: none;" data-bind="visible: loginState.isUser">
+									<input type="text" id="terminal-command" style="width:88%;" data-bind="value: command, event: { keyup: function(d,e) { return handleKeyUp(e); }, keydown: function(d,e) { return handleKeyDown(e); } }, enable: (state.isOperational() || isLocked()) && loginState.isUser()">
+									<button class="btn" type="button" id="terminal-send" data-bind="click: sendCommandWithSafetyPopup, enable: (state.isOperational() || isLocked()) && loginState.isUser()">{{ _('Send') }}</button>
+								</div>
+							</div>
+
+						</div>
+					</div>
+				</div>
+
+				<div class="tab-pane" id="designlib">
+					<div class="container-fluid">
+						<div class="row-fluid" id="files_accordion">
+							<div class="span4">
+								<ol>
+									<li>Add designs to your working area with the <i class="icon-ok"></i>-button</li>
+									<li>Afterwards switch back to the working area</li>
+
+								</ol>
+								<div class="">
+									<div class="accordion-heading">
+										<span class="accordion-toggle" ><i class="icon-list"></i> {{ _('Files') }}</span>
+										<!--<a class="accordion-toggle" data-toggle="collapse" href="#files_search" style="text-decoration: none;"><i class="icon-search dropdown-toggle"></i><span class="caret" style="margin: .5em;"></span></a>-->
+
+									</div>
+
+									<div id="files_search" class="">
+										<form class="form-search" data-bind="submit: performSearch">
+											<input type="text" style="width:90%;" class="input-block search-query" data-bind="value: searchQuery, valueUpdate: 'input'" placeholder="{{ _('Search...') }}">
+										</form>
+									</div>
+									<ul class="file_list_filter" id="files_filter">
+										<li><a href="#" data-bind="click: function() { $root.listHelper.changeSorting('name'); }"><i class="icon-ok" data-bind="style: {visibility: listHelper.currentSorting() == 'name' ? 'visible' : 'hidden'}"></i> {{ _('Sort by name') }} ({{ _('ascending') }})</a></li>
+										<li><a href="#" data-bind="click: function() { $root.listHelper.changeSorting('upload'); }"><i class="icon-ok" data-bind="style: {visibility: listHelper.currentSorting() == 'upload' ? 'visible' : 'hidden'}"></i> {{ _('Sort by upload date') }} ({{ _('descending') }})</a></li>
+										<li><a href="#" data-bind="click: function() { $root.listHelper.changeSorting('size'); }"><i class="icon-ok" data-bind="style: {visibility: listHelper.currentSorting() == 'size' ? 'visible' : 'hidden'}"></i> {{ _('Sort by file size') }} ({{ _('descending') }})</a></li>
+										<li class="divider"></li>
+										<li><a href="#" data-bind="click: function() { $root.listHelper.toggleFilter('machinecode'); }"><i class="icon-ok" data-bind="style: {visibility: _.contains(listHelper.currentFilters(), 'machinecode') ? 'visible' : 'hidden'}"></i> {{ _('Only show GCode files') }}</a></li>
+										<li><a href="#" data-bind="click: function() { $root.listHelper.toggleFilter('model'); }"><i class="icon-ok" data-bind="style: {visibility: _.contains(listHelper.currentFilters(), 'model') ? 'visible' : 'hidden'}"></i> {{ _('Only show design files') }}</a></li>
+										<li class="divider"></li>
+									</ul>
+									<div class="muted text-right">
+										<small>{{ _('Free') }}: <span data-bind="text: freeSpaceString"></span></small>
+									</div>
+									<div style="display: none;" data-bind="visible: loginState.isUser">
+										<div class="row-fluid upload-buttons">
+
+											<span class="btn btn-primary fileinput-button " data-bind="css: {disabled: !$root.loginState.isUser(), span12: !hasCamera(), span8: hasCamera()}" style="margin-bottom: 10px">
+												<i class="icon-upload-alt icon-white"></i>
+												<span>{{ _('Upload') }}</span>
+												<input id="gcode_upload" type="file" name="file" class="fileinput-button" data-bind="enable: loginState.isUser()">
+											</span>
+											<a class="btn btn-primary span4" href="#" role="button" data-bind="visible:hasCamera(), css: {disabled: !$root.loginState.isUser()}, click: takePhoto" >
+												<i class="icon-camera icon-white"></i>
+												<span>{{ _('Photo') }}</span>
+											</a>
+												
+										</div>
+										<div id="gcode_upload_progress" class="progress" style="width: 100%;">
+											<div class="bar" style="width: 0%"></div>
+										</div>
+										<div>
+											<small>{{ _('Hint: You can also drag and drop files on this page to upload them.') }}</small>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="span8">
+								<div class="designlib" >
+									<div id="files" >
+
+										<div  id="files_wrapper">
+											<div class="accordion-inner">
+
+												<div class="gcode_files" data-bind="slimScrolledForeach: listHelper.paginatedItems" >
+													<div class="entry" data-bind="attr: { id: $root.getEntryId($data) }, template: { name: $root.templateFor($data), data: $data }"></div>
+												</div>
+
+													<script type="text/html" id="files_template_machinecode">
+														<div class="file_list_entry">
+															<i class="icon-cog file_list_icon file_list_entry_gcode"></i>
+															<div class="title muted dropdown" >
+																<a type="button" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+																	<span data-bind="css: $root.getSuccessClass($data), style: { 'font-weight': $root.listHelper.isSelected($data) ? 'bold' : 'normal' }, text: name"></span>
+																	<span class="caret"></span>
+																</a>
+																<ul class="dropdown-menu" role="menu">
+																	<li><a class="" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i> {{ _('Download') }}</a></li>
+																	<li><a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFile($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a></li>
+																</ul>
+															</div>
+															<div class="uploaded">{{ _('Created') }}: <span data-bind="text: formatTimeAgo(date)"></span></div>
+															<div class="size">{{ _('Size') }}: <span data-bind="text: formatSize(size)"></span></div>
+															<div class="additionalInfo hide" data-bind="html: $root.getAdditionalData($data)"></div>
+															<div class="btn-group action-buttons">
+<!--																<a class="btn btn-mini" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i></a>
+																<a class="btn btn-mini" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFile($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i></a>-->
+																<div class="btn"  data-bind="click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeGcode($data); } }, css: {disabled: $root.workingArea.isPlaced($data)}"><i class="icon-ok" title="{{ _('Use') }}">Add</i></div>
+															</div>
+														</div>
+													</script>
+
+													<script type="text/html" id="files_template_model_svg">
+														<div class="file_list_entry">
+															<i class="icon-picture file_list_icon"></i>
+															<div class="title muted dropdown" >
+																<a type="button" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+																	<span  data-bind="text: name"></span>
+																	<span class="caret"></span>
+																</a>
+																<ul class="dropdown-menu" role="menu">
+																	<li>
+																		<a class="" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i> {{ _('Download') }}</a>
+																	</li>
+																	<li>
+																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFile($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
+																	</li>
+																</ul>
+															</div>
+															<div class="uploaded">{{ _('Uploaded') }}: <span data-bind="text: formatTimeAgo(date)"></span></div>
+															<div class="size">{{ _('Size') }}: <span data-bind="text: formatSize(size)"></span></div>
+															<div class="btn-group action-buttons">
+<!--																<a class="btn btn-mini" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i></a>
+																<div class="btn btn-mini" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFile($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i></div>-->
+																<div class="btn" data-bind="click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeSVG($data); } }, css: {disabled: $root.workingArea.isPlaced($data)}"><i class="icon-ok" title="{{ _('Use') }}">Add</i></div>
+															</div>
+														</div>
+													</script>
+
+													<script type="text/html" id="files_template_model_img">
+														<div class="file_list_entry">
+															<i class="icon-camera file_list_icon"></i>
+															<div class="title muted dropdown" >
+																<a type="button" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+																	<span  data-bind="text: name"></span>
+																	<span class="caret"></span>
+																</a>
+																<ul class="dropdown-menu" role="menu">
+																	<li>
+																		<a class="" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i> {{ _('Download') }}</a>
+																	</li>
+																	<li>
+																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFile($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
+																	</li>
+																</ul>
+															</div>
+															<div class="uploaded">{{ _('Uploaded') }}: <span data-bind="text: formatTimeAgo(date)"></span></div>
+															<div class="size">{{ _('Size') }}: <span data-bind="text: formatSize(size)"></span></div>
+															<div class="btn-group action-buttons">
+<!--																<a class="btn btn-mini" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i></a>
+																<div class="btn btn-mini" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFile($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i></div>-->
+																<div class="btn" data-bind="click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeIMG($data); } }, css: {disabled: $root.workingArea.isPlaced($data)}"><i class="icon-ok" title="{{ _('Use') }}">Add</i></div>
+															</div>
+														</div>
+													</script>
+
+													<script type="text/html" id="files_template_model_dummy">
+														<div class="file_list_entry">
+														</div>
+													</script>
+
+													<script type="text/html" id="files_template_folder">
+														<div class="title" data-bind="text: name"></div>
+													</script>
+
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="tab-pane" id="focus">
+					<div class="container-fluid">
+						<div class="row-fluid">
+							<div class="span4">
+								<ul class="focus_steps">
+									<li>1. Place your material on the working area</li>
+									<li>2. Move the laser over the material</li>
+									<li>3. Put on your safety glasses</li>
+									<li>4. Turn the laser safety switch to on</li>
+									<li>&RightArrow; Now enable the focus mode</li>
+									<li>5. Adjust the focus until the laser beam is as small as possible</li>
+									<li>&RightArrow; Disable the focus mode. </li>
+								</ul>
+								<div style="text-align:center">
+								<div class="btn-group" role="group" aria-label="focus mode control" style="">
+									<button id="btn_focus_on" class="btn btn-danger" data-bind="enable: state.isOperational() && !isPrinting() && loginState.isUser(), click: focus_on ">{{ _('Enable Focus') }}</button>
+									<button id="btn_focus_off" class="btn btn-default" data-bind="enable: state.isOperational() && !isPrinting() && loginState.isUser(), click: focus_off ">{{ _('Disable Focus') }}</button>
+								</div>
+								</div>
+
+								<div style="text-align:center" data-bind="visible: showZAxis">
+									<div class="jog-panel" id="control_zaxis_focus">
+
+										Z-Axis
+										<div class="btn-group-vertical" role="group" aria-label="z-axis control">
+											<button class="btn box" data-bind="enable: state.isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('z',1) }"><i class="icon-arrow-up"></i></button>
+											<button class="btn box" data-bind="enable: state.isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('z',-1) }"><i class="icon-arrow-down"></i></button>
+										</div>
+									</div>
+								</div>
+
+							</div>
+							<div class="span8">
+								<div class="focus" id="focus_description">
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="tab-pane" id="gcode">
+					<div class="container-fluid">
+						<div class="row-fluid">
+							{% include 'tabs/gcodeviewer.jinja2' %}
+
+						</div>
+					</div>
+				</div>
+
+				<div class="tab-pane" id="settings">
+					<div class="container-fluid">
+						<div class="row-fluid">
+
+							<div class="settings" >
+								{% include 'dialogs/settings.jinja2' %}
+							</div>
+
+						</div>
+					</div>
+				</div>
+
+			</div>
+
+
+					</div>
+					<!------->
+
+					<!------>
+
+						<footer class="footer">
+							<ul class="pull-left muted">
+								<li><small>{{ _('Version') }}: <span class="version">{{ display_version }}</span></small></li>
+							</ul>
+							<ul class="pull-right">
+								<li><a href="http://www.mr-beam.org" target="_blank"><i class="icon-home"></i> {{ _('Homepage') }}</a></li>
+								<li><a href="https://github.com/mrbeam/OctoPrint/" target="_blank"><i class="icon-download"></i> {{ _('Sourcecode') }}</a></li>
+								<li><a href="https://wiki.mr-beam.org" target="_blank"><i class="icon-book"></i> {{ _('Documentation') }}</a></li>
+								<li><a href="https://github.com/mrbeam/OctoPrint/issues" target="_blank"><i class="icon-flag"></i> {{ _('Bugs and Requests') }}</a></li>
+							</ul>
+						</footer>
+					</div>
+
+
+
+		<!-- Plugin template files -->
+		{%  if templatePlugins %}
+		{% for plugin_name in templatePlugins %}
+		{% include plugin_name+".jinja2" ignore missing %}
+		{% endfor %}
+		{% endif %}
+		<!-- End plugin template files -->
+
+
+		<!-- Dialogs -->
+        {% include 'dialogs/confirmation.jinja2' %}
+        {% include 'dialogs/firstrun.jinja2' %}
+        {#% include 'dialogs/settings.jinja2' %#}
+        {% include 'dialogs/slicing.jinja2' %}
+		{% include 'dialogs/usersettings.jinja2' %}
+        {% include 'take_photo.jinja2' %}
+        {% include 'conversion_dialog.jinja2' %}
+        <!-- End of dialogs -->
+
+        <!-- Overlays -->
+        {% include 'overlays/dragndrop.jinja2' %}
+        {% include 'overlays/offline.jinja2' %}
+        <!-- End of overlays -->
+
+		 <!-- Generic plugin template files -->
+		{% for key in templates.generic.order %}
+			{% set data = templates.generic.entries[key] %}
+			{% include data.template ignore missing %}
+		{% endfor %}
+		<!-- End of generic plugin template files -->
+
+
+        {% include 'javascripts.jinja2' %}
+	</body>
+</html>

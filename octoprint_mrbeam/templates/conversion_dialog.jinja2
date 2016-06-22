@@ -1,0 +1,188 @@
+<div id="dialog_vector_graphics_conversion" class="modal hide fade">
+    <div class="modal-header">
+        <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+        <h3 data-bind="text: title"></h3>
+    </div>
+    <div class="modal-body">
+        <form class="form-horizontal" data-bind="visible: !slicing_in_progress() ">
+			<div data-bind="visible: show_vector_parameters ">
+				<p>{{ _('Vector graphic parameters:') }}</p>
+
+				<div class="control-group">
+					<label class="control-label">{{ _('Laser intensity') }} (1-1000)</label>
+					<div class="controls">
+						<div class="input-append">
+							<input id="svgtogcode_intensity_slider" type="text" data-bind="slicerValue: laserIntensity">
+							<input id="svgtogcode_intensity" class="slider_manual_input" type="text" data-bind="value: laserIntensity, valueUpdate: 'keyup'">
+						</div>
+					</div>
+					<div class="controls alert alert-info hint" data-bind="visible: showHints">
+						<span class="icon icon-question-sign" aria-hidden="true"></span>
+						Sets the intensity of the laser. The more intensity the deeper the effect on the material. 
+						Cutting needs higher intensities than engraving.
+						The effect in general is dependent from the material and its color and surface.
+					</div>
+				</div>
+				<div class="control-group">
+					<label class="control-label">{{ _('Speed') }} (<span data-bind="text: minSpeed">20</span> - <span data-bind="text: maxSpeed">3000</span>)</label>
+					<div class="controls">
+						<div class="input-append">
+							<input id="svgtogcode_feedrate_slider" class="uninitialized" type="text" data-bind="value: laserSpeed">
+							<input id="svgtogcode_feedrate" class="slider_manual_input" type="text" data-bind="value: laserSpeed, valueUpdate: 'keyup'">
+						</div>
+					</div>
+					<div class="controls alert alert-info hint" data-bind="visible: showHints">
+						<span class="icon icon-question-sign" aria-hidden="true"></span>
+						Sets the velocity of the laser head. The slower the movement the deeper the effect on the material. 
+						Cutting needs slower movement than engraving. 
+						The effect in general is dependent from the material and its color and surface.
+					</div>
+				</div>
+				<label class="control-label">{{ _('Filled areas') }}</label>
+				<div class="controls">
+					<label class="checkbox">
+						<input type="checkbox" data-bind="checked: fill_areas">{{ _('Engrave Infills') }}
+					</label>
+				</div>
+            </div>
+
+			<div class="control-group" data-bind="visible: showExpertSettings ">
+				<label class="control-label">{{ _('Pierce Time (ms)') }} </label>
+				<div class="controls">
+					<div class="input-append">
+						<input type="number" min="0" max="2000" style="width:4em;" data-bind="value: pierceTime">
+					</div>
+				</div>
+				<div class="controls alert alert-info hint" data-bind="visible: showHints">
+					<span class="icon icon-question-sign" aria-hidden="true"></span>
+					Some (especially bright) materials require the laser to dwell a little until the surface has absorbed enough energy to be affected.
+					This parameter sets the amount of time in milliseconds the movement is paused after the laser is switched on. 
+					If the result shows gaps in lines for example increase this value carefully. The higher the value the higher the risk of material ignition.
+				</div>
+			</div>
+			
+			<div data-bind="visible: show_image_parameters ">
+				<p>{{ _('Image engraving parameters:') }}</p>
+				<div class="control-group" >
+					<label class="control-label">{{ _('Laser intensity') }}</label>
+					<div class="controls">
+						<div class="input-append">
+							<input id="svgtogcode_img_intensity_white" class="img_intensity_input" type="number" min="0" max="1000" data-bind="value: imgIntensityWhite">
+							<div class="svgtogcode_grayscale">&nbsp;</div>
+							<input id="svgtogcode_img_intensity_black" class="img_intensity_input" type="number" min="0" max="1000" data-bind="value: imgIntensityBlack">
+						</div>
+					</div>
+					<div class="controls alert alert-info hint" data-bind="visible: showHints">
+						<span class="icon icon-question-sign" aria-hidden="true"></span>
+						The intensity range used for engraving pixel graphics. Bright/white pixels use the left (lower) value, dark/black pixels the right (higher) value.
+						Equal values do not vary the laser intensity related to the pixel brightness.
+					</div>
+
+					<label class="control-label">{{ _('Engraving speed') }}</label>
+					<div class="controls">
+						<div class="input-append">
+							<input id="svgtogcode_img_feedrate_white" class="img_intensity_input" type="number"  min="30" data-bind="value: imgFeedrateWhite">
+							<div class="svgtogcode_grayscale">&nbsp;</div>
+							<input id="svgtogcode_img_feedrate_black" class="img_intensity_input" type="number"  min="30" data-bind="value: imgFeedrateBlack">
+						</div>
+					</div>
+					<div class="controls alert alert-info hint" data-bind="visible: showHints">
+						<span class="icon icon-question-sign" aria-hidden="true"></span>
+						The movement velocity range used for engraving pixel graphics. Bright/white pixels use the left (higher) value, dark/black pixels the right (lower) value.
+						Equal values do not vary the laser velocity related to the pixel brightness.
+					</div>
+
+				</div>
+				<div class="control-group" data-bind="visible: showExpertSettings">
+					<label class="control-label">{{ _('Line distance') }}</label>
+					<div class="controls">
+						<div class="input-append">
+							<input id="svgtogcode_img_line_dist" class="img_intensity_input" type="number" max="0.5" min="0.1" step="0.05" data-bind="value: beamDiameter">mm
+						</div>
+					</div>
+					<div class="controls alert alert-info hint" data-bind="visible: showHints">
+						<span class="icon icon-question-sign" aria-hidden="true"></span>
+						Pixel / raster engravings are done line by line. This sets the distance between the single lines.
+						Smaller values allow finer engravings but require a more precise focus and are slower. 
+					</div>
+
+					
+					<p >{{ _('Image Preprocessing') }}</p>
+					<div class="controls">
+						<div class="img_preprocessing_preview before" style="background-image:url(/plugin/svgtogcode/static/img/kitty_grayscale.png);" >before</div>
+						<div class="img_preprocessing_preview after" style="background-image:url(/plugin/svgtogcode/static/img/kitty_grayscale.png);" >after
+							<div class="img_preprocessing_preview contrast" style="background-image:url(/plugin/svgtogcode/static/img/kitty_contrast.png);" data-bind="style: { opacity: contrastPreview }" ></div>
+							<div class="img_preprocessing_preview sharpened" style="background-image:url(/plugin/svgtogcode/static/img/kitty_sharpened.png);" data-bind="style: { opacity: sharpenedPreview }" ></div>
+							<div class="img_preprocessing_preview dithered" style="background-image:url(/plugin/svgtogcode/static/img/kitty_dithered_150.png);" data-bind="visible: imgDithering"></div>
+						
+						</div>
+						<div class="photo_attribution"><a href="http://www.christianholmer.com" target="_blank">Photo: Christian Holmér</a></div>
+					</div>
+					
+					<div data-bind="disable:imgDithering ">
+						<label class="control-label">{{ _('Contrast') }}</label>
+						<div class="controls img_slider">
+							<input id="svgtogcode_contrast_slider" type="text" data-bind="value: imgContrast" >
+						</div>
+						<div style="clear:both"></div>	
+						<div class="controls alert alert-info hint" data-bind="visible: showHints">
+							<span class="icon icon-question-sign" aria-hidden="true"></span>
+							Increases the image contrast before converting to gcode.  
+						</div>
+						
+						<label class="control-label">{{ _('Sharpening') }}</label>
+						<div class="controls img_slider">
+							<input id="svgtogcode_sharpening_slider" class="uninitialized" type="text" data-bind="value: imgSharpening">
+						</div>
+						<div style="clear:both"></div>
+						<div class="controls alert alert-info hint" data-bind="visible: showHints">
+							<span class="icon icon-question-sign" aria-hidden="true"></span>
+							Sharpens the image before converting to gcode.  
+						</div>
+					</div>
+						
+					<label class="control-label">{{ _('Dithering') }}</label>
+					<div class="controls">
+						<label class="checkbox">
+							<input type="checkbox" data-bind="checked: imgDithering">{{ _('Dithering') }}
+						</label>
+					</div>
+					<div class="controls alert alert-info hint" data-bind="visible: showHints">
+						<span class="icon icon-question-sign" aria-hidden="true"></span>
+						Converts the image to solely black and white pixels. 
+						Use this if the laser effect on your material is not able to transfer grayscales.  
+					</div>
+
+				</div>
+			</div>
+
+            <div class="control-group" data-bind="visible: showExpertSettings ">
+				<p>{{ _('Store GCode after conversion:') }}</p>
+                <label class="control-label">{{ _('GCode Filename') }}</label>
+                <div class="controls">
+                    <div class="input-append">
+                        <input type="text" data-bind="value: gcodeFilename">
+                        <span class="add-on"><span data-bind="text:settingsString"></span>.gco</span>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+		<div id="slicing_progress" class="progress" style="width: 100%;" data-bind="visible: slicing_in_progress">
+			<div class="bar" style="width: 0%" data-bind="style: {width: slicing_progress() + '%'} "></div>
+		</div>
+    </div>
+    <div class="modal-footer">
+		<div class="pull-left" style="text-align:left;">
+			<label class="checkbox">
+				<input type="checkbox" data-bind="checked: showExpertSettings">show advanced settings
+			</label>
+			<label class="checkbox">
+				<input type="checkbox" data-bind="checked: showHints">show explanations
+			</label>
+		</div>
+
+        <a href="#" class="btn" data-dismiss="modal" aria-hidden="true" data-bind="click: $root.cancel_conversion()">{{ _('Cancel') }}</a>
+        <a href="#" class="btn btn-primary" data-bind="click: function() { if ($root.enableConvertButton()) { $root.convert() } }, enabled: enableConvertButton, css: {disabled: !$root.enableConvertButton()}">{{ _('Convert') }}</a>
+    </div>
+</div>

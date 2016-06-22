@@ -1,0 +1,129 @@
+table th.settings_plugin_svgtogcode_profiles_key,table td.settings_plugin_svgtogcode_profiles_key{text-overflow:ellipsis;text-align:left;width:200px}table th.settings_plugin_svgtogcode_profiles_name,table td.settings_plugin_svgtogcode_profiles_name{text-overflow:ellipsis;text-align:left}table th.settings_plugin_svgtogcode_profiles_actions,table td.settings_plugin_svgtogcode_profiles_actions{text-align:center;width:100px}table th.settings_plugin_svgtogcode_profiles_actions a,table td.settings_plugin_svgtogcode_profiles_actions a{text-decoration:none;color:#000}table th.settings_plugin_svgtogcode_profiles_actions a.disabled,table td.settings_plugin_svgtogcode_profiles_actions a.disabled{color:#ccc;cursor:default}
+.slider_manual_input {
+	margin-left: 1.5em;
+	width: 2.5em;
+}
+
+#gcode_reference .gcommand {
+	font-weight: bold;
+}
+#gcode_reference .example {
+	font-style: italic;
+}
+
+#gcode_reference ul {
+	margin-left: 0;
+	max-height: 60vh;
+	overflow: auto;
+}
+#gcode_reference ul li {
+	list-style: none;
+	margin-bottom: 1em;
+}
+
+.svgtogcode_grayscale {
+	background-image: linear-gradient(90deg, #FFFFFF, #000000);
+	width:220px;
+	display: inline-block;
+}
+
+.img_intensity_input {
+	width: 3.5em;
+}
+
+svg text {
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	cursor: default;
+	pointer-events: none;
+
+}
+
+.img_slider{
+	margin-bottom: 24px;
+}
+
+.img_preprocessing_preview {
+    background-size: 150px;
+	display: inline-block;
+	width: 150px;
+	height: 150px;
+}
+
+.img_preprocessing_preview.after {
+    position:relative;
+}
+.img_preprocessing_preview.after>div {
+	position: absolute;
+	top:0;
+	left:0;
+}
+
+.img_preprocessing_preview.after .contrast,
+.img_preprocessing_preview.after .sharpened,
+.img_preprocessing_preview.after .sharpened_contrast {
+	opacity: 0;
+}
+
+.photo_attribution {
+	margin-bottom: 1em;
+}
+.photo_attribution a {
+    color: #999;
+    font-size: smaller;
+}
+
+#dialog_vector_graphics_conversion .hint {
+	font-style: italic;
+    font-size: smaller;
+	margin-top: 4px;
+	background-color: #fafafa;
+}
+
+#dialog_vector_graphics_conversion .hint .icon {
+	font-size: large;
+    padding-right: .5em;
+}
+
+#photo_preview {
+	width: 400px;
+	height: 300px;
+	margin: auto;
+}
+
+.overrideSlider {
+	margin-bottom: 8px;
+}
+
+.overrideSlider input {
+	width:45%;
+}
+.overrideSlider span {
+	padding-left: .6em;
+}
+
+.repeatGcode .btn-group {
+	width: 145px;
+}
+.repeatGcode input, .repeatGcode button {
+	width: 33%;
+}
+
+.repeatGcode input {
+	margin-bottom:0;
+	padding-left: 0;
+	padding-right: 0;
+	text-align: center;
+}
+.repeatGcode>span {
+	padding-left: .6em;
+}
+
+.manual_position_input {
+	padding-top: 12px;
+}
+
+#manual_position.warning {
+	color: #DD0000;
+}
