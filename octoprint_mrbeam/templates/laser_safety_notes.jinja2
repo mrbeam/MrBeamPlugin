@@ -1,0 +1,65 @@
+<div id="laser_safety_overlay" class="modal hide fade" data-backdrop="static" data-keyboard="false">
+    <div class="modal-header">
+        <h3><i class="icon-warning-sign" style="color:red;"></i> {{ _('Laser Safety') }}</h3>
+    </div>
+    <div class="modal-body">
+        {% trans %}<p>
+            <strong>Heads up! Read the following, it is very important for your and other's health!</strong>
+        </p>
+        <h3>
+           Laser Classification:
+        </h3>
+        <p>
+			Your laser engraver contains a 658nm or 445nm laser diode with an output power greater than 1000mW. 
+			According to IEC60825 this is a class 4 laser which is capable of causing injury to both 
+			the eye and skin and will also present a fire hazard if sufficiently high output powers are used.  
+        </p>
+        {% endtrans %}
+		<img src="{{ url_for('plugin.mrbeam.static', filename='img/laser_class4_labels.png') }}" alt="safety labels"/>
+        {% trans %}
+		<h3>Safety Advisory:</h3>
+        <p>
+			Laser products emit intense laser light that can be harmful to the eyes and can cause burning by irradiation.<br/>
+			NEVER DIRECT AT THE EYES EVEN AT A DISTANCE REGARDLESS OF LASER CLASS!<br/>
+			Everybody in the line of sight must wear appropriate laser safety glasses during the laser operation. <br/>
+			Even when wearing laser safety glasses, <strong>never ever</strong> look direct into the laser beam.<br/>
+			Be always responsible regarding yourself and others.<br/>
+			Always operate your own assembly of the kit under permanent supervision. <br/>
+			<strong>Never</strong> leave the device unattended during operation. <br/>
+			<strong>Never</strong> put reflecting or mirroring or flammable materials under the laser. <br/>
+			<strong>Never</strong> put the machine on a flammable surface. <br/>
+			It must be operated only by persons who are aware of the risks and dangers of the operation, 
+			especially those of class 4 laser light emissions.<br/>
+			If not operated by yourself introduce the operating person carefully and responsibly.
+			If you are connecting the laser engraver to a network ensure that you properly set up the network access 
+			as well as the machines access control. Do NOT underestimate the risk of an unsecured access from the internet to your laser engraver. 
+        </p>
+		
+        <p>
+			By proceeding you are agreeing, that
+		</p>
+		<ul>
+			<li>You understand that laser components are dangerous</li>
+			<li>You understand that you are responsible to build your machine according to your local regulations. 
+			  This may require extensions or alterations of the design and the construction.</li>
+			<li>You will always use the provided laser in a safe and responsible manner and for a legal purpose.</li>
+			<li>You are legally responsible for the use and also the improper use of your Mr Beam assembly.</li>
+			<li>You are legally responsible to grant access to your laser engraver only to introduced and authorized personnel.</li>
+			<li>You have connected the laser engraver to a trustful network and ensured that only authorized and introduced personnel can access it. </li>
+		</ul>
+
+        <p>
+			If you have any concerns about laser safety or if you do not agree with the conditions above 
+			don't use this software to operate any machine emitting laser light. 
+        </p>
+			
+
+		<p>Thank you for reading. </p>
+		{% endtrans %}
+        
+    </div>
+    <div class="modal-footer">
+        <a href="#" class="btn btn-danger" data-bind="click: agree">{{ _('I do fully understand and agree!') }}</a>
+    </div>
+</div>
+
