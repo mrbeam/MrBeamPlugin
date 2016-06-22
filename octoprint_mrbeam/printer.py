@@ -1,5 +1,6 @@
 
-from octoprint.printer.standard import Printer, StateMonitor
+from octoprint.printer.standard import Printer, StateMonitor, PrinterInterface
+from octoprint.settings import settings
 from . import comm_acc2 as comm
 
 class Laser(Printer):
@@ -44,23 +45,13 @@ class Laser(Printer):
 		self._printerProfileManager.select(profile)
 		self._comm = comm.MachineCom(port, baudrate, callbackObject=self, printerProfileManager=self._printerProfileManager)
 
+	# overwrite operational state to accept commands in locked state
+	def is_operational(self):
+		return Printer.is_operational(self) or self.is_locked()
 		
 	# extend commands: home, position, increase_passes, decrease_passes
 	def home(self, axes):
-		if(settings().getBoolean(["feature", "grbl"])):
-			self.commands(["$H", "G92X0Y0Z0", "G90", "G21"])
-		else:
-			if not isinstance(axes, (list, tuple)):
-				if isinstance(axes, (str, unicode)):
-					axes = [axes]
-				else:
-					raise ValueError("axes is neither a list nor a string: {axes}".format(axes=axes))
-
-			validated_axes = filter(lambda x: x in PrinterInterface.valid_axes, map(lambda x: x.lower(), axes))
-			if len(axes) != len(validated_axes):
-				raise ValueError("axes contains invalid axes: {axes}".format(axes=axes))
-
-			self.commands(["G91", "G28 %s" % " ".join(map(lambda x: "%s0" % x.upper(), validated_axes)), "G90"])
+		self.commands(["$H", "G92X0Y0Z0", "G90", "G21"])
 
 	def position(self, x, y):
 		printer_profile = self._printerProfileManager.get_current_or_default()

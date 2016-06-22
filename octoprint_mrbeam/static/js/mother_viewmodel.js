@@ -9,7 +9,7 @@ $(function(){
 		self.connection = params[4];
 		self.control = params[5];
 		self.terminal = params[6];
-		self.workingarea = params[7];
+		self.workingArea = params[7];
 		self.conversion = params[8];
 
 		self.laserPos = ko.computed(function () {
@@ -114,9 +114,9 @@ $(function(){
 
 		self._processWPosData = function (data) {
 			if (data == null) {
-				self.currentPos({x: 0, y: 0});
+				self.state.currentPos({x: 0, y: 0});
 			} else {
-				self.currentPos({x: data[0], y: data[1]});
+				self.state.currentPos({x: data[0], y: data[1]});
 			}
 		};
 	}
