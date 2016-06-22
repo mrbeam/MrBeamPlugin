@@ -99,7 +99,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			)
 		)
 
-	##~~ TemplatePlugin API
+	def laser_factory(self, components):
+		from .printer import Laser
+		return Laser(components['file_manager'], components['analysis_queue'], components['printer_profile_manager'])
+
+
 
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
@@ -113,6 +117,7 @@ def __plugin_load__():
 
 	global __plugin_hooks__
 	__plugin_hooks__ = {
-		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information
+		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
+		"octoprint.printer.factory": __plugin_implementation__.laser_factory
 	}
 

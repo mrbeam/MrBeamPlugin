@@ -1,0 +1,138 @@
+
+from octoprint.printer.standard import Printer, StateMonitor
+from . import comm_acc2 as comm
+
+class Laser(Printer):
+	
+	def __init__(self, fileManager, analysisQueue, printerProfileManager):
+		Printer.__init__(self, fileManager, analysisQueue, printerProfileManager)
+		self._stateMonitor = LaserStateMonitor(
+			interval=0.5,
+			on_update=self._sendCurrentDataCallbacks,
+			on_add_temperature=self._sendAddTemperatureCallbacks,
+			on_add_log=self._sendAddLogCallbacks,
+			on_add_message=self._sendAddMessageCallbacks
+		)
+		self._stateMonitor.reset(
+			state={"text": self.get_state_string(), "flags": self._getStateFlags()},
+			job_data={
+				"file": {
+					"name": None,
+					"size": None,
+					"origin": None,
+					"date": None
+				},
+				"estimatedPrintTime": None,
+				"lastPrintTime": None,
+				"filament": {
+					"length": None,
+					"volume": None
+				}
+			},
+			progress={"completion": None, "filepos": None, "printTime": None, "printTimeLeft": None},
+			current_z=None
+		)
+		
+	# overwrite connect to use comm_acc2
+	def connect(self, port=None, baudrate=None, profile=None):
+		"""
+		 Connects to the printer. If port and/or baudrate is provided, uses these settings, otherwise autodetection
+		 will be attempted.
+		"""
+		if self._comm is not None:
+			self._comm.close()
+		self._printerProfileManager.select(profile)
+		self._comm = comm.MachineCom(port, baudrate, callbackObject=self, printerProfileManager=self._printerProfileManager)
+
+		
+	# extend commands: home, position, increase_passes, decrease_passes
+	def home(self, axes):
+		if(settings().getBoolean(["feature", "grbl"])):
+			self.commands(["$H", "G92X0Y0Z0", "G90", "G21"])
+		else:
+			if not isinstance(axes, (list, tuple)):
+				if isinstance(axes, (str, unicode)):
+					axes = [axes]
+				else:
+					raise ValueError("axes is neither a list nor a string: {axes}".format(axes=axes))
+
+			validated_axes = filter(lambda x: x in PrinterInterface.valid_axes, map(lambda x: x.lower(), axes))
+			if len(axes) != len(validated_axes):
+				raise ValueError("axes contains invalid axes: {axes}".format(axes=axes))
+
+			self.commands(["G91", "G28 %s" % " ".join(map(lambda x: "%s0" % x.upper(), validated_axes)), "G90"])
+
+	def position(self, x, y):
+		printer_profile = self._printerProfileManager.get_current_or_default()
+		movement_speed = min(printer_profile["axes"]["x"]["speed"], printer_profile["axes"]["y"]["speed"])
+		self.commands(["G90", "G0 X%.3f Y%.3f F%d" % (x, y, movement_speed), "?"])
+	
+	def increase_passes(self):
+		"""
+		 increase the number of passes by one.
+		"""
+		if self._comm is None:
+			return
+		self._comm.increasePasses()
+
+	def decrease_passes(self):
+		"""
+		 decrease the number of passes by one.
+		"""
+		if self._comm is None:
+			return
+		self._comm.decreasePasses()
+
+	
+	# extend flags
+	def is_locked(self):
+		return self._comm is not None and self._comm.isLocked()
+
+	def is_flashing(self):
+		return self._comm is not None and self._comm.isFlashing()
+
+	def _getStateFlags(self):
+		flags = Printer._getStateFlags(self)
+		flags.update({
+			"locked": self.is_locked(),
+			"flashing": self.is_flashing(),
+		})
+		return flags
+	
+	# position update callbacks
+	def on_comm_pos_update(self, MPos, WPos):
+		self._add_position_data(MPos, WPos)
+
+	def _add_position_data(self, MPos, WPos):
+		if MPos is None or WPos is None:
+			MPos = WPos = [0, 0, 0]
+		#else:
+			#MPosString = "X: %.4f Y: %.4f Z: %.4f" % ( MPos[0], MPos[1], MPos[2] )
+			#WPosString = "X: %.4f Y: %.4f Z: %.4f" % ( WPos[0], WPos[1], WPos[2] )
+
+		self._stateMonitor.setWorkPosition(WPos)
+		self._stateMonitor.setMachinePosition(MPos)
+
+
+class LaserStateMonitor(StateMonitor):	
+	def __init__(self, *args, **kwargs):
+		StateMonitor.__init__(self, *args, **kwargs)
+		self._machinePosition = None
+		self._workPosition = None
+
+	def setWorkPosition(self, workPosition):
+		self._workPosition = workPosition
+		self._change_event.set()
+
+	def setMachinePosition(self, machinePosition):
+		self._machinePosition = machinePosition
+		self._change_event.set()
+
+	def get_current_data(self):
+		data = StateMonitor.get_current_data(self)
+		data.update({
+			"workPosition": self._workPosition,
+			"machinePosition": self._machinePosition
+		})
+		return data
+	
