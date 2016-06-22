@@ -58,15 +58,15 @@
 									<div id="statusbox">
 
 									<div id="mrb_control" class="accordion-inner" data-bind="visible: state.isReady() || state.isLocked() || state.isFlashing()">
-										<div data-bind="visible: state.isLocked ">
-											Mr Beam is in a locked state as it does not know its position.
+										<div data-bind="visible: state.isLocked() ">
+											Mr Beam does not know the current position.
 											First remove any objects blocking the gantry's travel range.
 											Then do a homing cycle.
 											<div style='text-align: center; padding:.5em;'>
 
 												<div class='btn-group'>
-													<button class="btn btn-default" data-bind="enable: state.isLocked() && loginState.isUser(), click: function() { $root.sendHomeCommand(['x', 'y']) }"><i class="icon-home"> Homing Cycle</i></button>
-													<!--<button class="btn btn-default" data-bind="enable: state.isLocked() && loginState.isUser(), click: function() { $root.sendHomeCommand(['x', 'y']) }"><i class="icon-unlock">Unlock</i></button>-->
+													<button class="btn btn-default" data-bind="enable: state.isLocked() && loginState.isUser(), click: function() { $root.control.sendHomeCommand(['x', 'y']) }"><i class="icon-home"> Homing Cycle</i></button>
+													<!--<button class="btn btn-default" data-bind="enable: state.isLocked() && loginState.isUser(), click: function() { $root.control.sendHomeCommand(['x', 'y']) }"><i class="icon-unlock">Unlock</i></button>-->
 												</div>
 											</div>
 										</div>
@@ -93,28 +93,28 @@
 												<div class="jog-panel" id="control_xyaxis">
 													XY-Axes
 													<div>
-														<button class="btn box" data-bind="enable: state.isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('y',1) }"><i class="icon-arrow-up"></i></button>
+														<button class="btn box" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('y',1) }"><i class="icon-arrow-up"></i></button>
 													</div>
 													<div>
-														<button class="btn box pull-left" data-bind="enable: state.isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('x',-1) }"><i class="icon-arrow-left"></i></button>
-														<button class="btn box pull-left" data-bind="enable: (state.isOperational() || state.isLocked()) && !isPrinting() && loginState.isUser(), click: function() { $root.sendHomeCommand(['x', 'y']) }"><i class="icon-home"></i></button>
-														<button class="btn box pull-left" data-bind="enable: state.isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('x',1) }"><i class="icon-arrow-right"></i></button>
+														<button class="btn box pull-left" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('x',-1) }"><i class="icon-arrow-left"></i></button>
+														<button class="btn box pull-left" data-bind="enable: (state.isOperational() || state.isLocked()) && !state.isPrinting() && loginState.isUser(), click: function() { $root.sendHomeCommand(['x', 'y']) }"><i class="icon-home"></i></button>
+														<button class="btn box pull-left" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('x',1) }"><i class="icon-arrow-right"></i></button>
 													</div>
 													<div>
-														<button class="btn box" data-bind="enable: state.isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('y',-1) }"><i class="icon-arrow-down"></i></button>
+														<button class="btn box" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('y',-1) }"><i class="icon-arrow-down"></i></button>
 													</div>
 												</div>
 											   <div class="jog-panel" id="control_zaxis">
 												   <div data-bind="visible: control.showZAxis">
 														Z-Axis
 														<div class="btn-group-vertical" role="group" aria-label="z-axis control">
-														   <button class="btn" data-bind="enable: state.isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('z',1) }"><i class="icon-arrow-up"></i></button>
-														   <!--<button class="btn box" data-bind="enable: state.isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendHomeCommand(['z']) }"><i class="icon-home"></i></button>-->
-														   <button class="btn" data-bind="enable: state.isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('z',-1) }"><i class="icon-arrow-down"></i></button>
+														   <button class="btn" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('z',1) }"><i class="icon-arrow-up"></i></button>
+														   <!--<button class="btn box" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { $root.sendHomeCommand(['z']) }"><i class="icon-home"></i></button>-->
+														   <button class="btn" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('z',-1) }"><i class="icon-arrow-down"></i></button>
 														</div>
 												   </div>
 													<div>
-														<button id="set_coordinate_origin_btn" class="btn" data-bind="enable: state.isOperational() && !isPrinting() && loginState.isUser(), click: control.setCoordinateOrigin" title="set coordinate origin"><i class="icon-screenshot"></i></button>
+														<button id="set_coordinate_origin_btn" class="btn" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: control.setCoordinateOrigin" title="set coordinate origin"><i class="icon-screenshot"></i></button>
 													</div>
 											   </div>
 
@@ -193,9 +193,9 @@
 
 
 												<div class="row-fluid print-control" style="display: none;" data-bind="visible: loginState.isUser">
-													<button class="btn btn-danger span4" data-bind="click: conversion.show_conversion_dialog, enable: state.isOperational() && state.isReady() && !isPrinting() && !isPaused() && loginState.isUser() && !workingArea.working_area_empty(), attr: {title: state.titlePrintButton}" id="job_print">
+													<button class="btn btn-danger span4" data-bind="click: conversion.show_conversion_dialog, enable: state.isOperational() && state.isReady() && !state.isPrinting() && !state.isPaused() && loginState.isUser() && !workingArea.working_area_empty(), attr: {title: state.titlePrintButton}" id="job_print">
 														<i class="icon-white icon-fire" data-bind="css: { 'wobble': state.isPrinting()}"></i> <span>{{ _('Laser') }}</span>
-														<!--<i class="icon-white" data-bind="css: {'icon-fire': !isPaused(), 'icon-undo': isPaused(), 'wobble': isPrinting()}"></i> <span data-bind="text: (isPaused() ? '{{ _('Restart') }}' : '{{ _('Laser') }}')">{{ _('Laser') }}</span>-->
+														<!--<i class="icon-white" data-bind="css: {'icon-fire': !state.isPaused(), 'icon-undo': isPaused(), 'wobble': isPrinting()}"></i> <span data-bind="text: (isPaused() ? '{{ _('Restart') }}' : '{{ _('Laser') }}')">{{ _('Laser') }}</span>-->
 													</button>
 													<button class="btn span4" id="job_pause" data-bind="click: state.pause, enable: state.isOperational() && (state.isPrinting() || state.isPaused()) && loginState.isUser(), css: {active: state.isPaused()}, attr: {title: state.titlePauseButton}"><i data-bind="css: {'icon-pause': !state.isPaused(), 'icon-play': state.isPaused()}"></i> <span data-bind="visible: !state.isPaused()">{{ _('Pause') }}</span><span data-bind="visible: state.isPaused()">{{ _('Resume') }}</span></button>
 													<button class="btn span4" id="job_cancel" data-bind="click: state.cancel, enable: state.isOperational() && (state.isPrinting() || state.isPaused()) && loginState.isUser()" title="{{ _('Cancels the job') }}"><i class="icon-stop"></i> {{ _('Cancel') }}</button>
@@ -667,8 +667,8 @@
 								</ul>
 								<div style="text-align:center">
 								<div class="btn-group" role="group" aria-label="focus mode control" style="">
-									<button id="btn_focus_on" class="btn btn-danger" data-bind="enable: state.isOperational() && !isPrinting() && loginState.isUser(), click: control.focus_on ">{{ _('Enable Focus') }}</button>
-									<button id="btn_focus_off" class="btn btn-default" data-bind="enable: state.isOperational() && !isPrinting() && loginState.isUser(), click: control.focus_off ">{{ _('Disable Focus') }}</button>
+									<button id="btn_focus_on" class="btn btn-danger" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: control.focus_on ">{{ _('Enable Focus') }}</button>
+									<button id="btn_focus_off" class="btn btn-default" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: control.focus_off ">{{ _('Disable Focus') }}</button>
 								</div>
 								</div>
 

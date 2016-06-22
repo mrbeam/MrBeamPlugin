@@ -70,6 +70,55 @@ $(function(){
 			self.state.isConnecting = ko.observable(undefined);
 		};
 		
+		self.fromCurrentData = function(data) {
+            self._fromData(data);
+        };
+
+        self.fromHistoryData = function(data) {
+            self._fromData(data);
+        };
+		
+		self._fromData = function (data) {
+			self._processStateData(data.state);
+//            self._processJobData(data.job);
+//            self._processProgressData(data.progress);
+//            self._processZData(data.currentZ);
+//            self._processBusyFiles(data.busyFiles);
+			self._processWPosData(data.workPosition);
+		};
+
+		self._processStateData = function (data) {
+//            var prevPaused = self.state.isPaused();
+//            self.stateString(gettext(data.text));
+//            self.isErrorOrClosed(data.flags.closedOrError);
+//            self.isOperational(data.flags.operational);
+//            self.isPaused(data.flags.paused);
+//            self.isPrinting(data.flags.printing);
+//            self.isError(data.flags.error);
+//            self.isReady(data.flags.ready);
+//            self.isSdReady(data.flags.sdReady);
+			self.state.isLocked(data.flags.locked);
+			self.state.isFlashing(data.flags.flashing);
+			self.state.isConnecting(data.text === "Connecting" || data.text === "Opening serial port");
+
+//            if (self.isPaused() != prevPaused) {
+//                if (self.isPaused()) {
+//                    self.titlePrintButton(self.TITLE_PRINT_BUTTON_PAUSED);
+//                    self.titlePauseButton(self.TITLE_PAUSE_BUTTON_PAUSED);
+//                } else {
+//                    self.titlePrintButton(self.TITLE_PRINT_BUTTON_UNPAUSED);
+//                    self.titlePauseButton(self.TITLE_PAUSE_BUTTON_UNPAUSED);
+//                }
+//            }
+		};
+
+		self._processWPosData = function (data) {
+			if (data == null) {
+				self.currentPos({x: 0, y: 0});
+			} else {
+				self.currentPos({x: data[0], y: data[1]});
+			}
+		};
 	}
 	
 	
