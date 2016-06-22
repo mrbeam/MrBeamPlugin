@@ -24,10 +24,6 @@ $(function(){
 		self.settings = params[1];
 		self.state = params[2];
 		self.files = params[3];
-		
-		self.state.currentPos = function(){
-			console.warn("dummy function TODO: implement");
-		};
 
 		self.log = [];
 
