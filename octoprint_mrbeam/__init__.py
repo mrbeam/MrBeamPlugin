@@ -16,27 +16,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				   octoprint.plugin.UiPlugin,
                    octoprint.plugin.TemplatePlugin):
 
-	##~~ SettingsPlugin mixin
-
-	def get_settings_defaults(self):
-		return dict(
-			# put your plugin's default settings here
-			# from old laser_safety_notes plugin
-			agreed_to_safety_notes=False
-		)
-
-	def on_settings_load(self):
-		# from old laser_safety_notes plugin
-		cfg = dict(
-			has_agreed = self._settings.get_boolean(["agreed_to_safety_notes"]),
-		)
-		return cfg
-
-	def on_settings_save(self, data):
-		# from old laser_safety_notes plugin
-		if "has_agreed" in data:
-			self._settings.set_boolean(["agreed_to_safety_notes"], data["has_agreed"])
-
 	##~~ AssetPlugin mixin
 
 	def get_assets(self):
