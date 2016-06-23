@@ -65,8 +65,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return dict(
 			js=["js/mother_viewmodel.js", "js/mrbeam.js", "js/working_area.js", 
 			"js/lib/snap.svg-min.js", "js/render_fills.js", "js/matrix_oven.js", "js/drag_scale_rotate.js", 
-			"js/convert.js", "js/gcode_parser.js", "js/lib/photobooth_min.js", "js/laserSafetyNotes.js"],
-			css=["css/mrbeam.css", "css/svgtogcode.css", "js/lasercutterprofiles.js"],
+			"js/convert.js", "js/gcode_parser.js", "js/lib/photobooth_min.js", "js/laserSafetyNotes.js", 
+			"js/lasercutterprofiles.js"],
+			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css"],
 			less=["less/mrbeam.less"]
 		)
 
@@ -296,9 +297,15 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 # can be overwritten via __plugin_xyz__ control properties. See the documentation for that.
 __plugin_name__ = "Mr Beam Plugin"
 
+
 def __plugin_load__():
 	global __plugin_implementation__
 	__plugin_implementation__ = MrBeamPlugin()
+
+	global __plugin_settings_overlay__ 
+	__plugin_settings_overlay__ = dict(
+		plugins = dict(_disabled=['cura', 'pluginmanager', 'announcementsplugin']) # eats dict | pfad.yml | callable
+	)
 
 	global __plugin_hooks__
 	__plugin_hooks__ = {

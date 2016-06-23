@@ -1,0 +1,11 @@
+#navbar_show_settings { display: none; }
+#settings_printerProfiles_link { display: none; }
+#settings_temperature_link { display: none; }
+#settings_gcodeScripts_link { display: none; }
+#settings_features_link { display: none; }
+#settings_webcam_link { display: none; }
+#settings_gcodegcodevisualizer_link { display: none; }
+#settings_api_link { display: none; }
+#settings_server_link { display: none; }
+#settings_folders_link { display: none; }
+#settings_appearance_link { display: none; }

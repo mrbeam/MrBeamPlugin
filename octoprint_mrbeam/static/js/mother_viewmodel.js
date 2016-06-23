@@ -121,6 +121,38 @@ $(function(){
 			});
 		};
 		
+		// settings.js extensions
+		self.settings.saveall = function(e, v){
+	//		$("#settings_save_btn").css("visibility", "visible");
+
+			$("#settingsTabs li.active").addClass('saveInProgress');
+			if(self.settings.savetimer !== undefined){
+				clearTimeout(self.settings.savetimer);
+			}
+			self.settings.savetimer = setTimeout(self.instantSaveData, 2000);
+		};
+		
+		self.settings.instantSaveData = function() {
+			var data = self.settings.collectData();
+			$.ajax({
+				url: API_BASEURL + "settings",
+				type: "POST",
+				dataType: "json",
+				contentType: "application/json; charset=UTF-8",
+				data: JSON.stringify(data),
+				success: function(response) {
+	//                self.fromResponse(response);
+	//                $("#settings_dialog").modal("hide");
+	//                $("#settings_save_btn").attr("disabled", "disabled");
+	//				$("#settings_save_btn").css("visibility", "hidden");
+					$("#settingsTabs li.active").removeClass('saveInProgress');
+					self.savetimer = undefined;
+				}
+			});
+		};
+		
+
+		
 
 		self.show_safety_glasses_warning = function (callback) {
 			

@@ -40,6 +40,7 @@
 						{% if "custom_bindings" not in data or data["custom_bindings"] %}<!-- /ko -->{% endif %}
 					{% endfor %}
 
+					<li><a href="#settings" data-toggle="tab"><i class="icon-wrench"></i></a></li>
 				</ul>
 			</div>
 		</nav>
@@ -57,7 +58,7 @@
 						<div class="row-fluid">
 
 							<div class="settings" >
-								{% include 'dialogs/settings.jinja2' %}
+								{% include 'settings.jinja2' %}
 							</div>
 
 						</div>
