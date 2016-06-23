@@ -44,10 +44,16 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	##~~ SettingsPlugin mixin
 
 	def get_settings_defaults(self):
-		return dict(current_profile_id = "_mrbeam_junior")
+		return dict(
+			current_profile_id = "_mrbeam_junior",
+			default_laser_intensity = 500,
+			default_laser_feedrate = 300,
+		)
 
 	def on_settings_load(self):
-		return dict(current_profile_id = self._settings.get(["current_profile_id"]))
+		return dict(
+			current_profile_id = self._settings.get(["current_profile_id"])
+		)
 
 	def on_settings_save(self, data):
 		if "workingAreaWidth" in data and data["workingAreaWidth"]:
