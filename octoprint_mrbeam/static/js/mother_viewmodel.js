@@ -12,17 +12,6 @@ $(function(){
 		self.workingArea = params[7];
 		self.conversion = params[8];
 
-		self.laserPos = ko.computed(function () {
-			if(typeof self.state.currentPos === "function"){
-				var pos = self.state.currentPos();
-				if (!pos) {
-					return "(?, ?)";
-				} else {
-					return "(" + pos.x + ", " + pos.y + ")";
-				}
-			}
-		}, this);
-
 		self.onStartup = function(){
 			// TODO fetch machine profile on start
 			//self.requestData(); 
@@ -68,6 +57,15 @@ $(function(){
 			self.state.feedrateOverride.extend({ rateLimit: 500 });
 			self.state.numberOfPasses = ko.observable(1);
 			self.state.isConnecting = ko.observable(undefined);
+			
+			self.state.laserPos = ko.computed(function () {
+				var pos = self.state.currentPos();
+				if (!pos) {
+					return "(?, ?)";
+				} else {
+					return "(" + pos.x + ", " + pos.y + ")";
+				}
+			}, this);
 		};
 		
 		self.fromCurrentData = function(data) {
@@ -80,36 +78,13 @@ $(function(){
 		
 		self._fromData = function (data) {
 			self._processStateData(data.state);
-//            self._processJobData(data.job);
-//            self._processProgressData(data.progress);
-//            self._processZData(data.currentZ);
-//            self._processBusyFiles(data.busyFiles);
 			self._processWPosData(data.workPosition);
 		};
 
 		self._processStateData = function (data) {
-//            var prevPaused = self.state.isPaused();
-//            self.stateString(gettext(data.text));
-//            self.isErrorOrClosed(data.flags.closedOrError);
-//            self.isOperational(data.flags.operational);
-//            self.isPaused(data.flags.paused);
-//            self.isPrinting(data.flags.printing);
-//            self.isError(data.flags.error);
-//            self.isReady(data.flags.ready);
-//            self.isSdReady(data.flags.sdReady);
 			self.state.isLocked(data.flags.locked);
 			self.state.isFlashing(data.flags.flashing);
 			self.state.isConnecting(data.text === "Connecting" || data.text === "Opening serial port");
-
-//            if (self.isPaused() != prevPaused) {
-//                if (self.isPaused()) {
-//                    self.titlePrintButton(self.TITLE_PRINT_BUTTON_PAUSED);
-//                    self.titlePauseButton(self.TITLE_PAUSE_BUTTON_PAUSED);
-//                } else {
-//                    self.titlePrintButton(self.TITLE_PRINT_BUTTON_UNPAUSED);
-//                    self.titlePauseButton(self.TITLE_PAUSE_BUTTON_UNPAUSED);
-//                }
-//            }
 		};
 
 		self._processWPosData = function (data) {
@@ -146,31 +121,25 @@ $(function(){
 			});
 		};
 		
-		
-		// TODO replace with global method showConfirmationDialog
-		self.show_safety_glasses_warning = function (callback) {
-//			$('#confirmation_dialog .confirmation_dialog_message div').remove();
-//			jQuery('<div/>', {
-//				class: "safety_glasses_heads_up"
-//			}).appendTo("#confirmation_dialog .confirmation_dialog_message");
-//			jQuery('<div/>', {
-//				class: "safety_glasses_warning",
-//				text: gettext("The laser will now start. Protect yourself and everybody in the room appropriately before proceeding!")
-//			}).appendTo("#confirmation_dialog .confirmation_dialog_message");
-//			$("#confirmation_dialog .confirmation_dialog_acknowledge").unbind("click");
-//			$("#confirmation_dialog .confirmation_dialog_acknowledge").click(
-//					function (e) {
-//						if (typeof callback === 'function') {
-//                            self.state.resetOverrideSlider();
-//                            self.state.numberOfPasses(1);
-//							callback(e);
-							callback();
-//							$("#confirmation_dialog").modal("hide");
-//							$("#confirmation_dialog .confirmation_dialog_message").html('');
-//						}
-//					});
-//			$("#confirmation_dialog").modal("show");
 
+		self.show_safety_glasses_warning = function (callback) {
+			
+			var options = {};
+			options.title = gettext("Are you sure?");
+			options.message = gettext("The laser will now start. Protect yourself and everybody in the room appropriately before proceeding!");
+			options.question = gettext("Are you sure you want to proceed?");
+			options.cancel = gettext("Cancel");
+			options.proceed = gettext("Proceed");
+			options.proceedClass = "danger";
+			options.dialogClass = "safety_glasses_heads_up";
+			options.onproceed = function (e) {
+						if (typeof callback === 'function') {
+                            self.state.resetOverrideSlider();
+                            self.state.numberOfPasses(1);
+							callback(e);
+						}
+					};
+			showConfirmationDialog(options);
 		};
 
 		self.print_with_safety_glasses_warning = function () {

@@ -1712,15 +1712,15 @@ input.search-query,
 	height: 1px;
 }
 
-.safety_glasses_heads_up {
-	background-image:url(/plugin/mrbeam/static/img/safety_glasses_heads_up500.png);
-	background-repeat: no-repeat;
-	background-position: center;
-	background-size: contain;
-	width:250px;
-	height:150px;
-	float: right;
-	margin: 0em 1em;
+.safety_glasses_heads_up .modal-body p:first-of-type {
+    background-image: url(/plugin/mrbeam/static/img/safety_glasses_heads_up500.png);
+    background-repeat: no-repeat;
+    background-position: 100% 50%;
+    background-size: 30%;
+    min-height: 21vh;
+    padding-right: 30%;
+	font-weight: bold;
+    font-size: large;
 }
 
 .safety_glasses_warning {

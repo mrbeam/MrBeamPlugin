@@ -31,7 +31,7 @@
 											Do not power off the Machine during the flashing process.
                                         </div>
 										<div data-bind="visible: !state.isLocked() && !state.isFlashing() ">
-											{{ _('Position') }}: <strong data-bind="text: laserPos"></strong>
+											{{ _('Position') }}: <strong data-bind="text: state.laserPos"></strong>
 											<a href="#control_btns" style="margin-top: -5px;"
 											   class="btn btn-xs pull-right"
 											   data-toggle="collapse" aria-expanded="false">
