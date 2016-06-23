@@ -1,20 +1,60 @@
 # coding=utf-8
 from __future__ import absolute_import
 
-### (Don't forget to remove me)
-# This is a basic skeleton for your plugin's __init__.py. You probably want to adjust the class name of your plugin
-# as well as the plugin mixins it's subclassing from. This is really just a basic skeleton to get you started,
-# defining your plugin as a template plugin, settings and asset plugin. Feel free to add or remove mixins
-# as necessary.
-#
-# Take a look at the documentation on what other plugin mixins are available.
-
 import octoprint.plugin
+from octoprint.util import dict_merge
+from octoprint.server import NO_CONTENT
+
+from .profile import LaserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError
+
+import copy
+from octoprint.server.util.flask import restricted_access
+from flask import Blueprint, request, jsonify, make_response, url_for
+
 
 class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
                    octoprint.plugin.AssetPlugin,
 				   octoprint.plugin.UiPlugin,
-                   octoprint.plugin.TemplatePlugin):
+                   octoprint.plugin.TemplatePlugin,
+				   octoprint.plugin.BlueprintPlugin):
+
+	def __init(self):
+		self.laserCutterProfileManager = None
+
+	def initialized(self):
+		self.laserCutterProfileManager = LaserCutterProfileManager(self._settings)
+
+	def _convert_profiles(self, profiles):
+		result = dict()
+		for identifier, profile in profiles.items():
+			result[identifier] = self._convert_profile(profile)
+		return result
+
+	def _convert_profile(self, profile):
+		default = self.laserCutterProfileManager.get_default()["id"]
+		current = self.laserCutterProfileManager.get_current_or_default()["id"]
+
+		converted = copy.deepcopy(profile)
+		converted["resource"] = url_for(".laserCutterProfilesGet", identifier=profile["id"], _external=True)
+		converted["default"] = (profile["id"] == default)
+		converted["current"] = (profile["id"] == current)
+		return converted
+
+	##~~ SettingsPlugin mixin
+
+	def get_settings_defaults(self):
+		return dict(current_profile_id = "_mrbeam_junior")
+
+	def on_settings_load(self):
+		return dict(current_profile_id = self._settings.get(["current_profile_id"]))
+
+	def on_settings_save(self, data):
+		if "workingAreaWidth" in data and data["workingAreaWidth"]:
+			self._settings.set(["workingAreaWidth"], data["workingAreaWidth"])
+		if "zAxis" in data:
+			self._settings.set_boolean(["zAxis"], data["zAxis"])
+		selectedProfile = laserCutterProfileManager.get_current_or_default()
+		self._settings.set(["current_profile_id"], selectedProfile['id'])
 
 	##~~ AssetPlugin mixin
 
@@ -25,7 +65,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			js=["js/mother_viewmodel.js", "js/mrbeam.js", "js/working_area.js", 
 			"js/lib/snap.svg-min.js", "js/render_fills.js", "js/matrix_oven.js", "js/drag_scale_rotate.js", 
 			"js/convert.js", "js/gcode_parser.js", "js/lib/photobooth_min.js", "js/laserSafetyNotes.js"],
-			css=["css/mrbeam.css", "css/svgtogcode.css"],
+			css=["css/mrbeam.css", "css/svgtogcode.css", "js/lasercutterprofiles.js"],
 			less=["less/mrbeam.less"]
 		)
 
@@ -55,6 +95,135 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 now=now,
 							 ))
 		return make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
+
+	##~~ TemplatePlugin mixin
+
+	def get_template_configs(self):
+		return [dict(type = 'settings', name = "Machine Profiles", template='lasercutterprofiles_settings.jinja2', custom_bindings = False)]
+
+	##~~ BlueprintPlugin API
+
+	@octoprint.plugin.BlueprintPlugin.route("/profiles", methods=["GET"])
+	def laserCutterProfilesList(self):
+		all_profiles = laserCutterProfileManager.get_all()
+		return jsonify(dict(profiles=_convert_profiles(all_profiles)))
+
+	@octoprint.plugin.BlueprintPlugin.route("/profiles", methods=["POST"])
+	@restricted_access
+	def laserCutterProfilesAdd(self):
+		if not "application/json" in request.headers["Content-Type"]:
+			return make_response("Expected content-type JSON", 400)
+
+		try:
+			json_data = request.json
+		except JSONBadRequest:
+			return make_response("Malformed JSON body in request", 400)
+
+		if not "profile" in json_data:
+			return make_response("No profile included in request", 400)
+
+		base_profile = laserCutterProfileManager.get_default()
+		if "basedOn" in json_data and isinstance(json_data["basedOn"], basestring):
+			other_profile = laserCutterProfileManager.get(json_data["basedOn"])
+			if other_profile is not None:
+				base_profile = other_profile
+
+		if "id" in base_profile:
+			del base_profile["id"]
+		if "name" in base_profile:
+			del base_profile["name"]
+		if "default" in base_profile:
+			del base_profile["default"]
+
+		new_profile = json_data["profile"]
+		make_default = False
+		if "default" in new_profile:
+			make_default = True
+			del new_profile["default"]
+
+		profile = dict_merge(base_profile, new_profile)
+		try:
+			saved_profile = laserCutterProfileManager.save(profile, allow_overwrite=False, make_default=make_default)
+		except InvalidProfileError:
+			return make_response("Profile is invalid", 400)
+		except CouldNotOverwriteError:
+			return make_response("Profile already exists and overwriting was not allowed", 400)
+		#except Exception as e:
+		#	return make_response("Could not save profile: %s" % e.message, 500)
+		else:
+			return jsonify(dict(profile=_convert_profile(saved_profile)))
+
+	@octoprint.plugin.BlueprintPlugin.route("/profiles/<string:identifier>", methods=["GET"])
+	def laserCutterProfilesGet(self, identifier):
+		profile = laserCutterProfileManager.get(identifier)
+		if profile is None:
+			return make_response("Unknown profile: %s" % identifier, 404)
+		else:
+			return jsonify(_convert_profile(profile))
+
+	@octoprint.plugin.BlueprintPlugin.route("/profiles/<string:identifier>", methods=["DELETE"])
+	@restricted_access
+	def laserCutterProfilesDelete(self, identifier):
+		laserCutterProfileManager.remove(identifier)
+		return NO_CONTENT
+
+	@octoprint.plugin.BlueprintPlugin.route("/profiles/<string:identifier>", methods=["PATCH"])
+	@restricted_access
+	def laserCutterProfilesUpdate(self, identifier):
+		if not "application/json" in request.headers["Content-Type"]:
+			return make_response("Expected content-type JSON", 400)
+
+		try:
+			json_data = request.json
+		except JSONBadRequest:
+			return make_response("Malformed JSON body in request", 400)
+
+		if not "profile" in json_data:
+			return make_response("No profile included in request", 400)
+
+		profile = laserCutterProfileManager.get(identifier)
+		if profile is None:
+			profile = laserCutterProfileManager.get_default()
+
+		new_profile = json_data["profile"]
+		new_profile = dict_merge(profile, new_profile)
+
+		make_default = False
+		if "default" in new_profile:
+			make_default = True
+			del new_profile["default"]
+
+		# edit width and depth in grbl firmware
+		### TODO queu the commands if not in locked or operational mode
+		if make_default or (laserCutterProfileManager.get_current_or_default()['id'] == identifier):
+			if self._printer.is_locked() or self._printer.is_operational():
+				if "volume" in new_profile:
+					if "width" in new_profile["volume"]:
+						width = float(new_profile['volume']['width'])
+						if identifier == "_mrbeam_senior":
+							width *= 2
+						width += float(new_profile['volume']['origin_offset_x'])
+						self._printer.commands('$130=' + str(width))
+						time.sleep(0.1) ### TODO find better solution then sleep
+					if "depth" in new_profile["volume"]:
+						depth = float(new_profile['volume']['depth'])
+						if identifier == "_mrbeam_senior":
+							depth *= 2
+						depth += float(new_profile['volume']['origin_offset_y'])
+						self._printer.commands('$131=' + str(depth))
+
+		new_profile["id"] = identifier
+
+		try:
+			saved_profile = laserCutterProfileManager.save(new_profile, allow_overwrite=True, make_default=make_default)
+		except InvalidProfileError:
+			return make_response("Profile is invalid", 400)
+		except CouldNotOverwriteError:
+			return make_response("Profile already exists and overwriting was not allowed", 400)
+		#except Exception as e:
+		#	return make_response("Could not save profile: %s" % e.message, 500)
+		else:
+			return jsonify(dict(profile=_convert_profile(saved_profile)))
 											 
 	##~~ Softwareupdate hook
 	
