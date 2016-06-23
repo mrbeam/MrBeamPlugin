@@ -9,6 +9,7 @@ from .profile import LaserCutterProfileManager, InvalidProfileError, CouldNotOve
 
 import copy
 from octoprint.server.util.flask import restricted_access
+from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping
 from flask import Blueprint, request, jsonify, make_response, url_for
 
 
@@ -247,12 +248,48 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			)
 		)
 
-	def laser_factory(self, components):
+	def laser_factory(self, components, *args, **kwargs):
 		from .printer import Laser
 		return Laser(components['file_manager'], components['analysis_queue'], components['printer_profile_manager'])
 
-
-
+	def laser_filemanager(self, *args, **kwargs):
+		def _image_mime_detector(path):
+			p = path.lower()
+			if p.endswith('.jpg') or p.endswith('.jpeg') or p.endswith('.jpe'):
+				return 'image/jpeg' 
+			elif p.endswith('.png'):
+				return 'image/png' 
+			elif p.endswith('.gif'):
+				return 'image/gif' 
+			elif p.endswith('.bmp'):
+				return 'image/bmp' 
+			elif p.endswith('.pcx'):
+				return 'image/x-pcx' 
+			elif p.endswith('.'):
+				return 'image/webp'
+			
+		return dict(
+			# extensions for image / 3d model files
+			model=dict(
+				# TODO enable once 3d support is ready
+				#stl=ContentTypeMapping(["stl"], "application/sla"),
+				image=ContentTypeDetector(['jpg', 'jpeg', 'jpe', 'png', 'gif', 'bmp', 'pcx', 'webp'], _image_mime_detector),
+				svg=ContentTypeMapping(["svg"], "image/svg+xml")
+			),
+			# extensions for printable machine code
+			machinecode=dict(
+				gcode=ContentTypeMapping(["gcode", "gco", "g", "nc"], "text/plain")
+			)
+		)
+		
+#	def serve_url(self, server_routes, *args, **kwargs):
+#		from octoprint.server.util.tornado import LargeResponseHandler, path_validation_factory
+#		from octoprint.util import is_hidden_path
+#		return [(r"/serve/(.*)", LargeResponseHandler, 
+#			dict(path=self._settings.global_get_basefolder("uploads"),
+#            as_attachment=False,
+#            path_validation=path_validation_factory(lambda path: not is_hidden_path(path), status_code=404)))
+#		]
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
@@ -266,6 +303,8 @@ def __plugin_load__():
 	global __plugin_hooks__
 	__plugin_hooks__ = {
 		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
-		"octoprint.printer.factory": __plugin_implementation__.laser_factory
+		"octoprint.printer.factory": __plugin_implementation__.laser_factory,
+		"octoprint.filemanager.extension_tree": __plugin_implementation__.laser_filemanager,
+		#"octoprint.server.http.routes": __plugin_implementation__.serve_url
 	}
 

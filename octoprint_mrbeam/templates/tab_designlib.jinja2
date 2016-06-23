@@ -66,7 +66,7 @@
 													<div class="entry" data-bind="attr: { id: $root.getEntryId($data) }, template: { name: $root.templateFor($data), data: $data }"></div>
 												</div>
 
-													<script type="text/html" id="files_template_machinecode">
+													<script type="text/html" id="files_template_machinecode_gcode">
 														<div class="file_list_entry">
 															<i class="icon-cog file_list_icon file_list_entry_gcode"></i>
 															<div class="title muted dropdown" >
@@ -117,7 +117,7 @@
 														</div>
 													</script>
 
-													<script type="text/html" id="files_template_model_img">
+													<script type="text/html" id="files_template_model_image">
 														<div class="file_list_entry">
 															<i class="icon-camera file_list_icon"></i>
 															<div class="title muted dropdown" >
@@ -145,6 +145,11 @@
 													</script>
 
 													<script type="text/html" id="files_template_model_dummy">
+														<div class="file_list_entry">
+														</div>
+													</script>
+													
+													<script type="text/html" id="files_template_model_stl">
 														<div class="file_list_entry">
 														</div>
 													</script>

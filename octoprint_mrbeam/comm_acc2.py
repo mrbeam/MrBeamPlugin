@@ -830,7 +830,8 @@ class MachineCom(object):
 		eventManager().fire(Events.FILE_DESELECTED)
 		self._callback.on_comm_file_selected(None, None, False)
 
-	def startPrint(self):
+	def startPrint(self, *args, **kwargs):
+		# TODO implement pos kw argument for resuming prints
 		if not self.isOperational():
 			return
 
