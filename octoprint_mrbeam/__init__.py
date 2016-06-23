@@ -46,13 +46,19 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def get_settings_defaults(self):
 		return dict(
 			current_profile_id = "_mrbeam_junior",
-			default_laser_intensity = 500,
-			default_laser_feedrate = 300,
+			defaultIntensity = 500,
+			defaultFeedrate = 300,
+			svgDPI = 90,
+			svgtogcode_debug_logging = False,
 		)
 
 	def on_settings_load(self):
 		return dict(
-			current_profile_id = self._settings.get(["current_profile_id"])
+			current_profile_id = self._settings.get(["current_profile_id"]),
+			defaultIntensity = self._settings.get(['defaultIntensity']),
+			defaultFeedrate = self._settings.get(['defaultFeedrate']),
+			svgDPI = self._settings.get(['svgDPI']),
+			svgtogcode_debug_logging = self._settings.get(['svgtogcode_debug_logging']),
 		)
 
 	def on_settings_save(self, data):

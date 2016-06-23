@@ -5,25 +5,25 @@
         <div class="control-group">
             <label class="control-label" for="settings-svgtogcode-defaultIntensity">{{ _('Default Laser Intensity') }}</label>
             <div class="controls">
-                <input type="number" min="1" max="1000" class="input-block-level" data-bind="event: {change: saveall}, value: settings.plugins.svgtogcode.defaultIntensity">
+                <input type="number" min="1" max="1000" class="input-block-level" data-bind="value: settings.plugins.mrbeam.defaultIntensity">
             </div>
         </div>
         <div class="control-group">
             <label class="control-label" for="settings-svgtogcode-defaultFeedrate">{{ _('Default Laser Speed') }}</label>
             <div class="controls">
-                <input type="number" min="1" class="input-block-level" data-bind="event: {change: saveall}, value: settings.plugins.svgtogcode.defaultFeedrate">
+                <input type="number" min="1" class="input-block-level" data-bind="value: settings.plugins.mrbeam.defaultFeedrate">
             </div>
         </div>
         <div class="control-group">
             <label class="control-label" for="settings-svgtogcode-svgDPI">{{ _('SVG dpi') }}</label>
             <div class="controls">
-                <input type="text" class="input-block-level" data-bind="event: {change: saveall}, value: settings.plugins.svgtogcode.svgDPI">
+                <input type="number" min="0" class="input-block-level" data-bind="value: settings.plugins.mrbeam.svgDPI">
             </div>
         </div>
         <div class="control-group">
             <div class="controls">
                 <label class="checkbox">
-                    <input type="checkbox" data-bind="event: {change: saveall}, checked: settings.plugins.svgtogcode.debug_logging"> {{ _('Enable logging to plugin_svgtogcode.log') }}
+                    <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.svgtogcode_debug_logging"> {{ _('Enable logging to plugin_svgtogcode.log') }}
                 </label>
             </div>
         </div>

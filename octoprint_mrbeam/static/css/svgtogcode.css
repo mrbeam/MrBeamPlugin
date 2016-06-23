@@ -127,3 +127,7 @@ svg text {
 #manual_position.warning {
 	color: #DD0000;
 }
+
+#settings_svg_conversion input[type=number] {
+	max-width: 6em;
+}
