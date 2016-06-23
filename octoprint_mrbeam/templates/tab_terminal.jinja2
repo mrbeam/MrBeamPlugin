@@ -1,0 +1,137 @@
+
+				<div class="tab-pane" id="mrb_term">
+
+					<div class="container-fluid">
+						<div class="row-fluid">
+							<div class="span4 accordion">
+								<div class="accordion-group" >
+									<div class="accordion-heading">
+										<a class="accordion-toggle" ><i class="icon-filter"></i> {{ _('Terminal filters') }}</a>
+									</div>
+								</div>
+								<label class="checkbox">
+									<input type="checkbox" id="terminal-autoscroll" data-bind="checked: terminal.autoscrollEnabled"> {{ _('Autoscroll') }}
+								</label>
+								<div data-bind="foreach: terminal.filters">
+									<label class="checkbox">
+										<input type="checkbox" data-bind="attr: { value: regex }, checked: $parent.activeFilters"> <span data-bind="text: name"></span>
+									</label>
+								</div>
+
+								<div class="accordion-group" >
+									<div class="accordion-heading">
+										<a class="accordion-toggle" data-toggle="collapse" href="#gcode_reference"><i class="icon-info-sign"></i> {{ _('GCode reference') }}</a>
+									</div>
+								</div>
+								<div id="gcode_reference">
+									<ul>
+										<li>
+											<span class="gcommand">G0</span>:
+											<span class="desc">rapid position move</span>
+											<div class="params">parameters: X,Y</div>
+											<div class="example">example: G0 X100 Y0</div>
+										</li>
+										<li>
+											<span class="gcommand">F</span>:
+											<span class="desc">set feedrate for G1,G2,G3</span>
+											<div class="params">parameters: value</div>
+											<div class="example">example: F300</div>
+										</li>
+										<li>
+											<span class="gcommand">G1</span>:
+											<span class="desc">work move, line</span>
+											<div class="params">parameters: X,Y,F</div>
+											<div class="example">example: G1 X100 Y0 F800</div>
+										</li>
+										<li>
+											<span class="gcommand">G2</span>:
+											<span class="desc">work move, arc clockwise</span>
+											<div class="params">parameters: X,Y,I,J,F</div>
+											<div class="example">example: G2 X10 Y10 I8 J5</div>
+										</li>
+										<li>
+											<span class="gcommand">G3</span>:
+											<span class="desc">work move, arc counterclockwise</span>
+											<div class="params">parameters: X,Y,I,J,F</div>
+											<div class="example">example: G3 X10 Y10 I8 J5</div>
+										</li>
+										<li>
+											<span class="gcommand">G4</span>:
+											<span class="desc">dwell</span>
+											<div class="params">parameters: P</div>
+											<div class="example">example: G4 P0.5</div>
+										</li>
+										<li>
+											<span class="gcommand">M3</span>:
+											<span class="desc">laser on</span>
+											<div class="params">parameters: S</div>
+											<div class="example">example: M3 S10</div>
+										</li>
+										<li>
+											<span class="gcommand">M5</span>:
+											<span class="desc">laser off</span>
+											<div class="params">parameters: -</div>
+											<div class="example">example: M5</div>
+										</li>
+										<li>
+											<span class="gcommand">M8</span>:
+											<span class="desc">fan on</span>
+											<div class="params">parameters: -</div>
+											<div class="example">example: M8</div>
+										</li>
+										<li>
+											<span class="gcommand">M9</span>:
+											<span class="desc">fan off</span>
+											<div class="params">parameters: -</div>
+											<div class="example">example: M9</div>
+										</li>
+										<li>
+											<span class="gcommand">M2</span>:
+											<span class="desc">machine off</span>
+											<div class="params">parameters: -</div>
+											<div class="example">example: M2</div>
+										</li>
+										<li>
+											<span class="gcommand">G90</span>:
+											<span class="desc">absolute coordinate mode</span>
+											<div class="params">parameters: -</div>
+											<div class="example">example: G90</div>
+										</li>
+										<li>
+											<span class="gcommand">G91</span>:
+											<span class="desc">relative coordinate mode</span>
+											<div class="params">parameters: -</div>
+											<div class="example">example: G91</div>
+										</li>
+										<li>
+											<span class="gcommand">G92</span>:
+											<span class="desc">set coordinate origin</span>
+											<div class="params">parameters: X,Y</div>
+											<div class="example">example: G92 X0 Y0</div>
+										</li>
+										<li>
+											<span class="gcommand">G20</span>:
+											<span class="desc">set units to inches</span>
+											<div class="params">parameters: -</div>
+											<div class="example">example: G20</div>
+										</li>
+										<li>
+											<span class="gcommand">G21</span>:
+											<span class="desc">set units to millimeters</span>
+											<div class="params">parameters: -</div>
+											<div class="example">example: G21</div>
+										</li>
+									</ul>
+								</div>
+							</div>
+							<div class="span8 ">
+								<pre id="terminal-output" class="pre-scrollable" data-bind="foreach: terminal.displayedLines"><span data-bind="text: line, css: {muted: type == 'filtered'}"></span><br></pre>
+								<div class="input-append" style="display: none;" data-bind="visible: loginState.isUser">
+									<input type="text" id="terminal-command" style="width:88%;" data-bind="value: terminal.command, event: { keyup: function(d,e) { return terminal.handleKeyUp(e); }, keydown: function(d,e) { return terminal.handleKeyDown(e); } }, enable: (state.isOperational() || state.isLocked()) && loginState.isUser()">
+									<button class="btn" type="button" id="terminal-send" data-bind="click: terminal.sendCommandWithSafetyPopup, enable: (state.isOperational() || state.isLocked()) && loginState.isUser()">{{ _('Send') }}</button>
+								</div>
+							</div>
+
+						</div>
+					</div>
+				</div>

@@ -46,7 +46,7 @@ $(function(){
 					var x = parseFloat(tmp[0]);
 					var y = parseFloat(tmp[1]);
 					if(!isNaN(x) && !isNaN(y)) {
-						self.sendCustomCommand({type: 'command', command: "G0X"+x+"Y"+y});
+						self.control.sendCustomCommand({type: 'command', command: "G0X"+x+"Y"+y});
 						$('#manual_position').val('');
 					} else {
 						$('#manual_position').addClass('warning');

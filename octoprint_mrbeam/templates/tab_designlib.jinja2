@@ -1,0 +1,163 @@
+
+				<div class="tab-pane" id="designlib">
+					<div class="container-fluid">
+						<div class="row-fluid" id="files_accordion">
+							<div class="span4">
+								<ol>
+									<li>Add designs to your working area with the <i class="icon-ok"></i>-button</li>
+									<li>Afterwards switch back to the working area</li>
+
+								</ol>
+								<div class="">
+									<div class="accordion-heading">
+										<span class="accordion-toggle" ><i class="icon-list"></i> {{ _('Files') }}</span>
+										<!--<a class="accordion-toggle" data-toggle="collapse" href="#files_search" style="text-decoration: none;"><i class="icon-search dropdown-toggle"></i><span class="caret" style="margin: .5em;"></span></a>-->
+
+									</div>
+
+									<div id="files_search" class="">
+										<form class="form-search" data-bind="submit: performSearch">
+											<input type="text" style="width:90%;" class="input-block search-query" data-bind="value: searchQuery, valueUpdate: 'input'" placeholder="{{ _('Search...') }}">
+										</form>
+									</div>
+									<ul class="file_list_filter" id="files_filter">
+										<li><a href="#" data-bind="click: function() { $root.listHelper.changeSorting('name'); }"><i class="icon-ok" data-bind="style: {visibility: listHelper.currentSorting() == 'name' ? 'visible' : 'hidden'}"></i> {{ _('Sort by name') }} ({{ _('ascending') }})</a></li>
+										<li><a href="#" data-bind="click: function() { $root.listHelper.changeSorting('upload'); }"><i class="icon-ok" data-bind="style: {visibility: listHelper.currentSorting() == 'upload' ? 'visible' : 'hidden'}"></i> {{ _('Sort by upload date') }} ({{ _('descending') }})</a></li>
+										<li><a href="#" data-bind="click: function() { $root.listHelper.changeSorting('size'); }"><i class="icon-ok" data-bind="style: {visibility: listHelper.currentSorting() == 'size' ? 'visible' : 'hidden'}"></i> {{ _('Sort by file size') }} ({{ _('descending') }})</a></li>
+										<li class="divider"></li>
+										<li><a href="#" data-bind="click: function() { $root.listHelper.toggleFilter('machinecode'); }"><i class="icon-ok" data-bind="style: {visibility: _.contains(listHelper.currentFilters(), 'machinecode') ? 'visible' : 'hidden'}"></i> {{ _('Only show GCode files') }}</a></li>
+										<li><a href="#" data-bind="click: function() { $root.listHelper.toggleFilter('model'); }"><i class="icon-ok" data-bind="style: {visibility: _.contains(listHelper.currentFilters(), 'model') ? 'visible' : 'hidden'}"></i> {{ _('Only show design files') }}</a></li>
+										<li class="divider"></li>
+									</ul>
+									<div class="muted text-right">
+										<small>{{ _('Free') }}: <span data-bind="text: freeSpaceString"></span></small>
+									</div>
+									<div style="display: none;" data-bind="visible: loginState.isUser">
+										<div class="row-fluid upload-buttons">
+
+											<span class="btn btn-primary fileinput-button " data-bind="css: {disabled: !$root.loginState.isUser(), span12: !hasCamera(), span8: hasCamera()}" style="margin-bottom: 10px">
+												<i class="icon-upload-alt icon-white"></i>
+												<span>{{ _('Upload') }}</span>
+												<input id="gcode_upload" type="file" name="file" class="fileinput-button" data-bind="enable: loginState.isUser()">
+											</span>
+											<a class="btn btn-primary span4" href="#" role="button" data-bind="visible:hasCamera(), css: {disabled: !$root.loginState.isUser()}, click: takePhoto" >
+												<i class="icon-camera icon-white"></i>
+												<span>{{ _('Photo') }}</span>
+											</a>
+												
+										</div>
+										<div id="gcode_upload_progress" class="progress" style="width: 100%;">
+											<div class="bar" style="width: 0%"></div>
+										</div>
+										<div>
+											<small>{{ _('Hint: You can also drag and drop files on this page to upload them.') }}</small>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="span8">
+								<div class="designlib" >
+									<div id="files" >
+
+										<div  id="files_wrapper">
+											<div class="accordion-inner">
+
+												<div class="gcode_files" data-bind="slimScrolledForeach: listHelper.paginatedItems" >
+													<div class="entry" data-bind="attr: { id: $root.getEntryId($data) }, template: { name: $root.templateFor($data), data: $data }"></div>
+												</div>
+
+													<script type="text/html" id="files_template_machinecode">
+														<div class="file_list_entry">
+															<i class="icon-cog file_list_icon file_list_entry_gcode"></i>
+															<div class="title muted dropdown" >
+																<a type="button" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+																	<span data-bind="css: $root.getSuccessClass($data), style: { 'font-weight': $root.listHelper.isSelected($data) ? 'bold' : 'normal' }, text: name"></span>
+																	<span class="caret"></span>
+																</a>
+																<ul class="dropdown-menu" role="menu">
+																	<li><a class="" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i> {{ _('Download') }}</a></li>
+																	<li><a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFile($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a></li>
+																</ul>
+															</div>
+															<div class="uploaded">{{ _('Created') }}: <span data-bind="text: formatTimeAgo(date)"></span></div>
+															<div class="size">{{ _('Size') }}: <span data-bind="text: formatSize(size)"></span></div>
+															<div class="additionalInfo hide" data-bind="html: $root.getAdditionalData($data)"></div>
+															<div class="btn-group action-buttons">
+<!--																<a class="btn btn-mini" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i></a>
+																<a class="btn btn-mini" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFile($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i></a>-->
+																<div class="btn"  data-bind="click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeGcode($data); } }, css: {disabled: $root.workingArea.isPlaced($data)}"><i class="icon-ok" title="{{ _('Use') }}">Add</i></div>
+															</div>
+														</div>
+													</script>
+
+													<script type="text/html" id="files_template_model_svg">
+														<div class="file_list_entry">
+															<i class="icon-picture file_list_icon"></i>
+															<div class="title muted dropdown" >
+																<a type="button" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+																	<span  data-bind="text: name"></span>
+																	<span class="caret"></span>
+																</a>
+																<ul class="dropdown-menu" role="menu">
+																	<li>
+																		<a class="" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i> {{ _('Download') }}</a>
+																	</li>
+																	<li>
+																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFile($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
+																	</li>
+																</ul>
+															</div>
+															<div class="uploaded">{{ _('Uploaded') }}: <span data-bind="text: formatTimeAgo(date)"></span></div>
+															<div class="size">{{ _('Size') }}: <span data-bind="text: formatSize(size)"></span></div>
+															<div class="btn-group action-buttons">
+<!--																<a class="btn btn-mini" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i></a>
+																<div class="btn btn-mini" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFile($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i></div>-->
+																<div class="btn" data-bind="click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeSVG($data); } }, css: {disabled: $root.workingArea.isPlaced($data)}"><i class="icon-ok" title="{{ _('Use') }}">Add</i></div>
+															</div>
+														</div>
+													</script>
+
+													<script type="text/html" id="files_template_model_img">
+														<div class="file_list_entry">
+															<i class="icon-camera file_list_icon"></i>
+															<div class="title muted dropdown" >
+																<a type="button" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+																	<span  data-bind="text: name"></span>
+																	<span class="caret"></span>
+																</a>
+																<ul class="dropdown-menu" role="menu">
+																	<li>
+																		<a class="" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i> {{ _('Download') }}</a>
+																	</li>
+																	<li>
+																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFile($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
+																	</li>
+																</ul>
+															</div>
+															<div class="uploaded">{{ _('Uploaded') }}: <span data-bind="text: formatTimeAgo(date)"></span></div>
+															<div class="size">{{ _('Size') }}: <span data-bind="text: formatSize(size)"></span></div>
+															<div class="btn-group action-buttons">
+<!--																<a class="btn btn-mini" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i></a>
+																<div class="btn btn-mini" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFile($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i></div>-->
+																<div class="btn" data-bind="click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeIMG($data); } }, css: {disabled: $root.workingArea.isPlaced($data)}"><i class="icon-ok" title="{{ _('Use') }}">Add</i></div>
+															</div>
+														</div>
+													</script>
+
+													<script type="text/html" id="files_template_model_dummy">
+														<div class="file_list_entry">
+														</div>
+													</script>
+
+													<script type="text/html" id="files_template_folder">
+														<div class="title" data-bind="text: name"></div>
+													</script>
+
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
