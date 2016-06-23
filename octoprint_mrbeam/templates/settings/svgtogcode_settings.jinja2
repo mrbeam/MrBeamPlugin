@@ -1,0 +1,31 @@
+<div id="settings_svg_conversion" xdata-bind="allowBindings: true">
+    <h4>{{ _('Default settings') }}</h4>
+
+    <form class="form-horizontal">
+        <div class="control-group">
+            <label class="control-label" for="settings-svgtogcode-defaultIntensity">{{ _('Default Laser Intensity') }}</label>
+            <div class="controls">
+                <input type="number" min="1" max="1000" class="input-block-level" data-bind="event: {change: saveall}, value: settings.plugins.svgtogcode.defaultIntensity">
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="settings-svgtogcode-defaultFeedrate">{{ _('Default Laser Speed') }}</label>
+            <div class="controls">
+                <input type="number" min="1" class="input-block-level" data-bind="event: {change: saveall}, value: settings.plugins.svgtogcode.defaultFeedrate">
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="settings-svgtogcode-svgDPI">{{ _('SVG dpi') }}</label>
+            <div class="controls">
+                <input type="text" class="input-block-level" data-bind="event: {change: saveall}, value: settings.plugins.svgtogcode.svgDPI">
+            </div>
+        </div>
+        <div class="control-group">
+            <div class="controls">
+                <label class="checkbox">
+                    <input type="checkbox" data-bind="event: {change: saveall}, checked: settings.plugins.svgtogcode.debug_logging"> {{ _('Enable logging to plugin_svgtogcode.log') }}
+                </label>
+            </div>
+        </div>
+    </form>
+</div>

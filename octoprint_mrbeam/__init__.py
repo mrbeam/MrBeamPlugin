@@ -57,6 +57,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		selectedProfile = laserCutterProfileManager.get_current_or_default()
 		self._settings.set(["current_profile_id"], selectedProfile['id'])
 
+
+
 	##~~ AssetPlugin mixin
 
 	def get_assets(self):
@@ -101,7 +103,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	##~~ TemplatePlugin mixin
 
 	def get_template_configs(self):
-		return [dict(type = 'settings', name = "Machine Profiles", template='lasercutterprofiles_settings.jinja2', custom_bindings = False)]
+		return [
+			dict(type = 'settings', name = "Machine Profiles", template='settings/lasercutterprofiles_settings.jinja2', suffix="_lasercutterprofiles", custom_bindings = False),
+			dict(type = 'settings', name = "SVG Conversion", template='settings/svgtogcode_settings.jinja2', suffix="_conversion", custom_bindings = False)
+		]
 
 	##~~ BlueprintPlugin API
 
@@ -304,7 +309,7 @@ def __plugin_load__():
 
 	global __plugin_settings_overlay__ 
 	__plugin_settings_overlay__ = dict(
-		plugins = dict(_disabled=['cura', 'pluginmanager', 'announcementsplugin']) # eats dict | pfad.yml | callable
+		plugins = dict(_disabled=['cura', 'pluginmanager', 'announcements']) # eats dict | pfad.yml | callable
 	)
 
 	global __plugin_hooks__
