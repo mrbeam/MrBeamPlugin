@@ -22,7 +22,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def __init(self):
 		self.laserCutterProfileManager = None
 
-	def initialized(self):
+	def initialize(self):
 		self.laserCutterProfileManager = LaserCutterProfileManager(self._settings)
 
 	def _convert_profiles(self, profiles):
@@ -126,7 +126,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@octoprint.plugin.BlueprintPlugin.route("/profiles", methods=["GET"])
 	def laserCutterProfilesList(self):
 		all_profiles = self.laserCutterProfileManager.get_all()
-		return jsonify(dict(profiles=_convert_profiles(all_profiles)))
+		return jsonify(dict(profiles=self._convert_profiles(all_profiles)))
 
 	@octoprint.plugin.BlueprintPlugin.route("/profiles", methods=["POST"])
 	@restricted_access
