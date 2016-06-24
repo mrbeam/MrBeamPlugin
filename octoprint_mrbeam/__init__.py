@@ -318,7 +318,13 @@ def __plugin_load__():
 
 	global __plugin_settings_overlay__ 
 	__plugin_settings_overlay__ = dict(
-		plugins = dict(_disabled=['cura', 'pluginmanager', 'announcements']) # eats dict | pfad.yml | callable
+		plugins = dict(
+			_disabled=['cura', 'pluginmanager', 'announcements']), # eats dict | pfad.yml | callable
+			terminalFilters=[
+				{ "name": "Suppress position requests" , "regex": "(Send: \?)" },
+				{ "name": "Suppress confirmations" , "regex": "(Recv: ok)" },
+				{ "name": "Suppress status messages" , "regex": "(Recv: <)" },
+			],
 	)
 
 	global __plugin_hooks__
