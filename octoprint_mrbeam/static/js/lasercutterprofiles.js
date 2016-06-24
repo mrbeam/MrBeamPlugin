@@ -81,7 +81,7 @@ $(function() {
 
     self.requestData = function() {
         $.ajax({
-            url: BASEURL + "plugin/lasercutterprofiles/profiles",
+            url: BASEURL + "plugin/mrbeam/profiles",
             type: "GET",
             dataType: "json",
             success: self.fromResponse
@@ -119,7 +119,7 @@ $(function() {
     self.addProfile = function(callback) {
         var profile = self._editorData();
         $.ajax({
-            url: BASEURL + "plugin/lasercutterprofiles/profiles",
+            url: BASEURL + "plugin/mrbeam/profiles",
             type: "POST",
             dataType: "json",
             contentType: "application/json; charset=UTF-8",
@@ -148,7 +148,7 @@ $(function() {
         }
 		
         $.ajax({
-            url: BASEURL + "plugin/lasercutterprofiles/profiles/" + profile.id,
+            url: BASEURL + "plugin/mrbeam/profiles/" + profile.id,
             type: "PATCH",
             dataType: "json",
             contentType: "application/json; charset=UTF-8",

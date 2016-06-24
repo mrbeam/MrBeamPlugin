@@ -122,9 +122,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	##~~ BlueprintPlugin API
 
+	# Laser cutter profiles
 	@octoprint.plugin.BlueprintPlugin.route("/profiles", methods=["GET"])
 	def laserCutterProfilesList(self):
-		all_profiles = laserCutterProfileManager.get_all()
+		all_profiles = self.laserCutterProfileManager.get_all()
 		return jsonify(dict(profiles=_convert_profiles(all_profiles)))
 
 	@octoprint.plugin.BlueprintPlugin.route("/profiles", methods=["POST"])
@@ -141,9 +142,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if not "profile" in json_data:
 			return make_response("No profile included in request", 400)
 
-		base_profile = laserCutterProfileManager.get_default()
+		base_profile = self.laserCutterProfileManager.get_default()
 		if "basedOn" in json_data and isinstance(json_data["basedOn"], basestring):
-			other_profile = laserCutterProfileManager.get(json_data["basedOn"])
+			other_profile = self.laserCutterProfileManager.get(json_data["basedOn"])
 			if other_profile is not None:
 				base_profile = other_profile
 
@@ -162,7 +163,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		profile = dict_merge(base_profile, new_profile)
 		try:
-			saved_profile = laserCutterProfileManager.save(profile, allow_overwrite=False, make_default=make_default)
+			saved_profile = self.laserCutterProfileManager.save(profile, allow_overwrite=False, make_default=make_default)
 		except InvalidProfileError:
 			return make_response("Profile is invalid", 400)
 		except CouldNotOverwriteError:
@@ -174,17 +175,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	@octoprint.plugin.BlueprintPlugin.route("/profiles/<string:identifier>", methods=["GET"])
 	def laserCutterProfilesGet(self, identifier):
-		profile = laserCutterProfileManager.get(identifier)
+		profile = self.laserCutterProfileManager.get(identifier)
 		if profile is None:
 			return make_response("Unknown profile: %s" % identifier, 404)
 		else:
 			return jsonify(_convert_profile(profile))
 
-	@octoprint.plugin.BlueprintPlugin.route("/profiles/<string:identifier>", methods=["DELETE"])
-	@restricted_access
-	def laserCutterProfilesDelete(self, identifier):
-		laserCutterProfileManager.remove(identifier)
-		return NO_CONTENT
 
 	@octoprint.plugin.BlueprintPlugin.route("/profiles/<string:identifier>", methods=["PATCH"])
 	@restricted_access
@@ -200,9 +196,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if not "profile" in json_data:
 			return make_response("No profile included in request", 400)
 
-		profile = laserCutterProfileManager.get(identifier)
+		profile = self.laserCutterProfileManager.get(identifier)
 		if profile is None:
-			profile = laserCutterProfileManager.get_default()
+			profile = self.laserCutterProfileManager.get_default()
 
 		new_profile = json_data["profile"]
 		new_profile = dict_merge(profile, new_profile)
@@ -214,7 +210,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		# edit width and depth in grbl firmware
 		### TODO queu the commands if not in locked or operational mode
-		if make_default or (laserCutterProfileManager.get_current_or_default()['id'] == identifier):
+		if make_default or (self.laserCutterProfileManager.get_current_or_default()['id'] == identifier):
 			if self._printer.is_locked() or self._printer.is_operational():
 				if "volume" in new_profile:
 					if "width" in new_profile["volume"]:
@@ -234,7 +230,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		new_profile["id"] = identifier
 
 		try:
-			saved_profile = laserCutterProfileManager.save(new_profile, allow_overwrite=True, make_default=make_default)
+			saved_profile = self.laserCutterProfileManager.save(new_profile, allow_overwrite=True, make_default=make_default)
 		except InvalidProfileError:
 			return make_response("Profile is invalid", 400)
 		except CouldNotOverwriteError:
@@ -266,6 +262,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			)
 		)
 
+	# inject a Laser object instead the original Printer from standard.py
 	def laser_factory(self, components, *args, **kwargs):
 		from .printer import Laser
 		return Laser(components['file_manager'], components['analysis_queue'], components['printer_profile_manager'])
