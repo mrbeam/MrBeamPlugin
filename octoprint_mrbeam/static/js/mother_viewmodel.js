@@ -120,6 +120,22 @@ $(function(){
 				self.gcodefiles.loadFile(gcodeFile, true);
 			});
 		};
+
+		self.gcodefiles.takePhoto = function () {
+				$('#take_photo_dialog').modal("show");
+			};
+
+		self.gcodefiles.hasCamera = function () {
+				var fGetUserMedia = (
+						navigator.getUserMedia ||
+						navigator.webkitGetUserMedia ||
+						navigator.mozGetUserMedia ||
+						navigator.oGetUserMedia ||
+						navigator.msieGetUserMedia ||
+						false
+						);
+				return !!fGetUserMedia;
+			};
 		
 		// settings.js extensions		
 		self.settings.saveall = function(e, v){
@@ -185,6 +201,7 @@ $(function(){
 			document.getElementById("mrb_state_wrapper"),
 			document.getElementById("mrb_term"),
 			document.getElementById("focus"),
+			document.getElementById("design_lib_search"),
 		]]);
 
 		// third party model binding
