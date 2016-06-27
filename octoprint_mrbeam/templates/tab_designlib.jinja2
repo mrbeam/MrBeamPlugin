@@ -16,31 +16,31 @@
 									</div>
 
 									<div id="files_search" class="">
-										<form class="form-search" data-bind="submit: gcodefiles.performSearch">
-											<input type="text" style="width:90%;" class="input-block search-query" data-bind="value: gcodefiles.searchQuery, valueUpdate: 'input'" placeholder="{{ _('Search...') }}">
+										<form class="form-search" data-bind="submit: performSearch">
+											<input type="text" style="width:90%;" class="input-block search-query" data-bind="value: searchQuery, valueUpdate: 'input'" placeholder="{{ _('Search...') }}">
 										</form>
 									</div>
 									<ul class="file_list_filter" id="files_filter">
-										<li><a href="#" data-bind="click: function() { $root.gcodefiles.listHelper.changeSorting('name'); }"><i class="icon-ok" data-bind="style: {visibility: gcodefiles.listHelper.currentSorting() == 'name' ? 'visible' : 'hidden'}"></i> {{ _('Sort by name') }} ({{ _('ascending') }})</a></li>
-										<li><a href="#" data-bind="click: function() { $root.gcodefiles.listHelper.changeSorting('upload'); }"><i class="icon-ok" data-bind="style: {visibility: gcodefiles.listHelper.currentSorting() == 'upload' ? 'visible' : 'hidden'}"></i> {{ _('Sort by upload date') }} ({{ _('descending') }})</a></li>
-										<li><a href="#" data-bind="click: function() { $root.gcodefiles.listHelper.changeSorting('size'); }"><i class="icon-ok" data-bind="style: {visibility: gcodefiles.listHelper.currentSorting() == 'size' ? 'visible' : 'hidden'}"></i> {{ _('Sort by file size') }} ({{ _('descending') }})</a></li>
+										<li><a href="#" data-bind="click: function() { $root.listHelper.changeSorting('name'); }"><i class="icon-ok" data-bind="style: {visibility: listHelper.currentSorting() == 'name' ? 'visible' : 'hidden'}"></i> {{ _('Sort by name') }} ({{ _('ascending') }})</a></li>
+										<li><a href="#" data-bind="click: function() { $root.listHelper.changeSorting('upload'); }"><i class="icon-ok" data-bind="style: {visibility: listHelper.currentSorting() == 'upload' ? 'visible' : 'hidden'}"></i> {{ _('Sort by upload date') }} ({{ _('descending') }})</a></li>
+										<li><a href="#" data-bind="click: function() { $root.listHelper.changeSorting('size'); }"><i class="icon-ok" data-bind="style: {visibility: listHelper.currentSorting() == 'size' ? 'visible' : 'hidden'}"></i> {{ _('Sort by file size') }} ({{ _('descending') }})</a></li>
 										<li class="divider"></li>
-										<li><a href="#" data-bind="click: function() { $root.gcodefiles.listHelper.toggleFilter('machinecode'); }"><i class="icon-ok" data-bind="style: {visibility: _.contains(gcodefiles.listHelper.currentFilters(), 'machinecode') ? 'visible' : 'hidden'}"></i> {{ _('Only show GCode files') }}</a></li>
-										<li><a href="#" data-bind="click: function() { $root.gcodefiles.listHelper.toggleFilter('model'); }"><i class="icon-ok" data-bind="style: {visibility: _.contains(gcodefiles.listHelper.currentFilters(), 'model') ? 'visible' : 'hidden'}"></i> {{ _('Only show design files') }}</a></li>
+										<li><a href="#" data-bind="click: function() { $root.listHelper.toggleFilter('machinecode'); }"><i class="icon-ok" data-bind="style: {visibility: _.contains(listHelper.currentFilters(), 'machinecode') ? 'visible' : 'hidden'}"></i> {{ _('Only show GCode files') }}</a></li>
+										<li><a href="#" data-bind="click: function() { $root.listHelper.toggleFilter('model'); }"><i class="icon-ok" data-bind="style: {visibility: _.contains(listHelper.currentFilters(), 'model') ? 'visible' : 'hidden'}"></i> {{ _('Only show design files') }}</a></li>
 										<li class="divider"></li>
 									</ul>
 									<div class="muted text-right">
-										<small>{{ _('Free') }}: <span data-bind="text: gcodefiles.freeSpaceString"></span></small>
+										<small>{{ _('Free') }}: <span data-bind="text: freeSpaceString"></span></small>
 									</div>
 									<div style="display: none;" data-bind="visible: loginState.isUser">
 										<div class="row-fluid upload-buttons">
 
-											<span class="btn btn-primary fileinput-button " data-bind="css: {disabled: !$root.loginState.isUser(), span12: !gcodefiles.hasCamera(), span8: gcodefiles.hasCamera()}" style="margin-bottom: 10px">
+											<span class="btn btn-primary fileinput-button " data-bind="css: {disabled: !$root.loginState.isUser(), span12: !hasCamera(), span8: hasCamera()}" style="margin-bottom: 10px">
 												<i class="icon-upload-alt icon-white"></i>
 												<span>{{ _('Upload') }}</span>
 												<input id="gcode_upload" type="file" name="file" class="fileinput-button" data-bind="enable: loginState.isUser()">
 											</span>
-											<a class="btn btn-primary span4" href="#" role="button" data-bind="visible:gcodefiles.hasCamera(), css: {disabled: !$root.loginState.isUser()}, click: gcodefiles.takePhoto" >
+											<a class="btn btn-primary span4" href="#" role="button" data-bind="visible:hasCamera(), css: {disabled: !$root.loginState.isUser()}, click: takePhoto" >
 												<i class="icon-camera icon-white"></i>
 												<span>{{ _('Photo') }}</span>
 											</a>

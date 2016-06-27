@@ -200,11 +200,10 @@ $(function(){
 			document.getElementById("mrb_connection_wrapper"),
 			document.getElementById("mrb_state_wrapper"),
 			document.getElementById("mrb_term"),
-			document.getElementById("focus"),
-			document.getElementById("design_lib_search"),
+			document.getElementById("focus")
 		]]);
 
 		// third party model binding
-	//OCTOPRINT_ADDITIONAL_BINDINGS.push(['loginStateViewModel', ["#state_wrapper"]]);
+	OCTOPRINT_ADDITIONAL_BINDINGS.push(['gcodeFilesViewModel', ["#design_lib_search"]]);
 });
 
