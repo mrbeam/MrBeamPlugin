@@ -62,7 +62,7 @@
 										<div  id="files_wrapper">
 											<div class="accordion-inner">
 
-												<div class="gcode_files" data-bind="slimScrolledForeach: listHelper.paginatedItems" >
+												<div class="gcode_files" data-bind="slimScrolledForeach: filesOnlyList" >
 													<div class="entry" data-bind="attr: { id: $root.getEntryId($data) }, template: { name: $root.templateFor($data), data: $data }"></div>
 												</div>
 
