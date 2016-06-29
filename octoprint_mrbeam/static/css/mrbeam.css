@@ -1716,9 +1716,9 @@ input.search-query,
     background-image: url(/plugin/mrbeam/static/img/safety_glasses_heads_up500.png);
     background-repeat: no-repeat;
     background-position: 100% 50%;
-    background-size: 30%;
+    background-size: 50%;
     min-height: 21vh;
-    padding-right: 30%;
+    padding-right: 40%;
 	font-weight: bold;
     font-size: large;
 }
