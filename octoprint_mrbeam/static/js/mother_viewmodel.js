@@ -137,7 +137,8 @@ $(function(){
 				return !!fGetUserMedia;
 			};
 		
-		// settings.js extensions		
+		// settings.js viewmodel extensions
+		
 		self.settings.saveall = function(e, v){
 			$("#settingsTabs li.active").addClass('saveInProgress');
 			if(self.settings.savetimer !== undefined){
@@ -151,13 +152,9 @@ $(function(){
 			}, 2000);
 		};
 		
-		// TODO check selector
-		$('#settings_dialog_content input').on('change', function(){ 
+		$('#settings_dialog_content').has('input, select, textarea').on('change', function(){
 			self.settings.saveall();
 		});
-		
-		
-
 		
 
 		self.show_safety_glasses_warning = function (callback) {
@@ -187,7 +184,6 @@ $(function(){
 			};
 			self.show_safety_glasses_warning(callback);
 		};
-		
 	}
 	
 	
@@ -203,7 +199,7 @@ $(function(){
 			document.getElementById("focus")
 		]]);
 
-		// third party model binding
+	// third party model binding
 	OCTOPRINT_ADDITIONAL_BINDINGS.push(['gcodeFilesViewModel', ["#design_lib_search"]]);
 });
 
