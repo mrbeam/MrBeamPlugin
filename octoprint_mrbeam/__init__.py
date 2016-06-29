@@ -98,7 +98,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		
 		enable_accesscontrol = self._user_manager.enabled
 		accesscontrol_active = enable_accesscontrol and self._user_manager.hasBeenCustomized()
-		
+
+		# render_kwargs["templates"]["settings"]["entries"]["serial"][1]["template"] = "settings/serialconnection.jinja2"
+
 		render_kwargs.update(dict(
 							 webcamStream=self._settings.global_get(["webcam", "stream"]),
 							 enableTemperatureGraph=False,
@@ -117,7 +119,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def get_template_configs(self):
 		return [
 			dict(type = 'settings', name = "Machine Profiles", template='settings/lasercutterprofiles_settings.jinja2', suffix="_lasercutterprofiles", custom_bindings = False),
-			dict(type = 'settings', name = "SVG Conversion", template='settings/svgtogcode_settings.jinja2', suffix="_conversion", custom_bindings = False)
+			dict(type = 'settings', name = "SVG Conversion", template='settings/svgtogcode_settings.jinja2', suffix="_conversion", custom_bindings = False),
+			dict(type = 'settings', name = "Serial Connection", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings= False, replaces='serial')
 		]
 
 	##~~ BlueprintPlugin API
