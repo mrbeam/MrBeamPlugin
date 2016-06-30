@@ -67,6 +67,23 @@ $(function(){
 				}
 			}, this);
 		};
+
+		self.onAllBound = function(allViewModels) {
+		  	var tabs = $('#mrbeam-main-tabs a[data-toggle="tab"]');
+			tabs.on('show', function (e) {
+				var current = e.target.hash;
+				var previous = e.relatedTarget.hash;
+				log.debug("Selected OctoPrint tab changed: previous = " + previous + ", current = " + current);
+				OctoPrint.coreui.selectedTab = current;
+				callViewModels(allViewModels, "onTabChange", [current, previous]);
+		  	});
+
+			tabs.on('shown', function (e) {
+				var current = e.target.hash;
+				var previous = e.relatedTarget.hash;
+				callViewModels(allViewModels, "onAfterTabChange", [current, previous]);
+			});
+		};
 		
 		self.fromCurrentData = function(data) {
             self._fromData(data);
@@ -155,6 +172,11 @@ $(function(){
 		$('#settings_dialog_content').has('input, select, textarea').on('change', function(){
 			self.settings.saveall();
 		});
+
+		self.terminal.onAfterTabChange = function(current, previous) {
+            self.terminal.tabActive = current == "#mrb_term";
+            self.terminal.updateOutput();
+        };
 		
 
 		self.show_safety_glasses_warning = function (callback) {
