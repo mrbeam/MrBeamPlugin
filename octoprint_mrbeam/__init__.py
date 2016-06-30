@@ -174,7 +174,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		#except Exception as e:
 		#	return make_response("Could not save profile: %s" % e.message, 500)
 		else:
-			return jsonify(dict(profile=_convert_profile(saved_profile)))
+			return jsonify(dict(profile=self._convert_profile(saved_profile)))
 
 	@octoprint.plugin.BlueprintPlugin.route("/profiles/<string:identifier>", methods=["GET"])
 	def laserCutterProfilesGet(self, identifier):
@@ -182,8 +182,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if profile is None:
 			return make_response("Unknown profile: %s" % identifier, 404)
 		else:
-			return jsonify(_convert_profile(profile))
+			return jsonify(self._convert_profile(profile))
 
+	@octoprint.plugin.BlueprintPlugin.route("/profiles/<string:identifier>", methods=["DELETE"])
+	@restricted_access
+	def laserCutterProfilesDelete(self, identifier):
+		self.laserCutterProfileManager.remove(identifier)
+		return NO_CONTENT
 
 	@octoprint.plugin.BlueprintPlugin.route("/profiles/<string:identifier>", methods=["PATCH"])
 	@restricted_access
@@ -241,7 +246,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		#except Exception as e:
 		#	return make_response("Could not save profile: %s" % e.message, 500)
 		else:
-			return jsonify(dict(profile=_convert_profile(saved_profile)))
+			return jsonify(dict(profile=self._convert_profile(saved_profile)))
 											 
 	##~~ Softwareupdate hook
 	
