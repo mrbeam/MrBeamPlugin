@@ -323,6 +323,21 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				gcode=ContentTypeMapping(["gcode", "gco", "g", "nc"], "text/plain")
 			)
 		)
+
+	def get_update_information(self):
+		return dict(
+			updateplugindemo=dict(
+				displayName=self._plugin_name,
+				displayVersion=self._plugin_version,
+
+				type="github_release",
+				current=self._plugin_version,
+				user="mrbeam",
+				repo="MrBeamPlugin",
+
+				pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip"
+			)
+		)
 		
 #	def serve_url(self, server_routes, *args, **kwargs):
 #		from octoprint.server.util.tornado import LargeResponseHandler, path_validation_factory
@@ -343,7 +358,7 @@ def __plugin_load__():
 	global __plugin_implementation__
 	__plugin_implementation__ = MrBeamPlugin()
 
-	global __plugin_settings_overlay__ 
+	global __plugin_settings_overlay__
 	__plugin_settings_overlay__ = dict(
 		plugins = dict(
 			_disabled=['cura', 'pluginmanager', 'announcements']), # eats dict | pfad.yml | callable
@@ -359,6 +374,7 @@ def __plugin_load__():
 		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
 		"octoprint.printer.factory": __plugin_implementation__.laser_factory,
 		"octoprint.filemanager.extension_tree": __plugin_implementation__.laser_filemanager,
+		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information
 		#"octoprint.server.http.routes": __plugin_implementation__.serve_url
 	}
 
