@@ -8,6 +8,7 @@ from octoprint.server import NO_CONTENT
 from .profile import LaserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError
 
 import copy
+import time
 from octoprint.server.util.flask import restricted_access
 from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping
 from flask import Blueprint, request, jsonify, make_response, url_for
