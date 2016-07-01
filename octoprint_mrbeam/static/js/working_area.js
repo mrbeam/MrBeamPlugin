@@ -126,7 +126,7 @@ $(function(){
 					type: "POST",
 					dataType: "json",
 					contentType: "application/json; charset=UTF8",
-					data: JSON.stringify({"command": "position", x:coord.x, y:coord.y})
+					data: JSON.stringify({"command": "position", x:parseFloat(coord.x.toFixed(2)), y:parseFloat(coord.y.toFixed(2))})
 				});
 			}
 		};
