@@ -122,7 +122,7 @@ $(function(){
 			if(self.state.isOperational() && !self.state.isPrinting()){
 				var coord = self.getXYCoord(evt);
 				$.ajax({
-					url: API_BASEURL + "printer/printhead",
+					url: API_BASEURL + "plugin/mrbeam",
 					type: "POST",
 					dataType: "json",
 					contentType: "application/json; charset=UTF8",

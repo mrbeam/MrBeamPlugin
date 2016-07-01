@@ -18,7 +18,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
                    octoprint.plugin.AssetPlugin,
 				   octoprint.plugin.UiPlugin,
                    octoprint.plugin.TemplatePlugin,
-				   octoprint.plugin.BlueprintPlugin):
+				   octoprint.plugin.BlueprintPlugin,
+				   octoprint.plugin.SimpleApiPlugin):
 
 	def __init(self):
 		self.laserCutterProfileManager = None
@@ -124,7 +125,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			dict(type = 'settings', name = "Serial Connection", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings= False, replaces='serial')
 		]
 
-	##~~ BlueprintPlugin API
+	##~~ BlueprintPlugin mixin
 
 	# Laser cutter profiles
 	@octoprint.plugin.BlueprintPlugin.route("/profiles", methods=["GET"])
@@ -248,6 +249,23 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		#	return make_response("Could not save profile: %s" % e.message, 500)
 		else:
 			return jsonify(dict(profile=self._convert_profile(saved_profile)))
+
+	##~~ SimpleApiPlugin mixin
+
+	def get_api_commands(self):
+		return dict(
+			position=["x", "y"]
+		)
+
+	def on_api_command(self, command, data):
+		import flask
+		if command == "position":
+			if isinstance(data["x"], (int, long, float)) and isinstance(data["y"], (int, long, float)):
+				self._printer.position(data["x"], data["y"])
+			else:
+				return make_response("Not a number for one of the parameters", 400)
+		return NO_CONTENT
+
 											 
 	##~~ Softwareupdate hook
 	
