@@ -89,11 +89,11 @@ $(function(){
 
 			if(self.show_vector_parameters() || self.show_image_parameters()){
 				if(self.laserIntensity() === undefined){
-					var intensity = self.settings.settings.plugins.svgtogcode.defaultIntensity();
+					var intensity = self.settings.settings.plugins.mrbeam.defaultIntensity();
 					self.laserIntensity(intensity);
 				} 
 				if(self.laserSpeed() === undefined){
-					var speed = self.settings.settings.plugins.svgtogcode.defaultFeedrate();
+					var speed = self.settings.settings.plugins.mrbeam.defaultFeedrate();
 					self.laserSpeed(speed);
 				}
 
@@ -280,7 +280,7 @@ $(function(){
 					}
 
 					$.ajax({
-						url: API_BASEURL + "files/convert",
+						url: "plugin/mrbeam/convert",
 						type: "POST",
 						dataType: "json",
 						contentType: "application/json; charset=UTF-8",

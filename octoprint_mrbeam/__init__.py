@@ -5,11 +5,15 @@ import octoprint.plugin
 from octoprint.util import dict_merge
 from octoprint.server import NO_CONTENT
 
-from .profile import LaserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError
+from .profile import LaserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
 
 import copy
 import time
-from octoprint.server.util.flask import restricted_access
+import os
+import logging
+import socket
+import threading
+from octoprint.server.util.flask import restricted_access, get_json_command_from_request
 from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping
 from flask import Blueprint, request, jsonify, make_response, url_for
 
@@ -19,13 +23,19 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				   octoprint.plugin.UiPlugin,
                    octoprint.plugin.TemplatePlugin,
 				   octoprint.plugin.BlueprintPlugin,
-				   octoprint.plugin.SimpleApiPlugin):
+				   octoprint.plugin.SimpleApiPlugin,
+				   octoprint.plugin.SlicerPlugin):
 
-	def __init(self):
+	def __init__(self):
 		self.laserCutterProfileManager = None
+		self._slicing_commands = dict()
+		self._slicing_commands_mutex = threading.Lock()
+		self._cancelled_jobs = []
+		self._cancelled_jobs_mutex = threading.Lock()
 
 	def initialize(self):
 		self.laserCutterProfileManager = LaserCutterProfileManager(self._settings)
+		self._svgtogcode_logger = logging.getLogger("octoprint.plugins.svgtogcode.engine")
 
 	def _convert_profiles(self, profiles):
 		result = dict()
@@ -250,6 +260,160 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		else:
 			return jsonify(dict(profile=self._convert_profile(saved_profile)))
 
+	@octoprint.plugin.BlueprintPlugin.route("/convert", methods=["POST"])
+	@restricted_access
+	def gcodeConvertCommand(self):
+		target = "local";
+
+		# valid file commands, dict mapping command name to mandatory parameters
+		valid_commands = {
+			"convert": []
+		}
+		command, data, response = get_json_command_from_request(request, valid_commands)
+		if response is not None:
+			return response
+
+		appendGcodeFiles = data['gcodeFilesToAppend']
+		del data['gcodeFilesToAppend']
+
+		if command == "convert":
+			# TODO stripping non-ascii is a hack - svg contains lots of non-ascii in <text> tags. Fix this!
+			import re
+			svg = ''.join(i for i in data['svg'] if ord(i) < 128)  # strip non-ascii chars like €
+			del data['svg']
+
+			import os
+			name, _ = os.path.splitext(data['gcode'])
+
+			filename = target + "/temp.svg"
+
+			class Wrapper(object):
+				def __init__(self, filename, content):
+					self.filename = filename
+					self.content = content
+
+				def save(self, absolute_dest_path):
+					with open(absolute_dest_path, "w") as d:
+						d.write(self.content)
+						d.close()
+
+			fileObj = Wrapper(filename, svg)
+			self._file_manager.add_file(target, filename, fileObj, links=None, allow_overwrite=True)
+
+			slicer = "svgtogcode";
+			slicer_instance = self._slicing_manager.get_slicer(slicer)
+			if slicer_instance.get_slicer_properties()["same_device"] and (
+						self._printer.is_printing() or self._printer.is_paused()):
+				# slicer runs on same device as OctoPrint, slicing while printing is hence disabled
+				return make_response("Cannot convert while lasering due to performance reasons".format(**locals()),
+									 409)
+
+			if "gcode" in data.keys() and data["gcode"]:
+				gcode_name = data["gcode"]
+				del data["gcode"]
+			else:
+				import os
+				name, _ = os.path.splitext(filename)
+				gcode_name = name + ".gco"
+
+			# append number if file exists
+			name, ext = os.path.splitext(gcode_name)
+			i = 1;
+			while (self._file_manager.file_exists(target, gcode_name)):
+				gcode_name = name + '.' + str(i) + ext
+				i += 1
+
+			# prohibit overwriting the file that is currently being printed
+			currentOrigin, currentFilename = self._getCurrentFile()
+			if currentFilename == gcode_name and currentOrigin == target and (
+						self._printer.is_printing() or self._printer.is_paused()):
+				make_response("Trying to slice into file that is currently being printed: %s" % gcode_name, 409)
+
+			if "profile" in data.keys() and data["profile"]:
+				profile = data["profile"]
+				del data["profile"]
+			else:
+				profile = None
+			##
+			if "printerProfile" in data.keys() and data["printerProfile"]:
+				printerProfile = data["printerProfile"]
+				del data["printerProfile"]
+			else:
+				printerProfile = None
+
+			if "position" in data.keys() and data["position"] and isinstance(data["position"], dict) and "x" in \
+					data[
+						"position"] and "y" in data["position"]:
+				position = data["position"]
+				del data["position"]
+			else:
+				position = None
+
+			select_after_slicing = False
+			if "select" in data.keys() and data["select"] in valid_boolean_trues:
+				if not printer.is_operational():
+					return make_response("Printer is not operational, cannot directly select for printing", 409)
+				select_after_slicing = True
+
+			print_after_slicing = False
+			if "print" in data.keys() and data["print"] in valid_boolean_trues:
+				if not printer.is_operational():
+					return make_response("Printer is not operational, cannot directly start printing", 409)
+				select_after_slicing = print_after_slicing = True
+
+			override_keys = [k for k in data if k.startswith("profile.") and data[k] is not None]
+			overrides = dict()
+			for key in override_keys:
+				overrides[key[len("profile."):]] = data[key]
+
+			def slicing_done(target, gcode_name, select_after_slicing, print_after_slicing, append_these_files):
+				# append additioal gcodes
+				output_path = self._file_manager.path_on_disk(target, gcode_name)
+				with open(output_path, 'ab') as wfd:
+					for f in append_these_files:
+						path = self._file_manager.path_on_disk(f['origin'], f['name'])
+						wfd.write("\n; " + f['name'] + "\n")
+
+						with open(path, 'rb') as fd:
+							shutil.copyfileobj(fd, wfd, 1024 * 1024 * 10)
+
+						wfd.write("\nM05\n")  # ensure that the laser is off.
+
+				if select_after_slicing or print_after_slicing:
+					sd = False
+					filenameToSelect = self._file_manager.path_on_disk(target, gcode_name)
+					printer.select_file(filenameToSelect, sd, True)
+
+			try:
+				self._file_manager.slice(slicer, target, filename, target, gcode_name,
+								  profile=profile,
+								  printer_profile_id=printerProfile,
+								  position=position,
+								  overrides=overrides,
+								  callback=slicing_done,
+								  callback_args=[target, gcode_name, select_after_slicing, print_after_slicing,
+												 appendGcodeFiles])
+			except octoprint.slicing.UnknownProfile:
+				return make_response("Profile {profile} doesn't exist".format(**locals()), 400)
+
+			files = {}
+			location = "test"#url_for(".readGcodeFile", target=target, filename=gcode_name, _external=True)
+			result = {
+				"name": gcode_name,
+				"origin": "local",
+				"refs": {
+					"resource": location,
+					"download": url_for("index", _external=True) + "downloads/files/" + target + "/" + gcode_name
+				}
+			}
+
+			r = make_response(jsonify(result), 202)
+			r.headers["Location"] = location
+			return r
+
+		return NO_CONTENT
+
+
 	##~~ SimpleApiPlugin mixin
 
 	def get_api_commands(self):
@@ -265,6 +429,137 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			else:
 				return make_response("Not a number for one of the parameters", 400)
 		return NO_CONTENT
+
+
+	##~~ SlicerPlugin API
+
+	def is_slicer_configured(self):
+		# svgtogcode_engine = s.get(["svgtogcode_engine"])
+		# return svgtogcode_engine is not None and os.path.exists(svgtogcode_engine)
+		return True
+
+	def get_slicer_properties(self):
+		return dict(
+			type="svgtogcode",
+			name="svgtogcode",
+			same_device=True,
+			progress_report=True
+		)
+
+	def get_slicer_default_profile(self):
+		path = self._settings.get(["default_profile"])
+		if not path:
+			path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "profiles", "default.profile.yaml")
+		return self.get_slicer_profile(path)
+
+	def get_slicer_profile(self, path):
+		profile_dict = self._load_profile(path)
+
+		display_name = None
+		description = None
+		if "_display_name" in profile_dict:
+			display_name = profile_dict["_display_name"]
+			del profile_dict["_display_name"]
+		if "_description" in profile_dict:
+			description = profile_dict["_description"]
+			del profile_dict["_description"]
+
+		properties = self.get_slicer_properties()
+		return octoprint.slicing.SlicingProfile(properties["type"], "unknown", profile_dict,
+												display_name=display_name, description=description)
+
+	def save_slicer_profile(self, path, profile, allow_overwrite=True, overrides=None):
+		if os.path.exists(path) and not allow_overwrite:
+			raise octoprint.slicing.ProfileAlreadyExists("cura", profile.name)
+
+		new_profile = Profile.merge_profile(profile.data, overrides=overrides)
+
+		if profile.display_name is not None:
+			new_profile["_display_name"] = profile.display_name
+		if profile.description is not None:
+			new_profile["_description"] = profile.description
+
+		self._save_profile(path, new_profile, allow_overwrite=allow_overwrite)
+
+	def do_slice(self, model_path, printer_profile, machinecode_path=None, profile_path=None, position=None,
+				 on_progress=None, on_progress_args=None, on_progress_kwargs=None):
+		if not profile_path:
+			profile_path = self._settings.get(["default_profile"])
+		if not machinecode_path:
+			path, _ = os.path.splitext(model_path)
+			machinecode_path = path + ".gco"
+
+		self._svgtogcode_logger.info(
+			"### Slicing %s to %s using profile stored at %s" % (model_path, machinecode_path, profile_path))
+
+		## direct call
+		from .gcodegenerator.mrbeam import Laserengraver
+
+		profile = Profile(self._load_profile(profile_path))
+		params = profile.convert_to_engine2()
+
+		dest_dir, dest_file = os.path.split(machinecode_path)
+		params['directory'] = dest_dir
+		params['file'] = dest_file
+		params['noheaders'] = "true"  # TODO... booleanify
+
+		params['fill_areas'] = False  # disabled as highly experimental
+		if (self._settings.get(["debug_logging"])):
+			log_path = homedir + "/.octoprint/logs/svgtogcode.log"
+			params['log_filename'] = log_path
+		else:
+			params['log_filename'] = ''
+
+		try:
+			engine = Laserengraver(params, model_path)
+			engine.affect(on_progress, on_progress_args, on_progress_kwargs)
+
+			self._svgtogcode_logger.info("### Conversion finished")
+			return True, None  # TODO add analysis about out of working area, ignored elements, invisible elements, text elements
+		except octoprint.slicing.SlicingCancelled as e:
+			raise e
+		except Exception as e:
+			print e.__doc__
+			print e.message
+			self._logger.exception("Conversion error ({0}): {1}".format(e.__doc__, e.message))
+			return False, "Unknown error, please consult the log file"
+
+		finally:
+			with self._cancelled_jobs_mutex:
+				if machinecode_path in self._cancelled_jobs:
+					self._cancelled_jobs.remove(machinecode_path)
+			with self._slicing_commands_mutex:
+				if machinecode_path in self._slicing_commands:
+					del self._slicing_commands[machinecode_path]
+
+			self._svgtogcode_logger.info("-" * 40)
+
+	def cancel_slicing(self, machinecode_path):
+		with self._slicing_commands_mutex:
+			if machinecode_path in self._slicing_commands:
+				with self._cancelled_jobs_mutex:
+					self._cancelled_jobs.append(machinecode_path)
+				self._slicing_commands[machinecode_path].terminate()
+				self._logger.info("Cancelled slicing of %s" % machinecode_path)
+
+	def _load_profile(self, path):
+		import yaml
+		profile_dict = dict()
+		with open(path, "r") as f:
+			try:
+				profile_dict = yaml.safe_load(f)
+			except:
+				raise IOError("Couldn't read profile from {path}".format(path=path))
+		return profile_dict
+
+	def _save_profile(self, path, profile, allow_overwrite=True):
+		import yaml
+		with open(path, "wb") as f:
+			yaml.safe_dump(profile, f, default_flow_style=False, indent="  ", allow_unicode=True)
+
+	def _convert_to_engine(self, profile_path):
+		profile = Profile(self._load_profile(profile_path))
+		return profile.convert_to_engine()
 
 											 
 	##~~ Softwareupdate hook
@@ -338,6 +633,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip"
 			)
 		)
+
+	def _getCurrentFile(self):
+		currentJob = self._printer.get_current_job()
+		if currentJob is not None and "file" in currentJob.keys() and "name" in currentJob["file"] and "origin" in \
+				currentJob["file"]:
+			return currentJob["file"]["origin"], currentJob["file"]["name"]
+		else:
+			return None, None
 		
 #	def serve_url(self, server_routes, *args, **kwargs):
 #		from octoprint.server.util.tornado import LargeResponseHandler, path_validation_factory
