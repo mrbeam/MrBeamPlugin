@@ -392,7 +392,10 @@ $(function(){
                 title: "Text elements found",
                 text: error,
                 type: "warn",
-                hide: false
+                hide: false,
+				buttons: {
+        			sticker: false
+    			}
             });
 			svg.selectAll('text,tspan').remove();
 		};
@@ -406,7 +409,10 @@ $(function(){
                 title: "Design moved",
                 text: error,
                 type: "warn",
-                hide: false
+                hide: false,
+				buttons: {
+        			sticker: false
+    			}
             });
 
 		};
