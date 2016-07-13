@@ -176,6 +176,18 @@ $(function(){
 						);
 				return !!fGetUserMedia;
 			};
+
+		self.gcodefiles.onEventSlicingDone = function (payload) {
+			var url = API_BASEURL + "files/" + payload.gcode_location + "/" + payload.gcode;
+			var data = {refs: {resource: url}, origin: payload.gcode_location, path: payload.gcode};
+			self.gcodefiles.loadFile(data, false); // loads gcode into gcode viewer
+
+			var callback = function (e) {
+				e.preventDefault();
+				self.gcodefiles.loadFile(data, true); // starts print
+			};
+			self.show_safety_glasses_warning(callback);
+		};
 		
 		// settings.js viewmodel extensions
 		
@@ -203,7 +215,6 @@ $(function(){
 		
 
 		self.show_safety_glasses_warning = function (callback) {
-			
 			var options = {};
 			options.title = gettext("Are you sure?");
 			options.message = gettext("The laser will now start. Protect yourself and everybody in the room appropriately before proceeding!");
