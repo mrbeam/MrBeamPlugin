@@ -921,6 +921,8 @@ class MachineCom(object):
 		self._passes -= 1
 		self._log("decrease Passes to %d" % self._passes)
 
+	def sendGcodeScript(self, scriptName, replacements=None):
+		pass
 
 	def getStateId(self, state=None):
 		if state is None:
