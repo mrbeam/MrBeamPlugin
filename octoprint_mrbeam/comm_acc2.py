@@ -90,7 +90,7 @@ class MachineCom(object):
 		self._finished_passes = 0
 
 		# regular expressions
-		self._regex_command = re.compile("^\s*\$?([GM]\d+|[TH])")
+		self._regex_command = re.compile("^\s*\$?([GM]\d+|[THFS])")
 		self._regex_feedrate = re.compile("F\d+", re.IGNORECASE)
 		self._regex_intensity = re.compile("S\d+", re.IGNORECASE)
 
@@ -377,8 +377,6 @@ class MachineCom(object):
 			errorMsg = "Soft-reset detected. Please do a homing cycle"
 			self._log(errorMsg)
 			self._errorValue = errorMsg
-			eventManager().fire(Events.ERROR, {"error": self.getErrorString()})
-			eventManager().fire(Events.SOFT_RESET, {"error": self.getErrorString()})
 		elif "Probe fail" in line:
 			errorMsg = "Probing has failed. Please reset the machine and do a homing cycle"
 			self._log(errorMsg)
@@ -735,6 +733,11 @@ class MachineCom(object):
 		cmd = self._replace_intensity(cmd)
 		return cmd
 
+	def _gcode_M3_sending(self, cmd, cmd_type=None):
+		cmd = self._replace_feedrate(cmd)
+		cmd = self._replace_intensity(cmd)
+		return cmd
+
 	def _gcode_G01_sending(self, cmd, cmd_type=None):
 		return self._gcode_G1_sending(cmd, cmd_type)
 
@@ -743,6 +746,9 @@ class MachineCom(object):
 
 	def _gcode_G03_sending(self, cmd, cmd_type=None):
 		return self._gcode_G3_sending(cmd, cmd_type)
+
+	def _gcode_M03_sending(self, cmd, cmd_type=None):
+		return self._gcode_M3_sending(cmd, cmd_type)
 
 	def _gcode_H_sent(self, cmd, cmd_type=None):
 		self._changeState(self.STATE_HOMING)
@@ -755,6 +761,12 @@ class MachineCom(object):
 	def _gcode_Resume_sent(self, cmd, cmd_type=None):
 		self._changeState(self.STATE_PRINTING)
 		return cmd
+
+	def _gcode_F_sending(self, cmd, cmd_type=None):
+		cmd = self._replace_feedrate(cmd)
+
+	def _gcode_S_sending(self, cmd, cmd_type=None):
+		cmd = self._replace_intensity(cmd)
 
 	def sendCommand(self, cmd, cmd_type=None, processed=False):
 		cmd = cmd.encode('ascii', 'replace')
