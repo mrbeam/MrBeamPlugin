@@ -110,10 +110,11 @@
 												<!--
 												{{ _('File') }}: <strong data-bind="text: filename"></strong>&nbsp;<strong data-bind="visible: sd">(SD)</strong><br>
 												{{ _('Timelapse') }}: <strong data-bind="text: timelapseString"></strong><br>
-												-->
 												{{ _('Approx. Total Job Time') }}: <strong data-bind="text: state.estimatedPrintTimeString"></strong><br>
+												-->
 												<div data-bind="visible: state.isPrinting() || state.isPaused()">
-													
+
+
 													<div class="progress">
 														<div class="bar" id="job_progressBar" data-bind="style: { width: state.progressString() + '%' }">&nbsp;{{ _('Processed') }} :  <strong data-bind="text: state.byteString"></strong></div>
 													</div>
