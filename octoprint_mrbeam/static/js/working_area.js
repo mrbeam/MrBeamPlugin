@@ -234,8 +234,7 @@ $(function(){
 		};
 
 		self.placeSVG = function(file) {
-			var url = self._getSVGserveUrl(file); // TODO debug
-			var url = file['refs']['download']; // TODO debug
+			var url = self._getSVGserveUrl(file);
 			callback = function (f) {
 				var newSvgAttrs = {};
 				if(f.select('svg') == null){
@@ -597,14 +596,9 @@ $(function(){
 
 		self._getSVGserveUrl = function(file){
 			if (file && file["refs"] && file["refs"]["download"]) {
-				var url = file.refs.download.replace("downloads/files/local", "plugin/mrbeam/serve") +'?'+ Date.now(); // be sure to avoid caching.
+				var url = file.refs.download +'?'+ Date.now(); // be sure to avoid caching.
 				return url;
 			}
-//			if (file && file["refs"] && file["refs"]["download"]) {
-//				var url = file.refs.download.replace("downloads", "serve") +'?'+ Date.now(); // be sure to avoid caching.
-//				return url;
-//			}
-
 		};
 
 		self._getIMGserveUrl = function(file){
