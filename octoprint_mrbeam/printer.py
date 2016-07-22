@@ -1,4 +1,3 @@
-
 from octoprint.printer.standard import Printer, StateMonitor, PrinterInterface
 from octoprint.settings import settings
 from . import comm_acc2 as comm
@@ -56,7 +55,7 @@ class Laser(Printer):
 	def position(self, x, y):
 		printer_profile = self._printerProfileManager.get_current_or_default()
 		movement_speed = min(printer_profile["axes"]["x"]["speed"], printer_profile["axes"]["y"]["speed"])
-		self.commands(["G90", "G0 X%.3f Y%.3f F%d" % (x, y, movement_speed), "?"])
+		self.commands(["G90", "G0 X%.3f Y%.3f F%d" % (x, y, movement_speed)])
 	
 	def increase_passes(self):
 		"""

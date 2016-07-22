@@ -640,6 +640,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			)
 		)
 
+	def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
+		return [("POST", r"/convert", 1024 * 1024)]
+
 	def _getCurrentFile(self):
 		currentJob = self._printer.get_current_job()
 		if currentJob is not None and "file" in currentJob.keys() and "name" in currentJob["file"] and "origin" in \
@@ -683,7 +686,8 @@ def __plugin_load__():
 		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
 		"octoprint.printer.factory": __plugin_implementation__.laser_factory,
 		"octoprint.filemanager.extension_tree": __plugin_implementation__.laser_filemanager,
-		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information
+		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
+		"octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook
 		#"octoprint.server.http.routes": __plugin_implementation__.serve_url
 	}
 
