@@ -420,7 +420,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return dict(
 			position=["x", "y"],
 			feedrate=["value"],
-			intensity=["value"]
+			intensity=["value"],
+			passes=["value"]
 		)
 
 	def on_api_command(self, command, data):
@@ -434,6 +435,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._printer.commands("/feedrate " + str(data["value"]))
 		elif command == "intensity":
 			self._printer.commands("/intensity " + str(data["value"]))
+		elif command == "passes":
+			self._printer.set_passes(data["value"])
 		return NO_CONTENT
 
 

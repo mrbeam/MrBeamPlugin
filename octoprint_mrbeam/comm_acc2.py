@@ -945,6 +945,10 @@ class MachineCom(object):
 		self._passes -= 1
 		self._log("decrease Passes to %d" % self._passes)
 
+	def setPasses(self, value):
+		self._passes = value
+		self._log("set Passes to %d" % self._passes)
+
 	def sendGcodeScript(self, scriptName, replacements=None):
 		pass
 

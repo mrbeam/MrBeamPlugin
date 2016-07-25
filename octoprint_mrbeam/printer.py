@@ -65,6 +65,11 @@ class Laser(Printer):
 			return
 		self._comm.increasePasses()
 
+	def set_passes(self, value):
+		if self._comm is None:
+			return
+		self._comm.setPasses(value)
+
 	def decrease_passes(self):
 		"""
 		 decrease the number of passes by one.

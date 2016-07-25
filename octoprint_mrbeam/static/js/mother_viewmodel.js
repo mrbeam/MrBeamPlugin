@@ -149,6 +149,16 @@ $(function () {
             self.state.feedrateOverride(100);
         };
 
+		self.state.increasePasses = function(){
+			self.state.numberOfPasses(self.state.numberOfPasses()+1);
+            self.state._overrideCommand({name: "passes", value: self.state.numberOfPasses()});
+		}
+		self.state.decreasePasses = function(){
+			var passes = Math.max(self.state.numberOfPasses()-1, 1);
+			self.state.numberOfPasses(passes);
+            self.state._overrideCommand({name: "passes", value: self.state.numberOfPasses()});
+		}
+
         self.state._overrideCommand = function (data, callback) {
             $.ajax({
                 url: API_BASEURL + "plugin/mrbeam",
