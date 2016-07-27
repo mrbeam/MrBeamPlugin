@@ -114,7 +114,9 @@
 												-->
 												<div data-bind="visible: state.isPrinting() || state.isPaused()">
 
-
+                                                    <div>
+														<div id="job_printtime">Print Time: <strong data-bind="text: state.printTimeString"></strong></div>
+													</div>
 													<div class="progress">
 														<div class="bar" id="job_progressBar" data-bind="style: { width: state.progressString() + '%' }">&nbsp;{{ _('Processed') }} :  <strong data-bind="text: state.byteString"></strong></div>
 													</div>

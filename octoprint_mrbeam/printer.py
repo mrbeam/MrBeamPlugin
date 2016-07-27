@@ -98,13 +98,13 @@ class Laser(Printer):
 	def on_comm_pos_update(self, MPos, WPos):
 		self._add_position_data(MPos, WPos)
 
+	# progress update callbacks
+	def on_comm_progress(self):
+		self._setProgressData(self._comm.getPrintProgress(), self._comm.getPrintFilepos(), self._comm.getPrintTime(), self._comm.getCleanedPrintTime())
+
 	def _add_position_data(self, MPos, WPos):
 		if MPos is None or WPos is None:
 			MPos = WPos = [0, 0, 0]
-		#else:
-			#MPosString = "X: %.4f Y: %.4f Z: %.4f" % ( MPos[0], MPos[1], MPos[2] )
-			#WPosString = "X: %.4f Y: %.4f Z: %.4f" % ( WPos[0], WPos[1], WPos[2] )
-
 		self._stateMonitor.setWorkPosition(WPos)
 		self._stateMonitor.setMachinePosition(MPos)
 

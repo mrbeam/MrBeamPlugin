@@ -50,6 +50,11 @@ $(function () {
             self.state.isReady = ko.observable(undefined);
             self.state.isFlashing = ko.observable(undefined);
             self.state.currentPos = ko.observable(undefined);
+			self.state.filename = ko.observable(undefined);
+			self.state.filesize = ko.observable(undefined);
+			self.state.filepos = ko.observable(undefined);
+			self.state.progress = ko.observable(undefined);
+			self.state.printTime = ko.observable(undefined);
 
             self.state.intensityOverride = ko.observable(100);
             self.state.feedrateOverride = ko.observable(100);
@@ -65,6 +70,12 @@ $(function () {
                 self.state._overrideCommand({name: "feedrate", value: factor});
             });
 
+			self.state.byteString = ko.computed(function() {
+				if (!self.state.filesize())
+					return "-";
+				var filepos = self.state.filepos() ? formatSize(self.state.filepos()) : "-";
+				return filepos + " / " + formatSize(self.state.filesize());
+			});
             self.state.laserPos = ko.computed(function () {
                 var pos = self.state.currentPos();
                 if (!pos) {
@@ -73,6 +84,11 @@ $(function () {
                     return "(" + pos.x + ", " + pos.y + ")";
                 }
             }, this);
+			self.state.printTimeString = ko.computed(function() {
+            if (!self.state.printTime())
+                return "-";
+            return formatDuration(self.state.printTime());
+        });
         };
 
         self.onAllBound = function (allViewModels) {
@@ -105,6 +121,8 @@ $(function () {
         self._fromData = function (data) {
             self._processStateData(data.state);
             self._processWPosData(data.workPosition);
+			self._processProgressData(data.progress);
+			self._processJobData(data.job);
         };
 
         self._processStateData = function (data) {
@@ -119,6 +137,30 @@ $(function () {
             } else {
                 self.state.currentPos({x: data[0], y: data[1]});
             }
+        };
+
+        self._processProgressData = function(data) {
+            if (data.completion) {
+                self.state.progress(data.completion);
+            } else {
+                self.state.progress(undefined);
+            }
+            self.state.filepos(data.filepos);
+            self.state.printTime(data.printTime);
+            //self.printTimeLeft(data.printTimeLeft);
+        };
+
+        self._processJobData = function(data) {
+            if (data.file) {
+                self.state.filename(data.file.name);
+                self.state.filesize(data.file.size);
+            } else {
+                self.state.filename(undefined);
+                self.state.filesize(undefined);
+            }
+            // TODO make the estimated print time work
+            //self.estimatedPrintTime(data.estimatedPrintTime);
+            //self.lastPrintTime(data.lastPrintTime);
         };
 
         self._configureOverrideSliders = function () {
@@ -153,6 +195,7 @@ $(function () {
 			self.state.numberOfPasses(self.state.numberOfPasses()+1);
             self.state._overrideCommand({name: "passes", value: self.state.numberOfPasses()});
 		}
+
 		self.state.decreasePasses = function(){
 			var passes = Math.max(self.state.numberOfPasses()-1, 1);
 			self.state.numberOfPasses(passes);
