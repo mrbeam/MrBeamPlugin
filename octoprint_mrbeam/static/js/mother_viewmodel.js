@@ -108,6 +108,8 @@ $(function () {
             });
 
             self._configureOverrideSliders();
+
+			self.gcodefiles.listHelper.toggleFilter('model');
         };
 
         self.fromCurrentData = function (data) {
