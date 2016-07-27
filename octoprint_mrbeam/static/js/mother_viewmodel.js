@@ -110,6 +110,15 @@ $(function () {
             self._configureOverrideSliders();
 
 			self.gcodefiles.listHelper.toggleFilter('model');
+
+			// adjust height of designlib scroll element
+			var height = $('#designlib').height();
+			$(".slimScrollDiv").height(height);
+			$(".gcode_files").height(height);
+
+			// adjust height of mrb_term scroll element
+			height = $('#mrb_term').height();
+			$("#terminal-output").css({'max-height': (height - 100) + 'px'});
         };
 
         self.fromCurrentData = function (data) {
