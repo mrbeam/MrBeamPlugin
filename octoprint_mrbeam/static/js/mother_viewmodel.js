@@ -85,10 +85,10 @@ $(function () {
                 }
             }, this);
 			self.state.printTimeString = ko.computed(function() {
-            if (!self.state.printTime())
-                return "-";
-            return formatDuration(self.state.printTime());
-        });
+				if (!self.state.printTime())
+					return "-";
+				return formatDuration(self.state.printTime());
+			});
         };
 
         self.onAllBound = function (allViewModels) {
