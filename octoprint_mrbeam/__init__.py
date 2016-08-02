@@ -78,10 +78,17 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._settings.set(["workingAreaWidth"], data["workingAreaWidth"])
 		if "zAxis" in data:
 			self._settings.set_boolean(["zAxis"], data["zAxis"])
-		selectedProfile = laserCutterProfileManager.get_current_or_default()
+		if "defaultIntensity" in data:
+			self._settings.set_int(["defaultIntensity"], data["defaultIntensity"])
+		if "defaultFeedrate" in data:
+			self._settings.set_int(["defaultFeedrate"], data["defaultFeedrate"])
+		if "svgDPI" in data:
+			self._settings.set_int(["svgDPI"], data["svgDPI"])
+		if "svgtogcode_debug_logging" in data:
+			self._settings.set_int(["svgtogcode_debug_logging"], data["svgtogcode_debug_logging"])
+
+		selectedProfile = self.laserCutterProfileManager.get_current_or_default()
 		self._settings.set(["current_profile_id"], selectedProfile['id'])
-
-
 
 	##~~ AssetPlugin mixin
 
