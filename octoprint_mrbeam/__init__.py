@@ -644,7 +644,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		)
 
 	def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
-		return [("POST", r"/convert", 1024 * 1024)]
+		return [("POST", r"/convert", 10 * 1024 * 1024)]
 
 	def _getCurrentFile(self):
 		currentJob = self._printer.get_current_job()
