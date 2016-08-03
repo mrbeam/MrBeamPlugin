@@ -85,7 +85,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if "svgDPI" in data:
 			self._settings.set_int(["svgDPI"], data["svgDPI"])
 		if "svgtogcode_debug_logging" in data:
-			self._settings.set_int(["svgtogcode_debug_logging"], data["svgtogcode_debug_logging"])
+			self._settings.set_boolean(["svgtogcode_debug_logging"], data["svgtogcode_debug_logging"])
 
 		selectedProfile = self.laserCutterProfileManager.get_current_or_default()
 		self._settings.set(["current_profile_id"], selectedProfile['id'])
