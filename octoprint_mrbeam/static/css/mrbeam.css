@@ -1221,6 +1221,7 @@ ul.dropdown-menu li a {
 /** Footer */
 .footer ul {
   margin: 0 1em;
+  padding-top: 0;
 }
 .footer ul li {
   display: inline;

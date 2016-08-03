@@ -1,4 +1,3 @@
-
 from octoprint.printer.standard import Printer, StateMonitor, PrinterInterface
 from octoprint.settings import settings
 from . import comm_acc2 as comm
@@ -56,7 +55,7 @@ class Laser(Printer):
 	def position(self, x, y):
 		printer_profile = self._printerProfileManager.get_current_or_default()
 		movement_speed = min(printer_profile["axes"]["x"]["speed"], printer_profile["axes"]["y"]["speed"])
-		self.commands(["G90", "G0 X%.3f Y%.3f F%d" % (x, y, movement_speed), "?"])
+		self.commands(["G90", "G0 X%.3f Y%.3f F%d" % (x, y, movement_speed)])
 	
 	def increase_passes(self):
 		"""
@@ -65,6 +64,11 @@ class Laser(Printer):
 		if self._comm is None:
 			return
 		self._comm.increasePasses()
+
+	def set_passes(self, value):
+		if self._comm is None:
+			return
+		self._comm.setPasses(value)
 
 	def decrease_passes(self):
 		"""
@@ -94,13 +98,13 @@ class Laser(Printer):
 	def on_comm_pos_update(self, MPos, WPos):
 		self._add_position_data(MPos, WPos)
 
+	# progress update callbacks
+	def on_comm_progress(self):
+		self._setProgressData(self._comm.getPrintProgress(), self._comm.getPrintFilepos(), self._comm.getPrintTime(), self._comm.getCleanedPrintTime())
+
 	def _add_position_data(self, MPos, WPos):
 		if MPos is None or WPos is None:
 			MPos = WPos = [0, 0, 0]
-		#else:
-			#MPosString = "X: %.4f Y: %.4f Z: %.4f" % ( MPos[0], MPos[1], MPos[2] )
-			#WPosString = "X: %.4f Y: %.4f Z: %.4f" % ( WPos[0], WPos[1], WPos[2] )
-
 		self._stateMonitor.setWorkPosition(WPos)
 		self._stateMonitor.setMachinePosition(MPos)
 

@@ -30,14 +30,14 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	 */
 	Element.prototype.bake = function (toCubics, dec) {
 		var elem = this;
-		if (!elem || !elem.paper) // don't handle unplaced elements. this causes double handling.
-			return;
+		if (!elem || !elem.paper || elem.type !== "text" || elem.type !== "#text" || elem.type !== "tspan"){
+  			return;
+        } // don't handle unplaced elements. this causes double handling.
 
 		if (typeof (toCubics) === 'undefined')
 			toCubics = false;
 		if (typeof (dec) === 'undefined')
 			dec = 5;
-		//var children = elem.selectAll('*')
 		var children = elem.children();
 		if (children.length > 0) {
 			for (var i = 0; i < children.length; i++) {
@@ -54,14 +54,14 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			elem.type !== "polygon" &&
 			elem.type !== "polyline" &&
 			elem.type !== "image" &&
-			elem.type !== "path"){
-			
-//			if(elem.type !== 'g' && elem.type !== 'desc' && elem.type !== 'defs')
-//				console.log('skipping unsupported element ', elem.type);
+			elem.type !== "path" &&
+			elem.type !== "text" &&
+			elem.type !== "tspan" &&
+			elem.type !== "#text"){
 			return;
 		}
 
-		if (elem.type == 'image'){
+		if (elem.type == 'image' || elem.type == "text" || elem.type == "#text"){
 			// TODO ... 
 			var x = parseFloat(elem.attr('x')),
 				y = parseFloat(elem.attr('y')),
@@ -89,7 +89,6 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			return;
 		}
 
-		//if(elem.type !== 'path') console.log("bake: converting " + elem.type + " to path");
 		var path_elem = elem.convertToPath();
 
 		if (!path_elem || path_elem.attr('d') === '' || path_elem.attr('d') === null)
@@ -438,6 +437,19 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		// Possibly the cubed root of 6, but 1.81 works best
 		var num = 1.81;
 		var tag = old_element.type;
+
+        var convertMMtoPixel = function (val) {
+			attrList = ['rx','ry','r','cx','cy','x1','x2','y1','y2','x','y','width','height'];
+    		for(var attrIdx in attrList) {
+				if(val.attr(attrList[attrIdx]) != null && val.attr(attrList[attrIdx]).indexOf('mm') > -1) {
+					var tmp = parseFloat(val.attr(attrList[attrIdx])) * 3.5433;
+					val.attr(attrList[attrIdx], tmp);
+				}
+			}
+		}
+
+		convertMMtoPixel(old_element);
+
 		switch (tag) {
 			case 'ellipse':
 			case 'circle':

@@ -50,7 +50,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 				}
 			}
 		} else {
-			if(elem.type === 'image'){
+			if(elem.type === 'image' || elem.type === "text" || elem.type === "#text"){
 				selection.push(elem);
 			} else {
 				if(fillPaths && elem.is_filled()){
@@ -121,7 +121,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 		// get svg as dataUrl
 		var svgStr = elem.outerSVG();
-		var svgDataUri = 'data:image/svg+xml;base64,' + window.btoa(svgStr);
+		var svgDataUri = 'data:image/svg+xml;base64,' + window.btoa(unescape(encodeURIComponent(svgStr))); //deprecated unescape needed!
 		var source = new Image();
 		source.src = svgDataUri;
 

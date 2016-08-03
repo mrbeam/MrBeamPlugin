@@ -41,8 +41,10 @@ $(function(){
 		// image engraving stuff
 		// preset values are a good start for wood engraving
 		self.images_placed = ko.observable(false);
+		self.text_placed = ko.observable(false);
 		self.show_image_parameters = ko.computed(function(){
-			return self.images_placed() || (self.fill_areas() && self.show_vector_parameters());
+			return (self.images_placed() || self.text_placed()
+                    || (self.fill_areas() && self.show_vector_parameters()));
 		});
 		self.imgIntensityWhite = ko.observable(0);
 		self.imgIntensityBlack = ko.observable(500);
@@ -85,15 +87,16 @@ $(function(){
 			self.show_vector_parameters(self.workingArea.getPlacedSvgs().length > 0);
 			self.show_fill_areas_checkbox(self.workingArea.hasFilledVectors())
 			self.images_placed(self.workingArea.getPlacedImages().length > 0);
+            self.text_placed(self.workingArea.hasTextItems());
 			//self.show_image_parameters(self.workingArea.getPlacedImages().length > 0);
 
 			if(self.show_vector_parameters() || self.show_image_parameters()){
 				if(self.laserIntensity() === undefined){
-					var intensity = self.settings.settings.plugins.svgtogcode.defaultIntensity();
+					var intensity = self.settings.settings.plugins.mrbeam.defaultIntensity();
 					self.laserIntensity(intensity);
 				} 
 				if(self.laserSpeed() === undefined){
-					var speed = self.settings.settings.plugins.svgtogcode.defaultFeedrate();
+					var speed = self.settings.settings.plugins.mrbeam.defaultFeedrate();
 					self.laserSpeed(speed);
 				}
 
@@ -280,7 +283,7 @@ $(function(){
 					}
 
 					$.ajax({
-						url: API_BASEURL + "files/convert",
+						url: "plugin/mrbeam/convert",
 						type: "POST",
 						dataType: "json",
 						contentType: "application/json; charset=UTF-8",
