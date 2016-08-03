@@ -844,6 +844,12 @@ input[type="submit"].btn.btn-mini {
 	border-bottom: 1px dotted #EEEEEE;
 }
 
+li.nav_version {
+    font-size: x-small;
+    color: #383e42;
+    padding: 0px 20px;
+}
+
 body {
 	padding-top: 48px;  /* necessary for navbar-fixed-top */
 	background-color:whitesmoke;
