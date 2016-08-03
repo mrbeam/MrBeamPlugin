@@ -372,7 +372,7 @@ $(function(){
 			$('#'+label_id+' .vertical').text(vertical.toFixed() + 'mm');
 			$('#'+label_id+' .rotation').text(rot.toFixed(1) + '°');
 			var scale = Math.sqrt((transform.localMatrix.a * transform.localMatrix.a) + (transform.localMatrix.c * transform.localMatrix.c));
-			$('#'+label_id+' .scale').text(scale.toFixed(2));
+			$('#'+label_id+' .scale').text((scale*100).toFixed(1) + '%');
 		};
 
 
