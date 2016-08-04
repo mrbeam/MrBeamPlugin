@@ -114,8 +114,11 @@ $(function(){
 
 		self.trigger_resize = function(){
 			if(typeof(snap) !== 'undefined') self.abortFreeTransforms();
-			self.availableHeight(document.documentElement.clientHeight - $('body>nav').outerHeight()  - $('footer>*').outerHeight() - 39); // magic number
+			var tabContentPadding = 18;
+			self.availableHeight(document.documentElement.clientHeight - $('body>nav').outerHeight()  - $('footer>*').outerHeight() - tabContentPadding - 48); // TODO remove magic number
 			self.availableWidth($('#workingarea div.span8').innerWidth());
+//			console.log("availableHeight ", self.availableHeight());
+//			console.log("availableWidth ", self.availableWidth());
 		};
 
 		self.move_laser = function(data, evt){
@@ -368,6 +371,8 @@ $(function(){
 			$('#'+label_id+' .horizontal').text(horizontal.toFixed() + 'mm');
 			$('#'+label_id+' .vertical').text(vertical.toFixed() + 'mm');
 			$('#'+label_id+' .rotation').text(rot.toFixed(1) + '°');
+			var scale = Math.sqrt((transform.localMatrix.a * transform.localMatrix.a) + (transform.localMatrix.c * transform.localMatrix.c));
+			$('#'+label_id+' .scale').text((scale*100).toFixed(1) + '%');
 		};
 
 

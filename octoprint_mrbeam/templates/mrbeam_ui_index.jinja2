@@ -12,16 +12,17 @@
         {% include 'laser_safety_notes.jinja2' %}
     </head>
     <body>
-		<div class="container octoprint-container">
-		<nav class="navbar navbar-default navbar-fixed-top" role="navigation" id="navbar">
-			<div class="container">
-				<div class="navbar-header brand" style="min-width: 272px;">
+		<div class="container-fluid octoprint-container">
+		<nav class="navbar navbar-default navbar-fixed-top" role="navigation" id="navbar" style="min-width:630px;">
+			<div class="">
+				<div class="navbar-header brand">
 					<a class="navbar-brand" href="#">
-						<img alt="Mr Beam Logo" src="{{ url_for('plugin.mrbeam.static', filename='img/mr-typo-red_x120.png') }}">
+						<img id="logo_wide" alt="Mr Beam Logo" src="{{ url_for('plugin.mrbeam.static', filename='img/mr-typo_x120.png') }}">
+						<img id="logo_compact" alt="Mr Beam Logo" src="{{ url_for('plugin.mrbeam.static', filename='img/mr_x120.png') }}">
 					</a>
 				</div>
 				<!-- Navbar -->
-				<ul id="mrbeam-main-tabs" class="nav nav-pills">
+				<ul id="mrbeam-main-tabs" class="nav nav-pills pull-right">
 					<li class="active"><a href="#workingarea" data-toggle="tab" id="wa_tab_btn">working area</a></li>
 					<li><a href="#designlib" data-toggle="tab">design library</a></li>
 					<li><a href="#focus" data-toggle="tab">focus</a></li>
@@ -40,37 +41,52 @@
 						{% if "custom_bindings" not in data or data["custom_bindings"] %}<!-- /ko -->{% endif %}
 					{% endfor %}
 
-					<li><a href="#settings" data-toggle="tab"><i class="icon-wrench"></i></a></li>
+					<li class="dropdown">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown">
+							<i class="icon-cog"></i>
+						  <b class="caret"></b>
+						</a>
+						<ul class="dropdown-menu">
+							<li><a href="#settings" data-toggle="tab"><i class="icon-wrench"></i> {{ _('Settings') }}</a></li>
+							<li class="divider"></li>
+							<li><a href="http://www.mr-beam.org" target="_blank"><i class="icon-home"></i> {{ _('Homepage') }}</a></li>
+							<li><a href="https://github.com/mrbeam/OctoPrint/" target="_blank"><i class="icon-download"></i> {{ _('Sourcecode') }}</a></li>
+							<li><a href="https://wiki.mr-beam.org" target="_blank"><i class="icon-book"></i> {{ _('Documentation') }}</a></li>
+							<li><a href="https://github.com/mrbeam/OctoPrint/issues" target="_blank"><i class="icon-flag"></i> {{ _('Bugs and Requests') }}</a></li>
+							<li class="divider"></li>
+						  	<li class="nav_version">{{ _('Version') }}: <span class="version">{{ display_version }}</span></li>
+						</ul>
+					</li>
 				</ul>
 			</div>
 		</nav>
 
-		<div class="span12 tabbable" id="mrbeam-tabs">
-			<div class="tab-content">
-				
-				{% include 'tab_workingarea.jinja2' %}				
-				{% include 'tab_terminal.jinja2' %}
-				{% include 'tab_designlib.jinja2' %}				
-				{% include 'tab_focus.jinja2' %}				
+		<div class="row-fluid">		
+			<div class="span12 tabbable" id="mrbeam-tabs">
+				<div class="tab-content">
 
-				<div class="tab-pane" id="settings">
-					<div class="container-fluid">
-						<div class="row-fluid">
+					{% include 'tab_workingarea.jinja2' %}				
+					{% include 'tab_terminal.jinja2' %}
+					{% include 'tab_designlib.jinja2' %}				
+					{% include 'tab_focus.jinja2' %}				
 
-							<div class="settings" >
-								{% include 'settings.jinja2' %}
+					<div class="tab-pane" id="settings">
+						<div class="container-fluid">
+							<div class="row-fluid">
+
+								<div class="settings" >
+									{% include 'settings.jinja2' %}
+								</div>
+
 							</div>
-
 						</div>
 					</div>
+
 				</div>
-
 			</div>
-
-
 		</div>
 
-		<footer class="footer">
+		<footer class="footer" style="display:none">
 			<ul class="pull-left muted">
 				<li><small>{{ _('Version') }}: <span class="version">{{ display_version }}</span></small></li>
 			</ul>
