@@ -82,7 +82,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			handleLength: 18,
 			handleRadius: 16, 
 			unscale: 1,
-			handleStrokeDash: "5,5",
+			handleStrokeDash: "5,5"
 		};
 		
 		Element.prototype.ftToggleHandles = function(){	
@@ -93,14 +93,15 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			}
 		};
 
-		Element.prototype.ftCreateHandles = function() {
+		Element.prototype.ftCreateHandles = function(hull) {
 			this.ftInit();
 			var freetransEl = this;
 			var bb = freetransEl.getBBox();
-			
+
 			var rotateDragger = this.paper.select('#userContent').circle(bb.cx + bb.width/2 + ftOption.handleLength * ftOption.unscale, bb.cy, ftOption.handleRadius * ftOption.unscale ).attr({ fill: ftOption.handleFill });
 			var translateDragger = this.paper.select('#userContent').circle(bb.cx, bb.cy, ftOption.handleRadius * ftOption.unscale).attr({ fill: ftOption.handleFill });
-			
+			var convexHull = hull;
+
 			var joinLine = freetransEl.ftDrawJoinLine( rotateDragger, ftOption.handleStrokeWidth * ftOption.unscale);
 			var handlesGroup = this.paper.select('#userContent').g( joinLine, rotateDragger, translateDragger );
 
@@ -187,7 +188,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 				this.data("joinLine").attr({ x1: thisBB.cx, y1: thisBB.cy, x2: rotateHandle.attr('cx'), y2: rotateHandle.attr('cy') });
 			} else {
 				return this.paper.line( thisBB.cx, thisBB.cy, handle.attr('cx'), handle.attr('cy') ).attr( lineAttributes );
-			};
+			}
 
 			return this;
 		};
@@ -207,7 +208,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			
 			// transformed bbox
 			this.data("bbT", this.paper.rect( rectObjFromBB( this.getBBox(1) ) )
-							.attr({ fill: "none", stroke: ftOption.handleFill, strokeWidth: ftOption.handleStrokeWidth, strokeDasharray: ftOption.handleStrokeDashPreset.join(',') })
+							.attr({ fill: "none", 'vector-effect': "non-scaling-stroke", stroke: ftOption.handleFill, strokeWidth: ftOption.handleStrokeWidth, strokeDasharray: ftOption.handleStrokeDashPreset.join(',') })
 							.transform( this.transform().global.toString() ) );
 			// outer bbox
 			this.data("bb", this.paper.select('#userContent').rect( rectObjFromBB( this.getBBox() ) )
