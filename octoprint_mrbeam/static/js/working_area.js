@@ -75,6 +75,22 @@ $(function(){
 		self.px2mm_factor = ko.computed(function(){
 			return self.workingAreaWidthMM() / self.workingAreaWidthPx();
 		});
+		
+		self.camWidth = ko.computed(function(){
+			if(self.settings.webcam_rotate90()){
+				return self.workingAreaHeightPx();
+			} else {
+				return self.workingAreaWidthPx();
+			}
+		});
+
+		self.camHeight = ko.computed(function(){
+			if(self.settings.webcam_rotate90()){
+				return self.workingAreaWidthPx();
+			} else {
+				return self.workingAreaHeightPx();
+			}
+		});
 
 		// matrix scales svg units to display_pixels
 		self.scaleMatrix = ko.computed(function(){
@@ -915,6 +931,37 @@ $(function(){
 		self.onBeforeBinding = function(){
 			self.files.workingArea = self;
 		};
+		
+		self.onTabChange = function (current, previous) {
+            if (current == "#workingarea") {
+                if (self.webcamDisableTimeout != undefined) {
+                    clearTimeout(self.webcamDisableTimeout);
+                }
+                var webcamImage = $("#webcam_image");
+//                var currentSrc = webcamImage.attr("src");
+                var currentSrc = webcamImage.attr("xlink:href");
+                if (currentSrc === undefined || currentSrc.trim() == "") {
+                    var newSrc = CONFIG_WEBCAM_STREAM;
+                    if (CONFIG_WEBCAM_STREAM.lastIndexOf("?") > -1) {
+                        newSrc += "&";
+                    } else {
+                        newSrc += "?";
+                    }
+                    newSrc += new Date().getTime();
+
+                    //self.control.updateRotatorWidth();
+//                    webcamImage.attr("src", newSrc);
+                    webcamImage.attr("xlink:href", newSrc);
+                }
+            } else if (previous == "#workingarea") {
+                // only disable webcam stream if tab is out of focus for more than 5s, otherwise we might cause
+                // more load by the constant connection creation than by the actual webcam stream
+                self.webcamDisableTimeout = setTimeout(function () {
+                    $("#webcam_image").attr("src", "");
+                }, 5000);
+            }
+        };
+
 	}
 
 

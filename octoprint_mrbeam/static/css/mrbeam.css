@@ -1119,17 +1119,40 @@ ul.dropdown-menu li a {
 #webcam_container {
   width: 100%;
 }
-#webcam_container .flipH {
+#webcam_image.flipH {
   -webkit-transform: scaleX(-1);
   -moz-transform: scaleX(-1);
+  transform: scaleX(-1) translateX(-100%);
 }
-#webcam_container .flipV {
+#webcam_image.flipV {
   -webkit-transform: scaleY(-1);
   -moz-transform: scaleY(-1);
+  transform: scaleY(-1) translateY(-100%);
 }
-#webcam_container .flipH.flipV {
+#webcam_image.flipH.flipV {
   -webkit-transform: scaleX(-1) scaleY(-1);
   -moz-transform: scaleX(-1) scaleY(-1);
+  transform: scaleX(-1) scaleY(-1)  translate(-100%, -100%);
+}
+#webcam_image.rotate90 {
+  -webkit-transform: scaleX(-1);
+  -moz-transform: scaleX(-1);
+  transform: rotate(-90deg) translateX(-100%);
+}
+#webcam_image.rotate90.flipH {
+  -webkit-transform: scaleY(-1);
+  -moz-transform: scaleY(-1);
+  transform: rotate(-90deg) scaleY(-1) translate(-100%, -100%);
+}
+#webcam_image.rotate90.flipV {
+  -webkit-transform: scaleX(-1);
+  -moz-transform: scaleX(-1);
+  transform: rotate(-90deg) scaleX(-1);
+}
+#webcam_image.rotate90.flipH.flipV {
+  -webkit-transform: scaleX(-1) scaleY(-1);
+  -moz-transform: scaleX(-1) scaleY(-1);
+  transform: rotate(-90deg) scaleX(-1) scaleY(-1) translate(0%, -100%);
 }
 /** GCODE file manager */
 #files .gcode_files {
