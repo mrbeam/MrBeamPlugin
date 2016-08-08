@@ -830,6 +830,7 @@ $(function(){
 				self.trigger_resize();
 			});
 			self.trigger_resize(); // initialize
+			self.onTabChange('#workingarea', '#notab');
 			self.init();
 		};
 
