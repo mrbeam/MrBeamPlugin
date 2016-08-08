@@ -118,7 +118,7 @@ $(function () {
 
 			// adjust height of mrb_term scroll element
 			height = $('#mrb_term').height();
-			$("#terminal-output").css({'max-height': (height - 100) + 'px'});
+			$("#terminal-output").css({'max-height': (height - 150) + 'px'});
         };
 
         self.fromCurrentData = function (data) {

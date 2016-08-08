@@ -113,8 +113,8 @@ $(function(){
 		
 		self.cancel_conversion = function(){
 			if(self.slicing_in_progress()){
-				//console.log('cancel slicing', self.slicing_in_progress());
-				// TODO cancel slicing properly
+				// TODO cancel slicing at the backend properly
+				self.slicing_in_progress(false);
 			}
 		};
 
