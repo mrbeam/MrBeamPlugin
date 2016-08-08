@@ -118,7 +118,7 @@ $(function () {
 
 			// adjust height of mrb_term scroll element
 			height = $('#mrb_term').height();
-			$("#terminal-output").css({'max-height': (height - 100) + 'px'});
+			$("#terminal-output").css({'max-height': (height - 150) + 'px'});
         };
 
         self.fromCurrentData = function (data) {
@@ -273,6 +273,21 @@ $(function () {
                 self.gcodefiles.loadFile(data, true); // starts print
             };
             self.show_safety_glasses_warning(callback);
+
+			self.gcodefiles.uploadProgress
+                .removeClass("progress-striped")
+                .removeClass("active");
+            self.gcodefiles.uploadProgressBar
+                .css("width", "0%");
+            self.gcodefiles.uploadProgressBar.text("");
+
+            new PNotify({
+                title: gettext("Slicing done"),
+                text: _.sprintf(gettext("Sliced %(stl)s to %(gcode)s, took %(time).2f seconds"), payload),
+                type: "success"
+            });
+
+            self.gcodefiles.requestData(undefined, undefined, self.gcodefiles.currentPath());
         };
 
         // settings.js viewmodel extensions
