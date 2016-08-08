@@ -62,6 +62,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			defaultFeedrate = 300,
 			svgDPI = 90,
 			svgtogcode_debug_logging = False,
+			showlasersafety = True
 		)
 
 	def on_settings_load(self):
@@ -71,6 +72,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			defaultFeedrate = self._settings.get(['defaultFeedrate']),
 			svgDPI = self._settings.get(['svgDPI']),
 			svgtogcode_debug_logging = self._settings.get(['svgtogcode_debug_logging']),
+			showlasersafety = self._settings.get(['showlasersafety'])
 		)
 
 	def on_settings_save(self, data):

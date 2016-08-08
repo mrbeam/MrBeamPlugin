@@ -3223,20 +3223,22 @@ class Laserengraver(inkex.Effect):
 					#print("path", layer.get('id'), path.get('id'))
 					if "d" not in path.keys() : 
 						self.error(_("Warning: One or more paths dont have 'd' parameter, try to Ungroup (Ctrl+Shift+G) and Object to Path (Ctrl+Shift+C)!"),"selection_contains_objects_that_are_not_paths")
-						continue					
-					csp = cubicsuperpath.parsePath(path.get("d"))
-					csp = self.apply_transforms(path, csp)
-					if path.get("dxfpoint") == "1":
-						tmp_curve=self.transform_csp(csp, layer) # does the coordinate transformation from px to mm according to the orientation points
-						x=tmp_curve[0][0][0][0]
-						y=tmp_curve[0][0][0][1]
-						print_("got dxfpoint (scaled) at (%f,%f)" % (x,y))
-						dxfpoints += [[x,y]]
-					else:
-						p += csp
-					
-					processedItemCount += 1
-					report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
+						continue
+					d = path.get("d")
+					if d != '':
+						csp = cubicsuperpath.parsePath(path.get("d"))
+						csp = self.apply_transforms(path, csp)
+						if path.get("dxfpoint") == "1":
+							tmp_curve=self.transform_csp(csp, layer) # does the coordinate transformation from px to mm according to the orientation points
+							x=tmp_curve[0][0][0][0]
+							y=tmp_curve[0][0][0][1]
+							print_("got dxfpoint (scaled) at (%f,%f)" % (x,y))
+							dxfpoints += [[x,y]]
+						else:
+							p += csp
+
+						processedItemCount += 1
+						report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
 
 				dxfpoints=sort_dxfpoints(dxfpoints)
 				curve = self.parse_curve(p, layer)
