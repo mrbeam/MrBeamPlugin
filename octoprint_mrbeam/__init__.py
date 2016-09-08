@@ -26,7 +26,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				   octoprint.plugin.BlueprintPlugin,
 				   octoprint.plugin.SimpleApiPlugin,
 				   octoprint.plugin.EventHandlerPlugin,
-				   octoprint.plugin.progressPlugin,
+				   octoprint.plugin.ProgressPlugin,
 				   octoprint.plugin.SlicerPlugin):
 
 	def __init__(self):
