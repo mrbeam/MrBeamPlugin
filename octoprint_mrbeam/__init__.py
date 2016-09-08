@@ -585,14 +585,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	##~~ Event Handler Plugin API
 
-	def on_event(event, payload):
+	def on_event(self, event, payload):
 		print("on_event", event, payload)
 		StateHandler.on_state_change(event)
 
 		
 	##~~ Progress Plugin API
 
-	def on_print_progress(storage, path, progress):
+	def on_print_progress(self, storage, path, progress):
 		StateHandler.on_state_change(state)
 
 	def on_slicing_progress(slicer, source_location, source_path, destination_location, destination_path, progress):
