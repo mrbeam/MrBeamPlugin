@@ -19,3 +19,4 @@ class LEDstrips():
 		print "sent state " + state
 		data = self.s.recv(1024)
 		#self.s.close()
+		# TODO handle broken pipe errors -> reestablish the connection
