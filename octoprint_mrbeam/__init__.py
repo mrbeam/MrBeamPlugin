@@ -596,7 +596,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def on_print_progress(self, storage, path, progress):
 		self.stateHandler.on_state_change(state)
 
-	def on_slicing_progress(slicer, source_location, source_path, destination_location, destination_path, progress):
+	def on_slicing_progress(self, slicer, source_location, source_path, destination_location, destination_path, progress):
 		self.stateHandler.on_state_change(state)
 											 
 	##~~ Softwareupdate hook
