@@ -3,13 +3,15 @@ import socket
 
 class LEDstrips():
 	def __init__(self):
-		self.socket_file = "/var/run/mrbeam_state.sock"
+		self.socket_file = "/var/run/mrbeam_ledstrips.sock"
 		self.s = None
 		
 	def _connect(self):
 		self.s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-		self.s.connect(self.socket_file)
-		
+		try:
+			self.s.connect(self.socket_file)
+		except socket.error as e:
+			print "Error while connecting to socket %s" % self.socket_file
 		
 	def on_state_change(self, state):
 		if(self.s is None):
