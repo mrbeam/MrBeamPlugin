@@ -829,6 +829,11 @@ $(function(){
 			$(window).resize(function(){
 				self.trigger_resize();
 			});
+			$("#webcam_image").load(function(){
+				$(this).removeClass('broken'); 
+			}).error(function () { 
+				$(this).addClass('broken'); 
+			});
 			self.trigger_resize(); // initialize
 			self.onTabChange('#workingarea', '#notab');
 			self.init();
@@ -934,14 +939,14 @@ $(function(){
 		};
 		
 		self.onTabChange = function (current, previous) {
-            if (current == "#workingarea") {
+            if (current === "#workingarea") {
                 if (self.webcamDisableTimeout != undefined) {
                     clearTimeout(self.webcamDisableTimeout);
                 }
                 var webcamImage = $("#webcam_image");
 //                var currentSrc = webcamImage.attr("src");
                 var currentSrc = webcamImage.attr("xlink:href");
-                if (currentSrc === undefined || currentSrc.trim() == "") {
+                if (currentSrc === undefined || currentSrc.trim() === "") {
                     var newSrc = CONFIG_WEBCAM_STREAM;
                     if (CONFIG_WEBCAM_STREAM.lastIndexOf("?") > -1) {
                         newSrc += "&";
@@ -954,11 +959,11 @@ $(function(){
 //                    webcamImage.attr("src", newSrc);
                     webcamImage.attr("xlink:href", newSrc);
                 }
-            } else if (previous == "#workingarea") {
+            } else if (previous === "#workingarea") {
                 // only disable webcam stream if tab is out of focus for more than 5s, otherwise we might cause
                 // more load by the constant connection creation than by the actual webcam stream
                 self.webcamDisableTimeout = setTimeout(function () {
-                    $("#webcam_image").attr("src", "");
+                    $("#webcam_image").attr("xlink:href", "");
                 }, 5000);
             }
         };
