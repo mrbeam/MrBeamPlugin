@@ -17,11 +17,12 @@ class LEDstrips():
 		if(self.s is None):
 			self._connect()
 			
-		if(self.s is not None):
+		try:
 			self.s.send(state + '\x00')
 			print "sent state " + state
 			data = self.s.recv(1024)
 			#self.s.close()
 			# TODO handle broken pipe errors -> reestablish the connection
-		else:
-			print "Error: mrbeam_ledstrips daemon not running."
+		except Exception as e:
+			print "Error: %s! mrbeam_ledstrips daemon not running?" % e
+			self.s = None
