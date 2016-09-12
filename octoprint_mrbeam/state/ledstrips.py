@@ -17,8 +17,11 @@ class LEDstrips():
 		if(self.s is None):
 			self._connect()
 			
-		self.s.send(state + '\x00')
-		print "sent state " + state
-		data = self.s.recv(1024)
-		#self.s.close()
-		# TODO handle broken pipe errors -> reestablish the connection
+		if(self.s is not None):
+			self.s.send(state + '\x00')
+			print "sent state " + state
+			data = self.s.recv(1024)
+			#self.s.close()
+			# TODO handle broken pipe errors -> reestablish the connection
+		else:
+			print "Error: mrbeam_ledstrips daemon not running."
