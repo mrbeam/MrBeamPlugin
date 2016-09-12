@@ -131,3 +131,7 @@ svg text {
 #settings_svg_conversion input[type=number] {
 	max-width: 6em;
 }
+
+#webcam_image.broken {
+	visibility: hidden;
+}

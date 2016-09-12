@@ -831,10 +831,10 @@ $(function(){
 			});
 			var webcam_image = document.getElementById('webcam_image');
 			$(webcam_image).load(function(){
-//				$(this).removeClass('broken'); 
+//				$(this).removeClass('broken'); // does not work with inline SVG
 				webcam_image.setAttribute("class", "");
 			}).error(function () { 
-//				$(this).addClass('broken'); 
+//				$(this).addClass('broken'); // does not work with inline SVG
 				webcam_image.setAttribute("class", "broken");
 			});
 			self.trigger_resize(); // initialize
