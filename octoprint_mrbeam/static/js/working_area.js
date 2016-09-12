@@ -829,10 +829,13 @@ $(function(){
 			$(window).resize(function(){
 				self.trigger_resize();
 			});
-			$("#webcam_image").load(function(){
-				$(this).removeClass('broken'); 
+			var webcam_image = document.getElementById('webcam_image');
+			$(webcam_image).load(function(){
+//				$(this).removeClass('broken'); 
+				webcam_image.setAttribute("class", "");
 			}).error(function () { 
-				$(this).addClass('broken'); 
+//				$(this).addClass('broken'); 
+				webcam_image.setAttribute("class", "broken");
 			});
 			self.trigger_resize(); // initialize
 			self.onTabChange('#workingarea', '#notab');
