@@ -76,6 +76,7 @@ $(function(){
 			return self.workingAreaWidthMM() / self.workingAreaWidthPx();
 		});
 		
+		// returns camera width with respect to the camera orientation
 		self.camWidth = ko.computed(function(){
 			if(self.settings.webcam_rotate90()){
 				return self.workingAreaHeightPx();
@@ -91,6 +92,16 @@ $(function(){
 				return self.workingAreaHeightPx();
 			}
 		});
+		
+		// TODO cropping parameters
+		self.camOffsets = ko.computed(function(){
+//			var offX = self.settings.settings.plugins.mrbeam.webcam_offset_x();
+//			var offY = self.settings.settings.plugins.mrbeam.webcam_offset_y();
+			var offX = 0;
+			var offY = 0;
+			return offX + "px " +offY + "px";
+		});
+
 
 		// matrix scales svg units to display_pixels
 		self.scaleMatrix = ko.computed(function(){
@@ -829,14 +840,14 @@ $(function(){
 			$(window).resize(function(){
 				self.trigger_resize();
 			});
-			var webcam_image = document.getElementById('webcam_image');
-			$(webcam_image).load(function(){
-//				$(this).removeClass('broken'); // does not work with inline SVG
-				webcam_image.setAttribute("class", "");
-			}).error(function () { 
-//				$(this).addClass('broken'); // does not work with inline SVG
-				webcam_image.setAttribute("class", "broken");
-			});
+//			var webcam_image = document.getElementById('webcam_image');
+//			$(webcam_image).load(function(){
+////				$(this).removeClass('broken'); // does not work with inline SVG
+//				webcam_image.setAttribute("class", "");
+//			}).error(function () { 
+////				$(this).addClass('broken'); // does not work with inline SVG
+//				webcam_image.setAttribute("class", "broken");
+//			});
 			self.trigger_resize(); // initialize
 			self.onTabChange('#workingarea', '#notab');
 			self.init();
@@ -948,8 +959,10 @@ $(function(){
                 }
                 var webcamImage = $("#webcam_image");
 //                var currentSrc = webcamImage.attr("src");
-                var currentSrc = webcamImage.attr("xlink:href");
-                if (currentSrc === undefined || currentSrc.trim() === "") {
+//                var currentSrc = webcamImage.attr("xlink:href");
+                var currentSrc = webcamImage.css('background-image'); //.replace(/^url\(['"]?/,'').replace(/['"]?\)$/,'');
+
+                if (currentSrc === undefined || currentSrc === "none" || currentSrc.trim() === "") {
                     var newSrc = CONFIG_WEBCAM_STREAM;
                     if (CONFIG_WEBCAM_STREAM.lastIndexOf("?") > -1) {
                         newSrc += "&";
@@ -960,13 +973,15 @@ $(function(){
 
                     //self.control.updateRotatorWidth();
 //                    webcamImage.attr("src", newSrc);
-                    webcamImage.attr("xlink:href", newSrc);
+//                    webcamImage.attr("xlink:href", newSrc);
+                    webcamImage.css("background-image", 'url('+newSrc+')');
                 }
             } else if (previous === "#workingarea") {
                 // only disable webcam stream if tab is out of focus for more than 5s, otherwise we might cause
                 // more load by the constant connection creation than by the actual webcam stream
                 self.webcamDisableTimeout = setTimeout(function () {
-                    $("#webcam_image").attr("xlink:href", "");
+//                    $("#webcam_image").attr("xlink:href", "");
+                    $("#webcam_image").css("background-image", "none");
                 }, 5000);
             }
         };
@@ -977,6 +992,6 @@ $(function(){
     // view model class, parameters for constructor, container to bind to
     ADDITIONAL_VIEWMODELS.push([WorkingAreaViewModel,
 		["loginStateViewModel", "settingsViewModel", "printerStateViewModel",  "gcodeFilesViewModel"],
-		[document.getElementById("area_preview"), document.getElementById("working_area_files")]]);
+		[document.getElementById("area_preview"), document.getElementById("working_area_files"), document.getElementById("webcam_image")]]);
 
 });

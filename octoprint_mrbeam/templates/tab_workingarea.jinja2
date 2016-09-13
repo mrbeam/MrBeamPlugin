@@ -258,7 +258,17 @@
 
 							<!--  end sidebar  -->
 
-							<div class="span8">						
+							<div class="span8">		
+								{% if webcamStream %}
+								
+								<div id="webcam_image" data-bind="style: {
+													width: camWidth()+'px',
+													height: camHeight()+'px',
+													background-position: camOffsets(),
+												},
+											   css: { rotate90: settings.webcam_rotate90(), flipH: settings.webcam_flipH(), flipV: settings.webcam_flipV() },
+											   "></div>	
+								{% endif %}
 								<svg id="area_preview" class="workingarea"
 									 data-bind="style: {
 											backgroundPosition: crosshairX()+'px'+' '+crosshairY()+'px',
@@ -276,23 +286,7 @@
 											<feFuncB type="table" tableValues="0.2 1"></feFuncB>
 										</feComponentTransfer>
 									</filter>
-									{% if webcamStream %}
-									<g data-bind="style: {}">
-										<image id="webcam_image" xlink:href="" x="0" y="0"
-											   data-bind="style: {
-													width: camWidth()+'px',
-													height: camHeight()+'px'
-												},
-											   css: { rotate90: settings.webcam_rotate90(), flipH: settings.webcam_flipH(), flipV: settings.webcam_flipV() },
-											   "
-											   />
-									</g>
-<!--									<div id="webcam_container" tabindex="0" >
-											<div id="webcam_rotator" data-bind="css: { rotate90: settings.webcam_rotate90() }">
-												<img id="webcam_image" data-bind="css: { flipH: settings.webcam_flipH(), flipV: settings.webcam_flipV() }">
-											</div>
-										</div>-->
-									{% endif %}
+
 									<g id="scaleGroup" data-bind="attr: { transform: scaleMatrix() }">
 
 										<text
