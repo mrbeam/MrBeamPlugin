@@ -39,6 +39,7 @@ $(function(){
 		self.camera_offset_x = ko.observable(0);
 		self.camera_offset_y = ko.observable(0);
 		self.camera_scale = ko.observable(1.0);
+		self.camera_rotation = ko.observable(0.0);
 		
 		self.hwRatio = ko.computed(function(){
 			// y/x = 297/216 junior, respectively 594/432 senior
@@ -81,33 +82,37 @@ $(function(){
 			return self.workingAreaWidthMM() / self.workingAreaWidthPx();
 		});
 		
-		// returns camera width with respect to the camera orientation
-		self.camWidth = ko.computed(function(){
-			if(self.settings.webcam_rotate90()){
-				return self.workingAreaHeightPx();
-			} else {
-				return self.workingAreaWidthPx();
-			}
+		self.camTransform = ko.computed(function(){
+			return "scale("+self.camera_scale()+") rotate("+self.camera_rotation()+"deg) translate("+self.camera_offset_x()+"px, "+self.camera_offset_y()+"px)"
 		});
-
-		self.camHeight = ko.computed(function(){
-			if(self.settings.webcam_rotate90()){
-				return self.workingAreaWidthPx();
-			} else {
-				return self.workingAreaHeightPx();
-			}
-		});
+//		
+//		// returns camera width with respect to the camera orientation
+//		self.camWidth = ko.computed(function(){
+//			if(self.settings.webcam_rotate90()){
+//				return self.workingAreaHeightPx();
+//			} else {
+//				return self.workingAreaWidthPx();
+//			}
+//		});
+//
+//		self.camHeight = ko.computed(function(){
+//			if(self.settings.webcam_rotate90()){
+//				return self.workingAreaWidthPx();
+//			} else {
+//				return self.workingAreaHeightPx();
+//			}
+//		});
 		
-		// scales camera image proportionally to working area size
-		self.camSize = ko.computed(function(){
-			return self.workingAreaWidthPx() * self.camera_scale() + 'px auto';
-		});
-		
-		// offset parameters
-		self.camOffsets = ko.computed(function(){
-			console.log("cam_offsets", self.camera_offset_x() + "px " + self.camera_offset_y() + "px");
-			return self.camera_offset_x() + "px " + self.camera_offset_y() + "px";
-		});
+//		// scales camera image proportionally to working area size
+//		self.camSize = ko.computed(function(){
+//			return self.workingAreaWidthPx() * self.camera_scale() + 'px auto';
+//		});
+//		
+//		// offset parameters
+//		self.camOffsets = ko.computed(function(){
+//			console.log("cam_offsets", self.camera_offset_x() + "px " + self.camera_offset_y() + "px");
+//			return self.camera_offset_x() + "px " + self.camera_offset_y() + "px";
+//		});
 
 
 		// matrix scales svg units to display_pixels
@@ -148,6 +153,9 @@ $(function(){
 			});
 			self.settings.settings.plugins.mrbeam.camera_scale.subscribe(function(newValue) {
 				self.camera_scale(newValue);
+			});
+			self.settings.settings.plugins.mrbeam.camera_rotation.subscribe(function(newValue) {
+				self.camera_rotation(newValue);
 			});
 		};
 		
@@ -975,9 +983,9 @@ $(function(){
                     clearTimeout(self.webcamDisableTimeout);
                 }
                 var webcamImage = $("#webcam_image");
-//                var currentSrc = webcamImage.attr("src");
+                var currentSrc = webcamImage.attr("src");
 //                var currentSrc = webcamImage.attr("xlink:href");
-                var currentSrc = webcamImage.css('background-image'); //.replace(/^url\(['"]?/,'').replace(/['"]?\)$/,'');
+//                var currentSrc = webcamImage.css('background-image'); //.replace(/^url\(['"]?/,'').replace(/['"]?\)$/,'');
 
                 if (currentSrc === undefined || currentSrc === "none" || currentSrc.trim() === "") {
                     var newSrc = CONFIG_WEBCAM_STREAM;
@@ -989,9 +997,9 @@ $(function(){
                     newSrc += new Date().getTime();
 
                     //self.control.updateRotatorWidth();
-//                    webcamImage.attr("src", newSrc);
+                    webcamImage.attr("src", newSrc);
 //                    webcamImage.attr("xlink:href", newSrc);
-                    webcamImage.css("background-image", 'url('+newSrc+')');
+//                    webcamImage.css("background-image", 'url('+newSrc+')');
                 }
             } else if (previous === "#workingarea") {
                 // only disable webcam stream if tab is out of focus for more than 5s, otherwise we might cause
@@ -1009,6 +1017,8 @@ $(function(){
     // view model class, parameters for constructor, container to bind to
     ADDITIONAL_VIEWMODELS.push([WorkingAreaViewModel,
 		["loginStateViewModel", "settingsViewModel", "printerStateViewModel",  "gcodeFilesViewModel"],
-		[document.getElementById("area_preview"), document.getElementById("working_area_files"), document.getElementById("webcam_image")]]);
+		[document.getElementById("area_preview"), 
+			document.getElementById("working_area_files"), 
+			document.getElementById("webcam_wrapper")]]);
 
 });

@@ -132,7 +132,12 @@ svg text {
 	max-width: 6em;
 }
 
-
+#webcam_wrapper {
+	position:absolute;
+	top:1px;
+	left:1px;
+	overflow: hidden;
+}
 
 #webcam_image {
 	position:absolute;

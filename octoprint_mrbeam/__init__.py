@@ -69,7 +69,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			showlasersafety = True,
 			camera_offset_x = 0,
 			camera_offset_y = 0,
-			camera_scale = 1
+			camera_scale = 1,
+			camera_rotation = 0
 		)
 
 	def on_settings_load(self):
@@ -83,6 +84,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			camera_offset_x = self._settings.get(['camera_offset_x']),
 			camera_offset_y = self._settings.get(['camera_offset_y']),
 			camera_scale = self._settings.get(['camera_scale']),
+			camera_rotation = self._settings.get(['camera_rotation']),
 			)
 
 	def on_settings_save(self, data):
@@ -102,6 +104,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._settings.set_int(["camera_offset_y"], data["camera_offset_y"])
 		if "camera_scale" in data:
 			self._settings.set_float(["camera_scale"], data["camera_scale"])
+		if "camera_rotation" in data:
+			self._settings.set_float(["camera_rotation"], data["camera_rotation"])
 		if "svgtogcode_debug_logging" in data:
 			self._settings.set_boolean(["svgtogcode_debug_logging"], data["svgtogcode_debug_logging"])
 
