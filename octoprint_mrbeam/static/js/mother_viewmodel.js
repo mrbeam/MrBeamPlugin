@@ -297,12 +297,18 @@ $(function () {
             if (self.settings.savetimer !== undefined) {
                 clearTimeout(self.settings.savetimer);
             }
-            self.settings.savetimer = setTimeout(function () {
-                self.settings.saveData(undefined, function () {
-                    $("#settingsTabs li.active").removeClass('saveInProgress');
-                    self.settings.savetimer = undefined;
-                });
-            }, 2000);
+			
+			// only trigger autosave if there is something changed.
+			// the port scanning from the backend otherwise triggers it frequently
+			var data = getOnlyChangedData(self.settings.getLocalData(), self.settings.lastReceivedSettings);
+			if(Object.getOwnPropertyNames(data).length > 0){
+				self.settings.savetimer = setTimeout(function () {
+					self.settings.saveData(undefined, function () {
+						$("#settingsTabs li.active").removeClass('saveInProgress');
+						self.settings.savetimer = undefined;
+					});
+				}, 2000);
+			}
         };
 
         $('#settings_dialog_content').has('input, select, textarea').on('change', function () {
