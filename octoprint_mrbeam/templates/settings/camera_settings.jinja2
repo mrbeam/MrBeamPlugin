@@ -1,0 +1,24 @@
+<div id="settings_svg_conversion" xdata-bind="allowBindings: true">
+    <h4>{{ _('Camera Calibration') }}</h4>
+
+    <form class="form-horizontal">
+        <div class="control-group">
+            <label class="control-label" for="settings-cam-offset-x">{{ _('Offset X') }}</label>
+            <div class="controls">
+                <input type="number" class="input-block-level" data-bind="value: settings.plugins.mrbeam.camera_offset_x">
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="settings-cam-offset-y">{{ _('Offset Y') }}</label>
+            <div class="controls">
+                <input type="number" class="input-block-level" data-bind="value: settings.plugins.mrbeam.camera_offset_y">
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="settings-cam-scale">{{ _('Offset Y') }}</label>
+            <div class="controls">
+                <input type="number" step="0.01" min="0" class="input-block-level" data-bind="value: settings.plugins.mrbeam.camera_scale">
+            </div>
+        </div>
+    </form>
+</div>

@@ -157,6 +157,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return [
 			dict(type = 'settings', name = "Machine Profiles", template='settings/lasercutterprofiles_settings.jinja2', suffix="_lasercutterprofiles", custom_bindings = False),
 			dict(type = 'settings', name = "SVG Conversion", template='settings/svgtogcode_settings.jinja2', suffix="_conversion", custom_bindings = False),
+			dict(type = 'settings', name = "Camera Calibration", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings = False),
 			dict(type = 'settings', name = "Serial Connection", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings= False, replaces='serial')
 		]
 

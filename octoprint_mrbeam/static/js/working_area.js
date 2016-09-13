@@ -105,6 +105,7 @@ $(function(){
 		
 		// offset parameters
 		self.camOffsets = ko.computed(function(){
+			console.log("cam_offsets", self.camera_offset_x() + "px " + self.camera_offset_y() + "px");
 			return self.camera_offset_x() + "px " + self.camera_offset_y() + "px";
 		});
 
@@ -136,6 +137,19 @@ $(function(){
 		self.working_area_empty = ko.computed(function(){
 			return self.placedDesigns().length === 0;
 		});
+		
+		self.initCameraCalibration = function(){
+			self.settings.settings.plugins.mrbeam.camera_offset_x.subscribe(function(newValue) {
+				console.log("offset_x", newValue);
+				self.camera_offset_x(newValue);
+			});
+			self.settings.settings.plugins.mrbeam.camera_offset_y.subscribe(function(newValue) {
+				self.camera_offset_y(newValue);
+			});
+			self.settings.settings.plugins.mrbeam.camera_scale.subscribe(function(newValue) {
+				self.camera_scale(newValue);
+			});
+		};
 		
 		self.clear = function(){
 			snap.selectAll('#userContent>*').remove();
@@ -846,17 +860,14 @@ $(function(){
 			$(window).resize(function(){
 				self.trigger_resize();
 			});
-//			var webcam_image = document.getElementById('webcam_image');
-//			$(webcam_image).load(function(){
-////				$(this).removeClass('broken'); // does not work with inline SVG
-//				webcam_image.setAttribute("class", "");
-//			}).error(function () { 
-////				$(this).addClass('broken'); // does not work with inline SVG
-//				webcam_image.setAttribute("class", "broken");
-//			});
 			self.trigger_resize(); // initialize
 			self.onTabChange('#workingarea', '#notab');
 			self.init();
+		};
+		
+		self.onStartupComplete = function(){
+			self.initCameraCalibration();
+			
 		};
 
 		self.check_sizes_and_placements = function(){

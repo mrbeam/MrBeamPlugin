@@ -245,29 +245,22 @@
 													</div>
 												</div>
 											</script>
-
-
-
 										</div>
 									</div>
 								</div>
-
-
-
 							</div>
 
 							<!--  end sidebar  -->
 
 							<div class="span8">		
 								{% if webcamStream %}
-								
-								<div id="webcam_image" data-bind="style: {
+									<div id="webcam_image" data-bind="style: {
 													width: camWidth()+'px',
 													height: camHeight()+'px',
 													backgroundSize: camSize(),
 													backgroundPosition: camOffsets(),
 												},
-											   css: { rotate90: settings.webcam_rotate90(), flipH: settings.webcam_flipH(), flipV: settings.webcam_flipV() },
+											   css: { flipH: settings.webcam_flipH(), flipV: settings.webcam_flipV() },
 											   "></div>	
 								{% endif %}
 								<svg id="area_preview" class="workingarea"
