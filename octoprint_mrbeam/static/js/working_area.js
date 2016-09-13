@@ -144,19 +144,25 @@ $(function(){
 		});
 		
 		self.initCameraCalibration = function(){
-			self.settings.settings.plugins.mrbeam.camera_offset_x.subscribe(function(newValue) {
-				console.log("offset_x", newValue);
+			var s = self.settings.settings.plugins.mrbeam; 
+			s.camera_offset_x.subscribe(function(newValue) {
 				self.camera_offset_x(newValue);
 			});
-			self.settings.settings.plugins.mrbeam.camera_offset_y.subscribe(function(newValue) {
+			s.camera_offset_y.subscribe(function(newValue) {
 				self.camera_offset_y(newValue);
 			});
-			self.settings.settings.plugins.mrbeam.camera_scale.subscribe(function(newValue) {
+			s.camera_scale.subscribe(function(newValue) {
 				self.camera_scale(newValue);
 			});
-			self.settings.settings.plugins.mrbeam.camera_rotation.subscribe(function(newValue) {
+			s.camera_rotation.subscribe(function(newValue) {
 				self.camera_rotation(newValue);
 			});
+		
+			s.camera_offset_x.notifySubscribers(s.camera_offset_x());
+			s.camera_offset_y.notifySubscribers(s.camera_offset_y());
+			s.camera_scale.notifySubscribers(s.camera_scale());
+			s.camera_rotation.notifySubscribers(s.camera_rotation());
+			
 		};
 		
 		self.clear = function(){
