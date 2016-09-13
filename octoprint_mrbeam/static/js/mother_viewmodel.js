@@ -96,7 +96,7 @@ $(function () {
             tabs.on('show', function (e) {
                 var current = e.target.hash;
                 var previous = e.relatedTarget.hash;
-                log.debug("Selected OctoPrint tab changed: previous = " + previous + ", current = " + current);
+//                log.debug("Selected OctoPrint tab changed: previous = " + previous + ", current = " + current);
                 OctoPrint.coreui.selectedTab = current;
                 callViewModels(allViewModels, "onTabChange", [current, previous]);
             });

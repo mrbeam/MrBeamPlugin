@@ -35,6 +35,11 @@ $(function(){
 		self.svgDPI = ko.observable(90); // TODO fetch from settings
 		self.workingAreaWidthMM = ko.observable(undefined);
 		self.workingAreaHeightMM = ko.observable(undefined);
+		
+		self.camera_offset_x = ko.observable(0);
+		self.camera_offset_y = ko.observable(0);
+		self.camera_scale = ko.observable(1.0);
+		
 		self.hwRatio = ko.computed(function(){
 			// y/x = 297/216 junior, respectively 594/432 senior
 			var w = self.workingAreaWidthMM();
@@ -93,13 +98,14 @@ $(function(){
 			}
 		});
 		
-		// TODO cropping parameters
+		// scales camera image proportionally to working area size
+		self.camSize = ko.computed(function(){
+			return self.workingAreaWidthPx() * self.camera_scale() + 'px auto';
+		});
+		
+		// offset parameters
 		self.camOffsets = ko.computed(function(){
-//			var offX = self.settings.settings.plugins.mrbeam.webcam_offset_x();
-//			var offY = self.settings.settings.plugins.mrbeam.webcam_offset_y();
-			var offX = 0;
-			var offY = 0;
-			return offX + "px " +offY + "px";
+			return self.camera_offset_x() + "px " + self.camera_offset_y() + "px";
 		});
 
 
@@ -130,7 +136,7 @@ $(function(){
 		self.working_area_empty = ko.computed(function(){
 			return self.placedDesigns().length === 0;
 		});
-
+		
 		self.clear = function(){
 			snap.selectAll('#userContent>*').remove();
 			snap.selectAll('#placedGcodes>*').remove();
