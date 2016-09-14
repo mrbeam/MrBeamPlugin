@@ -372,7 +372,6 @@ class MachineCom(object):
 			self._log(errorMsg)
 			self._errorValue = errorMsg
 			eventManager().fire(Events.ERROR, {"error": self.getErrorString()})
-			eventManager().fire(Events.LIMITS_HIT, {"error": self.getErrorString()})
 		elif "Abort during cycle" in line:
 			errorMsg = "Soft-reset detected. Please do a homing cycle"
 			self._log(errorMsg)
@@ -395,6 +394,8 @@ class MachineCom(object):
 
 	def _handle_feedback_message(self, line):
 		if line[1:].startswith('Res'): # [Reset to continue]
+			#send ctrl-x back immediately '\x18' == ctrl-x
+			self._serial.write(list(bytearray('\x18')))
 			pass
 		elif line[1:].startswith('\'$H'): # ['$H'|'$X' to unlock]
 			pass
@@ -817,6 +818,9 @@ class MachineCom(object):
 			elif "intensity" in specialcmd:
 				data = specialcmd[9:]
 				self._set_intensity_override(int(data))
+			elif "reset" in specialcmd:
+				self._log("Reset initiated")
+				self._serial.write(list(bytearray('\x18')))
 			else:
 				self._log("Command not Found! %s" % cmd)
 				self._log("available commands are:")
@@ -825,6 +829,7 @@ class MachineCom(object):
 				self._log("   /feedrate <%>")
 				self._log("   /intensity <%>")
 				self._log("   /disconnect")
+				self._log("   /reset")
 			return
 
 		eepromCmd = re.search("^\$[0-9]+=.+$", cmd)

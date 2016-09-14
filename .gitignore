@@ -1,3 +1,26 @@
+# Created by .ignore support plugin (hsz.mobi)
+.DS_Store
+.gitignore
+.idea/
+Mr_Beam.egg-info/
+octoprint_mrbeam/__init__.pyc
+octoprint_mrbeam/comm_acc2.pyc
+octoprint_mrbeam/gcodegenerator/__init__.pyc
+octoprint_mrbeam/gcodegenerator/bezmisc.pyc
+octoprint_mrbeam/gcodegenerator/color2intensity.pyc
+octoprint_mrbeam/gcodegenerator/cspsubdiv.pyc
+octoprint_mrbeam/gcodegenerator/cubicsuperpath.pyc
+octoprint_mrbeam/gcodegenerator/ffgeom.pyc
+octoprint_mrbeam/gcodegenerator/img2gcode.pyc
+octoprint_mrbeam/gcodegenerator/infill_generator.pyc
+octoprint_mrbeam/gcodegenerator/inkex.pyc
+octoprint_mrbeam/gcodegenerator/machine_settings.pyc
+octoprint_mrbeam/gcodegenerator/mrbeam.pyc
+octoprint_mrbeam/gcodegenerator/simplepath.pyc
+octoprint_mrbeam/gcodegenerator/simplestyle.pyc
+octoprint_mrbeam/gcodegenerator/simpletransform.pyc
+octoprint_mrbeam/printer.pyc
+octoprint_mrbeam/profile.pyc
 *.pyc
 *.swp
 .idea
