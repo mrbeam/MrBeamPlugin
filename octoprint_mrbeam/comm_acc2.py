@@ -372,7 +372,6 @@ class MachineCom(object):
 			self._log(errorMsg)
 			self._errorValue = errorMsg
 			eventManager().fire(Events.ERROR, {"error": self.getErrorString()})
-			eventManager().fire(Events.LIMITS_HIT, {"error": self.getErrorString()})
 		elif "Abort during cycle" in line:
 			errorMsg = "Soft-reset detected. Please do a homing cycle"
 			self._log(errorMsg)
