@@ -6,6 +6,7 @@ from octoprint.util import dict_merge
 from octoprint.server import NO_CONTENT
 
 from .profile import LaserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
+from .state.ledstrips import LEDstrips
 
 import copy
 import time
@@ -24,6 +25,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
                    octoprint.plugin.TemplatePlugin,
 				   octoprint.plugin.BlueprintPlugin,
 				   octoprint.plugin.SimpleApiPlugin,
+				   octoprint.plugin.EventHandlerPlugin,
+				   octoprint.plugin.ProgressPlugin,
 				   octoprint.plugin.SlicerPlugin):
 
 	def __init__(self):
@@ -32,6 +35,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._slicing_commands_mutex = threading.Lock()
 		self._cancelled_jobs = []
 		self._cancelled_jobs_mutex = threading.Lock()
+		self.stateHandler = LEDstrips() 
 
 	def initialize(self):
 		self.laserCutterProfileManager = LaserCutterProfileManager(self._settings)
@@ -579,6 +583,23 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		profile = Profile(self._load_profile(profile_path))
 		return profile.convert_to_engine()
 
+
+	##~~ Event Handler Plugin API
+
+	def on_event(self, event, payload):
+		print("on_event", event, payload)
+		self.stateHandler.on_state_change(event)
+
+		
+	##~~ Progress Plugin API
+
+	def on_print_progress(self, storage, path, progress):
+		state = "progress:"+str(progress)
+		self.stateHandler.on_state_change(state)
+
+	def on_slicing_progress(self, slicer, source_location, source_path, destination_location, destination_path, progress):
+		state = "slicing:"+str(progress)
+		self.stateHandler.on_state_change(state)
 											 
 	##~~ Softwareupdate hook
 	
