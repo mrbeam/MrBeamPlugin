@@ -141,6 +141,9 @@ svg text {
 
 #webcam_image {
 	position:absolute;
-	background-repeat: no-repeat;
-	
+	background-repeat: no-repeat;	
+}
+
+#webcam_image.broken {
+	visibility: hidden;
 }

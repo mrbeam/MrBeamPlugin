@@ -890,8 +890,20 @@ $(function(){
 		
 		self.onStartupComplete = function(){
 			self.initCameraCalibration();
-			
 		};
+
+		self.onBrowserTabVisibilityChange = function(state){
+			var currentTab = $('#mrbeam-main-tabs li.active a').attr('href');
+			if(typeof currentTab !== undefined && currentTab === "#workingarea"){
+				if(state === true){
+					self.onTabChange('#workingarea', '#notab');
+				} 
+
+				if(state === false){
+					self.onTabChange('#notab', '#workingarea');
+				}
+			} else
+		}
 
 		self.check_sizes_and_placements = function(){
 			ko.utils.arrayForEach(self.placedDesigns(), function(design) {
@@ -999,8 +1011,6 @@ $(function(){
                 }
                 var webcamImage = $("#webcam_image");
                 var currentSrc = webcamImage.attr("src");
-//                var currentSrc = webcamImage.attr("xlink:href");
-//                var currentSrc = webcamImage.css('background-image'); //.replace(/^url\(['"]?/,'').replace(/['"]?\)$/,'');
 
                 if (currentSrc === undefined || currentSrc === "none" || currentSrc.trim() === "") {
                     var newSrc = CONFIG_WEBCAM_STREAM;
@@ -1010,17 +1020,14 @@ $(function(){
                         newSrc += "?";
                     }
                     newSrc += new Date().getTime();
-
-                    //self.control.updateRotatorWidth();
+					console.log("webcam src set", newSrc);
                     webcamImage.attr("src", newSrc);
-//                    webcamImage.attr("xlink:href", newSrc);
-//                    webcamImage.css("background-image", 'url('+newSrc+')');
                 }
+				console.log("webcam enabled");
             } else if (previous === "#workingarea") {
                 // only disable webcam stream if tab is out of focus for more than 5s, otherwise we might cause
                 // more load by the constant connection creation than by the actual webcam stream
                 self.webcamDisableTimeout = setTimeout(function () {
-//                    $("#webcam_image").attr("xlink:href", "");
                     $("#webcam_image").css("background-image", "none");
                 }, 5000);
             }
