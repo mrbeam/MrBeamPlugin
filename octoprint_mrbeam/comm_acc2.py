@@ -151,7 +151,7 @@ class MachineCom(object):
 				elif line.startswith('Grb'): # Grbl startup message
 					self._handle_startup_message(line)
 			except:
-				self._logger.exception("Something crashed inside the monitoring loop, please report this to Mr. Beam")
+				self._logger.exception("Something crashed inside the monitoring loop, please report this to Mr Beam")
 				errorMsg = "See octoprint.log for details"
 				self._log(errorMsg)
 				self._errorValue = errorMsg

@@ -876,6 +876,15 @@ $(function(){
 			});
 			self.trigger_resize(); // initialize
 			self.onTabChange('#workingarea', '#notab');
+			var webcam_image = document.getElementById('webcam_image');
+			$(webcam_image).load(function(){
+			  $(this).removeClass('broken'); // does not work with inline SVG
+//				webcam_image.setAttribute("class", "");
+			}).error(function () {
+				$(this).addClass('broken'); // does not work with inline SVG
+//				webcam_image.setAttribute("class", "broken");
+			});
+
 			self.init();
 		};
 		
