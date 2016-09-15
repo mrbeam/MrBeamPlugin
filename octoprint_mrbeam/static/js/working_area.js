@@ -902,8 +902,8 @@ $(function(){
 				if(state === false){
 					self.onTabChange('#notab', '#workingarea');
 				}
-			} else
-		}
+			} 
+		};
 
 		self.check_sizes_and_placements = function(){
 			ko.utils.arrayForEach(self.placedDesigns(), function(design) {
