@@ -139,8 +139,17 @@ svg text {
 	overflow: hidden;
 }
 
+#webcam_wrapper_settings {
+	position:absolute;
+	top:1px;
+	left:1px;
+	overflow: hidden;
+	width: 100%;
+	height:auto;
+}
+
 #webcam_image {
 	position:absolute;
 	background-repeat: no-repeat;
-	
+
 }
