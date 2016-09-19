@@ -14,7 +14,7 @@ $(function () {
 
         self.onStartup = function () {
             // TODO fetch machine profile on start
-            //self.requestData(); 
+            //self.requestData();
             self.control.showZAxis = ko.computed(function () {
 //				var has = self.currentProfileData()['zAxis']();
 //				return has;
@@ -297,7 +297,6 @@ $(function () {
             if (self.settings.savetimer !== undefined) {
                 clearTimeout(self.settings.savetimer);
             }
-			
 			// only trigger autosave if there is something changed.
 			// the port scanning from the backend otherwise triggers it frequently
 			var data = getOnlyChangedData(self.settings.getLocalData(), self.settings.lastReceivedSettings);

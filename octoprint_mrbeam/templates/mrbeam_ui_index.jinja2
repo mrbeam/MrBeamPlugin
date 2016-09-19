@@ -25,7 +25,9 @@
 				<ul id="mrbeam-main-tabs" class="nav nav-pills pull-right">
 					<li class="active"><a href="#workingarea" data-toggle="tab" id="wa_tab_btn">working area</a></li>
 					<li><a href="#designlib" data-toggle="tab">design library</a></li>
+                    {% if not enableFocus %}
 					<li><a href="#focus" data-toggle="tab">focus</a></li>
+                    {% endif %}
 					<li><a href="#mrb_term" data-toggle="tab">terminal</a></li>
 
 					{% for key in templates.navbar.order %}
@@ -61,14 +63,16 @@
 			</div>
 		</nav>
 
-		<div class="row-fluid">		
+		<div class="row-fluid">
 			<div class="span12 tabbable" id="mrbeam-tabs">
 				<div class="tab-content">
 
-					{% include 'tab_workingarea.jinja2' %}				
+					{% include 'tab_workingarea.jinja2' %}
 					{% include 'tab_terminal.jinja2' %}
-					{% include 'tab_designlib.jinja2' %}				
-					{% include 'tab_focus.jinja2' %}				
+					{% include 'tab_designlib.jinja2' %}
+					{% if not enableFocus %}
+                    {% include 'tab_focus.jinja2' %}
+                    {% endif %}
 
 					<div class="tab-pane" id="settings">
 						<div class="container-fluid">

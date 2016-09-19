@@ -35,7 +35,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._slicing_commands_mutex = threading.Lock()
 		self._cancelled_jobs = []
 		self._cancelled_jobs_mutex = threading.Lock()
-		self.stateHandler = LEDstrips() 
+		self.stateHandler = LEDstrips()
 
 	def initialize(self):
 		self.laserCutterProfileManager = LaserCutterProfileManager(self._settings)
@@ -102,40 +102,45 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# Define your plugin's asset files to automatically include in the
 		# core UI here.
 		return dict(
-			js=["js/mother_viewmodel.js", "js/mrbeam.js", "js/working_area.js", 
-			"js/lib/snap.svg-min.js", "js/render_fills.js", "js/matrix_oven.js", "js/drag_scale_rotate.js", 
-			"js/convert.js", "js/gcode_parser.js", "js/lib/photobooth_min.js", "js/laserSafetyNotes.js", 
+			js=["js/mother_viewmodel.js", "js/mrbeam.js", "js/working_area.js",
+			"js/lib/snap.svg-min.js", "js/render_fills.js", "js/matrix_oven.js", "js/drag_scale_rotate.js",
+			"js/convert.js", "js/gcode_parser.js", "js/lib/photobooth_min.js", "js/laserSafetyNotes.js",
 			"js/lasercutterprofiles.js"],
 			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css"],
 			less=["less/mrbeam.less"]
 		)
 
 	##~~ UiPlugin mixin
-	
+
 	def will_handle_ui(self, request):
 		# returns True as Mr Beam Plugin should be always displayed
 		return True
-	
+
 	def on_ui_render(self, now, request, render_kwargs):
 		# if will_handle_ui returned True, we will now render our custom index
 		# template, using the render_kwargs as provided by OctoPrint
 		from flask import make_response, render_template
-		
+
 		enable_accesscontrol = self._user_manager.enabled
 		accesscontrol_active = enable_accesscontrol and self._user_manager.hasBeenCustomized()
+
+		selectedProfile = self.laserCutterProfileManager.get_current_or_default()
+		print("Selected Profile Focus: ", selectedProfile["focus"]);
+		enable_focus = selectedProfile["focus"]
 
 		# render_kwargs["templates"]["settings"]["entries"]["serial"][1]["template"] = "settings/serialconnection.jinja2"
 
 		render_kwargs.update(dict(
-							 webcamStream=self._settings.global_get(["webcam", "stream"]),
-							 enableTemperatureGraph=False,
-							 enableAccessControl=enable_accesscontrol,
-							 accessControlActive=accesscontrol_active,					  
-							 enableSdSupport=False,
-							 gcodeMobileThreshold=0,
-							 gcodeThreshold=0,
-							 wizard=False,
-							 now=now,
+							 webcamStream = self._settings.global_get(["webcam", "stream"]),
+							 enableFocus = enable_focus,
+							 enableTemperatureGraph = False,
+							 enableAccessControl = enable_accesscontrol,
+							 accessControlActive = accesscontrol_active,
+							 enableSdSupport = False,
+							 gcodeMobileThreshold = 0,
+							 gcodeThreshold = 0,
+							 wizard = False,
+							 now = now,
 							 ))
 		return make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
 
@@ -590,7 +595,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		print("on_event", event, payload)
 		self.stateHandler.on_state_change(event)
 
-		
+
 	##~~ Progress Plugin API
 
 	def on_print_progress(self, storage, path, progress):
@@ -600,9 +605,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def on_slicing_progress(self, slicer, source_location, source_path, destination_location, destination_path, progress):
 		state = "slicing:"+str(progress)
 		self.stateHandler.on_state_change(state)
-											 
+
 	##~~ Softwareupdate hook
-	
+
 	def get_update_information(self):
 		# Define the configuration for your plugin to use with the Software Update
 		# Plugin here. See https://github.com/foosel/OctoPrint/wiki/Plugin:-Software-Update
@@ -632,18 +637,18 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		def _image_mime_detector(path):
 			p = path.lower()
 			if p.endswith('.jpg') or p.endswith('.jpeg') or p.endswith('.jpe'):
-				return 'image/jpeg' 
+				return 'image/jpeg'
 			elif p.endswith('.png'):
-				return 'image/png' 
+				return 'image/png'
 			elif p.endswith('.gif'):
-				return 'image/gif' 
+				return 'image/gif'
 			elif p.endswith('.bmp'):
-				return 'image/bmp' 
+				return 'image/bmp'
 			elif p.endswith('.pcx'):
-				return 'image/x-pcx' 
+				return 'image/x-pcx'
 			elif p.endswith('.'):
 				return 'image/webp'
-			
+
 		return dict(
 			# extensions for image / 3d model files
 			model=dict(
@@ -683,11 +688,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return currentJob["file"]["origin"], currentJob["file"]["name"]
 		else:
 			return None, None
-		
+
 #	def serve_url(self, server_routes, *args, **kwargs):
 #		from octoprint.server.util.tornado import LargeResponseHandler, path_validation_factory
 #		from octoprint.util import is_hidden_path
-#		return [(r"/serve/(.*)", LargeResponseHandler, 
+#		return [(r"/serve/(.*)", LargeResponseHandler,
 #			dict(path=self._settings.global_get_basefolder("uploads"),
 #            as_attachment=False,
 #            path_validation=path_validation_factory(lambda path: not is_hidden_path(path), status_code=404)))
