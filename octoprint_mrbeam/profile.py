@@ -60,6 +60,7 @@ class LaserCutterProfileManager(object):
 			origin_offset_y = 1.1,
 		),
 		zAxis = False,
+		focus = False,
 		axes=dict(
 			x = dict(speed=5000, inverted=False),
 			y = dict(speed=5000, inverted=False),
@@ -180,7 +181,7 @@ class LaserCutterProfileManager(object):
 				continue
 
 			results[identifier] = dict_merge(self._load_default("_mrbeam_junior"), profile)
-			
+
 		results["_mrbeam_junior"] = self._load_default("_mrbeam_junior")
 		results["_mrbeam_senior"] = self._load_default("_mrbeam_senior")
 		return results
@@ -241,7 +242,7 @@ class LaserCutterProfileManager(object):
 			default['volume']['depth'] *= 2
 			default['model'] = "Senior"
 			default['id'] = "_mrbeam_senior"
-		
+
 		profile = self._ensure_valid_profile(default)
 		if not profile:
 			self._logger.warn("Invalid default profile after applying overrides")
