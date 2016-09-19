@@ -1,11 +1,9 @@
 $(function() {
-    
+
 	function LaserCutterProfilesViewModel(params) {
         var self = this;
 
-        self.workingarea = params[0];
-        self.control = params[1];
-        self.conversion = params[2];
+        self.control = params[0];
 
         self._cleanProfile = function() {
             return {
@@ -21,6 +19,7 @@ $(function() {
                     origin_offset_y: 1
                 },
                 zAxis: false,
+                focus: false,
                 axes: {
                     x: {speed: 6000, inverted: false},
                     y: {speed: 6000, inverted: false},
@@ -61,6 +60,7 @@ $(function() {
         self.editorVolumeHeight = ko.observable();
 
         self.editorZAxis = ko.observable();
+        self.editorFocus = ko.observable();
 
         self.editorAxisXSpeed = ko.observable();
         self.editorAxisYSpeed = ko.observable();
@@ -110,10 +110,9 @@ $(function() {
             self.currentProfile(currentProfile);
             self.currentProfileData(currentProfileData);
 
-            self.workingarea.workingAreaWidthMM(self.currentProfileData().volume.width() - self.currentProfileData().volume.origin_offset_x());
-            self.workingarea.workingAreaHeightMM(self.currentProfileData().volume.depth() - self.currentProfileData().volume.origin_offset_y());
-            var maxSpeed = Math.min(self.currentProfileData().axes.x.speed(), self.currentProfileData().axes.y.speed());
-            self.conversion.maxSpeed(maxSpeed);
+            //TODO calculate MaxSpeed without Conversion
+            // var maxSpeed = Math.min(self.currentProfileData().axes.x.speed(), self.currentProfileData().axes.y.speed());
+            // self.conversion.maxSpeed(maxSpeed);
         };
 
         self.addProfile = function(callback) {
@@ -180,6 +179,7 @@ $(function() {
             self.editorVolumeHeight(data.volume.height);
 
             self.editorZAxis(data.zAxis);
+            self.editorFocus(data.focus);
 
             self.editorAxisXSpeed(data.axes.x.speed);
             self.editorAxisXInverted(data.axes.x.inverted);
@@ -227,6 +227,7 @@ $(function() {
                     height: parseFloat(self.editorVolumeHeight()),
                 },
                 zAxis: self.editorZAxis(),
+                focus: self.editorFocus(),
                 axes: {
                     x: {
                         speed: parseInt(self.editorAxisXSpeed()),
@@ -257,10 +258,10 @@ $(function() {
 	};
 }
 
-	
+
     // view model class, identifier, parameters for constructor, container to bind to
     ADDITIONAL_VIEWMODELS.push([LaserCutterProfilesViewModel,
-		["workingAreaViewModel", "controlViewModel", "vectorConversionViewModel"], 
+		["controlViewModel"],
 		document.getElementById("lasercutterprofiles")]);
-	
+
 });
