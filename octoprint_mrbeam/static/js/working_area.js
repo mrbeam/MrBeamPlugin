@@ -649,13 +649,22 @@ $(function(){
 				if(!isNaN(newVal))
 					self.draw_coord_grid();
 			});
+			self.workingAreaHeightMM.subscribe(function(newVal){
+				if(!isNaN(newVal))
+					self.draw_coord_grid();
+			});
+			self.workingAreaWidthMM.subscribe(function(newVal){
+				if(!isNaN(newVal))
+					self.draw_coord_grid();
+			});
 		};
 
 		self.draw_coord_grid = function(){
 			var grid = snap.select('#coordGrid');
-			if(grid.attr('fill') === 'none'){
-				var w = self.mm2svgUnits(self.workingAreaWidthMM());
-				var h = self.mm2svgUnits(self.workingAreaHeightMM());
+			var w = self.mm2svgUnits(self.workingAreaWidthMM());
+			var h = self.mm2svgUnits(self.workingAreaHeightMM());
+
+			if( grid.attr('width') !== w || grid.attr('height') !== h || grid.attr('fill') === 'none'){
 				var max_lines = 20;
 
 				var linedistMM = Math.floor(Math.max(self.workingAreaWidthMM(), self.workingAreaHeightMM()) / (max_lines * 10))*10;
