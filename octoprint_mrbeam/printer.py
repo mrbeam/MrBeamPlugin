@@ -50,7 +50,8 @@ class Laser(Printer):
 		
 	# extend commands: home, position, increase_passes, decrease_passes
 	def home(self, axes):
-		self.commands(["$H", "G92X0Y0Z0", "G90", "G21"])
+		# TODO get position after homing from machine profile
+		self.commands(["$H", "G92X500Y400Z0", "G90", "G21"])
 
 	def position(self, x, y):
 		printer_profile = self._printerProfileManager.get_current_or_default()

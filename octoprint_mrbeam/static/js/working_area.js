@@ -33,7 +33,7 @@ $(function(){
 		self.availableHeight = ko.observable(undefined);
 		self.availableWidth = ko.observable(undefined);
 		self.px2mm_factor = 1; // initial value
-		self.svgDPI = ko.observable(90); // TODO fetch from settings
+		self.svgDPI = ko.observable(90); // TODO fetch from settings		
 
 		self.workingAreaWidthMM = ko.computed(function(){
 			return self.profile.currentProfileData().volume.width() - self.profile.currentProfileData().volume.origin_offset_x();
@@ -46,6 +46,7 @@ $(function(){
 		self.camera_offset_y = ko.observable(0);
 		self.camera_scale = ko.observable(1.0);
 		self.camera_rotation = ko.observable(0.0);
+
 
 		self.hwRatio = ko.computed(function(){
 			// y/x = 297/216 junior, respectively 594/432 senior
@@ -87,6 +88,39 @@ $(function(){
 		self.px2mm_factor = ko.computed(function(){
 			return self.workingAreaWidthMM() / self.workingAreaWidthPx();
 		});
+		
+		self.camTransform = ko.computed(function(){
+			return "scale("+self.camera_scale()+") rotate("+self.camera_rotation()+"deg) translate("+self.camera_offset_x()+"px, "+self.camera_offset_y()+"px)"
+		});
+//		
+//		// returns camera width with respect to the camera orientation
+//		self.camWidth = ko.computed(function(){
+//			if(self.settings.webcam_rotate90()){
+//				return self.workingAreaHeightPx();
+//			} else {
+//				return self.workingAreaWidthPx();
+//			}
+//		});
+//
+//		self.camHeight = ko.computed(function(){
+//			if(self.settings.webcam_rotate90()){
+//				return self.workingAreaWidthPx();
+//			} else {
+//				return self.workingAreaHeightPx();
+//			}
+//		});
+		
+//		// scales camera image proportionally to working area size
+//		self.camSize = ko.computed(function(){
+//			return self.workingAreaWidthPx() * self.camera_scale() + 'px auto';
+//		});
+//		
+//		// offset parameters
+//		self.camOffsets = ko.computed(function(){
+//			console.log("cam_offsets", self.camera_offset_x() + "px " + self.camera_offset_y() + "px");
+//			return self.camera_offset_x() + "px " + self.camera_offset_y() + "px";
+//		});
+
 
 		// matrix scales svg units to display_pixels
 		self.scaleMatrix = ko.computed(function(){
@@ -115,7 +149,29 @@ $(function(){
 		self.working_area_empty = ko.computed(function(){
 			return self.placedDesigns().length === 0;
 		});
-
+		
+		self.initCameraCalibration = function(){
+			var s = self.settings.settings.plugins.mrbeam; 
+			s.camera_offset_x.subscribe(function(newValue) {
+				self.camera_offset_x(newValue);
+			});
+			s.camera_offset_y.subscribe(function(newValue) {
+				self.camera_offset_y(newValue);
+			});
+			s.camera_scale.subscribe(function(newValue) {
+				self.camera_scale(newValue);
+			});
+			s.camera_rotation.subscribe(function(newValue) {
+				self.camera_rotation(newValue);
+			});
+		
+			s.camera_offset_x.notifySubscribers(s.camera_offset_x());
+			s.camera_offset_y.notifySubscribers(s.camera_offset_y());
+			s.camera_scale.notifySubscribers(s.camera_scale());
+			s.camera_rotation.notifySubscribers(s.camera_rotation());
+			
+		};
+		
 		self.clear = function(){
 			snap.selectAll('#userContent>*').remove();
 			snap.selectAll('#placedGcodes>*').remove();
@@ -835,7 +891,34 @@ $(function(){
 				self.trigger_resize();
 			});
 			self.trigger_resize(); // initialize
+			self.onTabChange('#workingarea', '#notab');
+			var webcam_image = document.getElementById('webcam_image');
+			$(webcam_image).load(function(){
+			  $(this).removeClass('broken'); // does not work with inline SVG
+//				webcam_image.setAttribute("class", "");
+			}).error(function () {
+				$(this).addClass('broken'); // does not work with inline SVG
+//				webcam_image.setAttribute("class", "broken");
+			});
+
 			self.init();
+		};
+		
+		self.onStartupComplete = function(){
+			self.initCameraCalibration();
+		};
+
+		self.onBrowserTabVisibilityChange = function(state){
+			var currentTab = $('#mrbeam-main-tabs li.active a').attr('href');
+			if(typeof currentTab !== undefined && currentTab === "#workingarea"){
+				if(state === true){
+					self.onTabChange('#workingarea', '#notab');
+				} 
+
+				if(state === false){
+					self.onTabChange('#notab', '#workingarea');
+				}
+			} 
 		};
 
 		self.check_sizes_and_placements = function(){
@@ -936,11 +1019,42 @@ $(function(){
 		self.onBeforeBinding = function(){
 			self.files.workingArea = self;
 		};
+		
+		self.onTabChange = function (current, previous) {
+            if (current === "#workingarea") {
+                if (self.webcamDisableTimeout != undefined) {
+                    clearTimeout(self.webcamDisableTimeout);
+                }
+                var webcamImage = $("#webcam_image");
+                var currentSrc = webcamImage.attr("src");
+
+                if (currentSrc === undefined || currentSrc === "none" || currentSrc.trim() === "") {
+                    var newSrc = CONFIG_WEBCAM_STREAM;
+                    if (CONFIG_WEBCAM_STREAM.lastIndexOf("?") > -1) {
+                        newSrc += "&";
+                    } else {
+                        newSrc += "?";
+                    }
+                    newSrc += new Date().getTime();
+					console.log("webcam src set", newSrc);
+                    webcamImage.attr("src", newSrc);
+                }
+				console.log("webcam enabled");
+            } else if (previous === "#workingarea") {
+                // only disable webcam stream if tab is out of focus for more than 5s, otherwise we might cause
+                // more load by the constant connection creation than by the actual webcam stream
+                self.webcamDisableTimeout = setTimeout(function () {
+                    $("#webcam_image").css("background-image", "none");
+                }, 5000);
+            }
+        };
+
 	}
 
 
     // view model class, parameters for constructor, container to bind to
     ADDITIONAL_VIEWMODELS.push([WorkingAreaViewModel,
+
 		["loginStateViewModel", "settingsViewModel", "printerStateViewModel",  "gcodeFilesViewModel", "laserCutterProfilesViewModel"],
 		[document.getElementById("area_preview"),
 			document.getElementById("working_area_files"),

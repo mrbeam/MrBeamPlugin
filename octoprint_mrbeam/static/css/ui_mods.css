@@ -6,7 +6,7 @@ li.nav-header { display: none }
 #settings_temperature_link { display: none; }
 #settings_gcodeScripts_link { display: none; }
 #settings_features_link { display: none; }
-#settings_webcam_link { display: none; }
+/*#settings_webcam_link { display: none; }*/
 #settings_gcodegcodevisualizer_link { display: none; }
 #settings_api_link { display: none; }
 #settings_server_link { display: none; }
