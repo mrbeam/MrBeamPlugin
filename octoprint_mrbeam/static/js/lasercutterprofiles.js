@@ -20,6 +20,7 @@ $(function() {
                 },
                 zAxis: false,
                 focus: false,
+                glasses: true,
                 axes: {
                     x: {speed: 6000, inverted: false},
                     y: {speed: 6000, inverted: false},
@@ -61,6 +62,7 @@ $(function() {
 
         self.editorZAxis = ko.observable();
         self.editorFocus = ko.observable();
+        self.editorGlasses = ko.observable();
 
         self.editorAxisXSpeed = ko.observable();
         self.editorAxisYSpeed = ko.observable();
@@ -180,6 +182,7 @@ $(function() {
 
             self.editorZAxis(data.zAxis);
             self.editorFocus(data.focus);
+            self.editorGlasses(data.glasses);
 
             self.editorAxisXSpeed(data.axes.x.speed);
             self.editorAxisXInverted(data.axes.x.inverted);
@@ -228,6 +231,7 @@ $(function() {
                 },
                 zAxis: self.editorZAxis(),
                 focus: self.editorFocus(),
+                glasses: self.editorGlasses(),
                 axes: {
                     x: {
                         speed: parseInt(self.editorAxisXSpeed()),

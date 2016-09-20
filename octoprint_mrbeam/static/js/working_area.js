@@ -35,8 +35,13 @@ $(function(){
 		self.px2mm_factor = 1; // initial value
 		self.svgDPI = ko.observable(90); // TODO fetch from settings
 
-		self.workingAreaWidthMM = self.profile.currentProfileData().volume.width() - self.profile.currentProfileData().volume.origin_offset_x();
-		self.workingAreaHeightMM = self.profile.currentProfileData().volume.depth() - self.profile.currentProfileData().volume.origin_offset_y();
+		self.workingAreaWidthMM = ko.computed(function(){
+			return self.profile.currentProfileData().volume.width() - self.profile.currentProfileData().volume.origin_offset_x();
+		}, self);
+		self.workingAreaHeightMM = ko.computed(function(){
+			return self.profile.currentProfileData().volume.depth() - self.profile.currentProfileData().volume.origin_offset_y();
+		},self);
+
         self.camera_offset_x = ko.observable(0);
 		self.camera_offset_y = ko.observable(0);
 		self.camera_scale = ko.observable(1.0);
@@ -44,8 +49,8 @@ $(function(){
 
 		self.hwRatio = ko.computed(function(){
 			// y/x = 297/216 junior, respectively 594/432 senior
-			var w = self.workingAreaWidthMM;
-			var h = self.workingAreaHeightMM;
+			var w = self.workingAreaWidthMM();
+			var h = self.workingAreaHeightMM();
 			var ratio = h / w;
 			return ratio;
 		}, self);
@@ -80,7 +85,7 @@ $(function(){
 		}, self);
 
 		self.px2mm_factor = ko.computed(function(){
-			return self.workingAreaWidthMM / self.workingAreaWidthPx();
+			return self.workingAreaWidthMM() / self.workingAreaWidthPx();
 		});
 
 		// matrix scales svg units to display_pixels
@@ -98,7 +103,7 @@ $(function(){
 		self.scaleMatrixMMtoDisplay = ko.computed(function(){
 			var m = new Snap.Matrix();
 			var factor = self.svgDPI()/25.4; // scale mm to 90dpi pixels
-			var yShift = self.workingAreaHeightMM; // 0,0 origin of the gcode is bottom left. (top left in the svg)
+			var yShift = self.workingAreaHeightMM(); // 0,0 origin of the gcode is bottom left. (top left in the svg)
 			if(!isNaN(factor)){
 				m.scale(factor, -factor).translate(0,-yShift);
 				return m;
@@ -146,8 +151,8 @@ $(function(){
 			var scale = evt.target.parentElement.transform.baseVal[0].matrix.a;
 			var x = self.px2mm(evt.offsetX) * scale;
 			var y = self.px2mm(parseFloat(evt.target.attributes.height.value) - evt.offsetY) * scale;
-			x = Math.min(x, self.workingAreaWidthMM);
-			y = Math.min(y, self.workingAreaHeightMM);
+			x = Math.min(x, self.workingAreaWidthMM());
+			y = Math.min(y, self.workingAreaHeightMM());
 			return {x:x, y:y};
 		}
 
@@ -366,7 +371,7 @@ $(function(){
 			var transform = svg.transform();
 			var bbox = svg.getBBox();
 			var tx = self.px2mm(bbox.x * globalScale);
-			var ty = self.workingAreaHeightMM - self.px2mm(bbox.y2 * globalScale);
+			var ty = self.workingAreaHeightMM() - self.px2mm(bbox.y2 * globalScale);
 			var startIdx = transform.local.indexOf('r') + 1;
 			var endIdx = transform.local.indexOf(',', startIdx);
 			var rot = parseFloat(transform.local.substring(startIdx, endIdx)) || 0;
@@ -474,7 +479,7 @@ $(function(){
 				var wPT = dimPT[0];
 				var hPT = dimPT[1];
 
-				var y = self.mm2svgUnits(self.workingAreaHeightMM) - hPT;
+				var y = self.mm2svgUnits(self.workingAreaHeightMM()) - hPT;
 				var newImg = snap.image(url, 0, y, wPT, hPT);
 				var id = self.getEntryId(file);
 				var previewId = self.generateUniqueId(id); // appends # if multiple times the same design is placed.
@@ -500,8 +505,8 @@ $(function(){
 			var maxWidthMM   = wpx * 0.25; // TODO parametrize
 			var maxHeightMM  = hpx * 0.25; // TODO parametrize
 			var aspectRatio  = wpx / hpx;
-			var destWidthMM  = Math.min(self.workingAreaWidthMM - 2, maxWidthMM);
-			var destHeightMM = Math.min(self.workingAreaHeightMM - 2, maxHeightMM);
+			var destWidthMM  = Math.min(self.workingAreaWidthMM() - 2, maxWidthMM);
+			var destHeightMM = Math.min(self.workingAreaHeightMM() - 2, maxHeightMM);
 			if ((destWidthMM / aspectRatio) > destHeightMM) {
 				destWidthMM = destHeightMM * aspectRatio;
 			} else {
@@ -649,12 +654,12 @@ $(function(){
 		self.draw_coord_grid = function(){
 			var grid = snap.select('#coordGrid');
 			if(grid.attr('fill') === 'none'){
-				var w = self.mm2svgUnits(self.workingAreaWidthMM);
-				var h = self.mm2svgUnits(self.workingAreaHeightMM);
+				var w = self.mm2svgUnits(self.workingAreaWidthMM());
+				var h = self.mm2svgUnits(self.workingAreaHeightMM());
 				var max_lines = 20;
 
-				var linedistMM = Math.floor(Math.max(self.workingAreaWidthMM, self.workingAreaHeightMM) / (max_lines * 10))*10;
-				var yPatternOffset = self.mm2svgUnits(self.workingAreaHeightMM % linedistMM);
+				var linedistMM = Math.floor(Math.max(self.workingAreaWidthMM(), self.workingAreaHeightMM()) / (max_lines * 10))*10;
+				var yPatternOffset = self.mm2svgUnits(self.workingAreaHeightMM() % linedistMM);
 				var linedist = self.mm2svgUnits(linedistMM);
 
 				var marker = snap.circle(linedist/2, linedist/2, 1).attr({
@@ -699,8 +704,8 @@ $(function(){
 
 		self.getCompositionSVG = function(fillAreas, callback){
 			self.abortFreeTransforms();
-			var wMM = self.workingAreaWidthMM;
-			var hMM = self.workingAreaHeightMM;
+			var wMM = self.workingAreaWidthMM();
+			var hMM = self.workingAreaHeightMM();
 			var wPT = wMM * 90 / 25.4;
 			var hPT = hMM * 90 / 25.4;
 			var compSvg = Snap(wPT, hPT);
@@ -719,8 +724,8 @@ $(function(){
 			var svgStr = content.innerSVG();
 			if(svgStr !== ''){
 				var dpiFactor = self.svgDPI()/25.4; // convert mm to pix 90dpi for inkscape, 72 for illustrator
-				var w = dpiFactor * self.workingAreaWidthMM;
-				var h = dpiFactor * self.workingAreaHeightMM;
+				var w = dpiFactor * self.workingAreaWidthMM();
+				var h = dpiFactor * self.workingAreaHeightMM();
 
 				// TODO: look for better solution to solve this Firefox bug problem
 				svgStr = svgStr.replace("(\\\"","(");

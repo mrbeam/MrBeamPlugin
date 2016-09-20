@@ -205,13 +205,13 @@ $(function () {
 		self.state.increasePasses = function(){
 			self.state.numberOfPasses(self.state.numberOfPasses()+1);
             self.state._overrideCommand({name: "passes", value: self.state.numberOfPasses()});
-		}
+		};
 
 		self.state.decreasePasses = function(){
 			var passes = Math.max(self.state.numberOfPasses()-1, 1);
 			self.state.numberOfPasses(passes);
             self.state._overrideCommand({name: "passes", value: self.state.numberOfPasses()});
-		}
+		};
 
         self.state._overrideCommand = function (data, callback) {
             $.ajax({
@@ -273,7 +273,6 @@ $(function () {
                 self.gcodefiles.loadFile(data, true); // starts print
             };
             self.show_safety_glasses_warning(callback);
-
 			self.gcodefiles.uploadProgress
                 .removeClass("progress-striped")
                 .removeClass("active");
@@ -323,12 +322,19 @@ $(function () {
         self.show_safety_glasses_warning = function (callback) {
             var options = {};
             options.title = gettext("Are you sure?");
-            options.message = gettext("The laser will now start. Protect yourself and everybody in the room appropriately before proceeding!");
-            options.question = gettext("Are you sure you want to proceed?");
             options.cancel = gettext("Cancel");
             options.proceed = gettext("Proceed");
-            options.proceedClass = "danger";
-            options.dialogClass = "safety_glasses_heads_up";
+
+            if(self.workingArea.profile.currentProfileData().glasses()){
+                options.message = gettext("The laser will now start. Protect yourself and everybody in the room appropriately before proceeding!");
+                options.question = gettext("Are you sure you want to proceed?");
+                options.proceedClass = "danger";
+                options.dialogClass = "safety_glasses_heads_up";
+            }else{
+                options.message = gettext("The laser will now start. Please make sure the lid is closed.");
+                options.question = gettext("Please confirm to proceed.");
+            }
+
             options.onproceed = function (e) {
                 if (typeof callback === 'function') {
                     self.state.resetOverrideSlider();
