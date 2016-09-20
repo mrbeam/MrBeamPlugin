@@ -1,7 +1,7 @@
 				<div class="tab-pane active" id="workingarea">
 					<div class="container-fluid">
 						<div class="row-fluid">
-							<div class="span4 accordion">
+							<div class="span4 accordion" style="margin-bottom:0;">
 
 								<div class="accordion-group" id="state_accordion">
 									<div class="accordion-heading">
@@ -174,7 +174,7 @@
 										</div>
 
 									</div>
-									<div class="accordion-body collapse in overflow_visible" id="wa_filelist">
+									<div class="accordion-body collapse in XXoverflow_visible" id="wa_filelist">
 										<div class="accordion-inner">
 											<div class="gcode_files" data-bind="slimScrolledForeach: placedDesigns">
 												<div class="entry" data-bind="attr: { id: $data.id }, template: { name: $root.templateFor($data), data: $data }"></div>
@@ -245,20 +245,26 @@
 													</div>
 												</div>
 											</script>
-
-
-
 										</div>
 									</div>
 								</div>
-
-
-
 							</div>
 
 							<!--  end sidebar  -->
 
-							<div class="span8">
+							<div class="span8" style="position:relative">		
+								{% if webcamStream %}
+								<div id="webcam_wrapper" data-bind="style: {
+											width: workingAreaWidthPx()+'px',
+											height: workingAreaHeightPx()+'px'
+										}">
+									<img id="webcam_image" data-bind="css: { flipH: settings.webcam_flipH(), flipV: settings.webcam_flipV() },
+										 style: {
+											 transform: camTransform()
+										 }">
+
+								</div>
+								{% endif %}
 								<svg id="area_preview" class="workingarea"
 									 data-bind="style: {
 											backgroundPosition: crosshairX()+'px'+' '+crosshairY()+'px',
@@ -276,6 +282,7 @@
 											<feFuncB type="table" tableValues="0.2 1"></feFuncB>
 										</feComponentTransfer>
 									</filter>
+
 									<g id="scaleGroup" data-bind="attr: { transform: scaleMatrix() }">
 										<g id="placedGcodes" data-bind="visible: !state.isPrinting() && !state.isPaused(), attr: { transform: scaleMatrixMMtoDisplay() }"></g>
 										<g id="gCodePreview" data-bind="visible: state.isPrinting() || state.isPaused(), attr: { transform: scaleMatrixMMtoDisplay() }"></g>

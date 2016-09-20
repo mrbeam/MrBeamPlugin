@@ -66,7 +66,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			defaultFeedrate = 300,
 			svgDPI = 90,
 			svgtogcode_debug_logging = False,
-			showlasersafety = True
+			showlasersafety = True,
+			camera_offset_x = 0,
+			camera_offset_y = 0,
+			camera_scale = 1,
+			camera_rotation = 0
 		)
 
 	def on_settings_load(self):
@@ -76,8 +80,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			defaultFeedrate = self._settings.get(['defaultFeedrate']),
 			svgDPI = self._settings.get(['svgDPI']),
 			svgtogcode_debug_logging = self._settings.get(['svgtogcode_debug_logging']),
-			showlasersafety = self._settings.get(['showlasersafety'])
-		)
+			showlasersafety = self._settings.get(['showlasersafety']),
+			camera_offset_x = self._settings.get(['camera_offset_x']),
+			camera_offset_y = self._settings.get(['camera_offset_y']),
+			camera_scale = self._settings.get(['camera_scale']),
+			camera_rotation = self._settings.get(['camera_rotation']),
+			)
 
 	def on_settings_save(self, data):
 		if "workingAreaWidth" in data and data["workingAreaWidth"]:
@@ -90,6 +98,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._settings.set_int(["defaultFeedrate"], data["defaultFeedrate"])
 		if "svgDPI" in data:
 			self._settings.set_int(["svgDPI"], data["svgDPI"])
+		if "camera_offset_x" in data:
+			self._settings.set_int(["camera_offset_x"], data["camera_offset_x"])
+		if "camera_offset_y" in data:
+			self._settings.set_int(["camera_offset_y"], data["camera_offset_y"])
+		if "camera_scale" in data:
+			self._settings.set_float(["camera_scale"], data["camera_scale"])
+		if "camera_rotation" in data:
+			self._settings.set_float(["camera_rotation"], data["camera_rotation"])
 		if "svgtogcode_debug_logging" in data:
 			self._settings.set_boolean(["svgtogcode_debug_logging"], data["svgtogcode_debug_logging"])
 
@@ -149,6 +165,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return [
 			dict(type = 'settings', name = "Machine Profiles", template='settings/lasercutterprofiles_settings.jinja2', suffix="_lasercutterprofiles", custom_bindings = False),
 			dict(type = 'settings', name = "SVG Conversion", template='settings/svgtogcode_settings.jinja2', suffix="_conversion", custom_bindings = False),
+			dict(type = 'settings', name = "Camera Calibration", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings = False),
 			dict(type = 'settings', name = "Serial Connection", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings= False, replaces='serial')
 		]
 
