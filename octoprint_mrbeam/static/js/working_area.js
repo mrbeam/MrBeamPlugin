@@ -33,7 +33,7 @@ $(function(){
 		self.availableHeight = ko.observable(undefined);
 		self.availableWidth = ko.observable(undefined);
 		self.px2mm_factor = 1; // initial value
-		self.svgDPI = ko.observable(90); // TODO fetch from settings		
+		self.svgDPI = ko.observable(90); // TODO fetch from settings
 
 		self.workingAreaWidthMM = ko.computed(function(){
 			return self.profile.currentProfileData().volume.width() - self.profile.currentProfileData().volume.origin_offset_x();
@@ -88,11 +88,11 @@ $(function(){
 		self.px2mm_factor = ko.computed(function(){
 			return self.workingAreaWidthMM() / self.workingAreaWidthPx();
 		});
-		
+
 		self.camTransform = ko.computed(function(){
 			return "scale("+self.camera_scale()+") rotate("+self.camera_rotation()+"deg) translate("+self.camera_offset_x()+"px, "+self.camera_offset_y()+"px)"
 		});
-//		
+//
 //		// returns camera width with respect to the camera orientation
 //		self.camWidth = ko.computed(function(){
 //			if(self.settings.webcam_rotate90()){
@@ -109,12 +109,12 @@ $(function(){
 //				return self.workingAreaHeightPx();
 //			}
 //		});
-		
+
 //		// scales camera image proportionally to working area size
 //		self.camSize = ko.computed(function(){
 //			return self.workingAreaWidthPx() * self.camera_scale() + 'px auto';
 //		});
-//		
+//
 //		// offset parameters
 //		self.camOffsets = ko.computed(function(){
 //			console.log("cam_offsets", self.camera_offset_x() + "px " + self.camera_offset_y() + "px");
@@ -149,9 +149,9 @@ $(function(){
 		self.working_area_empty = ko.computed(function(){
 			return self.placedDesigns().length === 0;
 		});
-		
+
 		self.initCameraCalibration = function(){
-			var s = self.settings.settings.plugins.mrbeam; 
+			var s = self.settings.settings.plugins.mrbeam;
 			s.camera_offset_x.subscribe(function(newValue) {
 				self.camera_offset_x(newValue);
 			});
@@ -164,14 +164,14 @@ $(function(){
 			s.camera_rotation.subscribe(function(newValue) {
 				self.camera_rotation(newValue);
 			});
-		
+
 			s.camera_offset_x.notifySubscribers(s.camera_offset_x());
 			s.camera_offset_y.notifySubscribers(s.camera_offset_y());
 			s.camera_scale.notifySubscribers(s.camera_scale());
 			s.camera_rotation.notifySubscribers(s.camera_rotation());
-			
+
 		};
-		
+
 		self.clear = function(){
 			snap.selectAll('#userContent>*').remove();
 			snap.selectAll('#placedGcodes>*').remove();
@@ -205,8 +205,8 @@ $(function(){
 
 		self.getXYCoord = function(evt){
 			var scale = evt.target.parentElement.transform.baseVal[0].matrix.a;
-			var x = self.px2mm(evt.offsetX) * scale;
-			var y = self.px2mm(parseFloat(evt.target.attributes.height.value) - evt.offsetY) * scale;
+			var x = self.px2mm(evt.offsetX);
+			var y = self.px2mm(parseFloat(evt.target.attributes.height.value) * scale - evt.offsetY);
 			x = Math.min(x, self.workingAreaWidthMM());
 			y = Math.min(y, self.workingAreaHeightMM());
 			return {x:x, y:y};
@@ -903,7 +903,7 @@ $(function(){
 
 			self.init();
 		};
-		
+
 		self.onStartupComplete = function(){
 			self.initCameraCalibration();
 		};
@@ -913,12 +913,12 @@ $(function(){
 			if(typeof currentTab !== undefined && currentTab === "#workingarea"){
 				if(state === true){
 					self.onTabChange('#workingarea', '#notab');
-				} 
+				}
 
 				if(state === false){
 					self.onTabChange('#notab', '#workingarea');
 				}
-			} 
+			}
 		};
 
 		self.check_sizes_and_placements = function(){
@@ -1019,7 +1019,7 @@ $(function(){
 		self.onBeforeBinding = function(){
 			self.files.workingArea = self;
 		};
-		
+
 		self.onTabChange = function (current, previous) {
             if (current === "#workingarea") {
                 if (self.webcamDisableTimeout != undefined) {
