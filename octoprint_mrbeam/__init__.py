@@ -6,7 +6,7 @@ from octoprint.util import dict_merge
 from octoprint.server import NO_CONTENT
 
 from .profile import LaserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
-from .state.ledstrips import LEDstrips
+# from .state.ledstrips import LEDstrips
 
 import copy
 import time
@@ -35,7 +35,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._slicing_commands_mutex = threading.Lock()
 		self._cancelled_jobs = []
 		self._cancelled_jobs_mutex = threading.Lock()
-		self.stateHandler = LEDstrips()
+		# self.stateHandler = LEDstrips()
 
 	def initialize(self):
 		self.laserCutterProfileManager = LaserCutterProfileManager(self._settings)
@@ -102,10 +102,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# Define your plugin's asset files to automatically include in the
 		# core UI here.
 		return dict(
-			js=["js/mother_viewmodel.js", "js/mrbeam.js", "js/working_area.js",
+			js=["js/lasercutterprofiles.js","js/mother_viewmodel.js", "js/mrbeam.js", "js/working_area.js",
 			"js/lib/snap.svg-min.js", "js/render_fills.js", "js/matrix_oven.js", "js/drag_scale_rotate.js",
-			"js/convert.js", "js/gcode_parser.js", "js/lib/photobooth_min.js", "js/laserSafetyNotes.js",
-			"js/lasercutterprofiles.js"],
+			"js/convert.js", "js/gcode_parser.js", "js/lib/photobooth_min.js", "js/laserSafetyNotes.js"],
 			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css"],
 			less=["less/mrbeam.less"]
 		)
@@ -125,14 +124,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		accesscontrol_active = enable_accesscontrol and self._user_manager.hasBeenCustomized()
 
 		selectedProfile = self.laserCutterProfileManager.get_current_or_default()
-		print("Selected Profile Focus: ", selectedProfile["focus"]);
 		enable_focus = selectedProfile["focus"]
-
+		safety_glasses = selectedProfile["glasses"]
 		# render_kwargs["templates"]["settings"]["entries"]["serial"][1]["template"] = "settings/serialconnection.jinja2"
 
 		render_kwargs.update(dict(
 							 webcamStream = self._settings.global_get(["webcam", "stream"]),
 							 enableFocus = enable_focus,
+							 safetyGlasses = safety_glasses,
 							 enableTemperatureGraph = False,
 							 enableAccessControl = enable_accesscontrol,
 							 accessControlActive = accesscontrol_active,
@@ -593,18 +592,18 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def on_event(self, event, payload):
 		print("on_event", event, payload)
-		self.stateHandler.on_state_change(event)
+		# self.stateHandler.on_state_change(event)
 
 
 	##~~ Progress Plugin API
 
 	def on_print_progress(self, storage, path, progress):
 		state = "progress:"+str(progress)
-		self.stateHandler.on_state_change(state)
+		# self.stateHandler.on_state_change(state)
 
 	def on_slicing_progress(self, slicer, source_location, source_path, destination_location, destination_path, progress):
 		state = "slicing:"+str(progress)
-		self.stateHandler.on_state_change(state)
+		# self.stateHandler.on_state_change(state)
 
 	##~~ Softwareupdate hook
 
