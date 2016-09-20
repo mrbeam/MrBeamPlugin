@@ -104,7 +104,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 			var translateHull = this.paper.select('#userContent')
 				.rect(rectObjFromBB(bbT))
-				.attr({fill:'grey',opacity:0.3,id:'translateHull'});
+				.attr({fill:'grey',opacity:0.3,id:'translateHull',cursor:'move'});
 
 			//check if it needs to be on another side if design is exceeding workArea
 			var wa = ftEl.data('wa');
@@ -115,24 +115,24 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 			var rotateDragger = this.paper.select('#userContent')
 				.circle(rotX, bbT.cy, ftOption.handleRadius )
-				.attr({ fill: ftOption.handleFill, id: 'rotateDragger' });
+				.attr({ fill: ftOption.handleFill, id: 'rotateDragger',cursor:'pointer' });
 
 			//todo make code more generic
 			var resizeDragger1 = this.paper.select('#userContent')
 				.circle(bbT.x2, bbT.y2, ftOption.handleRadius)
-				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling' });
+				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, cursor:'se-resize' });
 
 			var resizeDragger2 = this.paper.select('#userContent')
 				.circle(bbT.x2, bbT.y, ftOption.handleRadius)
-				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling' });
+				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling',cursor:'ne-resize' });
 
 			var resizeDragger3 = this.paper.select('#userContent')
 				.circle(bbT.x, bbT.y2, ftOption.handleRadius)
-				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling' });
+				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling',cursor:'sw-resize' });
 
 			var resizeDragger4 = this.paper.select('#userContent')
 				.circle(bbT.x, bbT.y, ftOption.handleRadius)
-				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling' });
+				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling',cursor:'nw-resize' });
 
 			var handlesGroup = this.paper.select('#userContent')
 				.g(translateHull,rotateDragger,resizeDragger1,resizeDragger2,resizeDragger3,resizeDragger4)
