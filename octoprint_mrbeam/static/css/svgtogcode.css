@@ -125,7 +125,7 @@ svg text {
 }
 
 #manual_position.warning {
-	color: #DD0000;
+	color: #e25303;
 }
 
 #settings_svg_conversion input[type=number] {
@@ -140,12 +140,8 @@ svg text {
 }
 
 #webcam_wrapper_settings {
-	position:absolute;
-	top:1px;
-	left:1px;
 	overflow: hidden;
-	width: 100%;
-	height:auto;
+	border:	1px solid #999;
 }
 
 #webcam_image {
