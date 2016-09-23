@@ -300,7 +300,7 @@
 											  style="text-anchor:middle;text-align:center" /></text>
 										<g id="placedGcodes" data-bind="visible: !state.isPrinting() && !state.isPaused(), attr: { transform: scaleMatrixMMtoDisplay() }"></g>
 										<g id="gCodePreview" data-bind="visible: state.isPrinting() || state.isPaused(), attr: { transform: scaleMatrixMMtoDisplay() }"></g>
-										<rect data-bind="click: move_laser"
+										<rect xxdata-bind="click: move_laser"
 											  id="coordGrid" x="0" y="0" width="0" height="0"
 											  stroke="none" fill="none"></rect>
 										<g id="userContent" data-bind="visible: !state.isPrinting() && !state.isPaused()"></g>
