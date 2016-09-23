@@ -1,8 +1,8 @@
 //    Drag, Scale & Rotate - a snapsvg.io plugin to free transform objects in an svg.
 //    Copyright (C) 2015  Teja Philipp <osd@tejaphilipp.de>
-//    
+//
 //    heavily inspired by http://svg.dabbles.info
-//    
+//
 //    This program is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU Affero General Public License as
 //    published by the Free Software Foundation, either version 3 of the
@@ -19,10 +19,10 @@
 
 
 Snap.plugin(function (Snap, Element, Paper, global) {
-	
+
 	/**
-	 * 
-	 * 
+	 *
+	 *
 	 * @returns {undefined}
 	 */
 	Element.prototype.transformable = function () {
@@ -35,13 +35,13 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		elem.click(function(){ elem.ftCreateHandles() });
 		return elem;
 
-		
+
 	};
-	
+
 	/**
-	 * Adds transparent fill if not present. 
-	 * This is useful for dragging the element around. 
-	 * 
+	 * Adds transparent fill if not present.
+	 * This is useful for dragging the element around.
+	 *
 	 * @returns {path}
 	 */
 	//TODO add fill for Text (like bounding box or similar)
@@ -65,7 +65,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	};
 });
 
-	
+
 /**
  * Free transform plugin heavily inspired by http://svg.dabbles.info
  *
@@ -79,12 +79,12 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			handleStrokeDashPreset: [5,5],
 			handleStrokeWidth: 2,
 			handleLength: 22,
-			handleRadius: 16, 
+			handleRadius: 16,
 			unscale: 1,
 			handleStrokeDash: "5,5"
 		};
-		
-		Element.prototype.ftToggleHandles = function(){	
+
+		Element.prototype.ftToggleHandles = function(){
 			if(this.data('handlesGroup')){
 				this.ftRemoveHandles();
 			} else {
@@ -104,7 +104,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 			var translateHull = this.paper.select('#userContent')
 				.rect(rectObjFromBB(bbT))
-				.attr({fill:'grey',opacity:0.3,id:'translateHull'});
+				.attr({fill:'grey',opacity:0.3,id:'translateHull',cursor:'move'});
 
 			//check if it needs to be on another side if design is exceeding workArea
 			var wa = ftEl.data('wa');
@@ -115,24 +115,24 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 			var rotateDragger = this.paper.select('#userContent')
 				.circle(rotX, bbT.cy, ftOption.handleRadius )
-				.attr({ fill: ftOption.handleFill, id: 'rotateDragger' });
+				.attr({ fill: ftOption.handleFill, id: 'rotateDragger',cursor:'pointer' });
 
 			//todo make code more generic
 			var resizeDragger1 = this.paper.select('#userContent')
 				.circle(bbT.x2, bbT.y2, ftOption.handleRadius)
-				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling' });
+				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, cursor:'se-resize' });
 
 			var resizeDragger2 = this.paper.select('#userContent')
 				.circle(bbT.x2, bbT.y, ftOption.handleRadius)
-				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling' });
+				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling',cursor:'ne-resize' });
 
 			var resizeDragger3 = this.paper.select('#userContent')
 				.circle(bbT.x, bbT.y2, ftOption.handleRadius)
-				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling' });
+				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling',cursor:'sw-resize' });
 
 			var resizeDragger4 = this.paper.select('#userContent')
 				.circle(bbT.x, bbT.y, ftOption.handleRadius)
-				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling' });
+				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling',cursor:'nw-resize' });
 
 			var handlesGroup = this.paper.select('#userContent')
 				.g(translateHull,rotateDragger,resizeDragger1,resizeDragger2,resizeDragger3,resizeDragger4)
@@ -161,7 +161,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 				elementDragEnd.bind( translateHull, ftEl )
 			);
 
-			rotateDragger.drag( 
+			rotateDragger.drag(
 				rotateDraggerMove.bind( rotateDragger, ftEl ),
 				rotateDraggerStart.bind( rotateDragger, ftEl  ),
 				rotateDraggerEnd.bind( rotateDragger, ftEl  )
@@ -208,11 +208,11 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			myData.forEach( function( el ) { myClosureEl.removeData([el]) });
 			return this;
 		};
-		
+
 		Element.prototype.ftStoreInitialTransformMatrix = function() {
 			this.data('initialTransformMatrix', this.transform().localMatrix );
 			return this;
-		};	
+		};
 
 		Element.prototype.ftGetInitialTransformMatrix = function() {
 			return this.data('initialTransformMatrix');
@@ -257,16 +257,19 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			if(this.data("bbT")) this.data("bbT").remove();
 			if(this.data("bb")) this.data("bb").remove();
 
-			// transformed bbox
+			// outer bbox
+			this.data("bb", this.paper.rect( rectObjFromBB( this.getBBox() ) )
+                .attr({ fill: "none", stroke: 'gray', strokeWidth: ftOption.handleStrokeWidth, strokeDasharray: ftOption.handleStrokeDash })
+                .prependTo(this.paper.select('#userContent')));
+			//TODO make more efficiently
+			// this.data('bb');
+            // transformed bbox
 			this.data("bbT", this.paper.rect( rectObjFromBB( this.getBBox(1) ) )
 							.attr({ fill: "none", 'vector-effect': "non-scaling-stroke", stroke: ftOption.handleFill, strokeWidth: ftOption.handleStrokeWidth, strokeDasharray: ftOption.handleStrokeDashPreset.join(',') })
 							.transform( this.transform().global.toString() ) );
-			// outer bbox
-			this.data("bb", this.paper.select('#userContent').rect( rectObjFromBB( this.getBBox() ) )
-							.attr({ fill: "none", stroke: 'gray', strokeWidth: ftOption.handleStrokeWidth, strokeDasharray: ftOption.handleStrokeDash }) );
 			return this;
 		};
-		
+
 		Element.prototype.ftReportTransformation = function(){
 			if(this.data('ftCallbacks') && this.data('ftCallbacks').length > 0){
 				for (var idx = 0; idx < this.data('ftCallbacks').length; idx++) {
@@ -285,9 +288,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 			this.ftReportTransformation();
 		};
-		
+
 		Element.prototype.ftDisableRotate = function(){
-			this.data('block_rotation', true);	
+			this.data('block_rotation', true);
 		};
 	});
 
@@ -337,7 +340,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		mainEl.data('angleFactor', ((bb.cy - bb.y) / oldHeight)/mainEl.data('scale'));
 
 	};
-	
+
 
 	function rotateDraggerMove( mainEl, dx, dy, x, y, event ) {
 		var rotateDragger = this;

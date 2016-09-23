@@ -22,6 +22,14 @@ octoprint_mrbeam/gcodegenerator/simpletransform.pyc
 octoprint_mrbeam/printer.pyc
 octoprint_mrbeam/profile.pyc
 *.pyc
+*.swp
+.idea
+*.iml
+build
+dist
+*.egg*
+.DS_Store
+*.zip
 nbproject
 .directory
 

@@ -61,6 +61,7 @@ class LaserCutterProfileManager(object):
 		),
 		zAxis = False,
 		focus = False,
+		glasses = True,
 		axes=dict(
 			x = dict(speed=5000, inverted=False),
 			y = dict(speed=5000, inverted=False),
@@ -162,7 +163,7 @@ class LaserCutterProfileManager(object):
 	def exists(self, identifier):
 		if identifier is None:
 			return False
-		elif identifier == "_mrbeam_junior" or identifier == "_mrbeam_senior":
+		elif identifier == "_mrbeam_junior" or identifier == "_mrbeam_senior"                                                                                                                               :
 			return True
 		else:
 			path = self._get_profile_path(identifier)

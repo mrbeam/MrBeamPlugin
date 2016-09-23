@@ -154,7 +154,7 @@ class MachineCom(object):
 					self._log("Empty line received during STATE_CONNECTION, starting soft-reset")
 					self._serial.write(list(bytearray('\x18'))) # Serial-Connection Error
 			except:
-				self._logger.exception("Something crashed inside the monitoring loop, please report this to Mr. Beam")
+				self._logger.exception("Something crashed inside the monitoring loop, please report this to Mr Beam")
 				errorMsg = "See octoprint.log for details"
 				self._log(errorMsg)
 				self._errorValue = errorMsg

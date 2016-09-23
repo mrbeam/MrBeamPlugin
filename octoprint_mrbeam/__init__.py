@@ -6,7 +6,7 @@ from octoprint.util import dict_merge
 from octoprint.server import NO_CONTENT
 
 from .profile import LaserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
-from .state.ledstrips import LEDstrips
+# from .state.ledstrips import LEDstrips
 
 import copy
 import time
@@ -35,7 +35,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._slicing_commands_mutex = threading.Lock()
 		self._cancelled_jobs = []
 		self._cancelled_jobs_mutex = threading.Lock()
-		self.stateHandler = LEDstrips()
+		# self.stateHandler = LEDstrips()
 
 	def initialize(self):
 		self.laserCutterProfileManager = LaserCutterProfileManager(self._settings)
@@ -66,7 +66,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			defaultFeedrate = 300,
 			svgDPI = 90,
 			svgtogcode_debug_logging = False,
-			showlasersafety = True
+			showlasersafety = True,
+			camera_offset_x = 0,
+			camera_offset_y = 0,
+			camera_scale = 1,
+			camera_rotation = 0
 		)
 
 	def on_settings_load(self):
@@ -76,8 +80,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			defaultFeedrate = self._settings.get(['defaultFeedrate']),
 			svgDPI = self._settings.get(['svgDPI']),
 			svgtogcode_debug_logging = self._settings.get(['svgtogcode_debug_logging']),
-			showlasersafety = self._settings.get(['showlasersafety'])
-		)
+			showlasersafety = self._settings.get(['showlasersafety']),
+			camera_offset_x = self._settings.get(['camera_offset_x']),
+			camera_offset_y = self._settings.get(['camera_offset_y']),
+			camera_scale = self._settings.get(['camera_scale']),
+			camera_rotation = self._settings.get(['camera_rotation']),
+			)
 
 	def on_settings_save(self, data):
 		if "workingAreaWidth" in data and data["workingAreaWidth"]:
@@ -90,6 +98,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._settings.set_int(["defaultFeedrate"], data["defaultFeedrate"])
 		if "svgDPI" in data:
 			self._settings.set_int(["svgDPI"], data["svgDPI"])
+		if "camera_offset_x" in data:
+			self._settings.set_int(["camera_offset_x"], data["camera_offset_x"])
+		if "camera_offset_y" in data:
+			self._settings.set_int(["camera_offset_y"], data["camera_offset_y"])
+		if "camera_scale" in data:
+			self._settings.set_float(["camera_scale"], data["camera_scale"])
+		if "camera_rotation" in data:
+			self._settings.set_float(["camera_rotation"], data["camera_rotation"])
 		if "svgtogcode_debug_logging" in data:
 			self._settings.set_boolean(["svgtogcode_debug_logging"], data["svgtogcode_debug_logging"])
 
@@ -104,8 +120,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return dict(
 			js=["js/lasercutterprofiles.js","js/mother_viewmodel.js", "js/mrbeam.js", "js/working_area.js", "js/camera.js",
 			"js/lib/snap.svg-min.js", "js/render_fills.js", "js/matrix_oven.js", "js/drag_scale_rotate.js",
-			"js/convert.js", "js/gcode_parser.js", "js/lib/photobooth_min.js", "js/laserSafetyNotes.js",
-			"js/lasercutterprofiles.js"],
+			"js/convert.js", "js/gcode_parser.js", "js/lib/photobooth_min.js", "js/laserSafetyNotes.js"],
 			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css"],
 			less=["less/mrbeam.less"]
 		)
@@ -125,14 +140,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		accesscontrol_active = enable_accesscontrol and self._user_manager.hasBeenCustomized()
 
 		selectedProfile = self.laserCutterProfileManager.get_current_or_default()
-		print("Selected Profile Focus: ", selectedProfile["focus"]);
 		enable_focus = selectedProfile["focus"]
-
+		safety_glasses = selectedProfile["glasses"]
 		# render_kwargs["templates"]["settings"]["entries"]["serial"][1]["template"] = "settings/serialconnection.jinja2"
 
 		render_kwargs.update(dict(
 							 webcamStream = self._settings.global_get(["webcam", "stream"]),
 							 enableFocus = enable_focus,
+							 safetyGlasses = safety_glasses,
 							 enableTemperatureGraph = False,
 							 enableAccessControl = enable_accesscontrol,
 							 accessControlActive = accesscontrol_active,
@@ -150,10 +165,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return [
 			dict(type = 'settings', name = "Machine Profiles", template='settings/lasercutterprofiles_settings.jinja2', suffix="_lasercutterprofiles", custom_bindings = False),
 			dict(type = 'settings', name = "SVG Conversion", template='settings/svgtogcode_settings.jinja2', suffix="_conversion", custom_bindings = False),
-<<<<<<< HEAD
-=======
 			dict(type = 'settings', name = "Camera Calibration", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings = True),
->>>>>>> 9dcba36... camera preview got its own viewModel. calibration with preview now.
 			dict(type = 'settings', name = "Serial Connection", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings= False, replaces='serial')
 		]
 
@@ -597,18 +609,18 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def on_event(self, event, payload):
 		print("on_event", event, payload)
-		self.stateHandler.on_state_change(event)
+		# self.stateHandler.on_state_change(event)
 
 
 	##~~ Progress Plugin API
 
 	def on_print_progress(self, storage, path, progress):
 		state = "progress:"+str(progress)
-		self.stateHandler.on_state_change(state)
+		# self.stateHandler.on_state_change(state)
 
 	def on_slicing_progress(self, slicer, source_location, source_path, destination_location, destination_path, progress):
 		state = "slicing:"+str(progress)
-		self.stateHandler.on_state_change(state)
+		# self.stateHandler.on_state_change(state)
 
 	##~~ Softwareupdate hook
 
