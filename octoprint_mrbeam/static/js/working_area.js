@@ -713,6 +713,10 @@ $(function(){
 				if(!isNaN(newVal))
 					self.draw_coord_grid();
 			});
+			
+			$('#coordGrid').on('dblclick', function (event) {
+				self.move_laser({}, event)
+			});
 		};
 
 		self.draw_coord_grid = function(){
