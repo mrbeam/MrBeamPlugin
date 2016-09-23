@@ -942,6 +942,7 @@ $(function(){
 		["loginStateViewModel", "settingsViewModel", "printerStateViewModel",  "gcodeFilesViewModel", "laserCutterProfilesViewModel"],
 		[document.getElementById("area_preview"),
 			document.getElementById("working_area_files"),
-			document.getElementById("webcam_wrapper")]]);
+			//document.getElementById("webcam_wrapper")
+		]]);
 
 });

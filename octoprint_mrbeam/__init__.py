@@ -102,7 +102,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# Define your plugin's asset files to automatically include in the
 		# core UI here.
 		return dict(
-			js=["js/mother_viewmodel.js", "js/mrbeam.js", "js/working_area.js",
+			js=["js/lasercutterprofiles.js","js/mother_viewmodel.js", "js/mrbeam.js", "js/working_area.js", "js/camera.js",
 			"js/lib/snap.svg-min.js", "js/render_fills.js", "js/matrix_oven.js", "js/drag_scale_rotate.js",
 			"js/convert.js", "js/gcode_parser.js", "js/lib/photobooth_min.js", "js/laserSafetyNotes.js",
 			"js/lasercutterprofiles.js"],
@@ -150,6 +150,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return [
 			dict(type = 'settings', name = "Machine Profiles", template='settings/lasercutterprofiles_settings.jinja2', suffix="_lasercutterprofiles", custom_bindings = False),
 			dict(type = 'settings', name = "SVG Conversion", template='settings/svgtogcode_settings.jinja2', suffix="_conversion", custom_bindings = False),
+<<<<<<< HEAD
+=======
+			dict(type = 'settings', name = "Camera Calibration", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings = True),
+>>>>>>> 9dcba36... camera preview got its own viewModel. calibration with preview now.
 			dict(type = 'settings', name = "Serial Connection", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings= False, replaces='serial')
 		]
 
@@ -614,13 +618,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# for details.
 		return dict(
 			mrbeam=dict(
-				displayName="Mrbeam Plugin",
+				displayName="Mr Beam Laser Cutter",
 				displayVersion=self._plugin_version,
 
 				# version check: github repository
 				type="github_release",
-				user="hungerpirat",
-				repo="Mr_Beam",
+				user="mrbeam",
+				repo="MrBeamPlugin",
 				current=self._plugin_version,
 
 				# update method: pip
@@ -689,19 +693,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		else:
 			return None, None
 
-#	def serve_url(self, server_routes, *args, **kwargs):
-#		from octoprint.server.util.tornado import LargeResponseHandler, path_validation_factory
-#		from octoprint.util import is_hidden_path
-#		return [(r"/serve/(.*)", LargeResponseHandler,
-#			dict(path=self._settings.global_get_basefolder("uploads"),
-#            as_attachment=False,
-#            path_validation=path_validation_factory(lambda path: not is_hidden_path(path), status_code=404)))
-#		]
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
 # can be overwritten via __plugin_xyz__ control properties. See the documentation for that.
-__plugin_name__ = "Mr Beam Plugin"
+__plugin_name__ = "Mr Beam Laser Cutter"
 
 
 def __plugin_load__():
