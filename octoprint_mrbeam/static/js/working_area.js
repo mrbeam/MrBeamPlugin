@@ -92,34 +92,6 @@ $(function(){
 		self.camTransform = ko.computed(function(){
 			return "scale("+self.camera_scale()+") rotate("+self.camera_rotation()+"deg) translate("+self.camera_offset_x()+"px, "+self.camera_offset_y()+"px)"
 		});
-//
-//		// returns camera width with respect to the camera orientation
-//		self.camWidth = ko.computed(function(){
-//			if(self.settings.webcam_rotate90()){
-//				return self.workingAreaHeightPx();
-//			} else {
-//				return self.workingAreaWidthPx();
-//			}
-//		});
-//
-//		self.camHeight = ko.computed(function(){
-//			if(self.settings.webcam_rotate90()){
-//				return self.workingAreaWidthPx();
-//			} else {
-//				return self.workingAreaHeightPx();
-//			}
-//		});
-
-//		// scales camera image proportionally to working area size
-//		self.camSize = ko.computed(function(){
-//			return self.workingAreaWidthPx() * self.camera_scale() + 'px auto';
-//		});
-//
-//		// offset parameters
-//		self.camOffsets = ko.computed(function(){
-//			console.log("cam_offsets", self.camera_offset_x() + "px " + self.camera_offset_y() + "px");
-//			return self.camera_offset_x() + "px " + self.camera_offset_y() + "px";
-//		});
 
 
 		// matrix scales svg units to display_pixels
@@ -1062,6 +1034,7 @@ $(function(){
 		["loginStateViewModel", "settingsViewModel", "printerStateViewModel",  "gcodeFilesViewModel", "laserCutterProfilesViewModel"],
 		[document.getElementById("area_preview"),
 			document.getElementById("working_area_files"),
-			document.getElementById("webcam_wrapper")]]);
+			//document.getElementById("webcam_wrapper")
+		]]);
 
 });

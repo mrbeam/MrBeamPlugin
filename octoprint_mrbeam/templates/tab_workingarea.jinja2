@@ -255,8 +255,8 @@
 							<div class="span8" style="position:relative">
 								{% if webcamStream %}
 								<div id="webcam_wrapper" data-bind="style: {
-											width: workingAreaWidthPx()+'px',
-											height: workingAreaHeightPx()+'px'
+											width: workingArea.workingAreaWidthPx()+'px',
+											height: workingArea.workingAreaHeightPx()+'px'
 										}">
 									<img id="webcam_image" data-bind="css: { flipH: settings.webcam_flipH(), flipV: settings.webcam_flipV() },
 										 style: {

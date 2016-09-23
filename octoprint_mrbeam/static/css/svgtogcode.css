@@ -142,6 +142,36 @@ svg text {
 #webcam_wrapper_settings {
 	overflow: hidden;
 	border:	1px solid #999;
+	position: absolute;
+	top:0;
+}
+
+#camera_calibration_parameter_wrapper {
+	display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+	position:absolute;
+	top:0;
+}
+
+#camera_calibration_parameter {
+	margin: 10%;
+	background-color: rgba(255,255,255,0.8);
+	padding: 0% 10%;
+}
+
+.camCalib {
+	width: 48%;
+	display: inline-block;
+}
+
+.form-horizontal .camCalib .controls {
+    margin-left: 60%;
+}
+.form-horizontal .camCalib .control-label {
+    width: 48%;
 }
 
 #webcam_image {
