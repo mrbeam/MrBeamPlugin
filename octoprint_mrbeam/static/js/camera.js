@@ -50,6 +50,7 @@ $(function(){
 		};
 
 		self.onStartupComplete = function(){
+			self.initCameraCalibration();
 		};
 
 		self.onBeforeBinding = function(){
@@ -91,9 +92,8 @@ $(function(){
     ADDITIONAL_VIEWMODELS.push([CameraViewModel,
 		["settingsViewModel", "workingAreaViewModel", "laserCutterProfilesViewModel"],
 		[
-			document.getElementById("settings_camera_calibration"),
-			//document.getElementById("webcam_wrapper_settings"),
-			document.getElementById("webcam_wrapper")
+			document.getElementById("webcam_wrapper"),
+			document.getElementById("settings_camera_calibration")
 		]
 	]);
 
