@@ -743,7 +743,7 @@ $(function(){
 			self.check_sizes_and_placements();
 		};
 
-		self.getCompositionSVG = function(fillAreas, callback){
+		self.getCompositionSVG = function(fillAreas, cutOutlines, callback){
 			self.abortFreeTransforms();
 			var wMM = self.workingAreaWidthMM();
 			var hMM = self.workingAreaHeightMM();
@@ -755,7 +755,7 @@ $(function(){
 			var userContent = snap.select("#userContent").clone();
 			compSvg.append(userContent);
 
-			self.renderInfill(compSvg, fillAreas, wMM, hMM, 10, function(svgWithRenderedInfill){
+			self.renderInfill(compSvg, fillAreas, cutOutlines, wMM, hMM, 10, function(svgWithRenderedInfill){
 				callback( self._wrapInSvgAndScale(svgWithRenderedInfill));
 				$('#compSvg').remove();
 			});
@@ -943,7 +943,8 @@ $(function(){
 		}
 
 		// render the infill and inject it as an image into the svg
-		self.renderInfill = function (svg, fillAreas, wMM, hMM, pxPerMM, callback) {
+		self.renderInfill = function (svg, fillAreas, cutOutlines, wMM, hMM, pxPerMM, callback) {
+			//TODO cutOutlines use it and make it work
 			var wPT = wMM * 90 / 25.4;
 			var hPT = hMM * 90 / 25.4;
 			var tmpSvg = Snap(wPT, hPT).attr('id', 'tmpSvg');

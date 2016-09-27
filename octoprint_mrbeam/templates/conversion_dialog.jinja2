@@ -91,6 +91,11 @@
 						The movement velocity range used for engraving pixel graphics. Bright/white pixels use the left (higher) value, dark/black pixels the right (lower) value.
 						Equal values do not vary the laser velocity related to the pixel brightness.
 					</div>
+					<div class="controls">
+					<label class="checkbox">
+						<input type="checkbox" data-bind="checked: cut_outlines">{{ _('Cut Outlines') }}
+					</label>
+				</div>
 
 				</div>
 				<div class="control-group" data-bind="visible: showExpertSettings">
