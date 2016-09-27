@@ -108,30 +108,30 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 			//check if it needs to be on another side if design is exceeding workArea
 			var wa = ftEl.data('wa');
-			var rotX = bbT.cx - bbT.width/2 - ftOption.handleLength;
+			var rotX = bbT.cx - bbT.width/2 - ftOption.handleLength * ftOption.unscale;
 			if( ftEl.matrix.x(rotX,bbT.cy) <= wa.x || ftEl.matrix.x(rotX,bbT.cy) >= wa.x2 ||
 				ftEl.matrix.y(rotX,bbT.cy) <= wa.y || ftEl.matrix.y(rotX,bbT.cy)  >= wa.y2)
-			{rotX += bbT.width + 2*ftOption.handleLength;}
+			{rotX += bbT.width + 2*ftOption.handleLength* ftOption.unscale;}
 
 			var rotateDragger = this.paper.select('#userContent')
-				.circle(rotX, bbT.cy, ftOption.handleRadius )
+				.circle(rotX, bbT.cy, ftOption.handleRadius * ftOption.unscale )
 				.attr({ fill: ftOption.handleFill, id: 'rotateDragger',cursor:'pointer' });
 
 			//todo make code more generic
 			var resizeDragger1 = this.paper.select('#userContent')
-				.circle(bbT.x2, bbT.y2, ftOption.handleRadius)
+				.circle(bbT.x2, bbT.y2, ftOption.handleRadius * ftOption.unscale)
 				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, cursor:'se-resize' });
 
 			var resizeDragger2 = this.paper.select('#userContent')
-				.circle(bbT.x2, bbT.y, ftOption.handleRadius)
+				.circle(bbT.x2, bbT.y, ftOption.handleRadius * ftOption.unscale)
 				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling',cursor:'ne-resize' });
 
 			var resizeDragger3 = this.paper.select('#userContent')
-				.circle(bbT.x, bbT.y2, ftOption.handleRadius)
+				.circle(bbT.x, bbT.y2, ftOption.handleRadius * ftOption.unscale)
 				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling',cursor:'sw-resize' });
 
 			var resizeDragger4 = this.paper.select('#userContent')
-				.circle(bbT.x, bbT.y, ftOption.handleRadius)
+				.circle(bbT.x, bbT.y, ftOption.handleRadius * ftOption.unscale)
 				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling',cursor:'nw-resize' });
 
 			var handlesGroup = this.paper.select('#userContent')
@@ -187,7 +187,6 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			this.data('ty', 0);
 			this.data('wa', snap.select('#coordGrid').getBBox());
 			this.data('ratio', 1);
-
 			this.attr({class:'_freeTransformInProgress'});
 
 			//unscale from scaleGroup (outer Group)
@@ -195,11 +194,17 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			this.data('sgUnscale', 1 / sgUnscale);
 
 			//local unscale
-			ftOption.unscale = 1 / this.transform().localMatrix.a;
-			this.data('unscale', ftOption.unscale);
+			this.ftUpdateUnscale();
 
 			return this;
 		};
+
+		Element.prototype.ftUpdateUnscale = function() {
+			var tm = this.transform();
+			ftOption.unscale = 1 / Math.sqrt((tm.localMatrix.a * tm.localMatrix.a) + (tm.localMatrix.c * tm.localMatrix.c));
+			this.data('unscale', ftOption.unscale);
+		};
+
 
 		Element.prototype.ftCleanUp = function() {
 			var myClosureEl = this;
@@ -238,6 +243,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			var tstring = "t" + this.data("tx") + "," + this.data("ty") + this.ftGetInitialTransformMatrix().toTransformString() + "r" + this.data("angle") + 'S' + this.data("scale" );
 			this.attr({ transform: tstring });
 			if(this.data("bbT")) this.ftHighlightBB(this.paper.select('#userContent'));
+			this.ftUpdateUnscale();
 			this.ftReportTransformation();
 			this.ftUpdateHandlesGroup();
 			return this;
@@ -249,7 +255,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 				el.transform(group.transform().local.toString());
 			});
 			group.parent().select("#handlesGroup").selectAll('circle').forEach( function( el, i ) {
-				el.attr({'r': ftOption.handleRadius * group.data('unscale') / (group.data('scale')*group.data('angleFactor'))})
+				el.attr({'r': ftOption.handleRadius * group.data('unscale')})
 			});
 		};
 
@@ -259,11 +265,11 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 			// outer bbox
 			this.data("bb", this.paper.rect( rectObjFromBB( this.getBBox() ) )
-                .attr({ fill: "none", stroke: 'gray', strokeWidth: ftOption.handleStrokeWidth, strokeDasharray: ftOption.handleStrokeDash })
-                .prependTo(this.paper.select('#userContent')));
+				.attr({ fill: "none", stroke: 'gray', strokeWidth: ftOption.handleStrokeWidth, strokeDasharray: ftOption.handleStrokeDash })
+				.prependTo(this.paper.select('#userContent')));
 			//TODO make more efficiently
 			// this.data('bb');
-            // transformed bbox
+			// transformed bbox
 			this.data("bbT", this.paper.rect( rectObjFromBB( this.getBBox(1) ) )
 							.attr({ fill: "none", 'vector-effect': "non-scaling-stroke", stroke: ftOption.handleFill, strokeWidth: ftOption.handleStrokeWidth, strokeDasharray: ftOption.handleStrokeDashPreset.join(',') })
 							.transform( this.transform().global.toString() ) );
@@ -289,9 +295,6 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			this.ftReportTransformation();
 		};
 
-		Element.prototype.ftDisableRotate = function(){
-			this.data('block_rotation', true);
-		};
 	});
 
 	function rectObjFromBB ( bb ) {
