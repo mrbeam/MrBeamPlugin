@@ -685,7 +685,15 @@ $(function(){
 				if(!isNaN(newVal))
 					self.draw_coord_grid();
 			});
-			
+
+			$('#coordGrid').on('click', function (event) {
+				// TODO check if this can be made simpler
+				var elem = snap.select('._freeTransformInProgress');
+				if(elem !== null && elem.data('handlesGroup')){
+					elem.ftRemoveHandles();
+				}
+			});
+
 			$('#coordGrid').on('dblclick', function (event) {
 				self.move_laser({}, event)
 			});
