@@ -36,6 +36,7 @@ $(function(){
 		self.maxSpeed = ko.observable(3000);
 		self.minSpeed = ko.observable(20);
 		self.fill_areas = ko.observable(false);
+		self.set_passes = ko.observable(1);
 		self.show_fill_areas_checkbox = ko.observable(false);
 
 
@@ -295,6 +296,7 @@ $(function(){
 						"profile.speed": self.laserSpeed(),
 						"profile.intensity": self.laserIntensity(),
 						"profile.fill_areas": self.fill_areas(),
+						"profile.set_passes": self.set_passes(),
 						"profile.pierce_time": self.pierceTime(),
 						"profile.intensity_black" : self.imgIntensityBlack(),
 						"profile.intensity_white" : self.imgIntensityWhite(),

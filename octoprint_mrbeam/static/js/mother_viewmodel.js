@@ -70,6 +70,14 @@ $(function () {
                 self.state._overrideCommand({name: "feedrate", value: factor});
             });
 
+//			self.state.setPasses = ko.computed(function () {
+//				if(self.conversion.set_passes() === undefined){
+//					return;
+//				}
+//				self.state.numberOfPasses(self.conversion.set_passes());
+//                self.state._overrideCommand({name: "passes", value: self.state.numberOfPasses()});
+//			});
+
 			self.state.byteString = ko.computed(function() {
 				if (!self.state.filesize())
 					return "-";
@@ -338,7 +346,8 @@ $(function () {
             options.onproceed = function (e) {
                 if (typeof callback === 'function') {
                     self.state.resetOverrideSlider();
-                    self.state.numberOfPasses(1);
+                    self.state.numberOfPasses(parseInt(self.conversion.set_passes()));
+                    self.state._overrideCommand({name: "passes", value: self.state.numberOfPasses()});
                     callback(e);
                 }
             };
