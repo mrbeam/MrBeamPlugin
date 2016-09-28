@@ -37,7 +37,25 @@ $(function(){
 		self.minSpeed = ko.observable(20);
 		self.fill_areas = ko.observable(false);
 		self.show_fill_areas_checkbox = ko.observable(false);
-		
+
+
+		// material menu
+		//TODO make not hardcoded
+		//[laserInt,speed,engraveWhite,engraveBlack,speedWhite,speedBlack]
+		self.materials_settings = {
+			'default':[500, 300, 0, 500, 1500, 250],
+			'wood':[ 800, 200, 0, 500, 1000, 200],
+			'kraftplex':[1000, 200, 0, 250, 3000, 500],
+			'foam rubber':[600, 200, 0, 301, 3000, 1000]
+		};
+		var setting_keys = [];
+		for(k in self.materials_settings){
+			setting_keys.push(k);
+		}
+		self.material_menu = ko.observableArray(setting_keys);
+		self.selected_material = ko.observable();
+
+
 		// image engraving stuff
 		// preset values are a good start for wood engraving
 		self.images_placed = ko.observable(false);
@@ -149,7 +167,24 @@ $(function(){
 				return;
 			}
 		};
-		
+
+
+
+		self.set_settings = ko.computed(function(){
+			//[laserInt,speed,engraveWhite,engraveBlack,speedWhite,speedBlack]
+			if(self.selected_material() === undefined){return;}
+
+			var settings = self.materials_settings[self.selected_material()];
+			console.log(settings);
+			self.laserIntensity(settings[0]);
+			self.laserSpeed(settings[1]);
+			self.imgIntensityWhite(settings[2]);
+			self.imgIntensityBlack(settings[3]);
+			self.imgFeedrateWhite(settings[4]);
+			self.imgFeedrateBlack(settings[5]);
+
+		});
+
 		self.settingsString = ko.computed(function(){
 			var intensity = self.laserIntensity();
 			var feedrate = self.laserSpeed();
