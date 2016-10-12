@@ -176,13 +176,12 @@ $(function(){
 		};
 
 		self.getXYCoord = function(evt){
-			var scale = evt.target.parentElement.transform.baseVal[0].matrix.a;
 			var x = self.px2mm(evt.offsetX);
-			var y = self.px2mm(parseFloat(evt.target.attributes.height.value) * scale - evt.offsetY);
+			var y = self.px2mm(self.availableHeight() - evt.offsetY);
 			x = Math.min(x, self.workingAreaWidthMM());
 			y = Math.min(y, self.workingAreaHeightMM());
 			return {x:x, y:y};
-		}
+		};
 
 		self.crosshairX = function(){
 			var pos = self.state.currentPos();
@@ -685,7 +684,7 @@ $(function(){
 				if(!isNaN(newVal))
 					self.draw_coord_grid();
 			});
-			
+
 			$('#coordGrid').on('dblclick', function (event) {
 				self.move_laser({}, event)
 			});
