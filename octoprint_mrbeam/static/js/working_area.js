@@ -155,7 +155,7 @@ $(function(){
 		self.trigger_resize = function(){
 			if(typeof(snap) !== 'undefined') self.abortFreeTransforms();
 			var tabContentPadding = 18;
-			self.availableHeight(document.documentElement.clientHeight - $('body>nav').outerHeight()  - $('footer>*').outerHeight() - tabContentPadding - 48); // TODO remove magic number
+			self.availableHeight(document.documentElement.clientHeight - $('#mrbeam-main-tabs').height() - tabContentPadding); // TODO remove magic number
 			self.availableWidth($('#workingarea div.span8').innerWidth());
 //			console.log("availableHeight ", self.availableHeight());
 //			console.log("availableWidth ", self.availableWidth());
