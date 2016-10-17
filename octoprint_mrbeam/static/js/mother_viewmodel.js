@@ -338,7 +338,7 @@ $(function () {
             options.onproceed = function (e) {
                 if (typeof callback === 'function') {
                     self.state.resetOverrideSlider();
-                    self.state.numberOfPasses(self.conversion.set_passes());
+                    self.state.numberOfPasses(parseInt(self.conversion.set_passes()));
                     self.state._overrideCommand({name: "passes", value: self.state.numberOfPasses()});
                     callback(e);
                 }
