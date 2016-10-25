@@ -2357,7 +2357,7 @@ class Laserengraver(inkex.Effect):
 #					print_((-f(w[k][i-1]),-f(w[k][i]), [i1[5] for i1 in l1]) )
 				c += [ [ [subpath[-1][1][0],subpath[-1][1][1]]  ,'end',0,0] ]
 
-			#print_("Curve: " + str(c))
+			print_("Curve: " + str(c))
 			return c
 
 
@@ -2490,14 +2490,71 @@ class Laserengraver(inkex.Effect):
 ###		Generate Gcode
 ###		Generates Gcode on given curve.
 ###
-###		Crve defenitnion [start point, type = {'arc','line','move','end'}, arc center, arc angle, end point, [zstart, zend]]		
+###		Curve definition [start point, type = {'arc','line','move','end'}, arc center, arc angle, end point, [zstart, zend]]
 ###
 ################################################################################
+	def generate_gcode_color(self, curve, color='#000000', pierce_time=0):
+		print ("generate_gcode_Color()")
+
+		def c(c):
+			# returns gcode for coordinates/parameters
+			c = [c[i] if i < len(c) else None for i in range(6)]  # fills missing coordinates/parameters with none
+			if c[5] == 0: c[5] = None
+			s = [" X", " Y", " Z", " I", " J", " K"]
+			r = ''
+			for i in range(6):
+				if c[i] != None:
+					r += s[i] + ("%.4f" % (round(c[i], 4)))  # truncating leads to invalid GCODE ID33
+			return r
+
+		if len(curve) == 0: return ""
+
+		print_("working on curve")
+		print_("Curve: " + str(curve))
+		g = ""
+
+		lg, f = 'G00', "F%s" % color
+		for i in range(1, len(curve)):
+			#	Creating Gcode for curve between s=curve[i-1] and si=curve[i] start at s[0] end at s[4]=si[0]
+			s, si = curve[i - 1], curve[i]
+			feed = f if lg not in ['G01', 'G02', 'G03'] else ''
+			if s[1] == 'move':
+				g += "G0" + c(si[0]) + "\n" + machine_settings.gcode_before_path_color(color) + "\n"
+				if pierce_time > 0:
+					g += "G4P%.3f\n" % (round(pierce_time / 1000.0, 4))
+				lg = 'G00'
+			elif s[1] == 'end':
+				g += machine_settings.gcode_after_path() + "\n"
+				lg = 'G00'
+			elif s[1] == 'line':
+				if lg == "G00": g += "G01 " + feed + "\n"
+				g += "G01 " + c(si[0]) + "\n"
+				lg = 'G01'
+			elif s[1] == 'arc':
+				r = [(s[2][0] - s[0][0]), (s[2][1] - s[0][1])]
+				if lg == "G00": g += "G01" + feed + "\n"
+				if (r[0] ** 2 + r[1] ** 2) > .1:
+					r1, r2 = (P(s[0]) - P(s[2])), (P(si[0]) - P(s[2]))
+					if abs(r1.mag() - r2.mag()) < 0.001:
+						g += ("G02" if s[3] < 0 else "G03") + c(
+							si[0] + [None, (s[2][0] - s[0][0]), (s[2][1] - s[0][1])]) + "\n"
+					else:
+						r = (r1.mag() + r2.mag()) / 2
+						g += ("G02" if s[3] < 0 else "G03") + c(si[0]) + " R%f" % (r) + "\n"
+					lg = 'G02'
+				else:
+					g += "G01" + c(si[0]) + feed + "\n"
+					lg = 'G01'
+		if si[1] == 'end':
+			g += machine_settings.gcode_after_path() + "\n"
+		return g
+
 	def generate_gcode(self, curve, intensity = 0, feedrate = 0, pierce_time = 0):
 		print ("generate_gcode()")
 
 		def c(c):
-			c = [c[i] if i<len(c) else None for i in range(6)]
+			# returns gcode for coordinates/parameters
+			c = [c[i] if i<len(c) else None for i in range(6)] #fills missing coordinates/parameters with none
 			if c[5] == 0 : c[5]=None
 			s = [" X", " Y", " Z", " I", " J", " K"]
 			r = ''	
@@ -2568,7 +2625,7 @@ class Laserengraver(inkex.Effect):
 
 	def apply_transforms(self,g,csp):
 		trans = self.get_transforms(g)
-		if trans != []:
+		if trans != []: #todo can trans be [] anyways?
 			simpletransform.applyTransformToPath(trans, csp)
 		return csp
 
@@ -3217,38 +3274,58 @@ class Laserengraver(inkex.Effect):
 		for layer in self.layers :
 			if layer in paths :
 				#print(("layer",layer.get('id')))
-				p = []	
-				dxfpoints = []
+				stroke = None
+				p = []
+				pD = dict()
+				# dxfpoints = []
 				for path in paths[layer] :
-					#print("path", layer.get('id'), path.get('id'))
-					if "d" not in path.keys() : 
+					print("path", layer.get('id'), path.get('id'), path.get('stroke'))
+					stroke = path.get('stroke')
+					if(stroke == None): #todo catch None stroke earlier
+						print('stroke==None -> skipping path:', path.get('id'))
+						continue
+					if "d" not in path.keys() :
 						self.error(_("Warning: One or more paths dont have 'd' parameter, try to Ungroup (Ctrl+Shift+G) and Object to Path (Ctrl+Shift+C)!"),"selection_contains_objects_that_are_not_paths")
 						continue
+					if stroke not in pD.keys() :
+						pD[stroke] = []
 					d = path.get("d")
 					if d != '':
-						csp = cubicsuperpath.parsePath(path.get("d"))
+						csp = cubicsuperpath.parsePath(d) #todo why not d because d=path.get("d")
 						csp = self.apply_transforms(path, csp)
 						if path.get("dxfpoint") == "1":
 							tmp_curve=self.transform_csp(csp, layer) # does the coordinate transformation from px to mm according to the orientation points
 							x=tmp_curve[0][0][0][0]
 							y=tmp_curve[0][0][0][1]
 							print_("got dxfpoint (scaled) at (%f,%f)" % (x,y))
-							dxfpoints += [[x,y]]
+							print 'uncomment dxfpoints, its still needed!!'
+							# dxfpoints += [[x,y]]
 						else:
+							pD[stroke] += csp
+							print pD
 							p += csp
 
 						processedItemCount += 1
 						report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
 
-				dxfpoints=sort_dxfpoints(dxfpoints)
+				# dxfpoints=sort_dxfpoints(dxfpoints) #todo check if really needed, probably not
+				print dict(pD)
+				curvesD = dict() #diction
+				for colorKey in pD.keys():
+					curvesD[colorKey] = self.parse_curve(pD[colorKey], layer)
 				curve = self.parse_curve(p, layer)
+				print curve
 				intensity = self.options['laser_intensity']
 				feedrate = self.options['engraving_laser_speed']
 				pierce_time = self.options['pierce_time']
 				layerId = layer.get('id') or '?'
 				pathId = path.get('id') or '?'
-				gcode_outlines += "; Layer: " + layerId + ", outline of " + pathId + "\n"
-				gcode_outlines += self.generate_gcode(curve, intensity, feedrate, pierce_time)
+				# WIP outlines2 as test
+				#for each color generate GCode
+				for colorKey in curvesD.keys():
+					gcode_outlines += "; Layer: " + layerId + ", outline of " + pathId + ", stroke: " + colorKey + "\n"
+					gcode_outlines += self.generate_gcode_color(curvesD[colorKey], colorKey, pierce_time)
+
 
 			if layer in self.filled_areas :
 				for fillpath in self.filled_areas[layer] :		

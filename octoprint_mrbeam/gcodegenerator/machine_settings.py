@@ -6,6 +6,9 @@
 def gcode_before_path(intensity = 0):
 	return "\nM03 S"+str(intensity)
 
+def gcode_before_path_color(intensity = '#000000'):
+	return "\nM03 S"+intensity
+
 def gcode_after_path():
 	return "M03 S0\n"
 

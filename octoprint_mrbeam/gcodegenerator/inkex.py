@@ -206,9 +206,9 @@ class Effect:
 		path = '//*[@id="%s"]' % id
 		el_list = self.document.xpath(path, namespaces=NSS)
 		if el_list:
-		  return el_list[0]
+			return el_list[0]
 		else:
-		  return None
+			return None
 
 	def getParentNode(self, node):
 		for parent in self.document.getiterator():
