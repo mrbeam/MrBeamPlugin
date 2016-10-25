@@ -2357,7 +2357,7 @@ class Laserengraver(inkex.Effect):
 #					print_((-f(w[k][i-1]),-f(w[k][i]), [i1[5] for i1 in l1]) )
 				c += [ [ [subpath[-1][1][0],subpath[-1][1][1]]  ,'end',0,0] ]
 
-			print_("Curve: " + str(c))
+			#print_("Curve: " + str(c))
 			return c
 
 
@@ -3552,7 +3552,9 @@ if __name__ == "__main__":
 	OptionParser.add_option("",   "--fill-areas",		action="store_true", 		 dest="fill_areas", default=False,			help="Fill filled paths line by line.")				
 	OptionParser.add_option("",   "--set-passes",		action="store_true", 		 dest="set_passes", default=1,			help="Set number of passes.")
 	OptionParser.add_option("",   "--fill-spacing",		action="store", type="float",		 dest="fill_spacing", default=0.25,			help="Distance between area filling lines. Increase for faster engraving, decrease for better quality. Minimum: laser beam diameter")
-	OptionParser.add_option("",   "--cross-fill",		action="store_true", 		 dest="cross_fill", default=False,			help="Fill areas with grid ?")				
+	OptionParser.add_option("",   "--cut-outlines",		action="store_true", 		 dest="cut_outlines", default=True,			help="Cut Outlines.")
+	OptionParser.add_option("",   "--fill-spacing",		action="store", type="float",		 dest="fill_spacing", default=0.25,			help="Distance between area filling lines. Increase for faster engraving, decrease for better quality. Minimum: laser beam diameter")
+	OptionParser.add_option("",   "--cross-fill",		action="store_true", 		 dest="cross_fill", default=False,			help="Fill areas with grid ?")
 	OptionParser.add_option("",   "--fill-angle",		action="store", type="float",		 dest="fill_angle", default=0.0,			help="Angle of the fill pattern. 0.0 means parallel to x-axis.")				
 	OptionParser.add_option("",   "--no-header", type="string", help="omits Mr Beam start and end sequences", default="false", dest="noheaders")
 	OptionParser.add_option("",   "--img-intensity-white", type="int", default="0", help="intensity for white pixels, default 0", dest="intensity_white")

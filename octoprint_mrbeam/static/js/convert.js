@@ -37,6 +37,7 @@ $(function(){
 		self.minSpeed = ko.observable(20);
 		self.fill_areas = ko.observable(false);
 		self.set_passes = ko.observable(1);
+		self.cut_outlines = ko.observable(true);
 		self.show_fill_areas_checkbox = ko.observable(false);
 
 
@@ -286,7 +287,7 @@ $(function(){
 				self.files.startGcodeWithSafetyWarning(self.gcodeFilesToAppend[0]);
 			} else {
 				self.slicing_in_progress(true);
-				self.workingArea.getCompositionSVG(self.fill_areas(), function(composition){
+				self.workingArea.getCompositionSVG(self.fill_areas(), self.cut_outlines(), function(composition){
 					self.svg = composition;	
 					var filename = self.gcodeFilename() + self.settingsString() + '.gco';
 					var gcodeFilename = self._sanitize(filename);
@@ -297,6 +298,7 @@ $(function(){
 						"profile.intensity": self.laserIntensity(),
 						"profile.fill_areas": self.fill_areas(),
 						"profile.set_passes": self.set_passes(),
+						"profile.cut_outlines" : self.cut_outlines(),
 						"profile.pierce_time": self.pierceTime(),
 						"profile.intensity_black" : self.imgIntensityBlack(),
 						"profile.intensity_white" : self.imgIntensityWhite(),
