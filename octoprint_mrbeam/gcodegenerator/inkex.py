@@ -121,6 +121,7 @@ class Effect:
 		"svgDPI": 90,
 		"biarc_max_split_depth": 4,
 		"fill_areas": False,
+		"engrave": False,
 		"set_passes": 1,
 		"cut_outlines": True,
 		"fill_spacing": 0.25,

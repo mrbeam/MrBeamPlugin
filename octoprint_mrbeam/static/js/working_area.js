@@ -47,6 +47,7 @@ $(function(){
 		self.camera_scale = ko.observable(1.0);
 		self.camera_rotation = ko.observable(0.0);
 
+		self.colorsFound = {};
 
 		self.hwRatio = ko.computed(function(){
 			// y/x = 297/216 junior, respectively 594/432 senior
@@ -289,7 +290,7 @@ $(function(){
 				var doc_height = null;
 				var doc_viewbox = null;
 
-                // find clippath elements
+				// find clippath elements
 				var clipPathEl = f.selectAll('clipPath');
 				if(clipPathEl.length != 0){
 					console.warn("Warning: removed unsupported clipPath element in SVG");
@@ -297,8 +298,25 @@ $(function(){
 					clipPathEl.remove()
 				}
 
+				var svgClasses = {};
+				f.selectAll('path').forEach(function (el, i) {
+					var elClass = el.attr('class');
+					if(svgClasses[elClass] === undefined){
+						console.log(elClass)
+					}
+				});
+
+				f.selectAll('*[stroke]').forEach(function (el, i) {
+					var elColor = el.attr().stroke;
+					if(self.colorsFound[elColor] === undefined){
+						console.log(elColor, 'found in SVG');
+						self.colorsFound[elColor] = [500, 300, 0, 500, 1500, 250]; //Todo CLEM make color-settings-Object?
+					}
+				});
+
+
 				// find all elements with "display=none" and remove them
-				f.selectAll("[display=none]").remove()
+				f.selectAll("[display=none]").remove();
 
 				// iterate svg tag attributes
 				for(var i = 0; i < root_attrs.length; i++){
@@ -910,6 +928,7 @@ $(function(){
 				if(design.type === 'model'){
 					var svg = snap.select('#' + design.previewId);
 					var misfitting = self.outsideWorkingArea(svg);
+					console.log("Misfitting: ", misfitting);
 					if(misfitting.oversized || misfitting.outside){
 						svg.data('fitMatrix', misfitting);
 						$('#'+design.id).addClass('misfit');

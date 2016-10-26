@@ -689,7 +689,7 @@ def csp_line_intersection(l1,l2,sp1,sp2):
 def csp_split_by_two_points(sp1,sp2,t1,t2) :
 	if t1>t2 : t1, t2 = t2, t1
 	if t1 == t2 : 
-		sp1,sp2,sp3 =  csp_split(sp1,sp2,t)
+		sp1,sp2,sp3 =  csp_split(sp1,sp2,t1)
 		return [sp1,sp2,sp2,sp3]
 	elif t1 <= 1e-10 and t2 >= 1.-1e-10 :
 		return [sp1,sp1,sp2,sp2]
@@ -1001,9 +1001,9 @@ def csp_concat_subpaths(*s):
 		if s1 == [] : return s2
 		if s2 == [] : return s1
 		if (s1[-1][1][0]-s2[0][1][0])**2 + (s1[-1][1][1]-s2[0][1][1])**2 > 0.00001 :
-			 return s1[:-1]+[ [s1[-1][0],s1[-1][1],s1[-1][1]],  [s2[0][1],s2[0][1],s2[0][2]] ] + s2[1:]
+			return s1[:-1]+[ [s1[-1][0],s1[-1][1],s1[-1][1]],  [s2[0][1],s2[0][1],s2[0][2]] ] + s2[1:]
 		else :
-			 return s1[:-1]+[ [s1[-1][0],s2[0][1],s2[0][2]] ] + s2[1:]		
+			return s1[:-1]+[ [s1[-1][0],s2[0][1],s2[0][2]] ] + s2[1:]
 			 
 	if len(s) == 0 : return []
 	if len(s) ==1 : return s[0]
@@ -1019,7 +1019,7 @@ def csp_draw(csp, color="#05f", group = None, style="fill:none;", width = .1, co
 		style += "stroke:"+color+";"+ "stroke-width:%0.4fpx;"%width
 		args = {"d": cubicsuperpath.formatPath(csp), "style":style}
 		if comment!="" : args["comment"] = str(comment)
-		inkex.etree.SubElement( group, inkex.addNS('path','svg'), args )							
+		inkex.etree.SubElement( group, inkex.addNS('path','svg'), args )
 
 	
 def csp_subpaths_end_to_start_distance2(s1,s2):
@@ -2794,12 +2794,13 @@ class Laserengraver(inkex.Effect):
 		
 		if(visible):
 			simpletransform.fuseTransform(node)
-			self.paths[layer] = self.paths[layer] + [node] if layer in self.paths else [node]
-			if node.get("id") in self.selected :
-				self.selected_paths[layer] = self.selected_paths[layer] + [node] if layer in self.selected_paths else [node]  
+			if self.options['cut_outlines'] == True:
+				self.paths[layer] = self.paths[layer] + [node] if layer in self.paths else [node]
+
+			if node.get("id") in self.selected : #probably not needed
+				self.selected_paths[layer] = self.selected_paths[layer] + [node] if layer in self.selected_paths else [node]
 
 			if self.options['fill_areas'] == True:
-
 				if fill['visible']:
 					fillColor = fill['color']
 					ig = infill_generator.InfillGenerator( self.document, [node] )
@@ -3264,26 +3265,28 @@ class Laserengraver(inkex.Effect):
 		for layer in self.layers :
 			if layer in paths :
 				itemAmount += len(paths[layer])
-			if(layer in self.filled_areas):
+			if layer in self.filled_areas:
 				itemAmount += len(self.filled_areas[layer])
-			if(layer in self.images):
+			if layer in self.images:
 				itemAmount += len(self.images[layer])
 				
 		processedItemCount = 0
 		report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
 		for layer in self.layers :
 			if layer in paths :
-				#print(("layer",layer.get('id')))
-				stroke = None
-				p = []
 				pD = dict()
-				# dxfpoints = []
 				for path in paths[layer] :
-					print("path", layer.get('id'), path.get('id'), path.get('stroke'))
-					stroke = path.get('stroke')
-					if(stroke == None): #todo catch None stroke earlier
-						print('stroke==None -> skipping path:', path.get('id'))
-						continue
+					print("path", layer.get('id'), path.get('id'), 'stroke: ',path.get('stroke'), 'fill: ',path.get('class'))
+
+					if path.get('stroke') is not None: #todo catch None stroke/fill earlier
+						stroke = path.get('stroke')
+					elif path.get('fill') is not None:
+						stroke = path.get('fill')
+					elif path.get('class') is not None:
+						stroke = path.get('class')
+					else:
+						stroke = 'default'
+
 					if "d" not in path.keys() :
 						self.error(_("Warning: One or more paths dont have 'd' parameter, try to Ungroup (Ctrl+Shift+G) and Object to Path (Ctrl+Shift+C)!"),"selection_contains_objects_that_are_not_paths")
 						continue
@@ -3293,35 +3296,21 @@ class Laserengraver(inkex.Effect):
 					if d != '':
 						csp = cubicsuperpath.parsePath(d) #todo why not d because d=path.get("d")
 						csp = self.apply_transforms(path, csp)
-						if path.get("dxfpoint") == "1":
-							tmp_curve=self.transform_csp(csp, layer) # does the coordinate transformation from px to mm according to the orientation points
-							x=tmp_curve[0][0][0][0]
-							y=tmp_curve[0][0][0][1]
-							print_("got dxfpoint (scaled) at (%f,%f)" % (x,y))
-							print 'uncomment dxfpoints, its still needed!!'
-							# dxfpoints += [[x,y]]
-						else:
-							pD[stroke] += csp
-							print pD
-							p += csp
+						pD[stroke] += csp
 
 						processedItemCount += 1
 						report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
 
-				# dxfpoints=sort_dxfpoints(dxfpoints) #todo check if really needed, probably not
-				print dict(pD)
 				curvesD = dict() #diction
 				for colorKey in pD.keys():
 					curvesD[colorKey] = self.parse_curve(pD[colorKey], layer)
-				curve = self.parse_curve(p, layer)
-				print curve
-				intensity = self.options['laser_intensity']
-				feedrate = self.options['engraving_laser_speed']
+
 				pierce_time = self.options['pierce_time']
 				layerId = layer.get('id') or '?'
 				pathId = path.get('id') or '?'
-				# WIP outlines2 as test
+
 				#for each color generate GCode
+				print "Colors found", curvesD.keys()
 				for colorKey in curvesD.keys():
 					gcode_outlines += "; Layer: " + layerId + ", outline of " + pathId + ", stroke: " + colorKey + "\n"
 					gcode_outlines += self.generate_gcode_color(curvesD[colorKey], colorKey, pierce_time)
@@ -3348,7 +3337,8 @@ class Laserengraver(inkex.Effect):
 					processedItemCount += 1
 					report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
 
-			if layer in self.images :
+			print 'Infills Setting:', self.options['engrave']
+			if layer in self.images and self.options['engrave']:
 				for imgNode in self.images[layer] :
 					file_id = imgNode.get('data-serveurl', '')
 					x = imgNode.get('x')
@@ -3550,9 +3540,9 @@ if __name__ == "__main__":
 	OptionParser.add_option("",   "--dpi",						action="store", type="float",		 dest="svgDPI", default="90",		help="dpi of the SVG file. Use 90 for Inkscape and 72 for Illustrator")
 	OptionParser.add_option("",   "--biarc-max-split-depth",		action="store", type="int",		 dest="biarc_max_split_depth", default="4",			help="Defines maximum depth of splitting while approximating using biarcs.")				
 	OptionParser.add_option("",   "--fill-areas",		action="store_true", 		 dest="fill_areas", default=False,			help="Fill filled paths line by line.")				
-	OptionParser.add_option("",   "--set-passes",		action="store_true", 		 dest="set_passes", default=1,			help="Set number of passes.")
-	OptionParser.add_option("",   "--fill-spacing",		action="store", type="float",		 dest="fill_spacing", default=0.25,			help="Distance between area filling lines. Increase for faster engraving, decrease for better quality. Minimum: laser beam diameter")
+	OptionParser.add_option("",   "--engrave",		action="store_true", 		 dest="engrave", default=False,			help="Engrave Image/Design.")
 	OptionParser.add_option("",   "--cut-outlines",		action="store_true", 		 dest="cut_outlines", default=True,			help="Cut Outlines.")
+	OptionParser.add_option("",   "--set-passes",		action="store_true", 		 dest="set_passes", default=1,			help="Set number of passes.")
 	OptionParser.add_option("",   "--fill-spacing",		action="store", type="float",		 dest="fill_spacing", default=0.25,			help="Distance between area filling lines. Increase for faster engraving, decrease for better quality. Minimum: laser beam diameter")
 	OptionParser.add_option("",   "--cross-fill",		action="store_true", 		 dest="cross_fill", default=False,			help="Fill areas with grid ?")
 	OptionParser.add_option("",   "--fill-angle",		action="store", type="float",		 dest="fill_angle", default=0.0,			help="Angle of the fill pattern. 0.0 means parallel to x-axis.")				
@@ -3578,6 +3568,6 @@ if __name__ == "__main__":
 	if(option_dict['directory'] == None):
 		option_dict['directory'] = os.path.dirname(os.path.realpath(svg_file))
 		print("using default folder", option_dict['directory'])
-	
+	#todo option_dict engrave and fill-areas are doubled, because some legacy code setting fill areas to False always...
 	e = Laserengraver(option_dict, svg_file)
 	e.affect()					

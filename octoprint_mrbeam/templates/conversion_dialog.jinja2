@@ -10,6 +10,9 @@
                 <div class="control-group">
                     <select data-bind="options: material_menu, value: selected_material"></select>
                 </div>
+                <div class="control-group" data-bind="visible: showColorSettings">
+                    <select data-bind="options: color_menu, value: selected_color"></select>
+                </div>
 				<div class="control-group">
 					<label class="control-label">{{ _('Laser intensity') }} (1-1000)</label>
 					<div class="controls">

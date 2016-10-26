@@ -50,12 +50,34 @@ $(function(){
 			'kraftplex':[1000, 200, 0, 250, 3000, 500],
 			'foam rubber':[600, 200, 0, 301, 3000, 1000]
 		};
+
 		var setting_keys = [];
-		for(k in self.materials_settings){
+		for(var k in self.materials_settings){
 			setting_keys.push(k);
 		}
 		self.material_menu = ko.observableArray(setting_keys);
 		self.selected_material = ko.observable();
+
+
+		// color settings
+		self.showColorSettings = ko.observable(false); //todo check if multiple colors found
+		self.color_settings = self.workingArea.colorsFound;
+
+
+		self.color_keys = [];
+
+		self.color_menu = ko.observableArray(self.color_keys);
+		self.selected_color = ko.observable();
+
+		self.color_key_update = function(){
+			self.color_keys = [];
+			console.log("color keys update");
+			for(var k in self.color_settings){
+				self.color_keys.push(k);
+			}
+			self.color_menu(self.color_keys);
+		};
+
 
 
 		// image engraving stuff
@@ -64,7 +86,7 @@ $(function(){
 		self.text_placed = ko.observable(false);
 		self.show_image_parameters = ko.computed(function(){
 			return (self.images_placed() || self.text_placed()
-                    || (self.fill_areas() && self.show_vector_parameters()));
+					|| (self.fill_areas() && self.show_vector_parameters()));
 		});
 		self.imgIntensityWhite = ko.observable(0);
 		self.imgIntensityBlack = ko.observable(500);
@@ -105,9 +127,11 @@ $(function(){
 		self.show_conversion_dialog = function() {
 			self.gcodeFilesToAppend = self.workingArea.getPlacedGcodes();
 			self.show_vector_parameters(self.workingArea.getPlacedSvgs().length > 0);
-			self.show_fill_areas_checkbox(self.workingArea.hasFilledVectors())
+			self.show_fill_areas_checkbox(self.workingArea.hasFilledVectors());
 			self.images_placed(self.workingArea.getPlacedImages().length > 0);
-            self.text_placed(self.workingArea.hasTextItems());
+			self.text_placed(self.workingArea.hasTextItems());
+			self.showColorSettings(Object.keys(self.workingArea.colorsFound).length > 1);
+			self.color_key_update();
 			//self.show_image_parameters(self.workingArea.getPlacedImages().length > 0);
 
 			if(self.show_vector_parameters() || self.show_image_parameters()){
@@ -186,6 +210,8 @@ $(function(){
 			self.imgFeedrateBlack(settings[5]);
 
 		});
+
+
 
 		self.settingsString = ko.computed(function(){
 			var intensity = self.laserIntensity();
@@ -297,6 +323,7 @@ $(function(){
 						"profile.speed": self.laserSpeed(),
 						"profile.intensity": self.laserIntensity(),
 						"profile.fill_areas": self.fill_areas(),
+						"profile.engrave": self.fill_areas(),
 						"profile.set_passes": self.set_passes(),
 						"profile.cut_outlines" : self.cut_outlines(),
 						"profile.pierce_time": self.pierceTime(),
