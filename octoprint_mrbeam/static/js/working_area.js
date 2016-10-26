@@ -289,7 +289,7 @@ $(function(){
 				var doc_height = null;
 				var doc_viewbox = null;
 
-                // find clippath elements
+				// find clippath elements
 				var clipPathEl = f.selectAll('clipPath');
 				if(clipPathEl.length != 0){
 					console.warn("Warning: removed unsupported clipPath element in SVG");

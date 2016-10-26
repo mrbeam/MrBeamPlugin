@@ -22,6 +22,7 @@ defaults = dict(
 	speed=300,
 	intensity=500,
 	fill_areas=False,
+	engrave=False,
 	set_passes=1,
 	cut_outlines=True,
 	cross_fill=False,
@@ -523,7 +524,7 @@ class Profile(object):
 		return settings
 
 	def convert_to_engine2(self):
-
+		# engrave is mirrored fill area, needs to be removed in next iteration
 		settings = {
 			"engraving_laser_speed": self.get_int("speed"),
 			"laser_intensity": self.get_int("intensity"),
@@ -537,6 +538,7 @@ class Profile(object):
 			"sharpening": self.get_float("img_sharpening"),
 			"dithering": self.get_boolean("img_dithering"),
 			"fill_areas": self.get_boolean("fill_areas"),
+			"engrave": self.get_boolean("fill_areas"),
 			"set_passes": self.get_int("set_passes"),
 			"cut_outlines": self.get_boolean("cut_outlines"),
 			"cross_fill": self.get_boolean("cross_fill"),

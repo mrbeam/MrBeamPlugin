@@ -297,6 +297,7 @@ $(function(){
 						"profile.speed": self.laserSpeed(),
 						"profile.intensity": self.laserIntensity(),
 						"profile.fill_areas": self.fill_areas(),
+						"profile.engrave": self.fill_areas(),
 						"profile.set_passes": self.set_passes(),
 						"profile.cut_outlines" : self.cut_outlines(),
 						"profile.pierce_time": self.pierceTime(),
