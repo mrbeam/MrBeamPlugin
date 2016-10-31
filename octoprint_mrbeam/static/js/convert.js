@@ -99,7 +99,13 @@ $(function(){
 		
 		self.sharpeningMax = 25;
 		self.contrastMax = 2;
-		
+
+		self.reset_cutOutlines = ko.computed(function(){
+			if(!self.fill_areas()){
+				self.cut_outlines(true);
+			}
+		}, self);
+
 		// preprocessing preview ... returns opacity 0.0 - 1.0
 		self.sharpenedPreview = ko.computed(function(){
 			if(self.imgDithering()) return 0;
