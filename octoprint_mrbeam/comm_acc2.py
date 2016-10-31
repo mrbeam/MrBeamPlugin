@@ -873,7 +873,6 @@ class MachineCom(object):
 		# reset feedrate and intesity factor in case they where changed in a previous run
 		self._feedrate_factor  = 1
 		self._intensity_factor = 1
-		self._passes = 1
 		self._finished_passes = 0
 
 		try:

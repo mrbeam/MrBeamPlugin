@@ -7,7 +7,9 @@
         <form class="form-horizontal" data-bind="visible: !slicing_in_progress() ">
 			<div data-bind="visible: show_vector_parameters ">
 				<p>{{ _('Vector graphic parameters:') }}</p>
-
+                <div class="control-group">
+                    <select data-bind="options: material_menu, value: selected_material"></select>
+                </div>
 				<div class="control-group">
 					<label class="control-label">{{ _('Laser intensity') }} (1-1000)</label>
 					<div class="controls">
@@ -43,6 +45,14 @@
 					<label class="checkbox">
 						<input type="checkbox" data-bind="checked: fill_areas">{{ _('Engrave Infills') }}
 					</label>
+				</div>
+                <div class="control-group">
+                <label class="control-label">{{ _('Number of passes') }} </label>
+                    <div class="controls">
+                        <div class="input-append">
+                            <input type="number" min="1" max="10" style="width:4em;" data-bind="value: set_passes">
+                        </div>
+                    </div>
 				</div>
             </div>
 
