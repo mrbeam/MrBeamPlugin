@@ -1022,7 +1022,7 @@ $(function(){
                     console.log("webcam src set", newSrc);
                     webcamImage.attr("src", newSrc);
                 }
-                photoupdate = setInterval(myTimer, 1000);
+                photoupdate = setInterval(myTimer, 5000);
                 function myTimer() {
                     var newSrc = CONFIG_WEBCAM_STREAM;
                     if (CONFIG_WEBCAM_STREAM.lastIndexOf("?") > -1) {
