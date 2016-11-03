@@ -1019,16 +1019,29 @@ $(function(){
                         newSrc += "?";
                     }
                     newSrc += new Date().getTime();
-					console.log("webcam src set", newSrc);
+                    console.log("webcam src set", newSrc);
                     webcamImage.attr("src", newSrc);
                 }
-				console.log("webcam enabled");
+                photoupdate = setInterval(myTimer, 1000);
+                function myTimer() {
+                    var newSrc = CONFIG_WEBCAM_STREAM;
+                    if (CONFIG_WEBCAM_STREAM.lastIndexOf("?") > -1) {
+                        newSrc += "&";
+                    } else {
+                        newSrc += "?";
+                    }
+                    newSrc += new Date().getTime();
+                    console.log("webcam src set", newSrc);
+                    webcamImage.attr("src", newSrc);
+                }
+                console.log("webcam enabled");
             } else if (previous === "#workingarea") {
                 // only disable webcam stream if tab is out of focus for more than 5s, otherwise we might cause
                 // more load by the constant connection creation than by the actual webcam stream
                 self.webcamDisableTimeout = setTimeout(function () {
                     $("#webcam_image").css("background-image", "none");
                 }, 5000);
+                window.clearInterval(photoupdate)
             }
         };
 
