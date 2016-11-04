@@ -41,7 +41,7 @@ class MachineCom(object):
 	STATE_LOCKED = 12
 	STATE_HOMING = 13
 	STATE_FLASHING = 14
-	
+
 	def __init__(self, port=None, baudrate=None, callbackObject=None, printerProfileManager=None):
 		self._logger = logging.getLogger(__name__)
 		self._serialLogger = logging.getLogger("SERIAL")
@@ -343,7 +343,7 @@ class MachineCom(object):
 		}
 		eventManager().fire(Events.PRINT_DONE, payload)
 		self.sendCommand("M5")
-		self.sendCommand("G0X0Y0")
+		self.sendCommand("G0X500Y400")
 		self.sendCommand("M9")
 
 	def _handle_status_report(self, line):
@@ -973,7 +973,7 @@ class MachineCom(object):
 				return possible_state[len("STATE_"):]
 
 		return "UNKNOWN"
-	
+
 	def getStateString(self, state=None):
 		if state is None:
 			state = self._state

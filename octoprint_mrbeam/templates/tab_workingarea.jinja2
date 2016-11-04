@@ -252,6 +252,7 @@
 
 							<!--  end sidebar  -->
 
+
 							<div class="span8" style="position:relative">
 								{% if webcamStream %}
 								<div id="webcam_wrapper" data-bind="style: {
@@ -286,8 +287,7 @@
 									<g id="scaleGroup" data-bind="attr: { transform: scaleMatrix() }">
 										<g id="placedGcodes" data-bind="visible: !state.isPrinting() && !state.isPaused(), attr: { transform: scaleMatrixMMtoDisplay() }"></g>
 										<g id="gCodePreview" data-bind="visible: state.isPrinting() || state.isPaused(), attr: { transform: scaleMatrixMMtoDisplay() }"></g>
-										<rect xxdata-bind="click: move_laser"
-											  id="coordGrid" x="0" y="0" width="0" height="0"
+										<rect id="coordGrid" x="0" y="0" width="0" height="0"
 											  stroke="none" fill="none"></rect>
 										<g id="userContent" data-bind="visible: !state.isPrinting() && !state.isPaused()"></g>
 									</g>

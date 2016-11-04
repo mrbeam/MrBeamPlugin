@@ -3,7 +3,7 @@ from octoprint.settings import settings
 from . import comm_acc2 as comm
 
 class Laser(Printer):
-	
+
 	def __init__(self, fileManager, analysisQueue, printerProfileManager):
 		Printer.__init__(self, fileManager, analysisQueue, printerProfileManager)
 		self._stateMonitor = LaserStateMonitor(
@@ -32,7 +32,7 @@ class Laser(Printer):
 			progress={"completion": None, "filepos": None, "printTime": None, "printTimeLeft": None},
 			current_z=None
 		)
-		
+
 	# overwrite connect to use comm_acc2
 	def connect(self, port=None, baudrate=None, profile=None):
 		"""
@@ -56,7 +56,6 @@ class Laser(Printer):
 
 	# extend commands: home, position, increase_passes, decrease_passes
 	def home(self, axes):
-		# TODO get position after homing from machine profile
 		self.commands(["$H", "G92X500Y400Z0", "G90", "G21"])
 
 	def position(self, x, y):
@@ -85,7 +84,7 @@ class Laser(Printer):
 			return
 		self._comm.decreasePasses()
 
-	
+
 	# extend flags
 	def is_locked(self):
 		return self._comm is not None and self._comm.isLocked()
@@ -100,7 +99,7 @@ class Laser(Printer):
 			"flashing": self.is_flashing(),
 		})
 		return flags
-	
+
 	# position update callbacks
 	def on_comm_pos_update(self, MPos, WPos):
 		self._add_position_data(MPos, WPos)
@@ -116,7 +115,7 @@ class Laser(Printer):
 		self._stateMonitor.setMachinePosition(MPos)
 
 
-class LaserStateMonitor(StateMonitor):	
+class LaserStateMonitor(StateMonitor):
 	def __init__(self, *args, **kwargs):
 		StateMonitor.__init__(self, *args, **kwargs)
 		self._machinePosition = None
@@ -137,4 +136,3 @@ class LaserStateMonitor(StateMonitor):
 			"machinePosition": self._machinePosition
 		})
 		return data
-	

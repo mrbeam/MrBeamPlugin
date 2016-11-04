@@ -157,7 +157,7 @@ $(function(){
 		self.trigger_resize = function(){
 			if(typeof(snap) !== 'undefined') self.abortFreeTransforms();
 			var tabContentPadding = 18;
-			self.availableHeight(document.documentElement.clientHeight - $('body>nav').outerHeight()  - $('footer>*').outerHeight() - tabContentPadding - 48); // TODO remove magic number
+			self.availableHeight(document.documentElement.clientHeight - $('#mrbeam-main-tabs').height() - tabContentPadding); // TODO remove magic number
 			self.availableWidth($('#workingarea div.span8').innerWidth());
 //			console.log("availableHeight ", self.availableHeight());
 //			console.log("availableWidth ", self.availableWidth());
@@ -178,13 +178,12 @@ $(function(){
 		};
 
 		self.getXYCoord = function(evt){
-			var scale = evt.target.parentElement.transform.baseVal[0].matrix.a;
 			var x = self.px2mm(evt.offsetX);
-			var y = self.px2mm(parseFloat(evt.target.attributes.height.value) * scale - evt.offsetY);
+			var y = self.px2mm(self.availableHeight() - evt.offsetY);
 			x = Math.min(x, self.workingAreaWidthMM());
 			y = Math.min(y, self.workingAreaHeightMM());
 			return {x:x, y:y};
-		}
+		};
 
 		self.crosshairX = function(){
 			var pos = self.state.currentPos();
@@ -1072,16 +1071,29 @@ $(function(){
                         newSrc += "?";
                     }
                     newSrc += new Date().getTime();
-					console.log("webcam src set", newSrc);
+                    console.log("webcam src set", newSrc);
                     webcamImage.attr("src", newSrc);
                 }
-				console.log("webcam enabled");
+                photoupdate = setInterval(myTimer, 5000);
+                function myTimer() {
+                    var newSrc = CONFIG_WEBCAM_STREAM;
+                    if (CONFIG_WEBCAM_STREAM.lastIndexOf("?") > -1) {
+                        newSrc += "&";
+                    } else {
+                        newSrc += "?";
+                    }
+                    newSrc += new Date().getTime();
+                    console.log("webcam src set", newSrc);
+                    webcamImage.attr("src", newSrc);
+                }
+                console.log("webcam enabled");
             } else if (previous === "#workingarea") {
                 // only disable webcam stream if tab is out of focus for more than 5s, otherwise we might cause
                 // more load by the constant connection creation than by the actual webcam stream
                 self.webcamDisableTimeout = setTimeout(function () {
                     $("#webcam_image").css("background-image", "none");
                 }, 5000);
+                window.clearInterval(photoupdate)
             }
         };
 
