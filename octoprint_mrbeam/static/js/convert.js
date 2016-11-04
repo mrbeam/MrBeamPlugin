@@ -752,11 +752,14 @@ $(function(){
 		//[laserInt,speed,engraveWhite,engraveBlack,speedWhite,speedBlack]
 		self.materials_settings = {
 			'default':[0, 0, 0, 0, 0, 0],
-			'wood':[ 800, 200, 0, 500, 1000, 200],
-			'cut wood':[ 800, 200, 0, 500, 1000, 200],
-			'Kraftplex engrave':[375, 750, 0, 375, 4500, 750],
-			'Kraftplex cut':[1000, 100, 0, 375, 4500, 750],
-			'foam rubber':[600, 200, 0, 301, 3000, 1000]
+//			'Acrylic':[1000,80,0,350,4500,850],
+			'Foam Rubber':[500, 300, 0, 200, 3000, 1000],
+			'Felt engrave':[300, 1000, 0, 300, 2000, 1000],
+			'Felt cut':[1000, 1000, 0, 300, 2000, 1000],
+			'Kraftplex engrave':[400, 850, 0, 400, 4500, 850],
+			'Kraftplex cut':[1000, 100, 0, 400, 4500, 850],
+			'Wood engrave':[350, 850, 0, 350, 4500, 850],
+			'Wood cut':[1000, 80, 0, 350, 4500, 850]
 		};
 
 		var material_keys = [];
