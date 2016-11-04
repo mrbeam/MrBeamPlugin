@@ -140,6 +140,7 @@ class Effect:
 	}	
 	
 	def __init__(self, *args, **kwargs):
+		self.colorSettings = dict()
 		self.document=None
 		self.original_document=None
 		self.ctx=None
@@ -174,6 +175,19 @@ class Effect:
 		self.document = etree.parse(stream, parser=p)
 		self.original_document = copy.deepcopy(self.document)
 		stream.close()
+
+	def parseColors(self):
+		for comment in self.document.getiterator():
+			if comment.tag is etree.Comment :
+				lines = str(comment).split('\\n')
+				lineGen = (line.split(',') for line in lines if line[0] is '#')
+				for lg in lineGen:
+					self.colorSettings[lg[0]] = {'intensity':lg[1],
+												 'speed':lg[2],
+												 'cut':lg[3]}
+				print self.colorSettings
+				break
+
 
 	def getposinlayer(self):
 		#defaults
@@ -247,6 +261,7 @@ class Effect:
 	def affect(self, on_progress=None, on_progress_args=None, on_progress_kwargs=None):
 		"""Affect an SVG document with a callback effect"""
 		self.parse()
+		self.parseColors()
 		self.getposinlayer()
 		self.getselected()
 		self.getdocids()

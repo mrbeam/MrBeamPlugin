@@ -3286,11 +3286,12 @@ class Laserengraver(inkex.Effect):
 						stroke = path.get('class')
 					else:
 						stroke = 'default'
+						continue
 
 					if "d" not in path.keys() :
 						self.error(_("Warning: One or more paths dont have 'd' parameter, try to Ungroup (Ctrl+Shift+G) and Object to Path (Ctrl+Shift+C)!"),"selection_contains_objects_that_are_not_paths")
 						continue
-					if stroke not in pD.keys() :
+					if stroke not in pD.keys() and stroke != 'default':
 						pD[stroke] = []
 					d = path.get("d")
 					if d != '':
@@ -3312,8 +3313,13 @@ class Laserengraver(inkex.Effect):
 				#for each color generate GCode
 				print "Colors found", curvesD.keys()
 				for colorKey in curvesD.keys():
-					gcode_outlines += "; Layer: " + layerId + ", outline of " + pathId + ", stroke: " + colorKey + "\n"
-					gcode_outlines += self.generate_gcode_color(curvesD[colorKey], colorKey, pierce_time)
+					gcode_outlines += "; Layer: " + layerId + ", outline of " + pathId + ", stroke: " + colorKey +', '+str(self.colorSettings[colorKey])+"\n"
+					# TODO CLEM REDO after DEMO
+					# gcode_outlines += self.generate_gcode_color(curvesD[colorKey], colorKey, pierce_time)
+					gcode_outlines += self.generate_gcode(curvesD[colorKey],
+														  int(self.colorSettings[colorKey]['intensity']),
+														  int(self.colorSettings[colorKey]['speed']),
+														  pierce_time)
 
 
 			if layer in self.filled_areas :
@@ -3377,7 +3383,7 @@ class Laserengraver(inkex.Effect):
 #					simpletransform.applyTransformToPoint(unitMat, lowerRight)
 #					wMM = abs(lowerRight[0] - upperLeft[0])
 #					hMM = abs(lowerRight[1] - upperLeft[1])
-#					
+#
 
 
 					_upperLeft = [x, y]

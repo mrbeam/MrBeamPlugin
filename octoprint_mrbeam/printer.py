@@ -47,7 +47,13 @@ class Laser(Printer):
 	# overwrite operational state to accept commands in locked state
 	def is_operational(self):
 		return Printer.is_operational(self) or self.is_locked()
-		
+
+	# send color settings to commAcc to inject settings into Gcode
+	def set_colors(self, currentFileName,value):
+		if self._comm is None:
+			return
+		self._comm.setColors(currentFileName,value)
+
 	# extend commands: home, position, increase_passes, decrease_passes
 	def home(self, axes):
 		# TODO get position after homing from machine profile
@@ -57,7 +63,7 @@ class Laser(Printer):
 		printer_profile = self._printerProfileManager.get_current_or_default()
 		movement_speed = min(printer_profile["axes"]["x"]["speed"], printer_profile["axes"]["y"]["speed"])
 		self.commands(["G90", "G0 X%.3f Y%.3f F%d" % (x, y, movement_speed)])
-	
+
 	def increase_passes(self):
 		"""
 		 increase the number of passes by one.

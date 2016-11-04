@@ -118,7 +118,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# Define your plugin's asset files to automatically include in the
 		# core UI here.
 		return dict(
-			js=["js/lasercutterprofiles.js","js/mother_viewmodel.js", "js/mrbeam.js", "js/working_area.js", "js/camera.js",
+			js=["js/lasercutterprofiles.js","js/mother_viewmodel.js", "js/mrbeam.js","js/color_classifier.js","js/working_area.js", "js/camera.js",
 			"js/lib/snap.svg-min.js", "js/render_fills.js", "js/matrix_oven.js", "js/drag_scale_rotate.js",
 			"js/convert.js", "js/gcode_parser.js", "js/lib/photobooth_min.js", "js/laserSafetyNotes.js"],
 			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css"],
@@ -395,10 +395,24 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 					return make_response("Printer is not operational, cannot directly start printing", 409)
 				select_after_slicing = print_after_slicing = True
 
+			#get profile information out of data json
 			override_keys = [k for k in data if k.startswith("profile.") and data[k] is not None]
 			overrides = dict()
 			for key in override_keys:
 				overrides[key[len("profile."):]] = data[key]
+
+			#get color information out of data json
+			override_color_keys = [k for k in data if k.startswith("colors.") and data[k] is not None]
+			color_overrides = dict()
+			for key in override_color_keys:
+				colorKey = key[len("colors."):len("colors.#000000")]
+				if colorKey == 'undefin': break
+				color_overrides[colorKey] = {'intensity' : data['colors.'+colorKey+'.intensity'],
+											 'speed': data['colors.'+colorKey+'.speed'],
+											 'cut': data['colors.'+colorKey+'.cut']}
+				print ('color_overrides', color_overrides)
+
+			self._printer.set_colors(currentFilename, color_overrides)
 
 			def slicing_done(target, gcode_name, select_after_slicing, print_after_slicing, append_these_files):
 				# append additioal gcodes
@@ -420,13 +434,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 			try:
 				self._file_manager.slice(slicer, target, filename, target, gcode_name,
-								  profile=profile,
-								  printer_profile_id=printerProfile,
-								  position=position,
-								  overrides=overrides,
-								  callback=slicing_done,
-								  callback_args=[target, gcode_name, select_after_slicing, print_after_slicing,
-												 appendGcodeFiles])
+										 profile=profile,
+										 printer_profile_id=printerProfile,
+										 position=position,
+										 overrides=overrides,
+										 callback=slicing_done,
+										 callback_args=[target, gcode_name, select_after_slicing, print_after_slicing,
+														appendGcodeFiles])
 			except octoprint.slicing.UnknownProfile:
 				return make_response("Profile {profile} doesn't exist".format(**locals()), 400)
 

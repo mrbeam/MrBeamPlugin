@@ -496,6 +496,10 @@ class MachineCom(object):
 		# finally return whatever we resulted on
 		return command, command_type, gcode
 
+	# TODO CLEM Inject color
+	def setColors(self,currentFileName, colors):
+		print ('>>>>>>>>>>>>>>>>>>>|||||||||||||||<<<<<<<<<<<<<<<<<<<<', currentFileName, colors)
+
 	def _gcode_command_for_cmd(self, cmd):
 		"""
 		Tries to parse the provided ``cmd`` and extract the GCODE command identifier from it (e.g. "G0" for "G0 X10.0").
@@ -1309,6 +1313,7 @@ def convert_pause_triggers(configured_triggers):
 		if len(triggers[t]) > 0:
 			result[t] = re.compile("|".join(map(lambda pattern: "({pattern})".format(pattern=pattern), triggers[t])))
 	return result
+
 
 def process_gcode_line(line):
 	line = strip_comment(line).strip()

@@ -24,7 +24,8 @@ $(function(){
 		self.settings = params[1];
 		self.state = params[2];
 		self.files = params[3];
-        self.profile = params[4];
+		self.profile = params[4];
+		self.classifier = params[5];
 
 		self.log = [];
 
@@ -310,7 +311,8 @@ $(function(){
 					var elColor = el.attr().stroke;
 					if(self.colorsFound[elColor] === undefined){
 						console.log(elColor, 'found in SVG');
-						self.colorsFound[elColor] = [500, 300, 0, 500, 1500, 250]; //Todo CLEM make color-settings-Object?
+						self.colorsFound[elColor] = { material : 'default',
+													  settings : [0,0,0,0,0,0]}; //Todo CLEM make color-settings-Object?
 					}
 				});
 
@@ -769,7 +771,7 @@ $(function(){
 			self.check_sizes_and_placements();
 		};
 
-		self.getCompositionSVG = function(fillAreas, cutOutlines, callback){
+		self.getCompositionSVG = function(fillAreas, cutOutlines, colorSettings,nameToHex, callback){
 			self.abortFreeTransforms();
 			var wMM = self.workingAreaWidthMM();
 			var hMM = self.workingAreaHeightMM();
@@ -781,13 +783,43 @@ $(function(){
 			var userContent = snap.select("#userContent").clone();
 			compSvg.append(userContent);
 
+
+
 			self.renderInfill(compSvg, fillAreas, cutOutlines, wMM, hMM, 10, function(svgWithRenderedInfill){
-				callback( self._wrapInSvgAndScale(svgWithRenderedInfill));
+				callback( self._wrapInSvgAndScale(colorSettings,nameToHex,svgWithRenderedInfill));
 				$('#compSvg').remove();
 			});
 		};
 
-		self._wrapInSvgAndScale = function(content){
+		self._wrapInSvgAndScale = function(colorSettings,nameToHex,content){
+			// TODO CLEM overthink the CUT/engrave option for colors....
+//			var removeColors = {};
+			var coloStr = '<!--';
+			for(var col in colorSettings){
+				if (col != undefined){
+					coloStr += '\n'+nameToHex[col];
+					coloStr += ','+colorSettings[col].intensity;
+					coloStr += ','+colorSettings[col].speed;
+					var cutColor = colorSettings[col].material.includes("cut");
+					coloStr += ','+cutColor;
+//					if(cutColor){
+//						removeColors[nameToHex[col]] = 0;
+//					}
+				}
+			}
+			coloStr += '\n-->';
+//			console.log(coloStr);
+
+			//TODO CLEM check for all types of forms in svg that can apply
+//			content.selectAll('rect','path','circle','polygon').forEach(function (el) {
+//				for (var rcol in removeColors){
+//					if (el.toString().includes(rcol)) {
+//						el.remove()
+//					}
+//				}
+//			});
+
+
 			var svgStr = content.innerSVG();
 			if(svgStr !== ''){
 				var dpiFactor = self.svgDPI()/25.4; // convert mm to pix 90dpi for inkscape, 72 for illustrator
@@ -798,7 +830,7 @@ $(function(){
 				svgStr = svgStr.replace("(\\\"","(");
 				svgStr = svgStr.replace("\\\")",")");
 
-				var svg = '<svg height="'+ h +'" version="1.1" width="'+ w +'" xmlns="http://www.w3.org/2000/svg"><defs/>'+ svgStr +'</svg>';
+				var svg = '<svg height="'+ h +'" version="1.1" width="'+ w +'" xmlns="http://www.w3.org/2000/svg"><defs/>'+coloStr+svgStr+'</svg>';
 				return svg;
 			} else {
 				return;
@@ -1061,6 +1093,7 @@ $(function(){
 
 		["loginStateViewModel", "settingsViewModel", "printerStateViewModel",  "gcodeFilesViewModel", "laserCutterProfilesViewModel"],
 		[document.getElementById("area_preview"),
+			document.getElementById("color_classifier"),
 			document.getElementById("working_area_files"),
 			//document.getElementById("webcam_wrapper")
 		]]);
