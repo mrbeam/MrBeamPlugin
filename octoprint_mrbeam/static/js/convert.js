@@ -772,17 +772,6 @@ $(function(){
 			material_keys.push(colHex);
 		}
 
-//		MATERIALS OVERVIEW
-//		self.material_objects = [
-//			{ name: 'wood', settings : [1000, 250, 0, 350, 4500, 850]},
-//			{ name: 'foam', settings : [625, 400, 0, 200, 3000, 1000]},
-//			{ name: 'default', settings : [0, 0, 0, 0, 0, 0]}
-//		];
-////		self.material_forEach = ko.observableArray(self.material_objects);
-//		self.printTest = function() {
-//			console.log("CLICK CLICK CLICK");
-//		};
-
 		self.material_menu = ko.observableArray(material_keys);
 		self.selected_material = ko.observable();
 		self.old_material = 'default';

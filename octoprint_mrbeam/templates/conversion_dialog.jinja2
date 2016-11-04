@@ -10,12 +10,6 @@
                 <div class="control-group" data-bind="visible: showColorSettings">
                     <select data-bind="options: color_menu, value: selected_color"></select>
                 </div>
-{#                <div class="control-group" data-bind="foreach: material_menu">#}
-{#                    <li>#}
-{#                        Name at position <span data-bind="text: name"> </span>:#}
-{#                        <a href="#" data-bind="click: $parent.printTest">Remove</a>#}
-{#                    </li>#}
-{#                </div>#}
                 <p>{{ _('Choose Settings:') }}</p>
                 <div class="control-group">
                     <select data-bind="options: material_menu, value: selected_material"></select>
