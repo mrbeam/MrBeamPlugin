@@ -383,6 +383,22 @@ $(function(){
 			self.abortFreeTransforms();
 			snap.selectAll('#'+file.previewId).remove();
 			self.placedDesigns.remove(file);
+
+			//TODO CLEM check if stayingColors is the way to go...
+			//check for colors that haven't been removed and keep them
+			var stayingColors = {};
+			snap.selectAll('*[stroke]').forEach(function (el) {
+				var elColor = el.attr().stroke;
+				for (var k in self.colorsFound){
+					if(self.colorsFound[k] != undefined){
+						if(elColor === k){
+							stayingColors[k] = self.colorsFound[k];
+						}
+					}
+				}
+			});
+			self.colorsFound = stayingColors;
+
 			// TODO debug why remove always clears all items of this type.
 //			self.placedDesigns.remove(function(item){
 //				console.log("item", item.previewId );

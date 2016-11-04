@@ -753,19 +753,36 @@ $(function(){
 		self.materials_settings = {
 			'default':[0, 0, 0, 0, 0, 0],
 //			'Acrylic':[1000,80,0,350,4500,850],
-			'Foam Rubber':[500, 300, 0, 200, 3000, 1000],
+			'Foam Rubber':[625, 400, 0, 200, 3000, 1000],
 			'Felt engrave':[300, 1000, 0, 300, 2000, 1000],
 			'Felt cut':[1000, 1000, 0, 300, 2000, 1000],
-			'Kraftplex engrave':[400, 850, 0, 400, 4500, 850],
-			'Kraftplex cut':[1000, 100, 0, 400, 4500, 850],
-			'Wood engrave':[350, 850, 0, 350, 4500, 850],
-			'Wood cut':[1000, 80, 0, 350, 4500, 850]
+			'Jeans Fabric':[1000,500,0,200,3000,500], // 2 passes todo check engraving
+			'Grey cardboard':[1000,500,0,300,3000,750], // 2-3 passes
+			'Cardboard':[1000,300,0,300,3000,750], // 2-3 passes
+			'Kraftplex engrave':[400, 850, 0, 500, 3000, 850],
+			'Kraftplex cut':[1000, 100, 0, 500, 3000, 850], //1-2 pass
+			'Wood engrave':[350, 850, 0, 350, 3000, 850],
+			'Wood cut':[1000, 250, 0, 350, 3000, 850],
+			'Balsa cut':[700, 500, 0, 350, 3000, 850] //2 passes
 		};
 
 		var material_keys = [];
+
 		for(var colHex in self.materials_settings){
 			material_keys.push(colHex);
 		}
+
+//		MATERIALS OVERVIEW
+//		self.material_objects = [
+//			{ name: 'wood', settings : [1000, 250, 0, 350, 4500, 850]},
+//			{ name: 'foam', settings : [625, 400, 0, 200, 3000, 1000]},
+//			{ name: 'default', settings : [0, 0, 0, 0, 0, 0]}
+//		];
+////		self.material_forEach = ko.observableArray(self.material_objects);
+//		self.printTest = function() {
+//			console.log("CLICK CLICK CLICK");
+//		};
+
 		self.material_menu = ko.observableArray(material_keys);
 		self.selected_material = ko.observable();
 		self.old_material = 'default';
