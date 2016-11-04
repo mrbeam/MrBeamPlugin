@@ -811,7 +811,7 @@ $(function(){
 		self.imgDithering = ko.observable(false);
 		self.imgSharpening = ko.observable(1);
 		self.imgContrast = ko.observable(1);
-		self.beamDiameter = ko.observable(0.2);
+		self.beamDiameter = ko.observable(0.15);
 		
 		self.sharpeningMax = 25;
 		self.contrastMax = 2;
