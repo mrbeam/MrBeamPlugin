@@ -7,10 +7,10 @@ def gcode_before_path(intensity = 0):
 	return "\nM03 S"+str(intensity)
 
 def gcode_before_path_color(intensity = '#000000'):
-	return "\nM03 S"+intensity
+	return "\nM03 S"+intensity #todo check if M05 is needed, maybe grbl error
 
 def gcode_after_path():
-	return "M03 S0\n"
+	return "M05"
 
 gcode_header = """
 $H
