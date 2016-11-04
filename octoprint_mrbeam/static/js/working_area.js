@@ -411,7 +411,8 @@ $(function(){
 			$('#'+label_id+' .vertical').text(vertical.toFixed() + 'mm');
 			$('#'+label_id+' .rotation').text(rot.toFixed(1) + '°');
 			var scale = Math.sqrt((transform.localMatrix.a * transform.localMatrix.a) + (transform.localMatrix.c * transform.localMatrix.c));
-			$('#'+label_id+' .scale').text((scale*100).toFixed(1) + '%');
+			var dpiscale = 90 / self.settings.settings.plugins.mrbeam.svgDPI();
+			$('#'+label_id+' .scale').text((scale/dpiscale*100).toFixed(1) + '%');
 		};
 
 
