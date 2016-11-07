@@ -728,7 +728,7 @@ $(function(){
 		self.profiles = ko.observableArray();
 		self.defaultSlicer = undefined;
 		self.defaultProfile = undefined;
-		
+
 		// expert settings
 		self.showHints = ko.observable(false);
 		self.showExpertSettings = ko.observable(false);
@@ -760,7 +760,7 @@ $(function(){
 			'Grey cardboard':[1000,500,0,300,3000,750], // 2-3 passes
 			'Cardboard':[1000,300,0,300,3000,750], // 2-3 passes
 			'Kraftplex engrave':[400, 850, 0, 500, 3000, 850],
-			'Kraftplex cut':[1000, 100, 0, 500, 3000, 850], //1-2 pass
+			'Kraftplex cut':[1000, 80, 0, 500, 3000, 850], //1-2 pass
 			'Wood engrave':[350, 850, 0, 350, 3000, 850],
 			'Wood cut':[1000, 250, 0, 350, 3000, 850],
 			'Balsa cut':[700, 500, 0, 350, 3000, 850] //2 passes
@@ -812,13 +812,13 @@ $(function(){
 		});
 		self.imgIntensityWhite = ko.observable(0);
 		self.imgIntensityBlack = ko.observable(500);
-		self.imgFeedrateWhite = ko.observable(1500); 
+		self.imgFeedrateWhite = ko.observable(1500);
 		self.imgFeedrateBlack = ko.observable(250);
 		self.imgDithering = ko.observable(false);
 		self.imgSharpening = ko.observable(1);
 		self.imgContrast = ko.observable(1);
 		self.beamDiameter = ko.observable(0.15);
-		
+
 		self.sharpeningMax = 25;
 		self.contrastMax = 2;
 
@@ -845,7 +845,7 @@ $(function(){
 				return contrastPercents - sharpeningPercents/2;
 			}
 		}, self);
-		
+
 
 		self.maxSpeed.subscribe(function(val){
 			self._configureFeedrateSlider();
@@ -868,7 +868,7 @@ $(function(){
 				if(self.laserIntensity() === undefined){
 					var intensity = self.settings.settings.plugins.mrbeam.defaultIntensity();
 					self.laserIntensity(intensity);
-				} 
+				}
 				if(self.laserSpeed() === undefined){
 					var speed = self.settings.settings.plugins.mrbeam.defaultFeedrate();
 					self.laserSpeed(speed);
@@ -884,7 +884,7 @@ $(function(){
 				self.convert();
 			}
 		};
-		
+
 		self.cancel_conversion = function(){
 			if(self.slicing_in_progress()){
 				// TODO cancel slicing at the backend properly
@@ -916,9 +916,9 @@ $(function(){
 				if(uniqueDesigns > 1){
 					gcode_name += "_"+(uniqueDesigns-1)+"more";
 				}
-				
+
 				return gcode_name;
-			} else { 
+			} else {
 				console.error("no designs placed.");
 				return;
 			}
@@ -1161,7 +1161,7 @@ $(function(){
 			self._configureFeedrateSlider();
 			self._configureImgSliders();
 		};
-		
+
 		self.onSlicingProgress = function(slicer, model_path, machinecode_path, progress){
 			self.slicing_progress(progress);
 		};
@@ -1247,7 +1247,7 @@ $(function(){
 		self._calcRealSpeed = function(sliderVal){
 			return Math.round(self.minSpeed() + sliderVal/100 * (self.maxSpeed() - self.minSpeed()));
 		};
-		
+
 		self._configureImgSliders = function() {
 			self.contrastSlider = $("#svgtogcode_contrast_slider").slider({
 				step: .1,
@@ -1258,7 +1258,7 @@ $(function(){
 			}).on("slide", function(ev){
 				self.imgContrast(ev.value);
 			});
-			
+
 			self.sharpeningSlider = $("#svgtogcode_sharpening_slider").slider({
 				step: 1,
 				min: 1,
@@ -1277,9 +1277,9 @@ $(function(){
 		});
 
 	}
-	
-    ADDITIONAL_VIEWMODELS.push([VectorConversionViewModel, 
-		["loginStateViewModel", "settingsViewModel", "printerStateViewModel", "workingAreaViewModel", "gcodeFilesViewModel"], 
+
+    ADDITIONAL_VIEWMODELS.push([VectorConversionViewModel,
+		["loginStateViewModel", "settingsViewModel", "printerStateViewModel", "workingAreaViewModel", "gcodeFilesViewModel"],
 		document.getElementById("dialog_vector_graphics_conversion")]);
-	
+
 });
