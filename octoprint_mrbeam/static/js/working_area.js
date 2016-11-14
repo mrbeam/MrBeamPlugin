@@ -335,6 +335,7 @@ $(function(){
 					self.svg_contains_text_warning(newSvg);
 				}
 
+				newSvg.clean(); // normalize and clean
 				newSvg.bake(); // remove transforms
 				newSvg.selectAll('path').attr({strokeWidth: '0.5'});
 				newSvg.attr(newSvgAttrs);
