@@ -33,28 +33,41 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             }
         }
 
-        if (elem.type !== "path" &&
-            elem.type !== "circle" &&
-            elem.type !== "ellipse" &&
-            elem.type !== "rect" &&
-            elem.type !== "line" &&
-            elem.type !== "polyline" &&
-            elem.type !== "path") {
-            return;
+        if (elem.type.includes("metadata") || elem.type.includes("sodipodi")) {
+            elem.remove();
         }
 
         for (var property in elem.attr()) {
             if (elem.attr().hasOwnProperty(property)) {
-                if (property.includes(":")) { // loescht alle attribute mit namespace anderst als svg
-                    elem.attr(property, "");
-                } else if (property == "style") { // entpackt den style attribute und entfernt default Werte
-                    elem.unwrap_style_attr()
+                if (property.includes("sodipodi:") ||
+                    property.includes("inkscape:") ||
+                    property.includes("dc:") ||
+                    property.includes("cc:") ||
+                    property.includes("rdf:")) {
+                        elem.attr(property, "");
                 }
             }
         }
 
-        if (!elem.attr().hasOwnProperty("stroke")) { // fuegt das stroke attribute in das element ein wenn nicht gesestzt
-            elem.attr("stroke", elem.attr("stroke")); // TODO die passende group finden und stroke dort entfernen.
+        if (elem.type == "path" ||
+            elem.type == "circle" ||
+            elem.type == "ellipse" ||
+            elem.type == "rect" ||
+            elem.type == "line" ||
+            elem.type == "polyline" ||
+            elem.type == "path") {
+
+            for (var property in elem.attr()) {
+                if (elem.attr().hasOwnProperty(property)) {
+                    if (property == "style") { // entpackt den style attribute und entfernt default Werte
+                        elem.unwrap_style_attr()
+                    }
+                }
+            }
+
+            if (!elem.attr().hasOwnProperty("stroke")) { // fuegt das stroke attribute in das element ein wenn nicht gesestzt
+                elem.attr("stroke", elem.attr("stroke")); // TODO die passende group finden und stroke dort entfernen.
+            }
         }
     };
 
