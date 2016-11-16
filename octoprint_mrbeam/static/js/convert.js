@@ -883,6 +883,12 @@ $(function(){
 				// just gcodes were placed. Start lasering right away.
 				self.convert();
 			}
+			var designs = self.workingArea.placedDesigns();
+			for (var idx in designs) {
+                if (designs[idx].subtype == "bitmap") {
+                    self.fill_areas(true);
+                }
+            }
 		};
 
 		self.cancel_conversion = function(){
