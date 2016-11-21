@@ -48,7 +48,6 @@ $(function(){
 		self.camera_scale = ko.observable(1.0);
 		self.camera_rotation = ko.observable(0.0);
 
-		self.colorsFound = {};
 
 		self.hwRatio = ko.computed(function(){
 			// y/x = 297/216 junior, respectively 594/432 senior
@@ -151,6 +150,19 @@ $(function(){
 			snap.selectAll('#placedGcodes>*').remove();
             snap.selectAll('rect:not(#coordGrid)').remove();
 			self.placedDesigns([]);
+		};
+
+		self.colorNamer = new ColorClassifier();
+		self.colorsFound = function () {
+			colFound = {};
+			snap.selectAll('#userContent *[stroke]').forEach(function (el) {
+				var colHex = el.attr().stroke;
+				if (colFound[colHex] === undefined && colHex !== undefined && colHex !== 'none') {
+					var colName = self.colorNamer.classify(colHex);
+					colFound[colHex] = colName;
+				}
+			});
+			return colFound;
 		};
 
 
@@ -305,17 +317,6 @@ $(function(){
 						console.log(elClass)
 					}
 				});
-
-				f.selectAll('*[stroke]').forEach(function (el, i) {
-					var elColor = el.attr().stroke;
-					if(self.colorsFound[elColor] === undefined){
-						console.log(elColor, 'found in SVG');
-						self.colorsFound[elColor] = { material : 'default',
-													  settings : [0,0,0,0,0,0]}; //Todo CLEM make color-settings-Object?
-					}
-				});
-
-
 				// find all elements with "display=none" and remove them
 				f.selectAll("[display=none]").remove();
 
@@ -383,21 +384,6 @@ $(function(){
 			self.abortFreeTransforms();
 			snap.selectAll('#'+file.previewId).remove();
 			self.placedDesigns.remove(file);
-
-			//TODO CLEM check if stayingColors is the way to go...
-			//check for colors that haven't been removed and keep them
-			var stayingColors = {};
-			snap.selectAll('*[stroke]').forEach(function (el) {
-				var elColor = el.attr().stroke;
-				for (var k in self.colorsFound){
-					if(self.colorsFound[k] != undefined){
-						if(elColor === k){
-							stayingColors[k] = self.colorsFound[k];
-						}
-					}
-				}
-			});
-			self.colorsFound = stayingColors;
 
 			// TODO debug why remove always clears all items of this type.
 //			self.placedDesigns.remove(function(item){
@@ -786,7 +772,7 @@ $(function(){
 			self.check_sizes_and_placements();
 		};
 
-		self.getCompositionSVG = function(fillAreas, cutOutlines, colorSettings,nameToHex, callback){
+		self.getCompositionSVG = function(fillAreas, cutOutlines, colorSettings,colorKeys, callback){
 			self.abortFreeTransforms();
 			var wMM = self.workingAreaWidthMM();
 			var hMM = self.workingAreaHeightMM();
@@ -801,38 +787,26 @@ $(function(){
 
 
 			self.renderInfill(compSvg, fillAreas, cutOutlines, wMM, hMM, 10, function(svgWithRenderedInfill){
-				callback( self._wrapInSvgAndScale(colorSettings,nameToHex,svgWithRenderedInfill));
+				callback( self._wrapInSvgAndScale(colorSettings,colorKeys,svgWithRenderedInfill));
 				$('#compSvg').remove();
 			});
 		};
 
-		self._wrapInSvgAndScale = function(colorSettings,nameToHex,content){
+		self._wrapInSvgAndScale = function(colorSettings,colorKeys,content){
 			// TODO CLEM overthink the CUT/engrave option for colors....
-//			var removeColors = {};
 			var coloStr = '<!--';
-			for(var col in colorSettings){
-				if (col != undefined){
-					coloStr += '\n'+nameToHex[col];
-					coloStr += ','+colorSettings[col].intensity;
-					coloStr += ','+colorSettings[col].speed;
-					var cutColor = colorSettings[col].material.includes("cut");
+			for(var colHex in colorKeys){
+				if (colHex !== undefined && colHex !== 'none'){
+					var colName = colorKeys[colHex];
+					coloStr += '\n'+colHex;
+					coloStr += ','+colorSettings[colName].intensity;
+					coloStr += ','+colorSettings[colName].speed;
+					var cutColor = colorSettings[colName].material.includes("cut");
 					coloStr += ','+cutColor;
-//					if(cutColor){
-//						removeColors[nameToHex[col]] = 0;
-//					}
 				}
 			}
 			coloStr += '\n-->';
-//			console.log(coloStr);
-
-			//TODO CLEM check for all types of forms in svg that can apply
-//			content.selectAll('rect','path','circle','polygon').forEach(function (el) {
-//				for (var rcol in removeColors){
-//					if (el.toString().includes(rcol)) {
-//						el.remove()
-//					}
-//				}
-//			});
+			console.log(coloStr);
 
 
 			var svgStr = content.innerSVG();
@@ -1087,7 +1061,7 @@ $(function(){
                         newSrc += "?";
                     }
                     newSrc += new Date().getTime();
-                    console.log("webcam src set", newSrc);
+//                    console.log("webcam src set", newSrc);
                     webcamImage.attr("src", newSrc);
                 }
                 photoupdate = setInterval(myTimer, 5000);
@@ -1099,7 +1073,7 @@ $(function(){
                         newSrc += "?";
                     }
                     newSrc += new Date().getTime();
-                    console.log("webcam src set", newSrc);
+//                    console.log("webcam src set", newSrc);
                     webcamImage.attr("src", newSrc);
                 }
                 console.log("webcam enabled");
