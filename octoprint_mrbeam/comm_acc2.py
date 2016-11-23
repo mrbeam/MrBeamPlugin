@@ -150,9 +150,9 @@ class MachineCom(object):
 					self._handle_feedback_message(line)
 				elif line.startswith('Grb'): # Grbl startup message
 					self._handle_startup_message(line)
-				elif not line and self._state is self.STATE_CONNECTING:
+				elif not line and (self._state is self.STATE_CONNECTING or self._state is self.STATE_OPEN_SERIAL):
 					self._log("Empty line received during STATE_CONNECTION, starting soft-reset")
-					self._serial.write(list(bytearray('\x18'))) # Serial-Connection Error
+					self._sendCommand(b'\x18') # Serial-Connection Error
 			except:
 				self._logger.exception("Something crashed inside the monitoring loop, please report this to Mr Beam")
 				errorMsg = "See octoprint.log for details"
