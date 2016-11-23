@@ -120,7 +120,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return dict(
 			js=["js/lasercutterprofiles.js","js/mother_viewmodel.js", "js/mrbeam.js","js/color_classifier.js","js/working_area.js", "js/camera.js",
 			"js/lib/snap.svg-min.js", "js/render_fills.js", "js/matrix_oven.js", "js/drag_scale_rotate.js",
-			"js/convert.js", "js/gcode_parser.js", "js/lib/photobooth_min.js", "js/laserSafetyNotes.js"],
+			"js/convert.js", "js/gcode_parser.js", "js/lib/photobooth_min.js", "js/laserSafetyNotes.js", "js/svg_cleaner.js"],
 			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css"],
 			less=["less/mrbeam.less"]
 		)
