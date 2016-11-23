@@ -150,7 +150,7 @@ class MachineCom(object):
 					self._handle_feedback_message(line)
 				elif line.startswith('Grb'): # Grbl startup message
 					self._handle_startup_message(line)
-				elif not line and (self._state is self.STATE_CONNECTING or self._state is self.STATE_OPEN_SERIAL):
+				elif not line and (self._state is self.STATE_CONNECTING or self._state is self.STATE_OPEN_SERIAL or self._state is self.STATE_DETECT_SERIAL):
 					self._log("Empty line received during STATE_CONNECTION, starting soft-reset")
 					self._sendCommand(b'\x18') # Serial-Connection Error
 			except:
