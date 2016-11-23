@@ -524,6 +524,8 @@ class MachineCom(object):
 
 	# internal state management
 	def _changeState(self, newState):
+		print ('new State:',newState)
+
 		if self._state == newState:
 			return
 
