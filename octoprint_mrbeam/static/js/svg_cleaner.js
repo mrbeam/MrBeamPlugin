@@ -65,8 +65,14 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 }
             }
 
-            if (!elem.attr().hasOwnProperty("stroke")) { // fuegt das stroke attribute in das element ein wenn nicht gesestzt
-                elem.attr("stroke", elem.attr("stroke")); // TODO die passende group finden und stroke dort entfernen.
+            if (!elem.attr().hasOwnProperty("stroke")) {
+                var stroke = elem.attr("stroke");
+                if (stroke !== 'none') {
+                    elem.attr("stroke", stroke);
+                }
+            }
+            if (elem.attr("stroke") == 'none') {
+                elem.attr("stroke", '');
             }
         }
     };
