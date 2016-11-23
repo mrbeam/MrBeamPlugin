@@ -265,7 +265,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 			// outer bbox
 			this.data("bb", this.paper.rect( rectObjFromBB( this.getBBox() ) )
-				.attr({ fill: "none", stroke: 'gray', strokeWidth: ftOption.handleStrokeWidth, strokeDasharray: ftOption.handleStrokeDash })
+				.attr({ id: 'bbox', fill: "none", stroke: 'gray', strokeWidth: ftOption.handleStrokeWidth, strokeDasharray: ftOption.handleStrokeDash })
 				.prependTo(this.paper.select('#userContent')));
 			//TODO make more efficiently
 			// this.data('bb');

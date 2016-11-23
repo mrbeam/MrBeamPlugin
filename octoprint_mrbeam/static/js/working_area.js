@@ -155,7 +155,7 @@ $(function(){
 		self.colorNamer = new ColorClassifier();
 		self.colorsFound = function () {
 			colFound = {};
-			snap.selectAll('#userContent *[stroke]').forEach(function (el) {
+			snap.selectAll('#userContent *[stroke]:not(#bbox)').forEach(function (el) {
 				var colHex = el.attr().stroke;
 				if (colFound[colHex] === undefined && colHex !== undefined && colHex !== 'none') {
 					var colName = self.colorNamer.classify(colHex);
