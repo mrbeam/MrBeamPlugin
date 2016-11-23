@@ -249,11 +249,17 @@ $(function(){
 			return {material : material,
 					intensity : self.laserIntensity(),
 					speed : self.laserSpeed(),
+					cutColor : material !== 'none'
 			}
 		};
 
 		self.update_colorSettings = function(){
-			self.color_settings[self.selected_color()] = self.get_current_settings(self.selected_material())
+			self.color_settings[self.selected_color()] = self.get_current_settings(self.selected_material());
+			for(var colHex in self.color_keys){
+				if(self.color_settings[self.color_keys[colHex]] === undefined){
+					self.color_settings[self.color_keys[colHex]] = self.get_current_settings('none')
+				}
+			}
 		};
 
 		self.apply_material_settings = function (settings){
@@ -407,7 +413,7 @@ $(function(){
 							var colName = self.color_keys[colHex];
 							data['colors.'+ colHex +'.intensity'] = self.color_settings[colName].intensity;
 							data['colors.'+ colHex +'.speed'] = self.color_settings[colName].speed;
-							data['colors.'+ colHex +'.cut'] = colName;
+							data['colors.'+ colHex +'.cut'] = self.color_settings[colName].speed;
 						}
 					}
 

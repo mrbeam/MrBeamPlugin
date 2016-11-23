@@ -795,7 +795,6 @@ $(function(){
 		};
 
 		self._wrapInSvgAndScale = function(colorSettings,colorKeys,content){
-			// TODO CLEM overthink the CUT/engrave option for colors....
 			var coloStr = '<!--';
 			for(var colHex in colorKeys){
 				if (colHex !== undefined && colHex !== 'none'){
@@ -803,8 +802,7 @@ $(function(){
 					coloStr += '\n'+colHex;
 					coloStr += ','+colorSettings[colName].intensity;
 					coloStr += ','+colorSettings[colName].speed;
-					var cutColor = colorSettings[colName].material.includes("cut");
-					coloStr += ','+cutColor;
+					coloStr += ','+colorSettings[colName].cutColor;
 				}
 			}
 			coloStr += '\n-->';

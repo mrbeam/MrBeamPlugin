@@ -3295,7 +3295,7 @@ class Laserengraver(inkex.Effect):
 						pD[stroke] = []
 					d = path.get("d")
 					if d != '':
-						csp = cubicsuperpath.parsePath(d) #todo why not d because d=path.get("d")
+						csp = cubicsuperpath.parsePath(d)
 						csp = self.apply_transforms(path, csp)
 						pD[stroke] += csp
 
@@ -3304,6 +3304,8 @@ class Laserengraver(inkex.Effect):
 
 				curvesD = dict() #diction
 				for colorKey in pD.keys():
+					if colorKey == 'none':
+						continue
 					curvesD[colorKey] = self.parse_curve(pD[colorKey], layer)
 
 				pierce_time = self.options['pierce_time']
@@ -3315,6 +3317,9 @@ class Laserengraver(inkex.Effect):
 				for colorKey in curvesD.keys():
 					gcode_outlines += "; Layer: " + layerId + ", outline of " + pathId + ", stroke: " + colorKey +', '+str(self.colorSettings[colorKey])+"\n"
 					# TODO CLEM REDO after DEMO
+					if self.colorSettings[colorKey]['cut'] != 'true' :
+						print "Dont cut "+colorKey
+						continue
 					# gcode_outlines += self.generate_gcode_color(curvesD[colorKey], colorKey, pierce_time)
 					gcode_outlines += self.generate_gcode(curvesD[colorKey],
 														  int(self.colorSettings[colorKey]['intensity']),
