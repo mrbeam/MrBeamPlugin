@@ -30,9 +30,20 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	 */
 	Element.prototype.bake = function (toCubics, dec) {
 		var elem = this;
-		if (!elem || !elem.paper || elem.type !== "text" || elem.type !== "#text" || elem.type !== "tspan"){
-  			return;
-        } // don't handle unplaced elements. this causes double handling.
+
+//		console.log('Elem: ', elem);
+//		if(elem.type === 'text' || elem.type === 'tspan' || elem.type === '#text'){
+//			console.log('Text: !elem', !elem);
+//			console.log('Text: !elem.paper', !elem.paper);
+//			console.log('Text: elem.type', elem.type);
+//			console.log('Text: second', (!elem.paper && (elem.type !== "text" || elem.type !== "tspan" || elem.type !== "#text")));
+//			elem.attr({type:'blub'});
+//			console.log('blub',elem.type)
+//		}
+
+		if (!elem || (!elem.paper && (elem.type !== "text" && elem.type !== "tspan" && elem.type !== "#text"))){
+			return;
+		} // don't handle unplaced elements. this causes double handling.
 
 		if (typeof (toCubics) === 'undefined')
 			toCubics = false;
@@ -61,7 +72,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			return;
 		}
 
-		if (elem.type == 'image' || elem.type == "text" || elem.type == "#text"){
+		if (elem.type === "image"){
 			// TODO ... 
 			var x = parseFloat(elem.attr('x')),
 				y = parseFloat(elem.attr('y')),
@@ -78,7 +89,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 				console.log('No attribute "y" in image tag. Assuming 0.')
 				y = 0;
 			}
-			var transform = elem.transform();
+			var transform = elem.transform(); // TODO CLEM maybe parent is needed here too! Check SVG with image and transform Matrix
 			var matrix = transform['totalMatrix'];
 			var transformedX = matrix.x(x, y);
 			var transformedY = matrix.y(x, y);
@@ -86,6 +97,49 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			var transformedH = matrix.y(x+w, y+h) - transformedY;
 			
 			elem.attr({x: transformedX, y: transformedY, width: transformedW, height: transformedH});
+			return;
+		}
+
+		if (elem.type === "text" || elem.type === "#text" || elem.type === "tspan"){
+			// TODO ...
+
+//			console.log('Textelem start: ', elem);
+
+			if(elem.parent().attr('blub') != undefined && elem.parent().attr('blub') === true){
+				//parent already transformed
+				return;
+			}
+
+			if(!elem.node.textContent.replace(/\s/g, '').length || elem.node.textContent === "Created with Snap"){
+				//text only contains whitespace or nothing and is skipped
+				console.log('Textelem empty: ',elem.node.textContent);
+				return;
+			}
+			console.log('Textelem not empty: ', elem.node.textContent);
+
+			var x = parseFloat(elem.attr('x')),
+				y = parseFloat(elem.attr('y')),
+				w = parseFloat(elem.attr('width')),
+				h = parseFloat(elem.attr('height'));
+
+			// Validity checks from http://www.w3.org/TR/SVG/shapes.html#RectElement:
+			// If 'x' and 'y' are not specified, then set both to 0. // CorelDraw is creating that sometimes
+			if (!isFinite(x)) {
+				console.log('No attribute "x" in image tag. Assuming 0.')
+				x = parseFloat(elem.parent().attr('x'));
+			}
+			if (!isFinite(y)) {
+				console.log('No attribute "y" in image tag. Assuming 0.')
+				y = parseFloat(elem.parent().attr('y'));
+			}
+			var transform = elem.parent().transform();
+			var matrix = transform['totalMatrix'];
+			var transformedX = matrix.x(x, y);
+			var transformedY = matrix.y(x, y);
+			var transformedW = matrix.x(x+w, y+h) - transformedX;
+			var transformedH = matrix.y(x+w, y+h) - transformedY;
+
+			elem.parent().attr({x: transformedX, y: transformedY, width: transformedW, height: transformedH, blub:true});
 			return;
 		}
 

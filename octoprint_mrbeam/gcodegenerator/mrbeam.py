@@ -3278,9 +3278,9 @@ class Laserengraver(inkex.Effect):
 				for path in paths[layer] :
 					print("path", layer.get('id'), path.get('id'), 'stroke: ',path.get('stroke'), 'fill: ',path.get('class'))
 
-					if path.get('stroke') is not None: #todo catch None stroke/fill earlier
+					if path.get('stroke') is not None and path.get('stroke') != 'none' : #todo catch None stroke/fill earlier
 						stroke = path.get('stroke')
-					elif path.get('fill') is not None:
+					elif path.get('fill') is not None and path.get('fill') != 'none' :
 						stroke = path.get('fill')
 					elif path.get('class') is not None:
 						stroke = path.get('class')
