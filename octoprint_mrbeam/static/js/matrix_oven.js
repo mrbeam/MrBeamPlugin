@@ -101,15 +101,21 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		}
 
 		if (elem.type === "text" || elem.type === "#text" || elem.type === "tspan"){
-			// TODO ...
 
-//			console.log('Textelem start: ', elem);
+			// remove style
+			if(elem.node.parentNode.nodeName === "style"){
+				console.log("Parent is style");
+				return;
+			}
 
-			if(elem.parent().attr('blub') != undefined && elem.parent().attr('blub') === true){
+			// remove already set parent-nodes
+			//todo check if redundant
+			if(elem.parent().attr('text_set') != undefined && elem.parent().attr('text_set') === true){
 				//parent already transformed
 				return;
 			}
 
+			// replace empty text and Created with Snap
 			if(!elem.node.textContent.replace(/\s/g, '').length || elem.node.textContent === "Created with Snap"){
 				//text only contains whitespace or nothing and is skipped
 				console.log('Textelem empty: ',elem.node.textContent);
@@ -125,12 +131,12 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			// Validity checks from http://www.w3.org/TR/SVG/shapes.html#RectElement:
 			// If 'x' and 'y' are not specified, then set both to 0. // CorelDraw is creating that sometimes
 			if (!isFinite(x)) {
-				console.log('No attribute "x" in image tag. Assuming 0.')
 				x = parseFloat(elem.parent().attr('x'));
+				console.log('No attribute "x" in text tag. Using parent-x:',x);
 			}
 			if (!isFinite(y)) {
-				console.log('No attribute "y" in image tag. Assuming 0.')
 				y = parseFloat(elem.parent().attr('y'));
+				console.log('No attribute "x" in text tag. Using parent-x:',y);
 			}
 			var transform = elem.parent().transform();
 			var matrix = transform['totalMatrix'];
@@ -139,7 +145,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			var transformedW = matrix.x(x+w, y+h) - transformedX;
 			var transformedH = matrix.y(x+w, y+h) - transformedY;
 
-			elem.parent().attr({x: transformedX, y: transformedY, width: transformedW, height: transformedH, blub:true});
+			elem.parent().attr({x: transformedX, y: transformedY, width: transformedW, height: transformedH, text_set:true});
 			return;
 		}
 
