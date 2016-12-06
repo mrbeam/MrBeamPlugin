@@ -77,7 +77,8 @@ $(function(){
 
 		self.color_key_update = function(){
 			self.color_keys = self.workingArea.colorsFound();
-			console.log("color keys update");
+			console.log("color keys update: ", self.color_keys);
+			self.showColorSettings(Object.keys(self.color_keys).length > 0);
 			self.color_menu($.map(self.color_keys, function(value, key) { return value }));
 		};
 

@@ -3280,12 +3280,7 @@ class Laserengraver(inkex.Effect):
 
 					if path.get('stroke') is not None and path.get('stroke') != 'none' : #todo catch None stroke/fill earlier
 						stroke = path.get('stroke')
-					elif path.get('fill') is not None and path.get('fill') != 'none' :
-						stroke = path.get('fill')
-					elif path.get('class') is not None:
-						stroke = path.get('class')
 					else:
-						stroke = 'default'
 						continue
 
 					if "d" not in path.keys() :
@@ -3315,6 +3310,7 @@ class Laserengraver(inkex.Effect):
 				#for each color generate GCode
 				print "Colors found", curvesD.keys()
 				for colorKey in curvesD.keys():
+
 					gcode_outlines += "; Layer: " + layerId + ", outline of " + pathId + ", stroke: " + colorKey +', '+str(self.colorSettings[colorKey])+"\n"
 					# TODO CLEM REDO after DEMO
 					if self.colorSettings[colorKey]['cut'] != 'true' :
