@@ -102,9 +102,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 		if (elem.type === "text" || elem.type === "#text" || elem.type === "tspan"){
 
-			// remove style
-			if(elem.node.parentNode.nodeName === "style"){
-				console.log("Parent is style");
+			// remove style/title
+			if(elem.node.parentNode.nodeName === "style" || elem.node.parentNode.nodeName === "title"){
+				console.log("Parent is style/title");
 				return;
 			}
 
