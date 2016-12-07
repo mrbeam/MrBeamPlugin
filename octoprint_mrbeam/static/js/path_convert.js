@@ -197,6 +197,17 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			pathAttr.d = d;
 		}
 		var path = old_element.paper.path(pathAttr);
+
+		var stroke = old_element.attr("stroke");
+
+		console.log("attr(stroke):",stroke);
+		console.log("Snap.getRGB: '" + Snap.getRGB(stroke).hex + "'");
+
+		if(stroke !== 'none' && stroke !== undefined && stroke !== ""){
+			path.attr({'mb:color': Snap.getRGB(stroke).hex})
+			console.log("Snap.getRGB: '" + Snap.getRGB(stroke).hex + "'");
+		}
+
 		return path;
 	};
 

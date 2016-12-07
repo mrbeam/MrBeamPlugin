@@ -795,19 +795,18 @@ $(function(){
 		};
 
 		self._wrapInSvgAndScale = function(colorSettings,colorKeys,content){
-			var coloStr = '<!--';
+			var colorComment = '<!--';
 			for(var colHex in colorKeys){
 				if (colHex !== undefined && colHex !== 'none'){
 					var colName = colorKeys[colHex];
-					coloStr += '\n'+colHex;
-					coloStr += ','+colorSettings[colName].intensity;
-					coloStr += ','+colorSettings[colName].speed;
-					coloStr += ','+colorSettings[colName].cutColor;
+					colorComment += '\n'+colHex;
+					colorComment += ','+colorSettings[colName].intensity;
+					colorComment += ','+colorSettings[colName].speed;
+					colorComment += ','+colorSettings[colName].cutColor;
 				}
 			}
-			coloStr += '\n-->';
-			console.log(coloStr);
-
+			colorComment += '\n-->';
+			console.log(colorComment);
 
 			var svgStr = content.innerSVG();
 			if(svgStr !== ''){
@@ -819,7 +818,8 @@ $(function(){
 				svgStr = svgStr.replace("(\\\"","(");
 				svgStr = svgStr.replace("\\\")",")");
 
-				var svg = '<svg height="'+ h +'" version="1.1" width="'+ w +'" xmlns="http://www.w3.org/2000/svg"><defs/>'+coloStr+svgStr+'</svg>';
+				var svg = '<svg height="'+ h +'" version="1.1" width="'+ w
+						+ '" xmlns="http://www.w3.org/2000/svg" xmlns:mb="http://www.mr-beam.org/mbns"><defs/>'+ colorComment + svgStr +'</svg>';
 				return svg;
 			} else {
 				return;
