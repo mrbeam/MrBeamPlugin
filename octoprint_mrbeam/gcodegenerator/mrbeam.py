@@ -3274,48 +3274,50 @@ class Laserengraver(inkex.Effect):
 		report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
 		for layer in self.layers :
 			if layer in paths :
-				pD = dict()
+				pathsD = dict()
 				for path in paths[layer] :
-					print("path", layer.get('id'), path.get('id'), 'stroke: ',path.get('stroke'), 'fill: ',path.get('class'))
+					mbColor = path.get('{http://www.mr-beam.org/mbns}color')
+					print("path", layer.get('id'), path.get('id'), 'stroke: ',mbColor, 'fill: ',path.get('class'))
 
-					if path.get('stroke') is not None and path.get('stroke') != 'none' : #todo catch None stroke/fill earlier
-						stroke = path.get('stroke')
-					else:
+					if mbColor is None or mbColor == 'none' :
+						#skip path as there is no mbColor
+						continue
+
+					if self.colorSettings[mbColor]['cut'] != 'true' :
+						#skip path because cut is set to false
+						print "Don't cut :" + mbColor
 						continue
 
 					if "d" not in path.keys() :
 						self.error(_("Warning: One or more paths dont have 'd' parameter, try to Ungroup (Ctrl+Shift+G) and Object to Path (Ctrl+Shift+C)!"),"selection_contains_objects_that_are_not_paths")
 						continue
-					if stroke not in pD.keys() and stroke != 'default':
-						pD[stroke] = []
+					if mbColor not in pathsD.keys():
+						pathsD[mbColor] = []
 					d = path.get("d")
 					if d != '':
 						csp = cubicsuperpath.parsePath(d)
 						csp = self.apply_transforms(path, csp)
-						pD[stroke] += csp
+						pathsD[mbColor] += csp
 
 						processedItemCount += 1
 						report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
 
 				curvesD = dict() #diction
-				for colorKey in pD.keys():
+				for colorKey in pathsD.keys():
 					if colorKey == 'none':
 						continue
-					curvesD[colorKey] = self.parse_curve(pD[colorKey], layer)
+					curvesD[colorKey] = self.parse_curve(pathsD[colorKey], layer)
 
 				pierce_time = self.options['pierce_time']
 				layerId = layer.get('id') or '?'
 				pathId = path.get('id') or '?'
 
 				#for each color generate GCode
-				print "Colors found", curvesD.keys()
+				print "Colors to cut found:", curvesD.keys()
 				for colorKey in curvesD.keys():
-
-					gcode_outlines += "; Layer: " + layerId + ", outline of " + pathId + ", stroke: " + colorKey +', '+str(self.colorSettings[colorKey])+"\n"
 					# TODO CLEM REDO after DEMO
-					if self.colorSettings[colorKey]['cut'] != 'true' :
-						print "Dont cut "+colorKey
-						continue
+					gcode_outlines += "; Layer: " + layerId + ", outline of " + pathId + ", mbColor: " + colorKey +', '+str(self.colorSettings[colorKey])+"\n"
+
 					# gcode_outlines += self.generate_gcode_color(curvesD[colorKey], colorKey, pierce_time)
 					gcode_outlines += self.generate_gcode(curvesD[colorKey],
 														  int(self.colorSettings[colorKey]['intensity']),
@@ -3384,7 +3386,6 @@ class Laserengraver(inkex.Effect):
 #					simpletransform.applyTransformToPoint(unitMat, lowerRight)
 #					wMM = abs(lowerRight[0] - upperLeft[0])
 #					hMM = abs(lowerRight[1] - upperLeft[1])
-#
 
 
 					_upperLeft = [x, y]
