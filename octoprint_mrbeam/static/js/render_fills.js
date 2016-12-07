@@ -20,9 +20,7 @@
 
 
 Snap.plugin(function (Snap, Element, Paper, global) {
-	
 
-	
 	/**
 	 * @param {elem} elem start point
 	 * 
@@ -30,11 +28,11 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	 */
 
 	Element.prototype.removeUnfilled = function(fillPaths){
+		//todo check if remove of all elements with mb:color is also working
 		var elem = this;
 		var selection = [];
 		var children = elem.children();
 
-		
 		if (children.length > 0) {
 			var goRecursive = (elem.type !== "defs" && // ignore these tags
 				elem.type !== "clipPath" &&
@@ -121,6 +119,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 		// get svg as dataUrl
 		var svgStr = elem.outerSVG();
+		// insert mb:namespace into xml, only once
 		svgStr.replace('xmlns="http://www.w3.org/2000/svg"','xmlns="http://www.w3.org/2000/svg" xmlns:mb="http://www.mr-beam.org/mbns"');
 		var svgDataUri = 'data:image/svg+xml;base64,' + window.btoa(unescape(encodeURIComponent(svgStr))); //deprecated unescape needed!
 		var source = new Image();

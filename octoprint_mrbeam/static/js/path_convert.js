@@ -198,13 +198,10 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		}
 		var path = old_element.paper.path(pathAttr);
 
+		// get computed stroke of path and add as mb:color
 		var stroke = old_element.attr("stroke");
-
-		console.log("attr(stroke):",stroke);
-		console.log("Snap.getRGB: '" + Snap.getRGB(stroke).hex + "'");
-
 		if(stroke !== 'none' && stroke !== undefined && stroke !== ""){
-			path.attr({'mb:color': Snap.getRGB(stroke).hex})
+			path.attr({'mb:color': Snap.getRGB(stroke).hex});
 			console.log("Snap.getRGB: '" + Snap.getRGB(stroke).hex + "'");
 		}
 
