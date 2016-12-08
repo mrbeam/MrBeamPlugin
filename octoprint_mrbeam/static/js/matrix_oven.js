@@ -103,8 +103,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		if (elem.type === "text" || elem.type === "#text" || elem.type === "tspan"){
 
 			// remove style/title
-			if(elem.node.parentNode.nodeName === "style" || elem.node.parentNode.nodeName === "title"){
-				console.log("Parent is style/title");
+			if(elem.node.parentNode.nodeName === "style" || elem.node.parentNode.nodeName === "title" || elem.node.parentNode.nodeName.startsWith("dc:")){
+				console.log("Skip node. Parent is :",elem.node.parentNode.nodeName);
 				return;
 			}
 
