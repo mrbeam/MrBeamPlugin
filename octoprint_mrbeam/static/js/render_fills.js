@@ -52,7 +52,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 				selection.push(elem);
 			} else {
 				if(fillPaths && elem.is_filled()){
-					selection.push(elem.attr({style:"stroke: none; "+elem.attr('style')}));
+					selection.push(elem);
 				} else {
 					elem.remove();
 				}
