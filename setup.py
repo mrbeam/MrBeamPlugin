@@ -33,7 +33,7 @@ plugin_url = "https://github.com/mrbeam/MrBeamPlugin"
 plugin_license = "AGPLv3"
 
 # Any additional requirements besides OctoPrint should be listed here
-plugin_requires = []
+plugin_requires = ['webcolors', 'pillow', 'lxml', 'numpy==1.11.2']
 
 ### --------------------------------------------------------------------------------------------------------------------
 ### More advanced options that you usually shouldn't have to touch follow after this point
@@ -57,7 +57,7 @@ plugin_ignored_packages = []
 # Example:
 #     plugin_requires = ["someDependency==dev"]
 #     additional_setup_parameters = {"dependency_links": ["https://github.com/someUser/someRepo/archive/master.zip#egg=someDependency-dev"]}
-additional_setup_parameters = {'package_data': {'octoprint_mrbeam': ['profiles/*.yaml']}}
+additional_setup_parameters = {'package_data': {'octoprint_mrbeam': ['profiles/*.yaml']}, 'setup_requires': ['numpy==1.11.2']}
 
 ########################################################################################################################
 
