@@ -1003,17 +1003,21 @@ $(function(){
 				for (var i = 0; i < fillings.length; i++) {
 					var item = fillings[i];
 
+					var style = item.attr('style');
 					if (item.type === 'image' || item.type === "text" || item.type === "#text") {
 						// remove filter effects on images for proper rendering
-						var style = item.attr('style');
 						if (style !== null) {
 							var strippedFilters = style.replace(/filter.+?;/, '');
 							item.attr('style', strippedFilters);
 						}
 					} else {
 						// remove stroke from other elements
-						//item.attr('fill', '#ff0000');
+						var styleNoStroke = 'stroke: none;';
+						if (style !== null) {
+							styleNoStroke += style.replace(/stroke.+?;/, '');
+						}
 						item.attr('stroke', 'none');
+						item.attr('style', styleNoStroke);
 					}
 				}
 

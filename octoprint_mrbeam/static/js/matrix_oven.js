@@ -73,7 +73,6 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		}
 
 		if (elem.type === "image"){
-			// TODO ... 
 			var x = parseFloat(elem.attr('x')),
 				y = parseFloat(elem.attr('y')),
 				w = parseFloat(elem.attr('width')),
@@ -103,6 +102,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		if (elem.type === "text" || elem.type === "#text" || elem.type === "tspan"){
 
 			// remove style/title
+			//todo check for all possibilities. Or Maybe look for the ones we want instead of the ones that don't work
 			if(elem.node.parentNode.nodeName === "style" || elem.node.parentNode.nodeName === "title" || elem.node.parentNode.nodeName.startsWith("dc:")){
 				console.log("Skip node. Parent is :",elem.node.parentNode.nodeName);
 				return;
@@ -118,7 +118,6 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			// replace empty text and Created with Snap
 			if(!elem.node.textContent.replace(/\s/g, '').length || elem.node.textContent === "Created with Snap"){
 				//text only contains whitespace or nothing and is skipped
-				console.log('Textelem empty: ',elem.node.textContent);
 				return;
 			}
 			console.log('Textelem not empty: ', elem.node.textContent);
