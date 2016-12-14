@@ -27,6 +27,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				   octoprint.plugin.SimpleApiPlugin,
 				   octoprint.plugin.EventHandlerPlugin,
 				   octoprint.plugin.ProgressPlugin,
+				   octoprint.plugin.WizardPlugin,
 				   octoprint.plugin.SlicerPlugin):
 
 	def __init__(self):
@@ -154,7 +155,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 enableSdSupport = False,
 							 gcodeMobileThreshold = 0,
 							 gcodeThreshold = 0,
-							 wizard = False,
+							 wizard = True,
 							 now = now,
 							 ))
 		return make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
@@ -168,6 +169,17 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			dict(type = 'settings', name = "Camera Calibration", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings = True),
 			dict(type = 'settings', name = "Serial Connection", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings= False, replaces='serial')
 		]
+
+	#~~ WizardPlugin API
+
+	def is_wizard_required(self):
+		# methods = self._get_subwizard_attrs("_is_", "_wizard_required")
+		# return self._settings.global_get(["server", "firstRun"]) and any(map(lambda m: m(), methods.values()))
+		return True
+
+	def get_wizard_details(self):
+		result = dict()
+		return result
 
 	##~~ BlueprintPlugin mixin
 
@@ -733,7 +745,7 @@ def __plugin_load__():
 	global __plugin_settings_overlay__
 	__plugin_settings_overlay__ = dict(
 		plugins = dict(
-			_disabled=['cura', 'pluginmanager', 'announcements']), # eats dict | pfad.yml | callable
+			_disabled=['cura', 'pluginmanager', 'announcements','corewizard']), # eats dict | pfad.yml | callable
 			terminalFilters=[
 				{ "name": "Suppress position requests" , "regex": "(Send: \?)" },
 				{ "name": "Suppress confirmations" , "regex": "(Recv: ok)" },
