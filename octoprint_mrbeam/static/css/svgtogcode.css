@@ -189,3 +189,29 @@ svg#area_preview {
 	-o-user-select:none;
 	-ms-user-select:none;
 }
+
+.color_drop_zone {
+	min-height: 80px;
+}
+
+.used_color {
+    width: 48px;
+    height: 48px;
+    overflow: hidden;
+    display: inline-block;
+    border-radius: 100%;
+	border: 1px solid #545544;
+}
+
+.color_drop_zone {
+	border: 2px dashed lightgray;
+	padding: 1em;
+}
+
+.color_drop_zone.hover {
+    font-weight: 700;
+}
+
+body.colorDragInProgress #drop_overlay {
+	display: none;
+}

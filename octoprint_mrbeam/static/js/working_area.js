@@ -153,13 +153,15 @@ $(function(){
 		};
 
 		self.colorNamer = new ColorClassifier();
-		self.colorsFound = function () {
-			colFound = {};
+		self.getUsedColors = function () {
+			var colHash = {};
+			var colFound = [];
 			snap.selectAll('#userContent *[stroke]:not(#bbox)').forEach(function (el) {
 				var colHex = el.attr().stroke;
-				if (colFound[colHex] === undefined && colHex !== undefined && colHex !== 'none') {
+				if (colHex !== undefined && colHex !== 'none' && colHash[colHex] === undefined) {
 					var colName = self.colorNamer.classify(colHex);
-					colFound[colHex] = colName;
+					colFound.push({hex: colHex, name: colName});
+					colHash[colHex] = 1;
 				}
 			});
 			return colFound;

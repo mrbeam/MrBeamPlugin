@@ -44,6 +44,21 @@ $(function(){
 		// material menu
 		//TODO make not hardcoded
 		//[laserInt,speed,engraveWhite,engraveBlack,speedWhite,speedBlack]
+		// TODO: should be a structure like this:
+		
+//		material = {
+//			name: 'Kraftplex',
+//			engrave: {intensity: 300, feedrate: 500, pierceTime: 0, comment: ''}, // do we need passes here ?
+//			cut: [
+//				{thicknessMM:.8, intensity: 1000, feedrate: 120, pierceTime: 0, passes:1, comment: 'single pass, ugly edges'},
+//				{thicknessMM:1.5, intensity: 1000, feedrate: 80, pierceTime: 0, passes:1, comment: 'single pass, ugly edges'},
+//				{thicknessMM:1.5, intensity: 1000, feedrate: 240, pierceTime: 0, passes:3, comment: '3 faster passes, nice edges'},
+//			],
+//			description: 'natural MDF like material from Kraftplex.com',
+//			hints: '',
+//			safety_notes: 'super fine structures are subject to ignition!'
+//		}
+		
 		self.materials_settings = {
 			'default':[0, 0, 0, 0, 0, 0],
 //			'Acrylic':[1000,80,0,350,4500,850],
@@ -76,11 +91,49 @@ $(function(){
 		self.showColorSettings = ko.observable(false); //todo check if multiple colors found
 
 		self.color_key_update = function(){
-			self.color_keys = self.workingArea.colorsFound();
-			console.log("color keys update");
-			self.color_menu($.map(self.color_keys, function(value, key) { return value }));
+			var cols = self.workingArea.getUsedColors();
+			self.color_keys = cols;
+//			console.log("color keys update");
+			self.color_menu($.map(self.color_keys, function(value, idx) { return value.name }));
+			
+			// rewrite
+			for (var idx = 0; idx < cols.length; idx++) {
+				var c = cols[idx];
+				var exists = $('#cd_color_'+c.hex.substr(1)).length > 0;
+				if(! exists){
+					var drop_zone = $('#first_job .color_drop_zone')
+					var i = self._getColorIcon(c);
+					drop_zone.append(i);
+				}
+			}
 		};
-
+		
+		self._getColorIcon = function(color){
+			var i = $('<div/>',{
+				id: 'cd_color_'+color.hex.substr(1),
+				style: "background-color: "+color.hex+";",
+				draggable: "true",
+				class: 'used_color'
+			}).on({ 
+				dragstart: function(ev){ colorDrag(ev.originalEvent); },
+				dragend: function(ev){ colorDragEnd(ev.originalEvent); },
+			});
+			
+			return i;
+		};
+		
+		self.set_material = function(material, ev){
+			if(typeof ev !== 'undefined'){
+				var param_set = self.materials_settings[material];
+				var p = $(ev.target).parentsUntil('.job_row');
+				$(p).find('.job_title').html(material)
+				$(p).find('.param_intensity').val(param_set[0])
+				$(p).find('.param_feedrate').val(param_set[1])
+				$(p).find('.param_passes').val(param_set[2])
+				console.log(material,  ev);
+			}
+		};
+		
 		// image engraving stuff
 		// preset values are a good start for wood engraving
 		self.images_placed = ko.observable(false);
@@ -137,7 +190,7 @@ $(function(){
 			self.show_fill_areas_checkbox(self.workingArea.hasFilledVectors());
 			self.images_placed(self.workingArea.getPlacedImages().length > 0);
 			self.text_placed(self.workingArea.hasTextItems());
-//			if(Object.keys(self.workingArea.colorsFound()).length > 1){
+//			if(Object.keys(self.workingArea.getUsedColors()).length > 1){
 			self.showColorSettings(true);
 //			}
 			self.color_key_update();
@@ -566,11 +619,70 @@ $(function(){
 		self.showExpertSettings.subscribe(function(){
 			$('#dialog_vector_graphics_conversion').trigger('resize');
 		});
+		
+		self._update_color_assignments = function(){
+			var jobs = $('#additional_jobs .job_row');
+			for (var idx = 0; idx < jobs.length; idx++) {
+				var j = jobs[idx];
+				var colors = $(j).find('.used_color');
+				if(colors.length === 0){
+					$(j).remove();
+				}
+			}
+		};
 
 	}
+
 
     ADDITIONAL_VIEWMODELS.push([VectorConversionViewModel,
 		["loginStateViewModel", "settingsViewModel", "printerStateViewModel", "workingAreaViewModel", "gcodeFilesViewModel"],
 		document.getElementById("dialog_vector_graphics_conversion")]);
 
 });
+
+
+// Drag functions outside the viewmodel are way less complicated
+function colorAllowDrop(ev) {
+    ev.preventDefault();
+	$('.color_drop_zone').addClass('hover');
+}
+		
+function colorDrag(ev) {
+	$("body").addClass("colorDragInProgress");
+	ev.dataTransfer.setData("text", ev.target.id);
+	ev.dataTransfer.effectAllowed = "move";
+}
+
+function colorDrop(ev) {
+    ev.preventDefault();
+	setTimeout(function(){$("body").removeClass("colorDragInProgress");}, 200);
+	$('.color_drop_zone').removeClass('hover');
+    var data = ev.dataTransfer.getData("text");
+    ev.target.appendChild(document.getElementById(data));
+	ko.dataFor(document.getElementById("dialog_vector_graphics_conversion"))._update_color_assignments();
+}
+
+function colorDropCreateJob(ev) {
+    ev.preventDefault();
+	setTimeout(function(){$("body").removeClass("colorDragInProgress");}, 200);
+	$('.color_drop_zone').removeClass('hover');
+	
+	var newJob = $('#first_job').clone(true);
+	newJob.attr('id','');
+	newJob.find('.used_color').remove();
+	newJob.appendTo($('#additional_jobs'));
+	
+    var data = ev.dataTransfer.getData("text");
+    var color = document.getElementById(data);
+	$(newJob).find('.assigned_colors').append(color);
+	ko.dataFor(document.getElementById("dialog_vector_graphics_conversion"))._update_color_assignments();
+}
+
+		
+function colorDragEnd(ev){
+    ev.preventDefault();
+	setTimeout(function(){$("body").removeClass("colorDragInProgress");}, 200);
+	$('.color_drop_zone').removeClass('hover');
+}
+
+

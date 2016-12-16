@@ -13,7 +13,7 @@
                 <p>{{ _('Choose Settings:') }}</p>
                 <div class="control-group">
                     <select data-bind="options: material_menu, value: selected_material"></select>
-                </div>
+                </div>				
 				<div class="control-group" data-bind="visible: showExpertSettings">
 					<label class="control-label">{{ _('Laser intensity') }} (1-1000)</label>
 					<div class="controls">
@@ -187,6 +187,34 @@
             </div>
         </form>
 
+		<div id="teja_color_assignment" class="row">
+
+			<div id="no_job" class="job_row span12">
+				<div class="assigned_colors span3 color_drop_zone" ondragover="colorAllowDrop(event)" ondrop="colorDrop(event)"></div>
+				<div class="job_parameters span8"><h3>Skip</h3></div>
+			</div>
+			<div id="first_job" class="job_row span12">
+				<div class="assigned_colors span3 color_drop_zone" ondragover="colorAllowDrop(event)" ondrop="colorDrop(event)"></div>
+				<div class="job_parameters span8">
+					<h3 class="job_title">Engrave</h3>
+					<div class="dropdown">
+						<button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+							Presets <span class="caret"></span></button>
+						<ul class="dropdown-menu" data-bind="foreach: material_menu">
+							<li><a href="#" data-bind="text: $data, click: $root.set_material($data, event) "></a></li>
+						</ul>
+					</div>
+					<input class="param_intensity" type="text" placeholder="Intensity" />
+					<input class="param_feedrate" type="text" placeholder="Feedrate" />
+					<input class="param_passes" type="text" placeholder="Passes" />
+				</div>
+			</div>
+			<div id="additional_jobs"></div>
+			<div class="span12">
+				<div class="assigned_colors span12 color_drop_zone" ondragover="colorAllowDrop(event)" ondrop="colorDropCreateJob(event)">+ More +</div>
+			</div>
+		</div>
+		
 		<div id="slicing_progress" class="progress" style="width: 100%;" data-bind="visible: slicing_in_progress">
 			<div class="bar" style="width: 0%" data-bind="style: {width: slicing_progress() + '%'} "></div>
 		</div>
