@@ -6,14 +6,14 @@
     <div class="modal-body">
         <form class="form-horizontal" data-bind="visible: !slicing_in_progress() ">
 			<div data-bind="visible: show_vector_parameters ">
-				<p>{{ _('Choose Color from SVG:') }}</p>
+<!--				<p>{{ _('Choose Color from SVG:') }}</p>
                 <div class="control-group" data-bind="visible: showColorSettings">
                     <select data-bind="options: color_menu, value: selected_color"></select>
                 </div>
                 <p>{{ _('Choose Settings:') }}</p>
                 <div class="control-group">
                     <select data-bind="options: material_menu, value: selected_material"></select>
-                </div>				
+                </div>				-->
 				<div class="control-group" data-bind="visible: showExpertSettings">
 					<label class="control-label">{{ _('Laser intensity') }} (1-1000)</label>
 					<div class="controls">
@@ -187,31 +187,44 @@
             </div>
         </form>
 
-		<div id="teja_color_assignment" class="row">
+		<div id="color_assignment" class="">
 
-			<div id="no_job" class="job_row span12">
-				<div class="assigned_colors span3 color_drop_zone" ondragover="colorAllowDrop(event)" ondrop="colorDrop(event)"></div>
-				<div class="job_parameters span8"><h3>Skip</h3></div>
-			</div>
-			<div id="first_job" class="job_row span12">
-				<div class="assigned_colors span3 color_drop_zone" ondragover="colorAllowDrop(event)" ondrop="colorDrop(event)"></div>
-				<div class="job_parameters span8">
-					<h3 class="job_title">Engrave</h3>
-					<div class="dropdown">
-						<button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
-							Presets <span class="caret"></span></button>
-						<ul class="dropdown-menu" data-bind="foreach: material_menu">
-							<li><a href="#" data-bind="text: $data, click: $root.set_material($data, event) "></a></li>
-						</ul>
+			<div id="no_job" class="job_row row-fluid">
+				<div class="span3" style="display:flex;">
+					<div class="assigned_colors color_drop_zone" ondragover="colorAllowDrop(event)" ondrop="colorDrop(event)"></div>
+				</div>
+				<div class="span9">
+					<div class="job_parameters">
+						<h4>Skip</h4>
+						<span>Drag colors on this row to skip them.</span>
 					</div>
-					<input class="param_intensity" type="text" placeholder="Intensity" />
-					<input class="param_feedrate" type="text" placeholder="Feedrate" />
-					<input class="param_passes" type="text" placeholder="Passes" />
+				</div>
+			</div>
+			<div id="first_job" class="job_row row-fluid">
+				<div class="span3" style="display:flex;">
+					<div class="assigned_colors color_drop_zone" ondragover="colorAllowDrop(event)" ondrop="colorDrop(event)"></div>
+				</div>
+				<div class="span9">
+					<div class="job_parameters">
+						<h4 class="job_title">Job 1</h4>
+						<div class="dropdown">
+							<button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">
+								Presets <span class="caret"></span></button>
+							<ul class="dropdown-menu" data-bind="foreach: material_menu">
+								<li><a href="#" data-bind="text: $data, click: $root.set_material($data, event) "></a></li>
+							</ul>
+						</div>
+						<input class="param_intensity" type="text" placeholder="Intensity" />
+						<input class="param_feedrate" type="text" placeholder="Feedrate" />
+						<input class="param_passes" type="text" placeholder="Passes" />
+					</div>
 				</div>
 			</div>
 			<div id="additional_jobs"></div>
-			<div class="span12">
-				<div class="assigned_colors span12 color_drop_zone" ondragover="colorAllowDrop(event)" ondrop="colorDropCreateJob(event)">+ More +</div>
+			<div class="row-fluid">
+				<div class="assigned_colors color_drop_zone create_job" ondragover="colorAllowDrop(event)" ondrop="colorDropCreateJob(event)">
+					+ Drag colors here for a different job +
+				</div>
 			</div>
 		</div>
 		

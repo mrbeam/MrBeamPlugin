@@ -16,12 +16,12 @@ $(function(){
 		self.slicing_in_progress = ko.observable(false);
 
 		self.title = ko.observable(undefined);
-		self.slicer = ko.observable();
-		self.slicers = ko.observableArray();
-		self.profile = ko.observable();
-		self.profiles = ko.observableArray();
-		self.defaultSlicer = undefined;
-		self.defaultProfile = undefined;
+//		self.slicer = ko.observable();
+//		self.slicers = ko.observableArray();
+//		self.profile = ko.observable();
+//		self.profiles = ko.observableArray();
+//		self.defaultSlicer = undefined;
+//		self.defaultProfile = undefined;
 
 		// expert settings
 		self.showHints = ko.observable(false);
@@ -48,15 +48,17 @@ $(function(){
 		
 //		material = {
 //			name: 'Kraftplex',
-//			engrave: {intensity: 300, feedrate: 500, pierceTime: 0, comment: ''}, // do we need passes here ?
+//			color: 'default',
+//			engrave: {intensity: 300, feedrate: 500, pierceTime: 0, comment: '', rating: -1, rating_amount: 0}, // do we need passes here ?
 //			cut: [
-//				{thicknessMM:.8, intensity: 1000, feedrate: 120, pierceTime: 0, passes:1, comment: 'single pass, ugly edges'},
-//				{thicknessMM:1.5, intensity: 1000, feedrate: 80, pierceTime: 0, passes:1, comment: 'single pass, ugly edges'},
-//				{thicknessMM:1.5, intensity: 1000, feedrate: 240, pierceTime: 0, passes:3, comment: '3 faster passes, nice edges'},
+//				{thicknessMM:.8, intensity: 1000, feedrate: 120, pierceTime: 0, passes:1, comment: 'single pass, ugly edges', rating: -1, rating_amount: 0},
+//				{thicknessMM:1.5, intensity: 1000, feedrate: 80, pierceTime: 0, passes:1, comment: 'single pass, ugly edges', rating: -1, rating_amount: 0},
+//				{thicknessMM:1.5, intensity: 1000, feedrate: 240, pierceTime: 0, passes:3, comment: '3 faster passes, nice edges', rating: -1, rating_amount: 0},
 //			],
 //			description: 'natural MDF like material from Kraftplex.com',
 //			hints: '',
 //			safety_notes: 'super fine structures are subject to ignition!'
+//			laser_type: 'MrBeamII-1.0'
 //		}
 		
 		self.materials_settings = {
@@ -217,7 +219,7 @@ $(function(){
 			}
 			var designs = self.workingArea.placedDesigns();
 			for (var idx in designs) {
-                if (designs[idx].subtype == "bitmap") {
+                if (designs[idx].subtype === "bitmap") {
                     self.fill_areas(true);
                 }
             }
@@ -303,7 +305,29 @@ $(function(){
 					intensity : self.laserIntensity(),
 					speed : self.laserSpeed(),
 					cutColor : material !== 'none'
-			}
+			};
+		};
+
+		self.get_current_multicolor_settings = function () {
+			var data = [];
+			$('.job_row').each(function(i, pass){
+				var intensity = $(pass).find('.param_intensity').val();
+				var feedrate = $(pass).find('.param_feedrate').val();
+				var piercetime = $(pass).find('.param_piercetime').val();
+				var passes = $(pass).find('.param_passes').val();
+				$(pass).find('.used_color').each(function(j, col){
+					var hex = '#' + $(col).attr('id').substr(-6);
+					data.push({
+						job: i,
+						color: hex,
+						intensity: intensity,
+						feedrate: feedrate,
+						piercetime: piercetime,
+						passes: passes
+					});
+				});
+			});
+			return data;
 		};
 
 		self.update_colorSettings = function(){
@@ -341,9 +365,9 @@ $(function(){
 			return settingsString;
 		});
 
-		self.slicer.subscribe(function(newValue) {
-			self.profilesForSlicer(newValue);
-		});
+//		self.slicer.subscribe(function(newValue) {
+//			self.profilesForSlicer(newValue);
+//		});
 
 		self.enableConvertButton = ko.computed(function() {
 			if (self.slicing_in_progress() || self.laserIntensity() === undefined || self.laserSpeed() === undefined || self.gcodeFilename() === undefined) {
@@ -395,51 +419,52 @@ $(function(){
 			self.defaultSlicer = selectedSlicer;
 		};
 
-		self.profilesForSlicer = function(key) {
-			if (key === undefined) {
-				key = self.slicer();
-			}
-			if (key === undefined || !self.data.hasOwnProperty(key)) {
-				return;
-			}
-			var slicer = self.data[key];
-
-			var selectedProfile = undefined;
-			self.profiles.removeAll();
-			_.each(_.values(slicer.profiles), function(profile) {
-				var name = profile.displayName;
-				if (name === undefined) {
-					name = profile.key;
-				}
-
-				if (profile.default) {
-					selectedProfile = profile.key;
-				}
-
-				self.profiles.push({
-					key: profile.key,
-					name: name
-				});
-			});
-
-			if (selectedProfile !== undefined) {
-				self.profile(selectedProfile);
-			}
-
-			self.defaultProfile = selectedProfile;
-		};
+//		self.profilesForSlicer = function(key) {
+//			if (key === undefined) {
+//				key = self.slicer();
+//			}
+//			if (key === undefined || !self.data.hasOwnProperty(key)) {
+//				return;
+//			}
+//			var slicer = self.data[key];
+//
+//			var selectedProfile = undefined;
+//			self.profiles.removeAll();
+//			_.each(_.values(slicer.profiles), function(profile) {
+//				var name = profile.displayName;
+//				if (name === undefined) {
+//					name = profile.key;
+//				}
+//
+//				if (profile.default) {
+//					selectedProfile = profile.key;
+//				}
+//
+//				self.profiles.push({
+//					key: profile.key,
+//					name: name
+//				});
+//			});
+//
+//			if (selectedProfile !== undefined) {
+//				self.profile(selectedProfile);
+//			}
+//
+//			self.defaultProfile = selectedProfile;
+//		};
 
 		self.convert = function() {
 			if(self.gcodeFilesToAppend.length === 1 && self.svg === undefined){
 				self.files.startGcodeWithSafetyWarning(self.gcodeFilesToAppend[0]);
 			} else {
-				self.update_colorSettings();
+				//self.update_colorSettings();
 				self.slicing_in_progress(true);
 				self.workingArea.getCompositionSVG(self.fill_areas(), self.cut_outlines(),self.color_settings,self.color_keys, function(composition){
 					self.svg = composition;
 					var filename = self.gcodeFilename() + self.settingsString() + '.gco';
 					var gcodeFilename = self._sanitize(filename);
 
+					var multicolor_data = self.get_current_multicolor_settings();
 					var data = {
 						command: "convert",
 						"profile.speed": self.laserSpeed(),
@@ -457,6 +482,8 @@ $(function(){
 						"profile.img_sharpening" : self.imgSharpening(),
 						"profile.img_dithering" : self.imgDithering(),
 						"profile.beam_diameter" : self.beamDiameter(),
+						"multicolor" : multicolor_data,
+						
 						slicer: "svgtogcode",
 						gcode: gcodeFilename
 					};
@@ -469,8 +496,6 @@ $(function(){
 							data['colors.'+ colHex +'.cut'] = self.color_settings[colName].speed;
 						}
 					}
-
-					console.log('after',data);
 
 					if(self.svg !== undefined){
 						data.svg = self.svg;
