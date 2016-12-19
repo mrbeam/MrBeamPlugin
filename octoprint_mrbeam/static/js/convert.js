@@ -127,7 +127,7 @@ $(function(){
 		self.set_material = function(material, ev){
 			if(typeof ev !== 'undefined'){
 				var param_set = self.materials_settings[material];
-				var p = $(ev.target).parentsUntil('.job_row');
+				var p = $(ev.target).parents('.job_row');
 				$(p).find('.job_title').html(material)
 				$(p).find('.param_intensity').val(param_set[0])
 				$(p).find('.param_feedrate').val(param_set[1])
@@ -394,29 +394,29 @@ $(function(){
 		self.fromResponse = function(data) {
 			self.data = data;
 
-			var selectedSlicer = undefined;
-			self.slicers.removeAll();
-			_.each(_.values(data), function(slicer) {
-				var name = slicer.displayName;
-				if (name === undefined) {
-					name = slicer.key;
-				}
-
-				if (slicer.default) {
-					selectedSlicer = slicer.key;
-				}
-
-				self.slicers.push({
-					key: slicer.key,
-					name: name
-				});
-			});
-
-			if (selectedSlicer !== undefined) {
-				self.slicer(selectedSlicer);
-			}
-
-			self.defaultSlicer = selectedSlicer;
+//			var selectedSlicer = undefined;
+//			self.slicers.removeAll();
+//			_.each(_.values(data), function(slicer) {
+//				var name = slicer.displayName;
+//				if (name === undefined) {
+//					name = slicer.key;
+//				}
+//
+//				if (slicer.default) {
+//					selectedSlicer = slicer.key;
+//				}
+//
+//				self.slicers.push({
+//					key: slicer.key,
+//					name: name
+//				});
+//			});
+//
+//			if (selectedSlicer !== undefined) {
+//				self.slicer(selectedSlicer);
+//			}
+//
+//			self.defaultSlicer = selectedSlicer;
 		};
 
 //		self.profilesForSlicer = function(key) {
@@ -459,7 +459,7 @@ $(function(){
 			} else {
 				//self.update_colorSettings();
 				self.slicing_in_progress(true);
-				self.workingArea.getCompositionSVG(self.fill_areas(), self.cut_outlines(),self.color_settings,self.color_keys, function(composition){
+				self.workingArea.getCompositionSVG(self.fill_areas(), self.cut_outlines(), function(composition){
 					self.svg = composition;
 					var filename = self.gcodeFilename() + self.settingsString() + '.gco';
 					var gcodeFilename = self._sanitize(filename);
@@ -488,19 +488,21 @@ $(function(){
 						gcode: gcodeFilename
 					};
 
-					for(var colHex in self.color_keys){
-						if (colHex !== undefined && colHex !== 'none'){
-							var colName = self.color_keys[colHex];
-							data['colors.'+ colHex +'.intensity'] = self.color_settings[colName].intensity;
-							data['colors.'+ colHex +'.speed'] = self.color_settings[colName].speed;
-							data['colors.'+ colHex +'.cut'] = self.color_settings[colName].speed;
-						}
-					}
-
+//					for(var colHex in self.color_keys){
+//						if (colHex !== undefined && colHex !== 'none'){
+//							var colName = self.color_keys[colHex];
+//							data['colors.'+ colHex +'.intensity'] = self.color_settings[colName].intensity;
+//							data['colors.'+ colHex +'.speed'] = self.color_settings[colName].speed;
+//							data['colors.'+ colHex +'.cut'] = self.color_settings[colName].speed;
+//						}
+//					}
+					
+					var colorStr = '<!--' +JSON.stringify(multicolor_data) + '-->';
+					
 					if(self.svg !== undefined){
-						data.svg = self.svg;
+						data.svg = colorStr + self.svg;
 					} else {
-						data.svg = '<svg height="0" version="1.1" width="0" xmlns="http://www.w3.org/2000/svg"><defs/></svg>';
+						data.svg = colorStr + '<svg height="0" version="1.1" width="0" xmlns="http://www.w3.org/2000/svg"><defs/></svg>';
 					}
 					if(self.gcodeFilesToAppend !== undefined){
 						data.gcodeFilesToAppend = self.gcodeFilesToAppend;

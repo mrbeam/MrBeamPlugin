@@ -208,6 +208,14 @@ svg#area_preview {
 	display: flex;
 }
 
+.job_row input {
+    max-width: 35%;
+}
+
+.job_row .form-horizontal .control-group {
+    margin-bottom: 5px;
+}
+
 .used_color {
     width: 48px;
     height: 48px;

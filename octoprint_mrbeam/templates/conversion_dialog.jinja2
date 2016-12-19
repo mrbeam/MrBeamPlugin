@@ -6,7 +6,8 @@
     <div class="modal-body">
         <form class="form-horizontal" data-bind="visible: !slicing_in_progress() ">
 			<div data-bind="visible: show_vector_parameters ">
-<!--				<p>{{ _('Choose Color from SVG:') }}</p>
+<!--
+				<p>{{ _('Choose Color from SVG:') }}</p>
                 <div class="control-group" data-bind="visible: showColorSettings">
                     <select data-bind="options: color_menu, value: selected_color"></select>
                 </div>
@@ -44,6 +45,7 @@
 						The effect in general is dependent from the material and its color and surface.
 					</div>
 				</div>
+<!--
 				<label class="control-label">{{ _('Filled areas') }}</label>
 				<div class="controls">
 					<label class="checkbox">
@@ -73,6 +75,7 @@
 					This parameter sets the amount of time in milliseconds the movement is paused after the laser is switched on. 
 					If the result shows gaps in lines for example increase this value carefully. The higher the value the higher the risk of material ignition.
 				</div>
+-->
 			</div>
 			
 			<div data-bind="visible: show_image_parameters ">
@@ -175,7 +178,7 @@
 				</div>
 			</div>
 
-            <div class="control-group" data-bind="visible: showExpertSettings ">
+<!--            <div class="control-group" data-bind="visible: showExpertSettings ">
 				<p>{{ _('Store GCode after conversion:') }}</p>
                 <label class="control-label">{{ _('GCode Filename') }}</label>
                 <div class="controls">
@@ -185,6 +188,7 @@
                     </div>
                 </div>
             </div>
+-->
         </form>
 
 		<div id="color_assignment" class="">
@@ -193,30 +197,46 @@
 				<div class="span3" style="display:flex;">
 					<div class="assigned_colors color_drop_zone" ondragover="colorAllowDrop(event)" ondrop="colorDrop(event)"></div>
 				</div>
-				<div class="span9">
+				<div class="span6">
 					<div class="job_parameters">
 						<h4>Skip</h4>
 						<span>Drag colors on this row to skip them.</span>
 					</div>
 				</div>
+				<div class="span3"></div>
 			</div>
 			<div id="first_job" class="job_row row-fluid">
 				<div class="span3" style="display:flex;">
 					<div class="assigned_colors color_drop_zone" ondragover="colorAllowDrop(event)" ondrop="colorDrop(event)"></div>
 				</div>
-				<div class="span9">
-					<div class="job_parameters">
+				<div class="span6">
+					<form class="job_parameters form-horizontal">
 						<h4 class="job_title">Job 1</h4>
-						<div class="dropdown">
-							<button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">
-								Presets <span class="caret"></span></button>
-							<ul class="dropdown-menu" data-bind="foreach: material_menu">
-								<li><a href="#" data-bind="text: $data, click: $root.set_material($data, event) "></a></li>
-							</ul>
+						<div class="control-group">
+							<label class="control-label">Laser</label>
+							<div class="controls"><input class="param_intensity" type="number" min="0" max="1000"  placeholder="Intensity" />&nbsp;%</div>
 						</div>
-						<input class="param_intensity" type="text" placeholder="Intensity" />
-						<input class="param_feedrate" type="text" placeholder="Feedrate" />
-						<input class="param_passes" type="text" placeholder="Passes" />
+						<div class="control-group">
+							<label class="control-label">Speed</label>
+							<div class="controls"><input class="param_feedrate" type="number" min="20" max="3000" placeholder="Speed" />&nbsp;mm/min</div>
+						</div>
+						<div class="control-group">
+							<label class="control-label">Passes</label>
+							<div class="controls"><input class="param_passes" type="number" min="1" max="10" value="1" />&nbsp;&times;</div>
+						</div>
+						<div class="control-group" data-bind="visible: showExpertSettings ">
+							<label class="control-label">Pierce time</label>
+							<div class="controls"><input class="param_piercetime" type="number" min="0" max="2000" value="0" />&nbsp;ms</div>
+						</div>
+					</form>
+				</div>
+				<div class="span3">
+					<div class="dropdown">
+						<button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">
+							Select material <span class="caret"></span></button>
+						<ul class="dropdown-menu" data-bind="foreach: material_menu">
+							<li><a href="#" data-bind="text: $data, click: $root.set_material($data, event) "></a></li>
+						</ul>
 					</div>
 				</div>
 			</div>

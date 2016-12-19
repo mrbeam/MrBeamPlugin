@@ -776,7 +776,7 @@ $(function(){
 			self.check_sizes_and_placements();
 		};
 
-		self.getCompositionSVG = function(fillAreas, cutOutlines, colorSettings,colorKeys, callback){
+		self.getCompositionSVG = function(fillAreas, cutOutlines, callback){
 			self.abortFreeTransforms();
 			var wMM = self.workingAreaWidthMM();
 			var hMM = self.workingAreaHeightMM();
@@ -791,26 +791,12 @@ $(function(){
 
 
 			self.renderInfill(compSvg, fillAreas, cutOutlines, wMM, hMM, 10, function(svgWithRenderedInfill){
-				callback( self._wrapInSvgAndScale(colorSettings,colorKeys,svgWithRenderedInfill));
+				callback( self._wrapInSvgAndScale(svgWithRenderedInfill));
 				$('#compSvg').remove();
 			});
 		};
 
-		self._wrapInSvgAndScale = function(colorSettings,colorKeys,content){
-			var coloStr = '<!--';
-			for(var colHex in colorKeys){
-				if (colHex !== undefined && colHex !== 'none'){
-					var colName = colorKeys[colHex];
-					coloStr += '\n'+colHex;
-					coloStr += ','+colorSettings[colName].intensity;
-					coloStr += ','+colorSettings[colName].speed;
-					coloStr += ','+colorSettings[colName].cutColor;
-				}
-			}
-			coloStr += '\n-->';
-			console.log(coloStr);
-
-
+		self._wrapInSvgAndScale = function(content){
 			var svgStr = content.innerSVG();
 			if(svgStr !== ''){
 				var dpiFactor = self.svgDPI()/25.4; // convert mm to pix 90dpi for inkscape, 72 for illustrator
@@ -821,7 +807,7 @@ $(function(){
 				svgStr = svgStr.replace("(\\\"","(");
 				svgStr = svgStr.replace("\\\")",")");
 
-				var svg = '<svg height="'+ h +'" version="1.1" width="'+ w +'" xmlns="http://www.w3.org/2000/svg"><defs/>'+coloStr+svgStr+'</svg>';
+				var svg = '<svg height="'+ h +'" version="1.1" width="'+ w +'" xmlns="http://www.w3.org/2000/svg"><defs/>'+svgStr+'</svg>';
 				return svg;
 			} else {
 				return;
