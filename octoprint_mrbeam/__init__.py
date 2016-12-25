@@ -14,9 +14,11 @@ import os
 import logging
 import socket
 import threading
+import json
 from octoprint.server.util.flask import restricted_access, get_json_command_from_request
 from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping
 from flask import Blueprint, request, jsonify, make_response, url_for
+
 
 
 class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
@@ -36,10 +38,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._cancelled_jobs = []
 		self._cancelled_jobs_mutex = threading.Lock()
 		# self.stateHandler = LEDstrips()
+		self._MULTICOLOR_PARAMS_PATH = "/tmp/multicolor_parameters.json" #TODO add proper path there
 
 	def initialize(self):
 		self.laserCutterProfileManager = LaserCutterProfileManager(self._settings)
-		self._svgtogcode_logger = logging.getLogger("octoprint.plugins.svgtogcode.engine")
+		self._log = logging.getLogger("octoprint.plugins.mrbeam")
 
 	def _convert_profiles(self, profiles):
 		result = dict()
@@ -315,10 +318,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			import re
 			svg = ''.join(i for i in data['svg'] if ord(i) < 128)  # strip non-ascii chars like €
 			del data['svg']
-
-			import os
-			name, _ = os.path.splitext(data['gcode'])
-
 			filename = target + "/temp.svg"
 
 			class Wrapper(object):
@@ -334,7 +333,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			fileObj = Wrapper(filename, svg)
 			self._file_manager.add_file(target, filename, fileObj, links=None, allow_overwrite=True)
 
-			slicer = "svgtogcode";
+			slicer = "svgtogcode"
 			slicer_instance = self._slicing_manager.get_slicer(slicer)
 			if slicer_instance.get_slicer_properties()["same_device"] and (
 						self._printer.is_printing() or self._printer.is_paused()):
@@ -342,11 +341,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				return make_response("Cannot convert while lasering due to performance reasons".format(**locals()),
 									 409)
 
+			import os
 			if "gcode" in data.keys() and data["gcode"]:
 				gcode_name = data["gcode"]
 				del data["gcode"]
 			else:
-				import os
 				name, _ = os.path.splitext(filename)
 				gcode_name = name + ".gco"
 
@@ -363,57 +362,65 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 						self._printer.is_printing() or self._printer.is_paused()):
 				make_response("Trying to slice into file that is currently being printed: %s" % gcode_name, 409)
 
-			if "profile" in data.keys() and data["profile"]:
-				profile = data["profile"]
-				del data["profile"]
-			else:
-				profile = None
+#			if "profile" in data.keys() and data["profile"]:
+#				profile = data["profile"]
+#				del data["profile"]
+#			else:
+#				profile = None
 			##
-			if "printerProfile" in data.keys() and data["printerProfile"]:
-				printerProfile = data["printerProfile"]
-				del data["printerProfile"]
-			else:
-				printerProfile = None
-
-			if "position" in data.keys() and data["position"] and isinstance(data["position"], dict) and "x" in \
-					data[
-						"position"] and "y" in data["position"]:
-				position = data["position"]
-				del data["position"]
-			else:
-				position = None
+#			if "printerProfile" in data.keys() and data["printerProfile"]:
+#				printerProfile = data["printerProfile"]
+#				del data["printerProfile"]
+#			else:
+#				printerProfile = None
+#
+#			if "position" in data.keys() and data["position"] and isinstance(data["position"], dict) and "x" in \
+#					data[
+#						"position"] and "y" in data["position"]:
+#				position = data["position"]
+#				del data["position"]
+#			else:
+#				position = None
 
 			select_after_slicing = False
-			if "select" in data.keys() and data["select"] in valid_boolean_trues:
-				if not printer.is_operational():
-					return make_response("Printer is not operational, cannot directly select for printing", 409)
-				select_after_slicing = True
+#			if "select" in data.keys() and data["select"] in valid_boolean_trues:
+#				if not printer.is_operational():
+#					return make_response("Printer is not operational, cannot directly select for printing", 409)
+#				select_after_slicing = True
 
 			print_after_slicing = False
-			if "print" in data.keys() and data["print"] in valid_boolean_trues:
-				if not printer.is_operational():
-					return make_response("Printer is not operational, cannot directly start printing", 409)
-				select_after_slicing = print_after_slicing = True
+#			if "print" in data.keys() and data["print"] in valid_boolean_trues:
+#				if not printer.is_operational():
+#					return make_response("Printer is not operational, cannot directly start printing", 409)
+#				select_after_slicing = print_after_slicing = True
 
 			#get profile information out of data json
 			override_keys = [k for k in data if k.startswith("profile.") and data[k] is not None]
 			overrides = dict()
 			for key in override_keys:
 				overrides[key[len("profile."):]] = data[key]
+			overrides['multicolor'] = data['multicolor']
+
+			with open(self._MULTICOLOR_PARAMS_PATH, 'w') as outfile:
+				json.dump(data, outfile)
+				self._log.info('Wrote job parameters to %s', self._MULTICOLOR_PARAMS_PATH)
 
 			#get color information out of data json
-			override_color_keys = [k for k in data if k.startswith("colors.") and data[k] is not None]
-			color_overrides = dict()
-			for key in override_color_keys:
-				colorKey = key[len("colors."):len("colors.#000000")]
-				if colorKey == 'undefin': break
-				color_overrides[colorKey] = {'intensity' : data['colors.'+colorKey+'.intensity'],
-											 'speed': data['colors.'+colorKey+'.speed'],
-											 'cut': data['colors.'+colorKey+'.cut']}
-				print ('color_overrides', color_overrides)
+#			override_color_keys = [k for k in data if k.startswith("colors.") and data[k] is not None]
+#			color_overrides = dict()
+#			for key in override_color_keys:
+#				colorKey = key[len("colors."):len("colors.#000000")]
+#				if colorKey == 'undefin': break
+#				color_overrides[colorKey] = {'intensity' : data['colors.'+colorKey+'.intensity'],
+#											 'speed': data['colors.'+colorKey+'.speed'],
+#											 'cut': data['colors.'+colorKey+'.cut']}
+#				print ('color_overrides', color_overrides)
+			#color_overrides = data['multicolor']
+			self._printer.set_colors(currentFilename, data['multicolor'])
+	
+			self._log.debug('### BEFORE CALLBACK %s', str(data['multicolor']))
 
-			self._printer.set_colors(currentFilename, color_overrides)
-
+			# callback definition
 			def slicing_done(target, gcode_name, select_after_slicing, print_after_slicing, append_these_files):
 				# append additioal gcodes
 				output_path = self._file_manager.path_on_disk(target, gcode_name)
@@ -433,10 +440,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 					printer.select_file(filenameToSelect, sd, True)
 
 			try:
+				self._log.debug('### BEFORE SLICE %s', self._MULTICOLOR_PARAMS_PATH)
 				self._file_manager.slice(slicer, target, filename, target, gcode_name,
-										 profile=profile,
-										 printer_profile_id=printerProfile,
-										 position=position,
+										 profile=None,#profile,
+										 printer_profile_id=None, #printerProfile,
+										 position=None, #position,
 										 overrides=overrides,
 										 callback=slicing_done,
 										 callback_args=[target, gcode_name, select_after_slicing, print_after_slicing,
@@ -444,7 +452,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			except octoprint.slicing.UnknownProfile:
 				return make_response("Profile {profile} doesn't exist".format(**locals()), 400)
 
-			files = {}
+			#files = {}
 			location = "test"#url_for(".readGcodeFile", target=target, filename=gcode_name, _external=True)
 			result = {
 				"name": gcode_name,
@@ -491,8 +499,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	##~~ SlicerPlugin API
 
 	def is_slicer_configured(self):
-		# svgtogcode_engine = s.get(["svgtogcode_engine"])
-		# return svgtogcode_engine is not None and os.path.exists(svgtogcode_engine)
 		return True
 
 	def get_slicer_properties(self):
@@ -546,14 +552,16 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			path, _ = os.path.splitext(model_path)
 			machinecode_path = path + ".gco"
 
-		self._svgtogcode_logger.info(
-			"### Slicing %s to %s using profile stored at %s" % (model_path, machinecode_path, profile_path))
+		self._log.info("### Slicing %s to %s using profile stored at %s, %s" % (model_path, machinecode_path, profile_path, self._MULTICOLOR_PARAMS_PATH))
 
-		## direct call
-		from .gcodegenerator.mrbeam import Laserengraver
+		#profile = Profile(self._load_profile(profile_path))
+		#params = profile.convert_to_engine2()
 
-		profile = Profile(self._load_profile(profile_path))
-		params = profile.convert_to_engine2()
+		# READ PARAMS FROM JSON
+		params = dict()
+		with open(self._MULTICOLOR_PARAMS_PATH) as data_file:    
+			params = json.load(data_file)
+			#self._log.debug("Read multicolor params %s" % params)
 
 		dest_dir, dest_file = os.path.split(machinecode_path)
 		params['directory'] = dest_dir
@@ -567,18 +575,25 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		else:
 			params['log_filename'] = ''
 
+		self._log.info("params ###")
+		self._log.info(params)
+		
+		## direct call
 		try:
+			from .gcodegenerator.mrbeam_multicolor import Laserengraver
 			engine = Laserengraver(params, model_path)
+			engine.set_logger(self._log)
+			engine.set_laser_params(params['multicolor'])
 			engine.affect(on_progress, on_progress_args, on_progress_kwargs)
 
-			self._svgtogcode_logger.info("### Conversion finished")
+			self._log.info("### Conversion finished")
 			return True, None  # TODO add analysis about out of working area, ignored elements, invisible elements, text elements
 		except octoprint.slicing.SlicingCancelled as e:
 			raise e
 		except Exception as e:
 			print e.__doc__
 			print e.message
-			self._logger.exception("Conversion error ({0}): {1}".format(e.__doc__, e.message))
+			self._log.exception("Conversion error ({0}): {1}".format(e.__doc__, e.message))
 			return False, "Unknown error, please consult the log file"
 
 		finally:
@@ -589,7 +604,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				if machinecode_path in self._slicing_commands:
 					del self._slicing_commands[machinecode_path]
 
-			self._svgtogcode_logger.info("-" * 40)
+			self._log.info("-" * 40)
 
 	def cancel_slicing(self, machinecode_path):
 		with self._slicing_commands_mutex:
@@ -622,9 +637,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	##~~ Event Handler Plugin API
 
 	def on_event(self, event, payload):
-		print("on_event", event, payload)
+		#self._log.debug("on_event %s: %s", event, payload)
 		# self.stateHandler.on_state_change(event)
-
+		pass
 
 	##~~ Progress Plugin API
 

@@ -128,11 +128,10 @@ $(function(){
 			if(typeof ev !== 'undefined'){
 				var param_set = self.materials_settings[material];
 				var p = $(ev.target).parents('.job_row');
-				$(p).find('.job_title').html(material)
-				$(p).find('.param_intensity').val(param_set[0])
-				$(p).find('.param_feedrate').val(param_set[1])
-				$(p).find('.param_passes').val(param_set[2])
-				console.log(material,  ev);
+				$(p).find('.job_title').html(material);
+				$(p).find('.param_intensity').val(param_set[0]);
+				$(p).find('.param_feedrate').val(param_set[1]);
+				$(p).find('.param_passes').val(1); // currently no passes in the data structure
 			}
 		};
 		
@@ -465,6 +464,7 @@ $(function(){
 					var gcodeFilename = self._sanitize(filename);
 
 					var multicolor_data = self.get_current_multicolor_settings();
+					var colorStr = '<!--COLOR_PARAMS_START' +JSON.stringify(multicolor_data) + 'COLOR_PARAMS_END-->';
 					var data = {
 						command: "convert",
 						"profile.speed": self.laserSpeed(),
@@ -496,13 +496,12 @@ $(function(){
 //							data['colors.'+ colHex +'.cut'] = self.color_settings[colName].speed;
 //						}
 //					}
-					
-					var colorStr = '<!--' +JSON.stringify(multicolor_data) + '-->';
-					
+										
 					if(self.svg !== undefined){
-						data.svg = colorStr + self.svg;
+						// TODO place comment within initial <svg > tag.
+						data.svg = colorStr +"\n"+ self.svg;
 					} else {
-						data.svg = colorStr + '<svg height="0" version="1.1" width="0" xmlns="http://www.w3.org/2000/svg"><defs/></svg>';
+						data.svg = colorStr +"\n"+ '<svg height="0" version="1.1" width="0" xmlns="http://www.w3.org/2000/svg"><defs/></svg>';
 					}
 					if(self.gcodeFilesToAppend !== undefined){
 						data.gcodeFilesToAppend = self.gcodeFilesToAppend;

@@ -19,7 +19,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 """
-import sys, copy, optparse, random, re
+import sys, copy, optparse, random, re, json
 import gettext
 from math import *
 _ = gettext.gettext
@@ -136,10 +136,12 @@ class Effect:
 		"contrast": 1.0,
 		"sharpening": 1.0,
 		"dithering": False,
-		"beam_diameter": 0.25
+		"beam_diameter": 0.25,
+		"multicolor": []
 	}	
 	
 	def __init__(self, *args, **kwargs):
+		print ('++++++++++++++++***********************++++++++++++++++')
 		self.colorSettings = dict()
 		self.document=None
 		self.original_document=None
@@ -185,6 +187,26 @@ class Effect:
 					self.colorSettings[lg[0]] = {'intensity':lg[1],
 												 'speed':lg[2],
 												 'cut':lg[3]}
+				print self.colorSettings
+				break
+				
+	def parseColorsJSON(self):
+		for node in self.document.getiterator():
+			if node.tag is etree.Comment :
+				comment_text = str(node)
+				matchObj = re.match( r'<!--COLOR_PARAMS_START(.+)COLOR_PARAMS_END-->', comment_text)
+
+				self.colorSettings = dict();
+				if matchObj:
+					jsonStr = matchObj.group(1)
+					paramArray = json.loads(jsonStr)
+					if len(paramArray) > 0:
+						for job in paramArray:
+							#{"job":1,"color":"#666666","intensity":"625","feedrate":"400","piercetime":"0","passes":"0"}
+							self.colorSettings[job['color']] = job
+							#self.colorSettings[job['color']]['speed'] = job['feedrate'] # legacy compatibility
+							#self.colorSettings[job['color']]['cut'] = True # legacy compatibility
+				
 				print self.colorSettings
 				break
 
@@ -261,7 +283,7 @@ class Effect:
 	def affect(self, on_progress=None, on_progress_args=None, on_progress_kwargs=None):
 		"""Affect an SVG document with a callback effect"""
 		self.parse()
-		self.parseColors()
+		self.parseColorsJSON()
 		self.getposinlayer()
 		self.getselected()
 		self.getdocids()
