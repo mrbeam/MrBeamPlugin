@@ -321,7 +321,7 @@ $(function(){
 						color: hex,
 						intensity: intensity,
 						feedrate: feedrate,
-						piercetime: piercetime,
+						pierce_time: piercetime,
 						passes: passes
 					});
 				});

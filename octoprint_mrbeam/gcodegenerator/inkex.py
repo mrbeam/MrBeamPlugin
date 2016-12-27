@@ -20,6 +20,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 """
 import sys, copy, optparse, random, re, json
+import logging
 import gettext
 from math import *
 _ = gettext.gettext
@@ -141,6 +142,7 @@ class Effect:
 	}	
 	
 	def __init__(self, *args, **kwargs):
+		self._log = logging.getLogger("octoprint.plugins.mrbeam.Laserengraver")
 		print ('++++++++++++++++***********************++++++++++++++++')
 		self.colorSettings = dict()
 		self.document=None

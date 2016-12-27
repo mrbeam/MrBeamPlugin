@@ -101,11 +101,11 @@
 										</div>
 									</div>
 
-									<div class="accordion-body collapse in" id="mrb_state_wrapper" data-bind="visible: !state.isErrorOrClosed() && loginState.isUser() && !state.isFlashing() ">
+									<div class="accordion-body collapse in" id="mrb_state_wrapper" data-bind="visible: true || !state.isErrorOrClosed() && loginState.isUser() && !state.isFlashing() ">
 										<div class="accordion-inner">
 											{{ _('Machine State') }}: <strong data-bind="text: state.stateString"></strong><br>
 
-											<div data-bind="visible: !state.isLocked() && !state.isConnecting()">
+											<div data-bind="visible: true || (!state.isLocked() && !state.isConnecting())">
 
 												<!--
 												{{ _('File') }}: <strong data-bind="text: filename"></strong>&nbsp;<strong data-bind="visible: sd">(SD)</strong><br>
@@ -148,7 +148,7 @@
 
 
 												<div class="row-fluid print-control" style="display: none;" data-bind="visible: loginState.isUser">
-													<button class="btn btn-danger span4" data-bind="click: conversion.show_conversion_dialog, enable: state.isOperational() && state.isReady() && !state.isPrinting() && !state.isPaused() && loginState.isUser() && !workingArea.working_area_empty(), attr: {title: state.titlePrintButton}" id="job_print">
+													<button class="btn btn-danger span4" data-bind="click: conversion.show_conversion_dialog, enable: true || state.isOperational() && state.isReady() && !state.isPrinting() && !state.isPaused() && loginState.isUser() && !workingArea.working_area_empty(), attr: {title: state.titlePrintButton}" id="job_print">
 														<i class="icon-white icon-fire" data-bind="css: { 'wobble': state.isPrinting()}"></i> <span>{{ _('Laser') }}</span>
 														<!--<i class="icon-white" data-bind="css: {'icon-fire': !state.isPaused(), 'icon-undo': isPaused(), 'wobble': isPrinting()}"></i> <span data-bind="text: (isPaused() ? '{{ _('Restart') }}' : '{{ _('Laser') }}')">{{ _('Laser') }}</span>-->
 													</button>

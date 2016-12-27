@@ -6,8 +6,8 @@
 def gcode_before_path(intensity = 0):
 	return "\nM03 S"+str(intensity)
 
-def gcode_before_path_color(intensity = '#000000'):
-	return "\nM03 S"+intensity #todo check if M05 is needed, maybe grbl error
+def gcode_before_path_color(color = '#000000', intensity = '0'):
+	return "\nM03 S%s;%s" % (intensity, color) 
 
 def gcode_after_path():
 	return "M05"
@@ -21,7 +21,7 @@ M08
 
 gcode_footer = """
 M05
-G0 X0.000 Y0.000
+G0 X500.000 Y400.000
 M09
 M02
 """

@@ -21,6 +21,7 @@ from flask import Blueprint, request, jsonify, make_response, url_for
 
 
 
+
 class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
                    octoprint.plugin.AssetPlugin,
 				   octoprint.plugin.UiPlugin,
@@ -577,26 +578,34 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		else:
 			params['log_filename'] = ''
 
+		params['log_filename'] = '/tmp/test.log'
 		self._log.info("params ###")
 		self._log.info(params)
 		
 		## direct call
+		from .gcodegenerator.converter import Converter
+		enginex = Converter(params, model_path)
+		enginex.convert(on_progress, on_progress_args, on_progress_kwargs)
+			
+		#self._log.info("### converter init %s" % enginex)
+		#from .gcodegenerator.mrbeam import Laserengraver
+		#from .gcodegenerator.mrbeam_multicolor import Laserengraver
+		#engine = Laserengraver(params, model_path)
+			#engine.set_laser_params(params['multicolor'])
+		#engine.affect(on_progress, on_progress_args, on_progress_kwargs)
 		try:
-			from .gcodegenerator.mrbeam_multicolor import Laserengraver
-			engine = Laserengraver(params, model_path)
-			engine.set_logger(self._log)
-			engine.set_laser_params(params['multicolor'])
-			engine.affect(on_progress, on_progress_args, on_progress_kwargs)
 
 			self._log.info("### Conversion finished")
 			return True, None  # TODO add analysis about out of working area, ignored elements, invisible elements, text elements
 		except octoprint.slicing.SlicingCancelled as e:
+			self._log.info("### _cancel 1")
 			raise e
-		except Exception as e:
-			print e.__doc__
-			print e.message
-			self._log.exception("Conversion error ({0}): {1}".format(e.__doc__, e.message))
-			return False, "Unknown error, please consult the log file"
+#		except Exception as e:
+#			self._log.info("### _exception")
+#			print e.__doc__
+#			print e.message
+#			self._log.exception("Conversion error ({0}): {1}".format(e.__doc__, e.message))
+#			return False, "Unknown error, please consult the log file"
 
 		finally:
 			with self._cancelled_jobs_mutex:

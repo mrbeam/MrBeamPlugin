@@ -2247,24 +2247,25 @@ class Polygon:
 ################################################################################
 
 class Laserengraver(inkex.Effect):
+#class Laserengraver():
 	
 	def __init__(self, options, svg_file): 
 
+		
 		inkex.Effect.__init__(self)
 		self.svg_file = svg_file
 		self.setoptions(options)
-		self._log = logging.getLogger("octoprint.plugins.mrbeamXX")
-		console_logger = logging.StreamHandler()
-		console_logger.setLevel(logging.INFO)
-		console_logger.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
-		fh = logging.FileHandler('/tmp/spam.log')
-		fh.setLevel(logging.DEBUG)
-		fh.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
-		self._log.addHandler(fh)
-		self._log.addHandler(console_logger)
-		self._log.setLevel(logging.DEBUG)
-		self._log.info('INIT :)')
-		print ('++++++++++++++++#############++++++++++++++++')
+#		console_logger = logging.StreamHandler()
+#		console_logger.setLevel(logging.INFO)
+#		console_logger.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
+#		fh = logging.FileHandler('/tmp/spam.log')
+#		fh.setLevel(logging.DEBUG)
+#		fh.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
+#		self._log.addHandler(fh)
+#		self._log.addHandler(console_logger)
+#		self._log.setLevel(logging.DEBUG)
+#		self._log.info('INIT :)')
+#		print ('++++++++++++++++#############++++++++++++++++')
 			
 
 	def set_logger(self, lh):
