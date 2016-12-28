@@ -6,6 +6,8 @@ import os
 from biarc import biarc
 import machine_settings
 
+import numpy
+
 import simplestyle
 import simplepath
 import simpletransform
@@ -29,6 +31,29 @@ u'inkscape' :u'http://www.inkscape.org/namespaces/inkscape',
 u'xlink'	:u'http://www.w3.org/1999/xlink',
 u'xml'	  :u'http://www.w3.org/XML/1998/namespace'
 }
+
+uuconv = {'in':90.0, 'pt':1.25, 'px':1, 'mm':3.5433070866, 'cm':35.433070866, 'm':3543.3070866,
+		  'km':3543307.0866, 'pc':15.0, 'yd':3240 , 'ft':1080}
+def unittouu(string):
+	'''Returns userunits given a string representation of units in another system'''
+	unit = re.compile('(%s)$' % '|'.join(uuconv.keys()))
+	param = re.compile(r'(([-+]?[0-9]+(\.[0-9]*)?|[-+]?\.[0-9]+)([eE][-+]?[0-9]+)?)')
+
+	p = param.match(string)
+	u = unit.search(string)
+	if p:
+		retval = float(p.string[p.start():p.end()])
+	else:
+		retval = 0.0
+	if u:
+		try:
+			return retval * uuconv[u.string[u.start():u.end()]]
+		except KeyError:
+			pass
+	return retval
+
+def uutounit(val, unit):
+	return val/uuconv[unit]
 
 def addNS(tag, ns=None):
 	val = tag
@@ -63,11 +88,11 @@ class Converter():
 
 	def __init__(self, params, model_path):
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam.converter")
-		#logging.shutdown()
-		#reload(logging)
-		#self.transform_matrix = {}
-		#self.transform_matrix_reverse = {}
-
+		
+		# debugging
+		self.transform_matrix = {}
+		self.transform_matrix_reverse = {}
+		self.orientation_points = {}
 		
 		self.colorParams = {}
 		self.options = self.defaults;
@@ -95,8 +120,24 @@ class Converter():
 		options['doc_root'] = self.document.getroot()
 
 		# Get all Gcodetools data from the scene.
+		self.orientation()
 		self.collect_paths()
-
+		self._logger.info("### after first get_info:")
+		self._logger.info("### paths %s " % self.paths)
+		self._logger.info("### images %s " % self.images)
+		self._logger.info("### orientation_points %s " % self.orientation_points)
+		self._logger.info("### layers %s " % self.layers)
+		self._logger.info("### transform_m %s " % self.transform_matrix)
+		self._logger.info("### transform_m_rev %s " % self.transform_matrix_reverse)
+#		self.collect_paths()
+#		self._logger.info("### after 2nd get_info:")
+#		self._logger.info("### paths %s " % self.paths)
+#		self._logger.info("### images %s " % self.images)
+#		self._logger.info("### orientation_points %s " % self.orientation_points)
+#		self._logger.info("### layers %s " % self.layers)
+#		self._logger.info("### transform_m %s " % self.transform_matrix)
+#		self._logger.info("### transform_m_rev %s " % self.transform_matrix_reverse)
+		
 		for p in self.paths :
 			#print "path", etree.tostring(p)
 			pass
@@ -309,7 +350,7 @@ class Converter():
 					pierce_time = self.options['pierce_time'], material = "default")
 					data = imgNode.get('href')
 					if(data is None):
-						data = imgNode.get(inkex.addNS('href', 'xlink'))
+						data = imgNode.get(addNS('href', 'xlink'))
 						
 					gcode = ''
 					if(data.startswith("data:")):
@@ -346,7 +387,46 @@ class Converter():
 						recursive_search(i,i)
 					else:
 						self._logger.info("Skipping hidden layer: '%s'" % i.get('id', "?") 	)
-				else:
+				elif i.get('gcodetools') == "Gcodetools orientation group" :
+					#points = self.get_orientation_points(i)
+					# hack!
+					g = i
+					items = g.getchildren()
+					items.reverse()
+					p2, p3 = [], []
+					p = None
+					for i in items:
+						if i.tag == addNS("g",'svg') and i.get("gcodetools") == "Gcodetools orientation point (2 points)":
+							p2 += [i]
+#						if i.tag == addNS("g",'svg') and i.get("gcodetools") == "Gcodetools orientation point (3 points)":
+#							p3 += [i]
+					if len(p2)==2 : p=p2 
+#					elif len(p3)==3 : p=p3 
+					if p==None: points = None
+					points = []
+					for i in p:	
+						point = [[],[]]	
+						for  node in i :
+							if node.get('gcodetools') == "Gcodetools orientation point arrow":
+								point[0] = self._apply_transforms(node,cubicsuperpath.parsePath(node.get("d")))[0][0][1]
+							if node.get('gcodetools') == "Gcodetools orientation point text":
+								r = re.match(r'(?i)\s*\(\s*(-?\s*\d*(?:,|\.)*\d*)\s*;\s*(-?\s*\d*(?:,|\.)*\d*)\s*;\s*(-?\s*\d*(?:,|\.)*\d*)\s*\)\s*',node.text)
+								point[1] = [float(r.group(1)),float(r.group(2)),float(r.group(3))]
+						if point[0]!=[] and point[1]!=[]:	points += [point]
+					if len(points)==len(p2)==2: 
+						pass
+					else: 
+						points = None
+
+					
+					
+					if points != None :
+						self.orientation_points[layer] = self.orientation_points[layer]+[points[:]] if layer in self.orientation_points else [points[:]]
+						self._logger.info("Found orientation points in '%s' layer: %s" % (layer.get(addNS('label','inkscape')), points))
+					else :
+						self._logger.error("Warning! Found bad orientation points in '%s' layer. Resulting Gcode could be corrupt!") % layer.get(addNS('label','inkscape'))
+				elif "gcodetools"  not in i.keys() :
+				#else:
 					# path
 					if i.tag == addNS('path','svg'):					
 						self._handle_node(i, layer)
@@ -486,7 +566,7 @@ class Converter():
 						recursive_search(i,layer)
 				
 					else :
-						self._logger.info("ignoring not supported tag %s" % i.tag)
+						#self._logger.info("ignoring not supported tag %s" % i.tag)
 						self._logger.debug("ignoring not supported tag: %s \n %s \n\n" % (i.tag, etree.tostring(i)))
 					
 		recursive_search(self.document.getroot(), self.document.getroot())
@@ -686,80 +766,81 @@ class Converter():
 	def _transform_csp(self, csp_, layer, reverse = False):
 		self._logger.debug("_transform_csp %s , %s, %s" % (csp_, layer, reverse))
 		csp = [  [ [csp_[i][j][0][:],csp_[i][j][1][:],csp_[i][j][2][:]]  for j in range(len(csp_[i])) ]   for i in range(len(csp_)) ]
-#		for i in xrange(len(csp)):
-#			for j in xrange(len(csp[i])): 
-#				for k in xrange(len(csp[i][j])): 
-#					csp[i][j][k] = self._transform(csp[i][j][k],layer, reverse)
+		for i in xrange(len(csp)):
+			for j in xrange(len(csp[i])): 
+				for k in xrange(len(csp[i][j])): 
+					csp[i][j][k] = self._transform(csp[i][j][k],layer, reverse)
 		return csp
 	
 	def _transform(self, source_point, layer, reverse=False):
+		self._logger.info('_transform %s,%s,%s ' % (source_point, layer, reverse))
 		if layer == None :
 			layer = self.document.getroot()
 		if layer not in self.transform_matrix:
 			for i in range(self.layers.index(layer),-1,-1):
-				#if self.layers[i] in self.orientation_points : 
-				#	break
+				if self.layers[i] in self.orientation_points : 
+					break
 
-				self._logger.debug(str(self.layers))
-				self._logger.debug(str("I: " + str(i)))
-				self._logger.debug("Transform: " + str(self.layers[i]))
-#				if self.layers[i] not in self.orientation_points :
-#					self._logger.error("Orientation points for '%s' layer have not been found! Please add orientation points using Orientation tab!") % layer.get(inkex.addNS('label','inkscape'))
-#				elif self.layers[i] in self.transform_matrix :
-#					self.transform_matrix[layer] = self.transform_matrix[self.layers[i]]
-#				else :
-#					orientation_layer = self.layers[i]
-#					if len(self.orientation_points[orientation_layer])>1 : 
-#						self._logger.error("There are more than one orientation point groups in '%s' layer") % orientation_layer.get(inkex.addNS('label','inkscape'))
-#					points = self.orientation_points[orientation_layer][0]
-#					if len(points)==2:
-#						points += [ [ [(points[1][0][1]-points[0][0][1])+points[0][0][0], -(points[1][0][0]-points[0][0][0])+points[0][0][1]], [-(points[1][1][1]-points[0][1][1])+points[0][1][0], points[1][1][0]-points[0][1][0]+points[0][1][1]] ] ]
-#					if len(points)==3:
-#						self._logger.debug("Layer '%s' Orientation points: " % orientation_layer.get(inkex.addNS('label','inkscape')))
-#						for point in points:
-#							self._logger.debug(point)
-#						#	Zcoordinates definition taken from Orientatnion point 1 and 2 
-#						#self.Zcoordinates[layer] = [max(points[0][1][2],points[1][1][2]), min(points[0][1][2],points[1][1][2])]
-#						matrix = numpy.array([
-#									[points[0][0][0], points[0][0][1], 1, 0, 0, 0, 0, 0, 0],
-#									[0, 0, 0, points[0][0][0], points[0][0][1], 1, 0, 0, 0],
-#									[0, 0, 0, 0, 0, 0, points[0][0][0], points[0][0][1], 1],
-#									[points[1][0][0], points[1][0][1], 1, 0, 0, 0, 0, 0, 0],
-#									[0, 0, 0, points[1][0][0], points[1][0][1], 1, 0, 0, 0],
-#									[0, 0, 0, 0, 0, 0, points[1][0][0], points[1][0][1], 1],
-#									[points[2][0][0], points[2][0][1], 1, 0, 0, 0, 0, 0, 0],
-#									[0, 0, 0, points[2][0][0], points[2][0][1], 1, 0, 0, 0],
-#									[0, 0, 0, 0, 0, 0, points[2][0][0], points[2][0][1], 1]
-#								])
-#
-#						if numpy.linalg.det(matrix)!=0 :
-#							m = numpy.linalg.solve(matrix,
-#								numpy.array(
-#									[[points[0][1][0]], [points[0][1][1]], [1], [points[1][1][0]], [points[1][1][1]], [1], [points[2][1][0]], [points[2][1][1]], [1]]	
-#											)
-#								).tolist()
-#							self.transform_matrix[layer] = [[m[j*3+i][0] for i in range(3)] for j in range(3)]
-#
-#						else :
-#							self._logger.error("Orientation points are wrong! (if there are two orientation points they sould not be the same. If there are three orientation points they should not be in a straight line.)")
-#					else :
-#						self._logger.error("Orientation points are wrong! (if there are two orientation points they sould not be the same. If there are three orientation points they should not be in a straight line.)")
+			self._logger.debug(str(self.layers))
+			self._logger.debug(str("I: " + str(i)))
+			self._logger.debug("Transform: " + str(self.layers[i]))
+			if self.layers[i] not in self.orientation_points :
+				self._logger.error("Orientation points for '%s' layer have not been found! Please add orientation points using Orientation tab!" % layer)
+			elif self.layers[i] in self.transform_matrix :
+				self.transform_matrix[layer] = self.transform_matrix[self.layers[i]]
+			else:
+				orientation_layer = self.layers[i]
+				if len(self.orientation_points[orientation_layer])>1 : 
+					self._logger.error("There are more than one orientation point groups in '%s' layer") % orientation_layer.get(addNS('label','inkscape'))
+				points = self.orientation_points[orientation_layer][0]
+				if len(points)==2:
+					points += [ [ [(points[1][0][1]-points[0][0][1])+points[0][0][0], -(points[1][0][0]-points[0][0][0])+points[0][0][1]], [-(points[1][1][1]-points[0][1][1])+points[0][1][0], points[1][1][0]-points[0][1][0]+points[0][1][1]] ] ]
+				if len(points)==3:
+					self._logger.debug("Layer '%s' Orientation points: " % orientation_layer.get(addNS('label','inkscape')))
+					for point in points:
+						self._logger.debug(point)
+					#	Zcoordinates definition taken from Orientatnion point 1 and 2 
+					#self.Zcoordinates[layer] = [max(points[0][1][2],points[1][1][2]), min(points[0][1][2],points[1][1][2])]
+					matrix = numpy.array([
+								[points[0][0][0], points[0][0][1], 1, 0, 0, 0, 0, 0, 0],
+								[0, 0, 0, points[0][0][0], points[0][0][1], 1, 0, 0, 0],
+								[0, 0, 0, 0, 0, 0, points[0][0][0], points[0][0][1], 1],
+								[points[1][0][0], points[1][0][1], 1, 0, 0, 0, 0, 0, 0],
+								[0, 0, 0, points[1][0][0], points[1][0][1], 1, 0, 0, 0],
+								[0, 0, 0, 0, 0, 0, points[1][0][0], points[1][0][1], 1],
+								[points[2][0][0], points[2][0][1], 1, 0, 0, 0, 0, 0, 0],
+								[0, 0, 0, points[2][0][0], points[2][0][1], 1, 0, 0, 0],
+								[0, 0, 0, 0, 0, 0, points[2][0][0], points[2][0][1], 1]
+							])
 
-			#	self.transform_matrix_reverse[layer] = numpy.linalg.inv(self.transform_matrix[layer]).tolist()		
-				self._logger.debug("\n Layer '%s' transformation matrixes:" % layer.get(addNS('label','inkscape')) )
-				self._logger.debug(self.transform_matrix)
-				self._logger.debug(self.transform_matrix_reverse)
-				#self._logger.debug("scalematrix", self.transform_matrix)
-				#self._logger.debug("revmatrix", self.transform_matrix_reverse)
+					if numpy.linalg.det(matrix)!=0 :
+						m = numpy.linalg.solve(matrix,
+							numpy.array(
+								[[points[0][1][0]], [points[0][1][1]], [1], [points[1][1][0]], [points[1][1][1]], [1], [points[2][1][0]], [points[2][1][1]], [1]]	
+										)
+							).tolist()
+						self.transform_matrix[layer] = [[m[j*3+i][0] for i in range(3)] for j in range(3)]
+
+					else :
+						self._logger.error("Orientation points are wrong! (if there are two orientation points they sould not be the same. If there are three orientation points they should not be in a straight line.)")
+				else :
+					self._logger.error("Orientation points are wrong! (if there are two orientation points they sould not be the same. If there are three orientation points they should not be in a straight line.)")
+
+			self.transform_matrix_reverse[layer] = numpy.linalg.inv(self.transform_matrix[layer]).tolist()		
+			self._logger.debug("\n Layer '%s' transformation matrixes:" % layer.get(addNS('label','inkscape')) )
+			self._logger.debug(self.transform_matrix)
+			self._logger.debug(self.transform_matrix_reverse)
+			self._logger.debug("scalematrix %s" % self.transform_matrix)
+			self._logger.debug("revmatrix %s" % self.transform_matrix_reverse)
 
 			
 		x,y = source_point[0], source_point[1]
-#		if not reverse :
-#			t = self.transform_matrix[layer]
-#		else :
-#			t = self.transform_matrix_reverse[layer]
-#		return [t[0][0]*x+t[0][1]*y+t[0][2], t[1][0]*x+t[1][1]*y+t[1][2]]
-		return [x, y]
+		if not reverse :
+			t = self.transform_matrix[layer]
+		else :
+			t = self.transform_matrix_reverse[layer]
+		return [t[0][0]*x+t[0][1]*y+t[0][2], t[1][0]*x+t[1][1]*y+t[1][2]]
+		#return [x, y]
 
 ################################################################################
 ###
@@ -842,3 +923,120 @@ class Converter():
 		f.write(self.header + gcode + self.footer)
 		f.close()
 		self._logger.info( "wrote file: " + self.options['directory'] + self.options['file'])
+		
+	def orientation(self, layer=None) :
+		self._logger.info("entering orientations. layer: %s" % layer)
+		if layer == None :
+			layer = self.document.getroot()
+		if layer in self.orientation_points:
+			self._logger.error("Active layer already has orientation points! Remove them or select another layer!")
+		
+		self._logger.info("entering orientations. layer: %s" % layer)
+		#orientation_group = etree.SubElement(layer, addNS('g','svg'), {"gcodetools":"Gcodetools orientation group"})
+
+		# translate == ['0', '-917.7043']
+		if layer.get("transform") != None :
+			self._logger.error('FOUND TRANSFORM: %s ' % layer.get('transform'))
+			translate = layer.get("transform").replace("translate(", "").replace(")", "").split(",")
+		else :
+			translate = [0,0]
+
+		# doc height in pixels (38 mm == 134.64566px)
+		h = self._getDocumentHeight()
+		doc_height = unittouu(h)
+		viewBoxM = self._getDocumentViewBoxMatrix()
+		viewBoxScale = viewBoxM[1][1] # TODO use both coordinates.
+		
+		self._logger.info("Document height: %s   viewBoxTransform: %s" % (str(doc_height),  viewBoxM))
+			
+		points = [[100.,0.,0.],[0.,0.,0.],[0.,100.,0.]]
+		orientation_scale = (self.options['svgDPI'] / 25.4) / viewBoxScale # 3.5433070660 @ 90dpi
+		points = points[:2]
+
+		self._logger.info("using orientation scale %s, i=%s" % (orientation_scale, points))
+		opoints = []
+		for i in points :
+			# X == Correct!
+			# si == x,y coordinate in px
+			# si have correct coordinates
+			# if layer have any tranform it will be in translate so lets add that
+			si = [i[0]*orientation_scale, (i[1]*orientation_scale)+float(translate[1])]
+			#self._logger.info("### orientation si=%s" % (si))
+#			### orientation si=[0.0, 0.0]                                
+#			### orientation si=[354.33070866141736, 0.0]
+#			g = etree.SubElement(orientation_group, addNS('g','svg'), {'gcodetools': "Gcodetools orientation point (2 points)"})
+#			etree.SubElement(	g, addNS('path','svg'), 
+#				{
+#					'style':	"stroke:none;fill:#000000;",	 
+#					'd':'m %s,%s 2.9375,-6.343750000001 0.8125,1.90625 6.843748640396,-6.84374864039 0,0 0.6875,0.6875 -6.84375,6.84375 1.90625,0.812500000001 z z' % (si[0], -si[1]+doc_height),
+#					'gcodetools': "Gcodetools orientation point arrow"
+#				})
+#			t = etree.SubElement(	g, addNS('text','svg'), 
+#				{
+#					'style':	"font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#000000;fill-opacity:1;stroke:none;",
+#					addNS("space","xml"):"preserve",
+#					'x':	str(si[0]+10),
+#					'y':	str(-si[1]-10+doc_height),
+#					'gcodetools': "Gcodetools orientation point text"
+#				})
+#			t.text = "(%s; %s; %s)" % (i[0],i[1],i[2])
+#			
+#			
+			#TODO
+			#point[0] = self._apply_transforms(node,cubicsuperpath.parsePath(node.get("d")))[0][0][1]
+			d = 'm %s,%s 2.9375,-6.343750000001 0.8125,1.90625 6.843748640396,-6.84374864039 0,0 0.6875,0.6875 -6.84375,6.84375 1.90625,0.812500000001 z z' % (si[0], -si[1]+doc_height)
+			csp = cubicsuperpath.parsePath(d)
+			#self._logger.info('### CSP %s' % csp)
+			p0 = csp[0][0][1]
+			p1 = [i[0],i[1],i[2]]
+			point = [p0,p1]
+			opoints += [point]
+			
+		if opoints != None :
+			self.orientation_points[layer] = self.orientation_points[layer]+[opoints[:]] if layer in self.orientation_points else [opoints[:]]
+			self._logger.info("Generated orientation points in '%s' layer: %s" % (layer.get(addNS('label','inkscape')), opoints))
+		else :
+			self._logger.error("XXX Warning! Found bad orientation points in '%s' layer. Resulting Gcode could be corrupt!") % layer.get(addNS('label','inkscape'))
+				
+
+
+	def _getDocumentHeight(self):
+		height = self.document.getroot().get('height')
+		if(height == None):
+			self._logger.info("height property not set in root node, fetching from viewBox attribute")
+			vbox = self.document.getroot().get('viewBox')
+			if(vbox != None ):
+				parts = vbox.split(' ')
+				if(len(parts) == 4):
+					height = parts[3]
+
+		if(height == "100%"):
+			height = 1052.3622047 # 297mm @ 90dpi
+			self._logger.info("Overriding height from 100 percents to %s" % height)
+
+		if(height == None):
+			height = 1052.3622047 # 297mm @ 90dpi
+			self._logger.info("Height not set. Assuming height is %s" % height)
+		return str(height)
+
+	def _getDocumentViewBoxMatrix(self):
+		vbox = self.document.getroot().get('viewBox')
+		if(vbox != None ):
+			self._logger.info("Found viewbox attribute", vbox)
+			widthPx = unittouu(self.getDocumentWidth())
+			heightPx = unittouu(self.getDocumentHeight())
+			parts = vbox.split(' ')
+			if(len(parts) == 4):
+				offsetVBoxX = float(parts[0])
+				offsetVBoxY = float(parts[1])
+				widthVBox = float(parts[2]) - float(parts[0])
+				heightVBox = float(parts[3]) - float(parts[1])
+
+				fx = widthPx / widthVBox
+				fy = heightPx / heightVBox
+				dx = offsetVBoxX * fx
+				dy = offsetVBoxY * fy
+				return [[fx,0,0],[0,fy,0], [dx,dy,1]]
+
+		return [[1,0,0],[0,1,0], [0,0,1]]
+
