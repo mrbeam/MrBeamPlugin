@@ -1,42 +1,28 @@
 import logging
-#import sys
-#import copy
 import re
 import os
-from biarc import biarc
 import machine_settings
 
+from biarc import biarc
+from point import Point
 import numpy
 
 import simplestyle
-import simplepath
+#import simplepath
 import simpletransform
 import cubicsuperpath
 
+from svg_util import get_path_d, _add_ns
 
 from lxml import etree
-#logging.basicConfig
-#logging.shutdown()
-#reload(logging)
 
-#a dictionary of all of the xmlns prefixes in a standard inkscape doc
-NSS = {
-u'sodipodi' :u'http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd',
-u'cc'	   :u'http://creativecommons.org/ns#',
-u'ccOLD'	:u'http://web.resource.org/cc/',
-u'svg'	  :u'http://www.w3.org/2000/svg',
-u'dc'	   :u'http://purl.org/dc/elements/1.1/',
-u'rdf'	  :u'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
-u'inkscape' :u'http://www.inkscape.org/namespaces/inkscape',
-u'xlink'	:u'http://www.w3.org/1999/xlink',
-u'xml'	  :u'http://www.w3.org/XML/1998/namespace'
-}
 
-uuconv = {'in':90.0, 'pt':1.25, 'px':1, 'mm':3.5433070866, 'cm':35.433070866, 'm':3543.3070866,
+
+UUCONV = {'in':90.0, 'pt':1.25, 'px':1, 'mm':3.5433070866, 'cm':35.433070866, 'm':3543.3070866,
 		  'km':3543307.0866, 'pc':15.0, 'yd':3240 , 'ft':1080}
 def unittouu(string):
 	'''Returns userunits given a string representation of units in another system'''
-	unit = re.compile('(%s)$' % '|'.join(uuconv.keys()))
+	unit = re.compile('(%s)$' % '|'.join(UUCONV.keys()))
 	param = re.compile(r'(([-+]?[0-9]+(\.[0-9]*)?|[-+]?\.[0-9]+)([eE][-+]?[0-9]+)?)')
 
 	p = param.match(string)
@@ -47,31 +33,23 @@ def unittouu(string):
 		retval = 0.0
 	if u:
 		try:
-			return retval * uuconv[u.string[u.start():u.end()]]
+			return retval * UUCONV[u.string[u.start():u.end()]]
 		except KeyError:
 			pass
 	return retval
 
 def uutounit(val, unit):
-	return val/uuconv[unit]
+	return val/UUCONV[unit]
 
-def addNS(tag, ns=None):
-	val = tag
-	if ns!=None and len(ns)>0 and NSS.has_key(ns) and len(tag)>0 and tag[0]!='{':
-		val = "{%s}%s" % (NSS[ns], tag)
-	return val
+
 
 class Converter():
-
 
 	defaults = {
 		"directory": None,
 		"file": None,
 		"svgDPI": 90,
 		"noheaders": "false",
-#		"engraving_laser_speed": 300,
-#		"laser_intensity": 500,
-#		"pierce_time": 0,
 
 		"engrave": False,
 		"intensity_white": 0,
@@ -115,28 +93,12 @@ class Converter():
 	def convert(self, on_progress=None, on_progress_args=None, on_progress_kwargs=None):
 		self.parse()
 
-		#self.effect(on_progress, on_progress_args, on_progress_kwargs)
 		options = self.options
 		options['doc_root'] = self.document.getroot()
 
 		# Get all Gcodetools data from the scene.
-		self.orientation()
+		self.calculate_conversion_matrix()
 		self.collect_paths()
-		self._logger.info("### after first get_info:")
-		self._logger.info("### paths %s " % self.paths)
-		self._logger.info("### images %s " % self.images)
-		self._logger.info("### orientation_points %s " % self.orientation_points)
-		self._logger.info("### layers %s " % self.layers)
-		self._logger.info("### transform_m %s " % self.transform_matrix)
-		self._logger.info("### transform_m_rev %s " % self.transform_matrix_reverse)
-#		self.collect_paths()
-#		self._logger.info("### after 2nd get_info:")
-#		self._logger.info("### paths %s " % self.paths)
-#		self._logger.info("### images %s " % self.images)
-#		self._logger.info("### orientation_points %s " % self.orientation_points)
-#		self._logger.info("### layers %s " % self.layers)
-#		self._logger.info("### transform_m %s " % self.transform_matrix)
-#		self._logger.info("### transform_m_rev %s " % self.transform_matrix_reverse)
 		
 		for p in self.paths :
 			#print "path", etree.tostring(p)
@@ -156,87 +118,6 @@ class Converter():
 				on_progress_kwargs["_progress"] = progress
 				on_progress(*on_progress_args, **on_progress_kwargs)
 		
-#		def get_boundaries(points):
-#			minx,miny,maxx,maxy=None,None,None,None
-#			out=[[],[],[],[]]
-#			for p in points:
-#				if minx==p[0]:
-#					out[0]+=[p]
-#				if minx==None or p[0]<minx: 
-#					minx=p[0]
-#					out[0]=[p]
-#
-#				if miny==p[1]:
-#					out[1]+=[p]
-#				if miny==None or p[1]<miny: 
-#					miny=p[1]
-#					out[1]=[p]
-#
-#				if maxx==p[0]:
-#					out[2]+=[p]
-#				if maxx==None or p[0]>maxx: 
-#					maxx=p[0]
-#					out[2]=[p]
-#
-#				if maxy==p[1]:
-#					out[3]+=[p]
-#				if maxy==None or p[1]>maxy: 
-#					maxy=p[1]
-#					out[3]=[p]
-#			return out
-
-
-#		def remove_duplicates(points):
-#			i=0		
-#			out=[]
-#			for p in points:
-#				for j in xrange(i,len(points)):
-#					if p==points[j]: points[j]=[None,None]	
-#				if p!=[None,None]: out+=[p]
-#			i+=1
-#			return(out)
-	
-	
-#		def get_way_len(points):
-#			l=0
-#			for i in xrange(1,len(points)):
-#				l+=math.sqrt((points[i][0]-points[i-1][0])**2 + (points[i][1]-points[i-1][1])**2)
-#			return l
-
-	
-#		def sort_dxfpoints(points):
-#			points=remove_duplicates(points)
-#
-#			ways=[
-#					# l=0, d=1, r=2, u=3
-#			 [3,0], # ul
-#			 [3,2], # ur
-#			 [1,0], # dl
-#			 [1,2], # dr
-#			 [0,3], # lu
-#			 [0,1], # ld
-#			 [2,3], # ru
-#			 [2,1], # rd
-#			]
-#
-#			minimal_way=[]
-#			minimal_len=None
-#			minimal_way_type=None
-#			for w in ways:
-#				tpoints=points[:]
-#				cw=[]
-#				for j in xrange(0,len(points)):
-#					p=get_boundaries(get_boundaries(tpoints)[w[0]])[w[1]]
-#					tpoints.remove(p[0])
-#					cw+=p
-#				curlen = get_way_len(cw)
-#				if minimal_len==None or curlen < minimal_len: 
-#					minimal_len=curlen
-#					minimal_way=cw
-#					minimal_way_type=w
-#			
-#			return minimal_way
-
 
 		self._check_dir() 
 		gcode = ""
@@ -350,7 +231,7 @@ class Converter():
 					pierce_time = self.options['pierce_time'], material = "default")
 					data = imgNode.get('href')
 					if(data is None):
-						data = imgNode.get(addNS('href', 'xlink'))
+						data = imgNode.get(_add_ns('href', 'xlink'))
 						
 					gcode = ''
 					if(data.startswith("data:")):
@@ -361,7 +242,6 @@ class Converter():
 						self._logger.info("Error: unable to parse img data", data)
 
 					gcode_images += gcode
-
 					processedItemCount += 1
 					report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
 
@@ -378,178 +258,36 @@ class Converter():
 			items = g.getchildren()
 			items.reverse()
 			if(len(items) > 0):
-				self._logger.info("recursive search: %i - %s"  %(len(items), g.get("id")))
+				self._logger.debug("recursive search: %i - %s"  %(len(items), g.get("id")))
+				
 			for i in items:
-				if i.tag == addNS("g",'svg') and i.get(addNS('groupmode','inkscape')) == 'layer':
+				# TODO layer support
+				if i.tag == _add_ns("g",'svg') and i.get(_add_ns('groupmode','inkscape')) == 'layer':
 					styles = simplestyle.parseStyle(i.get("style", ''))
 					if "display" not in styles or styles["display"] != 'none':
 						self.layers += [i]
 						recursive_search(i,i)
 					else:
 						self._logger.info("Skipping hidden layer: '%s'" % i.get('id', "?") 	)
-				elif i.get('gcodetools') == "Gcodetools orientation group" :
-					#points = self.get_orientation_points(i)
-					# hack!
-					g = i
-					items = g.getchildren()
-					items.reverse()
-					p2, p3 = [], []
-					p = None
-					for i in items:
-						if i.tag == addNS("g",'svg') and i.get("gcodetools") == "Gcodetools orientation point (2 points)":
-							p2 += [i]
-#						if i.tag == addNS("g",'svg') and i.get("gcodetools") == "Gcodetools orientation point (3 points)":
-#							p3 += [i]
-					if len(p2)==2 : p=p2 
-#					elif len(p3)==3 : p=p3 
-					if p==None: points = None
-					points = []
-					for i in p:	
-						point = [[],[]]	
-						for  node in i :
-							if node.get('gcodetools') == "Gcodetools orientation point arrow":
-								point[0] = self._apply_transforms(node,cubicsuperpath.parsePath(node.get("d")))[0][0][1]
-							if node.get('gcodetools') == "Gcodetools orientation point text":
-								r = re.match(r'(?i)\s*\(\s*(-?\s*\d*(?:,|\.)*\d*)\s*;\s*(-?\s*\d*(?:,|\.)*\d*)\s*;\s*(-?\s*\d*(?:,|\.)*\d*)\s*\)\s*',node.text)
-								point[1] = [float(r.group(1)),float(r.group(2)),float(r.group(3))]
-						if point[0]!=[] and point[1]!=[]:	points += [point]
-					if len(points)==len(p2)==2: 
-						pass
-					else: 
-						points = None
 
-					
-					
-					if points != None :
-						self.orientation_points[layer] = self.orientation_points[layer]+[points[:]] if layer in self.orientation_points else [points[:]]
-						self._logger.info("Found orientation points in '%s' layer: %s" % (layer.get(addNS('label','inkscape')), points))
-					else :
-						self._logger.error("Warning! Found bad orientation points in '%s' layer. Resulting Gcode could be corrupt!") % layer.get(addNS('label','inkscape'))
-				elif "gcodetools"  not in i.keys() :
-				#else:
+				else:
 					# path
-					if i.tag == addNS('path','svg'):					
+					if i.tag == _add_ns('path','svg'):					
 						self._handle_node(i, layer)
 
-					# rect
-					elif i.tag == addNS( 'rect', 'svg' ) or i.tag == 'rect':
-
-						# Manually transform
-						#
-						#    <rect x="X" y="Y" width="W" height="H"/>
-						# into
-						#    <path d="MX,Y lW,0 l0,H l-W,0 z"/>
-						#
-						# I.e., explicitly draw three sides of the rectangle and the
-						# fourth side implicitly
-
-						# Create a path with the outline of the rectangle
-						x = float( i.get( 'x','0' ) )
-						y = float( i.get( 'y','0' ) )
-						if ( not x ) or ( not y ):
-							pass
-						w = float( i.get( 'width', '0' ) )
-						h = float( i.get( 'height', '0' ) )
-						a = []
-						a.append( ['M ', [x, y]] )
-						a.append( [' l ', [w, 0]] )
-						a.append( [' l ', [0, h]] )
-						a.append( [' l ', [-w, 0]] )
-						a.append( [' Z', []] )
-						d = simplepath.formatPath( a )
-						i.set("d", d)
-						
-						self._handle_node(i, layer)
-						
-					# line
-					elif i.tag == addNS( 'line', 'svg' ) or i.tag == 'line':
-
-						# Convert
-						#
-						#   <line x1="X1" y1="Y1" x2="X2" y2="Y2/>
-						# to
-						#   <path d="MX1,Y1 LX2,Y2"/>
-
-						x1 = float( i.get( 'x1' ) )
-						y1 = float( i.get( 'y1' ) )
-						x2 = float( i.get( 'x2' ) )
-						y2 = float( i.get( 'y2' ) )
-						if ( not x1 ) or ( not y1 ) or ( not x2 ) or ( not y2 ):
-							pass
-						a = []
-						a.append( ['M ', [x1, y1]] )
-						a.append( [' L ', [x2, y2]] )
-						d = simplepath.formatPath( a )
-						i.set("d",d)
-						
-						self._handle_node(i, layer)
-
-					# polygon
-					elif i.tag == addNS( 'polygon', 'svg' ) or i.tag == 'polygon' \
-					or i.tag == addNS( 'polyline', 'svg' ) or i.tag == 'polyline':
-						# Convert
-						#
-						#  <polygon points="x1,y1 x2,y2 x3,y3 [...]"/>
-						#  <polyline points="x1,y1 x2,y2 x3,y3 [...]"/>
-						# to
-						#   <path d="Mx1,y1 Lx2,y2 Lx3,y3 [...] Z"/>
-						#
-						# Note: we ignore polygons with no points
-
-						pl = i.get( 'points', '' ).strip()
-						if pl == '':
-							pass
-
-						pa = pl.split()
-						d = "".join( ["M " + pa[j] if j == 0 else " L " + pa[j] for j in range( 0, len( pa ) )] )
-						d += " Z"
-						i.set("d", d)
-
-						self._handle_node(i, layer)
+					# rect, line, polygon, polyline, circle, ellipse
+					elif i.tag == _add_ns( 'rect', 'svg' ) or i.tag == 'rect' \
+					or i.tag == _add_ns( 'line', 'svg' ) or i.tag == 'line' \
+					or i.tag == _add_ns( 'polygon', 'svg' ) or i.tag == 'polygon' \
+					or i.tag == _add_ns( 'polyline', 'svg' ) or i.tag == 'polyline' \
+					or i.tag == _add_ns( 'ellipse', 'svg' ) or i.tag == 'ellipse' \
+					or i.tag == _add_ns( 'circle', 'svg' ) or	i.tag == 'circle':
 					
-					# circle / ellipse
-					elif i.tag == addNS( 'ellipse', 'svg' ) or \
-						i.tag == 'ellipse' or \
-						i.tag == addNS( 'circle', 'svg' ) or \
-						i.tag == 'circle':
-
-							# Convert circles and ellipses to a path with two 180 degree arcs.
-							# In general (an ellipse), we convert
-							#
-							#   <ellipse rx="RX" ry="RY" cx="X" cy="Y"/>
-							# to
-							#   <path d="MX1,CY A RX,RY 0 1 0 X2,CY A RX,RY 0 1 0 X1,CY"/>
-							#
-							# where
-							#   X1 = CX - RX
-							#   X2 = CX + RX
-							#
-							# Note: ellipses or circles with a radius attribute of value 0 are ignored
-
-							if i.tag == addNS( 'ellipse', 'svg' ) or i.tag == 'ellipse':
-								rx = float( i.get( 'rx', '0' ) )
-								ry = float( i.get( 'ry', '0' ) )
-							else:
-								rx = float( i.get( 'r', '0' ) )
-								ry = rx
-							if rx == 0 or ry == 0:
-								pass
-
-							cx = float( i.get( 'cx', '0' ) )
-							cy = float( i.get( 'cy', '0' ) )
-							x1 = cx - rx
-							x2 = cx + rx
-							d = 'M %f,%f ' % ( x1, cy ) + \
-								'A %f,%f ' % ( rx, ry ) + \
-								'0 1 0 %f,%f ' % ( x2, cy ) + \
-								'A %f,%f ' % ( rx, ry ) + \
-								'0 1 0 %f,%f' % ( x1, cy )
-							i.set("d", d)
-							
-							self._handle_node(i, layer)
+						i.set("d", get_path_d(i))
+						self._handle_node(i, layer)
 
 					# image
-					elif i.tag == addNS('image','svg'):
+					elif i.tag == _add_ns('image','svg'):
 						x = i.get('x')
 						y = i.get('y')						
 						if x == None:
@@ -559,14 +297,12 @@ class Converter():
 					
 						self._logger.info("added image " + i.get("width") + 'x' + i.get("height") + "@" + x+","+y)
 						self._handle_image(i, layer)
-						
 					
 					# group
-					elif i.tag == addNS("g",'svg'):
+					elif i.tag == _add_ns("g",'svg'):
 						recursive_search(i,layer)
 				
 					else :
-						#self._logger.info("ignoring not supported tag %s" % i.tag)
 						self._logger.debug("ignoring not supported tag: %s \n %s \n\n" % (i.tag, etree.tostring(i)))
 					
 		recursive_search(self.document.getroot(), self.document.getroot())
@@ -574,21 +310,13 @@ class Converter():
 		self._logger.info("self.paths: %i" % len(self.paths))
 
 
-
-
 	def parse(self,file=None):
-		self._logger.info("### parsing %s" % self.svg_file)
 		try:
 			stream = open(self.svg_file,'r')
 		except:
 			self._logger.error("unable to read %s" % self.svg_file)
-		self._logger.info("### opened %s" % self.svg_file)
 		p = etree.XMLParser(huge_tree=True)
-		self._logger.info("### lxml instance %s" % self.svg_file)
-		#p.useGlobalPythonLog()
-		self._logger.info("### lxml logging %s" % self.svg_file)
 		self.document = etree.parse(stream, parser=p)
-		#self.original_document = copy.deepcopy(self.document)
 		stream.close()
 		self._logger.info("parsed %s" % self.svg_file)
 		
@@ -756,8 +484,6 @@ class Converter():
 					sp1 = [  [subpath[i-1][j][0], subpath[i-1][j][1]] for j in range(3)]
 					sp2 = [  [subpath[i  ][j][0], subpath[i  ][j][1]] for j in range(3)]
 					c += biarc(sp1,sp2,0,0) if w==None else biarc(sp1,sp2,-f(w[k][i-1]),-f(w[k][i]))
-#					l1 = biarc(sp1,sp2,0,0) if w==None else biarc(sp1,sp2,-f(w[k][i-1]),-f(w[k][i]))
-#					self._logger.debug((-f(w[k][i-1]),-f(w[k][i]), [i1[5] for i1 in l1]) )
 				c += [ [ [subpath[-1][1][0],subpath[-1][1][1]]  ,'end',0,0] ]
 
 			#self._logger.debug("Curve: " + str(c))
@@ -773,34 +499,28 @@ class Converter():
 		return csp
 	
 	def _transform(self, source_point, layer, reverse=False):
-		self._logger.info('_transform %s,%s,%s ' % (source_point, layer, reverse))
+		self._logger.debug('_transform %s,%s,%s ' % (source_point, layer, reverse))
 		if layer == None :
 			layer = self.document.getroot()
 		if layer not in self.transform_matrix:
 			for i in range(self.layers.index(layer),-1,-1):
 				if self.layers[i] in self.orientation_points : 
-					break
+					break # i will remain after the loop
 
-			self._logger.debug(str(self.layers))
-			self._logger.debug(str("I: " + str(i)))
-			self._logger.debug("Transform: " + str(self.layers[i]))
 			if self.layers[i] not in self.orientation_points :
-				self._logger.error("Orientation points for '%s' layer have not been found! Please add orientation points using Orientation tab!" % layer)
+				self._logger.error("No orientation points for '%s' layer!" % layer)
 			elif self.layers[i] in self.transform_matrix :
 				self.transform_matrix[layer] = self.transform_matrix[self.layers[i]]
 			else:
 				orientation_layer = self.layers[i]
-				if len(self.orientation_points[orientation_layer])>1 : 
-					self._logger.error("There are more than one orientation point groups in '%s' layer") % orientation_layer.get(addNS('label','inkscape'))
 				points = self.orientation_points[orientation_layer][0]
 				if len(points)==2:
 					points += [ [ [(points[1][0][1]-points[0][0][1])+points[0][0][0], -(points[1][0][0]-points[0][0][0])+points[0][0][1]], [-(points[1][1][1]-points[0][1][1])+points[0][1][0], points[1][1][0]-points[0][1][0]+points[0][1][1]] ] ]
 				if len(points)==3:
-					self._logger.debug("Layer '%s' Orientation points: " % orientation_layer.get(addNS('label','inkscape')))
+					self._logger.debug("Layer '%s' Orientation points: " % orientation_layer.get(_add_ns('label','inkscape')))
 					for point in points:
 						self._logger.debug(point)
-					#	Zcoordinates definition taken from Orientatnion point 1 and 2 
-					#self.Zcoordinates[layer] = [max(points[0][1][2],points[1][1][2]), min(points[0][1][2],points[1][1][2])]
+						
 					matrix = numpy.array([
 								[points[0][0][0], points[0][0][1], 1, 0, 0, 0, 0, 0, 0],
 								[0, 0, 0, points[0][0][0], points[0][0][1], 1, 0, 0, 0],
@@ -827,11 +547,6 @@ class Converter():
 					self._logger.error("Orientation points are wrong! (if there are two orientation points they sould not be the same. If there are three orientation points they should not be in a straight line.)")
 
 			self.transform_matrix_reverse[layer] = numpy.linalg.inv(self.transform_matrix[layer]).tolist()		
-			self._logger.debug("\n Layer '%s' transformation matrixes:" % layer.get(addNS('label','inkscape')) )
-			self._logger.debug(self.transform_matrix)
-			self._logger.debug(self.transform_matrix_reverse)
-			self._logger.debug("scalematrix %s" % self.transform_matrix)
-			self._logger.debug("revmatrix %s" % self.transform_matrix_reverse)
 
 			
 		x,y = source_point[0], source_point[1]
@@ -840,7 +555,6 @@ class Converter():
 		else :
 			t = self.transform_matrix_reverse[layer]
 		return [t[0][0]*x+t[0][1]*y+t[0][2], t[1][0]*x+t[1][1]*y+t[1][2]]
-		#return [x, y]
 
 ################################################################################
 ###
@@ -871,16 +585,16 @@ class Converter():
 		g = ""
 
 		lg = 'G00'
-		f = "F%s;%s" % (settings['intensity'], color)
+		f = "F%s;%s" % (settings['feedrate'], color)
 		for i in range(1, len(curve)):
 			#	Creating Gcode for curve between s=curve[i-1] and si=curve[i] start at s[0] end at s[4]=si[0]
 			s = curve[i - 1]
 			si = curve[i]
 			feed = f if lg not in ['G01', 'G02', 'G03'] else ''
 			if s[1] == 'move':
-				g += "G0" + c(si[0]) + "\n" + machine_settings.gcode_before_path_color(color) + "\n"
-				if settings['pierce_time'] > 0:
-					pt = int(settings['pierce_time'])
+				g += "G0" + c(si[0]) + "\n" + machine_settings.gcode_before_path_color(color, settings['intensity']) + "\n"
+				pt = int(settings['pierce_time'])
+				if pt > 0:
 					g += "G4P%.3f\n" % (round(pt / 1000.0, 4))
 				lg = 'G00'
 			elif s[1] == 'end':
@@ -894,7 +608,7 @@ class Converter():
 				r = [(s[2][0] - s[0][0]), (s[2][1] - s[0][1])]
 				if lg == "G00": g += "G01" + feed + "\n"
 				if (r[0] ** 2 + r[1] ** 2) > .1:
-					r1, r2 = (P(s[0]) - P(s[2])), (P(si[0]) - P(s[2]))
+					r1, r2 = (Point(s[0]) - Point(s[2])), (Point(si[0]) - Point(s[2]))
 					if abs(r1.mag() - r2.mag()) < 0.001:
 						g += ("G02" if s[3] < 0 else "G03") + c(
 							si[0] + [None, (s[2][0] - s[0][0]), (s[2][1] - s[0][1])]) + "\n"
@@ -910,7 +624,6 @@ class Converter():
 		return g
 
 	def export_gcode(self, gcode) :
-
 		if(self.options['noheaders']):
 			self.header = ""
 			self.footer = "M05\n"
@@ -924,7 +637,7 @@ class Converter():
 		f.close()
 		self._logger.info( "wrote file: " + self.options['directory'] + self.options['file'])
 		
-	def orientation(self, layer=None) :
+	def calculate_conversion_matrix(self, layer=None) :
 		self._logger.info("entering orientations. layer: %s" % layer)
 		if layer == None :
 			layer = self.document.getroot()
@@ -932,7 +645,6 @@ class Converter():
 			self._logger.error("Active layer already has orientation points! Remove them or select another layer!")
 		
 		self._logger.info("entering orientations. layer: %s" % layer)
-		#orientation_group = etree.SubElement(layer, addNS('g','svg'), {"gcodetools":"Gcodetools orientation group"})
 
 		# translate == ['0', '-917.7043']
 		if layer.get("transform") != None :
@@ -942,9 +654,9 @@ class Converter():
 			translate = [0,0]
 
 		# doc height in pixels (38 mm == 134.64566px)
-		h = self._getDocumentHeight()
+		h = self._get_document_height()
 		doc_height = unittouu(h)
-		viewBoxM = self._getDocumentViewBoxMatrix()
+		viewBoxM = self._get_document_viewbox_matrix()
 		viewBoxScale = viewBoxM[1][1] # TODO use both coordinates.
 		
 		self._logger.info("Document height: %s   viewBoxTransform: %s" % (str(doc_height),  viewBoxM))
@@ -961,32 +673,14 @@ class Converter():
 			# si have correct coordinates
 			# if layer have any tranform it will be in translate so lets add that
 			si = [i[0]*orientation_scale, (i[1]*orientation_scale)+float(translate[1])]
-			#self._logger.info("### orientation si=%s" % (si))
-#			### orientation si=[0.0, 0.0]                                
-#			### orientation si=[354.33070866141736, 0.0]
-#			g = etree.SubElement(orientation_group, addNS('g','svg'), {'gcodetools': "Gcodetools orientation point (2 points)"})
-#			etree.SubElement(	g, addNS('path','svg'), 
-#				{
-#					'style':	"stroke:none;fill:#000000;",	 
-#					'd':'m %s,%s 2.9375,-6.343750000001 0.8125,1.90625 6.843748640396,-6.84374864039 0,0 0.6875,0.6875 -6.84375,6.84375 1.90625,0.812500000001 z z' % (si[0], -si[1]+doc_height),
-#					'gcodetools': "Gcodetools orientation point arrow"
-#				})
-#			t = etree.SubElement(	g, addNS('text','svg'), 
-#				{
-#					'style':	"font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#000000;fill-opacity:1;stroke:none;",
-#					addNS("space","xml"):"preserve",
-#					'x':	str(si[0]+10),
-#					'y':	str(-si[1]-10+doc_height),
-#					'gcodetools': "Gcodetools orientation point text"
-#				})
-#			t.text = "(%s; %s; %s)" % (i[0],i[1],i[2])
-#			
-#			
-			#TODO
+			
+			#TODO avoid conversion to cubicsuperpath, calculate p0 and p1 directly
 			#point[0] = self._apply_transforms(node,cubicsuperpath.parsePath(node.get("d")))[0][0][1]
 			d = 'm %s,%s 2.9375,-6.343750000001 0.8125,1.90625 6.843748640396,-6.84374864039 0,0 0.6875,0.6875 -6.84375,6.84375 1.90625,0.812500000001 z z' % (si[0], -si[1]+doc_height)
 			csp = cubicsuperpath.parsePath(d)
 			#self._logger.info('### CSP %s' % csp)
+			### CSP [[[[0.0, 1413.42519685], [0.0, 1413.42519685], [0.0, 1413.42519685]], [[2.9375, 1407.081446849999], [2.9375, 1407.081446849999], [2.9375, 1407.081446849999]], [[3.75, 1408.987696849999], [3.75, 1408.987696849999], [3.75, 1408.987696849999]], [[10.593748640396, 1402.143948209609], [10.593748640396, 1402.143948209609], [10.593748640396, 1402.143948209609]], [[10.593748640396, 1402.143948209609], [10.593748640396, 1402.143948209609], [10.593748640396, 1402.143948209609]], [[11.281248640396, 1402.831448209609], [11.281248640396, 1402.831448209609], [11.281248640396, 1402.831448209609]], [[4.437498640396001, 1409.675198209609], [4.437498640396001, 1409.675198209609], [4.437498640396001, 1409.675198209609]], [[6.343748640396001, 1410.48769820961], [6.343748640396001, 1410.48769820961], [6.343748640396001, 1410.48769820961]], [[0.0, 1413.42519685], [0.0, 1413.42519685], [0.0, 1413.42519685]], [[0.0, 1413.42519685], [0.0, 1413.42519685], [0.0, 1413.42519685]]]]   
+			
 			p0 = csp[0][0][1]
 			p1 = [i[0],i[1],i[2]]
 			point = [p0,p1]
@@ -994,13 +688,30 @@ class Converter():
 			
 		if opoints != None :
 			self.orientation_points[layer] = self.orientation_points[layer]+[opoints[:]] if layer in self.orientation_points else [opoints[:]]
-			self._logger.info("Generated orientation points in '%s' layer: %s" % (layer.get(addNS('label','inkscape')), opoints))
+			self._logger.info("Generated orientation points in '%s' layer: %s" % (layer.get(_add_ns('label','inkscape')), opoints))
 		else :
-			self._logger.error("XXX Warning! Found bad orientation points in '%s' layer. Resulting Gcode could be corrupt!") % layer.get(addNS('label','inkscape'))
-				
+			self._logger.error("Warning! Found bad orientation points in '%s' layer. Resulting Gcode could be corrupt!") % layer.get(_add_ns('label','inkscape'))
 
+	def _get_document_width(self):
+		width = self.document.getroot().get('width')
+		if(width == None):
+			vbox = self.document.getroot().get('viewBox')
+			if(vbox != None ):
+				self._logger.info("width property not set in root node, fetching from viewBox attribute")
+				parts = vbox.split(' ')
+				if(len(parts) == 4):
+					width = parts[2]
 
-	def _getDocumentHeight(self):
+		if(width == "100%"):
+			width = 744.09 # 210mm @ 90dpi
+			self._logger.info("Overriding width from 100 percents to %s" % width)
+
+		if(width == None):
+			width = 744.09 # 210mm @ 90dpi
+			self._logger.info("width not set. Assuming width is %s" % width)
+		return str(width)
+
+	def _get_document_height(self):
 		height = self.document.getroot().get('height')
 		if(height == None):
 			self._logger.info("height property not set in root node, fetching from viewBox attribute")
@@ -1019,12 +730,12 @@ class Converter():
 			self._logger.info("Height not set. Assuming height is %s" % height)
 		return str(height)
 
-	def _getDocumentViewBoxMatrix(self):
+	def _get_document_viewbox_matrix(self):
 		vbox = self.document.getroot().get('viewBox')
 		if(vbox != None ):
 			self._logger.info("Found viewbox attribute", vbox)
-			widthPx = unittouu(self.getDocumentWidth())
-			heightPx = unittouu(self.getDocumentHeight())
+			widthPx = unittouu(self._get_document_width())
+			heightPx = unittouu(self._get_document_height())
 			parts = vbox.split(' ')
 			if(len(parts) == 4):
 				offsetVBoxX = float(parts[0])

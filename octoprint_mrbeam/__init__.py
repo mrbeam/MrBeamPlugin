@@ -443,7 +443,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 					printer.select_file(filenameToSelect, sd, True)
 
 			try:
-				self._log.debug('### BEFORE SLICE %s', self._MULTICOLOR_PARAMS_PATH)
 				self._file_manager.slice(slicer, target, filename, target, gcode_name,
 										 profile=None,#profile,
 										 printer_profile_id=None, #printerProfile,

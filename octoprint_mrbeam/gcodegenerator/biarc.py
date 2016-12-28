@@ -147,3 +147,57 @@ def biarc_curve_clip_at_l(curve, l, clip_type = "strict") :
 			reverse = not reverse
 		i = i%len(subcurve)
 	return res	
+
+
+###	Distance calculattion from point to arc
+def point_to_arc_distance(p, arc):
+	P0,P2,c,a = arc
+	dist = None
+	p = Point(p)
+	r = (P0-c).mag()
+	if r>0 :
+		i = c + (p-c).unit()*r
+		alpha = ((i-c).angle() - (P0-c).angle())
+		if a*alpha<0: 
+			if alpha>0:	alpha = alpha-math.pi2
+			else: alpha = math.pi2+alpha
+		if between(alpha,0,a) or min(abs(alpha),abs(alpha-a))<straight_tolerance : 
+			return (p-i).mag(), [i.x, i.y]
+		else : 
+			d1, d2 = (p-P0).mag(), (p-P2).mag()
+			if d1<d2 : 
+				return (d1, [P0.x,P0.y])
+			else :
+				return (d2, [P2.x,P2.y])
+
+
+def csp_to_arc_distance(sp1,sp2, arc1, arc2, tolerance = 0.01 ): # arc = [start,end,center,alpha]
+	n, i = 10, 0
+	d, d1, dl = (0,(0,0)), (0,(0,0)), 0
+	while i<1 or (abs(d1[0]-dl[0])>tolerance and i<4):
+		i += 1
+		dl = d1*1	
+		for j in range(n+1):
+			t = float(j)/n
+			p = csp_at_t(sp1,sp2,t) 
+			d = min(point_to_arc_distance(p,arc1), point_to_arc_distance(p,arc2))
+			d1 = max(d1,d)
+		n=n*2
+	return d1[0]
+
+def csp_at_t(sp1, sp2, t):
+	ax, bx, cx, dx = sp1[1][0], sp1[2][0], sp2[0][0], sp2[1][0]
+	ay, by, cy, dy = sp1[1][1], sp1[2][1], sp2[0][1], sp2[1][1]
+
+	x1, y1 = ax + (bx-ax) * t, ay + (by-ay) * t	
+	x2, y2 = bx + (cx-bx) * t, by + (cy-by) * t	
+	x3, y3 = cx + (dx-cx) * t, cy + (dy-cy) * t	
+	
+	x4, y4 = x1 + (x2-x1) * t, y1 + (y2-y1) * t 
+	x5, y5 = x2 + (x3-x2) * t, y2 + (y3-y2) * t 
+	
+	x, y = x4 + (x5-x4) * t, y4 + (y5-y4) * t 
+	return [x, y]
+
+def between(c,x,y):
+	return (x-straight_tolerance<=c<=y+straight_tolerance) or (y-straight_tolerance<=c<=x+straight_tolerance)

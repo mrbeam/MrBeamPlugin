@@ -13,7 +13,7 @@ class Point:
 	def __sub__(self, other): return Point(self.x - other.x, self.y - other.y)
 	def __neg__(self): return Point(-self.x, -self.y)
 	def __mul__(self, other):
-		if isinstance(other, P):
+		if isinstance(other, Point):
 			return self.x * other.x + self.y * other.y
 		return Point(self.x * other, self.y * other)
 	__rmul__ = __mul__

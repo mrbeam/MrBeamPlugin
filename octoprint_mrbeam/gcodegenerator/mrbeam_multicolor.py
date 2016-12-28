@@ -2267,10 +2267,6 @@ class Laserengraver(inkex.Effect):
 #		self._log.info('INIT :)')
 #		print ('++++++++++++++++#############++++++++++++++++')
 			
-
-	def set_logger(self, lh):
-		#self._log = lh
-		pass
 		
 	def export_gcode(self,gcode) :
 
@@ -2724,7 +2720,6 @@ class Laserengraver(inkex.Effect):
 		else :
 			t = self.transform_matrix_reverse[layer]
 		return [t[0][0]*x+t[0][1]*y+t[0][2], t[1][0]*x+t[1][1]*y+t[1][2]]
-
 
 	def transform_csp(self, csp_, layer, reverse = False):
 		csp = [  [ [csp_[i][j][0][:],csp_[i][j][1][:],csp_[i][j][2][:]]  for j in range(len(csp_[i])) ]   for i in range(len(csp_)) ]
