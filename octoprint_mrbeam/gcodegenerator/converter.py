@@ -12,6 +12,7 @@ import simplestyle
 import simpletransform
 import cubicsuperpath
 
+from img2gcode import ImageProcessor
 from svg_util import get_path_d, _add_ns
 
 from lxml import etree
@@ -60,12 +61,13 @@ class Converter():
 		"sharpening": 1.0,
 		"dithering": False,
 		"beam_diameter": 0.2,
+		"pierce_time": 0,
 
 		"multicolor": []
 	}
 
 	def __init__(self, params, model_path):
-		self._logger = logging.getLogger("octoprint.plugins.mrbeam.converter")
+		self._log = logging.getLogger("octoprint.plugins.mrbeam.converter")
 		
 		# debugging
 		self.transform_matrix = {}
@@ -77,10 +79,11 @@ class Converter():
 		self.setoptions(params)
 		self.svg_file = model_path
 		self.document=None
-		self._logger.info('### Converter Initialized: %s' % self.options)
+		self._log.info('### Converter Initialized: %s' % self.options)
 		
 	def setoptions(self, opts):
 		# set default values if option is missing
+		self._log.info("opts: %s" % opts)
 		for key in self.options.keys():
 			if key in opts: 
 				self.options[key] = opts[key]
@@ -88,7 +91,7 @@ class Converter():
 					for paramSet in opts['multicolor']:
 						self.colorParams[paramSet['color']] = paramSet
 			else:
-				self._logger.info("Using default %s = %s" %(key, str(self.options[key])))
+				self._log.info("Using default %s = %s" %(key, str(self.options[key])))
 
 	def convert(self, on_progress=None, on_progress_args=None, on_progress_kwargs=None):
 		self.parse()
@@ -125,7 +128,7 @@ class Converter():
 		gcode_fillings = ""
 		gcode_images = ""
 
-		self._logger.info("processing %i layers" % len(self.layers))
+		self._log.info("processing %i layers" % len(self.layers))
 		# sum up
 		itemAmount = 1
 		for layer in self.layers :
@@ -140,7 +143,7 @@ class Converter():
 			if layer in self.paths :
 				pD = dict()
 				for path in self.paths[layer] :
-					self._logger.info("path %s, %s, stroke: %s,  'fill: ', %s" % ( layer.get('id'), path.get('id'), path.get('stroke'), path.get('class') ))
+					self._log.info("path %s, %s, stroke: %s,  'fill: ', %s" % ( layer.get('id'), path.get('id'), path.get('stroke'), path.get('class') ))
 
 					if path.get('stroke') is not None: #todo catch None stroke/fill earlier
 						stroke = path.get('stroke')
@@ -153,7 +156,7 @@ class Converter():
 						continue
 
 					if "d" not in path.keys() :
-						self._logger.error("Warning: One or more paths don't have 'd' parameter")
+						self._log.error("Warning: One or more paths don't have 'd' parameter")
 						continue
 					if stroke not in pD.keys() and stroke != 'default':
 						pD[stroke] = []
@@ -187,7 +190,7 @@ class Converter():
 						gcode_outlines += curveGCode
 
 
-			self._logger.info( 'Infills Setting: %s' % self.options['engrave'])
+			self._log.info( 'Infills Setting: %s' % self.options['engrave'])
 			if layer in self.images and self.options['engrave']:
 				for imgNode in self.images[layer] :
 					file_id = imgNode.get('data-serveurl', '')
@@ -215,8 +218,8 @@ class Converter():
 					
 					### original style with orientation points :( ... TODO
 					# mm conversion
-					upperLeft = self.transform(_upperLeft,layer, False)
-					lowerRight = self.transform(_lowerRight,layer, False)
+					upperLeft = self._transform(_upperLeft,layer, False)
+					lowerRight = self._transform(_lowerRight,layer, False)
 					
 					w = abs(lowerRight[0] - upperLeft[0])
 					h = abs(lowerRight[1] - upperLeft[1])
@@ -228,7 +231,8 @@ class Converter():
 					intensity_black = self.options['intensity_black'], intensity_white = self.options['intensity_white'], 
 					speed_black = self.options['speed_black'], speed_white = self.options['speed_white'], 
 					dithering = self.options['dithering'],
-					pierce_time = self.options['pierce_time'], material = "default")
+					pierce_time = self.options['pierce_time'],
+					material = "default")
 					data = imgNode.get('href')
 					if(data is None):
 						data = imgNode.get(_add_ns('href', 'xlink'))
@@ -239,8 +243,8 @@ class Converter():
 					elif(data.startswith("http://")):
 						gcode = ip.imgurl_to_gcode(data, w, h, upperLeft[0], lowerRight[1], file_id)
 					else:
-						self._logger.info("Error: unable to parse img data", data)
-
+						self._log.info("Error: unable to parse img data", data)
+					
 					gcode_images += gcode
 					processedItemCount += 1
 					report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
@@ -249,7 +253,7 @@ class Converter():
 
 
 	def collect_paths(self):
-		self._logger.info( "collect_paths")
+		self._log.info( "collect_paths")
 		self.paths = {}
 		self.images = {}
 		self.layers = [self.document.getroot()]
@@ -258,7 +262,7 @@ class Converter():
 			items = g.getchildren()
 			items.reverse()
 			if(len(items) > 0):
-				self._logger.debug("recursive search: %i - %s"  %(len(items), g.get("id")))
+				self._log.debug("recursive search: %i - %s"  %(len(items), g.get("id")))
 				
 			for i in items:
 				# TODO layer support
@@ -268,7 +272,7 @@ class Converter():
 						self.layers += [i]
 						recursive_search(i,i)
 					else:
-						self._logger.info("Skipping hidden layer: '%s'" % i.get('id', "?") 	)
+						self._log.info("Skipping hidden layer: '%s'" % i.get('id', "?") 	)
 
 				else:
 					# path
@@ -295,7 +299,7 @@ class Converter():
 						if y == None:
 							y = "0"
 					
-						self._logger.info("added image " + i.get("width") + 'x' + i.get("height") + "@" + x+","+y)
+						self._log.info("added image " + i.get("width") + 'x' + i.get("height") + "@" + x+","+y)
 						self._handle_image(i, layer)
 					
 					# group
@@ -303,22 +307,22 @@ class Converter():
 						recursive_search(i,layer)
 				
 					else :
-						self._logger.debug("ignoring not supported tag: %s \n %s \n\n" % (i.tag, etree.tostring(i)))
+						self._log.debug("ignoring not supported tag: %s \n %s \n\n" % (i.tag, etree.tostring(i)))
 					
 		recursive_search(self.document.getroot(), self.document.getroot())
-		self._logger.info("self.layers: %i" % len(self.layers))
-		self._logger.info("self.paths: %i" % len(self.paths))
+		self._log.info("self.layers: %i" % len(self.layers))
+		self._log.info("self.paths: %i" % len(self.paths))
 
 
 	def parse(self,file=None):
 		try:
 			stream = open(self.svg_file,'r')
 		except:
-			self._logger.error("unable to read %s" % self.svg_file)
+			self._log.error("unable to read %s" % self.svg_file)
 		p = etree.XMLParser(huge_tree=True)
 		self.document = etree.parse(stream, parser=p)
 		stream.close()
-		self._logger.info("parsed %s" % self.svg_file)
+		self._log.info("parsed %s" % self.svg_file)
 		
 	def _handle_image(self, imgNode, layer):
 		self.images[layer] = self.images[layer] + [imgNode] if layer in self.images else [imgNode]
@@ -423,7 +427,7 @@ class Converter():
 		if(color in self.colorParams.keys()):
 			return True
 		else:
-			self._logger.info("Skipping color: %s " % color)
+			self._log.info("Skipping color: %s " % color)
 			return False
 		
 	def _check_dir(self):
@@ -432,17 +436,17 @@ class Converter():
 				self.options['directory'] += "\\"
 			else :
 				self.options['directory'] += "/"
-		self._logger.info("Checking directory: '%s'"%self.options['directory'])
+		self._log.info("Checking directory: '%s'"%self.options['directory'])
 		if (os.path.isdir(self.options['directory'])):
 			pass
 		else: 
-			self._logger.error("Directory does not exist! Please specify existing directory at Preferences tab!")
+			self._log.error("Directory does not exist! Please specify existing directory at Preferences tab!")
 			return False	
 		
 	def _apply_transforms(self,g,csp):
 		trans = self._get_transforms(g)
 		if trans != []: #todo can trans be [] anyways?
-			self._logger.error("still transforms in the SVG %s" % trans)
+			self._log.error("still transforms in the SVG %s" % trans)
 			simpletransform.applyTransformToPath(trans, csp)
 		return csp
 
@@ -454,7 +458,7 @@ class Converter():
 				t = g.get('transform')
 				t = simpletransform.parseTransform(t)
 				trans = simpletransform.composeTransform(t,trans) if trans != [] else t
-				self._logger.debug("Found transform: " % trans)
+				self._log.debug("Found transform: " % trans)
 			g = g.getparent()
 		return trans
 	
@@ -486,11 +490,11 @@ class Converter():
 					c += biarc(sp1,sp2,0,0) if w==None else biarc(sp1,sp2,-f(w[k][i-1]),-f(w[k][i]))
 				c += [ [ [subpath[-1][1][0],subpath[-1][1][1]]  ,'end',0,0] ]
 
-			#self._logger.debug("Curve: " + str(c))
+			#self._log.debug("Curve: " + str(c))
 			return c
 		
 	def _transform_csp(self, csp_, layer, reverse = False):
-		self._logger.debug("_transform_csp %s , %s, %s" % (csp_, layer, reverse))
+		self._log.debug("_transform_csp %s , %s, %s" % (csp_, layer, reverse))
 		csp = [  [ [csp_[i][j][0][:],csp_[i][j][1][:],csp_[i][j][2][:]]  for j in range(len(csp_[i])) ]   for i in range(len(csp_)) ]
 		for i in xrange(len(csp)):
 			for j in xrange(len(csp[i])): 
@@ -499,7 +503,7 @@ class Converter():
 		return csp
 	
 	def _transform(self, source_point, layer, reverse=False):
-		self._logger.debug('_transform %s,%s,%s ' % (source_point, layer, reverse))
+		self._log.debug('_transform %s,%s,%s ' % (source_point, layer, reverse))
 		if layer == None :
 			layer = self.document.getroot()
 		if layer not in self.transform_matrix:
@@ -508,7 +512,7 @@ class Converter():
 					break # i will remain after the loop
 
 			if self.layers[i] not in self.orientation_points :
-				self._logger.error("No orientation points for '%s' layer!" % layer)
+				self._log.error("No orientation points for '%s' layer!" % layer)
 			elif self.layers[i] in self.transform_matrix :
 				self.transform_matrix[layer] = self.transform_matrix[self.layers[i]]
 			else:
@@ -517,9 +521,9 @@ class Converter():
 				if len(points)==2:
 					points += [ [ [(points[1][0][1]-points[0][0][1])+points[0][0][0], -(points[1][0][0]-points[0][0][0])+points[0][0][1]], [-(points[1][1][1]-points[0][1][1])+points[0][1][0], points[1][1][0]-points[0][1][0]+points[0][1][1]] ] ]
 				if len(points)==3:
-					self._logger.debug("Layer '%s' Orientation points: " % orientation_layer.get(_add_ns('label','inkscape')))
+					self._log.debug("Layer '%s' Orientation points: " % orientation_layer.get(_add_ns('label','inkscape')))
 					for point in points:
-						self._logger.debug(point)
+						self._log.debug(point)
 						
 					matrix = numpy.array([
 								[points[0][0][0], points[0][0][1], 1, 0, 0, 0, 0, 0, 0],
@@ -542,9 +546,9 @@ class Converter():
 						self.transform_matrix[layer] = [[m[j*3+i][0] for i in range(3)] for j in range(3)]
 
 					else :
-						self._logger.error("Orientation points are wrong! (if there are two orientation points they sould not be the same. If there are three orientation points they should not be in a straight line.)")
+						self._log.error("Orientation points are wrong! (if there are two orientation points they sould not be the same. If there are three orientation points they should not be in a straight line.)")
 				else :
-					self._logger.error("Orientation points are wrong! (if there are two orientation points they sould not be the same. If there are three orientation points they should not be in a straight line.)")
+					self._log.error("Orientation points are wrong! (if there are two orientation points they sould not be the same. If there are three orientation points they should not be in a straight line.)")
 
 			self.transform_matrix_reverse[layer] = numpy.linalg.inv(self.transform_matrix[layer]).tolist()		
 
@@ -565,7 +569,7 @@ class Converter():
 ###
 ################################################################################
 	def _generate_gcode(self, curve, color='#000000'):
-		self._logger.info( "_generate_gcode()")
+		self._log.info( "_generate_gcode()")
 		settings = self.colorParams.get(color, {'intensity': -1, 'feedrate': -1, 'passes': 0, 'pierce_time': 0})
 
 		def c(c):
@@ -581,7 +585,7 @@ class Converter():
 
 		if len(curve) == 0: return ""
 
-		self._logger.debug("Curve: " + str(curve))
+		self._log.debug("Curve: " + str(curve))
 		g = ""
 
 		lg = 'G00'
@@ -635,20 +639,20 @@ class Converter():
 		f = open(self.options['directory'] + self.options['file'], "w")
 		f.write(self.header + gcode + self.footer)
 		f.close()
-		self._logger.info( "wrote file: " + self.options['directory'] + self.options['file'])
+		self._log.info( "wrote file: " + self.options['directory'] + self.options['file'])
 		
 	def calculate_conversion_matrix(self, layer=None) :
-		self._logger.info("entering orientations. layer: %s" % layer)
+		self._log.info("entering orientations. layer: %s" % layer)
 		if layer == None :
 			layer = self.document.getroot()
 		if layer in self.orientation_points:
-			self._logger.error("Active layer already has orientation points! Remove them or select another layer!")
+			self._log.error("Active layer already has orientation points! Remove them or select another layer!")
 		
-		self._logger.info("entering orientations. layer: %s" % layer)
+		self._log.info("entering orientations. layer: %s" % layer)
 
 		# translate == ['0', '-917.7043']
 		if layer.get("transform") != None :
-			self._logger.error('FOUND TRANSFORM: %s ' % layer.get('transform'))
+			self._log.error('FOUND TRANSFORM: %s ' % layer.get('transform'))
 			translate = layer.get("transform").replace("translate(", "").replace(")", "").split(",")
 		else :
 			translate = [0,0]
@@ -659,13 +663,13 @@ class Converter():
 		viewBoxM = self._get_document_viewbox_matrix()
 		viewBoxScale = viewBoxM[1][1] # TODO use both coordinates.
 		
-		self._logger.info("Document height: %s   viewBoxTransform: %s" % (str(doc_height),  viewBoxM))
+		self._log.info("Document height: %s   viewBoxTransform: %s" % (str(doc_height),  viewBoxM))
 			
 		points = [[100.,0.,0.],[0.,0.,0.],[0.,100.,0.]]
 		orientation_scale = (self.options['svgDPI'] / 25.4) / viewBoxScale # 3.5433070660 @ 90dpi
 		points = points[:2]
 
-		self._logger.info("using orientation scale %s, i=%s" % (orientation_scale, points))
+		self._log.info("using orientation scale %s, i=%s" % (orientation_scale, points))
 		opoints = []
 		for i in points :
 			# X == Correct!
@@ -678,7 +682,7 @@ class Converter():
 			#point[0] = self._apply_transforms(node,cubicsuperpath.parsePath(node.get("d")))[0][0][1]
 			d = 'm %s,%s 2.9375,-6.343750000001 0.8125,1.90625 6.843748640396,-6.84374864039 0,0 0.6875,0.6875 -6.84375,6.84375 1.90625,0.812500000001 z z' % (si[0], -si[1]+doc_height)
 			csp = cubicsuperpath.parsePath(d)
-			#self._logger.info('### CSP %s' % csp)
+			#self._log.info('### CSP %s' % csp)
 			### CSP [[[[0.0, 1413.42519685], [0.0, 1413.42519685], [0.0, 1413.42519685]], [[2.9375, 1407.081446849999], [2.9375, 1407.081446849999], [2.9375, 1407.081446849999]], [[3.75, 1408.987696849999], [3.75, 1408.987696849999], [3.75, 1408.987696849999]], [[10.593748640396, 1402.143948209609], [10.593748640396, 1402.143948209609], [10.593748640396, 1402.143948209609]], [[10.593748640396, 1402.143948209609], [10.593748640396, 1402.143948209609], [10.593748640396, 1402.143948209609]], [[11.281248640396, 1402.831448209609], [11.281248640396, 1402.831448209609], [11.281248640396, 1402.831448209609]], [[4.437498640396001, 1409.675198209609], [4.437498640396001, 1409.675198209609], [4.437498640396001, 1409.675198209609]], [[6.343748640396001, 1410.48769820961], [6.343748640396001, 1410.48769820961], [6.343748640396001, 1410.48769820961]], [[0.0, 1413.42519685], [0.0, 1413.42519685], [0.0, 1413.42519685]], [[0.0, 1413.42519685], [0.0, 1413.42519685], [0.0, 1413.42519685]]]]   
 			
 			p0 = csp[0][0][1]
@@ -688,33 +692,33 @@ class Converter():
 			
 		if opoints != None :
 			self.orientation_points[layer] = self.orientation_points[layer]+[opoints[:]] if layer in self.orientation_points else [opoints[:]]
-			self._logger.info("Generated orientation points in '%s' layer: %s" % (layer.get(_add_ns('label','inkscape')), opoints))
+			self._log.info("Generated orientation points in '%s' layer: %s" % (layer.get(_add_ns('label','inkscape')), opoints))
 		else :
-			self._logger.error("Warning! Found bad orientation points in '%s' layer. Resulting Gcode could be corrupt!") % layer.get(_add_ns('label','inkscape'))
+			self._log.error("Warning! Found bad orientation points in '%s' layer. Resulting Gcode could be corrupt!") % layer.get(_add_ns('label','inkscape'))
 
 	def _get_document_width(self):
 		width = self.document.getroot().get('width')
 		if(width == None):
 			vbox = self.document.getroot().get('viewBox')
 			if(vbox != None ):
-				self._logger.info("width property not set in root node, fetching from viewBox attribute")
+				self._log.info("width property not set in root node, fetching from viewBox attribute")
 				parts = vbox.split(' ')
 				if(len(parts) == 4):
 					width = parts[2]
 
 		if(width == "100%"):
 			width = 744.09 # 210mm @ 90dpi
-			self._logger.info("Overriding width from 100 percents to %s" % width)
+			self._log.info("Overriding width from 100 percents to %s" % width)
 
 		if(width == None):
 			width = 744.09 # 210mm @ 90dpi
-			self._logger.info("width not set. Assuming width is %s" % width)
+			self._log.info("width not set. Assuming width is %s" % width)
 		return str(width)
 
 	def _get_document_height(self):
 		height = self.document.getroot().get('height')
 		if(height == None):
-			self._logger.info("height property not set in root node, fetching from viewBox attribute")
+			self._log.info("height property not set in root node, fetching from viewBox attribute")
 			vbox = self.document.getroot().get('viewBox')
 			if(vbox != None ):
 				parts = vbox.split(' ')
@@ -723,17 +727,17 @@ class Converter():
 
 		if(height == "100%"):
 			height = 1052.3622047 # 297mm @ 90dpi
-			self._logger.info("Overriding height from 100 percents to %s" % height)
+			self._log.info("Overriding height from 100 percents to %s" % height)
 
 		if(height == None):
 			height = 1052.3622047 # 297mm @ 90dpi
-			self._logger.info("Height not set. Assuming height is %s" % height)
+			self._log.info("Height not set. Assuming height is %s" % height)
 		return str(height)
 
 	def _get_document_viewbox_matrix(self):
 		vbox = self.document.getroot().get('viewBox')
 		if(vbox != None ):
-			self._logger.info("Found viewbox attribute", vbox)
+			self._log.info("Found viewbox attribute", vbox)
 			widthPx = unittouu(self._get_document_width())
 			heightPx = unittouu(self._get_document_height())
 			parts = vbox.split(' ')

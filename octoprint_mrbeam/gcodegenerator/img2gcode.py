@@ -21,6 +21,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 """
 import optparse
+import logging
 from PIL import Image
 from PIL import ImageEnhance
 import base64
@@ -32,18 +33,19 @@ class ImageProcessor():
 	def __init__( self, contrast = 1.0, sharpening = 1.0, beam_diameter = 0.25, 
 	intensity_black = 500, intensity_white = 0, speed_black = 500, speed_white = 3000, 
 	dithering = False, pierce_time = 0, material = "default"):
+		self._log = logging.getLogger("octoprint.plugins.mrbeam.img2gcode")
 		
-		self.beam = beam_diameter
-		self.pierce_time = pierce_time/1000.0
+		self.beam = float(beam_diameter)
+		self.pierce_time = float(pierce_time)/1000.0
 		self.pierce_intensity = 1000 # TODO parametrize
 		self.ignore_brighter_than = 254 # TODO parametrize
-		self.intensity_black = intensity_black
-		self.intensity_white = intensity_white
-		self.feedrate_white = speed_white
-		self.feedrate_black = speed_black
+		self.intensity_black = float(intensity_black)
+		self.intensity_white = float(intensity_white)
+		self.feedrate_white = float(speed_white)
+		self.feedrate_black = float(speed_black)
 		self.material = material
-		self.contrastFactor = contrast
-		self.sharpeningFactor = sharpening
+		self.contrastFactor = float(contrast)
+		self.sharpeningFactor = float(sharpening)
 		self.dithering = (dithering == True or dithering == "True")
 		
 		self.debugPreprocessing = False
@@ -81,7 +83,7 @@ class ImageProcessor():
 		dest_wpx = int(w/self.beam)
 		dest_hpx = int(h/self.beam)
 		
-		print("scaling to {}x{}".format(dest_wpx, dest_hpx))
+		self._log.info("scaling to {}x{}".format(dest_wpx, dest_hpx))
 
 		# scale
 		img = orig_img.resize((dest_wpx, dest_hpx))
@@ -137,7 +139,8 @@ class ImageProcessor():
 		return img
 
 	def generate_gcode(self, img, x,y,w,h, file_id):
-		print("img2gcode conversion started: \n", self.get_settings_as_comment(x,y,w,h, ""))
+		settings_comment = self.get_settings_as_comment(x,y,w,h, "")
+		self._log.info("img2gcode conversion started:\n%s" % settings_comment)
 		x += self.beam/2.0
 		y -= self.beam/2.0
 		direction_positive = True
@@ -218,7 +221,7 @@ class ImageProcessor():
 	
 	def _dataurl_to_img(self, dataUrl):
 		if(dataUrl is None):
-			print("ERROR: image is not base64 encoded")
+			self._log.info("ERROR: image is not base64 encoded")
 			return ""; 
 		
 		# get raw base64 data
