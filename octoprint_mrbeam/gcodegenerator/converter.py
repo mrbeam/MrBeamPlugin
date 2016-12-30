@@ -244,7 +244,7 @@ class Converter():
 					elif(data.startswith("http://")):
 						gcode = ip.imgurl_to_gcode(data, w, h, upperLeft[0], lowerRight[1], file_id)
 					else:
-						self._log.info("Error: unable to parse img data", data)
+						self._log.error("Unable to parse img data", data)
 					
 					gcode_images += gcode
 					processedItemCount += 1
@@ -450,7 +450,7 @@ class Converter():
 	def _apply_transforms(self,g,csp):
 		trans = self._get_transforms(g)
 		if trans != []: #todo can trans be [] anyways?
-			self._log.error("still transforms in the SVG %s" % trans)
+			self._log.warn("still transforms in the SVG %s" % trans)
 			simpletransform.applyTransformToPath(trans, csp)
 		return csp
 
@@ -646,17 +646,16 @@ class Converter():
 		self._log.info( "wrote file: " + self.options['directory'] + self.options['file'])
 		
 	def calculate_conversion_matrix(self, layer=None) :
-		self._log.info("entering orientations. layer: %s" % layer)
+		self._log.info("Calculating transformation matrix for layer: %s" % layer)
 		if layer == None :
 			layer = self.document.getroot()
 		if layer in self.orientation_points:
-			self._log.error("Active layer already has orientation points! Remove them or select another layer!")
+			self._log.error("Layer already has a transformation matrix points!")
 		
-		self._log.info("entering orientations. layer: %s" % layer)
 
 		# translate == ['0', '-917.7043']
 		if layer.get("transform") != None :
-			self._log.error('FOUND TRANSFORM: %s ' % layer.get('transform'))
+			self._log.warn('FOUND TRANSFORM: %s ' % layer.get('transform'))
 			translate = layer.get("transform").replace("translate(", "").replace(")", "").split(",")
 		else :
 			translate = [0,0]

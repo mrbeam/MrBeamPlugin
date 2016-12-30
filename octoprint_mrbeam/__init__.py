@@ -341,8 +341,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			if slicer_instance.get_slicer_properties()["same_device"] and (
 						self._printer.is_printing() or self._printer.is_paused()):
 				# slicer runs on same device as OctoPrint, slicing while printing is hence disabled
-				return make_response("Cannot convert while lasering due to performance reasons".format(**locals()),
-									 409)
+				return make_response("Cannot convert while lasering due to performance reasons".format(**locals()), 409)
 
 			import os
 			if "gcode" in data.keys() and data["gcode"]:
@@ -365,26 +364,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 						self._printer.is_printing() or self._printer.is_paused()):
 				make_response("Trying to slice into file that is currently being printed: %s" % gcode_name, 409)
 
-#			if "profile" in data.keys() and data["profile"]:
-#				profile = data["profile"]
-#				del data["profile"]
-#			else:
-#				profile = None
-			##
-#			if "printerProfile" in data.keys() and data["printerProfile"]:
-#				printerProfile = data["printerProfile"]
-#				del data["printerProfile"]
-#			else:
-#				printerProfile = None
-#
-#			if "position" in data.keys() and data["position"] and isinstance(data["position"], dict) and "x" in \
-#					data[
-#						"position"] and "y" in data["position"]:
-#				position = data["position"]
-#				del data["position"]
-#			else:
-#				position = None
-
 			select_after_slicing = False
 #			if "select" in data.keys() and data["select"] in valid_boolean_trues:
 #				if not printer.is_operational():
@@ -397,11 +376,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 #					return make_response("Printer is not operational, cannot directly start printing", 409)
 #				select_after_slicing = print_after_slicing = True
 
-			#get profile information out of data json
-			#override_keys = [k for k in data if k.startswith("profile.") and data[k] is not None]
+			#get job params out of data json
 			overrides = dict()
-			#for key in override_keys:
-			#	overrides[key[len("profile."):]] = data[key]
 			overrides['vector'] = data['vector']
 			overrides['raster'] = data['raster']
 
@@ -409,17 +385,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				json.dump(data, outfile)
 				self._log.info('Wrote job parameters to %s', self._CONVERSION_PARAMS_PATH)
 
-			#get color information out of data json
-#			override_color_keys = [k for k in data if k.startswith("colors.") and data[k] is not None]
-#			color_overrides = dict()
-#			for key in override_color_keys:
-#				colorKey = key[len("colors."):len("colors.#000000")]
-#				if colorKey == 'undefin': break
-#				color_overrides[colorKey] = {'intensity' : data['colors.'+colorKey+'.intensity'],
-#											 'speed': data['colors.'+colorKey+'.speed'],
-#											 'cut': data['colors.'+colorKey+'.cut']}
-#				print ('color_overrides', color_overrides)
-			#color_overrides = data['multicolor']
 			self._printer.set_colors(currentFilename, data['vector'])
 	
 			# callback definition
