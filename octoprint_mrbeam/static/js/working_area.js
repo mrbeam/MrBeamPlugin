@@ -193,7 +193,8 @@ $(function(){
 		};
 
 		self.getXYCoord = function(evt){
-			var x = self.px2mm(evt.offsetX);
+			// TODO somehow use clientX/Y or screenX/Y instead. These two are the only ones confirmed by W3C.
+			var x = self.px2mm(evt.offsetX); // cross browser problems.
 			var y = self.px2mm(self.availableHeight() - evt.offsetY);
 			x = Math.min(x, self.workingAreaWidthMM());
 			y = Math.min(y, self.workingAreaHeightMM());
