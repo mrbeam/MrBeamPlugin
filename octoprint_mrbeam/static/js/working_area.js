@@ -853,12 +853,13 @@ $(function(){
 			var el = snap.selectAll('#userContent *');
 			for (var i = 0; i < el.length; i++) {
 				var e = el[i];
-				var fill = e.attr('fill');
-				var op = e.attr('fill-opacity');
-				if(fill !== 'none' && op > 0){
-					return true;
+				if (["path", "circle", "ellipse", "rect", "line", "polyline", "polygon", "path"].indexOf(e.type) >= 0){
+					var fill = e.attr('fill');
+					var op = e.attr('fill-opacity');
+					if(fill !== 'none' && op > 0){
+						return true;
+					}
 				}
-
 			}
 			return false;
 		};

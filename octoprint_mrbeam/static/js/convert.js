@@ -163,6 +163,7 @@ $(function(){
 
 		// shows conversion dialog and extracts svg first
 		self.show_conversion_dialog = function() {
+			self.workingArea.abortFreeTransforms();
 			self.gcodeFilesToAppend = self.workingArea.getPlacedGcodes();
 			self.show_vector_parameters(self.workingArea.getPlacedSvgs().length > 0);
 			self.filled_shapes_placed(self.workingArea.hasFilledVectors());
