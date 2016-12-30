@@ -1680,6 +1680,10 @@ input.search-query,
 	background-repeat: no-repeat;
 	background-size: 30px auto;
 	background-position: -30px -30px;
+    transition-property: background-position;
+	transition-timing-function: linear;
+	transition-duration: 1s;
+	transition-delay: 0;
 }
 
 #focus_description {
