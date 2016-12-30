@@ -136,7 +136,7 @@ class Converter():
 				itemAmount += len(self.paths[layer])
 			if layer in self.images:
 				itemAmount += len(self.images[layer])
-				
+			
 		processedItemCount = 0
 		report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
 		for layer in self.layers :
@@ -318,12 +318,12 @@ class Converter():
 	def parse(self,file=None):
 		try:
 			stream = open(self.svg_file,'r')
-		except:
-			self._log.error("unable to read %s" % self.svg_file)
-		p = etree.XMLParser(huge_tree=True)
-		self.document = etree.parse(stream, parser=p)
-		stream.close()
-		self._log.info("parsed %s" % self.svg_file)
+			p = etree.XMLParser(huge_tree=True)
+			self.document = etree.parse(stream, parser=p)
+			stream.close()
+			self._log.info("parsed %s" % self.svg_file)
+		except Exception as e:
+			self._log.error("unable to parse %s: %s" % (self.svg_file, e.message))
 		
 	def _handle_image(self, imgNode, layer):
 		self.images[layer] = self.images[layer] + [imgNode] if layer in self.images else [imgNode]
@@ -331,13 +331,10 @@ class Converter():
 	def _handle_node(self, node, layer):
 		stroke = self._get_stroke(node)
 		fill = self._get_fill(node)
-		if(node.tag == '{http://www.w3.org/2000/svg}polygon'):
-			self._log.info("polygon %s , stroke: %s, fill: %s " % (node, stroke, fill))
 
 		has_classes = node.get('class', None) is not None # TODO parse styles instead of assuming that the style applies visibility
 		visible = has_classes or stroke['visible'] or fill['visible'] or (stroke['color'] == 'unset' and fill['color'] == 'unset')
 		processColor = self._process_color(stroke['color'])
-		
 		if(visible and processColor):
 			simpletransform.fuseTransform(node)
 			self.paths[layer] = self.paths[layer] + [node] if layer in self.paths else [node]
