@@ -119,6 +119,21 @@ $(function(){
 			}
 		};
 		
+		self.set_material_engraving = function(material, ev){
+			if(typeof ev !== 'undefined'){
+				var param_set = self.materials_settings[material];
+				var p = $('#engrave_job');
+				$(p).find('.job_title').html("Engrave " + material);
+
+				self.imgIntensityWhite(param_set[2]);
+				self.imgIntensityBlack(param_set[3]);
+				self.imgFeedrateWhite(param_set[4]);
+				self.imgFeedrateBlack(param_set[5]);
+				//self.imgDithering();
+				//self.engravingPiercetime(0);
+			}
+		};
+		
 		// image engraving stuff
 		// preset values are a good start for wood engraving
 		self.images_placed = ko.observable(false);

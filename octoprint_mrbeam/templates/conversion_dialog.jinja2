@@ -42,10 +42,18 @@
 						<div id="cd_engraving" draggable="true" class="used_color" ondragstart="colorDragStart(event)" ondragend="colorDragEnd(event)"></div>
 					</div>
 				</div>
-				<div class="span6">
+				<div class="span9">
+					<div class="clearfix">
+						<h4 class="job_title pull-left">Engraving</h4>
+						<div class="dropdown pull-right">
+							<a class="dropdown-toggle material-dropdown" data-toggle="dropdown">
+								Select material <span class="caret"></span></a>
+							<ul class="dropdown-menu" data-bind="foreach: material_menu">
+								<li><a href="#" data-bind="text: $data, click: $root.set_material_engraving($data, event) "></a></li>
+							</ul>
+						</div>
+					</div>
 					<form class="job_parameters form-horizontal">
-						<h4 class="job_title">Engraving</h4>
-
 						<div class="control-group" >
 							<label class="control-label">{{ _('Laser intensity range') }}</label>
 							<div class="controls">
@@ -146,23 +154,23 @@
 						</div>
 					</form>
 				</div>
-				<div class="span3">
-					<div class="dropdown">
-						<button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">
-							Select material <span class="caret"></span></button>
-						<ul class="dropdown-menu" data-bind="foreach: material_menu">
-							<li><a href="#" data-bind="text: $data, click: $root.set_material($data, event) "></a></li>
-						</ul>
-					</div>
-				</div>
 			</div>
 			<div id="first_job" class="job_row_vector job_row row-fluid" data-bind="visible: show_vector_parameters">
 				<div class="span3" style="display:flex;">
 					<div class="assigned_colors color_drop_zone" ondragover="colorAllowDrop(event)" ondrop="colorDrop(event)"></div>
 				</div>
-				<div class="span6">
+				<div class="span9">
+					<div class="clearfix">
+						<h4 class="job_title pull-left">Job 1</h4>
+						<div class="dropdown pull-right">
+							<a class="dropdown-toggle material-dropdown" data-toggle="dropdown">
+								Select material <span class="caret"></span></a>
+							<ul class="dropdown-menu" data-bind="foreach: material_menu">
+								<li><a href="#" data-bind="text: $data, click: $root.set_material($data, event) "></a></li>
+							</ul>
+						</div>
+					</div>
 					<form class="job_parameters form-horizontal">
-						<h4 class="job_title">Job 1</h4>
 						<div class="control-group">
 							<label class="control-label">Laser</label>
 							<div class="controls"><input class="param_intensity" type="number" min="0" max="1000"  placeholder="Intensity" />&nbsp;%</div>
@@ -192,15 +200,6 @@
 							<div class="controls"><input class="param_piercetime" type="number" min="0" max="2000" value="0" />&nbsp;ms</div>
 						</div>
 					</form>
-				</div>
-				<div class="span3">
-					<div class="dropdown">
-						<button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">
-							Select material <span class="caret"></span></button>
-						<ul class="dropdown-menu" data-bind="foreach: material_menu">
-							<li><a href="#" data-bind="text: $data, click: $root.set_material($data, event) "></a></li>
-						</ul>
-					</div>
 				</div>
 			</div>
 			<div id="additional_jobs"></div>

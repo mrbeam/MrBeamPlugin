@@ -208,6 +208,11 @@ svg#area_preview {
 	display: flex;
 }
 
+h4.job_title{
+	margin-top: 0px;
+	margin-bottom: 1em;
+}
+
 .job_row input {
     max-width: 35%;
 }
@@ -264,3 +269,4 @@ body.vectorDrag .color_drop_zone.create_job.hover {
 body.colorDragInProgress #drop_overlay {
 	display: none;
 }
+
