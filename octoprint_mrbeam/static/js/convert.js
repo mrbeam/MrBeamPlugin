@@ -78,16 +78,20 @@ $(function(){
 
 		self.color_key_update = function(){
 			var cols = self.workingArea.getUsedColors();
-			
+			$('.job_row_vector .used_color').addClass('not-used');
 			for (var idx = 0; idx < cols.length; idx++) {
 				var c = cols[idx];
-				var exists = $('#cd_color_'+c.hex.substr(1)).length > 0;
+				var selection = $('#cd_color_'+c.hex.substr(1));
+				var exists = selection.length > 0;
 				if(! exists){
 					var drop_zone = $('#first_job .color_drop_zone');
 					var i = self._getColorIcon(c);
 					drop_zone.append(i);
+				} else {
+					selection.removeClass('not-used');
 				}
 			}
+			$('.job_row_vector .not-used').remove();
 		};
 		
 		self._getColorIcon = function(color){

@@ -146,6 +146,7 @@ $(function(){
 		};
 
 		self.clear = function(){
+			self.abortFreeTransforms();
 			snap.selectAll('#userContent>*').remove();
 			snap.selectAll('#placedGcodes>*').remove();
             snap.selectAll('rect:not(#coordGrid)').remove();
@@ -158,7 +159,7 @@ $(function(){
 			var colFound = [];
 			snap.selectAll('#userContent *[stroke]:not(#bbox)').forEach(function (el) {
 				var colHex = el.attr().stroke;
-				if (colHex !== undefined && colHex !== 'none' && colHash[colHex] === undefined) {
+				if (typeof(colHex) !== 'undefined' && colHex !== 'none' && typeof(colHash[colHex]) === 'undefined') {
 					var colName = self.colorNamer.classify(colHex);
 					colFound.push({hex: colHex, name: colName});
 					colHash[colHex] = 1;
