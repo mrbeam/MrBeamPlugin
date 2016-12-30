@@ -128,7 +128,7 @@
 														<input id="feedrate_override_slider" type="text" data-bind="sliderValue: state.feedrateOverride">
 														<span data-bind="text:state.feedrateOverride()">100</span>% Feedrate
 													</div>
-													<div class="repeatGcode">
+<!--													<div class="repeatGcode">
 														<div class="btn-group">
 															<button type="button" class="btn btn-default btn-number" data-bind="enable: state.numberOfPasses() > 1, click:state.decreasePasses">
 																<span class="icon-minus"></span>
@@ -140,7 +140,7 @@
 														</div>
 														<span>Passes</span>
 
-													</div>
+													</div>-->
 
 												</div>
 												<!--                                {{ _('Print Time') }}: <strong data-bind="text: printTimeString"></strong><br>
@@ -285,11 +285,11 @@
 									</filter>
 
 									<g id="scaleGroup" data-bind="attr: { transform: scaleMatrix() }">
-										<g id="placedGcodes" data-bind="visible: !state.isPrinting() && !state.isPaused(), attr: { transform: scaleMatrixMMtoDisplay() }"></g>
+										<g id="placedGcodes" data-bind="visible: true || (state.isPrinting() && !state.isPaused()), attr: { transform: scaleMatrixMMtoDisplay() }"></g>
 										<g id="gCodePreview" data-bind="visible: state.isPrinting() || state.isPaused(), attr: { transform: scaleMatrixMMtoDisplay() }"></g>
 										<rect id="coordGrid" x="0" y="0" width="0" height="0"
 											  stroke="none" fill="none"></rect>
-										<g id="userContent" data-bind="visible: !state.isPrinting() && !state.isPaused()"></g>
+										<g id="userContent" XXdata-bind="visible: !state.isPrinting() && !state.isPaused()"></g>
 									</g>
 								</svg>
 
