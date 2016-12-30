@@ -39,7 +39,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._cancelled_jobs = []
 		self._cancelled_jobs_mutex = threading.Lock()
 		# self.stateHandler = LEDstrips()
-		self._MULTICOLOR_PARAMS_PATH = "/tmp/multicolor_parameters.json" #TODO add proper path there
+		self._CONVERSION_PARAMS_PATH = "/tmp/conversion_parameters.json" #TODO add proper path there
 
 	def initialize(self):
 		self.laserCutterProfileManager = LaserCutterProfileManager(self._settings)
@@ -398,15 +398,16 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 #				select_after_slicing = print_after_slicing = True
 
 			#get profile information out of data json
-			override_keys = [k for k in data if k.startswith("profile.") and data[k] is not None]
+			#override_keys = [k for k in data if k.startswith("profile.") and data[k] is not None]
 			overrides = dict()
-			for key in override_keys:
-				overrides[key[len("profile."):]] = data[key]
-			overrides['multicolor'] = data['multicolor']
+			#for key in override_keys:
+			#	overrides[key[len("profile."):]] = data[key]
+			overrides['vector'] = data['vector']
+			overrides['raster'] = data['raster']
 
-			with open(self._MULTICOLOR_PARAMS_PATH, 'w') as outfile:
+			with open(self._CONVERSION_PARAMS_PATH, 'w') as outfile:
 				json.dump(data, outfile)
-				self._log.info('Wrote job parameters to %s', self._MULTICOLOR_PARAMS_PATH)
+				self._log.info('Wrote job parameters to %s', self._CONVERSION_PARAMS_PATH)
 
 			#get color information out of data json
 #			override_color_keys = [k for k in data if k.startswith("colors.") and data[k] is not None]
@@ -419,10 +420,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 #											 'cut': data['colors.'+colorKey+'.cut']}
 #				print ('color_overrides', color_overrides)
 			#color_overrides = data['multicolor']
-			self._printer.set_colors(currentFilename, data['multicolor'])
+			self._printer.set_colors(currentFilename, data['vector'])
 	
-			self._log.debug('### BEFORE CALLBACK %s', str(data['multicolor']))
-
 			# callback definition
 			def slicing_done(target, gcode_name, select_after_slicing, print_after_slicing, append_these_files):
 				# append additioal gcodes
@@ -436,7 +435,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							shutil.copyfileobj(fd, wfd, 1024 * 1024 * 10)
 
 						wfd.write("\nM05\n")  # ensure that the laser is off.
-
+						self._log.info("Slicing finished: %s" % path)
+						
 				if select_after_slicing or print_after_slicing:
 					sd = False
 					filenameToSelect = self._file_manager.path_on_disk(target, gcode_name)
@@ -554,14 +554,15 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			path, _ = os.path.splitext(model_path)
 			machinecode_path = path + ".gco"
 
-		self._log.info("### Slicing %s to %s using profile stored at %s, %s" % (model_path, machinecode_path, profile_path, self._MULTICOLOR_PARAMS_PATH))
+		self._log.info("Slicing %s to %s using profile stored at %s, %s" % (model_path, machinecode_path, profile_path, self._CONVERSION_PARAMS_PATH))
 
+		# TODO remove profile dependency completely
 		#profile = Profile(self._load_profile(profile_path))
 		#params = profile.convert_to_engine2()
 
 		# READ PARAMS FROM JSON
 		params = dict()
-		with open(self._MULTICOLOR_PARAMS_PATH) as data_file:    
+		with open(self._CONVERSION_PARAMS_PATH) as data_file:    
 			params = json.load(data_file)
 			#self._log.debug("Read multicolor params %s" % params)
 
@@ -570,7 +571,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		params['file'] = dest_file
 		params['noheaders'] = "true"  # TODO... booleanify
 
-		params['fill_areas'] = False  # disabled as highly experimental
+		#params['fill_areas'] = False  # disabled as highly experimental
 		if (self._settings.get(["debug_logging"])):
 			log_path = homedir + "/.octoprint/logs/svgtogcode.log"
 			params['log_filename'] = log_path
@@ -579,16 +580,15 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		try:
 			from .gcodegenerator.converter import Converter
-			enginex = Converter(params, model_path)
-			enginex.convert(on_progress, on_progress_args, on_progress_kwargs)
+			engine = Converter(params, model_path)
+			engine.convert(on_progress, on_progress_args, on_progress_kwargs)
 			
-			self._log.info("### Conversion finished")
+			self._log.info("Conversion delegated.")
 			return True, None  # TODO add analysis about out of working area, ignored elements, invisible elements, text elements
 		except octoprint.slicing.SlicingCancelled as e:
-			self._log.info("### _cancel 1")
+			self._log.info("Conversion canceled")
 			raise e
 		except Exception as e:
-			self._log.info("### _exception")
 			print e.__doc__
 			print e.message
 			self._log.exception("Conversion error ({0}): {1}".format(e.__doc__, e.message))

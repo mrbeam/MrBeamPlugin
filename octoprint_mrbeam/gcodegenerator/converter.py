@@ -51,19 +51,19 @@ class Converter():
 		"file": None,
 		"svgDPI": 90,
 		"noheaders": "false",
-
 		"engrave": False,
-		"intensity_white": 0,
-		"intensity_black": 500,
-		"speed_white": 1500,
-		"speed_black": 250,
-		"contrast": 1.0,
-		"sharpening": 1.0,
-		"dithering": False,
-		"beam_diameter": 0.2,
-		"pierce_time": 0,
-
-		"multicolor": []
+		"raster" :{
+			"intensity_white": 0,
+			"intensity_black": 500,
+			"speed_white": 1500,
+			"speed_black": 250,
+			"contrast": 1.0,
+			"sharpening": 1.0,
+			"dithering": False,
+			"beam_diameter": 0.2,
+			"pierce_time": 0,
+		},
+		"vector": []
 	}
 
 	def __init__(self, params, model_path):
@@ -87,8 +87,8 @@ class Converter():
 		for key in self.options.keys():
 			if key in opts: 
 				self.options[key] = opts[key]
-				if(key == "multicolor"):
-					for paramSet in opts['multicolor']:
+				if(key == "vector"):
+					for paramSet in opts['vector']:
 						self.colorParams[paramSet['color']] = paramSet
 			else:
 				self._log.info("Using default %s = %s" %(key, str(self.options[key])))
@@ -226,12 +226,13 @@ class Converter():
 
 					# contrast = 1.0, sharpening = 1.0, beam_diameter = 0.25, 
 					# intensity_black = 1000, intensity_white = 0, speed_black = 30, speed_white = 500, 
-					# dithering = True, pierce_time = 500, material = "default"):
-					ip = ImageProcessor(contrast = self.options['contrast'], sharpening = self.options['sharpening'], beam_diameter = self.options['beam_diameter'],
-					intensity_black = self.options['intensity_black'], intensity_white = self.options['intensity_white'], 
-					speed_black = self.options['speed_black'], speed_white = self.options['speed_white'], 
-					dithering = self.options['dithering'],
-					pierce_time = self.options['pierce_time'],
+					# dithering = True, pierce_time = 500, material = "default"
+					rasterParams = self.options['raster']
+					ip = ImageProcessor(contrast = rasterParams['contrast'], sharpening = rasterParams['sharpening'], beam_diameter = rasterParams['beam_diameter'],
+					intensity_black = rasterParams['intensity_black'], intensity_white = rasterParams['intensity_white'], 
+					speed_black = rasterParams['speed_black'], speed_white = rasterParams['speed_white'], 
+					dithering = rasterParams['dithering'],
+					pierce_time = rasterParams['pierce_time'],
 					material = "default")
 					data = imgNode.get('href')
 					if(data is None):
@@ -330,6 +331,9 @@ class Converter():
 	def _handle_node(self, node, layer):
 		stroke = self._get_stroke(node)
 		fill = self._get_fill(node)
+		if(node.tag == '{http://www.w3.org/2000/svg}polygon'):
+			self._log.info("polygon %s , stroke: %s, fill: %s " % (node, stroke, fill))
+
 		has_classes = node.get('class', None) is not None # TODO parse styles instead of assuming that the style applies visibility
 		visible = has_classes or stroke['visible'] or fill['visible'] or (stroke['color'] == 'unset' and fill['color'] == 'unset')
 		processColor = self._process_color(stroke['color'])

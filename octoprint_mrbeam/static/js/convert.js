@@ -133,6 +133,7 @@ $(function(){
 		self.imgSharpening = ko.observable(1);
 		self.imgContrast = ko.observable(1);
 		self.beamDiameter = ko.observable(0.15);
+		self.engravingPiercetime = ko.observable(0);
 
 		self.sharpeningMax = 25;
 		self.contrastMax = 2;
@@ -221,49 +222,6 @@ $(function(){
 			}
 		};
 
-//		self.on_change_material_color = ko.computed(function(){
-//			var new_material = self.selected_material();
-//			var new_color = self.selected_color();
-//			if(new_material === undefined || new_color === undefined){return;}
-//
-//			var material_changed = self.old_material != new_material;
-//			var color_changed = self.old_color != new_color;
-//			console.log(material_changed,color_changed);
-//			console.log('Color',self.old_color,new_color);
-//			console.log('Material',self.old_material,new_material);
-//
-//
-//			if(color_changed){
-//				// color settings alleine übernommen werden
-//				if(self.color_settings[new_color] === undefined){
-//					self.color_settings[new_color] = self.get_current_settings(new_material);
-//				}else{
-//					self.color_settings[self.old_color] = self.get_current_settings(self.old_material);
-//					console.log('Apply color settings...');
-//					self.apply_color_settings(self.color_settings[new_color]);
-//				}
-//				console.log('Color change from ',self.old_color,' to ',new_color);
-//				self.old_color = new_color;
-//				self.old_material = self.selected_material();
-//			}else if(material_changed){
-//				//material settings übernommen und color überschrieben
-//				self.apply_material_settings(self.materials_settings[new_material]);
-//				console.log('Material change from ',self.old_material,' to ',new_material);
-//				self.old_material = new_material;
-//				self.color_settings[new_color] = self.get_current_settings(new_material);
-//				console.log('Color Settings Updated with new Material:',new_material);
-//			}
-//			console.log('OnChange: ', self.color_settings);
-//		});
-
-
-//		self.get_current_settings = function (material) {
-//			return {material : material,
-//					intensity : self.laserIntensity(),
-//					speed : self.laserSpeed(),
-//					cutColor : material !== 'none'
-//			};
-//		};
 
 		self.get_current_multicolor_settings = function () {
 			var data = [];
@@ -286,45 +244,24 @@ $(function(){
 			});
 			return data;
 		};
-
-//		self.update_colorSettings = function(){
-//			self.color_settings[self.selected_color()] = self.get_current_settings(self.selected_material());
-//			for(var colHex in self.color_keys){
-//				if(self.color_settings[self.color_keys[colHex]] === undefined){
-//					self.color_settings[self.color_keys[colHex]] = self.get_current_settings('none')
-//				}
-//			}
-//		};
-
-//		self.apply_material_settings = function (settings){
-//			//[laserInt,speed,engraveWhite,engraveBlack,speedWhite,speedBlack]
-//			self.laserIntensity(settings[0]);
-//			self.laserSpeed(settings[1]);
-//			self.imgIntensityWhite(settings[2]);
-//			self.imgIntensityBlack(settings[3]);
-//			self.imgFeedrateWhite(settings[4]);
-//			self.imgFeedrateBlack(settings[5]);
-//		};
-//
-//		self.apply_color_settings = function (s){
-//			//[laserInt,speed,engraveWhite,engraveBlack,speedWhite,speedBlack]
-//			self.selected_material(s.material);
-//			self.laserIntensity(s.intensity);
-//			self.laserSpeed(s.speed);
-//		};
+		
+		self.get_current_engraving_settings = function () {
+			var data = {
+				"engrave_outlines" : self.engrave_outlines(),
+				"intensity_black" : self.imgIntensityBlack(),
+				"intensity_white" : self.imgIntensityWhite(),
+				"speed_black" : self.imgFeedrateBlack(),
+				"speed_white" : self.imgFeedrateWhite(),
+				"contrast" : self.imgContrast(),
+				"sharpening" : self.imgSharpening(),
+				"dithering" : self.imgDithering(),
+				"beam_diameter" : self.beamDiameter(),
+				"pierce_time": self.engravingPiercetime()
+			};
+			return data;
+		};
 
 
-
-//		self.settingsString = ko.computed(function(){
-//			var intensity = self.laserIntensity();
-//			var feedrate = self.laserSpeed();
-//			var settingsString = "_i" + intensity + "s" + Math.round(feedrate);
-//			return settingsString;
-//		});
-
-//		self.slicer.subscribe(function(newValue) {
-//			self.profilesForSlicer(newValue);
-//		});
 
 		self.enableConvertButton = ko.computed(function() {
 			if (self.slicing_in_progress() || self.workingArea.placedDesigns().length === 0 ) {
@@ -359,22 +296,13 @@ $(function(){
 					var gcodeFilename = self._sanitize(filename);
 
 					var multicolor_data = self.get_current_multicolor_settings();
+					var engraving_data = self.get_current_engraving_settings();
 					var colorStr = '<!--COLOR_PARAMS_START' +JSON.stringify(multicolor_data) + 'COLOR_PARAMS_END-->';
 					var data = {
 						command: "convert",
-						"engrave": self.do_engrave(),
-						"engrave_outlines" : self.engrave_outlines(),
-						"intensity_black" : self.imgIntensityBlack(),
-						"intensity_white" : self.imgIntensityWhite(),
-						"speed_black" : self.imgFeedrateBlack(),
-						"speed_white" : self.imgFeedrateWhite(),
-						"contrast" : self.imgContrast(),
-						"sharpening" : self.imgSharpening(),
-						"dithering" : self.imgDithering(),
-						"beam_diameter" : self.beamDiameter(),
-						"pierce_time": self.get_engraving_piercetime(),
-						"multicolor" : multicolor_data,
-						
+						engrave: self.do_engrave(),
+						vector : multicolor_data,
+						raster : engraving_data,
 						slicer: "svgtogcode",
 						gcode: gcodeFilename
 					};
@@ -399,10 +327,6 @@ $(function(){
 
 				});
 			}
-		};
-		
-		self.get_engraving_piercetime = function(){
-			return $('#engrave_job .param_piercetime').val();
 		};
 		
 		self.do_engrave = function(){
@@ -453,57 +377,57 @@ $(function(){
 			//console.log("onSlicingFailed" , payload);
 		};
 
-		self._configureIntensitySlider = function() {
-			self.intensitySlider = $("#svgtogcode_intensity_slider").slider({
-				id: "svgtogcode_intensity_slider_impl",
-				reversed: false,
-				selection: "after",
-				orientation: "horizontal",
-				min: 1,
-				max: 1000,
-				step: 1,
-				value: 500,
-				enabled: true,
-				formatter: function(value) { return "" + (value/10) +"%"; }
-			}).on("slideStop", function(ev){
-				self.laserIntensity(ev.value);
-			});
+//		self._configureIntensitySlider = function() {
+//			self.intensitySlider = $("#svgtogcode_intensity_slider").slider({
+//				id: "svgtogcode_intensity_slider_impl",
+//				reversed: false,
+//				selection: "after",
+//				orientation: "horizontal",
+//				min: 1,
+//				max: 1000,
+//				step: 1,
+//				value: 500,
+//				enabled: true,
+//				formatter: function(value) { return "" + (value/10) +"%"; }
+//			}).on("slideStop", function(ev){
+//				self.laserIntensity(ev.value);
+//			});
+//
+//			self.laserIntensity.subscribe(function(newVal){
+//				self.intensitySlider.slider('setValue', parseInt(newVal));
+//			});
+//		};
 
-			self.laserIntensity.subscribe(function(newVal){
-				self.intensitySlider.slider('setValue', parseInt(newVal));
-			});
-		};
-
-		self._configureFeedrateSlider = function() {
-			self.feedrateSlider = $("#svgtogcode_feedrate_slider").slider({
-				id: "svgtogcode_feedrate_slider_impl",
-				reversed: false,
-				selection: "after",
-				orientation: "horizontal",
-				min: 0,
-				max: 100, // fixed values to avoid reinitializing after profile changes
-				step: 1,
-				value: 300,
-				enabled: true,
-				formatter: function(value) { return "" + Math.round(self._calcRealSpeed(value)) +"mm/min"; }
-			});
-
-			// use the class as a flag to avoid double binding of the slideStop event
-			if($("#svgtogcode_feedrate_slider").attr('class') === 'uninitialized'){ // somehow hasClass(...) did not work ???
-				self.feedrateSlider.on("slideStop", function(ev){
-					$('#svgtogcode_feedrate').val(self._calcRealSpeed(ev.value));
-					self.laserSpeed(self._calcRealSpeed(ev.value));
-				});
-				$("#svgtogcode_feedrate_slider").removeClass('uninitialized');
-			}
-
-			var speedSubscription = self.laserSpeed.subscribe(function(fromSettings){
-				var realVal = parseInt(fromSettings);
-				var val = 100*(realVal - self.minSpeed()) / (self.maxSpeed() - self.minSpeed());
-				self.feedrateSlider.slider('setValue', val);
-				//speedSubscription.dispose(); // only do it once
-			});
-		};
+//		self._configureFeedrateSlider = function() {
+//			self.feedrateSlider = $("#svgtogcode_feedrate_slider").slider({
+//				id: "svgtogcode_feedrate_slider_impl",
+//				reversed: false,
+//				selection: "after",
+//				orientation: "horizontal",
+//				min: 0,
+//				max: 100, // fixed values to avoid reinitializing after profile changes
+//				step: 1,
+//				value: 300,
+//				enabled: true,
+//				formatter: function(value) { return "" + Math.round(self._calcRealSpeed(value)) +"mm/min"; }
+//			});
+//
+//			// use the class as a flag to avoid double binding of the slideStop event
+//			if($("#svgtogcode_feedrate_slider").attr('class') === 'uninitialized'){ // somehow hasClass(...) did not work ???
+//				self.feedrateSlider.on("slideStop", function(ev){
+//					$('#svgtogcode_feedrate').val(self._calcRealSpeed(ev.value));
+//					self.laserSpeed(self._calcRealSpeed(ev.value));
+//				});
+//				$("#svgtogcode_feedrate_slider").removeClass('uninitialized');
+//			}
+//
+//			var speedSubscription = self.laserSpeed.subscribe(function(fromSettings){
+//				var realVal = parseInt(fromSettings);
+//				var val = 100*(realVal - self.minSpeed()) / (self.maxSpeed() - self.minSpeed());
+//				self.feedrateSlider.slider('setValue', val);
+//				//speedSubscription.dispose(); // only do it once
+//			});
+//		};
 
 		self._calcRealSpeed = function(sliderVal){
 			return Math.round(self.minSpeed() + sliderVal/100 * (self.maxSpeed() - self.minSpeed()));
