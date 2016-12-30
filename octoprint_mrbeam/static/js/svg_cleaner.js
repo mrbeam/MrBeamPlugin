@@ -49,18 +49,19 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             }
         }
 
-        if (elem.type == "path" ||
-            elem.type == "circle" ||
-            elem.type == "ellipse" ||
-            elem.type == "rect" ||
-            elem.type == "line" ||
-            elem.type == "polyline" ||
-            elem.type == "path") {
+        if (elem.type === "path" ||
+            elem.type === "circle" ||
+            elem.type === "ellipse" ||
+            elem.type === "rect" ||
+            elem.type === "line" ||
+            elem.type === "polyline" ||
+            elem.type === "polygon" ||
+            elem.type === "path") {
 
             for (var property in elem.attr()) {
                 if (elem.attr().hasOwnProperty(property)) {
-                    if (property == "style") { // entpackt den style attribute und entfernt default Werte
-                        elem.unwrap_style_attr()
+                    if (property === "style") { // entpackt den style attribute und entfernt default Werte
+                        elem.unwrap_style_attr();
                     }
                 }
             }
@@ -71,7 +72,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                     elem.attr("stroke", stroke);
                 }
             }
-            if (elem.attr("stroke") == 'none') {
+            if (elem.attr("stroke") === 'none') {
                 elem.attr("stroke", '');
             }
         }
@@ -147,10 +148,10 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         var style = elem.attr("style");
         style.split(";").forEach(function (item, index) {
             attr = item.split(":");
-            if (attr[0] in defaults && defaults[attr[0]] != attr[1]) {
+            if (attr[0] in defaults && defaults[attr[0]] !== attr[1]) {
                 elem.attr(attr[0], attr[1]);
                 elem.attr("style", "");
             }
-        })
+        });
     };
 });
