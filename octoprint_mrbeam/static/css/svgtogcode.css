@@ -227,13 +227,18 @@ svg#area_preview {
     margin: 4px;
 }
 
+.img_drop_zone,
 .color_drop_zone {
 	border-color: rgba(0,0,0,0);
 	min-height: 80px;
 	width: 100%
 }
 
-.color_drop_zone.hover {
+/* state machine. either img or vector color drop zone highlightning*/
+#no_job .color_drop_zone.hover, 
+body.engravingDrag #engrave_job .img_drop_zone.hover,
+body.vectorDrag .job_row_vector .color_drop_zone.hover, 
+body.vectorDrag .color_drop_zone.create_job.hover {
 	border: 2px dashed;
     font-weight: 700;
 	border-color: rgba(0,0,0,0.33);
@@ -244,6 +249,16 @@ svg#area_preview {
 	text-align: center;
     padding: 1em 0;
     min-height: auto;
+}
+
+#cd_engraving {
+	background: linear-gradient(135deg,   
+				rgba(255, 0, 0, 1) 0%, 
+				rgba(255, 255, 0, 1) 35%,
+				rgba(0, 255, 0, 1) 50%,
+				rgba(0, 255, 255, 1) 65%,
+				rgba(0, 0, 255, 1) 100%
+				);
 }
 
 body.colorDragInProgress #drop_overlay {

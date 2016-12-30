@@ -101,7 +101,7 @@ $(function(){
 				draggable: "true",
 				class: 'used_color'
 			}).on({ 
-				dragstart: function(ev){ colorDrag(ev.originalEvent); },
+				dragstart: function(ev){ colorDragStart(ev.originalEvent); },
 				dragend: function(ev){ colorDragEnd(ev.originalEvent); }
 			});
 			
@@ -490,28 +490,41 @@ $(function(){
 // Drag functions outside the viewmodel are way less complicated
 function colorAllowDrop(ev) {
     ev.preventDefault();
-	$('.color_drop_zone').addClass('hover');
+	$('.color_drop_zone, .img_drop_zone').addClass('hover');
 }
 		
-function colorDrag(ev) {
+function colorDragStart(ev) {
 	$("body").addClass("colorDragInProgress");
+	if(ev.target.id === "cd_engraving"){
+		$('body').addClass('engravingDrag');
+	} else {
+		$('body').addClass('vectorDrag');
+	}
 	ev.dataTransfer.setData("text", ev.target.id);
 	ev.dataTransfer.effectAllowed = "move";
 }
 
 function colorDrop(ev) {
     ev.preventDefault();
+	$('body').removeClass('vectorDrag engravingDrag');
 	setTimeout(function(){$("body").removeClass("colorDragInProgress");}, 200);
-	$('.color_drop_zone').removeClass('hover');
+	$('.color_drop_zone, .img_drop_zone').removeClass('hover');
     var data = ev.dataTransfer.getData("text");
-    ev.target.appendChild(document.getElementById(data));
-	ko.dataFor(document.getElementById("dialog_vector_graphics_conversion"))._update_color_assignments();
+	var required_class = 'color_drop_zone';
+	if(data === 'cd_engraving'){
+		required_class = 'img_drop_zone';
+	} 
+	if ($(ev.target).hasClass(required_class)) { 
+		// TODO check if parent is allowed drop zone.
+		ev.target.appendChild(document.getElementById(data));
+		ko.dataFor(document.getElementById("dialog_vector_graphics_conversion"))._update_color_assignments();
+	} 
 }
 
 function colorDropCreateJob(ev) {
     ev.preventDefault();
 	setTimeout(function(){$("body").removeClass("colorDragInProgress");}, 200);
-	$('.color_drop_zone').removeClass('hover');
+	$('.color_drop_zone, .img_drop_zone').removeClass('hover');
 	
 	var newJob = $('#first_job').clone(true);
 	newJob.attr('id','');
@@ -527,8 +540,6 @@ function colorDropCreateJob(ev) {
 		
 function colorDragEnd(ev){
     ev.preventDefault();
-	setTimeout(function(){$("body").removeClass("colorDragInProgress");}, 200);
-	$('.color_drop_zone').removeClass('hover');
+	setTimeout(function(){$("body").removeClass("colorDragInProgress vectorDrag engravingDrag");}, 200);
+	$('.color_drop_zone, .img_drop_zone').removeClass('hover');
 }
-
-
