@@ -529,10 +529,14 @@ function colorDrop(ev) {
 	if(data === 'cd_engraving'){
 		required_class = 'img_drop_zone';
 	} 
-	if ($(ev.target).hasClass(required_class)) { 
-		// TODO check if parent is allowed drop zone.
-		ev.target.appendChild(document.getElementById(data));
-		ko.dataFor(document.getElementById("dialog_vector_graphics_conversion"))._update_color_assignments();
+	var parent = $(ev.target).parents('.job_row');
+	if (parent.length === 1) {
+		var drop_target = $(parent[0]).find('.'+required_class);
+		if (drop_target.length === 1) { 
+			// TODO check if parent is allowed drop zone.
+			drop_target[0].appendChild(document.getElementById(data));
+			ko.dataFor(document.getElementById("dialog_vector_graphics_conversion"))._update_color_assignments();
+		} 
 	} 
 }
 
