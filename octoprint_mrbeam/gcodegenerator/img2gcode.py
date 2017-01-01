@@ -30,11 +30,12 @@ import os.path
 
 class ImageProcessor():
 
-	def __init__( self, contrast = 1.0, sharpening = 1.0, beam_diameter = 0.25, 
+	def __init__( self, output_filehandle = None, contrast = 1.0, sharpening = 1.0, beam_diameter = 0.25, 
 	intensity_black = 500, intensity_white = 0, speed_black = 500, speed_white = 3000, 
 	dithering = False, pierce_time = 0, material = "default"):
 		self._log = logging.getLogger("octoprint.plugins.mrbeam.img2gcode")
 		
+		self.output_filehandle = output_filehandle
 		self.beam = float(beam_diameter)
 		self.pierce_time = float(pierce_time)/1000.0
 		self.pierce_intensity = 1000 # TODO parametrize
@@ -53,6 +54,7 @@ class ImageProcessor():
 		
 		self._lookup_intensity = {}
 		self._lookup_feedrate = {}
+		self._output_gcode = ""
 
 	def get_settings_as_comment(self, x,y,w,h, file_id = ''):
 		comment = ";Image: {:.2f}x{:.2f} @ {:.2f},{:.2f}|".format(w,h,x,y) + file_id+"\n"
@@ -144,9 +146,9 @@ class ImageProcessor():
 		x += self.beam/2.0
 		y -= self.beam/2.0
 		direction_positive = True
-		gcode = self.get_settings_as_comment(x,y,w,h, file_id)
-		gcode += 'F' + str(self.feedrate_white) + '\n' # set an initial feedrate
-		gcode += 'M3S0\n' # enable laser
+		self._append_gcode(self.get_settings_as_comment(x,y,w,h, file_id))
+		self._append_gcode('F' + str(self.feedrate_white) + '\n') # set an initial feedrate
+		self._append_gcode('M3S0\n') # enable laser
 		last_y = -1
 		
 		(width, height) = img.size
@@ -167,7 +169,7 @@ class ImageProcessor():
 				if(brightness != lastBrightness ):
 					if(i != pixelrange[0]): # don't move after new line
 						xpos = x + self.beam * (i-1 if (direction_positive) else (i)) # calculate position; backward lines need to be shifted by +1 beam diameter
-						gcode += self.get_gcode_for_equal_pixels(lastBrightness, xpos, row_pos_y, last_y)
+						self._append_gcode(self.get_gcode_for_equal_pixels(lastBrightness, xpos, row_pos_y, last_y))
 						last_y = row_pos_y
 				else:
 					pass # combine equal intensity values to one move
@@ -176,14 +178,14 @@ class ImageProcessor():
 
 			if(brightness <= self.ignore_brighter_than and self.get_intensity(brightness) > 0): # finish non-white line
 				end_of_line = x + pixelrange[-1] * self.beam 
-				gcode += self.get_gcode_for_equal_pixels(brightness, end_of_line, row_pos_y, last_y)
+				self._append_gcode(self.get_gcode_for_equal_pixels(brightness, end_of_line, row_pos_y, last_y))
 				last_y = row_pos_y
 
 			# flip direction after each line to go back and forth
 			direction_positive = not direction_positive
 			
-		gcode += ";EndImage\nM5\n" # important for gcode preview!
-		return gcode
+		self._append_gcode(";EndImage\nM5\n") # important for gcode preview!
+		return self._output_gcode
 
 	def get_gcode_for_equal_pixels(self, brightness, target_x, target_y, last_y, comment=""):
 		# fast skipping whitespace
@@ -289,6 +291,11 @@ class ImageProcessor():
 		else: 
 			return 0
 		
+	def _append_gcode(self, gcode):
+		if(self.output_filehandle is not None):
+			self.output_filehandle.write(gcode)
+		else:
+			self._output_gcode += gcode
 		
 
 
@@ -316,41 +323,42 @@ if __name__ == "__main__":
 
 	(options, args) = opts.parse_args()
 	
-	boolDither = (options.dithering == "true")
-	ip = ImageProcessor(options.contrast, options.sharpening, options.beam_diameter, 
-	options.intensity_black, options.intensity_white, options.speed_black, options.speed_white, 
-	boolDither, options.pierce_time)
-	mode = "intensity"
-	path = args[0]
-	gcode = ip.img_to_gcode(path, options.width, options.height, options.x, options.y, path)
-	#gcode = ip.dataUrl_to_gcode(base64img, options.width, options.height, options.x, options.y)
-	
-	header = ""
-	footer = ""
-	if(options.noheaders == "false"): 
-		header = '''
-$H
-G92X0Y0Z0
-G90
-M8
-G21
-
-'''
-		footer = '''
-M5
-G0X0Y0
-M9
-M2
-'''
-
 	if(len(args) == 2):
 		gcodefile = args[1]
 	else:
 		filename, _ = os.path.splitext(path)
 		gcodefile = filename + ".gco"
 		
-	with open (gcodefile, "w") as f:
-		f.write(gcode)
+	with open (gcodefile, "w") as fh:
+		header = ""
+		footer = ""
+		if(options.noheaders == "false"): 
+			header = '''
+	$H
+	G92X0Y0Z0
+	G90
+	M8
+	G21
+
+	'''
+			footer = '''
+	M5
+	G0X0Y0
+	M9
+	M2
+	'''
+	
+		fh.write(header)
+		
+		boolDither = (options.dithering == "true")
+		ip = ImageProcessor(fh, options.contrast, options.sharpening, options.beam_diameter, 
+		options.intensity_black, options.intensity_white, options.speed_black, options.speed_white, 
+		boolDither, options.pierce_time)
+		path = args[0]
+		ip.img_to_gcode(path, options.width, options.height, options.x, options.y, path)
+		#ip.dataUrl_to_gcode(base64img, options.width, options.height, options.x, options.y)
+
+		fh.write(footer)
 
 	print("gcode written to " + gcodefile) 
 		

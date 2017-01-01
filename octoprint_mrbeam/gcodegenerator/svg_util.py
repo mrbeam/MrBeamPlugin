@@ -1,4 +1,5 @@
 import simplepath
+import re
 
 #a dictionary of all of the xmlns prefixes in a standard inkscape doc
 NSS = {
@@ -131,4 +132,27 @@ def get_path_d(node):
 			'0 1 0 %f,%f' % (x1, cy)
 		return d
 
+UUCONV = {'in':90.0, 'pt':1.25, 'px':1, 'mm':3.5433070866, 'cm':35.433070866, 'm':3543.3070866,
+		  'km':3543307.0866, 'pc':15.0, 'yd':3240 , 'ft':1080}
+		  
+def unittouu(string):
+	'''Returns userunits given a string representation of units in another system'''
+	unit = re.compile('(%s)$' % '|'.join(UUCONV.keys()))
+	param = re.compile(r'(([-+]?[0-9]+(\.[0-9]*)?|[-+]?\.[0-9]+)([eE][-+]?[0-9]+)?)')
+
+	p = param.match(string)
+	u = unit.search(string)
+	if p:
+		retval = float(p.string[p.start():p.end()])
+	else:
+		retval = 0.0
+	if u:
+		try:
+			return retval * UUCONV[u.string[u.start():u.end()]]
+		except KeyError:
+			pass
+	return retval
+
+def uutounit(val, unit):
+	return val/UUCONV[unit]
 

@@ -1,5 +1,6 @@
 import logging
 import re
+import shutil
 import os
 import machine_settings
 
@@ -8,41 +9,13 @@ from point import Point
 import numpy
 
 import simplestyle
-#import simplepath
 import simpletransform
 import cubicsuperpath
 
 from img2gcode import ImageProcessor
-from svg_util import get_path_d, _add_ns
+from svg_util import get_path_d, _add_ns, unittouu
 
 from lxml import etree
-
-
-
-UUCONV = {'in':90.0, 'pt':1.25, 'px':1, 'mm':3.5433070866, 'cm':35.433070866, 'm':3543.3070866,
-		  'km':3543307.0866, 'pc':15.0, 'yd':3240 , 'ft':1080}
-def unittouu(string):
-	'''Returns userunits given a string representation of units in another system'''
-	unit = re.compile('(%s)$' % '|'.join(UUCONV.keys()))
-	param = re.compile(r'(([-+]?[0-9]+(\.[0-9]*)?|[-+]?\.[0-9]+)([eE][-+]?[0-9]+)?)')
-
-	p = param.match(string)
-	u = unit.search(string)
-	if p:
-		retval = float(p.string[p.start():p.end()])
-	else:
-		retval = 0.0
-	if u:
-		try:
-			return retval * UUCONV[u.string[u.start():u.end()]]
-		except KeyError:
-			pass
-	return retval
-
-def uutounit(val, unit):
-	return val/UUCONV[unit]
-
-
 
 class Converter():
 
@@ -65,6 +38,8 @@ class Converter():
 		},
 		"vector": []
 	}
+	
+	_tempfile = "/tmp/_converter_output.tmp"
 
 	def __init__(self, params, model_path):
 		self._log = logging.getLogger("octoprint.plugins.mrbeam.converter")
@@ -93,9 +68,19 @@ class Converter():
 			else:
 				self._log.info("Using default %s = %s" %(key, str(self.options[key])))
 
-	def convert(self, on_progress=None, on_progress_args=None, on_progress_kwargs=None):
-		self.parse()
+	def init_output_file(self):
+		# remove old file if exists. 
+		try:
+			os.remove(self._tempfile)
+		except OSError:
+			pass
+		# create new file and return file handle.
+		
 
+	def convert(self, on_progress=None, on_progress_args=None, on_progress_kwargs=None):
+
+		self.init_output_file()
+		self.parse()
 		options = self.options
 		options['doc_root'] = self.document.getroot()
 
@@ -122,12 +107,6 @@ class Converter():
 				on_progress(*on_progress_args, **on_progress_kwargs)
 		
 
-		self._check_dir() 
-		gcode = ""
-		gcode_outlines = ""
-		gcode_fillings = ""
-		gcode_images = ""
-
 		self._log.info("processing %i layers" % len(self.layers))
 		# sum up
 		itemAmount = 1
@@ -139,118 +118,127 @@ class Converter():
 			
 		processedItemCount = 0
 		report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
-		for layer in self.layers :
-			if layer in self.paths :
-				pD = dict()
-				for path in self.paths[layer] :
-					self._log.info("path %s, %s, stroke: %s,  'fill: ', %s" % ( layer.get('id'), path.get('id'), path.get('stroke'), path.get('class') ))
 
-					if path.get('stroke') is not None: #todo catch None stroke/fill earlier
-						stroke = path.get('stroke')
-					elif path.get('fill') is not None:
-						stroke = path.get('fill')
-					elif path.get('class') is not None:
-						stroke = path.get('class')
-					else:
-						stroke = 'default'
-						continue
+		with open(self._tempfile, 'a') as fh:
+			fh.write(self._get_gcode_header())
 
-					if "d" not in path.keys() :
-						self._log.error("Warning: One or more paths don't have 'd' parameter")
-						continue
-					if stroke not in pD.keys() and stroke != 'default':
-						pD[stroke] = []
-					d = path.get("d")
-					if d != '':
-						csp = cubicsuperpath.parsePath(d)
-						csp = self._apply_transforms(path, csp)
-						pD[stroke] += csp
+			# images
+			self._log.info( 'Raster conversion: %s' % self.options['engrave'])
+			for layer in self.layers :
+				if layer in self.images and self.options['engrave']:
+					for imgNode in self.images[layer] :
+						file_id = imgNode.get('data-serveurl', '')
+						x = imgNode.get('x')
+						y = imgNode.get('y')						
+						if x == None:
+							x = "0"
+						if y == None:
+							y = "0"
+
+						# pt units
+						x = float(x)
+						y = float(y)
+						w = float(imgNode.get("width"))
+						h = float(imgNode.get("height"))
+
+						_upperLeft = [x, y]
+						_lowerRight = [x + w, y + h]
+
+						# apply svg transforms
+						_mat = self._get_transforms(imgNode)
+						simpletransform.applyTransformToPoint(_mat, _upperLeft)
+						simpletransform.applyTransformToPoint(_mat, _lowerRight)
+
+						### original style with orientation points :( ... TODO
+						# mm conversion
+						upperLeft = self._transform(_upperLeft,layer, False)
+						lowerRight = self._transform(_lowerRight,layer, False)
+
+						w = abs(lowerRight[0] - upperLeft[0])
+						h = abs(lowerRight[1] - upperLeft[1])
+
+						# contrast = 1.0, sharpening = 1.0, beam_diameter = 0.25, 
+						# intensity_black = 1000, intensity_white = 0, speed_black = 30, speed_white = 500, 
+						# dithering = True, pierce_time = 500, material = "default"
+						rasterParams = self.options['raster']
+						ip = ImageProcessor(output_filehandle = fh, contrast = rasterParams['contrast'], sharpening = rasterParams['sharpening'], beam_diameter = rasterParams['beam_diameter'],
+						intensity_black = rasterParams['intensity_black'], intensity_white = rasterParams['intensity_white'], 
+						speed_black = rasterParams['speed_black'], speed_white = rasterParams['speed_white'], 
+						dithering = rasterParams['dithering'],
+						pierce_time = rasterParams['pierce_time'],
+						material = "default")
+						data = imgNode.get('href')
+						if(data is None):
+							data = imgNode.get(_add_ns('href', 'xlink'))
+
+						if(data.startswith("data:")):
+							ip.dataUrl_to_gcode(data, w, h, upperLeft[0], lowerRight[1], file_id)
+						elif(data.startswith("http://")):
+							ip.imgurl_to_gcode(data, w, h, upperLeft[0], lowerRight[1], file_id)
+						else:
+							self._log.error("Unable to parse img data", data)
 
 						processedItemCount += 1
 						report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
-
-				curvesD = dict() #diction
-				for colorKey in pD.keys():
-					if colorKey == 'none':
-						continue
-					curvesD[colorKey] = self._parse_curve(pD[colorKey], layer)
-
-				#pierce_time = self.options['pierce_time']
-				layerId = layer.get('id') or '?'
-				pathId = path.get('id') or '?'
-
-				#for each color generate GCode
-				for colorKey in curvesD.keys():
-					settings = self.colorParams.get(colorKey, {'intensity': -1, 'feedrate': -1, 'passes': 0, 'pierce_time': 0})
-					gcode_outlines += "; Layer: " + layerId + ", outline of " + pathId + ", stroke: " + colorKey +', '+str(settings)+"\n"
-					# gcode_outlines += self.generate_gcode_color(curvesD[colorKey], colorKey, pierce_time)
-					curveGCode = self._generate_gcode(curvesD[colorKey], colorKey)
-					for p in range(0, int(settings['passes'])):
-						gcode_outlines += ";pass %i of %s\n" % (p+1, settings['passes'])
-						gcode_outlines += curveGCode
-
-
-			self._log.info( 'Infills Setting: %s' % self.options['engrave'])
-			if layer in self.images and self.options['engrave']:
-				for imgNode in self.images[layer] :
-					file_id = imgNode.get('data-serveurl', '')
-					x = imgNode.get('x')
-					y = imgNode.get('y')						
-					if x == None:
-						x = "0"
-					if y == None:
-						y = "0"
-
-					
-					# pt units
-					x = float(x)
-					y = float(y)
-					w = float(imgNode.get("width"))
-					h = float(imgNode.get("height"))
-
-					_upperLeft = [x, y]
-					_lowerRight = [x + w, y + h]
-					
-					# apply svg transforms
-					_mat = self._get_transforms(imgNode)
-					simpletransform.applyTransformToPoint(_mat, _upperLeft)
-					simpletransform.applyTransformToPoint(_mat, _lowerRight)
-					
-					### original style with orientation points :( ... TODO
-					# mm conversion
-					upperLeft = self._transform(_upperLeft,layer, False)
-					lowerRight = self._transform(_lowerRight,layer, False)
-					
-					w = abs(lowerRight[0] - upperLeft[0])
-					h = abs(lowerRight[1] - upperLeft[1])
-
-					# contrast = 1.0, sharpening = 1.0, beam_diameter = 0.25, 
-					# intensity_black = 1000, intensity_white = 0, speed_black = 30, speed_white = 500, 
-					# dithering = True, pierce_time = 500, material = "default"
-					rasterParams = self.options['raster']
-					ip = ImageProcessor(contrast = rasterParams['contrast'], sharpening = rasterParams['sharpening'], beam_diameter = rasterParams['beam_diameter'],
-					intensity_black = rasterParams['intensity_black'], intensity_white = rasterParams['intensity_white'], 
-					speed_black = rasterParams['speed_black'], speed_white = rasterParams['speed_white'], 
-					dithering = rasterParams['dithering'],
-					pierce_time = rasterParams['pierce_time'],
-					material = "default")
-					data = imgNode.get('href')
-					if(data is None):
-						data = imgNode.get(_add_ns('href', 'xlink'))
-						
-					gcode = ''
-					if(data.startswith("data:")):
-						gcode = ip.dataUrl_to_gcode(data, w, h, upperLeft[0], lowerRight[1], file_id)
-					elif(data.startswith("http://")):
-						gcode = ip.imgurl_to_gcode(data, w, h, upperLeft[0], lowerRight[1], file_id)
 					else:
-						self._log.error("Unable to parse img data", data)
-					
-					gcode_images += gcode
-					processedItemCount += 1
-					report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
+						self._log.info("postponing non-image layer %s" % ( layer.get('id') ))
 
-		self.export_gcode(gcode_images + "\n\n" + gcode_fillings + "\n\n" + gcode_outlines)
+
+			# paths
+			self._log.info( 'Vector conversion: %s paths' % len(self.paths))
+			for layer in self.layers :
+				if layer in self.paths :
+					pD = dict()
+					for path in self.paths[layer] :
+						self._log.info("path %s, %s, stroke: %s,  'fill: ', %s" % ( layer.get('id'), path.get('id'), path.get('stroke'), path.get('class') ))
+
+						if path.get('stroke') is not None: #todo catch None stroke/fill earlier
+							stroke = path.get('stroke')
+						elif path.get('fill') is not None:
+							stroke = path.get('fill')
+						elif path.get('class') is not None:
+							stroke = path.get('class')
+						else:
+							stroke = 'default'
+							continue
+
+						if "d" not in path.keys() :
+							self._log.error("Warning: One or more paths don't have 'd' parameter")
+							continue
+						if stroke not in pD.keys() and stroke != 'default':
+							pD[stroke] = []
+						d = path.get("d")
+						if d != '':
+							csp = cubicsuperpath.parsePath(d)
+							csp = self._apply_transforms(path, csp)
+							pD[stroke] += csp
+
+							processedItemCount += 1
+							report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
+
+					curvesD = dict() #diction
+					for colorKey in pD.keys():
+						if colorKey == 'none':
+							continue
+						curvesD[colorKey] = self._parse_curve(pD[colorKey], layer)
+
+					#pierce_time = self.options['pierce_time']
+					layerId = layer.get('id') or '?'
+					pathId = path.get('id') or '?'
+
+					#for each color generate GCode
+					for colorKey in curvesD.keys():
+						settings = self.colorParams.get(colorKey, {'intensity': -1, 'feedrate': -1, 'passes': 0, 'pierce_time': 0})
+						fh.write("; Layer: " + layerId + ", outline of " + pathId + ", stroke: " + colorKey +', '+str(settings)+"\n")
+						# fh.write(self.generate_gcode_color(curvesD[colorKey], colorKey, pierce_time))
+						curveGCode = self._generate_gcode(curvesD[colorKey], colorKey)
+						for p in range(0, int(settings['passes'])):
+							fh.write(";pass %i of %s\n" % (p+1, settings['passes']))
+							fh.write(curveGCode)
+
+			fh.write(self._get_gcode_footer())
+
+		self.export_gcode()
 
 
 	def collect_paths(self):
@@ -628,19 +616,25 @@ class Converter():
 			g += machine_settings.gcode_after_path() + "\n"
 		return g
 
-	def export_gcode(self, gcode) :
-		if(self.options['noheaders']):
-			self.header = ""
-			self.footer = "M05\n"
-		else:
-			self.header = machine_settings.gcode_header
-			self.footer = machine_settings.gcode_footer
-			self.header += "G21\n\n"
+	def export_gcode(self) :
+		self._check_dir() 
 			
-		f = open(self.options['directory'] + self.options['file'], "w")
-		f.write(self.header + gcode + self.footer)
-		f.close()
-		self._log.info( "wrote file: " + self.options['directory'] + self.options['file'])
+		destination = self.options['directory'] + self.options['file']
+		shutil.move(self._tempfile, destination)
+		self._log.info( "wrote file: %s" % destination)
+		
+	def _get_gcode_header(self):
+		if(self.options['noheaders']):
+			return ""
+		else:
+			return machine_settings.gcode_header + "G21\n\n"
+	
+	def _get_gcode_footer(self):
+		if(self.options['noheaders']):
+			return "M05\n"
+		else:
+			return machine_settings.gcode_footer
+	
 		
 	def calculate_conversion_matrix(self, layer=None) :
 		self._log.info("Calculating transformation matrix for layer: %s" % layer)
