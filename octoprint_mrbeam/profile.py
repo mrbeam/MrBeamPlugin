@@ -37,7 +37,8 @@ defaults = dict(
 	feedrate_black=250,
 	img_contrast=1.0,
 	img_sharpening=1.0,
-	img_dithering=False
+	img_dithering=False,
+	multicolor=""
 )
 
 class SaveError(Exception):

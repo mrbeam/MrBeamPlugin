@@ -146,6 +146,7 @@ $(function(){
 		};
 
 		self.clear = function(){
+			self.abortFreeTransforms();
 			snap.selectAll('#userContent>*').remove();
 			snap.selectAll('#placedGcodes>*').remove();
             snap.selectAll('rect:not(#coordGrid)').remove();
@@ -153,13 +154,15 @@ $(function(){
 		};
 
 		self.colorNamer = new ColorClassifier();
-		self.colorsFound = function () {
-			colFound = {};
+		self.getUsedColors = function () {
+			var colHash = {};
+			var colFound = [];
 			snap.selectAll('#userContent *[stroke]:not(#bbox)').forEach(function (el) {
 				var colHex = el.attr().stroke;
-				if (colFound[colHex] === undefined && colHex !== undefined && colHex !== 'none') {
+				if (typeof(colHex) !== 'undefined' && colHex !== 'none' && typeof(colHash[colHex]) === 'undefined') {
 					var colName = self.colorNamer.classify(colHex);
-					colFound[colHex] = colName;
+					colFound.push({hex: colHex, name: colName});
+					colHash[colHex] = 1;
 				}
 			});
 			return colFound;
@@ -190,7 +193,8 @@ $(function(){
 		};
 
 		self.getXYCoord = function(evt){
-			var x = self.px2mm(evt.offsetX);
+			// TODO somehow use clientX/Y or screenX/Y instead. These two are the only ones confirmed by W3C.
+			var x = self.px2mm(evt.offsetX); // cross browser problems.
 			var y = self.px2mm(self.availableHeight() - evt.offsetY);
 			x = Math.min(x, self.workingAreaWidthMM());
 			y = Math.min(y, self.workingAreaHeightMM());
@@ -773,7 +777,7 @@ $(function(){
 			self.check_sizes_and_placements();
 		};
 
-		self.getCompositionSVG = function(fillAreas, cutOutlines, colorSettings,colorKeys, callback){
+		self.getCompositionSVG = function(fillAreas, cutOutlines, callback){
 			self.abortFreeTransforms();
 			var wMM = self.workingAreaWidthMM();
 			var hMM = self.workingAreaHeightMM();
@@ -788,25 +792,12 @@ $(function(){
 
 
 			self.renderInfill(compSvg, fillAreas, cutOutlines, wMM, hMM, 10, function(svgWithRenderedInfill){
-				callback( self._wrapInSvgAndScale(colorSettings,colorKeys,svgWithRenderedInfill));
+				callback( self._wrapInSvgAndScale(svgWithRenderedInfill));
 				$('#compSvg').remove();
 			});
 		};
 
-		self._wrapInSvgAndScale = function(colorSettings,colorKeys,content){
-			var colorComment = '<!--';
-			for(var colHex in colorKeys){
-				if (colHex !== undefined && colHex !== 'none'){
-					var colName = colorKeys[colHex];
-					colorComment += '\n'+colHex;
-					colorComment += ','+colorSettings[colName].intensity;
-					colorComment += ','+colorSettings[colName].speed;
-					colorComment += ','+colorSettings[colName].cutColor;
-				}
-			}
-			colorComment += '\n-->';
-			console.log(colorComment);
-
+		self._wrapInSvgAndScale = function(content){
 			var svgStr = content.innerSVG();
 			if(svgStr !== ''){
 				var dpiFactor = self.svgDPI()/25.4; // convert mm to pix 90dpi for inkscape, 72 for illustrator
@@ -817,8 +808,7 @@ $(function(){
 				svgStr = svgStr.replace("(\\\"","(");
 				svgStr = svgStr.replace("\\\")",")");
 
-				var svg = '<svg height="'+ h +'" version="1.1" width="'+ w
-						+ '" xmlns="http://www.w3.org/2000/svg" xmlns:mb="http://www.mr-beam.org/mbns"><defs/>'+ colorComment + svgStr +'</svg>';
+				var svg = '<svg height="'+ h +'" version="1.1" width="'+ w +'" xmlns="http://www.w3.org/2000/svg"  xmlns:mb="http://www.mr-beam.org/mbns"><defs/>'+svgStr+'</svg>';
 				return svg;
 			} else {
 				return;
@@ -864,12 +854,13 @@ $(function(){
 			var el = snap.selectAll('#userContent *');
 			for (var i = 0; i < el.length; i++) {
 				var e = el[i];
-				var fill = e.attr('fill');
-				var op = e.attr('fill-opacity');
-				if(fill !== 'none' && op > 0){
-					return true;
+				if (["path", "circle", "ellipse", "rect", "line", "polyline", "polygon", "path"].indexOf(e.type) >= 0){
+					var fill = e.attr('fill');
+					var op = e.attr('fill-opacity');
+					if(fill !== 'none' && op > 0){
+						return true;
+					}
 				}
-
 			}
 			return false;
 		};
