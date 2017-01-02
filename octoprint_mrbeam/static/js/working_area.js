@@ -193,12 +193,12 @@ $(function(){
 		};
 
 		self.getXYCoord = function(evt){
-			// TODO somehow use clientX/Y or screenX/Y instead. These two are the only ones confirmed by W3C.
-			var x = self.px2mm(evt.offsetX); // cross browser problems.
-			var y = self.px2mm(self.availableHeight() - evt.offsetY);
-			x = Math.min(x, self.workingAreaWidthMM());
-			y = Math.min(y, self.workingAreaHeightMM());
-			return {x:x, y:y};
+            var elemPos = evt.currentTarget.getBoundingClientRect();
+            var x = self.px2mm(evt.clientX - elemPos.left);
+            var y = self.px2mm(evt.clientY - elemPos.top);
+            x = Math.min(x, self.workingAreaWidthMM());
+            y = Math.min(y, self.workingAreaHeightMM());
+            return {x:x, y:y};
 		};
 
 		self.crosshairX = function(){
