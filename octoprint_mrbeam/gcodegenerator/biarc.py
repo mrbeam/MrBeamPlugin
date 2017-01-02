@@ -1,4 +1,5 @@
 import math
+import bezmisc
 from point import Point
 
 ################################################################################
@@ -198,6 +199,26 @@ def csp_at_t(sp1, sp2, t):
 	
 	x, y = x4 + (x5-x4) * t, y4 + (y5-y4) * t 
 	return [x, y]
+
+def csp_split(sp1,sp2,t=.5) :
+	[x1,y1],[x2,y2],[x3,y3],[x4,y4] = sp1[1], sp1[2], sp2[0], sp2[1] 
+	x12 = x1+(x2-x1)*t
+	y12 = y1+(y2-y1)*t
+	x23 = x2+(x3-x2)*t
+	y23 = y2+(y3-y2)*t
+	x34 = x3+(x4-x3)*t
+	y34 = y3+(y4-y3)*t
+	x1223 = x12+(x23-x12)*t
+	y1223 = y12+(y23-y12)*t
+	x2334 = x23+(x34-x23)*t
+	y2334 = y23+(y34-y23)*t
+	x = x1223+(x2334-x1223)*t
+	y = y1223+(y2334-y1223)*t
+	return [sp1[0],sp1[1],[x12,y12]], [[x1223,y1223],[x,y],[x2334,y2334]], [[x34,y34],sp2[1],sp2[2]]
+
+def cspseglength(sp1,sp2, tolerance = 0.001):
+	bez = (sp1[1][:],sp1[2][:],sp2[0][:],sp2[1][:])
+	return bezmisc.bezierlength(bez, tolerance)	
 
 def between(c,x,y):
 	return (x-straight_tolerance<=c<=y+straight_tolerance) or (y-straight_tolerance<=c<=x+straight_tolerance)
