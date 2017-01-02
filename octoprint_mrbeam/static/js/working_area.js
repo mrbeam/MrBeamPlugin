@@ -195,7 +195,7 @@ $(function(){
 		self.getXYCoord = function(evt){
             var elemPos = evt.currentTarget.getBoundingClientRect();
             var x = self.px2mm(evt.clientX - elemPos.left);
-            var y = self.px2mm(evt.clientY - elemPos.top);
+            var y = self.px2mm(elemPos.bottom - evt.clientY);
             x = Math.min(x, self.workingAreaWidthMM());
             y = Math.min(y, self.workingAreaHeightMM());
             return {x:x, y:y};
