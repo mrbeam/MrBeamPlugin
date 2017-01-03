@@ -146,6 +146,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		safety_glasses = selectedProfile["glasses"]
 		# render_kwargs["templates"]["settings"]["entries"]["serial"][1]["template"] = "settings/serialconnection.jinja2"
 
+		wizard = render_kwargs["templates"] is not None and bool(render_kwargs["templates"]["wizard"]["order"])
+
 		render_kwargs.update(dict(
 							 webcamStream = self._settings.global_get(["webcam", "stream"]),
 							 enableFocus = enable_focus,
@@ -156,7 +158,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 enableSdSupport = False,
 							 gcodeMobileThreshold = 0,
 							 gcodeThreshold = 0,
-							 wizard = True,
+							 wizard = wizard,
 							 now = now,
 							 ))
 		return make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
