@@ -87,7 +87,8 @@ $(function(){
 		}, self);
 
 		self.px2mm_factor = ko.computed(function(){
-			return self.workingAreaWidthMM() / self.workingAreaWidthPx();
+			return 1;
+//			return self.workingAreaWidthMM() / self.workingAreaWidthPx();
 		});
 
 		self.camTransform = ko.computed(function(){
@@ -308,10 +309,10 @@ $(function(){
 
 				// find clippath elements
 				var clipPathEl = f.selectAll('clipPath');
-				if(clipPathEl.length != 0){
+				if(clipPathEl.length !== 0){
 					console.warn("Warning: removed unsupported clipPath element in SVG");
 					self.svg_contains_clipPath_warning();
-					clipPathEl.remove()
+					clipPathEl.remove();
 				}
 
 				var svgClasses = {};
@@ -341,7 +342,7 @@ $(function(){
 
 				// find Illustrator comment and notify
 				Array.from(f.node.childNodes).forEach(function(entry) {
-					if(entry.nodeType == 8) { // Nodetype 8 = comment
+					if(entry.nodeType === 8) { // Nodetype 8 = comment
 						if(entry.textContent.indexOf('Illustrator') > -1) {
 							new PNotify({title: gettext("Illustrator SVG Detected"), text: "Illustrator SVG detected! To preserve coorect scale, please go to the \'Settings\' menu and change the \'SVG dpi\' field under \'Plugins/Svg Conversion\' according to your file. And add it again.", type: "info", hide: false});
 						}
@@ -350,7 +351,7 @@ $(function(){
 
 				// scale matrix
 				var mat = self.getDocumentViewBoxMatrix(doc_width, doc_height, doc_viewbox);
-				var dpiscale = 90 / self.settings.settings.plugins.mrbeam.svgDPI();
+				var dpiscale = 25.4 / self.settings.settings.plugins.mrbeam.svgDPI();
                 var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(dpiscale).toTransformString();
                 newSvgAttrs['transform'] = scaleMatrixStr;
 
@@ -727,15 +728,14 @@ $(function(){
 
 		self.draw_coord_grid = function(){
 			var grid = snap.select('#coordGrid');
-			var w = self.mm2svgUnits(self.workingAreaWidthMM());
-			var h = self.mm2svgUnits(self.workingAreaHeightMM());
+			var w = self.workingAreaWidthMM();
+			var h = self.workingAreaHeightMM();
 
 			if( grid.attr('width') !== w || grid.attr('height') !== h || grid.attr('fill') === 'none'){
 				var max_lines = 20;
 
-				var linedistMM = Math.floor(Math.max(self.workingAreaWidthMM(), self.workingAreaHeightMM()) / (max_lines * 10))*10;
-				var yPatternOffset = self.mm2svgUnits(self.workingAreaHeightMM() % linedistMM);
-				var linedist = self.mm2svgUnits(linedistMM);
+				var linedist = Math.floor(Math.max(self.workingAreaWidthMM(), self.workingAreaHeightMM()) / (max_lines * 10))*10;
+				var yPatternOffset = self.workingAreaHeightMM() % linedist;
 
 				var marker = snap.circle(linedist/2, linedist/2, 1).attr({
 					fill: "#000000",

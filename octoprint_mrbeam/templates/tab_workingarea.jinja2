@@ -271,7 +271,8 @@
 											backgroundPosition: crosshairX()+'px'+' '+crosshairY()+'px',
 											width: workingAreaWidthPx()+'px',
 											height: workingAreaHeightPx()+'px'
-										}
+										},
+										attr: { viewBox: '0 0 ' + workingAreaWidthMM() +' '+ workingAreaHeightMM() }
 									 ">
 									<filter id="grayscale_filter">
 										<feColorMatrix in="SourceGraphic" type="saturate" values="0"/>
@@ -284,7 +285,7 @@
 										</feComponentTransfer>
 									</filter>
 
-									<g id="scaleGroup" data-bind="attr: { transform: scaleMatrix() }">
+									<g id="scaleGroup" XXdata-bind="attr: { transform: scaleMatrix() }">
 										<g id="placedGcodes" data-bind="visible: true || (state.isPrinting() && !state.isPaused()), attr: { transform: scaleMatrixMMtoDisplay() }"></g>
 										<g id="gCodePreview" data-bind="visible: state.isPrinting() || state.isPaused(), attr: { transform: scaleMatrixMMtoDisplay() }"></g>
 										<rect id="coordGrid" x="0" y="0" width="0" height="0"
