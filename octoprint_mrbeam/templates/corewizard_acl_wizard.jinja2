@@ -1,18 +1,17 @@
 <h3>{{ _('Access Control') }}</h3>
 
 {% trans %}<p>
-    <strong>Please read the following, it is very important for your printer's health!</strong>
+    <strong>Please read the following, it is very important for the security of your Mr Beam 2!</strong>
 </p>
 <p>
-    OctoPrint by default ships with Access Control enabled, meaning you won't be able to do anything with the
-    printer unless you login first as a configured user. This is to <strong>prevent strangers - possibly with
-    malicious intent - to gain access to your printer</strong> via the internet or another untrustworthy network
+    Your Mr Beam 2 is configured with a Access Control, meaning you won't be able to do anything with the
+    laser cutter unless you login first as a configured user. This is to <strong>prevent strangers - possibly with
+    malicious intent - to gain access to your laser cutter</strong> via the internet or another untrustworthy network
     and using it in such a way that it is damaged or worse (i.e. causes a fire).
 </p>
 <p>
-    It looks like you haven't configured access control yet. Please <strong>set up a username and password</strong> for the
-    initial administrator account who will have full access to both the printer and OctoPrint's settings, then click
-    on "Keep Access Control Enabled":
+    Please <strong>set up a username and password</strong> for the
+    initial administrator account who will have full access to the Mr Beam 2:
 </p>{% endtrans %}
 <form class="form-horizontal">
     <div class="control-group" data-bind="css: {success: validUsername()}">
@@ -36,24 +35,7 @@
     </div>
 </form>
 {% trans %}<p>
-    <strong>Note:</strong> In case that your OctoPrint installation is only accessible from within a trustworthy network and you don't
-    need Access Control for other reasons, you may alternatively disable Access Control. You should only
-    do this if you are absolutely certain that only people you know and trust will be able to connect to it.
+    <strong>Note:</strong> Please consider using a strong password in order to prevent any other person of guessing or
+    brute forcing your password.
 </p>
-<p>
-    <strong>Do NOT underestimate the risk of an unsecured access from the internet to your printer!</strong>
-</p>{% endtrans %}
-
-<div class="row-fluid">
-    <a href="#" class="btn btn-danger span6" data-bind="click: function() { if(!setup()){disableAccessControl()}}, enable: !setup(), css: {disabled: setup()}">{{ _('Disable Access Control') }}</a>
-    <a href="#" class="btn btn-primary span6" data-bind="click: function() { if(!setup()){keepAccessControl()}}, enable: !setup() && validData(), css: {disabled: !validData() || setup()}">{{ _('Keep Access Control Enabled') }}</a>
-</div>
-
-<div class="acl_decision" style="display: none" data-bind="visible: setup()">
-    <div class="text-center" style="display: none" data-bind="visible: decision()">{% trans %}
-        Access control is <strong class="text-success">enabled</strong>.
-    {% endtrans %}</div>
-    <div class="text-center" style="display: none" data-bind="visible: !decision()">{% trans %}
-        Access control is <strong class="text-danger">disabled</strong>.
-    {% endtrans %}</div>
-</div>
+{% endtrans %}

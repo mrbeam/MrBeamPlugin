@@ -71,15 +71,33 @@ $(function() {
                 });
         };
 
-        self.onWizardTabChange = function(current, next) {
-            if (!current || !_.startsWith(current, "wizard_plugin_corewizard_acl_") || self.setup()) {
-                return true;
+        self.onBeforeWizardTabChange = function(next, current) {
+            if (current && _.startsWith(current, "wizard_plugin_corewizard_acl_")) {
+                if (self.validData()) {
+                    var data = {
+                    "ac": true,
+                    "user": self.username(),
+                    "pass1": self.password(),
+                    "pass2": self.confirmedPassword()
+                    };
+                    self._sendData(data);
+                    return true;
+                } else {
+                    if (!self.validUsername()) {
+                        showMessageDialog({
+                            title: gettext("Invalid emtpy username"),
+                            message: gettext("You need to enter a valid username.")
+                        });
+                    } else if (!self.validPassword()) {
+                        showMessageDialog({
+                            title: gettext("Invalid emtpy password"),
+                            message: gettext("You need to enter a valid password.")
+                        });
+                    }
+                    return false;
+                }
             }
-            showMessageDialog({
-                title: gettext("Please set up Access Control"),
-                message: gettext("You haven't yet set up access control. You need to either setup a username and password and click \"Keep Access Control Enabled\" or click \"Disable Access Control\" before continuing")
-            });
-            return false;
+            return true;
         };
 
         self.onWizardFinish = function() {

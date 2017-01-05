@@ -148,6 +148,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		wizard = render_kwargs["templates"] is not None and bool(render_kwargs["templates"]["wizard"]["order"])
 
+		if render_kwargs["templates"]["wizard"]["entries"]:
+			render_kwargs["templates"]["wizard"]["entries"]["firstrunstart"][1]["template"] = "wizard/firstrun_start.jinja2"
+			render_kwargs["templates"]["wizard"]["entries"]["firstrunend"][1]["template"] = "wizard/firstrun_end.jinja2"
+
 		render_kwargs.update(dict(
 							 webcamStream = self._settings.global_get(["webcam", "stream"]),
 							 enableFocus = enable_focus,
