@@ -1,3 +1,5 @@
+/* global snap, ko, $, Snap, API_BASEURL, _, CONFIG_WEBCAM_STREAM, ADDITIONAL_VIEWMODELS */
+
 $(function(){
 
 	// Opera 8.0+
@@ -87,19 +89,18 @@ $(function(){
 		}, self);
 
 		self.px2mm_factor = ko.computed(function(){
-			return 1;
-//			return self.workingAreaWidthMM() / self.workingAreaWidthPx();
+			return self.workingAreaWidthMM() / self.workingAreaWidthPx();
 		});
 
 		self.camTransform = ko.computed(function(){
-			return "scale("+self.camera_scale()+") rotate("+self.camera_rotation()+"deg) translate("+self.camera_offset_x()+"px, "+self.camera_offset_y()+"px)"
+			return "scale("+self.camera_scale()+") rotate("+self.camera_rotation()+"deg) translate("+self.camera_offset_x()+"px, "+self.camera_offset_y()+"px)";
 		});
 
 
 		// matrix scales svg units to display_pixels
 		self.scaleMatrix = ko.computed(function(){
 			var m = new Snap.Matrix();
-			var factor = 25.4/self.svgDPI() * 1/self.px2mm_factor();
+			var factor = 25.4/self.svgDPI();
 			if(!isNaN(factor)){
 				m.scale(factor);
 				return m;
@@ -116,6 +117,13 @@ $(function(){
 				m.scale(factor, -factor).translate(0,-yShift);
 				return m;
 			}
+			return m;
+		});
+		
+		self.matrixMMflipY = ko.computed(function(){
+			var m = new Snap.Matrix();
+			var yShift = self.workingAreaHeightMM(); // 0,0 origin of the gcode is bottom left. (top left in the svg)
+			m.scale(1, -1).translate(0, -yShift);
 			return m;
 		});
 
@@ -204,11 +212,17 @@ $(function(){
 
 		self.crosshairX = function(){
 			var pos = self.state.currentPos();
-			return pos !== undefined ? (self.mm2px(pos.x)  - 15) : -100; // subtract width/2;
+			console.log("crossHairX pos", pos);
+			if(pos !== undefined){
+				return self.mm2px(pos.x)  - 15; // subtract width/2;
+			} else {
+				return -100;
+			}
 
 		};
 		self.crosshairY = function(){
-			var h = Snap($('#area_preview')[0]).getBBox().height;
+			var h = self.workingAreaHeightPx();
+//			var h = Snap($('#area_preview')[0]).getBBox().height;
 			var pos = self.state.currentPos();
 			return pos !== undefined ? (h - self.mm2px(pos.y)  - 15) : -100; // subtract height/2;
 		};
@@ -319,11 +333,13 @@ $(function(){
 				f.selectAll('path').forEach(function (el, i) {
 					var elClass = el.attr('class');
 					if(svgClasses[elClass] === undefined){
-						console.log(elClass)
+						console.log(elClass);
 					}
 				});
 				// find all elements with "display=none" and remove them
 				f.selectAll("[display=none]").remove();
+				f.selectAll("sodipodi\\:namedview").remove();
+				f.selectAll("metadata").remove();
 
 				// iterate svg tag attributes
 				for(var i = 0; i < root_attrs.length; i++){
@@ -336,9 +352,9 @@ $(function(){
 
 					// copy namespaces into group
 					if(attr.name.indexOf("xmlns") === 0){
-						newSvgAttrs[attr.name] = attr.value;
+							newSvgAttrs[attr.name] = attr.value;
+						}
 					}
-				}
 
 				// find Illustrator comment and notify
 				Array.from(f.node.childNodes).forEach(function(entry) {
@@ -361,9 +377,9 @@ $(function(){
 					self.svg_contains_text_warning(newSvg);
 				}
 
-				newSvg.bake(); // remove transforms
-				newSvg.selectAll('path').attr({strokeWidth: '0.5'});
+				newSvg.selectAll('path').attr({strokeWidth: '0.5', 'vector-effect': 'non-scaling-stroke'});
 				newSvg.attr(newSvgAttrs);
+				newSvg.bake(); // remove transforms
 				var id = self.getEntryId(file);
 				var previewId = self.generateUniqueId(id); // appends -# if multiple times the same design is placed.
 				newSvg.attr({id: previewId});
@@ -790,25 +806,32 @@ $(function(){
 			compSvg.append(userContent);
 
 
-
-			self.renderInfill(compSvg, fillAreas, cutOutlines, wMM, hMM, 10, function(svgWithRenderedInfill){
-				callback( self._wrapInSvgAndScale(svgWithRenderedInfill));
+			if(fillAreas){
+				self.renderInfill(compSvg, fillAreas, cutOutlines, wMM, hMM, 10, function(svgWithRenderedInfill){
+					callback( self._wrapInSvgAndScale(svgWithRenderedInfill));
+					$('#compSvg').remove();
+				});
+			} else {
+				callback( self._wrapInSvgAndScale(compSvg));
 				$('#compSvg').remove();
-			});
+			}
 		};
 
 		self._wrapInSvgAndScale = function(content){
 			var svgStr = content.innerSVG();
 			if(svgStr !== ''){
-				var dpiFactor = self.svgDPI()/25.4; // convert mm to pix 90dpi for inkscape, 72 for illustrator
-				var w = dpiFactor * self.workingAreaWidthMM();
-				var h = dpiFactor * self.workingAreaHeightMM();
-
+				var wMM = self.workingAreaWidthMM();
+				var hMM = self.workingAreaHeightMM();
+				var dpiFactor = 90 / 25.4; // we create SVG always with 90 dpi. 
+				var w = dpiFactor * wMM;
+				var h = dpiFactor * hMM;
+				var viewBox = "0 0 " + wMM + " " + hMM;
 				// TODO: look for better solution to solve this Firefox bug problem
 				svgStr = svgStr.replace("(\\\"","(");
 				svgStr = svgStr.replace("\\\")",")");
 
-				var svg = '<svg height="'+ h +'" version="1.1" width="'+ w +'" xmlns="http://www.w3.org/2000/svg"  xmlns:mb="http://www.mr-beam.org/mbns"><defs/>'+svgStr+'</svg>';
+				var svg = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:mb="http://www.mr-beam.org/mbns"' 
+						+ ' width="'+ w +'" height="'+ h +'"  viewBox="'+ viewBox +'"><defs/>'+svgStr+'</svg>';
 				return svg;
 			} else {
 				return;
@@ -836,9 +859,9 @@ $(function(){
 			if(snap.selectAll("#userContent tspan").length > 0 ||
 				snap.selectAll("#userContent text").length > 0 ||
 				snap.selectAll("userContent #text").length > 0) {
-				return true
+				return true;
 			}else{
-				return false
+				return false;
 			}
 		};
 
@@ -871,7 +894,8 @@ $(function(){
 			var p = snap.path(d).attr({
 				fill: "none",
 				stroke: stroke_color,
-				strokeWidth: 1
+				strokeWidth: 0.5,
+				'vector-effect': "non-scaling-stroke"
 			});
 			snap.select(target).append(p);
 		};
@@ -978,7 +1002,7 @@ $(function(){
 					callback();
 				}
 			}
-		}
+		};
 
 		// render the infill and inject it as an image into the svg
 		self.renderInfill = function (svg, fillAreas, cutOutlines, wMM, hMM, pxPerMM, callback) {
@@ -1077,7 +1101,7 @@ $(function(){
                 self.webcamDisableTimeout = setTimeout(function () {
                     $("#webcam_image").css("background-image", "none");
                 }, 5000);
-                window.clearInterval(photoupdate)
+                window.clearInterval(photoupdate);
             }
         };
 

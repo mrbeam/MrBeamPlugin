@@ -317,7 +317,8 @@ $(function(){
 
 					var multicolor_data = self.get_current_multicolor_settings();
 					var engraving_data = self.get_current_engraving_settings();
-					var colorStr = '<!--COLOR_PARAMS_START' +JSON.stringify(multicolor_data) + 'COLOR_PARAMS_END-->';
+					//var colorStr = '<!--COLOR_PARAMS_START' +JSON.stringify(multicolor_data) + 'COLOR_PARAMS_END-->';
+					var colorStr = '';
 					var data = {
 						command: "convert",
 						engrave: self.do_engrave(),

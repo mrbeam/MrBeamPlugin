@@ -1682,8 +1682,8 @@ input.search-query,
 	background-position: -30px -30px;
     transition-property: background-position;
 	transition-timing-function: linear;
-	transition-duration: 1s;
-	transition-delay: 0;
+	transition-duration: 2s;
+	transition-delay: 0s;
 }
 
 #focus_description {

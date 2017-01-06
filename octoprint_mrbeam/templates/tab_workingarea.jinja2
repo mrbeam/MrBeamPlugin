@@ -285,9 +285,9 @@
 										</feComponentTransfer>
 									</filter>
 
-									<g id="scaleGroup" XXdata-bind="attr: { transform: scaleMatrix() }">
-										<g id="placedGcodes" data-bind="visible: true || (state.isPrinting() && !state.isPaused()), attr: { transform: scaleMatrixMMtoDisplay() }"></g>
-										<g id="gCodePreview" data-bind="visible: state.isPrinting() || state.isPaused(), attr: { transform: scaleMatrixMMtoDisplay() }"></g>
+									<g id="placedGcodes" data-bind="visible: true || (state.isPrinting() && !state.isPaused()), attr: { transform: matrixMMflipY() }"></g>
+									<g id="gCodePreview" data-bind="visible: state.isPrinting() || state.isPaused(), attr: { transform: matrixMMflipY() }"></g>
+									<g id="scaleGroup">
 										<rect id="coordGrid" x="0" y="0" width="0" height="0"
 											  stroke="none" fill="none"></rect>
 										<g id="userContent" XXdata-bind="visible: !state.isPrinting() && !state.isPaused()"></g>
