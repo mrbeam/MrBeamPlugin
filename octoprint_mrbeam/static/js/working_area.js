@@ -436,16 +436,15 @@ $(function(){
 		};
 
 		self.svgTransformUpdate = function(svg){
-			var globalScale = self.scaleMatrix().a;
 			var transform = svg.transform();
 			var bbox = svg.getBBox();
-			var tx = self.px2mm(bbox.x * globalScale);
-			var ty = self.workingAreaHeightMM() - self.px2mm(bbox.y2 * globalScale);
+			var tx = bbox.x; 
+			var ty = self.workingAreaHeightMM() - bbox.y2; 
 			var startIdx = transform.local.indexOf('r') + 1;
 			var endIdx = transform.local.indexOf(',', startIdx);
 			var rot = parseFloat(transform.local.substring(startIdx, endIdx)) || 0;
-			var horizontal = self.px2mm((bbox.x2 - bbox.x) * globalScale);
-			var vertical = self.px2mm((bbox.y2 - bbox.y) * globalScale);
+			var horizontal = bbox.w; 
+			var vertical = bbox.h; 
 			var id = svg.attr('id');
 			var label_id = id.substr(0, id.indexOf('-'));
 			$('#'+label_id+' .translation').text(tx.toFixed(1) + ',' + ty.toFixed(1));

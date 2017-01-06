@@ -187,8 +187,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			this.data('scale', 1);
 			this.data('tx', 0);
 			this.data('ty', 0);
-			// TODO avoid calling snap (Paper) global - get instance dynamically
-			this.data('wa', snap.select('#coordGrid').getBBox());
+			this.data('wa', this.paper.select('#coordGrid').getBBox());
 			this.data('ratio', 1);
 			this.attr({class:'_freeTransformInProgress'});
 
