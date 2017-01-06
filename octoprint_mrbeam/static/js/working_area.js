@@ -544,12 +544,12 @@ $(function(){
 				var wpx = this.width;
 				var hpx = this.height;
 
-				var dimPT = self.getUsefulDimensions(wpx, hpx);
-				var wPT = dimPT[0];
-				var hPT = dimPT[1];
+				var dimMM = self.getUsefulDimensions(wpx, hpx);
+				var wMM = dimMM[0];
+				var hMM = dimMM[1];
 
-				var y = self.mm2svgUnits(self.workingAreaHeightMM()) - hPT;
-				var newImg = snap.image(url, 0, y, wPT, hPT);
+				var y = self.workingAreaHeightMM() - hMM;
+				var newImg = snap.image(url, 0, y, wMM, hMM);
 				var id = self.getEntryId(file);
 				var previewId = self.generateUniqueId(id); // appends # if multiple times the same design is placed.
 				newImg.attr({id: previewId, filter: 'url(#grayscale_filter)', 'data-serveurl': url});
@@ -581,9 +581,7 @@ $(function(){
 			} else {
 				destHeightMM = destWidthMM / aspectRatio;
 			}
-			var destWidthPT = self.mm2svgUnits(destWidthMM);
-			var destHeightPT = self.mm2svgUnits(destHeightMM);
-			return [destWidthPT, destHeightPT];
+			return [destWidthMM, destHeightMM];
 		};
 
 		self.getDocumentDimensionsInPt = function(doc_width, doc_height, doc_viewbox){
@@ -1007,7 +1005,8 @@ $(function(){
 			//TODO cutOutlines use it and make it work
 			var wPT = wMM * 90 / 25.4;
 			var hPT = hMM * 90 / 25.4;
-			var tmpSvg = Snap(wPT, hPT).attr('id', 'tmpSvg');
+			var viewBox = snap.attr('viewBox');
+			var tmpSvg = Snap(wPT, hPT).attr({id: 'tmpSvg', viewBox: viewBox});
 			// get only filled items and embed the images
 			var userContent = svg.clone();
 			tmpSvg.append(userContent);
