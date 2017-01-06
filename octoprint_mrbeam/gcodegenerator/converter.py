@@ -731,10 +731,6 @@ class Converter():
 	def _get_document_viewbox_matrix(self):
 		vbox = self.document.getroot().get('viewBox')
 		if(vbox != None ):
-<<<<<<< HEAD
-			print("Found viewbox attribute %s" % vbox)
-=======
->>>>>>> develop
 			self._log.info("Found viewbox attribute %s" % vbox)
 			widthPx = unittouu(self._get_document_width())
 			heightPx = unittouu(self._get_document_height())
