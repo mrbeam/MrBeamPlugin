@@ -376,9 +376,9 @@ $(function(){
 					self.svg_contains_text_warning(newSvg);
 				}
 
-				newSvg.selectAll('path').attr({strokeWidth: '0.5', 'vector-effect': 'non-scaling-stroke'});
 				newSvg.attr(newSvgAttrs);
 				newSvg.bake(); // remove transforms
+				newSvg.selectAll('path').attr({strokeWidth: '0.8', class:'vector_outline'});
 				var id = self.getEntryId(file);
 				var previewId = self.generateUniqueId(id); // appends -# if multiple times the same design is placed.
 				newSvg.attr({id: previewId});
