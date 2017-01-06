@@ -731,7 +731,6 @@ class Converter():
 	def _get_document_viewbox_matrix(self):
 		vbox = self.document.getroot().get('viewBox')
 		if(vbox != None ):
-			print("Found viewbox attribute %s" % vbox)
 			self._log.info("Found viewbox attribute %s" % vbox)
 			widthPx = unittouu(self._get_document_width())
 			heightPx = unittouu(self._get_document_height())
@@ -747,7 +746,6 @@ class Converter():
 				dx = offsetVBoxX * fx
 				dy = offsetVBoxY * fy
 				m = [[fx,0,0],[0,fy,0], [dx,dy,1]]
-				print("viewbox matrix %s" % m)
 				return m
 
 		return [[1,0,0],[0,1,0], [0,0,1]]
