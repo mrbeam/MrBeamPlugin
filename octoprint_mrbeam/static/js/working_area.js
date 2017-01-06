@@ -212,7 +212,6 @@ $(function(){
 
 		self.crosshairX = function(){
 			var pos = self.state.currentPos();
-			console.log("crossHairX pos", pos);
 			if(pos !== undefined){
 				return self.mm2px(pos.x)  - 15; // subtract width/2;
 			} else {
@@ -963,7 +962,7 @@ $(function(){
 				if(design.type === 'model'){
 					var svg = snap.select('#' + design.previewId);
 					var misfitting = self.outsideWorkingArea(svg);
-					console.log("Misfitting: ", misfitting);
+//					console.log("Misfitting: ", misfitting);
 					if(misfitting.oversized || misfitting.outside){
 						svg.data('fitMatrix', misfitting);
 						$('#'+design.id).addClass('misfit');
@@ -1094,7 +1093,7 @@ $(function(){
 //                    console.log("webcam src set", newSrc);
                     webcamImage.attr("src", newSrc);
                 }
-                console.log("webcam enabled");
+//                console.log("webcam enabled");
             } else if (previous === "#workingarea") {
                 // only disable webcam stream if tab is out of focus for more than 5s, otherwise we might cause
                 // more load by the constant connection creation than by the actual webcam stream
