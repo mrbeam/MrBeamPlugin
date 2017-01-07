@@ -274,7 +274,7 @@ $(function(){
 
 				};
 				var imgCallback = function(x,y,w,h, url){
-					self.draw_gcode_img_placeholder(x,y,w,h,url, '#'+previewId)
+					self.draw_gcode_img_placeholder(x,y,w,h,url, '#'+previewId);
 				};
 				self.parser.parse(gcode, /(m0?3)|(m0?5)/i, pathCallback, imgCallback);
 			});
@@ -311,7 +311,7 @@ $(function(){
 			var url = self._getSVGserveUrl(file);
 			callback = function (f) {
 				var newSvgAttrs = {};
-				if(f.select('svg') == null){
+				if(f.select('svg') === null){
 					root_attrs = f.node.attributes;
 				} else {
 					var root_attrs = f.select('svg').node.attributes;
@@ -739,7 +739,7 @@ $(function(){
 			});
 
 			$('#coordGrid').on('dblclick', function (event) {
-				self.move_laser({}, event)
+				self.move_laser({}, event);
 			});
 		};
 
@@ -749,12 +749,13 @@ $(function(){
 			var h = self.workingAreaHeightMM();
 
 			if( grid.attr('width') !== w || grid.attr('height') !== h || grid.attr('fill') === 'none'){
+				snap.selectAll('#coordPattern').remove();
 				var max_lines = 20;
 
 				var linedist = Math.floor(Math.max(self.workingAreaWidthMM(), self.workingAreaHeightMM()) / (max_lines * 10))*10;
 				var yPatternOffset = self.workingAreaHeightMM() % linedist;
 
-				var marker = snap.circle(linedist/2, linedist/2, 1).attr({
+				var marker = snap.circle(linedist/2, linedist/2, .5).attr({
 					fill: "#000000",
 					stroke: "none",
 					strokeWidth: 1
@@ -763,6 +764,7 @@ $(function(){
 				// dot pattern
 				var p = marker.pattern(0, 0, linedist, linedist);
 				p.attr({
+					id: 'coordPattern',
 					x: linedist/2,
 					y: linedist/2 + yPatternOffset
 				});
@@ -981,9 +983,9 @@ $(function(){
 
 			var allImages = svg.selectAll('image');
 			var linkedImages = allImages.items.filter(function(i){
-				if(i.attr('xlink:href') != null) {
+				if(i.attr('xlink:href') !== null) {
 					return !i.attr('xlink:href').startsWith('data:');
-				} else if(i.attr('href') != null) {
+				} else if(i.attr('href') !== null) {
 					return !i.attr('href').startsWith('data:');
 				}});
 			if(linkedImages.length > 0){
@@ -1067,7 +1069,7 @@ $(function(){
 
 		self.onTabChange = function (current, previous) {
             if (current === "#workingarea") {
-                if (self.webcamDisableTimeout != undefined) {
+                if (self.webcamDisableTimeout !== undefined) {
                     clearTimeout(self.webcamDisableTimeout);
                 }
                 var webcamImage = $("#webcam_image");
