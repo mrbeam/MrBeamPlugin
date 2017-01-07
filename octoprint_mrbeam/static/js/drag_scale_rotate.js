@@ -354,7 +354,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 		var rCenter = {x: mainBB.cx,y: mainBB.cy};
 		var rStart = {x: +rotateDragger.data('ocx') , y: +rotateDragger.data('ocy')};
-		var rEnd = {x: rStart.x + dx * sgUnscale, y: rStart.y + dy * sgUnscale};
+		var rEnd = {x: rStart.x + dx * sgUnscale, y: rStart.y + dy * sgUnscale *-1};
 
 
 		if(!mainEl.data('block_rotation')){
