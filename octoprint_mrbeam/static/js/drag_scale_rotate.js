@@ -313,7 +313,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		var sgUnscale = mainEl.data('sgUnscale');
 
 		var udx = sgUnscale*dx;
-		var udy = sgUnscale*dy;
+		var udy = sgUnscale*dy *-1;
 
 		var tx = mainEl.data("otx") + +udx;
 		var ty = mainEl.data("oty") + +udy;
@@ -406,7 +406,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	function resizeDraggerMove( mainEl, dx, dy, x, y, event ) {
 		var resizeDragger = this;
 		// TODO use dx and dy, scale properly to movement.
-		dy = dy/2; //apply smoothing factor of 2
+		dy = -dy/2; //apply smoothing factor of 2
 
 		var origHeight = +mainEl.data('oHeight') * +mainEl.data('angleFactor');
 		var newHeight = +resizeDragger.data('sHeight') - dy * mainEl.data('sgUnscale') * resizeDragger.data('signY');
