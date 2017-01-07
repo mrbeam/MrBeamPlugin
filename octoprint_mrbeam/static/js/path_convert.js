@@ -203,7 +203,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		var stroke = old_element.attr("stroke");
 		if(stroke !== 'none' && stroke !== undefined && stroke !== ""){
 			path.attr({'mb:color': Snap.getRGB(stroke).hex});
-			console.log("Snap.getRGB: '" + Snap.getRGB(stroke).hex + "'");
+//			console.log("Snap.getRGB: '" + Snap.getRGB(stroke).hex + "'");
 		}
 
 		return path;

@@ -109,16 +109,16 @@ $(function(){
 		});
 
 		// matrix scales svg units to display_pixels
-		self.scaleMatrixMMtoDisplay = ko.computed(function(){
-			var m = new Snap.Matrix();
-			var factor = self.svgDPI()/25.4; // scale mm to 90dpi pixels
-			var yShift = self.workingAreaHeightMM(); // 0,0 origin of the gcode is bottom left. (top left in the svg)
-			if(!isNaN(factor)){
-				m.scale(factor, -factor).translate(0,-yShift);
-				return m;
-			}
-			return m;
-		});
+//		self.scaleMatrixMMtoDisplay = ko.computed(function(){
+//			var m = new Snap.Matrix();
+//			var factor = self.svgDPI()/25.4; // scale mm to 90dpi pixels
+//			var yShift = self.workingAreaHeightMM(); // 0,0 origin of the gcode is bottom left. (top left in the svg)
+//			if(!isNaN(factor)){
+//				m.scale(factor, -factor).translate(0,-yShift);
+//				return m;
+//			}
+//			return m;
+//		});
 		
 		self.matrixMMflipY = ko.computed(function(){
 			var m = new Snap.Matrix();
@@ -316,8 +316,8 @@ $(function(){
 				} else {
 					var root_attrs = f.select('svg').node.attributes;
 				}
-				var doc_width = null;
-				var doc_height = null;
+				var doc_widthStr = null;
+				var doc_heightStr = null;
 				var doc_viewbox = null;
 
 				// find clippath elements
@@ -345,8 +345,8 @@ $(function(){
 					var attr = root_attrs[i];
 
 					// get dimensions
-					if(attr.name === "width") doc_width = attr.value;
-					if(attr.name === "height") doc_height = attr.value;
+					if(attr.name === "width") doc_widthStr = attr.value;
+					if(attr.name === "height") doc_heightStr = attr.value;
 					if(attr.name === "viewBox") doc_viewbox = attr.value;
 
 					// copy namespaces into group
@@ -365,9 +365,15 @@ $(function(){
 				});
 
 				// scale matrix
-				var mat = self.getDocumentViewBoxMatrix(doc_width, doc_height, doc_viewbox);
 				var dpiscale = 25.4 / self.settings.settings.plugins.mrbeam.svgDPI();
-                var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(dpiscale).toTransformString();
+				var doc_dimPT = self.getDocumentDimensionsInPt(doc_widthStr, doc_heightStr, doc_viewbox);
+				var mat = self.getDocumentViewBoxMatrix(doc_dimPT, doc_viewbox);
+				var yShift = doc_dimPT[1] * dpiscale; // if doc size is different than workingArea place bottom left
+                var scaleMatrixStr = new Snap.Matrix(
+						mat[0][0],mat[0][1], 
+						mat[1][0],-mat[1][1], 
+						mat[0][2],mat[1][2]+yShift
+					).scale(dpiscale).toTransformString();
                 newSvgAttrs['transform'] = scaleMatrixStr;
 
 				var newSvg = snap.group(f.selectAll("svg>*"));
@@ -622,8 +628,7 @@ $(function(){
 			return [widthPt, heightPt];
 		};
 
-		self.getDocumentViewBoxMatrix = function(widthStr, heightStr, vbox){
-			var dim = self.getDocumentDimensionsInPt(widthStr, heightStr, vbox);
+		self.getDocumentViewBoxMatrix = function(dim, vbox){
 			if(vbox !== null ){
 				var widthPx = dim[0];
 				var heightPx = dim[1];
