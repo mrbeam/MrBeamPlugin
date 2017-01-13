@@ -118,6 +118,13 @@ $(function(){
 			return m;
 		});
 
+		self.scaleMatrixCrosshair = function(){
+		    var x = self.crosshairX != undefined ? self.crosshairX() : 0;
+		    var y = self.crosshairY != undefined ? self.crosshairY() : 0;
+		    var m = "matrix(0.09, 0, 0, 0.09, " + x + ", " + y + ")";
+		    return m;
+        };
+
 		self.placedDesigns = ko.observableArray([]);
 		self.working_area_empty = ko.computed(function(){
 			return self.placedDesigns().length === 0;
