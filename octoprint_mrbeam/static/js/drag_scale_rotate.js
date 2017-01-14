@@ -312,8 +312,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	function elementDragMove( mainEl, dx, dy, x, y ) {
 		var sgUnscale = mainEl.data('sgUnscale');
 
-		var udx = sgUnscale*dx;
-		var udy = sgUnscale*dy *-1;
+		var udx = sgUnscale * dx;
+		var udy = sgUnscale * dy * -1;
 
 		var tx = mainEl.data("otx") + +udx;
 		var ty = mainEl.data("oty") + +udy;
@@ -354,7 +354,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 		var rCenter = {x: mainBB.cx,y: mainBB.cy};
 		var rStart = {x: +rotateDragger.data('ocx') , y: +rotateDragger.data('ocy')};
-		var rEnd = {x: rStart.x + dx * sgUnscale, y: rStart.y + dy * sgUnscale *-1};
+		var rEnd = {x: rStart.x + dx * sgUnscale, y: rStart.y + dy * sgUnscale * -1};
 
 
 		if(!mainEl.data('block_rotation')){
@@ -387,8 +387,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		var bb = mainEl.getBBox();
 
 		//store height at start of dragging
-		resizeDragger.data('sHeight', bb.cy-bb.y);
-		mainEl.data('ratio', (bb.cx - bb.x)/resizeDragger.data('sHeight'));
+		var sHeight = bb.cy - bb.y;
+		resizeDragger.data('sHeight', sHeight);
+		mainEl.data('ratio', (bb.cx - bb.x) / sHeight);
 
 		//check where dragger is to adjust scaling-translation
 		elementDragStart(mainEl);
@@ -421,7 +422,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		mainEl.data('scale', newScale);
 
 		//TODO angle, for translation of innerBB(redBB)
-		elementDragMove(mainEl,dy * +mainEl.data('ratio') * resizeDragger.data('signX') * resizeDragger.data('signY'),dy);
+		elementDragMove(mainEl, dy * +mainEl.data('ratio') * resizeDragger.data('signX')   * resizeDragger.data('signY'), -dy);
 
 		mainEl.ftUpdateTransform();
 	};
