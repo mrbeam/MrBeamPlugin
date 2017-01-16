@@ -738,7 +738,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				current=self._plugin_version,
 
 				# update method: pip
-				pip="https://github.com/hungerpirat/Mr_Beam/archive/{target_version}.zip"
+				pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip"
 			)
 		)
 
