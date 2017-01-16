@@ -434,7 +434,7 @@ class Converter():
 		
 	def _apply_transforms(self,g,csp):
 		trans = self._get_transforms(g)
-		if trans != []: #todo can trans be [] anyways?
+		if trans != [[1,0,0],[0,1,0]]: #todo can trans be [] anyways?
 			self._log.warn("still transforms in the SVG %s" % trans)
 			simpletransform.applyTransformToPath(trans, csp)
 		return csp
@@ -674,7 +674,7 @@ class Converter():
 			
 			#TODO avoid conversion to cubicsuperpath, calculate p0 and p1 directly
 			#point[0] = self._apply_transforms(node,cubicsuperpath.parsePath(node.get("d")))[0][0][1]
-			d = 'm %s,%s 2.9375,-6.343750000001 0.8125,1.90625 6.843748640396,-6.84374864039 0,0 0.6875,0.6875 -6.84375,6.84375 1.90625,0.812500000001 z z' % (si[0], -si[1]+doc_height)
+			d = 'm %s,%s 2.9375,-6.343750000001 0.8125,1.90625 6.843748640396,-6.84374864039 0,0 0.6875,0.6875 -6.84375,6.84375 1.90625,0.812500000001 z z' % (si[0], -si[1] + doc_height / viewBoxScale)
 			csp = cubicsuperpath.parsePath(d)
 			#self._log.info('### CSP %s' % csp)
 			### CSP [[[[0.0, 1413.42519685], [0.0, 1413.42519685], [0.0, 1413.42519685]], [[2.9375, 1407.081446849999], [2.9375, 1407.081446849999], [2.9375, 1407.081446849999]], [[3.75, 1408.987696849999], [3.75, 1408.987696849999], [3.75, 1408.987696849999]], [[10.593748640396, 1402.143948209609], [10.593748640396, 1402.143948209609], [10.593748640396, 1402.143948209609]], [[10.593748640396, 1402.143948209609], [10.593748640396, 1402.143948209609], [10.593748640396, 1402.143948209609]], [[11.281248640396, 1402.831448209609], [11.281248640396, 1402.831448209609], [11.281248640396, 1402.831448209609]], [[4.437498640396001, 1409.675198209609], [4.437498640396001, 1409.675198209609], [4.437498640396001, 1409.675198209609]], [[6.343748640396001, 1410.48769820961], [6.343748640396001, 1410.48769820961], [6.343748640396001, 1410.48769820961]], [[0.0, 1413.42519685], [0.0, 1413.42519685], [0.0, 1413.42519685]], [[0.0, 1413.42519685], [0.0, 1413.42519685], [0.0, 1413.42519685]]]]   
@@ -731,7 +731,7 @@ class Converter():
 	def _get_document_viewbox_matrix(self):
 		vbox = self.document.getroot().get('viewBox')
 		if(vbox != None ):
-			self._log.info("Found viewbox attribute", vbox)
+			self._log.info("Found viewbox attribute %s" % vbox)
 			widthPx = unittouu(self._get_document_width())
 			heightPx = unittouu(self._get_document_height())
 			parts = vbox.split(' ')
@@ -745,7 +745,8 @@ class Converter():
 				fy = heightPx / heightVBox
 				dx = offsetVBoxX * fx
 				dy = offsetVBoxY * fy
-				return [[fx,0,0],[0,fy,0], [dx,dy,1]]
+				m = [[fx,0,0],[0,fy,0], [dx,dy,1]]
+				return m
 
 		return [[1,0,0],[0,1,0], [0,0,1]]
 

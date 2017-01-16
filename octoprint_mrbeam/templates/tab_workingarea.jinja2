@@ -266,12 +266,13 @@
 
 								</div>
 								{% endif %}
-								<svg id="area_preview" class="workingarea"
+								<svg id="area_preview" class="workingarea" visibility="hidden"
 									 data-bind="style: {
 											backgroundPosition: crosshairX()+'px'+' '+crosshairY()+'px',
 											width: workingAreaWidthPx()+'px',
 											height: workingAreaHeightPx()+'px'
-										}
+										},
+										attr: {visibility: 'visible'}
 									 ">
 									<filter id="grayscale_filter">
 										<feColorMatrix in="SourceGraphic" type="saturate" values="0"/>
@@ -283,7 +284,6 @@
 											<feFuncB type="table" tableValues="0.2 1"></feFuncB>
 										</feComponentTransfer>
 									</filter>
-
 									<g id="scaleGroup" data-bind="attr: { transform: scaleMatrix() }">
 										<g id="placedGcodes" data-bind="visible: true || (state.isPrinting() && !state.isPaused()), attr: { transform: scaleMatrixMMtoDisplay() }"></g>
 										<g id="gCodePreview" data-bind="visible: state.isPrinting() || state.isPaused(), attr: { transform: scaleMatrixMMtoDisplay() }"></g>
@@ -291,6 +291,15 @@
 											  stroke="none" fill="none"></rect>
 										<g id="userContent" XXdata-bind="visible: !state.isPrinting() && !state.isPaused()"></g>
 									</g>
+                                      <g id="crosshair" class="workingarea"
+                                         transform="matrix(0.09, 0, 0, 0.09, -100, -100)"
+                                         data-bind="attr: { transform: scaleMatrixCrosshair()}">
+                                        <circle cx="174.776" cy="174.779" r="13.921" style="fill: rgb(226, 83, 3);"/>
+                                        <path d="M14.917,189.696h112.714c8.24,0,14.917-6.677,14.917-14.917s-6.677-14.917-14.917-14.917H14.917&#10;&#9;&#9;&#9;C6.677,159.861,0,166.538,0,174.779S6.677,189.696,14.917,189.696z" style="fill: rgb(226, 83, 3);"/>
+                                        <path d="M189.693,14.92c0-8.24-6.677-14.917-14.917-14.917c-8.24,0-14.917,6.677-14.917,14.917v112.714&#10;&#9;&#9;&#9;c0,8.24,6.677,14.917,14.917,14.917c8.24,0,14.917-6.677,14.917-14.917V14.92z" style="fill: rgb(226, 83, 3);"/>
+                                        <path d="M349.557,174.779c0-8.24-6.677-14.917-14.917-14.917H221.926c-8.24,0-14.917,6.677-14.917,14.917&#10;&#9;&#9;&#9;s6.677,14.917,14.917,14.917H334.64C342.874,189.696,349.557,183.019,349.557,174.779z" style="fill: rgb(226, 83, 3);"/>
+                                        <path d="M159.858,334.637c0,8.24,6.677,14.917,14.917,14.917c8.24,0,14.917-6.677,14.917-14.917V221.923&#10;&#9;&#9;&#9;c0-8.24-6.677-14.917-14.917-14.917c-8.24,0-14.917,6.677-14.917,14.917V334.637z" style="fill: rgb(226, 83, 3);"/>
+                                      </g>
 								</svg>
 
 							</div>
