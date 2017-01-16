@@ -1,0 +1,41 @@
+<h3>{{ _('Wifi') }}</h3>
+
+{% trans %}<p>
+    <strong>This is about Wifi of your Mr Beam 2!</strong>
+</p>
+<p>
+    Your Mr Beam 2 is configured with a Access Control, meaning you won't be able to do anything with the
+    laser cutter unless you login first as a configured user. This is to <strong>prevent strangers - possibly with
+    malicious intent - to gain access to your laser cutter</strong> via the internet or another untrustworthy network
+    and using it in such a way that it is damaged or worse (i.e. causes a fire).
+</p>
+<p>
+    Please <strong>set up a username and password</strong> for the
+    initial administrator account who will have full access to the Mr Beam 2:
+</p>{% endtrans %}
+<form class="form-horizontal">
+    <div class="control-group" data-bind="css: {success: validUsername()}">
+        <label class="control-label" for="first_run_username">{{ _('Username') }}</label>
+        <div class="controls">
+            <input type="text" class="input-medium" data-bind="value: username, valueUpdate: 'afterkeydown', enable: !setup(), css: {disabled: setup()}">
+        </div>
+    </div>
+    <div class="control-group" data-bind="css: {success: validPassword()}">
+        <label class="control-label" for="first_run_username">{{ _('Password') }}</label>
+        <div class="controls">
+            <input type="password" class="input-medium" data-bind="value: password, valueUpdate: 'afterkeydown', enable: !setup(), css: {disabled: setup()}">
+        </div>
+    </div>
+    <div class="control-group" data-bind="css: {error: passwordMismatch(), success: validPassword() && !passwordMismatch()}">
+        <label class="control-label" for="first_run_username">{{ _('Confirm Password') }}</label>
+        <div class="controls">
+            <input type="password" class="input-medium" data-bind="value: confirmedPassword, valueUpdate: 'afterkeydown', enable: !setup(), css: {disabled: setup()}">
+            <span class="help-inline" data-bind="visible: passwordMismatch()">{{ _('Passwords do not match') }}</span>
+        </div>
+    </div>
+</form>
+{% trans %}<p>
+    <strong>Note:</strong> Please consider using a strong password in order to prevent any other person of guessing or
+    brute forcing your password.
+</p>
+{% endtrans %}
