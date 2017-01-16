@@ -491,7 +491,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self._log.info('Wrote job parameters to %s', self._CONVERSION_PARAMS_PATH)
 
 			self._printer.set_colors(currentFilename, data['vector'])
-	
+
 			# callback definition
 			def slicing_done(target, gcode_name, select_after_slicing, print_after_slicing, append_these_files):
 				# append additioal gcodes
@@ -506,7 +506,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 						wfd.write("\nM05\n")  # ensure that the laser is off.
 						self._log.info("Slicing finished: %s" % path)
-						
+
 				if select_after_slicing or print_after_slicing:
 					sd = False
 					filenameToSelect = self._file_manager.path_on_disk(target, gcode_name)
@@ -632,7 +632,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		# READ PARAMS FROM JSON
 		params = dict()
-		with open(self._CONVERSION_PARAMS_PATH) as data_file:    
+		with open(self._CONVERSION_PARAMS_PATH) as data_file:
 			params = json.load(data_file)
 			#self._log.debug("Read multicolor params %s" % params)
 
@@ -652,7 +652,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			from .gcodegenerator.converter import Converter
 			engine = Converter(params, model_path)
 			engine.convert(on_progress, on_progress_args, on_progress_kwargs)
-			
+
 			self._log.info("Conversion delegated.")
 			return True, None  # TODO add analysis about out of working area, ignored elements, invisible elements, text elements
 		except octoprint.slicing.SlicingCancelled as e:
@@ -734,6 +734,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				type="github_release",
 				user="mrbeam",
 				repo="MrBeamPlugin",
+				branch="develop",
 				current=self._plugin_version,
 
 				# update method: pip
@@ -776,20 +777,20 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			)
 		)
 
-	def get_update_information(self):
-		return dict(
-			updateplugindemo=dict(
-				displayName=self._plugin_name,
-				displayVersion=self._plugin_version,
-
-				type="github_release",
-				current=self._plugin_version,
-				user="mrbeam",
-				repo="MrBeamPlugin",
-
-				pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip"
-			)
-		)
+	# def get_update_information(self):
+	# 	return dict(
+	# 		updateplugindemo=dict(
+	# 			displayName=self._plugin_name,
+	# 			displayVersion=self._plugin_version,
+	#
+	# 			type="github_release",
+	# 			current=self._plugin_version,
+	# 			user="mrbeam",
+	# 			repo="MrBeamPlugin",
+	#
+	# 			pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip"
+	# 		)
+	# 	)
 
 	def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
 		return [("POST", r"/convert", 10 * 1024 * 1024)]
