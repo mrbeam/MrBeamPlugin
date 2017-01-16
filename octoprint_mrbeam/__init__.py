@@ -17,6 +17,7 @@ import threading
 import json
 from octoprint.server.util.flask import restricted_access, get_json_command_from_request
 from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping
+from flask.ext.babel import gettext
 from flask import Blueprint, request, jsonify, make_response, url_for
 
 
@@ -30,6 +31,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				   octoprint.plugin.SimpleApiPlugin,
 				   octoprint.plugin.EventHandlerPlugin,
 				   octoprint.plugin.ProgressPlugin,
+				   octoprint.plugin.WizardPlugin,
 				   octoprint.plugin.SlicerPlugin):
 
 	def __init__(self):
@@ -126,7 +128,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return dict(
 			js=["js/lasercutterprofiles.js","js/mother_viewmodel.js", "js/mrbeam.js","js/color_classifier.js","js/working_area.js", "js/camera.js",
 			"js/lib/snap.svg-min.js", "js/render_fills.js", "js/path_convert.js", "js/matrix_oven.js", "js/drag_scale_rotate.js",
-			"js/convert.js", "js/gcode_parser.js", "js/lib/photobooth_min.js", "js/laserSafetyNotes.js", "js/svg_cleaner.js"],
+			"js/convert.js", "js/gcode_parser.js", "js/lib/photobooth_min.js", "js/laserSafetyNotes.js", "js/svg_cleaner.js", "js/corewizard.js"],
 			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css"],
 			less=["less/mrbeam.less"]
 		)
@@ -150,6 +152,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		safety_glasses = selectedProfile["glasses"]
 		# render_kwargs["templates"]["settings"]["entries"]["serial"][1]["template"] = "settings/serialconnection.jinja2"
 
+		wizard = render_kwargs["templates"] is not None and bool(render_kwargs["templates"]["wizard"]["order"])
+
+		if render_kwargs["templates"]["wizard"]["entries"]:
+			render_kwargs["templates"]["wizard"]["entries"]["firstrunstart"][1]["template"] = "wizard/firstrun_start.jinja2"
+			render_kwargs["templates"]["wizard"]["entries"]["firstrunend"][1]["template"] = "wizard/firstrun_end.jinja2"
+
 		render_kwargs.update(dict(
 							 webcamStream = self._settings.global_get(["webcam", "stream"]),
 							 enableFocus = enable_focus,
@@ -160,7 +168,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 enableSdSupport = False,
 							 gcodeMobileThreshold = 0,
 							 gcodeThreshold = 0,
-							 wizard = False,
+							 wizard = wizard,
 							 now = now,
 							 ))
 		return make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
@@ -173,7 +181,104 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			dict(type = 'settings', name = "SVG Conversion", template='settings/svgtogcode_settings.jinja2', suffix="_conversion", custom_bindings = False),
 			dict(type = 'settings', name = "Camera Calibration", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings = True),
 			dict(type = 'settings', name = "Serial Connection", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings= False, replaces='serial')
-		]
+		] + self._get_wizard_template_configs()
+
+	def _get_wizard_template_configs(self):
+		required = self._get_subwizard_attrs("_is_", "_wizard_required")
+		names = self._get_subwizard_attrs("_get_", "_wizard_name")
+		additional = self._get_subwizard_attrs("_get_", "_additional_wizard_template_data")
+
+		result = list()
+		for key, method in required.items():
+			if not method():
+				continue
+
+			if not key in names:
+				continue
+
+			name = names[key]()
+			if not name:
+				continue
+
+			config = dict(type="wizard", name=name, template="corewizard_{}_wizard.jinja2".format(key), div="wizard_plugin_corewizard_{}".format(key))
+			if key in additional:
+				additional_result = additional[key]()
+				if additional_result:
+					config.update(additional_result)
+			result.append(config)
+
+		return result
+
+	#~~ WizardPlugin API
+
+	def is_wizard_required(self):
+		methods = self._get_subwizard_attrs("_is_", "_wizard_required")
+		return self._settings.global_get(["server", "firstRun"]) and any(map(lambda m: m(), methods.values()))
+
+	def get_wizard_details(self):
+		result = dict()
+		return result
+
+	#~~ ACL subwizard
+
+	def _is_acl_wizard_required(self):
+		return self._user_manager.enabled and not self._user_manager.hasBeenCustomized()
+
+	def _get_acl_wizard_details(self):
+		return dict()
+
+	def _get_acl_wizard_name(self):
+		return gettext("Access Control")
+
+	def _get_acl_additional_wizard_template_data(self):
+		return dict(mandatory=self._is_acl_wizard_required())
+
+	@octoprint.plugin.BlueprintPlugin.route("/acl", methods=["POST"])
+	def acl_wizard_api(self):
+		from flask import request
+		from octoprint.server.api import valid_boolean_trues, NO_CONTENT
+
+		data = request.values
+		if hasattr(request, "json") and request.json:
+			data = request.json
+
+		if "ac" in data and data["ac"] in valid_boolean_trues and \
+						"user" in data.keys() and "pass1" in data.keys() and \
+						"pass2" in data.keys() and data["pass1"] == data["pass2"]:
+			# configure access control
+			self._settings.global_set_boolean(["accessControl", "enabled"], True)
+			self._user_manager.enable()
+			self._user_manager.addUser(data["user"], data["pass1"], True, ["user", "admin"], overwrite=True)
+		elif "ac" in data.keys() and not data["ac"] in valid_boolean_trues:
+			# disable access control
+			self._settings.global_set_boolean(["accessControl", "enabled"], False)
+
+			octoprint.server.loginManager.anonymous_user = octoprint.users.DummyUser
+			octoprint.server.principals.identity_loaders.appendleft(octoprint.users.dummy_identity_loader)
+
+			self._user_manager.disable()
+		self._settings.save()
+		return NO_CONTENT
+
+	#~~ helpers
+
+	def _get_subwizard_attrs(self, start, end, callback=None):
+		result = dict()
+
+		for item in dir(self):
+			if not item.startswith(start) or not item.endswith(end):
+				continue
+
+			key = item[len(start):-len(end)]
+			if not key:
+				continue
+
+			attr = getattr(self, item)
+			if callable(callback):
+				callback(key, attr)
+			result[key] = attr
+
+		return result
 
 	##~~ BlueprintPlugin mixin
 
@@ -711,7 +816,7 @@ def __plugin_load__():
 	global __plugin_settings_overlay__
 	__plugin_settings_overlay__ = dict(
 		plugins = dict(
-			_disabled=['cura', 'pluginmanager', 'announcements']), # eats dict | pfad.yml | callable
+			_disabled=['cura', 'pluginmanager', 'announcements','corewizard']), # eats dict | pfad.yml | callable
 			terminalFilters=[
 				{ "name": "Suppress position requests" , "regex": "(Send: \?)" },
 				{ "name": "Suppress confirmations" , "regex": "(Recv: ok)" },
