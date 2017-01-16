@@ -214,14 +214,7 @@ $(function(){
 
 		};
 		self.crosshairY = function(){
-		    var box = Snap($('#area_preview')[0]).getBBox();
-
-		    // If parts of the crosshair are outside of the working_area
-            // which is when the crosshair is close to the upper bound of the working_area
-            // the working_area gets expanded and so it's y position changes from 0 to -16 (in my case)
-            // that's why we need to add the y position of the working_area's bb0x to it's height...
-			var h = box.height + box.y;
-
+			var h = self.workingAreaDim != undefined ? self.workingAreaDim()[1] : 0;
 			var pos = self.state.currentPos();
 			return pos !== undefined ? (h - self.mm2px(pos.y)  - 15) : -100; // subtract height/2;
 		};

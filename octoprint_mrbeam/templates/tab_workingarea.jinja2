@@ -268,7 +268,6 @@
 								{% endif %}
 								<svg id="area_preview" class="workingarea" visibility="hidden"
 									 data-bind="style: {
-											backgroundPosition: crosshairX()+'px'+' '+crosshairY()+'px',
 											width: workingAreaWidthPx()+'px',
 											height: workingAreaHeightPx()+'px'
 										},
@@ -291,7 +290,7 @@
 											  stroke="none" fill="none"></rect>
 										<g id="userContent" XXdata-bind="visible: !state.isPrinting() && !state.isPaused()"></g>
 									</g>
-                                      <g id="crosshair" class="workingarea"
+                                      <g id="crosshair"
                                          transform="matrix(0.09, 0, 0, 0.09, -100, -100)"
                                          data-bind="attr: { transform: scaleMatrixCrosshair()}">
                                         <circle cx="174.776" cy="174.779" r="13.921" style="fill: rgb(226, 83, 3);"/>
