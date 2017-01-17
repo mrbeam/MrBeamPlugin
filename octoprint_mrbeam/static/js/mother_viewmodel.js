@@ -292,7 +292,9 @@ $(function () {
         // settings.js viewmodel extensions
 
         self.settings.saveall = function (e, v) {
-            $("#settingsTabs li.active").addClass('saveInProgress');
+            if ($("#settings").is(':visible')) {
+                $("#settingsTabs").find("li.active").addClass('saveInProgress');
+            }
             if (self.settings.savetimer !== undefined) {
                 clearTimeout(self.settings.savetimer);
             }
