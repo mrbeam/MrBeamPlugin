@@ -217,6 +217,21 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		result = dict()
 		return result
 
+
+	# ~~ Wifi subwizard
+
+	def _is_wifi_wizard_required(self):
+		return self._user_manager.enabled and not self._user_manager.hasBeenCustomized()
+
+	def _get_wifi_wizard_details(self):
+		return dict()
+
+	def _get_wifi_additional_wizard_template_data(self):
+		return dict(mandatory=self._is_wifi_wizard_required())
+
+	def _get_wifi_wizard_name(self):
+		return gettext("Wifi Setup")
+
 	#~~ ACL subwizard
 
 	def _is_acl_wizard_required(self):
@@ -232,19 +247,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return gettext("Access Control")
 
 
-	# ~~ Wifi subwizard
-
-	def _is_wifi_wizard_required(self):
-		return self._user_manager.enabled and not self._user_manager.hasBeenCustomized()
-
-	def _get_wifi_wizard_details(self):
-		return dict()
-
-	def _get_wifi_additional_wizard_template_data(self):
-		return dict(mandatory=self._is_wifi_wizard_required())
-
-	def _get_wifi_wizard_name(self):
-		return gettext("Wifi Setup")
 
 
 	@octoprint.plugin.BlueprintPlugin.route("/acl", methods=["POST"])
