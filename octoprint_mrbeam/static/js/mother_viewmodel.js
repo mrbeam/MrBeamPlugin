@@ -292,9 +292,6 @@ $(function () {
         // settings.js viewmodel extensions
 
         self.settings.saveall = function (e, v) {
-            if ($("#settings").is(':visible')) {
-                $("#settingsTabs").find("li.active").addClass('saveInProgress');
-            }
             if (self.settings.savetimer !== undefined) {
                 clearTimeout(self.settings.savetimer);
             }
@@ -302,6 +299,7 @@ $(function () {
 			// the port scanning from the backend otherwise triggers it frequently
 			var data = getOnlyChangedData(self.settings.getLocalData(), self.settings.lastReceivedSettings);
 			if(Object.getOwnPropertyNames(data).length > 0){
+			    $("#settingsTabs").find("li.active").addClass('saveInProgress');
 				self.settings.savetimer = setTimeout(function () {
 					self.settings.saveData(undefined, function () {
 						$("#settingsTabs").find("li.active").removeClass('saveInProgress');
