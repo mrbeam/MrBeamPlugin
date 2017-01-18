@@ -304,7 +304,7 @@ $(function () {
 			if(Object.getOwnPropertyNames(data).length > 0){
 				self.settings.savetimer = setTimeout(function () {
 					self.settings.saveData(undefined, function () {
-						$("#settingsTabs li.active").removeClass('saveInProgress');
+						$("#settingsTabs").find("li.active").removeClass('saveInProgress');
 						self.settings.savetimer = undefined;
 					});
 				}, 2000);
