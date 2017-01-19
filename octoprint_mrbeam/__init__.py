@@ -126,7 +126,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return dict(
 			js=["js/lasercutterprofiles.js","js/mother_viewmodel.js", "js/mrbeam.js","js/color_classifier.js","js/working_area.js", "js/camera.js",
 			"js/lib/snap.svg-min.js", "js/render_fills.js", "js/path_convert.js", "js/matrix_oven.js", "js/drag_scale_rotate.js",
-			"js/convert.js", "js/gcode_parser.js", "js/lib/photobooth_min.js", "js/laserSafetyNotes.js", "js/svg_cleaner.js", "js/corewizard.js"],
+			"js/convert.js", "js/gcode_parser.js", "js/lib/photobooth_min.js", "js/laserSafetyNotes.js", "js/svg_cleaner.js", "js/corewizard.js", 			"js/netconnectd_wrapper.js"],
 			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css"],
 			less=["less/mrbeam.less"]
 		)
@@ -221,13 +221,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	# ~~ Wifi subwizard
 
 	def _is_wifi_wizard_required(self):
-		return self._user_manager.enabled and not self._user_manager.hasBeenCustomized()
+		# ANDYTEST todo
+		return True
 
 	def _get_wifi_wizard_details(self):
 		return dict()
 
 	def _get_wifi_additional_wizard_template_data(self):
-		return dict(mandatory=self._is_wifi_wizard_required())
+		return dict(mandatory=False)
 
 	def _get_wifi_wizard_name(self):
 		return gettext("Wifi Setup")

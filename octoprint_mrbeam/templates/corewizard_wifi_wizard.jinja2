@@ -1,41 +1,94 @@
 <h3>{{ _('Wifi Setup') }}</h3>
 
-{% trans %}<p>
-    <strong>This is about Wifi of your Mr Beam 2!</strong>
+<p>
+	<strong>Let's get your Mr Beam 2 connected to your wifi.</strong>
 </p>
 <p>
-    Your Mr Beam 2 is configured with a Access Control, meaning you won't be able to do anything with the
-    laser cutter unless you login first as a configured user. This is to <strong>prevent strangers - possibly with
-    malicious intent - to gain access to your laser cutter</strong> via the internet or another untrustworthy network
-    and using it in such a way that it is damaged or worse (i.e. causes a fire).
+    Select your wifi below and click connect, then enter your wifi passphrase if requested. 
 </p>
-<p>
-    Please <strong>set up a username and password</strong> for the
-    initial administrator account who will have full access to the Mr Beam 2:
-</p>{% endtrans %}
-<form class="form-horizontal">
-    <div class="control-group" data-bind="css: {success: validUsername()}">
-        <label class="control-label" for="first_run_username">{{ _('Username') }}</label>
-        <div class="controls">
-            <input type="text" class="input-medium" data-bind="value: username, valueUpdate: 'afterkeydown', enable: !setup(), css: {disabled: setup()}">
+
+<div id="wizard_plugin_corewizard_wifi_netconnectd" data-bind="allowBindings: true">
+
+    <div class="pull-right" data-bind="visible: netconnectdViewModel.enableQualitySorting">
+        <small>
+            {{ _('Sort by') }}: <a href="#" data-bind="click: function() { netconnectdViewModel.listHelper.changeSorting('ssid'); }">{{ _('SSID') }} ({{ _('ascending') }})</a> | <a href="#" data-bind="click: function() { netconnectdViewModel.listHelper.changeSorting('quality'); }">{{ _('Quality') }} ({{ _('descending') }})</a>
+        </small>
+    </div>
+    <table class="table table-striped table-hover table-condensed table-hover" id="settings_plugin_netconnectd_wifis">
+        <thead>
+        <tr>
+            <th class="settings_plugin_netconnectd_wifis_ssid">{{ _('SSID') }}</th>
+            <th class="settings_plugin_netconnectd_wifis_quality" data-bind="visible: netconnectdViewModel.enableQualitySorting">{{ _('Quality') }}</th>
+            <th class="settings_plugin_netconnectd_wifis_action">{{ _('Action') }}</th>
+        </tr>
+        </thead>
+        <tbody data-bind="foreach: netconnectdViewModel.listHelper.paginatedItems">
+            <tr data-bind="attr: {title: name}">
+                <td class="settings_plugin_netconnectd_wifis_ssid"><span class="icon-lock" data-bind="invisible: !encrypted"></span> <span data-bind="text: ssid"></span> <small class="muted">({{ _('Address') }}: <span data-bind="text: address"></span>)</small></td>
+                <td class="settings_plugin_netconnectd_wifis_quality" data-bind="visible: $root.netconnectdViewModel.enableQualitySorting, text: qualityText"></td>
+                <td class="settings_plugin_netconnectd_wifis_action">
+                    <button class="btn btn-small" data-bind="click: function() { $parent.configureWifi($data); }, css: {disabled: !$root.netconnectdViewModel.loginState.isUser() || $root.netconnectdViewModel.working() || $root.netconnectdViewModel.error() || $root.netconnectdViewModel.getEntryId($data) == $root.netconnectdViewModel.statusCurrentWifi()}"><i class="icon-spinner icon-spin" data-bind="visible: $root.netconnectdViewModel.working"></i><i class="icon-signin" data-bind="visible: !$root.netconnectdViewModel.working()"></i> {{ _('Connect') }}</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="pagination pagination-mini pagination-centered">
+        <ul>
+            <li data-bind="css: {disabled: netconnectdViewModel.listHelper.currentPage() === 0}">
+                <a href="#" data-bind="click: netconnectdViewModel.listHelper.prevPage">«</a>
+            </li>
+        </ul>
+        <ul data-bind="foreach: netconnectdViewModel.listHelper.pages">
+            <li data-bind="css: { active: $data.number === $root.netconnectdViewModel.listHelper.currentPage(), disabled: $data.number === -1 }">
+                <a href="#" data-bind="text: $data.text, click: function() { $root.netconnectdViewModel.listHelper.changePage($data.number); }"></a>
+            </li>
+        </ul>
+        <ul>
+            <li data-bind="css: {disabled: netconnectdViewModel.listHelper.currentPage() === netconnectdViewModel.listHelper.lastPage()}">
+                <a href="#" data-bind="click: netconnectdViewModel.listHelper.nextPage">»</a>
+            </li>
+        </ul>
+    </div>
+
+    <button class="btn btn-primary btn-block" data-bind="click: function() { $root.netconnectdViewModel.refresh() }, enable: $root.netconnectdViewModel.daemonOnline() && $root.netconnectdViewModel.status.wifi.present()">{{ _('Refresh') }}</button>
+
+    <div>
+        <small class="muted">{{ _('netconnectd socket') }}: <span data-bind="text: netconnectdViewModel.settings.plugins.netconnectd.socket"></span></small>
+    </div>
+
+    <div>
+        <div><small><a href="#" class="muted" onclick="$(this).children().toggleClass('icon-caret-right icon-caret-down').parent().parent().parent().next().slideToggle('fast')"><i class="icon-caret-right"></i> {{ _('Advanced options') }}</a></small></div>
+        <div class="hide row-fluid">
+            <button class="btn span6" data-bind="click: function() { if ($root.netconnectdViewModel.apRunning()) { $root.netconnectdViewModel.sendStopAp(); } else { $root.netconnectdViewModel.sendStartAp(); } }, enable: $root.netconnectdViewModel.daemonOnline()"><span data-bind="visible: !$root.netconnectdViewModel.apRunning() && $root.netconnectdViewModel.daemonOnline()">{{ _('Start AP') }}</span><span data-bind="visible: $root.netconnectdViewModel.apRunning() && $root.netconnectdViewModel.daemonOnline()">{{ _('Stop AP') }}</span><span data-bind="visible: !$root.netconnectdViewModel.daemonOnline()">{{ _('Daemon offline') }}</span></button>
+            <button class="btn span6" data-bind="click: function() { $root.netconnectdViewModel.sendReset() }, enable: $root.netconnectdViewModel.daemonOnline()">{{ _('Reset daemon') }}</button>
         </div>
     </div>
-    <div class="control-group" data-bind="css: {success: validPassword()}">
-        <label class="control-label" for="first_run_username">{{ _('Password') }}</label>
-        <div class="controls">
-            <input type="password" class="input-medium" data-bind="value: password, valueUpdate: 'afterkeydown', enable: !setup(), css: {disabled: setup()}">
+
+    <div id="settings_plugin_netconnectd_wificonfig" class="modal hide fade">
+        <div class="modal-header">
+            <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+            <h3>{{ _('Configure secured Wifi connection to "%(ssid)s"', ssid='<span data-bind="text: $root.netconnectdViewModel.editorWifiSsid"></span>') }}</h3>
+        </div>
+        <div class="modal-body">
+            <form class="form-horizontal">
+                <div class="control-group">
+                    <label class="control-label" for="settings_plugin_netconnectd_wificonfig_passphrase1">{{ _('Password') }}</label>
+                    <div class="controls">
+                        <input type="password" class="input-block-level" id="settings_plugin_netconnectd_wificonfig_passphrase1" data-bind="value: $root.netconnectdViewModel.editorWifiPassphrase1" required>
+                    </div>
+                </div>
+                <div class="control-group" data-bind="css: {error: $root.netconnectdViewModel.editorWifiPassphraseMismatch()}">
+                    <label class="control-label" for="settings_plugin_netconnectd_wificonfig_passphrase2">{{ _('Repeat Password') }}</label>
+                    <div class="controls">
+                        <input type="password" class="input-block-level" id="settings_plugin_netconnectd_wificonfig_passphrase2" data-bind="value: $root.netconnectdViewModel.editorWifiPassphrase2, valueUpdate: 'afterkeydown'" required>
+                        <span class="help-inline" data-bind="visible: $root.netconnectdViewModel.editorWifiPassphraseMismatch()">{{ _('Passwords do not match') }}</span>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" data-dismiss="modal" data-bind="enable: !$root.netconnectdViewModel.working() && !$root.netconnectdViewModel.error()" aria-hidden="true">{{ _('Abort') }}</button>
+            <button class="btn btn-primary" data-bind="click: function() { $root.netconnectdViewModel.confirmWifiConfiguration(); }, enable: !$root.netconnectdViewModel.editorWifiPassphraseMismatch() && !$root.netconnectdViewModel.working() && !$root.netconnectdViewModel.error()"><i class="icon-spinner icon-spin" data-bind="visible: netconnectdViewModel.working"></i> {{ _('Confirm') }}</button>
         </div>
     </div>
-    <div class="control-group" data-bind="css: {error: passwordMismatch(), success: validPassword() && !passwordMismatch()}">
-        <label class="control-label" for="first_run_username">{{ _('Confirm Password') }}</label>
-        <div class="controls">
-            <input type="password" class="input-medium" data-bind="value: confirmedPassword, valueUpdate: 'afterkeydown', enable: !setup(), css: {disabled: setup()}">
-            <span class="help-inline" data-bind="visible: passwordMismatch()">{{ _('Passwords do not match') }}</span>
-        </div>
-    </div>
-</form>
-{% trans %}<p>
-    <strong>Note:</strong> Please consider using a strong password in order to prevent any other person of guessing or
-    brute forcing your password.
-</p>
-{% endtrans %}
+</div>
