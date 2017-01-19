@@ -5,9 +5,15 @@ $(function() {
 		
 		// Disable paging. Scrolling is the new paging...
 		self.netconnectdViewModel.listHelper.pageSize(0);
+		
+		self.hasDataLoaded = ko.computed(function() {
+			return (self.netconnectdViewModel.hostname() != undefined);
+		});
+		
+		// DEBUG ANDYTEST
+		// self.netconnectdViewModel.fromResponse = function(response) {}
 	}
 	
     // view model class, parameters for constructor, container to bind to
-	console.log("ANDYEST beam//js/netconnectd_wrapper.js: pushing NetconnectdWrapperViewModel to ADDITIONAL_VIEWMODELS");
     ADDITIONAL_VIEWMODELS.push([NetconnectdWrapperViewModel, ["netconnectdViewModel"], "#wizard_plugin_corewizard_wifi_netconnectd"]);
 });
