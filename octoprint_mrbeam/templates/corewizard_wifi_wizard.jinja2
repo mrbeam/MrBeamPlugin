@@ -1,13 +1,12 @@
 <h3>{{ _('Wifi Setup') }}</h3>
 
-<p>
-	<strong>Let's get your Mr Beam 2 connected to your wifi.</strong>
-</p>
-<p>
-    Select your wifi below and click connect, then enter your wifi passphrase if requested. 
-</p>
-
 <div id="wizard_plugin_corewizard_wifi_netconnectd" data-bind="allowBindings: true">
+	<p>
+		<strong>Let's get your Mr Beam 2 connected to your wifi.</strong>
+	</p>
+	<p>
+		<strong>{{ _('Connection state') }}:</strong> <span data-bind="text: netconnectdViewModel.connectionStateText"></span>
+	</p>
 
     <div class="pull-right" data-bind="visible: netconnectdViewModel.enableQualitySorting">
         <small>
@@ -27,12 +26,12 @@
                 <td class="settings_plugin_netconnectd_wifis_ssid"><span class="icon-lock" data-bind="invisible: !encrypted"></span> <span data-bind="text: ssid"></span> <small class="muted">({{ _('Address') }}: <span data-bind="text: address"></span>)</small></td>
                 <td class="settings_plugin_netconnectd_wifis_quality" data-bind="visible: $root.netconnectdViewModel.enableQualitySorting, text: qualityText"></td>
                 <td class="settings_plugin_netconnectd_wifis_action">
-                    <button class="btn btn-small" data-bind="click: function() { $parent.configureWifi($data); }, css: {disabled: !$root.netconnectdViewModel.loginState.isUser() || $root.netconnectdViewModel.working() || $root.netconnectdViewModel.error() || $root.netconnectdViewModel.getEntryId($data) == $root.netconnectdViewModel.statusCurrentWifi()}"><i class="icon-spinner icon-spin" data-bind="visible: $root.netconnectdViewModel.working"></i><i class="icon-signin" data-bind="visible: !$root.netconnectdViewModel.working()"></i> {{ _('Connect') }}</button>
+                    <button class="btn btn-small" data-bind="click: function() { $parent.netconnectdViewModel.configureWifi($data); }, css: {disabled: !$root.netconnectdViewModel.loginState.isUser() || $root.netconnectdViewModel.working() || $root.netconnectdViewModel.error() || $root.netconnectdViewModel.getEntryId($data) == $root.netconnectdViewModel.statusCurrentWifi()}"><i class="icon-spinner icon-spin" data-bind="visible: $root.netconnectdViewModel.working"></i><i class="icon-signin" data-bind="visible: !$root.netconnectdViewModel.working()"></i> {{ _('Connect') }}</button>
                 </td>
             </tr>
         </tbody>
     </table>
-    <div class="pagination pagination-mini pagination-centered">
+    {#<div class="pagination pagination-mini pagination-centered">
         <ul>
             <li data-bind="css: {disabled: netconnectdViewModel.listHelper.currentPage() === 0}">
                 <a href="#" data-bind="click: netconnectdViewModel.listHelper.prevPage">«</a>
@@ -48,7 +47,7 @@
                 <a href="#" data-bind="click: netconnectdViewModel.listHelper.nextPage">»</a>
             </li>
         </ul>
-    </div>
+    </div> #}
 
     <button class="btn btn-primary btn-block" data-bind="click: function() { $root.netconnectdViewModel.refresh() }, enable: $root.netconnectdViewModel.daemonOnline() && $root.netconnectdViewModel.status.wifi.present()">{{ _('Refresh') }}</button>
 
