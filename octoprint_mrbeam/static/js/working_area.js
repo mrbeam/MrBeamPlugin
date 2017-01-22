@@ -120,12 +120,12 @@ $(function(){
 //			return m;
 //		});
 		
-		self.matrixMMflipY = ko.computed(function(){
-			var m = new Snap.Matrix();
-			var yShift = self.workingAreaHeightMM(); // 0,0 origin of the gcode is bottom left. (top left in the svg)
-			m.scale(1, -1).translate(0, -yShift);
-			return m;
-		});
+//		self.matrixMMflipY = ko.computed(function(){
+//			var m = new Snap.Matrix();
+//			var yShift = self.workingAreaHeightMM(); // 0,0 origin of the gcode is bottom left. (top left in the svg)
+//			m.scale(1, -1).translate(0, -yShift);
+//			return m;
+//		});
 
 		self.placedDesigns = ko.observableArray([]);
 		self.working_area_empty = ko.computed(function(){
@@ -339,6 +339,7 @@ $(function(){
 				f.selectAll("[display=none]").remove();
 				f.selectAll("sodipodi\\:namedview").remove();
 				f.selectAll("metadata").remove();
+				f.selectAll('desc').remove();
 
 				// iterate svg tag attributes
 				for(var i = 0; i < root_attrs.length; i++){

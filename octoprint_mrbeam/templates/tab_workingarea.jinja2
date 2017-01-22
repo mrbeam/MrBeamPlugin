@@ -273,7 +273,8 @@
 											height: workingAreaHeightPx()+'px'
 										},
 										attr: { viewBox: '0 0 ' + workingAreaWidthMM() +' '+ workingAreaHeightMM() }
-									 ">
+									 "
+									 style="transform:scale(1,-1);">
 									<filter id="grayscale_filter">
 										<feColorMatrix in="SourceGraphic" type="saturate" values="0"/>
 									</filter>
@@ -285,13 +286,12 @@
 										</feComponentTransfer>
 									</filter>
 
-									<g id="placedGcodes" data-bind="visible: true || (state.isPrinting() && !state.isPaused()), attr: { transform: matrixMMflipY() }"></g>
-									<g id="gCodePreview" data-bind="visible: state.isPrinting() || state.isPaused(), attr: { transform: matrixMMflipY() }"></g>
-									<g id="scaleGroup">
+									<g id="placedGcodes" data-bind="visible: true || (state.isPrinting() && !state.isPaused())"></g>
+									<g id="gCodePreview" data-bind="visible: state.isPrinting() || state.isPaused()"></g>
 										<rect id="coordGrid" x="0" y="0" width="0" height="0"
 											  stroke="none" fill="none"></rect>
+									<g id="scaleGroup" >
 										<g id="userContent" 
-										   data-bind="attr: { transform: matrixMMflipY() }"
 										   XXdata-bind="visible: !state.isPrinting() && !state.isPaused()"></g>
 									</g>
 								</svg>

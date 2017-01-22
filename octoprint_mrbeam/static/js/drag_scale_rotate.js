@@ -407,10 +407,10 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	function resizeDraggerMove( mainEl, dx, dy, x, y, event ) {
 		var resizeDragger = this;
 		// TODO use dx and dy, scale properly to movement.
-		dy = -dy/2; //apply smoothing factor of 2
+		var	delta = -dy/2; //apply smoothing factor of 2
 
 		var origHeight = +mainEl.data('oHeight') * +mainEl.data('angleFactor');
-		var newHeight = +resizeDragger.data('sHeight') - dy * mainEl.data('sgUnscale') * resizeDragger.data('signY');
+		var newHeight = +resizeDragger.data('sHeight') - delta * mainEl.data('sgUnscale') * resizeDragger.data('signY');
 		var newScale =  Math.abs(newHeight / origHeight);
 
 		//todo implement shiftkey for resize
@@ -422,7 +422,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		mainEl.data('scale', newScale);
 
 		//TODO angle, for translation of innerBB(redBB)
-		elementDragMove(mainEl, dy * +mainEl.data('ratio') * resizeDragger.data('signX')   * resizeDragger.data('signY'), -dy);
+		elementDragMove(mainEl, delta * +mainEl.data('ratio') * resizeDragger.data('signX')   * resizeDragger.data('signY'), -delta);
 
 		mainEl.ftUpdateTransform();
 	};
