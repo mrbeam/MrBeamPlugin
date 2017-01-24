@@ -399,6 +399,8 @@ $(function(){
 				file.misfit = "";
 
 				self.placedDesigns.push(file);
+				
+				self.updateGCode();
 			};
 			self.loadSVG(url, callback);
 		};
@@ -917,6 +919,19 @@ $(function(){
 
 		self.clear_gcode = function(){
 			snap.select('#gCodePreview').clear();
+		};
+		
+		self.updateGCode = function(){
+			var paths = snap.selectAll('#userContent path');
+			for (var i = 0; i < paths.length; i++) {
+				var path = paths[i];
+				if(path.attr('gc') !== null){
+					console.log("gc already present");
+				} else {
+					path.generate_gc();
+				}
+					
+			}
 		};
 
 		self.onStartup = function(){

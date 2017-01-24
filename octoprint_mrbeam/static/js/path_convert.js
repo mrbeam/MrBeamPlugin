@@ -1,8 +1,7 @@
-//    Matrix Oven - a snapsvg.io plugin to apply & remove transformations from svg files.
+/* global Snap */
+
+//    Path convert - a snapsvg.io plugin to convert standard types to paths.
 //    Copyright (C) 2015  Teja Philipp <osd@tejaphilipp.de>
-//    
-//    based on work by https://gist.github.com/timo22345/9413158 
-//    and https://github.com/duopixel/Method-Draw/blob/master/editor/src/svgcanvas.js
 //
 //    This program is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU Affero General Public License as
@@ -25,24 +24,24 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	var _convertToString = function (arr) {
 		return arr.join(',').replace(_p2s, '$1');
 	};
-
-
-	/**
-	 * Creates a path in the same shape as the origin element
-	 * Supports rect, ellipse, circle, line, polyline, polygon and of course path
-	 * 
-	 * based on 
-	 * https://github.com/duopixel/Method-Draw/blob/master/editor/src/svgcanvas.js
-	 * Modifications: Timo (https://github.com/timo22345)
-	 * 
-	 * @returns {path} path element
-	 */
+	
 	Element.prototype.toPath = function (with_attrs) {
-		var old_element = this;
-
+		var old_elem = this;
+		if (old_elem.type !== "circle" &&
+			old_elem.type !== "rect" &&
+			old_elem.type !== "ellipse" &&
+			old_elem.type !== "line" &&
+			old_elem.type !== "polygon" &&
+			old_elem.type !== "polyline" &&
+			old_elem.type !== "path")
+			return;
+		
+		
+		var d = old_elem.getPathAttr(with_attrs);
+		
 		// Create new path element
-		var pathAttr = {};
-
+		var new_path_attributes = {};
+		
 		//set attributes that should be copied to new path
 		var attrs = with_attrs;
 		if(attrs === undefined){
@@ -56,15 +55,42 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			var attrName = attrs[attrIdx];
 			var attrValue;
 			if(attrName === 'transform') {
-				attrValue = old_element.transform()['localMatrix'];
+				attrValue = old_elem.transform()['localMatrix'];
 			} else {
-				attrValue = old_element.attr(attrName);
+				attrValue = old_elem.attr(attrName);
 			}
 			if (attrValue) {
-				pathAttr[attrName] = attrValue;
+				new_path_attributes[attrName] = attrValue;
 			}
 		}
+		
+		if (d){
+			new_path_attributes.d = d;
+		}
+		var path = old_elem.paper.path(new_path_attributes);
 
+		// get computed stroke of path and add as mb:color
+		var stroke = old_elem.attr("stroke");
+		if(stroke !== 'none' && stroke !== undefined && stroke !== ""){
+			path.attr({'mb:color': Snap.getRGB(stroke).hex});
+//			console.log("Snap.getRGB: '" + Snap.getRGB(stroke).hex + "'");
+		}
+
+		return path;
+	};
+	
+	/**
+	 * Creates a path in the same shape as the origin element
+	 * Supports rect, ellipse, circle, line, polyline, polygon and of course path
+	 * 
+	 * based on 
+	 * https://github.com/duopixel/Method-Draw/blob/master/editor/src/svgcanvas.js
+	 * Modifications: Timo (https://github.com/timo22345)
+	 * 
+	 * @returns {path} path element
+	 */
+	Element.prototype.getPathAttr = function () {
+		var old_element = this;
 		var d = '';
 
 		var validRadius = function (val) {
@@ -79,15 +105,16 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		var num = 1.81;
 		var tag = old_element.type;
 
+		// TODO: capsule unit conversion and make it working for other units beside mm
         var convertMMtoPixel = function (val) {
 			attrList = ['rx','ry','r','cx','cy','x1','x2','y1','y2','x','y','width','height'];
     		for(var attrIdx in attrList) {
-				if(val.attr(attrList[attrIdx]) != null && val.attr(attrList[attrIdx]).indexOf('mm') > -1) {
+				if(val.attr(attrList[attrIdx]) !== null && val.attr(attrList[attrIdx]).indexOf('mm') > -1) {
 					var tmp = parseFloat(val.attr(attrList[attrIdx])) * 3.5433;
 					val.attr(attrList[attrIdx], tmp);
 				}
 			}
-		}
+		};
 
 		convertMMtoPixel(old_element);
 
@@ -193,24 +220,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			default:
 				break;
 		}
-
-		if (d){
-			pathAttr.d = d;
-		}
-		var path = old_element.paper.path(pathAttr);
-
-		// get computed stroke of path and add as mb:color
-		var stroke = old_element.attr("stroke");
-		if(stroke !== 'none' && stroke !== undefined && stroke !== ""){
-			path.attr({'mb:color': Snap.getRGB(stroke).hex});
-//			console.log("Snap.getRGB: '" + Snap.getRGB(stroke).hex + "'");
-		}
-
-		return path;
+		
+		return d;
 	};
-
-
-
-
 });
 

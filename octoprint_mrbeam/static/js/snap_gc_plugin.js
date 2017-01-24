@@ -18,11 +18,23 @@
 
 Snap.plugin(function (Snap, Element, Paper, global) {
 	
+	Element.prototype.embed_gc = function(){
+		var elem = this;
+		var paths = elem.selectAll('path');
+		for (var i = 0; i < paths.length; i++) {
+			var path = paths[i];
+			var matrix = path.transform().totalMatrix;
+			var gc = path.generate_gc(matrix);
+			path.attr('gc', gc);
+		}
+	};
+	
 	/**
 	 * generates gc from d attr
 	 * 
 	 * @param {float} correction_matrix : matrix to be applied on resulting points
 	 * @param {float} max_derivation : how precise curves are approximated
+	 * @param {float} min_segment_length : minimum length of G1 commands
 	 * @param {float} max_segment_length : maximum length of G1 commands
 	 * @returns {undefined}
 	 */
@@ -47,7 +59,12 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		var temp = elem.paper.path(transformed_path_array).attr('opacity',0);
 
 		var length = temp.getTotalLength();
+		
+		// eye candy
+		elem.attr({strokeDasharray: length, strokeDashoffset: length});
 		var progress_callback = function(position){ 
+			var value = length - position;
+			elem.attr({strokeDashoffset: value});
 			console.log('progress', position/length); 
 		};
 		var points = temp.approximateArray(0, length, max_derivation, min_segment_length, max_segment_length, progress_callback);
@@ -57,10 +74,12 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		for (var i = 1; i < points.length; i++) {
 			var p = points[i];
 			gc += 'G1X'+p.x.toFixed(2)+'Y'+p.y.toFixed(2)+"\n";
+			
 //			DEBUG visualization
-			elem.parent().append(elem.paper.circle(p.x, p.y, 1.0).attr({fill:'green'}));
+			snap.circle(p.x, p.y, 1.0).attr({fill:'green'});
 		}
-		elem.attr('gc', gc);
+		elem.attr({strokeDasharray: 'none', strokeDashoffset: 'none'});
+		return gc;
 	};
 	
 	
