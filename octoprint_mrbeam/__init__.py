@@ -221,7 +221,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	# ~~ Wifi subwizard
 
 	def _is_wifi_wizard_required(self):
-		# ANDYTEST todo
 		return True
 
 	def _get_wifi_wizard_details(self):
@@ -236,13 +235,16 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	#~~ ACL subwizard
 
 	def _is_acl_wizard_required(self):
-		return self._user_manager.enabled and not self._user_manager.hasBeenCustomized()
+		# return self._user_manager.enabled and not self._user_manager.hasBeenCustomized()
+		return True
 
 	def _get_acl_wizard_details(self):
 		return dict()
 
 	def _get_acl_additional_wizard_template_data(self):
-		return dict(mandatory=self._is_acl_wizard_required())
+		# return dict(mandatory=self._is_acl_wizard_required())
+		return dict(mandatory=False)
+		
 
 	def _get_acl_wizard_name(self):
 		return gettext("Access Control")

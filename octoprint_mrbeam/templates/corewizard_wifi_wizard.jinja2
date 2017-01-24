@@ -70,32 +70,5 @@
         </div>
     </div>
 	<p>&nbsp;<p/>
-
-    <div id="settings_plugin_netconnectd_wificonfig" class="modal hide fade">
-        <div class="modal-header">
-            <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
-            <h3>{{ _('Configure secured Wifi connection to "%(ssid)s"', ssid='<span data-bind="text: $root.netconnectdViewModel.editorWifiSsid"></span>') }}</h3>
-        </div>
-        <div class="modal-body">
-            <form class="form-horizontal">
-                <div class="control-group">
-                    <label class="control-label" for="settings_plugin_netconnectd_wificonfig_passphrase1">{{ _('Password') }}</label>
-                    <div class="controls">
-                        <input type="password" class="input-block-level" id="settings_plugin_netconnectd_wificonfig_passphrase1" data-bind="value: $root.netconnectdViewModel.editorWifiPassphrase1" required>
-                    </div>
-                </div>
-                <div class="control-group" data-bind="css: {error: $root.netconnectdViewModel.editorWifiPassphraseMismatch()}">
-                    <label class="control-label" for="settings_plugin_netconnectd_wificonfig_passphrase2">{{ _('Repeat Password') }}</label>
-                    <div class="controls">
-                        <input type="password" class="input-block-level" id="settings_plugin_netconnectd_wificonfig_passphrase2" data-bind="value: $root.netconnectdViewModel.editorWifiPassphrase2, valueUpdate: 'afterkeydown'" required>
-                        <span class="help-inline" data-bind="visible: $root.netconnectdViewModel.editorWifiPassphraseMismatch()">{{ _('Passwords do not match') }}</span>
-                    </div>
-                </div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button class="btn" data-dismiss="modal" data-bind="enable: !$root.netconnectdViewModel.working() && !$root.netconnectdViewModel.error()" aria-hidden="true">{{ _('Abort') }}</button>
-            <button class="btn btn-primary" data-bind="click: function() { $root.netconnectdViewModel.confirmWifiConfiguration(); }, enable: !$root.netconnectdViewModel.editorWifiPassphraseMismatch() && !$root.netconnectdViewModel.working() && !$root.netconnectdViewModel.error()"><i class="icon-spinner icon-spin" data-bind="visible: netconnectdViewModel.working"></i> {{ _('Confirm') }}</button>
-        </div>
-    </div>
+{# We're using the #settings_plugin_netconnectd_wificonfig from the settings pane. Hacky or lean design? #}
 </div>
