@@ -20,12 +20,21 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	
 	Element.prototype.embed_gc = function(){
 		var elem = this;
-		var paths = elem.selectAll('path');
-		for (var i = 0; i < paths.length; i++) {
-			var path = paths[i];
-			var matrix = path.transform().totalMatrix;
-			var gc = path.generate_gc(matrix);
-			path.attr('gc', gc);
+		var items = elem.selectAll('path, rect, line, polygon, polyline, circle, ellipse');
+		for (var i = 0; i < items.length; i++) {
+			var item = items[i];
+			var matrix = item.transform().totalMatrix;
+			var gc = item.generate_gc(matrix);
+			item.attr('mb:gc', gc);
+		}
+	};
+	
+	Element.prototype.clean_gc = function(){
+		var elem = this;
+		var items = elem.selectAll('path, rect, line, polygon, polyline, circle, ellipse');
+		for (var i = 0; i < items.length; i++) {
+			var item = items[i];
+			item.attr('mb:gc', '');
 		}
 	};
 	
@@ -50,12 +59,20 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			console.warn("max_segment_length can't be smaller than min_segment_length!");
 		}
 
-		if(elem.type !== 'path'){
-			console.log('Only path elemts are supported. This is ', elem.type);
+		if (elem.type !== "circle" &&
+			elem.type !== "rect" &&
+			elem.type !== "ellipse" &&
+			elem.type !== "line" &&
+			elem.type !== "polygon" &&
+			elem.type !== "polyline" &&
+			elem.type !== "path" ){
+		
+			console.log('Only primitive elements are supported. This is ', elem.type);
 			return;
 		}
 
-		var transformed_path_array = Snap.path.map(elem.attr('d'), correction_matrix);
+		var d = elem.getPathAttr();
+		var transformed_path_array = Snap.path.map(d, correction_matrix);
 		var temp = elem.paper.path(transformed_path_array).attr('opacity',0);
 
 		var length = temp.getTotalLength();
@@ -76,7 +93,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			gc += 'G1X'+p.x.toFixed(2)+'Y'+p.y.toFixed(2)+"\n";
 			
 //			DEBUG visualization
-			snap.circle(p.x, p.y, 1.0).attr({fill:'green'});
+//			snap.circle(p.x, p.y, 1.0).attr({fill:'green'});
 		}
 		elem.attr({strokeDasharray: 'none', strokeDashoffset: 'none'});
 		return gc;

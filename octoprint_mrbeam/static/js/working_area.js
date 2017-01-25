@@ -391,16 +391,22 @@ $(function(){
 				newSvg.attr({id: previewId});
 				snap.select("#userContent").append(newSvg);
 				newSvg.transformable();
-				newSvg.ftRegisterCallback(self.svgTransformUpdate);
+				newSvg.ftRegisterOnTransformCallback(self.svgTransformUpdate);
+//				newSvg.ftRegisterBeforeTransformCallback(function(){
+//					newSvg.clean_gc();
+//				});
+				newSvg.ftRegisterAfterTransformCallback(function(){
+					newSvg.embed_gc();
+				});
+
+				newSvg.embed_gc();
 
 				file.id = id; // list entry id
 				file.previewId = previewId;
 				file.url = url;
 				file.misfit = "";
 
-				self.placedDesigns.push(file);
-				
-				self.updateGCode();
+				self.placedDesigns.push(file);				
 			};
 			self.loadSVG(url, callback);
 		};
@@ -435,6 +441,7 @@ $(function(){
 			svg.data('fitMatrix', null);
 			$('#'+file.id).removeClass('misfit');
 			self.svgTransformUpdate(svg);
+			svg.embed_gc();
 		};
 
 		self.toggleTransformHandles = function(file){
@@ -921,18 +928,18 @@ $(function(){
 			snap.select('#gCodePreview').clear();
 		};
 		
-		self.updateGCode = function(){
-			var paths = snap.selectAll('#userContent path');
-			for (var i = 0; i < paths.length; i++) {
-				var path = paths[i];
-				if(path.attr('gc') !== null){
-					console.log("gc already present");
-				} else {
-					path.generate_gc();
-				}
-					
-			}
-		};
+//		self.updateGCode = function(){
+//			var paths = snap.selectAll('#userContent path');
+//			for (var i = 0; i < paths.length; i++) {
+//				var path = paths[i];
+//				if(path.attr('gc') !== null){
+//					console.log("gc already present");
+//				} else {
+//					path.generate_gc();
+//				}
+//					
+//			}
+//		};
 
 		self.onStartup = function(){
 			self.state.workingArea = self;

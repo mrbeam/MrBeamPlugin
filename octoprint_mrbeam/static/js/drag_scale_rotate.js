@@ -97,6 +97,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		Element.prototype.ftCreateHandles = function() {
 			var ftEl = this;
 			ftEl.ftInit();
+			ftEl.ftBeforeTransform();
 			var id = ftEl.id;
 			var bb = ftEl.getBBox();
 			ftEl.ftStoreInitialTransformMatrix();
@@ -233,6 +234,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			if(this.data( 'bb' )) this.data('bb').remove();
 			this.click( function() { this.ftCreateHandles(); } ) ;
 			this.ftCleanUp();
+			this.ftAfterTransform();
 			return this;
 		};
 
@@ -279,22 +281,56 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		};
 
 		Element.prototype.ftReportTransformation = function(){
-			if(this.data('ftCallbacks') && this.data('ftCallbacks').length > 0){
-				for (var idx = 0; idx < this.data('ftCallbacks').length; idx++) {
-					var cb = this.data('ftCallbacks')[idx];
+			if(this.data('ftOnTransformCallbacks') && this.data('ftOnTransformCallbacks').length > 0){
+				for (var idx = 0; idx < this.data('ftOnTransformCallbacks').length; idx++) {
+					var cb = this.data('ftOnTransformCallbacks')[idx];
 					cb(this);
 				}
 			}
 		};
 
-		Element.prototype.ftRegisterCallback = function(callback){
-			if(typeof this.data('ftCallbacks') === 'undefined'){
-				this.data('ftCallbacks', [callback]);
+		Element.prototype.ftRegisterOnTransformCallback = function(callback){
+			if(typeof this.data('ftOnTransformCallbacks') === 'undefined'){
+				this.data('ftOnTransformCallbacks', [callback]);
 			} else {
-				this.data('ftCallbacks').push(callback);
+				this.data('ftOnTransformCallbacks').push(callback);
 			}
 
 			this.ftReportTransformation();
+		};
+		
+		Element.prototype.ftAfterTransform = function(){
+			if(this.data('ftAfterTransformCallbacks') && this.data('ftAfterTransformCallbacks').length > 0){
+				for (var idx = 0; idx < this.data('ftAfterTransformCallbacks').length; idx++) {
+					var cb = this.data('ftAfterTransformCallbacks')[idx];
+					cb(this);
+				}
+			}
+		};
+
+		Element.prototype.ftRegisterAfterTransformCallback = function(callback){
+			if(typeof this.data('ftAfterTransformCallbacks') === 'undefined'){
+				this.data('ftAfterTransformCallbacks', [callback]);
+			} else {
+				this.data('ftAfterTransformCallbacks').push(callback);
+			}
+		};
+		
+		Element.prototype.ftBeforeTransform = function(){
+			if(this.data('ftBeforeTransformCallbacks') && this.data('ftBeforeTransformCallbacks').length > 0){
+				for (var idx = 0; idx < this.data('ftBeforeTransformCallbacks').length; idx++) {
+					var cb = this.data('ftBeforeTransformCallbacks')[idx];
+					cb(this);
+				}
+			}
+		};
+
+		Element.prototype.ftRegisterBeforeTransformCallback = function(callback){
+			if(typeof this.data('ftBeforeTransformCallbacks') === 'undefined'){
+				this.data('ftBeforeTransformCallbacks', [callback]);
+			} else {
+				this.data('ftBeforeTransformCallbacks').push(callback);
+			}
 		};
 
 	});

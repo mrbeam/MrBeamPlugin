@@ -293,3 +293,14 @@ body.colorDragInProgress #drop_overlay {
 	display: none;
 }
 
+#userContent path,
+#userContent circle,
+#userContent ellipse,
+#userContent line,
+#userContent polygon,
+#userContent polyline,
+#userContent rect{
+	transition-property: stroke-dashoffset;
+	transition-duration: .5s;
+	transition-timing-function: linear;
+}
