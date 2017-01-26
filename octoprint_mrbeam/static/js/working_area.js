@@ -220,10 +220,10 @@ $(function(){
 
 		};
 		self.crosshairY = function(){
-			var h = self.workingAreaHeightPx();
+//			var h = self.workingAreaHeightPx();
 //			var h = Snap($('#area_preview')[0]).getBBox().height;
 			var pos = self.state.currentPos();
-			return pos !== undefined ? (h - self.mm2px(pos.y)  - 15) : -100; // subtract height/2;
+			return pos !== undefined ? (self.mm2px(pos.y)  - 15) : -100; // subtract height/2;
 		};
 
 		self.px2mm = function(val){
@@ -763,7 +763,8 @@ $(function(){
 				var max_lines = 20;
 
 				var linedist = Math.floor(Math.max(self.workingAreaWidthMM(), self.workingAreaHeightMM()) / (max_lines * 10))*10;
-				var yPatternOffset = self.workingAreaHeightMM() % linedist;
+//				var yPatternOffset = self.workingAreaHeightMM() % linedist;
+				var yPatternOffset = 0;
 
 				var marker = snap.circle(linedist/2, linedist/2, .5).attr({
 					fill: "#000000",
@@ -810,14 +811,14 @@ $(function(){
 			self.abortFreeTransforms();
 			var wMM = self.workingAreaWidthMM();
 			var hMM = self.workingAreaHeightMM();
-			var wPT = wMM * 90 / 25.4;
+			var wPT = wMM * 90 / 25.4;  // TODO ... switch to 96dpi ? 
 			var hPT = hMM * 90 / 25.4;
 			var compSvg = Snap(wPT, hPT);
 			compSvg.attr('id', 'compSvg');
-
+			
+			var content = compSvg.g({id: 'flipY', transform: 'matrix(1,0,0,-1,0,'+hMM+')'});
 			var userContent = snap.select("#userContent").clone();
-			compSvg.append(userContent);
-
+			content.append(userContent);
 
 			if(fillAreas){
 				self.renderInfill(compSvg, fillAreas, cutOutlines, wMM, hMM, 10, function(svgWithRenderedInfill){

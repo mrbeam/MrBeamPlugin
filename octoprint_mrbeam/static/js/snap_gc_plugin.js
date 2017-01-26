@@ -87,7 +87,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		var points = temp.approximateArray(0, length, max_derivation, min_segment_length, max_segment_length, progress_callback);
 		
 		temp.remove();
-		var gc = 'G0X'+points[0].x.toFixed(2)+'Y'+points[0].y.toFixed(2)+"\n";
+		var gc = 'G0X'+points[0].x.toFixed(2)+'Y'+points[0].y.toFixed(2)+"\n;_params_\n";
 		for (var i = 1; i < points.length; i++) {
 			var p = points[i];
 			gc += 'G1X'+p.x.toFixed(2)+'Y'+p.y.toFixed(2)+"\n";
