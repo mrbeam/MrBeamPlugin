@@ -650,7 +650,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 			#TODO implement cancelled_Jobs, to check if this particular Job has been canceled
 			#TODO implement check "_cancel_job"-loop inside engine.convert(...), to stop during conversion, too
-			engine = Converter(params, model_path,self._cancel_job)
+			engine = Converter(params, model_path)
 			engine.convert(on_progress, on_progress_args, on_progress_kwargs)
 
 			is_job_cancelled() #check if canceled during conversion
