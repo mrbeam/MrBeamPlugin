@@ -398,6 +398,7 @@ $(function(){
 				newSvg.ftRegisterAfterTransformCallback(function(){
 					newSvg.embed_gc();
 				});
+				
 
 				newSvg.embed_gc();
 
@@ -406,7 +407,7 @@ $(function(){
 				file.url = url;
 				file.misfit = "";
 
-				self.placedDesigns.push(file);				
+				self.placedDesigns.push(file);
 			};
 			self.loadSVG(url, callback);
 		};
@@ -455,7 +456,8 @@ $(function(){
 			var transform = svg.transform();
 			var bbox = svg.getBBox();
 			var tx = bbox.x; 
-			var ty = self.workingAreaHeightMM() - bbox.y2; 
+//			var ty = self.workingAreaHeightMM() - bbox.y2; 
+			var ty = bbox.y; 
 			var startIdx = transform.local.indexOf('r') + 1;
 			var endIdx = transform.local.indexOf(',', startIdx);
 			var rot = parseFloat(transform.local.substring(startIdx, endIdx)) || 0;
@@ -1094,6 +1096,17 @@ $(function(){
 
 		self.onTabChange = function (current, previous) {
             if (current === "#workingarea") {
+				// update transform information
+				setTimeout(function(){
+					ko.utils.arrayForEach(self.placedDesigns(), function(designData) {
+						var svgNode = snap.select('#'+designData.previewId);
+						self.svgTransformUpdate(svgNode);
+
+					});
+				}, 200);
+
+				
+				// switch off webcam
                 if (self.webcamDisableTimeout !== undefined) {
                     clearTimeout(self.webcamDisableTimeout);
                 }
