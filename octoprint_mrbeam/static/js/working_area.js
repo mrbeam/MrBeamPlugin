@@ -565,14 +565,15 @@ $(function(){
 				var hMM = dimMM[1];
 
 				var y = self.workingAreaHeightMM() - hMM;
-				var newImg = snap.image(url, 0, y, wMM, hMM);
+				var imgWrapper = snap.group();
+				var newImg = imgWrapper.image(url, 0, 0, wMM, hMM).attr({transform: 'matrix(1,0,0,-1,0,'+hMM+')'});
 				var id = self.getEntryId(file);
 				var previewId = self.generateUniqueId(id); // appends # if multiple times the same design is placed.
-				newImg.attr({id: previewId, filter: 'url(#grayscale_filter)', 'data-serveurl': url});
-				snap.select("#userContent").append(newImg);
-				newImg.transformable();
-				//newImg.ftDisableRotate();
-				newImg.ftRegisterCallback(self.svgTransformUpdate);
+				imgWrapper.attr({id: previewId});
+				newImg.attr({filter: 'url(#grayscale_filter)', 'data-serveurl': url});
+				snap.select("#userContent").append(imgWrapper);
+				imgWrapper.transformable();
+				imgWrapper.ftRegisterOnTransformCallback(self.svgTransformUpdate);
 				file.id = id;
 				file.previewId = previewId;
 				file.url = url;
