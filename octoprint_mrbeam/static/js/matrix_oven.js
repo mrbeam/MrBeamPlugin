@@ -114,6 +114,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			var transformedH = matrix.y(x+w, y+h) - transformedY;
 			
 			elem.attr({x: transformedX, y: transformedY, width: transformedW, height: transformedH});
+			if(transformedH < 0){
+				elem.attr({style: 'transform: scale(1,-1); transform-origin: top', height: -transformedH});
+			}
 			return;
 		}
 
