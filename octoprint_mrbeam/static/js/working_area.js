@@ -1104,9 +1104,10 @@ $(function(){
 				// update transform information
 				setTimeout(function(){
 					ko.utils.arrayForEach(self.placedDesigns(), function(designData) {
-						var svgNode = snap.select('#'+designData.previewId);
-						self.svgTransformUpdate(svgNode);
-
+						if(designData.previewId !== undefined){
+							var svgNode = snap.select('#'+designData.previewId);
+							self.svgTransformUpdate(svgNode);
+						}
 					});
 				}, 200);
 

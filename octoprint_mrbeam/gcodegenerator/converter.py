@@ -54,11 +54,11 @@ class Converter():
 		self.setoptions(params)
 		self.svg_file = model_path
 		self.document=None
-		self._log.info('### Converter Initialized: %s' % self.options)
+		self._log.info('Converter Initialized: %s' % self.options)
 		
 	def setoptions(self, opts):
 		# set default values if option is missing
-		self._log.info("opts: %s" % opts)
+		# self._log.info("opts: %s" % opts)
 		for key in self.options.keys():
 			if key in opts: 
 				self.options[key] = opts[key]
@@ -638,6 +638,7 @@ class Converter():
 	
 	def _use_embedded_gcode(self, gcode, color) :
 		self._log.debug( "_use_embedded_gcode()")
+		gcode = gcode.replace(' ', "\n")
 		settings = self.colorParams.get(color, {'intensity': -1, 'feedrate': -1, 'passes': 0, 'pierce_time': 0})
 		feedrateCode = "F%s;%s\n" % (settings['feedrate'], color)
 		intensityCode = machine_settings.gcode_before_path_color(color, settings['intensity']) + "\n"
@@ -648,7 +649,7 @@ class Converter():
 		placeholder = ";_params_"
 		
 		gc = gcode.replace(placeholder, feedrateCode + intensityCode + piercetimeCode, 1) + "\n"+ machine_settings.gcode_after_path() + "\n"
-		return gc.replace(' ', "\n")
+		return gc
 		
 
 	def export_gcode(self) :
