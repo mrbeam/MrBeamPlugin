@@ -266,14 +266,15 @@
 
 								</div>
 								{% endif %}
-								<svg id="area_preview" class="workingarea"
+								<svg id="area_preview" class="workingarea" visibility="hidden"
 									 data-bind="style: {
-											backgroundPosition: crosshairX()+'px'+' '+crosshairY()+'px',
 											width: workingAreaWidthPx()+'px',
 											height: workingAreaHeightPx()+'px'
 										},
-										attr: { viewBox: '0 0 ' + workingAreaWidthMM() +' '+ workingAreaHeightMM() }
-									 "
+										attr: { 
+											viewBox: '0 0 ' + workingAreaWidthMM() +' '+ workingAreaHeightMM(),
+											visibility: 'visible'	
+										}"
 									 style="transform:scale(1,-1);">
 									<filter id="grayscale_filter">
 										<feColorMatrix in="SourceGraphic" type="saturate" values="0"/>
@@ -293,6 +294,14 @@
 									<g id="scaleGroup" >
 										<g id="userContent" 
 										   XXdata-bind="visible: !state.isPrinting() && !state.isPaused()"></g>
+									</g>
+									<g id="crosshair" transform="matrix(1, 0, 0, 1, -20, -20)"
+									   data-bind="attr: { transform: scaleMatrixCrosshair()}">
+										<circle r="0.5" cy="0" cx="0" />
+										<path d="M -15,0 H -5" />
+										<path d="M 15,0 H 5" />
+										<path d="M 0,15 V 5" />
+										<path d="M 0,-15 V -5" />
 									</g>
 								</svg>
 

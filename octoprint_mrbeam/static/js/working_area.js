@@ -127,6 +127,13 @@ $(function(){
 //			return m;
 //		});
 
+		self.scaleMatrixCrosshair = function(){
+		    var x = self.crosshairX !== undefined ? self.crosshairX() : 0;
+		    var y = self.crosshairY !== undefined ? self.crosshairY() : 0;
+		    var m = "matrix(1, 0, 0, 1, " + x + ", " + y + ")";
+		    return m;
+        };
+
 		self.placedDesigns = ko.observableArray([]);
 		self.working_area_empty = ko.computed(function(){
 			return self.placedDesigns().length === 0;
@@ -213,17 +220,15 @@ $(function(){
 		self.crosshairX = function(){
 			var pos = self.state.currentPos();
 			if(pos !== undefined){
-				return self.mm2px(pos.x)  - 15; // subtract width/2;
+				return pos.x; //  - 15; // subtract width/2;
 			} else {
 				return -100;
 			}
 
 		};
 		self.crosshairY = function(){
-//			var h = self.workingAreaHeightPx();
-//			var h = Snap($('#area_preview')[0]).getBBox().height;
 			var pos = self.state.currentPos();
-			return pos !== undefined ? (self.mm2px(pos.y)  - 15) : -100; // subtract height/2;
+			return pos !== undefined ? pos.y : -100; //  - 15) : -100; // subtract height/2;
 		};
 
 		self.px2mm = function(val){

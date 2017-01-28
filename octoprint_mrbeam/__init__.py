@@ -12,11 +12,11 @@ import copy
 import time
 import os
 import logging
-import socket
 import threading
 import json
 from octoprint.server.util.flask import restricted_access, get_json_command_from_request
 from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping
+from flask.ext.babel import gettext
 from flask import Blueprint, request, jsonify, make_response, url_for
 
 
@@ -30,6 +30,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				   octoprint.plugin.SimpleApiPlugin,
 				   octoprint.plugin.EventHandlerPlugin,
 				   octoprint.plugin.ProgressPlugin,
+				   octoprint.plugin.WizardPlugin,
 				   octoprint.plugin.SlicerPlugin):
 
 	def __init__(self):
@@ -38,8 +39,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._slicing_commands_mutex = threading.Lock()
 		self._cancelled_jobs = []
 		self._cancelled_jobs_mutex = threading.Lock()
-		# self.stateHandler = LEDstrips()
-		self._CONVERSION_PARAMS_PATH = "/tmp/conversion_parameters.json" #TODO add proper path there
+		self._CONVERSION_PARAMS_PATH = "/tmp/conversion_parameters.json"  # TODO add proper path there
 
 	def initialize(self):
 		self.laserCutterProfileManager = LaserCutterProfileManager(self._settings)
@@ -65,32 +65,32 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def get_settings_defaults(self):
 		return dict(
-			current_profile_id = "_mrbeam_junior",
-			defaultIntensity = 500,
-			defaultFeedrate = 300,
-			svgDPI = 90,
-			svgtogcode_debug_logging = False,
-			showlasersafety = False,
-			glasses = False,
-			camera_offset_x = 0,
-			camera_offset_y = 0,
-			camera_scale = 1,
-			camera_rotation = 0
+			current_profile_id="_mrbeam_junior",
+			defaultIntensity=500,
+			defaultFeedrate=300,
+			svgDPI=90,
+			svgtogcode_debug_logging=False,
+			showlasersafety=False,
+			glasses=False,
+			camera_offset_x=0,
+			camera_offset_y=0,
+			camera_scale=1,
+			camera_rotation=0
 		)
 
 	def on_settings_load(self):
 		return dict(
-			current_profile_id = self._settings.get(["current_profile_id"]),
-			defaultIntensity = self._settings.get(['defaultIntensity']),
-			defaultFeedrate = self._settings.get(['defaultFeedrate']),
-			svgDPI = self._settings.get(['svgDPI']),
-			svgtogcode_debug_logging = self._settings.get(['svgtogcode_debug_logging']),
-			showlasersafety = self._settings.get(['showlasersafety']),
-			glasses = self._settings.get(['glasses']),
-			camera_offset_x = self._settings.get(['camera_offset_x']),
-			camera_offset_y = self._settings.get(['camera_offset_y']),
-			camera_scale = self._settings.get(['camera_scale']),
-			camera_rotation = self._settings.get(['camera_rotation']),
+			current_profile_id=self._settings.get(["current_profile_id"]),
+			defaultIntensity=self._settings.get(['defaultIntensity']),
+			defaultFeedrate=self._settings.get(['defaultFeedrate']),
+			svgDPI=self._settings.get(['svgDPI']),
+			svgtogcode_debug_logging=self._settings.get(['svgtogcode_debug_logging']),
+			showlasersafety=self._settings.get(['showlasersafety']),
+			glasses=self._settings.get(['glasses']),
+			camera_offset_x=self._settings.get(['camera_offset_x']),
+			camera_offset_y=self._settings.get(['camera_offset_y']),
+			camera_scale=self._settings.get(['camera_scale']),
+			camera_rotation=self._settings.get(['camera_rotation']),
 			)
 
 	def on_settings_save(self, data):
@@ -124,9 +124,28 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# Define your plugin's asset files to automatically include in the
 		# core UI here.
 		return dict(
-			js=["js/lasercutterprofiles.js","js/mother_viewmodel.js", "js/mrbeam.js","js/color_classifier.js","js/working_area.js", "js/camera.js",
-			"js/lib/snap.svg-min.js", "js/render_fills.js", "js/path_convert.js", "js/matrix_oven.js", "js/snap_gc_plugin.js", "js/drag_scale_rotate.js",
-			"js/convert.js", "js/gcode_parser.js", "js/lib/photobooth_min.js", "js/laserSafetyNotes.js", "js/svg_cleaner.js"],
+			js=[
+			"js/lasercutterprofiles.js",
+			"js/mother_viewmodel.js", 
+			"js/mrbeam.js",
+			"js/color_classifier.js",
+			"js/working_area.js", 
+			"js/camera.js", 
+			# snap and plugins
+			"js/lib/snap.svg-min.js", 
+			"js/render_fills.js", 
+			"js/path_convert.js", 
+			"js/matrix_oven.js", 
+			"js/snap_gc_plugin.js", 
+			"js/drag_scale_rotate.js",
+			
+			"js/convert.js", 
+			"js/gcode_parser.js", 
+			"js/lib/photobooth_min.js", 
+			"js/laserSafetyNotes.js", 
+			"js/svg_cleaner.js", 
+			"js/corewizard.js"],
+			
 			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css"],
 			less=["less/mrbeam.less"]
 		)
@@ -150,18 +169,24 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		safety_glasses = selectedProfile["glasses"]
 		# render_kwargs["templates"]["settings"]["entries"]["serial"][1]["template"] = "settings/serialconnection.jinja2"
 
+		wizard = render_kwargs["templates"] is not None and bool(render_kwargs["templates"]["wizard"]["order"])
+
+		if render_kwargs["templates"]["wizard"]["entries"]:
+			render_kwargs["templates"]["wizard"]["entries"]["firstrunstart"][1]["template"] = "wizard/firstrun_start.jinja2"
+			render_kwargs["templates"]["wizard"]["entries"]["firstrunend"][1]["template"] = "wizard/firstrun_end.jinja2"
+
 		render_kwargs.update(dict(
-							 webcamStream = self._settings.global_get(["webcam", "stream"]),
-							 enableFocus = enable_focus,
-							 safetyGlasses = safety_glasses,
-							 enableTemperatureGraph = False,
-							 enableAccessControl = enable_accesscontrol,
-							 accessControlActive = accesscontrol_active,
-							 enableSdSupport = False,
-							 gcodeMobileThreshold = 0,
-							 gcodeThreshold = 0,
-							 wizard = False,
-							 now = now,
+							 webcamStream=self._settings.global_get(["webcam", "stream"]),
+							 enableFocus=enable_focus,
+							 safetyGlasses=safety_glasses,
+							 enableTemperatureGraph=False,
+							 enableAccessControl=enable_accesscontrol,
+							 accessControlActive=accesscontrol_active,
+							 enableSdSupport=False,
+							 gcodeMobileThreshold=0,
+							 gcodeThreshold=0,
+							 wizard=wizard,
+							 now=now,
 							 ))
 		return make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
 
@@ -169,11 +194,108 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def get_template_configs(self):
 		return [
-			dict(type = 'settings', name = "Machine Profiles", template='settings/lasercutterprofiles_settings.jinja2', suffix="_lasercutterprofiles", custom_bindings = False),
-			dict(type = 'settings', name = "SVG Conversion", template='settings/svgtogcode_settings.jinja2', suffix="_conversion", custom_bindings = False),
-			dict(type = 'settings', name = "Camera Calibration", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings = True),
-			dict(type = 'settings', name = "Serial Connection", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings= False, replaces='serial')
-		]
+			dict(type='settings', name="Machine Profiles", template='settings/lasercutterprofiles_settings.jinja2', suffix="_lasercutterprofiles", custom_bindings=False),
+			dict(type='settings', name="SVG Conversion", template='settings/svgtogcode_settings.jinja2', suffix="_conversion", custom_bindings=False),
+			dict(type='settings', name="Camera Calibration", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
+			dict(type='settings', name="Serial Connection", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings=False, replaces='serial')
+		] + self._get_wizard_template_configs()
+
+	def _get_wizard_template_configs(self):
+		required = self._get_subwizard_attrs("_is_", "_wizard_required")
+		names = self._get_subwizard_attrs("_get_", "_wizard_name")
+		additional = self._get_subwizard_attrs("_get_", "_additional_wizard_template_data")
+
+		result = list()
+		for key, method in required.items():
+			if not method():
+				continue
+
+			if not key in names:
+				continue
+
+			name = names[key]()
+			if not name:
+				continue
+
+			config = dict(type="wizard", name=name, template="corewizard_{}_wizard.jinja2".format(key), div="wizard_plugin_corewizard_{}".format(key))
+			if key in additional:
+				additional_result = additional[key]()
+				if additional_result:
+					config.update(additional_result)
+			result.append(config)
+
+		return result
+
+	#~~ WizardPlugin API
+
+	def is_wizard_required(self):
+		methods = self._get_subwizard_attrs("_is_", "_wizard_required")
+		return self._settings.global_get(["server", "firstRun"]) and any(map(lambda m: m(), methods.values()))
+
+	def get_wizard_details(self):
+		result = dict()
+		return result
+
+	#~~ ACL subwizard
+
+	def _is_acl_wizard_required(self):
+		return self._user_manager.enabled and not self._user_manager.hasBeenCustomized()
+
+	def _get_acl_wizard_details(self):
+		return dict()
+
+	def _get_acl_wizard_name(self):
+		return gettext("Access Control")
+
+	def _get_acl_additional_wizard_template_data(self):
+		return dict(mandatory=self._is_acl_wizard_required())
+
+	@octoprint.plugin.BlueprintPlugin.route("/acl", methods=["POST"])
+	def acl_wizard_api(self):
+		from flask import request
+		from octoprint.server.api import valid_boolean_trues, NO_CONTENT
+
+		data = request.values
+		if hasattr(request, "json") and request.json:
+			data = request.json
+
+		if "ac" in data and data["ac"] in valid_boolean_trues and \
+						"user" in data.keys() and "pass1" in data.keys() and \
+						"pass2" in data.keys() and data["pass1"] == data["pass2"]:
+			# configure access control
+			self._settings.global_set_boolean(["accessControl", "enabled"], True)
+			self._user_manager.enable()
+			self._user_manager.addUser(data["user"], data["pass1"], True, ["user", "admin"], overwrite=True)
+		elif "ac" in data.keys() and not data["ac"] in valid_boolean_trues:
+			# disable access control
+			self._settings.global_set_boolean(["accessControl", "enabled"], False)
+
+			octoprint.server.loginManager.anonymous_user = octoprint.users.DummyUser
+			octoprint.server.principals.identity_loaders.appendleft(octoprint.users.dummy_identity_loader)
+
+			self._user_manager.disable()
+		self._settings.save()
+		return NO_CONTENT
+
+	#~~ helpers
+
+	def _get_subwizard_attrs(self, start, end, callback=None):
+		result = dict()
+
+		for item in dir(self):
+			if not item.startswith(start) or not item.endswith(end):
+				continue
+
+			key = item[len(start):-len(end)]
+			if not key:
+				continue
+
+			attr = getattr(self, item)
+			if callable(callback):
+				callback(key, attr)
+			result[key] = attr
+
+		return result
 
 	##~~ BlueprintPlugin mixin
 
@@ -223,8 +345,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return make_response("Profile is invalid", 400)
 		except CouldNotOverwriteError:
 			return make_response("Profile already exists and overwriting was not allowed", 400)
-		#except Exception as e:
-		#	return make_response("Could not save profile: %s" % e.message, 500)
 		else:
 			return jsonify(dict(profile=self._convert_profile(saved_profile)))
 
@@ -295,15 +415,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return make_response("Profile is invalid", 400)
 		except CouldNotOverwriteError:
 			return make_response("Profile already exists and overwriting was not allowed", 400)
-		#except Exception as e:
-		#	return make_response("Could not save profile: %s" % e.message, 500)
 		else:
 			return jsonify(dict(profile=self._convert_profile(saved_profile)))
 
 	@octoprint.plugin.BlueprintPlugin.route("/convert", methods=["POST"])
 	@restricted_access
 	def gcodeConvertCommand(self):
-		target = "local";
+		target = "local"
 
 		# valid file commands, dict mapping command name to mandatory parameters
 		valid_commands = {
@@ -353,8 +471,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 			# append number if file exists
 			name, ext = os.path.splitext(gcode_name)
-			i = 1;
-			while (self._file_manager.file_exists(target, gcode_name)):
+			i = 1
+			while self._file_manager.file_exists(target, gcode_name):
 				gcode_name = name + '.' + str(i) + ext
 				i += 1
 
@@ -365,16 +483,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				make_response("Trying to slice into file that is currently being printed: %s" % gcode_name, 409)
 
 			select_after_slicing = False
-#			if "select" in data.keys() and data["select"] in valid_boolean_trues:
-#				if not printer.is_operational():
-#					return make_response("Printer is not operational, cannot directly select for printing", 409)
-#				select_after_slicing = True
-
 			print_after_slicing = False
-#			if "print" in data.keys() and data["print"] in valid_boolean_trues:
-#				if not printer.is_operational():
-#					return make_response("Printer is not operational, cannot directly start printing", 409)
-#				select_after_slicing = print_after_slicing = True
 
 			#get job params out of data json
 			overrides = dict()
@@ -386,7 +495,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self._log.info('Wrote job parameters to %s', self._CONVERSION_PARAMS_PATH)
 
 			self._printer.set_colors(currentFilename, data['vector'])
-	
+
 			# callback definition
 			def slicing_done(target, gcode_name, select_after_slicing, print_after_slicing, append_these_files):
 				# append additioal gcodes
@@ -401,7 +510,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 						wfd.write("\nM05\n")  # ensure that the laser is off.
 						self._log.info("Slicing finished: %s" % path)
-						
+
 				if select_after_slicing or print_after_slicing:
 					sd = False
 					filenameToSelect = self._file_manager.path_on_disk(target, gcode_name)
@@ -419,8 +528,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			except octoprint.slicing.UnknownProfile:
 				return make_response("Profile {profile} doesn't exist".format(**locals()), 400)
 
-			#files = {}
-			location = "test"#url_for(".readGcodeFile", target=target, filename=gcode_name, _external=True)
+			location = "test"  # url_for(".readGcodeFile", target=target, filename=gcode_name, _external=True)
 			result = {
 				"name": gcode_name,
 				"origin": "local",
@@ -527,7 +635,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		# READ PARAMS FROM JSON
 		params = dict()
-		with open(self._CONVERSION_PARAMS_PATH) as data_file:    
+		with open(self._CONVERSION_PARAMS_PATH) as data_file:
 			params = json.load(data_file)
 			#self._log.debug("Read multicolor params %s" % params)
 
@@ -536,7 +644,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		params['file'] = dest_file
 		params['noheaders'] = "true"  # TODO... booleanify
 
-		#params['fill_areas'] = False  # disabled as highly experimental
 		if (self._settings.get(["debug_logging"])):
 			log_path = homedir + "/.octoprint/logs/svgtogcode.log"
 			params['log_filename'] = log_path
@@ -547,7 +654,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			from .gcodegenerator.converter import Converter
 			engine = Converter(params, model_path)
 			engine.convert(on_progress, on_progress_args, on_progress_kwargs)
-			
+
 			self._log.info("Conversion delegated.")
 			return True, None  # TODO add analysis about out of working area, ignored elements, invisible elements, text elements
 		except octoprint.slicing.SlicingCancelled as e:
@@ -629,10 +736,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				type="github_release",
 				user="mrbeam",
 				repo="MrBeamPlugin",
+				branch="develop",
 				current=self._plugin_version,
 
 				# update method: pip
-				pip="https://github.com/hungerpirat/Mr_Beam/archive/{target_version}.zip"
+				pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip"
 			)
 		)
 
@@ -671,21 +779,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			)
 		)
 
-	def get_update_information(self):
-		return dict(
-			updateplugindemo=dict(
-				displayName=self._plugin_name,
-				displayVersion=self._plugin_version,
-
-				type="github_release",
-				current=self._plugin_version,
-				user="mrbeam",
-				repo="MrBeamPlugin",
-
-				pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip"
-			)
-		)
-
 	def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
 		return [("POST", r"/convert", 10 * 1024 * 1024)]
 
@@ -710,12 +803,12 @@ def __plugin_load__():
 
 	global __plugin_settings_overlay__
 	__plugin_settings_overlay__ = dict(
-		plugins = dict(
-			_disabled=['cura', 'pluginmanager', 'announcements']), # eats dict | pfad.yml | callable
+		plugins=dict(
+			_disabled=['cura', 'pluginmanager', 'announcements', 'corewizard']),  # eats dict | pfad.yml | callable
 			terminalFilters=[
-				{ "name": "Suppress position requests" , "regex": "(Send: \?)" },
-				{ "name": "Suppress confirmations" , "regex": "(Recv: ok)" },
-				{ "name": "Suppress status messages" , "regex": "(Recv: <)" },
+				{"name": "Suppress position requests", "regex": "(Send: \?)"},
+				{"name": "Suppress confirmations", "regex": "(Recv: ok)"},
+				{"name": "Suppress status messages", "regex": "(Recv: <)"},
 			],
 	)
 
