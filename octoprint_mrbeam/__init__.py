@@ -225,14 +225,16 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def _is_wifi_wizard_required(self):
 		result = False
-		self._logger.info("ANDYTEST _is_wifi_wizard_required()")
-		pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
-		if pluginInfo is None:
-			self._logger.warn("_is_wifi_wizard_required() didn't get wifi data. Netconnectd's PluginInfo is None")
-		else:
-			status = pluginInfo.implementation._get_status()
-			result = not status["connections"]["wifi"]
-		self._logger.info("ANDYTEST _is_wifi_wizard_required(): result=%s", result)
+		try:
+			pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
+			if pluginInfo is None:
+				self._logger.warn("_is_wifi_wizard_required() didn't get wifi data. Netconnectd's PluginInfo is None")
+			else:
+				status = pluginInfo.implementation._get_status()
+				result = not status["connections"]["wifi"]
+		except Exception as e:
+			self._logger.exception("Exception while reading wifi state from netconnectd:")
+		self._logger.info("Show wifi setup wizard: %s", result)
 		return result
 
 	def _get_wifi_wizard_details(self):
@@ -244,8 +246,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def _get_wifi_wizard_name(self):
 		return gettext("Wifi Setup")
 		
-	def _on_wifi_wizard_finish(self, handled):
-		self._log.info("ANDYTEST _on_wifi_wizard_finish() handled: " + str(handled));
+	# def _on_wifi_wizard_finish(self, handled):
+	# 	self._log.info("ANDYTEST _on_wifi_wizard_finish() handled: " + str(handled));
 
 	#~~ ACL subwizard
 
@@ -264,8 +266,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def _get_acl_wizard_name(self):
 		return gettext("Access Control")
 		
-	def _on_acl_wizard_finish(self, handled):
-		self._log.info("ANDYTEST _on_acl_wizard_finish() test handled: " + str(handled));
+	# def _on_acl_wizard_finish(self, handled):
+	# 	self._log.info("ANDYTEST _on_acl_wizard_finish() test handled: " + str(handled));
 
 
 
