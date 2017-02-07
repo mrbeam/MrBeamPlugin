@@ -19,7 +19,7 @@ from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping
 from flask.ext.babel import gettext
 from flask import Blueprint, request, jsonify, make_response, url_for
 
-
+import pprint
 
 
 class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
@@ -211,7 +211,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def is_wizard_required(self):
 		methods = self._get_subwizard_attrs("_is_", "_wizard_required")
-		return self._settings.global_get(["server", "firstRun"]) and any(map(lambda m: m(), methods.values()))
+		result = self._settings.global_get(["server", "firstRun"]) and any(map(lambda m: m(), methods.values()))
+		if result:
+			self._logger.info("Setup Wizard showing")
+		return result
 
 	def get_wizard_details(self):
 		result = dict()
@@ -234,7 +237,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				result = not status["connections"]["wifi"]
 		except Exception as e:
 			self._logger.exception("Exception while reading wifi state from netconnectd:")
-		self._logger.info("Show wifi setup wizard: %s", result)
 		return result
 
 	def _get_wifi_wizard_details(self):
@@ -244,7 +246,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return dict(mandatory=False)
 
 	def _get_wifi_wizard_name(self):
-		return gettext("Wifi Setup")
+		return gettext("1. Wifi Setup")
 		
 	# def _on_wifi_wizard_finish(self, handled):
 	# 	self._log.info("ANDYTEST _on_wifi_wizard_finish() handled: " + str(handled));
@@ -264,7 +266,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		
 
 	def _get_acl_wizard_name(self):
-		return gettext("Access Control")
+		return gettext("2. Access Control")
 		
 	# def _on_acl_wizard_finish(self, handled):
 	# 	self._log.info("ANDYTEST _on_acl_wizard_finish() test handled: " + str(handled));
@@ -289,15 +291,49 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._user_manager.enable()
 			self._user_manager.addUser(data["user"], data["pass1"], True, ["user", "admin"], overwrite=True)
 		elif "ac" in data.keys() and not data["ac"] in valid_boolean_trues:
-			# disable access control
-			self._settings.global_set_boolean(["accessControl", "enabled"], False)
+			self._logger.warn("User tried to disable access control (aka user management).")
+			return make_response("Forbiden to disable access control", 403)
 
-			octoprint.server.loginManager.anonymous_user = octoprint.users.DummyUser
-			octoprint.server.principals.identity_loaders.appendleft(octoprint.users.dummy_identity_loader)
-
-			self._user_manager.disable()
 		self._settings.save()
 		return NO_CONTENT
+		
+	
+	@octoprint.plugin.BlueprintPlugin.route("/wifi", methods=["POST"])
+	def wifi_wizard_api(self):
+		from flask import request
+		from octoprint.server.api import valid_boolean_trues, NO_CONTENT
+		
+		# accept requests only while setup wizard is active
+		if not self._settings.global_get(["server", "firstRun"]) or not self._is_wifi_wizard_required():
+			self._logger.warn("wifi_wizard_api() was called even though wifi wizard is not active at the moment.")
+			return make_response("Wifi setup wizard forbidden. User wifi setings as an admin user.", 403)
+		
+		self._logger.info("ANDYTEST wifi_wizard_api() called. ")
+		data = None
+		command = None
+		try:
+			data = request.json
+			command = data["command"]
+		except:
+			return make_response("Unable to interprete request", 400)
+		
+		self._logger.info("ANDYTEST wifi_wizard_api() command: %s, data: %s", command,  pprint.pformat(data))
+		
+		result = None
+		try:
+			pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
+			if pluginInfo is None:
+				self._logger.warn("wifi_wizard_api() didn't get wifi data. Netconnectd's PluginInfo is None")
+			else:
+				result = pluginInfo.implementation.on_api_command(command, data, adminRequired=False)
+		except Exception as e:
+			self._logger.exception("Exception while executing wifi command in netconnectd:")
+			return make_response(e.message, 500)
+		
+		self._logger.info("ANDYTEST wifi_wizard_api() result: %s", result)
+		if result is None:
+			return NO_CONTENT
+		return result
 
 	#~~ helpers
 

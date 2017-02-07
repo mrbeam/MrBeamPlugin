@@ -32,7 +32,7 @@
 	                <td class="settings_plugin_netconnectd_wifis_ssid"><span class="icon-lock" data-bind="invisible: !encrypted"></span> <span data-bind="text: ssid"></span> <small class="muted">({{ _('Address') }}: <span data-bind="text: address"></span>)</small></td>
 	                <td class="settings_plugin_netconnectd_wifis_quality" data-bind="visible: $root.netconnectdViewModel.enableQualitySorting, text: qualityText"></td>
 	                <td class="settings_plugin_netconnectd_wifis_action">
-	                    <button class="btn btn-small" data-bind="click: function() { $parent.netconnectdViewModel.configureWifi($data); }, css: {disabled: !$root.netconnectdViewModel.loginState.isUser() || $root.netconnectdViewModel.working() || $root.netconnectdViewModel.error() || $root.netconnectdViewModel.getEntryId($data) == $root.netconnectdViewModel.statusCurrentWifi()}"><i class="icon-spinner icon-spin" data-bind="visible: $root.netconnectdViewModel.working"></i><i class="icon-signin" data-bind="visible: !$root.netconnectdViewModel.working()"></i> {{ _('Connect') }}</button>
+	                    <button class="btn btn-small" data-bind="click: function() { $parent.netconnectdViewModel.configureWifi($data); }, css: {disabled: $root.netconnectdViewModel.working() || $root.netconnectdViewModel.error() || $root.netconnectdViewModel.getEntryId($data) == $root.netconnectdViewModel.statusCurrentWifi()}"><i class="icon-spinner icon-spin" data-bind="visible: $root.netconnectdViewModel.working"></i><i class="icon-signin" data-bind="visible: !$root.netconnectdViewModel.working()"></i> {{ _('Connect') }}</button>
 	                </td>
 	            </tr>
 	        </tbody>
