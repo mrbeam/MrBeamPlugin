@@ -203,13 +203,6 @@ $(function(){
 			}
 		};
 
-		self.cancel_conversion = function(){
-			if(self.slicing_in_progress()){
-				// TODO cancel slicing at the backend properly
-				self.slicing_in_progress(false);
-			}
-		};
-
 		self.create_gcode_filename = function(placedDesigns){
 			if(placedDesigns.length > 0){
 				var filemap = {};
@@ -386,10 +379,34 @@ $(function(){
 			self.slicing_in_progress(false);
 			//console.log("onSlicingDone" , payload);
 		};
+
+		self.cancel_conversion = function(){
+			if(self.slicing_in_progress()){
+				// TODO cancel slicing at the backend properly
+				var filename = self.gcodeFilename() + '.gco';
+				var gcodeFilename = self._sanitize(filename);
+
+				var data = {
+						command: "cancel",
+						gcode: gcodeFilename
+					};
+				$.ajax({
+						url: "plugin/mrbeam/cancel",
+						type: "POST",
+						dataType: "json",
+						contentType: "application/json; charset=UTF-8",
+						data: JSON.stringify(data)
+					});
+			}else{
+				$("#dialog_vector_graphics_conversion").modal("hide");
+			}
+		};
+
 		self.onEventSlicingCancelled = function(payload){
 			self.gcodeFilename(undefined);
 			self.svg = undefined;
 			self.slicing_in_progress(false);
+			self.slicing_progress(0);
 			$("#dialog_vector_graphics_conversion").modal("hide");
 			//console.log("onSlicingCancelled" , payload);
 		};

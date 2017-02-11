@@ -50,7 +50,7 @@ class Converter():
 		self.orientation_points = {}
 		
 		self.colorParams = {}
-		self.options = self.defaults;
+		self.options = self.defaults
 		self.setoptions(params)
 		self.svg_file = model_path
 		self.document=None
@@ -130,9 +130,9 @@ class Converter():
 						file_id = imgNode.get('data-serveurl', '')
 						x = imgNode.get('x')
 						y = imgNode.get('y')						
-						if x == None:
+						if x is None:
 							x = "0"
-						if y == None:
+						if y is None:
 							y = "0"
 
 						# pt units
