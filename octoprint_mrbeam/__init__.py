@@ -40,6 +40,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._cancelled_jobs = []
 		self._cancelled_jobs_mutex = threading.Lock()
 		self._CONVERSION_PARAMS_PATH = "/tmp/conversion_parameters.json"  # TODO add proper path there
+		self._cancel_job = False
 
 	def initialize(self):
 		self.laserCutterProfileManager = LaserCutterProfileManager(self._settings)
@@ -525,6 +526,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		return NO_CONTENT
 
+	@octoprint.plugin.BlueprintPlugin.route("/cancel", methods=["POST"])
+	@restricted_access
+	def cancelSlicing(self):
+		self._cancel_job = True
+		return NO_CONTENT
 
 	##~~ SimpleApiPlugin mixin
 
@@ -614,6 +620,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		#profile = Profile(self._load_profile(profile_path))
 		#params = profile.convert_to_engine2()
 
+		def is_job_cancelled():
+			if self._cancel_job:
+				self._cancel_job = False
+				self._log.info("Conversion canceled")
+				raise octoprint.slicing.SlicingCancelled
+
 		# READ PARAMS FROM JSON
 		params = dict()
 		with open(self._CONVERSION_PARAMS_PATH) as data_file:
@@ -625,7 +637,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		params['file'] = dest_file
 		params['noheaders'] = "true"  # TODO... booleanify
 
-		if (self._settings.get(["debug_logging"])):
+		if self._settings.get(["debug_logging"]):
 			log_path = homedir + "/.octoprint/logs/svgtogcode.log"
 			params['log_filename'] = log_path
 		else:
@@ -633,13 +645,19 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		try:
 			from .gcodegenerator.converter import Converter
+
+			is_job_cancelled() #check before conversion started
+
+			#TODO implement cancelled_Jobs, to check if this particular Job has been canceled
+			#TODO implement check "_cancel_job"-loop inside engine.convert(...), to stop during conversion, too
 			engine = Converter(params, model_path)
 			engine.convert(on_progress, on_progress_args, on_progress_kwargs)
 
-			self._log.info("Conversion delegated.")
+			is_job_cancelled() #check if canceled during conversion
+
 			return True, None  # TODO add analysis about out of working area, ignored elements, invisible elements, text elements
 		except octoprint.slicing.SlicingCancelled as e:
-			self._log.info("Conversion canceled")
+			self._log.info("Conversion cancelled")
 			raise e
 		except Exception as e:
 			print e.__doc__
@@ -658,6 +676,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._log.info("-" * 40)
 
 	def cancel_slicing(self, machinecode_path):
+		self._log.info("Canceling Routine: {}".format(machinecode_path))
 		with self._slicing_commands_mutex:
 			if machinecode_path in self._slicing_commands:
 				with self._cancelled_jobs_mutex:
