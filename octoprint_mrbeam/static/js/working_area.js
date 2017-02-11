@@ -401,11 +401,11 @@ $(function(){
 //					newSvg.clean_gc();
 //				});
 				newSvg.ftRegisterAfterTransformCallback(function(){
-					newSvg.embed_gc();
+//					newSvg.embed_gc();
 				});
 				
 
-				newSvg.embed_gc();
+//				newSvg.embed_gc();
 
 				file.id = id; // list entry id
 				file.previewId = previewId;
@@ -447,7 +447,7 @@ $(function(){
 			svg.data('fitMatrix', null);
 			$('#'+file.id).removeClass('misfit');
 			self.svgTransformUpdate(svg);
-			svg.embed_gc();
+//			svg.embed_gc();
 		};
 
 		self.toggleTransformHandles = function(file){
