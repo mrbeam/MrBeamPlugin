@@ -25,7 +25,6 @@ $(function(){
 		self.state = params[2];
 		self.files = params[3];
 		self.profile = params[4];
-		self.classifier = params[5];
 
 		self.log = [];
 
@@ -42,6 +41,13 @@ $(function(){
 		self.workingAreaHeightMM = ko.computed(function(){
 			return self.profile.currentProfileData().volume.depth() - self.profile.currentProfileData().volume.origin_offset_y();
 		},self);
+
+        // QuickText fields
+        self.fontMap = ['Ubuntu', 'Roboto', 'Libre Baskerville', 'Indie Flower', 'VT323'];
+        self.currentQuickTextFile = undefined;
+        self.currentQuickText = ko.observable();
+        self.lastQuickTextFontIndex = 0;
+        self.lastQuickTextIntensity = 0; // rgb values: 0=black, 155=white
 
         self.camera_offset_x = ko.observable(0);
 		self.camera_offset_y = ko.observable(0);
@@ -426,19 +432,30 @@ $(function(){
 			}
 		};
 
-		self.svgTransformUpdate = function(svg){
-			var globalScale = self.scaleMatrix().a;
-			var transform = svg.transform();
-			var bbox = svg.getBBox();
-			var tx = self.px2mm(bbox.x * globalScale);
-			var ty = self.workingAreaHeightMM() - self.px2mm(bbox.y2 * globalScale);
-			var startIdx = transform.local.indexOf('r') + 1;
-			var endIdx = transform.local.indexOf(',', startIdx);
-			var rot = parseFloat(transform.local.substring(startIdx, endIdx)) || 0;
-			var horizontal = self.px2mm((bbox.x2 - bbox.x) * globalScale);
-			var vertical = self.px2mm((bbox.y2 - bbox.y) * globalScale);
-			var id = svg.attr('id');
-			var label_id = id.substr(0, id.indexOf('-'));
+		self.showTransformHandles = function(file, show){
+			var el = snap.select('#'+file.previewId);
+			if(el){
+			    if (show) {
+                    el.ftCreateHandles();
+                } else {
+			        el.ftRemoveHandles();
+                }
+			}
+		};
+
+		self.svgTransformUpdate = function(svg) {
+            var globalScale = self.scaleMatrix().a;
+            var transform = svg.transform();
+            var bbox = svg.getBBox();
+            var tx = self.px2mm(bbox.x * globalScale);
+            var ty = self.workingAreaHeightMM() - self.px2mm(bbox.y2 * globalScale);
+            var startIdx = transform.local.indexOf('r') + 1;
+            var endIdx = transform.local.indexOf(',', startIdx);
+            var rot = parseFloat(transform.local.substring(startIdx, endIdx)) || 0;
+            var horizontal = self.px2mm((bbox.x2 - bbox.x) * globalScale);
+            var vertical = self.px2mm((bbox.y2 - bbox.y) * globalScale);
+            var id = svg.attr('id');
+            var label_id = id.substr(0, id.indexOf('-'));
 			$('#'+label_id+' .translation').text(tx.toFixed(1) + ',' + ty.toFixed(1));
 			$('#'+label_id+' .horizontal').text(horizontal.toFixed() + 'mm');
 			$('#'+label_id+' .vertical').text(vertical.toFixed() + 'mm');
@@ -684,24 +701,25 @@ $(function(){
 		};
 
 		self.templateFor = function(data) {
-			if(data.type === "model" || data.type === "machinecode"){
-				var extension = data.name.split('.').pop().toLowerCase();
-				if (extension === "svg") {
-					return "wa_template_" + data.type + "_svg";
-				} else if (_.contains(['jpg', 'jpeg', 'png', 'gif', 'bmp', 'pcx', 'webp'], extension)) {
-					return "wa_template_" + data.type + "_img";
-				} else {
-					return "wa_template_" + data.type;
-				}
+			if(data.type === "model" || data.type === "machinecode") {
+                var extension = data.name.split('.').pop().toLowerCase();
+                if (extension === "svg") {
+                    return "wa_template_" + data.type + "_svg";
+                } else if (_.contains(['jpg', 'jpeg', 'png', 'gif', 'bmp', 'pcx', 'webp'], extension)) {
+                    return "wa_template_" + data.type + "_img";
+                } else {
+                    return "wa_template_" + data.type;
+                }
+            }else if (data.type === "quicktext") {
+			    return "wa_template_quicktext";
 			} else {
 				return "wa_template_dummy";
 			}
 		};
 
-		self.getEntryId = function(data) {
-			return "wa_" + md5(data["origin"] + ":" + data["name"]);
+		self.getEntryId = function(file) {
+			return "wa_" + md5(file["origin"] + file["name"] + Date.now());
 		};
-
 
 		self.init = function(){
 			// init snap.svg
@@ -1088,6 +1106,190 @@ $(function(){
             }
         };
 
+
+        // ***********************************************************
+		//  QUICKTEXT start
+        // ***********************************************************
+
+        /**
+         * Opens QuickText window and places a new quickText Object
+         * to the working_area and file list.
+         */
+        self.newQuickText = function() {
+            var file = self.placeQuicktext();
+            self.editQuickText(file)
+        };
+
+        /**
+         * Opens QuickText window to edit an existing QuickText object
+         * @param file Object representing the QuickText to edit
+         */
+        self.editQuickText = function(file) {
+            self.currentQuickTextFile = file;
+            self.currentQuickTextUpdate();
+
+            $('#quick_text_dialog').on('hide.bs.modal', self.currentQuickTextRemoveIfEmpty);
+            $('#quick_text_dialog').on('shown.bs.modal', function(){$('#quick_text_dialog_text_input').focus()});
+            $('#quick_text_dialog').modal({keyboard: true});
+            self.showTransformHandles(self.currentQuickTextFile, false);
+            $('#quick_text_dialog_intensity').val(self.currentQuickTextFile.intensity);
+            $('#quick_text_dialog_text_input').focus();
+        }
+
+        /**
+         * callback/subscription to changes of the text field
+         */
+        self.currentQuickText.subscribe(function(nuText) {
+            if (self.currentQuickTextFile) {
+                self.currentQuickTextFile.name = $.trim(nuText);
+            }
+            self.currentQuickTextUpdate();
+        });
+
+        /**
+         * callback/subscription for the intensity slider
+         */
+        $('#quick_text_dialog_intensity').on("input change", function(e){
+            if (self.currentQuickTextFile) {
+                self.currentQuickTextFile.intensity = e.currentTarget.value;
+                self.lastQuickTextIntensity = self.currentQuickTextFile.intensity;
+                self.currentQuickTextUpdate();
+            }
+        })
+
+        /**
+         * callback for the next font button
+         */
+        self.currentQuickTextFontNext = function() {
+            if (self.currentQuickTextFile) {
+                self.currentQuickTextFile.fontIndex++;
+                if (self.currentQuickTextFile.fontIndex >= self.fontMap.length) {
+                    self.currentQuickTextFile.fontIndex = 0;
+                }
+                self.lastQuickTextFontIndex = self.currentQuickTextFile.fontIndex;
+                self.currentQuickTextUpdate();
+            }
+        }
+
+        /**
+         * callback for the previous font button
+         */
+        self.currentQuickTextFontPrev = function() {
+            if (self.currentQuickTextFile) {
+                self.currentQuickTextFile.fontIndex--;
+                if (self.currentQuickTextFile.fontIndex < 0) {
+                    self.currentQuickTextFile.fontIndex = self.fontMap.length-1;
+                }
+                self.lastQuickTextFontIndex = self.currentQuickTextFile.fontIndex;
+                self.currentQuickTextUpdate();
+            }
+        }
+
+        /**
+         * updates the actual SVG object and the file list object and more
+         * Needs to be called after all changes to a QuickText object
+         *
+         * Updates will be done for the QT object self.currentQuickTextFile is pointing to
+         */
+        self.currentQuickTextUpdate = function(){
+            if (self.currentQuickTextFile) {
+                self.currentQuickText(self.currentQuickTextFile.name);
+                var displayText = self.currentQuickTextFile.name != '' ?
+                    self.currentQuickTextFile.name : $('#quick_text_dialog_text_input').attr('placeholder');
+
+                // update svg object
+                var g = snap.select('#' + self.currentQuickTextFile.previewId);
+                var text = g.select('text');
+                var ity = self.currentQuickTextFile.intensity;
+                text.attr({
+                    text: displayText,
+                    'font-family': self.fontMap[self.currentQuickTextFile.fontIndex],
+                    fill: 'rgb('+ity+','+ity+','+ity+')',
+                    // stroke: 'rgb('+ity+','+ity+','+ity+')',
+                });
+                var bb = text.getBBox();
+                g.select('rect').attr({x: bb.x, y: bb.y, width: bb.width, height: bb.height});
+
+                // update font of input field
+                var shadowIty = 0;
+                if (ity > 200) {
+                    shadowIty = (ity - 200) / 100;
+                }
+                $('#quick_text_dialog_text_input').css('text-shadow', 'rgba(226, 85, 3, '+shadowIty+') 0px 0px 16px');
+                $('#quick_text_dialog_text_input').css('color', 'rgb('+ity+','+ity+','+ity+')');
+
+                $('#quick_text_dialog_text_input').css('font-family', self.fontMap[self.currentQuickTextFile.fontIndex]);
+                $('#quick_text_dialog_font_name').text(self.fontMap[self.currentQuickTextFile.fontIndex]);
+
+                // update fileslist
+                $('#'+self.currentQuickTextFile.id+' .title').text(displayText);
+            }
+        };
+
+        /**
+         * removes an QT object with an empty text from stage
+         */
+        self.currentQuickTextRemoveIfEmpty = function() {
+            if (self.currentQuickTextFile && self.currentQuickTextFile.name == '' ) {
+                self.removeSVG(self.currentQuickTextFile);
+            }
+        };
+
+        /**
+         * Equivalent to self.placeSVG for QuickText
+         * @returns file object
+         */
+        self.placeQuicktext = function(){
+            var placeholderText = $('#quick_text_dialog_text_input').attr('placeholder');
+
+            var file = {
+                date: Date.now(),
+                name: '',
+                id: null,
+                previewId: null,
+                url: null,
+                misfit: "",
+                origin: 'local',
+                path: null,
+                type: "quicktext",
+                typePath: ["quicktext"],
+                fontIndex: self.lastQuickTextFontIndex,
+                intensity: self.lastQuickTextIntensity
+            };
+
+            file.id = self.getEntryId(file);
+            file.previewId = self.generateUniqueId(file.id); // appends -# if multiple times the same design is placed.
+
+            var uc = snap.select("#userContent");
+            var text = uc.text(400, 300, placeholderText);
+            text.attr({
+                'font-size': 70,
+                'font-family': 'Ubuntu'
+            });
+            var box = uc.rect(); // will be placed and sized by self.currentQuickTextUpdateText()
+            box.attr({
+                opacity: "0",
+                // opacity: "0.3",
+                // fill: "yellow"
+            });
+
+            var group = uc.group(text, box);
+            group.attr({
+                id: file.previewId,
+            });
+
+            group.transformable();
+            group.ftRegisterCallback(self.svgTransformUpdate);
+
+            self.placedDesigns.push(file);
+
+            return file;
+        };
+
+        // ***********************************************************
+		//  QUICKTEXT end
+        // ***********************************************************
+
 	}
 
 
@@ -1098,6 +1300,8 @@ $(function(){
 		[document.getElementById("area_preview"),
 			document.getElementById("color_classifier"),
 			document.getElementById("working_area_files"),
+            document.getElementById("quick_text_dialog"),
+            document.getElementById("working_area_addstuff"),
 			//document.getElementById("webcam_wrapper")
 		]]);
 

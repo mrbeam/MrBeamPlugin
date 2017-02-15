@@ -166,6 +166,22 @@
 
 
 
+                                <div class="accordion-group" id="working_area_addstuff">
+									<div class="" data-bind="visible: true">
+										<div class="accordion-heading">
+											<a class="accordion-toggle" data-toggle="collapse" href="#wa_addstuff"><i class="icon-list"></i> {{ _('Add Stuff') }}</a>
+										</div>
+
+									</div>
+									<div class="accordion-body collapse in XXoverflow_visible" id="wa_addstuff">
+										<div class="accordion-inner">
+                                            <div class="btn span3" data-bind="click: newQuickText"> {{ _('Quick Text') }} </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div data-bind="visible: true" id="connection_accordion_2"></div>
+
 								<div class="accordion-group" id="working_area_files">
 									<div class="" data-bind="visible: !working_area_empty()">
 										<div class="accordion-heading">
@@ -182,7 +198,7 @@
 
 											<script type="text/html" id="wa_template_machinecode">
 												<div class="file_list_entry">
-													<div class="title muted pull-left" data-bind="text: name"></div>
+													<div class="title pull-left" data-bind="text: name"></div>
 													<div class="btn-group action-buttons pull-right">
 														<div class="btn btn-mini" data-bind="click: function(){ $root.removeGcode($data); }"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
 													</div>
@@ -192,7 +208,7 @@
 
 											<script type="text/html" id="wa_template_model_svg">
 												<div class="file_list_entry">
-													<div class="title muted pull-left" data-bind="text: name"></div>
+													<div class="title pull-left" data-bind="text: name"></div>
 													<div class="btn-group action-buttons pull-right">
 														<div class="btn btn-mini" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
 														<div class="btn btn-mini" data-bind="click: function() { $root.removeSVG($data); }"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
@@ -220,7 +236,7 @@
 
 											<script type="text/html" id="wa_template_model_img">
 												<div class="file_list_entry">
-													<div class="title muted pull-left" data-bind="text: name"></div>
+													<div class="title pull-left" data-bind="text: name"></div>
 													<div class="btn-group action-buttons pull-right">
 														<div class="btn btn-mini" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
 														<div class="btn btn-mini" data-bind="click: function() { $root.removeIMG($data); }"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
@@ -245,6 +261,36 @@
 													</div>
 												</div>
 											</script>
+
+                                            <script type="text/html" id="wa_template_quicktext">
+												<div class="file_list_entry">
+                                                    <div class="title pull-left" data-bind="text: name"></div>
+													<div class="btn-group action-buttons pull-right">
+														<div class="btn btn-mini" data-bind="click: function() { $root.editQuickText($data); }"><i class="icon-edit" title="{{ _('Edit') }}"></i></div>
+														<div class="btn btn-mini" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
+														<div class="btn btn-mini" data-bind="click: function() { $root.removeSVG($data); }"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
+													</div>
+													<div class="detail_information" >
+														<div class="local_transformation muted">
+															<i class="icon-move" title="{{ _('translation') }}"></i>
+															<span class="translation" >0,0</span>
+															<i class="icon-repeat" title="{{ _('rotation') }}"></i>
+															<span class="rotation" >0°</span></br>
+															<i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>
+															<span class="horizontal" >0mm</span>
+															<i class="icon-resize-vertical" title="{{ _('vertical') }}"></i>
+															<span class="vertical" >0mm</span>
+                                                            <i class="icon-resize-full" title="{{ _('scale') }}"></i>
+															<span class="scale" >100.0%</span>
+														</div>
+														<div class="misfit_warning" >
+															<i class="icon-exclamation-sign" style="color:red;" title="{{ _('exceeds working area') }}"> Design exceeds the working area.</i>
+															<a href="#" data-bind="click: function(){ $root.fitSVG($data) } ">Make it fit</a>
+														</div>
+													</div>
+												</div>
+											</script>
+
 										</div>
 									</div>
 								</div>
