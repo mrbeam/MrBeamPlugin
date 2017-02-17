@@ -211,14 +211,17 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def is_wizard_required(self):
 		methods = self._get_subwizard_attrs("_is_", "_wizard_required")
-		result = self._settings.global_get(["server", "firstRun"]) and any(map(lambda m: m(), methods.values()))
+		
+		result = self._settings.global_get(["server", "firstRun"]) 
+		if result:
+			# don't even go here if firstRun is false
+			result = any(map(lambda m: m(), methods.values()))
 		if result:
 			self._logger.info("Setup Wizard showing")
 		return result
 
 	def get_wizard_details(self):
-		result = dict()
-		return result
+		return dict()
 
 	def on_wizard_finish(self, handled):
 		map(lambda m: m(handled), self._get_subwizard_attrs("_on_", "_wizard_finish").values())
@@ -234,9 +237,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self._logger.warn("_is_wifi_wizard_required() didn't get wifi data. Netconnectd's PluginInfo is None")
 			else:
 				status = pluginInfo.implementation._get_status()
+				self._logger.info("ANDYTEST _is_wifi_wizard_required() status: %s", status)
 				result = not status["connections"]["wifi"]
 		except Exception as e:
 			self._logger.exception("Exception while reading wifi state from netconnectd:")
+		self._logger.info("_is_wifi_wizard_required() %s", result)
 		return result
 
 	def _get_wifi_wizard_details(self):
