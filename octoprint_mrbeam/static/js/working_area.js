@@ -808,11 +808,13 @@ $(function(){
 			var hMM = self.workingAreaHeightMM();
 			var wPT = wMM * 90 / 25.4;
 			var hPT = hMM * 90 / 25.4;
+
 			var compSvg = Snap(wPT, hPT);
 			compSvg.attr('id', 'compSvg');
-
+			self._qt_copyFontsToSvg();
 			var userContent = snap.select("#userContent").clone();
 			compSvg.append(userContent);
+			self._qt_removeFontsFromSvg();
 
 			self.renderInfill(compSvg, fillAreas, cutOutlines, wMM, hMM, 10, function(svgWithRenderedInfill){
 				callback( self._wrapInSvgAndScale(svgWithRenderedInfill));
@@ -915,21 +917,6 @@ $(function(){
 		};
 
 		self.onStartup = function(){
-
-            // get quicktext-fonts.css
-            // Ultimately this needs to be within the SVG tag. That's why we're loading it this way
-            var url = '/plugin/mrbeam/static/css/quicktext-fonts.css';
-            $.ajax({
-                url: url,
-                dataType: "html",
-                success: function(data) {
-                    $('#quickTextFontPlaceholder').html(data);
-                },
-                error: function(e) {
-                    console.warn("Unable to load QuickText fonts from source: " + url);
-                }
-			});
-
 			self.state.workingArea = self;
 			self.files.workingArea = self;
 
@@ -1129,8 +1116,15 @@ $(function(){
          * to the working_area and file list.
          */
         self.newQuickText = function() {
-            var file = self.placeQuicktext();
+            var file = self._qt_placeQuicktext();
             self.editQuickText(file)
+
+
+            var rules = document.styleSheets[0].rules || document.styleSheets[0].cssRules;
+            for(var x=0;x<rules.length;x++) {
+               // console.log(rules[x].name + " | " +rules[x].cssText);
+               // console.log(rules[x].cssText, rules[x]);
+            }
         };
 
         /**
@@ -1139,9 +1133,9 @@ $(function(){
          */
         self.editQuickText = function(file) {
             self.currentQuickTextFile = file;
-            self.currentQuickTextUpdate();
+            self._qt_currentQuickTextUpdate();
 
-            $('#quick_text_dialog').on('hide.bs.modal', self.currentQuickTextRemoveIfEmpty);
+            $('#quick_text_dialog').on('hide.bs.modal', self._qt_currentQuickTextRemoveIfEmpty);
             $('#quick_text_dialog').on('shown.bs.modal', function(){$('#quick_text_dialog_text_input').focus()});
             $('#quick_text_dialog').modal({keyboard: true});
             self.showTransformHandles(self.currentQuickTextFile, false);
@@ -1156,7 +1150,7 @@ $(function(){
             if (self.currentQuickTextFile) {
                 self.currentQuickTextFile.name = $.trim(nuText);
             }
-            self.currentQuickTextUpdate();
+            self._qt_currentQuickTextUpdate();
         });
 
         /**
@@ -1166,7 +1160,7 @@ $(function(){
             if (self.currentQuickTextFile) {
                 self.currentQuickTextFile.intensity = e.currentTarget.value;
                 self.lastQuickTextIntensity = self.currentQuickTextFile.intensity;
-                self.currentQuickTextUpdate();
+                self._qt_currentQuickTextUpdate();
             }
         })
 
@@ -1180,7 +1174,7 @@ $(function(){
                     self.currentQuickTextFile.fontIndex = 0;
                 }
                 self.lastQuickTextFontIndex = self.currentQuickTextFile.fontIndex;
-                self.currentQuickTextUpdate();
+                self._qt_currentQuickTextUpdate();
             }
         }
 
@@ -1194,7 +1188,7 @@ $(function(){
                     self.currentQuickTextFile.fontIndex = self.fontMap.length-1;
                 }
                 self.lastQuickTextFontIndex = self.currentQuickTextFile.fontIndex;
-                self.currentQuickTextUpdate();
+                self._qt_currentQuickTextUpdate();
             }
         }
 
@@ -1204,7 +1198,7 @@ $(function(){
          *
          * Updates will be done for the QT object self.currentQuickTextFile is pointing to
          */
-        self.currentQuickTextUpdate = function(){
+        self._qt_currentQuickTextUpdate = function(){
             if (self.currentQuickTextFile) {
                 self.currentQuickText(self.currentQuickTextFile.name);
                 var displayText = self.currentQuickTextFile.name != '' ?
@@ -1242,7 +1236,7 @@ $(function(){
         /**
          * removes an QT object with an empty text from stage
          */
-        self.currentQuickTextRemoveIfEmpty = function() {
+        self._qt_currentQuickTextRemoveIfEmpty = function() {
             if (self.currentQuickTextFile && self.currentQuickTextFile.name == '' ) {
                 self.removeSVG(self.currentQuickTextFile);
             }
@@ -1252,7 +1246,7 @@ $(function(){
          * Equivalent to self.placeSVG for QuickText
          * @returns file object
          */
-        self.placeQuicktext = function(){
+        self._qt_placeQuicktext = function(){
             var placeholderText = $('#quick_text_dialog_text_input').attr('placeholder');
 
             var file = {
@@ -1279,11 +1273,12 @@ $(function(){
                 'font-size': 70,
                 'font-family': 'Ubuntu'
             });
-            var box = uc.rect(); // will be placed and sized by self.currentQuickTextUpdateText()
+            var box = uc.rect(); // will be placed and sized by self._qt_currentQuickTextUpdateText()
             box.attr({
                 opacity: "0",
                 // opacity: "0.3",
                 // fill: "yellow"
+                class: 'deleteme'
             });
 
             var group = uc.group(text, box);
@@ -1298,6 +1293,39 @@ $(function(){
 
             return file;
         };
+
+        /**
+         * All fonts need to be provided as dataUrl within the SVG when rendered into a canvas. (If they're not
+         * installed on the system which we cant assume.)
+         * This copies the content of quicktext-fonts.css into the SVG userContent. It's expected that this css file
+         * contains @font-face entries with wff2 files as dataUrls. Eg:
+         * // @font-face {font-family: 'Indie Flower'; src: url(data:application/font-woff2;charset=utf-8;base64,d09GMgABAAAAAKtEABEAAAABh...) format('woff2');}
+         * @private
+         */
+        self._qt_copyFontsToSvg = function() {
+            var styleSheets = document.styleSheets;
+			for(var ss=0;ss<styleSheets.length;ss++) {
+			    if (styleSheets[ss].href && styleSheets[ss].href.endsWith("quicktext-fonts.css")) {
+			        self._qt_removeFontsFromSvg();
+			        var rules = styleSheets[ss].cssRules;
+			        for(var r=0;r<rules.length;r++) {
+                        if (rules[r].cssText) {
+                            $('#quickTextFontPlaceholder').append(rules[r].cssText);
+                        }
+                    }
+                    break; // this file appears usually twice....
+                }
+            }
+        };
+
+        /**
+         * removes the fonts added by _qt_copyFontsToSvg()
+         * @private
+         */
+		self._qt_removeFontsFromSvg = function() {
+		    $('#quickTextFontPlaceholder').empty();
+        }
+
 
         // ***********************************************************
 		//  QUICKTEXT end
