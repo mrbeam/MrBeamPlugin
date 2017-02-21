@@ -814,8 +814,6 @@ $(function(){
 			var userContent = snap.select("#userContent").clone();
 			compSvg.append(userContent);
 
-
-
 			self.renderInfill(compSvg, fillAreas, cutOutlines, wMM, hMM, 10, function(svgWithRenderedInfill){
 				callback( self._wrapInSvgAndScale(svgWithRenderedInfill));
 				$('#compSvg').remove();
@@ -917,6 +915,21 @@ $(function(){
 		};
 
 		self.onStartup = function(){
+
+            // get quicktext-fonts.css
+            // Ultimately this needs to be within the SVG tag. That's why we're loading it this way
+            var url = '/plugin/mrbeam/static/css/quicktext-fonts.css';
+            $.ajax({
+                url: url,
+                dataType: "html",
+                success: function(data) {
+                    $('#quickTextFontPlaceholder').html(data);
+                },
+                error: function(e) {
+                    console.warn("Unable to load QuickText fonts from source: " + url);
+                }
+			});
+
 			self.state.workingArea = self;
 			self.files.workingArea = self;
 

@@ -319,11 +319,6 @@
 										},
 										attr: {visibility: 'visible'}
 									 ">
-                                    <defs>
-                                        <style type="text/css">
-                                            @import url('https://fonts.googleapis.com/css?family=Indie+Flower|Libre+Baskerville|Roboto|Ubuntu|VT323');
-                                        </style>
-                                    </defs>
 									<filter id="grayscale_filter">
 										<feColorMatrix in="SourceGraphic" type="saturate" values="0"/>
 									</filter>
@@ -339,7 +334,11 @@
 										<g id="gCodePreview" data-bind="visible: state.isPrinting() || state.isPaused(), attr: { transform: scaleMatrixMMtoDisplay() }"></g>
 										<rect id="coordGrid" x="0" y="0" width="0" height="0"
 											  stroke="none" fill="none"></rect>
-										<g id="userContent" XXdata-bind="visible: !state.isPrinting() && !state.isPaused()"></g>
+										<g id="userContent" XXdata-bind="visible: !state.isPrinting() && !state.isPaused()">
+                                            <defs>
+                                                <style id="quickTextFontPlaceholder"></style>
+                                            </defs>
+                                        </g>
 									</g>
                                       <g id="crosshair"
                                          transform="matrix(0.09, 0, 0, 0.09, -100, -100)"
