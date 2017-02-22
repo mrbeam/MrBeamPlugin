@@ -368,9 +368,23 @@ $(function(){
                 newSvgAttrs['transform'] = scaleMatrixStr;
 
 				var newSvg = snap.group(f.selectAll("svg>*"));
+
+				// handle texts
 				var hasText = newSvg.selectAll('text,tspan');
-				if(hasText !== null && hasText.length > 0){
+				if(hasText && hasText.length > 0){
 					self.svg_contains_text_warning(newSvg);
+				}
+
+				// remove style elements with online references
+				var hasStyle = newSvg.selectAll('style');
+				if (hasStyle && hasStyle.length > 0) {
+					for(var y=0; y<hasStyle.length; y++) {
+						if (hasStyle[y].node.innerHTML && hasStyle[y].node.innerHTML.search("@import ") >= 0) {
+							self.svg_contains_online_style_warning();
+							console.warn("Removing style element: web references not supported: ", hasStyle[y].node.innerHTML);
+							hasStyle[y].node.remove();
+						}
+					}
 				}
 
 				newSvg.bake(); // remove transforms
@@ -519,6 +533,19 @@ $(function(){
             var error = "<p>" + gettext("The SVG file contains text elements.<br/>If you want to laser just their outlines,<br/>please convert them to paths.<br/>Otherwise they will be engraved with infill.") + "</p>";
             new PNotify({
                 title: "Text elements found",
+                text: error,
+                type: "warn",
+                hide: false,
+				buttons: {
+        			sticker: false
+    			}
+            });
+		};
+
+        self.svg_contains_online_style_warning = function(svg){
+            var error = "<p>" + gettext("The SVG file contained style elements with online references. Since online references are not supported, we removed them. The image might look a bit different now.") + "</p>";
+            new PNotify({
+                title: "Style elements removed",
                 text: error,
                 type: "warn",
                 hide: false,
@@ -811,10 +838,19 @@ $(function(){
 
 			var compSvg = Snap(wPT, hPT);
 			compSvg.attr('id', 'compSvg');
-			self._qt_copyFontsToSvg();
 			var userContent = snap.select("#userContent").clone();
 			compSvg.append(userContent);
-			self._qt_removeFontsFromSvg();
+
+			// remove all items maked with deleteBeforeRendering class
+			var dels = compSvg.selectAll('.deleteBeforeRendering');
+            if (dels && dels.length > 0) {
+                for(var i=0; i<dels.length; i++) {
+                    dels[i].remove();
+                }
+            }
+
+            // embed the fonts as dataUris
+            self._qt_copyFontsToSvg(compSvg.select(".quickTextFontPlaceholder").node);
 
 			self.renderInfill(compSvg, fillAreas, cutOutlines, wMM, hMM, 10, function(svgWithRenderedInfill){
 				callback( self._wrapInSvgAndScale(svgWithRenderedInfill));
@@ -1039,8 +1075,12 @@ $(function(){
 
 				var cb = function(result) {
 					if(fillings.length > 0){
-						// replace all images with the fill rendering
+
+						// fill rendering replaces all
 						svg.selectAll('image').remove();
+						svg.selectAll('.deleteAfterRendering').remove();
+						svg.selectAll('text,tspan').remove();
+
 						var waBB = snap.select('#coordGrid').getBBox();
 						var fillImage = snap.image(result, 0, 0, waBB.w, waBB.h);
 						fillImage.attr('id', 'fillRendering');
@@ -1278,7 +1318,7 @@ $(function(){
                 opacity: "0",
                 // opacity: "0.3",
                 // fill: "yellow"
-                class: 'deleteme'
+                class: 'deleteBeforeRendering'
             });
 
             var group = uc.group(text, box);
@@ -1297,20 +1337,21 @@ $(function(){
         /**
          * All fonts need to be provided as dataUrl within the SVG when rendered into a canvas. (If they're not
          * installed on the system which we cant assume.)
-         * This copies the content of quicktext-fonts.css into the SVG userContent. It's expected that this css file
+         * This copies the content of quicktext-fonts.css into the given element. It's expected that this css file
          * contains @font-face entries with wff2 files as dataUrls. Eg:
          * // @font-face {font-family: 'Indie Flower'; src: url(data:application/font-woff2;charset=utf-8;base64,d09GMgABAAAAAKtEABEAAAABh...) format('woff2');}
          * @private
+         * @param DomElement to add the font definition into
          */
-        self._qt_copyFontsToSvg = function() {
+        self._qt_copyFontsToSvg = function(elem) {
             var styleSheets = document.styleSheets;
 			for(var ss=0;ss<styleSheets.length;ss++) {
 			    if (styleSheets[ss].href && styleSheets[ss].href.endsWith("quicktext-fonts.css")) {
-			        self._qt_removeFontsFromSvg();
+			        self._qt_removeFontsFromSvg(elem);
 			        var rules = styleSheets[ss].cssRules;
 			        for(var r=0;r<rules.length;r++) {
                         if (rules[r].cssText) {
-                            $('#quickTextFontPlaceholder').append(rules[r].cssText);
+                            $(elem).append(rules[r].cssText);
                         }
                     }
                     break; // this file appears usually twice....
@@ -1322,8 +1363,8 @@ $(function(){
          * removes the fonts added by _qt_copyFontsToSvg()
          * @private
          */
-		self._qt_removeFontsFromSvg = function() {
-		    $('#quickTextFontPlaceholder').empty();
+		self._qt_removeFontsFromSvg = function(elem) {
+		    $(elem).empty();
         }
 
 
