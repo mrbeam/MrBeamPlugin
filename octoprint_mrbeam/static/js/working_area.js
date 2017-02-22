@@ -25,7 +25,6 @@ $(function(){
 		self.state = params[2];
 		self.files = params[3];
 		self.profile = params[4];
-		self.classifier = params[5];
 
 		self.log = [];
 
@@ -42,6 +41,13 @@ $(function(){
 		self.workingAreaHeightMM = ko.computed(function(){
 			return self.profile.currentProfileData().volume.depth() - self.profile.currentProfileData().volume.origin_offset_y();
 		},self);
+
+        // QuickText fields
+        self.fontMap = ['Ubuntu', 'Roboto', 'Libre Baskerville', 'Indie Flower', 'VT323'];
+        self.currentQuickTextFile = undefined;
+        self.currentQuickText = ko.observable();
+        self.lastQuickTextFontIndex = 0;
+        self.lastQuickTextIntensity = 0; // rgb values: 0=black, 155=white
 
         self.camera_offset_x = ko.observable(0);
 		self.camera_offset_y = ko.observable(0);
@@ -362,9 +368,23 @@ $(function(){
                 newSvgAttrs['transform'] = scaleMatrixStr;
 
 				var newSvg = snap.group(f.selectAll("svg>*"));
+
+				// handle texts
 				var hasText = newSvg.selectAll('text,tspan');
-				if(hasText !== null && hasText.length > 0){
+				if(hasText && hasText.length > 0){
 					self.svg_contains_text_warning(newSvg);
+				}
+
+				// remove style elements with online references
+				var hasStyle = newSvg.selectAll('style');
+				if (hasStyle && hasStyle.length > 0) {
+					for(var y=0; y<hasStyle.length; y++) {
+						if (hasStyle[y].node.innerHTML && hasStyle[y].node.innerHTML.search("@import ") >= 0) {
+							self.svg_contains_online_style_warning();
+							console.warn("Removing style element: web references not supported: ", hasStyle[y].node.innerHTML);
+							hasStyle[y].node.remove();
+						}
+					}
 				}
 
 				newSvg.bake(); // remove transforms
@@ -426,19 +446,30 @@ $(function(){
 			}
 		};
 
-		self.svgTransformUpdate = function(svg){
-			var globalScale = self.scaleMatrix().a;
-			var transform = svg.transform();
-			var bbox = svg.getBBox();
-			var tx = self.px2mm(bbox.x * globalScale);
-			var ty = self.workingAreaHeightMM() - self.px2mm(bbox.y2 * globalScale);
-			var startIdx = transform.local.indexOf('r') + 1;
-			var endIdx = transform.local.indexOf(',', startIdx);
-			var rot = parseFloat(transform.local.substring(startIdx, endIdx)) || 0;
-			var horizontal = self.px2mm((bbox.x2 - bbox.x) * globalScale);
-			var vertical = self.px2mm((bbox.y2 - bbox.y) * globalScale);
-			var id = svg.attr('id');
-			var label_id = id.substr(0, id.indexOf('-'));
+		self.showTransformHandles = function(file, show){
+			var el = snap.select('#'+file.previewId);
+			if(el){
+			    if (show) {
+                    el.ftCreateHandles();
+                } else {
+			        el.ftRemoveHandles();
+                }
+			}
+		};
+
+		self.svgTransformUpdate = function(svg) {
+            var globalScale = self.scaleMatrix().a;
+            var transform = svg.transform();
+            var bbox = svg.getBBox();
+            var tx = self.px2mm(bbox.x * globalScale);
+            var ty = self.workingAreaHeightMM() - self.px2mm(bbox.y2 * globalScale);
+            var startIdx = transform.local.indexOf('r') + 1;
+            var endIdx = transform.local.indexOf(',', startIdx);
+            var rot = parseFloat(transform.local.substring(startIdx, endIdx)) || 0;
+            var horizontal = self.px2mm((bbox.x2 - bbox.x) * globalScale);
+            var vertical = self.px2mm((bbox.y2 - bbox.y) * globalScale);
+            var id = svg.attr('id');
+            var label_id = id.substr(0, id.indexOf('-'));
 			$('#'+label_id+' .translation').text(tx.toFixed(1) + ',' + ty.toFixed(1));
 			$('#'+label_id+' .horizontal').text(horizontal.toFixed() + 'mm');
 			$('#'+label_id+' .vertical').text(vertical.toFixed() + 'mm');
@@ -502,6 +533,19 @@ $(function(){
             var error = "<p>" + gettext("The SVG file contains text elements.<br/>If you want to laser just their outlines,<br/>please convert them to paths.<br/>Otherwise they will be engraved with infill.") + "</p>";
             new PNotify({
                 title: "Text elements found",
+                text: error,
+                type: "warn",
+                hide: false,
+				buttons: {
+        			sticker: false
+    			}
+            });
+		};
+
+        self.svg_contains_online_style_warning = function(svg){
+            var error = "<p>" + gettext("The SVG file contained style elements with online references. Since online references are not supported, we removed them. The image might look a bit different now.") + "</p>";
+            new PNotify({
+                title: "Style elements removed",
                 text: error,
                 type: "warn",
                 hide: false,
@@ -684,24 +728,25 @@ $(function(){
 		};
 
 		self.templateFor = function(data) {
-			if(data.type === "model" || data.type === "machinecode"){
-				var extension = data.name.split('.').pop().toLowerCase();
-				if (extension === "svg") {
-					return "wa_template_" + data.type + "_svg";
-				} else if (_.contains(['jpg', 'jpeg', 'png', 'gif', 'bmp', 'pcx', 'webp'], extension)) {
-					return "wa_template_" + data.type + "_img";
-				} else {
-					return "wa_template_" + data.type;
-				}
+			if(data.type === "model" || data.type === "machinecode") {
+                var extension = data.name.split('.').pop().toLowerCase();
+                if (extension === "svg") {
+                    return "wa_template_" + data.type + "_svg";
+                } else if (_.contains(['jpg', 'jpeg', 'png', 'gif', 'bmp', 'pcx', 'webp'], extension)) {
+                    return "wa_template_" + data.type + "_img";
+                } else {
+                    return "wa_template_" + data.type;
+                }
+            }else if (data.type === "quicktext") {
+			    return "wa_template_quicktext";
 			} else {
 				return "wa_template_dummy";
 			}
 		};
 
-		self.getEntryId = function(data) {
-			return "wa_" + md5(data["origin"] + ":" + data["name"]);
+		self.getEntryId = function(file) {
+			return "wa_" + md5(file["origin"] + file["name"] + Date.now());
 		};
-
 
 		self.init = function(){
 			// init snap.svg
@@ -790,13 +835,22 @@ $(function(){
 			var hMM = self.workingAreaHeightMM();
 			var wPT = wMM * 90 / 25.4;
 			var hPT = hMM * 90 / 25.4;
+
 			var compSvg = Snap(wPT, hPT);
 			compSvg.attr('id', 'compSvg');
-
 			var userContent = snap.select("#userContent").clone();
 			compSvg.append(userContent);
 
+			// remove all items maked with deleteBeforeRendering class
+			var dels = compSvg.selectAll('.deleteBeforeRendering');
+            if (dels && dels.length > 0) {
+                for(var i=0; i<dels.length; i++) {
+                    dels[i].remove();
+                }
+            }
 
+            // embed the fonts as dataUris
+            self._qt_copyFontsToSvg(compSvg.select(".quickTextFontPlaceholder").node);
 
 			self.renderInfill(compSvg, fillAreas, cutOutlines, wMM, hMM, 10, function(svgWithRenderedInfill){
 				callback( self._wrapInSvgAndScale(svgWithRenderedInfill));
@@ -1021,8 +1075,12 @@ $(function(){
 
 				var cb = function(result) {
 					if(fillings.length > 0){
-						// replace all images with the fill rendering
+
+						// fill rendering replaces all
 						svg.selectAll('image').remove();
+						svg.selectAll('.deleteAfterRendering').remove();
+						svg.selectAll('text,tspan').remove();
+
 						var waBB = snap.select('#coordGrid').getBBox();
 						var fillImage = snap.image(result, 0, 0, waBB.w, waBB.h);
 						fillImage.attr('id', 'fillRendering');
@@ -1088,6 +1146,232 @@ $(function(){
             }
         };
 
+
+        // ***********************************************************
+		//  QUICKTEXT start
+        // ***********************************************************
+
+        /**
+         * Opens QuickText window and places a new quickText Object
+         * to the working_area and file list.
+         */
+        self.newQuickText = function() {
+            var file = self._qt_placeQuicktext();
+            self.editQuickText(file)
+
+
+            var rules = document.styleSheets[0].rules || document.styleSheets[0].cssRules;
+            for(var x=0;x<rules.length;x++) {
+               // console.log(rules[x].name + " | " +rules[x].cssText);
+               // console.log(rules[x].cssText, rules[x]);
+            }
+        };
+
+        /**
+         * Opens QuickText window to edit an existing QuickText object
+         * @param file Object representing the QuickText to edit
+         */
+        self.editQuickText = function(file) {
+            self.currentQuickTextFile = file;
+            self._qt_currentQuickTextUpdate();
+
+            $('#quick_text_dialog').on('hide.bs.modal', self._qt_currentQuickTextRemoveIfEmpty);
+            $('#quick_text_dialog').on('shown.bs.modal', function(){$('#quick_text_dialog_text_input').focus()});
+            $('#quick_text_dialog').modal({keyboard: true});
+            self.showTransformHandles(self.currentQuickTextFile, false);
+            $('#quick_text_dialog_intensity').val(self.currentQuickTextFile.intensity);
+            $('#quick_text_dialog_text_input').focus();
+        }
+
+        /**
+         * callback/subscription to changes of the text field
+         */
+        self.currentQuickText.subscribe(function(nuText) {
+            if (self.currentQuickTextFile) {
+                self.currentQuickTextFile.name = $.trim(nuText);
+            }
+            self._qt_currentQuickTextUpdate();
+        });
+
+        /**
+         * callback/subscription for the intensity slider
+         */
+        $('#quick_text_dialog_intensity').on("input change", function(e){
+            if (self.currentQuickTextFile) {
+                self.currentQuickTextFile.intensity = e.currentTarget.value;
+                self.lastQuickTextIntensity = self.currentQuickTextFile.intensity;
+                self._qt_currentQuickTextUpdate();
+            }
+        })
+
+        /**
+         * callback for the next font button
+         */
+        self.currentQuickTextFontNext = function() {
+            if (self.currentQuickTextFile) {
+                self.currentQuickTextFile.fontIndex++;
+                if (self.currentQuickTextFile.fontIndex >= self.fontMap.length) {
+                    self.currentQuickTextFile.fontIndex = 0;
+                }
+                self.lastQuickTextFontIndex = self.currentQuickTextFile.fontIndex;
+                self._qt_currentQuickTextUpdate();
+            }
+        }
+
+        /**
+         * callback for the previous font button
+         */
+        self.currentQuickTextFontPrev = function() {
+            if (self.currentQuickTextFile) {
+                self.currentQuickTextFile.fontIndex--;
+                if (self.currentQuickTextFile.fontIndex < 0) {
+                    self.currentQuickTextFile.fontIndex = self.fontMap.length-1;
+                }
+                self.lastQuickTextFontIndex = self.currentQuickTextFile.fontIndex;
+                self._qt_currentQuickTextUpdate();
+            }
+        }
+
+        /**
+         * updates the actual SVG object and the file list object and more
+         * Needs to be called after all changes to a QuickText object
+         *
+         * Updates will be done for the QT object self.currentQuickTextFile is pointing to
+         */
+        self._qt_currentQuickTextUpdate = function(){
+            if (self.currentQuickTextFile) {
+                self.currentQuickText(self.currentQuickTextFile.name);
+                var displayText = self.currentQuickTextFile.name != '' ?
+                    self.currentQuickTextFile.name : $('#quick_text_dialog_text_input').attr('placeholder');
+
+                // update svg object
+                var g = snap.select('#' + self.currentQuickTextFile.previewId);
+                var text = g.select('text');
+                var ity = self.currentQuickTextFile.intensity;
+                text.attr({
+                    text: displayText,
+                    'font-family': self.fontMap[self.currentQuickTextFile.fontIndex],
+                    fill: 'rgb('+ity+','+ity+','+ity+')',
+                    // stroke: 'rgb('+ity+','+ity+','+ity+')',
+                });
+                var bb = text.getBBox();
+                g.select('rect').attr({x: bb.x, y: bb.y, width: bb.width, height: bb.height});
+
+                // update font of input field
+                var shadowIty = 0;
+                if (ity > 200) {
+                    shadowIty = (ity - 200) / 100;
+                }
+                $('#quick_text_dialog_text_input').css('text-shadow', 'rgba(226, 85, 3, '+shadowIty+') 0px 0px 16px');
+                $('#quick_text_dialog_text_input').css('color', 'rgb('+ity+','+ity+','+ity+')');
+
+                $('#quick_text_dialog_text_input').css('font-family', self.fontMap[self.currentQuickTextFile.fontIndex]);
+                $('#quick_text_dialog_font_name').text(self.fontMap[self.currentQuickTextFile.fontIndex]);
+
+                // update fileslist
+                $('#'+self.currentQuickTextFile.id+' .title').text(displayText);
+            }
+        };
+
+        /**
+         * removes an QT object with an empty text from stage
+         */
+        self._qt_currentQuickTextRemoveIfEmpty = function() {
+            if (self.currentQuickTextFile && self.currentQuickTextFile.name == '' ) {
+                self.removeSVG(self.currentQuickTextFile);
+            }
+        };
+
+        /**
+         * Equivalent to self.placeSVG for QuickText
+         * @returns file object
+         */
+        self._qt_placeQuicktext = function(){
+            var placeholderText = $('#quick_text_dialog_text_input').attr('placeholder');
+
+            var file = {
+                date: Date.now(),
+                name: '',
+                id: null,
+                previewId: null,
+                url: null,
+                misfit: "",
+                origin: 'local',
+                path: null,
+                type: "quicktext",
+                typePath: ["quicktext"],
+                fontIndex: self.lastQuickTextFontIndex,
+                intensity: self.lastQuickTextIntensity
+            };
+
+            file.id = self.getEntryId(file);
+            file.previewId = self.generateUniqueId(file.id); // appends -# if multiple times the same design is placed.
+
+            var uc = snap.select("#userContent");
+            var text = uc.text(400, 300, placeholderText);
+            text.attr({
+                'font-size': 70,
+                'font-family': 'Ubuntu'
+            });
+            var box = uc.rect(); // will be placed and sized by self._qt_currentQuickTextUpdateText()
+            box.attr({
+                opacity: "0",
+                // opacity: "0.3",
+                // fill: "yellow"
+                class: 'deleteBeforeRendering'
+            });
+
+            var group = uc.group(text, box);
+            group.attr({
+                id: file.previewId,
+            });
+
+            group.transformable();
+            group.ftRegisterCallback(self.svgTransformUpdate);
+
+            self.placedDesigns.push(file);
+
+            return file;
+        };
+
+        /**
+         * All fonts need to be provided as dataUrl within the SVG when rendered into a canvas. (If they're not
+         * installed on the system which we cant assume.)
+         * This copies the content of quicktext-fonts.css into the given element. It's expected that this css file
+         * contains @font-face entries with wff2 files as dataUrls. Eg:
+         * // @font-face {font-family: 'Indie Flower'; src: url(data:application/font-woff2;charset=utf-8;base64,d09GMgABAAAAAKtEABEAAAABh...) format('woff2');}
+         * @private
+         * @param DomElement to add the font definition into
+         */
+        self._qt_copyFontsToSvg = function(elem) {
+            var styleSheets = document.styleSheets;
+			for(var ss=0;ss<styleSheets.length;ss++) {
+			    if (styleSheets[ss].href && styleSheets[ss].href.endsWith("quicktext-fonts.css")) {
+			        self._qt_removeFontsFromSvg(elem);
+			        var rules = styleSheets[ss].cssRules;
+			        for(var r=0;r<rules.length;r++) {
+                        if (rules[r].cssText) {
+                            $(elem).append(rules[r].cssText);
+                        }
+                    }
+                    break; // this file appears usually twice....
+                }
+            }
+        };
+
+        /**
+         * removes the fonts added by _qt_copyFontsToSvg()
+         * @private
+         */
+		self._qt_removeFontsFromSvg = function(elem) {
+		    $(elem).empty();
+        }
+
+
+        // ***********************************************************
+		//  QUICKTEXT end
+        // ***********************************************************
+
 	}
 
 
@@ -1098,6 +1382,8 @@ $(function(){
 		[document.getElementById("area_preview"),
 			document.getElementById("color_classifier"),
 			document.getElementById("working_area_files"),
+            document.getElementById("quick_text_dialog"),
+            document.getElementById("working_area_addstuff"),
 			//document.getElementById("webcam_wrapper")
 		]]);
 

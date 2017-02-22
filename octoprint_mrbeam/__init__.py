@@ -128,7 +128,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			js=["js/lasercutterprofiles.js","js/mother_viewmodel.js", "js/mrbeam.js","js/color_classifier.js","js/working_area.js", "js/camera.js",
 			"js/lib/snap.svg-min.js", "js/render_fills.js", "js/path_convert.js", "js/matrix_oven.js", "js/drag_scale_rotate.js",
 			"js/convert.js", "js/gcode_parser.js", "js/lib/photobooth_min.js", "js/laserSafetyNotes.js", "js/svg_cleaner.js", "js/corewizard.js"],
-			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css"],
+			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css", "css/quicktext-fonts.css"],
 			less=["less/mrbeam.less"]
 		)
 
@@ -805,6 +805,7 @@ def __plugin_load__():
 	__plugin_settings_overlay__ = dict(
 		plugins=dict(
 			_disabled=['cura', 'pluginmanager', 'announcements', 'corewizard']),  # eats dict | pfad.yml | callable
+			# _disabled=['cura', 'pluginmanager', 'announcements', 'corewizard', 'mrbeam']),  # eats dict | pfad.yml | callable
 			terminalFilters=[
 				{"name": "Suppress position requests", "regex": "(Send: \?)"},
 				{"name": "Suppress confirmations", "regex": "(Recv: ok)"},

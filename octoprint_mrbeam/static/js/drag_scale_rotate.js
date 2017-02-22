@@ -226,7 +226,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		Element.prototype.ftRemoveHandles = function() {
 			this.unclick();
 			this.removeClass('_freeTransformInProgress');
-			this.data( 'handlesGroup').remove();
+			if(this.data( 'handlesGroup')) this.data( 'handlesGroup').remove();
 			if(this.data( 'bbT' )) this.data('bbT').remove();
 			if(this.data( 'bb' )) this.data('bb').remove();
 			this.click( function() { this.ftCreateHandles(); } ) ;
