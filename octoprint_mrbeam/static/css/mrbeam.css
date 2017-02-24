@@ -1873,3 +1873,10 @@ input.search-query,
 #flashing_progress {
 
 }
+
+.decimal_input{
+    width: 4em;
+    min-width: 4em;
+}
+
+
