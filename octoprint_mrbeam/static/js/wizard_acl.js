@@ -1,5 +1,5 @@
 $(function() {
-    function CoreWizardAclViewModel(parameters) {
+    function WizardAclViewModel(parameters) {
         var self = this;
 
         self.loginStateViewModel = parameters[0];
@@ -10,13 +10,38 @@ $(function() {
 
         self.setup = ko.observable(false);
         self.decision = ko.observable();
+        self.hasUserTyped = ko.observable(false);
+        self.hasPw2Typed = ko.observable(false);
+        
+        // validates email adresses
+        self.regexValidateEmail = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+
+        // self.onBeforeWifiConfigure = function() {
+        //     return {forwardUrl: 'http://find.mr-beam.org:5000', source: self};
+        // }
 
         self.passwordMismatch = ko.pureComputed(function() {
             return self.password() != self.confirmedPassword();
         });
 
         self.validUsername = ko.pureComputed(function() {
-            return self.username() && self.username().trim() != "";
+            return self.regexValidateEmail.test(self.username())
+        });
+        
+        self.doUserValidation = ko.pureComputed(function() {
+            return self.hasUserTyped();
+        });
+        
+        self.doPwMatchValidation = ko.pureComputed(function() {
+            if (self.hasPw2Typed()) {
+                return true;
+            }
+            var len1 = self.password() ? self.password().length : 0;
+            var len2 = self.confirmedPassword() ? self.confirmedPassword().length : 0;
+            if (len2 > 0 && len2 >= len1) {
+                self.hasPw2Typed(true);
+            }
+            return len2 >= len1;
         });
 
         self.validPassword = ko.pureComputed(function() {
@@ -26,6 +51,17 @@ $(function() {
         self.validData = ko.pureComputed(function() {
             return !self.passwordMismatch() && self.validUsername() && self.validPassword();
         });
+        
+        
+        self.onStartupComplete = function(){
+            $('#wizard_plugin_corewizard_acl_input_username').blur(function(){
+                self.hasUserTyped(true);
+            })
+            $('#wizard_plugin_corewizard_acl_input_pw2').blur(function(){
+                self.hasPw2Typed(true);
+            })
+            
+        };
 
         self.keepAccessControl = function() {
             if (!self.validData()) return;
@@ -85,8 +121,8 @@ $(function() {
                 } else {
                     if (!self.validUsername()) {
                         showMessageDialog({
-                            title: gettext("Invalid emtpy username"),
-                            message: gettext("You need to enter a valid username.")
+                            title: gettext("Invalid e-mail address"),
+                            message: gettext("You need to enter your valid e-mail address.")
                         });
                     } else if (!self.validPassword()) {
                         showMessageDialog({
@@ -108,7 +144,7 @@ $(function() {
     }
 
     OCTOPRINT_VIEWMODELS.push([
-        CoreWizardAclViewModel,
+        WizardAclViewModel,
         ["loginStateViewModel"],
         "#wizard_plugin_corewizard_acl"
     ]);

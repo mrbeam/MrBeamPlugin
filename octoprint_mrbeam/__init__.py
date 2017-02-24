@@ -44,6 +44,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def initialize(self):
 		self.laserCutterProfileManager = LaserCutterProfileManager(self._settings)
 		self._log = logging.getLogger("octoprint.plugins.mrbeam")
+		self._log.info("ANDYTEST: getPiSerial: %s", self.getPiSerial())
 
 	def _convert_profiles(self, profiles):
 		result = dict()
@@ -124,9 +125,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# Define your plugin's asset files to automatically include in the
 		# core UI here.
 		return dict(
-			js=["js/lasercutterprofiles.js","js/mother_viewmodel.js", "js/mrbeam.js","js/color_classifier.js","js/working_area.js", "js/camera.js",
-			"js/lib/snap.svg-min.js", "js/render_fills.js", "js/path_convert.js", "js/matrix_oven.js", "js/drag_scale_rotate.js",
-			"js/convert.js", "js/gcode_parser.js", "js/lib/photobooth_min.js", "js/laserSafetyNotes.js", "js/svg_cleaner.js", "js/corewizard.js", 			"js/netconnectd_wrapper.js"],
+			js=["js/lasercutterprofiles.js","js/mother_viewmodel.js", "js/mrbeam.js","js/color_classifier.js",
+			"js/working_area.js", "js/camera.js", "js/lib/snap.svg-min.js", "js/render_fills.js", "js/path_convert.js", 
+			"js/matrix_oven.js", "js/drag_scale_rotate.js", "js/convert.js", "js/gcode_parser.js", 
+			"js/lib/photobooth_min.js", "js/laserSafetyNotes.js", "js/svg_cleaner.js", 
+			"js/wizard_acl.js", "js/netconnectd_wrapper.js"],
 			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css"],
 			less=["less/mrbeam.less"]
 		)
@@ -198,7 +201,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			if not name:
 				continue
 
-			config = dict(type="wizard", name=name, template="corewizard_{}_wizard.jinja2".format(key), div="wizard_plugin_corewizard_{}".format(key))
+			config = dict(type="wizard", name=name, template="wizard/wizard_{}.jinja2".format(key), div="wizard_plugin_corewizard_{}".format(key))
 			if key in additional:
 				additional_result = additional[key]()
 				if additional_result:
@@ -852,6 +855,22 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return currentJob["file"]["origin"], currentJob["file"]["name"]
 		else:
 			return None, None
+			
+			
+	def getPiSerial(self):
+		# Extract serial from cpuinfo file
+		cpuserial = "0000000000000000"
+		try:
+			f = open('/proc/cpuinfo', 'r')
+			for line in f:
+				if line[0:6] == 'Serial':
+					cpuserial = line[10:26]
+			f.close()
+		except Exception as e:
+			cpuserial = "ERROR000000000"
+			self._log.exception(e);
+
+		return cpuserial
 
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py

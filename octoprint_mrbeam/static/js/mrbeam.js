@@ -12,7 +12,6 @@ $(function() {
         // self.loginStateViewModel = parameters[0];
         // self.settingsViewModel = parameters[1];
 
-        // TODO: Implement your plugin's view model here.
     }
 
     // view model class, parameters for constructor, container to bind to
