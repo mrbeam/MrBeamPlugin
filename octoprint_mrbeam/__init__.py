@@ -46,7 +46,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	USER_SETTINGS_KEY_TIMESTAMP = 'ts'
 	USER_SETTINGS_KEY_VERSION = 'version'
 	USER_SETTINGS_KEY_SAFETY_CONFIRMATION_SENT_TO_CLOUD = ['safety_wizard', 'sent_to_cloud']
-	USER_SETTINGS_KEY_SAFETY_CONFIRMATION_DONT_SHOW_AGAIN = ['safety_wizard', 'dont_show_again']
+	USER_SETTINGS_KEY_SAFETY_CONFIRMATION_SHOW_AGAIN = ['safety_wizard', 'show_again']
 
 
 
@@ -396,6 +396,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				or current_user.get_name() != username:
 			return make_response("Invalid user", 403)
 
+		showAgain = bool(data.get('showAgain', True))
+
 		# see if we nee to send this to the cloud
 		submissionDate = self.getUserSetting(username, self.USER_SETTINGS_KEY_SAFETY_CONFIRMATION_SENT_TO_CLOUD, -1)
 		force = bool(data.get('force', False))
@@ -411,7 +413,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			if debug is not None and debug != "prod":
 				payload['debug'] = debug
 				self._log.debug("safety_wizard - debug flag: %s", debug)
-				
+
 			if force:
 				payload['force'] = force
 				self._log.debug("safety_wizard - force flag: %s", force)
@@ -420,9 +422,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							   self.SAFETY_CONFIRMATION_STORAGE_URL, payload)
 
 
-			
+
 			# actual request
-			saved = False
+			successfullySubmitted = False
 			responseCode = ''
 			responseFull = ''
 			httpCode = -1
@@ -431,18 +433,23 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				responseCode = r.text.lstrip().split(' ', 1)[0]
 				responseFull = r.text
 				httpCode = r.status_code
+				if responseCode == 'OK' or responseCode == 'OK_DEBUG':
+					successfullySubmitted = True
 			except Exception as e:
 				responseCode = "EXCEPTION"
 				responseFull = str(e.args)
 
-			if responseCode == 'OK' or responseCode == 'OK_DEBUG':
-				self.setUserSetting(username, self.USER_SETTINGS_KEY_SAFETY_CONFIRMATION_SENT_TO_CLOUD, time.time())
-				saved = True
+			submissionDate = time.time() if successfullySubmitted else -1
+			showAgain = showAgain if successfullySubmitted else True
+			self.setUserSetting(username, self.USER_SETTINGS_KEY_SAFETY_CONFIRMATION_SENT_TO_CLOUD, submissionDate)
+			self.setUserSetting(username, self.USER_SETTINGS_KEY_SAFETY_CONFIRMATION_SHOW_AGAIN, showAgain)
 
 			# and drop a line into the log on info level this is important
-			self._logger.info("safety_wizard: confirmation response: (%s) %s, confirmation safed: %s, full response: %s", httpCode, responseCode, saved, responseFull)
+			self._logger.info("safety_wizard: confirmation response: (%s) %s, submissionDate: %s, showAgain: %s, full response: %s",
+							  httpCode, responseCode, submissionDate, showAgain, responseFull)
 		else:
-			self._logger.info("safety_wizard: confirmation already sent.")
+			self._logger.info("safety_wizard: confirmation already sent. showAgain: %s", showAgain)
+			self.setUserSetting(username, self.USER_SETTINGS_KEY_SAFETY_CONFIRMATION_SHOW_AGAIN, showAgain)
 
 		return NO_CONTENT
 
@@ -482,7 +489,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if not isinstance(key, list):
 			key = [key]
 		result = self._user_manager.getUserSetting(username, [self.USER_SETTINGS_KEY_MRBEAM] + key)
-			
+
 		if result is None:
 			result = default
 		return result
