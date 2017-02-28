@@ -389,7 +389,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		# check if username is ok
 		username = data.get('username', '')
-		username = data.get('username', '')
 		if current_user is None \
 				or current_user.is_anonymous() \
 				or not current_user.is_user() \
@@ -399,34 +398,49 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		# see if we nee to send this to the cloud
 		submissionDate = self.getUserSetting(username, self.USER_SETTINGS_KEY_SAFETY_CONFIRMATION_SENT_TO_CLOUD, -1)
-		self._logger.debug("ANDYTEST safety_wizard_api() isConfirmed: %s", submissionDate)
-		if submissionDate <= 0:
+		force = bool(data.get('force', False))
+		if submissionDate <= 0 or force:
 			# get cloud env to use
 			debug = self._settings.global_get(self.SETTINGS_KEY_DEVEL_MRBEAM_CLOUD_ENV)
 
 			payload = {'ts': data.get('ts', ''),
 					   'email': data.get('username', ''),
-					   # 'serial': self.getPiSerial(),
+					   'serial': self.getPiSerial(),
 					   'hostname': self.getHostname()}
 
 			if debug is not None and debug != "prod":
 				payload['debug'] = debug
 				self._log.debug("safety_wizard - debug flag: %s", debug)
+				
+			if force:
+				payload['force'] = force
+				self._log.debug("safety_wizard - force flag: %s", force)
 
 			self._logger.debug("safety_wizard - cloud request: url: %s, payload: %s",
 							   self.SAFETY_CONFIRMATION_STORAGE_URL, payload)
 
-			# actual request
-			r = requests.post(self.SAFETY_CONFIRMATION_STORAGE_URL, data=payload)
 
+			
+			# actual request
 			saved = False
-			response = r.text.lstrip().split(' ', 1)[0]
-			if response == 'OK' or response == 'OK_DEBUG':
+			responseCode = ''
+			responseFull = ''
+			httpCode = -1
+			try:
+				r = requests.post(self.SAFETY_CONFIRMATION_STORAGE_URL, data=payload)
+				responseCode = r.text.lstrip().split(' ', 1)[0]
+				responseFull = r.text
+				httpCode = r.status_code
+			except Exception as e:
+				responseCode = "EXCEPTION"
+				responseFull = str(e.args)
+
+			if responseCode == 'OK' or responseCode == 'OK_DEBUG':
 				self.setUserSetting(username, self.USER_SETTINGS_KEY_SAFETY_CONFIRMATION_SENT_TO_CLOUD, time.time())
 				saved = True
 
 			# and drop a line into the log on info level this is important
-			self._logger.info("safety_wizard: confirmation response: (%s) %s, confirmation safed: %s", r.status_code, r.text, saved)
+			self._logger.info("safety_wizard: confirmation response: (%s) %s, confirmation safed: %s, full response: %s", httpCode, responseCode, saved, responseFull)
 		else:
 			self._logger.info("safety_wizard: confirmation already sent.")
 
@@ -468,10 +482,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if not isinstance(key, list):
 			key = [key]
 		result = self._user_manager.getUserSetting(username, [self.USER_SETTINGS_KEY_MRBEAM] + key)
+			
 		if result is None:
 			result = default
 		return result
-
 
 
 	##~~ BlueprintPlugin mixin
@@ -989,6 +1003,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				if line[0:6] == 'Serial':
 					cpuserial = line[10:26]
 			f.close()
+			cpuserial = cpuserial.upper()
 		except Exception as e:
 			cpuserial = "ERROR000000000"
 			# self._log.exception(e);
