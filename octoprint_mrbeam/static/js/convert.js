@@ -33,7 +33,7 @@ $(function(){
 		//TODO make not hardcoded
 		//[laserInt,speed,engraveWhite,engraveBlack,speedWhite,speedBlack]
 		// TODO: should be a structure like this:
-		
+
 //		material = {
 //			name: 'Kraftplex',
 //			color: 'default',
@@ -48,7 +48,7 @@ $(function(){
 //			safety_notes: 'super fine structures are subject to ignition!'
 //			laser_type: 'MrBeamII-1.0'
 //		}
-		
+
 		self.materials_settings = {
 			'default':[0, 0, 0, 0, 0, 0],
 //			'Acrylic':[1000,80,0,350,4500,850],
@@ -93,21 +93,21 @@ $(function(){
 			}
 			$('.job_row_vector .not-used').remove();
 		};
-		
+
 		self._getColorIcon = function(color){
 			var i = $('<div/>',{
 				id: 'cd_color_'+color.hex.substr(1),
 				style: "background-color: "+color.hex+";",
 				draggable: "true",
 				class: 'used_color'
-			}).on({ 
+			}).on({
 				dragstart: function(ev){ colorDragStart(ev.originalEvent); },
 				dragend: function(ev){ colorDragEnd(ev.originalEvent); }
 			});
-			
+
 			return i;
 		};
-		
+
 		self.set_material = function(material, ev){
 			if(typeof ev !== 'undefined'){
 				var param_set = self.materials_settings[material];
@@ -118,7 +118,7 @@ $(function(){
 				$(p).find('.param_passes').val(1); // currently no passes in the data structure
 			}
 		};
-		
+
 		self.set_material_engraving = function(material, ev){
 			if(typeof ev !== 'undefined'){
 				var param_set = self.materials_settings[material];
@@ -133,14 +133,14 @@ $(function(){
 				//self.engravingPiercetime(0);
 			}
 		};
-		
+
 		// image engraving stuff
 		// preset values are a good start for wood engraving
 		self.images_placed = ko.observable(false);
 		self.text_placed = ko.observable(false);
 		self.filled_shapes_placed = ko.observable(false);
 		self.engrave_outlines = ko.observable(false);
-		
+
 		self.show_image_parameters = ko.computed(function(){
 			return (self.images_placed() || self.text_placed() || self.filled_shapes_placed());
 		});
@@ -203,19 +203,15 @@ $(function(){
 			}
 		};
 
-		self.cancel_conversion = function(){
-			if(self.slicing_in_progress()){
-				// TODO cancel slicing at the backend properly
-				self.slicing_in_progress(false);
-			}
-		};
-
 		self.create_gcode_filename = function(placedDesigns){
 			if(placedDesigns.length > 0){
 				var filemap = {};
 				for(var idx in placedDesigns){
 					var design = placedDesigns[idx];
 					var end = design.name.lastIndexOf('.');
+					if(end < 0){
+					    end = design.name.length;
+                    }
 					var name = design.name.substring(0, end);
 					if(filemap[name] !== undefined) filemap[name] += 1;
 					else filemap[name] = 1;
@@ -264,7 +260,7 @@ $(function(){
 			});
 			return data;
 		};
-		
+
 		self.get_current_engraving_settings = function () {
 			var data = {
 				"engrave_outlines" : self.engrave_outlines(),
@@ -326,7 +322,7 @@ $(function(){
 						slicer: "svgtogcode",
 						gcode: gcodeFilename
 					};
-										
+
 					if(self.svg !== undefined){
 						// TODO place comment within initial <svg > tag.
 						data.svg = colorStr +"\n"+ self.svg;
@@ -348,7 +344,7 @@ $(function(){
 				});
 			}
 		};
-		
+
 		self.do_engrave = function(){
 			var assigned_images = $('#engrave_job .assigned_colors').children().length;
 			return (assigned_images > 0 && self.show_image_parameters());
@@ -385,10 +381,34 @@ $(function(){
 			self.slicing_in_progress(false);
 			//console.log("onSlicingDone" , payload);
 		};
+
+		self.cancel_conversion = function(){
+			if(self.slicing_in_progress()){
+				// TODO cancel slicing at the backend properly
+				var filename = self.gcodeFilename() + '.gco';
+				var gcodeFilename = self._sanitize(filename);
+
+				var data = {
+						command: "cancel",
+						gcode: gcodeFilename
+					};
+				$.ajax({
+						url: "plugin/mrbeam/cancel",
+						type: "POST",
+						dataType: "json",
+						contentType: "application/json; charset=UTF-8",
+						data: JSON.stringify(data)
+					});
+			}else{
+				$("#dialog_vector_graphics_conversion").modal("hide");
+			}
+		};
+
 		self.onEventSlicingCancelled = function(payload){
 			self.gcodeFilename(undefined);
 			self.svg = undefined;
 			self.slicing_in_progress(false);
+			self.slicing_progress(0);
 			$("#dialog_vector_graphics_conversion").modal("hide");
 			//console.log("onSlicingCancelled" , payload);
 		};
@@ -480,7 +500,7 @@ $(function(){
 		self.showExpertSettings.subscribe(function(){
 			$('#dialog_vector_graphics_conversion').trigger('resize');
 		});
-		
+
 		self._update_color_assignments = function(){
 			var jobs = $('#additional_jobs .job_row_vector');
 			for (var idx = 0; idx < jobs.length; idx++) {
@@ -507,7 +527,7 @@ function colorAllowDrop(ev) {
     ev.preventDefault();
 	$('.color_drop_zone, .img_drop_zone').addClass('hover');
 }
-		
+
 function colorDragStart(ev) {
 	$("body").addClass("colorDragInProgress");
 	if(ev.target.id === "cd_engraving"){
@@ -528,35 +548,35 @@ function colorDrop(ev) {
 	var required_class = 'color_drop_zone';
 	if(data === 'cd_engraving'){
 		required_class = 'img_drop_zone';
-	} 
+	}
 	var parent = $(ev.target).parents('.job_row');
 	if (parent.length === 1) {
 		var drop_target = $(parent[0]).find('.'+required_class);
-		if (drop_target.length === 1) { 
+		if (drop_target.length === 1) {
 			// TODO check if parent is allowed drop zone.
 			drop_target[0].appendChild(document.getElementById(data));
 			ko.dataFor(document.getElementById("dialog_vector_graphics_conversion"))._update_color_assignments();
-		} 
-	} 
+		}
+	}
 }
 
 function colorDropCreateJob(ev) {
     ev.preventDefault();
 	setTimeout(function(){$("body").removeClass("colorDragInProgress");}, 200);
 	$('.color_drop_zone, .img_drop_zone').removeClass('hover');
-	
+
 	var newJob = $('#first_job').clone(true);
 	newJob.attr('id','');
 	newJob.find('.used_color').remove();
 	newJob.appendTo($('#additional_jobs'));
-	
+
     var data = ev.dataTransfer.getData("text");
     var color = document.getElementById(data);
 	$(newJob).find('.assigned_colors').append(color);
 	ko.dataFor(document.getElementById("dialog_vector_graphics_conversion"))._update_color_assignments();
 }
 
-		
+
 function colorDragEnd(ev){
     ev.preventDefault();
 	setTimeout(function(){$("body").removeClass("colorDragInProgress vectorDrag engravingDrag");}, 200);

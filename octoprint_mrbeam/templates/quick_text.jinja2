@@ -1,0 +1,20 @@
+<div id="quick_text_dialog" class="modal hide fade" >
+    <div class="modal-header">
+{#        <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>#}
+        <h3>{{ _('Quick Text') }}</h3>
+    </div>
+    <div class="modal-body">
+        <form role="form" class="form-search" data-bind="submit: function(){$('#quick_text_dialog').modal('hide');}" _lpchecked="1">
+            <input type="text" id="quick_text_dialog_text_input" class="input-block quicktext-input" data-bind="textInput: currentQuickText" placeholder="QuickText..." autocomplete="off">
+                <div class="row-fluid padding-top">
+                    <div class="btn btn-small span3 quicktext-font-button" data-bind="click: currentQuickTextFontPrev"><i class="icon-chevron-left" title="Previous Font"></i> Aa </div>
+                    <div class="span6 quicktext-fontname" id="quick_text_dialog_font_name"></div>
+                    <div class="btn btn-small span3 quicktext-font-button" data-bind="click: currentQuickTextFontNext"> Aa <i class="icon-chevron-right" title="Next Font"></i></div>
+                </div>
+                <input id="quick_text_dialog_intensity" class="quicktext-slider padding-top" type="range" min="0" max="255"/>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <a class="btn btn-primary" type="submit" data-dismiss="modal" aria-hidden="true">{{ _('Done') }}</a>
+    </div>
+</div>

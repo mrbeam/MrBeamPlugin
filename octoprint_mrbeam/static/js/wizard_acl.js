@@ -129,6 +129,11 @@ $(function() {
                             title: gettext("Invalid emtpy password"),
                             message: gettext("You need to enter a valid password.")
                         });
+                    } else if (self.passwordMismatch()) {
+                        showMessageDialog({
+                            title: gettext("Passwords do not match"),
+                            message: gettext("Please retype your password.")
+                        });
                     }
                     return false;
                 }
