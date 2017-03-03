@@ -268,8 +268,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# if result:
 		# 	self._logger.info("Setup Wizard showing")
 		# return result
-		result = self._settings.global_get(["server", "firstRun"])
-		return result
+		return self.isFirstRun()
 
 	def get_wizard_details(self):
 		return dict()
@@ -312,7 +311,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	#~~ ACL subwizard
 
 	def _is_acl_wizard_required(self):
-		return self._user_manager.enabled and not self._user_manager.hasBeenCustomized()
+		result = self._user_manager.enabled and not self._user_manager.hasBeenCustomized()
+		self._logger.debug("_is_acl_wizard_required() %s", result)
+		return result
 
 	def _get_acl_wizard_details(self):
 		return dict()
@@ -353,6 +354,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		from flask import request
 		from octoprint.server.api import valid_boolean_trues, NO_CONTENT
 
+		if not(self.isFirstRun() and self._user_manager.enabled and not self._user_manager.hasBeenCustomized()):
+			return make_response("Forbidden", 403)
+
 		data = request.values
 		if hasattr(request, "json") and request.json:
 			data = request.json
@@ -379,9 +383,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		from octoprint.server.api import valid_boolean_trues, NO_CONTENT
 
 		# accept requests only while setup wizard is active
-		if not self._settings.global_get(["server", "firstRun"]) or not self._is_wifi_wizard_required():
-			self._logger.warn("wifi_wizard_api() was called even though wifi wizard is not active at the moment.")
-			return make_response("Wifi setup wizard forbidden. Use wifi settings as admin user.", 403)
+		if not self.isFirstRun() or not self._is_wifi_wizard_required():
+			return make_response("Forbidden", 403)
 
 		data = None
 		command = None
@@ -456,8 +459,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 			self._logger.debug("LaserSafetyNotice - cloud request: url: %s, payload: %s",
 							   self.LASERSAFETY_CONFIRMATION_STORAGE_URL, payload)
-
-
 
 			# actual request
 			successfullySubmitted = False
@@ -1090,6 +1091,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		return branch
 
+	def isFirstRun(self):
+		return self._settings.global_get(["server", "firstRun"])
 
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
