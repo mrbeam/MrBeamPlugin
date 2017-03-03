@@ -1,5 +1,5 @@
 $(function() {
-    
+
 	function LaserSafetyNotesViewModel(params) {
 		var self = this;
 
@@ -11,16 +11,16 @@ $(function() {
 			}
 
 		};
-		
+
 		self.agree = function(){
 			$('#laser_safety_overlay').modal("hide");
 		}
 	}
 
-	
+
     // view model class, identifier, parameters for constructor, container to bind to
     ADDITIONAL_VIEWMODELS.push([LaserSafetyNotesViewModel,
 		["settingsViewModel"],
 		document.getElementById("laser_safety_overlay")]);
-	
+
 });

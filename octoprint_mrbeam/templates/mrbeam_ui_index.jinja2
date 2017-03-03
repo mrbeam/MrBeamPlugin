@@ -9,6 +9,7 @@
 
 		{% include 'stylesheets.jinja2' %}
         {% include 'initscript.jinja2' %}
+        {% include 'mrbeam_initscript.jinja2' %}
         {% include 'laser_safety_notes.jinja2' %}
     </head>
     <body>
@@ -45,18 +46,23 @@
 
 					<li class="dropdown">
 						<a href="#" class="dropdown-toggle" data-toggle="dropdown">
-							<i class="icon-cog"></i>
+							<i class="icon-reorder icon-large"></i>
+{#							<i class="icon-cog"></i>#}
 						  <b class="caret"></b>
 						</a>
 						<ul class="dropdown-menu">
 							<li><a href="#settings" data-toggle="tab"><i class="icon-wrench"></i> {{ _('Settings') }}</a></li>
 							<li class="divider"></li>
+                            <li><a onclick="$('#laser_safety_overlay').modal('show')"><i class="icon-warning-sign"></i> {{ _('Laser Safety') }}</a></li>
+							<li class="divider"></li>
+{#                           <i class="icon-bolt"><i class="icon-asterisk"><i class="icon-warning-sign"> #}
 							<li><a href="http://www.mr-beam.org" target="_blank"><i class="icon-home"></i> {{ _('Homepage') }}</a></li>
 							<li><a href="https://github.com/mrbeam/OctoPrint/" target="_blank"><i class="icon-download"></i> {{ _('Sourcecode') }}</a></li>
 							<li><a href="https://wiki.mr-beam.org" target="_blank"><i class="icon-book"></i> {{ _('Documentation') }}</a></li>
 							<li><a href="https://github.com/mrbeam/OctoPrint/issues" target="_blank"><i class="icon-flag"></i> {{ _('Bugs and Requests') }}</a></li>
 							<li class="divider"></li>
-						  	<li class="nav_version">{{ _('Version') }}: <span class="version">{{ display_version }}</span></li>
+						  	<li class="nav_version">{{ _('beamOS Version') }}: <span class="version_beamos">{{ beamosVersion.display_version }}</span></li>
+						  	<li class="nav_version">{{ _('OctoPrint Version') }}: <span class="version"></span></li>
 						</ul>
 					</li>
 				</ul>

@@ -1,6 +1,10 @@
 # coding=utf-8
 from __future__ import absolute_import
 
+
+# import logging as log
+from subprocess import check_output
+
 import octoprint.plugin
 import flask
 
@@ -16,7 +20,7 @@ import os
 import logging
 import threading
 import json
-from octoprint.server.util.flask import restricted_access,  get_json_command_from_request
+from octoprint.server.util.flask import restricted_access, get_json_command_from_request, add_non_caching_response_headers
 from octoprint.server import admin_permission
 from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping
 from flask.ext.babel import gettext
@@ -61,7 +65,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def initialize(self):
 		self.laserCutterProfileManager = LaserCutterProfileManager(self._settings)
-		self._log = logging.getLogger("octoprint.plugins.mrbeam")
+		self._logger = logging.getLogger("octoprint.plugins.mrbeam")
+		self._branch = self.getBranch()
+		self._hostname = self.getHostname()
+		self._logger.info("MrBeam Plugin initialize()  version: %s, branch: %s, host: %s",
+						  self._plugin_version, self._branch, self._hostname)
 
 	def _convert_profiles(self, profiles):
 		result = dict()
@@ -145,7 +153,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			js=["js/lasercutterprofiles.js","js/mother_viewmodel.js", "js/mrbeam.js","js/color_classifier.js",
 				"js/working_area.js", "js/camera.js", "js/lib/snap.svg-min.js", "js/render_fills.js", "js/path_convert.js",
 				"js/matrix_oven.js", "js/drag_scale_rotate.js",	"js/convert.js", "js/gcode_parser.js",
-				"js/lib/photobooth_min.js", "js/laserSafetyNotes.js", "js/svg_cleaner.js",
+				"js/lib/photobooth_min.js",
+				# "js/laserSafetyNotes.js",
+				"js/svg_cleaner.js",
 				"js/wizard_acl.js", "js/netconnectd_wrapper.js", "js/wizard_safety.js"],
 			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css", "css/quicktext-fonts.css"],
 			less=["less/mrbeam.less"]
@@ -161,6 +171,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# if will_handle_ui returned True, we will now render our custom index
 		# template, using the render_kwargs as provided by OctoPrint
 		from flask import make_response, render_template
+
+		firstRun = render_kwargs['firstRun']
 
 		enable_accesscontrol = self._user_manager.enabled
 		accesscontrol_active = enable_accesscontrol and self._user_manager.hasBeenCustomized()
@@ -188,8 +200,18 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 gcodeThreshold=0,
 							 wizard=wizard,
 							 now=now,
+							 beamosVersion= dict(
+								number = self._plugin_version,
+								branch= self._branch,
+								display_version = "{} ({} branch) on {}".format(
+									self._plugin_version, self._branch, self._hostname) if self._branch else (self._plugin_version, self._hostname)
+								)
 							 ))
-		return make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
+		r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
+
+		if firstRun:
+			r = add_non_caching_response_headers(r)
+		return r
 
 	##~~ TemplatePlugin mixin
 
@@ -230,21 +252,29 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	#~~ WizardPlugin API
 
 	def is_wizard_required(self):
-		methods = self._get_subwizard_attrs("_is_", "_wizard_required")
-
+		# self._logger.info("ANDYTEST is_wizard_required")
+        #
+		# methods = self._get_subwizard_attrs("_is_", "_wizard_required")
+        #
+		# result = self._settings.global_get(["server", "firstRun"])
+		# if result:
+		# 	# don't even go here if firstRun is false
+		# 	result = any(map(lambda m: m(), methods.values()))
+		# if result:
+		# 	self._logger.info("Setup Wizard showing")
+		# return result
 		result = self._settings.global_get(["server", "firstRun"])
-		if result:
-			# don't even go here if firstRun is false
-			result = any(map(lambda m: m(), methods.values()))
-		if result:
-			self._logger.info("Setup Wizard showing")
 		return result
 
 	def get_wizard_details(self):
 		return dict()
 
+	def get_wizard_version(self):
+		return 12
+
 	def on_wizard_finish(self, handled):
-		map(lambda m: m(handled), self._get_subwizard_attrs("_on_", "_wizard_finish").values())
+		self._logger.info("Setup Wizard finished.")
+		# map(lambda m: m(handled), self._get_subwizard_attrs("_on_", "_wizard_finish").values())
 
 
 	# ~~ Wifi subwizard
@@ -409,15 +439,15 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			payload = {'ts': data.get('ts', ''),
 					   'email': data.get('username', ''),
 					   'serial': self.getPiSerial(),
-					   'hostname': self.getHostname()}
+					   'hostname': self._hostname}
 
 			if debug is not None and debug != "prod":
 				payload['debug'] = debug
-				self._log.debug("safety_wizard - debug flag: %s", debug)
+				self._logger.debug("safety_wizard - debug flag: %s", debug)
 
 			if force:
 				payload['force'] = force
-				self._log.debug("safety_wizard - force flag: %s", force)
+				self._logger.debug("safety_wizard - force flag: %s", force)
 
 			self._logger.debug("safety_wizard - cloud request: url: %s, payload: %s",
 							   self.SAFETY_CONFIRMATION_STORAGE_URL, payload)
@@ -451,6 +481,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		else:
 			self._logger.info("safety_wizard: confirmation already sent. showAgain: %s", showAgain)
 			self.setUserSetting(username, self.USER_SETTINGS_KEY_SAFETY_CONFIRMATION_SHOW_AGAIN, showAgain)
+
+        #  ANDYTEST TODO check, if we still need stuff like this:
+		# self._settings.save()
+		# self._user_manager._save()
+        #
+		# self._user_manager.changeUserSetting(username, ['mrTest'], 'bitteNicht')
 
 		return NO_CONTENT
 
@@ -691,7 +727,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 			with open(self._CONVERSION_PARAMS_PATH, 'w') as outfile:
 				json.dump(data, outfile)
-				self._log.info('Wrote job parameters to %s', self._CONVERSION_PARAMS_PATH)
+				self._logger.info('Wrote job parameters to %s', self._CONVERSION_PARAMS_PATH)
 
 			self._printer.set_colors(currentFilename, data['vector'])
 
@@ -708,7 +744,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							shutil.copyfileobj(fd, wfd, 1024 * 1024 * 10)
 
 						wfd.write("\nM05\n")  # ensure that the laser is off.
-						self._log.info("Slicing finished: %s" % path)
+						self._logger.info("Slicing finished: %s" % path)
 
 				if select_after_slicing or print_after_slicing:
 					sd = False
@@ -834,7 +870,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			path, _ = os.path.splitext(model_path)
 			machinecode_path = path + ".gco"
 
-		self._log.info("Slicing %s to %s using profile stored at %s, %s" % (model_path, machinecode_path, profile_path, self._CONVERSION_PARAMS_PATH))
+		self._logger.info("Slicing %s to %s using profile stored at %s, %s" % (model_path, machinecode_path, profile_path, self._CONVERSION_PARAMS_PATH))
 
 		# TODO remove profile dependency completely
 		#profile = Profile(self._load_profile(profile_path))
@@ -843,14 +879,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		def is_job_cancelled():
 			if self._cancel_job:
 				self._cancel_job = False
-				self._log.info("Conversion canceled")
+				self._logger.info("Conversion canceled")
 				raise octoprint.slicing.SlicingCancelled
 
 		# READ PARAMS FROM JSON
 		params = dict()
 		with open(self._CONVERSION_PARAMS_PATH) as data_file:
 			params = json.load(data_file)
-			#self._log.debug("Read multicolor params %s" % params)
+			#self._logger.debug("Read multicolor params %s" % params)
 
 		dest_dir, dest_file = os.path.split(machinecode_path)
 		params['directory'] = dest_dir
@@ -877,12 +913,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 			return True, None  # TODO add analysis about out of working area, ignored elements, invisible elements, text elements
 		except octoprint.slicing.SlicingCancelled as e:
-			self._log.info("Conversion cancelled")
+			self._logger.info("Conversion cancelled")
 			raise e
 		except Exception as e:
 			print e.__doc__
 			print e.message
-			self._log.exception("Conversion error ({0}): {1}".format(e.__doc__, e.message))
+			self._logger.exception("Conversion error ({0}): {1}".format(e.__doc__, e.message))
 			return False, "Unknown error, please consult the log file"
 
 		finally:
@@ -893,10 +929,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				if machinecode_path in self._slicing_commands:
 					del self._slicing_commands[machinecode_path]
 
-			self._log.info("-" * 40)
+			self._logger.info("-" * 40)
 
 	def cancel_slicing(self, machinecode_path):
-		self._log.info("Canceling Routine: {}".format(machinecode_path))
+		self._logger.info("Canceling Routine: {}".format(machinecode_path))
 		with self._slicing_commands_mutex:
 			if machinecode_path in self._slicing_commands:
 				with self._cancelled_jobs_mutex:
@@ -927,7 +963,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	##~~ Event Handler Plugin API
 
 	def on_event(self, event, payload):
-		#self._log.debug("on_event %s: %s", event, payload)
+		#self._logger.debug("on_event %s: %s", event, payload)
 		# self.stateHandler.on_state_change(event)
 		pass
 
@@ -1032,16 +1068,31 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			cpuserial = cpuserial.upper()
 		except Exception as e:
 			cpuserial = "ERROR000000000"
-			# self._log.exception(e);
 
 		return cpuserial
+
+
+	def getBranch(self):
+		branch = ''
+		try:
+			output = check_output(["git", "branch"])
+			splits = output.split("\n")
+			for i, val in enumerate(splits):
+				if val.startswith('* '):
+					branch = val[1:].strip()
+		except Exception as e:
+			self._logger.debug("getBranch: unable to exceute 'git branch' due to exception: %s", e)
+
+		return branch
+
 
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
 # can be overwritten via __plugin_xyz__ control properties. See the documentation for that.
-__plugin_name__ = "Mr Beam Laser Cutter"
 
+
+__plugin_name__ = "Mr Beam Laser Cutter"
 
 def __plugin_load__():
 	global __plugin_implementation__
