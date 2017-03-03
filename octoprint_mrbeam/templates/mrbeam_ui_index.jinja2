@@ -10,7 +10,7 @@
 		{% include 'stylesheets.jinja2' %}
         {% include 'initscript.jinja2' %}
         {% include 'mrbeam_initscript.jinja2' %}
-        {% include 'laser_safety_notes.jinja2' %}
+        {% include 'lasersafety_standalone.jinja2' %}
     </head>
     <body>
 		<div class="container-fluid octoprint-container">
@@ -53,7 +53,7 @@
 						<ul class="dropdown-menu">
 							<li><a href="#settings" data-toggle="tab"><i class="icon-wrench"></i> {{ _('Settings') }}</a></li>
 							<li class="divider"></li>
-                            <li><a onclick="$('#laser_safety_overlay').modal('show')"><i class="icon-warning-sign"></i> {{ _('Laser Safety') }}</a></li>
+                            <li><a onclick="$('#lasersafety_overlay').modal('show')"><i class="icon-warning-sign"></i> {{ _('Laser Safety') }}</a></li>
 							<li class="divider"></li>
 {#                           <i class="icon-bolt"><i class="icon-asterisk"><i class="icon-warning-sign"> #}
 							<li><a href="http://www.mr-beam.org" target="_blank"><i class="icon-home"></i> {{ _('Homepage') }}</a></li>

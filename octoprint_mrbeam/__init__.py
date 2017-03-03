@@ -44,13 +44,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	# CONSTANTS
 
-	SETTINGS_KEY_DEVEL_MRBEAM_CLOUD_ENV = ["devel", "mrbeam", "cloud_env"]
-	SAFETY_CONFIRMATION_STORAGE_URL = 'https://script.google.com/a/macros/mr-beam.org/s/AKfycby3Y1RLBBiGPDcIpIg0LHd3nwgC7GjEA4xKfknbDLjm3v9-LjG1/exec'
+	GLOBAL_SETTINGS_KEY_DEVEL_MRBEAM_CLOUD_ENV = ["devel", "mrbeam", "cloud_env"]
+	LASERSAFETY_CONFIRMATION_STORAGE_URL = 'https://script.google.com/a/macros/mr-beam.org/s/AKfycby3Y1RLBBiGPDcIpIg0LHd3nwgC7GjEA4xKfknbDLjm3v9-LjG1/exec'
 	USER_SETTINGS_KEY_MRBEAM = 'mrbeam'
 	USER_SETTINGS_KEY_TIMESTAMP = 'ts'
 	USER_SETTINGS_KEY_VERSION = 'version'
-	USER_SETTINGS_KEY_SAFETY_CONFIRMATION_SENT_TO_CLOUD = ['safety_wizard', 'sent_to_cloud']
-	USER_SETTINGS_KEY_SAFETY_CONFIRMATION_SHOW_AGAIN = ['safety_wizard', 'show_again']
+	USER_SETTINGS_KEY_LASERSAFETY_CONFIRMATION_SENT_TO_CLOUD = ['lasersafety', 'sent_to_cloud']
+	USER_SETTINGS_KEY_LASERSAFETY_CONFIRMATION_SHOW_AGAIN = ['lasersafety', 'show_again']
 
 
 
@@ -70,6 +70,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._hostname = self.getHostname()
 		self._logger.info("MrBeam Plugin initialize()  version: %s, branch: %s, host: %s",
 						  self._plugin_version, self._branch, self._hostname)
+		try:
+			pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
+			if pluginInfo is None:
+				self._logger.warn("NetconnectdPlugin not available. Wifi configuration not possible.")
+		except Exception as e:
+			self._logger.exception("Exception while getting NetconnectdPlugin pluginInfo")
+
 
 	def _convert_profiles(self, profiles):
 		result = dict()
@@ -153,10 +160,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			js=["js/lasercutterprofiles.js","js/mother_viewmodel.js", "js/mrbeam.js","js/color_classifier.js",
 				"js/working_area.js", "js/camera.js", "js/lib/snap.svg-min.js", "js/render_fills.js", "js/path_convert.js",
 				"js/matrix_oven.js", "js/drag_scale_rotate.js",	"js/convert.js", "js/gcode_parser.js",
-				"js/lib/photobooth_min.js",
-				# "js/laserSafetyNotes.js",
-				"js/svg_cleaner.js",
-				"js/wizard_acl.js", "js/netconnectd_wrapper.js", "js/wizard_safety.js"],
+				"js/lib/photobooth_min.js", "js/svg_cleaner.js",
+				"js/wizard_acl.js", "js/netconnectd_wrapper.js", "js/lasersaftey_viewmodel.js"],
 			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css", "css/quicktext-fonts.css"],
 			less=["less/mrbeam.less"]
 		)
@@ -283,15 +288,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		result = False
 		try:
 			pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
-			if pluginInfo is None:
-				self._logger.warn("_is_wifi_wizard_required() didn't get wifi data. Netconnectd's PluginInfo is None")
-			else:
+			if pluginInfo is not None:
 				status = pluginInfo.implementation._get_status()
-				self._logger.info("ANDYTEST _is_wifi_wizard_required() status: %s", status)
 				result = not status["connections"]["wifi"]
 		except Exception as e:
 			self._logger.exception("Exception while reading wifi state from netconnectd:")
-		self._logger.info("_is_wifi_wizard_required() %s", result)
+
+		self._logger.debug("_is_wifi_wizard_required() %s", result)
 		return result
 
 	def _get_wifi_wizard_details(self):
@@ -327,16 +330,16 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	# ~~ Saftey subwizard
 
-	def _is_safety_wizard_required(self):
+	def _is_lasersafety_wizard_required(self):
 		return True
 
-	def _get_safety_wizard_details(self):
+	def _get_lasersafety_wizard_details(self):
 		return dict()
 
-	def _get_safety_additional_wizard_template_data(self):
+	def _get_lasersafety_additional_wizard_template_data(self):
 		return dict(mandatory=False)
 
-	def _get_safety_wizard_name(self):
+	def _get_lasersafety_wizard_name(self):
 		return gettext("3. Laser Safety")
 
 	# def _on_acl_wizard_finish(self, handled):
@@ -353,17 +356,18 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		data = request.values
 		if hasattr(request, "json") and request.json:
 			data = request.json
+		else:
+			return make_response("Unable to interprete request", 400)
 
-		if "ac" in data and data["ac"] in valid_boolean_trues and \
-						"user" in data.keys() and "pass1" in data.keys() and \
-						"pass2" in data.keys() and data["pass1"] == data["pass2"]:
+		if 	"user" in data.keys() and "pass1" in data.keys() and \
+				"pass2" in data.keys() and data["pass1"] == data["pass2"]:
 			# configure access control
+			self._logger.debug("acl_wizard_api() creating admin user: %s", data["user"])
 			self._settings.global_set_boolean(["accessControl", "enabled"], True)
 			self._user_manager.enable()
 			self._user_manager.addUser(data["user"], data["pass1"], True, ["user", "admin"], overwrite=True)
-		elif "ac" in data.keys() and not data["ac"] in valid_boolean_trues:
-			self._logger.warn("User tried to disable access control (aka user management).")
-			return make_response("Forbiden to disable access control", 403)
+		else:
+			return make_response("Unable to interprete request", 400)
 
 		self._settings.save()
 		return NO_CONTENT
@@ -377,7 +381,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# accept requests only while setup wizard is active
 		if not self._settings.global_get(["server", "firstRun"]) or not self._is_wifi_wizard_required():
 			self._logger.warn("wifi_wizard_api() was called even though wifi wizard is not active at the moment.")
-			return make_response("Wifi setup wizard forbidden. Use wifi setings as admin user.", 403)
+			return make_response("Wifi setup wizard forbidden. Use wifi settings as admin user.", 403)
 
 		data = None
 		command = None
@@ -387,27 +391,28 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		except:
 			return make_response("Unable to interprete request", 400)
 
-		self._logger.info("ANDYTEST wifi_wizard_api() command: %s, data: %s", command,  pprint.pformat(data))
+		self._logger.debug("wifi_wizard_api() command: %s, data: %s", command,  pprint.pformat(data))
 
 		result = None
 		try:
 			pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
 			if pluginInfo is None:
-				self._logger.warn("wifi_wizard_api() didn't get wifi data. Netconnectd's PluginInfo is None")
+				self._logger.warn("wifi_wizard_api() NetconnectdPlugin not available.")
 			else:
 				result = pluginInfo.implementation.on_api_command(command, data, adminRequired=False)
 		except Exception as e:
-			self._logger.exception("Exception while executing wifi command in netconnectd:")
+			self._logger.exception("Exception while executing wifi command '%s' in netconnectd: " +
+					   "(This might be totally ok since this plugin throws an exception if we were rejected by the " +
+					   "wifi for invalid password or other non-exceprional things.)", command)
 			return make_response(e.message, 500)
 
-		self._logger.info("ANDYTEST wifi_wizard_api() result: %s", result)
+		self._logger.debug("wifi_wizard_api() result: %s", result)
 		if result is None:
 			return NO_CONTENT
 		return result
 
-
-	# called through SimpleApi command=safety_wizard_confirmation
-	def safety_wizard_api(self, data):
+	# simpleApiCommand: lasersafety_confirmation; simpleApiCommand: lasersafety_confirmation;
+	def lasersafety_wizard_api(self, data):
 		from flask.ext.login import current_user
 		from octoprint.server.api import valid_boolean_trues, NO_CONTENT
 
@@ -430,11 +435,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		showAgain = bool(data.get('showAgain', True))
 
 		# see if we nee to send this to the cloud
-		submissionDate = self.getUserSetting(username, self.USER_SETTINGS_KEY_SAFETY_CONFIRMATION_SENT_TO_CLOUD, -1)
+		submissionDate = self.getUserSetting(username, self.USER_SETTINGS_KEY_LASERSAFETY_CONFIRMATION_SENT_TO_CLOUD, -1)
 		force = bool(data.get('force', False))
 		if submissionDate <= 0 or force:
 			# get cloud env to use
-			debug = self._settings.global_get(self.SETTINGS_KEY_DEVEL_MRBEAM_CLOUD_ENV)
+			debug = self._settings.global_get(self.GLOBAL_SETTINGS_KEY_DEVEL_MRBEAM_CLOUD_ENV)
 
 			payload = {'ts': data.get('ts', ''),
 					   'email': data.get('username', ''),
@@ -443,14 +448,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 			if debug is not None and debug != "prod":
 				payload['debug'] = debug
-				self._logger.debug("safety_wizard - debug flag: %s", debug)
+				self._logger.debug("LaserSafetyNotice - debug flag: %s", debug)
 
 			if force:
 				payload['force'] = force
-				self._logger.debug("safety_wizard - force flag: %s", force)
+				self._logger.debug("LaserSafetyNotice - force flag: %s", force)
 
-			self._logger.debug("safety_wizard - cloud request: url: %s, payload: %s",
-							   self.SAFETY_CONFIRMATION_STORAGE_URL, payload)
+			self._logger.debug("LaserSafetyNotice - cloud request: url: %s, payload: %s",
+							   self.LASERSAFETY_CONFIRMATION_STORAGE_URL, payload)
 
 
 
@@ -460,7 +465,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			responseFull = ''
 			httpCode = -1
 			try:
-				r = requests.post(self.SAFETY_CONFIRMATION_STORAGE_URL, data=payload)
+				r = requests.post(self.LASERSAFETY_CONFIRMATION_STORAGE_URL, data=payload)
 				responseCode = r.text.lstrip().split(' ', 1)[0]
 				responseFull = r.text
 				httpCode = r.status_code
@@ -472,15 +477,15 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 			submissionDate = time.time() if successfullySubmitted else -1
 			showAgain = showAgain if successfullySubmitted else True
-			self.setUserSetting(username, self.USER_SETTINGS_KEY_SAFETY_CONFIRMATION_SENT_TO_CLOUD, submissionDate)
-			self.setUserSetting(username, self.USER_SETTINGS_KEY_SAFETY_CONFIRMATION_SHOW_AGAIN, showAgain)
+			self.setUserSetting(username, self.USER_SETTINGS_KEY_LASERSAFETY_CONFIRMATION_SENT_TO_CLOUD, submissionDate)
+			self.setUserSetting(username, self.USER_SETTINGS_KEY_LASERSAFETY_CONFIRMATION_SHOW_AGAIN, showAgain)
 
 			# and drop a line into the log on info level this is important
-			self._logger.info("safety_wizard: confirmation response: (%s) %s, submissionDate: %s, showAgain: %s, full response: %s",
+			self._logger.info("LaserSafetyNotice: confirmation response: (%s) %s, submissionDate: %s, showAgain: %s, full response: %s",
 							  httpCode, responseCode, submissionDate, showAgain, responseFull)
 		else:
-			self._logger.info("safety_wizard: confirmation already sent. showAgain: %s", showAgain)
-			self.setUserSetting(username, self.USER_SETTINGS_KEY_SAFETY_CONFIRMATION_SHOW_AGAIN, showAgain)
+			self._logger.info("LaserSafetyNotice: confirmation already sent. showAgain: %s", showAgain)
+			self.setUserSetting(username, self.USER_SETTINGS_KEY_LASERSAFETY_CONFIRMATION_SHOW_AGAIN, showAgain)
 
         #  ANDYTEST TODO check, if we still need stuff like this:
 		# self._settings.save()
@@ -793,7 +798,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			feedrate=["value"],
 			intensity=["value"],
 			passes=["value"],
-			safety_wizard_confirmation=[]
+			lasersafety_confirmation=[]
 		)
 
 	def on_api_command(self, command, data):
@@ -809,8 +814,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._printer.commands("/intensity " + str(data["value"]))
 		elif command == "passes":
 			self._printer.set_passes(data["value"])
-		elif command == "safety_wizard_confirmation":
-			self.safety_wizard_api(data)
+		elif command == "lasersafety_confirmation":
+			self.lasersafety_wizard_api(data)
 		return NO_CONTENT
 
 

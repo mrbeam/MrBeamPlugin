@@ -1,5 +1,5 @@
 $(function() {
-    function WizardSafetyViewModel(parameters) {
+    function LaserSafetyViewModel(parameters) {
         var self = this;
 
         self.loginStateViewModel = parameters[0];
@@ -28,13 +28,13 @@ $(function() {
         self.agree = function() {
             var result = self._handleExit();
             if (result) {
-                $('#laser_safety_overlay').modal("hide");
+                $('#lasersafety_overlay').modal("hide");
             }
 		};
 
 		// for wizard version
         self.onBeforeWizardTabChange = function(next, current) {
-            if (current && _.startsWith(current, "wizard_plugin_corewizard_safety")) {
+            if (current && _.startsWith(current, "wizard_plugin_corewizard_lasersafety")) {
                 var result = self._handleExit();
                 return result;
             }
@@ -42,6 +42,10 @@ $(function() {
         };
 
         self.onUserLoggedIn = function(currentUser){
+            if (OctoPrint.coreui.wizardOpen) {
+                return;
+            }
+
             var enableCheckboxes = false;
             var showAgain = true;
 
@@ -59,11 +63,11 @@ $(function() {
                     }
                     // end HACK
 
-                    if (beamSettings.safety_wizard) {
-                        var sent = beamSettings.safety_wizard.sent_to_cloud;
+                    if (beamSettings.lasersafety) {
+                        var sent = beamSettings.lasersafety.sent_to_cloud;
                         if (sent && sent > 0) {
                             enableCheckboxes = true;
-                            if (beamSettings.safety_wizard.show_again == false) {
+                            if (beamSettings.lasersafety.show_again == false) {
                                 showAgain = false;
                             }
                         }
@@ -84,8 +88,8 @@ $(function() {
         };
 
         self.showDialog = function() {
-            if (!$('#laser_safety_overlay').hasClass('in')) {
-                $('#laser_safety_overlay').modal("show");
+            if (!$('#lasersafety_overlay').hasClass('in')) {
+                $('#lasersafety_overlay').modal("show");
             }
         }
 
@@ -117,13 +121,13 @@ $(function() {
         };
 
         self._sendData = function(data) {
-            OctoPrint.simpleApiCommand("mrbeam", "safety_wizard_confirmation", data);
+            OctoPrint.simpleApiCommand("mrbeam", "lasersafety_confirmation", data);
         };
     }
 
     OCTOPRINT_VIEWMODELS.push([
-        WizardSafetyViewModel,
+        LaserSafetyViewModel,
         ["loginStateViewModel"],
-        ["#wizard_plugin_corewizard_safety", "#laser_safety_overlay"]
+        ["#wizard_plugin_corewizard_lasersafety", "#lasersafety_overlay"]
     ]);
 });
