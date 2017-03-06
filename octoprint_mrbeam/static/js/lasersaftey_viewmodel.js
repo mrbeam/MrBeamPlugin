@@ -28,7 +28,7 @@ $(function() {
         self.agree = function() {
             var result = self._handleExit();
             if (result) {
-                $('#lasersafety_overlay').modal("hide");
+                self.hideDialog();
             }
 		};
 
@@ -42,9 +42,7 @@ $(function() {
         };
 
         self.onUserLoggedIn = function(currentUser){
-            if (OctoPrint.coreui.wizardOpen) {
-                return;
-            }
+            if (OctoPrint.coreui.wizardOpen) return;
 
             var enableCheckboxes = false;
             var showAgain = true;
@@ -54,6 +52,7 @@ $(function() {
                     var beamSettings = currentUser.settings.mrbeam;
 
                     // HACK:
+                    // // ANDYTEST TODO: this should be fixed in OctoPrint 1.3.2
                     // this is because the first call of onUserLoggedIn() gives us a
                     // corrupted/incomplete version of the user settings.
                     if (!beamSettings.ts) {
@@ -86,11 +85,23 @@ $(function() {
             self._setAll(false);
             self.showAgain(true);
         };
+        
+        // if we get this, there must be a Setup Wizard active....
+        // so remove this one quickly
+        self.onWizardShow = function(){
+            if (OctoPrint.coreui.wizardOpen) {
+                self.hideDialog();
+            }
+        }
 
         self.showDialog = function() {
             if (!$('#lasersafety_overlay').hasClass('in')) {
                 $('#lasersafety_overlay').modal("show");
             }
+        }
+        
+        self.hideDialog = function() {
+            $('#lasersafety_overlay').modal("hide");
         }
 
         self._setAll = function(checked) {
