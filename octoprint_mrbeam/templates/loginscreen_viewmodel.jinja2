@@ -1,0 +1,33 @@
+<div id="loginscreen_dialog" class="modal hide fade" data-backdrop="static" data-keyboard="false">
+    <div class="modal-header">
+        <h3><img src="/plugin/mrbeam/static/img/mr_x120.png" style="height: 38px; width: auto;"> {{ _('Login') }}</h3>
+    </div>
+
+    <form class="form-horizontal" data-bind="event: {'submit': login }">
+        <div class="modal-body">
+
+                <div class="control-group">
+                    <label class="control-label">{{ _('E-mail address') }}</label>
+                    <div class="controls">
+                        <input type="text" class="input-medium" name="username" data-bind="valueWithInit: loginState.loginUser" placeholder="{{ _('E-mail address') }}" autocapitalize="none">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label" >{{ _('Password') }}</label>
+                    <div class="controls">
+                        <input type="password" class="input-medium" name="password" data-bind="valueWithInit: loginState.loginPass" placeholder="{{ _('Password') }}">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="controls">
+                        <input type="checkbox" class="input-medium" data-bind="checked: loginState.loginRemember">
+                        <span class="help-inline" >{{ _('Remember me') }}</span>
+                    </div>
+                </div>
+
+        </div>
+        <div class="modal-footer">
+            <button type="submit" class="btn btn-block btn-primary">{{ _('Login') }}</button>
+        </div>
+    </form>
+</div>
