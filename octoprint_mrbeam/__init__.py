@@ -300,10 +300,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return dict()
 
 	def _get_wifi_additional_wizard_template_data(self):
-		return dict(mandatory=False)
+		return dict(mandatory=False, suffix="_wifi")
 
 	def _get_wifi_wizard_name(self):
-		return gettext("1. Wifi Setup")
+		return gettext("Wifi Setup")
 
 	# def _on_wifi_wizard_finish(self, handled):
 	# 	self._log.info("ANDYTEST _on_wifi_wizard_finish() handled: " + str(handled));
@@ -319,11 +319,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return dict()
 
 	def _get_acl_additional_wizard_template_data(self):
-		return dict(mandatory=False)
+		return dict(mandatory=False, suffix="_acl")
 
 
 	def _get_acl_wizard_name(self):
-		return gettext("2. Access Control")
+		return gettext("Access Control")
 
 	# def _on_acl_wizard_finish(self, handled):
 	# 	self._log.info("ANDYTEST _on_acl_wizard_finish() test handled: " + str(handled));
@@ -338,10 +338,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return dict()
 
 	def _get_lasersafety_additional_wizard_template_data(self):
-		return dict(mandatory=False)
+		return dict(mandatory=False, suffix="_lasersafety")
 
 	def _get_lasersafety_wizard_name(self):
-		return gettext("3. Laser Safety")
+		return gettext("Laser Safety")
 
 	# def _on_acl_wizard_finish(self, handled):
 	# 	self._log.info("ANDYTEST _on_acl_wizard_finish() test handled: " + str(handled));
@@ -487,12 +487,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		else:
 			self._logger.info("LaserSafetyNotice: confirmation already sent. showAgain: %s", showAgain)
 			self.setUserSetting(username, self.USER_SETTINGS_KEY_LASERSAFETY_CONFIRMATION_SHOW_AGAIN, showAgain)
-
-        #  ANDYTEST TODO check, if we still need stuff like this:
-		# self._settings.save()
-		# self._user_manager._save()
-        #
-		# self._user_manager.changeUserSetting(username, ['mrTest'], 'bitteNicht')
 
 		return NO_CONTENT
 
@@ -1109,13 +1103,23 @@ def __plugin_load__():
 	global __plugin_settings_overlay__
 	__plugin_settings_overlay__ = dict(
 		plugins=dict(
-			_disabled=['cura', 'pluginmanager', 'announcements', 'corewizard']),  # eats dict | pfad.yml | callable
-			# _disabled=['cura', 'pluginmanager', 'announcements', 'corewizard', 'mrbeam']),  # eats dict | pfad.yml | callable
-			terminalFilters=[
-				{"name": "Suppress position requests", "regex": "(Send: \?)"},
-				{"name": "Suppress confirmations", "regex": "(Recv: ok)"},
-				{"name": "Suppress status messages", "regex": "(Recv: <)"},
-			],
+			_disabled=['cura', 'pluginmanager', 'announcements', 'corewizard']   # eats dict | pfad.yml | callable
+			# _disabled=['cura', 'pluginmanager', 'announcements', 'corewizard', 'mrbeam']  # eats dict | pfad.yml | callable
+		),
+		terminalFilters=[
+			{"name": "Suppress position requests", "regex": "(Send: \?)"},
+			{"name": "Suppress confirmations", "regex": "(Recv: ok)"},
+			{"name": "Suppress status messages", "regex": "(Recv: <)"},
+		],
+		appearance=dict(components=dict(
+			order=dict(
+				# to debug: pprint(templates['wizard']) to views.py:_process_templates() at the very end
+				wizard=["plugin_mrbeam_wifi", "plugin_mrbeam_acl", "plugin_mrbeam_lasersafety"]
+			),
+			disabled=dict(
+				wizard=['plugin_softwareupdate']
+			)
+		))
 	)
 
 	global __plugin_hooks__
