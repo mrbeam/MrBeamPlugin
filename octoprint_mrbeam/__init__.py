@@ -1075,15 +1075,24 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def getBranch(self):
 		branch = ''
 		try:
-			output = check_output(["git", "branch"])
-			splits = output.split("\n")
-			for i, val in enumerate(splits):
-				if val.startswith('* '):
-					branch = val[1:].strip()
+			command = "git branch | grep '*'"
+			output = check_output(command, shell=True)
+			branch = output[1:].strip()
 		except Exception as e:
-			self._logger.debug("getBranch: unable to exceute 'git branch' due to exception: %s", e)
-
+			True
+			# 	self._logger.debug("getBranch: unable to exceute 'git branch' due to exception: %s", e)
+			
+		if not branch:
+			try:
+				command = "cd /home/pi/MrBeamPlugin/; git branch | grep '*'"
+				output = check_output(command, shell=True)
+				branch = output[1:].strip()
+			except Exception as e:
+				True
+				# 	self._logger.debug("getBranch: unable to exceute 'cd /home/pi/MrBeamPlugin/; git branch' due to exception: %s", e)
+			
 		return branch
+
 
 	def isFirstRun(self):
 		return self._settings.global_get(["server", "firstRun"])
