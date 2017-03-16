@@ -12,6 +12,7 @@ from octoprint.util import dict_merge
 from octoprint.server import NO_CONTENT
 
 from .profile import LaserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
+from octoprint_mrbeam.events import eventManagerMrb
 # from .state.ledstrips import LEDstrips
 
 import copy
@@ -66,6 +67,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def initialize(self):
 		self.laserCutterProfileManager = LaserCutterProfileManager(self._settings)
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam")
+
+		self._eventManagerMrb = eventManagerMrb(self)
+
 		self._branch = self.getBranch()
 		self._hostname = self.getHostname()
 		self._logger.info("MrBeam Plugin initialize()  version: %s, branch: %s, host: %s",
@@ -1081,7 +1085,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		except Exception as e:
 			True
 			# 	self._logger.debug("getBranch: unable to exceute 'git branch' due to exception: %s", e)
-			
+
 		if not branch:
 			try:
 				command = "cd /home/pi/MrBeamPlugin/; git branch | grep '*'"
@@ -1090,7 +1094,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			except Exception as e:
 				True
 				# 	self._logger.debug("getBranch: unable to exceute 'cd /home/pi/MrBeamPlugin/; git branch' due to exception: %s", e)
-			
+
 		return branch
 
 
