@@ -12,7 +12,7 @@ from octoprint.util import dict_merge
 from octoprint.server import NO_CONTENT
 
 from .profile import LaserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
-from octoprint_mrbeam.events import eventManagerMrb
+from octoprint_mrbeam.iobeam_handler import ioBeamHandler
 # from .state.ledstrips import LEDstrips
 
 import copy
@@ -68,7 +68,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self.laserCutterProfileManager = LaserCutterProfileManager(self._settings)
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam")
 
-		self._eventManagerMrb = eventManagerMrb(self)
+		self._eventManagerMrb = ioBeamHandler(self._event_bus)
 
 		self._branch = self.getBranch()
 		self._hostname = self.getHostname()

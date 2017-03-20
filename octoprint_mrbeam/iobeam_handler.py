@@ -41,34 +41,49 @@ import logging
 # singleton
 _instance = None
 
-def eventManagerMrb(mrbeamPlugin):
+def ioBeamHandler(mrbeamPlugin):
 	global _instance
 	if _instance is None:
-		_instance = EventManagerMrb(mrbeamPlugin)
+		_instance = IoBeamHandler(mrbeamPlugin)
 	return _instance
 
 
-class EventManagerMrb(object):
+class IoBeamEvents(object):
+	CONNECT = "iobeam.connect"
+	DISCONNECT = "iobeam.disconnect"
+	ONEBUTTON_PUSHED = "iobeam.onebutton.pushed"
+	ONEBUTTON_RELEASED = "iobeam.onebutton.released"
+
+
+class IoBeamHandler(object):
 
 	SOCKET_FILE = "/tmp/mrbeamEventSocket"
 	SOCKET_COMAMND_LENGTH_MAX = 1024
 	SOCKET_COMAMND_NEWLINE= "\n"
 
-	EVENT_BUTTON_PUSHED = "mrbeam.ButtonPushed"
-	EVENT_BUTTON_RELEASED = "mrbeam.ButtonReleased"
 
-
-	def __init__(self, mrbeamPlugin):
-		self._mrbeamPlugin = mrbeamPlugin
-		self._eventBusOct = self._mrbeamPlugin._event_bus
-		self._logger = logging.getLogger("octoprint.plugins.mrbeam.events")
+	def __init__(self, eventBusOct):
+		self._eventBusOct = eventBusOct
+		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam")
 		self._logger.debug("initializing EventManagerMrb")
 
 		self._shutdown_signaled = False
+		self._isConnected = False
 
 		self._subscribeEvents()
 		self._initWorker()
 
+	def isRunning(self):
+		return self._worker.is_alive()
+
+	def isConnected(self):
+		return self._isConnected
+
+	def shutdown(self):
+		global _instance
+		_instance = None
+		self._logger.debug("shutdown()")
+		self._shutdown_signaled = True
 
 	def _initWorker(self):
 		self._logger.debug("initializing worker thread")
@@ -78,14 +93,14 @@ class EventManagerMrb(object):
 
 
 	def _subscribeEvents(self):
-		self._eventBusOct.subscribe(self.EVENT_BUTTON_PUSHED, self._onEvent)
-		self._eventBusOct.subscribe(self.EVENT_BUTTON_RELEASED, self._onEvent)
+		self._eventBusOct.subscribe(IoBeamEvents.ONEBUTTON_PUSHED, self._onEvent)
+		self._eventBusOct.subscribe(IoBeamEvents.ONEBUTTON_RELEASED, self._onEvent)
 
 
 	def _onEvent(self, event, payload):
 		self._logger.info("_onEvent() event:%s, payload:%s", event, payload)
 		self._logger.info("_onEvent() going to sleeeeeep")
-		time.sleep(5)
+		time.sleep(1)
 		self._logger.info("_onEvent() aaaaand wakeup!")
 
 
@@ -96,14 +111,18 @@ class EventManagerMrb(object):
 			mySocket = None
 			try:
 				mySocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-				mySocket.settimeout(5)
+				mySocket.settimeout(3)
 				self._logger.debug("Connecting to socket...")
 				mySocket.connect(self.SOCKET_FILE)
-				self._logger.debug("Socket connected")
 			except socket.error as e:
+				self._isConnected = False
 				self._logger.warn("EventManagerMrb no able to connect to socket %s, reason: %s. Trying again...", self.SOCKET_FILE, e)
-				time.sleep(2)
+				time.sleep(1)
 				continue
+
+			self._isConnected = True
+			self._logger.debug("Socket connected")
+			self._fireEvent(IoBeamEvents.CONNECT)
 
 			while not self._shutdown_signaled:
 				try:
@@ -112,6 +131,11 @@ class EventManagerMrb(object):
 					self._logger.warn("Exception while sockect.recv(): %s - Resetting connection...", e)
 					break
 
+				if not data:
+					self._logger.warn("Connection ended from other side. Closing connection...")
+					break
+
+				# here we see what's in the data...
 				valid = self._handleData(data)
 				if not valid:
 					self._logger.warn("Received invalid data from socket. Resetting connection...")
@@ -119,9 +143,17 @@ class EventManagerMrb(object):
 
 			if mySocket is not None:
 				self._logger.debug("Closing socket...")
+				# mySocket.shutdown(SHUT_RDWR)
 				mySocket.close()
-			time.sleep(2)
 
+			self._isConnected = False
+			self._fireEvent(IoBeamEvents.DISCONNECT)
+
+			if not self._shutdown_signaled:
+				self._logger.debug("Sleeping for a sec before reconnecting...")
+				time.sleep(1)
+
+		self._logger.debug("Worker thread stopped.")
 
 	# handles incoming data from the socket.
 	# @return bool False if data is (partially) invalid and connection needs to be reset, true otherwise
@@ -151,7 +183,7 @@ class EventManagerMrb(object):
 					self._logger.warn("Invalid value of 'RL' received from socket: %s; resetting connection...", value)
 					return False
 				self._logger.debug("_handleData: RL duration: %s (value:%s)", duration, value)
-				self._fireEvent(self.EVENT_BUTTON_RELEASED, duration)
+				self._fireEvent(IoBeamEvents.ONEBUTTON_RELEASED, duration)
 				continue
 			else:
 				self._logger.warn("Unknown command received from socket: '%s' resetting connection...", value)
