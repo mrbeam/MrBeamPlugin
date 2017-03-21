@@ -24,7 +24,7 @@ class IoBeamEvents(object):
 
 class IoBeamHandler(object):
 
-	SOCKET_FILE = "/tmp/mrbeamEventSocket"
+	SOCKET_FILE = "/tmp/iobeamSocket"
 	SOCKET_COMAMND_LENGTH_MAX = 1024
 	SOCKET_COMAMND_NEWLINE= "\n"
 
@@ -34,10 +34,14 @@ class IoBeamHandler(object):
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam")
 		self._logger.debug("initializing EventManagerMrb")
 
+		self._oneButtonHandler = OneButtonHandler(self._eventBusOct)
+
 		self._shutdown_signaled = False
 		self._isConnected = False
+		
+		self._connectionException = None
 
-		self._subscribeEvents()
+		# self._subscribeEvents()
 		self._initWorker()
 
 	def isRunning(self):
@@ -59,16 +63,16 @@ class IoBeamHandler(object):
 		self._worker.start()
 
 
-	def _subscribeEvents(self):
-		self._eventBusOct.subscribe(IoBeamEvents.ONEBUTTON_PUSHED, self._onEvent)
-		self._eventBusOct.subscribe(IoBeamEvents.ONEBUTTON_RELEASED, self._onEvent)
-
-
-	def _onEvent(self, event, payload):
-		self._logger.info("_onEvent() event:%s, payload:%s", event, payload)
-		self._logger.info("_onEvent() going to sleeeeeep")
-		time.sleep(1)
-		self._logger.info("_onEvent() aaaaand wakeup!")
+	# def _subscribeEvents(self):
+	# 	self._eventBusOct.subscribe(IoBeamEvents.ONEBUTTON_PUSHED, self._onEvent)
+	# 	self._eventBusOct.subscribe(IoBeamEvents.ONEBUTTON_RELEASED, self._onEvent)
+	#
+	#
+	# def _onEvent(self, event, payload):
+	# 	self._logger.info("_onEvent() event:%s, payload:%s", event, payload)
+	# 	self._logger.info("_onEvent() going to sleeeeeep")
+	# 	time.sleep(1)
+	# 	self._logger.info("_onEvent() aaaaand wakeup!")
 
 
 	def _work(self):
@@ -79,15 +83,18 @@ class IoBeamHandler(object):
 			try:
 				mySocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 				mySocket.settimeout(3)
-				self._logger.debug("Connecting to socket...")
+				# self._logger.debug("Connecting to socket...")
 				mySocket.connect(self.SOCKET_FILE)
 			except socket.error as e:
 				self._isConnected = False
-				self._logger.warn("EventManagerMrb no able to connect to socket %s, reason: %s. Trying again...", self.SOCKET_FILE, e)
+				if not self._connectionException == str(e):
+					self._logger.warn("IoBeamHandler not able to connect to socket %s, reason: %s. I'll keept trying but I won't log further failures.", self.SOCKET_FILE, e)
+					self._connectionException = str(e)
 				time.sleep(1)
 				continue
 
 			self._isConnected = True
+			self._connectionException = None
 			self._logger.debug("Socket connected")
 			self._fireEvent(IoBeamEvents.CONNECT)
 
@@ -155,17 +162,6 @@ class IoBeamHandler(object):
 			else:
 				self._logger.warn("Unknown command received from socket: '%s' resetting connection...", value)
 				return False
-
-
-			# intValue = -1
-			# try:
-			# 	intValue = int(value)
-			# except:
-			# 	return False
-            #
-			# if intValue == 5:
-			# 	self._fireEvent(self.EVENT_BUTTON_PUSHED)
-
 		return True
 
 
@@ -179,9 +175,7 @@ class OneButtonHandler(object):
 
 	def __init__(self, eventBusOct):
 		self._eventBusOct = eventBusOct
-
 		self.pushedTs = -1
-
 		self._subscribe()
 
 
