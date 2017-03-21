@@ -5,39 +5,6 @@ import time
 import logging
 
 
-# class SocketServerThread(threading.Thread):
-#
-# 	SOCKET_FILE = "/tmp/mrbeamEventSocket"
-#
-# 	def __init__(self):
-# 		super(SocketClientThread, self).__init__()
-# 		self.alive = threading.Event()
-# 		self.alive.set()
-#
-# 		self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-#
-# 	def run(self):
-# 		try:
-# 			os.remove(self.SOCKET_FILE)
-# 		except OSError:
-# 			pass
-# 		self.socket.bind(self.SOCKET_FILE)
-#
-# 		while self.alive.isSet():
-# 			self.socket.listen(0)
-# 			conn, addr = self.socket.accept()
-#
-# 			while self.alive.isSet():
-# 				data = conn.recv(1024)
-# 				if not data: break
-# 				print(repr(data))
-#
-# 			conn.close()
-#
-# 	def join(self, timeout=None):
-# 		self.alive.clear()
-# 		threading.Thread.join(self, timeout)
-
 # singleton
 _instance = None
 
@@ -205,3 +172,36 @@ class IoBeamHandler(object):
 	def _fireEvent(self, event, payload=None):
 		self._logger.info("_fireEvent() event:%s, payload:%s", event, payload)
 		self._eventBusOct.fire(event, payload)
+
+
+class OneButtonHandler(object):
+
+
+	def __init__(self, eventBusOct):
+		self._eventBusOct = eventBusOct
+
+		self.pushedTs = -1
+
+		self._subscribe()
+
+
+	def _subscribe(self):
+		self._eventBusOct.subscribe(IoBeamEvents.ONEBUTTON_PUSHED, self.onEvent)
+		self._eventBusOct.subscribe(IoBeamEvents.ONEBUTTON_RELEASED, self.onEvent)
+		self._eventBusOct.subscribe(IoBeamEvents.DISCONNECT, self.onEvent)
+
+	def onEvent(self, event, payload):
+		if event == IoBeamEvents.ONEBUTTON_PUSHED:
+			self.pushedTs = time.time()
+		elif event == IoBeamEvents.ONEBUTTON_RELEASED:
+			self.pushedTs = -1
+		elif event == IoBeamEvents.DISCONNECT:
+			self.pushedTs = -1
+
+
+
+
+
+
+
+
