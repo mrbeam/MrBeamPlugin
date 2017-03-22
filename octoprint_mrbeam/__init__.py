@@ -10,6 +10,7 @@ import flask
 
 from octoprint.util import dict_merge
 from octoprint.server import NO_CONTENT
+from octoprint.events import Events
 
 from .profile import LaserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
 from octoprint_mrbeam.iobeam_handler import ioBeamHandler
@@ -63,6 +64,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._cancelled_jobs_mutex = threading.Lock()
 		self._CONVERSION_PARAMS_PATH = "/tmp/conversion_parameters.json"  # TODO add proper path there
 		self._cancel_job = False
+		self.lastProgress = -1
 
 	def initialize(self):
 		self.laserCutterProfileManager = LaserCutterProfileManager(self._settings)
@@ -967,15 +969,18 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	##~~ Event Handler Plugin API
 
 	def on_event(self, event, payload):
-		#self._logger.debug("on_event %s: %s", event, payload)
-		# self.stateHandler.on_state_change(event)
-		pass
+		self._logger.debug("on_event %s: %s", event, payload)
+		if event == Events.PRINT_STARTED:
+			self.lastProgress = -1
 
 	##~~ Progress Plugin API
 
 	def on_print_progress(self, storage, path, progress):
-		state = "progress:"+str(progress)
-		# self.stateHandler.on_state_change(state)
+		self._logger.debug("on_print_progress %s, %s, %s", storage, path, progress)
+		flooredProgress = progress - (progress % 10)
+		if (flooredProgress != self.lastProgress):
+			self.lastProgress = flooredProgress
+			self._event_bus.fire("PrintProgress", self.lastProgress)
 
 	def on_slicing_progress(self, slicer, source_location, source_path, destination_location, destination_path, progress):
 		state = "slicing:"+str(progress)
