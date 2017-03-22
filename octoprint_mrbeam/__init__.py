@@ -14,7 +14,6 @@ from octoprint.events import Events
 
 from .profile import LaserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
 from octoprint_mrbeam.iobeam_handler import ioBeamHandler
-# from .state.ledstrips import LEDstrips
 
 import copy
 import time
@@ -31,6 +30,11 @@ from flask import Blueprint, request, jsonify, make_response, url_for
 import pprint
 import requests
 import socket
+
+
+class MrBeamEvents(object):
+	PRINT_PROGRESS = "PrintProgress"
+	SLICING_PROGRESS = "SlicingProgress"
 
 
 class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
@@ -64,7 +68,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._cancelled_jobs_mutex = threading.Lock()
 		self._CONVERSION_PARAMS_PATH = "/tmp/conversion_parameters.json"  # TODO add proper path there
 		self._cancel_job = False
-		self.lastProgress = -1
+		self.print_progress_last = -1
+		self.slicing_progress_last = -1
 
 	def initialize(self):
 		self.laserCutterProfileManager = LaserCutterProfileManager(self._settings)
@@ -969,22 +974,22 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	##~~ Event Handler Plugin API
 
 	def on_event(self, event, payload):
-		self._logger.debug("on_event %s: %s", event, payload)
-		if event == Events.PRINT_STARTED:
-			self.lastProgress = -1
+		# self._logger.debug("on_event %s: %s", event, payload)
+		pass
 
 	##~~ Progress Plugin API
 
 	def on_print_progress(self, storage, path, progress):
-		self._logger.debug("on_print_progress %s, %s, %s", storage, path, progress)
 		flooredProgress = progress - (progress % 10)
-		if (flooredProgress != self.lastProgress):
-			self.lastProgress = flooredProgress
-			self._event_bus.fire("PrintProgress", self.lastProgress)
+		if (flooredProgress != self.print_progress_last):
+			self.print_progress_last = flooredProgress
+			self._event_bus.fire(MrBeamEvents.PRINT_PROGRESS, self.print_progress_last)
 
 	def on_slicing_progress(self, slicer, source_location, source_path, destination_location, destination_path, progress):
-		state = "slicing:"+str(progress)
-		# self.stateHandler.on_state_change(state)
+		flooredProgress = progress - (progress % 10)
+		if (flooredProgress != self.slicing_progress_last):
+			self.slicing_progress_last = flooredProgress
+			self._event_bus.fire(MrBeamEvents.SLICING_PROGRESS, self.slicing_progress_last)
 
 	##~~ Softwareupdate hook
 
