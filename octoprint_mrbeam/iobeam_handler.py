@@ -24,7 +24,7 @@ class IoBeamEvents(object):
 
 class IoBeamHandler(object):
 
-	SOCKET_FILE = "/tmp/iobeamSocket"
+	SOCKET_FILE = "/var/run/mrbeam_iobeam.sock"
 	SOCKET_COMAMND_LENGTH_MAX = 1024
 	SOCKET_COMAMND_NEWLINE= "\n"
 
@@ -38,7 +38,7 @@ class IoBeamHandler(object):
 
 		self._shutdown_signaled = False
 		self._isConnected = False
-		
+
 		self._connectionException = None
 
 		# self._subscribeEvents()
