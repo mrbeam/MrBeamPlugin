@@ -70,7 +70,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._hostname = self.getHostname()
 		self._logger.info("MrBeam Plugin initialize()  version: %s, branch: %s, host: %s",
 						  self._plugin_version, self._branch, self._hostname)
-		self._logger.info("ANDYTEST Is it version 0.1.5 yet...?")
+		self._logger.info("ANDYTEST Is it version 0.1.5 yet...? Yes. But it's the one with the answer!")
 		try:
 			pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
 			if pluginInfo is None:
