@@ -70,7 +70,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._hostname = self.getHostname()
 		self._logger.info("MrBeam Plugin initialize()  version: %s, branch: %s, host: %s",
 						  self._plugin_version, self._branch, self._hostname)
-		self._logger.info("ANDYTEST Lets have something version 0.1.4")
+		self._logger.info("ANDYTEST Is it version 0.1.5 yet...?")
 		try:
 			pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
 			if pluginInfo is None:
@@ -1142,7 +1142,6 @@ def __plugin_load__():
 		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
 		"octoprint.printer.factory": __plugin_implementation__.laser_factory,
 		"octoprint.filemanager.extension_tree": __plugin_implementation__.laser_filemanager,
-		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
 		"octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook
 		#"octoprint.server.http.routes": __plugin_implementation__.serve_url
 	}
