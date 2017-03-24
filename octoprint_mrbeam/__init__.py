@@ -70,12 +70,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._hostname = self.getHostname()
 		self._logger.info("MrBeam Plugin initialize()  version: %s, branch: %s, host: %s",
 						  self._plugin_version, self._branch, self._hostname)
+		self._logger.info("ANDYTEST Lets have something different")
 		try:
 			pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
 			if pluginInfo is None:
 				self._logger.warn("NetconnectdPlugin not available. Wifi configuration not possible.")
 		except Exception as e:
 			self._logger.exception("Exception while getting NetconnectdPlugin pluginInfo")
+
 
 
 	def _convert_profiles(self, profiles):
@@ -1081,7 +1083,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		except Exception as e:
 			True
 			# 	self._logger.debug("getBranch: unable to exceute 'git branch' due to exception: %s", e)
-			
+
 		if not branch:
 			try:
 				command = "cd /home/pi/MrBeamPlugin/; git branch | grep '*'"
@@ -1090,7 +1092,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			except Exception as e:
 				True
 				# 	self._logger.debug("getBranch: unable to exceute 'cd /home/pi/MrBeamPlugin/; git branch' due to exception: %s", e)
-			
+
 		return branch
 
 
