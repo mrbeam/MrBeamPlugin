@@ -70,7 +70,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._hostname = self.getHostname()
 		self._logger.info("MrBeam Plugin initialize()  version: %s, branch: %s, host: %s",
 						  self._plugin_version, self._branch, self._hostname)
-		self._logger.info("ANDYTEST Lets have something different")
+		self._logger.info("ANDYTEST Lets have something version 0.1.4")
 		try:
 			pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
 			if pluginInfo is None:
@@ -215,6 +215,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 								)
 							 ))
 		r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
+
+		information, ua, up = self._plugin_manager.get_plugin_info("softwareupdate").implementation.get_current_versions()
+		self._logger.info("ANDYTEST softwareupdate get_current_versions: %s", information)
+
 
 		if firstRun:
 			r = add_non_caching_response_headers(r)
