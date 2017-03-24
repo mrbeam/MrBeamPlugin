@@ -70,7 +70,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._hostname = self.getHostname()
 		self._logger.info("MrBeam Plugin initialize()  version: %s, branch: %s, host: %s",
 						  self._plugin_version, self._branch, self._hostname)
-		self._logger.info("ANDYTEST Is it version 0.1.5 yet...? Yes. But it's the one with the answer!")
+		self._logger.info("ANDYTEST This is 0.1.6")
 		try:
 			pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
 			if pluginInfo is None:
@@ -110,7 +110,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			camera_offset_x=0,
 			camera_offset_y=0,
 			camera_scale=1,
-			camera_rotation=0
+			camera_rotation=0,
+			dev=dict(
+				software_tier="PROD"
+			)
 		)
 
 	def on_settings_load(self):
@@ -986,25 +989,44 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	##~~ Softwareupdate hook
 
 	def get_update_information(self):
-		# Define the configuration for your plugin to use with the Software Update
-		# Plugin here. See https://github.com/foosel/OctoPrint/wiki/Plugin:-Software-Update
-		# for details.
-		return dict(
-			mrbeam=dict(
-				displayName="Mr Beam Laser Cutter",
-				displayVersion=self._plugin_version,
 
-				# version check: github repository
+		tier = self._settings.get(["dev", "software_tier"])
+		self._logger.info("SoftwareUpdate using tier: %s", tier)
+
+		result = dict()
+
+		# mrbeam plugin
+		result['mrbeam'] = dict(
+				displayName="MrBeam Plugin",
+				displayVersion=self._plugin_version,
 				type="github_release",
 				user="mrbeam",
 				repo="MrBeamPlugin",
+				branch="master",
+				# current=self._plugin_version,
+				pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip")
+		if tier in ["DEV"]:
+			result['mrbeam'] = dict(
+				displayName="MrBeam Plugin ({})".format(tier),
+				displayVersion=self._plugin_version,
+				type="github_commit",
+				user="mrbeam",
+				repo="MrBeamPlugin",
 				branch="develop",
-				current=self._plugin_version,
+				pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip")
+		if tier in ["ANDYTEST"]:
+			result['mrbeam'] = dict(
+				displayName="MrBeam Plugin ({})".format(tier),
+				displayVersion=self._plugin_version,
+				type="github_commit",
+				user="mrbeam",
+				repo="MrBeamPlugin",
+				branch="andy_softwareupdate_test1",
+				pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip")
 
-				# update method: pip
-				pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip"
-			)
-		)
+		self._logger.debug("SoftwareUpdate using tier: %s, config: %s", tier, result)
+
+		return result
 
 	# inject a Laser object instead the original Printer from standard.py
 	def laser_factory(self, components, *args, **kwargs):
