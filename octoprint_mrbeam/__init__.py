@@ -196,8 +196,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		wizard = render_kwargs["templates"] is not None and bool(render_kwargs["templates"]["wizard"]["order"])
 
 		if render_kwargs["templates"]["wizard"]["entries"]:
-			render_kwargs["templates"]["wizard"]["entries"]["firstrunstart"][1]["template"] = "wizard/firstrun_start.jinja2"
-			render_kwargs["templates"]["wizard"]["entries"]["firstrunend"][1]["template"] = "wizard/firstrun_end.jinja2"
+			if render_kwargs["templates"]["wizard"]["entries"]["firstrunstart"]:
+				render_kwargs["templates"]["wizard"]["entries"]["firstrunstart"][1]["template"] = "wizard/firstrun_start.jinja2"
+			if render_kwargs["templates"]["wizard"]["entries"]["firstrunend"]:
+				render_kwargs["templates"]["wizard"]["entries"]["firstrunend"][1]["template"] = "wizard/firstrun_end.jinja2"
 
 		render_kwargs.update(dict(
 							 webcamStream=self._settings.global_get(["webcam", "stream"]),
@@ -219,10 +221,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 								)
 							 ))
 		r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
-
-		information, ua, up = self._plugin_manager.get_plugin_info("softwareupdate").implementation.get_current_versions()
-		self._logger.info("ANDYTEST softwareupdate get_current_versions: %s", information)
-
 
 		if firstRun:
 			r = add_non_caching_response_headers(r)
