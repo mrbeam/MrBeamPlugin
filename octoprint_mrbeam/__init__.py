@@ -12,6 +12,7 @@ from octoprint.util import dict_merge
 from octoprint.server import NO_CONTENT
 
 from .profile import LaserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
+from .software_update_information import get_update_information
 # from .state.ledstrips import LEDstrips
 
 import copy
@@ -989,44 +990,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	##~~ Softwareupdate hook
 
 	def get_update_information(self):
-
-		tier = self._settings.get(["dev", "software_tier"])
-		self._logger.info("SoftwareUpdate using tier: %s", tier)
-
-		result = dict()
-
-		# mrbeam plugin
-		result['mrbeam'] = dict(
-				displayName="MrBeam Plugin",
-				displayVersion=self._plugin_version,
-				type="github_release",
-				user="mrbeam",
-				repo="MrBeamPlugin",
-				branch="master",
-				# current=self._plugin_version,
-				pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip")
-		if tier in ["DEV"]:
-			result['mrbeam'] = dict(
-				displayName="MrBeam Plugin ({})".format(tier),
-				displayVersion=self._plugin_version,
-				type="github_commit",
-				user="mrbeam",
-				repo="MrBeamPlugin",
-				branch="develop",
-				pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip")
-		if tier in ["ANDYTEST"]:
-			result['mrbeam'] = dict(
-				displayName="MrBeam Plugin ({})".format(tier),
-				displayVersion=self._plugin_version,
-				type="github_commit",
-				user="mrbeam",
-				repo="MrBeamPlugin",
-				branch="andy_softwareupdate_test1",
-				pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip")
-
-		self._logger.debug("SoftwareUpdate using tier: %s, config: %s", tier, result)
-
-		return result
+		# calling from .software_update_information import get_update_information
+		return get_update_information(self)
 
 	# inject a Laser object instead the original Printer from standard.py
 	def laser_factory(self, components, *args, **kwargs):
