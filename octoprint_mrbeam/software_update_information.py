@@ -5,11 +5,13 @@ import os
 
 
 
+
+
 def get_update_information(self):
-	_logger = logging.getLogger("octoprint.plugins.mrbeam.software_update_information")
+
 
 	tier = self._settings.get(["dev", "software_tier"])
-	_logger.info("SoftwareUpdate using tier: %s", tier)
+	_logger(self).info("SoftwareUpdate using tier: %s", tier)
 
 	result = dict()
 
@@ -17,12 +19,12 @@ def get_update_information(self):
 	result['mrbeam'] = get_info_mrbeam_plugin(self, tier)
 
 	# netconnectd plugin
-	config = get_info_netconnectd_plugin(self, tier)
-	if config is not None: result['netconnectd'] = config
+	config_netconnectd_plugin = get_info_netconnectd_plugin(self, tier)
+	if config_netconnectd_plugin is not None: result['netconnectd'] = config_netconnectd_plugin
 
-	# findmyoctoprint
-	config = get_info_findmymrbeam(self, tier)
-	if config is not None: result['findmyoctoprint'] = config
+	# findmymrbeam
+	config_findmymrbeam = get_info_findmymrbeam(self, tier)
+	if config_findmymrbeam is not None: result['findmymrbeam'] = config_findmymrbeam
 
 
 	# octoprint
@@ -65,10 +67,8 @@ def get_update_information(self):
 			checkout_folder=path,
 			update_script="{folder}/update.sh")
 
-	# FindMyMrBeam
 
-
-	_logger.debug("unsing config:\n%s", yaml.dump(result))
+	_logger(self).debug("unsing config:\n%s", yaml.dump(result))
 
 	return result
 
@@ -95,7 +95,7 @@ def get_info_mrbeam_plugin(self, tier):
 			branch="develop",
 			pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip")
 
-	if tier in ["ANDYTEST"]:
+	if tier in ["ANDY"]:
 		result = dict(
 			displayName=_get_display_name(self, name, tier),
 			displayVersion=self._plugin_version,
@@ -133,7 +133,8 @@ def get_info_netconnectd_plugin(self, tier):
 def get_info_findmymrbeam(self, tier):
 	name = "OctoPrint-FindMyMrBeam"
 
-	pluginInfo = self._plugin_manager.get_plugin_info("findmyoctoprint")
+	pluginInfo = self._plugin_manager.get_plugin_info("findmymrbeam")
+
 	if pluginInfo is None:
 		return None
 
@@ -145,18 +146,45 @@ def get_info_findmymrbeam(self, tier):
 		type="github_commit",
 		user="mrbeam",
 		repo="OctoPrint-FindMyMrBeam",
-		branch="master",
+		branch="mrbeam2-stable",
 		pip="https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
 		restart="octoprint")
 
-	# result['netconnectd'] = dict(
-	# 	displayName=_get_display_name(self, name),
-	# 	type="git_commit",
-	# 	checkout_folder="/home/pi/OctoPrint-Netconnectd",
-	# 	restart="octoprint",
-	# 	update_script="{folder}/update.sh")
+	if tier in ["DEV", "ANDY"]:
+		result = dict(
+			displayName=_get_display_name(self, name, tier),
+			displayVersion=current_version,
+			type="github_commit",
+			user="mrbeam",
+			repo="OctoPrint-FindMyMrBeam",
+			branch="develop",
+			pip="https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
+			restart="octoprint")
 
 	return result
+
+
+def get_info_ledstrips(self, tier):
+	name = "MrBeam LED"
+
+	result = dict(
+		displayName=_get_display_name(self, name),
+		# displayVersion=current_version,
+		type="github_commit",
+		user="mrbeam",
+		repo="OctoPrint-FindMyMrBeam",
+		branch="master",
+		pip="https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
+		restart="octoprint")
+	# # mrbeam-ledstrips:
+	# name = "MrBeam LED"
+	# path = "/home/pi/mrbeamledstrips"
+	# if (os.path.isdir(path)):
+	# 	result['mrbeam-ledstrips'] = dict(
+	# 		displayName=_get_display_name(self, name),
+	# 		type="git_commit",
+	# 		checkout_folder=path,
+	# 		update_script="{folder}/update.sh")
 
 
 def _get_display_name(self, name, tier=None):
@@ -166,3 +194,5 @@ def _get_display_name(self, name, tier=None):
 		return name
 
 
+def _logger(self):
+	return logging.getLogger("octoprint.plugins.mrbeam.software_update_information")
