@@ -179,28 +179,6 @@ def get_info_findmymrbeam(self, tier):
 	return result
 
 
-def get_info_ledstrips(self, tier):
-	name = "MrBeam LED"
-
-	result = dict(
-		displayName=_get_display_name(self, name),
-		# displayVersion=current_version,
-		type="github_commit",
-		user="mrbeam",
-		repo="OctoPrint-FindMyMrBeam",
-		branch="master",
-		pip="https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
-		restart="octoprint")
-	# # mrbeam-ledstrips:
-	# name = "MrBeam LED"
-	# path = "/home/pi/mrbeamledstrips"
-	# if (os.path.isdir(path)):
-	# 	result['mrbeam-ledstrips'] = dict(
-	# 		displayName=_get_display_name(self, name),
-	# 		type="git_commit",
-	# 		checkout_folder=path,
-	# 		update_script="{folder}/update.sh")
-
 
 def _get_display_name(self, name, tier=None):
 	if tier is not None and not tier == "PROD":

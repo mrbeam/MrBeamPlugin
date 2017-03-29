@@ -45,7 +45,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	# CONSTANTS
 
-	GLOBAL_SETTINGS_KEY_DEVEL_MRBEAM_CLOUD_ENV = ["devel", "mrbeam", "cloud_env"]
+	SETTINGS_KEY_DEVEL_MRBEAM_CLOUD_ENV = ["dev", "cloud_env"]
 	LASERSAFETY_CONFIRMATION_STORAGE_URL = 'https://script.google.com/a/macros/mr-beam.org/s/AKfycby3Y1RLBBiGPDcIpIg0LHd3nwgC7GjEA4xKfknbDLjm3v9-LjG1/exec'
 	USER_SETTINGS_KEY_MRBEAM = 'mrbeam'
 	USER_SETTINGS_KEY_TIMESTAMP = 'ts'
@@ -449,7 +449,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		force = bool(data.get('force', False))
 		if submissionDate <= 0 or force:
 			# get cloud env to use
-			debug = self._settings.global_get(self.GLOBAL_SETTINGS_KEY_DEVEL_MRBEAM_CLOUD_ENV)
+			debug = self._settings.global_get(self.SETTINGS_KEY_DEVEL_MRBEAM_CLOUD_ENV)
 
 			payload = {'ts': data.get('ts', ''),
 					   'email': data.get('username', ''),
