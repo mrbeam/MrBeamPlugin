@@ -8,12 +8,13 @@ import os
 
 
 def get_update_information(self):
-
+	result = dict()
 
 	tier = self._settings.get(["dev", "software_tier"])
 	_logger(self).info("SoftwareUpdate using tier: %s", tier)
 
-	result = dict()
+	# configure OctoPrint
+	octoprint_configured = octoprint_checkout_folder(self, tier)
 
 	# mrbeam plugin
 	result['mrbeam'] = get_info_mrbeam_plugin(self, tier)
@@ -27,15 +28,6 @@ def get_update_information(self):
 	if config_findmymrbeam is not None: result['findmymrbeam'] = config_findmymrbeam
 
 
-	# octoprint
-	path = "/home/pi/OctoPrint"
-	if (os.path.isdir(path)):
-		result['octoprint'] = dict(
-			checkout_folder=path,
-			prerelease=True,
-			prerelease_channel="rc/maintenance")
-
-
 	# netconnectd daemon:
 	name = "Netconnectd"
 	path = "/home/pi/netconnectd"
@@ -43,9 +35,8 @@ def get_update_information(self):
 		result['netconnectd-daemon'] = dict(
 			displayName=_get_display_name(self, name),
 			type="git_commit",
-			branch="master",
 			checkout_folder=path,
-			update_script="{folder}/update.sh -b {branch}")
+			update_script="{folder}/update.sh")
 
 	# mrbeam-ledstrips:
 	name = "MrBeam LED"
@@ -68,9 +59,33 @@ def get_update_information(self):
 			update_script="{folder}/update.sh")
 
 
-	_logger(self).debug("unsing config:\n%s", yaml.dump(result))
+	_logger(self).debug("Using config:\n%s", yaml.dump(result))
 
 	return result
+
+# We need octoprint's checkout_folder to be set in config.yaml
+# (These's no way to set sw_update config for octoprint from the third party plugin update_hooks)
+# returns True if it was already set, False otherwise
+def octoprint_checkout_folder(self, tier):
+	settings_path = ["plugins", "softwareupdate", "checks", "octoprint", "checkout_folder"]
+	octoprint_checkout_folder = self._settings.global_get(settings_path)
+	if octoprint_checkout_folder is not None:
+		return True
+	else:
+		octoprint_checkout_folder = "/home/pi/OctoPrint"
+		if os.path.isdir(octoprint_checkout_folder):
+			self._settings.global_set(settings_path, octoprint_checkout_folder, force=True)
+			self._settings.save(force=True)
+			_logger(self).debug("config.yaml: setting octoprint_checkout_folder: %s", octoprint_checkout_folder)
+		else:
+			_logger(self).warning("OctoPrint octoprint_checkout_folder wasn't set because path doesnt' exist: %s ", octoprint_checkout_folder)
+			return False
+
+	test = self._settings.global_get(settings_path)
+	if test is None:
+		_logger(self).warning("OctoPrint octoprint_checkout_folder could not be set.")
+
+	return False
 
 
 def get_info_mrbeam_plugin(self, tier):
