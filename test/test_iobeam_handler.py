@@ -16,16 +16,19 @@ from octoprint_mrbeam.iobeam_handler import ioBeamHandler, IoBeamEvents
 @ddt.ddt
 class IoBeamHandlerTestCase(unittest.TestCase):
 
+	SOCKET_FILE = "/tmp/mrbeam_iobeam.sock"
+
 	def setUp(self):
 		self._logger = logging.getLogger("test." + self.__module__ + "." + self.__class__.__name__)
 		self._logger.debug("setUp() START")
 
-		self.testThreadServer = ServerThread()
+		self.testThreadServer = ServerThread(self.SOCKET_FILE)
 		self.testThreadServer.start()
 		time.sleep(.01)
 
 		self.mock = mock.MagicMock(name="EventManagerOctMock")
-		self.ioBeamHandler = ioBeamHandler(self.mock)
+		self.ioBeamHandler = ioBeamHandler(self.mock, self.SOCKET_FILE)
+		self.ioBeamHandler.SOCKET_FILE = self.SOCKET_FILE
 		time.sleep(.01)
 
 		self.mock.reset_mock()
@@ -100,16 +103,16 @@ class IoBeamHandlerTestCase(unittest.TestCase):
 
 
 class ServerThread(threading.Thread):
-	SOCKET_FILE = "/tmp/mrbeam_iobeam.sock"
-	# SOCKET_FILE = "/var/run/mrbeam_iobeam.sock"
 	SOCKET_NEWLINE = "\n"
 
-	def __init__(self):
+	def __init__(self, socket_file):
 		super(ServerThread, self).__init__()
 		self.daemon = True
 		self.alive = threading.Event()
 		self.alive.set()
 		self.conn = None
+
+		self._socket_file = socket_file
 
 		self._logger = logging.getLogger("test." + self.__module__ + "." + self.__class__.__name__)
 		self._logger.info( self.__class__.__name__ + " initialized")
@@ -117,15 +120,15 @@ class ServerThread(threading.Thread):
 	def run(self):
 		self._logger.info("Worker thread started.")
 		try:
-			os.remove(self.SOCKET_FILE)
+			os.remove(self._socket_file)
 		except OSError:
 			pass
 
 		self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-		self.socket.bind(self.SOCKET_FILE)
+		self.socket.bind(self._socket_file)
 
 		while self.alive.isSet():
-			self._logger.info("Listening for incoming connections on " + self.SOCKET_FILE)
+			self._logger.info("Listening for incoming connections on " + self._socket_file)
 			self.socket.setblocking(1)
 			self.socket.settimeout(3)
 			self.socket.listen(0)

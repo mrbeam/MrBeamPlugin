@@ -8,10 +8,10 @@ import logging
 # singleton
 _instance = None
 
-def ioBeamHandler(eventBusOct):
+def ioBeamHandler(eventBusOct, socket_file=None):
 	global _instance
 	if _instance is None:
-		_instance = IoBeamHandler(eventBusOct)
+		_instance = IoBeamHandler(eventBusOct, socket_file)
 	return _instance
 
 
@@ -65,8 +65,7 @@ class IoBeamHandler(object):
 	# > laser:temp:error:<error type or message>
 
 
-	SOCKET_FILE = "/tmp/mrbeam_iobeam.sock"
-	# SOCKET_FILE = "/var/run/mrbeam_iobeam.sock"
+	SOCKET_FILE = "/var/run/mrbeam_iobeam.sock"
 	MAX_ERRORS = 10
 
 	MESSAGE_LENGTH_MAX = 1024
@@ -89,7 +88,7 @@ class IoBeamHandler(object):
 	MESSAGE_ACTION_INTERLOCK_CLOSED =   "cl"
 
 
-	def __init__(self, eventBusOct):
+	def __init__(self, eventBusOct, socket_file=None):
 		self._eventBusOct = eventBusOct
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam")
 		self._logger.debug("initializing EventManagerMrb")
@@ -103,7 +102,7 @@ class IoBeamHandler(object):
 		self._connectionException = None
 		self._interlocks = dict()
 
-		self._initWorker()
+		self._initWorker(socket_file)
 
 	def isRunning(self):
 		return self._worker.is_alive()
@@ -121,15 +120,20 @@ class IoBeamHandler(object):
 		return len(self._interlocks.keys()) == 0
 
 
-	def _initWorker(self):
+	def _initWorker(self, socket_file=None):
 		self._logger.debug("initializing worker thread")
+
+		# this is needed for unit tests
+		if socket_file is not None:
+			self.SOCKET_FILE = socket_file
+
 		self._worker = threading.Thread(target=self._work)
 		self._worker.daemon = True
 		self._worker.start()
 
 
 	def _work(self):
-		self._logger.debug("Worker thread starting...")
+		self._logger.debug("Worker thread starting, connecting to socket: %s", self.SOCKET_FILE)
 
 		while not self._shutdown_signaled:
 			mySocket = None
