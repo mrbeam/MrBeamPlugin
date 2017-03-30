@@ -8,10 +8,10 @@ import logging
 # singleton
 _instance = None
 
-def ioBeamHandler(mrbeamPlugin):
+def ioBeamHandler(eventBusOct):
 	global _instance
 	if _instance is None:
-		_instance = IoBeamHandler(mrbeamPlugin)
+		_instance = IoBeamHandler(eventBusOct)
 	return _instance
 
 

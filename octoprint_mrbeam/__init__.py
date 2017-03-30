@@ -14,6 +14,7 @@ from octoprint.events import Events
 
 from .profile import LaserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
 from octoprint_mrbeam.iobeam_handler import ioBeamHandler
+from octoprint_mrbeam.led_events import LedEventListener
 
 import copy
 import time
@@ -27,14 +28,11 @@ from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping
 from flask.ext.babel import gettext
 from flask import Blueprint, request, jsonify, make_response, url_for
 
+
 import pprint
 import requests
 import socket
 
-
-class MrBeamEvents(object):
-	PRINT_PROGRESS = "PrintProgress"
-	SLICING_PROGRESS = "SlicingProgress"
 
 
 class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
@@ -74,9 +72,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def initialize(self):
 		self.laserCutterProfileManager = LaserCutterProfileManager(self._settings)
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam")
-
-		self._eventManagerMrb = ioBeamHandler(self._event_bus)
-
 		self._branch = self.getBranch()
 		self._hostname = self.getHostname()
 		self._logger.info("MrBeam Plugin initialize()  version: %s, branch: %s, host: %s",
@@ -87,6 +82,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self._logger.warn("NetconnectdPlugin not available. Wifi configuration not possible.")
 		except Exception as e:
 			self._logger.exception("Exception while getting NetconnectdPlugin pluginInfo")
+
+		self._eventManagerMrb = ioBeamHandler(self._event_bus)
+		self._led_eventhandler = LedEventListener(self._printer, self._event_bus)
 
 
 	def _convert_profiles(self, profiles):
