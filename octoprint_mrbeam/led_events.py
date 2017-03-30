@@ -59,8 +59,8 @@ class LedEventListener(CommandTrigger):
 		self.subscribe(self.LED_EVENTS.keys())
 
 
-	def eventCallback(self, event, payload):
-		self._logger.info("ANDYTEST eventCallback() event: %s, payload: %s", event, payload)
-		CommandTrigger.eventCallback(self, event, payload)
+	# def eventCallback(self, event, payload):
+	# 	self._logger.info("ANDYTEST eventCallback() event: %s, payload: %s", event, payload)
+	# 	CommandTrigger.eventCallback(self, event, payload)
 
 
