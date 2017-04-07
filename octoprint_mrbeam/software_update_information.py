@@ -27,6 +27,10 @@ def get_update_information(self):
 	config_findmymrbeam = get_info_findmymrbeam(self, tier)
 	if config_findmymrbeam is not None: result['findmymrbeam'] = config_findmymrbeam
 
+	# mrbeam_ledstrips
+	config_mrbeam_ledstrips = get_info_mrbeamledstrips(self, tier)
+	if config_mrbeam_ledstrips is not None: result['mrbeam-ledstrips'] = config_mrbeam_ledstrips
+
 
 	# netconnectd daemon:
 	name = "Netconnectd"
@@ -38,15 +42,6 @@ def get_update_information(self):
 			checkout_folder=path,
 			update_script="{folder}/update.sh")
 
-	# mrbeam-ledstrips:
-	name = "MrBeam LED"
-	path = "/home/pi/mrbeamledstrips"
-	if (os.path.isdir(path)):
-		result['mrbeam-ledstrips'] = dict(
-			displayName=_get_display_name(self, name),
-			type="git_commit",
-			checkout_folder=path,
-			update_script="{folder}/update.sh")
 
 	# pcf8575:
 	name = "pcf8575"
@@ -175,6 +170,31 @@ def get_info_findmymrbeam(self, tier):
 			branch="develop",
 			pip="https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
 			restart="octoprint")
+
+	return result
+
+
+def get_info_mrbeamledstrips(self, tier):
+	name = "MrBeam LED Strips"
+
+	result = dict(
+		displayName=_get_display_name(self, name),
+		type="github_commit",
+		user="mrbeam",
+		repo="MrBeamLedStrips",
+		branch="mrbeam2-stable",
+		pip="https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
+		restart="environment")
+
+	if tier in ["DEV", "ANDY"]:
+		result = dict(
+			displayName=_get_display_name(self, name),
+			type="github_commit",
+			user="mrbeam",
+			repo="MrBeamLedStrips",
+			branch="develop",
+			pip="https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
+			restart="environment")
 
 	return result
 
