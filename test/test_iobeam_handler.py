@@ -7,7 +7,7 @@ import os
 import sys
 import threading
 import time
-from octoprint_mrbeam.iobeam_handler import ioBeamHandler, IoBeamEvents
+from octoprint_mrbeam.iobeam_handler import ioBeamHandler, IoBeamEvents, OneButtonHandler
 
 
 # hint: to get the output with timestamps:
@@ -22,16 +22,22 @@ class IoBeamHandlerTestCase(unittest.TestCase):
 		self._logger = logging.getLogger("test." + self.__module__ + "." + self.__class__.__name__)
 		self._logger.debug("setUp() START")
 
+		# init test thread; socket server, actually a mock for the real ioBeam
 		self.testThreadServer = ServerThread(self.SOCKET_FILE)
 		self.testThreadServer.start()
 		time.sleep(.01)
 
-		self.mock = mock.MagicMock(name="EventManagerOctMock")
-		self.ioBeamHandler = ioBeamHandler(self.mock, self.SOCKET_FILE)
+		# init ioBeamHandler
+		self.event_bus_mock = mock.MagicMock(name="event_bus_mock")
+		self.ioBeamHandler = ioBeamHandler(self.event_bus_mock, self.SOCKET_FILE)
 		self.ioBeamHandler.SOCKET_FILE = self.SOCKET_FILE
 		time.sleep(.01)
 
-		self.mock.reset_mock()
+		#init OneButtonHandler
+		self._printer_mock = mock.MagicMock(name="_printer_mock")
+		self._oneButtonHandler = OneButtonHandler(self.event_bus_mock, self._printer_mock)
+
+		self.event_bus_mock.reset_mock()
 		self._logger.debug("setUp() DONE --------------------")
 
 	def tearDown(self):
@@ -69,9 +75,9 @@ class IoBeamHandlerTestCase(unittest.TestCase):
 		self._logger.debug("test_interlocks() messages: %s, expectations: %s, expectation_closed_in_the_end: %s",
 						   messages, expectations, expectation_closed_in_the_end)
 		self._send_messages_and_evaluate(messages, expectations)
-		self._logger.debug("test_interlocks() ANDYTEST is_interlock_closed: %s", self.ioBeamHandler.is_interlock_closed())
 		self.assertEqual(self.ioBeamHandler.is_interlock_closed(), expectation_closed_in_the_end,
 						 "is_interlock_closed() did not return %s in the end as expected." % expectation_closed_in_the_end)
+
 
 
 	def test_reconnect_on_error(self):
@@ -82,10 +88,10 @@ class IoBeamHandlerTestCase(unittest.TestCase):
 
 		expected = [mock.call.fire(IoBeamEvents.DISCONNECT, None),
 					mock.call.fire(IoBeamEvents.CONNECT, None)]
-		assert (self.mock.mock_calls == expected), \
+		assert (self.event_bus_mock.mock_calls == expected), \
 			("Events fired by IoBeamHandler.\n"
 			 "Expected calls: %s\n"
-			 "Actual calls:   %s" % (expected, self.mock.mock_calls))
+			 "Actual calls:   %s" % (expected, self.event_bus_mock.mock_calls))
 
 
 	def _send_messages_and_evaluate(self, messages, expectations):
@@ -96,10 +102,10 @@ class IoBeamHandlerTestCase(unittest.TestCase):
 		expected = []
 		for exp in expectations:
 			expected.append(mock.call.fire(exp[0], exp[1]))
-		assert (self.mock.mock_calls == expected), \
+		assert (self.event_bus_mock.mock_calls == expected), \
 			("Events fired by IoBeamHandler.\n"
 			 "Expected calls: %s\n"
-			 "Actual calls:   %s" % (expected, self.mock.mock_calls))
+			 "Actual calls:   %s" % (expected, self.event_bus_mock.mock_calls))
 
 
 class ServerThread(threading.Thread):

@@ -8,6 +8,9 @@ class MrBeamEvents(object):
 	PRINT_PROGRESS = "PrintProgress"
 	SLICING_PROGRESS = "SlicingProgress"
 
+	READY_TO_LASER_START = "ReadyToLaserStart"
+	READY_TO_LASER_CANCELED = "ReadyToLaserCanceled"
+
 
 class LedEventListener(CommandTrigger):
 
@@ -34,15 +37,15 @@ class LedEventListener(CommandTrigger):
 	LED_EVENTS[Events.SLICING_CANCELLED] = "mrbeam_ledstrips_cli SlicingCancelled"
 	LED_EVENTS[Events.SLICING_FAILED] = "mrbeam_ledstrips_cli SlicingFailed"
 	# Settings
-	LED_EVENTS[Events.SETTINGS_UPDATED] = "mrbeam_ledstrips_cli SettingsUpdated"
+	# LED_EVENTS[Events.SETTINGS_UPDATED] = "mrbeam_ledstrips_cli SettingsUpdated"
 	# MrBeam Events
 	LED_EVENTS[MrBeamEvents.SLICING_PROGRESS] = "mrbeam_ledstrips_cli SlicingProgress:{__data}"
 	LED_EVENTS[MrBeamEvents.PRINT_PROGRESS] = "mrbeam_ledstrips_cli progress:{__data}"
 
 
-	def __init__(self, printer, eventBusOct):
+	def __init__(self, event_bus, printer):
 		CommandTrigger.__init__(self, printer)
-		self._eventBusOct = eventBusOct
+		self._event_bus = event_bus
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam.led_events")
 
 		self._subscriptions = {}

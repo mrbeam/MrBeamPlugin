@@ -1909,6 +1909,14 @@ input.search-query,
   user-select: none;
 }
 
+.hidden {
+  display: none;
+}
+
+.btn-hidden {
+  display: none;
+}
+
 /**
  * range.css
  */

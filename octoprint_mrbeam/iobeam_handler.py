@@ -4,6 +4,10 @@ import threading
 import time
 import logging
 
+from octoprint_mrbeam.led_events import MrBeamEvents
+from octoprint.events import Events as OctoPrintEvents
+from octoprint.filemanager import valid_file_type
+
 
 # singleton
 _instance = None
@@ -88,12 +92,10 @@ class IoBeamHandler(object):
 	MESSAGE_ACTION_INTERLOCK_CLOSED =   "cl"
 
 
-	def __init__(self, eventBusOct, socket_file=None):
-		self._eventBusOct = eventBusOct
+	def __init__(self, event_bus, socket_file=None):
+		self._event_bus = event_bus
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam")
 		self._logger.debug("initializing EventManagerMrb")
-
-		self._oneButtonHandler = OneButtonHandler(self._eventBusOct)
 
 		self._shutdown_signaled = False
 		self._isConnected = False
@@ -287,7 +289,7 @@ class IoBeamHandler(object):
 
 	def _fireEvent(self, event, payload=None):
 		self._logger.info("_fireEvent() event:%s, payload:%s", event, payload)
-		self._eventBusOct.fire(event, payload)
+		self._event_bus.fire(event, payload)
 
 
 	def _as_number(self, str):
@@ -300,29 +302,100 @@ class IoBeamHandler(object):
 
 class OneButtonHandler(object):
 
-	def __init__(self, eventBusOct):
-		self._eventBusOct = eventBusOct
-		self.pushedTs = -1
+	PRINTER_STATE_PRINTING = "PRINTING"
+	READY_TO_PRINT_MAX_WAITING_TIME = 120
+	READY_TO_PRINT_CHECK_INTERVAL = 10
+
+	def __init__(self, event_bus, plugin_manager, file_manager, printer):
+		self._event_bus = event_bus
+		self._plugin_manager = plugin_manager
+		self._file_manager = file_manager
+		self._printer = printer
+		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam.onebuttonhandler")
 		self._subscribe()
 
+		self.ready_to_laser_ts = -1
+		self.ready_to_laser_file = None
+		self.ready_to_laser_timer = None
 
 	def _subscribe(self):
-		self._eventBusOct.subscribe(IoBeamEvents.ONEBUTTON_PRESSED, self.onEvent)
-		self._eventBusOct.subscribe(IoBeamEvents.ONEBUTTON_RELEASED, self.onEvent)
-		self._eventBusOct.subscribe(IoBeamEvents.DISCONNECT, self.onEvent)
+		self._event_bus.subscribe(IoBeamEvents.ONEBUTTON_PRESSED, self.onEvent)
+		self._event_bus.subscribe(IoBeamEvents.ONEBUTTON_RELEASED, self.onEvent)
+		self._event_bus.subscribe(IoBeamEvents.DISCONNECT, self.onEvent)
+		self._event_bus.subscribe(OctoPrintEvents.CLIENT_CLOSED, self.onEvent)
 
 	def onEvent(self, event, payload):
 		if event == IoBeamEvents.ONEBUTTON_PRESSED:
-			self.pushedTs = time.time()
+			if self._printer.get_state_id() == self.PRINTER_STATE_PRINTING:
+				self._printer.pause_print()
+		elif event == OctoPrintEvents.CLIENT_CLOSED:
+			self.ready_to_laser_ts = -1
+			self._check_if_still_ready_to_laser()
 		elif event == IoBeamEvents.ONEBUTTON_RELEASED:
-			self.pushedTs = -1
-		elif event == IoBeamEvents.DISCONNECT:
-			self.pushedTs = -1
+			if self._printer.is_operational() and self.ready_to_laser_ts > 0:
+				self._start_laser()
 
 
+	def set_ready_to_laser(self, gcode_file):
+		self._test_conditions(gcode_file)
+		self.ready_to_laser_file = gcode_file
+		self.ready_to_laser_ts = time.time()
+		self._event_bus.fire(MrBeamEvents.READY_TO_LASER_START)
+		self._check_if_still_ready_to_laser()
+
+	def unset_ready_to_laser(self, lasering=False):
+		self._logger.debug("unset_ready_to_laser()")
+		self._cancel_timer()
+		self.ready_to_laser_ts = -1
+		self.ready_to_laser_file = None
+		if lasering:
+			self._plugin_manager.send_plugin_message("mrbeam", dict(ready_to_laser="end_lasering"))
+		else:
+			self._plugin_manager.send_plugin_message("mrbeam", dict(ready_to_laser="end_canceled"))
+			self._event_bus.fire(MrBeamEvents.READY_TO_LASER_CANCELED)
+
+	def _check_if_still_ready_to_laser(self):
+		if self.ready_to_laser_ts> 0 and time.time() - self.ready_to_laser_ts < self.READY_TO_PRINT_MAX_WAITING_TIME:
+			self._logger.debug("_check_if_still_ready_to_laser() still ready")
+			self._start_timer()
+		else:
+			self.unset_ready_to_laser(False)
+
+	def _start_laser(self):
+		self._logger.debug("_start_laser() ...shall we laser file %s ?", self.ready_to_laser_file)
+		if self.ready_to_laser_ts <= 0 or time.time() - self.ready_to_laser_ts > self.READY_TO_PRINT_MAX_WAITING_TIME:
+			self._logger.warn("_start_laser() READY_TO_PRINT_MAX_WAITING_TIME exceeded.")
+			return
+
+		self._test_conditions(self.ready_to_laser_file)
+
+		self._logger.debug("_start_laser() LET'S LASER BABY!!! it's file %s", self.ready_to_laser_file)
+		myFile = self._file_manager.path_on_disk("local", self.ready_to_laser_file)
+		result = self._printer.select_file(myFile, False, True)
+
+		self.unset_ready_to_laser(True)
 
 
+	def _test_conditions(self, file):
+		self._logger.debug("_test_conditions() laser file %s, printer state: %s", file, self._printer.get_state_id())
 
+		if file is None:
+			raise Exception("ReadyToLaser: file is None")
+		if not self._file_manager.file_exists("local", file):
+			raise Exception("ReadyToLaser: file not found '%s'" % file)
+		if not valid_file_type(file, type="machinecode"):
+			raise Exception("ReadyToLaser: file is not of type machine code")
+		if not self._printer.is_operational() or not self._printer.get_state_id() == "OPERATIONAL":
+			raise Exception("ReadyToLaser: printer is not ready. printer state is: %s" % self._printer.get_state_id())
+
+	def _start_timer(self):
+		self.ready_to_laser_timer = threading.Timer(self.READY_TO_PRINT_CHECK_INTERVAL,
+													self._check_if_still_ready_to_laser).start()
+
+	def _cancel_timer(self):
+		if self.ready_to_laser_timer is not None:
+			self.ready_to_laser_timer.cancel()
+			self.ready_to_laser_timer = None
 
 
 

@@ -240,10 +240,12 @@ $(function () {
         };
 
         self.gcodefiles.startGcodeWithSafetyWarning = function (gcodeFile) {
-            self.gcodefiles.loadFile(gcodeFile, false);
+            var no_print = self.gcodefiles.loadFile(gcodeFile, false);
 
             self.show_safety_glasses_warning(function () {
-                self.gcodefiles.loadFile(gcodeFile, true);
+                // ANDYTEST find out where this is called from
+                var do_print = self.gcodefiles.loadFile(gcodeFile, true);
+                console.log("ANDYTEST: gcodefiles.loadFile: do_print: ", do_print);
             });
         };
 
@@ -266,11 +268,15 @@ $(function () {
         self.gcodefiles.onEventSlicingDone = function (payload) {
             var url = API_BASEURL + "files/" + payload.gcode_location + "/" + payload.gcode;
             var data = {refs: {resource: url}, origin: payload.gcode_location, path: payload.gcode};
-            self.gcodefiles.loadFile(data, false); // loads gcode into gcode viewer
+            var no_print = self.gcodefiles.loadFile(data, false); // loads gcode into gcode viewer
 
             var callback = function (e) {
                 e.preventDefault();
-                self.gcodefiles.loadFile(data, true); // starts print
+                if (self.workingArea.profile.currentProfileData().start_method() == "onebutton") {
+                    self.gcodefiles.setReadyToLaser(false);
+                } else {
+                    self.gcodefiles.loadFile(data, true); // starts print
+                }
             };
             self.show_safety_glasses_warning(callback);
 			self.gcodefiles.uploadProgress
@@ -286,8 +292,17 @@ $(function () {
                 type: "success"
             });
 
-            self.gcodefiles.requestData(undefined, undefined, self.gcodefiles.currentPath());
+            // self.gcodefiles.requestData(undefined, undefined, self.gcodefiles.currentPath());
+            self.gcodefiles.requestData({switchToPath: self.gcodefiles.currentPath()});
+
+            self.gcodefiles.setReadyToLaser(true, payload.gcode);
         };
+
+
+        self.gcodefiles.setReadyToLaser = function(ready, gcode) {
+            OctoPrint.simpleApiCommand("mrbeam", "ready_to_laser", {gcode: gcode, ready: ready});
+        }
+
 
         // settings.js viewmodel extensions
 
@@ -321,18 +336,26 @@ $(function () {
 
         self.show_safety_glasses_warning = function (callback) {
             var options = {};
-            options.title = gettext("Are you sure?");
-            options.cancel = gettext("Cancel");
-            options.proceed = gettext("Proceed");
+            options.title = gettext("Ready to laser?");
 
-            if(self.workingArea.profile.currentProfileData().glasses()){
-                options.message = gettext("The laser will now start. Protect yourself and everybody in the room appropriately before proceeding!");
-                options.question = gettext("Are you sure you want to proceed?");
-                options.proceedClass = "danger";
-                options.dialogClass = "safety_glasses_heads_up";
-            }else{
+            if (self.workingArea.profile.currentProfileData().start_method() == "onebutton") {
+                options.cancel = gettext("nothing");
+                options.proceed = gettext("Cancel");
+                options.proceedClass = "pull-left";
                 options.message = gettext("The laser will now start. Please make sure the lid is closed.");
-                options.question = gettext("Please confirm to proceed.");
+                options.question = gettext("Press OneButton to start");
+            } else {
+                if (self.workingArea.profile.currentProfileData().glasses()) {
+                options.cancel = gettext("Cancel");
+                options.proceed = gettext("Proceed");
+                    options.message = gettext("The laser will now start. Protect yourself and everybody in the room appropriately before proceeding!");
+                    options.question = gettext("Are you sure you want to proceed?");
+                    options.proceedClass = "danger";
+                    options.dialogClass = "safety_glasses_heads_up";
+                } else {
+                    options.message = gettext("The laser will now start. Please make sure the lid is closed.");
+                    options.question = gettext("Please confirm to proceed.");
+                }
             }
 
             options.onproceed = function (e) {
@@ -343,12 +366,43 @@ $(function () {
                     callback(e);
                 }
             };
-            showConfirmationDialog(options);
+            self.readyToLaserDialog = showConfirmationDialog(options);
         };
 
+        /**
+         * this is listening for data coming through the socket connection
+         */
+        self.onDataUpdaterPluginMessage = function(plugin, data) {
+            if (plugin != "mrbeam") {
+                return;
+            }
+            if (!data) {
+                console.warn("onDataUpdaterPluginMessage() received empty data for plugin '"+mrbeam+"'");
+                return;
+            }
+
+            if (data.ready_to_laser.startsWith("end")) {
+                console.log("ReadyToLaser state was ended by the server.");
+                if (self.readyToLaserDialog) {
+                    self.readyToLaserDialog.modal("hide");
+                    self.readyToLaserDialog = undefined;
+                }
+
+                if (data.ready_to_laser == "end_lasering") {
+                    new PNotify({
+                        title: gettext("Laser Started"),
+                        text: _.sprintf(gettext("It's real laser, baby!!! Be a little careful, don't leave Mr Beam alone...")),
+                        type: "success"
+                    });
+                }
+            }
+        }
+
+        // who calls this????
         self.print_with_safety_glasses_warning = function () {
             var callback = function (e) {
                 e.preventDefault();
+                /// ...and where is this function 'print()' defined???
                 self.print();
             };
             self.show_safety_glasses_warning(callback);
