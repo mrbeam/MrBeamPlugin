@@ -2,16 +2,25 @@
 import logging
 import yaml
 import os
+import subprocess
 
 
-
+SW_UPDATE_TIER_PROD =      "PROD"
+SW_UPDATE_TIER_DEV =       "DEV"
+SW_UPDATE_TIER_ANDY =      "ANDY"
+SW_UPDATE_TIER_NO_UPDATE = "NO_UPDATE"
 
 
 def get_update_information(self):
+
+
 	result = dict()
 
 	tier = self._settings.get(["dev", "software_tier"])
 	_logger(self).info("SoftwareUpdate using tier: %s", tier)
+
+	if tier in [SW_UPDATE_TIER_NO_UPDATE]:
+		return result
 
 	# configure OctoPrint
 	octoprint_configured = octoprint_checkout_folder(self, tier)
@@ -95,7 +104,7 @@ def get_info_mrbeam_plugin(self, tier):
 		branch="master",
 		pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip")
 
-	if tier in ["DEV"]:
+	if tier in [SW_UPDATE_TIER_DEV]:
 		result = dict(
 			displayName=_get_display_name(self, name, tier),
 			displayVersion=self._plugin_version,
@@ -105,7 +114,7 @@ def get_info_mrbeam_plugin(self, tier):
 			branch="develop",
 			pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip")
 
-	if tier in ["ANDY"]:
+	if tier in [SW_UPDATE_TIER_ANDY]:
 		result = dict(
 			displayName=_get_display_name(self, name, tier),
 			displayVersion=self._plugin_version,
@@ -160,7 +169,7 @@ def get_info_findmymrbeam(self, tier):
 		pip="https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
 		restart="octoprint")
 
-	if tier in ["DEV", "ANDY"]:
+	if tier in [SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_ANDY]:
 		result = dict(
 			displayName=_get_display_name(self, name, tier),
 			displayVersion=current_version,
@@ -177,6 +186,11 @@ def get_info_findmymrbeam(self, tier):
 def get_info_mrbeamledstrips(self, tier):
 	name = "MrBeam LED Strips"
 
+	installed = _sys_command(self, "mrbeam_ledstrips_cli")
+	self._logger.debug("MrBeam LEDs version output: %s", installed)
+	if not installed:
+		return None
+
 	result = dict(
 		displayName=_get_display_name(self, name),
 		type="github_commit",
@@ -186,7 +200,7 @@ def get_info_mrbeamledstrips(self, tier):
 		pip="https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
 		restart="environment")
 
-	if tier in ["DEV", "ANDY"]:
+	if tier in [SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_ANDY]:
 		result = dict(
 			displayName=_get_display_name(self, name),
 			type="github_commit",
@@ -205,6 +219,24 @@ def _get_display_name(self, name, tier=None):
 		return "{} ({})".format(name, tier)
 	else:
 		return name
+
+
+# Executes a system command in shell-mode
+# @Return If the command quit with returncode 0 this method returns the command's output or True if the output was empty
+#         If the command's returncode was anything other that 0, this method returns False; no exception will be raised.
+#		  In other words: The return value of this method will be True-ish if the command returned 0, False otherwise.
+def _sys_command(self, command):
+	result = None
+	try:
+		output = subprocess.check_output(command, shell=True)
+		if output:
+			result = output
+		else:
+			result = True
+	except subprocess.CalledProcessError as e:
+		result = False
+		self._logger.warn("System command quit with error %s. Command: '%s', output: %s ", e.returncode, e.cmd, e.output)
+	return result
 
 
 def _logger(self):

@@ -3,7 +3,6 @@ from __future__ import absolute_import
 
 
 # import logging as log
-from subprocess import check_output
 
 import octoprint.plugin
 import flask
@@ -26,6 +25,7 @@ from octoprint.server import admin_permission
 from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping
 from flask.ext.babel import gettext
 from flask import Blueprint, request, jsonify, make_response, url_for
+from subprocess import check_output
 
 import pprint
 import requests
@@ -1069,8 +1069,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			output = check_output(command, shell=True)
 			branch = output[1:].strip()
 		except Exception as e:
-			True
 			# 	self._logger.debug("getBranch: unable to exceute 'git branch' due to exception: %s", e)
+			pass
 
 		if not branch:
 			try:
@@ -1078,8 +1078,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				output = check_output(command, shell=True)
 				branch = output[1:].strip()
 			except Exception as e:
-				True
 				# 	self._logger.debug("getBranch: unable to exceute 'cd /home/pi/MrBeamPlugin/; git branch' due to exception: %s", e)
+				pass
 
 		return branch
 
