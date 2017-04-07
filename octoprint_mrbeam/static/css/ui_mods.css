@@ -13,3 +13,4 @@ li.nav-header { display: none }
 #settings_folders_link { display: none; }
 #settings_appearance_link { display: none; }
 #settings_plugin_announcements_link { display: none; }
+#settings_plugin_softwareupdate div.pull-right > button { display: none; }

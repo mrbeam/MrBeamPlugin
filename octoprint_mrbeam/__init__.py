@@ -12,6 +12,7 @@ from octoprint.util import dict_merge
 from octoprint.server import NO_CONTENT
 
 from .profile import LaserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
+from .software_update_information import get_update_information
 # from .state.ledstrips import LEDstrips
 
 import copy
@@ -44,7 +45,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	# CONSTANTS
 
-	GLOBAL_SETTINGS_KEY_DEVEL_MRBEAM_CLOUD_ENV = ["devel", "mrbeam", "cloud_env"]
+	SETTINGS_KEY_DEVEL_MRBEAM_CLOUD_ENV = ["dev", "cloud_env"]
 	LASERSAFETY_CONFIRMATION_STORAGE_URL = 'https://script.google.com/a/macros/mr-beam.org/s/AKfycby3Y1RLBBiGPDcIpIg0LHd3nwgC7GjEA4xKfknbDLjm3v9-LjG1/exec'
 	USER_SETTINGS_KEY_MRBEAM = 'mrbeam'
 	USER_SETTINGS_KEY_TIMESTAMP = 'ts'
@@ -78,6 +79,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._logger.exception("Exception while getting NetconnectdPlugin pluginInfo")
 
 
+
 	def _convert_profiles(self, profiles):
 		result = dict()
 		for identifier, profile in profiles.items():
@@ -108,7 +110,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			camera_offset_x=0,
 			camera_offset_y=0,
 			camera_scale=1,
-			camera_rotation=0
+			camera_rotation=0,
+			dev=dict(
+				software_tier="PROD"
+			)
 		)
 
 	def on_settings_load(self):
@@ -190,8 +195,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		wizard = render_kwargs["templates"] is not None and bool(render_kwargs["templates"]["wizard"]["order"])
 
 		if render_kwargs["templates"]["wizard"]["entries"]:
-			render_kwargs["templates"]["wizard"]["entries"]["firstrunstart"][1]["template"] = "wizard/firstrun_start.jinja2"
-			render_kwargs["templates"]["wizard"]["entries"]["firstrunend"][1]["template"] = "wizard/firstrun_end.jinja2"
+			if render_kwargs["templates"]["wizard"]["entries"]["firstrunstart"]:
+				render_kwargs["templates"]["wizard"]["entries"]["firstrunstart"][1]["template"] = "wizard/firstrun_start.jinja2"
+			if render_kwargs["templates"]["wizard"]["entries"]["firstrunend"]:
+				render_kwargs["templates"]["wizard"]["entries"]["firstrunend"][1]["template"] = "wizard/firstrun_end.jinja2"
 
 		render_kwargs.update(dict(
 							 webcamStream=self._settings.global_get(["webcam", "stream"]),
@@ -442,7 +449,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		force = bool(data.get('force', False))
 		if submissionDate <= 0 or force:
 			# get cloud env to use
-			debug = self._settings.global_get(self.GLOBAL_SETTINGS_KEY_DEVEL_MRBEAM_CLOUD_ENV)
+			debug = self._settings.global_get(self.SETTINGS_KEY_DEVEL_MRBEAM_CLOUD_ENV)
 
 			payload = {'ts': data.get('ts', ''),
 					   'email': data.get('username', ''),
@@ -980,25 +987,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	##~~ Softwareupdate hook
 
 	def get_update_information(self):
-		# Define the configuration for your plugin to use with the Software Update
-		# Plugin here. See https://github.com/foosel/OctoPrint/wiki/Plugin:-Software-Update
-		# for details.
-		return dict(
-			mrbeam=dict(
-				displayName="Mr Beam Laser Cutter",
-				displayVersion=self._plugin_version,
-
-				# version check: github repository
-				type="github_release",
-				user="mrbeam",
-				repo="MrBeamPlugin",
-				branch="develop",
-				current=self._plugin_version,
-
-				# update method: pip
-				pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip"
-			)
-		)
+		# calling from .software_update_information import get_update_information
+		return get_update_information(self)
 
 	# inject a Laser object instead the original Printer from standard.py
 	def laser_factory(self, components, *args, **kwargs):
@@ -1081,7 +1071,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		except Exception as e:
 			True
 			# 	self._logger.debug("getBranch: unable to exceute 'git branch' due to exception: %s", e)
-			
+
 		if not branch:
 			try:
 				command = "cd /home/pi/MrBeamPlugin/; git branch | grep '*'"
@@ -1090,7 +1080,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			except Exception as e:
 				True
 				# 	self._logger.debug("getBranch: unable to exceute 'cd /home/pi/MrBeamPlugin/; git branch' due to exception: %s", e)
-			
+
 		return branch
 
 
@@ -1136,7 +1126,6 @@ def __plugin_load__():
 		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
 		"octoprint.printer.factory": __plugin_implementation__.laser_factory,
 		"octoprint.filemanager.extension_tree": __plugin_implementation__.laser_filemanager,
-		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
 		"octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook
 		#"octoprint.server.http.routes": __plugin_implementation__.serve_url
 	}
