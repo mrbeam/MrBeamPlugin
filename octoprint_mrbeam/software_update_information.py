@@ -2,61 +2,38 @@
 import logging
 import yaml
 import os
+import subprocess
 
 
 
+SW_UPDATE_TIER_PROD =      "PROD"
+SW_UPDATE_TIER_DEV =       "DEV"
+SW_UPDATE_TIER_ANDY =      "ANDY"
+SW_UPDATE_TIER_NO_UPDATE = "NO_UPDATE"
+
+sw_update_config = dict()
 
 
 def get_update_information(self):
-	result = dict()
+	# sw_update_config = dict()
 
 	tier = self._settings.get(["dev", "software_tier"])
 	_logger(self).info("SoftwareUpdate using tier: %s", tier)
 
-	# configure OctoPrint
-	octoprint_configured = octoprint_checkout_folder(self, tier)
+	if not tier in [SW_UPDATE_TIER_NO_UPDATE]:
 
-	# mrbeam plugin
-	result['mrbeam'] = get_info_mrbeam_plugin(self, tier)
+		octoprint_configured = octoprint_checkout_folder(self, tier)
 
-	# netconnectd plugin
-	config_netconnectd_plugin = get_info_netconnectd_plugin(self, tier)
-	if config_netconnectd_plugin is not None: result['netconnectd'] = config_netconnectd_plugin
+		get_info_mrbeam_plugin(self, tier)
+		get_info_mrbeam_plugin(self, tier)
+		get_info_findmymrbeam(self, tier)
+		get_info_mrbeamledstrips(self, tier)
+		get_info_netconnectd_daemon(self, tier)
+		get_info_pcf8575(self, tier)
 
-	# findmymrbeam
-	config_findmymrbeam = get_info_findmymrbeam(self, tier)
-	if config_findmymrbeam is not None: result['findmymrbeam'] = config_findmymrbeam
+	_logger(self).debug("MrBeam Plugin provides this config (might be overridden by settings!):\n%s", yaml.dump(sw_update_config, width=50000).strip())
 
-	# mrbeam_ledstrips
-	config_mrbeam_ledstrips = get_info_mrbeamledstrips(self, tier)
-	if config_mrbeam_ledstrips is not None: result['mrbeam-ledstrips'] = config_mrbeam_ledstrips
-
-
-	# netconnectd daemon:
-	name = "Netconnectd"
-	path = "/home/pi/netconnectd"
-	if (os.path.isdir(path)):
-		result['netconnectd-daemon'] = dict(
-			displayName=_get_display_name(self, name),
-			type="git_commit",
-			checkout_folder=path,
-			update_script="{folder}/update.sh")
-
-
-	# pcf8575:
-	name = "pcf8575"
-	path = "/home/pi/pcf8575"
-	if (os.path.isdir(path)):
-		result['pcf8575'] = dict(
-			displayName=_get_display_name(self, name),
-			type="git_commit",
-			checkout_folder=path,
-			update_script="{folder}/update.sh")
-
-
-	_logger(self).debug("Using config:\n%s", yaml.dump(result))
-
-	return result
+	return sw_update_config
 
 # We need octoprint's checkout_folder to be set in config.yaml
 # (These's no way to set sw_update config for octoprint from the third party plugin update_hooks)
@@ -85,8 +62,11 @@ def octoprint_checkout_folder(self, tier):
 
 def get_info_mrbeam_plugin(self, tier):
 	name = "MrBeam Plugin"
+	module_id = "mrbeam"
 
-	result = dict(
+	if _is_override_in_settings(self, module_id): return
+
+	sw_update_config[module_id] = dict(
 		displayName=_get_display_name(self, name),
 		displayVersion=self._plugin_version,
 		type="github_release",
@@ -95,8 +75,8 @@ def get_info_mrbeam_plugin(self, tier):
 		branch="master",
 		pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip")
 
-	if tier in ["DEV"]:
-		result = dict(
+	if tier in [SW_UPDATE_TIER_DEV]:
+		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name, tier),
 			displayVersion=self._plugin_version,
 			type="github_commit",
@@ -105,8 +85,8 @@ def get_info_mrbeam_plugin(self, tier):
 			branch="develop",
 			pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip")
 
-	if tier in ["ANDY"]:
-		result = dict(
+	if tier in [SW_UPDATE_TIER_ANDY]:
+		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name, tier),
 			displayVersion=self._plugin_version,
 			type="github_commit",
@@ -115,19 +95,18 @@ def get_info_mrbeam_plugin(self, tier):
 			branch="andy_softwareupdate_test1",
 			pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip")
 
-	return result
-
 
 def get_info_netconnectd_plugin(self, tier):
 	name = "OctoPrint-Netconnectd Plugin"
+	module_id = "netconnectd"
 
-	pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
-	if pluginInfo is None:
-		return None
+	if _is_override_in_settings(self, module_id): return
 
+	pluginInfo = self._plugin_manager.get_plugin_info(module_id)
+	if pluginInfo is None: return
 	current_version = pluginInfo.version
 
-	result = dict(
+	sw_update_config[module_id] = dict(
 		displayName=_get_display_name(self, name),
 		displayVersion=current_version,
 		type="github_commit",
@@ -137,20 +116,18 @@ def get_info_netconnectd_plugin(self, tier):
 		pip="https://github.com/mrbeam/OctoPrint-Netconnectd/archive/{target_version}.zip",
 		restart="octoprint")
 
-	return result
-
 
 def get_info_findmymrbeam(self, tier):
 	name = "OctoPrint-FindMyMrBeam"
+	module_id = "findmymrbeam"
 
-	pluginInfo = self._plugin_manager.get_plugin_info("findmymrbeam")
+	if _is_override_in_settings(self, module_id): return
 
-	if pluginInfo is None:
-		return None
-
+	pluginInfo = self._plugin_manager.get_plugin_info(module_id)
+	if pluginInfo is None: return
 	current_version = pluginInfo.version
 
-	result = dict(
+	sw_update_config[module_id] = dict(
 		displayName=_get_display_name(self, name),
 		displayVersion=current_version,
 		type="github_commit",
@@ -160,8 +137,8 @@ def get_info_findmymrbeam(self, tier):
 		pip="https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
 		restart="octoprint")
 
-	if tier in ["DEV", "ANDY"]:
-		result = dict(
+	if tier in [SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_ANDY]:
+		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name, tier),
 			displayVersion=current_version,
 			type="github_commit",
@@ -171,13 +148,17 @@ def get_info_findmymrbeam(self, tier):
 			pip="https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
 			restart="octoprint")
 
-	return result
-
 
 def get_info_mrbeamledstrips(self, tier):
 	name = "MrBeam LED Strips"
+	module_id = "mrbeam-ledstrips"
 
-	result = dict(
+	if _is_override_in_settings(self, module_id): return
+	returncode, output = _sys_command(self, "mrbeam_ledstrips_cli")
+	_logger(self).debug("MrBeam LEDs - returncode: %s, output: %s", returncode, output)
+	if returncode == 127: return
+
+	sw_update_config[module_id] = dict(
 		displayName=_get_display_name(self, name),
 		type="github_commit",
 		user="mrbeam",
@@ -186,8 +167,8 @@ def get_info_mrbeamledstrips(self, tier):
 		pip="https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
 		restart="environment")
 
-	if tier in ["DEV", "ANDY"]:
-		result = dict(
+	if tier in [SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_ANDY]:
+		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name),
 			type="github_commit",
 			user="mrbeam",
@@ -196,15 +177,65 @@ def get_info_mrbeamledstrips(self, tier):
 			pip="https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
 			restart="environment")
 
-	return result
 
+def get_info_netconnectd_daemon(self, tier):
+	name = "Netconnectd Daemon"
+	module_id = "netconnectd-daemon"
+	path = "/home/pi/netconnectd"
+
+	if _is_override_in_settings(self, module_id): return
+
+	if (os.path.isdir(path)):
+		sw_update_config[module_id] = dict(
+			displayName=_get_display_name(self, name),
+			type="git_commit",
+			checkout_folder=path,
+			update_script="{folder}/update.sh")
+
+
+def get_info_pcf8575(self, tier):
+	name = "pcf8575"
+	module_id = "pcf8575"
+	path = "/home/pi/pcf8575"
+
+	if _is_override_in_settings(self, module_id): return
+
+	if (os.path.isdir(path)):
+		sw_update_config[module_id] = dict(
+			displayName=_get_display_name(self, name),
+			type="git_commit",
+			checkout_folder=path,
+			update_script="{folder}/update.sh")
 
 
 def _get_display_name(self, name, tier=None):
-	if tier is not None and not tier == "PROD":
+	if tier is not None and not tier == SW_UPDATE_TIER_PROD:
 		return "{} ({})".format(name, tier)
 	else:
 		return name
+
+
+def _is_override_in_settings(self, module_id):
+	settings_path = ["plugins", "softwareupdate", "checks", module_id, "override"]
+	is_override = self._settings.global_get(settings_path)
+	if is_override:
+		_logger(self).info("Module %s has overriding config in settings!", module_id)
+		return True
+ 	return False
+
+
+# Executes a system command in shell-mode
+def _sys_command(self, command):
+	returncode = -1
+	output = None
+	try:
+		output = subprocess.check_output(command, shell=True)
+		returncode = 0
+	except subprocess.CalledProcessError as e:
+		output = e.output
+		returncode = e.returncode
+		_logger(self).warn("System command quit with error %s. Command: '%s', output: %s ", e.returncode, e.cmd, e.output)
+	return (returncode, output)
 
 
 def _logger(self):
