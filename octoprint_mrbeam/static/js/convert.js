@@ -113,7 +113,7 @@ $(function(){
 				var param_set = self.materials_settings[material];
 				var p = $(ev.target).parents('.job_row_vector');
 				$(p).find('.job_title').html(material);
-				$(p).find('.param_intensity').val(param_set[0]);
+				$(p).find('.param_intensity').val(parseInt(param_set[0]/10));
 				$(p).find('.param_feedrate').val(param_set[1]);
 				$(p).find('.param_passes').val(1); // currently no passes in the data structure
 			}
@@ -242,7 +242,7 @@ $(function(){
 		self.get_current_multicolor_settings = function () {
 			var data = [];
 			$('.job_row_vector').each(function(i, pass){
-				var intensity = $(pass).find('.param_intensity').val();
+				var intensity = $(pass).find('.param_intensity').val() * 10 ;
 				var feedrate = $(pass).find('.param_feedrate').val();
 				var piercetime = $(pass).find('.param_piercetime').val();
 				var passes = $(pass).find('.param_passes').val();

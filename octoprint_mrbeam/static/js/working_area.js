@@ -1188,7 +1188,7 @@ $(function(){
          */
         self.currentQuickText.subscribe(function(nuText) {
             if (self.currentQuickTextFile) {
-                self.currentQuickTextFile.name = $.trim(nuText);
+                self.currentQuickTextFile.name = nuText;
             }
             self._qt_currentQuickTextUpdate();
         });
@@ -1309,10 +1309,8 @@ $(function(){
 
             var uc = snap.select("#userContent");
             var text = uc.text(400, 300, placeholderText);
-            text.attr({
-                'font-size': 70,
-                'font-family': 'Ubuntu'
-            });
+            text.attr('style', 'white-space: pre; font-size: 70; font-family: Ubuntu');
+
             var box = uc.rect(); // will be placed and sized by self._qt_currentQuickTextUpdateText()
             box.attr({
                 opacity: "0",
