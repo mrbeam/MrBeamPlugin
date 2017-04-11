@@ -7,7 +7,7 @@ import os
 import sys
 import threading
 import time
-from octoprint_mrbeam.iobeam_handler import ioBeamHandler, IoBeamEvents, OneButtonHandler
+from octoprint_mrbeam.iobeam_handler import ioBeamHandler, IoBeamEvents, ReadyToLaserStateManager
 
 
 # hint: to get the output with timestamps:
@@ -34,8 +34,14 @@ class IoBeamHandlerTestCase(unittest.TestCase):
 		time.sleep(.01)
 
 		#init OneButtonHandler
+		self._plugin_manager_mock = mock.MagicMock(name="_plugin_manager_mock")
+		self._file_manager_mock = mock.MagicMock(name="_file_manager_mock")
+		self._file_manager_mock.path_on_disk.return_value("someFileName")
 		self._printer_mock = mock.MagicMock(name="_printer_mock")
-		self._oneButtonHandler = OneButtonHandler(self.event_bus_mock, self._printer_mock)
+		self._oneButtonHandler = ReadyToLaserStateManager(self.event_bus_mock,
+														  self._plugin_manager_mock,
+														  self._file_manager_mock,
+														  self._printer_mock)
 
 		self.event_bus_mock.reset_mock()
 		self._logger.debug("setUp() DONE --------------------")
@@ -65,10 +71,10 @@ class IoBeamHandlerTestCase(unittest.TestCase):
 
 	@ddt.data(
 		# ( [list of mesages to send], [ list of tuples (event, payload)] )
-		(["intlk:0:op"], [(IoBeamEvents.INTERLOCK_OPEN, None)], False),
+		(["intlk:0:op"], [(IoBeamEvents.INTERLOCK_OPEN, ['0'])], False),
 		(["intlk:2:cl"], [], True),
-		(["intlk:0:op", "intlk:2:cl", "intlk:1:cl"], [(IoBeamEvents.INTERLOCK_OPEN, None)], False),
-		(["intlk:0:op", "intlk:2:cl", "intlk:0:cl"], [(IoBeamEvents.INTERLOCK_OPEN, None), (IoBeamEvents.INTERLOCK_CLOSED, None)], True),
+		(["intlk:0:op", "intlk:2:cl", "intlk:1:cl"], [(IoBeamEvents.INTERLOCK_OPEN, ['0'])], False),
+		(["intlk:0:op", "intlk:2:cl", "intlk:0:cl"], [(IoBeamEvents.INTERLOCK_OPEN, ['0']), (IoBeamEvents.INTERLOCK_CLOSED, None)], True),
 	)
 	@ddt.unpack
 	def test_interlocks(self, messages, expectations, expectation_closed_in_the_end):

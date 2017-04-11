@@ -7,12 +7,13 @@ from __future__ import absolute_import
 import octoprint.plugin
 import flask
 
+
 from octoprint.util import dict_merge
 from octoprint.server import NO_CONTENT
 from octoprint.events import Events
 
 from .profile import LaserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
-from octoprint_mrbeam.iobeam_handler import ioBeamHandler, OneButtonHandler
+from octoprint_mrbeam.iobeam_handler import ioBeamHandler, ReadyToLaserStateManager, InterLockHandler
 from octoprint_mrbeam.led_events import LedEventListener, MrBeamEvents
 from .software_update_information import get_update_information
 # from .state.ledstrips import LEDstrips
@@ -24,6 +25,9 @@ import logging
 import threading
 import json
 import click
+import pprint
+import requests
+import socket
 from octoprint.server.util.flask import restricted_access, get_json_command_from_request, add_non_caching_response_headers
 from octoprint.server import admin_permission
 from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping
@@ -32,11 +36,8 @@ from flask import Blueprint, request, jsonify, make_response, url_for
 from subprocess import check_output
 
 
-import pprint
-import requests
-import socket
-
-
+import __builtin__
+__builtin__.MRBEAM_DEBUG = False
 
 class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
                    octoprint.plugin.AssetPlugin,
@@ -74,11 +75,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def initialize(self):
 		self.laserCutterProfileManager = LaserCutterProfileManager(self._settings)
+		if self._settings.get(["dev", "debug"]) == True: __builtin__.MRBEAM_DEBUG = True
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam")
 		self._branch = self.getBranch()
 		self._hostname = self.getHostname()
-		self._logger.info("MrBeam Plugin initialize()  version: %s, branch: %s, host: %s",
-						  self._plugin_version, self._branch, self._hostname)
+		self._logger.info("MrBeam Plugin initializeing: version: %s, branch: %s, host: %s %s",
+						  self._plugin_version, self._branch, self._hostname, ("MRBEAM_DEBUG" if MRBEAM_DEBUG else ""))
 		try:
 			pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
 			if pluginInfo is None:
@@ -87,7 +89,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._logger.exception("Exception while getting NetconnectdPlugin pluginInfo")
 
 		self._ioBeam = ioBeamHandler(self._event_bus, self._settings.get(["dev", "sockets", "iobeam"]))
-		self._oneButtonHandler = OneButtonHandler(self._event_bus, self._plugin_manager, self._file_manager, self._printer)
+		self._oneButtonHandler = ReadyToLaserStateManager(self._event_bus, self._plugin_manager, self._file_manager, self._printer)
+		self._interlock_handler = InterLockHandler(self._ioBeam, self._event_bus, self._plugin_manager)
 		self._led_eventhandler = LedEventListener(self._event_bus, self._printer)
 
 
@@ -178,7 +181,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/working_area.js", "js/camera.js", "js/lib/snap.svg-min.js", "js/render_fills.js", "js/path_convert.js",
 				"js/matrix_oven.js", "js/drag_scale_rotate.js",	"js/convert.js", "js/gcode_parser.js",
 				"js/lib/photobooth_min.js", "js/svg_cleaner.js", "js/loginscreen_viewmodel.js",
-				"js/wizard_acl.js", "js/netconnectd_wrapper.js", "js/lasersaftey_viewmodel.js"],
+				"js/wizard_acl.js", "js/netconnectd_wrapper.js", "js/lasersaftey_viewmodel.js",
+				"js/ready_to_laser_viewmodel.js"],
 			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css", "css/quicktext-fonts.css"],
 			less=["less/mrbeam.less"]
 		)
@@ -212,6 +216,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			if render_kwargs["templates"]["wizard"]["entries"]["firstrunend"]:
 				render_kwargs["templates"]["wizard"]["entries"]["firstrunend"][1]["template"] = "wizard/firstrun_end.jinja2"
 
+		display_version_string = "{} on {}".format(self._plugin_version, self._hostname)
+		if self._branch:
+			display_version_string = "{} ({} branch) on {}".format(self._plugin_version, self._branch, self._hostname)
+		if MRBEAM_DEBUG:
+			display_version_string += " MRBEAM_DEBUG"
+
 		render_kwargs.update(dict(
 							 webcamStream=self._settings.global_get(["webcam", "stream"]),
 							 enableFocus=enable_focus,
@@ -227,9 +237,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 beamosVersion= dict(
 								number = self._plugin_version,
 								branch= self._branch,
-								display_version = "{} ({} branch) on {}".format(
-									self._plugin_version, self._branch, self._hostname) if self._branch else (self._plugin_version, self._hostname)
-								)
+								display_version = display_version_string),
+							 MRBEAM_DEBUG=MRBEAM_DEBUG
 							 ))
 		r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
 

@@ -9,6 +9,7 @@ from octoprint.events import Events as OctoPrintEvents
 from octoprint.filemanager import valid_file_type
 
 
+
 # singleton
 _instance = None
 
@@ -95,7 +96,6 @@ class IoBeamHandler(object):
 	def __init__(self, event_bus, socket_file=None):
 		self._event_bus = event_bus
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam")
-		self._logger.debug("initializing EventManagerMrb")
 
 		self._shutdown_signaled = False
 		self._isConnected = False
@@ -121,6 +121,8 @@ class IoBeamHandler(object):
 	def is_interlock_closed(self):
 		return len(self._interlocks.keys()) == 0
 
+	def open_interlocks(self):
+		return self._interlocks.keys()
 
 	def _initWorker(self, socket_file=None):
 		self._logger.debug("initializing worker thread")
@@ -135,7 +137,7 @@ class IoBeamHandler(object):
 
 
 	def _work(self):
-		self._logger.debug("Worker thread starting, connecting to socket: %s", self.SOCKET_FILE)
+		self._logger.debug("Worker thread starting, connecting to socket: %s %s", self.SOCKET_FILE, ("MRBEAM_DEBUG" if MRBEAM_DEBUG else ""))
 
 		while not self._shutdown_signaled:
 			mySocket = None
@@ -162,8 +164,13 @@ class IoBeamHandler(object):
 				try:
 					data = mySocket.recv(self.MESSAGE_LENGTH_MAX)
 				except Exception as e:
-					self._logger.warn("Exception while sockect.recv(): %s - Resetting connection...", e)
-					break
+					if MRBEAM_DEBUG and e.message == "timed out":
+						self._logger.warn("Connection stale but MRBEAM_DEBUG enabled. Continuing....")
+						continue
+					else:
+						self._logger.warn("Exception while sockect.recv(): %s - Resetting connection...", e)
+						break
+
 
 				if not data:
 					self._logger.warn("Connection ended from other side. Closing connection...")
@@ -252,7 +259,7 @@ class IoBeamHandler(object):
 	def _handle_interlock_message(self, message, tokens):
 		lock_num = tokens[0] if len(tokens) > 0 else None
 		lock_state = tokens[1] if len(tokens) > 1 else None
-		before_state = self.is_interlock_closed()
+		before_state = self.open_interlocks()
 		self._logger.debug("_handle_interlock_message() message: %s, lock_num: %s, lock_state: %s, before_state: %s", message, lock_num, lock_state, before_state)
 
 		if lock_num is not None and lock_state == self.MESSAGE_ACTION_INTERLOCK_OPEN:
@@ -264,12 +271,12 @@ class IoBeamHandler(object):
 		else:
 			return self._handle_invalid_message(message)
 
-		now_state = self.is_interlock_closed()
+		now_state = self.open_interlocks()
 		if now_state != before_state:
-			if now_state:
+			if self.is_interlock_closed():
 				self._fireEvent(IoBeamEvents.INTERLOCK_CLOSED)
 			else:
-				self._fireEvent(IoBeamEvents.INTERLOCK_OPEN)
+				self._fireEvent(IoBeamEvents.INTERLOCK_OPEN, now_state)
 
 		return True
 
@@ -300,7 +307,9 @@ class IoBeamHandler(object):
 			return None
 
 
-class OneButtonHandler(object):
+# This guy handles OneButton Events.
+# it basically also handles the ReadyToLaser state
+class ReadyToLaserStateManager(object):
 
 	PRINTER_STATE_PRINTING = "PRINTING"
 	READY_TO_PRINT_MAX_WAITING_TIME = 120
@@ -311,7 +320,7 @@ class OneButtonHandler(object):
 		self._plugin_manager = plugin_manager
 		self._file_manager = file_manager
 		self._printer = printer
-		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam.onebuttonhandler")
+		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam.readytolaserman")
 		self._subscribe()
 
 		self.ready_to_laser_ts = -1
@@ -341,6 +350,7 @@ class OneButtonHandler(object):
 		self.ready_to_laser_file = gcode_file
 		self.ready_to_laser_ts = time.time()
 		self._event_bus.fire(MrBeamEvents.READY_TO_LASER_START)
+		self._plugin_manager.send_plugin_message("mrbeam", dict(ready_to_laser="start"))
 		self._check_if_still_ready_to_laser()
 
 	def unset_ready_to_laser(self, lasering=False):
@@ -396,6 +406,45 @@ class OneButtonHandler(object):
 		if self.ready_to_laser_timer is not None:
 			self.ready_to_laser_timer.cancel()
 			self.ready_to_laser_timer = None
+
+
+# This guy handles InterLock Events
+# Honestly, I'm not sure if we need a separate handler for this...
+class InterLockHandler(object):
+
+	def __init__(self, iobeam_handler, event_bus, plugin_manager):
+		self._iobeam_handler = iobeam_handler
+		self._event_bus = event_bus
+		self._plugin_manager = plugin_manager
+		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam.interlockhandler")
+
+		self._subscribe()
+
+
+	def _subscribe(self):
+		self._event_bus.subscribe(IoBeamEvents.INTERLOCK_OPEN, self.onEvent)
+		self._event_bus.subscribe(IoBeamEvents.INTERLOCK_CLOSED, self.onEvent)
+		self._event_bus.subscribe(MrBeamEvents.READY_TO_LASER_START, self.onEvent)
+		# self._event_bus.subscribe(IoBeamEvents.DISCONNECT, self.onEvent)
+
+
+	def onEvent(self, event, payload):
+		if event == IoBeamEvents.INTERLOCK_OPEN \
+				or event == IoBeamEvents.INTERLOCK_CLOSED \
+				or event == MrBeamEvents.READY_TO_LASER_START:
+			self.send_state()
+
+
+	def send_state(self):
+		self._plugin_manager.send_plugin_message("mrbeam",
+						 dict(interlocks_closed=self._iobeam_handler.is_interlock_closed(),
+							  interlocks_open=self._iobeam_handler.open_interlocks()))
+
+
+
+
+
+
 
 
 
