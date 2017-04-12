@@ -25,7 +25,7 @@ def get_update_information(self):
 		octoprint_configured = octoprint_checkout_folder(self, tier)
 
 		get_info_mrbeam_plugin(self, tier)
-		get_info_mrbeam_plugin(self, tier)
+		get_info_netconnectd_plugin(self, tier)
 		get_info_findmymrbeam(self, tier)
 		get_info_mrbeamledstrips(self, tier)
 		get_info_netconnectd_daemon(self, tier)
@@ -76,23 +76,25 @@ def get_info_mrbeam_plugin(self, tier):
 		pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip")
 
 	if tier in [SW_UPDATE_TIER_DEV]:
+		branch = "develop"
 		sw_update_config[module_id] = dict(
-			displayName=_get_display_name(self, name, tier),
+			displayName=_get_display_name(self, name, tier, branch),
 			displayVersion=self._plugin_version,
 			type="github_commit",
 			user="mrbeam",
 			repo="MrBeamPlugin",
-			branch="develop",
+			branch=branch,
 			pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip")
 
 	if tier in [SW_UPDATE_TIER_ANDY]:
+		branch = "andy_softwareupdate_test1"
 		sw_update_config[module_id] = dict(
-			displayName=_get_display_name(self, name, tier),
+			displayName=_get_display_name(self, name, tier, branch),
 			displayVersion=self._plugin_version,
 			type="github_commit",
 			user="mrbeam",
 			repo="MrBeamPlugin",
-			branch="andy_softwareupdate_test1",
+			branch=branch,
 			pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip")
 
 
@@ -138,13 +140,14 @@ def get_info_findmymrbeam(self, tier):
 		restart="octoprint")
 
 	if tier in [SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_ANDY]:
+		branch = "develop"
 		sw_update_config[module_id] = dict(
-			displayName=_get_display_name(self, name, tier),
+			displayName=_get_display_name(self, name, tier, branch),
 			displayVersion=current_version,
 			type="github_commit",
 			user="mrbeam",
 			repo="OctoPrint-FindMyMrBeam",
-			branch="develop",
+			branch=branch,
 			pip="https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
 			restart="octoprint")
 
@@ -168,12 +171,13 @@ def get_info_mrbeamledstrips(self, tier):
 		restart="environment")
 
 	if tier in [SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_ANDY]:
+		branch = "develop"
 		sw_update_config[module_id] = dict(
-			displayName=_get_display_name(self, name),
+			displayName=_get_display_name(self, name, tier, branch),
 			type="github_commit",
 			user="mrbeam",
 			repo="MrBeamLedStrips",
-			branch="develop",
+			branch=branch,
 			pip="https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
 			restart="environment")
 
@@ -208,9 +212,12 @@ def get_info_pcf8575(self, tier):
 			update_script="{folder}/update.sh")
 
 
-def _get_display_name(self, name, tier=None):
+def _get_display_name(self, name, tier=None, branch=None):
 	if tier is not None and not tier == SW_UPDATE_TIER_PROD:
-		return "{} ({})".format(name, tier)
+		if branch is not None:
+			return "{} ({}:{})".format(name, tier, branch)
+		else:
+			return "{} ({})".format(name, tier)
 	else:
 		return name
 
