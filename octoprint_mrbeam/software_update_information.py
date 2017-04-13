@@ -73,7 +73,8 @@ def get_info_mrbeam_plugin(self, tier):
 		user="mrbeam",
 		repo="MrBeamPlugin",
 		branch="master",
-		pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip")
+		pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
+		restart="octoprint")
 
 	if tier in [SW_UPDATE_TIER_DEV]:
 		branch = "develop"
@@ -84,7 +85,8 @@ def get_info_mrbeam_plugin(self, tier):
 			user="mrbeam",
 			repo="MrBeamPlugin",
 			branch=branch,
-			pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip")
+			pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
+			restart="octoprint")
 
 	if tier in [SW_UPDATE_TIER_ANDY]:
 		branch = "andy_softwareupdate_test1"
@@ -95,7 +97,8 @@ def get_info_mrbeam_plugin(self, tier):
 			user="mrbeam",
 			repo="MrBeamPlugin",
 			branch=branch,
-			pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip")
+			pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
+			restart="octoprint")
 
 
 def get_info_netconnectd_plugin(self, tier):
@@ -155,46 +158,65 @@ def get_info_findmymrbeam(self, tier):
 def get_info_mrbeamledstrips(self, tier):
 	name = "MrBeam LED Strips"
 	module_id = "mrbeam-ledstrips"
+	# ths module is installed outside of our virtualenv therefor we can't use default pip command.
+	# /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
+	pip_command = "sudo /usr/local/bin/pip"
+	pip_name = "mrbeam-ledstrips"
 
 	if _is_override_in_settings(self, module_id): return
-	returncode, output = _sys_command(self, "mrbeam_ledstrips_cli")
-	_logger(self).debug("MrBeam LEDs - returncode: %s, output: %s", returncode, output)
-	if returncode == 127: return
+
+	version = get_version_of_pip_module(self, pip_name, pip_command)
+	if version is None: return
 
 	sw_update_config[module_id] = dict(
 		displayName=_get_display_name(self, name),
+		displayVersion=version,
 		type="github_commit",
 		user="mrbeam",
 		repo="MrBeamLedStrips",
 		branch="mrbeam2-stable",
 		pip="https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
+		pip_command=pip_command,
 		restart="environment")
 
 	if tier in [SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_ANDY]:
 		branch = "develop"
 		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name, tier, branch),
+			displayVersion=version,
 			type="github_commit",
 			user="mrbeam",
 			repo="MrBeamLedStrips",
 			branch=branch,
 			pip="https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
+			pip_command=pip_command,
 			restart="environment")
 
 
 def get_info_netconnectd_daemon(self, tier):
 	name = "Netconnectd Daemon"
 	module_id = "netconnectd-daemon"
-	path = "/home/pi/netconnectd"
+	branch = "mrbeam2-stable"
+	# ths module is installed outside of our virtualenv therefor we can't use default pip command.
+	# /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
+	pip_command = "sudo /usr/local/bin/pip"
+	pip_name = "netconnectd"
 
 	if _is_override_in_settings(self, module_id): return
 
-	if (os.path.isdir(path)):
-		sw_update_config[module_id] = dict(
-			displayName=_get_display_name(self, name),
-			type="git_commit",
-			checkout_folder=path,
-			update_script="{folder}/update.sh")
+	version = get_version_of_pip_module(self, pip_name, pip_command)
+	if version is None: return
+
+	sw_update_config[module_id] = dict(
+		displayName=_get_display_name(self, name, tier, branch),
+		displayVersion=version,
+		type="github_commit",
+		user="mrbeam",
+		repo="netconnectd_mrbeam",
+		branch=branch,
+		pip="https://github.com/mrbeam/netconnectd_mrbeam/archive/{target_version}.zip",
+		pip_command=pip_command,
+		restart="environment")
 
 
 def get_info_pcf8575(self, tier):
@@ -229,6 +251,23 @@ def _is_override_in_settings(self, module_id):
 		_logger(self).info("Module %s has overriding config in settings!", module_id)
 		return True
  	return False
+
+
+def get_version_of_pip_module(self, pip_name, pip_command=None):
+	version = None
+	if pip_command is None: pip_command = "pip"
+	command = "{pip_command} freeze".format(pip_command=pip_command)
+	returncode, output = _sys_command(self, command)
+	if returncode == 0:
+		lines = output.splitlines()
+		for myLine in lines:
+			token = myLine.split("==")
+			if len(token) >= 2 and token[0] == pip_name:
+				version = token[1]
+				break
+	_logger(self).debug("get_version_of_pip_module() version of pip module %s is %s (pip command %s returned %s)",
+						pip_name, version, pip_command, returncode)
+	return version
 
 
 # Executes a system command in shell-mode
