@@ -24,12 +24,12 @@ def get_update_information(self):
 
 		octoprint_configured = octoprint_checkout_folder(self, tier)
 
-		get_info_mrbeam_plugin(self, tier)
-		get_info_netconnectd_plugin(self, tier)
-		get_info_findmymrbeam(self, tier)
-		get_info_mrbeamledstrips(self, tier)
-		get_info_netconnectd_daemon(self, tier)
-		get_info_pcf8575(self, tier)
+		set_info_mrbeam_plugin(self, tier)
+		set_info_netconnectd_plugin(self, tier)
+		set_info_findmymrbeam(self, tier)
+		set_info_mrbeamledstrips(self, tier)
+		set_info_netconnectd_daemon(self, tier)
+		set_info_pcf8575(self, tier)
 
 	_logger(self).debug("MrBeam Plugin provides this config (might be overridden by settings!):\n%s", yaml.dump(sw_update_config, width=50000).strip())
 
@@ -60,7 +60,7 @@ def octoprint_checkout_folder(self, tier):
 	return False
 
 
-def get_info_mrbeam_plugin(self, tier):
+def set_info_mrbeam_plugin(self, tier):
 	name = "MrBeam Plugin"
 	module_id = "mrbeam"
 
@@ -101,7 +101,7 @@ def get_info_mrbeam_plugin(self, tier):
 			restart="octoprint")
 
 
-def get_info_netconnectd_plugin(self, tier):
+def set_info_netconnectd_plugin(self, tier):
 	name = "OctoPrint-Netconnectd Plugin"
 	module_id = "netconnectd"
 
@@ -122,7 +122,7 @@ def get_info_netconnectd_plugin(self, tier):
 		restart="octoprint")
 
 
-def get_info_findmymrbeam(self, tier):
+def set_info_findmymrbeam(self, tier):
 	name = "OctoPrint-FindMyMrBeam"
 	module_id = "findmymrbeam"
 
@@ -155,7 +155,7 @@ def get_info_findmymrbeam(self, tier):
 			restart="octoprint")
 
 
-def get_info_mrbeamledstrips(self, tier):
+def set_info_mrbeamledstrips(self, tier):
 	name = "MrBeam LED Strips"
 	module_id = "mrbeam-ledstrips"
 	# ths module is installed outside of our virtualenv therefor we can't use default pip command.
@@ -171,7 +171,7 @@ def get_info_mrbeamledstrips(self, tier):
 	sw_update_config[module_id] = dict(
 		displayName=_get_display_name(self, name),
 		displayVersion=version,
-		type="github_commit",
+		type="github_release",
 		user="mrbeam",
 		repo="MrBeamLedStrips",
 		branch="mrbeam2-stable",
@@ -193,7 +193,7 @@ def get_info_mrbeamledstrips(self, tier):
 			restart="environment")
 
 
-def get_info_netconnectd_daemon(self, tier):
+def set_info_netconnectd_daemon(self, tier):
 	name = "Netconnectd Daemon"
 	module_id = "netconnectd-daemon"
 	branch = "mrbeam2-stable"
@@ -219,7 +219,7 @@ def get_info_netconnectd_daemon(self, tier):
 		restart="environment")
 
 
-def get_info_pcf8575(self, tier):
+def set_info_pcf8575(self, tier):
 	name = "pcf8575"
 	module_id = "pcf8575"
 	path = "/home/pi/pcf8575"
@@ -263,9 +263,12 @@ def get_version_of_pip_module(self, pip_name, pip_command=None):
 		for myLine in lines:
 			token = myLine.split("==")
 			if len(token) >= 2 and token[0] == pip_name:
-				version = token[1]
+				if token[1][:1] == "=":
+					version = token[1][1:]
+				else:
+					version = token[1]
 				break
-	_logger(self).debug("get_version_of_pip_module() version of pip module %s is %s (pip command %s returned %s)",
+	_logger(self).debug("get_version_of_pip_module() version of pip module '%s' is '%s' (pip command '%s' returned %s)",
 						pip_name, version, pip_command, returncode)
 	return version
 
