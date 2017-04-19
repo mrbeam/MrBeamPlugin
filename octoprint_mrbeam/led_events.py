@@ -36,7 +36,8 @@ class LedEventListener(CommandTrigger):
 	LED_EVENTS[MrBeamEvents.SLICING_PROGRESS] = "mrbeam_ledstrips_cli SlicingProgress:{__data}"
 	LED_EVENTS[MrBeamEvents.PRINT_PROGRESS] = "mrbeam_ledstrips_cli progress:{__data}"
 	#Shutdown
-	LED_EVENTS[MrBeamEvents.SHUTDOWN_PREPARE] = "mrbeam_ledstrips_cli ShutdownPrepare"
+	LED_EVENTS[MrBeamEvents.SHUTDOWN_PREPARE_START] = "mrbeam_ledstrips_cli ShutdownPrepare"
+	LED_EVENTS[MrBeamEvents.SHUTDOWN_PREPARE_SUCCESS] = "mrbeam_ledstrips_cli Shutdown"
 	LED_EVENTS[Events.SHUTDOWN] = "mrbeam_ledstrips_cli Shutdown"
 
 

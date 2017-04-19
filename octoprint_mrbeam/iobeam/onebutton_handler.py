@@ -1,9 +1,9 @@
 import logging
 import threading
 import time
+from subprocess import check_output
 
 from octoprint.events import Events as OctoPrintEvents
-from octoprint.settings import settings
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 
@@ -16,6 +16,7 @@ def oneButtonHandler(plugin):
 		_instance = OneButtonHandler(plugin._event_bus,
 									 plugin._plugin_manager,
 									 plugin._file_manager,
+									 plugin._settings,
 									 plugin._printer)
 	return _instance
 
@@ -34,10 +35,11 @@ class OneButtonHandler(object):
 	SHUTDOWN_STATE_PREPARE    = 1
 	SHUTDOWN_STATE_GOING_DOWN = 2
 
-	def __init__(self, event_bus, plugin_manager, file_manager, printer):
+	def __init__(self, event_bus, plugin_manager, file_manager, settings, printer):
 		self._event_bus = event_bus
 		self._plugin_manager = plugin_manager
 		self._file_manager = file_manager
+		self._settings = settings
 		self._printer = printer
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam.onebutton_handler")
 		self._subscribe()
@@ -62,15 +64,19 @@ class OneButtonHandler(object):
 			if self._printer.get_state_id() == self.PRINTER_STATE_PRINTING:
 				self._printer.pause_print()
 		elif event == IoBeamEvents.ONEBUTTON_DOWN:
+			# shutdown prepare
 			if self.shutdown_state == self.SHUTDOWN_STATE_NONE and float(payload) >= self.PRESS_TIME_SHUTDOWN_PREPARE:
 				self.shutdown_state = self.SHUTDOWN_STATE_PREPARE
-				self._fireEvent(MrBeamEvents.SHUTDOWN_PREPARE)
-		elif event == IoBeamEvents.ONEBUTTON_RELEASED:
+				self._fireEvent(MrBeamEvents.SHUTDOWN_PREPARE_START)
+				# shutdown
 			if self.shutdown_state == self.SHUTDOWN_STATE_PREPARE and float(payload) >= self.PRESS_TIME_SHUTDOWN_DOIT:
 				self.shutdown_state = self.SHUTDOWN_STATE_GOING_DOWN
-				# shutdown the system
+				self._fireEvent(MrBeamEvents.SHUTDOWN_PREPARE_SUCCESS)
 				self._shutdown()
-			else:
+		elif event == IoBeamEvents.ONEBUTTON_RELEASED:
+			# end shutdown prepare
+			if self.shutdown_state == self.SHUTDOWN_STATE_PREPARE:
+				self._fireEvent(MrBeamEvents.SHUTDOWN_PREPARE_CANCEL)
 				self.shutdown_state = self.SHUTDOWN_STATE_NONE
 		elif event == OctoPrintEvents.CLIENT_CLOSED:
 			self.ready_to_laser_ts = -1
@@ -143,7 +149,7 @@ class OneButtonHandler(object):
 			self.ready_to_laser_timer = None
 
 	def _get_shutdown_command(self):
-		c = settings().get(["server", "commands", "systemShutdownCommand"])
+		c = self._settings.global_get(["server", "commands", "systemShutdownCommand"])
 		if c is None:
 			self._logger.warn("No shutdown command in settings. Can't shut down system per OneButton.")
 		return c

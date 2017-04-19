@@ -40,11 +40,14 @@ class IoBeamHandlerTestCase(unittest.TestCase):
 		self._plugin_manager_mock = mock.MagicMock(name="_plugin_manager_mock")
 		self._file_manager_mock = mock.MagicMock(name="_file_manager_mock")
 		self._file_manager_mock.path_on_disk.return_value("someFileName")
+		self._settings_mock = mock.MagicMock(name="_settings_mock")
+		self._settings_mock.global_get.return_value(None)
 		self._printer_mock = mock.MagicMock(name="_printer_mock")
 		self._oneButtonHandler = OneButtonHandler(self.event_bus_mock,
-														  self._plugin_manager_mock,
-														  self._file_manager_mock,
-														  self._printer_mock)
+												  self._plugin_manager_mock,
+												  self._file_manager_mock,
+												  self._settings_mock,
+												  self._printer_mock)
 
 		self.event_bus_mock.reset_mock()
 		self._logger.debug("setUp() DONE --------------------")
@@ -63,8 +66,20 @@ class IoBeamHandlerTestCase(unittest.TestCase):
 		(["onebtn:dn:0.8"], [(IoBeamEvents.ONEBUTTON_DOWN, 0.8)]),
 		(["onebtn:rl:1.2"], [(IoBeamEvents.ONEBUTTON_RELEASED, 1.2)]),
 		(["onebtn:pr", "onebtn:dn:0.2","onebtn:dn:0.5", "onebtn:rl:1.0"],
-		 	[(IoBeamEvents.ONEBUTTON_PRESSED, None), (IoBeamEvents.ONEBUTTON_DOWN, 0.2),
-			 (IoBeamEvents.ONEBUTTON_DOWN, 0.5),(IoBeamEvents.ONEBUTTON_RELEASED, 1.0)]),
+		 	[(IoBeamEvents.ONEBUTTON_PRESSED, None),
+			 (IoBeamEvents.ONEBUTTON_DOWN, 0.2),
+			 (IoBeamEvents.ONEBUTTON_DOWN, 0.5),
+			 (IoBeamEvents.ONEBUTTON_RELEASED, 1.0)
+			 ]),
+		# (["onebtn:pr", "onebtn:dn:0.2", "onebtn:dn:1.2", "onebtn:dn:4.7", "onebtn:rl:5.3"],
+		#  [(IoBeamEvents.ONEBUTTON_PRESSED, None),
+		#   (IoBeamEvents.ONEBUTTON_DOWN, 0.2),
+		#   (IoBeamEvents.ONEBUTTON_DOWN, 1.2),
+		#   (MrBeamEvents.SHUTDOWN_PREPARE_START, None),
+		#   (IoBeamEvents.ONEBUTTON_DOWN, 4.7),
+		#   (IoBeamEvents.ONEBUTTON_RELEASED, 5.3),
+		#   (MrBeamEvents.SHUTDOWN_PREPARE_SUCCESS, None)
+		#   ]),
 	)
 	@ddt.unpack
 	def test_onebutton(self, messages, expectations):
