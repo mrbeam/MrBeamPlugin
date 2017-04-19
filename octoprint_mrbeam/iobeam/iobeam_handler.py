@@ -88,11 +88,6 @@ class IoBeamHandler(object):
 	MESSAGE_ACTION_INTERLOCK_CLOSED =   "cl"
 
 
-	SHUTDOWN_STATE_NONE       = 0
-	SHUTDOWN_STATE_PREPARE    = 1
-	SHUTDOWN_STATE_GOING_DOWN = 2
-
-
 	def __init__(self, event_bus, socket_file=None):
 		self._event_bus = event_bus
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam")
@@ -103,7 +98,6 @@ class IoBeamHandler(object):
 
 		self._connectionException = None
 		self._interlocks = dict()
-		self.shutdown = self.SHUTDOWN_STATE_NONE
 
 		self._initWorker(socket_file)
 
@@ -248,17 +242,8 @@ class IoBeamHandler(object):
 			self._fireEvent(IoBeamEvents.ONEBUTTON_PRESSED)
 		elif action == self.MESSAGE_ACTION_ONEBUTTON_DOWN and payload is not None:
 			self._fireEvent(IoBeamEvents.ONEBUTTON_DOWN, payload)
-			if self.shutdown == self.SHUTDOWN_STATE_NONE and float(payload) >=1.0:
-				self.shutdown = self.SHUTDOWN_STATE_PREPARE
-				self._fireEvent(MrBeamEvents.SHUTDOWN_PREPARE)
 		elif action == self.MESSAGE_ACTION_ONEBUTTON_RELEASED and payload is not None:
 			self._fireEvent(IoBeamEvents.ONEBUTTON_RELEASED, payload)
-			if self.shutdown == self.SHUTDOWN_STATE_PREPARE and float(payload) >= 5.0:
-				self.shutdown = self.SHUTDOWN_STATE_GOING_DOWN
-				# shutdown the system
-				executeSystemCommand("core", "shutdown")
-			else:
-				self.shutdown = self.SHUTDOWN_STATE_NONE
 		elif action == self.MESSAGE_ERROR:
 			raise Exception("iobeam received OneButton error: %s", message)
 		else:

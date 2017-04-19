@@ -26,17 +26,26 @@ class OneButtonHandler(object):
 	READY_TO_PRINT_MAX_WAITING_TIME = 120
 	READY_TO_PRINT_CHECK_INTERVAL = 10
 
+	PRESS_TIME_SHUTDOWN_PREPARE = 1.0 #seconds
+	PRESS_TIME_SHUTDOWN_DOIT    = 5.0 #seconds
+
+	SHUTDOWN_STATE_NONE       = 0
+	SHUTDOWN_STATE_PREPARE    = 1
+	SHUTDOWN_STATE_GOING_DOWN = 2
+
 	def __init__(self, event_bus, plugin_manager, file_manager, printer):
 		self._event_bus = event_bus
 		self._plugin_manager = plugin_manager
 		self._file_manager = file_manager
 		self._printer = printer
-		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam.readytolaserman")
+		self._logger = logging.getLogger(__name__)
 		self._subscribe()
 
 		self.ready_to_laser_ts = -1
 		self.ready_to_laser_file = None
 		self.ready_to_laser_timer = None
+
+		self.shutdown_state = self.SHUTDOWN_STATE_NONE
 
 	def _subscribe(self):
 		self._event_bus.subscribe(IoBeamEvents.ONEBUTTON_PRESSED, self.onEvent)
@@ -48,6 +57,17 @@ class OneButtonHandler(object):
 		if event == IoBeamEvents.ONEBUTTON_PRESSED:
 			if self._printer.get_state_id() == self.PRINTER_STATE_PRINTING:
 				self._printer.pause_print()
+		elif event == IoBeamEvents.ONEBUTTON_DOWN:
+			if self.shutdown_state == self.SHUTDOWN_STATE_NONE and float(payload) >= self.PRESS_TIME_SHUTDOWN_PREPARE:
+				self.shutdown_state = self.SHUTDOWN_STATE_PREPARE
+				self._fireEvent(MrBeamEvents.SHUTDOWN_PREPARE)
+		elif event == IoBeamEvents.ONEBUTTON_RELEASED:
+			if self.shutdown_state == self.SHUTDOWN_STATE_PREPARE and float(payload) >= self.PRESS_TIME_SHUTDOWN_DOIT:
+				self.shutdown_state = self.SHUTDOWN_STATE_GOING_DOWN
+				# shutdown the system
+				executeSystemCommand("core", "shutdown")
+			else:
+				self.shutdown_state = self.SHUTDOWN_STATE_NONE
 		elif event == OctoPrintEvents.CLIENT_CLOSED:
 			self.ready_to_laser_ts = -1
 			self._check_if_still_ready_to_laser()
@@ -60,7 +80,7 @@ class OneButtonHandler(object):
 		self._test_conditions(gcode_file)
 		self.ready_to_laser_file = gcode_file
 		self.ready_to_laser_ts = time.time()
-		self._event_bus.fire(MrBeamEvents.READY_TO_LASER_START)
+		self._fireEvent(MrBeamEvents.READY_TO_LASER_START)
 		self._plugin_manager.send_plugin_message("mrbeam", dict(ready_to_laser="start"))
 		self._check_if_still_ready_to_laser()
 
@@ -73,7 +93,7 @@ class OneButtonHandler(object):
 			self._plugin_manager.send_plugin_message("mrbeam", dict(ready_to_laser="end_lasering"))
 		else:
 			self._plugin_manager.send_plugin_message("mrbeam", dict(ready_to_laser="end_canceled"))
-			self._event_bus.fire(MrBeamEvents.READY_TO_LASER_CANCELED)
+			self._fireEvent(MrBeamEvents.READY_TO_LASER_CANCELED)
 
 	def _check_if_still_ready_to_laser(self):
 		if self.ready_to_laser_ts> 0 and time.time() - self.ready_to_laser_ts < self.READY_TO_PRINT_MAX_WAITING_TIME:
@@ -117,3 +137,7 @@ class OneButtonHandler(object):
 		if self.ready_to_laser_timer is not None:
 			self.ready_to_laser_timer.cancel()
 			self.ready_to_laser_timer = None
+
+	def _fireEvent(self, event, payload=None):
+		self._logger.info("_fireEvent() event:%s, payload:%s", event, payload)
+		self._event_bus.fire(event, payload)

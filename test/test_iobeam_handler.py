@@ -9,7 +9,9 @@ import ddt
 import mock
 
 from octoprint_mrbeam.iobeam.iobeam_handler import ioBeamHandler, IoBeamEvents
-from octoprint_mrbeam import ReadyToLaserStateManager
+from octoprint_mrbeam.iobeam.onebutton_handler import OneButtonHandler
+from octoprint_mrbeam.iobeam.interlock_handler import InterLockHandler
+from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 
 # hint: to get the output with timestamps:
@@ -32,7 +34,6 @@ class IoBeamHandlerTestCase(unittest.TestCase):
 		# init ioBeamHandler
 		self.event_bus_mock = mock.MagicMock(name="event_bus_mock")
 		self.ioBeamHandler = ioBeamHandler(self.event_bus_mock, self.SOCKET_FILE)
-		self.ioBeamHandler.SOCKET_FILE = self.SOCKET_FILE
 		time.sleep(.01)
 
 		#init OneButtonHandler
@@ -40,7 +41,7 @@ class IoBeamHandlerTestCase(unittest.TestCase):
 		self._file_manager_mock = mock.MagicMock(name="_file_manager_mock")
 		self._file_manager_mock.path_on_disk.return_value("someFileName")
 		self._printer_mock = mock.MagicMock(name="_printer_mock")
-		self._oneButtonHandler = ReadyToLaserStateManager(self.event_bus_mock,
+		self._oneButtonHandler = OneButtonHandler(self.event_bus_mock,
 														  self._plugin_manager_mock,
 														  self._file_manager_mock,
 														  self._printer_mock)
