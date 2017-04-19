@@ -3,6 +3,7 @@ import threading
 import time
 
 from octoprint.events import Events as OctoPrintEvents
+from octoprint.settings import settings
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 
@@ -38,22 +39,25 @@ class OneButtonHandler(object):
 		self._plugin_manager = plugin_manager
 		self._file_manager = file_manager
 		self._printer = printer
-		self._logger = logging.getLogger(__name__)
+		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam.onebutton_handler")
 		self._subscribe()
 
 		self.ready_to_laser_ts = -1
 		self.ready_to_laser_file = None
 		self.ready_to_laser_timer = None
 
+		self.shutdown_command = self._get_shutdown_command()
 		self.shutdown_state = self.SHUTDOWN_STATE_NONE
 
 	def _subscribe(self):
+		self._event_bus.subscribe(IoBeamEvents.ONEBUTTON_DOWN, self.onEvent)
 		self._event_bus.subscribe(IoBeamEvents.ONEBUTTON_PRESSED, self.onEvent)
 		self._event_bus.subscribe(IoBeamEvents.ONEBUTTON_RELEASED, self.onEvent)
 		self._event_bus.subscribe(IoBeamEvents.DISCONNECT, self.onEvent)
 		self._event_bus.subscribe(OctoPrintEvents.CLIENT_CLOSED, self.onEvent)
 
 	def onEvent(self, event, payload):
+		self._logger.debug("onEvent() event: %s, payload: %s, : self.shutdown_state: %s", event, payload, self.shutdown_state)
 		if event == IoBeamEvents.ONEBUTTON_PRESSED:
 			if self._printer.get_state_id() == self.PRINTER_STATE_PRINTING:
 				self._printer.pause_print()
@@ -65,7 +69,7 @@ class OneButtonHandler(object):
 			if self.shutdown_state == self.SHUTDOWN_STATE_PREPARE and float(payload) >= self.PRESS_TIME_SHUTDOWN_DOIT:
 				self.shutdown_state = self.SHUTDOWN_STATE_GOING_DOWN
 				# shutdown the system
-				executeSystemCommand("core", "shutdown")
+				self._shutdown()
 			else:
 				self.shutdown_state = self.SHUTDOWN_STATE_NONE
 		elif event == OctoPrintEvents.CLIENT_CLOSED:
@@ -137,6 +141,24 @@ class OneButtonHandler(object):
 		if self.ready_to_laser_timer is not None:
 			self.ready_to_laser_timer.cancel()
 			self.ready_to_laser_timer = None
+
+	def _get_shutdown_command(self):
+		c = settings().get(["server", "commands", "systemShutdownCommand"])
+		if c is None:
+			self._logger.warn("No shutdown command in settings. Can't shut down system per OneButton.")
+		return c
+
+	def _shutdown(self):
+		self._logger.info("Shutting system down...")
+		if self.shutdown_command is not None:
+			try:
+				output = check_output(self.shutdown_command, shell=True)
+			except Exception as e:
+				self._logger.warn("Exception during OneButton shutdown: %s", e)
+				pass
+		else:
+			self._logger.warn("No shutdown command in settings. Can't shut down system per OneButton.")
+
 
 	def _fireEvent(self, event, payload=None):
 		self._logger.info("_fireEvent() event:%s, payload:%s", event, payload)

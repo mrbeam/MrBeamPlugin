@@ -3,8 +3,6 @@ import socket
 import threading
 import time
 
-from octoprint_mrbeam.mrbeam_events import MrBeamEvents
-
 # singleton
 _instance = None
 
@@ -63,6 +61,13 @@ class IoBeamHandler(object):
 	# < laser:temp
 	# > laser:temp:< temperatur >
 	# > laser:temp:error:<error type or message>
+
+
+	# How to test and debug:
+	# in config.yaml set
+	#      [plugins mrbeam dev debug] to true (suppresses reconnect on socket timeout) and
+	#      [plugins mrbeam dev sockets iobeam] to '/tmp/mrbeam_iobeam.sock' to open the socket without sudo pw
+	# and then use  "/usr/bin/nc -U -l /tmp/mrbeam_iobeam.sock"
 
 
 	SOCKET_FILE = "/var/run/mrbeam_iobeam.sock"
