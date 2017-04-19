@@ -170,6 +170,8 @@ class IoBeamHandler(object):
 						self._logger.warn("Exception while sockect.recv(): %s - Resetting connection...", e)
 						break
 
+				if data == '.':
+					continue
 
 				if not data:
 					self._logger.warn("Connection ended from other side. Closing connection...")
