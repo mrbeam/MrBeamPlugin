@@ -271,7 +271,8 @@ $(function () {
             var data = {refs: {resource: url}, origin: payload.gcode_location, path: payload.gcode};
             self.gcodefiles.loadFile(data, false); // loads gcode into gcode viewer
 
-            var oneButton = (self.workingArea.profile.currentProfileData().start_method() == "onebutton");
+            var oneButton = (self.workingArea.profile.currentProfileData().start_method != undefined &&
+                    self.workingArea.profile.currentProfileData().start_method() == "onebutton");
             if (oneButton) {
                 self.readyToLaser.setReadyToLaser(payload.gcode);
             } else {
