@@ -35,14 +35,14 @@ class IoBeamHandler(object):
 	# > onebtn:error	?
 	# > lid:pr
 	# > lid:rl:< time >
-	# > intlk:0:op
-	# > intlk:0:cl
-	# > intlk:1:op
-	# > intlk:1:cl
-	# > intlk:2:op
-	# > intlk:2:cl
-	# > intlk:3:op
-	# > intlk:3:cl
+	# > intlk:op:0
+	# > intlk:cl:0
+	# > intlk:op:1
+	# > intlk:cl:1
+	# > intlk:op:2
+	# > intlk:cl:2
+	# > intlk:op:3
+	# > intlk:cl:3
 	# > steprun:en
 	# > steprun:di
 
@@ -256,15 +256,15 @@ class IoBeamHandler(object):
 
 
 	def _handle_interlock_message(self, message, tokens):
-		lock_num = tokens[0] if len(tokens) > 0 else None
-		lock_state = tokens[1] if len(tokens) > 1 else None
+		lock_state = tokens[0] if len(tokens) > 0 else None
+		lock_id = tokens[1] if len(tokens) > 1 else None
 		before_state = self.open_interlocks()
-		self._logger.debug("_handle_interlock_message() message: %s, lock_num: %s, lock_state: %s, before_state: %s", message, lock_num, lock_state, before_state)
+		self._logger.debug("_handle_interlock_message() message: %s, lock_id: %s, lock_state: %s, before_state: %s", message, lock_id, lock_state, before_state)
 
-		if lock_num is not None and lock_state == self.MESSAGE_ACTION_INTERLOCK_OPEN:
-			self._interlocks[lock_num] = True
-		elif lock_num is not None and lock_state == self.MESSAGE_ACTION_INTERLOCK_CLOSED:
-			self._interlocks.pop(lock_num, None)
+		if lock_id is not None and lock_state == self.MESSAGE_ACTION_INTERLOCK_OPEN:
+			self._interlocks[lock_id] = True
+		elif lock_id is not None and lock_state == self.MESSAGE_ACTION_INTERLOCK_CLOSED:
+			self._interlocks.pop(lock_id, None)
 		elif self.MESSAGE_ERROR in message:
 			raise Exception("iobeam received InterLock error: %s", message)
 		else:
