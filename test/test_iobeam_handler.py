@@ -1,13 +1,15 @@
-import unittest
-import mock
-import ddt
 import logging
-import socket
 import os
-import sys
+import socket
 import threading
 import time
-from octoprint_mrbeam.iobeam_handler import ioBeamHandler, IoBeamEvents, ReadyToLaserStateManager
+import unittest
+
+import ddt
+import mock
+
+from octoprint_mrbeam.iobeam.iobeam_handler import ioBeamHandler, IoBeamEvents
+from octoprint_mrbeam import ReadyToLaserStateManager
 
 
 # hint: to get the output with timestamps:

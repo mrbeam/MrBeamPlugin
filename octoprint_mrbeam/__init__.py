@@ -1,42 +1,38 @@
 # coding=utf-8
 from __future__ import absolute_import
 
-
-# import logging as log
-
-import octoprint.plugin
-import flask
-
-
-from octoprint.util import dict_merge
-from octoprint.server import NO_CONTENT
-from octoprint.events import Events
-
-from .profile import LaserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
-from octoprint_mrbeam.iobeam_handler import ioBeamHandler, ReadyToLaserStateManager, InterLockHandler
-from octoprint_mrbeam.led_events import LedEventListener, MrBeamEvents
-from .software_update_information import get_update_information
-# from .state.ledstrips import LEDstrips
-
+import __builtin__
 import copy
-import time
-import os
-import logging
-import threading
 import json
-import click
+import logging
+import os
 import pprint
-import requests
 import socket
-from octoprint.server.util.flask import restricted_access, get_json_command_from_request, add_non_caching_response_headers
-from octoprint.server import admin_permission
-from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping
-from flask.ext.babel import gettext
-from flask import Blueprint, request, jsonify, make_response, url_for
+import threading
+import time
 from subprocess import check_output
 
+import octoprint.plugin
+import requests
+from flask import request, jsonify, make_response, url_for
+from flask.ext.babel import gettext
+from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping
+from octoprint.server import NO_CONTENT
+from octoprint.server.util.flask import restricted_access, get_json_command_from_request, \
+	add_non_caching_response_headers
+from octoprint.util import dict_merge
 
-import __builtin__
+from octoprint_mrbeam.iobeam.iobeam_handler import ioBeamHandler
+from octoprint_mrbeam.iobeam.onebutton_handler import oneButtonHandler
+# from octoprint_mrbeam.iobeam.readytolaser_handler import ReadyToLaserStateManager
+from octoprint_mrbeam.iobeam.interlock_handler import InterLockHandler
+from octoprint_mrbeam.led_events import LedEventListener
+from octoprint_mrbeam.mrbeam_events import MrBeamEvents
+from .profile import LaserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
+from .software_update_information import get_update_information
+
+# import logging as log
+# from .state.ledstrips import LEDstrips
 __builtin__.MRBEAM_DEBUG = False
 
 class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
@@ -89,7 +85,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._logger.exception("Exception while getting NetconnectdPlugin pluginInfo")
 
 		self._ioBeam = ioBeamHandler(self._event_bus, self._settings.get(["dev", "sockets", "iobeam"]))
-		self._oneButtonHandler = ReadyToLaserStateManager(self._event_bus, self._plugin_manager, self._file_manager, self._printer)
+		self._oneButtonHandler = oneButtonHandler(self)
+		# self._oneButtonHandler = ReadyToLaserStateManager(self._event_bus, self._plugin_manager, self._file_manager, self._printer)
 		self._interlock_handler = InterLockHandler(self._ioBeam, self._event_bus, self._plugin_manager)
 		self._led_eventhandler = LedEventListener(self._event_bus, self._printer)
 
@@ -380,7 +377,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@octoprint.plugin.BlueprintPlugin.route("/acl", methods=["POST"])
 	def acl_wizard_api(self):
 		from flask import request
-		from octoprint.server.api import valid_boolean_trues, NO_CONTENT
+		from octoprint.server.api import NO_CONTENT
 
 		if not(self.isFirstRun() and self._user_manager.enabled and not self._user_manager.hasBeenCustomized()):
 			return make_response("Forbidden", 403)
@@ -408,7 +405,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@octoprint.plugin.BlueprintPlugin.route("/wifi", methods=["POST"])
 	def wifi_wizard_api(self):
 		from flask import request
-		from octoprint.server.api import valid_boolean_trues, NO_CONTENT
+		from octoprint.server.api import NO_CONTENT
 
 		# accept requests only while setup wizard is active
 		if not self.isFirstRun() or not self._is_wifi_wizard_required():
@@ -445,7 +442,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	# simpleApiCommand: lasersafety_confirmation; simpleApiCommand: lasersafety_confirmation;
 	def lasersafety_wizard_api(self, data):
 		from flask.ext.login import current_user
-		from octoprint.server.api import valid_boolean_trues, NO_CONTENT
+		from octoprint.server.api import NO_CONTENT
 
 		# get JSON from request data, or send user back home
 		data = request.values
@@ -699,7 +696,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		if command == "convert":
 			# TODO stripping non-ascii is a hack - svg contains lots of non-ascii in <text> tags. Fix this!
-			import re
 			svg = ''.join(i for i in data['svg'] if ord(i) < 128)  # strip non-ascii chars like €
 			del data['svg']
 			filename = target + "/temp.svg"
@@ -827,7 +823,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		)
 
 	def on_api_command(self, command, data):
-		import flask
 		if command == "position":
 			if isinstance(data["x"], (int, long, float)) and isinstance(data["y"], (int, long, float)):
 				self._printer.position(data["x"], data["y"])
@@ -1151,7 +1146,6 @@ def clitest_commands(cli_group, pass_octoprint_ctx, *args, **kwargs):
 	import sys
 	import requests.exceptions
 	import octoprint_client as client
-	import json
 
 	# > octoprint plugins mrbeam:debug_event MrBeamDebugEvent -p 42
 	# remember to activate venv where MrBeamPlugin is installed in

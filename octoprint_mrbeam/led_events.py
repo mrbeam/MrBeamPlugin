@@ -1,15 +1,9 @@
 
 
 import logging
+
 from octoprint.events import Events, CommandTrigger
-
-
-class MrBeamEvents(object):
-	PRINT_PROGRESS = "PrintProgress"
-	SLICING_PROGRESS = "SlicingProgress"
-
-	READY_TO_LASER_START = "ReadyToLaserStart"
-	READY_TO_LASER_CANCELED = "ReadyToLaserCanceled"
+from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 
 class LedEventListener(CommandTrigger):
