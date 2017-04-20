@@ -79,8 +79,7 @@ class OneButtonHandler(object):
 				self._fireEvent(MrBeamEvents.SHUTDOWN_PREPARE_CANCEL)
 				self.shutdown_state = self.SHUTDOWN_STATE_NONE
 		elif event == OctoPrintEvents.CLIENT_CLOSED:
-			self.ready_to_laser_ts = -1
-			self._check_if_still_ready_to_laser()
+			self.unset_ready_to_laser()
 		elif event == IoBeamEvents.ONEBUTTON_RELEASED:
 			if self._printer.is_operational() and self.ready_to_laser_ts > 0:
 				self._start_laser()
@@ -97,11 +96,12 @@ class OneButtonHandler(object):
 	def unset_ready_to_laser(self, lasering=False):
 		self._logger.debug("unset_ready_to_laser()")
 		self._cancel_timer()
+		was_ready_to_laser = (self.ready_to_laser_ts > 0)
 		self.ready_to_laser_ts = -1
 		self.ready_to_laser_file = None
-		if lasering:
+		if lasering and was_ready_to_laser:
 			self._plugin_manager.send_plugin_message("mrbeam", dict(ready_to_laser="end_lasering"))
-		else:
+		elif was_ready_to_laser:
 			self._plugin_manager.send_plugin_message("mrbeam", dict(ready_to_laser="end_canceled"))
 			self._fireEvent(MrBeamEvents.READY_TO_LASER_CANCELED)
 
