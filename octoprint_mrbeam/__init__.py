@@ -73,8 +73,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam")
 		self._branch = self.getBranch()
 		self._hostname = self.getHostname()
-		self._logger.info("MrBeam Plugin initializeing: version: %s, branch: %s, host: %s %s",
-						  self._plugin_version, self._branch, self._hostname, ("MRBEAM_DEBUG" if MRBEAM_DEBUG else ""))
+		self._octopi_info = self.get_octopi_info()
+		self._logger.info("MrBeam Plugin initializeing: %s version: %s, branch: %s, host: %s, image: %s",
+						  ("MRBEAM_DEBUG" if MRBEAM_DEBUG else ""), self._plugin_version, self._branch, self._hostname, self._octopi_info)
 		try:
 			pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
 			if pluginInfo is None:
@@ -231,7 +232,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 beamosVersion= dict(
 								number = self._plugin_version,
 								branch= self._branch,
-								display_version = display_version_string),
+								display_version = display_version_string,
+							 	image = self._octopi_info),
 							 MRBEAM_DEBUG=MRBEAM_DEBUG
 							 ))
 		r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
@@ -1131,6 +1133,18 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				pass
 
 		return branch
+
+	def get_octopi_info(self):
+		try:
+			with open('/etc/octopi_flavor', 'r') as myfile:
+				flavor = myfile.read().replace('\n', '')
+			with open('/etc/octopi_datetime', 'r') as myfile:
+				datetime = myfile.read().replace('\n', '')
+			return "{} {}".format(flavor, datetime)
+		except Exception as e:
+			# self._logger.exception("Can't read OctoPi image info due to exception:", e)
+			pass
+		return None
 
 
 	def isFirstRun(self):
