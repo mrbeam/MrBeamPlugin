@@ -122,6 +122,10 @@ $(function () {
 			$("#terminal-output").css({'height': (height - 150) + 'px'});
         };
 
+        self.onStartupComplete = function() {
+            $('#loading_overlay').hide();
+        }
+
         self.fromCurrentData = function (data) {
             self._fromData(data);
         };
