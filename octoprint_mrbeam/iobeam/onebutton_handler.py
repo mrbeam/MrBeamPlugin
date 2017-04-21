@@ -4,6 +4,7 @@ import time
 from subprocess import check_output
 
 from octoprint.events import Events as OctoPrintEvents
+from octoprint.filemanager import valid_file_type
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 
@@ -78,11 +79,11 @@ class OneButtonHandler(object):
 			if self.shutdown_state == self.SHUTDOWN_STATE_PREPARE:
 				self._fireEvent(MrBeamEvents.SHUTDOWN_PREPARE_CANCEL)
 				self.shutdown_state = self.SHUTDOWN_STATE_NONE
+			# start laser
+			elif self._printer.is_operational() and self.ready_to_laser_ts > 0:
+				self._start_laser()
 		elif event == OctoPrintEvents.CLIENT_CLOSED:
 			self.unset_ready_to_laser()
-		elif event == IoBeamEvents.ONEBUTTON_RELEASED:
-			if self._printer.is_operational() and self.ready_to_laser_ts > 0:
-				self._start_laser()
 
 
 	def set_ready_to_laser(self, gcode_file):
