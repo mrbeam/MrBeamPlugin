@@ -123,7 +123,7 @@ $(function () {
         };
 
         self.onStartupComplete = function() {
-            $('#loading_overlay').hide();
+            $('#loading_overlay').remove();
         }
 
         self.fromCurrentData = function (data) {
