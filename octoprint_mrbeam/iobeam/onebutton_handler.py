@@ -26,8 +26,12 @@ def oneButtonHandler(plugin):
 class OneButtonHandler(object):
 
 	PRINTER_STATE_PRINTING = "PRINTING"
+	PRINTER_STATE_PAUSED = "PAUSED"
+
 	READY_TO_PRINT_MAX_WAITING_TIME = 120
 	READY_TO_PRINT_CHECK_INTERVAL = 10
+
+	LASER_PAUSE_WAITING_TIME = 5
 
 	PRESS_TIME_SHUTDOWN_PREPARE = 1.0 #seconds
 	PRESS_TIME_SHUTDOWN_DOIT    = 5.0 #seconds
@@ -49,6 +53,8 @@ class OneButtonHandler(object):
 		self.ready_to_laser_file = None
 		self.ready_to_laser_timer = None
 
+		self.pause_laser_ts = -1;
+
 		self.shutdown_command = self._get_shutdown_command()
 		self.shutdown_state = self.SHUTDOWN_STATE_NONE
 
@@ -63,7 +69,7 @@ class OneButtonHandler(object):
 		self._logger.debug("onEvent() event: %s, payload: %s, : self.shutdown_state: %s", event, payload, self.shutdown_state)
 		if event == IoBeamEvents.ONEBUTTON_PRESSED:
 			if self._printer.get_state_id() == self.PRINTER_STATE_PRINTING:
-				self._printer.pause_print()
+				self.pause_laser()
 		elif event == IoBeamEvents.ONEBUTTON_DOWN:
 			# shutdown prepare
 			if self.shutdown_state == self.SHUTDOWN_STATE_NONE and float(payload) >= self.PRESS_TIME_SHUTDOWN_PREPARE:
@@ -82,6 +88,8 @@ class OneButtonHandler(object):
 			# start laser
 			elif self._printer.is_operational() and self.ready_to_laser_ts > 0:
 				self._start_laser()
+			elif self._printer.get_state_id() == self.PRINTER_STATE_PAUSED:
+				self.resume_laser_if_waitingtime_is_over()
 		elif event == OctoPrintEvents.CLIENT_CLOSED:
 			self.unset_ready_to_laser()
 
@@ -148,6 +156,17 @@ class OneButtonHandler(object):
 		if self.ready_to_laser_timer is not None:
 			self.ready_to_laser_timer.cancel()
 			self.ready_to_laser_timer = None
+
+	def pause_laser(self):
+		self.pause_laser_ts = time.time()
+		self._printer.pause_print()
+
+	def resume_laser_if_waitingtime_is_over(self):
+		if self.pause_laser_ts > 0 and time.time() - self.pause_laser_ts > self.LASER_PAUSE_WAITING_TIME:
+			self._printer.resume_print()
+			self.pause_laser_ts = -1
+		else:
+			self._logger.info("Not resuming laser job, still in waiting time.")
 
 	def _get_shutdown_command(self):
 		c = self._settings.global_get(["server", "commands", "systemShutdownCommand"])
