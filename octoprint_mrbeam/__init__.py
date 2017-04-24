@@ -33,6 +33,7 @@ from .software_update_information import get_update_information
 
 __builtin__.MRBEAM_DEBUG = False
 
+
 class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
                    octoprint.plugin.AssetPlugin,
 				   octoprint.plugin.UiPlugin,
@@ -45,8 +46,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				   octoprint.plugin.SlicerPlugin):
 
 	# CONSTANTS
+	ENV_LOCAL =        "local"
+	ENV_LASER_SAFETY = "laser_safety"
+	ENV_ANALYTICS =    "analytics"
 
-	SETTINGS_KEY_DEVEL_MRBEAM_CLOUD_ENV = ["dev", "cloud_env"]
 	LASERSAFETY_CONFIRMATION_STORAGE_URL = 'https://script.google.com/a/macros/mr-beam.org/s/AKfycby3Y1RLBBiGPDcIpIg0LHd3nwgC7GjEA4xKfknbDLjm3v9-LjG1/exec'
 	USER_SETTINGS_KEY_MRBEAM = 'mrbeam'
 	USER_SETTINGS_KEY_TIMESTAMP = 'ts'
@@ -74,8 +77,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._branch = self.getBranch()
 		self._hostname = self.getHostname()
 		self._octopi_info = self.get_octopi_info()
-		self._logger.info("MrBeam Plugin initializeing: %s version: %s, branch: %s, host: %s, image: %s",
-						  ("MRBEAM_DEBUG" if MRBEAM_DEBUG else ""), self._plugin_version, self._branch, self._hostname, self._octopi_info)
+		self._serial = self.getPiSerial()
+		self._do_initial_log()
 		try:
 			pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
 			if pluginInfo is None:
@@ -88,6 +91,20 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._interlock_handler = InterLockHandler(self._ioBeam, self._event_bus, self._plugin_manager)
 		self._led_eventhandler = LedEventListener(self._event_bus, self._printer)
 
+
+	def _do_initial_log(self):
+		msg = ""
+		msg += " MRBEAM_DEBUG " if False else ''
+		msg += " version:" + self._plugin_version
+		msg += ", branch:" + self._branch
+		msg += ", host:" + self._hostname
+		msg += ", serial:" + self._serial
+		msg += ", env:" + self.get_env()
+		msg += " ("+self.ENV_LOCAL+':'+self.get_env(self.ENV_LOCAL)
+		msg += ","+self.ENV_LASER_SAFETY+':'+self.get_env(self.ENV_LASER_SAFETY)
+		msg += ","+self.ENV_ANALYTICS+':'+self.get_env(self.ENV_ANALYTICS)+')'
+		msg += ", octopi:" + str(self._octopi_info)
+		self._logger.info("MrBeam Plugin %s", msg)
 
 
 	def _convert_profiles(self, profiles):
@@ -122,8 +139,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			camera_scale=1,
 			camera_rotation=0,
 			dev=dict(
-				software_tier="PROD"
-			)
+				env="PROD"
+			),
+			analyticsEnabled=True
 		)
 
 	def on_settings_load(self):
@@ -234,8 +252,17 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 								branch= self._branch,
 								display_version = display_version_string,
 							 	image = self._octopi_info),
-							 MRBEAM_DEBUG=MRBEAM_DEBUG
-							 ))
+							 ),
+							 MRBEAM_DEBUG=MRBEAM_DEBUG,
+							 env= dict(
+								 env=self.get_env(),
+								 local=self.get_env(self.ENV_LOCAL),
+								 laser_safety=self.get_env(self.ENV_LASER_SAFETY),
+								 analytics=self.get_env(self.ENV_ANALYTICS)
+							 ),
+							 serial=self._serial,
+							 analyticsEnabled=self._settings.get(["analyticsEnabled"])
+						 )
 		r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
 
 		if firstRun:
@@ -466,14 +493,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		force = bool(data.get('force', False))
 		if submissionDate <= 0 or force:
 			# get cloud env to use
-			debug = self._settings.global_get(self.SETTINGS_KEY_DEVEL_MRBEAM_CLOUD_ENV)
+			debug = self.get_env(ENV_LASER_SAFETY)
 
 			payload = {'ts': data.get('ts', ''),
 					   'email': data.get('username', ''),
-					   'serial': self.getPiSerial(),
+					   'serial': self._serial,
 					   'hostname': self._hostname}
 
-			if debug is not None and debug != "prod":
+			if debug is not None and debug != "PROD":
 				payload['debug'] = debug
 				self._logger.debug("LaserSafetyNotice - debug flag: %s", debug)
 
@@ -1151,6 +1178,18 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return self._settings.global_get(["server", "firstRun"])
 
 
+	def get_env(self, type=None):
+		result = self._settings.get(["dev", "env"])
+		if type is not None:
+			if type == self.ENV_LASER_SAFETY:
+				type_env = self._settings.get(["dev", "cloud_env"]) # deprected flag
+			else:
+				type_env = self._settings.get(["dev", "env_overrides", type])
+			if type_env is not None:
+				result = type_env
+		return result
+
+
 # this is for the command line interface we're providing
 def clitest_commands(cli_group, pass_octoprint_ctx, *args, **kwargs):
 	import click
@@ -1164,7 +1203,6 @@ def clitest_commands(cli_group, pass_octoprint_ctx, *args, **kwargs):
 	@click.argument("event", default="MrBeamDebugEvent")
 	@click.option("--payload", "-p", default=None, help="optinal payload string")
 	def debug_event_command(event, payload):
-
 		if payload is not None:
 			payload_numer = None
 			try:
@@ -1189,7 +1227,6 @@ def clitest_commands(cli_group, pass_octoprint_ctx, *args, **kwargs):
 			sys.exit(1)
 
 	return [debug_event_command]
-
 
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
