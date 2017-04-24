@@ -69,8 +69,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam")
 		self._branch = self.getBranch()
 		self._hostname = self.getHostname()
-		self._logger.info("MrBeam Plugin initialize()  version: %s, branch: %s, host: %s",
-						  self._plugin_version, self._branch, self._hostname)
+		self._serial = self.getPiSerial()
+		self._logger.info("MrBeam Plugin initialize()  version: %s, branch: %s, host: %s, serial: %s",
+						  self._plugin_version, self._branch, self._hostname, self._serial)
 		try:
 			pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
 			if pluginInfo is None:
@@ -113,7 +114,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			camera_rotation=0,
 			dev=dict(
 				software_tier="PROD"
-			)
+			),
+			analyticsEnabled=True
 		)
 
 	def on_settings_load(self):
@@ -217,7 +219,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 								branch= self._branch,
 								display_version = "{} ({} branch) on {}".format(
 									self._plugin_version, self._branch, self._hostname) if self._branch else (self._plugin_version, self._hostname)
-								)
+								),
+							 serial=self._serial,
+							 analyticsEnabled=self._settings.get(["analyticsEnabled"])
 							 ))
 		r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
 
@@ -453,7 +457,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 			payload = {'ts': data.get('ts', ''),
 					   'email': data.get('username', ''),
-					   'serial': self.getPiSerial(),
+					   'serial': self._serial,
 					   'hostname': self._hostname}
 
 			if debug is not None and debug != "prod":
