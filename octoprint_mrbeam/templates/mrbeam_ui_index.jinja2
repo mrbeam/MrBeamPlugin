@@ -171,6 +171,13 @@ mixpanel.init("094a94a7a2bd139aa838a1b326d58529",{debug:true});</script><!-- end
 				}
 			});
 
+			mixpanel.register({
+                env: MRBEAM_ENV_ANALYTICS,
+                beamOS_version: BEAMOS_DISPLAY_VERSION,
+                octoprint_version: DISPLAY_VERSION,
+                device_serial: MRBEAM_SERIAL,
+            });
+
 		</script>
 
 		{% endif %}

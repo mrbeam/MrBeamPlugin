@@ -32,6 +32,7 @@ import requests
 import socket
 
 
+
 class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
                    octoprint.plugin.AssetPlugin,
 				   octoprint.plugin.UiPlugin,
@@ -44,8 +45,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				   octoprint.plugin.SlicerPlugin):
 
 	# CONSTANTS
+	ENV_LOCAL =        "local"
+	ENV_LASER_SAFETY = "laser_safety"
+	ENV_ANALYTICS =    "analytics"
 
-	SETTINGS_KEY_DEVEL_MRBEAM_CLOUD_ENV = ["dev", "cloud_env"]
 	LASERSAFETY_CONFIRMATION_STORAGE_URL = 'https://script.google.com/a/macros/mr-beam.org/s/AKfycby3Y1RLBBiGPDcIpIg0LHd3nwgC7GjEA4xKfknbDLjm3v9-LjG1/exec'
 	USER_SETTINGS_KEY_MRBEAM = 'mrbeam'
 	USER_SETTINGS_KEY_TIMESTAMP = 'ts'
@@ -70,8 +73,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._branch = self.getBranch()
 		self._hostname = self.getHostname()
 		self._serial = self.getPiSerial()
-		self._logger.info("MrBeam Plugin initialize()  version: %s, branch: %s, host: %s, serial: %s",
-						  self._plugin_version, self._branch, self._hostname, self._serial)
+		self._do_initial_log()
 		try:
 			pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
 			if pluginInfo is None:
@@ -79,6 +81,19 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		except Exception as e:
 			self._logger.exception("Exception while getting NetconnectdPlugin pluginInfo")
 
+
+	def _do_initial_log(self):
+		str = ""
+		str += " MRBEAM_DEBUG " if False else ''
+		str += " version:" + self._plugin_version
+		str += ", branch:" + self._branch
+		str += ", host:" + self._hostname
+		str += ", serial:" + self._serial
+		str += ", env:" + self.get_env()
+		str += " ("+self.ENV_LOCAL+':'+self.get_env(self.ENV_LOCAL)
+		str += ","+self.ENV_LASER_SAFETY+':'+self.get_env(self.ENV_LASER_SAFETY)
+		str += ","+self.ENV_ANALYTICS+':'+self.get_env(self.ENV_ANALYTICS)+')'
+		self._logger.info("MrBeam Plugin %s", str)
 
 
 	def _convert_profiles(self, profiles):
@@ -113,7 +128,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			camera_scale=1,
 			camera_rotation=0,
 			dev=dict(
-				software_tier="PROD"
+				env="PROD"
 			),
 			analyticsEnabled=True
 		)
@@ -219,7 +234,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 								branch= self._branch,
 								display_version = "{} ({} branch) on {}".format(
 									self._plugin_version, self._branch, self._hostname) if self._branch else (self._plugin_version, self._hostname)
-								),
+							 ),
+							 env= dict(
+								 env=self.get_env(),
+								 local=self.get_env(self.ENV_LOCAL),
+								 laser_safety=self.get_env(self.ENV_LASER_SAFETY),
+								 analytics=self.get_env(self.ENV_ANALYTICS)
+							 ),
 							 serial=self._serial,
 							 analyticsEnabled=self._settings.get(["analyticsEnabled"])
 							 ))
@@ -453,14 +474,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		force = bool(data.get('force', False))
 		if submissionDate <= 0 or force:
 			# get cloud env to use
-			debug = self._settings.global_get(self.SETTINGS_KEY_DEVEL_MRBEAM_CLOUD_ENV)
+			debug = self.get_env(ENV_LASER_SAFETY)
 
 			payload = {'ts': data.get('ts', ''),
 					   'email': data.get('username', ''),
 					   'serial': self._serial,
 					   'hostname': self._hostname}
 
-			if debug is not None and debug != "prod":
+			if debug is not None and debug != "PROD":
 				payload['debug'] = debug
 				self._logger.debug("LaserSafetyNotice - debug flag: %s", debug)
 
@@ -1090,6 +1111,20 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def isFirstRun(self):
 		return self._settings.global_get(["server", "firstRun"])
+
+
+	def get_env(self, type=None):
+		result = self._settings.get(["dev", "env"])
+		if type is not None:
+			if type == self.ENV_LASER_SAFETY:
+				type_env = self._settings.get(["dev", "cloud_env"]) # deprected flag
+			else:
+				type_env = self._settings.get(["dev", "env_overrides", type])
+			if type_env is not None:
+				result = type_env
+		return result
+
+
 
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
