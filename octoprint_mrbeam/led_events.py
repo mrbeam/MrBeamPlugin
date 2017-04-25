@@ -20,9 +20,14 @@ class LedEventListener(CommandTrigger):
 	LED_EVENTS[Events.PRINT_STARTED] = "mrbeam_ledstrips_cli PrintStarted"
 	LED_EVENTS[Events.PRINT_DONE] = "mrbeam_ledstrips_cli PrintDone"
 	LED_EVENTS[Events.PRINT_CANCELLED] = "mrbeam_ledstrips_cli PrintCancelled"
-	LED_EVENTS[Events.PRINT_PAUSED] = "mrbeam_ledstrips_cli PrintPaused"
 	LED_EVENTS[Events.PRINT_RESUMED] = "mrbeam_ledstrips_cli PrintResumed"
 	LED_EVENTS[Events.ERROR] = "mrbeam_ledstrips_cli Error"
+	# LaserPauseSafetyTimeout Events
+	LED_EVENTS[MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_START] = "mrbeam_ledstrips_cli PrintPausedTimeout"
+	LED_EVENTS[MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_END] = "mrbeam_ledstrips_cli PrintPaused"
+	LED_EVENTS[MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_BLOCK] = "mrbeam_ledstrips_cli PrintPausedTimeoutBlock"
+
+
 	# File management
 	LED_EVENTS[Events.UPLOAD] = "mrbeam_ledstrips_cli Upload"
 	# Slicing
