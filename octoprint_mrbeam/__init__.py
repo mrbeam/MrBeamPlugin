@@ -130,7 +130,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			dev=dict(
 				env="PROD"
 			),
-			analyticsEnabled=True
+			analyticsEnabled=False
 		)
 
 	def on_settings_load(self):
