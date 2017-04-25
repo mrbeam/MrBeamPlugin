@@ -16,6 +16,9 @@ class LedEventListener(CommandTrigger):
 	# connect/disconnect by client
 	LED_EVENTS[Events.CLIENT_OPENED] = "mrbeam_ledstrips_cli ClientOpened"
 	LED_EVENTS[Events.CLIENT_CLOSED] = "mrbeam_ledstrips_cli ClientClosed"
+	# ready to laser
+	LED_EVENTS[MrBeamEvents.READY_TO_LASER_START] = "mrbeam_ledstrips_cli ReadyToPrint"
+	LED_EVENTS[MrBeamEvents.READY_TO_LASER_CANCELED] = "mrbeam_ledstrips_cli ReadyToPrintCancel"
 	# print job
 	LED_EVENTS[Events.PRINT_STARTED] = "mrbeam_ledstrips_cli PrintStarted"
 	LED_EVENTS[Events.PRINT_DONE] = "mrbeam_ledstrips_cli PrintDone"
