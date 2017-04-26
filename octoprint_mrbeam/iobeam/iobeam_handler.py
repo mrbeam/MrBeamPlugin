@@ -21,6 +21,8 @@ class IoBeamEvents(object):
 	ONEBUTTON_RELEASED = "iobeam.onebutton.released"
 	INTERLOCK_OPEN =     "iobeam.interlock.open"
 	INTERLOCK_CLOSED =   "iobeam.interlock.closed"
+	LID_OPENED =         "iobeam.lid.opened"
+	LID_CLOSED =         "iobeam.lid.closed"
 
 
 class IoBeamHandler(object):
@@ -30,16 +32,15 @@ class IoBeamHandler(object):
 	# > onebtn:rl:< time >
 	# > onebtn:error	?
 	# > lid:pr
-	# > lid:dn:< time >
 	# > lid:rl:< time >
-	# > intlk:0:op
-	# > intlk:0:cl
-	# > intlk:1:op
-	# > intlk:1:cl
-	# > intlk:2:op
-	# > intlk:2:cl
-	# > intlk:3:op
-	# > intlk:3:cl
+	# > intlk:op:0
+	# > intlk:cl:0
+	# > intlk:op:1
+	# > intlk:cl:1
+	# > intlk:op:2
+	# > intlk:cl:2
+	# > intlk:op:3
+	# > intlk:cl:3
 	# > steprun:en
 	# > steprun:di
 
@@ -91,6 +92,9 @@ class IoBeamHandler(object):
 
 	MESSAGE_ACTION_INTERLOCK_OPEN =     "op"
 	MESSAGE_ACTION_INTERLOCK_CLOSED =   "cl"
+
+	MESSAGE_ACTION_LID_OPENED =         "pr"
+	MESSAGE_ACTION_LID_CLOSED =         "rl"
 
 
 	def __init__(self, event_bus, socket_file=None):
@@ -171,6 +175,8 @@ class IoBeamHandler(object):
 						self._logger.warn("Exception while sockect.recv(): %s - Resetting connection...", e)
 						break
 
+				if data == '.':
+					continue
 
 				if not data:
 					self._logger.warn("Connection ended from other side. Closing connection...")
@@ -257,15 +263,15 @@ class IoBeamHandler(object):
 
 
 	def _handle_interlock_message(self, message, tokens):
-		lock_num = tokens[0] if len(tokens) > 0 else None
-		lock_state = tokens[1] if len(tokens) > 1 else None
+		lock_state = tokens[0] if len(tokens) > 0 else None
+		lock_id = tokens[1] if len(tokens) > 1 else None
 		before_state = self.open_interlocks()
-		self._logger.debug("_handle_interlock_message() message: %s, lock_num: %s, lock_state: %s, before_state: %s", message, lock_num, lock_state, before_state)
+		self._logger.debug("_handle_interlock_message() message: %s, lock_id: %s, lock_state: %s, before_state: %s", message, lock_id, lock_state, before_state)
 
-		if lock_num is not None and lock_state == self.MESSAGE_ACTION_INTERLOCK_OPEN:
-			self._interlocks[lock_num] = True
-		elif lock_num is not None and lock_state == self.MESSAGE_ACTION_INTERLOCK_CLOSED:
-			self._interlocks.pop(lock_num, None)
+		if lock_id is not None and lock_state == self.MESSAGE_ACTION_INTERLOCK_OPEN:
+			self._interlocks[lock_id] = True
+		elif lock_id is not None and lock_state == self.MESSAGE_ACTION_INTERLOCK_CLOSED:
+			self._interlocks.pop(lock_id, None)
 		elif self.MESSAGE_ERROR in message:
 			raise Exception("iobeam received InterLock error: %s", message)
 		else:
@@ -281,7 +287,18 @@ class IoBeamHandler(object):
 		return True
 
 
-	def _handle_lid_message(self, message, tokens):
+	def _handle_lid_message(self, message, token):
+		action = token[0] if len(token) > 0 else None
+		payload = self._as_number(token[1]) if len(token) > 1 else None
+		self._logger.debug("_handle_lid_message() message: %s, action: %s, payload: %s", message, action, payload)
+
+		if action == self.MESSAGE_ACTION_LID_OPENED:
+			self._fireEvent(IoBeamEvents.LID_OPENED)
+		if action == self.MESSAGE_ACTION_LID_CLOSED:
+			self._fireEvent(IoBeamEvents.LID_CLOSED)
+		else:
+			return self._handle_invalid_message(message)
+
 		return True
 
 	def _handle_steprun_message(self, message, tokens):
