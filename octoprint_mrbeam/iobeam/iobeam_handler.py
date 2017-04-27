@@ -175,9 +175,6 @@ class IoBeamHandler(object):
 						self._logger.warn("Exception while sockect.recv(): %s - Resetting connection...", e)
 						break
 
-				if data == '.':
-					continue
-
 				if not data:
 					self._logger.warn("Connection ended from other side. Closing connection...")
 					break
@@ -215,6 +212,7 @@ class IoBeamHandler(object):
 		message_list = data.split(self.MESSAGE_NEWLINE)
 		for message in message_list:
 			if not message: continue
+			if message == '.': continue # ping
 
 			self._logger.debug("_handleMessages() handling message: %s", message)
 
