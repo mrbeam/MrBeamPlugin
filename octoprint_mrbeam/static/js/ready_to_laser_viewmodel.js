@@ -10,10 +10,11 @@ $(function() {
         self.dialogElement = undefined;
         self.gcodeFile = undefined;
 
-        self.interlocks_closed = ko.observable(undefined);
+        self.interlocks_closed = ko.observable(true);
         self.interlocks_open = ko.pureComputed(function() {
             return !self.interlocks_closed();
         }, self);
+        self.allow_canceling = ko.observable(true);
 
 
         self.onStartup = function() {
@@ -30,16 +31,17 @@ $(function() {
         }
 
         self.setReadyToLaserCancel = function(notifyServer){
-            if (self.gcodeFile == undefined) {
+            notifyServer = notifyServer == false ? false : true // true if undefined
+            if (notifyServer && self.gcodeFile == undefined) {
                 return
             }
-            notifyServer = notifyServer == false ? false : true // true if undefined
             console.log("setReadyToLaserCancel() notifyServer: ", notifyServer)
             self.hideDialog();
             if (notifyServer) {
                 self._sendReadyToLaserRequest(false);
             }
             self.gcodeFile = undefined;
+            self.allow_canceling(true)
         }
 
 
@@ -59,7 +61,7 @@ $(function() {
             }
 
             if ('ready_to_laser' in data && data.ready_to_laser.startsWith("end")) {
-                console.log("ReadyToLaser state was ended by the server.");
+                console.log("ReadyToLaser state was ended by the server. data.ready_to_laser=", data.ready_to_laser);
                 self.setReadyToLaserCancel(false);
 
                 if (data.ready_to_laser == "end_lasering") {
@@ -69,6 +71,12 @@ $(function() {
                         type: "success"
                     });
                 }
+            } else if ('ready_to_laser' in data && data.ready_to_laser.startsWith("start")) {
+                console.log("ReadyToLaser state was started by the server. data.ready_to_laser=", data.ready_to_laser);
+                if (data.ready_to_laser == "start_pause") {
+                    self.allow_canceling(false)
+                }
+                self.showDialog();
             }
 
             if ('interlocks_closed' in data) {
@@ -79,7 +87,11 @@ $(function() {
 
         self.showDialog = function() {
             if (!self.dialogElement.hasClass('in')) {
-                self.dialogElement.modal("show");
+                if (self.allow_canceling()) {
+                    self.dialogElement.modal("show");
+                } else {
+                    self.dialogElement.modal({backdrop: 'static', keyboard: false})
+                }
             }
         }
 

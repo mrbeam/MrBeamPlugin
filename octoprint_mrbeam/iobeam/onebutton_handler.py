@@ -29,6 +29,12 @@ class OneButtonHandler(object):
 	PRINTER_STATE_PRINTING = "PRINTING"
 	PRINTER_STATE_PAUSED = "PAUSED"
 
+	CLIENT_RTL_STATE_START =        "start"
+	CLIENT_RTL_STATE_START_PAUSE =  "start_pause"
+	CLIENT_RTL_STATE_END_LASERING = "end_lasering"
+	CLIENT_RTL_STATE_END_CANCELED = "end_canceled"
+	CLIENT_RTL_STATE_END_RESUMED =  "end_resumed"
+
 	READY_TO_PRINT_MAX_WAITING_TIME = 120
 	READY_TO_PRINT_CHECK_INTERVAL = 10
 	LASER_PAUSE_WAITING_TIME = 5
@@ -153,7 +159,7 @@ class OneButtonHandler(object):
 		self.ready_to_laser_file = gcode_file
 		self.ready_to_laser_ts = time.time()
 		self._fireEvent(MrBeamEvents.READY_TO_LASER_START)
-		self._plugin_manager.send_plugin_message("mrbeam", dict(ready_to_laser="start"))
+		self._send_frontend_ready_to_laser_state(self.CLIENT_RTL_STATE_START)
 		self._check_if_still_ready_to_laser()
 
 	def unset_ready_to_laser(self, lasering=False):
@@ -163,9 +169,9 @@ class OneButtonHandler(object):
 		self.ready_to_laser_ts = -1
 		self.ready_to_laser_file = None
 		if lasering and was_ready_to_laser:
-			self._plugin_manager.send_plugin_message("mrbeam", dict(ready_to_laser="end_lasering"))
+			self._send_frontend_ready_to_laser_state(self.CLIENT_RTL_STATE_END_LASERING)
 		elif was_ready_to_laser:
-			self._plugin_manager.send_plugin_message("mrbeam", dict(ready_to_laser="end_canceled"))
+			self._send_frontend_ready_to_laser_state(self.CLIENT_RTL_STATE_END_CANCELED)
 			self._fireEvent(MrBeamEvents.READY_TO_LASER_CANCELED)
 
 	def _check_if_still_ready_to_laser(self):
@@ -189,7 +195,7 @@ class OneButtonHandler(object):
 
 		self.unset_ready_to_laser(True)
 
-
+	# We raise these exceptions because these are all things we can't fix/handle here...
 	def _test_conditions(self, file):
 		self._logger.debug("_test_conditions() laser file %s, printer state: %s", file, self._printer.get_state_id())
 
@@ -228,6 +234,7 @@ class OneButtonHandler(object):
 		self.pause_need_to_release = need_to_release;
 		self._printer.pause_print()
 		self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_START)
+		self._send_frontend_ready_to_laser_state(self.CLIENT_RTL_STATE_START_PAUSE)
 		self._start_pause_safety_timeout_timer()
 
 	def _is_during_pause_waiting_time(self):
@@ -236,6 +243,7 @@ class OneButtonHandler(object):
 	def resume_laser_if_waitingtime_is_over(self):
 		if self.pause_laser_ts > 0 and time.time() - self.pause_laser_ts > self.LASER_PAUSE_WAITING_TIME:
 			self._printer.resume_print()
+			self._send_frontend_ready_to_laser_state(self.CLIENT_RTL_STATE_END_RESUMED)
 			self.pause_laser_ts = -1
 			self._logger.debug("Resuming laser job...")
 		else:
@@ -245,6 +253,9 @@ class OneButtonHandler(object):
 		self.pause_laser_ts = -1
 		self._cancel_pause_safety_timeout_timer()
 
+	def _send_frontend_ready_to_laser_state(self, state):
+		self._logger.debug("_send_frontend_ready_to_laser_state() state: %s", state)
+		self._plugin_manager.send_plugin_message("mrbeam", dict(ready_to_laser=state))
 
 	def _get_shutdown_command(self):
 		c = self._settings.global_get(["server", "commands", "systemShutdownCommand"])
