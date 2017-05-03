@@ -43,7 +43,7 @@ class MachineCom(object):
 	STATE_FLASHING = 14
 
 	def __init__(self, port=None, baudrate=None, callbackObject=None, printerProfileManager=None):
-		self._logger = logging.getLogger(__name__)
+		self._logger = logging.getLogger("octoprint.plugins.mrbeam.comm_acc2")
 		self._serialLogger = logging.getLogger("SERIAL")
 
 		if port is None:

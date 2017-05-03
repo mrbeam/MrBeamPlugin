@@ -1,17 +1,21 @@
 from octoprint.printer.standard import Printer, StateMonitor, PrinterInterface
 from octoprint.settings import settings
+from octoprint.events import eventManager, Events
 from . import comm_acc2 as comm
+import logging
 
 class Laser(Printer):
 
 	def __init__(self, fileManager, analysisQueue, printerProfileManager):
 		Printer.__init__(self, fileManager, analysisQueue, printerProfileManager)
+		self._logger = logging.getLogger("octoprint.plugins.mrbeam.printer")
 		self._stateMonitor = LaserStateMonitor(
 			interval=0.5,
 			on_update=self._sendCurrentDataCallbacks,
 			on_add_temperature=self._sendAddTemperatureCallbacks,
 			on_add_log=self._sendAddLogCallbacks,
-			on_add_message=self._sendAddMessageCallbacks
+			on_add_message=self._sendAddMessageCallbacks,
+			on_get_progress = self._updateProgressDataCallback
 		)
 		self._stateMonitor.reset(
 			state={"text": self.get_state_string(), "flags": self._getStateFlags()},
@@ -41,6 +45,8 @@ class Laser(Printer):
 		"""
 		if self._comm is not None:
 			self._comm.close()
+
+		eventManager().fire(Events.CONNECTING)
 		self._printerProfileManager.select(profile)
 		self._comm = comm.MachineCom(port, baudrate, callbackObject=self, printerProfileManager=self._printerProfileManager)
 
@@ -56,7 +62,7 @@ class Laser(Printer):
 
 	# extend commands: home, position, increase_passes, decrease_passes
 	def home(self, axes):
-		self._logger.info("ANDYTEST self.commands([\"$H\", \"G92X500Y400Z0\", \"G90\", \"G21\"])")
+		# self._logger.info("ANDYTEST self.commands([\"$H\", \"G92X500Y400Z0\", \"G90\", \"G21\"])")
 		self.commands(["$H", "G92X500Y400Z0", "G90", "G21"])
 
 	def position(self, x, y):
@@ -108,6 +114,7 @@ class Laser(Printer):
 	# progress update callbacks
 	def on_comm_progress(self):
 		self._setProgressData(self._comm.getPrintProgress(), self._comm.getPrintFilepos(), self._comm.getPrintTime(), self._comm.getCleanedPrintTime())
+		self._stateMonitor.trigger_progress_update()
 
 	def _add_position_data(self, MPos, WPos):
 		if MPos is None or WPos is None:

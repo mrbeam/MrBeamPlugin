@@ -29,7 +29,8 @@ def get_update_information(self):
 		set_info_findmymrbeam(self, tier)
 		set_info_mrbeamledstrips(self, tier)
 		set_info_netconnectd_daemon(self, tier)
-		set_info_pcf8575(self, tier)
+		# set_info_pcf8575(self, tier)
+		set_info_iobeam(self, tier)
 
 	_logger(self).debug("MrBeam Plugin provides this config (might be overridden by settings!):\n%s", yaml.dump(sw_update_config, width=50000).strip())
 
@@ -219,6 +220,34 @@ def set_info_netconnectd_daemon(self, tier):
 		restart="environment")
 
 
+
+def set_info_iobeam(self, tier):
+	name = "iobeam"
+	module_id = "iobeam"
+	branch = "master"
+	# ths module is installed outside of our virtualenv therefor we can't use default pip command.
+	# /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
+	pip_command = "sudo /usr/local/bin/pip"
+	pip_name = "iobeam"
+
+	if _is_override_in_settings(self, module_id): return
+
+	version = get_version_of_pip_module(self, pip_name, pip_command)
+	if version is None: return
+
+	sw_update_config[module_id] = dict(
+		displayName=_get_display_name(self, name, tier, branch),
+		displayVersion=version,
+		type="bitbucket_commit",
+		user="mrbeam",
+		repo="iobeam",
+		branch=branch,
+		pip="https://bitbucket.org/mrbeam/iobeam/get/{target_version}.zip",
+		pip_command=pip_command,
+		restart="environment"
+	)
+
+
 def set_info_pcf8575(self, tier):
 	name = "pcf8575"
 	module_id = "pcf8575"
@@ -236,10 +265,10 @@ def set_info_pcf8575(self, tier):
 
 def _get_display_name(self, name, tier=None, branch=None):
 	if tier is not None and not tier == SW_UPDATE_TIER_PROD:
-		if branch is not None:
-			return "{} ({}:{})".format(name, tier, branch)
-		else:
-			return "{} ({})".format(name, tier)
+		# if branch is not None:
+		# 	return "{} ({}:{})".format(name, tier, branch)
+		# else:
+		return "{} ({})".format(name, tier)
 	else:
 		return name
 

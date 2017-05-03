@@ -11,6 +11,7 @@ $(function () {
         self.terminal = params[6];
         self.workingArea = params[7];
         self.conversion = params[8];
+        self.readyToLaser = params[9];
 
         self.onStartup = function () {
             // TODO fetch machine profile on start
@@ -244,10 +245,12 @@ $(function () {
         };
 
         self.gcodefiles.startGcodeWithSafetyWarning = function (gcodeFile) {
-            self.gcodefiles.loadFile(gcodeFile, false);
+            var no_print = self.gcodefiles.loadFile(gcodeFile, false);
 
             self.show_safety_glasses_warning(function () {
-                self.gcodefiles.loadFile(gcodeFile, true);
+                // ANDYTEST find out where this is called from
+                var do_print = self.gcodefiles.loadFile(gcodeFile, true);
+                console.log("ANDYTEST: gcodefiles.loadFile: do_print: ", do_print);
             });
         };
 
@@ -272,11 +275,17 @@ $(function () {
             var data = {refs: {resource: url}, origin: payload.gcode_location, path: payload.gcode};
             self.gcodefiles.loadFile(data, false); // loads gcode into gcode viewer
 
-            var callback = function (e) {
-                e.preventDefault();
-                self.gcodefiles.loadFile(data, true); // starts print
+            var oneButton = (self.workingArea.profile.currentProfileData().start_method != undefined &&
+                    self.workingArea.profile.currentProfileData().start_method() == "onebutton");
+            if (oneButton) {
+                self.readyToLaser.setReadyToLaser(payload.gcode);
+            } else {
+                var callback = function (e) {
+                    e.preventDefault();
+                    self.gcodefiles.loadFile(data, true); // starts print
+                };
+                self.show_safety_glasses_warning(callback);
             };
-            self.show_safety_glasses_warning(callback);
 			self.gcodefiles.uploadProgress
                 .removeClass("progress-striped")
                 .removeClass("active");
@@ -290,8 +299,10 @@ $(function () {
                 type: "success"
             });
 
-            self.gcodefiles.requestData(undefined, undefined, self.gcodefiles.currentPath());
+            // self.gcodefiles.requestData(undefined, undefined, self.gcodefiles.currentPath());
+            self.gcodefiles.requestData({switchToPath: self.gcodefiles.currentPath()});
         };
+
 
         // settings.js viewmodel extensions
 
@@ -325,16 +336,16 @@ $(function () {
 
         self.show_safety_glasses_warning = function (callback) {
             var options = {};
-            options.title = gettext("Are you sure?");
+            options.title = gettext("Ready to laser?");
+
+            if (self.workingArea.profile.currentProfileData().glasses()) {
             options.cancel = gettext("Cancel");
             options.proceed = gettext("Proceed");
-
-            if(self.workingArea.profile.currentProfileData().glasses()){
                 options.message = gettext("The laser will now start. Protect yourself and everybody in the room appropriately before proceeding!");
                 options.question = gettext("Are you sure you want to proceed?");
                 options.proceedClass = "danger";
                 options.dialogClass = "safety_glasses_heads_up";
-            }else{
+            } else {
                 options.message = gettext("The laser will now start. Please make sure the lid is closed.");
                 options.question = gettext("Please confirm to proceed.");
             }
@@ -350,20 +361,24 @@ $(function () {
             showConfirmationDialog(options);
         };
 
-        self.print_with_safety_glasses_warning = function () {
-            var callback = function (e) {
-                e.preventDefault();
-                self.print();
-            };
-            self.show_safety_glasses_warning(callback);
-        };
+
+        // who calls this????
+        // self.print_with_safety_glasses_warning = function () {
+        //     var callback = function (e) {
+        //         e.preventDefault();
+        //         /// ...and where is this function 'print()' defined???
+        //         self.print();
+        //     };
+        //     self.show_safety_glasses_warning(callback);
+        // };
     }
 
 
     // view model class, parameters for constructor, container to bind to
     ADDITIONAL_VIEWMODELS.push([MotherViewModel,
         ["loginStateViewModel", "settingsViewModel", "printerStateViewModel", "gcodeFilesViewModel",
-            "connectionViewModel", "controlViewModel", "terminalViewModel", "workingAreaViewModel", "vectorConversionViewModel"],
+            "connectionViewModel", "controlViewModel", "terminalViewModel", "workingAreaViewModel",
+            "vectorConversionViewModel", "readyToLaserViewModel"],
         [document.getElementById("mrb_state"),
             document.getElementById("mrb_control"),
             document.getElementById("mrb_connection_wrapper"),

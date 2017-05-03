@@ -1,36 +1,37 @@
 # coding=utf-8
 from __future__ import absolute_import
 
-
-# import logging as log
-
-import octoprint.plugin
-import flask
-
-from octoprint.util import dict_merge
-from octoprint.server import NO_CONTENT
-
-from .profile import LaserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
-from .software_update_information import get_update_information
-# from .state.ledstrips import LEDstrips
-
+import __builtin__
 import copy
-import time
-import os
-import logging
-import threading
 import json
-from octoprint.server.util.flask import restricted_access, get_json_command_from_request, add_non_caching_response_headers
-from octoprint.server import admin_permission
-from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping
-from flask.ext.babel import gettext
-from flask import Blueprint, request, jsonify, make_response, url_for
+import logging
+import os
+import pprint
+import socket
+import threading
+import time
 from subprocess import check_output
 
-import pprint
+import octoprint.plugin
 import requests
-import socket
+from flask import request, jsonify, make_response, url_for
+from flask.ext.babel import gettext
+from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping
+from octoprint.server import NO_CONTENT
+from octoprint.server.util.flask import restricted_access, get_json_command_from_request, \
+	add_non_caching_response_headers
+from octoprint.util import dict_merge
 
+from octoprint_mrbeam.iobeam.iobeam_handler import ioBeamHandler
+from octoprint_mrbeam.iobeam.onebutton_handler import oneButtonHandler
+from octoprint_mrbeam.iobeam.interlock_handler import interLockHandler
+from octoprint_mrbeam.led_events import LedEventListener
+from octoprint_mrbeam.mrbeam_events import MrBeamEvents
+from .profile import LaserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
+from .software_update_information import get_update_information
+
+
+__builtin__.MRBEAM_DEBUG = False
 
 
 class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
@@ -66,12 +67,16 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._cancelled_jobs_mutex = threading.Lock()
 		self._CONVERSION_PARAMS_PATH = "/tmp/conversion_parameters.json"  # TODO add proper path there
 		self._cancel_job = False
+		self.print_progress_last = -1
+		self.slicing_progress_last = -1
 
 	def initialize(self):
 		self.laserCutterProfileManager = LaserCutterProfileManager(self._settings)
+		if self._settings.get(["dev", "debug"]) == True: __builtin__.MRBEAM_DEBUG = True
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam")
 		self._branch = self.getBranch()
 		self._hostname = self.getHostname()
+		self._octopi_info = self.get_octopi_info()
 		self._serial = self.getPiSerial()
 		self._do_initial_log()
 		try:
@@ -81,19 +86,25 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		except Exception as e:
 			self._logger.exception("Exception while getting NetconnectdPlugin pluginInfo")
 
+		self._ioBeam = ioBeamHandler(self._event_bus, self._settings.get(["dev", "sockets", "iobeam"]))
+		self._oneButtonHandler = oneButtonHandler(self)
+		self._interlock_handler = interLockHandler(self)
+		self._led_eventhandler = LedEventListener(self._event_bus, self._printer)
+
 
 	def _do_initial_log(self):
-		str = ""
-		str += " MRBEAM_DEBUG " if False else ''
-		str += " version:" + self._plugin_version
-		str += ", branch:" + self._branch
-		str += ", host:" + self._hostname
-		str += ", serial:" + self._serial
-		str += ", env:" + self.get_env()
-		str += " ("+self.ENV_LOCAL+':'+self.get_env(self.ENV_LOCAL)
-		str += ","+self.ENV_LASER_SAFETY+':'+self.get_env(self.ENV_LASER_SAFETY)
-		str += ","+self.ENV_ANALYTICS+':'+self.get_env(self.ENV_ANALYTICS)+')'
-		self._logger.info("MrBeam Plugin %s", str)
+		msg = ""
+		msg += " MRBEAM_DEBUG " if False else ''
+		msg += " version:" + self._plugin_version
+		msg += ", branch:" + self._branch
+		msg += ", host:" + self._hostname
+		msg += ", serial:" + self._serial
+		msg += ", env:" + self.get_env()
+		msg += " ("+self.ENV_LOCAL+':'+self.get_env(self.ENV_LOCAL)
+		msg += ","+self.ENV_LASER_SAFETY+':'+self.get_env(self.ENV_LASER_SAFETY)
+		msg += ","+self.ENV_ANALYTICS+':'+self.get_env(self.ENV_ANALYTICS)+')'
+		msg += ", octopi:" + str(self._octopi_info)
+		self._logger.info("MrBeam Plugin %s", msg)
 
 
 	def _convert_profiles(self, profiles):
@@ -183,7 +194,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/working_area.js", "js/camera.js", "js/lib/snap.svg-min.js", "js/render_fills.js", "js/path_convert.js",
 				"js/matrix_oven.js", "js/drag_scale_rotate.js",	"js/convert.js", "js/gcode_parser.js",
 				"js/lib/photobooth_min.js", "js/svg_cleaner.js", "js/loginscreen_viewmodel.js",
-				"js/wizard_acl.js", "js/netconnectd_wrapper.js", "js/lasersaftey_viewmodel.js"],
+				"js/wizard_acl.js", "js/netconnectd_wrapper.js", "js/lasersaftey_viewmodel.js",
+				"js/ready_to_laser_viewmodel.js"],
 			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css", "css/quicktext-fonts.css"],
 			less=["less/mrbeam.less"]
 		)
@@ -217,6 +229,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			if render_kwargs["templates"]["wizard"]["entries"]["firstrunend"]:
 				render_kwargs["templates"]["wizard"]["entries"]["firstrunend"][1]["template"] = "wizard/firstrun_end.jinja2"
 
+		display_version_string = "{} on {}".format(self._plugin_version, self._hostname)
+		if self._branch:
+			display_version_string = "{} ({} branch) on {}".format(self._plugin_version, self._branch, self._hostname)
+		if MRBEAM_DEBUG:
+			display_version_string += " MRBEAM_DEBUG"
+
 		render_kwargs.update(dict(
 							 webcamStream=self._settings.global_get(["webcam", "stream"]),
 							 enableFocus=enable_focus,
@@ -232,9 +250,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 beamosVersion= dict(
 								number = self._plugin_version,
 								branch= self._branch,
-								display_version = "{} ({} branch) on {}".format(
-									self._plugin_version, self._branch, self._hostname) if self._branch else (self._plugin_version, self._hostname)
+								display_version = display_version_string,
+							 	image = self._octopi_info),
 							 ),
+							 MRBEAM_DEBUG=MRBEAM_DEBUG,
 							 env= dict(
 								 env=self.get_env(),
 								 local=self.get_env(self.ENV_LOCAL),
@@ -243,7 +262,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 ),
 							 serial=self._serial,
 							 analyticsEnabled=self._settings.get(["analyticsEnabled"])
-							 ))
+						 )
 		r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
 
 		if firstRun:
@@ -384,7 +403,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@octoprint.plugin.BlueprintPlugin.route("/acl", methods=["POST"])
 	def acl_wizard_api(self):
 		from flask import request
-		from octoprint.server.api import valid_boolean_trues, NO_CONTENT
+		from octoprint.server.api import NO_CONTENT
 
 		if not(self.isFirstRun() and self._user_manager.enabled and not self._user_manager.hasBeenCustomized()):
 			return make_response("Forbidden", 403)
@@ -412,7 +431,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@octoprint.plugin.BlueprintPlugin.route("/wifi", methods=["POST"])
 	def wifi_wizard_api(self):
 		from flask import request
-		from octoprint.server.api import valid_boolean_trues, NO_CONTENT
+		from octoprint.server.api import NO_CONTENT
 
 		# accept requests only while setup wizard is active
 		if not self.isFirstRun() or not self._is_wifi_wizard_required():
@@ -449,7 +468,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	# simpleApiCommand: lasersafety_confirmation; simpleApiCommand: lasersafety_confirmation;
 	def lasersafety_wizard_api(self, data):
 		from flask.ext.login import current_user
-		from octoprint.server.api import valid_boolean_trues, NO_CONTENT
+		from octoprint.server.api import NO_CONTENT
 
 		# get JSON from request data, or send user back home
 		data = request.values
@@ -703,7 +722,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		if command == "convert":
 			# TODO stripping non-ascii is a hack - svg contains lots of non-ascii in <text> tags. Fix this!
-			import re
 			svg = ''.join(i for i in data['svg'] if ord(i) < 128)  # strip non-ascii chars like €
 			del data['svg']
 			filename = target + "/temp.svg"
@@ -825,11 +843,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			feedrate=["value"],
 			intensity=["value"],
 			passes=["value"],
-			lasersafety_confirmation=[]
+			lasersafety_confirmation=[],
+			ready_to_laser=["ready"],
+			debug_event=["event"]
 		)
 
 	def on_api_command(self, command, data):
-		import flask
 		if command == "position":
 			if isinstance(data["x"], (int, long, float)) and isinstance(data["y"], (int, long, float)):
 				self._printer.position(data["x"], data["y"])
@@ -843,6 +862,35 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._printer.set_passes(data["value"])
 		elif command == "lasersafety_confirmation":
 			self.lasersafety_wizard_api(data)
+		elif command == "ready_to_laser":
+			return self.ready_to_laser(data)
+		elif command == "debug_event":
+			return self.debug_event(data)
+		return NO_CONTENT
+
+
+	def debug_event(self, data):
+		event = data['event']
+		payload = data['payload'] if 'payload' in data else None
+		self._logger.info("Fireing debug event: %s, payload: %s", event, payload)
+		self._event_bus.fire(event, payload)
+		return NO_CONTENT
+
+
+	def ready_to_laser(self, data):
+		if data['ready']:
+			if 'gcode' in data:
+				try:
+					self._oneButtonHandler.set_ready_to_laser(data['gcode'])
+					# self._oneButtonHandler._start_laser()
+				except:
+					self._logger.exception("Error while going into state ReadyToLaser.")
+					return make_response("BAD REQUEST - Not able to go to Ready state. See server log for more details.", 400)
+			else:
+				return make_response("BAD REQUEST - No gcode file provided.", 400)
+		else:
+			self._oneButtonHandler.unset_ready_to_laser()
+
 		return NO_CONTENT
 
 
@@ -995,19 +1043,24 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	##~~ Event Handler Plugin API
 
 	def on_event(self, event, payload):
-		#self._logger.debug("on_event %s: %s", event, payload)
-		# self.stateHandler.on_state_change(event)
+		if not event == "SettingsUpdated":
+			self._logger.debug("on_event %s: %s", event, payload)
+		# self._logger.info("ANDYTEST get_state_id: %s, is_operational: %s", self._printer.get_state_id(), self._printer.is_operational())
 		pass
 
 	##~~ Progress Plugin API
 
 	def on_print_progress(self, storage, path, progress):
-		state = "progress:"+str(progress)
-		# self.stateHandler.on_state_change(state)
+		flooredProgress = progress - (progress % 10)
+		if (flooredProgress != self.print_progress_last):
+			self.print_progress_last = flooredProgress
+			self._event_bus.fire(MrBeamEvents.PRINT_PROGRESS, self.print_progress_last)
 
 	def on_slicing_progress(self, slicer, source_location, source_path, destination_location, destination_path, progress):
-		state = "slicing:"+str(progress)
-		# self.stateHandler.on_state_change(state)
+		flooredProgress = progress - (progress % 10)
+		if (flooredProgress != self.slicing_progress_last):
+			self.slicing_progress_last = flooredProgress
+			self._event_bus.fire(MrBeamEvents.SLICING_PROGRESS, self.slicing_progress_last)
 
 	##~~ Softwareupdate hook
 
@@ -1108,6 +1161,18 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		return branch
 
+	def get_octopi_info(self):
+		try:
+			with open('/etc/octopi_flavor', 'r') as myfile:
+				flavor = myfile.read().replace('\n', '')
+			with open('/etc/octopi_datetime', 'r') as myfile:
+				datetime = myfile.read().replace('\n', '')
+			return "{} {}".format(flavor, datetime)
+		except Exception as e:
+			# self._logger.exception("Can't read OctoPi image info due to exception:", e)
+			pass
+		return None
+
 
 	def isFirstRun(self):
 		return self._settings.global_get(["server", "firstRun"])
@@ -1125,12 +1190,48 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return result
 
 
+# this is for the command line interface we're providing
+def clitest_commands(cli_group, pass_octoprint_ctx, *args, **kwargs):
+	import click
+	import sys
+	import requests.exceptions
+	import octoprint_client as client
+
+	# > octoprint plugins mrbeam:debug_event MrBeamDebugEvent -p 42
+	# remember to activate venv where MrBeamPlugin is installed in
+	@click.command("debug_event")
+	@click.argument("event", default="MrBeamDebugEvent")
+	@click.option("--payload", "-p", default=None, help="optinal payload string")
+	def debug_event_command(event, payload):
+		if payload is not None:
+			payload_numer = None
+			try:
+				payload_numer = int(payload)
+			except:
+				try:
+					payload_numer = float(payload)
+				except:
+					pass
+			if payload_numer is not None:
+				payload = payload_numer
+
+		params = dict(command="debug_event", event=event, payload=payload)
+		client.init_client(cli_group.settings)
+
+		click.echo("Firing debug event - params: {}".format(params))
+		r = client.post_json("/api/plugin/mrbeam", data=params)
+		try:
+			r.raise_for_status()
+		except requests.exceptions.HTTPError as e:
+			click.echo("Could not fire event, got {}".format(e))
+			sys.exit(1)
+
+	return [debug_event_command]
 
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
 # can be overwritten via __plugin_xyz__ control properties. See the documentation for that.
-
 
 __plugin_name__ = "Mr Beam Laser Cutter"
 
@@ -1165,7 +1266,9 @@ def __plugin_load__():
 		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
 		"octoprint.printer.factory": __plugin_implementation__.laser_factory,
 		"octoprint.filemanager.extension_tree": __plugin_implementation__.laser_filemanager,
-		"octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook
-		#"octoprint.server.http.routes": __plugin_implementation__.serve_url
+		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
+		"octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook,
+		"octoprint.cli.commands": clitest_commands
+
 	}
 

@@ -12,6 +12,7 @@
         {% include 'mrbeam_initscript.jinja2' %}
         {% include 'loading_overlay.jinja2' %}
         {% include 'lasersafety_standalone.jinja2' %}
+        {% include 'ready_to_laser.jinja2' %}
         {% include 'loginscreen_viewmodel.jinja2' %}
 		{% if analyticsEnabled %}
 <!-- start Mixpanel --><script type="text/javascript">(function(e,a){if(!a.__SV){var b=window;try{var c,l,i,j=b.location,g=j.hash;c=function(a,b){return(l=a.match(RegExp(b+"=([^&]*)")))?l[1]:null};g&&c(g,"state")&&(i=JSON.parse(decodeURIComponent(c(g,"state"))),"mpeditor"===i.action&&(b.sessionStorage.setItem("_mpcehash",g),history.replaceState(i.desiredHash||"",e.title,j.pathname+j.search)))}catch(m){}var k,h;window.mixpanel=a;a._i=[];a.init=function(b,c,f){function e(b,a){var c=a.split(".");2==c.length&&(b=b[c[0]],a=c[1]);b[a]=function(){b.push([a].concat(Array.prototype.slice.call(arguments,
@@ -70,6 +71,7 @@ mixpanel.init("094a94a7a2bd139aa838a1b326d58529",{debug:true});</script><!-- end
 							<li><a href="https://github.com/mrbeam/OctoPrint/issues" target="_blank"><i class="icon-flag"></i> {{ _('Bugs and Requests') }}</a></li>
 							<li class="divider"></li>
 						  	<li class="nav_version">{{ _('beamOS Version') }}: <span class="version_beamos">{{ beamosVersion.display_version }}</span></li>
+						  	<li class="nav_version">{{ _('beamOS image') }}: <span class="version_beamos">{{ beamosVersion.image }}</span></li>
 						  	<li class="nav_version">{{ _('OctoPrint Version') }}: <span class="version"></span></li>
 						</ul>
 					</li>
