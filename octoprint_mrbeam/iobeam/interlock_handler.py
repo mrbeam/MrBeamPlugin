@@ -4,15 +4,27 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 
 
+# singleton
+_instance = None
+
+def interLockHandler(plugin):
+	global _instance
+	if _instance is None:
+		_instance = InterLockHandler(plugin._ioBeam,
+									 plugin._event_bus,
+									 plugin._plugin_manager,
+									 plugin._printer)
+	return _instance
 
 # This guy handles InterLock Events
 # Honestly, I'm not sure if we need a separate handler for this...
 class InterLockHandler(object):
 
-	def __init__(self, iobeam_handler, event_bus, plugin_manager):
+	def __init__(self, iobeam_handler, event_bus, plugin_manager, printer):
 		self._iobeam_handler = iobeam_handler
 		self._event_bus = event_bus
 		self._plugin_manager = plugin_manager
+		self._printer = printer
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam.interlockhandler")
 
 		self._subscribe()

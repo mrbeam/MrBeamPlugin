@@ -242,10 +242,9 @@ def set_info_iobeam(self, tier):
 		user="mrbeam",
 		repo="iobeam",
 		branch=branch,
-		# pip="https://github.com/mrbeam/netconnectd_mrbeam/archive/{target_version}.zip",
 		pip="https://bitbucket.org/mrbeam/iobeam/get/{target_version}.zip",
 		pip_command=pip_command,
-		# restart="environment"
+		restart="environment"
 	)
 
 

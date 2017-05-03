@@ -24,7 +24,7 @@ from octoprint.util import dict_merge
 
 from octoprint_mrbeam.iobeam.iobeam_handler import ioBeamHandler
 from octoprint_mrbeam.iobeam.onebutton_handler import oneButtonHandler
-from octoprint_mrbeam.iobeam.interlock_handler import InterLockHandler
+from octoprint_mrbeam.iobeam.interlock_handler import interLockHandler
 from octoprint_mrbeam.led_events import LedEventListener
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from .profile import LaserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
@@ -88,7 +88,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		self._ioBeam = ioBeamHandler(self._event_bus, self._settings.get(["dev", "sockets", "iobeam"]))
 		self._oneButtonHandler = oneButtonHandler(self)
-		self._interlock_handler = InterLockHandler(self._ioBeam, self._event_bus, self._plugin_manager)
+		self._interlock_handler = interLockHandler(self)
 		self._led_eventhandler = LedEventListener(self._event_bus, self._printer)
 
 

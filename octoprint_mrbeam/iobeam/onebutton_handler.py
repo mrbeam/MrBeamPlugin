@@ -14,7 +14,8 @@ _instance = None
 def oneButtonHandler(plugin):
 	global _instance
 	if _instance is None:
-		_instance = OneButtonHandler(plugin._event_bus,
+		_instance = OneButtonHandler(plugin._ioBeam,
+									 plugin._event_bus,
 									 plugin._plugin_manager,
 									 plugin._file_manager,
 									 plugin._settings,
@@ -39,7 +40,8 @@ class OneButtonHandler(object):
 	SHUTDOWN_STATE_PREPARE    = 1
 	SHUTDOWN_STATE_GOING_DOWN = 2
 
-	def __init__(self, event_bus, plugin_manager, file_manager, settings, printer):
+	def __init__(self, iobeam, event_bus, plugin_manager, file_manager, settings, printer):
+		self._iobeam = iobeam
 		self._event_bus = event_bus
 		self._plugin_manager = plugin_manager
 		self._file_manager = file_manager
@@ -63,8 +65,12 @@ class OneButtonHandler(object):
 		self._event_bus.subscribe(IoBeamEvents.ONEBUTTON_DOWN, self.onEvent)
 		self._event_bus.subscribe(IoBeamEvents.ONEBUTTON_PRESSED, self.onEvent)
 		self._event_bus.subscribe(IoBeamEvents.ONEBUTTON_RELEASED, self.onEvent)
+		self._event_bus.subscribe(IoBeamEvents.INTERLOCK_OPEN, self.onEvent)
+		self._event_bus.subscribe(IoBeamEvents.INTERLOCK_CLOSED, self.onEvent)
 		self._event_bus.subscribe(IoBeamEvents.DISCONNECT, self.onEvent)
 		self._event_bus.subscribe(OctoPrintEvents.CLIENT_CLOSED, self.onEvent)
+		self._event_bus.subscribe(OctoPrintEvents.PRINT_PAUSED, self.onEvent)
+		self._event_bus.subscribe(OctoPrintEvents.PRINT_RESUMED, self.onEvent)
 
 	def onEvent(self, event, payload):
 		self._logger.debug("onEvent() event:%s, payload:%s, : self.shutdown_state:%s, pause_laser_ts:%s, pause_need_to_release:%s",
@@ -107,16 +113,36 @@ class OneButtonHandler(object):
 				self.shutdown_state = self.SHUTDOWN_STATE_NONE
 				self._fireEvent(MrBeamEvents.SHUTDOWN_PREPARE_CANCEL)
 			# start laser
-			elif self._printer.is_operational() and self.ready_to_laser_ts > 0:
+			elif self._printer.is_operational() and self.ready_to_laser_ts > 0 and self._iobeam.is_interlock_closed():
 				self._logger.debug("onEvent() ONEBUTTON_RELEASED: start laser")
 				self._start_laser()
 			elif self._printer.get_state_id() == self.PRINTER_STATE_PAUSED:
 				if self._is_during_pause_waiting_time():
 					self._logger.debug("onEvent() ONEBUTTON_RELEASED: timeout block")
 					self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_BLOCK)
-				else:
+				elif self._iobeam.is_interlock_closed():
+				# else:
 					self._logger.debug("onEvent() ONEBUTTON_RELEASED: resume_laser_if_waitingtime_is_over")
 					self.resume_laser_if_waitingtime_is_over()
+
+		elif event == IoBeamEvents.INTERLOCK_OPEN:
+			if self._printer.get_state_id() == self.PRINTER_STATE_PRINTING:
+				self._logger.debug("onEvent() INTERLOCK_OPEN: pausing laser")
+				self.pause_laser(need_to_release=False)
+			else:
+				self._logger.debug("onEvent() INTERLOCK_OPEN: not printing, nothing to do. printer state is: %s", self._printer.get_state_id())
+
+		# elif event == IoBeamEvents.INTERLOCK_CLOSED:
+		elif event == OctoPrintEvents.PRINT_PAUSED:
+			# Webinterface / OctoPrint caused the pause state
+			if self.pause_laser_ts <= 0:
+				self.pause_laser(need_to_release=False)
+
+		elif event == OctoPrintEvents.PRINT_RESUMED:
+			# Webinterface / OctoPrint caused the resume
+			self._logger.debug("onEvent() PRINT_RESUMED")
+			self._set_resumed()
+
 
 		elif event == OctoPrintEvents.CLIENT_CLOSED:
 			self.unset_ready_to_laser()
@@ -132,7 +158,7 @@ class OneButtonHandler(object):
 
 	def unset_ready_to_laser(self, lasering=False):
 		self._logger.debug("unset_ready_to_laser()")
-		self._cancel_timer()
+		self._cancel_ready_to_laser_timer()
 		was_ready_to_laser = (self.ready_to_laser_ts > 0)
 		self.ready_to_laser_ts = -1
 		self.ready_to_laser_file = None
@@ -177,25 +203,29 @@ class OneButtonHandler(object):
 			raise Exception("ReadyToLaser: printer is not ready. printer state is: %s" % self._printer.get_state_id())
 
 	def _start_ready_to_laser_timer(self):
-		self.ready_to_laser_timer = threading.Timer(self.READY_TO_PRINT_CHECK_INTERVAL,
-													self._check_if_still_ready_to_laser).start()
+		self.ready_to_laser_timer = threading.Timer(self.READY_TO_PRINT_CHECK_INTERVAL, self._check_if_still_ready_to_laser)
+		self.ready_to_laser_timer.start()
 
-	def _start_pause_safety_timeout_timer(self):
-		self.pause_safety_timeout_timer = threading.Timer(self.LASER_PAUSE_WAITING_TIME,
-													self._end_pause_safety_timeout).start()
-
-	def _end_pause_safety_timeout(self):
-		self._logger.debug("_end_pause_safety_timeout()")
-		self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_END)
-
-	def _cancel_timer(self):
+	def _cancel_ready_to_laser_timer(self):
 		if self.ready_to_laser_timer is not None:
 			self.ready_to_laser_timer.cancel()
 			self.ready_to_laser_timer = None
 
-	def pause_laser(self):
+	def _start_pause_safety_timeout_timer(self):
+		self.pause_safety_timeout_timer = threading.Timer(self.LASER_PAUSE_WAITING_TIME, self._end_pause_safety_timeout)
+		self.pause_safety_timeout_timer.start()
+
+	def _end_pause_safety_timeout(self):
+		self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_END)
+
+	def _cancel_pause_safety_timeout_timer(self):
+		if self.pause_safety_timeout_timer is not None:
+			self.pause_safety_timeout_timer.cancel()
+			self.pause_safety_timeout_timer = None
+
+	def pause_laser(self, need_to_release=True):
 		self.pause_laser_ts = time.time()
-		self.pause_need_to_release = True;
+		self.pause_need_to_release = need_to_release;
 		self._printer.pause_print()
 		self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_START)
 		self._start_pause_safety_timeout_timer()
@@ -210,6 +240,11 @@ class OneButtonHandler(object):
 			self._logger.debug("Resuming laser job...")
 		else:
 			self._logger.info("Not resuming laser job, still in waiting time.")
+
+	def _set_resumed(self):
+		self.pause_laser_ts = -1
+		self._cancel_pause_safety_timeout_timer()
+
 
 	def _get_shutdown_command(self):
 		c = self._settings.global_get(["server", "commands", "systemShutdownCommand"])
