@@ -72,7 +72,7 @@ class IoBeamHandler(object):
 
 
 	SOCKET_FILE = "/var/run/mrbeam_iobeam.sock"
-	MAX_ERRORS = 10
+	MAX_ERRORS = 3
 
 	MESSAGE_LENGTH_MAX = 1024
 	MESSAGE_NEWLINE = "\n"
@@ -166,29 +166,33 @@ class IoBeamHandler(object):
 
 			while not self._shutdown_signaled:
 				try:
-					data = mySocket.recv(self.MESSAGE_LENGTH_MAX)
-				except Exception as e:
-					if MRBEAM_DEBUG and e.message == "timed out":
-						self._logger.warn("Connection stale but MRBEAM_DEBUG enabled. Continuing....")
-						continue
-					else:
-						self._logger.warn("Exception while sockect.recv(): %s - Resetting connection...", e)
+
+					try:
+						data = mySocket.recv(self.MESSAGE_LENGTH_MAX)
+					except Exception as e:
+						if MRBEAM_DEBUG and e.message == "timed out":
+							self._logger.warn("Connection stale but MRBEAM_DEBUG enabled. Continuing....")
+							continue
+						else:
+							self._logger.warn("Exception while sockect.recv(): %s - Resetting connection...", e)
+							break
+
+					if not data:
+						self._logger.warn("Connection ended from other side. Closing connection...")
 						break
 
-				if not data:
-					self._logger.warn("Connection ended from other side. Closing connection...")
-					break
+					# here we see what's in the data...
+					my_errors = self._handleMessages(data)
+					if my_errors > 0:
+						self._errors += my_errors
+						if self._errors >= self.MAX_ERRORS:
+							self._logger.warn("Resetting connection... error_count=%s, Resetting connection...", self._errors)
+							break
+						else:
+							self._logger.warn("Received invalid message, error_count=%s", self._errors)
 
-				# here we see what's in the data...
-				valid = self._handleMessages(data)
-				if not valid:
-					self._errors += 1
-					if self._errors >= self.MAX_ERRORS:
-						self._logger.warn("Received invalid message, error_count=%s, Resetting connection...", self._errors)
-						break
-					else:
-						self._logger.warn("Received invalid message, error_count=%s", self._errors)
-
+				except:
+					self._logger.exception("Exception in socket loop. Not sure what to do, resetting connection...")
 
 			if mySocket is not None:
 				self._logger.debug("Closing socket...")
@@ -205,41 +209,51 @@ class IoBeamHandler(object):
 
 
 	# handles incoming data from the socket.
-	# @return bool False if data is (partially) invalid and connection needs to be reset, true otherwise
+	# @return int: number of invalid messages 0 means all messages were handled correctly
 	def _handleMessages(self, data):
-		if not data: return False
+		if not data: return 1
 
+		error_count = 0
 		message_list = data.split(self.MESSAGE_NEWLINE)
 		for message in message_list:
 			if not message: continue
 			if message == '.': continue # ping
 
+			err = -1
 			self._logger.debug("_handleMessages() handling message: %s", message)
 
 			tokens = message.split(self.MESSAGE_SEPARATOR)
-			if len(tokens) <=1: return self._handle_invalid_message(message)
+			if len(tokens) <=1:
+				err = self._handle_invalid_message(message)
+			else:
+				device = tokens.pop(0)
+				if device == self.MESSAGE_DEVICE_ONEBUTTON:
+					err = self._handle_onebutton_message(message, tokens)
+				elif device == self.MESSAGE_DEVICE_LID:
+					err = self._handle_lid_message(message, tokens)
+				elif device == self.MESSAGE_DEVICE_INTERLOCK:
+					err = self._handle_interlock_message(message, tokens)
+				elif device == self.MESSAGE_DEVICE_STEPRUN:
+					err = self._handle_steprun_message(message, tokens)
+				elif device == self.MESSAGE_DEVICE_FAN:
+					err = self._handle_fan_message(message, tokens)
+				elif device == self.MESSAGE_DEVICE_LASER:
+					err = self._handle_laser_message(message, tokens)
+				elif device == self.MESSAGE_ERROR:
+					err = self._handle_error_message(message, tokens)
+				else:
+					err = 1
 
-			device = tokens.pop(0)
-			if device == self.MESSAGE_DEVICE_ONEBUTTON:
-				return self._handle_onebutton_message(message, tokens)
-			elif device == self.MESSAGE_DEVICE_LID:
-				return self._handle_lid_message(message, tokens)
-			elif device == self.MESSAGE_DEVICE_INTERLOCK:
-				return self._handle_interlock_message(message, tokens)
-			elif device == self.MESSAGE_DEVICE_STEPRUN:
-				return self._handle_steprun_message(message, tokens)
-			elif device == self.MESSAGE_DEVICE_FAN:
-				return self._handle_fan_message(message, tokens)
-			elif device == self.MESSAGE_DEVICE_LASER:
-				return self._handle_laser_message(message, tokens)
+			if err >= 0:
+				error_count += err
 
-		return True
+		return error_count
 
 
 
 	def _handle_invalid_message(self, message):
 		self._logger.warn("Received invalid message: '%s'", message)
-		return False
+		return 1
 
 
 	def _handle_onebutton_message(self, message, token):
@@ -257,7 +271,7 @@ class IoBeamHandler(object):
 			raise Exception("iobeam received OneButton error: %s", message)
 		else:
 			return self._handle_invalid_message(message)
-		return True
+		return 0
 
 
 	def _handle_interlock_message(self, message, tokens):
@@ -282,7 +296,7 @@ class IoBeamHandler(object):
 			else:
 				self._fireEvent(IoBeamEvents.INTERLOCK_OPEN, now_state)
 
-		return True
+		return 0
 
 
 	def _handle_lid_message(self, message, token):
@@ -297,16 +311,22 @@ class IoBeamHandler(object):
 		else:
 			return self._handle_invalid_message(message)
 
-		return True
+		return 0
 
 	def _handle_steprun_message(self, message, tokens):
-		return True
+		return 0
 
 	def _handle_fan_message(self, message, tokens):
-		return True
+		return 0
 
 	def _handle_laser_message(self, message, tokens):
-		return True
+		return 0
+
+	def _handle_error_message(self, message, token):
+		action = token[0] if len(token) > 0 else None
+		if action == "reconnect":
+			raise Exception("ioBeam requested to reconnect. Now doing so...")
+		return 1
 
 
 	def _fireEvent(self, event, payload=None):
