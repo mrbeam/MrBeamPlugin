@@ -247,7 +247,6 @@ class IoBeamHandler(object):
 			if err >= 0:
 				error_count += err
 
-		self._logger.debug("_handleMessages() return error_count: %s", error_count)
 		return error_count
 
 
