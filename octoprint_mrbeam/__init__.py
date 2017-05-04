@@ -493,7 +493,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		force = bool(data.get('force', False))
 		if submissionDate <= 0 or force:
 			# get cloud env to use
-			debug = self.get_env(ENV_LASER_SAFETY)
+			debug = self.get_env(self.ENV_LASER_SAFETY)
 
 			payload = {'ts': data.get('ts', ''),
 					   'email': data.get('username', ''),
