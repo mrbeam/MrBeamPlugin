@@ -43,7 +43,8 @@ class IoBeamHandlerTestCase(unittest.TestCase):
 		self._settings_mock = mock.MagicMock(name="_settings_mock")
 		self._settings_mock.global_get.return_value(None)
 		self._printer_mock = mock.MagicMock(name="_printer_mock")
-		self._oneButtonHandler = OneButtonHandler(self.event_bus_mock,
+		self._oneButtonHandler = OneButtonHandler(self.ioBeamHandler,
+												  self.event_bus_mock,
 												  self._plugin_manager_mock,
 												  self._file_manager_mock,
 												  self._settings_mock,
@@ -89,10 +90,10 @@ class IoBeamHandlerTestCase(unittest.TestCase):
 
 	@ddt.data(
 		# ( [list of mesages to send], [ list of tuples (event, payload)] )
-		(["intlk:0:op"], [(IoBeamEvents.INTERLOCK_OPEN, ['0'])], False),
-		(["intlk:2:cl"], [], True),
-		(["intlk:0:op", "intlk:2:cl", "intlk:1:cl"], [(IoBeamEvents.INTERLOCK_OPEN, ['0'])], False),
-		(["intlk:0:op", "intlk:2:cl", "intlk:0:cl"], [(IoBeamEvents.INTERLOCK_OPEN, ['0']), (IoBeamEvents.INTERLOCK_CLOSED, None)], True),
+		(["intlk:op:0"], [(IoBeamEvents.INTERLOCK_OPEN, ['0'])], False),
+		(["intlk:cl:2"], [], True),
+		(["intlk:op:0", "intlk:cl:2", "intlk:cl:1"], [(IoBeamEvents.INTERLOCK_OPEN, ['0'])], False),
+		(["intlk:op:0", "intlk:cl:2", "intlk:cl:0"], [(IoBeamEvents.INTERLOCK_OPEN, ['0']), (IoBeamEvents.INTERLOCK_CLOSED, None)], True),
 	)
 	@ddt.unpack
 	def test_interlocks(self, messages, expectations, expectation_closed_in_the_end):
@@ -105,7 +106,7 @@ class IoBeamHandlerTestCase(unittest.TestCase):
 
 
 	def test_reconnect_on_error(self):
-		for i in range(0, 10):
+		for i in range(0, 3):
 			self.testThreadServer.sendCommand("some BS %s" % i)
 			time.sleep(0.01)
 		time.sleep(1.1) # eventBusMrb sleeps for 1 sec after closing connection to avoid busy loops

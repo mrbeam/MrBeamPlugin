@@ -22,7 +22,7 @@ def oneButtonHandler(plugin):
 									 plugin._printer)
 	return _instance
 
-# This guy handles OneButton Events.
+# This guy handles OneButton Events and many more... It's more a Hydra now... :-/
 # it basically also handles the ReadyToLaser state
 class OneButtonHandler(object):
 
@@ -35,9 +35,9 @@ class OneButtonHandler(object):
 	CLIENT_RTL_STATE_END_CANCELED = "end_canceled"
 	CLIENT_RTL_STATE_END_RESUMED =  "end_resumed"
 
-	READY_TO_PRINT_MAX_WAITING_TIME = 120
+	READY_TO_PRINT_MAX_WAITING_TIME = 1200 #20min
 	READY_TO_PRINT_CHECK_INTERVAL = 10
-	LASER_PAUSE_WAITING_TIME = 5
+	LASER_PAUSE_WAITING_TIME = 3
 
 	PRESS_TIME_SHUTDOWN_PREPARE = 1.0 #seconds
 	PRESS_TIME_SHUTDOWN_DOIT    = 5.0 #seconds
