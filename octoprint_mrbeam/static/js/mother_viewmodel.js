@@ -12,6 +12,8 @@ $(function () {
         self.workingArea = params[7];
         self.conversion = params[8];
         self.readyToLaser = params[9];
+        self.navigation = params[10];
+        self.appearance = params[10];
 
         self.onStartup = function () {
             // TODO fetch machine profile on start
@@ -90,6 +92,8 @@ $(function () {
 					return "-";
 				return formatDuration(self.state.printTime());
 			});
+
+            self.setupFullscreenContols();
         };
 
         self.onAllBound = function (allViewModels) {
@@ -124,7 +128,40 @@ $(function () {
 
         self.onStartupComplete = function() {
             $('#loading_overlay').remove();
-        }
+        };
+
+
+        /**
+         * controls fullscreen functionality unsing on screenfull.js
+         */
+        self.setupFullscreenContols = function(){
+            // Doesnt seem to work with Knockout so ket's do it manually...
+            console.log("screenfull: screenfull.enabled: ", screenfull.enabled);
+
+            if (screenfull.enabled) {
+                $('#go_fullscreen_menu_item').show();
+                $('#exit_fullscreen_menu_item').hide();
+
+                screenfull.onerror(function(event){
+                    console.log('screenfull: Failed to enable fullscreen ', event);
+                });
+
+                $('#go_fullscreen_menu_item').on( "click", function() {
+                    console.log("screenfull: go_fullscreen_menu_item click");
+                    screenfull.request();
+                    $('#go_fullscreen_menu_item').hide();
+                    $('#exit_fullscreen_menu_item').show();
+                });
+                $('#exit_fullscreen_menu_item').on( "click", function() {
+                    console.log("screenfull: exit_fullscreen_menu_item click");
+                    screenfull.exit();
+                    $('#go_fullscreen_menu_item').show();
+                    $('#exit_fullscreen_menu_item').hide();
+                });
+            } else {
+                $('.fullscreen').hide();
+            }
+        };
 
         self.fromCurrentData = function (data) {
             self._fromData(data);
@@ -378,7 +415,7 @@ $(function () {
     ADDITIONAL_VIEWMODELS.push([MotherViewModel,
         ["loginStateViewModel", "settingsViewModel", "printerStateViewModel", "gcodeFilesViewModel",
             "connectionViewModel", "controlViewModel", "terminalViewModel", "workingAreaViewModel",
-            "vectorConversionViewModel", "readyToLaserViewModel"],
+            "vectorConversionViewModel", "readyToLaserViewModel", "navigationViewModel", "appearanceViewModel"],
         [document.getElementById("mrb_state"),
             document.getElementById("mrb_control"),
             document.getElementById("mrb_connection_wrapper"),

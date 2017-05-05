@@ -195,7 +195,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/matrix_oven.js", "js/drag_scale_rotate.js",	"js/convert.js", "js/gcode_parser.js",
 				"js/lib/photobooth_min.js", "js/svg_cleaner.js", "js/loginscreen_viewmodel.js",
 				"js/wizard_acl.js", "js/netconnectd_wrapper.js", "js/lasersaftey_viewmodel.js",
-				"js/ready_to_laser_viewmodel.js"],
+				"js/ready_to_laser_viewmodel.js", "js/lib/screenfull.min.js"],
 			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css", "css/quicktext-fonts.css"],
 			less=["less/mrbeam.less"]
 		)
@@ -260,6 +260,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 								 laser_safety=self.get_env(self.ENV_LASER_SAFETY),
 								 analytics=self.get_env(self.ENV_ANALYTICS)
 							 ),
+							 displayName=self.getDisplayName(self._hostname),
+							 hostname=self._hostname,
 							 serial=self._serial,
 							 analyticsEnabled=self._settings.get(["analyticsEnabled"])
 						 )
@@ -1123,6 +1125,18 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			hostname = ERROR.HOSTNAME
 		return hostname
 
+	def getDisplayName(self, hostName):
+		code = None
+		name = "Mr Beam II {}"
+		preFix = "MrBeam2-"
+		if hostName.startswith(preFix):
+			code = hostName.replace(preFix, "")
+			return name.format(code)
+		else:
+			return name.format(hostName)
+
+
+
 
 	def getPiSerial(self):
 		# Extract serial from cpuinfo file
@@ -1252,7 +1266,7 @@ def __plugin_load__():
 		],
 		appearance=dict(components=dict(
 			order=dict(
-				# to debug: pprint(templates['wizard']) to views.py:_process_templates() at the very end
+				# to debug: "_logger.info("ANDYTEST templates: %s", templates)" to views.py:_process_templates() at the very end
 				wizard=["plugin_mrbeam_wifi", "plugin_mrbeam_acl", "plugin_mrbeam_lasersafety"]
 			),
 			disabled=dict(
