@@ -90,7 +90,7 @@ $(function() {
                 if (self.allow_canceling()) {
                     self.dialogElement.modal("show");
                 } else {
-                    self.dialogElement.modal({backdrop: 'static', keyboard: false})
+                    self.dialogElement.modal({backdrop: 'static', keyboard: true})
                 }
             }
         }
