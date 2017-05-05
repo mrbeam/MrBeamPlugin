@@ -282,13 +282,19 @@ $(function () {
         };
 
         self.gcodefiles.startGcodeWithSafetyWarning = function (gcodeFile) {
-            var no_print = self.gcodefiles.loadFile(gcodeFile, false);
+            self.gcodefiles.loadFile(gcodeFile, false);
 
-            self.show_safety_glasses_warning(function () {
-                // ANDYTEST find out where this is called from
-                var do_print = self.gcodefiles.loadFile(gcodeFile, true);
-                console.log("ANDYTEST: gcodefiles.loadFile: do_print: ", do_print);
-            });
+             var oneButton = (self.workingArea.profile.currentProfileData().start_method != undefined &&
+                    self.workingArea.profile.currentProfileData().start_method() == "onebutton");
+            if (oneButton) {
+                self.readyToLaser.setReadyToLaser(gcodeFile.path);
+            } else {
+                self.show_safety_glasses_warning(function () {
+                    var do_print = self.gcodefiles.loadFile(gcodeFile, true);
+                });
+
+
+            };
         };
 
         self.gcodefiles.takePhoto = function () {
