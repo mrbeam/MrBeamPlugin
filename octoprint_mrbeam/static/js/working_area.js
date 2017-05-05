@@ -160,7 +160,7 @@ $(function(){
 
 		self.clear = function(){
 			self.abortFreeTransforms();
-			snap.selectAll('#userContent>*').remove();
+			snap.selectAll('#userContent>*:not(defs)').remove();
 			snap.selectAll('#placedGcodes>*').remove();
             snap.selectAll('rect:not(#coordGrid)').remove();
 			self.placedDesigns([]);
@@ -792,7 +792,8 @@ $(function(){
 				var marker = snap.circle(linedist/2, linedist/2, 1).attr({
 					fill: "#000000",
 					stroke: "none",
-					strokeWidth: 1
+					strokeWidth: 1,
+                    r: 2
 				});
 
 				// dot pattern
