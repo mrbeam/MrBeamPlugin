@@ -851,6 +851,7 @@ $(function(){
             }
 
             // embed the fonts as dataUris
+            $('#compSvg defs').append('<style id="quickTextFontPlaceholder" class="quickTextFontPlaceholder deleteAfterRendering"></style>')
             self._qt_copyFontsToSvg(compSvg.select(".quickTextFontPlaceholder").node);
 
 			self.renderInfill(compSvg, fillAreas, cutOutlines, wMM, hMM, 10, function(svgWithRenderedInfill){
@@ -1335,7 +1336,7 @@ $(function(){
 
         /**
          * All fonts need to be provided as dataUrl within the SVG when rendered into a canvas. (If they're not
-         * installed on the system which we cant assume.)
+         * installed on the system which we can't assume.)
          * This copies the content of quicktext-fonts.css into the given element. It's expected that this css file
          * contains @font-face entries with wff2 files as dataUrls. Eg:
          * // @font-face {font-family: 'Indie Flower'; src: url(data:application/font-woff2;charset=utf-8;base64,d09GMgABAAAAAKtEABEAAAABh...) format('woff2');}
