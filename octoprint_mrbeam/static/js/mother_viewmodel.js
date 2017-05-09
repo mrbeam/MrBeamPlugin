@@ -139,8 +139,7 @@ $(function () {
             console.log("screenfull: screenfull.enabled: ", screenfull.enabled);
 
             if (screenfull.enabled) {
-                $('#go_fullscreen_menu_item').show();
-                $('#exit_fullscreen_menu_item').hide();
+                self._updateFullscreenButton();
 
                 screenfull.onerror(function(event){
                     console.log('screenfull: Failed to enable fullscreen ', event);
@@ -149,19 +148,34 @@ $(function () {
                 $('#go_fullscreen_menu_item').on( "click", function() {
                     console.log("screenfull: go_fullscreen_menu_item click");
                     screenfull.request();
-                    $('#go_fullscreen_menu_item').hide();
-                    $('#exit_fullscreen_menu_item').show();
+                    self._updateFullscreenButton(true);
                 });
                 $('#exit_fullscreen_menu_item').on( "click", function() {
                     console.log("screenfull: exit_fullscreen_menu_item click");
                     screenfull.exit();
-                    $('#go_fullscreen_menu_item').show();
-                    $('#exit_fullscreen_menu_item').hide();
+                    self._updateFullscreenButton(false);
+                });
+                $('#burger_menu_link').on( "click", function() {
+                    self._updateFullscreenButton();
                 });
             } else {
                 $('.fullscreen').hide();
             }
         };
+
+
+        self._updateFullscreenButton = function(isFullscreen){
+            if (isFullscreen === undefined) {
+                isFullscreen = screenfull.isFullscreen;
+            }
+            if (isFullscreen) {
+                $('#go_fullscreen_menu_item').hide();
+                $('#exit_fullscreen_menu_item').show();
+            } else {
+                $('#go_fullscreen_menu_item').show();
+                $('#exit_fullscreen_menu_item').hide();
+            }
+        }
 
         self.fromCurrentData = function (data) {
             self._fromData(data);
