@@ -2,10 +2,10 @@
  * Created by andy on 03/03/2017.
  */
 $(function() {
-    function ReadyToLaserViewModel(parameters) {
+    function ReadyToLaserViewModel(params) {
         var self = this;
-
-        self.loginState = parameters[0];
+        self.loginState = params[0];
+        self.state = params[1];
 
         self.dialogElement = undefined;
         self.gcodeFile = undefined;
@@ -14,7 +14,7 @@ $(function() {
         self.interlocks_open = ko.pureComputed(function() {
             return !self.interlocks_closed();
         }, self);
-        self.allow_canceling = ko.observable(true);
+        self.is_pause_mode = ko.observable(false);
 
 
         self.onStartup = function() {
@@ -24,7 +24,7 @@ $(function() {
             })
 
             if (MRBEAM_ENV_LOCAL == "DEV") {
-                $('#dev_start_button').on('click', function () {
+                $('.dev_start_button').on('click', function () {
                     console.log("dev_start_button pressed...")
                     self._sendReadyToLaserRequest(true, true);
                 })
@@ -48,9 +48,25 @@ $(function() {
                 self._sendReadyToLaserRequest(false);
             }
             self.gcodeFile = undefined;
-            self.allow_canceling(true)
+            self.is_pause_mode(false)
         }
 
+        self.cancel_btn = function(){
+            if (self.is_pause_mode()) {
+                self.state.cancel();
+            } else {
+                self.setReadyToLaserCancel();
+            }
+        }
+
+        self.onEventPrintPaused = function(){
+            self._set_paused();
+        }
+
+        self.onEventPrintCancelled = function(payload) {
+            console.log("onEventPrintCanceled() payload: ", payload);
+            self.setReadyToLaserCancel(false);
+        }
 
         /**
          * this is listening for data coming through the socket connection
@@ -81,9 +97,10 @@ $(function() {
             } else if ('ready_to_laser' in data && data.ready_to_laser.startsWith("start")) {
                 console.log("ReadyToLaser state was started by the server. data.ready_to_laser=", data.ready_to_laser);
                 if (data.ready_to_laser == "start_pause") {
-                    self.allow_canceling(false)
+                    self._set_paused();
+                } else {
+                    self.showDialog();
                 }
-                self.showDialog();
             }
 
             if ('interlocks_closed' in data) {
@@ -91,13 +108,18 @@ $(function() {
             }
         }
 
+        self._set_paused = function(){
+            self.is_pause_mode(true);
+            self.showDialog();
+        }
+
 
         self.showDialog = function() {
             if (!self.dialogElement.hasClass('in')) {
-                if (self.allow_canceling()) {
+                if (!self.is_pause_mode()) {
                     self.dialogElement.modal("show");
                 } else {
-                    self.dialogElement.modal({backdrop: 'static', keyboard: true})
+                    self.dialogElement.modal({backdrop: 'static', keyboard: false})
                 }
             }
         }
@@ -120,7 +142,7 @@ $(function() {
 
     OCTOPRINT_VIEWMODELS.push([
         ReadyToLaserViewModel,
-        ["loginStateViewModel"],
+        ["loginStateViewModel", "printerStateViewModel"],
         ["#ready_to_laser_dialog"]
     ]);
 });

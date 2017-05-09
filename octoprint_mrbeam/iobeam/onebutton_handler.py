@@ -168,6 +168,12 @@ class OneButtonHandler(object):
 		was_ready_to_laser = (self.ready_to_laser_ts > 0)
 		self.ready_to_laser_ts = -1
 		self.ready_to_laser_file = None
+
+		self.pause_laser_ts = -1;
+		self.pause_need_to_release = False
+		self.pause_safety_timeout_timer = None
+		self._cancel_pause_safety_timeout_timer()
+
 		if lasering and was_ready_to_laser:
 			self._send_frontend_ready_to_laser_state(self.CLIENT_RTL_STATE_END_LASERING)
 		elif was_ready_to_laser:
@@ -197,9 +203,6 @@ class OneButtonHandler(object):
 
 		self.unset_ready_to_laser(True)
 
-	# def cancel_laser(self):
-	# 	self._logger.debug("cancel_laser() cancel it")
-	# 	self._printer.cancel_print()
 
 	# We raise these exceptions because these are all things we can't fix/handle here...
 	def _test_conditions(self, file):
