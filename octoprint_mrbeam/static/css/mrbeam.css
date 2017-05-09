@@ -425,7 +425,7 @@ input[type="submit"].btn.btn-mini {
 }
 
 #logo_compact { display: none; }
-@media (max-width: 810px) {
+@media (max-width: 1000px) {
 	#logo_wide { display: none; }
 	#logo_compact { display: initial; }
 }
@@ -488,6 +488,9 @@ input[type="submit"].btn.btn-mini {
   #navbar .navbar-inner .brand span {
     background-image: url(../img/mr-typo_x120.png);
   }
+}
+#navbar_login a.dropdown-toggle span{
+  max-width: 250px !important;
 }
 #navbar .navbar-inner .nav li.dropdown.open > .dropdown-toggle,
 #navbar .navbar-inner .nav li.dropdown.active > .dropdown-toggle,
