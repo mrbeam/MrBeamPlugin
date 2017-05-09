@@ -176,13 +176,15 @@ class OneButtonHandler(object):
 
 	def _check_if_still_ready_to_laser(self):
 		if self.ready_to_laser_ts> 0 and time.time() - self.ready_to_laser_ts < self.READY_TO_PRINT_MAX_WAITING_TIME:
-			self._logger.debug("_check_if_still_ready_to_laser() still ready")
 			self._start_ready_to_laser_timer()
 		else:
 			self.unset_ready_to_laser(False)
 
 	def _start_laser(self):
 		self._logger.debug("_start_laser() ...shall we laser file %s ?", self.ready_to_laser_file)
+		if not (self._printer.is_operational() and self.ready_to_laser_ts > 0 and self._iobeam.is_interlock_closed()):
+			self._logger.warn("_start_laser() Preconditions not met. Triggered per dev-start_button?")
+			return
 		if self.ready_to_laser_ts <= 0 or time.time() - self.ready_to_laser_ts > self.READY_TO_PRINT_MAX_WAITING_TIME:
 			self._logger.warn("_start_laser() READY_TO_PRINT_MAX_WAITING_TIME exceeded.")
 			return
@@ -194,6 +196,10 @@ class OneButtonHandler(object):
 		result = self._printer.select_file(myFile, False, True)
 
 		self.unset_ready_to_laser(True)
+
+	# def cancel_laser(self):
+	# 	self._logger.debug("cancel_laser() cancel it")
+	# 	self._printer.cancel_print()
 
 	# We raise these exceptions because these are all things we can't fix/handle here...
 	def _test_conditions(self, file):
@@ -241,13 +247,14 @@ class OneButtonHandler(object):
 		return self.pause_laser_ts > 0 and time.time() - self.pause_laser_ts <= self.LASER_PAUSE_WAITING_TIME
 
 	def resume_laser_if_waitingtime_is_over(self):
-		if self.pause_laser_ts > 0 and time.time() - self.pause_laser_ts > self.LASER_PAUSE_WAITING_TIME:
-			self._printer.resume_print()
-			self._send_frontend_ready_to_laser_state(self.CLIENT_RTL_STATE_END_RESUMED)
-			self.pause_laser_ts = -1
-			self._logger.debug("Resuming laser job...")
-		else:
-			self._logger.info("Not resuming laser job, still in waiting time.")
+		if self._iobeam.is_interlock_closed():
+			if self.pause_laser_ts > 0 and time.time() - self.pause_laser_ts > self.LASER_PAUSE_WAITING_TIME:
+				self._printer.resume_print()
+				self._send_frontend_ready_to_laser_state(self.CLIENT_RTL_STATE_END_RESUMED)
+				self.pause_laser_ts = -1
+				self._logger.debug("Resuming laser job...")
+			else:
+				self._logger.info("Not resuming laser job, still in waiting time.")
 
 	def _set_resumed(self):
 		self.pause_laser_ts = -1

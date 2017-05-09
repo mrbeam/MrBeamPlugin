@@ -22,7 +22,7 @@ from octoprint.server.util.flask import restricted_access, get_json_command_from
 	add_non_caching_response_headers
 from octoprint.util import dict_merge
 
-from octoprint_mrbeam.iobeam.iobeam_handler import ioBeamHandler
+from octoprint_mrbeam.iobeam.iobeam_handler import ioBeamHandler, IoBeamEvents
 from octoprint_mrbeam.iobeam.onebutton_handler import oneButtonHandler
 from octoprint_mrbeam.iobeam.interlock_handler import interLockHandler
 from octoprint_mrbeam.led_events import LedEventListener
@@ -880,11 +880,17 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 
 	def ready_to_laser(self, data):
-		if data['ready']:
+		if 'dev_start_button' in data and data['dev_start_button']:
+			if self.get_env(self.ENV_LOCAL).lower() == 'dev':
+				self._logger.info("DEV dev_start_button pressed.")
+				self._event_bus.fire(IoBeamEvents.ONEBUTTON_RELEASED, 1.1)
+			else:
+				self._logger.warn("DEV dev_start_button used while we're not in DEV mode. (ENV_LOCAL)")
+				return make_response("BAD REQUEST - DEV mode only.", 400)
+		elif 'ready'in data and data['ready']:
 			if 'gcode' in data:
 				try:
 					self._oneButtonHandler.set_ready_to_laser(data['gcode'])
-					# self._oneButtonHandler._start_laser()
 				except:
 					self._logger.exception("Error while going into state ReadyToLaser.")
 					return make_response("BAD REQUEST - Not able to go to Ready state. See server log for more details.", 400)

@@ -22,6 +22,13 @@ $(function() {
             self.dialogElement.on('hidden', function () {
                 self.setReadyToLaserCancel();
             })
+
+            if (MRBEAM_ENV_LOCAL == "DEV") {
+                $('#dev_start_button').on('click', function () {
+                    console.log("dev_start_button pressed...")
+                    self._sendReadyToLaserRequest(true, true);
+                })
+            };
         }
 
         self.setReadyToLaser = function(gcodeFile){
@@ -101,8 +108,12 @@ $(function() {
             }
         }
 
-        self._sendReadyToLaserRequest = function(ready) {
-            OctoPrint.simpleApiCommand("mrbeam", "ready_to_laser", {gcode: self.gcodeFile, ready: ready});
+        self._sendReadyToLaserRequest = function(ready, dev_start_button) {
+            data = {gcode: self.gcodeFile, ready: ready}
+            if (dev_start_button) {
+                data.dev_start_button = 'start'
+            }
+            OctoPrint.simpleApiCommand("mrbeam", "ready_to_laser", data);
         }
 
     }
