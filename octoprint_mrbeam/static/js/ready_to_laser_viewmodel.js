@@ -8,6 +8,8 @@ $(function() {
         self.state = params[1];
 
         self.dialogElement = undefined;
+        self.dialogShouldBeOpen = false;
+        self.dialogIsInTransition = false;
         self.gcodeFile = undefined;
 
         self.interlocks_closed = ko.observable(true);
@@ -19,8 +21,33 @@ $(function() {
 
         self.onStartup = function() {
             self.dialogElement = $('#ready_to_laser_dialog');
+
+            self.dialogElement.on('show.bs.modal', function (e) {
+                self.dialogIsInTransition = true;
+                if (self.dialogShouldBeOpen != true) {
+                    e.preventDefault()
+                }
+            });
+            self.dialogElement.on('hide.bs.modal', function () {
+                self.dialogIsInTransition = true;
+                if (self.dialogShouldBeOpen != false) {
+                    e.preventDefault()
+                }
+            });
+            self.dialogElement.on('shown.bs.modal', function () {
+                if (self.dialogShouldBeOpen == true) {
+                    self.dialogIsInTransition = false;
+                } else {
+                    self.hideDialog(true);
+                }
+            });
             self.dialogElement.on('hidden', function () {
-                self.setReadyToLaserCancel();
+                if (self.dialogShouldBeOpen == false) {
+                    self.dialogIsInTransition = false;
+                    self.setReadyToLaserCancel();
+                } else {
+                    self.showDialog(true);
+                }
             })
 
             if (MRBEAM_ENV_LOCAL == "DEV") {
@@ -40,6 +67,7 @@ $(function() {
         self.setReadyToLaserCancel = function(notifyServer){
             notifyServer = notifyServer == false ? false : true // true if undefined
             if (notifyServer && self.gcodeFile == undefined) {
+                console.warn("setReadyToLaserCancel() skipping because no gcode file.")
                 return
             }
             console.log("setReadyToLaserCancel() notifyServer: ", notifyServer)
@@ -114,18 +142,21 @@ $(function() {
         }
 
 
-        self.showDialog = function() {
-            if (!self.dialogElement.hasClass('in')) {
+        self.showDialog = function(force) {
+            self.dialogShouldBeOpen = true;
+            if (!self.dialogIsInTransition || force) {
                 if (!self.is_pause_mode()) {
                     self.dialogElement.modal("show");
                 } else {
+                    // not dismissable in paused mode
                     self.dialogElement.modal({backdrop: 'static', keyboard: false})
                 }
             }
         }
 
-        self.hideDialog = function() {
-            if (self.dialogElement.hasClass('in')) {
+        self.hideDialog = function(force) {
+            self.dialogShouldBeOpen = false;
+            if (!self.dialogIsInTransition || force) {
                 self.dialogElement.modal("hide");
             }
         }
