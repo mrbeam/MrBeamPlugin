@@ -10,6 +10,7 @@ $(function() {
         self.dialogElement = undefined;
         self.dialogShouldBeOpen = false;
         self.dialogIsInTransition = false;
+        self.dialogTimeoutId = -1;
         self.gcodeFile = undefined;
 
         self.interlocks_closed = ko.observable(true);
@@ -22,31 +23,44 @@ $(function() {
         self.onStartup = function() {
             self.dialogElement = $('#ready_to_laser_dialog');
 
+            /**
+             * these fucking bs callbacks are unreliable as fuck!!!
+             *
+             */
             self.dialogElement.on('show.bs.modal', function (e) {
-                self.dialogIsInTransition = true;
-                if (self.dialogShouldBeOpen != true) {
+                if (self.dialogShouldBeOpen != true && e != undefined) {
+                    console.log("ANDYTEST on(show.bs.modal) skip");
                     e.preventDefault()
+                } else {
+                    console.log("ANDYTEST on(show.bs.modal) dialogIsInTransition <= true");
+                    self.dialogIsInTransition = true;
                 }
             });
             self.dialogElement.on('hide.bs.modal', function () {
-                self.dialogIsInTransition = true;
                 if (self.dialogShouldBeOpen != false) {
+                    console.log("ANDYTEST on(hide.bs.modal) skip");
                     e.preventDefault()
+                } else {
+                    console.log("ANDYTEST on(hide.bs.modal) dialogIsInTransition <= true");
+                    self.dialogIsInTransition = true;
                 }
             });
             self.dialogElement.on('shown.bs.modal', function () {
                 if (self.dialogShouldBeOpen == true) {
+                    console.log("ANDYTEST on(shown.bs.modal) dialogIsInTransition <= false");
                     self.dialogIsInTransition = false;
                 } else {
-                    self.hideDialog(true);
+                    console.log("ANDYTEST on(shown.bs.modal) set timeout (dialogShouldBeOpen not true)");
+                    self.setTimeoutForDialog();
                 }
             });
             self.dialogElement.on('hidden', function () {
                 if (self.dialogShouldBeOpen == false) {
+                    console.log("ANDYTEST on(hidden.bs.modal) dialogIsInTransition <= false");
                     self.dialogIsInTransition = false;
-                    self.setReadyToLaserCancel();
                 } else {
-                    self.showDialog(true);
+                    console.log("ANDYTEST on(hidden.bs.modal) set timeout (dialogShouldBeOpen not false)");
+                    self.setTimeoutForDialog();
                 }
             })
 
@@ -56,6 +70,33 @@ $(function() {
                     self._sendReadyToLaserRequest(true, true);
                 })
             };
+        };
+
+
+        self.setTimeoutForDialog = function(){
+            if (self.dialogTimeoutId < 0){
+                self.dialogTimeoutId = setTimeout(self.timoutCallbackForDialog, 1500);
+                console.log("ANDYTEST setTimeoutForDialog() timeout id: " + self.dialogTimeoutId);
+            } else {
+                console.log("ANDYTEST setTimeoutForDialog() already timeout existing, id" + self.dialogTimeoutId);
+            }
+        };
+
+        self.timoutCallbackForDialog = function(){
+            console.log("ANDYTEST timoutCallbackForDialog() ");
+            clearTimeout(self.dialogTimeoutId);
+            self.dialogTimeoutId = -1;
+
+            if (self.dialogShouldBeOpen == true && !self.dialogElement.hasClass('in')){
+                console.log("ANDYTEST timoutCallbackForDialog() calling showDialog() : self.dialogShouldBeOpen="+self.dialogShouldBeOpen+", self.dialogElement.hasClass('in')"+self.dialogElement.hasClass('in'));
+                self.showDialog(true);
+            }else if (self.dialogShouldBeOpen == false && self.dialogElement.hasClass('in')){
+                console.log("ANDYTEST timoutCallbackForDialog() calling hideDialog() : self.dialogShouldBeOpen="+self.dialogShouldBeOpen+", self.dialogElement.hasClass('in')"+self.dialogElement.hasClass('in'));
+                self.hideDialog(true);
+            } else {
+                console.log("ANDYTEST timoutCallbackForDialog() dialogIsInTransition <= false");
+                self.dialogIsInTransition = false;
+            }
         }
 
         self.setReadyToLaser = function(gcodeFile){
@@ -66,10 +107,6 @@ $(function() {
 
         self.setReadyToLaserCancel = function(notifyServer){
             notifyServer = notifyServer == false ? false : true // true if undefined
-            if (notifyServer && self.gcodeFile == undefined) {
-                console.warn("setReadyToLaserCancel() skipping because no gcode file.")
-                return
-            }
             console.log("setReadyToLaserCancel() notifyServer: ", notifyServer)
             self.hideDialog();
             if (notifyServer) {
@@ -143,21 +180,38 @@ $(function() {
 
 
         self.showDialog = function(force) {
+            console.log("ANDYTEST showDialog() " + (force ? "force!" : ""));
             self.dialogShouldBeOpen = true;
-            if (!self.dialogIsInTransition || force) {
-                if (!self.is_pause_mode()) {
-                    self.dialogElement.modal("show");
-                } else {
+            if ((!self.dialogIsInTransition && !self.dialogElement.hasClass('in')) || force) {
+                var param = 'show'
+                if (self.is_pause_mode()) {
                     // not dismissable in paused mode
-                    self.dialogElement.modal({backdrop: 'static', keyboard: false})
+                    param = {backdrop: 'static', keyboard: false}
                 }
+
+                console.log("ANDYTEST showDialog() dialogIsInTransition <= true");
+                self.dialogIsInTransition = true;
+                console.log("ANDYTEST showDialog() show");
+                self.dialogElement.modal(param);
+
+                self.setTimeoutForDialog();
+            } else {
+                console.log("ANDYTEST showDialog() skip");
             }
         }
 
         self.hideDialog = function(force) {
+            console.log("ANDYTEST hideDialog() "  + (force ? "force!" : ""));
             self.dialogShouldBeOpen = false;
-            if (!self.dialogIsInTransition || force) {
+            if ((!self.dialogIsInTransition && self.dialogElement.hasClass('in')) || force) {
+                console.log("ANDYTEST hideDialog() dialogIsInTransition <= true");
+                self.dialogIsInTransition = true;
+                console.log("ANDYTEST hideDialog() hide");
                 self.dialogElement.modal("hide");
+
+                self.setTimeoutForDialog();
+            } else {
+                console.log("ANDYTEST hideDialog() skip");
             }
         }
 
