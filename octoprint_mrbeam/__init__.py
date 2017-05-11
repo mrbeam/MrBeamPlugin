@@ -880,6 +880,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 
 	def ready_to_laser(self, data):
+		self._logger.debug("ready_to_laser() data: %s", data)
 		if 'dev_start_button' in data and data['dev_start_button']:
 			if self.get_env(self.ENV_LOCAL).lower() == 'dev':
 				self._logger.info("DEV dev_start_button pressed.")
@@ -887,16 +888,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			else:
 				self._logger.warn("DEV dev_start_button used while we're not in DEV mode. (ENV_LOCAL)")
 				return make_response("BAD REQUEST - DEV mode only.", 400)
-		elif 'ready'in data and data['ready']:
-			if 'gcode' in data:
-				try:
-					self._oneButtonHandler.set_ready_to_laser(data['gcode'])
-				except:
-					self._logger.exception("Error while going into state ReadyToLaser.")
-					return make_response("BAD REQUEST - Not able to go to Ready state. See server log for more details.", 400)
-			else:
-				return make_response("BAD REQUEST - No gcode file provided.", 400)
-		else:
+		elif 'ready' not in data or not data['ready']:
 			self._oneButtonHandler.unset_ready_to_laser()
 
 		return NO_CONTENT

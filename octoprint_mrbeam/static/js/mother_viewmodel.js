@@ -297,18 +297,13 @@ $(function () {
 
         self.gcodefiles.startGcodeWithSafetyWarning = function (gcodeFile) {
             self.gcodefiles.loadFile(gcodeFile, false);
-
-             var oneButton = (self.workingArea.profile.currentProfileData().start_method != undefined &&
-                    self.workingArea.profile.currentProfileData().start_method() == "onebutton");
-            if (oneButton) {
-                self.readyToLaser.setReadyToLaser(gcodeFile.path);
+            if (self.readyToLaser.oneButton) {
+                self.readyToLaser.setGcodeFile(gcodeFile.path);
             } else {
                 self.show_safety_glasses_warning(function () {
                     var do_print = self.gcodefiles.loadFile(gcodeFile, true);
                 });
-
-
-            };
+            }
         };
 
         self.gcodefiles.takePhoto = function () {
@@ -331,18 +326,15 @@ $(function () {
             var url = API_BASEURL + "files/" + payload.gcode_location + "/" + payload.gcode;
             var data = {refs: {resource: url}, origin: payload.gcode_location, path: payload.gcode};
             self.gcodefiles.loadFile(data, false); // loads gcode into gcode viewer
-
-            var oneButton = (self.workingArea.profile.currentProfileData().start_method != undefined &&
-                    self.workingArea.profile.currentProfileData().start_method() == "onebutton");
-            if (oneButton) {
-                self.readyToLaser.setReadyToLaser(payload.gcode);
+            if (self.readyToLaser.oneButton) {
+                self.readyToLaser.setGcodeFile(payload.gcode);
             } else {
                 var callback = function (e) {
                     e.preventDefault();
                     self.gcodefiles.loadFile(data, true); // starts print
                 };
                 self.show_safety_glasses_warning(callback);
-            };
+            }
 			self.gcodefiles.uploadProgress
                 .removeClass("progress-striped")
                 .removeClass("active");

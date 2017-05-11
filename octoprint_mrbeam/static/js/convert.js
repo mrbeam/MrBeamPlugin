@@ -12,7 +12,7 @@ $(function(){
 		self.target = undefined;
 		self.file = undefined;
 		self.data = undefined;
-		self.slicing_progress = ko.observable(0);
+		self.slicing_progress = ko.observable(5);
 		self.slicing_in_progress = ko.observable(false);
 
 		self.title = ko.observable(undefined);
@@ -361,26 +361,35 @@ $(function(){
 //			self._configureIntensitySlider();
 //			self._configureFeedrateSlider();
 			self._configureImgSliders();
+
+            $("#dialog_vector_graphics_conversion").on('hidden', function(){
+                self.slicing_in_progress(false);
+                self.slicing_progress(5);
+            });
 		};
 
 		self.onSlicingProgress = function(slicer, model_path, machinecode_path, progress){
 			self.slicing_progress(progress);
 		};
+
 		self.onEventSlicingStarted = function(payload){
 			self.slicing_in_progress(true);
 		};
+
 		self.onEventSlicingDone = function(payload){
-			// payload
-//			gcode: "ex_11more_i1000s300.gco"
-//			gcode_location: "local"
-//			stl: "local/ex_11more_i1000s300.svg"
-//			time: 30.612739086151123
-			self.gcodeFilename(undefined);
-			self.svg = undefined;
-			$("#dialog_vector_graphics_conversion").modal("hide");
-			self.slicing_in_progress(false);
-			//console.log("onSlicingDone" , payload);
+		    self.slicing_progress(100);
+            // let's wait for onEventFileSelected() to remove the convert dialog and got to the next step
 		};
+
+		// This indicates that the slicing is really done.
+		// called several times once slicing is done. we react only to the first call
+		self.onEventFileSelected = function(payload){
+            if (self.slicing_in_progress()) {
+                self.gcodeFilename(undefined);
+                self.svg = undefined;
+                $("#dialog_vector_graphics_conversion").modal("hide");
+            }
+        }
 
 		self.cancel_conversion = function(){
 			if(self.slicing_in_progress()){
@@ -408,7 +417,7 @@ $(function(){
 			self.gcodeFilename(undefined);
 			self.svg = undefined;
 			self.slicing_in_progress(false);
-			self.slicing_progress(0);
+			self.slicing_progress(5);
 			$("#dialog_vector_graphics_conversion").modal("hide");
 			//console.log("onSlicingCancelled" , payload);
 		};
