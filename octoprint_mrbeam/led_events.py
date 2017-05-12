@@ -2,7 +2,7 @@
 
 import logging
 
-from octoprint.events import Events, CommandTrigger
+from octoprint.events import Events, CommandTrigger, GenericEventListener
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 
@@ -65,13 +65,31 @@ class LedEventListener(CommandTrigger):
 		for event in self.LED_EVENTS:
 			if not event in self._subscriptions.keys():
 				self._subscriptions[event] = []
-			self._subscriptions[event].append((self.LED_EVENTS[event], "system", True))
+			self._subscriptions[event].append((self.LED_EVENTS[event], "system", False))
 
 		self.subscribe(self.LED_EVENTS.keys())
 
 
-	# def eventCallback(self, event, payload):
-	# 	self._logger.info("ANDYTEST eventCallback() event: %s, payload: %s", event, payload)
-	# 	CommandTrigger.eventCallback(self, event, payload)
+	def eventCallback(self, event, payload):
+		# really, just copied this one from OctoPrint to add my debug log line.
+
+		GenericEventListener.eventCallback(self, event, payload)
+
+		if not event in self._subscriptions:
+			return
+
+		for command, commandType, debug in self._subscriptions[event]:
+			try:
+				if isinstance(command, (tuple, list, set)):
+					processedCommand = []
+					for c in command:
+						processedCommand.append(self._processCommand(c, payload))
+				else:
+					processedCommand = self._processCommand(command, payload)
+
+				self._logger.debug("LED_EVENT %s: '%s'", event, processedCommand)
+				self.executeCommand(processedCommand, commandType, debug=debug)
+			except KeyError as e:
+				self._logger.warn("There was an error processing one or more placeholders in the following command: %s" % command)
 
 

@@ -67,6 +67,7 @@ class OneButtonHandler(object):
 
 		self.shutdown_command = self._get_shutdown_command()
 		self.shutdown_state = self.SHUTDOWN_STATE_NONE
+		self.shutdown_prepare_was_initiated_during_pause_saftey_timeout = None
 
 	def _subscribe(self):
 		self._event_bus.subscribe(IoBeamEvents.ONEBUTTON_DOWN, self.onEvent)
@@ -88,6 +89,7 @@ class OneButtonHandler(object):
 		msg += ", payload:{}".format(payload)
 
 		msg += " - shutdown_state:{}".format(self.shutdown_state)
+		msg += " - shutdown_prepare_was_initiated_during_pause_saftey_timeout:{}".format(self.shutdown_prepare_was_initiated_during_pause_saftey_timeout)
 
 		msg += ", is_ready_to_laser():{}".format(self.is_ready_to_laser())
 		msg += ", ready_to_laser_ts:{}".format(self.ready_to_laser_ts)
@@ -106,6 +108,11 @@ class OneButtonHandler(object):
 
 		self._logger.debug("onEvent() %s", msg)
 
+		# return if we're already shutting down
+		if self.shutdown_state == self.SHUTDOWN_STATE_GOING_DOWN:
+			self._logger.debug("onEvent() SHUTDOWN_STATE_GOING_DOWN: no processing any further events.")
+			return
+
 		# ...and the we can go:
 		if event == IoBeamEvents.ONEBUTTON_PRESSED:
 			if self.print_started > 0 and time.time() - self.print_started > 1 and self._printer.get_state_id() == self.PRINTER_STATE_PRINTING:
@@ -120,13 +127,10 @@ class OneButtonHandler(object):
 			# shutdown prepare
 			if self.shutdown_state == self.SHUTDOWN_STATE_NONE and float(payload) >= self.PRESS_TIME_SHUTDOWN_PREPARE:
 				self._logger.debug("onEvent() ONEBUTTON_DOWN: ShutdownPrepareStart")
-				self.shutdown_state = self.SHUTDOWN_STATE_PREPARE
-				self._fireEvent(MrBeamEvents.SHUTDOWN_PREPARE_START)
+				self.shutdown_prepare_start()
 				# shutdown
 			elif self.shutdown_state == self.SHUTDOWN_STATE_PREPARE and float(payload) >= self.PRESS_TIME_SHUTDOWN_DOIT:
 				self._logger.debug("onEvent() ONEBUTTON_DOWN: shutdown!")
-				self.shutdown_state = self.SHUTDOWN_STATE_GOING_DOWN
-				self._fireEvent(MrBeamEvents.SHUTDOWN_PREPARE_SUCCESS)
 				self._shutdown()
 			elif not self.pause_need_to_release and self._is_during_pause_waiting_time():
 				self._logger.debug("onEvent() ONEBUTTON_DOWN: timeout block")
@@ -134,25 +138,25 @@ class OneButtonHandler(object):
 				self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_BLOCK)
 
 		elif event == IoBeamEvents.ONEBUTTON_RELEASED:
-			if self.pause_need_to_release:
+			# pause_need_to_release
+			if self.pause_need_to_release and self.shutdown_state == self.SHUTDOWN_STATE_NONE:
 				self._logger.debug("onEvent() ONEBUTTON_RELEASED: set pause_need_to_release = false")
 				self.pause_need_to_release = False
-				return
 			# end shutdown prepare
-			if self.shutdown_state == self.SHUTDOWN_STATE_PREPARE:
+			elif self.shutdown_state == self.SHUTDOWN_STATE_PREPARE:
 				self._logger.debug("onEvent() ONEBUTTON_RELEASED: shutdown cancel")
-				self.shutdown_state = self.SHUTDOWN_STATE_NONE
-				self._fireEvent(MrBeamEvents.SHUTDOWN_PREPARE_CANCEL)
+				self.shutdown_prepare_cancel()
+				self.pause_need_to_release = False
 			# start laser
 			elif self._printer.is_operational() and self.ready_to_laser_ts > 0 and self._iobeam.is_interlock_closed():
 				self._logger.debug("onEvent() ONEBUTTON_RELEASED: start laser")
 				self._start_laser()
+			# resume laser (or timeout block)
 			elif self._printer.get_state_id() == self.PRINTER_STATE_PAUSED:
 				if self._is_during_pause_waiting_time():
 					self._logger.debug("onEvent() ONEBUTTON_RELEASED: timeout block")
 					self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_BLOCK)
 				elif self._iobeam.is_interlock_closed():
-				# else:
 					self._logger.debug("onEvent() ONEBUTTON_RELEASED: resume_laser_if_waitingtime_is_over")
 					self.resume_laser_if_waitingtime_is_over()
 
@@ -281,7 +285,8 @@ class OneButtonHandler(object):
 		self.pause_safety_timeout_timer.start()
 
 	def _end_pause_safety_timeout(self):
-		self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_END)
+		if self.shutdown_state != self.SHUTDOWN_STATE_PREPARE:
+			self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_END)
 		self._cancel_pause_safety_timeout_timer()
 
 	def _cancel_pause_safety_timeout_timer(self):
@@ -318,6 +323,19 @@ class OneButtonHandler(object):
 		self._logger.debug("_send_frontend_ready_to_laser_state() state: %s", state)
 		self._plugin_manager.send_plugin_message("mrbeam", dict(ready_to_laser=state))
 
+	def shutdown_prepare_start(self):
+		self.shutdown_state = self.SHUTDOWN_STATE_PREPARE
+		self.shutdown_prepare_was_initiated_during_pause_saftey_timeout = self._is_during_pause_waiting_time()
+		self._fireEvent(MrBeamEvents.SHUTDOWN_PREPARE_START)
+
+	def shutdown_prepare_cancel(self):
+		self.shutdown_state = self.SHUTDOWN_STATE_NONE
+		self._fireEvent(MrBeamEvents.SHUTDOWN_PREPARE_CANCEL)
+		if self.shutdown_prepare_was_initiated_during_pause_saftey_timeout and not self._is_during_pause_waiting_time():
+			# we didn't fire this event when it actually timed out, so let's make up leeway
+			self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_END)
+		self.shutdown_prepare_was_initiated_during_pause_saftey_timeout = None
+
 	def _get_shutdown_command(self):
 		c = self._settings.global_get(["server", "commands", "systemShutdownCommand"])
 		if c is None:
@@ -326,6 +344,10 @@ class OneButtonHandler(object):
 
 	def _shutdown(self):
 		self._logger.info("Shutting system down...")
+
+		self.shutdown_state = self.SHUTDOWN_STATE_GOING_DOWN
+		self._fireEvent(MrBeamEvents.SHUTDOWN_PREPARE_SUCCESS)
+
 		if self.shutdown_command is not None:
 			try:
 				output = check_output(self.shutdown_command, shell=True)
