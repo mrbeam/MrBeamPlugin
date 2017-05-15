@@ -117,7 +117,7 @@ class OneButtonHandler(object):
 		if event == IoBeamEvents.ONEBUTTON_PRESSED:
 			if self.print_started > 0 and time.time() - self.print_started > 1 and self._printer.get_state_id() == self.PRINTER_STATE_PRINTING:
 				self._logger.debug("onEvent() ONEBUTTON_PRESSED: self.pause_laser()")
-				self.pause_laser()
+				self.pause_laser(need_to_release=True)
 			elif self.pause_need_to_release and self._is_during_pause_waiting_time():
 				self._logger.debug("onEvent() ONEBUTTON_PRESSED: timeout block")
 				self.pause_need_to_release = True
@@ -193,11 +193,11 @@ class OneButtonHandler(object):
 		elif event == OctoPrintEvents.PRINT_RESUMED:
 			# Webinterface / OctoPrint caused the resume
 			self._logger.debug("onEvent() _set_resumed()")
-			self._set_resumed()
+			self._reset_pause_configuration()
 
 
 		elif event == OctoPrintEvents.CLIENT_CLOSED:
-			self.unset_ready_to_laser()
+			self.unset_ready_to_laser(lasering=False)
 
 
 	def set_ready_to_laser(self, gcode_file):
@@ -216,12 +216,6 @@ class OneButtonHandler(object):
 		was_ready_to_laser = (self.ready_to_laser_ts > 0)
 		self.ready_to_laser_ts = -1
 		self.ready_to_laser_file = None
-
-		self.pause_laser_ts = -1;
-		self.pause_need_to_release = False
-		self.pause_safety_timeout_timer = None
-		self._cancel_pause_safety_timeout_timer()
-
 		if lasering and was_ready_to_laser:
 			self._send_frontend_ready_to_laser_state(self.CLIENT_RTL_STATE_END_LASERING)
 		elif was_ready_to_laser:
@@ -238,7 +232,7 @@ class OneButtonHandler(object):
 		if self.is_ready_to_laser():
 			self._start_ready_to_laser_timer()
 		else:
-			self.unset_ready_to_laser(False)
+			self.unset_ready_to_laser(lasering=False)
 
 	def _start_laser(self):
 		self._logger.debug("_start_laser() ...shall we laser file %s ?", self.ready_to_laser_file)
@@ -250,12 +244,13 @@ class OneButtonHandler(object):
 			return
 
 		self._test_conditions(self.ready_to_laser_file)
+		self._reset_pause_configuration()
 
 		self._logger.debug("_start_laser() LET'S LASER BABY!!! it's file %s", self.ready_to_laser_file)
 		myFile = self._file_manager.path_on_disk("local", self.ready_to_laser_file)
 		result = self._printer.select_file(myFile, False, True)
 
-		self.unset_ready_to_laser(True)
+		self.unset_ready_to_laser(lasering=True)
 
 
 	# I guess there's no reasy anymore to raise these exceptions. Just returning false would be better.
@@ -307,13 +302,18 @@ class OneButtonHandler(object):
 
 	def resume_laser_if_waitingtime_is_over(self):
 		if self._iobeam.is_interlock_closed():
-			if self.pause_laser_ts > 0 and time.time() - self.pause_laser_ts > self.LASER_PAUSE_WAITING_TIME:
+			if not self._is_during_pause_waiting_time():
 				self._logger.debug("Resuming laser job...")
 				self._printer.resume_print()
 				self._send_frontend_ready_to_laser_state(self.CLIENT_RTL_STATE_END_RESUMED)
 				self.pause_laser_ts = -1
 			else:
 				self._logger.info("Not resuming laser job, still in waiting time.")
+
+	def _reset_pause_configuration(self):
+		self.pause_laser_ts = -1;
+		self.pause_need_to_release = False
+		self._cancel_pause_safety_timeout_timer()
 
 	def _set_resumed(self):
 		self.pause_laser_ts = -1
