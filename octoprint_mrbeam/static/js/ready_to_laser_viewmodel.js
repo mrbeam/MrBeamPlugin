@@ -42,6 +42,7 @@ $(function() {
                 /**
                  * Use 'show', 'shown'.. etx instead of 'show.bs.modal' in BS2!!! Otherwise these callbacks are unreliable!
                  * This code has been written with the assumption of these callbacks being unreliable...
+                 * https://github.com/jschr/bootstrap-modal/issues/228
                  * Now that I found how to use em correctly, this code seems a bit overly complicated...
                  */
                 self.dialogElement.on('show', function (e) {
