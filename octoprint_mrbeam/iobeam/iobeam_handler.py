@@ -32,7 +32,8 @@ class IoBeamHandler(object):
 	# > onebtn:rl:< time >
 	# > onebtn:error	?
 	# > lid:pr
-	# > lid:rl:< time >
+	# > lid:rl
+	#!! > lid:rl:< time >
 	# > intlk:op:0
 	# > intlk:cl:0
 	# > intlk:op:1
@@ -306,7 +307,7 @@ class IoBeamHandler(object):
 
 		if action == self.MESSAGE_ACTION_LID_OPENED:
 			self._fireEvent(IoBeamEvents.LID_OPENED)
-		if action == self.MESSAGE_ACTION_LID_CLOSED:
+		elif action == self.MESSAGE_ACTION_LID_CLOSED:
 			self._fireEvent(IoBeamEvents.LID_CLOSED)
 		else:
 			return self._handle_invalid_message(message)
