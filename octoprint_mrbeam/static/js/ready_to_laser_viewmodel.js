@@ -40,52 +40,55 @@ $(function() {
                 console.log("OneButton activated.");
 
                 /**
-                 * these fucking bootstrap callbacks are unreliable as fuck!!!
+                 * Use 'show', 'shown'.. etx instead of 'show.bs.modal' in BS2!!! Otherwise these callbacks are unreliable!
+                 * This code has been written with the assumption of these callbacks being unreliable...
+                 * Now that I found how to use em correctly, this code seems a bit overly complicated...
                  */
-                self.dialogElement.on('show.bs.modal', function (e) {
+                self.dialogElement.on('show', function (e) {
                     if (self.dialogShouldBeOpen != true) {
                         if (typeof e !== "undefined") {
                             self._debugDaShit("on(show.bs.modal) skip");
                             e.preventDefault()
                         } else {
-                            self._debugDaShit("on(show.bs.modal) cant prevent default event");
+                            self._debugDaShit("on(show) cant prevent default event");
                         }
                     } else {
-                        self._debugDaShit("on(show.bs.modal) dialogIsInTransition <= true");
+                        self._debugDaShit("on(show) dialogIsInTransition <= true");
                         self.dialogIsInTransition = true;
                     }
                 });
 
-                self.dialogElement.on('hide.bs.modal', function () {
+                self.dialogElement.on('hide', function () {
+                    self._setReadyToLaserCancel();
                     if (self.dialogShouldBeOpen != false) {
                         if (typeof e !== "undefined") {
-                            self._debugDaShit("on(hide.bs.modal) skip");
+                            self._debugDaShit("on(hide) skip");
                             e.preventDefault()
                         } else {
-                            self._debugDaShit("on(hide.bs.modal) cant prevent default event");
+                            self._debugDaShit("on(hide) cant prevent default event");
                         }
                     } else {
-                        self._debugDaShit("on(hide.bs.modal) dialogIsInTransition <= true");
+                        self._debugDaShit("on(hide) dialogIsInTransition <= true");
                         self.dialogIsInTransition = true;
                     }
                 });
 
-                self.dialogElement.on('shown.bs.modal', function () {
+                self.dialogElement.on('shown', function () {
                     if (self.dialogShouldBeOpen == true) {
-                        self._debugDaShit("on(shown.bs.modal) dialogIsInTransition <= false");
+                        self._debugDaShit("on(shown) dialogIsInTransition <= false");
                         self.dialogIsInTransition = false;
                     } else {
-                        self._debugDaShit("on(shown.bs.modal) set timeout (dialogShouldBeOpen not true)");
+                        self._debugDaShit("on(shown) set timeout (dialogShouldBeOpen not true)");
                         self._setTimeoutForDialog();
                     }
                 });
 
                 self.dialogElement.on('hidden', function () {
                     if (self.dialogShouldBeOpen == false) {
-                        self._debugDaShit("on(hidden.bs.modal) dialogIsInTransition <= false");
+                        self._debugDaShit("on(hidden) dialogIsInTransition <= false");
                         self.dialogIsInTransition = false;
                     } else {
-                        self._debugDaShit("on(hidden.bs.modal) set timeout (dialogShouldBeOpen not false)");
+                        self._debugDaShit("on(hidden) set timeout (dialogShouldBeOpen not false)");
                         self._setTimeoutForDialog();
                     }
                 });
@@ -161,7 +164,7 @@ $(function() {
             if (self.is_pause_mode()) {
                 self.state.cancel();
             } else {
-                self._setReadyToLaserCancel();
+                self._setReadyToLaserCancel(true);
             }
         };
 
@@ -227,7 +230,7 @@ $(function() {
 
         self._setTimeoutForDialog = function(){
             if (self.dialogTimeoutId < 0){
-                self.dialogTimeoutId = setTimeout(self._timoutCallbackForDialog, 1500);
+                self.dialogTimeoutId = setTimeout(self._timoutCallbackForDialog, 500);
                 self._debugDaShit("_setTimeoutForDialog() timeout id: " + self.dialogTimeoutId);
             } else {
                 self._debugDaShit("_setTimeoutForDialog() already timeout existing, id" + self.dialogTimeoutId);
