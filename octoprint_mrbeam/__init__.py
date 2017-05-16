@@ -25,6 +25,7 @@ from octoprint.util import dict_merge
 from octoprint_mrbeam.iobeam.iobeam_handler import ioBeamHandler, IoBeamEvents
 from octoprint_mrbeam.iobeam.onebutton_handler import oneButtonHandler
 from octoprint_mrbeam.iobeam.interlock_handler import interLockHandler
+from octoprint_mrbeam.iobeam.lid_handler import lidHandler
 from octoprint_mrbeam.led_events import LedEventListener
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from .profile import LaserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
@@ -89,6 +90,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._ioBeam = ioBeamHandler(self._event_bus, self._settings.get(["dev", "sockets", "iobeam"]))
 		self._oneButtonHandler = oneButtonHandler(self)
 		self._interlock_handler = interLockHandler(self)
+		self._lid_handler = lidHandler(self)
 		self._led_eventhandler = LedEventListener(self._event_bus, self._printer)
 
 
@@ -141,7 +143,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			dev=dict(
 				env="PROD"
 			),
-			analyticsEnabled=False
+			analyticsEnabled=False,
+			cam=dict(
+				frontendUrl="plugin/mrbeam/static/img/test.jpg",
+				localFilePath=None
+				# frontendUrl="/downloads/files/local/local/beam-cam.jpg",
+				# localFilePath="/Users/andy/Library/Application Support/OctoPrint/uploads/local/beam-cam.jpg"
+			)
 		)
 
 	def on_settings_load(self):
@@ -236,7 +244,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			display_version_string += " MRBEAM_DEBUG"
 
 		render_kwargs.update(dict(
-							 webcamStream=self._settings.global_get(["webcam", "stream"]),
+							 webcamStream=self._settings.get(["cam", "frontendUrl"]),
 							 enableFocus=enable_focus,
 							 safetyGlasses=safety_glasses,
 							 enableTemperatureGraph=False,
