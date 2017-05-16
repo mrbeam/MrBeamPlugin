@@ -131,7 +131,6 @@ class MachineCom(object):
 
 		self._log("Connected to: %s, starting monitor" % self._serial)
 		self._changeState(self.STATE_CONNECTING)
-		self._logger.info("##### %s", self._laserCutterProfile['grbl']['resetOnConnect'])
 		if self._laserCutterProfile['grbl']['resetOnConnect']:
 			self._serial.flushInput()
 			self._serial.flushOutput()
