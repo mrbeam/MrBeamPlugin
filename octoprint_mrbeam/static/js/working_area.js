@@ -249,15 +249,17 @@ $(function(){
 		self.placeGcode = function(file){
 			var previewId = self.getEntryId(file);
 
-			if(snap.select('#'+previewId)){
-				console.error("working_area placeGcode: file already placed.");
-				return;
-			} else {
+			// TODO think about if double placing a gcode file is a problem.
+//			if(snap.select('#'+previewId)){
+//				console.error("working_area placeGcode: file already placed.");
+//				return;
+//			} else {
 				var g = snap.group();
 				g.attr({id: previewId});
 				snap.select('#placedGcodes').append(g);
+				file.previewId = previewId;
 				self.placedDesigns.push(file);
-			}
+//			}
 
 			self.loadGcode(file, function(gcode){
 				var pathCallback = function(path){
@@ -301,7 +303,7 @@ $(function(){
 		};
 
 		self.removeGcode = function(file){
-			var previewId = self.getEntryId(file);
+			var previewId = file.previewId;
 			snap.select('#' + previewId).remove();
 			self.placedDesigns.remove(file);
 		};
