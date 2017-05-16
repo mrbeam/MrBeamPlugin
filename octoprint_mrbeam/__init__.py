@@ -27,7 +27,7 @@ from octoprint_mrbeam.iobeam.onebutton_handler import oneButtonHandler
 from octoprint_mrbeam.iobeam.interlock_handler import interLockHandler
 from octoprint_mrbeam.led_events import LedEventListener
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
-from .profile import LaserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
+from .profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
 from .software_update_information import get_update_information
 
 
@@ -71,7 +71,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self.slicing_progress_last = -1
 
 	def initialize(self):
-		self.laserCutterProfileManager = LaserCutterProfileManager(self._settings)
+		self.laserCutterProfileManager = laserCutterProfileManager(self._settings)
 		if self._settings.get(["dev", "debug"]) == True: __builtin__.MRBEAM_DEBUG = True
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam")
 		self._branch = self.getBranch()
