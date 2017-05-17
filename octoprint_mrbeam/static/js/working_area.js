@@ -1,3 +1,5 @@
+/* global snap, Snap */
+
 $(function(){
 
 	// Opera 8.0+
@@ -311,60 +313,40 @@ $(function(){
 		self.placeSVG = function(file) {
 			var url = self._getSVGserveUrl(file);
 			callback = function (f) {
-				var newSvgAttrs = {};
-				if(f.select('svg') == null){
-					root_attrs = f.node.attributes;
-				} else {
-					var root_attrs = f.select('svg').node.attributes;
-				}
-				var doc_width = null;
-				var doc_height = null;
-				var doc_viewbox = null;
 
 				// find clippath elements
 				var clipPathEl = f.selectAll('clipPath');
-				if(clipPathEl.length != 0){
+				if(clipPathEl.length !== 0){
 					console.warn("Warning: removed unsupported clipPath element in SVG");
 					self.svg_contains_clipPath_warning();
-					clipPathEl.remove()
+					clipPathEl.remove();
 				}
 
 				var svgClasses = {};
 				f.selectAll('path').forEach(function (el, i) {
 					var elClass = el.attr('class');
 					if(svgClasses[elClass] === undefined){
-						console.log(elClass)
+						console.log(elClass);
 					}
 				});
 				// find all elements with "display=none" and remove them
 				f.selectAll("[display=none]").remove();
 
-				// iterate svg tag attributes
-				for(var i = 0; i < root_attrs.length; i++){
-					var attr = root_attrs[i];
-
-					// get dimensions
-					if(attr.name === "width") doc_width = attr.value;
-					if(attr.name === "height") doc_height = attr.value;
-					if(attr.name === "viewBox") doc_viewbox = attr.value;
-
-					// copy namespaces into group
-					if(attr.name.indexOf("xmlns") === 0){
-						newSvgAttrs[attr.name] = attr.value;
-					}
-				}
-
 				// find Illustrator comment and notify
 				Array.from(f.node.childNodes).forEach(function(entry) {
-					if(entry.nodeType == 8) { // Nodetype 8 = comment
+					if(entry.nodeType === 8) { // Nodetype 8 = comment
 						if(entry.textContent.indexOf('Illustrator') > -1) {
 							new PNotify({title: gettext("Illustrator SVG Detected"), text: "Illustrator SVG detected! To preserve coorect scale, please go to the \'Settings\' menu and change the \'SVG dpi\' field under \'Plugins/Svg Conversion\' according to your file. And add it again.", type: "info", hide: false});
 						}
 					}
 				});
+				
+				// get original svg attributes
+				var newSvgAttrs = self._getDocumentNamespaceAttributes(f);
+				var doc_dimensions = self._getDocumentDimensionAttributes(f);
 
 				// scale matrix
-				var mat = self.getDocumentViewBoxMatrix(doc_width, doc_height, doc_viewbox);
+				var mat = self.getDocumentViewBoxMatrix(doc_dimensions.width, doc_dimensions.height, doc_dimensions.viewbox);
 				var dpiscale = 90 / self.settings.settings.plugins.mrbeam.svgDPI();
                 var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(dpiscale).toTransformString();
                 newSvgAttrs['transform'] = scaleMatrixStr;
@@ -417,16 +399,6 @@ $(function(){
 			self.abortFreeTransforms();
 			snap.selectAll('#'+file.previewId).remove();
 			self.placedDesigns.remove(file);
-
-			// TODO debug why remove always clears all items of this type.
-//			self.placedDesigns.remove(function(item){
-//				console.log("item", item.previewId );
-//				//return false;
-//				if(item.previewId === file.previewId){
-//					console.log("match", item.previewId );
-//					return true;
-//				} else return false;
-//			});
 		};
 		self.fitSVG = function(file){
 			self.abortFreeTransforms();
@@ -439,6 +411,87 @@ $(function(){
 			svg.data('fitMatrix', null);
 			$('#'+file.id).removeClass('misfit');
 			self.svgTransformUpdate(svg);
+		};
+
+		self.placeDXF = function(file) {
+			var url = self._getSVGserveUrl(file);
+			
+			callback = function (f) {
+				var doc_dimensions = self._getDocumentDimensionAttributes(f);
+				var newSvgAttrs = self._getDocumentNamespaceAttributes(f);
+
+				// scale matrix
+				var mat = self.getDocumentViewBoxMatrix(doc_dimensions.width, doc_dimensions.height, doc_dimensions.viewbox);
+				var dpiscale = 90; // self.settings.settings.plugins.mrbeam.svgDPI();
+                var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(dpiscale).toTransformString();
+
+				var newSvg = snap.group(f.selectAll("svg>*"));
+				newSvg.attr('transform', scaleMatrixStr);
+
+				newSvg.bake(); // remove transforms
+				newSvg.selectAll('path').attr({strokeWidth: '0.5', 'vector-effect':'non-scaling-stroke'});
+				newSvg.attr(newSvgAttrs);
+				var id = self.getEntryId(file);
+				var previewId = self.generateUniqueId(id); // appends -# if multiple times the same design is placed.
+				newSvg.attr({id: previewId});
+				snap.select("#userContent").append(newSvg);
+				newSvg.transformable();
+				newSvg.ftRegisterCallback(self.svgTransformUpdate);
+
+				file.id = id; // list entry id
+				file.previewId = previewId;
+				file.url = url;
+				file.misfit = "";
+
+				self.placedDesigns.push(file);
+			};
+			Snap.loadDXF(url, callback);
+		};
+
+		self._getDocumentDimensionAttributes = function(file){
+			if(file.select('svg') === null){
+				root_attrs = file.node.attributes;
+			} else {
+				var root_attrs = file.select('svg').node.attributes;
+			}
+			var doc_width = null;
+			var doc_height = null;
+			var doc_viewbox = null;
+
+			// iterate svg tag attributes
+			for(var i = 0; i < root_attrs.length; i++){
+				var attr = root_attrs[i];
+
+				// get dimensions
+				if(attr.name === "width") doc_width = attr.value;
+				if(attr.name === "height") doc_height = attr.value;
+				if(attr.name === "viewBox") doc_viewbox = attr.value;
+			}
+			return {
+				width: doc_width,
+				height: doc_height,
+				viewbox: doc_viewbox
+			};
+		};
+
+		self._getDocumentNamespaceAttributes = function(file){
+			if(file.select('svg') === null){
+				root_attrs = file.node.attributes;
+			} else {
+				var root_attrs = file.select('svg').node.attributes;
+			}
+			var namespaces = {};
+			
+			// iterate svg tag attributes
+			for(var i = 0; i < root_attrs.length; i++){
+				var attr = root_attrs[i];
+
+				// copy namespaces into group
+				if(attr.name.indexOf("xmlns") === 0){
+					namespaces[attr.name] = attr.value;
+				}
+			}
+			return namespaces;
 		};
 
 		self.toggleTransformHandles = function(file){
@@ -625,7 +678,7 @@ $(function(){
 		};
 
 		self.getDocumentDimensionsInPt = function(doc_width, doc_height, doc_viewbox){
-			if(doc_width === null){
+			if(doc_width === null || doc_width === "100%"){
 				// assume defaults if not set
 				if(doc_viewbox !== null ){
 					var parts = doc_viewbox.split(' ');
@@ -640,7 +693,7 @@ $(function(){
 					doc_width = 744.09; // 210mm @ 90dpi
 				}
 			}
-			if(doc_height === null){
+			if(doc_height === null || doc_height === "100%"){
 				// assume defaults if not set
 				if(doc_viewbox !== null ){
 					var parts = doc_viewbox.split(' ');
@@ -671,8 +724,8 @@ $(function(){
 				if(parts.length === 4){
 					var offsetVBoxX = parseFloat(parts[0]);
 					var offsetVBoxY = parseFloat(parts[1]);
-					var widthVBox = parseFloat(parts[2]) - parseFloat(parts[0]);
-					var heightVBox = parseFloat(parts[3]) - parseFloat(parts[1]);
+					var widthVBox = parseFloat(parts[2]);// - parseFloat(parts[0]);
+					var heightVBox = parseFloat(parts[3]);// - parseFloat(parts[1]);
 
 					var fx = widthPx / widthVBox;
 					var fy = heightPx / heightVBox;
@@ -734,12 +787,14 @@ $(function(){
                 var extension = data.name.split('.').pop().toLowerCase();
                 if (extension === "svg") {
                     return "wa_template_" + data.type + "_svg";
+				} else if (extension === "dxf") {
+                    return "wa_template_" + data.type + "_svg";
                 } else if (_.contains(['jpg', 'jpeg', 'png', 'gif', 'bmp', 'pcx', 'webp'], extension)) {
                     return "wa_template_" + data.type + "_img";
                 } else {
                     return "wa_template_" + data.type;
                 }
-            }else if (data.type === "quicktext") {
+            } else if (data.type === "quicktext") {
 			    return "wa_template_quicktext";
 			} else {
 				return "wa_template_dummy";

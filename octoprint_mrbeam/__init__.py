@@ -191,7 +191,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# core UI here.
 		return dict(
 			js=["js/lasercutterprofiles.js","js/mother_viewmodel.js", "js/mrbeam.js","js/color_classifier.js",
-				"js/working_area.js", "js/camera.js", "js/lib/snap.svg-min.js", "js/render_fills.js", "js/path_convert.js",
+				"js/working_area.js", "js/camera.js", "js/lib/snap.svg-min.js", "js/snap-dxf.js", "js/render_fills.js", "js/path_convert.js",
 				"js/matrix_oven.js", "js/drag_scale_rotate.js",	"js/convert.js", "js/gcode_parser.js",
 				"js/lib/photobooth_min.js", "js/svg_cleaner.js", "js/loginscreen_viewmodel.js",
 				"js/wizard_acl.js", "js/netconnectd_wrapper.js", "js/lasersaftey_viewmodel.js",
@@ -1095,7 +1095,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				# TODO enable once 3d support is ready
 				#stl=ContentTypeMapping(["stl"], "application/sla"),
 				image=ContentTypeDetector(['jpg', 'jpeg', 'jpe', 'png', 'gif', 'bmp', 'pcx', 'webp'], _image_mime_detector),
-				svg=ContentTypeMapping(["svg"], "image/svg+xml")
+				svg=ContentTypeMapping(["svg"], "image/svg+xml"),
+				dxf=ContentTypeMapping(["dxf"], "application/dxf"),
 			),
 			# extensions for printable machine code
 			machinecode=dict(
