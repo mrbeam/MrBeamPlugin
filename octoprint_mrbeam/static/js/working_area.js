@@ -940,7 +940,7 @@ $(function(){
 			ko.utils.arrayForEach(self.placedDesigns(), function(design) {
 				if(design.type === 'model'){
 				var extension = design.name.split('.').pop().toLowerCase();
-					if (extension === "svg") {
+					if (extension === "svg" || extension === "dxf") {
 						svgFiles.push(design);
 					}
 				}
