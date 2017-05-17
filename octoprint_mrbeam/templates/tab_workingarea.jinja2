@@ -306,7 +306,7 @@
 											height: workingArea.workingAreaHeightPx()+'px'
 										}">
 									<img id="webcam_image" data-bind="css: { flipH: settings.webcam_flipH(), flipV: settings.webcam_flipV() },
-										 style: {transform: camTransform()}" src="{{ webcamStream }}">
+										 style: {transform: camTransform()}" src="{{ webcamStream }}" onerror="this.src='/plugin/mrbeam/static/img/beam-cam-static.jpg'">
 
 								</div>
 								{% endif %}

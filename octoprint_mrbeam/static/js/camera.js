@@ -13,7 +13,8 @@ $(function(){
 		self.camera_rotation = ko.observable(0.0);
 
         self.webCamImageElem = undefined;
-        self.lastImageLoaded = '/plugin/mrbeam/static/img/beam-cam-static.jpg';
+        self.lastImageLoaded = undefined;
+        // self.lastImageLoaded = '/plugin/mrbeam/static/img/beam-cam-static.jpg';
 
 		self.camTransform = ko.computed(function(){
 			return "scale("+self.camera_scale()+") rotate("+self.camera_rotation()+"deg) translate("+self.camera_offset_x()+"px, "+self.camera_offset_y()+"px)"
@@ -22,15 +23,18 @@ $(function(){
 		self.onStartup = function(){
             self.webCamImageElem = $("#webcam_image");
 
+            self.webCamImageElem.load(function() {
+                self.lastImageLoaded = self.webCamImageElem.attr('src');
+            });
+
+            // we have a default onerror handler in the html wich executes the loading of beam-cam-static.jpg while DOM is being loaded.
+            // Now we're registering our own error handler here and must unregister the existing one.
+            self.webCamImageElem.attr('onerror', '');
             self.webCamImageElem.error(function() {
                 if (self.lastImageLoaded) {
                     // this will trigger onLoad event
                     self.webCamImageElem.attr('src', self.lastImageLoaded);
                 }
-            });
-
-            self.webCamImageElem.load(function() {
-                self.lastImageLoaded = self.webCamImageElem.attr('src');
             });
 
             self.onTabChange('#workingarea', '#notab');
