@@ -286,6 +286,33 @@ $(function(){
 				return true;
 			}
 		});
+		
+		self._allParametersSet = function(){
+			var allSet = true;
+			$('.job_row_vector').each(function(i, pass){
+				var intensityInput = $(pass).find('.param_intensity');
+				var feedrateInput = $(pass).find('.param_feedrate');
+				var intensity = intensityInput.val();
+				var feedrate = feedrateInput.val();
+				if(intensity === ''){
+					intensityInput.addClass('checkInput');
+					setTimeout(
+						function() { intensityInput.removeClass('checkInput'); },
+						2000
+					);
+					allSet = false;
+				}
+				if(feedrate === ''){
+					feedrateInput.addClass('checkInput');
+					setTimeout(
+						function() { feedrateInput.removeClass('checkInput'); },
+						2000
+					);
+					allSet = false;
+				}
+			});
+			return allSet;
+		};
 
 		self.requestData = function() {
 			$.ajax({
@@ -304,44 +331,48 @@ $(function(){
 			if(self.gcodeFilesToAppend.length === 1 && self.svg === undefined){
 				self.files.startGcodeWithSafetyWarning(self.gcodeFilesToAppend[0]);
 			} else {
-				//self.update_colorSettings();
-				self.slicing_in_progress(true);
-				self.workingArea.getCompositionSVG(self.do_engrave(), self.engrave_outlines(), function(composition){
-					self.svg = composition;
-					var filename = self.gcodeFilename() + '.gco';
-					var gcodeFilename = self._sanitize(filename);
+				if(self._allParametersSet()){
+					//self.update_colorSettings();
+					self.slicing_in_progress(true);
+					self.workingArea.getCompositionSVG(self.do_engrave(), self.engrave_outlines(), function(composition){
+						self.svg = composition;
+						var filename = self.gcodeFilename() + '.gco';
+						var gcodeFilename = self._sanitize(filename);
 
-					var multicolor_data = self.get_current_multicolor_settings();
-					var engraving_data = self.get_current_engraving_settings();
-					var colorStr = '<!--COLOR_PARAMS_START' +JSON.stringify(multicolor_data) + 'COLOR_PARAMS_END-->';
-					var data = {
-						command: "convert",
-						engrave: self.do_engrave(),
-						vector : multicolor_data,
-						raster : engraving_data,
-						slicer: "svgtogcode",
-						gcode: gcodeFilename
-					};
+						var multicolor_data = self.get_current_multicolor_settings();
+						var engraving_data = self.get_current_engraving_settings();
+						var colorStr = '<!--COLOR_PARAMS_START' +JSON.stringify(multicolor_data) + 'COLOR_PARAMS_END-->';
+						var data = {
+							command: "convert",
+							engrave: self.do_engrave(),
+							vector : multicolor_data,
+							raster : engraving_data,
+							slicer: "svgtogcode",
+							gcode: gcodeFilename
+						};
 
-					if(self.svg !== undefined){
-						// TODO place comment within initial <svg > tag.
-						data.svg = colorStr +"\n"+ self.svg;
-					} else {
-						data.svg = colorStr +"\n"+ '<svg height="0" version="1.1" width="0" xmlns="http://www.w3.org/2000/svg"><defs/></svg>';
-					}
-					if(self.gcodeFilesToAppend !== undefined){
-						data.gcodeFilesToAppend = self.gcodeFilesToAppend;
-					}
+						if(self.svg !== undefined){
+							// TODO place comment within initial <svg > tag.
+							data.svg = colorStr +"\n"+ self.svg;
+						} else {
+							data.svg = colorStr +"\n"+ '<svg height="0" version="1.1" width="0" xmlns="http://www.w3.org/2000/svg"><defs/></svg>';
+						}
+						if(self.gcodeFilesToAppend !== undefined){
+							data.gcodeFilesToAppend = self.gcodeFilesToAppend;
+						}
 
-					$.ajax({
-						url: "plugin/mrbeam/convert",
-						type: "POST",
-						dataType: "json",
-						contentType: "application/json; charset=UTF-8",
-						data: JSON.stringify(data)
+						$.ajax({
+							url: "plugin/mrbeam/convert",
+							type: "POST",
+							dataType: "json",
+							contentType: "application/json; charset=UTF-8",
+							data: JSON.stringify(data)
+						});
+
 					});
-
-				});
+				} else {
+					console.log('params missing');
+				}
 			}
 		};
 

@@ -271,3 +271,7 @@ body.colorDragInProgress #drop_overlay {
 	display: none;
 }
 
+.checkInput {
+	border-color: red !important;
+	
+}
