@@ -371,6 +371,8 @@ class MachineCom(object):
 			self._changeState(self.STATE_OPERATIONAL)
 
 	def _handle_error_message(self, line):
+		if "EEPROM read fail" in line:
+			return
 		self._errorValue = line
 		eventManager().fire(Events.ERROR, {"error": self.getErrorString()})
 		self._changeState(self.STATE_LOCKED)
