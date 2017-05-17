@@ -306,9 +306,7 @@
 											height: workingArea.workingAreaHeightPx()+'px'
 										}">
 									<img id="webcam_image" data-bind="css: { flipH: settings.webcam_flipH(), flipV: settings.webcam_flipV() },
-										 style: {
-											 transform: camTransform()
-										 }">
+										 style: {transform: camTransform()}" src="{{ webcamStream }}">
 
 								</div>
 								{% endif %}

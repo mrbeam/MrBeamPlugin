@@ -54,7 +54,6 @@ $(function(){
 		self.camera_scale = ko.observable(1.0);
 		self.camera_rotation = ko.observable(0.0);
 
-
 		self.hwRatio = ko.computed(function(){
 			// y/x = 297/216 junior, respectively 594/432 senior
 			var w = self.workingAreaWidthMM();
@@ -967,34 +966,11 @@ $(function(){
 				self.trigger_resize();
 			});
 			self.trigger_resize(); // initialize
-			self.onTabChange('#workingarea', '#notab');
-			var webcam_image = document.getElementById('webcam_image');
-			$(webcam_image).load(function(){
-			  $(this).removeClass('broken'); // does not work with inline SVG
-//				webcam_image.setAttribute("class", "");
-			}).error(function () {
-				$(this).addClass('broken'); // does not work with inline SVG
-//				webcam_image.setAttribute("class", "broken");
-			});
-
 			self.init();
 		};
 
 		self.onStartupComplete = function(){
 			self.initCameraCalibration();
-		};
-
-		self.onBrowserTabVisibilityChange = function(state){
-			var currentTab = $('#mrbeam-main-tabs li.active a').attr('href');
-			if(typeof currentTab !== undefined && currentTab === "#workingarea"){
-				if(state === true){
-					self.onTabChange('#workingarea', '#notab');
-				}
-
-				if(state === false){
-					self.onTabChange('#notab', '#workingarea');
-				}
-			}
 		};
 
 		self.check_sizes_and_placements = function(){
@@ -1105,48 +1081,6 @@ $(function(){
 		self.onBeforeBinding = function(){
 			self.files.workingArea = self;
 		};
-
-		self.onTabChange = function (current, previous) {
-            if (current === "#workingarea") {
-                if (self.webcamDisableTimeout != undefined) {
-                    clearTimeout(self.webcamDisableTimeout);
-                }
-                var webcamImage = $("#webcam_image");
-                var currentSrc = webcamImage.attr("src");
-
-                if (currentSrc === undefined || currentSrc === "none" || currentSrc.trim() === "") {
-                    var newSrc = CONFIG_WEBCAM_STREAM;
-                    if (CONFIG_WEBCAM_STREAM.lastIndexOf("?") > -1) {
-                        newSrc += "&";
-                    } else {
-                        newSrc += "?";
-                    }
-                    newSrc += new Date().getTime();
-//                    console.log("webcam src set", newSrc);
-                    webcamImage.attr("src", newSrc);
-                }
-                photoupdate = setInterval(myTimer, 5000);
-                function myTimer() {
-                    var newSrc = CONFIG_WEBCAM_STREAM;
-                    if (CONFIG_WEBCAM_STREAM.lastIndexOf("?") > -1) {
-                        newSrc += "&";
-                    } else {
-                        newSrc += "?";
-                    }
-                    newSrc += new Date().getTime();
-//                    console.log("webcam src set", newSrc);
-                    webcamImage.attr("src", newSrc);
-                }
-                console.log("webcam enabled");
-            } else if (previous === "#workingarea") {
-                // only disable webcam stream if tab is out of focus for more than 5s, otherwise we might cause
-                // more load by the constant connection creation than by the actual webcam stream
-                self.webcamDisableTimeout = setTimeout(function () {
-                    $("#webcam_image").css("background-image", "none");
-                }, 5000);
-                window.clearInterval(photoupdate)
-            }
-        };
 
 
         // ***********************************************************

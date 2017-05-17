@@ -6,17 +6,19 @@ from subprocess import call
 # don't crash on a dev computer where you can't install picamera
 try:
 	from picamera import PiCamera
+
 	PICAMERA_AVAILABLE = True
 except:
 	PICAMERA_AVAILABLE = False
-	logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler").warn("Could not import module picamera. Disabling camera integration.")
+	logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler").warn(
+		"Could not import module picamera. Disabling camera integration.")
 
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 from octoprint.events import Events as OctoPrintEvents
 
+
 # singleton
 _instance = None
-
 
 def lidHandler(plugin):
 	global _instance
@@ -34,7 +36,8 @@ class LidHandler(object):
 		self._settings = settings
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler")
 
-		self._photo_creator = PhotoCreator(self._settings.get(["cam", "localFilePath"]))
+		imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
+		self._photo_creator = PhotoCreator(imagePath)
 		self._worker = None
 
 		self._subscribe()
@@ -45,32 +48,30 @@ class LidHandler(object):
 		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self.onEvent)
 
 	def onEvent(self, event, payload):
-		self._logger.info("onEvent() event: %s, payload: %s", event, payload)
+		self._logger.debug("onEvent() event: %s, payload: %s", event, payload)
 		if event == IoBeamEvents.LID_OPENED:
-			self._logger.info("onEvent() LID_OPENED")
+			self._logger.debug("onEvent() LID_OPENED")
 			self._worker = threading.Thread(target=self._photo_creator.work)
 			self._worker.daemon = True
 			self._worker.start()
 		elif event == IoBeamEvents.LID_CLOSED:
-			self._logger.info("onEvent() LID_CLOSED")
+			self._logger.debug("onEvent() LID_CLOSED")
 			self._photo_creator.active = False
 		elif event == OctoPrintEvents.SHUTDOWN:
 			self._photo_creator.active = False
 
 
 class PhotoCreator(object):
-	def __init__(self, path="~/test.jpg"):
-		self.path = path
+	def __init__(self, path):
+		self.imagePath = path
+		self.tmpPath = self.imagePath + ".tmp"
 		self.active = True
 		self.last_photo = 0
 		self.camera = None
-
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator")
-		self._logger.info("__init__")
 
 	def work(self):
 		try:
-			self._logger.info("work()")
 			self.active = True
 			if not PICAMERA_AVAILABLE:
 				self._logger.warn("PiCamera is not available, not able to capture pictures.")
@@ -83,15 +84,16 @@ class PhotoCreator(object):
 
 			while self.active:
 				self._capture()
-				# now = time.time()
-				# if now - self.last_photo >= 2:
-				# 	self._capture()
-				# 	pass
-				# else:
-				# 	time.sleep(2 - (now - self.last_photo))
+				self._move_tmp_image()
+				time.sleep(1)
+			# now = time.time()
+			# if now - self.last_photo >= 2:
+			# 	self._capture()
+			# 	pass
+			# else:
+			# 	time.sleep(2 - (now - self.last_photo))
 
 			self._close_cam()
-			self._logger.info("work() leaving work")
 		except:
 			self._logger.exception("Uggghhhh.... ")
 
@@ -99,36 +101,36 @@ class PhotoCreator(object):
 
 	def _prepare_cam(self):
 		try:
-			self._logger.info("_prepare_cam()")
 			now = time.time()
 
 			self.camera = PiCamera()
+			# self.camera.resolution = (2592, 1944)
 			self.camera.resolution = (1024, 768)
 			self.camera.vflip = True
 			self.camera.hflip = True
+			self.camera.brightness = 70
+			self.camera.color_effects = (128, 128)
 			self.camera.start_preview()
 
-			self._logger.info("_prepare_cam() prepared in %ss", time.time() - now)
+			self._logger.debug("_prepare_cam() prepared in %ss", time.time() - now)
 		except:
 			self._logger.exception("_prepare_cam() Exception while preparing camera:")
 
 	def _capture(self):
 		try:
-			now  = time.time()
-			self.camera.capture(self.path)
-			self._logger.info("_capture() captured in %ss", time.time() - now)
+			now = time.time()
+			self.camera.capture(self.tmpPath, format='jpeg', resize=(1000, 800))
+			self._logger.debug("_capture() captured picture in %ss", time.time() - now)
 		except:
 			self._logger.exception("Exception while taking picture from camera:")
+
+	def _move_tmp_image(self):
+		returncode = call(['mv', self.tmpPath, self.imagePath])
+		if returncode != 0:
+			self._logger.warn("_move_tmp_image() returncode is %s (sys call, should be 0)", returncode)
 
 	def _close_cam(self):
 		if self.camera is not None:
 			self.camera.close()
-			self._logger.info("_close_cam() cam closed ")
-		else:
-			self._logger.info("_close_cam() can't close cam... guess that's ok.")
+			self._logger.dbug("_close_cam() Camera closed ")
 
-
-			# returncode = call(["raspistill", "--timeout", "0", "--mode", "2", "-o", self.path])
-			# self._logger.info("taking picture with raspistill:  returncode %s", returncode)
-			# call(["raspistill", "--timeout", "500", "--width", "1296", "--height", "972", "--quality", "70",
-			#       "-o", self.path])

@@ -145,10 +145,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			),
 			analyticsEnabled=False,
 			cam=dict(
-				frontendUrl="plugin/mrbeam/static/img/test.jpg",
-				localFilePath=None
-				# frontendUrl="/downloads/files/local/local/beam-cam.jpg",
-				# localFilePath="/Users/andy/Library/Application Support/OctoPrint/uploads/local/beam-cam.jpg"
+				# frontendUrl="plugin/mrbeam/static/img/test.jpg",
+				# localFilePath=None
+				frontendUrl="/downloads/files/local/local/beam-cam.jpg",
+				localFilePath="local/beam-cam.jpg"
 			)
 		)
 
