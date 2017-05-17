@@ -23,6 +23,8 @@ $(function(){
 		self.onStartup = function(){
             self.webCamImageElem = $("#webcam_image");
 
+            // either a real cam image or the static one was already loaded at this point.
+            self.lastImageLoaded = self.webCamImageElem.attr('src');
             self.webCamImageElem.load(function() {
                 self.lastImageLoaded = self.webCamImageElem.attr('src');
             });
