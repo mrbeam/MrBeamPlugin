@@ -14,10 +14,13 @@
         <link rel="apple-touch-icon" sizes="114x114" href="{{ url_for('plugin.mrbeam.static', filename='img/mrb114.png') }}">
         <link rel="apple-touch-icon" sizes="144x144" href="{{ url_for('plugin.mrbeam.static', filename='img/mrb144.png') }}">
 
-		{% include 'stylesheets.jinja2' %}
+        {#  Dirty to have this (== body elements) in the head section.
+           Chrome ends head-tag and opens body-tag which means that all following is in the page's bodey instead of the head  #}
+        {% include 'loading_overlay.jinja2' %}
+
+        {% include 'stylesheets.jinja2' %}
         {% include 'initscript.jinja2' %}
         {% include 'mrbeam_initscript.jinja2' %}
-        {% include 'loading_overlay.jinja2' %}
         {% include 'lasersafety_standalone.jinja2' %}
         {% include 'ready_to_laser.jinja2' %}
         {% include 'loginscreen_viewmodel.jinja2' %}

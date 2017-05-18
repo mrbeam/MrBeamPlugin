@@ -1,128 +1,124 @@
 $(function(){
 
 	function CameraViewModel(params) {
-		var self = this;
-
-		self.settings = params[0];
-		self.workingArea = params[1];
+        var self = this;
+        self.settings = params[0];
+        self.workingArea = params[1];
         self.profile = params[2];
 
-        self.camera_offset_x = ko.observable(0);
-		self.camera_offset_y = ko.observable(0);
-		self.camera_scale = ko.observable(1.0);
-		self.camera_rotation = ko.observable(0.0);
+        self.interval_duration = 2000;
 
+        self.myInterval = undefined;
+        self.imageUrl = undefined;
         self.webCamImageElem = undefined;
-        self.lastImageLoaded = undefined;
-        // self.lastImageLoaded = '/plugin/mrbeam/static/img/beam-cam-static.jpg';
 
-		self.camTransform = ko.computed(function(){
-			return "scale("+self.camera_scale()+") rotate("+self.camera_rotation()+"deg) translate("+self.camera_offset_x()+"px, "+self.camera_offset_y()+"px)"
-		});
+        self.imageLoadingDuration = -1;
 
-		self.onStartup = function(){
+        self.camera_offset_x = ko.observable(0);
+        self.camera_offset_y = ko.observable(0);
+        self.camera_scale = ko.observable(1.0);
+        self.camera_rotation = ko.observable(0.0);
+
+        self.camTransform = ko.computed(function () {
+            return "scale(" + self.camera_scale() + ") rotate(" + self.camera_rotation() + "deg) translate(" + self.camera_offset_x() + "px, " + self.camera_offset_y() + "px)"
+        });
+
+        self.onAllBound = function () {
             self.webCamImageElem = $("#webcam_image");
+            self.imageUrl = self.settings.settings.plugins.mrbeam.cam.frontendUrl();
 
-            // either a real cam image or the static one was already loaded at this point.
-            self.lastImageLoaded = self.webCamImageElem.attr('src');
-            self.webCamImageElem.load(function() {
-                self.lastImageLoaded = self.webCamImageElem.attr('src');
-            });
-
-            // we have a default onerror handler in the html wich executes the loading of beam-cam-static.jpg while DOM is being loaded.
-            // Now we're registering our own error handler here and must unregister the existing one.
-            self.webCamImageElem.attr('onerror', '');
-            self.webCamImageElem.error(function() {
-                if (self.lastImageLoaded) {
-                    // this will trigger onLoad event
-                    self.webCamImageElem.attr('src', self.lastImageLoaded);
-                }
-            });
-
+            self.initCameraCalibration();
             self.onTabChange('#workingarea', '#notab');
-		};
+        };
 
-		self.onAfterBinding = function(){
-			self.initCameraCalibration();
-		};
-
-		self.onBrowserTabVisibilityChange = function(state){
-			var currentTab = $('#mrbeam-main-tabs li.active a').attr('href');
-			if(typeof currentTab !== undefined && currentTab === "#workingarea"){
-				if(state === true){
-					self.onTabChange('#workingarea', '#notab');
-				}
-				if(state === false){
-					self.onTabChange('#notab', '#workingarea');
-				}
-			}
-		};
-
-		self.onTabChange = function (current, previous) {
-            if (current === "#workingarea") {
-                if (self.webcamDisableTimeout != undefined) {
-                    clearTimeout(self.webcamDisableTimeout);
+        self.onBrowserTabVisibilityChange = function (state) {
+            var currentTab = $('#mrbeam-main-tabs li.active a').attr('href');
+            if (typeof currentTab !== undefined && currentTab === "#workingarea") {
+                if (state === true) {
+                    self.onTabChange('#workingarea', '#notab');
                 }
-                var webcamImage = self.webCamImageElem;
-                var currentSrc = webcamImage.attr("src");
-
-                if (currentSrc === undefined || currentSrc === "none" || currentSrc.trim() === "") {
-                    var newSrc = CONFIG_WEBCAM_STREAM;
-                    if (CONFIG_WEBCAM_STREAM.lastIndexOf("?") > -1) {
-                        newSrc += "&";
-                    } else {
-                        newSrc += "?";
-                    }
-                    newSrc += new Date().getTime();
-//                    console.log("webcam src set", newSrc);
-                    webcamImage.attr("src", newSrc);
+                if (state === false) {
+                    self.onTabChange('#notab', '#workingarea');
                 }
-                photoupdate = setInterval(myTimer, 5000);
-                function myTimer() {
-                    var newSrc = CONFIG_WEBCAM_STREAM;
-                    if (CONFIG_WEBCAM_STREAM.lastIndexOf("?") > -1) {
-                        newSrc += "&";
-                    } else {
-                        newSrc += "?";
-                    }
-                    newSrc += new Date().getTime();
-                   // console.log("webcam src set", newSrc);
-                    webcamImage.attr("src", newSrc);
-                }
-                console.log("webcam enabled");
-            } else if (previous === "#workingarea") {
-                // only disable webcam stream if tab is out of focus for more than 5s, otherwise we might cause
-                // more load by the constant connection creation than by the actual webcam stream
-                self.webcamDisableTimeout = setTimeout(function () {
-                    self.webCamImageElem.css("background-image", "none");
-                }, 5000);
-                window.clearInterval(photoupdate)
             }
         };
 
+        self.onTabChange = function (current, previous) {
+            if (current === "#workingarea") {
+                self.loadImage();
+                self.startImageLoadingInterval();
+            } else if (previous === "#workingarea") {
+                self.stopImageLoadingInterval();
+            }
+        };
 
-		self.initCameraCalibration = function(){
-			var s = self.settings.settings.plugins.mrbeam;
-			s.camera_offset_x.subscribe(function(newValue) {
-				self.camera_offset_x(newValue);
-			});
-			s.camera_offset_y.subscribe(function(newValue) {
-				self.camera_offset_y(newValue);
-			});
-			s.camera_scale.subscribe(function(newValue) {
-				self.camera_scale(newValue);
-			});
-			s.camera_rotation.subscribe(function(newValue) {
-				self.camera_rotation(newValue);
-			});
+        self.initCameraCalibration = function () {
+            var s = self.settings.settings.plugins.mrbeam;
+            s.camera_offset_x.subscribe(function (newValue) {
+                self.camera_offset_x(newValue);
+            });
+            s.camera_offset_y.subscribe(function (newValue) {
+                self.camera_offset_y(newValue);
+            });
+            s.camera_scale.subscribe(function (newValue) {
+                self.camera_scale(newValue);
+            });
+            s.camera_rotation.subscribe(function (newValue) {
+                self.camera_rotation(newValue);
+            });
 
-			s.camera_offset_x.notifySubscribers(s.camera_offset_x());
-			s.camera_offset_y.notifySubscribers(s.camera_offset_y());
-			s.camera_scale.notifySubscribers(s.camera_scale());
-			s.camera_rotation.notifySubscribers(s.camera_rotation());
+            s.camera_offset_x.notifySubscribers(s.camera_offset_x());
+            s.camera_offset_y.notifySubscribers(s.camera_offset_y());
+            s.camera_scale.notifySubscribers(s.camera_scale());
+            s.camera_rotation.notifySubscribers(s.camera_rotation());
 
-		};
-	}
+        };
+
+        self.startImageLoadingInterval = function () {
+            var myIntervalDuration = Math.max(self.interval_duration, self.imageLoadingDuration);
+            self.myInterval = setInterval(self.loadImage, myIntervalDuration);
+            console.log("BeamCam updating, interval: " + Math.round(myIntervalDuration) + "ms");
+        };
+
+        self.stopImageLoadingInterval = function () {
+            window.clearInterval(self.myInterval);
+            self.myInterval = undefined;
+            console.log("BeamCam update paused");
+        };
+
+        self.loadImage = function () {
+            var myImageUrl = self.getTimestampedImageUrl();
+            var myTime = new Date().getTime();
+            $('<img>')
+                .load(function () {
+                    self.webCamImageElem.attr('src', myImageUrl);
+                    var myDuration = new Date().getTime() - myTime;
+                    self.addToImageLoadingDuration(myDuration);
+                })
+                .attr({src: myImageUrl});
+        };
+
+        self.getTimestampedImageUrl = function () {
+            var result = undefined;
+            if (self.imageUrl) {
+                result = self.imageUrl;
+                result += (result.lastIndexOf("?") > -1) ? '&' : '?';
+                result += new Date().getTime();
+            }
+            return result;
+        };
+
+        self.addToImageLoadingDuration = function(nuDuration) {
+            if (nuDuration > 0) {
+                if (self.imageLoadingDuration > 0) {
+                    self.imageLoadingDuration = (self.imageLoadingDuration + nuDuration) / 2 ;
+                } else {
+                    self.imageLoadingDuration = nuDuration;
+                }
+            }
+        };
+    };
+
 
 
     // view model class, parameters for constructor, container to bind to

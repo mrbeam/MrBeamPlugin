@@ -129,7 +129,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def get_settings_defaults(self):
 		return dict(
-			current_profile_id="_mrbeam_junior",
+			current_profile_id="MrBeam2B",
 			defaultIntensity=500,
 			defaultFeedrate=300,
 			svgDPI=90,
@@ -165,6 +165,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			camera_offset_y=self._settings.get(['camera_offset_y']),
 			camera_scale=self._settings.get(['camera_scale']),
 			camera_rotation=self._settings.get(['camera_rotation']),
+			analyticsEnabled=self._settings.get(['analyticsEnabled']),
+			cam=dict(frontendUrl=self._settings.get(['cam', 'frontendUrl']))
 			)
 
 	def on_settings_save(self, data):
