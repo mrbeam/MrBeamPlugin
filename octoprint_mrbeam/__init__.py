@@ -28,7 +28,7 @@ from octoprint_mrbeam.iobeam.interlock_handler import interLockHandler
 from octoprint_mrbeam.iobeam.lid_handler import lidHandler
 from octoprint_mrbeam.led_events import LedEventListener
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
-from .profile import LaserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
+from .profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
 from .software_update_information import get_update_information
 
 
@@ -72,7 +72,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self.slicing_progress_last = -1
 
 	def initialize(self):
-		self.laserCutterProfileManager = LaserCutterProfileManager(self._settings)
+		self.laserCutterProfileManager = laserCutterProfileManager(self._settings)
 		if self._settings.get(["dev", "debug"]) == True: __builtin__.MRBEAM_DEBUG = True
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam")
 		self._branch = self.getBranch()
@@ -201,7 +201,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# core UI here.
 		return dict(
 			js=["js/lasercutterprofiles.js","js/mother_viewmodel.js", "js/mrbeam.js","js/color_classifier.js",
-				"js/working_area.js", "js/camera.js", "js/lib/snap.svg-min.js", "js/render_fills.js", "js/path_convert.js",
+				"js/working_area.js", "js/camera.js", "js/lib/snap.svg-min.js", "js/snap-dxf.js", "js/render_fills.js", "js/path_convert.js",
 				"js/matrix_oven.js", "js/drag_scale_rotate.js",	"js/convert.js", "js/gcode_parser.js",
 				"js/lib/photobooth_min.js", "js/svg_cleaner.js", "js/loginscreen_viewmodel.js",
 				"js/wizard_acl.js", "js/netconnectd_wrapper.js", "js/lasersaftey_viewmodel.js",
@@ -1105,7 +1105,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				# TODO enable once 3d support is ready
 				#stl=ContentTypeMapping(["stl"], "application/sla"),
 				image=ContentTypeDetector(['jpg', 'jpeg', 'jpe', 'png', 'gif', 'bmp', 'pcx', 'webp'], _image_mime_detector),
-				svg=ContentTypeMapping(["svg"], "image/svg+xml")
+				svg=ContentTypeMapping(["svg"], "image/svg+xml"),
+				dxf=ContentTypeMapping(["dxf"], "application/dxf"),
 			),
 			# extensions for printable machine code
 			machinecode=dict(

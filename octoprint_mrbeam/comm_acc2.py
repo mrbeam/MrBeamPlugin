@@ -19,6 +19,8 @@ from subprocess import call as subprocesscall
 
 import octoprint.plugin
 
+from .profile import laserCutterProfileManager
+
 from octoprint.settings import settings, default_settings
 from octoprint.events import eventManager, Events
 from octoprint.filemanager.destinations import FileDestinations
@@ -62,7 +64,7 @@ class MachineCom(object):
 		self._port = port
 		self._baudrate = baudrate
 		self._callback = callbackObject
-		self._printerProfileManager = printerProfileManager
+		self._laserCutterProfile = laserCutterProfileManager(settings()).get_current_or_default()
 
 		self.RX_BUFFER_SIZE = 127
 
@@ -129,6 +131,10 @@ class MachineCom(object):
 
 		self._log("Connected to: %s, starting monitor" % self._serial)
 		self._changeState(self.STATE_CONNECTING)
+		if self._laserCutterProfile['grbl']['resetOnConnect']:
+			self._serial.flushInput()
+			self._serial.flushOutput()
+			self._sendCommand(b'\x18')
 		self._timeout = get_new_timeout("communication")
 
 		while self._monitoring_active:
@@ -365,6 +371,8 @@ class MachineCom(object):
 			self._changeState(self.STATE_OPERATIONAL)
 
 	def _handle_error_message(self, line):
+		if "EEPROM read fail" in line:
+			return
 		self._errorValue = line
 		eventManager().fire(Events.ERROR, {"error": self.getErrorString()})
 		self._changeState(self.STATE_LOCKED)
