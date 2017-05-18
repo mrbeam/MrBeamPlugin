@@ -6,13 +6,17 @@ $(function(){
         self.workingArea = params[1];
         self.profile = params[2];
 
-        self.interval_duration = 2000;
+        self.INTERVAL_DURATION = 2000;
+        self.TAB_NAME_WORKING_AREA = '#workingarea';
 
-        self.myInterval = undefined;
+        self.intervalId = undefined;
         self.imageUrl = undefined;
         self.webCamImageElem = undefined;
 
         self.imageLoadingDuration = -1;
+
+        self.currentTab = '';
+        self.lidClosed = undefined;
 
         self.camera_offset_x = ko.observable(0);
         self.camera_offset_y = ko.observable(0);
@@ -23,34 +27,53 @@ $(function(){
             return "scale(" + self.camera_scale() + ") rotate(" + self.camera_rotation() + "deg) translate(" + self.camera_offset_x() + "px, " + self.camera_offset_y() + "px)"
         });
 
+        // event listener callbacks //
+
         self.onAllBound = function () {
             self.webCamImageElem = $("#webcam_image");
             self.imageUrl = self.settings.settings.plugins.mrbeam.cam.frontendUrl();
 
             self.initCameraCalibration();
-            self.onTabChange('#workingarea', '#notab');
         };
 
         self.onBrowserTabVisibilityChange = function (state) {
-            var currentTab = $('#mrbeam-main-tabs li.active a').attr('href');
-            if (typeof currentTab !== undefined && currentTab === "#workingarea") {
-                if (state === true) {
-                    self.onTabChange('#workingarea', '#notab');
-                }
-                if (state === false) {
-                    self.onTabChange('#notab', '#workingarea');
-                }
-            }
+            var fakeTab = state ? self.TAB_NAME_WORKING_AREA : '#notab';
+            self.doCamState(fakeTab, 'onBrowserTabVisibilityChange');
         };
 
         self.onTabChange = function (current, previous) {
-            if (current === "#workingarea") {
-                self.loadImage();
-                self.startImageLoadingInterval();
-            } else if (previous === "#workingarea") {
-                self.stopImageLoadingInterval();
+            self.doCamState(current, 'onTabChange');
+        };
+
+         // this is listening for data coming through the socket connection
+        self.onDataUpdaterPluginMessage = function(plugin, data) {
+            if (plugin != "mrbeam" || !data) return;
+            if ('lid_closed' in data) {
+                self.lidClosed = data.lid_closed;
+                self.doCamState(undefined, 'onDataUpdaterPluginMessage');
             }
         };
+
+
+        // action methods //
+
+        self.doCamState = function(currentTab, trigger){
+            // console.log("doCamState() trigger:"+trigger+
+            //     ", self.lidClosed:"+self.lidClosed+
+            //     ", self.workingAreaIsCurrentTab("+currentTab+"):"+self.workingAreaIsCurrentTab(currentTab) +
+            //     ", self.intervalId:" + self.intervalId);
+
+            if (!self.lidClosed && self.workingAreaIsCurrentTab(currentTab)) {
+                if (!self.intervalId) {
+                    self.loadImage();
+                    self.startImageLoadingInterval();
+                }
+            } else {
+                if (self.intervalId) {
+                    self.stopImageLoadingInterval();
+                }
+            }
+        }
 
         self.initCameraCalibration = function () {
             var s = self.settings.settings.plugins.mrbeam;
@@ -75,14 +98,14 @@ $(function(){
         };
 
         self.startImageLoadingInterval = function () {
-            var myIntervalDuration = Math.max(self.interval_duration, self.imageLoadingDuration);
-            self.myInterval = setInterval(self.loadImage, myIntervalDuration);
+            var myIntervalDuration = Math.max(self.INTERVAL_DURATION, self.imageLoadingDuration);
+            self.intervalId = setInterval(self.loadImage, myIntervalDuration);
             console.log("BeamCam updating, interval: " + Math.round(myIntervalDuration) + "ms");
         };
 
         self.stopImageLoadingInterval = function () {
-            window.clearInterval(self.myInterval);
-            self.myInterval = undefined;
+            window.clearInterval(self.intervalId);
+            self.intervalId = undefined;
             console.log("BeamCam update paused");
         };
 
@@ -117,6 +140,15 @@ $(function(){
                 }
             }
         };
+
+        self.workingAreaIsCurrentTab = function(currentTab){
+            currentTab = (currentTab) ? currentTab : self.getCurrentTab();
+            return currentTab == self.TAB_NAME_WORKING_AREA;
+        }
+
+        self.getCurrentTab = function(){
+            return $('#mrbeam-main-tabs li.active a').attr('href');
+        }
     };
 
 
