@@ -174,11 +174,11 @@ svg text {
     width: 48%;
 }
 
-#webcam_image {
+#beamcam_image {
 	position:absolute;
 }
 
-#webcam_image.broken {
+#beamcam_image.broken {
 	visibility: hidden;
 }
 
@@ -227,7 +227,7 @@ h4.job_title{
     height: 48px;
     overflow: hidden;
     display: inline-block;
-    border-radius: 5%; 
+    border-radius: 5%;
     /* border: 1px solid #999; */
     box-shadow: 2px 2px 4px 2px rgba(0,0,0,0.33);
     margin: 4px;
@@ -241,9 +241,9 @@ h4.job_title{
 }
 
 /* state machine. either img or vector color drop zone highlightning*/
-#no_job .color_drop_zone.hover, 
+#no_job .color_drop_zone.hover,
 body.engravingDrag #engrave_job .img_drop_zone.hover,
-body.vectorDrag .job_row_vector .color_drop_zone.hover, 
+body.vectorDrag .job_row_vector .color_drop_zone.hover,
 body.vectorDrag .color_drop_zone.create_job.hover {
 	border: 2px dashed;
     font-weight: 700;
@@ -258,8 +258,8 @@ body.vectorDrag .color_drop_zone.create_job.hover {
 }
 
 #cd_engraving {
-	background: linear-gradient(135deg,   
-				rgba(255, 0, 0, 1) 0%, 
+	background: linear-gradient(135deg,
+				rgba(255, 0, 0, 1) 0%,
 				rgba(255, 255, 0, 1) 35%,
 				rgba(0, 255, 0, 1) 50%,
 				rgba(0, 255, 255, 1) 65%,
@@ -273,5 +273,5 @@ body.colorDragInProgress #drop_overlay {
 
 .checkInput {
 	border-color: red !important;
-	
+
 }

@@ -30,9 +30,9 @@ $(function(){
         // event listener callbacks //
 
         self.onAllBound = function () {
-            self.webCamImageElem = $("#webcam_image");
+            self.webCamImageElem = $("#beamcam_image");
+            self.webCamImageElem.removeAttr('onerror');
             self.imageUrl = self.settings.settings.plugins.mrbeam.cam.frontendUrl();
-
             self.initCameraCalibration();
         };
 
