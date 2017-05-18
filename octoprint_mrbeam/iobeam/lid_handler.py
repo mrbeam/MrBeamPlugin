@@ -103,7 +103,7 @@ class PhotoCreator(object):
 
 			self._prepare_cam()
 
-			while self.active:
+			while self.active and self.camera:
 				self._capture()
 				# check if still active...
 				if self.active:
