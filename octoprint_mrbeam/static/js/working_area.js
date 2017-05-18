@@ -195,7 +195,7 @@ $(function(){
 
 		self.move_laser = function(data, evt){
 			self.abortFreeTransforms();
-			if(self.state.isOperational() && !self.state.isPrinting()){
+			if(self.state.isOperational() && !self.state.isPrinting() && !self.state.isLocked()){
 				var coord = self.getXYCoord(evt);
 				$.ajax({
 					url: API_BASEURL + "plugin/mrbeam",
@@ -340,7 +340,7 @@ $(function(){
 						}
 					}
 				});
-				
+
 				// get original svg attributes
 				var newSvgAttrs = self._getDocumentNamespaceAttributes(f);
 				var doc_dimensions = self._getDocumentDimensionAttributes(f);
@@ -415,7 +415,7 @@ $(function(){
 
 		self.placeDXF = function(file) {
 			var url = self._getSVGserveUrl(file);
-			
+
 			callback = function (f) {
 				var doc_dimensions = self._getDocumentDimensionAttributes(f);
 				var newSvgAttrs = self._getDocumentNamespaceAttributes(f);
@@ -481,7 +481,7 @@ $(function(){
 				var root_attrs = file.select('svg').node.attributes;
 			}
 			var namespaces = {};
-			
+
 			// iterate svg tag attributes
 			for(var i = 0; i < root_attrs.length; i++){
 				var attr = root_attrs[i];
