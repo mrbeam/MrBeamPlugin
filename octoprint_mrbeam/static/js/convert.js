@@ -290,25 +290,28 @@ $(function(){
 		self._allParametersSet = function(){
 			var allSet = true;
 			$('.job_row_vector').each(function(i, pass){
-				var intensityInput = $(pass).find('.param_intensity');
-				var feedrateInput = $(pass).find('.param_feedrate');
-				var intensity = intensityInput.val();
-				var feedrate = feedrateInput.val();
-				if(intensity === ''){
-					intensityInput.addClass('checkInput');
-					setTimeout(
-						function() { intensityInput.removeClass('checkInput'); },
-						2000
-					);
-					allSet = false;
-				}
-				if(feedrate === ''){
-					feedrateInput.addClass('checkInput');
-					setTimeout(
-						function() { feedrateInput.removeClass('checkInput'); },
-						2000
-					);
-					allSet = false;
+				var colorDrops = $(pass).find('.color_drop_zone');
+				if (colorDrops.children() > 0){
+					var intensityInput = $(pass).find('.param_intensity');
+					var feedrateInput = $(pass).find('.param_feedrate');
+					var intensity = intensityInput.val();
+					var feedrate = feedrateInput.val();
+					if(intensity === ''){
+						intensityInput.addClass('checkInput');
+						setTimeout(
+							function() { intensityInput.removeClass('checkInput'); },
+							2000
+						);
+						allSet = false;
+					}
+					if(feedrate === ''){
+						feedrateInput.addClass('checkInput');
+						setTimeout(
+							function() { feedrateInput.removeClass('checkInput'); },
+							2000
+						);
+						allSet = false;
+					}
 				}
 			});
 			return allSet;
