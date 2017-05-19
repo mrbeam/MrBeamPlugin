@@ -147,6 +147,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			cam=dict(
 				# frontendUrl="plugin/mrbeam/static/img/test.jpg",
 				# localFilePath=None
+				enabled=True,
 				frontendUrl="/downloads/files/local/local/beam-cam.jpg",
 				localFilePath="local/beam-cam.jpg"
 			)
@@ -166,7 +167,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			camera_scale=self._settings.get(['camera_scale']),
 			camera_rotation=self._settings.get(['camera_rotation']),
 			analyticsEnabled=self._settings.get(['analyticsEnabled']),
-			cam=dict(frontendUrl=self._settings.get(['cam', 'frontendUrl']))
+			cam=dict(enabled=self._settings.get(['cam', 'enabled']),
+					 frontendUrl=self._settings.get(['cam', 'frontendUrl']))
 			)
 
 	def on_settings_save(self, data):

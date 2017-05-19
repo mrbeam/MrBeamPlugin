@@ -39,9 +39,12 @@ class LidHandler(object):
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler")
 
 		self.lidClosed = True;
+		self.camEnabled = self._settings.get(["cam", "enabled"])
 
-		imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
-		self._photo_creator = PhotoCreator(imagePath)
+		self._photo_creator = None
+		if self.camEnabled:
+			imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
+			self._photo_creator = PhotoCreator(imagePath)
 
 		self._subscribe()
 
@@ -56,7 +59,8 @@ class LidHandler(object):
 		if event == IoBeamEvents.LID_OPENED:
 			self._logger.debug("onEvent() LID_OPENED")
 			self.lidClosed = False;
-			self._start_photo_worker()
+			if self._photo_creator and self.camEnabled:
+				self._start_photo_worker()
 			self._send_frontend_lid_state(closed=self.lidClosed)
 		elif event == IoBeamEvents.LID_CLOSED:
 			self._logger.debug("onEvent() LID_CLOSED")
@@ -76,7 +80,8 @@ class LidHandler(object):
 		worker.start()
 
 	def _end_photo_worker(self):
-		self._photo_creator.active = False
+		if self._photo_creator:
+			self._photo_creator.active = False
 
 	def _send_frontend_lid_state(self, closed=True):
 		self._plugin_manager.send_plugin_message("mrbeam", dict(lid_closed=closed))
