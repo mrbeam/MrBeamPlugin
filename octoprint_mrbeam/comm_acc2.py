@@ -409,7 +409,19 @@ class MachineCom(object):
 			self._serial.write(list(bytearray('\x18')))
 			pass
 		elif line[1:].startswith('\'$H'): # ['$H'|'$X' to unlock]
-			pass
+			self._changeState(self.STATE_LOCKED)
+			if self.isOperational():
+				errorMsg = "Machine reset."
+				self._cmd = None
+				self._acc_line_buffer = []
+				self._pauseWaitStartTime = None
+				self._pauseWaitTimeLost = 0.0
+				self._send_event.clear(completely=True)
+				with self._commandQueue.mutex:
+					self._commandQueue.queue.clear()
+				self._log(errorMsg)
+				self._errorValue = errorMsg
+				eventManager().fire(Events.ERROR, {"error": self.getErrorString()})
 		elif line[1:].startswith('Cau'): # [Caution: Unlocked]
 			pass
 		elif line[1:].startswith('Ena'): # [Enabled]
@@ -418,20 +430,7 @@ class MachineCom(object):
 			pass
 
 	def _handle_startup_message(self, line):
-		if self.isOperational():
-			errorMsg = "Machine reset."
-			self._cmd = None
-			self._acc_line_buffer = []
-			self._pauseWaitStartTime = None
-			self._pauseWaitTimeLost = 0.0
-			self._send_event.clear(completely=True)
-			with self._commandQueue.mutex:
-				self._commandQueue.queue.clear()
-			self._log(errorMsg)
-			self._errorValue = errorMsg
-			self._changeState(self.STATE_LOCKED)
-			eventManager().fire(Events.ERROR, {"error": self.getErrorString()})
-		else:
+		if not self.isOperational():
 			self._onConnected(self.STATE_LOCKED)
 			versionMatch = re.search("Grbl (?P<grbl>.+?)(_(?P<git>[0-9a-f]{7})(?P<dirty>-dirty)?)? \[.+\]", line)
 			if versionMatch:
@@ -449,41 +448,22 @@ class MachineCom(object):
 		# <Idle,MPos:-434.000,-596.000,0.000,WPos:0.000,0.000,0.000,S:0,laser off:0>
 		try:
 			idx_mx_begin = line.index('MPos:') + 5
-			idx_mx_end = line.index('.', idx_mx_begin) + 2
+			idx_mx_end = line.index('.', idx_mx_begin) + 3
 			idx_my_begin = line.index(',', idx_mx_end) + 1
-			idx_my_end = line.index('.', idx_my_begin) + 2
-			#idx_mz_begin = line.index(',', idx_my_end) + 1
-			#idx_mz_end = line.index('.', idx_mz_begin) + 2
+			idx_my_end = line.index('.', idx_my_begin) + 3
 
 			idx_wx_begin = line.index('WPos:') + 5
-			idx_wx_end = line.index('.', idx_wx_begin) + 2
+			idx_wx_end = line.index('.', idx_wx_begin) + 3
 			idx_wy_begin = line.index(',', idx_wx_end) + 1
-			idx_wy_end = line.index('.', idx_wy_begin) + 2
-			#idx_wz_begin = line.index(',', idx_wy_end) + 1
-			#idx_wz_end = line.index('.', idx_wz_begin) + 2
+			idx_wy_end = line.index('.', idx_wy_begin) + 3
 
-			#idx_intensity_begin = line.index('S:', idx_wz_end) + 2
-			#idx_intensity_end = line.index(',', idx_intensity_begin)
-
-			#idx_laserstate_begin = line.index('laser ', idx_intensity_end) + 6
-			#idx_laserstate_end = line.index(':', idx_laserstate_begin)
-
-			#payload = {
-			#"mx": line[idx_mx_begin:idx_mx_end],
-			#"my": line[idx_my_begin:idx_my_end],
-			#"mz": line[idx_mz_begin:idx_mz_end],
-			#"wx": line[idx_wx_begin:idx_wx_end],
-			#"wy": line[idx_wy_begin:idx_wy_end],
-			#"wz": line[idx_wz_begin:idx_wz_end],
-			#"laser": line[idx_laserstate_begin:idx_laserstate_end],
-			#"intensity": line[idx_intensity_begin:idx_intensity_end]
-			#}
 			mx = float(line[idx_mx_begin:idx_mx_end])
 			my = float(line[idx_my_begin:idx_my_end])
 			wx = float(line[idx_wx_begin:idx_wx_end])
 			wy = float(line[idx_wy_begin:idx_wy_end])
+			self.MPosX = mx
+			self.MPosY = my
 			self._callback.on_comm_pos_update([mx, my, 0], [wx, wy, 0])
-		#eventManager().fire(Events.RT_STATE, payload)
 		except ValueError:
 			pass
 
@@ -915,12 +895,21 @@ class MachineCom(object):
 		if not self.isOperational():
 			return
 
+		# first pause (feed hold) bevore doing the soft reset in order to retain machine pos.
+		self._sendCommand('!')
+		time.sleep(0.5)
+
 		with self._commandQueue.mutex:
 			self._commandQueue.queue.clear()
-		self._soft_reset()
+		self._cmd = None
+
+		self._sendCommand(b'\x18')
 		self._acc_line_buffer = []
 		self._send_event.clear(completely=True)
-		self._changeState(self.STATE_LOCKED)
+		self._changeState(self.STATE_OPERATIONAL)
+
+		time.sleep(1.1)
+		self._sendCommand("G92X{:.3f}Y{:.3f}Z0\n".format(self.MPosX+501.0, self.MPosY+401.0))
 
 		payload = {
 			"file": self._currentFile.getFilename(),
