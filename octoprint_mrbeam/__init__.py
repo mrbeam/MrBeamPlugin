@@ -503,7 +503,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# see if we nee to send this to the cloud
 		submissionDate = self.getUserSetting(username, self.USER_SETTINGS_KEY_LASERSAFETY_CONFIRMATION_SENT_TO_CLOUD, -1)
 		force = bool(data.get('force', False))
-		if submissionDate <= 0 or force:
+		needSubmission = submissionDate <= 0 or force
+		if needSubmission:
 			# get cloud env to use
 			debug = self.get_env(self.ENV_LASER_SAFETY)
 
@@ -551,7 +552,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._logger.info("LaserSafetyNotice: confirmation already sent. showAgain: %s", showAgain)
 			self.setUserSetting(username, self.USER_SETTINGS_KEY_LASERSAFETY_CONFIRMATION_SHOW_AGAIN, showAgain)
 
-		return NO_CONTENT
+		if needSubmission and not successfullySubmitted:
+			return make_response("Failed to submit laser safety confirmation to cloud.", 901)
+		else:
+			return NO_CONTENT
 
 	#~~ helpers
 
@@ -873,7 +877,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		elif command == "passes":
 			self._printer.set_passes(data["value"])
 		elif command == "lasersafety_confirmation":
-			self.lasersafety_wizard_api(data)
+			return self.lasersafety_wizard_api(data)
 		elif command == "ready_to_laser":
 			return self.ready_to_laser(data)
 		elif command == "debug_event":

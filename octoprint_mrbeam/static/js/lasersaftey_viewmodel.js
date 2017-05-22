@@ -85,7 +85,7 @@ $(function() {
             self._setAll(false);
             self.showAgain(true);
         };
-        
+
         // if we get this, there must be a Setup Wizard active....
         // so remove this one quickly
         self.onWizardShow = function(){
@@ -99,7 +99,7 @@ $(function() {
                 $('#lasersafety_overlay').modal("show");
             }
         }
-        
+
         self.hideDialog = function() {
             $('#lasersafety_overlay').modal("hide");
         }
@@ -132,7 +132,15 @@ $(function() {
         };
 
         self._sendData = function(data) {
-            OctoPrint.simpleApiCommand("mrbeam", "lasersafety_confirmation", data);
+            OctoPrint.simpleApiCommand("mrbeam", "lasersafety_confirmation", data)
+                .fail(function(){
+                    new PNotify({
+                        title: gettext("Laser Safety notice will show again."),
+                        text: gettext("Device needs to have a working internet connection to submit your confirmation. We aren't able to reach our servers therefore we'll show this warning again."),
+                        type: "warning",
+                        hide: true
+                    });
+                });
         };
     }
 
