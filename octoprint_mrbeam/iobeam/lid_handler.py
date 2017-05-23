@@ -3,7 +3,7 @@ import time
 import threading
 import os
 from subprocess import call
-import mb_picture_preparation
+# import mb_picture_preparation
 
 # don't crash on a dev computer where you can't install picamera
 try:
