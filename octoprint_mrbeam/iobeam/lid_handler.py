@@ -62,15 +62,18 @@ class LidHandler(object):
 			self.lidClosed = False;
 			if self._photo_creator and self.camEnabled:
 				self._start_photo_worker()
-			self._send_frontend_lid_state(closed=self.lidClosed)
+			self._send_frontend_lid_state()
 		elif event == IoBeamEvents.LID_CLOSED:
 			self._logger.debug("onEvent() LID_CLOSED")
 			self.lidClosed = True;
 			self._end_photo_worker()
-			self._send_frontend_lid_state(closed=self.lidClosed)
+			self._send_frontend_lid_state()
 		elif event == OctoPrintEvents.CLIENT_OPENED:
 			self._logger.debug("onEvent() CLIENT_OPENED sending client lidClosed:%s", self.lidClosed)
-			self._send_frontend_lid_state(closed=self.lidClosed)
+			self._send_frontend_lid_state()
+			# apparently the socket connection isn't yet established.
+			# Hack: wait a seconden and send it again, it works.
+			threading.Timer(1, self._send_frontend_lid_state).start()
 		elif event == OctoPrintEvents.SHUTDOWN:
 			self._logger.debug("onEvent() SHUTDOWN stopping _photo_creator")
 			self._photo_creator.active = False
@@ -84,8 +87,9 @@ class LidHandler(object):
 		if self._photo_creator:
 			self._photo_creator.active = False
 
-	def _send_frontend_lid_state(self, closed=True):
-		self._plugin_manager.send_plugin_message("mrbeam", dict(lid_closed=closed))
+	def _send_frontend_lid_state(self, closed=None):
+		lid_closed = closed if closed is not None else self.lidClosed
+		self._plugin_manager.send_plugin_message("mrbeam", dict(lid_closed=lid_closed))
 
 
 class PhotoCreator(object):
