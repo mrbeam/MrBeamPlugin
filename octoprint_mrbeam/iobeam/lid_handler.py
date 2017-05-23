@@ -1,7 +1,9 @@
 import logging
 import time
 import threading
+import os
 from subprocess import call
+import mb_picture_preparation
 
 # don't crash on a dev computer where you can't install picamera
 try:
@@ -11,7 +13,7 @@ try:
 except:
 	PICAMERA_AVAILABLE = False
 	logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler").warn(
-		"Could not import module picamera. Disabling camera integration.")
+		"Could not import module 'picamera'. Disabling camera integration.")
 
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 from octoprint.events import Events as OctoPrintEvents
@@ -30,7 +32,6 @@ def lidHandler(plugin):
 
 
 # This guy handles lid Events
-# Honestly, I'm not sure if we need a separate handler for this...
 class LidHandler(object):
 	def __init__(self, event_bus, settings, plugin_manager):
 		self._event_bus = event_bus
@@ -91,10 +92,15 @@ class PhotoCreator(object):
 	def __init__(self, path):
 		self.imagePath = path
 		self.tmpPath = self.imagePath + ".tmp"
+		self.tmpPath2 = self.imagePath + ".tmp2"
 		self.active = True
 		self.last_photo = 0
 		self.camera = None
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator")
+
+		self._createFolder_if_not_existing(self.imagePath)
+		self._createFolder_if_not_existing(self.tmpPath)
+		self._createFolder_if_not_existing(self.tmpPath2)
 
 	def work(self):
 		try:
@@ -104,34 +110,25 @@ class PhotoCreator(object):
 				self.active = False
 				return
 
-			# TODO activate lights inside the working area
-
 			self._prepare_cam()
-
 			while self.active and self.camera:
 				self._capture()
 				# check if still active...
 				if self.active:
+					# self.correct_image()
 					self._move_tmp_image()
 					time.sleep(1)
-			# now = time.time()
-			# if now - self.last_photo >= 2:
-			# 	self._capture()
-			# 	pass
-			# else:
-			# 	time.sleep(2 - (now - self.last_photo))
 
 			self._close_cam()
 		except:
-			self._logger.exception("Uggghhhh.... ")
-
-	# TODO deactive light inside the working area
+			self._logger.exception("Exception in worker thread of PhotoCreator:")
 
 	def _prepare_cam(self):
 		try:
 			now = time.time()
 
 			self.camera = PiCamera()
+			# Check with Clemens about best default values here....
 			# self.camera.resolution = (2592, 1944)
 			self.camera.resolution = (1024, 768)
 			self.camera.vflip = True
@@ -152,6 +149,16 @@ class PhotoCreator(object):
 		except:
 			self._logger.exception("Exception while taking picture from camera:")
 
+	def _createFolder_if_not_existing(self, filename):
+		try:
+			path = os.path.dirname(filename)
+			if not os.path.exists(path):
+				os.makedirs(path)
+				self._logger.debug("Created folder '%s' for camera images.", path)
+		except:
+			self.logger.exception("Exception while creating folder '%s' for camera images:", filename)
+
+
 	def _move_tmp_image(self):
 		returncode = call(['mv', self.tmpPath, self.imagePath])
 		if returncode != 0:
@@ -162,3 +169,17 @@ class PhotoCreator(object):
 			self.camera.close()
 			self._logger.debug("_close_cam() Camera closed ")
 
+	# draft
+	def correct_image(self):
+		self._logger.debug("correct_image()")
+		path_to_input_image = self.tmpPath
+		path_to_output_img = self.tmpPath2
+		path_to_cam_params = '/home/pi/cam_calibration_output/cam_calibration_output.npz'
+		path_to_markers_file = '/home/pi/cam_calibration_output/cam_markers.npz'
+
+		is_high_precision = mb_picture_preparation.prepareImage(path_to_input_image,
+																path_to_output_img,
+																path_to_cam_params,
+																path_to_markers_file)
+
+		self._logger.debug("correct_image() is_high_precision:%s", is_high_precision)

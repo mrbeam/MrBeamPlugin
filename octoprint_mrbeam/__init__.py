@@ -148,8 +148,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				# frontendUrl="plugin/mrbeam/static/img/test.jpg",
 				# localFilePath=None
 				enabled=True,
-				frontendUrl="/downloads/files/local/local/beam-cam.jpg",
-				localFilePath="local/beam-cam.jpg"
+				frontendUrl="/downloads/files/local/cam/beam-cam.jpg",
+				localFilePath="cam/beam-cam.jpg"
 			)
 		)
 
