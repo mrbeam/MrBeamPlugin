@@ -9,6 +9,8 @@ $(function(){
         self.INTERVAL_DURATION = 2000;
         self.TAB_NAME_WORKING_AREA = '#workingarea';
 
+        self.camEnabled = undefined;
+
         self.intervalId = undefined;
         self.imageUrl = undefined;
         self.webCamImageElem = undefined;
@@ -32,6 +34,7 @@ $(function(){
         self.onAllBound = function () {
             self.webCamImageElem = $("#beamcam_image");
             self.webCamImageElem.removeAttr('onerror');
+            self.camEnabled = self.settings.settings.plugins.mrbeam.cam.enabled();
             self.imageUrl = self.settings.settings.plugins.mrbeam.cam.frontendUrl();
             self.initCameraCalibration();
         };
@@ -59,11 +62,12 @@ $(function(){
 
         self.doCamState = function(currentTab, trigger){
             // console.log("doCamState() trigger:"+trigger+
+            //     ", self.camEnabled:"+self.camEnabled+
             //     ", self.lidClosed:"+self.lidClosed+
             //     ", self.workingAreaIsCurrentTab("+currentTab+"):"+self.workingAreaIsCurrentTab(currentTab) +
             //     ", self.intervalId:" + self.intervalId);
 
-            if (!self.lidClosed && self.workingAreaIsCurrentTab(currentTab)) {
+            if (self.camEnabled && !self.lidClosed && self.workingAreaIsCurrentTab(currentTab)) {
                 if (!self.intervalId) {
                     self.loadImage();
                     self.startImageLoadingInterval();
@@ -73,7 +77,7 @@ $(function(){
                     self.stopImageLoadingInterval();
                 }
             }
-        }
+        };
 
         self.initCameraCalibration = function () {
             var s = self.settings.settings.plugins.mrbeam;
