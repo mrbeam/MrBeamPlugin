@@ -118,12 +118,9 @@ $(function () {
 
 			// adjust height of designlib scroll element
 			var height = $('#designlib').height();
-			$(".slimScrollDiv").height(height);
+			$("#designlib .slimScrollDiv").height(height);
 			$(".gcode_files").height(height);
 
-			// adjust height of mrb_term scroll element
-			height = $('#mrb_term').height();
-			$("#terminal-output").css({'height': (height - 150) + 'px'});
         };
 
         self.onStartupComplete = function() {

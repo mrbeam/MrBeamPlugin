@@ -275,3 +275,13 @@ body.colorDragInProgress #drop_overlay {
 	border-color: red !important;
 
 }
+
+/*#terminal-output {
+	height: calc(100vh - 140px);
+	max-height: none;
+}*/
+
+.full-tab-height {
+	height: calc(100vh - 140px);
+	max-height: none;	
+}
