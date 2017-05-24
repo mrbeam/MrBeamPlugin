@@ -1,9 +1,9 @@
 
-import logging
 import yaml
 import os
 import subprocess
 
+from octoprint_mrbeam.mrb_logger import mrb_logger
 
 
 SW_UPDATE_TIER_PROD =      "PROD"
@@ -317,4 +317,4 @@ def _sys_command(self, command):
 
 
 def _logger(self):
-	return logging.getLogger("octoprint.plugins.mrbeam.software_update_information")
+	return mrb_logger("octoprint.plugins.mrbeam.software_update_information")

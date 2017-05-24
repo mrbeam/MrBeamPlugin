@@ -1,4 +1,3 @@
-import logging
 import time
 import threading
 import os
@@ -17,6 +16,7 @@ except:
 
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 from octoprint.events import Events as OctoPrintEvents
+from octoprint_mrbeam.mrb_logger import mrb_logger
 
 
 # singleton
@@ -37,7 +37,7 @@ class LidHandler(object):
 		self._event_bus = event_bus
 		self._settings = settings
 		self._plugin_manager = plugin_manager
-		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler")
+		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler")
 
 		self.lidClosed = True;
 		self.camEnabled = self._settings.get(["cam", "enabled"])

@@ -4,7 +4,6 @@ from __future__ import absolute_import
 import __builtin__
 import copy
 import json
-import logging
 import os
 import pprint
 import socket
@@ -28,8 +27,10 @@ from octoprint_mrbeam.iobeam.interlock_handler import interLockHandler
 from octoprint_mrbeam.iobeam.lid_handler import lidHandler
 from octoprint_mrbeam.led_events import LedEventListener
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
+from octoprint_mrbeam.mrb_logger import init_terminal, mrb_logger
 from .profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
 from .software_update_information import get_update_information
+
 
 
 __builtin__.MRBEAM_DEBUG = False
@@ -74,7 +75,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def initialize(self):
 		self.laserCutterProfileManager = laserCutterProfileManager(self._settings)
 		if self._settings.get(["dev", "debug"]) == True: __builtin__.MRBEAM_DEBUG = True
-		self._logger = logging.getLogger("octoprint.plugins.mrbeam")
+
+		init_mrb_logger(self._printer)
+		self._logger = mrb_logger("octoprint.plugins.mrbeam")
 		self._branch = self.getBranch()
 		self._hostname = self.getHostname()
 		self._octopi_info = self.get_octopi_info()
@@ -95,7 +98,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 
 	def _do_initial_log(self):
-		msg = ""
+		msg = "MrBeam Plugin"
 		msg += " MRBEAM_DEBUG " if False else ''
 		msg += " version:" + self._plugin_version
 		msg += ", branch:" + self._branch
@@ -106,7 +109,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		msg += ","+self.ENV_LASER_SAFETY+':'+self.get_env(self.ENV_LASER_SAFETY)
 		msg += ","+self.ENV_ANALYTICS+':'+self.get_env(self.ENV_ANALYTICS)+')'
 		msg += ", octopi:" + str(self._octopi_info)
-		self._logger.info("MrBeam Plugin %s", msg)
+		self._logger.info(msg, terminal=True)
 
 
 	def _convert_profiles(self, profiles):
@@ -1274,10 +1277,11 @@ def __plugin_load__():
 			_disabled=['cura', 'pluginmanager', 'announcements', 'corewizard']   # eats dict | pfad.yml | callable
 			# _disabled=['cura', 'pluginmanager', 'announcements', 'corewizard', 'mrbeam']  # eats dict | pfad.yml | callable
 		),
-		terminalFilters=[
-			{"name": "Suppress position requests", "regex": "(Send: \?)"},
-			{"name": "Suppress confirmations", "regex": "(Recv: ok)"},
-			{"name": "Suppress status messages", "regex": "(Recv: <)"},
+		terminalFilters = [
+			dict(name="Filter all COMM messages", regex="( mrbeam.comm_acc2 - COMM - )", activated=True),
+			dict(name="Filter COMM position requests", regex="(COMM - Send: \?)", activated=True),
+			dict(name="Filter COMM confirmations", regex="(COMM - Recv: ok)", activated=True),
+			dict(name="Filter COMM status messages", regex="(COMM - Recv: <)", activated=True),
 		],
 		appearance=dict(components=dict(
 			order=dict(

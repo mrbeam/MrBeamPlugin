@@ -9,9 +9,9 @@ __copyright__ = "Copyright (C) 2014 The OctoPrint Project - Released under terms
 import os
 import copy
 import re
-import logging
 
 from octoprint.util import dict_merge, dict_clean, dict_contains_keys
+from octoprint_mrbeam.mrb_logger import mrb_logger
 
 # singleton
 _instance = None
@@ -123,7 +123,7 @@ class LaserCutterProfileManager(object):
 		self._folder = self.settings.getBaseFolder("plugins")+"/lasercutterprofiles"
 		if not os.path.exists(self._folder):
 			os.makedirs(self._folder)
-		self._logger = logging.getLogger(__name__)
+		self._logger = mrb_logger(__name__)
 
 	def select(self, identifier):
 		if identifier is None or not self.exists(identifier):

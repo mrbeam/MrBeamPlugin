@@ -2,13 +2,13 @@ from octoprint.printer.standard import Printer, StateMonitor, PrinterInterface
 from octoprint.settings import settings
 from octoprint.events import eventManager, Events
 from . import comm_acc2 as comm
-import logging
+from octoprint_mrbeam.mrb_logger import mrb_logger
 
 class Laser(Printer):
 
 	def __init__(self, fileManager, analysisQueue, printerProfileManager):
 		Printer.__init__(self, fileManager, analysisQueue, printerProfileManager)
-		self._logger = logging.getLogger("octoprint.plugins.mrbeam.printer")
+		self._logger = mrb_logger("octoprint.plugins.mrbeam.printer")
 		self._stateMonitor = LaserStateMonitor(
 			interval=0.5,
 			on_update=self._sendCurrentDataCallbacks,

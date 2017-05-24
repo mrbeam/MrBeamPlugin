@@ -26,6 +26,8 @@ from octoprint.events import eventManager, Events
 from octoprint.filemanager.destinations import FileDestinations
 from octoprint.util import get_exception_string, RepeatedTimer, CountedEvent, sanitize_ascii
 
+from octoprint_mrbeam.mrb_logger import mrb_logger
+
 ### MachineCom #########################################################################################################
 class MachineCom(object):
 	STATE_NONE = 0
@@ -45,7 +47,7 @@ class MachineCom(object):
 	STATE_FLASHING = 14
 
 	def __init__(self, port=None, baudrate=None, callbackObject=None, printerProfileManager=None):
-		self._logger = logging.getLogger("octoprint.plugins.mrbeam.comm_acc2")
+		self._logger = mrb_logger("octoprint.plugins.mrbeam.comm_acc2")
 		self._serialLogger = logging.getLogger("SERIAL")
 
 		if port is None:
@@ -582,7 +584,8 @@ class MachineCom(object):
 			self._send_event.set()
 
 	def _log(self, message):
-		self._callback.on_comm_log(message)
+		# self._callback.on_comm_log(message)
+		self._logger.comm(message)
 		self._serialLogger.debug(message)
 
 	def _compareGrblVersion(self, versionDict):

@@ -393,7 +393,9 @@ $(function () {
         self.terminal.activeAllFilters = function(){
             var filters = self.terminal.filters();
             for (var i = 0; i < filters.length; i++) {
-                self.terminal.activeFilters.push(filters[i].regex);
+                if (filters[i].activated) {
+                    self.terminal.activeFilters.push(filters[i].regex);
+                }
             }
         };
 

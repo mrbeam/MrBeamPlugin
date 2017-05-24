@@ -1254,9 +1254,10 @@ ul.dropdown-menu li a {
 }
 
 /** Terminal output */
-#term #terminal-output {
-  min-height: 70vh;
+#terminal-output {
+  font-size: 11px;
 }
+
 /** Settings dialog */
 /** Footer */
 .footer ul {
