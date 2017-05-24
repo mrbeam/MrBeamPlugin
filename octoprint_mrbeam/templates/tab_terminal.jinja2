@@ -9,9 +9,9 @@
 										<a class="accordion-toggle" ><i class="icon-filter"></i> {{ _('Terminal filters') }}</a>
 									</div>
 								</div>
-								<label class="checkbox">
-									<input type="checkbox" id="terminal-autoscroll" data-bind="checked: terminal.autoscrollEnabled"> {{ _('Autoscroll') }}
-								</label>
+{#								<label class="checkbox">#}
+{#									<input type="checkbox" id="terminal-autoscroll" data-bind="checked: terminal.autoscrollEnabled"> {{ _('Autoscroll') }}#}
+{#								</label>#}
 								<div data-bind="foreach: terminal.filters">
 									<label class="checkbox">
 										<input type="checkbox" data-bind="attr: { value: regex }, checked: $parent.terminal.activeFilters"> <span data-bind="text: name"></span>
