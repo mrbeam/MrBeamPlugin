@@ -121,9 +121,14 @@ $(function () {
 			$(".slimScrollDiv").height(height);
 			$(".gcode_files").height(height);
 
+			// terminal stuff
 			// adjust height of mrb_term scroll element
 			height = $('#mrb_term').height();
-			$("#terminal-output").css({'height': (height - 150) + 'px'});
+			$("#terminal-output").css({'height': (height - 250) + 'px', 'max-height': 'none'});
+            $("#terminal-output").scroll(function() {
+                 self.terminal.checkAutoscroll();
+            });
+            self.terminal.activeAllFilters();
         };
 
         self.onStartupComplete = function() {
@@ -175,7 +180,7 @@ $(function () {
                 $('#go_fullscreen_menu_item').show();
                 $('#exit_fullscreen_menu_item').hide();
             }
-        }
+        };
 
         self.fromCurrentData = function (data) {
             self._fromData(data);
@@ -382,6 +387,18 @@ $(function () {
             self.terminal.updateOutput();
         };
 
+        self.terminal.checkAutoscroll = function(){
+            var elem = $("#terminal-output");
+            var isScrolledToBottom = elem[0].scrollHeight <= elem.scrollTop() + elem.outerHeight();
+            self.terminal.autoscrollEnabled(isScrolledToBottom);
+        };
+
+        self.terminal.activeAllFilters = function(){
+            var filters = self.terminal.filters();
+            for (var i = 0; i < filters.length; i++) {
+                self.terminal.activeFilters.push(filters[i].regex);
+            }
+        };
 
         self.show_safety_glasses_warning = function (callback) {
             var options = {};
