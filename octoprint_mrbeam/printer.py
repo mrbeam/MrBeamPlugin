@@ -3,6 +3,7 @@ from octoprint.settings import settings
 from octoprint.events import eventManager, Events
 from . import comm_acc2 as comm
 from octoprint_mrbeam.mrb_logger import mrb_logger
+from . import _mrbeam_plugin_implementation
 
 class Laser(Printer):
 
@@ -121,6 +122,26 @@ class Laser(Printer):
 			MPos = WPos = [0, 0, 0]
 		self._stateMonitor.setWorkPosition(WPos)
 		self._stateMonitor.setMachinePosition(MPos)
+
+
+	# maybe one day we want to introduce special MrBeam commands....
+	# def commands(self, commands):
+	# 	"""
+	# 	Sends one or more gcode commands to the printer.
+	# 	"""
+	# 	if self._comm is None:
+	# 		return
+    #
+	# 	if not isinstance(commands, (list, tuple)):
+	# 		commands = [commands]
+    #
+	# 	for command in commands:
+	# 		self._logger.debug("Laser.commands() %s", command)
+	# 		sendCommandToPrinter = True
+	# 		if _mrbeam_plugin_implementation is not None:
+	# 			sendCommandToPrinter = _mrbeam_plugin_implementation.execute_command(command)
+	# 		if sendCommandToPrinter:
+	# 			self._comm.sendCommand(command)
 
 
 class LaserStateMonitor(StateMonitor):

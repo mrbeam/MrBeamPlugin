@@ -9,6 +9,7 @@ import pprint
 import socket
 import threading
 import time
+import shlex
 from subprocess import check_output
 
 import octoprint.plugin
@@ -27,13 +28,16 @@ from octoprint_mrbeam.iobeam.interlock_handler import interLockHandler
 from octoprint_mrbeam.iobeam.lid_handler import lidHandler
 from octoprint_mrbeam.led_events import LedEventListener
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
-from octoprint_mrbeam.mrb_logger import init_terminal, mrb_logger
+from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
 from .profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
 from .software_update_information import get_update_information
 
 
 
 __builtin__.MRBEAM_DEBUG = False
+
+
+_mrbeam_plugin_implementation = None
 
 
 class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
@@ -1134,6 +1138,22 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		else:
 			return None, None
 
+	# def execute_command(self, command):
+	# 	return True
+	# 	'''
+	# 	There's this idea that we can enter commands into the frontend's terminal.
+	# 	This could be the place where we handle these commands....
+	# 	'''
+	# 	self._logger.debug("execute_command() %s", command)
+	# 	if command is not None and command.startswith("\\"):
+	# 		chunks = shlex.split(command)
+	# 		self._logger.debug("execute_command() chunks: %s", chunks)
+	# 		if chunks[0] in ('\\filter', 'filter'):
+	# 			# do something about filters
+	# 			pass
+	# 		return False
+	# 	else:
+	# 		return True
 
 	def getHostname(self):
 		hostname = '';
@@ -1268,8 +1288,10 @@ def clitest_commands(cli_group, pass_octoprint_ctx, *args, **kwargs):
 __plugin_name__ = "Mr Beam Laser Cutter"
 
 def __plugin_load__():
-	global __plugin_implementation__
+	global __plugin_implementation__, _mrbeam_plugin_implementation
 	__plugin_implementation__ = MrBeamPlugin()
+	_mrbeam_plugin_implementation = __plugin_implementation__
+	# MRBEAM_PLUGIN_IMPLEMENTATION = __plugin_implementation__
 
 	global __plugin_settings_overlay__
 	__plugin_settings_overlay__ = dict(
@@ -1278,10 +1300,9 @@ def __plugin_load__():
 			# _disabled=['cura', 'pluginmanager', 'announcements', 'corewizard', 'mrbeam']  # eats dict | pfad.yml | callable
 		),
 		terminalFilters = [
-			dict(name="Filter all COMM messages", regex="( mrbeam.comm_acc2 - COMM - )", activated=True),
-			dict(name="Filter COMM position requests", regex="(COMM - Send: \?)", activated=True),
-			dict(name="Filter COMM confirmations", regex="(COMM - Recv: ok)", activated=True),
-			dict(name="Filter COMM status messages", regex="(COMM - Recv: <)", activated=True),
+			dict(name="Filter beamOS messages", regex="^([0-9,.: ]+ [A-Z]+ mrbeam)", activated=False),
+			dict(name="Filter _COMM_ messages", regex="^([0-9,.: ]+ _COMM_)", activated=True),
+			dict(name="Filter _COMM_ except Gcode", regex="^([0-9,.: ]+ _COMM_: (Send: \?|Recv: ok|Recv: <))", activated=True),
 		],
 		appearance=dict(components=dict(
 			order=dict(
@@ -1291,6 +1312,11 @@ def __plugin_load__():
 			disabled=dict(
 				wizard=['plugin_softwareupdate']
 			)
+		)),
+		server = dict(commands=dict(
+			serverRestartCommand = "sudo systemctl restart octoprint.service",
+			systemRestartCommand = "sudo shutdown -r now",
+			systemShutdownCommand = "sudo shutdown -h now"
 		))
 	)
 

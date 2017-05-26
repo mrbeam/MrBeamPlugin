@@ -22,7 +22,7 @@ class MrbLogger(object):
 		self.id = self._shorten_id(id)
 
 
-	def terminal(self, msg, *args, **kwargs):
+	def _terminal(self, msg, *args, **kwargs):
 		global _printer
 
 		date = self._getDateString()
@@ -33,7 +33,7 @@ class MrbLogger(object):
 		if kwargs.pop('exc_info', False):
 			exctype, value = sys.exc_info()[:2]
 			exception = " (Exception: {type} - {value})".format(type=exctype, value=value)
-		output = "{date} {id} - {level} - {msg}{exception}".format(date=date, id=id, level=level, msg=msg, exception=exception)
+		output = "{date} {level}{space}{id}: {msg}{exception}".format(date=date, space=(' ' if id else ''), id=id, level=level, msg=msg, exception=exception)
 
 		if _printer:
 			_printer.on_comm_log(output)
@@ -42,16 +42,16 @@ class MrbLogger(object):
 
 
 	def comm(self, msg, *args, **kwargs):
-		self.terminal(msg, *args, level='COMM', **kwargs)
+		self._terminal(msg, *args, level='_COMM_', id='', **kwargs)
 
 	def debug(self, msg, *args, **kwargs):
 		if kwargs.pop('terminal', False):
-			self.terminal(msg, *args, level='DEBUG', **kwargs)
+			self._terminal(msg, *args, level='DEBUG', **kwargs)
 		self.logger.debug(msg, *args, **kwargs)
 
 	def info(self, msg, *args, **kwargs):
 		if kwargs.pop('terminal', False):
-			self.terminal(msg, *args, level='INFO', **kwargs)
+			self._terminal(msg, *args, level='INFO', **kwargs)
 		self.logger.info(msg, *args, **kwargs)
 
 	def warn(self, msg, *args, **kwargs):
@@ -59,27 +59,28 @@ class MrbLogger(object):
 
 	def warning(self, msg, *args, **kwargs):
 		if kwargs.pop('terminal', True):
-			self.terminal(msg, *args, level='WARNING', **kwargs)
+			self._terminal(msg, *args, level='WARNING', **kwargs)
 		self.logger.warn(msg, *args, **kwargs)
 
 	def error(self, msg, *args, **kwargs):
 		if kwargs.pop('terminal', True):
-			self.terminal(msg, *args, level='ERROR', **kwargs)
+			self._terminal(msg, *args, level='ERROR', **kwargs)
 		self.logger.error(msg, *args, **kwargs)
 
 	def critical(self, msg, *args, **kwargs):
 		if kwargs.pop('terminal', True):
-			self.terminal(msg, *args, level='CRITICAL', **kwargs)
+			self._terminal(msg, *args, level='CRITICAL', **kwargs)
 		self.logger.critical(msg, *args, **kwargs)
 
 	def exception(self, msg, *args, **kwargs):
 		if kwargs.pop('terminal', True):
-			self.terminal(msg, *args, level='EXCEPTION', exc_info=True, **kwargs)
+			self._terminal(msg, *args, level='EXCEPTION', exc_info=True, **kwargs)
 		self.logger.exception(msg, *args, **kwargs)
 
 	def _shorten_id(self, id):
 		return id.replace('octoprint.plugins.', '')
 
 	def _getDateString(self):
-		return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3]
+		return datetime.datetime.now().strftime("%H:%M:%S,%f")[:-3]
+		# return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3]
 

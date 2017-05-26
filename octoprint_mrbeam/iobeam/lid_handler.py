@@ -1,6 +1,7 @@
 import time
 import threading
 import os
+import logging
 from subprocess import call
 # import mb_picture_preparation
 
