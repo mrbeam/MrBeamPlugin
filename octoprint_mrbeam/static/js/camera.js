@@ -33,6 +33,8 @@ $(function(){
 
         self.onAllBound = function () {
             self.webCamImageElem = $("#beamcam_image");
+            self.webCamSettingsImageElem = $("#webcam_image_settings"); // dev settings module
+            self.webCamSettingsImageElem.attr('src', self.webCamImageElem.attr('src'));
             self.webCamImageElem.removeAttr('onerror');
             self.camEnabled = self.settings.settings.plugins.mrbeam.cam.enabled();
             self.imageUrl = self.settings.settings.plugins.mrbeam.cam.frontendUrl();
@@ -124,6 +126,7 @@ $(function(){
             $('<img>')
                 .load(function () {
                     self.webCamImageElem.attr('src', myImageUrl);
+                    self.webCamSettingsImageElem.attr('src', myImageUrl);
                     var myDuration = new Date().getTime() - myTime;
                     self.addToImageLoadingDuration(myDuration);
                 })
