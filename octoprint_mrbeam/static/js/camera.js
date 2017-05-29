@@ -37,6 +37,11 @@ $(function(){
             self.camEnabled = self.settings.settings.plugins.mrbeam.cam.enabled();
             self.imageUrl = self.settings.settings.plugins.mrbeam.cam.frontendUrl();
             self.initCameraCalibration();
+
+            // At this point we already got a lid_state through the socket connection.
+            // But back then this viewmodel wasn't bound so that doCamState (or more precisely self.workingAreaIsCurrentTab) failed.
+            // another doCamState() here solves this problem.
+            self.doCamState(undefined, 'onAllBound');
         };
 
         self.onBrowserTabVisibilityChange = function (state) {
