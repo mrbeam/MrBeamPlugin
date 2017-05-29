@@ -33,10 +33,17 @@ $(function(){
 
         self.onAllBound = function () {
             self.webCamImageElem = $("#beamcam_image");
+            self.webCamSettingsImageElem = $("#webcam_image_settings"); // dev settings module
+            self.webCamSettingsImageElem.attr('src', self.webCamImageElem.attr('src'));
             self.webCamImageElem.removeAttr('onerror');
             self.camEnabled = self.settings.settings.plugins.mrbeam.cam.enabled();
             self.imageUrl = self.settings.settings.plugins.mrbeam.cam.frontendUrl();
             self.initCameraCalibration();
+
+            // At this point we already got a lid_state through the socket connection.
+            // But back then this viewmodel wasn't bound so that doCamState (or more precisely self.workingAreaIsCurrentTab) failed.
+            // another doCamState() here solves this problem.
+            self.doCamState(undefined, 'onAllBound');
         };
 
         self.onBrowserTabVisibilityChange = function (state) {
@@ -119,6 +126,7 @@ $(function(){
             $('<img>')
                 .load(function () {
                     self.webCamImageElem.attr('src', myImageUrl);
+                    self.webCamSettingsImageElem.attr('src', myImageUrl);
                     var myDuration = new Date().getTime() - myTime;
                     self.addToImageLoadingDuration(myDuration);
                 })

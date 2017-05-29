@@ -71,9 +71,6 @@ class LidHandler(object):
 		elif event == OctoPrintEvents.CLIENT_OPENED:
 			self._logger.debug("onEvent() CLIENT_OPENED sending client lidClosed:%s", self.lidClosed)
 			self._send_frontend_lid_state()
-			# apparently the socket connection isn't yet established.
-			# Hack: wait a seconden and send it again, it works.
-			threading.Timer(1, self._send_frontend_lid_state).start()
 		elif event == OctoPrintEvents.SHUTDOWN:
 			self._logger.debug("onEvent() SHUTDOWN stopping _photo_creator")
 			self._photo_creator.active = False
