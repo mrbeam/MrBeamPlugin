@@ -44,6 +44,8 @@ class Laser(Printer):
 		 Connects to the printer. If port and/or baudrate is provided, uses these settings, otherwise autodetection
 		 will be attempted.
 		"""
+		self._init_terminal()
+
 		if self._comm is not None:
 			self._comm.close()
 
@@ -123,6 +125,11 @@ class Laser(Printer):
 		self._stateMonitor.setWorkPosition(WPos)
 		self._stateMonitor.setMachinePosition(MPos)
 
+	def _init_terminal(self):
+		from collections import deque
+		terminalMaxLines = _mrbeam_plugin_implementation._settings.get(['dev', 'terminalMaxLines'])
+		if terminalMaxLines is not None and terminalMaxLines > 0:
+			self._log = deque(self._log, terminalMaxLines)
 
 	# maybe one day we want to introduce special MrBeam commands....
 	# def commands(self, commands):

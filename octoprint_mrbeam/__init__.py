@@ -36,7 +36,7 @@ from .software_update_information import get_update_information
 
 __builtin__.MRBEAM_DEBUG = False
 
-
+# this is a easy&simple way to access the plugin and all injections everywhere within the plugin
 _mrbeam_plugin_implementation = None
 
 
@@ -148,12 +148,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			camera_scale=1,
 			camera_rotation=0,
 			dev=dict(
-				env="PROD"
+				env="PROD",
+				terminalMaxLines = 2000
 			),
 			analyticsEnabled=False,
 			cam=dict(
-				# frontendUrl="plugin/mrbeam/static/img/test.jpg",
-				# localFilePath=None
 				enabled=True,
 				frontendUrl="/downloads/files/local/cam/beam-cam.jpg",
 				localFilePath="cam/beam-cam.jpg"
@@ -175,8 +174,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			camera_rotation=self._settings.get(['camera_rotation']),
 			analyticsEnabled=self._settings.get(['analyticsEnabled']),
 			cam=dict(enabled=self._settings.get(['cam', 'enabled']),
-					 frontendUrl=self._settings.get(['cam', 'frontendUrl']))
-			)
+					 frontendUrl=self._settings.get(['cam', 'frontendUrl'])),
+			dev=dict(
+				env = self._settings.get(['dev', 'env']),
+				terminalMaxLines = self._settings.get(['dev', 'terminalMaxLines']))
+		)
 
 	def on_settings_save(self, data):
 		if "workingAreaWidth" in data and data["workingAreaWidth"]:
@@ -1302,7 +1304,7 @@ def __plugin_load__():
 		terminalFilters = [
 			dict(name="Filter beamOS messages", regex="^([0-9,.: ]+ [A-Z]+ mrbeam)", activated=False),
 			dict(name="Filter _COMM_ messages", regex="^([0-9,.: ]+ _COMM_)", activated=True),
-			dict(name="Filter _COMM_ except Gcode", regex="^([0-9,.: ]+ _COMM_: (Send: \?|Recv: ok|Recv: <))", activated=True),
+			dict(name="Filter _COMM_ except Gcode", regex="^([0-9,.: ]+ _COMM_: (Send: \?|Recv: ok|Recv: <))", activated=False),
 		],
 		appearance=dict(components=dict(
 			order=dict(

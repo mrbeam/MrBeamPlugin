@@ -94,6 +94,8 @@ $(function () {
 			});
 
             self.setupFullscreenContols();
+
+
         };
 
         self.onAllBound = function (allViewModels) {
@@ -122,10 +124,15 @@ $(function () {
 			$(".gcode_files").height(height);
 
 			// terminal stuff
+            terminalMaxLines = self.settings.settings.plugins.mrbeam.dev.terminalMaxLines();
+            self.terminal.upperLimit(terminalMaxLines*2);
+            self.terminal.buffer(terminalMaxLines);
+
             $("#terminal-output").scroll(function() {
                  self.terminal.checkAutoscroll();
             });
             self.terminal.activeAllFilters();
+
         };
 
         self.onStartupComplete = function() {
