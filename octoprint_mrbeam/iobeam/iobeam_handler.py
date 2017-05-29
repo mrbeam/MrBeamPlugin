@@ -1,7 +1,8 @@
-import logging
 import socket
 import threading
 import time
+
+from octoprint_mrbeam.mrb_logger import mrb_logger
 
 # singleton
 _instance = None
@@ -100,7 +101,7 @@ class IoBeamHandler(object):
 
 	def __init__(self, event_bus, socket_file=None):
 		self._event_bus = event_bus
-		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam")
+		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam")
 
 		self._shutdown_signaled = False
 		self._isConnected = False

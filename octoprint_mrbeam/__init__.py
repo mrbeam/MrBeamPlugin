@@ -4,12 +4,12 @@ from __future__ import absolute_import
 import __builtin__
 import copy
 import json
-import logging
 import os
 import pprint
 import socket
 import threading
 import time
+import shlex
 from subprocess import check_output
 
 import octoprint.plugin
@@ -28,11 +28,16 @@ from octoprint_mrbeam.iobeam.interlock_handler import interLockHandler
 from octoprint_mrbeam.iobeam.lid_handler import lidHandler
 from octoprint_mrbeam.led_events import LedEventListener
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
+from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
 from .profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
 from .software_update_information import get_update_information
 
 
+
 __builtin__.MRBEAM_DEBUG = False
+
+# this is a easy&simple way to access the plugin and all injections everywhere within the plugin
+_mrbeam_plugin_implementation = None
 
 
 class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
@@ -74,7 +79,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def initialize(self):
 		self.laserCutterProfileManager = laserCutterProfileManager(self._settings)
 		if self._settings.get(["dev", "debug"]) == True: __builtin__.MRBEAM_DEBUG = True
-		self._logger = logging.getLogger("octoprint.plugins.mrbeam")
+
+		init_mrb_logger(self._printer)
+		self._logger = mrb_logger("octoprint.plugins.mrbeam")
 		self._branch = self.getBranch()
 		self._hostname = self.getHostname()
 		self._octopi_info = self.get_octopi_info()
@@ -95,7 +102,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 
 	def _do_initial_log(self):
-		msg = ""
+		msg = "MrBeam Plugin"
 		msg += " MRBEAM_DEBUG " if False else ''
 		msg += " version:" + self._plugin_version
 		msg += ", branch:" + self._branch
@@ -106,7 +113,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		msg += ","+self.ENV_LASER_SAFETY+':'+self.get_env(self.ENV_LASER_SAFETY)
 		msg += ","+self.ENV_ANALYTICS+':'+self.get_env(self.ENV_ANALYTICS)+')'
 		msg += ", octopi:" + str(self._octopi_info)
-		self._logger.info("MrBeam Plugin %s", msg)
+		self._logger.info(msg, terminal=True)
 
 
 	def _convert_profiles(self, profiles):
@@ -141,12 +148,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			camera_scale=1,
 			camera_rotation=0,
 			dev=dict(
-				env="PROD"
+				env="PROD",
+				terminalMaxLines = 2000
 			),
 			analyticsEnabled=False,
 			cam=dict(
-				# frontendUrl="plugin/mrbeam/static/img/test.jpg",
-				# localFilePath=None
 				enabled=True,
 				frontendUrl="/downloads/files/local/cam/beam-cam.jpg",
 				localFilePath="cam/beam-cam.jpg"
@@ -168,8 +174,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			camera_rotation=self._settings.get(['camera_rotation']),
 			analyticsEnabled=self._settings.get(['analyticsEnabled']),
 			cam=dict(enabled=self._settings.get(['cam', 'enabled']),
-					 frontendUrl=self._settings.get(['cam', 'frontendUrl']))
-			)
+					 frontendUrl=self._settings.get(['cam', 'frontendUrl'])),
+			dev=dict(
+				env = self._settings.get(['dev', 'env']),
+				terminalMaxLines = self._settings.get(['dev', 'terminalMaxLines']))
+		)
 
 	def on_settings_save(self, data):
 		if "workingAreaWidth" in data and data["workingAreaWidth"]:
@@ -1131,6 +1140,22 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		else:
 			return None, None
 
+	# def execute_command(self, command):
+	# 	return True
+	# 	'''
+	# 	There's this idea that we can enter commands into the frontend's terminal.
+	# 	This could be the place where we handle these commands....
+	# 	'''
+	# 	self._logger.debug("execute_command() %s", command)
+	# 	if command is not None and command.startswith("\\"):
+	# 		chunks = shlex.split(command)
+	# 		self._logger.debug("execute_command() chunks: %s", chunks)
+	# 		if chunks[0] in ('\\filter', 'filter'):
+	# 			# do something about filters
+	# 			pass
+	# 		return False
+	# 	else:
+	# 		return True
 
 	def getHostname(self):
 		hostname = '';
@@ -1265,8 +1290,10 @@ def clitest_commands(cli_group, pass_octoprint_ctx, *args, **kwargs):
 __plugin_name__ = "Mr Beam Laser Cutter"
 
 def __plugin_load__():
-	global __plugin_implementation__
+	global __plugin_implementation__, _mrbeam_plugin_implementation
 	__plugin_implementation__ = MrBeamPlugin()
+	_mrbeam_plugin_implementation = __plugin_implementation__
+	# MRBEAM_PLUGIN_IMPLEMENTATION = __plugin_implementation__
 
 	global __plugin_settings_overlay__
 	__plugin_settings_overlay__ = dict(
@@ -1274,10 +1301,10 @@ def __plugin_load__():
 			_disabled=['cura', 'pluginmanager', 'announcements', 'corewizard']   # eats dict | pfad.yml | callable
 			# _disabled=['cura', 'pluginmanager', 'announcements', 'corewizard', 'mrbeam']  # eats dict | pfad.yml | callable
 		),
-		terminalFilters=[
-			{"name": "Suppress position requests", "regex": "(Send: \?)"},
-			{"name": "Suppress confirmations", "regex": "(Recv: ok)"},
-			{"name": "Suppress status messages", "regex": "(Recv: <)"},
+		terminalFilters = [
+			dict(name="Filter beamOS messages", regex="^([0-9,.: ]+ [A-Z]+ mrbeam)", activated=False),
+			dict(name="Filter _COMM_ messages", regex="^([0-9,.: ]+ _COMM_)", activated=True),
+			dict(name="Filter _COMM_ except Gcode", regex="^([0-9,.: ]+ _COMM_: (Send: \?|Recv: ok|Recv: <))", activated=False),
 		],
 		appearance=dict(components=dict(
 			order=dict(
@@ -1287,6 +1314,11 @@ def __plugin_load__():
 			disabled=dict(
 				wizard=['plugin_softwareupdate']
 			)
+		)),
+		server = dict(commands=dict(
+			serverRestartCommand = "sudo systemctl restart octoprint.service",
+			systemRestartCommand = "sudo shutdown -r now",
+			systemShutdownCommand = "sudo shutdown -h now"
 		))
 	)
 

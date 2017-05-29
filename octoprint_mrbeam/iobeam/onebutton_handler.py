@@ -1,4 +1,3 @@
-import logging
 import threading
 import time
 from subprocess import check_output
@@ -7,6 +6,7 @@ from octoprint.events import Events as OctoPrintEvents
 from octoprint.filemanager import valid_file_type
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
+from octoprint_mrbeam.mrb_logger import mrb_logger
 
 # singleton
 _instance = None
@@ -53,7 +53,7 @@ class OneButtonHandler(object):
 		self._file_manager = file_manager
 		self._settings = settings
 		self._printer = printer
-		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam.onebutton_handler")
+		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.onebutton_handler")
 		self._subscribe()
 
 		self.ready_to_laser_ts = -1

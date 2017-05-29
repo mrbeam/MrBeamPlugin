@@ -94,6 +94,8 @@ $(function () {
 			});
 
             self.setupFullscreenContols();
+
+
         };
 
         self.onAllBound = function (allViewModels) {
@@ -122,10 +124,15 @@ $(function () {
 			$(".gcode_files").height(height);
 
 			// terminal stuff
+            terminalMaxLines = self.settings.settings.plugins.mrbeam.dev.terminalMaxLines();
+            self.terminal.upperLimit(terminalMaxLines*2);
+            self.terminal.buffer(terminalMaxLines);
+
             $("#terminal-output").scroll(function() {
                  self.terminal.checkAutoscroll();
             });
             self.terminal.activeAllFilters();
+
         };
 
         self.onStartupComplete = function() {
@@ -393,7 +400,9 @@ $(function () {
         self.terminal.activeAllFilters = function(){
             var filters = self.terminal.filters();
             for (var i = 0; i < filters.length; i++) {
-                self.terminal.activeFilters.push(filters[i].regex);
+                if (filters[i].activated) {
+                    self.terminal.activeFilters.push(filters[i].regex);
+                }
             }
         };
 

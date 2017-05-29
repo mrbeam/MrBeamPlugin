@@ -2,13 +2,14 @@ from octoprint.printer.standard import Printer, StateMonitor, PrinterInterface
 from octoprint.settings import settings
 from octoprint.events import eventManager, Events
 from . import comm_acc2 as comm
-import logging
+from octoprint_mrbeam.mrb_logger import mrb_logger
+from . import _mrbeam_plugin_implementation
 
 class Laser(Printer):
 
 	def __init__(self, fileManager, analysisQueue, printerProfileManager):
 		Printer.__init__(self, fileManager, analysisQueue, printerProfileManager)
-		self._logger = logging.getLogger("octoprint.plugins.mrbeam.printer")
+		self._logger = mrb_logger("octoprint.plugins.mrbeam.printer")
 		self._stateMonitor = LaserStateMonitor(
 			interval=0.5,
 			on_update=self._sendCurrentDataCallbacks,
@@ -43,6 +44,8 @@ class Laser(Printer):
 		 Connects to the printer. If port and/or baudrate is provided, uses these settings, otherwise autodetection
 		 will be attempted.
 		"""
+		self._init_terminal()
+
 		if self._comm is not None:
 			self._comm.close()
 
@@ -121,6 +124,31 @@ class Laser(Printer):
 			MPos = WPos = [0, 0, 0]
 		self._stateMonitor.setWorkPosition(WPos)
 		self._stateMonitor.setMachinePosition(MPos)
+
+	def _init_terminal(self):
+		from collections import deque
+		terminalMaxLines = _mrbeam_plugin_implementation._settings.get(['dev', 'terminalMaxLines'])
+		if terminalMaxLines is not None and terminalMaxLines > 0:
+			self._log = deque(self._log, terminalMaxLines)
+
+	# maybe one day we want to introduce special MrBeam commands....
+	# def commands(self, commands):
+	# 	"""
+	# 	Sends one or more gcode commands to the printer.
+	# 	"""
+	# 	if self._comm is None:
+	# 		return
+    #
+	# 	if not isinstance(commands, (list, tuple)):
+	# 		commands = [commands]
+    #
+	# 	for command in commands:
+	# 		self._logger.debug("Laser.commands() %s", command)
+	# 		sendCommandToPrinter = True
+	# 		if _mrbeam_plugin_implementation is not None:
+	# 			sendCommandToPrinter = _mrbeam_plugin_implementation.execute_command(command)
+	# 		if sendCommandToPrinter:
+	# 			self._comm.sendCommand(command)
 
 
 class LaserStateMonitor(StateMonitor):

@@ -1,9 +1,8 @@
 
 
-import logging
-
 from octoprint.events import Events, CommandTrigger, GenericEventListener
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
+from octoprint_mrbeam.mrb_logger import mrb_logger
 
 
 class LedEventListener(CommandTrigger):
@@ -54,7 +53,7 @@ class LedEventListener(CommandTrigger):
 	def __init__(self, event_bus, printer):
 		CommandTrigger.__init__(self, printer)
 		self._event_bus = event_bus
-		self._logger = logging.getLogger("octoprint.plugins.mrbeam.led_events")
+		self._logger = mrb_logger("octoprint.plugins.mrbeam.led_events")
 
 		self._subscriptions = {}
 

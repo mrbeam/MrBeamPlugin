@@ -1,7 +1,7 @@
-import logging
 
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
+from octoprint_mrbeam.mrb_logger import mrb_logger
 
 
 # singleton
@@ -25,7 +25,7 @@ class InterLockHandler(object):
 		self._event_bus = event_bus
 		self._plugin_manager = plugin_manager
 		self._printer = printer
-		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam.interlockhandler")
+		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.interlockhandler")
 
 		self._subscribe()
 
