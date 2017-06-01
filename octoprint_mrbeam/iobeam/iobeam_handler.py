@@ -28,13 +28,13 @@ class IoBeamEvents(object):
 
 class IoBeamHandler(object):
 
+	# > onebtn:up
 	# > onebtn:pr
 	# > onebtn:dn:< time >
 	# > onebtn:rl:< time >
 	# > onebtn:error	?
 	# > lid:pr
 	# > lid:rl
-	#!! > lid:rl:< time >
 	# > intlk:op:0
 	# > intlk:cl:0
 	# > intlk:op:1
@@ -43,8 +43,8 @@ class IoBeamHandler(object):
 	# > intlk:cl:2
 	# > intlk:op:3
 	# > intlk:cl:3
-	# > steprun:en
-	# > steprun:di
+	# > steprun:on
+	# > steprun:off
 
 	# < fan:on:< value0 - 100 >
 	# > fan:on:ok
@@ -65,12 +65,16 @@ class IoBeamHandler(object):
 	# > laser:temp:< temperatur >
 	# > laser:temp:error:<error type or message>
 
+	# < info
 
 	# How to test and debug:
 	# in config.yaml set
 	#      [plugins mrbeam dev debug] to true (suppresses reconnect on socket timeout) and
 	#      [plugins mrbeam dev sockets iobeam] to '/tmp/mrbeam_iobeam.sock' to open the socket without sudo pw
 	# and then use  "/usr/bin/nc -U -l /tmp/mrbeam_iobeam.sock"
+	#
+	# How to get debug info:
+	#       echo "info" |  nc -U -w1 /var/run/mrbeam_iobeam.sock
 
 
 	SOCKET_FILE = "/var/run/mrbeam_iobeam.sock"
