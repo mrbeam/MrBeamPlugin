@@ -3,11 +3,7 @@
 					<div class="container-fluid">
 						<div class="row-fluid" id="files_wrapper">
 							<div class="span4">
-								<ol>
-									<li>Add designs to your working area with the <i class="icon-ok"></i>-button</li>
-									<li>Afterwards switch back to the working area</li>
 
-								</ol>
 								<div id="design_lib_search" class="">
 									<div class="accordion-heading">
 										<span class="accordion-toggle" ><i class="icon-list"></i> {{ _('Files') }}</span>
@@ -66,106 +62,107 @@
 												</div>
 
 													<script type="text/html" id="files_template_machinecode_gcode">
-														<div class="file_list_entry">
-															<i class="icon-cog file_list_icon file_list_entry_gcode"></i>
-															<div class="title muted dropdown" >
+														<div class="file_list_entry icon_card">
+															<div class="preview" data-bind="
+																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeGcode($data); } }, 
+																css: {disabled: $root.workingArea.isPlaced($data)}
+																" ><i class="icon-cog"></i></div>
+															<div class="title dropdown" >
+																<span class="title_shortened" data-bind="css: $root.getSuccessClass($data), style: { 'font-weight': $root.listHelper.isSelected($data) ? 'bold' : 'normal' }, text: name" ></span>
 																<a type="button" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-																	<span data-bind="css: $root.getSuccessClass($data), style: { 'font-weight': $root.listHelper.isSelected($data) ? 'bold' : 'normal' }, text: name"></span>
-																	<span class="caret"></span>
+																	<i class="icon-reorder pull-right"></i>
 																</a>
-																<ul class="dropdown-menu" role="menu">
-																	<li><a class="" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i> {{ _('Download') }}</a></li>
-																	<li><a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFile($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a></li>
-																</ul>
-															</div>
-															<div class="uploaded">{{ _('Created') }}: <span data-bind="text: formatTimeAgo(date)"></span></div>
-															<div class="size">{{ _('Size') }}: <span data-bind="text: formatSize(size)"></span></div>
-															<div class="additionalInfo hide" data-bind="html: $root.getAdditionalData($data)"></div>
-															<div class="btn-group action-buttons">
-<!--																<a class="btn btn-mini" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i></a>
-																<a class="btn btn-mini" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFile($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i></a>-->
-																<div class="btn"  data-bind="click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeGcode($data); } }, css: {disabled: $root.workingArea.isPlaced($data)}"><i class="icon-ok" title="{{ _('Use') }}"></i>Add</div>
-															</div>
-														</div>
-													</script>
-
-													<script type="text/html" id="files_template_model_svg">
-														<div class="file_list_entry">
-															<i class="icon-picture file_list_icon"></i>
-															<div class="title muted dropdown" >
-																<a type="button" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-																	<span  data-bind="text: name"></span>
-																	<span class="caret"></span>
-																</a>
-																<ul class="dropdown-menu" role="menu">
+																<ul class="dropdown-menu dropdown-menu-right" role="menu">
 																	<li>
 																		<a class="" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i> {{ _('Download') }}</a>
 																	</li>
 																	<li>
 																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFile($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
 																	</li>
+																	 <li class="divider"></li>
+																	<li class="uploaded">{{ _('Uploaded') }}: <span data-bind="text: formatTimeAgo(date)"></span></li>
+																	<li class="size">{{ _('Size') }}: <span data-bind="text: formatSize(size)"></span></li>
 																</ul>
 															</div>
-															<div class="uploaded">{{ _('Uploaded') }}: <span data-bind="text: formatTimeAgo(date)"></span></div>
-															<div class="size">{{ _('Size') }}: <span data-bind="text: formatSize(size)"></span></div>
-															<div class="btn-group action-buttons">
-<!--																<a class="btn btn-mini" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i></a>
-																<div class="btn btn-mini" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFile($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i></div>-->
-																<div class="btn" data-bind="click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeSVG($data); } }, css: {disabled: $root.workingArea.isPlaced($data)}"><i class="icon-ok" title="{{ _('Use') }}"></i>Add</div>
+														</div>	
+													</script>
+
+													<script type="text/html" id="files_template_model_svg">
+														<div class="file_list_entry preview_card">
+															<div class="preview" data-bind="
+																style: { 'background-image': 'url('+$root.downloadLink($data)+')' },
+																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeSVG($data); } }, 
+																css: {disabled: $root.workingArea.isPlaced($data)}
+																" ></div>
+															<div class="title dropdown" >
+																<span class="title_shortened" data-bind="text: name" ></span>
+																<a type="button" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+																	<i class="icon-reorder pull-right"></i>
+																</a>
+																<ul class="dropdown-menu dropdown-menu-right" role="menu">
+																	<li>
+																		<a class="" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i> {{ _('Download') }}</a>
+																	</li>
+																	<li>
+																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFile($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
+																	</li>
+																	 <li class="divider"></li>
+																	<li class="uploaded">{{ _('Uploaded') }}: <span data-bind="text: formatTimeAgo(date)"></span></li>
+																	<li class="size">{{ _('Size') }}: <span data-bind="text: formatSize(size)"></span></li>
+																</ul>
 															</div>
 														</div>
 													</script>
 													
 													<script type="text/html" id="files_template_model_dxf">
-														<div class="file_list_entry">
-															<i class="icon-picture file_list_icon"></i>
-															<div class="title muted dropdown" >
+														<div class="file_list_entry icon_card">
+															<div class="preview" data-bind="
+																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeDXF($data); } }, 
+																css: {disabled: $root.workingArea.isPlaced($data)}
+																" ><i class="icon-picture"></i></div>
+															<div class="title dropdown" >
+																<span class="title_shortened" data-bind="text: name" ></span>
 																<a type="button" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-																	<span  data-bind="text: name"></span>
-																	<span class="caret"></span>
+																	<i class="icon-reorder pull-right"></i>
 																</a>
-																<ul class="dropdown-menu" role="menu">
+																<ul class="dropdown-menu dropdown-menu-right" role="menu">
 																	<li>
 																		<a class="" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i> {{ _('Download') }}</a>
 																	</li>
 																	<li>
 																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFile($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
 																	</li>
+																	 <li class="divider"></li>
+																	<li class="uploaded">{{ _('Uploaded') }}: <span data-bind="text: formatTimeAgo(date)"></span></li>
+																	<li class="size">{{ _('Size') }}: <span data-bind="text: formatSize(size)"></span></li>
 																</ul>
 															</div>
-															<div class="uploaded">{{ _('Uploaded') }}: <span data-bind="text: formatTimeAgo(date)"></span></div>
-															<div class="size">{{ _('Size') }}: <span data-bind="text: formatSize(size)"></span></div>
-															<div class="btn-group action-buttons">
-<!--																<a class="btn btn-mini" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i></a>
-																<div class="btn btn-mini" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFile($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i></div>-->
-																<div class="btn" data-bind="click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeDXF($data); } }, css: {disabled: $root.workingArea.isPlaced($data)}"><i class="icon-ok" title="{{ _('Use') }}"></i>Add</div>
-															</div>
-														</div>
+														</div>												
 													</script>
 
 													<script type="text/html" id="files_template_model_image">
-														<div class="file_list_entry">
-															<i class="icon-camera file_list_icon"></i>
-															<div class="title muted dropdown" >
+														<div class="file_list_entry preview_card">
+															<div class="preview" data-bind="
+																style: { 'background-image': 'url('+$root.downloadLink($data)+')' },
+																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeIMG($data); } }, 
+																css: {disabled: $root.workingArea.isPlaced($data)}
+																" ></div>
+															<div class="title dropdown" >
+																<span class="title_shortened" data-bind="text: name" ></span>
 																<a type="button" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-																	<span  data-bind="text: name"></span>
-																	<span class="caret"></span>
+																	<i class="icon-reorder pull-right"></i>
 																</a>
-																<ul class="dropdown-menu" role="menu">
+																<ul class="dropdown-menu dropdown-menu-right" role="menu">
 																	<li>
 																		<a class="" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i> {{ _('Download') }}</a>
 																	</li>
 																	<li>
 																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFile($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
 																	</li>
+																	 <li class="divider"></li>
+																	<li class="uploaded">{{ _('Uploaded') }}: <span data-bind="text: formatTimeAgo(date)"></span></li>
+																	<li class="size">{{ _('Size') }}: <span data-bind="text: formatSize(size)"></span></li>
 																</ul>
-															</div>
-															<div class="uploaded">{{ _('Uploaded') }}: <span data-bind="text: formatTimeAgo(date)"></span></div>
-															<div class="size">{{ _('Size') }}: <span data-bind="text: formatSize(size)"></span></div>
-															<div class="btn-group action-buttons">
-<!--																<a class="btn btn-mini" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i></a>
-																<div class="btn btn-mini" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFile($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i></div>-->
-																<div class="btn" data-bind="click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeIMG($data); } }, css: {disabled: $root.workingArea.isPlaced($data)}"><i class="icon-ok" title="{{ _('Use') }}"></i>Add</div>
 															</div>
 														</div>
 													</script>

@@ -1159,15 +1159,35 @@ ul.dropdown-menu li a {
   transform: rotate(-90deg) scaleX(-1) scaleY(-1) translate(0%, -100%);
 }*/
 /** GCODE file manager */
+
+
+
 #files .gcode_files {
   padding-right: 7px;
 }
 #files .gcode_files .entry {
-  padding: 5px;
+  padding: 12px;
   line-height: 20px;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 0;
   position: relative;
+  width: 50%;
+  float: left;
+  box-sizing: border-box;
 }
+
+@media only screen and (max-width : 1200px) {
+	#files .gcode_files .entry { width: 33%; }
+}
+
+@media only screen and (max-width : 979px) {
+	#files .gcode_files .entry { width: 50%; }
+}
+
+@media only screen and (max-width : 767px) {
+	#files .gcode_files .entry { width: 100%; }
+}
+
+
 #files .gcode_files .entry:hover {
   background-color: #f5f5f5;
 }
@@ -1175,20 +1195,7 @@ ul.dropdown-menu li a {
   text-overflow: ellipsis;
   word-break: break-all;
 }
-#files .gcode_files .entry .uploaded,
-#files .gcode_files .entry .size,
-#files .gcode_files .entry .additionalInfo {
-  font-size: 85%;
-  color: #999;
-}
-#files .gcode_files .entry .action-buttons {
-  position: absolute;
-  bottom: 5px;
-  right: 5px;
-}
-#files .gcode_files .entry .additionalInfo {
-  padding-bottom: 22px;
-}
+
 #files .upload-buttons {
   margin-top: 10px;
 }
@@ -1196,6 +1203,77 @@ ul.dropdown-menu li a {
   text-align: center;
   margin-bottom: 5px !important;
 }
+
+#files .file_list_entry .title {
+  padding: .8em .8em 0.2em;
+  white-space: nowrap;
+  border-top: 1px dotted lightgray;
+
+}
+
+.title_shortened {
+	width: 89%;
+	overflow: hidden;
+	display: inline-block;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+#files .file_list_entry li.size,
+#files .file_list_entry li.uploaded {
+  font-size: x-small;
+  color: #383e42;
+  padding: 0px 20px;
+}
+
+.file_list_icon {
+  color: #999;
+  font-size: 3em;
+  display: block;
+  float: left;
+  margin-right: 12px;
+  min-width: 1.1em;
+}
+
+.file_list_entry_gcode {
+	color: #CCC;
+}
+
+
+
+/* file tab preview cards */
+.file_list_entry.icon_card,
+.file_list_entry.preview_card {
+	position: relative;
+	width: 100%;
+	box-shadow: rgba(0,0,0,.3) 0 0 9px 0;
+}
+
+#files .preview_card div.preview,	
+#files .icon_card div.preview {
+	padding-top: 80%;
+	width: 100%;
+	cursor: pointer;
+}	
+
+#files .preview_card div.preview {	
+	background-position: center;
+	background-size: contain;
+	background-repeat: no-repeat;
+}
+
+#files .icon_card div.preview>i{	
+	text-align: center;
+	font-size: 6rem;
+	color: #999;
+	height: 0;
+	position: absolute;
+	top: calc(50% - 6rem / 2);
+	left: 0;
+	width: 100%;
+}
+
+
 /** Control tab */
 #control {
   overflow: hidden;
@@ -1663,22 +1741,7 @@ input.search-query,
 	display: block;
 }
 
-#files .file_list_entry .title {
-	margin-left: 3.3em;
-}
 
-.file_list_icon {
-  color: #999;
-  font-size: 3em;
-  display: block;
-  float: left;
-  margin-right: 12px;
-  min-width: 1.1em;
-}
-
-.file_list_entry_gcode {
-	color: #CCC;
-}
 
 #focus_description {
 	background-image: url(/plugin/mrbeam/static/img/focus_adjust_steps.png);
