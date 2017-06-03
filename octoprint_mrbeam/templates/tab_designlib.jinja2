@@ -57,14 +57,15 @@
 										<div  id="files_list">
 											<div class="accordion-inner">
 
-												<div class="gcode_files" data-bind="slimScrolledForeach: filesOnlyList" >
+												<!--<div class="gcode_files" data-bind="slimXXScrolledForeach: filesOnlyList" >-->
+												<div class="gcode_files" data-bind="foreach: filesOnlyList" >
 													<div class="entry" data-bind="attr: { id: $root.getEntryId($data) }, template: { name: $root.templateFor($data), data: $data }"></div>
 												</div>
 
 													<script type="text/html" id="files_template_machinecode_gcode">
 														<div class="file_list_entry icon_card">
 															<div class="preview" data-bind="
-																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeGcode($data); } }, 
+																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeGcode($data); $('#wa_tab_btn').tab('show'); } }, 
 																css: {disabled: $root.workingArea.isPlaced($data)}
 																" ><i class="icon-cog"></i></div>
 															<div class="title dropdown" >
@@ -91,7 +92,7 @@
 														<div class="file_list_entry preview_card">
 															<div class="preview" data-bind="
 																style: { 'background-image': 'url('+$root.downloadLink($data)+')' },
-																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeSVG($data); } }, 
+																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeSVG($data); $('#wa_tab_btn').tab('show'); } }, 
 																css: {disabled: $root.workingArea.isPlaced($data)}
 																" ></div>
 															<div class="title dropdown" >
@@ -117,7 +118,7 @@
 													<script type="text/html" id="files_template_model_dxf">
 														<div class="file_list_entry icon_card">
 															<div class="preview" data-bind="
-																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeDXF($data); } }, 
+																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeDXF($data); $('#wa_tab_btn').tab('show'); } }, 
 																css: {disabled: $root.workingArea.isPlaced($data)}
 																" ><i class="icon-picture"></i></div>
 															<div class="title dropdown" >
@@ -144,7 +145,7 @@
 														<div class="file_list_entry preview_card">
 															<div class="preview" data-bind="
 																style: { 'background-image': 'url('+$root.downloadLink($data)+')' },
-																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeIMG($data); } }, 
+																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeIMG($data); $('#wa_tab_btn').tab('show'); } }, 
 																css: {disabled: $root.workingArea.isPlaced($data)}
 																" ></div>
 															<div class="title dropdown" >

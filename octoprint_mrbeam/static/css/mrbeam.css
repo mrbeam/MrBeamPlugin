@@ -1273,6 +1273,9 @@ ul.dropdown-menu li a {
 	width: 100%;
 }
 
+#files .preview.disabled {
+  opacity: 0.2;
+}
 
 /** Control tab */
 #control {
