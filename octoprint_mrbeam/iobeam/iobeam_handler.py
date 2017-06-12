@@ -91,11 +91,13 @@ class IoBeamHandler(object):
 	MESSAGE_DEVICE_STEPRUN =            "steprun"
 	MESSAGE_DEVICE_FAN =	            "fan"
 	MESSAGE_DEVICE_LASER =	            "laser"
+	MESSAGE_DEVICE_UNUSED =	            "unused"
 	MESSAGE_DEVICE_IOBEAM =	            "iobeam"
 
 	MESSAGE_ACTION_ONEBUTTON_PRESSED =  "pr"
 	MESSAGE_ACTION_ONEBUTTON_DOWN =     "dn"
 	MESSAGE_ACTION_ONEBUTTON_RELEASED = "rl"
+	MESSAGE_ACTION_ONEBUTTON_UP =		"up"
 
 	MESSAGE_ACTION_INTERLOCK_OPEN =     "op"
 	MESSAGE_ACTION_INTERLOCK_CLOSED =   "cl"
@@ -253,6 +255,8 @@ class IoBeamHandler(object):
 					err = self._handle_laser_message(message, tokens)
 				elif device == self.MESSAGE_DEVICE_IOBEAM:
 					err = self._handle_iobeam_message(message, tokens)
+				elif device == self.MESSAGE_DEVICE_UNUSED:
+					pass
 				elif device == self.MESSAGE_ERROR:
 					err = self._handle_error_message(message, tokens)
 				else:
@@ -281,6 +285,8 @@ class IoBeamHandler(object):
 			self._fireEvent(IoBeamEvents.ONEBUTTON_DOWN, payload)
 		elif action == self.MESSAGE_ACTION_ONEBUTTON_RELEASED and payload is not None:
 			self._fireEvent(IoBeamEvents.ONEBUTTON_RELEASED, payload)
+		elif action == self.MESSAGE_ACTION_ONEBUTTON_UP:
+			return 0
 		elif action == self.MESSAGE_ERROR:
 			raise Exception("iobeam received OneButton error: %s", message)
 		else:
