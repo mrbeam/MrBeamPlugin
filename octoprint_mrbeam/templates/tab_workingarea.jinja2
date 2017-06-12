@@ -175,7 +175,7 @@
 									</div>
 									<div class="accordion-body collapse in XXoverflow_visible" id="wa_addstuff">
 										<div class="accordion-inner">
-                                            <div class="btn" data-bind="click: $('#designlib_tab_btn').tab('show')"><i class="icon-file"></i> {{ _('File') }} </div>
+                                            <div class="btn" data-bind="click: function(){$('#designlib_tab_btn').tab('show');}"><i class="icon-file"></i> {{ _('File') }} </div>
                                             <div class="btn" data-bind="click: newQuickText"><i class="icon-font"></i> {{ _('Quick Text') }} </div>
                                             <div class="btn" data-bind="visible:files.hasCamera(), css: {disabled: !$root.loginState.isUser()}, click: files.takePhoto" >
 												<i class="icon-camera icon-white"></i>
