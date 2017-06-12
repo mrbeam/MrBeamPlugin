@@ -14,7 +14,7 @@ _instance = None
 def oneButtonHandler(plugin):
 	global _instance
 	if _instance is None:
-		_instance = OneButtonHandler(plugin._ioBeam,
+		_instance = OneButtonHandler(plugin,
 									 plugin._event_bus,
 									 plugin._plugin_manager,
 									 plugin._file_manager,
@@ -46,8 +46,8 @@ class OneButtonHandler(object):
 	SHUTDOWN_STATE_PREPARE    = 1
 	SHUTDOWN_STATE_GOING_DOWN = 2
 
-	def __init__(self, iobeam, event_bus, plugin_manager, file_manager, settings, printer):
-		self._iobeam = iobeam
+	def __init__(self, plugin, event_bus, plugin_manager, file_manager, settings, printer):
+		self._plugin = plugin
 		self._event_bus = event_bus
 		self._plugin_manager = plugin_manager
 		self._file_manager = file_manager
@@ -104,7 +104,7 @@ class OneButtonHandler(object):
 
 		msg += ", _printer.get_state_id():{}".format(self._printer.get_state_id())
 		msg += ", _printer.is_operational():{}".format(self._printer.is_operational())
-		msg += ", _iobeam.is_interlock_closed():{}".format(self._iobeam.is_interlock_closed())
+		msg += ", _iobeam.is_interlock_closed():{}".format(self.is_interlock_closed())
 
 		self._logger.debug("onEvent() %s", msg)
 
@@ -148,7 +148,7 @@ class OneButtonHandler(object):
 				self.shutdown_prepare_cancel()
 				self.pause_need_to_release = False
 			# start laser
-			elif self._printer.is_operational() and self.ready_to_laser_ts > 0 and self._iobeam.is_interlock_closed():
+			elif self._printer.is_operational() and self.ready_to_laser_ts > 0 and self.is_interlock_closed():
 				self._logger.debug("onEvent() ONEBUTTON_RELEASED: start laser")
 				self._start_laser()
 			# resume laser (or timeout block)
@@ -156,7 +156,7 @@ class OneButtonHandler(object):
 				if self._is_during_pause_waiting_time():
 					self._logger.debug("onEvent() ONEBUTTON_RELEASED: timeout block")
 					self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_BLOCK)
-				elif self._iobeam.is_interlock_closed():
+				elif self.is_interlock_closed():
 					self._logger.debug("onEvent() ONEBUTTON_RELEASED: resume_laser_if_waitingtime_is_over")
 					self.resume_laser_if_waitingtime_is_over()
 
@@ -236,7 +236,7 @@ class OneButtonHandler(object):
 
 	def _start_laser(self):
 		self._logger.debug("_start_laser() ...shall we laser file %s ?", self.ready_to_laser_file)
-		if not (self._printer.is_operational() and self.ready_to_laser_ts > 0 and self._iobeam.is_interlock_closed()):
+		if not (self._printer.is_operational() and self.ready_to_laser_ts > 0 and self.is_interlock_closed()):
 			self._logger.warn("_start_laser() Preconditions not met. Triggered per dev-start_button?")
 			return
 		if self.ready_to_laser_ts <= 0 or time.time() - self.ready_to_laser_ts > self.READY_TO_PRINT_MAX_WAITING_TIME:
@@ -301,7 +301,7 @@ class OneButtonHandler(object):
 		return self.pause_laser_ts > 0 and time.time() - self.pause_laser_ts <= self.LASER_PAUSE_WAITING_TIME
 
 	def resume_laser_if_waitingtime_is_over(self):
-		if self._iobeam.is_interlock_closed():
+		if self.is_interlock_closed():
 			if not self._is_during_pause_waiting_time():
 				self._logger.debug("Resuming laser job...")
 				self._printer.resume_print()
@@ -335,6 +335,12 @@ class OneButtonHandler(object):
 			# we didn't fire this event when it actually timed out, so let's make up leeway
 			self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_END)
 		self.shutdown_prepare_was_initiated_during_pause_saftey_timeout = None
+
+	def is_interlock_closed(self):
+		if self._plugin._ioBeam:
+			return self._plugin._ioBeam.is_interlock_closed()
+		else:
+			raise Exception("iobeam handler not available from Plugin.")
 
 	def _get_shutdown_command(self):
 		c = self._settings.global_get(["server", "commands", "systemShutdownCommand"])

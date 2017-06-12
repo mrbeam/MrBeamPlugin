@@ -242,7 +242,8 @@ def set_info_iobeam(self, tier):
 		user="mrbeam",
 		repo="iobeam",
 		branch=branch,
-		pip="https://bitbucket.org/mrbeam/iobeam/get/{target_version}.zip",
+		pip="git+ssh://git@bitbucket.org/mrbeam/iobeam.git@{target_version}",
+		# pip="https://bitbucket.org/mrbeam/iobeam/get/{target_version}.zip",
 		pip_command=pip_command,
 		restart="environment"
 	)
