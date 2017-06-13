@@ -78,7 +78,7 @@ class IoBeamHandler(object):
 
 
 	SOCKET_FILE = "/var/run/mrbeam_iobeam.sock"
-	MAX_ERRORS = 3
+	MAX_ERRORS = 10
 
 	MESSAGE_LENGTH_MAX = 1024
 	MESSAGE_NEWLINE = "\n"
