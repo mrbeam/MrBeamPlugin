@@ -1798,12 +1798,10 @@ input.search-query,
   margin-bottom:.3em;
 }
 
-#working_area_files {
-  height: 60vh;
-}
 
-#wa_filelist {
-	height: 55vh;
+#wa_filelist>div {
+	height: 47vh;
+	overflow-y:auto;
 }
 
 .print-control {
@@ -2060,3 +2058,24 @@ input[type=range]::-ms-thumb {
   height: 13px;
 }
 
+.full-col {
+	height: calc(100vh - 60px);
+	/*overflow-y: auto;*/
+}
+
+::-webkit-scrollbar-track
+{
+	-webkit-box-shadow: inset 0 0 4px rgba(0,0,0,0.3);
+	background-color: #F5F5F5;
+}
+
+::-webkit-scrollbar
+{
+	width: 4px;
+	background-color: #F5F5F5;
+}
+
+::-webkit-scrollbar-thumb
+{
+	background-color: #e25303;
+}

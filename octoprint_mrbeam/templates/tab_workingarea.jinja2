@@ -1,7 +1,7 @@
 				<div class="tab-pane active" id="workingarea">
 					<div class="container-fluid">
 						<div class="row-fluid">
-							<div class="span4 accordion" style="margin-bottom:0;">
+							<div class="span4 accordion full-col" style="margin-bottom:0;">
 
 								<div class="accordion-group" id="state_accordion">
 									<div class="accordion-heading">
@@ -166,15 +166,15 @@
 
 
 
-                                <div class="accordion-group" id="working_area_addstuff">
-									<div class="" data-bind="visible: true">
+                                <div class="accordion-group" id="working_area_files">
+									<div>
 										<div class="accordion-heading">
-											<a class="accordion-toggle" data-toggle="collapse" href="#wa_addstuff"><i class="icon-list"></i> {{ _('Add Stuff') }}</a>
+											<a class="accordion-toggle" data-toggle="collapse" href="#wa_filelist"><i class="icon-list"></i> {{ _('Designs') }}</a>
+											<a class="accordion-toggle pull-right" data-bind="visible: !working_area_empty(), click: clear" style="margin-right: 1em;" ><i class="icon-remove-sign"></i> {{ _('Clear all') }}</a>
 										</div>
-
 									</div>
-									<div class="accordion-body collapse in XXoverflow_visible" id="wa_addstuff">
-										<div class="accordion-inner">
+									<div class="accordion-body collapse in">
+										<div class="accordion-inner btn-block btn-group">
                                             <div class="btn" data-bind="click: function(){$('#designlib_tab_btn').tab('show');}"><i class="icon-file"></i> {{ _('File') }} </div>
                                             <div class="btn" data-bind="click: newQuickText"><i class="icon-font"></i> {{ _('Quick Text') }} </div>
                                             <div class="btn" data-bind="visible:files.hasCamera(), css: {disabled: !$root.loginState.isUser()}, click: files.takePhoto" >
@@ -183,21 +183,10 @@
 											</div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div data-bind="visible: true" id="connection_accordion_2"></div>
-
-								<div class="accordion-group" id="working_area_files">
-									<div class="" data-bind="visible: !working_area_empty()">
-										<div class="accordion-heading">
-											<a class="accordion-toggle" data-toggle="collapse" href="#wa_filelist"><i class="icon-list"></i> {{ _('Files') }}</a>
-											<a class="pull-right btn btn-small" data-bind="click: clear" style="margin-right: 1em; margin-top: 4px;" ><i class="icon-remove-sign"></i> {{ _('Clear') }}</a>
-										</div>
-
-									</div>
-									<div class="accordion-body collapse in XXoverflow_visible" id="wa_filelist">
+									<div class="accordion-body collapse in" id="wa_filelist">
 										<div class="accordion-inner">
-											<div class="gcode_files" data-bind="slimScrolledForeach: placedDesigns">
+											<div class="gcode_filesXX" data-bind="foreach: placedDesigns">
 												<div class="entry" data-bind="attr: { id: $data.id }, template: { name: $root.templateFor($data), data: $data }"></div>
 											</div>
 
