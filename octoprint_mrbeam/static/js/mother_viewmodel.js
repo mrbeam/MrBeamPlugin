@@ -58,7 +58,8 @@ $(function () {
 			$("body").on('keydown', function (event) {
 
 				if (!self.settings.feature_keyboardControl()) return;
-
+				if($('.modal.in').length > 0) return;
+				
 				var button = undefined;
 				switch (event.which) {
 					case 37: // left arrow key: 
@@ -85,8 +86,9 @@ $(function () {
 						button = $("#control-xyhome");
 						break;
 					default:
-						event.preventDefault();
-						return false;
+						return;
+//						event.preventDefault();
+//						return false;
 				}
 				if (button === undefined) {
 					return false;

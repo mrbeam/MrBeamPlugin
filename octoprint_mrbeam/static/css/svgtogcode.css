@@ -138,7 +138,7 @@ input.decent_input:hover {
 }
 
 #manual_position {
-	max-width: 13em;
+	max-width: 10em;
 }
 
 #manual_position.warning {
@@ -193,6 +193,11 @@ input.decent_input:hover {
 
 #beamcam_image {
 	position:absolute;
+	user-select: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+	-o-user-select: none;
+	-moz-user-select: none;
 }
 
 #beamcam_image.broken {
