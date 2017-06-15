@@ -104,29 +104,29 @@
 												<div class="jog-panel" id="control_xyaxis">
 													XY-Axes
 													<div>
-														<a class="" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { control.sendJogCommand('y',1) }"><i class="icon-circle-arrow-up"></i></a>
+														<a id="control-yinc" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { control.sendJogCommand('y',1) }"><i class="icon-circle-arrow-up"></i></a>
 													</div>
 													<div>
-														<a class="" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { control.sendJogCommand('x',-1) }"><i class="icon-circle-arrow-left"></i></a>
-														<a class="" data-bind="enable: (state.isOperational() || state.isLocked()) && !state.isPrinting() && loginState.isUser(), click: function() { control.sendHomeCommand(['x', 'y']) }"><i class="icon-home"></i></a>
-														<a class="" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { control.sendJogCommand('x',1) }"><i class="icon-circle-arrow-right"></i></a>
+														<a id="control-xdec" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { control.sendJogCommand('x',-1) }"><i class="icon-circle-arrow-left"></i></a>
+														<a id="control-xyhome" data-bind="enable: (state.isOperational() || state.isLocked()) && !state.isPrinting() && loginState.isUser(), click: function() { control.sendHomeCommand(['x', 'y']) }"><i class="icon-home"></i></a>
+														<a id="control-xinc" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { control.sendJogCommand('x',1) }"><i class="icon-circle-arrow-right"></i></a>
 													</div>
 													<div>
-														<a class="" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { control.sendJogCommand('y',-1) }"><i class="icon-circle-arrow-down"></i></a>
+														<a id="control-ydec" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { control.sendJogCommand('y',-1) }"><i class="icon-circle-arrow-down"></i></a>
 													</div>
 												</div>
 
 												<div class="jog-panel" id="control_zaxis">
 													<div data-bind="visible: control.showZAxis">
 														Z-Axis
-														<div class="" role="group" aria-label="z-axis control">
-															<a class="" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { control.sendJogCommand('z',1) }"><i class="icon-chevron-sign-up"></i></a>
-															<a class="" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { control.sendJogCommand('z',-1) }"><i class="icon-chevron-sign-down"></i></a>
+														<div role="group" aria-label="z-axis control">
+															<a id="control-zinc" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { control.sendJogCommand('z',1) }"><i class="icon-chevron-sign-up"></i></a>
+															<a ic="control-zdec" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { control.sendJogCommand('z',-1) }"><i class="icon-chevron-sign-down"></i></a>
 														</div>
 													</div>
-													<div>
+<!--													<div>
 														<a id="set_coordinate_origin_btn" class="" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: control.setCoordinateOrigin" title="set coordinate origin"><i class="icon-screenshot"></i></a>
-													</div>
+													</div>-->
 												</div>
 
 												<div class="clearfix"></div>

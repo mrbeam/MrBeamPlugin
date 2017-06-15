@@ -28,8 +28,6 @@ $(function () {
                 self.control.sendCustomCommand({type: 'command', command: "G92 X0 Y0"});
             };
 
-//            self.control.jogDistanceInMM = ko.observable(10);
-
             self.control.manualPosition = function () {
                 $('#manual_position').removeClass('warning');
                 var s = $('#manual_position').val();
@@ -55,6 +53,51 @@ $(function () {
 			});
 			$("#manual_position").on('blur', function (e) {
 				self.control.manualPosition();
+			});
+			
+			$("body").on('keydown', function (event) {
+
+				if (!self.settings.feature_keyboardControl()) return;
+
+				var button = undefined;
+				switch (event.which) {
+					case 37: // left arrow key: 
+						button = $("#control-xdec");
+						break;
+					case 38: // up arrow key
+						button = $("#control-yinc");
+						break;
+					case 39: // right arrow key
+						button = $("#control-xinc");
+						break;
+					case 40: // down arrow key
+						button = $("#control-ydec");
+						break;
+					case 33: // page up key
+					case 87: // w key
+						button = $("#control-zinc");
+						break;
+					case 34: // page down key
+					case 83: // s key
+						button = $("#control-zdec");
+						break;
+					case 36: // home key
+						button = $("#control-xyhome");
+						break;
+					default:
+						event.preventDefault();
+						return false;
+				}
+				if (button === undefined) {
+					return false;
+				} else {
+					event.preventDefault();
+					button.addClass("active");
+					setTimeout(function () {
+						button.removeClass("active");
+					}, 150);
+					button.click();
+				}
 			});
 
             // TODO forward to control viewmodel

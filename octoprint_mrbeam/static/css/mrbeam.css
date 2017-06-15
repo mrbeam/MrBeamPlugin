@@ -1294,10 +1294,12 @@ ul.dropdown-menu li a {
 	color: #777; /* #383e42;*/
 }
 
+#control_btns a.active i,
 #control_btns i:hover {
   color: #383e42; /* #e25303; */
   cursor: pointer;
 }
+
 
 #control_zaxis {
 	float:left;
