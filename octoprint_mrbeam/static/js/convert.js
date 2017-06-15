@@ -147,7 +147,7 @@ $(function(){
 			return (self.images_placed() || self.text_placed() || self.filled_shapes_placed());
 		});
 		self.imgIntensityWhite = ko.observable(0);
-		self.imgIntensityBlack = ko.observable(500);
+		self.imgIntensityBlack = ko.observable(50);
 		self.imgFeedrateWhite = ko.observable(1500);
 		self.imgFeedrateBlack = ko.observable(250);
 		self.imgDithering = ko.observable(false);
@@ -266,8 +266,8 @@ $(function(){
 		self.get_current_engraving_settings = function () {
 			var data = {
 				"engrave_outlines" : self.engrave_outlines(),
-				"intensity_black" : self.imgIntensityBlack(),
-				"intensity_white" : self.imgIntensityWhite(),
+				"intensity_black" : self.imgIntensityBlack() * 10,
+				"intensity_white" : self.imgIntensityWhite() * 10,
 				"speed_black" : self.imgFeedrateBlack(),
 				"speed_white" : self.imgFeedrateWhite(),
 				"contrast" : self.imgContrast(),
@@ -291,11 +291,14 @@ $(function(){
 		
 		self._allParametersSet = function(){
 			var allSet = true;
-			$('.job_row_vector').each(function(i, pass){
-				var colorDrops = $(pass).find('.color_drop_zone');
-				if (colorDrops.children() > 0){
-					var intensityInput = $(pass).find('.param_intensity');
-					var feedrateInput = $(pass).find('.param_feedrate');
+			var vector_jobs = $('.job_row_vector');
+			for (var i = 0; i < vector_jobs.length; i++) {
+				var vjob = vector_jobs[i];
+				
+				var colorDrops = $(vjob).find('.color_drop_zone');
+				if (colorDrops.children().length > 0){
+					var intensityInput = $(vjob).find('.param_intensity');
+					var feedrateInput = $(vjob).find('.param_feedrate');
 					var intensity = intensityInput.val();
 					var feedrate = feedrateInput.val();
 					if(intensity === ''){
@@ -315,7 +318,7 @@ $(function(){
 						allSet = false;
 					}
 				}
-			});
+			}
 			return allSet;
 		};
 
