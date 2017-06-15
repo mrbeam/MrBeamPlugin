@@ -124,6 +124,23 @@ svg text {
 	padding-top: 12px;
 }
 
+
+
+input.decent_input {
+	border: 1px solid transparent;
+	box-shadow: none;
+
+}
+
+input.decent_input:focus, 
+input.decent_input:hover {
+	border: 1px solid gray;
+}
+
+#manual_position {
+	max-width: 13em;
+}
+
 #manual_position.warning {
 	color: #e25303;
 }

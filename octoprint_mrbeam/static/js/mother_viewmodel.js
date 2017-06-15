@@ -28,7 +28,7 @@ $(function () {
                 self.control.sendCustomCommand({type: 'command', command: "G92 X0 Y0"});
             };
 
-            self.control.jogDistanceInMM = ko.observable(undefined);
+//            self.control.jogDistanceInMM = ko.observable(10);
 
             self.control.manualPosition = function () {
                 $('#manual_position').removeClass('warning');
@@ -47,6 +47,15 @@ $(function () {
                     $('#manual_position').addClass('warning');
                 }
             };
+			
+			$("#manual_position").on('keyup', function (e) {
+				if (e.keyCode === 13) {
+					self.control.manualPosition();
+				}
+			});
+			$("#manual_position").on('blur', function (e) {
+				self.control.manualPosition();
+			});
 
             // TODO forward to control viewmodel
             self.state.isLocked = ko.observable(undefined);
@@ -455,6 +464,7 @@ $(function () {
             document.getElementById("mrb_control"),
             document.getElementById("mrb_connection_wrapper"),
             document.getElementById("mrb_state_wrapper"),
+            document.getElementById("mrb_state_header"),
             document.getElementById("mrb_term"),
             document.getElementById("focus")
         ]]);

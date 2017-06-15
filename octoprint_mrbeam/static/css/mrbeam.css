@@ -1284,20 +1284,37 @@ ul.dropdown-menu li a {
 #control_btns {
 	text-align:center;
 }
+#control_btns i {
+	font-size:3em;
+	display:inline;
+	width: 1em;
+	height: 1em;
+	padding: .1em;
+	text-decoration: none;
+	color: #777; /* #383e42;*/
+}
+
+#control_btns i:hover {
+  color: #383e42; /* #e25303; */
+  cursor: pointer;
+}
+
 #control_zaxis {
-	display:inline-block;
-	width: 80px;
-	margin: 1em auto 0;
+	float:left;
+	width: 25%;
+	margin: 0;
+	box-sizing: border-box;
 }
 #control_zaxis_focus {
 	display:inline-block;
-	width: 80px;
+	/*width: 80px;*/
 	margin: 12px 0;
 }
 #control_xyaxis {
-	display:inline-block;
-	margin: 1em auto 0;
-	width: 120px;
+	float:left;
+	margin: 0;
+	width: 75%;
+	box-sizing: border-box;
 }
 
 #set_coordinate_origin_btn{
@@ -1313,13 +1330,13 @@ ul.dropdown-menu li a {
 #control .jog-panel > div.distance {
   text-align: left;
 }
-#control .box {
+/*#control .box {
   width: 30px;
   height: 30px;
   margin-right: 10px;
   margin-bottom: 10px;
   padding-left: 8px;
-}
+}*/
 #control .control-box {
   display: block;
   height: 30px;

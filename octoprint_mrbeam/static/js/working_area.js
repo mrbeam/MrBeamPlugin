@@ -98,7 +98,7 @@ $(function(){
 		});
 
 		self.camTransform = ko.computed(function(){
-			return "scale("+self.camera_scale()+") rotate("+self.camera_rotation()+"deg) translate("+self.camera_offset_x()+"px, "+self.camera_offset_y()+"px)"
+			return "scale("+self.camera_scale()+") rotate("+self.camera_rotation()+"deg) translate("+self.camera_offset_x()+"px, "+self.camera_offset_y()+"px)";
 		});
 
 
@@ -221,7 +221,7 @@ $(function(){
 
 		};
 		self.crosshairY = function(){
-			var h = self.workingAreaDim != undefined ? self.workingAreaDim()[1] : 0;
+			var h = self.workingAreaDim !== undefined ? self.workingAreaDim()[1] : 0;
 			var pos = self.state.currentPos();
 			return pos !== undefined ? (h - self.mm2px(pos.y)  - 15) : -100; // subtract height/2;
 		};
@@ -276,7 +276,7 @@ $(function(){
 
 				};
 				var imgCallback = function(x,y,w,h, url){
-					self.draw_gcode_img_placeholder(x,y,w,h,url, '#'+previewId)
+					self.draw_gcode_img_placeholder(x,y,w,h,url, '#'+previewId);
 				};
 				self.parser.parse(gcode, /(m0?3)|(m0?5)/i, pathCallback, imgCallback);
 			});
@@ -1371,10 +1371,10 @@ $(function(){
 
 		["loginStateViewModel", "settingsViewModel", "printerStateViewModel",  "gcodeFilesViewModel", "laserCutterProfilesViewModel"],
 		[document.getElementById("area_preview"),
-			document.getElementById("color_classifier"),
+			document.getElementById("homing_overlay"),
 			document.getElementById("working_area_files"),
             document.getElementById("quick_text_dialog"),
-            document.getElementById("working_area_addstuff"),
+//            document.getElementById("working_area_addstuff"),
 			//document.getElementById("webcam_wrapper")
 		]]);
 
