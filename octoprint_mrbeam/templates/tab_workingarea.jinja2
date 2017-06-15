@@ -3,167 +3,161 @@
 						<div class="row-fluid">
 							<div class="span4 accordion full-col" style="margin-bottom:0;">
 
-								<div class="accordion-group" id="state_accordion">
+								<div id="state_accordion">
 									<div class="accordion-heading" id="mrb_state_header">
 										<a class="accordion-toggle" XXdata-toggle="collapse" href="#statusbox"><i class="icon-info-sign"></i> {{ _('State') }}:</a><span data-bind="text: state.stateString"></span>
 									</div>
 									<div id="statusbox">
+										<div class="accordion-body collapse in" id="mrb_state_wrapper" data-bind="visible: !state.isErrorOrClosed() && loginState.isUser() && !state.isFlashing() ">
+											<div class="accordion-inner">
 
+												<div data-bind="visible:(!state.isLocked() && !state.isConnecting())">
 
-										
-									<div class="accordion-body collapse in" id="mrb_state_wrapper" data-bind="visible: !state.isErrorOrClosed() && loginState.isUser() && !state.isFlashing() ">
-										<div class="accordion-inner">
+													<!--
+													{{ _('File') }}: <strong data-bind="text: filename"></strong>&nbsp;<strong data-bind="visible: sd">(SD)</strong><br>
+													{{ _('Timelapse') }}: <strong data-bind="text: timelapseString"></strong><br>
+													{{ _('Approx. Total Job Time') }}: <strong data-bind="text: state.estimatedPrintTimeString"></strong><br>
+													-->
+													<div data-bind="visible: state.isPrinting() || state.isPaused()">
 
-											<div data-bind="visible:(!state.isLocked() && !state.isConnecting())">
-
-												<!--
-												{{ _('File') }}: <strong data-bind="text: filename"></strong>&nbsp;<strong data-bind="visible: sd">(SD)</strong><br>
-												{{ _('Timelapse') }}: <strong data-bind="text: timelapseString"></strong><br>
-												{{ _('Approx. Total Job Time') }}: <strong data-bind="text: state.estimatedPrintTimeString"></strong><br>
-												-->
-												<div data-bind="visible: state.isPrinting() || state.isPaused()">
-
-                                                    <div>
-														<div id="job_printtime">Print Time: <strong data-bind="text: state.printTimeString"></strong></div>
-													</div>
-													<div class="progress progress-striped">
-														<div class="bar" id="job_progressBar" data-bind="style: { width: state.progressString() + '%' }">&nbsp;{{ _('Processed') }} :  <strong data-bind="text: state.byteString"></strong></div>
-													</div>
-													<div class="overrideSlider">
-														<input id="intensity_override_slider" type="text" data-bind="sliderValue: state.intensityOverride">
-														<span data-bind="text:state.intensityOverride()">100</span>% Intensity
-													</div>
-													<div class="overrideSlider">
-														<input id="feedrate_override_slider" type="text" data-bind="sliderValue: state.feedrateOverride">
-														<span data-bind="text:state.feedrateOverride()">100</span>% Feedrate
-													</div>
-<!--													<div class="repeatGcode">
-														<div class="btn-group">
-															<button type="button" class="btn btn-default btn-number" data-bind="enable: state.numberOfPasses() > 1, click:state.decreasePasses">
-																<span class="icon-minus"></span>
-															</button>
-															<input type="text" class="input-mini text-right" value="1" min="1" max="10" data-bind="value:state.numberOfPasses()">
-															<button type="button" class="btn btn-default btn-number" data-bind="click:state.increasePasses">
-																<span class="icon-plus"></span>
-															</button>
+														<div>
+															<div id="job_printtime">Print Time: <strong data-bind="text: state.printTimeString"></strong></div>
 														</div>
-														<span>Passes</span>
+														<div class="progress progress-striped">
+															<div class="bar" id="job_progressBar" data-bind="style: { width: state.progressString() + '%' }">&nbsp;{{ _('Processed') }} :  <strong data-bind="text: state.byteString"></strong></div>
+														</div>
+														<div class="overrideSlider">
+															<input id="intensity_override_slider" type="text" data-bind="sliderValue: state.intensityOverride">
+															<span data-bind="text:state.intensityOverride()">100</span>% Intensity
+														</div>
+														<div class="overrideSlider">
+															<input id="feedrate_override_slider" type="text" data-bind="sliderValue: state.feedrateOverride">
+															<span data-bind="text:state.feedrateOverride()">100</span>% Feedrate
+														</div>
+	<!--													<div class="repeatGcode">
+															<div class="btn-group">
+																<button type="button" class="btn btn-default btn-number" data-bind="enable: state.numberOfPasses() > 1, click:state.decreasePasses">
+																	<span class="icon-minus"></span>
+																</button>
+																<input type="text" class="input-mini text-right" value="1" min="1" max="10" data-bind="value:state.numberOfPasses()">
+																<button type="button" class="btn btn-default btn-number" data-bind="click:state.increasePasses">
+																	<span class="icon-plus"></span>
+																</button>
+															</div>
+															<span>Passes</span>
 
-													</div>-->
+														</div>-->
 
-												</div>
-												<!--                                {{ _('Print Time') }}: <strong data-bind="text: printTimeString"></strong><br>
-																				{{ _('Print Time Left') }}: <strong data-bind="text: printTimeLeftString"></strong><br>-->
+													</div>
+													<!--                                {{ _('Print Time') }}: <strong data-bind="text: printTimeString"></strong><br>
+																					{{ _('Print Time Left') }}: <strong data-bind="text: printTimeLeftString"></strong><br>-->
 
 
-												<div class="row-fluid print-control btn-group" style="display: none;" data-bind="visible: loginState.isUser">
-													<button class="btn btn-danger span4" data-bind="click: conversion.show_conversion_dialog, enable: state.isOperational() && state.isReady() && !state.isPrinting() && !state.isPaused() && loginState.isUser() && !workingArea.working_area_empty(), attr: {title: state.titlePrintButton}" id="job_print">
-														<i class="icon-white icon-fire" data-bind="css: { 'wobble': state.isPrinting()}"></i> <span>{{ _('Laser') }}</span>
-													</button>
-													<button class="btn span4" id="job_pause" data-bind="click: state.pause, enable: state.isOperational() && (state.isPrinting() || state.isPaused()) && loginState.isUser(), css: {active: state.isPaused()}, attr: {title: state.titlePauseButton}"><i data-bind="css: {'icon-pause': !state.isPaused(), 'icon-play': state.isPaused()}"></i> <span data-bind="visible: !state.isPaused()">{{ _('Pause') }}</span><span data-bind="visible: state.isPaused()">{{ _('Resume') }}</span></button>
-													<button class="btn span4" id="job_cancel" data-bind="click: state.cancel, enable: state.isOperational() && (state.isPrinting() || state.isPaused()) && loginState.isUser()" title="{{ _('Cancels the job') }}"><i class="icon-stop"></i> {{ _('Cancel') }}</button>
+													<div class="row-fluid print-control btn-group" style="display: none;" data-bind="visible: loginState.isUser">
+														<button class="btn btn-danger span4" data-bind="click: conversion.show_conversion_dialog, enable: state.isOperational() && state.isReady() && !state.isPrinting() && !state.isPaused() && loginState.isUser() && !workingArea.working_area_empty(), attr: {title: state.titlePrintButton}" id="job_print">
+															<i class="icon-white icon-fire" data-bind="css: { 'wobble': state.isPrinting()}"></i> <span>{{ _('Laser') }}</span>
+														</button>
+														<button class="btn span4" id="job_pause" data-bind="click: state.pause, enable: state.isOperational() && (state.isPrinting() || state.isPaused()) && loginState.isUser(), css: {active: state.isPaused()}, attr: {title: state.titlePauseButton}"><i data-bind="css: {'icon-pause': !state.isPaused(), 'icon-play': state.isPaused()}"></i> <span data-bind="visible: !state.isPaused()">{{ _('Pause') }}</span><span data-bind="visible: state.isPaused()">{{ _('Resume') }}</span></button>
+														<button class="btn span4" id="job_cancel" data-bind="click: state.cancel, enable: state.isOperational() && (state.isPrinting() || state.isPaused()) && loginState.isUser()" title="{{ _('Cancels the job') }}"><i class="icon-stop"></i> {{ _('Cancel') }}</button>
+													</div>
 												</div>
 											</div>
 										</div>
-									</div>
-										
-									<div id="mrb_control" class="accordion-inner" data-bind="visible: state.isReady() || state.isLocked() || state.isFlashing()">
-<!--										<div data-bind="visible: state.isLocked() ">
-											Mr Beam does not know the current position.
-											First remove any objects blocking the gantry's travel range.
-											Then do a homing cycle.
-											<div style='text-align: center; padding:.5em;'>
 
-												<div class='btn-group'>
-													<button class="btn btn-default" data-bind="enable: state.isLocked() && loginState.isUser(), click: function() { control.sendHomeCommand(['x', 'y']) }"><i class="icon-home"></i>Homing Cycle</button>
-													<button class="btn btn-default" data-bind="enable: state.isLocked() && loginState.isUser(), click: function() { control.sendHomeCommand(['x', 'y']) }"><i class="icon-unlock"></i>Unlock</button>
+										<div id="mrb_control" class="accordion-inner" data-bind="visible: state.isReady() || state.isLocked() || state.isFlashing()">
+	<!--										<div data-bind="visible: state.isLocked() ">
+												Mr Beam does not know the current position.
+												First remove any objects blocking the gantry's travel range.
+												Then do a homing cycle.
+												<div style='text-align: center; padding:.5em;'>
+
+													<div class='btn-group'>
+														<button class="btn btn-default" data-bind="enable: state.isLocked() && loginState.isUser(), click: function() { control.sendHomeCommand(['x', 'y']) }"><i class="icon-home"></i>Homing Cycle</button>
+														<button class="btn btn-default" data-bind="enable: state.isLocked() && loginState.isUser(), click: function() { control.sendHomeCommand(['x', 'y']) }"><i class="icon-unlock"></i>Unlock</button>
+													</div>
 												</div>
+											</div>-->
+											<div data-bind="visible: state.isFlashing() ">
+												Firmware update in progress
+												<div id="flashing_progress" class="progress progress-striped active" style="width: 100%;">
+													<div class="bar" style="width: 100%;"></div>
+												</div>
+												<span class="icon-exclamation-sign"></span>
+												Do not power off the Machine during the flashing process.
 											</div>
-										</div>-->
-										<div data-bind="visible: state.isFlashing() ">
-											Firmware update in progress
-											<div id="flashing_progress" class="progress progress-striped active" style="width: 100%;">
-												<div class="bar" style="width: 100%;"></div>
-											</div>
-											<span class="icon-exclamation-sign"></span>
-											Do not power off the Machine during the flashing process.
-                                        </div>
-										<div data-bind="visible: !state.isLocked() && !state.isFlashing() ">
-										<div class="accordion-heading" id="mrb_state_header">
-											<a href="#control_btns" class="dropdown" data-toggle="collapse" aria-expanded="false">
-											<i class="icon-screenshot"></i> {{ _('Position') }}:
-<!--												<span data-bind="text: state.laserPos"></span>-->
-												<!--<i class="icon-move sr-only"></i>-->
-												<span class="caret"></span>
-											</a>
-											<input id="manual_position" class="decent_input" data-bind="attr:{placeholder: state.laserPos}" onsubmit="control.manualPosition"/>
-										</div>	
-											<!--<i class="icon-edit"></i>-->
-
-											<div class="clearfix"></div>
-											<div class="collapse" id="control_btns">
-
-												<div class="jog-panel" id="control_xyaxis">
-													XY-Axes
-													<div>
-														<a id="control-yinc" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { control.sendJogCommand('y',1) }"><i class="icon-circle-arrow-up"></i></a>
-													</div>
-													<div>
-														<a id="control-xdec" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { control.sendJogCommand('x',-1) }"><i class="icon-circle-arrow-left"></i></a>
-														<a id="control-xyhome" data-bind="enable: (state.isOperational() || state.isLocked()) && !state.isPrinting() && loginState.isUser(), click: function() { control.sendHomeCommand(['x', 'y']) }"><i class="icon-home"></i></a>
-														<a id="control-xinc" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { control.sendJogCommand('x',1) }"><i class="icon-circle-arrow-right"></i></a>
-													</div>
-													<div>
-														<a id="control-ydec" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { control.sendJogCommand('y',-1) }"><i class="icon-circle-arrow-down"></i></a>
-													</div>
-												</div>
-
-												<div class="jog-panel" id="control_zaxis">
-													<div data-bind="visible: control.showZAxis">
-														Z-Axis
-														<div role="group" aria-label="z-axis control">
-															<a id="control-zinc" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { control.sendJogCommand('z',1) }"><i class="icon-chevron-sign-up"></i></a>
-															<a ic="control-zdec" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { control.sendJogCommand('z',-1) }"><i class="icon-chevron-sign-down"></i></a>
-														</div>
-													</div>
-<!--													<div>
-														<a id="set_coordinate_origin_btn" class="" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: control.setCoordinateOrigin" title="set coordinate origin"><i class="icon-screenshot"></i></a>
-													</div>-->
-												</div>
+											<div data-bind="visible: !state.isLocked() && !state.isFlashing() ">
+											<div class="accordion-heading" id="mrb_state_header">
+												<a href="#control_btns" class="dropdown" data-toggle="collapse" aria-expanded="false">
+												<i class="icon-screenshot"></i> {{ _('Position') }}:
+	<!--												<span data-bind="text: state.laserPos"></span>-->
+													<!--<i class="icon-move sr-only"></i>-->
+													<span class="caret"></span>
+												</a>
+												<input id="manual_position" class="decent_input" data-bind="attr:{placeholder: state.laserPos}" onsubmit="control.manualPosition"/>
+											</div>	
+												<!--<i class="icon-edit"></i>-->
 
 												<div class="clearfix"></div>
+												<div class="collapse" id="control_btns">
 
-												<div class="distance">
-													Jog distance: 
-													<input class="decent_input" type="number" min="0.1" max="100" step="10" id="jogDistance" 
-														   data-bind="value: control.distance, valueUpdate: 'input'" 
-														   style="width:3.5em; display: inline; margin: 0; padding-right:0;"
-													/> mm
+													<div class="jog-panel" id="control_xyaxis">
+														XY-Axes
+														<div>
+															<a id="control-yinc" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { control.sendJogCommand('y',1) }"><i class="icon-circle-arrow-up"></i></a>
+														</div>
+														<div>
+															<a id="control-xdec" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { control.sendJogCommand('x',-1) }"><i class="icon-circle-arrow-left"></i></a>
+															<a id="control-xyhome" data-bind="enable: (state.isOperational() || state.isLocked()) && !state.isPrinting() && loginState.isUser(), click: function() { control.sendHomeCommand(['x', 'y']) }"><i class="icon-home"></i></a>
+															<a id="control-xinc" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { control.sendJogCommand('x',1) }"><i class="icon-circle-arrow-right"></i></a>
+														</div>
+														<div>
+															<a id="control-ydec" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { control.sendJogCommand('y',-1) }"><i class="icon-circle-arrow-down"></i></a>
+														</div>
+													</div>
+
+													<div class="jog-panel" id="control_zaxis">
+														<div data-bind="visible: control.showZAxis">
+															Z-Axis
+															<div role="group" aria-label="z-axis control">
+																<a id="control-zinc" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { control.sendJogCommand('z',1) }"><i class="icon-chevron-sign-up"></i></a>
+																<a ic="control-zdec" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { control.sendJogCommand('z',-1) }"><i class="icon-chevron-sign-down"></i></a>
+															</div>
+														</div>
+	<!--													<div>
+															<a id="set_coordinate_origin_btn" class="" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: control.setCoordinateOrigin" title="set coordinate origin"><i class="icon-screenshot"></i></a>
+														</div>-->
+													</div>
+
+													<div class="clearfix"></div>
+
+													<div class="distance">
+														Jog distance: 
+														<input class="decent_input" type="number" min="0.1" max="100" step="10" id="jogDistance" 
+															   data-bind="value: control.distance, valueUpdate: 'input'" 
+															   style="width:3.5em; display: inline; margin: 0; padding-right:0;"
+														/> mm
+													</div>
 												</div>
 											</div>
-										</div>
-									</div>										
-										
-									<div class="accordion-body in" id="mrb_connection_wrapper"
-										 data-bind="visible: !state.isFlashing() && state.isErrorOrClosed() && loginState.isUser()">
-										<div class="accordion-inner">
-											<label for="connection_ports" data-bind="css: {disabled: !state.isErrorOrClosed()}, enable: state.isErrorOrClosed() && loginState.isUser()">{{ _('Serial Port') }}</label>
-											<select id="connection_ports" data-bind="options: connection.portOptions, optionsCaption: 'AUTO', value: connection.selectedPort, css: {disabled: !state.isErrorOrClosed()}, enable: state.isErrorOrClosed() && loginState.isUser()"></select>
-											<label for="connection_baudrates" data-bind="css: {disabled: !state.isErrorOrClosed()}, enable: state.isErrorOrClosed() && loginState.isUser()">{{ _('Baudrate') }}</label>
-											<select id="connection_baudrates" data-bind="options: connection.baudrateOptions, optionsCaption: 'AUTO', value: connection.selectedBaudrate, css: {disabled: !state.isErrorOrClosed()}, enable: state.isErrorOrClosed() && loginState.isUser()"></select>
-<!--											<label class="checkbox">
-												<input type="checkbox" id="connection_save" data-bind="checked: saveSettings, css: {disabled: !state.isErrorOrClosed()}, enable: state.isErrorOrClosed() && loginState.isUser()"> {{ _('Save connection settings') }}
-											</label>-->
-											<label class="checkbox">
-												<input type="checkbox" id="connection_autoconnect" data-bind="checked: settings.serial_autoconnect, css: {disabled: !state.isErrorOrClosed()}, enable: state.isErrorOrClosed() && loginState.isUser()"> {{ _('Auto-connect on server startup') }}
-											</label>
-											<button class="btn btn-block" id="printer_connect" data-bind="click: connection.connect, text: connection.buttonText(), enable: loginState.isUser()">{{ _('Connect') }}</button>
+										</div>										
+
+										<div class="accordion-body in" id="mrb_connection_wrapper"
+											 data-bind="visible: !state.isFlashing() && state.isErrorOrClosed() && loginState.isUser()">
+											<div class="accordion-inner">
+												<label for="connection_ports" data-bind="css: {disabled: !state.isErrorOrClosed()}, enable: state.isErrorOrClosed() && loginState.isUser()">{{ _('Serial Port') }}</label>
+												<select id="connection_ports" data-bind="options: connection.portOptions, optionsCaption: 'AUTO', value: connection.selectedPort, css: {disabled: !state.isErrorOrClosed()}, enable: state.isErrorOrClosed() && loginState.isUser()"></select>
+												<label for="connection_baudrates" data-bind="css: {disabled: !state.isErrorOrClosed()}, enable: state.isErrorOrClosed() && loginState.isUser()">{{ _('Baudrate') }}</label>
+												<select id="connection_baudrates" data-bind="options: connection.baudrateOptions, optionsCaption: 'AUTO', value: connection.selectedBaudrate, css: {disabled: !state.isErrorOrClosed()}, enable: state.isErrorOrClosed() && loginState.isUser()"></select>
+	<!--											<label class="checkbox">
+													<input type="checkbox" id="connection_save" data-bind="checked: saveSettings, css: {disabled: !state.isErrorOrClosed()}, enable: state.isErrorOrClosed() && loginState.isUser()"> {{ _('Save connection settings') }}
+												</label>-->
+												<label class="checkbox">
+													<input type="checkbox" id="connection_autoconnect" data-bind="checked: settings.serial_autoconnect, css: {disabled: !state.isErrorOrClosed()}, enable: state.isErrorOrClosed() && loginState.isUser()"> {{ _('Auto-connect on server startup') }}
+												</label>
+												<button class="btn btn-block" id="printer_connect" data-bind="click: connection.connect, text: connection.buttonText(), enable: loginState.isUser()">{{ _('Connect') }}</button>
+											</div>
 										</div>
 									</div>
-
-									
-								</div>
-
 								</div>
 
 								<div data-bind="visible: loginState.isUser" id="connection_accordion"></div>
