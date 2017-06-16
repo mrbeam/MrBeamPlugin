@@ -375,10 +375,13 @@ $(function(){
 				newSvg.attr(newSvgAttrs);
 				var id = self.getEntryId(file);
 				var previewId = self.generateUniqueId(id); // appends -# if multiple times the same design is placed.
-				newSvg.attr({id: previewId});
+				newSvg.attr({id: previewId, class: 'userSVG'});
 				snap.select("#userContent").append(newSvg);
-				newSvg.transformable();
 				newSvg.ftRegisterCallback(self.svgTransformUpdate);
+				newSvg.transformable();
+				setTimeout(function(){
+					newSvg.ftReportTransformation();
+				}, 200);
 
 				file.id = id; // list entry id
 				file.previewId = previewId;
@@ -524,13 +527,30 @@ $(function(){
             var vertical = self.px2mm((bbox.y2 - bbox.y) * globalScale);
             var id = svg.attr('id');
             var label_id = id.substr(0, id.indexOf('-'));
-			$('#'+label_id+' .translation').text(tx.toFixed(1) + ',' + ty.toFixed(1));
+//			$('#'+label_id+' .translation').text(tx.toFixed(1) + ',' + ty.toFixed(1));
+			$('#'+label_id+' .translation2').val(tx.toFixed(1) + ',' + ty.toFixed(1));
 			$('#'+label_id+' .horizontal').text(horizontal.toFixed() + 'mm');
 			$('#'+label_id+' .vertical').text(vertical.toFixed() + 'mm');
 			$('#'+label_id+' .rotation').text(rot.toFixed(1) + '°');
 			var scale = Math.sqrt((transform.localMatrix.a * transform.localMatrix.a) + (transform.localMatrix.c * transform.localMatrix.c));
 			var dpiscale = 90 / self.settings.settings.plugins.mrbeam.svgDPI();
 			$('#'+label_id+' .scale').text((scale/dpiscale*100).toFixed(1) + '%');
+		};
+		
+		self.svgManualTranslate = function(data, inputEl) {
+            var label_id = data.id;
+			var svg = snap.select('#'+data.previewId);
+			var globalScale = self.scaleMatrix().a;
+			var newTranslateStr = $('#'+label_id+' .translation2').val();
+			var nt = newTranslateStr.split(/[^0-9.-]/); // TODO improve
+			var ntx = self.mm2px(nt[0]) / globalScale;
+			var nty = self.mm2px(nt[1]) / globalScale;
+			
+//            var bbox = svg.getBBox();
+//            var tx = self.px2mm(bbox.x * globalScale);
+//            var ty = self.workingAreaHeightMM() - self.px2mm(bbox.y2 * globalScale);
+			
+			svg.ftManualTransform({tx: ntx, ty: nty});
 		};
 
 
