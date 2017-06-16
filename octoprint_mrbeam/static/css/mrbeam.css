@@ -1764,6 +1764,8 @@ input.search-query,
 	width: calc(30% - 1em);
 	margin-bottom: 0;
 	box-sizing: border-box;
+	padding-left: 0;
+	padding-top: 0;
 }
 #wa_filelist .detail_information input.wide {
 	width: calc(45% - 1em);

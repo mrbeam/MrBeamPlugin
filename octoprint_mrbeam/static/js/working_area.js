@@ -439,7 +439,9 @@ $(function(){
 				snap.select("#userContent").append(newSvg);
 				newSvg.transformable();
 				newSvg.ftRegisterCallback(self.svgTransformUpdate);
-
+				setTimeout(function(){
+					newSvg.ftReportTransformation();
+				}, 200);
 				file.id = id; // list entry id
 				file.previewId = previewId;
 				file.url = url;
@@ -526,8 +528,8 @@ $(function(){
             var id = svg.attr('id');
             var label_id = id.substr(0, id.indexOf('-'));
 			$('#'+label_id+' .translation').val(tx.toFixed(1) + ',' + ty.toFixed(1));
-			$('#'+label_id+' .horizontal').text(horizontal.toFixed() + 'mm');
-			$('#'+label_id+' .vertical').text(vertical.toFixed() + 'mm');
+			$('#'+label_id+' .horizontal').val(horizontal.toFixed() + 'mm');
+			$('#'+label_id+' .vertical').val(vertical.toFixed() + 'mm');
 			$('#'+label_id+' .rotation').val(rot.toFixed(1) + '°');
 			var scale = svg.ftGetScale();
 			var dpiscale = 90 / self.settings.settings.plugins.mrbeam.svgDPI();
@@ -560,6 +562,30 @@ $(function(){
 				self.abortFreeTransforms();
 				var svg = snap.select('#'+data.previewId);
 				var newScale = parseFloat(event.target.value) / 100.0;
+				svg.ftManualTransform({scale: newScale});
+			}
+		};
+		self.svgManualWidth = function(data, event) {
+			if (event.keyCode === 13 || event.type === 'blur') {
+				self.abortFreeTransforms();
+				var svg = snap.select('#'+data.previewId);
+				var desiredW = parseFloat(event.target.value);
+				var currentW = svg.getBBox().w;
+				var globalScale = self.scaleMatrix().a;
+				var newRelativeScale = (self.mm2px(desiredW) / globalScale) / currentW;
+				var newScale = newRelativeScale * svg.ftGetScale();
+				svg.ftManualTransform({scale: newScale});
+			}
+		};
+		self.svgManualHeight = function(data, event) {
+			if (event.keyCode === 13 || event.type === 'blur') {
+				self.abortFreeTransforms();
+				var svg = snap.select('#'+data.previewId);
+				var desiredH = parseFloat(event.target.value);
+				var currentH = svg.getBBox().h;
+				var globalScale = self.scaleMatrix().a;
+				var newRelativeScale = (self.mm2px(desiredH) / globalScale) / currentH;
+				var newScale = newRelativeScale * svg.ftGetScale();
 				svg.ftManualTransform({scale: newScale});
 			}
 		};
@@ -676,8 +702,10 @@ $(function(){
 				newImg.attr({id: previewId, filter: 'url(#grayscale_filter)', 'data-serveurl': url});
 				snap.select("#userContent").append(newImg);
 				newImg.transformable();
-				//newImg.ftDisableRotate();
 				newImg.ftRegisterCallback(self.svgTransformUpdate);
+				setTimeout(function(){
+					newImg.ftReportTransformation();
+				}, 200);
 				file.id = id;
 				file.previewId = previewId;
 				file.url = url;
