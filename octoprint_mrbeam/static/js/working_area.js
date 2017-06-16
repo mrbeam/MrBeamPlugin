@@ -520,18 +520,18 @@ $(function(){
             var bbox = svg.getBBox();
             var tx = self.px2mm(bbox.x * globalScale);
             var ty = self.workingAreaHeightMM() - self.px2mm(bbox.y2 * globalScale);
-            var startIdx = transform.local.indexOf('r') + 1;
-            var endIdx = transform.local.indexOf(',', startIdx);
-            var rot = parseFloat(transform.local.substring(startIdx, endIdx)) || 0;
+//            var startIdx = transform.local.indexOf('r') + 1;
+//            var endIdx = transform.local.indexOf(',', startIdx);
+//            var rot = parseFloat(transform.local.substring(startIdx, endIdx)) || 0;
+			var rot = svg.ftGetRotation();
             var horizontal = self.px2mm((bbox.x2 - bbox.x) * globalScale);
             var vertical = self.px2mm((bbox.y2 - bbox.y) * globalScale);
             var id = svg.attr('id');
             var label_id = id.substr(0, id.indexOf('-'));
-//			$('#'+label_id+' .translation').text(tx.toFixed(1) + ',' + ty.toFixed(1));
 			$('#'+label_id+' .translation2').val(tx.toFixed(1) + ',' + ty.toFixed(1));
 			$('#'+label_id+' .horizontal').text(horizontal.toFixed() + 'mm');
 			$('#'+label_id+' .vertical').text(vertical.toFixed() + 'mm');
-			$('#'+label_id+' .rotation').text(rot.toFixed(1) + '°');
+			$('#'+label_id+' .rotation2').val(rot.toFixed(1) + '°');
 			var scale = Math.sqrt((transform.localMatrix.a * transform.localMatrix.a) + (transform.localMatrix.c * transform.localMatrix.c));
 			var dpiscale = 90 / self.settings.settings.plugins.mrbeam.svgDPI();
 			$('#'+label_id+' .scale').text((scale/dpiscale*100).toFixed(1) + '%');
@@ -541,14 +541,19 @@ $(function(){
 			if (event.keyCode === 13 || event.type === 'blur') {
 				var svg = snap.select('#'+data.previewId);
 				var globalScale = self.scaleMatrix().a;
-				var cursorPos = event.target.selectionStart;
 				var newTranslateStr = event.target.value;
 				var nt = newTranslateStr.split(/[^0-9.-]/); // TODO improve
 				var ntx = self.mm2px(nt[0]) / globalScale;
 				var nty = self.mm2px(self.workingAreaHeightMM() - nt[1]) / globalScale;			
 
 				svg.ftManualTransform({tx: ntx, ty: nty});
-				event.target.selectionStart = cursorPos;
+			}
+		};
+		self.svgManualRotate = function(data, event) {
+			if (event.keyCode === 13 || event.type === 'blur') {
+				var svg = snap.select('#'+data.previewId);
+				var newRotate = parseFloat(event.target.value);
+				svg.ftManualTransform({angle: newRotate});
 			}
 		};
 

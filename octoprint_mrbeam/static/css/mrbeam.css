@@ -1757,8 +1757,9 @@ input.search-query,
 }
 
 #wa_filelist .detail_information input {
-	width: calc(50% - 1em);
+	width: calc(45% - 1em);
 	margin-bottom: 0;
+	box-sizing: border-box;
 }
 
 .misfit_warning {

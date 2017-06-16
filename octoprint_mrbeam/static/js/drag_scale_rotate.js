@@ -1,3 +1,5 @@
+/* global Snap */
+
 //    Drag, Scale & Rotate - a snapsvg.io plugin to free transform objects in an svg.
 //    Copyright (C) 2015  Teja Philipp <osd@tejaphilipp.de>
 //
@@ -32,7 +34,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 		// add invisible fill for better dragging.
 		elem.add_fill();
-		elem.click(function(){ elem.ftCreateHandles() });
+		elem.click(function(){ elem.ftCreateHandles(); });
 		return elem;
 
 
@@ -145,14 +147,14 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			ftEl.ftUpdateHandlesGroup();
 
 			ftEl.unclick();
-			ftEl.data('click', ftEl.click( function() {  this.ftRemoveHandles() } ) );
+			ftEl.data('click', ftEl.click( function() {  this.ftRemoveHandles(); } ) );
 
 			ftEl.paper.selectAll('#resizeDragger_'+id).forEach(function(el){
 				el.drag(
 					resizeDraggerMove.bind( el, ftEl ),
 					resizeDraggerStart.bind( el, ftEl  ),
 					resizeDraggerEnd.bind( el, ftEl  )
-				)
+				);
 			});
 
 			translateHull.drag(
@@ -210,7 +212,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			var myClosureEl = this;
 			myClosureEl.paper.selectAll('#debug').remove(); // DEBUG
 			var myData = ['angle', 'scale','sgUnscale','unscale', 'tx', 'ty', 'otx', 'oty', 'bb', 'bbT', 'wa', 'initialTransformMatrix', 'handlesGroup' ]; // wa = workingArea
-			myData.forEach( function( el ) { myClosureEl.removeData([el]) });
+			myData.forEach( function( el ) { myClosureEl.removeData([el]); });
 			return this;
 		};
 
@@ -255,16 +257,19 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			var elTransform = this.transform();
 			var tx = 0;
 			var ty = 0;
+			var angle = 0;
 			if(params.tx !== undefined && !isNaN(params.tx)){
 				tx = params.tx - bbox.x;
 			}
 			if(params.ty !== undefined && !isNaN(params.ty)){
 				ty = params.ty - bbox.y2;
 			}
-//			var angle = params.angle || 0;
-//			var scale = params.scale || 1;
+			if(params.angle !== undefined && !isNaN(params.angle)){
+				angle = params.angle - this.ftGetRotation();
+			}
+			var scale = params.scale || 1;
 
-			var tstring = "t" + tx + "," + ty + elTransform.local; // + "r" + angle + 'S' + scale ;
+			var tstring = "t" + tx + "," + ty + elTransform.local + "r" + angle + 'S' + scale ;
 			this.attr({ transform: tstring });
 			this.ftReportTransformation();
 			return this;
@@ -314,6 +319,14 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			}
 
 			this.ftReportTransformation();
+		};
+		
+		Element.prototype.ftGetRotation = function(){
+			var transform = this.transform();
+			var startIdx = transform.local.indexOf('r') + 1;
+            var endIdx = transform.local.indexOf(',', startIdx);
+            var rot = parseFloat(transform.local.substring(startIdx, endIdx)) || 0;
+			return rot;
 		};
 
 	});
@@ -382,9 +395,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			var angleEnd = Snap.angle(rCenter.x, rCenter.y, rEnd.x, rEnd.y);
 
 			if(rotateDragger.data('withSaved')){
-				var savedAngle = +rotateDragger.data('savedAngle')
+				var savedAngle = +rotateDragger.data('savedAngle');
 			}else{
-				var savedAngle = 0
+				var savedAngle = 0;
 			};
 
 			var nAngle = savedAngle+angleEnd-angleStart;
