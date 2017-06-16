@@ -289,6 +289,7 @@ body.vectorDrag .color_drop_zone.create_job.hover {
 				rgba(0, 255, 255, 1) 65%,
 				rgba(0, 0, 255, 1) 100%
 				);*/
+	background-image: url(/plugin/mrbeam/static/img/img_and_fills2.svg);
 }
 
 body.colorDragInProgress #drop_overlay {
