@@ -1756,10 +1756,17 @@ input.search-query,
 	margin-right:.8em;
 }
 
+#wa_filelist .detail_information,
+#wa_filelist .detail_information input.decent_input {
+	font-size: 0.8rem;
+}
 #wa_filelist .detail_information input {
-	width: calc(45% - 1em);
+	width: calc(30% - 1em);
 	margin-bottom: 0;
 	box-sizing: border-box;
+}
+#wa_filelist .detail_information input.wide {
+	width: calc(45% - 1em);
 }
 
 .misfit_warning {

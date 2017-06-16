@@ -258,6 +258,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			var tx = 0;
 			var ty = 0;
 			var angle = 0;
+			var scale = 1;
 			if(params.tx !== undefined && !isNaN(params.tx)){
 				tx = params.tx - bbox.x;
 			}
@@ -267,7 +268,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			if(params.angle !== undefined && !isNaN(params.angle)){
 				angle = params.angle - this.ftGetRotation();
 			}
-			var scale = params.scale || 1;
+			if(params.scale !== undefined && !isNaN(params.scale)){
+				scale = params.scale / this.ftGetScale();
+			}
 
 			var tstring = "t" + tx + "," + ty + elTransform.local + "r" + angle + 'S' + scale ;
 			this.attr({ transform: tstring });
@@ -327,6 +330,13 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             var endIdx = transform.local.indexOf(',', startIdx);
             var rot = parseFloat(transform.local.substring(startIdx, endIdx)) || 0;
 			return rot;
+		};
+		
+		Element.prototype.ftGetScale = function(){
+			var transform = this.transform();
+			// get scale independent from rotation
+			var scale = Math.sqrt((transform.localMatrix.a * transform.localMatrix.a) + (transform.localMatrix.c * transform.localMatrix.c));
+			return scale;
 		};
 
 	});

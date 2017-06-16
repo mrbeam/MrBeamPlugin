@@ -126,8 +126,8 @@ $(function(){
 		});
 
 		self.scaleMatrixCrosshair = function(){
-		    var x = self.crosshairX != undefined ? self.crosshairX() : 0;
-		    var y = self.crosshairY != undefined ? self.crosshairY() : 0;
+		    var x = self.crosshairX !== undefined ? self.crosshairX() : 0;
+		    var y = self.crosshairY !== undefined ? self.crosshairY() : 0;
 		    var m = "matrix(0.09, 0, 0, 0.09, " + x + ", " + y + ")";
 		    return m;
         };
@@ -520,25 +520,23 @@ $(function(){
             var bbox = svg.getBBox();
             var tx = self.px2mm(bbox.x * globalScale);
             var ty = self.workingAreaHeightMM() - self.px2mm(bbox.y2 * globalScale);
-//            var startIdx = transform.local.indexOf('r') + 1;
-//            var endIdx = transform.local.indexOf(',', startIdx);
-//            var rot = parseFloat(transform.local.substring(startIdx, endIdx)) || 0;
 			var rot = svg.ftGetRotation();
             var horizontal = self.px2mm((bbox.x2 - bbox.x) * globalScale);
             var vertical = self.px2mm((bbox.y2 - bbox.y) * globalScale);
             var id = svg.attr('id');
             var label_id = id.substr(0, id.indexOf('-'));
-			$('#'+label_id+' .translation2').val(tx.toFixed(1) + ',' + ty.toFixed(1));
+			$('#'+label_id+' .translation').val(tx.toFixed(1) + ',' + ty.toFixed(1));
 			$('#'+label_id+' .horizontal').text(horizontal.toFixed() + 'mm');
 			$('#'+label_id+' .vertical').text(vertical.toFixed() + 'mm');
-			$('#'+label_id+' .rotation2').val(rot.toFixed(1) + '°');
-			var scale = Math.sqrt((transform.localMatrix.a * transform.localMatrix.a) + (transform.localMatrix.c * transform.localMatrix.c));
+			$('#'+label_id+' .rotation').val(rot.toFixed(1) + '°');
+			var scale = svg.ftGetScale();
 			var dpiscale = 90 / self.settings.settings.plugins.mrbeam.svgDPI();
-			$('#'+label_id+' .scale').text((scale/dpiscale*100).toFixed(1) + '%');
+			$('#'+label_id+' .scale').val((scale/dpiscale*100).toFixed(1) + '%');
 		};
 		
 		self.svgManualTranslate = function(data, event) {
 			if (event.keyCode === 13 || event.type === 'blur') {
+				self.abortFreeTransforms();
 				var svg = snap.select('#'+data.previewId);
 				var globalScale = self.scaleMatrix().a;
 				var newTranslateStr = event.target.value;
@@ -551,9 +549,18 @@ $(function(){
 		};
 		self.svgManualRotate = function(data, event) {
 			if (event.keyCode === 13 || event.type === 'blur') {
+				self.abortFreeTransforms();
 				var svg = snap.select('#'+data.previewId);
 				var newRotate = parseFloat(event.target.value);
 				svg.ftManualTransform({angle: newRotate});
+			}
+		};
+		self.svgManualScale = function(data, event) {
+			if (event.keyCode === 13 || event.type === 'blur') {
+				self.abortFreeTransforms();
+				var svg = snap.select('#'+data.previewId);
+				var newScale = parseFloat(event.target.value) / 100.0;
+				svg.ftManualTransform({scale: newScale});
 			}
 		};
 
@@ -853,7 +860,7 @@ $(function(){
 			});
 
 			$('#coordGrid').on('dblclick', function (event) {
-				self.move_laser({}, event)
+				self.move_laser({}, event);
 			});
 		};
 
@@ -931,7 +938,7 @@ $(function(){
             }
 
             // embed the fonts as dataUris
-            $('#compSvg defs').append('<style id="quickTextFontPlaceholder" class="quickTextFontPlaceholder deleteAfterRendering"></style>')
+            $('#compSvg defs').append('<style id="quickTextFontPlaceholder" class="quickTextFontPlaceholder deleteAfterRendering"></style>');
             self._qt_copyFontsToSvg(compSvg.select(".quickTextFontPlaceholder").node);
 
 			self.renderInfill(compSvg, fillAreas, cutOutlines, wMM, hMM, 10, function(svgWithRenderedInfill){
@@ -979,9 +986,9 @@ $(function(){
 			if(snap.selectAll("#userContent tspan").length > 0 ||
 				snap.selectAll("#userContent text").length > 0 ||
 				snap.selectAll("userContent #text").length > 0) {
-				return true
+				return true;
 			}else{
-				return false
+				return false;
 			}
 		};
 
@@ -1174,7 +1181,7 @@ $(function(){
          */
         self.newQuickText = function() {
             var file = self._qt_placeQuicktext();
-            self.editQuickText(file)
+            self.editQuickText(file);
 
 
             var rules = document.styleSheets[0].rules || document.styleSheets[0].cssRules;
@@ -1193,12 +1200,12 @@ $(function(){
             self._qt_currentQuickTextUpdate();
 
             $('#quick_text_dialog').on('hide.bs.modal', self._qt_currentQuickTextRemoveIfEmpty);
-            $('#quick_text_dialog').on('shown.bs.modal', function(){$('#quick_text_dialog_text_input').focus()});
+            $('#quick_text_dialog').on('shown.bs.modal', function(){$('#quick_text_dialog_text_input').focus();});
             $('#quick_text_dialog').modal({keyboard: true});
             self.showTransformHandles(self.currentQuickTextFile, false);
             $('#quick_text_dialog_intensity').val(self.currentQuickTextFile.intensity);
             $('#quick_text_dialog_text_input').focus();
-        }
+        };
 
         /**
          * callback/subscription to changes of the text field
@@ -1219,7 +1226,7 @@ $(function(){
                 self.lastQuickTextIntensity = self.currentQuickTextFile.intensity;
                 self._qt_currentQuickTextUpdate();
             }
-        })
+        });
 
         /**
          * callback for the next font button
@@ -1233,7 +1240,7 @@ $(function(){
                 self.lastQuickTextFontIndex = self.currentQuickTextFile.fontIndex;
                 self._qt_currentQuickTextUpdate();
             }
-        }
+        };
 
         /**
          * callback for the previous font button
@@ -1247,7 +1254,7 @@ $(function(){
                 self.lastQuickTextFontIndex = self.currentQuickTextFile.fontIndex;
                 self._qt_currentQuickTextUpdate();
             }
-        }
+        };
 
         /**
          * updates the actual SVG object and the file list object and more
@@ -1258,11 +1265,14 @@ $(function(){
         self._qt_currentQuickTextUpdate = function(){
             if (self.currentQuickTextFile) {
                 self.currentQuickText(self.currentQuickTextFile.name);
-                var displayText = self.currentQuickTextFile.name != '' ?
+                var displayText = self.currentQuickTextFile.name !== '' ?
                     self.currentQuickTextFile.name : $('#quick_text_dialog_text_input').attr('placeholder');
 
                 // update svg object
                 var g = snap.select('#' + self.currentQuickTextFile.previewId);
+				setTimeout(function () {
+					g.ftReportTransformation();
+				}, 200);
                 var text = g.select('text');
                 var ity = self.currentQuickTextFile.intensity;
                 text.attr({
@@ -1294,7 +1304,7 @@ $(function(){
          * removes an QT object with an empty text from stage
          */
         self._qt_currentQuickTextRemoveIfEmpty = function() {
-            if (self.currentQuickTextFile && self.currentQuickTextFile.name == '' ) {
+            if (self.currentQuickTextFile && self.currentQuickTextFile.name === '' ) {
                 self.removeSVG(self.currentQuickTextFile);
             }
         };
