@@ -58,7 +58,10 @@ $(function () {
 			$("body").on('keydown', function (event) {
 
 				if (!self.settings.feature_keyboardControl()) return;
-				if($('.modal.in').length > 0) return;
+				if(	event.target.nodeName === "INPUT" 
+					|| event.target.nodeName === "TEXTAREA"
+					|| $('.modal.in').length > 0
+				) return;
 				
 				var button = undefined;
 				switch (event.which) {
