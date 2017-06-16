@@ -260,9 +260,9 @@ h4.job_title{
 
 .img_drop_zone,
 .color_drop_zone {
-	border-color: rgba(0,0,0,0);
 	min-height: 50px;
-	width: 100%
+	width: 100%;
+	border: 2px dashed transparent;
 }
 
 /* state machine. either img or vector color drop zone highlightning*/
@@ -270,7 +270,6 @@ h4.job_title{
 body.engravingDrag #engrave_job .img_drop_zone.hover,
 body.vectorDrag .job_row_vector .color_drop_zone.hover,
 body.vectorDrag .color_drop_zone.create_job.hover {
-	border: 2px dashed;
     font-weight: 700;
 	border-color: rgba(0,0,0,0.33);
 	transition: border-color ease-in 0.5s;

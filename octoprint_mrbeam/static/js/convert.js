@@ -626,6 +626,7 @@ function colorDropCreateJob(ev) {
 
 function colorDragEnd(ev){
     ev.preventDefault();
+	$('#drop_overlay').removeClass('in'); // workaround
 	setTimeout(function(){$("body").removeClass("colorDragInProgress vectorDrag engravingDrag");}, 200);
 	$('.color_drop_zone, .img_drop_zone').removeClass('hover');
 }
