@@ -95,13 +95,12 @@ $(function(){
 		};
 
 		self._getColorIcon = function(color){
-			var i = $('<img />',{
+			var i = $('<div />',{
 				id: 'cd_color_'+color.hex.substr(1),
 				style: "background-color: "+color.hex+";",
 				draggable: "true",
 				class: 'used_color'
 			})
-			.attr({src: "/plugin/mrbeam/static/img/line_overlay.svg"})
 			.on({
 				dragstart: function(ev){ colorDragStart(ev.originalEvent); },
 				dragend: function(ev){ colorDragEnd(ev.originalEvent); }
