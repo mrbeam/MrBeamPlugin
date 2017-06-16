@@ -538,7 +538,7 @@ $(function(){
 		};
 		
 		self.svgManualTranslate = function(data, event) {
-			if (event.keyCode === 13) {
+			if (event.keyCode === 13 || event.type === 'blur') {
 				var svg = snap.select('#'+data.previewId);
 				var globalScale = self.scaleMatrix().a;
 				var cursorPos = event.target.selectionStart;
