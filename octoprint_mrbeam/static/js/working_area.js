@@ -537,20 +537,19 @@ $(function(){
 			$('#'+label_id+' .scale').text((scale/dpiscale*100).toFixed(1) + '%');
 		};
 		
-		self.svgManualTranslate = function(data, inputEl) {
-            var label_id = data.id;
-			var svg = snap.select('#'+data.previewId);
-			var globalScale = self.scaleMatrix().a;
-			var newTranslateStr = $('#'+label_id+' .translation2').val();
-			var nt = newTranslateStr.split(/[^0-9.-]/); // TODO improve
-			var ntx = self.mm2px(nt[0]) / globalScale;
-			var nty = self.mm2px(nt[1]) / globalScale;
-			
-//            var bbox = svg.getBBox();
-//            var tx = self.px2mm(bbox.x * globalScale);
-//            var ty = self.workingAreaHeightMM() - self.px2mm(bbox.y2 * globalScale);
-			
-			svg.ftManualTransform({tx: ntx, ty: nty});
+		self.svgManualTranslate = function(data, event) {
+			if (event.keyCode === 13) {
+				var svg = snap.select('#'+data.previewId);
+				var globalScale = self.scaleMatrix().a;
+				var cursorPos = event.target.selectionStart;
+				var newTranslateStr = event.target.value;
+				var nt = newTranslateStr.split(/[^0-9.-]/); // TODO improve
+				var ntx = self.mm2px(nt[0]) / globalScale;
+				var nty = self.mm2px(self.workingAreaHeightMM() - nt[1]) / globalScale;			
+
+				svg.ftManualTransform({tx: ntx, ty: nty});
+				event.target.selectionStart = cursorPos;
+			}
 		};
 
 
@@ -1094,7 +1093,7 @@ $(function(){
 					callback();
 				}
 			}
-		}
+		};
 
 		// render the infill and inject it as an image into the svg
 		self.renderInfill = function (svg, fillAreas, cutOutlines, wMM, hMM, pxPerMM, callback) {

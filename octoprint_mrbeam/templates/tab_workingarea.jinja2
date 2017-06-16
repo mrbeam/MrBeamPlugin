@@ -166,7 +166,7 @@
 
                                 <div class="accordion-group" id="working_area_files">
 									<div class="accordion-heading">
-										<a class="accordion-toggle" XXdata-toggle="collapse" href="#wa_filelist"><i class="icon-list"></i> {{ _('Designs') }}</a>
+										<a class="accordion-toggle" href="#wa_filelist"><i class="icon-list"></i> {{ _('Designs') }}</a>
 										<a class="accordion-toggle pull-right" data-bind="visible: !working_area_empty(), click: clear" style="margin-right: 1em;" ><i class="icon-remove-sign"></i> {{ _('Clear all') }}</a>
 									</div>
 									<div class="accordion-body">
@@ -207,7 +207,10 @@
 														<div class="detail_information" >
 															<div class="local_transformation muted">
 																<i class="icon-move" title="{{ _('translation') }}"></i>
-																<span class="translation" >0,0</span>
+																<!--<span class="translation" >0,0</span>-->
+																<input class="decent_input translation2" type="text" value="0,0" data-bind="event: {
+																			keyup: function(d, event){ $root.svgManualTranslate($data, event); }, 
+																			blur: function(d, event){ $root.svgManualTranslate($data, event); }} "/>
 																<i class="icon-repeat" title="{{ _('rotation') }}"></i>
 																<span class="rotation" >0°</span></br>
 																<i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>

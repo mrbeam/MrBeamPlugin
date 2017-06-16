@@ -1756,6 +1756,11 @@ input.search-query,
 	margin-right:.8em;
 }
 
+#wa_filelist .detail_information input {
+	width: calc(50% - 1em);
+	margin-bottom: 0;
+}
+
 .misfit_warning {
 	display: none;
 }

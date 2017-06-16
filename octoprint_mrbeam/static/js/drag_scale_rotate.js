@@ -236,6 +236,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 		Element.prototype.ftUpdateTransform = function() {
 			if(this.ftGetInitialTransformMatrix() === undefined){
+				console.log('no initial transform');
 				return this;
 			}
 
@@ -248,6 +249,26 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			this.ftUpdateHandlesGroup();
 			return this;
 		};
+		
+		Element.prototype.ftManualTransform = function(params){
+			var bbox = this.getBBox();
+			var elTransform = this.transform();
+			var tx = 0;
+			var ty = 0;
+			if(params.tx !== undefined && !isNaN(params.tx)){
+				tx = params.tx - bbox.x;
+			}
+			if(params.ty !== undefined && !isNaN(params.ty)){
+				ty = params.ty - bbox.y2;
+			}
+//			var angle = params.angle || 0;
+//			var scale = params.scale || 1;
+
+			var tstring = "t" + tx + "," + ty + elTransform.local; // + "r" + angle + 'S' + scale ;
+			this.attr({ transform: tstring });
+			this.ftReportTransformation();
+			return this;
+		};
 
 		Element.prototype.ftUpdateHandlesGroup = function() {
 			var group = this;
@@ -255,7 +276,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 				el.transform(group.transform().local.toString());
 			});
 			group.parent().select("#handlesGroup").selectAll('circle').forEach( function( el, i ) {
-				el.attr({'r': ftOption.handleRadius * group.data('unscale')})
+				el.attr({'r': ftOption.handleRadius * group.data('unscale')});
 			});
 		};
 
