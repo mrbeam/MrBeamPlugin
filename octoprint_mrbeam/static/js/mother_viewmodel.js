@@ -265,7 +265,7 @@ $(function () {
         };
 
         self._processWPosData = function (data) {
-            if (data == null) {
+            if (data === null) {
                 self.state.currentPos({x: 0, y: 0});
             } else {
                 self.state.currentPos({x: data[0], y: data[1]});
@@ -343,7 +343,7 @@ $(function () {
                 contentType: "application/json; charset=UTF-8",
                 data: JSON.stringify({command: data.name, value: data.value}),
                 success: function (response) {
-                    if (callback != undefined) {
+                    if (callback !== undefined) {
                         callback();
                     }
                 }
@@ -444,7 +444,7 @@ $(function () {
         });
 
         self.terminal.onAfterTabChange = function (current, previous) {
-            self.terminal.tabActive = current == "#mrb_term";
+            self.terminal.tabActive = current === "#mrb_term";
             self.terminal.updateOutput();
         };
 

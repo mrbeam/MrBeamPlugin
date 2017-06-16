@@ -518,7 +518,7 @@ $(function(){
 
 		self.svgTransformUpdate = function(svg) {
             var globalScale = self.scaleMatrix().a;
-            var transform = svg.transform();
+//            var transform = svg.transform();
             var bbox = svg.getBBox();
             var tx = self.px2mm(bbox.x * globalScale);
             var ty = self.workingAreaHeightMM() - self.px2mm(bbox.y2 * globalScale);
@@ -534,6 +534,7 @@ $(function(){
 			var scale = svg.ftGetScale();
 			var dpiscale = 90 / self.settings.settings.plugins.mrbeam.svgDPI();
 			$('#'+label_id+' .scale').val((scale/dpiscale*100).toFixed(1) + '%');
+			self.check_sizes_and_placements();
 		};
 		
 		self.svgManualTranslate = function(data, event) {
@@ -1074,10 +1075,10 @@ $(function(){
 			self.files.workingArea = self;
 
 			// check this on tab change as before the bounding boxes are sized 0.
-			$('#wa_tab_btn').on('shown.bs.tab', function (e) {
-				self.trigger_resize();
-				self.check_sizes_and_placements();
-			});
+//			$('#wa_tab_btn').on('shown.bs.tab', function (e) {
+//				self.trigger_resize();
+//				self.check_sizes_and_placements();
+//			});
 			$(window).resize(function(){
 				self.trigger_resize();
 			});
@@ -1088,10 +1089,17 @@ $(function(){
 		self.onStartupComplete = function(){
 			self.initCameraCalibration();
 		};
+		
+		self.onAfterTabChange = function(current, prev){
+			if(current === '#workingarea'){
+				self.trigger_resize();
+				self.check_sizes_and_placements();
+			}
+		};
 
 		self.check_sizes_and_placements = function(){
 			ko.utils.arrayForEach(self.placedDesigns(), function(design) {
-				if(design.type === 'model'){
+				if(design.type === 'model' || design.type === 'quicktext'){
 					var svg = snap.select('#' + design.previewId);
 					var misfitting = self.outsideWorkingArea(svg);
 					console.log("Misfitting: ", misfitting);
