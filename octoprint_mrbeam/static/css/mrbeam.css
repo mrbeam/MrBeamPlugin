@@ -1741,7 +1741,8 @@ input.search-query,
 */
 
 #wa_filelist .file_list_entry {
-	margin-right: 0.5em;
+	border-bottom: 1px dotted lightgray;
+	margin-bottom: 1em;
 }
 #wa_filelist .file_list_entry .title {
 	max-width: 80%;

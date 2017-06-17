@@ -301,12 +301,40 @@ body.colorDragInProgress #drop_overlay {
 
 }
 
-/*#terminal-output {
-	height: calc(100vh - 140px);
-	max-height: none;
-}*/
-
 .full-tab-height {
 	height: calc(100vh - 140px);
 	max-height: none;	
+}
+
+.dimDesigns .userSVG, 
+.dimDesigns .userIMG, 
+.dimDesigns .userText {
+	opacity:.3;
+	transition: opacity 0.5s ease-out; 
+}
+
+.userSvg, .userText, .userIMG,
+.dimDesigns .userSVG.designHighlight,
+.dimDesigns .userIMG.designHighlight,
+.dimDesigns .userText.designHighlight {
+	opacity:1;
+}
+
+.highlightMarker {
+	stroke-width: 1px; 
+	stroke-dasharray: 3, 9;
+	stroke:#e25303;
+	vector-effect: non-scaling-stroke;
+	fill:none;
+	animation: drawdash 1s linear normal infinite;
+	stroke-dashoffset: 0;
+}
+
+@keyframes drawdash {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: 12;
+  }
 }

@@ -188,7 +188,7 @@
 												</div>
 
 												<script type="text/html" id="wa_template_machinecode">
-													<div class="file_list_entry">
+													<div class="file_list_entry" data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
 														<div class="title pull-left" data-bind="text: name"></div>
 														<div class="btn-group action-buttons pull-right">
 															<div class="btn btn-mini" data-bind="click: function(){ $root.removeGcode($data); }"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
@@ -198,7 +198,7 @@
 												</script>
 
 												<script type="text/html" id="wa_template_model_svg">
-													<div class="file_list_entry">
+													<div class="file_list_entry" data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
 														<div class="title pull-left" data-bind="text: name"></div>
 														<div class="btn-group action-buttons pull-right">
 															<div class="btn btn-mini" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
@@ -237,7 +237,7 @@
 												</script>
 
 												<script type="text/html" id="wa_template_model_img">
-													<div class="file_list_entry">
+													<div class="file_list_entry" data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
 														<div class="title pull-left" data-bind="text: name"></div>
 														<div class="btn-group action-buttons pull-right">
 															<div class="btn btn-mini" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
@@ -277,7 +277,7 @@
 												</script>
 
 												<script type="text/html" id="wa_template_quicktext">
-													<div class="file_list_entry">
+													<div class="file_list_entry" data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
 														<div class="title pull-left" data-bind="text: name"></div>
 														<div class="btn-group action-buttons pull-right">
 															<div class="btn btn-mini" data-bind="click: function() { $root.editQuickText($data); }"><i class="icon-edit" title="{{ _('Edit') }}"></i></div>
@@ -355,14 +355,14 @@
 											<feFuncB type="table" tableValues="0.2 1"></feFuncB>
 										</feComponentTransfer>
 									</filter>
-                                            <defs></defs>
+                                    <defs></defs>
 									<g id="scaleGroup" data-bind="attr: { transform: scaleMatrix() }">
 										<g id="placedGcodes" data-bind="visible: true || (state.isPrinting() && !state.isPaused()), attr: { transform: scaleMatrixMMtoDisplay() }"></g>
 										<g id="gCodePreview" data-bind="visible: state.isPrinting() || state.isPaused(), attr: { transform: scaleMatrixMMtoDisplay() }"></g>
 										<rect id="coordGrid" x="0" y="0" width="0" height="0"
 											  stroke="none" fill="none"></rect>
-										<g id="userContent" XXdata-bind="visible: !state.isPrinting() && !state.isPaused()">
-                                        </g>
+										<rect id="highlightMarker" x="-1" y="-1" width="0" height="0" class="highlightMarker" fill="none"></rect>
+										<g id="userContent"></g>
 									</g>
                                       <g id="crosshair"
                                          transform="matrix(0.09, 0, 0, 0.09, -100, -100)"
