@@ -88,6 +88,13 @@ $(function () {
 					case 36: // home key
 						button = $("#control-xyhome");
 						break;
+					case 8: // del key
+					case 46: // backspace key
+						if($('nav li.active a').attr('href') === '#workingarea'){
+							self.workingArea.removeSelectedDesign();
+							return;
+						}
+						break;
 					default:
 						return;
 //						event.preventDefault();

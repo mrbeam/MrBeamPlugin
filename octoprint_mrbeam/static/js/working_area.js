@@ -163,7 +163,7 @@ $(function(){
 			self.abortFreeTransforms();
 			snap.selectAll('#userContent>*:not(defs)').remove();
 			snap.selectAll('#placedGcodes>*').remove();
-            snap.selectAll('rect:not(#coordGrid)').remove();
+            snap.selectAll('rect:not(#coordGrid):not(#highlightMarker)').remove();
 			self.placedDesigns([]);
 		};
 
@@ -746,6 +746,19 @@ $(function(){
 
 		self.removeIMG = function(file){
 			self.removeSVG(file);
+		};
+		self.removeSelectedDesign = function(){
+			var transformHandles = snap.select('#handlesGroup');
+			if(transformHandles){
+				var selectedId = transformHandles.data('parentId');
+				for (var i = 0; i < self.placedDesigns().length; i++) {
+					var file = self.placedDesigns()[i];
+					if(file.previewId === selectedId){
+						self.removeSVG(file);
+						return;
+					}
+				}
+			}
 		};
 
 		self.getUsefulDimensions = function(wpx, hpx){
