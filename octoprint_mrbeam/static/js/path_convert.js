@@ -1,9 +1,6 @@
-//    Matrix Oven - a snapsvg.io plugin to apply & remove transformations from svg files.
+//    Little snapsvg.io plugin to convert native svg elements to paths.
 //    Copyright (C) 2015  Teja Philipp <osd@tejaphilipp.de>
 //    
-//    based on work by https://gist.github.com/timo22345/9413158 
-//    and https://github.com/duopixel/Method-Draw/blob/master/editor/src/svgcanvas.js
-//
 //    This program is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU Affero General Public License as
 //    published by the Free Software Foundation, either version 3 of the
