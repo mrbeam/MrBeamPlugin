@@ -345,6 +345,7 @@
 										},
 										attr: {visibility: 'visible'}
 									 ">
+								<defs>
 									<filter id="grayscale_filter">
 										<feColorMatrix in="SourceGraphic" type="saturate" values="0"/>
 									</filter>
@@ -355,7 +356,11 @@
 											<feFuncB type="table" tableValues="0.2 1"></feFuncB>
 										</feComponentTransfer>
 									</filter>
-                                    <defs></defs>
+									<filter id="dehighlight" x="0" y="0">
+										<feGaussianBlur in="SourceGraphic" stdDeviation="5" />
+										<feColorMatrix type="saturate" values="0.5"/>
+									</filter>
+								</defs>
 									<g id="scaleGroup" data-bind="attr: { transform: scaleMatrix() }">
 										<g id="placedGcodes" data-bind="visible: true || (state.isPrinting() && !state.isPaused()), attr: { transform: scaleMatrixMMtoDisplay() }"></g>
 										<g id="gCodePreview" data-bind="visible: state.isPrinting() || state.isPaused(), attr: { transform: scaleMatrixMMtoDisplay() }"></g>

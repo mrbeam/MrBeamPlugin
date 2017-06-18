@@ -309,8 +309,9 @@ body.colorDragInProgress #drop_overlay {
 .dimDesigns .userSVG, 
 .dimDesigns .userIMG, 
 .dimDesigns .userText {
-	opacity:.3;
-	transition: opacity 0.5s ease-out; 
+	opacity:.7;
+	filter:url(#dehighlight);
+	transition: opacity 0.2s ease-out; 
 }
 
 .userSvg, .userText, .userIMG,
@@ -318,6 +319,7 @@ body.colorDragInProgress #drop_overlay {
 .dimDesigns .userIMG.designHighlight,
 .dimDesigns .userText.designHighlight {
 	opacity:1;
+	filter:none;
 }
 
 .highlightMarker {

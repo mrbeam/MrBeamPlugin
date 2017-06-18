@@ -727,13 +727,15 @@ $(function(){
 				var y = self.mm2svgUnits(self.workingAreaHeightMM()) - hPT;
 				var newImg = snap.image(url, 0, y, wPT, hPT);
 				var id = self.getEntryId(file);
+				newImg.attr({filter: 'url(#grayscale_filter)', 'data-serveurl': url});
 				var previewId = self.generateUniqueId(id); // appends # if multiple times the same design is placed.
-				newImg.attr({id: previewId, filter: 'url(#grayscale_filter)', 'data-serveurl': url, class: 'userIMG'});
-				snap.select("#userContent").append(newImg);
-				newImg.transformable();
-				newImg.ftRegisterCallback(self.svgTransformUpdate);
+				var imgWrapper = snap.group().attr({id: previewId, class: 'userIMG'});
+				imgWrapper.append(newImg);
+				snap.select("#userContent").append(imgWrapper);
+				imgWrapper.transformable();
+				imgWrapper.ftRegisterCallback(self.svgTransformUpdate);
 				setTimeout(function(){
-					newImg.ftReportTransformation();
+					imgWrapper.ftReportTransformation();
 				}, 200);
 				file.id = id;
 				file.previewId = previewId;
@@ -754,6 +756,7 @@ $(function(){
 				for (var i = 0; i < self.placedDesigns().length; i++) {
 					var file = self.placedDesigns()[i];
 					if(file.previewId === selectedId){
+						self.abortFreeTransforms();
 						self.removeSVG(file);
 						return;
 					}

@@ -189,7 +189,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			this.data('ty', 0);
 			this.data('wa', snap.select('#coordGrid').getBBox());
 			this.data('ratio', 1);
-			this.attr({class:'_freeTransformInProgress'});
+//			this.attr({class:'_freeTransformInProgress'});
+			this.addClass('_freeTransformInProgress');
 
 			//unscale from scaleGroup (outer Group)
 			var sgUnscale = this.paper.select('#scaleGroup').transform().localMatrix.a;
