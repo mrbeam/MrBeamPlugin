@@ -70,7 +70,7 @@ class LidHandler(object):
 			self._end_photo_worker()
 			self._send_frontend_lid_state()
 		elif event == OctoPrintEvents.CLIENT_OPENED:
-			self._logger.debug("onEvent() CLIENT_OPENED sending client lidClosed:%s", self.lidClosed)
+			self._logger.debug("onEvent() CLIENT_OPENED sending client lidClosed: %s", self.lidClosed)
 			self._send_frontend_lid_state()
 		elif event == OctoPrintEvents.SHUTDOWN:
 			self._logger.debug("onEvent() SHUTDOWN stopping _photo_creator")
@@ -140,16 +140,22 @@ class PhotoCreator(object):
 			self.camera.start_preview()
 
 			self._logger.debug("_prepare_cam() prepared in %ss", time.time() - now)
-		except:
-			self._logger.exception("_prepare_cam() Exception while preparing camera:")
+		except Exception as e:
+			if e.__class__.__name__.startswith('PiCamera'):
+				self._logger.error("PiCamera Error while preparing camera: %s: %s", e.__class__.__name__, e)
+			else:
+				self._logger.exception("Exception while preparing camera:")
 
 	def _capture(self):
 		try:
 			now = time.time()
 			self.camera.capture(self.tmpPath, format='jpeg', resize=(1000, 800))
 			self._logger.debug("_capture() captured picture in %ss", time.time() - now)
-		except:
-			self._logger.exception("Exception while taking picture from camera:")
+		except Exception as e:
+			if e.__class__.__name__.startswith('PiCamera'):
+				self._logger.error("PiCamera Error while capturing picture: %s: %s", e.__class__.__name__, e)
+			else:
+				self._logger.exception("Exception while taking picture from camera:")
 
 	def _createFolder_if_not_existing(self, filename):
 		try:

@@ -33,16 +33,16 @@ class IoBeamHandler(object):
 	# > onebtn:dn:< time >
 	# > onebtn:rl:< time >
 	# > onebtn:error	?
-	# > lid:pr
-	# > lid:rl
-	# > intlk:op:0
-	# > intlk:cl:0
-	# > intlk:op:1
-	# > intlk:cl:1
-	# > intlk:op:2
-	# > intlk:cl:2
-	# > intlk:op:3
-	# > intlk:cl:3
+	# > lid:op
+	# > lid:cl
+	# > intlk:0:op
+	# > intlk:0:cl
+	# > intlk:1:op
+	# > intlk:1:cl
+	# > intlk:2:op
+	# > intlk:2:cl
+	# > intlk:3:op
+	# > intlk:3:cl
 	# > steprun:on
 	# > steprun:off
 
@@ -78,7 +78,7 @@ class IoBeamHandler(object):
 
 
 	SOCKET_FILE = "/var/run/mrbeam_iobeam.sock"
-	MAX_ERRORS = 3
+	MAX_ERRORS = 10
 
 	MESSAGE_LENGTH_MAX = 1024
 	MESSAGE_NEWLINE = "\n"
@@ -91,16 +91,22 @@ class IoBeamHandler(object):
 	MESSAGE_DEVICE_STEPRUN =            "steprun"
 	MESSAGE_DEVICE_FAN =	            "fan"
 	MESSAGE_DEVICE_LASER =	            "laser"
+	MESSAGE_DEVICE_UNUSED =	            "unused"
+	MESSAGE_DEVICE_IOBEAM =	            "iobeam"
 
 	MESSAGE_ACTION_ONEBUTTON_PRESSED =  "pr"
 	MESSAGE_ACTION_ONEBUTTON_DOWN =     "dn"
 	MESSAGE_ACTION_ONEBUTTON_RELEASED = "rl"
+	MESSAGE_ACTION_ONEBUTTON_UP =		"up"
 
 	MESSAGE_ACTION_INTERLOCK_OPEN =     "op"
 	MESSAGE_ACTION_INTERLOCK_CLOSED =   "cl"
 
-	MESSAGE_ACTION_LID_OPENED =         "pr"
-	MESSAGE_ACTION_LID_CLOSED =         "rl"
+	MESSAGE_ACTION_LID_OPENED =         "op"
+	MESSAGE_ACTION_LID_CLOSED =         "cl"
+
+	MESSAGE_IOBEAM_VERSION_0_2_3 =		"0.2.3"
+	MESSAGE_IOBEAM_VERSION_0_2_4 =		"0.2.4"
 
 
 	def __init__(self, event_bus, socket_file=None):
@@ -110,6 +116,8 @@ class IoBeamHandler(object):
 		self._shutdown_signaled = False
 		self._isConnected = False
 		self._errors = 0
+
+		self.iobeam_version = None
 
 		self._connectionException = None
 		self._interlocks = dict()
@@ -147,6 +155,7 @@ class IoBeamHandler(object):
 
 
 	def _work(self):
+		threading.current_thread().name = self.__class__.__name__
 		self._logger.debug("Worker thread starting, connecting to socket: %s %s", self.SOCKET_FILE, ("MRBEAM_DEBUG" if MRBEAM_DEBUG else ""))
 
 		while not self._shutdown_signaled:
@@ -245,10 +254,14 @@ class IoBeamHandler(object):
 					err = self._handle_fan_message(message, tokens)
 				elif device == self.MESSAGE_DEVICE_LASER:
 					err = self._handle_laser_message(message, tokens)
+				elif device == self.MESSAGE_DEVICE_IOBEAM:
+					err = self._handle_iobeam_message(message, tokens)
+				elif device == self.MESSAGE_DEVICE_UNUSED:
+					pass
 				elif device == self.MESSAGE_ERROR:
 					err = self._handle_error_message(message, tokens)
 				else:
-					err = 1
+					err = self._handle_unknown_device_message(message, tokens)
 
 			if err >= 0:
 				error_count += err
@@ -273,6 +286,8 @@ class IoBeamHandler(object):
 			self._fireEvent(IoBeamEvents.ONEBUTTON_DOWN, payload)
 		elif action == self.MESSAGE_ACTION_ONEBUTTON_RELEASED and payload is not None:
 			self._fireEvent(IoBeamEvents.ONEBUTTON_RELEASED, payload)
+		elif action == self.MESSAGE_ACTION_ONEBUTTON_UP:
+			return 0
 		elif action == self.MESSAGE_ERROR:
 			raise Exception("iobeam received OneButton error: %s", message)
 		else:
@@ -281,8 +296,8 @@ class IoBeamHandler(object):
 
 
 	def _handle_interlock_message(self, message, tokens):
-		lock_state = tokens[0] if len(tokens) > 0 else None
-		lock_id = tokens[1] if len(tokens) > 1 else None
+		lock_id = tokens[0] if len(tokens) > 0 else None
+		lock_state = tokens[1] if len(tokens) > 1 else None
 		before_state = self.open_interlocks()
 		self._logger.debug("_handle_interlock_message() message: %s, lock_id: %s, lock_state: %s, before_state: %s", message, lock_id, lock_state, before_state)
 
@@ -328,11 +343,31 @@ class IoBeamHandler(object):
 	def _handle_laser_message(self, message, tokens):
 		return 0
 
+	def _handle_iobeam_message(self, message, token):
+		action = token[0] if len(token) > 0 else None
+		if action == 'version':
+			version = token[1] if len(token) > 1 else None
+			if version:
+				self.iobeam_version = version
+				self._logger.info("Received iobeam version: %s", self.iobeam_version)
+				return 0
+			else:
+				self._logger.warn("_handle_iobeam_message(): Received iobeam:version message without version number. Counting as error. Message: %s", message)
+				return 1
+		else:
+			self._logger.debug("_handle_iobeam_message(): Received unknown message for device 'iobeam'. NOT counting as error. Message: %s", message)
+			return 0
+
+
 	def _handle_error_message(self, message, token):
 		action = token[0] if len(token) > 0 else None
 		if action == "reconnect":
 			raise Exception("ioBeam requested to reconnect. Now doing so...")
 		return 1
+
+	def _handle_unknown_device_message(self, message, token):
+		self._logger.warn("Received mesage about unknown device: %s", message)
+		return 0
 
 
 	def _fireEvent(self, event, payload=None):

@@ -10,21 +10,19 @@ _instance = None
 def interLockHandler(plugin):
 	global _instance
 	if _instance is None:
-		_instance = InterLockHandler(plugin._ioBeam,
+		_instance = InterLockHandler(plugin,
 									 plugin._event_bus,
-									 plugin._plugin_manager,
-									 plugin._printer)
+									 plugin._plugin_manager)
 	return _instance
 
 # This guy handles InterLock Events
 # Honestly, I'm not sure if we need a separate handler for this...
 class InterLockHandler(object):
 
-	def __init__(self, iobeam_handler, event_bus, plugin_manager, printer):
-		self._iobeam_handler = iobeam_handler
+	def __init__(self, plugin, event_bus, plugin_manager):
+		self._plugin = plugin
 		self._event_bus = event_bus
 		self._plugin_manager = plugin_manager
-		self._printer = printer
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.interlockhandler")
 
 		self._subscribe()
@@ -45,6 +43,9 @@ class InterLockHandler(object):
 
 
 	def send_state(self):
-		self._plugin_manager.send_plugin_message("mrbeam",
-						 dict(interlocks_closed=self._iobeam_handler.is_interlock_closed(),
-							  interlocks_open=self._iobeam_handler.open_interlocks()))
+		if self._plugin._ioBeam:
+			self._plugin_manager.send_plugin_message("mrbeam",
+							 dict(interlocks_closed=self._plugin._ioBeam.is_interlock_closed(),
+								  interlocks_open=self._plugin._ioBeam.open_interlocks()))
+		else:
+			raise Exception("iobeam handler not available from Plugin. Can't notify frontend about interlock state change.")

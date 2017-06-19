@@ -94,11 +94,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		except Exception as e:
 			self._logger.exception("Exception while getting NetconnectdPlugin pluginInfo")
 
-		self._ioBeam = ioBeamHandler(self._event_bus, self._settings.get(["dev", "sockets", "iobeam"]))
 		self._oneButtonHandler = oneButtonHandler(self)
 		self._interlock_handler = interLockHandler(self)
 		self._lid_handler = lidHandler(self)
 		self._led_eventhandler = LedEventListener(self._event_bus, self._printer)
+		# start iobeam socket only once other handlers are already inittialized so that we can handle info mesage
+		self._ioBeam = ioBeamHandler(self._event_bus, self._settings.get(["dev", "sockets", "iobeam"]))
 
 
 	def _do_initial_log(self):
