@@ -22,43 +22,16 @@ def get_update_information(self):
 
 	if not tier in [SW_UPDATE_TIER_NO_UPDATE]:
 
-		octoprint_configured = octoprint_checkout_folder(self, tier)
-
 		set_info_mrbeam_plugin(self, tier)
 		set_info_netconnectd_plugin(self, tier)
 		set_info_findmymrbeam(self, tier)
 		set_info_mrbeamledstrips(self, tier)
 		set_info_netconnectd_daemon(self, tier)
-		# set_info_pcf8575(self, tier)
 		set_info_iobeam(self, tier)
 
 	_logger(self).debug("MrBeam Plugin provides this config (might be overridden by settings!):\n%s", yaml.dump(sw_update_config, width=50000).strip())
 
 	return sw_update_config
-
-# We need octoprint's checkout_folder to be set in config.yaml
-# (These's no way to set sw_update config for octoprint from the third party plugin update_hooks)
-# returns True if it was already set, False otherwise
-def octoprint_checkout_folder(self, tier):
-	settings_path = ["plugins", "softwareupdate", "checks", "octoprint", "checkout_folder"]
-	octoprint_checkout_folder = self._settings.global_get(settings_path)
-	if octoprint_checkout_folder is not None:
-		return True
-	else:
-		octoprint_checkout_folder = "/home/pi/OctoPrint"
-		if os.path.isdir(octoprint_checkout_folder):
-			self._settings.global_set(settings_path, octoprint_checkout_folder, force=True)
-			self._settings.save(force=True)
-			_logger(self).debug("config.yaml: setting octoprint_checkout_folder: %s", octoprint_checkout_folder)
-		else:
-			_logger(self).warning("OctoPrint octoprint_checkout_folder wasn't set because path doesnt' exist: %s ", octoprint_checkout_folder)
-			return False
-
-	test = self._settings.global_get(settings_path)
-	if test is None:
-		_logger(self).warning("OctoPrint octoprint_checkout_folder could not be set.")
-
-	return False
 
 
 def set_info_mrbeam_plugin(self, tier):
@@ -247,21 +220,6 @@ def set_info_iobeam(self, tier):
 		pip_command=pip_command,
 		restart="environment"
 	)
-
-
-def set_info_pcf8575(self, tier):
-	name = "pcf8575"
-	module_id = "pcf8575"
-	path = "/home/pi/pcf8575"
-
-	if _is_override_in_settings(self, module_id): return
-
-	if (os.path.isdir(path)):
-		sw_update_config[module_id] = dict(
-			displayName=_get_display_name(self, name),
-			type="git_commit",
-			checkout_folder=path,
-			update_script="{folder}/update.sh")
 
 
 def _get_display_name(self, name, tier=None, branch=None):
