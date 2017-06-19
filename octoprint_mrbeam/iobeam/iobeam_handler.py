@@ -3,6 +3,7 @@ import threading
 import time
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
+from octoprint.events import Events as OctoPrintEvents
 
 # singleton
 _instance = None
@@ -24,6 +25,7 @@ class IoBeamEvents(object):
 	INTERLOCK_CLOSED =   "iobeam.interlock.closed"
 	LID_OPENED =         "iobeam.lid.opened"
 	LID_CLOSED =         "iobeam.lid.closed"
+	LASER_TEMP =         "iobeam.laser.temp"
 
 
 class IoBeamHandler(object):
@@ -102,6 +104,8 @@ class IoBeamHandler(object):
 	MESSAGE_ACTION_LID_OPENED =         "pr"
 	MESSAGE_ACTION_LID_CLOSED =         "rl"
 
+	MESSAGE_ACTION_LASER_TEMP =         "temp"
+
 
 	def __init__(self, event_bus, socket_file=None):
 		self._event_bus = event_bus
@@ -114,6 +118,7 @@ class IoBeamHandler(object):
 		self._connectionException = None
 		self._interlocks = dict()
 
+		self._subscribe()
 		self._initWorker(socket_file)
 
 	def isRunning(self):
@@ -122,17 +127,21 @@ class IoBeamHandler(object):
 	def isConnected(self):
 		return self._isConnected
 
-	def shutdown(self):
+	def shutdown(self, *args):
+		self._logger.debug("shutdown() args: %s", args)
 		global _instance
 		_instance = None
-		self._logger.debug("shutdown()")
 		self._shutdown_signaled = True
+		# time.sleep(1)
 
 	def is_interlock_closed(self):
 		return len(self._interlocks.keys()) == 0
 
 	def open_interlocks(self):
 		return self._interlocks.keys()
+
+	def _subscribe(self):
+		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self.shutdown)
 
 	def _initWorker(self, socket_file=None):
 		self._logger.debug("initializing worker thread")
@@ -147,6 +156,7 @@ class IoBeamHandler(object):
 
 
 	def _work(self):
+		threading.current_thread().name = self.__class__.__name__
 		self._logger.debug("Worker thread starting, connecting to socket: %s %s", self.SOCKET_FILE, ("MRBEAM_DEBUG" if MRBEAM_DEBUG else ""))
 
 		while not self._shutdown_signaled:
@@ -326,6 +336,14 @@ class IoBeamHandler(object):
 		return 0
 
 	def _handle_laser_message(self, message, tokens):
+		action = token[0] if len(token) > 0 else None
+		payload = self._as_number(token[1]) if len(token) > 1 else None
+
+		if action == self.MESSAGE_ACTION_LASER_TEMP and payload is not None:
+			self._fireEvent(IoBeamEvents.LASER_TEMP, payload)
+		else:
+			return self._handle_invalid_message(message)
+
 		return 0
 
 	def _handle_error_message(self, message, token):
