@@ -33,8 +33,8 @@ class IoBeamHandler(object):
 	# > onebtn:dn:< time >
 	# > onebtn:rl:< time >
 	# > onebtn:error	?
-	# > lid:pr
-	# > lid:rl
+	# > lid:op
+	# > lid:cl
 	# > intlk:0:op
 	# > intlk:0:cl
 	# > intlk:1:op
@@ -155,6 +155,7 @@ class IoBeamHandler(object):
 
 
 	def _work(self):
+		threading.current_thread().name = self.__class__.__name__
 		self._logger.debug("Worker thread starting, connecting to socket: %s %s", self.SOCKET_FILE, ("MRBEAM_DEBUG" if MRBEAM_DEBUG else ""))
 
 		while not self._shutdown_signaled:
