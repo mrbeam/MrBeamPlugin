@@ -341,7 +341,8 @@ $(function(){
 				if(self._allParametersSet()){
 					//self.update_colorSettings();
 					self.slicing_in_progress(true);
-					self.workingArea.getCompositionSVG(self.do_engrave(), self.engrave_outlines(), function(composition){
+					var pixPerMM = 1/self.beamDiameter();
+					self.workingArea.getCompositionSVG(self.do_engrave(), pixPerMM, self.engrave_outlines(), function(composition){
 						self.svg = composition;
 						var filename = self.gcodeFilename() + '.gco';
 						var gcodeFilename = self._sanitize(filename);
