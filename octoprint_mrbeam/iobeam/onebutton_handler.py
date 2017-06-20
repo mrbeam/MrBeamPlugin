@@ -170,8 +170,8 @@ class OneButtonHandler(object):
 		elif event == OctoPrintEvents.FILE_SELECTED:
 			if not self.is_ready_to_laser() \
 				and self._printer.is_operational() \
-				and not self._printer.get_state_id() in (self.PRINTER_STATE_PRINTING, self.PRINTER_STATE_PAUSED) \
-				and 'name' in payload:
+				and not self._printer.get_state_id() in (self.PRINTER_STATE_PRINTING, self.PRINTER_STATE_PAUSED):
+				# and 'name' in payload:
 				self._logger.debug("onEvent() FILE_SELECTED set_ready_to_laser file name: %s:", 'name' in payload)
 				try:
 					self.set_ready_to_laser(payload['name'])
