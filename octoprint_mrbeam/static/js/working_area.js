@@ -497,7 +497,7 @@ $(function(){
 			}
 			return namespaces;
 		};
-		
+
 		self.highlightDesign = function(data){
 			$('#userContent').addClass('dimDesigns');
 			var svgEl = $('#'+data.previewId);
@@ -564,7 +564,7 @@ $(function(){
 			$('#'+label_id+' .scale').val((scale/dpiscale*100).toFixed(1) + '%');
 			self.check_sizes_and_placements();
 		};
-		
+
 		self.svgManualTranslate = function(data, event) {
 			if (event.keyCode === 13 || event.type === 'blur') {
 				self.abortFreeTransforms();
@@ -573,7 +573,7 @@ $(function(){
 				var newTranslateStr = event.target.value;
 				var nt = newTranslateStr.split(/[^0-9.-]/); // TODO improve
 				var ntx = self.mm2px(nt[0]) / globalScale;
-				var nty = self.mm2px(self.workingAreaHeightMM() - nt[1]) / globalScale;			
+				var nty = self.mm2px(self.workingAreaHeightMM() - nt[1]) / globalScale;
 
 				svg.ftManualTransform({tx: ntx, ty: nty});
 			}
@@ -997,8 +997,7 @@ $(function(){
 			var wPT = wMM * 90 / 25.4;
 			var hPT = hMM * 90 / 25.4;
 
-			var compSvg = Snap(wPT, hPT);
-			compSvg.attr('id', 'compSvg');
+			var compSvg = self.getNewSvg('compSvg', wPT, hPT);
 			var userContent = snap.select("#userContent").clone();
 			compSvg.append(userContent);
 
@@ -1133,7 +1132,7 @@ $(function(){
 		self.onStartupComplete = function(){
 			self.initCameraCalibration();
 		};
-		
+
 		self.onAfterTabChange = function(current, prev){
 			if(current === '#workingarea'){
 				self.trigger_resize();
@@ -1192,7 +1191,7 @@ $(function(){
 			//TODO cutOutlines use it and make it work
 			var wPT = wMM * 90 / 25.4;
 			var hPT = hMM * 90 / 25.4;
-			var tmpSvg = Snap(wPT, hPT).attr('id', 'tmpSvg');
+			var tmpSvg = self.getNewSvg('tmpSvg', wPT, hPT);
 			// get only filled items and embed the images
 			var userContent = svg.clone();
 			tmpSvg.append(userContent);
@@ -1249,6 +1248,15 @@ $(function(){
 		self.onBeforeBinding = function(){
 			self.files.workingArea = self;
 		};
+
+		self.getNewSvg = function(id, w, h){
+		    var svg = Snap(w, h);
+            svg.attr('id', id);
+            svg.attr('xmlns', 'http://www.w3.org/2000/svg');
+            svg.attr('xmlns:mb', 'http://www.mr-beam.org/mbns');
+            svg.attr('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+            return svg;
+        };
 
 
         // ***********************************************************
