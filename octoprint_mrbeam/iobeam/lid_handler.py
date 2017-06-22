@@ -3,12 +3,12 @@ import threading
 import os
 import logging
 from subprocess import call
-# import mb_picture_preparation
+
+import mb_picture_preparation as mb_pic
 
 # don't crash on a dev computer where you can't install picamera
 try:
 	from picamera import PiCamera
-
 	PICAMERA_AVAILABLE = True
 except:
 	PICAMERA_AVAILABLE = False
@@ -70,7 +70,7 @@ class LidHandler(object):
 			self._end_photo_worker()
 			self._send_frontend_lid_state()
 		elif event == OctoPrintEvents.CLIENT_OPENED:
-			self._logger.debug("onEvent() CLIENT_OPENED sending client lidClosed:%s", self.lidClosed)
+			self._logger.debug("onEvent() CLIENT_OPENED sending client lidClosed: %s", self.lidClosed)
 			self._send_frontend_lid_state()
 		elif event == OctoPrintEvents.SHUTDOWN:
 			self._logger.debug("onEvent() SHUTDOWN stopping _photo_creator")
@@ -93,8 +93,8 @@ class LidHandler(object):
 class PhotoCreator(object):
 	def __init__(self, path):
 		self.imagePath = path
-		self.tmpPath = self.imagePath + ".tmp"
-		self.tmpPath2 = self.imagePath + ".tmp2"
+		self.tmpPath = self.imagePath.replace('.jpg','-tmp.jpg')
+		self.tmpPath2 = self.imagePath.replace('.jpg','-tmp2.jpg')
 		self.active = True
 		self.last_photo = 0
 		self.camera = None
@@ -106,6 +106,10 @@ class PhotoCreator(object):
 
 	def work(self):
 		try:
+			self._logger.debug("Wait for it...")
+			time.sleep(2)
+			self._logger.debug("...starting now.")
+
 			self.active = True
 			if not PICAMERA_AVAILABLE:
 				self._logger.warn("PiCamera is not available, not able to capture pictures.")
@@ -117,9 +121,9 @@ class PhotoCreator(object):
 				self._capture()
 				# check if still active...
 				if self.active:
-					# self.correct_image()
+					self.correct_image()
 					self._move_tmp_image()
-					time.sleep(1)
+					time.sleep(5)
 
 			self._close_cam()
 		except:
@@ -135,21 +139,29 @@ class PhotoCreator(object):
 			self.camera.resolution = (1024, 768)
 			self.camera.vflip = True
 			self.camera.hflip = True
-			self.camera.brightness = 70
-			self.camera.color_effects = (128, 128)
+			# self.camera.brightness = 70
+			# self.camera.color_effects = (128, 128)
 			self.camera.start_preview()
 
 			self._logger.debug("_prepare_cam() prepared in %ss", time.time() - now)
-		except:
-			self._logger.exception("_prepare_cam() Exception while preparing camera:")
+		except Exception as e:
+			if e.__class__.__name__.startswith('PiCamera'):
+				self._logger.error("PiCamera Error while preparing camera: %s: %s", e.__class__.__name__, e)
+			else:
+				self._logger.exception("Exception while preparing camera:")
 
 	def _capture(self):
 		try:
 			now = time.time()
-			self.camera.capture(self.tmpPath, format='jpeg', resize=(1000, 800))
+			# self.camera.capture(self.tmpPath, format='jpeg', resize=(1000, 800))
+			self.camera.capture(self.tmpPath, format='jpeg')
+
 			self._logger.debug("_capture() captured picture in %ss", time.time() - now)
-		except:
-			self._logger.exception("Exception while taking picture from camera:")
+		except Exception as e:
+			if e.__class__.__name__.startswith('PiCamera'):
+				self._logger.error("PiCamera Error while capturing picture: %s: %s", e.__class__.__name__, e)
+			else:
+				self._logger.exception("Exception while taking picture from camera:")
 
 	def _createFolder_if_not_existing(self, filename):
 		try:
@@ -162,7 +174,7 @@ class PhotoCreator(object):
 
 
 	def _move_tmp_image(self):
-		returncode = call(['mv', self.tmpPath, self.imagePath])
+		returncode = call(['mv', self.tmpPath2, self.imagePath])
 		if returncode != 0:
 			self._logger.warn("_move_tmp_image() returncode is %s (sys call, should be 0)", returncode)
 
@@ -173,15 +185,15 @@ class PhotoCreator(object):
 
 	# draft
 	def correct_image(self):
-		self._logger.debug("correct_image()")
+		self._logger.debug("Starting with correction...")
 		path_to_input_image = self.tmpPath
 		path_to_output_img = self.tmpPath2
-		path_to_cam_params = '/home/pi/cam_calibration_output/cam_calibration_output.npz'
-		path_to_markers_file = '/home/pi/cam_calibration_output/cam_markers.npz'
+		path_to_cam_params = '/home/pi/cam_calibration_output/cam_params.npz'
+		path_to_pic_settings = '/home/pi/cam_calibration_output/pic_settings.json'
 
-		is_high_precision = mb_picture_preparation.prepareImage(path_to_input_image,
-																path_to_output_img,
-																path_to_cam_params,
-																path_to_markers_file)
+		is_high_precision = mb_pic._debug_prepareImage(path_to_input_image,
+												path_to_output_img,
+												path_to_cam_params,
+												path_to_pic_settings)
 
 		self._logger.debug("correct_image() is_high_precision:%s", is_high_precision)
