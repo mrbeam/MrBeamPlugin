@@ -32,6 +32,11 @@ $(function() {
             }
 		};
 
+        self.onStartup = function(){
+            // needs to be scrollable on touch devices
+            $('#wizard_dialog .modal-body').addClass('scrollable');
+        };
+
 		// for wizard version
         self.onBeforeWizardTabChange = function(next, current) {
             if (current && _.startsWith(current, "wizard_plugin_corewizard_lasersafety")) {

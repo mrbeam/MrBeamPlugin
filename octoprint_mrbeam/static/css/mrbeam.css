@@ -1249,20 +1249,20 @@ ul.dropdown-menu li a {
 	box-shadow: rgba(0,0,0,.3) 0 0 9px 0;
 }
 
-#files .preview_card div.preview,	
+#files .preview_card div.preview,
 #files .icon_card div.preview {
 	padding-top: 80%;
 	width: 100%;
 	cursor: pointer;
-}	
+}
 
-#files .preview_card div.preview {	
+#files .preview_card div.preview {
 	background-position: center;
 	background-size: contain;
 	background-repeat: no-repeat;
 }
 
-#files .icon_card div.preview>i{	
+#files .icon_card div.preview>i{
 	text-align: center;
 	font-size: 6rem;
 	color: #999;
@@ -2113,4 +2113,14 @@ input[type=range]::-ms-thumb {
 ::-webkit-scrollbar-thumb
 {
 	background-color: #e25303;
+}
+
+/*This was to fix the body on touch devices. Not sure, maybe we'll need it....'*/
+/*.fixed {*/
+  /*position: fixed;*/
+  /*overflow: hidden;*/
+/*}*/
+
+.scrollable {
+  /* just a flag to mark elements that need to be scrollable on touch devices. Also see mrbeam.js */
 }

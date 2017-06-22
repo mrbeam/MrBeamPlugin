@@ -28,7 +28,7 @@
 
                                     <div id="gcode_reference" class="accordion-body in collapse">
                                         <div class="accordion-inner">
-                                            <ul>
+                                            <ul class="scrollable">
                                                 <li>
                                                     <span class="gcommand">G0</span>:
                                                     <span class="desc">rapid position move</span>
@@ -131,7 +131,7 @@
                                 </div>
 							</div>
 							<div class="span8 ">
-								<pre id="terminal-output" class="pre-scrollable full-tab-height" data-bind="foreach: terminal.displayedLines"><span data-bind="text: line, css: {muted: type == 'filtered'}"></span><br></pre>
+								<pre id="terminal-output" class="pre-scrollable scrollable full-tab-height" data-bind="foreach: terminal.displayedLines"><span data-bind="text: line, css: {muted: type == 'filtered'}"></span><br></pre>
 								<div class="input-append" style="display: none;" data-bind="visible: loginState.isUser">
 									<input type="text" id="terminal-command" style="width:88%;" data-bind="value: terminal.command, event: { keyup: function(d,e) { return terminal.handleKeyUp(e); }, keydown: function(d,e) { return terminal.handleKeyDown(e); } }, enable: (state.isOperational() || state.isLocked()) && loginState.isUser()">
 									<button class="btn" type="button" id="terminal-send" data-bind="click: terminal.sendCommandWithSafetyPopup">{{ _('Send') }}</button>
