@@ -41,6 +41,14 @@ $(function() {
                     e.stopPropagation();
                 }
             });
+
+            // Still, somethime body scrolls... this fixes it in a very brutal way.
+            $('body').on('touchend', function(e) {
+                if ($('body').scrollTop() != 0) {
+                    $('body').scrollTop(0);
+                    console.log("Scroll on body happened. Hard Corrected.");
+                }
+            });
         };
 
 
