@@ -3,7 +3,6 @@ import threading
 import os
 import logging
 from subprocess import call
-
 import mb_picture_preparation as mb_pic
 
 # don't crash on a dev computer where you can't install picamera
@@ -106,9 +105,8 @@ class PhotoCreator(object):
 
 	def work(self):
 		try:
-			self._logger.debug("Wait for it...")
 			time.sleep(2)
-			self._logger.debug("...starting now.")
+			self._logger.debug("Taking picture now.")
 
 			self.active = True
 			if not PICAMERA_AVAILABLE:
@@ -123,7 +121,7 @@ class PhotoCreator(object):
 				if self.active:
 					self.correct_image()
 					self._move_tmp_image()
-					time.sleep(5)
+					time.sleep(4)
 
 			self._close_cam()
 		except:
@@ -191,6 +189,7 @@ class PhotoCreator(object):
 		path_to_cam_params = '/home/pi/cam_calibration_output/cam_params.npz'
 		path_to_pic_settings = '/home/pi/cam_calibration_output/pic_settings.json'
 
+		# todo implement high-precision feedback to frontend
 		is_high_precision = mb_pic._debug_prepareImage(path_to_input_image,
 												path_to_output_img,
 												path_to_cam_params,
