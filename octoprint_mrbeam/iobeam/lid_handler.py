@@ -4,6 +4,7 @@ import os
 import logging
 from subprocess import call
 import mb_picture_preparation as mb_pic
+from os.path import isfile
 
 # don't crash on a dev computer where you can't install picamera
 try:
@@ -119,8 +120,8 @@ class PhotoCreator(object):
 				self._capture()
 				# check if still active...
 				if self.active:
-					self.correct_image()
-					self._move_tmp_image()
+					if self.correct_image() >= 0:
+						self._move_tmp_image()
 					time.sleep(4)
 
 			self._close_cam()
@@ -186,13 +187,22 @@ class PhotoCreator(object):
 		self._logger.debug("Starting with correction...")
 		path_to_input_image = self.tmpPath
 		path_to_output_img = self.tmpPath2
+
 		path_to_cam_params = '/home/pi/cam_calibration_output/cam_params.npz'
 		path_to_pic_settings = '/home/pi/cam_calibration_output/pic_settings.json'
 
+		#check if params and settings file are available
+		# todo move into function
+		if not isfile(path_to_cam_params) or not isfile(path_to_pic_settings):
+			self._logger.error("cam_params.npz <{}> or pic_settings.json <{}> missing. Please check!".format(path_to_cam_params,path_to_pic_settings))
+			return -1
+
 		# todo implement high-precision feedback to frontend
-		is_high_precision = mb_pic._debug_prepareImage(path_to_input_image,
+		numNotFoundMarkers = mb_pic._debug_prepareImage(path_to_input_image,
 												path_to_output_img,
 												path_to_cam_params,
 												path_to_pic_settings)
 
-		self._logger.debug("correct_image() is_high_precision:%s", is_high_precision)
+		self._logger.debug("correct_image() is_high_precision:%s", numNotFoundMarkers)
+
+		return numNotFoundMarkers
