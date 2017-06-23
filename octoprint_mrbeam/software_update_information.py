@@ -8,6 +8,7 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 
 SW_UPDATE_TIER_PROD =      "PROD"
 SW_UPDATE_TIER_DEV =       "DEV"
+SW_UPDATE_TIER_DEMO =      "DEMO"
 SW_UPDATE_TIER_ANDY =      "ANDY"
 SW_UPDATE_TIER_NO_UPDATE = "NO_UPDATE"
 
@@ -52,6 +53,18 @@ def set_info_mrbeam_plugin(self, tier):
 
 	if tier in [SW_UPDATE_TIER_DEV]:
 		branch = "develop"
+		sw_update_config[module_id] = dict(
+			displayName=_get_display_name(self, name, tier, branch),
+			displayVersion=self._plugin_version,
+			type="github_commit",
+			user="mrbeam",
+			repo="MrBeamPlugin",
+			branch=branch,
+			pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
+			restart="octoprint")
+
+	if tier in [SW_UPDATE_TIER_DEMO]:
+		branch = "demo"
 		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name, tier, branch),
 			displayVersion=self._plugin_version,
@@ -116,7 +129,7 @@ def set_info_findmymrbeam(self, tier):
 		pip="https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
 		restart="octoprint")
 
-	if tier in [SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_ANDY]:
+	if tier in [SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_DEMO, SW_UPDATE_TIER_ANDY]:
 		branch = "develop"
 		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name, tier, branch),
@@ -155,6 +168,19 @@ def set_info_mrbeamledstrips(self, tier):
 
 	if tier in [SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_ANDY]:
 		branch = "develop"
+		sw_update_config[module_id] = dict(
+			displayName=_get_display_name(self, name, tier, branch),
+			displayVersion=version,
+			type="github_commit",
+			user="mrbeam",
+			repo="MrBeamLedStrips",
+			branch=branch,
+			pip="https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
+			pip_command=pip_command,
+			restart="environment")
+
+	if tier in [SW_UPDATE_TIER_DEMO]:
+		branch = "demo"
 		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name, tier, branch),
 			displayVersion=version,
