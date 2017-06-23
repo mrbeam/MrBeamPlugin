@@ -912,7 +912,7 @@ class MachineCom(object):
 		self._changeState(self.STATE_OPERATIONAL)
 
 		time.sleep(1.1)
-		self._sendCommand("G92X{:.3f}Y{:.3f}Z0\n".format(self.MPosX+501.0, self.MPosY+401.0))
+		self._sendCommand("G92X{:.3f}Y{:.3f}Z0\n".format(self.MPosX+501.0, self.MPosY+391.0))
 
 		payload = {
 			"file": self._currentFile.getFilename(),
