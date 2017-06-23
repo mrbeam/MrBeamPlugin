@@ -31,7 +31,6 @@ $(function(){
 
 		// material menu
 		//TODO make not hardcoded
-		//[laserInt,speed,engraveWhite,engraveBlack,speedWhite,speedBlack]
 		// TODO: should be a structure like this:
 
 //		material = {
@@ -50,19 +49,52 @@ $(function(){
 //		}
 
 		self.materials_settings = {
-			'default':[0, 0, 0, 0, 0, 0],
-//			'Acrylic':[1000,80,0,350,4500,850],
-			'Foam Rubber':[625, 400, 0, 200, 3000, 1000],
-			'Felt engrave':[300, 1000, 0, 300, 2000, 1000],
-			'Felt cut':[1000, 1000, 0, 300, 2000, 1000],
-			'Jeans Fabric':[1000,500,0,200,3000,500], // 2 passes todo check engraving
-			'Grey cardboard':[1000,500,0,300,3000,750], // 2-3 passes
-			'Cardboard':[1000,300,0,300,3000,750], // 2-3 passes
-			'Kraftplex engrave':[400, 850, 0, 500, 3000, 850],
-			'Kraftplex cut':[1000, 80, 0, 500, 3000, 850], //1-2 pass
-			'Wood engrave':[350, 850, 0, 350, 3000, 850],
-			'Wood cut':[1000, 250, 0, 350, 3000, 850],
-			'Balsa cut':[700, 500, 0, 350, 3000, 850] //2 passes
+			'default':{cut_i:0, cut_f:0, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
+			'material_name thickness':{cut_i:0, cut_f:0, cut_p:0, eng_i:[0,0], eng_f:[0,0]},
+			// new copper embedded laser
+			'Balsa 1mm':{cut_i:70, cut_f:600, cut_p:1, eng_i:[0,0], eng_f:[0,0]}, // min speed 300, max intensity 70 !!! ignition warning
+			'Balsa 2mm':{cut_i:100, cut_f:600, cut_p:1, eng_i:[0,0], eng_f:[0,0]}, // min speed 300 !!! ignition warning
+			'Balsa 3mm':{cut_i:100, cut_f:800, cut_p:2, eng_i:[0,0], eng_f:[0,0]}, // min speed 300 !!! ignition warning
+			'Balsa 4mm':{cut_i:100, cut_f:600, cut_p:3, eng_i:[0,0], eng_f:[0,0]}, // min speed 500 !!! ignition warning
+			'Balsa 5mm':{cut_i:100, cut_f:300, cut_p:3, eng_i:[0,0], eng_f:[0,0]}, // min speed 300 !!! ignition warning
+			'Cardboard double wall 5mm':{cut_i:100, cut_f:400, cut_p:3, eng_i:[10,35], eng_f:[2000,850]}, // warning, not slower than 180
+			'Cardboard single wall 4mm':{cut_i:100, cut_f:500, cut_p:3, eng_i:[10,35], eng_f:[2000,850]}, // warning, not slower than 180
+			'Cardboard single wall 2mm':{cut_i:100, cut_f:500, cut_p:2, eng_i:[10,35], eng_f:[2000,850]}, // warning, not slower than 180
+//			'Felt 2mm':{cut_i:100, cut_f:200, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
+//			'Felt 3mm':{cut_i:100, cut_f:200, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
+			'Felt 4mm green':{cut_i:100, cut_f:300, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
+//			'Felt 4mm grass':{cut_i:100, cut_f:300, cut_p:1, eng_i:[10,35], eng_f:[2000,850]},
+			'Felt 4mm baby blue':{cut_i:100, cut_f:100, cut_p:5, eng_i:[0,0], eng_f:[0,0]},
+			'Felt 4mm royal blue':{cut_i:100, cut_f:350, cut_p:2, eng_i:[0,0], eng_f:[0,0]},
+			'Felt 4mm yellow':{cut_i:100, cut_f:350, cut_p:2, eng_i:[0,0], eng_f:[0,0]},
+			'Felt 4mm purple':{cut_i:100, cut_f:450, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
+			'Foam Rubber 2mm blue':{cut_i:100, cut_f:600, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
+			'Foam Rubber 2mm orange':{cut_i:75, cut_f:800, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
+			'Foam Rubber 2mm white':{cut_i:100, cut_f:190, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
+			'Foam Rubber 3mm green':{cut_i:100, cut_f:600, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
+			'Foam Rubber 3mm bue':{cut_i:100, cut_f:600, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
+			'Paper':{cut_i:750, cut_f:800, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
+			'Plywood 3mm':{cut_i:100, cut_f:200, cut_p:2, eng_i:[10,35], eng_f:[2000,850]}, 
+			'Plywood 4mm':{cut_i:100, cut_f:250, cut_p:3, eng_i:[10,35], eng_f:[2000,850]}, 
+			'Kraftplex 0.8mm':{cut_i:100, cut_f:350, cut_p:2, eng_i:[10,35], eng_f:[2000,850]}, 
+			'Kraftplex 1.5mm':{cut_i:100, cut_f:175, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
+//			'Kraftplex 3mm':{cut_i:100, cut_f:200, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
+			'Wellboard 6mm':{cut_i:100, cut_f:225, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
+			'Wellboard 10mm':{cut_i:100, cut_f:140, cut_p:3, eng_i:[10,35], eng_f:[2000,850]},
+			'Wellboard rect':{cut_i:100, cut_f:200, cut_p:3, eng_i:[10,35], eng_f:[2000,850]},
+			// old laser
+//			'Acrylic':[1000,80,0,350,4500,850, 1],
+//			'Foam Rubber':{cut_i:625, cut_f:400, cut_p:1, eng_i:[0,200], eng_f:[3000,1000]},
+//			'Felt engrave':{cut_i:300, cut_f:1000, cut_p:1, eng_i:[0,300], eng_f:[2000,1000]},
+//			'Felt cut':{cut_i:1000, cut_f:1000, cut_p:1, eng_i:[0,300], eng_f:[2000,1000]},
+//			'Jeans Fabric':[1000,500,0,200,3000,500, 1], // 2 passes todo check engraving
+//			'Grey cardboard':[1000,500,0,300,3000,750, 1], // 2-3 passes
+//			'Cardboard':[1000,300,0,300,3000,750, 3], // 2-3 passes
+//			'Kraftplex engrave':{cut_i:400, cut_f:850, cut_p:1, eng_i:[0,500], eng_f:[3000,850]},
+//			'Kraftplex cut':{cut_i:1000, cut_f:80, cut_p:2, eng_i:[0,500], eng_f:[3000,850]}, //1-2 pass
+//			'Wood engrave':{cut_i:350, cut_f:850, cut_p:1, eng_i:[0,350], eng_f:[3000,850]},
+//			'Wood cut':{cut_i:1000, cut_f:250, cut_p:2, eng_i:[0,350], eng_f:[3000,850]},
+//			'Balsa cut':{cut_i:700, cut_f:500, cut_p:2, eng_i:[0,350], eng_f:[3000,850]} //2 passes
 		};
 		var material_keys = [];
 		for(var materialKey in self.materials_settings){
@@ -114,9 +146,10 @@ $(function(){
 				var param_set = self.materials_settings[material];
 				var p = $(ev.target).parents('.job_row_vector');
 				$(p).find('.job_title').html(material);
-				$(p).find('.param_intensity').val(parseInt(param_set[0]/10));
-				$(p).find('.param_feedrate').val(param_set[1]);
-				$(p).find('.param_passes').val(1); // currently no passes in the data structure
+				$(p).find('.param_intensity').val(param_set.cut_i);
+				$(p).find('.param_feedrate').val(param_set.cut_f);
+				$(p).find('.param_passes').val(param_set.cut_p || 0); 
+				$(p).find('.param_piercetime').val(param_set.cut_pierce || 0); 
 			}
 		};
 
@@ -126,12 +159,12 @@ $(function(){
 				var p = $('#engrave_job');
 				$(p).find('.job_title').html("Engrave " + material);
 
-				self.imgIntensityWhite(param_set[2]);
-				self.imgIntensityBlack(param_set[3]);
-				self.imgFeedrateWhite(param_set[4]);
-				self.imgFeedrateBlack(param_set[5]);
+				self.imgIntensityWhite(param_set.eng_i[0]);
+				self.imgIntensityBlack(param_set.eng_i[1]);
+				self.imgFeedrateWhite(param_set.eng_f[0]);
+				self.imgFeedrateBlack(param_set.eng_f[1]);
 				//self.imgDithering();
-				//self.engravingPiercetime(0);
+				self.engravingPiercetime(param_set.eng_pierce || 0);
 			}
 		};
 
