@@ -1974,6 +1974,14 @@ input.search-query,
 	background-size: 40px 40px;
 }
 
+.progress.active .bar {
+  -webkit-animation: progress-bar-stripes 2s reverse infinite;
+  -moz-animation: progress-bar-stripes 2s reverse infinite;
+  -ms-animation: progress-bar-stripes 2s reverse infinite;
+  -o-animation: progress-bar-stripes 2s reverse infinite;
+  animation: progress-bar-stripes 2s reverse infinite;
+}
+
 #flashing_progress {
 
 }
