@@ -351,7 +351,11 @@ class MachineCom(object):
 		}
 		eventManager().fire(Events.PRINT_DONE, payload)
 		self.sendCommand("M5")
-		self.sendCommand("G0X500Y400")
+		# would be nice if this worked.....
+		# homeX = self._laserCutterProfile['volume']['width'] - 2
+		# homeY = self._laserCutterProfile['volume']['depth'] - 2
+		# // ANDYTEST magic numbers!!!!!
+		self.sendCommand("G0X500Y390")
 		self.sendCommand("M9")
 
 	def _handle_status_report(self, line):
