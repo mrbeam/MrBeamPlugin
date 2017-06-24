@@ -351,7 +351,11 @@ class MachineCom(object):
 		}
 		eventManager().fire(Events.PRINT_DONE, payload)
 		self.sendCommand("M5")
-		self.sendCommand("G0X500Y400")
+		# would be nice if this worked.....
+		# homeX = self._laserCutterProfile['volume']['width'] - 2
+		# homeY = self._laserCutterProfile['volume']['depth'] - 2
+		# // ANDYTEST magic numbers!!!!!
+		self.sendCommand("G0X500Y390")
 		self.sendCommand("M9")
 
 	def _handle_status_report(self, line):
@@ -912,7 +916,7 @@ class MachineCom(object):
 		self._changeState(self.STATE_OPERATIONAL)
 
 		time.sleep(1.1)
-		self._sendCommand("G92X{:.3f}Y{:.3f}Z0\n".format(self.MPosX+501.0, self.MPosY+401.0))
+		self._sendCommand("G92X{:.3f}Y{:.3f}Z0\n".format(self.MPosX+501.0, self.MPosY+391.0))
 
 		payload = {
 			"file": self._currentFile.getFilename(),
