@@ -340,3 +340,15 @@ body.colorDragInProgress #drop_overlay {
     stroke-dashoffset: 12;
   }
 }
+
+svg#area_preview path, 
+svg#area_preview circle, 
+svg#area_preview line, 
+svg#area_preview polyline, 
+svg#area_preview polygon, 
+svg#area_preview ellipse, 
+svg#area_preview rect 
+{
+  vector-effect: non-scaling-stroke !important;
+  stroke-width: 1px !important;
+}
