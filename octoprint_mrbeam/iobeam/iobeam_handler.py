@@ -113,6 +113,7 @@ class IoBeamHandler(object):
 
 		self._shutdown_signaled = False
 		self._isConnected = False
+		self._my_socket = None
 		self._errors = 0
 
 		self._connectionException = None
@@ -140,6 +141,14 @@ class IoBeamHandler(object):
 	def open_interlocks(self):
 		return self._interlocks.keys()
 
+	def send_command(self, command):
+		if self._my_socket is not None:
+			if not command.endswith("\n"):
+				command = command + "\n"
+			self._my_socket.sendall(command)
+		else:
+			self._logger.warn("Can't send command while there's no connection on socket. Command: %s", command)
+
 	def _subscribe(self):
 		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self.shutdown)
 
@@ -160,12 +169,12 @@ class IoBeamHandler(object):
 		self._logger.debug("Worker thread starting, connecting to socket: %s %s", self.SOCKET_FILE, ("MRBEAM_DEBUG" if MRBEAM_DEBUG else ""))
 
 		while not self._shutdown_signaled:
-			mySocket = None
+			self._my_socket = None
 			try:
-				mySocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-				mySocket.settimeout(3)
+				self._my_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+				self._my_socket.settimeout(3)
 				# self._logger.debug("Connecting to socket...")
-				mySocket.connect(self.SOCKET_FILE)
+				self._my_socket.connect(self.SOCKET_FILE)
 			except socket.error as e:
 				self._isConnected = False
 				if not self._connectionException == str(e):
@@ -184,7 +193,7 @@ class IoBeamHandler(object):
 				try:
 
 					try:
-						data = mySocket.recv(self.MESSAGE_LENGTH_MAX)
+						data = self._my_socket.recv(self.MESSAGE_LENGTH_MAX)
 					except Exception as e:
 						if MRBEAM_DEBUG and e.message == "timed out":
 							self._logger.warn("Connection stale but MRBEAM_DEBUG enabled. Continuing....")
@@ -210,9 +219,10 @@ class IoBeamHandler(object):
 				except:
 					self._logger.exception("Exception in socket loop. Not sure what to do, resetting connection...")
 
-			if mySocket is not None:
+			if self._my_socket is not None:
 				self._logger.debug("Closing socket...")
-				mySocket.close()
+				self._my_socket.close()
+				self._my_socket = None
 
 			self._isConnected = False
 			self._fireEvent(IoBeamEvents.DISCONNECT)
