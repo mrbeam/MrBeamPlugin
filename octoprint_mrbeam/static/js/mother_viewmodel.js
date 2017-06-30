@@ -45,7 +45,7 @@ $(function () {
                     $('#manual_position').addClass('warning');
                 }
             };
-			
+
 			$("#manual_position").on('keyup', function (e) {
 				if (e.keyCode === 13) {
 					self.control.manualPosition();
@@ -54,18 +54,18 @@ $(function () {
 			$("#manual_position").on('blur', function (e) {
 				self.control.manualPosition();
 			});
-			
+
 			$("body").on('keydown', function (event) {
 
 				if (!self.settings.feature_keyboardControl()) return;
-				if(	event.target.nodeName === "INPUT" 
+				if(	event.target.nodeName === "INPUT"
 					|| event.target.nodeName === "TEXTAREA"
 					|| $('.modal.in').length > 0
 				) return;
-				
+
 				var button = undefined;
 				switch (event.which) {
-					case 37: // left arrow key: 
+					case 37: // left arrow key:
 						button = $("#control-xdec");
 						break;
 					case 38: // up arrow key
@@ -200,7 +200,15 @@ $(function () {
         };
 
         self.onStartupComplete = function() {
+            self.addSwUpdateTierInformation();
             $('#loading_overlay').remove();
+        };
+
+        self.addSwUpdateTierInformation = function(){
+            tier = self.settings.settings.plugins.mrbeam.dev.softwareTier();
+            if (tier != "PROD") {
+                $('#settings_plugin_softwareupdate > h3').append(" (TIER: "+tier+")");
+            }
         };
 
 

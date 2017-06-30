@@ -54,7 +54,7 @@ def set_info_mrbeam_plugin(self, tier):
 	if tier in [SW_UPDATE_TIER_DEV]:
 		branch = "develop"
 		sw_update_config[module_id] = dict(
-			displayName=_get_display_name(self, name, tier, branch),
+			displayName=_get_display_name(self, name),
 			displayVersion=self._plugin_version,
 			type="github_commit",
 			user="mrbeam",
@@ -66,7 +66,7 @@ def set_info_mrbeam_plugin(self, tier):
 	if tier in [SW_UPDATE_TIER_DEMO]:
 		branch = "demo"
 		sw_update_config[module_id] = dict(
-			displayName=_get_display_name(self, name, tier, branch),
+			displayName=_get_display_name(self, name),
 			displayVersion=self._plugin_version,
 			type="github_commit",
 			user="mrbeam",
@@ -78,7 +78,7 @@ def set_info_mrbeam_plugin(self, tier):
 	if tier in [SW_UPDATE_TIER_ANDY]:
 		branch = "andy_softwareupdate_test1"
 		sw_update_config[module_id] = dict(
-			displayName=_get_display_name(self, name, tier, branch),
+			displayName=_get_display_name(self, name),
 			displayVersion=self._plugin_version,
 			type="github_commit",
 			user="mrbeam",
@@ -132,7 +132,7 @@ def set_info_findmymrbeam(self, tier):
 	if tier in [SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_DEMO, SW_UPDATE_TIER_ANDY]:
 		branch = "develop"
 		sw_update_config[module_id] = dict(
-			displayName=_get_display_name(self, name, tier, branch),
+			displayName=_get_display_name(self, name),
 			displayVersion=current_version,
 			type="github_commit",
 			user="mrbeam",
@@ -169,7 +169,7 @@ def set_info_mrbeamledstrips(self, tier):
 	if tier in [SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_ANDY]:
 		branch = "develop"
 		sw_update_config[module_id] = dict(
-			displayName=_get_display_name(self, name, tier, branch),
+			displayName=_get_display_name(self, name),
 			displayVersion=version,
 			type="github_commit",
 			user="mrbeam",
@@ -182,7 +182,7 @@ def set_info_mrbeamledstrips(self, tier):
 	if tier in [SW_UPDATE_TIER_DEMO]:
 		branch = "demo"
 		sw_update_config[module_id] = dict(
-			displayName=_get_display_name(self, name, tier, branch),
+			displayName=_get_display_name(self, name),
 			displayVersion=version,
 			type="github_commit",
 			user="mrbeam",
@@ -208,7 +208,7 @@ def set_info_netconnectd_daemon(self, tier):
 	if version is None: return
 
 	sw_update_config[module_id] = dict(
-		displayName=_get_display_name(self, name, tier, branch),
+		displayName=_get_display_name(self, name),
 		displayVersion=version,
 		type="github_commit",
 		user="mrbeam",
@@ -235,7 +235,7 @@ def set_info_iobeam(self, tier):
 	if version is None: return
 
 	sw_update_config[module_id] = dict(
-		displayName=_get_display_name(self, name, tier, branch),
+		displayName=_get_display_name(self, name),
 		displayVersion=version,
 		type="bitbucket_commit",
 		user="mrbeam",
@@ -248,14 +248,12 @@ def set_info_iobeam(self, tier):
 	)
 
 
-def _get_display_name(self, name, tier=None, branch=None):
-	if tier is not None and not tier == SW_UPDATE_TIER_PROD:
-		# if branch is not None:
-		# 	return "{} ({}:{})".format(name, tier, branch)
-		# else:
-		return "{} ({})".format(name, tier)
-	else:
-		return name
+def _get_display_name(self, name):
+	return name
+	# if tier is not None and not tier == SW_UPDATE_TIER_PROD:
+	# 	return "{} ({})".format(name, tier)
+	# else:
+	# 	return name
 
 
 def _is_override_in_settings(self, module_id):

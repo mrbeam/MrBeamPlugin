@@ -179,6 +179,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 					 frontendUrl=self._settings.get(['cam', 'frontendUrl'])),
 			dev=dict(
 				env = self._settings.get(['dev', 'env']),
+				softwareTier = self._settings.get(["dev", "software_tier"]),
 				terminalMaxLines = self._settings.get(['dev', 'terminalMaxLines']))
 		)
 
