@@ -116,7 +116,7 @@ class Laser(Printer):
 
 	# progress update callbacks
 	def on_comm_progress(self):
-		self._setProgressData(self._comm.getPrintProgress(), self._comm.getPrintFilepos(), self._comm.getPrintTime(), self._comm.getCleanedPrintTime())
+		self._updateProgressData(self._comm.getPrintProgress(), self._comm.getPrintFilepos(), self._comm.getPrintTime(), self._comm.getCleanedPrintTime())
 		self._stateMonitor.trigger_progress_update()
 
 	def _add_position_data(self, MPos, WPos):
