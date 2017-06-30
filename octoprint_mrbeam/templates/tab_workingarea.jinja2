@@ -23,7 +23,7 @@
 														<div>
 															<div id="job_printtime">Print Time: <strong data-bind="text: state.printTimeString"></strong></div>
 														</div>
-														<div class="progress progress-striped">
+														<div class="progress progress-striped active">
 															<div class="bar" id="job_progressBar" data-bind="style: { width: state.progressString() + '%' }">&nbsp;{{ _('Processed') }} :  <strong data-bind="text: state.byteString"></strong></div>
 														</div>
 														<div class="overrideSlider">
@@ -94,7 +94,7 @@
 													<span class="caret"></span>
 												</a>
 												<input id="manual_position" class="decent_input" data-bind="attr:{placeholder: state.laserPos}" onsubmit="control.manualPosition"/>
-											</div>	
+											</div>
 												<!--<i class="icon-edit"></i>-->
 
 												<div class="clearfix"></div>
@@ -131,15 +131,15 @@
 													<div class="clearfix"></div>
 
 													<div class="distance">
-														Jog distance: 
-														<input class="decent_input" type="number" min="0.1" max="100" step="10" id="jogDistance" 
-															   data-bind="value: control.distance, valueUpdate: 'input'" 
+														Jog distance:
+														<input class="decent_input" type="number" min="0.1" max="100" step="10" id="jogDistance"
+															   data-bind="value: control.distance, valueUpdate: 'input'"
 															   style="width:3.5em; display: inline; margin: 0; padding-right:0;"
 														/> mm
 													</div>
 												</div>
 											</div>
-										</div>										
+										</div>
 
 										<div class="accordion-body in" id="mrb_connection_wrapper"
 											 data-bind="visible: !state.isFlashing() && state.isErrorOrClosed() && loginState.isUser()">
@@ -183,7 +183,7 @@
 
 										<div class="collapse in" id="wa_filelist">
 											<div class="accordion-inner">
-												<div class="" data-bind="foreach: placedDesigns">
+												<div class="scrollable" data-bind="foreach: placedDesigns">
 													<div class="entry" data-bind="attr: { id: $data.id }, template: { name: $root.templateFor($data), data: $data }"></div>
 												</div>
 
@@ -208,24 +208,24 @@
 															<div class="local_transformation muted">
 																<i class="icon-move" title="{{ _('translation') }}"></i>
 																<input class="decent_input translation wide" type="text" value="0,0" data-bind="event: {
-																			keyup: function(d, event){ $root.svgManualTranslate($data, event); }, 
+																			keyup: function(d, event){ $root.svgManualTranslate($data, event); },
 																			blur: function(d, event){ $root.svgManualTranslate($data, event); }} "/>
 																<i class="icon-repeat" title="{{ _('rotation') }}"></i>
 																<input class="decent_input rotation" type="text" value="0°" data-bind="event: {
-																			keyup: function(d, event){ $root.svgManualRotate($data, event); }, 
+																			keyup: function(d, event){ $root.svgManualRotate($data, event); },
 																			blur: function(d, event){ $root.svgManualRotate($data, event); }} "/>
 																</br>
 																<i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>
 																<input class="decent_input horizontal" type="text" value="? mm" data-bind="event: {
-																			keyup: function(d, event){ $root.svgManualWidth($data, event); }, 
+																			keyup: function(d, event){ $root.svgManualWidth($data, event); },
 																			blur: function(d, event){ $root.svgManualWidth($data, event); }} "/>
 																<i class="icon-resize-vertical" title="{{ _('vertical') }}"></i>
 																<input class="decent_input vertical" type="text" value="? mm" data-bind="event: {
-																			keyup: function(d, event){ $root.svgManualHeight($data, event); }, 
+																			keyup: function(d, event){ $root.svgManualHeight($data, event); },
 																			blur: function(d, event){ $root.svgManualHeight($data, event); }} "/>
 																<i class="icon-resize-full" title="{{ _('scale') }}"></i>
 																<input class="decent_input scale" type="text" value="100%" data-bind="event: {
-																			keyup: function(d, event){ $root.svgManualScale($data, event); }, 
+																			keyup: function(d, event){ $root.svgManualScale($data, event); },
 																			blur: function(d, event){ $root.svgManualScale($data, event); }} "/>
 															</div>
 															<div class="misfit_warning" >
@@ -247,24 +247,24 @@
 															<div class="local_transformation muted">
 																<i class="icon-move" title="{{ _('translation') }}"></i>
 																<input class="decent_input translation wide" type="text" value="0,0" data-bind="event: {
-																			keyup: function(d, event){ $root.svgManualTranslate($data, event); }, 
+																			keyup: function(d, event){ $root.svgManualTranslate($data, event); },
 																			blur: function(d, event){ $root.svgManualTranslate($data, event); }} "/>
 																<i class="icon-repeat" title="{{ _('rotation') }}"></i>
 																<input class="decent_input rotation" type="text" value="0°" data-bind="event: {
-																			keyup: function(d, event){ $root.svgManualRotate($data, event); }, 
+																			keyup: function(d, event){ $root.svgManualRotate($data, event); },
 																			blur: function(d, event){ $root.svgManualRotate($data, event); }} "/>
 																</br>
 																<i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>
 																<input class="decent_input horizontal" type="text" value="? mm" data-bind="event: {
-																			keyup: function(d, event){ $root.svgManualWidth($data, event); }, 
+																			keyup: function(d, event){ $root.svgManualWidth($data, event); },
 																			blur: function(d, event){ $root.svgManualWidth($data, event); }} "/>
 																<i class="icon-resize-vertical" title="{{ _('vertical') }}"></i>
 																<input class="decent_input vertical" type="text" value="? mm" data-bind="event: {
-																			keyup: function(d, event){ $root.svgManualHeight($data, event); }, 
+																			keyup: function(d, event){ $root.svgManualHeight($data, event); },
 																			blur: function(d, event){ $root.svgManualHeight($data, event); }} "/>
 																<i class="icon-resize-full" title="{{ _('scale') }}"></i>
 																<input class="decent_input scale" type="text" value="100%" data-bind="event: {
-																			keyup: function(d, event){ $root.svgManualScale($data, event); }, 
+																			keyup: function(d, event){ $root.svgManualScale($data, event); },
 																			blur: function(d, event){ $root.svgManualScale($data, event); }} "/>
 															</div>
 
@@ -288,24 +288,24 @@
 															<div class="local_transformation muted">
 																<i class="icon-move" title="{{ _('translation') }}"></i>
 																<input class="decent_input translation wide" type="text" value="0,0" data-bind="event: {
-																			keyup: function(d, event){ $root.svgManualTranslate($data, event); }, 
+																			keyup: function(d, event){ $root.svgManualTranslate($data, event); },
 																			blur: function(d, event){ $root.svgManualTranslate($data, event); }} "/>
 																<i class="icon-repeat" title="{{ _('rotation') }}"></i>
 																<input class="decent_input rotation" type="text" value="0°" data-bind="event: {
-																			keyup: function(d, event){ $root.svgManualRotate($data, event); }, 
+																			keyup: function(d, event){ $root.svgManualRotate($data, event); },
 																			blur: function(d, event){ $root.svgManualRotate($data, event); }} "/>
 																</br>
 																<i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>
 																<input class="decent_input horizontal" type="text" value="? mm" data-bind="event: {
-																			keyup: function(d, event){ $root.svgManualWidth($data, event); }, 
+																			keyup: function(d, event){ $root.svgManualWidth($data, event); },
 																			blur: function(d, event){ $root.svgManualWidth($data, event); }} "/>
 																<i class="icon-resize-vertical" title="{{ _('vertical') }}"></i>
 																<input class="decent_input vertical" type="text" value="? mm" data-bind="event: {
-																			keyup: function(d, event){ $root.svgManualHeight($data, event); }, 
+																			keyup: function(d, event){ $root.svgManualHeight($data, event); },
 																			blur: function(d, event){ $root.svgManualHeight($data, event); }} "/>
 																<i class="icon-resize-full" title="{{ _('scale') }}"></i>
 																<input class="decent_input scale" type="text" value="100%" data-bind="event: {
-																			keyup: function(d, event){ $root.svgManualScale($data, event); }, 
+																			keyup: function(d, event){ $root.svgManualScale($data, event); },
 																			blur: function(d, event){ $root.svgManualScale($data, event); }} "/>
 															</div>
 
@@ -334,7 +334,9 @@
 											height: workingArea.workingAreaHeightPx()+'px'
 										}">
 									<img id="beamcam_image" data-bind="css: { flipH: settings.webcam_flipH(), flipV: settings.webcam_flipV() },
-										 style: {transform: camTransform()}" src="{{ webcamStream }}" onerror="this.src='/plugin/mrbeam/static/img/beam-cam-static.jpg'">
+										 style: {transform: camTransform()}"
+                                         style="width: inherit; height: inherit"
+                                         src="{{ webcamStream }}" onerror="this.src='/plugin/mrbeam/static/img/beam-cam-static.jpg'">
 
 								</div>
 								{% endif %}

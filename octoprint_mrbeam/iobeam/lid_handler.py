@@ -3,12 +3,12 @@ import threading
 import os
 import logging
 from subprocess import call
-# import mb_picture_preparation
+import mb_picture_preparation as mb_pic
+from os.path import isfile
 
 # don't crash on a dev computer where you can't install picamera
 try:
 	from picamera import PiCamera
-
 	PICAMERA_AVAILABLE = True
 except:
 	PICAMERA_AVAILABLE = False
@@ -44,9 +44,10 @@ class LidHandler(object):
 		self.camEnabled = self._settings.get(["cam", "enabled"])
 
 		self._photo_creator = None
+		self.image_correction_enabled = self._settings.get(['cam', 'image_correction_enabled'])
 		if self.camEnabled:
 			imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
-			self._photo_creator = PhotoCreator(imagePath)
+			self._photo_creator = PhotoCreator(self._plugin_manager, imagePath, self.image_correction_enabled)
 
 		self._subscribe()
 
@@ -91,10 +92,12 @@ class LidHandler(object):
 
 
 class PhotoCreator(object):
-	def __init__(self, path):
+	def __init__(self, _plugin_manager, path, image_correction_enabled):
+		self._plugin_manager = _plugin_manager
 		self.imagePath = path
-		self.tmpPath = self.imagePath + ".tmp"
-		self.tmpPath2 = self.imagePath + ".tmp2"
+		self.image_correction_enabled = image_correction_enabled
+		self.tmpPath = self.imagePath.replace('.jpg','-tmp.jpg')
+		self.tmpPath2 = self.imagePath.replace('.jpg','-tmp2.jpg')
 		self.active = True
 		self.last_photo = 0
 		self.camera = None
@@ -106,24 +109,36 @@ class PhotoCreator(object):
 
 	def work(self):
 		try:
+			time.sleep(2)
+
 			self.active = True
 			if not PICAMERA_AVAILABLE:
 				self._logger.warn("PiCamera is not available, not able to capture pictures.")
 				self.active = False
 				return
 
+			self._logger.debug("Taking picture now.")
 			self._prepare_cam()
 			while self.active and self.camera:
 				self._capture()
 				# check if still active...
 				if self.active:
-					# self.correct_image()
-					self._move_tmp_image()
-					time.sleep(1)
+					move_from = self.tmpPath
+					correction_result = dict(image_correction=False)
+					if self.image_correction_enabled:
+						correction_result = self.correct_image()
+						if not correction_result['error']:
+							move_from = self.tmpPath2
+					self._move_tmp_image(move_from)
+					self._send_frontend_picture_metadata(correction_result)
+					time.sleep(4)
 
 			self._close_cam()
 		except:
 			self._logger.exception("Exception in worker thread of PhotoCreator:")
+
+	def _send_frontend_picture_metadata(self, meta_data):
+		self._plugin_manager.send_plugin_message("mrbeam", dict(beam_cam_new_image=meta_data))
 
 	def _prepare_cam(self):
 		try:
@@ -135,8 +150,9 @@ class PhotoCreator(object):
 			self.camera.resolution = (1024, 768)
 			self.camera.vflip = True
 			self.camera.hflip = True
-			self.camera.brightness = 70
-			self.camera.color_effects = (128, 128)
+			if not self.image_correction_enabled:
+				# self.camera.brightness = 70
+				self.camera.color_effects = (128, 128)
 			self.camera.start_preview()
 
 			self._logger.debug("_prepare_cam() prepared in %ss", time.time() - now)
@@ -149,7 +165,9 @@ class PhotoCreator(object):
 	def _capture(self):
 		try:
 			now = time.time()
-			self.camera.capture(self.tmpPath, format='jpeg', resize=(1000, 800))
+			# self.camera.capture(self.tmpPath, format='jpeg', resize=(1000, 800))
+			self.camera.capture(self.tmpPath, format='jpeg')
+
 			self._logger.debug("_capture() captured picture in %ss", time.time() - now)
 		except Exception as e:
 			if e.__class__.__name__.startswith('PiCamera'):
@@ -167,8 +185,8 @@ class PhotoCreator(object):
 			self.logger.exception("Exception while creating folder '%s' for camera images:", filename)
 
 
-	def _move_tmp_image(self):
-		returncode = call(['mv', self.tmpPath, self.imagePath])
+	def _move_tmp_image(self, copy_from):
+		returncode = call(['mv', copy_from, self.imagePath])
 		if returncode != 0:
 			self._logger.warn("_move_tmp_image() returncode is %s (sys call, should be 0)", returncode)
 
@@ -179,15 +197,27 @@ class PhotoCreator(object):
 
 	# draft
 	def correct_image(self):
-		self._logger.debug("correct_image()")
+		self._logger.debug("Starting with correction...")
 		path_to_input_image = self.tmpPath
 		path_to_output_img = self.tmpPath2
-		path_to_cam_params = '/home/pi/cam_calibration_output/cam_calibration_output.npz'
-		path_to_markers_file = '/home/pi/cam_calibration_output/cam_markers.npz'
 
-		is_high_precision = mb_picture_preparation.prepareImage(path_to_input_image,
-																path_to_output_img,
-																path_to_cam_params,
-																path_to_markers_file)
+		path_to_cam_params = '/home/pi/cam_calibration_output/cam_params.npz'
+		path_to_pic_settings = '/home/pi/cam_calibration_output/pic_settings.json'
 
-		self._logger.debug("correct_image() is_high_precision:%s", is_high_precision)
+		#check if params and settings file are available
+		# todo move into function
+		if not isfile(path_to_cam_params) or not isfile(path_to_pic_settings):
+			self._logger.error("cam_params.npz <{}> or pic_settings.json <{}> missing. Please check!".format(path_to_cam_params,path_to_pic_settings))
+			return -1
+
+		# todo implement high-precision feedback to frontend
+		correction_result = mb_pic._debug_prepareImage(path_to_input_image,
+												path_to_output_img,
+												path_to_cam_params,
+												path_to_pic_settings)
+
+		if not 'error' in correction_result:
+			correction_result['error'] = False
+		correction_result['image_correction'] = True
+		self._logger.info("Image correction result: %s", correction_result)
+		return correction_result

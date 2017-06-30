@@ -12,7 +12,7 @@ $(function() {
         self.decision = ko.observable();
         self.hasUserTyped = ko.observable(false);
         self.hasPw2Typed = ko.observable(false);
-        
+
         // validates email adresses
         self.regexValidateEmail = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
@@ -27,11 +27,11 @@ $(function() {
         self.validUsername = ko.pureComputed(function() {
             return self.regexValidateEmail.test(self.username())
         });
-        
+
         self.doUserValidation = ko.pureComputed(function() {
             return self.hasUserTyped();
         });
-        
+
         self.doPwMatchValidation = ko.pureComputed(function() {
             if (self.hasPw2Typed()) {
                 return true;
@@ -51,8 +51,12 @@ $(function() {
         self.validData = ko.pureComputed(function() {
             return !self.passwordMismatch() && self.validUsername() && self.validPassword();
         });
-        
-        
+
+        self.onStartup = function(){
+            // needs to be scrollable on touch devices
+            $('#wizard_dialog .modal-body').addClass('scrollable');
+        };
+
         self.onStartupComplete = function(){
             $('#wizard_plugin_corewizard_acl_input_username').blur(function(){
                 self.hasUserTyped(true);
@@ -60,7 +64,7 @@ $(function() {
             $('#wizard_plugin_corewizard_acl_input_pw2').blur(function(){
                 self.hasPw2Typed(true);
             })
-            
+
         };
 
         self.keepAccessControl = function() {

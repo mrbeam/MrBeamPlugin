@@ -66,7 +66,9 @@ class Laser(Printer):
 	# extend commands: home, position, increase_passes, decrease_passes
 	def home(self, axes):
 		# self._logger.info("ANDYTEST self.commands([\"$H\", \"G92X500Y400Z0\", \"G90\", \"G21\"])")
-		self.commands(["$H", "G92X500Y400Z0", "G90", "G21"])
+		# self.commands(["$H", "G92X500Y400Z0", "G90", "G21"])
+		# for demo at laserworld of photonics
+		self.commands(["$H", "G92X500Y390Z0", "G90", "G21"])
 
 	def position(self, x, y):
 		printer_profile = self._printerProfileManager.get_current_or_default()
