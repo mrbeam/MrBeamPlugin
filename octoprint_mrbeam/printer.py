@@ -66,7 +66,9 @@ class Laser(Printer):
 	# extend commands: home, position, increase_passes, decrease_passes
 	def home(self, axes):
 		# self._logger.info("ANDYTEST self.commands([\"$H\", \"G92X500Y400Z0\", \"G90\", \"G21\"])")
-		self.commands(["$H", "G92X500Y400Z0", "G90", "G21"])
+		# self.commands(["$H", "G92X500Y400Z0", "G90", "G21"])
+		# for demo at laserworld of photonics
+		self.commands(["$H", "G92X500Y390Z0", "G90", "G21"])
 
 	def position(self, x, y):
 		printer_profile = self._printerProfileManager.get_current_or_default()
@@ -116,7 +118,7 @@ class Laser(Printer):
 
 	# progress update callbacks
 	def on_comm_progress(self):
-		self._setProgressData(self._comm.getPrintProgress(), self._comm.getPrintFilepos(), self._comm.getPrintTime(), self._comm.getCleanedPrintTime())
+		self._updateProgressData(self._comm.getPrintProgress(), self._comm.getPrintFilepos(), self._comm.getPrintTime(), self._comm.getCleanedPrintTime())
 		self._stateMonitor.trigger_progress_update()
 
 	def _add_position_data(self, MPos, WPos):

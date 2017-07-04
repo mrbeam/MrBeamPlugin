@@ -94,11 +94,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		except Exception as e:
 			self._logger.exception("Exception while getting NetconnectdPlugin pluginInfo")
 
-		self._ioBeam = ioBeamHandler(self._event_bus, self._settings.get(["dev", "sockets", "iobeam"]))
 		self._oneButtonHandler = oneButtonHandler(self)
 		self._interlock_handler = interLockHandler(self)
 		self._lid_handler = lidHandler(self)
 		self._led_eventhandler = LedEventListener(self._event_bus, self._printer)
+		# start iobeam socket only once other handlers are already inittialized so that we can handle info mesage
+		self._ioBeam = ioBeamHandler(self._event_bus, self._settings.get(["dev", "sockets", "iobeam"]))
 
 
 	def _do_initial_log(self):
@@ -154,6 +155,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			analyticsEnabled=False,
 			cam=dict(
 				enabled=True,
+				image_correction_enabled = True,
 				frontendUrl="/downloads/files/local/cam/beam-cam.jpg",
 				localFilePath="cam/beam-cam.jpg"
 			)
@@ -177,6 +179,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 					 frontendUrl=self._settings.get(['cam', 'frontendUrl'])),
 			dev=dict(
 				env = self._settings.get(['dev', 'env']),
+				softwareTier = self._settings.get(["dev", "software_tier"]),
 				terminalMaxLines = self._settings.get(['dev', 'terminalMaxLines']))
 		)
 

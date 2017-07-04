@@ -10,12 +10,10 @@ $(function(){
         self.TAB_NAME_WORKING_AREA = '#workingarea';
 
         self.camEnabled = undefined;
+        self.doImageLoading = undefined;
 
-        self.intervalId = undefined;
         self.imageUrl = undefined;
         self.webCamImageElem = undefined;
-
-        self.imageLoadingDuration = -1;
 
         self.currentTab = '';
         self.lidClosed = undefined;
@@ -62,6 +60,14 @@ $(function(){
                 self.lidClosed = data.lid_closed;
                 self.doCamState(undefined, 'onDataUpdaterPluginMessage');
             }
+            if ('beam_cam_new_image' in data) {
+                if (self.doImageLoading) {
+                    console.log('Beam Cam: new image. LOADING ', data['beam_cam_new_image']);
+                    self.loadImage();
+                } else {
+                    console.log('Beam Cam: new image. IGNORING ', data['beam_cam_new_image']);
+                }
+            }
         };
 
 
@@ -75,14 +81,10 @@ $(function(){
             //     ", self.intervalId:" + self.intervalId);
 
             if (self.camEnabled && !self.lidClosed && self.workingAreaIsCurrentTab(currentTab)) {
-                if (!self.intervalId) {
-                    self.loadImage();
-                    self.startImageLoadingInterval();
-                }
+                self.loadImage();
+                self.startImageLoadingInterval();
             } else {
-                if (self.intervalId) {
-                    self.stopImageLoadingInterval();
-                }
+                self.stopImageLoadingInterval();
             }
         };
 
@@ -109,26 +111,21 @@ $(function(){
         };
 
         self.startImageLoadingInterval = function () {
-            var myIntervalDuration = Math.max(self.INTERVAL_DURATION, self.imageLoadingDuration);
-            self.intervalId = setInterval(self.loadImage, myIntervalDuration);
-            console.log("BeamCam updating, interval: " + Math.round(myIntervalDuration) + "ms");
+            self.doImageLoading = true;
+            console.log("BeamCam updating");
         };
 
         self.stopImageLoadingInterval = function () {
-            window.clearInterval(self.intervalId);
-            self.intervalId = undefined;
-            console.log("BeamCam update paused");
+            self.doImageLoading = false;
+            console.log("BeamCam paused");
         };
 
         self.loadImage = function () {
             var myImageUrl = self.getTimestampedImageUrl();
-            var myTime = new Date().getTime();
             $('<img>')
                 .load(function () {
                     self.webCamImageElem.attr('src', myImageUrl);
                     self.webCamSettingsImageElem.attr('src', myImageUrl);
-                    var myDuration = new Date().getTime() - myTime;
-                    self.addToImageLoadingDuration(myDuration);
                 })
                 .attr({src: myImageUrl});
         };
@@ -141,16 +138,6 @@ $(function(){
                 result += new Date().getTime();
             }
             return result;
-        };
-
-        self.addToImageLoadingDuration = function(nuDuration) {
-            if (nuDuration > 0) {
-                if (self.imageLoadingDuration > 0) {
-                    self.imageLoadingDuration = (self.imageLoadingDuration + nuDuration) / 2 ;
-                } else {
-                    self.imageLoadingDuration = nuDuration;
-                }
-            }
         };
 
         self.workingAreaIsCurrentTab = function(currentTab){

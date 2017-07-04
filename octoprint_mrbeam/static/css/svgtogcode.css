@@ -132,7 +132,7 @@ input.decent_input {
 
 }
 
-input.decent_input:focus, 
+input.decent_input:focus,
 input.decent_input:hover {
 	border: 1px solid gray;
 }
@@ -194,10 +194,12 @@ input.decent_input:hover {
 #beamcam_image {
 	position:absolute;
 	user-select: none;
+	filter: brightness(200%) contrast(70%);
 	-webkit-user-select: none;
 	-ms-user-select: none;
 	-o-user-select: none;
 	-moz-user-select: none;
+
 }
 
 #beamcam_image.broken {
@@ -282,8 +284,8 @@ body.vectorDrag .color_drop_zone.create_job.hover {
 }
 
 #cd_engraving {
-/*	background: linear-gradient(135deg,   
-				rgba(255, 0, 0, 1) 0%, 
+/*	background: linear-gradient(135deg,
+				rgba(255, 0, 0, 1) 0%,
 				rgba(255, 255, 0, 1) 35%,
 				rgba(0, 255, 0, 1) 50%,
 				rgba(0, 255, 255, 1) 65%,
@@ -303,15 +305,15 @@ body.colorDragInProgress #drop_overlay {
 
 .full-tab-height {
 	height: calc(100vh - 140px);
-	max-height: none;	
+	max-height: none;
 }
 
-.dimDesigns .userSVG, 
-.dimDesigns .userIMG, 
+.dimDesigns .userSVG,
+.dimDesigns .userIMG,
 .dimDesigns .userText {
 	opacity:.7;
 	filter:url(#dehighlight);
-	transition: opacity 0.2s ease-out; 
+	transition: opacity 0.2s ease-out;
 }
 
 .userSvg, .userText, .userIMG,
@@ -323,7 +325,7 @@ body.colorDragInProgress #drop_overlay {
 }
 
 .highlightMarker {
-	stroke-width: 1px; 
+	stroke-width: 1px;
 	stroke-dasharray: 3, 9;
 	stroke:#e25303;
 	vector-effect: non-scaling-stroke;
@@ -339,4 +341,16 @@ body.colorDragInProgress #drop_overlay {
   to {
     stroke-dashoffset: 12;
   }
+}
+
+svg#area_preview path, 
+svg#area_preview circle, 
+svg#area_preview line, 
+svg#area_preview polyline, 
+svg#area_preview polygon, 
+svg#area_preview ellipse, 
+svg#area_preview rect 
+{
+  vector-effect: non-scaling-stroke !important;
+  stroke-width: 1px !important;
 }
