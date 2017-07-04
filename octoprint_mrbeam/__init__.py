@@ -26,6 +26,7 @@ from octoprint_mrbeam.iobeam.iobeam_handler import ioBeamHandler, IoBeamEvents
 from octoprint_mrbeam.iobeam.onebutton_handler import oneButtonHandler
 from octoprint_mrbeam.iobeam.interlock_handler import interLockHandler
 from octoprint_mrbeam.iobeam.lid_handler import lidHandler
+from octoprint_mrbeam.iobeam.temperature_manager import temperatureManager
 from octoprint_mrbeam.led_events import LedEventListener
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
@@ -37,7 +38,7 @@ from .software_update_information import get_update_information
 __builtin__.MRBEAM_DEBUG = False
 
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
-_mrbeam_plugin_implementation = None
+__builtin__._mrbeam_plugin_implementation = None
 
 
 class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
@@ -75,9 +76,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._cancel_job = False
 		self.print_progress_last = -1
 		self.slicing_progress_last = -1
+		self._logger = mrb_logger("octoprint.plugins.mrbeam")
 
 	def initialize(self):
-		self.laserCutterProfileManager = laserCutterProfileManager(self._settings)
+		self.laserCutterProfileManager = laserCutterProfileManager()
 		if self._settings.get(["dev", "debug"]) == True: __builtin__.MRBEAM_DEBUG = True
 
 		init_mrb_logger(self._printer)
@@ -100,6 +102,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._led_eventhandler = LedEventListener(self._event_bus, self._printer)
 		# start iobeam socket only once other handlers are already inittialized so that we can handle info mesage
 		self._ioBeam = ioBeamHandler(self._event_bus, self._settings.get(["dev", "sockets", "iobeam"]))
+		self._temperatureManager = temperatureManager()
 
 
 	def _do_initial_log(self):
@@ -137,7 +140,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def get_settings_defaults(self):
 		return dict(
-			current_profile_id="MrBeam2B",
+			current_profile_id="_mrbeam_junior", # yea, this needs to be like this
 			defaultIntensity=500,
 			defaultFeedrate=300,
 			svgDPI=90,
@@ -1099,7 +1102,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	# inject a Laser object instead the original Printer from standard.py
 	def laser_factory(self, components, *args, **kwargs):
 		from .printer import Laser
-		return Laser(components['file_manager'], components['analysis_queue'], components['printer_profile_manager'])
+		return Laser(components['file_manager'], components['analysis_queue'], laserCutterProfileManager())
 
 	def laser_filemanager(self, *args, **kwargs):
 		def _image_mime_detector(path):
@@ -1293,9 +1296,9 @@ def clitest_commands(cli_group, pass_octoprint_ctx, *args, **kwargs):
 __plugin_name__ = "Mr Beam Laser Cutter"
 
 def __plugin_load__():
-	global __plugin_implementation__, _mrbeam_plugin_implementation
+	global __plugin_implementation__
 	__plugin_implementation__ = MrBeamPlugin()
-	_mrbeam_plugin_implementation = __plugin_implementation__
+	__builtin__._mrbeam_plugin_implementation = __plugin_implementation__
 	# MRBEAM_PLUGIN_IMPLEMENTATION = __plugin_implementation__
 
 	global __plugin_settings_overlay__

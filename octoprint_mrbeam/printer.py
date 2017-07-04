@@ -1,9 +1,9 @@
+import traceback
 from octoprint.printer.standard import Printer, StateMonitor, PrinterInterface
 from octoprint.settings import settings
 from octoprint.events import eventManager, Events
 from . import comm_acc2 as comm
 from octoprint_mrbeam.mrb_logger import mrb_logger
-from . import _mrbeam_plugin_implementation
 
 class Laser(Printer):
 
@@ -49,7 +49,7 @@ class Laser(Printer):
 		if self._comm is not None:
 			self._comm.close()
 
-		eventManager().fire(Events.CONNECTING)
+		eventManager().fire(Events.CONNECTING, payload=dict(profile=profile))
 		self._printerProfileManager.select(profile)
 		self._comm = comm.MachineCom(port, baudrate, callbackObject=self, printerProfileManager=self._printerProfileManager)
 
@@ -65,10 +65,9 @@ class Laser(Printer):
 
 	# extend commands: home, position, increase_passes, decrease_passes
 	def home(self, axes):
-		# self._logger.info("ANDYTEST self.commands([\"$H\", \"G92X500Y400Z0\", \"G90\", \"G21\"])")
-		# self.commands(["$H", "G92X500Y400Z0", "G90", "G21"])
-		# for demo at laserworld of photonics
-		self.commands(["$H", "G92X500Y390Z0", "G90", "G21"])
+		printer_profile = self._printerProfileManager.get_current_or_default()
+		command = "G92X{x}Y{y}Z{z}".format(x=printer_profile['volume']['width'], y=printer_profile['volume']['depth'], z=0)
+		self.commands(["$H", command, "G90", "G21"])
 
 	def position(self, x, y):
 		printer_profile = self._printerProfileManager.get_current_or_default()

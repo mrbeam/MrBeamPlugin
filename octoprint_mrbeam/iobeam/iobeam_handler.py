@@ -359,7 +359,7 @@ class IoBeamHandler(object):
 	def _handle_fan_message(self, message, tokens):
 		return 0
 
-	def _handle_laser_message(self, message, tokens):
+	def _handle_laser_message(self, message, token):
 		action = token[0] if len(token) > 0 else None
 		payload = self._as_number(token[1]) if len(token) > 1 else None
 

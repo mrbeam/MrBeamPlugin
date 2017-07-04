@@ -66,7 +66,7 @@ class MachineCom(object):
 		self._port = port
 		self._baudrate = baudrate
 		self._callback = callbackObject
-		self._laserCutterProfile = laserCutterProfileManager(settings()).get_current_or_default()
+		self._laserCutterProfile = laserCutterProfileManager().get_current_or_default()
 
 		self.RX_BUFFER_SIZE = 127
 
@@ -349,18 +349,21 @@ class MachineCom(object):
 			"origin": self._currentFile.getFileLocation(),
 			"time": self.getPrintTime()
 		}
+		self._move_home()
 		eventManager().fire(Events.PRINT_DONE, payload)
+
+	def _move_home(self):
 		self.sendCommand("M5")
-		# would be nice if this worked.....
-		# homeX = self._laserCutterProfile['volume']['width'] - 2
-		# homeY = self._laserCutterProfile['volume']['depth'] - 2
-		# // ANDYTEST magic numbers!!!!!
-		self.sendCommand("G0X500Y390")
+		homeX = self._laserCutterProfile['volume']['width'] - 2 ## what is this -2 ??
+		homeY = self._laserCutterProfile['volume']['depth'] - 2 ## what is this -2 ??
+		command = "G0X{x}Y{y}".format(x=homeX, y=homeY)
+		self.sendCommand(command)
 		self.sendCommand("M9")
 
 	def _handle_status_report(self, line):
 		self._grbl_state = line[1:].split(',')[0]
 		if self._grbl_state == 'Queue':
+			# ANDYTEST may here is it that we start the COOLING_DOWN STATE
 			if time.time() - self._pause_delay_time > 0.3:
 				if not self.isPaused():
 					self.setPause(True, False)
