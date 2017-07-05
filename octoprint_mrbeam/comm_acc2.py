@@ -1227,8 +1227,6 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
 		if not os.path.exists(self._filename) or not os.path.isfile(self._filename):
 			raise IOError("File %s does not exist" % self._filename)
 
-		self._stripCommments()
-
 		self._size = os.stat(self._filename).st_size
 		self._pos = 0
 
@@ -1281,16 +1279,6 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
 			self.close()
 			self._logger.exception("Exception while processing line")
 			raise e
-
-	def _stripCommments(self):
-		dir = os.path.dirname(os.path.abspath(self._filename))
-		tmpfile = open(dir + '/gcode.tmp', 'w')
-		with open(self._filename, "r") as fileobject:
-			for line in fileobject:
-				if process_gcode_line(line) is not None:
-					tmpfile.write(line)
-		tmpfile.close()
-		self._filename = dir + '/gcode.tmp'
 
 def convert_pause_triggers(configured_triggers):
 	triggers = {
