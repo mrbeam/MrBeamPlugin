@@ -618,6 +618,19 @@ $(function(){
 				svg.ftManualTransform({scale: newScale});
 			}
 		};
+		self.svgManualMultiply = function(data, event) {
+			if (event.keyCode === 13 || event.type === 'blur') {
+				self.abortFreeTransforms();
+				var svg = snap.select('#'+data.previewId);
+				var gridsize = event.target.value.split(/\D+/);
+				var cols = gridsize[0] || 1;
+				var rows = gridsize[1] || 1;
+				var dist = self.mm2px(2);
+				console.log(dist);
+				svg.grid(cols, rows, dist);
+				event.target.value = cols+"×"+rows;
+			}
+		};
 
 
 
