@@ -129,6 +129,7 @@ class LaserCutterProfileManager(object):
 		),
 		laser=dict(
 			max_temperature=53.0,
+			hysteresis_temperature=43.0
 		),
 		volume = dict(
 			depth = 390.0,

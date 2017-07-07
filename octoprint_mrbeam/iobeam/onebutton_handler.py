@@ -200,8 +200,8 @@ class OneButtonHandler(object):
 			self.print_started = time.time();
 
 		elif event == OctoPrintEvents.PRINT_PAUSED:
-			# Webinterface / OctoPrint caused the pause state
-			if self.pause_laser_ts <= 0:
+			# Webinterface / OctoPrint caused the pause state but ignore cooling state
+			if self.pause_laser_ts <= 0 and ('cooling' not in payload or not payload['cooling']):
 				self._logger.debug("onEvent() pause_laser(need_to_release=False)")
 				self.pause_laser(need_to_release=False)
 
@@ -214,6 +214,17 @@ class OneButtonHandler(object):
 		elif event == OctoPrintEvents.CLIENT_CLOSED:
 			self.unset_ready_to_laser(lasering=False)
 
+	def is_cooling(self):
+		return _mrbeam_plugin_implementation._temperatureManager.is_cooling()
+
+	def cooling_down_pause(self):
+		# TODO check if we're really printing
+		# TODO what if we're already in cooling state
+		self._printer.cooling_start()
+
+	def cooling_down_end(self):
+		if self.is_cooling() and self.is_interlock_closed():
+			self._printer.resume_print()
 
 	def set_rtl_file(self, gcode_file):
 		self._test_conditions(gcode_file)

@@ -28,7 +28,9 @@ class TemperatureManager(object):
 		self.temperatur = None
 		self.temperatur_ts = time.time()
 		self.temperatur_max = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['laser']['max_temperature']
+		self.hysteresis_temperature = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['laser']['hysteresis_temperature']
 		self.temp_timer = None
+		self.is_cooling_since = 0
 
 		self._shutting_down = False
 
@@ -58,7 +60,15 @@ class TemperatureManager(object):
 		_mrbeam_plugin_implementation._ioBeam.send_command("laser:temp")
 
 	def emergency_stop(self):
-		_mrbeam_plugin_implementation._printer.pause_print()
+		self.self.is_cooling_since = time.time()
+		_mrbeam_plugin_implementation._oneButtonHandler.cooling_down_pause()
+
+	def resume_emergency_stop(self):
+		self.self.is_cooling_since = 0
+		_mrbeam_plugin_implementation._oneButtonHandler.cooling_down_end()
+
+	def is_cooling(self):
+		return self.is_cooling_since is not None and self.is_cooling_since > 0
 
 	def _temp_timer_callback(self):
 		self.request_temp()
@@ -79,7 +89,9 @@ class TemperatureManager(object):
 			self.emergency_stop()
 
 	def _check_temp_val(self):
-		if self.temperatur is None or self.temperatur > self.temperatur_max:
+		if not self.is_cooling() and self.temperatur is None or self.temperatur > self.temperatur_max:
 			self._logger.warn("Laser temperatur exceeded limit. Current temp: %s, max: %s", self.temperatur, self.temperatur_max)
 			self.emergency_stop()
-
+		elif self.is_cooling() and self.temperatur is not None and self.temperatur > self.hysteresis_temperature:
+			self._logger.warn("Laser temperatur passed hysteresis limit. Current temp: %s, hysteresis: %s", self.temperatur, self.hysteresis_temperature)
+			self.resume_emergency_stop()

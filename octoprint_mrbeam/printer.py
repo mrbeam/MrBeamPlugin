@@ -96,6 +96,19 @@ class Laser(Printer):
 		self._comm.decreasePasses()
 
 
+	def cooling_start(self):
+		"""
+		Pasue the laser for cooling
+		"""
+		if self._comm is None:
+			return
+
+		if self._comm.isPaused():
+			return
+
+		self._comm.setPause(True, pause_for_cooling=True)
+
+
 	# extend flags
 	def is_locked(self):
 		return self._comm is not None and self._comm.isLocked()
