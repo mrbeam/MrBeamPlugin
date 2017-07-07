@@ -294,6 +294,7 @@ class OneButtonHandler(object):
 
 	def _start_ready_to_laser_timer(self):
 		self.ready_to_laser_timer = threading.Timer(self.READY_TO_PRINT_CHECK_INTERVAL, self._check_if_still_ready_to_laser)
+		self.ready_to_laser_timer.daemon = True
 		self.ready_to_laser_timer.start()
 
 	def _cancel_ready_to_laser_timer(self):
@@ -303,6 +304,7 @@ class OneButtonHandler(object):
 
 	def _start_pause_safety_timeout_timer(self):
 		self.pause_safety_timeout_timer = threading.Timer(self.LASER_PAUSE_WAITING_TIME, self._end_pause_safety_timeout)
+		self.pause_safety_timeout_timer.daemon = True
 		self.pause_safety_timeout_timer.start()
 
 	def _end_pause_safety_timeout(self):

@@ -141,7 +141,6 @@ class IoBeamHandler(object):
 		global _instance
 		_instance = None
 		self._shutdown_signaled = True
-		# time.sleep(1)
 
 	def is_interlock_closed(self):
 		return len(self._interlocks.keys()) == 0
@@ -150,12 +149,15 @@ class IoBeamHandler(object):
 		return self._interlocks.keys()
 
 	def send_command(self, command):
-		if self._my_socket is not None:
-			if not command.endswith("\n"):
-				command = command + "\n"
-			self._my_socket.sendall(command)
-		else:
-			self._logger.warn("Can't send command while there's no connection on socket. Command: %s", command)
+		if self._shutdown_signaled:
+			self._logger.debug("send_command() Can't send command while iobeam is shutting down. Command: %s", command)
+			return
+		if self._my_socket is None:
+			self._logger.warn("send_command() Can't send command while there's no connection on socket. Command: %s", command)
+			return
+		if not command.endswith("\n"):
+			command = command + "\n"
+		self._my_socket.sendall(command)
 
 	def _subscribe(self):
 		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self.shutdown)
@@ -168,7 +170,7 @@ class IoBeamHandler(object):
 			self.SOCKET_FILE = socket_file
 
 		self._worker = threading.Thread(target=self._work)
-		self._worker.daemon = True
+		self._worker.daemon = True # verify if this is good here....
 		self._worker.start()
 
 
@@ -233,7 +235,7 @@ class IoBeamHandler(object):
 				self._my_socket = None
 
 			self._isConnected = False
-			self._fireEvent(IoBeamEvents.DISCONNECT)
+			self._fireEvent(IoBeamEvents.DISCONNECT) # on shutdown this won't be broadcasted
 
 			if not self._shutdown_signaled:
 				self._logger.debug("Sleeping for a sec before reconnecting...")

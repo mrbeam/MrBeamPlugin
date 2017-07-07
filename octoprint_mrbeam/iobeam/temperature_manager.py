@@ -37,14 +37,16 @@ class TemperatureManager(object):
 
 	def _subscribe(self):
 		_mrbeam_plugin_implementation._event_bus.subscribe(IoBeamEvents.LASER_TEMP, self.onEvent)
-		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self._onShutdown)
+		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self.onEvent)
 
-	def _onShutdown(self0):
+	def shutdown(self):
 		self._shutting_down = True
 
 	def onEvent(self, event, payload):
 		if event == IoBeamEvents.LASER_TEMP:
 			self.handle_temp(payload)
+		elif event == OctoPrintEvents.SHUTDOWN:
+			self.shutdown()
 
 	def handle_temp(self, temp):
 		self._logger.debug("Current laser temperature: %s", temp)
@@ -66,9 +68,10 @@ class TemperatureManager(object):
 	def _start_temp_timer(self):
 		if not self._shutting_down:
 			self.temp_timer = threading.Timer(self.TEMP_TIMER_INTERVAL, self._temp_timer_callback)
+			self.temp_timer.daemon = True
 			self.temp_timer.start()
 		else:
-			self._logger.info("Shutting down.")
+			self._logger.debug("Shutting down.")
 
 	def _check_temp_is_current(self):
 		if time.time() - self.temperatur_ts > self.TEMP_MAX_AGE:

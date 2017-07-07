@@ -74,8 +74,11 @@ class LidHandler(object):
 			self._logger.debug("onEvent() CLIENT_OPENED sending client lidClosed: %s", self.lidClosed)
 			self._send_frontend_lid_state()
 		elif event == OctoPrintEvents.SHUTDOWN:
-			self._logger.debug("onEvent() SHUTDOWN stopping _photo_creator")
-			self._photo_creator.active = False
+			self.shutdown()
+
+	def shutdown(self):
+		self._logger.debug("shutdown() stopping _photo_creator")
+		self._photo_creator.active = False
 
 	def _start_photo_worker(self):
 		worker = threading.Thread(target=self._photo_creator.work)
@@ -133,6 +136,7 @@ class PhotoCreator(object):
 					self._send_frontend_picture_metadata(correction_result)
 					time.sleep(4)
 
+			self._logger.debug("PhotoCreator stopping...")
 			self._close_cam()
 		except:
 			self._logger.exception("Exception in worker thread of PhotoCreator:")

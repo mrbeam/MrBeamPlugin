@@ -50,7 +50,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				   octoprint.plugin.EventHandlerPlugin,
 				   octoprint.plugin.ProgressPlugin,
 				   octoprint.plugin.WizardPlugin,
-				   octoprint.plugin.SlicerPlugin):
+				   octoprint.plugin.SlicerPlugin,
+				   octoprint.plugin.ShutdownPlugin):
 
 	# CONSTANTS
 	ENV_LOCAL =        "local"
@@ -210,6 +211,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		selectedProfile = self.laserCutterProfileManager.get_current_or_default()
 		self._settings.set(["current_profile_id"], selectedProfile['id'])
+
+	def on_shutdown(self):
+		self._logger.info("on_shutdown()")
+		self._ioBeam.shutdown()
+		self._lid_handler.shutdown()
+		self._temperatureManager.shutdown()
+		time.sleep(2)
+		self._logger.debug("on_shutdown() sleept")
 
 	##~~ AssetPlugin mixin
 
