@@ -313,12 +313,20 @@ $(function(){
 			var url = self._getSVGserveUrl(file);
 			callback = function (f) {
 
-				// find clippath elements
+				// find clippath elements and remove them
 				var clipPathEl = f.selectAll('clipPath');
 				if(clipPathEl.length !== 0){
 					console.warn("Warning: removed unsupported clipPath element in SVG");
 					self.svg_contains_clipPath_warning();
 					clipPathEl.remove();
+				}
+
+				// find flowroot elements and remove them
+				var flowrootEl = f.selectAll('flowRoot');
+				if(flowrootEl.length != 0){
+					console.warn("Warning: removed unsupported flowRoot element in SVG");
+					self.svg_contains_flowRoot_warning();
+					flowrootEl.remove();
 				}
 
 				var svgClasses = {};
@@ -618,6 +626,19 @@ $(function(){
 				svg.ftManualTransform({scale: newScale});
 			}
 		};
+		self.svgManualMultiply = function(data, event) {
+			if (event.keyCode === 13 || event.type === 'blur') {
+				self.abortFreeTransforms();
+				var svg = snap.select('#'+data.previewId);
+				var gridsize = event.target.value.split(/\D+/);
+				var cols = gridsize[0] || 1;
+				var rows = gridsize[1] || 1;
+				var dist = self.mm2px(2);
+				console.log(dist);
+				svg.grid(cols, rows, dist);
+				event.target.value = cols+"×"+rows;
+			}
+		};
 
 
 
@@ -663,6 +684,16 @@ $(function(){
 			var error = "<p>" + gettext("The SVG file contains clipPath elements.<br/>clipPath is not supported yet and has been removed from file.") + "</p>";
 			new PNotify({
 				title: "clipPath elements removed",
+				text: error,
+				type: "warn",
+				hide: false
+			});
+		};
+
+		self.svg_contains_flowRoot_warning = function(){
+			var error = "<p>" + gettext("The SVG file contains flowRoot elements.<br/>flowRoot is not supported yet and has been removed from file.") + "</p>";
+			new PNotify({
+				title: "flowRoot elements removed",
 				text: error,
 				type: "warn",
 				hide: false
