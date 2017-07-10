@@ -60,15 +60,15 @@ class TemperatureManager(object):
 		_mrbeam_plugin_implementation._ioBeam.send_command("laser:temp")
 
 	def emergency_stop(self):
-		self.self.is_cooling_since = time.time()
+		self.is_cooling_since = time.time()
 		_mrbeam_plugin_implementation._oneButtonHandler.cooling_down_pause()
 
 	def resume_emergency_stop(self):
-		self.self.is_cooling_since = 0
 		_mrbeam_plugin_implementation._oneButtonHandler.cooling_down_end()
+		self.is_cooling_since = 0
 
 	def is_cooling(self):
-		return self.is_cooling_since is not None and self.is_cooling_since > 0
+		return (self.is_cooling_since is not None and self.is_cooling_since > 0)
 
 	def _temp_timer_callback(self):
 		self.request_temp()
@@ -92,6 +92,8 @@ class TemperatureManager(object):
 		if not self.is_cooling() and self.temperatur is None or self.temperatur > self.temperatur_max:
 			self._logger.warn("Laser temperatur exceeded limit. Current temp: %s, max: %s", self.temperatur, self.temperatur_max)
 			self.emergency_stop()
-		elif self.is_cooling() and self.temperatur is not None and self.temperatur > self.hysteresis_temperature:
+		elif self.is_cooling() and self.temperatur is not None and self.temperatur <= self.hysteresis_temperature:
 			self._logger.warn("Laser temperatur passed hysteresis limit. Current temp: %s, hysteresis: %s", self.temperatur, self.hysteresis_temperature)
 			self.resume_emergency_stop()
+		else:
+			self._logger.debug("Laser temperatur nothing. Current temp: %s, self.is_cooling(): %s", self.temperatur, self.is_cooling())
