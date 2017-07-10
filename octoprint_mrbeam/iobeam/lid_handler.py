@@ -27,16 +27,15 @@ def lidHandler(plugin):
 	global _instance
 	if _instance is None:
 		_instance = LidHandler(plugin._event_bus,
-							   plugin._settings,
 							   plugin._plugin_manager)
 	return _instance
 
 
 # This guy handles lid Events
 class LidHandler(object):
-	def __init__(self, event_bus, settings, plugin_manager):
+	def __init__(self, event_bus, plugin_manager):
 		self._event_bus = event_bus
-		self._settings = settings
+		self._settings = _mrbeam_plugin_implementation._settings
 		self._plugin_manager = plugin_manager
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler")
 
@@ -99,20 +98,20 @@ class PhotoCreator(object):
 		self._plugin_manager = _plugin_manager
 		self.imagePath = path
 		self.image_correction_enabled = image_correction_enabled
-		self.tmpPath = self.imagePath.replace('.jpg','-tmp.jpg')
-		self.tmpPath2 = self.imagePath.replace('.jpg','-tmp2.jpg')
+		self.keepOriginals = _mrbeam_plugin_implementation._settings.get(["cam", "keepOriginals"])
 		self.active = True
 		self.last_photo = 0
 		self.camera = None
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator")
 
+		self._init_filenames()
 		self._createFolder_if_not_existing(self.imagePath)
 		self._createFolder_if_not_existing(self.tmpPath)
 		self._createFolder_if_not_existing(self.tmpPath2)
 
 	def work(self):
 		try:
-			time.sleep(2)
+			time.sleep(0.5)
 
 			self.active = True
 			if not PICAMERA_AVAILABLE:
@@ -123,6 +122,8 @@ class PhotoCreator(object):
 			self._logger.debug("Taking picture now.")
 			self._prepare_cam()
 			while self.active and self.camera:
+				if self.keepOriginals:
+					self._init_filenames()
 				self._capture()
 				# check if still active...
 				if self.active:
@@ -143,6 +144,14 @@ class PhotoCreator(object):
 
 	def _send_frontend_picture_metadata(self, meta_data):
 		self._plugin_manager.send_plugin_message("mrbeam", dict(beam_cam_new_image=meta_data))
+
+	def _init_filenames(self):
+		if self.keepOriginals:
+			self.tmpPath = self.imagePath.replace('.jpg', "-tmp{}.jpg".format(time.time()))
+			self.tmpPath2 = self.imagePath.replace('.jpg', '-tmp2.jpg')
+		else:
+			self.tmpPath = self.imagePath.replace('.jpg','-tmp.jpg')
+			self.tmpPath2 = self.imagePath.replace('.jpg','-tmp2.jpg')
 
 	def _prepare_cam(self):
 		try:

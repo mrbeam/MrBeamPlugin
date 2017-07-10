@@ -161,7 +161,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				enabled=True,
 				image_correction_enabled = True,
 				frontendUrl="/downloads/files/local/cam/beam-cam.jpg",
-				localFilePath="cam/beam-cam.jpg"
+				localFilePath="cam/beam-cam.jpg",
+				keepOriginals=False
 			)
 		)
 
