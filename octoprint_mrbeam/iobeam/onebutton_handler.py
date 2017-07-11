@@ -159,6 +159,8 @@ class OneButtonHandler(object):
 				if self._is_during_pause_waiting_time():
 					self._logger.debug("onEvent() ONEBUTTON_RELEASED: timeout block")
 					self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_BLOCK)
+				# elif self.is_interlock_closed() and self.is_cooling():
+
 				elif self.is_interlock_closed():
 					self._logger.debug("onEvent() ONEBUTTON_RELEASED: resume_laser_if_waitingtime_is_over")
 					self.resume_laser_if_waitingtime_is_over()
@@ -167,8 +169,15 @@ class OneButtonHandler(object):
 			if self._printer.get_state_id() == self.PRINTER_STATE_PRINTING:
 				self._logger.debug("onEvent() INTERLOCK_OPEN: pausing laser")
 				self.pause_laser(need_to_release=False)
+			elif self._printer.get_state_id() == self.PRINTER_STATE_PAUSED and self.is_cooling():
+				self._logger.debug("onEvent() INTERLOCK_OPEN: pausing from cooling state")
+				self.pause_laser(need_to_release=False)
 			else:
 				self._logger.debug("onEvent() INTERLOCK_OPEN: not printing, nothing to do. printer state is: %s", self._printer.get_state_id())
+
+		# elif event == IoBeamEvents.INTERLOCK_CLOSED:
+		# 	if self.is_cooling()
+
 
 		# OctoPrint 1.3.4 doesn't provide the file name in FILE_SELECTED anymore, so we need to get it here and save it for later.
 		elif event == OctoPrintEvents.SLICING_DONE:
@@ -328,10 +337,10 @@ class OneButtonHandler(object):
 			self.pause_safety_timeout_timer.cancel()
 			self.pause_safety_timeout_timer = None
 
-	def pause_laser(self, need_to_release=True):
+	def pause_laser(self, need_to_release=True, force=False):
 		self.pause_laser_ts = time.time()
 		self.pause_need_to_release = self.pause_need_to_release or need_to_release;
-		self._printer.pause_print()
+		self._printer.pause_print(force=force)
 		self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_START)
 		self._send_frontend_ready_to_laser_state(self.CLIENT_RTL_STATE_START_PAUSE)
 		self._start_pause_safety_timeout_timer()

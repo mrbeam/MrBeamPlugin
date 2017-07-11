@@ -18,8 +18,11 @@ $(function() {
 
         self.interlocks_closed = ko.observable(true);
         self.is_pause_mode = ko.observable(false);
+        self.is_cooling_mode = ko.observable(false);
 
         self.DEBUG = false;
+
+
 
         self.onStartupComplete = function () {
             self.dialogElement = $('#ready_to_laser_dialog');
@@ -101,8 +104,18 @@ $(function() {
                     })
                 };
 
-                self.onEventPrintPaused = function () {
+                self.onEventPrintPaused = function (payload) {
+                    var cooling = (payload && payload['cooling']);
+                    console.log("ANDYTEST onEventPrintPaused() cooling:", cooling);
+                    self.is_cooling_mode(cooling);
                     self._set_paused();
+                };
+
+                self.onEventPrintResumed = function (payload) {
+                    var cooling = (payload && payload['cooling']);
+                    console.log("ANDYTEST onEventPrintResumed() from cooling:", cooling);
+                    self.is_cooling_mode(false);
+                    self._unset_paused();
                 };
 
                 self.onEventPrintCancelled = function (payload) {
@@ -116,6 +129,7 @@ $(function() {
                         return;
                     }
 
+                    console.log("ANDYTEST onDataUpdaterPluginMessage: ", data)
                     self._debugDaShit("onDataUpdaterPluginMessage() ", data);
 
                     if (!data) {
@@ -146,6 +160,10 @@ $(function() {
                     if ('interlocks_closed' in data) {
                         self.interlocks_closed(Boolean(data.interlocks_closed));
                     }
+
+                    if ('cooling' in data) {
+                        self.is_cooling_mode(data['cooling'])
+                    }
                 };
 
             } // end if oneButton
@@ -162,7 +180,7 @@ $(function() {
         // bound to both cancel buttons
         self.cancel_btn = function(){
             self._debugDaShit("cancel_btn() ");
-            if (self.is_pause_mode()) {
+            if (self.is_pause_mode() || self.is_cooling_mode()) {
                 self.state.cancel();
             } else {
                 self._setReadyToLaserCancel(true);
@@ -172,6 +190,11 @@ $(function() {
         self._set_paused = function(){
             self.is_pause_mode(true);
             self.showDialog();
+        };
+
+        self._unset_paused = function(){
+            self.is_pause_mode(false);
+            self.hideDialog()
         };
 
         self._setReadyToLaserCancel = function(notifyServer){

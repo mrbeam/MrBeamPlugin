@@ -95,6 +95,17 @@ class Laser(Printer):
 			return
 		self._comm.decreasePasses()
 
+	def pause_print(self, force=False):
+		"""
+		Pause the current printjob.
+		"""
+		if self._comm is None:
+			return
+
+		if not force and self._comm.isPaused():
+			return
+
+		self._comm.setPause(True, send_cmd=True)
 
 	def cooling_start(self):
 		"""

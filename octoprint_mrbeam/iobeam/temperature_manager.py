@@ -36,6 +36,8 @@ class TemperatureManager(object):
 
 		self._subscribe()
 		self._start_temp_timer()
+		self._logger.debug("TemperatureManager started. temperatur_max: %s, hysteresis_temperature: %s",
+		                   self.temperatur_max, self.hysteresis_temperature)
 
 	def _subscribe(self):
 		_mrbeam_plugin_implementation._event_bus.subscribe(IoBeamEvents.LASER_TEMP, self.onEvent)
