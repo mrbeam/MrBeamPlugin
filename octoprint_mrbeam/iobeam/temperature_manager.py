@@ -64,9 +64,11 @@ class TemperatureManager(object):
 	def emergency_stop(self):
 		self.is_cooling_since = time.time()
 		_mrbeam_plugin_implementation._oneButtonHandler.cooling_down_pause()
+		self._send_cooling_state_to_frontend(True)
 
 	def resume_emergency_stop(self):
 		_mrbeam_plugin_implementation._oneButtonHandler.cooling_down_end()
+		self._send_cooling_state_to_frontend(False)
 		self.is_cooling_since = 0
 
 	def is_cooling(self):
@@ -99,3 +101,7 @@ class TemperatureManager(object):
 			self.resume_emergency_stop()
 		else:
 			self._logger.debug("Laser temperatur nothing. Current temp: %s, self.is_cooling(): %s", self.temperatur, self.is_cooling())
+
+	def _send_cooling_state_to_frontend(self, cooling):
+		self._logger.debug("_send_cooling_state_to_frontend() cooling: %s", cooling)
+		_mrbeam_plugin_implementation._plugin_manager.send_plugin_message("mrbeam", dict(cooling=cooling))
