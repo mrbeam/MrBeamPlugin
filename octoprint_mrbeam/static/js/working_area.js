@@ -794,7 +794,7 @@ $(function(){
 
 				var y = self.workingAreaHeightMM() - hMM;
 				var imgWrapper = snap.group();
-				var newImg = imgWrapper.image(url, 0, 0, wMM, y); //.attr({transform: 'matrix(1,0,0,-1,0,'+hMM+')'});
+				var newImg = imgWrapper.image(url, 0, y, wMM, hMM); //.attr({transform: 'matrix(1,0,0,-1,0,'+hMM+')'});
 				var id = self.getEntryId(file);
 				newImg.attr({filter: 'url(#grayscale_filter)', 'data-serveurl': url});
 				var previewId = self.generateUniqueId(id); // appends # if multiple times the same design is placed.
