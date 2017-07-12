@@ -379,7 +379,7 @@
 								</defs>
 
 									<g id="scaleGroup" data-bind="attr: { transform: scaleMatrix() }">
-										<g id="placedGcodes" data-bind="visible: true || (state.isPrinting() && !state.isPaused())"></g>
+										<g id="placedGcodes" data-bind="visible: true || (state.isPrinting() && !state.isPaused()), attr: { transform: 'matrix(1,0,0,-1,0,'+workingAreaHeightMM()+')' }"></g>
 										<g id="gCodePreview" data-bind="visible: state.isPrinting() || state.isPaused()"></g>
 										<rect id="coordGrid" x="0" y="0" width="0" height="0"
 											  stroke="none" fill="none"></rect>

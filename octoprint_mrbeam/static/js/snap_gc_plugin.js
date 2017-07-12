@@ -18,12 +18,15 @@
 
 Snap.plugin(function (Snap, Element, Paper, global) {
 	
-	Element.prototype.embed_gc = function(){
+	Element.prototype.embed_gc = function(correctionMatrix){
 		var elem = this;
 		var items = elem.selectAll('path, rect, line, polygon, polyline, circle, ellipse');
 		for (var i = 0; i < items.length; i++) {
 			var item = items[i];
 			var matrix = item.transform().totalMatrix;
+			if(correctionMatrix !== undefined){
+				matrix = matrix.multLeft(correctionMatrix);
+			}
 			var gc = item.generate_gc(matrix);
 			item.attr('mb:gc', gc);
 		}
@@ -41,7 +44,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	/**
 	 * generates gc from d attr
 	 * 
-	 * @param {float} correction_matrix : matrix to be applied on resulting points
+	 * @param {Snap.matrix} correction_matrix : matrix to be applied on resulting points
 	 * @param {float} max_derivation : how precise curves are approximated
 	 * @param {float} min_segment_length : minimum length of G1 commands
 	 * @param {float} max_segment_length : maximum length of G1 commands

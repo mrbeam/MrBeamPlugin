@@ -43,6 +43,9 @@ $(function(){
 		self.workingAreaHeightMM = ko.computed(function(){
 			return self.profile.currentProfileData().volume.depth() - self.profile.currentProfileData().volume.origin_offset_y();
 		},self);
+		self.flipYMatrix = ko.computed(function(){
+			return Snap.matrix(1,0,0,-1,0,self.workingAreaHeightMM());
+		});
 
         // QuickText fields
         self.fontMap = ['Ubuntu', 'Roboto', 'Libre Baskerville', 'Indie Flower', 'VT323'];
@@ -413,11 +416,11 @@ $(function(){
 					newSvg.clean_gc();
 				});
 				newSvg.ftRegisterAfterTransformCallback(function(){
-					newSvg.embed_gc();
+					newSvg.embed_gc(self.flipYMatrix());
 				});
 				
 
-				newSvg.embed_gc();
+				newSvg.embed_gc(self.flipYMatrix());
 
 				setTimeout(function(){
 					newSvg.ftReportTransformation();
@@ -453,7 +456,7 @@ $(function(){
 			svg.data('fitMatrix', null);
 			$('#'+file.id).removeClass('misfit');
 			self.svgTransformUpdate(svg);
-			svg.embed_gc();
+			svg.embed_gc(self.flipYMatrix());
 		};
 
 		self.placeDXF = function(file) {
