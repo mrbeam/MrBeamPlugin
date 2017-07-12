@@ -465,7 +465,7 @@ $(function(){
 
 				// scale matrix
 				var mat = self.getDocumentViewBoxMatrix(doc_dimensions.width, doc_dimensions.height, doc_dimensions.viewbox);
-				var dpiscale = 90; // self.settings.settings.plugins.mrbeam.svgDPI();
+				var dpiscale = 25.4 ; // assumption: dxf is in inches, scale to mm
                 var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(dpiscale).toTransformString();
 
 				var newSvg = snap.group(f.selectAll("svg>*"));
