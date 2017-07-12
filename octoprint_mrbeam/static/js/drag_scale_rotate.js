@@ -81,7 +81,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			handleStrokeDashPreset: [5,5],
 			handleStrokeWidth: 2,
 			handleLength: 22,
-			handleRadius: 16,
+			handleRadius: 20,
 			unscale: 1,
 			handleStrokeDash: "5,5"
 		};
@@ -104,10 +104,12 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 			var bbT = ftEl.getBBox(1);
 			var unscale = ftEl.data('unscale');
+			var rad = ftOption.handleRadius * ftOption.unscale;
+			var off = rad / 2;
 
 			var translateHull = this.paper.select('#userContent')
-				.rect(rectObjFromBB(bbT))
-				.attr({ id:'translateHull',cursor:'move', class:'ft_bbox_transformed' });
+				.rect(rectObjFromBB(bbT, rad))
+				.attr({fill:'grey',opacity:0.3,id:'translateHull',cursor:'move'});
 
 			//check if it needs to be on another side if design is exceeding workArea
 			var wa = ftEl.data('wa');
@@ -115,27 +117,27 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			if( ftEl.matrix.x(rotX,bbT.cy) <= wa.x || ftEl.matrix.x(rotX,bbT.cy) >= wa.x2 ||
 				ftEl.matrix.y(rotX,bbT.cy) <= wa.y || ftEl.matrix.y(rotX,bbT.cy)  >= wa.y2)
 			{rotX += bbT.width + 2*ftOption.handleLength* ftOption.unscale;}
-
+			
 			var rotateDragger = this.paper.select('#userContent')
-				.circle(rotX, bbT.cy, ftOption.handleRadius * ftOption.unscale )
-				.attr({ fill: ftOption.handleFill, id: 'rotateDragger', cursor:'pointer', class: 'ft_handle'  });
+				.circle(rotX, bbT.cy, rad)
+				.attr({ fill: ftOption.handleFill, id: 'rotateDragger',cursor:'pointer' });
 
 			//todo make code more generic
 			var resizeDragger1 = this.paper.select('#userContent')
-				.circle(bbT.x2, bbT.y2, ftOption.handleRadius * ftOption.unscale)
-				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, cursor:'se-resize', class: 'ft_handle' });
+				.circle(bbT.x2+off, bbT.y2+off, rad)
+				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, cursor:'se-resize' });
 
 			var resizeDragger2 = this.paper.select('#userContent')
-				.circle(bbT.x2, bbT.y, ftOption.handleRadius * ftOption.unscale)
-				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling',cursor:'ne-resize', class: 'ft_handle'  });
+				.circle(bbT.x2+off, bbT.y-off, rad)
+				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling',cursor:'ne-resize' });
 
 			var resizeDragger3 = this.paper.select('#userContent')
-				.circle(bbT.x, bbT.y2, ftOption.handleRadius * ftOption.unscale)
-				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling',cursor:'sw-resize', class: 'ft_handle'  });
+				.circle(bbT.x-off, bbT.y2+off, rad)
+				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling',cursor:'sw-resize' });
 
 			var resizeDragger4 = this.paper.select('#userContent')
-				.circle(bbT.x, bbT.y, ftOption.handleRadius * ftOption.unscale)
-				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling',cursor:'nw-resize', class: 'ft_handle'  });
+				.circle(bbT.x-off, bbT.y-off, rad)
+				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling',cursor:'nw-resize' });
 
 			var handlesGroup = this.paper.select('#userContent')
 				.g(translateHull,rotateDragger,resizeDragger1,resizeDragger2,resizeDragger3,resizeDragger4)
@@ -190,7 +192,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			this.data('ty', 0);
 			this.data('wa', this.paper.select('#coordGrid').getBBox());
 			this.data('ratio', 1);
-			this.attr({class:'_freeTransformInProgress'});
+//			this.attr({class:'_freeTransformInProgress'});
+			this.addClass('_freeTransformInProgress');
 
 			//unscale from scaleGroup (outer Group)
 			var sgUnscale = this.paper.select('#scaleGroup').transform().localMatrix.a;
@@ -229,7 +232,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		Element.prototype.ftRemoveHandles = function() {
 			this.unclick();
 			this.removeClass('_freeTransformInProgress');
-			this.data( 'handlesGroup').remove();
+			if(this.data( 'handlesGroup')) this.data( 'handlesGroup').remove();
 			if(this.data( 'bbT' )) this.data('bbT').remove();
 			if(this.data( 'bb' )) this.data('bb').remove();
 			this.click( function() { this.ftCreateHandles(); } ) ;
@@ -240,6 +243,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 		Element.prototype.ftUpdateTransform = function() {
 			if(this.ftGetInitialTransformMatrix() === undefined){
+				console.log('no initial transform');
 				return this;
 			}
 
@@ -250,6 +254,32 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			this.ftUpdateUnscale();
 			this.ftReportTransformation();
 			this.ftUpdateHandlesGroup();
+			return this;
+		};
+		
+		Element.prototype.ftManualTransform = function(params){
+			var bbox = this.getBBox();
+			var elTransform = this.transform();
+			var tx = 0;
+			var ty = 0;
+			var angle = 0;
+			var scale = 1;
+			if(params.tx !== undefined && !isNaN(params.tx)){
+				tx = params.tx - bbox.x;
+			}
+			if(params.ty !== undefined && !isNaN(params.ty)){
+				ty = params.ty - bbox.y2;
+			}
+			if(params.angle !== undefined && !isNaN(params.angle)){
+				angle = params.angle - this.ftGetRotation();
+			}
+			if(params.scale !== undefined && !isNaN(params.scale)){
+				scale = params.scale / this.ftGetScale();
+			}
+
+			var tstring = "t" + tx + "," + ty + elTransform.local + "r" + angle + 'S' + scale ;
+			this.attr({ transform: tstring });
+			this.ftReportTransformation();
 			return this;
 		};
 
@@ -264,19 +294,20 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		};
 
 		Element.prototype.ftHighlightBB = function() {
+			var rad = ftOption.handleRadius * ftOption.unscale;
 			if(this.data("bbT")) this.data("bbT").remove();
 			if(this.data("bb")) this.data("bb").remove();
 
 			// outer bbox
-//			this.data("bb", this.paper.rect( rectObjFromBB( this.getBBox() ) )
-//				.attr({ id: 'bbox', fill: "none", stroke: 'gray', strokeWidth: ftOption.handleStrokeWidth, strokeDasharray: ftOption.handleStrokeDash })
-//				.prependTo(this.paper.select('#userContent')));
+			this.data("bb", this.paper.rect( rectObjFromBB( this.getBBox(), rad ) )
+				.attr({ id: 'bbox', fill: "none", stroke: 'gray', strokeWidth: ftOption.handleStrokeWidth, strokeDasharray: ftOption.handleStrokeDash })
+				.prependTo(this.paper.select('#userContent')));
 			//TODO make more efficiently
 			// this.data('bb');
 			// transformed bbox
-//			this.data("bbT", this.paper.rect( rectObjFromBB( this.getBBox(1) ) )
-//							.attr({ fill: "none", 'vector-effect': "non-scaling-stroke", stroke: ftOption.handleFill, strokeWidth: ftOption.handleStrokeWidth, strokeDasharray: ftOption.handleStrokeDashPreset.join(',') })
-//							.transform( this.transform().toString() ) );
+			this.data("bbT", this.paper.rect( rectObjFromBB( this.getBBox(1), rad ) )
+							.attr({ fill: "none", 'vector-effect': "non-scaling-stroke", stroke: ftOption.handleFill, strokeWidth: ftOption.handleStrokeWidth, strokeDasharray: ftOption.handleStrokeDashPreset.join(',') })
+							.transform( this.transform().global.toString() ) );
 			return this;
 		};
 
@@ -332,11 +363,43 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 				this.data('ftBeforeTransformCallbacks').push(callback);
 			}
 		};
+		
+		Element.prototype.ftGetRotation = function(){
+			var transform = this.transform();
+			var startIdx = transform.local.indexOf('r') + 1;
+            var endIdx = transform.local.indexOf(',', startIdx);
+            var rot = parseFloat(transform.local.substring(startIdx, endIdx)) || 0;
+			return rot;
+		};
+		
+		Element.prototype.ftGetScale = function(){
+			var transform = this.transform();
+			// get scale independent from rotation
+			var scale = Math.sqrt((transform.localMatrix.a * transform.localMatrix.a) + (transform.localMatrix.c * transform.localMatrix.c));
+			return scale;
+		};
 
 	});
 
-	function rectObjFromBB ( bb ) {
-		return { x: bb.x, y: bb.y, width: bb.width, height: bb.height };
+	function rectObjFromBB ( bb, minWidth, minHeight ) {
+		minWidth = minWidth || 0;
+		minHeight = minHeight || 0;
+		var x = bb.x;
+		var y = bb.y;
+		var w = bb.width;
+		var h = bb.height;
+		if(bb.width < minWidth){
+//			bb.width = minWidth;
+//			bb.x = bb.x - minWidth / 2;
+			w = minWidth;
+			x = x - minWidth / 2;
+		}
+		if(bb.height < minHeight){
+			bb.height = minHeight;
+			bb.y = bb.y - minHeight / 2;
+		}
+//		return { x: bb.x, y: bb.y, width: bb.width, height: bb.height };
+		return { x: x, y: bb.y, width: w, height: bb.height };
 	}
 
 	function elementDragStart( mainEl, x, y, ev ) {

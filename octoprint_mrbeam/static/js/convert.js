@@ -12,7 +12,7 @@ $(function(){
 		self.target = undefined;
 		self.file = undefined;
 		self.data = undefined;
-		self.slicing_progress = ko.observable(0);
+		self.slicing_progress = ko.observable(5);
 		self.slicing_in_progress = ko.observable(false);
 
 		self.title = ko.observable(undefined);
@@ -31,9 +31,8 @@ $(function(){
 
 		// material menu
 		//TODO make not hardcoded
-		//[laserInt,speed,engraveWhite,engraveBlack,speedWhite,speedBlack]
 		// TODO: should be a structure like this:
-		
+
 //		material = {
 //			name: 'Kraftplex',
 //			color: 'default',
@@ -48,21 +47,54 @@ $(function(){
 //			safety_notes: 'super fine structures are subject to ignition!'
 //			laser_type: 'MrBeamII-1.0'
 //		}
-		
+
 		self.materials_settings = {
-			'default':[0, 0, 0, 0, 0, 0],
-//			'Acrylic':[1000,80,0,350,4500,850],
-			'Foam Rubber':[625, 400, 0, 200, 3000, 1000],
-			'Felt engrave':[300, 1000, 0, 300, 2000, 1000],
-			'Felt cut':[1000, 1000, 0, 300, 2000, 1000],
-			'Jeans Fabric':[1000,500,0,200,3000,500], // 2 passes todo check engraving
-			'Grey cardboard':[1000,500,0,300,3000,750], // 2-3 passes
-			'Cardboard':[1000,300,0,300,3000,750], // 2-3 passes
-			'Kraftplex engrave':[400, 850, 0, 500, 3000, 850],
-			'Kraftplex cut':[1000, 80, 0, 500, 3000, 850], //1-2 pass
-			'Wood engrave':[350, 850, 0, 350, 3000, 850],
-			'Wood cut':[1000, 250, 0, 350, 3000, 850],
-			'Balsa cut':[700, 500, 0, 350, 3000, 850] //2 passes
+			'default':{cut_i:0, cut_f:0, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
+			'material_name thickness':{cut_i:0, cut_f:0, cut_p:0, eng_i:[0,0], eng_f:[0,0]},
+			// new copper embedded laser
+			'Balsa 1mm':{cut_i:70, cut_f:600, cut_p:1, eng_i:[0,0], eng_f:[0,0]}, // min speed 300, max intensity 70 !!! ignition warning
+			'Balsa 2mm':{cut_i:100, cut_f:600, cut_p:1, eng_i:[0,0], eng_f:[0,0]}, // min speed 300 !!! ignition warning
+			'Balsa 3mm':{cut_i:100, cut_f:800, cut_p:2, eng_i:[0,0], eng_f:[0,0]}, // min speed 300 !!! ignition warning
+			'Balsa 4mm':{cut_i:100, cut_f:600, cut_p:3, eng_i:[0,0], eng_f:[0,0]}, // min speed 500 !!! ignition warning
+			'Balsa 5mm':{cut_i:100, cut_f:300, cut_p:3, eng_i:[0,0], eng_f:[0,0]}, // min speed 300 !!! ignition warning
+			'Cardboard double wall 5mm':{cut_i:100, cut_f:400, cut_p:3, eng_i:[10,35], eng_f:[2000,850]}, // warning, not slower than 180
+			'Cardboard single wall 4mm':{cut_i:100, cut_f:500, cut_p:3, eng_i:[10,35], eng_f:[2000,850]}, // warning, not slower than 180
+			'Cardboard single wall 2mm':{cut_i:100, cut_f:500, cut_p:2, eng_i:[10,35], eng_f:[2000,850]}, // warning, not slower than 180
+//			'Felt 2mm':{cut_i:100, cut_f:200, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
+//			'Felt 3mm':{cut_i:100, cut_f:200, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
+			'Felt 4mm green':{cut_i:100, cut_f:300, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
+//			'Felt 4mm grass':{cut_i:100, cut_f:300, cut_p:1, eng_i:[10,35], eng_f:[2000,850]},
+			'Felt 4mm baby blue':{cut_i:100, cut_f:100, cut_p:5, eng_i:[0,0], eng_f:[0,0]},
+			'Felt 4mm royal blue':{cut_i:100, cut_f:350, cut_p:2, eng_i:[0,0], eng_f:[0,0]},
+			'Felt 4mm yellow':{cut_i:100, cut_f:350, cut_p:2, eng_i:[0,0], eng_f:[0,0]},
+			'Felt 4mm purple':{cut_i:100, cut_f:450, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
+			'Foam Rubber 2mm blue':{cut_i:100, cut_f:600, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
+			'Foam Rubber 2mm orange':{cut_i:75, cut_f:800, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
+			'Foam Rubber 2mm white':{cut_i:100, cut_f:190, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
+			'Foam Rubber 3mm green':{cut_i:100, cut_f:600, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
+			'Foam Rubber 3mm bue':{cut_i:100, cut_f:600, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
+			'Paper':{cut_i:750, cut_f:800, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
+			'Plywood 3mm':{cut_i:100, cut_f:200, cut_p:2, eng_i:[10,35], eng_f:[2000,850]}, 
+			'Plywood 4mm':{cut_i:100, cut_f:250, cut_p:3, eng_i:[10,35], eng_f:[2000,850]}, 
+			'Kraftplex 0.8mm':{cut_i:100, cut_f:350, cut_p:2, eng_i:[10,35], eng_f:[2000,850]}, 
+			'Kraftplex 1.5mm':{cut_i:100, cut_f:175, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
+//			'Kraftplex 3mm':{cut_i:100, cut_f:200, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
+			'Wellboard 6mm':{cut_i:100, cut_f:225, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
+			'Wellboard 10mm':{cut_i:100, cut_f:140, cut_p:3, eng_i:[10,35], eng_f:[2000,850]},
+			'Wellboard rect':{cut_i:100, cut_f:200, cut_p:3, eng_i:[10,35], eng_f:[2000,850]},
+			// old laser
+//			'Acrylic':[1000,80,0,350,4500,850, 1],
+//			'Foam Rubber':{cut_i:625, cut_f:400, cut_p:1, eng_i:[0,200], eng_f:[3000,1000]},
+//			'Felt engrave':{cut_i:300, cut_f:1000, cut_p:1, eng_i:[0,300], eng_f:[2000,1000]},
+//			'Felt cut':{cut_i:1000, cut_f:1000, cut_p:1, eng_i:[0,300], eng_f:[2000,1000]},
+//			'Jeans Fabric':[1000,500,0,200,3000,500, 1], // 2 passes todo check engraving
+//			'Grey cardboard':[1000,500,0,300,3000,750, 1], // 2-3 passes
+//			'Cardboard':[1000,300,0,300,3000,750, 3], // 2-3 passes
+//			'Kraftplex engrave':{cut_i:400, cut_f:850, cut_p:1, eng_i:[0,500], eng_f:[3000,850]},
+//			'Kraftplex cut':{cut_i:1000, cut_f:80, cut_p:2, eng_i:[0,500], eng_f:[3000,850]}, //1-2 pass
+//			'Wood engrave':{cut_i:350, cut_f:850, cut_p:1, eng_i:[0,350], eng_f:[3000,850]},
+//			'Wood cut':{cut_i:1000, cut_f:250, cut_p:2, eng_i:[0,350], eng_f:[3000,850]},
+//			'Balsa cut':{cut_i:700, cut_f:500, cut_p:2, eng_i:[0,350], eng_f:[3000,850]} //2 passes
 		};
 		var material_keys = [];
 		for(var materialKey in self.materials_settings){
@@ -93,59 +125,61 @@ $(function(){
 			}
 			$('.job_row_vector .not-used').remove();
 		};
-		
+
 		self._getColorIcon = function(color){
-			var i = $('<div/>',{
+			var i = $('<div />',{
 				id: 'cd_color_'+color.hex.substr(1),
 				style: "background-color: "+color.hex+";",
 				draggable: "true",
 				class: 'used_color'
-			}).on({ 
+			})
+			.on({
 				dragstart: function(ev){ colorDragStart(ev.originalEvent); },
 				dragend: function(ev){ colorDragEnd(ev.originalEvent); }
 			});
-			
+
 			return i;
 		};
-		
+
 		self.set_material = function(material, ev){
 			if(typeof ev !== 'undefined'){
 				var param_set = self.materials_settings[material];
 				var p = $(ev.target).parents('.job_row_vector');
 				$(p).find('.job_title').html(material);
-				$(p).find('.param_intensity').val(param_set[0]);
-				$(p).find('.param_feedrate').val(param_set[1]);
-				$(p).find('.param_passes').val(1); // currently no passes in the data structure
+				$(p).find('.param_intensity').val(param_set.cut_i);
+				$(p).find('.param_feedrate').val(param_set.cut_f);
+				$(p).find('.param_passes').val(param_set.cut_p || 0); 
+				$(p).find('.param_piercetime').val(param_set.cut_pierce || 0); 
 			}
 		};
-		
+
 		self.set_material_engraving = function(material, ev){
 			if(typeof ev !== 'undefined'){
 				var param_set = self.materials_settings[material];
 				var p = $('#engrave_job');
 				$(p).find('.job_title').html("Engrave " + material);
 
-				self.imgIntensityWhite(param_set[2]);
-				self.imgIntensityBlack(param_set[3]);
-				self.imgFeedrateWhite(param_set[4]);
-				self.imgFeedrateBlack(param_set[5]);
+				self.imgIntensityWhite(param_set.eng_i[0]);
+				self.imgIntensityBlack(param_set.eng_i[1]);
+				self.imgFeedrateWhite(param_set.eng_f[0]);
+				self.imgFeedrateBlack(param_set.eng_f[1]);
 				//self.imgDithering();
-				//self.engravingPiercetime(0);
+				self.engravingPiercetime(param_set.eng_pierce || 0);
 			}
 		};
-		
+
 		// image engraving stuff
 		// preset values are a good start for wood engraving
 		self.images_placed = ko.observable(false);
 		self.text_placed = ko.observable(false);
 		self.filled_shapes_placed = ko.observable(false);
 		self.engrave_outlines = ko.observable(false);
-		
+
 		self.show_image_parameters = ko.computed(function(){
 			return (self.images_placed() || self.text_placed() || self.filled_shapes_placed());
 		});
 		self.imgIntensityWhite = ko.observable(0);
-		self.imgIntensityBlack = ko.observable(500);
+		self.imgIntensityBlack = ko.observable(50);
 		self.imgFeedrateWhite = ko.observable(1500);
 		self.imgFeedrateBlack = ko.observable(250);
 		self.imgDithering = ko.observable(false);
@@ -209,6 +243,9 @@ $(function(){
 				for(var idx in placedDesigns){
 					var design = placedDesigns[idx];
 					var end = design.name.lastIndexOf('.');
+					if(end < 0){
+					    end = design.name.length;
+                    }
 					var name = design.name.substring(0, end);
 					if(filemap[name] !== undefined) filemap[name] += 1;
 					else filemap[name] = 1;
@@ -239,7 +276,7 @@ $(function(){
 		self.get_current_multicolor_settings = function () {
 			var data = [];
 			$('.job_row_vector').each(function(i, pass){
-				var intensity = $(pass).find('.param_intensity').val();
+				var intensity = $(pass).find('.param_intensity').val() * 10 ;
 				var feedrate = $(pass).find('.param_feedrate').val();
 				var piercetime = $(pass).find('.param_piercetime').val();
 				var passes = $(pass).find('.param_passes').val();
@@ -257,12 +294,12 @@ $(function(){
 			});
 			return data;
 		};
-		
+
 		self.get_current_engraving_settings = function () {
 			var data = {
 				"engrave_outlines" : self.engrave_outlines(),
-				"intensity_black" : self.imgIntensityBlack(),
-				"intensity_white" : self.imgIntensityWhite(),
+				"intensity_black" : self.imgIntensityBlack() * 10,
+				"intensity_white" : self.imgIntensityWhite() * 10,
 				"speed_black" : self.imgFeedrateBlack(),
 				"speed_white" : self.imgFeedrateWhite(),
 				"contrast" : self.imgContrast(),
@@ -283,6 +320,39 @@ $(function(){
 				return true;
 			}
 		});
+		
+		self._allParametersSet = function(){
+			var allSet = true;
+			var vector_jobs = $('.job_row_vector');
+			for (var i = 0; i < vector_jobs.length; i++) {
+				var vjob = vector_jobs[i];
+				
+				var colorDrops = $(vjob).find('.color_drop_zone');
+				if (colorDrops.children().length > 0){
+					var intensityInput = $(vjob).find('.param_intensity');
+					var feedrateInput = $(vjob).find('.param_feedrate');
+					var intensity = intensityInput.val();
+					var feedrate = feedrateInput.val();
+					if(intensity === ''){
+						intensityInput.addClass('checkInput');
+						setTimeout(
+							function() { intensityInput.removeClass('checkInput'); },
+							2000
+						);
+						allSet = false;
+					}
+					if(feedrate === ''){
+						feedrateInput.addClass('checkInput');
+						setTimeout(
+							function() { feedrateInput.removeClass('checkInput'); },
+							2000
+						);
+						allSet = false;
+					}
+				}
+			}
+			return allSet;
+		};
 
 		self.requestData = function() {
 			$.ajax({
@@ -301,49 +371,53 @@ $(function(){
 			if(self.gcodeFilesToAppend.length === 1 && self.svg === undefined){
 				self.files.startGcodeWithSafetyWarning(self.gcodeFilesToAppend[0]);
 			} else {
-				//self.update_colorSettings();
-				self.slicing_in_progress(true);
-				snap.select('#userContent').embed_gc(); // hack
-				self.workingArea.getCompositionSVG(self.do_engrave(), self.engrave_outlines(), function(composition){
-					self.svg = composition;
-					var filename = self.gcodeFilename() + '.gco';
-					var gcodeFilename = self._sanitize(filename);
+				if(self._allParametersSet()){
+					//self.update_colorSettings();
+					self.slicing_in_progress(true);
+					var pixPerMM = 1/self.beamDiameter();
+					snap.select('#userContent').embed_gc(); // hack
+					self.workingArea.getCompositionSVG(self.do_engrave(), pixPerMM, self.engrave_outlines(), function(composition){
+						self.svg = composition;
+						var filename = self.gcodeFilename() + '.gco';
+						var gcodeFilename = self._sanitize(filename);
 
-					var multicolor_data = self.get_current_multicolor_settings();
-					var engraving_data = self.get_current_engraving_settings();
-					//var colorStr = '<!--COLOR_PARAMS_START' +JSON.stringify(multicolor_data) + 'COLOR_PARAMS_END-->';
-					var colorStr = '';
-					var data = {
-						command: "convert",
-						engrave: self.do_engrave(),
-						vector : multicolor_data,
-						raster : engraving_data,
-						slicer: "svgtogcode",
-						gcode: gcodeFilename
-					};
-										
-					if(self.svg !== undefined){
-						// TODO place comment within initial <svg > tag.
-						data.svg = colorStr +"\n"+ self.svg;
-					} else {
-						data.svg = colorStr +"\n"+ '<svg height="0" version="1.1" width="0" xmlns="http://www.w3.org/2000/svg"><defs/></svg>';
-					}
-					if(self.gcodeFilesToAppend !== undefined){
-						data.gcodeFilesToAppend = self.gcodeFilesToAppend;
-					}
+						var multicolor_data = self.get_current_multicolor_settings();
+						var engraving_data = self.get_current_engraving_settings();
+						var colorStr = '<!--COLOR_PARAMS_START' +JSON.stringify(multicolor_data) + 'COLOR_PARAMS_END-->';
+						var data = {
+							command: "convert",
+							engrave: self.do_engrave(),
+							vector : multicolor_data,
+							raster : engraving_data,
+							slicer: "svgtogcode",
+							gcode: gcodeFilename
+						};
 
-					$.ajax({
-						url: "plugin/mrbeam/convert",
-						type: "POST",
-						dataType: "json",
-						contentType: "application/json; charset=UTF-8",
-						data: JSON.stringify(data)
+						if(self.svg !== undefined){
+							// TODO place comment within initial <svg > tag.
+							data.svg = colorStr +"\n"+ self.svg;
+						} else {
+							data.svg = colorStr +"\n"+ '<svg height="0" version="1.1" width="0" xmlns="http://www.w3.org/2000/svg"><defs/></svg>';
+						}
+						if(self.gcodeFilesToAppend !== undefined){
+							data.gcodeFilesToAppend = self.gcodeFilesToAppend;
+						}
+
+						$.ajax({
+							url: "plugin/mrbeam/convert",
+							type: "POST",
+							dataType: "json",
+							contentType: "application/json; charset=UTF-8",
+							data: JSON.stringify(data)
+						});
+
 					});
-
-				});
+				} else {
+					console.log('params missing');
+				}
 			}
 		};
-		
+
 		self.do_engrave = function(){
 			var assigned_images = $('#engrave_job .assigned_colors').children().length;
 			return (assigned_images > 0 && self.show_image_parameters());
@@ -360,26 +434,35 @@ $(function(){
 //			self._configureIntensitySlider();
 //			self._configureFeedrateSlider();
 			self._configureImgSliders();
+
+            $("#dialog_vector_graphics_conversion").on('hidden', function(){
+                self.slicing_in_progress(false);
+                self.slicing_progress(5);
+            });
 		};
 
 		self.onSlicingProgress = function(slicer, model_path, machinecode_path, progress){
 			self.slicing_progress(progress);
 		};
+
 		self.onEventSlicingStarted = function(payload){
 			self.slicing_in_progress(true);
 		};
+
 		self.onEventSlicingDone = function(payload){
-			// payload
-//			gcode: "ex_11more_i1000s300.gco"
-//			gcode_location: "local"
-//			stl: "local/ex_11more_i1000s300.svg"
-//			time: 30.612739086151123
-			self.gcodeFilename(undefined);
-			self.svg = undefined;
-			$("#dialog_vector_graphics_conversion").modal("hide");
-			self.slicing_in_progress(false);
-			//console.log("onSlicingDone" , payload);
+		    self.slicing_progress(100);
+            // let's wait for onEventFileSelected() to remove the convert dialog and got to the next step
 		};
+
+		// This indicates that the slicing is really done.
+		// called several times once slicing is done. we react only to the first call
+		self.onEventFileSelected = function(payload){
+            if (self.slicing_in_progress()) {
+                self.gcodeFilename(undefined);
+                self.svg = undefined;
+                $("#dialog_vector_graphics_conversion").modal("hide");
+            }
+        };
 
 		self.cancel_conversion = function(){
 			if(self.slicing_in_progress()){
@@ -407,7 +490,7 @@ $(function(){
 			self.gcodeFilename(undefined);
 			self.svg = undefined;
 			self.slicing_in_progress(false);
-			self.slicing_progress(0);
+			self.slicing_progress(5);
 			$("#dialog_vector_graphics_conversion").modal("hide");
 			//console.log("onSlicingCancelled" , payload);
 		};
@@ -499,7 +582,7 @@ $(function(){
 		self.showExpertSettings.subscribe(function(){
 			$('#dialog_vector_graphics_conversion').trigger('resize');
 		});
-		
+
 		self._update_color_assignments = function(){
 			var jobs = $('#additional_jobs .job_row_vector');
 			for (var idx = 0; idx < jobs.length; idx++) {
@@ -526,7 +609,7 @@ function colorAllowDrop(ev) {
     ev.preventDefault();
 	$('.color_drop_zone, .img_drop_zone').addClass('hover');
 }
-		
+
 function colorDragStart(ev) {
 	$("body").addClass("colorDragInProgress");
 	if(ev.target.id === "cd_engraving"){
@@ -547,37 +630,38 @@ function colorDrop(ev) {
 	var required_class = 'color_drop_zone';
 	if(data === 'cd_engraving'){
 		required_class = 'img_drop_zone';
-	} 
+	}
 	var parent = $(ev.target).parents('.job_row');
 	if (parent.length === 1) {
 		var drop_target = $(parent[0]).find('.'+required_class);
-		if (drop_target.length === 1) { 
+		if (drop_target.length === 1) {
 			// TODO check if parent is allowed drop zone.
 			drop_target[0].appendChild(document.getElementById(data));
 			ko.dataFor(document.getElementById("dialog_vector_graphics_conversion"))._update_color_assignments();
-		} 
-	} 
+		}
+	}
 }
 
 function colorDropCreateJob(ev) {
     ev.preventDefault();
 	setTimeout(function(){$("body").removeClass("colorDragInProgress");}, 200);
 	$('.color_drop_zone, .img_drop_zone').removeClass('hover');
-	
+
 	var newJob = $('#first_job').clone(true);
 	newJob.attr('id','');
 	newJob.find('.used_color').remove();
 	newJob.appendTo($('#additional_jobs'));
-	
+
     var data = ev.dataTransfer.getData("text");
     var color = document.getElementById(data);
 	$(newJob).find('.assigned_colors').append(color);
 	ko.dataFor(document.getElementById("dialog_vector_graphics_conversion"))._update_color_assignments();
 }
 
-		
+
 function colorDragEnd(ev){
     ev.preventDefault();
+	$('#drop_overlay').removeClass('in'); // workaround
 	setTimeout(function(){$("body").removeClass("colorDragInProgress vectorDrag engravingDrag");}, 200);
 	$('.color_drop_zone, .img_drop_zone').removeClass('hover');
 }

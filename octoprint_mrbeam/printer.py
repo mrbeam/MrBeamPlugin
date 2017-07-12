@@ -1,17 +1,22 @@
 from octoprint.printer.standard import Printer, StateMonitor, PrinterInterface
 from octoprint.settings import settings
+from octoprint.events import eventManager, Events
 from . import comm_acc2 as comm
+from octoprint_mrbeam.mrb_logger import mrb_logger
+from . import _mrbeam_plugin_implementation
 
 class Laser(Printer):
 
 	def __init__(self, fileManager, analysisQueue, printerProfileManager):
 		Printer.__init__(self, fileManager, analysisQueue, printerProfileManager)
+		self._logger = mrb_logger("octoprint.plugins.mrbeam.printer")
 		self._stateMonitor = LaserStateMonitor(
 			interval=0.5,
 			on_update=self._sendCurrentDataCallbacks,
 			on_add_temperature=self._sendAddTemperatureCallbacks,
 			on_add_log=self._sendAddLogCallbacks,
-			on_add_message=self._sendAddMessageCallbacks
+			on_add_message=self._sendAddMessageCallbacks,
+			on_get_progress = self._updateProgressDataCallback
 		)
 		self._stateMonitor.reset(
 			state={"text": self.get_state_string(), "flags": self._getStateFlags()},
@@ -39,8 +44,12 @@ class Laser(Printer):
 		 Connects to the printer. If port and/or baudrate is provided, uses these settings, otherwise autodetection
 		 will be attempted.
 		"""
+		self._init_terminal()
+
 		if self._comm is not None:
 			self._comm.close()
+
+		eventManager().fire(Events.CONNECTING)
 		self._printerProfileManager.select(profile)
 		self._comm = comm.MachineCom(port, baudrate, callbackObject=self, printerProfileManager=self._printerProfileManager)
 
@@ -56,7 +65,10 @@ class Laser(Printer):
 
 	# extend commands: home, position, increase_passes, decrease_passes
 	def home(self, axes):
-		self.commands(["$H", "G92X500Y400Z0", "G90", "G21"])
+		# self._logger.info("ANDYTEST self.commands([\"$H\", \"G92X500Y400Z0\", \"G90\", \"G21\"])")
+		# self.commands(["$H", "G92X500Y400Z0", "G90", "G21"])
+		# for demo at laserworld of photonics
+		self.commands(["$H", "G92X500Y390Z0", "G90", "G21"])
 
 	def position(self, x, y):
 		printer_profile = self._printerProfileManager.get_current_or_default()
@@ -106,13 +118,39 @@ class Laser(Printer):
 
 	# progress update callbacks
 	def on_comm_progress(self):
-		self._setProgressData(self._comm.getPrintProgress(), self._comm.getPrintFilepos(), self._comm.getPrintTime(), self._comm.getCleanedPrintTime())
+		self._updateProgressData(self._comm.getPrintProgress(), self._comm.getPrintFilepos(), self._comm.getPrintTime(), self._comm.getCleanedPrintTime())
+		self._stateMonitor.trigger_progress_update()
 
 	def _add_position_data(self, MPos, WPos):
 		if MPos is None or WPos is None:
 			MPos = WPos = [0, 0, 0]
 		self._stateMonitor.setWorkPosition(WPos)
 		self._stateMonitor.setMachinePosition(MPos)
+
+	def _init_terminal(self):
+		from collections import deque
+		terminalMaxLines = _mrbeam_plugin_implementation._settings.get(['dev', 'terminalMaxLines'])
+		if terminalMaxLines is not None and terminalMaxLines > 0:
+			self._log = deque(self._log, terminalMaxLines)
+
+	# maybe one day we want to introduce special MrBeam commands....
+	# def commands(self, commands):
+	# 	"""
+	# 	Sends one or more gcode commands to the printer.
+	# 	"""
+	# 	if self._comm is None:
+	# 		return
+    #
+	# 	if not isinstance(commands, (list, tuple)):
+	# 		commands = [commands]
+    #
+	# 	for command in commands:
+	# 		self._logger.debug("Laser.commands() %s", command)
+	# 		sendCommandToPrinter = True
+	# 		if _mrbeam_plugin_implementation is not None:
+	# 			sendCommandToPrinter = _mrbeam_plugin_implementation.execute_command(command)
+	# 		if sendCommandToPrinter:
+	# 			self._comm.sendCommand(command)
 
 
 class LaserStateMonitor(StateMonitor):

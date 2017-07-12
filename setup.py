@@ -14,7 +14,7 @@ plugin_package = "octoprint_mrbeam"
 plugin_name = "Mr_Beam"
 
 # The plugin's version. Can be overwritten within OctoPrint's internal data via __plugin_version__ in the plugin module
-plugin_version = "0.1.2"
+plugin_version = "0.1.4"
 
 # The plugin's description. Can be overwritten within OctoPrint's internal data via __plugin_description__ in the plugin
 # module
@@ -33,7 +33,7 @@ plugin_url = "https://github.com/mrbeam/MrBeamPlugin"
 plugin_license = "AGPLv3"
 
 # Any additional requirements besides OctoPrint should be listed here
-plugin_requires = ['webcolors', 'pillow', 'lxml', 'numpy==1.11.2']
+plugin_requires = ['webcolors', 'pillow', 'lxml', 'numpy==1.11.2', 'picamera']
 
 ### --------------------------------------------------------------------------------------------------------------------
 ### More advanced options that you usually shouldn't have to touch follow after this point

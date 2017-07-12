@@ -19,10 +19,14 @@ from subprocess import call as subprocesscall
 
 import octoprint.plugin
 
+from .profile import laserCutterProfileManager
+
 from octoprint.settings import settings, default_settings
 from octoprint.events import eventManager, Events
 from octoprint.filemanager.destinations import FileDestinations
 from octoprint.util import get_exception_string, RepeatedTimer, CountedEvent, sanitize_ascii
+
+from octoprint_mrbeam.mrb_logger import mrb_logger
 
 ### MachineCom #########################################################################################################
 class MachineCom(object):
@@ -43,7 +47,7 @@ class MachineCom(object):
 	STATE_FLASHING = 14
 
 	def __init__(self, port=None, baudrate=None, callbackObject=None, printerProfileManager=None):
-		self._logger = logging.getLogger(__name__)
+		self._logger = mrb_logger("octoprint.plugins.mrbeam.comm_acc2")
 		self._serialLogger = logging.getLogger("SERIAL")
 
 		if port is None:
@@ -62,7 +66,7 @@ class MachineCom(object):
 		self._port = port
 		self._baudrate = baudrate
 		self._callback = callbackObject
-		self._printerProfileManager = printerProfileManager
+		self._laserCutterProfile = laserCutterProfileManager(settings()).get_current_or_default()
 
 		self.RX_BUFFER_SIZE = 127
 
@@ -129,6 +133,10 @@ class MachineCom(object):
 
 		self._log("Connected to: %s, starting monitor" % self._serial)
 		self._changeState(self.STATE_CONNECTING)
+		if self._laserCutterProfile['grbl']['resetOnConnect']:
+			self._serial.flushInput()
+			self._serial.flushOutput()
+			self._sendCommand(b'\x18')
 		self._timeout = get_new_timeout("communication")
 
 		while self._monitoring_active:
@@ -343,7 +351,11 @@ class MachineCom(object):
 		}
 		eventManager().fire(Events.PRINT_DONE, payload)
 		self.sendCommand("M5")
-		self.sendCommand("G0X500Y400")
+		# would be nice if this worked.....
+		# homeX = self._laserCutterProfile['volume']['width'] - 2
+		# homeY = self._laserCutterProfile['volume']['depth'] - 2
+		# // ANDYTEST magic numbers!!!!!
+		self.sendCommand("G0X500Y390")
 		self.sendCommand("M9")
 
 	def _handle_status_report(self, line):
@@ -365,6 +377,8 @@ class MachineCom(object):
 			self._changeState(self.STATE_OPERATIONAL)
 
 	def _handle_error_message(self, line):
+		if "EEPROM read fail" in line:
+			return
 		self._errorValue = line
 		eventManager().fire(Events.ERROR, {"error": self.getErrorString()})
 		self._changeState(self.STATE_LOCKED)
@@ -401,7 +415,19 @@ class MachineCom(object):
 			self._serial.write(list(bytearray('\x18')))
 			pass
 		elif line[1:].startswith('\'$H'): # ['$H'|'$X' to unlock]
-			pass
+			self._changeState(self.STATE_LOCKED)
+			if self.isOperational():
+				errorMsg = "Machine reset."
+				self._cmd = None
+				self._acc_line_buffer = []
+				self._pauseWaitStartTime = None
+				self._pauseWaitTimeLost = 0.0
+				self._send_event.clear(completely=True)
+				with self._commandQueue.mutex:
+					self._commandQueue.queue.clear()
+				self._log(errorMsg)
+				self._errorValue = errorMsg
+				eventManager().fire(Events.ERROR, {"error": self.getErrorString()})
 		elif line[1:].startswith('Cau'): # [Caution: Unlocked]
 			pass
 		elif line[1:].startswith('Ena'): # [Enabled]
@@ -410,20 +436,7 @@ class MachineCom(object):
 			pass
 
 	def _handle_startup_message(self, line):
-		if self.isOperational():
-			errorMsg = "Machine reset."
-			self._cmd = None
-			self._acc_line_buffer = []
-			self._pauseWaitStartTime = None
-			self._pauseWaitTimeLost = 0.0
-			self._send_event.clear(completely=True)
-			with self._commandQueue.mutex:
-				self._commandQueue.queue.clear()
-			self._log(errorMsg)
-			self._errorValue = errorMsg
-			self._changeState(self.STATE_LOCKED)
-			eventManager().fire(Events.ERROR, {"error": self.getErrorString()})
-		else:
+		if not self.isOperational():
 			self._onConnected(self.STATE_LOCKED)
 			versionMatch = re.search("Grbl (?P<grbl>.+?)(_(?P<git>[0-9a-f]{7})(?P<dirty>-dirty)?)? \[.+\]", line)
 			if versionMatch:
@@ -441,41 +454,22 @@ class MachineCom(object):
 		# <Idle,MPos:-434.000,-596.000,0.000,WPos:0.000,0.000,0.000,S:0,laser off:0>
 		try:
 			idx_mx_begin = line.index('MPos:') + 5
-			idx_mx_end = line.index('.', idx_mx_begin) + 2
+			idx_mx_end = line.index('.', idx_mx_begin) + 3
 			idx_my_begin = line.index(',', idx_mx_end) + 1
-			idx_my_end = line.index('.', idx_my_begin) + 2
-			#idx_mz_begin = line.index(',', idx_my_end) + 1
-			#idx_mz_end = line.index('.', idx_mz_begin) + 2
+			idx_my_end = line.index('.', idx_my_begin) + 3
 
 			idx_wx_begin = line.index('WPos:') + 5
-			idx_wx_end = line.index('.', idx_wx_begin) + 2
+			idx_wx_end = line.index('.', idx_wx_begin) + 3
 			idx_wy_begin = line.index(',', idx_wx_end) + 1
-			idx_wy_end = line.index('.', idx_wy_begin) + 2
-			#idx_wz_begin = line.index(',', idx_wy_end) + 1
-			#idx_wz_end = line.index('.', idx_wz_begin) + 2
+			idx_wy_end = line.index('.', idx_wy_begin) + 3
 
-			#idx_intensity_begin = line.index('S:', idx_wz_end) + 2
-			#idx_intensity_end = line.index(',', idx_intensity_begin)
-
-			#idx_laserstate_begin = line.index('laser ', idx_intensity_end) + 6
-			#idx_laserstate_end = line.index(':', idx_laserstate_begin)
-
-			#payload = {
-			#"mx": line[idx_mx_begin:idx_mx_end],
-			#"my": line[idx_my_begin:idx_my_end],
-			#"mz": line[idx_mz_begin:idx_mz_end],
-			#"wx": line[idx_wx_begin:idx_wx_end],
-			#"wy": line[idx_wy_begin:idx_wy_end],
-			#"wz": line[idx_wz_begin:idx_wz_end],
-			#"laser": line[idx_laserstate_begin:idx_laserstate_end],
-			#"intensity": line[idx_intensity_begin:idx_intensity_end]
-			#}
 			mx = float(line[idx_mx_begin:idx_mx_end])
 			my = float(line[idx_my_begin:idx_my_end])
 			wx = float(line[idx_wx_begin:idx_wx_end])
 			wy = float(line[idx_wy_begin:idx_wy_end])
+			self.MPosX = mx
+			self.MPosY = my
 			self._callback.on_comm_pos_update([mx, my, 0], [wx, wy, 0])
-		#eventManager().fire(Events.RT_STATE, payload)
 		except ValueError:
 			pass
 
@@ -594,7 +588,8 @@ class MachineCom(object):
 			self._send_event.set()
 
 	def _log(self, message):
-		self._callback.on_comm_log(message)
+		# self._callback.on_comm_log(message)
+		self._logger.comm(message)
 		self._serialLogger.debug(message)
 
 	def _compareGrblVersion(self, versionDict):
@@ -907,12 +902,21 @@ class MachineCom(object):
 		if not self.isOperational():
 			return
 
+		# first pause (feed hold) bevore doing the soft reset in order to retain machine pos.
+		self._sendCommand('!')
+		time.sleep(0.5)
+
 		with self._commandQueue.mutex:
 			self._commandQueue.queue.clear()
-		self._soft_reset()
+		self._cmd = None
+
+		self._sendCommand(b'\x18')
 		self._acc_line_buffer = []
 		self._send_event.clear(completely=True)
-		self._changeState(self.STATE_LOCKED)
+		self._changeState(self.STATE_OPERATIONAL)
+
+		time.sleep(1.1)
+		self._sendCommand("G92X{:.3f}Y{:.3f}Z0\n".format(self.MPosX+501.0, self.MPosY+391.0))
 
 		payload = {
 			"file": self._currentFile.getFilename(),
@@ -1223,8 +1227,6 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
 		if not os.path.exists(self._filename) or not os.path.isfile(self._filename):
 			raise IOError("File %s does not exist" % self._filename)
 
-		self._stripCommments()
-
 		self._size = os.stat(self._filename).st_size
 		self._pos = 0
 
@@ -1277,16 +1279,6 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
 			self.close()
 			self._logger.exception("Exception while processing line")
 			raise e
-
-	def _stripCommments(self):
-		dir = os.path.dirname(os.path.abspath(self._filename))
-		tmpfile = open(dir + '/gcode.tmp', 'w')
-		with open(self._filename, "r") as fileobject:
-			for line in fileobject:
-				if process_gcode_line(line) is not None:
-					tmpfile.write(line)
-		tmpfile.close()
-		self._filename = dir + '/gcode.tmp'
 
 def convert_pause_triggers(configured_triggers):
 	triggers = {

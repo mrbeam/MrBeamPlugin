@@ -1,4 +1,4 @@
-/* global snap, ko, $, Snap, API_BASEURL, _, CONFIG_WEBCAM_STREAM, ADDITIONAL_VIEWMODELS */
+/* global snap, ko, $, Snap, API_BASEURL, _, CONFIG_WEBCAM_STREAM, ADDITIONAL_VIEWMODELS, mina */
 
 $(function(){
 
@@ -27,7 +27,6 @@ $(function(){
 		self.state = params[2];
 		self.files = params[3];
 		self.profile = params[4];
-		self.classifier = params[5];
 
 		self.log = [];
 
@@ -45,11 +44,17 @@ $(function(){
 			return self.profile.currentProfileData().volume.depth() - self.profile.currentProfileData().volume.origin_offset_y();
 		},self);
 
+        // QuickText fields
+        self.fontMap = ['Ubuntu', 'Roboto', 'Libre Baskerville', 'Indie Flower', 'VT323'];
+        self.currentQuickTextFile = undefined;
+        self.currentQuickText = ko.observable();
+        self.lastQuickTextFontIndex = 0;
+        self.lastQuickTextIntensity = 0; // rgb values: 0=black, 155=white
+
         self.camera_offset_x = ko.observable(0);
 		self.camera_offset_y = ko.observable(0);
 		self.camera_scale = ko.observable(1.0);
 		self.camera_rotation = ko.observable(0.0);
-
 
 		self.hwRatio = ko.computed(function(){
 			// y/x = 297/216 junior, respectively 594/432 senior
@@ -131,6 +136,7 @@ $(function(){
 		    var x = self.crosshairX !== undefined ? self.crosshairX() : 0;
 		    var y = self.crosshairY !== undefined ? self.crosshairY() : 0;
 		    var m = "matrix(1, 0, 0, 1, " + x + ", " + y + ")";
+//		    var m = "matrix(0.09, 0, 0, 0.09, " + x + ", " + y + ")";
 		    return m;
         };
 
@@ -163,9 +169,9 @@ $(function(){
 
 		self.clear = function(){
 			self.abortFreeTransforms();
-			snap.selectAll('#userContent>*').remove();
+			snap.selectAll('#userContent>*:not(defs)').remove();
 			snap.selectAll('#placedGcodes>*').remove();
-            snap.selectAll('rect:not(#coordGrid)').remove();
+            snap.selectAll('rect:not(#coordGrid):not(#highlightMarker)').remove();
 			self.placedDesigns([]);
 		};
 
@@ -196,7 +202,7 @@ $(function(){
 
 		self.move_laser = function(data, evt){
 			self.abortFreeTransforms();
-			if(self.state.isOperational() && !self.state.isPrinting()){
+			if(self.state.isOperational() && !self.state.isPrinting() && !self.state.isLocked()){
 				var coord = self.getXYCoord(evt);
 				$.ajax({
 					url: API_BASEURL + "plugin/mrbeam",
@@ -227,6 +233,7 @@ $(function(){
 
 		};
 		self.crosshairY = function(){
+			var h = self.workingAreaDim !== undefined ? self.workingAreaDim()[1] : 0;
 			var pos = self.state.currentPos();
 			return pos !== undefined ? pos.y : -100; //  - 15) : -100; // subtract height/2;
 		};
@@ -255,15 +262,17 @@ $(function(){
 		self.placeGcode = function(file){
 			var previewId = self.getEntryId(file);
 
-			if(snap.select('#'+previewId)){
-				console.error("working_area placeGcode: file already placed.");
-				return;
-			} else {
+			// TODO think about if double placing a gcode file is a problem.
+//			if(snap.select('#'+previewId)){
+//				console.error("working_area placeGcode: file already placed.");
+//				return;
+//			} else {
 				var g = snap.group();
 				g.attr({id: previewId});
 				snap.select('#placedGcodes').append(g);
+				file.previewId = previewId;
 				self.placedDesigns.push(file);
-			}
+//			}
 
 			self.loadGcode(file, function(gcode){
 				var pathCallback = function(path){
@@ -307,7 +316,7 @@ $(function(){
 		};
 
 		self.removeGcode = function(file){
-			var previewId = self.getEntryId(file);
+			var previewId = file.previewId;
 			snap.select('#' + previewId).remove();
 			self.placedDesigns.remove(file);
 		};
@@ -315,22 +324,20 @@ $(function(){
 		self.placeSVG = function(file) {
 			var url = self._getSVGserveUrl(file);
 			callback = function (f) {
-				var newSvgAttrs = {};
-				if(f.select('svg') === null){
-					root_attrs = f.node.attributes;
-				} else {
-					var root_attrs = f.select('svg').node.attributes;
-				}
-				var doc_widthStr = null;
-				var doc_heightStr = null;
-				var doc_viewbox = null;
-
-				// find clippath elements
+				// find clippath elements and remove them
 				var clipPathEl = f.selectAll('clipPath');
 				if(clipPathEl.length !== 0){
 					console.warn("Warning: removed unsupported clipPath element in SVG");
 					self.svg_contains_clipPath_warning();
 					clipPathEl.remove();
+				}
+
+				// find flowroot elements and remove them
+				var flowrootEl = f.selectAll('flowRoot');
+				if(flowrootEl.length != 0){
+					console.warn("Warning: removed unsupported flowRoot element in SVG");
+					self.svg_contains_flowRoot_warning();
+					flowrootEl.remove();
 				}
 
 				var svgClasses = {};
@@ -346,21 +353,6 @@ $(function(){
 				f.selectAll("metadata").remove();
 				f.selectAll('desc').remove();
 
-				// iterate svg tag attributes
-				for(var i = 0; i < root_attrs.length; i++){
-					var attr = root_attrs[i];
-
-					// get dimensions
-					if(attr.name === "width") doc_widthStr = attr.value;
-					if(attr.name === "height") doc_heightStr = attr.value;
-					if(attr.name === "viewBox") doc_viewbox = attr.value;
-
-					// copy namespaces into group
-					if(attr.name.indexOf("xmlns") === 0){
-							newSvgAttrs[attr.name] = attr.value;
-						}
-					}
-
 				// find Illustrator comment and notify
 				Array.from(f.node.childNodes).forEach(function(entry) {
 					if(entry.nodeType === 8) { // Nodetype 8 = comment
@@ -370,42 +362,61 @@ $(function(){
 					}
 				});
 
+				// get original svg attributes
+				var newSvgAttrs = self._getDocumentNamespaceAttributes(f);
+				var doc_dimensions = self._getDocumentDimensionAttributes(f);
+
 				// scale matrix
-				var dpiscale = 25.4 / self.settings.settings.plugins.mrbeam.svgDPI();
-				var doc_dimPT = self.getDocumentDimensionsInPt(doc_widthStr, doc_heightStr, doc_viewbox);
-				var mat = self.getDocumentViewBoxMatrix(doc_dimPT, doc_viewbox);
-				var yShift = doc_dimPT[1] * dpiscale; // if doc size is different than workingArea place bottom left
-                var scaleMatrixStr = new Snap.Matrix(
-						mat[0][0],mat[0][1], 
-						mat[1][0],-mat[1][1], 
-						mat[0][2],mat[1][2]+yShift
-					).scale(dpiscale).toTransformString();
+
+				var mat = self.getDocumentViewBoxMatrix(doc_dimensions.width, doc_dimensions.height, doc_dimensions.viewbox);
+				var dpiscale = 90 / self.settings.settings.plugins.mrbeam.svgDPI();
+                var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(dpiscale).toTransformString();
                 newSvgAttrs['transform'] = scaleMatrixStr;
 
 				var newSvg = snap.group(f.selectAll("svg>*"));
+
+				// handle texts
 				var hasText = newSvg.selectAll('text,tspan');
-				if(hasText !== null && hasText.length > 0){
+				if(hasText && hasText.length > 0){
 					self.svg_contains_text_warning(newSvg);
 				}
 
+				// remove style elements with online references
+				var hasStyle = newSvg.selectAll('style');
+				if (hasStyle && hasStyle.length > 0) {
+					for(var y=0; y<hasStyle.length; y++) {
+						if (hasStyle[y].node.innerHTML && hasStyle[y].node.innerHTML.search("@import ") >= 0) {
+							self.svg_contains_online_style_warning();
+							console.warn("Removing style element: web references not supported: ", hasStyle[y].node.innerHTML);
+							hasStyle[y].node.remove();
+						}
+					}
+				}
+
+				newSvg.bake(); // remove transforms
+				newSvg.selectAll('path').attr({strokeWidth: '0.5'});
 				newSvg.attr(newSvgAttrs);
 				newSvg.bake(); // remove transforms
 				newSvg.selectAll('path').attr({strokeWidth: '0.8', class:'vector_outline'});
 				var id = self.getEntryId(file);
 				var previewId = self.generateUniqueId(id); // appends -# if multiple times the same design is placed.
-				newSvg.attr({id: previewId});
+				newSvg.attr({id: previewId, class: 'userSVG'});
 				snap.select("#userContent").append(newSvg);
 				newSvg.transformable();
 				newSvg.ftRegisterOnTransformCallback(self.svgTransformUpdate);
-//				newSvg.ftRegisterBeforeTransformCallback(function(){
-//					newSvg.clean_gc();
-//				});
+				newSvg.ftRegisterBeforeTransformCallback(function(){
+					newSvg.clean_gc();
+				});
 				newSvg.ftRegisterAfterTransformCallback(function(){
-//					newSvg.embed_gc();
+					newSvg.embed_gc();
 				});
 				
 
-//				newSvg.embed_gc();
+				newSvg.embed_gc();
+
+				setTimeout(function(){
+					newSvg.ftReportTransformation();
+				}, 200);
 
 				file.id = id; // list entry id
 				file.previewId = previewId;
@@ -425,16 +436,6 @@ $(function(){
 			self.abortFreeTransforms();
 			snap.selectAll('#'+file.previewId).remove();
 			self.placedDesigns.remove(file);
-
-			// TODO debug why remove always clears all items of this type.
-//			self.placedDesigns.remove(function(item){
-//				console.log("item", item.previewId );
-//				//return false;
-//				if(item.previewId === file.previewId){
-//					console.log("match", item.previewId );
-//					return true;
-//				} else return false;
-//			});
 		};
 		self.fitSVG = function(file){
 			self.abortFreeTransforms();
@@ -450,6 +451,117 @@ $(function(){
 //			svg.embed_gc();
 		};
 
+		self.placeDXF = function(file) {
+			var url = self._getSVGserveUrl(file);
+
+			callback = function (f) {
+				var doc_dimensions = self._getDocumentDimensionAttributes(f);
+				var newSvgAttrs = self._getDocumentNamespaceAttributes(f);
+
+				// scale matrix
+				var mat = self.getDocumentViewBoxMatrix(doc_dimensions.width, doc_dimensions.height, doc_dimensions.viewbox);
+				var dpiscale = 90; // self.settings.settings.plugins.mrbeam.svgDPI();
+                var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(dpiscale).toTransformString();
+
+				var newSvg = snap.group(f.selectAll("svg>*"));
+				newSvg.attr('transform', scaleMatrixStr);
+
+				newSvg.bake(); // remove transforms
+				newSvg.selectAll('path').attr({strokeWidth: '0.5', 'vector-effect':'non-scaling-stroke'});
+				newSvg.attr(newSvgAttrs);
+				var id = self.getEntryId(file);
+				var previewId = self.generateUniqueId(id); // appends -# if multiple times the same design is placed.
+				newSvg.attr({id: previewId});
+				snap.select("#userContent").append(newSvg);
+				newSvg.transformable();
+				newSvg.ftRegisterCallback(self.svgTransformUpdate);
+				setTimeout(function(){
+					newSvg.ftReportTransformation();
+				}, 200);
+				file.id = id; // list entry id
+				file.previewId = previewId;
+				file.url = url;
+				file.misfit = "";
+
+				self.placedDesigns.push(file);
+			};
+			Snap.loadDXF(url, callback);
+		};
+
+		self._getDocumentDimensionAttributes = function(file){
+			if(file.select('svg') === null){
+				root_attrs = file.node.attributes;
+			} else {
+				var root_attrs = file.select('svg').node.attributes;
+			}
+			var doc_width = null;
+			var doc_height = null;
+			var doc_viewbox = null;
+
+			// iterate svg tag attributes
+			for(var i = 0; i < root_attrs.length; i++){
+				var attr = root_attrs[i];
+
+				// get dimensions
+				if(attr.name === "width") doc_width = attr.value;
+				if(attr.name === "height") doc_height = attr.value;
+				if(attr.name === "viewBox") doc_viewbox = attr.value;
+			}
+			return {
+				width: doc_width,
+				height: doc_height,
+				viewbox: doc_viewbox
+			};
+		};
+
+		self._getDocumentNamespaceAttributes = function(file){
+			if(file.select('svg') === null){
+				root_attrs = file.node.attributes;
+			} else {
+				var root_attrs = file.select('svg').node.attributes;
+			}
+			var namespaces = {};
+
+			// iterate svg tag attributes
+			for(var i = 0; i < root_attrs.length; i++){
+				var attr = root_attrs[i];
+
+				// copy namespaces into group
+				if(attr.name.indexOf("xmlns") === 0){
+					namespaces[attr.name] = attr.value;
+				}
+			}
+			return namespaces;
+		};
+
+		self.highlightDesign = function(data){
+			$('#userContent').addClass('dimDesigns');
+			var svgEl = $('#'+data.previewId);
+			svgEl.addClass('designHighlight');
+			self.showHighlightMarkers(data.previewId);
+		};
+		self.removeHighlight = function(data){
+			$('#userContent').removeClass('dimDesigns');
+			var svgEl = $('#'+data.previewId);
+			svgEl.removeClass('designHighlight');
+			self.showHighlightMarkers(null);
+		};
+		self.showHighlightMarkers = function(svgId) {
+//			if(svgId === null){
+//				var w = self.mm2svgUnits(self.workingAreaWidthMM());
+//				var h = self.mm2svgUnits(self.workingAreaHeightMM());
+//				snap.select('#highlightMarker').attr({x: -1, y:-1, width:0, height:0});
+//			} else {
+//				var svgEl = snap.select('#'+svgId);
+//				var bbox = svgEl.getBBox();
+//				var x = bbox.x - 20;
+//				var y = bbox.y - 20;
+//				var w = bbox.w + 40;
+//				var h = bbox.h + 40;
+//				snap.select('#highlightMarker').attr({x: x, y:y, width:w, height:h});
+//			}
+		};
+
 		self.toggleTransformHandles = function(file){
 			var el = snap.select('#'+file.previewId);
 			if(el){
@@ -457,26 +569,103 @@ $(function(){
 			}
 		};
 
-		self.svgTransformUpdate = function(svg){
-			var transform = svg.transform();
-			var bbox = svg.getBBox();
-			var tx = bbox.x; 
-//			var ty = self.workingAreaHeightMM() - bbox.y2; 
-			var ty = bbox.y; 
-			var startIdx = transform.local.indexOf('r') + 1;
-			var endIdx = transform.local.indexOf(',', startIdx);
-			var rot = parseFloat(transform.local.substring(startIdx, endIdx)) || 0;
-			var horizontal = bbox.w; 
-			var vertical = bbox.h; 
-			var id = svg.attr('id');
-			var label_id = id.substr(0, id.indexOf('-'));
-			$('#'+label_id+' .translation').text(tx.toFixed(1) + ',' + ty.toFixed(1));
-			$('#'+label_id+' .horizontal').text(horizontal.toFixed() + 'mm');
-			$('#'+label_id+' .vertical').text(vertical.toFixed() + 'mm');
-			$('#'+label_id+' .rotation').text(rot.toFixed(1) + '°');
-			var scale = Math.sqrt((transform.localMatrix.a * transform.localMatrix.a) + (transform.localMatrix.c * transform.localMatrix.c));
+		self.showTransformHandles = function(file, show){
+			var el = snap.select('#'+file.previewId);
+			if(el){
+			    if (show) {
+                    el.ftCreateHandles();
+                } else {
+			        el.ftRemoveHandles();
+                }
+			}
+		};
+
+		self.svgTransformUpdate = function(svg) {
+            var globalScale = self.scaleMatrix().a;
+//            var transform = svg.transform();
+            var bbox = svg.getBBox();
+            var tx = self.px2mm(bbox.x * globalScale);
+            var ty = self.workingAreaHeightMM() - self.px2mm(bbox.y2 * globalScale);
+			var rot = svg.ftGetRotation();
+            var horizontal = self.px2mm((bbox.x2 - bbox.x) * globalScale);
+            var vertical = self.px2mm((bbox.y2 - bbox.y) * globalScale);
+            var id = svg.attr('id');
+            var label_id = id.substr(0, id.indexOf('-'));
+			$('#'+label_id+' .translation').val(tx.toFixed(1) + ',' + ty.toFixed(1));
+			$('#'+label_id+' .horizontal').val(horizontal.toFixed() + 'mm');
+			$('#'+label_id+' .vertical').val(vertical.toFixed() + 'mm');
+			$('#'+label_id+' .rotation').val(rot.toFixed(1) + '°');
+			var scale = svg.ftGetScale();
 			var dpiscale = 90 / self.settings.settings.plugins.mrbeam.svgDPI();
-			$('#'+label_id+' .scale').text((scale/dpiscale*100).toFixed(1) + '%');
+			$('#'+label_id+' .scale').val((scale/dpiscale*100).toFixed(1) + '%');
+			self.check_sizes_and_placements();
+		};
+
+		self.svgManualTranslate = function(data, event) {
+			if (event.keyCode === 13 || event.type === 'blur') {
+				self.abortFreeTransforms();
+				var svg = snap.select('#'+data.previewId);
+				var globalScale = self.scaleMatrix().a;
+				var newTranslateStr = event.target.value;
+				var nt = newTranslateStr.split(/[^0-9.-]/); // TODO improve
+				var ntx = self.mm2px(nt[0]) / globalScale;
+				var nty = self.mm2px(self.workingAreaHeightMM() - nt[1]) / globalScale;
+
+				svg.ftManualTransform({tx: ntx, ty: nty});
+			}
+		};
+		self.svgManualRotate = function(data, event) {
+			if (event.keyCode === 13 || event.type === 'blur') {
+				self.abortFreeTransforms();
+				var svg = snap.select('#'+data.previewId);
+				var newRotate = parseFloat(event.target.value);
+				svg.ftManualTransform({angle: newRotate});
+			}
+		};
+		self.svgManualScale = function(data, event) {
+			if (event.keyCode === 13 || event.type === 'blur') {
+				self.abortFreeTransforms();
+				var svg = snap.select('#'+data.previewId);
+				var newScale = parseFloat(event.target.value) / 100.0;
+				svg.ftManualTransform({scale: newScale});
+			}
+		};
+		self.svgManualWidth = function(data, event) {
+			if (event.keyCode === 13 || event.type === 'blur') {
+				self.abortFreeTransforms();
+				var svg = snap.select('#'+data.previewId);
+				var desiredW = parseFloat(event.target.value);
+				var currentW = svg.getBBox().w;
+				var globalScale = self.scaleMatrix().a;
+				var newRelativeScale = (self.mm2px(desiredW) / globalScale) / currentW;
+				var newScale = newRelativeScale * svg.ftGetScale();
+				svg.ftManualTransform({scale: newScale});
+			}
+		};
+		self.svgManualHeight = function(data, event) {
+			if (event.keyCode === 13 || event.type === 'blur') {
+				self.abortFreeTransforms();
+				var svg = snap.select('#'+data.previewId);
+				var desiredH = parseFloat(event.target.value);
+				var currentH = svg.getBBox().h;
+				var globalScale = self.scaleMatrix().a;
+				var newRelativeScale = (self.mm2px(desiredH) / globalScale) / currentH;
+				var newScale = newRelativeScale * svg.ftGetScale();
+				svg.ftManualTransform({scale: newScale});
+			}
+		};
+		self.svgManualMultiply = function(data, event) {
+			if (event.keyCode === 13 || event.type === 'blur') {
+				self.abortFreeTransforms();
+				var svg = snap.select('#'+data.previewId);
+				var gridsize = event.target.value.split(/\D+/);
+				var cols = gridsize[0] || 1;
+				var rows = gridsize[1] || 1;
+				var dist = self.mm2px(2);
+				console.log(dist);
+				svg.grid(cols, rows, dist);
+				event.target.value = cols+"×"+rows;
+			}
 		};
 
 
@@ -529,10 +718,33 @@ $(function(){
 			});
 		};
 
+		self.svg_contains_flowRoot_warning = function(){
+			var error = "<p>" + gettext("The SVG file contains flowRoot elements.<br/>flowRoot is not supported yet and has been removed from file.") + "</p>";
+			new PNotify({
+				title: "flowRoot elements removed",
+				text: error,
+				type: "warn",
+				hide: false
+			});
+		};
+
 		self.svg_contains_text_warning = function(svg){
             var error = "<p>" + gettext("The SVG file contains text elements.<br/>If you want to laser just their outlines,<br/>please convert them to paths.<br/>Otherwise they will be engraved with infill.") + "</p>";
             new PNotify({
                 title: "Text elements found",
+                text: error,
+                type: "warn",
+                hide: false,
+				buttons: {
+        			sticker: false
+    			}
+            });
+		};
+
+        self.svg_contains_online_style_warning = function(svg){
+            var error = "<p>" + gettext("The SVG file contained style elements with online references. Since online references are not supported, we removed them. The image might look a bit different now.") + "</p>";
+            new PNotify({
+                title: "Style elements removed",
                 text: error,
                 type: "warn",
                 hide: false,
@@ -575,12 +787,16 @@ $(function(){
 				var imgWrapper = snap.group();
 				var newImg = imgWrapper.image(url, 0, 0, wMM, hMM).attr({transform: 'matrix(1,0,0,-1,0,'+hMM+')'});
 				var id = self.getEntryId(file);
-				var previewId = self.generateUniqueId(id); // appends # if multiple times the same design is placed.
-				imgWrapper.attr({id: previewId});
 				newImg.attr({filter: 'url(#grayscale_filter)', 'data-serveurl': url});
+				var previewId = self.generateUniqueId(id); // appends # if multiple times the same design is placed.
+				var imgWrapper = snap.group().attr({id: previewId, class: 'userIMG'});
+				imgWrapper.append(newImg);
 				snap.select("#userContent").append(imgWrapper);
 				imgWrapper.transformable();
-				imgWrapper.ftRegisterOnTransformCallback(self.svgTransformUpdate);
+				imgWrapper.ftRegisterCallback(self.svgTransformUpdate);
+				setTimeout(function(){
+					imgWrapper.ftReportTransformation();
+				}, 200);
 				file.id = id;
 				file.previewId = previewId;
 				file.url = url;
@@ -592,6 +808,20 @@ $(function(){
 
 		self.removeIMG = function(file){
 			self.removeSVG(file);
+		};
+		self.removeSelectedDesign = function(){
+			var transformHandles = snap.select('#handlesGroup');
+			if(transformHandles){
+				var selectedId = transformHandles.data('parentId');
+				for (var i = 0; i < self.placedDesigns().length; i++) {
+					var file = self.placedDesigns()[i];
+					if(file.previewId === selectedId){
+						self.abortFreeTransforms();
+						self.removeSVG(file);
+						return;
+					}
+				}
+			}
 		};
 
 		self.getUsefulDimensions = function(wpx, hpx){
@@ -609,7 +839,7 @@ $(function(){
 		};
 
 		self.getDocumentDimensionsInPt = function(doc_width, doc_height, doc_viewbox){
-			if(doc_width === null){
+			if(doc_width === null || doc_width === "100%"){
 				// assume defaults if not set
 				if(doc_viewbox !== null ){
 					var parts = doc_viewbox.split(' ');
@@ -624,7 +854,7 @@ $(function(){
 					doc_width = 744.09; // 210mm @ 90dpi
 				}
 			}
-			if(doc_height === null){
+			if(doc_height === null || doc_height === "100%"){
 				// assume defaults if not set
 				if(doc_viewbox !== null ){
 					var parts = doc_viewbox.split(' ');
@@ -654,8 +884,8 @@ $(function(){
 				if(parts.length === 4){
 					var offsetVBoxX = parseFloat(parts[0]);
 					var offsetVBoxY = parseFloat(parts[1]);
-					var widthVBox = parseFloat(parts[2]) - parseFloat(parts[0]);
-					var heightVBox = parseFloat(parts[3]) - parseFloat(parts[1]);
+					var widthVBox = parseFloat(parts[2]);// - parseFloat(parts[0]);
+					var heightVBox = parseFloat(parts[3]);// - parseFloat(parts[1]);
 
 					var fx = widthPx / widthVBox;
 					var fy = heightPx / heightVBox;
@@ -713,24 +943,27 @@ $(function(){
 		};
 
 		self.templateFor = function(data) {
-			if(data.type === "model" || data.type === "machinecode"){
-				var extension = data.name.split('.').pop().toLowerCase();
-				if (extension === "svg") {
-					return "wa_template_" + data.type + "_svg";
-				} else if (_.contains(['jpg', 'jpeg', 'png', 'gif', 'bmp', 'pcx', 'webp'], extension)) {
-					return "wa_template_" + data.type + "_img";
-				} else {
-					return "wa_template_" + data.type;
-				}
+			if(data.type === "model" || data.type === "machinecode") {
+                var extension = data.name.split('.').pop().toLowerCase();
+                if (extension === "svg") {
+                    return "wa_template_" + data.type + "_svg";
+				} else if (extension === "dxf") {
+                    return "wa_template_" + data.type + "_svg";
+                } else if (_.contains(['jpg', 'jpeg', 'png', 'gif', 'bmp', 'pcx', 'webp'], extension)) {
+                    return "wa_template_" + data.type + "_img";
+                } else {
+                    return "wa_template_" + data.type;
+                }
+            } else if (data.type === "quicktext") {
+			    return "wa_template_quicktext";
 			} else {
 				return "wa_template_dummy";
 			}
 		};
 
-		self.getEntryId = function(data) {
-			return "wa_" + md5(data["origin"] + ":" + data["name"]);
+		self.getEntryId = function(file) {
+			return "wa_" + md5(file["origin"] + file["name"] + Date.now());
 		};
-
 
 		self.init = function(){
 			// init snap.svg
@@ -777,7 +1010,8 @@ $(function(){
 				var marker = snap.circle(linedist/2, linedist/2, .5).attr({
 					fill: "#000000",
 					stroke: "none",
-					strokeWidth: 1
+					strokeWidth: 1,
+                    r: 2
 				});
 
 				// dot pattern
@@ -815,28 +1049,33 @@ $(function(){
 			self.check_sizes_and_placements();
 		};
 
-		self.getCompositionSVG = function(fillAreas, cutOutlines, callback){
+		self.getCompositionSVG = function(fillAreas, pxPerMM, cutOutlines, callback){
 			self.abortFreeTransforms();
 			var wMM = self.workingAreaWidthMM();
 			var hMM = self.workingAreaHeightMM();
 			var wPT = wMM * 90 / 25.4;  // TODO ... switch to 96dpi ? 
 			var hPT = hMM * 90 / 25.4;
-			var compSvg = Snap(wPT, hPT);
-			compSvg.attr('id', 'compSvg');
-			
+			var compSvg = self.getNewSvg('compSvg', wPT, hPT);
 			var content = compSvg.g({id: 'flipY', transform: 'matrix(1,0,0,-1,0,'+hMM+')'});
 			var userContent = snap.select("#userContent").clone();
 			content.append(userContent);
 
-			if(fillAreas){
-				self.renderInfill(compSvg, fillAreas, cutOutlines, wMM, hMM, 10, function(svgWithRenderedInfill){
-					callback( self._wrapInSvgAndScale(svgWithRenderedInfill));
-					$('#compSvg').remove();
-				});
-			} else {
-				callback( self._wrapInSvgAndScale(compSvg));
+			// remove all items maked with deleteBeforeRendering class
+			var dels = compSvg.selectAll('.deleteBeforeRendering');
+            if (dels && dels.length > 0) {
+                for(var i=0; i<dels.length; i++) {
+                    dels[i].remove();
+                }
+            }
+
+            // embed the fonts as dataUris
+            $('#compSvg defs').append('<style id="quickTextFontPlaceholder" class="quickTextFontPlaceholder deleteAfterRendering"></style>');
+            self._qt_copyFontsToSvg(compSvg.select(".quickTextFontPlaceholder").node);
+
+			self.renderInfill(compSvg, fillAreas, cutOutlines, wMM, hMM, pxPerMM, function(svgWithRenderedInfill){
+				callback( self._wrapInSvgAndScale(svgWithRenderedInfill));
 				$('#compSvg').remove();
-			}
+			});
 		};
 
 		self._wrapInSvgAndScale = function(content){
@@ -865,7 +1104,7 @@ $(function(){
 			ko.utils.arrayForEach(self.placedDesigns(), function(design) {
 				if(design.type === 'model'){
 				var extension = design.name.split('.').pop().toLowerCase();
-					if (extension === "svg") {
+					if (extension === "svg" || extension === "dxf") {
 						svgFiles.push(design);
 					}
 				}
@@ -955,24 +1194,14 @@ $(function(){
 			self.files.workingArea = self;
 
 			// check this on tab change as before the bounding boxes are sized 0.
-			$('#wa_tab_btn').on('shown.bs.tab', function (e) {
-				self.trigger_resize();
-				self.check_sizes_and_placements();
-			});
+//			$('#wa_tab_btn').on('shown.bs.tab', function (e) {
+//				self.trigger_resize();
+//				self.check_sizes_and_placements();
+//			});
 			$(window).resize(function(){
 				self.trigger_resize();
 			});
 			self.trigger_resize(); // initialize
-			self.onTabChange('#workingarea', '#notab');
-			var webcam_image = document.getElementById('webcam_image');
-			$(webcam_image).load(function(){
-			  $(this).removeClass('broken'); // does not work with inline SVG
-//				webcam_image.setAttribute("class", "");
-			}).error(function () {
-				$(this).addClass('broken'); // does not work with inline SVG
-//				webcam_image.setAttribute("class", "broken");
-			});
-
 			self.init();
 		};
 
@@ -980,22 +1209,16 @@ $(function(){
 			self.initCameraCalibration();
 		};
 
-		self.onBrowserTabVisibilityChange = function(state){
-			var currentTab = $('#mrbeam-main-tabs li.active a').attr('href');
-			if(typeof currentTab !== undefined && currentTab === "#workingarea"){
-				if(state === true){
-					self.onTabChange('#workingarea', '#notab');
-				}
-
-				if(state === false){
-					self.onTabChange('#notab', '#workingarea');
-				}
+		self.onAfterTabChange = function(current, prev){
+			if(current === '#workingarea'){
+				self.trigger_resize();
+				self.check_sizes_and_placements();
 			}
 		};
 
 		self.check_sizes_and_placements = function(){
 			ko.utils.arrayForEach(self.placedDesigns(), function(design) {
-				if(design.type === 'model'){
+				if(design.type === 'model' || design.type === 'quicktext'){
 					var svg = snap.select('#' + design.previewId);
 					var misfitting = self.outsideWorkingArea(svg);
 //					console.log("Misfitting: ", misfitting);
@@ -1044,8 +1267,7 @@ $(function(){
 			//TODO cutOutlines use it and make it work
 			var wPT = wMM * 90 / 25.4;
 			var hPT = hMM * 90 / 25.4;
-			var viewBox = snap.attr('viewBox');
-			var tmpSvg = Snap(wPT, hPT).attr({id: 'tmpSvg', viewBox: viewBox});
+			var tmpSvg = self.getNewSvg('tmpSvg', wPT, hPT);
 			// get only filled items and embed the images
 			var userContent = svg.clone();
 			tmpSvg.append(userContent);
@@ -1074,8 +1296,12 @@ $(function(){
 
 				var cb = function(result) {
 					if(fillings.length > 0){
-						// replace all images with the fill rendering
+
+						// fill rendering replaces all
 						svg.selectAll('image').remove();
+						svg.selectAll('.deleteAfterRendering').remove();
+						svg.selectAll('text,tspan').remove();
+
 						var waBB = snap.select('#coordGrid').getBBox();
 						var fillImage = snap.image(result, 0, 0, waBB.w, waBB.h);
 						fillImage.attr('id', 'fillRendering');
@@ -1099,59 +1325,242 @@ $(function(){
 			self.files.workingArea = self;
 		};
 
-		self.onTabChange = function (current, previous) {
-            if (current === "#workingarea") {
-				// update transform information
-				setTimeout(function(){
-					ko.utils.arrayForEach(self.placedDesigns(), function(designData) {
-						if(designData.previewId !== undefined){
-							var svgNode = snap.select('#'+designData.previewId);
-							self.svgTransformUpdate(svgNode);
-						}
-					});
-				}, 200);
+		self.getNewSvg = function(id, w, h){
+		    var svg = Snap(w, h);
+            svg.attr('id', id);
+            svg.attr('xmlns', 'http://www.w3.org/2000/svg');
+            svg.attr('xmlns:mb', 'http://www.mr-beam.org/mbns');
+            svg.attr('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+            return svg;
+        };
 
-				
-				// switch off webcam
-                if (self.webcamDisableTimeout !== undefined) {
-                    clearTimeout(self.webcamDisableTimeout);
-                }
-                var webcamImage = $("#webcam_image");
-                var currentSrc = webcamImage.attr("src");
 
-                if (currentSrc === undefined || currentSrc === "none" || currentSrc.trim() === "") {
-                    var newSrc = CONFIG_WEBCAM_STREAM;
-                    if (CONFIG_WEBCAM_STREAM.lastIndexOf("?") > -1) {
-                        newSrc += "&";
-                    } else {
-                        newSrc += "?";
-                    }
-                    newSrc += new Date().getTime();
-//                    console.log("webcam src set", newSrc);
-                    webcamImage.attr("src", newSrc);
-                }
-                photoupdate = setInterval(myTimer, 5000);
-                function myTimer() {
-                    var newSrc = CONFIG_WEBCAM_STREAM;
-                    if (CONFIG_WEBCAM_STREAM.lastIndexOf("?") > -1) {
-                        newSrc += "&";
-                    } else {
-                        newSrc += "?";
-                    }
-                    newSrc += new Date().getTime();
-//                    console.log("webcam src set", newSrc);
-                    webcamImage.attr("src", newSrc);
-                }
-//                console.log("webcam enabled");
-            } else if (previous === "#workingarea") {
-                // only disable webcam stream if tab is out of focus for more than 5s, otherwise we might cause
-                // more load by the constant connection creation than by the actual webcam stream
-                self.webcamDisableTimeout = setTimeout(function () {
-                    $("#webcam_image").css("background-image", "none");
-                }, 5000);
-                window.clearInterval(photoupdate);
+        // ***********************************************************
+		//  QUICKTEXT start
+        // ***********************************************************
+
+        /**
+         * Opens QuickText window and places a new quickText Object
+         * to the working_area and file list.
+         */
+        self.newQuickText = function() {
+            var file = self._qt_placeQuicktext();
+            self.editQuickText(file);
+
+
+            var rules = document.styleSheets[0].rules || document.styleSheets[0].cssRules;
+            for(var x=0;x<rules.length;x++) {
+               // console.log(rules[x].name + " | " +rules[x].cssText);
+               // console.log(rules[x].cssText, rules[x]);
             }
         };
+
+        /**
+         * Opens QuickText window to edit an existing QuickText object
+         * @param file Object representing the QuickText to edit
+         */
+        self.editQuickText = function(file) {
+            self.currentQuickTextFile = file;
+            self._qt_currentQuickTextUpdate();
+
+            $('#quick_text_dialog').on('hide.bs.modal', self._qt_currentQuickTextRemoveIfEmpty);
+            $('#quick_text_dialog').on('shown.bs.modal', function(){$('#quick_text_dialog_text_input').focus();});
+            $('#quick_text_dialog').modal({keyboard: true});
+            self.showTransformHandles(self.currentQuickTextFile, false);
+            $('#quick_text_dialog_intensity').val(self.currentQuickTextFile.intensity);
+            $('#quick_text_dialog_text_input').focus();
+        };
+
+        /**
+         * callback/subscription to changes of the text field
+         */
+        self.currentQuickText.subscribe(function(nuText) {
+            if (self.currentQuickTextFile) {
+                self.currentQuickTextFile.name = nuText;
+            }
+            self._qt_currentQuickTextUpdate();
+        });
+
+        /**
+         * callback/subscription for the intensity slider
+         */
+        $('#quick_text_dialog_intensity').on("input change", function(e){
+            if (self.currentQuickTextFile) {
+                self.currentQuickTextFile.intensity = e.currentTarget.value;
+                self.lastQuickTextIntensity = self.currentQuickTextFile.intensity;
+                self._qt_currentQuickTextUpdate();
+            }
+        });
+
+        /**
+         * callback for the next font button
+         */
+        self.currentQuickTextFontNext = function() {
+            if (self.currentQuickTextFile) {
+                self.currentQuickTextFile.fontIndex++;
+                if (self.currentQuickTextFile.fontIndex >= self.fontMap.length) {
+                    self.currentQuickTextFile.fontIndex = 0;
+                }
+                self.lastQuickTextFontIndex = self.currentQuickTextFile.fontIndex;
+                self._qt_currentQuickTextUpdate();
+            }
+        };
+
+        /**
+         * callback for the previous font button
+         */
+        self.currentQuickTextFontPrev = function() {
+            if (self.currentQuickTextFile) {
+                self.currentQuickTextFile.fontIndex--;
+                if (self.currentQuickTextFile.fontIndex < 0) {
+                    self.currentQuickTextFile.fontIndex = self.fontMap.length-1;
+                }
+                self.lastQuickTextFontIndex = self.currentQuickTextFile.fontIndex;
+                self._qt_currentQuickTextUpdate();
+            }
+        };
+
+        /**
+         * updates the actual SVG object and the file list object and more
+         * Needs to be called after all changes to a QuickText object
+         *
+         * Updates will be done for the QT object self.currentQuickTextFile is pointing to
+         */
+        self._qt_currentQuickTextUpdate = function(){
+            if (self.currentQuickTextFile) {
+                self.currentQuickText(self.currentQuickTextFile.name);
+                var displayText = self.currentQuickTextFile.name !== '' ?
+                    self.currentQuickTextFile.name : $('#quick_text_dialog_text_input').attr('placeholder');
+
+                // update svg object
+                var g = snap.select('#' + self.currentQuickTextFile.previewId);
+				setTimeout(function () {
+					g.ftReportTransformation();
+				}, 200);
+                var text = g.select('text');
+                var ity = self.currentQuickTextFile.intensity;
+                text.attr({
+                    text: displayText,
+                    'font-family': self.fontMap[self.currentQuickTextFile.fontIndex],
+                    fill: 'rgb('+ity+','+ity+','+ity+')',
+                    // stroke: 'rgb('+ity+','+ity+','+ity+')',
+                });
+                var bb = text.getBBox();
+                g.select('rect').attr({x: bb.x, y: bb.y, width: bb.width, height: bb.height});
+
+                // update font of input field
+                var shadowIty = 0;
+                if (ity > 200) {
+                    shadowIty = (ity - 200) / 100;
+                }
+                $('#quick_text_dialog_text_input').css('text-shadow', 'rgba(226, 85, 3, '+shadowIty+') 0px 0px 16px');
+                $('#quick_text_dialog_text_input').css('color', 'rgb('+ity+','+ity+','+ity+')');
+
+                $('#quick_text_dialog_text_input').css('font-family', self.fontMap[self.currentQuickTextFile.fontIndex]);
+                $('#quick_text_dialog_font_name').text(self.fontMap[self.currentQuickTextFile.fontIndex]);
+
+                // update fileslist
+                $('#'+self.currentQuickTextFile.id+' .title').text(displayText);
+            }
+        };
+
+        /**
+         * removes an QT object with an empty text from stage
+         */
+        self._qt_currentQuickTextRemoveIfEmpty = function() {
+            if (self.currentQuickTextFile && self.currentQuickTextFile.name === '' ) {
+                self.removeSVG(self.currentQuickTextFile);
+            }
+        };
+
+        /**
+         * Equivalent to self.placeSVG for QuickText
+         * @returns file object
+         */
+        self._qt_placeQuicktext = function(){
+            var placeholderText = $('#quick_text_dialog_text_input').attr('placeholder');
+
+            var file = {
+                date: Date.now(),
+                name: '',
+                id: null,
+                previewId: null,
+                url: null,
+                misfit: "",
+                origin: 'local',
+                path: null,
+                type: "quicktext",
+                typePath: ["quicktext"],
+                fontIndex: self.lastQuickTextFontIndex,
+                intensity: self.lastQuickTextIntensity
+            };
+
+            file.id = self.getEntryId(file);
+            file.previewId = self.generateUniqueId(file.id); // appends -# if multiple times the same design is placed.
+
+            var uc = snap.select("#userContent");
+            var text = uc.text(400, 300, placeholderText);
+            text.attr('style', 'white-space: pre; font-size: 70; font-family: Ubuntu');
+
+            var box = uc.rect(); // will be placed and sized by self._qt_currentQuickTextUpdateText()
+            box.attr({
+                opacity: "0",
+                // opacity: "0.3",
+                // fill: "yellow"
+                class: 'deleteBeforeRendering'
+            });
+
+            var group = uc.group(text, box);
+            group.attr({
+                id: file.previewId,
+				class: 'userText'
+            });
+
+            group.transformable();
+            group.ftRegisterCallback(self.svgTransformUpdate);
+
+            self.placedDesigns.push(file);
+
+            return file;
+        };
+
+        /**
+         * All fonts need to be provided as dataUrl within the SVG when rendered into a canvas. (If they're not
+         * installed on the system which we can't assume.)
+         * This copies the content of quicktext-fonts.css into the given element. It's expected that this css file
+         * contains @font-face entries with wff2 files as dataUrls. Eg:
+         * // @font-face {font-family: 'Indie Flower'; src: url(data:application/font-woff2;charset=utf-8;base64,d09GMgABAAAAAKtEABEAAAABh...) format('woff2');}
+         * @private
+         * @param DomElement to add the font definition into
+         */
+        self._qt_copyFontsToSvg = function(elem) {
+            var styleSheets = document.styleSheets;
+			for(var ss=0;ss<styleSheets.length;ss++) {
+			    if (styleSheets[ss].href && styleSheets[ss].href.endsWith("quicktext-fonts.css")) {
+			        self._qt_removeFontsFromSvg(elem);
+			        var rules = styleSheets[ss].cssRules;
+			        for(var r=0;r<rules.length;r++) {
+                        if (rules[r].cssText) {
+                            $(elem).append(rules[r].cssText);
+                        }
+                    }
+                    break; // this file appears usually twice....
+                }
+            }
+        };
+
+        /**
+         * removes the fonts added by _qt_copyFontsToSvg()
+         * @private
+         */
+		self._qt_removeFontsFromSvg = function(elem) {
+		    $(elem).empty();
+        };
+
+
+        // ***********************************************************
+		//  QUICKTEXT end
+        // ***********************************************************
 
 	}
 
@@ -1161,8 +1570,10 @@ $(function(){
 
 		["loginStateViewModel", "settingsViewModel", "printerStateViewModel",  "gcodeFilesViewModel", "laserCutterProfilesViewModel"],
 		[document.getElementById("area_preview"),
-			document.getElementById("color_classifier"),
+			document.getElementById("homing_overlay"),
 			document.getElementById("working_area_files"),
+            document.getElementById("quick_text_dialog"),
+//            document.getElementById("working_area_addstuff"),
 			//document.getElementById("webcam_wrapper")
 		]]);
 

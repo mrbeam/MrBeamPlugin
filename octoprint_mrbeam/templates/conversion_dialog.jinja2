@@ -3,24 +3,7 @@
         <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
         <h3 data-bind="text: title"></h3>
     </div>
-    <div class="modal-body">
-<!--
-        <form class="form-horizontal" data-bind="visible: !slicing_in_progress() ">
-			<div data-bind="visible: show_vector_parameters ">
-			
-				<div class="control-group" data-bind="visible: showExpertSettings">
-					<label class="control-label">{{ _('Speed') }} (<span data-bind="text: minSpeed">20</span> - <span data-bind="text: maxSpeed">3000</span>)</label>
-					<div class="controls">
-						<div class="input-append">
-							<input id="svgtogcode_feedrate_slider" class="uninitialized" type="text" data-bind="value: laserSpeed">
-							<input id="svgtogcode_feedrate" class="slider_manual_input" type="text" data-bind="value: laserSpeed, valueUpdate: 'keyup'">
-						</div>
-					</div>
-					
-				</div>
-			</div>
-        </form>
--->
+    <div class="modal-body scrollable">
 
 		<div id="color_assignment" class="" data-bind="visible: !slicing_in_progress()">
 			<div id="no_job" class="job_row row-fluid">
@@ -35,7 +18,7 @@
 				</div>
 				<div class="span3"></div>
 			</div>
-			
+
 			<div id="engrave_job" class="job_row row-fluid" data-bind="visible: show_image_parameters">
 				<div class="span3" style="display:flex;">
 					<div class="assigned_colors img_drop_zone" ondragover="colorAllowDrop(event)" ondrop="colorDrop(event)">
@@ -58,9 +41,9 @@
 							<label class="control-label">{{ _('Laser intensity range') }}</label>
 							<div class="controls">
 								<div class="input-append">
-									<input id="svgtogcode_img_intensity_white" class="img_intensity_input" type="number" min="0" max="1000" data-bind="value: imgIntensityWhite">
+									<input id="svgtogcode_img_intensity_white" class="img_intensity_input" type="number" min="0" max="100" data-bind="value: imgIntensityWhite">
 									<div class="svgtogcode_grayscale">&nbsp;</div>
-									<input id="svgtogcode_img_intensity_black" class="img_intensity_input" type="number" min="0" max="1000" data-bind="value: imgIntensityBlack">
+									<input id="svgtogcode_img_intensity_black" class="img_intensity_input" type="number" min="0" max="100" data-bind="value: imgIntensityBlack">
 								</div>
 							</div>
 							<div class="controls alert alert-info hint" data-bind="visible: showHints">
@@ -91,18 +74,14 @@
 
 						<div class="control-group" data-bind="visible: showExpertSettings ">
 							<label class="control-label">Pierce time</label>
-							<div class="controls"><input data-bind="value: engravingPiercetime" class="param_piercetime" type="number" min="0" max="2000" value="0" />&nbsp;ms</div>
+							<div class="controls"><input data-bind="value: engravingPiercetime" class="param_piercetime decimal_input" type="number" min="0" max="2000" value="0" />&nbsp;ms</div>
 
 							<label class="control-label">{{ _('Line distance') }}</label>
-							<div class="controls">
-								<div class="input-append">
-									<input id="svgtogcode_img_line_dist" class="img_intensity_input" type="number" max="0.5" min="0.1" step="0.05" data-bind="value: beamDiameter">mm
-								</div>
-							</div>
+							<div class="controls"><input id="svgtogcode_img_line_dist" class="img_intensity_input decimal_input" type="number" max="0.5" min="0.1" step="0.05" data-bind="value: beamDiameter" />&nbsp;mm</div>
 							<div class="controls alert alert-info hint" data-bind="visible: showHints">
 								<span class="icon icon-question-sign" aria-hidden="true"></span>
 								Pixel / raster engravings are done line by line. This sets the distance between the single lines.
-								Smaller values allow finer engravings but require a more precise focus and are slower. 
+								Smaller values allow finer engravings but require a more precise focus and are slower.
 							</div>
 
 
@@ -123,10 +102,10 @@
 								<div class="controls img_slider">
 									<input id="svgtogcode_contrast_slider" type="text" data-bind="value: imgContrast" >
 								</div>
-								<div style="clear:both"></div>	
+								<div style="clear:both"></div>
 								<div class="controls alert alert-info hint" data-bind="visible: showHints">
 									<span class="icon icon-question-sign" aria-hidden="true"></span>
-									Increases the image contrast before converting to gcode.  
+									Increases the image contrast before converting to gcode.
 								</div>
 
 								<label class="control-label">{{ _('Sharpening') }}</label>
@@ -136,7 +115,7 @@
 								<div style="clear:both"></div>
 								<div class="controls alert alert-info hint" data-bind="visible: showHints">
 									<span class="icon icon-question-sign" aria-hidden="true"></span>
-									Sharpens the image before converting to gcode.  
+									Sharpens the image before converting to gcode.
 								</div>
 							</div>
 
@@ -148,8 +127,8 @@
 							</div>
 							<div class="controls alert alert-info hint" data-bind="visible: showHints">
 								<span class="icon icon-question-sign" aria-hidden="true"></span>
-								Converts the image to solely black and white pixels. 
-								Use this if the laser effect on your material is not able to transfer grayscales.  
+								Converts the image to solely black and white pixels.
+								Use this if the laser effect on your material is not able to transfer grayscales.
 							</div>
 						</div>
 					</form>
@@ -172,28 +151,28 @@
 					</div>
 					<form class="job_parameters form-horizontal">
 						<div class="control-group">
-							<label class="control-label">Laser</label>
-							<div class="controls"><input class="param_intensity" type="number" min="0" max="1000"  placeholder="Intensity" />&nbsp;%</div>
+							<label class="control-label">Laser Intensity</label>
+							<div class="controls"><input class="param_intensity img_intensity_input" type="number" min="0" max="100" />&nbsp;%</div>
 							<div class="controls alert alert-info hint" data-bind="visible: showHints">
 								<span class="icon icon-question-sign" aria-hidden="true"></span>
-								Sets the intensity of the laser. The more intensity the deeper the effect on the material. 
+								Sets the intensity of the laser. The more intensity the deeper the effect on the material.
 								Cutting needs higher intensities than engraving.
 								The effect in general is dependent from the material and its color and surface.
 							</div>
 						</div>
 						<div class="control-group">
-							<label class="control-label">Speed</label>
-							<div class="controls"><input class="param_feedrate" type="number" min="20" max="3000" placeholder="Speed" />&nbsp;mm/min</div>
+							<label class="control-label">Laser Speed</label>
+							<div class="controls"><input class="param_feedrate img_intensity_input" type="number" min="20" max="3000" />&nbsp;mm/min</div>
 							<div class="controls alert alert-info hint" data-bind="visible: showHints">
 								<span class="icon icon-question-sign" aria-hidden="true"></span>
-								Sets the velocity of the laser head. The slower the movement the deeper the effect on the material. 
-								Cutting needs slower movement than engraving. 
+								Sets the velocity of the laser head. The slower the movement the deeper the effect on the material.
+								Cutting needs slower movement than engraving.
 								The effect in general is dependent from the material and its color and surface.
 							</div>
 						</div>
 						<div class="control-group">
 							<label class="control-label">Passes</label>
-							<div class="controls"><input class="param_passes" type="number" min="1" max="10" value="1" />&nbsp;&times;</div>
+							<div class="controls"><input class="param_passes img_intensity_input" type="number" min="1" max="10" value="1" />&nbsp;&times;</div>
 						</div>
 						<div class="control-group" data-bind="visible: showExpertSettings ">
 							<label class="control-label">Pierce time</label>
@@ -209,8 +188,8 @@
 				</div>
 			</div>
 		</div>
-		 
-		<div id="slicing_progress" class="progress" style="width: 100%;" data-bind="visible: slicing_in_progress()">
+
+		<div id="slicing_progress" class="progress progress-striped active" style="width: 100%;" data-bind="visible: slicing_in_progress()">
 			<div class="bar" style="width: 0%" data-bind="style: {width: slicing_progress() + '%'} "></div>
 		</div>
     </div>

@@ -425,7 +425,7 @@ input[type="submit"].btn.btn-mini {
 }
 
 #logo_compact { display: none; }
-@media (max-width: 810px) {
+@media (max-width: 1000px) {
 	#logo_wide { display: none; }
 	#logo_compact { display: initial; }
 }
@@ -488,6 +488,9 @@ input[type="submit"].btn.btn-mini {
   #navbar .navbar-inner .brand span {
     background-image: url(../img/mr-typo_x120.png);
   }
+}
+#navbar_login a.dropdown-toggle span{
+  max-width: 250px !important;
 }
 #navbar .navbar-inner .nav li.dropdown.open > .dropdown-toggle,
 #navbar .navbar-inner .nav li.dropdown.active > .dropdown-toggle,
@@ -849,6 +852,7 @@ input[type="submit"].btn.btn-mini {
 	margin-bottom: 0px;
 	/*margin-top: 6px;*/
 	box-shadow: 0px 0px 8px #DDD;
+    background-color: #FFFFFF
 }
 
 .navbar>.container {
@@ -1155,15 +1159,35 @@ ul.dropdown-menu li a {
   transform: rotate(-90deg) scaleX(-1) scaleY(-1) translate(0%, -100%);
 }*/
 /** GCODE file manager */
+
+
+
 #files .gcode_files {
   padding-right: 7px;
 }
 #files .gcode_files .entry {
-  padding: 5px;
+  padding: 12px;
   line-height: 20px;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 0;
   position: relative;
+  width: 25%;
+  float: left;
+  box-sizing: border-box;
 }
+
+@media only screen and (max-width : 1200px) {
+	#files .gcode_files .entry { width: 33%; }
+}
+
+@media only screen and (max-width : 979px) {
+	#files .gcode_files .entry { width: 50%; }
+}
+
+@media only screen and (max-width : 767px) {
+	#files .gcode_files .entry { width: 100%; }
+}
+
+
 #files .gcode_files .entry:hover {
   background-color: #f5f5f5;
 }
@@ -1171,20 +1195,7 @@ ul.dropdown-menu li a {
   text-overflow: ellipsis;
   word-break: break-all;
 }
-#files .gcode_files .entry .uploaded,
-#files .gcode_files .entry .size,
-#files .gcode_files .entry .additionalInfo {
-  font-size: 85%;
-  color: #999;
-}
-#files .gcode_files .entry .action-buttons {
-  position: absolute;
-  bottom: 5px;
-  right: 5px;
-}
-#files .gcode_files .entry .additionalInfo {
-  padding-bottom: 22px;
-}
+
 #files .upload-buttons {
   margin-top: 10px;
 }
@@ -1192,6 +1203,80 @@ ul.dropdown-menu li a {
   text-align: center;
   margin-bottom: 5px !important;
 }
+
+#files .file_list_entry .title {
+  padding: .8em .8em 0.2em;
+  white-space: nowrap;
+  border-top: 1px dotted lightgray;
+
+}
+
+.title_shortened {
+	width: 89%;
+	overflow: hidden;
+	display: inline-block;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+#files .file_list_entry li.size,
+#files .file_list_entry li.uploaded {
+  font-size: x-small;
+  color: #383e42;
+  padding: 0px 20px;
+}
+
+.file_list_icon {
+  color: #999;
+  font-size: 3em;
+  display: block;
+  float: left;
+  margin-right: 12px;
+  min-width: 1.1em;
+}
+
+.file_list_entry_gcode {
+	color: #CCC;
+}
+
+
+
+/* file tab preview cards */
+.file_list_entry.icon_card,
+.file_list_entry.preview_card {
+	position: relative;
+	width: 100%;
+	box-shadow: rgba(0,0,0,.3) 0 0 9px 0;
+}
+
+#files .preview_card div.preview,
+#files .icon_card div.preview {
+	padding-top: 80%;
+	width: 100%;
+	cursor: pointer;
+}
+
+#files .preview_card div.preview {
+	background-position: center;
+	background-size: contain;
+	background-repeat: no-repeat;
+}
+
+#files .icon_card div.preview>i{
+	text-align: center;
+	font-size: 6rem;
+	color: #999;
+	height: 0;
+	position: absolute;
+	top: calc(50% - 6rem / 2);
+	left: 0;
+	width: 100%;
+}
+
+#files .preview.disabled {
+  opacity: 0.2;
+}
+
 /** Control tab */
 #control {
   overflow: hidden;
@@ -1199,20 +1284,39 @@ ul.dropdown-menu li a {
 #control_btns {
 	text-align:center;
 }
+#control_btns i {
+	font-size:3em;
+	display:inline;
+	width: 1em;
+	height: 1em;
+	padding: .1em;
+	text-decoration: none;
+	color: #777; /* #383e42;*/
+}
+
+#control_btns a.active i,
+#control_btns i:hover {
+  color: #383e42; /* #e25303; */
+  cursor: pointer;
+}
+
+
 #control_zaxis {
-	display:inline-block;
-	width: 80px;
-	margin: 1em auto 0;
+	float:left;
+	width: 25%;
+	margin: 0;
+	box-sizing: border-box;
 }
 #control_zaxis_focus {
 	display:inline-block;
-	width: 80px;
+	/*width: 80px;*/
 	margin: 12px 0;
 }
 #control_xyaxis {
-	display:inline-block;
-	margin: 1em auto 0;
-	width: 120px;
+	float:left;
+	margin: 0;
+	width: 75%;
+	box-sizing: border-box;
 }
 
 #set_coordinate_origin_btn{
@@ -1228,13 +1332,13 @@ ul.dropdown-menu li a {
 #control .jog-panel > div.distance {
   text-align: left;
 }
-#control .box {
+/*#control .box {
   width: 30px;
   height: 30px;
   margin-right: 10px;
   margin-bottom: 10px;
   padding-left: 8px;
-}
+}*/
 #control .control-box {
   display: block;
   height: 30px;
@@ -1250,9 +1354,10 @@ ul.dropdown-menu li a {
 }
 
 /** Terminal output */
-#term #terminal-output {
-  min-height: 70vh;
+#terminal-output {
+  font-size: 11px;
 }
+
 /** Settings dialog */
 /** Footer */
 .footer ul {
@@ -1636,7 +1741,8 @@ input.search-query,
 */
 
 #wa_filelist .file_list_entry {
-	margin-right: 0.5em;
+	border-bottom: 1px dotted lightgray;
+	margin-bottom: 1em;
 }
 #wa_filelist .file_list_entry .title {
 	max-width: 80%;
@@ -1651,6 +1757,21 @@ input.search-query,
 	margin-right:.8em;
 }
 
+#wa_filelist .detail_information,
+#wa_filelist .detail_information input.decent_input {
+	font-size: 0.8rem;
+}
+#wa_filelist .detail_information input {
+	width: calc(30% - 1em);
+	margin-bottom: 0;
+	box-sizing: border-box;
+	padding-left: 0;
+	padding-top: 0;
+}
+#wa_filelist .detail_information input.wide {
+	width: calc(45% - 1em);
+}
+
 .misfit_warning {
 	display: none;
 }
@@ -1658,22 +1779,7 @@ input.search-query,
 	display: block;
 }
 
-#files .file_list_entry .title {
-	margin-left: 3.3em;
-}
 
-.file_list_icon {
-  color: #999;
-  font-size: 3em;
-  display: block;
-  float: left;
-  margin-right: 12px;
-  min-width: 1.1em;
-}
-
-.file_list_entry_gcode {
-	color: #CCC;
-}
 
 #crosshair {
     transition-property: transform;
@@ -1734,12 +1840,10 @@ input.search-query,
   margin-bottom:.3em;
 }
 
-#working_area_files {
-  height: 60vh;
-}
 
-#wa_filelist {
-	height: 55vh;
+#wa_filelist>div {
+	height: 50vh;
+	overflow-y:auto;
 }
 
 .print-control {
@@ -1877,6 +1981,161 @@ input.search-query,
 	background-size: 40px 40px;
 }
 
+.progress.active .bar {
+  -webkit-animation: progress-bar-stripes 2s reverse infinite;
+  -moz-animation: progress-bar-stripes 2s reverse infinite;
+  -ms-animation: progress-bar-stripes 2s reverse infinite;
+  -o-animation: progress-bar-stripes 2s reverse infinite;
+  animation: progress-bar-stripes 2s reverse infinite;
+}
+
 #flashing_progress {
 
+}
+
+.decimal_input{
+    width: 4em;
+    min-width: 4em;
+}
+
+.padding-top {
+   padding-top: 14px;
+}
+
+.quicktext-input {
+  height: 70px !important;
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 30px !important;
+  text-align: center;
+  -webkit-border-radius: 0;
+  -moz-border-radius: 0;
+  border-radius: 0;
+}
+
+.quicktext-slider {
+  width: 100%;
+  transform: scaleX(-1);
+}
+
+.quicktext-fontname {
+  text-align: center;
+}
+
+.quicktext-font-button {
+  font-weight: 500;
+  font-size: 16px;
+  user-select: none;
+}
+
+.hidden {
+  display: none;
+}
+
+.btn-hidden {
+  display: none;
+}
+
+/**
+ * range.css
+ */
+input[type=range] {
+  -webkit-appearance: none;
+  margin: 3.5px 0;
+}
+input[type=range]:focus {
+  outline: none;
+}
+input[type=range]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 13px;
+  cursor: pointer;
+  background: linear-gradient(to left,  #ffffff 0%,#000000 100%);
+  border-radius: 0px;
+  border: 0.1px solid #828282;
+}
+input[type=range]::-webkit-slider-thumb {
+  border: 1px solid #000000;
+  height: 20px;
+  width: 20px;
+  border-radius: 3px;
+  background: #ffffff;
+  cursor: pointer;
+  -webkit-appearance: none;
+  margin-top: -3.6px;
+}
+input[type=range]::-moz-range-track {
+  width: 100%;
+  height: 13px;
+  cursor: pointer;
+  background: linear-gradient(to left,  #ffffff 0%,#000000 100%);
+  border-radius: 0px;
+  border: 0.1px solid #828282;
+}
+input[type=range]::-moz-range-thumb {
+  border: 1px solid #000000;
+  height: 20px;
+  width: 20px;
+  border-radius: 3px;
+  background: #ffffff;
+  cursor: pointer;
+}
+input[type=range]::-ms-track {
+  width: 100%;
+  height: 13px;
+  cursor: pointer;
+  background: transparent;
+  border-color: transparent;
+  color: transparent;
+}
+input[type=range]::-ms-fill-lower {
+  background: linear-gradient(to left,  #ffffff 0%,#000000 100%);
+  border: 0.1px solid #828282;
+  border-radius: 0px;
+}
+input[type=range]::-ms-fill-upper {
+  background: linear-gradient(to left,  #ffffff 0%,#000000 100%);
+  border: 0.1px solid #828282;
+  border-radius: 0px;
+}
+input[type=range]::-ms-thumb {
+  border: 1px solid #000000;
+  height: 20px;
+  width: 20px;
+  border-radius: 3px;
+  background: #ffffff;
+  cursor: pointer;
+  height: 13px;
+}
+
+.full-col {
+	height: calc(100vh - 60px);
+	/*overflow-y: auto;*/
+}
+
+::-webkit-scrollbar-track
+{
+	-webkit-box-shadow: inset 0 0 4px rgba(0,0,0,0.3);
+	background-color: #F5F5F5;
+}
+
+::-webkit-scrollbar
+{
+	width: 4px;
+	background-color: #F5F5F5;
+}
+
+::-webkit-scrollbar-thumb
+{
+	background-color: #e25303;
+}
+
+/*This was to fix the body on touch devices. Not sure, maybe we'll need it....'*/
+/*.fixed {*/
+  /*position: fixed;*/
+  /*overflow: hidden;*/
+/*}*/
+
+.scrollable {
+  /* just a flag to mark elements that need to be scrollable on touch devices. Also see mrbeam.js */
 }

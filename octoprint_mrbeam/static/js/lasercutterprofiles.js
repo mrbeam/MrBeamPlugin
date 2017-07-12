@@ -45,6 +45,9 @@ $(function() {
             [],
             10
         );
+
+        self.hasDataLoaded = false;
+
         self.defaultProfile = ko.observable();
         self.currentProfile = ko.observable();
 
@@ -111,6 +114,8 @@ $(function() {
             self.defaultProfile(defaultProfile);
             self.currentProfile(currentProfile);
             self.currentProfileData(currentProfileData);
+
+            self.hasDataLoaded = true;
 
             //TODO calculate MaxSpeed without Conversion
             // var maxSpeed = Math.min(self.currentProfileData().axes.x.speed(), self.currentProfileData().axes.y.speed());

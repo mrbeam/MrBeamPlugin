@@ -146,6 +146,23 @@ svg .vector_outline {
 	padding-top: 12px;
 }
 
+
+
+input.decent_input {
+	border: 1px solid transparent;
+	box-shadow: none;
+
+}
+
+input.decent_input:focus,
+input.decent_input:hover {
+	border: 1px solid gray;
+}
+
+#manual_position {
+	max-width: 10em;
+}
+
 #manual_position.warning {
 	color: #e25303;
 }
@@ -196,11 +213,18 @@ svg .vector_outline {
     width: 48%;
 }
 
-#webcam_image {
+#beamcam_image {
 	position:absolute;
+	user-select: none;
+	filter: brightness(200%) contrast(70%);
+	-webkit-user-select: none;
+	-ms-user-select: none;
+	-o-user-select: none;
+	-moz-user-select: none;
+
 }
 
-#webcam_image.broken {
+#beamcam_image.broken {
 	visibility: hidden;
 }
 
@@ -249,25 +273,27 @@ h4.job_title{
     height: 48px;
     overflow: hidden;
     display: inline-block;
-    border-radius: 5%; 
+    border-radius: 5%;
     /* border: 1px solid #999; */
     box-shadow: 2px 2px 4px 2px rgba(0,0,0,0.33);
     margin: 4px;
+	background-image: url(/plugin/mrbeam/static/img/line_overlay.svg);
+	background-size: cover;
+	background-position: center;
 }
 
 .img_drop_zone,
 .color_drop_zone {
-	border-color: rgba(0,0,0,0);
 	min-height: 50px;
-	width: 100%
+	width: 100%;
+	border: 2px dashed transparent;
 }
 
 /* state machine. either img or vector color drop zone highlightning*/
-#no_job .color_drop_zone.hover, 
+#no_job .color_drop_zone.hover,
 body.engravingDrag #engrave_job .img_drop_zone.hover,
-body.vectorDrag .job_row_vector .color_drop_zone.hover, 
+body.vectorDrag .job_row_vector .color_drop_zone.hover,
 body.vectorDrag .color_drop_zone.create_job.hover {
-	border: 2px dashed;
     font-weight: 700;
 	border-color: rgba(0,0,0,0.33);
 	transition: border-color ease-in 0.5s;
@@ -280,13 +306,14 @@ body.vectorDrag .color_drop_zone.create_job.hover {
 }
 
 #cd_engraving {
-	background: linear-gradient(135deg,   
-				rgba(255, 0, 0, 1) 0%, 
+/*	background: linear-gradient(135deg,
+				rgba(255, 0, 0, 1) 0%,
 				rgba(255, 255, 0, 1) 35%,
 				rgba(0, 255, 0, 1) 50%,
 				rgba(0, 255, 255, 1) 65%,
 				rgba(0, 0, 255, 1) 100%
-				);
+				);*/
+	background-image: url(/plugin/mrbeam/static/img/img_and_fills2.svg);
 }
 
 body.colorDragInProgress #drop_overlay {
@@ -315,4 +342,61 @@ body.colorDragInProgress #drop_overlay {
 	stroke-dasharray:none;
 	stroke-dashoffset:0;
 	stroke-opacity:1;
+}
+
+.checkInput {
+	border-color: red !important;
+
+}
+
+.full-tab-height {
+	height: calc(100vh - 140px);
+	max-height: none;
+}
+
+.dimDesigns .userSVG,
+.dimDesigns .userIMG,
+.dimDesigns .userText {
+	opacity:.7;
+	filter:url(#dehighlight);
+	transition: opacity 0.2s ease-out;
+}
+
+.userSvg, .userText, .userIMG,
+.dimDesigns .userSVG.designHighlight,
+.dimDesigns .userIMG.designHighlight,
+.dimDesigns .userText.designHighlight {
+	opacity:1;
+	filter:none;
+}
+
+.highlightMarker {
+	stroke-width: 1px;
+	stroke-dasharray: 3, 9;
+	stroke:#e25303;
+	vector-effect: non-scaling-stroke;
+	fill:none;
+	animation: drawdash 1s linear normal infinite;
+	stroke-dashoffset: 0;
+}
+
+@keyframes drawdash {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: 12;
+  }
+}
+
+svg#area_preview path, 
+svg#area_preview circle, 
+svg#area_preview line, 
+svg#area_preview polyline, 
+svg#area_preview polygon, 
+svg#area_preview ellipse, 
+svg#area_preview rect 
+{
+  vector-effect: non-scaling-stroke !important;
+  stroke-width: 1px !important;
 }

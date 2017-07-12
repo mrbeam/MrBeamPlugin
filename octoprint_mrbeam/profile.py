@@ -9,9 +9,18 @@ __copyright__ = "Copyright (C) 2014 The OctoPrint Project - Released under terms
 import os
 import copy
 import re
-import logging
 
 from octoprint.util import dict_merge, dict_clean, dict_contains_keys
+from octoprint_mrbeam.mrb_logger import mrb_logger
+
+# singleton
+_instance = None
+def laserCutterProfileManager(settings):
+	global _instance
+	if _instance is None:
+		_instance = LaserCutterProfileManager(settings)
+	return _instance
+
 
 defaults = dict(
 	# general settings
@@ -52,6 +61,7 @@ class InvalidProfileError(Exception):
 
 class LaserCutterProfileManager(object):
 
+	# old default dictionary for Mr Beam I
 	default = dict(
 		id = "_mrbeam_junior",
 		name = "Mr Beam",
@@ -70,8 +80,49 @@ class LaserCutterProfileManager(object):
 			x = dict(speed=5000, inverted=False),
 			y = dict(speed=5000, inverted=False),
 			z = dict(speed=1000, inverted=False)
-		)
+		),
+		start_method = None,
+		grbl = dict(
+			resetOnConnect = False,
+		),
 	)
+
+	# we tried to switch to more up-to-date default profiles...
+	# but then more than just one profile had the same name as the default one
+	#    and that confused the whole system.... :-(
+	# default = dict(
+	# 	id = 'MrBeam2B',
+	# 	name = 'MrBeam2',
+	# 	model = 'B',
+	# 	axes = dict(
+	# 		x = dict(
+	# 			inverted = False,
+	# 			speed = 5000,
+	# 		),
+	# 		y = dict(
+	# 			inverted = False,
+	# 			speed = 5000,
+	# 		),
+	# 		z = dict(
+	# 			inverted = False,
+	# 			speed = 1000,
+	# 		),
+	# 	),
+	# 	focus = True,  # false if we need to show focus tab
+	# 	glasses = False,
+	# 	start_method = 'onebutton',
+	# 	grbl = dict(
+	# 		resetOnConnect = True,
+	# 	),
+	# 	volume = dict(
+	# 		depth = 400.0,
+	# 		height = 0.0,
+	# 		origin_offset_x = 1.1,
+	# 		origin_offset_y = 1.1,
+	# 		width = 500.0,
+	# 	),
+	# 	zAxis = False,
+	# )
 
 	def __init__(self, settings):
 		self._current = None
@@ -79,7 +130,7 @@ class LaserCutterProfileManager(object):
 		self._folder = self.settings.getBaseFolder("plugins")+"/lasercutterprofiles"
 		if not os.path.exists(self._folder):
 			os.makedirs(self._folder)
-		self._logger = logging.getLogger(__name__)
+		self._logger = mrb_logger(__name__)
 
 	def select(self, identifier):
 		if identifier is None or not self.exists(identifier):

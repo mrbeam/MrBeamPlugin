@@ -11,6 +11,9 @@ $(function () {
         self.terminal = params[6];
         self.workingArea = params[7];
         self.conversion = params[8];
+        self.readyToLaser = params[9];
+        self.navigation = params[10];
+        self.appearance = params[10];
 
         self.onStartup = function () {
             // TODO fetch machine profile on start
@@ -24,8 +27,6 @@ $(function () {
             self.control.setCoordinateOrigin = function () {
                 self.control.sendCustomCommand({type: 'command', command: "G92 X0 Y0"});
             };
-
-            self.control.jogDistanceInMM = ko.observable(undefined);
 
             self.control.manualPosition = function () {
                 $('#manual_position').removeClass('warning');
@@ -44,6 +45,72 @@ $(function () {
                     $('#manual_position').addClass('warning');
                 }
             };
+
+			$("#manual_position").on('keyup', function (e) {
+				if (e.keyCode === 13) {
+					self.control.manualPosition();
+				}
+			});
+			$("#manual_position").on('blur', function (e) {
+				self.control.manualPosition();
+			});
+
+			$("body").on('keydown', function (event) {
+
+				if (!self.settings.feature_keyboardControl()) return;
+				if(	event.target.nodeName === "INPUT"
+					|| event.target.nodeName === "TEXTAREA"
+					|| $('.modal.in').length > 0
+				) return;
+
+				var button = undefined;
+				switch (event.which) {
+					case 37: // left arrow key:
+						button = $("#control-xdec");
+						break;
+					case 38: // up arrow key
+						button = $("#control-yinc");
+						break;
+					case 39: // right arrow key
+						button = $("#control-xinc");
+						break;
+					case 40: // down arrow key
+						button = $("#control-ydec");
+						break;
+					case 33: // page up key
+					case 87: // w key
+						button = $("#control-zinc");
+						break;
+					case 34: // page down key
+					case 83: // s key
+						button = $("#control-zdec");
+						break;
+					case 36: // home key
+						button = $("#control-xyhome");
+						break;
+					case 8: // del key
+					case 46: // backspace key
+						if($('nav li.active a').attr('href') === '#workingarea'){
+							self.workingArea.removeSelectedDesign();
+							return;
+						}
+						break;
+					default:
+						return;
+//						event.preventDefault();
+//						return false;
+				}
+				if (button === undefined) {
+					return false;
+				} else {
+					event.preventDefault();
+					button.addClass("active");
+					setTimeout(function () {
+						button.removeClass("active");
+					}, 150);
+					button.click();
+				}
+			});
 
             // TODO forward to control viewmodel
             self.state.isLocked = ko.observable(undefined);
@@ -89,6 +156,10 @@ $(function () {
 					return "-";
 				return formatDuration(self.state.printTime());
 			});
+
+            self.setupFullscreenContols();
+
+
         };
 
         self.onAllBound = function (allViewModels) {
@@ -113,12 +184,78 @@ $(function () {
 
 			// adjust height of designlib scroll element
 			var height = $('#designlib').height();
-			$(".slimScrollDiv").height(height);
+			$("#designlib .slimScrollDiv").height(height);
 			$(".gcode_files").height(height);
 
-			// adjust height of mrb_term scroll element
-			height = $('#mrb_term').height();
-			$("#terminal-output").css({'height': (height - 150) + 'px'});
+			// terminal stuff
+            terminalMaxLines = self.settings.settings.plugins.mrbeam.dev.terminalMaxLines();
+            self.terminal.upperLimit(terminalMaxLines*2);
+            self.terminal.buffer(terminalMaxLines);
+
+            $("#terminal-output").scroll(function() {
+                 self.terminal.checkAutoscroll();
+            });
+            self.terminal.activeAllFilters();
+
+        };
+
+        self.onStartupComplete = function() {
+            self.addSwUpdateTierInformation();
+            $('#loading_overlay').remove();
+        };
+
+        self.addSwUpdateTierInformation = function(){
+            tier = self.settings.settings.plugins.mrbeam.dev.softwareTier();
+            if (tier != "PROD") {
+                $('#settings_plugin_softwareupdate > h3').append(" (TIER: "+tier+")");
+            }
+        };
+
+
+        /**
+         * controls fullscreen functionality unsing on screenfull.js
+         */
+        self.setupFullscreenContols = function(){
+            // Doesnt seem to work with Knockout so ket's do it manually...
+            console.log("screenfull: screenfull.enabled: ", screenfull.enabled);
+
+            if (screenfull.enabled) {
+                self._updateFullscreenButton();
+
+                screenfull.onerror(function(event){
+                    console.log('screenfull: Failed to enable fullscreen ', event);
+                });
+
+                $('#go_fullscreen_menu_item').on( "click", function() {
+                    console.log("screenfull: go_fullscreen_menu_item click");
+                    screenfull.request();
+                    self._updateFullscreenButton(true);
+                });
+                $('#exit_fullscreen_menu_item').on( "click", function() {
+                    console.log("screenfull: exit_fullscreen_menu_item click");
+                    screenfull.exit();
+                    self._updateFullscreenButton(false);
+                });
+                $('#burger_menu_link').on( "click", function() {
+                    self._updateFullscreenButton();
+                });
+            } else {
+                $('.fullscreen').hide();
+            }
+        };
+
+
+        self._updateFullscreenButton = function(isFullscreen){
+            if (isFullscreen === undefined) {
+                isFullscreen = screenfull.isFullscreen;
+            }
+            if (isFullscreen) {
+                $('#go_fullscreen_menu_item').hide();
+                $('#exit_fullscreen_menu_item').show();
+            } else {
+                $('#go_fullscreen_menu_item').show();
+                $('#exit_fullscreen_menu_item').hide();
+            }
         };
 
         self.fromCurrentData = function (data) {
@@ -143,7 +280,7 @@ $(function () {
         };
 
         self._processWPosData = function (data) {
-            if (data == null) {
+            if (data === null) {
                 self.state.currentPos({x: 0, y: 0});
             } else {
                 self.state.currentPos({x: data[0], y: data[1]});
@@ -221,7 +358,7 @@ $(function () {
                 contentType: "application/json; charset=UTF-8",
                 data: JSON.stringify({command: data.name, value: data.value}),
                 success: function (response) {
-                    if (callback != undefined) {
+                    if (callback !== undefined) {
                         callback();
                     }
                 }
@@ -241,10 +378,13 @@ $(function () {
 
         self.gcodefiles.startGcodeWithSafetyWarning = function (gcodeFile) {
             self.gcodefiles.loadFile(gcodeFile, false);
-
-            self.show_safety_glasses_warning(function () {
-                self.gcodefiles.loadFile(gcodeFile, true);
-            });
+            if (self.readyToLaser.oneButton) {
+                self.readyToLaser.setGcodeFile(gcodeFile.path);
+            } else {
+                self.show_safety_glasses_warning(function () {
+                    var do_print = self.gcodefiles.loadFile(gcodeFile, true);
+                });
+            }
         };
 
         self.gcodefiles.takePhoto = function () {
@@ -267,12 +407,15 @@ $(function () {
             var url = API_BASEURL + "files/" + payload.gcode_location + "/" + payload.gcode;
             var data = {refs: {resource: url}, origin: payload.gcode_location, path: payload.gcode};
             self.gcodefiles.loadFile(data, false); // loads gcode into gcode viewer
-
-            var callback = function (e) {
-                e.preventDefault();
-                self.gcodefiles.loadFile(data, true); // starts print
-            };
-            self.show_safety_glasses_warning(callback);
+            if (self.readyToLaser.oneButton) {
+                self.readyToLaser.setGcodeFile(payload.gcode);
+            } else {
+                var callback = function (e) {
+                    e.preventDefault();
+                    self.gcodefiles.loadFile(data, true); // starts print
+                };
+                self.show_safety_glasses_warning(callback);
+            }
 			self.gcodefiles.uploadProgress
                 .removeClass("progress-striped")
                 .removeClass("active");
@@ -286,8 +429,10 @@ $(function () {
                 type: "success"
             });
 
-            self.gcodefiles.requestData(undefined, undefined, self.gcodefiles.currentPath());
+            // self.gcodefiles.requestData(undefined, undefined, self.gcodefiles.currentPath());
+            self.gcodefiles.requestData({switchToPath: self.gcodefiles.currentPath()});
         };
+
 
         // settings.js viewmodel extensions
 
@@ -314,23 +459,37 @@ $(function () {
         });
 
         self.terminal.onAfterTabChange = function (current, previous) {
-            self.terminal.tabActive = current == "#mrb_term";
+            self.terminal.tabActive = current === "#mrb_term";
             self.terminal.updateOutput();
         };
 
+        self.terminal.checkAutoscroll = function(){
+            var elem = $("#terminal-output");
+            var isScrolledToBottom = elem[0].scrollHeight <= elem.scrollTop() + elem.outerHeight();
+            self.terminal.autoscrollEnabled(isScrolledToBottom);
+        };
+
+        self.terminal.activeAllFilters = function(){
+            var filters = self.terminal.filters();
+            for (var i = 0; i < filters.length; i++) {
+                if (filters[i].activated) {
+                    self.terminal.activeFilters.push(filters[i].regex);
+                }
+            }
+        };
 
         self.show_safety_glasses_warning = function (callback) {
             var options = {};
-            options.title = gettext("Are you sure?");
+            options.title = gettext("Ready to laser?");
+
+            if (self.workingArea.profile.currentProfileData().glasses()) {
             options.cancel = gettext("Cancel");
             options.proceed = gettext("Proceed");
-
-            if(self.workingArea.profile.currentProfileData().glasses()){
                 options.message = gettext("The laser will now start. Protect yourself and everybody in the room appropriately before proceeding!");
                 options.question = gettext("Are you sure you want to proceed?");
                 options.proceedClass = "danger";
                 options.dialogClass = "safety_glasses_heads_up";
-            }else{
+            } else {
                 options.message = gettext("The laser will now start. Please make sure the lid is closed.");
                 options.question = gettext("Please confirm to proceed.");
             }
@@ -346,24 +505,29 @@ $(function () {
             showConfirmationDialog(options);
         };
 
-        self.print_with_safety_glasses_warning = function () {
-            var callback = function (e) {
-                e.preventDefault();
-                self.print();
-            };
-            self.show_safety_glasses_warning(callback);
-        };
+
+        // who calls this????
+        // self.print_with_safety_glasses_warning = function () {
+        //     var callback = function (e) {
+        //         e.preventDefault();
+        //         /// ...and where is this function 'print()' defined???
+        //         self.print();
+        //     };
+        //     self.show_safety_glasses_warning(callback);
+        // };
     }
 
 
     // view model class, parameters for constructor, container to bind to
     ADDITIONAL_VIEWMODELS.push([MotherViewModel,
         ["loginStateViewModel", "settingsViewModel", "printerStateViewModel", "gcodeFilesViewModel",
-            "connectionViewModel", "controlViewModel", "terminalViewModel", "workingAreaViewModel", "vectorConversionViewModel"],
+            "connectionViewModel", "controlViewModel", "terminalViewModel", "workingAreaViewModel",
+            "vectorConversionViewModel", "readyToLaserViewModel", "navigationViewModel", "appearanceViewModel"],
         [document.getElementById("mrb_state"),
             document.getElementById("mrb_control"),
             document.getElementById("mrb_connection_wrapper"),
             document.getElementById("mrb_state_wrapper"),
+            document.getElementById("mrb_state_header"),
             document.getElementById("mrb_term"),
             document.getElementById("focus")
         ]]);
