@@ -253,15 +253,11 @@ def set_info_rpiws281x(self, tier):
 	module_id = "rpi-ws281x"
 	branch = "master"
 
-	pluginInfo = self._plugin_manager.get_plugin_info(module_id)
-	if pluginInfo is None: return
-	current_version = pluginInfo.version
-
 	if _is_override_in_settings(self, module_id): return
 
 	sw_update_config[module_id] = dict(
 		displayName=_get_display_name(self, name),
-		displayVersion=current_version,
+		displayVersion="",
 		type="github_commit",
 		user="mrbeam",
 		repo="rpi_ws281x",
