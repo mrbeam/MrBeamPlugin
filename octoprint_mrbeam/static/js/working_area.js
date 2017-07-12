@@ -671,7 +671,6 @@ $(function(){
 				var cols = gridsize[0] || 1;
 				var rows = gridsize[1] || 1;
 				var dist = 2;
-				console.log(dist);
 				svg.grid(cols, rows, dist);
 				event.target.value = cols+"×"+rows;
 			}
