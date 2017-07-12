@@ -262,8 +262,8 @@ def set_info_rpiws281x(self, tier):
 		user="mrbeam",
 		repo="rpi_ws281x",
 		branch=branch,
-		update_folder="~/rpi_ws281x",
-		update_script="~/rpi_ws281x/update_script.sh",
+		update_folder="/home/pi/rpi_ws281x",
+		update_script="/home/pi/rpi_ws281x/update_script.sh",
 		restart="environment")
 
 
