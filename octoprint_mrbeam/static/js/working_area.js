@@ -340,7 +340,7 @@ $(function(){
 
 				// find flowroot elements and remove them
 				var flowrootEl = f.selectAll('flowRoot');
-				if(flowrootEl.length != 0){
+				if(flowrootEl.length !== 0){
 					console.warn("Warning: removed unsupported flowRoot element in SVG");
 					self.svg_contains_flowRoot_warning();
 					flowrootEl.remove();
@@ -363,7 +363,7 @@ $(function(){
 				Array.from(f.node.childNodes).forEach(function(entry) {
 					if(entry.nodeType === 8) { // Nodetype 8 = comment
 						if(entry.textContent.indexOf('Illustrator') > -1) {
-							new PNotify({title: gettext("Illustrator SVG Detected"), text: "Illustrator SVG detected! To preserve coorect scale, please go to the \'Settings\' menu and change the \'SVG dpi\' field under \'Plugins/Svg Conversion\' according to your file. And add it again.", type: "info", hide: false});
+							new PNotify({title: gettext("Illustrator SVG Detected"), text: "Illustrator SVG detected! To preserve correct scale, please go to the \'Settings\' menu and change the \'SVG dpi\' field under \'Plugins/Svg Conversion\' according to your file. And add it again.", type: "info", hide: false});
 						}
 					}
 				});
@@ -375,7 +375,8 @@ $(function(){
 				// scale matrix
 
 				var mat = self.getDocumentViewBoxMatrix(doc_dimensions.width, doc_dimensions.height, doc_dimensions.viewbox);
-				var dpiscale = 90 / self.settings.settings.plugins.mrbeam.svgDPI();
+//				var dpiscale = 90 / self.settings.settings.plugins.mrbeam.svgDPI() * (25.4/90); 
+				var dpiscale = 25.4 / self.settings.settings.plugins.mrbeam.svgDPI(); 
                 var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(dpiscale).toTransformString();
                 newSvgAttrs['transform'] = scaleMatrixStr;
 
@@ -588,11 +589,15 @@ $(function(){
             var globalScale = self.scaleMatrix().a;
 //            var transform = svg.transform();
             var bbox = svg.getBBox();
-            var tx = self.px2mm(bbox.x * globalScale);
-            var ty = self.workingAreaHeightMM() - self.px2mm(bbox.y2 * globalScale);
+            var tx = bbox.x * globalScale;
+            var ty = self.workingAreaHeightMM() - bbox.y2 * globalScale;
+            var horizontal = (bbox.x2 - bbox.x) * globalScale;
+            var vertical = (bbox.y2 - bbox.y) * globalScale;
+//            var tx = self.px2mm(bbox.x * globalScale);
+//            var ty = self.workingAreaHeightMM() - self.px2mm(bbox.y2 * globalScale);
+//            var horizontal = self.px2mm((bbox.x2 - bbox.x) * globalScale);
+//            var vertical = self.px2mm((bbox.y2 - bbox.y) * globalScale);
 			var rot = svg.ftGetRotation();
-            var horizontal = self.px2mm((bbox.x2 - bbox.x) * globalScale);
-            var vertical = self.px2mm((bbox.y2 - bbox.y) * globalScale);
             var id = svg.attr('id');
             var label_id = id.substr(0, id.indexOf('-'));
 			$('#'+label_id+' .translation').val(tx.toFixed(1) + ',' + ty.toFixed(1));
@@ -612,8 +617,8 @@ $(function(){
 				var globalScale = self.scaleMatrix().a;
 				var newTranslateStr = event.target.value;
 				var nt = newTranslateStr.split(/[^0-9.-]/); // TODO improve
-				var ntx = self.mm2px(nt[0]) / globalScale;
-				var nty = self.mm2px(self.workingAreaHeightMM() - nt[1]) / globalScale;
+				var ntx = nt[0] / globalScale;
+				var nty = (self.workingAreaHeightMM() - nt[1]) / globalScale;
 
 				svg.ftManualTransform({tx: ntx, ty: nty});
 			}
@@ -641,7 +646,7 @@ $(function(){
 				var desiredW = parseFloat(event.target.value);
 				var currentW = svg.getBBox().w;
 				var globalScale = self.scaleMatrix().a;
-				var newRelativeScale = (self.mm2px(desiredW) / globalScale) / currentW;
+				var newRelativeScale = (desiredW / globalScale) / currentW;
 				var newScale = newRelativeScale * svg.ftGetScale();
 				svg.ftManualTransform({scale: newScale});
 			}
@@ -653,7 +658,7 @@ $(function(){
 				var desiredH = parseFloat(event.target.value);
 				var currentH = svg.getBBox().h;
 				var globalScale = self.scaleMatrix().a;
-				var newRelativeScale = (self.mm2px(desiredH) / globalScale) / currentH;
+				var newRelativeScale = (desiredH / globalScale) / currentH;
 				var newScale = newRelativeScale * svg.ftGetScale();
 				svg.ftManualTransform({scale: newScale});
 			}
@@ -665,7 +670,7 @@ $(function(){
 				var gridsize = event.target.value.split(/\D+/);
 				var cols = gridsize[0] || 1;
 				var rows = gridsize[1] || 1;
-				var dist = self.mm2px(2);
+				var dist = 2;
 				console.log(dist);
 				svg.grid(cols, rows, dist);
 				event.target.value = cols+"×"+rows;
