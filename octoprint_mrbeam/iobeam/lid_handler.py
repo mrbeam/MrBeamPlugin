@@ -76,8 +76,9 @@ class LidHandler(object):
 			self.shutdown()
 
 	def shutdown(self):
-		self._logger.debug("shutdown() stopping _photo_creator")
-		self._photo_creator.active = False
+		if self._photo_creator is not None:
+			self._logger.debug("shutdown() stopping _photo_creator")
+			self._end_photo_worker()
 
 	def _start_photo_worker(self):
 		worker = threading.Thread(target=self._photo_creator.work)
