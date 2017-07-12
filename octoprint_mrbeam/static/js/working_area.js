@@ -1510,8 +1510,11 @@ $(function(){
             file.previewId = self.generateUniqueId(file.id); // appends -# if multiple times the same design is placed.
 
             var uc = snap.select("#userContent");
-            var text = uc.text(400, 300, placeholderText);
-            text.attr('style', 'white-space: pre; font-size: 70; font-family: Ubuntu');
+			var x = self.workingAreaWidthMM()/2;
+			var y = self.workingAreaHeightMM()/3;
+			var size = self.workingAreaHeightMM()/20;
+            var text = uc.text(x, y, placeholderText);
+            text.attr('style', 'white-space: pre; font-size: '+size+'; font-family: Ubuntu; text-anchor: middle');
 
             var box = uc.rect(); // will be placed and sized by self._qt_currentQuickTextUpdateText()
             box.attr({
