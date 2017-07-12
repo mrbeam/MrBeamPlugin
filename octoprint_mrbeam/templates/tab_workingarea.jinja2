@@ -360,8 +360,7 @@
 										attr: { 
 											viewBox: '0 0 ' + workingAreaWidthMM() +' '+ workingAreaHeightMM(),
 											visibility: 'visible'	
-										}"
-									 XXstyle="transform:scale(1,-1);">
+										}">
 								<defs>
 									<filter id="grayscale_filter">
 										<feColorMatrix in="SourceGraphic" type="saturate" values="0"/>
@@ -380,8 +379,6 @@
 								</defs>
 
 									<g id="scaleGroup" data-bind="attr: { transform: scaleMatrix() }">
-										<!--<g id="placedGcodes" data-bind="visible: true || (state.isPrinting() && !state.isPaused()), attr: { transform: scaleMatrixMMtoDisplay() }"></g>-->
-										<!--<g id="gCodePreview" data-bind="visible: state.isPrinting() || state.isPaused(), attr: { transform: scaleMatrixMMtoDisplay() }"></g>-->
 										<g id="placedGcodes" data-bind="visible: true || (state.isPrinting() && !state.isPaused())"></g>
 										<g id="gCodePreview" data-bind="visible: state.isPrinting() || state.isPaused()"></g>
 										<rect id="coordGrid" x="0" y="0" width="0" height="0"

@@ -307,7 +307,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			// transformed bbox
 			this.data("bbT", this.paper.rect( rectObjFromBB( this.getBBox(1), rad ) )
 							.attr({ fill: "none", 'vector-effect': "non-scaling-stroke", stroke: ftOption.handleFill, strokeWidth: ftOption.handleStrokeWidth, strokeDasharray: ftOption.handleStrokeDashPreset.join(',') })
-							.transform( this.transform().global.toString() ) );
+							.transform( this.transform().local.toString() ) );
 			return this;
 		};
 

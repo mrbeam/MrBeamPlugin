@@ -479,7 +479,7 @@ $(function(){
 				newSvg.attr({id: previewId});
 				snap.select("#userContent").append(newSvg);
 				newSvg.transformable();
-				newSvg.ftRegisterCallback(self.svgTransformUpdate);
+				newSvg.ftRegisterOnTransformCallback(self.svgTransformUpdate);
 				setTimeout(function(){
 					newSvg.ftReportTransformation();
 				}, 200);
@@ -794,7 +794,7 @@ $(function(){
 
 				var y = self.workingAreaHeightMM() - hMM;
 				var imgWrapper = snap.group();
-				var newImg = imgWrapper.image(url, 0, 0, wMM, hMM).attr({transform: 'matrix(1,0,0,-1,0,'+hMM+')'});
+				var newImg = imgWrapper.image(url, 0, 0, wMM, y); //.attr({transform: 'matrix(1,0,0,-1,0,'+hMM+')'});
 				var id = self.getEntryId(file);
 				newImg.attr({filter: 'url(#grayscale_filter)', 'data-serveurl': url});
 				var previewId = self.generateUniqueId(id); // appends # if multiple times the same design is placed.
@@ -802,7 +802,7 @@ $(function(){
 				imgWrapper.append(newImg);
 				snap.select("#userContent").append(imgWrapper);
 				imgWrapper.transformable();
-				imgWrapper.ftRegisterCallback(self.svgTransformUpdate);
+				imgWrapper.ftRegisterOnTransformCallback(self.svgTransformUpdate);
 				setTimeout(function(){
 					imgWrapper.ftReportTransformation();
 				}, 200);
@@ -1528,7 +1528,7 @@ $(function(){
             });
 
             group.transformable();
-            group.ftRegisterCallback(self.svgTransformUpdate);
+            group.ftRegisterOnTransformCallback(self.svgTransformUpdate);
 
             self.placedDesigns.push(file);
 
