@@ -257,7 +257,7 @@ def set_info_rpiws281x(self, tier):
 
 	sw_update_config[module_id] = dict(
 		displayName=_get_display_name(self, name),
-		displayVersion="",
+		displayVersion="1.0",
 		type="github_commit",
 		user="mrbeam",
 		repo="rpi_ws281x",
