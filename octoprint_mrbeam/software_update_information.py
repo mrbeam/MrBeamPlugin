@@ -29,7 +29,7 @@ def get_update_information(self):
 		set_info_mrbeamledstrips(self, tier)
 		set_info_netconnectd_daemon(self, tier)
 		set_info_iobeam(self, tier)
-		set_info_rpiws281x_daemon
+		set_info_rpiws281x_daemon(self, tier)
 
 	_logger(self).debug("MrBeam Plugin provides this config (might be overridden by settings!):\n%s", yaml.dump(sw_update_config, width=50000).strip())
 
