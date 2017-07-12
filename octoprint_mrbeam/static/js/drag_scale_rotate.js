@@ -81,7 +81,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			handleStrokeDashPreset: [5,5],
 			handleStrokeWidth: 2,
 			handleLength: 22,
-			handleRadius: 20,
+			handleRadius: 10,
 			unscale: 1,
 			handleStrokeDash: "5,5"
 		};
@@ -495,7 +495,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		var vx = mainEl.matrix.x(resizeDragger.attr('cx'),resizeDragger.attr('cy'));
 		var vy = mainEl.matrix.y(resizeDragger.attr('cx'),resizeDragger.attr('cy'));
 		resizeDragger.data('signX',Math.sign(bb.cx - vx));
-		resizeDragger.data('signY',Math.sign(bb.cy - vy));
+		resizeDragger.data('signY',Math.sign(-bb.cy + vy));
 		// console.log("Sig X/Y", resizeDragger.data('signX'), resizeDragger.data('signY'));
 
 	};
@@ -506,7 +506,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	function resizeDraggerMove( mainEl, dx, dy, x, y, event ) {
 		var resizeDragger = this;
 		// TODO use dx and dy, scale properly to movement.
-		var	delta = dy/2; //apply smoothing factor of 2
+		var	delta = -dy/2; //apply smoothing factor of 2
 
 		var origHeight = +mainEl.data('oHeight') * +mainEl.data('angleFactor');
 		var newHeight = +resizeDragger.data('sHeight') - delta * mainEl.data('sgUnscale') * resizeDragger.data('signY');
