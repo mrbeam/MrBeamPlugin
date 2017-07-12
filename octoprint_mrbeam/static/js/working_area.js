@@ -103,13 +103,19 @@ $(function(){
 
 
 		// matrix scales svg units to display_pixels
+//		self.scaleMatrix = ko.computed(function(){
+//			var m = new Snap.Matrix();
+//			var factor = 25.4/self.svgDPI(); // * 1/self.px2mm_factor();
+//			if(!isNaN(factor)){
+//				m.scale(factor);
+//				return m;
+//			}
+//			return m;
+//		});
+		
+		// matrix scales svg units to display_pixels
 		self.scaleMatrix = ko.computed(function(){
 			var m = new Snap.Matrix();
-			var factor = 25.4/self.svgDPI();
-			if(!isNaN(factor)){
-				m.scale(factor);
-				return m;
-			}
 			return m;
 		});
 
@@ -392,9 +398,7 @@ $(function(){
 						}
 					}
 				}
-
-				newSvg.bake(); // remove transforms
-				newSvg.selectAll('path').attr({strokeWidth: '0.5'});
+				
 				newSvg.attr(newSvgAttrs);
 				newSvg.bake(); // remove transforms
 				newSvg.selectAll('path').attr({strokeWidth: '0.8', class:'vector_outline'});
@@ -448,7 +452,7 @@ $(function(){
 			svg.data('fitMatrix', null);
 			$('#'+file.id).removeClass('misfit');
 			self.svgTransformUpdate(svg);
-//			svg.embed_gc();
+			svg.embed_gc();
 		};
 
 		self.placeDXF = function(file) {
@@ -1004,14 +1008,14 @@ $(function(){
 				var max_lines = 20;
 
 				var linedist = Math.floor(Math.max(self.workingAreaWidthMM(), self.workingAreaHeightMM()) / (max_lines * 10))*10;
-//				var yPatternOffset = self.workingAreaHeightMM() % linedist;
-				var yPatternOffset = 0;
+				var yPatternOffset = self.workingAreaHeightMM() % linedist;
+//				var yPatternOffset = 0;
 
 				var marker = snap.circle(linedist/2, linedist/2, .5).attr({
 					fill: "#000000",
 					stroke: "none",
 					strokeWidth: 1,
-                    r: 2
+                    r: 0.75
 				});
 
 				// dot pattern
@@ -1056,7 +1060,9 @@ $(function(){
 			var wPT = wMM * 90 / 25.4;  // TODO ... switch to 96dpi ? 
 			var hPT = hMM * 90 / 25.4;
 			var compSvg = self.getNewSvg('compSvg', wPT, hPT);
-			var content = compSvg.g({id: 'flipY', transform: 'matrix(1,0,0,-1,0,'+hMM+')'});
+//			var attrs = {id: 'flipY', transform: 'matrix(1,0,0,-1,0,'+hMM+')'};
+			var attrs = {};
+			var content = compSvg.g(attrs);
 			var userContent = snap.select("#userContent").clone();
 			content.append(userContent);
 
@@ -1083,7 +1089,7 @@ $(function(){
 			if(svgStr !== ''){
 				var wMM = self.workingAreaWidthMM();
 				var hMM = self.workingAreaHeightMM();
-				var dpiFactor = 90 / 25.4; // we create SVG always with 90 dpi. 
+				var dpiFactor = 90 / 25.4; // we create SVG always with 90 dpi.  // TODO ... switch to 96dpi ? 
 				var w = dpiFactor * wMM;
 				var h = dpiFactor * hMM;
 				var viewBox = "0 0 " + wMM + " " + hMM;

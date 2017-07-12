@@ -412,7 +412,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		var sgUnscale = mainEl.data('sgUnscale');
 
 		var udx = sgUnscale * dx;
-		var udy = sgUnscale * dy * -1;
+		var udy = sgUnscale * dy;
 
 		var tx = mainEl.data("otx") + +udx;
 		var ty = mainEl.data("oty") + +udy;
@@ -453,7 +453,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 		var rCenter = {x: mainBB.cx,y: mainBB.cy};
 		var rStart = {x: +rotateDragger.data('ocx') , y: +rotateDragger.data('ocy')};
-		var rEnd = {x: rStart.x + dx * sgUnscale, y: rStart.y + dy * sgUnscale * -1};
+		var rEnd = {x: rStart.x + dx * sgUnscale, y: rStart.y + dy * sgUnscale};
 
 
 		if(!mainEl.data('block_rotation')){
@@ -506,7 +506,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	function resizeDraggerMove( mainEl, dx, dy, x, y, event ) {
 		var resizeDragger = this;
 		// TODO use dx and dy, scale properly to movement.
-		var	delta = -dy/2; //apply smoothing factor of 2
+		var	delta = dy/2; //apply smoothing factor of 2
 
 		var origHeight = +mainEl.data('oHeight') * +mainEl.data('angleFactor');
 		var newHeight = +resizeDragger.data('sHeight') - delta * mainEl.data('sgUnscale') * resizeDragger.data('signY');
