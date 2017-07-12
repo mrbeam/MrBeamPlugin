@@ -219,7 +219,6 @@ def set_info_netconnectd_daemon(self, tier):
 		restart="environment")
 
 
-
 def set_info_iobeam(self, tier):
 	name = "iobeam"
 	module_id = "iobeam"
@@ -248,6 +247,29 @@ def set_info_iobeam(self, tier):
 	)
 
 
+def set_info_rpiws281x_daemon(self, tier):
+	name = "rpi-ws281x"
+	module_id = "rpi-ws281x"
+	branch = "master"
+
+	pluginInfo = self._plugin_manager.get_plugin_info(module_id)
+	if pluginInfo is None: return
+	current_version = pluginInfo.version
+
+	if _is_override_in_settings(self, module_id): return
+
+	sw_update_config[module_id] = dict(
+		displayName=_get_display_name(self, name),
+		displayVersion=current_version,
+		type="github_commit",
+		user="mrbeam",
+		repo="rpi_ws281x",
+		branch=branch,
+		update_folder="~/rpi_ws281x",
+		update_script="~/rpi_ws281x/update_script.sh",
+		restart="environment")
+
+
 def _get_display_name(self, name):
 	return name
 	# if tier is not None and not tier == SW_UPDATE_TIER_PROD:
@@ -262,7 +284,7 @@ def _is_override_in_settings(self, module_id):
 	if is_override:
 		_logger(self).info("Module %s has overriding config in settings!", module_id)
 		return True
- 	return False
+	return False
 
 
 def get_version_of_pip_module(self, pip_name, pip_command=None):
