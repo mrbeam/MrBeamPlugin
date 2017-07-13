@@ -280,7 +280,7 @@ $(function () {
         };
 
         self._processWPosData = function (data) {
-            if (data === null) {
+            if (data === undefined || data === null) {
                 self.state.currentPos({x: 0, y: 0});
             } else {
                 self.state.currentPos({x: data[0], y: data[1]});
