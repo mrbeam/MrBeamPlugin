@@ -582,7 +582,7 @@ $(function(){
 			newSvg.attr({id: previewId, class: 'userSVG'});
 			newSvg.transform();
 			snap.select("#userContent").append(newSvg);
-			newSvg.ftRegisterCallback(self.svgTransformUpdate);
+			newSvg.ftRegisterOnTransformCallback(self.svgTransformUpdate);
 			newSvg.transformable();
 			setTimeout(function(){
 				newSvg.ftReportTransformation();
@@ -618,7 +618,7 @@ $(function(){
 				newSvg.attr({id: previewId});
 				snap.select("#userContent").append(newSvg);
 				newSvg.transformable();
-				newSvg.ftRegisterCallback(self.svgTransformUpdate);
+				newSvg.ftRegisterOnTransformCallback(self.svgTransformUpdate);
 				setTimeout(function(){
 					newSvg.ftReportTransformation();
 				}, 200);
