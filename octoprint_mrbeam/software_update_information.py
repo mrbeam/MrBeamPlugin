@@ -29,6 +29,10 @@ def get_update_information(self):
 		set_info_mrbeamledstrips(self, tier)
 		set_info_netconnectd_daemon(self, tier)
 		set_info_iobeam(self, tier)
+<<<<<<< HEAD
+=======
+		set_info_rpiws281x(self, tier)
+>>>>>>> develop
 
 	_logger(self).debug("MrBeam Plugin provides this config (might be overridden by settings!):\n%s", yaml.dump(sw_update_config, width=50000).strip())
 
@@ -219,7 +223,10 @@ def set_info_netconnectd_daemon(self, tier):
 		restart="environment")
 
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> develop
 def set_info_iobeam(self, tier):
 	name = "iobeam"
 	module_id = "iobeam"
@@ -248,6 +255,28 @@ def set_info_iobeam(self, tier):
 	)
 
 
+<<<<<<< HEAD
+=======
+def set_info_rpiws281x(self, tier):
+	name = "rpi-ws281x"
+	module_id = "rpi-ws281x"
+	branch = "master"
+
+	if _is_override_in_settings(self, module_id): return
+
+	sw_update_config[module_id] = dict(
+		displayName=_get_display_name(self, name),
+		displayVersion="1.0",
+		type="github_commit",
+		user="mrbeam",
+		repo="rpi_ws281x",
+		branch=branch,
+		update_folder="/home/pi/rpi_ws281x",
+		update_script="/home/pi/rpi_ws281x/update_script.sh",
+		restart="environment")
+
+
+>>>>>>> develop
 def _get_display_name(self, name):
 	return name
 	# if tier is not None and not tier == SW_UPDATE_TIER_PROD:
@@ -262,7 +291,11 @@ def _is_override_in_settings(self, module_id):
 	if is_override:
 		_logger(self).info("Module %s has overriding config in settings!", module_id)
 		return True
+<<<<<<< HEAD
  	return False
+=======
+	return False
+>>>>>>> develop
 
 
 def get_version_of_pip_module(self, pip_name, pip_command=None):

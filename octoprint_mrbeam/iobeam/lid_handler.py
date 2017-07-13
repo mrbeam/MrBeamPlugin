@@ -8,12 +8,12 @@ from os.path import isfile
 # don't crash on a dev computer where you can't install picamera
 try:
 	from picamera import PiCamera
-        import mb_picture_preparation as mb_pic
+	import mb_picture_preparation as mb_pic
 	PICAMERA_AVAILABLE = True
-except:
+except Exception as e:
 	PICAMERA_AVAILABLE = False
 	logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler").warn(
-		"Could not import module 'picamera'. Disabling camera integration.")
+		"Could not import module 'picamera' or 'mb_picture_preparation'. Disabling camera integration. (%s: %s)", e.__class__.__name__, e)
 
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 from octoprint.events import Events as OctoPrintEvents

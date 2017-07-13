@@ -1,6 +1,6 @@
 /* global Snap */
 
-//    Path convert - a snapsvg.io plugin to convert svg native elements types to paths.
+//    Path convert - a snapsvg.io plugin to convert svg native elements to paths.
 //    Copyright (C) 2015  Teja Philipp <osd@tejaphilipp.de>
 //
 //    This program is free software: you can redistribute it and/or modify

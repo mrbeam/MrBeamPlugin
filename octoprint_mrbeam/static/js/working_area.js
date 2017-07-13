@@ -54,6 +54,13 @@ $(function(){
         self.lastQuickTextFontIndex = 0;
         self.lastQuickTextIntensity = 0; // rgb values: 0=black, 155=white
 
+        // QuickText fields
+        self.fontMap = ['Ubuntu', 'Roboto', 'Libre Baskerville', 'Indie Flower', 'VT323'];
+        self.currentQuickTextFile = undefined;
+        self.currentQuickText = ko.observable();
+        self.lastQuickTextFontIndex = 0;
+        self.lastQuickTextIntensity = 0; // rgb values: 0=black, 155=white
+
         self.camera_offset_x = ko.observable(0);
 		self.camera_offset_y = ko.observable(0);
 		self.camera_scale = ko.observable(1.0);
@@ -145,7 +152,6 @@ $(function(){
 		    var x = self.crosshairX !== undefined ? self.crosshairX() : 0;
 		    var y = self.crosshairY !== undefined ? self.crosshairY() : 0;
 		    var m = "matrix(1, 0, 0, 1, " + x + ", " + y + ")";
-//		    var m = "matrix(0.09, 0, 0, 0.09, " + x + ", " + y + ")";
 		    return m;
         };
 
@@ -358,9 +364,6 @@ $(function(){
 				});
 				// find all elements with "display=none" and remove them
 				f.selectAll("[display=none]").remove();
-				f.selectAll("sodipodi\\:namedview").remove();
-				f.selectAll("metadata").remove();
-				f.selectAll('desc').remove();
 
 				// find Illustrator comment and notify
 				Array.from(f.node.childNodes).forEach(function(entry) {
@@ -402,7 +405,7 @@ $(function(){
 						}
 					}
 				}
-				
+
 				newSvg.attr(newSvgAttrs);
 				newSvg.bake(); // remove transforms
 				newSvg.selectAll('path').attr({strokeWidth: '0.8', class:'vector_outline'});
@@ -570,6 +573,139 @@ $(function(){
 //			}
 		};
 
+		self.duplicateSVG = function(src) {
+			self.abortFreeTransforms();
+			var newSvg = snap.select('#'+src.previewId).clone();
+			var file = {url: src.url, origin: src.origin, name: src.name, type: src.type};
+			var id = self.getEntryId(file);
+			var previewId = self.generateUniqueId(id); 
+			newSvg.attr({id: previewId, class: 'userSVG'});
+			newSvg.transform();
+			snap.select("#userContent").append(newSvg);
+			newSvg.ftRegisterCallback(self.svgTransformUpdate);
+			newSvg.transformable();
+			setTimeout(function(){
+				newSvg.ftReportTransformation();
+			}, 200);
+
+			file.id = id; // list entry id
+			file.previewId = previewId;
+			file.misfit = "";
+
+			self.placedDesigns.push(file);
+		};
+
+		self.placeDXF = function(file) {
+			var url = self._getSVGserveUrl(file);
+
+			callback = function (f) {
+				var doc_dimensions = self._getDocumentDimensionAttributes(f);
+				var newSvgAttrs = self._getDocumentNamespaceAttributes(f);
+
+				// scale matrix
+				var mat = self.getDocumentViewBoxMatrix(doc_dimensions.width, doc_dimensions.height, doc_dimensions.viewbox);
+				var dpiscale = 90; // self.settings.settings.plugins.mrbeam.svgDPI();
+                var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(dpiscale).toTransformString();
+
+				var newSvg = snap.group(f.selectAll("svg>*"));
+				newSvg.attr('transform', scaleMatrixStr);
+
+				newSvg.bake(); // remove transforms
+				newSvg.selectAll('path').attr({strokeWidth: '0.5', 'vector-effect':'non-scaling-stroke'});
+				newSvg.attr(newSvgAttrs);
+				var id = self.getEntryId(file);
+				var previewId = self.generateUniqueId(id); // appends -# if multiple times the same design is placed.
+				newSvg.attr({id: previewId});
+				snap.select("#userContent").append(newSvg);
+				newSvg.transformable();
+				newSvg.ftRegisterCallback(self.svgTransformUpdate);
+				setTimeout(function(){
+					newSvg.ftReportTransformation();
+				}, 200);
+				file.id = id; // list entry id
+				file.previewId = previewId;
+				file.url = url;
+				file.misfit = "";
+
+				self.placedDesigns.push(file);
+			};
+			Snap.loadDXF(url, callback);
+		};
+
+		self._getDocumentDimensionAttributes = function(file){
+			if(file.select('svg') === null){
+				root_attrs = file.node.attributes;
+			} else {
+				var root_attrs = file.select('svg').node.attributes;
+			}
+			var doc_width = null;
+			var doc_height = null;
+			var doc_viewbox = null;
+
+			// iterate svg tag attributes
+			for(var i = 0; i < root_attrs.length; i++){
+				var attr = root_attrs[i];
+
+				// get dimensions
+				if(attr.name === "width") doc_width = attr.value;
+				if(attr.name === "height") doc_height = attr.value;
+				if(attr.name === "viewBox") doc_viewbox = attr.value;
+			}
+			return {
+				width: doc_width,
+				height: doc_height,
+				viewbox: doc_viewbox
+			};
+		};
+
+		self._getDocumentNamespaceAttributes = function(file){
+			if(file.select('svg') === null){
+				root_attrs = file.node.attributes;
+			} else {
+				var root_attrs = file.select('svg').node.attributes;
+			}
+			var namespaces = {};
+
+			// iterate svg tag attributes
+			for(var i = 0; i < root_attrs.length; i++){
+				var attr = root_attrs[i];
+
+				// copy namespaces into group
+				if(attr.name.indexOf("xmlns") === 0){
+					namespaces[attr.name] = attr.value;
+				}
+			}
+			return namespaces;
+		};
+
+		self.highlightDesign = function(data){
+			$('#userContent').addClass('dimDesigns');
+			var svgEl = $('#'+data.previewId);
+			svgEl.addClass('designHighlight');
+			self.showHighlightMarkers(data.previewId);
+		};
+		self.removeHighlight = function(data){
+			$('#userContent').removeClass('dimDesigns');
+			var svgEl = $('#'+data.previewId);
+			svgEl.removeClass('designHighlight');
+			self.showHighlightMarkers(null);
+		};
+		self.showHighlightMarkers = function(svgId) {
+//			if(svgId === null){
+//				var w = self.mm2svgUnits(self.workingAreaWidthMM());
+//				var h = self.mm2svgUnits(self.workingAreaHeightMM());
+//				snap.select('#highlightMarker').attr({x: -1, y:-1, width:0, height:0});
+//			} else {
+//				var svgEl = snap.select('#'+svgId);
+//				var bbox = svgEl.getBBox();
+//				var x = bbox.x - 20;
+//				var y = bbox.y - 20;
+//				var w = bbox.w + 40;
+//				var h = bbox.h + 40;
+//				snap.select('#highlightMarker').attr({x: x, y:y, width:w, height:h});
+//			}
+		};
+
 		self.toggleTransformHandles = function(file){
 			var el = snap.select('#'+file.previewId);
 			if(el){
@@ -596,10 +732,6 @@ $(function(){
             var ty = self.workingAreaHeightMM() - bbox.y2 * globalScale;
             var horizontal = (bbox.x2 - bbox.x) * globalScale;
             var vertical = (bbox.y2 - bbox.y) * globalScale;
-//            var tx = self.px2mm(bbox.x * globalScale);
-//            var ty = self.workingAreaHeightMM() - self.px2mm(bbox.y2 * globalScale);
-//            var horizontal = self.px2mm((bbox.x2 - bbox.x) * globalScale);
-//            var vertical = self.px2mm((bbox.y2 - bbox.y) * globalScale);
 			var rot = svg.ftGetRotation();
             var id = svg.attr('id');
             var label_id = id.substr(0, id.indexOf('-'));

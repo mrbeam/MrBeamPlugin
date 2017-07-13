@@ -355,7 +355,11 @@ class MachineCom(object):
 		# homeX = self._laserCutterProfile['volume']['width'] - 2
 		# homeY = self._laserCutterProfile['volume']['depth'] - 2
 		# // ANDYTEST magic numbers!!!!!
+<<<<<<< HEAD
 		self.sendCommand("G0X500Y390")
+=======
+		self.sendCommand("G0X500Y390")  # TODO replace hardcoded values with profile values
+>>>>>>> develop
 		self.sendCommand("M9")
 
 	def _handle_status_report(self, line):
@@ -917,6 +921,10 @@ class MachineCom(object):
 
 		time.sleep(1.1)
 		self._sendCommand("G92X{:.3f}Y{:.3f}Z0\n".format(self.MPosX+501.0, self.MPosY+391.0))
+<<<<<<< HEAD
+=======
+		self._sendCommand("G0X500Y390\n")  # TODO replace hardcoded values with profile values
+>>>>>>> develop
 
 		payload = {
 			"file": self._currentFile.getFilename(),
