@@ -30,6 +30,13 @@ $(function(){
 
 		self.log = [];
 
+		self.gc_options = {
+			precision: 0.1,
+			optimize_travel: true,
+			small_paths_first: true,
+			
+		};
+
 		self.command = ko.observable(undefined);
 
 		self.availableHeight = ko.observable(undefined);
@@ -420,11 +427,11 @@ $(function(){
 					newSvg.clean_gc();
 				});
 				newSvg.ftRegisterAfterTransformCallback(function(){
-					newSvg.embed_gc(self.flipYMatrix());
+					newSvg.embed_gc(self.flipYMatrix(), self.workingAreaWidthMM(), self.workingAreaHeightMM(), self.gc_options);
 				});
 				
 
-				newSvg.embed_gc(self.flipYMatrix());
+				newSvg.embed_gc(self.flipYMatrix(), self.workingAreaWidthMM(), self.workingAreaHeightMM(), self.gc_options);
 
 				setTimeout(function(){
 					newSvg.ftReportTransformation();
@@ -460,7 +467,7 @@ $(function(){
 			svg.data('fitMatrix', null);
 			$('#'+file.id).removeClass('misfit');
 			self.svgTransformUpdate(svg);
-			svg.embed_gc(self.flipYMatrix());
+			svg.embed_gc(self.flipYMatrix(), self.workingAreaWidthMM(), self.workingAreaHeightMM(), self.gc_options);
 		};
 
 		self.placeDXF = function(file) {
