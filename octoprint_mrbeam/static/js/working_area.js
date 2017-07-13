@@ -1414,6 +1414,8 @@ $(function(){
 			var wPT = wMM * 90 / 25.4;
 			var hPT = hMM * 90 / 25.4;
 			var tmpSvg = self.getNewSvg('tmpSvg', wPT, hPT);
+			var attrs = {viewBox: "0 0 " + wMM + " " + hMM};
+			tmpSvg.attr(attrs);
 			// get only filled items and embed the images
 			var userContent = svg.clone();
 			tmpSvg.append(userContent);
