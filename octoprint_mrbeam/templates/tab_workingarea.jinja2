@@ -232,6 +232,11 @@
 																<input class="decent_input multiply" type="text" value="1×1" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualMultiply($data, event); },
 																			blur: function(d, event){ $root.svgManualMultiply($data, event); }} "/>
+																
+																<i class="icon-copy" title="{{ _('duplicate') }}"></i> 
+																<a href="#" data-bind="event: {
+																			click: function(d, event){ $root.duplicateSVG($data, event); }	
+																		} ">duplicate</a>
 															</div>
 															<div class="misfit_warning" >
 																<i class="icon-exclamation-sign" style="color:red;" title="{{ _('exceeds working area') }}"> Design exceeds the working area.</i>

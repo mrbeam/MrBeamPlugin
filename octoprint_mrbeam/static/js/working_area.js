@@ -423,6 +423,28 @@ $(function(){
 			self.svgTransformUpdate(svg);
 		};
 
+		self.duplicateSVG = function(src) {
+			self.abortFreeTransforms();
+			var newSvg = snap.select('#'+src.previewId).clone();
+			var file = {url: src.url, origin: src.origin, name: src.name, type: src.type};
+			var id = self.getEntryId(file);
+			var previewId = self.generateUniqueId(id); 
+			newSvg.attr({id: previewId, class: 'userSVG'});
+			newSvg.transform();
+			snap.select("#userContent").append(newSvg);
+			newSvg.ftRegisterCallback(self.svgTransformUpdate);
+			newSvg.transformable();
+			setTimeout(function(){
+				newSvg.ftReportTransformation();
+			}, 200);
+
+			file.id = id; // list entry id
+			file.previewId = previewId;
+			file.misfit = "";
+
+			self.placedDesigns.push(file);
+		};
+
 		self.placeDXF = function(file) {
 			var url = self._getSVGserveUrl(file);
 
