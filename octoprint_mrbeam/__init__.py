@@ -120,6 +120,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		msg += ", octopi:" + str(self._octopi_info)
 		self._logger.info(msg, terminal=True)
 
+		msg = "MrBeam Lasercutter Profile: %s" % self.laserCutterProfileManager.get_current_or_default()
+		self._logger.info(msg, terminal=True)
+
 
 	def _convert_profiles(self, profiles):
 		result = dict()

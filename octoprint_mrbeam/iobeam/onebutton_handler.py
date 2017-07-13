@@ -7,6 +7,7 @@ from octoprint.filemanager import valid_file_type
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
+from octoprint_mrbeam.iobeam.temperature_manager import temperatureManager
 
 # singleton
 _instance = None
@@ -70,6 +71,8 @@ class OneButtonHandler(object):
 		self.shutdown_state = self.SHUTDOWN_STATE_NONE
 		self.shutdown_prepare_was_initiated_during_pause_saftey_timeout = None
 
+		self.behave_cooling_state = False
+
 	def _subscribe(self):
 		self._event_bus.subscribe(IoBeamEvents.ONEBUTTON_DOWN, self.onEvent)
 		self._event_bus.subscribe(IoBeamEvents.ONEBUTTON_PRESSED, self.onEvent)
@@ -104,6 +107,7 @@ class OneButtonHandler(object):
 		msg += ", pause_need_to_release:{}".format(self.pause_need_to_release)
 		msg += ", pause_safety_timeout_timer:{}".format(self.pause_safety_timeout_timer)
 		msg += ", _is_during_pause_waiting_time():{}".format(self._is_during_pause_waiting_time())
+		msg += ", behave_cooling_state:{}".format(self.behave_cooling_state)
 
 		msg += ", _printer.get_state_id():{}".format(self._printer.get_state_id())
 		msg += ", _printer.is_operational():{}".format(self._printer.is_operational())
@@ -118,8 +122,17 @@ class OneButtonHandler(object):
 
 		# ...and the we can go:
 		if event == IoBeamEvents.ONEBUTTON_PRESSED:
-			if self.print_started > 0 and time.time() - self.print_started > 1 and self._printer.get_state_id() == self.PRINTER_STATE_PRINTING:
+			if self.print_started > 0 \
+					and time.time() - self.print_started > 1 \
+					and self._printer.get_state_id() == self.PRINTER_STATE_PRINTING:
 				self._logger.debug("onEvent() ONEBUTTON_PRESSED: self.pause_laser()")
+				self.pause_laser(need_to_release=True)
+			elif self.print_started > 0 \
+					and time.time() - self.print_started > 1 \
+					and self._printer.get_state_id() == self.PRINTER_STATE_PAUSED \
+					and self.behave_cooling_state:
+				self._logger.debug("onEvent() ONEBUTTON_PRESSED: stop_cooling_behavior and pause_laser()")
+				self.stop_cooling_behavior()
 				self.pause_laser(need_to_release=True)
 			elif self.pause_need_to_release and self._is_during_pause_waiting_time():
 				self._logger.debug("onEvent() ONEBUTTON_PRESSED: timeout block")
@@ -159,8 +172,12 @@ class OneButtonHandler(object):
 				if self._is_during_pause_waiting_time():
 					self._logger.debug("onEvent() ONEBUTTON_RELEASED: timeout block")
 					self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_BLOCK)
-				# elif self.is_interlock_closed() and self.is_cooling():
-
+				elif not self.is_interlock_closed():
+					self._logger.debug("onEvent() ONEBUTTON_RELEASED: interlock open: sending LASER_PAUSE_SAFTEY_TIMEOUT_BLOCK to have the light flash up.")
+					self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_BLOCK)
+				elif self.is_interlock_closed() and self.is_cooling():
+					self._logger.debug("onEvent() ONEBUTTON_RELEASED: start_cooling_behavior")
+					self.start_cooling_behavior()
 				elif self.is_interlock_closed():
 					self._logger.debug("onEvent() ONEBUTTON_RELEASED: resume_laser_if_waitingtime_is_over")
 					self.resume_laser_if_waitingtime_is_over()
@@ -169,9 +186,10 @@ class OneButtonHandler(object):
 			if self._printer.get_state_id() == self.PRINTER_STATE_PRINTING:
 				self._logger.debug("onEvent() INTERLOCK_OPEN: pausing laser")
 				self.pause_laser(need_to_release=False)
-			elif self._printer.get_state_id() == self.PRINTER_STATE_PAUSED and self.is_cooling():
+			elif self._printer.get_state_id() == self.PRINTER_STATE_PAUSED and self.behave_cooling_state:
 				self._logger.debug("onEvent() INTERLOCK_OPEN: pausing from cooling state")
 				self.pause_laser(need_to_release=False)
+				self.stop_cooling_behavior()
 			else:
 				self._logger.debug("onEvent() INTERLOCK_OPEN: not printing, nothing to do. printer state is: %s", self._printer.get_state_id())
 
@@ -227,13 +245,22 @@ class OneButtonHandler(object):
 		return _mrbeam_plugin_implementation._temperatureManager.is_cooling()
 
 	def cooling_down_pause(self):
-		# TODO check if we're really printing
-		# TODO what if we're already in cooling state
+		self.start_cooling_behavior()
 		self._printer.cooling_start()
 
-	def cooling_down_end(self):
-		if self.is_cooling() and self.is_interlock_closed():
-			self._printer.resume_print()
+	def cooling_down_end(self, only_if_behavior_is_cooling=False):
+		if not only_if_behavior_is_cooling or self.behave_cooling_state:
+			self.stop_cooling_behavior()
+			if self.is_interlock_closed():
+				self._printer.resume_print()
+
+	def stop_cooling_behavior(self):
+		self.behave_cooling_state = False
+		temperatureManager().send_cooling_state_to_frontend(False)
+
+	def start_cooling_behavior(self):
+		self.behave_cooling_state = True
+		temperatureManager().send_cooling_state_to_frontend(True)
 
 	def set_rtl_file(self, gcode_file):
 		self._test_conditions(gcode_file)
