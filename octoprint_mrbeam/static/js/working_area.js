@@ -42,10 +42,11 @@ $(function(){
 		}, self);
 		self.workingAreaHeightMM = ko.computed(function(){
 			return self.profile.currentProfileData().volume.depth() - self.profile.currentProfileData().volume.origin_offset_y();
-		},self);
+		}, self);
 		self.flipYMatrix = ko.computed(function(){
-			return Snap.matrix(1,0,0,-1,0,self.workingAreaHeightMM());
-		});
+			var h = self.workingAreaHeightMM();
+			return Snap.matrix(1,0,0,-1,0,h);
+		}, self);
 
         // QuickText fields
         self.fontMap = ['Ubuntu', 'Roboto', 'Libre Baskerville', 'Indie Flower', 'VT323'];

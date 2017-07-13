@@ -375,7 +375,7 @@ $(function(){
 					//self.update_colorSettings();
 					self.slicing_in_progress(true);
 					var pixPerMM = 1/self.beamDiameter();
-					snap.select('#userContent').embed_gc(); // hack
+//					snap.select('#userContent').embed_gc(); // hack
 					self.workingArea.getCompositionSVG(self.do_engrave(), pixPerMM, self.engrave_outlines(), function(composition){
 						self.svg = composition;
 						var filename = self.gcodeFilename() + '.gco';
