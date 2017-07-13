@@ -1,3 +1,231 @@
+function cubicCoefficients(x0, x1, x2, x3) {
+  return [x0, 3.0 * (x1 - x0), 3.0 * (x0 - 2.0 * x1 + x2), x3 - x0 + 3.0 * (x1 - x2)];
+}
+
+function cubicDerivativeCoefficients(x0, x1, x2, x3) {
+    return [3.0 * (x1 - x0), 6.0 * (x0 - 2.0 * x1 + x2), 3.0 * (x3 - x0) + 9.0 * (x1 - x2)];
+}
+
+function cubicDivide(x0, y0, x1, y1, x2, y2, x3, y3, delta) {
+  // Cubic Spline function:
+  // 
+  //   x(t) = a0 + a1 * t + a2 * t^2 + a3 * t^3
+  //   y(t) = b0 + b1 * t + b2 * t^2 + b3 * t^3
+  //
+  //   with t = 0..1
+
+  // calculate coefficients for x- and y-direction
+  var [a0, a1, a2, a3] = cubicCoefficients(x0, x1, x2, x3);
+  var [b0, b1, b2, b3] = cubicCoefficients(y0, y1, y2, y3);
+
+  // calculate real curve length
+  var length = cubicLength(x0, y0, x1, y1, x2, y2, x3, y3, delta);
+
+  // required number of segment
+  var n = ~~Math.ceil(length / delta);
+
+  // divide parameter space
+  var dt = 1.0 / n;
+
+  // allocate memory for points
+  var pts = [];
+  pts.length = n + 1;
+
+  // set first and last point explicit to avoid rounding errors
+  pts[0] = { x: x0, y: y0 };
+  pts[n] = { x: x3, y: y3 };
+
+  // interpolate points
+  for (i = 1; i < n; ++i) {
+    var t = i * dt;
+    var t2 = t * t;
+    var t3 = t2 * t;
+
+    x = a0 + a1 * t + a2 * t2 + a3 * t3;
+    y = b0 + b1 * t + b2 * t2 + b3 * t3;
+
+    pts[i] = { x: x, y: y };
+  }
+
+  return pts;
+}
+
+function cubicLength(x0, y0, x1, y1, x2, y2, x3, y3, tolerance=1e-8) {
+  // Cubic Spline derivative function:
+  // 
+  //   dx(t)/dt = da0 + da1 * t + da2 * t^2
+  //   dy(t)/dt = db0 + db1 * t + db2 * t^2
+  //
+  //   with t = 0..1
+
+  // calculate coefficients for x- and y-direction
+  var [da0, da1, da2] = cubicDerivativeCoefficients(x0, x1, x2, x3);
+  var [db0, db1, db2] = cubicDerivativeCoefficients(y0, y1, y2, y3);
+
+  var length = integrate(function (t) {
+    var t2 = t * t
+
+    var dx = da0 + da1 * t + da2 * t2
+    var dy = db0 + db1 * t + db2 * t2
+
+    return Math.sqrt(dx * dx + dy * dy)
+  }, 0.0, 1.0, tolerance);
+
+  return length;
+}
+
+// credits: https://github.com/scijs/integrate-adaptive-simpson
+function adsimp(f, a, b, fa, fm, fb, V0, tol, maxdepth, depth, state) {
+  if (state.nanEncountered) {
+    return NaN;
+  }
+
+  var h, f1, f2, sl, sr, s2, m, V1, V2, err;
+
+  h = b - a;
+  f1 = f(a + h * 0.25);
+  f2 = f(b - h * 0.25);
+
+  // Simple check for NaN:
+  if (isNaN(f1)) {
+    state.nanEncountered = true;
+    return;
+  }
+
+  // Simple check for NaN:
+  if (isNaN(f2)) {
+    state.nanEncountered = true;
+    return;
+  }
+
+  sl = h * (fa + 4 * f1 + fm) / 12;
+  sr = h * (fm + 4 * f2 + fb) / 12;
+  s2 = sl + sr;
+  err = (s2 - V0) / 15;
+
+  if (depth > maxdepth) {
+    state.maxDepthCount++;
+    return s2 + err;
+  } else if (Math.abs(err) < tol) {
+    return s2 + err;
+  } else {
+    m = a + h * 0.5;
+
+    V1 = adsimp(f, a, m, fa, f1, fm, sl, tol * 0.5, maxdepth, depth + 1, state);
+
+    if (isNaN(V1)) {
+      state.nanEncountered = true;
+      return NaN;
+    }
+
+    V2 = adsimp(f, m, b, fm, f2, fb, sr, tol * 0.5, maxdepth, depth + 1, state);
+
+    if (isNaN(V2)) {
+      state.nanEncountered = true;
+      return NaN;
+    }
+
+    return V1 + V2;
+  }
+}
+
+// credits: https://github.com/scijs/integrate-adaptive-simpson
+function integrate(f, a, b, tol, maxdepth) {
+  var state = {
+    maxDepthCount: 0,
+    nanEncountered: false
+  };
+
+  if (tol === undefined) {
+    tol = 1e-8;
+  }
+  if (maxdepth === undefined) {
+    maxdepth = 20;
+  }
+
+  var fa = f(a);
+  var fm = f(0.5 * (a + b));
+  var fb = f(b);
+
+  var V0 = (fa + 4 * fm + fb) * (b - a) / 6;
+
+  var result = adsimp(f, a, b, fa, fm, fb, V0, tol, maxdepth, 1, state);
+
+  if (state.maxDepthCount > 0 && console && console.warn) {
+    console.warn('integrate-adaptive-simpson: Warning: maximum recursion depth (' + maxdepth + ') reached ' + state.maxDepthCount + ' times');
+  }
+
+  if (state.nanEncountered && console && console.warn) {
+    console.warn('integrate-adaptive-simpson: Warning: NaN encountered. Halting early.');
+  }
+
+  return result;
+}
+
+var pointCount = 0;
+
+function gcodeFromPath(pathString, settings) {
+    pointCount = 0;
+
+    // get segments from path
+    var segments = Snap.path.toCubic(pathString);
+    // TODO: Switch to:
+    // var segments = Snap.path.toAbsolute(pathString);
+
+    // storage for gcode commands
+    gcodeCommands = [];
+
+    // storage for current location
+    var [currentX, currentY] = [0.0, 0.0];
+
+    // helper for number formatting
+    var fmt = function(number) { return number.toFixed(2); };
+
+    segments.forEach(function (segment) {
+        var command = segment[0];
+
+        switch (command) {
+            case 'M': // move
+                var [_, x, y] = segment;
+
+                gcodeCommands.push(`G0X${fmt(x)}Y${fmt(y)}`);
+
+                // move to position
+                [currentX, currentY] = [x, y];
+
+                break;
+            case 'C': // cubic spline
+                var [_, x1, y1, x2, y2, x3, y3] = segment;
+
+                // approximate cubic spline with polyline
+                var pts = cubicDivide(currentX, currentY, x1, y1, x2, y2, x3, y3, settings.delta);
+
+                // write gcode for segments
+                pts.forEach(function (pt) {
+                    gcodeCommands.push(`G1X${fmt(pt.x)}Y${fmt(pt.y)}`);
+                    pointCount += 1;
+                }, this);
+
+                // move to end point
+                [currentX, currentY] = [x3, y3];
+
+                break;
+        }
+    }, this);
+
+    var gcode = gcodeCommands.join('\n');
+
+    console.log(`#Points = ${pointCount} with delta = ${settings.delta}`)
+
+    return gcode;
+}
+
+
+
+
+
+
+
 /* global Snap */
 
 //    GC plugin - a snapsvg.io plugin.
@@ -19,139 +247,25 @@
 Snap.plugin(function (Snap, Element, Paper, global) {
 	
 	Element.prototype.embed_gc = function(correctionMatrix){
-		var elem = this;
-		var items = elem.selectAll('path, rect, line, polygon, polyline, circle, ellipse');
-		for (var i = 0; i < items.length; i++) {
-			var item = items[i];
-			var matrix = item.transform().totalMatrix;
-			if(correctionMatrix !== undefined){
+		this.selectAll('path').forEach(function(path) {
+			var matrix = path.transform().totalMatrix;
+
+			if (correctionMatrix !== undefined) {
 				matrix = matrix.multLeft(correctionMatrix);
 			}
-			var gc = item.generate_gc(matrix);
-			item.attr('mb:gc', gc);
-		}
+
+			var pathString = path.attr('d');
+			pathString = Snap.path.map(pathString, matrix);
+
+			var gcode = gcodeFromPath(pathString, {delta: 0.1});
+
+			path.attr('mb:gc', gcode);
+		}, this);
 	};
 	
 	Element.prototype.clean_gc = function(){
-		var elem = this;
-		var items = elem.selectAll('path, rect, line, polygon, polyline, circle, ellipse');
-		for (var i = 0; i < items.length; i++) {
-			var item = items[i];
-			item.attr('mb:gc', '');
-		}
+		this.selectAll('path').forEach(function(path) {
+			path.attr('mb:gc', '');
+		}, this);
 	};
-	
-	/**
-	 * generates gc from d attr
-	 * 
-	 * @param {Snap.matrix} correction_matrix : matrix to be applied on resulting points
-	 * @param {float} max_derivation : how precise curves are approximated
-	 * @param {float} min_segment_length : minimum length of G1 commands
-	 * @param {float} max_segment_length : maximum length of G1 commands
-	 * @returns {undefined}
-	 */
-	Element.prototype.generate_gc = function (correction_matrix, max_derivation, min_segment_length, max_segment_length) {
-		var elem = this;
-		
-		var max_derivation = max_derivation || .1; // TODO - real dist, not manhattan dist.
-		var min_segment_length = min_segment_length || .1; 
-		var max_segment_length = max_segment_length || 10; 
-
-		if(max_segment_length < min_segment_length){
-			max_segment_length = min_segment_length;
-			console.warn("max_segment_length can't be smaller than min_segment_length!");
-		}
-
-		if (elem.type !== "circle" &&
-			elem.type !== "rect" &&
-			elem.type !== "ellipse" &&
-			elem.type !== "line" &&
-			elem.type !== "polygon" &&
-			elem.type !== "polyline" &&
-			elem.type !== "path" ){
-		
-			console.log('Only primitive elements are supported. This is ', elem.type);
-			return;
-		}
-
-		var d = elem.getPathAttr();
-		var transformed_path_array = Snap.path.map(d, correction_matrix);
-		var temp = elem.paper.path(transformed_path_array).attr('opacity',0);
-
-		var length = temp.getTotalLength();
-		
-		// eye candy
-		elem.attr({strokeDasharray: length, strokeDashoffset: length});
-		var progress_callback = function(position){ 
-			var value = length - position;
-			elem.attr({strokeDashoffset: value});
-			console.log('progress', position/length); 
-		};
-		var points = temp.approximateArray(0, length, max_derivation, min_segment_length, max_segment_length, progress_callback);
-		
-		temp.remove();
-		var gc = 'G0X'+points[0].x.toFixed(2)+'Y'+points[0].y.toFixed(2)+"\n;_params_\n";
-		for (var i = 1; i < points.length; i++) {
-			var p = points[i];
-			gc += 'G1X'+p.x.toFixed(2)+'Y'+p.y.toFixed(2)+"\n";
-			
-//			DEBUG visualization
-//			snap.circle(p.x, p.y, 1.0).attr({fill:'green'});
-		}
-		elem.attr({strokeDasharray: 'none', strokeDashoffset: 'none'});
-		return gc;
-	};
-	
-	
-
-
-		
-	Element.prototype.approximateArray = function(start, end, max_derivation, min_segment_length, max_segment_length, progress){
-		var elem = this;
-		if(start === undefined) start = 0;
-		if(end === undefined) end = elem.getTotalLength();
-		if(max_derivation === undefined) max_derivation = 5;
-		var length = end - start;
-		var center = start + length/2;
-		var start_point = elem.getPointAtLength(start);
-		var end_point = elem.getPointAtLength(end);
-//		var angle_rad = start_point.alpha * Math.PI/180;
-		var projection_point_x = start_point.x - length * Snap.cos(start_point.alpha);
-		var projection_point_y = start_point.y - length * Snap.sin(start_point.alpha);
-//		DEBUG visualization
-//		elem.parent().append(elem.paper.circle(start_point.x,start_point.y, 0.3).attr({fill:'blue'}));
-//		elem.parent().append(elem.paper.circle(end_point.x, end_point.y, 0.3).attr({fill:'cyan'}));
-//		elem.parent().append(elem.paper.circle(projection_point_x, projection_point_y, 0.3).attr({fill:'red'}));
-		
-		var subdivide = false;
-		if(length > min_segment_length*2){ // divide segment only if long enough
-			if(length > max_segment_length){
-				subdivide = true;
-			}
-			if(Math.abs(projection_point_x - end_point.x) > max_derivation ||
-				Math.abs(projection_point_y - end_point.y) > max_derivation){ // Manhattan dist
-				subdivide = true;
-			} else { // real euclidean dist
-				if(Math.pow(projection_point_x - end_point.x,2) + Math.pow(projection_point_y - end_point.y,2) > Math.pow(max_derivation,2)){
-					subdivide = true;
-				} 
-			}
-		}
-		var points = [];
-		if(subdivide){
-			var points_first_half = elem.approximateArray(start, center, max_derivation, min_segment_length, max_segment_length, progress);
-			var points_second_half = elem.approximateArray(center, end, max_derivation, min_segment_length, max_segment_length, progress); 
-			points_second_half.shift(); // drop first, it is the last from the first_half
-			points = points_first_half.concat(points_second_half);
-		} else {
-			points = [start_point, end_point];
-		}
-		if(typeof progress === 'function'){
-			progress(end);
-		}
-		return points;
-	};
-	
-
 });
-
