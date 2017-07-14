@@ -256,7 +256,7 @@ class IoBeamHandler(object):
 			if message == '.': continue # ping
 
 			err = -1
-			self._logger.debug("_handleMessages() handling message: %s", message)
+			# self._logger.debug("_handleMessages() handling message: %s", message)
 
 			tokens = message.split(self.MESSAGE_SEPARATOR)
 			if len(tokens) <=1:
@@ -366,7 +366,7 @@ class IoBeamHandler(object):
 		payload = self._as_number(token[1]) if len(token) > 1 else None
 
 		if action == self.MESSAGE_ACTION_LASER_TEMP and payload is not None:
-			self._fireEvent(IoBeamEvents.LASER_TEMP, payload)
+			self._fireEvent(IoBeamEvents.LASER_TEMP, dict(log=False, val=payload))
 		else:
 			return self._handle_invalid_message(message)
 
@@ -400,7 +400,6 @@ class IoBeamHandler(object):
 
 
 	def _fireEvent(self, event, payload=None):
-		self._logger.info("_fireEvent() event:%s, payload:%s", event, payload)
 		self._event_bus.fire(event, payload)
 
 

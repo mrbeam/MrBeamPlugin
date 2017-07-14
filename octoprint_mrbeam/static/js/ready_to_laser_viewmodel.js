@@ -129,7 +129,6 @@ $(function() {
                         return;
                     }
 
-                    console.log("ANDYTEST onDataUpdaterPluginMessage: ", data)
                     self._debugDaShit("onDataUpdaterPluginMessage() ", data);
 
                     if (!data) {
@@ -163,6 +162,13 @@ $(function() {
 
                     if ('cooling' in data) {
                         self.is_cooling_mode(data['cooling'])
+                    }
+
+                    if ('status' in data) {
+                        if (typeof STATUS == 'undefined') {
+                            STATUS = {};
+                        }
+                        STATUS['laser_temperature'] = data['status']['laser_temperature'];
                     }
                 };
 
