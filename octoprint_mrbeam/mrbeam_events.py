@@ -16,3 +16,5 @@ class MrBeamEvents(object):
 	LASER_PAUSE_SAFTEY_TIMEOUT_START  = "LaserPauseSafetyTimeoutStart"
 	LASER_PAUSE_SAFTEY_TIMEOUT_END    = "LaserPauseSafetyTimeoutEnd"
 	LASER_PAUSE_SAFTEY_TIMEOUT_BLOCK  = "LaserPauseSafetyTimeoutBlock"
+
+	PRINT_CANCELING_DONE       = "PrintCancelingDone"

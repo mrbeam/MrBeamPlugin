@@ -66,7 +66,7 @@ class MachineCom(object):
 		self._port = port
 		self._baudrate = baudrate
 		self._callback = callbackObject
-		self._laserCutterProfile = laserCutterProfileManager(settings()).get_current_or_default()
+		self._laserCutterProfile = laserCutterProfileManager().get_current_or_default()
 
 		self.RX_BUFFER_SIZE = 127
 
@@ -125,6 +125,10 @@ class MachineCom(object):
 		self._sending_active = True
 		self.sending_thread = threading.Thread(target=self._send_loop, name="comm.sending_thread")
 		self.sending_thread.daemon = True
+
+	def get_home_position(self):
+		# TODO: remove magic number! (-2)
+		return (self._laserCutterProfile['volume']['width'] - 2, self._laserCutterProfile['volume']['depth'] - 2)
 
 	def _monitor_loop(self):
 		#Open the serial port.
@@ -349,13 +353,14 @@ class MachineCom(object):
 			"origin": self._currentFile.getFileLocation(),
 			"time": self.getPrintTime()
 		}
+		self._move_home()
 		eventManager().fire(Events.PRINT_DONE, payload)
+
+	def _move_home(self):
 		self.sendCommand("M5")
-		# would be nice if this worked.....
-		# homeX = self._laserCutterProfile['volume']['width'] - 2
-		# homeY = self._laserCutterProfile['volume']['depth'] - 2
-		# // ANDYTEST magic numbers!!!!!
-		self.sendCommand("G0X500Y390")  # TODO replace hardcoded values with profile values
+		h_pos = self.get_home_position()
+		command = "G0X{x}Y{y}".format(x=h_pos[0], y=h_pos[1])
+		self.sendCommand(command)
 		self.sendCommand("M9")
 
 	def _handle_status_report(self, line):
@@ -915,26 +920,22 @@ class MachineCom(object):
 		self._send_event.clear(completely=True)
 		self._changeState(self.STATE_OPERATIONAL)
 
-		time.sleep(1.1)
-		self._sendCommand("G92X{:.3f}Y{:.3f}Z0\n".format(self.MPosX+501.0, self.MPosY+391.0))
-		self._sendCommand("G0X500Y390\n")  # TODO replace hardcoded values with profile values
-
 		payload = {
 			"file": self._currentFile.getFilename(),
 			"filename": os.path.basename(self._currentFile.getFilename()),
 			"origin": self._currentFile.getFileLocation()
 		}
-
 		eventManager().fire(Events.PRINT_CANCELLED, payload)
 
-	def setPause(self, pause, send_cmd=True):
+	def setPause(self, pause, send_cmd=True, pause_for_cooling=False):
 		if not self._currentFile:
 			return
 
 		payload = {
 			"file": self._currentFile.getFilename(),
 			"filename": os.path.basename(self._currentFile.getFilename()),
-			"origin": self._currentFile.getFileLocation()
+			"origin": self._currentFile.getFileLocation(),
+			"cooling": pause_for_cooling
 		}
 
 		if not pause and self.isPaused():

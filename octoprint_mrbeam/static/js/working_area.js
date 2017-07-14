@@ -1198,7 +1198,7 @@ $(function(){
 				if(design.type === 'model' || design.type === 'quicktext'){
 					var svg = snap.select('#' + design.previewId);
 					var misfitting = self.outsideWorkingArea(svg);
-					console.log("Misfitting: ", misfitting);
+					// console.log("Misfitting: ", misfitting);
 					if(misfitting.oversized || misfitting.outside){
 						svg.data('fitMatrix', misfitting);
 						$('#'+design.id).addClass('misfit');
