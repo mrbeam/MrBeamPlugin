@@ -10,6 +10,7 @@ import socket
 import threading
 import time
 import shlex
+import collections
 from subprocess import check_output
 
 import octoprint.plugin
@@ -1087,10 +1088,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	##~~ Event Handler Plugin API
 
 	def on_event(self, event, payload):
-		if not event == "SettingsUpdated":
+		if payload is None or not isinstance(payload, collections.Iterable) or not 'log' in payload or payload['log']:
 			self._logger.debug("on_event %s: %s", event, payload)
-		# self._logger.info("ANDYTEST get_state_id: %s, is_operational: %s", self._printer.get_state_id(), self._printer.is_operational())
-		pass
+
 
 	##~~ Progress Plugin API
 

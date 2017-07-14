@@ -36,8 +36,6 @@ class TemperatureManager(object):
 
 		self._subscribe()
 		self._start_temp_timer()
-		self._logger.debug("TemperatureManager started. temperatur_max: %s, hysteresis_temperature: %s",
-		                   self.temperatur_max, self.hysteresis_temperature)
 
 	def _subscribe(self):
 		_mrbeam_plugin_implementation._event_bus.subscribe(IoBeamEvents.LASER_TEMP, self.onEvent)
@@ -63,11 +61,12 @@ class TemperatureManager(object):
 		elif event == OctoPrintEvents.SHUTDOWN:
 			self.shutdown()
 
-	def handle_temp(self, temp):
-		self._logger.debug("Current laser temperature: %s", temp)
+	def handle_temp(self, payload):
+		temp = payload['val'] if 'val' in payload else None
 		self.temperatur = temp
 		self.temperatur_ts = time.time()
 		self._check_temp_val()
+		self.send_status_to_frontend(self.temperatur)
 
 	def request_temp(self):
 		_mrbeam_plugin_implementation._ioBeam.send_command("laser:temp")
@@ -106,14 +105,17 @@ class TemperatureManager(object):
 
 	def _check_temp_val(self):
 		if not self.is_cooling() and (self.temperatur is None or self.temperatur > self.temperatur_max):
-			self._logger.warn("Laser temperatur exceeded limit. Current temp: %s, max: %s", self.temperatur, self.temperatur_max)
+			self._logger.warn("Laser temperature exceeded limit. Current temp: %s, max: %s", self.temperatur, self.temperatur_max)
 			self.cooling_stop()
 		elif self.is_cooling() and self.temperatur is not None and self.temperatur <= self.hysteresis_temperature:
-			self._logger.warn("Laser temperatur passed hysteresis limit. Current temp: %s, hysteresis: %s", self.temperatur, self.hysteresis_temperature)
+			self._logger.warn("Laser temperature passed hysteresis limit. Current temp: %s, hysteresis: %s", self.temperatur, self.hysteresis_temperature)
 			self.cooling_resume()
 		else:
-			self._logger.debug("Laser temperatur nothing. Current temp: %s, self.is_cooling(): %s", self.temperatur, self.is_cooling())
+			# self._logger.debug("Laser temperature nothing. Current temp: %s, self.is_cooling(): %s", self.temperatur, self.is_cooling())
+			pass
 
 	def send_cooling_state_to_frontend(self, cooling):
-		self._logger.debug("_send_cooling_state_to_frontend() cooling: %s", cooling)
 		_mrbeam_plugin_implementation._plugin_manager.send_plugin_message("mrbeam", dict(cooling=cooling))
+
+	def send_status_to_frontend(self, temperature):
+		_mrbeam_plugin_implementation._plugin_manager.send_plugin_message("mrbeam", dict(status=dict(laser_temperature=temperature)))
