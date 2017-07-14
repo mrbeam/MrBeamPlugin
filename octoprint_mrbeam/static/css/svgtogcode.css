@@ -320,7 +320,7 @@ body.colorDragInProgress #drop_overlay {
 	display: none;
 }
 
-// eye candy for gcode generation
+/* eye candy for gcode generation */
 #userContent path,
 #userContent circle,
 #userContent ellipse,

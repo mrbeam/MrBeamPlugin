@@ -159,6 +159,7 @@ $(function(){
 		self.scaleMatrixCrosshair = function(){
 		    var x = self.crosshairX !== undefined ? self.crosshairX() : 0;
 		    var y = self.crosshairY !== undefined ? self.crosshairY() : 0;
+			var y = self.workingAreaHeightMM() - y;
 		    var m = "matrix(1, 0, 0, 1, " + x + ", " + y + ")";
 		    return m;
         };
