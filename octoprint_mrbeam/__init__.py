@@ -26,6 +26,7 @@ from octoprint_mrbeam.iobeam.iobeam_handler import ioBeamHandler, IoBeamEvents
 from octoprint_mrbeam.iobeam.onebutton_handler import oneButtonHandler
 from octoprint_mrbeam.iobeam.interlock_handler import interLockHandler
 from octoprint_mrbeam.iobeam.lid_handler import lidHandler
+from octoprint_mrbeam.analytics.analytics_handler import analyticsHandler
 from octoprint_mrbeam.led_events import LedEventListener
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
@@ -97,6 +98,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._oneButtonHandler = oneButtonHandler(self)
 		self._interlock_handler = interLockHandler(self)
 		self._lid_handler = lidHandler(self)
+		self._analytics_handler = analyticsHandler(self)
 		self._led_eventhandler = LedEventListener(self._event_bus, self._printer)
 		# start iobeam socket only once other handlers are already inittialized so that we can handle info mesage
 		self._ioBeam = ioBeamHandler(self._event_bus, self._settings.get(["dev", "sockets", "iobeam"]))
