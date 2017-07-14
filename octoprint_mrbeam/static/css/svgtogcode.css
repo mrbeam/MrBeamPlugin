@@ -311,7 +311,7 @@ body.colorDragInProgress #drop_overlay {
 .dimDesigns .userSVG,
 .dimDesigns .userIMG,
 .dimDesigns .userText {
-	opacity:.7;
+	opacity:.5;
 	filter:url(#dehighlight);
 	transition: opacity 0.2s ease-out;
 }
