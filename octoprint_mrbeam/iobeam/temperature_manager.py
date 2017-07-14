@@ -75,11 +75,14 @@ class TemperatureManager(object):
 		self._logger.debug("cooling_stop()")
 		self.is_cooling_since = time.time()
 		_mrbeam_plugin_implementation._oneButtonHandler.cooling_down_pause()
+		_mrbeam_plugin_implementation._event_bus.fire(MrBeamEvents.LASER_COOLING_PAUSE, dict(temp=self.temperatur))
 		self.send_cooling_state_to_frontend(True)
+
 
 	def cooling_resume(self):
 		self._logger.debug("cooling_resume()")
 		_mrbeam_plugin_implementation._oneButtonHandler.cooling_down_end(only_if_behavior_is_cooling=True)
+		_mrbeam_plugin_implementation._event_bus.fire(MrBeamEvents.LASER_COOLING_RESUME, dict(temp=self.temperatur))
 		self.is_cooling_since = 0
 
 	def is_cooling(self):

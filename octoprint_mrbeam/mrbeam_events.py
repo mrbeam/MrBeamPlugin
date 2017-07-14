@@ -16,3 +16,6 @@ class MrBeamEvents(object):
 	LASER_PAUSE_SAFTEY_TIMEOUT_START  = "LaserPauseSafetyTimeoutStart"
 	LASER_PAUSE_SAFTEY_TIMEOUT_END    = "LaserPauseSafetyTimeoutEnd"
 	LASER_PAUSE_SAFTEY_TIMEOUT_BLOCK  = "LaserPauseSafetyTimeoutBlock"
+
+	LASER_COOLING_PAUSE        = "LaserCoolingPause"
+	LASER_COOLING_RESUME       = "LaserCoolingResume"
