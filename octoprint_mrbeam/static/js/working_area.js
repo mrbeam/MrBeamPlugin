@@ -1,5 +1,7 @@
 /* global snap, ko, $, Snap, API_BASEURL, _, CONFIG_WEBCAM_STREAM, ADDITIONAL_VIEWMODELS, mina */
 
+__PX2MM__ = 1; // global available in this viewmodel and in snap plugins at the same time.
+
 $(function(){
 
 	// Opera 8.0+
@@ -73,6 +75,45 @@ $(function(){
 		self.camera_offset_y = ko.observable(0);
 		self.camera_scale = ko.observable(1.0);
 		self.camera_rotation = ko.observable(0.0);
+		self.zoom = ko.observable(1.0);
+		self.zoomPercX = ko.observable(0);
+		self.zoomPercY = ko.observable(0);
+		self.zoomOffX = ko.observable(0);
+		self.zoomOffY = ko.observable(0);
+		self.zoomViewBox = ko.computed(function(){
+			var z = self.zoom();
+			var w = self.workingAreaWidthMM() * z;
+			var h = self.workingAreaHeightMM() * z;
+			var x = self.zoomOffX();
+			var y = self.zoomOffY();
+			return [x, y, w, h].join(' ');
+		});
+		
+		self.set_zoom_factor = function(delta, centerX, centerY){
+			var oldZ = self.zoom();
+			var newZ = oldZ + delta;
+			if(newZ >= 0.1 && newZ <= 1){
+				var deltaWidth = self.workingAreaWidthMM() * delta;
+				var deltaHeight = self.workingAreaHeightMM() * delta;
+				var oldOffX = self.zoomOffX();
+				var oldOffY = self.zoomOffY();
+				self.set_zoom_offX(oldOffX - deltaWidth*centerX);
+				self.set_zoom_offY(oldOffY - deltaHeight*centerY);
+				self.zoom(newZ);
+			}
+		};
+		self.set_zoom_offX = function(offset){
+			var max = (1 - self.zoom()) * self.workingAreaWidthMM();
+			var min = 0;
+			offset = Math.min(Math.max(offset, min), max);
+			self.zoomOffX(offset);
+		};
+		self.set_zoom_offY = function(offset){
+			var max = (1 - self.zoom()) * self.workingAreaHeightMM();
+			var min = 0;
+			offset = Math.min(Math.max(offset, min), max);
+			self.zoomOffY(offset);
+		};
 
 		self.hwRatio = ko.computed(function(){
 			// y/x = 297/216 junior, respectively 594/432 senior
@@ -112,7 +153,7 @@ $(function(){
 		}, self);
 
 		self.px2mm_factor = ko.computed(function(){
-			return self.workingAreaWidthMM() / self.workingAreaWidthPx();
+			return self.zoom() * self.workingAreaWidthMM() / self.workingAreaWidthPx();
 		});
 
 		self.camTransform = ko.computed(function(){
@@ -1121,8 +1162,10 @@ $(function(){
 			// init snap.svg
 			snap = Snap('#area_preview');
 			self.px2mm_factor.subscribe(function(newVal){
-				if(!isNaN(newVal))
+				if(!isNaN(newVal)){
+					__PX2MM__ = newVal;
 					self.draw_coord_grid();
+				}
 			});
 			self.workingAreaHeightMM.subscribe(function(newVal){
 				if(!isNaN(newVal))
@@ -1716,10 +1759,46 @@ $(function(){
 		    $(elem).empty();
         };
 
-
         // ***********************************************************
 		//  QUICKTEXT end
         // ***********************************************************
+		
+		self.wheel_zoom = function(target, ev){
+			var wheel = ev.originalEvent.wheelDelta;
+			var targetBBox = ev.currentTarget.getBoundingClientRect();
+			var xPerc = (ev.clientX - targetBBox.left) / targetBBox.width;
+			var yPerc = (ev.clientY - targetBBox.top) / targetBBox.height;
+			var deltaZoom = Math.sign(-wheel)/100;
+			self.set_zoom_factor(deltaZoom, xPerc, yPerc);
+		};
+		
+		self.mouse_drag = function(target, ev){
+			if (ev.originalEvent.shiftKey) {
+				var pos = self._get_pointer_event_position_MM(ev, ev.currentTarget);
+				var newOffX = self.zoomOffX() - pos.dx;
+				var newOffY = self.zoomOffY() - pos.dy;
+				self.set_zoom_offX(newOffX);
+				self.set_zoom_offY(newOffY);
+			}
+		};
+
+		self._get_pointer_event_position_MM = function(event, target){
+			var percPos = self._get_pointer_event_position_Percent(event, target);
+			var x = percPos.x * self.workingAreaWidthMM() * self.zoom() + self.zoomOffX();
+			var y = percPos.y * self.workingAreaHeightMM() * self.zoom() + self.zoomOffY();
+			var dx = percPos.dx * self.workingAreaWidthMM() * self.zoom() ;
+			var dy = percPos.dy * self.workingAreaHeightMM() * self.zoom();
+			return {x: x, y: y, dx: dx, dy: dy};
+		};
+
+		self._get_pointer_event_position_Percent = function(event, target){
+			var targetBBox = target.getBoundingClientRect();
+			var xPerc = (event.clientX - targetBBox.left) / targetBBox.width;
+			var yPerc = (event.clientY - targetBBox.top) / targetBBox.height;
+			var dxPerc = (event.originalEvent.movementX) / targetBBox.width;
+			var dyPerc = (event.originalEvent.movementY) / targetBBox.height;
+			return {x: xPerc, y: yPerc, dx: dxPerc, dy: dyPerc};
+		};
 
 	}
 

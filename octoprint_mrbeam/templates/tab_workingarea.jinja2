@@ -363,9 +363,11 @@
 											height: workingAreaHeightPx()+'px'
 										},
 										attr: { 
-											viewBox: '0 0 ' + workingAreaWidthMM() +' '+ workingAreaHeightMM(),
+											viewBox: zoomViewBox(),
 											visibility: 'visible'	
-										}">
+										},
+										event: { mousewheel: wheel_zoom, mousemove: mouse_drag }
+									 ">
 								<defs>
 									<filter id="grayscale_filter">
 										<feColorMatrix in="SourceGraphic" type="saturate" values="0"/>
