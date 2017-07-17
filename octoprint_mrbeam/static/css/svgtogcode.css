@@ -401,3 +401,10 @@ svg#area_preview rect
   vector-effect: non-scaling-stroke !important;
   stroke-width: 1px !important;
 }
+
+#zoomFactor {
+	position:absolute;
+	left: .3em;
+	bottom: .4em;
+	color: #777;
+}

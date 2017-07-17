@@ -1,6 +1,6 @@
 /* global snap, ko, $, Snap, API_BASEURL, _, CONFIG_WEBCAM_STREAM, ADDITIONAL_VIEWMODELS, mina */
 
-__PX2MM__ = 1; // global available in this viewmodel and in snap plugins at the same time.
+MRBEAM_PX2MM_FACTOR_WITH_ZOOM = 1; // global available in this viewmodel and in snap plugins at the same time.
 
 $(function(){
 
@@ -92,7 +92,8 @@ $(function(){
 		self.set_zoom_factor = function(delta, centerX, centerY){
 			var oldZ = self.zoom();
 			var newZ = oldZ + delta;
-			if(newZ >= 0.1 && newZ <= 1){
+			newZ = Math.min(Math.max(newZ, 0.25), 1);
+			if(newZ !== self.zoom()){
 				var deltaWidth = self.workingAreaWidthMM() * delta;
 				var deltaHeight = self.workingAreaHeightMM() * delta;
 				var oldOffX = self.zoomOffX();
@@ -114,6 +115,9 @@ $(function(){
 			offset = Math.min(Math.max(offset, min), max);
 			self.zoomOffY(offset);
 		};
+		self.zoom_factor_text = ko.computed(function(){
+			return (1/self.zoom() * 100).toFixed(0) + '%';
+		});
 
 		self.hwRatio = ko.computed(function(){
 			// y/x = 297/216 junior, respectively 594/432 senior
@@ -1163,7 +1167,7 @@ $(function(){
 			snap = Snap('#area_preview');
 			self.px2mm_factor.subscribe(function(newVal){
 				if(!isNaN(newVal)){
-					__PX2MM__ = newVal;
+					MRBEAM_PX2MM_FACTOR_WITH_ZOOM = newVal;
 					self.draw_coord_grid();
 				}
 			});
@@ -1764,12 +1768,14 @@ $(function(){
         // ***********************************************************
 		
 		self.wheel_zoom = function(target, ev){
-			var wheel = ev.originalEvent.wheelDelta;
-			var targetBBox = ev.currentTarget.getBoundingClientRect();
-			var xPerc = (ev.clientX - targetBBox.left) / targetBBox.width;
-			var yPerc = (ev.clientY - targetBBox.top) / targetBBox.height;
-			var deltaZoom = Math.sign(-wheel)/100;
-			self.set_zoom_factor(deltaZoom, xPerc, yPerc);
+			if (ev.originalEvent.shiftKey) {
+				var wheel = ev.originalEvent.wheelDelta;
+				var targetBBox = ev.currentTarget.getBoundingClientRect();
+				var xPerc = (ev.clientX - targetBBox.left) / targetBBox.width;
+				var yPerc = (ev.clientY - targetBBox.top) / targetBBox.height;
+				var deltaZoom = Math.sign(-wheel)/100;
+				self.set_zoom_factor(deltaZoom, xPerc, yPerc);
+			}
 		};
 		
 		self.mouse_drag = function(target, ev){
@@ -1811,7 +1817,7 @@ $(function(){
 			document.getElementById("homing_overlay"),
 			document.getElementById("working_area_files"),
             document.getElementById("quick_text_dialog"),
-//            document.getElementById("working_area_addstuff"),
+			document.getElementById("zoomFactor")
 			//document.getElementById("webcam_wrapper")
 		]]);
 
