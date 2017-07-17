@@ -38,6 +38,8 @@ class AnalyticsHandler(object):
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self.onEvent)
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_CANCELLED, self.onEvent)
 		self._event_bus.subscribe(MrBeamEvents.PRINT_PROGRESS, self.onEvent)
+		self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_PAUSE, self.onEvent)
+		self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_RESUME, self.onEvent)
 
 	def _initjsonfile(self):
 		if os.path.isfile(self._jsonfile):
@@ -98,6 +100,20 @@ class AnalyticsHandler(object):
 				'type':typename,
 				'v': 1,
 				'eventname':'print_resumed',
+				'timestamp':time.time()
+			}
+		elif event == OctoPrintEvents.LASER_COOLING_PAUSE:
+			data = {
+				'type':typename,
+				'v': 1,
+				'eventname':'laser_cooling_pause',
+				'timestamp':time.time()
+			}
+		elif event == OctoPrintEvents.LASER_COOLING_RESUME:
+			data = {
+				'type':typename,
+				'v': 1,
+				'eventname':'laser_cooling_resume',
 				'timestamp':time.time()
 			}
 		elif event == OctoPrintEvents.PRINT_DONE:
