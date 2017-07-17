@@ -2,7 +2,6 @@ import json
 import time
 import os.path
 from octoprint.events import Events as OctoPrintEvents
-from octoprint.settings import settings
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
@@ -11,18 +10,22 @@ _instance = None
 def analyticsHandler(plugin):
 	global _instance
 	if _instance is None:
-		_instance = AnalyticsHandler(plugin._event_bus)
+		_instance = AnalyticsHandler(plugin._event_bus, plugin._settings)
 	return _instance
 
 
 class AnalyticsHandler(object):
-	def __init__(self, event_bus):
+	def __init__(self, event_bus, settings):
 		self._event_bus = event_bus
+		self._settings = settings
 
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analyticshandler")
 
-		basefolder = settings().getBaseFolder("logs")  # TODO put in seperate analytics folder
-		self._jsonfile = os.path.join(basefolder, "analytics_log.json")
+		analyticsfolder = os.path.join(self._settings.getBaseFolder("base"), self._settings.get(["analyticsfolder"]))
+		if not os.path.isdir(analyticsfolder):
+			os.makedirs(analyticsfolder)
+
+		self._jsonfile = os.path.join(analyticsfolder, "analytics_log.json")
 		self._initjsonfile()
 
 		self._subscribe()

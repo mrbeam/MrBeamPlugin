@@ -162,7 +162,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				env="PROD",
 				terminalMaxLines = 2000
 			),
-			analyticsEnabled=False,
+			analyticsEnabled=False,  # frontend analytics Mixpanel
+			analyticsfolder="analytics",  # laser job analytics base folder (.octoprint/...)
 			cam=dict(
 				enabled=True,
 				image_correction_enabled = True,
