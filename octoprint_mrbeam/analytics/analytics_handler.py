@@ -102,14 +102,14 @@ class AnalyticsHandler(object):
 				'eventname':'print_resumed',
 				'timestamp':time.time()
 			}
-		elif event == OctoPrintEvents.LASER_COOLING_PAUSE:
+		elif event == MrBeamEvents.LASER_COOLING_PAUSE:
 			data = {
 				'type':typename,
 				'v': 1,
 				'eventname':'laser_cooling_pause',
 				'timestamp':time.time()
 			}
-		elif event == OctoPrintEvents.LASER_COOLING_RESUME:
+		elif event == MrBeamEvents.LASER_COOLING_RESUME:
 			data = {
 				'type':typename,
 				'v': 1,
