@@ -29,6 +29,7 @@ $(function(){
 		self.state = params[2];
 		self.files = params[3];
 		self.profile = params[4];
+		self.camera = params[5];
 
 		self.log = [];
 
@@ -1816,7 +1817,8 @@ $(function(){
     // view model class, parameters for constructor, container to bind to
     ADDITIONAL_VIEWMODELS.push([WorkingAreaViewModel,
 
-		["loginStateViewModel", "settingsViewModel", "printerStateViewModel",  "gcodeFilesViewModel", "laserCutterProfilesViewModel"],
+		["loginStateViewModel", "settingsViewModel", "printerStateViewModel",  
+			"gcodeFilesViewModel", "laserCutterProfilesViewModel", "cameraViewModel"],
 		[document.getElementById("area_preview"),
 			document.getElementById("homing_overlay"),
 			document.getElementById("working_area_files"),

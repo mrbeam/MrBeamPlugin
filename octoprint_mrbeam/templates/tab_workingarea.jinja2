@@ -345,6 +345,7 @@
 
 							<div class="span8" style="position:relative">
 								{% include 'homing_overlay.jinja2' %}
+<!--								
 								{% if webcamStream %}
 								<div id="webcam_wrapper" data-bind="style: {
 											width: workingArea.workingAreaWidthPx()+'px',
@@ -357,6 +358,7 @@
 
 								</div>
 								{% endif %}
+								-->
 								<div id="zoomFactor" data-bind="text: zoom_factor_text"></div>
 								<svg id="area_preview" class="workingarea" visibility="hidden"
 									 data-bind="style: {
@@ -385,7 +387,13 @@
 										<feColorMatrix type="saturate" values="0.5"/>
 									</filter>
 								</defs>
-
+								<image id="beamcam_image_svg"
+									xlink:href="/plugin/mrbeam/static/img/beam-cam-static.jpg" x="0" y="0" height="100%" width="100%"
+									onerror="this.src='/plugin/mrbeam/static/img/beam-cam-static.jpg'"
+									data-bind="attr: {
+											width: workingAreaWidthMM(),
+											height: workingAreaHeightMM()
+										}" />
 									<g id="scaleGroup" data-bind="attr: { transform: scaleMatrix() }">
 										<g id="placedGcodes" data-bind="visible: true || (state.isPrinting() && !state.isPaused()), attr: { transform: 'matrix(1,0,0,-1,0,'+workingAreaHeightMM()+')' }"></g>
 										<g id="gCodePreview" data-bind="visible: state.isPrinting() || state.isPaused()"></g>
