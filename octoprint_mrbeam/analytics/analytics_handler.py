@@ -21,7 +21,7 @@ class AnalyticsHandler(object):
 
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analyticshandler")
 
-		basefolder = settings().getBaseFolder("logs")
+		basefolder = settings().getBaseFolder("logs")  # TODO put in seperate analytics folder
 		self._jsonfile = os.path.join(basefolder, "analytics_log.json")
 		self._initjsonfile()
 
