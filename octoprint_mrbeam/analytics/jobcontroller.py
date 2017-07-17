@@ -39,6 +39,12 @@ class JobController(object):
 			totalpausetime += j.getTotalPauseTime()
 		return totalpausetime
 
+	def getTotalCoolingTime(self):
+		totalcoolingtime = 0
+		for j in self._joblist:
+			totalcoolingtime += j.getTotalCoolingTime()
+		return totalcoolingtime
+
 	def getTotalJobs(self):
 		if self._currentjob is None:
 			return len(self._joblist)

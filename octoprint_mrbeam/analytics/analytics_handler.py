@@ -2,7 +2,6 @@ import json
 import time
 import os.path
 from octoprint.events import Events as OctoPrintEvents
-from octoprint.settings import settings
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
@@ -11,18 +10,22 @@ _instance = None
 def analyticsHandler(plugin):
 	global _instance
 	if _instance is None:
-		_instance = AnalyticsHandler(plugin._event_bus)
+		_instance = AnalyticsHandler(plugin._event_bus, plugin._settings)
 	return _instance
 
 
 class AnalyticsHandler(object):
-	def __init__(self, event_bus):
+	def __init__(self, event_bus, settings):
 		self._event_bus = event_bus
+		self._settings = settings
 
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analyticshandler")
 
-		basefolder = settings().getBaseFolder("logs")  # TODO put in seperate analytics folder
-		self._jsonfile = os.path.join(basefolder, "analytics_log.json")
+		analyticsfolder = os.path.join(self._settings.getBaseFolder("base"), self._settings.get(["analyticsfolder"]))
+		if not os.path.isdir(analyticsfolder):
+			os.makedirs(analyticsfolder)
+
+		self._jsonfile = os.path.join(analyticsfolder, "analytics_log.json")
 		self._initjsonfile()
 
 		self._subscribe()
@@ -35,6 +38,8 @@ class AnalyticsHandler(object):
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self.onEvent)
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_CANCELLED, self.onEvent)
 		self._event_bus.subscribe(MrBeamEvents.PRINT_PROGRESS, self.onEvent)
+		self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_PAUSE, self.onEvent)
+		self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_RESUME, self.onEvent)
 
 	def _initjsonfile(self):
 		if os.path.isfile(self._jsonfile):
@@ -95,6 +100,20 @@ class AnalyticsHandler(object):
 				'type':typename,
 				'v': 1,
 				'eventname':'print_resumed',
+				'timestamp':time.time()
+			}
+		elif event == MrBeamEvents.LASER_COOLING_PAUSE:
+			data = {
+				'type':typename,
+				'v': 1,
+				'eventname':'laser_cooling_pause',
+				'timestamp':time.time()
+			}
+		elif event == MrBeamEvents.LASER_COOLING_RESUME:
+			data = {
+				'type':typename,
+				'v': 1,
+				'eventname':'laser_cooling_resume',
 				'timestamp':time.time()
 			}
 		elif event == OctoPrintEvents.PRINT_DONE:
