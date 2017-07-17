@@ -70,7 +70,6 @@
 												First remove any objects blocking the gantry's travel range.
 												Then do a homing cycle.
 												<div style='text-align: center; padding:.5em;'>
-
 													<div class='btn-group'>
 														<button class="btn btn-default" data-bind="enable: state.isLocked() && loginState.isUser(), click: function() { control.sendHomeCommand(['x', 'y']) }"><i class="icon-home"></i>Homing Cycle</button>
 														<button class="btn btn-default" data-bind="enable: state.isLocked() && loginState.isUser(), click: function() { control.sendHomeCommand(['x', 'y']) }"><i class="icon-unlock"></i>Unlock</button>
@@ -276,7 +275,7 @@
 																<input class="decent_input scale" type="text" value="100%" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualScale($data, event); },
 																			blur: function(d, event){ $root.svgManualScale($data, event); }} "/>
-</br>
+																</br>
 																<i class="icon-th" title="{{ _('multiply') }}"></i>
 																<input class="decent_input multiply" type="text" value="1×1" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualMultiply($data, event); },
@@ -358,12 +357,17 @@
 
 								</div>
 								{% endif %}
+								<div id="zoomFactor" data-bind="text: zoom_factor_text"></div>
 								<svg id="area_preview" class="workingarea" visibility="hidden"
 									 data-bind="style: {
 											width: workingAreaWidthPx()+'px',
 											height: workingAreaHeightPx()+'px'
 										},
-										attr: {visibility: 'visible'}
+										attr: { 
+											viewBox: zoomViewBox(),
+											visibility: 'visible'	
+										},
+										event: { mousewheel: wheel_zoom, mousemove: mouse_drag }
 									 ">
 								<defs>
 									<filter id="grayscale_filter">
@@ -381,23 +385,23 @@
 										<feColorMatrix type="saturate" values="0.5"/>
 									</filter>
 								</defs>
+
 									<g id="scaleGroup" data-bind="attr: { transform: scaleMatrix() }">
-										<g id="placedGcodes" data-bind="visible: true || (state.isPrinting() && !state.isPaused()), attr: { transform: scaleMatrixMMtoDisplay() }"></g>
-										<g id="gCodePreview" data-bind="visible: state.isPrinting() || state.isPaused(), attr: { transform: scaleMatrixMMtoDisplay() }"></g>
+										<g id="placedGcodes" data-bind="visible: true || (state.isPrinting() && !state.isPaused()), attr: { transform: 'matrix(1,0,0,-1,0,'+workingAreaHeightMM()+')' }"></g>
+										<g id="gCodePreview" data-bind="visible: state.isPrinting() || state.isPaused()"></g>
 										<rect id="coordGrid" x="0" y="0" width="0" height="0"
 											  stroke="none" fill="none"></rect>
 										<rect id="highlightMarker" x="-1" y="-1" width="0" height="0" class="highlightMarker" fill="none"></rect>
 										<g id="userContent"></g>
 									</g>
-                                      <g id="crosshair"
-                                         transform="matrix(0.09, 0, 0, 0.09, -100, -100)"
-                                         data-bind="attr: { transform: scaleMatrixCrosshair()}">
-                                        <circle cx="174.776" cy="174.779" r="13.921" style="fill: rgb(226, 83, 3);"/>
-                                        <path d="M14.917,189.696h112.714c8.24,0,14.917-6.677,14.917-14.917s-6.677-14.917-14.917-14.917H14.917&#10;&#9;&#9;&#9;C6.677,159.861,0,166.538,0,174.779S6.677,189.696,14.917,189.696z" style="fill: rgb(226, 83, 3);"/>
-                                        <path d="M189.693,14.92c0-8.24-6.677-14.917-14.917-14.917c-8.24,0-14.917,6.677-14.917,14.917v112.714&#10;&#9;&#9;&#9;c0,8.24,6.677,14.917,14.917,14.917c8.24,0,14.917-6.677,14.917-14.917V14.92z" style="fill: rgb(226, 83, 3);"/>
-                                        <path d="M349.557,174.779c0-8.24-6.677-14.917-14.917-14.917H221.926c-8.24,0-14.917,6.677-14.917,14.917&#10;&#9;&#9;&#9;s6.677,14.917,14.917,14.917H334.64C342.874,189.696,349.557,183.019,349.557,174.779z" style="fill: rgb(226, 83, 3);"/>
-                                        <path d="M159.858,334.637c0,8.24,6.677,14.917,14.917,14.917c8.24,0,14.917-6.677,14.917-14.917V221.923&#10;&#9;&#9;&#9;c0-8.24-6.677-14.917-14.917-14.917c-8.24,0-14.917,6.677-14.917,14.917V334.637z" style="fill: rgb(226, 83, 3);"/>
-                                      </g>
+									<g id="crosshair" transform="matrix(1, 0, 0, 1, -20, -20)"
+									   data-bind="attr: { transform: scaleMatrixCrosshair()}">
+										<circle r="0.5" cy="0" cx="0" />
+										<path d="M -15,0 H -5" />
+										<path d="M 15,0 H 5" />
+										<path d="M 0,15 V 5" />
+										<path d="M 0,-15 V -5" />
+									</g>
 								</svg>
 
 							</div>

@@ -1781,6 +1781,13 @@ input.search-query,
 
 
 
+#crosshair {
+    transition-property: transform;
+	transition-timing-function: linear;
+	transition-duration: 2s;
+	transition-delay: 0s;
+}
+
 #focus_description {
 	background-image: url(/plugin/mrbeam/static/img/focus_adjust_steps.png);
 	background-repeat: no-repeat;

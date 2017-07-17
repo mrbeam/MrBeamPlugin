@@ -50,7 +50,8 @@ if __name__ == "__main__":
 	debug_multicolor = [
 		{"passes": "1", "feedrate": "1000", "pierce_time": "0", "color": "#000000", "intensity": "10", "job": 1}, 
 		{"passes": "1", "feedrate": "800", "pierce_time": "0", "color": "#ff0000", "intensity": "20", "job": 2}, 
-		{"passes": "1", "feedrate": "400", "pierce_time": "0", "color": "#0000ff", "intensity": "30", "job": 3}
+		{"passes": "1", "feedrate": "400", "pierce_time": "0", "color": "#0000ff", "intensity": "30", "job": 3},
+		{"passes": "1", "feedrate": "400", "pierce_time": "0", "color": "black", "intensity": "30", "job": 4}
 	]
 	
 	params = dict()

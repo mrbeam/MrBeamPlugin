@@ -81,7 +81,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			handleStrokeDashPreset: [5,5],
 			handleStrokeWidth: 2,
 			handleLength: 22,
-			handleRadius: 20,
+			handleRadius: 10,
 			unscale: 1,
 			handleStrokeDash: "5,5"
 		};
@@ -97,6 +97,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		Element.prototype.ftCreateHandles = function() {
 			var ftEl = this;
 			ftEl.ftInit();
+			ftEl.ftBeforeTransform();
 			var id = ftEl.id;
 			var bb = ftEl.getBBox();
 			ftEl.ftStoreInitialTransformMatrix();
@@ -189,7 +190,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			this.data('scale', 1);
 			this.data('tx', 0);
 			this.data('ty', 0);
-			this.data('wa', snap.select('#coordGrid').getBBox());
+			this.data('wa', this.paper.select('#coordGrid').getBBox());
 			this.data('ratio', 1);
 //			this.attr({class:'_freeTransformInProgress'});
 			this.addClass('_freeTransformInProgress');
@@ -236,6 +237,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			if(this.data( 'bb' )) this.data('bb').remove();
 			this.click( function() { this.ftCreateHandles(); } ) ;
 			this.ftCleanUp();
+			this.ftAfterTransform();
 			return this;
 		};
 
@@ -305,27 +307,61 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			// transformed bbox
 			this.data("bbT", this.paper.rect( rectObjFromBB( this.getBBox(1), rad ) )
 							.attr({ fill: "none", 'vector-effect': "non-scaling-stroke", stroke: ftOption.handleFill, strokeWidth: ftOption.handleStrokeWidth, strokeDasharray: ftOption.handleStrokeDashPreset.join(',') })
-							.transform( this.transform().global.toString() ) );
+							.transform( this.transform().local.toString() ) );
 			return this;
 		};
 
 		Element.prototype.ftReportTransformation = function(){
-			if(this.data('ftCallbacks') && this.data('ftCallbacks').length > 0){
-				for (var idx = 0; idx < this.data('ftCallbacks').length; idx++) {
-					var cb = this.data('ftCallbacks')[idx];
+			if(this.data('ftOnTransformCallbacks') && this.data('ftOnTransformCallbacks').length > 0){
+				for (var idx = 0; idx < this.data('ftOnTransformCallbacks').length; idx++) {
+					var cb = this.data('ftOnTransformCallbacks')[idx];
 					cb(this);
 				}
 			}
 		};
 
-		Element.prototype.ftRegisterCallback = function(callback){
-			if(typeof this.data('ftCallbacks') === 'undefined'){
-				this.data('ftCallbacks', [callback]);
+		Element.prototype.ftRegisterOnTransformCallback = function(callback){
+			if(typeof this.data('ftOnTransformCallbacks') === 'undefined'){
+				this.data('ftOnTransformCallbacks', [callback]);
 			} else {
-				this.data('ftCallbacks').push(callback);
+				this.data('ftOnTransformCallbacks').push(callback);
 			}
 
 			this.ftReportTransformation();
+		};
+		
+		Element.prototype.ftAfterTransform = function(){
+			if(this.data('ftAfterTransformCallbacks') && this.data('ftAfterTransformCallbacks').length > 0){
+				for (var idx = 0; idx < this.data('ftAfterTransformCallbacks').length; idx++) {
+					var cb = this.data('ftAfterTransformCallbacks')[idx];
+					cb(this);
+				}
+			}
+		};
+
+		Element.prototype.ftRegisterAfterTransformCallback = function(callback){
+			if(typeof this.data('ftAfterTransformCallbacks') === 'undefined'){
+				this.data('ftAfterTransformCallbacks', [callback]);
+			} else {
+				this.data('ftAfterTransformCallbacks').push(callback);
+			}
+		};
+		
+		Element.prototype.ftBeforeTransform = function(){
+			if(this.data('ftBeforeTransformCallbacks') && this.data('ftBeforeTransformCallbacks').length > 0){
+				for (var idx = 0; idx < this.data('ftBeforeTransformCallbacks').length; idx++) {
+					var cb = this.data('ftBeforeTransformCallbacks')[idx];
+					cb(this);
+				}
+			}
+		};
+
+		Element.prototype.ftRegisterBeforeTransformCallback = function(callback){
+			if(typeof this.data('ftBeforeTransformCallbacks') === 'undefined'){
+				this.data('ftBeforeTransformCallbacks', [callback]);
+			} else {
+				this.data('ftBeforeTransformCallbacks').push(callback);
+			}
 		};
 		
 		Element.prototype.ftGetRotation = function(){
@@ -372,11 +408,11 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 	};
 
-	function elementDragMove( mainEl, dx, dy, x, y ) {
+	function elementDragMove( mainEl, dx, dy, x, y, event ) {
 		var sgUnscale = mainEl.data('sgUnscale');
 
-		var udx = sgUnscale*dx;
-		var udy = sgUnscale*dy;
+		var udx = sgUnscale * dx * MRBEAM_PX2MM_FACTOR_WITH_ZOOM;
+		var udy = sgUnscale * dy * MRBEAM_PX2MM_FACTOR_WITH_ZOOM;
 
 		var tx = mainEl.data("otx") + +udx;
 		var ty = mainEl.data("oty") + +udy;
@@ -450,15 +486,16 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		var bb = mainEl.getBBox();
 
 		//store height at start of dragging
-		resizeDragger.data('sHeight', bb.cy-bb.y);
-		mainEl.data('ratio', (bb.cx - bb.x)/resizeDragger.data('sHeight'));
+		var sHeight = bb.cy - bb.y;
+		resizeDragger.data('sHeight', sHeight);
+		mainEl.data('ratio', (bb.cx - bb.x) / sHeight);
 
 		//check where dragger is to adjust scaling-translation
 		elementDragStart(mainEl);
 		var vx = mainEl.matrix.x(resizeDragger.attr('cx'),resizeDragger.attr('cy'));
 		var vy = mainEl.matrix.y(resizeDragger.attr('cx'),resizeDragger.attr('cy'));
 		resizeDragger.data('signX',Math.sign(bb.cx - vx));
-		resizeDragger.data('signY',Math.sign(bb.cy - vy));
+		resizeDragger.data('signY',Math.sign(-bb.cy + vy));
 		// console.log("Sig X/Y", resizeDragger.data('signX'), resizeDragger.data('signY'));
 
 	};
@@ -468,10 +505,12 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 	function resizeDraggerMove( mainEl, dx, dy, x, y, event ) {
 		var resizeDragger = this;
-		dy = dy/2; //apply smoothing factor of 2
+		// TODO use dx and dy, scale properly to movement.
+		var	delta = -dy/2 * MRBEAM_PX2MM_FACTOR_WITH_ZOOM;
+		//apply smoothing factor of 2
 
 		var origHeight = +mainEl.data('oHeight') * +mainEl.data('angleFactor');
-		var newHeight = +resizeDragger.data('sHeight') - dy * mainEl.data('sgUnscale') * resizeDragger.data('signY');
+		var newHeight = +resizeDragger.data('sHeight') - delta * mainEl.data('sgUnscale') * resizeDragger.data('signY');
 		var newScale =  Math.abs(newHeight / origHeight);
 
 		//todo implement shiftkey for resize
@@ -483,11 +522,11 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		mainEl.data('scale', newScale);
 
 		//TODO angle, for translation of innerBB(redBB)
-		elementDragMove(mainEl,dy * +mainEl.data('ratio') * resizeDragger.data('signX') * resizeDragger.data('signY'),dy);
+		elementDragMove(mainEl, delta * +mainEl.data('ratio') * resizeDragger.data('signX')   * resizeDragger.data('signY'), -delta);
 
 		mainEl.ftUpdateTransform();
 	};
-
+	
 })();
 
 
