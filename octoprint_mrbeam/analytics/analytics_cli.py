@@ -29,4 +29,7 @@ if __name__ == "__main__":
 	print "Unknown jobs: {}".format(jobs.getUnknownJobs())
 	print "Total job count: {}".format(jobs.getTotalJobs())
 	print "Total job runtime: {0:.2f} [min]".format(jobs.getTotalRunTime() / 60.0)
+	print "Total pause time: {0:.2f} [min]".format(jobs.getTotalPauseTime() / 60)
+	print "pause time:  {0:.2f} [min]".format((jobs.getTotalPauseTime()-jobs.getTotalCoolingTime()) / 60)
+	print "cooling time: {0:.2f} [min]".format(jobs.getTotalCoolingTime() / 60)
 	print "Total laser runtime: {0:.2f} [min]".format((jobs.getTotalRunTime() - jobs.getTotalPauseTime()) / 60.0)

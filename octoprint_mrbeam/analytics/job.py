@@ -33,6 +33,10 @@ class Job(object):
 				self._addPrintPaused(event)
 			elif event['eventname'] == "print_resumed":
 				self._addPrintResumed(event)
+			elif event['eventname'] == "laser_cooling_pause":
+				self._addCoolingPause(event)
+			elif event['eventname'] == "laser_cooling_resume":
+				self._addCoolingResume(event)
 
 	def finishJob(self):
 		if self._starttime is None:
@@ -61,6 +65,12 @@ class Job(object):
 		totalsum = 0
 		for p in self._pauselist:
 			totalsum += p.getPauseTime()
+		return totalsum
+
+	def getTotalCoolingTime(self):
+		totalsum = 0
+		for p in self._pauselist:
+			totalsum += p.getCoolingTime()
 		return totalsum
 
 	def _addStartEvent(self, event):
@@ -102,6 +112,14 @@ class Job(object):
 			self._currentpause = None
 			self._state = self.JOB_STATE_RESUMED
 
+	def _addCoolingPause(self, event):
+		if self._currentpause is not None:
+			self._currentpause.addStartCooling(event['timestamp'])
+
+	def _addCoolingResume(self, event):
+		if self._currentpause is not None:
+			self._currentpause.addEndCooling(event['timestamp'])
+
 	def _addPrintProgress(self, event):
 		self._lastprogresstime = event['timestamp']
 		self._lastprogressvalue = event['progress']
@@ -110,6 +128,8 @@ class Pause(object):
 	def __init__(self, starttime):
 		self._starttime = None
 		self._endtime = None
+		self._startCooling = None
+		self._endCooling = None
 		self.addStarttime(starttime)
 
 	def addStarttime(self, time):
@@ -118,8 +138,21 @@ class Pause(object):
 	def addEndtime(self, time):
 		self._endtime = time
 
+	def addStartCooling(self, time):
+		self._startCooling = time
+
+	def addEndCooling(self, time):
+		if self._startCooling is not None:
+			self._endCooling = time
+
 	def getPauseTime(self):
 		return self._endtime - self._starttime
+
+	def getCoolingTime(self):
+		if self._endCooling is None:
+			return self._endtime - self._startCooling
+		else:
+			return self._endCooling - self._startCooling
 
 	def getPauseStarttime(self):
 		return self._starttime
