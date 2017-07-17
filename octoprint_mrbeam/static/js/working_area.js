@@ -116,7 +116,11 @@ $(function(){
 			self.zoomOffY(offset);
 		};
 		self.zoom_factor_text = ko.computed(function(){
-			return (1/self.zoom() * 100).toFixed(0) + '%';
+			if(self.zoom() !== 1){
+				return (1/self.zoom() * 100).toFixed(0) + '%';
+			} else {
+				return "";
+			}
 		});
 
 		self.hwRatio = ko.computed(function(){
