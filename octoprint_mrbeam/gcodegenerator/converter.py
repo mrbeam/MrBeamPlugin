@@ -53,12 +53,12 @@ class Converter():
 		self.options = self.defaults
 		self.setoptions(params)
 		self.svg_file = model_path
-		self.document = None
-		self._log.info('### Converter Initialized: %s' % self.options)
-
+		self.document=None
+		self._log.info('Converter Initialized: %s' % self.options)
+		
 	def setoptions(self, opts):
 		# set default values if option is missing
-		self._log.info("opts: %s" % opts)
+		# self._log.info("opts: %s" % opts)
 		for key in self.options.keys():
 			if key in opts: 
 				self.options[key] = opts[key]
@@ -188,53 +188,73 @@ class Converter():
 			self._log.info( 'Vector conversion: %s paths' % len(self.paths))
 			for layer in self.layers :
 				if layer in self.paths :
-					pD = dict()
+					paths_by_color = dict()
 					for path in self.paths[layer] :
-						self._log.info("path %s, %s, stroke: %s,  'fill: ', %s" % ( layer.get('id'), path.get('id'), path.get('stroke'), path.get('class') ))
-
-						if path.get('stroke') is not None: #todo catch None stroke/fill earlier
-							stroke = path.get('stroke')
-						elif path.get('fill') is not None:
-							stroke = path.get('fill')
-						elif path.get('class') is not None:
-							stroke = path.get('class')
-						else:
-							stroke = 'default'
+						self._log.info("path %s, %s, stroke: %s, fill: %s, mb:gc: %s" % ( layer.get('id'), path.get('id'), path.get('stroke'), path.get('class'), path.get('mb:gc') ))
+						
+#						if path.get('stroke') is not None: #todo catch None stroke/fill earlier
+#							stroke = path.get('stroke')
+#						elif path.get('fill') is not None:
+#							stroke = path.get('fill')
+#						elif path.get('class') is not None:
+#							stroke = path.get('class')
+#						else:
+#							stroke = 'default'
+							#continue
+							
+						strokeInfo = self._get_stroke(path)
+						#print('strokeInfo:', strokeInfo)
+						if(strokeInfo['visible'] == False):
 							continue
-
+							
+						stroke = strokeInfo['color']
 						if "d" not in path.keys() :
 							self._log.error("Warning: One or more paths don't have 'd' parameter")
 							continue
-						if stroke not in pD.keys() and stroke != 'default':
-							pD[stroke] = []
+						if stroke not in paths_by_color.keys() and stroke != 'default':
+							paths_by_color[stroke] = []
 						d = path.get("d")
 						if d != '':
-							csp = cubicsuperpath.parsePath(d)
-							csp = self._apply_transforms(path, csp)
-							pD[stroke] += csp
-
+							paths_by_color[stroke].append(path)# += path
 							processedItemCount += 1
 							report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
 
-					curvesD = dict() #diction
-					for colorKey in pD.keys():
-						if colorKey == 'none':
-							continue
-						curvesD[colorKey] = self._parse_curve(pD[colorKey], layer)
+#					curvesD = dict() #diction
+#					for colorKey in paths_by_color.keys():
+#						if colorKey == 'none':
+#							continue
+							
+#						curvesD[colorKey] = self._parse_curve(paths_by_color[colorKey], layer)
 
 					#pierce_time = self.options['pierce_time']
 					layerId = layer.get('id') or '?'
 					pathId = path.get('id') or '?'
-
+					
 					#for each color generate GCode
-					for colorKey in curvesD.keys():
-						settings = self.colorParams.get(colorKey, {'intensity': -1, 'feedrate': -1, 'passes': 0, 'pierce_time': 0})
-						fh.write("; Layer: " + layerId + ", outline of " + pathId + ", stroke: " + colorKey +', '+str(settings)+"\n")
-						# fh.write(self.generate_gcode_color(curvesD[colorKey], colorKey, pierce_time))
-						curveGCode = self._generate_gcode(curvesD[colorKey], colorKey)
-						for p in range(0, int(settings['passes'])):
-							fh.write(";pass %i of %s\n" % (p+1, settings['passes']))
-							fh.write(curveGCode)
+					#for colorKey in curvesD.keys():
+					for colorKey in paths_by_color.keys():
+						if colorKey == 'none':
+							continue
+						
+						for path in paths_by_color[colorKey]:
+							print('p', path)
+							curveGCode = ""
+							mbgc = path.get('{http://www.mr-beam.org/mbns}gc', None)
+							if(mbgc != None):
+								curveGCode = self._use_embedded_gcode(mbgc, colorKey)
+							else:
+								d = path.get('d')
+								csp = cubicsuperpath.parsePath(d)
+								csp = self._apply_transforms(path, csp)
+								curve = self._parse_curve(csp, layer)
+								curveGCode = self._generate_gcode(curve, colorKey)
+						
+						
+							settings = self.colorParams.get(colorKey, {'intensity': -1, 'feedrate': -1, 'passes': 0, 'pierce_time': 0})
+							fh.write("; Layer: " + layerId + ", outline of " + pathId + ", stroke: " + colorKey +', '+str(settings)+"\n")
+							for p in range(0, int(settings['passes'])):
+								fh.write(";pass %i of %s\n" % (p+1, settings['passes']))
+								fh.write(curveGCode)
 
 			fh.write(self._get_gcode_footer())
 
@@ -615,6 +635,22 @@ class Converter():
 		if si[1] == 'end':
 			g += machine_settings.gcode_after_path() + "\n"
 		return g
+	
+	def _use_embedded_gcode(self, gcode, color) :
+		self._log.debug( "_use_embedded_gcode()")
+		gcode = gcode.replace(' ', "\n")
+		settings = self.colorParams.get(color, {'intensity': -1, 'feedrate': -1, 'passes': 0, 'pierce_time': 0})
+		feedrateCode = "F%s;%s\n" % (settings['feedrate'], color)
+		intensityCode = machine_settings.gcode_before_path_color(color, settings['intensity']) + "\n"
+		piercetimeCode = ''
+		pt = int(settings['pierce_time'])
+		if pt > 0:
+			piercetimeCode = "G4P%.3f\n" % (round(pt / 1000.0, 4))
+		placeholder = ";_params_"
+		
+		gc = gcode.replace(placeholder, feedrateCode + intensityCode + piercetimeCode, 1) + "\n"+ machine_settings.gcode_after_path() + "\n"
+		return gc
+		
 
 	def export_gcode(self) :
 		self._check_dir() 

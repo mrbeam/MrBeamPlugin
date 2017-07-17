@@ -1,3 +1,5 @@
+/* global Snap */
+
 //    Matrix Oven - a snapsvg.io plugin to apply & remove transformations from svg files.
 //    Copyright (C) 2015  Teja Philipp <osd@tejaphilipp.de>
 //    
@@ -20,6 +22,19 @@
 
 
 Snap.plugin(function (Snap, Element, Paper, global) {
+
+	/**
+	 * bakes transformations of the element and all sub-elements into coordinates
+	 * 
+	 * @param {boolean} toCubics : use only cubic path segments
+	 * @param {integer} dec : number of digits after decimal separator. defaults to 5
+	 * @returns {undefined}
+	 */
+	Element.prototype.bake_subtree = function (correctionMatrix, toCubics, dec) {
+		var elem = this;
+		var own_transformation = elem.parent().transform().totalMatrix;
+		elem.bake(own_transformation.invert(), toCubics, dec);
+	};
 	
 	/**
 	 * bakes transformations of the element and all sub-elements into coordinates
@@ -28,7 +43,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	 * @param {integer} dec : number of digits after decimal separator. defaults to 5
 	 * @returns {undefined}
 	 */
-	Element.prototype.bake = function (toCubics, dec) {
+	Element.prototype.bake = function (correctionMatrix, toCubics, dec) {
 		var elem = this;
 
 //		console.log('Elem: ', elem);
@@ -45,15 +60,18 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			return;
 		} // don't handle unplaced elements. this causes double handling.
 
-		if (typeof (toCubics) === 'undefined')
+		if (toCubics === undefined)
 			toCubics = false;
-		if (typeof (dec) === 'undefined')
+		if (dec === undefined)
 			dec = 5;
+		if (correctionMatrix === undefined)
+			correctionMatrix = Snap.matrix(1,0,0,1,0,0);
+		
 		var children = elem.children();
 		if (children.length > 0) {
 			for (var i = 0; i < children.length; i++) {
 				var child = children[i];
-				child.bake(toCubics, dec);
+				child.bake(correctionMatrix, toCubics, dec);
 			}
 			elem.attr({transform: ''});
 			return;
@@ -81,21 +99,24 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			// Validity checks from http://www.w3.org/TR/SVG/shapes.html#RectElement:
 			// If 'x' and 'y' are not specified, then set both to 0. // CorelDraw is creating that sometimes
 			if (!isFinite(x)) {
-				console.log('No attribute "x" in image tag. Assuming 0.')
+				console.log('No attribute "x" in image tag. Assuming 0.');
 				x = 0;
 			}
 			if (!isFinite(y)) {
-				console.log('No attribute "y" in image tag. Assuming 0.')
+				console.log('No attribute "y" in image tag. Assuming 0.');
 				y = 0;
 			}
 			var transform = elem.transform(); // TODO CLEM maybe parent is needed here too! Check SVG with image and transform Matrix
-			var matrix = transform['totalMatrix'];
+			var matrix = transform['totalMatrix'].add(correctionMatrix);
 			var transformedX = matrix.x(x, y);
 			var transformedY = matrix.y(x, y);
 			var transformedW = matrix.x(x+w, y+h) - transformedX;
 			var transformedH = matrix.y(x+w, y+h) - transformedY;
 			
 			elem.attr({x: transformedX, y: transformedY, width: transformedW, height: transformedH});
+			if(transformedH < 0){
+				elem.attr({style: 'transform: scale(1,-1); transform-origin: top', height: -transformedH});
+			}
 			return;
 		}
 
@@ -110,7 +131,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 			// remove already set parent-nodes
 			//todo check if redundant
-			if(elem.parent().attr('text_set') != undefined && elem.parent().attr('text_set') === true){
+			if(elem.parent().attr('text_set') !== undefined && elem.parent().attr('text_set') === true){
 				//parent already transformed
 				return;
 			}
@@ -148,7 +169,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			}
 
 			var transform = elem.parent().transform();
-			var matrix = transform['totalMatrix'];
+			var matrix = transform['totalMatrix'].add(correctionMatrix);
 			var transformedX = matrix.x(x, y);
 			var transformedY = matrix.y(x, y);
 			var transformedW = matrix.x(x+w, y+h) - transformedX;
@@ -193,7 +214,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 		// Get the transformation matrix between SVG root element and current element
 		var transform = path_elem.transform();
-		var matrix = transform['totalMatrix'];
+		var matrix = transform['totalMatrix'].add(correctionMatrix);
 
 		// apply the matrix transformation on the path segments
 		var j; 
