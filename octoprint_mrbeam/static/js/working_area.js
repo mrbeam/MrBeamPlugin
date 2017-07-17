@@ -36,8 +36,7 @@ $(function(){
 		self.gc_options = {
 			precision: 0.1,
 			optimize_travel: true,
-			small_paths_first: true,
-			
+			small_paths_first: true
 		};
 
 		self.command = ko.observable(undefined);
@@ -169,35 +168,12 @@ $(function(){
 			return "scale("+self.camera_scale()+") rotate("+self.camera_rotation()+"deg) translate("+self.camera_offset_x()+"px, "+self.camera_offset_y()+"px)";
 		});
 
-
-		// matrix scales svg units to display_pixels
-//		self.scaleMatrix = ko.computed(function(){
-//			var m = new Snap.Matrix();
-//			var factor = 25.4/self.svgDPI(); // * 1/self.px2mm_factor();
-//			if(!isNaN(factor)){
-//				m.scale(factor);
-//				return m;
-//			}
-//			return m;
-//		});
-		
 		// matrix scales svg units to display_pixels
 		self.scaleMatrix = ko.computed(function(){
 			var m = new Snap.Matrix();
 			return m;
 		});
 
-		// matrix scales svg units to display_pixels
-//		self.scaleMatrixMMtoDisplay = ko.computed(function(){
-//			var m = new Snap.Matrix();
-//			var factor = self.svgDPI()/25.4; // scale mm to 90dpi pixels
-//			var yShift = self.workingAreaHeightMM(); // 0,0 origin of the gcode is bottom left. (top left in the svg)
-//			if(!isNaN(factor)){
-//				m.scale(factor, -factor).translate(0,-yShift);
-//				return m;
-//			}
-//			return m;
-//		});
 		
 //		self.matrixMMflipY = ko.computed(function(){
 //			var m = new Snap.Matrix();
@@ -737,34 +713,6 @@ $(function(){
 			return namespaces;
 		};
 
-		self.highlightDesign = function(data){
-			$('#userContent').addClass('dimDesigns');
-			var svgEl = $('#'+data.previewId);
-			svgEl.addClass('designHighlight');
-			self.showHighlightMarkers(data.previewId);
-		};
-		self.removeHighlight = function(data){
-			$('#userContent').removeClass('dimDesigns');
-			var svgEl = $('#'+data.previewId);
-			svgEl.removeClass('designHighlight');
-			self.showHighlightMarkers(null);
-		};
-		self.showHighlightMarkers = function(svgId) {
-//			if(svgId === null){
-//				var w = self.mm2svgUnits(self.workingAreaWidthMM());
-//				var h = self.mm2svgUnits(self.workingAreaHeightMM());
-//				snap.select('#highlightMarker').attr({x: -1, y:-1, width:0, height:0});
-//			} else {
-//				var svgEl = snap.select('#'+svgId);
-//				var bbox = svgEl.getBBox();
-//				var x = bbox.x - 20;
-//				var y = bbox.y - 20;
-//				var w = bbox.w + 40;
-//				var h = bbox.h + 40;
-//				snap.select('#highlightMarker').attr({x: x, y:y, width:w, height:h});
-//			}
-		};
-
 		self.toggleTransformHandles = function(file){
 			var el = snap.select('#'+file.previewId);
 			if(el){
@@ -1086,8 +1034,8 @@ $(function(){
 				if(parts.length === 4){
 					var offsetVBoxX = parseFloat(parts[0]);
 					var offsetVBoxY = parseFloat(parts[1]);
-					var widthVBox = parseFloat(parts[2]);// - parseFloat(parts[0]);
-					var heightVBox = parseFloat(parts[3]);// - parseFloat(parts[1]);
+					var widthVBox = parseFloat(parts[2]);
+					var heightVBox = parseFloat(parts[3]);
 
 					var fx = widthPx / widthVBox;
 					var fy = heightPx / heightVBox;
@@ -1381,29 +1329,10 @@ $(function(){
 		self.clear_gcode = function(){
 			snap.select('#gCodePreview').clear();
 		};
-		
-//		self.updateGCode = function(){
-//			var paths = snap.selectAll('#userContent path');
-//			for (var i = 0; i < paths.length; i++) {
-//				var path = paths[i];
-//				if(path.attr('gc') !== null){
-//					console.log("gc already present");
-//				} else {
-//					path.generate_gc();
-//				}
-//					
-//			}
-//		};
 
 		self.onStartup = function(){
 			self.state.workingArea = self;
 			self.files.workingArea = self;
-
-			// check this on tab change as before the bounding boxes are sized 0.
-//			$('#wa_tab_btn').on('shown.bs.tab', function (e) {
-//				self.trigger_resize();
-//				self.check_sizes_and_placements();
-//			});
 			$(window).resize(function(){
 				self.trigger_resize();
 			});
@@ -1824,7 +1753,6 @@ $(function(){
 			document.getElementById("working_area_files"),
             document.getElementById("quick_text_dialog"),
 			document.getElementById("zoomFactor")
-			//document.getElementById("webcam_wrapper")
 		]]);
 
 });
