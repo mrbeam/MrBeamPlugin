@@ -72,7 +72,6 @@ class TemperatureManager(object):
 		_mrbeam_plugin_implementation._ioBeam.send_command("laser:temp")
 
 	def cooling_stop(self):
-		self._logger.debug("cooling_stop()")
 		self.is_cooling_since = time.time()
 		_mrbeam_plugin_implementation._oneButtonHandler.cooling_down_pause()
 		_mrbeam_plugin_implementation._event_bus.fire(MrBeamEvents.LASER_COOLING_PAUSE, dict(temp=self.temperatur))
@@ -80,7 +79,6 @@ class TemperatureManager(object):
 
 
 	def cooling_resume(self):
-		self._logger.debug("cooling_resume()")
 		_mrbeam_plugin_implementation._event_bus.fire(MrBeamEvents.LASER_COOLING_RESUME, dict(temp=self.temperatur))
 		_mrbeam_plugin_implementation._oneButtonHandler.cooling_down_end(only_if_behavior_is_cooling=True)
 		self.is_cooling_since = 0
