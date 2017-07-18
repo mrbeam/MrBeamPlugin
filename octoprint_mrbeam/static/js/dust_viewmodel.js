@@ -17,14 +17,12 @@ $(function() {
                     return;
                 }
 
-                self._debugDaShit("onDataUpdaterPluginMessage() ", data);
-
                 if (!data) {
                     console.warn("onDataUpdaterPluginMessage() received empty data for plugin '"+mrbeam+"'");
                     return;
                 }
 
-                if ('status' in data) {
+                if ('status' in data && 'dust_value' in data['status']) {
                     self.dustvalue(data['status']['dust_value']);
                 }
             };
