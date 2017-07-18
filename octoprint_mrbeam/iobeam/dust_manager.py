@@ -46,6 +46,7 @@ class DustManager(object):
 		self._shutting_down = True
 
 	def handle_dust(self, payload):
+		self._logger.debug("got dust value {}".format(repr(payload)))
 		self.dust = payload['val'] if 'val' in payload else None
 		self.dust_ts = time.time()
 		self.check_dust_value()
@@ -60,6 +61,7 @@ class DustManager(object):
 			#self.cooling_stop()  # TODO ask andy why cooling_stop
 
 	def request_dust(self):
+		self._logger.debug("send dust request")
 		_mrbeam_plugin_implementation._ioBeam.send_command("fan:dust")
 
 	def _dust_timer_callback(self):
@@ -69,12 +71,13 @@ class DustManager(object):
 
 	def _start_dust_timer(self):
 		if not self._shutting_down:
+			self._logger.debug("start dust timer")
 			self.temp_timer = threading.Timer(self.DUST_TIMER_INTERVAL, self._dust_timer_callback)
 			self.temp_timer.daemon = True
 			self.temp_timer.start()
 		else:
 			self._logger.debug("Shutting down.")
 
-	@staticmethod
-	def send_status_to_frontend(dust):
+	def send_status_to_frontend(self, dust):
+		self._logger.debug("send data to frontend")
 		_mrbeam_plugin_implementation._plugin_manager.send_plugin_message("mrbeam", dict(status=dict(dust_value=dust)))
