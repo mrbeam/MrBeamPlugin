@@ -26,6 +26,7 @@ class IoBeamEvents(object):
 	LID_OPENED =         "iobeam.lid.opened"
 	LID_CLOSED =         "iobeam.lid.closed"
 	LASER_TEMP =         "iobeam.laser.temp"
+	DUST_VALUE =         "iobeam.dust.value"
 
 
 class IoBeamHandler(object):
@@ -111,6 +112,7 @@ class IoBeamHandler(object):
 	MESSAGE_IOBEAM_VERSION_0_2_4 =		"0.2.4"
 
 	MESSAGE_ACTION_LASER_TEMP =         "temp"
+	MESSAGE_ACTION_DUST_VALUE =         "dust"
 
 
 	def __init__(self, event_bus, socket_file=None):
@@ -358,7 +360,15 @@ class IoBeamHandler(object):
 	def _handle_steprun_message(self, message, tokens):
 		return 0
 
-	def _handle_fan_message(self, message, tokens):
+	def _handle_fan_message(self, message, token):
+		action = token[0] if len(token) > 0 else None
+		payload = self._as_number(token[1]) if len(token) > 1 else None
+
+		if action == self.MESSAGE_ACTION_DUST_VALUE and payload is not None:
+			self._fireEvent(IoBeamEvents.DUST_VALUE, dict(log=False, val=payload))
+		else:
+			return self._handle_invalid_message(message)
+
 		return 0
 
 	def _handle_laser_message(self, message, token):
