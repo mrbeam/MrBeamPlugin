@@ -70,7 +70,7 @@ class DustManager(object):
 		_mrbeam_plugin_implementation._ioBeam.send_command("fan:off")
 
 	def _stop_dust_extraction_when_below(self, value):
-		self.trail_extraction = threading.Thread(self._wait_until)
+		self.trail_extraction = threading.Thread(self._wait_until, args=(value,))
 		self.trail_extraction.daemon = True
 		self.trail_extraction.start()
 
