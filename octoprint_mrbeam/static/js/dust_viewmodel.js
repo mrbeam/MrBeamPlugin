@@ -15,6 +15,8 @@ $(function() {
 
             // this is listening for data coming through the socket connection
             self.onDataUpdaterPluginMessage = function(plugin, data) {
+                console.log(data);
+
                 if (plugin !== "mrbeam") {
                     return;
                 }
