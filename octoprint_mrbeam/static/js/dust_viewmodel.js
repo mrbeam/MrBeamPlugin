@@ -23,7 +23,6 @@ $(function() {
                 }
 
                 if ('status' in data && 'dust_value' in data['status']) {
-                    console.log("Got dust value");
                     self.dustvalue(data['status']['dust_value']);
                 }
             };
