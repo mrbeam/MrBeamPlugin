@@ -11,12 +11,8 @@ $(function() {
         self.dustvalue = ko.observable(0.0);
 
         self.onStartupComplete = function () {
-            console.log("Dust View Model activated.");
-
             // this is listening for data coming through the socket connection
             self.onDataUpdaterPluginMessage = function(plugin, data) {
-                console.log(data);
-
                 if (plugin !== "mrbeam") {
                     return;
                 }
