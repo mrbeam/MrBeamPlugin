@@ -18,7 +18,7 @@ $(function() {
                 }
 
                 if (!data) {
-                    console.warn("onDataUpdaterPluginMessage() received empty data for plugin '"+mrbeam+"'");
+                    console.warn("onDataUpdaterPluginMessage() received empty data for plugin 'mrbeam'");
                     return;
                 }
 
