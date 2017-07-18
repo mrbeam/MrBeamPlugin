@@ -30,7 +30,7 @@ $(function() {
     }
 
     OCTOPRINT_VIEWMODELS.push([
-        ReadyToLaserViewModel,
+        DustViewModel,
         ["loginStateViewModel", "printerStateViewModel", "laserCutterProfilesViewModel"],
         ["#dust_value"]
     ]);
