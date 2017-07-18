@@ -31,6 +31,7 @@ class DustManager(object):
 
 	def _subscribe(self):
 		_mrbeam_plugin_implementation._event_bus.subscribe(IoBeamEvents.DUST_VALUE, self.onEvent)
+		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_STARTED, self.onEvent)
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self.onEvent)
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self.onEvent)
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_CANCELLED, self.onEvent)
@@ -38,18 +39,35 @@ class DustManager(object):
 
 	def onEvent(self, event, payload):
 		if event == IoBeamEvents.DUST_VALUE:
-			self.handle_dust(payload)
+			self._handle_dust(payload)
+		elif event == OctoPrintEvents.PRINT_STARTED:
+			self._start_dust_extraction()
+		elif event in (OctoPrintEvents.PRINT_DONE, OctoPrintEvents.PRINT_FAILED, OctoPrintEvents.PRINT_CANCELLED):
+			self._stop_dust_extraction()
 		elif event == OctoPrintEvents.SHUTDOWN:
 			self.shutdown()
 
 	def shutdown(self):
 		self._shutting_down = True
 
-	def handle_dust(self, payload):
+	def _handle_dust(self, payload):
 		self.dust = payload['val'] if 'val' in payload else None
 		self.dust_ts = time.time()
 		self.check_dust_value()
 		self.send_status_to_frontend(self.dust)
+
+	def _start_dust_extraction(self, value=None):
+		if value is None:
+			_mrbeam_plugin_implementation._ioBeam.send_command("fan:auto")
+		else:
+			if value > 100:
+				value = 100
+			elif value < 0:
+				value = 0
+			_mrbeam_plugin_implementation._ioBeam.send_command("fan:on:{:d}".format(int(value)))
+
+	def _stop_dust_extraction(self):
+		_mrbeam_plugin_implementation._ioBeam.send_command("fan:off")
 
 	def check_dust_value(self):
 		pass
