@@ -31,7 +31,7 @@ class DustManager(object):
 		self._subscribe()
 		self._start_dust_timer()
 
-		self._logger.debug("initialzed.")
+		self._logger.debug("initialized!")
 
 	def _subscribe(self):
 		_mrbeam_plugin_implementation._event_bus.subscribe(IoBeamEvents.DUST_VALUE, self.onEvent)
@@ -84,6 +84,7 @@ class DustManager(object):
 			self._trail_extraction.start()
 
 	def _wait_until(self, value):
+		self._logger.debug("starting trial dust extraction.")
 		dust_start = self._dust
 		dust_start_ts = self._dust_ts
 		self._start_dust_extraction(100)
