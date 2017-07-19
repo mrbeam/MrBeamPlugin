@@ -55,11 +55,7 @@ class DustManager(object):
 		self._shutting_down = True
 
 	def _handle_dust(self, payload):
-		tmp = payload['val'] if 'val' in payload else None
-		if isinstance(tmp, numbers.Number):
-			self._dust = tmp
-		else:
-			self._logger.debug("GOT WRONG TYPE {} instead of number".format(type(tmp)))
+		self._dust = payload['val'] if 'val' in payload else None
 		self._dust_ts = time.time()
 		self.check_dust_value()
 		self.send_status_to_frontend(self._dust)
