@@ -90,7 +90,7 @@ class DustManager(object):
 		dust_start_ts = self._dust_ts
 		self._start_dust_extraction(100)
 		while self._dust > value:
-			time.sleep(1)
+			time.sleep(self.DEFAULT_DUST_TIMER_INTERVAL)
 		dust_end = self._dust
 		dust_end_ts = self._dust_ts
 		self._stop_dust_extraction()
