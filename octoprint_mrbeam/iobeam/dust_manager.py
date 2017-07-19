@@ -76,7 +76,9 @@ class DustManager(object):
 		_mrbeam_plugin_implementation._ioBeam.send_command("fan:off")
 
 	def _stop_dust_extraction_when_below(self, value):
+		self._logger.debug("test if we need trail extraction")
 		if self._trail_extraction is None:
+			self._logger.debug(("starting trail extraction!"))
 			self._trail_extraction = threading.Thread(target=self._wait_until, args=(value,))
 			self._trail_extraction.daemon = True
 			self._trail_extraction.start()
