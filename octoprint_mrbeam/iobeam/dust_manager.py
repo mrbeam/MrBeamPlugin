@@ -29,6 +29,8 @@ class DustManager(object):
 		self._subscribe()
 		self._start_dust_timer()
 
+		self._logger.debug("DustManager initialzed!")
+
 	def _subscribe(self):
 		_mrbeam_plugin_implementation._event_bus.subscribe(IoBeamEvents.DUST_VALUE, self.onEvent)
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_STARTED, self.onEvent)
