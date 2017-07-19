@@ -47,7 +47,7 @@ class DustManager(object):
 		elif event == OctoPrintEvents.PRINT_STARTED:
 			self._start_dust_extraction()
 		elif event in (OctoPrintEvents.PRINT_DONE, OctoPrintEvents.PRINT_FAILED, OctoPrintEvents.PRINT_CANCELLED):
-			self._stop_dust_extraction_when_below(0.2)
+			self._stop_dust_extraction_when_below(0.15)  # TODO change this hardcoded value to something from the machine profile
 		elif event == OctoPrintEvents.SHUTDOWN:
 			self.shutdown()
 
