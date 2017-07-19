@@ -371,7 +371,7 @@ class IoBeamHandler(object):
 		payload = self._as_number(token[1]) if len(token) > 1 else None
 
 		if action == self.MESSAGE_ACTION_DUST_VALUE and payload is not None:
-			self._fireEvent(IoBeamEvents.DUST_VALUE, dict(log=False, val=payload))
+			self._fireEvent(IoBeamEvents.DUST_VALUE, dict(log=True, val=payload))
 		elif action == self.MESSAGE_ACTION_FAN_ON:
 			pass
 		elif action == self.MESSAGE_ACTION_FAN_OFF:
