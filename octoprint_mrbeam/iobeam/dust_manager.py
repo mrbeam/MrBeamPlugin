@@ -29,7 +29,7 @@ class DustManager(object):
 		self._subscribe()
 		self._start_dust_timer()
 
-		self._logger.debug("DustManager initialzed!")
+		self._logger.debug("initialzed.")
 
 	def _subscribe(self):
 		_mrbeam_plugin_implementation._event_bus.subscribe(IoBeamEvents.DUST_VALUE, self.onEvent)
@@ -88,7 +88,6 @@ class DustManager(object):
 	def _check_dust_is_current(self):
 		if time.time() - self.dust_ts > self.DUST_MAX_AGE:
 			self._logger.error("Can't read dust value.")
-			#self.cooling_stop()  # TODO ask andy why cooling_stop
 
 	def request_dust(self):
 		_mrbeam_plugin_implementation._ioBeam.send_command("fan:dust")

@@ -113,6 +113,12 @@ class IoBeamHandler(object):
 
 	MESSAGE_ACTION_LASER_TEMP =         "temp"
 	MESSAGE_ACTION_DUST_VALUE =         "dust"
+	MESSAGE_ACTION_FAN_ON =             "on"
+	MESSAGE_ACTION_FAN_OFF =            "off"
+	MESSAGE_ACTION_FAN_AUTO =           "auto"
+	MESSAGE_ACTION_FAN_FACTOR =         "factor"
+	MESSAGE_ACTION_FAN_VERSION =        "version"
+	MESSAGE_ACTION_FAN_RPM =            "rpm"
 
 
 	def __init__(self, event_bus, socket_file=None):
@@ -377,6 +383,18 @@ class IoBeamHandler(object):
 
 		if action == self.MESSAGE_ACTION_LASER_TEMP and payload is not None:
 			self._fireEvent(IoBeamEvents.LASER_TEMP, dict(log=False, val=payload))
+		elif action == self.MESSAGE_ACTION_FAN_ON:
+			pass
+		elif action == self.MESSAGE_ACTION_FAN_OFF:
+			pass
+		elif action == self.MESSAGE_ACTION_FAN_AUTO:
+			pass
+		elif action == self.MESSAGE_ACTION_FACTOR:
+			pass
+		elif action == self.MESSAGE_ACTION_FAN_VERSION:
+			pass
+		elif action == self.MESSAGE_ACTION_FAN_RPM:
+			pass
 		else:
 			return self._handle_invalid_message(message)
 
