@@ -15,16 +15,20 @@ def dustManager():
 
 class DustManager(object):
 
-	DUST_TIMER_INTERVAL = 3
-	DUST_MAX_AGE = 10 # seconds
+	DEFAULT_DUST_TIMER_INTERVAL = 3
+	DEFAUL_DUST_MAX_AGE = 10  # seconds
 
 	def __init__(self):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.dustmanager")
 
-		self.dust = None
-		self.dust_ts = None
+		self._dust = None
+		self._dust_ts = None
 
 		self._shutting_down = False
+		self._trail_extraction = None
+
+		self._dust_timer_interval = self.DEFAULT_DUST_TIMER_INTERVAL
+		self._dust_max_age = self.DEFAUL_DUST_MAX_AGE
 
 		self._subscribe()
 		self._start_dust_timer()
@@ -53,10 +57,10 @@ class DustManager(object):
 		self._shutting_down = True
 
 	def _handle_dust(self, payload):
-		self.dust = payload['val'] if 'val' in payload else None
-		self.dust_ts = time.time()
+		self._dust = payload['val'] if 'val' in payload else None
+		self._dust_ts = time.time()
 		self.check_dust_value()
-		self.send_status_to_frontend(self.dust)
+		self.send_status_to_frontend(self._dust)
 
 	def _start_dust_extraction(self, value=None):
 		if value is None:
@@ -72,26 +76,30 @@ class DustManager(object):
 		_mrbeam_plugin_implementation._ioBeam.send_command("fan:off")
 
 	def _stop_dust_extraction_when_below(self, value):
-		self.trail_extraction = threading.Thread(target=self._wait_until, args=(value,))
-		self.trail_extraction.daemon = True
-		self.trail_extraction.start()
+		if self._trail_extraction is None:
+			self._trail_extraction = threading.Thread(target=self._wait_until, args=(value,))
+			self._trail_extraction.daemon = True
+			self._trail_extraction.start()
 
 	def _wait_until(self, value):
-		dust_start = self.dust
-		dust_start_ts = self.dust_ts
+		self._dust_timer_interval = 1
+		dust_start = self._dust
+		dust_start_ts = self._dust_ts
 		self._start_dust_extraction(100)
-		while self.dust > value:
-			time.sleep(3)
-		dust_end = self.dust
-		dust_end_ts = self.dust_ts
+		while self._dust > value:
+			time.sleep(1)
+		dust_end = self._dust
+		dust_end_ts = self._dust_ts
 		self._stop_dust_extraction()
+		self._dust_timer_interval = self.DEFAULT_DUST_TIMER_INTERVAL
 		self._logger.debug("dust extraction time {} from {} to {} (gradient: {})".format(dust_end_ts - dust_start_ts, dust_start, dust_end, (dust_start-dust_end)/(dust_end_ts-dust_start_ts)))
+		self._trail_extraction = None
 
 	def check_dust_value(self):
 		pass
 
 	def _check_dust_is_current(self):
-		if time.time() - self.dust_ts > self.DUST_MAX_AGE:
+		if time.time() - self._dust_ts > self._dust_max_age:
 			self._logger.error("Can't read dust value.")
 
 	def request_dust(self):
@@ -104,7 +112,7 @@ class DustManager(object):
 
 	def _start_dust_timer(self):
 		if not self._shutting_down:
-			self.temp_timer = threading.Timer(self.DUST_TIMER_INTERVAL, self._dust_timer_callback)
+			self.temp_timer = threading.Timer(self._dust_timer_interval, self._dust_timer_callback)
 			self.temp_timer.daemon = True
 			self.temp_timer.start()
 		else:
