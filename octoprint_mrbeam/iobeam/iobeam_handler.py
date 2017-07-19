@@ -389,7 +389,7 @@ class IoBeamHandler(object):
 			pass
 		elif action == self.MESSAGE_ACTION_FAN_AUTO:
 			pass
-		elif action == self.MESSAGE_ACTION_FACTOR:
+		elif action == self.MESSAGE_ACTION_FAN_FACTOR:
 			pass
 		elif action == self.MESSAGE_ACTION_FAN_VERSION:
 			pass
