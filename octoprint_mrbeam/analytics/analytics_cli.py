@@ -6,7 +6,7 @@ from jobcontroller import JobController
 
 
 if __name__ == "__main__":
-	jsonfile = '/home/pi/.octoprint/analytics_log.json'
+	jsonfile = '/home/pi/.octoprint/analytics/analytics_log.json'
 
 	if len(sys.argv) > 1:
 		jsonfile = sys.argv[1]
