@@ -85,7 +85,7 @@ class DustManager(object):
 		dust_end = self.dust
 		dust_end_ts = self.dust_ts
 		self._stop_dust_extraction()
-		self._logger.debug("dust extraction time {} from {} to {} (gradient: {})".format(dust_end_ts - dust_start_ts, dust_start, dust_end, (dust_start-dust_end)/(dust_end_ts-dust_start_ts))
+		self._logger.debug("dust extraction time {} from {} to {} (gradient: {})".format(dust_end_ts - dust_start_ts, dust_start, dust_end, (dust_start-dust_end)/(dust_end_ts-dust_start_ts)))
 
 	def check_dust_value(self):
 		pass
