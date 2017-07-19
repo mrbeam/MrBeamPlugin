@@ -1,5 +1,6 @@
 import time
 import threading
+import numbers
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
@@ -26,9 +27,6 @@ class DustManager(object):
 
 		self._shutting_down = False
 		self._trail_extraction = None
-
-		self._dust_timer_interval = self.DEFAULT_DUST_TIMER_INTERVAL
-		self._dust_max_age = self.DEFAUL_DUST_MAX_AGE
 
 		self._subscribe()
 		self._start_dust_timer()
@@ -57,7 +55,11 @@ class DustManager(object):
 		self._shutting_down = True
 
 	def _handle_dust(self, payload):
-		self._dust = payload['val'] if 'val' in payload else None
+		tmp = payload['val'] if 'val' in payload else None
+		if not isinstance(tmp, numbers.Number):
+			self._logger("GOT WRONG TYPE {} instead of number".format(self._dust))
+		else:
+			self._dust = tmp
 		self._dust_ts = time.time()
 		self.check_dust_value()
 		self.send_status_to_frontend(self._dust)
@@ -84,7 +86,6 @@ class DustManager(object):
 			self._trail_extraction.start()
 
 	def _wait_until(self, value):
-		self._dust_timer_interval = 1
 		dust_start = self._dust
 		dust_start_ts = self._dust_ts
 		self._start_dust_extraction(100)
@@ -93,7 +94,6 @@ class DustManager(object):
 		dust_end = self._dust
 		dust_end_ts = self._dust_ts
 		self._stop_dust_extraction()
-		self._dust_timer_interval = self.DEFAULT_DUST_TIMER_INTERVAL
 		self._logger.debug("dust extraction time {} from {} to {} (gradient: {})".format(dust_end_ts - dust_start_ts, dust_start, dust_end, (dust_start-dust_end)/(dust_end_ts-dust_start_ts)))
 		self._trail_extraction = None
 
@@ -101,7 +101,7 @@ class DustManager(object):
 		pass
 
 	def _check_dust_is_current(self):
-		if time.time() - self._dust_ts > self._dust_max_age:
+		if time.time() - self._dust_ts > self.DEFAUL_DUST_MAX_AGE:
 			self._logger.error("Can't read dust value.")
 
 	def request_dust(self):
@@ -114,7 +114,7 @@ class DustManager(object):
 
 	def _start_dust_timer(self):
 		if not self._shutting_down:
-			self.temp_timer = threading.Timer(self._dust_timer_interval, self._dust_timer_callback)
+			self.temp_timer = threading.Timer(self.DEFAULT_DUST_TIMER_INTERVAL, self._dust_timer_callback)
 			self.temp_timer.daemon = True
 			self.temp_timer.start()
 		else:
