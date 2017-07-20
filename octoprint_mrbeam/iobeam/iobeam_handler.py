@@ -433,7 +433,7 @@ class IoBeamHandler(object):
 
 	def _as_number(self, str):
 		if str is None: return None
-		if str.lower() == "nan": None
+		if str.lower() == "nan": return None
 		try:
 			return float(str)
 		except:
