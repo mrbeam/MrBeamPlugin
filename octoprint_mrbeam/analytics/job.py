@@ -149,10 +149,13 @@ class Pause(object):
 		return self._endtime - self._starttime
 
 	def getCoolingTime(self):
-		if self._endCooling is None:
-			return self._endtime - self._startCooling
+		if self._startCooling is None:
+			return 0
 		else:
-			return self._endCooling - self._startCooling
+			if self._endCooling is None:
+				return self._endtime - self._startCooling
+			else:
+				return self._endCooling - self._startCooling
 
 	def getPauseStarttime(self):
 		return self._starttime
