@@ -104,7 +104,7 @@ class DustManager(object):
 	def _activate_timed_auto_mode(self, value):
 		self._logger.debug("starting timed auto mode (value={}).".format(value))
 		self._start_dust_extraction()
-		self._auto_timer = threading.Timer(value, self._auto_timer_callback())
+		self._auto_timer = threading.Timer(value, self._auto_timer_callback)
 		self._auto_timer.daemon = True
 		self._auto_timer.start()
 
