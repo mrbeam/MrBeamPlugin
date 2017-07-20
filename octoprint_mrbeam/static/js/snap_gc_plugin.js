@@ -246,7 +246,7 @@ function gcodeFromPath(pathString, settings) {
 
 Snap.plugin(function (Snap, Element, Paper, global) {
 	
-	Element.prototype.embed_gc = function(correctionMatrix){
+	Element.prototype.embed_gc = function(correctionMatrix, gc_options){
 		this.selectAll('path').forEach(function(path) {
 			var matrix = path.transform().totalMatrix;
 

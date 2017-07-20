@@ -32,12 +32,7 @@ $(function(){
 
 		self.log = [];
 
-		self.gc_options = {
-			precision: 0.1,
-			optimize_travel: true,
-			small_paths_first: true,
-			
-		};
+		
 
 		self.command = ko.observable(undefined);
 
@@ -56,7 +51,14 @@ $(function(){
 			var h = self.workingAreaHeightMM();
 			return Snap.matrix(1,0,0,-1,0,h);
 		}, self);
-
+		self.gc_options = ko.computed(function(){
+			return {
+				precision: 0.1,
+				optimize_travel: true,
+				small_paths_first: true,
+				clipRect: [0,0,self.workingAreaWidthMM(), self.workingAreaHeightMM()]
+			};
+		});
         // QuickText fields
         self.fontMap = ['Ubuntu', 'Roboto', 'Libre Baskerville', 'Indie Flower', 'VT323'];
         self.currentQuickTextFile = undefined;
@@ -469,11 +471,11 @@ $(function(){
 					newSvg.clean_gc();
 				});
 				newSvg.ftRegisterAfterTransformCallback(function(){
-					newSvg.embed_gc(self.flipYMatrix(), self.workingAreaWidthMM(), self.workingAreaHeightMM(), self.gc_options);
+					newSvg.embed_gc(self.flipYMatrix(), self.gc_options());
 				});
 				
 
-				newSvg.embed_gc(self.flipYMatrix(), self.workingAreaWidthMM(), self.workingAreaHeightMM(), self.gc_options);
+				newSvg.embed_gc(self.flipYMatrix(), self.gc_options());
 
 				setTimeout(function(){
 					newSvg.ftReportTransformation();
@@ -509,7 +511,7 @@ $(function(){
 			svg.data('fitMatrix', null);
 			$('#'+file.id).removeClass('misfit');
 			self.svgTransformUpdate(svg);
-			svg.embed_gc(self.flipYMatrix(), self.workingAreaWidthMM(), self.workingAreaHeightMM(), self.gc_options);
+			svg.embed_gc(self.flipYMatrix(), self.gc_options());
 		};
 
 		self.placeDXF = function(file) {
