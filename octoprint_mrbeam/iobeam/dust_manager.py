@@ -27,6 +27,8 @@ class DustManager(object):
 
 		self._shutting_down = False
 		self._trail_extraction = None
+		self._temp_timer = None
+		self._auto_timer = None
 
 		self._subscribe()
 		self._start_dust_timer()
@@ -61,6 +63,9 @@ class DustManager(object):
 		self.send_status_to_frontend(self._dust)
 
 	def _start_dust_extraction(self, value=None):
+		if self._auto_timer is not None:
+			self._auto_timer.cancel()
+			self._auto_timer = None
 		if value is None:
 			_mrbeam_plugin_implementation._ioBeam.send_command("fan:auto")
 		else:
@@ -88,9 +93,18 @@ class DustManager(object):
 			time.sleep(self.DEFAULT_DUST_TIMER_INTERVAL)
 		dust_end = self._dust
 		dust_end_ts = self._dust_ts
-		self._stop_dust_extraction()
+		self._activate_timed_auto_mode(300) # TODO change this hardcoded value to something from the machine profile
 		self._logger.debug("dust extraction time {} from {} to {} (gradient: {})".format(dust_end_ts - dust_start_ts, dust_start, dust_end, (dust_start-dust_end)/(dust_end_ts-dust_start_ts)))
 		self._trail_extraction = None
+
+	def _activate_timed_auto_mode(self, value):
+		self._auto_timer = threading.Timer(value, self._auto_timer_callback())
+		self._auto_timer.daemon = True
+		self._auto_timer.start()
+
+	def _auto_timer_callback(self):
+		self._stop_dust_extraction()
+		self._auto_timer = None
 
 	def check_dust_value(self):
 		pass
@@ -109,9 +123,9 @@ class DustManager(object):
 
 	def _start_dust_timer(self):
 		if not self._shutting_down:
-			self.temp_timer = threading.Timer(self.DEFAULT_DUST_TIMER_INTERVAL, self._dust_timer_callback)
-			self.temp_timer.daemon = True
-			self.temp_timer.start()
+			self._temp_timer = threading.Timer(self.DEFAULT_DUST_TIMER_INTERVAL, self._dust_timer_callback)
+			self._temp_timer.daemon = True
+			self._temp_timer.start()
 		else:
 			self._logger.debug("Shutting down.")
 
