@@ -157,15 +157,28 @@ class IoBeamHandler(object):
 		return self._interlocks.keys()
 
 	def send_command(self, command):
+		'''
+		Sends a command to iobeam
+		:param command: Must not be None. May or may not and with a new line.
+		:return: Boolean success
+		'''
+		if command is None:
+			raise ValueError("Command must not be None in send_command().")
 		if self._shutdown_signaled:
 			self._logger.debug("send_command() Can't send command while iobeam is shutting down. Command: %s", command)
-			return
+			return False
 		if self._my_socket is None:
 			self._logger.warn("send_command() Can't send command while there's no connection on socket. Command: %s", command)
-			return
+			return False
 		if not command.endswith("\n"):
 			command = command + "\n"
-		self._my_socket.sendall(command)
+		try:
+			self._my_socket.sendall(command)
+			return True
+		except Exception as e:
+			self._errors += 1
+			self._logger.error("Exception while sending command '%s' to socket: %s", command.replace("\n", ''), e)
+			return False
 
 	def _subscribe(self):
 		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self.shutdown)
