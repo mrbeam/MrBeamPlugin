@@ -26,6 +26,7 @@ class IoBeamEvents(object):
 	LID_OPENED =         "iobeam.lid.opened"
 	LID_CLOSED =         "iobeam.lid.closed"
 	LASER_TEMP =         "iobeam.laser.temp"
+	DUST_VALUE =         "iobeam.dust.value"
 
 
 class IoBeamHandler(object):
@@ -111,6 +112,13 @@ class IoBeamHandler(object):
 	MESSAGE_IOBEAM_VERSION_0_2_4 =		"0.2.4"
 
 	MESSAGE_ACTION_LASER_TEMP =         "temp"
+	MESSAGE_ACTION_DUST_VALUE =         "dust"
+	MESSAGE_ACTION_FAN_ON =             "on"
+	MESSAGE_ACTION_FAN_OFF =            "off"
+	MESSAGE_ACTION_FAN_AUTO =           "auto"
+	MESSAGE_ACTION_FAN_FACTOR =         "factor"
+	MESSAGE_ACTION_FAN_VERSION =        "version"
+	MESSAGE_ACTION_FAN_RPM =            "rpm"
 
 
 	def __init__(self, event_bus, socket_file=None):
@@ -358,7 +366,27 @@ class IoBeamHandler(object):
 	def _handle_steprun_message(self, message, tokens):
 		return 0
 
-	def _handle_fan_message(self, message, tokens):
+	def _handle_fan_message(self, message, token):
+		action = token[0] if len(token) > 0 else None
+		payload = self._as_number(token[1]) if len(token) > 1 else None
+
+		if action == self.MESSAGE_ACTION_DUST_VALUE and payload is not None:
+			self._fireEvent(IoBeamEvents.DUST_VALUE, dict(log=False, val=payload))
+		elif action == self.MESSAGE_ACTION_FAN_ON:
+			pass
+		elif action == self.MESSAGE_ACTION_FAN_OFF:
+			pass
+		elif action == self.MESSAGE_ACTION_FAN_AUTO:
+			pass
+		elif action == self.MESSAGE_ACTION_FAN_FACTOR:
+			pass
+		elif action == self.MESSAGE_ACTION_FAN_VERSION:
+			pass
+		elif action == self.MESSAGE_ACTION_FAN_RPM:
+			pass
+		else:
+			return self._handle_invalid_message(message)
+
 		return 0
 
 	def _handle_laser_message(self, message, token):
@@ -405,6 +433,7 @@ class IoBeamHandler(object):
 
 	def _as_number(self, str):
 		if str is None: return None
+		if str.lower() == "nan": return None
 		try:
 			return float(str)
 		except:

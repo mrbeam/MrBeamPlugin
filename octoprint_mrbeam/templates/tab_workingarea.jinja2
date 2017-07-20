@@ -218,10 +218,10 @@
 																<input class="decent_input multiply" type="text" value="1×1" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualMultiply($data, event); },
 																			blur: function(d, event){ $root.svgManualMultiply($data, event); }} "/>
-																
-																<i class="icon-copy" title="{{ _('duplicate') }}"></i> 
+
+																<i class="icon-copy" title="{{ _('duplicate') }}"></i>
 																<a href="#" data-bind="event: {
-																			click: function(d, event){ $root.duplicateSVG($data, event); }	
+																			click: function(d, event){ $root.duplicateSVG($data, event); }
 																		} ">duplicate</a>
 															</div>
 															<div class="misfit_warning" >
@@ -338,9 +338,9 @@
 											width: workingAreaWidthPx()+'px',
 											height: workingAreaHeightPx()+'px'
 										},
-										attr: { 
+										attr: {
 											viewBox: zoomViewBox(),
-											visibility: 'visible'	
+											visibility: 'visible'
 										},
 										event: { mousewheel: wheel_zoom, mousemove: mouse_drag }
 									 ">
