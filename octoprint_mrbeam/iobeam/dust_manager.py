@@ -109,6 +109,7 @@ class DustManager(object):
 		self._auto_timer.start()
 
 	def _auto_timer_callback(self):
+		self._logger.debug("auto mode stopped!")
 		self._stop_dust_extraction()
 		self._auto_timer = None
 
