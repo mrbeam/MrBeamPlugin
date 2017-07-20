@@ -23,7 +23,7 @@ class DustManager(object):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.dustmanager")
 
 		self._dust = None
-		self._dust_ts = None
+		self._dust_ts = time.time()
 
 		self._shutting_down = False
 		self._trail_extraction = None
