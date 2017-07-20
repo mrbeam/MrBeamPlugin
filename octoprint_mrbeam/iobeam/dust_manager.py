@@ -32,6 +32,10 @@ class DustManager(object):
 
 		self._subscribe()
 		self._start_dust_timer()
+		self._stop_dust_extraction()
+
+		self.extraction_limit = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['dust']['extraction_limit']
+		self.auto_mode_time = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['dust']['auto_mode_time']
 
 		self._logger.debug("initialized!")
 
@@ -49,7 +53,7 @@ class DustManager(object):
 		elif event == OctoPrintEvents.PRINT_STARTED:
 			self._start_dust_extraction()
 		elif event in (OctoPrintEvents.PRINT_DONE, OctoPrintEvents.PRINT_FAILED, OctoPrintEvents.PRINT_CANCELLED):
-			self._stop_dust_extraction_when_below(0.15)  # TODO change this hardcoded value to something from the machine profile
+			self._stop_dust_extraction_when_below(self.extraction_limit)
 		elif event == OctoPrintEvents.SHUTDOWN:
 			self.shutdown()
 
@@ -93,11 +97,12 @@ class DustManager(object):
 			time.sleep(self.DEFAULT_DUST_TIMER_INTERVAL)
 		dust_end = self._dust
 		dust_end_ts = self._dust_ts
-		self._activate_timed_auto_mode(300) # TODO change this hardcoded value to something from the machine profile
-		self._logger.debug("dust extraction time {} from {} to {} (gradient: {})".format(dust_end_ts - dust_start_ts, dust_start, dust_end, (dust_start-dust_end)/(dust_end_ts-dust_start_ts)))
+		self._activate_timed_auto_mode(self.auto_mode_time) # TODO change this hardcoded value to something from the machine profile
+		self._write_analytics(dust_start, dust_start_ts, dust_end, dust_end_ts)
 		self._trail_extraction = None
 
 	def _activate_timed_auto_mode(self, value):
+		self._start_dust_extraction()
 		self._auto_timer = threading.Timer(value, self._auto_timer_callback())
 		self._auto_timer.daemon = True
 		self._auto_timer.start()
@@ -106,12 +111,17 @@ class DustManager(object):
 		self._stop_dust_extraction()
 		self._auto_timer = None
 
+	def _write_analytics(self, dust_start, dust_start_ts, dust_end, dust_end_ts):
+		self._logger.debug("dust extraction time {} from {} to {} (gradient: {})".format(dust_end_ts - dust_start_ts, dust_start, dust_end, (dust_start - dust_end) / (dust_end_ts - dust_start_ts)))
+		# TODO write to analytics file
+
 	def check_dust_value(self):
 		pass
 
 	def _check_dust_is_current(self):
 		if time.time() - self._dust_ts > self.DEFAUL_DUST_MAX_AGE:
 			self._logger.error("Can't read dust value.")
+			# TODO fire some Error pause (together with andy)
 
 	def request_dust(self):
 		_mrbeam_plugin_implementation._ioBeam.send_command("fan:dust")
