@@ -646,9 +646,13 @@ class Converter():
 		pt = int(settings['pierce_time'])
 		if pt > 0:
 			piercetimeCode = "G4P%.3f\n" % (round(pt / 1000.0, 4))
-		placeholder = ";_params_"
+		placeholder_laseron = ";_laseron_"
+		gc = gcode.replace(placeholder_laseron, feedrateCode + intensityCode + piercetimeCode, 1) + "\n"
 		
-		gc = gcode.replace(placeholder, feedrateCode + intensityCode + piercetimeCode, 1) + "\n"+ machine_settings.gcode_after_path() + "\n"
+		placeholder_laseroff = ";_laseroff_"
+		afterPathCode = machine_settings.gcode_after_path() + "\n"
+		gc = gcode.replace(placeholder_laseroff, afterPathCode, 1) + "\n"
+		
 		return gc
 		
 
