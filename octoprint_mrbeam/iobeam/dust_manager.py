@@ -97,8 +97,8 @@ class DustManager(object):
 			time.sleep(self.DEFAULT_DUST_TIMER_INTERVAL)
 		dust_end = self._dust
 		dust_end_ts = self._dust_ts
-		self._activate_timed_auto_mode(self.auto_mode_time)
 		self._write_analytics(dust_start, dust_start_ts, dust_end, dust_end_ts)
+		self._activate_timed_auto_mode(self.auto_mode_time)
 		self._trail_extraction = None
 
 	def _activate_timed_auto_mode(self, value):
