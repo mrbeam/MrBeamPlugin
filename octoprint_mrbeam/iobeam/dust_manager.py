@@ -89,7 +89,7 @@ class DustManager(object):
 			self._trail_extraction.start()
 
 	def _wait_until(self, value):
-		self._logger.debug("starting trial dust extraction.")
+		self._logger.debug("starting trial dust extraction (value={}).".format(value))
 		dust_start = self._dust
 		dust_start_ts = self._dust_ts
 		self._start_dust_extraction(100)
@@ -97,11 +97,12 @@ class DustManager(object):
 			time.sleep(self.DEFAULT_DUST_TIMER_INTERVAL)
 		dust_end = self._dust
 		dust_end_ts = self._dust_ts
-		self._activate_timed_auto_mode(self.auto_mode_time) # TODO change this hardcoded value to something from the machine profile
+		self._activate_timed_auto_mode(self.auto_mode_time)
 		self._write_analytics(dust_start, dust_start_ts, dust_end, dust_end_ts)
 		self._trail_extraction = None
 
 	def _activate_timed_auto_mode(self, value):
+		self._logger.debug("starting timed auto mode (value={}).".format(value))
 		self._start_dust_extraction()
 		self._auto_timer = threading.Timer(value, self._auto_timer_callback())
 		self._auto_timer.daemon = True
