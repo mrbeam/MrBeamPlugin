@@ -129,9 +129,13 @@ class DustManager(object):
 		_mrbeam_plugin_implementation._ioBeam.send_command("fan:dust")
 
 	def _dust_timer_callback(self):
-		self.request_dust()
-		self._check_dust_is_current()
-		self._start_dust_timer()
+		try:
+			self.request_dust()
+			self._check_dust_is_current()
+			self._start_dust_timer()
+		except:
+			self._logger.exception("Exception in _dust_timer_callback(): ")
+			self._start_dust_timer()
 
 	def _start_dust_timer(self):
 		if not self._shutting_down:
