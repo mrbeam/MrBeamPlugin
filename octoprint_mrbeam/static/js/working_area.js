@@ -1548,14 +1548,14 @@ $(function(){
 					if (item.type === 'image' || item.type === "text" || item.type === "#text") {
 						// remove filter effects on images for proper rendering
 						if (style !== null) {
-							var strippedFilters = style.replace(/filter.+?;/, '');
+							var strippedFilters = style.replace(/filter.+?;/g, '');
 							item.attr('style', strippedFilters);
 						}
 					} else {
 						// remove stroke from other elements
 						var styleNoStroke = 'stroke: none;';
 						if (style !== null) {
-							styleNoStroke += style.replace(/stroke.+?;/, '');
+							styleNoStroke += style.replace(/stroke.+?;/g, '');
 						}
 						item.attr('stroke', 'none');
 						item.attr('style', styleNoStroke);
