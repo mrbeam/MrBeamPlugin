@@ -65,6 +65,20 @@ $(function(){
 
 		return 0;
 	}
+	
+	function getHumanReadableId(length){
+		length = length || 4;
+		var consonants = 'bcdfghjklmnpqrstvwxz';
+		var vocals = 'aeiouy';
+		var out = [];
+		for (var i = 0; i < length/2; i++) {
+			var cIdx = Math.floor(Math.random()*consonants.length);
+			var vIdx = Math.floor(Math.random()*vocals.length);
+			out.push(consonants.charAt(cIdx));
+			out.push(vocals.charAt(vIdx));
+		}
+		return out.join('');
+	}
 
 	function WorkingAreaViewModel(params) {
 		var self = this;
@@ -1229,7 +1243,7 @@ $(function(){
 		};
 
 		self.getEntryId = function(file) {
-			return "wa_" + md5(file["origin"] + file["name"] + Date.now());
+			return "wa_" + getHumanReadableId();
 		};
 
 		self.init = function(){
