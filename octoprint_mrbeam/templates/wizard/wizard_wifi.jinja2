@@ -1,0 +1,74 @@
+<h3>{{ _('Wifi Setup') }}</h3>
+
+<div id="wizard_plugin_corewizard_wifi_netconnectd" data-bind="allowBindings: true">
+	<p>
+		<strong>Let's get your Mr Beam 2 connected to your wifi.</strong>
+	</p>
+
+	<div data-bind="visible: !hasDataLoaded()">
+		<p>Loading wifi data...</p>
+	</div>
+
+	<div data-bind="visible: hasDataLoaded()">
+		<p>
+			<strong>{{ _('Connection state') }}:</strong> <span data-bind="text: netconnectdViewModel.connectionStateText"></span>
+		</p>
+	
+	    <div class="pull-right" data-bind="visible: netconnectdViewModel.enableQualitySorting">
+	        <small>
+	            {{ _('Sort by') }}: <a href="#" data-bind="click: function() { netconnectdViewModel.listHelper.changeSorting('ssid'); }">{{ _('SSID') }} ({{ _('ascending') }})</a> | <a href="#" data-bind="click: function() { netconnectdViewModel.listHelper.changeSorting('quality'); }">{{ _('Quality') }} ({{ _('descending') }})</a>
+	        </small>
+	    </div>
+	    <table class="table table-striped table-hover table-condensed table-hover" id="settings_plugin_netconnectd_wifis">
+	        <thead>
+	        <tr>
+	            <th class="settings_plugin_netconnectd_wifis_ssid">{{ _('SSID') }}</th>
+	            <th class="settings_plugin_netconnectd_wifis_quality" data-bind="visible: netconnectdViewModel.enableQualitySorting">{{ _('Quality') }}</th>
+	            <th class="settings_plugin_netconnectd_wifis_action">{{ _('Action') }}</th>
+	        </tr>
+	        </thead>
+	        <tbody data-bind="foreach: netconnectdViewModel.listHelper.paginatedItems">
+	            <tr data-bind="attr: {title: name}">
+	                <td class="settings_plugin_netconnectd_wifis_ssid"><span class="icon-lock" data-bind="invisible: !encrypted"></span> <span data-bind="text: ssid"></span> <small class="muted">({{ _('Address') }}: <span data-bind="text: address"></span>)</small></td>
+	                <td class="settings_plugin_netconnectd_wifis_quality" data-bind="visible: $root.netconnectdViewModel.enableQualitySorting, text: qualityText"></td>
+	                <td class="settings_plugin_netconnectd_wifis_action">
+	                    <button class="btn btn-small" data-bind="click: function() { $parent.netconnectdViewModel.configureWifi($data); }, css: {disabled: $root.netconnectdViewModel.working() || $root.netconnectdViewModel.error() || $root.netconnectdViewModel.getEntryId($data) == $root.netconnectdViewModel.statusCurrentWifi()}"><i class="icon-spinner icon-spin" data-bind="visible: $root.netconnectdViewModel.working"></i><i class="icon-signin" data-bind="visible: !$root.netconnectdViewModel.working()"></i> {{ _('Connect') }}</button>
+	                </td>
+	            </tr>
+	        </tbody>
+	    </table>
+	    {#<div class="pagination pagination-mini pagination-centered">
+	        <ul>
+	            <li data-bind="css: {disabled: netconnectdViewModel.listHelper.currentPage() === 0}">
+	                <a href="#" data-bind="click: netconnectdViewModel.listHelper.prevPage">«</a>
+	            </li>
+	        </ul>
+	        <ul data-bind="foreach: netconnectdViewModel.listHelper.pages">
+	            <li data-bind="css: { active: $data.number === $root.netconnectdViewModel.listHelper.currentPage(), disabled: $data.number === -1 }">
+	                <a href="#" data-bind="text: $data.text, click: function() { $root.netconnectdViewModel.listHelper.changePage($data.number); }"></a>
+	            </li>
+	        </ul>
+	        <ul>
+	            <li data-bind="css: {disabled: netconnectdViewModel.listHelper.currentPage() === netconnectdViewModel.listHelper.lastPage()}">
+	                <a href="#" data-bind="click: netconnectdViewModel.listHelper.nextPage">»</a>
+	            </li>
+	        </ul>
+	    </div> #}
+	</div>
+
+    <button class="btn btn-primary btn-block" data-bind="click: function() { $root.netconnectdViewModel.refresh() }, enable: $root.netconnectdViewModel.daemonOnline() && $root.netconnectdViewModel.status.wifi.present()">{{ _('Refresh') }}</button>
+
+    <div>
+        <small class="muted">{{ _('netconnectd socket') }}: <span data-bind="text: netconnectdViewModel.settings.plugins.netconnectd.socket"></span></small>
+    </div>
+
+    <div>
+        <div><small><a href="#" class="muted" onclick="$(this).children().toggleClass('icon-caret-right icon-caret-down').parent().parent().parent().next().slideToggle('fast')"><i class="icon-caret-right"></i> {{ _('Advanced options') }}</a></small></div>
+        <div class="hide row-fluid">
+            <button class="btn span6" data-bind="click: function() { if ($root.netconnectdViewModel.apRunning()) { $root.netconnectdViewModel.sendStopAp(); } else { $root.netconnectdViewModel.sendStartAp(); } }, enable: $root.netconnectdViewModel.daemonOnline()"><span data-bind="visible: !$root.netconnectdViewModel.apRunning() && $root.netconnectdViewModel.daemonOnline()">{{ _('Start AP') }}</span><span data-bind="visible: $root.netconnectdViewModel.apRunning() && $root.netconnectdViewModel.daemonOnline()">{{ _('Stop AP') }}</span><span data-bind="visible: !$root.netconnectdViewModel.daemonOnline()">{{ _('Daemon offline') }}</span></button>
+            <button class="btn span6" data-bind="click: function() { $root.netconnectdViewModel.sendReset() }, enable: $root.netconnectdViewModel.daemonOnline()">{{ _('Reset daemon') }}</button>
+        </div>
+    </div>
+	<p>&nbsp;<p/>
+{# We're using the #settings_plugin_netconnectd_wificonfig from the settings pane. Hacky or lean design? #}
+</div>

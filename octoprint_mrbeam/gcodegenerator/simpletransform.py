@@ -21,8 +21,9 @@ barraud@math.univ-lille1.fr
 This code defines several functions to make handling of transform
 attribute easier.
 '''
-import inkex, cubicsuperpath, bezmisc, simplestyle
+import cubicsuperpath, bezmisc, simplestyle
 import copy, math, re
+from svg_util import _add_ns
 
 def parseTransform(transf,mat=[[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]):
     if transf=="" or transf==None:
@@ -93,7 +94,7 @@ def composeParents(node, mat):
     trans = node.get('transform')
     if trans:
         mat = composeTransform(parseTransform(trans), mat)
-    if node.getparent().tag == inkex.addNS('g','svg'):
+    if node.getparent().tag == _add_ns('g','svg'):
         mat = composeParents(node.getparent(), mat)
     return mat
 
@@ -200,15 +201,15 @@ def computeBBox(aList,mat=[[1,0,0],[0,1,0]]):
             d = node.get('d')
         elif node.get('points'):
             d = 'M' + node.get('points')
-        elif node.tag in [ inkex.addNS('rect','svg'), 'rect', inkex.addNS('image','svg'), 'image' ]:
+        elif node.tag in [ _add_ns('rect','svg'), 'rect', _add_ns('image','svg'), 'image' ]:
             d = 'M' + node.get('x', '0') + ',' + node.get('y', '0') + \
                 'h' + node.get('width') + 'v' + node.get('height') + \
                 'h-' + node.get('width')
-        elif node.tag in [ inkex.addNS('line','svg'), 'line' ]:
+        elif node.tag in [ _add_ns('line','svg'), 'line' ]:
             d = 'M' + node.get('x1') + ',' + node.get('y1') + \
                 ' ' + node.get('x2') + ',' + node.get('y2')
-        elif node.tag in [ inkex.addNS('circle','svg'), 'circle', \
-                            inkex.addNS('ellipse','svg'), 'ellipse' ]:
+        elif node.tag in [ _add_ns('circle','svg'), 'circle', \
+                            _add_ns('ellipse','svg'), 'ellipse' ]:
             rx = node.get('r')
             if rx is not None:
                 ry = rx
@@ -228,8 +229,8 @@ def computeBBox(aList,mat=[[1,0,0],[0,1,0]]):
             applyTransformToPath(m,p)
             bbox=boxunion(refinedBBox(p),bbox)
 
-        elif node.tag == inkex.addNS('use','svg') or node.tag=='use':
-            refid=node.get(inkex.addNS('href','xlink'))
+        elif node.tag == _add_ns('use','svg') or node.tag=='use':
+            refid=node.get(_add_ns('href','xlink'))
             path = '//*[@id="%s"]' % refid[1:]
             refnode = node.xpath(path)
             bbox=boxunion(computeBBox(refnode,m),bbox)

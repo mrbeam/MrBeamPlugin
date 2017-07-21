@@ -9,9 +9,20 @@ __copyright__ = "Copyright (C) 2014 The OctoPrint Project - Released under terms
 import os
 import copy
 import re
-import logging
+import collections
 
 from octoprint.util import dict_merge, dict_clean, dict_contains_keys
+from octoprint.settings import settings
+from octoprint_mrbeam.mrb_logger import mrb_logger
+
+# singleton
+_instance = None
+def laserCutterProfileManager():
+	global _instance
+	if _instance is None:
+		_instance = LaserCutterProfileManager()
+	return _instance
+
 
 defaults = dict(
 	# general settings
@@ -22,6 +33,9 @@ defaults = dict(
 	speed=300,
 	intensity=500,
 	fill_areas=False,
+	engrave=False,
+	set_passes=1,
+	cut_outlines=True,
 	cross_fill=False,
 	fill_angle=0,
 	fill_spacing=0.25,
@@ -34,7 +48,8 @@ defaults = dict(
 	feedrate_black=250,
 	img_contrast=1.0,
 	img_sharpening=1.0,
-	img_dithering=False
+	img_dithering=False,
+	multicolor=""
 )
 
 class SaveError(Exception):
@@ -48,32 +63,95 @@ class InvalidProfileError(Exception):
 
 class LaserCutterProfileManager(object):
 
+	SETTINGS_PATH_PROFILE_DEFAULT_ID = ['lasercutterProfiles', 'default']
+	SETTINGS_PATH_PROFILE_DEFAULT_PROFILE = ['lasercutterProfiles', 'defaultProfile']
+	# SETTINGS_PATH_PROFILE_CURRENT_ID = ['lasercutterProfiles', 'current']
+
+	# old default dictionary for Mr Beam I
+	# default = dict(
+	# 	id = "_mrbeam_junior",
+	# 	name = "Mr Beam",
+	# 	model = "Junior",
+	# 	volume=dict(
+	# 		width = 217,
+	# 		depth = 298,
+	# 		height = 0,
+	# 		origin_offset_x = 1.1,
+	# 		origin_offset_y = 1.1,
+	# 	),
+	# 	zAxis = False,
+	# 	focus = False,
+	# 	glasses = True,
+	# 	axes=dict(
+	# 		x = dict(speed=5000, inverted=False),
+	# 		y = dict(speed=5000, inverted=False),
+	# 		z = dict(speed=1000, inverted=False)
+	# 	),
+	# 	start_method = None,
+	# 	grbl = dict(
+	# 		resetOnConnect = False,
+	# 	),
+	# )
+
+	# we tried to switch to more up-to-date default profiles...
+	# but then more than just one profile had the same name as the default one
+	#    and that confused the whole system.... :-(
 	default = dict(
-		id = "_mrbeam_junior",
-		name = "Mr Beam",
-		model = "Junior",
-		volume=dict(
-			width = 217,
-			depth = 298,
-			height = 0,
+		id = 'my_default',
+		name = 'Dummy Laser',
+		model = 'X',
+		axes = dict(
+			x = dict(
+				inverted = False,
+				speed = 5000,
+				overshoot = 1,
+				homing_direction_positive = True
+			),
+			y = dict(
+				inverted = False,
+				speed = 5000,
+				overshoot=0,
+				homing_direction_positive=True
+			),
+			z = dict(
+				inverted = False,
+				speed = 1000,
+				overshoot=0,
+				homing_direction_positive=True
+			),
+		),
+		focus = True,  # false if we need to show focus tab
+		glasses = False,
+		start_method = 'onebutton',
+		grbl = dict(
+			resetOnConnect = True,
+			homing_debounce = 1
+		),
+		laser=dict(
+			max_temperature=53.0,
+			hysteresis_temperature=43.0
+		),
+		dust=dict(
+			extraction_limit=0.15,
+			auto_mode_time=300
+		),
+		volume = dict(
+			depth = 390.0,
+			height = 0.0,
 			origin_offset_x = 1.1,
 			origin_offset_y = 1.1,
+			width = 500.0,
 		),
 		zAxis = False,
-		axes=dict(
-			x = dict(speed=5000, inverted=False),
-			y = dict(speed=5000, inverted=False),
-			z = dict(speed=1000, inverted=False)
-		)
 	)
 
-	def __init__(self, settings):
+	def __init__(self):
 		self._current = None
-		self.settings = settings
-		self._folder = self.settings.getBaseFolder("plugins")+"/lasercutterprofiles"
+		self.settings = settings()
+		self._folder = self.settings.getBaseFolder("printerProfiles")+"/lasercutterprofiles"
 		if not os.path.exists(self._folder):
 			os.makedirs(self._folder)
-		self._logger = logging.getLogger(__name__)
+		self._logger = mrb_logger("octoprint.plugins.mrbeam.profile")
 
 	def select(self, identifier):
 		if identifier is None or not self.exists(identifier):
@@ -122,7 +200,7 @@ class LaserCutterProfileManager(object):
 			if not self._ensure_valid_profile(default_profile):
 				raise InvalidProfileError()
 
-			self.settings.set(["defaultProfile"], default_profile, defaults=dict(lasercutterprofiles=dict(defaultProfile=self.__class__.default)))
+			self.settings.set(self.SETTINGS_PATH_PROFILE_DEFAULT_PROFILE, default_profile, defaults=dict(lasercutterprofiles=dict(defaultProfile=self.__class__.default)))
 			self.settings.save()
 		else:
 			self._save_to_path(self._get_profile_path(identifier), profile, allow_overwrite=allow_overwrite)
@@ -130,10 +208,13 @@ class LaserCutterProfileManager(object):
 			if make_default:
 				self.set_default(identifier)
 
+		# Not sure if we want to sync to OP's PrinterprofileManager
+		# _mrbeam_plugin_implementation._printer_profile_manager.save(profile, allow_overwrite, make_default)
+
 		return self.get(identifier)
 
 	def get_default(self):
-		default = self.settings.get(["current_profile_id"])
+		default = self.settings.get(self.SETTINGS_PATH_PROFILE_DEFAULT_ID)
 		if default is not None and self.exists(default):
 			profile = self.get(default)
 			if profile is not None:
@@ -146,7 +227,7 @@ class LaserCutterProfileManager(object):
 		if identifier is not None and not identifier in all_identifiers:
 			return
 
-		self.settings.set(["current_profile_id"], identifier)
+		self.settings.set(self.SETTINGS_PATH_PROFILE_DEFAULT_ID, identifier)
 		self.settings.save()
 
 	def get_current_or_default(self):
@@ -161,7 +242,7 @@ class LaserCutterProfileManager(object):
 	def exists(self, identifier):
 		if identifier is None:
 			return False
-		elif identifier == "_mrbeam_junior" or identifier == "_mrbeam_senior":
+		elif identifier == "_mrbeam_junior" or identifier == "_mrbeam_senior"                                                                                                                               :
 			return True
 		else:
 			path = self._get_profile_path(identifier)
@@ -180,7 +261,7 @@ class LaserCutterProfileManager(object):
 				continue
 
 			results[identifier] = dict_merge(self._load_default("_mrbeam_junior"), profile)
-			
+
 		results["_mrbeam_junior"] = self._load_default("_mrbeam_junior")
 		results["_mrbeam_senior"] = self._load_default("_mrbeam_senior")
 		return results
@@ -210,6 +291,7 @@ class LaserCutterProfileManager(object):
 		if not profile:
 			self._logger.warn("Invalid profile: %s" % path)
 			raise InvalidProfileError()
+		profile = self._underlay_profile_with_default(profile)
 		return profile
 
 	def _save_to_path(self, path, profile, allow_overwrite=False):
@@ -241,7 +323,7 @@ class LaserCutterProfileManager(object):
 			default['volume']['depth'] *= 2
 			default['model'] = "Senior"
 			default['id'] = "_mrbeam_senior"
-		
+
 		profile = self._ensure_valid_profile(default)
 		if not profile:
 			self._logger.warn("Invalid default profile after applying overrides")
@@ -265,9 +347,9 @@ class LaserCutterProfileManager(object):
 		return sanitized_name
 
 	def _ensure_valid_profile(self, profile):
-		# ensure all keys are present
-		if not dict_contains_keys(self.default, profile):
-			return False
+		# # ensure all keys are present
+		# if not dict_contains_keys(self.default, profile):
+		# 	return False
 
 		# conversion helper
 		def convert_value(profile, path, converter):
@@ -305,6 +387,19 @@ class LaserCutterProfileManager(object):
 				return False
 
 		return profile
+
+	def _underlay_profile_with_default(self, profile):
+		return update(self._load_default(), profile)
+
+def update(d, u):
+	for k, v in u.iteritems():
+		if isinstance(v, collections.Mapping):
+			r = update(d.get(k, {}), v)
+			d[k] = r
+		else:
+			d[k] = u[k]
+	return d
+
 
 
 class Profile(object):
@@ -519,7 +614,7 @@ class Profile(object):
 		return settings
 
 	def convert_to_engine2(self):
-
+		# engrave is mirrored fill area, needs to be removed in next iteration
 		settings = {
 			"engraving_laser_speed": self.get_int("speed"),
 			"laser_intensity": self.get_int("intensity"),
@@ -533,6 +628,9 @@ class Profile(object):
 			"sharpening": self.get_float("img_sharpening"),
 			"dithering": self.get_boolean("img_dithering"),
 			"fill_areas": self.get_boolean("fill_areas"),
+			"engrave": self.get_boolean("fill_areas"),
+			"set_passes": self.get_int("set_passes"),
+			"cut_outlines": self.get_boolean("cut_outlines"),
 			"cross_fill": self.get_boolean("cross_fill"),
 			"fill_angle": self.get_float("fill_angle"),
 			"fill_spacing": self.get_float("fill_spacing"),

@@ -6,10 +6,11 @@ li.nav-header { display: none }
 #settings_temperature_link { display: none; }
 #settings_gcodeScripts_link { display: none; }
 #settings_features_link { display: none; }
-#settings_webcam_link { display: none; }
+/*#settings_webcam_link { display: none; }*/
 #settings_gcodegcodevisualizer_link { display: none; }
 #settings_api_link { display: none; }
 #settings_server_link { display: none; }
 #settings_folders_link { display: none; }
 #settings_appearance_link { display: none; }
 #settings_plugin_announcements_link { display: none; }
+#settings_plugin_softwareupdate div.pull-right > button { display: none; }

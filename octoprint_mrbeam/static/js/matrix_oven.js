@@ -1,3 +1,5 @@
+/* global Snap */
+
 //    Matrix Oven - a snapsvg.io plugin to apply & remove transformations from svg files.
 //    Copyright (C) 2015  Teja Philipp <osd@tejaphilipp.de>
 //    
@@ -20,6 +22,19 @@
 
 
 Snap.plugin(function (Snap, Element, Paper, global) {
+
+	/**
+	 * bakes transformations of the element and all sub-elements into coordinates
+	 * 
+	 * @param {boolean} toCubics : use only cubic path segments
+	 * @param {integer} dec : number of digits after decimal separator. defaults to 5
+	 * @returns {undefined}
+	 */
+	Element.prototype.bake_subtree = function (correctionMatrix, toCubics, dec) {
+		var elem = this;
+		var own_transformation = elem.parent().transform().totalMatrix;
+		elem.bake(own_transformation.invert(), toCubics, dec);
+	};
 	
 	/**
 	 * bakes transformations of the element and all sub-elements into coordinates
@@ -28,21 +43,35 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	 * @param {integer} dec : number of digits after decimal separator. defaults to 5
 	 * @returns {undefined}
 	 */
-	Element.prototype.bake = function (toCubics, dec) {
+	Element.prototype.bake = function (correctionMatrix, toCubics, dec) {
 		var elem = this;
-		if (!elem || !elem.paper || elem.type !== "text" || elem.type !== "#text" || elem.type !== "tspan"){
-  			return;
-        } // don't handle unplaced elements. this causes double handling.
 
-		if (typeof (toCubics) === 'undefined')
+//		console.log('Elem: ', elem);
+//		if(elem.type === 'text' || elem.type === 'tspan' || elem.type === '#text'){
+//			console.log('Text: !elem', !elem);
+//			console.log('Text: !elem.paper', !elem.paper);
+//			console.log('Text: elem.type', elem.type);
+//			console.log('Text: second', (!elem.paper && (elem.type !== "text" || elem.type !== "tspan" || elem.type !== "#text")));
+//			elem.attr({type:'blub'});
+//			console.log('blub',elem.type)
+//		}
+
+		if (!elem || (!elem.paper && (elem.type !== "text" && elem.type !== "tspan" && elem.type !== "#text"))){
+			return;
+		} // don't handle unplaced elements. this causes double handling.
+
+		if (toCubics === undefined)
 			toCubics = false;
-		if (typeof (dec) === 'undefined')
+		if (dec === undefined)
 			dec = 5;
+		if (correctionMatrix === undefined)
+			correctionMatrix = Snap.matrix(1,0,0,1,0,0);
+		
 		var children = elem.children();
 		if (children.length > 0) {
 			for (var i = 0; i < children.length; i++) {
 				var child = children[i];
-				child.bake(toCubics, dec);
+				child.bake(correctionMatrix, toCubics, dec);
 			}
 			elem.attr({transform: ''});
 			return;
@@ -61,8 +90,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			return;
 		}
 
-		if (elem.type == 'image' || elem.type == "text" || elem.type == "#text"){
-			// TODO ... 
+		if (elem.type === "image"){
 			var x = parseFloat(elem.attr('x')),
 				y = parseFloat(elem.attr('y')),
 				w = parseFloat(elem.attr('width')),
@@ -71,21 +99,83 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			// Validity checks from http://www.w3.org/TR/SVG/shapes.html#RectElement:
 			// If 'x' and 'y' are not specified, then set both to 0. // CorelDraw is creating that sometimes
 			if (!isFinite(x)) {
-				console.log('No attribute "x" in image tag. Assuming 0.')
+				console.log('No attribute "x" in image tag. Assuming 0.');
 				x = 0;
 			}
 			if (!isFinite(y)) {
-				console.log('No attribute "y" in image tag. Assuming 0.')
+				console.log('No attribute "y" in image tag. Assuming 0.');
 				y = 0;
 			}
-			var transform = elem.transform();
-			var matrix = transform['totalMatrix'];
+			var transform = elem.transform(); // TODO CLEM maybe parent is needed here too! Check SVG with image and transform Matrix
+			var matrix = transform['totalMatrix'].add(correctionMatrix);
 			var transformedX = matrix.x(x, y);
 			var transformedY = matrix.y(x, y);
 			var transformedW = matrix.x(x+w, y+h) - transformedX;
 			var transformedH = matrix.y(x+w, y+h) - transformedY;
 			
 			elem.attr({x: transformedX, y: transformedY, width: transformedW, height: transformedH});
+			if(transformedH < 0){
+				elem.attr({style: 'transform: scale(1,-1); transform-origin: top', height: -transformedH});
+			}
+			return;
+		}
+
+		if (elem.type === "text" || elem.type === "#text" || elem.type === "tspan"){
+
+			// remove style/title
+			//todo check for all possibilities. Or Maybe look for the ones we want instead of the ones that don't work
+			if(elem.node.parentNode.nodeName === "style" || elem.node.parentNode.nodeName === "title" || elem.node.parentNode.nodeName.startsWith("dc:")){
+				console.log("Skip node. Parent is :",elem.node.parentNode.nodeName);
+				return;
+			}
+
+			// remove already set parent-nodes
+			//todo check if redundant
+			if(elem.parent().attr('text_set') !== undefined && elem.parent().attr('text_set') === true){
+				//parent already transformed
+				return;
+			}
+
+			// replace empty text and Created with Snap
+			if(!elem.node.textContent.replace(/\s/g, '').length || elem.node.textContent === "Created with Snap"){
+				//text only contains whitespace or nothing and is skipped
+				return;
+			}
+			console.log('Textelem not empty: ', elem.node.textContent);
+
+			var x = parseFloat(elem.attr('x')),
+				y = parseFloat(elem.attr('y')),
+				w = parseFloat(elem.attr('width')),
+				h = parseFloat(elem.attr('height'));
+
+			// Validity checks from http://www.w3.org/TR/SVG/shapes.html#RectElement:
+			// If 'x' and 'y' are not specified, try parent.
+			if (!isFinite(x)) {
+				x = parseFloat(elem.parent().attr('x'));
+				console.log('No attribute "x" in text tag. Using parent-x:',x);
+			}
+			if (!isFinite(y)) {
+				y = parseFloat(elem.parent().attr('y'));
+				console.log('No attribute "x" in text tag. Using parent-x:',y);
+			}
+			// If 'x' and 'y' are not specified, then set both to 0. // CorelDraw is creating that sometimes
+			if (!isFinite(x)) {
+				x = 0;
+				console.log('No attribute "x" in text-parent tag. Using 0; ',x);
+			}
+			if (!isFinite(y)) {
+				y = 0;
+				console.log('No attribute "x" in text-parent tag. Using 0; ',y);
+			}
+
+			var transform = elem.parent().transform();
+			var matrix = transform['totalMatrix'].add(correctionMatrix);
+			var transformedX = matrix.x(x, y);
+			var transformedY = matrix.y(x, y);
+			var transformedW = matrix.x(x+w, y+h) - transformedX;
+			var transformedH = matrix.y(x+w, y+h) - transformedY;
+
+			elem.parent().attr({x: transformedX, y: transformedY, width: transformedW, height: transformedH, text_set:true});
 			return;
 		}
 
@@ -124,7 +214,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 		// Get the transformation matrix between SVG root element and current element
 		var transform = path_elem.transform();
-		var matrix = transform['totalMatrix'];
+		var matrix = transform['totalMatrix'].add(correctionMatrix);
 
 		// apply the matrix transformation on the path segments
 		var j; 
@@ -371,11 +461,12 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	}
 
 	// just a helper
+	//todo double code here and in path_convert, simplify
 	var _p2s = /,?([achlmqrstvxz]),?/gi;
 	var _convertToString = function (arr) {
 		return arr.join(',').replace(_p2s, '$1');
 	};
-	
+
 	/**
 	 * Replaces an element with a path of same shape.
 	 * Supports rect, ellipse, circle, line, polyline, polygon and of course path
@@ -390,178 +481,5 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		old_element.remove(); 
 		return path;
 	};
-
-	/**
-	 * Creates a path in the same shape as the origin element
-	 * Supports rect, ellipse, circle, line, polyline, polygon and of course path
-	 * 
-	 * based on 
-	 * https://github.com/duopixel/Method-Draw/blob/master/editor/src/svgcanvas.js
-	 * Modifications: Timo (https://github.com/timo22345)
-	 * 
-	 * @returns {path} path element
-	 */
-	Element.prototype.toPath = function () {
-		var old_element = this;
-
-		// Create new path element
-		var pathAttr = {};
-
-		// All attributes that path element can have
-		var attrs = ['requiredFeatures', 'requiredExtensions', 'systemLanguage', 'id', 'xml:base', 'xml:lang', 'xml:space', 'onfocusin', 'onfocusout', 'onactivate', 'onclick', 'onmousedown', 'onmouseup', 'onmouseover', 'onmousemove', 'onmouseout', 'onload', 'alignment-baseline', 'baseline-shift', 'clip', 'clip-path', 'clip-rule', 'color', 'color-interpolation', 'color-interpolation-filters', 'color-profile', 'color-rendering', 'cursor', 'direction', 'display', 'dominant-baseline', 'enable-background', 'fill', 'fill-opacity', 'fill-rule', 'filter', 'flood-color', 'flood-opacity', 'font-family', 'font-size', 'font-size-adjust', 'font-stretch', 'font-style', 'font-variant', 'font-weight', 'glyph-orientation-horizontal', 'glyph-orientation-vertical', 'image-rendering', 'kerning', 'letter-spacing', 'lighting-color', 'marker-end', 'marker-mid', 'marker-start', 'mask', 'opacity', 'overflow', 'pointer-events', 'shape-rendering', 'stop-color', 'stop-opacity', 'stroke', 'stroke-dasharray', 'stroke-dashoffset', 'stroke-linecap', 'stroke-linejoin', 'stroke-miterlimit', 'stroke-opacity', 'stroke-width', 'text-anchor', 'text-decoration', 'text-rendering', 'unicode-bidi', 'visibility', 'word-spacing', 'writing-mode', 'class', 'style', 'externalResourcesRequired', 'transform', 'd', 'pathLength'];
-
-		// Copy attributes of old_element to path
-		for(var attrIdx in attrs){
-			var attrName = attrs[attrIdx];
-			var attrValue;
-			if(attrName === 'transform') {
-				attrValue = old_element.transform()['localMatrix'];
-			} else {
-				attrValue = old_element.attr(attrName);
-			}
-			if (attrValue) {
-				pathAttr[attrName] = attrValue;
-			}
-		}
-
-		var d = '';
-
-		var validRadius = function (val) {
-			return (isFinite(val) && (val >= 0));
-		};
-		
-		var validCoordinate = function (val) {
-			return (isFinite(val));
-		};
-
-		// Possibly the cubed root of 6, but 1.81 works best
-		var num = 1.81;
-		var tag = old_element.type;
-
-        var convertMMtoPixel = function (val) {
-			attrList = ['rx','ry','r','cx','cy','x1','x2','y1','y2','x','y','width','height'];
-    		for(var attrIdx in attrList) {
-				if(val.attr(attrList[attrIdx]) != null && val.attr(attrList[attrIdx]).indexOf('mm') > -1) {
-					var tmp = parseFloat(val.attr(attrList[attrIdx])) * 3.5433;
-					val.attr(attrList[attrIdx], tmp);
-				}
-			}
-		}
-
-		convertMMtoPixel(old_element);
-
-		switch (tag) {
-			case 'ellipse':
-			case 'circle':
-				var rx = +parseFloat(old_element.attr('rx')),
-						ry = +parseFloat(old_element.attr('ry')),
-						cx = +parseFloat(old_element.attr('cx')),
-						cy = +old_element.attr('cy');
-				if (tag === 'circle') {
-					rx = ry = +old_element.attr('r');
-				}
-				
-				// If 'x' and 'y' are not specified, then set both to 0. // CorelDraw is creating that sometimes
-				if (!validCoordinate(cx))
-					cx = 0;
-				if (!validCoordinate(cy))
-					cy = 0;
-				
-				d += _convertToString([
-					['M', (cx - rx), (cy)],
-					['C', (cx - rx), (cy - ry / num), (cx - rx / num), (cy - ry), (cx), (cy - ry)],
-					['C', (cx + rx / num), (cy - ry), (cx + rx), (cy - ry / num), (cx + rx), (cy)],
-					['C', (cx + rx), (cy + ry / num), (cx + rx / num), (cy + ry), (cx), (cy + ry)],
-					['C', (cx - rx / num), (cy + ry), (cx - rx), (cy + ry / num), (cx - rx), (cy)],
-					['Z']
-				]);
-				break;
-			case 'path':
-				d = old_element.attr('d');
-				break;
-			case 'line':
-				var x1 = parseFloat(old_element.attr('x1')),
-						y1 = parseFloat(old_element.attr('y1')),
-						x2 = parseFloat(old_element.attr('x2')),
-						y2 = old_element.attr('y2');
-				d = 'M' + x1 + ',' + y1 + 'L' + x2 + ',' + y2;
-				break;
-			case 'polyline':
-				d = 'M' + old_element.attr('points');
-				break;
-			case 'polygon':
-				d = 'M' + old_element.attr('points') + 'Z';
-				break;
-			case 'rect':
-				// TODO ... 
-				var rx = parseFloat(old_element.attr('rx')),
-					ry = parseFloat(old_element.attr('ry')),
-					x = parseFloat(old_element.attr('x')),
-					y = parseFloat(old_element.attr('y')),
-					w = parseFloat(old_element.attr('width')),
-					h = parseFloat(old_element.attr('height'));
-
-				// Validity checks from http://www.w3.org/TR/SVG/shapes.html#RectElement:
-				// If 'x' and 'y' are not specified, then set both to 0. // CorelDraw is creating that sometimes
-				if (!validCoordinate(x))
-					x = 0;
-				if (!validCoordinate(y))
-					y = 0;
-				// If neither ‘rx’ nor ‘ry’ are properly specified, then set both rx and ry to 0. (This will result in square corners.)
-				if (!validRadius(rx) && !validRadius(ry)) {
-					rx = ry = 0;
-				// Otherwise, if a properly specified value is provided for ‘rx’, but not for ‘ry’, then set both rx and ry to the value of ‘rx’.
-				} else if (validRadius(rx) && !validRadius(ry)) {
-					ry = rx;
-				// Otherwise, if a properly specified value is provided for ‘ry’, but not for ‘rx’, then set both rx and ry to the value of ‘ry’.
-				} else if (validRadius(ry) && !validRadius(rx)) {
-					rx = ry;
-				} else { // cap values for rx/ry to half of w/h
-					rx = Math.min(rx, w/2);
-					ry = Math.min(ry, h/2);
-				}
-
-				if (!rx && !ry) {
-					d += _convertToString([
-						['M', x, y],
-						['L', x + w, y],
-						['L', x + w, y + h],
-						['L', x, y + h],
-						['L', x, y],
-						['Z']
-					]);
-				} else {
-					var num = 2.19;
-					if (!ry){
-						ry = rx;
-					}
-					d += _convertToString([
-						['M', x, y + ry],
-						['C', x, y + ry / num, x + rx / num, y, x + rx, y],
-						['L', x + w - rx, y],
-						['C', x + w - rx / num, y, x + w, y + ry / num, x + w, y + ry],
-						['L', x + w, y + h - ry],
-						['C', x + w, y + h - ry / num, x + w - rx / num, y + h, x + w - rx, y + h],
-						['L', x + rx, y + h],
-						['C', x + rx / num, y + h, x, y + h - ry / num, x, y + h - ry],
-						['L', x, y + ry],
-						['Z']
-					]);
-				}
-				break;
-			default:
-				break;
-		}
-
-		if (d){
-			pathAttr.d = d;
-		}
-		var path = old_element.paper.path(pathAttr);
-		return path;
-	};
-
-
-
-
 });
 

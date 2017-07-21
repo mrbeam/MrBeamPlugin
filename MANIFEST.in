@@ -1,1 +1,4 @@
 include README.md
+graft octoprint_mrbeam/templates
+graft octoprint_mrbeam/static
+graft octoprint_mrbeam/state

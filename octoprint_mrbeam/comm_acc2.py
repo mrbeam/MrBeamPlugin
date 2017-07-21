@@ -19,10 +19,14 @@ from subprocess import call as subprocesscall
 
 import octoprint.plugin
 
+from .profile import laserCutterProfileManager
+
 from octoprint.settings import settings, default_settings
 from octoprint.events import eventManager, Events
 from octoprint.filemanager.destinations import FileDestinations
 from octoprint.util import get_exception_string, RepeatedTimer, CountedEvent, sanitize_ascii
+
+from octoprint_mrbeam.mrb_logger import mrb_logger
 
 ### MachineCom #########################################################################################################
 class MachineCom(object):
@@ -41,9 +45,9 @@ class MachineCom(object):
 	STATE_LOCKED = 12
 	STATE_HOMING = 13
 	STATE_FLASHING = 14
-	
+
 	def __init__(self, port=None, baudrate=None, callbackObject=None, printerProfileManager=None):
-		self._logger = logging.getLogger(__name__)
+		self._logger = mrb_logger("octoprint.plugins.mrbeam.comm_acc2")
 		self._serialLogger = logging.getLogger("SERIAL")
 
 		if port is None:
@@ -62,7 +66,7 @@ class MachineCom(object):
 		self._port = port
 		self._baudrate = baudrate
 		self._callback = callbackObject
-		self._printerProfileManager = printerProfileManager
+		self._laserCutterProfile = laserCutterProfileManager().get_current_or_default()
 
 		self.RX_BUFFER_SIZE = 127
 
@@ -122,6 +126,10 @@ class MachineCom(object):
 		self.sending_thread = threading.Thread(target=self._send_loop, name="comm.sending_thread")
 		self.sending_thread.daemon = True
 
+	def get_home_position(self):
+		# TODO: remove magic number! (-2)
+		return (self._laserCutterProfile['volume']['width'] - 2, self._laserCutterProfile['volume']['depth'] - 2)
+
 	def _monitor_loop(self):
 		#Open the serial port.
 		if not self._openSerial():
@@ -129,6 +137,10 @@ class MachineCom(object):
 
 		self._log("Connected to: %s, starting monitor" % self._serial)
 		self._changeState(self.STATE_CONNECTING)
+		if self._laserCutterProfile['grbl']['resetOnConnect']:
+			self._serial.flushInput()
+			self._serial.flushOutput()
+			self._sendCommand(b'\x18')
 		self._timeout = get_new_timeout("communication")
 
 		while self._monitoring_active:
@@ -150,8 +162,11 @@ class MachineCom(object):
 					self._handle_feedback_message(line)
 				elif line.startswith('Grb'): # Grbl startup message
 					self._handle_startup_message(line)
+				elif not line and (self._state is self.STATE_CONNECTING or self._state is self.STATE_OPEN_SERIAL or self._state is self.STATE_DETECT_SERIAL):
+					self._log("Empty line received during STATE_CONNECTION, starting soft-reset")
+					self._sendCommand(b'\x18') # Serial-Connection Error
 			except:
-				self._logger.exception("Something crashed inside the monitoring loop, please report this to Mr. Beam")
+				self._logger.exception("Something crashed inside the monitoring loop, please report this to Mr Beam")
 				errorMsg = "See octoprint.log for details"
 				self._log(errorMsg)
 				self._errorValue = errorMsg
@@ -338,9 +353,14 @@ class MachineCom(object):
 			"origin": self._currentFile.getFileLocation(),
 			"time": self.getPrintTime()
 		}
+		self._move_home()
 		eventManager().fire(Events.PRINT_DONE, payload)
+
+	def _move_home(self):
 		self.sendCommand("M5")
-		self.sendCommand("G0X0Y0")
+		h_pos = self.get_home_position()
+		command = "G0X{x}Y{y}".format(x=h_pos[0], y=h_pos[1])
+		self.sendCommand(command)
 		self.sendCommand("M9")
 
 	def _handle_status_report(self, line):
@@ -362,6 +382,8 @@ class MachineCom(object):
 			self._changeState(self.STATE_OPERATIONAL)
 
 	def _handle_error_message(self, line):
+		if "EEPROM read fail" in line:
+			return
 		self._errorValue = line
 		eventManager().fire(Events.ERROR, {"error": self.getErrorString()})
 		self._changeState(self.STATE_LOCKED)
@@ -372,7 +394,6 @@ class MachineCom(object):
 			self._log(errorMsg)
 			self._errorValue = errorMsg
 			eventManager().fire(Events.ERROR, {"error": self.getErrorString()})
-			eventManager().fire(Events.LIMITS_HIT, {"error": self.getErrorString()})
 		elif "Abort during cycle" in line:
 			errorMsg = "Soft-reset detected. Please do a homing cycle"
 			self._log(errorMsg)
@@ -395,9 +416,23 @@ class MachineCom(object):
 
 	def _handle_feedback_message(self, line):
 		if line[1:].startswith('Res'): # [Reset to continue]
+			#send ctrl-x back immediately '\x18' == ctrl-x
+			self._serial.write(list(bytearray('\x18')))
 			pass
 		elif line[1:].startswith('\'$H'): # ['$H'|'$X' to unlock]
-			pass
+			self._changeState(self.STATE_LOCKED)
+			if self.isOperational():
+				errorMsg = "Machine reset."
+				self._cmd = None
+				self._acc_line_buffer = []
+				self._pauseWaitStartTime = None
+				self._pauseWaitTimeLost = 0.0
+				self._send_event.clear(completely=True)
+				with self._commandQueue.mutex:
+					self._commandQueue.queue.clear()
+				self._log(errorMsg)
+				self._errorValue = errorMsg
+				eventManager().fire(Events.ERROR, {"error": self.getErrorString()})
 		elif line[1:].startswith('Cau'): # [Caution: Unlocked]
 			pass
 		elif line[1:].startswith('Ena'): # [Enabled]
@@ -406,20 +441,7 @@ class MachineCom(object):
 			pass
 
 	def _handle_startup_message(self, line):
-		if self.isOperational():
-			errorMsg = "Machine reset."
-			self._cmd = None
-			self._acc_line_buffer = []
-			self._pauseWaitStartTime = None
-			self._pauseWaitTimeLost = 0.0
-			self._send_event.clear(completely=True)
-			with self._commandQueue.mutex:
-				self._commandQueue.queue.clear()
-			self._log(errorMsg)
-			self._errorValue = errorMsg
-			self._changeState(self.STATE_LOCKED)
-			eventManager().fire(Events.ERROR, {"error": self.getErrorString()})
-		else:
+		if not self.isOperational():
 			self._onConnected(self.STATE_LOCKED)
 			versionMatch = re.search("Grbl (?P<grbl>.+?)(_(?P<git>[0-9a-f]{7})(?P<dirty>-dirty)?)? \[.+\]", line)
 			if versionMatch:
@@ -437,41 +459,22 @@ class MachineCom(object):
 		# <Idle,MPos:-434.000,-596.000,0.000,WPos:0.000,0.000,0.000,S:0,laser off:0>
 		try:
 			idx_mx_begin = line.index('MPos:') + 5
-			idx_mx_end = line.index('.', idx_mx_begin) + 2
+			idx_mx_end = line.index('.', idx_mx_begin) + 3
 			idx_my_begin = line.index(',', idx_mx_end) + 1
-			idx_my_end = line.index('.', idx_my_begin) + 2
-			#idx_mz_begin = line.index(',', idx_my_end) + 1
-			#idx_mz_end = line.index('.', idx_mz_begin) + 2
+			idx_my_end = line.index('.', idx_my_begin) + 3
 
 			idx_wx_begin = line.index('WPos:') + 5
-			idx_wx_end = line.index('.', idx_wx_begin) + 2
+			idx_wx_end = line.index('.', idx_wx_begin) + 3
 			idx_wy_begin = line.index(',', idx_wx_end) + 1
-			idx_wy_end = line.index('.', idx_wy_begin) + 2
-			#idx_wz_begin = line.index(',', idx_wy_end) + 1
-			#idx_wz_end = line.index('.', idx_wz_begin) + 2
+			idx_wy_end = line.index('.', idx_wy_begin) + 3
 
-			#idx_intensity_begin = line.index('S:', idx_wz_end) + 2
-			#idx_intensity_end = line.index(',', idx_intensity_begin)
-
-			#idx_laserstate_begin = line.index('laser ', idx_intensity_end) + 6
-			#idx_laserstate_end = line.index(':', idx_laserstate_begin)
-
-			#payload = {
-			#"mx": line[idx_mx_begin:idx_mx_end],
-			#"my": line[idx_my_begin:idx_my_end],
-			#"mz": line[idx_mz_begin:idx_mz_end],
-			#"wx": line[idx_wx_begin:idx_wx_end],
-			#"wy": line[idx_wy_begin:idx_wy_end],
-			#"wz": line[idx_wz_begin:idx_wz_end],
-			#"laser": line[idx_laserstate_begin:idx_laserstate_end],
-			#"intensity": line[idx_intensity_begin:idx_intensity_end]
-			#}
 			mx = float(line[idx_mx_begin:idx_mx_end])
 			my = float(line[idx_my_begin:idx_my_end])
 			wx = float(line[idx_wx_begin:idx_wx_end])
 			wy = float(line[idx_wy_begin:idx_wy_end])
+			self.MPosX = mx
+			self.MPosY = my
 			self._callback.on_comm_pos_update([mx, my, 0], [wx, wy, 0])
-		#eventManager().fire(Events.RT_STATE, payload)
 		except ValueError:
 			pass
 
@@ -491,6 +494,10 @@ class MachineCom(object):
 
 		# finally return whatever we resulted on
 		return command, command_type, gcode
+
+	# TODO CLEM Inject color
+	def setColors(self,currentFileName, colors):
+		print ('>>>>>>>>>>>>>>>>>>>|||||||||||||||<<<<<<<<<<<<<<<<<<<<', currentFileName, colors)
 
 	def _gcode_command_for_cmd(self, cmd):
 		"""
@@ -516,6 +523,8 @@ class MachineCom(object):
 
 	# internal state management
 	def _changeState(self, newState):
+		print ('new State:',newState)
+
 		if self._state == newState:
 			return
 
@@ -584,7 +593,8 @@ class MachineCom(object):
 			self._send_event.set()
 
 	def _log(self, message):
-		self._callback.on_comm_log(message)
+		# self._callback.on_comm_log(message)
+		self._logger.comm(message)
 		self._serialLogger.debug(message)
 
 	def _compareGrblVersion(self, versionDict):
@@ -817,6 +827,9 @@ class MachineCom(object):
 			elif "intensity" in specialcmd:
 				data = specialcmd[9:]
 				self._set_intensity_override(int(data))
+			elif "reset" in specialcmd:
+				self._log("Reset initiated")
+				self._serial.write(list(bytearray('\x18')))
 			else:
 				self._log("Command not Found! %s" % cmd)
 				self._log("available commands are:")
@@ -825,6 +838,7 @@ class MachineCom(object):
 				self._log("   /feedrate <%>")
 				self._log("   /intensity <%>")
 				self._log("   /disconnect")
+				self._log("   /reset")
 			return
 
 		eepromCmd = re.search("^\$[0-9]+=.+$", cmd)
@@ -865,7 +879,6 @@ class MachineCom(object):
 		# reset feedrate and intesity factor in case they where changed in a previous run
 		self._feedrate_factor  = 1
 		self._intensity_factor = 1
-		self._passes = 1
 		self._finished_passes = 0
 
 		try:
@@ -894,29 +907,35 @@ class MachineCom(object):
 		if not self.isOperational():
 			return
 
+		# first pause (feed hold) bevore doing the soft reset in order to retain machine pos.
+		self._sendCommand('!')
+		time.sleep(0.5)
+
 		with self._commandQueue.mutex:
 			self._commandQueue.queue.clear()
-		self._soft_reset()
+		self._cmd = None
+
+		self._sendCommand(b'\x18')
 		self._acc_line_buffer = []
 		self._send_event.clear(completely=True)
-		self._changeState(self.STATE_LOCKED)
+		self._changeState(self.STATE_OPERATIONAL)
 
 		payload = {
 			"file": self._currentFile.getFilename(),
 			"filename": os.path.basename(self._currentFile.getFilename()),
 			"origin": self._currentFile.getFileLocation()
 		}
-
 		eventManager().fire(Events.PRINT_CANCELLED, payload)
 
-	def setPause(self, pause, send_cmd=True):
+	def setPause(self, pause, send_cmd=True, pause_for_cooling=False):
 		if not self._currentFile:
 			return
 
 		payload = {
 			"file": self._currentFile.getFilename(),
 			"filename": os.path.basename(self._currentFile.getFilename()),
-			"origin": self._currentFile.getFileLocation()
+			"origin": self._currentFile.getFileLocation(),
+			"cooling": pause_for_cooling
 		}
 
 		if not pause and self.isPaused():
@@ -962,7 +981,7 @@ class MachineCom(object):
 				return possible_state[len("STATE_"):]
 
 		return "UNKNOWN"
-	
+
 	def getStateString(self, state=None):
 		if state is None:
 			state = self._state
@@ -1210,8 +1229,6 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
 		if not os.path.exists(self._filename) or not os.path.isfile(self._filename):
 			raise IOError("File %s does not exist" % self._filename)
 
-		self._stripCommments()
-
 		self._size = os.stat(self._filename).st_size
 		self._pos = 0
 
@@ -1265,16 +1282,6 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
 			self._logger.exception("Exception while processing line")
 			raise e
 
-	def _stripCommments(self):
-		dir = os.path.dirname(os.path.abspath(self._filename))
-		tmpfile = open(dir + '/gcode.tmp', 'w')
-		with open(self._filename, "r") as fileobject:
-			for line in fileobject:
-				if process_gcode_line(line) is not None:
-					tmpfile.write(line)
-		tmpfile.close()
-		self._filename = dir + '/gcode.tmp'
-
 def convert_pause_triggers(configured_triggers):
 	triggers = {
 		"enable": [],
@@ -1302,6 +1309,7 @@ def convert_pause_triggers(configured_triggers):
 		if len(triggers[t]) > 0:
 			result[t] = re.compile("|".join(map(lambda pattern: "({pattern})".format(pattern=pattern), triggers[t])))
 	return result
+
 
 def process_gcode_line(line):
 	line = strip_comment(line).strip()
