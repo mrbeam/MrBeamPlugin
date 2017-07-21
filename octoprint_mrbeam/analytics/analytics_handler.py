@@ -142,3 +142,17 @@ class AnalyticsHandler(object):
 			with open(self._jsonfile, 'a') as f:
 				json.dump(data, f)
 				f.write('\n')
+
+	def add_dust_log(self, values):
+		data = {
+			'type':'dust',
+			'v':1,
+			'dust_start':values['dust_start'],
+			'dust_end': values['dust_end'],
+			'dust_start_ts': values['dust_start_ts'],
+			'dust_end_ts': values['dust_end_ts']
+		}
+
+		with open(self._jsonfile, 'a') as f:
+			json.dump(data, f)
+			f.write('\n')

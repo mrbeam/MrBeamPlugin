@@ -127,7 +127,13 @@ class DustManager(object):
 
 	def _write_analytics(self, dust_start, dust_start_ts, dust_end, dust_end_ts):
 		self._logger.debug("dust extraction time {} from {} to {} (gradient: {})".format(dust_end_ts - dust_start_ts, dust_start, dust_end, (dust_start - dust_end) / (dust_end_ts - dust_start_ts)))
-		# TODO write to analytics file
+		data = dict(
+			dust_start=dust_start,
+			dust_end=dust_end,
+			dust_start_ts=dust_start_ts,
+			dust_end_ts=dust_end_ts
+		)
+		_mrbeam_plugin_implementation._analytics_handler.add_dust_log(data)
 
 	def check_dust_value(self):
 		pass
