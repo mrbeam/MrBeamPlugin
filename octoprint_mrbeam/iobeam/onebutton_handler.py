@@ -244,6 +244,9 @@ class OneButtonHandler(object):
 	def is_cooling(self):
 		return _mrbeam_plugin_implementation._temperatureManager.is_cooling()
 
+	def is_printing(self):
+		return self._printer.get_state_id() == self.PRINTER_STATE_PRINTING
+
 	def cooling_down_pause(self):
 		self.start_cooling_behavior()
 		self._printer.cooling_start()
@@ -316,7 +319,10 @@ class OneButtonHandler(object):
 			self._logger.warn("_start_laser() READY_TO_PRINT_MAX_WAITING_TIME exceeded.")
 			return
 
+		# TODO: these guys throw exceptions that are not handled
 		self._test_conditions(self.ready_to_laser_file)
+		self._check_system_integrity()
+
 		self._reset_pause_configuration()
 
 		self._logger.debug("_start_laser() LET'S LASER BABY!!! it's file %s", self.ready_to_laser_file)
@@ -326,7 +332,7 @@ class OneButtonHandler(object):
 		self.unset_ready_to_laser(lasering=True)
 
 
-	# I guess there's no reasy anymore to raise these exceptions. Just returning false would be better.
+	# I guess there's no reason anymore to raise these exceptions. Just returning false would be better.
 	def _test_conditions(self, file):
 		self._logger.debug("_test_conditions() laser file %s, printer state: %s", file, self._printer.get_state_id())
 
@@ -338,6 +344,17 @@ class OneButtonHandler(object):
 			raise Exception("ReadyToLaser: file is not of type machine code")
 		if not self._printer.is_operational() or not self._printer.get_state_id() == "OPERATIONAL":
 			raise Exception("ReadyToLaser: printer is not ready. printer state is: %s" % self._printer.get_state_id())
+
+	def _check_system_integrity(self):
+		'''
+		We're going to need a concept of what to do if something here failes...
+		:return:
+		'''
+		temp_ok = _mrbeam_plugin_implementation._temperatureManager.is_temperature_recent()
+		if not temp_ok:
+			msg = "iobeam: Laser temperature not available"
+			self._fireEvent(OctoPrintEvents.ERROR, {"error": msg})
+			raise Exception(msg)
 
 	def _start_ready_to_laser_timer(self):
 		self.ready_to_laser_timer = threading.Timer(self.READY_TO_PRINT_CHECK_INTERVAL, self._check_if_still_ready_to_laser)
@@ -440,5 +457,10 @@ class OneButtonHandler(object):
 
 
 	def _fireEvent(self, event, payload=None):
+		'''
+		Fire an event into octoPrint's event system
+		:param event:
+		:param payload:
+		'''
 		self._logger.info("_fireEvent() event:%s, payload:%s", event, payload)
 		self._event_bus.fire(event, payload)
