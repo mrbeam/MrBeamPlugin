@@ -19,6 +19,67 @@ $(function(){
 	// Blink engine detection
 	var isBlink = (isChrome || isOpera) && !!window.CSS;
 
+	function versionCompare(v1, v2, options) {
+		var lexicographical = options && options.lexicographical,
+			zeroExtend = options && options.zeroExtend,
+			v1parts = v1.split('.'),
+			v2parts = v2.split('.');
+
+		function isValidPart(x) {
+			return (lexicographical ? /^\d+[A-Za-z]*$/ : /^\d+$/).test(x);
+		}
+
+		if (!v1parts.every(isValidPart) || !v2parts.every(isValidPart)) {
+			return NaN;
+		}
+
+		if (zeroExtend) {
+			while (v1parts.length < v2parts.length) v1parts.push("0");
+			while (v2parts.length < v1parts.length) v2parts.push("0");
+		}
+
+		if (!lexicographical) {
+			v1parts = v1parts.map(Number);
+			v2parts = v2parts.map(Number);
+		}
+
+		for (var i = 0; i < v1parts.length; ++i) {
+			if (v2parts.length === i) {
+				return 1;
+			}
+
+			if (v1parts[i] === v2parts[i]) {
+				continue;
+			}
+			else if (v1parts[i] > v2parts[i]) {
+				return 1;
+			}
+			else {
+				return -1;
+			}
+		}
+
+		if (v1parts.length !== v2parts.length) {
+			return -1;
+		}
+
+		return 0;
+	}
+	
+	function getHumanReadableId(length){
+		length = length || 4;
+		var consonants = 'bcdfghjklmnpqrstvwxz';
+		var vocals = 'aeiouy';
+		var out = [];
+		for (var i = 0; i < length/2; i++) {
+			var cIdx = Math.floor(Math.random()*consonants.length);
+			var vIdx = Math.floor(Math.random()*vocals.length);
+			out.push(consonants.charAt(cIdx));
+			out.push(vocals.charAt(vIdx));
+		}
+		return out.join('');
+	}
+
 	function WorkingAreaViewModel(params) {
 		var self = this;
 
@@ -400,25 +461,22 @@ $(function(){
 				// find all elements with "display=none" and remove them
 				f.selectAll("[display=none]").remove();
 
-				// find Illustrator comment and notify
-				Array.from(f.node.childNodes).forEach(function(entry) {
-					if(entry.nodeType === 8) { // Nodetype 8 = comment
-						if(entry.textContent.indexOf('Illustrator') > -1) {
-							new PNotify({title: gettext("Illustrator SVG Detected"), text: "Illustrator SVG detected! To preserve correct scale, please go to the \'Settings\' menu and change the \'SVG dpi\' field under \'Plugins/Svg Conversion\' according to your file. And add it again.", type: "info", hide: false});
-						}
-					}
-				});
+				var generator_info = self._get_generator_info(f);
 
 				// get original svg attributes
 				var newSvgAttrs = self._getDocumentNamespaceAttributes(f);
 				var doc_dimensions = self._getDocumentDimensionAttributes(f);
+				var unitScaleX = self._getDocumentScaleToMM(doc_dimensions.units_x, generator_info);
+				var unitScaleY = self._getDocumentScaleToMM(doc_dimensions.units_y, generator_info);
 
 				// scale matrix
 
 				var mat = self.getDocumentViewBoxMatrix(doc_dimensions.width, doc_dimensions.height, doc_dimensions.viewbox);
 //				var dpiscale = 90 / self.settings.settings.plugins.mrbeam.svgDPI() * (25.4/90); 
-				var dpiscale = 25.4 / self.settings.settings.plugins.mrbeam.svgDPI(); 
-                var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(dpiscale).toTransformString();
+//				var dpiscale = 25.4 / self.settings.settings.plugins.mrbeam.svgDPI(); 
+//                var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(dpiscale).toTransformString();
+                var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2])
+						.scale(unitScaleX, unitScaleY).toTransformString();
                 newSvgAttrs['transform'] = scaleMatrixStr;
 
 				var newSvg = snap.group(f.selectAll("svg>*"));
@@ -533,6 +591,62 @@ $(function(){
 			};
 			Snap.loadDXF(url, callback);
 		};
+		
+		self._get_generator_info = function(f){
+			var gen = null;
+			var version = null;
+			
+			// detect Inkscape by attribute
+			var inkscape_version = f.select('svg').attr('inkscape:version');
+			if (inkscape_version !== null) {
+				gen = 'inkscape';
+				version = inkscape_version;
+				console.log("Generator:", gen, version);
+				return {generator: gen, version: version};
+			}
+
+			// detect Corel
+//				return {generator: gen, version: version};
+
+			// detect Illustrator by comment
+			// <!-- Generator: Adobe Illustrator 16.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+			var children = f.node.childNodes;
+			for (var i = 0; i < children.length; i++) {
+				var node = children[i];
+				if(node.nodeType === 8){ // check for comment
+					if (node.textContent.indexOf('Illustrator') > -1) {
+						gen = 'illustrator';
+						var matches = node.textContent.match(/\d+\.\d+(\.\d+)*/g);
+						version = matches.join('_');
+						console.log("Generator:", gen, version);
+						return { generator: gen, version: version };
+					}
+				}
+			}
+//			Array.from(f.node.childNodes).forEach(function (entry) {
+//				if (entry.nodeType === 8) { // Nodetype 8 = comment
+//					if (entry.textContent.indexOf('Illustrator') > -1) {
+//						new PNotify({title: gettext("Illustrator SVG Detected"), text: "Illustrator SVG detected! To preserve correct scale, please go to the \'Settings\' menu and change the \'SVG dpi\' field under \'Plugins/Svg Conversion\' according to your file. And add it again.", type: "info", hide: false});
+//					}
+//				}
+//			});
+
+			// detect Method Draw by comment
+			// <!-- Created with Method Draw - http://github.com/duopixel/Method-Draw/ -->
+			for (var i = 0; i < children.length; i++) {
+				var node = children[i];
+				if(node.nodeType === 8){ // check for comment
+					if (node.textContent.indexOf('Method Draw') > -1) {
+						gen = 'method draw';
+						console.log("Generator:", gen, version);
+						return { generator: gen, version: version };
+					}
+				}
+			}
+			
+			console.log("Generator:", gen, version);
+			return { generator: 'unknown', version: 'unknown' };
+		};
 
 		self._getDocumentDimensionAttributes = function(file){
 			if(file.select('svg') === null){
@@ -543,21 +657,59 @@ $(function(){
 			var doc_width = null;
 			var doc_height = null;
 			var doc_viewbox = null;
+			var units_x = null;
+			var units_y = null;
 
 			// iterate svg tag attributes
 			for(var i = 0; i < root_attrs.length; i++){
 				var attr = root_attrs[i];
 
 				// get dimensions
-				if(attr.name === "width") doc_width = attr.value;
-				if(attr.name === "height") doc_height = attr.value;
+				if(attr.name === "width"){
+					doc_width = attr.value;
+					units_x = doc_width.replace(/[\d.]+/,'');
+				}
+				if(attr.name === "height"){
+					doc_height = attr.value;
+					units_y = doc_width.replace(/[\d.]+/,'');
+				}
 				if(attr.name === "viewBox") doc_viewbox = attr.value;
 			}
 			return {
 				width: doc_width,
 				height: doc_height,
-				viewbox: doc_viewbox
+				viewbox: doc_viewbox,
+				units_x: units_x,
+				units_y: units_y
 			};
+		};
+		
+		self._getDocumentScaleToMM = function(declaredUnit, generator){
+			if(declaredUnit === null || declaredUnit === ''){
+				declaredUnit = 'px';
+				console.log("unit '" + declaredUnit + "' not found. Assuming 'px'");
+			}
+			if(declaredUnit === 'px' || declaredUnit === ''){
+				if(generator.generator === 'inkscape'){
+					if(versionCompare(generator.version, '0.91') <= 0){
+						console.log("old inkscape, px @ 90dpi");
+						declaredUnit = 'px_inkscape_old';
+					} else {
+						console.log("new inkscape, px @ 96dpi");
+						declaredUnit = 'px_inkscape_new';
+					}
+				} else if (generator.generator === 'corel draw'){
+					console.log("corel draw, px @ 90dpi");
+					
+				} else if (generator.generator === 'illustrator') {
+					console.log("illustrator, px @ 72dpi");
+					declaredUnit = 'px_illustrator';
+				}
+			}
+			var declaredUnitValue = self.uuconv[declaredUnit];
+			var scale = declaredUnitValue / self.uuconv.mm; 
+			console.log("Units: " + declaredUnit, " => scale factor to mm: " + scale);
+			return scale;
 		};
 
 		self._getDocumentNamespaceAttributes = function(file){
@@ -667,31 +819,7 @@ $(function(){
 			Snap.loadDXF(url, callback);
 		};
 
-		self._getDocumentDimensionAttributes = function(file){
-			if(file.select('svg') === null){
-				root_attrs = file.node.attributes;
-			} else {
-				var root_attrs = file.select('svg').node.attributes;
-			}
-			var doc_width = null;
-			var doc_height = null;
-			var doc_viewbox = null;
 
-			// iterate svg tag attributes
-			for(var i = 0; i < root_attrs.length; i++){
-				var attr = root_attrs[i];
-
-				// get dimensions
-				if(attr.name === "width") doc_width = attr.value;
-				if(attr.name === "height") doc_height = attr.value;
-				if(attr.name === "viewBox") doc_viewbox = attr.value;
-			}
-			return {
-				width: doc_width,
-				height: doc_height,
-				viewbox: doc_viewbox
-			};
-		};
 
 		self._getDocumentNamespaceAttributes = function(file){
 			if(file.select('svg') === null){
@@ -1050,9 +1178,12 @@ $(function(){
 
 		//a dictionary of unit to user unit conversion factors
 		self.uuconv = {
+			'px':1, // Reference @ 90 dpi
 			'in':90.0,
 			'pt':1.25,
-			'px':1,
+			'px_inkscape_old':1, // 90 dpi
+			'px_inkscape_new':0.9375, // 96 dpi
+			'px_illustrator':1.25, // 72 dpi
 			'mm':3.5433070866,
 			'cm':35.433070866,
 			'm':3543.3070866,
@@ -1112,7 +1243,7 @@ $(function(){
 		};
 
 		self.getEntryId = function(file) {
-			return "wa_" + md5(file["origin"] + file["name"] + Date.now());
+			return "wa_" + getHumanReadableId();
 		};
 
 		self.init = function(){

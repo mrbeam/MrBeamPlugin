@@ -225,10 +225,11 @@ class PhotoCreator(object):
 			return -1
 
 		# todo implement high-precision feedback to frontend
-		correction_result = mb_pic._debug_prepareImage(path_to_input_image,
+		# todo get output image size from frontend/config-file
+		correction_result = mb_pic.prepareImage(path_to_input_image,
 												path_to_output_img,
 												path_to_cam_params,
-												path_to_pic_settings)
+												path_to_pic_settings, size=(1000,780),debug_out=False)
 
 		if not 'error' in correction_result:
 			correction_result['error'] = False
