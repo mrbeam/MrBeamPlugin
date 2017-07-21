@@ -27,7 +27,8 @@ class DustManager(object):
 
 		self._shutting_down = False
 		self._trail_extraction = None
-		self._temp_timer = None
+		self._dust_timer = None
+		self._dust_timer_interval = self.DEFAULT_DUST_TIMER_INTERVAL
 		self._auto_timer = None
 
 		self._subscribe()
@@ -104,11 +105,13 @@ class DustManager(object):
 		self._logger.debug("starting trial dust extraction (value={}).".format(value))
 		dust_start = self._dust
 		dust_start_ts = self._dust_ts
+		self._dust_timer_interval = 1
 		self._start_dust_extraction(100)
 		while self._dust > value:
-			time.sleep(self.DEFAULT_DUST_TIMER_INTERVAL)
+			time.sleep(self._dust_timer_interval)
 		dust_end = self._dust
 		dust_end_ts = self._dust_ts
+		self._dust_timer_interval = 3
 		self._write_analytics(dust_start, dust_start_ts, dust_end, dust_end_ts)
 		self._activate_timed_auto_mode(self.auto_mode_time)
 		self._trail_extraction = None
@@ -161,9 +164,9 @@ class DustManager(object):
 
 	def _start_dust_timer(self):
 		if not self._shutting_down:
-			self._temp_timer = threading.Timer(self.DEFAULT_DUST_TIMER_INTERVAL, self._dust_timer_callback)
-			self._temp_timer.daemon = True
-			self._temp_timer.start()
+			self._dust_timer = threading.Timer(self._dust_timer_interval, self._dust_timer_callback)
+			self._dust_timer.daemon = True
+			self._dust_timer.start()
 		else:
 			self._logger.debug("Shutting down.")
 
