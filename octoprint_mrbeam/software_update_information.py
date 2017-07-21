@@ -29,9 +29,10 @@ def get_update_information(self):
 		set_info_mrbeamledstrips(self, tier)
 		set_info_netconnectd_daemon(self, tier)
 		set_info_iobeam(self, tier)
+		set_info_camera_calibration(self, tier)
 		set_info_rpiws281x(self, tier)
 
-	_logger(self).debug("MrBeam Plugin provides this config (might be overridden by settings!):\n%s", yaml.dump(sw_update_config, width=50000).strip())
+	# _logger(self).debug("MrBeam Plugin provides this config (might be overridden by settings!):\n%s", yaml.dump(sw_update_config, width=50000).strip())
 
 	return sw_update_config
 
@@ -242,11 +243,54 @@ def set_info_iobeam(self, tier):
 		user="mrbeam",
 		repo="iobeam",
 		branch=branch,
+		api_user="MrBeamDev",
+		api_password="v2T5pFkmdgDqbFBJAqrt",
 		pip="git+ssh://git@bitbucket.org/mrbeam/iobeam.git@{target_version}",
 		# pip="https://bitbucket.org/mrbeam/iobeam/get/{target_version}.zip",
 		pip_command=pip_command,
 		restart="environment"
 	)
+
+def set_info_camera_calibration(self, tier):
+	name = "mb_camera_calibration"
+	module_id = "mb-camera-calibration"
+	branch = "mrbeam2-stable"
+	pip_name = module_id
+	# hmmm... I thought, i don't need to provide a special pip command if we are in the venv...
+	pip_command = "/home/pi/oprint/bin/pip"
+
+	if _is_override_in_settings(self, module_id): return
+
+	version = get_version_of_pip_module(self, pip_name, pip_command)
+	if version is None: return
+
+	sw_update_config[module_id] = dict(
+		displayName=_get_display_name(self, name),
+		displayVersion=version,
+		type="bitbucket_commit",
+		user="mrbeam",
+		repo="mb_camera_calibration",
+		branch=branch,
+		api_user="MrBeamDev",
+		api_password="v2T5pFkmdgDqbFBJAqrt",
+		pip="git+ssh://git@bitbucket.org/mrbeam/mb_camera_calibration.git@{target_version}",
+		restart="octoprint"
+	)
+
+	if tier in [SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_DEMO, SW_UPDATE_TIER_ANDY]:
+		branch = "master"
+		sw_update_config[module_id] = dict(
+			displayName=_get_display_name(self, name),
+			displayVersion=version,
+			type="bitbucket_commit",
+			user="mrbeam",
+			repo="mb_camera_calibration",
+			branch=branch,
+			api_user="MrBeamDev",
+			api_password="v2T5pFkmdgDqbFBJAqrt",
+			pip="git+ssh://git@bitbucket.org/mrbeam/mb_camera_calibration.git@{target_version}",
+			restart="octoprint"
+		)
 
 
 def set_info_rpiws281x(self, tier):
