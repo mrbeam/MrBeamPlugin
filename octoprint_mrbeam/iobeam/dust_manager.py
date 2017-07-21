@@ -71,16 +71,28 @@ class DustManager(object):
 			self._auto_timer.cancel()
 			self._auto_timer = None
 		if value is None:
-			_mrbeam_plugin_implementation._ioBeam.send_command("fan:auto")
+			while True:
+				if _mrbeam_plugin_implementation._ioBeam.send_command("fan:auto"):
+					break
+				else:
+					time.sleep(0.2)
 		else:
 			if value > 100:
 				value = 100
 			elif value < 0:
 				value = 0
-			_mrbeam_plugin_implementation._ioBeam.send_command("fan:on:{:d}".format(int(value)))
+			while True:
+				if _mrbeam_plugin_implementation._ioBeam.send_command("fan:on:{:d}".format(int(value))):
+					break
+				else:
+					time.sleep(0.2)
 
 	def _stop_dust_extraction(self):
-		_mrbeam_plugin_implementation._ioBeam.send_command("fan:off")
+		while True:
+			if _mrbeam_plugin_implementation._ioBeam.send_command("fan:off"):
+				break
+			else:
+				time.sleep(1)
 
 	def _stop_dust_extraction_when_below(self, value):
 		if self._trail_extraction is None:
@@ -126,12 +138,20 @@ class DustManager(object):
 			# TODO fire some Error pause (together with andy)
 
 	def request_dust(self):
-		_mrbeam_plugin_implementation._ioBeam.send_command("fan:dust")
+		while True:
+			if _mrbeam_plugin_implementation._ioBeam.send_command("fan:dust"):
+				break
+			else:
+				time.sleep(0.2)
 
 	def _dust_timer_callback(self):
-		self.request_dust()
-		self._check_dust_is_current()
-		self._start_dust_timer()
+		try:
+			self.request_dust()
+			self._check_dust_is_current()
+			self._start_dust_timer()
+		except:
+			self._logger.exception("Exception in _dust_timer_callback(): ")
+			self._start_dust_timer()
 
 	def _start_dust_timer(self):
 		if not self._shutting_down:
