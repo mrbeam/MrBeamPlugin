@@ -1780,13 +1780,13 @@ input.search-query,
 }
 
 
-
-#crosshair {
+/* disabled. uses 100% cpu in the browser */
+/*#crosshair {
     transition-property: transform;
 	transition-timing-function: linear;
 	transition-duration: 2s;
 	transition-delay: 0s;
-}
+}*/
 
 #focus_description {
 	background-image: url(/plugin/mrbeam/static/img/focus_adjust_steps.png);
