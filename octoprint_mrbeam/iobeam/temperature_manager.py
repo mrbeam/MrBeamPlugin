@@ -72,12 +72,14 @@ class TemperatureManager(object):
 		_mrbeam_plugin_implementation._ioBeam.send_command("laser:temp")
 
 	def cooling_stop(self):
-		self._logger.debug("cooling_stop()")
-		self.is_cooling_since = time.time()
-		_mrbeam_plugin_implementation._oneButtonHandler.cooling_down_pause()
-		_mrbeam_plugin_implementation._event_bus.fire(MrBeamEvents.LASER_COOLING_PAUSE, dict(temp=self.temperature))
-		self.send_cooling_state_to_frontend(True)
-
+		if  _mrbeam_plugin_implementation._oneButtonHandler.is_printing():
+			self._logger.debug("cooling_stop()")
+			self.is_cooling_since = time.time()
+			_mrbeam_plugin_implementation._oneButtonHandler.cooling_down_pause()
+			_mrbeam_plugin_implementation._event_bus.fire(MrBeamEvents.LASER_COOLING_PAUSE, dict(temp=self.temperature))
+			self.send_cooling_state_to_frontend(True)
+		else:
+			self._logger.debug("cooling_stop() skipping because printer state is not Printing: %s", _mrbeam_plugin_implementation._printer.get_state_id())
 
 	def cooling_resume(self):
 		self._logger.debug("cooling_resume()")

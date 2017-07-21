@@ -162,6 +162,9 @@ class IoBeamHandler(object):
 		:param command: Must not be None. May or may not and with a new line.
 		:return: Boolean success
 		'''
+		if not self._isConnected:
+			self._logger.warn("send_command() Can't send command since socket is not connected (yet?). Command: %s", command)
+			return False
 		if command is None:
 			raise ValueError("Command must not be None in send_command().")
 		if self._shutdown_signaled:
@@ -201,11 +204,13 @@ class IoBeamHandler(object):
 
 		while not self._shutdown_signaled:
 			self._my_socket = None
+			self._isConnected = False
 			try:
-				self._my_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-				self._my_socket.settimeout(3)
+				temp_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+				temp_socket.settimeout(3)
 				# self._logger.debug("Connecting to socket...")
-				self._my_socket.connect(self.SOCKET_FILE)
+				temp_socket.connect(self.SOCKET_FILE)
+				self._my_socket = temp_socket
 			except socket.error as e:
 				self._isConnected = False
 				if not self._connectionException == str(e):
