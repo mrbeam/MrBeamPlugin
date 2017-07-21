@@ -671,7 +671,7 @@ $(function(){
 				}
 				if(attr.name === "height"){
 					doc_height = attr.value;
-					units_y = doc_width.replace(/[\d.]+/,'');
+					units_y = doc_height.replace(/[\d.]+/,'');
 				}
 				if(attr.name === "viewBox") doc_viewbox = attr.value;
 			}
