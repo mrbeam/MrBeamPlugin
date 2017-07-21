@@ -119,7 +119,7 @@ class DustManager(object):
 		self._stop_dust_extraction()
 		self._auto_timer = None
 
-	def _send_fan_command(self, command, wait=1, max_retries=5):
+	def _send_fan_command(self, command, wait=1.0, max_retries=5):
 		retries = 0
 		while True:
 			if _mrbeam_plugin_implementation._ioBeam.send_command("fan:{}".format(command)):
