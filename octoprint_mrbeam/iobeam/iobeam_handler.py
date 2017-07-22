@@ -3,6 +3,7 @@ import threading
 import time
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
+from octoprint.events import Events as OctoPrintEvents
 
 # singleton
 _instance = None
@@ -24,6 +25,8 @@ class IoBeamEvents(object):
 	INTERLOCK_CLOSED =   "iobeam.interlock.closed"
 	LID_OPENED =         "iobeam.lid.opened"
 	LID_CLOSED =         "iobeam.lid.closed"
+	LASER_TEMP =         "iobeam.laser.temp"
+	DUST_VALUE =         "iobeam.dust.value"
 
 
 class IoBeamHandler(object):
@@ -108,6 +111,15 @@ class IoBeamHandler(object):
 	MESSAGE_IOBEAM_VERSION_0_2_3 =		"0.2.3"
 	MESSAGE_IOBEAM_VERSION_0_2_4 =		"0.2.4"
 
+	MESSAGE_ACTION_LASER_TEMP =         "temp"
+	MESSAGE_ACTION_DUST_VALUE =         "dust"
+	MESSAGE_ACTION_FAN_ON =             "on"
+	MESSAGE_ACTION_FAN_OFF =            "off"
+	MESSAGE_ACTION_FAN_AUTO =           "auto"
+	MESSAGE_ACTION_FAN_FACTOR =         "factor"
+	MESSAGE_ACTION_FAN_VERSION =        "version"
+	MESSAGE_ACTION_FAN_RPM =            "rpm"
+
 
 	def __init__(self, event_bus, socket_file=None):
 		self._event_bus = event_bus
@@ -115,6 +127,7 @@ class IoBeamHandler(object):
 
 		self._shutdown_signaled = False
 		self._isConnected = False
+		self._my_socket = None
 		self._errors = 0
 
 		self.iobeam_version = None
@@ -122,6 +135,7 @@ class IoBeamHandler(object):
 		self._connectionException = None
 		self._interlocks = dict()
 
+		self._subscribe()
 		self._initWorker(socket_file)
 
 	def isRunning(self):
@@ -130,10 +144,10 @@ class IoBeamHandler(object):
 	def isConnected(self):
 		return self._isConnected
 
-	def shutdown(self):
+	def shutdown(self, *args):
+		self._logger.debug("shutdown() args: %s", args)
 		global _instance
 		_instance = None
-		self._logger.debug("shutdown()")
 		self._shutdown_signaled = True
 
 	def is_interlock_closed(self):
@@ -141,6 +155,36 @@ class IoBeamHandler(object):
 
 	def open_interlocks(self):
 		return self._interlocks.keys()
+
+	def send_command(self, command):
+		'''
+		Sends a command to iobeam
+		:param command: Must not be None. May or may not and with a new line.
+		:return: Boolean success
+		'''
+		if not self._isConnected:
+			self._logger.warn("send_command() Can't send command since socket is not connected (yet?). Command: %s", command)
+			return False
+		if command is None:
+			raise ValueError("Command must not be None in send_command().")
+		if self._shutdown_signaled:
+			self._logger.debug("send_command() Can't send command while iobeam is shutting down. Command: %s", command)
+			return False
+		if self._my_socket is None:
+			self._logger.warn("send_command() Can't send command while there's no connection on socket. Command: %s", command)
+			return False
+		if not command.endswith("\n"):
+			command = command + "\n"
+		try:
+			self._my_socket.sendall(command)
+			return True
+		except Exception as e:
+			self._errors += 1
+			self._logger.error("Exception while sending command '%s' to socket: %s", command.replace("\n", ''), e)
+			return False
+
+	def _subscribe(self):
+		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self.shutdown)
 
 	def _initWorker(self, socket_file=None):
 		self._logger.debug("initializing worker thread")
@@ -150,7 +194,7 @@ class IoBeamHandler(object):
 			self.SOCKET_FILE = socket_file
 
 		self._worker = threading.Thread(target=self._work)
-		self._worker.daemon = True
+		self._worker.daemon = True # verify if this is good here....
 		self._worker.start()
 
 
@@ -159,12 +203,14 @@ class IoBeamHandler(object):
 		self._logger.debug("Worker thread starting, connecting to socket: %s %s", self.SOCKET_FILE, ("MRBEAM_DEBUG" if MRBEAM_DEBUG else ""))
 
 		while not self._shutdown_signaled:
-			mySocket = None
+			self._my_socket = None
+			self._isConnected = False
 			try:
-				mySocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-				mySocket.settimeout(3)
+				temp_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+				temp_socket.settimeout(3)
 				# self._logger.debug("Connecting to socket...")
-				mySocket.connect(self.SOCKET_FILE)
+				temp_socket.connect(self.SOCKET_FILE)
+				self._my_socket = temp_socket
 			except socket.error as e:
 				self._isConnected = False
 				if not self._connectionException == str(e):
@@ -183,7 +229,7 @@ class IoBeamHandler(object):
 				try:
 
 					try:
-						data = mySocket.recv(self.MESSAGE_LENGTH_MAX)
+						data = self._my_socket.recv(self.MESSAGE_LENGTH_MAX)
 					except Exception as e:
 						if MRBEAM_DEBUG and e.message == "timed out":
 							self._logger.warn("Connection stale but MRBEAM_DEBUG enabled. Continuing....")
@@ -209,12 +255,13 @@ class IoBeamHandler(object):
 				except:
 					self._logger.exception("Exception in socket loop. Not sure what to do, resetting connection...")
 
-			if mySocket is not None:
+			if self._my_socket is not None:
 				self._logger.debug("Closing socket...")
-				mySocket.close()
+				self._my_socket.close()
+				self._my_socket = None
 
 			self._isConnected = False
-			self._fireEvent(IoBeamEvents.DISCONNECT)
+			self._fireEvent(IoBeamEvents.DISCONNECT) # on shutdown this won't be broadcasted
 
 			if not self._shutdown_signaled:
 				self._logger.debug("Sleeping for a sec before reconnecting...")
@@ -235,7 +282,7 @@ class IoBeamHandler(object):
 			if message == '.': continue # ping
 
 			err = -1
-			self._logger.debug("_handleMessages() handling message: %s", message)
+			# self._logger.debug("_handleMessages() handling message: %s", message)
 
 			tokens = message.split(self.MESSAGE_SEPARATOR)
 			if len(tokens) <=1:
@@ -337,10 +384,38 @@ class IoBeamHandler(object):
 	def _handle_steprun_message(self, message, tokens):
 		return 0
 
-	def _handle_fan_message(self, message, tokens):
+	def _handle_fan_message(self, message, token):
+		action = token[0] if len(token) > 0 else None
+		payload = self._as_number(token[1]) if len(token) > 1 else None
+
+		if action == self.MESSAGE_ACTION_DUST_VALUE and payload is not None:
+			self._fireEvent(IoBeamEvents.DUST_VALUE, dict(log=False, val=payload))
+		elif action == self.MESSAGE_ACTION_FAN_ON:
+			pass
+		elif action == self.MESSAGE_ACTION_FAN_OFF:
+			pass
+		elif action == self.MESSAGE_ACTION_FAN_AUTO:
+			pass
+		elif action == self.MESSAGE_ACTION_FAN_FACTOR:
+			pass
+		elif action == self.MESSAGE_ACTION_FAN_VERSION:
+			pass
+		elif action == self.MESSAGE_ACTION_FAN_RPM:
+			pass
+		else:
+			return self._handle_invalid_message(message)
+
 		return 0
 
-	def _handle_laser_message(self, message, tokens):
+	def _handle_laser_message(self, message, token):
+		action = token[0] if len(token) > 0 else None
+		payload = self._as_number(token[1]) if len(token) > 1 else None
+
+		if action == self.MESSAGE_ACTION_LASER_TEMP and payload is not None:
+			self._fireEvent(IoBeamEvents.LASER_TEMP, dict(log=False, val=payload))
+		else:
+			return self._handle_invalid_message(message)
+
 		return 0
 
 	def _handle_iobeam_message(self, message, token):
@@ -371,12 +446,12 @@ class IoBeamHandler(object):
 
 
 	def _fireEvent(self, event, payload=None):
-		self._logger.info("_fireEvent() event:%s, payload:%s", event, payload)
 		self._event_bus.fire(event, payload)
 
 
 	def _as_number(self, str):
 		if str is None: return None
+		if str.lower() == "nan": return None
 		try:
 			return float(str)
 		except:

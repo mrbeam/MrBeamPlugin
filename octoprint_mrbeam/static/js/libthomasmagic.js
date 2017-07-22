@@ -36,11 +36,11 @@ var timer = function (name) {
 // --- Geometry: Quadratic Spline
 
 function quadraticCoefficients(x0, x1, x2) {
-  return [x1, 2.0 * (x2 - x1), x1 - 2.0 * x2 + x3];
+	return [x0, 2.0 * (x1 - x0), x0 - 2.0 * x1 + x2];
 }
 
 function quadraticDerivativeCoefficients(x0, x1, x2) {
-  return [2.0 * (x2 - x1), 2.0 * (x1 - 2.0 * x2 + x3)];
+	return [2.0 * (x1 - x0), 2.0 * (x0 - 2.0 * x1 + x2)];
 }
 
 function quadraticLength(x0, y0, x1, y1, x2, y2) {

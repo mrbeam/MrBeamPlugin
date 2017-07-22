@@ -10,6 +10,7 @@ import socket
 import threading
 import time
 import shlex
+import collections
 from subprocess import check_output
 
 import octoprint.plugin
@@ -26,6 +27,9 @@ from octoprint_mrbeam.iobeam.iobeam_handler import ioBeamHandler, IoBeamEvents
 from octoprint_mrbeam.iobeam.onebutton_handler import oneButtonHandler
 from octoprint_mrbeam.iobeam.interlock_handler import interLockHandler
 from octoprint_mrbeam.iobeam.lid_handler import lidHandler
+from octoprint_mrbeam.iobeam.temperature_manager import temperatureManager
+from octoprint_mrbeam.iobeam.dust_manager import dustManager
+from octoprint_mrbeam.analytics.analytics_handler import analyticsHandler
 from octoprint_mrbeam.led_events import LedEventListener
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
@@ -37,7 +41,7 @@ from .software_update_information import get_update_information
 __builtin__.MRBEAM_DEBUG = False
 
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
-_mrbeam_plugin_implementation = None
+__builtin__._mrbeam_plugin_implementation = None
 
 
 class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
@@ -49,7 +53,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				   octoprint.plugin.EventHandlerPlugin,
 				   octoprint.plugin.ProgressPlugin,
 				   octoprint.plugin.WizardPlugin,
-				   octoprint.plugin.SlicerPlugin):
+				   octoprint.plugin.SlicerPlugin,
+				   octoprint.plugin.ShutdownPlugin):
 
 	# CONSTANTS
 	ENV_LOCAL =        "local"
@@ -75,9 +80,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._cancel_job = False
 		self.print_progress_last = -1
 		self.slicing_progress_last = -1
+		self._logger = mrb_logger("octoprint.plugins.mrbeam")
 
 	def initialize(self):
-		self.laserCutterProfileManager = laserCutterProfileManager(self._settings)
+		self.laserCutterProfileManager = laserCutterProfileManager()
 		if self._settings.get(["dev", "debug"]) == True: __builtin__.MRBEAM_DEBUG = True
 
 		init_mrb_logger(self._printer)
@@ -97,9 +103,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._oneButtonHandler = oneButtonHandler(self)
 		self._interlock_handler = interLockHandler(self)
 		self._lid_handler = lidHandler(self)
+		self._analytics_handler = analyticsHandler(self)
 		self._led_eventhandler = LedEventListener(self._event_bus, self._printer)
 		# start iobeam socket only once other handlers are already inittialized so that we can handle info mesage
 		self._ioBeam = ioBeamHandler(self._event_bus, self._settings.get(["dev", "sockets", "iobeam"]))
+		self._temperatureManager = temperatureManager()
+		#self._dustManager = dustManager()
 
 
 	def _do_initial_log(self):
@@ -114,6 +123,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		msg += ","+self.ENV_LASER_SAFETY+':'+self.get_env(self.ENV_LASER_SAFETY)
 		msg += ","+self.ENV_ANALYTICS+':'+self.get_env(self.ENV_ANALYTICS)+')'
 		msg += ", octopi:" + str(self._octopi_info)
+		self._logger.info(msg, terminal=True)
+
+		msg = "MrBeam Lasercutter Profile: %s" % self.laserCutterProfileManager.get_current_or_default()
 		self._logger.info(msg, terminal=True)
 
 
@@ -137,7 +149,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def get_settings_defaults(self):
 		return dict(
-			current_profile_id="MrBeam2B",
+			current_profile_id="_mrbeam_junior", # yea, this needs to be like this
 			defaultIntensity=500,
 			defaultFeedrate=300,
 			svgDPI=90,
@@ -152,12 +164,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				env="PROD",
 				terminalMaxLines = 2000
 			),
-			analyticsEnabled=False,
+			analyticsEnabled=False,  # frontend analytics Mixpanel
+			analyticsfolder="analytics",  # laser job analytics base folder (.octoprint/...)
 			cam=dict(
 				enabled=True,
 				image_correction_enabled = True,
 				frontendUrl="/downloads/files/local/cam/beam-cam.jpg",
-				localFilePath="cam/beam-cam.jpg"
+				localFilePath="cam/beam-cam.jpg",
+				keepOriginals=False
 			)
 		)
 
@@ -207,6 +221,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		selectedProfile = self.laserCutterProfileManager.get_current_or_default()
 		self._settings.set(["current_profile_id"], selectedProfile['id'])
+
+	def on_shutdown(self):
+		self._logger.info("on_shutdown()")
+		self._ioBeam.shutdown()
+		self._lid_handler.shutdown()
+		self._temperatureManager.shutdown()
+		time.sleep(2)
+		self._logger.debug("on_shutdown() sleept")
 
 	##~~ AssetPlugin mixin
 
@@ -1073,10 +1095,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	##~~ Event Handler Plugin API
 
 	def on_event(self, event, payload):
-		if not event == "SettingsUpdated":
+		if payload is None or not isinstance(payload, collections.Iterable) or not 'log' in payload or payload['log']:
 			self._logger.debug("on_event %s: %s", event, payload)
-		# self._logger.info("ANDYTEST get_state_id: %s, is_operational: %s", self._printer.get_state_id(), self._printer.is_operational())
-		pass
+
 
 	##~~ Progress Plugin API
 
@@ -1101,7 +1122,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	# inject a Laser object instead the original Printer from standard.py
 	def laser_factory(self, components, *args, **kwargs):
 		from .printer import Laser
-		return Laser(components['file_manager'], components['analysis_queue'], components['printer_profile_manager'])
+		return Laser(components['file_manager'], components['analysis_queue'], laserCutterProfileManager())
 
 	def laser_filemanager(self, *args, **kwargs):
 		def _image_mime_detector(path):
@@ -1295,9 +1316,9 @@ def clitest_commands(cli_group, pass_octoprint_ctx, *args, **kwargs):
 __plugin_name__ = "Mr Beam Laser Cutter"
 
 def __plugin_load__():
-	global __plugin_implementation__, _mrbeam_plugin_implementation
+	global __plugin_implementation__
 	__plugin_implementation__ = MrBeamPlugin()
-	_mrbeam_plugin_implementation = __plugin_implementation__
+	__builtin__._mrbeam_plugin_implementation = __plugin_implementation__
 	# MRBEAM_PLUGIN_IMPLEMENTATION = __plugin_implementation__
 
 	global __plugin_settings_overlay__

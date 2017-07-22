@@ -411,8 +411,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	function elementDragMove( mainEl, dx, dy, x, y, event ) {
 		var sgUnscale = mainEl.data('sgUnscale');
 
-		var udx = sgUnscale * dx * __PX2MM__;
-		var udy = sgUnscale * dy * __PX2MM__;
+		var udx = sgUnscale * dx * MRBEAM_PX2MM_FACTOR_WITH_ZOOM;
+		var udy = sgUnscale * dy * MRBEAM_PX2MM_FACTOR_WITH_ZOOM;
 
 		var tx = mainEl.data("otx") + +udx;
 		var ty = mainEl.data("oty") + +udy;
@@ -506,7 +506,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	function resizeDraggerMove( mainEl, dx, dy, x, y, event ) {
 		var resizeDragger = this;
 		// TODO use dx and dy, scale properly to movement.
-		var	delta = -dy/2 * __PX2MM__;
+		var	delta = -dy/2 * MRBEAM_PX2MM_FACTOR_WITH_ZOOM;
 		//apply smoothing factor of 2
 
 		var origHeight = +mainEl.data('oHeight') * +mainEl.data('angleFactor');
@@ -527,21 +527,6 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		mainEl.ftUpdateTransform();
 	};
 	
-	function _convert_event_to_mm(event){
-//		var ref = document.getElementById('area_preview');
-//		var targetBBox = ref.getBoundingClientRect();
-//		var xPerc = (event.clientX - targetBBox.left) / targetBBox.width;
-//		var yPerc = (event.clientY - targetBBox.top) / targetBBox.height;
-//		var dxPerc = (event.movementX) / targetBBox.width;
-//		var dyPerc = (event.movementY) / targetBBox.height;
-//		return {x: xPerc, y: yPerc, dx: dxPerc, dy: dyPerc};		
-		return {x: event.clientX * __PX2MM__, y: event.clientY * __PX2MM__, dx: event.movementX * __PX2MM__, dy: event.movementY * __PX2MM__};		
-	}
-//	
-//	function _get_current_snap_scale(){
-//		return snap.data('zoom');
-//	};
-
 })();
 
 

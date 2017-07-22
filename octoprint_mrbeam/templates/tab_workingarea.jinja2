@@ -5,7 +5,7 @@
 
 								<div id="state_accordion">
 									<div class="accordion-heading" id="mrb_state_header">
-										<a class="accordion-toggle" XXdata-toggle="collapse" href="#statusbox"><i class="icon-info-sign"></i> {{ _('State') }}:</a><span data-bind="text: state.stateString"></span>
+										<a class="accordion-toggle" href="#statusbox"><i class="icon-info-sign"></i> {{ _('State') }}:</a><span data-bind="text: state.stateString"></span>
 									</div>
 									<div id="statusbox">
 										<div class="accordion-body collapse in" id="mrb_state_wrapper" data-bind="visible: !state.isErrorOrClosed() && loginState.isUser() && !state.isFlashing() ">
@@ -65,17 +65,6 @@
 										</div>
 
 										<div id="mrb_control" class="accordion-inner" data-bind="visible: state.isReady() || state.isLocked() || state.isFlashing()">
-	<!--										<div data-bind="visible: state.isLocked() ">
-												Mr Beam does not know the current position.
-												First remove any objects blocking the gantry's travel range.
-												Then do a homing cycle.
-												<div style='text-align: center; padding:.5em;'>
-													<div class='btn-group'>
-														<button class="btn btn-default" data-bind="enable: state.isLocked() && loginState.isUser(), click: function() { control.sendHomeCommand(['x', 'y']) }"><i class="icon-home"></i>Homing Cycle</button>
-														<button class="btn btn-default" data-bind="enable: state.isLocked() && loginState.isUser(), click: function() { control.sendHomeCommand(['x', 'y']) }"><i class="icon-unlock"></i>Unlock</button>
-													</div>
-												</div>
-											</div>-->
 											<div data-bind="visible: state.isFlashing() ">
 												Firmware update in progress
 												<div id="flashing_progress" class="progress progress-striped active" style="width: 100%;">
@@ -88,8 +77,6 @@
 											<div class="accordion-heading" id="mrb_state_header">
 												<a href="#control_btns" class="dropdown" data-toggle="collapse" aria-expanded="false">
 												<i class="icon-screenshot"></i> {{ _('Position') }}:
-	<!--												<span data-bind="text: state.laserPos"></span>-->
-													<!--<i class="icon-move sr-only"></i>-->
 													<span class="caret"></span>
 												</a>
 												<input id="manual_position" class="decent_input" data-bind="attr:{placeholder: state.laserPos}" onsubmit="control.manualPosition"/>
@@ -231,10 +218,10 @@
 																<input class="decent_input multiply" type="text" value="1×1" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualMultiply($data, event); },
 																			blur: function(d, event){ $root.svgManualMultiply($data, event); }} "/>
-																
-																<i class="icon-copy" title="{{ _('duplicate') }}"></i> 
+
+																<i class="icon-copy" title="{{ _('duplicate') }}"></i>
 																<a href="#" data-bind="event: {
-																			click: function(d, event){ $root.duplicateSVG($data, event); }	
+																			click: function(d, event){ $root.duplicateSVG($data, event); }
 																		} ">duplicate</a>
 															</div>
 															<div class="misfit_warning" >
@@ -345,26 +332,15 @@
 
 							<div class="span8" style="position:relative">
 								{% include 'homing_overlay.jinja2' %}
-								{% if webcamStream %}
-								<div id="webcam_wrapper" data-bind="style: {
-											width: workingArea.workingAreaWidthPx()+'px',
-											height: workingArea.workingAreaHeightPx()+'px'
-										}">
-									<img id="beamcam_image" data-bind="css: { flipH: settings.webcam_flipH(), flipV: settings.webcam_flipV() },
-										 style: {transform: camTransform()}"
-                                         style="width: inherit; height: inherit"
-                                         src="{{ webcamStream }}" onerror="this.src='/plugin/mrbeam/static/img/beam-cam-static.jpg'">
-
-								</div>
-								{% endif %}
+								<div id="zoomFactor" data-bind="text: zoom_factor_text"></div>
 								<svg id="area_preview" class="workingarea" visibility="hidden"
 									 data-bind="style: {
 											width: workingAreaWidthPx()+'px',
 											height: workingAreaHeightPx()+'px'
 										},
-										attr: { 
+										attr: {
 											viewBox: zoomViewBox(),
-											visibility: 'visible'	
+											visibility: 'visible'
 										},
 										event: { mousewheel: wheel_zoom, mousemove: mouse_drag }
 									 ">
@@ -384,7 +360,12 @@
 										<feColorMatrix type="saturate" values="0.5"/>
 									</filter>
 								</defs>
-
+								<image id="beamcam_image_svg"
+									xlink:href="/downloads/files/local/cam/beam-cam.jpg" x="0" y="0" height="100%" width="100%"
+									data-bind="attr: {
+											width: workingAreaWidthMM(),
+											height: workingAreaHeightMM()
+										}" />
 									<g id="scaleGroup" data-bind="attr: { transform: scaleMatrix() }">
 										<g id="placedGcodes" data-bind="visible: true || (state.isPrinting() && !state.isPaused()), attr: { transform: 'matrix(1,0,0,-1,0,'+workingAreaHeightMM()+')' }"></g>
 										<g id="gCodePreview" data-bind="visible: state.isPrinting() || state.isPaused()"></g>

@@ -50,13 +50,15 @@ $(function(){
 
 		self.materials_settings = {
 			'default':{cut_i:0, cut_f:0, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
-			'material_name thickness':{cut_i:0, cut_f:0, cut_p:0, eng_i:[0,0], eng_f:[0,0]},
+//			'material_name thickness':{cut_i:0, cut_f:0, cut_p:0, eng_i:[0,0], eng_f:[0,0]},
 			// new copper embedded laser
+			'Anodized Aluminum':{cut_i:0, cut_f:2000, cut_p:1, eng_i:[1000,1000], eng_f:[100,500]}, // engrave only
 			'Balsa 1mm':{cut_i:70, cut_f:600, cut_p:1, eng_i:[0,0], eng_f:[0,0]}, // min speed 300, max intensity 70 !!! ignition warning
 			'Balsa 2mm':{cut_i:100, cut_f:600, cut_p:1, eng_i:[0,0], eng_f:[0,0]}, // min speed 300 !!! ignition warning
 			'Balsa 3mm':{cut_i:100, cut_f:800, cut_p:2, eng_i:[0,0], eng_f:[0,0]}, // min speed 300 !!! ignition warning
 			'Balsa 4mm':{cut_i:100, cut_f:600, cut_p:3, eng_i:[0,0], eng_f:[0,0]}, // min speed 500 !!! ignition warning
 			'Balsa 5mm':{cut_i:100, cut_f:300, cut_p:3, eng_i:[0,0], eng_f:[0,0]}, // min speed 300 !!! ignition warning
+			'Bamboo':{cut_i:0, cut_f:2000, cut_p:1, eng_i:[200,1000], eng_f:[2000,350]}, // engrave only
 			'Cardboard double wall 5mm':{cut_i:100, cut_f:400, cut_p:3, eng_i:[10,35], eng_f:[2000,850]}, // warning, not slower than 180
 			'Cardboard single wall 4mm':{cut_i:100, cut_f:500, cut_p:3, eng_i:[10,35], eng_f:[2000,850]}, // warning, not slower than 180
 			'Cardboard single wall 2mm':{cut_i:100, cut_f:500, cut_p:2, eng_i:[10,35], eng_f:[2000,850]}, // warning, not slower than 180
@@ -74,8 +76,8 @@ $(function(){
 			'Foam Rubber 3mm green':{cut_i:100, cut_f:600, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
 			'Foam Rubber 3mm bue':{cut_i:100, cut_f:600, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
 			'Paper':{cut_i:750, cut_f:800, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
-			'Plywood 3mm':{cut_i:100, cut_f:200, cut_p:2, eng_i:[10,35], eng_f:[2000,850]}, 
-			'Plywood 4mm':{cut_i:100, cut_f:250, cut_p:3, eng_i:[10,35], eng_f:[2000,850]}, 
+			'Plywood 3mm':{cut_i:100, cut_f:200, cut_p:2, eng_i:[18,35], eng_f:[2000,750]}, 
+			'Plywood 4mm':{cut_i:100, cut_f:250, cut_p:3, eng_i:[18,35], eng_f:[2000,750]}, 
 			'Kraftplex 0.8mm':{cut_i:100, cut_f:350, cut_p:2, eng_i:[10,35], eng_f:[2000,850]}, 
 			'Kraftplex 1.5mm':{cut_i:100, cut_f:175, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
 //			'Kraftplex 3mm':{cut_i:100, cut_f:200, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},

@@ -15,6 +15,8 @@ $(function () {
         self.navigation = params[10];
         self.appearance = params[10];
 
+        self.isStartupComplete = false;
+
         self.onStartup = function () {
             // TODO fetch machine profile on start
             //self.requestData();
@@ -201,7 +203,8 @@ $(function () {
 
         self.onStartupComplete = function() {
             self.addSwUpdateTierInformation();
-            $('#loading_overlay').remove();
+            self.isStartupComplete = true;
+            self.removeLoadingOverlay();
         };
 
         self.addSwUpdateTierInformation = function(){
@@ -211,6 +214,15 @@ $(function () {
             }
         };
 
+        self.removeLoadingOverlay = function(){
+            // console.log("ANDYTEST removeLoadingOverlay() self.isStartupComplete:"+self.isStartupComplete+", self.workingArea.camera.firstImageLoaded:"+self.workingArea.camera.firstImageLoaded);
+            if (self.isStartupComplete &&  self.workingArea.camera.firstImageLoaded) {
+                $('#loading_overlay').remove();
+                console.log("beamOS started. loading_overlay removed.");
+            } else {
+                setTimeout(self.removeLoadingOverlay, 100);
+            }
+        };
 
         /**
          * controls fullscreen functionality unsing on screenfull.js

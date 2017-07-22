@@ -1,6 +1,6 @@
 /* global snap, ko, $, Snap, API_BASEURL, _, CONFIG_WEBCAM_STREAM, ADDITIONAL_VIEWMODELS, mina */
 
-__PX2MM__ = 1; // global available in this viewmodel and in snap plugins at the same time.
+MRBEAM_PX2MM_FACTOR_WITH_ZOOM = 1; // global available in this viewmodel and in snap plugins at the same time.
 
 $(function(){
 
@@ -65,6 +65,20 @@ $(function(){
 
 		return 0;
 	}
+	
+	function getHumanReadableId(length){
+		length = length || 4;
+		var consonants = 'bcdfghjklmnpqrstvwxz';
+		var vocals = 'aeiouy';
+		var out = [];
+		for (var i = 0; i < length/2; i++) {
+			var cIdx = Math.floor(Math.random()*consonants.length);
+			var vIdx = Math.floor(Math.random()*vocals.length);
+			out.push(consonants.charAt(cIdx));
+			out.push(vocals.charAt(vIdx));
+		}
+		return out.join('');
+	}
 
 	function WorkingAreaViewModel(params) {
 		var self = this;
@@ -76,10 +90,15 @@ $(function(){
 		self.state = params[2];
 		self.files = params[3];
 		self.profile = params[4];
+		self.camera = params[5];
 
 		self.log = [];
 
-		
+		self.gc_options = {
+			precision: 0.1,
+			optimize_travel: true,
+			small_paths_first: true
+		};
 
 		self.command = ko.observable(undefined);
 
@@ -141,7 +160,8 @@ $(function(){
 		self.set_zoom_factor = function(delta, centerX, centerY){
 			var oldZ = self.zoom();
 			var newZ = oldZ + delta;
-			if(newZ >= 0.1 && newZ <= 1){
+			newZ = Math.min(Math.max(newZ, 0.25), 1);
+			if(newZ !== self.zoom()){
 				var deltaWidth = self.workingAreaWidthMM() * delta;
 				var deltaHeight = self.workingAreaHeightMM() * delta;
 				var oldOffX = self.zoomOffX();
@@ -163,6 +183,13 @@ $(function(){
 			offset = Math.min(Math.max(offset, min), max);
 			self.zoomOffY(offset);
 		};
+		self.zoom_factor_text = ko.computed(function(){
+			if(self.zoom() !== 1){
+				return (1/self.zoom() * 100).toFixed(0) + '%';
+			} else {
+				return "";
+			}
+		});
 
 		self.hwRatio = ko.computed(function(){
 			// y/x = 297/216 junior, respectively 594/432 senior
@@ -209,35 +236,12 @@ $(function(){
 			return "scale("+self.camera_scale()+") rotate("+self.camera_rotation()+"deg) translate("+self.camera_offset_x()+"px, "+self.camera_offset_y()+"px)";
 		});
 
-
-		// matrix scales svg units to display_pixels
-//		self.scaleMatrix = ko.computed(function(){
-//			var m = new Snap.Matrix();
-//			var factor = 25.4/self.svgDPI(); // * 1/self.px2mm_factor();
-//			if(!isNaN(factor)){
-//				m.scale(factor);
-//				return m;
-//			}
-//			return m;
-//		});
-		
 		// matrix scales svg units to display_pixels
 		self.scaleMatrix = ko.computed(function(){
 			var m = new Snap.Matrix();
 			return m;
 		});
 
-		// matrix scales svg units to display_pixels
-//		self.scaleMatrixMMtoDisplay = ko.computed(function(){
-//			var m = new Snap.Matrix();
-//			var factor = self.svgDPI()/25.4; // scale mm to 90dpi pixels
-//			var yShift = self.workingAreaHeightMM(); // 0,0 origin of the gcode is bottom left. (top left in the svg)
-//			if(!isNaN(factor)){
-//				m.scale(factor, -factor).translate(0,-yShift);
-//				return m;
-//			}
-//			return m;
-//		});
 		
 //		self.matrixMMflipY = ko.computed(function(){
 //			var m = new Snap.Matrix();
@@ -674,7 +678,7 @@ $(function(){
 				}
 				if(attr.name === "height"){
 					doc_height = attr.value;
-					units_y = doc_width.replace(/[\d.]+/,'');
+					units_y = doc_height.replace(/[\d.]+/,'');
 				}
 				if(attr.name === "viewBox") doc_viewbox = attr.value;
 			}
@@ -842,34 +846,6 @@ $(function(){
 				}
 			}
 			return namespaces;
-		};
-
-		self.highlightDesign = function(data){
-			$('#userContent').addClass('dimDesigns');
-			var svgEl = $('#'+data.previewId);
-			svgEl.addClass('designHighlight');
-			self.showHighlightMarkers(data.previewId);
-		};
-		self.removeHighlight = function(data){
-			$('#userContent').removeClass('dimDesigns');
-			var svgEl = $('#'+data.previewId);
-			svgEl.removeClass('designHighlight');
-			self.showHighlightMarkers(null);
-		};
-		self.showHighlightMarkers = function(svgId) {
-//			if(svgId === null){
-//				var w = self.mm2svgUnits(self.workingAreaWidthMM());
-//				var h = self.mm2svgUnits(self.workingAreaHeightMM());
-//				snap.select('#highlightMarker').attr({x: -1, y:-1, width:0, height:0});
-//			} else {
-//				var svgEl = snap.select('#'+svgId);
-//				var bbox = svgEl.getBBox();
-//				var x = bbox.x - 20;
-//				var y = bbox.y - 20;
-//				var w = bbox.w + 40;
-//				var h = bbox.h + 40;
-//				snap.select('#highlightMarker').attr({x: x, y:y, width:w, height:h});
-//			}
 		};
 
 		self.toggleTransformHandles = function(file){
@@ -1193,8 +1169,8 @@ $(function(){
 				if(parts.length === 4){
 					var offsetVBoxX = parseFloat(parts[0]);
 					var offsetVBoxY = parseFloat(parts[1]);
-					var widthVBox = parseFloat(parts[2]);// - parseFloat(parts[0]);
-					var heightVBox = parseFloat(parts[3]);// - parseFloat(parts[1]);
+					var widthVBox = parseFloat(parts[2]);
+					var heightVBox = parseFloat(parts[3]);
 
 					var fx = widthPx / widthVBox;
 					var fy = heightPx / heightVBox;
@@ -1274,7 +1250,7 @@ $(function(){
 		};
 
 		self.getEntryId = function(file) {
-			return "wa_" + md5(file["origin"] + file["name"] + Date.now());
+			return "wa_" + getHumanReadableId();
 		};
 
 		self.init = function(){
@@ -1282,7 +1258,7 @@ $(function(){
 			snap = Snap('#area_preview');
 			self.px2mm_factor.subscribe(function(newVal){
 				if(!isNaN(newVal)){
-					__PX2MM__ = newVal;
+					MRBEAM_PX2MM_FACTOR_WITH_ZOOM = newVal;
 					self.draw_coord_grid();
 				}
 			});
@@ -1491,29 +1467,10 @@ $(function(){
 		self.clear_gcode = function(){
 			snap.select('#gCodePreview').clear();
 		};
-		
-//		self.updateGCode = function(){
-//			var paths = snap.selectAll('#userContent path');
-//			for (var i = 0; i < paths.length; i++) {
-//				var path = paths[i];
-//				if(path.attr('gc') !== null){
-//					console.log("gc already present");
-//				} else {
-//					path.generate_gc();
-//				}
-//					
-//			}
-//		};
 
 		self.onStartup = function(){
 			self.state.workingArea = self;
 			self.files.workingArea = self;
-
-			// check this on tab change as before the bounding boxes are sized 0.
-//			$('#wa_tab_btn').on('shown.bs.tab', function (e) {
-//				self.trigger_resize();
-//				self.check_sizes_and_placements();
-//			});
 			$(window).resize(function(){
 				self.trigger_resize();
 			});
@@ -1537,7 +1494,7 @@ $(function(){
 				if(design.type === 'model' || design.type === 'quicktext'){
 					var svg = snap.select('#' + design.previewId);
 					var misfitting = self.outsideWorkingArea(svg);
-//					console.log("Misfitting: ", misfitting);
+					// console.log("Misfitting: ", misfitting);
 					if(misfitting.oversized || misfitting.outside){
 						svg.data('fitMatrix', misfitting);
 						$('#'+design.id).addClass('misfit');
@@ -1598,14 +1555,14 @@ $(function(){
 					if (item.type === 'image' || item.type === "text" || item.type === "#text") {
 						// remove filter effects on images for proper rendering
 						if (style !== null) {
-							var strippedFilters = style.replace(/filter.+?;/, '');
+							var strippedFilters = style.replace(/filter.+?;/g, '');
 							item.attr('style', strippedFilters);
 						}
 					} else {
 						// remove stroke from other elements
 						var styleNoStroke = 'stroke: none;';
 						if (style !== null) {
-							styleNoStroke += style.replace(/stroke.+?;/, '');
+							styleNoStroke += style.replace(/stroke.+?;/g, '');
 						}
 						item.attr('stroke', 'none');
 						item.attr('style', styleNoStroke);
@@ -1883,12 +1840,14 @@ $(function(){
         // ***********************************************************
 		
 		self.wheel_zoom = function(target, ev){
-			var wheel = ev.originalEvent.wheelDelta;
-			var targetBBox = ev.currentTarget.getBoundingClientRect();
-			var xPerc = (ev.clientX - targetBBox.left) / targetBBox.width;
-			var yPerc = (ev.clientY - targetBBox.top) / targetBBox.height;
-			var deltaZoom = Math.sign(-wheel)/100;
-			self.set_zoom_factor(deltaZoom, xPerc, yPerc);
+			if (ev.originalEvent.shiftKey) {
+				var wheel = ev.originalEvent.wheelDelta;
+				var targetBBox = ev.currentTarget.getBoundingClientRect();
+				var xPerc = (ev.clientX - targetBBox.left) / targetBBox.width;
+				var yPerc = (ev.clientY - targetBBox.top) / targetBBox.height;
+				var deltaZoom = Math.sign(-wheel)/100;
+				self.set_zoom_factor(deltaZoom, xPerc, yPerc);
+			}
 		};
 		
 		self.mouse_drag = function(target, ev){
@@ -1925,13 +1884,13 @@ $(function(){
     // view model class, parameters for constructor, container to bind to
     ADDITIONAL_VIEWMODELS.push([WorkingAreaViewModel,
 
-		["loginStateViewModel", "settingsViewModel", "printerStateViewModel",  "gcodeFilesViewModel", "laserCutterProfilesViewModel"],
+		["loginStateViewModel", "settingsViewModel", "printerStateViewModel",  
+			"gcodeFilesViewModel", "laserCutterProfilesViewModel", "cameraViewModel"],
 		[document.getElementById("area_preview"),
 			document.getElementById("homing_overlay"),
 			document.getElementById("working_area_files"),
             document.getElementById("quick_text_dialog"),
-//            document.getElementById("working_area_addstuff"),
-			//document.getElementById("webcam_wrapper")
+			document.getElementById("zoomFactor")
 		]]);
 
 });
