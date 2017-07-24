@@ -19,49 +19,59 @@
 Snap.plugin(function (Snap, Element, Paper, global) {
 
   Element.prototype.embed_gc = function (correctionMatrix, gc_options) {
-    this.selectAll('path').forEach(function (path) {
+    // settings
+    var tolerance = gc_options.precision;
+    var bounds = gc_options.clipRect;
+                          
+    this.selectAll("path").forEach(function (element) {
       // calculate transformation matrix
-      var matrix = path.transform().totalMatrix;
+      var matrix = element.transform().totalMatrix;
 
       if (correctionMatrix !== undefined) {
         matrix = matrix.multLeft(correctionMatrix);
       }
 
+      var xform = [
+          matrix.a, matrix.b,
+          matrix.c, matrix.d,
+          matrix.e, matrix.f
+      ];
+
       // parse path string
-      var pathString = path.attr('d');
+      var pathString = element.attr("d");
       var segments = Snap.path.toAbsolute(pathString);
 
-      // settings
-      var tolerance = gc_options.precision;
-      var clippingResolution = 0.1 * gc_options.precision;
-      var bounds = gc_options.clipRect;
-      var transformation = [matrix.a, matrix.b,
-                            matrix.c, matrix.d,
-                            matrix.e, matrix.f]
-
-      // generate polylines
-      var polylines;
-      // convert segments to polylines
-      polylines = Polylines.fromSvgPathSegments(segments, tolerance);
+      // generate paths
+      var paths = mrbeam.path.parse(segments, tolerance);
+      
       // simplify polylines
-      polylines = Polylines.simplify(polylines, tolerance);
+      paths = mrbeam.path.simplify(paths, tolerance);
+      
       // apply transformation matrix
-      polylines = Polylines.transform(polylines, transformation);
+      paths = mrbeam.path.transform(paths, xform);
+      
       // clip to boundaries
-      polylines = Polylines.clipRect(polylines, bounds, clippingResolution);
+      var x = bounds[0];
+      var y = bounds[1];
+      var w = bounds[2] - bounds[0];
+      var h = bounds[3] - bounds[1];
+
+      var clip = [
+        mrbeam.path.rectangle(x, y, w, h)
+      ];
+
+      paths = mrbeam.path.clip(paths, clip, 0.1 * tolerance);
 
       // generate gcode
-      var gcode = Polylines.gcode(polylines);
+      var gcode = mrbeam.path.gcode(paths);
 
-      path.attr('mb:gc', gcode);
-    }, this);
+      element.attr("mb:gc", gcode);
+    });
   };
 
   Element.prototype.clean_gc = function () {
-    var paths = this.selectAll('path');
+    var elements = this.selectAll("path");
 
-    paths.forEach(function (path) {
-      path.attr('mb:gc', '');
-    }, this);
+    elements.forEach((element) => element.attr("mb:gc", ""));
   };
 });
