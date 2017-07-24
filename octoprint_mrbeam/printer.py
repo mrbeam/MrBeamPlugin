@@ -1,4 +1,5 @@
 import traceback
+import time
 from octoprint.printer.standard import Printer, StateMonitor, PrinterInterface
 from octoprint.settings import settings
 from octoprint.events import eventManager, Events
@@ -75,9 +76,9 @@ class Laser(Printer):
 		 Cancel the current printjob and do homing.
 		"""
 		super(Laser, self).cancel_print()
+		time.sleep(0.5)
 		self.home(axes="wtf")
 		eventManager().fire(MrBeamEvents.PRINT_CANCELING_DONE)
-
 
 	def position(self, x, y):
 		printer_profile = self._printerProfileManager.get_current_or_default()
