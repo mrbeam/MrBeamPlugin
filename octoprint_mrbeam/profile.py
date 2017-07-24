@@ -132,7 +132,7 @@ class LaserCutterProfileManager(object):
 			hysteresis_temperature=43.0
 		),
 		dust=dict(
-			extraction_limit=0.18,
+			extraction_limit=0.2,
 			auto_mode_time=300
 		),
 		volume = dict(
