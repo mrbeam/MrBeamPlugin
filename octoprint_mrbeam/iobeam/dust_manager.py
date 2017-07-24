@@ -153,11 +153,9 @@ class DustManager(object):
 
 	def _dust_timer_callback(self):
 		try:
-			if self.request_dust():
-				self._check_dust_is_current()
-				self._start_dust_timer()
-			else:
-				self._check_dust_is_current()
+			self.request_dust()
+			self._check_dust_is_current()
+			self._start_dust_timer()
 		except:
 			self._logger.exception("Exception in _dust_timer_callback(): ")
 			self._start_dust_timer()
