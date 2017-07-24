@@ -149,17 +149,15 @@ class DustManager(object):
 			# TODO fire some Error pause (together with andy)
 
 	def request_dust(self):
-		while True:
-			if _mrbeam_plugin_implementation._ioBeam.send_command("fan:dust"):
-				break
-			else:
-				time.sleep(0.2)
+		return True if self._send_fan_command("dust") else False
 
 	def _dust_timer_callback(self):
 		try:
-			self.request_dust()
-			self._check_dust_is_current()
-			self._start_dust_timer()
+			if self.request_dust():
+				self._check_dust_is_current()
+				self._start_dust_timer()
+			else:
+				self._check_dust_is_current()
 		except:
 			self._logger.exception("Exception in _dust_timer_callback(): ")
 			self._start_dust_timer()
