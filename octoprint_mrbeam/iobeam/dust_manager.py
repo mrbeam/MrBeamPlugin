@@ -27,7 +27,8 @@ class DustManager(object):
 
 		self._shutting_down = False
 		self._trail_extraction = None
-		self._temp_timer = None
+		self._dust_timer = None
+		self._dust_timer_interval = self.DEFAULT_DUST_TIMER_INTERVAL
 		self._auto_timer = None
 
 		self._subscribe()
@@ -71,28 +72,19 @@ class DustManager(object):
 			self._auto_timer.cancel()
 			self._auto_timer = None
 		if value is None:
-			while True:
-				if _mrbeam_plugin_implementation._ioBeam.send_command("fan:auto"):
-					break
-				else:
-					time.sleep(0.2)
+			if not self._send_fan_command('auto', wait=0.2):
+				self._logger.warning("Could not start auto mode!")
 		else:
 			if value > 100:
 				value = 100
 			elif value < 0:
 				value = 0
-			while True:
-				if _mrbeam_plugin_implementation._ioBeam.send_command("fan:on:{:d}".format(int(value))):
-					break
-				else:
-					time.sleep(0.2)
+			if not self._send_fan_command('on:{}'.format(int(value)), wait=0.2):
+				self._logger.warning("Could not start fixed mode!")
 
 	def _stop_dust_extraction(self):
-		while True:
-			if _mrbeam_plugin_implementation._ioBeam.send_command("fan:off"):
-				break
-			else:
-				time.sleep(1)
+		if not self._send_fan_command('off'):
+			self._logger.warning("Could not turn off dust extraction!")
 
 	def _stop_dust_extraction_when_below(self, value):
 		if self._trail_extraction is None:
@@ -104,11 +96,13 @@ class DustManager(object):
 		self._logger.debug("starting trial dust extraction (value={}).".format(value))
 		dust_start = self._dust
 		dust_start_ts = self._dust_ts
+		self._dust_timer_interval = 1
 		self._start_dust_extraction(100)
 		while self._dust > value:
-			time.sleep(self.DEFAULT_DUST_TIMER_INTERVAL)
+			time.sleep(self._dust_timer_interval)
 		dust_end = self._dust
 		dust_end_ts = self._dust_ts
+		self._dust_timer_interval = 3
 		self._write_analytics(dust_start, dust_start_ts, dust_end, dust_end_ts)
 		self._activate_timed_auto_mode(self.auto_mode_time)
 		self._trail_extraction = None
@@ -124,6 +118,17 @@ class DustManager(object):
 		self._logger.debug("auto mode stopped!")
 		self._stop_dust_extraction()
 		self._auto_timer = None
+
+	def _send_fan_command(self, command, wait=1.0, max_retries=5):
+		retries = 0
+		while True:
+			if _mrbeam_plugin_implementation._ioBeam.send_command("fan:{}".format(command)):
+				return True
+			else:
+				retries += 1
+				if retries >= max_retries:
+					return False
+				time.sleep(wait)
 
 	def _write_analytics(self, dust_start, dust_start_ts, dust_end, dust_end_ts):
 		self._logger.debug("dust extraction time {} from {} to {} (gradient: {})".format(dust_end_ts - dust_start_ts, dust_start, dust_end, (dust_start - dust_end) / (dust_end_ts - dust_start_ts)))
@@ -144,26 +149,24 @@ class DustManager(object):
 			# TODO fire some Error pause (together with andy)
 
 	def request_dust(self):
-		while True:
-			if _mrbeam_plugin_implementation._ioBeam.send_command("fan:dust"):
-				break
-			else:
-				time.sleep(0.2)
+		return True if self._send_fan_command("dust") else False
 
 	def _dust_timer_callback(self):
 		try:
-			self.request_dust()
-			self._check_dust_is_current()
-			self._start_dust_timer()
+			if self.request_dust():
+				self._check_dust_is_current()
+				self._start_dust_timer()
+			else:
+				self._check_dust_is_current()
 		except:
 			self._logger.exception("Exception in _dust_timer_callback(): ")
 			self._start_dust_timer()
 
 	def _start_dust_timer(self):
 		if not self._shutting_down:
-			self._temp_timer = threading.Timer(self.DEFAULT_DUST_TIMER_INTERVAL, self._dust_timer_callback)
-			self._temp_timer.daemon = True
-			self._temp_timer.start()
+			self._dust_timer = threading.Timer(self._dust_timer_interval, self._dust_timer_callback)
+			self._dust_timer.daemon = True
+			self._dust_timer.start()
 		else:
 			self._logger.debug("Shutting down.")
 
