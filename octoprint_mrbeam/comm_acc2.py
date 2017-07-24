@@ -918,7 +918,7 @@ class MachineCom(object):
 		self._sendCommand(b'\x18')
 		self._acc_line_buffer = []
 		self._send_event.clear(completely=True)
-		self._changeState(self.STATE_OPERATIONAL)
+		self._changeState(self.STATE_LOCKED)
 
 		payload = {
 			"file": self._currentFile.getFilename(),
