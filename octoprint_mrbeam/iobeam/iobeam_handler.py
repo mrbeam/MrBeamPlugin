@@ -2,8 +2,9 @@ import socket
 import threading
 import time
 
-from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint.events import Events as OctoPrintEvents
+from octoprint_mrbeam.mrb_logger import mrb_logger
+from octoprint_mrbeam.lib.rwlock import RWLock
 
 # singleton
 _instance = None
@@ -129,6 +130,8 @@ class IoBeamHandler(object):
 		self._isConnected = False
 		self._my_socket = None
 		self._errors = 0
+		self._callbacks = dict()
+		self._callbacks_lock = RWLock()
 
 		self.iobeam_version = None
 
@@ -156,32 +159,100 @@ class IoBeamHandler(object):
 	def open_interlocks(self):
 		return self._interlocks.keys()
 
+	def send_temperature_request(self):
+		return self._send_command("{}:{}".format(self.MESSAGE_DEVICE_LASER, self.MESSAGE_ACTION_LASER_TEMP))
+
 	def send_command(self, command):
+		'''
+		DEPRECATED !!!!!
+		:param command:
+		:return:
+		'''
+		return self._send_command(command)
+
+	def _send_command(self, command):
 		'''
 		Sends a command to iobeam
 		:param command: Must not be None. May or may not and with a new line.
 		:return: Boolean success
 		'''
+		command = self._normalize_command(command)
+		if command is None:
+			raise ValueError("Command must not be None in send_command().")
 		if not self._isConnected:
 			self._logger.warn("send_command() Can't send command since socket is not connected (yet?). Command: %s", command)
 			return False
-		if command is None:
-			raise ValueError("Command must not be None in send_command().")
 		if self._shutdown_signaled:
 			self._logger.debug("send_command() Can't send command while iobeam is shutting down. Command: %s", command)
 			return False
 		if self._my_socket is None:
 			self._logger.warn("send_command() Can't send command while there's no connection on socket. Command: %s", command)
 			return False
-		if not command.endswith("\n"):
-			command = command + "\n"
+
+		command_with_nl = "{}\n".format(command)
 		try:
-			self._my_socket.sendall(command)
-			return True
+			self._my_socket.sendall(command_with_nl)
 		except Exception as e:
 			self._errors += 1
-			self._logger.error("Exception while sending command '%s' to socket: %s", command.replace("\n", ''), e)
+			self._logger.error("Exception while sending command '%s' to socket: %s", command, e)
 			return False
+		return True
+
+	def subscribe(self, event, callback):
+		try:
+			self._callbacks_lock.writer_acquire()
+			if event in self._callbacks:
+				self._callbacks[event].append(callback)
+				# self._logger.debug("ANDYTEST subscribe() event: %s (adding callback to existing event entry.)", event)
+			else:
+				self._callbacks[event] = [callback]
+				# self._logger.debug("ANDYTEST subscribe() event: %s (created new event entry.)", event)
+		except:
+			self._logger.exception("Exception while subscribing to event '%s': ", event)
+		finally:
+			self._callbacks_lock.writer_release()
+
+	def _call_callback(self, _trigger_event, message, **kwargs):
+		try:
+			self._callbacks_lock.reader_acquire()
+			if _trigger_event in self._callbacks:
+				_callback_array = self._callbacks[_trigger_event]
+				kwargs['event'] = _trigger_event
+				kwargs['message'] = message
+				# # TODO: We need one dedicated thread to handle ALL callbacks instead of creating a new one for every command...
+				thread_params = dict(target = self.__execute_callback_called_by_new_thread,
+				                     name = "iobeamCB_{}".format(_trigger_event),
+				                     args = (_trigger_event, _callback_array),
+				                     kwargs = kwargs)
+				my_thread = threading.Thread(**thread_params)
+				my_thread.daemon = True
+				my_thread.start()
+				# self._logger.debug("ANDYTEST _call_callback() _trigger_event: %s | %s callbacks registered. Thread started (still alive:%s) with params: %s", _trigger_event, len(_callback_array), my_thread.is_alive(), thread_params)
+			else:
+				# self._logger.debug("ANDYTEST _call_callback() _trigger_event: %s | No callbacks registered.", _trigger_event)
+				pass
+		except:
+			self._logger.exception("Exception in _call_callback() _trigger_event: %s, message: %s, kwargs: %s", _trigger_event, message, kwargs)
+		finally:
+			self._callbacks_lock.reader_release()
+
+
+	def __execute_callback_called_by_new_thread(self, _trigger_event, _callback_array, **kwargs):
+		try:
+			# self._logger.debug("ANDYTEST __execute_callback_called_by_new_thread() called")
+			self._callbacks_lock.reader_acquire()
+			for my_cb in _callback_array:
+				try:
+					# self._logger.debug("Executing callback for '%s' with kwargs: %s ", _trigger_event, kwargs)
+					my_cb(**kwargs)
+				except Exception as e:
+					self._logger.exception("Exception in a callback for event: %s : ", _trigger_event)
+		except:
+			self._logger.exception("Exception in __execute_callback_called_by_new_thread() for event: %s : ", _trigger_event)
+		finally:
+			self._callbacks_lock.reader_release()
+
+
 
 	def _subscribe(self):
 		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self.shutdown)
@@ -193,8 +264,8 @@ class IoBeamHandler(object):
 		if socket_file is not None:
 			self.SOCKET_FILE = socket_file
 
-		self._worker = threading.Thread(target=self._work)
-		self._worker.daemon = True # verify if this is good here....
+		self._worker = threading.Thread(target=self._work, name="iobeamHandler")
+		self._worker.daemon = True
 		self._worker.start()
 
 
@@ -409,10 +480,11 @@ class IoBeamHandler(object):
 
 	def _handle_laser_message(self, message, token):
 		action = token[0] if len(token) > 0 else None
-		payload = self._as_number(token[1]) if len(token) > 1 else None
+		temp = self._as_number(token[1]) if len(token) > 1 else None
 
-		if action == self.MESSAGE_ACTION_LASER_TEMP and payload is not None:
-			self._fireEvent(IoBeamEvents.LASER_TEMP, dict(log=False, val=payload))
+		if action == self.MESSAGE_ACTION_LASER_TEMP and temp is not None:
+			# self._fireEvent(IoBeamEvents.LASER_TEMP, dict(log=False, val=payload))
+			self._call_callback(IoBeamEvents.LASER_TEMP, message, temp=temp)
 		else:
 			return self._handle_invalid_message(message)
 
@@ -433,7 +505,6 @@ class IoBeamHandler(object):
 			self._logger.debug("_handle_iobeam_message(): Received unknown message for device 'iobeam'. NOT counting as error. Message: %s", message)
 			return 0
 
-
 	def _handle_error_message(self, message, token):
 		action = token[0] if len(token) > 0 else None
 		if action == "reconnect":
@@ -444,10 +515,13 @@ class IoBeamHandler(object):
 		self._logger.warn("Received mesage about unknown device: %s", message)
 		return 0
 
-
 	def _fireEvent(self, event, payload=None):
 		self._event_bus.fire(event, payload)
 
+	def _normalize_command(self, cmd):
+		if cmd is None:
+			return None
+		return cmd.replace("\n", '')
 
 	def _as_number(self, str):
 		if str is None: return None

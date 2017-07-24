@@ -38,7 +38,9 @@ class TemperatureManager(object):
 		self._start_temp_timer()
 
 	def _subscribe(self):
-		_mrbeam_plugin_implementation._event_bus.subscribe(IoBeamEvents.LASER_TEMP, self.onEvent)
+		# _mrbeam_plugin_implementation._event_bus.subscribe(IoBeamEvents.LASER_TEMP, self.onEvent)
+		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamEvents.LASER_TEMP, self.handle_temp)
+
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self.onEvent)
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self.onEvent)
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_CANCELLED, self.onEvent)
@@ -61,15 +63,19 @@ class TemperatureManager(object):
 		elif event == OctoPrintEvents.SHUTDOWN:
 			self.shutdown()
 
-	def handle_temp(self, payload):
-		temp = payload['val'] if 'val' in payload else None
-		self.temperature = temp
+	# def handle_temp(self, payload):
+	def handle_temp(self, **kwargs):
+		# temp = payload['val'] if 'val' in payload else None
+		self._logger.debug("ANDYTEST handle_temp() kwargs: %s", kwargs)
+		self.temperature = kwargs['temp']
 		self.temperature_ts = time.time()
 		self._check_temp_val()
 		self.send_status_to_frontend(self.temperature)
 
 	def request_temp(self):
-		_mrbeam_plugin_implementation._ioBeam.send_command("laser:temp")
+		# _mrbeam_plugin_implementation._ioBeam.send_command("laser:temp")
+		result = _mrbeam_plugin_implementation._ioBeam.send_temperature_request()
+		self._logger.debug("ANDYTEST request_temp() result: %s", result)
 
 	def cooling_stop(self):
 		if  _mrbeam_plugin_implementation._oneButtonHandler.is_printing():
