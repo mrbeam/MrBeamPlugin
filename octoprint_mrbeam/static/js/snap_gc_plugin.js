@@ -65,7 +65,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
       // generate gcode
       var gcode = mrbeam.path.gcode(paths);
 
-      element.attr("mb:gc", gcode | " ");
+      element.attr("mb:gc", gcode || " ");
     });
   };
 
