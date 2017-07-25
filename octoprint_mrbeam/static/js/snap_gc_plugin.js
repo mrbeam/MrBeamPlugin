@@ -20,7 +20,6 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
   Element.prototype.embed_gc = function (correctionMatrix, gc_options) {
     // settings
-    var tolerance = gc_options.precision;
     var bounds = gc_options.clipRect;
                           
     this.selectAll("path").forEach(function (element) {
@@ -36,6 +35,15 @@ Snap.plugin(function (Snap, Element, Paper, global) {
           matrix.c, matrix.d,
           matrix.e, matrix.f
       ];
+
+      var norm = (x, y) => Math.sqrt(x**2 + y**2);
+
+      var scaleX = norm(matrix.a, matrix.b);
+      var scaleY = norm(matrix.c, matrix.d);
+
+      var scale = Math.max(scaleX, scaleY);
+
+      var tolerance = gc_options.precision / scale;
 
       // parse path string
       var pathString = element.attr("d");
