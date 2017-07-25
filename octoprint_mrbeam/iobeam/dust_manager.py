@@ -2,7 +2,7 @@ import time
 import threading
 import numbers
 from octoprint.events import Events as OctoPrintEvents
-from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
+from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents, IoBeamValueEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
 # singleton
@@ -41,7 +41,7 @@ class DustManager(object):
 		self._logger.debug("initialized!")
 
 	def _subscribe(self):
-		_mrbeam_plugin_implementation._event_bus.subscribe(IoBeamEvents.DUST_VALUE, self.onEvent)
+		_mrbeam_plugin_implementation._event_bus.subscribe(IoBeamValueEvents.DUST_VALUE, self.onEvent)
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_STARTED, self.onEvent)
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self.onEvent)
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self.onEvent)
@@ -49,7 +49,7 @@ class DustManager(object):
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self.onEvent)
 
 	def onEvent(self, event, payload):
-		if event == IoBeamEvents.DUST_VALUE:
+		if event == IoBeamValueEvents.DUST_VALUE:
 			self._handle_dust(payload)
 		elif event == OctoPrintEvents.PRINT_STARTED:
 			self._start_dust_extraction()

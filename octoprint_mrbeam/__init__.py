@@ -223,12 +223,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._settings.set(["current_profile_id"], selectedProfile['id'])
 
 	def on_shutdown(self):
-		self._logger.info("on_shutdown()")
+		self._logger.debug("Mr Beam Plugin stopping...")
 		self._ioBeam.shutdown()
 		self._lid_handler.shutdown()
 		self._temperatureManager.shutdown()
+		self._dustManager.shutdown()
 		time.sleep(2)
-		self._logger.debug("on_shutdown() sleept")
+		self._logger.info("Mr Beam Plugin stopped.")
 
 	##~~ AssetPlugin mixin
 
