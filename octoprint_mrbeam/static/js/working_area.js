@@ -95,7 +95,7 @@ $(function(){
 		self.log = [];
 
 		self.gc_options = {
-			precision: 0.1,
+			precision: 0.075,
 			optimize_travel: true,
 			small_paths_first: true
 		};
