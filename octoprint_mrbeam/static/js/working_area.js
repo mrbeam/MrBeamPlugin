@@ -458,13 +458,13 @@ $(function(){
 					flowrootEl.remove();
 				}
 
-				var svgClasses = {};
-				f.selectAll('path').forEach(function (el, i) {
-					var elClass = el.attr('class');
-					if(svgClasses[elClass] === undefined){
-						console.log(elClass);
-					}
-				});
+//				var svgClasses = {};
+//				f.selectAll('path').forEach(function (el, i) {
+//					var elClass = el.attr('class');
+//					if(svgClasses[elClass] === undefined){
+//						console.log(elClass);
+//					}
+//				});
 				// find all elements with "display=none" and remove them
 				f.selectAll("[display=none]").remove();
 				f.selectAll("script").remove();
@@ -628,7 +628,7 @@ $(function(){
 			// detect Corel
 //				return {generator: gen, version: version};
 
-			// detect Illustrator by comment
+			// detect Illustrator by comment (works with 'save as svg')
 			// <!-- Generator: Adobe Illustrator 16.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
 			var children = f.node.childNodes;
 			for (var i = 0; i < children.length; i++) {
@@ -643,13 +643,15 @@ $(function(){
 					}
 				}
 			}
-//			Array.from(f.node.childNodes).forEach(function (entry) {
-//				if (entry.nodeType === 8) { // Nodetype 8 = comment
-//					if (entry.textContent.indexOf('Illustrator') > -1) {
-//						new PNotify({title: gettext("Illustrator SVG Detected"), text: "Illustrator SVG detected! To preserve correct scale, please go to the \'Settings\' menu and change the \'SVG dpi\' field under \'Plugins/Svg Conversion\' according to your file. And add it again.", type: "info", hide: false});
-//					}
-//				}
-//			});
+			
+			// detect Illustrator by data-name (for 'export as svg')
+			var root_attributes = f.node.attributes;
+			if(root_attributes['data-name']){
+				gen = 'illustrator';
+				version = '?';
+				console.log("Generator:", gen, version);
+				return { generator: gen, version: version };
+			}
 
 			// detect Method Draw by comment
 			// <!-- Created with Method Draw - http://github.com/duopixel/Method-Draw/ -->
@@ -724,6 +726,10 @@ $(function(){
 				} else if (generator.generator === 'illustrator') {
 					console.log("illustrator, px @ 72dpi");
 					declaredUnit = 'px_illustrator';
+				} else if (generator.generator === 'unknown'){
+					console.log('unable to detect generator, using settings->svgDPI:', self.svgDPI());
+					declaredUnit = 'px_settings';
+					self.uuconv.px_settings = self.svgDPI() / 90; // scale to our internal 90
 				}
 			}
 			var declaredUnitValue = self.uuconv[declaredUnit];
