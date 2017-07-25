@@ -810,7 +810,7 @@ $(function(){
 			var spacer = 2;
 			var label = elem.attr('mb:origin');
 			var placed = snap.selectAll("g[mb\\:origin='"+label+"']");
-			var maxY = 0;
+			var maxY = -9999;
 			var minX = self.workingAreaWidthMM();
 			var lowestRow = [];
 			var leftest = null;
