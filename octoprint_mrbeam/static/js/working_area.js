@@ -300,7 +300,8 @@ $(function(){
 			snap.selectAll('#userContent *[stroke]:not(#bbox)').forEach(function (el) {
 				var colHex = el.attr().stroke;
 				if (typeof(colHex) !== 'undefined' && colHex !== 'none' && typeof(colHash[colHex]) === 'undefined') {
-					var colName = self.colorNamer.classify(colHex);
+//					var colName = self.colorNamer.classify(colHex);
+					var colName = colHex;
 					colFound.push({hex: colHex, name: colName});
 					colHash[colHex] = 1;
 				}
@@ -800,6 +801,7 @@ $(function(){
 			self.abortFreeTransforms();
 			var srcElem = snap.select('#'+src.previewId);
 			var newSvg = srcElem.clone();
+			newSvg.clean_gc();
 			var file = {url: src.url, origin: src.origin, name: src.name, type: src.type, refs:{download: src.url}};
 			var id = self.getEntryId(file);
 			var previewId = self.generateUniqueId(id, file); 
@@ -817,6 +819,15 @@ $(function(){
 
 			self.placedDesigns.push(file);
 			self.placeSmart(newSvg);
+//			newSvg.ftRegisterBeforeTransformCallback(function(){
+//				newSvg.clean_gc();
+//			});
+//			newSvg.ftRegisterAfterTransformCallback(function(){
+//				newSvg.embed_gc(self.flipYMatrix(), self.gc_options());
+//			});
+
+
+			newSvg.embed_gc(self.flipYMatrix(), self.gc_options());
 		};
 		
 		self.placeSmart = function(elem){
