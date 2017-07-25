@@ -799,11 +799,6 @@ $(function(){
 			var previewId = self.generateUniqueId(id, file); 
 			newSvg.attr({id: previewId, class: 'userSVG'});
 			snap.select("#userContent").append(newSvg);
-			newSvg.ftRegisterOnTransformCallback(self.svgTransformUpdate);
-			newSvg.transformable();
-			setTimeout(function(){
-				newSvg.ftReportTransformation();
-			}, 200);
 
 			file.id = id; // list entry id
 			file.previewId = previewId;
@@ -811,15 +806,20 @@ $(function(){
 
 			self.placedDesigns.push(file);
 			self.placeSmart(newSvg);
-//			newSvg.ftRegisterBeforeTransformCallback(function(){
-//				newSvg.clean_gc();
-//			});
-//			newSvg.ftRegisterAfterTransformCallback(function(){
-//				newSvg.embed_gc(self.flipYMatrix(), self.gc_options());
-//			});
+			newSvg.transformable();
+			newSvg.ftRegisterOnTransformCallback(self.svgTransformUpdate);
+			newSvg.ftRegisterBeforeTransformCallback(function(){
+				newSvg.clean_gc();
+			});
+			newSvg.ftRegisterAfterTransformCallback(function(){
+				newSvg.embed_gc(self.flipYMatrix(), self.gc_options());
+			});
+			setTimeout(function(){
+				newSvg.ftReportTransformation();
+			}, 200);
 
 
-//			newSvg.embed_gc(self.flipYMatrix(), self.gc_options());
+			newSvg.embed_gc(self.flipYMatrix(), self.gc_options());
 		};
 		
 		self.placeSmart = function(elem){
@@ -867,7 +867,11 @@ $(function(){
 			} 
 			var dx = newX - elemBBox.x;
 			var dy = newY - elemBBox.y;
-			elem.transform('t'+dx+','+dy);
+			var elemCTM = elem.transform().localMatrix;
+			elemCTM.e += dx;
+			elemCTM.f += dy;
+//			elem.transform('t'+dx+','+dy);
+			elem.transform(elemCTM);
 		};
 
 		self.toggleTransformHandles = function(file){
