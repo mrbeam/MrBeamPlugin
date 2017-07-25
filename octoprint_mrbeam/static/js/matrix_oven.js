@@ -168,14 +168,19 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 				console.log('No attribute "x" in text-parent tag. Using 0; ',y);
 			}
 
-			var transform = elem.parent().transform();
-			var matrix = transform['totalMatrix'].add(correctionMatrix);
-			var transformedX = matrix.x(x, y);
-			var transformedY = matrix.y(x, y);
-			var transformedW = matrix.x(x+w, y+h) - transformedX;
-			var transformedH = matrix.y(x+w, y+h) - transformedY;
+			var parent = elem.parent();
+			if(parent.node.getCTM !== undefined){
+				var transform = elem.parent().transform();
+				var matrix = transform['totalMatrix'].add(correctionMatrix);
+				var transformedX = matrix.x(x, y);
+				var transformedY = matrix.y(x, y);
+				var transformedW = matrix.x(x+w, y+h) - transformedX;
+				var transformedH = matrix.y(x+w, y+h) - transformedY;
 
-			elem.parent().attr({x: transformedX, y: transformedY, width: transformedW, height: transformedH, text_set:true});
+				elem.parent().attr({x: transformedX, y: transformedY, width: transformedW, height: transformedH, text_set:true});
+			} else {
+				console.log("getCTM not available. Skipping:", parent.node.type);
+			}
 			return;
 		}
 
