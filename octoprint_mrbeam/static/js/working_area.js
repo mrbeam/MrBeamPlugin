@@ -95,7 +95,7 @@ $(function(){
 		self.log = [];
 
 		self.gc_options = {
-			precision: 0.075,
+			precision: 0.05,
 			optimize_travel: true,
 			small_paths_first: true
 		};
@@ -870,7 +870,6 @@ $(function(){
 			var elemCTM = elem.transform().localMatrix;
 			elemCTM.e += dx;
 			elemCTM.f += dy;
-//			elem.transform('t'+dx+','+dy);
 			elem.transform(elemCTM);
 		};
 
