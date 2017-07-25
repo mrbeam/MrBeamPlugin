@@ -3,7 +3,7 @@ import threading
 import time
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
-from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
+from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents, IoBeamValueEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
 
@@ -38,8 +38,7 @@ class TemperatureManager(object):
 		self._start_temp_timer()
 
 	def _subscribe(self):
-		# _mrbeam_plugin_implementation._event_bus.subscribe(IoBeamEvents.LASER_TEMP, self.onEvent)
-		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamEvents.LASER_TEMP, self.handle_temp)
+		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.LASER_TEMP, self.handle_temp)
 
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self.onEvent)
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self.onEvent)
@@ -56,7 +55,7 @@ class TemperatureManager(object):
 		self.send_cooling_state_to_frontend(self.is_cooling())
 
 	def onEvent(self, event, payload):
-		if event == IoBeamEvents.LASER_TEMP:
+		if event == IoBeamValueEvents.LASER_TEMP:
 			self.handle_temp(payload)
 		elif event in (OctoPrintEvents.PRINT_DONE, OctoPrintEvents.PRINT_FAILED, OctoPrintEvents.PRINT_CANCELLED):
 			self.reset()
@@ -64,7 +63,6 @@ class TemperatureManager(object):
 			self.shutdown()
 
 	def handle_temp(self, **kwargs):
-		# self._logger.debug("ANDYTEST handle_temp() kwargs: %s", kwargs)
 		self.temperature = kwargs['temp']
 		self.temperature_ts = time.time()
 		self._check_temp_val()
@@ -105,9 +103,10 @@ class TemperatureManager(object):
 
 	def _temp_timer_callback(self):
 		try:
-			self.request_temp()
-			self._stop_if_temp_is_not_current()
-			self._start_temp_timer()
+			if not self._shutting_down:
+				self.request_temp()
+				self._stop_if_temp_is_not_current()
+				self._start_temp_timer()
 		except:
 			self._logger.exception("Exception in _temp_timer_callback(): ")
 			# this might have been the reason for the exception. Let's try to stay alive anyway...

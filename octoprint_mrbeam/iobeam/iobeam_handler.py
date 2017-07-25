@@ -1,6 +1,9 @@
 import socket
+import sys
 import threading
 import time
+import datetime
+import collections
 
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
@@ -17,6 +20,9 @@ def ioBeamHandler(eventBusOct, socket_file=None):
 
 
 class IoBeamEvents(object):
+	'''
+	These events are meant to be handled by OctoPrints event system
+	'''
 	CONNECT =            "iobeam.connect"
 	DISCONNECT =         "iobeam.disconnect"
 	ONEBUTTON_PRESSED =  "iobeam.onebutton.pressed"
@@ -26,11 +32,25 @@ class IoBeamEvents(object):
 	INTERLOCK_CLOSED =   "iobeam.interlock.closed"
 	LID_OPENED =         "iobeam.lid.opened"
 	LID_CLOSED =         "iobeam.lid.closed"
+
+class IoBeamValueEvents(object):
+	'''
+	These Values / events are not intended to be handled byt OctoPrints event system
+	but by IoBeamHandler's own event system
+	'''
 	LASER_TEMP =         "iobeam.laser.temp"
 	DUST_VALUE =         "iobeam.dust.value"
 
 
 class IoBeamHandler(object):
+
+	# > iobeam:<data>
+	# > iobeam:version:<version_string>
+	# > iobeam:debug:<data>
+	# < iobeam:<data>
+	# < iobeam:client:<client_id_string>
+	# < info
+	# < debug
 
 	# > onebtn:up
 	# > onebtn:pr
@@ -49,27 +69,33 @@ class IoBeamHandler(object):
 	# > intlk:3:cl
 	# > steprun:on
 	# > steprun:off
+	# > steprun:error
 
 	# < fan:on:< value0 - 100 >
 	# > fan:on:ok
+	# > fan:on:error
 	# < fan:off
 	# > fan:off:ok
+	# > fan:off:error
 	# < fan:auto
 	# > fan:auto:ok
+	# > fan:auto:error
 	# < fan:factor:< factor >
 	# > fan:factor:ok
+	# > fan:factor:error
 	# < fan:version
 	# > fan:version:<version-string>
+	# > fan:version:error
 	# < fan:dust
 	# > fan:dust:<dust value 0.3>
+	# > fan:dust:error
 	# < fan:rpm
 	# > fan:rpm:<rpm value>
+	# > fan:rpm:error
 
 	# < laser:temp
 	# > laser:temp:< temperatur >
 	# > laser:temp:error:<error type or message>
-
-	# < info
 
 	# How to test and debug:
 	# in config.yaml set
@@ -83,6 +109,11 @@ class IoBeamHandler(object):
 
 	SOCKET_FILE = "/var/run/mrbeam_iobeam.sock"
 	MAX_ERRORS = 10
+
+	CLIENT_ID = "MrBeamPlugin.v{vers_mrb}/OctoPrint.v{vers_op}"
+
+	PROCESSING_TIMES_LOG_LENGTH = 100
+	PROCESSING_TIME_WARNING_THRESHOLD = 0.1
 
 	MESSAGE_LENGTH_MAX = 1024
 	MESSAGE_NEWLINE = "\n"
@@ -141,6 +172,8 @@ class IoBeamHandler(object):
 		self._subscribe()
 		self._initWorker(socket_file)
 
+		self.processing_times_log = collections.deque([], self.PROCESSING_TIMES_LOG_LENGTH)
+
 	def isRunning(self):
 		return self._worker.is_alive()
 
@@ -160,6 +193,10 @@ class IoBeamHandler(object):
 		return self._interlocks.keys()
 
 	def send_temperature_request(self):
+		'''
+		Request a single temperature value from iobeam.
+		:return: True if the command was sent sucessfully.
+		'''
 		return self._send_command("{}:{}".format(self.MESSAGE_DEVICE_LASER, self.MESSAGE_ACTION_LASER_TEMP))
 
 	def send_command(self, command):
@@ -179,11 +216,10 @@ class IoBeamHandler(object):
 		command = self._normalize_command(command)
 		if command is None:
 			raise ValueError("Command must not be None in send_command().")
+		if self._shutdown_signaled:
+			return False
 		if not self._isConnected:
 			self._logger.warn("send_command() Can't send command since socket is not connected (yet?). Command: %s", command)
-			return False
-		if self._shutdown_signaled:
-			self._logger.debug("send_command() Can't send command while iobeam is shutting down. Command: %s", command)
 			return False
 		if self._my_socket is None:
 			self._logger.warn("send_command() Can't send command while there's no connection on socket. Command: %s", command)
@@ -199,14 +235,17 @@ class IoBeamHandler(object):
 		return True
 
 	def subscribe(self, event, callback):
+		'''
+		Subscibe to an event
+		:param event:
+		:param callback:
+		'''
 		try:
 			self._callbacks_lock.writer_acquire()
 			if event in self._callbacks:
 				self._callbacks[event].append(callback)
-				# self._logger.debug("ANDYTEST subscribe() event: %s (adding callback to existing event entry.)", event)
 			else:
 				self._callbacks[event] = [callback]
-				# self._logger.debug("ANDYTEST subscribe() event: %s (created new event entry.)", event)
 		except:
 			self._logger.exception("Exception while subscribing to event '%s': ", event)
 		finally:
@@ -218,19 +257,20 @@ class IoBeamHandler(object):
 			if _trigger_event in self._callbacks:
 				_callback_array = self._callbacks[_trigger_event]
 				kwargs['event'] = _trigger_event
-				kwargs['message'] = message
-				# # TODO: We need one dedicated thread to handle ALL callbacks instead of creating a new one for every command...
-				thread_params = dict(target = self.__execute_callback_called_by_new_thread,
-				                     name = "iobeamCB_{}".format(_trigger_event),
-				                     args = (_trigger_event, _callback_array),
-				                     kwargs = kwargs)
-				my_thread = threading.Thread(**thread_params)
-				my_thread.daemon = True
-				my_thread.start()
-				# self._logger.debug("ANDYTEST _call_callback() _trigger_event: %s | %s callbacks registered. Thread started (still alive:%s) with params: %s", _trigger_event, len(_callback_array), my_thread.is_alive(), thread_params)
-			else:
-				# self._logger.debug("ANDYTEST _call_callback() _trigger_event: %s | No callbacks registered.", _trigger_event)
-				pass
+ 				kwargs['message'] = message
+
+				# If handling of these messages blockes iobeam_handling, we might need a threadpool or so.
+				# One thread for handling this is almost the same bottleneck as current solution,
+				# so I think we would need a thread pool here... But maybe this would be just over engineering.
+				self.__execute_callback_called_by_new_thread(_trigger_event, _callback_array, **kwargs)
+
+				# thread_params = dict(target = self.__execute_callback_called_by_new_thread,
+				#                      name = "iobeamCB_{}".format(_trigger_event),
+				#                      args = (_trigger_event, _callback_array),
+				#                      kwargs = kwargs)
+				# my_thread = threading.Thread(**thread_params)
+				# my_thread.daemon = True
+				# my_thread.start()
 		except:
 			self._logger.exception("Exception in _call_callback() _trigger_event: %s, message: %s, kwargs: %s", _trigger_event, message, kwargs)
 		finally:
@@ -239,11 +279,9 @@ class IoBeamHandler(object):
 
 	def __execute_callback_called_by_new_thread(self, _trigger_event, _callback_array, **kwargs):
 		try:
-			# self._logger.debug("ANDYTEST __execute_callback_called_by_new_thread() called")
 			self._callbacks_lock.reader_acquire()
 			for my_cb in _callback_array:
 				try:
-					# self._logger.debug("Executing callback for '%s' with kwargs: %s ", _trigger_event, kwargs)
 					my_cb(**kwargs)
 				except Exception as e:
 					self._logger.exception("Exception in a callback for event: %s : ", _trigger_event)
@@ -251,8 +289,6 @@ class IoBeamHandler(object):
 			self._logger.exception("Exception in __execute_callback_called_by_new_thread() for event: %s : ", _trigger_event)
 		finally:
 			self._callbacks_lock.reader_release()
-
-
 
 	def _subscribe(self):
 		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self.shutdown)
@@ -293,7 +329,9 @@ class IoBeamHandler(object):
 			self._isConnected = True
 			self._errors = 0
 			self._connectionException = None
-			self._logger.debug("Socket connected")
+
+			id =self._send_identification()
+			self._logger.info("iobeam connection established. Identified ourselfs as '%s'", id)
 			self._fireEvent(IoBeamEvents.CONNECT)
 
 			while not self._shutdown_signaled:
@@ -314,7 +352,7 @@ class IoBeamHandler(object):
 						break
 
 					# here we see what's in the data...
-					my_errors = self._handleMessages(data)
+					my_errors, _ = self._handleMessages(data)
 					if my_errors > 0:
 						self._errors += my_errors
 						if self._errors >= self.MAX_ERRORS:
@@ -347,12 +385,15 @@ class IoBeamHandler(object):
 		if not data: return 1
 
 		error_count = 0
+		message_count = 0
 		message_list = data.split(self.MESSAGE_NEWLINE)
 		for message in message_list:
+			processing_start = time.time()
 			if not message: continue
 			if message == '.': continue # ping
 
 			err = -1
+			message_count =+ 1
 			# self._logger.debug("_handleMessages() handling message: %s", message)
 
 			tokens = message.split(self.MESSAGE_SEPARATOR)
@@ -384,7 +425,10 @@ class IoBeamHandler(object):
 			if err >= 0:
 				error_count += err
 
-		return error_count
+			processing_time = time.time() - processing_start
+			self._handle_precessing_time(processing_time, message, err)
+
+		return error_count, message_count
 
 
 
@@ -460,7 +504,7 @@ class IoBeamHandler(object):
 		payload = self._as_number(token[1]) if len(token) > 1 else None
 
 		if action == self.MESSAGE_ACTION_DUST_VALUE and payload is not None:
-			self._fireEvent(IoBeamEvents.DUST_VALUE, dict(log=False, val=payload))
+			self._fireEvent(IoBeamValueEvents.DUST_VALUE, dict(log=False, val=payload))
 		elif action == self.MESSAGE_ACTION_FAN_ON:
 			pass
 		elif action == self.MESSAGE_ACTION_FAN_OFF:
@@ -483,8 +527,7 @@ class IoBeamHandler(object):
 		temp = self._as_number(token[1]) if len(token) > 1 else None
 
 		if action == self.MESSAGE_ACTION_LASER_TEMP and temp is not None:
-			# self._fireEvent(IoBeamEvents.LASER_TEMP, dict(log=False, val=payload))
-			self._call_callback(IoBeamEvents.LASER_TEMP, message, temp=temp)
+			self._call_callback(IoBeamValueEvents.LASER_TEMP, message, temp=temp)
 		else:
 			return self._handle_invalid_message(message)
 
@@ -501,6 +544,8 @@ class IoBeamHandler(object):
 			else:
 				self._logger.warn("_handle_iobeam_message(): Received iobeam:version message without version number. Counting as error. Message: %s", message)
 				return 1
+		elif action == 'debug':
+			self.log_debug_processing_stats()
 		else:
 			self._logger.debug("_handle_iobeam_message(): Received unknown message for device 'iobeam'. NOT counting as error. Message: %s", message)
 			return 0
@@ -514,6 +559,45 @@ class IoBeamHandler(object):
 	def _handle_unknown_device_message(self, message, token):
 		self._logger.warn("Received mesage about unknown device: %s", message)
 		return 0
+
+	def _handle_precessing_time(self, processing_time, message, err, log_stats=False):
+		self.processing_times_log.append(dict(ts=time.time(),
+		                                      processing_time = processing_time,
+		                                      message = message,
+		                                      error_count = err))
+
+		if processing_time > self.PROCESSING_TIME_WARNING_THRESHOLD:
+			# TODO: write an error to our analytics module
+			self._logger.warn("Message handling time took %ss. (Errors: %s, message: '%s')", processing_time, err, message)
+		if log_stats or processing_time > self.PROCESSING_TIME_WARNING_THRESHOLD:
+			self.log_debug_processing_stats()
+
+	def log_debug_processing_stats(self):
+		# TODO: find a way to trigger this manually for debugging and general curiosity.
+			min = sys.maxint
+			max = 0
+			sum = 0
+			count = 0
+			earliest = time.time()
+			for entry in self.processing_times_log:
+				if entry['processing_time'] < min: min = entry['processing_time']
+				if entry['processing_time'] > max: max = entry['processing_time']
+				if entry['ts'] < earliest: earliest = entry['ts']
+				sum += entry['processing_time']
+				count += 1
+			if count <= 0:
+				self._logger.error("_handle_precessing_time() stats: message count is <= 0, something seems be wrong.")
+			else:
+				avg = sum/count
+				time_formatted = datetime.datetime.fromtimestamp(earliest).strftime('%Y-%m-%d %H:%M:%S')
+				self._logger.info("Message handling stats: %s message since %s; max: %ss, avg: %ss, min: %ss", count, time_formatted, max, avg, min)
+
+	def _send_identification(self):
+		client_name = self.CLIENT_ID.format(vers_mrb=_mrbeam_plugin_implementation._plugin_version, vers_op="?")
+		cmd = "{}:client:{}".format(self.MESSAGE_DEVICE_IOBEAM, client_name)
+		sent = self._send_command(cmd)
+		return client_name if sent else False
+
 
 	def _fireEvent(self, event, payload=None):
 		self._event_bus.fire(event, payload)
