@@ -129,7 +129,8 @@ class LaserCutterProfileManager(object):
 		),
 		laser=dict(
 			max_temperature=53.0,
-			hysteresis_temperature=43.0
+			hysteresis_temperature=43.0,
+			cooling_duration=-1 # if set to positive values: enables time based cooling resuming rather that per hysteresis_temperature
 		),
 		dust=dict(
 			extraction_limit=0.2,
