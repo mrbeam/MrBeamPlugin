@@ -614,26 +614,19 @@ $(function(){
 		self._get_generator_info = function(f){
 			var gen = null;
 			var version = null;
+			var root_attrs;
+			if(f.select('svg') === null){
+				root_attrs = f.node.attributes;
+			} else {
+				root_attrs = f.select('svg').node.attributes;
+			}
 			
 			// detect Inkscape by attribute
-			var root = f.select('svg');
-			if(root === null){
-				console.log("svg root el not found");
-				var attrs = f.node.attributes;
-				var inkscape_version = attrs['inkscape:version'];
-				if(inkscape_version !== undefined){
-					version = inkscape_version;
-					console.log("XX Generator:", gen, version);
-					return {generator: gen, version: version};
-				}
-			} else {
-				var inkscape_version = f.select('svg').attr('inkscape:version');
-				if (inkscape_version !== null) {
-					gen = 'inkscape';
-					version = inkscape_version;
-					console.log("Generator:", gen, version);
-					return {generator: gen, version: version};
-				}
+			var inkscape_version = root_attrs['inkscape:version'];
+			if(inkscape_version !== undefined){
+				version = inkscape_version;
+				console.log("Generator:", gen, version);
+				return {generator: gen, version: version};
 			}
 
 			// detect Corel
@@ -656,8 +649,7 @@ $(function(){
 			}
 			
 			// detect Illustrator by data-name (for 'export as svg')
-			var root_attributes = f.node.attributes;
-			if(root_attributes['data-name']){
+			if(root_attrs && root_attrs['data-name']){
 				gen = 'illustrator';
 				version = '?';
 				console.log("Generator:", gen, version);
@@ -827,7 +819,7 @@ $(function(){
 //			});
 
 
-			newSvg.embed_gc(self.flipYMatrix(), self.gc_options());
+//			newSvg.embed_gc(self.flipYMatrix(), self.gc_options());
 		};
 		
 		self.placeSmart = function(elem){
