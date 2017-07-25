@@ -467,6 +467,7 @@ $(function(){
 				});
 				// find all elements with "display=none" and remove them
 				f.selectAll("[display=none]").remove();
+				f.selectAll("script").remove();
 
 				var generator_info = self._get_generator_info(f);
 
@@ -604,12 +605,24 @@ $(function(){
 			var version = null;
 			
 			// detect Inkscape by attribute
-			var inkscape_version = f.select('svg').attr('inkscape:version');
-			if (inkscape_version !== null) {
-				gen = 'inkscape';
-				version = inkscape_version;
-				console.log("Generator:", gen, version);
-				return {generator: gen, version: version};
+			var root = f.select('svg');
+			if(root === null){
+				console.log("svg root el not found");
+				var attrs = f.node.attributes;
+				var inkscape_version = attrs['inkscape:version'];
+				if(inkscape_version !== undefined){
+					version = inkscape_version;
+					console.log("XX Generator:", gen, version);
+					return {generator: gen, version: version};
+				}
+			} else {
+				var inkscape_version = f.select('svg').attr('inkscape:version');
+				if (inkscape_version !== null) {
+					gen = 'inkscape';
+					version = inkscape_version;
+					console.log("Generator:", gen, version);
+					return {generator: gen, version: version};
+				}
 			}
 
 			// detect Corel
@@ -787,65 +800,6 @@ $(function(){
 			file.misfit = "";
 
 			self.placedDesigns.push(file);
-		};
-
-		self.placeDXF = function(file) {
-			var url = self._getSVGserveUrl(file);
-
-			callback = function (f) {
-				var doc_dimensions = self._getDocumentDimensionAttributes(f);
-				var newSvgAttrs = self._getDocumentNamespaceAttributes(f);
-
-				// scale matrix
-				var mat = self.getDocumentViewBoxMatrix(doc_dimensions.width, doc_dimensions.height, doc_dimensions.viewbox);
-				var dpiscale = 90; // self.settings.settings.plugins.mrbeam.svgDPI();
-                var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(dpiscale).toTransformString();
-
-				var newSvg = snap.group(f.selectAll("svg>*"));
-				newSvg.attr('transform', scaleMatrixStr);
-
-				newSvg.bake(); // remove transforms
-				newSvg.selectAll('path').attr({strokeWidth: '0.5', 'vector-effect':'non-scaling-stroke'});
-				newSvg.attr(newSvgAttrs);
-				var id = self.getEntryId(file);
-				var previewId = self.generateUniqueId(id); // appends -# if multiple times the same design is placed.
-				newSvg.attr({id: previewId});
-				snap.select("#userContent").append(newSvg);
-				newSvg.transformable();
-				newSvg.ftRegisterOnTransformCallback(self.svgTransformUpdate);
-				setTimeout(function(){
-					newSvg.ftReportTransformation();
-				}, 200);
-				file.id = id; // list entry id
-				file.previewId = previewId;
-				file.url = url;
-				file.misfit = "";
-
-				self.placedDesigns.push(file);
-			};
-			Snap.loadDXF(url, callback);
-		};
-
-
-
-		self._getDocumentNamespaceAttributes = function(file){
-			if(file.select('svg') === null){
-				root_attrs = file.node.attributes;
-			} else {
-				var root_attrs = file.select('svg').node.attributes;
-			}
-			var namespaces = {};
-
-			// iterate svg tag attributes
-			for(var i = 0; i < root_attrs.length; i++){
-				var attr = root_attrs[i];
-
-				// copy namespaces into group
-				if(attr.name.indexOf("xmlns") === 0){
-					namespaces[attr.name] = attr.value;
-				}
-			}
-			return namespaces;
 		};
 
 		self.toggleTransformHandles = function(file){
