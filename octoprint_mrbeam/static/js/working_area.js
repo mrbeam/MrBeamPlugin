@@ -466,6 +466,7 @@ $(function(){
 				});
 				// find all elements with "display=none" and remove them
 				f.selectAll("[display=none]").remove();
+				f.selectAll("script").remove();
 
 				var generator_info = self._get_generator_info(f);
 
@@ -607,12 +608,24 @@ $(function(){
 			var version = null;
 			
 			// detect Inkscape by attribute
-			var inkscape_version = f.select('svg').attr('inkscape:version');
-			if (inkscape_version !== null) {
-				gen = 'inkscape';
-				version = inkscape_version;
-				console.log("Generator:", gen, version);
-				return {generator: gen, version: version};
+			var root = f.select('svg');
+			if(root === null){
+				console.log("svg root el not found");
+				var attrs = f.node.attributes;
+				var inkscape_version = attrs['inkscape:version'];
+				if(inkscape_version !== undefined){
+					version = inkscape_version;
+					console.log("XX Generator:", gen, version);
+					return {generator: gen, version: version};
+				}
+			} else {
+				var inkscape_version = f.select('svg').attr('inkscape:version');
+				if (inkscape_version !== null) {
+					gen = 'inkscape';
+					version = inkscape_version;
+					console.log("Generator:", gen, version);
+					return {generator: gen, version: version};
+				}
 			}
 
 			// detect Corel
