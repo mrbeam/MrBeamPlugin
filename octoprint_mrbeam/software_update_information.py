@@ -278,7 +278,7 @@ def set_info_camera_calibration(self, tier):
 	)
 
 	if tier in [SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_DEMO, SW_UPDATE_TIER_ANDY]:
-		branch = "master"
+		branch = "develop"
 		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name),
 			displayVersion=version,

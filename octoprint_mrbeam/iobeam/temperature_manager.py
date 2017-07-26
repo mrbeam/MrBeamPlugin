@@ -29,6 +29,8 @@ class TemperatureManager(object):
 		self.temperature_ts = time.time()
 		self.temperature_max = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['laser']['max_temperature']
 		self.hysteresis_temperature = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['laser']['hysteresis_temperature']
+		self.cooling_duration = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['laser']['cooling_duration']
+		self.mode_time_based = self.cooling_duration > 0
 		self.temp_timer = None
 		self.is_cooling_since = 0
 
@@ -38,6 +40,12 @@ class TemperatureManager(object):
 
 		self._subscribe()
 		self._start_temp_timer()
+
+		msg = "TemperatureManager initialized. temperature_max: {max}, {key}: {value}".format(
+			max = self.temperature_max,
+			key = "cooling_duration" if self.mode_time_based else "hysteresis_temperature",
+			value = self.cooling_duration if self.mode_time_based else self.hysteresis_temperature)
+		self._logger.info(msg)
 
 	def _subscribe(self):
 		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.LASER_TEMP, self.handle_temp)
@@ -53,6 +61,8 @@ class TemperatureManager(object):
 	def reset(self):
 		self.temperature_max = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['laser']['max_temperature']
 		self.hysteresis_temperature = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['laser']['hysteresis_temperature']
+		self.cooling_duration = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['laser']['cooling_duration']
+		self.mode_time_based = self.cooling_duration > 0
 		self.is_cooling_since = 0
 		self.send_cooling_state_to_frontend(self.is_cooling())
 
@@ -139,11 +149,24 @@ class TemperatureManager(object):
 			self.cooling_stop()
 
 	def _check_temp_val(self):
+		# cooling break
 		if not self.is_cooling() and (self.temperature is None or self.temperature > self.temperature_max):
-			self._logger.warn("Laser temperature exceeded limit. Current temp: %s, max: %s", self.temperature, self.temperature_max)
+			self._logger.info("Laser temperature exceeded limit. Current temp: %s, max: %s", self.temperature, self.temperature_max)
 			self.cooling_stop()
-		elif self.is_cooling() and self.temperature is not None and self.temperature <= self.hysteresis_temperature:
-			self._logger.warn("Laser temperature passed hysteresis limit. Current temp: %s, hysteresis: %s", self.temperature, self.hysteresis_temperature)
+		# resume hysteresis temp based
+		elif self.is_cooling() and \
+			not self.mode_time_based and \
+			self.temperature is not None and \
+			self.temperature <= self.hysteresis_temperature:
+			self._logger.info("Laser temperature passed hysteresis limit. Current temp: %s, hysteresis: %s", self.temperature, self.hysteresis_temperature)
+			self.cooling_resume()
+		# resume time based
+		elif self.is_cooling() and \
+			 self.mode_time_based and \
+			 time.time() - self.is_cooling_since > self.cooling_duration and\
+			 self.temperature is not None and \
+			 self.temperature < self.temperature_max:
+			self._logger.warn("Cooling break duration passed: %ss - Current temp: %s", self.cooling_duration, self.temperature)
 			self.cooling_resume()
 		else:
 			# self._logger.debug("Laser temperature nothing. Current temp: %s, self.is_cooling(): %s", self.temperatur, self.is_cooling())

@@ -369,6 +369,12 @@ $(function(){
 			});
 			return filePlaced;
 		};
+		
+		self.countPlacements = function(file){
+			var label = file["refs"]["download"];
+			var p = snap.selectAll("g[mb\\:origin='"+label+"']");
+			return p.length;
+		};
 
 		self.placeGcode = function(file){
 			var previewId = self.getEntryId(file);
@@ -460,6 +466,7 @@ $(function(){
 				});
 				// find all elements with "display=none" and remove them
 				f.selectAll("[display=none]").remove();
+				f.selectAll("script").remove();
 
 				var generator_info = self._get_generator_info(f);
 
@@ -503,8 +510,12 @@ $(function(){
 				newSvg.bake(); // remove transforms
 				newSvg.selectAll('path').attr({strokeWidth: '0.8', class:'vector_outline'});
 				var id = self.getEntryId(file);
-				var previewId = self.generateUniqueId(id); // appends -# if multiple times the same design is placed.
-				newSvg.attr({id: previewId, class: 'userSVG'});
+				var previewId = self.generateUniqueId(id, file); // appends -# if multiple times the same design is placed.
+				newSvg.attr({
+					id: previewId, 
+					class: 'userSVG', 
+					'mb:origin': file["refs"]["download"],
+				});
 				snap.select("#userContent").append(newSvg);
 				newSvg.transformable();
 				newSvg.ftRegisterOnTransformCallback(self.svgTransformUpdate);
@@ -574,7 +585,7 @@ $(function(){
 				newSvg.selectAll('path').attr({strokeWidth: '0.5', 'vector-effect':'non-scaling-stroke'});
 				newSvg.attr(newSvgAttrs);
 				var id = self.getEntryId(file);
-				var previewId = self.generateUniqueId(id); // appends -# if multiple times the same design is placed.
+				var previewId = self.generateUniqueId(id, file); // appends -# if multiple times the same design is placed.
 				newSvg.attr({id: previewId});
 				snap.select("#userContent").append(newSvg);
 				newSvg.transformable();
@@ -597,12 +608,24 @@ $(function(){
 			var version = null;
 			
 			// detect Inkscape by attribute
-			var inkscape_version = f.select('svg').attr('inkscape:version');
-			if (inkscape_version !== null) {
-				gen = 'inkscape';
-				version = inkscape_version;
-				console.log("Generator:", gen, version);
-				return {generator: gen, version: version};
+			var root = f.select('svg');
+			if(root === null){
+				console.log("svg root el not found");
+				var attrs = f.node.attributes;
+				var inkscape_version = attrs['inkscape:version'];
+				if(inkscape_version !== undefined){
+					version = inkscape_version;
+					console.log("XX Generator:", gen, version);
+					return {generator: gen, version: version};
+				}
+			} else {
+				var inkscape_version = f.select('svg').attr('inkscape:version');
+				if (inkscape_version !== null) {
+					gen = 'inkscape';
+					version = inkscape_version;
+					console.log("Generator:", gen, version);
+					return {generator: gen, version: version};
+				}
 			}
 
 			// detect Corel
@@ -671,7 +694,7 @@ $(function(){
 				}
 				if(attr.name === "height"){
 					doc_height = attr.value;
-					units_y = doc_width.replace(/[\d.]+/,'');
+					units_y = doc_height.replace(/[\d.]+/,'');
 				}
 				if(attr.name === "viewBox") doc_viewbox = attr.value;
 			}
@@ -762,12 +785,12 @@ $(function(){
 
 		self.duplicateSVG = function(src) {
 			self.abortFreeTransforms();
-			var newSvg = snap.select('#'+src.previewId).clone();
-			var file = {url: src.url, origin: src.origin, name: src.name, type: src.type};
+			var srcElem = snap.select('#'+src.previewId);
+			var newSvg = srcElem.clone();
+			var file = {url: src.url, origin: src.origin, name: src.name, type: src.type, refs:{download: src.url}};
 			var id = self.getEntryId(file);
-			var previewId = self.generateUniqueId(id); 
+			var previewId = self.generateUniqueId(id, file); 
 			newSvg.attr({id: previewId, class: 'userSVG'});
-			newSvg.transform();
 			snap.select("#userContent").append(newSvg);
 			newSvg.ftRegisterOnTransformCallback(self.svgTransformUpdate);
 			newSvg.transformable();
@@ -780,65 +803,55 @@ $(function(){
 			file.misfit = "";
 
 			self.placedDesigns.push(file);
+			self.placeSmart(newSvg);
 		};
-
-		self.placeDXF = function(file) {
-			var url = self._getSVGserveUrl(file);
-
-			callback = function (f) {
-				var doc_dimensions = self._getDocumentDimensionAttributes(f);
-				var newSvgAttrs = self._getDocumentNamespaceAttributes(f);
-
-				// scale matrix
-				var mat = self.getDocumentViewBoxMatrix(doc_dimensions.width, doc_dimensions.height, doc_dimensions.viewbox);
-				var dpiscale = 90; // self.settings.settings.plugins.mrbeam.svgDPI();
-                var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(dpiscale).toTransformString();
-
-				var newSvg = snap.group(f.selectAll("svg>*"));
-				newSvg.attr('transform', scaleMatrixStr);
-
-				newSvg.bake(); // remove transforms
-				newSvg.selectAll('path').attr({strokeWidth: '0.5', 'vector-effect':'non-scaling-stroke'});
-				newSvg.attr(newSvgAttrs);
-				var id = self.getEntryId(file);
-				var previewId = self.generateUniqueId(id); // appends -# if multiple times the same design is placed.
-				newSvg.attr({id: previewId});
-				snap.select("#userContent").append(newSvg);
-				newSvg.transformable();
-				newSvg.ftRegisterOnTransformCallback(self.svgTransformUpdate);
-				setTimeout(function(){
-					newSvg.ftReportTransformation();
-				}, 200);
-				file.id = id; // list entry id
-				file.previewId = previewId;
-				file.url = url;
-				file.misfit = "";
-
-				self.placedDesigns.push(file);
-			};
-			Snap.loadDXF(url, callback);
-		};
-
-
-
-		self._getDocumentNamespaceAttributes = function(file){
-			if(file.select('svg') === null){
-				root_attrs = file.node.attributes;
-			} else {
-				var root_attrs = file.select('svg').node.attributes;
-			}
-			var namespaces = {};
-
-			// iterate svg tag attributes
-			for(var i = 0; i < root_attrs.length; i++){
-				var attr = root_attrs[i];
-
-				// copy namespaces into group
-				if(attr.name.indexOf("xmlns") === 0){
-					namespaces[attr.name] = attr.value;
+		
+		self.placeSmart = function(elem){
+			var spacer = 2;
+			var label = elem.attr('mb:origin');
+			var placed = snap.selectAll("g[mb\\:origin='"+label+"']");
+			var maxY = -9999;
+			var minX = self.workingAreaWidthMM();
+			var lowestRow = [];
+			var leftest = null;
+			for (var i = 0; i < placed.length; i++) {
+				var item = placed[i];
+				if(item.id !== elem.id){
+					var bbox = item.getBBox();
+					if(bbox.y === maxY){
+						lowestRow.push(item);
+					} else if(bbox.y > maxY){
+						lowestRow = [item];
+						maxY = bbox.y;
+					}
+					if(bbox.x < minX){
+						minX = bbox.x;
+						leftest = item;
+					}
 				}
 			}
-			return namespaces;
+			var lowestRightest = null;
+			var maxX = 0;
+			for (var i = 0; i < lowestRow.length; i++) {
+				var item = lowestRow[i];
+				var bbox = item.getBBox();
+				if(bbox.x2 > maxX){
+					maxX = bbox.x2;
+					lowestRightest = item;
+				}
+			}
+			var lowestBBox = lowestRightest.getBBox();
+			var elemBBox = elem.getBBox();
+			var newX = maxX + spacer;
+			var newY = lowestBBox.y;
+
+			if(newX + elemBBox.w > self.workingAreaWidthMM()){
+				newX = leftest.getBBox().x;
+				newY = lowestBBox.y2 + spacer;
+			} 
+			var dx = newX - elemBBox.x;
+			var dy = newY - elemBBox.y;
+			elem.transform('t'+dx+','+dy);
 		};
 
 		self.toggleTransformHandles = function(file){
@@ -1066,7 +1079,7 @@ $(function(){
 				var newImg = imgWrapper.image(url, 0, y, wMM, hMM); //.attr({transform: 'matrix(1,0,0,-1,0,'+hMM+')'});
 				var id = self.getEntryId(file);
 				newImg.attr({filter: 'url(#grayscale_filter)', 'data-serveurl': url});
-				var previewId = self.generateUniqueId(id); // appends # if multiple times the same design is placed.
+				var previewId = self.generateUniqueId(id, file); // appends # if multiple times the same design is placed.
 				var imgWrapper = snap.group().attr({id: previewId, class: 'userIMG'});
 				imgWrapper.append(newImg);
 				snap.select("#userContent").append(imgWrapper);
@@ -1313,13 +1326,15 @@ $(function(){
 			}
 		};
 
-		self.generateUniqueId = function(idBase){
+		self.generateUniqueId = function(idBase, file){
+			var suffix = self.countPlacements(file);
+			
 			var suffix = 0;
 			var id = idBase + "-" + suffix;
-			while(snap.select('#'+id) !== null){
-				suffix += 1;
-				id = idBase + "-" + suffix;
-			}
+//			while(snap.select('#'+id) !== null){
+//				suffix += 1;
+//				id = idBase + "-" + suffix;
+//			}
 			return id;
 		};
 
@@ -1548,14 +1563,14 @@ $(function(){
 					if (item.type === 'image' || item.type === "text" || item.type === "#text") {
 						// remove filter effects on images for proper rendering
 						if (style !== null) {
-							var strippedFilters = style.replace(/filter.+?;/, '');
+							var strippedFilters = style.replace(/filter.+?;/g, '');
 							item.attr('style', strippedFilters);
 						}
 					} else {
 						// remove stroke from other elements
 						var styleNoStroke = 'stroke: none;';
 						if (style !== null) {
-							styleNoStroke += style.replace(/stroke.+?;/, '');
+							styleNoStroke += style.replace(/stroke.+?;/g, '');
 						}
 						item.attr('stroke', 'none');
 						item.attr('style', styleNoStroke);
@@ -1764,7 +1779,7 @@ $(function(){
             };
 
             file.id = self.getEntryId(file);
-            file.previewId = self.generateUniqueId(file.id); // appends -# if multiple times the same design is placed.
+            file.previewId = self.generateUniqueId(file.id, file); // appends -# if multiple times the same design is placed.
 
             var uc = snap.select("#userContent");
 			var x = self.workingAreaWidthMM()/2;
