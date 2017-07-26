@@ -164,6 +164,8 @@ class IoBeamHandler(object):
 		self._callbacks = dict()
 		self._callbacks_lock = RWLock()
 
+		self.dev_mode = _mrbeam_plugin_implementation._settings.get_boolean(['dev', 'iobeam_disable_warnings'])
+
 		self.iobeam_version = None
 
 		self._connectionException = None
@@ -219,10 +221,11 @@ class IoBeamHandler(object):
 		if self._shutdown_signaled:
 			return False
 		if not self._isConnected:
-			self._logger.warn("send_command() Can't send command since socket is not connected (yet?). Command: %s", command)
+			if not self.dev_mode:
+				self._logger.warn("send_command() Can't send command since socket is not connected (yet?). Command: %s", command)
 			return False
 		if self._my_socket is None:
-			self._logger.warn("send_command() Can't send command while there's no connection on socket. Command: %s", command)
+			self._logger.error("send_command() Can't send command while there's no connection on socket but _isConnected()=True!  Command: %s", command)
 			return False
 
 		command_with_nl = "{}\n".format(command)
@@ -307,7 +310,9 @@ class IoBeamHandler(object):
 
 	def _work(self):
 		threading.current_thread().name = self.__class__.__name__
-		self._logger.debug("Worker thread starting, connecting to socket: %s %s", self.SOCKET_FILE, ("MRBEAM_DEBUG" if MRBEAM_DEBUG else ""))
+		self._logger.debug("Worker thread starting, connecting to socket: %s %s", self.SOCKET_FILE, (" !!! iobeam_disable_warnings: True !!!" if self.dev_mode else ""))
+		if self.dev_mode:
+			self._logger.warn("iobeam handler: !!! iobeam_disable_warnings: True !!!")
 
 		while not self._shutdown_signaled:
 			self._my_socket = None
@@ -320,9 +325,13 @@ class IoBeamHandler(object):
 				self._my_socket = temp_socket
 			except socket.error as e:
 				self._isConnected = False
-				if not self._connectionException == str(e):
-					self._logger.warn("IoBeamHandler not able to connect to socket %s, reason: %s. I'll keept trying but I won't log further failures.", self.SOCKET_FILE, e)
-					self._connectionException = str(e)
+				if self.dev_mode:
+					if not self._connectionException == str(e):
+						self._logger.error("IoBeamHandler not able to connect to socket %s, reason: %s. I'll keept trying but I won't log further failures.", self.SOCKET_FILE, e)
+						self._connectionException = str(e)
+				else:
+					self._logger.error("IoBeamHandler not able to connect to socket %s, reason: %s. ", self.SOCKET_FILE, e)
+
 				time.sleep(1)
 				continue
 
@@ -331,7 +340,7 @@ class IoBeamHandler(object):
 			self._connectionException = None
 
 			id =self._send_identification()
-			self._logger.info("iobeam connection established. Identified ourselfs as '%s'", id)
+			self._logger.info("iobeam connection established. Identified ourselves as '%s'", id)
 			self._fireEvent(IoBeamEvents.CONNECT)
 
 			while not self._shutdown_signaled:
@@ -340,8 +349,8 @@ class IoBeamHandler(object):
 					try:
 						data = self._my_socket.recv(self.MESSAGE_LENGTH_MAX)
 					except Exception as e:
-						if MRBEAM_DEBUG and e.message == "timed out":
-							self._logger.warn("Connection stale but MRBEAM_DEBUG enabled. Continuing....")
+						if self.dev_mode and e.message == "timed out":
+							# self._logger.warn("Connection stale but MRBEAM_DEBUG enabled. Continuing....")
 							continue
 						else:
 							self._logger.warn("Exception while sockect.recv(): %s - Resetting connection...", e)

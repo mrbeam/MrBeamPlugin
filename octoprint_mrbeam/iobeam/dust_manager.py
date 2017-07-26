@@ -31,6 +31,8 @@ class DustManager(object):
 		self._dust_timer_interval = self.DEFAULT_DUST_TIMER_INTERVAL
 		self._auto_timer = None
 
+		self.dev_mode = _mrbeam_plugin_implementation._settings.get_boolean(['dev', 'iobeam_disable_warnings'])
+
 		self._subscribe()
 		self._start_dust_timer()
 		self._stop_dust_extraction()
@@ -145,8 +147,10 @@ class DustManager(object):
 
 	def _check_dust_is_current(self):
 		if time.time() - self._dust_ts > self.DEFAUL_DUST_MAX_AGE:
-			self._logger.error("Can't read dust value.")
+			if not self.dev_mode:
+				self._logger.error("Can't read dust value.")
 			# TODO fire some Error pause (together with andy)
+			pass
 
 	def request_dust(self):
 		return True if self._send_fan_command("dust") else False
