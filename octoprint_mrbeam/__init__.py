@@ -161,8 +161,15 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			camera_scale=1,
 			camera_rotation=0,
 			dev=dict(
-				env="PROD",
-				terminalMaxLines = 2000
+				debug=False, # deprected
+				terminalMaxLines = 2000,
+				env = "PROD",
+				# env_overrides = dict(
+				# 	analytics = "DEV",
+				# 	laser_safety = "DEV",
+				# 	local =  "DEV"
+				# ),
+				iobeam_disable_warnings = False
 			),
 			analyticsEnabled=False,  # frontend analytics Mixpanel
 			analyticsfolder="analytics",  # laser job analytics base folder (.octoprint/...)
@@ -1185,6 +1192,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	# 		return True
 
 	def getHostname(self):
+		'''
+		Get device hostnema like 'MrBeam2-F930'
+		:return: String hostname or empty string
+		'''
 		hostname = '';
 		try:
 			hostname = socket.gethostname()
@@ -1203,9 +1214,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return name.format(hostName)
 
 
-
-
 	def getPiSerial(self):
+		'''
+		Get RaspberryPi's serial number from cpuinfo file
+		:return: String serial or ('0000000000000000' or 'ERROR000000000')
+		'''
 		# Extract serial from cpuinfo file
 		cpuserial = "0000000000000000"
 		try:

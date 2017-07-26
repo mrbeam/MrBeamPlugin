@@ -58,15 +58,11 @@ class AnalyticsHandler(object):
 
 	@staticmethod
 	def _getserialnumber():
-		with open("/proc/cpuinfo") as f:
-			for line in f:
-				if line.startswith("Serial"):
-					return line.split(' ')[-1].rstrip()
+		return _mrbeam_plugin_implementation.getPiSerial()
 
 	@staticmethod
 	def _gethostname():
-		import socket
-		return socket.gethostname()
+		return _mrbeam_plugin_implementation.getHostname()
 
 	def onEvent(self, event, payload):
 		data = None
