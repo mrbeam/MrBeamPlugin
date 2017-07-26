@@ -251,7 +251,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/matrix_oven.js", "js/drag_scale_rotate.js",	"js/convert.js", "js/snap_gc_plugin.js", "js/gcode_parser.js", "js/gridify.js",
 				"js/lib/photobooth_min.js", "js/svg_cleaner.js", "js/loginscreen_viewmodel.js",
 				"js/wizard_acl.js", "js/netconnectd_wrapper.js", "js/lasersaftey_viewmodel.js",
-				"js/ready_to_laser_viewmodel.js", "js/lib/screenfull.min.js"],
+				"js/ready_to_laser_viewmodel.js", "js/lib/screenfull.min.js", "js/settings/camera_calibration.js"],
 			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css", "css/quicktext-fonts.css"],
 			less=["less/mrbeam.less"]
 		)
@@ -333,7 +333,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return [
 			dict(type='settings', name="Machine Profiles", template='settings/lasercutterprofiles_settings.jinja2', suffix="_lasercutterprofiles", custom_bindings=False),
 			dict(type='settings', name="SVG Conversion", template='settings/svgtogcode_settings.jinja2', suffix="_conversion", custom_bindings=False),
-			dict(type='settings', name="Camera Calibration", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
+			dict(type='settings', name="Camera TEJAMARKERS", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
 			dict(type='settings', name="Serial Connection", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings=False, replaces='serial')
 		] + self._get_wizard_template_configs()
 
@@ -906,6 +906,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			intensity=["value"],
 			passes=["value"],
 			lasersafety_confirmation=[],
+			camera_calibration_markers=[], # TEJAMARKERS: let's define some required params that need to be present for this call to be acceped.
 			ready_to_laser=["ready"],
 			debug_event=["event"]
 		)
@@ -926,6 +927,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return self.lasersafety_wizard_api(data)
 		elif command == "ready_to_laser":
 			return self.ready_to_laser(data)
+		elif command == "camera_calibration_markers":
+			return self.camera_calibration_markers(data)
 		elif command == "debug_event":
 			return self.debug_event(data)
 		return NO_CONTENT
@@ -951,6 +954,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		elif 'ready' not in data or not data['ready']:
 			self._oneButtonHandler.unset_ready_to_laser()
 
+		return NO_CONTENT
+
+	def camera_calibration_markers(self, data):
+		self._logger.debug("TEJAMARKERS camera_calibration_markers() data:", data)
+		# I think Clemens and Andy take it from here...
 		return NO_CONTENT
 
 

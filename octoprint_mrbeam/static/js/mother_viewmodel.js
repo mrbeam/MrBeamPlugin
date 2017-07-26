@@ -215,11 +215,10 @@ $(function () {
         };
 
         self.removeLoadingOverlay = function(){
-            // console.log("ANDYTEST removeLoadingOverlay() self.isStartupComplete:"+self.isStartupComplete+", self.workingArea.camera.firstImageLoaded:"+self.workingArea.camera.firstImageLoaded);
             if (self.isStartupComplete &&  self.workingArea.camera.firstImageLoaded) {
                 $('#loading_overlay').remove();
                 console.log("beamOS started. loading_overlay removed.");
-                console.log("%c ", "color: transparent; font-size: 1500px; background:url('http://mrbeam2-f930.local/plugin/mrbeam/static/img/mr_x120.png') no-repeat bottom left");
+                console.log("%c ", "color: transparent; font-size: 500px; background:url('http://mrbeam2-f930.local/plugin/mrbeam/static/img/mr_x120.png') no-repeat bottom left");
             } else {
                 setTimeout(self.removeLoadingOverlay, 100);
             }
