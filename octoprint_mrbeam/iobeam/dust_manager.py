@@ -33,7 +33,9 @@ class DustManager(object):
 
 		self._subscribe()
 		self._start_dust_timer()
-		self._stop_dust_extraction()
+		self._initial_stop_fan = threading.Thread(target=self._stop_dust_extraction)
+		self._initial_stop_fan.daemon = True
+		self._initial_stop_fan.start()
 
 		self.extraction_limit = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['dust']['extraction_limit']
 		self.auto_mode_time = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['dust']['auto_mode_time']
