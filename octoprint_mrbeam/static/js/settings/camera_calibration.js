@@ -13,7 +13,14 @@ $(function() {
 		self.calImgUrl = ko.observable("/plugin/mrbeam/static/img/beam-cam-static.jpg");
 		self.calImgWidth = ko.observable(500);
 		self.calImgHeight = ko.observable(400);
-		self.calSvgViewBox = ko.observable('0 0 500 400');
+		self.calSvgOffX = ko.observable(0);
+		self.calSvgOffY = ko.observable(0);
+		self.calSvgScale = ko.observable(1);
+		self.calSvgViewBox = ko.computed(function(){
+			var w = self.calImgWidth() / self.calSvgScale();
+			var h = self.calImgHeight() / self.calSvgScale();
+			return [self.calSvgOffX(), self.calSvgOffY(), w, h].join(' ');
+		});
 		self.currentStep = 0;
 
 		self.calibrationSteps = [
@@ -34,26 +41,28 @@ $(function() {
 		};
 		
 		self._getClickPos = function(ev){
-			var bbox = ev.target.getBoundingClientRect();
+			
+			var bbox = ev.target.parentElement.getBoundingClientRect();
 			var clickpos = {
 				xScreenPx: ev.clientX - bbox.left, 
 				yScreenPx: ev.clientY - bbox.top
 			};
 			clickpos.xRel = clickpos.xScreenPx / bbox.width;
 			clickpos.yRel = clickpos.yScreenPx / bbox.height;
-			clickpos.xImg = clickpos.xRel * self.calImgWidth();
-			clickpos.yImg = clickpos.yRel * self.calImgHeight();
+			clickpos.xImg = self.calSvgOffX() + clickpos.xRel * (self.calImgWidth() / self.calSvgScale());
+			clickpos.yImg = self.calSvgOffY() + clickpos.yRel * (self.calImgHeight() / self.calSvgScale());
 			
-			console.log(clickpos);
 			return clickpos;
 		};
 		
 		self.zoomTo = function(x,y, scale){
+			self.calSvgScale(scale);
 			var w = self.calImgWidth() / scale;
 			var h = self.calImgHeight() / scale;
 			var offX = Math.min(Math.max(x - w/2, 0), self.calImgWidth() - w);
 			var offY = Math.min(Math.max(y - h/2, 0), self.calImgHeight() - h);
-			self.calSvgViewBox([offX, offY, w, h].join(' '));
+			self.calSvgOffX(offX);
+			self.calSvgOffY(offY);
 		};
 		
         self.onStartup = function(){
