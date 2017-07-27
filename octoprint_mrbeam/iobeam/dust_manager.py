@@ -152,7 +152,7 @@ class DustManager(object):
 			if not self.dev_mode:
 				self._logger.error("Can't read dust value.")
 			# TODO fire some Error pause (together with andy)
-			pass
+			self._start_dust_extraction()
 
 	def request_dust(self):
 		return True if self._send_fan_command("dust") else False
