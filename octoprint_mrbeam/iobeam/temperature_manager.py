@@ -34,6 +34,8 @@ class TemperatureManager(object):
 		self.temp_timer = None
 		self.is_cooling_since = 0
 
+		self.dev_mode = _mrbeam_plugin_implementation._settings.get_boolean(['dev', 'iobeam_disable_warnings'])
+
 		self._shutting_down = False
 
 		self._subscribe()
@@ -79,19 +81,27 @@ class TemperatureManager(object):
 		self.send_status_to_frontend(self.temperature)
 
 	def request_temp(self):
+		'''
+		Send a temperature request to iobeam
+		:return: True if sent successfully, False otherwise.
+		'''
 		return _mrbeam_plugin_implementation._ioBeam.send_temperature_request()
 
 	def cooling_stop(self):
+		'''
+		Stop the laser for cooling purpose
+		'''
 		if  _mrbeam_plugin_implementation._oneButtonHandler.is_printing():
 			self._logger.debug("cooling_stop()")
 			self.is_cooling_since = time.time()
 			_mrbeam_plugin_implementation._oneButtonHandler.cooling_down_pause()
 			_mrbeam_plugin_implementation._event_bus.fire(MrBeamEvents.LASER_COOLING_PAUSE, dict(temp=self.temperature))
 			self.send_cooling_state_to_frontend(True)
-		else:
-			self._logger.debug("cooling_stop() skipping because printer state is not Printing: %s", _mrbeam_plugin_implementation._printer.get_state_id())
 
 	def cooling_resume(self):
+		'''
+		Resume laser once the laser has cooled down enough.
+		'''
 		self._logger.debug("cooling_resume()")
 		_mrbeam_plugin_implementation._event_bus.fire(MrBeamEvents.LASER_COOLING_RESUME, dict(temp=self.temperature))
 		_mrbeam_plugin_implementation._oneButtonHandler.cooling_down_end(only_if_behavior_is_cooling=True)
@@ -102,7 +112,8 @@ class TemperatureManager(object):
 
 	def is_temperature_recent(self):
 		if self.temperature is None:
-			self._logger.error("is_temperature_recent(): Laser temperature is None. never received a temperature value.")
+			if not self.dev_mode:
+				self._logger.error("is_temperature_recent(): Laser temperature is None. never received a temperature value.")
 			return False
 		age = time.time() - self.temperature_ts
 		if age > self.TEMP_MAX_AGE:
@@ -133,7 +144,8 @@ class TemperatureManager(object):
 
 	def _stop_if_temp_is_not_current(self):
 		if not self.is_temperature_recent():
-			self._logger.error("_stop_if_temp_is_not_current() Laser temperature is not recent. Stopping laser.")
+			if not self.dev_mode:
+				self._logger.error("_stop_if_temp_is_not_current() Laser temperature is not recent. Stopping laser.")
 			self.cooling_stop()
 
 	def _check_temp_val(self):

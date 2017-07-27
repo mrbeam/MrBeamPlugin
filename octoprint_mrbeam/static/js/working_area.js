@@ -65,7 +65,7 @@ $(function(){
 
 		return 0;
 	}
-	
+
 	function getHumanReadableId(length){
 		length = length || 4;
 		var consonants = 'bcdfghjklmnpqrstvwxz';
@@ -149,7 +149,7 @@ $(function(){
 			var y = self.zoomOffY();
 			return [x, y, w, h].join(' ');
 		});
-		
+
 		self.set_zoom_factor = function(delta, centerX, centerY){
 			var oldZ = self.zoom();
 			var newZ = oldZ + delta;
@@ -235,7 +235,7 @@ $(function(){
 			return m;
 		});
 
-		
+
 //		self.matrixMMflipY = ko.computed(function(){
 //			var m = new Snap.Matrix();
 //			var yShift = self.workingAreaHeightMM(); // 0,0 origin of the gcode is bottom left. (top left in the svg)
@@ -369,8 +369,12 @@ $(function(){
 			});
 			return filePlaced;
 		};
-		
+
 		self.countPlacements = function(file){
+		    // quicktexts can't get duplicated and don't have ["refs"]["download"]
+            if (file["type"] == 'quicktext') {
+                return 1;
+            }
 			var label = file["refs"]["download"];
 			var p = snap.selectAll("g[mb\\:origin='"+label+"']");
 			return p.length;
@@ -479,8 +483,8 @@ $(function(){
 				// scale matrix
 
 				var mat = self.getDocumentViewBoxMatrix(doc_dimensions.width, doc_dimensions.height, doc_dimensions.viewbox);
-//				var dpiscale = 90 / self.settings.settings.plugins.mrbeam.svgDPI() * (25.4/90); 
-//				var dpiscale = 25.4 / self.settings.settings.plugins.mrbeam.svgDPI(); 
+//				var dpiscale = 90 / self.settings.settings.plugins.mrbeam.svgDPI() * (25.4/90);
+//				var dpiscale = 25.4 / self.settings.settings.plugins.mrbeam.svgDPI();
 //                var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(dpiscale).toTransformString();
                 var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2])
 						.scale(unitScaleX, unitScaleY).toTransformString();
@@ -512,8 +516,8 @@ $(function(){
 				var id = self.getEntryId(file);
 				var previewId = self.generateUniqueId(id, file); // appends -# if multiple times the same design is placed.
 				newSvg.attr({
-					id: previewId, 
-					class: 'userSVG', 
+					id: previewId,
+					class: 'userSVG',
 					'mb:origin': file["refs"]["download"],
 				});
 				snap.select("#userContent").append(newSvg);
@@ -525,7 +529,7 @@ $(function(){
 				newSvg.ftRegisterAfterTransformCallback(function(){
 //					newSvg.embed_gc(self.flipYMatrix(), self.workingAreaWidthMM(), self.workingAreaHeightMM(), self.gc_options);
 				});
-				
+
 
 //				newSvg.embed_gc(self.flipYMatrix(), self.workingAreaWidthMM(), self.workingAreaHeightMM(), self.gc_options);
 
@@ -602,11 +606,11 @@ $(function(){
 			};
 			Snap.loadDXF(url, callback);
 		};
-		
+
 		self._get_generator_info = function(f){
 			var gen = null;
 			var version = null;
-			
+
 			// detect Inkscape by attribute
 			var root = f.select('svg');
 			if(root === null){
@@ -666,7 +670,7 @@ $(function(){
 					}
 				}
 			}
-			
+
 			console.log("Generator:", gen, version);
 			return { generator: 'unknown', version: 'unknown' };
 		};
@@ -706,7 +710,7 @@ $(function(){
 				units_y: units_y
 			};
 		};
-		
+
 		self._getDocumentScaleToMM = function(declaredUnit, generator){
 			if(declaredUnit === null || declaredUnit === ''){
 				declaredUnit = 'px';
@@ -723,14 +727,14 @@ $(function(){
 					}
 				} else if (generator.generator === 'corel draw'){
 					console.log("corel draw, px @ 90dpi");
-					
+
 				} else if (generator.generator === 'illustrator') {
 					console.log("illustrator, px @ 72dpi");
 					declaredUnit = 'px_illustrator';
 				}
 			}
 			var declaredUnitValue = self.uuconv[declaredUnit];
-			var scale = declaredUnitValue / self.uuconv.mm; 
+			var scale = declaredUnitValue / self.uuconv.mm;
 			console.log("Units: " + declaredUnit, " => scale factor to mm: " + scale);
 			return scale;
 		};
@@ -789,7 +793,7 @@ $(function(){
 			var newSvg = srcElem.clone();
 			var file = {url: src.url, origin: src.origin, name: src.name, type: src.type, refs:{download: src.url}};
 			var id = self.getEntryId(file);
-			var previewId = self.generateUniqueId(id, file); 
+			var previewId = self.generateUniqueId(id, file);
 			newSvg.attr({id: previewId, class: 'userSVG'});
 			snap.select("#userContent").append(newSvg);
 			newSvg.ftRegisterOnTransformCallback(self.svgTransformUpdate);
@@ -805,7 +809,7 @@ $(function(){
 			self.placedDesigns.push(file);
 			self.placeSmart(newSvg);
 		};
-		
+
 		self.placeSmart = function(elem){
 			var spacer = 2;
 			var label = elem.attr('mb:origin');
@@ -848,7 +852,7 @@ $(function(){
 			if(newX + elemBBox.w > self.workingAreaWidthMM()){
 				newX = leftest.getBBox().x;
 				newY = lowestBBox.y2 + spacer;
-			} 
+			}
 			var dx = newX - elemBBox.x;
 			var dy = newY - elemBBox.y;
 			elem.transform('t'+dx+','+dy);
@@ -1328,7 +1332,7 @@ $(function(){
 
 		self.generateUniqueId = function(idBase, file){
 			var suffix = self.countPlacements(file);
-			
+
 			var suffix = 0;
 			var id = idBase + "-" + suffix;
 //			while(snap.select('#'+id) !== null){
@@ -1351,7 +1355,7 @@ $(function(){
 			self.abortFreeTransforms();
 			var wMM = self.workingAreaWidthMM();
 			var hMM = self.workingAreaHeightMM();
-			var wPT = wMM * 90 / 25.4;  // TODO ... switch to 96dpi ? 
+			var wPT = wMM * 90 / 25.4;  // TODO ... switch to 96dpi ?
 			var hPT = hMM * 90 / 25.4;
 			var compSvg = self.getNewSvg('compSvg', wPT, hPT);
 //			var attrs = {id: 'flipY', transform: 'matrix(1,0,0,-1,0,'+hMM+')'};
@@ -1383,7 +1387,7 @@ $(function(){
 			if(svgStr !== ''){
 				var wMM = self.workingAreaWidthMM();
 				var hMM = self.workingAreaHeightMM();
-				var dpiFactor = 90 / 25.4; // we create SVG always with 90 dpi.  // TODO ... switch to 96dpi ? 
+				var dpiFactor = 90 / 25.4; // we create SVG always with 90 dpi.  // TODO ... switch to 96dpi ?
 				var w = dpiFactor * wMM;
 				var h = dpiFactor * hMM;
 				var viewBox = "0 0 " + wMM + " " + hMM;
@@ -1391,7 +1395,7 @@ $(function(){
 				svgStr = svgStr.replace("(\\\"","(");
 				svgStr = svgStr.replace("\\\")",")");
 
-				var svg = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:mb="http://www.mr-beam.org/mbns"' 
+				var svg = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:mb="http://www.mr-beam.org/mbns"'
 						+ ' width="'+ w +'" height="'+ h +'"  viewBox="'+ viewBox +'"><defs/>'+svgStr+'</svg>';
 				return svg;
 			} else {
@@ -1846,7 +1850,7 @@ $(function(){
         // ***********************************************************
 		//  QUICKTEXT end
         // ***********************************************************
-		
+
 		self.wheel_zoom = function(target, ev){
 			if (ev.originalEvent.shiftKey) {
 				var wheel = ev.originalEvent.wheelDelta;
@@ -1857,7 +1861,7 @@ $(function(){
 				self.set_zoom_factor(deltaZoom, xPerc, yPerc);
 			}
 		};
-		
+
 		self.mouse_drag = function(target, ev){
 			if (ev.originalEvent.shiftKey) {
 				var pos = self._get_pointer_event_position_MM(ev, ev.currentTarget);
@@ -1892,7 +1896,7 @@ $(function(){
     // view model class, parameters for constructor, container to bind to
     ADDITIONAL_VIEWMODELS.push([WorkingAreaViewModel,
 
-		["loginStateViewModel", "settingsViewModel", "printerStateViewModel",  
+		["loginStateViewModel", "settingsViewModel", "printerStateViewModel",
 			"gcodeFilesViewModel", "laserCutterProfilesViewModel", "cameraViewModel"],
 		[document.getElementById("area_preview"),
 			document.getElementById("homing_overlay"),
