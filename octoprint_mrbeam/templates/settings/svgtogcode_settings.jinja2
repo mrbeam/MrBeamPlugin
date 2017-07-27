@@ -1,30 +1,13 @@
 <div id="settings_svg_conversion" xdata-bind="allowBindings: true">
-    <h4>{{ _('Default settings') }}</h4>
+    <h4>{{ _('SVG Settings') }}</h4>
 
     <form class="form-horizontal">
-        <div class="control-group">
-            <label class="control-label" for="settings-svgtogcode-defaultIntensity">{{ _('Default Laser Intensity') }}</label>
-            <div class="controls">
-                <input type="number" min="1" max="1000" class="input-block-level" data-bind="value: settings.plugins.mrbeam.defaultIntensity">
-            </div>
-        </div>
-        <div class="control-group">
-            <label class="control-label" for="settings-svgtogcode-defaultFeedrate">{{ _('Default Laser Speed') }}</label>
-            <div class="controls">
-                <input type="number" min="1" class="input-block-level" data-bind="value: settings.plugins.mrbeam.defaultFeedrate">
-            </div>
-        </div>
         <div class="control-group">
             <label class="control-label" for="settings-svgtogcode-svgDPI">{{ _('SVG dpi') }}</label>
             <div class="controls">
                 <input type="number" min="0" class="input-block-level" data-bind="value: settings.plugins.mrbeam.svgDPI">
-            </div>
-        </div>
-        <div class="control-group">
-            <div class="controls">
-                <label class="checkbox">
-                    <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.svgtogcode_debug_logging"> {{ _('Enable logging to plugin_svgtogcode.log') }}
-                </label>
+                <br />
+                <div><small>In case beamOS can't recognize what dpi value your graphic program uses, this value will be the fallback. You might need to change this if you use CorelDraw or other less wel known tools. Files from Illustrator or Inkscape tend to work fine regardless of this value.</small></div>
             </div>
         </div>
     </form>

@@ -38,8 +38,6 @@ from .software_update_information import get_update_information
 
 
 
-__builtin__.MRBEAM_DEBUG = False
-
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
 __builtin__._mrbeam_plugin_implementation = None
 
@@ -83,10 +81,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._logger = mrb_logger("octoprint.plugins.mrbeam")
 
 	def initialize(self):
-		self.laserCutterProfileManager = laserCutterProfileManager()
-		if self._settings.get(["dev", "debug"]) == True: __builtin__.MRBEAM_DEBUG = True
-
 		init_mrb_logger(self._printer)
+		self.laserCutterProfileManager = laserCutterProfileManager()
 		self._logger = mrb_logger("octoprint.plugins.mrbeam")
 		self._branch = self.getBranch()
 		self._hostname = self.getHostname()
@@ -113,7 +109,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def _do_initial_log(self):
 		msg = "MrBeam Plugin"
-		msg += " MRBEAM_DEBUG " if False else ''
 		msg += " version:" + self._plugin_version
 		msg += ", branch:" + self._branch
 		msg += ", host:" + self._hostname
@@ -150,10 +145,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def get_settings_defaults(self):
 		return dict(
 			current_profile_id="_mrbeam_junior", # yea, this needs to be like this
-			defaultIntensity=500,
-			defaultFeedrate=300,
 			svgDPI=90,
-			svgtogcode_debug_logging=False,
 			showlasersafety=False,
 			glasses=False,
 			camera_offset_x=0,
@@ -185,10 +177,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def on_settings_load(self):
 		return dict(
 			current_profile_id=self._settings.get(["current_profile_id"]),
-			defaultIntensity=self._settings.get(['defaultIntensity']),
-			defaultFeedrate=self._settings.get(['defaultFeedrate']),
 			svgDPI=self._settings.get(['svgDPI']),
-			svgtogcode_debug_logging=self._settings.get(['svgtogcode_debug_logging']),
 			showlasersafety=self._settings.get(['showlasersafety']),
 			glasses=self._settings.get(['glasses']),
 			camera_offset_x=self._settings.get(['camera_offset_x']),
@@ -209,10 +198,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._settings.set(["workingAreaWidth"], data["workingAreaWidth"])
 		if "zAxis" in data:
 			self._settings.set_boolean(["zAxis"], data["zAxis"])
-		if "defaultIntensity" in data:
-			self._settings.set_int(["defaultIntensity"], data["defaultIntensity"])
-		if "defaultFeedrate" in data:
-			self._settings.set_int(["defaultFeedrate"], data["defaultFeedrate"])
 		if "svgDPI" in data:
 			self._settings.set_int(["svgDPI"], data["svgDPI"])
 		if "camera_offset_x" in data:
@@ -223,8 +208,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._settings.set_float(["camera_scale"], data["camera_scale"])
 		if "camera_rotation" in data:
 			self._settings.set_float(["camera_rotation"], data["camera_rotation"])
-		if "svgtogcode_debug_logging" in data:
-			self._settings.set_boolean(["svgtogcode_debug_logging"], data["svgtogcode_debug_logging"])
 
 		selectedProfile = self.laserCutterProfileManager.get_current_or_default()
 		self._settings.set(["current_profile_id"], selectedProfile['id'])
@@ -288,8 +271,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		display_version_string = "{} on {}".format(self._plugin_version, self._hostname)
 		if self._branch:
 			display_version_string = "{} ({} branch) on {}".format(self._plugin_version, self._branch, self._hostname)
-		if MRBEAM_DEBUG:
-			display_version_string += " MRBEAM_DEBUG"
 
 		render_kwargs.update(dict(
 							 webcamStream=self._settings.get(["cam", "frontendUrl"]),
@@ -309,7 +290,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 								display_version = display_version_string,
 							 	image = self._octopi_info),
 							 ),
-							 MRBEAM_DEBUG=MRBEAM_DEBUG,
 							 env= dict(
 								 env=self.get_env(),
 								 local=self.get_env(self.ENV_LOCAL),
@@ -330,12 +310,18 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	##~~ TemplatePlugin mixin
 
 	def get_template_configs(self):
-		return [
-			dict(type='settings', name="Machine Profiles", template='settings/lasercutterprofiles_settings.jinja2', suffix="_lasercutterprofiles", custom_bindings=False),
-			dict(type='settings', name="SVG Conversion", template='settings/svgtogcode_settings.jinja2', suffix="_conversion", custom_bindings=False),
-			dict(type='settings', name="Camera Calibration", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
-			dict(type='settings', name="Serial Connection", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings=False, replaces='serial')
-		] + self._get_wizard_template_configs()
+		result = [
+			dict(type='settings', name="SVG Settings", template='settings/svgtogcode_settings.jinja2', suffix="_conversion", custom_bindings=False)
+			# disabled in appearance
+			# dict(type='settings', name="Serial Connection DEV", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings=False, replaces='serial')
+		 ]
+		if not self.is_prod_env('local'):
+			result.extend([
+				dict(type='settings', name="Machine Profiles DEV", template='settings/lasercutterprofiles_settings.jinja2', suffix="_lasercutterprofiles", custom_bindings=False),
+				dict(type='settings', name="Camera Calibration DEV", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
+			])
+		result.extend(self._get_wizard_template_configs())
+		return result
 
 	def _get_wizard_template_configs(self):
 		required = self._get_subwizard_attrs("_is_", "_wizard_required")
@@ -1271,6 +1257,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def isFirstRun(self):
 		return self._settings.global_get(["server", "firstRun"])
 
+	def is_prod_env(self, type=None):
+		return self.get_env(type) == 'prod'
 
 	def get_env(self, type=None):
 		result = self._settings.get(["dev", "env"])
@@ -1349,10 +1337,12 @@ def __plugin_load__():
 		appearance=dict(components=dict(
 			order=dict(
 				# to debug: "_logger.info("ANDYTEST templates: %s", templates)" to views.py:_process_templates() at the very end
-				wizard=["plugin_mrbeam_wifi", "plugin_mrbeam_acl", "plugin_mrbeam_lasersafety"]
+				wizard=["plugin_mrbeam_wifi", "plugin_mrbeam_acl", "plugin_mrbeam_lasersafety"],
+				settings = ['plugin_softwareupdate', 'accesscontrol', 'plugin_netconnectd', 'plugin_mrbeam_conversion', 'terminalfilters', 'logs']
 			),
 			disabled=dict(
-				wizard=['plugin_softwareupdate']
+				wizard=['plugin_softwareupdate'],
+				settings=['serial', 'webcam']
 			)
 		)),
 		server = dict(commands=dict(

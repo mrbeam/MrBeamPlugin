@@ -1494,11 +1494,30 @@ $(function(){
 			self.initCameraCalibration();
 		};
 
+		self.onTabChange = function(current, prev){
+		    if(current == '#settings'){
+		        // Since Settings is not a BS dialog anymore,
+                // we need to trigger 'show' and 'hidden' events "manually"
+                // for OctoPrint to trigger onSettingsShown() and onSettingsHidden()
+			    if (self.settings && self.settings.settingsDialog) {
+                    self.settings.settingsDialog.trigger('show');
+                }
+            }
+        };
+
 		self.onAfterTabChange = function(current, prev){
-			if(current === '#workingarea'){
+			if(current == '#workingarea'){
 				self.trigger_resize();
 				self.check_sizes_and_placements();
 			}
+			if(prev == '#settings'){
+			    // Since Settings is not a BS dialog anymore,
+                // we need to trigger 'show' and 'hidden' events "manually"
+                // for OctoPrint to trigger onSettingsShown() and onSettingsHidden()
+			    if (self.settings && self.settings.settingsDialog) {
+                    self.settings.settingsDialog.trigger('hidden');
+                }
+            }
 		};
 
 		self.check_sizes_and_placements = function(){
