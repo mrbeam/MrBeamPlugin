@@ -1,48 +1,13 @@
 <div id="settings_camera_calibration" style="position:relative; top:-28px;">
-	<div id="webcam_wrapper_settings" xxx_data-bind="style: { width: workingArea.workingAreaWidthPx()+'px',
-											height: workingArea.workingAreaHeightPx()+'px' }">
-		<img id="webcam_image_settings" xxx_data-bind="css: { flipH: settings.webcam_flipH(), flipV: settings.webcam_flipV() },
-			 style: {
-				 transform: 'scale(' + settings.settings.plugins.mrbeam.camera_scale()
-						 + ') rotate(' + settings.settings.plugins.mrbeam.camera_rotation() + 'deg) translate('
-						 + settings.settings.plugins.mrbeam.camera_offset_x() +'px, '+ settings.settings.plugins.mrbeam.camera_offset_y() + 'px)'
-			 },
-			 attr: { src: settings.webcam_streamUrl() }
-			 ">
-	</div>
-	<div id="camera_calibration_parameter_wrapper" xxx_data-bind="style: { width: workingArea.workingAreaWidthPx()+'px',
-											height: workingArea.workingAreaHeightPx()+'px' }">
+	<div id="camera_calibration_parameter_wrapper">
 		<div id="camera_calibration_parameter">
 			<h4>{{ _(' Title TEJAMARKERS') }}</h4>
-            <div>Feel free to remove all the content in this template here.... It's yours.</div>
-			<form class="form-horizontal">
-				<div class="control-group camCalib">
-					<label class="control-label" for="settings-cam-offset-x">{{ _('Offset X') }}</label>
-					<div class="controls">
-						<input id="settings-cam-offset-x" type="number" class="input-block-level" xxx_data-bind="value: settings.settings.plugins.mrbeam.camera_offset_x">
-					</div>
-				</div>
-				<div class="control-group camCalib">
-					<label class="control-label" for="settings-cam-offset-y">{{ _('Offset Y') }}</label>
-					<div class="controls">
-						<input id="settings-cam-offset-y" type="number" class="input-block-level" xxx_data-bind="value: settings.settings.plugins.mrbeam.camera_offset_y">
-					</div>
-				</div>
-				<div class="control-group camCalib">
-					<label class="control-label" for="settings-cam-scale">{{ _('Scale') }}</label>
-					<div class="controls">
-						<input id="settings-cam-scale" type="number" step="0.01" min="0" class="input-block-level" xxx_data-bind="value: settings.settings.plugins.mrbeam.camera_scale">
-					</div>
-				</div>
-				<div class="control-group camCalib">
-					<label class="control-label" for="settings-cam-rotation">{{ _('Rotation') }}</label>
-					<div class="controls">
-						<input id="settings-cam-rotation" type="number" step="0.01" class="input-block-level" xxx_data-bind="value: settings.settings.plugins.mrbeam.camera_rotation">
-					</div>
-				</div>
-			</form>
+            
 		</div>
-
+		<svg width="100%" height="100%" viewBox="0 0 500 400" data-bind="attr: {viewBox: calSvgViewBox()}">
+			<image data-bind="attr: {href: calImgUrl(), width:calImgWidth(), height:calImgHeight() }, 
+							click: userClick" />
+		</svg>
 
 	</div>
 </div>

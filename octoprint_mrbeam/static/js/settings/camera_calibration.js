@@ -1,18 +1,65 @@
 /*
- * View model for Mr_Beam
+ * View model for Mr Beam
  *
- * Author: Teja
+ * Author: Teja Philipp <teja@mr-beam.org>
  * License: AGPLv3
  */
+/* global OctoPrint, OCTOPRINT_VIEWMODELS */
+
 $(function() {
     function CameraCalibrationViewModel(parameters) {
         var self = this;
 
+		self.calImgUrl = ko.observable("/plugin/mrbeam/static/img/beam-cam-static.jpg");
+		self.calImgWidth = ko.observable(500);
+		self.calImgHeight = ko.observable(400);
+		self.calSvgViewBox = ko.observable('0 0 500 400');
+		self.currentStep = 0;
 
+		self.calibrationSteps = [
+			{name: 'start', desc: 'click to start', focus: [0,0,1]},
+			{name: 'NW', desc: 'North West', focus: [0,0,5]},
+			{name: 'NE', desc: 'North East', focus: [0,self.calImgWidth(),5]},
+			{name: 'SE', desc: 'South East', focus: [self.calImgHeight(),self.calImgWidth(),5]},
+			{name: 'SW', desc: 'South West', focus: [self.calImgHeight(),0,5]}
+		];
+
+		self.userClick = function(vm, ev){
+			var cPos = self._getClickPos(ev);
+			console.log("got calibration: ", cPos);
+			self.currentStep = (self.currentStep + 1) % self.calibrationSteps.length;
+			var n = self.calibrationSteps[self.currentStep];
+			self.zoomTo(n.focus[0], n.focus[1], n.focus[2]);
+			console.log("now click for " + n.desc);
+		};
+		
+		self._getClickPos = function(ev){
+			var bbox = ev.target.getBoundingClientRect();
+			var clickpos = {
+				xScreenPx: ev.clientX - bbox.left, 
+				yScreenPx: ev.clientY - bbox.top
+			};
+			clickpos.xRel = clickpos.xScreenPx / bbox.width;
+			clickpos.yRel = clickpos.yScreenPx / bbox.height;
+			clickpos.xImg = clickpos.xRel * self.calImgWidth();
+			clickpos.yImg = clickpos.yRel * self.calImgHeight();
+			
+			console.log(clickpos);
+			return clickpos;
+		};
+		
+		self.zoomTo = function(x,y, scale){
+			var w = self.calImgWidth() / scale;
+			var h = self.calImgHeight() / scale;
+			var offX = Math.min(Math.max(x - w/2, 0), self.calImgWidth() - w);
+			var offY = Math.min(Math.max(y - h/2, 0), self.calImgHeight() - h);
+			self.calSvgViewBox([offX, offY, w, h].join(' '));
+		};
+		
         self.onStartup = function(){
-            console.log("TEJAMARKERS CameraCalibrationViewModel.onStartup()")
+            console.log("TEJAMARKERS CameraCalibrationViewModel.onStartup()");
             // ok, maybe don't sent this onStartup()
-            self._sendData({some:"data", goes:"here"})
+            self._sendData({some:"data", goes:"here"});
         };
 
         self._sendData = function(data) {
