@@ -34,9 +34,9 @@ if __name__ == "__main__":
 	print "Unknown jobs: {}".format(jobs.getUnknownJobs())
 	print "Total job count: {}".format(jobs.getTotalJobs())
 
-	runtime = datetime.timedelta(seconds=jobs.getTotalRunTime())
-	pause = datetime.timedelta(seconds=jobs.getTotalPauseTime())
-	cooling = datetime.timedelta(seconds=jobs.getTotalCoolingTime())
+	runtime = datetime.timedelta(seconds=int(jobs.getTotalRunTime()))
+	pause = datetime.timedelta(seconds=int(jobs.getTotalPauseTime()))
+	cooling = datetime.timedelta(seconds=int(jobs.getTotalCoolingTime())
 
 	print "Total job runtime: {}".format(runtime)
 	print "Total pause time: {}".format(pause)
