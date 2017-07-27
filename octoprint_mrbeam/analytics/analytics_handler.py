@@ -31,15 +31,15 @@ class AnalyticsHandler(object):
 		self._subscribe()
 
 	def _subscribe(self):
-		self._event_bus.subscribe(OctoPrintEvents.PRINT_STARTED, self.onEvent)
-		self._event_bus.subscribe(OctoPrintEvents.PRINT_PAUSED, self.onEvent)
-		self._event_bus.subscribe(OctoPrintEvents.PRINT_RESUMED, self.onEvent)
-		self._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self.onEvent)
-		self._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self.onEvent)
-		self._event_bus.subscribe(OctoPrintEvents.PRINT_CANCELLED, self.onEvent)
-		self._event_bus.subscribe(MrBeamEvents.PRINT_PROGRESS, self.onEvent)
-		self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_PAUSE, self.onEvent)
-		self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_RESUME, self.onEvent)
+		self._event_bus.subscribe(OctoPrintEvents.PRINT_STARTED, self._event_print_started)
+		self._event_bus.subscribe(OctoPrintEvents.PRINT_PAUSED, self._event_print_paused)
+		self._event_bus.subscribe(OctoPrintEvents.PRINT_RESUMED, self._event_print_resumed)
+		self._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self._event_print_done)
+		self._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self._event_print_failed)
+		self._event_bus.subscribe(OctoPrintEvents.PRINT_CANCELLED, self._event_print_cancelled)
+		self._event_bus.subscribe(MrBeamEvents.PRINT_PROGRESS, self._event_print_progress)
+		self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_PAUSE, self._event_laser_cooling_pause)
+		self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_RESUME, self._event_laser_cooling_resume)
 
 	def _initjsonfile(self):
 		if os.path.isfile(self._jsonfile):
@@ -64,80 +64,43 @@ class AnalyticsHandler(object):
 	def _gethostname():
 		return _mrbeam_plugin_implementation.getHostname()
 
-	def onEvent(self, event, payload):
-		data = None
-		typename = 'jobevent'
+	def _event_print_started(self, event, payload):
+		self.write_event('jobevent', 'print_started', 1, {'filename': os.path.basename(payload['file'])})
 
-		if event == OctoPrintEvents.PRINT_STARTED:
-			data = {
-				'type':typename,
-				'v':1,
-				'eventname':'print_started',
-				'filename':os.path.basename(payload['file']),
-				'timestamp':time.time()
-			}
-		elif event == MrBeamEvents.PRINT_PROGRESS:
-			data = {
-				'type':typename,
-				'v':1,
-				'eventname':'print_progress',
-				'progress':payload,
-				'timestamp':time.time()
-			}
-		elif event == OctoPrintEvents.PRINT_PAUSED:
-			data = {
-				'type':typename,
-				'v': 1,
-				'eventname':'print_paused',
-				'timestamp':time.time()
-			}
-		elif event == OctoPrintEvents.PRINT_RESUMED:
-			data = {
-				'type':typename,
-				'v': 1,
-				'eventname':'print_resumed',
-				'timestamp':time.time()
-			}
-		elif event == MrBeamEvents.LASER_COOLING_PAUSE:
-			data = {
-				'type':typename,
-				'v': 1,
-				'eventname':'laser_cooling_pause',
-				'timestamp':time.time()
-			}
-		elif event == MrBeamEvents.LASER_COOLING_RESUME:
-			data = {
-				'type':typename,
-				'v': 1,
-				'eventname':'laser_cooling_resume',
-				'timestamp':time.time()
-			}
-		elif event == OctoPrintEvents.PRINT_DONE:
-			data = {
-				'type':typename,
-				'v': 1,
-				'eventname':'print_done',
-				'timestamp':time.time()
-			}
-		elif event == OctoPrintEvents.PRINT_CANCELLED:
-			data = {
-				'type':typename,
-				'v': 1,
-				'eventname':'print_cancelled',
-				'timestamp':time.time()
-			}
-		elif event == OctoPrintEvents.PRINT_FAILED:
-			data = {
-				'type':typename,
-				'v': 1,
-				'eventname':'print_failed',
-				'timestamp':time.time()
-			}
+	def _event_print_paused(self, event, payload):
+		self.write_event('jobevent', 'print_paused', 1)
 
-		if data is not None:
-			with open(self._jsonfile, 'a') as f:
-				json.dump(data, f)
-				f.write('\n')
+	def _event_print_resumed(self, event, payload):
+		self.write_event('jobevent', 'print_resumed', 1)
+
+	def _event_print_done(self, event, payload):
+		self.write_event('jobevent', 'print_done', 1)
+
+	def _event_print_failed(self, event, payload):
+		self.write_event('jobevent', 'print_failed', 1)
+
+	def _event_print_cancelled(self, event, payload):
+		self.write_event('jobevent', 'print_cancelled', 1)
+
+	def _event_print_progress(self, event, payload):
+		self.write_event('jobevent', 'print_progress', 1, {'progress':payload})
+
+	def _event_laser_cooling_pause(self, event, payload):
+		self.write_event('jobevent', 'laser_cooling_pause', 1)
+
+	def _event_laser_cooling_resume(self, event, payload):
+		self.write_event('jobevent', 'laser_cooling_resume', 1)
+
+	def write_event(self, typename, eventname, version, payload=None):
+		data = {
+			'type':typename,
+			'v': version,
+			'eventname': eventname,
+			'timestamp': time.time()
+		}
+		if payload:
+			data.update(payload)
+		self._append_data_to_file(data)
 
 	def add_dust_log(self, values):
 		data = {
@@ -148,7 +111,9 @@ class AnalyticsHandler(object):
 			'dust_start_ts': values['dust_start_ts'],
 			'dust_end_ts': values['dust_end_ts']
 		}
+		self._append_data_to_file(data)
 
+	def _append_data_to_file(self, data):
 		with open(self._jsonfile, 'a') as f:
 			json.dump(data, f)
 			f.write('\n')
