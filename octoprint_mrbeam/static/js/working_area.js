@@ -486,7 +486,7 @@ $(function(){
 
 				// scale matrix
 
-				var mat = self.getDocumentViewBoxMatrix(doc_dimensions.width, doc_dimensions.height, doc_dimensions.viewbox);
+				var mat = self.getDocumentViewBoxMatrix(doc_dimensions, doc_dimensions.viewbox);
 //				var dpiscale = 90 / self.settings.settings.plugins.mrbeam.svgDPI() * (25.4/90); 
 //				var dpiscale = 25.4 / self.settings.settings.plugins.mrbeam.svgDPI(); 
 //                var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(dpiscale).toTransformString();
@@ -582,7 +582,7 @@ $(function(){
 				var newSvgAttrs = self._getDocumentNamespaceAttributes(f);
 
 				// scale matrix
-				var mat = self.getDocumentViewBoxMatrix(doc_dimensions.width, doc_dimensions.height, doc_dimensions.viewbox);
+				var mat = self.getDocumentViewBoxMatrix(doc_dimensions, doc_dimensions.viewbox);
 				var dpiscale = 25.4 ; // assumption: dxf is in inches, scale to mm
                 var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(dpiscale).toTransformString();
 
@@ -656,6 +656,21 @@ $(function(){
 				return { generator: gen, version: version };
 			}
 
+			// detect Corel Draw by comment
+			// <!-- Creator: CorelDRAW X5 -->
+			var children = f.node.childNodes;
+			for (var i = 0; i < children.length; i++) {
+				var node = children[i];
+				if(node.nodeType === 8){ // check for comment
+					if (node.textContent.indexOf('CorelDRAW') > -1) {
+						gen = 'coreldraw';
+						var version = node.textContent.match(/(Creator: CorelDRAW) (\S+)/)[2];
+						console.log("Generator:", gen, version);
+						return { generator: gen, version: version };
+					}
+				}
+			}
+			
 			// detect Method Draw by comment
 			// <!-- Created with Method Draw - http://github.com/duopixel/Method-Draw/ -->
 			for (var i = 0; i < children.length; i++) {
@@ -1188,8 +1203,8 @@ $(function(){
 
 		self.getDocumentViewBoxMatrix = function(dim, vbox){
 			if(vbox !== null ){
-				var widthPx = dim[0];
-				var heightPx = dim[1];
+				var width = parseFloat(dim.width);
+				var height = parseFloat(dim.height);
 				var parts = vbox.split(' ');
 				if(parts.length === 4){
 					var offsetVBoxX = parseFloat(parts[0]);
@@ -1197,8 +1212,8 @@ $(function(){
 					var widthVBox = parseFloat(parts[2]);
 					var heightVBox = parseFloat(parts[3]);
 
-					var fx = widthPx / widthVBox;
-					var fy = heightPx / heightVBox;
+					var fx = width / widthVBox;
+					var fy = height / heightVBox;
 					var dx = offsetVBoxX * fx;
 					var dy = offsetVBoxY * fy;
 					return [[fx,0,0],[0,fy,0], [dx,dy,1]];
