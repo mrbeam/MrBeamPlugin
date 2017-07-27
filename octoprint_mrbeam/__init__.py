@@ -146,12 +146,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return dict(
 			current_profile_id="_mrbeam_junior", # yea, this needs to be like this
 			svgDPI=90,
-			showlasersafety=False,
-			glasses=False,
-			camera_offset_x=0,
-			camera_offset_y=0,
-			camera_scale=1,
-			camera_rotation=0,
 			dev=dict(
 				debug=False, # deprected
 				terminalMaxLines = 2000,
@@ -171,6 +165,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				frontendUrl="/downloads/files/local/cam/beam-cam.jpg",
 				localFilePath="cam/beam-cam.jpg",
 				keepOriginals=False
+			),
+			gcode_nextgen = dict(
+				enabled = True,
+				precision = 0.05,
+				optimize_travel = True,
+				small_paths_first = True
 			)
 		)
 
@@ -178,19 +178,19 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return dict(
 			current_profile_id=self._settings.get(["current_profile_id"]),
 			svgDPI=self._settings.get(['svgDPI']),
-			showlasersafety=self._settings.get(['showlasersafety']),
-			glasses=self._settings.get(['glasses']),
-			camera_offset_x=self._settings.get(['camera_offset_x']),
-			camera_offset_y=self._settings.get(['camera_offset_y']),
-			camera_scale=self._settings.get(['camera_scale']),
-			camera_rotation=self._settings.get(['camera_rotation']),
 			analyticsEnabled=self._settings.get(['analyticsEnabled']),
 			cam=dict(enabled=self._settings.get(['cam', 'enabled']),
 					 frontendUrl=self._settings.get(['cam', 'frontendUrl'])),
 			dev=dict(
 				env = self._settings.get(['dev', 'env']),
 				softwareTier = self._settings.get(["dev", "software_tier"]),
-				terminalMaxLines = self._settings.get(['dev', 'terminalMaxLines']))
+				terminalMaxLines = self._settings.get(['dev', 'terminalMaxLines'])),
+			gcode_nextgen=dict(
+				enabled = self._settings.get(['gcode_nextgen', 'enabled']),
+				precision = self._settings.get(['gcode_nextgen', 'precision']),
+				optimize_travel = self._settings.get(['gcode_nextgen', 'optimize_travel']),
+				small_paths_first = self._settings.get(['gcode_nextgen', 'small_paths_first']),
+			)
 		)
 
 	def on_settings_save(self, data):
@@ -200,14 +200,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._settings.set_boolean(["zAxis"], data["zAxis"])
 		if "svgDPI" in data:
 			self._settings.set_int(["svgDPI"], data["svgDPI"])
-		if "camera_offset_x" in data:
-			self._settings.set_int(["camera_offset_x"], data["camera_offset_x"])
-		if "camera_offset_y" in data:
-			self._settings.set_int(["camera_offset_y"], data["camera_offset_y"])
-		if "camera_scale" in data:
-			self._settings.set_float(["camera_scale"], data["camera_scale"])
-		if "camera_rotation" in data:
-			self._settings.set_float(["camera_rotation"], data["camera_rotation"])
 
 		selectedProfile = self.laserCutterProfileManager.get_current_or_default()
 		self._settings.set(["current_profile_id"], selectedProfile['id'])
@@ -227,14 +219,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# Define your plugin's asset files to automatically include in the
 		# core UI here.
 		return dict(
-			js=["js/libthomasmagic.js",
-				# "js/lib/parallel.js",
-				"js/lasercutterprofiles.js","js/mother_viewmodel.js", "js/mrbeam.js","js/color_classifier.js",
+			js=["js/lasercutterprofiles.js","js/mother_viewmodel.js", "js/mrbeam.js","js/color_classifier.js",
 				"js/working_area.js", "js/camera.js", "js/lib/snap.svg-min.js", "js/snap-dxf.js", "js/render_fills.js", "js/path_convert.js",
 				"js/matrix_oven.js", "js/drag_scale_rotate.js",	"js/convert.js", "js/snap_gc_plugin.js", "js/gcode_parser.js", "js/gridify.js",
 				"js/lib/photobooth_min.js", "js/svg_cleaner.js", "js/loginscreen_viewmodel.js",
 				"js/wizard_acl.js", "js/netconnectd_wrapper.js", "js/lasersaftey_viewmodel.js",
-				"js/ready_to_laser_viewmodel.js", "js/lib/screenfull.min.js"],
+				"js/ready_to_laser_viewmodel.js", "js/lib/screenfull.min.js",
+				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js",],
 			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css", "css/quicktext-fonts.css"],
 			less=["less/mrbeam.less"]
 		)

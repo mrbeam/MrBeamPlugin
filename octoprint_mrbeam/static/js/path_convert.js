@@ -155,10 +155,12 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 				d = 'M' + x1 + ',' + y1 + 'L' + x2 + ',' + y2;
 				break;
 			case 'polyline':
-				d = 'M' + old_element.attr('points');
+//				d = 'M' + old_element.attr('points');
+				d = 'M' + old_element.attr().points.trim();
 				break;
 			case 'polygon':
-				d = 'M' + old_element.attr('points') + 'Z';
+//				d = 'M' + old_element.attr('points') + 'Z';
+				d = 'M' + old_element.attr().points.trim() + 'Z';
 				break;
 			case 'rect':
 				// TODO ... 

@@ -94,18 +94,12 @@ $(function(){
 
 		self.log = [];
 
-		self.gc_options = {
-			precision: 0.1,
-			optimize_travel: true,
-			small_paths_first: true
-		};
-
 		self.command = ko.observable(undefined);
 
 		self.availableHeight = ko.observable(undefined);
 		self.availableWidth = ko.observable(undefined);
 		self.px2mm_factor = 1; // initial value
-		self.svgDPI = ko.observable(90); // TODO fetch from settings
+		self.svgDPI = function(){return 90;} // initial value, gets overwritten by settings in onAllBound()
 
 		self.workingAreaWidthMM = ko.computed(function(){
 			return self.profile.currentProfileData().volume.width() - self.profile.currentProfileData().volume.origin_offset_x();
@@ -118,12 +112,10 @@ $(function(){
 			return Snap.matrix(1,0,0,-1,0,h);
 		}, self);
 
-        // QuickText fields
-        self.fontMap = ['Ubuntu', 'Roboto', 'Libre Baskerville', 'Indie Flower', 'VT323'];
-        self.currentQuickTextFile = undefined;
-        self.currentQuickText = ko.observable();
-        self.lastQuickTextFontIndex = 0;
-        self.lastQuickTextIntensity = 0; // rgb values: 0=black, 155=white
+        // get overwritten by settings in onAllBound()
+		self.gc_options = ko.computed(function(){
+			return {enabled: false};
+		});
 
         // QuickText fields
         self.fontMap = ['Ubuntu', 'Roboto', 'Libre Baskerville', 'Indie Flower', 'VT323'];
@@ -132,10 +124,6 @@ $(function(){
         self.lastQuickTextFontIndex = 0;
         self.lastQuickTextIntensity = 0; // rgb values: 0=black, 155=white
 
-        self.camera_offset_x = ko.observable(0);
-		self.camera_offset_y = ko.observable(0);
-		self.camera_scale = ko.observable(1.0);
-		self.camera_rotation = ko.observable(0.0);
 		self.zoom = ko.observable(1.0);
 		self.zoomPercX = ko.observable(0);
 		self.zoomPercY = ko.observable(0);
@@ -225,10 +213,6 @@ $(function(){
 			return self.zoom() * self.workingAreaWidthMM() / self.workingAreaWidthPx();
 		});
 
-		self.camTransform = ko.computed(function(){
-			return "scale("+self.camera_scale()+") rotate("+self.camera_rotation()+"deg) translate("+self.camera_offset_x()+"px, "+self.camera_offset_y()+"px)";
-		});
-
 		// matrix scales svg units to display_pixels
 		self.scaleMatrix = ko.computed(function(){
 			var m = new Snap.Matrix();
@@ -256,28 +240,6 @@ $(function(){
 			return self.placedDesigns().length === 0;
 		});
 
-		self.initCameraCalibration = function(){
-			var s = self.settings.settings.plugins.mrbeam;
-			s.camera_offset_x.subscribe(function(newValue) {
-				self.camera_offset_x(newValue);
-			});
-			s.camera_offset_y.subscribe(function(newValue) {
-				self.camera_offset_y(newValue);
-			});
-			s.camera_scale.subscribe(function(newValue) {
-				self.camera_scale(newValue);
-			});
-			s.camera_rotation.subscribe(function(newValue) {
-				self.camera_rotation(newValue);
-			});
-
-			s.camera_offset_x.notifySubscribers(s.camera_offset_x());
-			s.camera_offset_y.notifySubscribers(s.camera_offset_y());
-			s.camera_scale.notifySubscribers(s.camera_scale());
-			s.camera_rotation.notifySubscribers(s.camera_rotation());
-
-		};
-
 		self.clear = function(){
 			self.abortFreeTransforms();
 			snap.selectAll('#userContent>*:not(defs)').remove();
@@ -293,7 +255,8 @@ $(function(){
 			snap.selectAll('#userContent *[stroke]:not(#bbox)').forEach(function (el) {
 				var colHex = el.attr().stroke;
 				if (typeof(colHex) !== 'undefined' && colHex !== 'none' && typeof(colHash[colHex]) === 'undefined') {
-					var colName = self.colorNamer.classify(colHex);
+//					var colName = self.colorNamer.classify(colHex);
+					var colName = colHex;
 					colFound.push({hex: colHex, name: colName});
 					colHash[colHex] = 1;
 				}
@@ -461,13 +424,13 @@ $(function(){
 					flowrootEl.remove();
 				}
 
-				var svgClasses = {};
-				f.selectAll('path').forEach(function (el, i) {
-					var elClass = el.attr('class');
-					if(svgClasses[elClass] === undefined){
-						console.log(elClass);
-					}
-				});
+//				var svgClasses = {};
+//				f.selectAll('path').forEach(function (el, i) {
+//					var elClass = el.attr('class');
+//					if(svgClasses[elClass] === undefined){
+//						console.log(elClass);
+//					}
+//				});
 				// find all elements with "display=none" and remove them
 				f.selectAll("[display=none]").remove();
 				f.selectAll("script").remove();
@@ -482,7 +445,7 @@ $(function(){
 
 				// scale matrix
 
-				var mat = self.getDocumentViewBoxMatrix(doc_dimensions.width, doc_dimensions.height, doc_dimensions.viewbox);
+				var mat = self.getDocumentViewBoxMatrix(doc_dimensions, doc_dimensions.viewbox);
 //				var dpiscale = 90 / self.settings.settings.plugins.mrbeam.svgDPI() * (25.4/90);
 //				var dpiscale = 25.4 / self.settings.settings.plugins.mrbeam.svgDPI();
 //                var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(dpiscale).toTransformString();
@@ -527,11 +490,11 @@ $(function(){
 					newSvg.clean_gc();
 				});
 				newSvg.ftRegisterAfterTransformCallback(function(){
-//					newSvg.embed_gc(self.flipYMatrix(), self.workingAreaWidthMM(), self.workingAreaHeightMM(), self.gc_options);
+					newSvg.embed_gc(self.flipYMatrix(), self.gc_options());
 				});
 
 
-//				newSvg.embed_gc(self.flipYMatrix(), self.workingAreaWidthMM(), self.workingAreaHeightMM(), self.gc_options);
+				newSvg.embed_gc(self.flipYMatrix(), self.gc_options());
 
 				setTimeout(function(){
 					newSvg.ftReportTransformation();
@@ -567,7 +530,7 @@ $(function(){
 			svg.data('fitMatrix', null);
 			$('#'+file.id).removeClass('misfit');
 			self.svgTransformUpdate(svg);
-//			svg.embed_gc(self.flipYMatrix(), self.workingAreaWidthMM(), self.workingAreaHeightMM(), self.gc_options);
+			svg.embed_gc(self.flipYMatrix(), self.gc_options());
 		};
 
 		self.placeDXF = function(file) {
@@ -578,7 +541,7 @@ $(function(){
 				var newSvgAttrs = self._getDocumentNamespaceAttributes(f);
 
 				// scale matrix
-				var mat = self.getDocumentViewBoxMatrix(doc_dimensions.width, doc_dimensions.height, doc_dimensions.viewbox);
+				var mat = self.getDocumentViewBoxMatrix(doc_dimensions, doc_dimensions.viewbox);
 				var dpiscale = 25.4 ; // assumption: dxf is in inches, scale to mm
                 var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(dpiscale).toTransformString();
 
@@ -610,32 +573,25 @@ $(function(){
 		self._get_generator_info = function(f){
 			var gen = null;
 			var version = null;
+			var root_attrs;
+			if(f.select('svg') === null){
+				root_attrs = f.node.attributes;
+			} else {
+				root_attrs = f.select('svg').node.attributes;
+			}
 
 			// detect Inkscape by attribute
-			var root = f.select('svg');
-			if(root === null){
-				console.log("svg root el not found");
-				var attrs = f.node.attributes;
-				var inkscape_version = attrs['inkscape:version'];
-				if(inkscape_version !== undefined){
-					version = inkscape_version;
-					console.log("XX Generator:", gen, version);
-					return {generator: gen, version: version};
-				}
-			} else {
-				var inkscape_version = f.select('svg').attr('inkscape:version');
-				if (inkscape_version !== null) {
-					gen = 'inkscape';
-					version = inkscape_version;
-					console.log("Generator:", gen, version);
-					return {generator: gen, version: version};
-				}
+			var inkscape_version = root_attrs['inkscape:version'];
+			if(inkscape_version !== undefined){
+				version = inkscape_version;
+				console.log("Generator:", gen, version);
+				return {generator: gen, version: version};
 			}
 
 			// detect Corel
 //				return {generator: gen, version: version};
 
-			// detect Illustrator by comment
+			// detect Illustrator by comment (works with 'save as svg')
 			// <!-- Generator: Adobe Illustrator 16.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
 			var children = f.node.childNodes;
 			for (var i = 0; i < children.length; i++) {
@@ -650,13 +606,29 @@ $(function(){
 					}
 				}
 			}
-//			Array.from(f.node.childNodes).forEach(function (entry) {
-//				if (entry.nodeType === 8) { // Nodetype 8 = comment
-//					if (entry.textContent.indexOf('Illustrator') > -1) {
-//						new PNotify({title: gettext("Illustrator SVG Detected"), text: "Illustrator SVG detected! To preserve correct scale, please go to the \'Settings\' menu and change the \'SVG dpi\' field under \'Plugins/Svg Conversion\' according to your file. And add it again.", type: "info", hide: false});
-//					}
-//				}
-//			});
+
+			// detect Illustrator by data-name (for 'export as svg')
+			if(root_attrs && root_attrs['data-name']){
+				gen = 'illustrator';
+				version = '?';
+				console.log("Generator:", gen, version);
+				return { generator: gen, version: version };
+			}
+
+			// detect Corel Draw by comment
+			// <!-- Creator: CorelDRAW X5 -->
+			var children = f.node.childNodes;
+			for (var i = 0; i < children.length; i++) {
+				var node = children[i];
+				if(node.nodeType === 8){ // check for comment
+					if (node.textContent.indexOf('CorelDRAW') > -1) {
+						gen = 'coreldraw';
+						var version = node.textContent.match(/(Creator: CorelDRAW) (\S+)/)[2];
+						console.log("Generator:", gen, version);
+						return { generator: gen, version: version };
+					}
+				}
+			}
 
 			// detect Method Draw by comment
 			// <!-- Created with Method Draw - http://github.com/duopixel/Method-Draw/ -->
@@ -731,6 +703,10 @@ $(function(){
 				} else if (generator.generator === 'illustrator') {
 					console.log("illustrator, px @ 72dpi");
 					declaredUnit = 'px_illustrator';
+				} else if (generator.generator === 'unknown'){
+					console.log('unable to detect generator, using settings->svgDPI:', self.svgDPI());
+					declaredUnit = 'px_settings';
+					self.uuconv.px_settings = self.svgDPI() / 90; // scale to our internal 90
 				}
 			}
 			var declaredUnitValue = self.uuconv[declaredUnit];
@@ -791,16 +767,12 @@ $(function(){
 			self.abortFreeTransforms();
 			var srcElem = snap.select('#'+src.previewId);
 			var newSvg = srcElem.clone();
+			newSvg.clean_gc();
 			var file = {url: src.url, origin: src.origin, name: src.name, type: src.type, refs:{download: src.url}};
 			var id = self.getEntryId(file);
 			var previewId = self.generateUniqueId(id, file);
 			newSvg.attr({id: previewId, class: 'userSVG'});
 			snap.select("#userContent").append(newSvg);
-			newSvg.ftRegisterOnTransformCallback(self.svgTransformUpdate);
-			newSvg.transformable();
-			setTimeout(function(){
-				newSvg.ftReportTransformation();
-			}, 200);
 
 			file.id = id; // list entry id
 			file.previewId = previewId;
@@ -808,6 +780,20 @@ $(function(){
 
 			self.placedDesigns.push(file);
 			self.placeSmart(newSvg);
+			newSvg.transformable();
+			newSvg.ftRegisterOnTransformCallback(self.svgTransformUpdate);
+			newSvg.ftRegisterBeforeTransformCallback(function(){
+				newSvg.clean_gc();
+			});
+			newSvg.ftRegisterAfterTransformCallback(function(){
+				newSvg.embed_gc(self.flipYMatrix(), self.gc_options());
+			});
+			setTimeout(function(){
+				newSvg.ftReportTransformation();
+			}, 200);
+
+
+			newSvg.embed_gc(self.flipYMatrix(), self.gc_options());
 		};
 
 		self.placeSmart = function(elem){
@@ -855,7 +841,10 @@ $(function(){
 			}
 			var dx = newX - elemBBox.x;
 			var dy = newY - elemBBox.y;
-			elem.transform('t'+dx+','+dy);
+			var elemCTM = elem.transform().localMatrix;
+			elemCTM.e += dx;
+			elemCTM.f += dy;
+			elem.transform(elemCTM);
 		};
 
 		self.toggleTransformHandles = function(file){
@@ -892,8 +881,9 @@ $(function(){
 			$('#'+label_id+' .vertical').val(vertical.toFixed() + 'mm');
 			$('#'+label_id+' .rotation').val(rot.toFixed(1) + '°');
 			var scale = svg.ftGetScale();
-			var dpiscale = 90 / self.settings.settings.plugins.mrbeam.svgDPI();
-			$('#'+label_id+' .scale').val((scale/dpiscale*100).toFixed(1) + '%');
+			// var dpiscale = 90 / self.settings.settings.plugins.mrbeam.svgDPI();
+			// $('#'+label_id+' .scale').val((scale/dpiscale*100).toFixed(1) + '%');
+			$('#'+label_id+' .scale').val((scale*100).toFixed(1) + '%');
 			self.check_sizes_and_placements();
 		};
 
@@ -1173,8 +1163,8 @@ $(function(){
 
 		self.getDocumentViewBoxMatrix = function(dim, vbox){
 			if(vbox !== null ){
-				var widthPx = dim[0];
-				var heightPx = dim[1];
+				var width = parseFloat(dim.width);
+				var height = parseFloat(dim.height);
 				var parts = vbox.split(' ');
 				if(parts.length === 4){
 					var offsetVBoxX = parseFloat(parts[0]);
@@ -1182,8 +1172,8 @@ $(function(){
 					var widthVBox = parseFloat(parts[2]);
 					var heightVBox = parseFloat(parts[3]);
 
-					var fx = widthPx / widthVBox;
-					var fy = heightPx / heightVBox;
+					var fx = width / widthVBox;
+					var fy = height / heightVBox;
 					var dx = offsetVBoxX * fx;
 					var dy = offsetVBoxY * fy;
 					return [[fx,0,0],[0,fy,0], [dx,dy,1]];
@@ -1198,7 +1188,7 @@ $(function(){
 			'px':1, // Reference @ 90 dpi
 			'in':90.0,
 			'pt':1.25,
-			'px_inkscape_old':1, // 90 dpi
+			'px_inkscape_old':1, // 90 dpi // < Inkscape v0.91
 			'px_inkscape_new':0.9375, // 96 dpi
 			'px_illustrator':1.25, // 72 dpi
 			'mm':3.5433070866,
@@ -1490,20 +1480,29 @@ $(function(){
 			self.init();
 		};
 
-		self.onStartupComplete = function(){
-			self.initCameraCalibration();
-		};
+		self.onAllBound = function(allViewModels){
+		    self.svgDPI = self.settings.settings.plugins.mrbeam.svgDPI;
+            self.gc_options = ko.computed(function(){
+                return {
+                    enabled: self.settings.settings.plugins.mrbeam.gcode_nextgen.enabled(),
+                    precision: self.settings.settings.plugins.mrbeam.gcode_nextgen.precision(),
+                    optimize_travel: self.settings.settings.plugins.mrbeam.gcode_nextgen.optimize_travel(),
+                    small_paths_first: self.settings.settings.plugins.mrbeam.gcode_nextgen.small_paths_first(),
+                    clipRect: [0,0,self.workingAreaWidthMM(), self.workingAreaHeightMM()]
+                };
+            });
+        };
 
 		self.onTabChange = function(current, prev){
 		    if(current == '#settings'){
 		        // Since Settings is not a BS dialog anymore,
                 // we need to trigger 'show' and 'hidden' events "manually"
                 // for OctoPrint to trigger onSettingsShown() and onSettingsHidden()
-			    if (self.settings && self.settings.settingsDialog) {
+                if (self.settings && self.settings.settingsDialog) {
                     self.settings.settingsDialog.trigger('show');
                 }
-            }
-        };
+		    }
+		};
 
 		self.onAfterTabChange = function(current, prev){
 			if(current == '#workingarea'){
