@@ -65,7 +65,7 @@ $(function(){
 
 		return 0;
 	}
-	
+
 	function getHumanReadableId(length){
 		length = length || 4;
 		var consonants = 'bcdfghjklmnpqrstvwxz';
@@ -94,18 +94,12 @@ $(function(){
 
 		self.log = [];
 
-		self.gc_options = {
-			precision: 0.05,
-			optimize_travel: true,
-			small_paths_first: true
-		};
-
 		self.command = ko.observable(undefined);
 
 		self.availableHeight = ko.observable(undefined);
 		self.availableWidth = ko.observable(undefined);
 		self.px2mm_factor = 1; // initial value
-		self.svgDPI = ko.observable(90); // TODO fetch from settings
+		self.svgDPI = self.settings.settings.plugins.mrbeam.svgDPI;
 
 		self.workingAreaWidthMM = ko.computed(function(){
 			return self.profile.currentProfileData().volume.width() - self.profile.currentProfileData().volume.origin_offset_x();
@@ -117,20 +111,16 @@ $(function(){
 			var h = self.workingAreaHeightMM();
 			return Snap.matrix(1,0,0,-1,0,h);
 		}, self);
+
 		self.gc_options = ko.computed(function(){
 			return {
-				precision: 0.1,
-				optimize_travel: true,
-				small_paths_first: true,
+				enabled: self.settings.settings.plugins.mrbeam.gcode_nextgen.enabled(),
+                precision: self.settings.settings.plugins.mrbeam.gcode_nextgen.precision(),
+                optimize_travel: self.settings.settings.plugins.mrbeam.gcode_nextgen.optimize_travel(),
+                small_paths_first: self.settings.settings.plugins.mrbeam.gcode_nextgen.small_paths_first(),
 				clipRect: [0,0,self.workingAreaWidthMM(), self.workingAreaHeightMM()]
 			};
 		});
-        // QuickText fields
-        self.fontMap = ['Ubuntu', 'Roboto', 'Libre Baskerville', 'Indie Flower', 'VT323'];
-        self.currentQuickTextFile = undefined;
-        self.currentQuickText = ko.observable();
-        self.lastQuickTextFontIndex = 0;
-        self.lastQuickTextIntensity = 0; // rgb values: 0=black, 155=white
 
         // QuickText fields
         self.fontMap = ['Ubuntu', 'Roboto', 'Libre Baskerville', 'Indie Flower', 'VT323'];
@@ -139,10 +129,6 @@ $(function(){
         self.lastQuickTextFontIndex = 0;
         self.lastQuickTextIntensity = 0; // rgb values: 0=black, 155=white
 
-        self.camera_offset_x = ko.observable(0);
-		self.camera_offset_y = ko.observable(0);
-		self.camera_scale = ko.observable(1.0);
-		self.camera_rotation = ko.observable(0.0);
 		self.zoom = ko.observable(1.0);
 		self.zoomPercX = ko.observable(0);
 		self.zoomPercY = ko.observable(0);
@@ -156,7 +142,7 @@ $(function(){
 			var y = self.zoomOffY();
 			return [x, y, w, h].join(' ');
 		});
-		
+
 		self.set_zoom_factor = function(delta, centerX, centerY){
 			var oldZ = self.zoom();
 			var newZ = oldZ + delta;
@@ -232,17 +218,13 @@ $(function(){
 			return self.zoom() * self.workingAreaWidthMM() / self.workingAreaWidthPx();
 		});
 
-		self.camTransform = ko.computed(function(){
-			return "scale("+self.camera_scale()+") rotate("+self.camera_rotation()+"deg) translate("+self.camera_offset_x()+"px, "+self.camera_offset_y()+"px)";
-		});
-
 		// matrix scales svg units to display_pixels
 		self.scaleMatrix = ko.computed(function(){
 			var m = new Snap.Matrix();
 			return m;
 		});
 
-		
+
 //		self.matrixMMflipY = ko.computed(function(){
 //			var m = new Snap.Matrix();
 //			var yShift = self.workingAreaHeightMM(); // 0,0 origin of the gcode is bottom left. (top left in the svg)
@@ -262,28 +244,6 @@ $(function(){
 		self.working_area_empty = ko.computed(function(){
 			return self.placedDesigns().length === 0;
 		});
-
-		self.initCameraCalibration = function(){
-			var s = self.settings.settings.plugins.mrbeam;
-			s.camera_offset_x.subscribe(function(newValue) {
-				self.camera_offset_x(newValue);
-			});
-			s.camera_offset_y.subscribe(function(newValue) {
-				self.camera_offset_y(newValue);
-			});
-			s.camera_scale.subscribe(function(newValue) {
-				self.camera_scale(newValue);
-			});
-			s.camera_rotation.subscribe(function(newValue) {
-				self.camera_rotation(newValue);
-			});
-
-			s.camera_offset_x.notifySubscribers(s.camera_offset_x());
-			s.camera_offset_y.notifySubscribers(s.camera_offset_y());
-			s.camera_scale.notifySubscribers(s.camera_scale());
-			s.camera_rotation.notifySubscribers(s.camera_rotation());
-
-		};
 
 		self.clear = function(){
 			self.abortFreeTransforms();
@@ -377,7 +337,7 @@ $(function(){
 			});
 			return filePlaced;
 		};
-		
+
 		self.countPlacements = function(file){
 			var label = file["refs"]["download"];
 			var p = snap.selectAll("g[mb\\:origin='"+label+"']");
@@ -487,8 +447,8 @@ $(function(){
 				// scale matrix
 
 				var mat = self.getDocumentViewBoxMatrix(doc_dimensions, doc_dimensions.viewbox);
-//				var dpiscale = 90 / self.settings.settings.plugins.mrbeam.svgDPI() * (25.4/90); 
-//				var dpiscale = 25.4 / self.settings.settings.plugins.mrbeam.svgDPI(); 
+//				var dpiscale = 90 / self.settings.settings.plugins.mrbeam.svgDPI() * (25.4/90);
+//				var dpiscale = 25.4 / self.settings.settings.plugins.mrbeam.svgDPI();
 //                var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(dpiscale).toTransformString();
                 var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2])
 						.scale(unitScaleX, unitScaleY).toTransformString();
@@ -520,8 +480,8 @@ $(function(){
 				var id = self.getEntryId(file);
 				var previewId = self.generateUniqueId(id, file); // appends -# if multiple times the same design is placed.
 				newSvg.attr({
-					id: previewId, 
-					class: 'userSVG', 
+					id: previewId,
+					class: 'userSVG',
 					'mb:origin': file["refs"]["download"],
 				});
 				snap.select("#userContent").append(newSvg);
@@ -533,7 +493,7 @@ $(function(){
 				newSvg.ftRegisterAfterTransformCallback(function(){
 					newSvg.embed_gc(self.flipYMatrix(), self.gc_options());
 				});
-				
+
 
 				newSvg.embed_gc(self.flipYMatrix(), self.gc_options());
 
@@ -610,7 +570,7 @@ $(function(){
 			};
 			Snap.loadDXF(url, callback);
 		};
-		
+
 		self._get_generator_info = function(f){
 			var gen = null;
 			var version = null;
@@ -620,7 +580,7 @@ $(function(){
 			} else {
 				root_attrs = f.select('svg').node.attributes;
 			}
-			
+
 			// detect Inkscape by attribute
 			var inkscape_version = root_attrs['inkscape:version'];
 			if(inkscape_version !== undefined){
@@ -647,7 +607,7 @@ $(function(){
 					}
 				}
 			}
-			
+
 			// detect Illustrator by data-name (for 'export as svg')
 			if(root_attrs && root_attrs['data-name']){
 				gen = 'illustrator';
@@ -670,7 +630,7 @@ $(function(){
 					}
 				}
 			}
-			
+
 			// detect Method Draw by comment
 			// <!-- Created with Method Draw - http://github.com/duopixel/Method-Draw/ -->
 			for (var i = 0; i < children.length; i++) {
@@ -683,7 +643,7 @@ $(function(){
 					}
 				}
 			}
-			
+
 			console.log("Generator:", gen, version);
 			return { generator: 'unknown', version: 'unknown' };
 		};
@@ -723,7 +683,7 @@ $(function(){
 				units_y: units_y
 			};
 		};
-		
+
 		self._getDocumentScaleToMM = function(declaredUnit, generator){
 			if(declaredUnit === null || declaredUnit === ''){
 				declaredUnit = 'px';
@@ -740,7 +700,7 @@ $(function(){
 					}
 				} else if (generator.generator === 'corel draw'){
 					console.log("corel draw, px @ 90dpi");
-					
+
 				} else if (generator.generator === 'illustrator') {
 					console.log("illustrator, px @ 72dpi");
 					declaredUnit = 'px_illustrator';
@@ -751,7 +711,7 @@ $(function(){
 				}
 			}
 			var declaredUnitValue = self.uuconv[declaredUnit];
-			var scale = declaredUnitValue / self.uuconv.mm; 
+			var scale = declaredUnitValue / self.uuconv.mm;
 			console.log("Units: " + declaredUnit, " => scale factor to mm: " + scale);
 			return scale;
 		};
@@ -811,7 +771,7 @@ $(function(){
 			newSvg.clean_gc();
 			var file = {url: src.url, origin: src.origin, name: src.name, type: src.type, refs:{download: src.url}};
 			var id = self.getEntryId(file);
-			var previewId = self.generateUniqueId(id, file); 
+			var previewId = self.generateUniqueId(id, file);
 			newSvg.attr({id: previewId, class: 'userSVG'});
 			snap.select("#userContent").append(newSvg);
 
@@ -836,7 +796,7 @@ $(function(){
 
 			newSvg.embed_gc(self.flipYMatrix(), self.gc_options());
 		};
-		
+
 		self.placeSmart = function(elem){
 			var spacer = 2;
 			var label = elem.attr('mb:origin');
@@ -879,7 +839,7 @@ $(function(){
 			if(newX + elemBBox.w > self.workingAreaWidthMM()){
 				newX = leftest.getBBox().x;
 				newY = lowestBBox.y2 + spacer;
-			} 
+			}
 			var dx = newX - elemBBox.x;
 			var dy = newY - elemBBox.y;
 			var elemCTM = elem.transform().localMatrix;
@@ -922,8 +882,9 @@ $(function(){
 			$('#'+label_id+' .vertical').val(vertical.toFixed() + 'mm');
 			$('#'+label_id+' .rotation').val(rot.toFixed(1) + '°');
 			var scale = svg.ftGetScale();
-			var dpiscale = 90 / self.settings.settings.plugins.mrbeam.svgDPI();
-			$('#'+label_id+' .scale').val((scale/dpiscale*100).toFixed(1) + '%');
+			// var dpiscale = 90 / self.settings.settings.plugins.mrbeam.svgDPI();
+			// $('#'+label_id+' .scale').val((scale/dpiscale*100).toFixed(1) + '%');
+			$('#'+label_id+' .scale').val((scale*100).toFixed(1) + '%');
 			self.check_sizes_and_placements();
 		};
 
@@ -1228,7 +1189,7 @@ $(function(){
 			'px':1, // Reference @ 90 dpi
 			'in':90.0,
 			'pt':1.25,
-			'px_inkscape_old':1, // 90 dpi
+			'px_inkscape_old':1, // 90 dpi // < Inkscape v0.91
 			'px_inkscape_new':0.9375, // 96 dpi
 			'px_illustrator':1.25, // 72 dpi
 			'mm':3.5433070866,
@@ -1362,7 +1323,7 @@ $(function(){
 
 		self.generateUniqueId = function(idBase, file){
 			var suffix = self.countPlacements(file);
-			
+
 			var suffix = 0;
 			var id = idBase + "-" + suffix;
 //			while(snap.select('#'+id) !== null){
@@ -1385,7 +1346,7 @@ $(function(){
 			self.abortFreeTransforms();
 			var wMM = self.workingAreaWidthMM();
 			var hMM = self.workingAreaHeightMM();
-			var wPT = wMM * 90 / 25.4;  // TODO ... switch to 96dpi ? 
+			var wPT = wMM * 90 / 25.4;  // TODO ... switch to 96dpi ?
 			var hPT = hMM * 90 / 25.4;
 			var compSvg = self.getNewSvg('compSvg', wPT, hPT);
 //			var attrs = {id: 'flipY', transform: 'matrix(1,0,0,-1,0,'+hMM+')'};
@@ -1417,7 +1378,7 @@ $(function(){
 			if(svgStr !== ''){
 				var wMM = self.workingAreaWidthMM();
 				var hMM = self.workingAreaHeightMM();
-				var dpiFactor = 90 / 25.4; // we create SVG always with 90 dpi.  // TODO ... switch to 96dpi ? 
+				var dpiFactor = 90 / 25.4; // we create SVG always with 90 dpi.  // TODO ... switch to 96dpi ?
 				var w = dpiFactor * wMM;
 				var h = dpiFactor * hMM;
 				var viewBox = "0 0 " + wMM + " " + hMM;
@@ -1425,7 +1386,7 @@ $(function(){
 				svgStr = svgStr.replace("(\\\"","(");
 				svgStr = svgStr.replace("\\\")",")");
 
-				var svg = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:mb="http://www.mr-beam.org/mbns"' 
+				var svg = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:mb="http://www.mr-beam.org/mbns"'
 						+ ' width="'+ w +'" height="'+ h +'"  viewBox="'+ viewBox +'"><defs/>'+svgStr+'</svg>';
 				return svg;
 			} else {
@@ -1518,10 +1479,6 @@ $(function(){
 			});
 			self.trigger_resize(); // initialize
 			self.init();
-		};
-
-		self.onStartupComplete = function(){
-			self.initCameraCalibration();
 		};
 
 		self.onAfterTabChange = function(current, prev){
@@ -1880,7 +1837,7 @@ $(function(){
         // ***********************************************************
 		//  QUICKTEXT end
         // ***********************************************************
-		
+
 		self.wheel_zoom = function(target, ev){
 			if (ev.originalEvent.shiftKey) {
 				var wheel = ev.originalEvent.wheelDelta;
@@ -1891,7 +1848,7 @@ $(function(){
 				self.set_zoom_factor(deltaZoom, xPerc, yPerc);
 			}
 		};
-		
+
 		self.mouse_drag = function(target, ev){
 			if (ev.originalEvent.shiftKey) {
 				var pos = self._get_pointer_event_position_MM(ev, ev.currentTarget);
@@ -1926,7 +1883,7 @@ $(function(){
     // view model class, parameters for constructor, container to bind to
     ADDITIONAL_VIEWMODELS.push([WorkingAreaViewModel,
 
-		["loginStateViewModel", "settingsViewModel", "printerStateViewModel",  
+		["loginStateViewModel", "settingsViewModel", "printerStateViewModel",
 			"gcodeFilesViewModel", "laserCutterProfilesViewModel", "cameraViewModel"],
 		[document.getElementById("area_preview"),
 			document.getElementById("homing_overlay"),

@@ -153,13 +153,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			defaultIntensity=500,
 			defaultFeedrate=300,
 			svgDPI=90,
-			svgtogcode_debug_logging=False,
-			showlasersafety=False,
 			glasses=False,
-			camera_offset_x=0,
-			camera_offset_y=0,
-			camera_scale=1,
-			camera_rotation=0,
 			dev=dict(
 				env="PROD",
 				terminalMaxLines = 2000
@@ -172,6 +166,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				frontendUrl="/downloads/files/local/cam/beam-cam.jpg",
 				localFilePath="cam/beam-cam.jpg",
 				keepOriginals=False
+			),
+			gcode_nextgen = dict(
+				enabled = true,
+				precision = 0.05,
+				optimize_travel = True,
+				small_paths_first = True
 			)
 		)
 
@@ -181,13 +181,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			defaultIntensity=self._settings.get(['defaultIntensity']),
 			defaultFeedrate=self._settings.get(['defaultFeedrate']),
 			svgDPI=self._settings.get(['svgDPI']),
-			svgtogcode_debug_logging=self._settings.get(['svgtogcode_debug_logging']),
-			showlasersafety=self._settings.get(['showlasersafety']),
 			glasses=self._settings.get(['glasses']),
-			camera_offset_x=self._settings.get(['camera_offset_x']),
-			camera_offset_y=self._settings.get(['camera_offset_y']),
-			camera_scale=self._settings.get(['camera_scale']),
-			camera_rotation=self._settings.get(['camera_rotation']),
 			analyticsEnabled=self._settings.get(['analyticsEnabled']),
 			cam=dict(enabled=self._settings.get(['cam', 'enabled']),
 					 frontendUrl=self._settings.get(['cam', 'frontendUrl'])),
@@ -208,16 +202,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._settings.set_int(["defaultFeedrate"], data["defaultFeedrate"])
 		if "svgDPI" in data:
 			self._settings.set_int(["svgDPI"], data["svgDPI"])
-		if "camera_offset_x" in data:
-			self._settings.set_int(["camera_offset_x"], data["camera_offset_x"])
-		if "camera_offset_y" in data:
-			self._settings.set_int(["camera_offset_y"], data["camera_offset_y"])
-		if "camera_scale" in data:
-			self._settings.set_float(["camera_scale"], data["camera_scale"])
-		if "camera_rotation" in data:
-			self._settings.set_float(["camera_rotation"], data["camera_rotation"])
-		if "svgtogcode_debug_logging" in data:
-			self._settings.set_boolean(["svgtogcode_debug_logging"], data["svgtogcode_debug_logging"])
 
 		selectedProfile = self.laserCutterProfileManager.get_current_or_default()
 		self._settings.set(["current_profile_id"], selectedProfile['id'])
