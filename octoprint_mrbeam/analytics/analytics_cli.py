@@ -15,7 +15,11 @@ if __name__ == "__main__":
 
 	with open(jsonfile, 'r') as f:
 		for line in f:
-			data = json.loads(line)
+			try:
+				data = json.loads(line.strip('\x00'))
+			except ValueError as e:
+				print "{}: {}".format(e.message, repr(line))
+				continue
 
 			if data['type'] == "deviceinfo":
 				print "Analytics for device: {}\nSerialnumber: {}".format(data['hostname'], data['serialnumber'])
