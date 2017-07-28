@@ -45,7 +45,7 @@ def set_info_mrbeam_plugin(self, tier):
 	sw_update_config[module_id] = dict(
 		displayName=_get_display_name(self, name),
 		displayVersion=self._plugin_version,
-		type="github_release",
+		type="github_commit", # "github_release",
 		user="mrbeam",
 		repo="MrBeamPlugin",
 		branch="mrbeam2-stable",
@@ -144,7 +144,7 @@ def set_info_mrbeamledstrips(self, tier):
 	sw_update_config[module_id] = dict(
 		displayName=_get_display_name(self, name),
 		displayVersion=version,
-		type="github_release",
+		type="github_commit", #""github_release",
 		user="mrbeam",
 		repo="MrBeamLedStrips",
 		branch="mrbeam2-stable",
