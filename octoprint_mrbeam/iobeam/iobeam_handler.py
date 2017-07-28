@@ -38,9 +38,12 @@ class IoBeamValueEvents(object):
 	These Values / events are not intended to be handled byt OctoPrints event system
 	but by IoBeamHandler's own event system
 	'''
-	LASER_TEMP =         "iobeam.laser.temp"
-	DUST_VALUE =         "iobeam.dust.value"
-
+	LASER_TEMP =          "iobeam.laser.temp"
+	DUST_VALUE =          "iobeam.dust.value"
+	FAN_ON_RESPONSE =     "iobeam.fan.on.response"
+	FAN_OFF_RESPONSE =    "iobeam.fan.off.response"
+	FAN_AUTO_RESPONSE =   "iobeam.fan.auto.response"
+	FAN_FACTOR_RESPONSE = "iobeam.fan.factor.response"
 
 class IoBeamHandler(object):
 
@@ -118,6 +121,7 @@ class IoBeamHandler(object):
 	MESSAGE_LENGTH_MAX = 1024
 	MESSAGE_NEWLINE = "\n"
 	MESSAGE_SEPARATOR = ":"
+	MESSAGE_OK = "ok"
 	MESSAGE_ERROR = "error"
 
 	MESSAGE_DEVICE_ONEBUTTON =          "onebtn"
@@ -518,22 +522,30 @@ class IoBeamHandler(object):
 
 	def _handle_fan_message(self, message, token):
 		action = token[0] if len(token) > 0 else None
-		payload = self._as_number(token[1]) if len(token) > 1 else None
+		value = token[1] if len(token) > 1 else None
 
 		if action == self.MESSAGE_ACTION_DUST_VALUE and payload is not None:
-			self._fireEvent(IoBeamValueEvents.DUST_VALUE, dict(log=False, val=payload))
-		elif action == self.MESSAGE_ACTION_FAN_ON:
-			pass
-		elif action == self.MESSAGE_ACTION_FAN_OFF:
-			pass
-		elif action == self.MESSAGE_ACTION_FAN_AUTO:
-			pass
-		elif action == self.MESSAGE_ACTION_FAN_FACTOR:
-			pass
-		elif action == self.MESSAGE_ACTION_FAN_VERSION:
-			pass
+			dust_val = self._as_number(value)
+			self._fireEvent(IoBeamValueEvents.DUST_VALUE, dict(val=dust_val))
+			return 0
 		elif action == self.MESSAGE_ACTION_FAN_RPM:
-			pass
+			return 0
+		elif action == self.MESSAGE_ACTION_FAN_VERSION:
+			return 0
+
+		# check if OK otherwise it's an error
+		success = value == self.MESSAGE_OK
+		payload = dict(success=success)
+		if not success: payload['error'] = token[2] if len(token) > 2 else None
+
+		if action == self.MESSAGE_ACTION_FAN_ON:
+			self._fireEvent(IoBeamValueEvents.FAN_ON_RESPONSE, payload)
+		elif action == self.MESSAGE_ACTION_FAN_OFF:
+			self._fireEvent(IoBeamValueEvents.FAN_OFF_RESPONSE, payload)
+		elif action == self.MESSAGE_ACTION_FAN_AUTO:
+			self._fireEvent(IoBeamValueEvents.FAN_AUTO_RESPONSE, payload)
+		elif action == self.MESSAGE_ACTION_FAN_FACTOR:
+			self._fireEvent(IoBeamValueEvents.FAN_FACTOR_RESPONSE, payload)
 		else:
 			return self._handle_invalid_message(message)
 
