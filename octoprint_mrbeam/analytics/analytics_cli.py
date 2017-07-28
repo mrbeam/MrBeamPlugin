@@ -36,7 +36,7 @@ if __name__ == "__main__":
 
 	runtime = datetime.timedelta(seconds=int(jobs.getTotalRunTime()))
 	pause = datetime.timedelta(seconds=int(jobs.getTotalPauseTime()))
-	cooling = datetime.timedelta(seconds=int(jobs.getTotalCoolingTime())
+	cooling = datetime.timedelta(seconds=int(jobs.getTotalCoolingTime()))
 
 	print "Total job runtime: {}".format(runtime)
 	print "Total pause time: {}".format(pause)
