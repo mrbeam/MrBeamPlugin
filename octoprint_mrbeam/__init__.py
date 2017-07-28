@@ -146,6 +146,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return dict(
 			current_profile_id="_mrbeam_junior", # yea, this needs to be like this
 			svgDPI=90,
+			beta_label="",
 			dev=dict(
 				debug=False, # deprected
 				terminalMaxLines = 2000,
@@ -290,7 +291,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 displayName=self.getDisplayName(self._hostname),
 							 hostname=self._hostname,
 							 serial=self._serial,
-							 analyticsEnabled=self._settings.get(["analyticsEnabled"])
+							 analyticsEnabled=self._settings.get(["analyticsEnabled"]),
+							 beta_label=self._settings.get(['beta_label']),
 						 )
 		r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
 
