@@ -126,7 +126,7 @@ class DustManager(object):
 	def _send_fan_command(self, command, wait=1.0, max_retries=5):
 		retries = 0
 		while True:
-			if _mrbeam_plugin_implementation._ioBeam.send_command("fan:{}".format(command)):
+			if _mrbeam_plugin_implementation._ioBeam.send_fan_command(command):
 				return True
 			else:
 				retries += 1

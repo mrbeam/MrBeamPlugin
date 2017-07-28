@@ -201,6 +201,14 @@ class IoBeamHandler(object):
 		'''
 		return self._send_command("{}:{}".format(self.MESSAGE_DEVICE_LASER, self.MESSAGE_ACTION_LASER_TEMP))
 
+	def send_fan_command(self, command):
+		'''
+		Send the specified command as fan:<command>
+		:param command: One of the three values (ON:<0-100>/OFF/AUTO)
+		:return: True if the command was sent sucessfull (does not mean it was sucessfully executed)
+		'''
+		return self._send_command("{}:{}".format(self.MESSAGE_DEVICE_FAN, command))
+
 	def send_command(self, command):
 		'''
 		DEPRECATED !!!!!
