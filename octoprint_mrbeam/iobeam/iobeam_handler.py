@@ -266,7 +266,7 @@ class IoBeamHandler(object):
 		finally:
 			self._callbacks_lock.writer_release()
 
-	def _call_callback(self, _trigger_event, message, **kwargs):
+	def _call_callback(self, _trigger_event, message, kwargs):
 		try:
 			self._callbacks_lock.reader_acquire()
 			if _trigger_event in self._callbacks:
@@ -277,7 +277,7 @@ class IoBeamHandler(object):
 				# If handling of these messages blockes iobeam_handling, we might need a threadpool or so.
 				# One thread for handling this is almost the same bottleneck as current solution,
 				# so I think we would need a thread pool here... But maybe this would be just over engineering.
-				self.__execute_callback_called_by_new_thread(_trigger_event, _callback_array, **kwargs)
+				self.__execute_callback_called_by_new_thread(_trigger_event, _callback_array, kwargs)
 
 				# thread_params = dict(target = self.__execute_callback_called_by_new_thread,
 				#                      name = "iobeamCB_{}".format(_trigger_event),
@@ -292,12 +292,12 @@ class IoBeamHandler(object):
 			self._callbacks_lock.reader_release()
 
 
-	def __execute_callback_called_by_new_thread(self, _trigger_event, _callback_array, **kwargs):
+	def __execute_callback_called_by_new_thread(self, _trigger_event, _callback_array, kwargs):
 		try:
 			self._callbacks_lock.reader_acquire()
 			for my_cb in _callback_array:
 				try:
-					my_cb(**kwargs)
+					my_cb(kwargs)
 				except Exception as e:
 					self._logger.exception("Exception in a callback for event: %s : ", _trigger_event)
 		except:
@@ -557,7 +557,7 @@ class IoBeamHandler(object):
 		temp = self._as_number(token[1]) if len(token) > 1 else None
 
 		if action == self.MESSAGE_ACTION_LASER_TEMP and temp is not None:
-			self._call_callback(IoBeamValueEvents.LASER_TEMP, message, temp=temp)
+			self._call_callback(IoBeamValueEvents.LASER_TEMP, message, dict(temp=temp))
 		else:
 			return self._handle_invalid_message(message)
 
