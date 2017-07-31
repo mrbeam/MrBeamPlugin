@@ -38,9 +38,12 @@ class IoBeamValueEvents(object):
 	These Values / events are not intended to be handled byt OctoPrints event system
 	but by IoBeamHandler's own event system
 	'''
-	LASER_TEMP =         "iobeam.laser.temp"
-	DUST_VALUE =         "iobeam.dust.value"
-
+	LASER_TEMP =          "iobeam.laser.temp"
+	DUST_VALUE =          "iobeam.dust.value"
+	FAN_ON_RESPONSE =     "iobeam.fan.on.response"
+	FAN_OFF_RESPONSE =    "iobeam.fan.off.response"
+	FAN_AUTO_RESPONSE =   "iobeam.fan.auto.response"
+	FAN_FACTOR_RESPONSE = "iobeam.fan.factor.response"
 
 class IoBeamHandler(object):
 
@@ -118,6 +121,7 @@ class IoBeamHandler(object):
 	MESSAGE_LENGTH_MAX = 1024
 	MESSAGE_NEWLINE = "\n"
 	MESSAGE_SEPARATOR = ":"
+	MESSAGE_OK = "ok"
 	MESSAGE_ERROR = "error"
 
 	MESSAGE_DEVICE_ONEBUTTON =          "onebtn"
@@ -201,6 +205,14 @@ class IoBeamHandler(object):
 		'''
 		return self._send_command("{}:{}".format(self.MESSAGE_DEVICE_LASER, self.MESSAGE_ACTION_LASER_TEMP))
 
+	def send_fan_command(self, command):
+		'''
+		Send the specified command as fan:<command>
+		:param command: One of the three values (ON:<0-100>/OFF/AUTO)
+		:return: True if the command was sent sucessfull (does not mean it was sucessfully executed)
+		'''
+		return self._send_command("{}:{}".format(self.MESSAGE_DEVICE_FAN, command))
+
 	def send_command(self, command):
 		'''
 		DEPRECATED !!!!!
@@ -254,18 +266,18 @@ class IoBeamHandler(object):
 		finally:
 			self._callbacks_lock.writer_release()
 
-	def _call_callback(self, _trigger_event, message, **kwargs):
+	def _call_callback(self, _trigger_event, message, kwargs):
 		try:
 			self._callbacks_lock.reader_acquire()
 			if _trigger_event in self._callbacks:
 				_callback_array = self._callbacks[_trigger_event]
 				kwargs['event'] = _trigger_event
- 				kwargs['message'] = message
+				kwargs['message'] = message
 
 				# If handling of these messages blockes iobeam_handling, we might need a threadpool or so.
 				# One thread for handling this is almost the same bottleneck as current solution,
 				# so I think we would need a thread pool here... But maybe this would be just over engineering.
-				self.__execute_callback_called_by_new_thread(_trigger_event, _callback_array, **kwargs)
+				self.__execute_callback_called_by_new_thread(_trigger_event, _callback_array, kwargs)
 
 				# thread_params = dict(target = self.__execute_callback_called_by_new_thread,
 				#                      name = "iobeamCB_{}".format(_trigger_event),
@@ -280,12 +292,12 @@ class IoBeamHandler(object):
 			self._callbacks_lock.reader_release()
 
 
-	def __execute_callback_called_by_new_thread(self, _trigger_event, _callback_array, **kwargs):
+	def __execute_callback_called_by_new_thread(self, _trigger_event, _callback_array, kwargs):
 		try:
 			self._callbacks_lock.reader_acquire()
 			for my_cb in _callback_array:
 				try:
-					my_cb(**kwargs)
+					my_cb(kwargs)
 				except Exception as e:
 					self._logger.exception("Exception in a callback for event: %s : ", _trigger_event)
 		except:
@@ -510,22 +522,31 @@ class IoBeamHandler(object):
 
 	def _handle_fan_message(self, message, token):
 		action = token[0] if len(token) > 0 else None
-		payload = self._as_number(token[1]) if len(token) > 1 else None
+		value = token[1] if len(token) > 1 else None
 
-		if action == self.MESSAGE_ACTION_DUST_VALUE and payload is not None:
-			self._fireEvent(IoBeamValueEvents.DUST_VALUE, dict(log=False, val=payload))
-		elif action == self.MESSAGE_ACTION_FAN_ON:
-			pass
-		elif action == self.MESSAGE_ACTION_FAN_OFF:
-			pass
-		elif action == self.MESSAGE_ACTION_FAN_AUTO:
-			pass
-		elif action == self.MESSAGE_ACTION_FAN_FACTOR:
-			pass
-		elif action == self.MESSAGE_ACTION_FAN_VERSION:
-			pass
+		if action == self.MESSAGE_ACTION_DUST_VALUE:
+			dust_val = self._as_number(value)
+			if dust_val is not None:
+				self._call_callback(IoBeamValueEvents.DUST_VALUE, message, dict(val=dust_val))
+			return 0
 		elif action == self.MESSAGE_ACTION_FAN_RPM:
-			pass
+			return 0
+		elif action == self.MESSAGE_ACTION_FAN_VERSION:
+			return 0
+
+		# check if OK otherwise it's an error
+		success = value == self.MESSAGE_OK
+		payload = dict(success=success)
+		if not success: payload['error'] = token[2] if len(token) > 2 else None
+
+		if action == self.MESSAGE_ACTION_FAN_ON:
+			self._call_callback(IoBeamValueEvents.FAN_ON_RESPONSE, message, payload)
+		elif action == self.MESSAGE_ACTION_FAN_OFF:
+			self._call_callback(IoBeamValueEvents.FAN_OFF_RESPONSE, message, payload)
+		elif action == self.MESSAGE_ACTION_FAN_AUTO:
+			self._call_callback(IoBeamValueEvents.FAN_AUTO_RESPONSE, message, payload)
+		elif action == self.MESSAGE_ACTION_FAN_FACTOR:
+			self._call_callback(IoBeamValueEvents.FAN_FACTOR_RESPONSE, message, payload)
 		else:
 			return self._handle_invalid_message(message)
 
@@ -536,7 +557,7 @@ class IoBeamHandler(object):
 		temp = self._as_number(token[1]) if len(token) > 1 else None
 
 		if action == self.MESSAGE_ACTION_LASER_TEMP and temp is not None:
-			self._call_callback(IoBeamValueEvents.LASER_TEMP, message, temp=temp)
+			self._call_callback(IoBeamValueEvents.LASER_TEMP, message, dict(temp=temp))
 		else:
 			return self._handle_invalid_message(message)
 
