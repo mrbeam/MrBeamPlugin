@@ -59,9 +59,9 @@ $(function(){
 			'Balsa 4mm':{cut_i:100, cut_f:600, cut_p:3, eng_i:[0,0], eng_f:[0,0]}, // min speed 500 !!! ignition warning
 			'Balsa 5mm':{cut_i:100, cut_f:300, cut_p:3, eng_i:[0,0], eng_f:[0,0]}, // min speed 300 !!! ignition warning
 			'Bamboo':{cut_i:0, cut_f:2000, cut_p:1, eng_i:[200,1000], eng_f:[2000,350]}, // engrave only
-			'Cardboard double wall 5mm':{cut_i:100, cut_f:400, cut_p:3, eng_i:[10,35], eng_f:[2000,850]}, // warning, not slower than 180
 			'Cardboard single wall 4mm':{cut_i:100, cut_f:500, cut_p:3, eng_i:[10,35], eng_f:[2000,850]}, // warning, not slower than 180
 			'Cardboard single wall 2mm':{cut_i:100, cut_f:500, cut_p:2, eng_i:[10,35], eng_f:[2000,850]}, // warning, not slower than 180
+			'Cardboard double wall 5mm':{cut_i:100, cut_f:400, cut_p:3, eng_i:[10,35], eng_f:[2000,850]}, // warning, not slower than 180
 //			'Felt 2mm':{cut_i:100, cut_f:200, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
 //			'Felt 3mm':{cut_i:100, cut_f:200, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
 			'Felt 4mm green':{cut_i:100, cut_f:300, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
@@ -75,12 +75,12 @@ $(function(){
 			'Foam Rubber 2mm white':{cut_i:100, cut_f:190, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
 			'Foam Rubber 3mm green':{cut_i:100, cut_f:600, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
 			'Foam Rubber 3mm bue':{cut_i:100, cut_f:600, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
-			'Paper':{cut_i:750, cut_f:800, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
-			'Plywood 3mm':{cut_i:100, cut_f:200, cut_p:2, eng_i:[18,35], eng_f:[2000,750]}, 
-			'Plywood 4mm':{cut_i:100, cut_f:250, cut_p:3, eng_i:[18,35], eng_f:[2000,750]}, 
-			'Kraftplex 0.8mm':{cut_i:100, cut_f:350, cut_p:2, eng_i:[10,35], eng_f:[2000,850]}, 
+			'Kraftplex 0.8mm':{cut_i:100, cut_f:350, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
 			'Kraftplex 1.5mm':{cut_i:100, cut_f:175, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
 //			'Kraftplex 3mm':{cut_i:100, cut_f:200, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
+			'Paper':{cut_i:750, cut_f:800, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
+			'Plywood 3mm':{cut_i:100, cut_f:200, cut_p:2, eng_i:[18,35], eng_f:[2000,750]},
+			'Plywood 4mm':{cut_i:100, cut_f:250, cut_p:3, eng_i:[18,35], eng_f:[2000,750]},
 			'Wellboard 6mm':{cut_i:100, cut_f:225, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
 			'Wellboard 10mm':{cut_i:100, cut_f:140, cut_p:3, eng_i:[10,35], eng_f:[2000,850]},
 			'Wellboard rect':{cut_i:100, cut_f:200, cut_p:3, eng_i:[10,35], eng_f:[2000,850]},
@@ -98,11 +98,31 @@ $(function(){
 //			'Wood cut':{cut_i:1000, cut_f:250, cut_p:2, eng_i:[0,350], eng_f:[3000,850]},
 //			'Balsa cut':{cut_i:700, cut_f:500, cut_p:2, eng_i:[0,350], eng_f:[3000,850]} //2 passes
 		};
-		var material_keys = [];
+
+
+        var material_keys_cut = [];
 		for(var materialKey in self.materials_settings){
-			material_keys.push(materialKey);
+		    if (self.materials_settings[materialKey]
+                && self.materials_settings[materialKey].cut_i > 0
+                && self.materials_settings[materialKey].cut_f > 0
+                && self.materials_settings[materialKey].cut_p > 0) {
+			    material_keys_cut.push(materialKey);
+            }
 		}
-		self.material_menu = ko.observableArray(material_keys);
+
+        var material_keys_eng = [];
+		for(var materialKey in self.materials_settings){
+            if (self.materials_settings[materialKey]
+                && self.materials_settings[materialKey].eng_i[0] > 0
+                && self.materials_settings[materialKey].eng_i[1] > 0
+                && self.materials_settings[materialKey].eng_f[0] > 0
+                && self.materials_settings[materialKey].eng_f[1] > 0) {
+			    material_keys_eng.push(materialKey);
+            }
+		}
+
+		self.material_menu_cut = ko.observableArray(material_keys_cut);
+		self.material_menu_eng = ko.observableArray(material_keys_eng);
 		self.selected_material = ko.observable();
 		self.old_material = 'default';
 
@@ -150,8 +170,8 @@ $(function(){
 				$(p).find('.job_title').html(material);
 				$(p).find('.param_intensity').val(param_set.cut_i);
 				$(p).find('.param_feedrate').val(param_set.cut_f);
-				$(p).find('.param_passes').val(param_set.cut_p || 0); 
-				$(p).find('.param_piercetime').val(param_set.cut_pierce || 0); 
+				$(p).find('.param_passes').val(param_set.cut_p || 0);
+				$(p).find('.param_piercetime').val(param_set.cut_pierce || 0);
 			}
 		};
 
@@ -322,13 +342,13 @@ $(function(){
 				return true;
 			}
 		});
-		
+
 		self._allParametersSet = function(){
 			var allSet = true;
 			var vector_jobs = $('.job_row_vector');
 			for (var i = 0; i < vector_jobs.length; i++) {
 				var vjob = vector_jobs[i];
-				
+
 				var colorDrops = $(vjob).find('.color_drop_zone');
 				if (colorDrops.children().length > 0){
 					var intensityInput = $(vjob).find('.param_intensity');
