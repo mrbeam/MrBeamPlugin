@@ -86,14 +86,14 @@ class DustManager(object):
 			self._auto_timer.cancel()
 			self._auto_timer = None
 		if value is None:
-			if not self._send_fan_command('auto', wait=0.2):
+			if not self._send_fan_command('auto'):
 				self._logger.warning("Could not start auto mode!")
 		else:
 			if value > 100:
 				value = 100
 			elif value < 0:
 				value = 0
-			if not self._send_fan_command('on:{}'.format(int(value)), wait=0.2):
+			if not self._send_fan_command('on:{}'.format(int(value))):
 				self._logger.warning("Could not start fixed mode!")
 
 	def _stop_dust_extraction(self):
@@ -133,7 +133,7 @@ class DustManager(object):
 		self._stop_dust_extraction()
 		self._auto_timer = None
 
-	def _send_fan_command(self, command, wait=0.5, max_retries=5):
+	def _send_fan_command(self, command, wait=1.0, max_retries=5):
 		retries = 0
 		while retries <= max_retries:
 			self._command_response = None
