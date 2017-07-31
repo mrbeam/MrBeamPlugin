@@ -68,6 +68,7 @@ class DustManager(object):
 			self.shutdown()
 
 	def on_command_response(self, event, payload):
+		self._logger.debug("command response: {}".format(payload['success']))
 		self._command_response = payload['success']
 		self._command_event.set()
 
@@ -136,6 +137,7 @@ class DustManager(object):
 		retries = 0
 		while retries <= max_retries:
 			self._command_response = None
+			self._logger.debug("sending command: {}".format(command))
 			_mrbeam_plugin_implementation._ioBeam.send_fan_command(command)
 			retries += 1
 
