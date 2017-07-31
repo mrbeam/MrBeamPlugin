@@ -527,7 +527,7 @@ class IoBeamHandler(object):
 		if action == self.MESSAGE_ACTION_DUST_VALUE:
 			dust_val = self._as_number(value)
 			if dust_val is not None:
-				self._call_callback(IoBeamValueEvents.DUST_VALUE, None, dict(val=dust_val))
+				self._call_callback(IoBeamValueEvents.DUST_VALUE, message, dict(val=dust_val))
 			return 0
 		elif action == self.MESSAGE_ACTION_FAN_RPM:
 			return 0
@@ -540,13 +540,13 @@ class IoBeamHandler(object):
 		if not success: payload['error'] = token[2] if len(token) > 2 else None
 
 		if action == self.MESSAGE_ACTION_FAN_ON:
-			self._call_callback(IoBeamValueEvents.FAN_ON_RESPONSE, None, payload)
+			self._call_callback(IoBeamValueEvents.FAN_ON_RESPONSE, message, payload)
 		elif action == self.MESSAGE_ACTION_FAN_OFF:
-			self._call_callback(IoBeamValueEvents.FAN_OFF_RESPONSE, None, payload)
+			self._call_callback(IoBeamValueEvents.FAN_OFF_RESPONSE, message, payload)
 		elif action == self.MESSAGE_ACTION_FAN_AUTO:
-			self._call_callback(IoBeamValueEvents.FAN_AUTO_RESPONSE, None, payload)
+			self._call_callback(IoBeamValueEvents.FAN_AUTO_RESPONSE, message, payload)
 		elif action == self.MESSAGE_ACTION_FAN_FACTOR:
-			self._call_callback(IoBeamValueEvents.FAN_FACTOR_RESPONSE, None, payload)
+			self._call_callback(IoBeamValueEvents.FAN_FACTOR_RESPONSE, message, payload)
 		else:
 			return self._handle_invalid_message(message)
 
