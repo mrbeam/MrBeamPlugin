@@ -72,7 +72,6 @@ class DustManager(object):
 		self._shutting_down = True
 
 	def _handle_dust(self, args):
-		self._logger.debug("Got dust msg: {}".format(args))
 		self._dust = args['val']
 		self._dust_ts = time.time()
 		self.check_dust_value()
