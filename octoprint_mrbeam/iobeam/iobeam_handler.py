@@ -272,7 +272,7 @@ class IoBeamHandler(object):
 			if _trigger_event in self._callbacks:
 				_callback_array = self._callbacks[_trigger_event]
 				kwargs['event'] = _trigger_event
- 				kwargs['message'] = message
+				kwargs['message'] = message
 
 				# If handling of these messages blockes iobeam_handling, we might need a threadpool or so.
 				# One thread for handling this is almost the same bottleneck as current solution,
@@ -526,7 +526,8 @@ class IoBeamHandler(object):
 
 		if action == self.MESSAGE_ACTION_DUST_VALUE:
 			dust_val = self._as_number(value)
-			self._fireEvent(IoBeamValueEvents.DUST_VALUE, dict(val=dust_val))
+			if dust_val is not None:
+				self._call_callback(IoBeamValueEvents.DUST_VALUE, dict(val=dust_val))
 			return 0
 		elif action == self.MESSAGE_ACTION_FAN_RPM:
 			return 0
@@ -539,13 +540,13 @@ class IoBeamHandler(object):
 		if not success: payload['error'] = token[2] if len(token) > 2 else None
 
 		if action == self.MESSAGE_ACTION_FAN_ON:
-			self._fireEvent(IoBeamValueEvents.FAN_ON_RESPONSE, payload)
+			self._call_callback(IoBeamValueEvents.FAN_ON_RESPONSE, payload)
 		elif action == self.MESSAGE_ACTION_FAN_OFF:
-			self._fireEvent(IoBeamValueEvents.FAN_OFF_RESPONSE, payload)
+			self._call_callback(IoBeamValueEvents.FAN_OFF_RESPONSE, payload)
 		elif action == self.MESSAGE_ACTION_FAN_AUTO:
-			self._fireEvent(IoBeamValueEvents.FAN_AUTO_RESPONSE, payload)
+			self._call_callback(IoBeamValueEvents.FAN_AUTO_RESPONSE, payload)
 		elif action == self.MESSAGE_ACTION_FAN_FACTOR:
-			self._fireEvent(IoBeamValueEvents.FAN_FACTOR_RESPONSE, payload)
+			self._call_callback(IoBeamValueEvents.FAN_FACTOR_RESPONSE, payload)
 		else:
 			return self._handle_invalid_message(message)
 

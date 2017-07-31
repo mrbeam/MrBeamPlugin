@@ -63,9 +63,9 @@ class DustManager(object):
 		elif event == OctoPrintEvents.SHUTDOWN:
 			self.shutdown()
 
-	def on_command_response(self, event, payload):
-		self._logger.debug("command response: {}".format(payload['success']))
-		self._command_response = payload['success']
+	def on_command_response(self, **kwargs):
+		self._logger.debug("command response: {}".format(kwargs['success']))
+		self._command_response = kwargs['success']
 		self._command_event.set()
 
 	def shutdown(self):
