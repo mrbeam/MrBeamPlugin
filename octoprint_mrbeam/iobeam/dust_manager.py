@@ -45,10 +45,10 @@ class DustManager(object):
 		self._logger.debug("initialized!")
 
 	def _subscribe(self):
-		_mrbeam_plugin_implementation._event_bus.subscribe(IoBeamValueEvents.DUST_VALUE, self.onEvent)
-		_mrbeam_plugin_implementation._event_bus.subscribe(IoBeamValueEvents.FAN_ON_RESPONSE, self.on_command_response)
-		_mrbeam_plugin_implementation._event_bus.subscribe(IoBeamValueEvents.FAN_OFF_RESPONSE, self.on_command_response)
-		_mrbeam_plugin_implementation._event_bus.subscribe(IoBeamValueEvents.FAN_AUTO_RESPONSE, self.on_command_response)
+		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.DUST_VALUE, self._handle_dust)
+		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.FAN_ON_RESPONSE, self.on_command_response)
+		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.FAN_OFF_RESPONSE, self.on_command_response)
+		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.FAN_AUTO_RESPONSE, self.on_command_response)
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_STARTED, self.onEvent)
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self.onEvent)
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self.onEvent)
@@ -56,9 +56,7 @@ class DustManager(object):
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self.onEvent)
 
 	def onEvent(self, event, payload):
-		if event == IoBeamValueEvents.DUST_VALUE:
-			self._handle_dust(payload)
-		elif event == OctoPrintEvents.PRINT_STARTED:
+		if event == OctoPrintEvents.PRINT_STARTED:
 			self._start_dust_extraction_thread()
 		elif event in (OctoPrintEvents.PRINT_DONE, OctoPrintEvents.PRINT_FAILED, OctoPrintEvents.PRINT_CANCELLED):
 			self._stop_dust_extraction_when_below(self.extraction_limit)
@@ -73,8 +71,8 @@ class DustManager(object):
 	def shutdown(self):
 		self._shutting_down = True
 
-	def _handle_dust(self, payload):
-		self._dust = payload['val'] if 'val' in payload else None
+	def _handle_dust(self, **kwargs):
+		self.dust = kwargs['val']
 		self._dust_ts = time.time()
 		self.check_dust_value()
 		self.send_status_to_frontend(self._dust)
