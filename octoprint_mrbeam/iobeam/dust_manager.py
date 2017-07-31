@@ -30,6 +30,8 @@ class DustManager(object):
 		self._dust_timer = None
 		self._dust_timer_interval = self.DEFAULT_DUST_TIMER_INTERVAL
 		self._auto_timer = None
+		self._command_response = None
+		self._command_event = threading.Event()
 
 		self.dev_mode = _mrbeam_plugin_implementation._settings.get_boolean(['dev', 'iobeam_disable_warnings'])
 
@@ -46,6 +48,9 @@ class DustManager(object):
 
 	def _subscribe(self):
 		_mrbeam_plugin_implementation._event_bus.subscribe(IoBeamValueEvents.DUST_VALUE, self.onEvent)
+		_mrbeam_plugin_implementation._event_bus.subscribe(IoBeamValueEvents.FAN_ON_RESPONSE, self.on_command_response)
+		_mrbeam_plugin_implementation._event_bus.subscribe(IoBeamValueEvents.FAN_OFF_RESPONSE, self.on_command_response)
+		_mrbeam_plugin_implementation._event_bus.subscribe(IoBeamValueEvents.FAN_AUTO_RESPONSE, self.on_command_response)
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_STARTED, self.onEvent)
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self.onEvent)
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self.onEvent)
@@ -61,6 +66,10 @@ class DustManager(object):
 			self._stop_dust_extraction_when_below(self.extraction_limit)
 		elif event == OctoPrintEvents.SHUTDOWN:
 			self.shutdown()
+
+	def on_command_response(self, event, payload):
+		self._command_response = payload['success']
+		self._command_event.set()
 
 	def shutdown(self):
 		self._shutting_down = True
@@ -123,16 +132,20 @@ class DustManager(object):
 		self._stop_dust_extraction()
 		self._auto_timer = None
 
-	def _send_fan_command(self, command, wait=1.0, max_retries=5):
+	def _send_fan_command(self, command, wait=0.5, max_retries=5):
 		retries = 0
-		while True:
-			if _mrbeam_plugin_implementation._ioBeam.send_fan_command(command):
+		while retries <= max_retries:
+			self._command_response = None
+			_mrbeam_plugin_implementation._ioBeam.send_fan_command(command)
+			retries += 1
+
+			self._command_event.wait(timeout=wait)
+			self._command_event.clear()
+
+			if self._command_response:
 				return True
-			else:
-				retries += 1
-				if retries >= max_retries:
-					return False
-				time.sleep(wait)
+
+		return False
 
 	def _write_analytics(self, dust_start, dust_start_ts, dust_end, dust_end_ts):
 		self._logger.debug("dust extraction time {} from {} to {} (gradient: {})".format(dust_end_ts - dust_start_ts, dust_start, dust_end, (dust_start - dust_end) / (dust_end_ts - dust_start_ts)))
@@ -155,7 +168,7 @@ class DustManager(object):
 			self._start_dust_extraction()
 
 	def request_dust(self):
-		return True if self._send_fan_command("dust") else False
+		return True if _mrbeam_plugin_implementation._ioBeam.send_command("fan:dust") else False
 
 	def _dust_timer_callback(self):
 		try:
