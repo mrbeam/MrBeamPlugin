@@ -73,7 +73,7 @@ class DustManager(object):
 
 	def _handle_dust(self, args):
 		self._logger.debug("Got dust msg: {}".format(args))
-		self.dust = args['val']
+		self._dust = args['val']
 		self._dust_ts = time.time()
 		self.check_dust_value()
 		self.send_status_to_frontend(self._dust)
