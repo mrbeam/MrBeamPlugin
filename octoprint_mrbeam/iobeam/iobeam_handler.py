@@ -524,7 +524,7 @@ class IoBeamHandler(object):
 		action = token[0] if len(token) > 0 else None
 		value = token[1] if len(token) > 1 else None
 
-		if action == self.MESSAGE_ACTION_DUST_VALUE and payload is not None:
+		if action == self.MESSAGE_ACTION_DUST_VALUE:
 			dust_val = self._as_number(value)
 			self._fireEvent(IoBeamValueEvents.DUST_VALUE, dict(val=dust_val))
 			return 0
