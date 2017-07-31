@@ -72,6 +72,7 @@ class DustManager(object):
 		self._shutting_down = True
 
 	def _handle_dust(self, args):
+		self._logger.debug("Got dust msg: {}".format(args))
 		self.dust = args['val']
 		self._dust_ts = time.time()
 		self.check_dust_value()
@@ -121,6 +122,7 @@ class DustManager(object):
 			self._start_dust_extraction_thread(100)
 			while self._dust > value:
 				time.sleep(self._dust_timer_interval)
+			self._logger.debug("finished trial dust extraction.")
 			dust_end = self._dust
 			dust_end_ts = self._dust_ts
 			self._dust_timer_interval = 3
