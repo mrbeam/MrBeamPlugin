@@ -37,9 +37,7 @@ class DustManager(object):
 
 		self._subscribe()
 		self._start_dust_timer()
-		self._initial_stop_fan = threading.Thread(target=self._stop_dust_extraction)
-		self._initial_stop_fan.daemon = True
-		self._initial_stop_fan.start()
+		self._stop_dust_extraction_thread()
 
 		self.extraction_limit = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['dust']['extraction_limit']
 		self.auto_mode_time = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['dust']['auto_mode_time']
@@ -61,7 +59,7 @@ class DustManager(object):
 		if event == IoBeamValueEvents.DUST_VALUE:
 			self._handle_dust(payload)
 		elif event == OctoPrintEvents.PRINT_STARTED:
-			self._start_dust_extraction()
+			self._start_dust_extraction_thread()
 		elif event in (OctoPrintEvents.PRINT_DONE, OctoPrintEvents.PRINT_FAILED, OctoPrintEvents.PRINT_CANCELLED):
 			self._stop_dust_extraction_when_below(self.extraction_limit)
 		elif event == OctoPrintEvents.SHUTDOWN:
@@ -81,6 +79,11 @@ class DustManager(object):
 		self.check_dust_value()
 		self.send_status_to_frontend(self._dust)
 
+	def _start_dust_extraction_thread(self, value=None):
+		command_thread = threading.Thread(target=self._start_dust_extraction, args=(value,))
+		command_thread.daemon = True
+		command_thread.start()
+
 	def _start_dust_extraction(self, value=None):
 		if self._auto_timer is not None:
 			self._auto_timer.cancel()
@@ -95,6 +98,11 @@ class DustManager(object):
 				value = 0
 			if not self._send_fan_command('on:{}'.format(int(value))):
 				self._logger.warning("Could not start fixed mode!")
+
+	def _stop_dust_extraction_thread(self):
+		command_thread = threading.Thread(target=self._stop_dust_extraction)
+		command_thread.daemon = True
+		command_thread.start()
 
 	def _stop_dust_extraction(self):
 		if not self._send_fan_command('off'):
@@ -111,7 +119,7 @@ class DustManager(object):
 		dust_start = self._dust
 		dust_start_ts = self._dust_ts
 		self._dust_timer_interval = 1
-		self._start_dust_extraction(100)
+		self._start_dust_extraction_thread(100)
 		while self._dust > value:
 			time.sleep(self._dust_timer_interval)
 		dust_end = self._dust
@@ -123,17 +131,18 @@ class DustManager(object):
 
 	def _activate_timed_auto_mode(self, value):
 		self._logger.debug("starting timed auto mode (value={}).".format(value))
-		self._start_dust_extraction()
+		self._start_dust_extraction_thread()
 		self._auto_timer = threading.Timer(value, self._auto_timer_callback)
 		self._auto_timer.daemon = True
 		self._auto_timer.start()
 
 	def _auto_timer_callback(self):
 		self._logger.debug("auto mode stopped!")
-		self._stop_dust_extraction()
+		self._stop_dust_extraction_thread()
 		self._auto_timer = None
 
 	def _send_fan_command(self, command, wait=1.0, max_retries=5):
+
 		retries = 0
 		while retries <= max_retries:
 			self._command_response = None
@@ -167,7 +176,7 @@ class DustManager(object):
 			if not self.dev_mode:
 				self._logger.error("Can't read dust value.")
 			# TODO fire some Error pause (together with andy)
-			self._start_dust_extraction()
+			self._start_dust_extraction_thread()
 
 	def request_dust(self):
 		return True if _mrbeam_plugin_implementation._ioBeam.send_command("fan:dust") else False
