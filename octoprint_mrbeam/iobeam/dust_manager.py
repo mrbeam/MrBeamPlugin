@@ -113,19 +113,22 @@ class DustManager(object):
 			self._trail_extraction.start()
 
 	def _wait_until(self, value):
-		self._logger.debug("starting trial dust extraction (value={}).".format(value))
-		dust_start = self._dust
-		dust_start_ts = self._dust_ts
-		self._dust_timer_interval = 1
-		self._start_dust_extraction_thread(100)
-		while self._dust > value:
-			time.sleep(self._dust_timer_interval)
-		dust_end = self._dust
-		dust_end_ts = self._dust_ts
-		self._dust_timer_interval = 3
-		self._write_analytics(dust_start, dust_start_ts, dust_end, dust_end_ts)
-		self._activate_timed_auto_mode(self.auto_mode_time)
-		self._trail_extraction = None
+		try:
+			self._logger.debug("starting trial dust extraction (value={}).".format(value))
+			dust_start = self._dust
+			dust_start_ts = self._dust_ts
+			self._dust_timer_interval = 1
+			self._start_dust_extraction_thread(100)
+			while self._dust > value:
+				time.sleep(self._dust_timer_interval)
+			dust_end = self._dust
+			dust_end_ts = self._dust_ts
+			self._dust_timer_interval = 3
+			self._write_analytics(dust_start, dust_start_ts, dust_end, dust_end_ts)
+			self._activate_timed_auto_mode(self.auto_mode_time)
+			self._trail_extraction = None
+		except:
+			self._logger.exception("Exception in _wait_until(): ")
 
 	def _activate_timed_auto_mode(self, value):
 		self._logger.debug("starting timed auto mode (value={}).".format(value))
