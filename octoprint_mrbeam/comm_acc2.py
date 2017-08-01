@@ -1166,6 +1166,7 @@ class PrintingFileInformation(object):
 		self._filename = filename
 		self._pos = 0
 		self._size = None
+		self._comment_size = None
 		self._start_time = None
 
 	def getStartTime(self):
@@ -1178,7 +1179,7 @@ class PrintingFileInformation(object):
 		return self._size
 
 	def getFilepos(self):
-		return self._pos
+		return self._pos - self._comment_size
 
 	def getFileLocation(self):
 		return FileDestinations.LOCAL
@@ -1190,7 +1191,7 @@ class PrintingFileInformation(object):
 		"""
 		if self._size is None or not self._size > 0:
 			return -1
-		return float(self._pos) / float(self._size)
+		return float(self._pos - self._comment_size) / float(self._size - self._comment_size)
 
 	def reset(self):
 		"""
@@ -1231,6 +1232,7 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
 
 		self._size = os.stat(self._filename).st_size
 		self._pos = 0
+		self._comment_size = 0
 
 	def start(self):
 		"""
@@ -1274,6 +1276,8 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
 				if not line:
 					self.close()
 				processed = process_gcode_line(line)
+				if processed is None:
+					self._comment_size += len(line)
 			self._pos = self._handle.tell()
 
 			return processed
