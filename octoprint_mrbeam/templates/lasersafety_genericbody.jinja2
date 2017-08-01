@@ -5,29 +5,33 @@
    Laser Classification:
 </h3>
 <p>
-    Your laser engraver contains a 658nm or 445nm laser diode with an output power greater than 1000mW.
+    Your laser engraver is classified as a class 1 laser product according to IEC60825. This means that no
+	harmful laser light can emit the safety housing while operating as purposed. 
+	The laserhead inside features a 450nm laser diode with an output power greater than 1000mW.
     According to IEC60825 this is a class 4 laser which is capable of causing injury to both
     the eye and skin and will also present a fire hazard if sufficiently high output powers are used.
+	
 </p>
 {% endtrans %}
 <img src="{{ url_for('plugin.mrbeam.static', filename='img/laser_class4_labels.png') }}" alt="safety labels"/>
 {% trans %}
 <h3>Safety Advisory:</h3>
 <p>
-    Laser products emit intense laser light that can be harmful to the eyes and can cause burning by irradiation.<br/>
-    NEVER DIRECT AT THE EYES EVEN AT A DISTANCE REGARDLESS OF LASER CLASS!<br/>
-    Everybody in the line of sight must wear appropriate laser safety glasses during the laser operation. <br/>
-    Even when wearing laser safety glasses, <strong>never ever</strong> look direct into the laser beam.<br/>
-    Be always responsible regarding yourself and others.<br/>
-    Always operate your own assembly of the kit under permanent supervision. <br/>
+	Keep the safety housing and the safety lid <strong>always</strong> in excellent condition.<br/> 
+	<strong>Never</strong> modify, disable or circumvent the safety housing, safety lid, safety switches or any other safety related device on your laser engraver.<br/> 
+	Damaged or modified devices are not allowed to use. Ask a certified service engineer to repair them immediately.<br/>
+	Be <strong>always</strong> responsible regarding yourself and others.<br/>
     <strong>Never</strong> leave the device unattended during operation. <br/>
-    <strong>Never</strong> put reflecting or mirroring or flammable materials under the laser. <br/>
+    <strong>Never</strong> run the device without proper exhaust system. <br/>
+    <strong>Always</strong> vent unfiltered fumes during operation to the outside. <br/>
+    In closed rooms it is <strong>always</strong> necessary to filter the exhausted air. <br/>
+    <strong>Never</strong> put reflecting or mirroring or flammable materials under the laser.<br/>
     <strong>Never</strong> put the machine on a flammable surface. <br/>
-    It must be operated only by persons who are aware of the risks and dangers of the operation,
-    especially those of class 4 laser light emissions.<br/>
-    If not operated by yourself introduce the operating person carefully and responsibly.
+    It must be operated <strong>only</strong> by persons who are aware of the risks and dangers of the operation.<br/>
+    If not operated by yourself, introduce the operating person carefully and responsibly.<br/>
     If you are connecting the laser engraver to a network ensure that you properly set up the network access
-    as well as the machines access control. Do NOT underestimate the risk of an unsecured access from the internet to your laser engraver.
+    as well as the machines access control. 
+	Do NOT underestimate the risk of an unsecured access from the internet to your laser engraver.
 </p>
 
 <p>
@@ -37,37 +41,38 @@
     <div class="control-group wizard_safety_agreement" data-bind="css: {success: checkbox1(), error: !checkbox1()}">
         <label class="checkbox">
             <input type="checkbox" data-bind="checked: checkbox1">
-            I understand that laser components are dangerous.
+            I understand that laser light is dangerous.
 	    </label>
     </div>
 
     <div class="control-group wizard_safety_agreement" data-bind="css: {success: checkbox2(), error: !checkbox2()}">
         <label class="checkbox">
             <input type="checkbox" data-bind="checked: checkbox2">
-            I understand that I am are responsible to build my machine according to my local regulations.<br/>
-            This may require extensions or alterations of the design and the construction.
+			This laser engraver is protecting you from laser light with 
+			a safety housing, a safety lid, safety electronic circuits, exhaust system and other safety devices. 
+			I understand that modifying, circumventing or disabling any safety related device will result in insufficient protection.
 	    </label>
     </div>
-
 
     <div class="control-group wizard_safety_agreement" data-bind="css: {success: checkbox3(), error: !checkbox3()}">
         <label class="checkbox">
             <input type="checkbox" data-bind="checked: checkbox3">
-            I will always use the provided laser in a safe and responsible manner and for a legal purpose.
+            I understand that I am are responsible to keep this laser engraver and all attached safety devices in excellent condition.<br/>
+            This may require regular inspections and immediate repairs if necessary.
 	    </label>
     </div>
 
     <div class="control-group wizard_safety_agreement" data-bind="css: {success: checkbox4(), error: !checkbox4()}">
         <label class="checkbox">
             <input type="checkbox" data-bind="checked: checkbox4">
-            I am legally responsible for the use and also the improper use of my Mr Beam assembly.
+            I am legally responsible for the use and also the improper use of my laser cutter.
 	    </label>
     </div>
 
     <div class="control-group wizard_safety_agreement" data-bind="css: {success: checkbox5(), error: !checkbox5()}">
         <label class="checkbox">
             <input type="checkbox" data-bind="checked: checkbox5">
-            I am legally responsible to grant access to my laser engraver only to introduced and authorized personnel.
+            I am legally responsible to grant access to my laser cutter only to introduced and authorized personnel.
 	    </label>
     </div>
 
