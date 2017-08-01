@@ -2,7 +2,8 @@ import time
 import threading
 import numbers
 from octoprint.events import Events as OctoPrintEvents
-from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents, IoBeamValueEvents
+from octoprint_mrbeam.mrbeam_events import MrBeamEvents
+from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamValueEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
 # singleton
@@ -139,12 +140,16 @@ class DustManager(object):
 		except:
 			self._logger.exception("Exception in _wait_until(): ")
 		finally:
+			self._logger.debug("Last event: {}".format(self._last_event))
 			if self._last_event == OctoPrintEvents.PRINT_DONE:
 				_mrbeam_plugin_implementation._event_bus.fire(MrBeamEvents.LASER_JOB_DONE)
+				self._logger.debug("Fire event: {}".format(MrBeamEvents.LASER_JOB_DONE))
 			elif self._last_event == OctoPrintEvents.PRINT_CANCELLED:
 				_mrbeam_plugin_implementation._event_bus.fire(MrBeamEvents.LASER_JOB_CANCELLED)
+				self._logger.debug("Fire event: {}".format(MrBeamEvents.LASER_JOB_CANCELLED))
 			elif self._last_event == OctoPrintEvents.PRINT_FAILED:
 				_mrbeam_plugin_implementation._event_bus.fire(MrBeamEvents.LASER_JOB_FAILED)
+				self._logger.debug("Fire event: {}".format(MrBeamEvents.LASER_JOB_FAILED))
 
 	def _continue_dust_extraction(self, value, started):
 		if time.time() - started > 30:  # TODO: get this value from laser profile
