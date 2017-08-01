@@ -74,7 +74,7 @@ class TemperatureManager(object):
 		elif event == OctoPrintEvents.SHUTDOWN:
 			self.shutdown()
 
-	def handle_temp(self, **kwargs):
+	def handle_temp(self, kwargs):
 		self.temperature = kwargs['temp']
 		self.temperature_ts = time.time()
 		self._check_temp_val()

@@ -17,6 +17,11 @@ $(function () {
 
         self.isStartupComplete = false;
 
+        // MrBeam Logo click activates workingarea tab
+        $('#mrbeam_logo_link').click(function() {
+            $('#wa_tab_btn').tab('show');
+        });
+
         self.onStartup = function () {
             // TODO fetch machine profile on start
             //self.requestData();
@@ -160,8 +165,6 @@ $(function () {
 			});
 
             self.setupFullscreenContols();
-
-
         };
 
         self.onAllBound = function (allViewModels) {
