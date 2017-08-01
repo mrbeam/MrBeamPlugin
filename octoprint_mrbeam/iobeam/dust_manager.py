@@ -138,13 +138,11 @@ class DustManager(object):
 			self._logger.exception("Exception in _wait_until(): ")
 
 	def _continue_dust_extraction(self, value, started):
-		if self._dust is None:
-			return True
-		if self._dust > value:
-			return True
-		if time.time() - started < 30:
-			return True
-		return False
+		if time.time() - started > 30:  # TODO: get this value from laser profile
+			return False
+		if self._dust is not None and self._dust < value:
+			return False
+		return True
 
 	def _activate_timed_auto_mode(self, value):
 		self._logger.debug("starting timed auto mode (value={}).".format(value))
