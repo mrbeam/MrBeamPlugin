@@ -524,58 +524,6 @@ $(function(){
 			//console.log("onSlicingFailed" , payload);
 		};
 
-//		self._configureIntensitySlider = function() {
-//			self.intensitySlider = $("#svgtogcode_intensity_slider").slider({
-//				id: "svgtogcode_intensity_slider_impl",
-//				reversed: false,
-//				selection: "after",
-//				orientation: "horizontal",
-//				min: 1,
-//				max: 1000,
-//				step: 1,
-//				value: 500,
-//				enabled: true,
-//				formatter: function(value) { return "" + (value/10) +"%"; }
-//			}).on("slideStop", function(ev){
-//				self.laserIntensity(ev.value);
-//			});
-//
-//			self.laserIntensity.subscribe(function(newVal){
-//				self.intensitySlider.slider('setValue', parseInt(newVal));
-//			});
-//		};
-
-//		self._configureFeedrateSlider = function() {
-//			self.feedrateSlider = $("#svgtogcode_feedrate_slider").slider({
-//				id: "svgtogcode_feedrate_slider_impl",
-//				reversed: false,
-//				selection: "after",
-//				orientation: "horizontal",
-//				min: 0,
-//				max: 100, // fixed values to avoid reinitializing after profile changes
-//				step: 1,
-//				value: 300,
-//				enabled: true,
-//				formatter: function(value) { return "" + Math.round(self._calcRealSpeed(value)) +"mm/min"; }
-//			});
-//
-//			// use the class as a flag to avoid double binding of the slideStop event
-//			if($("#svgtogcode_feedrate_slider").attr('class') === 'uninitialized'){ // somehow hasClass(...) did not work ???
-//				self.feedrateSlider.on("slideStop", function(ev){
-//					$('#svgtogcode_feedrate').val(self._calcRealSpeed(ev.value));
-//					self.laserSpeed(self._calcRealSpeed(ev.value));
-//				});
-//				$("#svgtogcode_feedrate_slider").removeClass('uninitialized');
-//			}
-//
-//			var speedSubscription = self.laserSpeed.subscribe(function(fromSettings){
-//				var realVal = parseInt(fromSettings);
-//				var val = 100*(realVal - self.minSpeed()) / (self.maxSpeed() - self.minSpeed());
-//				self.feedrateSlider.slider('setValue', val);
-//				//speedSubscription.dispose(); // only do it once
-//			});
-//		};
-
 		self._calcRealSpeed = function(sliderVal){
 			return Math.round(self.minSpeed() + sliderVal/100 * (self.maxSpeed() - self.minSpeed()));
 		};
