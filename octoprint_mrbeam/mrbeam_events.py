@@ -19,5 +19,9 @@ class MrBeamEvents(object):
 
 	PRINT_CANCELING_DONE       = "PrintCancelingDone"
 
+	LASER_JOB_DONE             = "LaserJobDone"
+	LASER_JOB_CANCELLED        = "LaserJobCancelled"
+	LASER_JOB_FAILED           = "LaserJobFailed"
+
 	LASER_COOLING_PAUSE        = "LaserCoolingPause"
 	LASER_COOLING_RESUME       = "LaserCoolingResume"

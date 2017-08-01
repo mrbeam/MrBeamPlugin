@@ -25,6 +25,7 @@ class DustManager(object):
 		self._dust = None
 		self._dust_ts = time.time()
 
+		self._last_event = None
 		self._shutting_down = False
 		self._trail_extraction = None
 		self._dust_timer = None
@@ -56,6 +57,7 @@ class DustManager(object):
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self.onEvent)
 
 	def onEvent(self, event, payload):
+		self._last_event = event
 		if event == OctoPrintEvents.PRINT_STARTED:
 			self._start_dust_extraction_thread()
 		elif event in (OctoPrintEvents.PRINT_DONE, OctoPrintEvents.PRINT_FAILED, OctoPrintEvents.PRINT_CANCELLED):
@@ -136,6 +138,13 @@ class DustManager(object):
 				self._logger.warning("No dust value received so far. Skipping trial dust extraction!")
 		except:
 			self._logger.exception("Exception in _wait_until(): ")
+		finally:
+			if self._last_event == OctoPrintEvents.PRINT_DONE:
+				_mrbeam_plugin_implementation._event_bus.fire(MrBeamEvents.LASER_JOB_DONE)
+			elif self._last_event == OctoPrintEvents.PRINT_CANCELLED:
+				_mrbeam_plugin_implementation._event_bus.fire(MrBeamEvents.LASER_JOB_CANCELLED)
+			elif self._last_event == OctoPrintEvents.PRINT_FAILED:
+				_mrbeam_plugin_implementation._event_bus.fire(MrBeamEvents.LASER_JOB_FAILED)
 
 	def _continue_dust_extraction(self, value, started):
 		if time.time() - started > 30:  # TODO: get this value from laser profile
