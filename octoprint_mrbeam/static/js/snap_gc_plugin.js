@@ -73,7 +73,21 @@ Snap.plugin(function (Snap, Element, Paper, global) {
           ];
           var clip_tolerance = 0.1 * tolerance
 
-          console.log("clip_working_area: clip_tolerance:"+clip_tolerance+", clip rectangle:", clip);
+          // ANDYTEST this needs to go...
+          var first = true;
+          var str = "[[";
+          for (var i = 0; i < clip[0].length; i++) {
+              if (!first) {
+                  str += ",";
+              } else {
+                  first = false;
+              }
+              str += "(x"+clip[0][i]['x']+",y"+clip[0][i]['y']+")";
+           }
+           str += "]]";
+          // ANDYTEST...till here
+
+          console.log("clip_working_area: clip_tolerance:"+clip_tolerance+", clip rectangle:" + str);
           paths = mrbeam.path.clip(paths, clip, clip_tolerance);
       }
 

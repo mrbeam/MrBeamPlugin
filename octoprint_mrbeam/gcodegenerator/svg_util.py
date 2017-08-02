@@ -11,7 +11,8 @@ NSS = {
 	u'rdf'	  :u'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
 	u'inkscape' :u'http://www.inkscape.org/namespaces/inkscape',
 	u'xlink'	:u'http://www.w3.org/1999/xlink',
-	u'xml'	  :u'http://www.w3.org/XML/1998/namespace'
+	u'xml'	  :u'http://www.w3.org/XML/1998/namespace',
+	u'mb'	  :u'http://www.mr-beam.org/mbns'
 }
 
 def _add_ns(tag, ns=None):
@@ -134,7 +135,7 @@ def get_path_d(node):
 
 UUCONV = {'in':90.0, 'pt':1.25, 'px':1, 'mm':3.5433070866, 'cm':35.433070866, 'm':3543.3070866,
 		  'km':3543307.0866, 'pc':15.0, 'yd':3240 , 'ft':1080}
-		  
+
 def unittouu(string):
 	'''Returns userunits given a string representation of units in another system'''
 	unit = re.compile('(%s)$' % '|'.join(UUCONV.keys()))
