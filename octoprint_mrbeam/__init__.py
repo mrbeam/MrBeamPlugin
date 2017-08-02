@@ -1153,23 +1153,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		else:
 			return None, None
 
-	# def execute_command(self, command):
-	# 	return True
-	# 	'''
-	# 	There's this idea that we can enter commands into the frontend's terminal.
-	# 	This could be the place where we handle these commands....
-	# 	'''
-	# 	self._logger.debug("execute_command() %s", command)
-	# 	if command is not None and command.startswith("\\"):
-	# 		chunks = shlex.split(command)
-	# 		self._logger.debug("execute_command() chunks: %s", chunks)
-	# 		if chunks[0] in ('\\filter', 'filter'):
-	# 			# do something about filters
-	# 			pass
-	# 		return False
-	# 	else:
-	# 		return True
-
 	def getHostname(self):
 		'''
 		Get device hostnema like 'MrBeam2-F930'

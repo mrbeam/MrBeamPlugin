@@ -19,6 +19,7 @@ class MrBeamEvents(object):
 
 	PRINT_CANCELING_DONE       = "PrintCancelingDone"
 
+	# After PrintDone we turn up the exhaus system and maybe other things...
 	LASER_JOB_DONE             = "LaserJobDone"
 	LASER_JOB_CANCELLED        = "LaserJobCancelled"
 	LASER_JOB_FAILED           = "LaserJobFailed"
