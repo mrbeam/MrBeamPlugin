@@ -1488,6 +1488,7 @@ $(function(){
                     precision: self.settings.settings.plugins.mrbeam.gcode_nextgen.precision(),
                     optimize_travel: self.settings.settings.plugins.mrbeam.gcode_nextgen.optimize_travel(),
                     small_paths_first: self.settings.settings.plugins.mrbeam.gcode_nextgen.small_paths_first(),
+                    clip_working_area: self.settings.settings.plugins.mrbeam.gcode_nextgen.clip_working_area(),
                     clipRect: [0,0,self.workingAreaWidthMM(), self.workingAreaHeightMM()]
                 };
             });
