@@ -140,7 +140,7 @@ class DustManager(object):
 				self._logger.warning("No dust value received so far. Skipping trial dust extraction!")
 		except:
 			self._logger.exception("Exception in _wait_until(): ")
-		self.send_laser_done_event()
+		self.send_laser_job_event()
 
 	def send_laser_job_event(self):
 		try:
