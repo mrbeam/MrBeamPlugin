@@ -89,7 +89,7 @@ $(function(){
 			'Plywood 4mm':{cut_i:100, cut_f:250, cut_p:3, eng_i:[18,35], eng_f:[2000,750]},
 			'Wellboard 6mm':{cut_i:100, cut_f:225, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
 			'Wellboard 10mm':{cut_i:100, cut_f:140, cut_p:3, eng_i:[10,35], eng_f:[2000,850]},
-			'Wellboard rect':{cut_i:100, cut_f:200, cut_p:3, eng_i:[10,35], eng_f:[2000,850]},
+			// 'Wellboard rect':{cut_i:100, cut_f:200, cut_p:3, eng_i:[10,35], eng_f:[2000,850]},
 			// old laser
 //			'Acrylic':[1000,80,0,350,4500,850, 1],
 //			'Foam Rubber':{cut_i:625, cut_f:400, cut_p:1, eng_i:[0,200], eng_f:[3000,1000]},
