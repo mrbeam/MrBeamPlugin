@@ -10,9 +10,10 @@ $(function() {
         self.is_print_done = ko.observable(false);
         self.is_job_done = ko.observable(false);
 
-        self.onStartup = function(){
-            console.log("LaserJobDoneViewmodel loaded!");
+        self.onStartupComplete = function(){
+            self.dialogElement = $('#laser_job_done_dialog');
         };
+
 
         self.onDataUpdaterPluginMessage = function(plugin, data) {
             if (plugin != "mrbeam") {
@@ -26,12 +27,14 @@ $(function() {
 
             if ('event' in data && data['event'] == "LaserJobDone") {
                 console.log("Got event data: ", data);
+                setTimeout(function(){ self.dialogElement.modal("hide"); }, 3000);
                 self.is_job_done(true);
             }
         };
 
         self.onEventPrintDone = function (payload) {
             console.log("Got printdone: ", payload);
+            self.dialogElement.modal("show");
             self.is_print_done(true);
         };
     };
