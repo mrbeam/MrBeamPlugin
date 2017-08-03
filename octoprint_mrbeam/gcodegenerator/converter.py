@@ -38,29 +38,30 @@ class Converter():
 		},
 		"vector": []
 	}
-	
+
 	_tempfile = "/tmp/_converter_output.tmp"
 
 	def __init__(self, params, model_path):
 		self._log = logging.getLogger("octoprint.plugins.mrbeam.converter")
-		
+
 		# debugging
 		self.transform_matrix = {}
 		self.transform_matrix_reverse = {}
 		self.orientation_points = {}
-		
+
 		self.colorParams = {}
+		self.gc_options = None
 		self.options = self.defaults
 		self.setoptions(params)
 		self.svg_file = model_path
 		self.document=None
 		self._log.info('Converter Initialized: %s' % self.options)
-		
+
 	def setoptions(self, opts):
 		# set default values if option is missing
 		# self._log.info("opts: %s" % opts)
 		for key in self.options.keys():
-			if key in opts: 
+			if key in opts:
 				self.options[key] = opts[key]
 				if(key == "vector"):
 					for paramSet in opts['vector']:
@@ -69,13 +70,13 @@ class Converter():
 				self._log.info("Using default %s = %s" %(key, str(self.options[key])))
 
 	def init_output_file(self):
-		# remove old file if exists. 
+		# remove old file if exists.
 		try:
 			os.remove(self._tempfile)
 		except OSError:
 			pass
 		# create new file and return file handle.
-		
+
 
 	def convert(self, on_progress=None, on_progress_args=None, on_progress_kwargs=None):
 
@@ -87,7 +88,7 @@ class Converter():
 		# Get all Gcodetools data from the scene.
 		self.calculate_conversion_matrix()
 		self.collect_paths()
-		
+
 		for p in self.paths :
 			#print "path", etree.tostring(p)
 			pass
@@ -95,7 +96,7 @@ class Converter():
 		def report_progress(on_progress, on_progress_args, on_progress_kwargs, done, total):
 			if(total == 0):
 				total = 1
-			
+
 			progress = done / float(total)
 			if on_progress is not None:
 				if on_progress_args is None:
@@ -105,7 +106,7 @@ class Converter():
 
 				on_progress_kwargs["_progress"] = progress
 				on_progress(*on_progress_args, **on_progress_kwargs)
-		
+
 
 		self._log.info("processing %i layers" % len(self.layers))
 		# sum up
@@ -115,7 +116,7 @@ class Converter():
 				itemAmount += len(self.paths[layer])
 			if layer in self.images:
 				itemAmount += len(self.images[layer])
-			
+
 		processedItemCount = 0
 		report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
 
@@ -129,7 +130,7 @@ class Converter():
 					for imgNode in self.images[layer] :
 						file_id = imgNode.get('data-serveurl', '')
 						x = imgNode.get('x')
-						y = imgNode.get('y')						
+						y = imgNode.get('y')
 						if x is None:
 							x = "0"
 						if y is None:
@@ -157,13 +158,13 @@ class Converter():
 						w = abs(lowerRight[0] - upperLeft[0])
 						h = abs(lowerRight[1] - upperLeft[1])
 
-						# contrast = 1.0, sharpening = 1.0, beam_diameter = 0.25, 
-						# intensity_black = 1000, intensity_white = 0, speed_black = 30, speed_white = 500, 
+						# contrast = 1.0, sharpening = 1.0, beam_diameter = 0.25,
+						# intensity_black = 1000, intensity_white = 0, speed_black = 30, speed_white = 500,
 						# dithering = True, pierce_time = 500, material = "default"
 						rasterParams = self.options['raster']
 						ip = ImageProcessor(output_filehandle = fh, contrast = rasterParams['contrast'], sharpening = rasterParams['sharpening'], beam_diameter = rasterParams['beam_diameter'],
-						intensity_black = rasterParams['intensity_black'], intensity_white = rasterParams['intensity_white'], 
-						speed_black = rasterParams['speed_black'], speed_white = rasterParams['speed_white'], 
+						intensity_black = rasterParams['intensity_black'], intensity_white = rasterParams['intensity_white'],
+						speed_black = rasterParams['speed_black'], speed_white = rasterParams['speed_white'],
 						dithering = rasterParams['dithering'],
 						pierce_time = rasterParams['pierce_time'],
 						material = "default")
@@ -186,12 +187,18 @@ class Converter():
 
 			# paths
 			self._log.info( 'Vector conversion: %s paths' % len(self.paths))
+
+			gc_color_str = "; laser params: {}\n".format(self.colorParams)
+			fh.write(gc_color_str)
+			gc_options_str = "; gc_nexgen gc_options: {}\n".format(self.gc_options)
+			fh.write(gc_options_str)
+
 			for layer in self.layers :
 				if layer in self.paths :
 					paths_by_color = dict()
 					for path in self.paths[layer] :
 						self._log.info("path %s, %s, stroke: %s, fill: %s, mb:gc: %s" % ( layer.get('id'), path.get('id'), path.get('stroke'), path.get('class'), path.get('mb:gc') ))
-						
+
 #						if path.get('stroke') is not None: #todo catch None stroke/fill earlier
 #							stroke = path.get('stroke')
 #						elif path.get('fill') is not None:
@@ -201,12 +208,12 @@ class Converter():
 #						else:
 #							stroke = 'default'
 							#continue
-							
+
 						strokeInfo = self._get_stroke(path)
 						#print('strokeInfo:', strokeInfo)
 						if(strokeInfo['visible'] == False):
 							continue
-							
+
 						stroke = strokeInfo['color']
 						if "d" not in path.keys() :
 							self._log.error("Warning: One or more paths don't have 'd' parameter")
@@ -223,19 +230,19 @@ class Converter():
 #					for colorKey in paths_by_color.keys():
 #						if colorKey == 'none':
 #							continue
-							
+
 #						curvesD[colorKey] = self._parse_curve(paths_by_color[colorKey], layer)
 
 					#pierce_time = self.options['pierce_time']
 					layerId = layer.get('id') or '?'
 					pathId = path.get('id') or '?'
-					
+
 					#for each color generate GCode
 					#for colorKey in curvesD.keys():
 					for colorKey in paths_by_color.keys():
 						if colorKey == 'none':
 							continue
-						
+
 						for path in paths_by_color[colorKey]:
 							print('p', path)
 							curveGCode = ""
@@ -248,8 +255,8 @@ class Converter():
 								csp = self._apply_transforms(path, csp)
 								curve = self._parse_curve(csp, layer)
 								curveGCode = self._generate_gcode(curve, colorKey)
-						
-						
+
+
 							settings = self.colorParams.get(colorKey, {'intensity': -1, 'feedrate': -1, 'passes': 0, 'pierce_time': 0})
 							fh.write("; Layer: " + layerId + ", outline of " + pathId + ", stroke: " + colorKey +', '+str(settings)+"\n")
 							for p in range(0, int(settings['passes'])):
@@ -267,12 +274,15 @@ class Converter():
 		self.images = {}
 		self.layers = [self.document.getroot()]
 
+		self.gc_options = self.document.getroot().get(_add_ns('gc_options', 'mb'))
+		self._log.info("gc_nexgen gc_options data in svg:  %s", self.gc_options)
+
 		def recursive_search(g, layer):
 			items = g.getchildren()
 			items.reverse()
 			if(len(items) > 0):
 				self._log.debug("recursive search: %i - %s"  %(len(items), g.get("id")))
-				
+
 			for i in items:
 				# TODO layer support
 				if i.tag == _add_ns("g",'svg') and i.get(_add_ns('groupmode','inkscape')) == 'layer':
@@ -285,7 +295,7 @@ class Converter():
 
 				else:
 					# path
-					if i.tag == _add_ns('path','svg'):					
+					if i.tag == _add_ns('path','svg'):
 						self._handle_node(i, layer)
 
 					# rect, line, polygon, polyline, circle, ellipse
@@ -295,29 +305,29 @@ class Converter():
 					or i.tag == _add_ns( 'polyline', 'svg' ) or i.tag == 'polyline' \
 					or i.tag == _add_ns( 'ellipse', 'svg' ) or i.tag == 'ellipse' \
 					or i.tag == _add_ns( 'circle', 'svg' ) or	i.tag == 'circle':
-					
+
 						i.set("d", get_path_d(i))
 						self._handle_node(i, layer)
 
 					# image
 					elif i.tag == _add_ns('image','svg'):
 						x = i.get('x')
-						y = i.get('y')						
+						y = i.get('y')
 						if x == None:
 							x = "0"
 						if y == None:
 							y = "0"
-					
+
 						self._log.info("added image " + i.get("width") + 'x' + i.get("height") + "@" + x+","+y)
 						self._handle_image(i, layer)
-					
+
 					# group
 					elif i.tag == _add_ns("g",'svg'):
 						recursive_search(i,layer)
-				
+
 					else :
-						self._log.debug("ignoring not supported tag: %s \n %s \n\n" % (i.tag, etree.tostring(i)))
-					
+						self._log.debug("ignoring not supported tag: %s \n%s" % (i.tag, etree.tostring(i)))
+
 		recursive_search(self.document.getroot(), self.document.getroot())
 		self._log.info("self.layers: %i" % len(self.layers))
 		self._log.info("self.paths: %i" % len(self.paths))
@@ -332,10 +342,10 @@ class Converter():
 			self._log.info("parsed %s" % self.svg_file)
 		except Exception as e:
 			self._log.error("unable to parse %s: %s" % (self.svg_file, e.message))
-		
+
 	def _handle_image(self, imgNode, layer):
 		self.images[layer] = self.images[layer] + [imgNode] if layer in self.images else [imgNode]
-		
+
 	def _handle_node(self, node, layer):
 		stroke = self._get_stroke(node)
 		fill = self._get_fill(node)
@@ -354,29 +364,29 @@ class Converter():
 		stroke['color'] = 'unset'
 		stroke['opacity'] = 1
 		stroke['visible'] = True
-		
+
 		#"stroke", "stroke-width", "stroke-opacity", "opacity"
 		styles = simplestyle.parseStyle(node.get("style"))
 		color = node.get('stroke', None)
 		if(color is None):
 			if("stroke" in styles):
 				color = styles["stroke"]
-		
+
 		if(color != None and color != 'none' and color != ''):
 			stroke['color'] = color
-		
+
 		width = node.get('stroke-width', '')
 		if(width is ''):
 			if("stroke-width" in styles):
 				width = styles["stroke-width"]
 		if(width != 'none' and width != ''):
 			try:
-				strokeWidth = float(re.sub(r'[^\d.]+', '', width))				
+				strokeWidth = float(re.sub(r'[^\d.]+', '', width))
 				stroke['width'] = strokeWidth
 				# todo: unit
 			except ValueError:
 				pass
-				
+
 		stroke_opacity = node.get('stroke-opacity', 1)
 		if(stroke_opacity is 1):
 			if ("stroke-opacity" in styles):
@@ -392,7 +402,7 @@ class Converter():
 					opacity = float(styles["opacity"])
 				except ValueError:
 					pass
-				
+
 		stroke['opacity'] = min(opacity, stroke_opacity)
 		stroke['visible'] = stroke['color'] is not None and stroke['opacity'] > 0 and stroke['width'] > 0
 		return stroke
@@ -402,7 +412,7 @@ class Converter():
 		fill['color'] = 'unset'
 		fill['opacity'] = 1
 		fill['visible'] = True
-		
+
 		#"fill", "fill-opacity", "opacity"
 		styles = simplestyle.parseStyle(node.get("style"))
 		color = node.get('fill', None)
@@ -411,7 +421,7 @@ class Converter():
 				color = styles["fill"]
 		if(color != None and color != 'none' and color != ''):
 			fill['color'] = color
-				
+
 		fill_opacity = node.get('fill-opacity', 1)
 		if(fill_opacity is 1):
 			if ("fill-opacity" in styles):
@@ -429,16 +439,16 @@ class Converter():
 					pass
 
 		fill['opacity'] = min(opacity, fill_opacity)
-		fill['visible'] = fill['color'] is not None and fill['opacity'] > 0 
+		fill['visible'] = fill['color'] is not None and fill['opacity'] > 0
 		return fill
-		
+
 	def _process_color(self, color):
 		if(color in self.colorParams.keys()):
 			return True
 		else:
 			self._log.info("Skipping color: %s " % color)
 			return False
-		
+
 	def _check_dir(self):
 		if self.options['directory'][-1] not in ["/","\\"]:
 			if "\\" in self.options['directory'] :
@@ -448,10 +458,10 @@ class Converter():
 		self._log.info("Checking directory: '%s'"%self.options['directory'])
 		if (os.path.isdir(self.options['directory'])):
 			pass
-		else: 
+		else:
 			self._log.error("Directory does not exist! Please specify existing directory at Preferences tab!")
-			return False	
-		
+			return False
+
 	def _apply_transforms(self,g,csp):
 		trans = self._get_transforms(g)
 		if trans != [[1,0,0],[0,1,0]]: #todo can trans be [] anyways?
@@ -470,14 +480,14 @@ class Converter():
 				self._log.debug("Found transform: " % trans)
 			g = g.getparent()
 		return trans
-	
+
 	def _parse_curve(self, p, layer, w = None, f = None):
 			c = []
-			if len(p)==0 : 
+			if len(p)==0 :
 				return []
 			p = self._transform_csp(p, layer)
-			
-			### Sort to reduce Rapid distance	
+
+			### Sort to reduce Rapid distance
 			k = range(1,len(p))
 			keys = [0]
 			while len(k)>0:
@@ -488,7 +498,7 @@ class Converter():
 					dist = max(   ( -( ( end[0]-start[0])**2+(end[1]-start[1])**2 ) ,i)	,   dist )
 				keys += [k[dist[1]]]
 				del k[dist[1]]
-				
+
 			#keys = range(1,len(p)) # debug unsorted.
 			for k in keys:
 				subpath = p[k]
@@ -501,23 +511,23 @@ class Converter():
 
 			#self._log.debug("Curve: " + str(c))
 			return c
-		
+
 	def _transform_csp(self, csp_, layer, reverse = False):
 		self._log.debug("_transform_csp %s , %s, %s" % (csp_, layer, reverse))
 		csp = [  [ [csp_[i][j][0][:],csp_[i][j][1][:],csp_[i][j][2][:]]  for j in range(len(csp_[i])) ]   for i in range(len(csp_)) ]
 		for i in xrange(len(csp)):
-			for j in xrange(len(csp[i])): 
-				for k in xrange(len(csp[i][j])): 
+			for j in xrange(len(csp[i])):
+				for k in xrange(len(csp[i][j])):
 					csp[i][j][k] = self._transform(csp[i][j][k],layer, reverse)
 		return csp
-	
+
 	def _transform(self, source_point, layer, reverse=False):
 		self._log.debug('_transform %s,%s,%s ' % (source_point, layer, reverse))
 		if layer == None :
 			layer = self.document.getroot()
 		if layer not in self.transform_matrix:
 			for i in range(self.layers.index(layer),-1,-1):
-				if self.layers[i] in self.orientation_points : 
+				if self.layers[i] in self.orientation_points :
 					break # i will remain after the loop
 
 			if self.layers[i] not in self.orientation_points :
@@ -533,7 +543,7 @@ class Converter():
 					self._log.debug("Layer '%s' Orientation points: " % orientation_layer.get(_add_ns('label','inkscape')))
 					for point in points:
 						self._log.debug(point)
-						
+
 					matrix = numpy.array([
 								[points[0][0][0], points[0][0][1], 1, 0, 0, 0, 0, 0, 0],
 								[0, 0, 0, points[0][0][0], points[0][0][1], 1, 0, 0, 0],
@@ -549,7 +559,7 @@ class Converter():
 					if numpy.linalg.det(matrix)!=0 :
 						m = numpy.linalg.solve(matrix,
 							numpy.array(
-								[[points[0][1][0]], [points[0][1][1]], [1], [points[1][1][0]], [points[1][1][1]], [1], [points[2][1][0]], [points[2][1][1]], [1]]	
+								[[points[0][1][0]], [points[0][1][1]], [1], [points[1][1][0]], [points[1][1][1]], [1], [points[2][1][0]], [points[2][1][1]], [1]]
 										)
 							).tolist()
 						self.transform_matrix[layer] = [[m[j*3+i][0] for i in range(3)] for j in range(3)]
@@ -559,9 +569,9 @@ class Converter():
 				else :
 					self._log.error("Orientation points are wrong! (if there are two orientation points they sould not be the same. If there are three orientation points they should not be in a straight line.)")
 
-			self.transform_matrix_reverse[layer] = numpy.linalg.inv(self.transform_matrix[layer]).tolist()		
+			self.transform_matrix_reverse[layer] = numpy.linalg.inv(self.transform_matrix[layer]).tolist()
 
-			
+
 		x,y = source_point[0], source_point[1]
 		if not reverse :
 			t = self.transform_matrix[layer]
@@ -635,7 +645,7 @@ class Converter():
 		if si[1] == 'end':
 			g += machine_settings.gcode_after_path() + "\n"
 		return g
-	
+
 	def _use_embedded_gcode(self, gcode, color) :
 		self._log.debug( "_use_embedded_gcode()")
 		gcode = gcode.replace(' ', "\n")
@@ -648,41 +658,41 @@ class Converter():
 			piercetimeCode = "G4P%.3f\n" % (round(pt / 1000.0, 4))
 		placeholder_laseron = ";_laseron_"
 		gcode = gcode.replace(placeholder_laseron, feedrateCode + intensityCode + piercetimeCode) + "\n"
-		
+
 		placeholder_laseroff = ";_laseroff_"
 		afterPathCode = machine_settings.gcode_after_path() + "\n"
 		gc = gcode.replace(placeholder_laseroff, afterPathCode) + "\n"
-		
+
 		return gc
-		
+
 
 	def export_gcode(self) :
-		self._check_dir() 
-			
+		self._check_dir()
+
 		destination = self.options['directory'] + self.options['file']
 		shutil.move(self._tempfile, destination)
 		self._log.info( "wrote file: %s" % destination)
-		
+
 	def _get_gcode_header(self):
 		if(self.options['noheaders']):
 			return ""
 		else:
 			return machine_settings.gcode_header + "G21\n\n"
-	
+
 	def _get_gcode_footer(self):
 		if(self.options['noheaders']):
 			return "M05\n"
 		else:
 			return machine_settings.gcode_footer
-	
-		
+
+
 	def calculate_conversion_matrix(self, layer=None) :
 		self._log.info("Calculating transformation matrix for layer: %s" % layer)
 		if layer == None :
 			layer = self.document.getroot()
 		if layer in self.orientation_points:
 			self._log.error("Layer already has a transformation matrix points!")
-		
+
 
 		# translate == ['0', '-917.7043']
 		if layer.get("transform") != None :
@@ -696,9 +706,9 @@ class Converter():
 		doc_height = unittouu(h)
 		viewBoxM = self._get_document_viewbox_matrix()
 		viewBoxScale = viewBoxM[1][1] # TODO use both coordinates.
-		
+
 		self._log.info("Document height: %s   viewBoxTransform: %s" % (str(doc_height),  viewBoxM))
-			
+
 		points = [[100.,0.,0.],[0.,0.,0.],[0.,100.,0.]]
 		orientation_scale = (self.options['svgDPI'] / 25.4) / viewBoxScale # 3.5433070660 @ 90dpi
 		points = points[:2]
@@ -711,19 +721,19 @@ class Converter():
 			# si have correct coordinates
 			# if layer have any tranform it will be in translate so lets add that
 			si = [i[0]*orientation_scale, (i[1]*orientation_scale)+float(translate[1])]
-			
+
 			#TODO avoid conversion to cubicsuperpath, calculate p0 and p1 directly
 			#point[0] = self._apply_transforms(node,cubicsuperpath.parsePath(node.get("d")))[0][0][1]
 			d = 'm %s,%s 2.9375,-6.343750000001 0.8125,1.90625 6.843748640396,-6.84374864039 0,0 0.6875,0.6875 -6.84375,6.84375 1.90625,0.812500000001 z z' % (si[0], -si[1] + doc_height / viewBoxScale)
 			csp = cubicsuperpath.parsePath(d)
 			#self._log.info('### CSP %s' % csp)
-			### CSP [[[[0.0, 1413.42519685], [0.0, 1413.42519685], [0.0, 1413.42519685]], [[2.9375, 1407.081446849999], [2.9375, 1407.081446849999], [2.9375, 1407.081446849999]], [[3.75, 1408.987696849999], [3.75, 1408.987696849999], [3.75, 1408.987696849999]], [[10.593748640396, 1402.143948209609], [10.593748640396, 1402.143948209609], [10.593748640396, 1402.143948209609]], [[10.593748640396, 1402.143948209609], [10.593748640396, 1402.143948209609], [10.593748640396, 1402.143948209609]], [[11.281248640396, 1402.831448209609], [11.281248640396, 1402.831448209609], [11.281248640396, 1402.831448209609]], [[4.437498640396001, 1409.675198209609], [4.437498640396001, 1409.675198209609], [4.437498640396001, 1409.675198209609]], [[6.343748640396001, 1410.48769820961], [6.343748640396001, 1410.48769820961], [6.343748640396001, 1410.48769820961]], [[0.0, 1413.42519685], [0.0, 1413.42519685], [0.0, 1413.42519685]], [[0.0, 1413.42519685], [0.0, 1413.42519685], [0.0, 1413.42519685]]]]   
-			
+			### CSP [[[[0.0, 1413.42519685], [0.0, 1413.42519685], [0.0, 1413.42519685]], [[2.9375, 1407.081446849999], [2.9375, 1407.081446849999], [2.9375, 1407.081446849999]], [[3.75, 1408.987696849999], [3.75, 1408.987696849999], [3.75, 1408.987696849999]], [[10.593748640396, 1402.143948209609], [10.593748640396, 1402.143948209609], [10.593748640396, 1402.143948209609]], [[10.593748640396, 1402.143948209609], [10.593748640396, 1402.143948209609], [10.593748640396, 1402.143948209609]], [[11.281248640396, 1402.831448209609], [11.281248640396, 1402.831448209609], [11.281248640396, 1402.831448209609]], [[4.437498640396001, 1409.675198209609], [4.437498640396001, 1409.675198209609], [4.437498640396001, 1409.675198209609]], [[6.343748640396001, 1410.48769820961], [6.343748640396001, 1410.48769820961], [6.343748640396001, 1410.48769820961]], [[0.0, 1413.42519685], [0.0, 1413.42519685], [0.0, 1413.42519685]], [[0.0, 1413.42519685], [0.0, 1413.42519685], [0.0, 1413.42519685]]]]
+
 			p0 = csp[0][0][1]
 			p1 = [i[0],i[1],i[2]]
 			point = [p0,p1]
 			opoints += [point]
-			
+
 		if opoints != None :
 			self.orientation_points[layer] = self.orientation_points[layer]+[opoints[:]] if layer in self.orientation_points else [opoints[:]]
 			self._log.info("Generated orientation points in '%s' layer: %s" % (layer.get(_add_ns('label','inkscape')), opoints))

@@ -171,7 +171,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				enabled = True,
 				precision = 0.05,
 				optimize_travel = True,
-				small_paths_first = True
+				small_paths_first = True,
+				clip_working_area = True
 			)
 		)
 
@@ -191,6 +192,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				precision = self._settings.get(['gcode_nextgen', 'precision']),
 				optimize_travel = self._settings.get(['gcode_nextgen', 'optimize_travel']),
 				small_paths_first = self._settings.get(['gcode_nextgen', 'small_paths_first']),
+				clip_working_area = self._settings.get(['gcode_nextgen', 'clip_working_area'])
 			)
 		)
 

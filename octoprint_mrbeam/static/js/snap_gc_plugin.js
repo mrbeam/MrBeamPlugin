@@ -62,17 +62,34 @@ Snap.plugin(function (Snap, Element, Paper, global) {
       // apply transformation matrix
       paths = mrbeam.path.transform(paths, xform);
 
-      // clip to boundaries
-      var x = bounds[0];
-      var y = bounds[1];
-      var w = bounds[2] - bounds[0];
-      var h = bounds[3] - bounds[1];
+      // clip working area borders
+      if (gc_options.clip_working_area) {
+          var x = bounds[0];
+          var y = bounds[1];
+          var w = bounds[2] - bounds[0];
+          var h = bounds[3] - bounds[1];
+          var clip = [
+              mrbeam.path.rectangle(x, y, w, h)
+          ];
+          var clip_tolerance = 0.1 * tolerance
 
-      var clip = [
-        mrbeam.path.rectangle(x, y, w, h)
-      ];
+          // ANDYTEST this needs to go...
+          var first = true;
+          var str = "[[";
+          for (var i = 0; i < clip[0].length; i++) {
+              if (!first) {
+                  str += ",";
+              } else {
+                  first = false;
+              }
+              str += "(x"+clip[0][i]['x']+",y"+clip[0][i]['y']+")";
+           }
+           str += "]]";
+          // ANDYTEST...till here
 
-      paths = mrbeam.path.clip(paths, clip, 0.1 * tolerance);
+          console.log("clip_working_area: clip_tolerance:"+clip_tolerance+", clip rectangle:" + str);
+          paths = mrbeam.path.clip(paths, clip, clip_tolerance);
+      }
 
       // generate gcode
       var gcode = mrbeam.path.gcode(paths);

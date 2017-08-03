@@ -614,7 +614,7 @@ var mrbeam = mrbeam || {};
     var xy = pointsString.split(/,|\s/g)
                           .filter(s => s.length > 0)
                           .map(Number);
-    
+
     var pts = [];
 
     for (let i = 0; i < xy.length; i += 2) {
@@ -624,7 +624,7 @@ var mrbeam = mrbeam || {};
     if (closed) {
       pts.push(pts[0]);
     }
-    
+
     return pts;
   }
 
@@ -671,7 +671,7 @@ var mrbeam = mrbeam || {};
     return pathString;
   };
 
-  module.gcode = function (paths) {
+  module.gcode = function (paths, gc_options) {
     var commands = [];
 
     // helper for number formatting

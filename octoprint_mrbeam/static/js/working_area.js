@@ -1348,7 +1348,6 @@ $(function(){
 			var wPT = wMM * 90 / 25.4;  // TODO ... switch to 96dpi ?
 			var hPT = hMM * 90 / 25.4;
 			var compSvg = self.getNewSvg('compSvg', wPT, hPT);
-//			var attrs = {id: 'flipY', transform: 'matrix(1,0,0,-1,0,'+hMM+')'};
 			var attrs = {};
 			var content = compSvg.g(attrs);
 			var userContent = snap.select("#userContent").clone();
@@ -1381,17 +1380,33 @@ $(function(){
 				var w = dpiFactor * wMM;
 				var h = dpiFactor * hMM;
 				var viewBox = "0 0 " + wMM + " " + hMM;
-				// TODO: look for better solution to solve this Firefox bug problem
-				svgStr = svgStr.replace("(\\\"","(");
-				svgStr = svgStr.replace("\\\")",")");
+
+				svgStr = self._normalize_svg_string(svgStr);
+				var gc_otions_str = self.gc_options_as_string().replace('"', "'");
 
 				var svg = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:mb="http://www.mr-beam.org/mbns"'
-						+ ' width="'+ w +'" height="'+ h +'"  viewBox="'+ viewBox +'"><defs/>'+svgStr+'</svg>';
+						+ ' width="'+ w +'" height="'+ h +'"  viewBox="'+ viewBox +'" mb:gc_options="'+gc_otions_str+'"><defs/>'+svgStr+'</svg>';
 				return svg;
 			} else {
 				return;
 			}
 		};
+
+		self._normalize_svg_string = function(svgStr){
+		    // TODO: look for better solution to solve this Firefox bug problem
+            svgStr = svgStr.replace("(\\\"","(");
+            svgStr = svgStr.replace("\\\")",")");
+            return svgStr;
+        };
+
+        self.gc_options_as_string = function() {
+            var gc_options = self.gc_options();
+            var res = [];
+            for (var key in gc_options) {
+                res.push(key + ":" + gc_options[key]);
+            }
+            return res.join(", ");
+        };
 
 		self.getPlacedSvgs = function() {
 			var svgFiles = [];
@@ -1488,6 +1503,7 @@ $(function(){
                     precision: self.settings.settings.plugins.mrbeam.gcode_nextgen.precision(),
                     optimize_travel: self.settings.settings.plugins.mrbeam.gcode_nextgen.optimize_travel(),
                     small_paths_first: self.settings.settings.plugins.mrbeam.gcode_nextgen.small_paths_first(),
+                    clip_working_area: self.settings.settings.plugins.mrbeam.gcode_nextgen.clip_working_area(),
                     clipRect: [0,0,self.workingAreaWidthMM(), self.workingAreaHeightMM()]
                 };
             });
