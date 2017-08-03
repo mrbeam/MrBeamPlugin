@@ -7,7 +7,8 @@
 $(function() {
     function LaserJobDoneViewmodel(parameters) {
         var self = this;
-
+        self.is_print_done = ko.observable(false);
+        self.is_job_done = ko.observable(false);
 
         self.onStartup = function(){
             console.log("LaserJobDoneViewmodel loaded!");
@@ -23,13 +24,15 @@ $(function() {
                 return;
             }
 
-            if ('event' in data) {
+            if ('event' in data && data['event'] == "LaserJobDone") {
                 console.log("Got event data: ", data);
+                self.is_job_done(true);
             }
         };
 
         self.onEventPrintDone = function (payload) {
             console.log("Got printdone: ", payload);
+            self.is_print_done(true);
         };
     };
 
