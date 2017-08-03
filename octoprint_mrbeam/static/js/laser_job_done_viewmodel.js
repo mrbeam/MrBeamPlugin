@@ -26,9 +26,9 @@ $(function() {
 
             if ('event' in data && data['event'] == "LaserJobDone") {
                 self.is_job_done(true);
-                $('.modal-backdrop').on('click', function () {
+                $('.modal-backdrop').onclick = function () {
                     self.dialogElement.modal("hide");
-                })
+                };
             }
         };
 
