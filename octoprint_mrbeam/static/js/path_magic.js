@@ -772,4 +772,24 @@ var mrbeam = mrbeam || {};
 
     return optimized.reverse();
   };
+
+  module.pp_paths = function(paths){
+      var ps = [];
+      for (var i = 0; i < paths.length; i++) {
+            ps.push(module.pp_path(paths[i]));
+      }
+      return "["+ps.join(', ')+"]";
+  };
+
+  module.pp_path = function(path){
+      var ps = [];
+      for (var i = 0; i < path.length; i++) {
+            ps.push(module.pp_point(path[i]));
+      }
+      return "["+ps.join(',')+"]";
+  };
+
+  module.pp_point = function(point){
+      return "(x"+point.x+",y"+point.y+")";
+  };
 }());

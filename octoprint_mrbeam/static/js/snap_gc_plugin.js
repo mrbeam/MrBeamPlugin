@@ -27,6 +27,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
     var bounds = gc_options.clipRect;
 
     this.selectAll("path").forEach(function (element) {
+      var id = element.attr('id') || '';
+      var node = element.node.nodeName || '';
+
       // calculate transformation matrix
       var matrix = element.transform().totalMatrix;
 
@@ -73,21 +76,13 @@ Snap.plugin(function (Snap, Element, Paper, global) {
           ];
           var clip_tolerance = 0.1 * tolerance
 
-          // ANDYTEST this needs to go...
-          var first = true;
-          var str = "[[";
-          for (var i = 0; i < clip[0].length; i++) {
-              if (!first) {
-                  str += ",";
-              } else {
-                  first = false;
-              }
-              str += "(x"+clip[0][i]['x']+",y"+clip[0][i]['y']+")";
-           }
-           str += "]]";
-          // ANDYTEST...till here
-
-          console.log("clip_working_area: clip_tolerance:"+clip_tolerance+", clip rectangle:" + str);
+          if (id.toLowerCase().indexOf('debug') !== -1 || id.toLowerCase().indexOf('andytest') !== -1) {
+            console.log("mrbeam.path.clip() node:"+node+", id:"+id
+                +", paths: " + mrbeam.path.pp_paths(paths)
+                +", clip:" + mrbeam.path.pp_paths(clip)
+                +", clip_tolerance:"+clip_tolerance
+            );
+          }
           paths = mrbeam.path.clip(paths, clip, clip_tolerance);
       }
 
@@ -103,4 +98,6 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
     elements.forEach((element) => element.attr("mb:gc", ""));
   };
+
+
 });
