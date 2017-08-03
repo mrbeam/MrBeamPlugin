@@ -7,7 +7,6 @@
 $(function() {
     function LaserJobDoneViewmodel(parameters) {
         var self = this;
-        self.is_print_done = ko.observable(false);
         self.is_job_done = ko.observable(false);
 
         self.onStartupComplete = function(){
@@ -35,7 +34,6 @@ $(function() {
         self.onEventPrintDone = function (payload) {
             console.log("Got printdone: ", payload);
             self.dialogElement.modal("show");
-            self.is_print_done(true);
         };
     };
 
