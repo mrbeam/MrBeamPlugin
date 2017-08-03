@@ -25,7 +25,6 @@ $(function() {
             }
 
             if ('event' in data && data['event'] == "LaserJobDone") {
-                console.log("Got event data: ", data);
                 self.is_job_done(true);
                 setTimeout(function(){
                     self.dialogElement.modal("hide");
@@ -35,7 +34,6 @@ $(function() {
         };
 
         self.onEventPrintDone = function (payload) {
-            console.log("Got printdone: ", payload);
             if (!self.dialogElement.hasClass('in')) {
                 self.dialogElement.modal("show");
             }
