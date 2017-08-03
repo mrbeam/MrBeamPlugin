@@ -26,7 +26,7 @@ $(function() {
 
             if ('event' in data && data['event'] == "LaserJobDone") {
                 self.is_job_done(true);
-                $('.modal-backdrop').removeData('bs.modal').modal({backdrop: true, keyboard: true})
+                self.dialogElement.removeData('bs.modal').modal({backdrop: true, keyboard: true})
             }
         };
 
