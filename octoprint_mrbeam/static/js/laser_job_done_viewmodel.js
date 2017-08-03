@@ -26,16 +26,21 @@ $(function() {
 
             if ('event' in data && data['event'] == "LaserJobDone") {
                 console.log("Got event data: ", data);
-                setTimeout(function(){ self.dialogElement.modal("hide"); }, 3000);
                 self.is_job_done(true);
+                setTimeout(function(){
+                    self.dialogElement.modal("hide");
+                    self.is_job_done(false);
+                }, 3000);
             }
         };
 
         self.onEventPrintDone = function (payload) {
             console.log("Got printdone: ", payload);
-            self.dialogElement.modal("show");
+            if (!self.dialogElement.hasClass('in')) {
+                self.dialogElement.modal("show");
+            }
         };
-    };
+    }
 
     // view model class, parameters for constructor, container to bind to
     OCTOPRINT_VIEWMODELS.push([
