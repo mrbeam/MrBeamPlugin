@@ -8,13 +8,13 @@
             <img data-bind='visible: !is_job_done()'src="/plugin/mrbeam/static/img/fan.jpg">
             <img data-bind='visible: is_job_done()' src="/plugin/mrbeam/static/img/done.png">
             <h5 data-bind='visible: !is_job_done()'>Please wait a few seconds until the Mr Beam Air Filter cleared most of the dust particles out of the workingarea.</h5>
-            <h5 data-bind='visible: is_job_done()'>Everything is ready to go.</h5>
+            <h5 data-bind='visible: is_job_done()'>Everything is ready to go. You can now open the lid and take your material out.</h5>
         </div>
         <div class="modal-footer">
-            <h4 data-bind='visible: is_job_done()' class="pull-right" >
+            <h4 data-bind='visible: !is_job_done()' class="pull-right" >
                 Almost done... Please be patient!
             </h4>
-            <a class="btn btn-primary" data-bind='visible: !is_job_done(), click: cancel_btn' aria-hidden="true">{{ _('OK') }}</a>
+            <a class="btn btn-primary" data-bind='visible: is_job_done(), click: cancel_btn' aria-hidden="true">{{ _('OK') }}</a>
         </div>
     </div>
 </div>
