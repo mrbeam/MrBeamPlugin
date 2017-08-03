@@ -147,12 +147,15 @@ class DustManager(object):
 			self._logger.debug("Last event: {}".format(self._last_event))
 			if self._last_event == OctoPrintEvents.PRINT_DONE:
 				_mrbeam_plugin_implementation._event_bus.fire(MrBeamEvents.LASER_JOB_DONE)
+				_mrbeam_plugin_implementation._plugin_manager.send_plugin_message("mrbeam", dict(event=MrBeamEvents.LASER_JOB_DONE))
 				self._logger.debug("Fire event: {}".format(MrBeamEvents.LASER_JOB_DONE))
 			elif self._last_event == OctoPrintEvents.PRINT_CANCELLED:
 				_mrbeam_plugin_implementation._event_bus.fire(MrBeamEvents.LASER_JOB_CANCELLED)
+				_mrbeam_plugin_implementation._plugin_manager.send_plugin_message("mrbeam", dict(event=MrBeamEvents.LASER_JOB_CANCELLED))
 				self._logger.debug("Fire event: {}".format(MrBeamEvents.LASER_JOB_CANCELLED))
 			elif self._last_event == OctoPrintEvents.PRINT_FAILED:
 				_mrbeam_plugin_implementation._event_bus.fire(MrBeamEvents.LASER_JOB_FAILED)
+				_mrbeam_plugin_implementation._plugin_manager.send_plugin_message("mrbeam", dict(event=MrBeamEvents.LASER_JOB_FAILED))
 				self._logger.debug("Fire event: {}".format(MrBeamEvents.LASER_JOB_FAILED))
 		except:
 			self._logger.exception("Exception send_laser_done_event _wait_until(): ")
