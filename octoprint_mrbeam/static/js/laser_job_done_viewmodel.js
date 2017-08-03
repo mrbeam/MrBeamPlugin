@@ -26,17 +26,18 @@ $(function() {
 
             if ('event' in data && data['event'] == "LaserJobDone") {
                 self.is_job_done(true);
-                setTimeout(function(){
-                    self.dialogElement.modal("hide");
-                    self.is_job_done(false);
-                }, 3000);
             }
         };
 
         self.onEventPrintDone = function (payload) {
             if (!self.dialogElement.hasClass('in')) {
-                self.dialogElement.modal("show");
+                self.dialogElement.modal({backdrop: 'static'});
             }
+        };
+
+        self.cancel_btn = function(){
+            self.dialogElement.modal("hide");
+            self.is_job_done(false);
         };
     }
 
