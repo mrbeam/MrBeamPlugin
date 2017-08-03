@@ -114,22 +114,35 @@ class DustManager(object):
 
 	def _wait_until(self, value):
 		try:
-			self._logger.debug("starting trial dust extraction (value={}).".format(value))
-			dust_start = self._dust
-			dust_start_ts = self._dust_ts
-			self._dust_timer_interval = 1
-			self._start_dust_extraction_thread(100)
-			while self._dust > value:
-				time.sleep(self._dust_timer_interval)
-			self._logger.debug("finished trial dust extraction.")
-			dust_end = self._dust
-			dust_end_ts = self._dust_ts
-			self._dust_timer_interval = 3
-			self._write_analytics(dust_start, dust_start_ts, dust_end, dust_end_ts)
-			self._activate_timed_auto_mode(self.auto_mode_time)
-			self._trail_extraction = None
+			if self._dust is not None:
+				self._logger.debug("starting trial dust extraction (value={}).".format(value))
+				dust_start = self._dust
+				dust_start_ts = self._dust_ts
+				self._dust_timer_interval = 1
+				self._start_dust_extraction_thread(100)
+				while self._continue_dust_extraction(value, dust_start_ts):
+					time.sleep(self._dust_timer_interval)
+				self._logger.debug("finished trial dust extraction.")
+				dust_end = self._dust
+				dust_end_ts = self._dust_ts
+				self._dust_timer_interval = 3
+				if dust_start_ts != dust_end_ts:
+					self._write_analytics(dust_start, dust_start_ts, dust_end, dust_end_ts)
+				else:
+					self._logger.warning("No dust value recieved during extraction time. Skipping wrinting analytics!")
+				self._activate_timed_auto_mode(self.auto_mode_time)
+				self._trail_extraction = None
+			else:
+				self._logger.warning("No dust value received so far. Skipping trial dust extraction!")
 		except:
 			self._logger.exception("Exception in _wait_until(): ")
+
+	def _continue_dust_extraction(self, value, started):
+		if time.time() - started > 30:  # TODO: get this value from laser profile
+			return False
+		if self._dust is not None and self._dust < value:
+			return False
+		return True
 
 	def _activate_timed_auto_mode(self, value):
 		self._logger.debug("starting timed auto mode (value={}).".format(value))
