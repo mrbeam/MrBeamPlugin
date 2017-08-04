@@ -2,6 +2,7 @@ import logging
 import re
 import shutil
 import os
+import time
 import machine_settings
 
 from biarc import biarc
@@ -124,6 +125,13 @@ class Converter():
 		report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
 
 		with open(self._tempfile, 'a') as fh:
+			# write comments to gcode
+			gc_options_str = "; gc_nexgen gc_options: {}\n".format(self.gc_options)
+			fh.write(gc_options_str)
+			fh.write("; created:{}\n".format(time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())))
+			gc_color_str = "; laser params: {}\n".format(self.colorParams)
+			fh.write(gc_color_str)
+
 			fh.write(self._get_gcode_header())
 
 			# images
@@ -191,11 +199,6 @@ class Converter():
 			# paths
 			self._log.info( 'Vector conversion: %s paths' % len(self.paths))
 
-			gc_color_str = "; laser params: {}\n".format(self.colorParams)
-			fh.write(gc_color_str)
-			gc_options_str = "; gc_nexgen gc_options: {}\n".format(self.gc_options)
-			fh.write(gc_options_str)
-
 			for layer in self.layers :
 				if layer in self.paths :
 					paths_by_color = dict()
@@ -261,9 +264,9 @@ class Converter():
 
 
 							settings = self.colorParams.get(colorKey, {'intensity': -1, 'feedrate': -1, 'passes': 0, 'pierce_time': 0})
-							fh.write("; Layer: " + layerId + ", outline of " + pathId + ", stroke: " + colorKey +', '+str(settings)+"\n")
+							fh.write("; Layer:" + layerId + ", outline of:" + pathId + ", stroke:" + colorKey +', '+str(settings)+"\n")
 							for p in range(0, int(settings['passes'])):
-								fh.write(";pass %i of %s\n" % (p+1, settings['passes']))
+								fh.write("; pass:%i/%s\n" % (p+1, settings['passes']))
 								fh.write(curveGCode)
 
 			fh.write(self._get_gcode_footer())
@@ -278,7 +281,7 @@ class Converter():
 		self.layers = [self.document.getroot()]
 
 		self.gc_options = self.document.getroot().get(_add_ns('gc_options', 'mb'))
-		self._log.info("gc_nexgen gc_options data in svg:  %s", self.gc_options)
+		self._log.info("gc_nexgen gc_options data in svg: %s", self.gc_options)
 
 		def recursive_search(g, layer):
 			items = g.getchildren()

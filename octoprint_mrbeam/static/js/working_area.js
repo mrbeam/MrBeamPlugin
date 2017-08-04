@@ -1549,6 +1549,8 @@ $(function(){
 		    self.svgDPI = self.settings.settings.plugins.mrbeam.svgDPI;
             self.gc_options = ko.computed(function(){
                 return {
+                    beamOS: BEAMOS_DISPLAY_VERSION,
+                    gc_nextgen: mrbeam.path.version,
                     enabled: self.settings.settings.plugins.mrbeam.gcode_nextgen.enabled(),
                     precision: self.settings.settings.plugins.mrbeam.gcode_nextgen.precision(),
                     optimize_travel: self.settings.settings.plugins.mrbeam.gcode_nextgen.optimize_travel(),

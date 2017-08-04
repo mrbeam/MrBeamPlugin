@@ -3,9 +3,19 @@ var mrbeam = mrbeam || {};
 (function () {
   "use strict";
 
+  ////////////////////////////
+    // gcode_nextgen
+    // version:
+  var VERSION = '0.1'
+    //
+    //
+  ////////////////////////////
+
+
   mrbeam.path = {};
   var module = mrbeam.path;
 
+  module.version = VERSION;
 
   function point(x, y) {
     return { x: x, y: y };
