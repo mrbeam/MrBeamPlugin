@@ -277,7 +277,7 @@ class IoBeamHandler(object):
 				# If handling of these messages blockes iobeam_handling, we might need a threadpool or so.
 				# One thread for handling this is almost the same bottleneck as current solution,
 				# so I think we would need a thread pool here... But maybe this would be just over engineering.
-				self.__execute_callback_called_by_new_thread(_trigger_event, _callback_array, kwargs)
+				self.__execute_callback_called_by_new_thread(_trigger_event, False, _callback_array, kwargs)
 
 				# thread_params = dict(target = self.__execute_callback_called_by_new_thread,
 				#                      name = "iobeamCB_{}".format(_trigger_event),
@@ -292,9 +292,12 @@ class IoBeamHandler(object):
 			self._callbacks_lock.reader_release()
 
 
-	def __execute_callback_called_by_new_thread(self, _trigger_event, _callback_array, kwargs):
+	def __execute_callback_called_by_new_thread(self, _trigger_event, acquire_lock, _callback_array, kwargs):
 		try:
-			self._callbacks_lock.reader_acquire()
+			if acquire_lock:
+				# It's a trrible idea to acquire this lock two times in a row on the same thread.
+				# It happened that there was a write request in between -> dead lock like in a text book ;-)
+				self._callbacks_lock.reader_acquire()
 			for my_cb in _callback_array:
 				try:
 					my_cb(kwargs)
@@ -303,7 +306,8 @@ class IoBeamHandler(object):
 		except:
 			self._logger.exception("Exception in __execute_callback_called_by_new_thread() for event: %s : ", _trigger_event)
 		finally:
-			self._callbacks_lock.reader_release()
+			if acquire_lock:
+				self._callbacks_lock.reader_release()
 
 	def _subscribe(self):
 		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self.shutdown)
