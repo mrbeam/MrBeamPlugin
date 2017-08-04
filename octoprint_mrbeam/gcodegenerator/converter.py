@@ -19,6 +19,9 @@ from lxml import etree
 
 class Converter():
 
+	PLACEHOLDER_LASER_ON  = ";_laseron_"
+	PLACEHOLDER_LASER_OFF = ";_laseroff_"
+
 	defaults = {
 		"directory": None,
 		"file": None,
@@ -197,7 +200,7 @@ class Converter():
 				if layer in self.paths :
 					paths_by_color = dict()
 					for path in self.paths[layer] :
-						self._log.info("path %s, %s, stroke: %s, fill: %s, mb:gc: %s" % ( layer.get('id'), path.get('id'), path.get('stroke'), path.get('class'), path.get('mb:gc') ))
+						self._log.info("path %s, %s, stroke: %s, fill: %s, mb:gc: %s" % ( layer.get('id'), path.get('id'), path.get('stroke'), path.get('class'), path.get(_add_ns('gc', 'mb'))[:100] ))
 
 #						if path.get('stroke') is not None: #todo catch None stroke/fill earlier
 #							stroke = path.get('stroke')
@@ -246,7 +249,7 @@ class Converter():
 						for path in paths_by_color[colorKey]:
 							print('p', path)
 							curveGCode = ""
-							mbgc = path.get('{http://www.mr-beam.org/mbns}gc', None)
+							mbgc = path.get(_add_ns('gc', 'mb'), None)
 							if(mbgc != None):
 								curveGCode = self._use_embedded_gcode(mbgc, colorKey)
 							else:
@@ -647,7 +650,7 @@ class Converter():
 		return g
 
 	def _use_embedded_gcode(self, gcode, color) :
-		self._log.debug( "_use_embedded_gcode()")
+		self._log.debug( "_use_embedded_gcode() %s", gcode[:100])
 		gcode = gcode.replace(' ', "\n")
 		settings = self.colorParams.get(color, {'intensity': -1, 'feedrate': -1, 'passes': 0, 'pierce_time': 0})
 		feedrateCode = "F%s;%s\n" % (settings['feedrate'], color)
@@ -656,14 +659,10 @@ class Converter():
 		pt = int(settings['pierce_time'])
 		if pt > 0:
 			piercetimeCode = "G4P%.3f\n" % (round(pt / 1000.0, 4))
-		placeholder_laseron = ";_laseron_"
-		gcode = gcode.replace(placeholder_laseron, feedrateCode + intensityCode + piercetimeCode) + "\n"
+		gcode = gcode.replace(self.PLACEHOLDER_LASER_ON, feedrateCode + intensityCode + piercetimeCode) + "\n"
+		gcode = gcode.replace(self.PLACEHOLDER_LASER_OFF, machine_settings.gcode_after_path()) + "\n"
 
-		placeholder_laseroff = ";_laseroff_"
-		afterPathCode = machine_settings.gcode_after_path() + "\n"
-		gc = gcode.replace(placeholder_laseroff, afterPathCode) + "\n"
-
-		return gc
+		return gcode
 
 
 	def export_gcode(self) :

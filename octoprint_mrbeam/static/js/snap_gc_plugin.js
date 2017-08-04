@@ -18,17 +18,19 @@
 
 Snap.plugin(function (Snap, Element, Paper, global) {
 
-  Element.prototype.embed_gc = function (correctionMatrix, gc_options) {
+  Element.prototype.embed_gc = function (correctionMatrix, gc_options, mb_meta) {
     if (!gc_options || !gc_options.enabled) {
         return;
     }
+    mb_meta = mb_meta || {};
 
     // settings
     var bounds = gc_options.clipRect;
 
-    this.selectAll("path").forEach(function (element) {
-      var id = element.attr('id') || '';
-      var node = element.node.nodeName || '';
+      this.selectAll("path").forEach(function (element) {
+
+        var id = element.attr('id');
+
 
       // calculate transformation matrix
       var matrix = element.transform().totalMatrix;
@@ -77,7 +79,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
           var clip_tolerance = 0.1 * tolerance
 
           if (id.toLowerCase().indexOf('debug') !== -1 || id.toLowerCase().indexOf('andytest') !== -1) {
-            console.log("mrbeam.path.clip() node:"+node+", id:"+id
+            console.log("mrbeam.path.clip() id:'"+id+"'"
                 +", paths: " + mrbeam.path.pp_paths(paths)
                 +", clip:" + mrbeam.path.pp_paths(clip)
                 +", clip_tolerance:"+clip_tolerance
@@ -87,7 +89,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
       }
 
       // generate gcode
-      var gcode = mrbeam.path.gcode(paths);
+      var gcode = mrbeam.path.gcode(paths, id, mb_meta[id]);
 
       element.attr("mb:gc", gcode || " ");
     });

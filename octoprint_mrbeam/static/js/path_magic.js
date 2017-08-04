@@ -671,8 +671,15 @@ var mrbeam = mrbeam || {};
     return pathString;
   };
 
-  module.gcode = function (paths, gc_options) {
+  module.gcode = function (paths, id, mb_meta) {
     var commands = [];
+
+    mb_meta = mb_meta || {}
+    var meta_str = "";
+    for (var key in mb_meta) {
+        meta_str += ","+key+":"+mb_meta[key].replace(" ", '_');
+    }
+    commands.push(";_gc_nextgen_svg_id:"+id.replace(' ', "_") + meta_str);
 
     // helper for number formatting
     var fmt = (number) => number.toFixed(2);
@@ -691,7 +698,7 @@ var mrbeam = mrbeam || {};
       commands.push(";_laseroff_");
     });
 
-    var gcode = commands.join("\n");
+    var gcode = commands.join(" ");
 
     return gcode;
   };
