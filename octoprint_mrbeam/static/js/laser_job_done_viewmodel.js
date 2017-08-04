@@ -15,7 +15,7 @@ $(function() {
 
 
         self.onDataUpdaterPluginMessage = function(plugin, data) {
-            if (plugin != "mrbeam") {
+            if (plugin !== "mrbeam") {
                 return;
             }
 
@@ -24,9 +24,10 @@ $(function() {
                 return;
             }
 
-            if ('event' in data && data['event'] == "LaserJobDone") {
+            if ('event' in data && data['event'] === "LaserJobDone") {
+                self.dialogElement.modal('hide');
+                self.dialogElement.modal('show');
                 self.is_job_done(true);
-                self.dialogElement.removeData('bs.modal').modal({backdrop: true, keyboard: true})
             }
         };
 
@@ -45,10 +46,8 @@ $(function() {
     // view model class, parameters for constructor, container to bind to
     OCTOPRINT_VIEWMODELS.push([
         LaserJobDoneViewmodel,
-
         // e.g. loginStateViewModel, settingsViewModel, ...
         [ /* "loginStateViewModel", "settingsViewModel" */ ],
-
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         [ '#laser_job_done_dialog' ]
     ]);
