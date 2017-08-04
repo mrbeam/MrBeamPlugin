@@ -25,8 +25,6 @@ $(function() {
             }
 
             if ('event' in data && data['event'] === "LaserJobDone") {
-                self.dialogElement.modal('hide');
-                self.dialogElement.modal('show');
                 self.is_job_done(true);
             }
         };
