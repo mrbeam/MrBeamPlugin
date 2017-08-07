@@ -66,18 +66,20 @@ $(function(){
 		return 0;
 	}
 
+	// constants
+    var HUMAN_READABLE_IDS_CONSTANTS = 'bcdfghjklmnpqrstvwxz';
+    var HUMAN_READABLE_IDS_VOCALS    = 'aeiouy';
+
 	function getHumanReadableId(length){
 		length = length || 4;
-		var consonants = 'bcdfghjklmnpqrstvwxz';
-		var vocals = 'aeiouy';
 		var out = [];
 		for (var i = 0; i < length/2; i++) {
-			var cIdx = Math.floor(Math.random()*consonants.length);
-			var vIdx = Math.floor(Math.random()*vocals.length);
-			out.push(consonants.charAt(cIdx));
-			out.push(vocals.charAt(vIdx));
+			var cIdx = Math.floor(Math.random()*HUMAN_READABLE_IDS_CONSTANTS.length);
+			var vIdx = Math.floor(Math.random()*HUMAN_READABLE_IDS_VOCALS.length);
+			out.push(HUMAN_READABLE_IDS_CONSTANTS.charAt(cIdx));
+			out.push(HUMAN_READABLE_IDS_VOCALS.charAt(vIdx));
 		}
-		return out.join('');
+		return  out.join('');
 	}
 
 	function WorkingAreaViewModel(params) {
@@ -95,6 +97,7 @@ $(function(){
 		self.log = [];
 
 		self.command = ko.observable(undefined);
+		self.id_counter = 1000;
 
 		self.availableHeight = ko.observable(undefined);
 		self.availableWidth = ko.observable(undefined);
@@ -344,7 +347,7 @@ $(function(){
 		};
 
 		self.placeGcode = function(file){
-			var previewId = self.getEntryId(file);
+			var previewId = self.getEntryId();
 
 			// TODO think about if double placing a gcode file is a problem.
 //			if(snap.select('#'+previewId)){
@@ -352,7 +355,7 @@ $(function(){
 //				return;
 //			} else {
 				var g = snap.group();
-				g.attr({id: previewId});
+				g.attr({id: previewId, 'mb:id':previewId});
 				snap.select('#placedGcodes').append(g);
 				file.previewId = previewId;
 				self.placedDesigns.push(file);
@@ -476,10 +479,11 @@ $(function(){
 				newSvg.attr(newSvgAttrs);
 				newSvg.bake(); // remove transforms
 				newSvg.selectAll('path').attr({strokeWidth: '0.8', class:'vector_outline'});
-				var id = self.getEntryId(file);
+				var id = self.getEntryId();
 				var previewId = self.generateUniqueId(id, file); // appends -# if multiple times the same design is placed.
 				newSvg.attr({
 					id: previewId,
+                    'mb:id':previewId,
 					class: 'userSVG',
 					'mb:origin': file["refs"]["download"],
 				});
@@ -490,11 +494,13 @@ $(function(){
 					newSvg.clean_gc();
 				});
 				newSvg.ftRegisterAfterTransformCallback(function(){
-					newSvg.embed_gc(self.flipYMatrix(), self.gc_options());
+				    var mb_meta = self._set_mb_attributes(newSvg);
+					newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
 				});
 
 
-				newSvg.embed_gc(self.flipYMatrix(), self.gc_options());
+				var mb_meta = self._set_mb_attributes(newSvg);
+				newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
 
 				setTimeout(function(){
 					newSvg.ftReportTransformation();
@@ -530,7 +536,9 @@ $(function(){
 			svg.data('fitMatrix', null);
 			$('#'+file.id).removeClass('misfit');
 			self.svgTransformUpdate(svg);
-			svg.embed_gc(self.flipYMatrix(), self.gc_options());
+
+			var mb_meta = self._set_mb_attributes(svg);
+			svg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
 		};
 
 		self.placeDXF = function(file) {
@@ -551,9 +559,9 @@ $(function(){
 				newSvg.bake(); // remove transforms
 				newSvg.selectAll('path').attr({strokeWidth: '0.5', 'vector-effect':'non-scaling-stroke'});
 				newSvg.attr(newSvgAttrs);
-				var id = self.getEntryId(file);
+				var id = self.getEntryId();
 				var previewId = self.generateUniqueId(id, file); // appends -# if multiple times the same design is placed.
-				newSvg.attr({id: previewId});
+				newSvg.attr({id: previewId, 'mb:id':previewId});
 				snap.select("#userContent").append(newSvg);
 				newSvg.transformable();
 				newSvg.ftRegisterOnTransformCallback(self.svgTransformUpdate);
@@ -766,12 +774,16 @@ $(function(){
 		self.duplicateSVG = function(src) {
 			self.abortFreeTransforms();
 			var srcElem = snap.select('#'+src.previewId);
+			var clone_id = srcElem.attr('mb:clone_of') || src.previewId;
 			var newSvg = srcElem.clone();
 			newSvg.clean_gc();
 			var file = {url: src.url, origin: src.origin, name: src.name, type: src.type, refs:{download: src.url}};
-			var id = self.getEntryId(file);
+			var id = self.getEntryId();
 			var previewId = self.generateUniqueId(id, file);
-			newSvg.attr({id: previewId, class: 'userSVG'});
+			newSvg.attr({id: previewId,
+                'mb:id': previewId,
+                'mb:clone_of':clone_id,
+                class: 'userSVG'});
 			snap.select("#userContent").append(newSvg);
 
 			file.id = id; // list entry id
@@ -786,14 +798,15 @@ $(function(){
 				newSvg.clean_gc();
 			});
 			newSvg.ftRegisterAfterTransformCallback(function(){
-				newSvg.embed_gc(self.flipYMatrix(), self.gc_options());
+			    var mb_meta = self._set_mb_attributes(newSvg);
+				newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
 			});
 			setTimeout(function(){
 				newSvg.ftReportTransformation();
 			}, 200);
 
-
-			newSvg.embed_gc(self.flipYMatrix(), self.gc_options());
+            var mb_meta = self._set_mb_attributes(newSvg);
+			newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
 		};
 
 		self.placeSmart = function(elem){
@@ -1071,10 +1084,10 @@ $(function(){
 				var y = self.workingAreaHeightMM() - hMM;
 				var imgWrapper = snap.group();
 				var newImg = imgWrapper.image(url, 0, y, wMM, hMM); //.attr({transform: 'matrix(1,0,0,-1,0,'+hMM+')'});
-				var id = self.getEntryId(file);
+				var id = self.getEntryId();
 				newImg.attr({filter: 'url(#grayscale_filter)', 'data-serveurl': url});
 				var previewId = self.generateUniqueId(id, file); // appends # if multiple times the same design is placed.
-				var imgWrapper = snap.group().attr({id: previewId, class: 'userIMG'});
+				var imgWrapper = snap.group().attr({id: previewId, 'mb:id':previewId, class: 'userIMG'});
 				imgWrapper.append(newImg);
 				snap.select("#userContent").append(imgWrapper);
 				imgWrapper.transformable();
@@ -1249,8 +1262,9 @@ $(function(){
 			}
 		};
 
-		self.getEntryId = function(file) {
-			return "wa_" + getHumanReadableId();
+		self.getEntryId = function(prefix, length) {
+		    prefix = prefix || 'wa';
+			return prefix + "_" + getHumanReadableId(length);
 		};
 
 		self.init = function(){
@@ -1321,14 +1335,19 @@ $(function(){
 		};
 
 		self.generateUniqueId = function(idBase, file){
-			var suffix = self.countPlacements(file);
+		    var suffix = "";
+		    if (file) {
+                var suffix = self.countPlacements(file);
+            } else {
+		        suffix = self.id_counter++;
+            }
 
 			var suffix = 0;
 			var id = idBase + "-" + suffix;
-//			while(snap.select('#'+id) !== null){
-//				suffix += 1;
-//				id = idBase + "-" + suffix;
-//			}
+			while(snap.select('#'+id) !== null){
+				suffix += 1;
+				id = idBase + "-" + suffix;
+			}
 			return id;
 		};
 
@@ -1348,7 +1367,6 @@ $(function(){
 			var wPT = wMM * 90 / 25.4;  // TODO ... switch to 96dpi ?
 			var hPT = hMM * 90 / 25.4;
 			var compSvg = self.getNewSvg('compSvg', wPT, hPT);
-//			var attrs = {id: 'flipY', transform: 'matrix(1,0,0,-1,0,'+hMM+')'};
 			var attrs = {};
 			var content = compSvg.g(attrs);
 			var userContent = snap.select("#userContent").clone();
@@ -1381,17 +1399,64 @@ $(function(){
 				var w = dpiFactor * wMM;
 				var h = dpiFactor * hMM;
 				var viewBox = "0 0 " + wMM + " " + hMM;
-				// TODO: look for better solution to solve this Firefox bug problem
-				svgStr = svgStr.replace("(\\\"","(");
-				svgStr = svgStr.replace("\\\")",")");
+
+				svgStr = self._normalize_svg_string(svgStr);
+				var gc_otions_str = self.gc_options_as_string().replace('"', "'");
 
 				var svg = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:mb="http://www.mr-beam.org/mbns"'
-						+ ' width="'+ w +'" height="'+ h +'"  viewBox="'+ viewBox +'"><defs/>'+svgStr+'</svg>';
+						+ ' width="'+ w +'" height="'+ h +'"  viewBox="'+ viewBox +'" mb:gc_options="'+gc_otions_str+'"><defs/>'+svgStr+'</svg>';
 				return svg;
 			} else {
 				return;
 			}
 		};
+
+		self._normalize_svg_string = function(svgStr){
+		    // TODO: look for better solution to solve this Firefox bug problem
+            svgStr = svgStr.replace("(\\\"","(");
+            svgStr = svgStr.replace("\\\")",")");
+            return svgStr;
+        };
+
+        self.gc_options_as_string = function() {
+            var gc_options = self.gc_options();
+            var res = [];
+            for (var key in gc_options) {
+                res.push(key + ":" + gc_options[key]);
+            }
+            return res.join(", ");
+        };
+
+        self._set_mb_attributes = function (snapSvg) {
+            var mb_meta = {};
+            snapSvg.selectAll("path").forEach(function (element) {
+                var id = element.attr('id');
+
+                // if there's no id, let's create one
+                if (!id) {
+                    id = self.generateUniqueId(self.getEntryId('wa',6));
+                    element.attr('id', id);
+                }
+
+                var my_meta = {node: element.node.nodeName || ''};
+                var attrs = element.node.attributes;
+                for (var i = 0; i < attrs.length; i++) {
+                    if (attrs[i].nodeName.startsWith('mb:') && attrs[i].nodeName != 'mb:gc') {
+                        my_meta[attrs[i].nodeName] = attrs[i].nodeValue;
+                    }
+                }
+                if (my_meta['mb:id'] && id != my_meta['mb:id'] && !my_meta['mb:clone_of']) {
+                    element.attr('mb:clone_of', my_meta['mb:id']);
+                    my_meta['mb:clone_of'] = my_meta['mb:id'];
+                }
+
+                element.attr("mb:id", id);
+
+                my_meta['mb:id'] = id;
+                mb_meta[id] = my_meta;
+            });
+            return mb_meta;
+        };
 
 		self.getPlacedSvgs = function() {
 			var svgFiles = [];
@@ -1484,10 +1549,13 @@ $(function(){
 		    self.svgDPI = self.settings.settings.plugins.mrbeam.svgDPI;
             self.gc_options = ko.computed(function(){
                 return {
+                    beamOS: BEAMOS_DISPLAY_VERSION,
+                    gc_nextgen: mrbeam.path.version,
                     enabled: self.settings.settings.plugins.mrbeam.gcode_nextgen.enabled(),
                     precision: self.settings.settings.plugins.mrbeam.gcode_nextgen.precision(),
                     optimize_travel: self.settings.settings.plugins.mrbeam.gcode_nextgen.optimize_travel(),
                     small_paths_first: self.settings.settings.plugins.mrbeam.gcode_nextgen.small_paths_first(),
+                    clip_working_area: self.settings.settings.plugins.mrbeam.gcode_nextgen.clip_working_area(),
                     clipRect: [0,0,self.workingAreaWidthMM(), self.workingAreaHeightMM()]
                 };
             });
@@ -1800,7 +1868,7 @@ $(function(){
                 intensity: self.lastQuickTextIntensity
             };
 
-            file.id = self.getEntryId(file);
+            file.id = self.getEntryId('qt');
             file.previewId = self.generateUniqueId(file.id, file); // appends -# if multiple times the same design is placed.
 
             var uc = snap.select("#userContent");
@@ -1821,6 +1889,7 @@ $(function(){
             var group = uc.group(text, box);
             group.attr({
                 id: file.previewId,
+                'mb:id': file.previewId,
 				class: 'userText'
             });
 

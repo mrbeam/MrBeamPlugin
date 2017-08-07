@@ -18,15 +18,20 @@
 
 Snap.plugin(function (Snap, Element, Paper, global) {
 
-  Element.prototype.embed_gc = function (correctionMatrix, gc_options) {
+  Element.prototype.embed_gc = function (correctionMatrix, gc_options, mb_meta) {
     if (!gc_options || !gc_options.enabled) {
         return;
     }
+    mb_meta = mb_meta || {};
 
     // settings
     var bounds = gc_options.clipRect;
 
-    this.selectAll("path").forEach(function (element) {
+      this.selectAll("path").forEach(function (element) {
+
+        var id = element.attr('id');
+
+
       // calculate transformation matrix
       var matrix = element.transform().totalMatrix;
 
@@ -62,20 +67,29 @@ Snap.plugin(function (Snap, Element, Paper, global) {
       // apply transformation matrix
       paths = mrbeam.path.transform(paths, xform);
 
-      // clip to boundaries
-      var x = bounds[0];
-      var y = bounds[1];
-      var w = bounds[2] - bounds[0];
-      var h = bounds[3] - bounds[1];
+      // clip working area borders
+      if (gc_options.clip_working_area) {
+          var x = bounds[0];
+          var y = bounds[1];
+          var w = bounds[2] - bounds[0];
+          var h = bounds[3] - bounds[1];
+          var clip = [
+              mrbeam.path.rectangle(x, y, w, h)
+          ];
+          var clip_tolerance = 0.1 * tolerance
 
-      var clip = [
-        mrbeam.path.rectangle(x, y, w, h)
-      ];
-
-      paths = mrbeam.path.clip(paths, clip, 0.1 * tolerance);
+          if (id.toLowerCase().indexOf('debug') !== -1 || id.toLowerCase().indexOf('andytest') !== -1) {
+            console.log("mrbeam.path.clip() id:'"+id+"'"
+                +", paths: " + mrbeam.path.pp_paths(paths)
+                +", clip:" + mrbeam.path.pp_paths(clip)
+                +", clip_tolerance:"+clip_tolerance
+            );
+          }
+          paths = mrbeam.path.clip(paths, clip, clip_tolerance);
+      }
 
       // generate gcode
-      var gcode = mrbeam.path.gcode(paths);
+      var gcode = mrbeam.path.gcode(paths, id, mb_meta[id]);
 
       element.attr("mb:gc", gcode || " ");
     });
@@ -86,4 +100,6 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
     elements.forEach((element) => element.attr("mb:gc", ""));
   };
+
+
 });

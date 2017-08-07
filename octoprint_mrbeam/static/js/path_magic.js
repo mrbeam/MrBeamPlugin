@@ -3,9 +3,19 @@ var mrbeam = mrbeam || {};
 (function () {
   "use strict";
 
+  ////////////////////////////
+    // gcode_nextgen
+    // version:
+  var VERSION = '0.1'
+    //
+    //
+  ////////////////////////////
+
+
   mrbeam.path = {};
   var module = mrbeam.path;
 
+  module.version = VERSION;
 
   function point(x, y) {
     return { x: x, y: y };
@@ -614,7 +624,7 @@ var mrbeam = mrbeam || {};
     var xy = pointsString.split(/,|\s/g)
                           .filter(s => s.length > 0)
                           .map(Number);
-    
+
     var pts = [];
 
     for (let i = 0; i < xy.length; i += 2) {
@@ -624,7 +634,7 @@ var mrbeam = mrbeam || {};
     if (closed) {
       pts.push(pts[0]);
     }
-    
+
     return pts;
   }
 
@@ -671,8 +681,15 @@ var mrbeam = mrbeam || {};
     return pathString;
   };
 
-  module.gcode = function (paths) {
+  module.gcode = function (paths, id, mb_meta) {
     var commands = [];
+
+    mb_meta = mb_meta || {}
+    var meta_str = "";
+    for (var key in mb_meta) {
+        meta_str += ","+key+":"+mb_meta[key].replace(" ", '_');
+    }
+    commands.push(";_gc_nextgen_svg_id:"+id.replace(' ', "_") + meta_str);
 
     // helper for number formatting
     var fmt = (number) => number.toFixed(2);
@@ -691,7 +708,7 @@ var mrbeam = mrbeam || {};
       commands.push(";_laseroff_");
     });
 
-    var gcode = commands.join("\n");
+    var gcode = commands.join(" ");
 
     return gcode;
   };
@@ -771,5 +788,25 @@ var mrbeam = mrbeam || {};
     }
 
     return optimized.reverse();
+  };
+
+  module.pp_paths = function(paths){
+      var ps = [];
+      for (var i = 0; i < paths.length; i++) {
+            ps.push(module.pp_path(paths[i]));
+      }
+      return "["+ps.join(', ')+"]";
+  };
+
+  module.pp_path = function(path){
+      var ps = [];
+      for (var i = 0; i < path.length; i++) {
+            ps.push(module.pp_point(path[i]));
+      }
+      return "["+ps.join(',')+"]";
+  };
+
+  module.pp_point = function(point){
+      return "(x"+point.x+",y"+point.y+")";
   };
 }());
