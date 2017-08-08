@@ -411,8 +411,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	function elementDragMove( mainEl, dx, dy, x, y, event ) {
 		var sgUnscale = mainEl.data('sgUnscale');
 
-		var udx = sgUnscale * dx;
-		var udy = sgUnscale * dy;
+		var udx = sgUnscale * dx * MRBEAM_PX2MM_FACTOR_WITH_ZOOM;
+		var udy = sgUnscale * dy * MRBEAM_PX2MM_FACTOR_WITH_ZOOM;
 		var tx = mainEl.data("otx") + +udx;
 		var ty = mainEl.data("oty") + +udy;
 		mainEl.data("tx", tx);
@@ -525,8 +525,11 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		//TODO check for negative scale, what should happen?
 		mainEl.data('scale', newScale);
 
+		// drag element, nobody wants to have centered scaling
+		var tx = d/2 * +mainEl.data('ratio') * resizeDragger.data('signX')   * resizeDragger.data('signY');
+		var ty = -d/2;
 		//TODO angle, for translation of innerBB(redBB)
-		elementDragMove(mainEl, delta * +mainEl.data('ratio') * resizeDragger.data('signX')   * resizeDragger.data('signY'), -delta);
+		elementDragMove(mainEl, tx, ty);
 
 		mainEl.ftUpdateTransform();
 	};
