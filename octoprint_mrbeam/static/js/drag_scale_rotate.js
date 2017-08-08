@@ -411,9 +411,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	function elementDragMove( mainEl, dx, dy, x, y, event ) {
 		var sgUnscale = mainEl.data('sgUnscale');
 
-		var udx = sgUnscale * dx * MRBEAM_PX2MM_FACTOR_WITH_ZOOM;
-		var udy = sgUnscale * dy * MRBEAM_PX2MM_FACTOR_WITH_ZOOM;
-
+		var udx = sgUnscale * dx;
+		var udy = sgUnscale * dy;
 		var tx = mainEl.data("otx") + +udx;
 		var ty = mainEl.data("oty") + +udy;
 		mainEl.data("tx", tx);
@@ -496,7 +495,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		var vy = mainEl.matrix.y(resizeDragger.attr('cx'),resizeDragger.attr('cy'));
 		resizeDragger.data('signX',Math.sign(bb.cx - vx));
 		resizeDragger.data('signY',Math.sign(-bb.cy + vy));
-		// console.log("Sig X/Y", resizeDragger.data('signX'), resizeDragger.data('signY'));
+		 console.log("Sig X/Y", resizeDragger.data('signX'), resizeDragger.data('signY'));
 
 	};
 
@@ -505,11 +504,16 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 	function resizeDraggerMove( mainEl, dx, dy, x, y, event ) {
 		var resizeDragger = this;
+		var origHeight = +mainEl.data('oHeight') * +mainEl.data('angleFactor');
+		var d = -dy;
 		// TODO use dx and dy, scale properly to movement.
-		var	delta = -dy/2 * MRBEAM_PX2MM_FACTOR_WITH_ZOOM;
+//		if(Math.abs(dx) > Math.abs(dy) - origHeight){
+//			d = dx;
+//		}
+		
+		var	delta = d/2 * MRBEAM_PX2MM_FACTOR_WITH_ZOOM;
 		//apply smoothing factor of 2
 
-		var origHeight = +mainEl.data('oHeight') * +mainEl.data('angleFactor');
 		var newHeight = +resizeDragger.data('sHeight') - delta * mainEl.data('sgUnscale') * resizeDragger.data('signY');
 		var newScale =  Math.abs(newHeight / origHeight);
 
