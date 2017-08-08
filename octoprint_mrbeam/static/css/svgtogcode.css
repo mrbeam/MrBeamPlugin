@@ -408,3 +408,9 @@ svg#area_preview rect
 	bottom: .4em;
 	color: #777;
 }
+
+.freeTransformHandle{
+	fill: rgba(255,255,255,0.3);
+	stroke: #ff0000;
+	stroke-width: 1px;
+}
