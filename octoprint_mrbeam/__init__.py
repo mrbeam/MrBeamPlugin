@@ -228,7 +228,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/lib/photobooth_min.js", "js/svg_cleaner.js", "js/loginscreen_viewmodel.js",
 				"js/wizard_acl.js", "js/netconnectd_wrapper.js", "js/lasersaftey_viewmodel.js",
 				"js/ready_to_laser_viewmodel.js", "js/lib/screenfull.min.js",
-				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js",],
+				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js", "js/laser_job_done_viewmodel.js"],
 			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css", "css/quicktext-fonts.css"],
 			less=["less/mrbeam.less"]
 		)
@@ -1154,23 +1154,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return currentJob["file"]["origin"], currentJob["file"]["name"]
 		else:
 			return None, None
-
-	# def execute_command(self, command):
-	# 	return True
-	# 	'''
-	# 	There's this idea that we can enter commands into the frontend's terminal.
-	# 	This could be the place where we handle these commands....
-	# 	'''
-	# 	self._logger.debug("execute_command() %s", command)
-	# 	if command is not None and command.startswith("\\"):
-	# 		chunks = shlex.split(command)
-	# 		self._logger.debug("execute_command() chunks: %s", chunks)
-	# 		if chunks[0] in ('\\filter', 'filter'):
-	# 			# do something about filters
-	# 			pass
-	# 		return False
-	# 	else:
-	# 		return True
 
 	def getHostname(self):
 		'''

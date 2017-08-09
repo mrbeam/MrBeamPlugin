@@ -2,7 +2,8 @@ import time
 import threading
 import numbers
 from octoprint.events import Events as OctoPrintEvents
-from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents, IoBeamValueEvents
+from octoprint_mrbeam.mrbeam_events import MrBeamEvents
+from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamValueEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
 # singleton
@@ -18,6 +19,7 @@ class DustManager(object):
 
 	DEFAULT_DUST_TIMER_INTERVAL = 3
 	DEFAUL_DUST_MAX_AGE = 10  # seconds
+	FAN_MAX_INTENSITY = 100
 
 	def __init__(self):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.dustmanager")
@@ -25,6 +27,7 @@ class DustManager(object):
 		self._dust = None
 		self._dust_ts = time.time()
 
+		self._last_event = None
 		self._shutting_down = False
 		self._trail_extraction = None
 		self._dust_timer = None
@@ -59,6 +62,7 @@ class DustManager(object):
 		if event == OctoPrintEvents.PRINT_STARTED:
 			self._start_dust_extraction_thread()
 		elif event in (OctoPrintEvents.PRINT_DONE, OctoPrintEvents.PRINT_FAILED, OctoPrintEvents.PRINT_CANCELLED):
+			self._last_event = event
 			self._stop_dust_extraction_when_below(self.extraction_limit)
 		elif event == OctoPrintEvents.SHUTDOWN:
 			self.shutdown()
@@ -119,7 +123,7 @@ class DustManager(object):
 				dust_start = self._dust
 				dust_start_ts = self._dust_ts
 				self._dust_timer_interval = 1
-				self._start_dust_extraction_thread(100)
+				self._start_dust_extraction_thread(self.FAN_MAX_INTENSITY)
 				while self._continue_dust_extraction(value, dust_start_ts):
 					time.sleep(self._dust_timer_interval)
 				self._logger.debug("finished trial dust extraction.")
@@ -136,6 +140,26 @@ class DustManager(object):
 				self._logger.warning("No dust value received so far. Skipping trial dust extraction!")
 		except:
 			self._logger.exception("Exception in _wait_until(): ")
+		self.send_laser_job_event()
+
+	def send_laser_job_event(self):
+		try:
+			self._logger.debug("Last event: {}".format(self._last_event))
+			if self._last_event == OctoPrintEvents.PRINT_DONE:
+				_mrbeam_plugin_implementation._event_bus.fire(MrBeamEvents.LASER_JOB_DONE)
+				_mrbeam_plugin_implementation._plugin_manager.send_plugin_message("mrbeam", dict(event=MrBeamEvents.LASER_JOB_DONE))
+				self._logger.debug("Fire event: {}".format(MrBeamEvents.LASER_JOB_DONE))
+			elif self._last_event == OctoPrintEvents.PRINT_CANCELLED:
+				_mrbeam_plugin_implementation._event_bus.fire(MrBeamEvents.LASER_JOB_CANCELLED)
+				_mrbeam_plugin_implementation._plugin_manager.send_plugin_message("mrbeam", dict(event=MrBeamEvents.LASER_JOB_CANCELLED))
+				self._logger.debug("Fire event: {}".format(MrBeamEvents.LASER_JOB_CANCELLED))
+			elif self._last_event == OctoPrintEvents.PRINT_FAILED:
+				_mrbeam_plugin_implementation._event_bus.fire(MrBeamEvents.LASER_JOB_FAILED)
+				_mrbeam_plugin_implementation._plugin_manager.send_plugin_message("mrbeam", dict(event=MrBeamEvents.LASER_JOB_FAILED))
+				self._logger.debug("Fire event: {}".format(MrBeamEvents.LASER_JOB_FAILED))
+		except:
+			self._logger.exception("Exception send_laser_done_event _wait_until(): ")
+
 
 	def _continue_dust_extraction(self, value, started):
 		if time.time() - started > 30:  # TODO: get this value from laser profile

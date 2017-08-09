@@ -103,7 +103,6 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			ftEl.ftStoreInitialTransformMatrix();
 
 			var bbT = ftEl.getBBox(1);
-			var unscale = ftEl.data('unscale');
 			var rad = ftOption.handleRadius * ftOption.unscale;
 			var off = rad / 2;
 
@@ -120,24 +119,24 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			
 			var rotateDragger = this.paper.select('#userContent')
 				.circle(rotX, bbT.cy, rad)
-				.attr({ fill: ftOption.handleFill, id: 'rotateDragger',cursor:'pointer' });
+				.attr({ fill: ftOption.handleFill, id: 'rotateDragger',cursor:'pointer', class:'freeTransformHandle' });
 
 			//todo make code more generic
 			var resizeDragger1 = this.paper.select('#userContent')
 				.circle(bbT.x2+off, bbT.y2+off, rad)
-				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, cursor:'se-resize' });
+				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, cursor:'se-resize', class:'freeTransformHandle' });
 
 			var resizeDragger2 = this.paper.select('#userContent')
 				.circle(bbT.x2+off, bbT.y-off, rad)
-				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling',cursor:'ne-resize' });
+				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling',cursor:'ne-resize', class:'freeTransformHandle', class:'freeTransformHandle' });
 
 			var resizeDragger3 = this.paper.select('#userContent')
 				.circle(bbT.x-off, bbT.y2+off, rad)
-				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling',cursor:'sw-resize' });
+				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling',cursor:'sw-resize', class:'freeTransformHandle' });
 
 			var resizeDragger4 = this.paper.select('#userContent')
 				.circle(bbT.x-off, bbT.y-off, rad)
-				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling',cursor:'nw-resize' });
+				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling',cursor:'nw-resize', class:'freeTransformHandle' });
 
 			var handlesGroup = this.paper.select('#userContent')
 				.g(translateHull,rotateDragger,resizeDragger1,resizeDragger2,resizeDragger3,resizeDragger4)
@@ -413,7 +412,6 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 		var udx = sgUnscale * dx * MRBEAM_PX2MM_FACTOR_WITH_ZOOM;
 		var udy = sgUnscale * dy * MRBEAM_PX2MM_FACTOR_WITH_ZOOM;
-
 		var tx = mainEl.data("otx") + +udx;
 		var ty = mainEl.data("oty") + +udy;
 		mainEl.data("tx", tx);
@@ -496,7 +494,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		var vy = mainEl.matrix.y(resizeDragger.attr('cx'),resizeDragger.attr('cy'));
 		resizeDragger.data('signX',Math.sign(bb.cx - vx));
 		resizeDragger.data('signY',Math.sign(-bb.cy + vy));
-		// console.log("Sig X/Y", resizeDragger.data('signX'), resizeDragger.data('signY'));
+		 console.log("Sig X/Y", resizeDragger.data('signX'), resizeDragger.data('signY'));
 
 	};
 
@@ -505,11 +503,16 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 	function resizeDraggerMove( mainEl, dx, dy, x, y, event ) {
 		var resizeDragger = this;
-		// TODO use dx and dy, scale properly to movement.
-		var	delta = -dy/2 * MRBEAM_PX2MM_FACTOR_WITH_ZOOM;
-		//apply smoothing factor of 2
-
 		var origHeight = +mainEl.data('oHeight') * +mainEl.data('angleFactor');
+		var d = -dy;
+		// TODO use dx and dy, scale properly to movement.
+//		if(Math.abs(dx) > Math.abs(dy) - origHeight){
+//			d = dx;
+//		}
+		
+		//apply smoothing factor of 2
+		var	delta = d/2 * MRBEAM_PX2MM_FACTOR_WITH_ZOOM;
+
 		var newHeight = +resizeDragger.data('sHeight') - delta * mainEl.data('sgUnscale') * resizeDragger.data('signY');
 		var newScale =  Math.abs(newHeight / origHeight);
 
@@ -521,8 +524,11 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		//TODO check for negative scale, what should happen?
 		mainEl.data('scale', newScale);
 
+		// drag element, nobody wants to have centered scaling
+		var tx = d/2 * +mainEl.data('ratio') * resizeDragger.data('signX')   * resizeDragger.data('signY');
+		var ty = -d/2;
 		//TODO angle, for translation of innerBB(redBB)
-		elementDragMove(mainEl, delta * +mainEl.data('ratio') * resizeDragger.data('signX')   * resizeDragger.data('signY'), -delta);
+		elementDragMove(mainEl, tx, ty);
 
 		mainEl.ftUpdateTransform();
 	};
