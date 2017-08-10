@@ -172,7 +172,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				precision = 0.05,
 				optimize_travel = True,
 				small_paths_first = True,
-				clip_working_area = True
+				clip_working_area = False
 			)
 		)
 
