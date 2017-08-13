@@ -414,3 +414,22 @@ svg#area_preview rect
 	stroke: #e25303;
 	stroke-width: 1px;
 }
+
+#material_list {
+	margin: 0;
+	max-height: 50vh;
+	overflow: auto;
+}
+.material_entry {
+	display: block;
+	width: 200px;
+	height: 100px;
+	border: 1px solid #999;
+	float: left;
+	padding: .5em;
+	margin: .2em;
+}
+
+.misfit_warning i {
+	color: #e25303;
+}
