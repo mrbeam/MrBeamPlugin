@@ -4,197 +4,266 @@
         <h3 data-bind="text: title"></h3>
     </div>
     <div class="modal-body scrollable">
-
-		<div id="color_assignment" class="" data-bind="visible: !slicing_in_progress()">
-			<div id="no_job" class="job_row row-fluid">
-				<div class="span3" style="display:flex;">
-					<div class="assigned_colors color_drop_zone img_drop_zone" ondragover="colorAllowDrop(event)" ondrop="colorDrop(event)"></div>
-				</div>
-				<div class="span6">
-					<div class="job_parameters">
-						<h4>Skip</h4>
-						<span>Drag colors on this row to skip them.</span>
+		<div data-bind="visible:!slicing_in_progress()">
+			
+			<div id="material_type" class="row-fluid" data-bind="visible: step() === 0">
+				<div class="job_parameters form-horizontal">
+					<div class="control-group">
+						<label class="control-label">Material</label>
+						<div class="controls">
+							<div data-bind="visible: !isMaterialSelected()">
+								<form class="form-search" data-bind="submit: filterQuery">
+									<input type="text" style="width:90%;" class="input-block search-query" data-bind="value: filterQuery, valueUpdate: 'input'" placeholder="{{ _('Search...') }}">
+								</form>
+								<ul id="material_list" data-bind="foreach: filteredMaterials">
+									<li class='material_entry'><a href="#" data-bind="text: $data.name, click: $root.set_material($data, event) "></a></li>
+								</ul>
+								<div class="clearfix"></div>
+							</div>
+							<div data-bind="visible: isMaterialSelected()">
+								<div data-bind="text: selected_material_name()"></div>
+								<a href="#" class="" data-bind="click: set_material(null, event)"><i class="icon-edit"></i> change...</a>
+							</div>
+						</div>
 					</div>
 				</div>
-				<div class="span3"></div>
+			</div>
+			<div id="material_thickness_color" class="row-fluid" data-bind="visible: step() === 1">
+				<form class="job_parameters form-horizontal row-fluid" data-bind="visible: isMaterialSelected()">
+					<div class="control-group span8">
+						<label class="control-label">Thickness</label>
+						<div class="controls">
+							<input id="material_thickness_range" type="range" min="0" value="1" max="5" step=".5" data-bind="value:selected_material_thickness, valueUpdate: 'input'" /> <span data-bind="text:selected_material_thickness_str()"></span>
+							<div class="muted" style='margin-top: 1em;'>
+								<i class="icon-info-sign"></i>&nbsp;Mount the laser head in position <span data-bind="text:thickness_mount_pos">1</span>.
+							</div>
+						</div>
+						<div class="controls alert alert-info hint" data-bind="visible: showHints">
+							<span class="icon icon-question-sign" aria-hidden="true"></span>
+							Set the thickness of the material. When cutting the material it is important to tell Mr Beam
+							the thickness that he can select the correct laser settings.
+						</div>
+					</div>
+					<div id="material_thickness_ruler" class="span4" data-bind="visible:isMaterialSelected()">
+						<div id="ruler">
+							<div></div><div></div><div></div><div></div><div></div>
+							<div></div><div></div><div></div><div></div><div></div>
+							<div></div><div></div><div></div><div></div><div></div>
+							<div></div><div></div><div></div><div></div><div></div>
+							<div></div><div></div><div></div><div></div><div></div>
+							<div></div><div></div><div></div><div></div><div></div>
+							<div></div><div></div><div></div><div></div><div></div>
+							<div></div><div></div><div></div><div></div><div></div>
+							<div></div>
+						</div>
+						<div id="thickness_sample_material" data-bind="style: {height: selected_material_thickness_px()}" ></div>
+					</div>
+					<div class="control-group">
+						<label class="control-label">Color</label>
+						<div class="controls">
+							<input id="material_color" type="color" value="#999999" />
+						</div>
+						<div class="controls alert alert-info hint" data-bind="visible: showHints">
+							<span class="icon icon-question-sign" aria-hidden="true"></span>
+							Depending on the color the laser beam is reflected more or less. Select a color
+							close to the material's color to improve the result. 
+						</div>
+					</div>
+				</form>
 			</div>
 
-			<div id="engrave_job" class="job_row row-fluid" data-bind="visible: show_image_parameters">
-				<div class="span3" style="display:flex;">
-					<div class="assigned_colors img_drop_zone" ondragover="colorAllowDrop(event)" ondrop="colorDrop(event)">
-						<div id="cd_engraving" draggable="true" class="used_color" ondragstart="colorDragStart(event)" ondragend="colorDragEnd(event)"></div>
+			<div id="color_assignment" class="" data-bind="visible:step() === 2">
+				<div id="no_job" class="job_row row-fluid">
+					<div class="span3" style="display:flex;">
+						<div class="assigned_colors color_drop_zone img_drop_zone" ondragover="colorAllowDrop(event)" ondrop="colorDrop(event)"></div>
 					</div>
+					<div class="span6">
+						<div class="job_parameters">
+							<h4>Skip</h4>
+							<span>Drag colors on this row to skip them.</span>
+						</div>
+					</div>
+					<div class="span3"></div>
 				</div>
-				<div class="span9">
-					<div class="clearfix">
-						<h4 class="job_title pull-left">Engraving</h4>
-						<div class="dropdown pull-right">
-							<a class="dropdown-toggle material-dropdown" data-toggle="dropdown">
-								Select material <span class="caret"></span></a>
-							<ul class="dropdown-menu" data-bind="foreach: material_menu_eng">
-								<li><a href="#" data-bind="text: $data, click: $root.set_material_engraving($data, event) "></a></li>
-							</ul>
+
+				<div id="engrave_job" class="job_row row-fluid" data-bind="visible: show_image_parameters">
+					<div class="span3" style="display:flex;">
+						<div class="assigned_colors img_drop_zone" ondragover="colorAllowDrop(event)" ondrop="colorDrop(event)">
+							<div id="cd_engraving" draggable="true" class="used_color" ondragstart="colorDragStart(event)" ondragend="colorDragEnd(event)"></div>
 						</div>
 					</div>
-					<form class="job_parameters form-horizontal">
-						<div class="control-group" >
-							<label class="control-label">{{ _('Laser intensity range') }}</label>
-							<div class="controls">
-								<div class="input-append">
-									<input id="svgtogcode_img_intensity_white" class="img_intensity_input" type="number" min="0" max="100" data-bind="value: imgIntensityWhite">
-									<div class="svgtogcode_grayscale">&nbsp;</div>
-									<input id="svgtogcode_img_intensity_black" class="img_intensity_input" type="number" min="0" max="100" data-bind="value: imgIntensityBlack">
-								</div>
-							</div>
-							<div class="controls alert alert-info hint" data-bind="visible: showHints">
-								<span class="icon icon-question-sign" aria-hidden="true"></span>
-								The intensity range used for engraving pixel graphics. Bright/white pixels use the left (lower) value, dark/black pixels the right (higher) value.
-								Equal values do not vary the laser intensity related to the pixel brightness.
-							</div>
-
-							<label class="control-label">{{ _('Engraving speed range') }}</label>
-							<div class="controls">
-								<div class="input-append">
-									<input id="svgtogcode_img_feedrate_white" class="img_intensity_input" type="number"  min="30" data-bind="value: imgFeedrateWhite">
-									<div class="svgtogcode_grayscale">&nbsp;</div>
-									<input id="svgtogcode_img_feedrate_black" class="img_intensity_input" type="number"  min="30" data-bind="value: imgFeedrateBlack">
-								</div>
-							</div>
-							<div class="controls alert alert-info hint" data-bind="visible: showHints">
-								<span class="icon icon-question-sign" aria-hidden="true"></span>
-								The movement velocity range used for engraving pixel graphics. Bright/white pixels use the left (higher) value, dark/black pixels the right (lower) value.
-								Equal values do not vary the laser velocity related to the pixel brightness.
-							</div>
-							<div class="controls" data-bind="visible: showExpertSettings ">
-								<label class="checkbox">
-									<input type="checkbox" data-bind="checked: engrave_outlines">{{ _('engrave outlines of filled shapes') }}
-								</label>
-							</div>
+					<div class="span9">
+						<div class="clearfix">
+							<h4 class="job_title pull-left">Engraving</h4>
+	<!--						<div class="dropdown pull-right">
+								<a class="dropdown-toggle material-dropdown" data-toggle="dropdown">
+									Select material <span class="caret"></span></a>
+								<ul class="dropdown-menu" data-bind="foreach: material_menu_eng">
+									<li><a href="#" data-bind="text: $data, click: $root.set_material_engraving($data, event) "></a></li>
+								</ul>
+							</div>-->
 						</div>
-
-						<div class="control-group" data-bind="visible: showExpertSettings ">
-							<label class="control-label">Pierce time</label>
-							<div class="controls"><input data-bind="value: engravingPiercetime" class="param_piercetime decimal_input" type="number" min="0" max="2000" value="0" />&nbsp;ms</div>
-
-							<label class="control-label">{{ _('Line distance') }}</label>
-							<div class="controls"><input id="svgtogcode_img_line_dist" class="img_intensity_input decimal_input" type="number" max="0.5" min="0.1" step="0.05" data-bind="value: beamDiameter" />&nbsp;mm</div>
-							<div class="controls alert alert-info hint" data-bind="visible: showHints">
-								<span class="icon icon-question-sign" aria-hidden="true"></span>
-								Pixel / raster engravings are done line by line. This sets the distance between the single lines.
-								Smaller values allow finer engravings but require a more precise focus and are slower.
-							</div>
-
-
-							<p >{{ _('Image Preprocessing') }}</p>
-							<div class="controls">
-								<div class="img_preprocessing_preview before" style="background-image:url(/plugin/mrbeam/static/img/kitty_grayscale.png);" >before</div>
-								<div class="img_preprocessing_preview after" style="background-image:url(/plugin/mrbeam/static/img/kitty_grayscale.png);" >after
-									<div class="img_preprocessing_preview contrast" style="background-image:url(/plugin/mrbeam/static/img/kitty_contrast.png);" data-bind="style: { opacity: contrastPreview }" ></div>
-									<div class="img_preprocessing_preview sharpened" style="background-image:url(/plugin/mrbeam/static/img/kitty_sharpened.png);" data-bind="style: { opacity: sharpenedPreview }" ></div>
-									<div class="img_preprocessing_preview dithered" style="background-image:url(/plugin/mrbeam/static/img/kitty_dithered_150.png);" data-bind="visible: imgDithering"></div>
-
+						<form class="job_parameters form-horizontal">
+							<div class="control-group" >
+								<label class="control-label">{{ _('Laser intensity range') }}</label>
+								<div class="controls">
+									<div class="input-append">
+										<input id="svgtogcode_img_intensity_white" class="img_intensity_input" type="number" min="0" max="100" data-bind="value: imgIntensityWhite">
+										<div class="svgtogcode_grayscale">&nbsp;</div>
+										<input id="svgtogcode_img_intensity_black" class="img_intensity_input" type="number" min="0" max="100" data-bind="value: imgIntensityBlack">
+									</div>
 								</div>
-								<div class="photo_attribution"><a href="http://www.christianholmer.com" target="_blank">Photo: Christian Holmér</a></div>
-							</div>
-
-							<div data-bind="disable:imgDithering ">
-								<label class="control-label">{{ _('Contrast') }}</label>
-								<div class="controls img_slider">
-									<input id="svgtogcode_contrast_slider" type="text" data-bind="value: imgContrast" >
-								</div>
-								<div style="clear:both"></div>
 								<div class="controls alert alert-info hint" data-bind="visible: showHints">
 									<span class="icon icon-question-sign" aria-hidden="true"></span>
-									Increases the image contrast before converting to gcode.
+									The intensity range used for engraving pixel graphics. Bright/white pixels use the left (lower) value, dark/black pixels the right (higher) value.
+									Equal values do not vary the laser intensity related to the pixel brightness.
 								</div>
 
-								<label class="control-label">{{ _('Sharpening') }}</label>
-								<div class="controls img_slider">
-									<input id="svgtogcode_sharpening_slider" class="uninitialized" type="text" data-bind="value: imgSharpening">
+								<label class="control-label">{{ _('Engraving speed range') }}</label>
+								<div class="controls">
+									<div class="input-append">
+										<input id="svgtogcode_img_feedrate_white" class="img_intensity_input" type="number"  min="30" data-bind="value: imgFeedrateWhite">
+										<div class="svgtogcode_grayscale">&nbsp;</div>
+										<input id="svgtogcode_img_feedrate_black" class="img_intensity_input" type="number"  min="30" data-bind="value: imgFeedrateBlack">
+									</div>
 								</div>
-								<div style="clear:both"></div>
 								<div class="controls alert alert-info hint" data-bind="visible: showHints">
 									<span class="icon icon-question-sign" aria-hidden="true"></span>
-									Sharpens the image before converting to gcode.
+									The movement velocity range used for engraving pixel graphics. Bright/white pixels use the left (higher) value, dark/black pixels the right (lower) value.
+									Equal values do not vary the laser velocity related to the pixel brightness.
+								</div>
+								<div class="controls" data-bind="visible: showExpertSettings ">
+									<label class="checkbox">
+										<input type="checkbox" data-bind="checked: engrave_outlines">{{ _('engrave outlines of filled shapes') }}
+									</label>
 								</div>
 							</div>
 
-							<label class="control-label">{{ _('Dithering') }}</label>
-							<div class="controls">
-								<label class="checkbox">
-									<input type="checkbox" data-bind="checked: imgDithering">{{ _('Dithering') }}
-								</label>
+							<div class="control-group" data-bind="visible: showExpertSettings ">
+								<label class="control-label">Pierce time</label>
+								<div class="controls"><input data-bind="value: engravingPiercetime" class="param_piercetime decimal_input" type="number" min="0" max="2000" value="0" />&nbsp;ms</div>
+
+								<label class="control-label">{{ _('Line distance') }}</label>
+								<div class="controls"><input id="svgtogcode_img_line_dist" class="img_intensity_input decimal_input" type="number" max="0.5" min="0.1" step="0.05" data-bind="value: beamDiameter" />&nbsp;mm</div>
+								<div class="controls alert alert-info hint" data-bind="visible: showHints">
+									<span class="icon icon-question-sign" aria-hidden="true"></span>
+									Pixel / raster engravings are done line by line. This sets the distance between the single lines.
+									Smaller values allow finer engravings but require a more precise focus and are slower.
+								</div>
+
+
+								<p >{{ _('Image Preprocessing') }}</p>
+								<div class="controls">
+									<div class="img_preprocessing_preview before" style="background-image:url(/plugin/mrbeam/static/img/kitty_grayscale.png);" >before</div>
+									<div class="img_preprocessing_preview after" style="background-image:url(/plugin/mrbeam/static/img/kitty_grayscale.png);" >after
+										<div class="img_preprocessing_preview contrast" style="background-image:url(/plugin/mrbeam/static/img/kitty_contrast.png);" data-bind="style: { opacity: contrastPreview }" ></div>
+										<div class="img_preprocessing_preview sharpened" style="background-image:url(/plugin/mrbeam/static/img/kitty_sharpened.png);" data-bind="style: { opacity: sharpenedPreview }" ></div>
+										<div class="img_preprocessing_preview dithered" style="background-image:url(/plugin/mrbeam/static/img/kitty_dithered_150.png);" data-bind="visible: imgDithering"></div>
+
+									</div>
+									<div class="photo_attribution"><a href="http://www.christianholmer.com" target="_blank">Photo: Christian Holmér</a></div>
+								</div>
+
+								<div data-bind="disable:imgDithering ">
+									<label class="control-label">{{ _('Contrast') }}</label>
+									<div class="controls img_slider">
+										<input id="svgtogcode_contrast_slider" type="text" data-bind="value: imgContrast" >
+									</div>
+									<div style="clear:both"></div>
+									<div class="controls alert alert-info hint" data-bind="visible: showHints">
+										<span class="icon icon-question-sign" aria-hidden="true"></span>
+										Increases the image contrast before converting to gcode.
+									</div>
+
+									<label class="control-label">{{ _('Sharpening') }}</label>
+									<div class="controls img_slider">
+										<input id="svgtogcode_sharpening_slider" class="uninitialized" type="text" data-bind="value: imgSharpening">
+									</div>
+									<div style="clear:both"></div>
+									<div class="controls alert alert-info hint" data-bind="visible: showHints">
+										<span class="icon icon-question-sign" aria-hidden="true"></span>
+										Sharpens the image before converting to gcode.
+									</div>
+								</div>
+
+								<label class="control-label">{{ _('Dithering') }}</label>
+								<div class="controls">
+									<label class="checkbox">
+										<input type="checkbox" data-bind="checked: imgDithering">{{ _('Dithering') }}
+									</label>
+								</div>
+								<div class="controls alert alert-info hint" data-bind="visible: showHints">
+									<span class="icon icon-question-sign" aria-hidden="true"></span>
+									Converts the image to solely black and white pixels.
+									Use this if the laser effect on your material is not able to transfer grayscales.
+								</div>
 							</div>
-							<div class="controls alert alert-info hint" data-bind="visible: showHints">
-								<span class="icon icon-question-sign" aria-hidden="true"></span>
-								Converts the image to solely black and white pixels.
-								Use this if the laser effect on your material is not able to transfer grayscales.
-							</div>
-						</div>
-					</form>
-				</div>
-			</div>
-			<div id="first_job" class="job_row_vector job_row row-fluid" data-bind="visible: show_vector_parameters">
-				<div class="span3" style="display:flex;">
-					<div class="assigned_colors color_drop_zone" ondragover="colorAllowDrop(event)" ondrop="colorDrop(event)"></div>
-				</div>
-				<div class="span9">
-					<div class="clearfix">
-						<h4 class="job_title pull-left">Job 1</h4>
-						<div class="dropdown pull-right">
-							<a class="dropdown-toggle material-dropdown" data-toggle="dropdown">
-								Select material <span class="caret"></span></a>
-							<ul class="dropdown-menu" data-bind="foreach: material_menu_cut">
-								<li><a href="#" data-bind="text: $data, click: $root.set_material($data, event) "></a></li>
-							</ul>
-						</div>
+						</form>
 					</div>
-					<form class="job_parameters form-horizontal">
-						<div class="control-group">
-							<label class="control-label">Laser Intensity</label>
-							<div class="controls"><input class="param_intensity img_intensity_input" type="number" min="0" max="100" />&nbsp;%</div>
-							<div class="controls alert alert-info hint" data-bind="visible: showHints">
-								<span class="icon icon-question-sign" aria-hidden="true"></span>
-								Sets the intensity of the laser. The more intensity the deeper the effect on the material.
-								Cutting needs higher intensities than engraving.
-								The effect in general is dependent from the material and its color and surface.
+				</div>
+				<div id="first_job" class="job_row_vector job_row row-fluid" data-bind="visible: show_vector_parameters">
+					<div class="span3" style="display:flex;">
+						<div class="assigned_colors color_drop_zone" ondragover="colorAllowDrop(event)" ondrop="colorDrop(event)"></div>
+					</div>
+					<div class="span9">
+						<div class="clearfix">
+							<h4 class="job_title pull-left">Job 1</h4>
+	<!--						<div class="dropdown pull-right">
+								<a class="dropdown-toggle material-dropdown" data-toggle="dropdown">
+									Select material <span class="caret"></span></a>
+								<ul class="dropdown-menu" data-bind="foreach: material_menu_cut">
+									<li><a href="#" data-bind="text: $data, click: $root.set_material($data, event) "></a></li>
+								</ul>
+							</div>-->
+						</div>
+						<form class="job_parameters form-horizontal">
+							<div class="control-group">
+								<label class="control-label">Laser Intensity</label>
+								<div class="controls"><input class="param_intensity img_intensity_input" type="number" min="0" max="100" />&nbsp;%</div>
+								<div class="controls alert alert-info hint" data-bind="visible: showHints">
+									<span class="icon icon-question-sign" aria-hidden="true"></span>
+									Sets the intensity of the laser. The more intensity the deeper the effect on the material.
+									Cutting needs higher intensities than engraving.
+									The effect in general is dependent from the material and its color and surface.
+								</div>
 							</div>
-						</div>
-						<div class="control-group">
-							<label class="control-label">Laser Speed</label>
-							<div class="controls"><input class="param_feedrate img_intensity_input" type="number" min="20" max="3000" />&nbsp;mm/min</div>
-							<div class="controls alert alert-info hint" data-bind="visible: showHints">
-								<span class="icon icon-question-sign" aria-hidden="true"></span>
-								Sets the velocity of the laser head. The slower the movement the deeper the effect on the material.
-								Cutting needs slower movement than engraving.
-								The effect in general is dependent from the material and its color and surface.
+							<div class="control-group">
+								<label class="control-label">Laser Speed</label>
+								<div class="controls"><input class="param_feedrate img_intensity_input" type="number" min="20" max="3000" />&nbsp;mm/min</div>
+								<div class="controls alert alert-info hint" data-bind="visible: showHints">
+									<span class="icon icon-question-sign" aria-hidden="true"></span>
+									Sets the velocity of the laser head. The slower the movement the deeper the effect on the material.
+									Cutting needs slower movement than engraving.
+									The effect in general is dependent from the material and its color and surface.
+								</div>
 							</div>
-						</div>
-						<div class="control-group">
-							<label class="control-label">Passes</label>
-							<div class="controls"><input class="param_passes img_intensity_input" type="number" min="1" max="10" value="1" />&nbsp;&times;</div>
-						</div>
-						<div class="control-group" data-bind="visible: showExpertSettings ">
-							<label class="control-label">Pierce time</label>
-							<div class="controls"><input class="param_piercetime" type="number" min="0" max="2000" value="0" />&nbsp;ms</div>
-						</div>
-					</form>
+							<div class="control-group">
+								<label class="control-label">Passes</label>
+								<div class="controls"><input class="param_passes img_intensity_input" type="number" min="1" max="10" value="1" />&nbsp;&times;</div>
+							</div>
+							<div class="control-group" data-bind="visible: showExpertSettings ">
+								<label class="control-label">Pierce time</label>
+								<div class="controls"><input class="param_piercetime" type="number" min="0" max="2000" value="0" />&nbsp;ms</div>
+							</div>
+						</form>
+					</div>
+				</div>
+				<div id="additional_jobs"></div>
+				<div class="row-fluid" data-bind="visible: show_vector_parameters">
+					<div class="assigned_colors color_drop_zone create_job" ondragover="colorAllowDrop(event)" ondrop="colorDropCreateJob(event)">
+						+ Drag colors here for another job +
+					</div>
 				</div>
 			</div>
-			<div id="additional_jobs"></div>
-			<div class="row-fluid" data-bind="visible: show_vector_parameters">
-				<div class="assigned_colors color_drop_zone create_job" ondragover="colorAllowDrop(event)" ondrop="colorDropCreateJob(event)">
-					+ Drag colors here for another job +
-				</div>
-			</div>
+
 		</div>
-
+		
 		<div id="slicing_progress" class="progress progress-striped active" style="width: 100%;" data-bind="visible: slicing_in_progress()">
 			<div class="bar" style="width: 0%" data-bind="style: {width: slicing_progress() + '%'} "></div>
 		</div>
     </div>
     <div class="modal-footer">
-		<div class="pull-left" style="text-align:left;">
+		<div class="pull-left" style="text-align:left;" data-bind="visible:!slicing_in_progress()">
 			<label class="checkbox">
 				<input type="checkbox" data-bind="checked: showExpertSettings">show advanced settings
 			</label>
@@ -204,6 +273,12 @@
 		</div>
 
         <a href="#" class="btn" aria-hidden="true" data-bind="click: $root.cancel_conversion()">{{ _('Cancel') }}</a>
-        <a href="#" class="btn btn-primary" data-bind="click: function() { if ($root.enableConvertButton()) { $root.convert() } }, enabled: enableConvertButton, css: {disabled: !$root.enableConvertButton()}">{{ _('Convert') }}</a>
+        <a href="#" class="btn" aria-hidden="true" data-bind="click: previousStep(), visible: step() > 0">{{ _('Back') }}</a>
+        <a href="#" class="btn" aria-hidden="true" data-bind="click: nextStep(), visible: step() < 2 && isMaterialSelected()">{{ _('Next') }}</a>
+        <a href="#" class="btn btn-primary" 
+		   data-bind="click: function() { if ($root.enableConvertButton()) { $root.convert() } }, 
+					visible: step() === 2,
+					enabled: enableConvertButton,
+					css: {disabled: !$root.enableConvertButton()}">{{ _('Convert') }}</a>
     </div>
 </div>

@@ -430,6 +430,42 @@ svg#area_preview rect
 	margin: .2em;
 }
 
+#material_thickness_ruler {
+	transform:scaleY(-1);
+}
+#ruler {
+	width:2em;
+	margin-left:1mm;
+	float:right;
+}
+#ruler div {
+	height: calc(1mm*1.37 - 1px);
+	border-top: 1px solid #ccc;
+	width: 1em;
+}
+#ruler div:nth-of-type(5n+1){
+	width:1.5em;
+}
+#ruler div:nth-of-type(10n+1){
+	width:2em;
+}
+#thickness_sample_material {
+	float: right;
+	border: 0.25mm solid #999;
+	border-left-color: transparent;
+	width: calc(100% - 4em);
+	background-image: url(/plugin/mrbeam/static/img/pattern_stripes.png);
+	background-size: 40%;
+}
+
+#material_color {
+	width: 100px;
+	height: 100px;
+	border: none;
+	box-shadow: none;
+	padding: 0;
+}
+
 .misfit_warning i {
 	color: #e25303;
 }
