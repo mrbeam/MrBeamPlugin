@@ -428,6 +428,15 @@ svg#area_preview rect
 	float: left;
 	padding: .5em;
 	margin: .2em;
+	background-size: cover;
+	position: relative;
+	cursor: pointer;
+}
+li.material_entry span {
+  position: absolute;
+  bottom: .3em;
+  color: white;
+  text-shadow: 0px 0px 4px black;
 }
 
 #material_thickness_ruler {
@@ -468,4 +477,8 @@ svg#area_preview rect
 
 .misfit_warning i {
 	color: #e25303;
+}
+
+#dialog_vector_graphics_conversion .modal-body {
+  min-height: 65vh;
 }

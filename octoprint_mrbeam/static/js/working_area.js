@@ -1507,6 +1507,20 @@ $(function(){
 			}
 			return false;
 		};
+		self.hasStrokedVectors = function(){
+			var el = snap.selectAll('#userContent *');
+			for (var i = 0; i < el.length; i++) {
+				var e = el[i];
+				if (["path", "circle", "ellipse", "rect", "line", "polyline", "polygon", "path"].indexOf(e.type) >= 0){
+					var stroke = e.attr('stroke');
+					var sw = e.attr('stroke-width');
+					if(stroke !== 'none' && sw > 0){
+						return true;
+					}
+				}
+			}
+			return false;
+		};
 
 		self.draw_gcode = function(points, intensity, target){
 			var stroke_color = intensity === 0 ? '#BBBBBB' : '#FF0000';

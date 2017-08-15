@@ -6,29 +6,32 @@
     <div class="modal-body scrollable">
 		<div data-bind="visible:!slicing_in_progress()">
 			
-			<div id="material_type" class="row-fluid" data-bind="visible: step() === 0">
+			<div id="material_type" class="row-fluid" data-bind="visible: dialog_state() === 'material_type'">
 				<div class="job_parameters form-horizontal">
 					<div class="control-group">
 						<label class="control-label">Material</label>
 						<div class="controls">
-							<div data-bind="visible: !isMaterialSelected()">
+							<div data-bind="">
 								<form class="form-search" data-bind="submit: filterQuery">
 									<input type="text" style="width:90%;" class="input-block search-query" data-bind="value: filterQuery, valueUpdate: 'input'" placeholder="{{ _('Search...') }}">
 								</form>
 								<ul id="material_list" data-bind="foreach: filteredMaterials">
-									<li class='material_entry'><a href="#" data-bind="text: $data.name, click: $root.set_material($data, event) "></a></li>
+									<li class='material_entry' data-bind="click: $root.set_material($data, event), style: { backgroundImage: 'url(\'/plugin/mrbeam/static/img/materials/' + $data.img + '\')' }">
+										<span href="#" data-bind="text: $data.name"></span>
+									</li>
 								</ul>
 								<div class="clearfix"></div>
 							</div>
-							<div data-bind="visible: isMaterialSelected()">
+<!--							<div data-bind="visible: isMaterialSelected()">
 								<div data-bind="text: selected_material_name()"></div>
 								<a href="#" class="" data-bind="click: set_material(null, event)"><i class="icon-edit"></i> change...</a>
-							</div>
+							</div>-->
 						</div>
 					</div>
 				</div>
 			</div>
-			<div id="material_thickness_color" class="row-fluid" data-bind="visible: step() === 1">
+			
+			<div id="material_thickness_color" class="row-fluid" data-bind="visible: dialog_state() === 'material_properties'">
 				<form class="job_parameters form-horizontal row-fluid" data-bind="visible: isMaterialSelected()">
 					<div class="control-group span8">
 						<label class="control-label">Thickness</label>
@@ -61,7 +64,7 @@
 					<div class="control-group">
 						<label class="control-label">Color</label>
 						<div class="controls">
-							<input id="material_color" type="color" value="#999999" />
+							<input id="material_color" type="color" value="#999999" data-bind="value: selected_material_color" />
 						</div>
 						<div class="controls alert alert-info hint" data-bind="visible: showHints">
 							<span class="icon icon-question-sign" aria-hidden="true"></span>
@@ -72,7 +75,7 @@
 				</form>
 			</div>
 
-			<div id="color_assignment" class="" data-bind="visible:step() === 2">
+			<div id="color_assignment" class="" data-bind="visible:dialog_state() === 'color_assignment'">
 				<div id="no_job" class="job_row row-fluid">
 					<div class="span3" style="display:flex;">
 						<div class="assigned_colors color_drop_zone img_drop_zone" ondragover="colorAllowDrop(event)" ondrop="colorDrop(event)"></div>
@@ -95,13 +98,6 @@
 					<div class="span9">
 						<div class="clearfix">
 							<h4 class="job_title pull-left">Engraving</h4>
-	<!--						<div class="dropdown pull-right">
-								<a class="dropdown-toggle material-dropdown" data-toggle="dropdown">
-									Select material <span class="caret"></span></a>
-								<ul class="dropdown-menu" data-bind="foreach: material_menu_eng">
-									<li><a href="#" data-bind="text: $data, click: $root.set_material_engraving($data, event) "></a></li>
-								</ul>
-							</div>-->
 						</div>
 						<form class="job_parameters form-horizontal">
 							<div class="control-group" >
@@ -144,7 +140,7 @@
 								<div class="controls"><input data-bind="value: engravingPiercetime" class="param_piercetime decimal_input" type="number" min="0" max="2000" value="0" />&nbsp;ms</div>
 
 								<label class="control-label">{{ _('Line distance') }}</label>
-								<div class="controls"><input id="svgtogcode_img_line_dist" class="img_intensity_input decimal_input" type="number" max="0.5" min="0.1" step="0.05" data-bind="value: beamDiameter" />&nbsp;mm</div>
+								<div class="controls"><input id="svgtogcode_img_line_dist" class="img_intensity_input decimal_input" type="number" max="0.5" min="0.1" dialog_state="0.05" data-bind="value: beamDiameter" />&nbsp;mm</div>
 								<div class="controls alert alert-info hint" data-bind="visible: showHints">
 									<span class="icon icon-question-sign" aria-hidden="true"></span>
 									Pixel / raster engravings are done line by line. This sets the distance between the single lines.
@@ -208,13 +204,6 @@
 					<div class="span9">
 						<div class="clearfix">
 							<h4 class="job_title pull-left">Job 1</h4>
-	<!--						<div class="dropdown pull-right">
-								<a class="dropdown-toggle material-dropdown" data-toggle="dropdown">
-									Select material <span class="caret"></span></a>
-								<ul class="dropdown-menu" data-bind="foreach: material_menu_cut">
-									<li><a href="#" data-bind="text: $data, click: $root.set_material($data, event) "></a></li>
-								</ul>
-							</div>-->
 						</div>
 						<form class="job_parameters form-horizontal">
 							<div class="control-group">
@@ -255,7 +244,41 @@
 					</div>
 				</div>
 			</div>
+			
+			<div id="conversion_summary" data-bind="visible: dialog_state() === 'summary' ">
+				<form class="job_parameters form-horizontal">
+					<div data-bind="click: dialog_state('material_type')">
 
+						<div class="control-group">
+							<label class="control-label">Material</label>
+							<div class="controls">
+									<span data-bind="text:selected_material"></span><br/>
+									<span data-bind="text:selected_material_thickness"></span><br/>
+									<span data-bind="text:selected_material_color"></span>
+		<!--							<i class="icon-edit"></i> change...-->
+							</div>
+						</div>
+					</div>
+					<div data-bind="click: dialog_state('color_assignment')">
+						<div class="control-group">
+							<label class="control-label">Engraving</label>
+							<div class="controls">
+								<span data-bind="">Images & Fills: 20-100% @ 1000-200 mm/min</span><br/>
+								<span data-bind="">Green: 20% @ 600mm/min</span><br/>
+								<span data-bind=""></span>
+							</div>
+						</div>
+						<div class="control-group">
+							<label class="control-label">Cutting</label>
+							<div class="controls">
+								<span data-bind="">1. Red: 100% @ 200 mm/min x2</span><br/>
+								<span data-bind="">2. Blue 100% @ 200 mm/min x1</span><br/>
+								<span data-bind=""></span>
+							</div>
+						</div>
+					</div>
+				</form>
+			</div>
 		</div>
 		
 		<div id="slicing_progress" class="progress progress-striped active" style="width: 100%;" data-bind="visible: slicing_in_progress()">
@@ -272,12 +295,13 @@
 			</label>
 		</div>
 
-        <a href="#" class="btn" aria-hidden="true" data-bind="click: $root.cancel_conversion()">{{ _('Cancel') }}</a>
-        <a href="#" class="btn" aria-hidden="true" data-bind="click: previousStep(), visible: step() > 0">{{ _('Back') }}</a>
-        <a href="#" class="btn" aria-hidden="true" data-bind="click: nextStep(), visible: step() < 2 && isMaterialSelected()">{{ _('Next') }}</a>
+        <!--<a href="#" class="btn" aria-hidden="true" data-bind="click: $root.cancel_conversion()">{{ _('Cancel') }}</a>-->
+<!--        <a href="#" class="btn" aria-hidden="true" data-bind="click: previousStep(), visible: dialog_state() !== 'material_type' ">{{ _('Back') }}</a>
+-->
+        <a href="#" class="btn" aria-hidden="true" data-bind="click: dialog_state(get_dialog_state()), visible: dialog_state() !== 'summary' ">{{ _('Ok') }}</a>
         <a href="#" class="btn btn-primary" 
 		   data-bind="click: function() { if ($root.enableConvertButton()) { $root.convert() } }, 
-					visible: step() === 2,
+					visible: dialog_state() === 'summary',
 					enabled: enableConvertButton,
 					css: {disabled: !$root.enableConvertButton()}">{{ _('Convert') }}</a>
     </div>
