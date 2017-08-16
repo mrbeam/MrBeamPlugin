@@ -39,6 +39,7 @@ $(function(){
 		self.maxSpeed = ko.observable(3000);
 		self.minSpeed = ko.observable(20);
 
+		self.vectorJobs = ko.observableArray([]);
 
 		// material menu
 		self.material_settings2 = {
@@ -317,80 +318,43 @@ $(function(){
 			}
 		};
 
-		self.materials_settings = {
-//			'default':{cut_i:0, cut_f:0, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
-//			'material_name thickness':{cut_i:0, cut_f:0, cut_p:0, eng_i:[0,0], eng_f:[0,0]},
-			'Anodized Aluminum':{cut_i:0, cut_f:2000, cut_p:1, eng_i:[100,1], eng_f:[30,1000]}, // engrave only
-			'Balsa 1mm':{cut_i:70, cut_f:600, cut_p:1, eng_i:[0,0], eng_f:[0,0]}, // min speed 300, max intensity 70 !!! ignition warning
-			'Balsa 2mm':{cut_i:100, cut_f:600, cut_p:1, eng_i:[0,0], eng_f:[0,0]}, // min speed 300 !!! ignition warning
-			'Balsa 3mm':{cut_i:100, cut_f:800, cut_p:2, eng_i:[0,0], eng_f:[0,0]}, // min speed 300 !!! ignition warning
-			'Balsa 4mm':{cut_i:100, cut_f:600, cut_p:3, eng_i:[0,0], eng_f:[0,0]}, // min speed 500 !!! ignition warning
-			'Balsa 5mm':{cut_i:100, cut_f:300, cut_p:3, eng_i:[0,0], eng_f:[0,0]}, // min speed 300 !!! ignition warning
-			'Bamboo':{cut_i:0, cut_f:2000, cut_p:1, eng_i:[20,100], eng_f:[2000,350]}, // engrave only
-			'Cardboard corrugated, single wave 2mm':{cut_i:100, cut_f:500, cut_p:2, eng_i:[10,25], eng_f:[2000,850]}, // warning, not slower than 180
-			'Cardboard corrugated, single wave 3mm':{cut_i:100, cut_f:400, cut_p:2, eng_i:[10,25], eng_f:[2000,850]}, // warning, not slower than 180
-			'Cardboard corrugated, single wave 4mm':{cut_i:100, cut_f:400, cut_p:3, eng_i:[10,25], eng_f:[2000,850]}, // warning, not slower than 180
-			'Cardboard corrugated, double wave 5mm':{cut_i:100, cut_f:400, cut_p:3, eng_i:[10,25], eng_f:[2000,850]}, // warning, not slower than 180
-			'Finn Cardboard 2.5mm':{cut_i:100, cut_f:200, cut_p:2, eng_i:[0,0], eng_f:[0,0]},
-//			'Felt 2mm':{cut_i:100, cut_f:200, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
-//			'Felt 3mm':{cut_i:100, cut_f:200, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
-			'Felt 4mm green':{cut_i:100, cut_f:300, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
-//			'Felt 4mm grass':{cut_i:100, cut_f:300, cut_p:1, eng_i:[10,35], eng_f:[2000,850]},
-			'Felt 4mm baby blue':{cut_i:100, cut_f:100, cut_p:5, eng_i:[0,0], eng_f:[0,0]},
-			'Felt 4mm royal blue':{cut_i:100, cut_f:350, cut_p:2, eng_i:[0,0], eng_f:[0,0]},
-			'Felt 4mm yellow':{cut_i:100, cut_f:350, cut_p:2, eng_i:[0,0], eng_f:[0,0]},
-			'Felt 4mm purple':{cut_i:100, cut_f:500, cut_p:2, eng_i:[0,0], eng_f:[0,0]},
-			'Felt 4mm gray':{cut_i:100, cut_f:400, cut_p:2, eng_i:[0,0], eng_f:[0,0]},
-			'Felt 4mm black':{cut_i:100, cut_f:400, cut_p:2, eng_i:[0,0], eng_f:[0,0]},
-			'Felt 4mm orange':{cut_i:100, cut_f:500, cut_p:2, eng_i:[0,0], eng_f:[0,0]},
-			'Foam Rubber 2mm blue':{cut_i:100, cut_f:600, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
-			'Foam Rubber 2mm orange':{cut_i:75, cut_f:800, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
-			'Foam Rubber 2mm white':{cut_i:100, cut_f:190, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
-			'Foam Rubber 2mm black':{cut_i:100, cut_f:800, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
-			'Foam Rubber 3mm green':{cut_i:100, cut_f:600, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
-			'Foam Rubber 3mm blue':{cut_i:100, cut_f:600, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
-			'Kraftplex 0.8mm':{cut_i:100, cut_f:350, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
-			'Kraftplex 1.5mm':{cut_i:100, cut_f:175, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
-//			'Kraftplex 3mm':{cut_i:100, cut_f:200, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
-			'Paper':{cut_i:75, cut_f:800, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
-			'Plywood 3mm':{cut_i:100, cut_f:150, cut_p:3, eng_i:[18,35], eng_f:[2000,750]},
-			'Plywood 4mm':{cut_i:100, cut_f:120, cut_p:3, eng_i:[18,35], eng_f:[2000,750]},
-			'Wellboard 6mm':{cut_i:100, cut_f:225, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
-			'Wellboard 10mm':{cut_i:100, cut_f:140, cut_p:3, eng_i:[10,35], eng_f:[2000,850]},
-			// 'Wellboard rect':{cut_i:100, cut_f:200, cut_p:3, eng_i:[10,35], eng_f:[2000,850]},
-		};
 
+//        var material_keys_cut = [];
+//		for(var materialKey in self.materials_settings){
+//		    if (self.materials_settings[materialKey]
+//                && self.materials_settings[materialKey].cut_i > 0
+//                && self.materials_settings[materialKey].cut_f > 0
+//                && self.materials_settings[materialKey].cut_p > 0) {
+//			    material_keys_cut.push(materialKey);
+//            }
+//		}
+//
+//        var material_keys_eng = [];
+//		for(var materialKey in self.materials_settings){
+//            if (self.materials_settings[materialKey]
+//                && self.materials_settings[materialKey].eng_i[0] > 0
+//                && self.materials_settings[materialKey].eng_i[1] > 0
+//                && self.materials_settings[materialKey].eng_f[0] > 0
+//                && self.materials_settings[materialKey].eng_f[1] > 0) {
+//			    material_keys_eng.push(materialKey);
+//            }
+//		}
 
-        var material_keys_cut = [];
-		for(var materialKey in self.materials_settings){
-		    if (self.materials_settings[materialKey]
-                && self.materials_settings[materialKey].cut_i > 0
-                && self.materials_settings[materialKey].cut_f > 0
-                && self.materials_settings[materialKey].cut_p > 0) {
-			    material_keys_cut.push(materialKey);
-            }
-		}
-
-        var material_keys_eng = [];
-		for(var materialKey in self.materials_settings){
-            if (self.materials_settings[materialKey]
-                && self.materials_settings[materialKey].eng_i[0] > 0
-                && self.materials_settings[materialKey].eng_i[1] > 0
-                && self.materials_settings[materialKey].eng_f[0] > 0
-                && self.materials_settings[materialKey].eng_f[1] > 0) {
-			    material_keys_eng.push(materialKey);
-            }
-		}
-
-		self.material_menu_cut = ko.observableArray(material_keys_cut);
-		self.material_menu_eng = ko.observableArray(material_keys_eng);
-		self.material_menu = ko.observableArray(material_keys_eng.concat(material_keys_cut));
+//		self.material_menu_cut = ko.observableArray(material_keys_cut);
+//		self.material_menu_eng = ko.observableArray(material_keys_eng);
+//		self.material_menu = ko.observableArray(material_keys_eng.concat(material_keys_cut));
 		self.selected_material = ko.observable(null);
 		self.selected_material_color = ko.observable(null);
-		self.selected_material_thickness = ko.observable(null);
+		self.selected_material_thickness = ko.observable(0.5);
+		self.selected_material_coloroptions = ko.observable(true);
 		self.selected_material_name = ko.computed(function(){ 
 			var mat = self.selected_material();
 			return mat === null ? '' : mat.name;
+		 });
+		self.selected_material_img = ko.computed(function(){ 
+			var mat = self.selected_material();
+			if(mat !== null)
+			return mat === null ? '' : mat.img;
 		 });
 		self.selected_material_thickness_str = ko.computed(function(){ 
 			return self.selected_material_thickness() +' mm';
@@ -400,8 +364,9 @@ $(function(){
 			return d +'mm';
 		 });
 		 
-		self.get_closest_thickness_params = function(thickness, material){
-			var color_closest = self.get_closest_color_params(self.selected_material_color(), material);
+		self.get_closest_thickness_params = function(){
+			var thickness = self.selected_material_thickness();
+			var color_closest = self.get_closest_color_params();
 			var available = color_closest.cut;
 			if(available.length === 0) {
 				return null;
@@ -421,27 +386,29 @@ $(function(){
 				return upper;
 			}
 		};
-		self.get_closest_color_params = function(hex, material){
-			var available_colors = Object.keys(material.colors);
-			var closest = self._find_closest_color_to(hex, available_colors);
-			console.log("closest color to " + hex, closest);
-			return material.colors[closest];
+		self.get_closest_color_params = function(){
+			var material = self.selected_material();
+			var hex = self.selected_material_color();
+			if(material !== null && hex !== null){
+				var available_colors = Object.keys(material.colors);
+				var closest = self._find_closest_color_to(hex, available_colors);
+//				console.log("closest color to " + hex, closest);
+				return material.colors[closest];
+			} else {
+				return null;
+			}
 		};
 		self.max_cut_depth = ko.computed(function(){
-			var m = self.selected_material();
-			var col = self.selected_material_color();
-			if(m !== null && col !== null){
-				var p = self.get_closest_color_params(self.selected_material_color(), self.selected_material());
-				var cuttable = 0;
+			var cuttable = -1;
+			var p = self.get_closest_color_params();
+			if(p !== null){
 				for (var i = 0; i < p.cut.length; i++) {
 					var item = p.cut[i];
 					cuttable = Math.max(cuttable, item.thicknessMM);
 				}
-				console.log("max cut:", cuttable);
-				return cuttable;
-			} else { 
-				return 0;
 			}
+			console.log("max cut:", cuttable);
+			return cuttable;
 		});
 		self.thickness_mount_pos = ko.computed(function(){ 
 			var d = self.selected_material_thickness(); 
@@ -457,13 +424,15 @@ $(function(){
 		// Highest node in hierarchy -> resets color.
 		self.selected_material.subscribe(function(material){
 			if(material !== null){
-				console.log("changing material to", material.name);
+//				console.log("changing material to", material.name);
 				var available_colors = Object.keys(material.colors);
-				if(available_colors.length > 1){
-					self.selected_material_color(null);
+				self.selected_material_coloroptions(available_colors.length > 1);
+				self.selected_material_color(available_colors[0]);
+				var available_thickness = material.colors[available_colors[0]].cut;
+				if(available_thickness.length === 0){
+//					console.log("only engraving possible");
 				} else {
-					self.selected_material_color(available_colors[0]);
-					console.log('only one color available for '+ material.name +'. using it.');
+					self.selected_material_thickness(available_thickness[0].thicknessMM);
 				}
 			}
 		});
@@ -471,7 +440,14 @@ $(function(){
 		// changes in color reset thickness settings
 		self.selected_material_color.subscribe(function(color){
 			// reset thickness values
-			self.selected_material_thickness(null);
+			self.apply_engraving_proposal();
+		});
+		self.selected_material_color.subscribe(function(thickness){
+			self.apply_vector_proposal();
+		});
+
+		self.dialog_state.subscribe(function(new_state){
+			self._update_job_summary();
 		});
 			
         self.filterQuery = ko.observable('');
@@ -533,15 +509,17 @@ $(function(){
 			} else {
 				self.selected_material(null);
 			}
-//			self.dialog_state(self.get_dialog_state());
+			self.dialog_state('material_properties');
 		};
 
-		self.set_material_vector = function(materia, params){
-			if(materia !== null){
+		self.apply_vector_proposal = function(){
+			var material = self.selected_material();
+			var params = self.get_closest_thickness_params();
+			if(material !== null && params !== null){
 				var vector_jobs = $('.job_row_vector');
 				for (var i = 0; i < vector_jobs.length; i++) {
 					var job = vector_jobs[i];
-					$(job).find('.job_title').html(materia);
+					$(job).find('.job_title').html(material.name);
 					$(job).find('.param_intensity').val(params.cut_i);
 					$(job).find('.param_feedrate').val(params.cut_f);
 					$(job).find('.param_passes').val(params.cut_p || 0);
@@ -549,18 +527,21 @@ $(function(){
 				}
 			}
 		};
-		self.set_material_engraving = function(material, params){
-			if(material !== null){
+		self.apply_engraving_proposal = function(){
+			var material = self.selected_material();
+			var param_set = self.get_closest_color_params();
+			var p = param_set.engrave;
+			if(material !== null && p !== null){
 				
 				var job = $('#engrave_job');
 				$(job).find('.job_title').html("Engrave " + material.name);
 
-				self.imgIntensityWhite(params.eng_i[0]);
-				self.imgIntensityBlack(params.eng_i[1]);
-				self.imgFeedrateWhite(params.eng_f[0]);
-				self.imgFeedrateBlack(params.eng_f[1]);
-				self.imgDithering(params.dithering);
-				self.engravingPiercetime(params.eng_pierce || 0);
+				self.imgIntensityWhite(p.eng_i[0]);
+				self.imgIntensityBlack(p.eng_i[1]);
+				self.imgFeedrateWhite(p.eng_f[0]);
+				self.imgFeedrateBlack(p.eng_f[1]);
+				self.imgDithering(p.dithering);
+				self.engravingPiercetime(p.eng_pierce || 0);
 			}
 		};
 		
@@ -662,6 +643,8 @@ $(function(){
 			self.images_placed(self.workingArea.getPlacedImages().length > 0);
 			self.text_placed(self.workingArea.hasTextItems());
 			self.color_key_update();
+
+			self._update_job_summary();
 
 			if(self.show_vector_parameters() || self.show_image_parameters()){
 				self.dialog_state(self.get_dialog_state());
@@ -935,9 +918,9 @@ $(function(){
 			//console.log("onSlicingFailed" , payload);
 		};
 
-		self._calcRealSpeed = function(sliderVal){
-			return Math.round(self.minSpeed() + sliderVal/100 * (self.maxSpeed() - self.minSpeed()));
-		};
+//		self._calcRealSpeed = function(sliderVal){
+//			return Math.round(self.minSpeed() + sliderVal/100 * (self.maxSpeed() - self.minSpeed()));
+//		};
 
 		self._configureImgSliders = function() {
 			self.contrastSlider = $("#svgtogcode_contrast_slider").slider({
@@ -968,6 +951,7 @@ $(function(){
 		});
 
 		self._update_color_assignments = function(){
+			self._update_job_summary();
 			var jobs = $('#additional_jobs .job_row_vector');
 			for (var idx = 0; idx < jobs.length; idx++) {
 				var j = jobs[idx];
@@ -976,6 +960,12 @@ $(function(){
 					$(j).remove();
 				}
 			}
+		};
+
+		// quick hack
+		self._update_job_summary = function(){
+			var jobs = self.get_current_multicolor_settings();
+			self.vectorJobs(jobs);
 		};
 
 	}

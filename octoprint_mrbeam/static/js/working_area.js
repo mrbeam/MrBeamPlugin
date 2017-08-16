@@ -592,7 +592,7 @@ $(function(){
 			var inkscape_version = root_attrs['inkscape:version'];
 			if(inkscape_version !== undefined){
 				version = inkscape_version;
-				console.log("Generator:", gen, version);
+//				console.log("Generator:", gen, version);
 				return {generator: gen, version: version};
 			}
 
@@ -609,7 +609,7 @@ $(function(){
 						gen = 'illustrator';
 						var matches = node.textContent.match(/\d+\.\d+(\.\d+)*/g);
 						version = matches.join('_');
-						console.log("Generator:", gen, version);
+//						console.log("Generator:", gen, version);
 						return { generator: gen, version: version };
 					}
 				}
@@ -619,7 +619,7 @@ $(function(){
 			if(root_attrs && root_attrs['data-name']){
 				gen = 'illustrator';
 				version = '?';
-				console.log("Generator:", gen, version);
+//				console.log("Generator:", gen, version);
 				return { generator: gen, version: version };
 			}
 
@@ -632,7 +632,7 @@ $(function(){
 					if (node.textContent.indexOf('CorelDRAW') > -1) {
 						gen = 'coreldraw';
 						var version = node.textContent.match(/(Creator: CorelDRAW) (\S+)/)[2];
-						console.log("Generator:", gen, version);
+//						console.log("Generator:", gen, version);
 						return { generator: gen, version: version };
 					}
 				}
@@ -645,13 +645,13 @@ $(function(){
 				if(node.nodeType === 8){ // check for comment
 					if (node.textContent.indexOf('Method Draw') > -1) {
 						gen = 'method draw';
-						console.log("Generator:", gen, version);
+//						console.log("Generator:", gen, version);
 						return { generator: gen, version: version };
 					}
 				}
 			}
 
-			console.log("Generator:", gen, version);
+//			console.log("Generator:", gen, version);
 			return { generator: 'unknown', version: 'unknown' };
 		};
 
@@ -694,32 +694,32 @@ $(function(){
 		self._getDocumentScaleToMM = function(declaredUnit, generator){
 			if(declaredUnit === null || declaredUnit === ''){
 				declaredUnit = 'px';
-				console.log("unit '" + declaredUnit + "' not found. Assuming 'px'");
+//				console.log("unit '" + declaredUnit + "' not found. Assuming 'px'");
 			}
 			if(declaredUnit === 'px' || declaredUnit === ''){
 				if(generator.generator === 'inkscape'){
 					if(versionCompare(generator.version, '0.91') <= 0){
-						console.log("old inkscape, px @ 90dpi");
+//						console.log("old inkscape, px @ 90dpi");
 						declaredUnit = 'px_inkscape_old';
 					} else {
-						console.log("new inkscape, px @ 96dpi");
+//						console.log("new inkscape, px @ 96dpi");
 						declaredUnit = 'px_inkscape_new';
 					}
 				} else if (generator.generator === 'corel draw'){
-					console.log("corel draw, px @ 90dpi");
+//					console.log("corel draw, px @ 90dpi");
 
 				} else if (generator.generator === 'illustrator') {
-					console.log("illustrator, px @ 72dpi");
+//					console.log("illustrator, px @ 72dpi");
 					declaredUnit = 'px_illustrator';
 				} else if (generator.generator === 'unknown'){
-					console.log('unable to detect generator, using settings->svgDPI:', self.svgDPI());
+//					console.log('unable to detect generator, using settings->svgDPI:', self.svgDPI());
 					declaredUnit = 'px_settings';
 					self.uuconv.px_settings = self.svgDPI() / 90; // scale to our internal 90
 				}
 			}
 			var declaredUnitValue = self.uuconv[declaredUnit];
 			var scale = declaredUnitValue / self.uuconv.mm;
-			console.log("Units: " + declaredUnit, " => scale factor to mm: " + scale);
+//			console.log("Units: " + declaredUnit, " => scale factor to mm: " + scale);
 			return scale;
 		};
 
@@ -1514,7 +1514,7 @@ $(function(){
 				if (["path", "circle", "ellipse", "rect", "line", "polyline", "polygon", "path"].indexOf(e.type) >= 0){
 					var stroke = e.attr('stroke');
 					var sw = e.attr('stroke-width');
-					if(stroke !== 'none' && sw > 0){
+					if(stroke !== 'none' && parseFloat(sw) > 0){
 						return true;
 					}
 				}

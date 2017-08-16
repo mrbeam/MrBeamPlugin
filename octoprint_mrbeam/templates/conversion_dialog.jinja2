@@ -33,13 +33,24 @@
 			
 			<div id="material_thickness_color" class="row-fluid" data-bind="visible: dialog_state() === 'material_properties'">
 				<form class="job_parameters form-horizontal row-fluid" data-bind="visible: isMaterialSelected()">
+					<div class="control-group" data-bind="visible: selected_material_coloroptions()">
+						<label class="control-label">Color</label>
+						<div class="controls">
+							<input id="material_color" type="color" value="#999999" data-bind="value: selected_material_color, valueUpdate: 'input'" />
+						</div>
+						<div class="controls alert alert-info hint" data-bind="visible: showHints">
+							<span class="icon icon-question-sign" aria-hidden="true"></span>
+							Depending on the color the laser beam is reflected more or less. Select a color
+							close to the material's color to improve the result. 
+						</div>
+					</div>
 					<div class="control-group span8">
 						<label class="control-label">Thickness</label>
 						<div class="controls">
-							<input id="material_thickness_range" type="range" min="0" value="1" max="5" step=".5" data-bind="value:selected_material_thickness, valueUpdate: 'input'" /> <span data-bind="text:selected_material_thickness_str()"></span>
-							<div class="muted" style='margin-top: 1em;'>
+							<input id="material_thickness_range" type="range" min="0" value="1" max="40" step=".5" data-bind="value:selected_material_thickness, valueUpdate: 'input'" /> <span data-bind="text:selected_material_thickness_str()"></span>
+<!--							<div class="muted" style='margin-top: 1em;'>
 								<i class="icon-info-sign"></i>&nbsp;Mount the laser head in position <span data-bind="text:thickness_mount_pos">1</span>.
-							</div>
+							</div>-->
 						</div>
 						<div class="controls alert alert-info hint" data-bind="visible: showHints">
 							<span class="icon icon-question-sign" aria-hidden="true"></span>
@@ -61,21 +72,24 @@
 						</div>
 						<div id="thickness_sample_material" data-bind="style: {height: selected_material_thickness_px()}" ></div>
 					</div>
-					<div class="control-group">
-						<label class="control-label">Color</label>
-						<div class="controls">
-							<input id="material_color" type="color" value="#999999" data-bind="value: selected_material_color" />
-						</div>
-						<div class="controls alert alert-info hint" data-bind="visible: showHints">
-							<span class="icon icon-question-sign" aria-hidden="true"></span>
-							Depending on the color the laser beam is reflected more or less. Select a color
-							close to the material's color to improve the result. 
-						</div>
-					</div>
+					<div data-bind="visible: selected_material_thickness() > max_cut_depth()" >Material is only engravable.</div>
 				</form>
 			</div>
 
 			<div id="color_assignment" class="" data-bind="visible:dialog_state() === 'color_assignment'">
+				<div class="row-fluid form-horizontal" style="border-bottom: 1px solid #999;">
+					<div class="control-group">
+						<label class="control-label">Material</label>
+						<div class="controls">
+							<div class="material_entry" data-bind="style: { backgroundImage: 'url(\'/plugin/mrbeam/static/img/materials/' + selected_material_img() + '\')' }">
+								<span style="position: absolute; bottom:.3em; color: white;" data-bind="text:selected_material_name"></span><br/>
+							</div>
+							<div data-bind="style:{backgroundColor: '#'+selected_material_color(), height:selected_material_thickness()+'mm' }" style="width: 100px; display:inline-block; background-image:url(/plugin/mrbeam/static/img/pattern_stripes.png); background-size: 100px;"></div>
+							<div style="display: inline-block;">Thickness: <span data-bind="text:selected_material_thickness"></span>&nbsp;mm</div>
+						</div>
+					</div>
+				</div>
+				
 				<div id="no_job" class="job_row row-fluid">
 					<div class="span3" style="display:flex;">
 						<div class="assigned_colors color_drop_zone img_drop_zone" ondragover="colorAllowDrop(event)" ondrop="colorDrop(event)"></div>
@@ -247,33 +261,40 @@
 			
 			<div id="conversion_summary" data-bind="visible: dialog_state() === 'summary' ">
 				<form class="job_parameters form-horizontal">
-					<div data-bind="click: dialog_state('material_type')">
+					<div data-bind="click: function(){dialog_state('material_type');}">
 
 						<div class="control-group">
 							<label class="control-label">Material</label>
 							<div class="controls">
-									<span data-bind="text:selected_material"></span><br/>
-									<span data-bind="text:selected_material_thickness"></span><br/>
-									<span data-bind="text:selected_material_color"></span>
-		<!--							<i class="icon-edit"></i> change...-->
+								<div class="material_entry" data-bind="style: { backgroundImage: 'url(\'/plugin/mrbeam/static/img/materials/' + selected_material_img() + '\')' }">
+									<span style="position: absolute; bottom:.3em; color: white;" data-bind="text:selected_material_name"></span><br/>
+								</div>
+								<div data-bind="style:{backgroundColor: '#'+selected_material_color(), height:selected_material_thickness()+'mm' }" style="width: 100px; display:inline-block; background-image:url(/plugin/mrbeam/static/img/pattern_stripes.png); background-size: 100px;"></div>
+								<div style="display: inline-block;">Thickness: <span data-bind="text:selected_material_thickness"></span>&nbsp;mm</div>
 							</div>
 						</div>
 					</div>
-					<div data-bind="click: dialog_state('color_assignment')">
+					<div data-bind="click: function(){dialog_state('color_assignment');}" style="curser:pointer;">
 						<div class="control-group">
 							<label class="control-label">Engraving</label>
 							<div class="controls">
-								<span data-bind="">Images & Fills: 20-100% @ 1000-200 mm/min</span><br/>
-								<span data-bind="">Green: 20% @ 600mm/min</span><br/>
-								<span data-bind=""></span>
+								Images & Fills: 
+								<span data-bind="text:imgIntensityWhite"></span>-<span data-bind="text:imgIntensityBlack"></span>%
+								@ 
+								<span data-bind="text:imgFeedrateWhite"></span>-<span data-bind="text:imgFeedrateBlack"></span>mm/min  
 							</div>
 						</div>
 						<div class="control-group">
 							<label class="control-label">Cutting</label>
 							<div class="controls">
-								<span data-bind="">1. Red: 100% @ 200 mm/min x2</span><br/>
-								<span data-bind="">2. Blue 100% @ 200 mm/min x1</span><br/>
-								<span data-bind=""></span>
+								<div data-bind="foreach: vectorJobs">
+									<span data-bind="style: {backgroundColor: $data.color}" style="display:inline-block; width: 1em; height: 1em; border:1px solid #999;"></span>:
+									<span data-bind="text:$data.intensity/10"></span>% @
+									<span data-bind="text:$data.feedrate"></span> mm/min &times;
+									<span data-bind="text:$data.passes"></span> 
+									<br/>
+								</div>
+									
 							</div>
 						</div>
 					</div>
@@ -286,7 +307,7 @@
 		</div>
     </div>
     <div class="modal-footer">
-		<div class="pull-left" style="text-align:left;" data-bind="visible:!slicing_in_progress()">
+		<div class="pull-left" style="text-align:left;" data-bind="visible:dialog_state() === 'color_assignment'">
 			<label class="checkbox">
 				<input type="checkbox" data-bind="checked: showExpertSettings">show advanced settings
 			</label>
@@ -298,11 +319,11 @@
         <!--<a href="#" class="btn" aria-hidden="true" data-bind="click: $root.cancel_conversion()">{{ _('Cancel') }}</a>-->
 <!--        <a href="#" class="btn" aria-hidden="true" data-bind="click: previousStep(), visible: dialog_state() !== 'material_type' ">{{ _('Back') }}</a>
 -->
-        <a href="#" class="btn" aria-hidden="true" data-bind="click: dialog_state(get_dialog_state()), visible: dialog_state() !== 'summary' ">{{ _('Ok') }}</a>
+        <a href="#" class="btn" aria-hidden="true" data-bind="click: function(){dialog_state(get_dialog_state());}, visible: dialog_state() !== 'summary' ">{{ _('Ok') }}</a>
         <a href="#" class="btn btn-primary" 
 		   data-bind="click: function() { if ($root.enableConvertButton()) { $root.convert() } }, 
 					visible: dialog_state() === 'summary',
 					enabled: enableConvertButton,
-					css: {disabled: !$root.enableConvertButton()}">{{ _('Convert') }}</a>
+					css: {disabled: !$root.enableConvertButton()}">{{ _('Go') }}</a>
     </div>
 </div>
