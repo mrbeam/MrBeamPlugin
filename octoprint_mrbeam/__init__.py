@@ -906,7 +906,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			intensity=["value"],
 			passes=["value"],
 			lasersafety_confirmation=[],
-			camera_calibration_markers=[], # TEJAMARKERS: let's define some required params that need to be present for this call to be acceped.
+			camera_calibration_markers=["result"], # TEJAMARKERS: let's define some required params that need to be present for this call to be acceped.
 			ready_to_laser=["ready"],
 			debug_event=["event"]
 		)
@@ -957,8 +957,23 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return NO_CONTENT
 
 	def camera_calibration_markers(self, data):
-		self._logger.debug("TEJAMARKERS camera_calibration_markers() data:", data)
-		# I think Clemens and Andy take it from here...
+		self._logger.debug("camera_calibration_markers() data:", data)
+
+		# transform dict
+		# todo replace/do better
+		qdDict = {}
+		for qd in data['result']:
+			qdDict[qd] = (data['result'][qd]['x'],data['result'][qd]['y'])
+		print 'XXX data reprocessed:',qdDict
+
+		# todo get picSettingsPath from config
+		pic_settings_path = '/Users/clem/Desktop/pic_test_settings.yaml'
+
+		pic_settings = self._load_profile(pic_settings_path)
+		pic_settings['cornersFromImage'] = qdDict
+
+		self._save_profile(pic_settings_path,pic_settings)
+
 		return NO_CONTENT
 
 
