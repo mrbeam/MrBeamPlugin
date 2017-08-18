@@ -10,6 +10,7 @@ $(function() {
     function CameraCalibrationViewModel(parameters) {
         var self = this;
         self.scaleFactor = 8;
+        // todo get ImgUrl from Backend/Have it hardcoded but right
 		self.calImgUrl = ko.observable("/plugin/mrbeam/static/img/cam_calib_static.jpg");
 		self.calImgWidth = ko.observable(1024);
 		self.calImgHeight = ko.observable(768);
@@ -81,8 +82,34 @@ $(function() {
 		};
 
         self.onStartup = function(){
-            console.log("TEJAMARKERS CameraCalibrationViewModel.onStartup()");
+            console.log("CameraCalibrationViewModel.onStartup()");
+
         };
+
+        self.loadUndistortedPicture = function () {
+          console.log("NEW PICTURE REQUESTED...");
+          OctoPrint.simpleApiCommand("mrbeam", "take_undistorted_picture")
+                .done(function(response) {
+                    console.log(response);
+                    new PNotify({
+                        title: gettext("Success"),
+                        text: gettext("New Picture is loaded"),
+                        type: "success",
+                        hide: true
+                    });
+                })
+                .fail(function(){
+                    new PNotify({
+                        title: gettext("Error"),
+                        text: gettext("could not take picture"),
+                        type: "warning",
+                        hide: true
+                    });
+                });
+        };
+
+
+
 
         self._sendData = function(data) {
             OctoPrint.simpleApiCommand("mrbeam", "camera_calibration_markers", data)

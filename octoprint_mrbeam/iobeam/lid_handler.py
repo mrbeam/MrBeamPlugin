@@ -85,6 +85,13 @@ class LidHandler(object):
 			self._logger.debug("shutdown() stopping _photo_creator")
 			self._end_photo_worker()
 
+	def set_save_undistorted(self):
+		if self._photo_creator is not None:
+			self._photo_creator.save_undistorted = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(['cam','localUndistImage'])
+			return "Should save an Image soon."
+		else:
+			return "Error, no photocreator active, maybe you are developing and dont have a cam?"
+
 	def _start_photo_worker(self):
 		worker = threading.Thread(target=self._photo_creator.work)
 		worker.daemon = True
@@ -107,6 +114,7 @@ class PhotoCreator(object):
 		self.keepOriginals = _mrbeam_plugin_implementation._settings.get(["cam", "keepOriginals"])
 		self.active = True
 		self.last_photo = 0
+		self.save_undistorted = None
 		self.camera = None
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator")
 
@@ -117,6 +125,7 @@ class PhotoCreator(object):
 
 	def work(self):
 		try:
+			# todo find maximum of sleep in beginning that's not affecting UX
 			time.sleep(0.5)
 
 			self.active = True
@@ -216,7 +225,6 @@ class PhotoCreator(object):
 			self._logger.debug("_close_cam() Camera closed ")
 
 
-	# draft
 	def correct_image(self):
 		self._logger.debug("Starting with correction...")
 		path_to_input_image = self.tmpPath
@@ -240,7 +248,11 @@ class PhotoCreator(object):
 												path_to_pic_settings,
 												path_to_last_markers,
 												size=(1000,780),
+												save_undistorted=self.save_undistorted,
 												debug_out=False)
+
+		if self.save_undistorted is not None:
+			self.save_undistorted = None
 
 		if not 'error' in correction_result:
 			correction_result['error'] = False

@@ -163,8 +163,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			cam=dict(
 				enabled=True,
 				image_correction_enabled = True,
+				# todo CLEM add NPZ folder and pic_settings, calib output folder etc.
 				frontendUrl="/downloads/files/local/cam/beam-cam.jpg",
 				localFilePath="cam/beam-cam.jpg",
+				localUndistImage="cam/undistorted.jpg",
 				keepOriginals=False
 			),
 			gcode_nextgen = dict(
@@ -891,7 +893,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			lasersafety_confirmation=[],
 			camera_calibration_markers=["result"], # TEJAMARKERS: let's define some required params that need to be present for this call to be acceped.
 			ready_to_laser=["ready"],
-			debug_event=["event"]
+			debug_event=["event"],
+			take_undistorted_picture=["take_undistorted_picture"]
 		)
 
 	def on_api_command(self, command, data):
@@ -911,6 +914,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		elif command == "ready_to_laser":
 			return self.ready_to_laser(data)
 		elif command == "camera_calibration_markers":
+			return self.camera_calibration_markers(data)
+		elif command == "take_undistorted_picture":
 			return self.camera_calibration_markers(data)
 		elif command == "debug_event":
 			return self.debug_event(data)
@@ -939,6 +944,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		return NO_CONTENT
 
+	def take_undistorted_picture(self,data):
+		self._logger.debug("New undistorted image is requested", data)
+		image_response = self._lid_handler.set_save_undistorted()
+		return image_response
+
+
 	def camera_calibration_markers(self, data):
 		self._logger.debug("camera_calibration_markers() data:", data)
 
@@ -956,6 +967,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		pic_settings['cornersFromImage'] = qdDict
 
 		self._save_profile(pic_settings_path,pic_settings)
+
+		# todo delete old undistorted image
 
 		return NO_CONTENT
 
