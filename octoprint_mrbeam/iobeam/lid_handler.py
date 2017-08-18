@@ -44,7 +44,7 @@ class LidHandler(object):
 		self._plugin_manager = plugin_manager
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler")
 
-		self.lidClosed = True;
+		self.lidClosed = True
 		self.camEnabled = self._settings.get(["cam", "enabled"])
 
 		self._photo_creator = None
@@ -65,13 +65,13 @@ class LidHandler(object):
 		self._logger.debug("onEvent() event: %s, payload: %s", event, payload)
 		if event == IoBeamEvents.LID_OPENED:
 			self._logger.debug("onEvent() LID_OPENED")
-			self.lidClosed = False;
+			self.lidClosed = False
 			if self._photo_creator and self.camEnabled:
 				self._start_photo_worker()
 			self._send_frontend_lid_state()
 		elif event == IoBeamEvents.LID_CLOSED:
 			self._logger.debug("onEvent() LID_CLOSED")
-			self.lidClosed = True;
+			self.lidClosed = True
 			self._end_photo_worker()
 			self._send_frontend_lid_state()
 		elif event == OctoPrintEvents.CLIENT_OPENED:
@@ -214,6 +214,7 @@ class PhotoCreator(object):
 		if self.camera is not None:
 			self.camera.close()
 			self._logger.debug("_close_cam() Camera closed ")
+
 
 	# draft
 	def correct_image(self):

@@ -4,7 +4,10 @@
 		<div id="camera_calibration_parameter">
 			<h4>{{ _('Camera Calibration') }}</h4>
 		</div>
-
+		<svg width="100%" height="100%" viewBox="0 0 500 400" data-bind="attr: {viewBox: calSvgViewBox()}">
+			<image data-bind="attr: {href: calImgUrl(), width:calImgWidth(), height:calImgHeight() }, 
+							click: userClick" />
+		</svg>
 
 	</div>
 </div>
