@@ -2,6 +2,7 @@
 
 import sys
 import json
+import datetime
 from jobcontroller import JobController
 
 
@@ -15,7 +16,11 @@ if __name__ == "__main__":
 
 	with open(jsonfile, 'r') as f:
 		for line in f:
-			data = json.loads(line)
+			try:
+				data = json.loads(line.strip('\x00'))
+			except ValueError as e:
+				print "{}: {}".format(e.message, repr(line))
+				continue
 
 			if data['type'] == "deviceinfo":
 				print "Analytics for device: {}\nSerialnumber: {}".format(data['hostname'], data['serialnumber'])
@@ -28,8 +33,13 @@ if __name__ == "__main__":
 	print "Failed jobs: {}".format(jobs.getFailedJobs())
 	print "Unknown jobs: {}".format(jobs.getUnknownJobs())
 	print "Total job count: {}".format(jobs.getTotalJobs())
-	print "Total job runtime: {0:.2f} [min]".format(jobs.getTotalRunTime() / 60.0)
-	print "Total pause time: {0:.2f} [min]".format(jobs.getTotalPauseTime() / 60)
-	print "pause time:  {0:.2f} [min]".format((jobs.getTotalPauseTime()-jobs.getTotalCoolingTime()) / 60)
-	print "cooling time: {0:.2f} [min]".format(jobs.getTotalCoolingTime() / 60)
-	print "Total laser runtime: {0:.2f} [min]".format((jobs.getTotalRunTime() - jobs.getTotalPauseTime()) / 60.0)
+
+	runtime = datetime.timedelta(seconds=int(jobs.getTotalRunTime()))
+	pause = datetime.timedelta(seconds=int(jobs.getTotalPauseTime()))
+	cooling = datetime.timedelta(seconds=int(jobs.getTotalCoolingTime()))
+
+	print "Total job runtime: {}".format(runtime)
+	print "Total pause time: {}".format(pause)
+	print "pause time: {}".format(pause-cooling)
+	print "cooling time: {}".format(cooling)
+	print "Total laser runtime: {}".format(runtime-pause)

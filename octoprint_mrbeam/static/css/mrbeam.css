@@ -1982,11 +1982,11 @@ input.search-query,
 }
 
 .progress.active .bar {
-  -webkit-animation: progress-bar-stripes 2s reverse infinite;
-  -moz-animation: progress-bar-stripes 2s reverse infinite;
-  -ms-animation: progress-bar-stripes 2s reverse infinite;
-  -o-animation: progress-bar-stripes 2s reverse infinite;
-  animation: progress-bar-stripes 2s reverse infinite;
+  -webkit-animation: progress-bar-stripes 2s reverse linear infinite;
+  -moz-animation: progress-bar-stripes 2s reverse linear infinite;
+  -ms-animation: progress-bar-stripes 2s reverse linear infinite;
+  -o-animation: progress-bar-stripes 2s reverse linear infinite;
+  animation: progress-bar-stripes 2s reverse linear infinite;
 }
 
 #flashing_progress {

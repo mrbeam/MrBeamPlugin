@@ -52,16 +52,18 @@ $(function(){
 			'default':{cut_i:0, cut_f:0, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
 //			'material_name thickness':{cut_i:0, cut_f:0, cut_p:0, eng_i:[0,0], eng_f:[0,0]},
 			// new copper embedded laser
-			'Anodized Aluminum':{cut_i:0, cut_f:2000, cut_p:1, eng_i:[1000,1000], eng_f:[100,500]}, // engrave only
+			'Anodized Aluminum':{cut_i:0, cut_f:2000, cut_p:1, eng_i:[100,1], eng_f:[30,1000]}, // engrave only
 			'Balsa 1mm':{cut_i:70, cut_f:600, cut_p:1, eng_i:[0,0], eng_f:[0,0]}, // min speed 300, max intensity 70 !!! ignition warning
 			'Balsa 2mm':{cut_i:100, cut_f:600, cut_p:1, eng_i:[0,0], eng_f:[0,0]}, // min speed 300 !!! ignition warning
 			'Balsa 3mm':{cut_i:100, cut_f:800, cut_p:2, eng_i:[0,0], eng_f:[0,0]}, // min speed 300 !!! ignition warning
 			'Balsa 4mm':{cut_i:100, cut_f:600, cut_p:3, eng_i:[0,0], eng_f:[0,0]}, // min speed 500 !!! ignition warning
 			'Balsa 5mm':{cut_i:100, cut_f:300, cut_p:3, eng_i:[0,0], eng_f:[0,0]}, // min speed 300 !!! ignition warning
-			'Bamboo':{cut_i:0, cut_f:2000, cut_p:1, eng_i:[200,1000], eng_f:[2000,350]}, // engrave only
-			'Cardboard double wall 5mm':{cut_i:100, cut_f:400, cut_p:3, eng_i:[10,35], eng_f:[2000,850]}, // warning, not slower than 180
-			'Cardboard single wall 4mm':{cut_i:100, cut_f:500, cut_p:3, eng_i:[10,35], eng_f:[2000,850]}, // warning, not slower than 180
-			'Cardboard single wall 2mm':{cut_i:100, cut_f:500, cut_p:2, eng_i:[10,35], eng_f:[2000,850]}, // warning, not slower than 180
+			'Bamboo':{cut_i:0, cut_f:2000, cut_p:1, eng_i:[20,100], eng_f:[2000,350]}, // engrave only
+			'Cardboard corrugated, single wave 2mm':{cut_i:100, cut_f:500, cut_p:2, eng_i:[10,25], eng_f:[2000,850]}, // warning, not slower than 180
+			'Cardboard corrugated, single wave 3mm':{cut_i:100, cut_f:400, cut_p:2, eng_i:[10,25], eng_f:[2000,850]}, // warning, not slower than 180
+			'Cardboard corrugated, single wave 4mm':{cut_i:100, cut_f:400, cut_p:3, eng_i:[10,25], eng_f:[2000,850]}, // warning, not slower than 180
+			'Cardboard corrugated, double wave 5mm':{cut_i:100, cut_f:400, cut_p:3, eng_i:[10,25], eng_f:[2000,850]}, // warning, not slower than 180
+			'Finn Cardboard 2.5mm':{cut_i:100, cut_f:200, cut_p:2, eng_i:[0,0], eng_f:[0,0]},
 //			'Felt 2mm':{cut_i:100, cut_f:200, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
 //			'Felt 3mm':{cut_i:100, cut_f:200, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
 			'Felt 4mm green':{cut_i:100, cut_f:300, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
@@ -69,21 +71,25 @@ $(function(){
 			'Felt 4mm baby blue':{cut_i:100, cut_f:100, cut_p:5, eng_i:[0,0], eng_f:[0,0]},
 			'Felt 4mm royal blue':{cut_i:100, cut_f:350, cut_p:2, eng_i:[0,0], eng_f:[0,0]},
 			'Felt 4mm yellow':{cut_i:100, cut_f:350, cut_p:2, eng_i:[0,0], eng_f:[0,0]},
-			'Felt 4mm purple':{cut_i:100, cut_f:450, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
+			'Felt 4mm purple':{cut_i:100, cut_f:500, cut_p:2, eng_i:[0,0], eng_f:[0,0]},
+			'Felt 4mm gray':{cut_i:100, cut_f:400, cut_p:2, eng_i:[0,0], eng_f:[0,0]},
+			'Felt 4mm black':{cut_i:100, cut_f:400, cut_p:2, eng_i:[0,0], eng_f:[0,0]},
+			'Felt 4mm orange':{cut_i:100, cut_f:500, cut_p:2, eng_i:[0,0], eng_f:[0,0]},
 			'Foam Rubber 2mm blue':{cut_i:100, cut_f:600, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
 			'Foam Rubber 2mm orange':{cut_i:75, cut_f:800, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
 			'Foam Rubber 2mm white':{cut_i:100, cut_f:190, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
+			'Foam Rubber 2mm black':{cut_i:100, cut_f:800, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
 			'Foam Rubber 3mm green':{cut_i:100, cut_f:600, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
-			'Foam Rubber 3mm bue':{cut_i:100, cut_f:600, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
-			'Paper':{cut_i:750, cut_f:800, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
-			'Plywood 3mm':{cut_i:100, cut_f:200, cut_p:2, eng_i:[18,35], eng_f:[2000,750]}, 
-			'Plywood 4mm':{cut_i:100, cut_f:250, cut_p:3, eng_i:[18,35], eng_f:[2000,750]}, 
-			'Kraftplex 0.8mm':{cut_i:100, cut_f:350, cut_p:2, eng_i:[10,35], eng_f:[2000,850]}, 
+			'Foam Rubber 3mm blue':{cut_i:100, cut_f:600, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
+			'Kraftplex 0.8mm':{cut_i:100, cut_f:350, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
 			'Kraftplex 1.5mm':{cut_i:100, cut_f:175, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
 //			'Kraftplex 3mm':{cut_i:100, cut_f:200, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
+			'Paper':{cut_i:75, cut_f:800, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
+			'Plywood 3mm':{cut_i:100, cut_f:150, cut_p:3, eng_i:[18,35], eng_f:[2000,750]},
+			'Plywood 4mm':{cut_i:100, cut_f:120, cut_p:3, eng_i:[18,35], eng_f:[2000,750]},
 			'Wellboard 6mm':{cut_i:100, cut_f:225, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
 			'Wellboard 10mm':{cut_i:100, cut_f:140, cut_p:3, eng_i:[10,35], eng_f:[2000,850]},
-			'Wellboard rect':{cut_i:100, cut_f:200, cut_p:3, eng_i:[10,35], eng_f:[2000,850]},
+			// 'Wellboard rect':{cut_i:100, cut_f:200, cut_p:3, eng_i:[10,35], eng_f:[2000,850]},
 			// old laser
 //			'Acrylic':[1000,80,0,350,4500,850, 1],
 //			'Foam Rubber':{cut_i:625, cut_f:400, cut_p:1, eng_i:[0,200], eng_f:[3000,1000]},
@@ -98,11 +104,31 @@ $(function(){
 //			'Wood cut':{cut_i:1000, cut_f:250, cut_p:2, eng_i:[0,350], eng_f:[3000,850]},
 //			'Balsa cut':{cut_i:700, cut_f:500, cut_p:2, eng_i:[0,350], eng_f:[3000,850]} //2 passes
 		};
-		var material_keys = [];
+
+
+        var material_keys_cut = [];
 		for(var materialKey in self.materials_settings){
-			material_keys.push(materialKey);
+		    if (self.materials_settings[materialKey]
+                && self.materials_settings[materialKey].cut_i > 0
+                && self.materials_settings[materialKey].cut_f > 0
+                && self.materials_settings[materialKey].cut_p > 0) {
+			    material_keys_cut.push(materialKey);
+            }
 		}
-		self.material_menu = ko.observableArray(material_keys);
+
+        var material_keys_eng = [];
+		for(var materialKey in self.materials_settings){
+            if (self.materials_settings[materialKey]
+                && self.materials_settings[materialKey].eng_i[0] > 0
+                && self.materials_settings[materialKey].eng_i[1] > 0
+                && self.materials_settings[materialKey].eng_f[0] > 0
+                && self.materials_settings[materialKey].eng_f[1] > 0) {
+			    material_keys_eng.push(materialKey);
+            }
+		}
+
+		self.material_menu_cut = ko.observableArray(material_keys_cut);
+		self.material_menu_eng = ko.observableArray(material_keys_eng);
 		self.selected_material = ko.observable();
 		self.old_material = 'default';
 
@@ -150,8 +176,8 @@ $(function(){
 				$(p).find('.job_title').html(material);
 				$(p).find('.param_intensity').val(param_set.cut_i);
 				$(p).find('.param_feedrate').val(param_set.cut_f);
-				$(p).find('.param_passes').val(param_set.cut_p || 0); 
-				$(p).find('.param_piercetime').val(param_set.cut_pierce || 0); 
+				$(p).find('.param_passes').val(param_set.cut_p || 0);
+				$(p).find('.param_piercetime').val(param_set.cut_pierce || 0);
 			}
 		};
 
@@ -322,13 +348,13 @@ $(function(){
 				return true;
 			}
 		});
-		
+
 		self._allParametersSet = function(){
 			var allSet = true;
 			var vector_jobs = $('.job_row_vector');
 			for (var i = 0; i < vector_jobs.length; i++) {
 				var vjob = vector_jobs[i];
-				
+
 				var colorDrops = $(vjob).find('.color_drop_zone');
 				if (colorDrops.children().length > 0){
 					var intensityInput = $(vjob).find('.param_intensity');
@@ -500,58 +526,6 @@ $(function(){
 			self.slicing_in_progress(false);
 			//console.log("onSlicingFailed" , payload);
 		};
-
-//		self._configureIntensitySlider = function() {
-//			self.intensitySlider = $("#svgtogcode_intensity_slider").slider({
-//				id: "svgtogcode_intensity_slider_impl",
-//				reversed: false,
-//				selection: "after",
-//				orientation: "horizontal",
-//				min: 1,
-//				max: 1000,
-//				step: 1,
-//				value: 500,
-//				enabled: true,
-//				formatter: function(value) { return "" + (value/10) +"%"; }
-//			}).on("slideStop", function(ev){
-//				self.laserIntensity(ev.value);
-//			});
-//
-//			self.laserIntensity.subscribe(function(newVal){
-//				self.intensitySlider.slider('setValue', parseInt(newVal));
-//			});
-//		};
-
-//		self._configureFeedrateSlider = function() {
-//			self.feedrateSlider = $("#svgtogcode_feedrate_slider").slider({
-//				id: "svgtogcode_feedrate_slider_impl",
-//				reversed: false,
-//				selection: "after",
-//				orientation: "horizontal",
-//				min: 0,
-//				max: 100, // fixed values to avoid reinitializing after profile changes
-//				step: 1,
-//				value: 300,
-//				enabled: true,
-//				formatter: function(value) { return "" + Math.round(self._calcRealSpeed(value)) +"mm/min"; }
-//			});
-//
-//			// use the class as a flag to avoid double binding of the slideStop event
-//			if($("#svgtogcode_feedrate_slider").attr('class') === 'uninitialized'){ // somehow hasClass(...) did not work ???
-//				self.feedrateSlider.on("slideStop", function(ev){
-//					$('#svgtogcode_feedrate').val(self._calcRealSpeed(ev.value));
-//					self.laserSpeed(self._calcRealSpeed(ev.value));
-//				});
-//				$("#svgtogcode_feedrate_slider").removeClass('uninitialized');
-//			}
-//
-//			var speedSubscription = self.laserSpeed.subscribe(function(fromSettings){
-//				var realVal = parseInt(fromSettings);
-//				var val = 100*(realVal - self.minSpeed()) / (self.maxSpeed() - self.minSpeed());
-//				self.feedrateSlider.slider('setValue', val);
-//				//speedSubscription.dispose(); // only do it once
-//			});
-//		};
 
 		self._calcRealSpeed = function(sliderVal){
 			return Math.round(self.minSpeed() + sliderVal/100 * (self.maxSpeed() - self.minSpeed()));

@@ -24,6 +24,7 @@
         {% include 'mrbeam_initscript.jinja2' %}
         {% include 'lasersafety_standalone.jinja2' %}
         {% include 'ready_to_laser.jinja2' %}
+        {% include 'laser_job_done.jinja2' %}
         {% include 'loginscreen_viewmodel.jinja2' %}
 		{% if analyticsEnabled %}
 <!-- start Mixpanel --><script type="text/javascript">(function(e,a){if(!a.__SV){var b=window;try{var c,l,i,j=b.location,g=j.hash;c=function(a,b){return(l=a.match(RegExp(b+"=([^&]*)")))?l[1]:null};g&&c(g,"state")&&(i=JSON.parse(decodeURIComponent(c(g,"state"))),"mpeditor"===i.action&&(b.sessionStorage.setItem("_mpcehash",g),history.replaceState(i.desiredHash||"",e.title,j.pathname+j.search)))}catch(m){}var k,h;window.mixpanel=a;a._i=[];a.init=function(b,c,f){function e(b,a){var c=a.split(".");2==c.length&&(b=b[c[0]],a=c[1]);b[a]=function(){b.push([a].concat(Array.prototype.slice.call(arguments,
@@ -37,10 +38,11 @@ mixpanel.init("094a94a7a2bd139aa838a1b326d58529",{debug:true});</script><!-- end
 		<nav class="navbar navbar-default navbar-fixed-top" role="navigation" id="navbar" style="min-width:730px;">
 			<div class="">
 				<div class="navbar-header brand">
-					<a class="navbar-brand" href="#">
+					<a id="mrbeam_logo_link" class="navbar-brand" href="#">
 						<img id="logo_wide" alt="Mr Beam Logo" src="{{ url_for('plugin.mrbeam.static', filename='img/mr-typo_x120.png') }}">
 						<img id="logo_compact" alt="Mr Beam Logo" src="{{ url_for('plugin.mrbeam.static', filename='img/mr_x120.png') }}">
 					</a>
+                    <span style="margin: 6px; vertical-align: top; font-size: 14px; font-weight: 400; color: #e25303; text-decoration: none;">{{ beta_label }}</span>
 				</div>
 				<!-- Navbar -->
 				<ul id="mrbeam-main-tabs" class="nav nav-pills pull-right">

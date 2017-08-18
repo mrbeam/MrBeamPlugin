@@ -9,7 +9,6 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 SW_UPDATE_TIER_PROD =      "PROD"
 SW_UPDATE_TIER_DEV =       "DEV"
 SW_UPDATE_TIER_DEMO =      "DEMO"
-SW_UPDATE_TIER_ANDY =      "ANDY"
 SW_UPDATE_TIER_NO_UPDATE = "NO_UPDATE"
 
 sw_update_config = dict()
@@ -46,46 +45,32 @@ def set_info_mrbeam_plugin(self, tier):
 	sw_update_config[module_id] = dict(
 		displayName=_get_display_name(self, name),
 		displayVersion=self._plugin_version,
-		type="github_release",
+		type="github_commit", # "github_release",
 		user="mrbeam",
 		repo="MrBeamPlugin",
-		branch="master",
+		branch="mrbeam2-stable",
 		pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
 		restart="octoprint")
 
 	if tier in [SW_UPDATE_TIER_DEV]:
-		branch = "develop"
 		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name),
 			displayVersion=self._plugin_version,
 			type="github_commit",
 			user="mrbeam",
 			repo="MrBeamPlugin",
-			branch=branch,
+			branch="develop",
 			pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
 			restart="octoprint")
 
 	if tier in [SW_UPDATE_TIER_DEMO]:
-		branch = "demo"
 		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name),
 			displayVersion=self._plugin_version,
 			type="github_commit",
 			user="mrbeam",
 			repo="MrBeamPlugin",
-			branch=branch,
-			pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
-			restart="octoprint")
-
-	if tier in [SW_UPDATE_TIER_ANDY]:
-		branch = "andy_softwareupdate_test1"
-		sw_update_config[module_id] = dict(
-			displayName=_get_display_name(self, name),
-			displayVersion=self._plugin_version,
-			type="github_commit",
-			user="mrbeam",
-			repo="MrBeamPlugin",
-			branch=branch,
+			branch="demo",
 			pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
 			restart="octoprint")
 
@@ -131,15 +116,14 @@ def set_info_findmymrbeam(self, tier):
 		pip="https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
 		restart="octoprint")
 
-	if tier in [SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_DEMO, SW_UPDATE_TIER_ANDY]:
-		branch = "develop"
+	if tier in [SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_DEMO]:
 		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name),
 			displayVersion=current_version,
 			type="github_commit",
 			user="mrbeam",
 			repo="OctoPrint-FindMyMrBeam",
-			branch=branch,
+			branch="develop",
 			pip="https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
 			restart="octoprint")
 
@@ -160,7 +144,7 @@ def set_info_mrbeamledstrips(self, tier):
 	sw_update_config[module_id] = dict(
 		displayName=_get_display_name(self, name),
 		displayVersion=version,
-		type="github_release",
+		type="github_commit", #""github_release",
 		user="mrbeam",
 		repo="MrBeamLedStrips",
 		branch="mrbeam2-stable",
@@ -168,28 +152,26 @@ def set_info_mrbeamledstrips(self, tier):
 		pip_command=pip_command,
 		restart="environment")
 
-	if tier in [SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_ANDY]:
-		branch = "develop"
+	if tier in [SW_UPDATE_TIER_DEV]:
 		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name),
 			displayVersion=version,
 			type="github_commit",
 			user="mrbeam",
 			repo="MrBeamLedStrips",
-			branch=branch,
+			branch="develop",
 			pip="https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
 			pip_command=pip_command,
 			restart="environment")
 
 	if tier in [SW_UPDATE_TIER_DEMO]:
-		branch = "demo"
 		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name),
 			displayVersion=version,
 			type="github_commit",
 			user="mrbeam",
 			repo="MrBeamLedStrips",
-			branch=branch,
+			branch="demo",
 			pip="https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
 			pip_command=pip_command,
 			restart="environment")
@@ -198,7 +180,6 @@ def set_info_mrbeamledstrips(self, tier):
 def set_info_netconnectd_daemon(self, tier):
 	name = "Netconnectd Daemon"
 	module_id = "netconnectd-daemon"
-	branch = "mrbeam2-stable"
 	# ths module is installed outside of our virtualenv therefor we can't use default pip command.
 	# /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
 	pip_command = "sudo /usr/local/bin/pip"
@@ -215,7 +196,7 @@ def set_info_netconnectd_daemon(self, tier):
 		type="github_commit",
 		user="mrbeam",
 		repo="netconnectd_mrbeam",
-		branch=branch,
+		branch="mrbeam2-stable",
 		pip="https://github.com/mrbeam/netconnectd_mrbeam/archive/{target_version}.zip",
 		pip_command=pip_command,
 		restart="environment")
@@ -225,7 +206,6 @@ def set_info_netconnectd_daemon(self, tier):
 def set_info_iobeam(self, tier):
 	name = "iobeam"
 	module_id = "iobeam"
-	branch = "master"
 	# ths module is installed outside of our virtualenv therefor we can't use default pip command.
 	# /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
 	pip_command = "sudo /usr/local/bin/pip"
@@ -242,19 +222,32 @@ def set_info_iobeam(self, tier):
 		type="bitbucket_commit",
 		user="mrbeam",
 		repo="iobeam",
-		branch=branch,
+		branch="mrbeam2-stable",
 		api_user="MrBeamDev",
 		api_password="v2T5pFkmdgDqbFBJAqrt",
 		pip="git+ssh://git@bitbucket.org/mrbeam/iobeam.git@{target_version}",
-		# pip="https://bitbucket.org/mrbeam/iobeam/get/{target_version}.zip",
 		pip_command=pip_command,
 		restart="environment"
 	)
 
+	if tier in [SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_DEMO]:
+		sw_update_config[module_id] = dict(
+			displayName=_get_display_name(self, name),
+			displayVersion=version,
+			type="bitbucket_commit",
+			user="mrbeam",
+			repo="iobeam",
+			branch="develop",
+			api_user="MrBeamDev",
+			api_password="v2T5pFkmdgDqbFBJAqrt",
+			pip="git+ssh://git@bitbucket.org/mrbeam/iobeam.git@{target_version}",
+			pip_command=pip_command,
+			restart="environment"
+		)
+
 def set_info_camera_calibration(self, tier):
 	name = "mb_camera_calibration"
 	module_id = "mb-camera-calibration"
-	branch = "mrbeam2-stable"
 	pip_name = module_id
 	# hmmm... I thought, i don't need to provide a special pip command if we are in the venv...
 	pip_command = "/home/pi/oprint/bin/pip"
@@ -270,22 +263,21 @@ def set_info_camera_calibration(self, tier):
 		type="bitbucket_commit",
 		user="mrbeam",
 		repo="mb_camera_calibration",
-		branch=branch,
+		branch="mrbeam2-stable",
 		api_user="MrBeamDev",
 		api_password="v2T5pFkmdgDqbFBJAqrt",
 		pip="git+ssh://git@bitbucket.org/mrbeam/mb_camera_calibration.git@{target_version}",
 		restart="octoprint"
 	)
 
-	if tier in [SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_DEMO, SW_UPDATE_TIER_ANDY]:
-		branch = "develop"
+	if tier in [SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_DEMO]:
 		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name),
 			displayVersion=version,
 			type="bitbucket_commit",
 			user="mrbeam",
 			repo="mb_camera_calibration",
-			branch=branch,
+			branch="develop",
 			api_user="MrBeamDev",
 			api_password="v2T5pFkmdgDqbFBJAqrt",
 			pip="git+ssh://git@bitbucket.org/mrbeam/mb_camera_calibration.git@{target_version}",
@@ -296,7 +288,6 @@ def set_info_camera_calibration(self, tier):
 def set_info_rpiws281x(self, tier):
 	name = "rpi-ws281x"
 	module_id = "rpi-ws281x"
-	branch = "master"
 
 	if _is_override_in_settings(self, module_id): return
 
@@ -306,7 +297,7 @@ def set_info_rpiws281x(self, tier):
 		type="github_commit",
 		user="mrbeam",
 		repo="rpi_ws281x",
-		branch=branch,
+		branch="master",
 		update_folder="/home/pi/rpi_ws281x",
 		update_script="/home/pi/rpi_ws281x/update_script.sh",
 		restart="environment")

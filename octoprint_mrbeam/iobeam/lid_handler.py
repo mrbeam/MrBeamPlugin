@@ -8,12 +8,17 @@ from os.path import isfile
 # don't crash on a dev computer where you can't install picamera
 try:
 	from picamera import PiCamera
-	import mb_picture_preparation as mb_pic
 	PICAMERA_AVAILABLE = True
-except Exception as e:
+except ImportError as e:
 	PICAMERA_AVAILABLE = False
 	logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler").warn(
-		"Could not import module 'picamera' or 'mb_picture_preparation'. Disabling camera integration. (%s: %s)", e.__class__.__name__, e)
+		"Could not import module 'picamera'. Disabling camera integration. (%s: %s)", e.__class__.__name__, e)
+try:
+	import mb_picture_preparation as mb_pic
+except ImportError as e:
+	PICAMERA_AVAILABLE = False
+	logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler").warn(
+		"Could not import module 'mb_picture_preparation'. Disabling camera integration. (%s: %s)", e.__class__.__name__, e)
 
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 from octoprint.events import Events as OctoPrintEvents
@@ -116,7 +121,7 @@ class PhotoCreator(object):
 
 			self.active = True
 			if not PICAMERA_AVAILABLE:
-				self._logger.warn("PiCamera is not available, not able to capture pictures.")
+				self._logger.warn("Camera disabled. Not all required modules could be loaded at startup. ")
 				self.active = False
 				return
 
@@ -139,9 +144,10 @@ class PhotoCreator(object):
 					time.sleep(4)
 
 			self._logger.debug("PhotoCreator stopping...")
-			self._close_cam()
 		except:
 			self._logger.exception("Exception in worker thread of PhotoCreator:")
+		finally:
+			self._close_cam()
 
 	def _send_frontend_picture_metadata(self, meta_data):
 		self._plugin_manager.send_plugin_message("mrbeam", dict(beam_cam_new_image=meta_data))
@@ -217,8 +223,9 @@ class PhotoCreator(object):
 		path_to_output_img = self.tmpPath2
 
 		path_to_cam_params = '/home/pi/cam_calibration_output/cam_params.npz'
-		path_to_pic_settings = '/home/pi/cam_calibration_output/pic_settings.json'
+		path_to_pic_settings = '/home/pi/cam_calibration_output/pic_settings.yaml'
 
+		path_to_last_markers = "/home/pi/cam_calibration_output/last_markers.json"
 		#check if params and settings file are available
 		# todo move into function
 		if not isfile(path_to_cam_params) or not isfile(path_to_pic_settings):
@@ -230,7 +237,10 @@ class PhotoCreator(object):
 		correction_result = mb_pic.prepareImage(path_to_input_image,
 												path_to_output_img,
 												path_to_cam_params,
-												path_to_pic_settings, size=(1000,780),debug_out=False)
+												path_to_pic_settings,
+												path_to_last_markers,
+												size=(1000,780),
+												debug_out=False)
 
 		if not 'error' in correction_result:
 			correction_result['error'] = False

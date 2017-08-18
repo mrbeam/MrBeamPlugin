@@ -5,17 +5,23 @@ $(function () {
         self.loginState = params[0];
         self.settings = params[1];
         self.state = params[2];
-        self.gcodefiles = params[3];
-        self.connection = params[4];
-        self.control = params[5];
-        self.terminal = params[6];
-        self.workingArea = params[7];
-        self.conversion = params[8];
-        self.readyToLaser = params[9];
-        self.navigation = params[10];
-        self.appearance = params[10];
+        self.files = params[3];
+        self.gcodefiles = params[4];
+        self.connection = params[5];
+        self.control = params[6];
+        self.terminal = params[7];
+        self.workingArea = params[8];
+        self.conversion = params[9];
+        self.readyToLaser = params[10];
+        self.navigation = params[11];
+        self.appearance = params[12];
 
         self.isStartupComplete = false;
+
+        // MrBeam Logo click activates workingarea tab
+        $('#mrbeam_logo_link').click(function() {
+            $('#wa_tab_btn').tab('show');
+        });
 
         self.onStartup = function () {
             // TODO fetch machine profile on start
@@ -160,8 +166,6 @@ $(function () {
 			});
 
             self.setupFullscreenContols();
-
-
         };
 
         self.onAllBound = function (allViewModels) {
@@ -203,8 +207,14 @@ $(function () {
 
         self.onStartupComplete = function() {
             self.addSwUpdateTierInformation();
+            self.set_Design_lib_defaults();
             self.isStartupComplete = true;
             self.removeLoadingOverlay();
+        };
+
+        self.set_Design_lib_defaults = function(){
+            self.files.listHelper.addFilter('model');
+            self.files.listHelper.changeSorting('upload');
         };
 
         self.addSwUpdateTierInformation = function(){
@@ -516,23 +526,12 @@ $(function () {
             };
             showConfirmationDialog(options);
         };
-
-
-        // who calls this????
-        // self.print_with_safety_glasses_warning = function () {
-        //     var callback = function (e) {
-        //         e.preventDefault();
-        //         /// ...and where is this function 'print()' defined???
-        //         self.print();
-        //     };
-        //     self.show_safety_glasses_warning(callback);
-        // };
-    }
+    };
 
 
     // view model class, parameters for constructor, container to bind to
     ADDITIONAL_VIEWMODELS.push([MotherViewModel,
-        ["loginStateViewModel", "settingsViewModel", "printerStateViewModel", "gcodeFilesViewModel",
+        ["loginStateViewModel", "settingsViewModel", "printerStateViewModel", "filesViewModel", "gcodeFilesViewModel",
             "connectionViewModel", "controlViewModel", "terminalViewModel", "workingAreaViewModel",
             "vectorConversionViewModel", "readyToLaserViewModel", "navigationViewModel", "appearanceViewModel"],
         [document.getElementById("mrb_state"),
