@@ -1328,6 +1328,14 @@ def __plugin_load__():
 			systemRestartCommand = "sudo shutdown -r now",
 			systemShutdownCommand = "sudo shutdown -h now"
 		))
+		# )),
+		# system=dict(actions=[
+		# 	dict(action="iobeam restart", name="iobeam restart", command="sudo systemctl restart iobeam.service"),
+		# 	dict(action="ledstrips restart", name="ledstrips restart",
+		# 	     command="sudo systemctl restart mrbeam_ledstrips.service && sleep 1 &&  mrbeam_ledstrips_cli ClientConected"),
+		# 	dict(action="fan auto", name="fan auto", command="iobeam_info fan:auto"),
+		# 	dict(action="fan off", name="fan off", command="iobeam_info fan:off")
+		# ])
 	)
 
 	global __plugin_hooks__
