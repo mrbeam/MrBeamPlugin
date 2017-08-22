@@ -74,7 +74,7 @@ class IoBeamHandler(object):
 	# > steprun:off
 	# > steprun:error
 
-	# < fan:on:< value0 - 100 >
+	# < fan:on:< value 0-100 >
 	# > fan:on:ok
 	# > fan:on:error
 	# < fan:off
@@ -83,18 +83,29 @@ class IoBeamHandler(object):
 	# < fan:auto
 	# > fan:auto:ok
 	# > fan:auto:error
-	# < fan:factor:< factor >
+	# < fan:state
+	# > fan:state:<value 0-100 | auto> #TODO refine value
+	# < fan:rpm
+	# > fan:rpm:<rpm value>
+	# > fan:rpm:error
+	# < fan:factor:<factor 0.00-2.55, default: 0.35>
+	# > fan:factor:<factor 0.00-2.55>
 	# > fan:factor:ok
 	# > fan:factor:error
+	# < fan:tpr:<tics per roto 0-255, default: 2>
+	# > fan:tpr:<tics per roto 0-255>
+	# > fan:tpr:ok
+	# > fan:tpr:error
+	# < fan:pwm_min:<pwm_min 0-255, default: 55>
+	# > fan:pwm_min:<pwm_min 0-255>
+	# > fan:pwm_min:ok
+	# > fan:pwm_min:error
 	# < fan:version
 	# > fan:version:<version-string>
 	# > fan:version:error
 	# < fan:dust
 	# > fan:dust:<dust value 0.3>
 	# > fan:dust:error
-	# < fan:rpm
-	# > fan:rpm:<rpm value>
-	# > fan:rpm:error
 
 	# < laser:temp
 	# > laser:temp:< temperatur >
