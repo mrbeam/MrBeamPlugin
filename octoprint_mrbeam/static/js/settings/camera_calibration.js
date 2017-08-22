@@ -90,17 +90,18 @@ $(function() {
 
         self.loadUndistortedPicture = function () {
           console.log("NEW PICTURE REQUESTED...");
-          OctoPrint.simpleApiCommand("mrbeam", "take_undistorted_picture")
+          OctoPrint.simpleApiCommand("mrbeam", "take_undistorted_picture",{"take_undistorted_picture":true})
                 .done(function(response) {
-                    console.log(response);
+                    console.log('Success',response.responseText);
                     new PNotify({
                         title: gettext("Success"),
-                        text: gettext("New Picture is loaded"),
+                        text: gettext("New Picture is loaded soon"),
                         type: "success",
                         hide: true
                     });
                 })
-                .fail(function(){
+                .fail(function(response){
+                    console.log('Error',response.responseText);
                     new PNotify({
                         title: gettext("Error"),
                         text: gettext("could not take picture"),

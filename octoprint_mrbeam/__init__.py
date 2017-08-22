@@ -316,7 +316,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			result.extend([
 				dict(type='settings', name="Machine Profiles DEV", template='settings/lasercutterprofiles_settings.jinja2', suffix="_lasercutterprofiles", custom_bindings=False),
 				dict(type='settings', name="Camera Calibration DEV", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
-        dict(type='settings', name="Camera TEJAMARKERS", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
+        		dict(type='settings', name="Camera TEJAMARKERS", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
 			])
 		result.extend(self._get_wizard_template_configs())
 		return result
@@ -722,7 +722,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			del new_profile["default"]
 
 		# edit width and depth in grbl firmware
-		### TODO queu the commands if not in locked or operational mode
+		### TODO queue the commands if not in locked or operational mode
 		if make_default or (self.laserCutterProfileManager.get_current_or_default()['id'] == identifier):
 			if self._printer.is_locked() or self._printer.is_operational():
 				if "volume" in new_profile:
@@ -916,7 +916,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		elif command == "camera_calibration_markers":
 			return self.camera_calibration_markers(data)
 		elif command == "take_undistorted_picture":
-			return self.camera_calibration_markers(data)
+			return self.take_undistorted_picture(data)
 		elif command == "debug_event":
 			return self.debug_event(data)
 		return NO_CONTENT
@@ -945,8 +945,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return NO_CONTENT
 
 	def take_undistorted_picture(self,data):
-		self._logger.debug("New undistorted image is requested", data)
+		self._logger.debug("New undistorted image is requested")
 		image_response = self._lid_handler.set_save_undistorted()
+		self._logger.debug("Image_Response: {}".format(image_response))
 		return image_response
 
 	def camera_calibration_markers(self, data):
