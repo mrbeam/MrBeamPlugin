@@ -9,6 +9,8 @@
 $(function() {
     function CameraCalibrationViewModel(parameters) {
         var self = this;
+
+        self.workingArea = parameters[1];
         self.scaleFactor = 8;
         // todo get ImgUrl from Backend/Have it hardcoded but right
 		self.calImgUrl = ko.observable("/plugin/mrbeam/static/img/cam_calib_static.jpg");
@@ -137,7 +139,7 @@ $(function() {
         CameraCalibrationViewModel,
 
         // e.g. loginStateViewModel, settingsViewModel, ...
-        ["settingsViewModel"],
+        ["settingsViewModel","workingAreaViewModel"],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         [ "#settings_plugin_mrbeam_camera" ]
