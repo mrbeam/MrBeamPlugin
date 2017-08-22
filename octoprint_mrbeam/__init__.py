@@ -949,7 +949,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		image_response = self._lid_handler.set_save_undistorted()
 		return image_response
 
-
 	def camera_calibration_markers(self, data):
 		self._logger.debug("camera_calibration_markers() data:", data)
 
