@@ -105,6 +105,11 @@ class LidHandler(object):
 		lid_closed = closed if closed is not None else self.lidClosed
 		self._plugin_manager.send_plugin_message("mrbeam", dict(lid_closed=lid_closed))
 
+	def getPicSettingsPath(self):
+		# todo find better solution for path settings...
+		return self._photo_creator.getPicSettingsPath()
+
+
 
 class PhotoCreator(object):
 	def __init__(self, _plugin_manager, path, image_correction_enabled):
