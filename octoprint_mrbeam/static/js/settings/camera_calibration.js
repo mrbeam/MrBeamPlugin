@@ -50,7 +50,11 @@ $(function() {
 			//check if finished and send result if true
             self.currentStep = (self.currentStep + 1) % self.calibrationSteps.length;
             if(self.currentStep === 0){
-                self._sendData({result:self.currentResults});
+                var tempResult = {
+                    newMarkers: self.currentResults,
+                    newCorners: self.currentMarkersFound
+                };
+                self._sendData(tempResult);
                 self.calImgUrl("/plugin/mrbeam/static/img/cam_calib_static.jpg");
                 self.currentResults = {}
             }
