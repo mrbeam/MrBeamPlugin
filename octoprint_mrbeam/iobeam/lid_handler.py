@@ -224,16 +224,27 @@ class PhotoCreator(object):
 			self.camera.close()
 			self._logger.debug("_close_cam() Camera closed ")
 
+	def getPicSettingsPath(self):
+		# todo get from config
+		return '/home/pi/cam_calibration_output/pic_settings.yaml'
+
+	def getLastMarkerPath(self):
+		# todo get from config
+		return "/home/pi/cam_calibration_output/last_markers.json"
+
+	def getCamParamsPath(self):
+		# todo get from config
+		return '/home/pi/cam_calibration_output/cam_params.npz'
 
 	def correct_image(self):
 		self._logger.debug("Starting with correction...")
 		path_to_input_image = self.tmpPath
 		path_to_output_img = self.tmpPath2
 
-		path_to_cam_params = '/home/pi/cam_calibration_output/cam_params.npz'
-		path_to_pic_settings = '/home/pi/cam_calibration_output/pic_settings.yaml'
+		path_to_cam_params = self.getCamParamsPath()
+		path_to_pic_settings = self.getPicSettingsPath()
+		path_to_last_markers = self.getLastMarkerPath()
 
-		path_to_last_markers = "/home/pi/cam_calibration_output/last_markers.json"
 		#check if params and settings file are available
 		# todo move into function
 		if not isfile(path_to_cam_params) or not isfile(path_to_pic_settings):

@@ -960,15 +960,15 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			qdDict[qd] = (data['result'][qd]['x'],data['result'][qd]['y'])
 		print 'XXX data reprocessed:',qdDict
 
-		# todo get picSettingsPath from config
-		pic_settings_path = '/Users/clem/Desktop/pic_test_settings.yaml'
+		# todo check if this is the best to do
+		pic_settings_path = self._lid_handler.getPicSettingsPath()
 
 		pic_settings = self._load_profile(pic_settings_path)
 		pic_settings['cornersFromImage'] = qdDict
 
 		self._save_profile(pic_settings_path,pic_settings)
 
-		# todo delete old undistorted image
+		# todo delete old undistorted image, still needed?
 
 		return NO_CONTENT
 

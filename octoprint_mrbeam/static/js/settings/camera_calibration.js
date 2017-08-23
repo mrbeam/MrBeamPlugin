@@ -11,7 +11,7 @@ $(function() {
         var self = this;
 
         self.workingArea = parameters[1];
-        self.scaleFactor = 8;
+        self.scaleFactor = 6;
         // todo get ImgUrl from Backend/Have it hardcoded but right
 		self.calImgUrl = ko.observable("/plugin/mrbeam/static/img/cam_calib_static.jpg");
 		self.calImgWidth = ko.observable(1000);
@@ -26,6 +26,8 @@ $(function() {
 		});
 		self.currentStep = 0;
         self.currentResults = {};
+        self.currentMarkersFound = {};
+
 
 		self.calibrationSteps = [
 			{name: 'start', desc: 'click to start', focus: [0,0,1]},
@@ -49,6 +51,7 @@ $(function() {
             self.currentStep = (self.currentStep + 1) % self.calibrationSteps.length;
             if(self.currentStep === 0){
                 self._sendData({result:self.currentResults});
+                self.calImgUrl("/plugin/mrbeam/static/img/cam_calib_static.jpg");
                 self.currentResults = {}
             }
 
@@ -116,13 +119,16 @@ $(function() {
             if ('beam_cam_new_image' in data) {
                 if(data['beam_cam_new_image']['undistorted_saved']){
                     console.log("Update imgURL");
-                    self.calImgUrl('/downloads/files/local/cam/beam-cam.jpg ');
+                    self.calImgUrl('/downloads/files/local/cam/undistorted.jpg'+ '?' + new Date().getTime());
+                    self.currentMarkersFound = data['beam_cam_new_image']['markers_found'];
+                    console.log("Markers Found here:",self.currentMarkersFound);
                 }
             }
         };
 
 
         self._sendData = function(data) {
+            console.log('Sending data:',data);
             OctoPrint.simpleApiCommand("mrbeam", "camera_calibration_markers", data)
                 .done(function(response) {
                     new PNotify({
