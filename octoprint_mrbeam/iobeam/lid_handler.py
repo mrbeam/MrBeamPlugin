@@ -150,7 +150,7 @@ class PhotoCreator(object):
 							move_from = self.tmpPath2
 					self._move_tmp_image(move_from)
 					self._send_frontend_picture_metadata(correction_result)
-					time.sleep(4)
+					time.sleep(1.5)
 
 			self._logger.debug("PhotoCreator stopping...")
 		except:
@@ -251,8 +251,10 @@ class PhotoCreator(object):
 												save_undistorted=self.save_undistorted,
 												debug_out=False)
 
-		if self.save_undistorted is not None:
+		if correction_result['undistorted_saved']:
 			self.save_undistorted = None
+			self._logger.debug("Undistorted Image saved.")
+
 
 		if not 'error' in correction_result:
 			correction_result['error'] = False

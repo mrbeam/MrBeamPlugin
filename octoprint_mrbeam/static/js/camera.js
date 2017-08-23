@@ -3,6 +3,7 @@ $(function(){
 	function CameraViewModel(params) {
         var self = this;
         self.settings = params[0];
+        self.cameraCalibration = params[1];
 
         self.TAB_NAME_WORKING_AREA = '#workingarea';
         self.FALLBACK_IMAGE_URL = '/plugin/mrbeam/static/img/beam-cam-static.jpg';
@@ -36,12 +37,15 @@ $(function(){
             if ('beam_cam_new_image' in data) {
                 console.log('Beam Cam: new image. LOADING ', data['beam_cam_new_image']);
                 self.loadImage();
+                if(data['beam_cam_new_image']['undistorted_saved']){
+                    console.log("Update imgURL");
+                    self.cameraCalibration.calImgUrl('/downloads/files/local/cam/beam-cam.jpg ');
+                }
             }
         };
 
         self.loadImage = function () {
             var myImageUrl = self.getTimestampedImageUrl();
-
             var img = $('<img>');
             img.load(function () {
                 self.webCamImageElem.attr('xlink:href', myImageUrl);
@@ -69,7 +73,7 @@ $(function(){
 
     // view model class, parameters for constructor, container to bind to
     ADDITIONAL_VIEWMODELS.push([CameraViewModel,
-		["settingsViewModel"],
+		["settingsViewModel","cameraCalibrationViewModel"],
 		[] // nothing to bind.
 	]);
 
