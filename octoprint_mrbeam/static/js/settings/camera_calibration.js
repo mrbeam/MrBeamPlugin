@@ -14,8 +14,8 @@ $(function() {
         self.scaleFactor = 6;
         // todo get ImgUrl from Backend/Have it hardcoded but right
 		self.calImgUrl = ko.observable("/plugin/mrbeam/static/img/cam_calib_static.jpg");
-		self.calImgWidth = ko.observable(1000);
-		self.calImgHeight = ko.observable(780);
+		self.calImgWidth = ko.observable(1024);
+		self.calImgHeight = ko.observable(768);
 		self.calSvgOffX = ko.observable(0);
 		self.calSvgOffY = ko.observable(0);
 		self.calSvgScale = ko.observable(1);

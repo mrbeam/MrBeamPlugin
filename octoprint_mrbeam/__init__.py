@@ -956,14 +956,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# transform dict
 		# todo replace/do better
 		newCorners = {}
-		for qd in data['result']:
+		for qd in data['result']['newCorners']:
 			newCorners[qd] = [data['result']['newCorners'][qd]['x'],data['result']['newCorners'][qd]['y']]
-		self._logger.debug('XXX data reprocessed:',newCorners)
+		self._logger.debug('XXX data reprocessed:{}'.format(newCorners))
 
 		newMarkers = {}
-		for qd in data['result']:
+		for qd in data['result']['newMarkers']:
 			newCorners[qd] = [data['result']['newMarkers'][qd]['x'],data['result']['newMarkers'][qd]['y']]
-		self._logger.debug('XXX data reprocessed:',newMarkers)
+		self._logger.debug('XXX data reprocessed: {}'.format(newMarkers))
 
 		# todo check if this is the best to do
 		pic_settings_path = self._lid_handler.getPicSettingsPath()
@@ -974,7 +974,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		pic_settings['calibration_updated'] = True
 
 		self._logger.debug('picSettings new to save: {}'.format(pic_settings))
-		# self._save_profile(pic_settings_path,pic_settings)
+		self._save_profile(pic_settings_path,pic_settings)
 
 		# todo delete old undistorted image, still needed?
 
