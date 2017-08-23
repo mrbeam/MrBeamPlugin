@@ -37,10 +37,6 @@ $(function(){
             if ('beam_cam_new_image' in data) {
                 console.log('Beam Cam: new image. LOADING ', data['beam_cam_new_image']);
                 self.loadImage();
-                if(data['beam_cam_new_image']['undistorted_saved']){
-                    console.log("Update imgURL");
-                    self.cameraCalibration.calImgUrl('/downloads/files/local/cam/beam-cam.jpg ');
-                }
             }
         };
 
@@ -73,7 +69,7 @@ $(function(){
 
     // view model class, parameters for constructor, container to bind to
     ADDITIONAL_VIEWMODELS.push([CameraViewModel,
-		["settingsViewModel","cameraCalibrationViewModel"],
+		["settingsViewModel"],
 		[] // nothing to bind.
 	]);
 

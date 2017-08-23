@@ -111,7 +111,15 @@ $(function() {
                 });
         };
 
-
+        self.onDataUpdaterPluginMessage = function(plugin, data) {
+            if (plugin !== "mrbeam" || !data) return;
+            if ('beam_cam_new_image' in data) {
+                if(data['beam_cam_new_image']['undistorted_saved']){
+                    console.log("Update imgURL");
+                    self.calImgUrl('/downloads/files/local/cam/beam-cam.jpg ');
+                }
+            }
+        };
 
 
         self._sendData = function(data) {
