@@ -957,10 +957,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# todo replace/do better
 		newCorners = {}
 		for qd in data['result']:
-			newCorners[qd] = (data['result']['newCorners'][qd]['x'],data['result']['newCorners'][qd]['y'])
+			newCorners[qd] = [data['result']['newCorners'][qd]['x'],data['result']['newCorners'][qd]['y']]
 		self._logger.debug('XXX data reprocessed:',newCorners)
 
-		newMarkers = data['result']['newMarkers']
+		newMarkers = {}
+		for qd in data['result']:
+			newCorners[qd] = [data['result']['newMarkers'][qd]['x'],data['result']['newMarkers'][qd]['y']]
+		self._logger.debug('XXX data reprocessed:',newMarkers)
 
 		# todo check if this is the best to do
 		pic_settings_path = self._lid_handler.getPicSettingsPath()
