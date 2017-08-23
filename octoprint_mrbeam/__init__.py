@@ -962,7 +962,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		newMarkers = {}
 		for qd in data['result']['newMarkers']:
-			newCorners[qd] = [data['result']['newMarkers'][qd]['x'],data['result']['newMarkers'][qd]['y']]
+			newMarkers[qd] = [data['result']['newMarkers'][qd]['x'],data['result']['newMarkers'][qd]['y']]
 		self._logger.debug('XXX data reprocessed: {}'.format(newMarkers))
 
 		# todo check if this is the best to do
