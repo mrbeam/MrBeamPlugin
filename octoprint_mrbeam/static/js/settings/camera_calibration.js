@@ -130,6 +130,12 @@ $(function() {
             }
         };
 
+        self.abortCalibration = function () {
+            self.currentStep = 0;
+            self.currentResults = {};
+            self.currentMarkersFound = {};
+            self.calImgUrl("/plugin/mrbeam/static/img/cam_calib_static.jpg");
+        };
 
         self._sendData = function(data) {
             console.log('Sending data:',data);
