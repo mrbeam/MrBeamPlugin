@@ -44,7 +44,7 @@ $(function() {
 			// save current stepResult
 			var step = self.calibrationSteps[self.currentStep];
 			if(self.currentStep > 0){
-			    self.currentResults[step.name] = {'x':cPos.xImg,'y':cPos.yImg};
+			    self.currentResults[step.name] = {'x':Math.round(cPos.xImg),'y':Math.round(cPos.yImg)};
             }
 
 			//check if finished and send result if true
@@ -135,6 +135,8 @@ $(function() {
             self.currentResults = {};
             self.currentMarkersFound = {};
             self.calImgUrl("/plugin/mrbeam/static/img/cam_calib_static.jpg");
+            var nextStep = self.calibrationSteps[self.currentStep];
+			self.zoomTo(nextStep.focus[0], nextStep.focus[1], nextStep.focus[2]);
         };
 
         self._sendData = function(data) {
