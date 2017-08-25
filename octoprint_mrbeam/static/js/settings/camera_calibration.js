@@ -14,8 +14,8 @@ $(function() {
         self.scaleFactor = 6;
         // todo get ImgUrl from Backend/Have it hardcoded but right
 		self.calImgUrl = ko.observable("/plugin/mrbeam/static/img/cam_calib_static.jpg");
-		self.calImgWidth = ko.observable(1008);
-		self.calImgHeight = ko.observable(754);
+		self.calImgWidth = ko.observable(1024);
+		self.calImgHeight = ko.observable(768);
 		self.calSvgOffX = ko.observable(0);
 		self.calSvgOffY = ko.observable(0);
 		self.calSvgScale = ko.observable(1);
@@ -27,7 +27,6 @@ $(function() {
 		self.currentStep = 0;
         self.currentResults = {};
         self.currentMarkersFound = {};
-
 
 		self.calibrationSteps = [
 			{name: 'start', desc: 'click to start', focus: [0,0,1]},
@@ -159,7 +158,7 @@ $(function() {
                     });
                 });
         };
-    };
+    }
 
     // view model class, parameters for constructor, container to bind to
     OCTOPRINT_VIEWMODELS.push([

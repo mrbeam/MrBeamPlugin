@@ -102,7 +102,7 @@ $(function(){
 		self.availableHeight = ko.observable(undefined);
 		self.availableWidth = ko.observable(undefined);
 		self.px2mm_factor = 1; // initial value
-		self.svgDPI = function(){return 90;} // initial value, gets overwritten by settings in onAllBound()
+		self.svgDPI = function(){return 90}; // initial value, gets overwritten by settings in onAllBound()
 
 		self.workingAreaWidthMM = ko.computed(function(){
 			return self.profile.currentProfileData().volume.width() - self.profile.currentProfileData().volume.origin_offset_x();
@@ -146,12 +146,17 @@ $(function(){
 			var newZ = oldZ + delta;
 			newZ = Math.min(Math.max(newZ, 0.25), 1);
 			if(newZ !== self.zoom()){
-				var deltaWidth = self.workingAreaWidthMM() * delta;
-				var deltaHeight = self.workingAreaHeightMM() * delta;
-				var oldOffX = self.zoomOffX();
-				var oldOffY = self.zoomOffY();
-				self.set_zoom_offX(oldOffX - deltaWidth*centerX);
-				self.set_zoom_offY(oldOffY - deltaHeight*centerY);
+				if(newZ == 1){
+				    self.set_zoom_offX(0);
+				    self.set_zoom_offY(0);
+                }else{
+				    var deltaWidth = self.workingAreaWidthMM() * delta;
+				    var deltaHeight = self.workingAreaHeightMM() * delta;
+				    var oldOffX = self.zoomOffX();
+				    var oldOffY = self.zoomOffY();
+				    self.set_zoom_offX(oldOffX - deltaWidth*centerX);
+				    self.set_zoom_offY(oldOffY - deltaHeight*centerY);
+                }
 				self.zoom(newZ);
 			}
 		};
@@ -1269,7 +1274,7 @@ $(function(){
 
 		self.init = function(){
 			// init snap.svg
-			snap = Snap('#area_preview');
+            snap = Snap('#area_preview');
 			self.px2mm_factor.subscribe(function(newVal){
 				if(!isNaN(newVal)){
 					MRBEAM_PX2MM_FACTOR_WITH_ZOOM = newVal;
