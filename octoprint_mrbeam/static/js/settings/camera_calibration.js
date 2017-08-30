@@ -131,7 +131,18 @@ $(function() {
                     console.log("Update imgURL");
                     self.calImgUrl('/downloads/files/local/cam/undistorted.jpg'+ '?' + new Date().getTime());
                     self.currentMarkersFound = data['beam_cam_new_image']['markers_found'];
-                    console.log("Markers Found here:",self.currentMarkersFound);
+                    if(self.currentMarkersFound.empty()){
+                        console.log("ERROR NO MARKERS FOUND IN PICTURE, PLEASE TAKE PIC AGAIN")
+                        new PNotify({
+                            title: gettext("Error"),
+                            text: gettext("No Markers found/no Data about Markers. Please take picture again. Canceling calibration."),
+                            type: "warning",
+                            hide: true
+                        });
+                        self.abortCalibration()
+                    }else{
+                        console.log("Markers Found here:",self.currentMarkersFound);
+                    }
                 }
             }
         };

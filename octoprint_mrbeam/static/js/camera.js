@@ -49,8 +49,6 @@ $(function(){
                         text: gettext("Please calibrate the camera under Settings -> Camera Calibration"),
                         type: "warning",
                         tag: "calibration_needed",
-                        renotify: false,
-                        stack: {dir1: "down", dir2: "left"},
                         hide: true
                     });
                 }
