@@ -316,7 +316,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			result.extend([
 				dict(type='settings', name="Machine Profiles DEV", template='settings/lasercutterprofiles_settings.jinja2', suffix="_lasercutterprofiles", custom_bindings=False),
 				dict(type='settings', name="Camera Calibration DEV", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
-        		dict(type='settings', name="Camera TEJAMARKERS", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
+        		dict(type='settings', name="Camera Calibration", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
 			])
 		result.extend(self._get_wizard_template_configs())
 		return result

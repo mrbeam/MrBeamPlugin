@@ -21,6 +21,9 @@ class DustManager(object):
 	DEFAUL_DUST_MAX_AGE = 10  # seconds
 	FAN_MAX_INTENSITY = 100
 
+	FAN_COMMAND_RETRIES = 2
+	FAN_COMMAND_WAITTIME = 1.0
+
 	def __init__(self):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.dustmanager")
 
@@ -180,8 +183,9 @@ class DustManager(object):
 		self._stop_dust_extraction_thread()
 		self._auto_timer = None
 
-	def _send_fan_command(self, command, wait=1.0, max_retries=5):
-
+	def _send_fan_command(self, command, wait_time=-1.0, max_retries=-1):
+		max_retries = self.FAN_COMMAND_RETRIES if max_retries < 0 else max_retries
+		wait_time = self.FAN_COMMAND_WAITTIME if wait_time < 0 else wait_time
 		retries = 0
 		while retries <= max_retries:
 			self._command_response = None
@@ -189,7 +193,7 @@ class DustManager(object):
 			_mrbeam_plugin_implementation._ioBeam.send_fan_command(command)
 			retries += 1
 
-			self._command_event.wait(timeout=wait)
+			self._command_event.wait(timeout=wait_time)
 			self._command_event.clear()
 
 			if self._command_response:
@@ -218,7 +222,7 @@ class DustManager(object):
 			self._start_dust_extraction_thread()
 
 	def request_dust(self):
-		return True if _mrbeam_plugin_implementation._ioBeam.send_command("fan:dust") else False
+		return _mrbeam_plugin_implementation._ioBeam.send_fan_command("dust")
 
 	def _dust_timer_callback(self):
 		try:

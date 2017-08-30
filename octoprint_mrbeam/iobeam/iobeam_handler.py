@@ -74,7 +74,7 @@ class IoBeamHandler(object):
 	# > steprun:off
 	# > steprun:error
 
-	# < fan:on:< value0 - 100 >
+	# < fan:on:< value 0-100 >
 	# > fan:on:ok
 	# > fan:on:error
 	# < fan:off
@@ -83,18 +83,29 @@ class IoBeamHandler(object):
 	# < fan:auto
 	# > fan:auto:ok
 	# > fan:auto:error
-	# < fan:factor:< factor >
+	# < fan:state
+	# > fan:state:<value 0-100 | auto> #TODO refine value
+	# < fan:rpm
+	# > fan:rpm:<rpm value>
+	# > fan:rpm:error
+	# < fan:factor:<factor 0.00-2.55, default: 0.35>
+	# > fan:factor:<factor 0.00-2.55>
 	# > fan:factor:ok
 	# > fan:factor:error
+	# < fan:tpr:<tics per roto 0-255, default: 2>
+	# > fan:tpr:<tics per roto 0-255>
+	# > fan:tpr:ok
+	# > fan:tpr:error
+	# < fan:pwm_min:<pwm_min 0-255, default: 55>
+	# > fan:pwm_min:<pwm_min 0-255>
+	# > fan:pwm_min:ok
+	# > fan:pwm_min:error
 	# < fan:version
 	# > fan:version:<version-string>
 	# > fan:version:error
 	# < fan:dust
 	# > fan:dust:<dust value 0.3>
 	# > fan:dust:error
-	# < fan:rpm
-	# > fan:rpm:<rpm value>
-	# > fan:rpm:error
 
 	# < laser:temp
 	# > laser:temp:< temperatur >
@@ -211,20 +222,14 @@ class IoBeamHandler(object):
 		:param command: One of the three values (ON:<0-100>/OFF/AUTO)
 		:return: True if the command was sent sucessfull (does not mean it was sucessfully executed)
 		'''
-		return self._send_command("{}:{}".format(self.MESSAGE_DEVICE_FAN, command))
-
-	def send_command(self, command):
-		'''
-		DEPRECATED !!!!!
-		:param command:
-		:return:
-		'''
-		return self._send_command(command)
+		ok = self._send_command("{}:{}".format(self.MESSAGE_DEVICE_FAN, command))
+		# self._logger.info("ANDYTEST send_fan_command(): ok: %s, command: %s", ok, command)
+		return ok
 
 	def _send_command(self, command):
 		'''
 		Sends a command to iobeam
-		:param command: Must not be None. May or may not and with a new line.
+		:param command: Must not be None. May or may not end with a new line.
 		:return: Boolean success
 		'''
 		command = self._normalize_command(command)
