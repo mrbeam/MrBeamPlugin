@@ -188,6 +188,7 @@ $(function(){
 			return ratio;
 		}, self);
 
+		// TODO CLEM check comma expression for functionality!
 		self.workingAreaDim = ko.computed(function(){
 			var maxH = self.availableHeight();
 			var maxW = self.availableWidth();
