@@ -44,13 +44,15 @@ $(function(){
                 console.log('Beam Cam: new image. LOADING ', data['beam_cam_new_image']);
                 console.log('Error happened? :', data['beam_cam_new_image']['error']);
                 if(data['beam_cam_new_image']['error'] === "Error: Marker Calibration Needed"){
-                    var notice = new PNotify({
+                    new PNotify({
                         title: gettext("Calibration Needed"),
                         text: gettext("Please calibrate the camera under Settings -> Camera Calibration"),
                         type: "warning",
                         tag: "calibration_needed",
+                        renotify: false,
+                        stack: {dir1: "down", dir2: "left"},
                         hide: true
-                    }).click(function(){ notice.remove(); });
+                    });
                 }
                 self.loadImage();
             }
