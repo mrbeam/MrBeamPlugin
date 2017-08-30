@@ -10,10 +10,12 @@ $(function() {
     function CameraCalibrationViewModel(parameters) {
         var self = this;
 
+        self.staticURL = "/plugin/mrbeam/static/img/cam_calib_static.jpg"
+
         self.workingArea = parameters[1];
         self.scaleFactor = 6;
         // todo get ImgUrl from Backend/Have it hardcoded but right
-		self.calImgUrl = ko.observable("/plugin/mrbeam/static/img/cam_calib_static.jpg");
+		self.calImgUrl = ko.observable(self.staticURL);
 		self.calImgWidth = ko.observable(1024);
 		self.calImgHeight = ko.observable(768);
 		self.calSvgOffX = ko.observable(0);
@@ -40,6 +42,11 @@ $(function() {
 			var cPos = self._getClickPos(ev);
 			console.log("got calibration: ", cPos);
 
+            if(self.calImgUrl === self.staticURL){
+                console.log("Please Take new Picture or wait till its loaded...");
+                return;
+            }
+
 			// save current stepResult
 			var step = self.calibrationSteps[self.currentStep];
 			if(self.currentStep > 0){
@@ -54,7 +61,7 @@ $(function() {
                         newCorners: self.currentResults
                 }};
                 self._sendData(tempResult);
-                self.calImgUrl("/plugin/mrbeam/static/img/cam_calib_static.jpg");
+                self.calImgUrl(self.staticURL);
                 self.currentResults = {}
             }
 

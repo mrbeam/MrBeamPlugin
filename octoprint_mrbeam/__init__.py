@@ -891,7 +891,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			intensity=["value"],
 			passes=["value"],
 			lasersafety_confirmation=[],
-			camera_calibration_markers=["result"], # TEJAMARKERS: let's define some required params that need to be present for this call to be acceped.
+			camera_calibration_markers=["result"],
 			ready_to_laser=["ready"],
 			debug_event=["event"],
 			take_undistorted_picture=["take_undistorted_picture"]

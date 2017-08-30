@@ -12,7 +12,7 @@ $(function(){
 
         self.imageUrl = undefined;
         self.webCamImageElem = undefined;
-
+        self.isCamCalibrated = false;
         self.firstImageLoaded = false;
 
         // event listener callbacks //
@@ -32,10 +32,26 @@ $(function(){
             self.loadImage();
         };
 
+        // self.checkIfCameraIsCalibrated = function () {
+        //   if(!self.isCamCalibrated){
+        //
+        //   }
+        // };
+
         self.onDataUpdaterPluginMessage = function(plugin, data) {
             if (plugin !== "mrbeam" || !data) return;
             if ('beam_cam_new_image' in data) {
                 console.log('Beam Cam: new image. LOADING ', data['beam_cam_new_image']);
+                console.log('Error happened? :', data['beam_cam_new_image']['error']);
+                if(data['beam_cam_new_image']['error'] === "Error: Marker Calibration Needed"){
+                    var notice = new PNotify({
+                        title: gettext("Calibration Needed"),
+                        text: gettext("Please calibrate the camera under Settings -> Camera Calibration"),
+                        type: "warning",
+                        tag: "calibration_needed",
+                        hide: true
+                    }).click(function(){ notice.remove(); });
+                }
                 self.loadImage();
             }
         };
