@@ -252,9 +252,17 @@ class PhotoCreator(object):
 
 		#check if params and settings file are available
 		# todo move into function
-		if not isfile(path_to_cam_params) or not isfile(path_to_pic_settings):
-			self._logger.error("cam_params.npz <{}> or pic_settings.json <{}> missing. Please check!".format(path_to_cam_params,path_to_pic_settings))
-			return -1
+		# todo ANDY CLEM, CHECK PLEASE!!!
+		# errorResult = {}
+		# if not isfile(path_to_cam_params) or not isfile(path_to_pic_settings):
+		# 	self._logger.error("cam_params.npz <{}> or pic_settings.json <{}> missing. Please check!".format(path_to_cam_params,path_to_pic_settings))
+		# 	errorResult['error'] = "cam_params.npz <{}> or pic_settings.json <{}> missing. Please check!".format(path_to_cam_params,path_to_pic_settings)
+		# 	return errorResult
+		# if not isfile(path_to_input_image):
+		# 	self._logger.error("No input image found... please check")
+		# 	errorResult['error'] = "cam_params.npz <{}> or pic_settings.json <{}> missing. Please check!".format(path_to_cam_params,path_to_pic_settings)
+		# 	return errorResult
+
 
 		# todo implement high-precision feedback to frontend
 		# todo get output image size from frontend/config-file
@@ -270,7 +278,6 @@ class PhotoCreator(object):
 		if correction_result['undistorted_saved']:
 			self.save_undistorted = None
 			self._logger.debug("Undistorted Image saved.")
-
 
 		if not 'error' in correction_result:
 			correction_result['error'] = False
