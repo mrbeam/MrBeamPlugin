@@ -131,7 +131,7 @@ $(function() {
                     console.log("Update imgURL");
                     self.calImgUrl('/downloads/files/local/cam/undistorted.jpg'+ '?' + new Date().getTime());
                     self.currentMarkersFound = data['beam_cam_new_image']['markers_found'];
-                    if(self.currentMarkersFound.empty()){
+                    if(self.currentMarkersFound === {}){
                         console.log("ERROR NO MARKERS FOUND IN PICTURE, PLEASE TAKE PIC AGAIN")
                         new PNotify({
                             title: gettext("Error"),
