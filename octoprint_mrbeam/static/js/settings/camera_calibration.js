@@ -119,6 +119,7 @@ $(function() {
                         text: gettext(response),
                         type: notifyType,
                         hide: true
+                    })
                 })
                 .fail(function(response){
                     if(response === 'Should save Image soon, please wait.'){
