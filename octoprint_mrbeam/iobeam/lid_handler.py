@@ -93,7 +93,7 @@ class LidHandler(object):
 			return "Error, no photocreator active, maybe you are developing and dont have a cam?"
 
 	def _start_photo_worker(self):
-		worker = threading.Thread(target=self._photo_creator.work)
+		worker = threading.Thread(target=self._photo_creator.work,name='XXX-Photo-Worker')
 		worker.daemon = True
 		worker.start()
 
@@ -114,7 +114,7 @@ class LidHandler(object):
 class PhotoCreator(object):
 	def __init__(self, _plugin_manager, path, image_correction_enabled):
 		self._plugin_manager = _plugin_manager
-		self.imagePath = path
+		self.final_image_path = path
 		self.image_correction_enabled = image_correction_enabled
 		self.keepOriginals = _mrbeam_plugin_implementation._settings.get(["cam", "keepOriginals"])
 		self.active = True
@@ -124,14 +124,14 @@ class PhotoCreator(object):
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator")
 
 		self._init_filenames()
-		self._createFolder_if_not_existing(self.imagePath)
-		self._createFolder_if_not_existing(self.tmpPath)
-		self._createFolder_if_not_existing(self.tmpPath2)
+		self._createFolder_if_not_existing(self.final_image_path)
+		self._createFolder_if_not_existing(self.tmp_img_raw)
+		self._createFolder_if_not_existing(self.tmp_img_prepared)
 
 	def work(self):
 		try:
 			# todo find maximum of sleep in beginning that's not affecting UX
-			time.sleep(0.5)
+			time.sleep(0.8)
 
 			self.active = True
 			if not PICAMERA_AVAILABLE:
@@ -142,24 +142,27 @@ class PhotoCreator(object):
 			self._logger.debug("Taking picture now.")
 			self._prepare_cam()
 			while self.active and self.camera:
+				self._logger.debug("THREADS: {}".format(threading.enumerate()))
 				if self.keepOriginals:
 					self._init_filenames()
 				self._capture()
 				# check if still active...
 				if self.active:
-					move_from = self.tmpPath
+					move_from = self.tmp_img_raw
 					correction_result = dict(image_correction=False)
 					if self.image_correction_enabled:
-						correction_result = self.correct_image()
+						correction_result = self.correct_image(self.tmp_img_raw, self.tmp_img_prepared)
 						if not correction_result['error']:
-							move_from = self.tmpPath2
-					self._move_tmp_image(move_from)
+							self._logger.debug("NO ERROR")
+							move_from = self.tmp_img_prepared
+					# self._move_tmp_image(move_from)
+					self._move_img(move_from,self.final_image_path)
 					self._send_frontend_picture_metadata(correction_result)
-					time.sleep(1.5)
+					time.sleep(2)
 
 			self._logger.debug("PhotoCreator stopping...")
-		except:
-			self._logger.exception("Exception in worker thread of PhotoCreator:")
+		except Exception as worker_exception:
+			self._logger.exception("Exception in worker thread of PhotoCreator: {}".format(worker_exception.message))
 		finally:
 			self._close_cam()
 
@@ -168,11 +171,11 @@ class PhotoCreator(object):
 
 	def _init_filenames(self):
 		if self.keepOriginals:
-			self.tmpPath = self.imagePath.replace('.jpg', "-tmp{}.jpg".format(time.time()))
-			self.tmpPath2 = self.imagePath.replace('.jpg', '-tmp2.jpg')
+			self.tmp_img_raw = self.final_image_path.replace('.jpg', "-tmp{}.jpg".format(time.time()))
+			self.tmp_img_prepared = self.final_image_path.replace('.jpg', '-tmp2.jpg')
 		else:
-			self.tmpPath = self.imagePath.replace('.jpg','-tmp.jpg')
-			self.tmpPath2 = self.imagePath.replace('.jpg','-tmp2.jpg')
+			self.tmp_img_raw = self.final_image_path.replace('.jpg', '-tmp.jpg')
+			self.tmp_img_prepared = self.final_image_path.replace('.jpg', '-tmp2.jpg')
 
 	def _prepare_cam(self):
 		try:
@@ -200,7 +203,7 @@ class PhotoCreator(object):
 		try:
 			now = time.time()
 			# self.camera.capture(self.tmpPath, format='jpeg', resize=(1000, 800))
-			self.camera.capture(self.tmpPath, format='jpeg')
+			self.camera.capture(self.tmp_img_raw, format='jpeg')
 
 			self._logger.debug("_capture() captured picture in %ss", time.time() - now)
 		except Exception as e:
@@ -218,9 +221,14 @@ class PhotoCreator(object):
 		except:
 			self.logger.exception("Exception while creating folder '%s' for camera images:", filename)
 
+	def _move_img(self, copy_from, copy_to):
+		returncode = call(['mv', copy_from, copy_to])
+		if returncode != 0:
+			self._logger.warn("_move_tmp_image() returncode is %s (sys call, should be 0)", returncode)
+
 
 	def _move_tmp_image(self, copy_from):
-		returncode = call(['mv', copy_from, self.imagePath])
+		returncode = call(['mv', copy_from, self.final_image_path])
 		if returncode != 0:
 			self._logger.warn("_move_tmp_image() returncode is %s (sys call, should be 0)", returncode)
 
@@ -241,10 +249,10 @@ class PhotoCreator(object):
 		# todo get from config
 		return '/home/pi/cam_calibration_output/cam_params.npz'
 
-	def correct_image(self):
+	def correct_image(self,pic_path_in,pic_path_out):
 		self._logger.debug("Starting with correction...")
-		path_to_input_image = self.tmpPath
-		path_to_output_img = self.tmpPath2
+		path_to_input_image = pic_path_in
+		path_to_output_img = pic_path_out
 
 		path_to_cam_params = self.getCamParamsPath()
 		path_to_pic_settings = self.getPicSettingsPath()
