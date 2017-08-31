@@ -93,9 +93,12 @@ class LidHandler(object):
 			return "Error, no photocreator active, maybe you are developing and dont have a cam?"
 
 	def _start_photo_worker(self):
-		worker = threading.Thread(target=self._photo_creator.work,name='XXX-Photo-Worker')
-		worker.daemon = True
-		worker.start()
+		if not self._photo_creator.active:
+			worker = threading.Thread(target=self._photo_creator.work,name='XXX-Photo-Worker')
+			worker.daemon = True
+			worker.start()
+		else:
+			self._logger.error("Another PhotoCreatorThread is alreeady existing!!!!")
 
 	def _end_photo_worker(self):
 		if self._photo_creator:
