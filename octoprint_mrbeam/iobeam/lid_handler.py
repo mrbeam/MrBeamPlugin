@@ -90,11 +90,13 @@ class LidHandler(object):
 			self._end_photo_worker()
 
 	def set_save_undistorted(self):
+		response = {}
 		if self._photo_creator is not None:
 			self._photo_creator.save_undistorted = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(['cam','localUndistImage'])
-			return "Should save an Image soon."
+			response['text'] = 'Should save Image soon, please wait.'
 		else:
-			return "Error, no photocreator active, maybe you are developing and dont have a cam?"
+			response['text'] = "Error, no photocreator active, maybe you are developing and dont have a cam?"
+		return response
 
 	def _start_photo_worker(self):
 		worker = threading.Thread(target=self._photo_creator.work,name='XXX-Photo-Worker')
@@ -147,7 +149,6 @@ class PhotoCreator(object):
 			self._logger.debug("Taking picture now.")
 			self._prepare_cam()
 			while self.active and self.camera:
-				self._logger.debug("THREADS: {}".format(threading.enumerate()))
 				if self.keepOriginals:
 					self._init_filenames()
 				self._capture()
@@ -157,13 +158,11 @@ class PhotoCreator(object):
 					correction_result = dict(image_correction=False)
 					if self.image_correction_enabled:
 						correction_result = self.correct_image(self.tmp_img_raw, self.tmp_img_prepared)
-						if not correction_result['error']:
-							self._logger.debug("NO ERROR")
+						if 'error' in correction_result and not correction_result['error']:
 							move_from = self.tmp_img_prepared
-					# self._move_tmp_image(move_from)
 					self._move_img(move_from,self.final_image_path)
 					self._send_frontend_picture_metadata(correction_result)
-					time.sleep(2)
+					time.sleep(1.5)
 
 			self._logger.debug("PhotoCreator stopping...")
 		except Exception as worker_exception:
@@ -225,18 +224,12 @@ class PhotoCreator(object):
 				os.makedirs(path)
 				self._logger.debug("Created folder '%s' for camera images.", path)
 		except:
-			self.logger.exception("Exception while creating folder '%s' for camera images:", filename)
+			self._logger.exception("Exception while creating folder '%s' for camera images:", filename)
 
 	def _move_img(self, copy_from, copy_to):
 		returncode = call(['mv', copy_from, copy_to])
 		if returncode != 0:
-			self._logger.warn("_move_tmp_image() returncode is %s (sys call, should be 0)", returncode)
-
-
-	def _move_tmp_image(self, copy_from):
-		returncode = call(['mv', copy_from, self.final_image_path])
-		if returncode != 0:
-			self._logger.warn("_move_tmp_image() returncode is %s (sys call, should be 0)", returncode)
+			self._logger.warn("_move_img() returncode is %s (sys call, should be 0)", returncode)
 
 	def _close_cam(self):
 		if self.camera is not None:
@@ -256,6 +249,11 @@ class PhotoCreator(object):
 		return '/home/pi/cam_calibration_output/cam_params.npz'
 
 	def correct_image(self,pic_path_in,pic_path_out):
+		"""
+		:param pic_path_in:
+		:param pic_path_out:
+		:return: result dict with informations about picture preparation
+		"""
 		self._logger.debug("Starting with correction...")
 		path_to_input_image = pic_path_in
 		path_to_output_img = pic_path_out
