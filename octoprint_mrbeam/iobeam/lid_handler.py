@@ -90,16 +90,15 @@ class LidHandler(object):
 			self._end_photo_worker()
 
 	def set_save_undistorted(self):
-		response = {}
+		from flask import make_response
 		if self._photo_creator is not None:
 			self._photo_creator.save_undistorted = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(['cam','localUndistImage'])
-			response['text'] = 'Should save Image soon, please wait.'
+			return make_response('Should save Image soon, please wait.',200)
 		else:
-			response['text'] = "Error, no photocreator active, maybe you are developing and dont have a cam?"
-		return response
+			return make_response('Error, no photocreator active, maybe you are developing and dont have a cam?',503)
 
 	def _start_photo_worker(self):
-		worker = threading.Thread(target=self._photo_creator.work,name='XXX-Photo-Worker')
+		worker = threading.Thread(target=self._photo_creator.work,name='Photo-Worker')
 		worker.daemon = True
 		worker.start()
 

@@ -102,23 +102,37 @@ $(function() {
         };
 
         self.loadUndistortedPicture = function () {
-          console.log("NEW PICTURE REQUESTED...");
+          console.log("New picture requested.");
           OctoPrint.simpleApiCommand("mrbeam", "take_undistorted_picture",{"take_undistorted_picture":true})
                 .done(function(response) {
-                    console.log('Success',response.responseText);
+                    // TODO check how to get the response to be a success...
+                    if(response === 'Should save Image soon, please wait.'){
+                        notifyType = 'success';
+                        notifyTitle = 'Success';
+                    }else{
+                        notifyType = 'warning';
+                        notifyTitle = 'Error';
+                    }
+                    console.log(notifyTitle,response.responseText);
                     new PNotify({
-                        title: gettext("Success"),
-                        text: gettext("New Picture is loaded soon"),
-                        type: "success",
+                        title: gettext(notifyTitle),
+                        text: gettext(response),
+                        type: notifyType,
                         hide: true
-                    });
                 })
                 .fail(function(response){
-                    console.log('Error',response.responseText);
+                    if(response === 'Should save Image soon, please wait.'){
+                        notifyType = 'success';
+                        notifyTitle = 'Success';
+                    }else{
+                        notifyType = 'warning';
+                        notifyTitle = 'Error';
+                    }
+                    console.log(notifyTitle,response.responseText);
                     new PNotify({
-                        title: gettext("Error"),
-                        text: gettext("could not take picture"),
-                        type: "warning",
+                        title: gettext(notifyTitle),
+                        text: gettext(response),
+                        type: notifyType,
                         hide: true
                     });
                 });
