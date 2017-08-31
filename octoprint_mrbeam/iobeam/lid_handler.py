@@ -67,7 +67,11 @@ class LidHandler(object):
 			self._logger.debug("onEvent() LID_OPENED")
 			self.lidClosed = False
 			if self._photo_creator and self.camEnabled:
-				self._start_photo_worker()
+				if not self._photo_creator.active:
+					self._start_photo_worker()
+				else:
+					self._logger.error("Another PhotoCreator thread is already active! Not starting a new one. Why am I here...??? "
+					                   "Looks like LID_OPENED was triggered several times. Maybe iobeam is reconnecting constantly?")
 			self._send_frontend_lid_state()
 		elif event == IoBeamEvents.LID_CLOSED:
 			self._logger.debug("onEvent() LID_CLOSED")
@@ -93,12 +97,10 @@ class LidHandler(object):
 			return "Error, no photocreator active, maybe you are developing and dont have a cam?"
 
 	def _start_photo_worker(self):
-		if not self._photo_creator.active:
-			worker = threading.Thread(target=self._photo_creator.work,name='XXX-Photo-Worker')
-			worker.daemon = True
-			worker.start()
-		else:
-			self._logger.error("Another PhotoCreatorThread is alreeady existing!!!!")
+		worker = threading.Thread(target=self._photo_creator.work,name='XXX-Photo-Worker')
+		worker.daemon = True
+		worker.start()
+
 
 	def _end_photo_worker(self):
 		if self._photo_creator:
@@ -120,7 +122,7 @@ class PhotoCreator(object):
 		self.final_image_path = path
 		self.image_correction_enabled = image_correction_enabled
 		self.keepOriginals = _mrbeam_plugin_implementation._settings.get(["cam", "keepOriginals"])
-		self.active = True
+		self.active = False
 		self.last_photo = 0
 		self.save_undistorted = None
 		self.camera = None
@@ -133,10 +135,10 @@ class PhotoCreator(object):
 
 	def work(self):
 		try:
+			self.active = True
 			# todo find maximum of sleep in beginning that's not affecting UX
 			time.sleep(0.8)
 
-			self.active = True
 			if not PICAMERA_AVAILABLE:
 				self._logger.warn("Camera disabled. Not all required modules could be loaded at startup. ")
 				self.active = False
@@ -167,6 +169,7 @@ class PhotoCreator(object):
 		except Exception as worker_exception:
 			self._logger.exception("Exception in worker thread of PhotoCreator: {}".format(worker_exception.message))
 		finally:
+			self.active = False
 			self._close_cam()
 
 	def _send_frontend_picture_metadata(self, meta_data):
