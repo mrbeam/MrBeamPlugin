@@ -15,45 +15,47 @@ $(function() {
         self.workingArea = parameters[1];
         self.scaleFactor = 6;
         // todo get ImgUrl from Backend/Have it hardcoded but right
-		self.calImgUrl = ko.observable(self.staticURL);
-		self.calImgWidth = ko.observable(1024);
-		self.calImgHeight = ko.observable(768);
-		self.calSvgOffX = ko.observable(0);
-		self.calSvgOffY = ko.observable(0);
-		self.calSvgScale = ko.observable(1);
-		self.calSvgViewBox = ko.computed(function(){
-			var w = self.calImgWidth() / self.calSvgScale();
-			var h = self.calImgHeight() / self.calSvgScale();
-			return [self.calSvgOffX(), self.calSvgOffY(), w, h].join(' ');
-		});
-		self.currentStep = 0;
+        self.calImgUrl = ko.observable(self.staticURL);
+        self.calImgWidth = ko.observable(1024);
+        self.calImgHeight = ko.observable(768);
+        self.calSvgOffX = ko.observable(0);
+        self.calSvgOffY = ko.observable(0);
+        self.calSvgScale = ko.observable(1);
+        self.calSvgViewBox = ko.computed(function(){
+            var w = self.calImgWidth() / self.calSvgScale();
+            var h = self.calImgHeight() / self.calSvgScale();
+            return [self.calSvgOffX(), self.calSvgOffY(), w, h].join(' ');
+        });
+        self.currentStep = 0;
         self.currentResults = {};
         self.currentMarkersFound = {};
 
-		self.calibrationSteps = [
-			{name: 'start', desc: 'click to start', focus: [0,0,1]},
-			{name: 'NW', desc: 'North West', focus: [0,0,self.scaleFactor]},
-			{name: 'SW', desc: 'North East', focus: [0,self.calImgHeight(),self.scaleFactor]},
-			{name: 'SE', desc: 'South East', focus: [self.calImgWidth(),self.calImgHeight(),self.scaleFactor]},
-			{name: 'NE', desc: 'South West', focus: [self.calImgWidth(),0,self.scaleFactor]}
-		];
+        self.calibrationSteps = [
+            {name: 'start', desc: 'click to start', focus: [0,0,1]},
+            {name: 'NW', desc: 'North West', focus: [0,0,self.scaleFactor]},
+            {name: 'SW', desc: 'North East', focus: [0,self.calImgHeight(),self.scaleFactor]},
+            {name: 'SE', desc: 'South East', focus: [self.calImgWidth(),self.calImgHeight(),self.scaleFactor]},
+            {name: 'NE', desc: 'South West', focus: [self.calImgWidth(),0,self.scaleFactor]}
+        ];
 
-		self.userClick = function(vm, ev){
-			var cPos = self._getClickPos(ev);
-			console.log("got calibration: ", cPos);
+        self.userClick = function(vm, ev){
 
-            if(self.calImgUrl === self.staticURL){
+            // check if picture is loaded
+            if(self.calImgUrl() === self.staticURL){
                 console.log("Please Take new Picture or wait till its loaded...");
                 return;
             }
 
-			// save current stepResult
-			var step = self.calibrationSteps[self.currentStep];
-			if(self.currentStep > 0){
-			    self.currentResults[step.name] = {'x':Math.round(cPos.xImg),'y':Math.round(cPos.yImg)};
+            var cPos = self._getClickPos(ev);
+            console.log("got calibration: ", cPos);
+
+            // save current stepResult
+            var step = self.calibrationSteps[self.currentStep];
+            if(self.currentStep > 0){
+                self.currentResults[step.name] = {'x':Math.round(cPos.xImg),'y':Math.round(cPos.yImg)};
             }
 
-			//check if finished and send result if true
+            //check if finished and send result if true
             self.currentStep = (self.currentStep + 1) % self.calibrationSteps.length;
             if(self.currentStep === 0){
                 var tempResult = { result: {
@@ -65,36 +67,36 @@ $(function() {
                 self.currentResults = {}
             }
 
-			// update for next step
-			var nextStep = self.calibrationSteps[self.currentStep];
-			self.zoomTo(nextStep.focus[0], nextStep.focus[1], nextStep.focus[2]);
-			console.log("now click for " + nextStep.desc);
-		};
+            // update for next step
+            var nextStep = self.calibrationSteps[self.currentStep];
+            self.zoomTo(nextStep.focus[0], nextStep.focus[1], nextStep.focus[2]);
+            console.log("now click for " + nextStep.desc);
+        };
 
-		self._getClickPos = function(ev){
+        self._getClickPos = function(ev){
 
-			var bbox = ev.target.parentElement.getBoundingClientRect();
-			var clickpos = {
-				xScreenPx: ev.clientX - bbox.left,
-				yScreenPx: ev.clientY - bbox.top
-			};
-			clickpos.xRel = clickpos.xScreenPx / bbox.width;
-			clickpos.yRel = clickpos.yScreenPx / bbox.height;
-			clickpos.xImg = self.calSvgOffX() + clickpos.xRel * (self.calImgWidth() / self.calSvgScale());
-			clickpos.yImg = self.calSvgOffY() + clickpos.yRel * (self.calImgHeight() / self.calSvgScale());
+            var bbox = ev.target.parentElement.getBoundingClientRect();
+            var clickpos = {
+                xScreenPx: ev.clientX - bbox.left,
+                yScreenPx: ev.clientY - bbox.top
+            };
+            clickpos.xRel = clickpos.xScreenPx / bbox.width;
+            clickpos.yRel = clickpos.yScreenPx / bbox.height;
+            clickpos.xImg = self.calSvgOffX() + clickpos.xRel * (self.calImgWidth() / self.calSvgScale());
+            clickpos.yImg = self.calSvgOffY() + clickpos.yRel * (self.calImgHeight() / self.calSvgScale());
 
-			return clickpos;
-		};
+            return clickpos;
+        };
 
-		self.zoomTo = function(x,y, scale){
-			self.calSvgScale(scale);
-			var w = self.calImgWidth() / scale;
-			var h = self.calImgHeight() / scale;
-			var offX = Math.min(Math.max(x - w/scale, 0), self.calImgWidth() - w);
-			var offY = Math.min(Math.max(y - h/scale, 0), self.calImgHeight() - h);
-			self.calSvgOffX(offX);
-			self.calSvgOffY(offY);
-		};
+        self.zoomTo = function(x,y, scale){
+            self.calSvgScale(scale);
+            var w = self.calImgWidth() / scale;
+            var h = self.calImgHeight() / scale;
+            var offX = Math.min(Math.max(x - w/scale, 0), self.calImgWidth() - w);
+            var offY = Math.min(Math.max(y - h/scale, 0), self.calImgHeight() - h);
+            self.calSvgOffX(offX);
+            self.calSvgOffY(offY);
+        };
 
         self.onStartup = function(){
             console.log("CameraCalibrationViewModel.onStartup()");
@@ -105,24 +107,16 @@ $(function() {
           console.log("New picture requested.");
           OctoPrint.simpleApiCommand("mrbeam", "take_undistorted_picture",{"take_undistorted_picture":true})
                 .done(function(response) {
-                    // TODO check how to get the response to be a success...
-                    if(response === 'Should save Image soon, please wait.'){
-                        notifyType = 'success';
-                        notifyTitle = 'Success';
-                    }else{
-                        notifyType = 'warning';
-                        notifyTitle = 'Error';
-                    }
-                    console.log(notifyTitle,response.responseText);
+                    console.log('Success');
                     new PNotify({
-                        title: gettext(notifyTitle),
-                        text: gettext(response),
-                        type: notifyType,
+                        title: gettext('Success'),
+                        text: gettext(response.responseText),
+                        type: 'success',
                         hide: true
                     })
                 })
                 .fail(function(response){
-                    if(response === 'Should save Image soon, please wait.'){
+                    if(response.status === 200){
                         notifyType = 'success';
                         notifyTitle = 'Success';
                     }else{
@@ -131,8 +125,8 @@ $(function() {
                     }
                     console.log(notifyTitle,response.responseText);
                     new PNotify({
-                        title: gettext(notifyTitle),
-                        text: gettext(response),
+                        title: notifyTitle,
+                        text: response.responseText,
                         type: notifyType,
                         hide: true
                     });
@@ -168,7 +162,7 @@ $(function() {
             self.currentMarkersFound = {};
             self.calImgUrl("/plugin/mrbeam/static/img/cam_calib_static.jpg");
             var nextStep = self.calibrationSteps[self.currentStep];
-			self.zoomTo(nextStep.focus[0], nextStep.focus[1], nextStep.focus[2]);
+            self.zoomTo(nextStep.focus[0], nextStep.focus[1], nextStep.focus[2]);
         };
 
         self._sendData = function(data) {
