@@ -11,7 +11,7 @@
 					<div class="control-group">
 						<label class="control-label">Material</label>
 						<div class="controls">
-							<div data-bind="">
+							<div data-bind="visible: true || !isMaterialSelected()">
 								<form class="form-search" data-bind="submit: filterQuery">
 									<input type="text" style="width:90%;" class="input-block search-query" data-bind="value: filterQuery, valueUpdate: 'input'" placeholder="{{ _('Search...') }}">
 								</form>
@@ -27,7 +27,7 @@
 							</div>
 <!--							<div data-bind="visible: isMaterialSelected()">
 								<div data-bind="text: selected_material_name()"></div>
-								<a href="#" class="" data-bind="click: set_material(null, event)"><i class="icon-edit"></i> change...</a>
+								<a href="#" class="" data-bind="click: function(){dialog_state('material_type');}"><i class="icon-edit"></i> change...</a>
 							</div>-->
 						</div>
 					</div>
