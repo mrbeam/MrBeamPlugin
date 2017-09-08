@@ -26,7 +26,7 @@ $(function() {
             var h = self.calImgHeight() / self.calSvgScale();
             return [self.calSvgOffX(), self.calSvgOffY(), w, h].join(' ');
         });
-        self.currentStep = 0;
+        self.currentMarker = 0;
         self.currentResults = {};
         self.currentMarkersFound = {};
 
@@ -50,14 +50,14 @@ $(function() {
             console.log("got calibration: ", cPos);
 
             // save current stepResult
-            var step = self.calibrationSteps[self.currentStep];
-            if(self.currentStep > 0){
+            var step = self.calibrationSteps[self.currentMarker];
+            if(self.currentMarker > 0){
                 self.currentResults[step.name] = {'x':Math.round(cPos.xImg),'y':Math.round(cPos.yImg)};
             }
 
             //check if finished and send result if true
-            self.currentStep = (self.currentStep + 1) % self.calibrationSteps.length;
-            if(self.currentStep === 0){
+            self.currentMarker = (self.currentMarker + 1) % self.calibrationSteps.length;
+            if(self.currentMarker === 0){
                 var tempResult = { result: {
                         newMarkers: self.currentMarkersFound,
                         newCorners: self.currentResults
@@ -68,7 +68,7 @@ $(function() {
             }
 
             // update for next step
-            var nextStep = self.calibrationSteps[self.currentStep];
+            var nextStep = self.calibrationSteps[self.currentMarker];
             self.zoomTo(nextStep.focus[0], nextStep.focus[1], nextStep.focus[2]);
             console.log("now click for " + nextStep.desc);
         };
@@ -157,12 +157,14 @@ $(function() {
         };
 
         self.abortCalibration = function () {
-            self.currentStep = 0;
+			$('.calibration_step').removeClass('active');
+			$('#calibration_step_1').addClass('active');
+            self.currentMarker = 0;
             self.currentResults = {};
             self.currentMarkersFound = {};
             self.calImgUrl("/plugin/mrbeam/static/img/cam_calib_static.jpg");
-            var nextStep = self.calibrationSteps[self.currentStep];
-            self.zoomTo(nextStep.focus[0], nextStep.focus[1], nextStep.focus[2]);
+            var nextMarker = self.calibrationSteps[self.currentMarker];
+            self.zoomTo(nextMarker.focus[0], nextMarker.focus[1], nextMarker.focus[2]);
         };
 
         self._sendData = function(data) {
@@ -185,6 +187,16 @@ $(function() {
                     });
                 });
         };
+		
+		self.next = function(){
+			var current = $('.calibration_step.active');
+			current.removeClass('active');
+			var next = current.next('.calibration_step');
+			if(next.length === 0) {
+				next = $('#calibration_step_1');
+			}
+			next.addClass('active');
+		};
     }
 
     // view model class, parameters for constructor, container to bind to

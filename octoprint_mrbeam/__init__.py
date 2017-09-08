@@ -20,7 +20,7 @@ from flask.ext.babel import gettext
 from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping
 from octoprint.server import NO_CONTENT
 from octoprint.server.util.flask import restricted_access, get_json_command_from_request, \
-	add_non_caching_response_headers
+	add_non_caching_response_headers, firstrun_only_access
 from octoprint.util import dict_merge
 
 from octoprint_mrbeam.iobeam.iobeam_handler import ioBeamHandler, IoBeamEvents
@@ -587,7 +587,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return make_response("Failed to submit laser safety confirmation to cloud.", 901)
 		else:
 			return NO_CONTENT
-
+		
 	#~~ helpers
 
 	def _get_subwizard_attrs(self, start, end, callback=None):
@@ -631,9 +631,59 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 
 	##~~ BlueprintPlugin mixin
+	
+	# disable default api key check for all blueprint routes. 
+	# use @restricted_access, @firstrun_only_access to check permissions
+	def is_blueprint_protected(self):
+		return False
+
+
+	@octoprint.plugin.BlueprintPlugin.route("/calibration", methods=["GET"])
+	@firstrun_only_access
+	def calibration_wrapper(self):
+		from flask import request
+		from octoprint.server.api import NO_CONTENT
+		from flask import make_response, render_template
+		from octoprint.server import debug, LOCALES, VERSION, DISPLAY_VERSION, UI_API_KEY, BRANCH
+		
+		display_version_string = "{} on {}".format(self._plugin_version, self._hostname)
+		if self._branch:
+			display_version_string = "{} ({} branch) on {}".format(self._plugin_version, self._branch, self._hostname)
+
+		render_kwargs = dict(debug=debug,
+							firstRun=self.isFirstRun(),
+							version=dict(number=VERSION, display=DISPLAY_VERSION, branch=BRANCH),
+							uiApiKey=UI_API_KEY,
+							templates=dict(tab=[]),
+							pluginNames=dict(),
+							locales=dict(),
+							supportedExtensions=[],
+							beamosVersion= dict(
+								number = self._plugin_version,
+								branch= self._branch,
+								display_version = display_version_string,
+							 	image = self._octopi_info),
+							 env= dict(
+								 env=self.get_env(),
+								 local=self.get_env(self.ENV_LOCAL),
+							 ),
+							 displayName=self.getDisplayName(self._hostname),
+							 hostname=self._hostname,
+							 serial=self._serial,
+							 beta_label=self._settings.get(['beta_label']),
+							 e='null',
+							 gcodeThreshold=0, #legacy 
+							 gcodeMobileThreshold=0, #legacy 
+						 )
+		r = make_response(render_template("initial_calibration.jinja2", **render_kwargs))
+
+		r = add_non_caching_response_headers(r)
+		return r
+
 
 	# Laser cutter profiles
 	@octoprint.plugin.BlueprintPlugin.route("/profiles", methods=["GET"])
+	@restricted_access
 	def laserCutterProfilesList(self):
 		all_profiles = self.laserCutterProfileManager.get_all()
 		return jsonify(dict(profiles=self._convert_profiles(all_profiles)))

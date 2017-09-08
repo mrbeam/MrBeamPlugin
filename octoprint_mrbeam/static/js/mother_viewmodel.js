@@ -334,24 +334,29 @@ $(function () {
         };
 
         self._configureOverrideSliders = function () {
-            self.state.intensityOverrideSlider = $("#intensity_override_slider").slider({
-                step: 1,
-                min: 10,
-                max: 200,
-                value: 100,
-            }).on("slideStop", function (ev) {
-                self.state.intensityOverride(ev.value);
-            });
+			var el1 = $("#intensity_override_slider");
+			if(el1.length > 0){
+				self.state.intensityOverrideSlider = el1.slider({
+					step: 1,
+					min: 10,
+					max: 200,
+					value: 100,
+				}).on("slideStop", function (ev) {
+					self.state.intensityOverride(ev.value);
+				});
+			}
 
-            self.state.feedrateOverrideSlider = $("#feedrate_override_slider").slider({
-                step: 1,
-                min: 10,
-                max: 200,
-                value: 100,
-            }).on("slideStop", function (ev) {
-                self.state.feedrateOverride(ev.value);
-            });
-
+			var el2 = $("#intensity_override_slider");
+			if(el2.length > 0){
+				self.state.feedrateOverrideSlider = el2.slider({
+					step: 1,
+					min: 10,
+					max: 200,
+					value: 100,
+				}).on("slideStop", function (ev) {
+					self.state.feedrateOverride(ev.value);
+				});
+			}
         };
 
         self.state.resetOverrideSlider = function () {
