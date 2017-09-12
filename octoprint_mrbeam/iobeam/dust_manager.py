@@ -1,6 +1,5 @@
 import time
 import threading
-import numbers
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamValueEvents
@@ -27,8 +26,10 @@ class DustManager(object):
 	def __init__(self):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.dustmanager")
 
+		self._dust_old = None
+		self._dust_old_ts = time.time()
 		self._dust = None
-		self._dust_ts = time.time()
+		self._dust_ts = self._dust_old_ts
 
 		self._last_event = None
 		self._shutting_down = False
@@ -52,16 +53,30 @@ class DustManager(object):
 
 	def _subscribe(self):
 		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.DUST_VALUE, self._handle_dust)
-		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.FAN_ON_RESPONSE, self.on_command_response)
-		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.FAN_OFF_RESPONSE, self.on_command_response)
-		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.FAN_AUTO_RESPONSE, self.on_command_response)
-		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_STARTED, self.onEvent)
-		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self.onEvent)
-		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self.onEvent)
-		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_CANCELLED, self.onEvent)
-		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self.onEvent)
+		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.FAN_ON_RESPONSE, self._on_command_response)
+		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.FAN_OFF_RESPONSE, self._on_command_response)
+		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.FAN_AUTO_RESPONSE, self._on_command_response)
+		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_STARTED, self._onEvent)
+		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self._onEvent)
+		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self._onEvent)
+		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_CANCELLED, self._onEvent)
+		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self._onEvent)
 
-	def onEvent(self, event, payload):
+	def _handle_dust(self, args):
+		if self._dust_old != args['val']:
+			self._dust_old = self._dust
+			self._dust_old_ts = self._dust_ts
+			self._dust = args['val']
+			self.send_status_to_frontend(self._dust)
+		self._dust_ts = time.time()
+		self.check_dust_value()
+
+	def _on_command_response(self, args):
+		self._logger.debug("command response: {}".format(args))
+		self._command_response = args['success']
+		self._command_event.set()
+
+	def _onEvent(self, event, payload):
 		if event == OctoPrintEvents.PRINT_STARTED:
 			self._start_dust_extraction_thread()
 		elif event in (OctoPrintEvents.PRINT_DONE, OctoPrintEvents.PRINT_FAILED, OctoPrintEvents.PRINT_CANCELLED):
@@ -70,19 +85,8 @@ class DustManager(object):
 		elif event == OctoPrintEvents.SHUTDOWN:
 			self.shutdown()
 
-	def on_command_response(self, args):
-		self._logger.debug("command response: {}".format(args))
-		self._command_response = args['success']
-		self._command_event.set()
-
 	def shutdown(self):
 		self._shutting_down = True
-
-	def _handle_dust(self, args):
-		self._dust = args['val']
-		self._dust_ts = time.time()
-		self.check_dust_value()
-		self.send_status_to_frontend(self._dust)
 
 	def _start_dust_extraction_thread(self, value=None):
 		command_thread = threading.Thread(target=self._start_dust_extraction, args=(value,))
