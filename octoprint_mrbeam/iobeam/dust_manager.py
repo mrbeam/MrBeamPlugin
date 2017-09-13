@@ -26,10 +26,8 @@ class DustManager(object):
 	def __init__(self):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.dustmanager")
 
-		self._dust_old = None
-		self._dust_old_ts = time.time()
 		self._dust = None
-		self._dust_ts = self._dust_old_ts
+		self._dust_ts = time.time()
 
 		self._last_event = None
 		self._shutting_down = False
@@ -63,13 +61,10 @@ class DustManager(object):
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self._onEvent)
 
 	def _handle_dust(self, args):
-		if self._dust_old != args['val']:
-			self._dust_old = self._dust
-			self._dust_old_ts = self._dust_ts
-			self._dust = args['val']
-			self.send_status_to_frontend(self._dust)
+		self._dust = args['val']
 		self._dust_ts = time.time()
 		self.check_dust_value()
+		self.send_status_to_frontend(self._dust)
 
 	def _on_command_response(self, args):
 		self._logger.debug("command response: {}".format(args))
@@ -223,7 +218,6 @@ class DustManager(object):
 			if not self.dev_mode:
 				self._logger.error("Can't read dust value.")
 			# TODO fire some Error pause (together with andy)
-			self._start_dust_extraction_thread()
 
 	def request_dust(self):
 		return _mrbeam_plugin_implementation._ioBeam.send_fan_command("dust")
