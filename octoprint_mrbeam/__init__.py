@@ -587,7 +587,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return make_response("Failed to submit laser safety confirmation to cloud.", 901)
 		else:
 			return NO_CONTENT
-		
+
 	#~~ helpers
 
 	def _get_subwizard_attrs(self, start, end, callback=None):
@@ -631,8 +631,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 
 	##~~ BlueprintPlugin mixin
-	
-	# disable default api key check for all blueprint routes. 
+
+	# disable default api key check for all blueprint routes.
 	# use @restricted_access, @firstrun_only_access to check permissions
 	def is_blueprint_protected(self):
 		return False
@@ -645,7 +645,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		from octoprint.server.api import NO_CONTENT
 		from flask import make_response, render_template
 		from octoprint.server import debug, LOCALES, VERSION, DISPLAY_VERSION, UI_API_KEY, BRANCH
-		
+
 		display_version_string = "{} on {}".format(self._plugin_version, self._hostname)
 		if self._branch:
 			display_version_string = "{} ({} branch) on {}".format(self._plugin_version, self._branch, self._hostname)
@@ -672,14 +672,46 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 serial=self._serial,
 							 beta_label=self._settings.get(['beta_label']),
 							 e='null',
-							 gcodeThreshold=0, #legacy 
-							 gcodeMobileThreshold=0, #legacy 
+							 gcodeThreshold=0, #legacy
+							 gcodeMobileThreshold=0, #legacy
 						 )
 		r = make_response(render_template("initial_calibration.jinja2", **render_kwargs))
 
 		r = add_non_caching_response_headers(r)
 		return r
 
+	### Initial Camera Calibration - START ###
+	# The next two calls are needed for first-run and initial camera calibration
+
+	@octoprint.plugin.BlueprintPlugin.route("/take_undistorted_picture", methods=["GET"])
+	@firstrun_only_access
+	def takeUndistortedPictureForInitialCalibration(self):
+		self._logger.debug("INITIAL TAKE PICTURE")
+		self.take_undistorted_picture()
+		return NO_CONTENT
+
+
+	@octoprint.plugin.BlueprintPlugin.route("/send_calibration_markers", methods=["POST"])
+	@firstrun_only_access
+	def sendInitialCalibrationMarkers(self):
+		if not "application/json" in request.headers["Content-Type"]:
+			return make_response("Expected content-type JSON", 400)
+
+		try:
+			json_data = request.json
+		except JSONBadRequest:
+			return make_response("Malformed JSON body in request", 400)
+
+		self._logger.debug("INITIAL camera_calibration_markers() data: {}".format(json_data))
+
+
+		if not "result" in json_data or not all(k in json_data['result'] for k in ['newCorners','newMarkers']):
+			return make_response("No profile included in request", 400)
+
+		self.camera_calibration_markers(json_data)
+		return NO_CONTENT
+
+	### Initial Camera Calibration - END ###
 
 	# Laser cutter profiles
 	@octoprint.plugin.BlueprintPlugin.route("/profiles", methods=["GET"])
@@ -944,7 +976,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			camera_calibration_markers=["result"],
 			ready_to_laser=["ready"],
 			debug_event=["event"],
-			take_undistorted_picture=["take_undistorted_picture"]
+			take_undistorted_picture=[]
 		)
 
 	def on_api_command(self, command, data):
@@ -966,7 +998,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		elif command == "camera_calibration_markers":
 			return self.camera_calibration_markers(data)
 		elif command == "take_undistorted_picture":
-			return self.take_undistorted_picture(data)
+			return self.take_undistorted_picture()
 		elif command == "debug_event":
 			return self.debug_event(data)
 		return NO_CONTENT
@@ -994,7 +1026,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		return NO_CONTENT
 
-	def take_undistorted_picture(self,data):
+	def take_undistorted_picture(self):
 		self._logger.debug("New undistorted image is requested")
 		image_response = self._lid_handler.set_save_undistorted()
 		self._logger.debug("Image_Response: {}".format(image_response))

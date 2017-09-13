@@ -85,50 +85,55 @@ $(function() {
             return clickpos;
         };
 
-        self.zoomTo = function(x,y, scale){
-            self.calSvgScale(scale);
-            var w = self.calImgWidth() / scale;
-            var h = self.calImgHeight() / scale;
-            var offX = Math.min(Math.max(x - w/scale, 0), self.calImgWidth() - w);
-            var offY = Math.min(Math.max(y - h/scale, 0), self.calImgHeight() - h);
-            self.calSvgOffX(offX);
-            self.calSvgOffY(offY);
-        };
+        self.zoomTo = function (x, y, scale) {
+			self.calSvgScale(scale);
+			var w = self.calImgWidth() / scale;
+			var h = self.calImgHeight() / scale;
+			var offX = Math.min(Math.max(x - w / scale, 0), self.calImgWidth() - w);
+			var offY = Math.min(Math.max(y - h / scale, 0), self.calImgHeight() - h);
+			self.calSvgOffX(offX);
+			self.calSvgOffY(offY);
+		};
 
-        self.onStartup = function(){
+		self.onStartup = function () {
 //            console.log("CameraCalibrationViewModel.onStartup()");
 
-        };
+		};
 
-        self.loadUndistortedPicture = function () {
-          console.log("New picture requested.");
-          OctoPrint.simpleApiCommand("mrbeam", "take_undistorted_picture",{"take_undistorted_picture":true})
-                .done(function(response) {
-                    console.log('Success');
-                    new PNotify({
-                        title: gettext('Success'),
-                        text: gettext(response.responseText),
-                        type: 'success',
-                        hide: true
-                    })
-                })
-                .fail(function(response){
-                    if(response.status === 200){
-                        notifyType = 'success';
-                        notifyTitle = 'Success';
-                    }else{
-                        notifyType = 'warning';
-                        notifyTitle = 'Error';
-                    }
-                    console.log(notifyTitle,response.responseText);
-                    new PNotify({
-                        title: notifyTitle,
-                        text: response.responseText,
-                        type: notifyType,
-                        hide: true
-                    });
-                });
-        };
+		self.loadUndistortedPicture = function () {
+			console.log("New picture requested.");
+
+			if (self.isInitialCalibration()) {
+				$.get('/plugin/mrbeam/take_undistorted_picture');
+			} else {
+				OctoPrint.simpleApiCommand("mrbeam", "take_undistorted_picture", {})
+						.done(function (response) {
+							console.log('Success');
+							new PNotify({
+								title: gettext('Success'),
+								text: gettext(response.responseText),
+								type: 'success',
+								hide: true
+							})
+						})
+						.fail(function (response) {
+							if (response.status === 200) {
+								notifyType = 'success';
+								notifyTitle = 'Success';
+							} else {
+								notifyType = 'warning';
+								notifyTitle = 'Error';
+							}
+							console.log(notifyTitle, response.responseText);
+							new PNotify({
+								title: notifyTitle,
+								text: response.responseText,
+								type: notifyType,
+								hide: true
+							});
+						});
+			}
+		};
 
         self.onDataUpdaterPluginMessage = function(plugin, data) {
             if (plugin !== "mrbeam" || !data) return;
@@ -153,7 +158,7 @@ $(function() {
             }
         };
 
-		
+
         self.engrave_markers = function () {
 			var xmin = 0;
 			var xmax = self.workingArea.workingAreaWidthMM();
@@ -170,16 +175,6 @@ $(function() {
 			return (typeof INITIAL_CALIBRATION !== 'undefined' && INITIAL_CALIBRATION === true);
 		};
 
-//        self.abortCalibration = function () {
-//			$('.calibration_step').removeClass('active');
-//			$('#calibration_step_1').addClass('active');
-//            self.currentMarker = 0;
-//            self.currentResults = {};
-//            self.currentMarkersFound = {};
-//            self.calImgUrl("/plugin/mrbeam/static/img/cam_calib_static.jpg");
-//            var nextMarker = self.calibrationSteps[self.currentMarker];
-//            self.zoomTo(nextMarker.focus[0], nextMarker.focus[1], nextMarker.focus[2]);
-//        };
 
         self.saveCalibrationData = function () {
 			var data = {
@@ -189,7 +184,19 @@ $(function() {
 				}
 			};
             console.log('Sending data:',data);
-            OctoPrint.simpleApiCommand("mrbeam", "camera_calibration_markers", data)
+            if(self.isInitialCalibration()){
+                $.ajax({
+                    url:"/plugin/mrbeam/send_calibration_markers",
+                    type:"POST",
+                    headers: {
+                        "Accept" : "application/json; charset=utf-8",
+                        "Content-Type": "application/json; charset=utf-8"
+                      },
+                    data: JSON.stringify(data),
+                    dataType:"json"
+                });
+            } else {
+                OctoPrint.simpleApiCommand("mrbeam", "camera_calibration_markers", data)
                 .done(function(response) {
                     new PNotify({
                         title: gettext("BAM! markers are sent."),
@@ -206,8 +213,9 @@ $(function() {
                         hide: true
                     });
                 });
+            }
         };
-		
+
 		self.next = function(){
 			var current = $('.calibration_step.active');
 			current.removeClass('active');
@@ -217,7 +225,7 @@ $(function() {
 			}
 			next.addClass('active');
 		};
-		
+
 		self._getMarkerSVG = function(xmin, xmax, ymin, ymax){
 			return `
 <svg id="calibration_markers-0" viewBox="`+[xmin, ymin, xmax, ymax].join(' ')+`" height="`+ymax+`mm" width="`+xmax+`mm">
