@@ -416,34 +416,22 @@ $(function(){
 
 		self.placeSVG = function(file) {
 			var url = self._getSVGserveUrl(file);
-			callback = function (f) {
-				// find clippath elements and remove them
-				var clipPathEl = f.selectAll('clipPath');
-				if(clipPathEl.length !== 0){
-					console.warn("Warning: removed unsupported clipPath element in SVG");
-					self.svg_contains_clipPath_warning();
-					clipPathEl.remove();
-				}
-
-				// find flowroot elements and remove them
-				var flowrootEl = f.selectAll('flowRoot');
-				if(flowrootEl.length !== 0){
-					console.warn("Warning: removed unsupported flowRoot element in SVG");
-					self.svg_contains_flowRoot_warning();
-					flowrootEl.remove();
-				}
-
-//				var svgClasses = {};
-//				f.selectAll('path').forEach(function (el, i) {
-//					var elClass = el.attr('class');
-//					if(svgClasses[elClass] === undefined){
-//						console.log(elClass);
-//					}
-//				});
-				// find all elements with "display=none" and remove them
-				f.selectAll("[display=none]").remove();
-				f.selectAll("script").remove();
-
+			callback = function (fragment) {
+				var id = self.getEntryId();
+				var previewId = self.generateUniqueId(id, file); // appends -# if multiple times the same design is placed.
+				var origin = file["refs"]["download"];
+				file.id = id; // list entry id
+				file.previewId = previewId;
+				file.url = url;
+				file.misfit = "";
+				self.placedDesigns.push(file);
+				var insertedId = self._prepareAndInsertSVG(fragment, id, origin);
+			};
+			self.loadSVG(url, callback);
+		};
+		
+		self._prepareAndInsertSVG = function(fragment, id, origin){
+				var f = self._removeUnsupportedSvgElements(fragment);
 				var generator_info = self._get_generator_info(f);
 
 				// get original svg attributes
@@ -453,7 +441,6 @@ $(function(){
 				var unitScaleY = self._getDocumentScaleToMM(doc_dimensions.units_y, generator_info);
 
 				// scale matrix
-
 				var mat = self.getDocumentViewBoxMatrix(doc_dimensions, doc_dimensions.viewbox);
 //				var dpiscale = 90 / self.settings.settings.plugins.mrbeam.svgDPI() * (25.4/90);
 //				var dpiscale = 25.4 / self.settings.settings.plugins.mrbeam.svgDPI();
@@ -485,13 +472,11 @@ $(function(){
 				newSvg.attr(newSvgAttrs);
 				newSvg.bake(); // remove transforms
 				newSvg.selectAll('path').attr({strokeWidth: '0.8', class:'vector_outline'});
-				var id = self.getEntryId();
-				var previewId = self.generateUniqueId(id, file); // appends -# if multiple times the same design is placed.
 				newSvg.attr({
-					id: previewId,
-                    'mb:id':previewId,
+					id: id,
+                    'mb:id':id,
 					class: 'userSVG',
-					'mb:origin': file["refs"]["download"],
+					'mb:origin': origin,
 				});
 				snap.select("#userContent").append(newSvg);
 				newSvg.transformable();
@@ -504,7 +489,6 @@ $(function(){
 					newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
 				});
 
-
 				var mb_meta = self._set_mb_attributes(newSvg);
 				newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
 
@@ -512,14 +496,30 @@ $(function(){
 					newSvg.ftReportTransformation();
 				}, 200);
 
-				file.id = id; // list entry id
-				file.previewId = previewId;
-				file.url = url;
-				file.misfit = "";
+				return id;
+		};
+		
+		self._removeUnsupportedSvgElements = function(fragment){
+			// find clippath elements and remove them
+				var clipPathEl = fragment.selectAll('clipPath');
+				if(clipPathEl.length !== 0){
+					console.warn("Warning: removed unsupported clipPath element in SVG");
+					self.svg_contains_clipPath_warning();
+					clipPathEl.remove();
+				}
 
-				self.placedDesigns.push(file);
-			};
-			self.loadSVG(url, callback);
+				// find flowroot elements and remove them
+				var flowrootEl = fragment.selectAll('flowRoot');
+				if(flowrootEl.length !== 0){
+					console.warn("Warning: removed unsupported flowRoot element in SVG");
+					self.svg_contains_flowRoot_warning();
+					flowrootEl.remove();
+				}
+
+				// find all elements with "display=none" and remove them
+				fragment.selectAll("[display=none]").remove(); // TODO check if this really works. I (tp) doubt it.
+				fragment.selectAll("script").remove();
+				return fragment;
 		};
 
 		self.loadSVG = function(url, callback){

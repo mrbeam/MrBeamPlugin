@@ -13,6 +13,7 @@ $(function() {
         self.staticURL = "/plugin/mrbeam/static/img/cam_calib_static.jpg";
 
         self.workingArea = parameters[1];
+        self.conversion = parameters[2];
         self.scaleFactor = 6;
         // todo get ImgUrl from Backend/Have it hardcoded but right
         self.calImgUrl = ko.observable(self.staticURL);
@@ -99,7 +100,7 @@ $(function() {
         };
 
         self.onStartup = function(){
-            console.log("CameraCalibrationViewModel.onStartup()");
+//            console.log("CameraCalibrationViewModel.onStartup()");
 
         };
 
@@ -156,16 +157,33 @@ $(function() {
             }
         };
 
-        self.abortCalibration = function () {
-			$('.calibration_step').removeClass('active');
-			$('#calibration_step_1').addClass('active');
-            self.currentMarker = 0;
-            self.currentResults = {};
-            self.currentMarkersFound = {};
-            self.calImgUrl("/plugin/mrbeam/static/img/cam_calib_static.jpg");
-            var nextMarker = self.calibrationSteps[self.currentMarker];
-            self.zoomTo(nextMarker.focus[0], nextMarker.focus[1], nextMarker.focus[2]);
-        };
+		
+        self.engrave_markers = function () {
+			var xmin = 0;
+			var xmax = self.workingArea.workingAreaWidthMM();
+			var ymin = 0;
+			var ymax = self.workingArea.workingAreaHeightMM();
+			var marker_svg = self._getMarkerSVG(xmin, xmax, ymin, ymax);
+			var fragment = Snap.fragment(marker_svg);
+			self.workingArea._prepareAndInsertSVG(fragment, 'calibration_markers', '_generic_');
+			self.conversion.convert();
+			
+		};
+
+		self.isInitialCalibration = function(){
+			return (typeof INITIAL_CALIBRATION !== 'undefined' && INITIAL_CALIBRATION === true);
+		};
+
+//        self.abortCalibration = function () {
+//			$('.calibration_step').removeClass('active');
+//			$('#calibration_step_1').addClass('active');
+//            self.currentMarker = 0;
+//            self.currentResults = {};
+//            self.currentMarkersFound = {};
+//            self.calImgUrl("/plugin/mrbeam/static/img/cam_calib_static.jpg");
+//            var nextMarker = self.calibrationSteps[self.currentMarker];
+//            self.zoomTo(nextMarker.focus[0], nextMarker.focus[1], nextMarker.focus[2]);
+//        };
 
         self._sendData = function(data) {
             console.log('Sending data:',data);
@@ -197,6 +215,80 @@ $(function() {
 			}
 			next.addClass('active');
 		};
+		
+		self._getMarkerSVG = function(xmin, xmax, ymin, ymax){
+			return `
+<svg id="calibration_markers" viewBox="`+[xmin, ymin, xmax, ymax].join(' ')+`" height="`+ymax+`" width="`+xmax+`">
+	<path id="NE" d="M`+xmax+` `+ymax+`l-20,0 5,-5 -10,-10 10,-10 10,10 5,-5 z" style="stroke:#000000; stroke-width:1px;" />
+	<path id="NW" d="M`+xmin+` `+ymax+`l20,0 -5,-5 10,-10 -10,-10 -10,10 -5,-5 z" style="stroke:#000000; stroke-width:1px;" />
+	<path id="SW" d="M`+xmin+` `+ymin+`l20,0 -5,5 10,10 -10,10 -10,-10 -5,5 z" style="stroke:#000000; stroke-width:1px;" />
+	<path id="SE" d="M`+xmin+` `+ymin+`l-20,0 5,5 -10,10 10,10 10,-10 5,5 z" style="stroke:#000000; stroke-width:1px;" />
+</svg>
+`;
+		};
+
+		self._getMarkerGCode = function(xmin, xmax, ymin, ymax, feedrate, intensity){
+			var gcode = `
+G0 X<xmax> Y<ymax> ; upper right arrow, starting at tip going ccw
+G1 F<feedrate>
+G91
+M3 S<intensity>; laser on
+G1 X-20
+G1 X5 Y-5
+G1 X-10 Y-10
+G1 X10 Y-10
+G1 X10 Y10
+G1 X5 Y-5
+G1 Y20
+M5
+G90
+
+G0 X<xmin> Y<ymax> ; upper left arrow, starting at tip going cw
+G91
+M3 S<intensity>; laser on
+G1 X20
+G1 X-5 Y-5
+G1 X10 Y-10
+G1 X-10 Y-10
+G1 X-10 Y10
+G1 X-5 Y-5
+G1 Y20
+M5
+G90
+
+G0 X<xmin> Y<ymin> ; lower left arrow, starting at tip going ccw
+G91
+M3 S<intensity>; laser on
+G1 X20
+G1 X-5 Y5
+G1 X10 Y10
+G1 X-10 Y10
+G1 X-10 Y-10
+G1 X-5 Y5
+G1 Y-20
+M5
+G90
+
+G0 X<xmax> Y<ymin> ; lower right arrow, starting at tip going cw
+G91
+M3 S<intensity>; laser on
+G1 X-20
+G1 X5 Y5
+G1 X-10 Y10
+G1 X10 Y10
+G1 X10 Y-10
+G1 X5 Y5
+G1 Y-20
+M5
+G90
+`;
+			return gcode.replace(/<xmin>/g, xmin)
+			.replace(/<xmax>/g, xmax)
+			.replace(/<ymin>/g, ymin)
+			.replace(/<ymax>/g, ymax)
+			.replace(/<feedrate>/g, feedrate)
+			.replace(/<intensity>/g, intensity);
+		};
     }
 
     // view model class, parameters for constructor, container to bind to
@@ -204,7 +296,7 @@ $(function() {
         CameraCalibrationViewModel,
 
         // e.g. loginStateViewModel, settingsViewModel, ...
-        ["settingsViewModel","workingAreaViewModel"],
+        ["settingsViewModel","workingAreaViewModel","vectorConversionViewModel"],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         [ "#settings_plugin_mrbeam_camera" ]
