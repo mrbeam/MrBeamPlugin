@@ -680,6 +680,38 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		r = add_non_caching_response_headers(r)
 		return r
 
+	### Initial Camera Calibration - START ###
+	# The next two calls are needed for first-run and initial camera calibration
+
+	@octoprint.plugin.BlueprintPlugin.route("/take_undistorted_picture", methods=["GET"])
+	@firstrun_only_access
+	def takeUndistortedPictureForInitialCalibration(self):
+		self._logger.debug("INITIAL TAKE PICTURE")
+		self.take_undistorted_picture()
+		return NO_CONTENT
+
+
+	@octoprint.plugin.BlueprintPlugin.route("/send_calibration_markers", methods=["POST"])
+	@firstrun_only_access
+	def sendInitialCalibrationMarkers(self):
+		if not "application/json" in request.headers["Content-Type"]:
+			return make_response("Expected content-type JSON", 400)
+
+		try:
+			json_data = request.json
+		except JSONBadRequest:
+			return make_response("Malformed JSON body in request", 400)
+
+		self._logger.debug("INITIAL camera_calibration_markers() data: {}".format(json_data))
+
+
+		if not "result" in json_data or not all(k in json_data['result'] for k in ['newCorners','newMarkers']):
+			return make_response("No profile included in request", 400)
+
+		self.camera_calibration_markers(json_data)
+		return NO_CONTENT
+
+	### Initial Camera Calibration - END ###
 
 	# Laser cutter profiles
 	@octoprint.plugin.BlueprintPlugin.route("/profiles", methods=["GET"])

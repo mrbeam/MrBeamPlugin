@@ -106,7 +106,11 @@ $(function() {
 
         self.loadUndistortedPicture = function () {
           console.log("New picture requested.");
-          OctoPrint.simpleApiCommand("mrbeam", "take_undistorted_picture",{})
+
+          if(self.isInitialCalibration()){
+              $.get('/plugin/mrbeam/take_undistorted_picture')
+          }else{
+              OctoPrint.simpleApiCommand("mrbeam", "take_undistorted_picture",{})
                 .done(function(response) {
                     console.log('Success');
                     new PNotify({
@@ -132,6 +136,9 @@ $(function() {
                         hide: true
                     });
                 });
+          }
+
+
         };
 
         self.onDataUpdaterPluginMessage = function(plugin, data) {
@@ -157,7 +164,7 @@ $(function() {
             }
         };
 
-		
+
         self.engrave_markers = function () {
 			var xmin = 0;
 			var xmax = self.workingArea.workingAreaWidthMM();
@@ -167,7 +174,7 @@ $(function() {
 			var fragment = Snap.fragment(marker_svg);
 			self.workingArea._prepareAndInsertSVG(fragment, 'calibration_markers', '_generic_');
 			self.conversion.convert();
-			
+
 		};
 
 		self.isInitialCalibration = function(){
@@ -187,7 +194,19 @@ $(function() {
 
         self._sendData = function(data) {
             console.log('Sending data:',data);
-            OctoPrint.simpleApiCommand("mrbeam", "camera_calibration_markers", data)
+            if(self.isInitialCalibration()){
+                $.ajax({
+                    url:"/plugin/mrbeam/send_calibration_markers",
+                    type:"POST",
+                    headers: {
+                        "Accept" : "application/json; charset=utf-8",
+                        "Content-Type": "application/json; charset=utf-8"
+                      },
+                    data: JSON.stringify(data),
+                    dataType:"json"
+                })
+            }else{
+                OctoPrint.simpleApiCommand("mrbeam", "camera_calibration_markers", data)
                 .done(function(response) {
                     new PNotify({
                         title: gettext("BAM! markers are sent."),
@@ -204,6 +223,7 @@ $(function() {
                         hide: true
                     });
                 });
+            }
         };
 
 		self.next = function(){
@@ -215,7 +235,7 @@ $(function() {
 			}
 			next.addClass('active');
 		};
-		
+
 		self._getMarkerSVG = function(xmin, xmax, ymin, ymax){
 			return `
 <svg id="calibration_markers" viewBox="`+[xmin, ymin, xmax, ymax].join(' ')+`" height="`+ymax+`" width="`+xmax+`">
