@@ -14,6 +14,9 @@
         <link rel="apple-touch-icon" sizes="114x114" href="{{ url_for('plugin.mrbeam.static', filename='img/mrb114.png') }}">
         <link rel="apple-touch-icon" sizes="144x144" href="{{ url_for('plugin.mrbeam.static', filename='img/mrb144.png') }}">
 
+		<script type="text/javascript">
+			INITIAL_CALIBRATION=true;
+		</script>
         {% include 'stylesheets.jinja2' %}
         {% include 'initscript.jinja2' %}
         {% include 'mrbeam_initscript.jinja2' %}
