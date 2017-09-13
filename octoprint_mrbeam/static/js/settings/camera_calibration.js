@@ -105,7 +105,7 @@ $(function() {
 
         self.loadUndistortedPicture = function () {
           console.log("New picture requested.");
-          OctoPrint.simpleApiCommand("mrbeam", "take_undistorted_picture",{"take_undistorted_picture":true})
+          OctoPrint.simpleApiCommand("mrbeam", "take_undistorted_picture",{})
                 .done(function(response) {
                     console.log('Success');
                     new PNotify({
@@ -187,7 +187,7 @@ $(function() {
                     });
                 });
         };
-		
+
 		self.next = function(){
 			var current = $('.calibration_step.active');
 			current.removeClass('active');
