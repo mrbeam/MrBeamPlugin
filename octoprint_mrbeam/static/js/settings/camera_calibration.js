@@ -59,11 +59,7 @@ $(function() {
             //check if finished and send result if true
             self.currentMarker = (self.currentMarker + 1) % self.calibrationSteps.length;
             if(self.currentMarker === 0){
-                var tempResult = { result: {
-                        newMarkers: self.currentMarkersFound,
-                        newCorners: self.currentResults
-                }};
-                self._sendData(tempResult);
+                
                 self.calImgUrl(self.staticURL);
                 self.currentResults = {}
             }
@@ -165,8 +161,8 @@ $(function() {
 			var ymax = self.workingArea.workingAreaHeightMM();
 			var marker_svg = self._getMarkerSVG(xmin, xmax, ymin, ymax);
 			var fragment = Snap.fragment(marker_svg);
-			self.workingArea._prepareAndInsertSVG(fragment, 'calibration_markers', '_generic_');
-			self.conversion.convert();
+			self.workingArea._prepareAndInsertSVG(fragment, 'calibration_markers-0', '_generic_');
+			self.conversion.show_conversion_dialog();
 			
 		};
 
@@ -185,7 +181,13 @@ $(function() {
 //            self.zoomTo(nextMarker.focus[0], nextMarker.focus[1], nextMarker.focus[2]);
 //        };
 
-        self._sendData = function(data) {
+        self.saveCalibrationData = function () {
+			var data = {
+				result: {
+					newMarkers: self.currentMarkersFound,
+					newCorners: self.currentResults
+				}
+			};
             console.log('Sending data:',data);
             OctoPrint.simpleApiCommand("mrbeam", "camera_calibration_markers", data)
                 .done(function(response) {
@@ -218,11 +220,11 @@ $(function() {
 		
 		self._getMarkerSVG = function(xmin, xmax, ymin, ymax){
 			return `
-<svg id="calibration_markers" viewBox="`+[xmin, ymin, xmax, ymax].join(' ')+`" height="`+ymax+`" width="`+xmax+`">
-	<path id="NE" d="M`+xmax+` `+ymax+`l-20,0 5,-5 -10,-10 10,-10 10,10 5,-5 z" style="stroke:#000000; stroke-width:1px;" />
-	<path id="NW" d="M`+xmin+` `+ymax+`l20,0 -5,-5 10,-10 -10,-10 -10,10 -5,-5 z" style="stroke:#000000; stroke-width:1px;" />
-	<path id="SW" d="M`+xmin+` `+ymin+`l20,0 -5,5 10,10 -10,10 -10,-10 -5,5 z" style="stroke:#000000; stroke-width:1px;" />
-	<path id="SE" d="M`+xmin+` `+ymin+`l-20,0 5,5 -10,10 10,10 10,-10 5,5 z" style="stroke:#000000; stroke-width:1px;" />
+<svg id="calibration_markers-0" viewBox="`+[xmin, ymin, xmax, ymax].join(' ')+`" height="`+ymax+`mm" width="`+xmax+`mm">
+	<path id="NE" d="M`+xmax+` `+ymax+`l-20,0 5,-5 -10,-10 10,-10 10,10 5,-5 z" style="stroke:#000000; stroke-width:1px; fill:none;" />
+	<path id="NW" d="M`+xmin+` `+ymax+`l20,0 -5,-5 10,-10 -10,-10 -10,10 -5,-5 z" style="stroke:#000000; stroke-width:1px; fill:none;" />
+	<path id="SW" d="M`+xmin+` `+ymin+`l20,0 -5,5 10,10 -10,10 -10,-10 -5,5 z" style="stroke:#000000; stroke-width:1px; fill:none;" />
+	<path id="SE" d="M`+xmax+` `+ymin+`l-20,0 5,5 -10,10 10,10 10,-10 5,5 z" style="stroke:#000000; stroke-width:1px; fill:none;" />
 </svg>
 `;
 		};

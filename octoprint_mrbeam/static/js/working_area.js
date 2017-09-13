@@ -699,8 +699,8 @@ $(function(){
 
 		self._getDocumentScaleToMM = function(declaredUnit, generator){
 			if(declaredUnit === null || declaredUnit === ''){
-				declaredUnit = 'px';
 				console.log("unit '" + declaredUnit + "' not found. Assuming 'px'");
+				declaredUnit = 'px';
 			}
 			if(declaredUnit === 'px' || declaredUnit === ''){
 				if(generator.generator === 'inkscape'){
