@@ -833,6 +833,47 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		else:
 			return jsonify(dict(profile=self._convert_profile(saved_profile)))
 
+
+	@octoprint.plugin.BlueprintPlugin.route("/generate_calibration_markers_svg", methods=["GET"])
+	@firstrun_only_access
+	def gcodeConvertCommand(self):
+		command, data, response = get_json_command_from_request(request, valid_commands)
+		if response is not None:
+			return response
+
+		profile = self.laserCutterProfileManager.get_current_or_default()
+		xmin = 0
+		ymin = 0
+		xmax = profile.volume.width
+		ymax = profile.volume.depth
+		svg = '<svg id="calibration_markers-0" viewBox="'+xmin+' '+ymin+' '+xmax+' '+ymax+'" height="'+ymax+'mm" width="'+xmax+'mm">'
+		+'<path id="NE" d="M'+xmax+' '+ymax+'l-20,0 5,-5 -10,-10 10,-10 10,10 5,-5 z" style="stroke:#000000; stroke-width:1px; fill:none;" />'
+		+'<path id="NW" d="M'+xmin+' '+ymax+'l20,0 -5,-5 10,-10 -10,-10 -10,10 -5,-5 z" style="stroke:#000000; stroke-width:1px; fill:none;" />'
+		+'<path id="SW" d="M'+xmin+' '+ymin+'l20,0 -5,5 10,10 -10,10 -10,-10 -5,5 z" style="stroke:#000000; stroke-width:1px; fill:none;" />'
+		+'<path id="SE" d="M'+xmax+' '+ymin+'l-20,0 5,5 -10,10 10,10 10,-10 5,5 z" style="stroke:#000000; stroke-width:1px; fill:none;" />'
+		+'</svg>'
+
+		target = 'local'
+		filename = target + '/CalibrationMarkers.svg'
+
+		class Wrapper(object):
+			def __init__(self, filename, content):
+				self.filename = filename
+				self.content = content
+
+			def save(self, absolute_dest_path):
+				with open(absolute_dest_path, "w") as d:
+					d.write(self.content)
+					d.close()
+		fileObj = Wrapper(filename, svg)
+		try:
+			self._file_manager.add_file(target, filename, fileObj, links=None, allow_overwrite=True)
+		except:
+			return make_response("Failed to write file. Disk full?", 400)
+		else:
+			return jsonify(dict(calibration_marker_svg=filename, target=target))
+
+
 	@octoprint.plugin.BlueprintPlugin.route("/convert", methods=["POST"])
 	@restricted_access
 	def gcodeConvertCommand(self):

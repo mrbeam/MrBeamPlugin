@@ -160,15 +160,10 @@ $(function() {
 
 
         self.engrave_markers = function () {
-			var xmin = 0;
-			var xmax = self.workingArea.workingAreaWidthMM();
-			var ymin = 0;
-			var ymax = self.workingArea.workingAreaHeightMM();
-			var marker_svg = self._getMarkerSVG(xmin, xmax, ymin, ymax);
-			var fragment = Snap.fragment(marker_svg);
-			self.workingArea._prepareAndInsertSVG(fragment, 'calibration_markers-0', '_generic_');
-			self.conversion.show_conversion_dialog();
-			
+			var url = '/plugin/mrbeam/generate_calibration_markers_svg';
+			$.post(url, {}, function(data, status, req){ 
+				console.log("generated_markers_svg", data, status, req);
+			}, 'text/json');
 		};
 
 		self.isInitialCalibration = function(){
@@ -233,72 +228,9 @@ $(function() {
 	<path id="NW" d="M`+xmin+` `+ymax+`l20,0 -5,-5 10,-10 -10,-10 -10,10 -5,-5 z" style="stroke:#000000; stroke-width:1px; fill:none;" />
 	<path id="SW" d="M`+xmin+` `+ymin+`l20,0 -5,5 10,10 -10,10 -10,-10 -5,5 z" style="stroke:#000000; stroke-width:1px; fill:none;" />
 	<path id="SE" d="M`+xmax+` `+ymin+`l-20,0 5,5 -10,10 10,10 10,-10 5,5 z" style="stroke:#000000; stroke-width:1px; fill:none;" />
-</svg>
-`;
+</svg>`;
 		};
 
-		self._getMarkerGCode = function(xmin, xmax, ymin, ymax, feedrate, intensity){
-			var gcode = `
-G0 X<xmax> Y<ymax> ; upper right arrow, starting at tip going ccw
-G1 F<feedrate>
-G91
-M3 S<intensity>; laser on
-G1 X-20
-G1 X5 Y-5
-G1 X-10 Y-10
-G1 X10 Y-10
-G1 X10 Y10
-G1 X5 Y-5
-G1 Y20
-M5
-G90
-
-G0 X<xmin> Y<ymax> ; upper left arrow, starting at tip going cw
-G91
-M3 S<intensity>; laser on
-G1 X20
-G1 X-5 Y-5
-G1 X10 Y-10
-G1 X-10 Y-10
-G1 X-10 Y10
-G1 X-5 Y-5
-G1 Y20
-M5
-G90
-
-G0 X<xmin> Y<ymin> ; lower left arrow, starting at tip going ccw
-G91
-M3 S<intensity>; laser on
-G1 X20
-G1 X-5 Y5
-G1 X10 Y10
-G1 X-10 Y10
-G1 X-10 Y-10
-G1 X-5 Y5
-G1 Y-20
-M5
-G90
-
-G0 X<xmax> Y<ymin> ; lower right arrow, starting at tip going cw
-G91
-M3 S<intensity>; laser on
-G1 X-20
-G1 X5 Y5
-G1 X-10 Y10
-G1 X10 Y10
-G1 X10 Y-10
-G1 X5 Y5
-G1 Y-20
-M5
-G90
-`;
-			return gcode.replace(/<xmin>/g, xmin)
-			.replace(/<xmax>/g, xmax)
-			.replace(/<ymin>/g, ymin)
-			.replace(/<ymax>/g, ymax)
-			.replace(/<feedrate>/g, feedrate)
-			.replace(/<intensity>/g, intensity);
-		};
     }
 
     // view model class, parameters for constructor, container to bind to
