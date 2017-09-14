@@ -36,6 +36,7 @@ class DustManager(object):
 		self._dust_timer_interval = self.DEFAULT_DUST_TIMER_INTERVAL
 		self._auto_timer = None
 		self._command_response = None
+		self._last_command = None
 		self._command_event = threading.Event()
 
 		self.dev_mode = _mrbeam_plugin_implementation._settings.get_boolean(['dev', 'iobeam_disable_warnings'])
@@ -67,9 +68,10 @@ class DustManager(object):
 		self.send_status_to_frontend(self._dust)
 
 	def _on_command_response(self, args):
-		self._logger.debug("command response: {}".format(args))
-		self._command_response = args['success']
-		self._command_event.set()
+		if args['message'].split(':')[1] == self._last_command.split[1]:
+			self._logger.debug("command response: {}".format(args))
+			self._command_response = args['success']
+			self._command_event.set()
 
 	def _onEvent(self, event, payload):
 		if event == OctoPrintEvents.PRINT_STARTED:
@@ -188,6 +190,7 @@ class DustManager(object):
 		retries = 0
 		while retries <= max_retries:
 			self._command_response = None
+			self._last_command = command
 			self._logger.debug("sending command: {}".format(command))
 			_mrbeam_plugin_implementation._ioBeam.send_fan_command(command)
 			retries += 1
