@@ -9,7 +9,7 @@ from os.path import isfile
 try:
 	from picamera import PiCamera
 	PICAMERA_AVAILABLE = True
-except ImportError as e:
+except Exception as e:
 	PICAMERA_AVAILABLE = False
 	logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler").warn(
 		"Could not import module 'picamera'. Disabling camera integration. (%s: %s)", e.__class__.__name__, e)
