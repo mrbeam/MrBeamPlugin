@@ -68,7 +68,7 @@ class DustManager(object):
 		self.send_status_to_frontend(self._dust)
 
 	def _on_command_response(self, args):
-		if args['message'].split(':')[1] == self._last_command.split[1]:
+		if args['message'].split(':')[1] == self._last_command.split[0]:
 			self._logger.debug("command response: {}".format(args))
 			self._command_response = args['success']
 			self._command_event.set()
