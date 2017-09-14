@@ -836,7 +836,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	@octoprint.plugin.BlueprintPlugin.route("/generate_calibration_markers_svg", methods=["GET"])
 	@restricted_access
-	def gcodeConvertCommand(self):
+	def generateCalibrationMarkersSvg(self):
 		command, data, response = get_json_command_from_request(request, valid_commands)
 		if response is not None:
 			return response
