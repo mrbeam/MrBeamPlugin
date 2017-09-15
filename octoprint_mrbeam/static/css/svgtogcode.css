@@ -443,3 +443,19 @@ svg#area_preview rect
 .misfit_warning i {
 	color: #e25303;
 }
+
+#calibration_box {
+	position: absolute;
+    top: 47vh;
+    width: 36vw;
+    background-color: white;
+    border-radius: 1em;
+    min-height: 14vh;
+    left: 32vw;
+    padding: 1em;
+    box-sizing: border-box;
+	transition: top ease-in-out 1s;
+}
+
+#calibration_box.up { top: 3vh; }
+#calibration_box.down { top: 83vh; }
