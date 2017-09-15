@@ -166,6 +166,9 @@ class IoBeamHandler(object):
 	MESSAGE_ACTION_FAN_FACTOR =         "factor"
 	MESSAGE_ACTION_FAN_VERSION =        "version"
 	MESSAGE_ACTION_FAN_RPM =            "rpm"
+	MESSAGE_ACTION_FAN_PWM_MIN =        "pwm_min"
+	MESSAGE_ACTION_FAN_TPR =            "tpr"
+	MESSAGE_ACTION_FAN_STATE =          "state"
 
 
 	def __init__(self, event_bus, socket_file=None):
@@ -541,6 +544,12 @@ class IoBeamHandler(object):
 		elif action == self.MESSAGE_ACTION_FAN_RPM:
 			return 0
 		elif action == self.MESSAGE_ACTION_FAN_VERSION:
+			return 0
+		elif action == self.MESSAGE_ACTION_FAN_PWM_MIN:
+			return 0
+		elif action == self.MESSAGE_ACTION_FAN_TPR:
+			return 0
+		elif action == self.MESSAGE_ACTION_FAN_STATE:
 			return 0
 
 		# check if OK otherwise it's an error

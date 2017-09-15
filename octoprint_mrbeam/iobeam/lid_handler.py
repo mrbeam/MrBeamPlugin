@@ -111,10 +111,6 @@ class LidHandler(object):
 		lid_closed = closed if closed is not None else self.lidClosed
 		self._plugin_manager.send_plugin_message("mrbeam", dict(lid_closed=lid_closed))
 
-	def getPicSettingsPath(self):
-		# todo find better solution for path settings...
-		return self._photo_creator.getPicSettingsPath()
-
 
 
 class PhotoCreator(object):
@@ -122,7 +118,8 @@ class PhotoCreator(object):
 		self._plugin_manager = _plugin_manager
 		self.final_image_path = path
 		self.image_correction_enabled = image_correction_enabled
-		self.keepOriginals = _mrbeam_plugin_implementation._settings.get(["cam", "keepOriginals"])
+		self._settings = _mrbeam_plugin_implementation._settings
+		self.keepOriginals = self._settings.get(["cam", "keepOriginals"])
 		self.active = False
 		self.last_photo = 0
 		self.save_undistorted = None
@@ -235,18 +232,6 @@ class PhotoCreator(object):
 			self.camera.close()
 			self._logger.debug("_close_cam() Camera closed ")
 
-	def getPicSettingsPath(self):
-		# todo get from config
-		return '/home/pi/cam_calibration_output/pic_settings.yaml'
-
-	def getLastMarkerPath(self):
-		# todo get from config
-		return "/home/pi/cam_calibration_output/last_markers.json"
-
-	def getCamParamsPath(self):
-		# todo get from config
-		return '/home/pi/cam_calibration_output/cam_params.npz'
-
 	def correct_image(self,pic_path_in,pic_path_out):
 		"""
 		:param pic_path_in:
@@ -257,9 +242,9 @@ class PhotoCreator(object):
 		path_to_input_image = pic_path_in
 		path_to_output_img = pic_path_out
 
-		path_to_cam_params = self.getCamParamsPath()
-		path_to_pic_settings = self.getPicSettingsPath()
-		path_to_last_markers = self.getLastMarkerPath()
+		path_to_cam_params = self._settings.get(["cam", "lensCalibrationFile"])
+		path_to_pic_settings = self._settings.get(["cam", "correctionSettingsFile"])
+		path_to_last_markers = self._settings.get(["cam", "correctionTmpFile"])
 
 		#check if params and settings file are available
 		# todo move into function
