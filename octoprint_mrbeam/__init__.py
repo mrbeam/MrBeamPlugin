@@ -163,8 +163,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			cam=dict(
 				enabled=True,
 				image_correction_enabled = True,
+				# todo CLEM add NPZ folder and pic_settings, calib output folder etc.
 				frontendUrl="/downloads/files/local/cam/beam-cam.jpg",
 				localFilePath="cam/beam-cam.jpg",
+				localUndistImage="cam/undistorted.jpg",
 				keepOriginals=False
 			),
 			gcode_nextgen = dict(
@@ -172,7 +174,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				precision = 0.05,
 				optimize_travel = True,
 				small_paths_first = True,
-				clip_working_area = True
+				clip_working_area = False
 			)
 		)
 
@@ -227,8 +229,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/matrix_oven.js", "js/drag_scale_rotate.js",	"js/convert.js", "js/snap_gc_plugin.js", "js/gcode_parser.js", "js/gridify.js",
 				"js/lib/photobooth_min.js", "js/svg_cleaner.js", "js/loginscreen_viewmodel.js",
 				"js/wizard_acl.js", "js/netconnectd_wrapper.js", "js/lasersaftey_viewmodel.js",
-				"js/ready_to_laser_viewmodel.js", "js/lib/screenfull.min.js",
-				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js",],
+				"js/ready_to_laser_viewmodel.js", "js/lib/screenfull.min.js","js/settings/camera_calibration.js",
+				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js", "js/laser_job_done_viewmodel.js"],
 			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css", "css/quicktext-fonts.css"],
 			less=["less/mrbeam.less"]
 		)
@@ -314,9 +316,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			result.extend([
 				dict(type='settings', name="Machine Profiles DEV", template='settings/lasercutterprofiles_settings.jinja2', suffix="_lasercutterprofiles", custom_bindings=False),
 				dict(type='settings', name="Camera Calibration DEV", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
+        		dict(type='settings', name="Camera Calibration", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
 			])
 		result.extend(self._get_wizard_template_configs())
 		return result
+
 
 	def _get_wizard_template_configs(self):
 		required = self._get_subwizard_attrs("_is_", "_wizard_required")
@@ -718,7 +722,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			del new_profile["default"]
 
 		# edit width and depth in grbl firmware
-		### TODO queu the commands if not in locked or operational mode
+		### TODO queue the commands if not in locked or operational mode
 		if make_default or (self.laserCutterProfileManager.get_current_or_default()['id'] == identifier):
 			if self._printer.is_locked() or self._printer.is_operational():
 				if "volume" in new_profile:
@@ -887,8 +891,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			intensity=["value"],
 			passes=["value"],
 			lasersafety_confirmation=[],
+			camera_calibration_markers=["result"],
 			ready_to_laser=["ready"],
-			debug_event=["event"]
+			debug_event=["event"],
+			take_undistorted_picture=["take_undistorted_picture"]
 		)
 
 	def on_api_command(self, command, data):
@@ -907,6 +913,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return self.lasersafety_wizard_api(data)
 		elif command == "ready_to_laser":
 			return self.ready_to_laser(data)
+		elif command == "camera_calibration_markers":
+			return self.camera_calibration_markers(data)
+		elif command == "take_undistorted_picture":
+			return self.take_undistorted_picture(data)
 		elif command == "debug_event":
 			return self.debug_event(data)
 		return NO_CONTENT
@@ -931,6 +941,42 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				return make_response("BAD REQUEST - DEV mode only.", 400)
 		elif 'ready' not in data or not data['ready']:
 			self._oneButtonHandler.unset_ready_to_laser()
+
+		return NO_CONTENT
+
+	def take_undistorted_picture(self,data):
+		self._logger.debug("New undistorted image is requested")
+		image_response = self._lid_handler.set_save_undistorted()
+		self._logger.debug("Image_Response: {}".format(image_response))
+		return image_response
+
+	def camera_calibration_markers(self, data):
+		self._logger.debug("camera_calibration_markers() data: {}".format(data))
+
+		# transform dict
+		# todo replace/do better
+		newCorners = {}
+		for qd in data['result']['newCorners']:
+			newCorners[qd] = [data['result']['newCorners'][qd]['x'],data['result']['newCorners'][qd]['y']]
+		self._logger.debug('XXX data reprocessed:{}'.format(newCorners))
+
+		newMarkers = {}
+		for qd in data['result']['newMarkers']:
+			newMarkers[qd] = [data['result']['newMarkers'][qd]['x'],data['result']['newMarkers'][qd]['y']]
+		self._logger.debug('XXX data reprocessed: {}'.format(newMarkers))
+
+		# todo check if this is the best to do
+		pic_settings_path = self._lid_handler.getPicSettingsPath()
+		pic_settings = self._load_profile(pic_settings_path)
+
+		pic_settings['cornersFromImage'] = newCorners
+		pic_settings['calibMarkers'] = newMarkers
+		pic_settings['calibration_updated'] = True
+
+		self._logger.debug('picSettings new to save: {}'.format(pic_settings))
+		self._save_profile(pic_settings_path,pic_settings)
+
+		# todo delete old undistorted image, still needed?
 
 		return NO_CONTENT
 
@@ -1155,23 +1201,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		else:
 			return None, None
 
-	# def execute_command(self, command):
-	# 	return True
-	# 	'''
-	# 	There's this idea that we can enter commands into the frontend's terminal.
-	# 	This could be the place where we handle these commands....
-	# 	'''
-	# 	self._logger.debug("execute_command() %s", command)
-	# 	if command is not None and command.startswith("\\"):
-	# 		chunks = shlex.split(command)
-	# 		self._logger.debug("execute_command() chunks: %s", chunks)
-	# 		if chunks[0] in ('\\filter', 'filter'):
-	# 			# do something about filters
-	# 			pass
-	# 		return False
-	# 	else:
-	# 		return True
-
 	def getHostname(self):
 		'''
 		Get device hostnema like 'MrBeam2-F930'
@@ -1345,6 +1374,14 @@ def __plugin_load__():
 			systemRestartCommand = "sudo shutdown -r now",
 			systemShutdownCommand = "sudo shutdown -h now"
 		))
+		# )),
+		# system=dict(actions=[
+		# 	dict(action="iobeam restart", name="iobeam restart", command="sudo systemctl restart iobeam.service"),
+		# 	dict(action="ledstrips restart", name="ledstrips restart",
+		# 	     command="sudo systemctl restart mrbeam_ledstrips.service && sleep 1 &&  mrbeam_ledstrips_cli ClientConected"),
+		# 	dict(action="fan auto", name="fan auto", command="iobeam_info fan:auto"),
+		# 	dict(action="fan off", name="fan off", command="iobeam_info fan:off")
+		# ])
 	)
 
 	global __plugin_hooks__

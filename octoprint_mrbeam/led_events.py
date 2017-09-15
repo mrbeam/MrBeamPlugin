@@ -24,6 +24,9 @@ class LedEventListener(CommandTrigger):
 	LED_EVENTS[Events.PRINT_CANCELLED] = "mrbeam_ledstrips_cli PrintCancelled"
 	LED_EVENTS[Events.PRINT_RESUMED] = "mrbeam_ledstrips_cli PrintResumed"
 	LED_EVENTS[Events.ERROR] = "mrbeam_ledstrips_cli Error"
+	LED_EVENTS[MrBeamEvents.LASER_JOB_DONE] = "mrbeam_ledstrips_cli LaserJobDone"
+	LED_EVENTS[MrBeamEvents.LASER_JOB_CANCELLED] = "mrbeam_ledstrips_cli LaserJobCancelled"
+	LED_EVENTS[MrBeamEvents.LASER_JOB_FAILED] = "mrbeam_ledstrips_cli LaserJobFailed"
 	# LaserPauseSafetyTimeout Events
 	LED_EVENTS[MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_START] = "mrbeam_ledstrips_cli PrintPausedTimeout"
 	LED_EVENTS[MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_END] = "mrbeam_ledstrips_cli PrintPaused"

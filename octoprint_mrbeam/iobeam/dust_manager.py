@@ -1,8 +1,8 @@
 import time
 import threading
-import numbers
 from octoprint.events import Events as OctoPrintEvents
-from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents, IoBeamValueEvents
+from octoprint_mrbeam.mrbeam_events import MrBeamEvents
+from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamValueEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
 # singleton
@@ -18,6 +18,10 @@ class DustManager(object):
 
 	DEFAULT_DUST_TIMER_INTERVAL = 3
 	DEFAUL_DUST_MAX_AGE = 10  # seconds
+	FAN_MAX_INTENSITY = 100
+
+	FAN_COMMAND_RETRIES = 2
+	FAN_COMMAND_WAITTIME = 1.0
 
 	def __init__(self):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.dustmanager")
@@ -25,12 +29,14 @@ class DustManager(object):
 		self._dust = None
 		self._dust_ts = time.time()
 
+		self._last_event = None
 		self._shutting_down = False
 		self._trail_extraction = None
 		self._dust_timer = None
 		self._dust_timer_interval = self.DEFAULT_DUST_TIMER_INTERVAL
 		self._auto_timer = None
 		self._command_response = None
+		self._last_command = None
 		self._command_event = threading.Event()
 
 		self.dev_mode = _mrbeam_plugin_implementation._settings.get_boolean(['dev', 'iobeam_disable_warnings'])
@@ -46,36 +52,38 @@ class DustManager(object):
 
 	def _subscribe(self):
 		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.DUST_VALUE, self._handle_dust)
-		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.FAN_ON_RESPONSE, self.on_command_response)
-		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.FAN_OFF_RESPONSE, self.on_command_response)
-		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.FAN_AUTO_RESPONSE, self.on_command_response)
-		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_STARTED, self.onEvent)
-		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self.onEvent)
-		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self.onEvent)
-		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_CANCELLED, self.onEvent)
-		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self.onEvent)
-
-	def onEvent(self, event, payload):
-		if event == OctoPrintEvents.PRINT_STARTED:
-			self._start_dust_extraction_thread()
-		elif event in (OctoPrintEvents.PRINT_DONE, OctoPrintEvents.PRINT_FAILED, OctoPrintEvents.PRINT_CANCELLED):
-			self._stop_dust_extraction_when_below(self.extraction_limit)
-		elif event == OctoPrintEvents.SHUTDOWN:
-			self.shutdown()
-
-	def on_command_response(self, args):
-		self._logger.debug("command response: {}".format(args))
-		self._command_response = args['success']
-		self._command_event.set()
-
-	def shutdown(self):
-		self._shutting_down = True
+		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.FAN_ON_RESPONSE, self._on_command_response)
+		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.FAN_OFF_RESPONSE, self._on_command_response)
+		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.FAN_AUTO_RESPONSE, self._on_command_response)
+		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_STARTED, self._onEvent)
+		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self._onEvent)
+		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self._onEvent)
+		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_CANCELLED, self._onEvent)
+		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self._onEvent)
 
 	def _handle_dust(self, args):
 		self._dust = args['val']
 		self._dust_ts = time.time()
 		self.check_dust_value()
 		self.send_status_to_frontend(self._dust)
+
+	def _on_command_response(self, args):
+		if args['message'].split(':')[1] == self._last_command.split(':')[0]:
+			self._logger.debug("command response: {}".format(args))
+			self._command_response = args['success']
+			self._command_event.set()
+
+	def _onEvent(self, event, payload):
+		if event == OctoPrintEvents.PRINT_STARTED:
+			self._start_dust_extraction_thread()
+		elif event in (OctoPrintEvents.PRINT_DONE, OctoPrintEvents.PRINT_FAILED, OctoPrintEvents.PRINT_CANCELLED):
+			self._last_event = event
+			self._stop_dust_extraction_when_below(self.extraction_limit)
+		elif event == OctoPrintEvents.SHUTDOWN:
+			self.shutdown()
+
+	def shutdown(self):
+		self._shutting_down = True
 
 	def _start_dust_extraction_thread(self, value=None):
 		command_thread = threading.Thread(target=self._start_dust_extraction, args=(value,))
@@ -119,7 +127,7 @@ class DustManager(object):
 				dust_start = self._dust
 				dust_start_ts = self._dust_ts
 				self._dust_timer_interval = 1
-				self._start_dust_extraction_thread(100)
+				self._start_dust_extraction_thread(self.FAN_MAX_INTENSITY)
 				while self._continue_dust_extraction(value, dust_start_ts):
 					time.sleep(self._dust_timer_interval)
 				self._logger.debug("finished trial dust extraction.")
@@ -136,6 +144,26 @@ class DustManager(object):
 				self._logger.warning("No dust value received so far. Skipping trial dust extraction!")
 		except:
 			self._logger.exception("Exception in _wait_until(): ")
+		self.send_laser_job_event()
+
+	def send_laser_job_event(self):
+		try:
+			self._logger.debug("Last event: {}".format(self._last_event))
+			if self._last_event == OctoPrintEvents.PRINT_DONE:
+				_mrbeam_plugin_implementation._event_bus.fire(MrBeamEvents.LASER_JOB_DONE)
+				_mrbeam_plugin_implementation._plugin_manager.send_plugin_message("mrbeam", dict(event=MrBeamEvents.LASER_JOB_DONE))
+				self._logger.debug("Fire event: {}".format(MrBeamEvents.LASER_JOB_DONE))
+			elif self._last_event == OctoPrintEvents.PRINT_CANCELLED:
+				_mrbeam_plugin_implementation._event_bus.fire(MrBeamEvents.LASER_JOB_CANCELLED)
+				_mrbeam_plugin_implementation._plugin_manager.send_plugin_message("mrbeam", dict(event=MrBeamEvents.LASER_JOB_CANCELLED))
+				self._logger.debug("Fire event: {}".format(MrBeamEvents.LASER_JOB_CANCELLED))
+			elif self._last_event == OctoPrintEvents.PRINT_FAILED:
+				_mrbeam_plugin_implementation._event_bus.fire(MrBeamEvents.LASER_JOB_FAILED)
+				_mrbeam_plugin_implementation._plugin_manager.send_plugin_message("mrbeam", dict(event=MrBeamEvents.LASER_JOB_FAILED))
+				self._logger.debug("Fire event: {}".format(MrBeamEvents.LASER_JOB_FAILED))
+		except:
+			self._logger.exception("Exception send_laser_done_event _wait_until(): ")
+
 
 	def _continue_dust_extraction(self, value, started):
 		if time.time() - started > 30:  # TODO: get this value from laser profile
@@ -156,16 +184,18 @@ class DustManager(object):
 		self._stop_dust_extraction_thread()
 		self._auto_timer = None
 
-	def _send_fan_command(self, command, wait=1.0, max_retries=5):
-
+	def _send_fan_command(self, command, wait_time=-1.0, max_retries=-1):
+		max_retries = self.FAN_COMMAND_RETRIES if max_retries < 0 else max_retries
+		wait_time = self.FAN_COMMAND_WAITTIME if wait_time < 0 else wait_time
 		retries = 0
 		while retries <= max_retries:
 			self._command_response = None
+			self._last_command = command
 			self._logger.debug("sending command: {}".format(command))
 			_mrbeam_plugin_implementation._ioBeam.send_fan_command(command)
 			retries += 1
 
-			self._command_event.wait(timeout=wait)
+			self._command_event.wait(timeout=wait_time)
 			self._command_event.clear()
 
 			if self._command_response:
@@ -191,10 +221,9 @@ class DustManager(object):
 			if not self.dev_mode:
 				self._logger.error("Can't read dust value.")
 			# TODO fire some Error pause (together with andy)
-			self._start_dust_extraction_thread()
 
 	def request_dust(self):
-		return True if _mrbeam_plugin_implementation._ioBeam.send_command("fan:dust") else False
+		return _mrbeam_plugin_implementation._ioBeam.send_fan_command("dust")
 
 	def _dust_timer_callback(self):
 		try:
