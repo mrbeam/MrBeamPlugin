@@ -22,6 +22,7 @@ from octoprint.server import NO_CONTENT
 from octoprint.server.util.flask import restricted_access, get_json_command_from_request, \
 	add_non_caching_response_headers, firstrun_only_access
 from octoprint.util import dict_merge
+from octoprint.settings import settings, default_settings
 
 from octoprint_mrbeam.iobeam.iobeam_handler import ioBeamHandler, IoBeamEvents
 from octoprint_mrbeam.iobeam.onebutton_handler import oneButtonHandler
@@ -168,9 +169,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				localFilePath="cam/beam-cam.jpg",
 				localUndistImage="cam/undistorted.jpg",
 				keepOriginals=False,
-				correctionSettingsFile='/home/pi/.octoprint/cam/pic_settings.yaml',
-				correctionTmpFile='/home/pi/.octoprint/cam/last_markers.json',
-				lensCalibrationFile='/home/pi/.octoprint/cam/cam_params.npz',
+				# TODO: we nee a better and unified solution for our custom paths. Some day...
+				correctionSettingsFile='{}/cam/pic_settings.yaml'.format(settings().getBaseFolder('base')),
+				correctionTmpFile='{}/cam/last_markers.json'.format(settings().getBaseFolder('base')),
+				lensCalibrationFile='{}/cam/cam_params.npz'.format(settings().getBaseFolder('base')),
 			),
 			gcode_nextgen = dict(
 				enabled = True,
@@ -853,8 +855,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		<path id="SE" d="M%(xmax)s %(ymin)sl-20,0 5,5 -10,10 10,10 10,-10 5,5 z" style="stroke:#000000; stroke-width:1px; fill:none;" />
 		</svg>"""  % {'xmin': xmin, 'xmax': xmax, 'ymin': ymin, 'ymax': ymax}
 
-#'name': 'Dummy Laser', 
-#'volume': {'width': 500.0, 'depth': 390.0, 'height': 0.0, 'origin_offset_x': 1.1, 'origin_offset_y': 1.1}, 
+#'name': 'Dummy Laser',
+#'volume': {'width': 500.0, 'depth': 390.0, 'height': 0.0, 'origin_offset_x': 1.1, 'origin_offset_y': 1.1},
 #'model': 'X', 'id': 'my_default', 'glasses': False}
 
 		target = 'local'
