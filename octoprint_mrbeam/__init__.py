@@ -167,7 +167,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				frontendUrl="/downloads/files/local/cam/beam-cam.jpg",
 				localFilePath="cam/beam-cam.jpg",
 				localUndistImage="cam/undistorted.jpg",
-				keepOriginals=False
+				keepOriginals=False,
+				correctionSettingsFile='/home/pi/.octoprint/cam/pic_settings.yaml',
+				correctionTmpFile='/home/pi/.octoprint/cam/last_markers.json',
+				lensCalibrationFile='/home/pi/.octoprint/cam/cam_params.npz',
 			),
 			gcode_nextgen = dict(
 				enabled = True,
@@ -965,8 +968,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			newMarkers[qd] = [data['result']['newMarkers'][qd]['x'],data['result']['newMarkers'][qd]['y']]
 		self._logger.debug('XXX data reprocessed: {}'.format(newMarkers))
 
-		# todo check if this is the best to do
-		pic_settings_path = self._lid_handler.getPicSettingsPath()
+		pic_settings_path = self._settings.get(["cam", "correctionSettingsFile"])
 		pic_settings = self._load_profile(pic_settings_path)
 
 		pic_settings['cornersFromImage'] = newCorners
