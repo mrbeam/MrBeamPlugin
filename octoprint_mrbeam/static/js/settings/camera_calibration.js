@@ -23,12 +23,23 @@ $(function () {
 		self.calSvgOffY = ko.observable(0);
 		self.calSvgScale = ko.observable(1);
 		self.calibrationActive = ko.observable(false);
-		self.calibrationComplete = ko.observable(false);
-		self.markerNW = ko.observable(['?', '?']);
-		self.markerSW = ko.observable(['?', '?']);
-		self.markerSE = ko.observable(['?', '?']);
-		self.markerNE = ko.observable(['?', '?']);
-
+		self.currentResults = ko.observable({});
+		self.calibrationComplete = ko.computed(function(){
+			var markers = ['NW', 'NE', 'SW', 'SE'];
+			for (var i = 0; i < markers.length; i++) {
+				var k = markers[i];
+				var m = self.currentResults()[k];
+				if(typeof m === 'undefined' || isNaN(m.x) || isNaN(m.y)){
+					return false;
+				}
+			}
+			return true;
+		});
+		self.__format_point = function(p){
+			if(typeof p === 'undefined') return '?,?';
+			else return p.x+','+p.y;
+		};
+		
 
 		self.calSvgViewBox = ko.computed(function () {
 			var w = self.calImgWidth() / self.calSvgScale();
@@ -36,10 +47,9 @@ $(function () {
 			return [self.calSvgOffX(), self.calSvgOffY(), w, h].join(' ');
 		});
 		self.currentMarker = 0;
-		self.currentResults = {};
 		self.currentMarkersFound = {};
 
-		self.calibrationSteps = [
+		self.calibrationMarkers = [
 			{name: 'start', desc: 'click to start', focus: [0, 0, 1]},
 			{name: 'NW', desc: 'North West', focus: [0, 0, self.scaleFactor]},
 			{name: 'SW', desc: 'North East', focus: [0, self.calImgHeight(), self.scaleFactor]},
@@ -48,57 +58,53 @@ $(function () {
 		];
 
 		self.startCalibration = function () {
-			self.currentResults = {};
+			self.currentResults({});
 			self.loadUndistortedPicture(function(){
-				
 				self.calibrationActive(true);
-				self.calibrationComplete(false);
+				self.nextMarker();
 			});
+		};
+		
+		self.nextMarker = function(){
+			self.currentMarker = (self.currentMarker + 1) % self.calibrationMarkers.length;
+			if(!self.calibrationComplete() && self.currentMarker === 0) self.currentMarker = 1;
+			var nextStep = self.calibrationMarkers[self.currentMarker];
+			self._highlightStep(nextStep);
+		};
+		self.previousMarker = function(){
+			var i = self.currentMarker - 1;
+			if(!self.calibrationComplete() && i === 0) i = -1;
+			if(i < 0) i = self.calibrationMarkers.length - 1;
+			self.currentMarker = i;
+			var nextStep = self.calibrationMarkers[self.currentMarker];
+			self._highlightStep(nextStep);
 		};
 
 		self.userClick = function (vm, ev) {
 			// check if picture is loaded
-			if(window.location.href.indexOf('localhost') !== -1)
-            if(self.calImgUrl() === self.staticURL){
-                console.log("Please Take new Picture or wait till its loaded...");
-                return;
-            }
-
-			var cPos = self._getClickPos(ev);
+			if(window.location.href.indexOf('localhost') === -1)
+				if(self.calImgUrl() === self.staticURL){
+					console.log("Please wait until camera image is loaded...");
+					return;
+				}
+			
+			if(self.calibrationComplete() || !self.calibrationActive()) return;
 
 			// save current stepResult
-			var step = self.calibrationSteps[self.currentMarker];
+			var step = self.calibrationMarkers[self.currentMarker];
 			if (self.currentMarker > 0) {
+				var cPos = self._getClickPos(ev);
 				var x = Math.round(cPos.xImg);
 				var y = Math.round(cPos.yImg);
-				self.currentResults[step.name] = {'x': x, 'y': y};
-				switch (step.name) {
-					case 'NW':
-						self.markerNW([x, y])
-						break;
-					case 'SW':
-						self.markerSW([x, y])
-						break;
-					case 'SE':
-						self.markerSE([x, y])
-						break;
-					case 'NE':
-						self.markerNE([x, y])
-						break;
-				}
+				var tmp = self.currentResults();
+				tmp[step.name] = {'x': x, 'y': y};
+				self.currentResults(tmp);
 			}
 
-			//check if finished and send result if true
-			self.currentMarker = (self.currentMarker + 1) % self.calibrationSteps.length;
 			if (self.currentMarker === 0) {
-				self.calibrationComplete(true);
 				self.calImgUrl(self.staticURL);
 				$('#calibration_box').removeClass('up').removeClass('down');
 			}
-
-			// update for next step
-			var nextStep = self.calibrationSteps[self.currentMarker];
-			self.zoomTo(nextStep.focus[0], nextStep.focus[1], nextStep.focus[2]);
 		};
 
 		self._getClickPos = function (ev) {
@@ -115,8 +121,14 @@ $(function () {
 
 			return clickpos;
 		};
+		
+		self._highlightStep = function(step){
+			$('.cal-row').removeClass('active');
+			$('#'+step.name).addClass('active');
+			self._zoomTo(step.focus[0], step.focus[1], step.focus[2]);
+		}
 
-		self.zoomTo = function (x, y, scale) {
+		self._zoomTo = function (x, y, scale) {
 			self.calSvgScale(scale);
 			var w = self.calImgWidth() / scale;
 			var h = self.calImgHeight() / scale;
@@ -186,7 +198,7 @@ $(function () {
 							hide: true
 						});
 						self.calibrationActive(false);
-						self.calibrationComplete(false);
+//						self.calibrationComplete(false);
 					} else {
 						console.log("Markers Found here:", self.currentMarkersFound);
 					}
@@ -243,7 +255,7 @@ $(function () {
 			var data = {
 				result: {
 					newMarkers: self.currentMarkersFound,
-					newCorners: self.currentResults
+					newCorners: self.currentResults()
 				}
 			};
 			console.log('Sending data:', data);
@@ -269,7 +281,7 @@ $(function () {
 		
 		self.saveMarkersSuccess = function (response) {
 			self.calibrationActive(false);
-			self.calibrationComplete(false);
+//			self.calibrationComplete(false);
 			new PNotify({
 				title: gettext("BAM! markers are sent."),
 				text: gettext("Cool, eh?"),
@@ -280,7 +292,7 @@ $(function () {
 
 		self.saveMarkersError = function () {
 			self.calibrationActive(false);
-			self.calibrationComplete(false);
+//			self.calibrationComplete(false);
 			new PNotify({
 				title: gettext("Couldn't send image markers."),
 				text: gettext("...and I have no clue why."),
@@ -290,18 +302,18 @@ $(function () {
 		};
 
 		self.outOfWay = function(vm,ev){
-			if(!self.calibrationComplete()){
-				var y = ev.screenY;
-				var h = screen.height;
-				var box = $('#calibration_box');
-				if(y < h/2){
-					box.removeClass('up');
-					box.addClass('down');
-				} else {
-					box.removeClass('down');
-					box.addClass('up');
-				}
-			}
+//			if(!self.calibrationComplete()){
+//				var y = ev.screenY;
+//				var h = screen.height;
+//				var box = $('#calibration_box');
+//				if(y < h/2){
+//					box.removeClass('up');
+//					box.addClass('down');
+//				} else {
+//					box.removeClass('down');
+//					box.addClass('up');
+//				}
+//			}
 		};
 
 		self.next = function () {
