@@ -13,10 +13,10 @@
 	</div>
 	<div class="calibration_summary" data-bind="visible: calibrationActive(), event:{ mouseenter: outOfWay }">
 		<div style="width:80%; margin:auto;">
-			<i class="icon-arrow-up"></i> North West: <span id="NW" data-bind="text: markerNW().join(',')"></span><br/>
-			<i class="icon-arrow-up"></i> South West: <span id="SW" data-bind="text: markerSW().join(',')"></span><br/>
-			<i class="icon-arrow-up"></i> South East: <span id="SE" data-bind="text: markerSE().join(',')"></span><br/>
-			<i class="icon-arrow-up"></i> North East: <span id="NE" data-bind="text: markerNE().join(',')"></span><br/>
+			<div class="cal-arrow NW"></div> North West: <span id="NW" data-bind="text: markerNW().join(',')"></span><br/>
+			<div class="cal-arrow SW"></div> South West: <span id="SW" data-bind="text: markerSW().join(',')"></span><br/>
+			<div class="cal-arrow SE"></div> South East: <span id="SE" data-bind="text: markerSE().join(',')"></span><br/>
+			<div class="cal-arrow NE"></div> North East: <span id="NE" data-bind="text: markerNE().join(',')"></span><br/>
 		</div>
 		<div style="text-align:center; padding-top:1.5em;">
 			<button class="btn btn-default" data-bind="click: saveCalibrationData">{{ _('Save Calibration') }}</button>

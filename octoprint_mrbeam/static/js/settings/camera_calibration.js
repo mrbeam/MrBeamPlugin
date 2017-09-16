@@ -58,6 +58,7 @@ $(function () {
 
 		self.userClick = function (vm, ev) {
 			// check if picture is loaded
+			if(window.location.href.indexOf('localhost') !== -1)
             if(self.calImgUrl() === self.staticURL){
                 console.log("Please Take new Picture or wait till its loaded...");
                 return;

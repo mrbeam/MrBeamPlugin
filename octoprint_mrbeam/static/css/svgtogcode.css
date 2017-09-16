@@ -459,3 +459,17 @@ svg#area_preview rect
 
 #calibration_box.up { top: 3vh; }
 #calibration_box.down { top: 83vh; }
+
+.cal-arrow{
+	width: 1em;
+    height: 1em;
+    background-image: url(/plugin/mrbeam/static/img/cal_marker.svg);
+    border: 0px transparent;
+    background-repeat: no-repeat;
+    background-color: white;
+    background-size: contain;
+}
+	
+.cal-arrow.NE {transform: scale(-1,1); }
+.cal-arrow.SE {transform: scale(-1,-1); }
+.cal-arrow.SW {transform: scale(1,-1); }
