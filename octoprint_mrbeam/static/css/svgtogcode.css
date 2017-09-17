@@ -446,10 +446,10 @@ svg#area_preview rect
 
 #calibration_box {
 	position: absolute;
-    top: 47vh;
-    width: 36vw;
+    top: calc(50% - 3rem);
+    width: 46%;
     background-color: white;
-    left: 32vw;
+    left: 27%;
     padding: 1em;
     box-sizing: border-box;
 	transition: top ease-in-out 1s;
@@ -471,7 +471,7 @@ svg#area_preview rect
 	background-position: center;
 }
 
-.cal-row { display: none; font-size: 2rem; }
+.cal-row { display: none; font-size: 1.5rem; }
 .cal-row.active { display: block; }
 .complete .cal-row { display: block !important; font-size: 1rem;}
 
