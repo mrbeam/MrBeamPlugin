@@ -226,6 +226,8 @@ class PhotoCreator(object):
 
 	def _move_img(self, src, dest):
 		try:
+			if os.path.exists(dest):
+				os.remove(dest)
 			shutil.move(src, dest)
 		except Exception as e: 
 			self._logger.warn("shutil.move exception: %s", e)
