@@ -281,24 +281,33 @@ $(function () {
 		
 		self.saveMarkersSuccess = function (response) {
 			self.calibrationActive(false);
-//			self.calibrationComplete(false);
 			new PNotify({
-				title: gettext("BAM! markers are sent."),
+				title: gettext("Calibration finished."),
 				text: gettext("Cool, eh?"),
 				type: "success",
 				hide: true
 			});
+			self.reset_calibration();
 		};
 
 		self.saveMarkersError = function () {
 			self.calibrationActive(false);
-//			self.calibrationComplete(false);
 			new PNotify({
-				title: gettext("Couldn't send image markers."),
-				text: gettext("...and I have no clue why."),
+				title: gettext("Couldn't send calibration data."),
+				text: gettext("...and I have no clue why. Sorry."),
 				type: "warning",
 				hide: true
 			});
+			self.reset_calibration();
+		};
+
+		self.reset_calibration = function(){
+			self.calImgUrl(self.staticURL);
+			if(self.isInitialCalibration()){
+				self.loadUndistortedPicture();
+			} else {
+				next('#calibration_step_1');
+			}
 		};
 
 		self.outOfWay = function(vm,ev){
@@ -316,12 +325,16 @@ $(function () {
 //			}
 		};
 
-		self.next = function () {
+		self.next = function (target_id) {
 			var current = $('.calibration_step.active');
 			current.removeClass('active');
-			var next = current.next('.calibration_step');
-			if (next.length === 0) {
-				next = $('#calibration_step_1');
+			if(target_id){
+				next = $(target_id);
+			} else {
+				var next = current.next('.calibration_step');
+				if (next.length === 0) {
+					next = $('#calibration_step_1');
+				}
 			}
 			next.addClass('active');
 		};

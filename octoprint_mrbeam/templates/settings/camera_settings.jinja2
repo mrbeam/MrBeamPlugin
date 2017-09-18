@@ -20,7 +20,6 @@
                 <div>{{_('Wait until the engraving is finished and Mr Beam II illuminates green.<br/> \n\
 						Open the safety lid again but do not touch the engraved cardboard.<br/>\n\
 						The camera will now take a picture of the engraving.')}}</div>
-				<!--<button class="btn btn-primary" data-bind="click: loadUndistortedPicture">{{ _('Take Picture') }}</button>-->
 				<button class="btn btn-default" data-bind="click: function(){ loadUndistortedPicture(); next(); }">{{ _('Next') }}</button>
             </div>
         </div>
@@ -28,13 +27,6 @@
             <label class="control-label" for="step3">{{ _('Step 3') }}</label>
             <div class="controls">
 				{% include 'settings/camera_settings_markers.jinja2' %}
-            </div>
-        </div>
-        <div id="calibration_step_4" class="control-group calibration_step">
-            <label class="control-label" for="step3">{{ _('Success') }}</label>
-            <div class="controls">
-                <div>{{_('Your camera is now calibrated.')}}</div>
-				<button class="btn btn-default" data-bind="click: next">{{ _('Start over') }}</button>
             </div>
         </div>
     </form>
