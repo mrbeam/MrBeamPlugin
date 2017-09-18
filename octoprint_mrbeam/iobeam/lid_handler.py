@@ -225,8 +225,6 @@ class PhotoCreator(object):
 			self._logger.exception("Exception while creating folder '%s' for camera images:", filename)
 
 	def _move_img(self, src, dest):
-		parts = os.path.split(src)
-		dest = os.path.join(dest,parts[1])
 		try:
 			shutil.move(src, dest)
 		except Exception as e: 
