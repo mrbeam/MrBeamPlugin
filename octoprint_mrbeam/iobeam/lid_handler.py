@@ -230,7 +230,7 @@ class PhotoCreator(object):
 				os.remove(dest)
 			shutil.move(src, dest)
 		except Exception as e: 
-			self._logger.warn("shutil.move exception: %s", e)
+			self._logger.warn("exception while moving file: %s", e)
 			
 #		returncode = call(['mv', src, dest])
 #		if returncode != 0:
