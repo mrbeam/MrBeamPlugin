@@ -303,7 +303,8 @@ $(function () {
 
 		self.reset_calibration = function(){
 			self.calImgUrl(self.staticURL);
-			self.currentMarker(0);
+			self._zoomTo(0,0,1);
+			self.currentMarker = 0;
 			if(self.isInitialCalibration()){
 				self.loadUndistortedPicture();
 			} else {
