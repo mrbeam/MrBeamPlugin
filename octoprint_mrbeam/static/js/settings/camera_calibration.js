@@ -303,10 +303,11 @@ $(function () {
 
 		self.reset_calibration = function(){
 			self.calImgUrl(self.staticURL);
+			self.currentMarker(0);
 			if(self.isInitialCalibration()){
 				self.loadUndistortedPicture();
 			} else {
-				next('#calibration_step_1');
+				self.goto('#calibration_step_1');
 			}
 		};
 
@@ -325,18 +326,25 @@ $(function () {
 //			}
 		};
 
-		self.next = function (target_id) {
+		self.next = function () {
 			var current = $('.calibration_step.active');
 			current.removeClass('active');
-			if(target_id){
-				next = $(target_id);
-			} else {
-				var next = current.next('.calibration_step');
-				if (next.length === 0) {
-					next = $('#calibration_step_1');
-				}
+			var next = current.next('.calibration_step');
+			if (next.length === 0) {
+				next = $('#calibration_step_1');
 			}
+
 			next.addClass('active');
+		};
+		
+		self.goto = function (target_id) {
+			var el = $(target_id);
+			if(el){
+				$('.calibration_step.active').removeClass('active');
+				$(target_id).addClass('active');
+			} else {
+				console.error('no element with id' + target_id);
+			}
 		};
 
 	}
