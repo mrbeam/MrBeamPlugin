@@ -51,7 +51,8 @@ class LidHandler(object):
 		self._photo_creator = None
 		self.image_correction_enabled = self._settings.get(['cam', 'image_correction_enabled'])
 		if self.camEnabled:
-			imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
+			#imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
+			imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"]) + '/'
 			self._photo_creator = PhotoCreator(self._plugin_manager, imagePath, self.image_correction_enabled)
 
 		self._subscribe()
@@ -225,7 +226,6 @@ class PhotoCreator(object):
 
 	def _move_img(self, src, dest):
 		try:
-			os.makedirs(os.path.dirname(dest))
 			shutil.move(src, dest)
 		except Exception as e: 
 			self._logger.warn("shutil.move exception: %s", e)
