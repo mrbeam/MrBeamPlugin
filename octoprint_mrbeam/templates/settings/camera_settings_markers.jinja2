@@ -4,7 +4,12 @@
 		<image data-bind="attr: {href: calImgUrl(), width:calImgWidth(), height:calImgHeight() }, click: userClick" />
 	</svg>
 	<div id="calibration_box">
-		<div class="calibration_help" data-bind="visible: !calibrationActive()">
+		<div class="calibration_waiting_for_picture" data-bind="visible: !cal_img_ready()">
+			<div style="text-align:center; padding-top:1.5em;">
+				<i class="icon-spinner icon-spin"></i>
+			</div>
+		</div>
+		<div class="calibration_help" data-bind="visible: cal_img_ready() && !calibrationActive()">
 			<div>{{_('Click on the arrow head of the marker in the magnified picture.<br/> \n\
 			Continue with the other markers as the picture changes.<br/>\n\
 			Once all arrowheads are marked the calibration is finished.')}}</div>
@@ -12,7 +17,7 @@
 				<button class="btn btn-default" data-bind="click: startCalibration">{{ _('Start Calibration') }}</button>
 			</div>
 		</div>
-		<div class="calibration_summary" data-bind="visible: calibrationActive(), event:{ mouseenter: outOfWay }">
+		<div class="calibration_summary" data-bind="visible: cal_img_ready() && calibrationActive(), event:{ mouseenter: outOfWay }">
 			<div style="width:80%; margin:auto;" data-bind="css: {complete: calibrationComplete()}">
 				<div id="NW" class="cal-row"><div class="cal-arrow NW"></div> North West: <span data-bind="text: __format_point(currentResults()['NW'])"></span></div>
 				<div id="SW" class="cal-row"><div class="cal-arrow SW"></div> South West: <span data-bind="text: __format_point(currentResults()['SW'])"></span></div>

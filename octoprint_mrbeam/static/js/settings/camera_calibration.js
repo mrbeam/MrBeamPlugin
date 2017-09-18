@@ -24,6 +24,7 @@ $(function () {
 		self.calSvgScale = ko.observable(1);
 		self.calibrationActive = ko.observable(false);
 		self.currentResults = ko.observable({});
+		self.cal_img_ready = ko.computed(function(){ return self.calImgUrl() !== self.staticURL; });
 		self.calibrationComplete = ko.computed(function(){
 			var markers = ['NW', 'NE', 'SW', 'SE'];
 			for (var i = 0; i < markers.length; i++) {
@@ -59,10 +60,8 @@ $(function () {
 
 		self.startCalibration = function () {
 			self.currentResults({});
-			self.loadUndistortedPicture(function(){
-				self.calibrationActive(true);
-				self.nextMarker();
-			});
+			self.calibrationActive(true);
+			self.nextMarker();
 		};
 		
 		self.nextMarker = function(){
@@ -138,33 +137,35 @@ $(function () {
 			self.calSvgOffY(offY);
 		};
 
-		self.onStartup = function () {
+		self.onStartupComplete = function () {
 //            console.log("CameraCalibrationViewModel.onStartup()");
+			if(self.isInitialCalibration()){
+				self.loadUndistortedPicture();
+			}
 		};
 
 		self.loadUndistortedPicture = function (callback) {
-			console.log("New picture requested.");
 			var success_callback = function(resp){ 
-					if(callback) callback(resp);
-					else console.log("Undistorted picture loaded");
+				if(callback) callback(resp);
+				else console.log("Calibration picture requested.");
 			};
-			var error_callback = function (response) {
+			var error_callback = function (resp) {
 				var notifyType;
 				var notifyTitle;
-				if (response.status === 200) {  // should never be 200 when failing ?? TODO
+				if (resp.status === 200) {  // should never be 200 when failing ?? TODO
 					notifyType = 'success';
 					notifyTitle = 'Success';
 				} else {
 					notifyType = 'warning';
 					notifyTitle = 'Error';
 				}
-				console.log(notifyTitle, response.responseText);
 				new PNotify({
 					title: notifyTitle,
-					text: response.responseText,
+					text: resp.responseText,
 					type: notifyType,
 					hide: true
 				});
+				if(callback) callback(resp);
 			};
 			if (self.isInitialCalibration()) {
 				$.ajax({
@@ -198,7 +199,6 @@ $(function () {
 							hide: true
 						});
 						self.calibrationActive(false);
-//						self.calibrationComplete(false);
 					} else {
 						console.log("Markers Found here:", self.currentMarkersFound);
 					}

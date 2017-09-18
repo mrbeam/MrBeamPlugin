@@ -644,7 +644,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 
 	@octoprint.plugin.BlueprintPlugin.route("/calibration", methods=["GET"])
-	@firstrun_only_access
+	#@firstrun_only_access
 	def calibration_wrapper(self):
 		from flask import request
 		from octoprint.server.api import NO_CONTENT
@@ -689,7 +689,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	# The next two calls are needed for first-run and initial camera calibration
 
 	@octoprint.plugin.BlueprintPlugin.route("/take_undistorted_picture", methods=["GET"])
-	@firstrun_only_access
+	#@firstrun_only_access
 	def takeUndistortedPictureForInitialCalibration(self):
 		self._logger.debug("INITIAL TAKE PICTURE")
 		self.take_undistorted_picture()
@@ -697,7 +697,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 
 	@octoprint.plugin.BlueprintPlugin.route("/send_calibration_markers", methods=["POST"])
-	@firstrun_only_access
+	#@firstrun_only_access
 	def sendInitialCalibrationMarkers(self):
 		if not "application/json" in request.headers["Content-Type"]:
 			return make_response("Expected content-type JSON", 400)
