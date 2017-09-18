@@ -52,7 +52,7 @@ class LidHandler(object):
 		self.image_correction_enabled = self._settings.get(['cam', 'image_correction_enabled'])
 		if self.camEnabled:
 			#imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
-			imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"]) + '/'
+			imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
 			self._photo_creator = PhotoCreator(self._plugin_manager, imagePath, self.image_correction_enabled)
 
 		self._subscribe()
@@ -225,6 +225,8 @@ class PhotoCreator(object):
 			self._logger.exception("Exception while creating folder '%s' for camera images:", filename)
 
 	def _move_img(self, src, dest):
+		parts = os.path.split(src)
+		dest = os.path.join(dest,parts[1])
 		try:
 			shutil.move(src, dest)
 		except Exception as e: 
