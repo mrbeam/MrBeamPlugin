@@ -1,8 +1,9 @@
 import time
 import threading
 import os
+import shutil
 import logging
-from subprocess import call
+#from subprocess import call
 from os.path import isfile
 
 # don't crash on a dev computer where you can't install picamera
@@ -222,10 +223,16 @@ class PhotoCreator(object):
 		except:
 			self._logger.exception("Exception while creating folder '%s' for camera images:", filename)
 
-	def _move_img(self, copy_from, copy_to):
-		returncode = call(['mv', copy_from, copy_to])
-		if returncode != 0:
-			self._logger.warn("_move_img() returncode is %s (sys call, should be 0)", returncode)
+	def _move_img(self, src, dest):
+		try:
+			os.makedirs(os.path.dirname(dest))
+			shutil.move(src, dest)
+		except Exception as e: 
+			self._logger.warn("shutil.move exception: %s", e)
+			
+#		returncode = call(['mv', src, dest])
+#		if returncode != 0:
+#			self._logger.warn("_move_img() returncode is %s (sys call, should be 0)", returncode)
 
 	def _close_cam(self):
 		if self.camera is not None:
