@@ -4,6 +4,7 @@
 		<image data-bind="attr: {href: calImgUrl(), width:calImgWidth(), height:calImgHeight() }, click: userClick" />
 	</svg>
 	<div id="calibration_box">
+		<a href='#' class='muted' onclick="$(this).parent().toggleClass('up');">{{_('move out of way')}}</a>
 		<div class="calibration_waiting_for_picture" data-bind="visible: !cal_img_ready()">
 			<div style="text-align:center; padding-top:1.5em;">
 				<i class="icon-spinner icon-spin"></i>

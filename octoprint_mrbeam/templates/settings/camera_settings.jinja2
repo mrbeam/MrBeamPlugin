@@ -4,14 +4,16 @@
 
     <form class="form-horizontal">
         <div id="calibration_step_1" class="control-group calibration_step active" data-bind="visible: !isInitialCalibration()">
-            <label class="control-label" for="step1">{{ _('Step 1') }}</label>
-            <div class="controls">
-                <div>{{_('Please put a piece of cardboard inside your Mr Beam II that it covers the whole working area.<br/> \n\
-						Afterwards close the lid. When you proceed, Mr Beam will start engraving the calibration markers on the cardboard.')}}</div>
+            <!--<label class="control-label" for="step1">{{ _('Step 1') }}</label>-->
+            <div XXclass="controls">
+				<img src="/plugin/mrbeam/static/img/cam_calibration/please_insert_cardboard.jpg" style="width:25%;" />
+                <div style="padding-left:25%;">{{_('Please put a piece of cardboard inside your Mr Beam II that it covers the whole working area.')}}</div>
+            </div>
+            <div XXclass="controls">
+				<img src="/plugin/mrbeam/static/img/cam_calibration/close_the_lid.jpg" style="width:25%;" />
+                <div style="padding-left:25%;">{{_('Afterwards close the lid. When you proceed, Mr Beam will start engraving the calibration markers on the cardboard.')}}</div>
 				<button class="btn btn-primary" data-bind="click: engrave_markers">{{ _('Engrave Markers') }}</button>
 				<button class="btn btn-default" data-bind="click: next">{{ _('Next') }}</button>
-				<img src="/plugin/mrbeam/static/img/cam_calibration/please_insert_cardboard.jpg" style="width:25%;" />
-				<img src="/plugin/mrbeam/static/img/cam_calibration/close_the_lid.jpg" style="width:25%;" />
             </div>
         </div>
         <div id="calibration_step_2" class="control-group calibration_step" data-bind="visible: !isInitialCalibration()">

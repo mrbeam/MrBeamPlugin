@@ -446,7 +446,7 @@ svg#area_preview rect
 
 #calibration_box {
 	position: absolute;
-    top: calc(50% - 3rem);
+	bottom: 3em;
     width: 46%;
     background-color: white;
     left: 27%;
@@ -456,8 +456,7 @@ svg#area_preview rect
 	box-shadow: 0 0 1em 0 #000
 }
 
-#calibration_box.up { top: 2em; }
-#calibration_box.down { top: initial; bottom: 2em; }
+#calibration_box.up { top: 2em; bottom: initial; }
 
 .cal-arrow{
 	width: 0.8em;
