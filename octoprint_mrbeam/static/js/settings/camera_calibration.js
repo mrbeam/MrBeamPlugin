@@ -233,9 +233,10 @@ $(function () {
 						]
 					};
 					// put it on the working area
-					self.workingArea.placeSVG(fileObj);
-					// start conversion
-					self.conversion.show_conversion_dialog();
+					self.workingArea.placeSVG(fileObj, function(){
+						// start conversion
+						self.conversion.show_conversion_dialog();
+					});
 				},
 				error: function (jqXHR, textStatus, errorThrown) {
 					alert("Error, status = " + textStatus + ", " +

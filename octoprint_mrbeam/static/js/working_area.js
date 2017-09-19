@@ -414,9 +414,9 @@ $(function(){
 			self.placedDesigns.remove(file);
 		};
 
-		self.placeSVG = function(file) {
+		self.placeSVG = function(file, callback) {
 			var url = self._getSVGserveUrl(file);
-			callback = function (fragment) {
+			cb = function (fragment) {
 				var id = self.getEntryId();
 				var previewId = self.generateUniqueId(id, file); // appends -# if multiple times the same design is placed.
 				var origin = file["refs"]["download"];
@@ -426,8 +426,9 @@ $(function(){
 				file.misfit = "";
 				self.placedDesigns.push(file);
 				var insertedId = self._prepareAndInsertSVG(fragment, previewId, origin);
+				if(typeof callback === 'function') callback(insertedId);
 			};
-			self.loadSVG(url, callback);
+			self.loadSVG(url, cb);
 		};
 		
 		self._prepareAndInsertSVG = function(fragment, id, origin){
@@ -550,7 +551,7 @@ $(function(){
 		self.placeDXF = function(file) {
 			var url = self._getSVGserveUrl(file);
 
-			callback = function (f) {
+			cb = function (f) {
 				var doc_dimensions = self._getDocumentDimensionAttributes(f);
 				var newSvgAttrs = self._getDocumentNamespaceAttributes(f);
 
@@ -581,7 +582,7 @@ $(function(){
 
 				self.placedDesigns.push(file);
 			};
-			Snap.loadDXF(url, callback);
+			Snap.loadDXF(url, cb);
 		};
 
 		self._get_generator_info = function(f){

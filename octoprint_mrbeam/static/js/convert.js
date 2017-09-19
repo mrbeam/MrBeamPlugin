@@ -259,9 +259,11 @@ $(function(){
 
 				self.title(gettext("Converting"));
 				$("#dialog_vector_graphics_conversion").modal("show"); // calls self.convert() afterwards
-			} else {
+			} else if(self.gcodeFilesToAppend > 0){
 				// just gcodes were placed. Start lasering right away.
 				self.convert();
+			} else {
+				console.warn('Nothing to laser.');
 			}
 		};
 
