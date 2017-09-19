@@ -1,35 +1,57 @@
 
 <div id="settings_camera_calibration">
-    <h4>{{ _('Camera Calibration') }}</h4>
 
-    <form class="form-horizontal">
-        <div id="calibration_step_1" class="control-group calibration_step active" data-bind="visible: !isInitialCalibration()">
-            <!--<label class="control-label" for="step1">{{ _('Step 1') }}</label>-->
-            <div XXclass="controls">
+	<div id="calibration_step_1" class="calibration_step active" data-bind="visible: !isInitialCalibration()">
+		<div class='calibration_manual img' style='background-image:url(/plugin/mrbeam/static/img/cam_calibration/calpic_material_size.svg)'></div>
+		<div class='calibration_manual text'>{{_('Please put a material like cardboard inside your Mr Beam II that it covers the whole working area.')}}</div>
+		<div class='calibration_manual img' style='background-image:url(/plugin/mrbeam/static/img/cam_calibration/calpic_close_lid.svg)'></div>
+		<div class='calibration_manual text'>{{_('Close the lid. Mr Beam will start engraving the calibration markers on the cardboard.')}}</div>
+		<div>
+			<button class="btn btn-primary" data-bind="click: engrave_markers">{{ _('Start Engraving') }}</button>
+		</div>
+	</div>
+	<div id="calibration_step_2" class="calibration_step" data-bind="visible: !isInitialCalibration()">
+		<div class='calibration_manual img' style='background-image:url(/plugin/mrbeam/static/img/cam_calibration/calpic_dont_touch.svg)'></div>
+		<div class='calibration_manual text'>{{_('Wait until the engraving is finished and Mr Beam II illuminates green.\
+						Open the safety lid again but do not touch the engraved cardboard.\
+						The camera will now take a picture of the engraving.')}}</div>
+		<div>
+			<button class="btn btn-default" data-bind="click: next">{{ _('Next') }}</button>
+		</div>
+	</div>
+	<div id="calibration_step_3" class="calibration_step">
+		<div class="controls">
+			{% include 'settings/camera_settings_markers.jinja2' %}
+		</div>
+	</div>
+	<!--    <form class="form-horizontal">
+		<div id="calibration_step_1" class="control-group calibration_step active" data-bind="visible: !isInitialCalibration()">
+			<label class="control-label" for="step1">{{ _('Step 1') }}</label>
+			<div XXclass="controls">
 				<img src="/plugin/mrbeam/static/img/cam_calibration/please_insert_cardboard.jpg" style="width:25%;" />
-                <div style="padding-left:25%;">{{_('Please put a piece of cardboard inside your Mr Beam II that it covers the whole working area.')}}</div>
-            </div>
-            <div XXclass="controls">
+				<div style="padding-left:25%;">{{_('Please put a piece of cardboard inside your Mr Beam II that it covers the whole working area.')}}</div>
+			</div>
+			<div XXclass="controls">
 				<img src="/plugin/mrbeam/static/img/cam_calibration/close_the_lid.jpg" style="width:25%;" />
-                <div style="padding-left:25%;">{{_('Afterwards close the lid. When you proceed, Mr Beam will start engraving the calibration markers on the cardboard.')}}</div>
+				<div style="padding-left:25%;">{{_('Afterwards close the lid. When you proceed, Mr Beam will start engraving the calibration markers on the cardboard.')}}</div>
 				<button class="btn btn-primary" data-bind="click: engrave_markers">{{ _('Engrave Markers') }}</button>
 				<button class="btn btn-default" data-bind="click: next">{{ _('Next') }}</button>
-            </div>
-        </div>
-        <div id="calibration_step_2" class="control-group calibration_step" data-bind="visible: !isInitialCalibration()">
-            <label class="control-label" for="step2">{{ _('Step 2') }}</label>
-            <div class="controls">
-                <div>{{_('Wait until the engraving is finished and Mr Beam II illuminates green.<br/> \n\
+			</div>
+		</div>
+		<div id="calibration_step_2" class="control-group calibration_step" data-bind="visible: !isInitialCalibration()">
+			<label class="control-label" for="step2">{{ _('Step 2') }}</label>
+			<div class="controls">
+				<div>{{_('Wait until the engraving is finished and Mr Beam II illuminates green.<br/> \n\
 						Open the safety lid again but do not touch the engraved cardboard.<br/>\n\
 						The camera will now take a picture of the engraving.')}}</div>
 				<button class="btn btn-default" data-bind="click: function(){ loadUndistortedPicture(); next(); }">{{ _('Next') }}</button>
-            </div>
-        </div>
-        <div id="calibration_step_3" class="control-group calibration_step">
-            <label class="control-label" for="step3">{{ _('Step 3') }}</label>
-            <div class="controls">
+			</div>
+		</div>
+		<div id="calibration_step_3" class="control-group calibration_step">
+			<label class="control-label" for="step3">{{ _('Step 3') }}</label>
+			<div class="controls">
 				{% include 'settings/camera_settings_markers.jinja2' %}
-            </div>
-        </div>
-    </form>
+			</div>
+		</div>
+	</form>-->
 </div>

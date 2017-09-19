@@ -444,6 +444,18 @@ svg#area_preview rect
 	color: #e25303;
 }
 
+.calibration_manual.text {
+    width: 48%;
+	margin-bottom: 2em;
+}
+.calibration_manual.img {
+    width: 48%;
+    padding-top: 32%;
+    background-repeat: no-repeat;
+    background-size: contain;
+    margin-bottom: 1em;
+}
+
 #calibration_box {
 	position: absolute;
 	bottom: 3em;
