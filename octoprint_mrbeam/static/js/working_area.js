@@ -425,7 +425,7 @@ $(function(){
 				file.url = url;
 				file.misfit = "";
 				self.placedDesigns.push(file);
-				var insertedId = self._prepareAndInsertSVG(fragment, id, origin);
+				var insertedId = self._prepareAndInsertSVG(fragment, previewId, origin);
 			};
 			self.loadSVG(url, callback);
 		};

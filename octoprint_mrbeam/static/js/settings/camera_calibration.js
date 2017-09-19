@@ -210,7 +210,7 @@ $(function () {
 		self.engrave_markers = function () {
 			var url = '/plugin/mrbeam/generate_calibration_markers_svg';
 			$.ajax({
-				type: "POST",
+				type: "GET",
 				url: url,
 				data: {},
 				success: function (data) {
