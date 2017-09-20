@@ -21,13 +21,13 @@
 			</div>
 		</div>
 		<div class="marker_selection_desc calibration_summary" data-bind="visible: cal_img_ready() && calibrationActive()">
-			<div style="width:80%; margin:auto;" data-bind="css: {complete: calibrationComplete()}">
+			<div data-bind="css: {complete: calibrationComplete()}">
 				<div id="NW" class="cal-row"><div class="cal-arrow NW"></div> North West: <span data-bind="text: __format_point(currentResults()['NW'])"></span></div>
 				<div id="SW" class="cal-row"><div class="cal-arrow SW"></div> South West: <span data-bind="text: __format_point(currentResults()['SW'])"></span></div>
 				<div id="SE" class="cal-row"><div class="cal-arrow SE"></div> South East: <span data-bind="text: __format_point(currentResults()['SE'])"></span></div>
 				<div id="NE" class="cal-row"><div class="cal-arrow NE"></div> North East: <span data-bind="text: __format_point(currentResults()['NE'])"></span></div>
 			</div>
-			<div style="">
+			<div style="margin-top:1em;">
 				<button class="btn btn-default" data-bind="click: previousMarker, visible: !calibrationComplete()">{{ _('Previous') }}</button>
 				<button class="btn btn-default" data-bind="click: nextMarker, visible: !calibrationComplete()">{{ _('Next') }}</button>
 				<button class="btn btn-default" data-bind="click: saveCalibrationData, visible: calibrationComplete()">{{ _('Save Calibration') }}</button>
