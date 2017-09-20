@@ -144,6 +144,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	##~~ SettingsPlugin mixin
 
 	def get_settings_defaults(self):
+		# Max img size: 2592x1944. Change requires rebuild of lens_correction_*.npz and machine recalibration.
+		image_default_width = 2048
+		image_default_height = 1536
+		
 		return dict(
 			current_profile_id="_mrbeam_junior", # yea, this needs to be like this
 			svgDPI=90,
@@ -164,6 +168,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			cam=dict(
 				enabled=True,
 				image_correction_enabled = True,
+				cam_img_width = image_default_width,
+				cam_img_height = image_default_height,
 				# todo CLEM add NPZ folder and pic_settings, calib output folder etc.
 				frontendUrl="/downloads/files/local/cam/beam-cam.jpg",
 				localFilePath="cam/beam-cam.jpg",
@@ -172,7 +178,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				# TODO: we nee a better and unified solution for our custom paths. Some day...
 				correctionSettingsFile='{}/cam/pic_settings.yaml'.format(settings().getBaseFolder('base')),
 				correctionTmpFile='{}/cam/last_markers.json'.format(settings().getBaseFolder('base')),
-				lensCalibrationFile='{}/cam/cam_params.npz'.format(settings().getBaseFolder('base')),
+				lensCalibrationFile='{}/cam/lens_correction_{}x{}.npz'.format(settings().getBaseFolder('base'), image_default_width, image_default_height),
 			),
 			gcode_nextgen = dict(
 				enabled = True,

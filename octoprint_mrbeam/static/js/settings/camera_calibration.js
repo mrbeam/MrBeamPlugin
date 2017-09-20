@@ -325,6 +325,7 @@ $(function () {
 			} else {
 				self.goto('#calibration_step_1');
 			}
+			$('.calibration_click_indicator').attr({cx:-100, cy:-100});
 		};
 
 		self.continue_to_calibration = function(){
