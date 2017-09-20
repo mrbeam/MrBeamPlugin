@@ -104,6 +104,7 @@ $(function () {
 				var tmp = self.currentResults();
 				tmp[step.name] = {'x': x, 'y': y};
 				self.currentResults(tmp);
+				$('#click_'+step.name).attr({cx:x, cy:y});
 			}
 
 			if (self.currentMarker === 0) {

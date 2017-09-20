@@ -481,6 +481,12 @@ svg#area_preview rect
 #SE .cal-arrow { transform: scale(-1,-1); }
 #SW .cal-arrow { transform: scale(1,-1); }
 
+.calibration_click_indicator {
+	stroke: #ffffff;
+	stroke-width: 1;
+	fill:none;
+}
+
 .marker_found_indicator { 
 	color: #DDD; 
 	display: inline-block;

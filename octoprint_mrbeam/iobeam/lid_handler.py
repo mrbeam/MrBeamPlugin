@@ -25,6 +25,10 @@ from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
+# Max img size: 2592x1944
+CAM_IMG_W = 2048
+CAM_IMG_H = 1536
+
 
 # singleton
 _instance = None
@@ -186,8 +190,7 @@ class PhotoCreator(object):
 
 			self.camera = PiCamera()
 			# Check with Clemens about best default values here....
-			# self.camera.resolution = (2592, 1944)
-			self.camera.resolution = (2048, 1536)
+			self.camera.resolution = (CAM_IMG_W, CAM_IMG_H)
 			self.camera.vflip = True
 			self.camera.hflip = True
 			self.camera.awb_mode = 'sunlight'
