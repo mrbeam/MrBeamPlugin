@@ -36,6 +36,12 @@ $(function () {
 			}
 			return true;
 		});
+		self.foundNW = ko.observable(false);
+		self.foundSW = ko.observable(false);
+		self.foundSE = ko.observable(false);
+		self.foundNE = ko.observable(false);
+		
+		
 		self.__format_point = function(p){
 			if(typeof p === 'undefined') return '?,?';
 			else return p.x+','+p.y;
@@ -186,6 +192,11 @@ $(function () {
 			if (plugin !== "mrbeam" || !data)
 				return;
 			if ('beam_cam_new_image' in data) {
+				var markers = data['beam_cam_new_image']['markers_found'];
+				self.foundNW(markers['NW'].recognized);
+				self.foundSW(markers['SW'].recognized);
+				self.foundSE(markers['SE'].recognized);
+				self.foundNE(markers['NE'].recognized);
 				if (data['beam_cam_new_image']['undistorted_saved']) {
 					console.log("Update imgURL");
 					self.calImgUrl('/downloads/files/local/cam/undistorted.jpg' + '?' + new Date().getTime());
