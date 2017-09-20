@@ -188,6 +188,7 @@ class PhotoCreator(object):
 			self.camera = PiCamera()
 			# Check with Clemens about best default values here....
 			# self.camera.resolution = (2592, 1944)
+			# todo get image resolution from machine
 			self.camera.resolution = (1024, 768)
 			self.camera.vflip = True
 			self.camera.hflip = True
