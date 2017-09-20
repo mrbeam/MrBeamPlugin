@@ -188,9 +188,10 @@ class PhotoCreator(object):
 			self.camera = PiCamera()
 			# Check with Clemens about best default values here....
 			# self.camera.resolution = (2592, 1944)
-			self.camera.resolution = (1024, 768)
+			self.camera.resolution = (2048, 1536)
 			self.camera.vflip = True
 			self.camera.hflip = True
+			self.camera.awb_mode = 'sun'
 			if not self.image_correction_enabled:
 				# self.camera.brightness = 70
 				self.camera.color_effects = (128, 128)

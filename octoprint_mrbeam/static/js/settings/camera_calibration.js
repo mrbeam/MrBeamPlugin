@@ -16,8 +16,8 @@ $(function() {
         self.scaleFactor = 6;
         // todo get ImgUrl from Backend/Have it hardcoded but right
         self.calImgUrl = ko.observable(self.staticURL);
-        self.calImgWidth = ko.observable(1024);
-        self.calImgHeight = ko.observable(768);
+        self.calImgWidth = ko.observable(2048);
+        self.calImgHeight = ko.observable(1536);
         self.calSvgOffX = ko.observable(0);
         self.calSvgOffY = ko.observable(0);
         self.calSvgScale = ko.observable(1);
