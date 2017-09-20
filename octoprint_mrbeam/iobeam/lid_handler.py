@@ -3,7 +3,6 @@ import threading
 import os
 import shutil
 import logging
-#from subprocess import call
 from os.path import isfile
 
 # don't crash on a dev computer where you can't install picamera
