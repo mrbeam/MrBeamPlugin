@@ -490,5 +490,9 @@ svg#area_preview rect
 #SE .cal-arrow { transform: scale(-1,-1); }
 #SW .cal-arrow { transform: scale(1,-1); }
 
-.marker_found_indicator { color: #DDD; }
+.marker_found_indicator { 
+	color: #DDD; 
+	display: inline-block;
+    padding: 0 .5em; 
+}
 .marker_found_indicator.active { color: #000; }

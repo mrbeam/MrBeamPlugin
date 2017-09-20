@@ -1,12 +1,12 @@
 
 <div style="position:relative;">
-	<svg width="100%" height="100%" viewBox="0 0 512 384" data-bind="attr: {viewBox: calSvgViewBox()}">
+	<svg style="max-width: 80vh;" width="100%" height="100%" viewBox="0 0 512 384" data-bind="attr: {viewBox: calSvgViewBox()}">
 		<image data-bind="attr: {href: calImgUrl(), width:calImgWidth(), height:calImgHeight() }, click: userClick" />
 	</svg>
 	<div id="Xcalibration_box">
-		<a href='#' class='muted' onclick="$(this).parent().toggleClass('up');">{{_('move out of way')}}</a>
+		<a class="accordion-toggle" data-bind="click:loadUndistortedPicture"><i class="icon-repeat"></i> refresh</a>
 		<div class="calibration_waiting_for_picture" data-bind="visible: !cal_img_ready()">
-			<div style="text-align:center; padding-top:1.5em;"><i class="icon-spinner icon-spin"></i></div>
+			<div style="xtext-align:center; padding-top:1.5em;"><i class="icon-spinner icon-spin"></i> searching markers</div>
 			<div class="marker_found_indicator" data-bind="css: { active: foundNW() }"><i class="icon-ok"></i> NW</div>
 			<div class="marker_found_indicator" data-bind="css: { active: foundSW() }"><i class="icon-ok"></i> SW</div>
 			<div class="marker_found_indicator" data-bind="css: { active: foundSE() }"><i class="icon-ok"></i> SE</div>

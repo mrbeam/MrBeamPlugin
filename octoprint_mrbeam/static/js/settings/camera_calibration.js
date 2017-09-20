@@ -152,7 +152,7 @@ $(function () {
 
 		self.loadUndistortedPicture = function (callback) {
 			var success_callback = function(resp){ 
-				if(callback) callback(resp);
+				if(typeof callback === 'function') callback(resp);
 				else console.log("Calibration picture requested.");
 			};
 			var error_callback = function (resp) {
@@ -171,7 +171,7 @@ $(function () {
 					type: notifyType,
 					hide: true
 				});
-				if(callback) callback(resp);
+				if(typeof callback === 'function') callback(resp);
 			};
 			if (self.isInitialCalibration()) {
 				$.ajax({
@@ -324,20 +324,11 @@ $(function () {
 			}
 		};
 
-		self.outOfWay = function(vm,ev){
-//			if(!self.calibrationComplete()){
-//				var y = ev.screenY;
-//				var h = screen.height;
-//				var box = $('#calibration_box');
-//				if(y < h/2){
-//					box.removeClass('up');
-//					box.addClass('down');
-//				} else {
-//					box.removeClass('down');
-//					box.addClass('up');
-//				}
-//			}
+		self.continue_to_calibration = function(){
+			self.loadUndistortedPicture(self.next);
 		};
+
+
 
 		self.next = function () {
 			var current = $('.calibration_step.active');
