@@ -25,10 +25,6 @@ from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
-CAM_IMG_W
-CAM_IMG_H
-
-
 # singleton
 _instance = None
 
