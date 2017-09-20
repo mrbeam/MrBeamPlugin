@@ -456,19 +456,10 @@ svg#area_preview rect
     margin-bottom: 1em;
 }
 
-#calibration_box {
-	position: absolute;
-	bottom: 3em;
-    width: 46%;
-    background-color: white;
-    left: 27%;
-    padding: 1em;
-    box-sizing: border-box;
-	transition: top ease-in-out 1s;
-	box-shadow: 0 0 1em 0 #000
+.marker_selection_desc {
+	margin-top: 1em;
+	margin-bottom: 2em;
 }
-
-#calibration_box.up { top: 2em; bottom: initial; }
 
 .cal-arrow{
 	width: 0.8em;
