@@ -489,3 +489,6 @@ svg#area_preview rect
 #NE .cal-arrow { transform: scale(-1,1); }
 #SE .cal-arrow { transform: scale(-1,-1); }
 #SW .cal-arrow { transform: scale(1,-1); }
+
+.marker_found_indicator { color: #DDD; }
+.marker_found_indicator.active { color: #000; }
