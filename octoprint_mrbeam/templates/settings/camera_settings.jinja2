@@ -23,7 +23,7 @@
 		</div>
 	</div>
 	<div id="calibration_step_3" class="calibration_step">
-		<div class="calibration_manual text">
+		<div class="calibration_manual" data-bind="css:{ text: !calibrationActive() }">
 			{% include 'settings/camera_settings_markers.jinja2' %}
 		</div>
 	</div>
