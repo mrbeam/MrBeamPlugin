@@ -256,20 +256,6 @@ class PhotoCreator(object):
 		path_to_pic_settings = self._settings.get(["cam", "correctionSettingsFile"])
 		path_to_last_markers = self._settings.get(["cam", "correctionTmpFile"])
 
-		#check if params and settings file are available
-		# todo move into function
-		# todo ANDY CLEM, CHECK PLEASE!!!
-		# errorResult = {}
-		# if not isfile(path_to_cam_params) or not isfile(path_to_pic_settings):
-		# 	self._logger.error("cam_params.npz <{}> or pic_settings.json <{}> missing. Please check!".format(path_to_cam_params,path_to_pic_settings))
-		# 	errorResult['error'] = "cam_params.npz <{}> or pic_settings.json <{}> missing. Please check!".format(path_to_cam_params,path_to_pic_settings)
-		# 	return errorResult
-		# if not isfile(path_to_input_image):
-		# 	self._logger.error("No input image found... please check")
-		# 	errorResult['error'] = "cam_params.npz <{}> or pic_settings.json <{}> missing. Please check!".format(path_to_cam_params,path_to_pic_settings)
-		# 	return errorResult
-
-
 		# todo implement high-precision feedback to frontend
 		outputImageWidth = int(2 * self._laserCutterProfile['volume']['width'])
 		outputImageHeight = int(2 * self._laserCutterProfile['volume']['depth'])
