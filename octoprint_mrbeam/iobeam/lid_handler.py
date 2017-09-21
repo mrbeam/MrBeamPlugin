@@ -259,7 +259,6 @@ class PhotoCreator(object):
 		# todo implement high-precision feedback to frontend
 		outputImageWidth = int(2 * self._laserCutterProfile['volume']['width'])
 		outputImageHeight = int(2 * self._laserCutterProfile['volume']['depth'])
-		self._logger.error('XXXX SIZE TEST: {} {}'.format(outputImageWidth,outputImageHeight))
 		correction_result = mb_pic.prepareImage(path_to_input_image,
 												path_to_output_img,
 												path_to_cam_params,
