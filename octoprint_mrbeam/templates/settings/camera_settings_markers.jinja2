@@ -1,0 +1,41 @@
+
+<div style="position:relative;">
+	<svg id="calibration_svg" style="max-width: 80vh;" width="100%" height="100%" viewBox="0 0 512 384" data-bind="attr: {viewBox: calSvgViewBox()}">
+		<image style="cursor:crosshair;" data-bind="attr: {href: calImgUrl(), width:calImgWidth(), height:calImgHeight() }, click: userClick" />
+		<circle id="click_NW" r="4" cx="-100" cy="-100" class="calibration_click_indicator" />
+		<circle id="click_SW" r="4" cx="-100" cy="-100" class="calibration_click_indicator" />
+		<circle id="click_SE" r="4" cx="-100" cy="-100" class="calibration_click_indicator" />
+		<circle id="click_NE" r="4" cx="-100" cy="-100" class="calibration_click_indicator" />
+	</svg>
+	<div>
+		<a class="accordion-toggle" data-bind="click:loadUndistortedPicture, visible: !cal_img_ready()"><i class="icon-repeat"></i> refresh</a>
+		<div class="marker_selection_desc calibration_waiting_for_picture" data-bind="visible: !cal_img_ready()">
+			<div style=""><i class="icon-spinner icon-spin"></i> searching markers</div>
+			<div class="marker_found_indicator" data-bind="css: { active: foundNW() }"><i class="icon-ok"></i> NW</div>
+			<div class="marker_found_indicator" data-bind="css: { active: foundSW() }"><i class="icon-ok"></i> SW</div>
+			<div class="marker_found_indicator" data-bind="css: { active: foundSE() }"><i class="icon-ok"></i> SE</div>
+			<div class="marker_found_indicator" data-bind="css: { active: foundNE() }"><i class="icon-ok"></i> NE</div>
+		</div>
+		<div class="marker_selection_desc calibration_help" data-bind="visible: cal_img_ready() && !calibrationActive()">
+			<div>{{_('Click on the arrow head of the marker in the magnified picture.<br/> \n\
+			Continue with the other markers as the picture changes.<br/>\n\
+			Once all arrowheads are marked the calibration is finished.')}}</div>
+			<div style="margin-top:1em;">
+				<button class="btn btn-default" data-bind="click: startCalibration">{{ _('Start Calibration') }}</button>
+			</div>
+		</div>
+		<div class="marker_selection_desc calibration_summary" data-bind="visible: cal_img_ready() && calibrationActive()">
+			<div data-bind="css: {complete: calibrationComplete()}">
+				<div id="NW" class="cal-row"><div class="cal-arrow NW"></div> North West: <span data-bind="text: __format_point(currentResults()['NW'])"></span></div>
+				<div id="SW" class="cal-row"><div class="cal-arrow SW"></div> South West: <span data-bind="text: __format_point(currentResults()['SW'])"></span></div>
+				<div id="SE" class="cal-row"><div class="cal-arrow SE"></div> South East: <span data-bind="text: __format_point(currentResults()['SE'])"></span></div>
+				<div id="NE" class="cal-row"><div class="cal-arrow NE"></div> North East: <span data-bind="text: __format_point(currentResults()['NE'])"></span></div>
+			</div>
+			<div style="margin-top:1em;">
+				<button class="btn btn-default" data-bind="click: previousMarker, visible: !calibrationComplete()">{{ _('Previous') }}</button>
+				<button class="btn btn-default" data-bind="click: nextMarker, visible: !calibrationComplete()">{{ _('Next') }}</button>
+				<button class="btn btn-default" data-bind="click: saveCalibrationData, visible: calibrationComplete()">{{ _('Save Calibration') }}</button>
+			</div>
+		</div>
+	</div>
+</div>

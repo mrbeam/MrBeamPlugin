@@ -4,6 +4,16 @@ table th.settings_plugin_svgtogcode_profiles_key,table td.settings_plugin_svgtog
 	width: 2.5em;
 }
 
+#settings_dialog.container { width: 100%; }
+
+.calibration_step {
+	display: none;
+}
+
+.calibration_step.active {
+	display: block;
+}
+
 #gcode_reference .gcommand {
 	font-weight: bold;
 }
@@ -433,3 +443,53 @@ svg#area_preview rect
 .misfit_warning i {
 	color: #e25303;
 }
+
+.calibration_manual.text {
+    width: 48%;
+	margin-bottom: 2em;
+}
+.calibration_manual.img {
+    width: 48%;
+    padding-top: 32%;
+    background-repeat: no-repeat;
+    background-size: contain;
+    margin-bottom: 1em;
+}
+
+.marker_selection_desc {
+	margin-top: 1em;
+	margin-bottom: 2em;
+}
+
+.cal-arrow{
+	width: 0.8em;
+    height: 0.8em;
+    background-image: url(/plugin/mrbeam/static/img/cal_marker.svg);
+    border: 0px transparent;
+    background-repeat: no-repeat;
+    background-color: white;
+    background-size: contain;
+	display: inline-block;
+	background-position: center;
+}
+
+.cal-row { display: none; font-size: 1.5rem; }
+.cal-row.active { display: block; }
+.complete .cal-row { display: block !important; font-size: 1rem;}
+
+#NE .cal-arrow { transform: scale(-1,1); }
+#SE .cal-arrow { transform: scale(-1,-1); }
+#SW .cal-arrow { transform: scale(1,-1); }
+
+.calibration_click_indicator {
+	stroke: #ffffff;
+	stroke-width: 1;
+	fill:none;
+}
+
+.marker_found_indicator { 
+	color: #DDD; 
+	display: inline-block;
+    padding: 0 .5em; 
+}
+.marker_found_indicator.active { color: #000; }

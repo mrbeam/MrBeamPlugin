@@ -30,6 +30,7 @@ def get_update_information(self):
 		set_info_iobeam(self, tier)
 		set_info_camera_calibration(self, tier)
 		set_info_rpiws281x(self, tier)
+#		set_info_testplugin(self, tier) # See function definition for more details
 
 	# _logger(self).debug("MrBeam Plugin provides this config (might be overridden by settings!):\n%s", yaml.dump(sw_update_config, width=50000).strip())
 
@@ -302,6 +303,18 @@ def set_info_rpiws281x(self, tier):
 		update_script="/home/pi/rpi_ws281x/update_script.sh",
 		restart="environment")
 
+# This is a template to later allow the installation of a new octoprint plugin.
+# The necesarry setup.py and plugin template is in the bitbucket repo linked below.
+# def set_info_testplugin(self, tier):
+# 	sw_update_config["testplugin"] = dict(
+# 		displayName="Test Plugin",
+# 		displayVersion="0.0.2",
+# 		type="bitbucket_commit",
+# 		user="mrbeam",
+# 		repo="testplugin",
+# 		branch="master",
+# 		pip="https://bitbucket.org/mrbeam/testplugin/get/{target_version}.zip",
+# 		restart="environment")
 
 def _get_display_name(self, name):
 	return name

@@ -259,9 +259,11 @@ $(function(){
 
 				self.title(gettext("Converting"));
 				$("#dialog_vector_graphics_conversion").modal("show"); // calls self.convert() afterwards
-			} else {
+			} else if(self.gcodeFilesToAppend.length > 0){
 				// just gcodes were placed. Start lasering right away.
 				self.convert();
+			} else {
+				console.warn('Nothing to laser.');
 			}
 		};
 
@@ -532,27 +534,32 @@ $(function(){
 		};
 
 		self._configureImgSliders = function() {
-			self.contrastSlider = $("#svgtogcode_contrast_slider").slider({
-				step: .1,
-				min: 1,
-				max: self.contrastMax,
-				value: 1,
-				tooltip: 'hide'
-			}).on("slide", function(ev){
-				self.imgContrast(ev.value);
-			});
+			var el1 = $("#svgtogcode_contrast_slider");
+			if(el1.length > 0){
+				self.contrastSlider = el1.slider({
+					step: .1,
+					min: 1,
+					max: self.contrastMax,
+					value: 1,
+					tooltip: 'hide'
+				}).on("slide", function(ev){
+					self.imgContrast(ev.value);
+				});
+			}
 
-			self.sharpeningSlider = $("#svgtogcode_sharpening_slider").slider({
-				step: 1,
-				min: 1,
-				max: self.sharpeningMax,
-				value: 1,
-				class: 'img_slider',
-				tooltip: 'hide'
-			}).on("slide", function(ev){
-				self.imgSharpening(ev.value);
-			});
-
+			var el2 = $("#svgtogcode_sharpening_slider");
+			if(el2.length > 0){
+				self.sharpeningSlider = el2.slider({
+					step: 1,
+					min: 1,
+					max: self.sharpeningMax,
+					value: 1,
+					class: 'img_slider',
+					tooltip: 'hide'
+				}).on("slide", function(ev){
+					self.imgSharpening(ev.value);
+				});
+			}
 		};
 
 		self.showExpertSettings.subscribe(function(){

@@ -1,15 +1,15 @@
 import time
 import threading
 import os
+import shutil
 import logging
-from subprocess import call
 from os.path import isfile
 
 # don't crash on a dev computer where you can't install picamera
 try:
 	from picamera import PiCamera
 	PICAMERA_AVAILABLE = True
-except ImportError as e:
+except Exception as e:
 	PICAMERA_AVAILABLE = False
 	logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler").warn(
 		"Could not import module 'picamera'. Disabling camera integration. (%s: %s)", e.__class__.__name__, e)
@@ -23,7 +23,6 @@ except ImportError as e:
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
-
 
 # singleton
 _instance = None
@@ -50,6 +49,7 @@ class LidHandler(object):
 		self._photo_creator = None
 		self.image_correction_enabled = self._settings.get(['cam', 'image_correction_enabled'])
 		if self.camEnabled:
+			#imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
 			imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
 			self._photo_creator = PhotoCreator(self._plugin_manager, imagePath, self.image_correction_enabled)
 
@@ -111,10 +111,6 @@ class LidHandler(object):
 		lid_closed = closed if closed is not None else self.lidClosed
 		self._plugin_manager.send_plugin_message("mrbeam", dict(lid_closed=lid_closed))
 
-	def getPicSettingsPath(self):
-		# todo find better solution for path settings...
-		return self._photo_creator.getPicSettingsPath()
-
 
 
 class PhotoCreator(object):
@@ -122,7 +118,9 @@ class PhotoCreator(object):
 		self._plugin_manager = _plugin_manager
 		self.final_image_path = path
 		self.image_correction_enabled = image_correction_enabled
-		self.keepOriginals = _mrbeam_plugin_implementation._settings.get(["cam", "keepOriginals"])
+		self._settings = _mrbeam_plugin_implementation._settings
+		self._laserCutterProfile = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()
+		self.keepOriginals = self._settings.get(["cam", "keepOriginals"])
 		self.active = False
 		self.last_photo = 0
 		self.save_undistorted = None
@@ -183,14 +181,16 @@ class PhotoCreator(object):
 
 	def _prepare_cam(self):
 		try:
+			w = self._settings.get(["cam", "cam_img_width"])
+			h = self._settings.get(["cam", "cam_img_height"])
 			now = time.time()
 
 			self.camera = PiCamera()
 			# Check with Clemens about best default values here....
-			# self.camera.resolution = (2592, 1944)
-			self.camera.resolution = (1024, 768)
+			self.camera.resolution = (w, h)
 			self.camera.vflip = True
 			self.camera.hflip = True
+			self.camera.awb_mode = 'sunlight'
 			if not self.image_correction_enabled:
 				# self.camera.brightness = 70
 				self.camera.color_effects = (128, 128)
@@ -225,27 +225,22 @@ class PhotoCreator(object):
 		except:
 			self._logger.exception("Exception while creating folder '%s' for camera images:", filename)
 
-	def _move_img(self, copy_from, copy_to):
-		returncode = call(['mv', copy_from, copy_to])
-		if returncode != 0:
-			self._logger.warn("_move_img() returncode is %s (sys call, should be 0)", returncode)
+	def _move_img(self, src, dest):
+		try:
+			if os.path.exists(dest):
+				os.remove(dest)
+			shutil.move(src, dest)
+		except Exception as e:
+			self._logger.warn("exception while moving file: %s", e)
+
+#		returncode = call(['mv', src, dest])
+#		if returncode != 0:
+#			self._logger.warn("_move_img() returncode is %s (sys call, should be 0)", returncode)
 
 	def _close_cam(self):
 		if self.camera is not None:
 			self.camera.close()
 			self._logger.debug("_close_cam() Camera closed ")
-
-	def getPicSettingsPath(self):
-		# todo get from config
-		return '/home/pi/cam_calibration_output/pic_settings.yaml'
-
-	def getLastMarkerPath(self):
-		# todo get from config
-		return "/home/pi/cam_calibration_output/last_markers.json"
-
-	def getCamParamsPath(self):
-		# todo get from config
-		return '/home/pi/cam_calibration_output/cam_params.npz'
 
 	def correct_image(self,pic_path_in,pic_path_out):
 		"""
@@ -257,33 +252,21 @@ class PhotoCreator(object):
 		path_to_input_image = pic_path_in
 		path_to_output_img = pic_path_out
 
-		path_to_cam_params = self.getCamParamsPath()
-		path_to_pic_settings = self.getPicSettingsPath()
-		path_to_last_markers = self.getLastMarkerPath()
-
-		#check if params and settings file are available
-		# todo move into function
-		# todo ANDY CLEM, CHECK PLEASE!!!
-		# errorResult = {}
-		# if not isfile(path_to_cam_params) or not isfile(path_to_pic_settings):
-		# 	self._logger.error("cam_params.npz <{}> or pic_settings.json <{}> missing. Please check!".format(path_to_cam_params,path_to_pic_settings))
-		# 	errorResult['error'] = "cam_params.npz <{}> or pic_settings.json <{}> missing. Please check!".format(path_to_cam_params,path_to_pic_settings)
-		# 	return errorResult
-		# if not isfile(path_to_input_image):
-		# 	self._logger.error("No input image found... please check")
-		# 	errorResult['error'] = "cam_params.npz <{}> or pic_settings.json <{}> missing. Please check!".format(path_to_cam_params,path_to_pic_settings)
-		# 	return errorResult
-
+		path_to_cam_params = self._settings.get(["cam", "lensCalibrationFile"])
+		path_to_pic_settings = self._settings.get(["cam", "correctionSettingsFile"])
+		path_to_last_markers = self._settings.get(["cam", "correctionTmpFile"])
 
 		# todo implement high-precision feedback to frontend
-		# todo get output image size from frontend/config-file
+		outputImageWidth = int(2 * self._laserCutterProfile['volume']['width'])
+		outputImageHeight = int(2 * self._laserCutterProfile['volume']['depth'])
 		correction_result = mb_pic.prepareImage(path_to_input_image,
 												path_to_output_img,
 												path_to_cam_params,
 												path_to_pic_settings,
 												path_to_last_markers,
-												size=(1000,780),
+												size=(outputImageWidth,outputImageHeight),
 												save_undistorted=self.save_undistorted,
+												quality=75,
 												debug_out=False)
 
 		if correction_result['undistorted_saved']:
@@ -294,4 +277,5 @@ class PhotoCreator(object):
 			correction_result['error'] = False
 		correction_result['image_correction'] = True
 		self._logger.info("Image correction result: %s", correction_result)
+
 		return correction_result
