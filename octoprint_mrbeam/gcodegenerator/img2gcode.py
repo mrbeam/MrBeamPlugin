@@ -40,6 +40,7 @@ class ImageProcessor():
 		self.pierce_time = float(pierce_time)/1000.0
 		self.pierce_intensity = 1000 # TODO parametrize
 		self.ignore_brighter_than = 254 # TODO parametrize
+		self.ignore_darker_than = 1 # TODO parametrize
 		self.intensity_black = float(intensity_black)
 		self.intensity_white = float(intensity_white)
 		self.feedrate_white = float(speed_white)
@@ -176,7 +177,7 @@ class ImageProcessor():
 				
 				lastBrightness = brightness
 
-			if(brightness <= self.ignore_brighter_than and self.get_intensity(brightness) > 0): # finish non-white line
+			if(not self._ignore_pixel_brightness(brightness) and self.get_intensity(brightness) > 0): # finish non-white line
 				end_of_line = x + pixelrange[-1] * self.beam 
 				self._append_gcode(self.get_gcode_for_equal_pixels(brightness, end_of_line, row_pos_y, last_y))
 				last_y = row_pos_y
@@ -186,13 +187,21 @@ class ImageProcessor():
 			
 		self._append_gcode(";EndImage\nM5\n") # important for gcode preview!
 		return self._output_gcode
+	
+	def _ignore_pixel_brightness(self, brightness):
+		if(self.intensity_white > self.intensity_black): # inverted engraving, e.g. anodized aluminum
+			return (brightness < self.ignore_darker_than)
+		else:
+			return (brightness > self.ignore_brighter_than)
+
 
 	def get_gcode_for_equal_pixels(self, brightness, target_x, target_y, last_y, comment=""):
 		# fast skipping whitespace
-		if(brightness > self.ignore_brighter_than ): 
+		if(self._ignore_pixel_brightness(brightness) ): 
 			y_gcode = "Y"+self.twodigits(target_y) if target_y != last_y else "" 
 			gcode = "G0X" + self.twodigits(target_x) + y_gcode + "S0" + comment +"\n"  
 
+			# pierctime after skipping whitespace
 			# fixed piercetime
 			if(self.pierce_time > 0):
 				gcode += "M3S"+str(self.pierce_intensity)+ "\n" + "G4P"+str(self.pierce_time)+"\n" # Dwell for P ms
@@ -322,7 +331,7 @@ if __name__ == "__main__":
 	opts.add_option("", "--no-headers", type="string", help="omits Mr Beam start and end sequences", default="false", dest="noheaders")
 
 	(options, args) = opts.parse_args()
-	
+	path = args[0]
 	if(len(args) == 2):
 		gcodefile = args[1]
 	else:
