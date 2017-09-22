@@ -422,8 +422,10 @@ class IoBeamHandler(object):
 		message_list = data.split(self.MESSAGE_NEWLINE)
 		for message in message_list:
 			processing_start = time.time()
+			# remove pings
+			while message.startswith('.'):
+				message = message[1:]
 			if not message: continue
-			if message == '.': continue # ping
 
 			err = -1
 			message_count =+ 1
