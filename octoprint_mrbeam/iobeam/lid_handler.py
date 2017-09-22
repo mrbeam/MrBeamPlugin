@@ -123,6 +123,7 @@ class PhotoCreator(object):
 		self.keepOriginals = self._settings.get(["cam", "keepOriginals"])
 		self.active = False
 		self.last_photo = 0
+		self.badQualityPicCount = 0
 		self.save_undistorted = None
 		self.camera = None
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator")
@@ -151,13 +152,31 @@ class PhotoCreator(object):
 				self._capture()
 				# check if still active...
 				if self.active:
+					# todo QUESTION: should the tmp_img_raw ever be showed in frontend?
 					move_from = self.tmp_img_raw
-					correction_result = dict(image_correction=False)
+					correction_result = dict(successful_correction=False)
 					if self.image_correction_enabled:
 						correction_result = self.correct_image(self.tmp_img_raw, self.tmp_img_prepared)
-						if 'error' in correction_result and not correction_result['error']:
+						# todo ANDY concept of what should happen with good and bad pictures etc....
+						if correction_result['successful_correction']:
 							move_from = self.tmp_img_prepared
-					self._move_img(move_from,self.final_image_path)
+							self._move_img(move_from, self.final_image_path)
+							self.badQualityPicCount = 0
+						else:
+							errorID = correction_result['error'].split(':')[0]
+							errorString = correction_result['error'].split(':')[1]
+							if errorID == 'BAD_QUALITY':
+								self.badQualityPicCount += 1
+								self._logger.error(errorString+' Number of bad quality pics: {}'.format(self.badQualityPicCount))
+								if self.badQualityPicCount > 5:
+									self._logger.error('Too many bad pics! Show bad image now.'.format(self.badQualityPicCount))
+									self._move_img(move_from, self.final_image_path)
+							elif errorID == 'NO_CALIBRATION':
+								self._logger.error(errorString)
+							elif errorID == 'NO_PICTURE_FOUND':
+								self._logger.error(errorString)
+							else: # Unknown error
+								self._logger.error(errorID+errorString)
 					self._send_frontend_picture_metadata(correction_result)
 					time.sleep(1.5)
 
@@ -273,9 +292,11 @@ class PhotoCreator(object):
 			self.save_undistorted = None
 			self._logger.debug("Undistorted Image saved.")
 
-		if not 'error' in correction_result:
-			correction_result['error'] = False
-		correction_result['image_correction'] = True
 		self._logger.info("Image correction result: %s", correction_result)
+		# check if there was an error or not.
+		if not correction_result['error']:
+			correction_result['successful_correction'] = True
+		else:
+			correction_result['successful_correction'] = False
 
 		return correction_result
