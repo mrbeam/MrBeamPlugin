@@ -119,6 +119,7 @@ class PhotoCreator(object):
 		self.final_image_path = path
 		self.image_correction_enabled = image_correction_enabled
 		self._settings = _mrbeam_plugin_implementation._settings
+		self._laserCutterProfile = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()
 		self.keepOriginals = self._settings.get(["cam", "keepOriginals"])
 		self.active = False
 		self.last_photo = 0
@@ -229,9 +230,9 @@ class PhotoCreator(object):
 			if os.path.exists(dest):
 				os.remove(dest)
 			shutil.move(src, dest)
-		except Exception as e: 
+		except Exception as e:
 			self._logger.warn("exception while moving file: %s", e)
-			
+
 #		returncode = call(['mv', src, dest])
 #		if returncode != 0:
 #			self._logger.warn("_move_img() returncode is %s (sys call, should be 0)", returncode)
@@ -255,29 +256,17 @@ class PhotoCreator(object):
 		path_to_pic_settings = self._settings.get(["cam", "correctionSettingsFile"])
 		path_to_last_markers = self._settings.get(["cam", "correctionTmpFile"])
 
-		#check if params and settings file are available
-		# todo move into function
-		# todo ANDY CLEM, CHECK PLEASE!!!
-		# errorResult = {}
-		# if not isfile(path_to_cam_params) or not isfile(path_to_pic_settings):
-		# 	self._logger.error("cam_params.npz <{}> or pic_settings.json <{}> missing. Please check!".format(path_to_cam_params,path_to_pic_settings))
-		# 	errorResult['error'] = "cam_params.npz <{}> or pic_settings.json <{}> missing. Please check!".format(path_to_cam_params,path_to_pic_settings)
-		# 	return errorResult
-		# if not isfile(path_to_input_image):
-		# 	self._logger.error("No input image found... please check")
-		# 	errorResult['error'] = "cam_params.npz <{}> or pic_settings.json <{}> missing. Please check!".format(path_to_cam_params,path_to_pic_settings)
-		# 	return errorResult
-
-
 		# todo implement high-precision feedback to frontend
-		# todo get output image size from frontend/config-file
+		outputImageWidth = int(2 * self._laserCutterProfile['volume']['width'])
+		outputImageHeight = int(2 * self._laserCutterProfile['volume']['depth'])
 		correction_result = mb_pic.prepareImage(path_to_input_image,
 												path_to_output_img,
 												path_to_cam_params,
 												path_to_pic_settings,
 												path_to_last_markers,
-												size=(1000,780),
+												size=(outputImageWidth,outputImageHeight),
 												save_undistorted=self.save_undistorted,
+												quality=75,
 												debug_out=False)
 
 		if correction_result['undistorted_saved']:
@@ -288,4 +277,5 @@ class PhotoCreator(object):
 			correction_result['error'] = False
 		correction_result['image_correction'] = True
 		self._logger.info("Image correction result: %s", correction_result)
+
 		return correction_result
