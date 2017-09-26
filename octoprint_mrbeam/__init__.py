@@ -147,7 +147,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# Max img size: 2592x1944. Change requires rebuild of lens_correction_*.npz and machine recalibration.
 		image_default_width = 2048
 		image_default_height = 1536
-		
+
 		return dict(
 			current_profile_id="_mrbeam_junior", # yea, this needs to be like this
 			svgDPI=90,
@@ -1094,12 +1094,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		newCorners = {}
 		for qd in data['result']['newCorners']:
 			newCorners[qd] = [data['result']['newCorners'][qd]['x'],data['result']['newCorners'][qd]['y']]
-		self._logger.debug('XXX data reprocessed:{}'.format(newCorners))
 
 		newMarkers = {}
 		for qd in data['result']['newMarkers']:
 			newMarkers[qd] = [data['result']['newMarkers'][qd]['x'],data['result']['newMarkers'][qd]['y']]
-		self._logger.debug('XXX data reprocessed: {}'.format(newMarkers))
 
 		pic_settings_path = self._settings.get(["cam", "correctionSettingsFile"])
 		pic_settings = self._load_profile(pic_settings_path)
