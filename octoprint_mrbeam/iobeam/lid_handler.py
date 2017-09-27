@@ -65,6 +65,7 @@ class LidHandler(object):
 		self._logger.debug("onEvent() event: %s, payload: %s", event, payload)
 		if event == IoBeamEvents.LID_OPENED:
 			self._logger.debug("onEvent() LID_OPENED")
+			self._write_lid_analytics('LID_OPENED')
 			self.lidClosed = False
 			if self._photo_creator and self.camEnabled:
 				if not self._photo_creator.active:
@@ -75,6 +76,7 @@ class LidHandler(object):
 			self._send_frontend_lid_state()
 		elif event == IoBeamEvents.LID_CLOSED:
 			self._logger.debug("onEvent() LID_CLOSED")
+			self._write_lid_analytics('LID_CLOSED')
 			self.lidClosed = True
 			self._end_photo_worker()
 			self._send_frontend_lid_state()
@@ -93,6 +95,7 @@ class LidHandler(object):
 		from flask import make_response
 		if self._photo_creator is not None:
 			self._photo_creator.save_undistorted = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(['cam','localUndistImage'])
+			# todo make_response, so that it will be accepted in the .done() method in frontend
 			return make_response('Should save Image soon, please wait.',200)
 		else:
 			return make_response('Error, no photocreator active, maybe you are developing and dont have a cam?',503)
@@ -111,6 +114,11 @@ class LidHandler(object):
 		lid_closed = closed if closed is not None else self.lidClosed
 		self._plugin_manager.send_plugin_message("mrbeam", dict(lid_closed=lid_closed))
 
+	def _write_lid_analytics(self, eventname):
+		typename = 'lid_handler'
+		# todo get lid version
+		lid_version = 1
+		_mrbeam_plugin_implementation._analytics_handler.write_event(typename,eventname,lid_version)
 
 
 class PhotoCreator(object):
@@ -157,6 +165,7 @@ class PhotoCreator(object):
 					correction_result = dict(successful_correction=False)
 					if self.image_correction_enabled:
 						correction_result = self.correct_image(self.tmp_img_raw, self.tmp_img_prepared)
+						self._write_cam_analytics(correction_result)
 						# todo ANDY concept of what should happen with good and bad pictures etc....
 						if correction_result['successful_correction']:
 							move_from = self.tmp_img_prepared
@@ -277,6 +286,7 @@ class PhotoCreator(object):
 		path_to_last_markers = self._settings.get(["cam", "correctionTmpFile"])
 
 		# todo implement high-precision feedback to frontend
+		# todo implement pixel2MM setting in _laserCutterProfile (the magic number 2 below)
 		outputImageWidth = int(2 * self._laserCutterProfile['volume']['width'])
 		outputImageHeight = int(2 * self._laserCutterProfile['volume']['depth'])
 		correction_result = mb_pic.prepareImage(path_to_input_image,
@@ -293,7 +303,7 @@ class PhotoCreator(object):
 			self.save_undistorted = None
 			self._logger.debug("Undistorted Image saved.")
 
-		self._logger.info("Image correction result: %s", correction_result)
+		self._logger.info("Image correction result: {}".format(correction_result))
 		# check if there was an error or not.
 		if not correction_result['error']:
 			correction_result['successful_correction'] = True
@@ -301,3 +311,10 @@ class PhotoCreator(object):
 			correction_result['successful_correction'] = False
 
 		return correction_result
+
+	def _write_cam_analytics(self,cam_data):
+		typename = 'cam'
+		eventname = 'picture_preparation'
+		# todo get cam version
+		cam_version = 1
+		_mrbeam_plugin_implementation._analytics_handler.write_event(typename,eventname,cam_version,payload=dict(cam_data=cam_data))
