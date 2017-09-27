@@ -178,7 +178,7 @@ class PhotoCreator(object):
 								self.badQualityPicCount += 1
 								self._logger.error(errorString+' Number of bad quality pics: {}'.format(self.badQualityPicCount))
 								# todo get the maximum for badquality pics from settings
-								if self.badQualityPicCount > 5:
+								if self.badQualityPicCount > 10:
 									self._logger.error('Too many bad pics! Show bad image now.'.format(self.badQualityPicCount))
 									self._move_img(move_from, self.final_image_path)
 							elif errorID == 'NO_CALIBRATION':
