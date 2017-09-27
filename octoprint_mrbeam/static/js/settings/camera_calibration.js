@@ -10,7 +10,7 @@ $(function () {
 	function CameraCalibrationViewModel(parameters) {
 		var self = this;
 
-		self.staticURL = "/plugin/mrbeam/static/img/cam_calib_static.jpg";
+		self.staticURL = "/plugin/mrbeam/static/img/cam_calibration/calpic_wait.png";
 
 		self.workingArea = parameters[1];
 		self.conversion = parameters[2];

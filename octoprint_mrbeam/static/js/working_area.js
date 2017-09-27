@@ -969,6 +969,8 @@ $(function(){
 				var rows = gridsize[1] || 1;
 				var dist = 2;
 				svg.grid(cols, rows, dist);
+				var mb_meta = self._set_mb_attributes(svg);
+				svg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
 				event.target.value = cols+"×"+rows;
 			}
 		};

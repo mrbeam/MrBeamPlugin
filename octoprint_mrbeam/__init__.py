@@ -88,7 +88,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._branch = self.getBranch()
 		self._hostname = self.getHostname()
 		self._octopi_info = self.get_octopi_info()
-		self._serial = self.getPiSerial()
+		self._serial = self.getMrBeamSerial()
 		self._do_initial_log()
 		try:
 			pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
@@ -1356,10 +1356,15 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		else:
 			return name.format(hostName)
 
+	def getMrBeamSerial(self):
+		return "{pi_serial}-{device_series}".format(
+			pi_serial=self.getPiSerial(),
+			device_series=self._get_val_from_device_info('device_series'))
 
 	def getPiSerial(self):
 		'''
 		Get RaspberryPi's serial number from cpuinfo file
+		:deprected: use getMrBeamSerial() instead
 		:return: String serial or ('0000000000000000' or 'ERROR000000000')
 		'''
 		# Extract serial from cpuinfo file
@@ -1376,8 +1381,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		return cpuserial
 
-
 	def getBranch(self):
+		'''
+		DEPRECTED
+		:return:
+		'''
 		branch = ''
 		try:
 			command = "git branch | grep '*'"
@@ -1399,15 +1407,29 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return branch
 
 	def get_octopi_info(self):
+		return self._get_val_from_device_info('octopi')
+		# try:
+		# 	with open('/etc/octopi_flavor', 'r') as myfile:
+		# 		flavor = myfile.read().replace('\n', '')
+		# 	with open('/etc/octopi_datetime', 'r') as myfile:
+		# 		datetime = myfile.read().replace('\n', '')
+		# 	return "{} {}".format(flavor, datetime)
+		# except Exception as e:
+		# 	# self._logger.exception("Can't read OctoPi image info due to exception:", e)
+		# 	pass
+		# return None
+
+	def _get_val_from_device_info(self, key):
+		device_info_file = '/etc/mrbeam'
 		try:
-			with open('/etc/octopi_flavor', 'r') as myfile:
-				flavor = myfile.read().replace('\n', '')
-			with open('/etc/octopi_datetime', 'r') as myfile:
-				datetime = myfile.read().replace('\n', '')
-			return "{} {}".format(flavor, datetime)
+			with open(device_info_file, 'r') as f:
+				for line in f:
+					line = line.strip()
+					token = line.split('=')
+					if len(token) >= 2 and token[0] == key:
+						return token[1]
 		except Exception as e:
-			# self._logger.exception("Can't read OctoPi image info due to exception:", e)
-			pass
+			self._logger.error("Can't read device_info_file '%s' due to exception: %s", device_info_file, e)
 		return None
 
 

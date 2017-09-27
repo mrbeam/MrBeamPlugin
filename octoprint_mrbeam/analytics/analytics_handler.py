@@ -58,7 +58,7 @@ class AnalyticsHandler(object):
 
 	@staticmethod
 	def _getserialnumber():
-		return _mrbeam_plugin_implementation.getPiSerial()
+		return _mrbeam_plugin_implementation.getMrBeamSerial()
 
 	@staticmethod
 	def _gethostname():
