@@ -459,7 +459,7 @@ $(function(){
             const is_valid = pattern.test(no_special_chars);
             if(!is_valid || no_special_chars.length <= 1){
                 const time_stamp = Date.now();
-                no_special_chars = 'mb'+no_special_chars+time_stamp
+                no_special_chars = 'mb'+no_special_chars+time_stamp;
             }
             return no_special_chars;
 		};
