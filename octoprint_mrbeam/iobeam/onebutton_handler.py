@@ -446,6 +446,8 @@ class OneButtonHandler(object):
 		self.shutdown_state = self.SHUTDOWN_STATE_GOING_DOWN
 		self._fireEvent(MrBeamEvents.SHUTDOWN_PREPARE_SUCCESS)
 
+		self._plugin._ioBeam.shutdown_fan()
+
 		if self.shutdown_command is not None:
 			try:
 				output = check_output(self.shutdown_command, shell=True)
