@@ -45,6 +45,7 @@ class LidHandler(object):
 
 		self.lidClosed = True
 		self.camEnabled = self._settings.get(["cam", "enabled"])
+		self._lid_log_version = 2
 
 		self._photo_creator = None
 		self.image_correction_enabled = self._settings.get(['cam', 'image_correction_enabled'])
@@ -115,10 +116,8 @@ class LidHandler(object):
 		self._plugin_manager.send_plugin_message("mrbeam", dict(lid_closed=lid_closed))
 
 	def _write_lid_analytics(self, eventname):
-		typename = 'lid_handler'
-		# todo get lid version
-		lid_version = 1
-		_mrbeam_plugin_implementation._analytics_handler.write_event(typename,eventname,lid_version)
+		typename = 'lidevent'
+		_mrbeam_plugin_implementation._analytics_handler.write_event(typename,eventname.lower(),self._lid_log_version)
 
 
 class PhotoCreator(object):
@@ -135,6 +134,8 @@ class PhotoCreator(object):
 		self.save_undistorted = None
 		self.camera = None
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator")
+
+		self._cam_log_version = 2
 
 		self._init_filenames()
 		self._createFolder_if_not_existing(self.final_image_path)
@@ -316,5 +317,4 @@ class PhotoCreator(object):
 		typename = 'cam'
 		eventname = 'picture_preparation'
 		# todo get cam version
-		cam_version = 1
-		_mrbeam_plugin_implementation._analytics_handler.write_event(typename,eventname,cam_version,payload=dict(cam_data=cam_data))
+		_mrbeam_plugin_implementation._analytics_handler.write_event(typename,eventname,self._cam_log_version,payload=dict(cam_data=cam_data))

@@ -4,6 +4,7 @@ import os.path
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
+from dust_collector import DustCollector
 
 # singleton
 _instance = None
@@ -19,6 +20,12 @@ class AnalyticsHandler(object):
 		self._event_bus = event_bus
 		self._settings = settings
 
+		self._current_job_id = None
+		self._current_dust_collector = None
+		self._jobevent_log_version = 2
+		self._deviceinfo_log_version = 2
+		self._dust_log_version = 2
+
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analyticshandler")
 
 		analyticsfolder = os.path.join(self._settings.getBaseFolder("base"), self._settings.get(["analyticsfolder"]))
@@ -26,7 +33,8 @@ class AnalyticsHandler(object):
 			os.makedirs(analyticsfolder)
 
 		self._jsonfile = os.path.join(analyticsfolder, "analytics_log.json")
-		self._initjsonfile()
+		if not os.path.isfile(self._jsonfile):
+			self._init_jsonfile()
 
 		self._subscribe()
 
@@ -40,78 +48,112 @@ class AnalyticsHandler(object):
 		self._event_bus.subscribe(MrBeamEvents.PRINT_PROGRESS, self._event_print_progress)
 		self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_PAUSE, self._event_laser_cooling_pause)
 		self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_RESUME, self._event_laser_cooling_resume)
+		self._event_bus.subscribe(MrBeamEvents.LASER_JOB_DONE, self._event_laser_job_done)
+		# TODO CLEM add JOB_DONE EVENT Subscription
 
-	def _initjsonfile(self):
-		if os.path.isfile(self._jsonfile):
-			return
-		else:
-			with open(self._jsonfile, 'w+') as f:
-				data = {
-					'type':'deviceinfo',
-					'v':1,
-					'serialnumber': self._getserialnumber(),
-					'hostname': self._gethostname(),
-					'timestamp': time.time()
-				}
-				json.dump(data, f)
-				f.write('\n')
+	def _init_jsonfile(self):
+		open(self._jsonfile, 'w+').close()
+		data = {
+			'hostname': self._getHostName()
+		}
+		self.write_event('deviceinfo','init_json', self._deviceinfo_log_version,payload=data)
 
 	@staticmethod
-	def _getserialnumber():
+	def _getSerialNumber():
 		return _mrbeam_plugin_implementation.getMrBeamSerial()
 
 	@staticmethod
-	def _gethostname():
+	def _getHostName():
 		return _mrbeam_plugin_implementation.getHostname()
 
 	def _event_print_started(self, event, payload):
-		self.write_event('jobevent', 'print_started', 1, {'filename': os.path.basename(payload['file'])})
+		filename = os.path.basename(payload['file'])
+		self._current_job_id = '{}_{}'.format(filename,time.time())
+		self._current_dust_collector = DustCollector()
+		self._write_jobevent('print_started', {'filename': filename})
 
 	def _event_print_paused(self, event, payload):
-		self.write_event('jobevent', 'print_paused', 1)
+		self._write_jobevent('print_paused')
 
 	def _event_print_resumed(self, event, payload):
-		self.write_event('jobevent', 'print_resumed', 1)
+		self._write_jobevent('print_resumed')
 
 	def _event_print_done(self, event, payload):
-		self.write_event('jobevent', 'print_done', 1)
+		data = self._current_dust_collector.getDustSummary()
+		self._write_jobevent('dust_summary',payload=data)
+		self._write_jobevent('print_done')
+
+	def _event_laser_job_done(self, event, payload):
+		# TODO check if resetting job_id to None makes sense
+		self._current_job_id = None
+		self._current_dust_collector = None
 
 	def _event_print_failed(self, event, payload):
-		self.write_event('jobevent', 'print_failed', 1)
+		self._write_jobevent('print_failed')
 
 	def _event_print_cancelled(self, event, payload):
-		self.write_event('jobevent', 'print_cancelled', 1)
+		self._write_jobevent('print_cancelled')
 
 	def _event_print_progress(self, event, payload):
-		self.write_event('jobevent', 'print_progress', 1, {'progress':payload})
+		self._write_jobevent('print_progress', {'progress':payload})
 
 	def _event_laser_cooling_pause(self, event, payload):
-		self.write_event('jobevent', 'laser_cooling_pause', 1)
+		self._write_jobevent('laser_cooling_pause')
 
 	def _event_laser_cooling_resume(self, event, payload):
-		self.write_event('jobevent', 'laser_cooling_resume', 1)
+		self._write_jobevent('laser_cooling_resume')
+
+	def write_conversion_details(self,details):
+		eventname = 'conversion'
+		if 'engrave' in details and details['engrave'] == True and 'raster' in details:
+			data = {
+				'laser_does': 'engrave',
+				'svgDPI': details['svgDPI']
+			}
+			data.update(details['raster'])
+			self._write_jobevent(eventname,payload=data)
+
+		if 'vector' in details and details['vector'] != []:
+			for color_settings in details['vector']:
+				data = {
+					'laser_does':'cut',
+					'svgDPI': details['svgDPI']
+				}
+				data.update(color_settings)
+				self._write_jobevent(eventname,payload=data)
+
+
+	def _write_jobevent(self,event,payload=None):
+		#TODO add data validation/preparation here
+		data = None
+		if payload is not None:
+			data = {'data':payload}
+		_jobevent_type = 'jobevent'
+		self.write_event(_jobevent_type, event, self._jobevent_log_version, payload=data)
 
 	def write_event(self, typename, eventname, version, payload=None):
 		data = {
-			'type':typename,
-			'v': version,
+			'serialnumber': self._getSerialNumber(),
+			'type': typename,
+			'log_version': version,
 			'eventname': eventname,
 			'timestamp': time.time()
 		}
-		if payload:
+		if payload is not None:
 			data.update(payload)
 		self._append_data_to_file(data)
 
-	def add_dust_log(self, values):
+	def add_dust_value(self, val):
+		self._current_dust_collector.addDustValue(val)
+
+	def write_dust_log(self, values):
 		data = {
-			'type':'dust',
-			'v':1,
 			'dust_start':values['dust_start'],
 			'dust_end': values['dust_end'],
 			'dust_start_ts': values['dust_start_ts'],
 			'dust_end_ts': values['dust_end_ts']
 		}
-		self._append_data_to_file(data)
+		self._write_jobevent('final_dust',payload=data)
 
 	def _append_data_to_file(self, data):
 		with open(self._jsonfile, 'a') as f:

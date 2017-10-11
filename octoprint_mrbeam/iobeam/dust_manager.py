@@ -48,6 +48,7 @@ class DustManager(object):
 		self.extraction_limit = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['dust']['extraction_limit']
 		self.auto_mode_time = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['dust']['auto_mode_time']
 
+
 		self._logger.debug("initialized!")
 
 	def _subscribe(self):
@@ -65,6 +66,7 @@ class DustManager(object):
 		self._dust = args['val']
 		self._dust_ts = time.time()
 		self.check_dust_value()
+		self._send_dust_to_analytics(self._dust)
 		self.send_status_to_frontend(self._dust)
 
 	def _on_command_response(self, args):
@@ -72,6 +74,7 @@ class DustManager(object):
 			self._logger.debug("command response: {}".format(args))
 			self._command_response = args['success']
 			self._command_event.set()
+
 
 	def _onEvent(self, event, payload):
 		if event == OctoPrintEvents.PRINT_STARTED:
@@ -135,7 +138,7 @@ class DustManager(object):
 				dust_end_ts = self._dust_ts
 				self._dust_timer_interval = 3
 				if dust_start_ts != dust_end_ts:
-					self._write_analytics(dust_start, dust_start_ts, dust_end, dust_end_ts)
+					self._send_final_dust_to_analytics(dust_start, dust_start_ts, dust_end, dust_end_ts)
 				else:
 					self._logger.warning("No dust value recieved during extraction time. Skipping wrinting analytics!")
 				self._activate_timed_auto_mode(self.auto_mode_time)
@@ -203,7 +206,24 @@ class DustManager(object):
 
 		return False
 
-	def _write_analytics(self, dust_start, dust_start_ts, dust_end, dust_end_ts):
+	def _send_dust_to_analytics(self,val):
+		"""
+		Sends dust value periodically to analytics_handler to get overall stats and dust profile.
+		:param val: measured dust value
+		:return:
+		"""
+		_mrbeam_plugin_implementation._analytics_handler.add_dust_value(val)
+
+	def _send_final_dust_to_analytics(self, dust_start, dust_start_ts, dust_end, dust_end_ts):
+		"""
+		Sends dust values after print_done (the final dust profile). This is to check how fast dust is getting less in the machine
+		and to check for filter full later.
+		:param dust_start: dust_value at state print_done
+		:param dust_start_ts: timestamp of dust_value at state print done
+		:param dust_end: dust_value at job_done
+		:param dust_end_ts: timestamp at dust_value at job_done
+		:return:
+		"""
 		self._logger.debug("dust extraction time {} from {} to {} (gradient: {})".format(dust_end_ts - dust_start_ts, dust_start, dust_end, (dust_start - dust_end) / (dust_end_ts - dust_start_ts)))
 		data = dict(
 			dust_start=dust_start,
@@ -211,7 +231,7 @@ class DustManager(object):
 			dust_start_ts=dust_start_ts,
 			dust_end_ts=dust_end_ts
 		)
-		_mrbeam_plugin_implementation._analytics_handler.add_dust_log(data)
+		_mrbeam_plugin_implementation._analytics_handler.write_dust_log(data)
 
 	def check_dust_value(self):
 		pass

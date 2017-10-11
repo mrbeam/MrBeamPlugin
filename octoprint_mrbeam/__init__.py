@@ -81,12 +81,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self.slicing_progress_last = -1
 		self._logger = mrb_logger("octoprint.plugins.mrbeam")
 
+	# inside initialize() OctoPrint is already loaded, not assured during __init__()!
 	def initialize(self):
 		init_mrb_logger(self._printer)
 		self.laserCutterProfileManager = laserCutterProfileManager()
 		self._logger = mrb_logger("octoprint.plugins.mrbeam")
 		self._branch = self.getBranch()
 		self._hostname = self.getHostname()
+		self._mbSerialnumber = self.getMrBeamSerial()
 		self._octopi_info = self.get_octopi_info()
 		self._serial = self.getMrBeamSerial()
 		self._do_initial_log()
@@ -450,9 +452,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	# def _on_acl_wizard_finish(self, handled):
 	# 	self._log.info("ANDYTEST _on_acl_wizard_finish() test handled: " + str(handled));
-
-
-
 
 	@octoprint.plugin.BlueprintPlugin.route("/acl", methods=["POST"])
 	def acl_wizard_api(self):
@@ -1061,7 +1060,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def debug_event(self, data):
 		event = data['event']
 		payload = data['payload'] if 'payload' in data else None
-		self._logger.info("Fireing debug event: %s, payload: %s", event, payload)
+		self._logger.info("Firing debug event: %s, payload: %s", event, payload)
 		self._event_bus.fire(event, payload)
 		return NO_CONTENT
 
@@ -1186,7 +1185,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		params = dict()
 		with open(self._CONVERSION_PARAMS_PATH) as data_file:
 			params = json.load(data_file)
-			#self._logger.debug("Read multicolor params %s" % params)
+			# self._logger.debug("Read multicolor params %s" % params)
 
 		dest_dir, dest_file = os.path.split(machinecode_path)
 		params['directory'] = dest_dir
@@ -1335,16 +1334,18 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return None, None
 
 	def getHostname(self):
-		'''
-		Get device hostnema like 'MrBeam2-F930'
-		:return: String hostname or empty string
-		'''
-		hostname = '';
-		try:
-			hostname = socket.gethostname()
-		except:
-			hostname = ERROR.HOSTNAME
-		return hostname
+		"""
+		Returns device hostname like 'MrBeam2-F930'.
+		ALSO: Checks if hostname not set and initializes otherwise.
+		:return: String hostname
+		"""
+		if not self._hostname:
+			try:
+				self._hostname = socket.gethostname()
+			except:
+				self._logger.exception("Exception while reading hostname.")
+				pass
+		return self._hostname
 
 	def getDisplayName(self, hostName):
 		code = None
@@ -1357,16 +1358,18 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return name.format(hostName)
 
 	def getMrBeamSerial(self):
-		return "{pi_serial}-{device_series}".format(
+		if not self._mbSerialnumber:
+			self._mbSerialnumber = "{pi_serial}-{device_series}".format(
 			pi_serial=self.getPiSerial(),
 			device_series=self._get_val_from_device_info('device_series'))
+		return self._mbSerialnumber
 
 	def getPiSerial(self):
-		'''
+		"""
 		Get RaspberryPi's serial number from cpuinfo file
-		:deprected: use getMrBeamSerial() instead
+		:deprecated: use getMrBeamSerial() instead
 		:return: String serial or ('0000000000000000' or 'ERROR000000000')
-		'''
+		"""
 		# Extract serial from cpuinfo file
 		cpuserial = "0000000000000000"
 		try:
@@ -1382,10 +1385,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return cpuserial
 
 	def getBranch(self):
-		'''
-		DEPRECTED
+		"""
+		DEPRECATED
 		:return:
-		'''
+		"""
 		branch = ''
 		try:
 			command = "git branch | grep '*'"
