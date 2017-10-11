@@ -15,6 +15,15 @@ def analyticsHandler(plugin):
 	return _instance
 
 
+def existing_analyticsHandler():
+	'''
+	Returns AnalyticsHandler instance only if it's already initialized. None otherwise
+	:return: None or AnalyticsHandler instance
+	'''
+	global _instance
+	return _instance
+
+
 class AnalyticsHandler(object):
 	def __init__(self, event_bus, settings):
 		self._event_bus = event_bus
@@ -180,6 +189,15 @@ class AnalyticsHandler(object):
 			'dust_end_ts': values['dust_end_ts']
 		}
 		self._write_jobevent('final_dust',payload=data)
+
+	def add_laser_intensity_value(self, laser_intesity):
+		'''
+		Laser intensity.
+		Values: 0-255. Zero means laser is off
+		:param laser_intesity:
+		'''
+		#TODO: implement this
+		pass
 
 	def _append_data_to_file(self, data):
 		with open(self._jsonfile, 'a') as f:

@@ -27,6 +27,7 @@ from octoprint.filemanager.destinations import FileDestinations
 from octoprint.util import get_exception_string, RepeatedTimer, CountedEvent, sanitize_ascii
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
+from octoprint_mrbeam.analytics.analytics_handler import existing_analyticsHandler
 
 ### MachineCom #########################################################################################################
 class MachineCom(object):
@@ -45,6 +46,8 @@ class MachineCom(object):
 	STATE_LOCKED = 12
 	STATE_HOMING = 13
 	STATE_FLASHING = 14
+
+	pattern_status = re.compile("<(?P<status>\w+),.*WPos:(?P<pos_x>[0-9.\-]+),(?P<pos_y>[0-9.\-]+),.*laser (?P<laser_state>\w+):(?P<laser_intensity>\d+).*>")
 
 	def __init__(self, port=None, baudrate=None, callbackObject=None, printerProfileManager=None):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.comm_acc2")
@@ -368,14 +371,29 @@ class MachineCom(object):
 		if self._grbl_state == 'Queue':
 			if time.time() - self._pause_delay_time > 0.3:
 				if not self.isPaused():
+					self._logger.debug("_handle_status_report() Pausing since we got status 'Queue' from grbl.")
 					self.setPause(True, False)
 		elif self._grbl_state == 'Run' or self._grbl_state == 'Idle':
 			if time.time() - self._pause_delay_time > 0.3:
 				if self.isPaused():
+					self._logger.debug("_handle_status_report() Unpausing since we got status 'Run' from grbl.")
 					self.setPause(False, False)
 		self._update_grbl_pos(line)
+		self._handle_laser_intensity_for_analytics(line)
 		#if self._metricf is not None:
 		#	self._metricf.write(line)
+
+	def _handle_laser_intensity_for_analytics(self, line):
+		match = self.pattern_status.match(line)
+		if match:
+			laser_intensity = 0
+			if match.group('laser_state') == 'on':
+				laser_intensity = int(match.group('laser_intensity'))
+				analytics = existing_analyticsHandler()
+				if analytics:
+					analytics.add_laser_intensity_value(laser_intensity)
+		else:
+			self._logger.warn("_handle_laser_intensity_for_analytics() status line didn't match expected pattern. ignoring")
 
 	def _handle_ok_message(self):
 		if self._state == self.STATE_HOMING:
