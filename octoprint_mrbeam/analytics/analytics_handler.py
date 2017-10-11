@@ -14,6 +14,15 @@ def analyticsHandler(plugin):
 	return _instance
 
 
+def existing_analyticsHandler():
+	'''
+	Returns AnalyticsHandler instance only if it's already initialized. None otherwise
+	:return: None or AnalyticsHandler instance
+	'''
+	global _instance
+	return _instance
+
+
 class AnalyticsHandler(object):
 	def __init__(self, event_bus, settings):
 		self._event_bus = event_bus

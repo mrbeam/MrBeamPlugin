@@ -27,7 +27,7 @@ from octoprint.filemanager.destinations import FileDestinations
 from octoprint.util import get_exception_string, RepeatedTimer, CountedEvent, sanitize_ascii
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
-from octoprint_mrbeam.analytics.analytics_handler import analyticsHandler
+from octoprint_mrbeam.analytics.analytics_handler import existing_analyticsHandler
 
 ### MachineCom #########################################################################################################
 class MachineCom(object):
@@ -389,7 +389,9 @@ class MachineCom(object):
 			laser_intensity = 0
 			if match.group('laser_state') == 'on':
 				laser_intensity = int(match.group('laser_intensity'))
-			analyticsHandler().add_laser_intensity_value(laser_intensity)
+				analytics = existing_analyticsHandler()
+				if analytics:
+					analytics.add_laser_intensity_value(laser_intensity)
 		else:
 			self._logger.warn("_handle_laser_intensity_for_analytics() status line didn't match expected pattern. ignoring")
 
