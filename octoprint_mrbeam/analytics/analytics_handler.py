@@ -123,7 +123,12 @@ class AnalyticsHandler(object):
 		self._append_data_to_file(data)
 
 	def add_laser_intensity_value(self, laser_intesity):
-		#TODO
+		'''
+		Laser intensity.
+		Values: 0-255. Zero means laser is off
+		:param laser_intesity:
+		'''
+		#TODO: implement this
 		pass
 
 	def _append_data_to_file(self, data):
