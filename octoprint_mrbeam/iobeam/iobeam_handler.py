@@ -20,9 +20,9 @@ def ioBeamHandler(eventBusOct, socket_file=None):
 
 
 class IoBeamEvents(object):
-	'''
+	"""
 	These events are meant to be handled by OctoPrints event system
-	'''
+	"""
 	CONNECT =            "iobeam.connect"
 	DISCONNECT =         "iobeam.disconnect"
 	ONEBUTTON_PRESSED =  "iobeam.onebutton.pressed"
@@ -34,10 +34,10 @@ class IoBeamEvents(object):
 	LID_CLOSED =         "iobeam.lid.closed"
 
 class IoBeamValueEvents(object):
-	'''
+	"""
 	These Values / events are not intended to be handled byt OctoPrints event system
 	but by IoBeamHandler's own event system
-	'''
+	"""
 	LASER_TEMP =          "iobeam.laser.temp"
 	DUST_VALUE =          "iobeam.dust.value"
 	FAN_ON_RESPONSE =     "iobeam.fan.on.response"

@@ -45,7 +45,6 @@ class LidHandler(object):
 
 		self.lidClosed = True
 		self.camEnabled = self._settings.get(["cam", "enabled"])
-		self._lid_log_version = 2
 
 		self._photo_creator = None
 		self.image_correction_enabled = self._settings.get(['cam', 'image_correction_enabled'])
@@ -66,7 +65,7 @@ class LidHandler(object):
 		self._logger.debug("onEvent() event: %s, payload: %s", event, payload)
 		if event == IoBeamEvents.LID_OPENED:
 			self._logger.debug("onEvent() LID_OPENED")
-			self._write_lid_analytics('LID_OPENED')
+			self._send_state_to_analytics('lid_opened')
 			self.lidClosed = False
 			if self._photo_creator and self.camEnabled:
 				if not self._photo_creator.active:
@@ -77,7 +76,7 @@ class LidHandler(object):
 			self._send_frontend_lid_state()
 		elif event == IoBeamEvents.LID_CLOSED:
 			self._logger.debug("onEvent() LID_CLOSED")
-			self._write_lid_analytics('LID_CLOSED')
+			self._send_state_to_analytics('lid_closed')
 			self.lidClosed = True
 			self._end_photo_worker()
 			self._send_frontend_lid_state()
@@ -115,9 +114,8 @@ class LidHandler(object):
 		lid_closed = closed if closed is not None else self.lidClosed
 		self._plugin_manager.send_plugin_message("mrbeam", dict(lid_closed=lid_closed))
 
-	def _write_lid_analytics(self, eventname):
-		typename = 'lidevent'
-		_mrbeam_plugin_implementation._analytics_handler.write_event(typename,eventname.lower(),self._lid_log_version)
+	def _send_state_to_analytics(self, eventname):
+		_mrbeam_plugin_implementation._analytics_handler.update_cam_session_id(eventname)
 
 
 class PhotoCreator(object):
@@ -314,7 +312,6 @@ class PhotoCreator(object):
 		return correction_result
 
 	def _write_cam_analytics(self,cam_data):
-		typename = 'cam'
-		eventname = 'picture_preparation'
+		eventname = 'pic_prep'
 		# todo get cam version
-		_mrbeam_plugin_implementation._analytics_handler.write_event(typename,eventname,self._cam_log_version,payload=dict(cam_data=cam_data))
+		_mrbeam_plugin_implementation._analytics_handler.write_cam_event(eventname,payload=cam_data)

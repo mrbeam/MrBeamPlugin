@@ -22,9 +22,12 @@ class AnalyticsHandler(object):
 
 		self._current_job_id = None
 		self._current_dust_collector = None
+		self._current_cam_session_id = None
+
 		self._jobevent_log_version = 2
 		self._deviceinfo_log_version = 2
 		self._dust_log_version = 2
+		self._cam_event_log_version = 2
 
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analyticshandler")
 
@@ -49,14 +52,20 @@ class AnalyticsHandler(object):
 		self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_PAUSE, self._event_laser_cooling_pause)
 		self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_RESUME, self._event_laser_cooling_resume)
 		self._event_bus.subscribe(MrBeamEvents.LASER_JOB_DONE, self._event_laser_job_done)
-		# TODO CLEM add JOB_DONE EVENT Subscription
 
 	def _init_jsonfile(self):
 		open(self._jsonfile, 'w+').close()
 		data = {
-			'hostname': self._getHostName()
+			'hostname': self._getHostName(),
+			'laser_head_version': self._getLaserHeadVersion()
 		}
 		self.write_event('deviceinfo','init_json', self._deviceinfo_log_version,payload=data)
+
+	@staticmethod
+	def _getLaserHeadVersion():
+		# TODO CLEM ADD laser_head_id for real
+		laser_head_version = 1
+		return laser_head_version
 
 	@staticmethod
 	def _getSerialNumber():
@@ -125,13 +134,30 @@ class AnalyticsHandler(object):
 
 	def _write_jobevent(self,event,payload=None):
 		#TODO add data validation/preparation here
-		data = None
+		data = dict(job_id=self._current_job_id)
+
 		if payload is not None:
-			data = {'data':payload}
+			data['data'] = payload
+
 		_jobevent_type = 'jobevent'
 		self.write_event(_jobevent_type, event, self._jobevent_log_version, payload=data)
 
-	def write_event(self, typename, eventname, version, payload=None):
+	def update_cam_session_id(self, lid_state):
+		if lid_state == 'lid_opened':
+			self._current_cam_session_id = 'cam_{}_{}'.format(self._getSerialNumber(),time.time())
+		else:
+			self._current_cam_session_id = None
+
+	def write_cam_event(self,event,payload=None):
+		#TODO add data validation/preparation here
+		data = dict(cam_session=self._current_cam_session_id)
+
+		if payload is not None:
+			data['data'] = payload
+
+		self.write_event('cam', event, self._cam_event_log_version, payload=data)
+
+	def write_event(self, typename, eventname, version, newKeys=None, payload=None):
 		data = {
 			'serialnumber': self._getSerialNumber(),
 			'type': typename,
