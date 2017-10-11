@@ -113,6 +113,10 @@ class AnalyticsHandler(object):
 		}
 		self._append_data_to_file(data)
 
+	def add_laser_intensity_value(self, laser_intesity):
+		#TODO
+		pass
+
 	def _append_data_to_file(self, data):
 		with open(self._jsonfile, 'a') as f:
 			json.dump(data, f)
