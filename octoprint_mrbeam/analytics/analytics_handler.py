@@ -4,7 +4,7 @@ import os.path
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
-from dust_collector import DustCollector
+from value_collector import ValueCollector
 
 # singleton
 _instance = None
@@ -30,8 +30,13 @@ class AnalyticsHandler(object):
 		self._settings = settings
 
 		self._current_job_id = None
+		self._isJobPaused = False
+		self._isCoolingPaused = False
+
 		self._current_dust_collector = None
 		self._current_cam_session_id = None
+		self._current_intensity_collector = None
+		self._current_lasertemp_collector = None
 
 		self._jobevent_log_version = 2
 		self._deviceinfo_log_version = 2
@@ -87,24 +92,34 @@ class AnalyticsHandler(object):
 	def _event_print_started(self, event, payload):
 		filename = os.path.basename(payload['file'])
 		self._current_job_id = '{}_{}'.format(filename,time.time())
-		self._current_dust_collector = DustCollector()
+		self._current_dust_collector = ValueCollector()
+		self._current_intensity_collector = ValueCollector()
+		self._current_lasertemp_collector = ValueCollector()
 		self._write_jobevent('print_started', {'filename': filename})
 
 	def _event_print_paused(self, event, payload):
-		self._write_jobevent('print_paused')
+		if not self._isJobPaused:
+			self._write_jobevent('print_paused')
+			self._isJobPaused = True
 
 	def _event_print_resumed(self, event, payload):
-		self._write_jobevent('print_resumed')
+		if self._isJobPaused:
+			self._write_jobevent('print_resumed')
+			self._isJobPaused = False
 
 	def _event_print_done(self, event, payload):
-		data = self._current_dust_collector.getDustSummary()
-		self._write_jobevent('dust_summary',payload=data)
+		self._write_jobevent('lasertemp_summary',payload=self._current_lasertemp_collector.getSummary())
+		self._write_jobevent('intensity_summary',payload=self._current_intensity_collector.getSummary())
+		self._write_jobevent('dust_summary',payload=self._current_dust_collector.getSummary())
 		self._write_jobevent('print_done')
 
 	def _event_laser_job_done(self, event, payload):
-		# TODO check if resetting job_id to None makes sense
+		# TODO check if resetting job_id etc to None makes sense
 		self._current_job_id = None
 		self._current_dust_collector = None
+		self._current_intensity_collector = None
+		self._current_lasertemp_collector = None
+		self._write_jobevent('laserjob_done')
 
 	def _event_print_failed(self, event, payload):
 		self._write_jobevent('print_failed')
@@ -116,10 +131,14 @@ class AnalyticsHandler(object):
 		self._write_jobevent('print_progress', {'progress':payload})
 
 	def _event_laser_cooling_pause(self, event, payload):
-		self._write_jobevent('laser_cooling_pause')
+		if not self._isCoolingPaused:
+			self._write_jobevent('laser_cooling_start')
+			self._isCoolingPaused = True
 
 	def _event_laser_cooling_resume(self, event, payload):
-		self._write_jobevent('laser_cooling_resume')
+		if self._isCoolingPaused:
+			self._write_jobevent('laser_cooling_done')
+			self._isCoolingPaused = False
 
 	def write_conversion_details(self,details):
 		eventname = 'conversion'
@@ -143,7 +162,7 @@ class AnalyticsHandler(object):
 
 	def _write_jobevent(self,event,payload=None):
 		#TODO add data validation/preparation here
-		data = dict(job_id=self._current_job_id)
+		data = dict(job_id = self._current_job_id)
 
 		if payload is not None:
 			data['data'] = payload
@@ -159,14 +178,14 @@ class AnalyticsHandler(object):
 
 	def write_cam_event(self,event,payload=None):
 		#TODO add data validation/preparation here
-		data = dict(cam_session=self._current_cam_session_id)
+		data = dict(cam_session = self._current_cam_session_id)
 
 		if payload is not None:
 			data['data'] = payload
 
 		self.write_event('cam', event, self._cam_event_log_version, payload=data)
 
-	def write_event(self, typename, eventname, version, newKeys=None, payload=None):
+	def write_event(self, typename, eventname, version, payload=None):
 		data = {
 			'serialnumber': self._getSerialNumber(),
 			'type': typename,
@@ -178,8 +197,26 @@ class AnalyticsHandler(object):
 			data.update(payload)
 		self._append_data_to_file(data)
 
-	def add_dust_value(self, val):
-		self._current_dust_collector.addDustValue(val)
+	def add_dust_value(self, dust_value):
+		"""
+		:param dust_value:
+		:return:
+		"""
+		self._current_dust_collector.addValue(dust_value)
+
+	def add_laser_temp_value(self,laser_temp):
+		"""
+		:param laser_temp:
+		:return:
+		"""
+		self._current_lasertemp_collector.addValue(laser_temp)
+
+	def add_laser_intensity_value(self, laser_intensity):
+		"""
+		Laser intensity.
+		:param laser_intensity: 0-255. Zero means laser is off
+		"""
+		self._current_intensity_collector.addValue(laser_intensity)
 
 	def write_dust_log(self, values):
 		data = {
@@ -189,15 +226,6 @@ class AnalyticsHandler(object):
 			'dust_end_ts': values['dust_end_ts']
 		}
 		self._write_jobevent('final_dust',payload=data)
-
-	def add_laser_intensity_value(self, laser_intesity):
-		'''
-		Laser intensity.
-		Values: 0-255. Zero means laser is off
-		:param laser_intesity:
-		'''
-		#TODO: implement this
-		pass
 
 	def _append_data_to_file(self, data):
 		with open(self._jsonfile, 'a') as f:
