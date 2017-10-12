@@ -141,19 +141,18 @@ class AnalyticsHandler(object):
 			self._isCoolingPaused = False
 
 	def write_conversion_details(self,details):
-		eventname = 'conversion'
 		if 'engrave' in details and details['engrave'] == True and 'raster' in details:
+			eventname = 'conv_engrave'
 			data = {
-				'laser_does': 'engrave',
 				'svgDPI': details['svgDPI']
 			}
 			data.update(details['raster'])
 			self._write_jobevent(eventname,payload=data)
 
 		if 'vector' in details and details['vector'] != []:
+			eventname = 'conv_cut'
 			for color_settings in details['vector']:
 				data = {
-					'laser_does':'cut',
 					'svgDPI': details['svgDPI']
 				}
 				data.update(color_settings)
