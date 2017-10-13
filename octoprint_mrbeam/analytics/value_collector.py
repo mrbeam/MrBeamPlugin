@@ -1,7 +1,7 @@
 import pandas as pd
 
-class ValueCollector(object):
 
+class ValueCollector(object):
 	def __init__(self):
 		self.valueList = list()
 
@@ -19,7 +19,11 @@ class ValueCollector(object):
 		descDict = {
 			'median': valueDf.median()
 		}
-		describeSeries = valueDf.describe()
-		for index in describeSeries.index:
-			descDict[index] = describeSeries.loc[index][0]
+		try:
+			describeSeries = valueDf.describe()
+			for index in describeSeries.index:
+				descDict[index] = describeSeries.loc[index][0]
+		except ValueError:
+			descDict['error'] = 'ValueError'
+
 		return descDict

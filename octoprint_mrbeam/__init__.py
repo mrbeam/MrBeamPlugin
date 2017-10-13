@@ -80,6 +80,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self.print_progress_last = -1
 		self.slicing_progress_last = -1
 		self._logger = mrb_logger("octoprint.plugins.mrbeam")
+		self._hostname = self.getHostname()
+		self._mbSerialnumber = self.getMrBeamSerial()
+
 
 	# inside initialize() OctoPrint is already loaded, not assured during __init__()!
 	def initialize(self):
@@ -87,8 +90,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self.laserCutterProfileManager = laserCutterProfileManager()
 		self._logger = mrb_logger("octoprint.plugins.mrbeam")
 		self._branch = self.getBranch()
-		self._hostname = self.getHostname()
-		self._mbSerialnumber = self.getMrBeamSerial()
 		self._octopi_info = self.get_octopi_info()
 		self._serial = self.getMrBeamSerial()
 		self._do_initial_log()
@@ -1339,13 +1340,15 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		ALSO: Checks if hostname not set and initializes otherwise.
 		:return: String hostname
 		"""
-		if not self._hostname:
+		try:
+			return self._hostname
+		except AttributeError:
 			try:
 				self._hostname = socket.gethostname()
 			except:
 				self._logger.exception("Exception while reading hostname.")
 				pass
-		return self._hostname
+			return self._hostname
 
 	def getDisplayName(self, hostName):
 		code = None
@@ -1358,7 +1361,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return name.format(hostName)
 
 	def getMrBeamSerial(self):
-		if not self._mbSerialnumber:
+		try:
+			return self._mbSerialnumber
+		except AttributeError:
 			self._mbSerialnumber = "{pi_serial}-{device_series}".format(
 			pi_serial=self.getPiSerial(),
 			device_series=self._get_val_from_device_info('device_series'))

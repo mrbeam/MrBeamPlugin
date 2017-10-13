@@ -5,6 +5,7 @@ from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents, IoBeamValueEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
+from octoprint_mrbeam.analytics.analytics_handler import analyticsHandler
 
 
 # singleton
@@ -78,19 +79,20 @@ class TemperatureManager(object):
 		self.temperature = kwargs['temp']
 		self.temperature_ts = time.time()
 		self._check_temp_val()
+		analyticsHandler(_mrbeam_plugin_implementation).add_laser_temp_value(self.temperature)
 		self.send_status_to_frontend(self.temperature)
 
 	def request_temp(self):
-		'''
+		"""
 		Send a temperature request to iobeam
 		:return: True if sent successfully, False otherwise.
-		'''
+		"""
 		return _mrbeam_plugin_implementation._ioBeam.send_temperature_request()
 
 	def cooling_stop(self):
-		'''
+		"""
 		Stop the laser for cooling purpose
-		'''
+		"""
 		if  _mrbeam_plugin_implementation._oneButtonHandler.is_printing():
 			self._logger.debug("cooling_stop()")
 			self.is_cooling_since = time.time()
@@ -99,9 +101,9 @@ class TemperatureManager(object):
 			self.send_cooling_state_to_frontend(True)
 
 	def cooling_resume(self):
-		'''
+		"""
 		Resume laser once the laser has cooled down enough.
-		'''
+		"""
 		self._logger.debug("cooling_resume()")
 		_mrbeam_plugin_implementation._event_bus.fire(MrBeamEvents.LASER_COOLING_RESUME, dict(temp=self.temperature))
 		_mrbeam_plugin_implementation._oneButtonHandler.cooling_down_end(only_if_behavior_is_cooling=True)

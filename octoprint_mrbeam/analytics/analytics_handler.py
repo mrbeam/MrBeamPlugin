@@ -16,10 +16,10 @@ def analyticsHandler(plugin):
 
 
 def existing_analyticsHandler():
-	'''
+	"""
 	Returns AnalyticsHandler instance only if it's already initialized. None otherwise
 	:return: None or AnalyticsHandler instance
-	'''
+	"""
 	global _instance
 	return _instance
 
@@ -108,24 +108,31 @@ class AnalyticsHandler(object):
 			self._isJobPaused = False
 
 	def _event_print_done(self, event, payload):
-		self._write_jobevent('lasertemp_summary',payload=self._current_lasertemp_collector.getSummary())
-		self._write_jobevent('intensity_summary',payload=self._current_intensity_collector.getSummary())
 		self._write_jobevent('dust_summary',payload=self._current_dust_collector.getSummary())
+		self._write_jobevent('intensity_summary',payload=self._current_intensity_collector.getSummary())
+		self._write_jobevent('lasertemp_summary', payload=self._current_lasertemp_collector.getSummary())
 		self._write_jobevent('print_done')
 
-	def _event_laser_job_done(self, event, payload):
-		# TODO check if resetting job_id etc to None makes sense
+	def _cleanup(self,successfull):
 		self._current_job_id = None
 		self._current_dust_collector = None
 		self._current_intensity_collector = None
 		self._current_lasertemp_collector = None
+
+	def _event_laser_job_done(self, event, payload):
 		self._write_jobevent('laserjob_done')
+		# TODO check if resetting job_id etc to None makes sense
+		self._cleanup(successfull=True)
 
 	def _event_print_failed(self, event, payload):
 		self._write_jobevent('print_failed')
+		self._cleanup(successfull=False)
+
 
 	def _event_print_cancelled(self, event, payload):
 		self._write_jobevent('print_cancelled')
+		self._cleanup(successfull=False)
+
 
 	def _event_print_progress(self, event, payload):
 		self._write_jobevent('print_progress', {'progress':payload})
@@ -158,7 +165,6 @@ class AnalyticsHandler(object):
 				data.update(color_settings)
 				self._write_jobevent(eventname,payload=data)
 
-
 	def _write_jobevent(self,event,payload=None):
 		#TODO add data validation/preparation here
 		data = dict(job_id = self._current_job_id)
@@ -175,7 +181,7 @@ class AnalyticsHandler(object):
 		else:
 			self._current_cam_session_id = None
 
-	def write_cam_event(self,event,payload=None):
+	def _write_cam_event(self, event, payload=None):
 		#TODO add data validation/preparation here
 		data = dict(cam_session = self._current_cam_session_id)
 
@@ -201,21 +207,24 @@ class AnalyticsHandler(object):
 		:param dust_value:
 		:return:
 		"""
-		self._current_dust_collector.addValue(dust_value)
+		if self._current_dust_collector is not None:
+			self._current_dust_collector.addValue(dust_value)
 
 	def add_laser_temp_value(self,laser_temp):
 		"""
 		:param laser_temp:
 		:return:
 		"""
-		self._current_lasertemp_collector.addValue(laser_temp)
+		if self._current_lasertemp_collector is not None:
+			self._current_lasertemp_collector.addValue(laser_temp)
 
 	def add_laser_intensity_value(self, laser_intensity):
 		"""
 		Laser intensity.
 		:param laser_intensity: 0-255. Zero means laser is off
 		"""
-		self._current_intensity_collector.addValue(laser_intensity)
+		if self._current_intensity_collector is not None:
+			self._current_intensity_collector.addValue(laser_intensity)
 
 	def write_dust_log(self, values):
 		data = {
