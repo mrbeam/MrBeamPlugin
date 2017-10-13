@@ -32,6 +32,7 @@ class AnalyticsHandler(object):
 		self._current_job_id = None
 		self._isJobPaused = False
 		self._isCoolingPaused = False
+		self._isJobDone = False
 
 		self._current_dust_collector = None
 		self._current_cam_session_id = None
@@ -92,28 +93,40 @@ class AnalyticsHandler(object):
 	def _event_print_started(self, event, payload):
 		filename = os.path.basename(payload['file'])
 		self._current_job_id = '{}_{}'.format(filename,time.time())
+		self._init_collectors()
+		self._isJobPaused = False
+		self._isCoolingPaused = False
+		self._isJobDone = False
+		self._write_jobevent('print_started', {'filename': filename})
+
+	def _init_collectors(self):
 		self._current_dust_collector = ValueCollector()
 		self._current_intensity_collector = ValueCollector()
 		self._current_lasertemp_collector = ValueCollector()
-		self._write_jobevent('print_started', {'filename': filename})
 
 	def _event_print_paused(self, event, payload):
-		if not self._isJobPaused:
+		if not self._isJobPaused: #prevent multiple printPaused events per Job
 			self._write_jobevent('print_paused')
 			self._isJobPaused = True
 
 	def _event_print_resumed(self, event, payload):
-		if self._isJobPaused:
+		if self._isJobPaused:  #prevent multiple printResume events per Job
 			self._write_jobevent('print_resumed')
 			self._isJobPaused = False
 
 	def _event_print_done(self, event, payload):
+		if not self._isJobDone:
+			self._isJobDone = True #prevent two jobDone events per Job
+			self._write_jobevent('print_done')
+			self._write_collectors()
+
+	def _write_collectors(self):
 		self._write_jobevent('dust_summary',payload=self._current_dust_collector.getSummary())
 		self._write_jobevent('intensity_summary',payload=self._current_intensity_collector.getSummary())
 		self._write_jobevent('lasertemp_summary', payload=self._current_lasertemp_collector.getSummary())
-		self._write_jobevent('print_done')
 
 	def _cleanup(self,successfull):
+		# TODO check if resetting job_id etc to None makes sense
 		self._current_job_id = None
 		self._current_dust_collector = None
 		self._current_intensity_collector = None
@@ -121,16 +134,17 @@ class AnalyticsHandler(object):
 
 	def _event_laser_job_done(self, event, payload):
 		self._write_jobevent('laserjob_done')
-		# TODO check if resetting job_id etc to None makes sense
 		self._cleanup(successfull=True)
 
 	def _event_print_failed(self, event, payload):
 		self._write_jobevent('print_failed')
+		self._write_collectors()
 		self._cleanup(successfull=False)
 
 
 	def _event_print_cancelled(self, event, payload):
 		self._write_jobevent('print_cancelled')
+		self._write_collectors()
 		self._cleanup(successfull=False)
 
 
