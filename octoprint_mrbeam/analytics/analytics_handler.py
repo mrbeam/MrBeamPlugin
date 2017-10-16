@@ -92,6 +92,9 @@ class AnalyticsHandler(object):
 	def _getHostName():
 		return _mrbeam_plugin_implementation.getHostname()
 
+	# def _write_software_status(self):
+
+
 	def _event_print_started(self, event, payload):
 		filename = os.path.basename(payload['file'])
 		self._current_job_id = '{}_{}'.format(filename,time.time())
@@ -143,24 +146,32 @@ class AnalyticsHandler(object):
 		self._write_collectors()
 		self._cleanup(successfull=False)
 
-
 	def _event_print_cancelled(self, event, payload):
 		self._write_jobevent('print_cancelled')
 		self._write_collectors()
 		self._cleanup(successfull=False)
-
 
 	def _event_print_progress(self, event, payload):
 		self._write_jobevent('print_progress', {'progress':payload})
 
 	def _event_laser_cooling_pause(self, event, payload):
 		if not self._isCoolingPaused:
-			self._write_jobevent('laser_cooling_start')
+			data = {
+				'lasertemp' : None
+			}
+			if self._current_lasertemp_collector:
+				data['lasertemp'] = self._current_lasertemp_collector.get_latest_value()
+			self._write_jobevent('laser_cooling_start',payload=data)
 			self._isCoolingPaused = True
 
 	def _event_laser_cooling_resume(self, event, payload):
 		if self._isCoolingPaused:
-			self._write_jobevent('laser_cooling_done')
+			data = {
+				'lasertemp' : None
+			}
+			if self._current_lasertemp_collector:
+				data['lasertemp'] = self._current_lasertemp_collector.get_latest_value()
+			self._write_jobevent('laser_cooling_done',payload=data)
 			self._isCoolingPaused = False
 
 	def write_conversion_details(self,details):

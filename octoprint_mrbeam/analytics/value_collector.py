@@ -27,3 +27,10 @@ class ValueCollector(object):
 			descDict['error'] = 'ValueError'
 
 		return descDict
+
+	def get_latest_value(self):
+		"""
+		Returns the most recent element of the ValueCollector
+		:return:
+		"""
+		return self.valueList[-1]
