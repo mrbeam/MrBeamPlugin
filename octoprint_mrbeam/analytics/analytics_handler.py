@@ -14,6 +14,8 @@ def analyticsHandler(plugin):
 		_instance = AnalyticsHandler(plugin._event_bus, plugin._settings)
 	return _instance
 
+# TODO CLEM replace all dict-keys with CONSTANT_VALUES
+
 
 def existing_analyticsHandler():
 	"""
@@ -182,6 +184,9 @@ class AnalyticsHandler(object):
 	def _write_jobevent(self,event,payload=None):
 		#TODO add data validation/preparation here
 		data = dict(job_id = self._current_job_id)
+
+		if event in ('lasertemp_summary','intensity_summary'):
+			data['laserhead_v'] = self._getLaserHeadVersion()
 
 		if payload is not None:
 			data['data'] = payload
