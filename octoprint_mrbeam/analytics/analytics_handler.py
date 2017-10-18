@@ -1,6 +1,7 @@
 import json
 import time
 import os.path
+from datetime import datetime
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
@@ -56,6 +57,12 @@ class AnalyticsHandler(object):
 		if not os.path.isfile(self._jsonfile):
 			self._init_jsonfile()
 
+		# check if <two days> have passed and software should be written away
+		self._days_passed_since_last_log = self._days_passed(self._jsonfile)
+		self._logger.debug('Days since last edit: {}'.format(self._days_passed_since_last_log))
+		if self._days_passed_since_last_log > 2:
+			self._write_current_softare_status()
+
 		self._subscribe()
 
 	def _subscribe(self):
@@ -69,6 +76,8 @@ class AnalyticsHandler(object):
 		self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_PAUSE, self._event_laser_cooling_pause)
 		self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_RESUME, self._event_laser_cooling_resume)
 		self._event_bus.subscribe(MrBeamEvents.LASER_JOB_DONE, self._event_laser_job_done)
+		self._event_bus.subscribe(OctoPrintEvents.STARTUP, self._event_startup)
+		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self._event_shutdown)
 
 	def _init_jsonfile(self):
 		open(self._jsonfile, 'w+').close()
@@ -76,7 +85,8 @@ class AnalyticsHandler(object):
 			'hostname': self._getHostName(),
 			'laser_head_version': self._getLaserHeadVersion()
 		}
-		self.write_event('deviceinfo','init_json', self._deviceinfo_log_version,payload=data)
+		self._write_deviceinfo('init_json',payload=data)
+		self._write_current_softare_status()
 
 	@staticmethod
 	def _getLaserHeadVersion():
@@ -92,8 +102,35 @@ class AnalyticsHandler(object):
 	def _getHostName():
 		return _mrbeam_plugin_implementation.getHostname()
 
-	# def _write_software_status(self):
+	@staticmethod
+	def _days_passed(path_to_file):
+		"""
+		Returns time that has passed since last log into analytics file in days
+		:return: int: days since last log
+		"""
+		# check days since path_to_file has been changed the last time
+		lm_ts = os.path.getmtime(path_to_file)
+		lm_date = datetime.utcfromtimestamp(lm_ts)
 
+		now_date = datetime.utcnow()
+		days_passed = (now_date-lm_date).days
+
+		return days_passed
+
+	def _write_current_softare_status(self):
+		# TODO CLEM get all software statuses
+		# for each sw_status in sw_stati:
+
+		self._logger.debug('XXXXXXX Current sw status: {} {}')
+		sw_status = dict(name='<name>',version='<x.x.x>')
+		self._write_deviceinfo('sw_status',payload=sw_status)
+
+	def _event_startup(self,event,payload):
+
+		self._write_deviceinfo('startup')
+
+	def _event_shutdown(self,event,payload):
+		self._write_deviceinfo('shutdown')
 
 	def _event_print_started(self, event, payload):
 		filename = os.path.basename(payload['file'])
@@ -110,6 +147,7 @@ class AnalyticsHandler(object):
 		self._current_lasertemp_collector = ValueCollector()
 
 	def _event_print_paused(self, event, payload):
+		# TODO CLEM add how it has been paused (lid_opened during job, frontend, onebutton)
 		if not self._isJobPaused: #prevent multiple printPaused events per Job
 			self._write_jobevent('print_paused')
 			self._isJobPaused = True
@@ -191,6 +229,15 @@ class AnalyticsHandler(object):
 				}
 				data.update(color_settings)
 				self._write_jobevent(eventname,payload=data)
+
+	def _write_deviceinfo(self,event,payload=None):
+		data = dict()
+
+		# TODO add data validation/preparation here
+		if payload is not None:
+			data['data'] = payload
+
+		self.write_event('deviceinfo', event, self._deviceinfo_log_version, payload=data)
 
 	def _write_jobevent(self,event,payload=None):
 		#TODO add data validation/preparation here

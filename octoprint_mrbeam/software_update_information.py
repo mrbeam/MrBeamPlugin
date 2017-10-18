@@ -13,6 +13,11 @@ SW_UPDATE_TIER_NO_UPDATE = "NO_UPDATE"
 
 sw_update_config = dict()
 
+def get_modules():
+	return sw_update_config
+
+
+
 
 def get_update_information(self):
 	result = dict()
@@ -207,7 +212,7 @@ def set_info_netconnectd_daemon(self, tier):
 def set_info_iobeam(self, tier):
 	name = "iobeam"
 	module_id = "iobeam"
-	# ths module is installed outside of our virtualenv therefor we can't use default pip command.
+	# this module is installed outside of our virtualenv therefor we can't use default pip command.
 	# /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
 	pip_command = "sudo /usr/local/bin/pip"
 	pip_name = "iobeam"

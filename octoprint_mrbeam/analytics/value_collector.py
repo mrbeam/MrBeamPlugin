@@ -17,12 +17,12 @@ class ValueCollector(object):
 		"""
 		valueDf = pd.DataFrame(self.valueList)
 		descDict = {
-			'median': valueDf.median()
+			'median': round(valueDf.median(),4)
 		}
 		try:
 			describeSeries = valueDf.describe()
 			for index in describeSeries.index:
-				descDict[index] = describeSeries.loc[index][0]
+				descDict[index] = round(describeSeries.loc[index][0],4)
 		except ValueError:
 			descDict['error'] = 'ValueError'
 
@@ -33,4 +33,4 @@ class ValueCollector(object):
 		Returns the most recent element of the ValueCollector
 		:return:
 		"""
-		return self.valueList[-1]
+		return round(self.valueList[-1],4)
