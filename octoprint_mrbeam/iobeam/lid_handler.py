@@ -219,7 +219,7 @@ class PhotoCreator(object):
 			self.camera.resolution = (w, h)
 			self.camera.vflip = True
 			self.camera.hflip = True
-			self.camera.awb_mode = 'sunlight'
+			self.camera.awb_mode = 'auto'
 			if not self.image_correction_enabled:
 				# self.camera.brightness = 70
 				self.camera.color_effects = (128, 128)
