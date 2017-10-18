@@ -195,11 +195,10 @@ $(function () {
 			if ('beam_cam_new_image' in data) {
 				var markers = data['beam_cam_new_image']['markers_found'];
 				if(!self.cal_img_ready()){
-                    self.foundNW(markers['NW'] && markers['NW'].recognized);
-                    self.foundNE(markers['NE'] && markers['NE'].recognized);
-                    self.foundSW(markers['SW'] && markers['SW'].recognized);
-                    self.foundSE(markers['SE'] && markers['SE'].recognized);
-				}
+					self.foundNW(markers['NW'] && markers['NW'].recognized);
+					self.foundNE(markers['NE'] && markers['NE'].recognized);
+					self.foundSW(markers['SW'] && markers['SW'].recognized);
+					self.foundSE(markers['SE'] && markers['SE'].recognized);
 				}
 				if (data['beam_cam_new_image']['undistorted_saved']) {
 					console.log("Update imgURL");
