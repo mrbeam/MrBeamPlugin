@@ -204,7 +204,7 @@ $(function () {
 					self.calImgUrl('/downloads/files/local/cam/undistorted.jpg' + '?' + new Date().getTime());
 					self.currentMarkersFound = markers;
 					if (self.currentMarkersFound === {}) {
-						console.log("ERROR NO MARKERS FOUND IN PICTURE, PLEASE TAKE PIC AGAIN")
+						console.log("ERROR NO MARKERS FOUND IN PICTURE, PLEASE TAKE PIC AGAIN");
 						new PNotify({
 							title: gettext("Error"),
 							text: gettext("No Markers found/no Data about Markers. Please take picture again. Canceling calibration."),

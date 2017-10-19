@@ -57,6 +57,7 @@ class AnalyticsHandler(object):
 		if not os.path.isfile(self._jsonfile):
 			self._init_jsonfile()
 
+		# TODO ANDY : Check if this is how you want it or maybe print it out at every startup
 		# check if <two days> have passed and software should be written away
 		self._days_passed_since_last_log = self._days_passed(self._jsonfile)
 		self._logger.debug('Days since last edit: {}'.format(self._days_passed_since_last_log))
@@ -90,7 +91,7 @@ class AnalyticsHandler(object):
 
 	@staticmethod
 	def _getLaserHeadVersion():
-		# TODO CLEM ADD laser_head_id for real
+		# TODO CLEM get Real laser_head_id
 		laser_head_version = 1
 		return laser_head_version
 
@@ -118,12 +119,12 @@ class AnalyticsHandler(object):
 		return days_passed
 
 	def _write_current_softare_status(self):
-		# TODO CLEM get all software statuses
+		# TODO ANDY get all software statuses
+		# get all sw_stati and then print out status for each
 		# for each sw_status in sw_stati:
-
-		self._logger.debug('XXXXXXX Current sw status: {} {}')
-		sw_status = dict(name='<name>',version='<x.x.x>')
-		self._write_deviceinfo('sw_status',payload=sw_status)
+		# 	sw_status = dict(name='<name>',version='<x.x.x>')
+		# 	self._write_deviceinfo('sw_status',payload=sw_status)
+		pass
 
 	def _event_startup(self,event,payload):
 
