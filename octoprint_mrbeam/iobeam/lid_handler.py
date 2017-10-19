@@ -60,7 +60,13 @@ class LidHandler(object):
 		self._event_bus.subscribe(IoBeamEvents.LID_CLOSED, self.onEvent)
 		self._event_bus.subscribe(OctoPrintEvents.CLIENT_OPENED, self.onEvent)
 		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self.onEvent)
+		self._event_bus.subscribe(OctoPrintEvents.CLIENT_CLOSED,self.onEvent)
+		self._event_bus.subscribe(OctoPrintEvents.SLICING_STARTED,self._setSlicingStatus)
+		self._event_bus.subscribe(OctoPrintEvents.SLICING_DONE,self._setSlicingStatus)
+		self._event_bus.subscribe(OctoPrintEvents.SLICING_FAILED,self._setSlicingStatus)
+		self._event_bus.subscribe(OctoPrintEvents.SLICING_FAILED, self._setSlicingStatus)
 
+	# TODO Question: Why is there only one onEvent() Function with if/elif/else instead of different functions for each event?
 	def onEvent(self, event, payload):
 		self._logger.debug("onEvent() event: %s, payload: %s", event, payload)
 		if event == IoBeamEvents.LID_OPENED:
@@ -82,9 +88,28 @@ class LidHandler(object):
 			self._send_frontend_lid_state()
 		elif event == OctoPrintEvents.CLIENT_OPENED:
 			self._logger.debug("onEvent() CLIENT_OPENED sending client lidClosed: %s", self.lidClosed)
+			self._setClientStatus(event)
 			self._send_frontend_lid_state()
+		elif event == OctoPrintEvents.CLIENT_CLOSED:
+			self._setClientStatus(event)
+		elif event == OctoPrintEvents.SLICING_DONE or event == OctoPrintEvents.SLICING_FAILED:
+			self._photo_creator.is_slicing = False
 		elif event == OctoPrintEvents.SHUTDOWN:
 			self.shutdown()
+
+	def _setSlicingStatus(self,event,payload):
+		if self._photo_creator is not None:
+			if event == OctoPrintEvents.SLICING_STARTED:
+				self._photo_creator.is_slicing = True
+			else:
+				self._photo_creator.is_slicing = False
+
+	def _setClientStatus(self,event):
+		if self._photo_creator is not None:
+			if event == OctoPrintEvents.CLIENT_OPENED:
+				self._photo_creator.client_opened = True
+			else:
+				self._photo_creator.client_opened = False
 
 	def shutdown(self):
 		if self._photo_creator is not None:
@@ -130,6 +155,8 @@ class PhotoCreator(object):
 		self._laserCutterProfile = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()
 		self.keepOriginals = self._settings.get(["cam", "keepOriginals"])
 		self.active = False
+		self.is_slicing = False
+		self.client_opened = True
 		self.last_photo = 0
 		self.badQualityPicCount = 0
 		self.save_undistorted = None
@@ -159,7 +186,8 @@ class PhotoCreator(object):
 					self._init_filenames()
 				self._capture()
 				# check if still active...
-				if self.active:
+				self._logger.debug('Picture if active: {} and not is_slicing: {} client_opened: {}'.format(self.active,self.is_slicing,self.client_opened))
+				if self.active and not self.is_slicing and self.client_opened:
 					# todo QUESTION: should the tmp_img_raw ever be showed in frontend?
 					move_from = self.tmp_img_raw
 					correction_result = dict(successful_correction=False)
