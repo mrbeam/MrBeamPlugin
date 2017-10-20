@@ -104,7 +104,7 @@ class LidHandler(object):
 			if event in (IoBeamEvents.LID_CLOSED, OctoPrintEvents.SLICING_STARTED, OctoPrintEvents.CLIENT_CLOSED):
 				self._end_photo_worker()
 			else:
-				if self._client_opened and not self._is_slicing:
+				if self._client_opened and not self._is_slicing and not self._lid_closed:
 					self._start_photo_worker()
 
 	def _setClientStatus(self,event):
