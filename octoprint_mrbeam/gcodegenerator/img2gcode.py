@@ -30,16 +30,17 @@ import os.path
 
 class ImageProcessor():
 
-	def __init__( self, output_filehandle = None, contrast = 1.0, sharpening = 1.0, beam_diameter = 0.25, 
-	intensity_black = 500, intensity_white = 0, speed_black = 500, speed_white = 3000, 
+	def __init__( self, output_filehandle = None, contrast = 1.0, sharpening = 1.0, beam_diameter = 0.25,
+	intensity_black = 500, intensity_white = 0, speed_black = 500, speed_white = 3000,
 	dithering = False, pierce_time = 0, material = "default"):
 		self._log = logging.getLogger("octoprint.plugins.mrbeam.img2gcode")
-		
+
 		self.output_filehandle = output_filehandle
 		self.beam = float(beam_diameter)
 		self.pierce_time = float(pierce_time)/1000.0
 		self.pierce_intensity = 1000 # TODO parametrize
 		self.ignore_brighter_than = 254 # TODO parametrize
+		self.ignore_darker_than = 1 # TODO parametrize
 		self.intensity_black = float(intensity_black)
 		self.intensity_white = float(intensity_white)
 		self.feedrate_white = float(speed_white)
@@ -48,10 +49,13 @@ class ImageProcessor():
 		self.contrastFactor = float(contrast)
 		self.sharpeningFactor = float(sharpening)
 		self.dithering = (dithering == True or dithering == "True")
-		
+
 		self.debugPreprocessing = False
 		self.debugPreprocessing = True
-		
+
+		# checks if intensity settings are inverted eg. anodized aluminum
+		self.is_inverted = self.intensity_white > self.intensity_black
+
 		self._lookup_intensity = {}
 		self._lookup_feedrate = {}
 		self._output_gcode = ""
@@ -77,14 +81,14 @@ class ImageProcessor():
 		2.greyscale
 		3.contrast / curves (material)
 		"""
-		
-		if(h < 0): 
+
+		if(h < 0):
 			ratio = (orig_img.size[1]/float(orig_img.size[0]))
 			h = w * ratio
-		
+
 		dest_wpx = int(w/self.beam)
 		dest_hpx = int(h/self.beam)
-		
+
 		self._log.info("scaling to {}x{}".format(dest_wpx, dest_hpx))
 
 		# scale
@@ -95,7 +99,7 @@ class ImageProcessor():
 			img.save("/tmp/img2gcode_1_resized.png")
 
 		# remove transparency
-		if(img.mode == 'RGBA'):
+		if (not self.is_inverted) and (img.mode == 'RGBA'):
 			whitebg = Image.new('RGBA', (dest_wpx, dest_hpx), "white")
 			img = Image.alpha_composite(whitebg, img)
 
@@ -106,15 +110,15 @@ class ImageProcessor():
 		# mirror?
 		#img = img.transpose(Image.FLIP_LEFT_RIGHT)
 
-		# contrast 
+		# contrast
 		if(self.dithering == False and self.contrastFactor > 1.0):
 			contrast = ImageEnhance.Contrast(img)
 			img = contrast.enhance(self.contrastFactor) # 1.0 returns original
 			if(self.debugPreprocessing):
 				img.save("/tmp/img2gcode_3_contrast.png")
-		
+
 		# greyscale
-		img = img.convert('L') 
+		img = img.convert('L')
 		if(self.debugPreprocessing):
 			img.save("/tmp/img2gcode_4_greyscale.png")
 
@@ -122,20 +126,20 @@ class ImageProcessor():
 		if(self.material != "default") :
 			# TODO
 			pass
-		
+
 		# sharpness (factor: 1 => unchanged , 25 => almost b/w)
 		if(self.dithering == False and self.sharpeningFactor > 1.0):
 			sharpness = ImageEnhance.Sharpness(img)
 			img = sharpness.enhance(self.sharpeningFactor)
 			if(self.debugPreprocessing):
 				img.save("/tmp/img2gcode_5_sharpened.png")
-		
+
 		# dithering
 		if(self.dithering == True):
-			img = img.convert('1') 
+			img = img.convert('1')
 			if(self.debugPreprocessing):
 				img.save("/tmp/img2gcode_6_dithered.png")
-		
+
 
 		# return pixel array
 		return img
@@ -150,18 +154,18 @@ class ImageProcessor():
 		self._append_gcode('F' + str(self.feedrate_white) + '\n') # set an initial feedrate
 		self._append_gcode('M3S0\n') # enable laser
 		last_y = -1
-		
+
 		(width, height) = img.size
-		
+
 		# iterate line by line
 		pix = img.load()
 		for row in range(height-1,-1,-1):
-			row_pos_y = y + (height - row) * self.beam # inverse y-coordinate as images have 0x0 at left top, mr beam at left bottom 
-			
+			row_pos_y = y + (height - row) * self.beam # inverse y-coordinate as images have 0x0 at left top, mr beam at left bottom
+
 			# back and forth
 			pixelrange = range(0, width) if(direction_positive) else range(width-1, -1, -1)
 
-			lastBrightness = self.ignore_brighter_than + 1 
+			lastBrightness = self.ignore_brighter_than + 1
 			for i in pixelrange:
 				px = pix[i, row]
 				#brightness = self.get_alpha_composition(px)
@@ -173,26 +177,34 @@ class ImageProcessor():
 						last_y = row_pos_y
 				else:
 					pass # combine equal intensity values to one move
-				
+
 				lastBrightness = brightness
 
-			if(brightness <= self.ignore_brighter_than and self.get_intensity(brightness) > 0): # finish non-white line
-				end_of_line = x + pixelrange[-1] * self.beam 
+			if(not self._ignore_pixel_brightness(brightness) and self.get_intensity(brightness) > 0): # finish non-white line
+				end_of_line = x + pixelrange[-1] * self.beam
 				self._append_gcode(self.get_gcode_for_equal_pixels(brightness, end_of_line, row_pos_y, last_y))
 				last_y = row_pos_y
 
 			# flip direction after each line to go back and forth
 			direction_positive = not direction_positive
-			
+
 		self._append_gcode(";EndImage\nM5\n") # important for gcode preview!
 		return self._output_gcode
 
+	def _ignore_pixel_brightness(self, brightness):
+		if(self.is_inverted): # inverted engraving, e.g. anodized aluminum
+			return (brightness < self.ignore_darker_than)
+		else:
+			return (brightness > self.ignore_brighter_than)
+
+
 	def get_gcode_for_equal_pixels(self, brightness, target_x, target_y, last_y, comment=""):
 		# fast skipping whitespace
-		if(brightness > self.ignore_brighter_than ): 
-			y_gcode = "Y"+self.twodigits(target_y) if target_y != last_y else "" 
-			gcode = "G0X" + self.twodigits(target_x) + y_gcode + "S0" + comment +"\n"  
+		if(self._ignore_pixel_brightness(brightness) ):
+			y_gcode = "Y"+self.twodigits(target_y) if target_y != last_y else ""
+			gcode = "G0X" + self.twodigits(target_x) + y_gcode + "S0" + comment +"\n"
 
+			# pierctime after skipping whitespace
 			# fixed piercetime
 			if(self.pierce_time > 0):
 				gcode += "M3S"+str(self.pierce_intensity)+ "\n" + "G4P"+str(self.pierce_time)+"\n" # Dwell for P ms
@@ -209,10 +221,10 @@ class ImageProcessor():
 		else:
 			intensity = self.get_intensity(brightness)
 			feedrate = self.get_feedrate(brightness)
-			gcode = "G0Y"+self.twodigits(target_y)+"S0\n" if target_y != last_y else "" 
+			gcode = "G0Y"+self.twodigits(target_y)+"S0\n" if target_y != last_y else ""
 			gcode += "G1X" + self.twodigits(target_x) + "F"+str(feedrate) + "S"+str(intensity)+ comment +"\n" # move until next intensity
-									
-		return gcode;
+
+		return gcode
 
 	def dataUrl_to_gcode(self, dataUrl, w,h, x,y, file_id):
 		img = self._dataurl_to_img(dataUrl)
@@ -220,22 +232,22 @@ class ImageProcessor():
 		pixArray = self.img_prepare(img, w, h)
 		gcode = self.generate_gcode(pixArray, x, y, w, h, dataUrl)
 		return gcode
-	
+
 	def _dataurl_to_img(self, dataUrl):
 		if(dataUrl is None):
 			self._log.info("ERROR: image is not base64 encoded")
-			return ""; 
-		
+			return ""
+
 		# get raw base64 data
 		# remove "data:image/png;base64," and add a "\n" in front to get proper base64 encoding
 		if(dataUrl.startswith("data:")):
 			commaidx = dataUrl.find(',')
 			base64str = "\n" + dataUrl[commaidx:]
-		
+
 		image_string = cStringIO.StringIO(base64.b64decode(base64str))
 		return Image.open(image_string)
-		
-	
+
+
 	def imgurl_to_gcode(self, url, w,h, x,y, file_id):
 		import urllib, cStringIO
 		file = cStringIO.StringIO(urllib.urlopen(url).read())
@@ -243,17 +255,17 @@ class ImageProcessor():
 		pixArray = self.img_prepare(img, w, h)
 		gcode = self.generate_gcode(pixArray, x, y, w, h, file_id)
 		return gcode
-	
+
 	# x,y are the lowerLeft of the image
 	def img_to_gcode(self, path, w,h, x,y, file_id):
 		img = Image.open(path)
 		pixArray = self.img_prepare(img, w, h)
 		gcode = self.generate_gcode(pixArray, x, y, w, h, file_id)
 		return gcode
-	
+
 	def twodigits(self, fl):
 		return "{0:.2f}".format(fl)
-	
+
 	def get_intensity(self, brightness):
 		if(not brightness in self._lookup_intensity):
 			intensity = (1.0 - brightness/255.0) * (self.intensity_black - self.intensity_white) + self.intensity_white
@@ -271,13 +283,13 @@ class ImageProcessor():
 		opacity = pixel[1] # 0..255
 		composite = brightness*(opacity/255.0) + 255*(1 - opacity/255.0) # Cout = ColorA*AlphaA + White*(1-AlphaA)
 		return composite
-	
+
 	def get_pierce_time_multiplier(self, col, row, pix, w, h, direction_positive):
 		col_min = max(0, col-1)
 		col_max = min(col+1, w-1)+1
 		row_min = max(0, row-1)
 		row_max = min(row+1, h-1)+1
-		
+
 		sum = 0
 		pixels = 0
 		for r in range(row_min, row_max):
@@ -288,15 +300,15 @@ class ImageProcessor():
 		val = sum/255.0/pixels
 		if val > 0.5: # more than 50% of pixels around are white
 			return val
-		else: 
+		else:
 			return 0
-		
+
 	def _append_gcode(self, gcode):
 		if(self.output_filehandle is not None):
 			self.output_filehandle.write(gcode)
 		else:
 			self._output_gcode += gcode
-		
+
 
 
 # debug string
@@ -322,17 +334,17 @@ if __name__ == "__main__":
 	opts.add_option("", "--no-headers", type="string", help="omits Mr Beam start and end sequences", default="false", dest="noheaders")
 
 	(options, args) = opts.parse_args()
-	
+	path = args[0]
 	if(len(args) == 2):
 		gcodefile = args[1]
 	else:
 		filename, _ = os.path.splitext(path)
 		gcodefile = filename + ".gco"
-		
+
 	with open (gcodefile, "w") as fh:
 		header = ""
 		footer = ""
-		if(options.noheaders == "false"): 
+		if(options.noheaders == "false"):
 			header = '''
 	$H
 	G92X0Y0Z0
@@ -347,12 +359,12 @@ if __name__ == "__main__":
 	M9
 	M2
 	'''
-	
+
 		fh.write(header)
-		
+
 		boolDither = (options.dithering == "true")
-		ip = ImageProcessor(fh, options.contrast, options.sharpening, options.beam_diameter, 
-		options.intensity_black, options.intensity_white, options.speed_black, options.speed_white, 
+		ip = ImageProcessor(fh, options.contrast, options.sharpening, options.beam_diameter,
+		options.intensity_black, options.intensity_white, options.speed_black, options.speed_white,
 		boolDither, options.pierce_time)
 		path = args[0]
 		ip.img_to_gcode(path, options.width, options.height, options.x, options.y, path)
@@ -360,5 +372,5 @@ if __name__ == "__main__":
 
 		fh.write(footer)
 
-	print("gcode written to " + gcodefile) 
-		
+	print("gcode written to " + gcodefile)
+

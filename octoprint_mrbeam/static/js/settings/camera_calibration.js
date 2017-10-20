@@ -10,7 +10,7 @@ $(function () {
 	function CameraCalibrationViewModel(parameters) {
 		var self = this;
 
-		self.staticURL = "/plugin/mrbeam/static/img/cam_calib_static.jpg";
+		self.staticURL = "/plugin/mrbeam/static/img/cam_calibration/calpic_wait.svg";
 
 		self.workingArea = parameters[1];
 		self.conversion = parameters[2];
@@ -40,13 +40,13 @@ $(function () {
 		self.foundSW = ko.observable(false);
 		self.foundSE = ko.observable(false);
 		self.foundNE = ko.observable(false);
-		
-		
+
+
 		self.__format_point = function(p){
 			if(typeof p === 'undefined') return '?,?';
 			else return p.x+','+p.y;
 		};
-		
+
 
 		self.calSvgViewBox = ko.computed(function () {
 			var w = self.calImgWidth() / self.calSvgScale();
@@ -69,7 +69,7 @@ $(function () {
 			self.calibrationActive(true);
 			self.nextMarker();
 		};
-		
+
 		self.nextMarker = function(){
 			self.currentMarker = (self.currentMarker + 1) % self.calibrationMarkers.length;
 			if(!self.calibrationComplete() && self.currentMarker === 0) self.currentMarker = 1;
@@ -92,7 +92,7 @@ $(function () {
 					console.log("Please wait until camera image is loaded...");
 					return;
 				}
-			
+
 			if(self.calibrationComplete() || !self.calibrationActive()) return;
 
 			// save current stepResult
@@ -127,7 +127,7 @@ $(function () {
 
 			return clickpos;
 		};
-		
+
 		self._highlightStep = function(step){
 			$('.cal-row').removeClass('active');
 			$('#'+step.name).addClass('active');
@@ -152,7 +152,7 @@ $(function () {
 		};
 
 		self.loadUndistortedPicture = function (callback) {
-			var success_callback = function(resp){ 
+			var success_callback = function(resp){
 				if(typeof callback === 'function') callback(resp);
 				else console.log("Calibration picture requested.");
 			};
@@ -195,9 +195,10 @@ $(function () {
 			if ('beam_cam_new_image' in data) {
 				var markers = data['beam_cam_new_image']['markers_found'];
 				if(!self.cal_img_ready()){
-					['NW', 'SW', 'SE', 'NE'].forEach(function(d){
-						self.foundNW(markers[d] && markers[d].recognized);
-					});
+					self.foundNW(markers['NW'] && markers['NW'].recognized);
+					self.foundNE(markers['NE'] && markers['NE'].recognized);
+					self.foundSW(markers['SW'] && markers['SW'].recognized);
+					self.foundSE(markers['SE'] && markers['SE'].recognized);
 				}
 				if (data['beam_cam_new_image']['undistorted_saved']) {
 					console.log("Update imgURL");
@@ -282,7 +283,7 @@ $(function () {
 						"Content-Type": "application/json; charset=utf-8"
 					},
 					data: JSON.stringify(data),
-					dataType: "json", 
+					dataType: "json",
 					success: self.saveMarkersSuccess,
 					error: self.saveMarkersError
 				});
@@ -292,7 +293,7 @@ $(function () {
 					.fail(self.saveMarkersError);
 			}
 		};
-		
+
 		self.saveMarkersSuccess = function (response) {
 			self.calibrationActive(false);
 			new PNotify({
@@ -343,7 +344,7 @@ $(function () {
 
 			next.addClass('active');
 		};
-		
+
 		self.goto = function (target_id) {
 			var el = $(target_id);
 			if(el){

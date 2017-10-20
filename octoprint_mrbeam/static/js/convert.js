@@ -408,8 +408,8 @@ $(function(){
 //					snap.select('#userContent').embed_gc(); // hack
 					self.workingArea.getCompositionSVG(self.do_engrave(), pixPerMM, self.engrave_outlines(), function(composition){
 						self.svg = composition;
-						var filename = self.gcodeFilename() + '.gco';
-						var gcodeFilename = self._sanitize(filename);
+						var filename = self.gcodeFilename();
+						var gcodeFilename = self._sanitize(filename) + '.gco';
 
 						var multicolor_data = self.get_current_multicolor_settings();
 						var engraving_data = self.get_current_engraving_settings();
@@ -449,12 +449,19 @@ $(function(){
 		};
 
 		self.do_engrave = function(){
-			var assigned_images = $('#engrave_job .assigned_colors').children().length;
+			const assigned_images = $('#engrave_job .assigned_colors').children().length;
 			return (assigned_images > 0 && self.show_image_parameters());
 		};
 
 		self._sanitize = function(name) {
-			return name.replace(/[^a-zA-Z0-9\-_\.\(\) ]/g, "").replace(/ /g, "_");
+		    let no_special_chars = name.replace(/[^a-zA-Z0-9\-_.() ]/g, "").replace(/ /g, "_"); // remove spaces,non-Ascii chars
+            const pattern = /[a-zA-Z0-9_\-()]$/g; //check if last character is a valid one
+            const is_valid = pattern.test(no_special_chars);
+            if(!is_valid || no_special_chars.length <= 1){
+                const time_stamp = Date.now();
+                no_special_chars = 'mb'+no_special_chars+time_stamp;
+            }
+            return no_special_chars;
 		};
 
 		self.onStartup = function() {

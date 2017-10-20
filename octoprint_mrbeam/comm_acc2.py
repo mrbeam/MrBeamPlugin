@@ -368,10 +368,12 @@ class MachineCom(object):
 		if self._grbl_state == 'Queue':
 			if time.time() - self._pause_delay_time > 0.3:
 				if not self.isPaused():
+					self._logger.debug("_handle_status_report() Pausing since we got status 'Queue' from grbl.")
 					self.setPause(True, False)
 		elif self._grbl_state == 'Run' or self._grbl_state == 'Idle':
 			if time.time() - self._pause_delay_time > 0.3:
 				if self.isPaused():
+					self._logger.debug("_handle_status_report() Unpausing since we got status 'Run' from grbl.")
 					self.setPause(False, False)
 		self._update_grbl_pos(line)
 		#if self._metricf is not None:

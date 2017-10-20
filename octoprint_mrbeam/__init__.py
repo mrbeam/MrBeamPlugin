@@ -1094,12 +1094,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		newCorners = {}
 		for qd in data['result']['newCorners']:
 			newCorners[qd] = [data['result']['newCorners'][qd]['x'],data['result']['newCorners'][qd]['y']]
-		self._logger.debug('XXX data reprocessed:{}'.format(newCorners))
 
 		newMarkers = {}
 		for qd in data['result']['newMarkers']:
 			newMarkers[qd] = [data['result']['newMarkers'][qd]['x'],data['result']['newMarkers'][qd]['y']]
-		self._logger.debug('XXX data reprocessed: {}'.format(newMarkers))
 
 		pic_settings_path = self._settings.get(["cam", "correctionSettingsFile"])
 		pic_settings = self._load_profile(pic_settings_path)
