@@ -42,6 +42,9 @@ class AnalyticsHandler(object):
 		self._current_intensity_collector = None
 		self._current_lasertemp_collector = None
 
+		self._shortSerial = self._getShortSerial()
+
+
 		self._jobevent_log_version = 2
 		self._deviceinfo_log_version = 2
 		self._dust_log_version = 2
@@ -84,6 +87,7 @@ class AnalyticsHandler(object):
 		open(self._jsonfile, 'w+').close()
 		data = {
 			'hostname': self._getHostName(),
+			'shortSerial': self._getShortSerial(),
 			'laser_head_version': self._getLaserHeadVersion()
 		}
 		self._write_deviceinfo('init_json',payload=data)
@@ -98,6 +102,10 @@ class AnalyticsHandler(object):
 	@staticmethod
 	def _getSerialNumber():
 		return _mrbeam_plugin_implementation.getMrBeamSerial()
+
+	def _getShortSerial(self):
+		serial_long = self._getserialnumber()
+		return serial_long.split('-')[0][-8::]
 
 	@staticmethod
 	def _getHostName():
@@ -255,9 +263,9 @@ class AnalyticsHandler(object):
 
 	def update_cam_session_id(self, lid_state):
 		if lid_state == 'lid_opened':
-			self._current_cam_session_id = 'cam_{}_{}'.format(self._getSerialNumber(),time.time())
-		else:
-			self._current_cam_session_id = None
+			self._current_cam_session_id = '{}_{}'.format(self._getShortSerial(),time.time())
+		# else:
+		# 	self._current_cam_session_id = None
 
 	def _write_cam_event(self, event, payload=None):
 		#TODO add data validation/preparation here
@@ -270,7 +278,7 @@ class AnalyticsHandler(object):
 
 	def write_event(self, typename, eventname, version, payload=None):
 		data = {
-			'serialnumber': self._getSerialNumber(),
+			'serialnumber': self._getShortSerial(),
 			'type': typename,
 			'log_version': version,
 			'eventname': eventname,
