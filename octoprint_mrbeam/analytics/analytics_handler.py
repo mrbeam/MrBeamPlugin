@@ -44,11 +44,10 @@ class AnalyticsHandler(object):
 
 		self._shortSerial = self._getShortSerial()
 
-
-		self._jobevent_log_version = 2
-		self._deviceinfo_log_version = 2
-		self._dust_log_version = 2
-		self._cam_event_log_version = 2
+		self._jobevent_log_version = 3
+		self._deviceinfo_log_version = 3
+		self._dust_log_version = 3
+		self._cam_event_log_version = 3
 
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analyticshandler")
 
@@ -65,7 +64,7 @@ class AnalyticsHandler(object):
 		self._days_passed_since_last_log = self._days_passed(self._jsonfile)
 		self._logger.debug('Days since last edit: {}'.format(self._days_passed_since_last_log))
 		if self._days_passed_since_last_log > 2:
-			self._write_current_softare_status()
+			self._write_current_software_status()
 
 		self._subscribe()
 
@@ -91,11 +90,11 @@ class AnalyticsHandler(object):
 			'laser_head_version': self._getLaserHeadVersion()
 		}
 		self._write_deviceinfo('init_json',payload=data)
-		self._write_current_softare_status()
+		self._write_current_software_status()
 
 	@staticmethod
 	def _getLaserHeadVersion():
-		# TODO CLEM get Real laser_head_id
+		# TODO ANDY tell CLEM how to get Real laser_head_id :)
 		laser_head_version = 1
 		return laser_head_version
 
@@ -126,7 +125,7 @@ class AnalyticsHandler(object):
 
 		return days_passed
 
-	def _write_current_softare_status(self):
+	def _write_current_software_status(self):
 		# TODO ANDY get all software statuses
 		# get all sw_stati and then print out status for each
 		# for each sw_status in sw_stati:
@@ -199,7 +198,7 @@ class AnalyticsHandler(object):
 		self._cleanup(successfull=False)
 
 	def _event_print_progress(self, event, payload):
-		self._write_jobevent('print_progress', {'progress':payload})
+		self._write_jobevent('print_progress', {'p':payload})
 
 	def _event_laser_cooling_pause(self, event, payload):
 		if not self._isCoolingPaused:
@@ -278,11 +277,11 @@ class AnalyticsHandler(object):
 
 	def write_event(self, typename, eventname, version, payload=None):
 		data = {
-			'serialnumber': self._getShortSerial(),
-			'type': typename,
-			'log_version': version,
-			'eventname': eventname,
-			'timestamp': time.time()
+			'snr': self._getShortSerial(),
+			't': typename,
+			'v': version,
+			'e': eventname,
+			'ts': time.time()
 		}
 		if payload is not None:
 			data.update(payload)
