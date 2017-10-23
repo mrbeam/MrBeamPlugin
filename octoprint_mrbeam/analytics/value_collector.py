@@ -1,8 +1,12 @@
 import numpy as np
+from octoprint_mrbeam.mrb_logger import mrb_logger
+
 
 class ValueCollector(object):
-	def __init__(self):
+	def __init__(self, name):
+		self.name = name
 		self.valueList = list()
+		self._logger = mrb_logger("octoprint.plugins.mrbeam.analyticshandler")
 
 	def addValue(self, value):
 		self.valueList.append(value)
@@ -14,6 +18,7 @@ class ValueCollector(object):
 		:param valueList:
 		:return:
 		"""
+		self._logger('XXX Collector <{}> has values: {}'.format(self.name,self.valueList))
 		arr = np.ndarray(self.valueList)
 
 		descDict = {

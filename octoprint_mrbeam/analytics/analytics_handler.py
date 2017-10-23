@@ -150,9 +150,9 @@ class AnalyticsHandler(object):
 		self._write_jobevent('print_started', {'filename': filename})
 
 	def _init_collectors(self):
-		self._current_dust_collector = ValueCollector()
-		self._current_intensity_collector = ValueCollector()
-		self._current_lasertemp_collector = ValueCollector()
+		self._current_dust_collector = ValueCollector('DustColl')
+		self._current_intensity_collector = ValueCollector('IntensityColl')
+		self._current_lasertemp_collector = ValueCollector('TempColl')
 
 	def _event_print_paused(self, event, payload):
 		# TODO CLEM add how it has been paused (lid_opened during job, frontend, onebutton)
