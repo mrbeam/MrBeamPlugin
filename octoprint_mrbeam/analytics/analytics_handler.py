@@ -220,6 +220,13 @@ class AnalyticsHandler(object):
 			self._write_jobevent('laser_cooling_done',payload=data)
 			self._isCoolingPaused = False
 
+	def write_cam_update(self,newMarkers,newCorners):
+		data = {
+			'markers':newMarkers,
+			'corners':newCorners
+		}
+		self._write_cam_event('calibration',payload=data)
+
 	def write_conversion_details(self,details):
 		if 'engrave' in details and details['engrave'] == True and 'raster' in details:
 			eventname = 'conv_engrave'
@@ -267,11 +274,24 @@ class AnalyticsHandler(object):
 		# 	self._current_cam_session_id = None
 
 	def _write_cam_event(self, event, payload=None):
-		#TODO add data validation/preparation here
-		data = dict(cam_session = self._current_cam_session_id)
+		data = dict()
+		if event == 'pic_prep':
+			data['cam_session'] = self._current_cam_session_id
+			# TODO add data validation/preparation here
+			if 'precision' in payload:
+				del payload['precision']
+			if 'corners_calculated' in payload:
+				del payload['corners_calculated']
+			if 'undistorted_saved' in payload:
+				del payload['undistorted_saved']
+			if 'high_precision' in payload:
+				del payload['high_precision']
+			if 'markers_recognized' in payload:
+				del payload['markers_recognized']
 
 		if payload is not None:
 			data['data'] = payload
+
 
 		self.write_event('cam', event, self._cam_event_log_version, payload=data)
 
