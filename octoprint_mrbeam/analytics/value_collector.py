@@ -6,7 +6,7 @@ class ValueCollector(object):
 	def __init__(self, name):
 		self.name = name
 		self.valueList = list()
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.analyticshandler")
+		# self._logger = mrb_logger("octoprint.plugins.mrbeam.analyticshandler")
 
 	def addValue(self, value):
 		self.valueList.append(value)
@@ -18,10 +18,12 @@ class ValueCollector(object):
 		:param valueList:
 		:return:
 		"""
-		self._logger('XXX Collector <{}> has values: {}'.format(self.name,self.valueList))
-		arr = np.ndarray(self.valueList)
+		count = len(self.valueList)
+		# self._logger.debug('Collector <{}> has values: {}'.format(self.name,self.valueList))
 
-		descDict = {
+		if count > 0:
+			arr = np.asarray(self.valueList)
+			descDict = {
 				'median': np.median(arr),
 				'mean': np.mean(arr),
 				'min': min(self.valueList),
@@ -30,7 +32,9 @@ class ValueCollector(object):
 				'75p': np.percentile(arr,75),
 				'std': np.std(arr),
 				'count': len(self.valueList)
-		}
+			}
+		else:
+			descDict = {'count':count}
 
 		# make all values float for json.dump()-compability
 		for key in descDict:
