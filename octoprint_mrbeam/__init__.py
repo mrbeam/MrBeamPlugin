@@ -726,7 +726,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	# Laser cutter profiles
 	@octoprint.plugin.BlueprintPlugin.route("/profiles", methods=["GET"])
-	@restricted_access
 	def laserCutterProfilesList(self):
 		all_profiles = self.laserCutterProfileManager.get_all()
 		return jsonify(dict(profiles=self._convert_profiles(all_profiles)))
