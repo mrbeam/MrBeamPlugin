@@ -1,5 +1,4 @@
-import pandas as pd
-
+import numpy as np
 
 class ValueCollector(object):
 	def __init__(self):
@@ -15,16 +14,22 @@ class ValueCollector(object):
 		:param valueList:
 		:return:
 		"""
-		valueDf = pd.DataFrame(self.valueList)
+		arr = np.ndarray(self.valueList)
+
 		descDict = {
-			'median': round(valueDf.median(),4)
+				'median': np.median(arr),
+				'mean': np.mean(arr),
+				'min': min(self.valueList),
+				'max': max(self.valueList),
+				'25p': np.percentile(arr,25),
+				'75p': np.percentile(arr,75),
+				'std': np.std(arr),
+				'count': len(self.valueList)
 		}
-		try:
-			describeSeries = valueDf.describe()
-			for index in describeSeries.index:
-				descDict[index] = round(describeSeries.loc[index][0],4)
-		except ValueError:
-			descDict['error'] = 'ValueError'
+
+		# make all values float for json.dump()-compability
+		for key in descDict:
+			descDict[key] = round(descDict[key],4)
 
 		return descDict
 

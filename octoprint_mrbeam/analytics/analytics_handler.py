@@ -104,7 +104,7 @@ class AnalyticsHandler(object):
 		return _mrbeam_plugin_implementation.getMrBeamSerial()
 
 	def _getShortSerial(self):
-		serial_long = self._getserialnumber()
+		serial_long = self._getSerialNumber()
 		return serial_long.split('-')[0][-8::]
 
 	@staticmethod
