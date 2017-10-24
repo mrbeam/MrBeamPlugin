@@ -164,7 +164,7 @@ class PhotoCreator(object):
 					correction_result = dict(successful_correction=False)
 					if self.image_correction_enabled:
 						correction_result = self.correct_image(self.tmp_img_raw, self.tmp_img_prepared)
-						self._write_cam_analytics(correction_result)
+						self._write_cam_analytics(correction_result.copy())
 						# todo ANDY concept of what should happen with good and bad pictures etc....
 						if correction_result['successful_correction']:
 							move_from = self.tmp_img_prepared
