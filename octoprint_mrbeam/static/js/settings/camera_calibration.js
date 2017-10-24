@@ -24,7 +24,7 @@ $(function () {
 		self.calSvgScale = ko.observable(1);
 		self.calibrationActive = ko.observable(false);
 		self.currentResults = ko.observable({});
-		self.cal_img_ready = ko.computed(function(){ return self.calImgUrl() !== self.staticURL; });
+		self.cal_img_ready = ko.computed(self._allMarkersFound());
 		self.calibrationComplete = ko.computed(function(){
 			var markers = ['NW', 'NE', 'SW', 'SE'];
 			for (var i = 0; i < markers.length; i++) {
@@ -189,34 +189,33 @@ $(function () {
 			}
 		};
 
+		self._allMarkersFound = function () {
+		    [self.foundNE(),self.foundNW(),self.foundSE(),self.foundSW()].every(function(el){return el === true})
+        };
+
 		self.onDataUpdaterPluginMessage = function (plugin, data) {
 			if (plugin !== "mrbeam" || !data)
 				return;
 			if ('beam_cam_new_image' in data) {
-				var markers = data['beam_cam_new_image']['markers_found'];
+				// update markers
+			    var markers = data['beam_cam_new_image']['markers_found'];
 				if(!self.cal_img_ready()){
 					self.foundNW(markers['NW'] && markers['NW'].recognized);
 					self.foundNE(markers['NE'] && markers['NE'].recognized);
 					self.foundSW(markers['SW'] && markers['SW'].recognized);
 					self.foundSE(markers['SE'] && markers['SE'].recognized);
 				}
-				if (data['beam_cam_new_image']['undistorted_saved']) {
-					console.log("Update imgURL");
-					self.calImgUrl('/downloads/files/local/cam/undistorted.jpg' + '?' + new Date().getTime());
-					self.currentMarkersFound = markers;
-					if (self.currentMarkersFound === {}) {
-						console.log("ERROR NO MARKERS FOUND IN PICTURE, PLEASE TAKE PIC AGAIN")
-						new PNotify({
-							title: gettext("Error"),
-							text: gettext("No Markers found/no Data about Markers. Please take picture again. Canceling calibration."),
-							type: "warning",
-							hide: true
-						});
-						self.calibrationActive(false);
-					} else {
-						console.log("Markers Found here:", self.currentMarkersFound);
-					}
+
+                // update image
+                if (data['beam_cam_new_image']['undistorted_saved']) {
+				    console.log("Update imgURL");
+                    self.calImgUrl('/downloads/files/local/cam/undistorted.jpg' + '?' + new Date().getTime());
 				}
+
+				// check if all markers are found and image is good for calibration
+                if(self._allMarkersFound()){
+				    self.currentMarkersFound = markers;
+                }
 			}
 		};
 

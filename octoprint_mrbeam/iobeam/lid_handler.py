@@ -299,9 +299,12 @@ class PhotoCreator(object):
 												quality=75,
 												debug_out=False)
 
-		if correction_result['undistorted_saved']:
+		if ('undistorted_saved' in correction_result and correction_result['undistorted_saved']
+			and 'markers_recognized' in correction_result and correction_result['markers_recognized'] == 4):
 			self.save_undistorted = None
-			self._logger.debug("Undistorted Image saved.")
+			self._logger.debug("Stopping to save undistorted picture, the last one is usable for calibration.")
+
+
 
 		self._logger.info("Image correction result: {}".format(correction_result))
 		# check if there was an error or not.
