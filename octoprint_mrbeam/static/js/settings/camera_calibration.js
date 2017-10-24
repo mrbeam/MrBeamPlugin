@@ -24,7 +24,6 @@ $(function () {
 		self.calSvgScale = ko.observable(1);
 		self.calibrationActive = ko.observable(false);
 		self.currentResults = ko.observable({});
-		self.cal_img_ready = ko.computed(self._allMarkersFound());
 		self.calibrationComplete = ko.computed(function(){
 			var markers = ['NW', 'NE', 'SW', 'SE'];
 			for (var i = 0; i < markers.length; i++) {
@@ -40,6 +39,9 @@ $(function () {
 		self.foundSW = ko.observable(false);
 		self.foundSE = ko.observable(false);
 		self.foundNE = ko.observable(false);
+
+        self.cal_img_ready = ko.computed(function(){
+            return self.foundNE() && self.foundNW() && self.foundSE() && self.foundSW()});
 
 
 		self.__format_point = function(p){
@@ -189,9 +191,6 @@ $(function () {
 			}
 		};
 
-		self._allMarkersFound = function () {
-		    [self.foundNE(),self.foundNW(),self.foundSE(),self.foundSW()].every(function(el){return el === true})
-        };
 
 		self.onDataUpdaterPluginMessage = function (plugin, data) {
 			if (plugin !== "mrbeam" || !data)
@@ -199,23 +198,26 @@ $(function () {
 			if ('beam_cam_new_image' in data) {
 				// update markers
 			    var markers = data['beam_cam_new_image']['markers_found'];
-				if(!self.cal_img_ready()){
-					self.foundNW(markers['NW'] && markers['NW'].recognized);
-					self.foundNE(markers['NE'] && markers['NE'].recognized);
-					self.foundSW(markers['SW'] && markers['SW'].recognized);
-					self.foundSE(markers['SE'] && markers['SE'].recognized);
-				}
+                self.foundNW(markers['NW'] && markers['NW'].recognized);
+                self.foundNE(markers['NE'] && markers['NE'].recognized);
+                self.foundSW(markers['SW'] && markers['SW'].recognized);
+                self.foundSE(markers['SE'] && markers['SE'].recognized);
+
 
                 // update image
                 if (data['beam_cam_new_image']['undistorted_saved']) {
 				    console.log("Update imgURL");
                     self.calImgUrl('/downloads/files/local/cam/undistorted.jpg' + '?' + new Date().getTime());
-				}
 
-				// check if all markers are found and image is good for calibration
-                if(self._allMarkersFound()){
-				    self.currentMarkersFound = markers;
-                }
+                    // check if all markers are found and image is good for calibration
+                    if(self.cal_img_ready()){
+                        console.log("Saving Markers to Frontend for Calibration");
+                        console.log(markers);
+				        self.currentMarkersFound = markers;
+                    }else{
+                        console.log("Not all Markers found, waiting for better Pic, please check if markers are visible.")
+                    }
+				}
 			}
 		};
 
