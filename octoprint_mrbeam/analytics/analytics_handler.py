@@ -86,8 +86,8 @@ class AnalyticsHandler(object):
 		open(self._jsonfile, 'w+').close()
 		data = {
 			'hostname': self._getHostName(),
-			'shortSerial': self._getShortSerial(),
-			'laser_head_version': self._getLaserHeadVersion()
+			'longSerial': self._getSerialNumber(),
+			'laser_head_v': self._getLaserHeadVersion()
 		}
 		self._write_deviceinfo('init_json',payload=data)
 		self._write_current_software_status()
@@ -198,7 +198,13 @@ class AnalyticsHandler(object):
 		self._cleanup(successfull=False)
 
 	def _event_print_progress(self, event, payload):
-		self._write_jobevent('print_progress', {'p':payload})
+		data = dict(
+			p=payload,
+			lt=self._current_lasertemp_collector.get_latest_value(),
+			li=self._current_intensity_collector.get_latest_value(),
+			dv=self._current_dust_collector.get_latest_value()
+		)
+		self._write_jobevent('print_progress', data)
 
 	def _event_laser_cooling_pause(self, event, payload):
 		if not self._isCoolingPaused:
@@ -341,6 +347,8 @@ class AnalyticsHandler(object):
 		self._write_jobevent('final_dust',payload=data)
 
 	def _append_data_to_file(self, data):
+		if not os.path.isfile(self._jsonfile):
+			self._init_jsonfile()
 		with open(self._jsonfile, 'a') as f:
 			json.dump(data, f)
 			f.write('\n')
