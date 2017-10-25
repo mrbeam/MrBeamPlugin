@@ -12,6 +12,8 @@ $(function () {
 
 		self.staticURL = "/plugin/mrbeam/static/img/cam_calibration/calpic_wait.svg";
 
+		self.dbNWImgUrl = ko.observable("");
+
 		self.workingArea = parameters[1];
 		self.conversion = parameters[2];
 		self.scaleFactor = 6;
@@ -43,7 +45,6 @@ $(function () {
         self.cal_img_ready = ko.computed(function(){
             return self.foundNE() && self.foundNW() && self.foundSE() && self.foundSW()});
 
-        // TODO implement that true when cal_img, was true once!
         self.markersFound = ko.observable(false);
 
 		self.__format_point = function(p){
@@ -210,6 +211,11 @@ $(function () {
                 if (data['beam_cam_new_image']['undistorted_saved']) {
 				    console.log("Update imgURL");
                     self.calImgUrl('/downloads/files/local/cam/undistorted.jpg' + '?' + new Date().getTime());
+
+                    console.log("isInitialCalibration: " + self.isInitialCalibration());
+                    if(self.isInitialCalibration()){
+                        self.dbNWImgUrl('/downloads/files/local/cam/beam-cam_debug_NW.jpg' + '?' + new Date().getTime());
+                    }
 
                     // check if all markers are found and image is good for calibration
                     if(self.cal_img_ready()){

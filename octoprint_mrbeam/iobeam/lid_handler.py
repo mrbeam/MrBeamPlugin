@@ -297,7 +297,7 @@ class PhotoCreator(object):
 												size=(outputImageWidth,outputImageHeight),
 												save_undistorted=self.save_undistorted,
 												quality=75,
-												debug_out=False)
+												debug_out=True)
 
 		if ('undistorted_saved' in correction_result and correction_result['undistorted_saved']
 			and 'markers_recognized' in correction_result and correction_result['markers_recognized'] == 4):
