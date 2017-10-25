@@ -43,6 +43,8 @@ $(function () {
         self.cal_img_ready = ko.computed(function(){
             return self.foundNE() && self.foundNW() && self.foundSE() && self.foundSW()});
 
+        // TODO implement that true when cal_img, was true once!
+        self.markersFound = ko.observable(false);
 
 		self.__format_point = function(p){
 			if(typeof p === 'undefined') return '?,?';
@@ -213,6 +215,7 @@ $(function () {
                     if(self.cal_img_ready()){
                         console.log("Saving Markers to Frontend for Calibration");
                         console.log(markers);
+                        self.markersFound(true);
 				        self.currentMarkersFound = markers;
                     }else{
                         console.log("Not all Markers found, waiting for better Pic, please check if markers are visible.")
@@ -321,6 +324,8 @@ $(function () {
 			self.calImgUrl(self.staticURL);
 			self._zoomTo(0,0,1);
 			self.currentMarker = 0;
+			self.currentMarkersFound = {};
+			self.markersFound(false);
 			if(self.isInitialCalibration()){
 				self.loadUndistortedPicture();
 			} else {

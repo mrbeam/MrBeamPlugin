@@ -8,8 +8,8 @@
 		<circle id="click_NE" r="4" cx="-100" cy="-100" class="calibration_click_indicator" />
 	</svg>
 	<div>
-		<a class="accordion-toggle" data-bind="click:loadUndistortedPicture, visible: (!cal_img_ready() && !calibrationActive())"><i class="icon-repeat"></i> refresh</a>
-		<div class="marker_selection_desc calibration_waiting_for_picture" data-bind="visible: !cal_img_ready()">
+		<a class="accordion-toggle" data-bind="click:loadUndistortedPicture, visible: !cal_img_ready() && !markersFound()"><i class="icon-repeat"></i> refresh</a>
+		<div class="marker_selection_desc calibration_waiting_for_picture" data-bind="visible: !cal_img_ready() && !markersFound()">
 			<div style=""><i class="icon-spinner icon-spin"></i> searching markers</div>
 			<div class="marker_found_indicator" data-bind="css: { active: foundNW() }"><i class="icon-ok"></i> NW</div>
 			<div class="marker_found_indicator" data-bind="css: { active: foundSW() }"><i class="icon-ok"></i> SW</div>
