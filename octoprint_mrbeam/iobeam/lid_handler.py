@@ -91,10 +91,12 @@ class LidHandler(object):
 			self._logger.debug("shutdown() stopping _photo_creator")
 			self._end_photo_worker()
 
-	def set_save_undistorted(self):
+	def set_save_undistorted(self, save_debug_images=False):
 		from flask import make_response
 		if self._photo_creator is not None:
 			self._photo_creator.save_undistorted = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(['cam','localUndistImage'])
+			set_debug_images_to = save_debug_images or self._photo_creator.save_debug_images
+			self._photo_creator.save_debug_images = save_debug_images or self._photo_creator.save_debug_images
 			# todo make_response, so that it will be accepted in the .done() method in frontend
 			return make_response('Should save Image soon, please wait.',200)
 		else:
@@ -109,6 +111,7 @@ class LidHandler(object):
 	def _end_photo_worker(self):
 		if self._photo_creator:
 			self._photo_creator.active = False
+			self._photo_creator.save_debug_images = False
 
 	def _send_frontend_lid_state(self, closed=None):
 		lid_closed = closed if closed is not None else self.lidClosed
@@ -133,6 +136,7 @@ class PhotoCreator(object):
 		self.last_photo = 0
 		self.badQualityPicCount = 0
 		self.save_undistorted = None
+		self.save_debug_images = self._settings.get(['cam', 'saveCorrectionDebugImages'])
 		self.camera = None
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator")
 
@@ -297,7 +301,7 @@ class PhotoCreator(object):
 												size=(outputImageWidth,outputImageHeight),
 												save_undistorted=self.save_undistorted,
 												quality=75,
-												debug_out=True)
+												debug_out=self.save_debug_images)
 
 		if ('undistorted_saved' in correction_result and correction_result['undistorted_saved']
 			and 'markers_recognized' in correction_result and correction_result['markers_recognized'] == 4):
