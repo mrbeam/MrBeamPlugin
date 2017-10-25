@@ -12,7 +12,10 @@ $(function () {
 
 		self.staticURL = "/plugin/mrbeam/static/img/cam_calibration/calpic_wait.svg";
 
-		self.dbNWImgUrl = ko.observable("");
+		self.dbNWImgUrl = ko.observable("/plugin/mrbeam/static/img/cam_calibration/calpic_wait.svg");
+		self.dbNEImgUrl = ko.observable("/plugin/mrbeam/static/img/cam_calibration/calpic_wait.svg");
+		self.dbSWImgUrl = ko.observable("/plugin/mrbeam/static/img/cam_calibration/calpic_wait.svg");
+		self.dbSEImgUrl = ko.observable("/plugin/mrbeam/static/img/cam_calibration/calpic_wait.svg");
 
 		self.workingArea = parameters[1];
 		self.conversion = parameters[2];
@@ -214,7 +217,11 @@ $(function () {
 
                     console.log("isInitialCalibration: " + self.isInitialCalibration());
                     if(self.isInitialCalibration()){
-                        self.dbNWImgUrl('/downloads/files/local/cam/beam-cam_debug_NW.jpg' + '?' + new Date().getTime());
+                        self.dbNWImgUrl('/downloads/files/local/cam/beam-cam-tmp2_debug_NW.jpg' + '?' + new Date().getTime());
+                        self.dbNEImgUrl('/downloads/files/local/cam/beam-cam-tmp2_debug_NE.jpg' + '?' + new Date().getTime());
+                        self.dbSWImgUrl('/downloads/files/local/cam/beam-cam-tmp2_debug_SW.jpg' + '?' + new Date().getTime());
+                        self.dbSEImgUrl('/downloads/files/local/cam/beam-cam-tmp2_debug_SE.jpg' + '?' + new Date().getTime());
+
                     }
 
                     // check if all markers are found and image is good for calibration
