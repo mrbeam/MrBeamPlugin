@@ -16,7 +16,7 @@
 			<div class="marker_found_indicator" data-bind="css: { active: foundSE() }"><i class="icon-ok"></i> SE</div>
 			<div class="marker_found_indicator" data-bind="css: { active: foundNE() }"><i class="icon-ok"></i> NE</div>
 		</div>
-		<div class="marker_selection_desc calibration_help" data-bind="visible: cal_img_ready() && !calibrationActive()">
+		<div class="marker_selection_desc calibration_help" data-bind="visible: markersFound() && !calibrationActive()">
 			<div>{{_('Click on the arrow head of the marker in the magnified picture.<br/> \n\
 			Continue with the other markers as the picture changes.<br/>\n\
 			Once all arrowheads are marked the calibration is finished.')}}</div>
@@ -24,7 +24,7 @@
 				<button class="btn btn-default" data-bind="click: startCalibration">{{ _('Start Calibration') }}</button>
 			</div>
 		</div>
-		<div class="marker_selection_desc calibration_summary" data-bind="visible: cal_img_ready() && calibrationActive()">
+		<div class="marker_selection_desc calibration_summary" data-bind="visible: markersFound() && calibrationActive()">
 			<div data-bind="css: {complete: calibrationComplete()}">
 				<div id="NW" class="cal-row"><div class="cal-arrow NW"></div> North West: <span data-bind="text: __format_point(currentResults()['NW'])"></span></div>
 				<div id="SW" class="cal-row"><div class="cal-arrow SW"></div> South West: <span data-bind="text: __format_point(currentResults()['SW'])"></span></div>
