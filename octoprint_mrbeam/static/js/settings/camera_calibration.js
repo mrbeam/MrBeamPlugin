@@ -12,10 +12,11 @@ $(function () {
 
 		self.staticURL = "/plugin/mrbeam/static/img/cam_calibration/calpic_wait.svg";
 
-		self.dbNWImgUrl = ko.observable("/plugin/mrbeam/static/img/cam_calibration/calpic_wait.svg");
-		self.dbNEImgUrl = ko.observable("/plugin/mrbeam/static/img/cam_calibration/calpic_wait.svg");
-		self.dbSWImgUrl = ko.observable("/plugin/mrbeam/static/img/cam_calibration/calpic_wait.svg");
-		self.dbSEImgUrl = ko.observable("/plugin/mrbeam/static/img/cam_calibration/calpic_wait.svg");
+
+		self.dbNWImgUrl = ko.observable("");
+		self.dbNEImgUrl = ko.observable("");
+		self.dbSWImgUrl = ko.observable("");
+		self.dbSEImgUrl = ko.observable("");
 
 		self.workingArea = parameters[1];
 		self.conversion = parameters[2];

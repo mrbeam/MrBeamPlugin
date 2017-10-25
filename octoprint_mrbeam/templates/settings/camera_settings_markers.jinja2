@@ -38,11 +38,11 @@
 			</div>
 		</div>
 	</div>
-    <div>
-        <image id="debug_NW_img" data-bind="attr: {href: dbNWImgUrl()}" width="100%" height="100%"/>
-        <image id="debug_NE_img" data-bind="attr: {href: dbNEImgUrl()}" width="100%" height="100%"/>
-        <image id="debug_SW_img" data-bind="attr: {href: dbSWImgUrl()}" width="100%" height="100%"/>
-        <image id="debug_SE_img" data-bind="attr: {href: dbSEImgUrl()}" width="100%" height="100%"/>
+    <div data-bind="visible: isInitialCalibration()">
+        <image id="debug_NW_img" data-bind="attr: {src: dbNWImgUrl()}" width="100%" height="100%"/>
+        <image id="debug_NE_img" data-bind="attr: {src: dbNEImgUrl()}" width="100%" height="100%"/>
+        <image id="debug_SW_img" data-bind="attr: {src: dbSWImgUrl()}" width="100%" height="100%"/>
+        <image id="debug_SE_img" data-bind="attr: {src: dbSEImgUrl()}" width="100%" height="100%"/>
     </div>
 </div>
 
