@@ -12,6 +12,12 @@ $(function () {
 
 		self.staticURL = "/plugin/mrbeam/static/img/cam_calibration/calpic_wait.svg";
 
+
+		self.dbNWImgUrl = ko.observable("");
+		self.dbNEImgUrl = ko.observable("");
+		self.dbSWImgUrl = ko.observable("");
+		self.dbSEImgUrl = ko.observable("");
+
 		self.workingArea = parameters[1];
 		self.conversion = parameters[2];
 		self.scaleFactor = 6;
@@ -24,7 +30,6 @@ $(function () {
 		self.calSvgScale = ko.observable(1);
 		self.calibrationActive = ko.observable(false);
 		self.currentResults = ko.observable({});
-		self.cal_img_ready = ko.computed(function(){ return self.calImgUrl() !== self.staticURL; });
 		self.calibrationComplete = ko.computed(function(){
 			var markers = ['NW', 'NE', 'SW', 'SE'];
 			for (var i = 0; i < markers.length; i++) {
@@ -41,6 +46,10 @@ $(function () {
 		self.foundSE = ko.observable(false);
 		self.foundNE = ko.observable(false);
 
+        self.cal_img_ready = ko.computed(function(){
+            return self.foundNE() && self.foundNW() && self.foundSE() && self.foundSW()});
+
+        self.markersFound = ko.observable(false);
 
 		self.__format_point = function(p){
 			if(typeof p === 'undefined') return '?,?';
@@ -189,33 +198,42 @@ $(function () {
 			}
 		};
 
+
 		self.onDataUpdaterPluginMessage = function (plugin, data) {
 			if (plugin !== "mrbeam" || !data)
 				return;
 			if ('beam_cam_new_image' in data) {
-				var markers = data['beam_cam_new_image']['markers_found'];
-				if(!self.cal_img_ready()){
-					self.foundNW(markers['NW'] && markers['NW'].recognized);
-					self.foundNE(markers['NE'] && markers['NE'].recognized);
-					self.foundSW(markers['SW'] && markers['SW'].recognized);
-					self.foundSE(markers['SE'] && markers['SE'].recognized);
-				}
-				if (data['beam_cam_new_image']['undistorted_saved']) {
-					console.log("Update imgURL");
-					self.calImgUrl('/downloads/files/local/cam/undistorted.jpg' + '?' + new Date().getTime());
-					self.currentMarkersFound = markers;
-					if (self.currentMarkersFound === {}) {
-						console.log("ERROR NO MARKERS FOUND IN PICTURE, PLEASE TAKE PIC AGAIN")
-						new PNotify({
-							title: gettext("Error"),
-							text: gettext("No Markers found/no Data about Markers. Please take picture again. Canceling calibration."),
-							type: "warning",
-							hide: true
-						});
-						self.calibrationActive(false);
-					} else {
-						console.log("Markers Found here:", self.currentMarkersFound);
-					}
+				// update markers
+			    var markers = data['beam_cam_new_image']['markers_found'];
+                self.foundNW(markers['NW'] && markers['NW'].recognized);
+                self.foundNE(markers['NE'] && markers['NE'].recognized);
+                self.foundSW(markers['SW'] && markers['SW'].recognized);
+                self.foundSE(markers['SE'] && markers['SE'].recognized);
+
+
+                // update image
+                if (data['beam_cam_new_image']['undistorted_saved']) {
+				    console.log("Update imgURL");
+                    self.calImgUrl('/downloads/files/local/cam/undistorted.jpg' + '?' + new Date().getTime());
+
+                    console.log("isInitialCalibration: " + self.isInitialCalibration());
+                    if(self.isInitialCalibration()){
+                        self.dbNWImgUrl('/downloads/files/local/cam/beam-cam-tmp2_debug_NW.jpg' + '?' + new Date().getTime());
+                        self.dbNEImgUrl('/downloads/files/local/cam/beam-cam-tmp2_debug_NE.jpg' + '?' + new Date().getTime());
+                        self.dbSWImgUrl('/downloads/files/local/cam/beam-cam-tmp2_debug_SW.jpg' + '?' + new Date().getTime());
+                        self.dbSEImgUrl('/downloads/files/local/cam/beam-cam-tmp2_debug_SE.jpg' + '?' + new Date().getTime());
+
+                    }
+
+                    // check if all markers are found and image is good for calibration
+                    if(self.cal_img_ready()){
+                        console.log("Saving Markers to Frontend for Calibration");
+                        console.log(markers);
+                        self.markersFound(true);
+				        self.currentMarkersFound = markers;
+                    }else{
+                        console.log("Not all Markers found, waiting for better Pic, please check if markers are visible.")
+                    }
 				}
 			}
 		};
@@ -320,6 +338,8 @@ $(function () {
 			self.calImgUrl(self.staticURL);
 			self._zoomTo(0,0,1);
 			self.currentMarker = 0;
+			self.currentMarkersFound = {};
+			self.markersFound(false);
 			if(self.isInitialCalibration()){
 				self.loadUndistortedPicture();
 			} else {
