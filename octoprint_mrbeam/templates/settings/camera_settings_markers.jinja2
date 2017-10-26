@@ -39,10 +39,14 @@
 		</div>
 	</div>
     <div data-bind="visible: isInitialCalibration()">
-        <image id="debug_NW_img" data-bind="attr: {src: dbNWImgUrl()}" width="100%" height="100%"/>
-        <image id="debug_NE_img" data-bind="attr: {src: dbNEImgUrl()}" width="100%" height="100%"/>
-        <image id="debug_SW_img" data-bind="attr: {src: dbSWImgUrl()}" width="100%" height="100%"/>
-        <image id="debug_SE_img" data-bind="attr: {src: dbSEImgUrl()}" width="100%" height="100%"/>
+        <div>
+            <img id="debug_NW_img" class="marker_debug_image" data-bind="attr: {src: dbNWImgUrl()}"/>
+            <img id="debug_NE_img" class="marker_debug_image" data-bind="attr: {src: dbNEImgUrl()}"/>
+        </div>
+        <div>
+            <img id="debug_SW_img" class="marker_debug_image" data-bind="attr: {src: dbSWImgUrl()}"/>
+            <img id="debug_SE_img" class="marker_debug_image" data-bind="attr: {src: dbSEImgUrl()}"/>
+        </div>
     </div>
 </div>
 
