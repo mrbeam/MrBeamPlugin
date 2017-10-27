@@ -44,10 +44,10 @@ class AnalyticsHandler(object):
 
 		self._shortSerial = self._getShortSerial()
 
-		self._jobevent_log_version = 3
-		self._deviceinfo_log_version = 3
-		self._dust_log_version = 3
-		self._cam_event_log_version = 3
+		self._jobevent_log_version = 2
+		self._deviceinfo_log_version = 2
+		self._dust_log_version = 2
+		self._cam_event_log_version = 2
 
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analyticshandler")
 
@@ -188,12 +188,12 @@ class AnalyticsHandler(object):
 		self._cleanup(successfull=True)
 
 	def _event_print_failed(self, event, payload):
-		self._write_jobevent('print_failed')
+		self._write_jobevent('p_failed')
 		self._write_collectors()
 		self._cleanup(successfull=False)
 
 	def _event_print_cancelled(self, event, payload):
-		self._write_jobevent('print_cancelled')
+		self._write_jobevent('p_cancelled')
 		self._write_collectors()
 		self._cleanup(successfull=False)
 
@@ -204,7 +204,7 @@ class AnalyticsHandler(object):
 			li=self._current_intensity_collector.get_latest_value(),
 			dv=self._current_dust_collector.get_latest_value()
 		)
-		self._write_jobevent('print_progress', data)
+		self._write_jobevent('p_progress', data)
 
 	def _event_laser_cooling_pause(self, event, payload):
 		if not self._isCoolingPaused:
@@ -270,7 +270,7 @@ class AnalyticsHandler(object):
 		if payload is not None:
 			data['data'] = payload
 
-		_jobevent_type = 'jobevent'
+		_jobevent_type = 'job'
 		self.write_event(_jobevent_type, event, self._jobevent_log_version, payload=data)
 
 	def update_cam_session_id(self, lid_state):
@@ -281,8 +281,8 @@ class AnalyticsHandler(object):
 
 	def _write_cam_event(self, event, payload=None):
 		data = dict()
-		if event == 'pic_prep':
-			data['cam_session'] = self._current_cam_session_id
+		if event == 'pic':
+			data['sess'] = self._current_cam_session_id
 			# TODO add data validation/preparation here
 			if 'precision' in payload:
 				del payload['precision']
