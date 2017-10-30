@@ -213,7 +213,7 @@ class AnalyticsHandler(object):
 			}
 			if self._current_lasertemp_collector:
 				data['lasertemp'] = self._current_lasertemp_collector.get_latest_value()
-			self._write_jobevent('laser_cooling_start',payload=data)
+			self._write_jobevent('cooling_start',payload=data)
 			self._isCoolingPaused = True
 
 	def _event_laser_cooling_resume(self, event, payload):
@@ -223,7 +223,7 @@ class AnalyticsHandler(object):
 			}
 			if self._current_lasertemp_collector:
 				data['lasertemp'] = self._current_lasertemp_collector.get_latest_value()
-			self._write_jobevent('laser_cooling_done',payload=data)
+			self._write_jobevent('cooling_done',payload=data)
 			self._isCoolingPaused = False
 
 	def write_cam_update(self,newMarkers,newCorners):
