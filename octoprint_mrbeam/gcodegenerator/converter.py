@@ -61,7 +61,7 @@ class Converter():
 		self.document=None
 		self._log.info('Converter Initialized: %s' % self.options)
 		# todo need material,bounding_box_area here
-		_mrbeam_plugin_implementation._analytics_handler.write_conversion_details(self.options)
+		_mrbeam_plugin_implementation._analytics_handler.store_conversion_details(self.options)
 
 	def setoptions(self, opts):
 		# set default values if option is missing

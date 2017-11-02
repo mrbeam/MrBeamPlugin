@@ -321,4 +321,4 @@ class PhotoCreator(object):
 	def _write_cam_analytics(self,cam_data):
 		eventname = 'pic_prep'
 		# todo get cam version
-		_mrbeam_plugin_implementation._analytics_handler._write_cam_event(eventname, payload=cam_data)
+		_mrbeam_plugin_implementation._analytics_handler.write_cam_event(eventname, payload=cam_data)
