@@ -30,8 +30,8 @@ class AnalyticsHandler(object):
 		self._event_bus = event_bus
 		self._settings = settings
 
-		self._analyticsOn = False
-		self._camAnalyticsOn = False
+		self._analyticsOn = True
+		self._camAnalyticsOn = True
 
 		self._current_job_id = None
 		self._isJobPaused = False
@@ -181,18 +181,21 @@ class AnalyticsHandler(object):
 		self._current_lasertemp_collector = None
 
 	def _event_laser_job_done(self, event, payload):
-		self._write_jobevent(ak.LASERJOB_DONE)
-		self._cleanup(successfull=True)
+		if self._current_job_id is not None:
+			self._write_jobevent(ak.LASERJOB_DONE)
+			self._cleanup(successfull=True)
 
 	def _event_print_failed(self, event, payload):
-		self._write_jobevent(ak.PRINT_FAILED)
-		self._write_collectors()
-		self._cleanup(successfull=False)
+		if self._current_job_id is not None:
+			self._write_jobevent(ak.PRINT_FAILED)
+			self._write_collectors()
+			self._cleanup(successfull=False)
 
 	def _event_print_cancelled(self, event, payload):
-		self._write_jobevent(ak.PRINT_CANCELLED)
-		self._write_collectors()
-		self._cleanup(successfull=False)
+		if self._current_job_id is not None:
+			self._write_jobevent(ak.PRINT_CANCELLED)
+			self._write_collectors()
+			self._cleanup(successfull=False)
 
 	def _event_print_progress(self, event, payload):
 		data = dict(
@@ -388,20 +391,9 @@ class AnalyticsHandler(object):
 			except Exception as e:
 				self._logger.error('Error during add_laser_intensity_value: {}'.format(e.message))
 
-	def write_dust_log(self, values):
+	def write_dust_log(self, data):
 		try:
 			if self._analyticsOn:
-				dust_duration = values[ak.DUST_END_TS] - values[ak.DUST_START_TS]
-				dust_difference = values[ak.DUST_END] - values[ak.DUST_START]
-				data = {
-					ak.DUST_START: values[ak.DUST_START],
-					ak.DUST_END: values[ak.DUST_END],
-					ak.DUST_START_TS: values[ak.DUST_START_TS],
-					ak.DUST_END_TS: values[ak.DUST_END_TS],
-					ak.DUST_DURATION: dust_duration,
-					ak.DUST_DIFF: dust_difference,
-					ak.DUST_PER_TIME: dust_difference / dust_duration
-				}
 				self._write_jobevent(ak.FINAL_DUST,payload=data)
 		except Exception as e:
 			self._logger.error('Error during write dust_log: {}'.format(e.message))

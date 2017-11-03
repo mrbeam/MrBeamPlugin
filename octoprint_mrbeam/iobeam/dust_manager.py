@@ -4,7 +4,7 @@ from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamValueEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
-
+from octoprint_mrbeam.analytics.analytics_keys import AnalyticsKeys as ak
 # singleton
 _instance = None
 
@@ -140,7 +140,7 @@ class DustManager(object):
 				if dust_start_ts != dust_end_ts:
 					self._send_final_dust_to_analytics(dust_start, dust_start_ts, dust_end, dust_end_ts)
 				else:
-					self._logger.warning("No dust value recieved during extraction time. Skipping wrinting analytics!")
+					self._logger.warning("No dust value recieved during extraction time. Skipping writing analytics!")
 				self._activate_timed_auto_mode(self.auto_mode_time)
 				self._trail_extraction = None
 			else:
@@ -224,13 +224,20 @@ class DustManager(object):
 		:param dust_end_ts: timestamp at dust_value at job_done
 		:return:
 		"""
-		self._logger.debug("dust extraction time {} from {} to {} (gradient: {})".format(dust_end_ts - dust_start_ts, dust_start, dust_end, (dust_start - dust_end) / (dust_end_ts - dust_start_ts)))
-		data = dict(
-			dust_start=dust_start,
-			dust_end=dust_end,
-			dust_start_ts=dust_start_ts,
-			dust_end_ts=dust_end_ts
-		)
+		dust_duration = dust_end_ts - dust_start_ts
+		dust_difference = dust_end - dust_start
+		dust_per_time =  dust_difference / dust_duration
+		self._logger.debug("dust extraction time {} from {} to {} (difference: {},gradient: {})".format(dust_duration, dust_start, dust_end,dust_difference, dust_per_time))
+
+		data = {
+			ak.DUST_START : dust_start,
+			ak.DUST_END : dust_end,
+			ak.DUST_START_TS : dust_start_ts,
+			ak.DUST_END_TS : dust_end_ts,
+			ak.DUST_DURATION : dust_duration,
+			ak.DUST_DIFF : dust_difference,
+			ak.DUST_PER_TIME: dust_per_time
+		}
 		_mrbeam_plugin_implementation._analytics_handler.write_dust_log(data)
 
 	def check_dust_value(self):
