@@ -69,6 +69,7 @@ class LidHandler(object):
 		self._event_bus.subscribe(OctoPrintEvents.SLICING_DONE,self._onSlicingEvent)
 		self._event_bus.subscribe(OctoPrintEvents.SLICING_FAILED,self._onSlicingEvent)
 		self._event_bus.subscribe(OctoPrintEvents.SLICING_CANCELLED, self._onSlicingEvent)
+		self._event_bus.subscribe('PrinterStateChanged',self._printerStateChanged)
 
 	# TODO Question: Why is there only one onEvent() Function with if/elif/else instead of different functions for each event?
 	def onEvent(self, event, payload):
@@ -96,17 +97,21 @@ class LidHandler(object):
 		elif event == OctoPrintEvents.SHUTDOWN:
 			self.shutdown()
 
+	def _printerStateChanged(self,event,payload):
+		if payload['state_string'] == 'Operational':
+			self._startStopCamera(event)
+
 	def _onSlicingEvent(self,event,payload):
 		self._is_slicing = (event == OctoPrintEvents.SLICING_STARTED)
 		self._startStopCamera(event)
 
 	def _startStopCamera(self,event):
 		if self._photo_creator is not None and self.camEnabled:
-			self._logger.debug('XXXXXXXXXX: {}'.format(self._printer.is_operational()))
 			if event in (IoBeamEvents.LID_CLOSED, OctoPrintEvents.SLICING_STARTED, OctoPrintEvents.CLIENT_CLOSED):
 				self._end_photo_worker()
 			else:
-				if self._client_opened and not self._is_slicing and not self._lid_closed:
+				# TODO get the states from _printer or the global state, instead of having local state as well!
+				if self._client_opened and not self._is_slicing and not self._lid_closed and not self._printer.is_locked():
 					self._start_photo_worker()
 
 	def _setClientStatus(self,event):
