@@ -224,8 +224,8 @@ class DustManager(object):
 		:param dust_end_ts: timestamp at dust_value at job_done
 		:return:
 		"""
-		dust_duration = dust_end_ts - dust_start_ts
-		dust_difference = dust_end - dust_start
+		dust_duration = round(dust_end_ts - dust_start_ts,4)
+		dust_difference = round(dust_end - dust_start,5)
 		dust_per_time =  dust_difference / dust_duration
 		self._logger.debug("dust extraction time {} from {} to {} (difference: {},gradient: {})".format(dust_duration, dust_start, dust_end,dust_difference, dust_per_time))
 
