@@ -85,15 +85,6 @@ class AnalyticsHandler(object):
 		self._event_bus.subscribe(OctoPrintEvents.STARTUP, self._event_startup)
 		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self._event_shutdown)
 
-	def _init_jsonfile(self):
-		open(self._jsonfile, 'w+').close()
-		data = {
-			ak.HOSTNAME: self._getHostName(),
-			ak.SERIALNUMBER: self._getSerialNumber(),
-			ak.LASERHEAD_VERSION: self._getLaserHeadVersion()
-		}
-		self._write_deviceinfo(ak.INIT,payload=data)
-		self._write_current_software_status()
 
 	@staticmethod
 	def _getLaserHeadVersion():
@@ -129,12 +120,15 @@ class AnalyticsHandler(object):
 		return days_passed
 
 	def _write_current_software_status(self):
-		# TODO ANDY get all software statuses
-		# get all sw_stati and then print out status for each
-		# for each sw_status in sw_stati:
-		# 	sw_status = dict(name='<name>',version='<x.x.x>')
-		# 	self._write_deviceinfo('sw_status',payload=sw_status)
-		pass
+		try:
+			# TODO ANDY get all software statuses
+			# get all sw_stati and then print out status for each
+			# for each sw_status in sw_stati:
+			# 	sw_status = dict(name='<name>',version='<x.x.x>')
+			# 	self._write_deviceinfo('sw_status',payload=sw_status)
+			pass
+		except Exception as e:
+			self._logger.error('Error during write_current_software_status: {}'.format(e.message))
 
 	def _event_startup(self,event,payload):
 		self._write_deviceinfo(ak.STARTUP)
@@ -230,33 +224,39 @@ class AnalyticsHandler(object):
 			self._isCoolingPaused = False
 
 	def write_cam_update(self,newMarkers,newCorners):
-		if self._camAnalyticsOn:
-			data = {
-				ak.MARKERS:newMarkers,
-				ak.CORNERS:newCorners
-			}
-			self.write_cam_event(ak.CAM_CALIBRATION, payload=data)
+		try:
+			if self._camAnalyticsOn:
+				data = {
+					ak.MARKERS:newMarkers,
+					ak.CORNERS:newCorners
+				}
+				self.write_cam_event(ak.CAM_CALIBRATION, payload=data)
+		except Exception as e:
+			self._logger.error('Error during write_cam_update: {}'.format(e.message))
 
 	def store_conversion_details(self, details):
-		if self._analyticsOn:
-			if 'engrave' in details and details['engrave'] == True and 'raster' in details:
-				eventname = ak.CONV_ENGRAVE
-				data = {
-					'svgDPI': details['svgDPI']
-				}
-				data.update(details['raster'])
-				self._store_conversion_details(eventname,payload=data)
-				# self._write_jobevent(eventname,payload=data)
-
-			if 'vector' in details and details['vector'] != []:
-				eventname = ak.CONV_CUT
-				for color_settings in details['vector']:
+		try:
+			if self._analyticsOn:
+				if 'engrave' in details and details['engrave'] == True and 'raster' in details:
+					eventname = ak.CONV_ENGRAVE
 					data = {
 						'svgDPI': details['svgDPI']
 					}
-					data.update(color_settings)
+					data.update(details['raster'])
 					self._store_conversion_details(eventname,payload=data)
 					# self._write_jobevent(eventname,payload=data)
+
+				if 'vector' in details and details['vector'] != []:
+					eventname = ak.CONV_CUT
+					for color_settings in details['vector']:
+						data = {
+							'svgDPI': details['svgDPI']
+						}
+						data.update(color_settings)
+						self._store_conversion_details(eventname,payload=data)
+						# self._write_jobevent(eventname,payload=data)
+		except Exception as e:
+			self._logger.error('Error during store_conversion_details: {}'.format(e.message))
 
 	def _store_conversion_details(self,eventname,payload=None):
 		data = {
@@ -271,73 +271,89 @@ class AnalyticsHandler(object):
 			data.update(payload)
 		self._storedConversions.append(data)
 
+
 	def _write_conversion_details(self):
-		for d in self._storedConversions:
-			if time.time() - d[ak.TIMESTAMP] < 600:
-				d[ak.JOB_ID] = self._current_job_id
-			self._append_data_to_file(d)
-		self._storedConversions = list()
+		try:
+			for d in self._storedConversions:
+				# TODO Check Magic Number 10min Q: How long can a conversion be stored for one job?
+				if time.time() - d[ak.TIMESTAMP] < 600:
+					d[ak.JOB_ID] = self._current_job_id
+				self._append_data_to_file(d)
+			self._storedConversions = list()
+		except Exception as e:
+			self._logger.error('Error during write_conversion_details: {}'.format(e.message))
 
 	def _write_deviceinfo(self,event,payload=None):
-		data = dict()
-		# TODO add data validation/preparation here
-		if payload is not None:
-			data[ak.DATA] = payload
-		self._write_event(ak.DEVICE_EVENT, event, self._deviceinfo_log_version, payload=data)
+		try:
+			data = dict()
+			# TODO add data validation/preparation here
+			if payload is not None:
+				data[ak.DATA] = payload
+			self._write_event(ak.DEVICE_EVENT, event, self._deviceinfo_log_version, payload=data)
+		except Exception as e:
+			self._logger.error('Error during write_device_info: {}'.format(e.message))
 
 	def _write_jobevent(self,event,payload=None):
-		#TODO add data validation/preparation here
-		data = dict(job_id = self._current_job_id)
+		try:
+			#TODO add data validation/preparation here
+			data = dict(job_id = self._current_job_id)
 
-		if event in (ak.LASERTEMP_SUM,ak.INTENSITY_SUM):
-			data[ak.LASERHEAD_VERSION] = self._getLaserHeadVersion()
+			if event in (ak.LASERTEMP_SUM,ak.INTENSITY_SUM):
+				data[ak.LASERHEAD_VERSION] = self._getLaserHeadVersion()
 
-		if payload is not None:
-			data[ak.DATA] = payload
+			if payload is not None:
+				data[ak.DATA] = payload
 
-		_jobevent_type = ak.JOB_EVENT
-		self._write_event(_jobevent_type, event, self._jobevent_log_version, payload=data)
+			_jobevent_type = ak.JOB_EVENT
+			self._write_event(_jobevent_type, event, self._jobevent_log_version, payload=data)
+		except Exception as e:
+			self._logger.error('Error during write_jobevent: {}'.format(e.message))
 
 	def update_cam_session_id(self, lid_state):
 		if self._camAnalyticsOn:
 			if lid_state == 'lid_opened':
 				self._current_cam_session_id = 'c_{}_{}'.format(self._getSerialNumber(),time.time())
-			# else:
-			# 	self._current_cam_session_id = None
+
 
 	def write_cam_event(self, eventname, payload=None):
-		if self._camAnalyticsOn:
-			data = dict()
-			if eventname == ak.PIC_EVENT:
-				data[ak.CAM_SESSION_ID] = self._current_cam_session_id
-				# TODO add data validation/preparation here
-				if 'precision' in payload:
-					del payload['precision']
-				if 'corners_calculated' in payload:
-					del payload['corners_calculated']
-				if 'undistorted_saved' in payload:
-					del payload['undistorted_saved']
-				if 'high_precision' in payload:
-					del payload['high_precision']
-				if 'markers_recognized' in payload:
-					del payload['markers_recognized']
+		try:
+			if self._camAnalyticsOn:
+				data = dict()
+				if eventname == ak.PIC_EVENT:
+					data[ak.CAM_SESSION_ID] = self._current_cam_session_id
+					# TODO add data validation/preparation here
+					if 'precision' in payload:
+						del payload['precision']
+					if 'corners_calculated' in payload:
+						del payload['corners_calculated']
+					if 'undistorted_saved' in payload:
+						del payload['undistorted_saved']
+					if 'high_precision' in payload:
+						del payload['high_precision']
+					if 'markers_recognized' in payload:
+						del payload['markers_recognized']
 
-			if payload is not None:
-				data[ak.DATA] = payload
+				if payload is not None:
+					data[ak.DATA] = payload
 
-			self._write_event(ak.CAM_EVENT, eventname, self._cam_event_log_version, payload=data)
+				self._write_event(ak.CAM_EVENT, eventname, self._cam_event_log_version, payload=data)
+		except Exception as e:
+			self._logger.error('Error during write_cam_event: {}'.format(e.message))
 
 	def _write_event(self, typename, eventname, version, payload=None):
-		data = {
-			ak.SERIALNUMBER: self._getSerialNumber(),
-			ak.TYPE: typename,
-			ak.VERSION: version,
-			ak.EVENT: eventname,
-			ak.TIMESTAMP: time.time()
-		}
-		if payload is not None:
-			data.update(payload)
-		self._append_data_to_file(data)
+		try:
+			data = {
+				ak.SERIALNUMBER: self._getSerialNumber(),
+				ak.TYPE: typename,
+				ak.VERSION: version,
+				ak.EVENT: eventname,
+				ak.TIMESTAMP: time.time()
+			}
+			if payload is not None:
+				data.update(payload)
+			self._append_data_to_file(data)
+		except Exception as e:
+			self._logger.error('Error during _write_event: {}'.format(e.message))
 
 	def add_dust_value(self, dust_value):
 		"""
@@ -345,7 +361,10 @@ class AnalyticsHandler(object):
 		:return:
 		"""
 		if self._analyticsOn and self._current_dust_collector is not None:
-			self._current_dust_collector.addValue(dust_value)
+			try:
+				self._current_dust_collector.addValue(dust_value)
+			except Exception as e:
+				self._logger.error('Error during add_dust_value: {}'.format(e.message))
 
 	def add_laser_temp_value(self,laser_temp):
 		"""
@@ -353,7 +372,10 @@ class AnalyticsHandler(object):
 		:return:
 		"""
 		if self._analyticsOn and self._current_lasertemp_collector is not None:
-			self._current_lasertemp_collector.addValue(laser_temp)
+			try:
+				self._current_lasertemp_collector.addValue(laser_temp)
+			except Exception as e:
+				self._logger.error('Error during add_laser_temp_value: {}'.format(e.message))
 
 	def add_laser_intensity_value(self, laser_intensity):
 		"""
@@ -361,21 +383,45 @@ class AnalyticsHandler(object):
 		:param laser_intensity: 0-255. Zero means laser is off
 		"""
 		if self._analyticsOn and self._current_intensity_collector is not None:
-			self._current_intensity_collector.addValue(laser_intensity)
+			try:
+				self._current_intensity_collector.addValue(laser_intensity)
+			except Exception as e:
+				self._logger.error('Error during add_laser_intensity_value: {}'.format(e.message))
 
 	def write_dust_log(self, values):
-		if self._analyticsOn:
-			data = {
-				ak.DUST_START:values[ak.DUST_START],
-				ak.DUST_END: values[ak.DUST_END],
-				ak.DUST_START_TS: values[ak.DUST_START_TS],
-				ak.DUST_END_TS: values[ak.DUST_END_TS]
-			}
-			self._write_jobevent(ak.FINAL_DUST,payload=data)
+		try:
+			if self._analyticsOn:
+				dust_duration = values[ak.DUST_END_TS] - values[ak.DUST_START_TS]
+				dust_difference = values[ak.DUST_END] - values[ak.DUST_START]
+				data = {
+					ak.DUST_START: values[ak.DUST_START],
+					ak.DUST_END: values[ak.DUST_END],
+					ak.DUST_START_TS: values[ak.DUST_START_TS],
+					ak.DUST_END_TS: values[ak.DUST_END_TS],
+					ak.DUST_DURATION: dust_duration,
+					ak.DUST_DIFF: dust_difference,
+					ak.DUST_PER_TIME: dust_difference / dust_duration
+				}
+				self._write_jobevent(ak.FINAL_DUST,payload=data)
+		except Exception as e:
+			self._logger.error('Error during write dust_log: {}'.format(e.message))
+
+	def _init_jsonfile(self):
+		open(self._jsonfile, 'w+').close()
+		data = {
+			ak.HOSTNAME: self._getHostName(),
+			ak.SERIALNUMBER: self._getSerialNumber(),
+			ak.LASERHEAD_VERSION: self._getLaserHeadVersion()
+		}
+		self._write_deviceinfo(ak.INIT,payload=data)
+		self._write_current_software_status()
 
 	def _append_data_to_file(self, data):
-		if not os.path.isfile(self._jsonfile):
-			self._init_jsonfile()
-		with open(self._jsonfile, 'a') as f:
-			json.dump(data, f)
-			f.write('\n')
+		try:
+			if not os.path.isfile(self._jsonfile):
+				self._init_jsonfile()
+			with open(self._jsonfile, 'a') as f:
+				json.dump(data, f)
+				f.write('\n')
+		except Exception as e:
+			self._logger.error('Error during init json: {}'.format(e.message))

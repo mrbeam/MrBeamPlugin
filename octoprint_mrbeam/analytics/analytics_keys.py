@@ -56,11 +56,13 @@ class AnalyticsKeys(object):
 					]
 	FAILED_PRINT_EVENTS = [PRINT_CANCELLED,PRINT_FAILED]
 
-	DUST_START = 'dust_start'
-	DUST_END = 'dust_end'
-	DUST_START_TS = 'dust_start_ts'
-	DUST_END_TS = 'dust_end_ts'
-
+	DUST_START = 'd_start'
+	DUST_END = 'd_end'
+	DUST_START_TS = 'd_start_ts'
+	DUST_END_TS = 'd_end_ts'
+	DUST_DURATION = 'd_duration'
+	DUST_DIFF = 'd_diff'
+	DUST_PER_TIME = 'd_per_time'
 
 	### CAM KEYS ###
 	MARKERS = 'markers'

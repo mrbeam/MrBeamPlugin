@@ -288,7 +288,6 @@ class PhotoCreator(object):
 		path_to_pic_settings = self._settings.get(["cam", "correctionSettingsFile"])
 		path_to_last_markers = self._settings.get(["cam", "correctionTmpFile"])
 
-		# todo implement high-precision feedback to frontend
 		# todo implement pixel2MM setting in _laserCutterProfile (the magic number 2 below)
 		outputImageWidth = int(2 * self._laserCutterProfile['volume']['width'])
 		outputImageHeight = int(2 * self._laserCutterProfile['volume']['depth'])
