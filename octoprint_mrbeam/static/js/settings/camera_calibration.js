@@ -264,6 +264,8 @@ $(function () {
 							"svg"
 						]
 					};
+					//clear workingArea from previous designs
+                    self.workingArea.clear();
 					// put it on the working area
 					self.workingArea.placeSVG(fileObj, function(){
 						// start conversion
