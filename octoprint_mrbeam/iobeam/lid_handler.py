@@ -40,6 +40,7 @@ class LidHandler(object):
 	def __init__(self, event_bus, plugin_manager):
 		self._event_bus = event_bus
 		self._settings = _mrbeam_plugin_implementation._settings
+		self._printer = _mrbeam_plugin_implementation._printer
 		self._plugin_manager = plugin_manager
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler")
 
@@ -101,6 +102,7 @@ class LidHandler(object):
 
 	def _startStopCamera(self,event):
 		if self._photo_creator is not None and self.camEnabled:
+			self._logger.debug('XXXXXXXXXX: {}'.format(self._printer.is_operational()))
 			if event in (IoBeamEvents.LID_CLOSED, OctoPrintEvents.SLICING_STARTED, OctoPrintEvents.CLIENT_CLOSED):
 				self._end_photo_worker()
 			else:
