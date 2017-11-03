@@ -179,6 +179,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				correctionSettingsFile='{}/cam/pic_settings.yaml'.format(settings().getBaseFolder('base')),
 				correctionTmpFile='{}/cam/last_markers.json'.format(settings().getBaseFolder('base')),
 				lensCalibrationFile='{}/cam/lens_correction_{}x{}.npz'.format(settings().getBaseFolder('base'), image_default_width, image_default_height),
+				saveCorrectionDebugImages=False,
 			),
 			gcode_nextgen = dict(
 				enabled = True,
@@ -697,8 +698,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@octoprint.plugin.BlueprintPlugin.route("/take_undistorted_picture", methods=["GET"])
 	#@firstrun_only_access
 	def takeUndistortedPictureForInitialCalibration(self):
-		self._logger.debug("INITIAL TAKE PICTURE")
-		self.take_undistorted_picture()
+		self._logger.debug("INITIAL_CALIBRATION TAKE PICTURE")
+		self.take_undistorted_picture(is_initial_calibration=True)
 		return NO_CONTENT
 
 
@@ -726,7 +727,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	# Laser cutter profiles
 	@octoprint.plugin.BlueprintPlugin.route("/profiles", methods=["GET"])
-	@restricted_access
 	def laserCutterProfilesList(self):
 		all_profiles = self.laserCutterProfileManager.get_all()
 		return jsonify(dict(profiles=self._convert_profiles(all_profiles)))
@@ -1052,7 +1052,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		elif command == "camera_calibration_markers":
 			return self.camera_calibration_markers(data)
 		elif command == "take_undistorted_picture":
-			return self.take_undistorted_picture()
+			return self.take_undistorted_picture(is_initial_calibration=False)
 		elif command == "debug_event":
 			return self.debug_event(data)
 		return NO_CONTENT
@@ -1080,9 +1080,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		return NO_CONTENT
 
-	def take_undistorted_picture(self):
-		self._logger.debug("New undistorted image is requested")
-		image_response = self._lid_handler.set_save_undistorted()
+	def take_undistorted_picture(self, is_initial_calibration):
+		self._logger.debug("New undistorted image is requested. is_initial_calibration: %s", is_initial_calibration)
+		image_response = self._lid_handler.set_save_undistorted(save_debug_images=is_initial_calibration)
 		self._logger.debug("Image_Response: {}".format(image_response))
 		return image_response
 
@@ -1515,7 +1515,6 @@ def __plugin_load__():
 		],
 		appearance=dict(components=dict(
 			order=dict(
-				# to debug: "_logger.info("ANDYTEST templates: %s", templates)" to views.py:_process_templates() at the very end
 				wizard=["plugin_mrbeam_wifi", "plugin_mrbeam_acl", "plugin_mrbeam_lasersafety"],
 				settings = ['plugin_softwareupdate', 'accesscontrol', 'plugin_netconnectd', 'plugin_mrbeam_conversion', 'terminalfilters', 'logs']
 			),

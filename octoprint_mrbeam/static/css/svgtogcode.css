@@ -400,13 +400,13 @@ body.colorDragInProgress #drop_overlay {
   }
 }
 
-svg#area_preview path, 
-svg#area_preview circle, 
-svg#area_preview line, 
-svg#area_preview polyline, 
-svg#area_preview polygon, 
-svg#area_preview ellipse, 
-svg#area_preview rect 
+svg#area_preview path,
+svg#area_preview circle,
+svg#area_preview line,
+svg#area_preview polyline,
+svg#area_preview polygon,
+svg#area_preview ellipse,
+svg#area_preview rect
 {
   vector-effect: non-scaling-stroke !important;
   stroke-width: 1px !important;
@@ -487,9 +487,40 @@ svg#area_preview rect
 	fill:none;
 }
 
-.marker_found_indicator { 
-	color: #DDD; 
+.marker_found_indicator {
+	color: #DDD;
 	display: inline-block;
-    padding: 0 .5em; 
+    padding: 0 .5em;
 }
 .marker_found_indicator.active { color: #000; }
+
+.marker_debug_image{
+    margin-right: 20px;
+    margin-bottom: 20px;
+    border: 1px;
+    border-style: solid;
+    border-color: black;
+    height: 45vh;
+}
+
+#debug_NW_img {
+    position: fixed;
+    top: 1vh;
+    left: 1vw;
+}
+#debug_NE_img {
+    position: fixed;
+    top: 1vh;
+    right: 1vw;
+}
+#debug_SW_img {
+    position: fixed;
+    bottom: 1vh;
+    left: 1vw;
+}
+#debug_SE_img {
+    position: fixed;
+    bottom: 1vh;
+    right: 1vw;
+}
+
