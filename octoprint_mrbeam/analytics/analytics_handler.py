@@ -30,8 +30,12 @@ class AnalyticsHandler(object):
 		self._event_bus = event_bus
 		self._settings = settings
 
-		self._analyticsOn = True
-		self._camAnalyticsOn = True
+		self._logger = mrb_logger("octoprint.plugins.mrbeam.analyticshandler")
+
+		self._analyticsOn = self._settings.get(['analytics','job_analytics'])
+		self._camAnalyticsOn = self._settings.get(['analytics','cam_analytics'])
+		self._logger.debug('XXX analytics: {}, cam_analytics: {}'.format(self._analyticsOn,self._camAnalyticsOn))
+		self._logger.debug('XXX FOLDER: {}'.format(self._settings.get(['analytics','folder'])))
 
 		self._current_job_id = None
 		self._isJobPaused = False
@@ -51,7 +55,6 @@ class AnalyticsHandler(object):
 		self._dust_log_version = 2
 		self._cam_event_log_version = 2
 
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.analyticshandler")
 
 		analyticsfolder = os.path.join(self._settings.getBaseFolder("base"), self._settings.get(["analyticsfolder"]))
 		if not os.path.isdir(analyticsfolder):

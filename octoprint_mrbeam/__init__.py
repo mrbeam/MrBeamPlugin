@@ -166,14 +166,19 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				# ),
 				iobeam_disable_warnings = False
 			),
+			# TODO rename analyticsEnabled and put in analytics-dict
 			analyticsEnabled=False,  # frontend analytics Mixpanel
 			analyticsfolder="analytics",  # laser job analytics base folder (.octoprint/...)
+			analytics=dict(
+				job_analytics = True,
+				cam_analytics = True,
+				folder = 'analytics'
+			),
 			cam=dict(
 				enabled=True,
 				image_correction_enabled = True,
 				cam_img_width = image_default_width,
 				cam_img_height = image_default_height,
-				# todo CLEM add NPZ folder and pic_settings, calib output folder etc.
 				frontendUrl="/downloads/files/local/cam/beam-cam.jpg",
 				localFilePath="cam/beam-cam.jpg",
 				localUndistImage="cam/undistorted.jpg",
