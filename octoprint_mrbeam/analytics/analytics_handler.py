@@ -34,8 +34,6 @@ class AnalyticsHandler(object):
 
 		self._analyticsOn = self._settings.get(['analytics','job_analytics'])
 		self._camAnalyticsOn = self._settings.get(['analytics','cam_analytics'])
-		self._logger.debug('XXX analytics: {}, cam_analytics: {}'.format(self._analyticsOn,self._camAnalyticsOn))
-		self._logger.debug('XXX FOLDER: {}'.format(self._settings.get(['analytics','folder'])))
 
 		self._current_job_id = None
 		self._isJobPaused = False
@@ -56,7 +54,7 @@ class AnalyticsHandler(object):
 		self._cam_event_log_version = 2
 
 
-		analyticsfolder = os.path.join(self._settings.getBaseFolder("base"), self._settings.get(["analyticsfolder"]))
+		analyticsfolder = os.path.join(self._settings.getBaseFolder("base"), self._settings.get(['analytics','folder']))
 		if not os.path.isdir(analyticsfolder):
 			os.makedirs(analyticsfolder)
 
