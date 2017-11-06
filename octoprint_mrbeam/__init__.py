@@ -80,9 +80,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self.print_progress_last = -1
 		self.slicing_progress_last = -1
 		self._logger = mrb_logger("octoprint.plugins.mrbeam")
-		self._hostname = self.getHostname()
-		self._mbSerialnumber = self.getMrBeamSerial()
-
+		self._hostname = None
+		self._mbSerialnumber = None
+		self._setHostname()
+		self._setMbSerialnumber()
 
 	# inside initialize() OctoPrint is already loaded, not assured during __init__()!
 	def initialize(self):
@@ -1341,21 +1342,22 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		else:
 			return None, None
 
+	def _setHostname(self):
+		try:
+			self._hostname = socket.gethostname()
+		except:
+			self._logger.exception("Exception while reading hostname.")
+			pass
+
 	def getHostname(self):
 		"""
 		Returns device hostname like 'MrBeam2-F930'.
-		ALSO: Checks if hostname not set and initializes otherwise.
 		:return: String hostname
 		"""
-		try:
-			return self._hostname
-		except AttributeError:
-			try:
-				self._hostname = socket.gethostname()
-			except:
-				self._logger.exception("Exception while reading hostname.")
-				pass
-			return self._hostname
+		if self._hostname is None:
+			self._logger.warning('Hostname was not initialized. Doing it now.')
+			self._setHostname()
+		return self._hostname
 
 	def getDisplayName(self, hostName):
 		code = None
@@ -1367,13 +1369,15 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		else:
 			return name.format(hostName)
 
-	def getMrBeamSerial(self):
-		try:
-			return self._mbSerialnumber
-		except AttributeError:
-			self._mbSerialnumber = "{pi_serial}-{device_series}".format(
+	def _setMbSerialnumber(self):
+		self._mbSerialnumber = "{pi_serial}-{device_series}".format(
 			pi_serial=self.getPiSerial(),
 			device_series=self._get_val_from_device_info('device_series'))
+
+	def getMrBeamSerial(self):
+		if self._mbSerialnumber is None:
+			self._logger.warning('Serial Number was not initialized. Doing it now.')
+			self._setMbSerialnumber()
 		return self._mbSerialnumber
 
 	def getPiSerial(self):

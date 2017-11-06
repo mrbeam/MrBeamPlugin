@@ -62,7 +62,6 @@ class AnalyticsHandler(object):
 			self._init_jsonfile()
 
 		if self._analyticsOn:
-			# TODO ANDY : Check if this is how you want it or maybe print it out at every startup
 			# check if <two days> have passed and software should be written away
 			TWO_DAYS = 2
 			_days_passed_since_last_log = self._days_passed(self._jsonfile)
@@ -89,7 +88,7 @@ class AnalyticsHandler(object):
 
 	@staticmethod
 	def _getLaserHeadVersion():
-		# TODO ANDY tell CLEM how to get Real laser_head_id :)
+		# TODO get Real laser_head_id
 		laser_head_version = None
 		return laser_head_version
 
@@ -122,7 +121,7 @@ class AnalyticsHandler(object):
 
 	def _write_current_software_status(self):
 		try:
-			# TODO ANDY get all software statuses
+			# TODO get all software statuses
 			# get all sw_stati and then print out status for each
 			# for each sw_status in sw_stati:
 			# 	sw_status = dict(name='<name>',version='<x.x.x>')
@@ -154,6 +153,10 @@ class AnalyticsHandler(object):
 
 	def _event_print_paused(self, event, payload):
 		# TODO add how it has been paused (lid_opened during job, frontend, onebutton)
+		"""
+		Cooling: payload holds some information if it was a cooling_pause or not.
+		Lid/Button: Currently there is no way to know other than checking the current state: _mrbeam_plugin_implementation._ioBeam .is_interlock_closed()
+		"""
 		if not self._isJobPaused: #prevent multiple printPaused events per Job
 			self._write_jobevent(ak.PRINT_PAUSED)
 			self._isJobPaused = True
