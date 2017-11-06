@@ -40,10 +40,14 @@ class LidHandler(object):
 	def __init__(self, event_bus, plugin_manager):
 		self._event_bus = event_bus
 		self._settings = _mrbeam_plugin_implementation._settings
+		self._printer = _mrbeam_plugin_implementation._printer
 		self._plugin_manager = plugin_manager
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler")
 
-		self.lidClosed = True
+		self._lid_closed = True
+		self._is_slicing = False
+		self._client_opened = False
+
 		self.camEnabled = self._settings.get(["cam", "enabled"])
 
 		self._photo_creator = None
@@ -60,58 +64,95 @@ class LidHandler(object):
 		self._event_bus.subscribe(IoBeamEvents.LID_CLOSED, self.onEvent)
 		self._event_bus.subscribe(OctoPrintEvents.CLIENT_OPENED, self.onEvent)
 		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self.onEvent)
+		self._event_bus.subscribe(OctoPrintEvents.CLIENT_CLOSED,self.onEvent)
+		self._event_bus.subscribe(OctoPrintEvents.SLICING_STARTED,self._onSlicingEvent)
+		self._event_bus.subscribe(OctoPrintEvents.SLICING_DONE,self._onSlicingEvent)
+		self._event_bus.subscribe(OctoPrintEvents.SLICING_FAILED,self._onSlicingEvent)
+		self._event_bus.subscribe(OctoPrintEvents.SLICING_CANCELLED, self._onSlicingEvent)
+		self._event_bus.subscribe('PrinterStateChanged',self._printerStateChanged)
 
+	# TODO Question: Why is there only one onEvent() Function with if/elif/else instead of different functions for each event?
 	def onEvent(self, event, payload):
 		self._logger.debug("onEvent() event: %s, payload: %s", event, payload)
 		if event == IoBeamEvents.LID_OPENED:
 			self._logger.debug("onEvent() LID_OPENED")
 			self._write_lid_analytics('LID_OPENED')
-			self.lidClosed = False
-			if self._photo_creator and self.camEnabled:
-				if not self._photo_creator.active:
-					self._start_photo_worker()
-				else:
-					self._logger.error("Another PhotoCreator thread is already active! Not starting a new one. Why am I here...??? "
-					                   "Looks like LID_OPENED was triggered several times. Maybe iobeam is reconnecting constantly?")
+			self._lid_closed = False
+			self._startStopCamera(event)
 			self._send_frontend_lid_state()
 		elif event == IoBeamEvents.LID_CLOSED:
 			self._logger.debug("onEvent() LID_CLOSED")
 			self._write_lid_analytics('LID_CLOSED')
-			self.lidClosed = True
-			self._end_photo_worker()
+			self._lid_closed = True
+			self._startStopCamera(event)
 			self._send_frontend_lid_state()
 		elif event == OctoPrintEvents.CLIENT_OPENED:
-			self._logger.debug("onEvent() CLIENT_OPENED sending client lidClosed: %s", self.lidClosed)
+			self._logger.debug("onEvent() CLIENT_OPENED sending client lidClosed: %s", self._lid_closed)
+			self._client_opened = True
+			self._startStopCamera(event)
 			self._send_frontend_lid_state()
+		elif event == OctoPrintEvents.CLIENT_CLOSED:
+			self._client_opened = False
+			self._startStopCamera(event)
 		elif event == OctoPrintEvents.SHUTDOWN:
 			self.shutdown()
+
+	def _printerStateChanged(self,event,payload):
+		if payload['state_string'] == 'Operational':
+			self._startStopCamera(event)
+
+	def _onSlicingEvent(self,event,payload):
+		self._is_slicing = (event == OctoPrintEvents.SLICING_STARTED)
+		self._startStopCamera(event)
+
+	def _startStopCamera(self,event):
+		if self._photo_creator is not None and self.camEnabled:
+			if event in (IoBeamEvents.LID_CLOSED, OctoPrintEvents.SLICING_STARTED, OctoPrintEvents.CLIENT_CLOSED):
+				self._end_photo_worker()
+			else:
+				# TODO get the states from _printer or the global state, instead of having local state as well!
+				if self._client_opened and not self._is_slicing and not self._lid_closed and not self._printer.is_locked():
+					self._start_photo_worker()
+
+	def _setClientStatus(self,event):
+		if self._photo_creator is not None and self.camEnabled:
+			if event == OctoPrintEvents.CLIENT_OPENED:
+				self._start_photo_worker()
+			else:
+				self._end_photo_worker()
 
 	def shutdown(self):
 		if self._photo_creator is not None:
 			self._logger.debug("shutdown() stopping _photo_creator")
 			self._end_photo_worker()
 
-	def set_save_undistorted(self):
+	def set_save_undistorted(self, save_debug_images=False):
 		from flask import make_response
 		if self._photo_creator is not None:
 			self._photo_creator.save_undistorted = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(['cam','localUndistImage'])
+			set_debug_images_to = save_debug_images or self._photo_creator.save_debug_images
+			self._photo_creator.save_debug_images = save_debug_images or self._photo_creator.save_debug_images
 			# todo make_response, so that it will be accepted in the .done() method in frontend
 			return make_response('Should save Image soon, please wait.',200)
 		else:
 			return make_response('Error, no photocreator active, maybe you are developing and dont have a cam?',503)
 
 	def _start_photo_worker(self):
-		worker = threading.Thread(target=self._photo_creator.work,name='Photo-Worker')
-		worker.daemon = True
-		worker.start()
+		if not self._photo_creator.active:
+			worker = threading.Thread(target=self._photo_creator.work, name='Photo-Worker')
+			worker.daemon = True
+			worker.start()
+		else:
+			self._logger.info("Another PhotoCreator thread is already active! Not starting a new one.")
 
 
 	def _end_photo_worker(self):
 		if self._photo_creator:
 			self._photo_creator.active = False
+			self._photo_creator.save_debug_images = False
 
 	def _send_frontend_lid_state(self, closed=None):
-		lid_closed = closed if closed is not None else self.lidClosed
+		lid_closed = closed if closed is not None else self._lid_closed
 		self._plugin_manager.send_plugin_message("mrbeam", dict(lid_closed=lid_closed))
 
 	def _write_lid_analytics(self, eventname):
@@ -133,6 +174,7 @@ class PhotoCreator(object):
 		self.last_photo = 0
 		self.badQualityPicCount = 0
 		self.save_undistorted = None
+		self.save_debug_images = self._settings.get(['cam', 'saveCorrectionDebugImages'])
 		self.camera = None
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator")
 
@@ -297,11 +339,14 @@ class PhotoCreator(object):
 												size=(outputImageWidth,outputImageHeight),
 												save_undistorted=self.save_undistorted,
 												quality=75,
-												debug_out=False)
+												debug_out=self.save_debug_images)
 
-		if correction_result['undistorted_saved']:
+		if ('undistorted_saved' in correction_result and correction_result['undistorted_saved']
+			and 'markers_recognized' in correction_result and correction_result['markers_recognized'] == 4):
 			self.save_undistorted = None
-			self._logger.debug("Undistorted Image saved.")
+			self._logger.debug("Stopping to save undistorted picture, the last one is usable for calibration.")
+
+
 
 		self._logger.info("Image correction result: {}".format(correction_result))
 		# check if there was an error or not.
