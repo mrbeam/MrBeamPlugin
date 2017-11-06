@@ -53,7 +53,6 @@ class AnalyticsHandler(object):
 		self._dust_log_version = 2
 		self._cam_event_log_version = 2
 
-
 		analyticsfolder = os.path.join(self._settings.getBaseFolder("base"), self._settings.get(['analytics','folder']))
 		if not os.path.isdir(analyticsfolder):
 			os.makedirs(analyticsfolder)

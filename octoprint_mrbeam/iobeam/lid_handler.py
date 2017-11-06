@@ -175,8 +175,6 @@ class PhotoCreator(object):
 		self.camera = None
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator")
 
-		self._cam_log_version = 2
-
 		self._init_filenames()
 		self._createFolder_if_not_existing(self.final_image_path)
 		self._createFolder_if_not_existing(self.tmp_img_raw)
