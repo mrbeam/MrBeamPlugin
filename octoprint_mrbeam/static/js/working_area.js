@@ -430,7 +430,7 @@ $(function(){
 			};
 			self.loadSVG(url, cb);
 		};
-		
+
 		self._prepareAndInsertSVG = function(fragment, id, origin){
 				var f = self._removeUnsupportedSvgElements(fragment);
 				var generator_info = self._get_generator_info(f);
@@ -499,7 +499,7 @@ $(function(){
 
 				return id;
 		};
-		
+
 		self._removeUnsupportedSvgElements = function(fragment){
 			// find clippath elements and remove them
 				var clipPathEl = fragment.selectAll('clipPath');
@@ -1116,6 +1116,21 @@ $(function(){
 		self.removeIMG = function(file){
 			self.removeSVG(file);
 		};
+
+		self.moveSelectedDesign = function(){
+			var transformHandles = snap.select('#handlesGroup');
+			if(transformHandles){
+				var selectedId = transformHandles.data('parentId');
+				for (var i = 0; i < self.placedDesigns().length; i++) {
+					var file = self.placedDesigns()[i];
+					if(file.previewId === selectedId){
+                        console.log('MoveMoveMove');
+						return;
+					}
+				}
+			}
+		};
+
 		self.removeSelectedDesign = function(){
 			var transformHandles = snap.select('#handlesGroup');
 			if(transformHandles){
