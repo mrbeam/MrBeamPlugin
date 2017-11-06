@@ -58,16 +58,17 @@ class AnalyticsHandler(object):
 		if not os.path.isdir(analyticsfolder):
 			os.makedirs(analyticsfolder)
 
-		self._jsonfile = os.path.join(analyticsfolder, "analytics_log.json")
+		self._jsonfile = os.path.join(analyticsfolder, self._settings.get(['analytics','filename']))
 		if not os.path.isfile(self._jsonfile):
 			self._init_jsonfile()
 
 		if self._analyticsOn:
 			# TODO ANDY : Check if this is how you want it or maybe print it out at every startup
 			# check if <two days> have passed and software should be written away
-			self._days_passed_since_last_log = self._days_passed(self._jsonfile)
-			self._logger.debug('Days since last edit: {}'.format(self._days_passed_since_last_log))
-			if self._days_passed_since_last_log > 2:
+			TWO_DAYS = 2
+			_days_passed_since_last_log = self._days_passed(self._jsonfile)
+			self._logger.debug('Days since last edit: {}'.format(_days_passed_since_last_log))
+			if _days_passed_since_last_log > TWO_DAYS:
 				self._write_current_software_status()
 
 			self._subscribe()
@@ -90,7 +91,7 @@ class AnalyticsHandler(object):
 	@staticmethod
 	def _getLaserHeadVersion():
 		# TODO ANDY tell CLEM how to get Real laser_head_id :)
-		laser_head_version = 1
+		laser_head_version = None
 		return laser_head_version
 
 	@staticmethod
@@ -153,7 +154,7 @@ class AnalyticsHandler(object):
 		self._current_lasertemp_collector = ValueCollector('TempColl')
 
 	def _event_print_paused(self, event, payload):
-		# TODO CLEM add how it has been paused (lid_opened during job, frontend, onebutton)
+		# TODO add how it has been paused (lid_opened during job, frontend, onebutton)
 		if not self._isJobPaused: #prevent multiple printPaused events per Job
 			self._write_jobevent(ak.PRINT_PAUSED)
 			self._isJobPaused = True
@@ -174,8 +175,7 @@ class AnalyticsHandler(object):
 		self._write_jobevent(ak.INTENSITY_SUM,payload=self._current_intensity_collector.getSummary())
 		self._write_jobevent(ak.LASERTEMP_SUM, payload=self._current_lasertemp_collector.getSummary())
 
-	def _cleanup(self,successfull):
-		# TODO check if resetting job_id etc to None makes sense
+	def _cleanup(self):
 		self._current_job_id = None
 		self._current_dust_collector = None
 		self._current_intensity_collector = None
@@ -359,6 +359,32 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.error('Error during _write_event: {}'.format(e.message))
 
+	def write_final_dust(self,dust_start, dust_start_ts, dust_end, dust_end_ts):
+		"""
+		Sends dust values after print_done (the final dust profile). This is to check how fast dust is getting less in the machine
+		and to check for filter full later.
+		:param dust_start: dust_value at state print_done
+		:param dust_start_ts: timestamp of dust_value at state print done
+		:param dust_end: dust_value at job_done
+		:param dust_end_ts: timestamp at dust_value at job_done
+		:return:
+		"""
+		dust_duration = round(dust_end_ts - dust_start_ts,4)
+		dust_difference = round(dust_end - dust_start,5)
+		dust_per_time =  dust_difference / dust_duration
+		self._logger.debug("dust extraction time {} from {} to {} (difference: {},gradient: {})".format(dust_duration, dust_start, dust_end,dust_difference, dust_per_time))
+
+		data = {
+			ak.DUST_START : dust_start,
+			ak.DUST_END : dust_end,
+			ak.DUST_START_TS : dust_start_ts,
+			ak.DUST_END_TS : dust_end_ts,
+			ak.DUST_DURATION : dust_duration,
+			ak.DUST_DIFF : dust_difference,
+			ak.DUST_PER_TIME: dust_per_time
+		}
+		self._write_dust_log(data)
+
 	def add_dust_value(self, dust_value):
 		"""
 		:param dust_value:
@@ -392,7 +418,7 @@ class AnalyticsHandler(object):
 			except Exception as e:
 				self._logger.error('Error during add_laser_intensity_value: {}'.format(e.message))
 
-	def write_dust_log(self, data):
+	def _write_dust_log(self, data):
 		try:
 			if self._analyticsOn:
 				self._write_jobevent(ak.FINAL_DUST,payload=data)
@@ -413,8 +439,8 @@ class AnalyticsHandler(object):
 		try:
 			if not os.path.isfile(self._jsonfile):
 				self._init_jsonfile()
+			dataString = json.dumps(data) + '\n'
 			with open(self._jsonfile, 'a') as f:
-				json.dump(data, f)
-				f.write('\n')
+				f.write(dataString)
 		except Exception as e:
 			self._logger.error('Error during init json: {}'.format(e.message))

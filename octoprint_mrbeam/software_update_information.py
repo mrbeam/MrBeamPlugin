@@ -35,10 +35,9 @@ def get_update_information(self):
 		set_info_iobeam(self, tier)
 		set_info_camera_calibration(self, tier)
 		set_info_rpiws281x(self, tier)
-#		set_info_testplugin(self, tier) # See function definition for more details
+		# set_info_testplugin(self, tier) # See function definition for more details
 
-	_logger(self).debug("MrBeam Plugin provides this config (might be overridden by settings!):\n%s", yaml.dump(sw_update_config, width=50000).strip())
-
+	# _logger(self).debug("MrBeam Plugin provides this config (might be overridden by settings!):\n%s", yaml.dump(sw_update_config, width=50000).strip())
 	return sw_update_config
 
 

@@ -171,7 +171,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			analytics=dict(
 				job_analytics = True,
 				cam_analytics = True,
-				folder = 'analytics' # laser job analytics base folder (.octoprint/...)
+				folder = 'analytics', # laser job analytics base folder (.octoprint/...)
+				filename = 'analytics_log.json'
 			),
 			cam=dict(
 				enabled=True,
