@@ -47,4 +47,7 @@ class ValueCollector(object):
 		Returns the most recent element of the ValueCollector
 		:return:
 		"""
-		return round(self.valueList[-1],4)
+		try:
+			return round(self.valueList[-1],4)
+		except: #mainly for IndexError
+			return None
