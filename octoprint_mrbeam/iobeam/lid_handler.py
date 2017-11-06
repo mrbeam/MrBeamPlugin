@@ -69,20 +69,20 @@ class LidHandler(object):
 		self._event_bus.subscribe(OctoPrintEvents.SLICING_DONE,self._onSlicingEvent)
 		self._event_bus.subscribe(OctoPrintEvents.SLICING_FAILED,self._onSlicingEvent)
 		self._event_bus.subscribe(OctoPrintEvents.SLICING_CANCELLED, self._onSlicingEvent)
-		self._event_bus.subscribe('PrinterStateChanged',self._printerStateChanged)
+		self._event_bus.subscribe(OctoPrintEvents.PRINTER_STATE_CHANGED,self._printerStateChanged)
 
 	# TODO Question: Why is there only one onEvent() Function with if/elif/else instead of different functions for each event?
 	def onEvent(self, event, payload):
 		self._logger.debug("onEvent() event: %s, payload: %s", event, payload)
 		if event == IoBeamEvents.LID_OPENED:
 			self._logger.debug("onEvent() LID_OPENED")
-			self._write_lid_analytics('LID_OPENED')
+			self._send_state_to_analytics('lid_opened')
 			self._lid_closed = False
 			self._startStopCamera(event)
 			self._send_frontend_lid_state()
 		elif event == IoBeamEvents.LID_CLOSED:
 			self._logger.debug("onEvent() LID_CLOSED")
-			self._write_lid_analytics('LID_CLOSED')
+			self._send_state_to_analytics('lid_closed')
 			self._lid_closed = True
 			self._startStopCamera(event)
 			self._send_frontend_lid_state()
@@ -155,11 +155,8 @@ class LidHandler(object):
 		lid_closed = closed if closed is not None else self._lid_closed
 		self._plugin_manager.send_plugin_message("mrbeam", dict(lid_closed=lid_closed))
 
-	def _write_lid_analytics(self, eventname):
-		typename = 'lid_handler'
-		# todo get lid version
-		lid_version = 1
-		_mrbeam_plugin_implementation._analytics_handler.write_event(typename,eventname,lid_version)
+	def _send_state_to_analytics(self, eventname):
+		_mrbeam_plugin_implementation._analytics_handler.update_cam_session_id(eventname)
 
 
 class PhotoCreator(object):
@@ -207,7 +204,7 @@ class PhotoCreator(object):
 					correction_result = dict(successful_correction=False)
 					if self.image_correction_enabled:
 						correction_result = self.correct_image(self.tmp_img_raw, self.tmp_img_prepared)
-						self._write_cam_analytics(correction_result)
+						self._write_pic_prep_analytics(correction_result.copy())
 						# todo ANDY concept of what should happen with good and bad pictures etc....
 						if correction_result['successful_correction']:
 							move_from = self.tmp_img_prepared
@@ -327,7 +324,6 @@ class PhotoCreator(object):
 		path_to_pic_settings = self._settings.get(["cam", "correctionSettingsFile"])
 		path_to_last_markers = self._settings.get(["cam", "correctionTmpFile"])
 
-		# todo implement high-precision feedback to frontend
 		# todo implement pixel2MM setting in _laserCutterProfile (the magic number 2 below)
 		outputImageWidth = int(2 * self._laserCutterProfile['volume']['width'])
 		outputImageHeight = int(2 * self._laserCutterProfile['volume']['depth'])
@@ -357,9 +353,5 @@ class PhotoCreator(object):
 
 		return correction_result
 
-	def _write_cam_analytics(self,cam_data):
-		typename = 'cam'
-		eventname = 'picture_preparation'
-		# todo get cam version
-		cam_version = 1
-		_mrbeam_plugin_implementation._analytics_handler.write_event(typename,eventname,cam_version,payload=dict(cam_data=cam_data))
+	def _write_pic_prep_analytics(self, cam_data):
+		_mrbeam_plugin_implementation._analytics_handler.write_pic_prep_event(payload=cam_data)

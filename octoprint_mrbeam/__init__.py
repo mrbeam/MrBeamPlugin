@@ -80,13 +80,17 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self.print_progress_last = -1
 		self.slicing_progress_last = -1
 		self._logger = mrb_logger("octoprint.plugins.mrbeam")
+		self._hostname = None
+		self._mbSerialnumber = None
+		self._setHostname()
+		self._setMbSerialnumber()
 
+	# inside initialize() OctoPrint is already loaded, not assured during __init__()!
 	def initialize(self):
 		init_mrb_logger(self._printer)
 		self.laserCutterProfileManager = laserCutterProfileManager()
 		self._logger = mrb_logger("octoprint.plugins.mrbeam")
 		self._branch = self.getBranch()
-		self._hostname = self.getHostname()
 		self._octopi_info = self.get_octopi_info()
 		self._serial = self.getMrBeamSerial()
 		self._do_initial_log()
@@ -163,14 +167,19 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				# ),
 				iobeam_disable_warnings = False
 			),
+			# TODO rename analyticsEnabled and put in analytics-dict
 			analyticsEnabled=False,  # frontend analytics Mixpanel
-			analyticsfolder="analytics",  # laser job analytics base folder (.octoprint/...)
+			analytics=dict(
+				job_analytics = True,
+				cam_analytics = True,
+				folder = 'analytics', # laser job analytics base folder (.octoprint/...)
+				filename = 'analytics_log.json'
+			),
 			cam=dict(
 				enabled=True,
 				image_correction_enabled = True,
 				cam_img_width = image_default_width,
 				cam_img_height = image_default_height,
-				# todo CLEM add NPZ folder and pic_settings, calib output folder etc.
 				frontendUrl="/downloads/files/local/cam/beam-cam.jpg",
 				localFilePath="cam/beam-cam.jpg",
 				localUndistImage="cam/undistorted.jpg",
@@ -451,9 +460,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	# def _on_acl_wizard_finish(self, handled):
 	# 	self._log.info("ANDYTEST _on_acl_wizard_finish() test handled: " + str(handled));
-
-
-
 
 	@octoprint.plugin.BlueprintPlugin.route("/acl", methods=["POST"])
 	def acl_wizard_api(self):
@@ -1061,7 +1067,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def debug_event(self, data):
 		event = data['event']
 		payload = data['payload'] if 'payload' in data else None
-		self._logger.info("Fireing debug event: %s, payload: %s", event, payload)
+		self._logger.info("Firing debug event: %s, payload: %s", event, payload)
 		self._event_bus.fire(event, payload)
 		return NO_CONTENT
 
@@ -1105,6 +1111,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		pic_settings['cornersFromImage'] = newCorners
 		pic_settings['calibMarkers'] = newMarkers
 		pic_settings['calibration_updated'] = True
+
+		self._analytics_handler.write_cam_update(newMarkers,newCorners)
 
 		self._logger.debug('picSettings new to save: {}'.format(pic_settings))
 		self._save_profile(pic_settings_path,pic_settings)
@@ -1186,7 +1194,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		params = dict()
 		with open(self._CONVERSION_PARAMS_PATH) as data_file:
 			params = json.load(data_file)
-			#self._logger.debug("Read multicolor params %s" % params)
+			# self._logger.debug("Read multicolor params %s" % params)
 
 		dest_dir, dest_file = os.path.split(machinecode_path)
 		params['directory'] = dest_dir
@@ -1334,17 +1342,22 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		else:
 			return None, None
 
-	def getHostname(self):
-		'''
-		Get device hostnema like 'MrBeam2-F930'
-		:return: String hostname or empty string
-		'''
-		hostname = '';
+	def _setHostname(self):
 		try:
-			hostname = socket.gethostname()
+			self._hostname = socket.gethostname()
 		except:
-			hostname = ERROR.HOSTNAME
-		return hostname
+			self._logger.exception("Exception while reading hostname.")
+			pass
+
+	def getHostname(self):
+		"""
+		Returns device hostname like 'MrBeam2-F930'.
+		:return: String hostname
+		"""
+		if self._hostname is None:
+			self._logger.warning('Hostname was not initialized. Doing it now.')
+			self._setHostname()
+		return self._hostname
 
 	def getDisplayName(self, hostName):
 		code = None
@@ -1356,17 +1369,23 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		else:
 			return name.format(hostName)
 
-	def getMrBeamSerial(self):
-		return "{pi_serial}-{device_series}".format(
+	def _setMbSerialnumber(self):
+		self._mbSerialnumber = "{pi_serial}-{device_series}".format(
 			pi_serial=self.getPiSerial(),
 			device_series=self._get_val_from_device_info('device_series'))
 
+	def getMrBeamSerial(self):
+		if self._mbSerialnumber is None:
+			self._logger.warning('Serial Number was not initialized. Doing it now.')
+			self._setMbSerialnumber()
+		return self._mbSerialnumber
+
 	def getPiSerial(self):
-		'''
+		"""
 		Get RaspberryPi's serial number from cpuinfo file
-		:deprected: use getMrBeamSerial() instead
+		:deprecated: use getMrBeamSerial() instead
 		:return: String serial or ('0000000000000000' or 'ERROR000000000')
-		'''
+		"""
 		# Extract serial from cpuinfo file
 		cpuserial = "0000000000000000"
 		try:
@@ -1382,10 +1401,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return cpuserial
 
 	def getBranch(self):
-		'''
-		DEPRECTED
+		"""
+		DEPRECATED
 		:return:
-		'''
+		"""
 		branch = ''
 		try:
 			command = "git branch | grep '*'"

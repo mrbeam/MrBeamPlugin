@@ -60,6 +60,8 @@ class Converter():
 		self.svg_file = model_path
 		self.document=None
 		self._log.info('Converter Initialized: %s' % self.options)
+		# todo need material,bounding_box_area here
+		_mrbeam_plugin_implementation._analytics_handler.store_conversion_details(self.options)
 
 	def setoptions(self, opts):
 		# set default values if option is missing
@@ -67,7 +69,7 @@ class Converter():
 		for key in self.options.keys():
 			if key in opts:
 				self.options[key] = opts[key]
-				if(key == "vector"):
+				if key == "vector":
 					for paramSet in opts['vector']:
 						self.colorParams[paramSet['color']] = paramSet
 			else:
