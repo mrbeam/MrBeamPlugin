@@ -320,24 +320,34 @@ class AnalyticsHandler(object):
 			if lid_state == 'lid_opened':
 				self._current_cam_session_id = 'c_{}_{}'.format(self._getSerialNumber(),time.time())
 
+	def write_pic_prep_event(self,payload=None):
+		try:
+			if self._camAnalyticsOn:
+				data = dict()
+				data[ak.CAM_SESSION_ID] = self._current_cam_session_id
+				# TODO add data validation/preparation here
+				if 'precision' in payload:
+					del payload['precision']
+				if 'corners_calculated' in payload:
+					del payload['corners_calculated']
+				if 'undistorted_saved' in payload:
+					del payload['undistorted_saved']
+				if 'high_precision' in payload:
+					del payload['high_precision']
+				if 'markers_recognized' in payload:
+					del payload['markers_recognized']
+
+				if payload is not None:
+					data[ak.DATA] = payload
+
+				self._write_event(ak.CAM_EVENT, ak.PIC_PREP, self._cam_event_log_version, payload=data)
+		except Exception as e:
+			self._logger.error('Error during write_cam_event: {}'.format(e.message))
 
 	def write_cam_event(self, eventname, payload=None):
 		try:
 			if self._camAnalyticsOn:
 				data = dict()
-				if eventname == ak.PIC_EVENT:
-					data[ak.CAM_SESSION_ID] = self._current_cam_session_id
-					# TODO add data validation/preparation here
-					if 'precision' in payload:
-						del payload['precision']
-					if 'corners_calculated' in payload:
-						del payload['corners_calculated']
-					if 'undistorted_saved' in payload:
-						del payload['undistorted_saved']
-					if 'high_precision' in payload:
-						del payload['high_precision']
-					if 'markers_recognized' in payload:
-						del payload['markers_recognized']
 
 				if payload is not None:
 					data[ak.DATA] = payload

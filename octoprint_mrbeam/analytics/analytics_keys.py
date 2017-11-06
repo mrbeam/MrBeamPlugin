@@ -69,4 +69,5 @@ class AnalyticsKeys(object):
 	CORNERS = 'corners'
 	CAM_CALIBRATION = 'calibration'
 	PIC_EVENT = 'pic'
+	PIC_PREP = 'pic_prep'
 	CAM_SESSION_ID = 'cs_id'
