@@ -184,19 +184,19 @@ class AnalyticsHandler(object):
 	def _event_laser_job_done(self, event, payload):
 		if self._current_job_id is not None:
 			self._write_jobevent(ak.LASERJOB_DONE)
-			self._cleanup(successfull=True)
+			self._cleanup()
 
 	def _event_print_failed(self, event, payload):
 		if self._current_job_id is not None:
 			self._write_jobevent(ak.PRINT_FAILED)
 			self._write_collectors()
-			self._cleanup(successfull=False)
+			self._cleanup()
 
 	def _event_print_cancelled(self, event, payload):
 		if self._current_job_id is not None:
 			self._write_jobevent(ak.PRINT_CANCELLED)
 			self._write_collectors()
-			self._cleanup(successfull=False)
+			self._cleanup()
 
 	def _event_print_progress(self, event, payload):
 		data = dict(
