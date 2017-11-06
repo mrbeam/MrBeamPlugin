@@ -69,7 +69,7 @@ class LidHandler(object):
 		self._event_bus.subscribe(OctoPrintEvents.SLICING_DONE,self._onSlicingEvent)
 		self._event_bus.subscribe(OctoPrintEvents.SLICING_FAILED,self._onSlicingEvent)
 		self._event_bus.subscribe(OctoPrintEvents.SLICING_CANCELLED, self._onSlicingEvent)
-		self._event_bus.subscribe('PrinterStateChanged',self._printerStateChanged)
+		self._event_bus.subscribe(OctoPrintEvents.PRINTER_STATE_CHANGED,self._printerStateChanged)
 
 	# TODO Question: Why is there only one onEvent() Function with if/elif/else instead of different functions for each event?
 	def onEvent(self, event, payload):
