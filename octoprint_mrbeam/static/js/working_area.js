@@ -93,6 +93,7 @@ $(function(){
 		self.files = params[3];
 		self.profile = params[4];
 		self.camera = params[5];
+        self.control = params[6];
 
 		self.log = [];
 
@@ -297,6 +298,35 @@ $(function(){
 			}
 		};
 
+		// IMPLEMENTATION IN OCTOPRINT, only here for debugging
+		// self.sendJogCommand = function (axis, multiplier, distance) {
+        //     if (typeof distance === "undefined")
+        //         distance = self.distance();
+        //     if (self.settings.printerProfiles.currentProfileData() && self.settings.printerProfiles.currentProfileData()["axes"] && self.settings.printerProfiles.currentProfileData()["axes"][axis] && self.settings.printerProfiles.currentProfileData()["axes"][axis]["inverted"]()) {
+        //         multiplier *= -1;
+        //     }
+		//
+        //     var data = {};
+        //     data[axis] = distance * multiplier;
+        //     OctoPrint.printer.jog(data);
+        // };
+
+
+        self.sendSaveJogCommand = function (axis,dir,distance) {
+            var pos = self.state.currentPos();
+            console.log(pos);
+            var stepSize = self.control.distance();
+
+            checkIfSave = true;
+
+            if(checkIfSave){
+                self.control.sendJogCommand(axis,dir,stepSize)
+            }else{
+                console.log('STOP LASER FROM HITTING!')
+            }
+
+        };
+
 		self.getXYCoord = function(evt){
             var elemPos = evt.currentTarget.getBoundingClientRect();
             var x = self.px2mm(evt.clientX - elemPos.left);
@@ -430,7 +460,7 @@ $(function(){
 			};
 			self.loadSVG(url, cb);
 		};
-		
+
 		self._prepareAndInsertSVG = function(fragment, id, origin){
 				var f = self._removeUnsupportedSvgElements(fragment);
 				var generator_info = self._get_generator_info(f);
@@ -499,7 +529,7 @@ $(function(){
 
 				return id;
 		};
-		
+
 		self._removeUnsupportedSvgElements = function(fragment){
 			// find clippath elements and remove them
 				var clipPathEl = fragment.selectAll('clipPath');
@@ -1993,7 +2023,7 @@ $(function(){
     ADDITIONAL_VIEWMODELS.push([WorkingAreaViewModel,
 
 		["loginStateViewModel", "settingsViewModel", "printerStateViewModel",
-			"gcodeFilesViewModel", "laserCutterProfilesViewModel", "cameraViewModel"],
+			"gcodeFilesViewModel", "laserCutterProfilesViewModel", "cameraViewModel","controlViewModel"],
 		[document.getElementById("area_preview"),
 			document.getElementById("homing_overlay"),
 			document.getElementById("working_area_files"),
