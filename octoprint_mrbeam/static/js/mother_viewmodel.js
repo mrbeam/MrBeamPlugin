@@ -84,7 +84,7 @@ $(function () {
 					case 38: // up arrow key
 						// button = $("#control-yinc");
 						if(wa_id === '#workingarea') {
-                            self.workingArea.moveSelectedDesign(0, 1);
+                            self.workingArea.moveSelectedDesign(0, -1);
                             return;
                         }
 						break;
@@ -98,7 +98,7 @@ $(function () {
 					case 40: // down arrow key
 						// button = $("#control-ydec");
                         if(wa_id === '#workingarea'){
-							self.workingArea.moveSelectedDesign(0,-1);
+							self.workingArea.moveSelectedDesign(0, 1);
 							return;
 						}
 						break;

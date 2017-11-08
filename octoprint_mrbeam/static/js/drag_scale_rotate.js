@@ -256,7 +256,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 				return this;
 			}
 
-			//console.log("translate: ", this.data('tx'), this.data('ty'), 'rotate: ', this.data('angle'), 'scale: ', this.data('scale'));
+			console.log("translate: ", this.data('tx'), this.data('ty'), 'rotate: ', this.data('angle'), 'scale: ', this.data('scale'));
 			var tstring = "t" + this.data("tx") + "," + this.data("ty") + this.ftGetInitialTransformMatrix().toTransformString() + "r" + this.data("angle") + 'S' + this.data("scale" );
 			this.attr({ transform: tstring });
 			if(this.data("bbT")) this.ftHighlightBB(this.paper.select('#userContent'));
