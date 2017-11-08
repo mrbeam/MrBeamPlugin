@@ -282,7 +282,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			if(params.scale !== undefined && !isNaN(params.scale)){
 				svg.data('scale', params.scale / svg.ftGetScale());
 			}
-			svg.ftUpdateTransform()
+			svg.ftStoreInitialTransformMatrix();
+			svg.ftUpdateTransform();
         };
 
 		// Element.prototype.ftManualTransform = function(params){
