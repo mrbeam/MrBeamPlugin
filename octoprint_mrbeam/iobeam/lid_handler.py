@@ -137,23 +137,17 @@ class LidHandler(object):
 			self._logger.debug("shutdown() stopping _photo_creator")
 			self._end_photo_worker()
 
-	def take_undistorted_picture(self):
+	def take_undistorted_picture(self,is_initial_calibration=False):
 		from flask import make_response
 		if self._photo_creator is not None:
-			self._photo_creator.set_undistorted_path()
+			if is_initial_calibration:
+				self._photo_creator._is_initial_calibration = True
+			else:
+				self._photo_creator.set_undistorted_path()
 			# todo make_response, so that it will be accepted in the .done() method in frontend
 			return make_response('Should save Image soon, please wait.', 200)
 		else:
 			return make_response('Error, no photocreator active, maybe you are developing and dont have a cam?', 503)
-
-	def set_is_initial_calibration(self):
-		from flask import make_response
-		if self._photo_creator is not None:
-			self._photo_creator._is_initial_calibration = True
-			# todo make_response, so that it will be accepted in the .done() method in frontend
-			return make_response('Should save Image soon, please wait.',200)
-		else:
-			return make_response('Error, no photocreator active, maybe you are developing and dont have a cam?',503)
 
 	def _start_photo_worker(self):
 		if not self._photo_creator.active:
@@ -163,13 +157,11 @@ class LidHandler(object):
 		else:
 			self._logger.info("Another PhotoCreator thread is already active! Not starting a new one.")
 
-
 	def _end_photo_worker(self):
 		if self._photo_creator:
 			self._photo_creator.active = False
 			self._photo_creator.save_debug_images = False
 			self._photo_creator.undistorted_pic_path = None
-
 
 	def _send_frontend_lid_state(self, closed=None):
 		lid_closed = closed if closed is not None else self._lid_closed
