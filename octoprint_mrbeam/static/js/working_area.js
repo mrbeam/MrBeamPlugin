@@ -1128,17 +1128,19 @@ $(function(){
 			    var svg = snap.select('#'+selectedId);
                 var globalScale = self.scaleMatrix().a;
 
-                var bbox = svg.BBox();
+                // var bbox = svg.getBBox();
+                // var nx = bbox.x + diff * ifX;
+                // var ny = bbox.y + diff * ifY;
 
-                var nx = bbox.x + diff * ifX;
-                var ny = bbox.y2 + diff * ifY;
+                var nx = diff * ifX;
+                var ny = diff * ifY;
 
                 var ntx = nx/globalScale;
                 var nty = ny/globalScale;
 
+                svg.ftStoreInitialTransformMatrix();
                 svg.data('tx', ntx);
                 svg.data('ty', nty);
-                svg.ftStoreInitialTransformMatrix();
                 svg.ftUpdateTransform();
 
 			}

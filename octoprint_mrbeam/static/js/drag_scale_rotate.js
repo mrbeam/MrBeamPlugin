@@ -327,13 +327,19 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 		Element.prototype.ftUpdateHandlesGroup = function() {
 			var group = this;
-			group.parent().selectAll('#handlesGroup').forEach( function( el, i ) {
-				el.transform(group.transform().local.toString());
-			});
-			group.parent().select("#handlesGroup").selectAll('.freeTransformHandle').forEach( function( el, i ) {
-				var s = group.data('unscale') * ftOption.handleSize;
-				el.transform(Snap.matrix(s,0,0,s,0,0));
-			});
+			var handlesGroup = group.parent().selectAll('#handlesGroup');
+
+            if( handlesGroup.items.length > 0){
+                handlesGroup.forEach( function( el, i ) {
+				    el.transform(group.transform().local.toString());
+                });
+                handlesGroup.selectAll('.freeTransformHandle').forEach( function( el, i ) {
+                    var s = group.data('unscale') * ftOption.handleSize;
+                    el.transform(Snap.matrix(s,0,0,s,0,0));
+                });
+            }
+
+
 		};
 
 		Element.prototype.ftHighlightBB = function() {
