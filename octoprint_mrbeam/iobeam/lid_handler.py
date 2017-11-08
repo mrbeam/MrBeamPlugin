@@ -137,12 +137,19 @@ class LidHandler(object):
 			self._logger.debug("shutdown() stopping _photo_creator")
 			self._end_photo_worker()
 
-	def set_save_undistorted(self, save_debug_images=False):
+	def take_undistorted_picture(self):
 		from flask import make_response
 		if self._photo_creator is not None:
-			self._photo_creator.save_undistorted = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(['cam','localUndistImage'])
-			set_debug_images_to = save_debug_images or self._photo_creator.save_debug_images
-			self._photo_creator.save_debug_images = save_debug_images or self._photo_creator.save_debug_images
+			self._photo_creator.set_undistorted_path()
+			# todo make_response, so that it will be accepted in the .done() method in frontend
+			return make_response('Should save Image soon, please wait.', 200)
+		else:
+			return make_response('Error, no photocreator active, maybe you are developing and dont have a cam?', 503)
+
+	def set_is_initial_calibration(self):
+		from flask import make_response
+		if self._photo_creator is not None:
+			self._photo_creator._is_initial_calibration = True
 			# todo make_response, so that it will be accepted in the .done() method in frontend
 			return make_response('Should save Image soon, please wait.',200)
 		else:
@@ -161,12 +168,15 @@ class LidHandler(object):
 		if self._photo_creator:
 			self._photo_creator.active = False
 			self._photo_creator.save_debug_images = False
+			self._photo_creator.undistorted_pic_path = None
+
 
 	def _send_frontend_lid_state(self, closed=None):
 		lid_closed = closed if closed is not None else self._lid_closed
 		self._plugin_manager.send_plugin_message("mrbeam", dict(lid_closed=lid_closed))
 
-	def _send_state_to_analytics(self, eventname):
+	@staticmethod
+	def _send_state_to_analytics(eventname):
 		_mrbeam_plugin_implementation._analytics_handler.update_cam_session_id(eventname)
 
 
@@ -181,7 +191,8 @@ class PhotoCreator(object):
 		self.active = False
 		self.last_photo = 0
 		self.badQualityPicCount = 0
-		self.save_undistorted = None
+		self._is_initial_calibration = False
+		self.undistorted_pic_path = None
 		self.save_debug_images = self._settings.get(['cam', 'saveCorrectionDebugImages'])
 		self.camera = None
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator")
@@ -191,11 +202,19 @@ class PhotoCreator(object):
 		self._createFolder_if_not_existing(self.tmp_img_raw)
 		self._createFolder_if_not_existing(self.tmp_img_prepared)
 
+	def set_undistorted_path(self):
+		self.undistorted_pic_path = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(['cam', 'localUndistImage'])
+
 	def work(self):
 		try:
 			self.active = True
 			# todo find maximum of sleep in beginning that's not affecting UX
-			time.sleep(0.8)
+			time.sleep(0.6)
+
+			if self._is_initial_calibration:
+				self.set_undistorted_path()
+				# set_debug_images_to = save_debug_images or self._photo_creator.save_debug_images
+				self.save_debug_images = True
 
 			if not PICAMERA_AVAILABLE:
 				self._logger.warn("Camera disabled. Not all required modules could be loaded at startup. ")
@@ -344,13 +363,13 @@ class PhotoCreator(object):
 												path_to_pic_settings,
 												path_to_last_markers,
 												size=(outputImageWidth,outputImageHeight),
-												save_undistorted=self.save_undistorted,
+												save_undistorted=self.undistorted_pic_path,
 												quality=75,
 												debug_out=self.save_debug_images)
 
 		if ('undistorted_saved' in correction_result and correction_result['undistorted_saved']
 			and 'markers_recognized' in correction_result and correction_result['markers_recognized'] == 4):
-			self.save_undistorted = None
+			self.undistorted_pic_path = None
 			self._logger.debug("Stopping to save undistorted picture, the last one is usable for calibration.")
 
 
