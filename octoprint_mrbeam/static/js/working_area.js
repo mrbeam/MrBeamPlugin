@@ -1134,8 +1134,8 @@ $(function(){
                 var ntx = nx/globalScale;
                 var nty = ny/globalScale;
 
-                svg.tx = ntx;
-                svg.ty = nty;
+                svg.data.tx = ntx;
+                svg.data.ty = nty;
                 svg.ftUpdateTransform()
 
 			}
