@@ -277,10 +277,10 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 svg.data('ty', params.ty - bbox.y2);
             }
             if(params.angle !== undefined && !isNaN(params.angle)){
-				svg.data('angle', params.angle - this.ftGetRotation());
+				svg.data('angle', params.angle - svg.ftGetRotation());
 			}
 			if(params.scale !== undefined && !isNaN(params.scale)){
-				svg.data('scale', params.scale / this.ftGetScale());
+				svg.data('scale', params.scale / svg.ftGetScale());
 			}
 			svg.ftUpdateTransform()
         };
