@@ -1577,6 +1577,7 @@ $(function(){
 		self.onStartup = function(){
 			self.state.workingArea = self;
 			self.files.workingArea = self;
+			self.control.workingArea = self;
 			$(window).resize(function(){
 				self.trigger_resize();
 			});

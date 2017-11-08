@@ -89,15 +89,15 @@
 													<div class="jog-panel" id="control_xyaxis">
 														XY-Axes
 														<div>
-															<a id="control-yinc" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { sendSaveJogCommand('y',1) }"><i class="icon-circle-arrow-up"></i></a>
+															<a id="control-yinc" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { workingArea.sendSaveJogCommand('y',1) }"><i class="icon-circle-arrow-up"></i></a>
 														</div>
 														<div>
-															<a id="control-xdec" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { sendSaveJogCommand('x',-1) }"><i class="icon-circle-arrow-left"></i></a>
+															<a id="control-xdec" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { workingArea.sendSaveJogCommand('x',-1) }"><i class="icon-circle-arrow-left"></i></a>
 															<a id="control-xyhome" data-bind="enable: (state.isOperational() || state.isLocked()) && !state.isPrinting() && loginState.isUser(), click: function() { control.sendHomeCommand(['x', 'y']) }"><i class="icon-home"></i></a>
-															<a id="control-xinc" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { sendSaveJogCommand('x',1) }"><i class="icon-circle-arrow-right"></i></a>
+															<a id="control-xinc" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { workingArea.sendSaveJogCommand('x',1) }"><i class="icon-circle-arrow-right"></i></a>
 														</div>
 														<div>
-															<a id="control-ydec" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { sendSaveJogCommand('y',-1) }"><i class="icon-circle-arrow-down"></i></a>
+															<a id="control-ydec" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { workingArea.sendSaveJogCommand('y',-1) }"><i class="icon-circle-arrow-down"></i></a>
 														</div>
 													</div>
 
