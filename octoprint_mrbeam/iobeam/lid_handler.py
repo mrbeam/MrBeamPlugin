@@ -113,7 +113,7 @@ class LidHandler(object):
 				# TODO get the states from _printer or the global state, instead of having local state as well!
 				if self._client_opened and not self._is_slicing and not self._lid_closed and not self._printer.is_locked():
 					self._start_photo_worker()
-				elif self._photo_creator.save_debug_images:
+				elif self._photo_creator.is_initial_calibration:
 					# camera is in first init mode
 					self._start_photo_worker()
 				else:
@@ -137,23 +137,17 @@ class LidHandler(object):
 			self._logger.debug("shutdown() stopping _photo_creator")
 			self._end_photo_worker()
 
-	def take_undistorted_picture(self):
+	def take_undistorted_picture(self,is_initial_calibration=False):
 		from flask import make_response
 		if self._photo_creator is not None:
-			self._photo_creator.set_undistorted_path()
+			if is_initial_calibration:
+				self._photo_creator.is_initial_calibration = True
+			else:
+				self._photo_creator.set_undistorted_path()
 			# todo make_response, so that it will be accepted in the .done() method in frontend
 			return make_response('Should save Image soon, please wait.', 200)
 		else:
 			return make_response('Error, no photocreator active, maybe you are developing and dont have a cam?', 503)
-
-	def set_is_initial_calibration(self):
-		from flask import make_response
-		if self._photo_creator is not None:
-			self._photo_creator._is_initial_calibration = True
-			# todo make_response, so that it will be accepted in the .done() method in frontend
-			return make_response('Should save Image soon, please wait.',200)
-		else:
-			return make_response('Error, no photocreator active, maybe you are developing and dont have a cam?',503)
 
 	def _start_photo_worker(self):
 		if not self._photo_creator.active:
@@ -163,13 +157,11 @@ class LidHandler(object):
 		else:
 			self._logger.info("Another PhotoCreator thread is already active! Not starting a new one.")
 
-
 	def _end_photo_worker(self):
 		if self._photo_creator:
 			self._photo_creator.active = False
 			self._photo_creator.save_debug_images = False
 			self._photo_creator.undistorted_pic_path = None
-
 
 	def _send_frontend_lid_state(self, closed=None):
 		lid_closed = closed if closed is not None else self._lid_closed
@@ -191,7 +183,7 @@ class PhotoCreator(object):
 		self.active = False
 		self.last_photo = 0
 		self.badQualityPicCount = 0
-		self._is_initial_calibration = False
+		self.is_initial_calibration = False
 		self.undistorted_pic_path = None
 		self.save_debug_images = self._settings.get(['cam', 'saveCorrectionDebugImages'])
 		self.camera = None
@@ -209,9 +201,9 @@ class PhotoCreator(object):
 		try:
 			self.active = True
 			# todo find maximum of sleep in beginning that's not affecting UX
-			time.sleep(0.6)
+			time.sleep(0.8)
 
-			if self._is_initial_calibration:
+			if self.is_initial_calibration:
 				self.set_undistorted_path()
 				# set_debug_images_to = save_debug_images or self._photo_creator.save_debug_images
 				self.save_debug_images = True
