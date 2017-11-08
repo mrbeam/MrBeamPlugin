@@ -286,60 +286,19 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			svg.ftUpdateTransform();
         };
 
-		// Element.prototype.ftManualTransform = function(params){
-		// 	var bbox = this.getBBox();
-		// 	var elTransform = this.transform();
-		// 	var tx = 0;
-		// 	var ty = 0;
-		// 	var angle = 0;
-		// 	var scale = 1;
-		//
-		// 	if(params.diffType !== undefined){
-		// 	    if(params.diffType === 'absolute'){
-		// 	        if(params.tx !== undefined && !isNaN(params.tx)){
-		// 		        tx = params.tx - bbox.x;
-		// 	        }
-		// 	        if(params.ty !== undefined && !isNaN(params.ty)){
-		// 		        ty = params.ty - bbox.y2;
-		// 	        }
-         //        } else if (params.diffType === 'relative'){
-		// 	        if(params.tx !== undefined && !isNaN(params.tx)){
-		// 		        tx = params.tx;
-		// 	        }
-		// 	        if(params.ty !== undefined && !isNaN(params.ty)){
-		// 		        ty = params.ty;
-		// 	        }
-         //        }
-         //    }
-		//
-		// 	if(params.angle !== undefined && !isNaN(params.angle)){
-		// 		angle = params.angle - this.ftGetRotation();
-		// 	}
-		// 	if(params.scale !== undefined && !isNaN(params.scale)){
-		// 		scale = params.scale / this.ftGetScale();
-		// 	}
-		//
-		// 	var tstring = "t" + tx + "," + ty + elTransform.local + "r" + angle + 'S' + scale ;
-		// 	this.attr({ transform: tstring });
-		// 	this.ftReportTransformation();
-		// 	return this;
-		// };
-
 		Element.prototype.ftUpdateHandlesGroup = function() {
 			var group = this;
-			var handlesGroup = group.parent().selectAll('#handlesGroup');
 
-            if( handlesGroup.items.length > 0){
-                handlesGroup.forEach( function( el, i ) {
-				    el.transform(group.transform().local.toString());
-                });
-                handlesGroup.selectAll('.freeTransformHandle').forEach( function( el, i ) {
-                    var s = group.data('unscale') * ftOption.handleSize;
-                    el.transform(Snap.matrix(s,0,0,s,0,0));
-                });
+            group.parent().selectAll('#handlesGroup').forEach( function( el, i ) {
+                el.transform(group.transform().local.toString());
+            });
+
+            if(group.parent().select("#handlesGroup") !== null){
+			    group.parent().select("#handlesGroup").selectAll('.freeTransformHandle').forEach( function( el, i ) {
+				    var s = group.data('unscale') * ftOption.handleSize;
+				    el.transform(Snap.matrix(s,0,0,s,0,0));
+			    });
             }
-
-
 		};
 
 		Element.prototype.ftHighlightBB = function() {
