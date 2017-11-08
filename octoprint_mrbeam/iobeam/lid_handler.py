@@ -99,6 +99,8 @@ class LidHandler(object):
 
 	def _printerStateChanged(self,event,payload):
 		if payload['state_string'] == 'Operational':
+			# TODO CHECK IF CLIENT IS CONNECTED FOR REAL, with PING METHOD OR SIMILAR
+			self._client_opened = True
 			self._startStopCamera(event)
 
 	def _onSlicingEvent(self,event,payload):
