@@ -1088,7 +1088,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def take_undistorted_picture(self, is_initial_calibration):
 		self._logger.debug("New undistorted image is requested. is_initial_calibration: %s", is_initial_calibration)
-		image_response = self._lid_handler.set_save_undistorted(save_debug_images=is_initial_calibration)
+		image_response = self._lid_handler.take_undistorted_picture(is_initial_calibration)
 		self._logger.debug("Image_Response: {}".format(image_response))
 		return image_response
 
