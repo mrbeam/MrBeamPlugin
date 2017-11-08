@@ -430,7 +430,7 @@ $(function(){
 			};
 			self.loadSVG(url, cb);
 		};
-		
+
 		self._prepareAndInsertSVG = function(fragment, id, origin){
 				var f = self._removeUnsupportedSvgElements(fragment);
 				var generator_info = self._get_generator_info(f);
@@ -499,7 +499,7 @@ $(function(){
 
 				return id;
 		};
-		
+
 		self._removeUnsupportedSvgElements = function(fragment){
 			// find clippath elements and remove them
 				var clipPathEl = fragment.selectAll('clipPath');
@@ -917,9 +917,11 @@ $(function(){
 				var ntx = nt[0] / globalScale;
 				var nty = (self.workingAreaHeightMM() - nt[1]) / globalScale;
 
-				svg.ftManualTransform({tx: ntx, ty: nty});
+				svg.ftManualTransform({tx: ntx, ty: nty, diffType:'absolute'});
 			}
 		};
+
+
 		self.svgManualRotate = function(data, event) {
 			if (event.keyCode === 13 || event.type === 'blur') {
 				self.abortFreeTransforms();
@@ -1116,6 +1118,34 @@ $(function(){
 		self.removeIMG = function(file){
 			self.removeSVG(file);
 		};
+
+		self.moveSelectedDesign = function(ifX,ifY){
+		    var diff = 2;
+		    var transformHandles = snap.select('#handlesGroup');
+
+		    if(transformHandles){
+				var selectedId = transformHandles.data('parentId');
+			    var svg = snap.select('#'+selectedId);
+                var globalScale = self.scaleMatrix().a;
+
+                // var bbox = svg.getBBox();
+                // var nx = bbox.x + diff * ifX;
+                // var ny = bbox.y + diff * ifY;
+
+                var nx = diff * ifX;
+                var ny = diff * ifY;
+
+                var ntx = nx/globalScale;
+                var nty = ny/globalScale;
+
+                svg.ftStoreInitialTransformMatrix();
+                svg.data('tx', ntx);
+                svg.data('ty', nty);
+                svg.ftUpdateTransform();
+
+			}
+        };
+
 		self.removeSelectedDesign = function(){
 			var transformHandles = snap.select('#handlesGroup');
 			if(transformHandles){
