@@ -83,7 +83,11 @@ $(function () {
 						button = $("#control-xinc");
 						break;
 					case 40: // down arrow key
-						button = $("#control-ydec");
+						// button = $("#control-ydec");
+                        if($('nav li.active a').attr('href') === '#workingarea'){
+							self.workingArea.move;
+							return;
+						}
 						break;
 					case 33: // page up key
 					case 87: // w key

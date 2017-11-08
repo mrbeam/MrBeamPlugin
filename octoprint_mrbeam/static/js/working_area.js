@@ -920,6 +920,8 @@ $(function(){
 				svg.ftManualTransform({tx: ntx, ty: nty});
 			}
 		};
+
+
 		self.svgManualRotate = function(data, event) {
 			if (event.keyCode === 13 || event.type === 'blur') {
 				self.abortFreeTransforms();
@@ -1130,6 +1132,24 @@ $(function(){
 				}
 			}
 		};
+
+		self.moveSelectedDesign = function(keyArrow){
+		    var transformHandles = snap.select('#handlesGroup');
+
+		    console.log(keyArrow);
+
+		    if(transformHandles){
+				var selectedId = transformHandles.data('parentId');
+			    var svg = snap.select('#'+selectedId);
+                var globalScale = self.scaleMatrix().a;
+
+                var nx = svg.getBBox().x + 10;
+                var ntx = nx/globalScale;
+
+                svg.ftManualTransform({tx: ntx});
+
+			}
+        };
 
 		self.removeSelectedDesign = function(){
 			var transformHandles = snap.select('#handlesGroup');
