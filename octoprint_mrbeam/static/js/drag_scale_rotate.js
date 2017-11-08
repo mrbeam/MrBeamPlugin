@@ -120,7 +120,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			var handlesGroup = userContent
 				.g(translateHull)
 				.attr({id:'handlesGroup'});
-			
+
 			var rotateDragger = handlesGroup
 				.path(_getTransformHandlePath('rot')).transform('s'+ftOption.handleSize)
 				.attr({id: 'rotateDragger',cursor:'pointer', class:'freeTransformHandle' })
@@ -265,7 +265,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			this.ftUpdateHandlesGroup();
 			return this;
 		};
-		
+
 		Element.prototype.ftManualTransform = function(params){
 			var bbox = this.getBBox();
 			var elTransform = this.transform();
@@ -273,12 +273,25 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			var ty = 0;
 			var angle = 0;
 			var scale = 1;
-			if(params.tx !== undefined && !isNaN(params.tx)){
-				tx = params.tx - bbox.x;
-			}
-			if(params.ty !== undefined && !isNaN(params.ty)){
-				ty = params.ty - bbox.y2;
-			}
+
+			if(params.diffType !== undefined){
+			    if(params.diffType === 'absolute'){
+			        if(params.tx !== undefined && !isNaN(params.tx)){
+				        tx = params.tx - bbox.x;
+			        }
+			        if(params.ty !== undefined && !isNaN(params.ty)){
+				        ty = params.ty - bbox.y2;
+			        }
+                } else if (params.diffType === 'relative'){
+			        if(params.tx !== undefined && !isNaN(params.tx)){
+				        tx = params.tx;
+			        }
+			        if(params.ty !== undefined && !isNaN(params.ty)){
+				        ty = params.ty;
+			        }
+                }
+            }
+
 			if(params.angle !== undefined && !isNaN(params.angle)){
 				angle = params.angle - this.ftGetRotation();
 			}
@@ -339,7 +352,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 			this.ftReportTransformation();
 		};
-		
+
 		Element.prototype.ftAfterTransform = function(){
 			if(this.data('ftAfterTransformCallbacks') && this.data('ftAfterTransformCallbacks').length > 0){
 				for (var idx = 0; idx < this.data('ftAfterTransformCallbacks').length; idx++) {
@@ -356,7 +369,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 				this.data('ftAfterTransformCallbacks').push(callback);
 			}
 		};
-		
+
 		Element.prototype.ftBeforeTransform = function(){
 			if(this.data('ftBeforeTransformCallbacks') && this.data('ftBeforeTransformCallbacks').length > 0){
 				for (var idx = 0; idx < this.data('ftBeforeTransformCallbacks').length; idx++) {
@@ -373,7 +386,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 				this.data('ftBeforeTransformCallbacks').push(callback);
 			}
 		};
-		
+
 		Element.prototype.ftGetRotation = function(){
 			var transform = this.transform();
 			var startIdx = transform.local.indexOf('r') + 1;
@@ -381,7 +394,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             var rot = parseFloat(transform.local.substring(startIdx, endIdx)) || 0;
 			return rot;
 		};
-		
+
 		Element.prototype.ftGetScale = function(){
 			var transform = this.transform();
 			// get scale independent from rotation
@@ -517,7 +530,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 //		if(Math.abs(dx) > Math.abs(dy) - origHeight){
 //			d = dx;
 //		}
-		
+
 		//apply smoothing factor of 2
 		var	delta = d/2 * MRBEAM_PX2MM_FACTOR_WITH_ZOOM;
 
@@ -540,7 +553,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 		mainEl.ftUpdateTransform();
 	};
-	
+
 	function _getTransformHandlePath(type){
 		switch(type){
 			case 'nw':
@@ -555,7 +568,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 				return "M 0,8 C 4.5,8 8,4.5 8,0 H 3 C 3,1.7 1.6,3 0,3 0,3 0,3 0,3 0,3 0,3 -0.3,3 -1.9,2.8 -3,1.5 -3,-0.1 c 0,-1.6 1.4,-3 3,-3 v 1.7 L 4,-5.5 0,-9.6 V -8 c -4.5,0 -8,3.6 -8,8 0,4.5 3.6,8 8,8 z";
 		}
 	}
-	
+
 })();
 
 
