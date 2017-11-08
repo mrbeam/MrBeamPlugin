@@ -271,16 +271,16 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		    var bbox = this.getBBox();
 
 		    if(params.tx !== undefined && !isNaN(params.tx)){
-                svg.data.tx = params.tx - bbox.x;
+                svg.data('tx', params.tx - bbox.x);
             }
             if(params.ty !== undefined && !isNaN(params.ty)){
-                svg.data.ty = params.ty - bbox.y2;
+                svg.data('ty', params.ty - bbox.y2);
             }
             if(params.angle !== undefined && !isNaN(params.angle)){
-				svg.data.angle = params.angle - this.ftGetRotation();
+				svg.data('angle', params.angle - this.ftGetRotation());
 			}
 			if(params.scale !== undefined && !isNaN(params.scale)){
-				svg.data.scale = params.scale / this.ftGetScale();
+				svg.data('scale', params.scale / this.ftGetScale());
 			}
 			svg.ftUpdateTransform()
         };
