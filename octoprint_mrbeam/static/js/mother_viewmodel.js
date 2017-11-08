@@ -72,20 +72,33 @@ $(function () {
 				) return;
 
 				var button = undefined;
+				var wa_id = $('nav li.active a').attr('href');
 				switch (event.which) {
 					case 37: // left arrow key:
-						button = $("#control-xdec");
+						// button = $("#control-xdec");
+                        if(wa_id === '#workingarea'){
+							self.workingArea.moveSelectedDesign(-1,0);
+							return;
+						}
 						break;
 					case 38: // up arrow key
-						button = $("#control-yinc");
+						// button = $("#control-yinc");
+						if(wa_id === '#workingarea') {
+                            self.workingArea.moveSelectedDesign(0, 1);
+                            return;
+                        }
 						break;
 					case 39: // right arrow key
-						button = $("#control-xinc");
-						break;
+						// button = $("#control-xinc");
+						if(wa_id === '#workingarea') {
+                            self.workingArea.moveSelectedDesign(1, 0);
+                            return;
+                        }
+                        break;
 					case 40: // down arrow key
 						// button = $("#control-ydec");
-                        if($('nav li.active a').attr('href') === '#workingarea'){
-							self.workingArea.move;
+                        if(wa_id === '#workingarea'){
+							self.workingArea.moveSelectedDesign(0,-1);
 							return;
 						}
 						break;
@@ -102,7 +115,7 @@ $(function () {
 						break;
 					case 8: // del key
 					case 46: // backspace key
-						if($('nav li.active a').attr('href') === '#workingarea'){
+						if(wa_id === '#workingarea'){
 							self.workingArea.removeSelectedDesign();
 							return;
 						}

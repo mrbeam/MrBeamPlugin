@@ -1133,20 +1133,27 @@ $(function(){
 			}
 		};
 
-		self.moveSelectedDesign = function(keyArrow){
+		self.moveSelectedDesign = function(ifX,ifY){
+		    var diff = 10;
 		    var transformHandles = snap.select('#handlesGroup');
 
 		    console.log(keyArrow);
 
 		    if(transformHandles){
+		        self.abortFreeTransforms();
 				var selectedId = transformHandles.data('parentId');
 			    var svg = snap.select('#'+selectedId);
                 var globalScale = self.scaleMatrix().a;
 
-                var nx = svg.getBBox().x + 10;
-                var ntx = nx/globalScale;
+                var bbox = svg.getBBox();
 
-                svg.ftManualTransform({tx: ntx});
+                var nx = bbox.x + diff * ifX;
+                var ny = bbox.y + diff * ifY;
+
+                var ntx = nx/globalScale;
+                var nty = ny/globalScale;
+
+                svg.ftManualTransform({tx: ntx, ty: nty});
 
 			}
         };
