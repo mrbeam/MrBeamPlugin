@@ -298,59 +298,44 @@ $(function(){
 			}
 		};
 
-		// IMPLEMENTATION IN OCTOPRINT, only here for debugging
-		// self.sendJogCommand = function (axis, multiplier, distance) {
-        //     if (typeof distance === "undefined")
-        //         distance = self.distance();
-        //     if (self.settings.printerProfiles.currentProfileData() && self.settings.printerProfiles.currentProfileData()["axes"] && self.settings.printerProfiles.currentProfileData()["axes"][axis] && self.settings.printerProfiles.currentProfileData()["axes"][axis]["inverted"]()) {
-        //         multiplier *= -1;
-        //     }
-		//
-        //     var data = {};
-        //     data[axis] = distance * multiplier;
-        //     OctoPrint.printer.jog(data);
-        // };
-
-
+		// Check before sending jogCommand if limit could be hit.
         self.possibleLimitHit = false;
         self.jogCount = {lastJog:new Date(),count:{'x':0,'y':0}};
 
         self.sendSaveJogCommand = function (axis,dir) {
             var pos = self.state.currentPos();
             var stepSize = self.control.distance();
-            var hit_limit = false;
-            console.log(axis,dir,stepSize);
-            console.log(pos.x,pos.x + dir * stepSize, self.workingAreaWidthMM());
-            console.log(pos.y,pos.y + dir * stepSize, self.workingAreaHeightMM());
+            var possible_hit = false;
 
+            // Check when last jogCommand was sent
+            var MAXTIME = 1500; // 1.5 seconds
             var now = new Date();
-            if(self.jogCount.lastJog - now < 3000){
-                self.jogCount.count.axis += 1;
+            if(now - self.jogCount.lastJog < MAXTIME){
+                self.jogCount.count[axis] += 1;
             }else{
-                self.jogCount.count.axis = 1;
+                self.jogCount.count[axis] = 1;
             }
             self.jogCount.lastJog = now;
 
+            // check if limit is hit, or possible hit
             if(axis === 'x'){
                 if(pos.x + dir * stepSize > self.workingAreaWidthMM()){
                     stepSize = self.workingAreaWidthMM() - pos.x
                 }else if(pos.x + dir * stepSize < 0){
                     stepSize = pos.x
                 }
-                hit_limit = pos.x + dir * self.jogCount.axis * stepSize > self.workingAreaWidthMM || pos.x + dir * self.jogCount.axis * stepSize < 0
+                possible_hit = pos.x + dir * self.jogCount.count[axis] * stepSize > self.workingAreaWidthMM() || pos.x + dir * self.jogCount.count[axis] * stepSize < 0
             }else if(axis === 'y'){
                 if(pos.y + dir * stepSize > self.workingAreaHeightMM()){
                     stepSize = self.workingAreaHeightMM() - pos.y
                 }else if(pos.y + dir * stepSize < 0){
                     stepSize = pos.y
                 }
-                hit_limit = pos.y + dir * self.jogCount.axis * stepSize > self.workingAreaHeightMM || pos.y + dir * self.jogCount.axis * stepSize < 0
+                possible_hit = pos.y + dir * self.jogCount.count[axis] * stepSize > self.workingAreaHeightMM() || pos.y + dir * self.jogCount.count[axis] * stepSize < 0
             }
 
-            console.log(axis,dir,stepSize);
-            console.log('-----------------');
-            console.log('LimitHit',hit_limit);
-            if(stepSize !== 0 && !hit_limit){
+            // only send command if no limit hit possible
+            if(stepSize !== 0 && !possible_hit){
                 self.control.sendJogCommand(axis,dir,stepSize)
             }
         };
