@@ -312,19 +312,47 @@ $(function(){
         // };
 
 
-        self.sendSaveJogCommand = function (axis,dir,distance) {
+        self.possibleLimitHit = false;
+        self.jogCount = {lastJog:new Date(),count:{'x':0,'y':0}};
+
+        self.sendSaveJogCommand = function (axis,dir) {
             var pos = self.state.currentPos();
-            console.log(pos);
             var stepSize = self.control.distance();
+            var hit_limit = false;
+            console.log(axis,dir,stepSize);
+            console.log(pos.x,pos.x + dir * stepSize, self.workingAreaWidthMM());
+            console.log(pos.y,pos.y + dir * stepSize, self.workingAreaHeightMM());
 
-            checkIfSave = true;
-
-            if(checkIfSave){
-                self.control.sendJogCommand(axis,dir,stepSize)
+            var now = new Date();
+            if(self.jogCount.lastJog - now < 3000){
+                self.jogCount.count.axis += 1;
             }else{
-                console.log('STOP LASER FROM HITTING!')
+                self.jogCount.count.axis = 1;
+            }
+            self.jogCount.lastJog = now;
+
+            if(axis === 'x'){
+                if(pos.x + dir * stepSize > self.workingAreaWidthMM()){
+                    stepSize = self.workingAreaWidthMM() - pos.x
+                }else if(pos.x + dir * stepSize < 0){
+                    stepSize = pos.x
+                }
+                hit_limit = pos.x + dir * self.jogCount.axis * stepSize > self.workingAreaWidthMM || pos.x + dir * self.jogCount.axis * stepSize < 0
+            }else if(axis === 'y'){
+                if(pos.y + dir * stepSize > self.workingAreaHeightMM()){
+                    stepSize = self.workingAreaHeightMM() - pos.y
+                }else if(pos.y + dir * stepSize < 0){
+                    stepSize = pos.y
+                }
+                hit_limit = pos.y + dir * self.jogCount.axis * stepSize > self.workingAreaHeightMM || pos.y + dir * self.jogCount.axis * stepSize < 0
             }
 
+            console.log(axis,dir,stepSize);
+            console.log('-----------------');
+            console.log('LimitHit',hit_limit);
+            if(stepSize !== 0 && !hit_limit){
+                self.control.sendJogCommand(axis,dir,stepSize)
+            }
         };
 
 		self.getXYCoord = function(evt){
