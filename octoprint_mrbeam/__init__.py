@@ -56,6 +56,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				   octoprint.plugin.ShutdownPlugin):
 
 	# CONSTANTS
+	ENV_PROD =         "PROD"
+
 	ENV_LOCAL =        "local"
 	ENV_LASER_SAFETY = "laser_safety"
 	ENV_ANALYTICS =    "analytics"
@@ -159,7 +161,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			dev=dict(
 				debug=False, # deprected
 				terminalMaxLines = 2000,
-				env = "PROD",
+				env = self.ENV_PROD,
 				# env_overrides = dict(
 				# 	analytics = "DEV",
 				# 	laser_safety = "DEV",
@@ -329,15 +331,15 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def get_template_configs(self):
 		result = [
-			dict(type='settings', name="SVG Settings", template='settings/svgtogcode_settings.jinja2', suffix="_conversion", custom_bindings=False)
+			dict(type='settings', name="SVG Settings", template='settings/svgtogcode_settings.jinja2', suffix="_conversion", custom_bindings=False),
+            dict(type='settings', name="Camera Calibration", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True)
 			# disabled in appearance
 			# dict(type='settings', name="Serial Connection DEV", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings=False, replaces='serial')
 		 ]
 		if not self.is_prod_env('local'):
 			result.extend([
-				dict(type='settings', name="Machine Profiles DEV", template='settings/lasercutterprofiles_settings.jinja2', suffix="_lasercutterprofiles", custom_bindings=False),
-				dict(type='settings', name="Camera Calibration DEV", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
-        		dict(type='settings', name="Camera Calibration", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
+				dict(type='settings', name="Machine Profiles DEV", template='settings/lasercutterprofiles_settings.jinja2', suffix="_lasercutterprofiles", custom_bindings=False)
+				# dict(type='settings', name="Camera Calibration DEV", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
 			])
 		result.extend(self._get_wizard_template_configs())
 		return result
@@ -562,7 +564,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 					   'serial': self._serial,
 					   'hostname': self._hostname}
 
-			if debug is not None and debug != "PROD":
+			if debug is not None and debug.upper() != self.ENV_PROD:
 				payload['debug'] = debug
 				self._logger.debug("LaserSafetyNotice - debug flag: %s", debug)
 
@@ -1456,7 +1458,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return self._settings.global_get(["server", "firstRun"])
 
 	def is_prod_env(self, type=None):
-		return self.get_env(type) == 'prod'
+		return self.get_env(type).upper() == self.ENV_PROD
 
 	def get_env(self, type=None):
 		result = self._settings.get(["dev", "env"])
@@ -1549,9 +1551,6 @@ def __plugin_load__():
 		))
 		# )),
 		# system=dict(actions=[
-		# 	dict(action="iobeam restart", name="iobeam restart", command="sudo systemctl restart iobeam.service"),
-		# 	dict(action="ledstrips restart", name="ledstrips restart",
-		# 	     command="sudo systemctl restart mrbeam_ledstrips.service && sleep 1 &&  mrbeam_ledstrips_cli ClientConected"),
 		# 	dict(action="fan auto", name="fan auto", command="iobeam_info fan:auto"),
 		# 	dict(action="fan off", name="fan off", command="iobeam_info fan:off")
 		# ])
