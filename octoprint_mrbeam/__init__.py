@@ -34,6 +34,7 @@ from octoprint_mrbeam.analytics.analytics_handler import analyticsHandler
 from octoprint_mrbeam.led_events import LedEventListener
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
+from octoprint_mrbeam.migrate import migrate
 from .profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
 from .software_update_information import get_update_information
 
@@ -56,6 +57,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				   octoprint.plugin.ShutdownPlugin):
 
 	# CONSTANTS
+	DEVIE_INFO_FILE = '/etc/mrbeam'
+
 	ENV_PROD =         "PROD"
 
 	ENV_LOCAL =        "local"
@@ -72,7 +75,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 
 	def __init__(self):
-		self.laserCutterProfileManager = None
 		self._slicing_commands = dict()
 		self._slicing_commands_mutex = threading.Lock()
 		self._cancelled_jobs = []
@@ -86,17 +88,23 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._mbSerialnumber = None
 		self._setHostname()
 		self._setMbSerialnumber()
-		self._device_series = self._get_val_from_device_info('device_series'),  # '2C'
+		self._device_series = self._get_val_from_device_info('device_series')  # '2C'
 
 	# inside initialize() OctoPrint is already loaded, not assured during __init__()!
 	def initialize(self):
 		init_mrb_logger(self._printer)
-		self.laserCutterProfileManager = laserCutterProfileManager()
 		self._logger = mrb_logger("octoprint.plugins.mrbeam")
 		self._branch = self.getBranch()
 		self._octopi_info = self.get_octopi_info()
 		self._serial = self.getMrBeamSerial()
+
+		# do migration if needed
+		migrate(self)
+
+
+		self.laserCutterProfileManager = laserCutterProfileManager()
 		self._do_initial_log()
+
 		try:
 			pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
 			if pluginInfo is None:
@@ -149,6 +157,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return converted
 
 	##~~ SettingsPlugin mixin
+	def get_settings_version(self):
+		return 2
 
 	def get_settings_defaults(self):
 		# Max img size: 2592x1944. Change requires rebuild of lens_correction_*.npz and machine recalibration.
@@ -223,15 +233,15 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		)
 
 	def on_settings_save(self, data):
-		if "workingAreaWidth" in data and data["workingAreaWidth"]:
-			self._settings.set(["workingAreaWidth"], data["workingAreaWidth"])
-		if "zAxis" in data:
-			self._settings.set_boolean(["zAxis"], data["zAxis"])
+		# if "workingAreaWidth" in data and data["workingAreaWidth"]:
+		# 	self._settings.set(["workingAreaWidth"], data["workingAreaWidth"])
+		# if "zAxis" in data:
+		# 	self._settings.set_boolean(["zAxis"], data["zAxis"])
 		if "svgDPI" in data:
 			self._settings.set_int(["svgDPI"], data["svgDPI"])
 
-		selectedProfile = self.laserCutterProfileManager.get_current_or_default()
-		self._settings.set(["current_profile_id"], selectedProfile['id'])
+		# selectedProfile = self.laserCutterProfileManager.get_current_or_default()
+		# self._settings.set(["current_profile_id"], selectedProfile['id'])
 
 	def on_shutdown(self):
 		self._logger.debug("Mr Beam Plugin stopping...")
@@ -1442,16 +1452,15 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# return None
 
 	def _get_val_from_device_info(self, key):
-		device_info_file = '/etc/mrbeam'
 		try:
-			with open(device_info_file, 'r') as f:
+			with open(self.DEVIE_INFO_FILE, 'r') as f:
 				for line in f:
 					line = line.strip()
 					token = line.split('=')
 					if len(token) >= 2 and token[0] == key:
 						return token[1]
 		except Exception as e:
-			self._logger.error("Can't read device_info_file '%s' due to exception: %s", device_info_file, e)
+			self._logger.error("Can't read device_info_file '%s' due to exception: %s", self.DEVIE_INFO_FILE, e)
 		return None
 
 
