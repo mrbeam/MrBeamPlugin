@@ -86,6 +86,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._mbSerialnumber = None
 		self._setHostname()
 		self._setMbSerialnumber()
+		self._device_series = self._get_val_from_device_info('device_series'),  # '2C'
 
 	# inside initialize() OctoPrint is already loaded, not assured during __init__()!
 	def initialize(self):
@@ -1373,7 +1374,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def _setMbSerialnumber(self):
 		self._mbSerialnumber = "{pi_serial}-{device_series}".format(
-			pi_serial=self.getPiSerial(),
+			pi_serial=self._getPiSerial_not_mrb_serial(),
 			device_series=self._get_val_from_device_info('device_series'))
 
 	def getMrBeamSerial(self):
@@ -1382,10 +1383,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._setMbSerialnumber()
 		return self._mbSerialnumber
 
-	def getPiSerial(self):
+	def _getPiSerial_not_mrb_serial(self):
 		"""
-		Get RaspberryPi's serial number from cpuinfo file
 		:deprecated: use getMrBeamSerial() instead
+		Get RaspberryPi's serial number from cpuinfo file
 		:return: String serial or ('0000000000000000' or 'ERROR000000000')
 		"""
 		# Extract serial from cpuinfo file

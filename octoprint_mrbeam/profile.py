@@ -144,6 +144,11 @@ class LaserCutterProfileManager(object):
 			width = 500.0,
 		),
 		zAxis = False,
+		legacy = dict(
+			# 2C series only
+			# https: // github.com / mrbeam / MrBeamPlugin / issues / 211
+			job_done_home_position_x = None
+		)
 	)
 
 	def __init__(self):

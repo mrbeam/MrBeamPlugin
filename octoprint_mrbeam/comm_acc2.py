@@ -131,6 +131,8 @@ class MachineCom(object):
 
 	def get_home_position(self):
 		# TODO: remove magic number! (-2)
+		if self._laserCutterProfile['legacy']['job_done_home_position_x'] is not None:
+			return (self._laserCutterProfile['legacy']['job_done_home_position_x'], self._laserCutterProfile['volume']['depth'] - 2)
 		return (self._laserCutterProfile['volume']['width'] - 2, self._laserCutterProfile['volume']['depth'] - 2)
 
 	def _monitor_loop(self):
