@@ -129,7 +129,7 @@ class LaserCutterProfileManager(object):
 		),
 		laser=dict(
 			max_temperature=55.0,
-			hysteresis_temperature=45.0,
+			hysteresis_temperature=48.0,
 			cooling_duration=25 # if set to positive values: enables time based cooling resuming rather that per hysteresis_temperature
 		),
 		dust=dict(
@@ -160,6 +160,11 @@ class LaserCutterProfileManager(object):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.profile")
 
 	def select(self, identifier):
+		"""
+		Selects a profile non-persistently
+		:param identifier:
+		:return:
+		"""
 		if identifier is None or not self.exists(identifier):
 			self._current = self.get_default()
 			return False
@@ -190,6 +195,13 @@ class LaserCutterProfileManager(object):
 		return self._remove_from_path(self._get_profile_path(identifier))
 
 	def save(self, profile, allow_overwrite=False, make_default=False):
+		"""
+		Saves given profile to file.
+		:param profile:
+		:param allow_overwrite:
+		:param make_default:
+		:return:
+		"""
 		if "id" in profile and profile['id'] != '':
 			identifier = profile["id"]
 		elif "name" in profile:
@@ -233,7 +245,7 @@ class LaserCutterProfileManager(object):
 		if identifier is not None and not identifier in all_identifiers:
 			return
 
-		self.settings.set(self.SETTINGS_PATH_PROFILE_DEFAULT_ID, identifier)
+		self.settings.set(self.SETTINGS_PATH_PROFILE_DEFAULT_ID, identifier, force=True)
 		self.settings.save()
 
 	def get_current_or_default(self):
