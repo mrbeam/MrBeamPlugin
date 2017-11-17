@@ -78,6 +78,7 @@ $(function(){
 		self.files = params[3];
 		self.profile = params[4];
 		self.camera = params[5];
+        self.control = params[6];
 
 		self.log = [];
 
@@ -281,6 +282,48 @@ $(function(){
 				});
 			}
 		};
+
+		// Check before sending jogCommand if limit could be hit.
+        self.possibleLimitHit = false;
+        self.jogCount = {lastJog:new Date(),count:{'x':0,'y':0}};
+
+        self.sendSaveJogCommand = function (axis,dir) {
+            var pos = self.state.currentPos();
+            var stepSize = self.control.distance();
+            var possible_hit = false;
+
+            // Check when last jogCommand was sent
+            var MAXTIME = 1500; // 1.5 seconds
+            var now = new Date();
+            if(now - self.jogCount.lastJog < MAXTIME){
+                self.jogCount.count[axis] += 1;
+            }else{
+                self.jogCount.count[axis] = 1;
+            }
+            self.jogCount.lastJog = now;
+
+            // check if limit is hit, or possible hit
+            if(axis === 'x'){
+                if(pos.x + dir * stepSize > self.workingAreaWidthMM()){
+                    stepSize = self.workingAreaWidthMM() - pos.x
+                }else if(pos.x + dir * stepSize < 0){
+                    stepSize = pos.x
+                }
+                possible_hit = pos.x + dir * self.jogCount.count[axis] * stepSize > self.workingAreaWidthMM() || pos.x + dir * self.jogCount.count[axis] * stepSize < 0
+            }else if(axis === 'y'){
+                if(pos.y + dir * stepSize > self.workingAreaHeightMM()){
+                    stepSize = self.workingAreaHeightMM() - pos.y
+                }else if(pos.y + dir * stepSize < 0){
+                    stepSize = pos.y
+                }
+                possible_hit = pos.y + dir * self.jogCount.count[axis] * stepSize > self.workingAreaHeightMM() || pos.y + dir * self.jogCount.count[axis] * stepSize < 0
+            }
+
+            // only send command if no limit hit possible
+            if(stepSize !== 0 && !possible_hit){
+                self.control.sendJogCommand(axis,dir,stepSize)
+            }
+        };
 
 		self.getXYCoord = function(evt){
             var elemPos = evt.currentTarget.getBoundingClientRect();
@@ -1562,6 +1605,7 @@ $(function(){
 		self.onStartup = function(){
 			self.state.workingArea = self;
 			self.files.workingArea = self;
+			self.control.workingArea = self;
 			$(window).resize(function(){
 				self.trigger_resize();
 			});
@@ -2008,7 +2052,7 @@ $(function(){
     ADDITIONAL_VIEWMODELS.push([WorkingAreaViewModel,
 
 		["loginStateViewModel", "settingsViewModel", "printerStateViewModel",
-			"gcodeFilesViewModel", "laserCutterProfilesViewModel", "cameraViewModel"],
+			"gcodeFilesViewModel", "laserCutterProfilesViewModel", "cameraViewModel","controlViewModel"],
 		[document.getElementById("area_preview"),
 			document.getElementById("homing_overlay"),
 			document.getElementById("working_area_files"),
