@@ -40,6 +40,10 @@ class IoBeamValueEvents(object):
 	"""
 	LASER_TEMP =          "iobeam.laser.temp"
 	DUST_VALUE =          "iobeam.dust.value"
+	RPM_VALUE =           "iobeam.rpm.value"
+	RPM_VALUE =           "iobeam.rpm.value"
+	STATE_VALUE =         "iobeam.state.value"
+	DYNAMIC_VALUE =       "iobeam.dynamic.value"
 	FAN_ON_RESPONSE =     "iobeam.fan.on.response"
 	FAN_OFF_RESPONSE =    "iobeam.fan.off.response"
 	FAN_AUTO_RESPONSE =   "iobeam.fan.auto.response"
@@ -88,6 +92,12 @@ class IoBeamHandler(object):
 	# < fan:rpm
 	# > fan:rpm:<rpm value>
 	# > fan:rpm:error
+	# < fan:dust
+	# > fan:dust:<dust value 0.3>
+	# > fan:dust:error
+	# < fan:dynamic
+	# > fan:dynamic:<state>:<rpm>:<dust>
+	# > fan:dynamic:error
 	# < fan:factor:<factor 0.00-2.55, default: 0.35>
 	# > fan:factor:<factor 0.00-2.55>
 	# > fan:factor:ok
@@ -103,9 +113,6 @@ class IoBeamHandler(object):
 	# < fan:version
 	# > fan:version:<version-string>
 	# > fan:version:error
-	# < fan:dust
-	# > fan:dust:<dust value 0.3>
-	# > fan:dust:error
 
 	# < laser:temp
 	# > laser:temp:< temperatur >
@@ -169,6 +176,7 @@ class IoBeamHandler(object):
 	MESSAGE_ACTION_FAN_PWM_MIN =        "pwm_min"
 	MESSAGE_ACTION_FAN_TPR =            "tpr"
 	MESSAGE_ACTION_FAN_STATE =          "state"
+	MESSAGE_ACTION_FAN_DYNAMIC =        "dynamic"
 
 
 	def __init__(self, event_bus, socket_file=None):
@@ -432,9 +440,12 @@ class IoBeamHandler(object):
 
 			err = -1
 			message_count =+ 1
-			# self._logger.debug("_handleMessages() handling message: %s", message)
+			self._logger.debug("_handleMessages() handling message: %s", message)
 
 			tokens = message.split(self.MESSAGE_SEPARATOR)
+			# would allow to escape MESSAGE_SEPARATOR in case we want to use JSON some day
+			# tokens = list(map(lambda x: x.replace('\\{}'.format(self.MESSAGE_SEPARATOR), self.MESSAGE_SEPARATOR),
+			#                   re.split(r'(?<!\\){}'.format(self.MESSAGE_SEPARATOR), message)))
 			if len(tokens) <=1:
 				err = self._handle_invalid_message(message)
 			else:
@@ -541,12 +552,33 @@ class IoBeamHandler(object):
 		action = token[0] if len(token) > 0 else None
 		value = token[1] if len(token) > 1 else None
 
+		if action == self.MESSAGE_ACTION_FAN_DYNAMIC:
+			if action.startswith(self.MESSAGE_ERROR):
+				pass
+			elif len(token) >= 4:
+				vals = dict(
+					state =  self._as_number(token[1]),
+					rpm =    self._as_number(token[2]),
+					dust =   self._as_number(token[3]))
+				self._call_callback(IoBeamValueEvents.DYNAMIC_VALUE, message, vals)
+				self._call_callback(IoBeamValueEvents.STATE_VALUE, message, dict(val=vals['state']))
+				self._call_callback(IoBeamValueEvents.RPM_VALUE, message, dict(val=vals['rpm']))
+				self._call_callback(IoBeamValueEvents.DUST_VALUE, message, dict(val=vals['dust']))
+				return 0
 		if action == self.MESSAGE_ACTION_DUST_VALUE:
 			dust_val = self._as_number(value)
 			if dust_val is not None:
 				self._call_callback(IoBeamValueEvents.DUST_VALUE, message, dict(val=dust_val))
 			return 0
 		elif action == self.MESSAGE_ACTION_FAN_RPM:
+			rpm_val = self._as_number(value)
+			if rpm_val is not None:
+				self._call_callback(IoBeamValueEvents.RPM_VALUE, message, dict(val=rpm_val))
+			return 0
+		elif action == self.MESSAGE_ACTION_FAN_STATE:
+			state = self._as_number(value)
+			if state is not None:
+				self._call_callback(IoBeamValueEvents.STATE_VALUE, message, dict(val=state))
 			return 0
 		elif action == self.MESSAGE_ACTION_FAN_VERSION:
 			return 0
