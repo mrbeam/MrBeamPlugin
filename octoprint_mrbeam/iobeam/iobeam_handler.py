@@ -44,79 +44,13 @@ class IoBeamValueEvents(object):
 	RPM_VALUE =           "iobeam.rpm.value"
 	STATE_VALUE =         "iobeam.state.value"
 	DYNAMIC_VALUE =       "iobeam.dynamic.value"
+	CONNECTED_VALUE =     "iobeam.connected.value"
 	FAN_ON_RESPONSE =     "iobeam.fan.on.response"
 	FAN_OFF_RESPONSE =    "iobeam.fan.off.response"
 	FAN_AUTO_RESPONSE =   "iobeam.fan.auto.response"
 	FAN_FACTOR_RESPONSE = "iobeam.fan.factor.response"
 
 class IoBeamHandler(object):
-
-	# > iobeam:<data>
-	# > iobeam:version:<version_string>
-	# > iobeam:debug:<data>
-	# < iobeam:<data>
-	# < iobeam:client:<client_id_string>
-	# < info
-	# < debug
-
-	# > onebtn:up
-	# > onebtn:pr
-	# > onebtn:dn:< time >
-	# > onebtn:rl:< time >
-	# > onebtn:error	?
-	# > lid:op
-	# > lid:cl
-	# > intlk:0:op
-	# > intlk:0:cl
-	# > intlk:1:op
-	# > intlk:1:cl
-	# > intlk:2:op
-	# > intlk:2:cl
-	# > intlk:3:op
-	# > intlk:3:cl
-	# > steprun:on
-	# > steprun:off
-	# > steprun:error
-
-	# < fan:on:< value 0-100 >
-	# > fan:on:ok
-	# > fan:on:error
-	# < fan:off
-	# > fan:off:ok
-	# > fan:off:error
-	# < fan:auto
-	# > fan:auto:ok
-	# > fan:auto:error
-	# < fan:state
-	# > fan:state:<value 0-100 | auto> #TODO refine value
-	# < fan:rpm
-	# > fan:rpm:<rpm value>
-	# > fan:rpm:error
-	# < fan:dust
-	# > fan:dust:<dust value 0.3>
-	# > fan:dust:error
-	# < fan:dynamic
-	# > fan:dynamic:<state>:<rpm>:<dust>
-	# > fan:dynamic:error
-	# < fan:factor:<factor 0.00-2.55, default: 0.35>
-	# > fan:factor:<factor 0.00-2.55>
-	# > fan:factor:ok
-	# > fan:factor:error
-	# < fan:tpr:<tics per roto 0-255, default: 2>
-	# > fan:tpr:<tics per roto 0-255>
-	# > fan:tpr:ok
-	# > fan:tpr:error
-	# < fan:pwm_min:<pwm_min 0-255, default: 55>
-	# > fan:pwm_min:<pwm_min 0-255>
-	# > fan:pwm_min:ok
-	# > fan:pwm_min:error
-	# < fan:version
-	# > fan:version:<version-string>
-	# > fan:version:error
-
-	# < laser:temp
-	# > laser:temp:< temperatur >
-	# > laser:temp:error:<error type or message>
 
 	# How to test and debug:
 	# in config.yaml set
@@ -177,6 +111,7 @@ class IoBeamHandler(object):
 	MESSAGE_ACTION_FAN_TPR =            "tpr"
 	MESSAGE_ACTION_FAN_STATE =          "state"
 	MESSAGE_ACTION_FAN_DYNAMIC =        "dynamic"
+	MESSAGE_ACTION_FAN_CONNECTED =      "connected"
 
 
 	def __init__(self, event_bus, socket_file=None):
@@ -555,15 +490,17 @@ class IoBeamHandler(object):
 		if action == self.MESSAGE_ACTION_FAN_DYNAMIC:
 			if action.startswith(self.MESSAGE_ERROR):
 				pass
-			elif len(token) >= 4:
+			elif len(token) >= 5:
 				vals = dict(
-					state =  self._as_number(token[1]),
-					rpm =    self._as_number(token[2]),
-					dust =   self._as_number(token[3]))
+					state =     self._as_number(token[1]),
+					rpm =       self._as_number(token[2]),
+					dust =      self._as_number(token[3]),
+					connected = self._get_connected_val(token[4]))
 				self._call_callback(IoBeamValueEvents.DYNAMIC_VALUE, message, vals)
 				self._call_callback(IoBeamValueEvents.STATE_VALUE, message, dict(val=vals['state']))
 				self._call_callback(IoBeamValueEvents.RPM_VALUE, message, dict(val=vals['rpm']))
 				self._call_callback(IoBeamValueEvents.DUST_VALUE, message, dict(val=vals['dust']))
+				self._call_callback(IoBeamValueEvents.CONNECTED_VALUE, message, dict(val=vals['connected']))
 				return 0
 		if action == self.MESSAGE_ACTION_DUST_VALUE:
 			dust_val = self._as_number(value)
@@ -579,6 +516,9 @@ class IoBeamHandler(object):
 			state = self._as_number(value)
 			if state is not None:
 				self._call_callback(IoBeamValueEvents.STATE_VALUE, message, dict(val=state))
+			return 0
+		elif action == self.MESSAGE_ACTION_FAN_CONNECTED:
+			self._call_callback(IoBeamValueEvents.CONNECTED_VALUE, message, dict(val=self._get_connected_val(value)))
 			return 0
 		elif action == self.MESSAGE_ACTION_FAN_VERSION:
 			return 0
@@ -699,5 +639,19 @@ class IoBeamHandler(object):
 			return float(str)
 		except:
 			return None
+
+	def _get_connected_val(self, value):
+		connected = None
+		if value is None: return None
+
+		value = value.lower()
+		if value in ('none', 'unknown'):
+			connected = None
+		elif value == 'false':
+			connected = False
+		elif value == 'true':
+			connected = True
+		self._logger.info("ANDYTEST MESSAGE_ACTION_FAN_CONNECTED value:%s, result:%s", value, connected)
+		return connected
 
 

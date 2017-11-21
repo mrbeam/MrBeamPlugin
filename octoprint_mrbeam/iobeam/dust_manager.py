@@ -15,7 +15,10 @@ def dustManager():
 
 class DustManager(object):
 
-	DEFAULT_TIMER_INTERVAL = 3
+	DEFAULT_TIMER_INTERVAL = 3.0
+	BOOST_TIMER_INTERVAL = 0.2
+	MAX_TIMER_BOOST_DURATION = 3.0
+
 	DEFAUL_DUST_MAX_AGE = 10  # seconds
 	FAN_MAX_INTENSITY = 100
 
@@ -30,6 +33,7 @@ class DustManager(object):
 	FAN_COMMAND_AUTO =    "auto"
 
 	DATA_TYPE_DYNAMIC  =  "dynamic"
+	DATA_TYPE_CONENCTED = "connected"
 
 
 	def __init__(self):
@@ -39,6 +43,7 @@ class DustManager(object):
 		self._state = None
 		self._dust = None
 		self._rpm = None
+		self._connected = None
 		self._data_ts = 0
 
 		self._init_ts = time.time()
@@ -46,6 +51,8 @@ class DustManager(object):
 		self._shutting_down = False
 		self._trail_extraction = None
 		self._timer = None
+		self._timer_interval = self.DEFAULT_TIMER_INTERVAL
+		self._timer_boost_ts = 0
 		self._auto_timer = None
 		# self._command_response = None
 		self._last_command = ''
@@ -62,6 +69,12 @@ class DustManager(object):
 
 		self._logger.debug("initialized!")
 
+	def is_fan_connected(self):
+		return self._connected
+
+	def shutdown(self):
+		self._shutting_down = True
+
 	def _subscribe(self):
 		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.DYNAMIC_VALUE, self._handle_fan_data)
 		# _mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.DUST_VALUE, self._handle_dust)
@@ -69,6 +82,11 @@ class DustManager(object):
 		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.FAN_ON_RESPONSE, self._on_command_response)
 		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.FAN_OFF_RESPONSE, self._on_command_response)
 		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.FAN_AUTO_RESPONSE, self._on_command_response)
+
+		_mrbeam_plugin_implementation._event_bus.subscribe(MrBeamEvents.READY_TO_LASER_START, self._onEvent)
+		_mrbeam_plugin_implementation._event_bus.subscribe(MrBeamEvents.READY_TO_LASER_START, self._onEvent)
+		_mrbeam_plugin_implementation._event_bus.subscribe(MrBeamEvents.READY_TO_LASER_CANCELED, self._onEvent)
+		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.SLICING_DONE, self._onEvent)
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_STARTED, self._onEvent)
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self._onEvent)
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self._onEvent)
@@ -78,6 +96,8 @@ class DustManager(object):
 	def _handle_fan_data(self, args):
 		#ANDYTEST remove this
 		self.do_debug_stuff()
+
+		self._logger.info("ANDYTEST _handle_fan_data() args: %s", args)
 
 		err = False
 		if args['state'] is not None:
@@ -92,12 +112,17 @@ class DustManager(object):
 			self._rpm = args['rpm']
 		else:
 			err = True
+
+		self._connected = args['connected']
+		if self._connected is not None:
+			self._unboost_timer_interval()
+
 		if not err:
 			self._data_ts = time.time()
 
 		self._validate_values()
 		self._send_dust_to_analytics(self._dust)
-		self.send_status_to_frontend()
+		self._send_status_to_frontend()
 
 
 	def _on_command_response(self, args):
@@ -112,18 +137,24 @@ class DustManager(object):
 
 
 	def _onEvent(self, event, payload):
-		if event == OctoPrintEvents.PRINT_STARTED:
+		if event in (OctoPrintEvents.SLICING_DONE, MrBeamEvents.READY_TO_LASER_START, OctoPrintEvents.PRINT_STARTED):
 			self._start_dust_extraction()
+			self._boost_timer_interval()
+		elif event == MrBeamEvents.READY_TO_LASER_CANCELED:
+			self._stop_dust_extraction()
+			self._unboost_timer_interval()
 		elif event in (OctoPrintEvents.PRINT_DONE, OctoPrintEvents.PRINT_FAILED, OctoPrintEvents.PRINT_CANCELLED):
 			self._last_event = event
 			self._do_end_dusting()
 		elif event == OctoPrintEvents.SHUTDOWN:
 			self.shutdown()
 
-	def shutdown(self):
-		self._shutting_down = True
-
 	def _start_dust_extraction(self, value=None):
+		"""
+		Turn on fan on auto mode or set to constant value.
+		:param value: Default: auto. 0-100 if constant value required.
+		:return:
+		"""
 		if self._auto_timer is not None:
 			self._auto_timer.cancel()
 			self._auto_timer = None
@@ -237,31 +268,54 @@ class DustManager(object):
 
 		return result
 
-	def request_value(self, value):
+	def _request_value(self, value):
 		return _mrbeam_plugin_implementation._ioBeam.send_fan_command(value)
 
 	def _timer_callback(self):
+		self._logger.info("ANDYTEST _timer_callback()")
 		try:
-			self.request_value(self.DATA_TYPE_DYNAMIC)
+			self._request_value(self.DATA_TYPE_DYNAMIC)
 			self._validate_values()
-			self._start_timer()
+			self._start_timer(delay=self._timer_interval)
 		except:
 			self._logger.exception("Exception in _timer_callback(): ")
-			self._start_timer()
+			self._start_timer(delay=self._timer_interval)
 
-	def _start_timer(self):
+	def _start_timer(self, delay=0):
+		self._logger.info("ANDYTEST _start_timer() delay:%s, self._timer_boost_ts:%s", delay, self._timer_boost_ts)
+		if self._timer:
+			self._timer.cancel()
+		if self._timer_boost_ts > 0 and time.time() - self._timer_boost_ts > self.MAX_TIMER_BOOST_DURATION:
+			self._unboost_timer_interval()
 		if not self._shutting_down:
-			self._timer = threading.Timer(self.DEFAULT_TIMER_INTERVAL, self._timer_callback)
-			self._timer.daemon = True
-			self._timer.start()
+			if delay <=0:
+				self._timer_callback()
+			else:
+				self._timer = threading.Timer(delay, self._timer_callback)
+				self._timer.daemon = True
+				self._timer.start()
 		else:
 			self._logger.debug("Shutting down.")
 
-	def send_status_to_frontend(self):
+	def _boost_timer_interval(self):
+		self._logger.info("ANDYTEST _boost_timer_interval()")
+		self._timer_boost_ts = time.time()
+		self._timer_interval = self.BOOST_TIMER_INTERVAL
+		# want the boost immediately, se reset current timer
+		self._start_timer()
+
+	def _unboost_timer_interval(self):
+		self._logger.info("ANDYTEST _unboost_timer_interval()")
+		self._timer_boost_ts = 0
+		self._timer_interval = self.DEFAULT_TIMER_INTERVAL
+		# must not call _start_timer()!!
+
+	def _send_status_to_frontend(self):
 		payload = dict(status=dict(
-			state=self._state,
-			rpm = self._rpm,
-			dust = self._dust
+			fan_state=self._state,
+			fan_rpm = self._rpm,
+			fan_dust = self._dust,
+			fan_connected = self._connected
 		))
 		_mrbeam_plugin_implementation._plugin_manager.send_plugin_message("mrbeam", payload)
 
