@@ -77,8 +77,6 @@ class DustManager(object):
 
 	def _subscribe(self):
 		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.DYNAMIC_VALUE, self._handle_fan_data)
-		# _mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.DUST_VALUE, self._handle_dust)
-		# _mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.RPM_VALUE, self._handle_rpm)
 		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.FAN_ON_RESPONSE, self._on_command_response)
 		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.FAN_OFF_RESPONSE, self._on_command_response)
 		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.FAN_AUTO_RESPONSE, self._on_command_response)
@@ -94,11 +92,6 @@ class DustManager(object):
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self._onEvent)
 
 	def _handle_fan_data(self, args):
-		#ANDYTEST remove this
-		self.do_debug_stuff()
-
-		self._logger.info("ANDYTEST _handle_fan_data() args: %s", args)
-
 		err = False
 		if args['state'] is not None:
 			self._state = args['state']
@@ -126,7 +119,6 @@ class DustManager(object):
 
 
 	def _on_command_response(self, args):
-		self._logger.info("ANDYTEST _on_command_response() args: %s", args)
 		if args['success']:
 			if args['message'].split(':')[1] != self._last_command.split(':')[0]:
 				# I'm not sure if we need to check or what to do if the command doesn't match.
@@ -148,6 +140,17 @@ class DustManager(object):
 			self._do_end_dusting()
 		elif event == OctoPrintEvents.SHUTDOWN:
 			self.shutdown()
+
+	def _pause_laser(self, trigger):
+		"""
+		Stops laser and switches to paused mode.
+		Should be called when air filters gets disconnected, dust value gets too high or when any error occurs...
+		:param trigger: A string to identify the cause/trigger that initiated paused mode
+		"""
+		if _mrbeam_plugin_implementation._oneButtonHandler.is_printing():
+			self._logger.info("_pause_laser() trigger: %s", trigger)
+			_mrbeam_plugin_implementation._oneButtonHandler.pause_laser(need_to_release=False, trigger=trigger)
+			self._send_status_to_frontend()
 
 	def _start_dust_extraction(self, value=None):
 		"""
@@ -179,13 +182,13 @@ class DustManager(object):
 	def __do_end_dusting_thread(self):
 		try:
 			if self._dust is not None:
-				self._logger.debug("starting trial dust extraction (value={}).".format(self.extraction_limit))
+				self._logger.debug("starting trial dust extraction. current: {}, threshold: {}".format(self._dust, self.extraction_limit))
 				dust_start = self._dust
 				dust_start_ts = self._data_ts
 				self._start_dust_extraction(self.FAN_MAX_INTENSITY)
 				while self.__continue_dust_extraction(self.extraction_limit, dust_start_ts):
 					time.sleep(1)
-				self._logger.debug("finished end dusting.")
+				self._logger.debug("finished end dusting. current: {}, threshold: {}".format(self._dust, self.extraction_limit))
 				dust_end = self._dust
 				dust_end_ts = self._data_ts
 				if dust_start_ts != dust_end_ts:
@@ -227,19 +230,18 @@ class DustManager(object):
 		return True
 
 	def _activate_timed_auto_mode(self, value):
-		self._logger.debug("starting timed auto mode (value={}).".format(value))
+		self._logger.info("starting timed auto mode for {}secs.".format(value))
 		self._start_dust_extraction()
 		self._auto_timer = threading.Timer(value, self._auto_timer_callback)
 		self._auto_timer.daemon = True
 		self._auto_timer.start()
 
 	def _auto_timer_callback(self):
-		self._logger.debug("auto mode stopped!")
+		self._logger.info("Stopping timed auto mode.")
 		self._stop_dust_extraction()
 		self._auto_timer = None
 
 	def _send_fan_command(self, command):
-		self._logger.debug("ANDYTEST _send_fan_command() command: {}".format(command))
 		self._last_command = command
 		ok = _mrbeam_plugin_implementation._ioBeam.send_fan_command(command)
 		if not ok:
@@ -262,9 +264,15 @@ class DustManager(object):
 			result = False
 
 		if not result and not self.dev_mode and time.time() - self._init_ts > self.INITIAL_WARNINGS_GRACE_PERIOD:
-			self._logger.error("Invalid fan data from iobeam: state:{state}, rpm:{rpm}, dust:{dust}, age:{age}s".format(
-				state=self._state, rpm=self._rpm, dust=self._dust, age=(time.time() - self._data_ts)
-			))
+			self._logger.error("Invalid or too old fan data from iobeam: state:{state}, rpm:{rpm}, dust:{dust}, connected:{connected}, age:{age}s".format(
+				state=self._state, rpm=self._rpm, dust=self._dust, connected=self._connected, age=(time.time() - self._data_ts)))
+			self._pause_laser(trigger="Fan values from iobeam invalid or too old.")
+
+		elif self._connected == False:
+			result = False
+			self._logger.warning("Air filter is not connected: state:{state}, rpm:{rpm}, dust:{dust}, connected:{connected}, age:{age}s".format(
+				state=self._state, rpm=self._rpm, dust=self._dust, connected=self._connected, age=(time.time() - self._data_ts)))
+			self._pause_laser(trigger="Air filter not connected.")
 
 		return result
 
@@ -272,7 +280,6 @@ class DustManager(object):
 		return _mrbeam_plugin_implementation._ioBeam.send_fan_command(value)
 
 	def _timer_callback(self):
-		self._logger.info("ANDYTEST _timer_callback()")
 		try:
 			self._request_value(self.DATA_TYPE_DYNAMIC)
 			self._validate_values()
@@ -282,7 +289,6 @@ class DustManager(object):
 			self._start_timer(delay=self._timer_interval)
 
 	def _start_timer(self, delay=0):
-		self._logger.info("ANDYTEST _start_timer() delay:%s, self._timer_boost_ts:%s", delay, self._timer_boost_ts)
 		if self._timer:
 			self._timer.cancel()
 		if self._timer_boost_ts > 0 and time.time() - self._timer_boost_ts > self.MAX_TIMER_BOOST_DURATION:
@@ -298,14 +304,12 @@ class DustManager(object):
 			self._logger.debug("Shutting down.")
 
 	def _boost_timer_interval(self):
-		self._logger.info("ANDYTEST _boost_timer_interval()")
 		self._timer_boost_ts = time.time()
 		self._timer_interval = self.BOOST_TIMER_INTERVAL
 		# want the boost immediately, se reset current timer
 		self._start_timer()
 
 	def _unboost_timer_interval(self):
-		self._logger.info("ANDYTEST _unboost_timer_interval()")
 		self._timer_boost_ts = 0
 		self._timer_interval = self.DEFAULT_TIMER_INTERVAL
 		# must not call _start_timer()!!

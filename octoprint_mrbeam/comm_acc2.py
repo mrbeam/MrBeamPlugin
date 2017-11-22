@@ -947,7 +947,7 @@ class MachineCom(object):
 		}
 		eventManager().fire(Events.PRINT_CANCELLED, payload)
 
-	def setPause(self, pause, send_cmd=True, pause_for_cooling=False):
+	def setPause(self, pause, send_cmd=True, pause_for_cooling=False, trigger=None):
 		if not self._currentFile:
 			return
 
@@ -955,7 +955,8 @@ class MachineCom(object):
 			"file": self._currentFile.getFilename(),
 			"filename": os.path.basename(self._currentFile.getFilename()),
 			"origin": self._currentFile.getFileLocation(),
-			"cooling": pause_for_cooling
+			"cooling": pause_for_cooling,
+			"trigger": trigger
 		}
 
 		if not pause and self.isPaused():

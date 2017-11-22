@@ -375,7 +375,7 @@ class IoBeamHandler(object):
 
 			err = -1
 			message_count =+ 1
-			self._logger.debug("_handleMessages() handling message: %s", message)
+			# self._logger.debug("_handleMessages() handling message: %s", message)
 
 			tokens = message.split(self.MESSAGE_SEPARATOR)
 			# would allow to escape MESSAGE_SEPARATOR in case we want to use JSON some day
@@ -651,7 +651,6 @@ class IoBeamHandler(object):
 			connected = False
 		elif value == 'true':
 			connected = True
-		self._logger.info("ANDYTEST MESSAGE_ACTION_FAN_CONNECTED value:%s, result:%s", value, connected)
 		return connected
 
 

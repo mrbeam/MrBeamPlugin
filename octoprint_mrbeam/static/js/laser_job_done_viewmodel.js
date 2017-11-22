@@ -11,6 +11,10 @@ $(function() {
 
         self.onStartupComplete = function(){
             self.dialogElement = $('#laser_job_done_dialog');
+
+            self.dialogElement.on('hidden', function (e) {
+                self.is_job_done(false);
+            });
         };
 
 
@@ -37,7 +41,6 @@ $(function() {
 
         self.cancel_btn = function(){
             self.dialogElement.modal("hide");
-            self.is_job_done(false);
         };
     }
 

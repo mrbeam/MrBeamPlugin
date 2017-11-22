@@ -93,8 +93,8 @@ class TemperatureManager(object):
 		"""
 		Stop the laser for cooling purpose
 		"""
-		if  _mrbeam_plugin_implementation._oneButtonHandler.is_printing():
-			self._logger.debug("cooling_stop()")
+		if _mrbeam_plugin_implementation._oneButtonHandler.is_printing():
+			self._logger.info("cooling_stop()")
 			self.is_cooling_since = time.time()
 			_mrbeam_plugin_implementation._oneButtonHandler.cooling_down_pause()
 			_mrbeam_plugin_implementation._event_bus.fire(MrBeamEvents.LASER_COOLING_PAUSE, dict(temp=self.temperature))
