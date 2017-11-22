@@ -1019,7 +1019,8 @@ class MachineCom(object):
 		if state == self.STATE_OPERATIONAL:
 			return "Operational"
 		if state == self.STATE_PRINTING:
-			return "Printing"
+			# return "Printing"
+			return "Lasering"
 		if state == self.STATE_PAUSED:
 			return "Paused"
 		if state == self.STATE_CLOSED:

@@ -58,7 +58,23 @@ $(function() {
 
         self.setBodyScrollTop = function(){
             $('body').scrollTop(0);
-        }
+        };
+
+        self.onDataUpdaterPluginMessage = function(plugin, data) {
+            if (plugin != "mrbeam") {
+                return;
+            }
+
+            if ('frontend_notification' in data) {
+                var notification = data['frontend_notification'];
+                new PNotify({
+                    title: notification['title'],
+                    text: notification['text'],
+                    type: notification['type'] || 'info',
+                    hide: !(notification['hide'] == false || notification['sticky'] == true)
+                });
+            }
+        };
 
     };
 

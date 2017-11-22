@@ -361,7 +361,13 @@ class OneButtonHandler(object):
 		temp_ok = _mrbeam_plugin_implementation._temperatureManager.is_temperature_recent()
 		if not temp_ok:
 			msg = "iobeam: Laser temperature not available"
-			self._fireEvent(OctoPrintEvents.ERROR, {"error": msg})
+			_mrbeam_plugin_implementation.notify_frontend(title="Error", text=msg, type='error')
+			raise Exception(msg)
+
+		iobeam_ok = _mrbeam_plugin_implementation._ioBeam.is_iobeam_version_ok()
+		if not iobeam_ok:
+			msg = "iobeam version is outdated. Please try Software update."
+			_mrbeam_plugin_implementation.notify_frontend(title="Error", text=msg, type='error')
 			raise Exception(msg)
 
 	def _start_ready_to_laser_timer(self):

@@ -23,6 +23,7 @@ from octoprint.server.util.flask import restricted_access, get_json_command_from
 	add_non_caching_response_headers, firstrun_only_access
 from octoprint.util import dict_merge
 from octoprint.settings import settings, default_settings
+from octoprint.events import Events as OctoPrintEvents
 
 from octoprint_mrbeam.iobeam.iobeam_handler import ioBeamHandler, IoBeamEvents
 from octoprint_mrbeam.iobeam.onebutton_handler import oneButtonHandler
@@ -86,6 +87,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._logger = mrb_logger("octoprint.plugins.mrbeam")
 		self._hostname = None
 		self._mbSerialnumber = None
+		self._stored_frontend_notifications = []
 		self._setHostname()
 		self._setMbSerialnumber()
 		self._device_series = self._get_val_from_device_info('device_series')  # '2C'
@@ -1287,6 +1289,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if payload is None or not isinstance(payload, collections.Iterable) or not 'log' in payload or payload['log']:
 			self._logger.debug("on_event %s: %s", event, payload)
 
+		if event == OctoPrintEvents.CLIENT_OPENED:
+			self._replay_stored_frontend_notification()
+
 
 	##~~ Progress Plugin API
 
@@ -1346,6 +1351,42 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
 		return [("POST", r"/convert", 10 * 1024 * 1024)]
+
+	def notify_frontend(self, title, text, type=None, sticky=False, replay_when_new_client_connects=False):
+		"""
+		Show a frontend notification to the user. (PNotify)
+		:param title: title of your mesasge
+		:param text: the actual text
+		:param type: inft, success, error, ... (default is info)
+		:param sticky: True | False (default is False)
+		:param replay_when_new_client_connects: If True the notification well be sent to all clients when a new client connects.
+				If you send the same notification (all params have identical values) it won't be sent again.
+		:return:
+		"""
+		notification = dict(
+			title= title,
+			text= text,
+			type=type,
+			sticky=sticky
+		)
+
+		send = True
+		if replay_when_new_client_connects:
+			my_hash = hash(frozenset(notification.items()))
+			existing = next((item for item in self._stored_frontend_notifications if item["h"] == my_hash), None)
+			if existing is None:
+				notification['h'] = my_hash
+				self._stored_frontend_notifications.append(notification)
+			else:
+				send =False
+
+		if send:
+			self._plugin_manager.send_plugin_message("mrbeam", dict(frontend_notification = notification))
+
+	def _replay_stored_frontend_notification(self):
+		# all currently connected clients will get this notification again
+		for n in self._stored_frontend_notifications:
+			self.notify_frontend(title = n['title'], text = n['text'], type= n['type'], sticky = n['sticky'], replay_when_new_client_connects=False)
 
 	def _getCurrentFile(self):
 		currentJob = self._printer.get_current_job()

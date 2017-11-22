@@ -4,6 +4,7 @@ import threading
 import time
 import datetime
 import collections
+from distutils.version import StrictVersion
 
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
@@ -64,6 +65,8 @@ class IoBeamHandler(object):
 
 	SOCKET_FILE = "/var/run/mrbeam_iobeam.sock"
 	MAX_ERRORS = 10
+
+	IOBEAM_MIN_REQUIRED_VERSION = '0.4.0'
 
 	CLIENT_ID = "MrBeamPlugin.v{vers_mrb}/OctoPrint.v{vers_op}"
 
@@ -202,6 +205,17 @@ class IoBeamHandler(object):
 			self._logger.error("Exception while sending command '%s' to socket: %s", command, e)
 			return False
 		return True
+
+	def is_iobeam_version_ok(self):
+		if self.iobeam_version is None:
+			return False
+		try:
+			StrictVersion(self.iobeam_version)
+		except ValueError as e:
+			self._logger.error("iobeam version invalid: '{}'. ValueError from StrictVersion: {}".format(self.iobeam_version, e))
+			return False
+
+		return StrictVersion(self.iobeam_version) >= StrictVersion(self.IOBEAM_MIN_REQUIRED_VERSION)
 
 	def subscribe(self, event, callback):
 		'''
@@ -564,7 +578,14 @@ class IoBeamHandler(object):
 			version = token[1] if len(token) > 1 else None
 			if version:
 				self.iobeam_version = version
-				self._logger.info("Received iobeam version: %s", self.iobeam_version)
+				ok = self.is_iobeam_version_ok()
+				if ok:
+					self._logger.info("Received iobeam version: %s - version OK", self.iobeam_version)
+				else:
+					self._logger.error("Received iobeam version: %s - version OUTDATED. IOBEAM_MIN_REQUIRED_VERSION: %s", self.iobeam_version, self.IOBEAM_MIN_REQUIRED_VERSION)
+				_mrbeam_plugin_implementation.notify_frontend(title="Software Update required",
+				                                              text="Module 'iobeam' is outdated. Please run Software Update from 'Settings' > 'Software Update' before you start a laser job.",
+															  type="error", sticky=True, replay_when_new_client_connects=True)
 				return 0
 			else:
 				self._logger.warn("_handle_iobeam_message(): Received iobeam:version message without version number. Counting as error. Message: %s", message)

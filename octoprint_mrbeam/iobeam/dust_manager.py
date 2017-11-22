@@ -323,7 +323,6 @@ class DustManager(object):
 		))
 		_mrbeam_plugin_implementation._plugin_manager.send_plugin_message("mrbeam", payload)
 
-
 	def do_debug_stuff(self):
 		from random import randint
 		val =randint(0, 255)
