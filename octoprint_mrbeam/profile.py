@@ -130,7 +130,8 @@ class LaserCutterProfileManager(object):
 		laser=dict(
 			max_temperature=55.0,
 			hysteresis_temperature=48.0,
-			cooling_duration=25 # if set to positive values: enables time based cooling resuming rather that per hysteresis_temperature
+			cooling_duration=25, # if set to positive values: enables time based cooling resuming rather that per hysteresis_temperature
+			intensity_factor=13  # to get from 100% intesity to GCODE-intensity of 1300
 		),
 		dust=dict(
 			extraction_limit=0.70,

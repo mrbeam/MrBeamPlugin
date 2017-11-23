@@ -24,9 +24,12 @@ class Migration(object):
 
 		if self.is_migration_required():
 			self._logger.info("Starting migration from v{} to v{}".format(self.version_previous, self.version_current))
-			# if self.version_previous is None:
-			# 	self.migrate_from_0_0_0() # add you migration methods here
+
+			# migrations
+			if self.version_previous is None or self._compare_versions(self.version_previous, '0.1.13', equal_ok=False):
+				self.migrate_from_0_0_0() # add you migration methods here
 			# migrations end
+
 			self.save_current_version()
 		else:
 			self._logger.debug("No migration required.")
@@ -42,15 +45,40 @@ class Migration(object):
 			return None
 		return StrictVersion(self.version_current) > StrictVersion(self.version_previous)
 
+	def _compare_versions(self, lower_vers, higher_vers, equal_ok=True):
+		"""
+		Compares two versions and returns true if lower_vers < higher_vers
+		:param lower_vers: needs to be inferior to higher_vers to be True
+		:param lower_vers: needs to be superior to lower_vers to be True
+		:param equal_ok: returned value if lower_vers and lower_vers are equal.
+		:return: True or False. None if one of the version was not a valid version number
+		"""
+		if lower_vers is None or higher_vers is None:
+			return None
+		try:
+			StrictVersion(lower_vers)
+			StrictVersion(higher_vers)
+		except ValueError as e:
+			self._logger.error("_compare_versions() One of the two version is invalid: lower_vers:{}, higher_vers:{}. ValueError from StrictVersion: {}".format(lower_vers, higher_vers, e))
+			return None
+		if StrictVersion(lower_vers) == StrictVersion(higher_vers):
+			return equal_ok
+		return StrictVersion(lower_vers) < StrictVersion(higher_vers)
 
 	def save_current_version(self):
 		self.plugin._settings.set(['version'], self.version_current, force=True)
 
 
 	def migrate_from_0_0_0(self):
-		self._logger.warn("migrate_from_0_0_0() This is just a dummy method for demonstration. Should never show up in a real logfile.")
-		# If you don't use force=True, OP will just ignore this set. (May the force be with you.)
-		self.plugin._settings.global_set(['bla', 'blub'], 'just_a_test', force=True)
+		self._logger.info("migrate_from_0_0_0() ")
+		my_profile = laserCutterProfileManager().get_default()
+		# this setting was introduce with MrbeamPlugin version 0.1.13
+		my_profile['laser']['intensity_factor'] = 13
+		self._logger.info("migrate_from_0_0_0() Set lasercutterProfile ['laser']['intensity_factor'] = 13")
+		# previous default was 300 (5min)
+		my_profile['dust']['auto_mode_time'] = 60
+		self._logger.info("migrate_from_0_0_0() Set lasercutterProfile ['dust']['auto_mode_time'] = 60")
+		laserCutterProfileManager().save(my_profile, allow_overwrite=True, make_default=True)
 
 
 

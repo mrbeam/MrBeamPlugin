@@ -175,12 +175,19 @@ class Converter():
 						# intensity_black = 1000, intensity_white = 0, speed_black = 30, speed_white = 500,
 						# dithering = True, pierce_time = 500, material = "default"
 						rasterParams = self.options['raster']
-						ip = ImageProcessor(output_filehandle = fh, contrast = rasterParams['contrast'], sharpening = rasterParams['sharpening'], beam_diameter = rasterParams['beam_diameter'],
-						intensity_black = rasterParams['intensity_black'], intensity_white = rasterParams['intensity_white'],
-						speed_black = rasterParams['speed_black'], speed_white = rasterParams['speed_white'],
-						dithering = rasterParams['dithering'],
-						pierce_time = rasterParams['pierce_time'],
-						material = "default")
+						ip = ImageProcessor(output_filehandle = fh,
+						                    contrast = rasterParams['contrast'],
+						                    sharpening = rasterParams['sharpening'],
+						                    beam_diameter = rasterParams['beam_diameter'],
+											intensity_black = rasterParams['intensity_black'],
+											intensity_white = rasterParams['intensity_white'],
+											intensity_black_user = rasterParams['intensity_black_user'],
+											intensity_white_user = rasterParams['intensity_white_user'],
+											speed_black = rasterParams['speed_black'],
+											speed_white = rasterParams['speed_white'],
+											dithering = rasterParams['dithering'],
+											pierce_time = rasterParams['pierce_time'],
+											material = rasterParams['material'] if 'material' in rasterParams else None)
 						data = imgNode.get('href')
 						if(data is None):
 							data = imgNode.get(_add_ns('href', 'xlink'))
