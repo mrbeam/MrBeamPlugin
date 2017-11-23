@@ -583,9 +583,9 @@ class IoBeamHandler(object):
 					self._logger.info("Received iobeam version: %s - version OK", self.iobeam_version)
 				else:
 					self._logger.error("Received iobeam version: %s - version OUTDATED. IOBEAM_MIN_REQUIRED_VERSION: %s", self.iobeam_version, self.IOBEAM_MIN_REQUIRED_VERSION)
-				_mrbeam_plugin_implementation.notify_frontend(title="Software Update required",
-				                                              text="Module 'iobeam' is outdated. Please run Software Update from 'Settings' > 'Software Update' before you start a laser job.",
-															  type="error", sticky=True, replay_when_new_client_connects=True)
+					_mrbeam_plugin_implementation.notify_frontend(title="Software Update required",
+					                                              text="Module 'iobeam' is outdated. Please run Software Update from 'Settings' > 'Software Update' before you start a laser job.",
+																  type="error", sticky=True, replay_when_new_client_connects=True)
 				return 0
 			else:
 				self._logger.warn("_handle_iobeam_message(): Received iobeam:version message without version number. Counting as error. Message: %s", message)
