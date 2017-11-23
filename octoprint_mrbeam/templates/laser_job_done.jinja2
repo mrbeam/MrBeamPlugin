@@ -2,13 +2,14 @@
     <div>
         <div class="modal-header">
             <a href="#" class="close" data-bind='visible: is_job_done(), click: cancel_btn' aria-hidden="true">&times;</a>
-            <h3>{{ _('Dust extraction') }}</h3>
+            <h3 data-bind='visible: !is_job_done()'>{{ _('Dust extraction') }}</h3>
+            <h3 data-bind='visible: is_job_done()'>{{ _('Laser Job Finished') }}</h3>
         </div>
         <div class="modal-body">
             <img data-bind='visible: !is_job_done()' src="/plugin/mrbeam/static/img/fan.jpg">
-            <img data-bind='visible: is_job_done()' src="/plugin/mrbeam/static/img/done.png">
+            <img data-bind='visible: is_job_done()' src="/plugin/mrbeam/static/img/done.jpg">
             <h5 data-bind='visible: !is_job_done()'>Please wait a few seconds until the Mr Beam Air Filter cleared most of the dust particles out of the workingarea.</h5>
-            <h5 data-bind='visible: is_job_done()'>Everything is ready to go. You can now open the lid and take your material out.</h5>
+            <h5 data-bind='visible: is_job_done()'>Now check out what you have created with your Mr Beam II.</h5>
         </div>
         <div class="modal-footer">
             <h4 data-bind='visible: !is_job_done()' class="pull-right" >

@@ -133,8 +133,8 @@ class LaserCutterProfileManager(object):
 			cooling_duration=25 # if set to positive values: enables time based cooling resuming rather that per hysteresis_temperature
 		),
 		dust=dict(
-			extraction_limit=0.22,
-			auto_mode_time=300
+			extraction_limit=0.70,
+			auto_mode_time=60
 		),
 		volume = dict(
 			depth = 390.0,
