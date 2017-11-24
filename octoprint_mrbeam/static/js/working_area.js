@@ -106,7 +106,7 @@ $(function(){
 		});
 
         // QuickText fields
-        self.fontMap = ['Ubuntu', 'Roboto', 'Libre Baskerville', 'Indie Flower', 'VT323'];
+        self.fontMap = ["Allerta Stencil","Amatic SC","Comfortaa","Fredericka the Great","Kavivanar","Lobster","Merriweather","Mr Bedfort","Quattrocento","Roboto"];
         self.currentQuickTextFile = undefined;
         self.currentQuickText = ko.observable();
         self.lastQuickTextFontIndex = 0;
@@ -1931,21 +1931,29 @@ $(function(){
          * This copies the content of quicktext-fonts.css into the given element. It's expected that this css file
          * contains @font-face entries with wff2 files as dataUrls. Eg:
          * // @font-face {font-family: 'Indie Flower'; src: url(data:application/font-woff2;charset=utf-8;base64,d09GMgABAAAAAKtEABEAAAABh...) format('woff2');}
+         * All fonts to be embedded need to be in 'quicktext-fonts.css' or 'packed_plugins.css'
+         * AND their fontFamily name must be included in self.fontMap
          * @private
          * @param DomElement to add the font definition into
          */
         self._qt_copyFontsToSvg = function(elem) {
             var styleSheets = document.styleSheets;
-			for(var ss=0;ss<styleSheets.length;ss++) {
-			    if (styleSheets[ss].href && styleSheets[ss].href.endsWith("quicktext-fonts.css")) {
-			        self._qt_removeFontsFromSvg(elem);
-			        var rules = styleSheets[ss].cssRules;
-			        for(var r=0;r<rules.length;r++) {
-                        if (rules[r].cssText) {
-                            $(elem).append(rules[r].cssText);
-                        }
+            self._qt_removeFontsFromSvg(elem);
+            for(var ss=0;ss<styleSheets.length;ss++) {
+                if (styleSheets[ss].href &&
+                    (styleSheets[ss].href.includes("quicktext-fonts.css") || styleSheets[ss].href.includes("packed_plugins.css"))) {
+                    var rules = styleSheets[ss].cssRules;
+                    for(var r=0;r<rules.length;r++) {
+                         if (rules[r].constructor == CSSFontFaceRule) {
+                             // if (rules[r].cssText && rules[r].cssText.includes('MrBeamQuickText')) {
+                             if (rules[r].style && rules[r].style.fontFamily) {
+                                 var fontName = rules[r].style.fontFamily.replace(/["']/g, '').trim();
+                                 if (self.fontMap.indexOf(fontName) > -1) {
+                                     $(elem).append(rules[r].cssText);
+                                 }
+                             }
+                         }
                     }
-                    break; // this file appears usually twice....
                 }
             }
         };
