@@ -106,7 +106,7 @@ $(function(){
 		});
 
         // QuickText fields
-        self.fontMap = ['Ubuntu', 'Roboto', 'Libre Baskerville', 'Indie Flower', 'VT323'];
+        self.fontMap = ["Allerta Stencil","Amatic SC","Comfortaa","Fredericka the Great","Kavivanar","Lobster","Merriweather","Mr Bedfort","Quattrocento","Roboto"];
         self.currentQuickTextFile = undefined;
         self.currentQuickText = ko.observable();
         self.lastQuickTextFontIndex = 0;
