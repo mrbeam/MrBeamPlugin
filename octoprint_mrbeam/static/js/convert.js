@@ -310,7 +310,7 @@ $(function(){
 		self.get_current_multicolor_settings = function () {
 			var data = [];
 			$('.job_row_vector').each(function(i, pass){
-				var intensity_user = $(pass).find('.param_intensity').val() * self.profile.currentProfileData().laser.intensity_factor() ;
+				var intensity_user = $(pass).find('.param_intensity').val();
 				var intensity = intensity_user * self.profile.currentProfileData().laser.intensity_factor() ;
 				var feedrate = $(pass).find('.param_feedrate').val();
 				var piercetime = $(pass).find('.param_piercetime').val();
