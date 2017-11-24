@@ -1,5 +1,10 @@
 /*  https://fonts.googleapis.com/css?family=Indie+Flower|Libre+Baskerville|Roboto|Ubuntu|VT323  */
 
+/**
+ * All fonts to be embedded need to be in 'quicktext-fonts.css' (DEV mode) or 'packed_plugins.css' (PROD mode)
+ * AND their fontFamily name must be included in WorkingAreaViewModel.fontMap.
+ */
+
 /* latin */
 @font-face {
   font-family: 'Indie Flower';
