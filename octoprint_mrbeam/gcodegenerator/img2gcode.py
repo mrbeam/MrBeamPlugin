@@ -79,8 +79,8 @@ class ImageProcessor():
 		comment += "; pierce_time = {:.3f}s\n".format(self.pierce_time)
 		comment += "; intensity_black = {:.0f}\n".format(self.intensity_black)
 		comment += "; intensity_white = {:.0f}\n".format(self.intensity_white)
-		comment += "; intensity_black_user = {:.0f}\n".format(self.intensity_black_user)
-		comment += "; intensity_white_user = {:.0f}\n".format(self.intensity_white_user)
+		comment += "; intensity_black_user = {}\n".format(self.intensity_black_user)
+		comment += "; intensity_white_user = {}\n".format(self.intensity_white_user)
 		comment += "; feedrate_white = {:.0f}\n".format(self.feedrate_white)
 		comment += "; feedrate_black = {:.0f}\n".format(self.feedrate_black)
 
