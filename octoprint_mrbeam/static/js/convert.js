@@ -8,6 +8,7 @@ $(function(){
 		self.state = params[2];
 		self.workingArea = params[3];
 		self.files = params[4];
+		self.profile = params[5];
 
 		self.target = undefined;
 		self.file = undefined;
@@ -81,8 +82,8 @@ $(function(){
 			'Foam Rubber 2mm black':{cut_i:100, cut_f:800, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
 			'Foam Rubber 3mm green':{cut_i:100, cut_f:600, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
 			'Foam Rubber 3mm blue':{cut_i:100, cut_f:600, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
-			'Kraftplex 0.8mm':{cut_i:100, cut_f:350, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
-			'Kraftplex 1.5mm':{cut_i:100, cut_f:175, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
+			'Kraftplex 0.8mm':{cut_i:100, cut_f:300, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
+			'Kraftplex 1.5mm':{cut_i:100, cut_f:150, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
 //			'Kraftplex 3mm':{cut_i:100, cut_f:200, cut_p:2, eng_i:[10,35], eng_f:[2000,850]},
 			'Paper':{cut_i:75, cut_f:800, cut_p:1, eng_i:[0,0], eng_f:[0,0]},
 			'Plywood 3mm':{cut_i:100, cut_f:150, cut_p:3, eng_i:[18,35], eng_f:[2000,750]},
@@ -178,6 +179,7 @@ $(function(){
 				$(p).find('.param_feedrate').val(param_set.cut_f);
 				$(p).find('.param_passes').val(param_set.cut_p || 0);
 				$(p).find('.param_piercetime').val(param_set.cut_pierce || 0);
+				$(p).find('.param_material').val(material);
 			}
 		};
 
@@ -193,6 +195,7 @@ $(function(){
 				self.imgFeedrateBlack(param_set.eng_f[1]);
 				//self.imgDithering();
 				self.engravingPiercetime(param_set.eng_pierce || 0);
+				self.engravingMaterial = material;
 			}
 		};
 
@@ -215,6 +218,7 @@ $(function(){
 		self.imgContrast = ko.observable(1);
 		self.beamDiameter = ko.observable(0.15);
 		self.engravingPiercetime = ko.observable(0);
+		self.engravingMaterial = null;
 
 		self.sharpeningMax = 25;
 		self.contrastMax = 2;
@@ -306,9 +310,11 @@ $(function(){
 		self.get_current_multicolor_settings = function () {
 			var data = [];
 			$('.job_row_vector').each(function(i, pass){
-				var intensity = $(pass).find('.param_intensity').val() * 10 ;
+				var intensity_user = $(pass).find('.param_intensity').val();
+				var intensity = intensity_user * self.profile.currentProfileData().laser.intensity_factor() ;
 				var feedrate = $(pass).find('.param_feedrate').val();
 				var piercetime = $(pass).find('.param_piercetime').val();
+				var material = $(pass).find('.param_material').val();
 				var passes = $(pass).find('.param_passes').val();
 				$(pass).find('.used_color').each(function(j, col){
 					var hex = '#' + $(col).attr('id').substr(-6);
@@ -316,9 +322,11 @@ $(function(){
 						job: i,
 						color: hex,
 						intensity: intensity,
+                        intensity_user: intensity_user,
 						feedrate: feedrate,
 						pierce_time: piercetime,
-						passes: passes
+						passes: passes,
+                        material: material
 					});
 				});
 			});
@@ -328,15 +336,18 @@ $(function(){
 		self.get_current_engraving_settings = function () {
 			var data = {
 				"engrave_outlines" : self.engrave_outlines(),
-				"intensity_black" : self.imgIntensityBlack() * 10,
-				"intensity_white" : self.imgIntensityWhite() * 10,
+				"intensity_black_user" : self.imgIntensityBlack(),
+				"intensity_black" : self.imgIntensityBlack() * self.profile.currentProfileData().laser.intensity_factor(),
+				"intensity_white_user" : self.imgIntensityWhite(),
+				"intensity_white" : self.imgIntensityWhite() * self.profile.currentProfileData().laser.intensity_factor(),
 				"speed_black" : self.imgFeedrateBlack(),
 				"speed_white" : self.imgFeedrateWhite(),
 				"contrast" : self.imgContrast(),
 				"sharpening" : self.imgSharpening(),
 				"dithering" : self.imgDithering(),
 				"beam_diameter" : self.beamDiameter(),
-				"pierce_time": self.engravingPiercetime()
+				"pierce_time": self.engravingPiercetime(),
+                "material": self.engravingMaterial
 			};
 			return data;
 		};
@@ -588,7 +599,8 @@ $(function(){
 
 
     ADDITIONAL_VIEWMODELS.push([VectorConversionViewModel,
-		["loginStateViewModel", "settingsViewModel", "printerStateViewModel", "workingAreaViewModel", "gcodeFilesViewModel"],
+		["loginStateViewModel", "settingsViewModel", "printerStateViewModel", "workingAreaViewModel",
+            "gcodeFilesViewModel", 'laserCutterProfilesViewModel'],
 		document.getElementById("dialog_vector_graphics_conversion")]);
 
 });

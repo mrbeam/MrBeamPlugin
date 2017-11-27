@@ -6,6 +6,8 @@ import datetime
 from jobcontroller import JobController
 
 
+
+
 if __name__ == "__main__":
 	jsonfile = '/home/pi/.octoprint/analytics/analytics_log.json'
 

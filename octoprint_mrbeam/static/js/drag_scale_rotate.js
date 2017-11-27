@@ -120,7 +120,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			var handlesGroup = userContent
 				.g(translateHull)
 				.attr({id:'handlesGroup'});
-			
+
 			var rotateDragger = handlesGroup
 				.path(_getTransformHandlePath('rot')).transform('s'+ftOption.handleSize)
 				.attr({id: 'rotateDragger',cursor:'pointer', class:'freeTransformHandle' })
@@ -256,7 +256,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 				return this;
 			}
 
-			//console.log("translate: ", this.data('tx'), this.data('ty'), 'rotate: ', this.data('angle'), 'scale: ', this.data('scale'));
+			// console.log("translate: ", this.data('tx'), this.data('ty'), 'rotate: ', this.data('angle'), 'scale: ', this.data('scale'));
 			var tstring = "t" + this.data("tx") + "," + this.data("ty") + this.ftGetInitialTransformMatrix().toTransformString() + "r" + this.data("angle") + 'S' + this.data("scale" );
 			this.attr({ transform: tstring });
 			if(this.data("bbT")) this.ftHighlightBB(this.paper.select('#userContent'));
@@ -265,42 +265,40 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			this.ftUpdateHandlesGroup();
 			return this;
 		};
-		
+
 		Element.prototype.ftManualTransform = function(params){
-			var bbox = this.getBBox();
-			var elTransform = this.transform();
-			var tx = 0;
-			var ty = 0;
-			var angle = 0;
-			var scale = 1;
-			if(params.tx !== undefined && !isNaN(params.tx)){
-				tx = params.tx - bbox.x;
-			}
-			if(params.ty !== undefined && !isNaN(params.ty)){
-				ty = params.ty - bbox.y2;
-			}
-			if(params.angle !== undefined && !isNaN(params.angle)){
-				angle = params.angle - this.ftGetRotation();
+            var svg = this;
+		    var bbox = svg.getBBox();
+
+		    if(params.tx !== undefined && !isNaN(params.tx)){
+                svg.data('tx', params.tx - bbox.x);
+            }
+            if(params.ty !== undefined && !isNaN(params.ty)){
+                svg.data('ty', params.ty - bbox.y2);
+            }
+            if(params.angle !== undefined && !isNaN(params.angle)){
+				svg.data('angle', params.angle - svg.ftGetRotation());
 			}
 			if(params.scale !== undefined && !isNaN(params.scale)){
-				scale = params.scale / this.ftGetScale();
+				svg.data('scale', params.scale / svg.ftGetScale());
 			}
-
-			var tstring = "t" + tx + "," + ty + elTransform.local + "r" + angle + 'S' + scale ;
-			this.attr({ transform: tstring });
-			this.ftReportTransformation();
-			return this;
-		};
+			svg.ftStoreInitialTransformMatrix();
+			svg.ftUpdateTransform();
+        };
 
 		Element.prototype.ftUpdateHandlesGroup = function() {
 			var group = this;
-			group.parent().selectAll('#handlesGroup').forEach( function( el, i ) {
-				el.transform(group.transform().local.toString());
-			});
-			group.parent().select("#handlesGroup").selectAll('.freeTransformHandle').forEach( function( el, i ) {
-				var s = group.data('unscale') * ftOption.handleSize;
-				el.transform(Snap.matrix(s,0,0,s,0,0));
-			});
+
+            group.parent().selectAll('#handlesGroup').forEach( function( el, i ) {
+                el.transform(group.transform().local.toString());
+            });
+
+            if(group.parent().select("#handlesGroup") !== null){
+			    group.parent().select("#handlesGroup").selectAll('.freeTransformHandle').forEach( function( el, i ) {
+				    var s = group.data('unscale') * ftOption.handleSize;
+				    el.transform(Snap.matrix(s,0,0,s,0,0));
+			    });
+            }
 		};
 
 		Element.prototype.ftHighlightBB = function() {
@@ -339,7 +337,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 			this.ftReportTransformation();
 		};
-		
+
 		Element.prototype.ftAfterTransform = function(){
 			if(this.data('ftAfterTransformCallbacks') && this.data('ftAfterTransformCallbacks').length > 0){
 				for (var idx = 0; idx < this.data('ftAfterTransformCallbacks').length; idx++) {
@@ -356,7 +354,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 				this.data('ftAfterTransformCallbacks').push(callback);
 			}
 		};
-		
+
 		Element.prototype.ftBeforeTransform = function(){
 			if(this.data('ftBeforeTransformCallbacks') && this.data('ftBeforeTransformCallbacks').length > 0){
 				for (var idx = 0; idx < this.data('ftBeforeTransformCallbacks').length; idx++) {
@@ -373,7 +371,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 				this.data('ftBeforeTransformCallbacks').push(callback);
 			}
 		};
-		
+
 		Element.prototype.ftGetRotation = function(){
 			var transform = this.transform();
 			var startIdx = transform.local.indexOf('r') + 1;
@@ -381,7 +379,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             var rot = parseFloat(transform.local.substring(startIdx, endIdx)) || 0;
 			return rot;
 		};
-		
+
 		Element.prototype.ftGetScale = function(){
 			var transform = this.transform();
 			// get scale independent from rotation
@@ -517,7 +515,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 //		if(Math.abs(dx) > Math.abs(dy) - origHeight){
 //			d = dx;
 //		}
-		
+
 		//apply smoothing factor of 2
 		var	delta = d/2 * MRBEAM_PX2MM_FACTOR_WITH_ZOOM;
 
@@ -540,7 +538,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 		mainEl.ftUpdateTransform();
 	};
-	
+
 	function _getTransformHandlePath(type){
 		switch(type){
 			case 'nw':
@@ -555,7 +553,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 				return "M 0,8 C 4.5,8 8,4.5 8,0 H 3 C 3,1.7 1.6,3 0,3 0,3 0,3 0,3 0,3 0,3 -0.3,3 -1.9,2.8 -3,1.5 -3,-0.1 c 0,-1.6 1.4,-3 3,-3 v 1.7 L 4,-5.5 0,-9.6 V -8 c -4.5,0 -8,3.6 -8,8 0,4.5 3.6,8 8,8 z";
 		}
 	}
-	
+
 })();
 
 

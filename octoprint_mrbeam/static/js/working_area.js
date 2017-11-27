@@ -4,21 +4,6 @@ MRBEAM_PX2MM_FACTOR_WITH_ZOOM = 1; // global available in this viewmodel and in 
 
 $(function(){
 
-	// Opera 8.0+
-	var isOpera = (!!window.opr && !!opr.addons) || !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
-	// Firefox 1.0+
-	var isFirefox = typeof InstallTrigger !== 'undefined';
-	// At least Safari 3+: "[object HTMLElementConstructor]"
-	var isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0;
-	// Internet Explorer 6-11
-	var isIE = /*@cc_on!@*/false || !!document.documentMode;
-	// Edge 20+
-	var isEdge = !isIE && !!window.StyleMedia;
-	// Chrome 1+
-	var isChrome = !!window.chrome && !!window.chrome.webstore;
-	// Blink engine detection
-	var isBlink = (isChrome || isOpera) && !!window.CSS;
-
 	function versionCompare(v1, v2, options) {
 		var lexicographical = options && options.lexicographical,
 			zeroExtend = options && options.zeroExtend,
@@ -121,7 +106,7 @@ $(function(){
 		});
 
         // QuickText fields
-        self.fontMap = ['Ubuntu', 'Roboto', 'Libre Baskerville', 'Indie Flower', 'VT323'];
+        self.fontMap = ["Allerta Stencil","Amatic SC","Comfortaa","Fredericka the Great","Kavivanar","Lobster","Merriweather","Mr Bedfort","Quattrocento","Roboto"];
         self.currentQuickTextFile = undefined;
         self.currentQuickText = ko.observable();
         self.lastQuickTextFontIndex = 0;
@@ -430,7 +415,7 @@ $(function(){
 			};
 			self.loadSVG(url, cb);
 		};
-		
+
 		self._prepareAndInsertSVG = function(fragment, id, origin){
 				var f = self._removeUnsupportedSvgElements(fragment);
 				var generator_info = self._get_generator_info(f);
@@ -499,7 +484,7 @@ $(function(){
 
 				return id;
 		};
-		
+
 		self._removeUnsupportedSvgElements = function(fragment){
 			// find clippath elements and remove them
 				var clipPathEl = fragment.selectAll('clipPath');
@@ -917,9 +902,11 @@ $(function(){
 				var ntx = nt[0] / globalScale;
 				var nty = (self.workingAreaHeightMM() - nt[1]) / globalScale;
 
-				svg.ftManualTransform({tx: ntx, ty: nty});
+				svg.ftManualTransform({tx: ntx, ty: nty, diffType:'absolute'});
 			}
 		};
+
+
 		self.svgManualRotate = function(data, event) {
 			if (event.keyCode === 13 || event.type === 'blur') {
 				self.abortFreeTransforms();
@@ -1116,6 +1103,34 @@ $(function(){
 		self.removeIMG = function(file){
 			self.removeSVG(file);
 		};
+
+		self.moveSelectedDesign = function(ifX,ifY){
+		    var diff = 2;
+		    var transformHandles = snap.select('#handlesGroup');
+
+		    if(transformHandles){
+				var selectedId = transformHandles.data('parentId');
+			    var svg = snap.select('#'+selectedId);
+                var globalScale = self.scaleMatrix().a;
+
+                // var bbox = svg.getBBox();
+                // var nx = bbox.x + diff * ifX;
+                // var ny = bbox.y + diff * ifY;
+
+                var nx = diff * ifX;
+                var ny = diff * ifY;
+
+                var ntx = nx/globalScale;
+                var nty = ny/globalScale;
+
+                svg.ftStoreInitialTransformMatrix();
+                svg.data('tx', ntx);
+                svg.data('ty', nty);
+                svg.ftUpdateTransform();
+
+			}
+        };
+
 		self.removeSelectedDesign = function(){
 			var transformHandles = snap.select('#handlesGroup');
 			if(transformHandles){
@@ -1916,21 +1931,29 @@ $(function(){
          * This copies the content of quicktext-fonts.css into the given element. It's expected that this css file
          * contains @font-face entries with wff2 files as dataUrls. Eg:
          * // @font-face {font-family: 'Indie Flower'; src: url(data:application/font-woff2;charset=utf-8;base64,d09GMgABAAAAAKtEABEAAAABh...) format('woff2');}
+         * All fonts to be embedded need to be in 'quicktext-fonts.css' or 'packed_plugins.css'
+         * AND their fontFamily name must be included in self.fontMap
          * @private
          * @param DomElement to add the font definition into
          */
         self._qt_copyFontsToSvg = function(elem) {
             var styleSheets = document.styleSheets;
-			for(var ss=0;ss<styleSheets.length;ss++) {
-			    if (styleSheets[ss].href && styleSheets[ss].href.endsWith("quicktext-fonts.css")) {
-			        self._qt_removeFontsFromSvg(elem);
-			        var rules = styleSheets[ss].cssRules;
-			        for(var r=0;r<rules.length;r++) {
-                        if (rules[r].cssText) {
-                            $(elem).append(rules[r].cssText);
-                        }
+            self._qt_removeFontsFromSvg(elem);
+            for(var ss=0;ss<styleSheets.length;ss++) {
+                if (styleSheets[ss].href &&
+                    (styleSheets[ss].href.includes("quicktext-fonts.css") || styleSheets[ss].href.includes("packed_plugins.css"))) {
+                    var rules = styleSheets[ss].cssRules;
+                    for(var r=0;r<rules.length;r++) {
+                         if (rules[r].constructor == CSSFontFaceRule) {
+                             // if (rules[r].cssText && rules[r].cssText.includes('MrBeamQuickText')) {
+                             if (rules[r].style && rules[r].style.fontFamily) {
+                                 var fontName = rules[r].style.fontFamily.replace(/["']/g, '').trim();
+                                 if (self.fontMap.indexOf(fontName) > -1) {
+                                     $(elem).append(rules[r].cssText);
+                                 }
+                             }
+                         }
                     }
-                    break; // this file appears usually twice....
                 }
             }
         };

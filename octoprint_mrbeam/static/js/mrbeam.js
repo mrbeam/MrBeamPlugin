@@ -4,6 +4,21 @@
  * Author: Teja
  * License: AGPLv3
  */
+
+/**
+    browser detection code
+    https://stackoverflow.com/a/7768006/2631798
+    Might not be perfect, but for now it's ok.
+ */
+var is_chrome = navigator.userAgent.indexOf('Chrome') > -1;
+var is_explorer = navigator.userAgent.indexOf('MSIE') > -1;
+var is_firefox = navigator.userAgent.indexOf('Firefox') > -1;
+var is_safari = navigator.userAgent.indexOf("Safari") > -1;
+var is_opera = navigator.userAgent.toLowerCase().indexOf("op") > -1;
+if ((is_chrome)&&(is_safari)) {is_safari=false;}
+if ((is_chrome)&&(is_opera)) {is_chrome=false;}
+
+
 $(function() {
     function MrbeamViewModel(parameters) {
         var self = this;
@@ -58,7 +73,23 @@ $(function() {
 
         self.setBodyScrollTop = function(){
             $('body').scrollTop(0);
-        }
+        };
+
+        self.onDataUpdaterPluginMessage = function(plugin, data) {
+            if (plugin != "mrbeam") {
+                return;
+            }
+
+            if ('frontend_notification' in data) {
+                var notification = data['frontend_notification'];
+                new PNotify({
+                    title: notification['title'],
+                    text: notification['text'],
+                    type: notification['type'] || 'info',
+                    hide: !(notification['hide'] == false || notification['sticky'] == true)
+                });
+            }
+        };
 
     };
 

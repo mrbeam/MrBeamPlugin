@@ -27,6 +27,7 @@ from octoprint.filemanager.destinations import FileDestinations
 from octoprint.util import get_exception_string, RepeatedTimer, CountedEvent, sanitize_ascii
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
+from octoprint_mrbeam.analytics.analytics_handler import existing_analyticsHandler
 
 ### MachineCom #########################################################################################################
 class MachineCom(object):
@@ -45,6 +46,8 @@ class MachineCom(object):
 	STATE_LOCKED = 12
 	STATE_HOMING = 13
 	STATE_FLASHING = 14
+
+	pattern_status = re.compile("<(?P<status>\w+),.*WPos:(?P<pos_x>[0-9.\-]+),(?P<pos_y>[0-9.\-]+),.*laser (?P<laser_state>\w+):(?P<laser_intensity>\d+).*>")
 
 	def __init__(self, port=None, baudrate=None, callbackObject=None, printerProfileManager=None):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.comm_acc2")
@@ -128,6 +131,8 @@ class MachineCom(object):
 
 	def get_home_position(self):
 		# TODO: remove magic number! (-2)
+		if self._laserCutterProfile['legacy']['job_done_home_position_x'] is not None:
+			return (self._laserCutterProfile['legacy']['job_done_home_position_x'], self._laserCutterProfile['volume']['depth'] - 2)
 		return (self._laserCutterProfile['volume']['width'] - 2, self._laserCutterProfile['volume']['depth'] - 2)
 
 	def _monitor_loop(self):
@@ -376,8 +381,21 @@ class MachineCom(object):
 					self._logger.debug("_handle_status_report() Unpausing since we got status 'Run' from grbl.")
 					self.setPause(False, False)
 		self._update_grbl_pos(line)
+		self._handle_laser_intensity_for_analytics(line)
 		#if self._metricf is not None:
 		#	self._metricf.write(line)
+
+	def _handle_laser_intensity_for_analytics(self, line):
+		match = self.pattern_status.match(line)
+		if match:
+			laser_intensity = 0
+			if match.group('laser_state') == 'on':
+				laser_intensity = int(match.group('laser_intensity'))
+				analytics = existing_analyticsHandler()
+				if analytics:
+					analytics.add_laser_intensity_value(laser_intensity)
+		else:
+			self._logger.warn("_handle_laser_intensity_for_analytics() status line didn't match expected pattern. ignoring")
 
 	def _handle_ok_message(self):
 		if self._state == self.STATE_HOMING:
@@ -929,7 +947,7 @@ class MachineCom(object):
 		}
 		eventManager().fire(Events.PRINT_CANCELLED, payload)
 
-	def setPause(self, pause, send_cmd=True, pause_for_cooling=False):
+	def setPause(self, pause, send_cmd=True, pause_for_cooling=False, trigger=None):
 		if not self._currentFile:
 			return
 
@@ -937,7 +955,8 @@ class MachineCom(object):
 			"file": self._currentFile.getFilename(),
 			"filename": os.path.basename(self._currentFile.getFilename()),
 			"origin": self._currentFile.getFileLocation(),
-			"cooling": pause_for_cooling
+			"cooling": pause_for_cooling,
+			"trigger": trigger
 		}
 
 		if not pause and self.isPaused():
@@ -1000,7 +1019,8 @@ class MachineCom(object):
 		if state == self.STATE_OPERATIONAL:
 			return "Operational"
 		if state == self.STATE_PRINTING:
-			return "Printing"
+			# return "Printing"
+			return "Lasering"
 		if state == self.STATE_PAUSED:
 			return "Paused"
 		if state == self.STATE_CLOSED:

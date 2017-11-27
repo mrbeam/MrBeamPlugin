@@ -24,7 +24,8 @@ $(function(){
             self.camEnabled = self.settings.settings.plugins.mrbeam.cam.enabled();
             self.imageUrl = self.settings.settings.plugins.mrbeam.cam.frontendUrl();
 
-            // loading_overlay dissapears only if this is set to true
+            // loading_overlay disappears only if this is set to true
+            // not working in Safari
             self.webCamImageElem.load(function(){
                 self.firstImageLoaded = true;
             });
@@ -64,6 +65,11 @@ $(function(){
             var img = $('<img>');
             img.load(function () {
                 self.webCamImageElem.attr('xlink:href', myImageUrl);
+                if (is_safari) {
+                    // load() event seems not to fire in Safari.
+                    // So as a quick hack, let's set firstImageLoaded to true already here
+                    self.firstImageLoaded = true;
+                }
             });
             if (!self.firstImageLoaded) {
                 img.error(function () {

@@ -30,9 +30,20 @@ import os.path
 
 class ImageProcessor():
 
-	def __init__( self, output_filehandle = None, contrast = 1.0, sharpening = 1.0, beam_diameter = 0.25,
-	intensity_black = 500, intensity_white = 0, speed_black = 500, speed_white = 3000,
-	dithering = False, pierce_time = 0, material = "default"):
+	def __init__( self,
+	              output_filehandle = None,
+	              contrast = 1.0,
+	              sharpening = 1.0,
+	              beam_diameter = 0.25,
+	              intensity_black = 500,
+	              intensity_white = 0,
+	              intensity_black_user = None,
+	              intensity_white_user = None,
+	              speed_black = 500,
+	              speed_white = 3000,
+	              dithering = False,
+	              pierce_time = 0,
+	              material = None):
 		self._log = logging.getLogger("octoprint.plugins.mrbeam.img2gcode")
 
 		self.output_filehandle = output_filehandle
@@ -43,6 +54,8 @@ class ImageProcessor():
 		self.ignore_darker_than = 1 # TODO parametrize
 		self.intensity_black = float(intensity_black)
 		self.intensity_white = float(intensity_white)
+		self.intensity_black_user = intensity_black_user
+		self.intensity_white_user = intensity_white_user
 		self.feedrate_white = float(speed_white)
 		self.feedrate_black = float(speed_black)
 		self.material = material
@@ -61,18 +74,20 @@ class ImageProcessor():
 		self._output_gcode = ""
 
 	def get_settings_as_comment(self, x,y,w,h, file_id = ''):
-		comment = ";Image: {:.2f}x{:.2f} @ {:.2f},{:.2f}|".format(w,h,x,y) + file_id+"\n"
-		comment += ";self.beam = {:.2f}".format(self.beam) + "\n"
-		comment += ";pierce_time = {:.3f}s".format(self.pierce_time) + "\n"
-		comment += ";intensity_black = {:.2f}".format(self.intensity_black) + "\n"
-		comment += ";intensity_white = {:.2f}".format(self.intensity_white) + "\n"
-		comment += ";feedrate_white = {:.2f}".format(self.feedrate_white) + "\n"
-		comment += ";feedrate_black = {:.2f}".format(self.feedrate_black) + "\n"
+		comment =  "; Image: {:.2f}x{:.2f} @ {:.2f},{:.2f}|{}\n".format(w,h,x,y,file_id)
+		comment += "; self.beam = {:.2f}\n".format(self.beam)
+		comment += "; pierce_time = {:.3f}s\n".format(self.pierce_time)
+		comment += "; intensity_black = {:.0f}\n".format(self.intensity_black)
+		comment += "; intensity_white = {:.0f}\n".format(self.intensity_white)
+		comment += "; intensity_black_user = {}\n".format(self.intensity_black_user)
+		comment += "; intensity_white_user = {}\n".format(self.intensity_white_user)
+		comment += "; feedrate_white = {:.0f}\n".format(self.feedrate_white)
+		comment += "; feedrate_black = {:.0f}\n".format(self.feedrate_black)
 
-		comment += ";material = " + self.material + "\n"
-		comment += ";contrastFactor = {:.2f}".format(self.contrastFactor) + "\n"
-		comment += ";sharpeningFactor = {:.2f}".format(self.sharpeningFactor) + "\n"
-		comment += ";dithering = " + str(self.dithering) + "\n"
+		comment += "; material = {}\n".format(self.material)
+		comment += "; contrastFactor = {:.2f}\n".format(self.contrastFactor)
+		comment += "; sharpeningFactor = {:.2f}\n".format(self.sharpeningFactor)
+		comment += "; dithering = {}\n".format(self.dithering)
 		return comment
 
 	def img_prepare(self, orig_img, w,h):
