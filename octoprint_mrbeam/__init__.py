@@ -185,8 +185,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			# TODO rename analyticsEnabled and put in analytics-dict
 			analyticsEnabled=False,  # frontend analytics Mixpanel
 			analytics=dict(
-				job_analytics = True,
-				cam_analytics = True,
+				job_analytics = False,
+				cam_analytics = False,
 				folder = 'analytics', # laser job analytics base folder (.octoprint/...)
 				filename = 'analytics_log.json'
 			),
