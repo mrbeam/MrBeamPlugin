@@ -255,9 +255,12 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 //				console.log('no initial transform');
 				return this;
 			}
+			var tx = this.data("tx") || 0;
+			var ty = this.data("ty") || 0;
+			var angle = this.data("angle") || 0;
 
 			// console.log("translate: ", this.data('tx'), this.data('ty'), 'rotate: ', this.data('angle'), 'scale: ', this.data('scale'));
-			var tstring = "t" + this.data("tx") + "," + this.data("ty") + this.ftGetInitialTransformMatrix().toTransformString() + "r" + this.data("angle") + 'S' + this.data("scale" );
+			var tstring = "t" + tx + "," + ty + this.ftGetInitialTransformMatrix().toTransformString() + "r" + angle + 'S' + this.data("scale" );
 			this.attr({ transform: tstring });
 			if(this.data("bbT")) this.ftHighlightBB(this.paper.select('#userContent'));
 			this.ftUpdateUnscale();
