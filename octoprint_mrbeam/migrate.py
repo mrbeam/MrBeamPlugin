@@ -104,7 +104,7 @@ class Migration(object):
 			elif self.plugin._device_series == '2D':
 				self.set_lasercutterPorfile_2D()
 			else:
-				set_lasercutterPorfile_2all()
+				self.set_lasercutterPorfile_2all()
 			self.save_current_version()
 
 
