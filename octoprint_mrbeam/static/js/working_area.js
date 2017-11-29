@@ -442,19 +442,12 @@ $(function(){
 			cb = function (fragment) {
 				var origin = file["refs"]["download"];
 
-				// from svg method
-// 				// scale matrix
-// 				var mat = self.getDocumentViewBoxMatrix(doc_dimensions, doc_dimensions.viewbox);
-// //				var dpiscale = 90 / self.settings.settings.plugins.mrbeam.svgDPI() * (25.4/90);
-// //				var dpiscale = 25.4 / self.settings.settings.plugins.mrbeam.svgDPI();
-// //                var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(dpiscale).toTransformString();
-//                 var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2])
-// 						.scale(unitScaleX, unitScaleY).toTransformString();
-//                 newSvgAttrs['transform'] = scaleMatrixStr;
-
 				// scale matrix
-				// var mat = self.getDocumentViewBoxMatrix(doc_dimensions, doc_dimensions.viewbox);
-				var dpiscale = 25.4 ; // assumption: dxf is in inches, scale to mm
+                // TODO: DXF scale factor!
+				var dpiscale = 10 ; //
+				// var dpiscale = 2.54 ; //
+				// var dpiscale = 25.4 ; // assumption: dxf is in inches, scale to mm
+                var scaleMatrixStr = new Snap.Matrix().scale(dpiscale).toTransformString();
                 // var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(dpiscale).toTransformString();
 
 				var id = self.getEntryId();
@@ -467,7 +460,7 @@ $(function(){
 
 				self.placedDesigns.push(file);
 
-				var insertedId = self._prepareAndInsertSVG(fragment, previewId, origin);
+				var insertedId = self._prepareAndInsertSVG(fragment, previewId, origin, scaleMatrixStr);
 				if(typeof callback === 'function') callback(insertedId);
 			};
 			Snap.loadDXF(url, cb);
@@ -587,6 +580,8 @@ $(function(){
 			svg.data('fitMatrix', null);
 			$('#'+file.id).removeClass('misfit');
 			self.svgTransformUpdate(svg);
+
+			self.showTransformHandles(file.previewId, true);
 
 			var mb_meta = self._set_mb_attributes(svg);
 			svg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
