@@ -88,6 +88,7 @@ $(function(){
 		self.availableWidth = ko.observable(undefined);
 		self.px2mm_factor = 1; // initial value
 		self.svgDPI = function(){return 90}; // initial value, gets overwritten by settings in onAllBound()
+        self.dxfScale =  function(){return 1}; // initial value, gets overwritten by settings in onAllBound()
 
 		self.workingAreaWidthMM = ko.computed(function(){
 			return self.profile.currentProfileData().volume.width() - self.profile.currentProfileData().volume.origin_offset_x();
@@ -442,23 +443,16 @@ $(function(){
 			cb = function (fragment) {
 				var origin = file["refs"]["download"];
 
-
-				// from svg method
-//				var generator_info = self._get_generator_info(fragment);
-                // TODO: DXF scale factor!
-				var scale = 10; //
-				
 				var tx = 0;
 				var ty = 0;
 				var doc_dimensions = self._getDocumentDimensionAttributes(fragment);
 				var viewbox = doc_dimensions.viewbox.split(' ');
 				var origin_left = parseFloat(viewbox[0]);
 				var origin_top = parseFloat(viewbox[1]);
-				if(!isNaN(origin_left) && origin_left < 0) tx = -origin_left * scale;
-				if(!isNaN(origin_top) && origin_top < 0) ty = -origin_top * scale;
+				if(!isNaN(origin_left) && origin_left < 0) tx = -origin_left * self.dxfScale();
+				if(!isNaN(origin_top) && origin_top < 0) ty = -origin_top * self.dxfScale();
 				// scale matrix
-//                var scaleMatrixStr = new Snap.Matrix().scale(dpiscale).toTransformString();
-                var scaleMatrixStr = new Snap.Matrix(1,0,0,1,tx,ty).scale(scale).toTransformString();
+                var scaleMatrixStr = new Snap.Matrix(1,0,0,1,tx,ty).scale(self.dxfScale()).toTransformString();
 
 				var id = self.getEntryId();
 				var previewId = self.generateUniqueId(id, file); // appends -# if multiple times the same design is placed.
@@ -613,7 +607,7 @@ $(function(){
 			} else {
 				root_attrs = f.select('svg').node.attributes;
 			}
-			
+
 			// TODO detect dxf.js generated
 
 			// detect Inkscape by attribute
@@ -1628,7 +1622,8 @@ $(function(){
 		};
 
 		self.onAllBound = function(allViewModels){
-		    self.svgDPI = self.settings.settings.plugins.mrbeam.svgDPI;
+		    self.svgDPI = self.settings.settings.plugins.mrbeam.svgDPI; // we assign ko function
+		    self.dxfScale = self.settings.settings.plugins.mrbeam.dxfScale;
             self.gc_options = ko.computed(function(){
                 return {
                     beamOS: BEAMOS_DISPLAY_VERSION,

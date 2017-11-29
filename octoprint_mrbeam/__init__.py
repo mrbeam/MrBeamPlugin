@@ -170,6 +170,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return dict(
 			current_profile_id="_mrbeam_junior", # yea, this needs to be like this
 			svgDPI=90,
+			dxfScale=1,
 			beta_label="",
 			dev=dict(
 				debug=False, # deprected
@@ -218,6 +219,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return dict(
 			current_profile_id=self._settings.get(["current_profile_id"]),
 			svgDPI=self._settings.get(['svgDPI']),
+			dxfScale=self._settings.get(['dxfScale']),
 			analyticsEnabled=self._settings.get(['analyticsEnabled']),
 			cam=dict(enabled=self._settings.get(['cam', 'enabled']),
 					 frontendUrl=self._settings.get(['cam', 'frontendUrl'])),
@@ -241,6 +243,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# 	self._settings.set_boolean(["zAxis"], data["zAxis"])
 		if "svgDPI" in data:
 			self._settings.set_int(["svgDPI"], data["svgDPI"])
+		if "dxfScale" in data:
+			self._settings.set_float(["dxfScale"], data["dxfScale"])
 
 		# selectedProfile = self.laserCutterProfileManager.get_current_or_default()
 		# self._settings.set(["current_profile_id"], selectedProfile['id'])
@@ -344,7 +348,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def get_template_configs(self):
 		result = [
-			dict(type='settings', name="SVG Settings", template='settings/svgtogcode_settings.jinja2', suffix="_conversion", custom_bindings=False),
+			dict(type='settings', name="File Import Settings", template='settings/svgtogcode_settings.jinja2', suffix="_conversion", custom_bindings=False),
             dict(type='settings', name="Camera Calibration", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True)
 			# disabled in appearance
 			# dict(type='settings', name="Serial Connection DEV", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings=False, replaces='serial')
