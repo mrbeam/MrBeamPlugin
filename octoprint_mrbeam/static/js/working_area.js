@@ -608,8 +608,6 @@ $(function(){
 				root_attrs = f.select('svg').node.attributes;
 			}
 
-			// TODO detect dxf.js generated
-
 			// detect Inkscape by attribute
 			var inkscape_version = root_attrs['inkscape:version'];
 			if(inkscape_version !== undefined){
@@ -669,7 +667,19 @@ $(function(){
 					}
 				}
 			}
-
+			
+			// detect dxf.js generated svg
+			// <!-- Created with dxf.js -->
+			for (var i = 0; i < children.length; i++) {
+				var node = children[i];
+				if(node.nodeType === 8){ // check for comment
+					if (node.textContent.indexOf('Created with dxf.js') > -1) {
+						gen = 'dxf.js';
+						console.log("Generator:", gen, version);
+						return { generator: gen, version: version };
+					}
+				}
+			}
 			console.log("Generator:", gen, version);
 			return { generator: 'unknown', version: 'unknown' };
 		};
