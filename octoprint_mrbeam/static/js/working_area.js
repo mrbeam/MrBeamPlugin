@@ -442,13 +442,23 @@ $(function(){
 			cb = function (fragment) {
 				var origin = file["refs"]["download"];
 
-				// scale matrix
+
+				// from svg method
+//				var generator_info = self._get_generator_info(fragment);
                 // TODO: DXF scale factor!
-				var dpiscale = 10 ; //
-				// var dpiscale = 2.54 ; //
-				// var dpiscale = 25.4 ; // assumption: dxf is in inches, scale to mm
-                var scaleMatrixStr = new Snap.Matrix().scale(dpiscale).toTransformString();
-                // var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(dpiscale).toTransformString();
+				var scale = 10; //
+				
+				var tx = 0;
+				var ty = 0;
+				var doc_dimensions = self._getDocumentDimensionAttributes(fragment);
+				var viewbox = doc_dimensions.viewbox.split(' ');
+				var origin_left = parseFloat(viewbox[0]);
+				var origin_top = parseFloat(viewbox[1]);
+				if(!isNaN(origin_left) && origin_left < 0) tx = -origin_left * scale;
+				if(!isNaN(origin_top) && origin_top < 0) ty = -origin_top * scale;
+				// scale matrix
+//                var scaleMatrixStr = new Snap.Matrix().scale(dpiscale).toTransformString();
+                var scaleMatrixStr = new Snap.Matrix(1,0,0,1,tx,ty).scale(scale).toTransformString();
 
 				var id = self.getEntryId();
 				var previewId = self.generateUniqueId(id, file); // appends -# if multiple times the same design is placed.
@@ -603,6 +613,8 @@ $(function(){
 			} else {
 				root_attrs = f.select('svg').node.attributes;
 			}
+			
+			// TODO detect dxf.js generated
 
 			// detect Inkscape by attribute
 			var inkscape_version = root_attrs['inkscape:version'];
