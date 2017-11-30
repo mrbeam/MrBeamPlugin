@@ -6,9 +6,9 @@
 /******/ 	function __webpack_require__(moduleId) {
 /******/
 /******/ 		// Check if module is in cache
-/******/ 		if(installedModules[moduleId])
+/******/ 		if(installedModules[moduleId]) {
 /******/ 			return installedModules[moduleId].exports;
-/******/
+/******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = installedModules[moduleId] = {
 /******/ 			i: moduleId,
@@ -2289,8 +2289,9 @@ module.exports = function (parsed) {
   svgString += '<svg xmlns="http://www.w3.org/2000/svg"';
   svgString += ' xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1"';
   svgString += ' preserveAspectRatio="xMinYMin meet"';
-  svgString += ' viewBox="' + (-1 + bbox.minX) + ' ' + -1 + ' ' + (bbox.width + 2) + ' ' + (bbox.height + 2) + '"';
-  svgString += ' width="100%" height="100%">' + paths + '</svg>';
+  svgString += ' viewBox="' + [bbox.minX, 0, bbox.width, bbox.height].join(' ') + '"';
+  svgString += ' width="' + bbox.width + '" height="' + bbox.height + '">';
+  svgString += '<!-- Created with dxf.js -->' + paths + '</svg>';
   return pd.xml(svgString);
 };
 

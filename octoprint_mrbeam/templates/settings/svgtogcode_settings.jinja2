@@ -1,5 +1,5 @@
 <div id="settings_svg_conversion">
-    <h4>{{ _('SVG Settings') }}</h4>
+    <h4>{{ _('File Import Settings') }}</h4>
 
     <form class="form-horizontal">
         <div class="control-group">
@@ -7,7 +7,17 @@
             <div class="controls">
                 <input type="number" min="0" class="input-block-level" data-bind="value: settings.plugins.mrbeam.svgDPI">
                 <br />
-                <div><small>In case beamOS can't recognize what dpi value your graphic program uses, this value will be the fallback. You might need to change this if you use CorelDraw or other less wel known tools. Files from Illustrator or Inkscape tend to work fine regardless of this value.</small></div>
+                <div><small>In case beamOS can't recognize what dpi value your graphic program uses, this value will be the fallback. Files from Illustrator or Inkscape or Corel Draw tend to work fine regardless of this value.</small></div>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label" for="settings-svgtogcode-dxfScale">{{ _('DXF Default Scale Factor') }}</label>
+            <div class="controls">
+                <input type="number" min="0" class="input-block-level" data-bind="value: settings.plugins.mrbeam.dxfScale">
+                <br />
+                <div><small>Set default scale factor for DXF files (AutoCAD). Set to >1 (like 10) to magnify graphic, set between 0 and 1 (like 0.1) to decrease its size. </small></div>
+                <div><small>Here are some suggestions depending on the program you use to create your DXF files: Illustrator: 1, Vector Works: 10, ArchiCAD: 1000</small></div>
             </div>
         </div>
     </form>
