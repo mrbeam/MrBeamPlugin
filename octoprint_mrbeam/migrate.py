@@ -1,4 +1,6 @@
-
+import os
+import re
+import shutil
 from distutils.version import StrictVersion
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from .profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
@@ -10,6 +12,7 @@ def migrate(plugin):
 
 class Migration(object):
 
+	VERSION_DELETE_EGG_DIR_LEFTOVERS = '0.1.17'
 
 	def __init__(self, plugin):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.migrate")
@@ -27,7 +30,10 @@ class Migration(object):
 
 			# migrations
 			if self.version_previous is None or self._compare_versions(self.version_previous, '0.1.13', equal_ok=False):
-				self.migrate_from_0_0_0() # add you migration methods here
+				self.migrate_from_0_0_0()
+
+			if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_DELETE_EGG_DIR_LEFTOVERS, equal_ok=False):
+				self.delete_egg_dir_leftovers()
 			# migrations end
 
 			self.save_current_version()
@@ -79,6 +85,28 @@ class Migration(object):
 		my_profile['dust']['auto_mode_time'] = 60
 		self._logger.info("migrate_from_0_0_0() Set lasercutterProfile ['dust']['auto_mode_time'] = 60")
 		laserCutterProfileManager().save(my_profile, allow_overwrite=True, make_default=True)
+
+
+	def delete_egg_dir_leftovers(self):
+		"""
+		Deletes egg files/dirs of older versions of MrBeamPlugin
+		Our first mrb_check USB sticks updated MrBeamPlugin per 'pip --ignore-installed'
+		which left old egg directories in site-packages.
+		This then caused the plugin to assume it's version is the old version, even though the new code was executed.
+		:return:
+		"""
+		self._logger.info("delete_egg_dir_leftovers() ")
+		site_packages_dir = '/home/pi/site-packages'
+		# files = [f for f in os.listdir(site_packages_dir) if re.match(r'Mr_Beam-([])-py2.7.egg-info', f)]
+		for f in os.listdir(site_packages_dir):
+			match = re.match(r'Mr_Beam-(?P<version>[0-9.]+)[.-].+', f)
+			if match:
+				version = match.group('version')
+				if self._compare_versions(version, self.VERSION_DELETE_EGG_DIR_LEFTOVERS, equal_ok=False):
+					del_dir = os.path.join(site_packages_dir, f)
+					self._logger.info("delete_egg_dir_leftovers() Deleting dir: %s", del_dir)
+					shutil.rmtree(del_dir)
+
 
 
 
