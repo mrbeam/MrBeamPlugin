@@ -59,7 +59,7 @@ $(function(){
 			'Balsa 3mm':{cut_i:100, cut_f:700, cut_p:2, eng_i:[0,0], eng_f:[0,0]}, // min speed 300 !!! ignition warning
 			'Balsa 4mm':{cut_i:100, cut_f:600, cut_p:3, eng_i:[0,0], eng_f:[0,0]}, // min speed 500 !!! ignition warning
 			'Balsa 5mm':{cut_i:100, cut_f:300, cut_p:3, eng_i:[0,0], eng_f:[0,0]}, // min speed 300 !!! ignition warning
-			'Bamboo':{cut_i:0, cut_f:2000, cut_p:1, eng_i:[20,100], eng_f:[2000,350]}, // engrave only
+			'Bamboo':{cut_i:0, cut_f:2000, cut_p:1, eng_i:[0,35], eng_f:[2000,550]}, // engrave only
 			'Cardboard corrugated, single wave 2mm':{cut_i:100, cut_f:500, cut_p:4, eng_i:[10,25], eng_f:[2000,850]}, // warning, not slower than 180
 			'Cardboard corrugated, single wave 3mm':{cut_i:100, cut_f:500, cut_p:4, eng_i:[10,25], eng_f:[2000,850]}, // warning, not slower than 180
 			'Cardboard corrugated, single wave 4mm':{cut_i:100, cut_f:400, cut_p:4, eng_i:[10,25], eng_f:[2000,850]}, // warning, not slower than 180
