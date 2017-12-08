@@ -541,27 +541,31 @@ $(function(){
 				return id;
 		};
 
+        /**
+         * Removes unsupported elements from fragment.
+         * List of elements to remove is defined within this function in var unsupportedElems
+         * @param fragment
+         * @returns fragment
+         * @private
+         */
 		self._removeUnsupportedSvgElements = function(fragment){
-			// find clippath elements and remove them
-				var clipPathEl = fragment.selectAll('clipPath');
-				if(clipPathEl.length !== 0){
-					console.warn("Warning: removed unsupported clipPath element in SVG");
-					self.svg_contains_clipPath_warning();
-					clipPathEl.remove();
-				}
 
-				// find flowroot elements and remove them
-				var flowrootEl = fragment.selectAll('flowRoot');
-				if(flowrootEl.length !== 0){
-					console.warn("Warning: removed unsupported flowRoot element in SVG");
-					self.svg_contains_flowRoot_warning();
-					flowrootEl.remove();
-				}
+            // add more elements that need to be removed here
+            var unsupportedElems = ['clipPath', 'flowRoot', 'switch', '#adobe_illustrator_pgf'];
+            //
+            for (var i = 0; i < unsupportedElems.length; i++) {
+                var myElem = fragment.selectAll(unsupportedElems[i]);
+                if (myElem.length !== 0) {
+                    console.warn("Warning: removed unsupported '"+unsupportedElems[i]+"' element in SVG");
+                    self.svg_contains_unsupported_element_warning(unsupportedElems[i]);
+                    myElem.remove();
+                }
+            }
 
-				// find all elements with "display=none" and remove them
-				fragment.selectAll("[display=none]").remove(); // TODO check if this really works. I (tp) doubt it.
-				fragment.selectAll("script").remove();
-				return fragment;
+            // find all elements with "display=none" and remove them
+            fragment.selectAll("[display=none]").remove(); // TODO check if this really works. I (tp) doubt it.
+            fragment.selectAll("script").remove();
+            return fragment;
 		};
 
 		self.loadSVG = function(url, callback){
@@ -667,7 +671,7 @@ $(function(){
 					}
 				}
 			}
-			
+
 			// detect dxf.js generated svg
 			// <!-- Created with dxf.js -->
 			for (var i = 0; i < children.length; i++) {
@@ -1064,20 +1068,11 @@ $(function(){
 			};
 		};
 
-		self.svg_contains_clipPath_warning = function(){
-			var error = "<p>" + gettext("The SVG file contains clipPath elements.<br/>clipPath is not supported yet and has been removed from file.") + "</p>";
+		self.svg_contains_unsupported_element_warning = function(elemName){
+            elemName = elemName.replace('\\:', ':');
+			var error = "<p>" + gettext("The SVG file contains unsupported elements: '"+elemName+"' These elements got removed.") + "</p>";
 			new PNotify({
-				title: "clipPath elements removed",
-				text: error,
-				type: "warn",
-				hide: false
-			});
-		};
-
-		self.svg_contains_flowRoot_warning = function(){
-			var error = "<p>" + gettext("The SVG file contains flowRoot elements.<br/>flowRoot is not supported yet and has been removed from file.") + "</p>";
-			new PNotify({
-				title: "flowRoot elements removed",
+				title: "Unsupported elements in SVG: '"+elemName+"'",
 				text: error,
 				type: "warn",
 				hide: false

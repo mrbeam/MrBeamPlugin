@@ -315,11 +315,11 @@ class Converter():
 
 					# rect, line, polygon, polyline, circle, ellipse
 					elif i.tag == _add_ns( 'rect', 'svg' ) or i.tag == 'rect' \
-					or i.tag == _add_ns( 'line', 'svg' ) or i.tag == 'line' \
-					or i.tag == _add_ns( 'polygon', 'svg' ) or i.tag == 'polygon' \
-					or i.tag == _add_ns( 'polyline', 'svg' ) or i.tag == 'polyline' \
-					or i.tag == _add_ns( 'ellipse', 'svg' ) or i.tag == 'ellipse' \
-					or i.tag == _add_ns( 'circle', 'svg' ) or	i.tag == 'circle':
+						or i.tag == _add_ns( 'line', 'svg' ) or i.tag == 'line' \
+						or i.tag == _add_ns( 'polygon', 'svg' ) or i.tag == 'polygon' \
+						or i.tag == _add_ns( 'polyline', 'svg' ) or i.tag == 'polyline' \
+						or i.tag == _add_ns( 'ellipse', 'svg' ) or i.tag == 'ellipse' \
+						or i.tag == _add_ns( 'circle', 'svg' ) or	i.tag == 'circle':
 
 						i.set("d", get_path_d(i))
 						self._handle_node(i, layer)
@@ -340,8 +340,12 @@ class Converter():
 					elif i.tag == _add_ns("g",'svg'):
 						recursive_search(i,layer)
 
+					elif i.tag == _add_ns( 'defs', 'svg' ) or i.tag == 'defs' \
+						or i.tag == _add_ns('desc', 'svg') or i.tag == 'desc':
+						self._log.info("ignoring tag: %s" % (i.tag))
+
 					else :
-						self._log.debug("ignoring not supported tag: %s \n%s" % (i.tag, etree.tostring(i)))
+						self._log.warn("ignoring not supported tag: %s \n%s" % (i.tag, etree.tostring(i)))
 
 		recursive_search(self.document.getroot(), self.document.getroot())
 		self._log.info("self.layers: %i" % len(self.layers))
