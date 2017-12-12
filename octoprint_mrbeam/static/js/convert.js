@@ -208,7 +208,8 @@ $(function(){
 		self.engrave_outlines = ko.observable(false);
 
 		self.show_image_parameters = ko.computed(function(){
-			return (self.images_placed() || self.text_placed() || self.filled_shapes_placed());
+//			return (self.images_placed() || self.text_placed() || self.filled_shapes_placed());
+			return true;
 		});
 		self.imgIntensityWhite = ko.observable(0);
 		self.imgIntensityBlack = ko.observable(50);
@@ -331,6 +332,35 @@ $(function(){
 					});
 				});
 			});
+			
+			var intensity_black_user = self.imgIntensityBlack();
+			var intensity_white_user = self.imgIntensityWhite();
+			var speed_black = parseInt(self.imgFeedrateBlack());
+			var speed_white = parseInt(self.imgFeedrateWhite());
+			$('#engrave_job .color_drop_zone .used_color').each(function(i, el){
+				if(el.id !== 'cd_engraving'){
+					var hex = $(el).attr('id').substr(-6);
+					var r = parseInt(hex.substr(0,2), 16);
+					var g = parseInt(hex.substr(2,2), 16);
+					var b = parseInt(hex.substr(4,2), 16);
+					var initial_factor = 1 - ((r * 0.299 + g * 0.587 + b * 0.114) / 255); // TODO user should override brightness
+					var intensity_user = intensity_white_user + initial_factor * (intensity_black_user - intensity_white_user);
+					var intensity = intensity_user * self.profile.currentProfileData().laser.intensity_factor();
+					var feedrate = speed_white + initial_factor * (speed_black - speed_white);
+					
+					data.push({
+						job: "vector_engrave"+i,
+						color: hex,
+						intensity: intensity,
+                        intensity_user: intensity_user,
+						feedrate: feedrate,
+						pierce_time: self.engravingPiercetime(),
+						passes: 1,
+                        material: self.engravingMaterial
+					});
+				}
+			});
+			
 			return data;
 		};
 
