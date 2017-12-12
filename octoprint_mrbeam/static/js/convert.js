@@ -3,6 +3,10 @@ $(function(){
 	function VectorConversionViewModel(params) {
 		var self = this;
 
+		self.BRIGHTNESS_VALUE_RED   = 0.299;
+		self.BRIGHTNESS_VALUE_GREEN = 0.587;
+		self.BRIGHTNESS_VALUE_BLUE  = 0.114;
+
 		self.loginState = params[0];
 		self.settings = params[1];
 		self.state = params[2];
@@ -343,7 +347,7 @@ $(function(){
 					var r = parseInt(hex.substr(1,2), 16);
 					var g = parseInt(hex.substr(3,2), 16);
 					var b = parseInt(hex.substr(5,2), 16);
-					var initial_factor = 1 - ((r * 0.299 + g * 0.587 + b * 0.114) / 255); // TODO user should override brightness
+					var initial_factor = 1 - ((r*self.BRIGHTNESS_VALUE_RED + g*self.BRIGHTNESS_VALUE_GREEN + b*self.BRIGHTNESS_VALUE_BLUE) / 255); // TODO user should override brightness
 					var intensity_user = intensity_white_user + initial_factor * (intensity_black_user - intensity_white_user);
 					var intensity = Math.round(intensity_user * self.profile.currentProfileData().laser.intensity_factor());
 					var feedrate = Math.round(speed_white + initial_factor * (speed_black - speed_white));
