@@ -301,7 +301,7 @@ h4.job_title{
 
 /* state machine. either img or vector color drop zone highlightning*/
 #no_job .color_drop_zone.hover,
-body.engravingDrag #engrave_job .img_drop_zone.hover,
+body.colorDragInProgress #engrave_job .img_drop_zone.hover,
 body.vectorDrag .job_row_vector .color_drop_zone.hover,
 body.vectorDrag .color_drop_zone.create_job.hover {
     font-weight: 700;
@@ -368,16 +368,19 @@ body.colorDragInProgress #drop_overlay {
 .dimDesigns .userSVG,
 .dimDesigns .userIMG,
 .dimDesigns .userText {
-	opacity:.5;
-	filter:url(#dehighlight);
-	transition: opacity 0.2s ease-out;
+	/*opacity:.5;*/
+	/*filter:url(#dehighlight);*/
+	stroke-width: 1;
+	transition: stroke-width 0.2s ease-out;
 }
 
 .userSvg, .userText, .userIMG,
 .dimDesigns .userSVG.designHighlight,
 .dimDesigns .userIMG.designHighlight,
+.dimDesigns .userSVG .vector_outline,
 .dimDesigns .userText.designHighlight {
-	opacity:1;
+	/*opacity:1;*/
+	stroke-width: 3px !important;
 	filter:none;
 }
 

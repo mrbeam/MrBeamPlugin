@@ -8,7 +8,7 @@
 										<a class="accordion-toggle" href="#statusbox"><i class="icon-info-sign"></i> {{ _('State') }}:</a><span data-bind="text: state.stateString"></span>
 									</div>
 									<div id="statusbox">
-										<div class="accordion-body collapse in" id="mrb_state_wrapper" data-bind="visible: !state.isErrorOrClosed() && loginState.isUser() && !state.isFlashing() ">
+										<div class="accordion-body collapse in" id="mrb_state_wrapper" data-bind="visible: loginState.isUser() ">
 											<div class="accordion-inner">
 
 												<div data-bind="visible:(!state.isLocked() && !state.isConnecting())">
