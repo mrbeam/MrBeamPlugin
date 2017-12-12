@@ -332,24 +332,24 @@ $(function(){
 					});
 				});
 			});
-			
+
 			var intensity_black_user = self.imgIntensityBlack();
 			var intensity_white_user = self.imgIntensityWhite();
 			var speed_black = parseInt(self.imgFeedrateBlack());
 			var speed_white = parseInt(self.imgFeedrateWhite());
 			$('#engrave_job .color_drop_zone .used_color').each(function(i, el){
 				if(el.id !== 'cd_engraving'){
-					var hex = $(el).attr('id').substr(-6);
-					var r = parseInt(hex.substr(0,2), 16);
-					var g = parseInt(hex.substr(2,2), 16);
-					var b = parseInt(hex.substr(4,2), 16);
+					var hex = '#' +$(el).attr('id').substr(-6);
+					var r = parseInt(hex.substr(1,2), 16);
+					var g = parseInt(hex.substr(3,2), 16);
+					var b = parseInt(hex.substr(5,2), 16);
 					var initial_factor = 1 - ((r * 0.299 + g * 0.587 + b * 0.114) / 255); // TODO user should override brightness
 					var intensity_user = intensity_white_user + initial_factor * (intensity_black_user - intensity_white_user);
-					var intensity = intensity_user * self.profile.currentProfileData().laser.intensity_factor();
-					var feedrate = speed_white + initial_factor * (speed_black - speed_white);
-					
+					var intensity = Math.round(intensity_user * self.profile.currentProfileData().laser.intensity_factor());
+					var feedrate = Math.round(speed_white + initial_factor * (speed_black - speed_white));
+
 					data.push({
-						job: "vector_engrave"+i,
+						job: "vector_engrave_"+i,
 						color: hex,
 						intensity: intensity,
                         intensity_user: intensity_user,
@@ -360,7 +360,7 @@ $(function(){
 					});
 				}
 			});
-			
+
 			return data;
 		};
 
