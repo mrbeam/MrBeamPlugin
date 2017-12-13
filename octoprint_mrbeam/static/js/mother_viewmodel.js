@@ -72,18 +72,35 @@ $(function () {
 				) return;
 
 				var button = undefined;
+				var wa_id = $('nav li.active a').attr('href');
 				switch (event.which) {
 					case 37: // left arrow key:
-						button = $("#control-xdec");
+						// button = $("#control-xdec");
+                        if(wa_id === '#workingarea'){
+							self.workingArea.moveSelectedDesign(-1,0);
+							return;
+						}
 						break;
 					case 38: // up arrow key
-						button = $("#control-yinc");
+						// button = $("#control-yinc");
+						if(wa_id === '#workingarea') {
+                            self.workingArea.moveSelectedDesign(0, -1);
+                            return;
+                        }
 						break;
 					case 39: // right arrow key
-						button = $("#control-xinc");
-						break;
+						// button = $("#control-xinc");
+						if(wa_id === '#workingarea') {
+                            self.workingArea.moveSelectedDesign(1, 0);
+                            return;
+                        }
+                        break;
 					case 40: // down arrow key
-						button = $("#control-ydec");
+						// button = $("#control-ydec");
+                        if(wa_id === '#workingarea'){
+							self.workingArea.moveSelectedDesign(0, 1);
+							return;
+						}
 						break;
 					case 33: // page up key
 					case 87: // w key
@@ -98,7 +115,7 @@ $(function () {
 						break;
 					case 8: // del key
 					case 46: // backspace key
-						if($('nav li.active a').attr('href') === '#workingarea'){
+						if(wa_id === '#workingarea'){
 							self.workingArea.removeSelectedDesign();
 							return;
 						}
@@ -225,11 +242,10 @@ $(function () {
         };
 
         self.removeLoadingOverlay = function(){
-            // console.log("ANDYTEST removeLoadingOverlay() self.isStartupComplete:"+self.isStartupComplete+", self.workingArea.camera.firstImageLoaded:"+self.workingArea.camera.firstImageLoaded);
             if (self.isStartupComplete &&  self.workingArea.camera.firstImageLoaded) {
                 $('#loading_overlay').remove();
                 console.log("beamOS started. loading_overlay removed.");
-                console.log("%c ", "color: transparent; font-size: 1500px; background:url('http://mrbeam2-f930.local/plugin/mrbeam/static/img/mr_x120.png') no-repeat bottom left");
+                console.log("%c      ", "color: transparent; font-size: 150px; background:url('http://www.mr-beam.org/img/logo2_path.svg') no-repeat bottom left");
             } else {
                 setTimeout(self.removeLoadingOverlay, 100);
             }
@@ -335,24 +351,29 @@ $(function () {
         };
 
         self._configureOverrideSliders = function () {
-            self.state.intensityOverrideSlider = $("#intensity_override_slider").slider({
-                step: 1,
-                min: 10,
-                max: 200,
-                value: 100,
-            }).on("slideStop", function (ev) {
-                self.state.intensityOverride(ev.value);
-            });
+			var el1 = $("#intensity_override_slider");
+			if(el1.length > 0){
+				self.state.intensityOverrideSlider = el1.slider({
+					step: 1,
+					min: 10,
+					max: 200,
+					value: 100,
+				}).on("slideStop", function (ev) {
+					self.state.intensityOverride(ev.value);
+				});
+			}
 
-            self.state.feedrateOverrideSlider = $("#feedrate_override_slider").slider({
-                step: 1,
-                min: 10,
-                max: 200,
-                value: 100,
-            }).on("slideStop", function (ev) {
-                self.state.feedrateOverride(ev.value);
-            });
-
+			var el2 = $("#intensity_override_slider");
+			if(el2.length > 0){
+				self.state.feedrateOverrideSlider = el2.slider({
+					step: 1,
+					min: 10,
+					max: 200,
+					value: 100,
+				}).on("slideStop", function (ev) {
+					self.state.feedrateOverride(ev.value);
+				});
+			}
         };
 
         self.state.resetOverrideSlider = function () {

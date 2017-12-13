@@ -60,6 +60,8 @@ class Converter():
 		self.svg_file = model_path
 		self.document=None
 		self._log.info('Converter Initialized: %s' % self.options)
+		# todo need material,bounding_box_area here
+		_mrbeam_plugin_implementation._analytics_handler.store_conversion_details(self.options)
 
 	def setoptions(self, opts):
 		# set default values if option is missing
@@ -67,7 +69,7 @@ class Converter():
 		for key in self.options.keys():
 			if key in opts:
 				self.options[key] = opts[key]
-				if(key == "vector"):
+				if key == "vector":
 					for paramSet in opts['vector']:
 						self.colorParams[paramSet['color']] = paramSet
 			else:
@@ -173,12 +175,19 @@ class Converter():
 						# intensity_black = 1000, intensity_white = 0, speed_black = 30, speed_white = 500,
 						# dithering = True, pierce_time = 500, material = "default"
 						rasterParams = self.options['raster']
-						ip = ImageProcessor(output_filehandle = fh, contrast = rasterParams['contrast'], sharpening = rasterParams['sharpening'], beam_diameter = rasterParams['beam_diameter'],
-						intensity_black = rasterParams['intensity_black'], intensity_white = rasterParams['intensity_white'],
-						speed_black = rasterParams['speed_black'], speed_white = rasterParams['speed_white'],
-						dithering = rasterParams['dithering'],
-						pierce_time = rasterParams['pierce_time'],
-						material = "default")
+						ip = ImageProcessor(output_filehandle = fh,
+						                    contrast = rasterParams['contrast'],
+						                    sharpening = rasterParams['sharpening'],
+						                    beam_diameter = rasterParams['beam_diameter'],
+											intensity_black = rasterParams['intensity_black'],
+											intensity_white = rasterParams['intensity_white'],
+											intensity_black_user = rasterParams['intensity_black_user'],
+											intensity_white_user = rasterParams['intensity_white_user'],
+											speed_black = rasterParams['speed_black'],
+											speed_white = rasterParams['speed_white'],
+											dithering = rasterParams['dithering'],
+											pierce_time = rasterParams['pierce_time'],
+											material = rasterParams['material'] if 'material' in rasterParams else None)
 						data = imgNode.get('href')
 						if(data is None):
 							data = imgNode.get(_add_ns('href', 'xlink'))
@@ -306,11 +315,11 @@ class Converter():
 
 					# rect, line, polygon, polyline, circle, ellipse
 					elif i.tag == _add_ns( 'rect', 'svg' ) or i.tag == 'rect' \
-					or i.tag == _add_ns( 'line', 'svg' ) or i.tag == 'line' \
-					or i.tag == _add_ns( 'polygon', 'svg' ) or i.tag == 'polygon' \
-					or i.tag == _add_ns( 'polyline', 'svg' ) or i.tag == 'polyline' \
-					or i.tag == _add_ns( 'ellipse', 'svg' ) or i.tag == 'ellipse' \
-					or i.tag == _add_ns( 'circle', 'svg' ) or	i.tag == 'circle':
+						or i.tag == _add_ns( 'line', 'svg' ) or i.tag == 'line' \
+						or i.tag == _add_ns( 'polygon', 'svg' ) or i.tag == 'polygon' \
+						or i.tag == _add_ns( 'polyline', 'svg' ) or i.tag == 'polyline' \
+						or i.tag == _add_ns( 'ellipse', 'svg' ) or i.tag == 'ellipse' \
+						or i.tag == _add_ns( 'circle', 'svg' ) or	i.tag == 'circle':
 
 						i.set("d", get_path_d(i))
 						self._handle_node(i, layer)
@@ -331,8 +340,12 @@ class Converter():
 					elif i.tag == _add_ns("g",'svg'):
 						recursive_search(i,layer)
 
+					elif i.tag == _add_ns( 'defs', 'svg' ) or i.tag == 'defs' \
+						or i.tag == _add_ns('desc', 'svg') or i.tag == 'desc':
+						self._log.info("ignoring tag: %s" % (i.tag))
+
 					else :
-						self._log.debug("ignoring not supported tag: %s \n%s" % (i.tag, etree.tostring(i)))
+						self._log.warn("ignoring not supported tag: %s \n%s" % (i.tag, etree.tostring(i)))
 
 		recursive_search(self.document.getroot(), self.document.getroot())
 		self._log.info("self.layers: %i" % len(self.layers))

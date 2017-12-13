@@ -19,6 +19,7 @@ $(function() {
         self.interlocks_closed = ko.observable(true);
         self.is_pause_mode = ko.observable(false);
         self.is_cooling_mode = ko.observable(false);
+        self.is_fan_connected = ko.observable(true);
 
         self.DEBUG = false;
 
@@ -165,10 +166,28 @@ $(function() {
                     }
 
                     if ('status' in data) {
+                        // STATUS is a global varibale that collects all status values for important reasons... (because we can).
                         if (typeof STATUS == 'undefined') {
                             STATUS = {};
                         }
-                        STATUS['laser_temperature'] = data['status']['laser_temperature'];
+                        if ('laser_temperature' in data['status']) {
+                            STATUS['laser_temperature'] = data['status']['laser_temperature'];
+                        }
+                        if ('fan_connected' in data['status']) {
+                            if (data['status']['fan_connected'] !== null) {
+                                self.is_fan_connected(data['status']['fan_connected']);
+                            }
+                            STATUS['fan_connected'] = data['status']['fan_connected'];
+                        }
+                        if ('fan_state' in data['status']) {
+                            STATUS['fan_state'] = data['status']['fan_state'];
+                        }
+                        if ('fan_rpm' in data['status']) {
+                            STATUS['fan_rpm'] = data['status']['fan_rpm'];
+                        }
+                        if ('fan_dust' in data['status']) {
+                            STATUS['fan_dust'] = data['status']['fan_dust'];
+                        }
                     }
                 };
 

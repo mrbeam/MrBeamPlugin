@@ -19,7 +19,7 @@
 Snap.plugin(function (Snap, Element, Paper, global) {
 	
 	/**
-	 * bakes transformations of the element and all sub-elements into coordinates
+	 * multiplies a group and arranges the copies in a grid with cols x rows
 	 * 
 	 * @param {integer} cols : as name says, defaults 0.
 	 * @param {integer} rows : as name says, defaults 0.
@@ -86,6 +86,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 				if(i !== 0 || j !== 0){
 					var str = 't'+(dx*i)+','+dy*j;
 					var clone = elem.clone().removeClass('gridify_original').addClass('gridify_clone').transform(str);
+					clone.clean_gc();
 					grid_elements.push(clone);
 				}
 			}

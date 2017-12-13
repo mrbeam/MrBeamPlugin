@@ -32,6 +32,8 @@ class LedEventListener(CommandTrigger):
 	LED_EVENTS[MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_END] = "mrbeam_ledstrips_cli PrintPaused"
 	LED_EVENTS[MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_BLOCK] = "mrbeam_ledstrips_cli PrintPausedTimeoutBlock"
 
+	LED_EVENTS[MrBeamEvents.BUTTON_PRESS_REJECT] = "mrbeam_ledstrips_cli ButtonPressReject"
+
 
 	# File management
 	LED_EVENTS[Events.UPLOAD] = "mrbeam_ledstrips_cli Upload"

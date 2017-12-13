@@ -13,6 +13,11 @@ SW_UPDATE_TIER_NO_UPDATE = "NO_UPDATE"
 
 sw_update_config = dict()
 
+def get_modules():
+	return sw_update_config
+
+
+
 
 def get_update_information(self):
 	result = dict()
@@ -30,9 +35,9 @@ def get_update_information(self):
 		set_info_iobeam(self, tier)
 		set_info_camera_calibration(self, tier)
 		set_info_rpiws281x(self, tier)
+		# set_info_testplugin(self, tier) # See function definition for more details
 
 	# _logger(self).debug("MrBeam Plugin provides this config (might be overridden by settings!):\n%s", yaml.dump(sw_update_config, width=50000).strip())
-
 	return sw_update_config
 
 
@@ -206,7 +211,7 @@ def set_info_netconnectd_daemon(self, tier):
 def set_info_iobeam(self, tier):
 	name = "iobeam"
 	module_id = "iobeam"
-	# ths module is installed outside of our virtualenv therefor we can't use default pip command.
+	# this module is installed outside of our virtualenv therefor we can't use default pip command.
 	# /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
 	pip_command = "sudo /usr/local/bin/pip"
 	pip_name = "iobeam"
@@ -302,6 +307,18 @@ def set_info_rpiws281x(self, tier):
 		update_script="/home/pi/rpi_ws281x/update_script.sh",
 		restart="environment")
 
+# This is a template to later allow the installation of a new octoprint plugin.
+# The necesarry setup.py and plugin template is in the bitbucket repo linked below.
+# def set_info_testplugin(self, tier):
+# 	sw_update_config["testplugin"] = dict(
+# 		displayName="Test Plugin",
+# 		displayVersion="0.0.2",
+# 		type="bitbucket_commit",
+# 		user="mrbeam",
+# 		repo="testplugin",
+# 		branch="master",
+# 		pip="https://bitbucket.org/mrbeam/testplugin/get/{target_version}.zip",
+# 		restart="environment")
 
 def _get_display_name(self, name):
 	return name

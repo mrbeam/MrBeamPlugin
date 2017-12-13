@@ -5,11 +5,16 @@ $(function(){
 	function VectorConversionViewModel(params) {
 		var self = this;
 
+		self.BRIGHTNESS_VALUE_RED   = 0.299;
+		self.BRIGHTNESS_VALUE_GREEN = 0.587;
+		self.BRIGHTNESS_VALUE_BLUE  = 0.114;
+
 		self.loginState = params[0];
 		self.settings = params[1];
 		self.state = params[2];
 		self.workingArea = params[3];
 		self.files = params[4];
+		self.profile = params[5];
 
 		self.target = undefined;
 		self.file = undefined;
@@ -581,7 +586,8 @@ $(function(){
 		self.engrave_outlines = ko.observable(false);
 
 		self.show_image_parameters = ko.computed(function(){
-			return (self.images_placed() || self.text_placed() || self.filled_shapes_placed());
+//			return (self.images_placed() || self.text_placed() || self.filled_shapes_placed());
+			return true;
 		});
 		self.imgIntensityWhite = ko.observable(0);
 		self.imgIntensityBlack = ko.observable(50);
@@ -592,6 +598,7 @@ $(function(){
 		self.imgContrast = ko.observable(1);
 		self.beamDiameter = ko.observable(0.15);
 		self.engravingPiercetime = ko.observable(0);
+		self.engravingMaterial = null;
 
 		self.sharpeningMax = 25;
 		self.contrastMax = 2;
@@ -652,9 +659,11 @@ $(function(){
 				var gcodeFile = self.create_gcode_filename(self.workingArea.placedDesigns());
 				self.gcodeFilename(gcodeFile);
 				$("#dialog_vector_graphics_conversion").modal("show"); // calls self.convert() afterwards
-			} else {
+			} else if(self.gcodeFilesToAppend.length > 0){
 				// just gcodes were placed. Start lasering right away.
 				self.convert();
+			} else {
+				console.warn('Nothing to laser.');
 			}
 		};
 
@@ -697,9 +706,11 @@ $(function(){
 		self.get_current_multicolor_settings = function () {
 			var data = [];
 			$('.job_row_vector').each(function(i, pass){
-				var intensity = $(pass).find('.param_intensity').val() * 10 ;
+				var intensity_user = $(pass).find('.param_intensity').val();
+				var intensity = intensity_user * self.profile.currentProfileData().laser.intensity_factor() ;
 				var feedrate = $(pass).find('.param_feedrate').val();
 				var piercetime = $(pass).find('.param_piercetime').val();
+				var material = $(pass).find('.param_material').val();
 				var passes = $(pass).find('.param_passes').val();
 				$(pass).find('.used_color').each(function(j, col){
 					var hex = '#' + $(col).attr('id').substr(-6);
@@ -707,27 +718,61 @@ $(function(){
 						job: i,
 						color: hex,
 						intensity: intensity,
+                        intensity_user: intensity_user,
 						feedrate: feedrate,
 						pierce_time: piercetime,
-						passes: passes
+						passes: passes,
+                        material: material
 					});
 				});
 			});
+
+			var intensity_black_user = self.imgIntensityBlack();
+			var intensity_white_user = self.imgIntensityWhite();
+			var speed_black = parseInt(self.imgFeedrateBlack());
+			var speed_white = parseInt(self.imgFeedrateWhite());
+			$('#engrave_job .color_drop_zone .used_color').each(function(i, el){
+				if(el.id !== 'cd_engraving'){
+					var hex = '#' +$(el).attr('id').substr(-6);
+					var r = parseInt(hex.substr(1,2), 16);
+					var g = parseInt(hex.substr(3,2), 16);
+					var b = parseInt(hex.substr(5,2), 16);
+					var initial_factor = 1 - ((r*self.BRIGHTNESS_VALUE_RED + g*self.BRIGHTNESS_VALUE_GREEN + b*self.BRIGHTNESS_VALUE_BLUE) / 255); // TODO user should override brightness
+					var intensity_user = intensity_white_user + initial_factor * (intensity_black_user - intensity_white_user);
+					var intensity = Math.round(intensity_user * self.profile.currentProfileData().laser.intensity_factor());
+					var feedrate = Math.round(speed_white + initial_factor * (speed_black - speed_white));
+
+					data.push({
+						job: "vector_engrave_"+i,
+						color: hex,
+						intensity: intensity,
+                        intensity_user: intensity_user,
+						feedrate: feedrate,
+						pierce_time: self.engravingPiercetime(),
+						passes: 1,
+                        material: self.engravingMaterial
+					});
+				}
+			});
+
 			return data;
 		};
 
 		self.get_current_engraving_settings = function () {
 			var data = {
 				"engrave_outlines" : self.engrave_outlines(),
-				"intensity_black" : self.imgIntensityBlack() * 10,
-				"intensity_white" : self.imgIntensityWhite() * 10,
+				"intensity_black_user" : self.imgIntensityBlack(),
+				"intensity_black" : self.imgIntensityBlack() * self.profile.currentProfileData().laser.intensity_factor(),
+				"intensity_white_user" : self.imgIntensityWhite(),
+				"intensity_white" : self.imgIntensityWhite() * self.profile.currentProfileData().laser.intensity_factor(),
 				"speed_black" : self.imgFeedrateBlack(),
 				"speed_white" : self.imgFeedrateWhite(),
 				"contrast" : self.imgContrast(),
 				"sharpening" : self.imgSharpening(),
 				"dithering" : self.imgDithering(),
 				"beam_diameter" : self.beamDiameter(),
-				"pierce_time": self.engravingPiercetime()
+				"pierce_time": self.engravingPiercetime(),
+                "material": self.engravingMaterial
 			};
 			return data;
 		};
@@ -799,8 +844,8 @@ $(function(){
 //					snap.select('#userContent').embed_gc(); // hack
 					self.workingArea.getCompositionSVG(self.do_engrave(), pixPerMM, self.engrave_outlines(), function(composition){
 						self.svg = composition;
-						var filename = self.gcodeFilename() + '.gco';
-						var gcodeFilename = self._sanitize(filename);
+						var filename = self.gcodeFilename();
+						var gcodeFilename = self._sanitize(filename) + '.gco';
 
 						var multicolor_data = self.get_current_multicolor_settings();
 						var engraving_data = self.get_current_engraving_settings();
@@ -840,12 +885,19 @@ $(function(){
 		};
 
 		self.do_engrave = function(){
-			var assigned_images = $('#engrave_job .assigned_colors').children().length;
+			const assigned_images = $('#engrave_job .assigned_colors').children().length;
 			return (assigned_images > 0 && self.show_image_parameters());
 		};
 
 		self._sanitize = function(name) {
-			return name.replace(/[^a-zA-Z0-9\-_\.\(\) ]/g, "").replace(/ /g, "_");
+		    let no_special_chars = name.replace(/[^a-zA-Z0-9\-_.() ]/g, "").replace(/ /g, "_"); // remove spaces,non-Ascii chars
+            const pattern = /[a-zA-Z0-9_\-()]$/g; //check if last character is a valid one
+            const is_valid = pattern.test(no_special_chars);
+            if(!is_valid || no_special_chars.length <= 1){
+                const time_stamp = Date.now();
+                no_special_chars = 'mb'+no_special_chars+time_stamp;
+            }
+            return no_special_chars;
 		};
 
 		self.onStartup = function() {
@@ -923,27 +975,32 @@ $(function(){
 //		};
 
 		self._configureImgSliders = function() {
-			self.contrastSlider = $("#svgtogcode_contrast_slider").slider({
-				step: .1,
-				min: 1,
-				max: self.contrastMax,
-				value: 1,
-				tooltip: 'hide'
-			}).on("slide", function(ev){
-				self.imgContrast(ev.value);
-			});
+			var el1 = $("#svgtogcode_contrast_slider");
+			if(el1.length > 0){
+				self.contrastSlider = el1.slider({
+					step: .1,
+					min: 1,
+					max: self.contrastMax,
+					value: 1,
+					tooltip: 'hide'
+				}).on("slide", function(ev){
+					self.imgContrast(ev.value);
+				});
+			}
 
-			self.sharpeningSlider = $("#svgtogcode_sharpening_slider").slider({
-				step: 1,
-				min: 1,
-				max: self.sharpeningMax,
-				value: 1,
-				class: 'img_slider',
-				tooltip: 'hide'
-			}).on("slide", function(ev){
-				self.imgSharpening(ev.value);
-			});
-
+			var el2 = $("#svgtogcode_sharpening_slider");
+			if(el2.length > 0){
+				self.sharpeningSlider = el2.slider({
+					step: 1,
+					min: 1,
+					max: self.sharpeningMax,
+					value: 1,
+					class: 'img_slider',
+					tooltip: 'hide'
+				}).on("slide", function(ev){
+					self.imgSharpening(ev.value);
+				});
+			}
 		};
 
 		self.showExpertSettings.subscribe(function(){
@@ -972,7 +1029,8 @@ $(function(){
 
 
     ADDITIONAL_VIEWMODELS.push([VectorConversionViewModel,
-		["loginStateViewModel", "settingsViewModel", "printerStateViewModel", "workingAreaViewModel", "gcodeFilesViewModel"],
+		["loginStateViewModel", "settingsViewModel", "printerStateViewModel", "workingAreaViewModel",
+            "gcodeFilesViewModel", 'laserCutterProfilesViewModel'],
 		document.getElementById("dialog_vector_graphics_conversion")]);
 
 });

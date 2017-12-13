@@ -4,6 +4,7 @@ import threading
 import time
 import datetime
 import collections
+from distutils.version import StrictVersion
 
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
@@ -20,9 +21,9 @@ def ioBeamHandler(eventBusOct, socket_file=None):
 
 
 class IoBeamEvents(object):
-	'''
+	"""
 	These events are meant to be handled by OctoPrints event system
-	'''
+	"""
 	CONNECT =            "iobeam.connect"
 	DISCONNECT =         "iobeam.disconnect"
 	ONEBUTTON_PRESSED =  "iobeam.onebutton.pressed"
@@ -34,71 +35,23 @@ class IoBeamEvents(object):
 	LID_CLOSED =         "iobeam.lid.closed"
 
 class IoBeamValueEvents(object):
-	'''
+	"""
 	These Values / events are not intended to be handled byt OctoPrints event system
 	but by IoBeamHandler's own event system
-	'''
+	"""
 	LASER_TEMP =          "iobeam.laser.temp"
 	DUST_VALUE =          "iobeam.dust.value"
+	RPM_VALUE =           "iobeam.rpm.value"
+	RPM_VALUE =           "iobeam.rpm.value"
+	STATE_VALUE =         "iobeam.state.value"
+	DYNAMIC_VALUE =       "iobeam.dynamic.value"
+	CONNECTED_VALUE =     "iobeam.connected.value"
 	FAN_ON_RESPONSE =     "iobeam.fan.on.response"
 	FAN_OFF_RESPONSE =    "iobeam.fan.off.response"
 	FAN_AUTO_RESPONSE =   "iobeam.fan.auto.response"
 	FAN_FACTOR_RESPONSE = "iobeam.fan.factor.response"
 
 class IoBeamHandler(object):
-
-	# > iobeam:<data>
-	# > iobeam:version:<version_string>
-	# > iobeam:debug:<data>
-	# < iobeam:<data>
-	# < iobeam:client:<client_id_string>
-	# < info
-	# < debug
-
-	# > onebtn:up
-	# > onebtn:pr
-	# > onebtn:dn:< time >
-	# > onebtn:rl:< time >
-	# > onebtn:error	?
-	# > lid:op
-	# > lid:cl
-	# > intlk:0:op
-	# > intlk:0:cl
-	# > intlk:1:op
-	# > intlk:1:cl
-	# > intlk:2:op
-	# > intlk:2:cl
-	# > intlk:3:op
-	# > intlk:3:cl
-	# > steprun:on
-	# > steprun:off
-	# > steprun:error
-
-	# < fan:on:< value0 - 100 >
-	# > fan:on:ok
-	# > fan:on:error
-	# < fan:off
-	# > fan:off:ok
-	# > fan:off:error
-	# < fan:auto
-	# > fan:auto:ok
-	# > fan:auto:error
-	# < fan:factor:< factor >
-	# > fan:factor:ok
-	# > fan:factor:error
-	# < fan:version
-	# > fan:version:<version-string>
-	# > fan:version:error
-	# < fan:dust
-	# > fan:dust:<dust value 0.3>
-	# > fan:dust:error
-	# < fan:rpm
-	# > fan:rpm:<rpm value>
-	# > fan:rpm:error
-
-	# < laser:temp
-	# > laser:temp:< temperatur >
-	# > laser:temp:error:<error type or message>
 
 	# How to test and debug:
 	# in config.yaml set
@@ -112,6 +65,8 @@ class IoBeamHandler(object):
 
 	SOCKET_FILE = "/var/run/mrbeam_iobeam.sock"
 	MAX_ERRORS = 10
+
+	IOBEAM_MIN_REQUIRED_VERSION = '0.4.0'
 
 	CLIENT_ID = "MrBeamPlugin.v{vers_mrb}/OctoPrint.v{vers_op}"
 
@@ -155,6 +110,11 @@ class IoBeamHandler(object):
 	MESSAGE_ACTION_FAN_FACTOR =         "factor"
 	MESSAGE_ACTION_FAN_VERSION =        "version"
 	MESSAGE_ACTION_FAN_RPM =            "rpm"
+	MESSAGE_ACTION_FAN_PWM_MIN =        "pwm_min"
+	MESSAGE_ACTION_FAN_TPR =            "tpr"
+	MESSAGE_ACTION_FAN_STATE =          "state"
+	MESSAGE_ACTION_FAN_DYNAMIC =        "dynamic"
+	MESSAGE_ACTION_FAN_CONNECTED =      "connected"
 
 
 	def __init__(self, event_bus, socket_file=None):
@@ -192,6 +152,9 @@ class IoBeamHandler(object):
 		_instance = None
 		self._shutdown_signaled = True
 
+	def shutdown_fan(self):
+		self.send_fan_command(self.MESSAGE_ACTION_FAN_OFF)
+
 	def is_interlock_closed(self):
 		return len(self._interlocks.keys()) == 0
 
@@ -211,20 +174,14 @@ class IoBeamHandler(object):
 		:param command: One of the three values (ON:<0-100>/OFF/AUTO)
 		:return: True if the command was sent sucessfull (does not mean it was sucessfully executed)
 		'''
-		return self._send_command("{}:{}".format(self.MESSAGE_DEVICE_FAN, command))
-
-	def send_command(self, command):
-		'''
-		DEPRECATED !!!!!
-		:param command:
-		:return:
-		'''
-		return self._send_command(command)
+		ok = self._send_command("{}:{}".format(self.MESSAGE_DEVICE_FAN, command))
+		# self._logger.info("ANDYTEST send_fan_command(): ok: %s, command: %s", ok, command)
+		return ok
 
 	def _send_command(self, command):
 		'''
 		Sends a command to iobeam
-		:param command: Must not be None. May or may not and with a new line.
+		:param command: Must not be None. May or may not end with a new line.
 		:return: Boolean success
 		'''
 		command = self._normalize_command(command)
@@ -248,6 +205,17 @@ class IoBeamHandler(object):
 			self._logger.error("Exception while sending command '%s' to socket: %s", command, e)
 			return False
 		return True
+
+	def is_iobeam_version_ok(self):
+		if self.iobeam_version is None:
+			return False
+		try:
+			StrictVersion(self.iobeam_version)
+		except ValueError as e:
+			self._logger.error("iobeam version invalid: '{}'. ValueError from StrictVersion: {}".format(self.iobeam_version, e))
+			return False
+
+		return StrictVersion(self.iobeam_version) >= StrictVersion(self.IOBEAM_MIN_REQUIRED_VERSION)
 
 	def subscribe(self, event, callback):
 		'''
@@ -414,14 +382,19 @@ class IoBeamHandler(object):
 		message_list = data.split(self.MESSAGE_NEWLINE)
 		for message in message_list:
 			processing_start = time.time()
+			# remove pings
+			while message.startswith('.'):
+				message = message[1:]
 			if not message: continue
-			if message == '.': continue # ping
 
 			err = -1
 			message_count =+ 1
 			# self._logger.debug("_handleMessages() handling message: %s", message)
 
 			tokens = message.split(self.MESSAGE_SEPARATOR)
+			# would allow to escape MESSAGE_SEPARATOR in case we want to use JSON some day
+			# tokens = list(map(lambda x: x.replace('\\{}'.format(self.MESSAGE_SEPARATOR), self.MESSAGE_SEPARATOR),
+			#                   re.split(r'(?<!\\){}'.format(self.MESSAGE_SEPARATOR), message)))
 			if len(tokens) <=1:
 				err = self._handle_invalid_message(message)
 			else:
@@ -528,14 +501,46 @@ class IoBeamHandler(object):
 		action = token[0] if len(token) > 0 else None
 		value = token[1] if len(token) > 1 else None
 
+		if action == self.MESSAGE_ACTION_FAN_DYNAMIC:
+			if action.startswith(self.MESSAGE_ERROR):
+				pass
+			elif len(token) >= 5:
+				vals = dict(
+					state =     self._as_number(token[1]),
+					rpm =       self._as_number(token[2]),
+					dust =      self._as_number(token[3]),
+					connected = self._get_connected_val(token[4]))
+				self._call_callback(IoBeamValueEvents.DYNAMIC_VALUE, message, vals)
+				self._call_callback(IoBeamValueEvents.STATE_VALUE, message, dict(val=vals['state']))
+				self._call_callback(IoBeamValueEvents.RPM_VALUE, message, dict(val=vals['rpm']))
+				self._call_callback(IoBeamValueEvents.DUST_VALUE, message, dict(val=vals['dust']))
+				self._call_callback(IoBeamValueEvents.CONNECTED_VALUE, message, dict(val=vals['connected']))
+				return 0
 		if action == self.MESSAGE_ACTION_DUST_VALUE:
 			dust_val = self._as_number(value)
 			if dust_val is not None:
 				self._call_callback(IoBeamValueEvents.DUST_VALUE, message, dict(val=dust_val))
 			return 0
 		elif action == self.MESSAGE_ACTION_FAN_RPM:
+			rpm_val = self._as_number(value)
+			if rpm_val is not None:
+				self._call_callback(IoBeamValueEvents.RPM_VALUE, message, dict(val=rpm_val))
+			return 0
+		elif action == self.MESSAGE_ACTION_FAN_STATE:
+			state = self._as_number(value)
+			if state is not None:
+				self._call_callback(IoBeamValueEvents.STATE_VALUE, message, dict(val=state))
+			return 0
+		elif action == self.MESSAGE_ACTION_FAN_CONNECTED:
+			self._call_callback(IoBeamValueEvents.CONNECTED_VALUE, message, dict(val=self._get_connected_val(value)))
 			return 0
 		elif action == self.MESSAGE_ACTION_FAN_VERSION:
+			return 0
+		elif action == self.MESSAGE_ACTION_FAN_PWM_MIN:
+			return 0
+		elif action == self.MESSAGE_ACTION_FAN_TPR:
+			return 0
+		elif action == self.MESSAGE_ACTION_FAN_STATE:
 			return 0
 
 		# check if OK otherwise it's an error
@@ -573,7 +578,14 @@ class IoBeamHandler(object):
 			version = token[1] if len(token) > 1 else None
 			if version:
 				self.iobeam_version = version
-				self._logger.info("Received iobeam version: %s", self.iobeam_version)
+				ok = self.is_iobeam_version_ok()
+				if ok:
+					self._logger.info("Received iobeam version: %s - version OK", self.iobeam_version)
+				else:
+					self._logger.error("Received iobeam version: %s - version OUTDATED. IOBEAM_MIN_REQUIRED_VERSION: %s", self.iobeam_version, self.IOBEAM_MIN_REQUIRED_VERSION)
+					_mrbeam_plugin_implementation.notify_frontend(title="Software Update required",
+					                                              text="Module 'iobeam' is outdated. Please run Software Update from 'Settings' > 'Software Update' before you start a laser job.",
+																  type="error", sticky=True, replay_when_new_client_connects=True)
 				return 0
 			else:
 				self._logger.warn("_handle_iobeam_message(): Received iobeam:version message without version number. Counting as error. Message: %s", message)
@@ -648,5 +660,18 @@ class IoBeamHandler(object):
 			return float(str)
 		except:
 			return None
+
+	def _get_connected_val(self, value):
+		connected = None
+		if value is None: return None
+
+		value = value.lower()
+		if value in ('none', 'unknown'):
+			connected = None
+		elif value == 'false':
+			connected = False
+		elif value == 'true':
+			connected = True
+		return connected
 
 

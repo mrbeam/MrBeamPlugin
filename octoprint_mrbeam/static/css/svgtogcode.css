@@ -4,6 +4,16 @@ table th.settings_plugin_svgtogcode_profiles_key,table td.settings_plugin_svgtog
 	width: 2.5em;
 }
 
+#settings_dialog.container { width: 100%; }
+
+.calibration_step {
+	display: none;
+}
+
+.calibration_step.active {
+	display: block;
+}
+
 #gcode_reference .gcommand {
 	font-weight: bold;
 }
@@ -291,7 +301,7 @@ h4.job_title{
 
 /* state machine. either img or vector color drop zone highlightning*/
 #no_job .color_drop_zone.hover,
-body.engravingDrag #engrave_job .img_drop_zone.hover,
+body.colorDragInProgress #engrave_job .img_drop_zone.hover,
 body.vectorDrag .job_row_vector .color_drop_zone.hover,
 body.vectorDrag .color_drop_zone.create_job.hover {
     font-weight: 700;
@@ -358,16 +368,19 @@ body.colorDragInProgress #drop_overlay {
 .dimDesigns .userSVG,
 .dimDesigns .userIMG,
 .dimDesigns .userText {
-	opacity:.5;
-	filter:url(#dehighlight);
-	transition: opacity 0.2s ease-out;
+	/*opacity:.5;*/
+	/*filter:url(#dehighlight);*/
+	stroke-width: 1;
+	transition: stroke-width 0.2s ease-out;
 }
 
 .userSvg, .userText, .userIMG,
 .dimDesigns .userSVG.designHighlight,
 .dimDesigns .userIMG.designHighlight,
+.dimDesigns .userSVG .vector_outline,
 .dimDesigns .userText.designHighlight {
-	opacity:1;
+	/*opacity:1;*/
+	stroke-width: 3px !important;
 	filter:none;
 }
 
@@ -390,13 +403,13 @@ body.colorDragInProgress #drop_overlay {
   }
 }
 
-svg#area_preview path, 
-svg#area_preview circle, 
-svg#area_preview line, 
-svg#area_preview polyline, 
-svg#area_preview polygon, 
-svg#area_preview ellipse, 
-svg#area_preview rect 
+svg#area_preview path,
+svg#area_preview circle,
+svg#area_preview line,
+svg#area_preview polyline,
+svg#area_preview polygon,
+svg#area_preview ellipse,
+svg#area_preview rect
 {
   vector-effect: non-scaling-stroke !important;
   stroke-width: 1px !important;
@@ -482,3 +495,84 @@ li.material_entry span {
 #dialog_vector_graphics_conversion .modal-body {
   min-height: 65vh;
 }
+
+.calibration_manual.text {
+    width: 48%;
+	margin-bottom: 2em;
+}
+.calibration_manual.img {
+    width: 48%;
+    padding-top: 32%;
+    background-repeat: no-repeat;
+    background-size: contain;
+    margin-bottom: 1em;
+}
+
+.marker_selection_desc {
+	margin-top: 1em;
+	margin-bottom: 2em;
+}
+
+.cal-arrow{
+	width: 0.8em;
+    height: 0.8em;
+    background-image: url(/plugin/mrbeam/static/img/cal_marker.svg);
+    border: 0px transparent;
+    background-repeat: no-repeat;
+    background-color: white;
+    background-size: contain;
+	display: inline-block;
+	background-position: center;
+}
+
+.cal-row { display: none; font-size: 1.5rem; }
+.cal-row.active { display: block; }
+.complete .cal-row { display: block !important; font-size: 1rem;}
+
+#NE .cal-arrow { transform: scale(-1,1); }
+#SE .cal-arrow { transform: scale(-1,-1); }
+#SW .cal-arrow { transform: scale(1,-1); }
+
+.calibration_click_indicator {
+	stroke: #ffffff;
+	stroke-width: 1;
+	fill:none;
+}
+
+.marker_found_indicator {
+	color: #DDD;
+	display: inline-block;
+    padding: 0 .5em;
+}
+.marker_found_indicator.active { color: #000; }
+
+.marker_debug_image{
+    margin-right: 20px;
+    margin-bottom: 20px;
+    border: 1px;
+    border-style: solid;
+    border-color: black;
+    height: 45vh;
+}
+
+#debug_NW_img {
+    position: fixed;
+    top: 1vh;
+    left: 1vw;
+}
+#debug_NE_img {
+    position: fixed;
+    top: 1vh;
+    right: 1vw;
+}
+#debug_SW_img {
+    position: fixed;
+    bottom: 1vh;
+    left: 1vw;
+}
+#debug_SE_img {
+    position: fixed;
+    bottom: 1vh;
+    right: 1vw;
+}
+

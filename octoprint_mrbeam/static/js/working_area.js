@@ -4,21 +4,6 @@ MRBEAM_PX2MM_FACTOR_WITH_ZOOM = 1; // global available in this viewmodel and in 
 
 $(function(){
 
-	// Opera 8.0+
-	var isOpera = (!!window.opr && !!opr.addons) || !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
-	// Firefox 1.0+
-	var isFirefox = typeof InstallTrigger !== 'undefined';
-	// At least Safari 3+: "[object HTMLElementConstructor]"
-	var isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0;
-	// Internet Explorer 6-11
-	var isIE = /*@cc_on!@*/false || !!document.documentMode;
-	// Edge 20+
-	var isEdge = !isIE && !!window.StyleMedia;
-	// Chrome 1+
-	var isChrome = !!window.chrome && !!window.chrome.webstore;
-	// Blink engine detection
-	var isBlink = (isChrome || isOpera) && !!window.CSS;
-
 	function versionCompare(v1, v2, options) {
 		var lexicographical = options && options.lexicographical,
 			zeroExtend = options && options.zeroExtend,
@@ -102,7 +87,8 @@ $(function(){
 		self.availableHeight = ko.observable(undefined);
 		self.availableWidth = ko.observable(undefined);
 		self.px2mm_factor = 1; // initial value
-		self.svgDPI = function(){return 90;} // initial value, gets overwritten by settings in onAllBound()
+		self.svgDPI = function(){return 90}; // initial value, gets overwritten by settings in onAllBound()
+        self.dxfScale =  function(){return 1}; // initial value, gets overwritten by settings in onAllBound()
 
 		self.workingAreaWidthMM = ko.computed(function(){
 			return self.profile.currentProfileData().volume.width() - self.profile.currentProfileData().volume.origin_offset_x();
@@ -121,7 +107,7 @@ $(function(){
 		});
 
         // QuickText fields
-        self.fontMap = ['Ubuntu', 'Roboto', 'Libre Baskerville', 'Indie Flower', 'VT323'];
+        self.fontMap = ["Allerta Stencil","Amatic SC","Comfortaa","Fredericka the Great","Kavivanar","Lobster","Merriweather","Mr Bedfort","Quattrocento","Roboto"];
         self.currentQuickTextFile = undefined;
         self.currentQuickText = ko.observable();
         self.lastQuickTextFontIndex = 0;
@@ -146,12 +132,17 @@ $(function(){
 			var newZ = oldZ + delta;
 			newZ = Math.min(Math.max(newZ, 0.25), 1);
 			if(newZ !== self.zoom()){
-				var deltaWidth = self.workingAreaWidthMM() * delta;
-				var deltaHeight = self.workingAreaHeightMM() * delta;
-				var oldOffX = self.zoomOffX();
-				var oldOffY = self.zoomOffY();
-				self.set_zoom_offX(oldOffX - deltaWidth*centerX);
-				self.set_zoom_offY(oldOffY - deltaHeight*centerY);
+				if(newZ == 1){
+				    self.set_zoom_offX(0);
+				    self.set_zoom_offY(0);
+                }else{
+				    var deltaWidth = self.workingAreaWidthMM() * delta;
+				    var deltaHeight = self.workingAreaHeightMM() * delta;
+				    var oldOffX = self.zoomOffX();
+				    var oldOffY = self.zoomOffY();
+				    self.set_zoom_offX(oldOffX - deltaWidth*centerX);
+				    self.set_zoom_offY(oldOffY - deltaHeight*centerY);
+                }
 				self.zoom(newZ);
 			}
 		};
@@ -183,6 +174,7 @@ $(function(){
 			return ratio;
 		}, self);
 
+		// TODO CLEM check comma expression for functionality!
 		self.workingAreaDim = ko.computed(function(){
 			var maxH = self.availableHeight();
 			var maxW = self.availableWidth();
@@ -408,55 +400,95 @@ $(function(){
 			self.placedDesigns.remove(file);
 		};
 
-		self.placeSVG = function(file) {
+        /**
+         * Call to place (add) a SVG file to working area
+         * @param file
+         * @param callback
+         */
+		self.placeSVG = function(file, callback) {
 			var url = self._getSVGserveUrl(file);
-			callback = function (f) {
-				// find clippath elements and remove them
-				var clipPathEl = f.selectAll('clipPath');
-				if(clipPathEl.length !== 0){
-					console.warn("Warning: removed unsupported clipPath element in SVG");
-					self.svg_contains_clipPath_warning();
-					clipPathEl.remove();
-				}
+			cb = function (fragment) {
+				var id = self.getEntryId();
+				var previewId = self.generateUniqueId(id, file); // appends -# if multiple times the same design is placed.
+				var origin = file["refs"]["download"];
+				file.id = id; // list entry id
+				file.previewId = previewId;
+				file.url = url;
+				file.misfit = "";
+				self.placedDesigns.push(file);
 
-				// find flowroot elements and remove them
-				var flowrootEl = f.selectAll('flowRoot');
-				if(flowrootEl.length !== 0){
-					console.warn("Warning: removed unsupported flowRoot element in SVG");
-					self.svg_contains_flowRoot_warning();
-					flowrootEl.remove();
-				}
-
-//				var svgClasses = {};
-//				f.selectAll('path').forEach(function (el, i) {
-//					var elClass = el.attr('class');
-//					if(svgClasses[elClass] === undefined){
-//						console.log(elClass);
-//					}
-//				});
-				// find all elements with "display=none" and remove them
-				f.selectAll("[display=none]").remove();
-				f.selectAll("script").remove();
-
-				var generator_info = self._get_generator_info(f);
-
-				// get original svg attributes
-				var newSvgAttrs = self._getDocumentNamespaceAttributes(f);
-				var doc_dimensions = self._getDocumentDimensionAttributes(f);
+				// get scale matrix
+                fragment = self._removeUnsupportedSvgElements(fragment);
+				var generator_info = self._get_generator_info(fragment);
+				var doc_dimensions = self._getDocumentDimensionAttributes(fragment);
 				var unitScaleX = self._getDocumentScaleToMM(doc_dimensions.units_x, generator_info);
 				var unitScaleY = self._getDocumentScaleToMM(doc_dimensions.units_y, generator_info);
-
-				// scale matrix
-
 				var mat = self.getDocumentViewBoxMatrix(doc_dimensions, doc_dimensions.viewbox);
-//				var dpiscale = 90 / self.settings.settings.plugins.mrbeam.svgDPI() * (25.4/90);
-//				var dpiscale = 25.4 / self.settings.settings.plugins.mrbeam.svgDPI();
-//                var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(dpiscale).toTransformString();
-                var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2])
-						.scale(unitScaleX, unitScaleY).toTransformString();
-                newSvgAttrs['transform'] = scaleMatrixStr;
+                var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(unitScaleX, unitScaleY).toTransformString();
 
-				var newSvg = snap.group(f.selectAll("svg>*"));
+				var insertedId = self._prepareAndInsertSVG(fragment, previewId, origin, scaleMatrixStr);
+				if(typeof callback === 'function') callback(insertedId);
+			};
+			self.loadSVG(url, cb);
+		};
+
+        /**
+         * Call to place (add) a DXF file to working area
+         * @param file
+         * @param callback (otional)
+         */
+		self.placeDXF = function(file, callback) {
+			var url = self._getSVGserveUrl(file);
+
+			cb = function (fragment) {
+				var origin = file["refs"]["download"];
+
+				var tx = 0;
+				var ty = 0;
+				var doc_dimensions = self._getDocumentDimensionAttributes(fragment);
+				var viewbox = doc_dimensions.viewbox.split(' ');
+				var origin_left = parseFloat(viewbox[0]);
+				var origin_top = parseFloat(viewbox[1]);
+				if(!isNaN(origin_left) && origin_left < 0) tx = -origin_left * self.dxfScale();
+				if(!isNaN(origin_top) && origin_top < 0) ty = -origin_top * self.dxfScale();
+				// scale matrix
+                var scaleMatrixStr = new Snap.Matrix(1,0,0,1,tx,ty).scale(self.dxfScale()).toTransformString();
+
+				var id = self.getEntryId();
+				var previewId = self.generateUniqueId(id, file); // appends -# if multiple times the same design is placed.
+
+				file.id = id; // list entry id
+				file.previewId = previewId;
+				file.url = url;
+				file.misfit = "";
+
+				self.placedDesigns.push(file);
+
+				var insertedId = self._prepareAndInsertSVG(fragment, previewId, origin, scaleMatrixStr);
+				if(typeof callback === 'function') callback(insertedId);
+			};
+			Snap.loadDXF(url, cb);
+		};
+
+        /**
+         * This should be the common handler for everything added to the working area that is converted to SVG
+         * @param fragment
+         * @param previewId
+         * @param origin
+         * @param scaleMatrixStr (optional)
+         * @returns {*}
+         * @private
+         */
+		self._prepareAndInsertSVG = function(fragment, id, origin, scaleMatrixStr){
+				fragment = self._removeUnsupportedSvgElements(fragment);
+
+				// get original svg attributes
+				var newSvgAttrs = self._getDocumentNamespaceAttributes(fragment);
+                if (scaleMatrixStr) {
+                    newSvgAttrs['transform'] = scaleMatrixStr;
+                }
+
+				var newSvg = snap.group(fragment.selectAll("svg>*"));
 
 				// handle texts
 				var hasText = newSvg.selectAll('text,tspan');
@@ -479,13 +511,11 @@ $(function(){
 				newSvg.attr(newSvgAttrs);
 				newSvg.bake(); // remove transforms
 				newSvg.selectAll('path').attr({strokeWidth: '0.8', class:'vector_outline'});
-				var id = self.getEntryId();
-				var previewId = self.generateUniqueId(id, file); // appends -# if multiple times the same design is placed.
 				newSvg.attr({
-					id: previewId,
-                    'mb:id':previewId,
+					id: id,
+                    'mb:id':id,
 					class: 'userSVG',
-					'mb:origin': file["refs"]["download"],
+					'mb:origin': origin,
 				});
 				snap.select("#userContent").append(newSvg);
 				newSvg.transformable();
@@ -498,6 +528,8 @@ $(function(){
 					newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
 				});
 
+                // activate handles on all things we add to the working_area
+                self.showTransformHandles(id, true);
 
 				var mb_meta = self._set_mb_attributes(newSvg);
 				newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
@@ -506,14 +538,34 @@ $(function(){
 					newSvg.ftReportTransformation();
 				}, 200);
 
-				file.id = id; // list entry id
-				file.previewId = previewId;
-				file.url = url;
-				file.misfit = "";
+				return id;
+		};
 
-				self.placedDesigns.push(file);
-			};
-			self.loadSVG(url, callback);
+        /**
+         * Removes unsupported elements from fragment.
+         * List of elements to remove is defined within this function in var unsupportedElems
+         * @param fragment
+         * @returns fragment
+         * @private
+         */
+		self._removeUnsupportedSvgElements = function(fragment){
+
+            // add more elements that need to be removed here
+            var unsupportedElems = ['clipPath', 'flowRoot', 'switch', '#adobe_illustrator_pgf'];
+            //
+            for (var i = 0; i < unsupportedElems.length; i++) {
+                var myElem = fragment.selectAll(unsupportedElems[i]);
+                if (myElem.length !== 0) {
+                    console.warn("Warning: removed unsupported '"+unsupportedElems[i]+"' element in SVG");
+                    self.svg_contains_unsupported_element_warning(unsupportedElems[i]);
+                    myElem.remove();
+                }
+            }
+
+            // find all elements with "display=none" and remove them
+            fragment.selectAll("[display=none]").remove(); // TODO check if this really works. I (tp) doubt it.
+            fragment.selectAll("script").remove();
+            return fragment;
 		};
 
 		self.loadSVG = function(url, callback){
@@ -537,47 +589,19 @@ $(function(){
 			$('#'+file.id).removeClass('misfit');
 			self.svgTransformUpdate(svg);
 
+			self.showTransformHandles(file.previewId, true);
+
 			var mb_meta = self._set_mb_attributes(svg);
 			svg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
 		};
 
-		self.placeDXF = function(file) {
-			var url = self._getSVGserveUrl(file);
 
-			callback = function (f) {
-				var doc_dimensions = self._getDocumentDimensionAttributes(f);
-				var newSvgAttrs = self._getDocumentNamespaceAttributes(f);
-
-				// scale matrix
-				var mat = self.getDocumentViewBoxMatrix(doc_dimensions, doc_dimensions.viewbox);
-				var dpiscale = 25.4 ; // assumption: dxf is in inches, scale to mm
-                var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(dpiscale).toTransformString();
-
-				var newSvg = snap.group(f.selectAll("svg>*"));
-				newSvg.attr('transform', scaleMatrixStr);
-
-				newSvg.bake(); // remove transforms
-				newSvg.selectAll('path').attr({strokeWidth: '0.5', 'vector-effect':'non-scaling-stroke'});
-				newSvg.attr(newSvgAttrs);
-				var id = self.getEntryId();
-				var previewId = self.generateUniqueId(id, file); // appends -# if multiple times the same design is placed.
-				newSvg.attr({id: previewId, 'mb:id':previewId});
-				snap.select("#userContent").append(newSvg);
-				newSvg.transformable();
-				newSvg.ftRegisterOnTransformCallback(self.svgTransformUpdate);
-				setTimeout(function(){
-					newSvg.ftReportTransformation();
-				}, 200);
-				file.id = id; // list entry id
-				file.previewId = previewId;
-				file.url = url;
-				file.misfit = "";
-
-				self.placedDesigns.push(file);
-			};
-			Snap.loadDXF(url, callback);
-		};
-
+        /**
+         * Returns with what program and version the given svg file was created. E.g. 'coreldraw'
+         * @param fragment
+         * @returns {*}
+         * @private
+         */
 		self._get_generator_info = function(f){
 			var gen = null;
 			var version = null;
@@ -595,9 +619,6 @@ $(function(){
 //				console.log("Generator:", gen, version);
 				return {generator: gen, version: version};
 			}
-
-			// detect Corel
-//				return {generator: gen, version: version};
 
 			// detect Illustrator by comment (works with 'save as svg')
 			// <!-- Generator: Adobe Illustrator 16.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
@@ -651,15 +672,34 @@ $(function(){
 				}
 			}
 
-//			console.log("Generator:", gen, version);
+
+			// detect dxf.js generated svg
+			// <!-- Created with dxf.js -->
+			for (var i = 0; i < children.length; i++) {
+				var node = children[i];
+				if(node.nodeType === 8){ // check for comment
+					if (node.textContent.indexOf('Created with dxf.js') > -1) {
+						gen = 'dxf.js';
+						console.log("Generator:", gen, version);
+						return { generator: gen, version: version };
+					}
+				}
+			}
+			console.log("Generator:", gen, version);
 			return { generator: 'unknown', version: 'unknown' };
 		};
 
-		self._getDocumentDimensionAttributes = function(file){
-			if(file.select('svg') === null){
-				root_attrs = file.node.attributes;
+        /**
+         * Finds dimensions (wifth, hight, etc..) of an SVG
+         * @param fragment
+         * @returns {{width: *, height: *, viewbox: *, units_x: *, units_y: *}}
+         * @private
+         */
+		self._getDocumentDimensionAttributes = function(fragment){
+			if(fragment.select('svg') === null){
+				root_attrs = fragment.node.attributes;
 			} else {
-				var root_attrs = file.select('svg').node.attributes;
+				var root_attrs = fragment.select('svg').node.attributes;
 			}
 			var doc_width = null;
 			var doc_height = null;
@@ -693,8 +733,8 @@ $(function(){
 
 		self._getDocumentScaleToMM = function(declaredUnit, generator){
 			if(declaredUnit === null || declaredUnit === ''){
-				declaredUnit = 'px';
 //				console.log("unit '" + declaredUnit + "' not found. Assuming 'px'");
+				declaredUnit = 'px';
 			}
 			if(declaredUnit === 'px' || declaredUnit === ''){
 				if(generator.generator === 'inkscape'){
@@ -805,8 +845,12 @@ $(function(){
 				newSvg.ftReportTransformation();
 			}, 200);
 
+			// activate handles on all things we add to the working_area
+            self.showTransformHandles(previewId, true);
+
             var mb_meta = self._set_mb_attributes(newSvg);
 			newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
+
 		};
 
 		self.placeSmart = function(elem){
@@ -860,15 +904,30 @@ $(function(){
 			elem.transform(elemCTM);
 		};
 
-		self.toggleTransformHandles = function(file){
-			var el = snap.select('#'+file.previewId);
+        /**
+         * toggle transformation handles
+         * @param previewId or file
+         */
+		self.toggleTransformHandles = function(previewId){
+		    if (typeof previewId === "object" && previewId.previewId) {
+		        previewId = previewId.previewId;
+            }
+			var el = snap.select('#'+previewId);
 			if(el){
 				el.ftToggleHandles();
 			}
 		};
 
-		self.showTransformHandles = function(file, show){
-			var el = snap.select('#'+file.previewId);
+        /**
+         * Show or hide transformation handles
+         * @param previewId or file
+         * @param show true or false
+         */
+		self.showTransformHandles = function(previewId, show){
+		    if (typeof previewId === "object" && previewId.previewId) {
+		        previewId = previewId.previewId;
+            }
+			var el = snap.select('#'+previewId);
 			if(el){
 			    if (show) {
                     el.ftCreateHandles();
@@ -910,9 +969,11 @@ $(function(){
 				var ntx = nt[0] / globalScale;
 				var nty = (self.workingAreaHeightMM() - nt[1]) / globalScale;
 
-				svg.ftManualTransform({tx: ntx, ty: nty});
+				svg.ftManualTransform({tx: ntx, ty: nty, diffType:'absolute'});
 			}
 		};
+
+
 		self.svgManualRotate = function(data, event) {
 			if (event.keyCode === 13 || event.type === 'blur') {
 				self.abortFreeTransforms();
@@ -962,6 +1023,8 @@ $(function(){
 				var rows = gridsize[1] || 1;
 				var dist = 2;
 				svg.grid(cols, rows, dist);
+				var mb_meta = self._set_mb_attributes(svg);
+				svg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
 				event.target.value = cols+"×"+rows;
 			}
 		};
@@ -1006,20 +1069,11 @@ $(function(){
 			};
 		};
 
-		self.svg_contains_clipPath_warning = function(){
-			var error = "<p>" + gettext("The SVG file contains clipPath elements.<br/>clipPath is not supported yet and has been removed from file.") + "</p>";
+		self.svg_contains_unsupported_element_warning = function(elemName){
+            elemName = elemName.replace('\\:', ':');
+			var error = "<p>" + gettext("The SVG file contains unsupported elements: '"+elemName+"' These elements got removed.") + "</p>";
 			new PNotify({
-				title: "clipPath elements removed",
-				text: error,
-				type: "warn",
-				hide: false
-			});
-		};
-
-		self.svg_contains_flowRoot_warning = function(){
-			var error = "<p>" + gettext("The SVG file contains flowRoot elements.<br/>flowRoot is not supported yet and has been removed from file.") + "</p>";
-			new PNotify({
-				title: "flowRoot elements removed",
+				title: "Unsupported elements in SVG: '"+elemName+"'",
 				text: error,
 				type: "warn",
 				hide: false
@@ -1107,6 +1161,34 @@ $(function(){
 		self.removeIMG = function(file){
 			self.removeSVG(file);
 		};
+
+		self.moveSelectedDesign = function(ifX,ifY){
+		    var diff = 2;
+		    var transformHandles = snap.select('#handlesGroup');
+
+		    if(transformHandles){
+				var selectedId = transformHandles.data('parentId');
+			    var svg = snap.select('#'+selectedId);
+                var globalScale = self.scaleMatrix().a;
+
+                // var bbox = svg.getBBox();
+                // var nx = bbox.x + diff * ifX;
+                // var ny = bbox.y + diff * ifY;
+
+                var nx = diff * ifX;
+                var ny = diff * ifY;
+
+                var ntx = nx/globalScale;
+                var nty = ny/globalScale;
+
+                svg.ftStoreInitialTransformMatrix();
+                svg.data('tx', ntx);
+                svg.data('ty', nty);
+                svg.ftUpdateTransform();
+
+			}
+        };
+
 		self.removeSelectedDesign = function(){
 			var transformHandles = snap.select('#handlesGroup');
 			if(transformHandles){
@@ -1269,7 +1351,7 @@ $(function(){
 
 		self.init = function(){
 			// init snap.svg
-			snap = Snap('#area_preview');
+            snap = Snap('#area_preview');
 			self.px2mm_factor.subscribe(function(newVal){
 				if(!isNaN(newVal)){
 					MRBEAM_PX2MM_FACTOR_WITH_ZOOM = newVal;
@@ -1560,7 +1642,8 @@ $(function(){
 		};
 
 		self.onAllBound = function(allViewModels){
-		    self.svgDPI = self.settings.settings.plugins.mrbeam.svgDPI;
+		    self.svgDPI = self.settings.settings.plugins.mrbeam.svgDPI; // we assign ko function
+		    self.dxfScale = self.settings.settings.plugins.mrbeam.dxfScale;
             self.gc_options = ko.computed(function(){
                 return {
                     beamOS: BEAMOS_DISPLAY_VERSION,
@@ -1750,10 +1833,11 @@ $(function(){
             self.currentQuickTextFile = file;
             self._qt_currentQuickTextUpdate();
 
-            $('#quick_text_dialog').on('hide.bs.modal', self._qt_currentQuickTextRemoveIfEmpty);
-            $('#quick_text_dialog').on('shown.bs.modal', function(){$('#quick_text_dialog_text_input').focus();});
+            $('#quick_text_dialog').on('hide', self._qt_currentQuickTextRemoveIfEmpty);
+            $('#quick_text_dialog').on('hide', self._qt_currentQuickShowTransformHandlesIfNotEmpty);
+            $('#quick_text_dialog').on('shown', function(){$('#quick_text_dialog_text_input').focus();});
             $('#quick_text_dialog').modal({keyboard: true});
-            self.showTransformHandles(self.currentQuickTextFile, false);
+            self.showTransformHandles(self.currentQuickTextFile.previewId, false);
             $('#quick_text_dialog_intensity').val(self.currentQuickTextFile.intensity);
             $('#quick_text_dialog_text_input').focus();
         };
@@ -1861,6 +1945,16 @@ $(function(){
         };
 
         /**
+         * shows transformation handles on QT if it exists.
+         * @private
+         */
+        self._qt_currentQuickShowTransformHandlesIfNotEmpty = function() {
+            if (self.currentQuickTextFile && self.currentQuickTextFile.previewId) {
+                self.showTransformHandles(self.currentQuickTextFile.previewId, true)
+            }
+        };
+
+        /**
          * Equivalent to self.placeSVG for QuickText
          * @returns file object
          */
@@ -1921,21 +2015,29 @@ $(function(){
          * This copies the content of quicktext-fonts.css into the given element. It's expected that this css file
          * contains @font-face entries with wff2 files as dataUrls. Eg:
          * // @font-face {font-family: 'Indie Flower'; src: url(data:application/font-woff2;charset=utf-8;base64,d09GMgABAAAAAKtEABEAAAABh...) format('woff2');}
+         * All fonts to be embedded need to be in 'quicktext-fonts.css' or 'packed_plugins.css'
+         * AND their fontFamily name must be included in self.fontMap
          * @private
          * @param DomElement to add the font definition into
          */
         self._qt_copyFontsToSvg = function(elem) {
             var styleSheets = document.styleSheets;
-			for(var ss=0;ss<styleSheets.length;ss++) {
-			    if (styleSheets[ss].href && styleSheets[ss].href.endsWith("quicktext-fonts.css")) {
-			        self._qt_removeFontsFromSvg(elem);
-			        var rules = styleSheets[ss].cssRules;
-			        for(var r=0;r<rules.length;r++) {
-                        if (rules[r].cssText) {
-                            $(elem).append(rules[r].cssText);
-                        }
+            self._qt_removeFontsFromSvg(elem);
+            for(var ss=0;ss<styleSheets.length;ss++) {
+                if (styleSheets[ss].href &&
+                    (styleSheets[ss].href.includes("quicktext-fonts.css") || styleSheets[ss].href.includes("packed_plugins.css"))) {
+                    var rules = styleSheets[ss].cssRules;
+                    for(var r=0;r<rules.length;r++) {
+                         if (rules[r].constructor == CSSFontFaceRule) {
+                             // if (rules[r].cssText && rules[r].cssText.includes('MrBeamQuickText')) {
+                             if (rules[r].style && rules[r].style.fontFamily) {
+                                 var fontName = rules[r].style.fontFamily.replace(/["']/g, '').trim();
+                                 if (self.fontMap.indexOf(fontName) > -1) {
+                                     $(elem).append(rules[r].cssText);
+                                 }
+                             }
+                         }
                     }
-                    break; // this file appears usually twice....
                 }
             }
         };
