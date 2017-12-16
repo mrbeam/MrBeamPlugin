@@ -2041,7 +2041,7 @@ input.search-query,
  */
 input[type=range] {
   -webkit-appearance: none;
-  margin: 3.5px 0;
+  margin: .5px 0;
 }
 input[type=range]:focus {
   outline: none;

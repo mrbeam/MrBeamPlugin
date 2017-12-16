@@ -5,94 +5,110 @@
     </div>
     <div class="modal-body scrollable">
 		<div data-bind="visible:!slicing_in_progress()">
-			
-			<div id="material_type" class="row-fluid" data-bind="visible: dialog_state() === 'material_type'">
-				<div class="job_parameters form-horizontal">
-					<div class="control-group">
-						<label class="control-label">Material</label>
-						<div class="controls">
-							<div data-bind="visible: true || !isMaterialSelected()">
-								<form class="form-search" data-bind="submit: filterQuery">
-									<input type="text" style="width:90%;" class="input-block search-query" data-bind="value: filterQuery, valueUpdate: 'input'" placeholder="{{ _('Search...') }}">
-								</form>
-								<ul id="material_list" data-bind="foreach: filteredMaterials">
-									<li class='material_entry' data-bind="click: $root.set_material($data, event), style: { backgroundImage: 'url(\'/plugin/mrbeam/static/img/materials/' + $data.img + '\')' }">
-										<span href="#" data-bind="text: $data.name"></span>
-									</li>
-								</ul>
-									<div class='material_entry' data-bind="click: function(){dialog_state('summary');}">
-										<span>Custom</span>
-									</div>
-								<div class="clearfix"></div>
-							</div>
-<!--							<div data-bind="visible: isMaterialSelected()">
-								<div data-bind="text: selected_material_name()"></div>
-								<a href="#" class="" data-bind="click: function(){dialog_state('material_type');}"><i class="icon-edit"></i> change...</a>
-							</div>-->
+			<div id="material_row" data-bind="css: {expanded: dialog_state() === 'color_assignment'}">
+				<div id="material_type" data-bind="css: {active : selected_material() === null}">
+					<div class="">
+						<label class=""></label>
+						<div class="">
+							<form class="form-search" data-bind="submit: filterQuery, visible: selected_material() === null">
+								<input type="text" style="width:90%;" class="input-block search-query" data-bind="value: filterQuery, valueUpdate: 'input'" placeholder="{{ _('Search...') }}">
+							</form>
+							<ul id="material_list" data-bind="foreach: filteredMaterials">
+								<li class='material_entry' 
+									data-bind="click: $root.set_material($data, event), 
+												style: { backgroundImage: 'url(\'/plugin/mrbeam/static/img/materials/' + $data.img + '\')' },
+												css: {selected: $root.selected_material() === $data}
+									">
+									<span href="#" data-bind="text: $data.name"></span>
+								</li>
+							</ul>
+							<div class="clearfix"></div>
 						</div>
 					</div>
 				</div>
-			</div>
-			
-			<div id="material_thickness_color" class="row-fluid" data-bind="visible: dialog_state() === 'material_properties'">
-				<form class="job_parameters form-horizontal row-fluid" data-bind="visible: isMaterialSelected()">
-					<div class="control-group" data-bind="visible: selected_material_coloroptions()">
-						<label class="control-label">Color</label>
-						<div class="controls">
-							<input id="material_color" type="color" value="#999999" data-bind="value: selected_material_color, valueUpdate: 'input'" />
-						</div>
-						<div class="controls alert alert-info hint" data-bind="visible: showHints">
-							<span class="icon icon-question-sign" aria-hidden="true"></span>
-							Depending on the color the laser beam is reflected more or less. Select a color
-							close to the material's color to improve the result. 
-						</div>
-					</div>
-					<div class="control-group span8">
-						<label class="control-label">Thickness</label>
-						<div class="controls">
-							<input id="material_thickness_range" type="range" min="0" value="1" max="40" step=".5" data-bind="value:selected_material_thickness, valueUpdate: 'input'" /> <span data-bind="text:selected_material_thickness_str()"></span>
-<!--							<div class="muted" style='margin-top: 1em;'>
-								<i class="icon-info-sign"></i>&nbsp;Mount the laser head in position <span data-bind="text:thickness_mount_pos">1</span>.
-							</div>-->
-						</div>
-						<div class="controls alert alert-info hint" data-bind="visible: showHints">
-							<span class="icon icon-question-sign" aria-hidden="true"></span>
-							Set the thickness of the material. When cutting the material it is important to tell Mr Beam
-							the thickness that he can select the correct laser settings.
-						</div>
-					</div>
-					<div id="material_thickness_ruler" class="span4" data-bind="visible:isMaterialSelected()">
-						<div id="ruler">
-							<div></div><div></div><div></div><div></div><div></div>
-							<div></div><div></div><div></div><div></div><div></div>
-							<div></div><div></div><div></div><div></div><div></div>
-							<div></div><div></div><div></div><div></div><div></div>
-							<div></div><div></div><div></div><div></div><div></div>
-							<div></div><div></div><div></div><div></div><div></div>
-							<div></div><div></div><div></div><div></div><div></div>
-							<div></div><div></div><div></div><div></div><div></div>
-							<div></div>
-						</div>
-						<div id="thickness_sample_material" data-bind="style: {height: selected_material_thickness_px()}" ></div>
-					</div>
-					<div data-bind="visible: selected_material_thickness() > max_cut_depth()" >Material is only engravable.</div>
-				</form>
-			</div>
 
-			<div id="color_assignment" class="" data-bind="visible:dialog_state() === 'color_assignment'">
-				<div class="row-fluid form-horizontal" style="border-bottom: 1px solid #999;">
-					<div class="control-group">
-						<label class="control-label">Material</label>
-						<div class="controls">
-							<div class="material_entry" data-bind="style: { backgroundImage: 'url(\'/plugin/mrbeam/static/img/materials/' + selected_material_img() + '\')' }">
-								<span style="position: absolute; bottom:.3em; color: white;" data-bind="text:selected_material_name"></span><br/>
+				<!--<form class="job_parameters " data-bind="">-->
+					<div id="material_color" class="" data-bind="css: {active : selected_material() !== null }">
+						<div class="" data-bind="visible: material_colors().length > 1">
+							<label class="">Color</label>
+							<ul id="color_list" data-bind="foreach: material_colors">
+								<li class='material_color_entry' data-bind="
+									click: $root.set_material_color($data, event),
+									attr: {id: 'material_color_'+$data },
+									css: {active: $data === $root.selected_material_color() },
+									style: { backgroundColor: '#'+$data }
+								"></li>
+							</ul>
+							<div class="alert alert-info hint" data-bind="visible: showHints">
+								<span class="icon icon-question-sign" aria-hidden="true"></span>
+								Depending on the color the laser beam is reflected more or less. Select a color
+								close to the material's color to improve the result. 
 							</div>
-							<div data-bind="style:{backgroundColor: '#'+selected_material_color(), height:selected_material_thickness()+'mm' }" style="width: 100px; display:inline-block; background-image:url(/plugin/mrbeam/static/img/pattern_stripes.png); background-size: 100px;"></div>
-							<div style="display: inline-block;">Thickness: <span data-bind="text:selected_material_thickness"></span>&nbsp;mm</div>
+						</div>
+					</div>
+					<div id="material_thickness" data-bind="css: {active : selected_material() !== null && selected_material_color() !== null}">
+						<div class="">
+							<label class="">Thickness</label>
+<!--							<div class="">
+								<input id="material_thickness_range" type="range" min="0" value="1" max="40" step=".5" data-bind="value:selected_material_thickness, valueUpdate: 'input'" /> <span data-bind="text:selected_material_thickness_str()"></span>
+								<div class="muted" style='margin-top: 1em;'>
+									<i class="icon-info-sign"></i>&nbsp;Mount the laser head in position <span data-bind="text:thickness_mount_pos">1</span>.
+								</div>
+							</div>-->
+							<div class="controls alert alert-info hint" data-bind="visible: showHints">
+								<span class="icon icon-question-sign" aria-hidden="true"></span>
+								Set the thickness of the material. When cutting the material it is important to tell Mr Beam
+								the thickness that he can select the correct laser settings.
+							</div>
+						</div>
+<!--						<div id="material_thickness_ruler" class="span4" data-bind="visible:isMaterialSelected()">
+							<div id="ruler">
+								<div></div><div></div><div></div><div></div><div></div>
+								<div></div><div></div><div></div><div></div><div></div>
+								<div></div><div></div><div></div><div></div><div></div>
+								<div></div><div></div><div></div><div></div><div></div>
+								<div></div><div></div><div></div><div></div><div></div>
+								<div></div><div></div><div></div><div></div><div></div>
+								<div></div><div></div><div></div><div></div><div></div>
+								<div></div><div></div><div></div><div></div><div></div>
+								<div></div>
+							</div>
+							
+							<div id="thickness_sample_material" data-bind="style: {height: selected_material_thickness_px()}" ></div>
+						</div>-->
+						<div id="thickness_list" data-bind="foreach: material_thicknesses">
+							<div class="thickness_sample" 
+								 data-bind="
+										click: $root.set_material_thickness($data, event),
+										attr: {id: 'material_thickness_'+$data.thicknessMM },
+										css: {active: $data === $root.selected_material_thickness() },
+										style: { padding: ($data.thicknessMM * $root.mm2px()/2)+'mm' },
+										visible: ($root.selected_material_thickness() === null) || ($root.selected_material_thickness() === $data),
+										text: ($data.thicknessMM)+' mm'
+								 " ></div>
 						</div>
 
+						<div data-bind="visible: selected_material_thickness() > max_cut_depth()" >Material is only engravable.</div>
 					</div>
-				</div>
+				<!--</form>-->
+			</div>
+
+			<div id="color_assignment" data-bind="visible:dialog_state() === 'color_assignment'">
+<!--				<div class="row-fluid form-horizontal" style="border-bottom: 1px solid #999;">
+					<div  data-bind="click: function(){dialog_state('material_type');}">
+						<div class="control-group">
+							<label class="control-label">Material</label>
+							<div class="controls">
+								<div class="material_entry" data-bind="style: { backgroundImage: 'url(\'/plugin/mrbeam/static/img/materials/' + selected_material_img() + '\')' }">
+									<span style="position: absolute; bottom:.3em; color: white;" data-bind="text:selected_material_name"></span><br/>
+								</div>
+								<div data-bind="style:{backgroundColor: '#'+selected_material_color(), height:selected_material_thickness()+'mm' }" style="width: 100px; display:inline-block; background-image:url(/plugin/mrbeam/static/img/pattern_stripes.png); background-size: 100px;"></div>
+								<div style="display: inline-block;">Thickness: <span data-bind="text:selected_material_thickness"></span>&nbsp;mm</div>
+							</div>
+
+						</div>
+					</div>
+				</div>-->
 				
 				<div id="no_job" class="job_row row-fluid">
 					<div class="span3" style="display:flex;">
@@ -109,7 +125,7 @@
 
 				<div id="engrave_job" class="job_row row-fluid" data-bind="visible: show_image_parameters">
 					<div class="span3" style="display:flex;">
-						<div class="assigned_colors img_drop_zone" ondragover="colorAllowDrop(event)" ondrop="colorDrop(event)">
+						<div class="assigned_colors img_drop_zone color_drop_zone" ondragover="colorAllowDrop(event)" ondrop="colorDrop(event)">
 							<div id="cd_engraving" draggable="true" class="used_color" ondragstart="colorDragStart(event)" ondragend="colorDragEnd(event)"></div>
 						</div>
 					</div>
@@ -263,47 +279,6 @@
 				</div>
 			</div>
 			
-			<div id="conversion_summary" data-bind="visible: dialog_state() === 'summary' ">
-				<form class="job_parameters form-horizontal">
-					<div data-bind="click: function(){dialog_state('material_type');}">
-
-						<div class="control-group">
-							<label class="control-label">Material</label>
-							<div class="controls">
-								<div class="material_entry" data-bind="style: { backgroundImage: 'url(\'/plugin/mrbeam/static/img/materials/' + selected_material_img() + '\')' }">
-									<span style="position: absolute; bottom:.3em; color: white;" data-bind="text:selected_material_name"></span><br/>
-								</div>
-								<div data-bind="style:{backgroundColor: '#'+selected_material_color(), height:selected_material_thickness()+'mm' }" style="width: 100px; display:inline-block; background-image:url(/plugin/mrbeam/static/img/pattern_stripes.png); background-size: 100px;"></div>
-								<div style="display: inline-block;">Thickness: <span data-bind="text:selected_material_thickness"></span>&nbsp;mm</div>
-							</div>
-						</div>
-					</div>
-					<div data-bind="click: function(){dialog_state('color_assignment');}" style="curser:pointer;">
-						<div class="control-group">
-							<label class="control-label">Engraving</label>
-							<div class="controls">
-								Images & Fills: 
-								<span data-bind="text:imgIntensityWhite"></span>-<span data-bind="text:imgIntensityBlack"></span>%
-								@ 
-								<span data-bind="text:imgFeedrateWhite"></span>-<span data-bind="text:imgFeedrateBlack"></span>mm/min  
-							</div>
-						</div>
-						<div class="control-group">
-							<label class="control-label">Cutting</label>
-							<div class="controls">
-								<div data-bind="foreach: vectorJobs">
-									<span data-bind="style: {backgroundColor: $data.color}" style="display:inline-block; width: 1em; height: 1em; border:1px solid #999;"></span>:
-									<span data-bind="text:$data.intensity/10"></span>% @
-									<span data-bind="text:$data.feedrate"></span> mm/min &times;
-									<span data-bind="text:$data.passes"></span> 
-									<br/>
-								</div>
-									
-							</div>
-						</div>
-					</div>
-				</form>
-			</div>
 		</div>
 		
 		<div id="slicing_progress" class="progress progress-striped active" style="width: 100%;" data-bind="visible: slicing_in_progress()">
@@ -320,14 +295,11 @@
 			</label>
 		</div>
 
-        <!--<a href="#" class="btn" aria-hidden="true" data-bind="click: $root.cancel_conversion()">{{ _('Cancel') }}</a>-->
-<!--        <a href="#" class="btn" aria-hidden="true" data-bind="click: previousStep(), visible: dialog_state() !== 'material_type' ">{{ _('Back') }}</a>
--->
-        <a href="#" class="btn" aria-hidden="true" data-bind="click: function(){dialog_state(get_dialog_state());}, visible: dialog_state() !== 'summary' ">{{ _('Ok') }}</a>
+        <a href="#" class="btn" aria-hidden="true" data-bind="click: $root.cancel_conversion()">{{ _('Cancel') }}</a>
+<!--        <a href="#" class="btn" aria-hidden="true" data-bind="click: previousStep(), visible: dialog_state() !== 'material_type' ">{{ _('Back') }}</a>-->
         <a href="#" class="btn btn-primary" 
 		   data-bind="click: function() { if ($root.enableConvertButton()) { $root.convert() } }, 
-					visible: dialog_state() === 'summary',
 					enabled: enableConvertButton,
-					css: {disabled: !$root.enableConvertButton()}">{{ _('Go') }}</a>
+					css: {disabled: !$root.enableConvertButton()}">{{ _('Start') }}</a>
     </div>
 </div>

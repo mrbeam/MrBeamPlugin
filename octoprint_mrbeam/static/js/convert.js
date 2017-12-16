@@ -22,7 +22,7 @@ $(function(){
 		self.slicing_progress = ko.observable(5);
 		self.slicing_in_progress = ko.observable(false);
 
-		self.dialog_state = ko.observable('summary');
+		self.dialog_state = ko.observable('color_assignment');
 		self.state_titles = {
 			material_type: 'Material Selection', 
 			material_properties: 'Material Properties', 
@@ -323,35 +323,12 @@ $(function(){
 			}
 		};
 
-
-//        var material_keys_cut = [];
-//		for(var materialKey in self.materials_settings){
-//		    if (self.materials_settings[materialKey]
-//                && self.materials_settings[materialKey].cut_i > 0
-//                && self.materials_settings[materialKey].cut_f > 0
-//                && self.materials_settings[materialKey].cut_p > 0) {
-//			    material_keys_cut.push(materialKey);
-//            }
-//		}
-//
-//        var material_keys_eng = [];
-//		for(var materialKey in self.materials_settings){
-//            if (self.materials_settings[materialKey]
-//                && self.materials_settings[materialKey].eng_i[0] > 0
-//                && self.materials_settings[materialKey].eng_i[1] > 0
-//                && self.materials_settings[materialKey].eng_f[0] > 0
-//                && self.materials_settings[materialKey].eng_f[1] > 0) {
-//			    material_keys_eng.push(materialKey);
-//            }
-//		}
-
-//		self.material_menu_cut = ko.observableArray(material_keys_cut);
-//		self.material_menu_eng = ko.observableArray(material_keys_eng);
-//		self.material_menu = ko.observableArray(material_keys_eng.concat(material_keys_cut));
 		self.selected_material = ko.observable(null);
+		self.material_colors = ko.observableArray([]);
+		self.material_thicknesses = ko.observableArray([]);
 		self.selected_material_color = ko.observable(null);
-		self.selected_material_thickness = ko.observable(0.5);
-		self.selected_material_coloroptions = ko.observable(true);
+		self.selected_material_thickness = ko.observable(null);
+		self.mm2px = ko.observable(1.37037); // TODO put in user settings
 		self.selected_material_name = ko.computed(function(){ 
 			var mat = self.selected_material();
 			return mat === null ? '' : mat.name;
@@ -365,7 +342,7 @@ $(function(){
 			return self.selected_material_thickness() +' mm';
 		 });
 		self.selected_material_thickness_px = ko.computed(function(){ 
-			var d = self.selected_material_thickness() * 1.37037 - 0.5; // TODO put in user settings
+			var d = self.selected_material_thickness() * self.mm2px() - 0.5; 
 			return d +'mm';
 		 });
 		 
@@ -431,24 +408,37 @@ $(function(){
 			if(material !== null){
 //				console.log("changing material to", material.name);
 				var available_colors = Object.keys(material.colors);
-				self.selected_material_coloroptions(available_colors.length > 1);
-				self.selected_material_color(available_colors[0]);
-				var available_thickness = material.colors[available_colors[0]].cut;
-				if(available_thickness.length === 0){
-//					console.log("only engraving possible");
-				} else {
-					self.selected_material_thickness(available_thickness[0].thicknessMM);
+				self.material_colors(available_colors);
+				if(available_colors.length > 1){
+					self.selected_material_color(null);
+				} else {				
+					self.selected_material_color(available_colors[0]);
 				}
+				var available_thickness = material.colors[available_colors[0]].cut;
+				console.log(available_thickness);
+				if(available_thickness.length === 0){
+					console.log("only engraving possible");
+				} else if(available_thickness.length === 1){
+					self.selected_material_thickness(available_thickness[0].thicknessMM);
+				} else {
+					self.material_thicknesses(available_thickness);
+					self.selected_material_thickness(null);
+				}
+			} else {
+				self.selected_material_color(null);
+				self.selected_material_thickness(null);
 			}
 		});
 		
 		// changes in color reset thickness settings
 		self.selected_material_color.subscribe(function(color){
 			// reset thickness values
-			self.apply_engraving_proposal();
+			if(color !== null)
+				self.apply_engraving_proposal();
 		});
-		self.selected_material_color.subscribe(function(thickness){
-			self.apply_vector_proposal();
+		self.selected_material_thickness.subscribe(function(thickness){
+			if(thickness !== null && self.selected_material_color() !== null)
+				self.apply_vector_proposal();
 		});
 
 		self.dialog_state.subscribe(function(new_state){
@@ -508,13 +498,44 @@ $(function(){
 		self.set_material = function(material, ev){
 			if(typeof ev !== 'undefined' && ev.type === 'click' && typeof material === 'object' ){
 				var old_material = self.selected_material();
-				if(old_material !== material){
+				if(old_material === null){
 					self.selected_material(material);
+				} else {
+					self.selected_material(null);
 				}
 			} else {
 				self.selected_material(null);
 			}
-			self.dialog_state('material_properties');
+			self.dialog_state('material_type');
+		};
+		self.set_material_color = function(color, ev){
+			if(typeof ev !== 'undefined' && ev.type === 'click' ){
+				var old = self.selected_material_color();
+				if(old === null){
+					self.selected_material_color(color);
+				} else {
+					self.selected_material_color(null);
+				}
+			} else {
+				self.selected_material_color(null);
+			}
+			self.dialog_state('material_type');
+		};
+		self.set_material_thickness = function(thickness, ev){
+			console.log(thickness);
+			if(typeof ev !== 'undefined' && ev.type === 'click' ){
+				var old = self.selected_material_thickness();
+				if(old === null){
+					self.selected_material_thickness(thickness);
+					self.dialog_state('color_assignment');
+				} else {
+					self.selected_material_thickness(null);
+					self.dialog_state('material_type');
+				}
+			} else {
+				self.selected_material_thickness(null);
+				self.dialog_state('material_type');
+			}
 		};
 
 		self.apply_vector_proposal = function(){
@@ -625,11 +646,11 @@ $(function(){
 			if(self.selected_material() === null){
 				return 'material_type';
 			} else if (self.selected_material_thickness() === null){
-				return 'material_properties';
+				return 'material_type';
 			} else if(self.get_color_assignment_required()){
 				return 'color_assignment';
 			} else {
-				return 'summary';
+				return 'color_assignment';
 			}
 		};
 

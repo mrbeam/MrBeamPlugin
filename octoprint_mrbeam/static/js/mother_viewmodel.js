@@ -306,17 +306,19 @@ $(function () {
         };
 
         self._fromData = function (data) {
-            self._processStateData(data.state);
-            self._processWPosData(data.workPosition);
+			if (self.isStartupComplete){
+				self._processStateData(data.state);
+				self._processWPosData(data.workPosition);
+			}
 			self._processProgressData(data.progress);
 			self._processJobData(data.job);
         };
 
         self._processStateData = function (data) {
-            self.state.isLocked(data.flags.locked);
-            self.state.isFlashing(data.flags.flashing);
-            self.state.isConnecting(data.text === "Connecting" || data.text === "Opening serial port");
-        };
+				self.state.isLocked(data.flags.locked);
+				self.state.isFlashing(data.flags.flashing);
+				self.state.isConnecting(data.text === "Connecting" || data.text === "Opening serial port");
+		};
 
         self._processWPosData = function (data) {
             if (data === undefined || data === null) {

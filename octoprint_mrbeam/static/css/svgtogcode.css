@@ -258,6 +258,23 @@ svg#area_preview {
 	clear: both;
 }
 
+#color_list li.material_color_entry {
+    width: 3em;
+    height: 3em;
+	margin: .3em;
+    display: inline-block;
+    border: 1px solid #ddd;
+    cursor: pointer;
+	transition: transform .1s ease-in;
+}
+#color_list li.material_color_entry.active,
+#color_list li.material_color_entry.active:hover {
+	transform: scale(1.25) !important;
+}
+#color_list li.material_color_entry:hover {
+	transform: scale(1.1);
+}
+
 .job_row {
     margin-bottom: 1em;
     border-bottom: 1px solid #999;
@@ -434,7 +451,7 @@ svg#area_preview rect
 	overflow: auto;
 }
 .material_entry {
-	display: block;
+	display: none;
 	width: 200px;
 	height: 100px;
 	border: 1px solid #999;
@@ -445,6 +462,10 @@ svg#area_preview rect
 	position: relative;
 	cursor: pointer;
 }
+
+#material_type .material_entry.selected { display: block; }
+#material_type.active .material_entry {	display: block; }
+
 li.material_entry span {
   position: absolute;
   bottom: .3em;
@@ -471,22 +492,55 @@ li.material_entry span {
 #ruler div:nth-of-type(10n+1){
 	width:2em;
 }
-#thickness_sample_material {
-	float: right;
-	border: 0.25mm solid #999;
-	border-left-color: transparent;
-	width: calc(100% - 4em);
-	background-image: url(/plugin/mrbeam/static/img/pattern_stripes.png);
-	background-size: 40%;
+
+#thickness_list{
+	width: 200px;
 }
 
-#material_color {
-	width: 100px;
-	height: 100px;
-	border: none;
-	box-shadow: none;
-	padding: 0;
+
+.thickness_sample {
+    display: inline-block;
+    border: 0.25mm solid #999;
+    border-left-color: transparent;
+    width: 200px;
+    background-image: url(/plugin/mrbeam/static/img/pattern_stripes.png);
+    background-size: 39%;
+    margin-bottom: 1em;
+    text-align: center;
+    height: 0;
+    line-height: 0;
+    text-shadow: 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff;
+	cursor: pointer;
 }
+.thickness_sample:hover {font-weight: bold; }
+
+#material_row {
+	width: 100%;
+	overflow-x: hidden;
+	position: relative;
+	height: calc(100px+2em);
+}
+#material_row.expanded {
+	height: 50vh;
+}
+
+#material_type, #material_color, #material_thickness {
+	width: 33%;
+	display: inline-block;
+	box-sizing: border-box;
+	position: absolute;
+	transition: margin-left .1s ease-in;
+	height: 50vh;
+	background-color: #fff;
+}
+#material_type.active {
+	width: 100%;
+}
+#material_color, #material_thickness { margin-left: 100%; }
+#material_color.active { margin-left:33%; }
+#material_thickness.active { margin-left:66%; }
+
+
 
 .misfit_warning i {
 	color: #e25303;
