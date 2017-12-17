@@ -5,7 +5,7 @@
     </div>
     <div class="modal-body scrollable">
 		<div data-bind="visible:!slicing_in_progress()">
-			<div id="material_row" data-bind="css: {expanded: dialog_state() === 'color_assignment'}">
+			<div id="material_row" data-bind="css: {expanded: dialog_state() !== 'color_assignment'}">
 				<div id="material_type" data-bind="css: {active : selected_material() === null}">
 					<div class="">
 						<label class=""></label>

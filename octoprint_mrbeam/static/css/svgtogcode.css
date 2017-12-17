@@ -518,7 +518,8 @@ li.material_entry span {
 	width: 100%;
 	overflow-x: hidden;
 	position: relative;
-	height: calc(100px+2em);
+	height: calc(100px + 2em);
+	border-bottom: 1px solid #999;
 }
 #material_row.expanded {
 	height: 50vh;

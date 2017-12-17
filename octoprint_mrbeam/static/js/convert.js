@@ -347,7 +347,7 @@ $(function(){
 		 });
 		 
 		self.get_closest_thickness_params = function(){
-			var thickness = self.selected_material_thickness();
+			var selected = self.selected_material_thickness();
 			var color_closest = self.get_closest_color_params();
 			var available = color_closest.cut;
 			if(available.length === 0) {
@@ -359,7 +359,7 @@ $(function(){
 				var upper = null;
 				for (var i = 0; i < available.length; i++) {
 					var pset = available[i];
-					if(pset.thicknessMM >= thickness){
+					if(pset.thicknessMM >= selected.thicknessMM){
 						if(upper === null || pset.thicknessMM < upper.thicknessMM){
 							upper = pset;
 						}
@@ -551,7 +551,9 @@ $(function(){
 					$(job).find('.param_passes').val(params.cut_p || 0);
 					$(job).find('.param_piercetime').val(params.cut_pierce || 0);
 				}
+				console.log("vector_props", params);
 			}
+			console.log("vector_props", material, params);
 		};
 		self.apply_engraving_proposal = function(){
 			var material = self.selected_material();
@@ -568,7 +570,9 @@ $(function(){
 				self.imgFeedrateBlack(p.eng_f[1]);
 				self.imgDithering(p.dithering);
 				self.engravingPiercetime(p.eng_pierce || 0);
+				console.log("engraving_props", p);
 			}
+			console.log("engraving_props null");
 		};
 		
 		self._find_closest_color_to = function(hex, available_colors){
