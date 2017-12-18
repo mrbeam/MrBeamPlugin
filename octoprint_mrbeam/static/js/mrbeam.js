@@ -19,6 +19,56 @@ if ((is_chrome)&&(is_safari)) {is_safari=false;}
 if ((is_chrome)&&(is_opera)) {is_chrome=false;}
 
 
+/**
+ * Test if OctoPrint of a specific or higher version is running.
+ * @param ecpectedOctoPrintVersion
+ * @returns Boolean or undefined if VERSION is not set
+ */
+var isOctoPrintVersionMin = function(ecpectedOctoPrintVersion){
+    if (VERSION) {
+        return isVersionOrHigher(VERSION.replace('v', ''), ecpectedOctoPrintVersion);
+    } else {
+        return undefined;
+    }
+};
+
+/**
+ * compare two versions, return true if actualVersion is up to date, false otherwise
+ * if both versions are in the form of major[.minor][.patch] then the comparison parses and compares as such
+ * otherwise the versions are treated as strings and normal string compare is done
+ * taken from: https://gist.github.com/prenagha/98bbb03e27163bc2f5e4
+ * @param actualVersion
+ * @param expectedVersion
+ * @returns {boolean}
+ */
+var isVersionOrHigher = function(actualVersion, expectedVersion) {
+    var VPAT = /^\d+(\.\d+){0,2}$/;
+
+    if (!actualVersion || !expectedVersion || actualVersion.length === 0 || expectedVersion.length === 0)
+        return false;
+    if (actualVersion == expectedVersion)
+        return true;
+    if (VPAT.test(actualVersion) && VPAT.test(expectedVersion)) {
+        var lparts = actualVersion.split('.');
+        while(lparts.length < 3)
+            lparts.push("0");
+        var rparts = expectedVersion.split('.');
+        while (rparts.length < 3)
+            rparts.push("0");
+        for (var i=0; i<3; i++) {
+            var l = parseInt(lparts[i], 10);
+            var r = parseInt(rparts[i], 10);
+            if (l === r)
+                continue;
+            return l > r;
+        }
+        return true;
+    } else {
+        return actualVersion >= expectedVersion;
+    }
+};
+
+
 $(function() {
     function MrbeamViewModel(parameters) {
         var self = this;

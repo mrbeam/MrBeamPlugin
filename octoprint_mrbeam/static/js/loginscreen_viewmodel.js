@@ -14,7 +14,26 @@ $(function() {
         self.onStartup = function() {
             self.dialogElement = $('#loginscreen_dialog');
             self.loginButton = $('#loginscreen_dialog button');
-        }
+        };
+
+        self.onStartupComplete = function(){
+            if (isOctoPrintVersionMin('1.3.6')) {
+                /**
+                 * New in OP 1.3.6:
+                 * No longer triggers onUserLoggedOut() in boot sequence. Only onUserLoggedIn() -if user is logged in.
+                 * But self.loginState.loggedIn() shows correct loggedIn state in onStartupComplete()
+                 */
+                self.setLoginState();
+            }
+        };
+
+        self.setLoginState = function(){
+            if (self.loginState.loggedIn()) {
+                self.onUserLoggedIn();
+            } else {
+                self.onUserLoggedOut();
+            }
+        };
 
         self.onUserLoggedIn = function(currentUser){
             if (!OctoPrint.coreui.wizardOpen) {
@@ -46,14 +65,14 @@ $(function() {
                 self.dialogElement.modal("show");
             }
             self.loginButton.prop('disabled', false);
-        }
+        };
 
         self.hideDialog = function() {
             if (self.dialogElement.hasClass('in')) {
                 self.dialogElement.modal("hide");
             }
             self.loginButton.prop('disabled', false);
-        }
+        };
 
     }
 
