@@ -473,26 +473,6 @@ li.material_entry span {
   text-shadow: 0px 0px 4px black;
 }
 
-#material_thickness_ruler {
-	transform:scaleY(-1);
-}
-#ruler {
-	width:2em;
-	margin-left:1mm;
-	float:right;
-}
-#ruler div {
-	height: calc(1mm*1.37 - 1px);
-	border-top: 1px solid #ccc;
-	width: 1em;
-}
-#ruler div:nth-of-type(5n+1){
-	width:1.5em;
-}
-#ruler div:nth-of-type(10n+1){
-	width:2em;
-}
-
 #thickness_list{
 	width: 200px;
 }
@@ -531,7 +511,6 @@ li.material_entry span {
 	box-sizing: border-box;
 	position: absolute;
 	transition: margin-left .1s ease-in;
-	height: 50vh;
 	background-color: #fff;
 }
 #material_type.active {
@@ -541,7 +520,7 @@ li.material_entry span {
 #material_color.active { margin-left:33%; }
 #material_thickness.active { margin-left:66%; }
 
-
+#color_list { margin:0; }
 
 .misfit_warning i {
 	color: #e25303;

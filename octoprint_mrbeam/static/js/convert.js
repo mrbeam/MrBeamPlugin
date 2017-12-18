@@ -323,11 +323,16 @@ $(function(){
 			}
 		};
 
-		self.selected_material = ko.observable(null);
 		self.material_colors = ko.observableArray([]);
 		self.material_thicknesses = ko.observableArray([]);
+		self.selected_material = ko.observable(null);
 		self.selected_material_color = ko.observable(null);
 		self.selected_material_thickness = ko.observable(null);
+		self.expandMaterialSelector = ko.computed(function(){
+			return self.selected_material === null || self.selected_material_color() === null || self.selected_material_thickness() === null;
+		});
+
+
 		self.mm2px = ko.observable(1.37037); // TODO put in user settings
 		self.selected_material_name = ko.computed(function(){ 
 			var mat = self.selected_material();
@@ -338,13 +343,13 @@ $(function(){
 			if(mat !== null)
 			return mat === null ? '' : mat.img;
 		 });
-		self.selected_material_thickness_str = ko.computed(function(){ 
-			return self.selected_material_thickness() +' mm';
-		 });
-		self.selected_material_thickness_px = ko.computed(function(){ 
-			var d = self.selected_material_thickness() * self.mm2px() - 0.5; 
-			return d +'mm';
-		 });
+//		self.selected_material_thickness_str = ko.computed(function(){ 
+//			return self.selected_material_thickness().thicknessMM +' mm';
+//		 });
+//		self.selected_material_thickness_px = ko.computed(function(){ 
+//			var d = self.selected_material_thickness().thicknessMM * self.mm2px() - 0.5; 
+//			return d +'mm';
+//		 });
 		 
 		self.get_closest_thickness_params = function(){
 			var selected = self.selected_material_thickness();
@@ -393,13 +398,17 @@ $(function(){
 			return cuttable;
 		});
 		self.thickness_mount_pos = ko.computed(function(){ 
-			var d = self.selected_material_thickness(); 
-			if(d < 10) return '1';
-			if(d < 20) return '2';
-			if(d < 30) return '3';
-			return '4';
+			var selected = self.selected_material_thickness(); 
+			if(selected !== null){
+				var d = selected.thicknessMM;
+				if(d < 10) return '1';
+				if(d < 20) return '2';
+				if(d < 30) return '3';
+				return '4';
+			} else {
+				return null;
+			}
 		 });
-		self.isMaterialSelected = ko.computed(function(){ return self.selected_material() !== null; });
 		
 		// Hierarchy: Material Type -> Color -> Thickness (changing higher nodes resets lower ones.)
 		// if only one option is available this one is used for the parameter suggestion.
@@ -407,6 +416,8 @@ $(function(){
 		self.selected_material.subscribe(function(material){
 			if(material !== null){
 //				console.log("changing material to", material.name);
+// 
+				// autoselect color if only one available
 				var available_colors = Object.keys(material.colors);
 				self.material_colors(available_colors);
 				if(available_colors.length > 1){
@@ -414,16 +425,7 @@ $(function(){
 				} else {				
 					self.selected_material_color(available_colors[0]);
 				}
-				var available_thickness = material.colors[available_colors[0]].cut;
-				console.log(available_thickness);
-				if(available_thickness.length === 0){
-					console.log("only engraving possible");
-				} else if(available_thickness.length === 1){
-					self.selected_material_thickness(available_thickness[0].thicknessMM);
-				} else {
-					self.material_thicknesses(available_thickness);
-					self.selected_material_thickness(null);
-				}
+
 			} else {
 				self.selected_material_color(null);
 				self.selected_material_thickness(null);
@@ -432,15 +434,31 @@ $(function(){
 		
 		// changes in color reset thickness settings
 		self.selected_material_color.subscribe(function(color){
-			// reset thickness values
-			if(color !== null)
+			var material = self.selected_material();
+			
+			if(material !== null && color !== null){
 				self.apply_engraving_proposal();
+
+				// autoselect thickness if only one available
+				var available_thickness = material.colors[color].cut;
+				if(available_thickness.length === 0){
+					console.log("only engraving possible");
+				} else if(available_thickness.length === 1){
+					self.material_thicknesses(available_thickness);
+					self.selected_material_thickness(available_thickness[0]);
+					self.dialog_state('color_assignment');
+				} else {
+					self.material_thicknesses(available_thickness);
+					self.selected_material_thickness(null);
+				}
+
+			}
 		});
 		self.selected_material_thickness.subscribe(function(thickness){
-			if(thickness !== null && self.selected_material_color() !== null)
+			if(thickness !== null && self.selected_material_color() !== null && self.selected_material !== null)
 				self.apply_vector_proposal();
 		});
-
+		
 		self.dialog_state.subscribe(function(new_state){
 			self._update_job_summary();
 		});
@@ -558,8 +576,8 @@ $(function(){
 		self.apply_engraving_proposal = function(){
 			var material = self.selected_material();
 			var param_set = self.get_closest_color_params();
-			var p = param_set.engrave;
-			if(material !== null && p !== null){
+			if(material !== null && param_set.engrave !== null){
+				var p = param_set.engrave;
 				
 				var job = $('#engrave_job');
 				$(job).find('.job_title').html("Engrave " + material.name);

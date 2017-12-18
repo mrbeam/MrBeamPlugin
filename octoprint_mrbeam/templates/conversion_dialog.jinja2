@@ -5,10 +5,10 @@
     </div>
     <div class="modal-body scrollable">
 		<div data-bind="visible:!slicing_in_progress()">
-			<div id="material_row" data-bind="css: {expanded: dialog_state() !== 'color_assignment'}">
+			<div id="material_row" data-bind="css: {expanded: expandMaterialSelector() }">
 				<div id="material_type" data-bind="css: {active : selected_material() === null}">
 					<div class="">
-						<label class=""></label>
+						<label class="">Material</label>
 						<div class="">
 							<form class="form-search" data-bind="submit: filterQuery, visible: selected_material() === null">
 								<input type="text" style="width:90%;" class="input-block search-query" data-bind="value: filterQuery, valueUpdate: 'input'" placeholder="{{ _('Search...') }}">
@@ -27,89 +27,51 @@
 					</div>
 				</div>
 
-				<!--<form class="job_parameters " data-bind="">-->
-					<div id="material_color" class="" data-bind="css: {active : selected_material() !== null }">
-						<div class="" data-bind="visible: material_colors().length > 1">
-							<label class="">Color</label>
-							<ul id="color_list" data-bind="foreach: material_colors">
-								<li class='material_color_entry' data-bind="
-									click: $root.set_material_color($data, event),
-									attr: {id: 'material_color_'+$data },
-									css: {active: $data === $root.selected_material_color() },
-									style: { backgroundColor: '#'+$data }
-								"></li>
-							</ul>
-							<div class="alert alert-info hint" data-bind="visible: showHints">
-								<span class="icon icon-question-sign" aria-hidden="true"></span>
-								Depending on the color the laser beam is reflected more or less. Select a color
-								close to the material's color to improve the result. 
-							</div>
+				<div id="material_color" class="" data-bind="css: {active : selected_material() !== null }">
+					<div class="" data-bind="visible: material_colors().length > 1">
+						<label class="">Color</label>
+						<ul id="color_list" data-bind="foreach: material_colors">
+							<li class='material_color_entry' data-bind="
+								click: $root.set_material_color($data, event),
+								attr: {id: 'material_color_'+$data },
+								css: {active: $data === $root.selected_material_color() },
+								style: { backgroundColor: '#'+$data }
+							"></li>
+						</ul>
+						<div class="alert alert-info hint" data-bind="visible: showHints">
+							<span class="icon icon-question-sign" aria-hidden="true"></span>
+							Depending on the color the laser beam is reflected more or less. Select a color
+							close to the material's color to improve the result. 
 						</div>
 					</div>
-					<div id="material_thickness" data-bind="css: {active : selected_material() !== null && selected_material_color() !== null}">
-						<div class="">
-							<label class="">Thickness</label>
-<!--							<div class="">
-								<input id="material_thickness_range" type="range" min="0" value="1" max="40" step=".5" data-bind="value:selected_material_thickness, valueUpdate: 'input'" /> <span data-bind="text:selected_material_thickness_str()"></span>
-								<div class="muted" style='margin-top: 1em;'>
-									<i class="icon-info-sign"></i>&nbsp;Mount the laser head in position <span data-bind="text:thickness_mount_pos">1</span>.
-								</div>
-							</div>-->
-							<div class="controls alert alert-info hint" data-bind="visible: showHints">
-								<span class="icon icon-question-sign" aria-hidden="true"></span>
-								Set the thickness of the material. When cutting the material it is important to tell Mr Beam
-								the thickness that he can select the correct laser settings.
-							</div>
+				</div>
+				<div id="material_thickness" data-bind="css: {active : selected_material() !== null && selected_material_color() !== null}">
+					<div class="">
+						<label class="">Thickness</label>
+						<div class="controls alert alert-info hint" data-bind="visible: showHints">
+							<span class="icon icon-question-sign" aria-hidden="true"></span>
+							Set the thickness of the material. When cutting the material it is important to tell Mr Beam
+							the thickness that he can select the correct laser settings.
 						</div>
-<!--						<div id="material_thickness_ruler" class="span4" data-bind="visible:isMaterialSelected()">
-							<div id="ruler">
-								<div></div><div></div><div></div><div></div><div></div>
-								<div></div><div></div><div></div><div></div><div></div>
-								<div></div><div></div><div></div><div></div><div></div>
-								<div></div><div></div><div></div><div></div><div></div>
-								<div></div><div></div><div></div><div></div><div></div>
-								<div></div><div></div><div></div><div></div><div></div>
-								<div></div><div></div><div></div><div></div><div></div>
-								<div></div><div></div><div></div><div></div><div></div>
-								<div></div>
-							</div>
-							
-							<div id="thickness_sample_material" data-bind="style: {height: selected_material_thickness_px()}" ></div>
-						</div>-->
-						<div id="thickness_list" data-bind="foreach: material_thicknesses">
-							<div class="thickness_sample" 
-								 data-bind="
-										click: $root.set_material_thickness($data, event),
-										attr: {id: 'material_thickness_'+$data.thicknessMM },
-										css: {active: $data === $root.selected_material_thickness() },
-										style: { padding: ($data.thicknessMM * $root.mm2px()/2)+'mm' },
-										visible: ($root.selected_material_thickness() === null) || ($root.selected_material_thickness() === $data),
-										text: ($data.thicknessMM)+' mm'
-								 " ></div>
-						</div>
+					</div>
+					<div id="thickness_list" data-bind="foreach: material_thicknesses">
+						<div class="thickness_sample" 
+							 data-bind="
+									click: $root.set_material_thickness($data, event),
+									attr: {id: 'material_thickness_'+$data.thicknessMM },
+									css: {active: $data === $root.selected_material_thickness() },
+									style: { padding: ($data.thicknessMM * $root.mm2px()/2)+'mm' },
+									visible: ($root.selected_material_thickness() === null) || ($root.selected_material_thickness() === $data),
+									text: ($data.thicknessMM)+' mm'
+							 " ></div>
+					</div>
 
-						<div data-bind="visible: selected_material_thickness() > max_cut_depth()" >Material is only engravable.</div>
-					</div>
-				<!--</form>-->
+					<div data-bind="visible: selected_material_thickness() > max_cut_depth()" >Material is only engravable.</div>
+				</div>
 			</div>
 
-			<div id="color_assignment" data-bind="visible:dialog_state() === 'color_assignment'">
-<!--				<div class="row-fluid form-horizontal" style="border-bottom: 1px solid #999;">
-					<div  data-bind="click: function(){dialog_state('material_type');}">
-						<div class="control-group">
-							<label class="control-label">Material</label>
-							<div class="controls">
-								<div class="material_entry" data-bind="style: { backgroundImage: 'url(\'/plugin/mrbeam/static/img/materials/' + selected_material_img() + '\')' }">
-									<span style="position: absolute; bottom:.3em; color: white;" data-bind="text:selected_material_name"></span><br/>
-								</div>
-								<div data-bind="style:{backgroundColor: '#'+selected_material_color(), height:selected_material_thickness()+'mm' }" style="width: 100px; display:inline-block; background-image:url(/plugin/mrbeam/static/img/pattern_stripes.png); background-size: 100px;"></div>
-								<div style="display: inline-block;">Thickness: <span data-bind="text:selected_material_thickness"></span>&nbsp;mm</div>
-							</div>
+			<div id="color_assignment" data-bind="visible: !expandMaterialSelector()">
 
-						</div>
-					</div>
-				</div>-->
-				
 				<div id="no_job" class="job_row row-fluid">
 					<div class="span3" style="display:flex;">
 						<div class="assigned_colors color_drop_zone img_drop_zone" ondragover="colorAllowDrop(event)" ondrop="colorDrop(event)"></div>
