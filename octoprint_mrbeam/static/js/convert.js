@@ -427,6 +427,8 @@ $(function(){
 				}
 
 			} else {
+				self.material_colors([]);
+				self.material_thicknesses([]);
 				self.selected_material_color(null);
 				self.selected_material_thickness(null);
 			}
@@ -443,6 +445,7 @@ $(function(){
 				var available_thickness = material.colors[color].cut;
 				if(available_thickness.length === 0){
 					console.log("only engraving possible");
+					self.selected_material_thickness(null);
 				} else if(available_thickness.length === 1){
 					self.material_thicknesses(available_thickness);
 					self.selected_material_thickness(available_thickness[0]);

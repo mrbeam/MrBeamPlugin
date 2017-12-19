@@ -262,23 +262,33 @@ svg#area_preview {
 #color_list { margin:0; }
 
 #color_list li.material_color_entry {
-    width: 3em;
-    height: 3em;
-	margin: .3em;
+    width: 60px;
+    height: 60px;
+	margin: 0 .5em .5em 0;
     display: none;
-    border: 1px solid #ddd;
+    /*border: 1px solid #ddd;*/
     cursor: pointer;
-	transition: transform .1s ease-in;
+	transition: width .1s ease-in-out;
 }
 #material_row.expanded li.material_color_entry,
-#material_color li.material_color_entry.active
-{ display: inline-block }
-#color_list li.material_color_entry.active,
-#color_list li.material_color_entry.active:hover {
-	transform: scale(1.25) !important;
+#material_color li.material_color_entry.active { 
+	display: inline-block;
+}
+#color_list li.material_color_entry.active {
+	/*transform: scale(1.25) !important;*/
+	width: 200px !important;
 }
 #color_list li.material_color_entry:hover {
-	transform: scale(1.25);
+	/*transform: scale(1.25);*/
+
+}
+
+#material_row .hover_shadow {
+    box-shadow: 1px 1px 2px #383e42;
+	transition: box-shadow .1s ease-in-out;
+}
+#material_row .hover_shadow:hover { 
+    box-shadow: 2px 2px 4px #383e42;
 }
 
 .job_row {
@@ -462,7 +472,7 @@ svg#area_preview rect
 	height: 100px;
 	float: left;
 	padding: .5em;
-	margin: .2em;
+	margin: 0 .5em .5em 0;
 	background-size: cover;
 	position: relative;
 	cursor: pointer;
@@ -495,7 +505,7 @@ li.material_entry span {
     display: inline-block;
     border: 0.25mm solid #999;
     border-left-color: transparent;
-    width: 200px;
+    width: 100%;
     background-image: url(/plugin/mrbeam/static/img/pattern_stripes.png);
     background-size: 39%;
     margin-bottom: 1em;
@@ -520,19 +530,23 @@ li.material_entry span {
 }
 
 #material_type, #material_color, #material_thickness {
-	width: 33%;
+	width: 20%;
 	display: inline-block;
 	box-sizing: border-box;
 	position: absolute;
 	transition: margin-left .1s ease-in;
 	background-color: #fff;
+	border: 1px solid cyan;
 }
-#material_type.active {
-	width: 100%;
-}
+#material_type.active { width: 100%; }
+#material_type { width: calc(200px + 2em); }
+
 #material_color, #material_thickness { margin-left: 100%; }
-#material_color.active { margin-left:33%; }
-#material_thickness.active { margin-left:66%; }
+#material_color.active { 
+	margin-left: calc(200px + 3em); 
+	width: calc(100% - 200px - 3em);
+}
+#material_thickness.active { margin-left:  calc(200px + 4em + 20%); }
 
 .misfit_warning i {
 	color: #e25303;

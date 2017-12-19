@@ -11,10 +11,10 @@
 						<label class="">Material</label>
 						<div class="">
 							<form class="form-search" data-bind="submit: filterQuery, visible: selected_material() === null">
-								<input type="text" style="width:90%;" class="input-block search-query" data-bind="value: filterQuery, valueUpdate: 'input'" placeholder="{{ _('Search...') }}">
+								<input type="text" class="input-block search-query" data-bind="value: filterQuery, valueUpdate: 'input'" placeholder="{{ _('Search...') }}">
 							</form>
 							<ul id="material_list" data-bind="foreach: filteredMaterials">
-								<li class='material_entry' 
+								<li class='material_entry hover_shadow' 
 									data-bind="click: $root.set_material($data, event), 
 												style: { backgroundImage: 'url(\'/plugin/mrbeam/static/img/materials/' + $data.img + '\')' },
 												css: {selected: $root.selected_material() === $data}
@@ -31,7 +31,7 @@
 					<div>
 						<label class="">Color</label>
 						<ul id="color_list" data-bind="foreach: material_colors">
-							<li class='material_color_entry' data-bind="
+							<li class='material_color_entry hover_shadow' data-bind="
 								click: $root.set_material_color($data, event),
 								attr: {id: 'material_color_'+$data },
 								css: {active: $data === $root.selected_material_color() },
@@ -55,12 +55,12 @@
 						</div>
 					</div>
 					<div id="thickness_list" data-bind="foreach: material_thicknesses">
-						<div class="thickness_sample" 
+						<div class="thickness_sample hover_shadow" 
 							 data-bind="
 									click: $root.set_material_thickness($data, event),
 									attr: {id: 'material_thickness_'+$data.thicknessMM },
 									css: {active: $data === $root.selected_material_thickness() },
-									style: { padding: ($data.thicknessMM * $root.mm2px()/2)+'mm' },
+									style: { padding: ($data.thicknessMM * $root.mm2px()/2)+'mm 0' },
 									visible: ($root.selected_material_thickness() === null) || ($root.selected_material_thickness() === $data),
 									text: ($data.thicknessMM)+' mm'
 							 " ></div>
