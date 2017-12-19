@@ -322,6 +322,7 @@ $(function(){
 				}
 			}
 		};
+		self.engrave_only_thickness = {thicknessMM: -1, cut_i:'', cut_f:'', cut_p: ''};
 
 		self.material_colors = ko.observableArray([]);
 		self.material_thicknesses = ko.observableArray([]);
@@ -343,13 +344,6 @@ $(function(){
 			if(mat !== null)
 			return mat === null ? '' : mat.img;
 		 });
-//		self.selected_material_thickness_str = ko.computed(function(){ 
-//			return self.selected_material_thickness().thicknessMM +' mm';
-//		 });
-//		self.selected_material_thickness_px = ko.computed(function(){ 
-//			var d = self.selected_material_thickness().thicknessMM * self.mm2px() - 0.5; 
-//			return d +'mm';
-//		 });
 		 
 		self.get_closest_thickness_params = function(){
 			var selected = self.selected_material_thickness();
@@ -397,6 +391,15 @@ $(function(){
 			console.log("max cut:", cuttable);
 			return cuttable;
 		});
+		self.only_engravable = ko.computed(function(){
+			var t = self.selected_material_thickness();
+			var max = self.max_cut_depth();
+			return (t === null) || (t.thicknessMM > max);
+		});
+		self.thickness_text = function(data){
+			if(data.thicknessMM < 0) return "engrave only";
+			else return data.thicknessMM+' mm'
+		}
 		self.thickness_mount_pos = ko.computed(function(){ 
 			var selected = self.selected_material_thickness(); 
 			if(selected !== null){
@@ -443,9 +446,12 @@ $(function(){
 
 				// autoselect thickness if only one available
 				var available_thickness = material.colors[color].cut;
+				available_thickness = available_thickness.concat(self.engrave_only_thickness);
+				console.log(available_thickness);
 				if(available_thickness.length === 0){
 					console.log("only engraving possible");
-					self.selected_material_thickness(null);
+					self.selected_material_thickness(self.engrave_only_thickness);
+					self.dialog_state('color_assignment');
 				} else if(available_thickness.length === 1){
 					self.material_thicknesses(available_thickness);
 					self.selected_material_thickness(available_thickness[0]);

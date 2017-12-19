@@ -59,18 +59,22 @@
 							 data-bind="
 									click: $root.set_material_thickness($data, event),
 									attr: {id: 'material_thickness_'+$data.thicknessMM },
-									css: {active: $data === $root.selected_material_thickness() },
+									css: {active: $data === $root.selected_material_thickness(), engrave_only: $data.thicknessMM === -1 },
 									style: { padding: ($data.thicknessMM * $root.mm2px()/2)+'mm 0' },
 									visible: ($root.selected_material_thickness() === null) || ($root.selected_material_thickness() === $data),
-									text: ($data.thicknessMM)+' mm'
+									text: $root.thickness_text($data)
 							 " ></div>
 					</div>
-
-					<div data-bind="visible: selected_material_thickness() > max_cut_depth()" >Material is only engravable.</div>
 				</div>
 			</div>
-
-			<div id="color_assignment" data-bind="visible: !expandMaterialSelector()">
+		</div>
+	</div>
+	<div class="modal_dialog_headline">
+		<h3>Line color assignment</h3>
+	</div>
+	<div class="modal-body scrollable" style="box-sizing: border-box">
+		<div data-bind="visible:!slicing_in_progress()">
+			<div id="color_assignment" data-bind="css:{ inactive: expandMaterialSelector }">
 
 				<div id="no_job" class="job_row row-fluid">
 					<div class="span3" style="display:flex;">

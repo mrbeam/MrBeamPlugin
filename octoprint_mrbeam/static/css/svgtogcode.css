@@ -461,6 +461,20 @@ svg#area_preview rect
 	stroke-width: 1px;
 }
 
+.modal_dialog_headline h3 {
+	padding: 9px 15px;
+	border-top: 1px solid #383e42;	
+	border-bottom: 1px solid #383e42;
+    margin: 0;
+    line-height: 30px;	
+}
+
+#color_assignment.inactive {
+    opacity: .3;
+    filter: blur(2px);
+    pointer-events: none;
+}
+
 #material_list {
 	margin: 0;
 	max-height: 55vh;
@@ -471,7 +485,6 @@ svg#area_preview rect
 	width: 200px;
 	height: 100px;
 	float: left;
-	padding: .5em;
 	margin: 0 .5em .5em 0;
 	background-size: cover;
 	position: relative;
@@ -522,11 +535,10 @@ li.material_entry span {
 	overflow-x: hidden;
 	position: relative;
 	height: calc(100px + 2em);
-	border-bottom: 1px solid #999;
 	transition: height .3s ease-in-out;
 }
 #material_row.expanded {
-	height: 65vh;
+	height: 32vh;
 }
 
 #material_type, #material_color, #material_thickness {
@@ -536,24 +548,31 @@ li.material_entry span {
 	position: absolute;
 	transition: margin-left .1s ease-in;
 	background-color: #fff;
-	border: 1px solid cyan;
 }
 #material_type.active { width: 100%; }
 #material_type { width: calc(200px + 2em); }
 
 #material_color, #material_thickness { margin-left: 100%; }
 #material_color.active { 
-	margin-left: calc(200px + 3em); 
+	margin-left: calc(200px + 6em); 
 	width: calc(100% - 200px - 3em);
 }
-#material_thickness.active { margin-left:  calc(200px + 4em + 20%); }
+#material_thickness.active { margin-left:  calc(200px + 6em + 20%); }
+
+#material_thickness .engrave_only {
+    border-bottom: transparent;
+    padding: 2em 0;
+    background-image: linear-gradient(to bottom, rgba(255,255,255,0) 0%,rgba(255,255,255,1) 100%), url(/plugin/mrbeam/static/img/pattern_stripes.png);
+    background-size: cover, contain;
+    border-top: 1px solid #e25303;
+}
 
 .misfit_warning i {
 	color: #e25303;
 }
 
 #dialog_vector_graphics_conversion .modal-body {
-  min-height: 65vh;
+  /*min-height: 65vh;*/
 }
 
 .calibration_manual.text {
