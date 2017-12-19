@@ -3,7 +3,7 @@
         <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
         <h3 data-bind="text: title"></h3>
     </div>
-    <div class="modal-body scrollable">
+    <div class="modal-body scrollable" style="box-sizing: border-box">
 		<div data-bind="visible:!slicing_in_progress()">
 			<div id="material_row" data-bind="css: {expanded: expandMaterialSelector() }">
 				<div id="material_type" data-bind="css: {active : selected_material() === null}">
@@ -28,7 +28,7 @@
 				</div>
 
 				<div id="material_color" class="" data-bind="css: {active : selected_material() !== null }">
-					<div class="" data-bind="visible: material_colors().length > 1">
+					<div>
 						<label class="">Color</label>
 						<ul id="color_list" data-bind="foreach: material_colors">
 							<li class='material_color_entry' data-bind="

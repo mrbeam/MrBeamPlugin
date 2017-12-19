@@ -531,7 +531,7 @@ $(function(){
 				var old = self.selected_material_color();
 				if(old === null){
 					self.selected_material_color(color);
-				} else {
+				} else if(self.material_colors().length > 1){
 					self.selected_material_color(null);
 				}
 			} else {
@@ -546,7 +546,7 @@ $(function(){
 				if(old === null){
 					self.selected_material_thickness(thickness);
 					self.dialog_state('color_assignment');
-				} else {
+				} else if(self.material_thicknesses().length > 1){
 					self.selected_material_thickness(null);
 					self.dialog_state('material_type');
 				}
