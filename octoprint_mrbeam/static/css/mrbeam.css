@@ -2139,3 +2139,7 @@ input[type=range]::-ms-thumb {
 .scrollable {
   /* just a flag to mark elements that need to be scrollable on touch devices. Also see mrbeam.js */
 }
+
+.no-transition {
+    transition-duration: 0s,0s,0s,0s !IMPORTANT;
+}
