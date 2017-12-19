@@ -35,6 +35,7 @@
 								click: $root.set_material_color($data, event),
 								attr: {id: 'material_color_'+$data },
 								css: {active: $data === $root.selected_material_color() },
+								visible: ($root.selected_material_color() === null) || ($root.selected_material_color() === $data),
 								style: { backgroundColor: '#'+$data }
 							"></li>
 						</ul>

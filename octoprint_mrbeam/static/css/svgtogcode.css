@@ -269,11 +269,11 @@ svg#area_preview {
     /*border: 1px solid #ddd;*/
     cursor: pointer;
 	transition: width .1s ease-in-out;
-}
-#material_row.expanded li.material_color_entry,
-#material_color li.material_color_entry.active { 
 	display: inline-block;
 }
+/*#material_row.expanded li.material_color_entry,
+#material_color li.material_color_entry.active { 
+}*/
 #color_list li.material_color_entry.active {
 	/*transform: scale(1.25) !important;*/
 	width: 200px !important;
