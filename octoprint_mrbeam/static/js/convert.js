@@ -352,7 +352,6 @@ $(function(){
 			if(available.length === 0) {
 				return null;
 			} else if(available.length === 1) {
-				console.log("only one thickness param set available");
 				return color_closest.cut[0];
 			} else {
 				var upper = null;
@@ -388,7 +387,6 @@ $(function(){
 					cuttable = Math.max(cuttable, item.thicknessMM);
 				}
 			}
-			console.log("max cut:", cuttable);
 			return cuttable;
 		});
 		self.only_engravable = ko.computed(function(){
@@ -447,9 +445,7 @@ $(function(){
 				// autoselect thickness if only one available
 				var available_thickness = material.colors[color].cut;
 				available_thickness = available_thickness.concat(self.engrave_only_thickness);
-				console.log(available_thickness);
 				if(available_thickness.length === 0){
-					console.log("only engraving possible");
 					self.selected_material_thickness(self.engrave_only_thickness);
 					self.dialog_state('color_assignment');
 				} else if(available_thickness.length === 1){
@@ -549,7 +545,6 @@ $(function(){
 			self.dialog_state('material_type');
 		};
 		self.set_material_thickness = function(thickness, ev){
-			console.log(thickness);
 			if(typeof ev !== 'undefined' && ev.type === 'click' ){
 				var old = self.selected_material_thickness();
 				if(old === null){
@@ -578,9 +573,7 @@ $(function(){
 					$(job).find('.param_passes').val(params.cut_p || 0);
 					$(job).find('.param_piercetime').val(params.cut_pierce || 0);
 				}
-				console.log("vector_props", params);
 			}
-			console.log("vector_props", material, params);
 		};
 		self.apply_engraving_proposal = function(){
 			var material = self.selected_material();
@@ -597,9 +590,7 @@ $(function(){
 				self.imgFeedrateBlack(p.eng_f[1]);
 				self.imgDithering(p.dithering);
 				self.engravingPiercetime(p.eng_pierce || 0);
-				console.log("engraving_props", p);
 			}
-			console.log("engraving_props null");
 		};
 		
 		self._find_closest_color_to = function(hex, available_colors){
@@ -1022,9 +1013,6 @@ $(function(){
 			//console.log("onSlicingFailed" , payload);
 		};
 
-//		self._calcRealSpeed = function(sliderVal){
-//			return Math.round(self.minSpeed() + sliderVal/100 * (self.maxSpeed() - self.minSpeed()));
-//		};
 
 		self._configureImgSliders = function() {
 			var el1 = $("#svgtogcode_contrast_slider");

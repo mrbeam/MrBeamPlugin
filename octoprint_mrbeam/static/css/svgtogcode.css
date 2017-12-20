@@ -271,9 +271,6 @@ svg#area_preview {
 	transition: width .1s ease-in-out;
 	display: inline-block;
 }
-/*#material_row.expanded li.material_color_entry,
-#material_color li.material_color_entry.active { 
-}*/
 #color_list li.material_color_entry.active {
 	/*transform: scale(1.25) !important;*/
 	width: 200px !important;
@@ -557,7 +554,7 @@ li.material_entry span {
 	margin-left: calc(200px + 6em); 
 	width: calc(100% - 200px - 3em);
 }
-#material_thickness.active { margin-left:  calc(200px + 6em + 20%); }
+#material_thickness.active { margin-left:  calc(2 * (200px + 6em)); }
 
 #material_thickness .engrave_only {
     border-bottom: transparent;
