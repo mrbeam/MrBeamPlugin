@@ -23,15 +23,6 @@ $(function(){
 		self.slicing_in_progress = ko.observable(false);
 
 		self.dialog_state = ko.observable('color_assignment');
-		self.state_titles = {
-			material_type: 'Material Selection', 
-			material_properties: 'Material Properties', 
-			color_assignment:'Color Assignment',
-			summary: 'Job Parameters'
-		};
-		self.title = ko.computed(function(){
-			return gettext(self.state_titles[self.dialog_state()]);
-		});
 
 		// expert settings
 		self.showHints = ko.observable(false);
@@ -323,6 +314,10 @@ $(function(){
 		self.selected_material = ko.observable(null);
 		self.selected_material_color = ko.observable(null);
 		self.selected_material_thickness = ko.observable(null);
+		self.material_safety_notes = ko.observable('');
+		self.material_hints = ko.observable('');
+		self.material_description = ko.observable('');
+		
 		self.expandMaterialSelector = ko.computed(function(){
 			return self.selected_material === null || self.selected_material_color() === null || self.selected_material_thickness() === null;
 		});
@@ -408,12 +403,18 @@ $(function(){
 				} else {				
 					self.selected_material_color(null);
 				}
+				self.material_description(material.description);
+				self.material_hints(material.hints);
+				self.material_safety_notes(material.safety_notes);
 
 			} else {
 				self.material_colors([]);
 				self.material_thicknesses([]);
 				self.selected_material_color(null);
 				self.selected_material_thickness(null);
+				self.material_description('');
+				self.material_hints('');
+				self.material_safety_notes('');
 			}
 		});
 		

@@ -1,7 +1,7 @@
 <div id="dialog_vector_graphics_conversion" class="modal hide fade">
     <div class="modal-header">
         <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
-        <h3 data-bind="text: title"></h3>
+        <h3>Material</h3>
     </div>
     <div class="modal-body scrollable" style="box-sizing: border-box">
 		<div data-bind="visible:!slicing_in_progress()">
@@ -65,6 +65,22 @@
 									visible: ($root.selected_material_thickness() === null) || ($root.selected_material_thickness() === $data),
 									text: $root.thickness_text($data)
 							 " ></div>
+					</div>
+				</div>
+				<div id="material_info">
+					<p>
+						<i class="icon-warning-sign" style="color:red;" data-bind="visible: material_safety_notes() !== ''"></i> 
+						<span id="safety_notes" class="" data-bind="text: material_safety_notes"></span>
+					</p>
+					<a href="#" class="dropdown" data-toggle="collapse" data-target="#more_material_info" data-bind="visible: material_description() !== '' || material_hints() !== ''">
+						<i class="icon-info-sign"></i> Info<b class="caret"></b>
+					</a>
+					<div id="more_material_info" class="collapse">
+						<p id="description" data-bind="text: material_description"></p>
+						<p>
+							<i class="icon-lightbulb" data-bind="visible: material_hints() !== ''"></i> 
+							<span id="hints" data-bind="text: material_hints"></span>
+						</p>
 					</div>
 				</div>
 			</div>

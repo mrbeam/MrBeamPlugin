@@ -531,11 +531,27 @@ li.material_entry span {
 	width: 100%;
 	overflow-x: hidden;
 	position: relative;
-	height: calc(100px + 2em);
+	/*height: calc(100px + 2em);*/
 	transition: height .3s ease-in-out;
 }
 #material_row.expanded {
 	height: 32vh;
+}
+
+#material_info {
+	margin-top: 100px;
+}
+#material_row.expanded #material_info {
+	display:none;
+}
+#safety_notes {
+	font-weight: bold;
+}
+
+#material_info p,
+#material_info a {
+    color: #777;
+    margin: 0;
 }
 
 #material_type, #material_color, #material_thickness {
