@@ -15,7 +15,7 @@
 							</form>
 							<ul id="material_list" data-bind="foreach: filteredMaterials">
 								<li class='material_entry hover_shadow' 
-									data-bind="click: $root.set_material($data, event), 
+									data-bind="click: function(){$root.set_material($data, event);}, 
 												style: { backgroundImage: 'url(\'/plugin/mrbeam/static/img/materials/' + $data.img + '\')' },
 												css: {selected: $root.selected_material() === $data}
 									">
@@ -32,7 +32,7 @@
 						<label class="">Color</label>
 						<ul id="color_list" data-bind="foreach: material_colors">
 							<li class='material_color_entry hover_shadow' data-bind="
-								click: $root.set_material_color($data, event),
+								click: function(){ $root.set_material_color($data, event); },
 								attr: {id: 'material_color_'+$data },
 								css: {active: $data === $root.selected_material_color() },
 								visible: ($root.selected_material_color() === null) || ($root.selected_material_color() === $data),
