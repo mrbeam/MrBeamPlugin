@@ -17,7 +17,7 @@ $(function() {
         };
 
         self.onStartupComplete = function(){
-            if (isOctoPrintVersionMin('1.3.6')) {
+            if (window.mrbeam.isOctoPrintVersionMin('1.3.6')) {
                 /**
                  * New in OP 1.3.6:
                  * No longer triggers onUserLoggedOut() in boot sequence. Only onUserLoggedIn() -if user is logged in.

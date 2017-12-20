@@ -10,23 +10,26 @@
     https://stackoverflow.com/a/7768006/2631798
     Might not be perfect, but for now it's ok.
  */
-var is_chrome = navigator.userAgent.indexOf('Chrome') > -1;
-var is_explorer = navigator.userAgent.indexOf('MSIE') > -1;
-var is_firefox = navigator.userAgent.indexOf('Firefox') > -1;
-var is_safari = navigator.userAgent.indexOf("Safari") > -1;
-var is_opera = navigator.userAgent.toLowerCase().indexOf("op") > -1;
-if ((is_chrome)&&(is_safari)) {is_safari=false;}
-if ((is_chrome)&&(is_opera)) {is_chrome=false;}
-
+var mrbeam = window.mrbeam;
+var browser = {
+    is_chrome: navigator.userAgent.indexOf('Chrome') > -1,
+    is_explorer: navigator.userAgent.indexOf('MSIE') > -1,
+    is_firefox: navigator.userAgent.indexOf('Firefox') > -1,
+    is_safari: navigator.userAgent.indexOf("Safari") > -1,
+    is_opera: navigator.userAgent.toLowerCase().indexOf("op") > -1,
+};
+if ((browser.is_chrome)&&(browser.is_safari)) {browser.is_safari=false;}
+if ((browser.is_chrome)&&(browser.is_opera)) {browser.is_chrome=false;}
+mrbeam.browser = browser;
 
 /**
  * Test if OctoPrint of a specific or higher version is running.
  * @param ecpectedOctoPrintVersion
  * @returns Boolean or undefined if VERSION is not set
  */
-var isOctoPrintVersionMin = function(ecpectedOctoPrintVersion){
+mrbeam.isOctoPrintVersionMin = function(ecpectedOctoPrintVersion){
     if (VERSION) {
-        return isVersionOrHigher(VERSION.replace('v', ''), ecpectedOctoPrintVersion);
+        return mrbeam._isVersionOrHigher(VERSION.replace('v', ''), ecpectedOctoPrintVersion);
     } else {
         return undefined;
     }
@@ -41,7 +44,7 @@ var isOctoPrintVersionMin = function(ecpectedOctoPrintVersion){
  * @param expectedVersion
  * @returns {boolean}
  */
-var isVersionOrHigher = function(actualVersion, expectedVersion) {
+mrbeam._isVersionOrHigher = function(actualVersion, expectedVersion) {
     var VPAT = /^\d+(\.\d+){0,2}$/;
 
     if (!actualVersion || !expectedVersion || actualVersion.length === 0 || expectedVersion.length === 0)
@@ -67,6 +70,7 @@ var isVersionOrHigher = function(actualVersion, expectedVersion) {
         return actualVersion >= expectedVersion;
     }
 };
+
 
 
 $(function() {
