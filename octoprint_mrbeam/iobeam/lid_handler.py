@@ -110,16 +110,33 @@ class LidHandler(object):
 	def _startStopCamera(self,event):
 		if self._photo_creator is not None and self.camEnabled:
 			if event in (IoBeamEvents.LID_CLOSED, OctoPrintEvents.SLICING_STARTED, OctoPrintEvents.CLIENT_CLOSED):
+				self._logger.info('Camera stopping...: event: {}, client_opened {}, is_slicing: {}, lid_closed: {}, printer.is_locked(): {}, save_debug_images: {}'.format(
+						event,
+						self._client_opened,
+						self._is_slicing,
+						self._lid_closed,
+						self._printer.is_locked(),
+						self._photo_creator.save_debug_images
+					))
 				self._end_photo_worker()
 			else:
 				# TODO get the states from _printer or the global state, instead of having local state as well!
 				if self._client_opened and not self._is_slicing and not self._lid_closed and not self._printer.is_locked():
+					self._logger.info('Camera starting: event: {}, client_opened {}, is_slicing: {}, lid_closed: {}, printer.is_locked(): {}, save_debug_images: {}'.format(
+							event,
+							self._client_opened,
+							self._is_slicing,
+							self._lid_closed,
+							self._printer.is_locked(),
+							self._photo_creator.save_debug_images
+						))
 					self._start_photo_worker()
 				elif self._photo_creator.is_initial_calibration:
 					# camera is in first init mode
 					self._start_photo_worker()
 				else:
-					self._logger.info('No Camera started: client_opened {}, is_slicing: {}, lid_closed: {}, printer.is_locked(): {}, save_debug_images: {}'.format(
+					self._logger.info('Camera not starting...: event: {}, client_opened {}, is_slicing: {}, lid_closed: {}, printer.is_locked(): {}, save_debug_images: {}'.format(
+						event,
 						self._client_opened,
 						self._is_slicing,
 						self._lid_closed,

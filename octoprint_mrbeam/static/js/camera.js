@@ -65,7 +65,7 @@ $(function(){
             var img = $('<img>');
             img.load(function () {
                 self.webCamImageElem.attr('xlink:href', myImageUrl);
-                if (is_safari) {
+                if (window.mrbeam.browser.is_safari) {
                     // load() event seems not to fire in Safari.
                     // So as a quick hack, let's set firstImageLoaded to true already here
                     self.firstImageLoaded = true;

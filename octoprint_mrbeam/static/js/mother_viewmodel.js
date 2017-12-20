@@ -17,6 +17,7 @@ $(function () {
         self.appearance = params[12];
 
         self.isStartupComplete = false;
+        self.storedSocketData = [];
 
         // MrBeam Logo click activates workingarea tab
         $('#mrbeam_logo_link').click(function() {
@@ -138,7 +139,7 @@ $(function () {
 			});
 
             // TODO forward to control viewmodel
-            self.state.isLocked = ko.observable(undefined);
+            self.state.isLocked = ko.observable(true);
             self.state.isReady = ko.observable(undefined);
             self.state.isFlashing = ko.observable(undefined);
             self.state.currentPos = ko.observable(undefined);
@@ -225,6 +226,7 @@ $(function () {
         self.onStartupComplete = function() {
             self.addSwUpdateTierInformation();
             self.set_Design_lib_defaults();
+            self._handleStoredSocketData();
             self.isStartupComplete = true;
             self.removeLoadingOverlay();
         };
@@ -244,7 +246,7 @@ $(function () {
         self.removeLoadingOverlay = function(){
             if (self.isStartupComplete &&  self.workingArea.camera.firstImageLoaded) {
                 $('#loading_overlay').remove();
-                console.log("beamOS started. loading_overlay removed.");
+                console.log("beamOS started. overlay removed.");
                 console.log("%c      ", "color: transparent; font-size: 150px; background:url('http://www.mr-beam.org/img/logo2_path.svg') no-repeat bottom left");
             } else {
                 setTimeout(self.removeLoadingOverlay, 100);
@@ -305,13 +307,25 @@ $(function () {
             self._fromData(data);
         };
 
-        self._fromData = function (data) {
-			if (self.isStartupComplete){
-				self._processStateData(data.state);
-				self._processWPosData(data.workPosition);
-			}
-			self._processProgressData(data.progress);
-			self._processJobData(data.job);
+        self._fromData = function (data, noStore, force) {
+            if (self.isStartupComplete || force) {
+                self._processStateData(data.state);
+                self._processWPosData(data.workPosition);
+                self._processProgressData(data.progress);
+			    self._processJobData(data.job);
+            } else if (!noStore){
+                self.storedSocketData.push(data);
+            }
+        };
+
+        self._handleStoredSocketData = function(){
+            if (self.storedSocketData.length > 0) {
+                console.log("Handling stored socked data: " + self.storedSocketData.length);
+                for (var i = 0; i < self.storedSocketData.length; i++) {
+                    self._fromData(self.storedSocketData[i], noStore=true, force=true);
+                }
+                self.storedSocketData = [];
+            }
         };
 
         self._processStateData = function (data) {

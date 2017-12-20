@@ -14,16 +14,51 @@ $(function() {
         self.onStartup = function() {
             self.dialogElement = $('#loginscreen_dialog');
             self.loginButton = $('#loginscreen_dialog button');
-        }
+        };
 
-        self.onUserLoggedIn = function(currentUser){
-            if (!OctoPrint.coreui.wizardOpen) {
+        self.onStartupComplete = function(){
+            if (window.mrbeam.isOctoPrintVersionMin('1.3.6')) {
+                /**
+                 * New in OP 1.3.6:
+                 * No longer triggers onUserLoggedOut() in boot sequence. Only onUserLoggedIn() -if user is logged in.
+                 * But self.loginState.loggedIn() shows correct loggedIn state in onStartupComplete()
+                 */
+                self.setLoginState(false);
+            }
+        };
+
+        /**
+         * OP callback
+         * Let's make sure login screen is set to correct visibility once user finishes setup wizard.
+         */
+        self.onWizardFinish = function(){
+            // OctoPrint.coreui.wizardOpen is still true here (OP 1.3.6), so we have to set force
+            self.setLoginState(true);
+            self.enableDialogAnimation();
+        };
+
+        self.setLoginState = function(force){
+            if (self.loginState.loggedIn()) {
+                self.onUserLoggedIn(null, force);
+            } else {
+                self.onUserLoggedOut(force);
+            }
+        };
+
+        self.onUserLoggedIn = function(currentUser, force){
+            if (force || !OctoPrint.coreui.wizardOpen) {
+                if (OctoPrint.coreui.wizardOpen) {
+                    self.disableDialogAnimation();
+                }
                 self.hideDialog();
             }
         };
 
-        self.onUserLoggedOut = function(){
-            if (!OctoPrint.coreui.wizardOpen) {
+        self.onUserLoggedOut = function(force){
+            if (force || !OctoPrint.coreui.wizardOpen) {
+                if (OctoPrint.coreui.wizardOpen) {
+                    self.disableDialogAnimation();
+                }
                 self.showDialog();
             }
         };
@@ -46,14 +81,25 @@ $(function() {
                 self.dialogElement.modal("show");
             }
             self.loginButton.prop('disabled', false);
-        }
+        };
 
         self.hideDialog = function() {
             if (self.dialogElement.hasClass('in')) {
                 self.dialogElement.modal("hide");
             }
             self.loginButton.prop('disabled', false);
-        }
+        };
+
+        self.enableDialogAnimation = function(){
+            self.dialogElement.removeClass('no-transition');
+        };
+
+        /**
+         * During Setup Wizard, we don't want any animations b/c it's visible behind the wizard dialog.
+         */
+        self.disableDialogAnimation = function(){
+            self.dialogElement.addClass('no-transition');
+        };
 
     }
 

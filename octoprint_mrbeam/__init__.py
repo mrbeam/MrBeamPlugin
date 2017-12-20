@@ -171,7 +171,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			current_profile_id="_mrbeam_junior", # yea, this needs to be like this
 			svgDPI=90,
 			dxfScale=1,
-			beta_label="",
+			beta_label="BETA",
 			dev=dict(
 				debug=False, # deprected
 				terminalMaxLines = 2000,

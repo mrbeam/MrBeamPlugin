@@ -490,8 +490,8 @@ $(function(){
 				class: 'used_color'
 			})
 			.on({
-				dragstart: function(ev){ colorDragStart(ev.originalEvent); },
-				dragend: function(ev){ colorDragEnd(ev.originalEvent); }
+				dragstart: function(ev){ window.mrbeam.colorDragging.colorDragStart(ev.originalEvent); },
+				dragend: function(ev){ window.mrbeam.colorDragging.colorDragEnd(ev.originalEvent); }
 			});
 
 			return i;
@@ -1064,65 +1064,74 @@ $(function(){
 
 });
 
+window.mrbeam.colorDragging = {
 
-// Drag functions outside the viewmodel are way less complicated
-function colorAllowDrop(ev) {
-    ev.preventDefault();
-	$('.color_drop_zone, .img_drop_zone').addClass('hover');
-}
+    // Drag functions outside the viewmodel are way less complicated
+    colorAllowDrop: function(ev) {
+        ev.preventDefault();
+        $('.color_drop_zone, .img_drop_zone').addClass('hover');
+    },
 
-function colorDragStart(ev) {
-	$("body").addClass("colorDragInProgress");
-	if(ev.target.id === "cd_engraving"){
-		$('body').addClass('engravingDrag');
-	} else {
-		$('body').addClass('vectorDrag');
-	}
-	ev.dataTransfer.setData("text", ev.target.id);
-	ev.dataTransfer.effectAllowed = "move";
-}
+    colorDragStart: function(ev) {
+        $("body").addClass("colorDragInProgress");
+        if (ev.target.id === "cd_engraving") {
+            $('body').addClass('engravingDrag');
+        } else {
+            $('body').addClass('vectorDrag');
+        }
+        ev.dataTransfer.setData("text", ev.target.id);
+        ev.dataTransfer.effectAllowed = "move";
+    },
 
-function colorDrop(ev) {
-    ev.preventDefault();
-	$('body').removeClass('vectorDrag engravingDrag');
-	setTimeout(function(){$("body").removeClass("colorDragInProgress");}, 200);
-	$('.color_drop_zone, .img_drop_zone').removeClass('hover');
-    var data = ev.dataTransfer.getData("text");
-	var required_class = 'color_drop_zone';
-	if(data === 'cd_engraving'){
-		required_class = 'img_drop_zone';
-	}
-	var parent = $(ev.target).parents('.job_row');
-	if (parent.length === 1) {
-		var drop_target = $(parent[0]).find('.'+required_class);
-		if (drop_target.length === 1) {
-			// TODO check if parent is allowed drop zone.
-			drop_target[0].appendChild(document.getElementById(data));
-			ko.dataFor(document.getElementById("dialog_vector_graphics_conversion"))._update_color_assignments();
-		}
-	}
-}
+    colorDrop: function(ev) {
+        ev.preventDefault();
+        $('body').removeClass('vectorDrag engravingDrag');
+        setTimeout(function () {
+            $("body").removeClass("colorDragInProgress");
+        }, 200);
+        $('.color_drop_zone, .img_drop_zone').removeClass('hover');
+        var data = ev.dataTransfer.getData("text");
+        var required_class = 'color_drop_zone';
+        if (data === 'cd_engraving') {
+            required_class = 'img_drop_zone';
+        }
+        var parent = $(ev.target).parents('.job_row');
+        if (parent.length === 1) {
+            var drop_target = $(parent[0]).find('.' + required_class);
+            if (drop_target.length === 1) {
+                // TODO check if parent is allowed drop zone.
+                drop_target[0].appendChild(document.getElementById(data));
+                ko.dataFor(document.getElementById("dialog_vector_graphics_conversion"))._update_color_assignments();
+            }
+        }
+    },
 
-function colorDropCreateJob(ev) {
-    ev.preventDefault();
-	setTimeout(function(){$("body").removeClass("colorDragInProgress");}, 200);
-	$('.color_drop_zone, .img_drop_zone').removeClass('hover');
+    colorDropCreateJob: function(ev) {
+        ev.preventDefault();
+        setTimeout(function () {
+            $("body").removeClass("colorDragInProgress");
+        }, 200);
+        $('.color_drop_zone, .img_drop_zone').removeClass('hover');
 
-	var newJob = $('#first_job').clone(true);
-	newJob.attr('id','');
-	newJob.find('.used_color').remove();
-	newJob.appendTo($('#additional_jobs'));
+        var newJob = $('#first_job').clone(true);
+        newJob.attr('id', '');
+        newJob.find('.used_color').remove();
+        newJob.appendTo($('#additional_jobs'));
 
-    var data = ev.dataTransfer.getData("text");
-    var color = document.getElementById(data);
-	$(newJob).find('.assigned_colors').append(color);
-	ko.dataFor(document.getElementById("dialog_vector_graphics_conversion"))._update_color_assignments();
-}
+        var data = ev.dataTransfer.getData("text");
+        var color = document.getElementById(data);
+        $(newJob).find('.assigned_colors').append(color);
+        ko.dataFor(document.getElementById("dialog_vector_graphics_conversion"))._update_color_assignments();
+    },
 
 
-function colorDragEnd(ev){
-    ev.preventDefault();
-	$('#drop_overlay').removeClass('in'); // workaround
-	setTimeout(function(){$("body").removeClass("colorDragInProgress vectorDrag engravingDrag");}, 200);
-	$('.color_drop_zone, .img_drop_zone').removeClass('hover');
-}
+    colorDragEnd: function(ev) {
+        ev.preventDefault();
+        $('#drop_overlay').removeClass('in'); // workaround
+        setTimeout(function () {
+            $("body").removeClass("colorDragInProgress vectorDrag engravingDrag");
+        }, 200);
+        $('.color_drop_zone, .img_drop_zone').removeClass('hover');
+    }
+
+};

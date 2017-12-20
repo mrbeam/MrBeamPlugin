@@ -95,7 +95,7 @@
 
 				<div id="no_job" class="job_row row-fluid">
 					<div class="span3" style="display:flex;">
-						<div class="assigned_colors color_drop_zone img_drop_zone" ondragover="colorAllowDrop(event)" ondrop="colorDrop(event)"></div>
+						<div class="assigned_colors color_drop_zone img_drop_zone" ondragover="window.mrbeam.colorDragging.colorAllowDrop(event)" ondrop="colorDrop(event)"></div>
 					</div>
 					<div class="span6">
 						<div class="job_parameters">
@@ -108,8 +108,8 @@
 
 				<div id="engrave_job" class="job_row row-fluid" data-bind="visible: show_image_parameters">
 					<div class="span3" style="display:flex;">
-						<div class="assigned_colors img_drop_zone color_drop_zone" ondragover="colorAllowDrop(event)" ondrop="colorDrop(event)">
-							<div id="cd_engraving" draggable="true" class="used_color" ondragstart="colorDragStart(event)" ondragend="colorDragEnd(event)"></div>
+						<div class="assigned_colors img_drop_zone color_drop_zone" ondragover="window.mrbeam.colorDragging.colorAllowDrop(event)" ondrop="window.mrbeam.colorDragging.colorDrop(event)">
+							<div id="cd_engraving" draggable="true" class="used_color" ondragstart="window.mrbeam.colorDragging.colorDragStart(event)" ondragend="window.mrbeam.colorDragging.colorDragEnd(event)"></div>
 						</div>
 					</div>
 					<div class="span9">
@@ -216,7 +216,7 @@
 				</div>
 				<div id="first_job" class="job_row_vector job_row row-fluid" data-bind="visible: show_vector_parameters">
 					<div class="span3" style="display:flex;">
-						<div class="assigned_colors color_drop_zone" ondragover="colorAllowDrop(event)" ondrop="colorDrop(event)"></div>
+						<div class="assigned_colors color_drop_zone" ondragover="window.mrbeam.colorDragging.colorAllowDrop(event)" ondrop="window.mrbeam.colorDragging.colorDrop(event)"></div>
 					</div>
 					<div class="span9">
 						<div class="clearfix">
@@ -256,7 +256,7 @@
 				</div>
 				<div id="additional_jobs"></div>
 				<div class="row-fluid" data-bind="visible: show_vector_parameters">
-					<div class="assigned_colors color_drop_zone create_job" ondragover="colorAllowDrop(event)" ondrop="colorDropCreateJob(event)">
+					<div class="assigned_colors color_drop_zone create_job" ondragover="window.mrbeam.colorDragging.colorAllowDrop(event)" ondrop="window.mrbeam.colorDragging.colorDropCreateJob(event)">
 						+ Drag colors here for another job +
 					</div>
 				</div>
@@ -279,7 +279,6 @@
 		</div>
 
         <a href="#" class="btn" aria-hidden="true" data-bind="click: $root.cancel_conversion()">{{ _('Cancel') }}</a>
-<!--        <a href="#" class="btn" aria-hidden="true" data-bind="click: previousStep(), visible: dialog_state() !== 'material_type' ">{{ _('Back') }}</a>-->
         <a href="#" class="btn btn-primary" 
 		   data-bind="click: function() { if ($root.enableConvertButton()) { $root.convert() } }, 
 					enabled: enableConvertButton,

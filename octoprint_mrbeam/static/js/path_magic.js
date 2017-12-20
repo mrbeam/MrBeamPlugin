@@ -11,7 +11,7 @@ var mrbeam = mrbeam || {};
     //
   ////////////////////////////
 
-
+  var mrbeam = window.mrbeam;
   mrbeam.path = {};
   var module = mrbeam.path;
 
