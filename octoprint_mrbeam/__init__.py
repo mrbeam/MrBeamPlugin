@@ -211,7 +211,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				precision = 0.05,
 				optimize_travel = True,
 				small_paths_first = True,
-				clip_working_area = False
+				clip_working_area = False # this is due a bug in clipping. Would be great if we could fix it an enable it again.
 			)
 		)
 
@@ -408,7 +408,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return dict()
 
 	def get_wizard_version(self):
-		return 12
+		return 12 #random number. but we can't go down anymore, just up.
 
 	def on_wizard_finish(self, handled):
 		self._logger.info("Setup Wizard finished.")
