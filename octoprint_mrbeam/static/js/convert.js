@@ -46,11 +46,11 @@ $(function(){
 				hints: 'Requires very precise focus.',
 				safety_notes: 'If engraving an iPhone, switch it off. Vibration alarms can ruin the result.',
 				laser_type: 'MrBeamII-1.0',
-				colors: { 
+				colors: {
 					'000000': {
 						engrave: {eng_i:[100,0], eng_f:[30,1000], pierceTime: 0, dithering: false },
 						cut: []
-					} 
+					}
 				}
 			},
 			'Balsa Wood': {
@@ -60,17 +60,17 @@ $(function(){
 				hints: '',
 				safety_notes: 'Take care about ignitions. Never run a job slower than 300 mm/min!',
 				laser_type: 'MrBeamII-1.0',
-				colors: { 
+				colors: {
 					'd4b26f': {
 						engrave: {eng_i:[0,20], eng_f:[2000,350], pierceTime: 0, dithering: false },
 						cut: [
-							{thicknessMM: 1, cut_i:70, cut_f:600, cut_p:1},
-							{thicknessMM: 2, cut_i:100, cut_f:600, cut_p:1},
-							{thicknessMM: 3, cut_i:100, cut_f:800, cut_p:2},
+							{thicknessMM: 1, cut_i:80, cut_f:700, cut_p:2},
+							{thicknessMM: 2, cut_i:100, cut_f:700, cut_p:1},
+							{thicknessMM: 3, cut_i:100, cut_f:700, cut_p:2},
 							{thicknessMM: 4, cut_i:100, cut_f:600, cut_p:3},
 							{thicknessMM: 5, cut_i:100, cut_f:300, cut_p:3}
 						]
-					} 
+					}
 				}
 			},
 			'Bamboo': {
@@ -80,11 +80,11 @@ $(function(){
 				hints: '',
 				safety_notes: '',
 				laser_type: 'MrBeamII-1.0',
-				colors: { 
+				colors: {
 					'9c642b': {
 						engrave: {eng_i:[0,100], eng_f:[2000,350], pierceTime: 0, dithering: false },
 						cut: []
-					} 
+					}
 				}
 			},
 			'Cardboard, corrugated single wave': {
@@ -94,17 +94,17 @@ $(function(){
 				hints: 'Engraving looks great if just the first layer is lasered away, that the wave is visible underneath.',
 				safety_notes: 'Take care about ignitions. Never run a job slower than 180 mm/min!',
 				laser_type: 'MrBeamII-1.0',
-				colors: { 
+				colors: {
 					'8b624a': {
-						engrave: {eng_i:[0,25], eng_f:[2000,850], pierceTime: 0, dithering: false },
+						engrave: {eng_i:[10,25], eng_f:[2000,850], pierceTime: 0, dithering: false },
 						cut: [
-							{thicknessMM: 2, cut_i:100, cut_f:500, cut_p:2},
-							{thicknessMM: 3, cut_i:100, cut_f:400, cut_p:2},
-							{thicknessMM: 4, cut_i:100, cut_f:400, cut_p:3},
-							{thicknessMM: 5, cut_i:100, cut_f:300, cut_p:3}
+							{thicknessMM: 2, cut_i:100, cut_f:500, cut_p:4},
+							{thicknessMM: 3, cut_i:100, cut_f:500, cut_p:4},
+							{thicknessMM: 4, cut_i:100, cut_f:400, cut_p:4}
+							// {thicknessMM: 5, cut_i:100, cut_f:400, cut_p:4}
 						]
-					} 
-				}				
+					}
+				}
 			},
 			'Cardboard, corrugated double wave': {
 				name: 'Cardboard, corrugated double wave',
@@ -113,14 +113,14 @@ $(function(){
 				hints: 'Engraving looks great if just the first layer is lasered away, that the wave is visible underneath.',
 				safety_notes: 'Take care about ignitions. Never run a job slower than 180 mm/min!',
 				laser_type: 'MrBeamII-1.0',
-				colors: { 
+				colors: {
 					'8b624a': {
-						engrave: {eng_i:[0,25], eng_f:[2000,850], pierceTime: 0, dithering: false },
+						engrave: {eng_i:[10,25], eng_f:[2000,850], pierceTime: 0, dithering: false },
 						cut: [
-							{thicknessMM: 5, cut_i:100, cut_f:400, cut_p:3}
+							{thicknessMM: 5, cut_i:100, cut_f:400, cut_p:4}
 						]
-					} 
-				}				
+					}
+				}
 			},
 			'Fabric Cotton': null,
 			'Fabric Polyester': null,
@@ -131,13 +131,13 @@ $(function(){
 				hints: '',
 				safety_notes: '',
 				laser_type: 'MrBeamII-1.0',
-				colors: { 
+				colors: {
 					'c7c97c': {
-						engrave: null,
+						engrave: {eng_i:[10,25], eng_f:[2000,1300], pierceTime: 0, dithering: false },
 						cut: [
-							{thicknessMM: 2.5, cut_i:100, cut_f:200, cut_p:2}
+							{thicknessMM: 2.5, cut_i:100, cut_f:450, cut_p:3}
 						]
-					} 
+					}
 				}
 			},
 			'Felt': {
@@ -147,63 +147,63 @@ $(function(){
 				hints: 'Be aware, natural felt is something different.',
 				safety_notes: '',
 				laser_type: 'MrBeamII-1.0',
-				colors: { 
+				colors: {
 					'00b000': {
 						name: 'green',
 						engrave: null, // not tested yet
 						cut: [
 							{thicknessMM: 4, cut_i:100, cut_f:300, cut_p:1}
 						]
-					}, 
+					},
 					'4dcaca': {
 						name: 'baby blue',
 						engrave: null, // not tested yet
 						cut: [
 							{thicknessMM: 4, cut_i:100, cut_f:100, cut_p:5}
 						]
-					}, 
+					},
 					'181866': {
 						name: 'royal blue',
 						engrave: null, // not tested yet
 						cut: [
 							{thicknessMM: 4, cut_i:100, cut_f:350, cut_p:2}
 						]
-					}, 
+					},
 					'c98600': {
 						name: 'yellow',
 						engrave: null, // not tested yet
 						cut: [
 							{thicknessMM: 4, cut_i:100, cut_f:350, cut_p:2}
 						]
-					}, 
+					},
 					'550024': {
 						name: 'purple',
 						engrave: null, // not tested yet
 						cut: [
 							{thicknessMM: 4, cut_i:100, cut_f:500, cut_p:2}
 						]
-					}, 
+					},
 					'393939': {
 						name: 'gray',
 						engrave: null, // not tested yet
 						cut: [
 							{thicknessMM: 4, cut_i:100, cut_f:400, cut_p:2}
 						]
-					}, 
+					},
 					'000000': {
 						name: 'black',
 						engrave: null, // not tested yet
 						cut: [
 							{thicknessMM: 4, cut_i:100, cut_f:400, cut_p:2}
 						]
-					}, 
+					},
 					'e03800': {
 						name: 'orange',
 						engrave: null, // not tested yet
 						cut: [
 							{thicknessMM: 4, cut_i:100, cut_f:500, cut_p:2}
 						]
-					}, 
+					},
 				}
 			},
 			'Foam Rubber': {
@@ -213,27 +213,28 @@ $(function(){
 				hints: 'Laser parameters are highly color dependant, bright colors might need pierce time.',
 				safety_notes: '',
 				laser_type: 'MrBeamII-1.0',
-				colors: { 
+				colors: {
 					'0057a8': {
 						engrave: null,
-						cut: [{thicknessMM: 2, cut_i:100, cut_f:650, cut_p:1},{thicknessMM: 3, cut_i:100, cut_f:600, cut_p:1}]
-					}, 
+						cut: [{thicknessMM: 2, cut_i:100, cut_f:650, cut_p:1},
+                              {thicknessMM: 3, cut_i:100, cut_f:600, cut_p:1}]
+					},
 					'ee6d2c': {
 						engrave: null,
 						cut: [{thicknessMM: 2, cut_i:75, cut_f:800, cut_p:1}]
-					}, 
+					},
 					'e6e6e6': {
 						engrave: null,
 						cut: [{thicknessMM: 2, cut_i:100, cut_f:190, cut_p:1}]
-					}, 
+					},
 					'000000': {
 						engrave: null,
 						cut: [{thicknessMM: 2, cut_i:100, cut_f:800, cut_p:1}]
-					}, 
+					},
 					'41c500': {
 						engrave: null,
 						cut: [{thicknessMM: 2, cut_i:100, cut_f:800, cut_p:1}]
-					}, 
+					},
 				}
 			},
 			'Kraftplex': {
@@ -243,13 +244,13 @@ $(function(){
 				hints: '',
 				safety_notes: '',
 				laser_type: 'MrBeamII-1.0',
-				colors: { 
+				colors: {
 					'795f39': {
 						engrave: {eng_i:[0,35], eng_f:[2000,850], pierceTime: 0, dithering: false },
 						cut: [
-							{thicknessMM: 0.8, cut_i:100, cut_f:350, cut_p:2},
-							{thicknessMM: 1.5, cut_i:100, cut_f:170, cut_p:2},
-							{thicknessMM: 3, cut_i:100, cut_f:100, cut_p:4}
+							{thicknessMM: 0.8, cut_i:100, cut_f:300, cut_p:2},
+							{thicknessMM: 1.5, cut_i:100, cut_f:150, cut_p:2},
+							{thicknessMM: 3,   cut_i:100, cut_f:100, cut_p:4}
 						]
 					}
 				}
@@ -262,11 +263,12 @@ $(function(){
 				hints: '',
 				safety_notes: 'Very fine structures may be subject of ignition.',
 				laser_type: 'MrBeamII-1.0',
-				colors: { 
+				colors: {
 					'e7d27f': {
 						engrave: null,
 						cut: [
 							{thicknessMM: 0.1, cut_i:75, cut_f:800, cut_p:1},
+							{thicknessMM: 0.2, cut_i:85, cut_f:800, cut_p:2} //  >300g is what we said in the old system
 						]
 					}
 				}
@@ -278,7 +280,7 @@ $(function(){
 				hints: 'Watch out for dedicated laser plywood - it has better surface quality and only natural glue.',
 				safety_notes: 'Very fine structures may be subject of ignition.',
 				laser_type: 'MrBeamII-1.0',
-				colors: { 
+				colors: {
 					'e7d27f': {
 						engrave: {eng_i:[18,35], eng_f:[2000,750], pierceTime: 0, dithering: false },
 						cut: [
@@ -295,11 +297,11 @@ $(function(){
 				hints: 'Thickness is measured over the whole wave.',
 				safety_notes: '',
 				laser_type: 'MrBeamII-1.0',
-				colors: { 
+				colors: {
 					'e7d27f': {
 						engrave: {eng_i:[10,35], eng_f:[2000,850], pierceTime: 0, dithering: false },
 						cut: [
-							{thicknessMM: 6, cut_i:100, cut_f:225, cut_p:2},
+							{thicknessMM: 6,  cut_i:100, cut_f:225, cut_p:2},
 							{thicknessMM: 10, cut_i:100, cut_f:140, cut_p:3},
 						]
 					}
@@ -317,23 +319,23 @@ $(function(){
 		self.material_safety_notes = ko.observable('');
 		self.material_hints = ko.observable('');
 		self.material_description = ko.observable('');
-		
+
 		self.expandMaterialSelector = ko.computed(function(){
 			return self.selected_material === null || self.selected_material_color() === null || self.selected_material_thickness() === null;
 		});
 
 
 		self.mm2px = ko.observable(1.37037); // TODO put in user settings
-		self.selected_material_name = ko.computed(function(){ 
+		self.selected_material_name = ko.computed(function(){
 			var mat = self.selected_material();
 			return mat === null ? '' : mat.name;
 		 });
-		self.selected_material_img = ko.computed(function(){ 
+		self.selected_material_img = ko.computed(function(){
 			var mat = self.selected_material();
 			if(mat !== null)
 			return mat === null ? '' : mat.img;
 		 });
-		 
+
 		self.get_closest_thickness_params = function(){
 			var selected = self.selected_material_thickness();
 			if(selected === null){ return null; }
@@ -374,9 +376,9 @@ $(function(){
 			if(data.thicknessMM < 0) return "engrave only";
 			else return data.thicknessMM+' mm';
 		};
-		
-		self.thickness_mount_pos = ko.computed(function(){ 
-			var selected = self.selected_material_thickness(); 
+
+		self.thickness_mount_pos = ko.computed(function(){
+			var selected = self.selected_material_thickness();
 			if(selected !== null){
 				var d = selected.thicknessMM;
 				if(d < 10) return '1';
@@ -387,7 +389,7 @@ $(function(){
 				return null;
 			}
 		 });
-		
+
 		// Hierarchy: Material Type -> Color -> Thickness (changing higher nodes resets lower ones.)
 		// if only one option is available this one is used for the parameter suggestion.
 		// Highest node in hierarchy -> resets color.
@@ -400,7 +402,7 @@ $(function(){
 				self.material_colors(available_colors);
 				if(available_colors.length === 1){
 					self.selected_material_color(available_colors[0]);
-				} else {				
+				} else {
 					self.selected_material_color(null);
 				}
 				self.material_description(material.description);
@@ -417,11 +419,11 @@ $(function(){
 				self.material_safety_notes('');
 			}
 		});
-		
+
 		// changes in color reset thickness settings
 		self.selected_material_color.subscribe(function(color){
 			var material = self.selected_material();
-			
+
 			if(material !== null && color !== null){
 
 				// autoselect thickness if only one available
@@ -432,7 +434,7 @@ $(function(){
 				if(available_thickness.length === 1){
 					self.selected_material_thickness(available_thickness[0]);
 					self.dialog_state('color_assignment');
-				} 
+				}
 			}
 			self.apply_engraving_proposal();
 		});
@@ -442,11 +444,11 @@ $(function(){
 				self.apply_vector_proposal();
 			}
 		});
-		
+
 		self.dialog_state.subscribe(function(new_state){
 			self._update_job_summary();
 		});
-			
+
         self.filterQuery = ko.observable('');
 		self.filteredMaterials = ko.computed(function(){
 			var q = self.filterQuery();
@@ -462,7 +464,7 @@ $(function(){
 			}
 			return out;
 		});
-        
+
 
 		self.color_key_update = function(){
 			var cols = self.workingArea.getUsedColors();
@@ -569,8 +571,8 @@ $(function(){
 			if(material !== null && param_set !== null && param_set.engrave !== null){
 				p = param_set.engrave;
 				name = material.name;
-			} 
-				
+			}
+
 			var job = $('#engrave_job');
 			$(job).find('.job_title').html("Engrave " + name);
 
@@ -581,23 +583,23 @@ $(function(){
 			self.imgDithering(p.dithering);
 			self.engravingPiercetime(p.eng_pierce || 0);
 		};
-		
+
 		self._find_closest_color_to = function(hex, available_colors){
 			if(available_colors.length === 1) return available_colors[0];
-			
+
 			var needle = self._parseHexColor(hex);
 			var distance;
 			var minDistance = Infinity;
 			var rgb;
 			var value;
-				
+
 			for (var i = 0; i < available_colors.length; ++i) {
 				rgb = self._parseHexColor(available_colors[i]);
-				distance = 
+				distance =
 					Math.pow(needle.x - rgb.x, 2) +
 					Math.pow(needle.y - rgb.y, 2) +
 					Math.pow(needle.z - rgb.z, 2);
-				
+
 				if (distance < minDistance) {
 					minDistance = distance;
 					value = available_colors[i];
@@ -605,7 +607,7 @@ $(function(){
 			}
 			return value;
 		};
-		
+
 		self._parseHexColor = function(hex){
 			return rgb_from_hex(hex); // from color_classifier.js
 		};
