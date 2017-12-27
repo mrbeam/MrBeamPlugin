@@ -23,22 +23,25 @@ class Migration(object):
 
 
 	def run(self):
-		if not self.is_lasercutterProfile_set(): self.set_lasercutterProfile()
+		try:
+			if not self.is_lasercutterProfile_set(): self.set_lasercutterProfile()
 
-		if self.is_migration_required():
-			self._logger.info("Starting migration from v{} to v{}".format(self.version_previous, self.version_current))
+			if self.is_migration_required():
+				self._logger.info("Starting migration from v{} to v{}".format(self.version_previous, self.version_current))
 
-			# migrations
-			if self.version_previous is None or self._compare_versions(self.version_previous, '0.1.13', equal_ok=False):
-				self.migrate_from_0_0_0()
+				# migrations
+				if self.version_previous is None or self._compare_versions(self.version_previous, '0.1.13', equal_ok=False):
+					self.migrate_from_0_0_0()
 
-			if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_DELETE_EGG_DIR_LEFTOVERS, equal_ok=False):
-				self.delete_egg_dir_leftovers()
-			# migrations end
+				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_DELETE_EGG_DIR_LEFTOVERS, equal_ok=False):
+					self.delete_egg_dir_leftovers()
+				# migrations end
 
-			self.save_current_version()
-		else:
-			self._logger.debug("No migration required.")
+				self.save_current_version()
+			else:
+				self._logger.debug("No migration required.")
+		except:
+			self._logger.exception("Unhandled exception during migration: ")
 
 
 	def is_migration_required(self):
@@ -97,15 +100,17 @@ class Migration(object):
 		"""
 		self._logger.info("delete_egg_dir_leftovers() ")
 		site_packages_dir = '/home/pi/site-packages'
-		# files = [f for f in os.listdir(site_packages_dir) if re.match(r'Mr_Beam-([])-py2.7.egg-info', f)]
-		for f in os.listdir(site_packages_dir):
-			match = re.match(r'Mr_Beam-(?P<version>[0-9.]+)[.-].+', f)
-			if match:
-				version = match.group('version')
-				if self._compare_versions(version, self.VERSION_DELETE_EGG_DIR_LEFTOVERS, equal_ok=False):
-					del_dir = os.path.join(site_packages_dir, f)
-					self._logger.info("delete_egg_dir_leftovers() Deleting dir: %s", del_dir)
-					shutil.rmtree(del_dir)
+		if os.path.isdir(site_packages_dir):
+			for f in os.listdir(site_packages_dir):
+				match = re.match(r'Mr_Beam-(?P<version>[0-9.]+)[.-].+', f)
+				if match:
+					version = match.group('version')
+					if self._compare_versions(version, self.VERSION_DELETE_EGG_DIR_LEFTOVERS, equal_ok=False):
+						del_dir = os.path.join(site_packages_dir, f)
+						self._logger.info("delete_egg_dir_leftovers() Deleting dir: %s", del_dir)
+						shutil.rmtree(del_dir)
+		else:
+			self._logger.error("delete_egg_dir_leftovers() Dir not existing '%s', Can't check for egg leftovers.")
 
 
 
@@ -127,7 +132,11 @@ class Migration(object):
 		if laserCutterProfileManager().get_default()['id'] == 'my_default':
 			self._logger.info("set_lasercutterPorfile() Setting lasercutterProfile for device '%s'", self.plugin._device_series)
 
-			if self.plugin._device_series == '2C':
+			if self.plugin._device_series == '2X':
+				# 2X placeholder value.
+				self._logger.error("set_lasercutterProfile() Can't set lasercutterProfile. device_series is %s: ", self.plugin._device_series)
+				return
+			elif self.plugin._device_series == '2C':
 				self.set_lasercutterPorfile_2C()
 			elif self.plugin._device_series == '2D':
 				self.set_lasercutterPorfile_2D()
