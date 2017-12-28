@@ -37,7 +37,7 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
 from octoprint_mrbeam.migrate import migrate
 from .profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
-from .software_update_information import get_update_information
+from .software_update_information import get_update_information, SW_UPDATE_TIER_PROD
 
 
 
@@ -55,7 +55,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				   octoprint.plugin.ProgressPlugin,
 				   octoprint.plugin.WizardPlugin,
 				   octoprint.plugin.SlicerPlugin,
-				   octoprint.plugin.ShutdownPlugin):
+				   octoprint.plugin.ShutdownPlugin,
+				   octoprint.plugin.EnvironmentDetectionPlugin):
 
 	# CONSTANTS
 	DEVIE_INFO_FILE = '/etc/mrbeam'
@@ -126,16 +127,21 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 
 	def _do_initial_log(self):
+		"""
+		Kicks an identifying log line
+		Was really important before we had
+		@see self.get_additional_environment()
+		"""
 		msg = "MrBeam Plugin"
-		msg += " version:" + self._plugin_version
-		msg += ", branch:" + self._branch
-		msg += ", host:" + self._hostname
-		msg += ", serial:" + self._serial
-		msg += ", env:" + self.get_env()
-		msg += " ("+self.ENV_LOCAL+':'+self.get_env(self.ENV_LOCAL)
-		msg += ","+self.ENV_LASER_SAFETY+':'+self.get_env(self.ENV_LASER_SAFETY)
-		msg += ","+self.ENV_ANALYTICS+':'+self.get_env(self.ENV_ANALYTICS)+')'
-		msg += ", octopi:" + str(self._octopi_info)
+		msg += " version:{}".format(self._plugin_version)
+		msg += ", host:{}".format(self._hostname)
+		msg += ", serial:{}".format(self._serial)
+		msg += ", software_tier:{}".format(self._settings.get(["dev", "software_tier"]))
+		msg += ", env:{}".format(self.get_env())
+		msg += " ({}:{}".format(self.ENV_LOCAL, self.get_env(self.ENV_LOCAL))
+		msg += ",{}:{}".format(self.ENV_LASER_SAFETY, self.get_env(self.ENV_LASER_SAFETY))
+		msg += ",{}:{})".format(self.ENV_ANALYTICS, self.get_env(self.ENV_ANALYTICS))
+		msg += ", beamOS-image:{}".format(self._octopi_info)
 		self._logger.info(msg, terminal=True)
 
 		msg = "MrBeam Lasercutter Profile: %s" % self.laserCutterProfileManager.get_current_or_default()
@@ -157,6 +163,18 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		converted["default"] = (profile["id"] == default)
 		converted["current"] = (profile["id"] == current)
 		return converted
+
+	def get_additional_environment(self):
+		"""
+		Mixin: octoprint.plugin.EnvironmentDetectionPlugin
+		:return: dict of environment data
+		"""
+		return dict(version=self._plugin_version,
+		            host=self._hostname,
+		            serial=self._serial,
+		            software_tier=self._settings.get(["dev", "software_tier"]),
+		            env=self.get_env(),
+		            beamOS_image=self._octopi_info)
 
 	##~~ SettingsPlugin mixin
 	def get_settings_version(self):
@@ -181,6 +199,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				# 	laser_safety = "DEV",
 				# 	local =  "DEV"
 				# ),
+				software_tier = SW_UPDATE_TIER_PROD,
 				iobeam_disable_warnings = False
 			),
 			# TODO rename analyticsEnabled and put in analytics-dict
@@ -1581,7 +1600,7 @@ def __plugin_load__():
 	global __plugin_settings_overlay__
 	__plugin_settings_overlay__ = dict(
 		plugins=dict(
-			_disabled=['cura', 'pluginmanager', 'announcements', 'corewizard']   # eats dict | pfad.yml | callable
+			_disabled=['cura', 'pluginmanager', 'announcements', 'corewizard', 'octopi_support']   # eats dict | pfad.yml | callable
 			# _disabled=['cura', 'pluginmanager', 'announcements', 'corewizard', 'mrbeam']  # eats dict | pfad.yml | callable
 		),
 		terminalFilters = [
