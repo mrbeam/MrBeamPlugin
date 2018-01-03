@@ -1088,7 +1088,7 @@ $(function(){
 					show_line_mappings = true;
 					var hex = '#' + id.substr(-6);
 					var val = 255 - self._get_brightness(hex);
-					var icon = '<input id="adjuster_'+id+'" type="range" min="0" max="255" style="background-color:'+hex+';" value="'+val+'" />';
+					var icon = '<input id="adjuster_'+id+'" class="precisionslider coloradjuster" type="range" min="0" max="255" style="border-top-color:'+hex+';" value="'+val+'" />';
 					line_mapping_container.append(icon);
 				}
 			}
