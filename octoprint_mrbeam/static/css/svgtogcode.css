@@ -360,6 +360,22 @@ body.colorDragInProgress #drop_overlay {
 	display: none;
 }
 
+#colored_line_mapping {
+	width: 220px;
+	margin-left: 4.5em;
+    display: block;
+    position: relative;
+}
+
+#colored_line_mapping input {
+	width: 100%;
+	max-width: initial;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+    height: 1px;
+	margin:	2rem 0 0 0;
+}
+
 /* eye candy for gcode generation */
 #userContent path,
 #userContent circle,
