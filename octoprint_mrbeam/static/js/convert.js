@@ -36,7 +36,7 @@ $(function(){
 		self.minSpeed = ko.observable(20);
 
 		self.vectorJobs = ko.observableArray([]);
-		self.show_colored_line_mappings = ko.observable(false);
+		self.show_line_color_mappings = ko.observable(false);
 
 		// material menu
 		self.material_settings2 = {
@@ -175,6 +175,13 @@ $(function(){
 						engrave: null, // not tested yet
 						cut: [
 							{thicknessMM: 4, cut_i:100, cut_f:350, cut_p:2}
+						]
+					},
+					'eca100': {
+						name: 'sunny yellow',
+						engrave: null, // not tested yet
+						cut: [
+							{thicknessMM: 4, cut_i:100, cut_f:300, cut_p:2}
 						]
 					},
 					'550024': {
@@ -572,6 +579,8 @@ $(function(){
 			if(material !== null && param_set !== null && param_set.engrave !== null){
 				p = param_set.engrave;
 				name = material.name;
+			} else {
+				console.warn("No engraving settings available for "+ material);
 			}
 
 			var job = $('#engrave_job');
@@ -1092,7 +1101,7 @@ $(function(){
 					line_mapping_container.append(icon);
 				}
 			}
-			self.show_colored_line_mappings(show_line_mappings);
+			self.show_line_color_mappings(show_line_mappings);
 		};
 
 		// quick hack

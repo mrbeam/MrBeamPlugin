@@ -3,6 +3,10 @@
     Author     : teja
 */
 
+input[type=range].precisionslider.coloradjuster {
+	border-top-width: 2px;
+}
+
 input[type=range].precisionslider {
   -webkit-appearance: none;
   width: 100%;
