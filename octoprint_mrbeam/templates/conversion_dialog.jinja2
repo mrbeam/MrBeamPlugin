@@ -87,7 +87,7 @@
 		</div>
 	</div>
 	<div class="modal_dialog_headline">
-		<h3>Line color assignment</h3>
+		<h3>Parameter assignment</h3>
 	</div>
 	<div class="modal-body scrollable" style="box-sizing: border-box">
 		<div data-bind="visible:!slicing_in_progress()">
@@ -97,13 +97,12 @@
 					<div class="span3" style="display:flex;">
 						<div class="assigned_colors color_drop_zone img_drop_zone" ondragover="window.mrbeam.colorDragging.colorAllowDrop(event)" ondrop="window.mrbeam.colorDragging.colorDrop(event)"></div>
 					</div>
-					<div class="span6">
+					<div class="span9">
 						<div class="job_parameters">
 							<h4>Skip</h4>
 							<span>Drag colors on this row to skip them.</span>
 						</div>
 					</div>
-					<div class="span3"></div>
 				</div>
 
 				<div id="engrave_job" class="job_row row-fluid" data-bind="visible: show_image_parameters">
@@ -145,6 +144,19 @@
 									The movement velocity range used for engraving pixel graphics. Bright/white pixels use the left (higher) value, dark/black pixels the right (lower) value.
 									Equal values do not vary the laser velocity related to the pixel brightness.
 								</div>
+								
+								<div data-bind="visible: show_line_color_mappings">
+									<label class="control-label">{{ _('Line color mapping') }}</label>
+									<div class="controls">
+										<div id="colored_line_mapping">
+										</div>
+									</div>
+								</div>
+								<div class="controls alert alert-info hint" data-bind="visible: showHints">
+									<span class="icon icon-question-sign" aria-hidden="true"></span>
+									Map the color of a vector path to a grayscale value for engraving.
+								</div>
+								
 								<div class="controls" data-bind="visible: showExpertSettings ">
 									<label class="checkbox">
 										<input type="checkbox" data-bind="checked: engrave_outlines">{{ _('engrave outlines of filled shapes') }}
@@ -269,7 +281,7 @@
 		</div>
     </div>
     <div class="modal-footer">
-		<div class="pull-left" style="text-align:left;" data-bind="visible:dialog_state() === 'color_assignment'">
+		<div class="pull-left" style="text-align:left;">
 			<label class="checkbox">
 				<input type="checkbox" data-bind="checked: showExpertSettings">show advanced settings
 			</label>

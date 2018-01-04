@@ -36,6 +36,7 @@ $(function(){
 		self.minSpeed = ko.observable(20);
 
 		self.vectorJobs = ko.observableArray([]);
+		self.show_line_color_mappings = ko.observable(false);
 
 		// material menu
 		self.material_settings2 = {
@@ -174,6 +175,13 @@ $(function(){
 						engrave: null, // not tested yet
 						cut: [
 							{thicknessMM: 4, cut_i:100, cut_f:350, cut_p:2}
+						]
+					},
+					'eca100': {
+						name: 'sunny yellow',
+						engrave: null, // not tested yet
+						cut: [
+							{thicknessMM: 4, cut_i:100, cut_f:300, cut_p:2}
 						]
 					},
 					'550024': {
@@ -468,7 +476,7 @@ $(function(){
 
 		self.color_key_update = function(){
 			var cols = self.workingArea.getUsedColors();
-			$('.job_row_vector .used_color').addClass('not-used');
+			$('.job_row .used_color:not(#cd_engraving)').addClass('not-used');
 			for (var idx = 0; idx < cols.length; idx++) {
 				var c = cols[idx];
 				var selection = $('#cd_color_'+c.hex.substr(1));
@@ -481,7 +489,7 @@ $(function(){
 					selection.removeClass('not-used');
 				}
 			}
-			$('.job_row_vector .not-used').remove();
+			$('.job_row .not-used').remove();
 		};
 
 		self._getColorIcon = function(color){
@@ -571,6 +579,8 @@ $(function(){
 			if(material !== null && param_set !== null && param_set.engrave !== null){
 				p = param_set.engrave;
 				name = material.name;
+			} else {
+				console.warn("No engraving settings available for "+ material);
 			}
 
 			var job = $('#engrave_job');
@@ -765,28 +775,47 @@ $(function(){
 			var intensity_white_user = self.imgIntensityWhite();
 			var speed_black = parseInt(self.imgFeedrateBlack());
 			var speed_white = parseInt(self.imgFeedrateWhite());
-			$('#engrave_job .color_drop_zone .used_color').each(function(i, el){
-				if(el.id !== 'cd_engraving'){
-					var hex = '#' +$(el).attr('id').substr(-6);
-					var r = parseInt(hex.substr(1,2), 16);
-					var g = parseInt(hex.substr(3,2), 16);
-					var b = parseInt(hex.substr(5,2), 16);
-					var initial_factor = 1 - ((r*self.BRIGHTNESS_VALUE_RED + g*self.BRIGHTNESS_VALUE_GREEN + b*self.BRIGHTNESS_VALUE_BLUE) / 255); // TODO user should override brightness
-					var intensity_user = intensity_white_user + initial_factor * (intensity_black_user - intensity_white_user);
-					var intensity = Math.round(intensity_user * self.profile.currentProfileData().laser.intensity_factor());
-					var feedrate = Math.round(speed_white + initial_factor * (speed_black - speed_white));
+//			$('#engrave_job .color_drop_zone .used_color').each(function(i, el){
+//				if(el.id !== 'cd_engraving'){
+//					var hex = '#' +$(el).attr('id').substr(-6);
+//					var adjuster = $();
+//					var brightness = self._get_brightness(hex);
+//					var initial_factor = 1 - (brightness / 255); // TODO user should override brightness
+//					var intensity_user = intensity_white_user + initial_factor * (intensity_black_user - intensity_white_user);
+//					var intensity = Math.round(intensity_user * self.profile.currentProfileData().laser.intensity_factor());
+//					var feedrate = Math.round(speed_white + initial_factor * (speed_black - speed_white));
+//
+//					data.push({
+//						job: "vector_engrave_"+i,
+//						color: hex,
+//						intensity: intensity,
+//                        intensity_user: intensity_user,
+//						feedrate: feedrate,
+//						pierce_time: self.engravingPiercetime(),
+//						passes: 1,
+//                        material: self.engravingMaterial
+//					});
+//				}
+//			});
+			
+			$('#colored_line_mapping input').each(function(i, el){
+				var hex = '#' +$(el).attr('id').substr(-6);
+				var brightness = self._get_brightness(hex);
+				var initial_factor = 1 - (brightness / 255); // TODO user should override brightness
+				var intensity_user = intensity_white_user + initial_factor * (intensity_black_user - intensity_white_user);
+				var intensity = Math.round(intensity_user * self.profile.currentProfileData().laser.intensity_factor());
+				var feedrate = Math.round(speed_white + initial_factor * (speed_black - speed_white));
 
-					data.push({
-						job: "vector_engrave_"+i,
-						color: hex,
-						intensity: intensity,
-                        intensity_user: intensity_user,
-						feedrate: feedrate,
-						pierce_time: self.engravingPiercetime(),
-						passes: 1,
-                        material: self.engravingMaterial
-					});
-				}
+				data.push({
+					job: "vector_engrave_"+i,
+					color: hex,
+					intensity: intensity,
+					intensity_user: intensity_user,
+					feedrate: feedrate,
+					pierce_time: self.engravingPiercetime(),
+					passes: 1,
+					material: self.engravingMaterial
+				});
 			});
 
 			return data;
@@ -933,6 +962,13 @@ $(function(){
             }
             return no_special_chars;
 		};
+		
+		self._get_brightness = function(hex){
+			var r = parseInt(hex.substr(1,2), 16);
+			var g = parseInt(hex.substr(3,2), 16);
+			var b = parseInt(hex.substr(5,2), 16);
+			return Math.round((r*self.BRIGHTNESS_VALUE_RED + g*self.BRIGHTNESS_VALUE_GREEN + b*self.BRIGHTNESS_VALUE_BLUE));
+		};
 
 		self.onStartup = function() {
 			self.requestData();
@@ -1044,10 +1080,28 @@ $(function(){
 			for (var idx = 0; idx < jobs.length; idx++) {
 				var j = jobs[idx];
 				var colors = $(j).find('.used_color');
-				if(colors.length === 0){
+				if(colors.length === 0){ // remove orphaned job rows
 					$(j).remove();
 				}
 			}
+			
+			// create adjusters for lines in engrave settings
+			var engrave_items = $('#engrave_job .img_drop_zone .used_color');
+			var show_line_mappings = false;
+			var line_mapping_container = $('#colored_line_mapping');
+			line_mapping_container.children().remove();
+			for (var i = 0; i < engrave_items.length; i++) {
+				var el = engrave_items[i];
+				var id = el.id;
+				if(id !== 'cd_engraving'){
+					show_line_mappings = true;
+					var hex = '#' + id.substr(-6);
+					var val = 255 - self._get_brightness(hex);
+					var icon = '<input id="adjuster_'+id+'" class="precisionslider coloradjuster" type="range" min="0" max="255" style="border-top-color:'+hex+';" value="'+val+'" />';
+					line_mapping_container.append(icon);
+				}
+			}
+			self.show_line_color_mappings(show_line_mappings);
 		};
 
 		// quick hack

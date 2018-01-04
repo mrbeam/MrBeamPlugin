@@ -295,7 +295,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/wizard_acl.js", "js/netconnectd_wrapper.js", "js/lasersaftey_viewmodel.js",
 				"js/ready_to_laser_viewmodel.js", "js/lib/screenfull.min.js","js/settings/camera_calibration.js",
 				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js", "js/laser_job_done_viewmodel.js"],
-			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css", "css/quicktext-fonts.css"],
+			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css", "css/quicktext-fonts.css", "css/sliders.css"],
 			less=["less/mrbeam.less"]
 		)
 
