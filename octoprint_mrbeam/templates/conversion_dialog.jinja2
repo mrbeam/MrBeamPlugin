@@ -9,7 +9,7 @@
 			<div id="material_row" data-bind="css: {expanded: expandMaterialSelector() }">
 				<div id="material_type" data-bind="css: {active : selected_material() === null}">
 					<div class="">
-						<label class="">Material</label>
+						<label data-bind="visible: expandMaterialSelector">Material</label>
 						<div class="">
 							<form class="form-search" data-bind="submit: filterQuery, visible: selected_material() === null">
 								<input type="text" class="input-block search-query" data-bind="value: filterQuery, valueUpdate: 'input'" placeholder="{{ _('Search...') }}">
@@ -30,7 +30,7 @@
 
 				<div id="material_color" class="" data-bind="css: {active : selected_material() !== null }">
 					<div>
-						<label class="">Color</label>
+						<label data-bind="visible: expandMaterialSelector">Color</label>
 						<ul id="color_list" data-bind="foreach: material_colors">
 							<li class='material_color_entry hover_shadow' data-bind="
 								click: function(){ $root.set_material_color($data, event); },
@@ -49,7 +49,7 @@
 				</div>
 				<div id="material_thickness" data-bind="css: {active : selected_material() !== null && selected_material_color() !== null}">
 					<div class="">
-						<label class="">Thickness</label>
+						<label data-bind="visible: expandMaterialSelector">Thickness</label>
 						<div class="controls alert alert-info hint" data-bind="visible: showHints">
 							<span class="icon icon-question-sign" aria-hidden="true"></span>
 							Set the thickness of the material. When cutting the material it is important to tell Mr Beam
@@ -113,7 +113,7 @@
 						<div class="clearfix">
 							<h4 class="job_title pull-left">Engraving</h4>
 						</div>
-						<form class="job_parameters form-horizontal">
+						<form class="job_parameters form-horizontal" data-bind="visible: engraving_possible">
 							<div class="control-group" >
 								<label class="control-label">{{ _('Laser intensity range') }}</label>
 								<div class="controls">
@@ -222,6 +222,9 @@
 								</div>
 							</div>
 						</form>
+						<div class="not_possible_on_this_material" data-bind="visible: !engraving_possible()">
+							Not engravable!
+						</div>
 					</div>
 				</div>
 				<div id="first_job" class="job_row_vector job_row row-fluid" data-bind="visible: show_vector_parameters">
@@ -232,7 +235,7 @@
 						<div class="clearfix">
 							<h4 class="job_title pull-left">Job 1</h4>
 						</div>
-						<form class="job_parameters form-horizontal">
+						<form class="job_parameters form-horizontal" data-bind="visible: cutting_possible">
 							<div class="control-group">
 								<label class="control-label">Laser Intensity</label>
 								<div class="controls"><input class="param_intensity img_intensity_input" type="number" min="0" max="100" />&nbsp;%</div>
@@ -262,6 +265,9 @@
 								<div class="controls"><input class="param_piercetime" type="number" min="0" max="2000" value="0" />&nbsp;ms</div>
 							</div>
 						</form>
+						<div class="not_possible_on_this_material" data-bind="visible: !cutting_possible()">
+							Not cuttable!
+						</div>
 					</div>
 				</div>
 				<div id="additional_jobs"></div>

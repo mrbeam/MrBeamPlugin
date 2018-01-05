@@ -327,9 +327,32 @@ $(function(){
 		self.material_safety_notes = ko.observable('');
 		self.material_hints = ko.observable('');
 		self.material_description = ko.observable('');
+		
+		self.engraving_possible = ko.computed(function(){
+			var mat = self.selected_material();
+			var col = self.selected_material_color();
+			var th = self.selected_material_thickness();
+			if(mat === null || col === null || th === null){
+				return false;
+			} else {
+				var param_set = self.get_closest_color_params();
+				return param_set.engrave !== null;
+			}
+		});
+		self.cutting_possible = ko.computed(function(){
+			var mat = self.selected_material();
+			var col = self.selected_material_color();
+			var th = self.selected_material_thickness();
+			if(mat === null || col === null || th === null){
+				return false;
+			} else {
+				var param_set = self.get_closest_thickness_params();
+				return param_set.thicknessMM > 0;
+			}
+		});
 
 		self.expandMaterialSelector = ko.computed(function(){
-			return self.selected_material === null || self.selected_material_color() === null || self.selected_material_thickness() === null;
+			return self.selected_material() === null || self.selected_material_color() === null || self.selected_material_thickness() === null;
 		});
 
 
@@ -350,23 +373,18 @@ $(function(){
 			var color_closest = self.get_closest_color_params();
 			var available = color_closest.cut;
 			if(available.length === 0) {
-				return [];
-			} else if(available.length === 1) {
-				return available[0];
+				return self.engrave_only_thickness;
 			} else {
-				var upper = null;
 				for (var i = 0; i < available.length; i++) {
 					var pset = available[i];
-					console.log("pset", pset);
 					if(pset.thicknessMM >= selected.thicknessMM){
-						if(upper === null || pset.thicknessMM < upper.thicknessMM){
-							upper = pset;
-						}
+						return pset;
 					}
 				}
-				return upper;
 			}
+			return self.engrave_only_thickness;
 		};
+		
 		self.get_closest_color_params = function(){
 			var material = self.selected_material();
 			var hex = self.selected_material_color();
@@ -436,7 +454,9 @@ $(function(){
 
 				// autoselect thickness if only one available
 				var available_thickness = material.colors[color].cut;
-				available_thickness = available_thickness.concat(self.engrave_only_thickness);
+				if(material.colors[color].engrave !== null){
+					available_thickness = available_thickness.concat(self.engrave_only_thickness);
+				}
 				self.material_thicknesses(available_thickness);
 				self.selected_material_thickness(null);
 				if(available_thickness.length === 1){
