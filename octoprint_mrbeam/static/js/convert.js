@@ -1169,15 +1169,17 @@ window.mrbeam.colorDragging = {
         }, 200);
         $('.color_drop_zone, .img_drop_zone').removeClass('hover');
 
-        var newJob = $('#first_job').clone(true);
-        newJob.attr('id', '');
-        newJob.find('.used_color').remove();
-        newJob.appendTo($('#additional_jobs'));
+		var data = ev.dataTransfer.getData("text");
+		if(data !== 'cd_engraving'){
+			var newJob = $('#first_job').clone(true);
+			newJob.attr('id', '');
+			newJob.find('.used_color').remove();
+			newJob.appendTo($('#additional_jobs'));
 
-        var data = ev.dataTransfer.getData("text");
-        var color = document.getElementById(data);
-        $(newJob).find('.assigned_colors').append(color);
-        ko.dataFor(document.getElementById("dialog_vector_graphics_conversion"))._update_color_assignments();
+			var color = document.getElementById(data);
+			$(newJob).find('.assigned_colors').append(color);
+			ko.dataFor(document.getElementById("dialog_vector_graphics_conversion"))._update_color_assignments();
+		}
     },
 
 
