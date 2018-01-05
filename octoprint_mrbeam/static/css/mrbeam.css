@@ -869,6 +869,7 @@ li.nav_version {
 body {
 	padding-top: 48px;  /* necessary for navbar-fixed-top */
 	min-width:620px;
+	color: #383e42;
 }
 
 .octoprint-container {
