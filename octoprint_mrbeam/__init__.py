@@ -38,6 +38,7 @@ from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
 from octoprint_mrbeam.migrate import migrate
 from .profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
 from .software_update_information import get_update_information, SW_UPDATE_TIER_PROD
+from .support import set_support_user
 
 
 
@@ -103,6 +104,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		# do migration if needed
 		migrate(self)
+
+		# Enable or disable internal support user.
+		set_support_user(self)
 
 
 		self.laserCutterProfileManager = laserCutterProfileManager()
@@ -200,7 +204,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				# 	local =  "DEV"
 				# ),
 				software_tier = SW_UPDATE_TIER_PROD,
-				iobeam_disable_warnings = False
+				iobeam_disable_warnings = False,
+				support_user = False
 			),
 			# TODO rename analyticsEnabled and put in analytics-dict
 			analyticsEnabled=False,  # frontend analytics Mixpanel
@@ -1546,43 +1551,44 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return result
 
 
-# this is for the command line interface we're providing
-def clitest_commands(cli_group, pass_octoprint_ctx, *args, **kwargs):
-	import click
-	import sys
-	import requests.exceptions
-	import octoprint_client as client
-
-	# > octoprint plugins mrbeam:debug_event MrBeamDebugEvent -p 42
-	# remember to activate venv where MrBeamPlugin is installed in
-	@click.command("debug_event")
-	@click.argument("event", default="MrBeamDebugEvent")
-	@click.option("--payload", "-p", default=None, help="optinal payload string")
-	def debug_event_command(event, payload):
-		if payload is not None:
-			payload_numer = None
-			try:
-				payload_numer = int(payload)
-			except:
-				try:
-					payload_numer = float(payload)
-				except:
-					pass
-			if payload_numer is not None:
-				payload = payload_numer
-
-		params = dict(command="debug_event", event=event, payload=payload)
-		client.init_client(cli_group.settings)
-
-		click.echo("Firing debug event - params: {}".format(params))
-		r = client.post_json("/api/plugin/mrbeam", data=params)
-		try:
-			r.raise_for_status()
-		except requests.exceptions.HTTPError as e:
-			click.echo("Could not fire event, got {}".format(e))
-			sys.exit(1)
-
-	return [debug_event_command]
+# # this is for the command line interface we're providing
+# def clitest_commands(cli_group, pass_octoprint_ctx, *args, **kwargs):
+# 	import click
+# 	import sys
+# 	import requests.exceptions
+# 	import octoprint_client as client
+#
+# 	# > octoprint plugins mrbeam:debug_event MrBeamDebugEvent -p 42
+# 	# remember to activate venv where MrBeamPlugin is installed in
+# 	@click.command("debug_event")
+# 	@click.argument("event", default="MrBeamDebugEvent")
+# 	@click.option("--payload", "-p", default=None, help="optinal payload string")
+# 	@click.pass_context
+# 	def debug_event_command(ctx, event, payload):
+# 		if payload is not None:
+# 			payload_numer = None
+# 			try:
+# 				payload_numer = int(payload)
+# 			except:
+# 				try:
+# 					payload_numer = float(payload)
+# 				except:
+# 					pass
+# 			if payload_numer is not None:
+# 				payload = payload_numer
+#
+# 		params = dict(command="debug_event", event=event, payload=payload)
+# 		# client.init_client(cli_group.settings)
+#
+# 		click.echo("Firing debug event - params: {}".format(params))
+# 		r = client.post_json("/api/plugin/mrbeam", data=params)
+# 		try:
+# 			r.raise_for_status()
+# 		except requests.exceptions.HTTPError as e:
+# 			click.echo("Could not fire event, got {}".format(e))
+# 			sys.exit(1)
+#
+# 	return [debug_event_command]
 
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
@@ -1636,8 +1642,8 @@ def __plugin_load__():
 		"octoprint.printer.factory": __plugin_implementation__.laser_factory,
 		"octoprint.filemanager.extension_tree": __plugin_implementation__.laser_filemanager,
 		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
-		"octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook,
-		"octoprint.cli.commands": clitest_commands
+		"octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook
+		# "octoprint.cli.commands": clitest_commands
 
 	}
 
