@@ -1,0 +1,102 @@
+<script id='doFindMrBeamReload' lang="javascript">
+
+    doFindMrBeamReload();
+
+    /**
+     * If the hostname is not whitelisted it's because MrBeam is used in AP mode.
+     * Per iptables we redirect all incoming traffic (on port 80) to localhost.
+     * No matter what website the user is trying to open, he'll get the MrBeam UI
+     * as response. This is very useful for find.mr-beam.org. However, it can cause
+     * serious caching issues. (MrBeam UI is cached as example.com. Even a simple reload
+     * wouldn't solve this for the user.) That's why we do a force-reload whenever
+     * we find that the requested domain doesn't match the typical ones for this device.
+     */
+    function doFindMrBeamReload() {
+
+        // if cookie name is changed, it also need to be changed in FindMyOctoPrint-Server
+        var cookie_name = 'mrbeam_beamos_reloading';
+
+        var forward_to = "{{ hostname }}.local".toLowerCase();
+        var hostname_whitelist = [
+            /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/, // ip addresses
+            /^mrbeam-[0-9abcdef]{4}\.local$/,
+            /^mrbeam-[0-9abcdef]{4}$/
+            ];
+
+
+        if (!is_whitelisted(forward_to)) {
+            console.error("doFindMrBeamReload() forward_to ("+forward_to+") is NOT whitelisted. This would cause endless redirecting. Not redirect performed.")
+            return;
+        }
+
+        if (!is_whitelisted(window.location.hostname)) {
+            var cookie = getCookie(cookie_name);
+            if (cookie) {
+                // coming from a reload
+                eraseCookie(cookie_name);
+                console.log("doFindMrBeamReload() We're on a domain that's not ours. ('"+window.location.hostname+"') Reload done. Forwarding to: "+forward_to);
+                window.location.href ="http://"+forward_to;
+            } else {
+                console.log("doFindMrBeamReload() We're on a domain that's not ours. ('"+window.location.hostname+"') Reloading page...");
+                setCookie(cookie_name, true);
+                setUrlParam('ts', Date.now());
+            }
+        }
+
+        function is_whitelisted(hostname) {
+            return hostname_whitelist.some(function(my_pattern){
+                return (null != hostname.match(my_pattern));
+            });
+        };
+
+        // Cookie helpers //
+        // https://stackoverflow.com/a/24103596/2631798
+        function setCookie(name,value,days) {
+            var expires = "";
+            if (days) {
+                var date = new Date();
+                date.setTime(date.getTime() + (days*24*60*60*1000));
+                expires = "; expires=" + date.toUTCString();
+            }
+            document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+        }
+        function getCookie(name) {
+            var nameEQ = name + "=";
+            var ca = document.cookie.split(';');
+            for(var i=0;i < ca.length;i++) {
+                var c = ca[i];
+                while (c.charAt(0)==' ') c = c.substring(1,c.length);
+                if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+            }
+            return null;
+        }
+        function eraseCookie(name) {
+            document.cookie = name+'=; Max-Age=-99999999;';
+        }
+
+        function getUrlParam(name, url) {
+            // https://stackoverflow.com/a/901144/2631798
+            if (!url) url = window.location.href;
+            name = name.replace(/[\[\]]/g, "\\$&");
+            var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+                results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, " "));
+        }
+
+        function setUrlParam(key, value) {
+            // https://stackoverflow.com/a/487049/2631798
+            key = encodeURIComponent(key);
+            value = encodeURIComponent(value);
+            var s = window.location.search;
+            var kvp = key + "=" + value;
+            var r = new RegExp("(&|\\?)" + key + "=[^\&]*");
+            s = s.replace(r, "$1" + kvp);
+            if (!RegExp.$1) {
+                s += (s.length > 0 ? '&' : '?') + kvp;
+            };
+            window.location.search = s;
+        };
+    };
+</script>
