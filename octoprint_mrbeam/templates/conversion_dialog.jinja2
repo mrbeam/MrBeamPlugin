@@ -48,24 +48,24 @@
 					</div>
 				</div>
 				<div id="material_thickness" data-bind="css: {active : selected_material() !== null && selected_material_color() !== null && selected_material_thickness() === null}">
-					<div class="">
+					<div>
 						<label data-bind="visible: expandMaterialSelector">Thickness</label>
+						<div id="thickness_list" data-bind="foreach: material_thicknesses">
+							<div class="thickness_sample hover_shadow" 
+								 data-bind="
+										click: $root.set_material_thickness($data, event),
+										attr: {id: 'material_thickness_'+$data.thicknessMM },
+										css: {active: $data === $root.selected_material_thickness(), engrave_only: $data.thicknessMM === -1 },
+										style: { padding: ($data.thicknessMM * $root.mm2px()/2)+'mm 0' },
+										visible: ($root.selected_material_thickness() === null) || ($root.selected_material_thickness() === $data),
+										text: $root.thickness_text($data)
+								 " ></div>
+						</div>
 						<div class="controls alert alert-info hint" data-bind="visible: showHints">
 							<span class="icon icon-question-sign" aria-hidden="true"></span>
 							Set the thickness of the material. When cutting the material it is important to tell Mr Beam
 							the thickness that he can select the correct laser settings.
 						</div>
-					</div>
-					<div id="thickness_list" data-bind="foreach: material_thicknesses">
-						<div class="thickness_sample hover_shadow" 
-							 data-bind="
-									click: $root.set_material_thickness($data, event),
-									attr: {id: 'material_thickness_'+$data.thicknessMM },
-									css: {active: $data === $root.selected_material_thickness(), engrave_only: $data.thicknessMM === -1 },
-									style: { padding: ($data.thicknessMM * $root.mm2px()/2)+'mm 0' },
-									visible: ($root.selected_material_thickness() === null) || ($root.selected_material_thickness() === $data),
-									text: $root.thickness_text($data)
-							 " ></div>
 					</div>
 				</div>
 				<div id="material_info">
@@ -263,7 +263,7 @@
 							</div>
 							<div class="control-group" data-bind="visible: showExpertSettings ">
 								<label class="control-label">Pierce time</label>
-								<div class="controls"><input class="param_piercetime" type="number" min="0" max="2000" value="0" />&nbsp;ms</div>
+								<div class="controls"><input class="param_piercetime img_intensity_input" type="number" min="0" max="2000" value="0" />&nbsp;ms</div>
 							</div>
 						</form>
 						<div class="not_possible_on_this_material" data-bind="visible: !has_cutting_proposal()">
