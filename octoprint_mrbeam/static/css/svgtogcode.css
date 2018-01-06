@@ -530,6 +530,7 @@ li.material_entry span {
 
 .thickness_sample {
     display: inline-block;
+	vertical-align: bottom;
     border: 0.25mm solid #999;
     border-left-color: transparent;
     width: 100%;
@@ -548,17 +549,10 @@ li.material_entry span {
 	width: 100%;
 	overflow-x: hidden;
 	position: relative;
-	/*height: calc(100px + 2em);*/
 	transition: height .3s ease-in-out;
 	margin-bottom: 1em;
 }
-#material_row.expanded {
-	height: 32vh;
-}
 
-#material_info {
-	margin-top: 100px;
-}
 #material_row.expanded #material_info {
 	display:none;
 }
@@ -576,19 +570,14 @@ li.material_entry span {
 	width: 20%;
 	display: inline-block;
 	box-sizing: border-box;
-	position: absolute;
-	transition: margin-left .1s ease-in;
+	/*position: absolute;*/
+	transition: width .1s ease-in;
 	background-color: #fff;
 }
 #material_type.active { width: 100%; }
-#material_type { width: calc(200px + 2em); }
-
-#material_color, #material_thickness { margin-left: 100%; }
-#material_color.active { 
-	margin-left: calc(200px + 6em); 
-	width: calc(100% - 200px - 3em);
-}
-#material_thickness.active { margin-left:  calc(2 * (200px + 6em)); }
+#material_type, #material_color, #material_thickness  { width: calc(200px + 2em); }
+#material_color.active { width: calc(100% - 200px - 3em); }
+#material_thickness.active { width: calc(100% - 2 * (200px + 6em)); }
 
 #material_thickness .engrave_only {
     border-bottom: transparent;

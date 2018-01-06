@@ -28,7 +28,7 @@
 					</div>
 				</div>
 
-				<div id="material_color" class="" data-bind="css: {active : selected_material() !== null }">
+				<div id="material_color" class="" data-bind="css: {active : selected_material() !== null && selected_material_color() === null }">
 					<div>
 						<label data-bind="visible: expandMaterialSelector">Color</label>
 						<ul id="color_list" data-bind="foreach: material_colors">
@@ -47,7 +47,7 @@
 						</div>
 					</div>
 				</div>
-				<div id="material_thickness" data-bind="css: {active : selected_material() !== null && selected_material_color() !== null}">
+				<div id="material_thickness" data-bind="css: {active : selected_material() !== null && selected_material_color() !== null && selected_material_thickness() === null}">
 					<div class="">
 						<label data-bind="visible: expandMaterialSelector">Thickness</label>
 						<div class="controls alert alert-info hint" data-bind="visible: showHints">

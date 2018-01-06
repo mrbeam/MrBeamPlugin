@@ -420,7 +420,6 @@ $(function(){
 		// if only one option is available this one is used for the parameter suggestion.
 		// Highest node in hierarchy -> resets color.
 		self.selected_material.subscribe(function(material){
-			console.log("selected_material.subscribe", material, self.selected_material_color());
 
 			if(material !== null){
 				// autoselect color if only one available
@@ -528,7 +527,6 @@ $(function(){
 		};
 
 		self.set_material = function(material, ev){
-			console.log("set_material", material, self.selected_material_color());
 			if(typeof ev !== 'undefined' && ev.type === 'click' && typeof material === 'object' ){
 				var old_material = self.selected_material();
 				if(old_material === null){
