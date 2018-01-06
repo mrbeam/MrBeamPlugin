@@ -314,12 +314,13 @@ h4.job_title{
     overflow: hidden;
     display: inline-block;
     border-radius: 5%;
-    /* border: 1px solid #999; */
     box-shadow: 2px 2px 4px 2px rgba(0,0,0,0.33);
     margin: 4px;
 	background-image: url(/plugin/mrbeam/static/img/line_overlay.svg);
 	background-size: cover;
 	background-position: center;
+    cursor: move;
+    cursor: -webkit-grab;
 }
 
 .img_drop_zone,

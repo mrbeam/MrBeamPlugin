@@ -113,7 +113,7 @@
 						<div class="clearfix">
 							<h4 class="job_title pull-left">Engraving</h4>
 						</div>
-						<form class="job_parameters form-horizontal" data-bind="visible: engraving_possible">
+						<form class="job_parameters form-horizontal" data-bind="visible: has_engraving_proposal">
 							<div class="control-group" >
 								<label class="control-label">{{ _('Laser intensity range') }}</label>
 								<div class="controls">
@@ -222,8 +222,9 @@
 								</div>
 							</div>
 						</form>
-						<div class="not_possible_on_this_material" data-bind="visible: !engraving_possible()">
-							Not engravable!
+						<div class="not_possible_on_this_material" data-bind="visible: !has_engraving_proposal()">
+							Sorry, there are no engraving settings for this material. 
+							<a data-bind="click:function(){ has_engraving_proposal(true); }">I know what I am doing! Let me try my own.</a>
 						</div>
 					</div>
 				</div>
@@ -233,12 +234,12 @@
 					</div>
 					<div class="span9">
 						<div class="clearfix">
-							<h4 class="job_title pull-left">Job 1</h4>
+							<h4 class="job_title pull-left">Cutting Job 1</h4>
 						</div>
-						<form class="job_parameters form-horizontal" data-bind="visible: cutting_possible">
+						<form class="job_parameters form-horizontal" data-bind="visible: has_cutting_proposal">
 							<div class="control-group">
 								<label class="control-label">Laser Intensity</label>
-								<div class="controls"><input class="param_intensity img_intensity_input" type="number" min="0" max="100" />&nbsp;%</div>
+								<div class="controls"><input class="param_intensity img_intensity_input" type="number" min="0" max="100" onblur="window.mrbeam.colorDragging.checkConversionParameters()"/>&nbsp;%</div>
 								<div class="controls alert alert-info hint" data-bind="visible: showHints">
 									<span class="icon icon-question-sign" aria-hidden="true"></span>
 									Sets the intensity of the laser. The more intensity the deeper the effect on the material.
@@ -248,7 +249,7 @@
 							</div>
 							<div class="control-group">
 								<label class="control-label">Laser Speed</label>
-								<div class="controls"><input class="param_feedrate img_intensity_input" type="number" min="20" max="3000" />&nbsp;mm/min</div>
+								<div class="controls"><input class="param_feedrate img_intensity_input" type="number" min="20" max="3000" onblur="window.mrbeam.colorDragging.checkConversionParameters()"/>&nbsp;mm/min</div>
 								<div class="controls alert alert-info hint" data-bind="visible: showHints">
 									<span class="icon icon-question-sign" aria-hidden="true"></span>
 									Sets the velocity of the laser head. The slower the movement the deeper the effect on the material.
@@ -265,13 +266,14 @@
 								<div class="controls"><input class="param_piercetime" type="number" min="0" max="2000" value="0" />&nbsp;ms</div>
 							</div>
 						</form>
-						<div class="not_possible_on_this_material" data-bind="visible: !cutting_possible()">
-							Not cuttable!
+						<div class="not_possible_on_this_material" data-bind="visible: !has_cutting_proposal()">
+							Sorry, there are no cutting settings for this material. 
+							<a data-bind="click: function(){ has_cutting_proposal(true); }">I know what I am doing! Let me try my own.</a>
 						</div>
 					</div>
 				</div>
 				<div id="additional_jobs"></div>
-				<div class="row-fluid" data-bind="visible: show_vector_parameters() && cutting_possible()">
+				<div class="row-fluid" data-bind="visible: show_vector_parameters()">
 					<div class="assigned_colors color_drop_zone create_job" ondragover="window.mrbeam.colorDragging.colorAllowDrop(event)" ondrop="window.mrbeam.colorDragging.colorDropCreateJob(event)">
 						+ Drag colors here for another job +
 					</div>
