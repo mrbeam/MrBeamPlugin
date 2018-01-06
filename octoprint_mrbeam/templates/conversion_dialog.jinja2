@@ -271,7 +271,7 @@
 					</div>
 				</div>
 				<div id="additional_jobs"></div>
-				<div class="row-fluid" data-bind="visible: show_vector_parameters">
+				<div class="row-fluid" data-bind="visible: show_vector_parameters() && cutting_possible()">
 					<div class="assigned_colors color_drop_zone create_job" ondragover="window.mrbeam.colorDragging.colorAllowDrop(event)" ondrop="window.mrbeam.colorDragging.colorDropCreateJob(event)">
 						+ Drag colors here for another job +
 					</div>
