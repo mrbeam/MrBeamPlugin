@@ -1213,7 +1213,7 @@ ul.dropdown-menu li a {
 }
 
 .title_shortened {
-	width: 89%;
+	width: calc(100% - 1.2em);
 	overflow: hidden;
 	display: inline-block;
 	text-overflow: ellipsis;

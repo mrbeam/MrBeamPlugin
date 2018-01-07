@@ -257,22 +257,26 @@ class Converter():
 					for colorKey in paths_by_color.keys():
 						if colorKey == 'none':
 							continue
+							
+						settings = self.colorParams.get(colorKey, {'intensity': -1, 'feedrate': -1, 'passes': 0, 'pierce_time': 0})
+						if(settings['feedrate'] == None or settings['feedrate'] == -1 or settings['intensity'] == None or settings['intensity'] <= 0):
+							self._log.info( "convert() skipping color %s, no valid settings %s." % (colorKey, settings))
+							continue
 
 						for path in paths_by_color[colorKey]:
 							print('p', path)
 							curveGCode = ""
 							mbgc = path.get(_add_ns('gc', 'mb'), None)
 							if(mbgc != None):
-								curveGCode = self._use_embedded_gcode(mbgc, colorKey)
+								curveGCode = self._use_embedded_gcode(mbgc, colorKey, settings)
 							else:
 								d = path.get('d')
 								csp = cubicsuperpath.parsePath(d)
 								csp = self._apply_transforms(path, csp)
 								curve = self._parse_curve(csp, layer)
-								curveGCode = self._generate_gcode(curve, colorKey)
+								curveGCode = self._generate_gcode(curve, settings, colorKey)
 
 
-							settings = self.colorParams.get(colorKey, {'intensity': -1, 'feedrate': -1, 'passes': 0, 'pierce_time': 0})
 							fh.write("; Layer:" + layerId + ", outline of:" + pathId + ", stroke:" + colorKey +', '+str(settings)+"\n")
 							for p in range(0, int(settings['passes'])):
 								fh.write("; pass:%i/%s\n" % (p+1, settings['passes']))
@@ -606,9 +610,8 @@ class Converter():
 ###		Curve definition [start point, type = {'arc','line','move','end'}, arc center, arc angle, end point, [zstart, zend]]
 ###
 ################################################################################
-	def _generate_gcode(self, curve, color='#000000'):
+	def _generate_gcode(self, curve, settings, color='#000000'):
 		self._log.info( "_generate_gcode()")
-		settings = self.colorParams.get(color, {'intensity': -1, 'feedrate': -1, 'passes': 0, 'pierce_time': 0})
 
 		def c(c):
 			# returns gcode for coordinates/parameters
@@ -665,10 +668,9 @@ class Converter():
 			g += machine_settings.gcode_after_path() + "\n"
 		return g
 
-	def _use_embedded_gcode(self, gcode, color) :
+	def _use_embedded_gcode(self, gcode, color, settings) :
 		self._log.debug( "_use_embedded_gcode() %s", gcode[:100])
 		gcode = gcode.replace(' ', "\n")
-		settings = self.colorParams.get(color, {'intensity': -1, 'feedrate': -1, 'passes': 0, 'pierce_time': 0})
 		feedrateCode = "F%s;%s\n" % (settings['feedrate'], color)
 		intensityCode = machine_settings.gcode_before_path_color(color, settings['intensity']) + "\n"
 		piercetimeCode = ''
