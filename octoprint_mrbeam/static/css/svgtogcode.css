@@ -293,6 +293,7 @@ svg#area_preview {
     border-bottom: 1px solid #999;
     padding-bottom: 1em;
 	display: flex;
+	user-select: none;
 }
 
 h4.job_title{
@@ -303,6 +304,8 @@ h4.job_title{
 .job_row input {
     max-width: 35%;
 }
+
+.job_row label.control-label {cursor: default; }
 
 .job_row .form-horizontal .control-group {
     margin-bottom: 5px;
@@ -344,6 +347,7 @@ body.vectorDrag .color_drop_zone.create_job.hover {
 	text-align: center;
     padding: 1em 0;
     min-height: auto;
+	user-select: none;
 }
 
 #cd_engraving {
@@ -552,6 +556,7 @@ li.material_entry span {
 	position: relative;
 	transition: height .3s ease-in-out;
 	margin-bottom: 1em;
+	user-select:none;
 }
 
 #material_row.expanded #material_info {
