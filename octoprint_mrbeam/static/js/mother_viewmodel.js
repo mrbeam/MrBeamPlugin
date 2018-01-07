@@ -206,11 +206,6 @@ $(function () {
 
 			self.gcodefiles.listHelper.toggleFilter('model');
 
-			// adjust height of designlib scroll element
-			var height = $('#designlib').height();
-			$("#designlib .slimScrollDiv").height(height);
-			$(".gcode_files").height(height);
-
 			// terminal stuff
             terminalMaxLines = self.settings.settings.plugins.mrbeam.dev.terminalMaxLines();
             self.terminal.upperLimit(terminalMaxLines*2);
