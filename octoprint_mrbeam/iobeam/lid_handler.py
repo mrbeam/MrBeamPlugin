@@ -122,17 +122,19 @@ class LidHandler(object):
 			else:
 				# TODO get the states from _printer or the global state, instead of having local state as well!
 				if self._client_opened and not self._is_slicing and not self._lid_closed and not self._printer.is_locked():
-					self._logger.info('Camera starting: event: {}, client_opened {}, is_slicing: {}, lid_closed: {}, printer.is_locked(): {}, save_debug_images: {}'.format(
+					self._logger.info('Camera starting: event: {}, client_opened {}, is_slicing: {}, lid_closed: {}, printer.is_locked(): {}, save_debug_images: {}, is_initial_calibration: {}'.format(
 							event,
 							self._client_opened,
 							self._is_slicing,
 							self._lid_closed,
 							self._printer.is_locked(),
-							self._photo_creator.save_debug_images
+							self._photo_creator.save_debug_images,
+							self._photo_creator.is_initial_calibration
 						))
 					self._start_photo_worker()
 				elif self._photo_creator.is_initial_calibration:
 					# camera is in first init mode
+					self._logger.info('Camera starting: initial_calibration. event: {}'.format(event))
 					self._start_photo_worker()
 				else:
 					self._logger.info('Camera not starting...: event: {}, client_opened {}, is_slicing: {}, lid_closed: {}, printer.is_locked(): {}, save_debug_images: {}'.format(
@@ -163,6 +165,7 @@ class LidHandler(object):
 				self._photo_creator.is_initial_calibration = True
 			else:
 				self._photo_creator.set_undistorted_path()
+			self._startStopCamera("take_undistorted_picture_request")
 			# todo make_response, so that it will be accepted in the .done() method in frontend
 			return make_response('Should save Image soon, please wait.', 200)
 		else:

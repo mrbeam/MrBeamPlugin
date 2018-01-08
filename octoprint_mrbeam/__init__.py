@@ -1079,7 +1079,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			camera_calibration_markers=["result"],
 			ready_to_laser=["ready"],
 			debug_event=["event"],
-			take_undistorted_picture=[]
+			take_undistorted_picture=[]  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
 		)
 
 	def on_api_command(self, command, data):
@@ -1101,6 +1101,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		elif command == "camera_calibration_markers":
 			return self.camera_calibration_markers(data)
 		elif command == "take_undistorted_picture":
+			# see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
 			return self.take_undistorted_picture(is_initial_calibration=False)
 		elif command == "debug_event":
 			return self.debug_event(data)
