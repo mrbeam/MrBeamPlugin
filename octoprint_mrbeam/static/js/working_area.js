@@ -91,10 +91,10 @@ $(function(){
         self.dxfScale =  function(){return 1}; // initial value, gets overwritten by settings in onAllBound()
 
 		self.workingAreaWidthMM = ko.computed(function(){
-			return self.profile.currentProfileData().volume.width() - self.profile.currentProfileData().volume.origin_offset_x();
+			return self.profile.currentProfileData().volume.width();
 		}, self);
 		self.workingAreaHeightMM = ko.computed(function(){
-			return self.profile.currentProfileData().volume.depth() - self.profile.currentProfileData().volume.origin_offset_y();
+			return self.profile.currentProfileData().volume.depth();
 		}, self);
 		self.flipYMatrix = ko.computed(function(){
 			var h = self.workingAreaHeightMM();

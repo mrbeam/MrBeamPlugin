@@ -139,9 +139,16 @@ class LaserCutterProfileManager(object):
 		),
 		volume = dict(
 			# Grbl values $130 (x max travel) and $131 (y max travel) need to be set to:
-			# x | $130:  width + working_area_shift_x + origin_offset_x
-			# y | $131:  width + working_area_shift_y + origin_offset_y
+			# x | $130 (x max travel):  width + (2 * working_area_shift_x) + origin_offset_x
+			# y | $131 (y max travel):  depth + (2 * working_area_shift_y) + origin_offset_y
 			# While origin_offset_x = origin_offset_x = $27 (homing pull-off) + 0.1 !!
+			#
+			# Example: D-Series
+			#   has an working_area_shift_x of 7.0, so we have to add it left and right of working_area.
+			#   However, left working_area_shift_x is in negative coordinates.
+			#   So $130 (x max travel) will be 515.1, reaching
+			#       from -7.0: 0 - 7.0(working_area_shift_x)
+			#       till 508.1: 500(width) + 7.0(working_area_shift_x) + 1.1(origin_offset_x)
 			depth = 390.0,
 			height = 0.0,
 			origin_offset_x = 1.1,
