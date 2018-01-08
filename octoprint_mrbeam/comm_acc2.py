@@ -130,10 +130,15 @@ class MachineCom(object):
 		self.sending_thread.daemon = True
 
 	def get_home_position(self):
-		# TODO: remove magic number! (-2)
+		"""
+		Returns the home position which usually where the head is after homing. (Except in C series)
+		:return: Tuple of (x, y) position
+		"""
 		if self._laserCutterProfile['legacy']['job_done_home_position_x'] is not None:
-			return (self._laserCutterProfile['legacy']['job_done_home_position_x'], self._laserCutterProfile['volume']['depth'] - 2)
-		return (self._laserCutterProfile['volume']['width'] - 2, self._laserCutterProfile['volume']['depth'] - 2)
+			return (self._laserCutterProfile['legacy']['job_done_home_position_x'],
+			        self._laserCutterProfile['volume']['depth'] + self._laserCutterProfile['volume']['working_area_shift_y'])
+		return (self._laserCutterProfile['volume']['width'] + self._laserCutterProfile['volume']['working_area_shift_x'], # x
+		        self._laserCutterProfile['volume']['depth'] + self._laserCutterProfile['volume']['working_area_shift_y']) # y
 
 	def _monitor_loop(self):
 		#Open the serial port.

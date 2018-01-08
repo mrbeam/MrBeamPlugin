@@ -138,11 +138,17 @@ class LaserCutterProfileManager(object):
 			auto_mode_time=60
 		),
 		volume = dict(
+			# Grbl values $130 (x max travel) and $131 (y max travel) need to be set to:
+			# x | $130:  width + working_area_shift_x + origin_offset_x
+			# y | $131:  width + working_area_shift_y + origin_offset_y
+			# While origin_offset_x = origin_offset_x = $27 (homing pull-off) + 0.1 !!
 			depth = 390.0,
 			height = 0.0,
 			origin_offset_x = 1.1,
 			origin_offset_y = 1.1,
 			width = 500.0,
+			working_area_shift_x = 0.0,
+			working_area_shift_y = 0.0
 		),
 		zAxis = False,
 		legacy = dict(
