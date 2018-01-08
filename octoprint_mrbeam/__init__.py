@@ -901,9 +901,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		print profile
 		xmin = '0'
 		ymin = '0'
-		homing_pulloff = 1.1 # TODO get this magic number from the machine profile.
-		xmax = str(profile['volume']['width'] - homing_pulloff)
-		ymax = str(profile['volume']['depth'] - homing_pulloff)
+		xmax = str(profile['volume']['width'])
+		ymax = str(profile['volume']['depth'])
 		svg = """<svg id="calibration_markers-0" viewBox="%(xmin)s %(ymin)s %(xmax)s %(ymax)s" height="%(ymax)smm" width="%(xmax)smm">
 		<path id="NE" d="M%(xmax)s %(ymax)sl-20,0 5,-5 -10,-10 10,-10 10,10 5,-5 z" style="stroke:#000000; stroke-width:1px; fill:none;" />
 		<path id="NW" d="M%(xmin)s %(ymax)sl20,0 -5,-5 10,-10 -10,-10 -10,10 -5,-5 z" style="stroke:#000000; stroke-width:1px; fill:none;" />
