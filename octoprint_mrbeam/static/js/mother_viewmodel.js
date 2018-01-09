@@ -15,6 +15,7 @@ $(function () {
         self.readyToLaser = params[10];
         self.navigation = params[11];
         self.appearance = params[12];
+        self.loadingOverlay = params[13];
 
         self.isStartupComplete = false;
         self.storedSocketData = [];
@@ -240,9 +241,7 @@ $(function () {
 
         self.removeLoadingOverlay = function(){
             if (self.isStartupComplete &&  self.workingArea.camera.firstImageLoaded) {
-                $('#loading_overlay').remove();
-                console.log("beamOS started. overlay removed.");
-                console.log("%c      ", "color: transparent; font-size: 150px; background:url('http://www.mr-beam.org/img/logo2_path.svg') no-repeat bottom left");
+                self.loadingOverlay.removeLoadingOverlay();
             } else {
                 setTimeout(self.removeLoadingOverlay, 100);
             }
@@ -566,7 +565,8 @@ $(function () {
     ADDITIONAL_VIEWMODELS.push([MotherViewModel,
         ["loginStateViewModel", "settingsViewModel", "printerStateViewModel", "filesViewModel", "gcodeFilesViewModel",
             "connectionViewModel", "controlViewModel", "terminalViewModel", "workingAreaViewModel",
-            "vectorConversionViewModel", "readyToLaserViewModel", "navigationViewModel", "appearanceViewModel"],
+            "vectorConversionViewModel", "readyToLaserViewModel", "navigationViewModel", "appearanceViewModel",
+            "loadingOverlayViewModel"],
         [document.getElementById("mrb_state"),
             document.getElementById("mrb_control"),
             document.getElementById("mrb_connection_wrapper"),
