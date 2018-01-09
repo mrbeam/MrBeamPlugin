@@ -52,7 +52,9 @@ mixpanel.init("094a94a7a2bd139aa838a1b326d58529",{debug:true});</script><!-- end
                     {% if not enableFocus %}
 					<li><a href="#focus" data-toggle="tab" id="focus_tab_btn">focus</a></li>
                     {% endif %}
+                    {% if terminalEnabled %}
 					<li><a href="#mrb_term" data-toggle="tab" id="terminal_tab_btn">terminal</a></li>
+                    {% endif %}
 
 					{% for key in templates.navbar.order %}
 						{% set data = templates.navbar.entries[key] %}
@@ -84,13 +86,13 @@ mixpanel.init("094a94a7a2bd139aa838a1b326d58529",{debug:true});</script><!-- end
                             </li>
 							<li class="divider"></li>
 							<li><a href="http://www.mr-beam.org" target="_blank"><i class="icon-home"></i> {{ _('Homepage') }}</a></li>
-							<li><a href="https://github.com/mrbeam/OctoPrint/" target="_blank"><i class="icon-download"></i> {{ _('Sourcecode') }}</a></li>
-							<li><a href="https://wiki.mr-beam.org" target="_blank"><i class="icon-book"></i> {{ _('Documentation') }}</a></li>
-							<li><a href="https://github.com/mrbeam/OctoPrint/issues" target="_blank"><i class="icon-flag"></i> {{ _('Bugs and Requests') }}</a></li>
+							<li><a href="https://github.com/mrbeam" target="_blank"><i class="icon-download"></i> {{ _('Sourcecode') }}</a></li>
+{#							<li><a href="https://wiki.mr-beam.org" target="_blank"><i class="icon-book"></i> {{ _('Documentation') }}</a></li>#}
+{#							<li><a href="https://github.com/mrbeam/OctoPrint/issues" target="_blank"><i class="icon-flag"></i> {{ _('Bugs and Requests') }}</a></li>#}
 							<li class="divider"></li>
 						  	<li class="nav_version">{{ _('beamOS Version') }}: <span class="version_beamos">{{ beamosVersion.display_version }}</span></li>
-						  	<li class="nav_version">{{ _('beamOS image') }}: <span class="version_beamos">{{ beamosVersion.image }}</span></li>
 						  	<li class="nav_version">{{ _('OctoPrint Version') }}: <span class="version"></span></li>
+						  	<li class="nav_version">{{ _('beamOS image') }}: <span class="version_beamos">{{ beamosVersion.image }}</span></li>
 						</ul>
 					</li>
 				</ul>
@@ -102,10 +104,12 @@ mixpanel.init("094a94a7a2bd139aa838a1b326d58529",{debug:true});</script><!-- end
 				<div class="tab-content">
 
 					{% include 'tab_workingarea.jinja2' %}
-					{% include 'tab_terminal.jinja2' %}
+					{% if terminalEnabled %}
+                    {%      include 'tab_terminal.jinja2' %}
+                    {% endif %}
 					{% include 'tab_designlib.jinja2' %}
 					{% if not enableFocus %}
-                    {% include 'tab_focus.jinja2' %}
+                    {%      include 'tab_focus.jinja2' %}
                     {% endif %}
 
 					<div class="tab-pane" id="settings">

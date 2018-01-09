@@ -361,6 +361,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 serial=self._serial,
 							 analyticsEnabled=self._settings.get(["analyticsEnabled"]),
 							 beta_label=self._settings.get(['beta_label']),
+							 terminalEnabled=not self.is_prod_env(self.ENV_LOCAL),
 						 )
 		r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
 
