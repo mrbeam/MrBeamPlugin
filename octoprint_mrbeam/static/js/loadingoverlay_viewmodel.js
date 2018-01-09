@@ -8,8 +8,12 @@ $(function() {
 
         self.display_state = ko.observable($('#loading_overlay_message').text());
 
-        window.onbeforeunload = function(){
-            self.showReloading();
+        window.onbeforeunload = function(event){
+            // do not show reloadingOverlay when it's a file download
+            if (!event.target.activeElement.href) {
+                console.log("Display reload overlay.");
+                self.showReloading();
+            }
         };
 
         self.removeLoadingOverlay = function(){
