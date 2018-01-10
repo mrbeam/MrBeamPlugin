@@ -158,12 +158,13 @@
 									<div class="accordion-body">
 										<div class="accordion-inner">
 											<div class="row-fluid btn-group">
-												<div class="btn span4" data-bind="click: function(){$('#designlib_tab_btn').tab('show');}"><i class="icon-file"></i> {{ _('File') }} </div>
-												<div class="btn span4" data-bind="click: newQuickText"><i class="icon-font"></i> {{ _('Text') }} </div>
-												<div class="btn span4" data-bind="visible:files.hasCamera(), css: {disabled: !$root.loginState.isUser()}, click: files.takePhoto" >
-													<i class="icon-camera icon-white"></i>
-													<span>{{ _('Photo') }}</span>
-												</div>
+												<div class="btn span6" data-bind="click: function(){$('#designlib_tab_btn').tab('show');}"><i class="icon-file"></i> {{ _('File') }} </div>
+												<div class="btn span6" data-bind="click: newQuickText"><i class="icon-font"></i> {{ _('Text') }} </div>
+{#												Camera not working, disabled till we fixed this. then set spans of the buttons above to span4 >#}
+{#												<div class="btn span4" data-bind="visible:files.hasCamera(), css: {disabled: !$root.loginState.isUser()}, click: files.takePhoto" >#}
+{#													<i class="icon-camera icon-white"></i>#}
+{#													<span>{{ _('Photo') }}</span>#}
+{#												</div>#}
 											</div>
                                         </div>
 

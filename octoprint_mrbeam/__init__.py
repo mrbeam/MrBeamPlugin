@@ -344,25 +344,35 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 gcodeThreshold=0,
 							 wizard=wizard,
 							 now=now,
-							 beamosVersion= dict(
-								number = self._plugin_version,
-								branch= self._branch,
-								display_version = display_version_string,
-							 	image = self._octopi_info),
-							 ),
-							 env= dict(
-								 env=self.get_env(),
-								 local=self.get_env(self.ENV_LOCAL),
-								 laser_safety=self.get_env(self.ENV_LASER_SAFETY),
-								 analytics=self.get_env(self.ENV_ANALYTICS)
-							 ),
+							 # beamosVersion= dict(
+								# number = self._plugin_version,
+								# branch= self._branch,
+								# display_version = display_version_string,
+							 # 	image = self._octopi_info),
+							 # ),
+							 beamosVersionNumber = self._plugin_version,
+							 beamosVersionBranch = self._branch,
+							 beamosVersionDisplayVersion = display_version_string,
+							 beamosVersionImage = self._octopi_info,
+							 # env= dict(
+								#  env=self.get_env(),
+								#  local=self.get_env(self.ENV_LOCAL),
+								#  laser_safety=self.get_env(self.ENV_LASER_SAFETY),
+								#  analytics=self.get_env(self.ENV_ANALYTICS)
+							 # ),
+							 env=self.get_env(),
+							 env_local=self.get_env(self.ENV_LOCAL),
+							 env_laser_safety=self.get_env(self.ENV_LASER_SAFETY),
+							 env_analytics=self.get_env(self.ENV_ANALYTICS),
+
 							 displayName=self.getDisplayName(self._hostname),
 							 hostname=self._hostname,
 							 serial=self._serial,
+							 software_tier=self._settings.get(["dev", "software_tier"]),
 							 analyticsEnabled=self._settings.get(["analyticsEnabled"]),
 							 beta_label=self._settings.get(['beta_label']),
 							 terminalEnabled=not self.is_prod_env(self.ENV_LOCAL),
-						 )
+						 ))
 		r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
 
 		if firstRun:
@@ -374,14 +384,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def get_template_configs(self):
 		result = [
 			dict(type='settings', name="File Import Settings", template='settings/svgtogcode_settings.jinja2', suffix="_conversion", custom_bindings=False),
-            dict(type='settings', name="Camera Calibration", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True)
+            dict(type='settings', name="Camera Calibration", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
+            dict(type='settings', name="About This Mr Beam", template='settings/about_settings.jinja2', suffix="_about", custom_bindings=False)
 			# disabled in appearance
 			# dict(type='settings', name="Serial Connection DEV", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings=False, replaces='serial')
 		 ]
 		if not self.is_prod_env('local'):
 			result.extend([
-				dict(type='settings', name="Machine Profiles DEV", template='settings/lasercutterprofiles_settings.jinja2', suffix="_lasercutterprofiles", custom_bindings=False)
-				# dict(type='settings', name="Camera Calibration DEV", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
+				dict(type='settings', name="DEV Machine Profiles", template='settings/lasercutterprofiles_settings.jinja2', suffix="_lasercutterprofiles", custom_bindings=False)
 			])
 		result.extend(self._get_wizard_template_configs())
 		return result
@@ -720,22 +730,24 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							pluginNames=dict(),
 							locales=dict(),
 							supportedExtensions=[],
-							beamosVersion= dict(
-								number = self._plugin_version,
-								branch= self._branch,
-								display_version = display_version_string,
-							 	image = self._octopi_info),
-							 env= dict(
-								 env=self.get_env(),
-								 local=self.get_env(self.ENV_LOCAL),
-							 ),
-							 displayName=self.getDisplayName(self._hostname),
-							 hostname=self._hostname,
-							 serial=self._serial,
-							 beta_label=self._settings.get(['beta_label']),
-							 e='null',
-							 gcodeThreshold=0, #legacy
-							 gcodeMobileThreshold=0, #legacy
+							# beamOS version
+							beamosVersionNumber=self._plugin_version,
+							beamosVersionBranch=self._branch,
+							beamosVersionDisplayVersion=display_version_string,
+							beamosVersionImage=self._octopi_info,
+							# environement
+							env=self.get_env(),
+							env_local=self.get_env(self.ENV_LOCAL),
+							env_laser_safety=self.get_env(self.ENV_LASER_SAFETY),
+							env_analytics=self.get_env(self.ENV_ANALYTICS),
+							#
+							displayName=self.getDisplayName(self._hostname),
+							hostname=self._hostname,
+							serial=self._serial,
+							beta_label=self._settings.get(['beta_label']),
+							e='null',
+							gcodeThreshold=0, #legacy
+							gcodeMobileThreshold=0, #legacy
 						 )
 		r = make_response(render_template("initial_calibration.jinja2", **render_kwargs))
 
@@ -1618,11 +1630,12 @@ def __plugin_load__():
 		appearance=dict(components=dict(
 			order=dict(
 				wizard=["plugin_mrbeam_wifi", "plugin_mrbeam_acl", "plugin_mrbeam_lasersafety"],
-				settings = ['plugin_softwareupdate', 'accesscontrol', 'plugin_netconnectd', 'plugin_mrbeam_conversion', 'terminalfilters', 'logs']
+				settings = ['plugin_softwareupdate', 'accesscontrol', 'plugin_netconnectd', 'plugin_mrbeam_conversion',
+				            'plugin_mrbeam_camera', 'logs', 'plugin_mrbeam_about']
 			),
 			disabled=dict(
 				wizard=['plugin_softwareupdate'],
-				settings=['serial', 'webcam']
+				settings=['serial', 'webcam', 'terminalfilters']
 			)
 		)),
 		server = dict(commands=dict(
