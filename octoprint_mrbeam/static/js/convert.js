@@ -329,7 +329,7 @@ $(function(){
 		self.material_description = ko.observable('');
 		self.has_engraving_proposal = ko.observable(false);
 		self.has_cutting_proposal = ko.observable(false);
-		
+
 //		self._engraving_params_available = function(){
 //			var mat = self.selected_material();
 //			var col = self.selected_material_color();
@@ -386,7 +386,7 @@ $(function(){
 			}
 			return self.engrave_only_thickness;
 		};
-		
+
 		self.get_closest_color_params = function(){
 			var material = self.selected_material();
 			var hex = self.selected_material_color();
@@ -648,8 +648,7 @@ $(function(){
 		self.engrave_outlines = ko.observable(false);
 
 		self.show_image_parameters = ko.computed(function(){
-//			return (self.images_placed() || self.text_placed() || self.filled_shapes_placed());
-			return true;
+			return (self.images_placed() || self.text_placed() || self.filled_shapes_placed());
 		});
 		self.imgIntensityWhite = ko.observable(0);
 		self.imgIntensityBlack = ko.observable(50);
@@ -825,7 +824,7 @@ $(function(){
 
 			return data;
 		};
-		
+
 		self._isValidVectorSetting = function(intensity, feedrate, passes, pierce_time){
 			if(intensity === '' || intensity > 100 || intensity < 0) return false;
 			if(feedrate === '' || feedrate > self.maxSpeed() || feedrate < self.minSpeed()) return false;
@@ -883,7 +882,7 @@ $(function(){
 					}
 				}
 			}
-			
+
 			if(self.has_engraving_proposal() && $('#engrave_job .color_drop_zone').children().length > 0){
 				if(self.imgIntensityWhite() === ''){
 					self._missing_parameter_hint($('#svgtogcode_img_intensity_white'));
@@ -904,7 +903,7 @@ $(function(){
 			}
 			return allSet;
 		};
-		
+
 		self._missing_parameter_hint = function(input){
 			$(input).addClass('checkInput');
 			setTimeout(
@@ -992,7 +991,7 @@ $(function(){
             }
             return no_special_chars;
 		};
-		
+
 		self._get_brightness = function(hex){
 			var r = parseInt(hex.substr(1,2), 16);
 			var g = parseInt(hex.substr(3,2), 16);
@@ -1114,7 +1113,7 @@ $(function(){
 					$(j).remove();
 				}
 			}
-			
+
 			// create adjusters for lines in engrave settings
 			var engrave_items = $('#engrave_job .img_drop_zone .used_color');
 			var show_line_mappings = false;
@@ -1205,7 +1204,7 @@ window.mrbeam.colorDragging = {
 			newJob.attr('id', '');
 			var i = $('.job_row_vector').length + 1;
 			$(newJob).find('.job_title').text("Cutting Job " + i);
-		
+
 			newJob.find('.used_color').remove();
 			newJob.appendTo($('#additional_jobs'));
 

@@ -15,8 +15,8 @@
 								<input type="text" class="input-block search-query" data-bind="value: filterQuery, valueUpdate: 'input'" placeholder="{{ _('Search...') }}">
 							</form>
 							<ul id="material_list" data-bind="foreach: filteredMaterials">
-								<li class='material_entry hover_shadow' 
-									data-bind="click: function(){$root.set_material($data, event);}, 
+								<li class='material_entry hover_shadow'
+									data-bind="click: function(){$root.set_material($data, event);},
 												style: { backgroundImage: 'url(\'/plugin/mrbeam/static/img/materials/' + $data.img + '\')' },
 												css: {selected: $root.selected_material() === $data}
 									">
@@ -43,7 +43,7 @@
 						<div class="alert alert-info hint" data-bind="visible: showHints">
 							<span class="icon icon-question-sign" aria-hidden="true"></span>
 							Depending on the color the laser beam is reflected more or less. Select a color
-							close to the material's color to improve the result. 
+							close to the material's color to improve the result.
 						</div>
 					</div>
 				</div>
@@ -51,7 +51,7 @@
 					<div>
 						<label data-bind="visible: expandMaterialSelector">Thickness</label>
 						<div id="thickness_list" data-bind="foreach: material_thicknesses">
-							<div class="thickness_sample hover_shadow" 
+							<div class="thickness_sample hover_shadow"
 								 data-bind="
 										click: $root.set_material_thickness($data, event),
 										attr: {id: 'material_thickness_'+$data.thicknessMM },
@@ -70,7 +70,7 @@
 				</div>
 				<div id="material_info">
 					<p>
-						<i class="icon-warning-sign" style="color:red;" data-bind="visible: material_safety_notes() !== ''"></i> 
+						<i class="icon-warning-sign" style="color:red;" data-bind="visible: material_safety_notes() !== ''"></i>
 						<span id="safety_notes" class="" data-bind="text: material_safety_notes"></span>
 					</p>
 					<a href="#" class="dropdown" data-toggle="collapse" data-target="#more_material_info" data-bind="visible: material_description() !== '' || material_hints() !== ''">
@@ -79,7 +79,7 @@
 					<div id="more_material_info" class="collapse">
 						<p id="description" data-bind="text: material_description"></p>
 						<p>
-							<i class="icon-lightbulb" data-bind="visible: material_hints() !== ''"></i> 
+							<i class="icon-lightbulb" data-bind="visible: material_hints() !== ''"></i>
 							<span id="hints" data-bind="text: material_hints"></span>
 						</p>
 					</div>
@@ -103,10 +103,10 @@
 					</div>
 				</div>
 
-				<div id="engrave_job" class="job_row row-fluid" data-bind="visible: show_image_parameters">
+				<div id="engrave_job" class="job_row row-fluid">
 					<div class="span3" style="display:flex;">
 						<div class="assigned_colors img_drop_zone color_drop_zone" ondragover="window.mrbeam.colorDragging.colorAllowDrop(event)" ondrop="window.mrbeam.colorDragging.colorDrop(event)">
-							<div id="cd_engraving" draggable="true" class="used_color" ondragstart="window.mrbeam.colorDragging.colorDragStart(event)" ondragend="window.mrbeam.colorDragging.colorDragEnd(event)"></div>
+							<div id="cd_engraving" draggable="true" class="used_color" ondragstart="window.mrbeam.colorDragging.colorDragStart(event)" ondragend="window.mrbeam.colorDragging.colorDragEnd(event)" data-bind="visible: show_image_parameters"></div>
 						</div>
 					</div>
 					<div class="span9">
@@ -142,7 +142,7 @@
 									The movement velocity range used for engraving pixel graphics. Bright/white pixels use the left (higher) value, dark/black pixels the right (lower) value.
 									Equal values do not vary the laser velocity related to the pixel brightness.
 								</div>
-								
+
 								<div data-bind="visible: show_line_color_mappings">
 									<label class="control-label">{{ _('Line color mapping') }}</label>
 									<div class="controls">
@@ -154,7 +154,7 @@
 									<span class="icon icon-question-sign" aria-hidden="true"></span>
 									Map the color of a vector path to a grayscale value for engraving.
 								</div>
-								
+
 								<div class="controls" data-bind="visible: showExpertSettings ">
 									<label class="checkbox">
 										<input type="checkbox" data-bind="checked: engrave_outlines">{{ _('engrave outlines of filled shapes') }}
@@ -223,7 +223,7 @@
 							</div>
 						</form>
 						<div class="not_possible_on_this_material" data-bind="visible: !has_engraving_proposal()">
-							Sorry, there are no engraving settings for this material. 
+							Sorry, there are no engraving settings for this material.
 							<a data-bind="click:function(){ has_engraving_proposal(true); }">I know what I am doing! Let me try my own.</a>
 						</div>
 					</div>
@@ -267,7 +267,7 @@
 							</div>
 						</form>
 						<div class="not_possible_on_this_material" data-bind="visible: !has_cutting_proposal()">
-							Sorry, there are no cutting settings for this material. 
+							Sorry, there are no cutting settings for this material.
 							<a data-bind="click: function(){ has_cutting_proposal(true); }">I know what I am doing! Let me try my own.</a>
 						</div>
 					</div>
@@ -279,7 +279,7 @@
 					</div>
 				</div>
 			</div>
-			
+
 		</div>
 		<div id="slicing_progress" class="progress progress-striped active" style="width: 100%;" data-bind="visible: slicing_in_progress()">
 			<div class="bar" style="width: 0%" data-bind="style: {width: slicing_progress() + '%'} "></div>
@@ -296,8 +296,8 @@
 		</div>
 
         <a href="#" class="btn" aria-hidden="true" data-bind="click: $root.cancel_conversion()">{{ _('Cancel') }}</a>
-        <a href="#" class="btn btn-primary" 
-		   data-bind="click: function() { if ($root.enableConvertButton()) { $root.convert() } }, 
+        <a href="#" class="btn btn-primary"
+		   data-bind="click: function() { if ($root.enableConvertButton()) { $root.convert() } },
 					enabled: enableConvertButton,
 					css: {disabled: !$root.enableConvertButton()}">{{ _('Start') }}</a>
     </div>
