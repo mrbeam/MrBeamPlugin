@@ -1115,21 +1115,31 @@ $(function(){
 			}
 
 			// create adjusters for lines in engrave settings
-			var engrave_items = $('#engrave_job .img_drop_zone .used_color');
+            var classFlag = 'removeme';
 			var show_line_mappings = false;
+			var engrave_items = $('#engrave_job .img_drop_zone .used_color');
 			var line_mapping_container = $('#colored_line_mapping');
-			line_mapping_container.children().remove();
+			line_mapping_container.children().addClass(classFlag);
 			for (var i = 0; i < engrave_items.length; i++) {
 				var el = engrave_items[i];
 				var id = el.id;
 				if(id !== 'cd_engraving'){
 					show_line_mappings = true;
 					var hex = '#' + id.substr(-6);
-					var val = 255 - self._get_brightness(hex);
-					var icon = '<input id="adjuster_'+id+'" class="precisionslider coloradjuster" type="range" min="0" max="255" style="border-top-color:'+hex+';" value="'+val+'" />';
-					line_mapping_container.append(icon);
+					var slider_id = "adjuster_"+id;
+					if ($('#'+slider_id).length > 0) {
+					    // slider element exists, just leave it as it is
+					    $('#'+slider_id).removeClass(classFlag);
+                    } else {
+					    // create slider element
+                        var val = 255 - self._get_brightness(hex);
+                        var icon = '<input id="'+slider_id+'" class="precisionslider coloradjuster" type="range" min="0" max="255" style="border-top-color:'+hex+';" value="'+val+'" />';
+                        line_mapping_container.append(icon);
+                    }
 				}
 			}
+			// remove all slider still flagged
+            $('#colored_line_mapping >.'+classFlag).remove();
 			self.show_line_color_mappings(show_line_mappings);
 		};
 
