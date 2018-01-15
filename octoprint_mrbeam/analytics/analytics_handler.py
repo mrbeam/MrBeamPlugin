@@ -1,11 +1,12 @@
-import json
 import time
+import json
 import os.path
 from datetime import datetime
-from octoprint.events import Events as OctoPrintEvents
-from octoprint_mrbeam.mrb_logger import mrb_logger
-from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from value_collector import ValueCollector
+
+from octoprint_mrbeam.mrb_logger import mrb_logger
+from octoprint.events import Events as OctoPrintEvents
+from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from analytics_keys import AnalyticsKeys as ak
 
 # singleton
@@ -47,7 +48,7 @@ class AnalyticsHandler(object):
 
 		self._storedConversions = list()
 
-		self._jobevent_log_version = 2
+		self._jobevent_log_version = 3
 		self._conversion_log_version = 2
 		self._deviceinfo_log_version = 2
 		self._dust_log_version = 2
@@ -158,18 +159,19 @@ class AnalyticsHandler(object):
 		Lid/Button: Currently there is no way to know other than checking the current state: _mrbeam_plugin_implementation._ioBeam .is_interlock_closed()
 		"""
 		if not self._isJobPaused: #prevent multiple printPaused events per Job
-			self._write_jobevent(ak.PRINT_PAUSED)
+			self._write_jobevent(ak.PRINT_PAUSED, payload={ak.JOB_DURATION: int(round(payload['time']))})
 			self._isJobPaused = True
 
 	def _event_print_resumed(self, event, payload):
 		if self._isJobPaused:  #prevent multiple printResume events per Job
-			self._write_jobevent(ak.PRINT_RESUMED)
+			self._write_jobevent(ak.PRINT_RESUMED, payload={ak.JOB_DURATION: int(round(payload['time']))})
 			self._isJobPaused = False
 
 	def _event_print_done(self, event, payload):
 		if not self._isJobDone:
+			self._logger.info("ANDYTEST _event_print_done() payload: %s", payload)
 			self._isJobDone = True #prevent two jobDone events per Job
-			self._write_jobevent(ak.PRINT_DONE)
+			self._write_jobevent(ak.PRINT_DONE, payload={ak.JOB_DURATION: int(round(payload['time']))})
 			self._write_collectors()
 
 	def _write_collectors(self):
@@ -190,23 +192,24 @@ class AnalyticsHandler(object):
 
 	def _event_print_failed(self, event, payload):
 		if self._current_job_id is not None:
-			self._write_jobevent(ak.PRINT_FAILED)
+			self._write_jobevent(ak.PRINT_FAILED, payload={ak.JOB_DURATION: int(round(payload['time']))})
 			self._write_collectors()
 			self._cleanup()
 
 	def _event_print_cancelled(self, event, payload):
 		if self._current_job_id is not None:
-			self._write_jobevent(ak.PRINT_CANCELLED)
+			self._write_jobevent(ak.PRINT_CANCELLED, payload={ak.JOB_DURATION: int(round(payload['time']))})
 			self._write_collectors()
 			self._cleanup()
 
 	def _event_print_progress(self, event, payload):
-		data = dict(
-			p=payload,
-			lt=self._current_lasertemp_collector.get_latest_value(),
-			li=self._current_intensity_collector.get_latest_value(),
-			dv=self._current_dust_collector.get_latest_value()
-		)
+		data = {
+			ak.PROGRESS_PERCENT: payload['progress'],
+			ak.PROGRESS_LASER_TEMPERATURE: self._current_lasertemp_collector.get_latest_value(),
+			ak.PROGRESS_LASER_INTENSITY: self._current_intensity_collector.get_latest_value(),
+			ak.PROGRESS_DUST_VALUE: self._current_dust_collector.get_latest_value(),
+			ak.JOB_DURATION: int(round(payload['time']))
+		}
 		self._write_jobevent(ak.PRINT_PROGRESS, data)
 
 	def _event_laser_cooling_pause(self, event, payload):

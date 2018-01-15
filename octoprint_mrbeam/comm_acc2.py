@@ -22,7 +22,7 @@ import octoprint.plugin
 from .profile import laserCutterProfileManager
 
 from octoprint.settings import settings, default_settings
-from octoprint.events import eventManager, Events
+from octoprint.events import eventManager, Events as OctoPrintEvents
 from octoprint.filemanager.destinations import FileDestinations
 from octoprint.util import get_exception_string, RepeatedTimer, CountedEvent, sanitize_ascii
 
@@ -181,7 +181,7 @@ class MachineCom(object):
 				self._log(errorMsg)
 				self._errorValue = errorMsg
 				self._changeState(self.STATE_ERROR)
-				eventManager().fire(Events.ERROR, {"error": self.getErrorString()})
+				eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
 		self._log("Connection closed, closing down monitor")
 
 	def _send_loop(self):
@@ -212,7 +212,7 @@ class MachineCom(object):
 				self._log(errorMsg)
 				self._errorValue = errorMsg
 				self._changeState(self.STATE_ERROR)
-				eventManager().fire(Events.ERROR, {"error": self.getErrorString()})
+				eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
 
 	def _metric_loop(self):
 		self._metricf = open('metric.tmp','w')
@@ -283,7 +283,7 @@ class MachineCom(object):
 				if ser is None:
 					self._errorValue = 'Failed to autodetect serial port, please set it manually.'
 					self._changeState(self.STATE_ERROR)
-					eventManager().fire(Events.ERROR, {"error": self.getErrorString()})
+					eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
 					self._log("Failed to autodetect serial port, please set it manually.")
 					return None
 				port = ser.port
@@ -308,7 +308,7 @@ class MachineCom(object):
 				exception_string = get_exception_string()
 				self._errorValue = "Connection error, see Terminal tab"
 				self._changeState(self.STATE_ERROR)
-				eventManager().fire(Events.ERROR, {"error": self.getErrorString()})
+				eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
 				self._log("Unexpected error while connecting to serial port: %s %s (hook %s)" % (self._port, exception_string, name))
 				if "failed to set custom baud rate" in exception_string.lower():
 					self._log("Your installation does not support custom baudrates (e.g. 250000) for connecting to your printer. This is a problem of the pyserial library that OctoPrint depends on. Please update to a pyserial version that supports your baudrate or switch your printer's firmware to a standard baudrate (e.g. 115200). See https://github.com/foosel/OctoPrint/wiki/OctoPrint-support-for-250000-baud-rate-on-Raspbian")
@@ -364,7 +364,7 @@ class MachineCom(object):
 			"time": self.getPrintTime()
 		}
 		self._move_home()
-		eventManager().fire(Events.PRINT_DONE, payload)
+		eventManager().fire(OctoPrintEvents.PRINT_DONE, payload)
 
 	def _move_home(self):
 		self.sendCommand("M5")
@@ -410,7 +410,7 @@ class MachineCom(object):
 		if "EEPROM read fail" in line:
 			return
 		self._errorValue = line
-		eventManager().fire(Events.ERROR, {"error": self.getErrorString()})
+		eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
 		self._changeState(self.STATE_LOCKED)
 
 	def _handle_alarm_message(self, line):
@@ -418,7 +418,7 @@ class MachineCom(object):
 			errorMsg = "Machine Limit Hit. Please reset the machine and do a homing cycle"
 			self._log(errorMsg)
 			self._errorValue = errorMsg
-			eventManager().fire(Events.ERROR, {"error": self.getErrorString()})
+			eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
 		elif "Abort during cycle" in line:
 			errorMsg = "Soft-reset detected. Please do a homing cycle"
 			self._log(errorMsg)
@@ -427,7 +427,7 @@ class MachineCom(object):
 			errorMsg = "Probing has failed. Please reset the machine and do a homing cycle"
 			self._log(errorMsg)
 			self._errorValue = errorMsg
-			eventManager().fire(Events.ERROR, {"error": self.getErrorString()})
+			eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
 
 		with self._commandQueue.mutex:
 			self._commandQueue.queue.clear()
@@ -457,7 +457,7 @@ class MachineCom(object):
 					self._commandQueue.queue.clear()
 				self._log(errorMsg)
 				self._errorValue = errorMsg
-				eventManager().fire(Events.ERROR, {"error": self.getErrorString()})
+				eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
 		elif line[1:].startswith('Cau'): # [Caution: Unlocked]
 			pass
 		elif line[1:].startswith('Ena'): # [Enabled]
@@ -592,7 +592,7 @@ class MachineCom(object):
 			self.sending_thread.start()
 
 		payload = dict(port=self._port, baudrate=self._baudrate)
-		eventManager().fire(Events.CONNECTED, payload)
+		eventManager().fire(OctoPrintEvents.CONNECTED, payload)
 
 	def _detectPort(self, close):
 		self._log("Serial port list: %s" % (str(serialList())))
@@ -878,7 +878,7 @@ class MachineCom(object):
 			return
 
 		self._currentFile = PrintingGcodeFileInformation(filename)
-		eventManager().fire(Events.FILE_SELECTED, {
+		eventManager().fire(OctoPrintEvents.FILE_SELECTED, {
 			"file": self._currentFile.getFilename(),
 			"filename": os.path.basename(self._currentFile.getFilename()),
 			"origin": self._currentFile.getFileLocation()
@@ -890,7 +890,7 @@ class MachineCom(object):
 			return
 
 		self._currentFile = None
-		eventManager().fire(Events.FILE_DESELECTED)
+		eventManager().fire(OctoPrintEvents.FILE_DESELECTED)
 		self._callback.on_comm_file_selected(None, None, False)
 
 	def startPrint(self, *args, **kwargs):
@@ -918,7 +918,7 @@ class MachineCom(object):
 				"filename": os.path.basename(self._currentFile.getFilename()),
 				"origin": self._currentFile.getFileLocation()
 			}
-			eventManager().fire(Events.PRINT_STARTED, payload)
+			eventManager().fire(OctoPrintEvents.PRINT_STARTED, payload)
 			#self.sendGcodeScript("beforePrintStarted", replacements=dict(event=payload))
 
 			self._changeState(self.STATE_PRINTING)
@@ -926,7 +926,7 @@ class MachineCom(object):
 			self._logger.exception("Error while trying to start printing")
 			self._errorValue = get_exception_string()
 			self._changeState(self.STATE_ERROR)
-			eventManager().fire(Events.ERROR, {"error": self.getErrorString()})
+			eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
 
 	def cancelPrint(self):
 		if not self.isOperational():
@@ -948,9 +948,10 @@ class MachineCom(object):
 		payload = {
 			"file": self._currentFile.getFilename(),
 			"filename": os.path.basename(self._currentFile.getFilename()),
-			"origin": self._currentFile.getFileLocation()
+			"origin": self._currentFile.getFileLocation(),
+			"time": self.getPrintTime()
 		}
-		eventManager().fire(Events.PRINT_CANCELLED, payload)
+		eventManager().fire(OctoPrintEvents.PRINT_CANCELLED, payload)
 
 	def setPause(self, pause, send_cmd=True, pause_for_cooling=False, trigger=None):
 		if not self._currentFile:
@@ -961,7 +962,8 @@ class MachineCom(object):
 			"filename": os.path.basename(self._currentFile.getFilename()),
 			"origin": self._currentFile.getFileLocation(),
 			"cooling": pause_for_cooling,
-			"trigger": trigger
+			"trigger": trigger,
+			"time": self.getPrintTime()
 		}
 
 		if not pause and self.isPaused():
@@ -969,10 +971,11 @@ class MachineCom(object):
 				self._pauseWaitTimeLost = self._pauseWaitTimeLost + (time.time() - self._pauseWaitStartTime)
 				self._pauseWaitStartTime = None
 			self._pause_delay_time = time.time()
+			payload["time"] = self.getPrintTime() # we need the pasue time to be removed from time
 			if send_cmd is True:
 				self._real_time_commands['cycle_start']=True
 			self._send_event.set()
-			eventManager().fire(Events.PRINT_RESUMED, payload)
+			eventManager().fire(OctoPrintEvents.PRINT_RESUMED, payload)
 		elif pause and self.isPrinting():
 			if not self._pauseWaitStartTime:
 				self._pauseWaitStartTime = time.time()
@@ -980,7 +983,7 @@ class MachineCom(object):
 			if send_cmd is True:
 				self._real_time_commands['feed_hold']=True
 			self._send_event.set()
-			eventManager().fire(Events.PRINT_PAUSED, payload)
+			eventManager().fire(OctoPrintEvents.PRINT_PAUSED, payload)
 
 	def increasePasses(self):
 		self._passes += 1
@@ -1131,10 +1134,11 @@ class MachineCom(object):
 				payload = {
 					"file": self._currentFile.getFilename(),
 					"filename": os.path.basename(self._currentFile.getFilename()),
-					"origin": self._currentFile.getFileLocation()
+					"origin": self._currentFile.getFileLocation(),
+					"time": self.getPrintTime()
 				}
-			eventManager().fire(Events.PRINT_FAILED, payload)
-		eventManager().fire(Events.DISCONNECTED)
+			eventManager().fire(OctoPrintEvents.PRINT_FAILED, payload)
+		eventManager().fire(OctoPrintEvents.DISCONNECTED)
 
 ### MachineCom callback ################################################################################################
 class MachineComPrintCallback(object):
