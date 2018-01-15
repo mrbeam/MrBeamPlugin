@@ -376,10 +376,12 @@ class MachineCom(object):
 	def _handle_status_report(self, line):
 		self._grbl_state = line[1:].split(',')[0]
 		if self._grbl_state == 'Queue':
+			self._logger.debug("ANDYTEST _handle_status_report() 'Queue' from grbl.")
 			if time.time() - self._pause_delay_time > 0.3:
 				if not self.isPaused():
-					self._logger.debug("_handle_status_report() Pausing since we got status 'Queue' from grbl.")
-					self.setPause(True, False)
+					self._logger.debug("ANDYTEST _handle_status_report() 'Queue' from grbl: NOT PAUSING")
+					# self._logger.debug("_handle_status_report() Pausing since we got status 'Queue' from grbl.")
+					# self.setPause(True, False)
 		elif self._grbl_state == 'Run' or self._grbl_state == 'Idle':
 			if time.time() - self._pause_delay_time > 0.3:
 				if self.isPaused():
