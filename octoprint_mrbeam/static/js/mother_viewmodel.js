@@ -15,8 +15,10 @@ $(function () {
         self.readyToLaser = params[10];
         self.navigation = params[11];
         self.appearance = params[12];
+        self.loadingOverlay = params[13];
 
         self.isStartupComplete = false;
+        self.storedSocketData = [];
 
         // MrBeam Logo click activates workingarea tab
         $('#mrbeam_logo_link').click(function() {
@@ -138,7 +140,7 @@ $(function () {
 			});
 
             // TODO forward to control viewmodel
-            self.state.isLocked = ko.observable(undefined);
+            self.state.isLocked = ko.observable(true);
             self.state.isReady = ko.observable(undefined);
             self.state.isFlashing = ko.observable(undefined);
             self.state.currentPos = ko.observable(undefined);
@@ -205,11 +207,6 @@ $(function () {
 
 			self.gcodefiles.listHelper.toggleFilter('model');
 
-			// adjust height of designlib scroll element
-			var height = $('#designlib').height();
-			$("#designlib .slimScrollDiv").height(height);
-			$(".gcode_files").height(height);
-
 			// terminal stuff
             terminalMaxLines = self.settings.settings.plugins.mrbeam.dev.terminalMaxLines();
             self.terminal.upperLimit(terminalMaxLines*2);
@@ -225,6 +222,7 @@ $(function () {
         self.onStartupComplete = function() {
             self.addSwUpdateTierInformation();
             self.set_Design_lib_defaults();
+            self._handleStoredSocketData();
             self.isStartupComplete = true;
             self.removeLoadingOverlay();
         };
@@ -243,9 +241,7 @@ $(function () {
 
         self.removeLoadingOverlay = function(){
             if (self.isStartupComplete &&  self.workingArea.camera.firstImageLoaded) {
-                $('#loading_overlay').remove();
-                console.log("beamOS started. loading_overlay removed.");
-                console.log("%c      ", "color: transparent; font-size: 150px; background:url('http://www.mr-beam.org/img/logo2_path.svg') no-repeat bottom left");
+                self.loadingOverlay.removeLoadingOverlay();
             } else {
                 setTimeout(self.removeLoadingOverlay, 100);
             }
@@ -305,18 +301,32 @@ $(function () {
             self._fromData(data);
         };
 
-        self._fromData = function (data) {
-            self._processStateData(data.state);
-            self._processWPosData(data.workPosition);
-			self._processProgressData(data.progress);
-			self._processJobData(data.job);
+        self._fromData = function (data, noStore, force) {
+            if (self.isStartupComplete || force) {
+                self._processStateData(data.state);
+                self._processWPosData(data.workPosition);
+                self._processProgressData(data.progress);
+			    self._processJobData(data.job);
+            } else if (!noStore){
+                self.storedSocketData.push(data);
+            }
+        };
+
+        self._handleStoredSocketData = function(){
+            if (self.storedSocketData.length > 0) {
+                console.log("Handling stored socked data: " + self.storedSocketData.length);
+                for (var i = 0; i < self.storedSocketData.length; i++) {
+                    self._fromData(self.storedSocketData[i], noStore=true, force=true);
+                }
+                self.storedSocketData = [];
+            }
         };
 
         self._processStateData = function (data) {
-            self.state.isLocked(data.flags.locked);
-            self.state.isFlashing(data.flags.flashing);
-            self.state.isConnecting(data.text === "Connecting" || data.text === "Opening serial port");
-        };
+				self.state.isLocked(data.flags.locked);
+				self.state.isFlashing(data.flags.flashing);
+				self.state.isConnecting(data.text === "Connecting" || data.text === "Opening serial port");
+		};
 
         self._processWPosData = function (data) {
             if (data === undefined || data === null) {
@@ -555,7 +565,8 @@ $(function () {
     ADDITIONAL_VIEWMODELS.push([MotherViewModel,
         ["loginStateViewModel", "settingsViewModel", "printerStateViewModel", "filesViewModel", "gcodeFilesViewModel",
             "connectionViewModel", "controlViewModel", "terminalViewModel", "workingAreaViewModel",
-            "vectorConversionViewModel", "readyToLaserViewModel", "navigationViewModel", "appearanceViewModel"],
+            "vectorConversionViewModel", "readyToLaserViewModel", "navigationViewModel", "appearanceViewModel",
+            "loadingOverlayViewModel"],
         [document.getElementById("mrb_state"),
             document.getElementById("mrb_control"),
             document.getElementById("mrb_connection_wrapper"),

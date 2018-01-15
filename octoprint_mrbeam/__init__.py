@@ -37,7 +37,8 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
 from octoprint_mrbeam.migrate import migrate
 from .profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
-from .software_update_information import get_update_information
+from .software_update_information import get_update_information, SW_UPDATE_TIER_PROD
+from .support import set_support_user
 
 
 
@@ -55,7 +56,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				   octoprint.plugin.ProgressPlugin,
 				   octoprint.plugin.WizardPlugin,
 				   octoprint.plugin.SlicerPlugin,
-				   octoprint.plugin.ShutdownPlugin):
+				   octoprint.plugin.ShutdownPlugin,
+				   octoprint.plugin.EnvironmentDetectionPlugin):
 
 	# CONSTANTS
 	DEVIE_INFO_FILE = '/etc/mrbeam'
@@ -103,6 +105,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# do migration if needed
 		migrate(self)
 
+		# Enable or disable internal support user.
+		set_support_user(self)
+
 
 		self.laserCutterProfileManager = laserCutterProfileManager()
 		self._do_initial_log()
@@ -126,16 +131,21 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 
 	def _do_initial_log(self):
+		"""
+		Kicks an identifying log line
+		Was really important before we had
+		@see self.get_additional_environment()
+		"""
 		msg = "MrBeam Plugin"
-		msg += " version:" + self._plugin_version
-		msg += ", branch:" + self._branch
-		msg += ", host:" + self._hostname
-		msg += ", serial:" + self._serial
-		msg += ", env:" + self.get_env()
-		msg += " ("+self.ENV_LOCAL+':'+self.get_env(self.ENV_LOCAL)
-		msg += ","+self.ENV_LASER_SAFETY+':'+self.get_env(self.ENV_LASER_SAFETY)
-		msg += ","+self.ENV_ANALYTICS+':'+self.get_env(self.ENV_ANALYTICS)+')'
-		msg += ", octopi:" + str(self._octopi_info)
+		msg += " version:{}".format(self._plugin_version)
+		msg += ", host:{}".format(self._hostname)
+		msg += ", serial:{}".format(self._serial)
+		msg += ", software_tier:{}".format(self._settings.get(["dev", "software_tier"]))
+		msg += ", env:{}".format(self.get_env())
+		msg += " ({}:{}".format(self.ENV_LOCAL, self.get_env(self.ENV_LOCAL))
+		msg += ",{}:{}".format(self.ENV_LASER_SAFETY, self.get_env(self.ENV_LASER_SAFETY))
+		msg += ",{}:{})".format(self.ENV_ANALYTICS, self.get_env(self.ENV_ANALYTICS))
+		msg += ", beamOS-image:{}".format(self._octopi_info)
 		self._logger.info(msg, terminal=True)
 
 		msg = "MrBeam Lasercutter Profile: %s" % self.laserCutterProfileManager.get_current_or_default()
@@ -158,6 +168,18 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		converted["current"] = (profile["id"] == current)
 		return converted
 
+	def get_additional_environment(self):
+		"""
+		Mixin: octoprint.plugin.EnvironmentDetectionPlugin
+		:return: dict of environment data
+		"""
+		return dict(version=self._plugin_version,
+		            host=self._hostname,
+		            serial=self._serial,
+		            software_tier=self._settings.get(["dev", "software_tier"]),
+		            env=self.get_env(),
+		            beamOS_image=self._octopi_info)
+
 	##~~ SettingsPlugin mixin
 	def get_settings_version(self):
 		return 2
@@ -171,7 +193,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			current_profile_id="_mrbeam_junior", # yea, this needs to be like this
 			svgDPI=90,
 			dxfScale=1,
-			beta_label="",
+			beta_label="BETA",
 			dev=dict(
 				debug=False, # deprected
 				terminalMaxLines = 2000,
@@ -181,7 +203,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				# 	laser_safety = "DEV",
 				# 	local =  "DEV"
 				# ),
-				iobeam_disable_warnings = False
+				software_tier = SW_UPDATE_TIER_PROD,
+				iobeam_disable_warnings = False,
+				support_user = False
 			),
 			# TODO rename analyticsEnabled and put in analytics-dict
 			analyticsEnabled=False,  # frontend analytics Mixpanel
@@ -211,7 +235,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				precision = 0.05,
 				optimize_travel = True,
 				small_paths_first = True,
-				clip_working_area = False
+				clip_working_area = False # this is due a bug in clipping. Would be great if we could fix it an enable it again.
 			)
 		)
 
@@ -270,8 +294,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/lib/photobooth_min.js", "js/svg_cleaner.js", "js/loginscreen_viewmodel.js",
 				"js/wizard_acl.js", "js/netconnectd_wrapper.js", "js/lasersaftey_viewmodel.js",
 				"js/ready_to_laser_viewmodel.js", "js/lib/screenfull.min.js","js/settings/camera_calibration.js",
-				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js", "js/laser_job_done_viewmodel.js"],
-			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css", "css/quicktext-fonts.css"],
+				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js", "js/laser_job_done_viewmodel.js", "js/loadingoverlay_viewmodel.js"],
+			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css", "css/quicktext-fonts.css", "css/sliders.css"],
 			less=["less/mrbeam.less"]
 		)
 
@@ -320,24 +344,35 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 gcodeThreshold=0,
 							 wizard=wizard,
 							 now=now,
-							 beamosVersion= dict(
-								number = self._plugin_version,
-								branch= self._branch,
-								display_version = display_version_string,
-							 	image = self._octopi_info),
-							 ),
-							 env= dict(
-								 env=self.get_env(),
-								 local=self.get_env(self.ENV_LOCAL),
-								 laser_safety=self.get_env(self.ENV_LASER_SAFETY),
-								 analytics=self.get_env(self.ENV_ANALYTICS)
-							 ),
+							 # beamosVersion= dict(
+								# number = self._plugin_version,
+								# branch= self._branch,
+								# display_version = display_version_string,
+							 # 	image = self._octopi_info),
+							 # ),
+							 beamosVersionNumber = self._plugin_version,
+							 beamosVersionBranch = self._branch,
+							 beamosVersionDisplayVersion = display_version_string,
+							 beamosVersionImage = self._octopi_info,
+							 # env= dict(
+								#  env=self.get_env(),
+								#  local=self.get_env(self.ENV_LOCAL),
+								#  laser_safety=self.get_env(self.ENV_LASER_SAFETY),
+								#  analytics=self.get_env(self.ENV_ANALYTICS)
+							 # ),
+							 env=self.get_env(),
+							 env_local=self.get_env(self.ENV_LOCAL),
+							 env_laser_safety=self.get_env(self.ENV_LASER_SAFETY),
+							 env_analytics=self.get_env(self.ENV_ANALYTICS),
+
 							 displayName=self.getDisplayName(self._hostname),
 							 hostname=self._hostname,
 							 serial=self._serial,
+							 software_tier=self._settings.get(["dev", "software_tier"]),
 							 analyticsEnabled=self._settings.get(["analyticsEnabled"]),
 							 beta_label=self._settings.get(['beta_label']),
-						 )
+							 terminalEnabled=not self.is_prod_env(self.ENV_LOCAL),
+						 ))
 		r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
 
 		if firstRun:
@@ -349,14 +384,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def get_template_configs(self):
 		result = [
 			dict(type='settings', name="File Import Settings", template='settings/svgtogcode_settings.jinja2', suffix="_conversion", custom_bindings=False),
-            dict(type='settings', name="Camera Calibration", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True)
+            dict(type='settings', name="Camera Calibration", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
+            dict(type='settings', name="About This Mr Beam", template='settings/about_settings.jinja2', suffix="_about", custom_bindings=False)
 			# disabled in appearance
 			# dict(type='settings', name="Serial Connection DEV", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings=False, replaces='serial')
 		 ]
 		if not self.is_prod_env('local'):
 			result.extend([
-				dict(type='settings', name="Machine Profiles DEV", template='settings/lasercutterprofiles_settings.jinja2', suffix="_lasercutterprofiles", custom_bindings=False)
-				# dict(type='settings', name="Camera Calibration DEV", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
+				dict(type='settings', name="DEV Machine Profiles", template='settings/lasercutterprofiles_settings.jinja2', suffix="_lasercutterprofiles", custom_bindings=False)
 			])
 		result.extend(self._get_wizard_template_configs())
 		return result
@@ -408,7 +443,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return dict()
 
 	def get_wizard_version(self):
-		return 12
+		return 12 #random number. but we can't go down anymore, just up.
 
 	def on_wizard_finish(self, handled):
 		self._logger.info("Setup Wizard finished.")
@@ -695,22 +730,24 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							pluginNames=dict(),
 							locales=dict(),
 							supportedExtensions=[],
-							beamosVersion= dict(
-								number = self._plugin_version,
-								branch= self._branch,
-								display_version = display_version_string,
-							 	image = self._octopi_info),
-							 env= dict(
-								 env=self.get_env(),
-								 local=self.get_env(self.ENV_LOCAL),
-							 ),
-							 displayName=self.getDisplayName(self._hostname),
-							 hostname=self._hostname,
-							 serial=self._serial,
-							 beta_label=self._settings.get(['beta_label']),
-							 e='null',
-							 gcodeThreshold=0, #legacy
-							 gcodeMobileThreshold=0, #legacy
+							# beamOS version
+							beamosVersionNumber=self._plugin_version,
+							beamosVersionBranch=self._branch,
+							beamosVersionDisplayVersion=display_version_string,
+							beamosVersionImage=self._octopi_info,
+							# environement
+							env=self.get_env(),
+							env_local=self.get_env(self.ENV_LOCAL),
+							env_laser_safety=self.get_env(self.ENV_LASER_SAFETY),
+							env_analytics=self.get_env(self.ENV_ANALYTICS),
+							#
+							displayName=self.getDisplayName(self._hostname),
+							hostname=self._hostname,
+							serial=self._serial,
+							beta_label=self._settings.get(['beta_label']),
+							e='null',
+							gcodeThreshold=0, #legacy
+							gcodeMobileThreshold=0, #legacy
 						 )
 		r = make_response(render_template("initial_calibration.jinja2", **render_kwargs))
 
@@ -877,9 +914,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		print profile
 		xmin = '0'
 		ymin = '0'
-		homing_pulloff = 1.1 # TODO get this magic number from the machine profile.
-		xmax = str(profile['volume']['width'] - homing_pulloff)
-		ymax = str(profile['volume']['depth'] - homing_pulloff)
+		xmax = str(profile['volume']['width'])
+		ymax = str(profile['volume']['depth'])
 		svg = """<svg id="calibration_markers-0" viewBox="%(xmin)s %(ymin)s %(xmax)s %(ymax)s" height="%(ymax)smm" width="%(xmax)smm">
 		<path id="NE" d="M%(xmax)s %(ymax)sl-20,0 5,-5 -10,-10 10,-10 10,10 5,-5 z" style="stroke:#000000; stroke-width:1px; fill:none;" />
 		<path id="NW" d="M%(xmin)s %(ymax)sl20,0 -5,-5 10,-10 -10,-10 -10,10 -5,-5 z" style="stroke:#000000; stroke-width:1px; fill:none;" />
@@ -1055,7 +1091,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			camera_calibration_markers=["result"],
 			ready_to_laser=["ready"],
 			debug_event=["event"],
-			take_undistorted_picture=[]
+			take_undistorted_picture=[]  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
 		)
 
 	def on_api_command(self, command, data):
@@ -1077,6 +1113,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		elif command == "camera_calibration_markers":
 			return self.camera_calibration_markers(data)
 		elif command == "take_undistorted_picture":
+			# see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
 			return self.take_undistorted_picture(is_initial_calibration=False)
 		elif command == "debug_event":
 			return self.debug_event(data)
@@ -1527,43 +1564,44 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return result
 
 
-# this is for the command line interface we're providing
-def clitest_commands(cli_group, pass_octoprint_ctx, *args, **kwargs):
-	import click
-	import sys
-	import requests.exceptions
-	import octoprint_client as client
-
-	# > octoprint plugins mrbeam:debug_event MrBeamDebugEvent -p 42
-	# remember to activate venv where MrBeamPlugin is installed in
-	@click.command("debug_event")
-	@click.argument("event", default="MrBeamDebugEvent")
-	@click.option("--payload", "-p", default=None, help="optinal payload string")
-	def debug_event_command(event, payload):
-		if payload is not None:
-			payload_numer = None
-			try:
-				payload_numer = int(payload)
-			except:
-				try:
-					payload_numer = float(payload)
-				except:
-					pass
-			if payload_numer is not None:
-				payload = payload_numer
-
-		params = dict(command="debug_event", event=event, payload=payload)
-		client.init_client(cli_group.settings)
-
-		click.echo("Firing debug event - params: {}".format(params))
-		r = client.post_json("/api/plugin/mrbeam", data=params)
-		try:
-			r.raise_for_status()
-		except requests.exceptions.HTTPError as e:
-			click.echo("Could not fire event, got {}".format(e))
-			sys.exit(1)
-
-	return [debug_event_command]
+# # this is for the command line interface we're providing
+# def clitest_commands(cli_group, pass_octoprint_ctx, *args, **kwargs):
+# 	import click
+# 	import sys
+# 	import requests.exceptions
+# 	import octoprint_client as client
+#
+# 	# > octoprint plugins mrbeam:debug_event MrBeamDebugEvent -p 42
+# 	# remember to activate venv where MrBeamPlugin is installed in
+# 	@click.command("debug_event")
+# 	@click.argument("event", default="MrBeamDebugEvent")
+# 	@click.option("--payload", "-p", default=None, help="optinal payload string")
+# 	@click.pass_context
+# 	def debug_event_command(ctx, event, payload):
+# 		if payload is not None:
+# 			payload_numer = None
+# 			try:
+# 				payload_numer = int(payload)
+# 			except:
+# 				try:
+# 					payload_numer = float(payload)
+# 				except:
+# 					pass
+# 			if payload_numer is not None:
+# 				payload = payload_numer
+#
+# 		params = dict(command="debug_event", event=event, payload=payload)
+# 		# client.init_client(cli_group.settings)
+#
+# 		click.echo("Firing debug event - params: {}".format(params))
+# 		r = client.post_json("/api/plugin/mrbeam", data=params)
+# 		try:
+# 			r.raise_for_status()
+# 		except requests.exceptions.HTTPError as e:
+# 			click.echo("Could not fire event, got {}".format(e))
+# 			sys.exit(1)
+#
+# 	return [debug_event_command]
 
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
@@ -1581,22 +1619,23 @@ def __plugin_load__():
 	global __plugin_settings_overlay__
 	__plugin_settings_overlay__ = dict(
 		plugins=dict(
-			_disabled=['cura', 'pluginmanager', 'announcements', 'corewizard']   # eats dict | pfad.yml | callable
+			_disabled=['cura', 'pluginmanager', 'announcements', 'corewizard', 'octopi_support']   # eats dict | pfad.yml | callable
 			# _disabled=['cura', 'pluginmanager', 'announcements', 'corewizard', 'mrbeam']  # eats dict | pfad.yml | callable
 		),
 		terminalFilters = [
-			dict(name="Filter beamOS messages", regex="^([0-9,.: ]+ [A-Z]+ mrbeam)", activated=False),
+			dict(name="Filter beamOS messages", regex="^([0-9,.: ]+ [A-Z]+ mrbeam)", activated=True),
 			dict(name="Filter _COMM_ messages", regex="^([0-9,.: ]+ _COMM_)", activated=True),
-			dict(name="Filter _COMM_ except Gcode", regex="^([0-9,.: ]+ _COMM_: (Send: \?|Recv: ok|Recv: <))", activated=False),
+			dict(name="Filter _COMM_ except Gcode", regex="^([0-9,.: ]+ _COMM_: (Send: \?|Recv: ok|Recv: <))", activated=True),
 		],
 		appearance=dict(components=dict(
 			order=dict(
 				wizard=["plugin_mrbeam_wifi", "plugin_mrbeam_acl", "plugin_mrbeam_lasersafety"],
-				settings = ['plugin_softwareupdate', 'accesscontrol', 'plugin_netconnectd', 'plugin_mrbeam_conversion', 'terminalfilters', 'logs']
+				settings = ['plugin_softwareupdate', 'accesscontrol', 'plugin_netconnectd', 'plugin_mrbeam_conversion',
+				            'plugin_mrbeam_camera', 'logs', 'plugin_mrbeam_about']
 			),
 			disabled=dict(
 				wizard=['plugin_softwareupdate'],
-				settings=['serial', 'webcam']
+				settings=['serial', 'webcam', 'terminalfilters']
 			)
 		)),
 		server = dict(commands=dict(
@@ -1617,8 +1656,8 @@ def __plugin_load__():
 		"octoprint.printer.factory": __plugin_implementation__.laser_factory,
 		"octoprint.filemanager.extension_tree": __plugin_implementation__.laser_filemanager,
 		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
-		"octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook,
-		"octoprint.cli.commands": clitest_commands
+		"octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook
+		# "octoprint.cli.commands": clitest_commands
 
 	}
 

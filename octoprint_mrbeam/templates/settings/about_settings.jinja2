@@ -1,0 +1,40 @@
+<div id="settings_mrbeam_about">
+    <h3>{{ _('About This Mr Beam') }}</h3>
+
+    <div class="control-group">
+        <h5>{{ _('Mr Beam II') }}</h5>
+        <div class="controls">
+            <ul>
+                <div><strong>Name:</strong> {{ hostname }}</div>
+                <div><strong>Serial:</strong> {{ serial }}</div>
+            </ul>
+        </div>
+    </div>
+
+    <div class="control-group">
+        <h5>{{ _('beamOS') }}</h5>
+        <div class="controls">
+            <ul>
+                <div><strong>Mr Beam Plugin:</strong> v{{ beamosVersionNumber }}</div>
+                <div><strong>OctoPrint:</strong> <span class="version"></span></div>
+                <div><strong>Image fingerprint:</strong> {{ beamosVersionImage }}</div>
+                <div><strong>Software tier:</strong> {{ software_tier }}</div>
+                <div><strong>Environment:</strong> {{ env }}</div>
+            </ul>
+        </div>
+    </div>
+
+    <div class="control-group">
+        <h5>{{ _('Links') }}</h5>
+        <div class="controls">
+            <ul>
+                <div><strong>Mr Beam:</strong> <a href="http://www.mr-beam.org" target="_blank"><i class="icon-home"></i> mr-beam.org</a></div>
+                <div><strong>Find my Mr Beam:</strong> <a href="http://find.mr-beam.org" target="_blank"><i class="icon-chevron-right"></i> find.mr-beam.org</a></div>
+                <div><strong>Quickstart Guide:</strong> <a href="/plugin/mrbeam/static/docs/QuickstartGuide.pdf" target="_blank"><i class="icon-book"></i> QuickstartGuide.pdf</a>
+                    or get the latest version <a href="https://drive.google.com/drive/folders/1IQ65zFGoCN1sz6MiEocyjAZOy5NFS3ZK?usp=sharing" target="_blank">online</a>.</div>
+                <div><strong>Sourcecode:</strong> <a href="https://github.com/mrbeam" target="_blank"><i class="icon-download"></i> github.com/mrbeam</a></div>
+            </ul>
+        </div>
+    </div>
+
+</div>

@@ -24,12 +24,14 @@ Snap.plugin(function (Snap, Element, Paper, global) {
     }
     mb_meta = mb_meta || {};
 
+    var mrbeam = window.mrbeam;
+
     // settings
     var bounds = gc_options.clipRect;
 
       this.selectAll("path").forEach(function (element) {
 
-        var id = element.attr('id');
+      var id = element.attr('id');
 
 
       // calculate transformation matrix

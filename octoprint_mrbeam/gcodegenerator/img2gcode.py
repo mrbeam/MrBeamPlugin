@@ -47,20 +47,20 @@ class ImageProcessor():
 		self._log = logging.getLogger("octoprint.plugins.mrbeam.img2gcode")
 
 		self.output_filehandle = output_filehandle
-		self.beam = float(beam_diameter)
-		self.pierce_time = float(pierce_time)/1000.0
+		self.beam = float(beam_diameter) if beam_diameter else 0.25
+		self.pierce_time = float(pierce_time)/1000.0 if pierce_time else 0.0
 		self.pierce_intensity = 1000 # TODO parametrize
 		self.ignore_brighter_than = 254 # TODO parametrize
 		self.ignore_darker_than = 1 # TODO parametrize
-		self.intensity_black = float(intensity_black)
-		self.intensity_white = float(intensity_white)
+		self.intensity_black = float(intensity_black) if intensity_black else 0.0
+		self.intensity_white = float(intensity_white) if intensity_white else 0.0
 		self.intensity_black_user = intensity_black_user
 		self.intensity_white_user = intensity_white_user
-		self.feedrate_white = float(speed_white)
-		self.feedrate_black = float(speed_black)
+		self.feedrate_white = float(speed_white) if speed_white else 0.0
+		self.feedrate_black = float(speed_black) if speed_black else 0.0
 		self.material = material
-		self.contrastFactor = float(contrast)
-		self.sharpeningFactor = float(sharpening)
+		self.contrastFactor = float(contrast) if contrast else 0.0
+		self.sharpeningFactor = float(sharpening) if sharpening else 0.0
 		self.dithering = (dithering == True or dithering == "True")
 
 		self.debugPreprocessing = False

@@ -258,11 +258,42 @@ svg#area_preview {
 	clear: both;
 }
 
+
+#color_list { margin:0; }
+
+#color_list li.material_color_entry {
+    width: 60px;
+    height: 60px;
+	margin: 0 .5em .5em 0;
+    display: none;
+    /*border: 1px solid #ddd;*/
+    cursor: pointer;
+	transition: width .1s ease-in-out;
+	display: inline-block;
+}
+#color_list li.material_color_entry.active {
+	/*transform: scale(1.25) !important;*/
+	width: 200px !important;
+}
+#color_list li.material_color_entry:hover {
+	/*transform: scale(1.25);*/
+
+}
+
+#material_row .hover_shadow {
+    box-shadow: 1px 1px 2px #383e42;
+	transition: box-shadow .1s ease-in-out;
+}
+#material_row .hover_shadow:hover { 
+    box-shadow: 2px 2px 4px #383e42;
+}
+
 .job_row {
     margin-bottom: 1em;
     border-bottom: 1px solid #999;
     padding-bottom: 1em;
 	display: flex;
+	user-select: none;
 }
 
 h4.job_title{
@@ -274,6 +305,8 @@ h4.job_title{
     max-width: 35%;
 }
 
+.job_row label.control-label {cursor: default; }
+
 .job_row .form-horizontal .control-group {
     margin-bottom: 5px;
 }
@@ -284,12 +317,13 @@ h4.job_title{
     overflow: hidden;
     display: inline-block;
     border-radius: 5%;
-    /* border: 1px solid #999; */
     box-shadow: 2px 2px 4px 2px rgba(0,0,0,0.33);
     margin: 4px;
 	background-image: url(/plugin/mrbeam/static/img/line_overlay.svg);
 	background-size: cover;
 	background-position: center;
+    cursor: move;
+    cursor: -webkit-grab;
 }
 
 .img_drop_zone,
@@ -301,7 +335,7 @@ h4.job_title{
 
 /* state machine. either img or vector color drop zone highlightning*/
 #no_job .color_drop_zone.hover,
-body.engravingDrag #engrave_job .img_drop_zone.hover,
+body.colorDragInProgress #engrave_job .img_drop_zone.hover,
 body.vectorDrag .job_row_vector .color_drop_zone.hover,
 body.vectorDrag .color_drop_zone.create_job.hover {
     font-weight: 700;
@@ -313,6 +347,7 @@ body.vectorDrag .color_drop_zone.create_job.hover {
 	text-align: center;
     padding: 1em 0;
     min-height: auto;
+	user-select: none;
 }
 
 #cd_engraving {
@@ -328,6 +363,22 @@ body.vectorDrag .color_drop_zone.create_job.hover {
 
 body.colorDragInProgress #drop_overlay {
 	display: none;
+}
+
+#colored_line_mapping {
+	width: 220px;
+	margin-left: 4.5em;
+    display: block;
+    position: relative;
+}
+
+#colored_line_mapping input {
+	width: 100%;
+	max-width: initial;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+    height: 1px;
+	margin:	2rem 0 0 0;
 }
 
 /* eye candy for gcode generation */
@@ -368,16 +419,19 @@ body.colorDragInProgress #drop_overlay {
 .dimDesigns .userSVG,
 .dimDesigns .userIMG,
 .dimDesigns .userText {
-	opacity:.5;
-	filter:url(#dehighlight);
-	transition: opacity 0.2s ease-out;
+	/*opacity:.5;*/
+	/*filter:url(#dehighlight);*/
+	stroke-width: 1;
+	transition: stroke-width 0.2s ease-out;
 }
 
 .userSvg, .userText, .userIMG,
 .dimDesigns .userSVG.designHighlight,
 .dimDesigns .userIMG.designHighlight,
+.dimDesigns .userSVG .vector_outline,
 .dimDesigns .userText.designHighlight {
-	opacity:1;
+	/*opacity:1;*/
+	stroke-width: 3px !important;
 	filter:none;
 }
 
@@ -425,23 +479,130 @@ svg#area_preview rect
 	stroke-width: 1px;
 }
 
+.modal_dialog_headline h3 {
+    width: 100%;
+    margin: 0 0 0 -14px;
+	padding: 9px 14px;
+	border-top: 1px solid #999;	
+	border-bottom: 1px solid #999;
+    line-height: 30px;	
+}
+
+#color_assignment.inactive {
+    opacity: .3;
+    filter: blur(2px);
+    pointer-events: none;
+}
+
 #material_list {
 	margin: 0;
-	max-height: 50vh;
+	max-height: 55vh;
 	overflow: auto;
 }
 .material_entry {
-	display: block;
+	display: none;
 	width: 200px;
 	height: 100px;
-	border: 1px solid #999;
 	float: left;
-	padding: .5em;
-	margin: .2em;
+	margin: 0 .5em .5em 0;
+	background-size: cover;
+	position: relative;
+	cursor: pointer;
+}
+
+#material_type .material_entry.selected { 
+	display: block;     
+	height: 60px;
+    background-position: center;
+}
+#material_type.active .material_entry {	display: block; }
+
+li.material_entry span {
+    position: absolute;
+    top: 0;
+    background-color: rgba(255,255,255,.85);
+    display: block;
+    width: 100%;
+    left: 0;
+    padding: 3px 8px;
+    box-sizing: border-box;
+}
+
+#thickness_list{
+	width: 200px;
+}
+
+
+.thickness_sample {
+    display: inline-block;
+	vertical-align: bottom;
+    border: 0.25mm solid #999;
+    border-left-color: transparent;
+    width: 100%;
+    background-image: url(/plugin/mrbeam/static/img/pattern_stripes.png);
+    background-size: 39%;
+    margin-bottom: 1em;
+    text-align: center;
+    height: 0;
+    line-height: 0;
+    text-shadow: 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff;
+	cursor: pointer;
+}
+.thickness_sample:hover, .thickness_sample.active {font-weight: bold; }
+
+#material_row {
+	width: 100%;
+	overflow-x: hidden;
+	position: relative;
+	transition: height .3s ease-in-out;
+	margin-bottom: 1em;
+	user-select:none;
+}
+
+#material_row.expanded #material_info {
+	display:none;
+}
+#safety_notes {
+	font-weight: bold;
+}
+
+#material_info p,
+#material_info a {
+    color: #777;
+    margin: 0;
+}
+
+#material_type, #material_color, #material_thickness {
+	width: 20%;
+	display: inline-block;
+	box-sizing: border-box;
+	/*position: absolute;*/
+	transition: width .1s ease-in;
+	background-color: #fff;
+}
+#material_type.active { width: 100%; }
+#material_type, #material_color, #material_thickness  { width: calc(200px + 2em); }
+#material_color.active { width: calc(100% - 200px - 3em); }
+#material_thickness.active { width: calc(100% - 2 * (200px + 6em)); }
+
+#material_thickness .engrave_only {
+    border-bottom: transparent;
+    padding: 2em 0;
+    background-image: linear-gradient(to bottom, rgba(255,255,255,0) 0%,rgba(255,255,255,1) 100%), url(/plugin/mrbeam/static/img/pattern_stripes.png);
+    background-size: cover, contain;
+    border-top: 1px solid #e25303;
+}
+
+.not_possible_on_this_material {
+	color:#999;
 }
 
 .misfit_warning i {
 	color: #e25303;
+}
+
+#dialog_vector_graphics_conversion .modal-body {
+  /*min-height: 65vh;*/
 }
 
 .calibration_manual.text {

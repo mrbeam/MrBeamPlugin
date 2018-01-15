@@ -15,6 +15,8 @@
         <link rel="apple-touch-icon" sizes="114x114" href="{{ url_for('plugin.mrbeam.static', filename='img/mrb114.png') }}">
         <link rel="apple-touch-icon" sizes="144x144" href="{{ url_for('plugin.mrbeam.static', filename='img/mrb144.png') }}">
 
+        {% include 'reload_find_mrbeam.jinja2' %}
+
         {#  Dirty to have this (== body elements) in the head section.
            Chrome ends head-tag and opens body-tag which means that all following is in the page's bodey instead of the head  #}
         {% include 'loading_overlay.jinja2' %}
@@ -33,14 +35,14 @@ for(h=0;h<k.length;h++)e(d,k[h]);a._i.push([b,c,f])};a.__SV=1.2;b=e.createElemen
 mixpanel.init("094a94a7a2bd139aa838a1b326d58529",{debug:true});</script><!-- end Mixpanel -->
 		{% endif %}
     </head>
-    <body>
+    <body style="overflow: hidden;">
 		<div class="container-fluid octoprint-container">
 		<nav class="navbar navbar-default navbar-fixed-top" role="navigation" id="navbar" style="min-width:730px;">
 			<div class="">
 				<div class="navbar-header brand">
 					<a id="mrbeam_logo_link" class="navbar-brand" href="#"><img id="logo_wide" alt="Mr Beam Logo" src="{{ url_for('plugin.mrbeam.static', filename='img/mr-typo_x120.png') }}"><img id="logo_compact" alt="Mr Beam Logo" src="{{ url_for('plugin.mrbeam.static', filename='img/mr_x120.png') }}"></a>
                     {% if beta_label %}
-                        <span style="margin: 6px; vertical-align: top; font-size: 14px; font-weight: 400; color: #e25303; text-decoration: none;">{{ beta_label }}</span>
+                        <span style="margin: 6px; vertical-align: -5px; font-size: 14px; font-weight: 400; color: #e25303; text-decoration: none;">{{ beta_label }}</span>
                     {% endif %}
 				</div>
 				<!-- Navbar -->
@@ -50,7 +52,9 @@ mixpanel.init("094a94a7a2bd139aa838a1b326d58529",{debug:true});</script><!-- end
                     {% if not enableFocus %}
 					<li><a href="#focus" data-toggle="tab" id="focus_tab_btn">focus</a></li>
                     {% endif %}
+                    {% if terminalEnabled %}
 					<li><a href="#mrb_term" data-toggle="tab" id="terminal_tab_btn">terminal</a></li>
+                    {% endif %}
 
 					{% for key in templates.navbar.order %}
 						{% set data = templates.navbar.entries[key] %}
@@ -81,14 +85,12 @@ mixpanel.init("094a94a7a2bd139aa838a1b326d58529",{debug:true});</script><!-- end
                                 <a href="#" id="exit_fullscreen_menu_item"><i class="icon-fullscreen"></i> {{ _('Exit Fullscreen') }}</a>
                             </li>
 							<li class="divider"></li>
-							<li><a href="http://www.mr-beam.org" target="_blank"><i class="icon-home"></i> {{ _('Homepage') }}</a></li>
-							<li><a href="https://github.com/mrbeam/OctoPrint/" target="_blank"><i class="icon-download"></i> {{ _('Sourcecode') }}</a></li>
-							<li><a href="https://wiki.mr-beam.org" target="_blank"><i class="icon-book"></i> {{ _('Documentation') }}</a></li>
-							<li><a href="https://github.com/mrbeam/OctoPrint/issues" target="_blank"><i class="icon-flag"></i> {{ _('Bugs and Requests') }}</a></li>
-							<li class="divider"></li>
-						  	<li class="nav_version">{{ _('beamOS Version') }}: <span class="version_beamos">{{ beamosVersion.display_version }}</span></li>
-						  	<li class="nav_version">{{ _('beamOS image') }}: <span class="version_beamos">{{ beamosVersion.image }}</span></li>
-						  	<li class="nav_version">{{ _('OctoPrint Version') }}: <span class="version"></span></li>
+							<li><a href="http://www.mr-beam.org" target="_blank"><i class="icon-home"></i> {{ _('mr-beam.org') }}</a></li>
+							<li><a href="http://find.mr-beam.org" target="_blank"><i class="icon-chevron-right"></i> {{ _('Find my Mr Beam') }}</a></li>
+							<li><a href="/plugin/mrbeam/static/docs/QuickstartGuide.pdf" target="_blank"><i class="icon-book"></i> {{ _('Quickstart Guide') }}</a></li>
+{#							<li><a href="https://github.com/mrbeam" target="_blank"><i class="icon-download"></i> {{ _('Sourcecode') }}</a></li>#}
+{#							<li><a href="https://wiki.mr-beam.org" target="_blank"><i class="icon-book"></i> {{ _('Documentation') }}</a></li>#}
+{#							<li><a href="https://github.com/mrbeam/OctoPrint/issues" target="_blank"><i class="icon-flag"></i> {{ _('Bugs and Requests') }}</a></li>#}
 						</ul>
 					</li>
 				</ul>
@@ -100,10 +102,12 @@ mixpanel.init("094a94a7a2bd139aa838a1b326d58529",{debug:true});</script><!-- end
 				<div class="tab-content">
 
 					{% include 'tab_workingarea.jinja2' %}
-					{% include 'tab_terminal.jinja2' %}
+					{% if terminalEnabled %}
+                    {%      include 'tab_terminal.jinja2' %}
+                    {% endif %}
 					{% include 'tab_designlib.jinja2' %}
 					{% if not enableFocus %}
-                    {% include 'tab_focus.jinja2' %}
+                    {%      include 'tab_focus.jinja2' %}
                     {% endif %}
 
 					<div class="tab-pane" id="settings">

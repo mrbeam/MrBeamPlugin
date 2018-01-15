@@ -2231,6 +2231,7 @@ var BoundingBox = __webpack_require__(3);
 var denormalise = __webpack_require__(5);
 var entityToPolyline = __webpack_require__(6);
 var colors = __webpack_require__(9);
+var logger = __webpack_require__(1);
 
 function polylineToPath(rgb, polyline) {
   var color24bit = rgb[2] | rgb[1] << 8 | rgb[0] << 16;
@@ -2277,7 +2278,14 @@ module.exports = function (parsed) {
     if (!layerTable) {
       throw new Error('no layer table for layer:' + entity.layer);
     }
-    var rgb = colors[layerTable.colorNumber] || [0, 0, 0];
+
+    // TODO: not sure if this prioritization is good (entity color first, layer color as fallback)
+    var colorNumber = 'colorNumber' in entity ? entity.colorNumber : layerTable.colorNumber;
+    var rgb = colors[colorNumber];
+    if (rgb === undefined) {
+      logger.warn("Color index", colorNumber, "invalid, defaulting to black");
+      rgb = [0, 0, 0];
+    }
 
     var p2 = polyline.map(function (p) {
       return [p[0], bbox.maxY - p[1]];
@@ -2289,9 +2297,11 @@ module.exports = function (parsed) {
   svgString += '<svg xmlns="http://www.w3.org/2000/svg"';
   svgString += ' xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1"';
   svgString += ' preserveAspectRatio="xMinYMin meet"';
+  // MrBeam modification START
   svgString += ' viewBox="' + [bbox.minX, 0, bbox.width, bbox.height].join(' ') + '"';
   svgString += ' width="' + bbox.width + '" height="' + bbox.height + '">';
   svgString += '<!-- Created with dxf.js -->' + paths + '</svg>';
+  // MrBeam modification END
   return pd.xml(svgString);
 };
 
@@ -3391,12 +3401,12 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 /**
 * pretty-data - nodejs plugin to pretty-print or minify data in XML, JSON and CSS formats.
-*  
+*
 * Version - 0.40.0
 * Copyright (c) 2012 Vadim Kiryukhin
 * vkiryukhin @ gmail.com
 * http://www.eslinstructor.net/pretty-data/
-* 
+*
 * Dual licensed under the MIT and GPL licenses:
 *   http://www.opensource.org/licenses/mit-license.php
 *   http://www.gnu.org/licenses/gpl.html
@@ -3406,20 +3416,20 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 *	pd.css(data ) - pretty print CSS;
 *	pd.sql(data)  - pretty print SQL;
 *
-*	pd.xmlmin(data [, preserveComments] ) - minify XML; 
-*	pd.jsonmin(data)                      - minify JSON; 
-*	pd.cssmin(data [, preserveComments] ) - minify CSS; 
-*	pd.sqlmin(data)                       - minify SQL; 
+*	pd.xmlmin(data [, preserveComments] ) - minify XML;
+*	pd.jsonmin(data)                      - minify JSON;
+*	pd.cssmin(data [, preserveComments] ) - minify CSS;
+*	pd.sqlmin(data)                       - minify SQL;
 *
 * PARAMETERS:
 *
 *	@data  			- String; XML, JSON, CSS or SQL text to beautify;
-* 	@preserveComments	- Bool (optional, used in minxml and mincss only); 
-*				  Set this flag to true to prevent removing comments from @text; 
+* 	@preserveComments	- Bool (optional, used in minxml and mincss only);
+*				  Set this flag to true to prevent removing comments from @text;
 *	@Return 		- String;
-*	
+*
 * USAGE:
-*	
+*
 *	var pd  = require('pretty-data').pd;
 *
 *	var xml_pp   = pd.xml(xml_text);
@@ -3528,6 +3538,7 @@ pp.prototype.json = function (text) {
 // ----------------------- CSS section ----------------------------------------------------
 
 pp.prototype.css = function (text) {
+
 	var ar = text.replace(/\s{1,}/g, ' ').replace(/\{/g, "{~::~").replace(/\}/g, "~::~}~::~").replace(/\;/g, ";~::~").replace(/\/\*/g, "~::~/*").replace(/\*\//g, "*/~::~").replace(/~::~\s{0,}~::~/g, "~::~").split('~::~'),
 	    len = ar.length,
 	    deep = 0,
@@ -3556,6 +3567,7 @@ function isSubquery(str, parenthesisLevel) {
 }
 
 function split_sql(str, tab) {
+
 	return str.replace(/\s{1,}/g, " ").replace(/ AND /ig, "~::~" + tab + tab + "AND ").replace(/ BETWEEN /ig, "~::~" + tab + "BETWEEN ").replace(/ CASE /ig, "~::~" + tab + "CASE ").replace(/ ELSE /ig, "~::~" + tab + "ELSE ").replace(/ END /ig, "~::~" + tab + "END ").replace(/ FROM /ig, "~::~FROM ").replace(/ GROUP\s{1,}BY/ig, "~::~GROUP BY ").replace(/ HAVING /ig, "~::~HAVING ")
 	//.replace(/ IN /ig,"~::~"+tab+"IN ")
 	.replace(/ IN /ig, " IN ").replace(/ JOIN /ig, "~::~JOIN ").replace(/ CROSS~::~{1,}JOIN /ig, "~::~CROSS JOIN ").replace(/ INNER~::~{1,}JOIN /ig, "~::~INNER JOIN ").replace(/ LEFT~::~{1,}JOIN /ig, "~::~LEFT JOIN ").replace(/ RIGHT~::~{1,}JOIN /ig, "~::~RIGHT JOIN ").replace(/ ON /ig, "~::~" + tab + "ON ").replace(/ OR /ig, "~::~" + tab + tab + "OR ").replace(/ ORDER\s{1,}BY/ig, "~::~ORDER BY ").replace(/ OVER /ig, "~::~" + tab + "OVER ").replace(/\(\s{0,}SELECT /ig, "~::~(SELECT ").replace(/\)\s{0,}SELECT /ig, ")~::~SELECT ").replace(/ THEN /ig, " THEN~::~" + tab + "").replace(/ UNION /ig, "~::~UNION~::~").replace(/ USING /ig, "~::~USING ").replace(/ WHEN /ig, "~::~" + tab + "WHEN ").replace(/ WHERE /ig, "~::~WHERE ").replace(/ WITH /ig, "~::~WITH ")

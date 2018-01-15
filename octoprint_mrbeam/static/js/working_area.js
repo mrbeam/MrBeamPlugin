@@ -91,10 +91,10 @@ $(function(){
         self.dxfScale =  function(){return 1}; // initial value, gets overwritten by settings in onAllBound()
 
 		self.workingAreaWidthMM = ko.computed(function(){
-			return self.profile.currentProfileData().volume.width() - self.profile.currentProfileData().volume.origin_offset_x();
+			return self.profile.currentProfileData().volume.width();
 		}, self);
 		self.workingAreaHeightMM = ko.computed(function(){
-			return self.profile.currentProfileData().volume.depth() - self.profile.currentProfileData().volume.origin_offset_y();
+			return self.profile.currentProfileData().volume.depth();
 		}, self);
 		self.flipYMatrix = ko.computed(function(){
 			var h = self.workingAreaHeightMM();
@@ -541,27 +541,31 @@ $(function(){
 				return id;
 		};
 
+        /**
+         * Removes unsupported elements from fragment.
+         * List of elements to remove is defined within this function in var unsupportedElems
+         * @param fragment
+         * @returns fragment
+         * @private
+         */
 		self._removeUnsupportedSvgElements = function(fragment){
-			// find clippath elements and remove them
-				var clipPathEl = fragment.selectAll('clipPath');
-				if(clipPathEl.length !== 0){
-					console.warn("Warning: removed unsupported clipPath element in SVG");
-					self.svg_contains_clipPath_warning();
-					clipPathEl.remove();
-				}
 
-				// find flowroot elements and remove them
-				var flowrootEl = fragment.selectAll('flowRoot');
-				if(flowrootEl.length !== 0){
-					console.warn("Warning: removed unsupported flowRoot element in SVG");
-					self.svg_contains_flowRoot_warning();
-					flowrootEl.remove();
-				}
+            // add more elements that need to be removed here
+            var unsupportedElems = ['clipPath', 'flowRoot', 'switch', '#adobe_illustrator_pgf'];
+            //
+            for (var i = 0; i < unsupportedElems.length; i++) {
+                var myElem = fragment.selectAll(unsupportedElems[i]);
+                if (myElem.length !== 0) {
+                    console.warn("Warning: removed unsupported '"+unsupportedElems[i]+"' element in SVG");
+                    self.svg_contains_unsupported_element_warning(unsupportedElems[i]);
+                    myElem.remove();
+                }
+            }
 
-				// find all elements with "display=none" and remove them
-				fragment.selectAll("[display=none]").remove(); // TODO check if this really works. I (tp) doubt it.
-				fragment.selectAll("script").remove();
-				return fragment;
+            // find all elements with "display=none" and remove them
+            fragment.selectAll("[display=none]").remove(); // TODO check if this really works. I (tp) doubt it.
+            fragment.selectAll("script").remove();
+            return fragment;
 		};
 
 		self.loadSVG = function(url, callback){
@@ -612,7 +616,7 @@ $(function(){
 			var inkscape_version = root_attrs['inkscape:version'];
 			if(inkscape_version !== undefined){
 				version = inkscape_version;
-				console.log("Generator:", gen, version);
+//				console.log("Generator:", gen, version);
 				return {generator: gen, version: version};
 			}
 
@@ -626,7 +630,7 @@ $(function(){
 						gen = 'illustrator';
 						var matches = node.textContent.match(/\d+\.\d+(\.\d+)*/g);
 						version = matches.join('_');
-						console.log("Generator:", gen, version);
+//						console.log("Generator:", gen, version);
 						return { generator: gen, version: version };
 					}
 				}
@@ -636,7 +640,7 @@ $(function(){
 			if(root_attrs && root_attrs['data-name']){
 				gen = 'illustrator';
 				version = '?';
-				console.log("Generator:", gen, version);
+//				console.log("Generator:", gen, version);
 				return { generator: gen, version: version };
 			}
 
@@ -649,7 +653,7 @@ $(function(){
 					if (node.textContent.indexOf('CorelDRAW') > -1) {
 						gen = 'coreldraw';
 						var version = node.textContent.match(/(Creator: CorelDRAW) (\S+)/)[2];
-						console.log("Generator:", gen, version);
+//						console.log("Generator:", gen, version);
 						return { generator: gen, version: version };
 					}
 				}
@@ -662,12 +666,13 @@ $(function(){
 				if(node.nodeType === 8){ // check for comment
 					if (node.textContent.indexOf('Method Draw') > -1) {
 						gen = 'method draw';
-						console.log("Generator:", gen, version);
+//						console.log("Generator:", gen, version);
 						return { generator: gen, version: version };
 					}
 				}
 			}
-			
+
+
 			// detect dxf.js generated svg
 			// <!-- Created with dxf.js -->
 			for (var i = 0; i < children.length; i++) {
@@ -728,33 +733,33 @@ $(function(){
 
 		self._getDocumentScaleToMM = function(declaredUnit, generator){
 			if(declaredUnit === null || declaredUnit === ''){
-				console.log("unit '" + declaredUnit + "' not found. Assuming 'px'");
+//				console.log("unit '" + declaredUnit + "' not found. Assuming 'px'");
 				declaredUnit = 'px';
 			}
 			if(declaredUnit === 'px' || declaredUnit === ''){
 				if(generator.generator === 'inkscape'){
 					if(versionCompare(generator.version, '0.91') <= 0){
-						console.log("old inkscape, px @ 90dpi");
+//						console.log("old inkscape, px @ 90dpi");
 						declaredUnit = 'px_inkscape_old';
 					} else {
-						console.log("new inkscape, px @ 96dpi");
+//						console.log("new inkscape, px @ 96dpi");
 						declaredUnit = 'px_inkscape_new';
 					}
 				} else if (generator.generator === 'corel draw'){
-					console.log("corel draw, px @ 90dpi");
+//					console.log("corel draw, px @ 90dpi");
 
 				} else if (generator.generator === 'illustrator') {
-					console.log("illustrator, px @ 72dpi");
+//					console.log("illustrator, px @ 72dpi");
 					declaredUnit = 'px_illustrator';
 				} else if (generator.generator === 'unknown'){
-					console.log('unable to detect generator, using settings->svgDPI:', self.svgDPI());
+//					console.log('unable to detect generator, using settings->svgDPI:', self.svgDPI());
 					declaredUnit = 'px_settings';
 					self.uuconv.px_settings = self.svgDPI() / 90; // scale to our internal 90
 				}
 			}
 			var declaredUnitValue = self.uuconv[declaredUnit];
 			var scale = declaredUnitValue / self.uuconv.mm;
-			console.log("Units: " + declaredUnit, " => scale factor to mm: " + scale);
+//			console.log("Units: " + declaredUnit, " => scale factor to mm: " + scale);
 			return scale;
 		};
 
@@ -1064,20 +1069,11 @@ $(function(){
 			};
 		};
 
-		self.svg_contains_clipPath_warning = function(){
-			var error = "<p>" + gettext("The SVG file contains clipPath elements.<br/>clipPath is not supported yet and has been removed from file.") + "</p>";
+		self.svg_contains_unsupported_element_warning = function(elemName){
+            elemName = elemName.replace('\\:', ':');
+			var error = "<p>" + gettext("The SVG file contains unsupported elements: '"+elemName+"' These elements got removed.") + "</p>";
 			new PNotify({
-				title: "clipPath elements removed",
-				text: error,
-				type: "warn",
-				hide: false
-			});
-		};
-
-		self.svg_contains_flowRoot_warning = function(){
-			var error = "<p>" + gettext("The SVG file contains flowRoot elements.<br/>flowRoot is not supported yet and has been removed from file.") + "</p>";
-			new PNotify({
-				title: "flowRoot elements removed",
+				title: "Unsupported elements in SVG: '"+elemName+"'",
 				text: error,
 				type: "warn",
 				hide: false
@@ -1587,6 +1583,20 @@ $(function(){
 					var fill = e.attr('fill');
 					var op = e.attr('fill-opacity');
 					if(fill !== 'none' && op > 0){
+						return true;
+					}
+				}
+			}
+			return false;
+		};
+		self.hasStrokedVectors = function(){
+			var el = snap.selectAll('#userContent *');
+			for (var i = 0; i < el.length; i++) {
+				var e = el[i];
+				if (["path", "circle", "ellipse", "rect", "line", "polyline", "polygon", "path"].indexOf(e.type) >= 0){
+					var stroke = e.attr('stroke');
+					var sw = e.attr('stroke-width');
+					if(stroke !== 'none' && parseFloat(sw) > 0){
 						return true;
 					}
 				}

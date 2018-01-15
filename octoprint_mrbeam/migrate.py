@@ -1,6 +1,7 @@
 import os
 import re
 import shutil
+import subprocess
 from distutils.version import StrictVersion
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from .profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
@@ -13,6 +14,7 @@ def migrate(plugin):
 class Migration(object):
 
 	VERSION_DELETE_EGG_DIR_LEFTOVERS = '0.1.17'
+	VERSION_SETUP_IPTABLES           = '0.1.19'
 
 	def __init__(self, plugin):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.migrate")
@@ -23,22 +25,28 @@ class Migration(object):
 
 
 	def run(self):
-		if not self.is_lasercutterProfile_set(): self.set_lasercutterProfile()
+		try:
+			if not self.is_lasercutterProfile_set(): self.set_lasercutterProfile()
 
-		if self.is_migration_required():
-			self._logger.info("Starting migration from v{} to v{}".format(self.version_previous, self.version_current))
+			if self.is_migration_required():
+				self._logger.info("Starting migration from v{} to v{}".format(self.version_previous, self.version_current))
 
-			# migrations
-			if self.version_previous is None or self._compare_versions(self.version_previous, '0.1.13', equal_ok=False):
-				self.migrate_from_0_0_0()
+				# migrations
+				if self.version_previous is None or self._compare_versions(self.version_previous, '0.1.13', equal_ok=False):
+					self.migrate_from_0_0_0()
 
-			if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_DELETE_EGG_DIR_LEFTOVERS, equal_ok=False):
-				self.delete_egg_dir_leftovers()
-			# migrations end
+				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_DELETE_EGG_DIR_LEFTOVERS, equal_ok=False):
+					self.delete_egg_dir_leftovers()
 
-			self.save_current_version()
-		else:
-			self._logger.debug("No migration required.")
+				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_SETUP_IPTABLES, equal_ok=False):
+					self.setup_iptables()
+				# migrations end
+
+				self.save_current_version()
+			else:
+				self._logger.debug("No migration required.")
+		except:
+			self._logger.exception("Unhandled exception during migration: ")
 
 
 	def is_migration_required(self):
@@ -93,19 +101,55 @@ class Migration(object):
 		Our first mrb_check USB sticks updated MrBeamPlugin per 'pip --ignore-installed'
 		which left old egg directories in site-packages.
 		This then caused the plugin to assume it's version is the old version, even though the new code was executed.
-		:return:
 		"""
 		self._logger.info("delete_egg_dir_leftovers() ")
 		site_packages_dir = '/home/pi/site-packages'
-		# files = [f for f in os.listdir(site_packages_dir) if re.match(r'Mr_Beam-([])-py2.7.egg-info', f)]
-		for f in os.listdir(site_packages_dir):
-			match = re.match(r'Mr_Beam-(?P<version>[0-9.]+)[.-].+', f)
-			if match:
-				version = match.group('version')
-				if self._compare_versions(version, self.VERSION_DELETE_EGG_DIR_LEFTOVERS, equal_ok=False):
-					del_dir = os.path.join(site_packages_dir, f)
-					self._logger.info("delete_egg_dir_leftovers() Deleting dir: %s", del_dir)
-					shutil.rmtree(del_dir)
+		if os.path.isdir(site_packages_dir):
+			for f in os.listdir(site_packages_dir):
+				match = re.match(r'Mr_Beam-(?P<version>[0-9.]+)[.-].+', f)
+				if match:
+					version = match.group('version')
+					if self._compare_versions(version, self.VERSION_DELETE_EGG_DIR_LEFTOVERS, equal_ok=False):
+						del_dir = os.path.join(site_packages_dir, f)
+						self._logger.info("delete_egg_dir_leftovers() Deleting dir: %s", del_dir)
+						shutil.rmtree(del_dir)
+		else:
+			self._logger.error("delete_egg_dir_leftovers() Dir not existing '%s', Can't check for egg leftovers.")
+
+
+	def setup_iptables(self):
+		"""
+		Creates iptables config file.
+		This is required to redirect all incoming traffic to localhost.
+		"""
+		self._logger.info("setup_iptables() ")
+		iptables_file = '/etc/network/if-up.d/iptables'
+		iptables_body = """#!/bin/sh
+iptables -t nat -F
+# route all incoming traffic to localhost
+sysctl -w net.ipv4.conf.all.route_localnet=1
+iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
+"""
+
+		command = ['sudo', 'bash', '-c', "echo '{data}' > {file}".format(data=iptables_body, file=iptables_file)]
+		out, code = self._exec_cmd_output(command)
+		if code != 0:
+			self._logger.error("setup_iptables() Error while writing iptables conf: '%s'", out)
+			return
+
+		command = ['sudo', 'chmod', '+x', iptables_file]
+		out, code = self._exec_cmd_output(command)
+		if code != 0:
+			self._logger.error("setup_iptables() Error while chmod iptables conf: '%s'", out)
+			return
+
+		command = ['sudo', 'bash', '-c', iptables_file]
+		out, code = self._exec_cmd_output(command)
+		if code != 0:
+			self._logger.error("setup_iptables() Error while executing iptables conf: '%s'", out)
+			return
+
+		self._logger.info("setup_iptables() Created and loaded iptables conf: '%s'", iptables_file)
 
 
 
@@ -127,7 +171,11 @@ class Migration(object):
 		if laserCutterProfileManager().get_default()['id'] == 'my_default':
 			self._logger.info("set_lasercutterPorfile() Setting lasercutterProfile for device '%s'", self.plugin._device_series)
 
-			if self.plugin._device_series == '2C':
+			if self.plugin._device_series == '2X':
+				# 2X placeholder value.
+				self._logger.error("set_lasercutterProfile() Can't set lasercutterProfile. device_series is %s: ", self.plugin._device_series)
+				return
+			elif self.plugin._device_series == '2C':
 				self.set_lasercutterPorfile_2C()
 			elif self.plugin._device_series == '2D':
 				self.set_lasercutterPorfile_2D()
@@ -188,4 +236,25 @@ class Migration(object):
 			self._logger.info("set_lasercutterPorfile_2D() Created lasercutterProfile '%s' and set as default. Content: %s",profile_id, default_profile)
 
 
+	##########################################################
+	#####                 helpers                        #####
+	##########################################################
 
+	def _exec_cmd_output(self, cmd):
+		'''
+		Executes a system command and returns its output.
+		:param cmd:
+		:return: Tuple(String:output , int return_code)
+				If system returncode was not 0 (zero), output will be the error message
+		'''
+		output = None
+		code = 0
+		self._logger.debug("_exec_cmd_output() command: '%s'", cmd)
+		try:
+			output = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+		except subprocess.CalledProcessError as e:
+			code = e.returncode
+			output = e.output
+			self._logger.debug("Fail to execute command '%s', return code: %s, output: '%s'", cmd, e.returncode, e.output)
+
+		return output, code

@@ -68,7 +68,12 @@ class Laser(Printer):
 	# extend commands: home, position, increase_passes, decrease_passes
 	def home(self, axes):
 		printer_profile = self._printerProfileManager.get_current_or_default()
-		command = "G92X{x}Y{y}Z{z}".format(x=printer_profile['volume']['width'], y=printer_profile['volume']['depth'], z=0)
+		params = dict(
+			x=printer_profile['volume']['width'] + printer_profile['volume']['working_area_shift_x'],
+			y=printer_profile['volume']['depth'] + printer_profile['volume']['working_area_shift_y'],
+			z=0
+		)
+		command = "G92X{x}Y{y}Z{z}".format(**params)
 		self.commands(["$H", command, "G90", "G21"])
 
 	def cancel_print(self):

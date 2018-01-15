@@ -869,6 +869,7 @@ li.nav_version {
 body {
 	padding-top: 48px;  /* necessary for navbar-fixed-top */
 	min-width:620px;
+	color: #383e42;
 }
 
 .octoprint-container {
@@ -1212,7 +1213,7 @@ ul.dropdown-menu li a {
 }
 
 .title_shortened {
-	width: 89%;
+	width: calc(100% - 1.2em);
 	overflow: hidden;
 	display: inline-block;
 	text-overflow: ellipsis;
@@ -2036,98 +2037,10 @@ input.search-query,
   display: none;
 }
 
-/**
- * range.css
- */
-input[type=range] {
-  -webkit-appearance: none;
-  margin: 3.5px 0;
-}
-input[type=range]:focus {
-  outline: none;
-}
-input[type=range]::-webkit-slider-runnable-track {
-  width: 100%;
-  height: 13px;
-  cursor: pointer;
-  background: linear-gradient(to left,  #ffffff 0%,#000000 100%);
-  border-radius: 0px;
-  border: 0.1px solid #828282;
-}
-input[type=range]::-webkit-slider-thumb {
-  border: 1px solid #000000;
-  height: 20px;
-  width: 20px;
-  border-radius: 3px;
-  background: #ffffff;
-  cursor: pointer;
-  -webkit-appearance: none;
-  margin-top: -3.6px;
-}
-input[type=range]::-moz-range-track {
-  width: 100%;
-  height: 13px;
-  cursor: pointer;
-  background: linear-gradient(to left,  #ffffff 0%,#000000 100%);
-  border-radius: 0px;
-  border: 0.1px solid #828282;
-}
-input[type=range]::-moz-range-thumb {
-  border: 1px solid #000000;
-  height: 20px;
-  width: 20px;
-  border-radius: 3px;
-  background: #ffffff;
-  cursor: pointer;
-}
-input[type=range]::-ms-track {
-  width: 100%;
-  height: 13px;
-  cursor: pointer;
-  background: transparent;
-  border-color: transparent;
-  color: transparent;
-}
-input[type=range]::-ms-fill-lower {
-  background: linear-gradient(to left,  #ffffff 0%,#000000 100%);
-  border: 0.1px solid #828282;
-  border-radius: 0px;
-}
-input[type=range]::-ms-fill-upper {
-  background: linear-gradient(to left,  #ffffff 0%,#000000 100%);
-  border: 0.1px solid #828282;
-  border-radius: 0px;
-}
-input[type=range]::-ms-thumb {
-  border: 1px solid #000000;
-  height: 20px;
-  width: 20px;
-  border-radius: 3px;
-  background: #ffffff;
-  cursor: pointer;
-  height: 13px;
-}
 
 .full-col {
 	height: calc(100vh - 60px);
 	/*overflow-y: auto;*/
-}
-
-::-webkit-scrollbar-track
-{
-	-webkit-box-shadow: inset 0 0 4px rgba(0,0,0,0.3);
-	background-color: #F5F5F5;
-}
-
-::-webkit-scrollbar
-{
-	width: 4px;
-	background-color: #F5F5F5;
-}
-
-::-webkit-scrollbar-thumb
-{
-	background-color: #e25303;
 }
 
 /*This was to fix the body on touch devices. Not sure, maybe we'll need it....'*/
@@ -2138,4 +2051,8 @@ input[type=range]::-ms-thumb {
 
 .scrollable {
   /* just a flag to mark elements that need to be scrollable on touch devices. Also see mrbeam.js */
+}
+
+.no-transition {
+    transition-duration: 0s,0s,0s,0s !IMPORTANT;
 }
