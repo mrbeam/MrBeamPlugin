@@ -1328,7 +1328,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def on_event(self, event, payload):
 		if payload is None or not isinstance(payload, collections.Iterable) or not 'log' in payload or payload['log']:
-			self._logger.debug("on_event %s: %s", event, payload)
+			self._logger.info("on_event() %s: %s", event, payload)
+
+		if event == OctoPrintEvents.ERROR:
+			self._logger.error("on_event() Error Event! Message: %s", payload['error'])
 
 		if event == OctoPrintEvents.CLIENT_OPENED:
 			self._replay_stored_frontend_notification()

@@ -182,6 +182,7 @@ class MachineCom(object):
 				self._errorValue = errorMsg
 				self._changeState(self.STATE_ERROR)
 				eventManager().fire(Events.ERROR, {"error": self.getErrorString()})
+				self._logger.dump_terminal_buffer(level=logging.ERROR)
 		self._log("Connection closed, closing down monitor")
 
 	def _send_loop(self):
@@ -213,6 +214,7 @@ class MachineCom(object):
 				self._errorValue = errorMsg
 				self._changeState(self.STATE_ERROR)
 				eventManager().fire(Events.ERROR, {"error": self.getErrorString()})
+				self._logger.dump_terminal_buffer(level=logging.ERROR)
 
 	def _metric_loop(self):
 		self._metricf = open('metric.tmp','w')
@@ -285,6 +287,7 @@ class MachineCom(object):
 					self._changeState(self.STATE_ERROR)
 					eventManager().fire(Events.ERROR, {"error": self.getErrorString()})
 					self._log("Failed to autodetect serial port, please set it manually.")
+					self._logger.dump_terminal_buffer(level=logging.ERROR)
 					return None
 				port = ser.port
 
@@ -312,6 +315,7 @@ class MachineCom(object):
 				self._log("Unexpected error while connecting to serial port: %s %s (hook %s)" % (self._port, exception_string, name))
 				if "failed to set custom baud rate" in exception_string.lower():
 					self._log("Your installation does not support custom baudrates (e.g. 250000) for connecting to your printer. This is a problem of the pyserial library that OctoPrint depends on. Please update to a pyserial version that supports your baudrate or switch your printer's firmware to a standard baudrate (e.g. 115200). See https://github.com/foosel/OctoPrint/wiki/OctoPrint-support-for-250000-baud-rate-on-Raspbian")
+				self._logger.dump_terminal_buffer(level=logging.ERROR)
 				return False
 			if serial_obj is not None:
 				# first hook to succeed wins, but any can pass on to the next
@@ -412,6 +416,7 @@ class MachineCom(object):
 		self._errorValue = line
 		eventManager().fire(Events.ERROR, {"error": self.getErrorString()})
 		self._changeState(self.STATE_LOCKED)
+		self._logger.dump_terminal_buffer(level=logging.ERROR)
 
 	def _handle_alarm_message(self, line):
 		if "Hard/soft limit" in line:
@@ -419,15 +424,18 @@ class MachineCom(object):
 			self._log(errorMsg)
 			self._errorValue = errorMsg
 			eventManager().fire(Events.ERROR, {"error": self.getErrorString()})
+			self._logger.dump_terminal_buffer(level=logging.ERROR)
 		elif "Abort during cycle" in line:
 			errorMsg = "Soft-reset detected. Please do a homing cycle"
 			self._log(errorMsg)
 			self._errorValue = errorMsg
+			self._logger.dump_terminal_buffer(level=logging.ERROR)
 		elif "Probe fail" in line:
 			errorMsg = "Probing has failed. Please reset the machine and do a homing cycle"
 			self._log(errorMsg)
 			self._errorValue = errorMsg
 			eventManager().fire(Events.ERROR, {"error": self.getErrorString()})
+			self._logger.dump_terminal_buffer(level=logging.ERROR)
 
 		with self._commandQueue.mutex:
 			self._commandQueue.queue.clear()
@@ -458,6 +466,7 @@ class MachineCom(object):
 				self._log(errorMsg)
 				self._errorValue = errorMsg
 				eventManager().fire(Events.ERROR, {"error": self.getErrorString()})
+				self._logger.dump_terminal_buffer(level=logging.ERROR)
 		elif line[1:].startswith('Cau'): # [Caution: Unlocked]
 			pass
 		elif line[1:].startswith('Ena'): # [Enabled]
@@ -927,6 +936,7 @@ class MachineCom(object):
 			self._errorValue = get_exception_string()
 			self._changeState(self.STATE_ERROR)
 			eventManager().fire(Events.ERROR, {"error": self.getErrorString()})
+			self._logger.dump_terminal_buffer(level=logging.ERROR)
 
 	def cancelPrint(self):
 		if not self.isOperational():

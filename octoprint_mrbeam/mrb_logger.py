@@ -1,14 +1,17 @@
 import sys
 import datetime
 import logging
+import collections
+import copy
+import threading
 
 
 _printer = None
 
+
 def init_mrb_logger(printer):
 	global _printer
 	_printer = printer
-
 
 def mrb_logger(id):
 	return MrbLogger(id)
@@ -16,10 +19,13 @@ def mrb_logger(id):
 
 class MrbLogger(object):
 
+	terminal_buffer = collections.deque(maxlen=100)
+
 	def __init__(self, id, ignorePrinter=False):
 		global _printer
 		self.logger = logging.getLogger(id)
 		self.id = self._shorten_id(id)
+		self.my_buffer = []
 
 
 	def _terminal(self, msg, *args, **kwargs):
@@ -34,6 +40,9 @@ class MrbLogger(object):
 			exctype, value = sys.exc_info()[:2]
 			exception = " (Exception: {type} - {value})".format(type=exctype, value=value)
 		output = "{date} {level}{space}{id}: {msg}{exception}".format(date=date, space=(' ' if id else ''), id=id, level=level, msg=msg, exception=exception)
+
+		if level == '_COMM_':
+			MrbLogger.terminal_buffer.append(output)
 
 		if _printer:
 			_printer.on_comm_log(output)
@@ -76,6 +85,25 @@ class MrbLogger(object):
 		if kwargs.pop('terminal', True):
 			self._terminal(msg, *args, level='EXCEPTION', exc_info=True, **kwargs)
 		self.logger.exception(msg, *args, **kwargs)
+
+	def dump_terminal_buffer(self, level=logging.INFO, repeat=True):
+		if repeat:
+			self.my_buffer = copy.copy(MrbLogger.terminal_buffer)
+		else:
+			self.my_buffer.extend(MrbLogger.terminal_buffer)
+		MrbLogger.terminal_buffer.clear()
+
+		if repeat:
+			temp_timer = threading.Timer(2.0, self.dump_terminal_buffer, kwargs=(dict(level=level, repeat=False)))
+			temp_timer.daemon = True
+			temp_timer.name = "MrbLoggerTimer"
+			temp_timer.start()
+		else:
+			my_logger = logging.getLogger('octoprint.plugins.mrbeam.terminal_dump')
+			my_logger.log(level, " ******* Dumping terminal buffer (len: %s)", len(self.my_buffer))
+			for line in self.my_buffer:
+				my_logger.log(level, line)
+			self.my_buffer.clear()
 
 	def _shorten_id(self, id):
 		return id.replace('octoprint.plugins.', '')
