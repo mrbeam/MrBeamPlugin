@@ -834,6 +834,7 @@ class MachineCom(object):
 				return
 
 		if cmd[0] == "/":
+			self._log("Command: %s" % cmd)
 			specialcmd = cmd[1:].lower()
 			if "togglestatusreport" in specialcmd:
 				if self._status_timer is None:
@@ -869,8 +870,8 @@ class MachineCom(object):
 				self._log("available commands are:")
 				self._log("   /togglestatusreport")
 				self._log("   /setstatusfrequency <Inteval Sec>")
-				self._log("   /feedrate <%>")
-				self._log("   /intensity <%>")
+				self._log("   /feedrate <f>")
+				self._log("   /intensity <s>")
 				self._log("   /disconnect")
 				self._log("   /reset")
 			return
