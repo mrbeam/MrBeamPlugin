@@ -384,6 +384,7 @@ class MachineCom(object):
 				if not self.isPaused():
 					self._logger.warn("_handle_status_report() Pausing since we got status 'Queue' from grbl.")
 					self.setPause(True, send_cmd=False, trigger="GRBL_QUEUE")
+					self._logger.dump_terminal_buffer(logging.WARN)
 		elif self._grbl_state == 'Run' or self._grbl_state == 'Idle':
 			if time.time() - self._pause_delay_time > 0.3:
 				if self.isPaused():
