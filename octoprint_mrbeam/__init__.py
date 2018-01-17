@@ -194,6 +194,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			svgDPI=90,
 			dxfScale=1,
 			beta_label="BETA",
+			terminal=False,
 			dev=dict(
 				debug=False, # deprected
 				terminalMaxLines = 2000,
@@ -244,6 +245,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			current_profile_id=self._settings.get(["current_profile_id"]),
 			svgDPI=self._settings.get(['svgDPI']),
 			dxfScale=self._settings.get(['dxfScale']),
+			terminal=self._settings.get(['terminal']),
 			analyticsEnabled=self._settings.get(['analyticsEnabled']),
 			cam=dict(enabled=self._settings.get(['cam', 'enabled']),
 					 frontendUrl=self._settings.get(['cam', 'frontendUrl'])),
@@ -269,6 +271,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._settings.set_int(["svgDPI"], data["svgDPI"])
 		if "dxfScale" in data:
 			self._settings.set_float(["dxfScale"], data["dxfScale"])
+		if "terminal" in data:
+			self._settings.set_boolean(["terminal"], data["terminal"])
 
 		# selectedProfile = self.laserCutterProfileManager.get_current_or_default()
 		# self._settings.set(["current_profile_id"], selectedProfile['id'])
@@ -344,22 +348,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 gcodeThreshold=0,
 							 wizard=wizard,
 							 now=now,
-							 # beamosVersion= dict(
-								# number = self._plugin_version,
-								# branch= self._branch,
-								# display_version = display_version_string,
-							 # 	image = self._octopi_info),
-							 # ),
+
 							 beamosVersionNumber = self._plugin_version,
 							 beamosVersionBranch = self._branch,
 							 beamosVersionDisplayVersion = display_version_string,
 							 beamosVersionImage = self._octopi_info,
-							 # env= dict(
-								#  env=self.get_env(),
-								#  local=self.get_env(self.ENV_LOCAL),
-								#  laser_safety=self.get_env(self.ENV_LASER_SAFETY),
-								#  analytics=self.get_env(self.ENV_ANALYTICS)
-							 # ),
+
 							 env=self.get_env(),
 							 env_local=self.get_env(self.ENV_LOCAL),
 							 env_laser_safety=self.get_env(self.ENV_LASER_SAFETY),
@@ -371,7 +365,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 software_tier=self._settings.get(["dev", "software_tier"]),
 							 analyticsEnabled=self._settings.get(["analyticsEnabled"]),
 							 beta_label=self._settings.get(['beta_label']),
-							 terminalEnabled=not self.is_prod_env(self.ENV_LOCAL),
+							 terminalEnabled=self._settings.get(['terminal']),
 						 ))
 		r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
 
@@ -385,6 +379,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		result = [
 			dict(type='settings', name="File Import Settings", template='settings/svgtogcode_settings.jinja2', suffix="_conversion", custom_bindings=False),
             dict(type='settings', name="Camera Calibration", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
+            dict(type='settings', name="Debug", template='settings/debug_settings.jinja2', suffix="_debug", custom_bindings=False),
             dict(type='settings', name="About This Mr Beam", template='settings/about_settings.jinja2', suffix="_about", custom_bindings=False)
 			# disabled in appearance
 			# dict(type='settings', name="Serial Connection DEV", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings=False, replaces='serial')
@@ -1622,8 +1617,8 @@ def __plugin_load__():
 	global __plugin_settings_overlay__
 	__plugin_settings_overlay__ = dict(
 		plugins=dict(
-			_disabled=['cura', 'pluginmanager', 'announcements', 'corewizard', 'octopi_support']   # eats dict | pfad.yml | callable
-			# _disabled=['cura', 'pluginmanager', 'announcements', 'corewizard', 'mrbeam']  # eats dict | pfad.yml | callable
+			_disabled=['cura', 'pluginmanager', 'announcements', 'corewizard', 'octopi_support']   # accepts dict | pfad.yml | callable
+			# _disabled=['cura', 'pluginmanager', 'announcements', 'corewizard', 'mrbeam']  # accepts dict | pfad.yml | callable
 		),
 		terminalFilters = [
 			dict(name="Filter beamOS messages", regex="^([0-9,.: ]+ [A-Z]+ mrbeam)", activated=True),
@@ -1634,7 +1629,7 @@ def __plugin_load__():
 			order=dict(
 				wizard=["plugin_mrbeam_wifi", "plugin_mrbeam_acl", "plugin_mrbeam_lasersafety"],
 				settings = ['plugin_softwareupdate', 'accesscontrol', 'plugin_netconnectd', 'plugin_mrbeam_conversion',
-				            'plugin_mrbeam_camera', 'logs', 'plugin_mrbeam_about']
+				            'plugin_mrbeam_camera', 'logs', 'plugin_mrbeam_debug', 'plugin_mrbeam_about']
 			),
 			disabled=dict(
 				wizard=['plugin_softwareupdate'],
