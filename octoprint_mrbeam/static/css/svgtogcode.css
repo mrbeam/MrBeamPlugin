@@ -572,16 +572,15 @@ li.material_entry span {
     margin: 0;
 }
 
-#material_type, #material_color, #material_thickness {
-	width: 20%;
+#material_type, #material_color, #material_thickness, #save_material_flyin {
+	width: calc(200px + 2em);
 	display: inline-block;
 	box-sizing: border-box;
-	/*position: absolute;*/
+	vertical-align: top;
 	transition: width .1s ease-in;
 	background-color: #fff;
 }
 #material_type.active { width: 100%; }
-#material_type, #material_color, #material_thickness  { width: calc(200px + 2em); }
 #material_color.active { width: calc(100% - 200px - 3em); }
 #material_thickness.active { width: calc(100% - 2 * (200px + 6em)); }
 
@@ -592,6 +591,8 @@ li.material_entry span {
     background-size: cover, contain;
     border-top: 1px solid #e25303;
 }
+
+#save_material_flyin {padding-top:1em;}
 
 .not_possible_on_this_material {
 	color:#999;

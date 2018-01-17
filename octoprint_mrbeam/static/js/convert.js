@@ -314,6 +314,27 @@ $(function(){
 						]
 					}
 				}
+			},
+		
+			custom_material: {
+				name: 'Custom',
+				img: 'custom.jpg',
+				description: 'Just a Dummy material',
+				hints: 'Figuring out material settings works best from low to high intensity and fast to slow movement.',
+				safety_notes: 'Experimenting with custom material settings is your responsibility.',
+				laser_type: 'MrBeamII-1.0',
+				colors: {
+					'd4b26f': {
+						engrave: {eng_i:[0,20], eng_f:[2000,350], pierceTime: 0, dithering: false },
+						cut: [
+							{thicknessMM: 1, cut_i:80, cut_f:700, cut_p:2},
+							{thicknessMM: 2, cut_i:100, cut_f:700, cut_p:1},
+							{thicknessMM: 3, cut_i:100, cut_f:700, cut_p:2},
+							{thicknessMM: 4, cut_i:100, cut_f:600, cut_p:3},
+							{thicknessMM: 5, cut_i:100, cut_f:300, cut_p:3}
+						]
+					}
+				}
 			}
 		};
 		self.engrave_only_thickness = {thicknessMM: -1, cut_i:'', cut_f:'', cut_p: 1};
@@ -329,29 +350,8 @@ $(function(){
 		self.material_description = ko.observable('');
 		self.has_engraving_proposal = ko.observable(false);
 		self.has_cutting_proposal = ko.observable(false);
+		self.customized_material = ko.observable(false);
 
-//		self._engraving_params_available = function(){
-//			var mat = self.selected_material();
-//			var col = self.selected_material_color();
-//			var th = self.selected_material_thickness();
-//			if(mat === null || col === null || th === null){
-//				return false;
-//			} else {
-//				var param_set = self.get_closest_color_params();
-//				return param_set.engrave !== null;
-//			}
-//		};
-//		self._cutting_params_available = function(){
-//			var mat = self.selected_material();
-//			var col = self.selected_material_color();
-//			var th = self.selected_material_thickness();
-//			if(mat === null || col === null || th === null){
-//				return false;
-//			} else {
-//				var param_set = self.get_closest_thickness_params();
-//				return param_set.thicknessMM > 0;
-//			}
-//		};
 
 		self.expandMaterialSelector = ko.computed(function(){
 			return self.selected_material() === null || self.selected_material_color() === null || self.selected_material_thickness() === null;
@@ -368,6 +368,29 @@ $(function(){
 			if(mat !== null)
 			return mat === null ? '' : mat.img;
 		 });
+		 
+		self.flag_customized_material = function(){
+			self.customized_material(true);
+		};
+		
+		self.reset_material_settings = function(){
+			self.apply_engraving_proposal();
+			self.apply_vector_proposal();
+		};
+		
+		self.save_material_settings = function(){
+			// get material name
+			// get material color
+			// get material thickness
+			var multicolor_data = self.get_current_multicolor_settings();
+			// TODO find strongest job of all colors, use this for cutting.
+			var engraving_data = self.get_current_engraving_settings();
+			console.log("Save material settings", multicolor_data, engraving_data);
+			// TODO build a material object
+			// save it locally
+			// push it to our cloud.
+		};
+		
 
 		self.get_closest_thickness_params = function(){
 			var selected = self.selected_material_thickness();
@@ -588,28 +611,27 @@ $(function(){
 				$(job).find('.param_passes').val(p.cut_p || 0);
 				$(job).find('.param_piercetime').val(p.cut_pierce || 0);
 			}
+			self.customized_material(false);
 		};
 		self.apply_engraving_proposal = function(){
 			var material = self.selected_material();
 			var param_set = self.get_closest_color_params();
 			var p = self.no_engraving;
-			var name = '';
 			if(material !== null && param_set !== null && param_set.engrave !== null){
 				p = param_set.engrave;
-				name = material.name;
 				self.has_engraving_proposal(true);
 			} else {
 				self.has_engraving_proposal(false);
 				console.warn("No engraving settings available for "+ material);
 			}
 
-			var job = $('#engrave_job');
 			self.imgIntensityWhite(p.eng_i[0]);
 			self.imgIntensityBlack(p.eng_i[1]);
 			self.imgFeedrateWhite(p.eng_f[0]);
 			self.imgFeedrateBlack(p.eng_f[1]);
 			self.imgDithering(p.dithering);
 			self.engravingPiercetime(p.eng_pierce || 0);
+			self.customized_material(false);
 		};
 
 		self._find_closest_color_to = function(hex, available_colors){
