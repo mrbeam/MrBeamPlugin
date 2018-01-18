@@ -1178,6 +1178,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._printer.set_passes(data["value"])
 		elif command == "lasersafety_confirmation":
 			return self.lasersafety_wizard_api(data)
+		elif command == "save_custom_material":
+			return self.save_custom_material(data)
 		elif command == "ready_to_laser":
 			return self.ready_to_laser(data)
 		elif command == "camera_calibration_markers":
