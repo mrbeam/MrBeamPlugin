@@ -19,6 +19,8 @@ def mrb_logger(id):
 
 class MrbLogger(object):
 
+	LEVEL_COMM = '_COMM_'
+
 	terminal_buffer = collections.deque(maxlen=100)
 
 	def __init__(self, id, ignorePrinter=False):
@@ -26,6 +28,8 @@ class MrbLogger(object):
 		self.logger = logging.getLogger(id)
 		self.id = self._shorten_id(id)
 		self.my_buffer = []
+		# TODO: this line overrides logging.yaml!!!
+		self.logger.setLevel(logging.DEBUG)
 
 
 	def _terminal(self, msg, *args, **kwargs):
@@ -41,7 +45,7 @@ class MrbLogger(object):
 			exception = " (Exception: {type} - {value})".format(type=exctype, value=value)
 		output = "{date} {level}{space}{id}: {msg}{exception}".format(date=date, space=(' ' if id else ''), id=id, level=level, msg=msg, exception=exception)
 
-		if level == '_COMM_':
+		if level == self.LEVEL_COMM:
 			MrbLogger.terminal_buffer.append(output)
 
 		if _printer:
@@ -51,7 +55,7 @@ class MrbLogger(object):
 
 
 	def comm(self, msg, *args, **kwargs):
-		self._terminal(msg, *args, level='_COMM_', id='', **kwargs)
+		self._terminal(msg, *args, level=self.LEVEL_COMM, id='', **kwargs)
 
 	def debug(self, msg, *args, **kwargs):
 		if kwargs.pop('terminal', False):
