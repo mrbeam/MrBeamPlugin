@@ -552,7 +552,6 @@ li.material_entry span {
 
 #material_row {
 	width: 100%;
-	overflow-x: hidden;
 	position: relative;
 	transition: height .3s ease-in-out;
 	margin-bottom: 1em;
@@ -593,6 +592,11 @@ li.material_entry span {
 }
 
 #save_material_flyin {padding-top:1em;}
+
+#save_material_flyin form { margin:0; }
+#save_material_flyin .control-group { margin-bottom:.5em; }
+#save_material_flyin label.control-label { width:120px; }
+#save_material_flyin .controls { margin-left:130px; }
 
 .not_possible_on_this_material {
 	color:#999;

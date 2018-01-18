@@ -72,8 +72,36 @@
 				</div>
 				
 				<div id="save_material_flyin" data-bind="visible: customized_material()">
-					<a href="#" data-bind="click: reset_material_settings"><i class="icon-repeat"></i> {{ _('Reset to defaults') }}</a><br/>
-					<a href="#" data-bind="click: save_material_settings"><i class="icon-star"></i> {{ _('Save custom material') }}</a>
+					<a data-bind="click: reset_material_settings"><i class="icon-repeat"></i> {{ _('Reset to defaults') }}</a>
+					<div class="dropdown">
+						<a class="dropdown-toggle" data-toggle="dropdown" href="#" data-bind="click: save_material_settings"><i class="icon-star"></i> {{ _('Save custom material') }}</a>
+						<div class="dropdown-menu" role="menu" style="padding:.5em">
+							<form class="form-horizontal" style="margin:0">
+								<div class="control-group">
+									<label class="control-label" for="custom_mat_name"> {{ _('Material Name') }}</label>
+									<div class="controls">
+										<input id="custom_mat_name" type="text" data-bind="value:save_custom_material_name" placeholder="your name of choice">
+									</div>
+								</div>
+								<div class="control-group">
+									<label class="control-label" for="custom_mat_th"> {{ _('Thickness') }}</label>
+									<div class="controls">
+										<input id="custom_mat_th" type="number" min="0" max="38" data-bind="value:save_custom_material_thickness">
+									</div>
+								</div>
+								<div class="control-group">
+									<label class="control-label" for="custom_mat_col"> {{ _('Color') }}</label>
+									<div class="controls">
+										<input id="custom_mat_col" type="color" min="0" max="38" data-bind="value:save_custom_material_color">
+									</div>
+								</div>
+								<div class="controls">
+									<a class="btn" data-toggle="dropdown" href="#"><i class="icon-remove"></i> {{ _('Cancel') }}</a>
+									<a class="btn" data-bind="click: save_material_settings"><i class="icon-ok"></i> {{ _('Save') }}</a>
+								</div>
+							</form>
+						</div>
+					</div>
 				</div>
 
 				<div id="material_info">

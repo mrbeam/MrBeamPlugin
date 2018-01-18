@@ -350,7 +350,11 @@ $(function(){
 		self.material_description = ko.observable('');
 		self.has_engraving_proposal = ko.observable(false);
 		self.has_cutting_proposal = ko.observable(false);
+
 		self.customized_material = ko.observable(false);
+		self.save_custom_material_name = ko.observable("");
+		self.save_custom_material_thickness = ko.observable(1);
+		self.save_custom_material_color = ko.observable("#000000");
 
 
 		self.expandMaterialSelector = ko.computed(function(){
@@ -379,16 +383,52 @@ $(function(){
 		};
 		
 		self.save_material_settings = function(){
-			// get material name
-			// get material color
-			// get material thickness
-			var multicolor_data = self.get_current_multicolor_settings();
-			// TODO find strongest job of all colors, use this for cutting.
-			var engraving_data = self.get_current_engraving_settings();
-			console.log("Save material settings", multicolor_data, engraving_data);
-			// TODO build a material object
+			var vectors = self.get_current_multicolor_settings();
+			var strength = 0;
+			var strongest;
+			for (var i = 0; i < vectors.length; i++) {
+				var v = vectors[i];
+				var s = v.intensity_user * v.passes / v.feedrate;
+				if(s > strength) strongest = v;
+			}
+
+			var e = self.get_current_engraving_settings();
+			var name = self.save_custom_material_name();
+			var thickness = self.save_custom_material_thickness();
+			var color = self.save_custom_material_color().substr(1,6);
+			var params = {
+				engrave: {eng_i: [e.intensity_white_user, e.intensity_black_user], eng_f: [e.speed_white, e.speed_black], pierceTime: e.pierce_time, dithering: e.dithering},
+				cut: [
+					{thicknessMM: thickness, cut_i: strongest.intensity_user, cut_f: strongest.feedrate, cut_p: strongest.passes},
+				]
+			};
+			var new_material = {
+				name: name,
+				img: 'custom.jpg',
+				description: 'custom material',
+				hints: 'Figuring out material settings works best from low to high intensity and fast to slow movement.',
+				safety_notes: 'Experimenting with custom material settings is your responsibility.',
+				laser_type: 'MrBeamII-1.0', 
+				colors: {}
+			};
+			new_material.colors[color] = params;
+				
 			// save it locally
-			// push it to our cloud.
+			// push it to our cloud. (backend?)
+			$.ajax({
+				url: "plugin/mrbeam/save_custom_material",
+				type: "POST",
+				dataType: "json",
+				contentType: "application/json; charset=UTF-8",
+				data: JSON.stringify(new_material),
+				error: function(){
+					console.error("unable to save custom material:", new_material);
+				},
+				success: function(){
+					console.log("saved custom material:", new_material);
+					$('#save_material_flyin dropdown').dropdown('toggle');
+				}
+			});
 		};
 		
 
