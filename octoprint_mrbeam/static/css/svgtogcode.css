@@ -598,6 +598,13 @@ li.material_entry span {
 #save_material_flyin label.control-label { width:120px; }
 #save_material_flyin .controls { margin-left:130px; }
 
+#custom_mat_col {
+	width: 3em;
+	height: 3em;
+}
+
+#custom_mat_th { width: 3em; margin-right: .5em; }
+
 .not_possible_on_this_material {
 	color:#999;
 }

@@ -385,22 +385,26 @@ $(function(){
 		self.save_material_settings = function(){
 			var vectors = self.get_current_multicolor_settings();
 			var strength = 0;
-			var strongest;
+			var strongest = null;
 			for (var i = 0; i < vectors.length; i++) {
 				var v = vectors[i];
 				var s = v.intensity_user * v.passes / v.feedrate;
 				if(s > strength) strongest = v;
 			}
+			var cut_setting = [];
+			if(strongest !== null){
+				cut_setting = {thicknessMM: thickness, cut_i: strongest.intensity_user, cut_f: strongest.feedrate, cut_p: strongest.passes};
+			}
 
 			var e = self.get_current_engraving_settings();
+			var engrave_setting = {eng_i: [e.intensity_white_user, e.intensity_black_user], eng_f: [e.speed_white, e.speed_black], pierceTime: e.pierce_time, dithering: e.dithering};
+			
 			var name = self.save_custom_material_name();
 			var thickness = self.save_custom_material_thickness();
 			var color = self.save_custom_material_color().substr(1,6);
 			var params = {
-				engrave: {eng_i: [e.intensity_white_user, e.intensity_black_user], eng_f: [e.speed_white, e.speed_black], pierceTime: e.pierce_time, dithering: e.dithering},
-				cut: [
-					{thicknessMM: thickness, cut_i: strongest.intensity_user, cut_f: strongest.feedrate, cut_p: strongest.passes},
-				]
+				engrave: engrave_setting,
+				cut: cut_setting
 			};
 			var new_material = {
 				name: name,
