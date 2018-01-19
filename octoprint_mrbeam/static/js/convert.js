@@ -315,7 +315,7 @@ $(function(){
 					}
 				}
 			},
-		
+
 			custom_material: {
 				name: 'Custom',
 				img: 'custom.jpg',
@@ -372,16 +372,16 @@ $(function(){
 			if(mat !== null)
 			return mat === null ? '' : mat.img;
 		 });
-		 
+
 		self.flag_customized_material = function(){
 			self.customized_material(true);
 		};
-		
+
 		self.reset_material_settings = function(){
 			self.apply_engraving_proposal();
 			self.apply_vector_proposal();
 		};
-		
+
 		self.save_material_settings = function(){
 			var vectors = self.get_current_multicolor_settings();
 			var strength = 0;
@@ -408,29 +408,29 @@ $(function(){
 				description: 'custom material',
 				hints: 'Figuring out material settings works best from low to high intensity and fast to slow movement.',
 				safety_notes: 'Experimenting with custom material settings is your responsibility.',
-				laser_type: 'MrBeamII-1.0', 
+				laser_type: 'MrBeamII-1.0',
 				colors: {}
 			};
 			new_material.colors[color] = params;
-				
+
 			// save it locally
 			// push it to our cloud. (backend?)
-			$.ajax({
-				url: "plugin/mrbeam/save_custom_material",
-				type: "POST",
-				dataType: "json",
-				contentType: "application/json; charset=UTF-8",
-				data: JSON.stringify(new_material),
-				error: function(){
-					console.error("unable to save custom material:", new_material);
-				},
-				success: function(){
+            var postData = {
+                addMaterials: [new_material]
+            };
+            OctoPrint.simpleApiCommand("mrbeam", "custom_materials", postData)
+                .done(function(){
 					console.log("saved custom material:", new_material);
 					$('#save_material_flyin dropdown').dropdown('toggle');
-				}
-			});
+				})
+                .fail(function(){
+					console.error("unable to save custom material:", postData);
+				});
+            // read existing materials from
+            // self.settings.settings.plugins.mrbeam.custom_materials()
+
 		};
-		
+
 
 		self.get_closest_thickness_params = function(){
 			var selected = self.selected_material_thickness();

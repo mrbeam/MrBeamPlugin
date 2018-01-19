@@ -237,7 +237,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				optimize_travel = True,
 				small_paths_first = True,
 				clip_working_area = False # this is due a bug in clipping. Would be great if we could fix it an enable it again.
-			)
+			),
+			custom_materials = []
 		)
 
 	def on_settings_load(self):
@@ -258,7 +259,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				optimize_travel = self._settings.get(['gcode_nextgen', 'optimize_travel']),
 				small_paths_first = self._settings.get(['gcode_nextgen', 'small_paths_first']),
 				clip_working_area = self._settings.get(['gcode_nextgen', 'clip_working_area'])
-			)
+			),
+			custom_materials =  self._settings.get(['custom_materials'])
 		)
 
 	def on_settings_save(self, data):
@@ -661,74 +663,91 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		else:
 			return NO_CONTENT
 
-	# simpleApiCommand: save_custom_material;
-	def save_custom_material(self, data):
+	# simpleApiCommand: custom_materials;
+	def custom_materials(self, data):
 		from flask.ext.login import current_user
 		from octoprint.server.api import NO_CONTENT
 
-		# get JSON from request data, or send user back home
-		data = request.values
-		if hasattr(request, "json") and request.json:
-			data = request.json
-		else:
-			return make_response("Unable to interprete request", 400)
+		self._logger.info("ANDYTEST custom_material(): %s", data)
 
-		# check if username is ok
-		if current_user is None \
-				or current_user.is_anonymous() \
-				or not current_user.is_user() \
-				or not current_user.is_active():
-			return make_response("Invalid user", 403)
+		try:
+			if 'addMaterials' in data:
+				for nuMaterial in data['addMaterials']:
+					custom_materials = self._settings.get(['custom_materials'])
+					custom_materials.append(nuMaterial)
+					self._settings.set(['custom_materials'], custom_materials)
+				self._settings.save(force=True)
+		except:
+			self._logger.exception("Exception while handling custom_materials() with 'addMaterials': ")
+			return make_response("Error while handling your request.", 500)
 
-		# TODO store material locally / merge into yaml
+		return NO_CONTENT
 
-		# see if we nee to send this to the cloud
-		needSubmission = True
-		if needSubmission:
-			# get cloud env to use
-			debug = self.get_env(self.ENV_LASER_SAFETY)
 
-			payload = {'ts': time.time(),
-					   'email': current_user.get_name(),
-					   'serial': self._serial,
-					   'hostname': self._hostname,
-					   'material': data }
 
-			if debug is not None and debug.upper() != self.ENV_PROD:
-				payload['debug'] = debug
-
-			self._logger.debug("SaveCustomMaterial - cloud request: url: %s, payload: %s", self.CUSTOM_MATERIAL_STORAGE_URL, payload)
-
-			# actual request
-			successfullySubmitted = False
-			responseCode = ''
-			responseFull = ''
-			httpCode = -1
-			try:
-				r = requests.post(self.CUSTOM_MATERIAL_STORAGE_URL, data=payload)
-				responseCode = r.text.lstrip().split(' ', 1)[0]
-				responseFull = r.text
-				httpCode = r.status_code
-				if responseCode == 'OK' or responseCode == 'OK_DEBUG':
-					successfullySubmitted = True
-			except Exception as e:
-				responseCode = "EXCEPTION"
-				responseFull = str(e.args)
-
-			submissionDate = time.time() if successfullySubmitted else -1
-			showAgain = showAgain if successfullySubmitted else True
-			
-			# and drop a line into the log on info level this is important
-			self._logger.info("CustomMaterial: confirmation response: (%s) %s, submissionDate: %s, showAgain: %s, full response: %s",
-							  httpCode, responseCode, submissionDate, showAgain, responseFull)
-		else:
-			self._logger.info("CustomMaterial: custom material already sent. showAgain: %s", showAgain)
-			self.setUserSetting(username, self.USER_SETTINGS_KEY_LASERSAFETY_CONFIRMATION_SHOW_AGAIN, showAgain)
-
-		if needSubmission and not successfullySubmitted:
-			return make_response("Failed to submit custom material to cloud.", 901)
-		else:
-			return NO_CONTENT
+		# # get JSON from request data, or send user back home
+		# data = request.values
+		# if hasattr(request, "json") and request.json:
+		# 	data = request.json
+		# else:
+		# 	return make_response("Unable to interprete request", 400)
+		#
+		# # check if username is ok
+		# if current_user is None \
+		# 		or current_user.is_anonymous() \
+		# 		or not current_user.is_user() \
+		# 		or not current_user.is_active():
+		# 	return make_response("Invalid user", 403)
+		#
+		# # TODO store material locally / merge into yaml
+		#
+		# # see if we nee to send this to the cloud
+		# needSubmission = True
+		# if needSubmission:
+		# 	# get cloud env to use
+		# 	debug = self.get_env(self.ENV_LASER_SAFETY)
+		#
+		# 	payload = {'ts': time.time(),
+		# 			   'email': current_user.get_name(),
+		# 			   'serial': self._serial,
+		# 			   'hostname': self._hostname,
+		# 			   'material': data }
+		#
+		# 	if debug is not None and debug.upper() != self.ENV_PROD:
+		# 		payload['debug'] = debug
+		#
+		# 	self._logger.debug("SaveCustomMaterial - cloud request: url: %s, payload: %s", self.CUSTOM_MATERIAL_STORAGE_URL, payload)
+		#
+		# 	# actual request
+		# 	successfullySubmitted = False
+		# 	responseCode = ''
+		# 	responseFull = ''
+		# 	httpCode = -1
+		# 	try:
+		# 		r = requests.post(self.CUSTOM_MATERIAL_STORAGE_URL, data=payload)
+		# 		responseCode = r.text.lstrip().split(' ', 1)[0]
+		# 		responseFull = r.text
+		# 		httpCode = r.status_code
+		# 		if responseCode == 'OK' or responseCode == 'OK_DEBUG':
+		# 			successfullySubmitted = True
+		# 	except Exception as e:
+		# 		responseCode = "EXCEPTION"
+		# 		responseFull = str(e.args)
+		#
+		# 	submissionDate = time.time() if successfullySubmitted else -1
+		# 	showAgain = showAgain if successfullySubmitted else True
+		#
+		# 	# and drop a line into the log on info level this is important
+		# 	self._logger.info("CustomMaterial: confirmation response: (%s) %s, submissionDate: %s, showAgain: %s, full response: %s",
+		# 					  httpCode, responseCode, submissionDate, showAgain, responseFull)
+		# else:
+		# 	self._logger.info("CustomMaterial: custom material already sent. showAgain: %s", showAgain)
+		# 	self.setUserSetting(username, self.USER_SETTINGS_KEY_LASERSAFETY_CONFIRMATION_SHOW_AGAIN, showAgain)
+		#
+		# if needSubmission and not successfullySubmitted:
+		# 	return make_response("Failed to submit custom material to cloud.", 901)
+		# else:
+		# 	return NO_CONTENT
 
 	#~~ helpers
 
@@ -1161,6 +1180,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			camera_calibration_markers=["result"],
 			ready_to_laser=["ready"],
 			debug_event=["event"],
+			custom_materials=[], #TODO ANDY set required params
 			take_undistorted_picture=[]  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
 		)
 
@@ -1178,8 +1198,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._printer.set_passes(data["value"])
 		elif command == "lasersafety_confirmation":
 			return self.lasersafety_wizard_api(data)
-		elif command == "save_custom_material":
-			return self.save_custom_material(data)
+		elif command == "custom_materials":
+			return self.custom_materials(data)
 		elif command == "ready_to_laser":
 			return self.ready_to_laser(data)
 		elif command == "camera_calibration_markers":
