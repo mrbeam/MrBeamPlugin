@@ -192,7 +192,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		image_default_height = 1536
 
 		return dict(
-			current_profile_id="_mrbeam_junior", # yea, this needs to be like this
+			current_profile_id="_mrbeam_junior", # yea, this needs to be like this # 2018: not so sure anymore...
 			svgDPI=90,
 			dxfScale=1,
 			beta_label="BETA",
@@ -247,7 +247,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def on_settings_load(self):
 		return dict(
-			current_profile_id=self._settings.get(["current_profile_id"]),
 			svgDPI=self._settings.get(['svgDPI']),
 			dxfScale=self._settings.get(['dxfScale']),
 			terminal=self._settings.get(['terminal']),
