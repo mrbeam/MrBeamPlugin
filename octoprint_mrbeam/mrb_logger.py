@@ -38,7 +38,7 @@ class MrbLogger(object):
 		date = self._getDateString()
 		id = kwargs.pop('id', self.id)
 		level = kwargs.pop('level', '')
-		msg = msg % args
+		msg = msg % args if args and msg else msg
 		exception = ''
 		if kwargs.pop('exc_info', False):
 			exctype, value = sys.exc_info()[:2]

@@ -32,6 +32,7 @@ from octoprint_mrbeam.iobeam.lid_handler import lidHandler
 from octoprint_mrbeam.iobeam.temperature_manager import temperatureManager
 from octoprint_mrbeam.iobeam.dust_manager import dustManager
 from octoprint_mrbeam.analytics.analytics_handler import analyticsHandler
+from octoprint_mrbeam.analytics.usage_handler import usageHandler
 from octoprint_mrbeam.led_events import LedEventListener
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
@@ -123,6 +124,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._interlock_handler = interLockHandler(self)
 		self._lid_handler = lidHandler(self)
 		self._analytics_handler = analyticsHandler(self)
+		self._usageHandler = usageHandler(self)
 		self._led_eventhandler = LedEventListener(self._event_bus, self._printer)
 		# start iobeam socket only once other handlers are already inittialized so that we can handle info mesage
 		self._ioBeam = ioBeamHandler(self._event_bus, self._settings.get(["dev", "sockets", "iobeam"]))
@@ -194,6 +196,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			svgDPI=90,
 			dxfScale=1,
 			beta_label="BETA",
+			job_time = 0.0,
 			terminal=False,
 			dev=dict(
 				debug=False, # deprected
@@ -214,7 +217,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				job_analytics = False,
 				cam_analytics = False,
 				folder = 'analytics', # laser job analytics base folder (.octoprint/...)
-				filename = 'analytics_log.json'
+				filename = 'analytics_log.json',
+				usage_filename = 'usage.yaml',
+				usage_backup_filename = 'usage_bak.yaml'
 			),
 			cam=dict(
 				enabled=True,
@@ -237,7 +242,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				optimize_travel = True,
 				small_paths_first = True,
 				clip_working_area = False # this is due a bug in clipping. Would be great if we could fix it an enable it again.
-			)
+			),
 		)
 
 	def on_settings_load(self):
@@ -1335,16 +1340,24 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	##~~ Progress Plugin API
 
 	def on_print_progress(self, storage, path, progress):
+		# TODO: this method should be moved into printer.py or comm_acc2 or so.
 		flooredProgress = progress - (progress % 10)
 		if (flooredProgress != self.print_progress_last):
 			self.print_progress_last = flooredProgress
-			self._event_bus.fire(MrBeamEvents.PRINT_PROGRESS, self.print_progress_last)
+			print_time = None
+			if self._printer._comm is not None:
+				print_time = self._printer._comm.getPrintTime()
+			payload = dict(progress=self.print_progress_last,
+			               time=print_time)
+			self._event_bus.fire(MrBeamEvents.PRINT_PROGRESS, payload)
 
 	def on_slicing_progress(self, slicer, source_location, source_path, destination_location, destination_path, progress):
+		# TODO: this method should be moved into printer.py or comm_acc2 or so.
 		flooredProgress = progress - (progress % 10)
 		if (flooredProgress != self.slicing_progress_last):
 			self.slicing_progress_last = flooredProgress
-			self._event_bus.fire(MrBeamEvents.SLICING_PROGRESS, self.slicing_progress_last)
+			payload = dict(progress=self.slicing_progress_last)
+			self._event_bus.fire(MrBeamEvents.SLICING_PROGRESS, payload)
 
 	##~~ Softwareupdate hook
 
