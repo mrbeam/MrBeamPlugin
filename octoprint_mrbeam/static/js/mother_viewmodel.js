@@ -203,7 +203,6 @@ $(function () {
                 callViewModels(allViewModels, "onAfterTabChange", [current, previous]);
             });
 
-            self._configureOverrideSliders();
 
 			self.gcodefiles.listHelper.toggleFilter('model');
 
@@ -360,64 +359,32 @@ $(function () {
             //self.lastPrintTime(data.lastPrintTime);
         };
 
-        self._configureOverrideSliders = function () {
-			var el1 = $("#intensity_override_slider");
-			if(el1.length > 0){
-				self.state.intensityOverrideSlider = el1.slider({
-					step: 1,
-					min: 10,
-					max: 200,
-					value: 100,
-				}).on("slideStop", function (ev) {
-					self.state.intensityOverride(ev.value);
-				});
-			}
 
-			var el2 = $("#intensity_override_slider");
-			if(el2.length > 0){
-				self.state.feedrateOverrideSlider = el2.slider({
-					step: 1,
-					min: 10,
-					max: 200,
-					value: 100,
-				}).on("slideStop", function (ev) {
-					self.state.feedrateOverride(ev.value);
-				});
-			}
-        };
-
-        self.state.resetOverrideSlider = function () {
-            self.state.feedrateOverrideSlider.slider('setValue', 100);
-            self.state.intensityOverrideSlider.slider('setValue', 100);
-            self.state.intensityOverride(100);
-            self.state.feedrateOverride(100);
-        };
-
-		self.state.increasePasses = function(){
-			self.state.numberOfPasses(self.state.numberOfPasses()+1);
-            self.state._overrideCommand({name: "passes", value: self.state.numberOfPasses()});
-		};
-
-		self.state.decreasePasses = function(){
-			var passes = Math.max(self.state.numberOfPasses()-1, 1);
-			self.state.numberOfPasses(passes);
-            self.state._overrideCommand({name: "passes", value: self.state.numberOfPasses()});
-		};
-
-        self.state._overrideCommand = function (data, callback) {
-            $.ajax({
-                url: API_BASEURL + "plugin/mrbeam",
-                type: "POST",
-                dataType: "json",
-                contentType: "application/json; charset=UTF-8",
-                data: JSON.stringify({command: data.name, value: data.value}),
-                success: function (response) {
-                    if (callback !== undefined) {
-                        callback();
-                    }
-                }
-            });
-        };
+//		self.state.increasePasses = function(){
+//			self.state.numberOfPasses(self.state.numberOfPasses()+1);
+//            self.state._overrideCommand({name: "passes", value: self.state.numberOfPasses()});
+//		};
+//
+//		self.state.decreasePasses = function(){
+//			var passes = Math.max(self.state.numberOfPasses()-1, 1);
+//			self.state.numberOfPasses(passes);
+//            self.state._overrideCommand({name: "passes", value: self.state.numberOfPasses()});
+//		};
+//
+//        self.state._overrideCommand = function (data, callback) {
+//            $.ajax({
+//                url: API_BASEURL + "plugin/mrbeam",
+//                type: "POST",
+//                dataType: "json",
+//                contentType: "application/json; charset=UTF-8",
+//                data: JSON.stringify({command: data.name, value: data.value}),
+//                success: function (response) {
+//                    if (callback !== undefined) {
+//                        callback();
+//                    }
+//                }
+//            });
+//        };
 
 
         // files.js viewmodel extensions
@@ -550,7 +517,6 @@ $(function () {
 
             options.onproceed = function (e) {
                 if (typeof callback === 'function') {
-                    self.state.resetOverrideSlider();
 //                    self.state.numberOfPasses(parseInt(self.conversion.set_passes()));
 //                    self.state._overrideCommand({name: "passes", value: self.state.numberOfPasses()});
                     callback(e);
