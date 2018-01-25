@@ -32,6 +32,7 @@ from octoprint_mrbeam.iobeam.lid_handler import lidHandler
 from octoprint_mrbeam.iobeam.temperature_manager import temperatureManager
 from octoprint_mrbeam.iobeam.dust_manager import dustManager
 from octoprint_mrbeam.analytics.analytics_handler import analyticsHandler
+from octoprint_mrbeam.analytics.usage_handler import usageHandler
 from octoprint_mrbeam.led_events import LedEventListener
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
@@ -123,6 +124,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._interlock_handler = interLockHandler(self)
 		self._lid_handler = lidHandler(self)
 		self._analytics_handler = analyticsHandler(self)
+		self._usageHandler = usageHandler(self)
 		self._led_eventhandler = LedEventListener(self._event_bus, self._printer)
 		# start iobeam socket only once other handlers are already inittialized so that we can handle info mesage
 		self._ioBeam = ioBeamHandler(self._event_bus, self._settings.get(["dev", "sockets", "iobeam"]))
@@ -190,10 +192,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		image_default_height = 1536
 
 		return dict(
-			current_profile_id="_mrbeam_junior", # yea, this needs to be like this
+			current_profile_id="_mrbeam_junior", # yea, this needs to be like this # 2018: not so sure anymore...
 			svgDPI=90,
 			dxfScale=1,
 			beta_label="BETA",
+			job_time = 0.0,
+			terminal=False,
 			dev=dict(
 				debug=False, # deprected
 				terminalMaxLines = 2000,
@@ -213,7 +217,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				job_analytics = False,
 				cam_analytics = False,
 				folder = 'analytics', # laser job analytics base folder (.octoprint/...)
-				filename = 'analytics_log.json'
+				filename = 'analytics_log.json',
+				usage_filename = 'usage.yaml',
+				usage_backup_filename = 'usage_bak.yaml'
 			),
 			cam=dict(
 				enabled=True,
@@ -236,14 +242,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				optimize_travel = True,
 				small_paths_first = True,
 				clip_working_area = False # this is due a bug in clipping. Would be great if we could fix it an enable it again.
-			)
+			),
 		)
 
 	def on_settings_load(self):
 		return dict(
-			current_profile_id=self._settings.get(["current_profile_id"]),
 			svgDPI=self._settings.get(['svgDPI']),
 			dxfScale=self._settings.get(['dxfScale']),
+			terminal=self._settings.get(['terminal']),
 			analyticsEnabled=self._settings.get(['analyticsEnabled']),
 			cam=dict(enabled=self._settings.get(['cam', 'enabled']),
 					 frontendUrl=self._settings.get(['cam', 'frontendUrl'])),
@@ -269,6 +275,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._settings.set_int(["svgDPI"], data["svgDPI"])
 		if "dxfScale" in data:
 			self._settings.set_float(["dxfScale"], data["dxfScale"])
+		if "terminal" in data:
+			self._settings.set_boolean(["terminal"], data["terminal"])
 
 		# selectedProfile = self.laserCutterProfileManager.get_current_or_default()
 		# self._settings.set(["current_profile_id"], selectedProfile['id'])
@@ -344,22 +352,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 gcodeThreshold=0,
 							 wizard=wizard,
 							 now=now,
-							 # beamosVersion= dict(
-								# number = self._plugin_version,
-								# branch= self._branch,
-								# display_version = display_version_string,
-							 # 	image = self._octopi_info),
-							 # ),
+
 							 beamosVersionNumber = self._plugin_version,
 							 beamosVersionBranch = self._branch,
 							 beamosVersionDisplayVersion = display_version_string,
 							 beamosVersionImage = self._octopi_info,
-							 # env= dict(
-								#  env=self.get_env(),
-								#  local=self.get_env(self.ENV_LOCAL),
-								#  laser_safety=self.get_env(self.ENV_LASER_SAFETY),
-								#  analytics=self.get_env(self.ENV_ANALYTICS)
-							 # ),
+
 							 env=self.get_env(),
 							 env_local=self.get_env(self.ENV_LOCAL),
 							 env_laser_safety=self.get_env(self.ENV_LASER_SAFETY),
@@ -371,7 +369,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 software_tier=self._settings.get(["dev", "software_tier"]),
 							 analyticsEnabled=self._settings.get(["analyticsEnabled"]),
 							 beta_label=self._settings.get(['beta_label']),
-							 terminalEnabled=not self.is_prod_env(self.ENV_LOCAL),
+							 terminalEnabled=self._settings.get(['terminal']),
 						 ))
 		r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
 
@@ -385,6 +383,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		result = [
 			dict(type='settings', name="File Import Settings", template='settings/svgtogcode_settings.jinja2', suffix="_conversion", custom_bindings=False),
             dict(type='settings', name="Camera Calibration", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
+            dict(type='settings', name="Debug", template='settings/debug_settings.jinja2', suffix="_debug", custom_bindings=False),
             dict(type='settings', name="About This Mr Beam", template='settings/about_settings.jinja2', suffix="_about", custom_bindings=False)
 			# disabled in appearance
 			# dict(type='settings', name="Serial Connection DEV", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings=False, replaces='serial')
@@ -1328,7 +1327,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def on_event(self, event, payload):
 		if payload is None or not isinstance(payload, collections.Iterable) or not 'log' in payload or payload['log']:
-			self._logger.debug("on_event %s: %s", event, payload)
+			self._logger.info("on_event() %s: %s", event, payload)
+
+		if event == OctoPrintEvents.ERROR:
+			self._logger.error("on_event() Error Event! Message: %s", payload['error'])
 
 		if event == OctoPrintEvents.CLIENT_OPENED:
 			self._replay_stored_frontend_notification()
@@ -1337,16 +1339,24 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	##~~ Progress Plugin API
 
 	def on_print_progress(self, storage, path, progress):
+		# TODO: this method should be moved into printer.py or comm_acc2 or so.
 		flooredProgress = progress - (progress % 10)
 		if (flooredProgress != self.print_progress_last):
 			self.print_progress_last = flooredProgress
-			self._event_bus.fire(MrBeamEvents.PRINT_PROGRESS, self.print_progress_last)
+			print_time = None
+			if self._printer._comm is not None:
+				print_time = self._printer._comm.getPrintTime()
+			payload = dict(progress=self.print_progress_last,
+			               time=print_time)
+			self._event_bus.fire(MrBeamEvents.PRINT_PROGRESS, payload)
 
 	def on_slicing_progress(self, slicer, source_location, source_path, destination_location, destination_path, progress):
+		# TODO: this method should be moved into printer.py or comm_acc2 or so.
 		flooredProgress = progress - (progress % 10)
 		if (flooredProgress != self.slicing_progress_last):
 			self.slicing_progress_last = flooredProgress
-			self._event_bus.fire(MrBeamEvents.SLICING_PROGRESS, self.slicing_progress_last)
+			payload = dict(progress=self.slicing_progress_last)
+			self._event_bus.fire(MrBeamEvents.SLICING_PROGRESS, payload)
 
 	##~~ Softwareupdate hook
 
@@ -1619,8 +1629,8 @@ def __plugin_load__():
 	global __plugin_settings_overlay__
 	__plugin_settings_overlay__ = dict(
 		plugins=dict(
-			_disabled=['cura', 'pluginmanager', 'announcements', 'corewizard', 'octopi_support']   # eats dict | pfad.yml | callable
-			# _disabled=['cura', 'pluginmanager', 'announcements', 'corewizard', 'mrbeam']  # eats dict | pfad.yml | callable
+			_disabled=['cura', 'pluginmanager', 'announcements', 'corewizard', 'octopi_support']   # accepts dict | pfad.yml | callable
+			# _disabled=['cura', 'pluginmanager', 'announcements', 'corewizard', 'mrbeam']  # accepts dict | pfad.yml | callable
 		),
 		terminalFilters = [
 			dict(name="Filter beamOS messages", regex="^([0-9,.: ]+ [A-Z]+ mrbeam)", activated=True),
@@ -1631,7 +1641,7 @@ def __plugin_load__():
 			order=dict(
 				wizard=["plugin_mrbeam_wifi", "plugin_mrbeam_acl", "plugin_mrbeam_lasersafety"],
 				settings = ['plugin_softwareupdate', 'accesscontrol', 'plugin_netconnectd', 'plugin_mrbeam_conversion',
-				            'plugin_mrbeam_camera', 'logs', 'plugin_mrbeam_about']
+				            'plugin_mrbeam_camera', 'logs', 'plugin_mrbeam_debug', 'plugin_mrbeam_about']
 			),
 			disabled=dict(
 				wizard=['plugin_softwareupdate'],

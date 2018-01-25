@@ -26,6 +26,7 @@
 														<div class="progress progress-striped active">
 															<div class="bar" id="job_progressBar" data-bind="style: { width: state.progressString() + '%' }">&nbsp;{{ _('Processed') }} :  <strong data-bind="text: state.byteString"></strong></div>
 														</div>
+<!--
 														<div class="overrideSlider">
 															<input id="intensity_override_slider" type="text" data-bind="sliderValue: state.intensityOverride">
 															<span data-bind="text:state.intensityOverride()">100</span>% Intensity
@@ -34,7 +35,7 @@
 															<input id="feedrate_override_slider" type="text" data-bind="sliderValue: state.feedrateOverride">
 															<span data-bind="text:state.feedrateOverride()">100</span>% Feedrate
 														</div>
-	<!--													<div class="repeatGcode">
+														<div class="repeatGcode">
 															<div class="btn-group">
 																<button type="button" class="btn btn-default btn-number" data-bind="enable: state.numberOfPasses() > 1, click:state.decreasePasses">
 																	<span class="icon-minus"></span>
@@ -46,7 +47,8 @@
 															</div>
 															<span>Passes</span>
 
-														</div>-->
+														</div>
+-->
 
 													</div>
 													<!--                                {{ _('Print Time') }}: <strong data-bind="text: printTimeString"></strong><br>
