@@ -759,7 +759,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@octoprint.plugin.BlueprintPlugin.route("/take_undistorted_picture", methods=["GET"])
 	#@firstrun_only_access
 	def takeUndistortedPictureForInitialCalibration(self):
-		self._logger.debug("INITIAL_CALIBRATION TAKE PICTURE")
+		self._logger.info("INITIAL_CALIBRATION TAKE PICTURE")
 		self.take_undistorted_picture(is_initial_calibration=True)
 		return NO_CONTENT
 
