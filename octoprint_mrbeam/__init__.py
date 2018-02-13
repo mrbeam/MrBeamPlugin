@@ -39,7 +39,7 @@ from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
 from octoprint_mrbeam.migrate import migrate
 from .profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
 from .software_update_information import get_update_information, SW_UPDATE_TIER_PROD
-from .support import set_support_user
+from .support import set_support_mode
 
 
 
@@ -107,7 +107,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		migrate(self)
 
 		# Enable or disable internal support user.
-		set_support_user(self)
+		self.support_mode = set_support_mode(self)
 
 
 		self.laserCutterProfileManager = laserCutterProfileManager()
@@ -209,7 +209,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				# ),
 				software_tier = SW_UPDATE_TIER_PROD,
 				iobeam_disable_warnings = False,
-				support_user = False
+				support_mode = False
 			),
 			# TODO rename analyticsEnabled and put in analytics-dict
 			analyticsEnabled=False,  # frontend analytics Mixpanel
@@ -369,7 +369,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 software_tier=self._settings.get(["dev", "software_tier"]),
 							 analyticsEnabled=self._settings.get(["analyticsEnabled"]),
 							 beta_label=self._settings.get(['beta_label']),
-							 terminalEnabled=self._settings.get(['terminal']),
+							 terminalEnabled=self._settings.get(['terminal']) or self.support_mode,
 						 ))
 		r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
 
