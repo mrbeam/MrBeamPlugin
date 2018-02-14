@@ -60,11 +60,15 @@ class MrbLogger(object):
 	def debug(self, msg, *args, **kwargs):
 		if kwargs.pop('terminal', False):
 			self._terminal(msg, *args, level='DEBUG', **kwargs)
+		if kwargs.pop('terminal_as_comm', False):
+			self._terminal(msg, *args, level=self.LEVEL_COMM, **kwargs)
 		self.logger.debug(msg, *args, **kwargs)
 
 	def info(self, msg, *args, **kwargs):
 		if kwargs.pop('terminal', False):
 			self._terminal(msg, *args, level='INFO', **kwargs)
+		if kwargs.pop('terminal_as_comm', False):
+			self._terminal(msg, *args, level=self.LEVEL_COMM, **kwargs)
 		self.logger.info(msg, *args, **kwargs)
 
 	def warn(self, msg, *args, **kwargs):
@@ -73,21 +77,29 @@ class MrbLogger(object):
 	def warning(self, msg, *args, **kwargs):
 		if kwargs.pop('terminal', True):
 			self._terminal(msg, *args, level='WARNING', **kwargs)
+		if kwargs.pop('terminal_as_comm', False):
+			self._terminal(msg, *args, level=self.LEVEL_COMM, **kwargs)
 		self.logger.warn(msg, *args, **kwargs)
 
 	def error(self, msg, *args, **kwargs):
 		if kwargs.pop('terminal', True):
 			self._terminal(msg, *args, level='ERROR', **kwargs)
+		if kwargs.pop('terminal_as_comm', False):
+			self._terminal(msg, *args, level=self.LEVEL_COMM, **kwargs)
 		self.logger.error(msg, *args, **kwargs)
 
 	def critical(self, msg, *args, **kwargs):
 		if kwargs.pop('terminal', True):
 			self._terminal(msg, *args, level='CRITICAL', **kwargs)
+		if kwargs.pop('terminal_as_comm', False):
+			self._terminal(msg, *args, level=self.LEVEL_COMM, **kwargs)
 		self.logger.critical(msg, *args, **kwargs)
 
 	def exception(self, msg, *args, **kwargs):
 		if kwargs.pop('terminal', True):
 			self._terminal(msg, *args, level='EXCEPTION', exc_info=True, **kwargs)
+		if kwargs.pop('terminal_as_comm', False):
+			self._terminal(msg, *args, level=self.LEVEL_COMM, **kwargs)
 		self.logger.exception(msg, *args, **kwargs)
 
 	def dump_terminal_buffer(self, level=logging.INFO, repeat=True):

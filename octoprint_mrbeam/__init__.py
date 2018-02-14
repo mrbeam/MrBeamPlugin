@@ -45,6 +45,7 @@ from .support import set_support_mode
 
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
 __builtin__._mrbeam_plugin_implementation = None
+__builtin__.__package_path__ = os.path.dirname(__file__)
 
 
 class MrBeamPlugin(octoprint.plugin.SettingsPlugin,

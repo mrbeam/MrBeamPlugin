@@ -28,6 +28,7 @@ from octoprint.util import get_exception_string, RepeatedTimer, CountedEvent, sa
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.analytics.analytics_handler import existing_analyticsHandler
+from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
 
 ### MachineCom #########################################################################################################
 class MachineCom(object):
@@ -47,7 +48,12 @@ class MachineCom(object):
 	STATE_HOMING = 13
 	STATE_FLASHING = 14
 
+	GRBL_HEX_FOLDER = 'files/grbl/'
+
 	pattern_status = re.compile("<(?P<status>\w+),.*WPos:(?P<pos_x>[0-9.\-]+),(?P<pos_y>[0-9.\-]+),.*laser (?P<laser_state>\w+):(?P<laser_intensity>\d+).*>")
+	pattern_grbl_version = re.compile("Grbl (?P<version>\S+)\s.*")
+	pattern_grbl_setting = re.compile("\$(?P<id>\d+)=(?P<value>\S+)\s\((?P<comment>.*)\)")
+
 
 	def __init__(self, port=None, baudrate=None, callbackObject=None, printerProfileManager=None):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.comm_acc2")
@@ -75,6 +81,8 @@ class MachineCom(object):
 
 		self._state = self.STATE_NONE
 		self._grbl_state = None
+		self._grbl_version = None
+		self._grbl_settings = dict()
 		self._errorValue = "Unknown Error"
 		self._serial = None
 		self._currentFile = None
@@ -106,28 +114,28 @@ class MachineCom(object):
 								'cycle_start':False,
 								'soft_reset':False}
 
-		# metric stuff
-		#self._metric_chars = 0
-		#self._metric_time = None
-		#self._metric_active = True
-		#self._metric_thread = threading.Thread(target=self._metric_loop, name="comm._metric_thread")
-		#self._metric_thread.daemon = True
-		#self._metric_thread.start()
-
 		# hooks
 		self._pluginManager = octoprint.plugin.plugin_manager()
 		self._serial_factory_hooks = self._pluginManager.get_hooks("octoprint.comm.transport.serial.factory")
 
-		# monitoring thread
+		# threads
+		self.monitoring_thread = None
+		self.sending_thread = None
+		self.start_monitoring_thread()
+
+
+	def start_monitoring_thread(self):
 		self._monitoring_active = True
 		self.monitoring_thread = threading.Thread(target=self._monitor_loop, name="comm._monitoring_thread")
 		self.monitoring_thread.daemon = True
 		self.monitoring_thread.start()
 
-		# sending thread
+	def start_sending_thread(self):
 		self._sending_active = True
-		self.sending_thread = threading.Thread(target=self._send_loop, name="comm.sending_thread")
+		self.sending_thread = threading.Thread(target=self._send_loop, name="comm._sending_thread")
 		self.sending_thread.daemon = True
+		self.sending_thread.start()
+
 
 	def get_home_position(self):
 		"""
@@ -155,7 +163,9 @@ class MachineCom(object):
 
 		while self._monitoring_active:
 			try:
+				# self._logger.info("ANDYTEST _monitor_loop() reading - _monitoring_active:%s", self._monitoring_active)
 				line = self._readline()
+				# self._logger.info("ANDYTEST _monitor_loop() read  - _monitoring_active:%s - %s", self._monitoring_active, line)
 				if line is None:
 					break
 				if line.strip() is not "":
@@ -172,6 +182,8 @@ class MachineCom(object):
 					self._handle_feedback_message(line)
 				elif line.startswith('Grb'): # Grbl startup message
 					self._handle_startup_message(line)
+				# elif line.startswith('$'): # Grbl settings
+				# 	self._handle_settings_message(line)
 				elif not line and (self._state is self.STATE_CONNECTING or self._state is self.STATE_OPEN_SERIAL or self._state is self.STATE_DETECT_SERIAL):
 					self._log("Empty line received during STATE_CONNECTION, starting soft-reset")
 					self._sendCommand(b'\x18') # Serial-Connection Error
@@ -183,11 +195,13 @@ class MachineCom(object):
 				self._changeState(self.STATE_ERROR)
 				eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
 				self._logger.dump_terminal_buffer(level=logging.ERROR)
-		self._log("Connection closed, closing down monitor")
+		self._logger.info("Connection closed, closing down monitor", terminal_as_comm=True)
+		# self._logger.info("ANDYTEST _monitor_loop() ending ")
 
 	def _send_loop(self):
 		while self._sending_active:
 			try:
+				# self._logger.info("ANDYTEST _send_loop() _process - _sending_active:%s", self._sending_active)
 				self._process_rt_commands()
 				if self.isPrinting() and self._commandQueue.empty():
 					cmd = self._getNext()
@@ -208,13 +222,14 @@ class MachineCom(object):
 				self._send_event.wait(1)
 				self._send_event.clear()
 			except:
-				self._logger.exception("Something crashed inside the sending loop, please report this to Mr. Beam")
+				self._logger.exception("Something crashed inside the sending loop, please report this to Mr Beam.")
 				errorMsg = "See octoprint.log for details"
 				self._log(errorMsg)
 				self._errorValue = errorMsg
 				self._changeState(self.STATE_ERROR)
 				eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
 				self._logger.dump_terminal_buffer(level=logging.ERROR)
+		# self._logger.info("ANDYTEST _send_loop() ending ")
 
 	def _metric_loop(self):
 		self._metricf = open('metric.tmp','w')
@@ -259,6 +274,7 @@ class MachineCom(object):
 				self._process_command_phase("sent", cmd)
 			except serial.SerialException:
 				self._log("Unexpected error while writing serial port: %s" % (get_exception_string()))
+				self._errorValue = get_exception_string()
 				self._errorValue = get_exception_string()
 				self.close(True)
 
@@ -319,7 +335,6 @@ class MachineCom(object):
 				return False
 			if serial_obj is not None:
 				# first hook to succeed wins, but any can pass on to the next
-				self._log(repr(self._serial))
 				self._changeState(self.STATE_OPEN_SERIAL)
 				self._serial = serial_obj
 				return True
@@ -335,7 +350,8 @@ class MachineCom(object):
 				if(len(self._acc_line_buffer) > 0):
 					del self._acc_line_buffer[0]  # Delete the commands character count corresponding to the last 'ok'
 		except serial.SerialException:
-			self._log("Unexpected error while reading serial port: %s" % (get_exception_string()))
+			self._logger.info("ANDYTEST self._monitoring_active: %s", self._monitoring_active)
+			self._logger.error("Unexpected error while reading serial port: %s" % (get_exception_string()), terminal_as_comm=True)
 			self._errorValue = get_exception_string()
 			self.close(True)
 			return None
@@ -476,18 +492,46 @@ class MachineCom(object):
 			pass
 
 	def _handle_startup_message(self, line):
-		if not self.isOperational():
-			self._onConnected(self.STATE_LOCKED)
-			versionMatch = re.search("Grbl (?P<grbl>.+?)(_(?P<git>[0-9a-f]{7})(?P<dirty>-dirty)?)? \[.+\]", line)
-			if versionMatch:
-				# TODO uncomment version check when ready to test
-				# versionDict = versionMatch.groupdict()
-				# self._writeGrblVersionToFile(versionDict)
-				# if self._compareGrblVersion(versionDict) is False:
-				# 	self._flashGrbl()
-				# else:
-				#	self._onConnected(self.STATE_LOCKED)
-				self._onConnected(self.STATE_LOCKED)
+		match = self.pattern_grbl_version.match(line)
+		if match:
+			self._grbl_version = match.group('version')
+		else:
+			self._logger.error("Unable to parse GRBL version from startup message: ", line)
+		self._logger.info("GRBL version: %s", self._grbl_version)
+
+		self._onConnected(self.STATE_LOCKED)
+		# self.sendCommand('$$')
+
+		# if not self.isOperational():
+		# 	self._onConnected(self.STATE_LOCKED)
+		# 	versionMatch = re.search("Grbl (?P<grbl>.+?)(_(?P<git>[0-9a-f]{7})(?P<dirty>-dirty)?)? \[.+\]", line)
+		# 	if versionMatch:
+		# 		# TODO uncomment version check when ready to test
+		# 		versionDict = versionMatch.groupdict()
+		# 		self._writeGrblVersionToFile(versionDict)
+		# 		if self._compareGrblVersion(versionDict) is False:
+		# 			self._flashGrbl()
+		# 		self._onConnected(self.STATE_LOCKED)
+
+	def _handle_settings_message(self, line):
+		match = self.pattern_grbl_setting.match(line)
+		if match:
+			id = int(match.group('id'))
+			comment = match.group('comment')
+			v_str = match.group('value')
+			v = float(v_str)
+			try:
+				i = int(v)
+			except ValueError:
+				pass
+			value = v
+			if i == v and v_str.find('.') < 0:
+				value = i
+			self._grbl_settings[id] = dict(value=value, comment=comment)
+			self._logger.info("GRBL setting: $%s = %s (%s)", id, value, comment)
+		else:
+			self._logger.error("_handle_settings_message() line did not mach pattern: %s", line)
+
 
 	def _update_grbl_pos(self, line):
 		# line example:
@@ -558,8 +602,6 @@ class MachineCom(object):
 
 	# internal state management
 	def _changeState(self, newState):
-		print ('new State:',newState)
-
 		if self._state == newState:
 			return
 
@@ -598,10 +640,10 @@ class MachineCom(object):
 		else:
 			self._changeState(nextState)
 
-		if not self.sending_thread.isAlive():
-			self.sending_thread.start()
+		if self.sending_thread is None or not self.sending_thread.isAlive():
+			self.start_sending_thread()
 
-		payload = dict(port=self._port, baudrate=self._baudrate)
+		payload = dict(grbl_version=self._grbl_version, port=self._port, baudrate=self._baudrate)
 		eventManager().fire(OctoPrintEvents.CONNECTED, payload)
 
 	def _detectPort(self, close):
@@ -632,57 +674,75 @@ class MachineCom(object):
 		self._logger.comm(message)
 		self._serialLogger.debug(message)
 
-	def _compareGrblVersion(self, versionDict):
-		cwd = os.path.dirname(__file__)
-		with open(cwd + "/../grbl/grblVersionRequirement.yml", 'r') as infile:
-			grblReqDict = yamlload(infile)
-		requiredGrblVer = str(grblReqDict['grbl']) + '_' + str(grblReqDict['git'])
-		if grblReqDict['dirty'] is True:
-			requiredGrblVer += '-dirty'
-		actualGrblVer = str(versionDict['grbl']) + '_' + str(versionDict['git'])
-		if versionDict['dirty'] is not(None):
-			actualGrblVer += '-dirty'
-		# compare actual and required grbl version
-		self._requiredGrblVer = requiredGrblVer
-		self._actualGrblVer = actualGrblVer
-		print repr(requiredGrblVer)
-		print repr(actualGrblVer)
-		if requiredGrblVer != actualGrblVer:
-			self._log("unsupported grbl version detected...")
-			self._log("required: " + requiredGrblVer)
-			self._log("detected: " + actualGrblVer)
-			return False
-		else:
-			return True
 
-	def _flashGrbl(self):
-		self._changeState(self.STATE_FLASHING)
-		self._serial.close()
-		cwd = os.path.dirname(__file__)
-		pathToGrblHex = cwd + "/../grbl/grbl.hex"
+	def flash_grbl(self, grbl_file=None):
+		"""
+		Flashes the specified grbl file (.hex). This file must not contain a bootloader.
+		:param grbl_file:
+		"""
+		if grbl_file is None:
+			# TODO: obviously this needs to come from profile settings or so.
+			grbl_file = 'grbl_22270fa.hex'
 
-		# TODO check if avrdude is installed.
-		# TODO log in logfile as well, not only to the serial monitor (use self._logger.info()... )
-		params = ["avrdude", "-patmega328p", "-carduino", "-b" + str(self._baudrate), "-P" + str(self._port), "-D", "-Uflash:w:" + pathToGrblHex]
-		rc = subprocesscall(params)
+		if grbl_file.startswith('..') or grbl_file.startswith('/'):
+			msg = "ERROR flashing GRBL '{}': Invalid filename.".format(grbl_file)
+			self._logger.warn(msg, terminal_as_comm=True)
+			return
 
-		if rc == 0:
-			self._log("successfully flashed new grbl version")
-			self._openSerial()
-			self._changeState(self.STATE_CONNECTING)
-		else:
-			self._log("error during flashing of new grbl version")
-			self._errorValue = "avrdude returncode: %s" % rc
+		grbl_path = os.path.join(__package_path__, self.GRBL_HEX_FOLDER, grbl_file)
+		if not os.path.isfile(grbl_path):
+			msg = "ERROR flashing GRBL '{}': File not found".format(grbl_file)
+			self._logger.warn(msg, terminal_as_comm=True)
+			return
+
+		self._logger.info("Flashing grbl: '%s'", grbl_path)
+
+		self.close(isError=False, next_state=self.STATE_FLASHING)
+		time.sleep(1)
+
+		# FYI: Fuses can't be changed from over srial
+		params = ["avrdude", "-patmega328p", "-carduino",
+		          "-b{}".format(self._baudrate), "-P{}".format(self._port),
+		          '-u', '-q', # non inter-active and quiet
+		          "-D", # do not erase settings
+		          "-Uflash:w:{}:i".format(grbl_path)]
+		self._logger.debug("flash_grbl() avrdude command:  %s", ' '.join(params))
+		output, code = exec_cmd_output(params)
+
+		if output is not None:
+			output = output.replace('strace: |autoreset: Broken pipe\n', '')
+			output = output.replace('done with autoreset\n', '')
+
+		# error case
+		if code != 0:
+			msg_short = "ERROR flashing GRBL '{}'".format(grbl_file)
+			msg_long = '{}:\n{}'.format(msg_short, output)
+			self._logger.error(msg_long, terminal_as_comm=True)
+			self._logger.error(msg_short, terminal_as_comm=True)
+			self._errorValue = "avrdude returncode: %s" % code
 			self._changeState(self.STATE_CLOSED_WITH_ERROR)
 
-	@staticmethod
-	def _writeGrblVersionToFile(versionDict):
-		if versionDict['dirty'] == '-dirty':
-			versionDict['dirty'] = True
-		versionDict['lastConnect'] = time.time()
-		versionFile = os.path.join(settings().getBaseFolder("logs"), 'grbl_Version.yml')
-		with open(versionFile, 'w') as outfile:
-			outfile.write(yamldump(versionDict, default_flow_style=True))
+			self._logger.info("Please reconnect manually or reboot system.", terminal_as_comm=True)
+			return
+
+		# ok case
+		msg_short = "OK flashing GRBL '{}'".format(grbl_file)
+		msg_long = '{}:\n{}'.format(msg_short, output)
+		self._logger.debug(msg_long, terminal_as_comm=True)
+		self._logger.info(msg_short, terminal_as_comm=True)
+
+		time.sleep(1.0)
+		timeout = 60
+		self._logger.info("Waiting before reconnect. (max %s secs)", timeout, terminal_as_comm=True)
+		if self.monitoring_thread is not None:
+			self.monitoring_thread.join(timeout)
+
+		if self.monitoring_thread is not None or not self.monitoring_thread.isAlive():
+			# will open serial connection
+			self.start_monitoring_thread()
+		else:
+			self._logger.info("Can't reconnect automacically. Try to reconnect manually or reboot system.")
+
 
 	def _handle_command_handler_result(self, command, command_type, gcode, handler_result):
 		original_tuple = (command, command_type, gcode)
@@ -828,26 +888,21 @@ class MachineCom(object):
 		cmd = self._replace_intensity(cmd)
 
 	def sendCommand(self, cmd, cmd_type=None, processed=False):
-		cmd = cmd.encode('ascii', 'replace')
-		if not processed:
-			cmd = process_gcode_line(cmd)
-			if not cmd:
-				return
-
-		if cmd[0] == "/":
+		if cmd is not None and cmd.startswith('/'):
 			self._log("Command: %s" % cmd)
-			specialcmd = cmd[1:].lower()
-			if "togglestatusreport" in specialcmd:
+			self._logger.info("Terminal user command: %s", cmd)
+			tokens = cmd.split(' ')
+			specialcmd = tokens[0].lower()
+			if specialcmd.startswith('/togglestatusreport'):
 				if self._status_timer is None:
 					self._status_timer = RepeatedTimer(1, self._poll_status)
 					self._status_timer.start()
 				else:
 					self._status_timer.cancel()
 					self._status_timer = None
-			elif "setstatusfrequency" in specialcmd:
-				data = specialcmd[18:]
+			elif specialcmd.startswith('/setstatusfrequency'):
 				try:
-					frequency = float(data)
+					frequency = float(tokens[1])
 				except ValueError:
 					self._log("No frequency setting found! Using 1 sec.")
 					frequency = 1
@@ -855,34 +910,53 @@ class MachineCom(object):
 					self._status_timer.cancel()
 				self._status_timer = RepeatedTimer(frequency, self._poll_status)
 				self._status_timer.start()
-			elif "disconnect" in specialcmd:
+			elif specialcmd.startswith('/disconnect'):
 				self.close()
-			elif "feedrate" in specialcmd:
-				data = specialcmd[8:]
-				self._set_feedrate_override(int(data))
-			elif "intensity" in specialcmd:
-				data = specialcmd[9:]
-				self._set_intensity_override(int(data))
-			elif "reset" in specialcmd:
+			elif specialcmd.startswith('/feedrate'):
+				if len(tokens) > 1:
+					self._set_feedrate_override(int(tokens[1]))
+				else:
+					self._log("no feedrate given")
+			elif specialcmd.startswith('/intensity'):
+				if len(tokens) > 1:
+					data = specialcmd[8:]
+					self._set_intensity_override(int(tokens[1]))
+				else:
+					self._log("no intensity given")
+			elif specialcmd.startswith('/reset'):
 				self._log("Reset initiated")
 				self._serial.write(list(bytearray('\x18')))
+			elif specialcmd.startswith('/flash_grbl'):
+				file = None
+				if len(tokens) > 1:
+					file = tokens[1]
+					self._log("Flashing GRBL '%s'..." % file)
+				else:
+					self._log("Flashing GRBL...")
+				self.flash_grbl(file)
 			else:
-				self._log("Command not Found! %s" % cmd)
-				self._log("available commands are:")
+				self._log("Command not found.")
+				self._log("Available commands are:")
 				self._log("   /togglestatusreport")
-				self._log("   /setstatusfrequency <Inteval Sec>")
+				self._log("   /setstatusfrequency <interval secs>")
 				self._log("   /feedrate <f>")
 				self._log("   /intensity <s>")
 				self._log("   /disconnect")
 				self._log("   /reset")
-			return
+				self._log("   /flash_grbl [<file>]")
+		else:
+			cmd = cmd.encode('ascii', 'replace')
+			if not processed:
+				cmd = process_gcode_line(cmd)
+				if not cmd:
+					return
 
-		eepromCmd = re.search("^\$[0-9]+=.+$", cmd)
-		if(eepromCmd and self.isPrinting()):
-			self._log("Warning: Configuration changes during print are not allowed!")
+			eepromCmd = re.search("^\$[0-9]+=.+$", cmd)
+			if(eepromCmd and self.isPrinting()):
+				self._log("Warning: Configuration changes during print are not allowed!")
 
-		self._commandQueue.put(cmd)
-		self._send_event.set()
+			self._commandQueue.put(cmd)
+			self._send_event.set()
 
 	def selectFile(self, filename, sd):
 		if self.isBusy():
@@ -1120,7 +1194,10 @@ class MachineCom(object):
 		else:
 			return time.time() - self._currentFile.getStartTime() - self._pauseWaitTimeLost
 
-	def close(self, isError = False):
+	def getGrblVersion(self):
+		return self._grbl_version
+
+	def close(self, isError=False, next_state=None):
 		if self._status_timer is not None:
 			try:
 				self._status_timer.cancel()
@@ -1135,6 +1212,8 @@ class MachineCom(object):
 		if self._serial is not None:
 			if isError:
 				self._changeState(self.STATE_CLOSED_WITH_ERROR)
+			elif next_state:
+				self._changeState(next_state)
 			else:
 				self._changeState(self.STATE_CLOSED)
 			self._serial.close()
