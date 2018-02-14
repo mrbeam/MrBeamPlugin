@@ -263,7 +263,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				optimize_travel = self._settings.get(['gcode_nextgen', 'optimize_travel']),
 				small_paths_first = self._settings.get(['gcode_nextgen', 'small_paths_first']),
 				clip_working_area = self._settings.get(['gcode_nextgen', 'clip_working_area'])
-			)
+			),
+			software_update_branches = self.get_update_branch_info()
 		)
 
 	def on_settings_save(self, data):
@@ -1363,6 +1364,34 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def get_update_information(self):
 		# calling from .software_update_information import get_update_information
 		return get_update_information(self)
+
+	def get_update_branch_info(self):
+		"""
+		Gets you a list of plugins which are currently not configured to be updated from their default branch.
+		Why do we need this? Frontend injects these data into SWupdate settings. So we can see if we put
+		a component like Mr Beam Plugin to a special branch (for development.)
+		:return: dict
+		"""
+		result = dict()
+		configured_checks = None
+		try:
+			pluginInfo = self._plugin_manager.get_plugin_info("softwareupdate")
+			if pluginInfo is not None:
+				impl = pluginInfo.implementation
+				configured_checks = impl._configured_checks
+			else:
+				self._logger.error("get_branch_info() Can't get pluginInfo.implementation")
+		except Exception as e:
+			self._logger.exception("Exception while reading configured_checks from softwareupdate plugin. ")
+
+		for name, config in configured_checks.iteritems():
+			if name == 'octoprint':
+				continue
+			if 'branch' in config and \
+					(('branch_default' in config and config['branch'] != config['branch_default'])
+					or (not 'branch_default' in config)):
+				result[name] = config['branch']
+		return result
 
 	# inject a Laser object instead the original Printer from standard.py
 	def laser_factory(self, components, *args, **kwargs):
