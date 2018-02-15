@@ -306,20 +306,23 @@ $(function () {
          */
         self.writeBranchesToSwUpdateScreen = function(){
             var software_update_branches = self.settings.settings.plugins.mrbeam.software_update_branches;
-            var allItems = self.softwareUpdate.versions.items();
-            var nuItems = []
+            // only if we really have some branch names inject
+            if (Object.keys(software_update_branches).length > 0) {
+                var allItems = self.softwareUpdate.versions.items();
+                var nuItems = []
 
-            for (var i = 0; i < allItems.length; i++) {
-                var plugin_id = allItems[i]['key']
-                var my_conf = jQuery.extend({}, allItems[i]);
-                if (software_update_branches[plugin_id]) {
-                    var branch = software_update_branches[plugin_id]();
-                    console.log(plugin_id+": "+branch);
-                    my_conf['displayVersion'] += ' ('+branch+')';
+                for (var i = 0; i < allItems.length; i++) {
+                    var plugin_id = allItems[i]['key']
+                    var my_conf = jQuery.extend({}, allItems[i]);
+                    if (software_update_branches[plugin_id]) {
+                        var branch = software_update_branches[plugin_id]();
+                        console.log(plugin_id+": "+branch);
+                        my_conf['displayVersion'] += ' ('+branch+')';
+                    }
+                    nuItems.push(my_conf);
                 }
-                nuItems.push(my_conf);
+                self.softwareUpdate.versions.updateItems(nuItems);
             }
-            self.softwareUpdate.versions.updateItems(nuItems);
         }
 
 
