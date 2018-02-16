@@ -182,8 +182,8 @@ class MachineCom(object):
 					self._handle_feedback_message(line)
 				elif line.startswith('Grb'): # Grbl startup message
 					self._handle_startup_message(line)
-				# elif line.startswith('$'): # Grbl settings
-				# 	self._handle_settings_message(line)
+				elif line.startswith('$'): # Grbl settings
+					self._handle_settings_message(line)
 				elif not line and (self._state is self.STATE_CONNECTING or self._state is self.STATE_OPEN_SERIAL or self._state is self.STATE_DETECT_SERIAL):
 					self._log("Empty line received during STATE_CONNECTION, starting soft-reset")
 					self._sendCommand(b'\x18') # Serial-Connection Error
@@ -293,6 +293,9 @@ class MachineCom(object):
 			self._real_time_commands['soft_reset']=False
 
 	def _openSerial(self):
+		self._grbl_version = None
+		self._grbl_settings = dict()
+
 		def default(_, port, baudrate, read_timeout):
 			if port is None or port == 'AUTO':
 				# no known port, try auto detection
@@ -492,6 +495,7 @@ class MachineCom(object):
 			pass
 
 	def _handle_startup_message(self, line):
+		# self._logger.info("ANDYTEST _handle_startup_message()")
 		match = self.pattern_grbl_version.match(line)
 		if match:
 			self._grbl_version = match.group('version')
@@ -500,7 +504,8 @@ class MachineCom(object):
 		self._logger.info("GRBL version: %s", self._grbl_version)
 
 		self._onConnected(self.STATE_LOCKED)
-		# self.sendCommand('$$')
+
+		self.verify_grbl_settings()
 
 		# if not self.isOperational():
 		# 	self._onConnected(self.STATE_LOCKED)
@@ -514,6 +519,10 @@ class MachineCom(object):
 		# 		self._onConnected(self.STATE_LOCKED)
 
 	def _handle_settings_message(self, line):
+		"""
+		Handles grbl settings message like '$130=515.1'
+		:param line:
+		"""
 		match = self.pattern_grbl_setting.match(line)
 		if match:
 			id = int(match.group('id'))
@@ -528,9 +537,68 @@ class MachineCom(object):
 			if i == v and v_str.find('.') < 0:
 				value = i
 			self._grbl_settings[id] = dict(value=value, comment=comment)
-			self._logger.info("GRBL setting: $%s = %s (%s)", id, value, comment)
+			# self._logger.info("ANDYTEST GRBL setting: $%s = %s (%s)", id, value, comment)
 		else:
 			self._logger.error("_handle_settings_message() line did not mach pattern: %s", line)
+
+
+	def verify_grbl_settings(self):
+		"""
+		This triggers a reload of GRBL settings and does a validation and correction afterwards.
+		"""
+		# self._logger.info("ANDYTEST validate_grbl_settings()")
+		self._refresh_grbl_settings()
+		threading.Timer (3.0, self._verify_loaded_grbl_settings).start()
+
+	def _refresh_grbl_settings(self):
+		self._grbl_settings = dict()
+		self.sendCommand('$$')
+
+	def _get_string_loaded_grbl_settings(self, settings=None):
+		my_grbl_settings = settings or self._grbl_settings.copy()  # to avoid race conditions
+		log = []
+		for id, data in sorted(my_grbl_settings.iteritems()):
+			log.append("${id}={val} ({comment})".format(id=id, val=data['value'], comment=data['comment']))
+		return "({count}) [{data}]".format(count=len(log), data=', '.join(log))
+
+	def _verify_loaded_grbl_settings(self):
+		# self._logger.info("ANDYTEST _validate_loaded_grbl_settings()")
+		settings_count = self._laserCutterProfile['grbl']['settings_count']
+		settings_expected = self._laserCutterProfile['grbl']['settings']
+		my_grbl_settings = self._grbl_settings.copy() # to avoid race conditions
+
+		log = self._get_string_loaded_grbl_settings(settings=my_grbl_settings)
+
+		commands = []
+		if len(my_grbl_settings) != settings_count:
+			self._logger.error("GRBL Settings count incorrect!! %s settings but should be %s. Writing all settings to grbl.", len(my_grbl_settings), settings_count)
+			for id, value in sorted(settings_expected.iteritems()):
+				commands.append("${id}={val}".format(id=id, val=value))
+		else:
+			for id, value in sorted(settings_expected.iteritems()):
+				if not id in my_grbl_settings:
+					self._logger.warning("GRBL Settings $%s=%s (%s) - Unexpected id: $%s", id, my_grbl_settings[id]['value'], my_grbl_settings[id]['comment'], id)
+				elif my_grbl_settings[id]['value'] != value:
+					self._logger.error("GRBL Settings $%s=%s (%s) - Incorrect value! Should be: %s",
+					                   id, my_grbl_settings[id]['value'], my_grbl_settings[id]['comment'], value)
+					commands.append("${id}={val}".format(id=id, val=value))
+
+		if len(commands) > 0:
+			msg = "GRBL Settings - Verification: FAILED"
+			self._logger.warn(msg + " - " + log)
+			self._log(msg)
+			self._logger.warn("GRBL Settings correcting: %s values", len(commands), terminal_as_comm=True)
+			for c in commands:
+				self._logger.warn("GRBL Settings correcting value: %s", c, terminal_as_comm=True)
+				self.sendCommand(c)
+				time.sleep(0.5)
+			self._logger.warn("GRBL Settings corrections done. Restarting verification...", terminal_as_comm=True)
+			self.verify_grbl_settings()
+		else:
+			msg = "GRBL Settings - Verification: OK"
+			self._logger.info(msg + " - " + log)
+			self._log(msg)
+
 
 
 	def _update_grbl_pos(self, line):
@@ -934,6 +1002,9 @@ class MachineCom(object):
 				else:
 					self._log("Flashing GRBL...")
 				self.flash_grbl(file)
+			elif specialcmd.startswith('/verify_settings'):
+				self._log("Verifying GRBL settings...")
+				self.verify_grbl_settings()
 			else:
 				self._log("Command not found.")
 				self._log("Available commands are:")
@@ -943,6 +1014,7 @@ class MachineCom(object):
 				self._log("   /intensity <s>")
 				self._log("   /disconnect")
 				self._log("   /reset")
+				self._log("   /verify_settings")
 				self._log("   /flash_grbl [<file>]")
 		else:
 			cmd = cmd.encode('ascii', 'replace')
