@@ -137,6 +137,14 @@ class AnalyticsHandler(object):
 	def _event_shutdown(self,event,payload):
 		self._write_deviceinfo(ak.SHUTDOWN)
 
+	def write_flash_grbl(self, from_version, to_version, succesful):
+		payload = dict(
+			from_version=from_version,
+			to_version=to_version,
+			succesful=succesful)
+		self._write_deviceinfo(ak.FLASH_GRBL, payload=payload)
+
+
 	def _event_print_started(self, event, payload):
 		filename = os.path.basename(payload['file'])
 		self._current_job_id = 'j_{}_{}'.format(self._getSerialNumber(),time.time())

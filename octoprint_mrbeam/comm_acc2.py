@@ -689,6 +689,8 @@ class MachineCom(object):
 			self._logger.warn(msg, terminal_as_comm=True)
 			return
 
+		from_version = self._grbl_version
+
 		grbl_path = os.path.join(__package_path__, self.GRBL_HEX_FOLDER, grbl_file)
 		if not os.path.isfile(grbl_path):
 			msg = "ERROR flashing GRBL '{}': File not found".format(grbl_file)
@@ -712,6 +714,11 @@ class MachineCom(object):
 		if output is not None:
 			output = output.replace('strace: |autoreset: Broken pipe\n', '')
 			output = output.replace('done with autoreset\n', '')
+
+		_mrbeam_plugin_implementation._analytics_handler.write_flash_grbl(
+			from_version=from_version,
+			to_version=grbl_file,
+			succesful=(code == 0))
 
 		# error case
 		if code != 0:
