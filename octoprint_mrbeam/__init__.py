@@ -157,6 +157,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		msg = "MrBeam Lasercutter Profile: %s" % self.laserCutterProfileManager.get_current_or_default()
 		self._logger.info(msg, terminal=True)
 
+		if self.is_vorlon_enabled():
+			self._logger.warn("!!! VORLON is enabled !!!!", terminal=True)
+
 	def _warn_about_egg_folders(self):
 		"""
 		This drops a wrning to logfile if there are more than one egg-folder for mr Beam Plugin present.
@@ -223,6 +226,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			beta_label="BETA",
 			job_time = 0.0,
 			terminal=False,
+			vorlon=False,
 			dev=dict(
 				debug=False, # deprected
 				terminalMaxLines = 2000,
@@ -275,6 +279,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			svgDPI=self._settings.get(['svgDPI']),
 			dxfScale=self._settings.get(['dxfScale']),
 			terminal=self._settings.get(['terminal']),
+			vorlon=self.is_vorlon_enabled(),
 			analyticsEnabled=self._settings.get(['analyticsEnabled']),
 			cam=dict(enabled=self._settings.get(['cam', 'enabled']),
 					 frontendUrl=self._settings.get(['cam', 'frontendUrl'])),
@@ -293,19 +298,19 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		)
 
 	def on_settings_save(self, data):
-		# if "workingAreaWidth" in data and data["workingAreaWidth"]:
-		# 	self._settings.set(["workingAreaWidth"], data["workingAreaWidth"])
-		# if "zAxis" in data:
-		# 	self._settings.set_boolean(["zAxis"], data["zAxis"])
 		if "svgDPI" in data:
 			self._settings.set_int(["svgDPI"], data["svgDPI"])
 		if "dxfScale" in data:
 			self._settings.set_float(["dxfScale"], data["dxfScale"])
 		if "terminal" in data:
 			self._settings.set_boolean(["terminal"], data["terminal"])
-
-		# selectedProfile = self.laserCutterProfileManager.get_current_or_default()
-		# self._settings.set(["current_profile_id"], selectedProfile['id'])
+		if "vorlon" in data:
+			if data["vorlon"]:
+				self._settings.set_float(["vorlon"], time.time())
+				self._logger.warn("Enabling VORLON per user request.", terminal=True)
+			else:
+				self._settings.set_boolean(["vorlon"], False)
+				self._logger.info("Disabling VORLON per user request.", terminal=True)
 
 	def on_shutdown(self):
 		self._logger.debug("Mr Beam Plugin stopping...")
@@ -394,8 +399,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 serial=self._serial,
 							 software_tier=self._settings.get(["dev", "software_tier"]),
 							 analyticsEnabled=self._settings.get(["analyticsEnabled"]),
-							 beta_label=self._settings.get(['beta_label']),
+							 beta_label=self.get_beta_label(),
 							 terminalEnabled=self._settings.get(['terminal']) or self.support_mode,
+							 vorlonEnabled=self.is_vorlon_enabled(),
 						 ))
 		r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
 
@@ -769,7 +775,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							displayName=self.getDisplayName(self._hostname),
 							hostname=self._hostname,
 							serial=self._serial,
-							beta_label=self._settings.get(['beta_label']),
+							beta_label=self.get_beta_label(),
 							e='null',
 							gcodeThreshold=0, #legacy
 							gcodeMobileThreshold=0, #legacy
@@ -1626,6 +1632,33 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			if type_env is not None:
 				result = type_env
 		return result
+
+	def get_beta_label(self):
+		label = self._settings.get(['beta_label'])
+		if (self.is_vorlon_enabled()):
+			if not label or not label.strip():
+				label = ''
+			else:
+				label = "{} | VORLON".format(label)
+		return label
+
+	def is_vorlon_enabled(self):
+		vorlon = self._settings.get(['vorlon'])
+		ts = -1
+		if vorlon == True:
+			# usually we get a timestamp here. if it's a true-Boolean, it was entered manually and we keep it forever.
+			return True
+		if not vorlon:
+			return False
+		try:
+			ts = float(vorlon)
+		except:
+			pass
+		if ts > 0 and time.time() - ts < float(60 * 60 * 6):
+			return True
+		else:
+			self._settings.set_boolean(['vorlon'], False, force=True)
+			return False
 
 
 # # this is for the command line interface we're providing
