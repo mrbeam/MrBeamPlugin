@@ -15,6 +15,7 @@ class Migration(object):
 
 	VERSION_DELETE_EGG_DIR_LEFTOVERS = '0.1.17'
 	VERSION_SETUP_IPTABLES           = '0.1.19'
+	VERSION_SYNC_GRBL_SETTINGS       = '0.1.24'
 
 	def __init__(self, plugin):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.migrate")
@@ -40,6 +41,10 @@ class Migration(object):
 
 				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_SETUP_IPTABLES, equal_ok=False):
 					self.setup_iptables()
+
+				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_SYNC_GRBL_SETTINGS, equal_ok=False):
+					if self.plugin._device_series == '2C':
+						self.add_grbl_130_maxTravel()
 				# migrations end
 
 				self.save_current_version()
@@ -152,7 +157,16 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 		self._logger.info("setup_iptables() Created and loaded iptables conf: '%s'", iptables_file)
 
 
-
+	def add_grbl_130_maxTravel(self):
+		"""
+		Since we introduced GRBL settings sync (aka correct_settings), we have grbl settings in machine profiles
+		So we need to add the old value for 'x max travel' for C-Series devices there.
+		"""
+		if self.plugin._device_series == '2C':
+			default_profile = laserCutterProfileManager().get_default()
+			default_profile['grbl']['settings'][130] = 501.1
+			laserCutterProfileManager().save(default_profile, allow_overwrite=True, make_default=True)
+			self._logger.info("add_grbl_130_maxTravel() C-Series Device: Added ['grbl']['settings'][130]=501.1 to lasercutterProfile: %s", default_profile)
 
 
 	##########################################################
@@ -211,6 +225,7 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 			default_profile['model'] = model
 			default_profile['legacy'] = dict()
 			default_profile['legacy']['job_done_home_position_x'] = 250
+			default_profile['grbl']['settings'][130] = 501.1
 			laserCutterProfileManager().save(default_profile, allow_overwrite=True, make_default=True)
 			self._logger.info("set_lasercutterPorfile_2C() Created lasercutterProfile '%s' and set as default. Content: %s", profile_id, default_profile)
 
