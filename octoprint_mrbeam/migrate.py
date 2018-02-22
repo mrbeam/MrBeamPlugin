@@ -13,7 +13,6 @@ def migrate(plugin):
 
 class Migration(object):
 
-	VERSION_DELETE_EGG_DIR_LEFTOVERS = '0.1.17'
 	VERSION_SETUP_IPTABLES           = '0.1.19'
 	VERSION_SYNC_GRBL_SETTINGS       = '0.1.24'
 
@@ -27,7 +26,11 @@ class Migration(object):
 
 	def run(self):
 		try:
-			if not self.is_lasercutterProfile_set(): self.set_lasercutterProfile()
+			if not self.is_lasercutterProfile_set():
+				self.set_lasercutterProfile()
+
+			# must be done outside of is_migration_required()-block.
+			self.delete_egg_dir_leftovers()
 
 			if self.is_migration_required():
 				self._logger.info("Starting migration from v{} to v{}".format(self.version_previous, self.version_current))
@@ -35,9 +38,6 @@ class Migration(object):
 				# migrations
 				if self.version_previous is None or self._compare_versions(self.version_previous, '0.1.13', equal_ok=False):
 					self.migrate_from_0_0_0()
-
-				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_DELETE_EGG_DIR_LEFTOVERS, equal_ok=False):
-					self.delete_egg_dir_leftovers()
 
 				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_SETUP_IPTABLES, equal_ok=False):
 					self.setup_iptables()
@@ -88,6 +88,59 @@ class Migration(object):
 		self.plugin._settings.set(['version'], self.version_current, force=True)
 
 
+
+	##########################################################
+	#####              general stuff                     #####
+	##########################################################
+
+	def delete_egg_dir_leftovers(self):
+		"""
+		Deletes egg files/dirs of older versions of MrBeamPlugin
+		Our first mrb_check USB sticks updated MrBeamPlugin per 'pip --ignore-installed'
+		which left old egg directories in site-packages.
+		This then caused the plugin to assume it's version is the old version, even though the new code was executed.
+		2018: Since we still see this happening, let's do this on every startup.
+		Since plugin version num is not reliable if there are old egg folders,
+		we must not call this from within a is_migration_needed()
+
+		Also cleans up an old OctoPrint folder which very likely is part of the image...
+		"""
+		site_packages_dir = '/home/pi/site-packages'
+		folders = []
+		keep_version = None
+		if os.path.isdir(site_packages_dir):
+			for f in os.listdir(site_packages_dir):
+				match = re.match(r'Mr_Beam-(?P<version>[0-9.]+)[.-].+', f)
+				if match:
+					version = match.group('version')
+					folders.append((version, f))
+
+					if keep_version is None:
+						keep_version = version
+					elif self._compare_versions(keep_version, version, equal_ok=False):
+						keep_version = version
+
+			if len(folders) > 1:
+				for version, folder in folders:
+					if version != keep_version:
+						del_dir = os.path.join(site_packages_dir, folder)
+						self._logger.warn("Cleaning up old .egg dir: %s  !!! RESTART OCTOPRINT TO GET RELIABLE MRB-PLUGIN VERSION !!", del_dir)
+						shutil.rmtree(del_dir)
+
+			# Also delete an old OctoPrint folder.
+			del_op_dir = os.path.join(site_packages_dir, 'OctoPrint-v1.3.5.1-py2.7.egg')
+			if os.path.isdir(del_op_dir):
+				self._logger.warn("Cleaning up old .egg dir: %s", del_op_dir)
+				shutil.rmtree(del_op_dir)
+
+		else:
+			self._logger.error("delete_egg_dir_leftovers() Dir not existing '%s', Can't check for egg leftovers.")
+
+
+	##########################################################
+	#####               migrations                       #####
+	##########################################################
+
 	def migrate_from_0_0_0(self):
 		self._logger.info("migrate_from_0_0_0() ")
 		my_profile = laserCutterProfileManager().get_default()
@@ -98,29 +151,6 @@ class Migration(object):
 		my_profile['dust']['auto_mode_time'] = 60
 		self._logger.info("migrate_from_0_0_0() Set lasercutterProfile ['dust']['auto_mode_time'] = 60")
 		laserCutterProfileManager().save(my_profile, allow_overwrite=True, make_default=True)
-
-
-	def delete_egg_dir_leftovers(self):
-		"""
-		Deletes egg files/dirs of older versions of MrBeamPlugin
-		Our first mrb_check USB sticks updated MrBeamPlugin per 'pip --ignore-installed'
-		which left old egg directories in site-packages.
-		This then caused the plugin to assume it's version is the old version, even though the new code was executed.
-		"""
-		self._logger.info("delete_egg_dir_leftovers() ")
-		site_packages_dir = '/home/pi/site-packages'
-		if os.path.isdir(site_packages_dir):
-			for f in os.listdir(site_packages_dir):
-				match = re.match(r'Mr_Beam-(?P<version>[0-9.]+)[.-].+', f)
-				if match:
-					version = match.group('version')
-					if self._compare_versions(version, self.VERSION_DELETE_EGG_DIR_LEFTOVERS, equal_ok=False):
-						del_dir = os.path.join(site_packages_dir, f)
-						self._logger.info("delete_egg_dir_leftovers() Deleting dir: %s", del_dir)
-						shutil.rmtree(del_dir)
-		else:
-			self._logger.error("delete_egg_dir_leftovers() Dir not existing '%s', Can't check for egg leftovers.")
-
 
 	def setup_iptables(self):
 		"""

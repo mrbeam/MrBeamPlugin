@@ -111,10 +111,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# Enable or disable internal support user.
 		self.support_mode = set_support_mode(self)
 
-
 		self.laserCutterProfileManager = laserCutterProfileManager()
 
-		self._warn_about_egg_folders()
 		self._do_initial_log()
 
 		try:
@@ -159,28 +157,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		if self.is_vorlon_enabled():
 			self._logger.warn("!!! VORLON is enabled !!!!", terminal=True)
-
-	def _warn_about_egg_folders(self):
-		"""
-		This drops a wrning to logfile if there are more than one egg-folder for mr Beam Plugin present.
-		It happened that there were several such folders of different Plugin versions which messes up the
-		version reporting of the Plugin.
-		Very likely the Folder with the higest vesion number is the version of the actually installed code.
-		And very likely this is not the vesion number that is shown everywhere in the log and in the UI.
-		That's why I've created this warning.
-		"""
-		site_packages_dir = '/home/pi/site-packages'
-		if os.path.isdir(site_packages_dir):
-			egg_dirs = []
-			for f in os.listdir(site_packages_dir):
-				match = re.match(r'Mr_Beam-.+', f)
-				if match:
-					egg_dirs.append(f)
-			if len(egg_dirs) > 1:
-				self._logger.warn("!!!!! There are more than one Mr_Beam egg folders in %s: %s - Very likely version numbers reported by Mr beam Plugin and other pip are incorrect.", site_packages_dir, egg_dirs)
-		else:
-			self._logger.error("Dir not existing '%s', Can't check for egg folders.")
-
 
 	def _convert_profiles(self, profiles):
 		result = dict()
