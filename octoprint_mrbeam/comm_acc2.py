@@ -387,7 +387,6 @@ class MachineCom(object):
 				if(len(self._acc_line_buffer) > 0):
 					del self._acc_line_buffer[0]  # Delete the commands character count corresponding to the last 'ok'
 		except serial.SerialException:
-			self._logger.info("ANDYTEST self._monitoring_active: %s", self._monitoring_active)
 			self._logger.error("Unexpected error while reading serial port: %s" % (get_exception_string()), terminal_as_comm=True)
 			self._errorValue = get_exception_string()
 			self.close(True)
@@ -538,7 +537,7 @@ class MachineCom(object):
 
 		self._onConnected(self.STATE_LOCKED)
 
-		self.verify_grbl_settings()
+		self.correct_grbl_settings()
 
 		# if not self.isOperational():
 		# 	self._onConnected(self.STATE_LOCKED)
@@ -570,17 +569,16 @@ class MachineCom(object):
 			if i == v and v_str.find('.') < 0:
 				value = i
 			self._grbl_settings[id] = dict(value=value, comment=comment)
-			# self._logger.info("ANDYTEST GRBL setting: $%s = %s (%s)", id, value, comment)
 		else:
 			self._logger.error("_handle_settings_message() line did not mach pattern: %s", line)
 
 
-	def verify_grbl_settings(self, retries=3):
+	def correct_grbl_settings(self, retries=3):
 		"""
 		This triggers a reload of GRBL settings and does a validation and correction afterwards.
 		"""
 		self._refresh_grbl_settings()
-		threading.Timer(3.0, self._verify_loaded_grbl_settings, kwargs=dict(retries=retries)).start()
+		threading.Timer(3.0, self._verify_and_correct_loaded_grbl_settings, kwargs=dict(retries=retries)).start()
 
 	def _refresh_grbl_settings(self):
 		self._grbl_settings = dict()
@@ -593,7 +591,7 @@ class MachineCom(object):
 			log.append("${id}={val} ({comment})".format(id=id, val=data['value'], comment=data['comment']))
 		return "({count}) [{data}]".format(count=len(log), data=', '.join(log))
 
-	def _verify_loaded_grbl_settings(self, retries=0):
+	def _verify_and_correct_loaded_grbl_settings(self, retries=0):
 		settings_count = self._laserCutterProfile['grbl']['settings_count']
 		settings_expected = self._laserCutterProfile['grbl']['settings']
 		my_grbl_settings = self._grbl_settings.copy() # to avoid race conditions
@@ -628,7 +626,7 @@ class MachineCom(object):
 			if retries > 0:
 				retries -= 1
 				self._logger.warn("GRBL Settings corrections done. Restarting verification...", terminal_as_comm=True)
-				self.verify_grbl_settings(retries=retries)
+				self.correct_grbl_settings(retries=retries)
 			else:
 				self._logger.warn("GRBL Settings corrections done. No more retries.", terminal_as_comm=True)
 
@@ -781,17 +779,20 @@ class MachineCom(object):
 		self._serialLogger.debug(message)
 
 
-	def flash_grbl(self, grbl_file=None):
+	def flash_grbl(self, grbl_file=None, verify_only=False):
 		"""
 		Flashes the specified grbl file (.hex). This file must not contain a bootloader.
 		:param grbl_file:
+		:param verify_only: If true, nothing is written, current grbl is verified only
 		"""
 		if grbl_file is None:
 			# TODO: obviously this needs to come from profile settings or so.
 			grbl_file = 'grbl_22270fa.hex'
 
+		log_verb = 'verifying' if verify_only else 'flashing'
+
 		if grbl_file.startswith('..') or grbl_file.startswith('/'):
-			msg = "ERROR flashing GRBL '{}': Invalid filename.".format(grbl_file)
+			msg = "ERROR {} GRBL '{}': Invalid filename.".format(log_verb, grbl_file)
 			self._logger.warn(msg, terminal_as_comm=True)
 			return
 
@@ -799,11 +800,11 @@ class MachineCom(object):
 
 		grbl_path = os.path.join(__package_path__, self.GRBL_HEX_FOLDER, grbl_file)
 		if not os.path.isfile(grbl_path):
-			msg = "ERROR flashing GRBL '{}': File not found".format(grbl_file)
+			msg = "ERROR {} GRBL '{}': File not found".format(log_verb, grbl_file)
 			self._logger.warn(msg, terminal_as_comm=True)
 			return
 
-		self._logger.info("Flashing grbl: '%s'", grbl_path)
+		self._logger.info("{} grbl: '%s'", log_verb.capitalize(), grbl_path)
 
 		self.close(isError=False, next_state=self.STATE_FLASHING)
 		time.sleep(1)
@@ -813,7 +814,7 @@ class MachineCom(object):
 		          "-b{}".format(self._baudrate), "-P{}".format(self._port),
 		          '-u', '-q', # non inter-active and quiet
 		          "-D", # do not erase settings
-		          "-Uflash:w:{}:i".format(grbl_path)]
+		          "-Uflash:{}:{}:i".format('v' if verify_only else 'w',grbl_path)]
 		self._logger.debug("flash_grbl() avrdude command:  %s", ' '.join(params))
 		output, code = exec_cmd_output(params)
 
@@ -821,29 +822,43 @@ class MachineCom(object):
 			output = output.replace('strace: |autoreset: Broken pipe\n', '')
 			output = output.replace('done with autoreset\n', '')
 
-		_mrbeam_plugin_implementation._analytics_handler.write_flash_grbl(
-			from_version=from_version,
-			to_version=grbl_file,
-			succesful=(code == 0))
+		if not verify_only:
+			try:
+				_mrbeam_plugin_implementation._analytics_handler.write_flash_grbl(
+					from_version=from_version,
+					to_version=grbl_file,
+					succesful=(code == 0))
+			except:
+				self._logger.exception("Exception while writing GRBL-flashing to analytics: ")
 
 		# error case
-		if code != 0:
+		if code != 0 and not verify_only:
 			msg_short = "ERROR flashing GRBL '{}'".format(grbl_file)
 			msg_long = '{}:\n{}'.format(msg_short, output)
 			self._logger.error(msg_long, terminal_as_comm=True)
 			self._logger.error(msg_short, terminal_as_comm=True)
 			self._errorValue = "avrdude returncode: %s" % code
 			self._changeState(self.STATE_CLOSED_WITH_ERROR)
-
 			self._logger.info("Please reconnect manually or reboot system.", terminal_as_comm=True)
 			return
+		elif code != 0 and verify_only:
+			msg_short = "Verification GRBL '{}': FAILED (See Avrdude output above for details.)".format(grbl_file)
+			msg_long = '{}:\n{}'.format(msg_short, output)
+			self._logger.info(msg_long, terminal_as_comm=True)
+			self._logger.info(msg_short, terminal_as_comm=True)
+		elif code == 0 and verify_only:
+			msg_short = "Verification GRBL '{}': OK".format(grbl_file)
+			msg_long = '{}:\n{}'.format(msg_short, output)
+			self._logger.info(msg_long, terminal_as_comm=True)
+			self._logger.info(msg_short, terminal_as_comm=True)
+		elif code == 0 and not verify_only:
+			# ok case
+			msg_short = "OK flashing GRBL '{}'".format(grbl_file)
+			msg_long = '{}:\n{}'.format(msg_short, output)
+			self._logger.debug(msg_long, terminal_as_comm=True)
+			self._logger.info(msg_short, terminal_as_comm=True)
 
-		# ok case
-		msg_short = "OK flashing GRBL '{}'".format(grbl_file)
-		msg_long = '{}:\n{}'.format(msg_short, output)
-		self._logger.debug(msg_long, terminal_as_comm=True)
-		self._logger.info(msg_short, terminal_as_comm=True)
-
+		# reconnect
 		time.sleep(1.0)
 		timeout = 60
 		self._logger.info("Waiting before reconnect. (max %s secs)", timeout, terminal_as_comm=True)
@@ -1047,9 +1062,17 @@ class MachineCom(object):
 				else:
 					self._log("Flashing GRBL...")
 				self.flash_grbl(file)
-			elif specialcmd.startswith('/verify_settings'):
-				self._log("Verifying GRBL settings...")
-				self.verify_grbl_settings()
+			elif specialcmd.startswith('/verify_grbl'):
+				file = None
+				if len(tokens) > 1:
+					file = tokens[1]
+					self._log("Verifying GRBL '%s'..." % file)
+				else:
+					self._log("Verifying GRBL...")
+				self.flash_grbl(file, verify_only=True)
+			elif specialcmd.startswith('/correct_settings'):
+				self._log("Correcting GRBL settings...")
+				self.correct_grbl_settings()
 			else:
 				self._log("Command not found.")
 				self._log("Available commands are:")
@@ -1059,7 +1082,8 @@ class MachineCom(object):
 				self._log("   /intensity <s>")
 				self._log("   /disconnect")
 				self._log("   /reset")
-				self._log("   /verify_settings")
+				self._log("   /correct_settings")
+				self._log("   /verify_grbl [<file>]")
 				self._log("   /flash_grbl [<file>]")
 		else:
 			cmd = cmd.encode('ascii', 'replace')
