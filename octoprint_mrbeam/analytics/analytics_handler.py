@@ -177,7 +177,6 @@ class AnalyticsHandler(object):
 
 	def _event_print_done(self, event, payload):
 		if not self._isJobDone:
-			self._logger.info("ANDYTEST _event_print_done() payload: %s", payload)
 			self._isJobDone = True #prevent two jobDone events per Job
 			self._write_jobevent(ak.PRINT_DONE, payload={ak.JOB_DURATION: int(round(payload['time']))})
 			self._write_collectors()

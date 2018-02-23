@@ -32,6 +32,10 @@ from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
 
 ### MachineCom #########################################################################################################
 class MachineCom(object):
+
+	GRBL_VERSION_20170919_22270fa = '0.9g_22270fa'
+	GRBL_VERSION_20180223_61638c5 = '0.9g_20180223_61638c5'
+
 	STATE_NONE = 0
 	STATE_OPEN_SERIAL = 1
 	STATE_DETECT_SERIAL = 2
@@ -62,7 +66,8 @@ class MachineCom(object):
 	GRBL_SYNC_COMMAND_WAIT_STATES = (GRBL_STATE_RUN, GRBL_STATE_QUEUE)
 	GRBL_HEX_FOLDER = 'files/grbl/'
 
-	pattern_status = re.compile("<(?P<status>\w+),.*WPos:(?P<pos_x>[0-9.\-]+),(?P<pos_y>[0-9.\-]+),.*laser (?P<laser_state>\w+):(?P<laser_intensity>\d+).*>")
+	pattern_grbl_status_legacy = re.compile("<(?P<status>\w+),.*MPos:(?P<mpos_x>[0-9.\-]+),(?P<mpos_y>[0-9.\-]+),.*WPos:(?P<pos_x>[0-9.\-]+),(?P<pos_y>[0-9.\-]+),.*laser (?P<laser_state>\w+):(?P<laser_intensity>\d+).*>")
+	pattern_grbl_status = re.compile("<(?P<status>\w+),.*MPos:(?P<mpos_x>[0-9.\-]+),(?P<mpos_y>[0-9.\-]+),.*WPos:(?P<pos_x>[0-9.\-]+),(?P<pos_y>[0-9.\-]+),.*limits:(?P<limit_x>[x]?)(?P<limit_y>[y]?)z?,.*laser (?P<laser_state>\w+):(?P<laser_intensity>\d+).*>")
 	pattern_grbl_version = re.compile("Grbl (?P<version>\S+)\s.*")
 	pattern_grbl_setting = re.compile("\$(?P<id>\d+)=(?P<value>\S+)\s\((?P<comment>.*)\)")
 
@@ -117,6 +122,8 @@ class MachineCom(object):
 		self._finished_passes = 0
 		self._sync_command_ts = -1
 		self._sync_command_state_sent = False
+		self.limit_x = -1
+		self.limit_y = -1
 
 		# regular expressions
 		self._regex_command = re.compile("^\s*\$?([GM]\d+|[THFSX])")
@@ -239,21 +246,6 @@ class MachineCom(object):
 				self._changeState(self.STATE_ERROR)
 				eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
 				self._logger.dump_terminal_buffer(level=logging.ERROR)
-
-	def _metric_loop(self):
-		self._metricf = open('metric.tmp','w')
-		self._metricf.write("1 sec interval")
-		while self._metric_active:
-			time.sleep(1)
-			if self._metric_time is not None:
-				t = time.time()
-				#s = "Metric: %f [chars/sec]" % (self._metric_chars / (t - self._metric_time))
-				s = "%.2f" % (self._metric_chars / (t - self._metric_time))
-				self._metric_time = None
-				self._metric_chars = 0
-				self._metricf.write(s)
-				#self._log(s)
-		self._metricf.close()
 
 	def _sendCommand(self, cmd=None):
 		if cmd is None:
@@ -430,7 +422,33 @@ class MachineCom(object):
 		self.sendCommand("M9")
 
 	def _handle_status_report(self, line):
-		self._grbl_state = line[1:].split(',')[0]
+		match = None
+		if (self._grbl_version == self.GRBL_VERSION_20170919_22270fa):
+			match = self.pattern_grbl_status_legacy.match(line)
+		else:
+			match = self.pattern_grbl_status.match(line)
+		if not match:
+			self._logger.warn("GRBL status string did not match pattern. GRBL version: %s, status string: %s", self._grbl_version, line)
+			return
+
+		groups = match.groupdict()
+		self._grbl_state = groups['status']
+
+		#  limit (end stops) not supported in legacy GRBL version
+		if 'limit_x' in groups: self.limit_x = time.time() if groups['limit_x'] else 0
+		if 'limit_y' in groups: self.limit_y = time.time() if groups['limit_y'] else 0
+
+		# positions
+		self.MPosX = float(groups['mpos_x'])
+		self.MPosY = float(groups['mpos_y'])
+		wx = float(groups['pos_x'])
+		wy = float(groups['pos_y'])
+		self._callback.on_comm_pos_update([self.MPosX, self.MPosY, 0], [wx, wy, 0])
+
+		# laser
+		self._handle_laser_intensity_for_analytics(groups['laser_state'], groups['laser_intensity'])
+
+		# unintended pause....
 		if self._grbl_state == self.GRBL_STATE_QUEUE:
 			if time.time() - self._pause_delay_time > 0.3:
 				if not self.isPaused():
@@ -442,22 +460,14 @@ class MachineCom(object):
 				if self.isPaused():
 					self._logger.warn("_handle_status_report() Unpausing since we got status '%s' from grbl.", self._grbl_state)
 					self.setPause(False, send_cmd=False, trigger="GRBL_RUN")
-		self._update_grbl_pos(line)
-		self._handle_laser_intensity_for_analytics(line)
-		#if self._metricf is not None:
-		#	self._metricf.write(line)
 
-	def _handle_laser_intensity_for_analytics(self, line):
-		match = self.pattern_status.match(line)
-		if match:
-			laser_intensity = 0
-			if match.group('laser_state') == 'on':
-				laser_intensity = int(match.group('laser_intensity'))
-				analytics = existing_analyticsHandler()
-				if analytics:
-					analytics.add_laser_intensity_value(laser_intensity)
-		else:
-			self._logger.warn("_handle_laser_intensity_for_analytics() status line didn't match expected pattern. ignoring")
+
+	def _handle_laser_intensity_for_analytics(self, laser_state, laser_intensity):
+		if laser_state == 'on':
+			analytics = existing_analyticsHandler()
+			if analytics:
+				analytics.add_laser_intensity_value(int(laser_intensity))
+
 
 	def _handle_ok_message(self):
 		if self._state == self.STATE_HOMING:
@@ -635,32 +645,6 @@ class MachineCom(object):
 			self._logger.info(msg + " - " + log)
 			self._log(msg)
 
-
-
-	def _update_grbl_pos(self, line):
-		# line example:
-		# <Idle,MPos:-434.000,-596.000,0.000,WPos:0.000,0.000,0.000,S:0,laser off:0>
-		try:
-			idx_mx_begin = line.index('MPos:') + 5
-			idx_mx_end = line.index('.', idx_mx_begin) + 3
-			idx_my_begin = line.index(',', idx_mx_end) + 1
-			idx_my_end = line.index('.', idx_my_begin) + 3
-
-			idx_wx_begin = line.index('WPos:') + 5
-			idx_wx_end = line.index('.', idx_wx_begin) + 3
-			idx_wy_begin = line.index(',', idx_wx_end) + 1
-			idx_wy_end = line.index('.', idx_wy_begin) + 3
-
-			mx = float(line[idx_mx_begin:idx_mx_end])
-			my = float(line[idx_my_begin:idx_my_end])
-			wx = float(line[idx_wx_begin:idx_wx_end])
-			wy = float(line[idx_wy_begin:idx_wy_end])
-			self.MPosX = mx
-			self.MPosY = my
-			self._callback.on_comm_pos_update([mx, my, 0], [wx, wy, 0])
-		except ValueError:
-			pass
-
 	def _process_command_phase(self, phase, command, command_type=None, gcode=None):
 		if phase not in ("queuing", "queued", "sending", "sent"):
 			return command, command_type, gcode
@@ -786,7 +770,7 @@ class MachineCom(object):
 		:param verify_only: If true, nothing is written, current grbl is verified only
 		"""
 		if grbl_file is None:
-			if self._grbl_version == '0.9g_22270fa': # legacy version string
+			if self._grbl_version == self.GRBL_VERSION_20170919_22270fa: # legacy version string
 				grbl_file = 'grbl_0.9g_20170919_22270fa.hex'
 			elif self._grbl_version is not None:
 				# '0.9g_20180223_61638c5' => 'grbl_0.9g_20180223_61638c5.hex'
