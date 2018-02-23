@@ -786,10 +786,18 @@ class MachineCom(object):
 		:param verify_only: If true, nothing is written, current grbl is verified only
 		"""
 		if grbl_file is None:
-			# TODO: obviously this needs to come from profile settings or so.
-			grbl_file = 'grbl_22270fa.hex'
+			if self._grbl_version == '0.9g_22270fa': # legacy version string
+				grbl_file = 'grbl_0.9g_20170919_22270fa.hex'
+			elif self._grbl_version is not None:
+				# '0.9g_20180223_61638c5' => 'grbl_0.9g_20180223_61638c5.hex'
+				grbl_file = 'grbl_{}.hex'.format(self._grbl_version)
 
 		log_verb = 'verifying' if verify_only else 'flashing'
+
+		if grbl_file is None:
+			msg = "ERROR {} GRBL: No default filename for currently installed version '%s'.".format(log_verb, self._grbl_version)
+			self._logger.warn(msg, terminal_as_comm=True)
+			return
 
 		if grbl_file.startswith('..') or grbl_file.startswith('/'):
 			msg = "ERROR {} GRBL '{}': Invalid filename.".format(log_verb, grbl_file)
@@ -813,7 +821,6 @@ class MachineCom(object):
 		params = ["avrdude", "-patmega328p", "-carduino",
 		          "-b{}".format(self._baudrate), "-P{}".format(self._port),
 		          '-u', '-q', # non inter-active and quiet
-		          "-D", # do not erase settings
 		          "-Uflash:{}:{}:i".format('v' if verify_only else 'w',grbl_path)]
 		self._logger.debug("flash_grbl() avrdude command:  %s", ' '.join(params))
 		output, code = exec_cmd_output(params)
