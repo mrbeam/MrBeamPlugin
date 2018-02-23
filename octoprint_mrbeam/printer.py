@@ -73,6 +73,7 @@ class Laser(Printer):
 			y=printer_profile['volume']['depth'] + printer_profile['volume']['working_area_shift_y'],
 			z=0
 		)
+		self._comm.rescue_from_home_pos()
 		command = "G92X{x}Y{y}Z{z}".format(**params)
 		self.commands(["$H", command, "G90", "G21"])
 

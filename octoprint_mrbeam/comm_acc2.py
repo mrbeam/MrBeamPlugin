@@ -61,13 +61,13 @@ class MachineCom(object):
 	COMMAND_RESUME   = '~'
 	COMMAND_RESET    = b'\x18'
 	COMMAND_FLUSH    = 'FLUSH'
-	COMMAND_SYNC     = 'SYNC'
+	COMMAND_SYNC     = 'SYNC' # experimental
 
 	GRBL_SYNC_COMMAND_WAIT_STATES = (GRBL_STATE_RUN, GRBL_STATE_QUEUE)
 	GRBL_HEX_FOLDER = 'files/grbl/'
 
-	pattern_grbl_status_legacy = re.compile("<(?P<status>\w+),.*MPos:(?P<mpos_x>[0-9.\-]+),(?P<mpos_y>[0-9.\-]+),.*WPos:(?P<pos_x>[0-9.\-]+),(?P<pos_y>[0-9.\-]+),.*laser (?P<laser_state>\w+):(?P<laser_intensity>\d+).*>")
-	pattern_grbl_status = re.compile("<(?P<status>\w+),.*MPos:(?P<mpos_x>[0-9.\-]+),(?P<mpos_y>[0-9.\-]+),.*WPos:(?P<pos_x>[0-9.\-]+),(?P<pos_y>[0-9.\-]+),.*limits:(?P<limit_x>[x]?)(?P<limit_y>[y]?)z?,.*laser (?P<laser_state>\w+):(?P<laser_intensity>\d+).*>")
+	pattern_grbl_status_legacy = re.compile("<(?P<status>\w+),.*MPos:(?P<mpos_x>[0-9.\-]+),(?P<mpos_y>[0-9.\-]+),.*WPos:(?P<pos_x>[0-9.\-]+),(?P<pos_y>[0-9.\-]+),.*RX:(?P<rx>\d+),.*laser (?P<laser_state>\w+):(?P<laser_intensity>\d+).*>")
+	pattern_grbl_status = re.compile("<(?P<status>\w+),.*MPos:(?P<mpos_x>[0-9.\-]+),(?P<mpos_y>[0-9.\-]+),.*WPos:(?P<pos_x>[0-9.\-]+),(?P<pos_y>[0-9.\-]+),.*RX:(?P<rx>\d+),.*limits:(?P<limit_x>[x]?)(?P<limit_y>[y]?)z?,.*laser (?P<laser_state>\w+):(?P<laser_intensity>\d+).*>")
 	pattern_grbl_version = re.compile("Grbl (?P<version>\S+)\s.*")
 	pattern_grbl_setting = re.compile("\$(?P<id>\d+)=(?P<value>\S+)\s\((?P<comment>.*)\)")
 
@@ -124,6 +124,8 @@ class MachineCom(object):
 		self._sync_command_state_sent = False
 		self.limit_x = -1
 		self.limit_y = -1
+		# from GRBL status RX value: Number of characters queued in Grbl's serial RX receive buffer.
+		self._grbl_rx_status = -1
 
 		# regular expressions
 		self._regex_command = re.compile("^\s*\$?([GM]\d+|[THFSX])")
@@ -264,7 +266,11 @@ class MachineCom(object):
 				self._send_event.set()
 			elif self._cmd == self.COMMAND_SYNC:
 				# SYNC waits until we're no longer waiting for any OKs from GRBL and GRBL has reported to no be busy anymore.
-				# TODO: Maybe we need to turn off the laser here...
+				# Still experimential: We need to test/verify/implement:
+				# - Maybe we need to turn off the laser here...
+				# - What if RX buffer remains 1 and never becomes 0? sync should handle/correct this
+				# - Do we need a timeout or something?
+				# self._logger.info("ANDYTEST SYNC: buffer: %s grbl_state: %s, grbl_rx: %s", len(self._acc_line_buffer), self._grbl_state, self._grbl_rx_status )
 				if self._sync_command_ts <=0:
 					self._sync_command_ts = time.time()
 				if len(self._acc_line_buffer) <= 0 and not self._grbl_state in self.GRBL_SYNC_COMMAND_WAIT_STATES:
@@ -437,6 +443,9 @@ class MachineCom(object):
 		#  limit (end stops) not supported in legacy GRBL version
 		if 'limit_x' in groups: self.limit_x = time.time() if groups['limit_x'] else 0
 		if 'limit_y' in groups: self.limit_y = time.time() if groups['limit_y'] else 0
+
+		# grbl_character_buffer
+		if 'rx' in groups: self._grbl_rx_status = groups['rx'] if groups['rx'] else -1
 
 		# positions
 		self.MPosX = float(groups['mpos_x'])
@@ -863,6 +872,56 @@ class MachineCom(object):
 			self._logger.info("Can't reconnect automacically. Try to reconnect manually or reboot system.")
 
 
+	def rescue_from_home_pos(self):
+		"""
+		In case the laserhead is pushed deep into homing corner and constantly keeps endstops/limit switches pushed,
+		this is going to rescue it from there before homing cycle is started.
+
+		This method tests:
+		- If GRBL version supports rescue (means reports limit data)
+		- If laserhead needs to be rescued
+		And then rescues aka moves the laserhead out of the critical zone.
+
+		Requires GRBV v '0.9g_20180223_61638c5' because we need limit data reported.
+		"""
+		if self._grbl_version is None:
+			self._logger.warn("rescue_from_home_pos() No GRBL version yet.")
+			return
+
+		if self._grbl_version == self.GRBL_VERSION_20170919_22270fa:
+			self._logger.info("rescue_from_home_pos() Rescue from home not supported by current GRBL version. GRBL version: %s", self._grbl_version)
+			return
+		else:
+			self._logger.info("rescue_from_home_pos() GRBL version: %s", self._grbl_version)
+
+
+		if self.limit_x < 0 or self.limit_y < 0:
+			self._logger.debug("rescue_from_home_pos() No limit data yet. Requesting status update from GRBL...")
+			self.sendCommand(self.COMMAND_STATUS)
+			i=0
+			while i<200 and (self.limit_x < 0 or self.limit_y < 0):
+				i += 1
+				self._logger.debug("rescue_from_home_pos() sleeping... (%s)", i)
+				time.sleep(0.01)
+
+		if self.limit_x < 0 or self.limit_y < 0:
+			self._logger.warn("rescue_from_home_pos() Can't get status with limit data. Returning.")
+			return
+
+		if self.limit_x == 0 and self.limit_y == 0:
+			self._logger.debug("rescue_from_home_pos() Not in home pos. nothing to rescue.")
+			return
+
+		self._logger.info("rescue_from_home_pos() Rescuing laserhead from home position...")
+		self.sendCommand('$X')
+		self.sendCommand(self.COMMAND_FLUSH)
+		self.sendCommand('G91')
+		self.sendCommand('G1X{x}Y{y}F500S0'.format(x='-5' if self.limit_x > 0 else '0', y='-5' if self.limit_y > 0 else '0'))
+		self.sendCommand('G90')
+		self.sendCommand(self.COMMAND_FLUSH)
+		time.sleep(1) # turns out we need this :-/ Maybe SYNC will solve once SYNC is fully working
+
+
 	def _handle_command_handler_result(self, command, command_type, gcode, handler_result):
 		original_tuple = (command, command_type, gcode)
 
@@ -985,7 +1044,8 @@ class MachineCom(object):
 		return self._gcode_M3_sending(cmd, cmd_type)
 
 	def _gcode_X_sent(self, cmd, cmd_type=None):
-		self._changeState(self.STATE_HOMING)  # TODO: maybe change to seperate $X mode
+		# since we use $X to rescue from homeposition, we don't want this to trigger homing
+		# self._changeState(self.STATE_HOMING)  # TODO: maybe change to seperate $X mode
 		return cmd
 
 	def _gcode_H_sent(self, cmd, cmd_type=None):
