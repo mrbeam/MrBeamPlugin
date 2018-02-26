@@ -44,8 +44,7 @@ $(function(){
 				name: 'Anodized Aluminum',
 				img: 'anodized_aluminum.jpg',
 				description: 'Dark anodized aluminum can be engraved. Works on iPhones.',
-				hints: 'Requires very precise focus.',
-				safety_notes: 'If engraving an iPhone, switch it off. Vibration alarms can ruin the result.',
+				hints: 'Anodized aluminum turns brighter through laser engraving. Therefor the settings are inverted! Requires very precise focus.',
 				laser_type: 'MrBeamII-1.0',
 				colors: {
 					'000000': {
@@ -65,11 +64,11 @@ $(function(){
 					'd4b26f': {
 						engrave: {eng_i:[0,20], eng_f:[2000,350], pierceTime: 0, dithering: false },
 						cut: [
-							{thicknessMM: 1, cut_i:80, cut_f:700, cut_p:2},
-							{thicknessMM: 2, cut_i:100, cut_f:700, cut_p:1},
-							{thicknessMM: 3, cut_i:100, cut_f:700, cut_p:2},
-							{thicknessMM: 4, cut_i:100, cut_f:600, cut_p:3},
-							{thicknessMM: 5, cut_i:100, cut_f:300, cut_p:3}
+							{thicknessMM: 1, cut_i:80, cut_f:525, cut_p:2},
+							{thicknessMM: 2, cut_i:100, cut_f:525, cut_p:1},
+							{thicknessMM: 3, cut_i:100, cut_f:525, cut_p:2},
+							{thicknessMM: 4, cut_i:100, cut_f:450, cut_p:3},
+							{thicknessMM: 5, cut_i:100, cut_f:225, cut_p:3}
 						]
 					}
 				}
@@ -83,7 +82,7 @@ $(function(){
 				laser_type: 'MrBeamII-1.0',
 				colors: {
 					'9c642b': {
-						engrave: {eng_i:[0,100], eng_f:[2000,350], pierceTime: 0, dithering: false },
+						engrave: {eng_i:[0,100], eng_f:[2000,260], pierceTime: 0, dithering: false },
 						cut: []
 					}
 				}
@@ -99,10 +98,10 @@ $(function(){
 					'8b624a': {
 						engrave: {eng_i:[10,25], eng_f:[2000,850], pierceTime: 0, dithering: false },
 						cut: [
-							{thicknessMM: 2, cut_i:100, cut_f:500, cut_p:4},
-							{thicknessMM: 3, cut_i:100, cut_f:500, cut_p:4},
-							{thicknessMM: 4, cut_i:100, cut_f:400, cut_p:4}
-							// {thicknessMM: 5, cut_i:100, cut_f:400, cut_p:4}
+							{thicknessMM: 2, cut_i:100, cut_f:375, cut_p:4},
+							{thicknessMM: 3, cut_i:100, cut_f:375, cut_p:4},
+							{thicknessMM: 4, cut_i:100, cut_f:300, cut_p:4}
+							// {thicknessMM: 5, cut_i:100, cut_f:300, cut_p:5}
 						]
 					}
 				}
@@ -118,7 +117,7 @@ $(function(){
 					'8b624a': {
 						engrave: {eng_i:[10,25], eng_f:[2000,850], pierceTime: 0, dithering: false },
 						cut: [
-							{thicknessMM: 5, cut_i:100, cut_f:400, cut_p:4}
+							{thicknessMM: 5, cut_i:100, cut_f:300, cut_p:4}
 						]
 					}
 				}
@@ -136,7 +135,7 @@ $(function(){
 					'c7c97c': {
 						engrave: {eng_i:[10,25], eng_f:[2000,1300], pierceTime: 0, dithering: false },
 						cut: [
-							{thicknessMM: 2.5, cut_i:100, cut_f:450, cut_p:3}
+							{thicknessMM: 2.5, cut_i:100, cut_f:330, cut_p:3}
 						]
 					}
 				}
@@ -153,7 +152,7 @@ $(function(){
 						name: 'green',
 						engrave: null, // not tested yet
 						cut: [
-							{thicknessMM: 4, cut_i:100, cut_f:300, cut_p:1}
+							{thicknessMM: 4, cut_i:100, cut_f:225, cut_p:1}
 						]
 					},
 					'4dcaca': {
@@ -167,49 +166,49 @@ $(function(){
 						name: 'royal blue',
 						engrave: null, // not tested yet
 						cut: [
-							{thicknessMM: 4, cut_i:100, cut_f:350, cut_p:2}
+							{thicknessMM: 4, cut_i:100, cut_f:260, cut_p:2}
 						]
 					},
 					'c98600': {
 						name: 'yellow',
 						engrave: null, // not tested yet
 						cut: [
-							{thicknessMM: 4, cut_i:100, cut_f:350, cut_p:2}
+							{thicknessMM: 4, cut_i:100, cut_f:260, cut_p:2}
 						]
 					},
 					'eca100': {
 						name: 'sunny yellow',
 						engrave: null, // not tested yet
 						cut: [
-							{thicknessMM: 4, cut_i:100, cut_f:300, cut_p:2}
+							{thicknessMM: 4, cut_i:100, cut_f:225, cut_p:2}
 						]
 					},
 					'550024': {
 						name: 'purple',
 						engrave: null, // not tested yet
 						cut: [
-							{thicknessMM: 4, cut_i:100, cut_f:500, cut_p:2}
+							{thicknessMM: 4, cut_i:100, cut_f:375, cut_p:2}
 						]
 					},
 					'393939': {
 						name: 'gray',
 						engrave: null, // not tested yet
 						cut: [
-							{thicknessMM: 4, cut_i:100, cut_f:400, cut_p:2}
+							{thicknessMM: 4, cut_i:100, cut_f:300, cut_p:2}
 						]
 					},
 					'000000': {
 						name: 'black',
 						engrave: null, // not tested yet
 						cut: [
-							{thicknessMM: 4, cut_i:100, cut_f:400, cut_p:2}
+							{thicknessMM: 4, cut_i:100, cut_f:300, cut_p:2}
 						]
 					},
 					'e03800': {
 						name: 'orange',
 						engrave: null, // not tested yet
 						cut: [
-							{thicknessMM: 4, cut_i:100, cut_f:500, cut_p:2}
+							{thicknessMM: 4, cut_i:100, cut_f:375, cut_p:2}
 						]
 					},
 				}
@@ -224,24 +223,24 @@ $(function(){
 				colors: {
 					'0057a8': {
 						engrave: null,
-						cut: [{thicknessMM: 2, cut_i:100, cut_f:650, cut_p:1},
-                              {thicknessMM: 3, cut_i:100, cut_f:600, cut_p:1}]
+						cut: [{thicknessMM: 2, cut_i:100, cut_f:480, cut_p:1},
+                              {thicknessMM: 3, cut_i:100, cut_f:450, cut_p:1}]
 					},
 					'ee6d2c': {
 						engrave: null,
-						cut: [{thicknessMM: 2, cut_i:75, cut_f:800, cut_p:1}]
+						cut: [{thicknessMM: 2, cut_i:75, cut_f:140, cut_p:1}]
 					},
 					'e6e6e6': {
 						engrave: null,
-						cut: [{thicknessMM: 2, cut_i:100, cut_f:190, cut_p:1}]
+						cut: [{thicknessMM: 2, cut_i:100, cut_f:140, cut_p:1}]
 					},
 					'000000': {
 						engrave: null,
-						cut: [{thicknessMM: 2, cut_i:100, cut_f:800, cut_p:1}]
+						cut: [{thicknessMM: 2, cut_i:100, cut_f:600, cut_p:1}]
 					},
 					'41c500': {
 						engrave: null,
-						cut: [{thicknessMM: 2, cut_i:100, cut_f:800, cut_p:1}]
+						cut: [{thicknessMM: 2, cut_i:100, cut_f:600, cut_p:1}]
 					},
 				}
 			},
@@ -256,9 +255,9 @@ $(function(){
 					'795f39': {
 						engrave: {eng_i:[0,35], eng_f:[2000,850], pierceTime: 0, dithering: false },
 						cut: [
-							{thicknessMM: 0.8, cut_i:100, cut_f:300, cut_p:2},
-							{thicknessMM: 1.5, cut_i:100, cut_f:150, cut_p:2},
-							{thicknessMM: 3,   cut_i:100, cut_f:100, cut_p:4}
+							{thicknessMM: 0.8, cut_i:100, cut_f:225, cut_p:2},
+							{thicknessMM: 1.5, cut_i:100, cut_f:110, cut_p:2},
+							{thicknessMM: 3,   cut_i:100, cut_f:100, cut_p:5}
 						]
 					}
 				}
@@ -275,8 +274,8 @@ $(function(){
 					'e7d27f': {
 						engrave: null,
 						cut: [
-							{thicknessMM: 0.1, cut_i:75, cut_f:800, cut_p:1},
-							{thicknessMM: 0.2, cut_i:85, cut_f:800, cut_p:2} //  >300g is what we said in the old system
+							{thicknessMM: 0.1, cut_i:75, cut_f:600, cut_p:1},
+							{thicknessMM: 0.2, cut_i:85, cut_f:600, cut_p:2} //  >300g is what we said in the old system
 						]
 					}
 				}
@@ -292,8 +291,8 @@ $(function(){
 					'e7d27f': {
 						engrave: {eng_i:[18,35], eng_f:[2000,750], pierceTime: 0, dithering: false },
 						cut: [
-							{thicknessMM: 3, cut_i:100, cut_f:150, cut_p:3},
-							{thicknessMM: 4, cut_i:100, cut_f:120, cut_p:3},
+							{thicknessMM: 3, cut_i:100, cut_f:110, cut_p:3},
+							{thicknessMM: 4, cut_i:100, cut_f:100, cut_p:3},
 						]
 					}
 				}
@@ -309,8 +308,8 @@ $(function(){
 					'e7d27f': {
 						engrave: {eng_i:[10,35], eng_f:[2000,850], pierceTime: 0, dithering: false },
 						cut: [
-							{thicknessMM: 6,  cut_i:100, cut_f:225, cut_p:2},
-							{thicknessMM: 10, cut_i:100, cut_f:140, cut_p:3},
+							{thicknessMM: 6,  cut_i:100, cut_f:160, cut_p:2},
+							{thicknessMM: 10, cut_i:100, cut_f:100, cut_p:3},
 						]
 					}
 				}
