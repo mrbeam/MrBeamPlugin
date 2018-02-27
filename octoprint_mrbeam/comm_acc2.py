@@ -468,9 +468,14 @@ class MachineCom(object):
 		if self._grbl_state == self.GRBL_STATE_QUEUE:
 			if time.time() - self._pause_delay_time > 0.3:
 				if not self.isPaused():
-					self._logger.warn("_handle_status_report() Pausing since we got status '%s' from grbl.", self._grbl_state)
-					self.setPause(True, send_cmd=False, trigger="GRBL_QUEUE")
-					self._logger.dump_terminal_buffer(logging.WARN)
+					if _mrbeam_plugin_implementation and _mrbeam_plugin_implementation._oneButtonHandler and \
+						not _mrbeam_plugin_implementation._oneButtonHandler.is_intended_pause():
+						self._logger.warn("_handle_status_report() Override pause since we got status '%s' from grbl.", self._grbl_state)
+						self.setPause(False, send_cmd=True, force=True, trigger="GRBL_QUEUE_OVERRIDE")
+					else:
+						self._logger.warn("_handle_status_report() Pausing since we got status '%s' from grbl.", self._grbl_state)
+						self.setPause(True, send_cmd=False, trigger="GRBL_QUEUE")
+						self._logger.dump_terminal_buffer(logging.WARN)
 		elif self._grbl_state == self.GRBL_STATE_RUN or self._grbl_state == self.GRBL_STATE_IDLE:
 			if time.time() - self._pause_delay_time > 0.3:
 				if self.isPaused():
@@ -1241,7 +1246,7 @@ class MachineCom(object):
 		}
 		eventManager().fire(OctoPrintEvents.PRINT_CANCELLED, payload)
 
-	def setPause(self, pause, send_cmd=True, pause_for_cooling=False, trigger=None):
+	def setPause(self, pause, send_cmd=True, pause_for_cooling=False, trigger=None, force=False):
 		if not self._currentFile:
 			return
 
@@ -1254,7 +1259,7 @@ class MachineCom(object):
 			"time": self.getPrintTime()
 		}
 
-		if not pause and self.isPaused():
+		if not pause and (self.isPaused() or force):
 			if self._pauseWaitStartTime:
 				self._pauseWaitTimeLost = self._pauseWaitTimeLost + (time.time() - self._pauseWaitStartTime)
 				self._pauseWaitStartTime = None
@@ -1264,7 +1269,7 @@ class MachineCom(object):
 				self._real_time_commands['cycle_start']=True
 			self._send_event.set()
 			eventManager().fire(OctoPrintEvents.PRINT_RESUMED, payload)
-		elif pause and self.isPrinting():
+		elif pause and (self.isPrinting() or force):
 			if not self._pauseWaitStartTime:
 				self._pauseWaitStartTime = time.time()
 			self._pause_delay_time = time.time()
