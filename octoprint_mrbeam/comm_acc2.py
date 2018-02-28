@@ -259,6 +259,8 @@ class MachineCom(object):
 				# FLUSH waits until we're no longer waiting for any OKs from GRBL
 				if self._sync_command_ts <=0:
 					self._sync_command_ts = time.time()
+					self._log("FLUSHing (grbl_state: {}, acc_line_buffer: {}, grbl_rx: {})".format(
+					                  self._grbl_state, sum([len(x) for x in self._acc_line_buffer]), self._grbl_rx_status))
 				if len(self._acc_line_buffer) <= 0:
 					self._cmd = None
 					self._log("FLUSHed ({}ms)".format(int(1000*(time.time() - self._sync_command_ts))))
@@ -270,9 +272,10 @@ class MachineCom(object):
 				# - Maybe we need to turn off the laser here...
 				# - What if RX buffer remains 1 and never becomes 0? sync should handle/correct this
 				# - Do we need a timeout or something?
-				# self._logger.info("ANDYTEST SYNC: buffer: %s grbl_state: %s, grbl_rx: %s", len(self._acc_line_buffer), self._grbl_state, self._grbl_rx_status )
 				if self._sync_command_ts <=0:
 					self._sync_command_ts = time.time()
+					self._log("SYNCing (grbl_state: {}, acc_line_buffer: {}, grbl_rx: {})".format(
+					                  self._grbl_state, sum([len(x) for x in self._acc_line_buffer]), self._grbl_rx_status))
 				if len(self._acc_line_buffer) <= 0 and not self._grbl_state in self.GRBL_SYNC_COMMAND_WAIT_STATES:
 					# Successfully synced, let's move on
 					self._cmd = None
@@ -306,7 +309,6 @@ class MachineCom(object):
 				self._process_command_phase("sent", cmd)
 			except serial.SerialException:
 				self._log("Unexpected error while writing serial port: %s" % (get_exception_string()))
-				self._errorValue = get_exception_string()
 				self._errorValue = get_exception_string()
 				self.close(True)
 
@@ -455,11 +457,14 @@ class MachineCom(object):
 		if 'rx' in groups: self._grbl_rx_status = groups['rx'] if groups['rx'] else -1
 
 		# positions
-		self.MPosX = float(groups['mpos_x'])
-		self.MPosY = float(groups['mpos_y'])
-		wx = float(groups['pos_x'])
-		wy = float(groups['pos_y'])
-		self._callback.on_comm_pos_update([self.MPosX, self.MPosY, 0], [wx, wy, 0])
+		try:
+			self.MPosX = float(groups['mpos_x'])
+			self.MPosY = float(groups['mpos_y'])
+			wx = float(groups['pos_x'])
+			wy = float(groups['pos_y'])
+			self._callback.on_comm_pos_update([self.MPosX, self.MPosY, 0], [wx, wy, 0])
+		except:
+			self._logger.exception("Exception while handling position updates from GRBL.")
 
 		# laser
 		self._handle_laser_intensity_for_analytics(groups['laser_state'], groups['laser_intensity'])
@@ -637,7 +642,8 @@ class MachineCom(object):
 		else:
 			for id, value in sorted(settings_expected.iteritems()):
 				if not id in my_grbl_settings:
-					self._logger.warning("GRBL Settings $%s=%s (%s) - Unexpected id: $%s", id, my_grbl_settings[id]['value'], my_grbl_settings[id]['comment'], id)
+					self._logger.error("GRBL Settings $%s - Missing entry! Should be: %s", id, value)
+					commands.append("${id}={val}".format(id=id, val=value))
 				elif my_grbl_settings[id]['value'] != value:
 					self._logger.error("GRBL Settings $%s=%s (%s) - Incorrect value! Should be: %s",
 					                   id, my_grbl_settings[id]['value'], my_grbl_settings[id]['comment'], value)
@@ -790,6 +796,13 @@ class MachineCom(object):
 		:param grbl_file:
 		:param verify_only: If true, nothing is written, current grbl is verified only
 		"""
+		log_verb = 'verifying' if verify_only else 'flashing'
+
+		if self._state in (self.STATE_FLASHING, self.STATE_PRINTING, self.STATE_PAUSED):
+			msg = "{} GRBL not possible in current printer state.".format(log_verb.capitalize())
+			self._logger.warn(msg, terminal_as_comm=True)
+			return
+
 		if grbl_file is None:
 			if self._grbl_version == self.GRBL_VERSION_20170919_22270fa: # legacy version string
 				grbl_file = 'grbl_0.9g_20170919_22270fa.hex'
@@ -797,7 +810,6 @@ class MachineCom(object):
 				# '0.9g_20180223_61638c5' => 'grbl_0.9g_20180223_61638c5.hex'
 				grbl_file = 'grbl_{}.hex'.format(self._grbl_version)
 
-		log_verb = 'verifying' if verify_only else 'flashing'
 
 		if grbl_file is None:
 			msg = "ERROR {} GRBL: No default filename for currently installed version '%s'.".format(log_verb, self._grbl_version)

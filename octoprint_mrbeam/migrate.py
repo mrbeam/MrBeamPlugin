@@ -4,6 +4,7 @@ import shutil
 import subprocess
 from distutils.version import StrictVersion
 from octoprint_mrbeam.mrb_logger import mrb_logger
+from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from .profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
 
 
@@ -54,6 +55,7 @@ class Migration(object):
 				# migrations end
 
 				self.save_current_version()
+				self._logger.info("Finished migration from v{} to v{}.".format(self.version_previous, self.version_current))
 			elif self.suppress_migrations:
 				self._logger.warn("No migration done because 'suppress_migrations' is set to true in settings.")
 			else:
@@ -152,7 +154,7 @@ class Migration(object):
 		"""
 		host = self.plugin.getHostname()
 		command = "sudo sed -i '/.*ssid: MrBeam-F930.*/c\  ssid: {}' /etc/netconnectd.yaml".format(host)
-		code = self.exec_cmd(command)
+		code = exec_cmd(command)
 		self._logger.debug("fix_wifi_ap_name() Corrected Wifi AP name.")
 
 
@@ -187,19 +189,19 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 """
 
 		command = ['sudo', 'bash', '-c', "echo '{data}' > {file}".format(data=iptables_body, file=iptables_file)]
-		out, code = self._exec_cmd_output(command)
+		out, code = exec_cmd_output(command)
 		if code != 0:
 			self._logger.error("setup_iptables() Error while writing iptables conf: '%s'", out)
 			return
 
 		command = ['sudo', 'chmod', '+x', iptables_file]
-		out, code = self._exec_cmd_output(command)
+		out, code = exec_cmd_output(command)
 		if code != 0:
 			self._logger.error("setup_iptables() Error while chmod iptables conf: '%s'", out)
 			return
 
 		command = ['sudo', 'bash', '-c', iptables_file]
-		out, code = self._exec_cmd_output(command)
+		out, code = exec_cmd_output(command)
 		if code != 0:
 			self._logger.error("setup_iptables() Error while executing iptables conf: '%s'", out)
 			return
@@ -301,45 +303,5 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 			self._logger.info("set_lasercutterPorfile_2D() Created lasercutterProfile '%s' and set as default. Content: %s",profile_id, default_profile)
 
 
-	##########################################################
-	#####                 helpers                        #####
-	##########################################################
 
-	def exec_cmd(self, cmd):
-		'''
-		Executes a system command
-		:param cmd:
-		:return: True if system returncode was 0,
-				 False if the command returned with an error,
-				 None if there was an exception.
-		'''
-		code = None
 
-		self._logger.debug("_execute_command() command: '%s'", cmd)
-		try:
-			code = subprocess.call(cmd, shell=True)
-		except Exception as e:
-			self._logger.debug("Failed to execute command '%s', return code: %s, Exception: %s", cmd, code, e)
-			return None
-
-			self._logger.debug("_execute_command() command return code: '%s'", code)
-		return code == 0
-
-	def _exec_cmd_output(self, cmd):
-		'''
-		Executes a system command and returns its output.
-		:param cmd:
-		:return: Tuple(String:output , int return_code)
-				If system returncode was not 0 (zero), output will be the error message
-		'''
-		output = None
-		code = 0
-		self._logger.debug("_exec_cmd_output() command: '%s'", cmd)
-		try:
-			output = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
-		except subprocess.CalledProcessError as e:
-			code = e.returncode
-			output = e.output
-			self._logger.debug("Fail to execute command '%s', return code: %s, output: '%s'", cmd, e.returncode, e.output)
-
-		return output, code
