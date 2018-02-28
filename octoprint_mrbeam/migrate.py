@@ -45,6 +45,11 @@ class Migration(object):
 				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_SYNC_GRBL_SETTINGS, equal_ok=False):
 					if self.plugin._device_series == '2C':
 						self.add_grbl_130_maxTravel()
+
+				# only needed for image'PROD 2018-01-12 19:15 1515784545'
+				if self.plugin.get_octopi_info() == 'PROD 2018-01-12 19:15 1515784545':
+					self.fix_wifi_ap_name()
+
 				# migrations end
 
 				self.save_current_version()
@@ -135,6 +140,18 @@ class Migration(object):
 
 		else:
 			self._logger.error("delete_egg_dir_leftovers() Dir not existing '%s', Can't check for egg leftovers.")
+
+
+	def fix_wifi_ap_name(self):
+		"""
+		image 'PROD 2018-01-12 19:15 1515784545' has wifi AP name: 'MrBeam-F930'
+		Let's correct it to actual wifi AP name
+		"""
+		host = self.plugin.getHostname()
+		command = "sudo sed -i '/.*ssid: MrBeam-F930.*/c\  ssid: {}' /etc/netconnectd.yaml".format(host)
+		code = self.exec_cmd(command)
+		self._logger.debug("fix_wifi_ap_name() Corrected Wifi AP name.")
+
 
 
 	##########################################################
@@ -284,6 +301,26 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 	##########################################################
 	#####                 helpers                        #####
 	##########################################################
+
+	def exec_cmd(self, cmd):
+		'''
+		Executes a system command
+		:param cmd:
+		:return: True if system returncode was 0,
+				 False if the command returned with an error,
+				 None if there was an exception.
+		'''
+		code = None
+
+		self._logger.debug("_execute_command() command: '%s'", cmd)
+		try:
+			code = subprocess.call(cmd, shell=True)
+		except Exception as e:
+			self._logger.debug("Failed to execute command '%s', return code: %s, Exception: %s", cmd, code, e)
+			return None
+
+			self._logger.debug("_execute_command() command return code: '%s'", code)
+		return code == 0
 
 	def _exec_cmd_output(self, cmd):
 		'''
