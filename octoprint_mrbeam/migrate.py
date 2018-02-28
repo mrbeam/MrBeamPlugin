@@ -22,6 +22,7 @@ class Migration(object):
 
 		self.version_previous = self.plugin._settings.get(['version'])
 		self.version_current  = self.plugin._plugin_version
+		self.suppress_migrations = self.plugin._settings.get(['dev', 'suppress_migrations'])
 
 
 	def run(self):
@@ -32,7 +33,7 @@ class Migration(object):
 			# must be done outside of is_migration_required()-block.
 			self.delete_egg_dir_leftovers()
 
-			if self.is_migration_required():
+			if self.is_migration_required() and not self.suppress_migrations:
 				self._logger.info("Starting migration from v{} to v{}".format(self.version_previous, self.version_current))
 
 				# migrations
@@ -53,6 +54,8 @@ class Migration(object):
 				# migrations end
 
 				self.save_current_version()
+			elif self.suppress_migrations:
+				self._logger.warn("No migration done because 'suppress_migrations' is set to true in settings.")
 			else:
 				self._logger.debug("No migration required.")
 		except:

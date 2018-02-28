@@ -213,7 +213,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				# 	local =  "DEV"
 				# ),
 				software_tier = SW_UPDATE_TIER_PROD,
-				iobeam_disable_warnings = False,
+				iobeam_disable_warnings = False, # for develpment on non-MrBeam devices
+				suppress_migrations = False,     # for develpment on non-MrBeam devices
 				support_mode = False
 			),
 			# TODO rename analyticsEnabled and put in analytics-dict
