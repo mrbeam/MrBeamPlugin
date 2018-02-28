@@ -16,6 +16,7 @@ $(function () {
         self.navigation = params[11];
         self.appearance = params[12];
         self.loadingOverlay = params[13];
+        self.softwareUpdate = params[14];
 
         self.isStartupComplete = false;
         self.storedSocketData = [];
@@ -24,6 +25,13 @@ $(function () {
         $('#mrbeam_logo_link').click(function() {
             $('#wa_tab_btn').tab('show');
         });
+
+        // get the hook when softwareUpdate get data from server
+        self.fromCheckResponse_copy = self.softwareUpdate.fromCheckResponse;
+        self.softwareUpdate.fromCheckResponse = function(data, ignoreSeen, showIfNothingNew) {
+            self.fromCheckResponse_copy(data, ignoreSeen, showIfNothingNew);
+            self.writeBranchesToSwUpdateScreen();
+        };
 
         self.onStartup = function () {
             // TODO fetch machine profile on start
@@ -292,6 +300,32 @@ $(function () {
             }
         };
 
+        /**
+         * Shows branch info in Software Update Settings if branch is not TIER-default
+         * Takes data from softwareUpdatePlugin and sneaks branch information into it.
+         */
+        self.writeBranchesToSwUpdateScreen = function(){
+            var software_update_branches = self.settings.settings.plugins.mrbeam.software_update_branches;
+            // only if we really have some branch names inject
+            if (Object.keys(software_update_branches).length > 0) {
+                var allItems = self.softwareUpdate.versions.items();
+                var nuItems = []
+
+                for (var i = 0; i < allItems.length; i++) {
+                    var plugin_id = allItems[i]['key']
+                    var my_conf = jQuery.extend({}, allItems[i]);
+                    if (software_update_branches[plugin_id]) {
+                        var branch = software_update_branches[plugin_id]();
+                        console.log(plugin_id+": "+branch);
+                        my_conf['displayVersion'] += ' ('+branch+')';
+                    }
+                    nuItems.push(my_conf);
+                }
+                self.softwareUpdate.versions.updateItems(nuItems);
+            }
+        }
+
+
         self.fromCurrentData = function (data) {
             self._fromData(data);
         };
@@ -532,7 +566,7 @@ $(function () {
         ["loginStateViewModel", "settingsViewModel", "printerStateViewModel", "filesViewModel", "gcodeFilesViewModel",
             "connectionViewModel", "controlViewModel", "terminalViewModel", "workingAreaViewModel",
             "vectorConversionViewModel", "readyToLaserViewModel", "navigationViewModel", "appearanceViewModel",
-            "loadingOverlayViewModel"],
+            "loadingOverlayViewModel", "softwareUpdateViewModel"],
         [document.getElementById("mrb_state"),
             document.getElementById("mrb_control"),
             document.getElementById("mrb_connection_wrapper"),

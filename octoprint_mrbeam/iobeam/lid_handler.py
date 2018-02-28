@@ -115,7 +115,7 @@ class LidHandler(object):
 						self._client_opened,
 						self._is_slicing,
 						self._lid_closed,
-						self._printer.is_locked(),
+						self._printer.is_locked() if self._printer else None,
 						self._photo_creator.save_debug_images
 					))
 				self._end_photo_worker()
@@ -127,7 +127,7 @@ class LidHandler(object):
 							self._client_opened,
 							self._is_slicing,
 							self._lid_closed,
-							self._printer.is_locked(),
+							self._printer.is_locked() if self._printer else None,
 							self._photo_creator.save_debug_images,
 							self._photo_creator.is_initial_calibration
 						))
@@ -142,7 +142,7 @@ class LidHandler(object):
 						self._client_opened,
 						self._is_slicing,
 						self._lid_closed,
-						self._printer.is_locked(),
+						self._printer.is_locked() if self._printer else None,
 						self._photo_creator.save_debug_images
 					))
 

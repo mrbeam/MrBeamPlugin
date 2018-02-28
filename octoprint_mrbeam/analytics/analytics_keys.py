@@ -20,6 +20,7 @@ class AnalyticsKeys(object):
 	STARTUP = 'startup'
 	SHUTDOWN = 'shutdown'
 	INIT = 'init_json'
+	FLASH_GRBL = 'flash_grbl'
 
 
 
