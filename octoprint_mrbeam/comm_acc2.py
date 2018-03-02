@@ -994,9 +994,10 @@ class MachineCom(object):
 			self._intensity_factor = temp
 			self._intensity_dict = {}
 			if self._actual_intensity is not None:
+				intensity_limit = int(self._laserCutterProfile['laser']['intensity_limit'])
 				temp = round(self._actual_intensity * self._intensity_factor)
-				if temp > 1000:
-					temp = 1000
+				if temp > intensity_limit:
+					temp = intensity_limit
 				self.sendCommand('S%d' % round(temp))
 
 	def _replace_feedrate(self, cmd):
@@ -1021,15 +1022,20 @@ class MachineCom(object):
 	def _replace_intensity(self, cmd):
 		obj = self._regex_intensity.search(cmd)
 		if obj is not None:
+			intensity_limit = int(self._laserCutterProfile['laser']['intensity_limit'])
 			intensity_cmd = cmd[obj.start():obj.end()]
-			self._actual_intensity = int(intensity_cmd[1:])
-			if self._intensity_factor != 1:
+			parsed_intensity = int(intensity_cmd[1:])
+			self._actual_intensity = parsed_intensity if parsed_intensity <= intensity_limit else intensity_limit
+			if self._actual_intensity != parsed_intensity:
+				return cmd.replace(intensity_cmd, 'S%d' % round(self._actual_intensity))
+			elif self._intensity_factor != 1:
+				# _intensity_factor is deprecated
 				if intensity_cmd in self._intensity_dict:
 					new_intensity = self._intensity_dict[intensity_cmd]
 				else:
 					new_intensity = round(self._actual_intensity * self._intensity_factor)
-					if new_intensity > 1000:
-						new_intensity = 1000
+					if new_intensity > intensity_limit:
+						new_intensity = intensity_limit
 					self._intensity_dict[intensity_cmd] = new_intensity
 				return cmd.replace(intensity_cmd, 'S%d' % round(new_intensity))
 		return cmd

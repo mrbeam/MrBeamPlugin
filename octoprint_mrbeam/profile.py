@@ -132,8 +132,9 @@ class LaserCutterProfileManager(object):
 		laser=dict(
 			max_temperature=55.0,
 			hysteresis_temperature=48.0,
-			cooling_duration=25, # if set to positive values: enables time based cooling resuming rather that per hysteresis_temperature
-			intensity_factor=13  # to get from 100% intesity to GCODE-intensity of 1300
+			cooling_duration=25,  # if set to positive values: enables time based cooling resuming rather that per hysteresis_temperature
+			intensity_factor=13,  # to get from 100% intesity to GCODE-intensity of 1300
+			intensity_limit=1300   # Limits intensity of ALL G-Code commands
 		),
 		dust=dict(
 			extraction_limit=0.70,
@@ -167,7 +168,7 @@ class LaserCutterProfileManager(object):
 			homing_debounce=1,
 			# GRBL version suitable for this device
 			# not yet in use
-		    versions=['0.9g_22270fa'],
+		    versions=['0.9g_22270fa', '0.9g_20180223_61638c5'],
 
 			# GRBL settings that will get synced to GRBL
 			settings_count=33,
