@@ -734,13 +734,13 @@ var mrbeam = mrbeam || {};
     var polynode = solution.GetFirst();
 
     while (polynode) {
-      var paths = fromIntPaths([polynode.Contour()], tolerance)[0];
+      var path = fromIntPaths([polynode.Contour()], tolerance)[0];
 
       if (!polynode.IsOpen) {
-        paths.push(polyline[0]);
+        path.push(path[0]);
       }
 
-      clipped.push(paths);
+      clipped.push(path);
 
       polynode = polynode.GetNext();
     }
