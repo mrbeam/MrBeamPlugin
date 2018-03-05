@@ -1611,13 +1611,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return result
 
 	def get_beta_label(self):
-		label = self._settings.get(['beta_label'])
-		if (self.is_vorlon_enabled()):
-			if not label or not label.strip():
-				label = ''
-			else:
-				label = "{} | VORLON".format(label)
-		return label
+		chunks = []
+		chunks.append(self._settings.get(['beta_label']))
+		if self.is_vorlon_enabled():
+			chunks.append("VORLON")
+		if self.support_mode:
+			chunks.append("SUPPORT")
+
+		return " | ".join(chunks)
 
 	def is_vorlon_enabled(self):
 		vorlon = self._settings.get(['vorlon'])

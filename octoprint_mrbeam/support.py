@@ -37,8 +37,12 @@ def set_support_mode(plugin):
 def set_support_user(plugin, support_mode):
 	"""
 	Creates or removes a user for internal support usage or removes it.
+	Does nothing if firstRun is True
 	:param support_mode
 	"""
+	if plugin._settings.global_get(["server", "firstRun"]):
+		return
+
 	if support_mode:
 		_logger.info("Enabling support user: %s", USER_NAME)
 		plugin._user_manager.addUser(USER_NAME, USER_PW, active=True, roles=["user", "admin"], overwrite=True)
