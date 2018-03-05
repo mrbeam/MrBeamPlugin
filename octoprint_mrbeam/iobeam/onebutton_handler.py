@@ -72,6 +72,7 @@ class OneButtonHandler(object):
 		self.shutdown_prepare_was_initiated_during_pause_saftey_timeout = None
 
 		self.behave_cooling_state = False
+		self.intended_pause = False
 
 	def _subscribe(self):
 		self._event_bus.subscribe(IoBeamEvents.ONEBUTTON_DOWN, self.onEvent)
@@ -242,7 +243,7 @@ class OneButtonHandler(object):
 
 		elif event == OctoPrintEvents.PRINT_RESUMED:
 			# Webinterface / OctoPrint caused the resume
-			self._logger.debug("onEvent() _set_resumed()")
+			self._logger.debug("onEvent() _reset_pause_configuration()")
 			self._reset_pause_configuration()
 
 
@@ -308,6 +309,13 @@ class OneButtonHandler(object):
 			   and self.ready_to_laser_flag \
 			   and (not rtl_expected_to_be_there or self.ready_to_laser_file is not None) \
 			   and self.print_started < 0
+
+	def is_intended_pause(self):
+		"""
+		This is called by com_acc2 to avoid unintended pauses
+		:return: Boolean
+		"""
+		return self.intended_pause or self.behave_cooling_state
 
 	def _check_if_still_ready_to_laser(self):
 		if self.is_ready_to_laser():
@@ -404,6 +412,7 @@ class OneButtonHandler(object):
 		:param force: Forwarded to _printer. If False, com_acc isn't called if printer is already in paused state
 		"""
 		self.pause_laser_ts = time.time()
+		self.intended_pause = True
 		self.pause_need_to_release = self.pause_need_to_release or need_to_release;
 		self._printer.pause_print(force=force, trigger=trigger)
 		self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_START, payload=dict(trigger=trigger))
@@ -420,16 +429,14 @@ class OneButtonHandler(object):
 				self._printer.resume_print()
 				self._send_frontend_ready_to_laser_state(self.CLIENT_RTL_STATE_END_RESUMED)
 				self.pause_laser_ts = -1
+				self.intended_pause = False
 			else:
 				self._logger.info("Not resuming laser job, still in waiting time.")
 
 	def _reset_pause_configuration(self):
 		self.pause_laser_ts = -1;
+		self.intended_pause = False
 		self.pause_need_to_release = False
-		self._cancel_pause_safety_timeout_timer()
-
-	def _set_resumed(self):
-		self.pause_laser_ts = -1
 		self._cancel_pause_safety_timeout_timer()
 
 	def _send_frontend_ready_to_laser_state(self, state, trigger=None):

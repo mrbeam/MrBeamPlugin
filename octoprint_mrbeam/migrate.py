@@ -4,6 +4,7 @@ import shutil
 import subprocess
 from distutils.version import StrictVersion
 from octoprint_mrbeam.mrb_logger import mrb_logger
+from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from .profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
 
 
@@ -13,8 +14,8 @@ def migrate(plugin):
 
 class Migration(object):
 
-	VERSION_DELETE_EGG_DIR_LEFTOVERS = '0.1.17'
 	VERSION_SETUP_IPTABLES           = '0.1.19'
+	VERSION_SYNC_GRBL_SETTINGS       = '0.1.24'
 
 	def __init__(self, plugin):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.migrate")
@@ -22,27 +23,41 @@ class Migration(object):
 
 		self.version_previous = self.plugin._settings.get(['version'])
 		self.version_current  = self.plugin._plugin_version
+		self.suppress_migrations = self.plugin._settings.get(['dev', 'suppress_migrations'])
 
 
 	def run(self):
 		try:
-			if not self.is_lasercutterProfile_set(): self.set_lasercutterProfile()
+			if not self.is_lasercutterProfile_set():
+				self.set_lasercutterProfile()
 
-			if self.is_migration_required():
+			# must be done outside of is_migration_required()-block.
+			self.delete_egg_dir_leftovers()
+
+			if self.is_migration_required() and not self.suppress_migrations:
 				self._logger.info("Starting migration from v{} to v{}".format(self.version_previous, self.version_current))
 
 				# migrations
 				if self.version_previous is None or self._compare_versions(self.version_previous, '0.1.13', equal_ok=False):
 					self.migrate_from_0_0_0()
 
-				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_DELETE_EGG_DIR_LEFTOVERS, equal_ok=False):
-					self.delete_egg_dir_leftovers()
-
 				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_SETUP_IPTABLES, equal_ok=False):
 					self.setup_iptables()
+
+				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_SYNC_GRBL_SETTINGS, equal_ok=False):
+					if self.plugin._device_series == '2C':
+						self.add_grbl_130_maxTravel()
+
+				# only needed for image'PROD 2018-01-12 19:15 1515784545'
+				if self.plugin.get_octopi_info() == 'PROD 2018-01-12 19:15 1515784545':
+					self.fix_wifi_ap_name()
+
 				# migrations end
 
 				self.save_current_version()
+				self._logger.info("Finished migration from v{} to v{}.".format(self.version_previous, self.version_current))
+			elif self.suppress_migrations:
+				self._logger.warn("No migration done because 'suppress_migrations' is set to true in settings.")
 			else:
 				self._logger.debug("No migration required.")
 		except:
@@ -83,6 +98,71 @@ class Migration(object):
 		self.plugin._settings.set(['version'], self.version_current, force=True)
 
 
+
+	##########################################################
+	#####              general stuff                     #####
+	##########################################################
+
+	def delete_egg_dir_leftovers(self):
+		"""
+		Deletes egg files/dirs of older versions of MrBeamPlugin
+		Our first mrb_check USB sticks updated MrBeamPlugin per 'pip --ignore-installed'
+		which left old egg directories in site-packages.
+		This then caused the plugin to assume it's version is the old version, even though the new code was executed.
+		2018: Since we still see this happening, let's do this on every startup.
+		Since plugin version num is not reliable if there are old egg folders,
+		we must not call this from within a is_migration_needed()
+
+		Also cleans up an old OctoPrint folder which very likely is part of the image...
+		"""
+		site_packages_dir = '/home/pi/site-packages'
+		folders = []
+		keep_version = None
+		if os.path.isdir(site_packages_dir):
+			for f in os.listdir(site_packages_dir):
+				match = re.match(r'Mr_Beam-(?P<version>[0-9.]+)[.-].+', f)
+				if match:
+					version = match.group('version')
+					folders.append((version, f))
+
+					if keep_version is None:
+						keep_version = version
+					elif self._compare_versions(keep_version, version, equal_ok=False):
+						keep_version = version
+
+			if len(folders) > 1:
+				for version, folder in folders:
+					if version != keep_version:
+						del_dir = os.path.join(site_packages_dir, folder)
+						self._logger.warn("Cleaning up old .egg dir: %s  !!! RESTART OCTOPRINT TO GET RELIABLE MRB-PLUGIN VERSION !!", del_dir)
+						shutil.rmtree(del_dir)
+
+			# Also delete an old OctoPrint folder.
+			del_op_dir = os.path.join(site_packages_dir, 'OctoPrint-v1.3.5.1-py2.7.egg')
+			if os.path.isdir(del_op_dir):
+				self._logger.warn("Cleaning up old .egg dir: %s", del_op_dir)
+				shutil.rmtree(del_op_dir)
+
+		else:
+			self._logger.error("delete_egg_dir_leftovers() Dir not existing '%s', Can't check for egg leftovers.")
+
+
+	def fix_wifi_ap_name(self):
+		"""
+		image 'PROD 2018-01-12 19:15 1515784545' has wifi AP name: 'MrBeam-F930'
+		Let's correct it to actual wifi AP name
+		"""
+		host = self.plugin.getHostname()
+		command = "sudo sed -i '/.*ssid: MrBeam-F930.*/c\  ssid: {}' /etc/netconnectd.yaml".format(host)
+		code = exec_cmd(command)
+		self._logger.debug("fix_wifi_ap_name() Corrected Wifi AP name.")
+
+
+
+	##########################################################
+	#####               migrations                       #####
+	##########################################################
+
 	def migrate_from_0_0_0(self):
 		self._logger.info("migrate_from_0_0_0() ")
 		my_profile = laserCutterProfileManager().get_default()
@@ -93,29 +173,6 @@ class Migration(object):
 		my_profile['dust']['auto_mode_time'] = 60
 		self._logger.info("migrate_from_0_0_0() Set lasercutterProfile ['dust']['auto_mode_time'] = 60")
 		laserCutterProfileManager().save(my_profile, allow_overwrite=True, make_default=True)
-
-
-	def delete_egg_dir_leftovers(self):
-		"""
-		Deletes egg files/dirs of older versions of MrBeamPlugin
-		Our first mrb_check USB sticks updated MrBeamPlugin per 'pip --ignore-installed'
-		which left old egg directories in site-packages.
-		This then caused the plugin to assume it's version is the old version, even though the new code was executed.
-		"""
-		self._logger.info("delete_egg_dir_leftovers() ")
-		site_packages_dir = '/home/pi/site-packages'
-		if os.path.isdir(site_packages_dir):
-			for f in os.listdir(site_packages_dir):
-				match = re.match(r'Mr_Beam-(?P<version>[0-9.]+)[.-].+', f)
-				if match:
-					version = match.group('version')
-					if self._compare_versions(version, self.VERSION_DELETE_EGG_DIR_LEFTOVERS, equal_ok=False):
-						del_dir = os.path.join(site_packages_dir, f)
-						self._logger.info("delete_egg_dir_leftovers() Deleting dir: %s", del_dir)
-						shutil.rmtree(del_dir)
-		else:
-			self._logger.error("delete_egg_dir_leftovers() Dir not existing '%s', Can't check for egg leftovers.")
-
 
 	def setup_iptables(self):
 		"""
@@ -132,19 +189,19 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 """
 
 		command = ['sudo', 'bash', '-c', "echo '{data}' > {file}".format(data=iptables_body, file=iptables_file)]
-		out, code = self._exec_cmd_output(command)
+		out, code = exec_cmd_output(command)
 		if code != 0:
 			self._logger.error("setup_iptables() Error while writing iptables conf: '%s'", out)
 			return
 
 		command = ['sudo', 'chmod', '+x', iptables_file]
-		out, code = self._exec_cmd_output(command)
+		out, code = exec_cmd_output(command)
 		if code != 0:
 			self._logger.error("setup_iptables() Error while chmod iptables conf: '%s'", out)
 			return
 
 		command = ['sudo', 'bash', '-c', iptables_file]
-		out, code = self._exec_cmd_output(command)
+		out, code = exec_cmd_output(command)
 		if code != 0:
 			self._logger.error("setup_iptables() Error while executing iptables conf: '%s'", out)
 			return
@@ -152,7 +209,16 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 		self._logger.info("setup_iptables() Created and loaded iptables conf: '%s'", iptables_file)
 
 
-
+	def add_grbl_130_maxTravel(self):
+		"""
+		Since we introduced GRBL settings sync (aka correct_settings), we have grbl settings in machine profiles
+		So we need to add the old value for 'x max travel' for C-Series devices there.
+		"""
+		if self.plugin._device_series == '2C':
+			default_profile = laserCutterProfileManager().get_default()
+			default_profile['grbl']['settings'][130] = 501.1
+			laserCutterProfileManager().save(default_profile, allow_overwrite=True, make_default=True)
+			self._logger.info("add_grbl_130_maxTravel() C-Series Device: Added ['grbl']['settings'][130]=501.1 to lasercutterProfile: %s", default_profile)
 
 
 	##########################################################
@@ -211,6 +277,7 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 			default_profile['model'] = model
 			default_profile['legacy'] = dict()
 			default_profile['legacy']['job_done_home_position_x'] = 250
+			default_profile['grbl']['settings'][130] = 501.1
 			laserCutterProfileManager().save(default_profile, allow_overwrite=True, make_default=True)
 			self._logger.info("set_lasercutterPorfile_2C() Created lasercutterProfile '%s' and set as default. Content: %s", profile_id, default_profile)
 
@@ -236,25 +303,5 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 			self._logger.info("set_lasercutterPorfile_2D() Created lasercutterProfile '%s' and set as default. Content: %s",profile_id, default_profile)
 
 
-	##########################################################
-	#####                 helpers                        #####
-	##########################################################
 
-	def _exec_cmd_output(self, cmd):
-		'''
-		Executes a system command and returns its output.
-		:param cmd:
-		:return: Tuple(String:output , int return_code)
-				If system returncode was not 0 (zero), output will be the error message
-		'''
-		output = None
-		code = 0
-		self._logger.debug("_exec_cmd_output() command: '%s'", cmd)
-		try:
-			output = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
-		except subprocess.CalledProcessError as e:
-			code = e.returncode
-			output = e.output
-			self._logger.debug("Fail to execute command '%s', return code: %s, output: '%s'", cmd, e.returncode, e.output)
 
-		return output, code

@@ -11,6 +11,7 @@ import threading
 import time
 import shlex
 import collections
+import re
 from subprocess import check_output
 
 import octoprint.plugin
@@ -37,14 +38,15 @@ from octoprint_mrbeam.led_events import LedEventListener
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
 from octoprint_mrbeam.migrate import migrate
-from .profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
-from .software_update_information import get_update_information, SW_UPDATE_TIER_PROD
-from .support import set_support_user
+from octoprint_mrbeam.profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
+from octoprint_mrbeam.software_update_information import get_update_information, SW_UPDATE_TIER_PROD
+from octoprint_mrbeam.support import set_support_mode
 
 
 
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
 __builtin__._mrbeam_plugin_implementation = None
+__builtin__.__package_path__ = os.path.dirname(__file__)
 
 
 class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
@@ -107,10 +109,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		migrate(self)
 
 		# Enable or disable internal support user.
-		set_support_user(self)
-
+		self.support_mode = set_support_mode(self)
 
 		self.laserCutterProfileManager = laserCutterProfileManager()
+
 		self._do_initial_log()
 
 		try:
@@ -153,6 +155,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		msg = "MrBeam Lasercutter Profile: %s" % self.laserCutterProfileManager.get_current_or_default()
 		self._logger.info(msg, terminal=True)
 
+		if self.is_vorlon_enabled():
+			self._logger.warn("!!! VORLON is enabled !!!!", terminal=True)
 
 	def _convert_profiles(self, profiles):
 		result = dict()
@@ -198,6 +202,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			beta_label="BETA",
 			job_time = 0.0,
 			terminal=False,
+			vorlon=False,
 			dev=dict(
 				debug=False, # deprected
 				terminalMaxLines = 2000,
@@ -208,8 +213,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				# 	local =  "DEV"
 				# ),
 				software_tier = SW_UPDATE_TIER_PROD,
-				iobeam_disable_warnings = False,
-				support_user = False
+				iobeam_disable_warnings = False, # for develpment on non-MrBeam devices
+				suppress_migrations = False,     # for develpment on non-MrBeam devices
+				support_mode = False
 			),
 			# TODO rename analyticsEnabled and put in analytics-dict
 			analyticsEnabled=False,  # frontend analytics Mixpanel
@@ -250,6 +256,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			svgDPI=self._settings.get(['svgDPI']),
 			dxfScale=self._settings.get(['dxfScale']),
 			terminal=self._settings.get(['terminal']),
+			vorlon=self.is_vorlon_enabled(),
 			analyticsEnabled=self._settings.get(['analyticsEnabled']),
 			cam=dict(enabled=self._settings.get(['cam', 'enabled']),
 					 frontendUrl=self._settings.get(['cam', 'frontendUrl'])),
@@ -263,23 +270,24 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				optimize_travel = self._settings.get(['gcode_nextgen', 'optimize_travel']),
 				small_paths_first = self._settings.get(['gcode_nextgen', 'small_paths_first']),
 				clip_working_area = self._settings.get(['gcode_nextgen', 'clip_working_area'])
-			)
+			),
+			software_update_branches = self.get_update_branch_info()
 		)
 
 	def on_settings_save(self, data):
-		# if "workingAreaWidth" in data and data["workingAreaWidth"]:
-		# 	self._settings.set(["workingAreaWidth"], data["workingAreaWidth"])
-		# if "zAxis" in data:
-		# 	self._settings.set_boolean(["zAxis"], data["zAxis"])
 		if "svgDPI" in data:
 			self._settings.set_int(["svgDPI"], data["svgDPI"])
 		if "dxfScale" in data:
 			self._settings.set_float(["dxfScale"], data["dxfScale"])
 		if "terminal" in data:
 			self._settings.set_boolean(["terminal"], data["terminal"])
-
-		# selectedProfile = self.laserCutterProfileManager.get_current_or_default()
-		# self._settings.set(["current_profile_id"], selectedProfile['id'])
+		if "vorlon" in data:
+			if data["vorlon"]:
+				self._settings.set_float(["vorlon"], time.time())
+				self._logger.warn("Enabling VORLON per user request.", terminal=True)
+			else:
+				self._settings.set_boolean(["vorlon"], False)
+				self._logger.info("Disabling VORLON per user request.", terminal=True)
 
 	def on_shutdown(self):
 		self._logger.debug("Mr Beam Plugin stopping...")
@@ -368,8 +376,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 serial=self._serial,
 							 software_tier=self._settings.get(["dev", "software_tier"]),
 							 analyticsEnabled=self._settings.get(["analyticsEnabled"]),
-							 beta_label=self._settings.get(['beta_label']),
-							 terminalEnabled=self._settings.get(['terminal']),
+							 beta_label=self.get_beta_label(),
+							 terminalEnabled=self._settings.get(['terminal']) or self.support_mode,
+							 vorlonEnabled=self.is_vorlon_enabled(),
 						 ))
 		r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
 
@@ -743,7 +752,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							displayName=self.getDisplayName(self._hostname),
 							hostname=self._hostname,
 							serial=self._serial,
-							beta_label=self._settings.get(['beta_label']),
+							beta_label=self.get_beta_label(),
 							e='null',
 							gcodeThreshold=0, #legacy
 							gcodeMobileThreshold=0, #legacy
@@ -759,7 +768,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@octoprint.plugin.BlueprintPlugin.route("/take_undistorted_picture", methods=["GET"])
 	#@firstrun_only_access
 	def takeUndistortedPictureForInitialCalibration(self):
-		self._logger.debug("INITIAL_CALIBRATION TAKE PICTURE")
+		self._logger.info("INITIAL_CALIBRATION TAKE PICTURE")
 		self.take_undistorted_picture(is_initial_calibration=True)
 		return NO_CONTENT
 
@@ -1364,6 +1373,34 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# calling from .software_update_information import get_update_information
 		return get_update_information(self)
 
+	def get_update_branch_info(self):
+		"""
+		Gets you a list of plugins which are currently not configured to be updated from their default branch.
+		Why do we need this? Frontend injects these data into SWupdate settings. So we can see if we put
+		a component like Mr Beam Plugin to a special branch (for development.)
+		:return: dict
+		"""
+		result = dict()
+		configured_checks = None
+		try:
+			pluginInfo = self._plugin_manager.get_plugin_info("softwareupdate")
+			if pluginInfo is not None:
+				impl = pluginInfo.implementation
+				configured_checks = impl._configured_checks
+			else:
+				self._logger.error("get_branch_info() Can't get pluginInfo.implementation")
+		except Exception as e:
+			self._logger.exception("Exception while reading configured_checks from softwareupdate plugin. ")
+
+		for name, config in configured_checks.iteritems():
+			if name == 'octoprint':
+				continue
+			if 'branch' in config and \
+					(('branch_default' in config and config['branch'] != config['branch_default'])
+					or (not 'branch_default' in config)):
+				result[name] = config['branch']
+		return result
+
 	# inject a Laser object instead the original Printer from standard.py
 	def laser_factory(self, components, *args, **kwargs):
 		from .printer import Laser
@@ -1573,6 +1610,33 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				result = type_env
 		return result
 
+	def get_beta_label(self):
+		label = self._settings.get(['beta_label'])
+		if (self.is_vorlon_enabled()):
+			if not label or not label.strip():
+				label = ''
+			else:
+				label = "{} | VORLON".format(label)
+		return label
+
+	def is_vorlon_enabled(self):
+		vorlon = self._settings.get(['vorlon'])
+		ts = -1
+		if vorlon == True:
+			# usually we get a timestamp here. if it's a true-Boolean, it was entered manually and we keep it forever.
+			return True
+		if not vorlon:
+			return False
+		try:
+			ts = float(vorlon)
+		except:
+			pass
+		if ts > 0 and time.time() - ts < float(60 * 60 * 6):
+			return True
+		else:
+			self._settings.set_boolean(['vorlon'], False, force=True)
+			return False
+
 
 # # this is for the command line interface we're providing
 # def clitest_commands(cli_group, pass_octoprint_ctx, *args, **kwargs):
@@ -1634,8 +1698,8 @@ def __plugin_load__():
 		),
 		terminalFilters = [
 			dict(name="Filter beamOS messages", regex="^([0-9,.: ]+ [A-Z]+ mrbeam)", activated=True),
-			dict(name="Filter _COMM_ messages", regex="^([0-9,.: ]+ _COMM_)", activated=True),
-			dict(name="Filter _COMM_ except Gcode", regex="^([0-9,.: ]+ _COMM_: (Send: \?|Recv: ok|Recv: <))", activated=True),
+			dict(name="Filter _COMM_ messages", regex="^([0-9,.: ]+ _COMM_)", activated=False),
+			dict(name="Filter _COMM_ except Gcode", regex="^([0-9,.: ]+ _COMM_: (Send: \?|Recv: ok|Recv: <))", activated=False),
 		],
 		appearance=dict(components=dict(
 			order=dict(

@@ -120,18 +120,21 @@ class LaserCutterProfileManager(object):
 				homing_direction_positive=True
 			),
 		),
-		focus = True,  # false if we need to show focus tab
+
+		# False if we need to show focus tab
+		focus = True,
+
+		# if True, Mr Beam shows warning to put on safety glasses (MrBeamI)
 		glasses = False,
+
+		# if set to onebutton, MR Beam 2 One Button to start laser is activated.
 		start_method = 'onebutton',
-		grbl = dict(
-			resetOnConnect = True,
-			homing_debounce = 1
-		),
 		laser=dict(
 			max_temperature=55.0,
 			hysteresis_temperature=48.0,
-			cooling_duration=25, # if set to positive values: enables time based cooling resuming rather that per hysteresis_temperature
-			intensity_factor=13  # to get from 100% intesity to GCODE-intensity of 1300
+			cooling_duration=25,  # if set to positive values: enables time based cooling resuming rather that per hysteresis_temperature
+			intensity_factor=13,  # to get from 100% intesity to GCODE-intensity of 1300
+			intensity_limit=1300   # Limits intensity of ALL G-Code commands
 		),
 		dust=dict(
 			extraction_limit=0.70,
@@ -155,8 +158,55 @@ class LaserCutterProfileManager(object):
 			origin_offset_y = 1.1,
 			width = 500.0,
 			working_area_shift_x = 0.0,
-			working_area_shift_y = 0.0
+			working_area_shift_y = 0.0,
+
+
 		),
+		grbl = dict(
+			resetOnConnect=True,
+			# legacy ?
+			homing_debounce=1,
+			# GRBL version suitable for this device
+			# not yet in use
+		    versions=['0.9g_22270fa', '0.9g_20180223_61638c5'],
+
+			# GRBL settings that will get synced to GRBL
+			settings_count=33,
+		    settings={
+			    0: 10,          # step idle delay must be 255
+			    1: 255,         # step idle delay, msec
+			    2: 0,           # step port invert mask:00000000
+			    3: 2,           # dir port invert mask:00000010
+			    4: 0,           # step enable invert, bool
+			    5: 0,           # limit pins invert, bool
+			    6: 0,           # probe pin invert, bool
+			    10: 31,         # status report mask:00011111
+			    11: 0.020,      # junction deviation, mm
+			    12: 0.002,      # arc tolerance, mm
+			    13: 0,          # report inches, bool
+			    14: 1,          # auto start, bool
+			    20: 1,          # soft limits, bool
+			    21: 0,          # hard limits, bool
+			    22: 1,          # homing cycle, bool
+			    23: 0,          # homing dir invert mask:00000000
+			    24: 25.000,     # homing feed, mm/min
+			    25: 2000.000,   # homing seek, mm/min
+			    26: 100,        # homing debounce, msec
+			    27: 1.000,      # homing pull-off, mm
+			    40: 1,          # turn Laser mode on, bool
+			    100: 100.000,   # x, step/mm
+			    101: 100.000,   # y, step/mm
+			    102: 100.000,   # z, step/mm
+			    110: 5000.000,  # x max rate, mm/min
+			    111: 5000.000,  # y max rate, mm/min
+			    112: 5000.000,  # z max rate, mm/min
+			    120: 700.000,   # x accel, mm/sec^2
+			    121: 700.000,   # y accel, mm/sec^2
+			    122: 100.000,   # z accel, mm/sec^2
+			    130: 515.100,   # x max travel, mm       # !! C-Series: 501.1
+			    131: 391.100,   # y max travel, mm
+			    132: 40.000,    # z max travel, mm
+				}),
 		zAxis = False,
 		legacy = dict(
 			# 2C series only
