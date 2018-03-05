@@ -78,7 +78,6 @@ def set_info_mrbeam_plugin(self, tier):
 			user="mrbeam",
 			repo="MrBeamPlugin",
 			branch="demo",
-			branch_default="demo",
 			pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
 			restart="octoprint")
 
@@ -126,7 +125,7 @@ def set_info_findmymrbeam(self, tier):
 		pip="https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
 		restart="octoprint")
 
-	if tier in [SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_DEMO]:
+	if tier in [SW_UPDATE_TIER_DEV]:
 		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name),
 			displayVersion=current_version,
@@ -245,7 +244,7 @@ def set_info_iobeam(self, tier):
 		restart="environment"
 	)
 
-	if tier in [SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_DEMO]:
+	if tier in [SW_UPDATE_TIER_DEV]:
 		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name),
 			displayVersion=version,
@@ -287,7 +286,7 @@ def set_info_camera_calibration(self, tier):
 		restart="octoprint"
 	)
 
-	if tier in [SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_DEMO]:
+	if tier in [SW_UPDATE_TIER_DEV]:
 		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name),
 			displayVersion=version,
