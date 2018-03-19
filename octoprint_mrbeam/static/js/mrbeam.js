@@ -93,7 +93,7 @@ $(function() {
             if (!mrbeam.browser.is_supported){
                 new PNotify({
                         title: "Browser not supported.",
-                        text: "Looks like you're using a browser that is not yet supported by Mr Beam.<br/>We recommend <a href='http://www.google.de/chrome/' target='_blank'>Google Chrome</a>",
+                        text: "Mr Beam II makes use of latest web technologies which are not fully support by your browser.<br/>Please use <a href='http://www.google.de/chrome/' target='_blank'>Google Chrome</a> for Mr Beam II.",
                         type: 'warn',
                         hide: false
                     });
