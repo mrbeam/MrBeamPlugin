@@ -73,7 +73,7 @@
 				
 				<div id="save_material_flyin" data-bind="visible: customized_material()">
 					<a data-bind="click: reset_material_settings"><i class="icon-repeat"></i> {{ _('Reset to defaults') }}</a>
-					<div class="dropdown">
+					<div id="save_material_form" class="dropdown">
 						<a class="dropdown-toggle" data-toggle="dropdown" href="#" ><i class="icon-star"></i> {{ _('Save custom material') }}</a>
 						<div class="dropdown-menu" role="menu" style="padding:.5em">
 							<form class="form-horizontal" style="margin:0">
@@ -85,7 +85,7 @@
 								</div>
 								<div class="control-group">
 									<label class="control-label" for="custom_mat_th"> {{ _('Thickness') }}</label>
-									<div class="controls">
+									<div class="controls"> 
 										<input id="custom_mat_th" type="number" min="0" max="38" data-bind="value:save_custom_material_thickness"> mm
 									</div>
 								</div>

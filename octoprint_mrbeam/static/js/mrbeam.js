@@ -17,9 +17,12 @@ var browser = {
     is_firefox: navigator.userAgent.indexOf('Firefox') > -1,
     is_safari: navigator.userAgent.indexOf("Safari") > -1,
     is_opera: navigator.userAgent.toLowerCase().indexOf("op") > -1,
+    is_supported: null
 };
 if ((browser.is_chrome)&&(browser.is_safari)) {browser.is_safari=false;}
 if ((browser.is_chrome)&&(browser.is_opera)) {browser.is_chrome=false;}
+// supported browser
+browser.is_supported = browser.is_chrome;
 mrbeam.browser = browser;
 
 /**
@@ -83,6 +86,18 @@ $(function() {
 
             $(window).on("orientationchange",self.onOrientationchange);
             self.setBodyScrollTop();
+        };
+
+        self.onStartupComplete = function(){
+            console.log("Supported Browser: " + mrbeam.browser.is_supported);
+            if (!mrbeam.browser.is_supported){
+                new PNotify({
+                        title: "Browser not supported.",
+                        text: "Mr Beam II makes use of latest web technologies which are not fully support by your browser.<br/>Please use <a href='http://www.google.de/chrome/' target='_blank'>Google Chrome</a> for Mr Beam II.",
+                        type: 'warn',
+                        hide: false
+                    });
+            }
         };
 
 

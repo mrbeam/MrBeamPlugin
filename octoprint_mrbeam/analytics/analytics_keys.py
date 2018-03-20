@@ -20,6 +20,7 @@ class AnalyticsKeys(object):
 	STARTUP = 'startup'
 	SHUTDOWN = 'shutdown'
 	INIT = 'init_json'
+	FLASH_GRBL = 'flash_grbl'
 
 
 
@@ -55,6 +56,7 @@ class AnalyticsKeys(object):
 						CONV_ENGRAVE
 					]
 	FAILED_PRINT_EVENTS = [PRINT_CANCELLED,PRINT_FAILED]
+	JOB_DURATION = 'dur'
 
 	DUST_START = 'd_start'
 	DUST_END = 'd_end'
@@ -63,6 +65,11 @@ class AnalyticsKeys(object):
 	DUST_DURATION = 'd_duration'
 	DUST_DIFF = 'd_diff'
 	DUST_PER_TIME = 'd_per_time'
+
+	PROGRESS_PERCENT =           'p'
+	PROGRESS_LASER_TEMPERATURE = 'lt'
+	PROGRESS_LASER_INTENSITY =   'li'
+	PROGRESS_DUST_VALUE =        'dv'
 
 	### CAM KEYS ###
 	MARKERS = 'markers'

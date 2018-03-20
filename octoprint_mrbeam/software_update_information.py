@@ -54,6 +54,7 @@ def set_info_mrbeam_plugin(self, tier):
 		user="mrbeam",
 		repo="MrBeamPlugin",
 		branch="mrbeam2-stable",
+		branch_default="mrbeam2-stable",
 		pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
 		restart="octoprint")
 
@@ -65,6 +66,7 @@ def set_info_mrbeam_plugin(self, tier):
 			user="mrbeam",
 			repo="MrBeamPlugin",
 			branch="develop",
+			branch_default="develop",
 			pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
 			restart="octoprint")
 
@@ -97,6 +99,7 @@ def set_info_netconnectd_plugin(self, tier):
 		user="mrbeam",
 		repo="OctoPrint-Netconnectd",
 		branch="mrbeam2-stable",
+		branch_default="mrbeam2-stable",
 		pip="https://github.com/mrbeam/OctoPrint-Netconnectd/archive/{target_version}.zip",
 		restart="octoprint")
 
@@ -118,10 +121,11 @@ def set_info_findmymrbeam(self, tier):
 		user="mrbeam",
 		repo="OctoPrint-FindMyMrBeam",
 		branch="mrbeam2-stable",
+		branch_default="mrbeam2-stable",
 		pip="https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
 		restart="octoprint")
 
-	if tier in [SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_DEMO]:
+	if tier in [SW_UPDATE_TIER_DEV]:
 		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name),
 			displayVersion=current_version,
@@ -129,6 +133,7 @@ def set_info_findmymrbeam(self, tier):
 			user="mrbeam",
 			repo="OctoPrint-FindMyMrBeam",
 			branch="develop",
+			branch_default="develop",
 			pip="https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
 			restart="octoprint")
 
@@ -153,6 +158,7 @@ def set_info_mrbeamledstrips(self, tier):
 		user="mrbeam",
 		repo="MrBeamLedStrips",
 		branch="mrbeam2-stable",
+		branch_default="mrbeam2-stable",
 		pip="https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
 		pip_command=pip_command,
 		restart="environment")
@@ -165,6 +171,7 @@ def set_info_mrbeamledstrips(self, tier):
 			user="mrbeam",
 			repo="MrBeamLedStrips",
 			branch="develop",
+			branch_default="develop",
 			pip="https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
 			pip_command=pip_command,
 			restart="environment")
@@ -202,6 +209,7 @@ def set_info_netconnectd_daemon(self, tier):
 		user="mrbeam",
 		repo="netconnectd_mrbeam",
 		branch="mrbeam2-stable",
+		branch_default="mrbeam2-stable",
 		pip="https://github.com/mrbeam/netconnectd_mrbeam/archive/{target_version}.zip",
 		pip_command=pip_command,
 		restart="environment")
@@ -228,6 +236,7 @@ def set_info_iobeam(self, tier):
 		user="mrbeam",
 		repo="iobeam",
 		branch="mrbeam2-stable",
+		branch_default="mrbeam2-stable",
 		api_user="MrBeamDev",
 		api_password="v2T5pFkmdgDqbFBJAqrt",
 		pip="git+ssh://git@bitbucket.org/mrbeam/iobeam.git@{target_version}",
@@ -235,7 +244,7 @@ def set_info_iobeam(self, tier):
 		restart="environment"
 	)
 
-	if tier in [SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_DEMO]:
+	if tier in [SW_UPDATE_TIER_DEV]:
 		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name),
 			displayVersion=version,
@@ -243,6 +252,7 @@ def set_info_iobeam(self, tier):
 			user="mrbeam",
 			repo="iobeam",
 			branch="develop",
+			branch_default="develop",
 			api_user="MrBeamDev",
 			api_password="v2T5pFkmdgDqbFBJAqrt",
 			pip="git+ssh://git@bitbucket.org/mrbeam/iobeam.git@{target_version}",
@@ -269,13 +279,14 @@ def set_info_camera_calibration(self, tier):
 		user="mrbeam",
 		repo="mb_camera_calibration",
 		branch="mrbeam2-stable",
+		branch_default="mrbeam2-stable",
 		api_user="MrBeamDev",
 		api_password="v2T5pFkmdgDqbFBJAqrt",
 		pip="git+ssh://git@bitbucket.org/mrbeam/mb_camera_calibration.git@{target_version}",
 		restart="octoprint"
 	)
 
-	if tier in [SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_DEMO]:
+	if tier in [SW_UPDATE_TIER_DEV]:
 		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name),
 			displayVersion=version,
@@ -283,6 +294,7 @@ def set_info_camera_calibration(self, tier):
 			user="mrbeam",
 			repo="mb_camera_calibration",
 			branch="develop",
+			branch_default="develop",
 			api_user="MrBeamDev",
 			api_password="v2T5pFkmdgDqbFBJAqrt",
 			pip="git+ssh://git@bitbucket.org/mrbeam/mb_camera_calibration.git@{target_version}",
@@ -303,6 +315,7 @@ def set_info_rpiws281x(self, tier):
 		user="mrbeam",
 		repo="rpi_ws281x",
 		branch="master",
+		branch_default="master",
 		update_folder="/home/pi/rpi_ws281x",
 		update_script="/home/pi/rpi_ws281x/update_script.sh",
 		restart="environment")
