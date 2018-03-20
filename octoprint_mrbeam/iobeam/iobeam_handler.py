@@ -73,7 +73,7 @@ class IoBeamHandler(object):
 	PROCESSING_TIMES_LOG_LENGTH = 100
 	PROCESSING_TIME_WARNING_THRESHOLD = 0.1
 
-	MESSAGE_LENGTH_MAX = 1024
+	MESSAGE_LENGTH_MAX = 4096
 	MESSAGE_NEWLINE = "\n"
 	MESSAGE_SEPARATOR = ":"
 	MESSAGE_OK = "ok"
@@ -372,9 +372,12 @@ class IoBeamHandler(object):
 		self._logger.debug("Worker thread stopped.")
 
 
-	# handles incoming data from the socket.
-	# @return int: number of invalid messages 0 means all messages were handled correctly
 	def _handleMessages(self, data):
+		"""
+		handles incoming data from the socket.
+		:param data:
+		:return: int: number of invalid messages 0 means all messages were handled correctly
+		"""
 		if not data: return 1
 
 		error_count = 0
@@ -449,7 +452,8 @@ class IoBeamHandler(object):
 		elif action == self.MESSAGE_ACTION_ONEBUTTON_UP:
 			return 0
 		elif action == self.MESSAGE_ERROR:
-			raise Exception("iobeam received OneButton error: {}".format(message))
+			self._logger.warn("Received onebtn error: '%s'", message)
+			return 1
 		else:
 			return self._handle_invalid_message(message)
 		return 0
@@ -535,7 +539,7 @@ class IoBeamHandler(object):
 			self._call_callback(IoBeamValueEvents.CONNECTED_VALUE, message, dict(val=self._get_connected_val(value)))
 			return 0
 		elif action == self.MESSAGE_ACTION_FAN_VERSION:
-			self._logger.info("Received fan:version:%s", value)
+			self._logger.info("Received fan version %s: '%s'", value, message)
 			return 0
 		elif action == self.MESSAGE_ACTION_FAN_PWM_MIN:
 			return 0
@@ -591,8 +595,17 @@ class IoBeamHandler(object):
 			else:
 				self._logger.warn("_handle_iobeam_message(): Received iobeam:version message without version number. Counting as error. Message: %s", message)
 				return 1
+		elif action == 'init':
+			# introduced with iobeam 0.4.2
+			# in future versions we could make this requried and only unlock laser functionality once this was ok
+			init = token[1] if len(token) > 1 else None
+			if init and init.startswith('ok'):
+				self._logger.info("iobeam init ok: '%s'", message)
+			else:
+				self._logger.info("iobeam init error: '%s' - requesting iobeam_debug...", message)
+				self._send_command('debug')
 		elif action == 'debug':
-			self.log_debug_processing_stats()
+			self._logger.info("iobeam debug message: '%s'", message)
 		else:
 			self._logger.debug("_handle_iobeam_message(): Received unknown message for device 'iobeam'. NOT counting as error. Message: %s", message)
 			return 0
@@ -620,24 +633,28 @@ class IoBeamHandler(object):
 			self.log_debug_processing_stats()
 
 	def log_debug_processing_stats(self):
+		"""
+		Not exactly sure what my idea was with this...
 		# TODO: find a way to trigger this manually for debugging and general curiosity.
-			min = sys.maxint
-			max = 0
-			sum = 0
-			count = 0
-			earliest = time.time()
-			for entry in self.processing_times_log:
-				if entry['processing_time'] < min: min = entry['processing_time']
-				if entry['processing_time'] > max: max = entry['processing_time']
-				if entry['ts'] < earliest: earliest = entry['ts']
-				sum += entry['processing_time']
-				count += 1
-			if count <= 0:
-				self._logger.error("_handle_precessing_time() stats: message count is <= 0, something seems be wrong.")
-			else:
-				avg = sum/count
-				time_formatted = datetime.datetime.fromtimestamp(earliest).strftime('%Y-%m-%d %H:%M:%S')
-				self._logger.info("Message handling stats: %s message since %s; max: %ss, avg: %ss, min: %ss", count, time_formatted, max, avg, min)
+		:return:
+		"""
+		min = sys.maxint
+		max = 0
+		sum = 0
+		count = 0
+		earliest = time.time()
+		for entry in self.processing_times_log:
+			if entry['processing_time'] < min: min = entry['processing_time']
+			if entry['processing_time'] > max: max = entry['processing_time']
+			if entry['ts'] < earliest: earliest = entry['ts']
+			sum += entry['processing_time']
+			count += 1
+		if count <= 0:
+			self._logger.error("_handle_precessing_time() stats: message count is <= 0, something seems be wrong.")
+		else:
+			avg = sum/count
+			time_formatted = datetime.datetime.fromtimestamp(earliest).strftime('%Y-%m-%d %H:%M:%S')
+			self._logger.info("Message handling stats: %s message since %s; max: %ss, avg: %ss, min: %ss", count, time_formatted, max, avg, min)
 
 	def _send_identification(self):
 		client_name = self.CLIENT_ID.format(vers_mrb=_mrbeam_plugin_implementation._plugin_version)
