@@ -1,6 +1,5 @@
 <div id="dialog_vector_graphics_conversion" class="modal hide fade">
     <div class="modal-header">
-        <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
         <h3 data-bind="visible:!slicing_in_progress()">Material <span data-bind="visible:customized_material()">(customized)</span></h3>
         <h3 data-bind="visible:slicing_in_progress()">Preparing...</h3>
     </div>
@@ -9,6 +8,16 @@
 			<div id="material_row" data-bind="css: {expanded: expandMaterialSelector() }">
 
 				<div id="material_type" data-bind="css: {active : selected_material() === null}">
+			        <div id="material_burger_menu" class="dropdown pull-right">
+						<a href="#" id="material_burger_menu_link" class="dropdown-toggle" data-toggle="dropdown" style="text-decoration: none;">
+							<i class="icon-reorder icon-large"></i>
+						  <b class="caret"></b>
+						</a>
+						<ul class="dropdown-menu">
+							<li><a href="#settings" data-toggle="tab" id="settings_tab_btn"><i class="icon-wrench"></i> Manage...</a></li>
+						</ul>
+					</div>
+
 					<div class="">
 						<label data-bind="visible: expandMaterialSelector">Material</label>
 						<div class="">

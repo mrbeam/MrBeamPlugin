@@ -416,24 +416,28 @@ $(function(){
 				colors: {}
 			};
 			new_material.colors[color] = params;
+			var new_material_str = JSON.stringify(new_material);
+			
 
 			// save it locally
 			// push it to our cloud. (backend?)
             var postData = {
-                addMaterials: [new_material]
+                addMaterials: [new_material_str],
+				deleteMaterials: []
             };
             OctoPrint.simpleApiCommand("mrbeam", "custom_materials", postData)
                 .done(function(){
 					console.log("saved custom material:", new_material);
 					// $('#save_material_form.dropdown').dropdown('toggle'); // buggy
 					$('#save_material_form').removeClass('open'); // workaround
-					// TODO set saved material selected
+					
+					// add to custom materials and select
+					self.custom_materials().push(new_material);
+					// TODO select
 				})
                 .fail(function(){
 					console.error("unable to save custom material:", postData);
 				});
-
-
 		};
 
 
@@ -548,9 +552,21 @@ $(function(){
 
         self.filterQuery = ko.observable('');
 		self.filteredMaterials = ko.computed(function(){
+			// TODO this method is called 3 times on startup: 1 time should be enough.
 			var q = self.filterQuery();
-			var out = [].concat(self.custom_materials());
-			
+			var out = [];
+			// List custom materials first
+			// filter custom materials
+			for (var i = 0; i < self.custom_materials().length; i++) {
+				var m = self.custom_materials()[i];
+				if(m !== null){
+//					m.name = materialKey; // TODO i18n
+					if(m.name.toLowerCase().indexOf(q) >= 0){
+						out.push(m);
+					}
+				}
+			}
+			// filter predefined materials
 			for(var materialKey in self.material_settings2){
 				var m = self.material_settings2[materialKey];
 				if(m !== null){
@@ -1084,7 +1100,7 @@ $(function(){
 			var cm = self.settings.settings.plugins.mrbeam.custom_materials(); 
 			var tmp = [];
 			for (var i = 0; i < cm.length; i++) {
-				var material = {};
+				var material = {custom: true};
 				var m = cm[i];
 				material.name = m.name();
 				material.description = m.description();
