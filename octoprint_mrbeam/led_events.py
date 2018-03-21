@@ -10,8 +10,8 @@ class LedEventListener(CommandTrigger):
 	LED_EVENTS = {}
 	LED_EVENTS[Events.STARTUP] = "mrbeam_ledstrips_cli Startup"
 	# connect/disconnect to printer
-	LED_EVENTS[Events.CONNECTED] = "mrbeam_ledstrips_cli Connected"
-	LED_EVENTS[Events.DISCONNECTED] = "mrbeam_ledstrips_cli Disconnected"
+	# LED_EVENTS[Events.CONNECTED] = "mrbeam_ledstrips_cli Connected" #  remove
+	# LED_EVENTS[Events.DISCONNECTED] = "mrbeam_ledstrips_cli Disconnected" # remove
 	# connect/disconnect by client
 	LED_EVENTS[Events.CLIENT_OPENED] = "mrbeam_ledstrips_cli ClientOpened"
 	LED_EVENTS[Events.CLIENT_CLOSED] = "mrbeam_ledstrips_cli ClientClosed"
@@ -36,7 +36,7 @@ class LedEventListener(CommandTrigger):
 
 
 	# File management
-	LED_EVENTS[Events.UPLOAD] = "mrbeam_ledstrips_cli Upload"
+	# LED_EVENTS[Events.UPLOAD] = "mrbeam_ledstrips_cli Upload"
 	# Slicing
 	LED_EVENTS[Events.SLICING_STARTED] = "mrbeam_ledstrips_cli SlicingStarted"
 	LED_EVENTS[Events.SLICING_DONE] = "mrbeam_ledstrips_cli SlicingDone"
