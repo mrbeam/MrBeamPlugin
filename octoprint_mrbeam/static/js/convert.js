@@ -388,8 +388,8 @@ $(function(){
 			event.preventDefault();
 			event.stopPropagation();
 			var postData = {
-                addMaterials: [new_material_str],
-				deleteMaterials: []
+                put: [],
+				delete: [JSON.stringify(m)]
             };
             OctoPrint.simpleApiCommand("mrbeam", "custom_materials", postData)
                 .done(function(){
@@ -422,7 +422,7 @@ $(function(){
 
 			var e = self.get_current_engraving_settings();
 			var engrave_setting = {eng_i: [e.intensity_white_user, e.intensity_black_user], eng_f: [e.speed_white, e.speed_black], pierceTime: e.pierce_time, dithering: e.dithering};
-			
+
 			var params = {
 				engrave: engrave_setting,
 				cut: cut_setting
@@ -437,23 +437,19 @@ $(function(){
 				colors: {}
 			};
 			new_material.colors[color] = params;
-			var new_material_str = JSON.stringify(new_material);
-			
 
 			// save it locally
-			// push it to our cloud. (backend?)
+			// push it to our backend
             var postData = {
-                addMaterials: [new_material_str],
-				deleteMaterials: []
+                'put':    [JSON.stringify(new_material)],   // optional
+                'delete': []                // optional
             };
             OctoPrint.simpleApiCommand("mrbeam", "custom_materials", postData)
-                .done(function(){
-					console.log("saved custom material:", new_material);
-					// $('#save_material_form.dropdown').dropdown('toggle'); // buggy
-					$('#save_material_form').removeClass('open'); // workaround
-					
-					// add to custom materials and select
-					self.custom_materials().push(new_material);
+                .done(function(response){
+					console.log("simpleApiCall response: ", response);
+					$('#save_material_flyin dropdown').dropdown('toggle');
+                      // add to custom materials and select
+                    self.custom_materials(response['custom_materials']);
 					self.selected_material(new_material);
 				})
                 .fail(function(){
