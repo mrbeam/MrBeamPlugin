@@ -398,7 +398,7 @@ $(function(){
 
 			var e = self.get_current_engraving_settings();
 			var engrave_setting = {eng_i: [e.intensity_white_user, e.intensity_black_user], eng_f: [e.speed_white, e.speed_black], pierceTime: e.pierce_time, dithering: e.dithering};
-			
+
 			var name = self.save_custom_material_name();
 			var thickness = self.save_custom_material_thickness();
 			var color = self.save_custom_material_color().substr(1,6);
@@ -418,20 +418,20 @@ $(function(){
 			new_material.colors[color] = params;
 
 			// save it locally
-			// push it to our cloud. (backend?)
+			// push it to our backend
             var postData = {
-                addMaterials: [new_material]
+                'put':    [new_material],   // optional
+                'delete': []                // optional
             };
             OctoPrint.simpleApiCommand("mrbeam", "custom_materials", postData)
-                .done(function(){
-					console.log("saved custom material:", new_material);
+                .done(function(response){
+					console.log("simpleApiCall response: ", response);
+					var my_current_custom_materials = response['custom_materials']
 					$('#save_material_flyin dropdown').dropdown('toggle');
 				})
                 .fail(function(){
 					console.error("unable to save custom material:", postData);
 				});
-            // read existing materials from
-            // self.settings.settings.plugins.mrbeam.custom_materials()
 
 		};
 

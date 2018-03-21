@@ -39,6 +39,7 @@ from octoprint_mrbeam.migrate import migrate
 from .profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
 from .software_update_information import get_update_information, SW_UPDATE_TIER_PROD
 from .support import set_support_user
+from .materials import materials
 
 
 
@@ -238,7 +239,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				small_paths_first = True,
 				clip_working_area = False # this is due a bug in clipping. Would be great if we could fix it an enable it again.
 			),
-			custom_materials = []
 		)
 
 	def on_settings_load(self):
@@ -260,7 +260,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				small_paths_first = self._settings.get(['gcode_nextgen', 'small_paths_first']),
 				clip_working_area = self._settings.get(['gcode_nextgen', 'clip_working_area'])
 			),
-			custom_materials =  self._settings.get(['custom_materials'])
 		)
 
 	def on_settings_save(self, data):
@@ -668,20 +667,27 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		from flask.ext.login import current_user
 		from octoprint.server.api import NO_CONTENT
 
-		self._logger.info("ANDYTEST custom_material(): %s", data)
+		self._logger.info("custom_material() request: %s", data)
+		res = dict(
+			custom_materials=[],
+			put=0,
+			deleted=0)
 
 		try:
-			if 'addMaterials' in data:
-				for nuMaterial in data['addMaterials']:
-					custom_materials = self._settings.get(['custom_materials'])
-					custom_materials.append(nuMaterial)
-					self._settings.set(['custom_materials'], custom_materials)
-				self._settings.save(force=True)
-		except:
-			self._logger.exception("Exception while handling custom_materials() with 'addMaterials': ")
-			return make_response("Error while handling your request.", 500)
+			if 'delete' in data:
+				res['deleted'] = materials(self).delete_custom_materials(data['delete'])
 
-		return NO_CONTENT
+			if 'put' in data:
+				res['put'] = materials(self).put_custom_materials(data['put'])
+
+			res['custom_materials'] = materials(self).get_custom_materials()
+
+		except:
+			self._logger.exception("Exception while handling custom_materials(): ")
+			return make_response("Error while handling custom_materials request.", 500)
+
+		self._logger.info("custom_material(): response: %s", data)
+		return make_response(jsonify(res), 200)
 
 
 
