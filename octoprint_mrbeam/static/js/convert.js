@@ -383,7 +383,6 @@ $(function(){
 		};
 		
 		self.delete_material = function(m, event){
-			console.log("delete", m, event.tar);
 			$(event.target).parents('li').remove();
 			event.preventDefault();
 			event.stopPropagation();
@@ -392,14 +391,15 @@ $(function(){
 				delete: [JSON.stringify(m)]
             };
             OctoPrint.simpleApiCommand("mrbeam", "custom_materials", postData)
-                .done(function(){
-					console.log("saved custom material:", new_material);
+                .done(function(response){
+					console.log("deleted custom material:");
 					// remove from custom materials and deselect
-					self.custom_materials().push(new_material);
+					self._update_custom_materials(response.custom_materials);
+
 					self.selected_material(null);
 				})
                 .fail(function(){
-					console.error("unable to save custom material:", postData);
+					console.error("unable to delete custom material:", postData);
 				});
 		};
 
@@ -447,16 +447,36 @@ $(function(){
             OctoPrint.simpleApiCommand("mrbeam", "custom_materials", postData)
                 .done(function(response){
 					console.log("simpleApiCall response: ", response);
-					$('#save_material_flyin dropdown').dropdown('toggle');
-                      // add to custom materials and select
-                    self.custom_materials(response['custom_materials']);
-					self.selected_material(new_material);
+					// $('#save_material_form.dropdown').dropdown('toggle'); // buggy
+					$('#save_material_form').removeClass('open'); // workaround
+					
+                    // add to custom materials and select
+					self._update_custom_materials(response.custom_materials);
+					var fm = self.filteredMaterials();
+						for (var i = 0; i < fm.length; i++) {
+							var m = fm[i];
+							if(m.name === new_material.name){
+								self.selected_material(m);
+								break;
+							}
+							
+						}
+//					self.selected_material(new_material);
 				})
                 .fail(function(){
 					console.error("unable to save custom material:", postData);
 				});
 		};
 
+		self._update_custom_materials = function(list){
+			var tmp = [];
+			for (var i = 0; i < list.length; i++) {
+				var cm = JSON.parse(list[i]);
+				cm.custom = true;
+				tmp.push(cm);
+			}
+			self.custom_materials(tmp);
+		};
 
 		self.get_closest_thickness_params = function(){
 			var selected = self.selected_material_thickness();
@@ -1121,16 +1141,13 @@ $(function(){
 		
 		self.onStartupComplete = function(){
 			// fill custom materials
-			var cm = self.settings.settings.plugins.mrbeam.custom_materials(); 
-			var tmp = [];
-			for (var i = 0; i < cm.length; i++) {
-				var json = cm[i];
-				var material = JSON.parse(json);
-				material.custom = true;
-				tmp.push(material);
-			}
-			ko.utils.arrayPushAll(self.custom_materials, tmp);
-			self.custom_materials.valueHasMutated();
+			OctoPrint.simpleApiCommand("mrbeam", "custom_materials", {})
+                .done(function(response){
+					self._update_custom_materials(response.custom_materials);
+				})
+                .fail(function(){
+					console.error("unable to fetch custom materials.");
+				});
 		};
 
 		self.onSlicingProgress = function(slicer, model_path, machinecode_path, progress){
