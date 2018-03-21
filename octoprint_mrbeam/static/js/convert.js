@@ -381,6 +381,27 @@ $(function(){
 			self.apply_engraving_proposal();
 			self.apply_vector_proposal();
 		};
+		
+		self.delete_material = function(m, event){
+			console.log("delete", m, event.tar);
+			$(event.target).parents('li').remove();
+			event.preventDefault();
+			event.stopPropagation();
+			var postData = {
+                addMaterials: [new_material_str],
+				deleteMaterials: []
+            };
+            OctoPrint.simpleApiCommand("mrbeam", "custom_materials", postData)
+                .done(function(){
+					console.log("saved custom material:", new_material);
+					// remove from custom materials and deselect
+					self.custom_materials().push(new_material);
+					self.selected_material(null);
+				})
+                .fail(function(){
+					console.error("unable to save custom material:", postData);
+				});
+		};
 
 		self.save_material_settings = function(){
 			var name = self.save_custom_material_name();
@@ -433,7 +454,7 @@ $(function(){
 					
 					// add to custom materials and select
 					self.custom_materials().push(new_material);
-					// TODO select
+					self.selected_material(new_material);
 				})
                 .fail(function(){
 					console.error("unable to save custom material:", postData);
@@ -614,17 +635,24 @@ $(function(){
 		};
 
 		self.set_material = function(material, ev){
-			if(typeof ev !== 'undefined' && ev.type === 'click' && typeof material === 'object' ){
-				var old_material = self.selected_material();
-				if(old_material === null){
-					self.selected_material(material);
+			if( $('#material_type').hasClass('manage') ){
+				$('#materials_manage_done').addClass('flash');
+				setTimeout(function(){
+					$('#materials_manage_done').removeClass('flash');
+				}, 300);
+			} else {
+				if(typeof ev !== 'undefined' && ev.type === 'click' && typeof material === 'object' ){
+					var old_material = self.selected_material();
+					if(old_material === null){
+						self.selected_material(material);
+					} else {
+						self.selected_material(null);
+					}
 				} else {
 					self.selected_material(null);
 				}
-			} else {
-				self.selected_material(null);
+				self.dialog_state('material_type');
 			}
-			self.dialog_state('material_type');
 		};
 		self.set_material_color = function(color, ev){
 			if(typeof ev !== 'undefined' && ev.type === 'click' ){
@@ -1100,32 +1128,9 @@ $(function(){
 			var cm = self.settings.settings.plugins.mrbeam.custom_materials(); 
 			var tmp = [];
 			for (var i = 0; i < cm.length; i++) {
-				var material = {custom: true};
-				var m = cm[i];
-				material.name = m.name();
-				material.description = m.description();
-				material.img = m.img();
-				material.hints = m.hints();
-				material.laser_type = m.laser_type();
-				material.safety_notes = m.safety_notes();
-				var hexes = Object.keys(m.colors);
-				material.colors = {};
-				for (var k = 0; k < hexes.length; k++) {
-					var hex = hexes[k];
-					var cut = m.colors[hex].cut();
-					var cut_settings = [];
-					for (var j = 0; j < cut.length; j++) {
-						var t = cut[j];
-						var thickness_entry = {thicknessMM: t.thicknessMM(), cut_f: t.cut_f(), cut_i: t.cut_i(), cut_p: t.cut_p()};
-						cut_settings.push(thickness_entry);
-					}
-					var eng = m.colors[hex].engrave;
-					var settings = {
-						cut: cut_settings,
-						engrave: {dithering:  eng.dithering(), eng_f: eng.eng_f(), eng_i: eng.eng_i(), pierceTime: eng.pierceTime()}
-					};
-					material.colors[hex] = settings;
-				}
+				var json = cm[i];
+				var material = JSON.parse(json);
+				material.custom = true;
 				tmp.push(material);
 			}
 			ko.utils.arrayPushAll(self.custom_materials, tmp);

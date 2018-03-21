@@ -288,6 +288,41 @@ svg#area_preview {
     box-shadow: 2px 2px 4px #383e42;
 }
 
+#material_type #material_burger_menu {
+	display: none;
+}
+#material_type.active #material_burger_menu {
+	display: block;
+}
+
+
+#material_type.manage a#materials_manage,
+#material_type a#materials_manage_done { display: none; }
+#material_type a#materials_manage,
+#material_type.manage a#materials_manage_done { display: inline; }
+
+#materials_manage_done { transition: text-shadow 0.3s ease-in-out 0s; }
+#materials_manage_done.flash {
+	text-shadow: 0px 0px 10px #e25303;
+}
+
+#material_type ul#material_list li span.delete_me:hover { color:#e25303; }
+#material_type ul#material_list li span.delete_me { display: none; cursor: pointer; }
+#material_type.manage ul#material_list li.custom span.delete_me { display: block; }
+
+li.material_entry span.delete_me {
+    position: absolute;
+    bottom: 0;
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+    padding: 13px 17px;
+    border-radius: 25% 0 0 0;
+    right: 0;
+    top: auto;
+    left: auto;
+}
+
 .job_row {
     margin-bottom: 1em;
     border-bottom: 1px solid #999;
