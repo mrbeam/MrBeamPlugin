@@ -388,7 +388,7 @@ $(function(){
 			event.stopPropagation();
 			var postData = {
                 put: [],
-				delete: [JSON.stringify(m)]
+				delete: [m.key]
             };
             OctoPrint.simpleApiCommand("mrbeam", "custom_materials", postData)
                 .done(function(response){
@@ -405,6 +405,7 @@ $(function(){
 
 		self.save_material_settings = function(){
 			var name = self.save_custom_material_name();
+			var key = self._replace_non_ascii(name);
 			var thickness = self.save_custom_material_thickness();
 			var color = self.save_custom_material_color().substr(1,6);
 			var vectors = self.get_current_multicolor_settings();
@@ -437,11 +438,13 @@ $(function(){
 				colors: {}
 			};
 			new_material.colors[color] = params;
+			var data = {};
+			data[key] = new_material;
 
 			// save it locally
 			// push it to our backend
             var postData = {
-                'put':    [JSON.stringify(new_material)],   // optional
+                'put':    [JSON.stringify(data)],   // optional
                 'delete': []                // optional
             };
             OctoPrint.simpleApiCommand("mrbeam", "custom_materials", postData)
@@ -472,7 +475,6 @@ $(function(){
 			var tmp = [];
 			for (var i = 0; i < list.length; i++) {
 				var cm = JSON.parse(list[i]);
-				cm.custom = true;
 				tmp.push(cm);
 			}
 			self.custom_materials(tmp);
@@ -595,10 +597,14 @@ $(function(){
 			// List custom materials first
 			// filter custom materials
 			for (var i = 0; i < self.custom_materials().length; i++) {
-				var m = self.custom_materials()[i];
+				var material_row = self.custom_materials()[i];
+				var key = Object.keys(material_row)[0];
+				var m = material_row[key];
 				if(m !== null){
 //					m.name = materialKey; // TODO i18n
 					if(m.name.toLowerCase().indexOf(q) >= 0){
+						m.key = key;
+						m.custom = true;
 						out.push(m);
 					}
 				}
@@ -607,6 +613,7 @@ $(function(){
 			for(var materialKey in self.material_settings2){
 				var m = self.material_settings2[materialKey];
 				if(m !== null){
+					m.key = materialKey;
 //					m.name = materialKey; // TODO i18n
 					if(m.name.toLowerCase().indexOf(q) >= 0){
 						out.push(m);
@@ -964,9 +971,9 @@ $(function(){
 		self.get_current_engraving_settings = function () {
 			var data = {
 				"engrave_outlines" : self.engrave_outlines(),
-				"intensity_black_user" : self.imgIntensityBlack(),
+				"intensity_black_user" : parseInt(self.imgIntensityBlack()),
 				"intensity_black" : self.imgIntensityBlack() * self.profile.currentProfileData().laser.intensity_factor(),
-				"intensity_white_user" : self.imgIntensityWhite(),
+				"intensity_white_user" : parseInt(self.imgIntensityWhite()),
 				"intensity_white" : self.imgIntensityWhite() * self.profile.currentProfileData().laser.intensity_factor(),
 				"speed_black" : self.imgFeedrateBlack(),
 				"speed_white" : self.imgFeedrateWhite(),
@@ -1118,6 +1125,11 @@ $(function(){
                 no_special_chars = 'mb'+no_special_chars+time_stamp;
             }
             return no_special_chars;
+		};
+		
+		self._replace_non_ascii = function(str){
+			let only_ascii = str.replace(/[\u{0080}-\u{FFFF}]/gu, "*").trim(); // remove spaces,non-Ascii chars
+			return only_ascii;
 		};
 
 		self._get_brightness = function(hex){
