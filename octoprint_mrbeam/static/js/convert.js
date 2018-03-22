@@ -140,79 +140,145 @@ $(function(){
 					}
 				}
 			},
-			'Felt': {
+			'Felt': { // took settings from IHM fair
 				name: 'Felt',
 				img: 'felt.jpg',
 				description: 'Acrylic felt like the one sold in many arts and craft stores.',
-				hints: 'Be aware, natural felt is something different.',
+				hints: 'Be aware that natural felt is something else.',
 				safety_notes: '',
 				laser_type: 'MrBeamII-1.0',
 				colors: {
-					'00b000': {
-						name: 'green',
-						engrave: null, // not tested yet
-						cut: [
-							{thicknessMM: 4, cut_i:100, cut_f:225, cut_p:1}
-						]
-					},
-					'4dcaca': {
-						name: 'baby blue',
-						engrave: null, // not tested yet
-						cut: [
-							{thicknessMM: 4, cut_i:100, cut_f:100, cut_p:5}
-						]
-					},
-					'181866': {
-						name: 'royal blue',
-						engrave: null, // not tested yet
-						cut: [
-							{thicknessMM: 4, cut_i:100, cut_f:260, cut_p:2}
-						]
-					},
-					'c98600': {
-						name: 'yellow',
-						engrave: null, // not tested yet
-						cut: [
-							{thicknessMM: 4, cut_i:100, cut_f:260, cut_p:2}
-						]
-					},
-					'eca100': {
-						name: 'sunny yellow',
-						engrave: null, // not tested yet
-						cut: [
-							{thicknessMM: 4, cut_i:100, cut_f:225, cut_p:2}
-						]
-					},
-					'550024': {
-						name: 'purple',
-						engrave: null, // not tested yet
-						cut: [
-							{thicknessMM: 4, cut_i:100, cut_f:375, cut_p:2}
-						]
-					},
-					'393939': {
-						name: 'gray',
-						engrave: null, // not tested yet
-						cut: [
-							{thicknessMM: 4, cut_i:100, cut_f:300, cut_p:2}
-						]
-					},
-					'000000': {
-						name: 'black',
-						engrave: null, // not tested yet
-						cut: [
-							{thicknessMM: 4, cut_i:100, cut_f:300, cut_p:2}
-						]
-					},
-					'e03800': {
+					'EB5A3E': {
 						name: 'orange',
-						engrave: null, // not tested yet
+						engrave: {eng_i:[0,35], eng_f:[1600,1600], pierceTime: 0, dithering: false },
 						cut: [
-							{thicknessMM: 4, cut_i:100, cut_f:375, cut_p:2}
+							{thicknessMM: 3, cut_i:100, cut_f:550, cut_p:2}
+						]
+					},
+					'F49A39': {
+						name: 'yellow',
+						engrave: {eng_i:[0,30], eng_f:[1200,1200], pierceTime: 0, dithering: false },
+						cut: [
+							{thicknessMM: 3, cut_i:100, cut_f:625, cut_p:2}
+						]
+					},
+					'293365': {
+						name: 'blue',
+						engrave: {eng_i:[0,35], eng_f:[1600,1600], pierceTime: 0, dithering: false },
+						cut: [
+							{thicknessMM: 3, cut_i:100, cut_f:500, cut_p:2}
+						]
+					},
+					'322F33': {
+						name: 'black',
+						engrave: {eng_i:[0,30], eng_f:[1600,1600], pierceTime: 0, dithering: false },
+						cut: [
+							{thicknessMM: 3, cut_i:100, cut_f:400, cut_p:2}
+						]
+					},
+					'54392E': {
+						name: 'brown',
+						engrave: {eng_i:[0,30], eng_f:[1600,1600], pierceTime: 0, dithering: false },
+						cut: [
+							{thicknessMM: 3, cut_i:100, cut_f:500, cut_p:2}
+						]
+					},
+					'A21F25': {
+						name: 'dunkelrot',
+						engrave: {eng_i:[0,30], eng_f:[1600,1600], pierceTime: 0, dithering: false },
+						cut: [
+							{thicknessMM: 3, cut_i:100, cut_f:550, cut_p:2}
+						]
+					},
+					'3E613E': {
+						name: 'green',
+						engrave: {eng_i:[0,30], eng_f:[1600,1600], pierceTime: 0, dithering: false },
+						cut: [
+							{thicknessMM: 3, cut_i:100, cut_f:500, cut_p:2}
+						]
+					},
+					'D91F48': {
+						name: 'pink',
+						engrave: {eng_i:[0,40], eng_f:[1600,1600], pierceTime: 0, dithering: false },
+						cut: [
+							{thicknessMM: 3, cut_i:100, cut_f:600, cut_p:2}
 						]
 					},
 				}
 			},
+//			'Felt': { // old settings we had before IHM fair
+//				name: 'Felt',
+//				img: 'felt.jpg',
+//				description: 'Acrylic felt like the one sold in many arts and craft stores.',
+//				hints: 'Be aware, natural felt is something different.',
+//				safety_notes: '',
+//				laser_type: 'MrBeamII-1.0',
+//				colors: {
+//					'00b000': {
+//						name: 'green',
+//						engrave: null, // not tested yet
+//						cut: [
+//							{thicknessMM: 4, cut_i:100, cut_f:225, cut_p:1}
+//						]
+//					},
+//					'4dcaca': {
+//						name: 'baby blue',
+//						engrave: null, // not tested yet
+//						cut: [
+//							{thicknessMM: 4, cut_i:100, cut_f:100, cut_p:5}
+//						]
+//					},
+//					'181866': {
+//						name: 'royal blue',
+//						engrave: null, // not tested yet
+//						cut: [
+//							{thicknessMM: 4, cut_i:100, cut_f:260, cut_p:2}
+//						]
+//					},
+//					'c98600': {
+//						name: 'yellow',
+//						engrave: null, // not tested yet
+//						cut: [
+//							{thicknessMM: 4, cut_i:100, cut_f:260, cut_p:2}
+//						]
+//					},
+//					'eca100': {
+//						name: 'sunny yellow',
+//						engrave: null, // not tested yet
+//						cut: [
+//							{thicknessMM: 4, cut_i:100, cut_f:225, cut_p:2}
+//						]
+//					},
+//					'550024': {
+//						name: 'purple',
+//						engrave: null, // not tested yet
+//						cut: [
+//							{thicknessMM: 4, cut_i:100, cut_f:375, cut_p:2}
+//						]
+//					},
+//					'393939': {
+//						name: 'gray',
+//						engrave: null, // not tested yet
+//						cut: [
+//							{thicknessMM: 4, cut_i:100, cut_f:300, cut_p:2}
+//						]
+//					},
+//					'000000': {
+//						name: 'black',
+//						engrave: null, // not tested yet
+//						cut: [
+//							{thicknessMM: 4, cut_i:100, cut_f:300, cut_p:2}
+//						]
+//					},
+//					'e03800': {
+//						name: 'orange',
+//						engrave: null, // not tested yet
+//						cut: [
+//							{thicknessMM: 4, cut_i:100, cut_f:375, cut_p:2}
+//						]
+//					},
+//				}
+//			},
 			'Foam Rubber': {
 				name: 'Foam Rubber',
 				img: 'foam_rubber.jpg',
