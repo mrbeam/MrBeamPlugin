@@ -103,6 +103,18 @@ def set_info_netconnectd_plugin(self, tier):
 		pip="https://github.com/mrbeam/OctoPrint-Netconnectd/archive/{target_version}.zip",
 		restart="octoprint")
 
+	if tier in [SW_UPDATE_TIER_DEV]:
+		sw_update_config[module_id] = dict(
+			displayName=_get_display_name(self, name),
+			displayVersion=current_version,
+			type="github_commit",
+			user="mrbeam",
+			repo="OctoPrint-Netconnectd",
+			branch="develop",
+			branch_default="develop",
+			pip="https://github.com/mrbeam/OctoPrint-Netconnectd/archive/{target_version}.zip",
+			restart="octoprint")
+
 
 def set_info_findmymrbeam(self, tier):
 	name = "OctoPrint-FindMyMrBeam"
