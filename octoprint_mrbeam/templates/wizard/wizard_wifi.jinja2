@@ -2,7 +2,10 @@
 
 <div id="wizard_plugin_corewizard_wifi_netconnectd" data-bind="allowBindings: true">
 	<p>
-		<strong>Let's get your Mr Beam 2 connected to your wifi.</strong>
+		<strong>Let's get your Mr Beam II connected to your wifi.</strong>
+	</p>
+	<p>
+	    You can skip the wifi setup simply by clicking 'Next' without connecting to any wifi networks.
 	</p>
 
 	<div data-bind="visible: !hasDataLoaded()">
@@ -10,10 +13,16 @@
 	</div>
 
 	<div data-bind="visible: hasDataLoaded()">
-		<p>
+		<p data-bind="visible: !ip_available()">
 			<strong>{{ _('Connection state') }}:</strong> <span data-bind="text: netconnectdViewModel.connectionStateText"></span>
 		</p>
-	
+		<p data-bind="visible: ip_available()">
+            <strong>{{ _('Ethernet') }}:</strong> <span data-bind="text: netconnectdViewModel.connectionStateTextEthernet"></span>
+        </p>
+        <p data-bind="visible: ip_available()">
+            <strong>{{ _('Wifi') }}:</strong> <span data-bind="text: netconnectdViewModel.connectionStateTextWifi"></span>
+        </p>
+
 	    <div class="pull-right" data-bind="visible: netconnectdViewModel.enableQualitySorting">
 	        <small>
 	            {{ _('Sort by') }}: <a href="#" data-bind="click: function() { netconnectdViewModel.listHelper.changeSorting('ssid'); }">{{ _('SSID') }} ({{ _('ascending') }})</a> | <a href="#" data-bind="click: function() { netconnectdViewModel.listHelper.changeSorting('quality'); }">{{ _('Quality') }} ({{ _('descending') }})</a>
