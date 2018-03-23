@@ -247,7 +247,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				precision = 0.05,
 				optimize_travel = True,
 				small_paths_first = True,
-				clip_working_area = False # this is due a bug in clipping. Would be great if we could fix it an enable it again.
+				clip_working_area = True # https://github.com/mrbeam/MrBeamPlugin/issues/134
 			),
 		)
 
