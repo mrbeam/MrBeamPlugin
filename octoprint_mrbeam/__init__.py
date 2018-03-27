@@ -1445,7 +1445,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		Show a frontend notification to the user. (PNotify)
 		:param title: title of your mesasge
 		:param text: the actual text
-		:param type: inft, success, error, ... (default is info)
+		:param type: info, success, error, ... (default is info)
 		:param sticky: True | False (default is False)
 		:param replay_when_new_client_connects: If True the notification well be sent to all clients when a new client connects.
 				If you send the same notification (all params have identical values) it won't be sent again.
