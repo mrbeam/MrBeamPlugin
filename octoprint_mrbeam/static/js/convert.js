@@ -864,9 +864,11 @@ $(function(){
 
 			// vector icons dragged into engraving.
 			$('#colored_line_mapping input').each(function(i, el){
-				var hex = '#' +$(el).attr('id').substr(-6);
-				var brightness = self._get_brightness(hex);
-				var initial_factor = 1 - (brightness / 255);
+				var colorkey = $(el).attr('id').substr(-6);
+				var hex = '#' + colorkey;
+				var slider_id = '#adjuster_cd_color_' + colorkey;
+				var brightness = $(slider_id).val();
+				var initial_factor = brightness / 255;
 				var intensity_user = intensity_white_user + initial_factor * (intensity_black_user - intensity_white_user);
 				var intensity = Math.round(intensity_user * self.profile.currentProfileData().laser.intensity_factor());
 				var feedrate = Math.round(speed_white + initial_factor * (speed_black - speed_white));
