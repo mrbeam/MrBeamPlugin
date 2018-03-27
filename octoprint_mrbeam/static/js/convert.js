@@ -1025,13 +1025,32 @@ $(function(){
 						if(self.gcodeFilesToAppend !== undefined){
 							data.gcodeFilesToAppend = self.gcodeFilesToAppend;
 						}
-
+						var json = JSON.stringify(data);
+						var length = json.length;
+						console.log("Conversion: " + length + " bytes have to be converted.");
 						$.ajax({
 							url: "plugin/mrbeam/convert",
 							type: "POST",
 							dataType: "json",
 							contentType: "application/json; charset=UTF-8",
-							data: JSON.stringify(data)
+							data: json,
+							success: function (response) {
+								console.log("Conversion started.", response);
+							},
+							error: function ( jqXHR, textStatus, errorThrown) {
+								console.error("Conversion failed with status " + jqXHR.status, textStatus, errorThrown);
+								if(length > 10000000){
+									console.error("JSON size " + length + "Bytes may be over the request maximum.");
+								}
+								self.slicing_in_progress(false);
+								new PNotify({
+								title: gettext("Conversion failed"),
+									text: gettext("Unable to start the conversion in the backend. Content length was " + length + " bytes."),
+									type: "error",
+									tag: "conversion_error",
+									hide: false
+								});
+							}
 						});
 
 					});
