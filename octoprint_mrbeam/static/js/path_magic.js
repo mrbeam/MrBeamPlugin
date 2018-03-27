@@ -721,7 +721,19 @@ var mrbeam = mrbeam || {};
 
     var solution = new ClipperLib.PolyTree();
     var c = new ClipperLib.Clipper();
-    c.AddPaths(subj, ClipperLib.PolyType.ptSubject, false);
+
+    subj.forEach(path => {
+      if (path.length == 0)
+          return
+  
+      var startPoint = path[0];
+      var endPoint = path[path.length - 1];
+
+      var isClosed = (startPoint.X == endPoint.X) && (startPoint.Y == endPoint.Y);
+
+      c.AddPath(path, ClipperLib.PolyType.ptSubject, isClosed);
+    });
+
     c.AddPaths(clip, ClipperLib.PolyType.ptClip, true);
     c.Execute(
       ClipperLib.ClipType.ctIntersection,
@@ -734,13 +746,13 @@ var mrbeam = mrbeam || {};
     var polynode = solution.GetFirst();
 
     while (polynode) {
-      var paths = fromIntPaths([polynode.Contour()], tolerance)[0];
+      var path = fromIntPaths([polynode.Contour()], tolerance)[0];
 
       if (!polynode.IsOpen) {
-        paths.push(polyline[0]);
+        path.push(path[0]);
       }
 
-      clipped.push(paths);
+      clipped.push(path);
 
       polynode = polynode.GetNext();
     }

@@ -249,7 +249,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				precision = 0.05,
 				optimize_travel = True,
 				small_paths_first = True,
-				clip_working_area = False # this is due a bug in clipping. Would be great if we could fix it an enable it again.
+				clip_working_area = True # https://github.com/mrbeam/MrBeamPlugin/issues/134
 			),
 		)
 
@@ -1543,7 +1543,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		Show a frontend notification to the user. (PNotify)
 		:param title: title of your mesasge
 		:param text: the actual text
-		:param type: inft, success, error, ... (default is info)
+		:param type: info, success, error, ... (default is info)
 		:param sticky: True | False (default is False)
 		:param replay_when_new_client_connects: If True the notification well be sent to all clients when a new client connects.
 				If you send the same notification (all params have identical values) it won't be sent again.

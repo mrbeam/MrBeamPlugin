@@ -342,7 +342,7 @@
 		</div>
     </div>
     <div class="modal-footer">
-		<div class="pull-left" style="text-align:left;">
+		<div class="pull-left" style="text-align:left;" data-bind="visible: !slicing_in_progress()">
 			<label class="checkbox">
 				<input type="checkbox" data-bind="checked: showExpertSettings">show advanced settings
 			</label>
@@ -351,10 +351,13 @@
 			</label>
 		</div>
 
-        <a href="#" class="btn" aria-hidden="true" data-bind="click: $root.cancel_conversion()">{{ _('Cancel') }}</a>
+        <a href="#" class="btn" aria-hidden="true" 
+		   data-bind="click: $root.cancel_conversion(),
+					visible: !slicing_in_progress()">{{ _('Cancel') }}</a>
         <a href="#" class="btn btn-primary"
 		   data-bind="click: function() { if ($root.enableConvertButton()) { $root.convert() } },
 					enabled: enableConvertButton,
+					visible: !slicing_in_progress(),
 					css: {disabled: !$root.enableConvertButton()}">{{ _('Start') }}</a>
     </div>
 </div>

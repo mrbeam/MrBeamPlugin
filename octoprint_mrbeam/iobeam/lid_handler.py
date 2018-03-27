@@ -325,8 +325,16 @@ class PhotoCreator(object):
 		except Exception as e:
 			if e.__class__.__name__.startswith('PiCamera'):
 				self._logger.error("PiCamera Error while capturing picture: %s: %s", e.__class__.__name__, e)
+				self.active = False
+				_mrbeam_plugin_implementation.notify_frontend(
+					title="Camera Error",
+					text="Please try the following:<br>- Close and reopen the lid<br>- Reboot the device and reload this page",
+					type='notice',
+					sticky=True,
+					replay_when_new_client_connects=True)
 			else:
 				self._logger.exception("Exception while taking picture from camera:")
+
 
 	def _createFolder_if_not_existing(self, filename):
 		try:

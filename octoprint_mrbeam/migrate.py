@@ -16,6 +16,7 @@ class Migration(object):
 
 	VERSION_SETUP_IPTABLES           = '0.1.19'
 	VERSION_SYNC_GRBL_SETTINGS       = '0.1.24'
+	VERSION_FIX_SSH_KEY_PERMISSION   = '0.1.28'
 
 	def __init__(self, plugin):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.migrate")
@@ -51,6 +52,9 @@ class Migration(object):
 				# only needed for image'PROD 2018-01-12 19:15 1515784545'
 				if self.plugin.get_octopi_info() == 'PROD 2018-01-12 19:15 1515784545':
 					self.fix_wifi_ap_name()
+
+				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_FIX_SSH_KEY_PERMISSION, equal_ok=False):
+					self.fix_ssh_key_permissions()
 
 				# migrations end
 
@@ -156,6 +160,12 @@ class Migration(object):
 		command = "sudo sed -i '/.*ssid: MrBeam-F930.*/c\  ssid: {}' /etc/netconnectd.yaml".format(host)
 		code = exec_cmd(command)
 		self._logger.debug("fix_wifi_ap_name() Corrected Wifi AP name.")
+
+
+	def fix_ssh_key_permissions(self):
+		command = "sudo chmod 600 /root/.ssh/id_rsa"
+		code = exec_cmd(command)
+		self._logger.info("fix_ssh_key_permissions() Corrected permissions: %s", code)
 
 
 
