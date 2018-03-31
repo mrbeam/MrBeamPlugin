@@ -415,7 +415,8 @@ $(function(){
 		self.material_description = ko.observable('');
 		self.has_engraving_proposal = ko.observable(false);
 		self.has_cutting_proposal = ko.observable(false);
-		self.custom_materials = ko.observableArray([]);
+//		self.custom_materials = ko.observableArray([]);
+		self.custom_materials = ko.observable({});
 
 		self.customized_material = ko.observable(false);
 		self.save_custom_material_name = ko.observable("");
@@ -440,12 +441,14 @@ $(function(){
 		 });
 
 		self.flag_customized_material = function(){
+			self.save_custom_material_name('My ' + self.selected_material().name);
 			self.customized_material(true);
 		};
 
 		self.reset_material_settings = function(){
 			self.apply_engraving_proposal();
 			self.apply_vector_proposal();
+			self.customized_material(false);
 		};
 		
 		self.delete_material = function(m, event){
@@ -482,31 +485,45 @@ $(function(){
 				var s = v.intensity_user * v.passes / v.feedrate;
 				if(s > strength) strongest = v;
 			}
-			var cut_setting = [];
+			var cut_setting = null;
 			if(strongest !== null){
-				cut_setting.push({thicknessMM: thickness, cut_i: strongest.intensity_user, cut_f: strongest.feedrate, cut_p: strongest.passes});
+				cut_setting = {thicknessMM: thickness, cut_i: strongest.intensity_user, cut_f: strongest.feedrate, cut_p: strongest.passes};
 			}
 
 			var e = self.get_current_engraving_settings();
 			var engrave_setting = {eng_i: [e.intensity_white_user, e.intensity_black_user], eng_f: [e.speed_white, e.speed_black], pierceTime: e.pierce_time, dithering: e.dithering};
 
-			var params = {
-				engrave: engrave_setting,
-				cut: cut_setting
-			};
-			var new_material = {
+			var new_material;
+					
+			if(self.custom_materials()[key]){
+				new_material = self.custom_materials()[key];
+			}else {
+					
+				new_material = {
 				name: name,
-				img: 'custom.jpg',
-				description: 'custom material',
-				hints: 'Figuring out material settings works best from low to high intensity and fast to slow movement.',
-				safety_notes: 'Experimenting with custom material settings is your responsibility.',
-				laser_type: 'MrBeamII-1.0',
-				colors: {}
-			};
-			new_material.colors[color] = params;
+					img: 'custom.jpg',
+					description: 'custom material',
+					hints: 'Figuring out material settings works best from low to high intensity and fast to slow movement.',
+					safety_notes: 'Experimenting with custom material settings is your responsibility.',
+					laser_type: 'MrBeamII-1.0',
+					colors: {}
+				};
+			}
+			
+			var tmp = [cut_setting];
+			if(new_material.colors[color]){
+				for (var t = 0; t < new_material.colors[color].cut.length; t++) {
+					var item = new_material.colors[color].cut[t];
+					if(item.thicknessMM !== cut_setting.thicknessMM) {
+						tmp.push(item);
+					}
+				}
+			}
+			new_material.colors[color] = {cut: tmp, engrave: engrave_setting};					
+			
 			var data = {};
 			data[key] = new_material;
-
+			
 			// save it locally
 			// push it to our backend
             var postData = {
@@ -538,10 +555,10 @@ $(function(){
 		};
 
 		self._update_custom_materials = function(list){
-			var tmp = [];
+			var tmp = {};
 			for (var i = 0; i < list.length; i++) {
 				var cm = JSON.parse(list[i]);
-				tmp.push(cm);
+				$.extend(true, tmp, cm);
 			}
 			self.custom_materials(tmp);
 		};
@@ -662,19 +679,21 @@ $(function(){
 			var out = [];
 			// List custom materials first
 			// filter custom materials
-			for (var i = 0; i < self.custom_materials().length; i++) {
-				var material_row = self.custom_materials()[i];
-				var key = Object.keys(material_row)[0];
-				var m = material_row[key];
+			var customs = self.custom_materials(); 
+			for(var materialKey in customs){
+				var m = customs[materialKey];
 				if(m !== null){
 //					m.name = materialKey; // TODO i18n
 					if(m.name.toLowerCase().indexOf(q) >= 0){
-						m.key = key;
+						m.key = materialKey;
 						m.custom = true;
 						out.push(m);
 					}
 				}
-			}
+				
+			} 
+//			for (var i = 0; i < self.custom_materials().length; i++) {
+//			}
 			// filter predefined materials
 			for(var materialKey in self.material_settings2){
 				var m = self.material_settings2[materialKey];
@@ -790,7 +809,7 @@ $(function(){
 				$(job).find('.param_passes').val(p.cut_p || 0);
 				$(job).find('.param_piercetime').val(p.cut_pierce || 0);
 			}
-			self.customized_material(false);
+//			self.customized_material(false);
 		};
 		self.apply_engraving_proposal = function(){
 			var material = self.selected_material();
@@ -810,7 +829,7 @@ $(function(){
 			self.imgFeedrateBlack(p.eng_f[1]);
 			self.imgDithering(p.dithering);
 			self.engravingPiercetime(p.eng_pierce || 0);
-			self.customized_material(false);
+//			self.customized_material(false);
 		};
 
 		self._find_closest_color_to = function(hex, available_colors){
