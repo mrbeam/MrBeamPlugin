@@ -450,7 +450,7 @@ $(function(){
 			self.apply_vector_proposal();
 			self.customized_material(false);
 		};
-		
+
 		self.delete_material = function(m, event){
 			$(event.target).parents('li').remove();
 			event.preventDefault();
@@ -474,7 +474,7 @@ $(function(){
 
 		self.save_material_settings = function(){
 			var name = self.save_custom_material_name();
-			var key = self._replace_non_ascii(name);
+			var key = self._replace_non_ascii(name).toLowerCase();
 			var thickness = self.save_custom_material_thickness();
 			var color = self.save_custom_material_color().substr(1,6);
 			var vectors = self.get_current_multicolor_settings();
@@ -494,11 +494,11 @@ $(function(){
 			var engrave_setting = {eng_i: [e.intensity_white_user, e.intensity_black_user], eng_f: [e.speed_white, e.speed_black], pierceTime: e.pierce_time, dithering: e.dithering};
 
 			var new_material;
-					
+
 			if(self.custom_materials()[key]){
 				new_material = self.custom_materials()[key];
 			}else {
-					
+
 				new_material = {
 				name: name,
 					img: 'custom.jpg',
@@ -509,7 +509,7 @@ $(function(){
 					colors: {}
 				};
 			}
-			
+
 			var tmp = [cut_setting];
 			if(new_material.colors[color]){
 				for (var t = 0; t < new_material.colors[color].cut.length; t++) {
@@ -519,15 +519,15 @@ $(function(){
 					}
 				}
 			}
-			new_material.colors[color] = {cut: tmp, engrave: engrave_setting};					
-			
+			new_material.colors[color] = {cut: tmp, engrave: engrave_setting};
+
 			var data = {};
 			data[key] = new_material;
-			
+
 			// save it locally
 			// push it to our backend
             var postData = {
-                'put':    [JSON.stringify(data)],   // optional
+                'put':    data,   // optional
                 'delete': []                // optional
             };
             OctoPrint.simpleApiCommand("mrbeam", "custom_materials", postData)
@@ -535,7 +535,7 @@ $(function(){
 					console.log("simpleApiCall response: ", response);
 					// $('#save_material_form.dropdown').dropdown('toggle'); // buggy
 					$('#save_material_form').removeClass('open'); // workaround
-					
+
                     // add to custom materials and select
 					self._update_custom_materials(response.custom_materials);
 					var fm = self.filteredMaterials();
@@ -545,7 +545,7 @@ $(function(){
 								self.selected_material(m);
 								break;
 							}
-							
+
 						}
 //					self.selected_material(new_material);
 				})
@@ -557,7 +557,7 @@ $(function(){
 		self._update_custom_materials = function(list){
 			var tmp = {};
 			for (var i = 0; i < list.length; i++) {
-				var cm = JSON.parse(list[i]);
+				var cm = list[i];
 				$.extend(true, tmp, cm);
 			}
 			self.custom_materials(tmp);
@@ -679,7 +679,7 @@ $(function(){
 			var out = [];
 			// List custom materials first
 			// filter custom materials
-			var customs = self.custom_materials(); 
+			var customs = self.custom_materials();
 			for(var materialKey in customs){
 				var m = customs[materialKey];
 				if(m !== null){
@@ -690,8 +690,8 @@ $(function(){
 						out.push(m);
 					}
 				}
-				
-			} 
+
+			}
 //			for (var i = 0; i < self.custom_materials().length; i++) {
 //			}
 			// filter predefined materials
@@ -1232,7 +1232,7 @@ $(function(){
             }
             return no_special_chars;
 		};
-		
+
 		self._replace_non_ascii = function(str){
 			let only_ascii = str.replace(/[\u{0080}-\u{FFFF}]/gu, "*").trim(); // remove spaces,non-Ascii chars
 			return only_ascii;
@@ -1256,7 +1256,7 @@ $(function(){
                 self.slicing_progress(5);
             });
 		};
-		
+
 		self.onStartupComplete = function(){
 			// fill custom materials
 			OctoPrint.simpleApiCommand("mrbeam", "custom_materials", {})

@@ -683,10 +683,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		try:
 			if 'delete' in data:
-				res['deleted'] = materials(self).delete_custom_materials(data['delete'])
+				materials(self).delete_custom_material(data['delete'])
 
 			if 'put' in data:
-				res['put'] = materials(self).put_custom_materials(data['put'])
+				for key, m in data['put'].iteritems():
+					materials(self).put_custom_material(key, m)
 
 			res['custom_materials'] = materials(self).get_custom_materials()
 

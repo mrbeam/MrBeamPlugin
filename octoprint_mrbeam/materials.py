@@ -24,7 +24,7 @@ class Materials(object):
 		self.plugin = plugin
 		self.custom_materials_file = os.path.join(self.plugin._settings.getBaseFolder('base'), self.FILE_CUSTOM_MATERIALS)
 
-		self.custom_materials = []
+		self.custom_materials = dict()
 		self.custom_materials_loaded = False
 
 
@@ -37,52 +37,54 @@ class Materials(object):
 		return self.custom_materials
 
 
-	def put_custom_materials(self, put_materials):
+	def put_custom_material(self, key, material):
 		"""
-		Put array of materials to custom materials. Adds or overwrites
-		:param put_materials: list of strings
-		:return: number of processed materials
+		Put material. If key exists, material will be overwritten
+		:param key: String unique material key
+		:param material: Dict of material data
+		:return: Boolean success
+		"""
+		self._load()
+		res = None
+
+		try:
+			self.custom_materials[key.strip()] = material
+			res = True
+		except:
+			self._logger.exception("Exception while putting materials: key: %s, data: %s", key, material)
+			res = False
+		if res:
+			res = self._save()
+		return res
+
+	def delete_custom_material(self, key):
+		"""
+		Deletes custom material if existing.
+		:param keys: String or list: key or list of keys to delete
+		:return: Boolean success
 		"""
 		self._load()
 		count = 0
 		res = True
 
-		if put_materials:
-			for m in put_materials:
-				i = -1
-				try:
-					i = self.custom_materials.index(m)
-				except ValueError:
-					pass
-				if i < 0:
-					# material is new
-					self.custom_materials.append(m)
-				else:
-					# update material
-					self.custom_materials[i] = m
-				count += 1
-			res = self._save()
-		return count if res else -1
+		key_list = key
+		if isinstance(key_list, basestring):
+			key_list = [key_list]
 
-	def delete_custom_materials(self, del_materials):
-		"""
-		Deletes custom materials if existing. If material is not fount it's skipped
-		:param del_materials: list of strings
-		:return: number of deleted materials
-		"""
-		self._load()
-		count = 0
-		res = True
-
-		if del_materials:
-			for m in del_materials:
-				try:
-					self.custom_materials.remove(m)
-					count += 1
-				except ValueError:
-					pass
-			res = self._save()
-		return count if res else -1
+		if key_list:
+			try:
+				for k in key_list:
+					try:
+						self.custom_materials.remove(k)
+						count += 1
+					except ValueError:
+						pass
+			except:
+				self._logger.exception("Exception while deleting materials: key: %s", key)
+				res = False
+			if res and count > 0:
+				res = self._save()
+		return res
 
 
 	def _load(self, force=False):
@@ -94,12 +96,12 @@ class Materials(object):
 							self.custom_materials = tmp['custom_materials']
 						self._logger.debug("Loaded %s custom materials from file %s", len(self.custom_materials), self.custom_materials_file)
 					else:
-						self.custom_materials = []
+						self.custom_materials = dict()
 						self._logger.debug("No custom materials yet. File %s does not exist.", self.custom_materials_file)
 					self.custom_materials_loaded = True
 				except:
 					self._logger.exception("Exception while loading custom materials from file %s", self.custom_materials_file)
-					self.custom_materials = []
+					self.custom_materials = dict()
 					self.custom_materials_loaded = False
 		return self.custom_materials
 
