@@ -441,7 +441,16 @@ $(function(){
 		 });
 
 		self.flag_customized_material = function(){
-			self.save_custom_material_name('My ' + self.selected_material().name);
+			var custom_prefix = 'My ';
+			var suggested_name = self.selected_material().name;
+			if(!suggested_name.startsWith(custom_prefix)){
+				suggested_name = custom_prefix + suggested_name;
+			}
+			self.save_custom_material_name(suggested_name);
+			self.save_custom_material_color('#'+self.selected_material_color());
+			var t = self.selected_material_thickness();
+			var tmp = t !== null ? t.thicknessMM : 1;
+			self.save_custom_material_thickness(tmp);
 			self.customized_material(true);
 		};
 
