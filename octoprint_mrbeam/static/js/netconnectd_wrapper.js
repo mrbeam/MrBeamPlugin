@@ -10,6 +10,11 @@ $(function() {
             var result = (self.netconnectdViewModel.hostname() != undefined);
                     return result;
         });
+        // ip_addresses were introduces in netconnect plugin 0.1.1
+        self.ip_available = ko.computed(function() {
+            var result = (self.netconnectdViewModel.status.ip_addresses != undefined);
+                    return result;
+        });
 
         self.onStartup = function(){
             // needs to be scrollable on touch devices

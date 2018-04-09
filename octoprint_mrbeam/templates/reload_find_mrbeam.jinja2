@@ -16,11 +16,14 @@
         // if cookie name is changed, it also need to be changed in FindMyOctoPrint-Server
         var cookie_name = 'mrbeam_beamos_reloading';
 
-        var forward_to = "{{ hostname }}.local".toLowerCase();
+        var forward_to = "10.250.250.1";
+        // var forward_to = "{{ hostname }}.local".toLowerCase();
         var hostname_whitelist = [
             /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/, // ip addresses
             /^mrbeam-[0-9abcdef]{4}\.local$/,
-            /^mrbeam-[0-9abcdef]{4}$/
+            /^mrbeam-[0-9abcdef]{4}\..*$/,
+            /^mrbeam-[0-9abcdef]{4}$/,
+            /^localhost.*$/
             ];
 
 

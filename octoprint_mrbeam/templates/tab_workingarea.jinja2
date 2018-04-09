@@ -56,11 +56,10 @@
 
 
 													<div class="row-fluid print-control btn-group" style="display: none;" data-bind="visible: loginState.isUser">
-														<button class="btn btn-danger span4" data-bind="click: conversion.show_conversion_dialog, enable: state.isOperational() && state.isReady() && !state.isPrinting() && !state.isPaused() && loginState.isUser() && !workingArea.working_area_empty(), attr: {title: state.titlePrintButton}" id="job_print">
+														<button class="btn btn-danger span6" data-bind="click: conversion.show_conversion_dialog, enable: state.isOperational() && state.isReady() && !state.isPrinting() && !state.isPaused() && loginState.isUser() && !workingArea.working_area_empty(), attr: {title: state.titlePrintButton}" id="job_print">
 															<i class="icon-white icon-fire" data-bind="css: { 'wobble': state.isPrinting()}"></i> <span>{{ _('Laser') }}</span>
 														</button>
-														<button class="btn span4" id="job_pause" data-bind="click: state.pause, enable: state.isOperational() && (state.isPrinting() || state.isPaused()) && loginState.isUser(), css: {active: state.isPaused()}, attr: {title: state.titlePauseButton}"><i data-bind="css: {'icon-pause': !state.isPaused(), 'icon-play': state.isPaused()}"></i> <span data-bind="visible: !state.isPaused()">{{ _('Pause') }}</span><span data-bind="visible: state.isPaused()">{{ _('Resume') }}</span></button>
-														<button class="btn span4" id="job_cancel" data-bind="click: state.cancel, enable: state.isOperational() && (state.isPrinting() || state.isPaused()) && loginState.isUser()" title="{{ _('Cancels the job') }}"><i class="icon-stop"></i> {{ _('Cancel') }}</button>
+														<button class="btn span6" id="job_pause" data-bind="click: state.pause, enable: state.isOperational() && (state.isPrinting() || state.isPaused()) && loginState.isUser(), css: {active: state.isPaused()}, attr: {title: state.titlePauseButton}"><i data-bind="css: {'icon-pause': !state.isPaused(), 'icon-play': state.isPaused()}"></i> <span data-bind="visible: !state.isPaused()">{{ _('Pause') }}</span><span data-bind="visible: state.isPaused()">{{ _('Resume') }}</span></button>
 													</div>
 												</div>
 											</div>

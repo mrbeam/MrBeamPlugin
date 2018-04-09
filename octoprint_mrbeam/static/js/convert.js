@@ -44,11 +44,11 @@ $(function(){
 				name: 'Anodized Aluminum',
 				img: 'anodized_aluminum.jpg',
 				description: 'Dark anodized aluminum can be engraved. Works on iPhones.',
-				hints: 'Anodized aluminum turns brighter through laser engraving. Therefor the settings are inverted! Requires very precise focus.',
+				hints: 'Requires very precise focus. Anodized aluminum turns brighter through laser engraving. Therefor we suggest to invert photos for engravings.',
 				laser_type: 'MrBeamII-1.0',
 				colors: {
 					'000000': {
-						engrave: {eng_i:[100,0], eng_f:[30,1000], pierceTime: 0, dithering: false },
+						engrave: {eng_i:[0,100], eng_f:[1000, 30], pierceTime: 0, dithering: false },
 						cut: []
 					}
 				}
@@ -140,79 +140,145 @@ $(function(){
 					}
 				}
 			},
-			'Felt': {
+			'Felt': { // took settings from IHM fair
 				name: 'Felt',
 				img: 'felt.jpg',
 				description: 'Acrylic felt like the one sold in many arts and craft stores.',
-				hints: 'Be aware, natural felt is something different.',
+				hints: 'Be aware that natural felt is something else.',
 				safety_notes: '',
 				laser_type: 'MrBeamII-1.0',
 				colors: {
-					'00b000': {
-						name: 'green',
-						engrave: null, // not tested yet
-						cut: [
-							{thicknessMM: 4, cut_i:100, cut_f:225, cut_p:1}
-						]
-					},
-					'4dcaca': {
-						name: 'baby blue',
-						engrave: null, // not tested yet
-						cut: [
-							{thicknessMM: 4, cut_i:100, cut_f:100, cut_p:5}
-						]
-					},
-					'181866': {
-						name: 'royal blue',
-						engrave: null, // not tested yet
-						cut: [
-							{thicknessMM: 4, cut_i:100, cut_f:260, cut_p:2}
-						]
-					},
-					'c98600': {
-						name: 'yellow',
-						engrave: null, // not tested yet
-						cut: [
-							{thicknessMM: 4, cut_i:100, cut_f:260, cut_p:2}
-						]
-					},
-					'eca100': {
-						name: 'sunny yellow',
-						engrave: null, // not tested yet
-						cut: [
-							{thicknessMM: 4, cut_i:100, cut_f:225, cut_p:2}
-						]
-					},
-					'550024': {
-						name: 'purple',
-						engrave: null, // not tested yet
-						cut: [
-							{thicknessMM: 4, cut_i:100, cut_f:375, cut_p:2}
-						]
-					},
-					'393939': {
-						name: 'gray',
-						engrave: null, // not tested yet
-						cut: [
-							{thicknessMM: 4, cut_i:100, cut_f:300, cut_p:2}
-						]
-					},
-					'000000': {
-						name: 'black',
-						engrave: null, // not tested yet
-						cut: [
-							{thicknessMM: 4, cut_i:100, cut_f:300, cut_p:2}
-						]
-					},
-					'e03800': {
+					'EB5A3E': {
 						name: 'orange',
-						engrave: null, // not tested yet
+						engrave: {eng_i:[0,35], eng_f:[1600,1600], pierceTime: 0, dithering: false },
 						cut: [
-							{thicknessMM: 4, cut_i:100, cut_f:375, cut_p:2}
+							{thicknessMM: 3, cut_i:100, cut_f:550, cut_p:2}
+						]
+					},
+					'F49A39': {
+						name: 'yellow',
+						engrave: {eng_i:[0,30], eng_f:[1200,1200], pierceTime: 0, dithering: false },
+						cut: [
+							{thicknessMM: 3, cut_i:100, cut_f:625, cut_p:2}
+						]
+					},
+					'293365': {
+						name: 'blue',
+						engrave: {eng_i:[0,35], eng_f:[1600,1600], pierceTime: 0, dithering: false },
+						cut: [
+							{thicknessMM: 3, cut_i:100, cut_f:500, cut_p:2}
+						]
+					},
+					'322F33': {
+						name: 'black',
+						engrave: {eng_i:[0,30], eng_f:[1600,1600], pierceTime: 0, dithering: false },
+						cut: [
+							{thicknessMM: 3, cut_i:100, cut_f:400, cut_p:2}
+						]
+					},
+					'54392E': {
+						name: 'brown',
+						engrave: {eng_i:[0,30], eng_f:[1600,1600], pierceTime: 0, dithering: false },
+						cut: [
+							{thicknessMM: 3, cut_i:100, cut_f:500, cut_p:2}
+						]
+					},
+					'A21F25': {
+						name: 'dunkelrot',
+						engrave: {eng_i:[0,30], eng_f:[1600,1600], pierceTime: 0, dithering: false },
+						cut: [
+							{thicknessMM: 3, cut_i:100, cut_f:550, cut_p:2}
+						]
+					},
+					'3E613E': {
+						name: 'green',
+						engrave: {eng_i:[0,30], eng_f:[1600,1600], pierceTime: 0, dithering: false },
+						cut: [
+							{thicknessMM: 3, cut_i:100, cut_f:500, cut_p:2}
+						]
+					},
+					'D91F48': {
+						name: 'pink',
+						engrave: {eng_i:[0,40], eng_f:[1600,1600], pierceTime: 0, dithering: false },
+						cut: [
+							{thicknessMM: 3, cut_i:100, cut_f:600, cut_p:2}
 						]
 					},
 				}
 			},
+//			'Felt': { // old settings we had before IHM fair
+//				name: 'Felt',
+//				img: 'felt.jpg',
+//				description: 'Acrylic felt like the one sold in many arts and craft stores.',
+//				hints: 'Be aware, natural felt is something different.',
+//				safety_notes: '',
+//				laser_type: 'MrBeamII-1.0',
+//				colors: {
+//					'00b000': {
+//						name: 'green',
+//						engrave: null, // not tested yet
+//						cut: [
+//							{thicknessMM: 4, cut_i:100, cut_f:225, cut_p:1}
+//						]
+//					},
+//					'4dcaca': {
+//						name: 'baby blue',
+//						engrave: null, // not tested yet
+//						cut: [
+//							{thicknessMM: 4, cut_i:100, cut_f:100, cut_p:5}
+//						]
+//					},
+//					'181866': {
+//						name: 'royal blue',
+//						engrave: null, // not tested yet
+//						cut: [
+//							{thicknessMM: 4, cut_i:100, cut_f:260, cut_p:2}
+//						]
+//					},
+//					'c98600': {
+//						name: 'yellow',
+//						engrave: null, // not tested yet
+//						cut: [
+//							{thicknessMM: 4, cut_i:100, cut_f:260, cut_p:2}
+//						]
+//					},
+//					'eca100': {
+//						name: 'sunny yellow',
+//						engrave: null, // not tested yet
+//						cut: [
+//							{thicknessMM: 4, cut_i:100, cut_f:225, cut_p:2}
+//						]
+//					},
+//					'550024': {
+//						name: 'purple',
+//						engrave: null, // not tested yet
+//						cut: [
+//							{thicknessMM: 4, cut_i:100, cut_f:375, cut_p:2}
+//						]
+//					},
+//					'393939': {
+//						name: 'gray',
+//						engrave: null, // not tested yet
+//						cut: [
+//							{thicknessMM: 4, cut_i:100, cut_f:300, cut_p:2}
+//						]
+//					},
+//					'000000': {
+//						name: 'black',
+//						engrave: null, // not tested yet
+//						cut: [
+//							{thicknessMM: 4, cut_i:100, cut_f:300, cut_p:2}
+//						]
+//					},
+//					'e03800': {
+//						name: 'orange',
+//						engrave: null, // not tested yet
+//						cut: [
+//							{thicknessMM: 4, cut_i:100, cut_f:375, cut_p:2}
+//						]
+//					},
+//				}
+//			},
 			'Foam Rubber': {
 				name: 'Foam Rubber',
 				img: 'foam_rubber.jpg',
@@ -798,9 +864,11 @@ $(function(){
 
 			// vector icons dragged into engraving.
 			$('#colored_line_mapping input').each(function(i, el){
-				var hex = '#' +$(el).attr('id').substr(-6);
-				var brightness = self._get_brightness(hex);
-				var initial_factor = 1 - (brightness / 255);
+				var colorkey = $(el).attr('id').substr(-6);
+				var hex = '#' + colorkey;
+				var slider_id = '#adjuster_cd_color_' + colorkey;
+				var brightness = $(slider_id).val();
+				var initial_factor = brightness / 255;
 				var intensity_user = intensity_white_user + initial_factor * (intensity_black_user - intensity_white_user);
 				var intensity = Math.round(intensity_user * self.profile.currentProfileData().laser.intensity_factor());
 				var feedrate = Math.round(speed_white + initial_factor * (speed_black - speed_white));
@@ -959,13 +1027,32 @@ $(function(){
 						if(self.gcodeFilesToAppend !== undefined){
 							data.gcodeFilesToAppend = self.gcodeFilesToAppend;
 						}
-
+						var json = JSON.stringify(data);
+						var length = json.length;
+						console.log("Conversion: " + length + " bytes have to be converted.");
 						$.ajax({
 							url: "plugin/mrbeam/convert",
 							type: "POST",
 							dataType: "json",
 							contentType: "application/json; charset=UTF-8",
-							data: JSON.stringify(data)
+							data: json,
+							success: function (response) {
+								console.log("Conversion started.", response);
+							},
+							error: function ( jqXHR, textStatus, errorThrown) {
+								console.error("Conversion failed with status " + jqXHR.status, textStatus, errorThrown);
+								if(length > 10000000){
+									console.error("JSON size " + length + "Bytes may be over the request maximum.");
+								}
+								self.slicing_in_progress(false);
+								new PNotify({
+								title: gettext("Conversion failed"),
+									text: gettext("Unable to start the conversion in the backend. Content length was " + length + " bytes."),
+									type: "error",
+									tag: "conversion_error",
+									hide: false
+								});
+							}
 						});
 
 					});
