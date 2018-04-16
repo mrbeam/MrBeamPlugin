@@ -110,6 +110,8 @@ $(function(){
         self.fontMap = ["Allerta Stencil","Amatic SC","Comfortaa","Fredericka the Great","Kavivanar","Lobster","Merriweather","Mr Bedfort","Quattrocento","Roboto"];
         self.currentQuickTextFile = undefined;
         self.currentQuickText = ko.observable();
+        self.currentQuickShapeFile = undefined;
+        self.currentQuickShape = ko.observable();
         self.lastQuickTextFontIndex = 0;
         self.lastQuickTextIntensity = 0; // rgb values: 0=black, 155=white
 
@@ -330,7 +332,7 @@ $(function(){
 
 		self.countPlacements = function(file){
 		    // quicktexts can't get duplicated and don't have ["refs"]["download"]
-            if (file["type"] == 'quicktext') {
+            if (file['type'] === 'quicktext' || file['type'] === 'quickshape') {
                 return 1;
             }
 			var label = file["refs"]["download"];
@@ -418,7 +420,7 @@ $(function(){
 				self.placedDesigns.push(file);
 
 				// get scale matrix
-                fragment = self._removeUnsupportedSvgElements(fragment);
+                fragment = self._removeUnsupportedSvgElements(fragment); // TODO check if this is necessary. Is done in prepareAndInsertSVG()
 				var generator_info = self._get_generator_info(fragment);
 				var doc_dimensions = self._getDocumentDimensionAttributes(fragment);
 				var unitScaleX = self._getDocumentScaleToMM(doc_dimensions.units_x, generator_info);
@@ -474,71 +476,80 @@ $(function(){
          * This should be the common handler for everything added to the working area that is converted to SVG
          * @param fragment
          * @param previewId
-         * @param origin
+         * @param origin file url or uniq element source id
          * @param scaleMatrixStr (optional)
+		 * @param flags object with self-explaining keys (true per default): showTransformHandles, embedGCode, bakeTransforms
          * @returns {*}
          * @private
          */
-		self._prepareAndInsertSVG = function(fragment, id, origin, scaleMatrixStr){
-				fragment = self._removeUnsupportedSvgElements(fragment);
+		self._prepareAndInsertSVG = function(fragment, id, origin, scaleMatrixStr, flags = {}){
 
-				// get original svg attributes
-				var newSvgAttrs = self._getDocumentNamespaceAttributes(fragment);
-                if (scaleMatrixStr) {
-                    newSvgAttrs['transform'] = scaleMatrixStr;
-                }
+			var switches = $.extend({showTransformHandles: true, embedGCode: true, bakeTransforms: true}, flags);
+			fragment = self._removeUnsupportedSvgElements(fragment);
 
-				var newSvg = snap.group(fragment.selectAll("svg>*"));
+			// get original svg attributes
+			var newSvgAttrs = self._getDocumentNamespaceAttributes(fragment);
+			if (scaleMatrixStr) {
+				newSvgAttrs['transform'] = scaleMatrixStr;
+			}
 
-				// handle texts
-				var hasText = newSvg.selectAll('text,tspan');
-				if(hasText && hasText.length > 0){
-					self.svg_contains_text_warning(newSvg);
-				}
+			var newSvg = snap.group(fragment.selectAll("svg>*"));
 
-				// remove style elements with online references
-				var hasStyle = newSvg.selectAll('style');
-				if (hasStyle && hasStyle.length > 0) {
-					for(var y=0; y<hasStyle.length; y++) {
-						if (hasStyle[y].node.innerHTML && hasStyle[y].node.innerHTML.search("@import ") >= 0) {
-							self.svg_contains_online_style_warning();
-							console.warn("Removing style element: web references not supported: ", hasStyle[y].node.innerHTML);
-							hasStyle[y].node.remove();
-						}
+			// handle texts
+			var hasText = newSvg.selectAll('text,tspan');
+			if(hasText && hasText.length > 0){
+				self.svg_contains_text_warning(newSvg);
+			}
+
+			// remove style elements with online references
+			var hasStyle = newSvg.selectAll('style');
+			if (hasStyle && hasStyle.length > 0) {
+				for(var y=0; y<hasStyle.length; y++) {
+					if (hasStyle[y].node.innerHTML && hasStyle[y].node.innerHTML.search("@import ") >= 0) {
+						self.svg_contains_online_style_warning();
+						console.warn("Removing style element: web references not supported: ", hasStyle[y].node.innerHTML);
+						hasStyle[y].node.remove();
 					}
 				}
+			}
 
-				newSvg.attr(newSvgAttrs);
+			newSvg.attr(newSvgAttrs);
+			if(switches.bakeTransforms){
 				newSvg.bake(); // remove transforms
-				newSvg.selectAll('path').attr({strokeWidth: '0.8', class:'vector_outline'});
-				newSvg.attr({
-					id: id,
-                    'mb:id':id,
-					class: 'userSVG',
-					'mb:origin': origin,
-				});
-				snap.select("#userContent").append(newSvg);
-				newSvg.transformable();
-				newSvg.ftRegisterOnTransformCallback(self.svgTransformUpdate);
-				newSvg.ftRegisterBeforeTransformCallback(function(){
-					newSvg.clean_gc();
-				});
-				newSvg.ftRegisterAfterTransformCallback(function(){
-				    var mb_meta = self._set_mb_attributes(newSvg);
-					newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
-				});
-
-                // activate handles on all things we add to the working_area
-                self.showTransformHandles(id, true);
-
+			}
+			newSvg.selectAll('path').attr({strokeWidth: '0.8', class:'vector_outline'});
+			newSvg.attr({
+				id: id,
+				'mb:id':id,
+				class: 'userSVG',
+				'mb:origin': origin
+			});
+			snap.select("#userContent").append(newSvg);
+			newSvg.transformable();
+			newSvg.ftRegisterOnTransformCallback(self.svgTransformUpdate);
+			newSvg.ftRegisterBeforeTransformCallback(function(){
+				newSvg.clean_gc();
+			});
+			newSvg.ftRegisterAfterTransformCallback(function(){
 				var mb_meta = self._set_mb_attributes(newSvg);
 				newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
+			});
 
-				setTimeout(function(){
-					newSvg.ftReportTransformation();
-				}, 200);
+			// activate handles on all things we add to the working_area
+			if(switches.showTransformHandles){
+				self.showTransformHandles(id, true);
+			}
+			
+			var mb_meta = self._set_mb_attributes(newSvg);
+			if(switches.embedGCode){
+				newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
+			}
 
-				return id;
+			setTimeout(function(){
+				newSvg.ftReportTransformation();
+			}, 200);
+
+			return id;
 		};
 
         /**
@@ -1339,6 +1350,8 @@ $(function(){
                 }
             } else if (data.type === "quicktext") {
 			    return "wa_template_quicktext";
+            } else if (data.type === "quickshape") {
+			    return "wa_template_quickshape";
 			} else {
 				return "wa_template_dummy";
 			}
@@ -1803,7 +1816,366 @@ $(function(){
             svg.attr('xmlns:xlink', 'http://www.w3.org/1999/xlink');
             return svg;
         };
+		
+		self._enableWorkingAreaOverModal = function(){ $('#area_preview').addClass('overModalBG'); }
+		self._disableWorkingAreaOverModal = function(){ setTimeout(function(){$('#area_preview').removeClass('overModalBG');},300); }
 
+        // ***********************************************************
+		//  QUICKSHAPE start
+        // ***********************************************************
+
+
+        self.newQuickShape = function() {
+            var file = self._qs_placeQuickShape();
+            self.editQuickShape(file);
+
+        };
+		
+       /**
+         * Equivalent to self.placeSVG for QuickShape
+         * @returns file object
+         */
+        self._qs_placeQuickShape = function(){
+			
+			var w = self.workingAreaWidthMM() / 5;
+			var h = w * 0.5;
+			var x = (self.workingAreaWidthMM() - w) / 2;
+			var y = (self.workingAreaHeightMM() - h) / 3;
+			var r = 0;
+			
+            var id = self.getEntryId('qs');
+			var origin = id;
+			var ts = Date.now();
+			var file = {
+				date: ts,
+				name: '',
+				id: id,
+				previewId: null,
+				url: null,
+				misfit: "",
+				origin: 'local',
+				path: null,
+				type: "quickshape",
+				typePath: ["quickshape"],
+				qs_params: {
+					type: '#rect', 
+					color: '#e25303',
+					rect_w: w, rect_h: h, rect_radius: r, 
+					circle_radius: w, 
+					star_radius: w/2, star_corners:5, star_sharpness: 0.5522, 
+					heart_w: w, heart_h:0.8*w, heart_lr: 0
+				}
+			};			
+            var previewId = self.generateUniqueId(id, file); // appends -# if multiple times the same design is placed.
+			file.previewId = previewId;
+            self.placedDesigns.push(file);
+
+			var d = self._qs_getRect(w,h,r);
+			var shapeSvg = '<svg><g><path d="'+d+'" stroke-width="1" stroke="'+file.qs_params.color+'" fill="#ffffff" fill-opacity="0" /></g></svg>';
+			var fragment = Snap.parse(shapeSvg);
+
+			var scaleMatrixStr = new Snap.Matrix(1,0,0,1,x,y).toString();
+			self._prepareAndInsertSVG(fragment, previewId, origin, '', {showTransformHandles: false, embedGCode: false});
+			$('#'+previewId).attr('transform', scaleMatrixStr);
+            return file;
+        };
+
+		/**
+         * Opens QuickText window to edit an existing QuickText object
+         * @param file Object representing the QuickText to edit
+         */
+        self.editQuickShape = function (file) {
+			self.currentQuickShapeFile = file;
+			var params = self.currentQuickShapeFile.qs_params;
+			self.showTransformHandles(self.currentQuickShapeFile.previewId, false);
+			$('#quick_shape_dialog').modal({keyboard: true});
+			$('#quick_shape_dialog').one('hide', self._qs_currentQuickShapeShowTransformHandlesIfNotEmpty);
+			$('#quick_shape_rect_w').val(params.rect_w);
+			$('#quick_shape_rect_h').val(params.rect_h);
+			$('#quick_shape_rect_radius').val(params.rect_radius);
+			$('#quick_shape_circle_radius').val(params.circle_radius);
+			$('#quick_shape_star_radius').val(params.star_radius);
+			$('#quick_shape_star_corners').val(params.star_corners);
+			$('#quick_shape_star_sharpness').val(params.star_sharpness);
+			$('#quick_shape_heart_w').val(params.heart_w);
+			$('#quick_shape_heart_h').val(params.heart_h);
+			$('#quick_shape_heart_lr').val(params.heart_lr);
+			$('#quick_shape_color').val(params.color);
+			
+			$('#shape_tab_link_'+params.type.substr(1)).tab('show');
+			$('#quick_shape_dialog div.tab-pane.active input:first').focus();
+			self._qs_currentQuickShapeUpdate();
+		};
+		
+		        /**
+         * shows transformation handles on QT if it exists.
+         * @private
+         */
+        self._qs_currentQuickShapeShowTransformHandlesIfNotEmpty = function() {
+            if (self.currentQuickShapeFile && self.currentQuickShapeFile.previewId) {
+                self.showTransformHandles(self.currentQuickShapeFile.previewId, true);
+            }
+        };
+		
+		self.switchQuickShape = function (newShapeType){
+			if (self.currentQuickShapeFile) {
+				self.currentQuickShapeFile.qs_params.type = newShapeType;
+			}
+			self._qs_currentQuickShapeUpdate();
+		};
+
+		/**
+		 * updates the actual SVG object, the file list object and more
+		 * Needs to be called after all changes to a QuickShape object
+		 *
+		 * Updates will be done for the QS object self.currentQuickShapeFile is pointing to
+		 */
+		self._qs_currentQuickShapeUpdate = function(){
+			if (self.currentQuickShapeFile) {
+				self.currentQuickShape(self.currentQuickShapeFile.name);
+//				var type = $('#shape_tabs li.active a').attr('href');
+				var type = self.currentQuickShapeFile.qs_params.type;
+				var qs_params = {
+					type: type, 
+					color: $('#quick_shape_color').val(), 
+					rect_w: parseFloat($('#quick_shape_rect_w').val()), 
+					rect_h: parseFloat($('#quick_shape_rect_h').val()), 
+					rect_radius: parseFloat($('#quick_shape_rect_radius').val()), 
+					circle_radius: parseFloat($('#quick_shape_circle_radius').val()), 
+					star_radius: parseFloat($('#quick_shape_star_radius').val()), 
+					star_corners: parseInt($('#quick_shape_star_corners').val(), 10), 
+					star_sharpness: parseFloat($('#quick_shape_star_sharpness').val()),
+					heart_w: parseFloat($('#quick_shape_heart_w').val()), 
+					heart_h: parseFloat($('#quick_shape_heart_h').val()), 
+					heart_lr: parseFloat($('#quick_shape_heart_lr').val())
+				};
+				// update svg object
+				var g = snap.select('#' + self.currentQuickShapeFile.previewId);
+				setTimeout(function () {
+					g.ftReportTransformation();
+				}, 200);
+				var shape = g.select('path');
+				var d;
+				switch(qs_params.type){
+					case '#circle':
+						d = self._qs_getCircle(qs_params.circle_radius);
+						break;
+					case '#star':
+						d = self._qs_getStar(qs_params.star_radius,qs_params.star_corners,qs_params.star_sharpness);
+						break;
+					case '#heart':
+						d = self._qs_getHeart(qs_params.heart_w,qs_params.heart_h,qs_params.heart_lr);
+						break;
+					default: // #rect
+						d = self._qs_getRect(qs_params.rect_w,qs_params.rect_h,qs_params.rect_radius);
+						break;
+				}
+				shape.attr({d: d, stroke: qs_params.color});
+				self.currentQuickShapeFile.qs_params = qs_params;
+				
+				// update fileslist
+				var displayText = self._qs_displayText(qs_params);
+				$('#'+self.currentQuickShapeFile.id+' .title').text(displayText);
+			}
+		};
+		
+		self._qs_getCircle = function(r){
+			return self._qs_getRect(r,r,100);
+		};
+		self._qs_getRect = function(w,h,r){
+			if(r <= 0){
+				var d = 'M0,0l'+w+',0 0,'+h+' '+(-w)+',0 z';
+				return d;
+			} else {
+				//     a___________b
+				//    /             \
+				//   h               c
+				//   |               |
+				//   g               d
+				//    \             /
+				//     f___________e
+				
+				var rx;
+				var ry;
+				if(r <= 50){
+					rx = r/50 * Math.min(w, h)/2;
+					ry = rx;
+				} else {
+					var rBig = Math.max(w, h)/2;
+					var rSmall = Math.min(w, h)/2;
+					if(w > h) {
+						rx = rSmall + (r-50)/50 * (rBig - rSmall);
+						ry = rSmall;
+					} else {
+						ry = rSmall + (r-50)/50 * (rBig - rSmall);
+						rx = rSmall;
+					}
+				}
+
+				var q = 0.552284749831; // circle approximation with cubic beziers: (4/3)*tan(pi/8) = 0.552284749831
+				
+				var a = [rx,0];
+				var b = [w-rx,0];
+				var c = [w,ry]; 
+				var c1 = [b[0] + q*rx, b[1]];
+				var c2 = [c[0], c[1] - q*ry];
+				var d = [w,h-ry];
+				var e = [w-rx,h];
+				var e1 = [d[0], d[1] + q*ry];
+				var e2 = [e[0] + q*rx, e[1]];
+				var f = [rx,h];
+				var g = [0,h-ry];
+				var g1 = [f[0] - q*rx, f[1]];
+				var g2 = [g[0], g[1] + q*ry];
+				var h = [0,ry];
+				var a1 = [h[0], h[1] - q*ry];
+				var a2 = [a[0] - q*rx, a[1]];
+				
+				var d = 'M'+a.join(',')
+						+'L'+b.join(',')
+						+'C'+c1.join(',')
+						+' '+c2.join(',')
+						+' '+c.join(',')
+						+'L'+d.join(',')
+						+'C'+e1.join(',')
+						+' '+e2.join(',')
+						+' '+e.join(',')
+						+'L'+f.join(',')
+						+'C'+g1.join(',')
+						+' '+g2.join(',')
+						+' '+g.join(',')
+						+'L'+h.join(',')
+						+'C'+a1.join(',')
+						+' '+a2.join(',')
+						+' '+a.join(',')
+						+'z';
+				return d;
+				
+			}
+		};
+		
+		self._qs_getStar = function(r,c,sh){
+			var points = [];
+			var step = 2*Math.PI / c;
+			var ri = (1-sh)*r;
+			for (var i = 0; i < c; i++) {
+				var angle_outer = i * step;
+				var angle_inner = angle_outer + step/2;
+				var pox = Math.cos(angle_outer) * r;
+				var poy = Math.sin(angle_outer) * r;
+				var pix = Math.cos(angle_inner) * ri;
+				var piy = Math.sin(angle_inner) * ri;
+				points.push(pox, poy, pix, piy);
+			}
+			var d = 'M'+points[0]+','+points[1]+'L'+points.join(' ') +'z';
+			return d;
+		};
+		
+		self._qs_getHeart = function(w,h,lr){
+			//         __   __
+			//        e  \ /  c   
+			//       (    d    )   
+			//        f       b    
+			//         \     /     
+			//          \   /      
+			//            a
+			var dx = w/5 * 0.78;
+			var dy = h/5 * 0.96;
+			var q = 0.552284749831; // circle approximation with cubic beziers: (4/3)*tan(pi/8) = 0.552284749831
+			var rx = dx;
+			var ry = dy;
+			
+			var bb = 1.5; // fatter ears
+			var earx = 0.4; // longer ears
+			var r_comp = Math.max(0,lr)*0.7;
+			var l_comp = Math.min(0,lr)*0.7;
+			
+			var a = [3*dx, 5*dy];
+			var b = [(5+r_comp)*dx, 3*dy];
+			var b1 = [a[0] +dx +lr*dx, a[1] - dy];
+			var b2 = [b[0] - dx/2, b[1] + dy/2];
+			var c = [(5+earx)*dx, (1-earx)*dy]; 
+			var c1 = [b[0] + q*rx, b[1] - q*ry];
+			var c2 = [c[0] + q*rx*bb, c[1] + q*ry*bb];
+			var d = [3*dx, 1*dy];
+			var d1 = [c[0] - q*rx*bb, c[1] - q*ry*bb];
+			var d2 = [d[0] + q*rx, d[1] - q*ry];
+			var e = [(1-earx)*dx, (1-earx)*dy];
+			var e1 = [d[0] - q*rx, d[1] - q*ry];
+			var e2 = [e[0] + q*rx*bb, e[1] - q*ry*bb];
+			var f = [(1+l_comp)*dx, 3*dy];
+			var f1 = [e[0] - q*rx*bb, e[1] + q*ry*bb];
+			var f2 = [f[0] - q*rx, f[1] - q*ry];
+			var a1 = [f[0] + dx/2, f[1] + dy/2];
+			var a2 = [a[0] -dx +lr*dx, a[1] - dy];
+			
+			var d = 'M'+a.join(',')
+						+'C'+b1.join(',')
+						+' '+b2.join(',')
+						+' '+b.join(',')
+						+'C'+c1.join(',')
+						+' '+c2.join(',')
+						+' '+c.join(',')
+						+'C'+d1.join(',')
+						+' '+d2.join(',')
+						+' '+d.join(',')
+						+'C'+e1.join(',')
+						+' '+e2.join(',')
+						+' '+e.join(',')
+						+'C'+f1.join(',')
+						+' '+f2.join(',')
+						+' '+f.join(',')
+						+'C'+a1.join(',')
+						+' '+a2.join(',')
+						+' '+a.join(',')
+						+'z';
+// Debug bezier handles				
+//						+'M'+a.join(',')
+//						+'L'+b1.join(',')
+//						+'M'+a.join(',')
+//						+'L'+a2.join(',')
+				
+//						+'M'+c.join(',')
+//						+'L'+d1.join(',')
+//						+'M'+d.join(',')
+//						+'L'+d2.join(',')
+//				
+//						+'M'+e1.join(',')
+//						+'L'+e.join(',')
+//						+'L'+e2.join(',')
+//				
+//						+'M'+f1.join(',')
+//						+'L'+f.join(',')
+//						+'L'+f2.join(',')
+//						+'z';
+			return d;
+		};
+		
+		self._qs_displayText = function(qs_params){
+			switch(qs_params.type){
+				case '#circle':
+					return self.currentQuickShapeFile.name !== '' ?
+						self.currentQuickShapeFile.name : "Circle Ø " + qs_params.circle_radius + ' mm';
+					break;
+				case '#heart':
+					return self.currentQuickShapeFile.name !== '' ?
+						self.currentQuickShapeFile.name : "Heart " + qs_params.heart_w + '*' + qs_params.heart_h + ' mm';
+					break;
+				case '#star':
+					return self.currentQuickShapeFile.name !== '' ?
+						self.currentQuickShapeFile.name : "Star Ø " + qs_params.circle_radius + ' mm';
+					break;
+				default: // #rect
+					return self.currentQuickShapeFile.name !== '' ?
+						self.currentQuickShapeFile.name : "Rectangle " + qs_params.rect_w + '*' + qs_params.rect_h + ' mm';
+					break;
+			}
+
+		};
+
+        // ***********************************************************
+		//  QUICKSHAPE end
+        // ***********************************************************
 
         // ***********************************************************
 		//  QUICKTEXT start
@@ -1832,10 +2204,10 @@ $(function(){
         self.editQuickText = function(file) {
             self.currentQuickTextFile = file;
             self._qt_currentQuickTextUpdate();
-
-            $('#quick_text_dialog').on('hide', self._qt_currentQuickTextRemoveIfEmpty);
-            $('#quick_text_dialog').on('hide', self._qt_currentQuickShowTransformHandlesIfNotEmpty);
-            $('#quick_text_dialog').on('shown', function(){$('#quick_text_dialog_text_input').focus();});
+            $('#quick_text_dialog').one('hide', self._qt_currentQuickTextRemoveIfEmpty);
+            $('#quick_text_dialog').one('hide', self._qt_currentQuickTextShowTransformHandlesIfNotEmpty);
+			// TODO check if necessary
+            $('#quick_text_dialog').one('shown', function(){$('#quick_text_dialog_text_input').focus();});
             $('#quick_text_dialog').modal({keyboard: true});
             self.showTransformHandles(self.currentQuickTextFile.previewId, false);
             $('#quick_text_dialog_intensity').val(self.currentQuickTextFile.intensity);
@@ -1948,9 +2320,9 @@ $(function(){
          * shows transformation handles on QT if it exists.
          * @private
          */
-        self._qt_currentQuickShowTransformHandlesIfNotEmpty = function() {
+        self._qt_currentQuickTextShowTransformHandlesIfNotEmpty = function() {
             if (self.currentQuickTextFile && self.currentQuickTextFile.previewId) {
-                self.showTransformHandles(self.currentQuickTextFile.previewId, true)
+                self.showTransformHandles(self.currentQuickTextFile.previewId, true);
             }
         };
 
@@ -1983,6 +2355,9 @@ $(function(){
 			var x = self.workingAreaWidthMM()/2;
 			var y = self.workingAreaHeightMM()/3;
 			var size = self.workingAreaHeightMM()/20;
+			
+			// TODO use self._prepareAndInsertSVG(fragment, previewId, origin, '', {showTransformHandles: false, embedGCode: false});
+			// replaces all code below.
             var text = uc.text(x, y, placeholderText);
             text.attr('style', 'white-space: pre; font-size: '+size+'; font-family: Ubuntu; text-anchor: middle');
 
@@ -2105,6 +2480,7 @@ $(function(){
 			document.getElementById("homing_overlay"),
 			document.getElementById("working_area_files"),
             document.getElementById("quick_text_dialog"),
+            document.getElementById("quick_shape_dialog"),
 			document.getElementById("zoomFactor")
 		]]);
 

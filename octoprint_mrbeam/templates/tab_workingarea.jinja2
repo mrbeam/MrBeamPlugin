@@ -159,8 +159,9 @@
 									<div class="accordion-body">
 										<div class="accordion-inner">
 											<div class="row-fluid btn-group">
-												<div class="btn span6" data-bind="click: function(){$('#designlib_tab_btn').tab('show');}"><i class="icon-file"></i> {{ _('File') }} </div>
-												<div class="btn span6" data-bind="click: newQuickText"><i class="icon-font"></i> {{ _('Text') }} </div>
+												<div class="btn span4" data-bind="click: function(){$('#designlib_tab_btn').tab('show');}"><i class="icon-file"></i> {{ _('File') }} </div>
+												<div class="btn span4" data-bind="click: newQuickText"><i class="icon-font"></i> {{ _('Text') }} </div>
+												<div class="btn span4" data-bind="click: newQuickShape"><i class="icon-heart-empty"></i> {{ _('Shape') }} </div>
 {#												Camera not working, disabled till we fixed this. then set spans of the buttons above to span4 >#}
 {#												<div class="btn span4" data-bind="visible:files.hasCamera(), css: {disabled: !$root.loginState.isUser()}, click: files.takePhoto" >#}
 {#													<i class="icon-camera icon-white"></i>#}
@@ -285,6 +286,51 @@
 														<div class="title pull-left" data-bind="text: name"></div>
 														<div class="btn-group action-buttons pull-right">
 															<div class="btn btn-mini" data-bind="click: function() { $root.editQuickText($data); }"><i class="icon-edit" title="{{ _('Edit') }}"></i></div>
+															<div class="btn btn-mini" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
+															<div class="btn btn-mini" data-bind="click: function() { $root.removeSVG($data); }"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
+														</div>
+														<div class="detail_information" >
+															<div class="local_transformation muted">
+																<i class="icon-move" title="{{ _('translation') }}"></i>
+																<input class="decent_input translation wide" type="text" value="0,0" data-bind="event: {
+																			keyup: function(d, event){ $root.svgManualTranslate($data, event); },
+																			blur: function(d, event){ $root.svgManualTranslate($data, event); }} "/>
+																<i class="icon-repeat" title="{{ _('rotation') }}"></i>
+																<input class="decent_input rotation" type="text" value="0°" data-bind="event: {
+																			keyup: function(d, event){ $root.svgManualRotate($data, event); },
+																			blur: function(d, event){ $root.svgManualRotate($data, event); }} "/>
+																</br>
+																<i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>
+																<input class="decent_input horizontal" type="text" value="? mm" data-bind="event: {
+																			keyup: function(d, event){ $root.svgManualWidth($data, event); },
+																			blur: function(d, event){ $root.svgManualWidth($data, event); }} "/>
+																<i class="icon-resize-vertical" title="{{ _('vertical') }}"></i>
+																<input class="decent_input vertical" type="text" value="? mm" data-bind="event: {
+																			keyup: function(d, event){ $root.svgManualHeight($data, event); },
+																			blur: function(d, event){ $root.svgManualHeight($data, event); }} "/>
+																<i class="icon-resize-full" title="{{ _('scale') }}"></i>
+																<input class="decent_input scale" type="text" value="100%" data-bind="event: {
+																			keyup: function(d, event){ $root.svgManualScale($data, event); },
+																			blur: function(d, event){ $root.svgManualScale($data, event); }} "/>
+																</br>
+																<i class="icon-th" title="{{ _('multiply') }}"></i>
+																<input class="decent_input multiply" type="text" value="1×1" data-bind="event: {
+																			keyup: function(d, event){ $root.svgManualMultiply($data, event); },
+																			blur: function(d, event){ $root.svgManualMultiply($data, event); }} "/>															</div>
+
+															<div class="misfit_warning" >
+																<i class="icon-warning-sign" title="{{ _('exceeds working area') }}"></i>&nbsp;
+																<span>Design exceeds the working area.</span>
+																<a href="#" data-bind="click: function(){ $root.fitSVG($data) } ">Make it fit</a>
+															</div>
+														</div>
+													</div>
+												</script>
+												<script type="text/html" id="wa_template_quickshape">
+													<div class="file_list_entry" data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
+														<div class="title pull-left" data-bind="text: name"></div>
+														<div class="btn-group action-buttons pull-right">
+															<div class="btn btn-mini" data-bind="click: function() { $root.editQuickShape($data); }"><i class="icon-edit" title="{{ _('Edit') }}"></i></div>
 															<div class="btn btn-mini" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
 															<div class="btn btn-mini" data-bind="click: function() { $root.removeSVG($data); }"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
 														</div>
