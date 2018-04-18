@@ -44,11 +44,11 @@ $(function(){
 				name: 'Anodized Aluminum',
 				img: 'anodized_aluminum.jpg',
 				description: 'Dark anodized aluminum can be engraved. Works on iPhones.',
-				hints: 'Anodized aluminum turns brighter through laser engraving. Therefor the settings are inverted! Requires very precise focus.',
+				hints: 'Requires very precise focus. Anodized aluminum turns brighter through laser engraving. Therefor we suggest to invert photos for engravings.',
 				laser_type: 'MrBeamII-1.0',
 				colors: {
 					'000000': {
-						engrave: {eng_i:[100,0], eng_f:[30,1000], pierceTime: 0, dithering: false },
+						engrave: {eng_i:[0,100], eng_f:[1000, 30], pierceTime: 0, dithering: false },
 						cut: []
 					}
 				}
