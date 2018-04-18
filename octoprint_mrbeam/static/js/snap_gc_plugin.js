@@ -69,8 +69,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
       // apply transformation matrix
       paths = mrbeam.path.transform(paths, xform);
 
-      // clip working area borders
-      if (gc_options.clip_working_area) {
+      // clip working area borders - only if item is a misfit
+      if (gc_options.clip_working_area && element.hasClass('misfit')) {
           var x = bounds[0];
           var y = bounds[1];
           var w = bounds[2] - bounds[0];
@@ -88,6 +88,10 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             );
           }
           paths = mrbeam.path.clip(paths, clip, clip_tolerance);
+
+          mb_meta[id]['clip_working_area_clipped'] = true;
+      } else {
+          mb_meta[id]['clip_working_area_clipped'] = false;
       }
 
       // generate gcode

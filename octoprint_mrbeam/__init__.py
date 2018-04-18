@@ -275,6 +275,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		)
 
 	def on_settings_save(self, data):
+		# self._logger.info("ANDYTEST on_settings_save() %s", data)
 		if "svgDPI" in data:
 			self._settings.set_int(["svgDPI"], data["svgDPI"])
 		if "dxfScale" in data:
@@ -288,6 +289,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			else:
 				self._settings.set_boolean(["vorlon"], False)
 				self._logger.info("Disabling VORLON per user request.", terminal=True)
+		if "gcode_nextgen" in data and isinstance(data['gcode_nextgen'], collections.Iterable) and "clip_working_area" in data['gcode_nextgen']:
+			self._settings.set_boolean(["gcode_nextgen", "clip_working_area"], data['gcode_nextgen']['clip_working_area'])
 
 	def on_shutdown(self):
 		self._logger.debug("Mr Beam Plugin stopping...")
