@@ -414,7 +414,7 @@ $(function(){
 				file.id = id; // list entry id
 				file.previewId = previewId;
 				file.url = url;
-				file.misfit = "";
+				file.misfit = false;
 				self.placedDesigns.push(file);
 
 				// get scale matrix
@@ -460,7 +460,7 @@ $(function(){
 				file.id = id; // list entry id
 				file.previewId = previewId;
 				file.url = url;
-				file.misfit = "";
+				file.misfit = false;
 
 				self.placedDesigns.push(file);
 
@@ -585,8 +585,7 @@ $(function(){
 			fitMatrix.translate(svg.data('fitMatrix').dx, svg.data('fitMatrix').dy);
 			fitMatrix.add(svg.transform().localMatrix);
 			svg.transform(fitMatrix);
-			svg.data('fitMatrix', null);
-			$('#'+file.id).removeClass('misfit');
+			self._mark_as_misfit(file, false, svg)
 			self.svgTransformUpdate(svg);
 
 			self.showTransformHandles(file.previewId, true);
@@ -828,7 +827,7 @@ $(function(){
 
 			file.id = id; // list entry id
 			file.previewId = previewId;
-			file.misfit = "";
+			file.misfit = false;
 
 			self.placedDesigns.push(file);
 			self.placeSmart(newSvg);
@@ -1104,23 +1103,6 @@ $(function(){
         			sticker: false
     			}
             });
-		};
-
-		self.svg_misfitting_warning = function(svg, misfitting){
-			var outside = gettext("<br/>It has been moved to (0,0). ");
-			var oversized = gettext("<br/>It has resized to %d %. ", misfitting.scale);
-            var error = "<p>" + gettext("The design was originally not fitting into the working area.")
-					+ outside + oversized + gettext("<br/>Please check the result.") + "</p>";
-            new PNotify({
-                title: "Design moved",
-                text: error,
-                type: "warn",
-                hide: false,
-				buttons: {
-        			sticker: false
-    			}
-            });
-
 		};
 
 		self.placeIMG = function (file) {
@@ -1689,18 +1671,35 @@ $(function(){
 				if(design.type === 'model' || design.type === 'quicktext'){
 					var svg = snap.select('#' + design.previewId);
 					var misfitting = self.outsideWorkingArea(svg);
-					// console.log("Misfitting: ", misfitting);
-					if(misfitting.oversized || misfitting.outside){
-						svg.data('fitMatrix', misfitting);
-						$('#'+design.id).addClass('misfit');
-
-					} else {
-						$('#'+design.id).removeClass('misfit');
-						svg.data('fitMatrix', null);
-					}
-				}
+					self._mark_as_misfit(design, misfitting, svg);
+                }
 			});
 		};
+
+		/**
+		 * Takes one design (element from placedDesigns) and marks it as misfit or un-marks it
+		 * @param design design element to mark or unmark (element from placedDesigns)
+		 * @param fitMatrix (from self.outsideWorkingArea()) or null or flash-ish if mark should be removed
+		 * @param svg (optional)  snap.select('#' + design.previewId);
+		 */
+		self._mark_as_misfit = function(design, fitMatrix, svg) {
+		    if (!svg) {
+		        svg = snap.select('#' + design.previewId);
+		    }
+		    if(fitMatrix && (fitMatrix.oversized || fitMatrix.outside)){
+                design.misfit = true;
+                $('#'+design.id).addClass('misfit');
+                svg.addClass('misfit');
+                svg.selectAll('*').forEach(function(e){e.addClass('misfit')})
+                svg.data('fitMatrix', fitMatrix);
+            } else {
+                design.misfit = false;
+                $('#'+design.id).removeClass('misfit');
+                svg.removeClass('misfit');
+                svg.selectAll('*').forEach(function(e){e.removeClass('misfit')})
+                svg.data('fitMatrix', null);
+            }
+		}
 
 		self._embedAllImages = function(svg, callback){
 
@@ -1967,7 +1966,7 @@ $(function(){
                 id: null,
                 previewId: null,
                 url: null,
-                misfit: "",
+                misfit: false,
                 origin: 'local',
                 path: null,
                 type: "quicktext",
