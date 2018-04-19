@@ -539,7 +539,7 @@ $(function(){
 			if(switches.showTransformHandles){
 				self.showTransformHandles(id, true);
 			}
-			
+
 			var mb_meta = self._set_mb_attributes(newSvg);
 			if(switches.embedGCode){
 				newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
@@ -1681,7 +1681,7 @@ $(function(){
 
 		self.check_sizes_and_placements = function(){
 			ko.utils.arrayForEach(self.placedDesigns(), function(design) {
-				if(design.type === 'model' || design.type === 'quicktext'){
+				if(design.type == 'model' || design.type == 'quicktext' || design.type == 'quickshape'){
 					var svg = snap.select('#' + design.previewId);
 					var misfitting = self.outsideWorkingArea(svg);
 					self._mark_as_misfit(design, misfitting, svg);
@@ -1815,7 +1815,7 @@ $(function(){
             svg.attr('xmlns:xlink', 'http://www.w3.org/1999/xlink');
             return svg;
         };
-		
+
 		self._enableWorkingAreaOverModal = function(){ $('#area_preview').addClass('overModalBG'); }
 		self._disableWorkingAreaOverModal = function(){ setTimeout(function(){$('#area_preview').removeClass('overModalBG');},300); }
 
@@ -1829,19 +1829,19 @@ $(function(){
             self.editQuickShape(file);
 
         };
-		
+
        /**
          * Equivalent to self.placeSVG for QuickShape
          * @returns file object
          */
         self._qs_placeQuickShape = function(){
-			
+
 			var w = self.workingAreaWidthMM() / 5;
 			var h = w * 0.5;
 			var x = (self.workingAreaWidthMM() - w) / 2;
 			var y = (self.workingAreaHeightMM() - h) / 3;
 			var r = 0;
-			
+
             var id = self.getEntryId('qs');
 			var origin = id;
 			var ts = Date.now();
@@ -1851,20 +1851,20 @@ $(function(){
 				id: id,
 				previewId: null,
 				url: null,
-				misfit: "",
+				misfit: false,
 				origin: 'local',
 				path: null,
 				type: "quickshape",
 				typePath: ["quickshape"],
 				qs_params: {
-					type: '#rect', 
+					type: '#rect',
 					color: '#e25303',
-					rect_w: w, rect_h: h, rect_radius: r, 
-					circle_radius: w, 
-					star_radius: w/2, star_corners:5, star_sharpness: 0.5522, 
+					rect_w: w, rect_h: h, rect_radius: r,
+					circle_radius: w,
+					star_radius: w/2, star_corners:5, star_sharpness: 0.5522,
 					heart_w: w, heart_h:0.8*w, heart_lr: 0
 				}
-			};			
+			};
             var previewId = self.generateUniqueId(id, file); // appends -# if multiple times the same design is placed.
 			file.previewId = previewId;
             self.placedDesigns.push(file);
@@ -1900,12 +1900,12 @@ $(function(){
 			$('#quick_shape_heart_h').val(params.heart_h);
 			$('#quick_shape_heart_lr').val(params.heart_lr);
 			$('#quick_shape_color').val(params.color);
-			
+
 			$('#shape_tab_link_'+params.type.substr(1)).tab('show');
 			$('#quick_shape_dialog div.tab-pane.active input:first').focus();
 			self._qs_currentQuickShapeUpdate();
 		};
-		
+
 		        /**
          * shows transformation handles on QT if it exists.
          * @private
@@ -1915,7 +1915,7 @@ $(function(){
                 self.showTransformHandles(self.currentQuickShapeFile.previewId, true);
             }
         };
-		
+
 		self.switchQuickShape = function (newShapeType){
 			if (self.currentQuickShapeFile) {
 				self.currentQuickShapeFile.qs_params.type = newShapeType;
@@ -1935,17 +1935,17 @@ $(function(){
 //				var type = $('#shape_tabs li.active a').attr('href');
 				var type = self.currentQuickShapeFile.qs_params.type;
 				var qs_params = {
-					type: type, 
-					color: $('#quick_shape_color').val(), 
-					rect_w: parseFloat($('#quick_shape_rect_w').val()), 
-					rect_h: parseFloat($('#quick_shape_rect_h').val()), 
-					rect_radius: parseFloat($('#quick_shape_rect_radius').val()), 
-					circle_radius: parseFloat($('#quick_shape_circle_radius').val()), 
-					star_radius: parseFloat($('#quick_shape_star_radius').val()), 
-					star_corners: parseInt($('#quick_shape_star_corners').val(), 10), 
+					type: type,
+					color: $('#quick_shape_color').val(),
+					rect_w: parseFloat($('#quick_shape_rect_w').val()),
+					rect_h: parseFloat($('#quick_shape_rect_h').val()),
+					rect_radius: parseFloat($('#quick_shape_rect_radius').val()),
+					circle_radius: parseFloat($('#quick_shape_circle_radius').val()),
+					star_radius: parseFloat($('#quick_shape_star_radius').val()),
+					star_corners: parseInt($('#quick_shape_star_corners').val(), 10),
 					star_sharpness: parseFloat($('#quick_shape_star_sharpness').val()),
-					heart_w: parseFloat($('#quick_shape_heart_w').val()), 
-					heart_h: parseFloat($('#quick_shape_heart_h').val()), 
+					heart_w: parseFloat($('#quick_shape_heart_w').val()),
+					heart_h: parseFloat($('#quick_shape_heart_h').val()),
 					heart_lr: parseFloat($('#quick_shape_heart_lr').val())
 				};
 				// update svg object
@@ -1971,13 +1971,13 @@ $(function(){
 				}
 				shape.attr({d: d, stroke: qs_params.color});
 				self.currentQuickShapeFile.qs_params = qs_params;
-				
+
 				// update fileslist
 				var displayText = self._qs_displayText(qs_params);
 				$('#'+self.currentQuickShapeFile.id+' .title').text(displayText);
 			}
 		};
-		
+
 		self._qs_getCircle = function(r){
 			return self._qs_getRect(r,r,100);
 		};
@@ -1993,7 +1993,7 @@ $(function(){
 				//   g               d
 				//    \             /
 				//     f___________e
-				
+
 				var rx;
 				var ry;
 				if(r <= 50){
@@ -2012,10 +2012,10 @@ $(function(){
 				}
 
 				var q = 0.552284749831; // circle approximation with cubic beziers: (4/3)*tan(pi/8) = 0.552284749831
-				
+
 				var a = [rx,0];
 				var b = [w-rx,0];
-				var c = [w,ry]; 
+				var c = [w,ry];
 				var c1 = [b[0] + q*rx, b[1]];
 				var c2 = [c[0], c[1] - q*ry];
 				var d = [w,h-ry];
@@ -2029,7 +2029,7 @@ $(function(){
 				var h = [0,ry];
 				var a1 = [h[0], h[1] - q*ry];
 				var a2 = [a[0] - q*rx, a[1]];
-				
+
 				var d = 'M'+a.join(',')
 						+'L'+b.join(',')
 						+'C'+c1.join(',')
@@ -2049,10 +2049,10 @@ $(function(){
 						+' '+a.join(',')
 						+'z';
 				return d;
-				
+
 			}
 		};
-		
+
 		self._qs_getStar = function(r,c,sh){
 			var points = [];
 			var step = 2*Math.PI / c;
@@ -2069,31 +2069,31 @@ $(function(){
 			var d = 'M'+points[0]+','+points[1]+'L'+points.join(' ') +'z';
 			return d;
 		};
-		
+
 		self._qs_getHeart = function(w,h,lr){
 			//         __   __
-			//        e  \ /  c   
-			//       (    d    )   
-			//        f       b    
-			//         \     /     
-			//          \   /      
+			//        e  \ /  c
+			//       (    d    )
+			//        f       b
+			//         \     /
+			//          \   /
 			//            a
 			var dx = w/5 * 0.78;
 			var dy = h/5 * 0.96;
 			var q = 0.552284749831; // circle approximation with cubic beziers: (4/3)*tan(pi/8) = 0.552284749831
 			var rx = dx;
 			var ry = dy;
-			
+
 			var bb = 1.5; // fatter ears
 			var earx = 0.4; // longer ears
 			var r_comp = Math.max(0,lr)*0.7;
 			var l_comp = Math.min(0,lr)*0.7;
-			
+
 			var a = [3*dx, 5*dy];
 			var b = [(5+r_comp)*dx, 3*dy];
 			var b1 = [a[0] +dx +lr*dx, a[1] - dy];
 			var b2 = [b[0] - dx/2, b[1] + dy/2];
-			var c = [(5+earx)*dx, (1-earx)*dy]; 
+			var c = [(5+earx)*dx, (1-earx)*dy];
 			var c1 = [b[0] + q*rx, b[1] - q*ry];
 			var c2 = [c[0] + q*rx*bb, c[1] + q*ry*bb];
 			var d = [3*dx, 1*dy];
@@ -2107,7 +2107,7 @@ $(function(){
 			var f2 = [f[0] - q*rx, f[1] - q*ry];
 			var a1 = [f[0] + dx/2, f[1] + dy/2];
 			var a2 = [a[0] -dx +lr*dx, a[1] - dy];
-			
+
 			var d = 'M'+a.join(',')
 						+'C'+b1.join(',')
 						+' '+b2.join(',')
@@ -2128,28 +2128,28 @@ $(function(){
 						+' '+a2.join(',')
 						+' '+a.join(',')
 						+'z';
-// Debug bezier handles				
+// Debug bezier handles
 //						+'M'+a.join(',')
 //						+'L'+b1.join(',')
 //						+'M'+a.join(',')
 //						+'L'+a2.join(',')
-				
+
 //						+'M'+c.join(',')
 //						+'L'+d1.join(',')
 //						+'M'+d.join(',')
 //						+'L'+d2.join(',')
-//				
+//
 //						+'M'+e1.join(',')
 //						+'L'+e.join(',')
 //						+'L'+e2.join(',')
-//				
+//
 //						+'M'+f1.join(',')
 //						+'L'+f.join(',')
 //						+'L'+f2.join(',')
 //						+'z';
 			return d;
 		};
-		
+
 		self._qs_displayText = function(qs_params){
 			switch(qs_params.type){
 				case '#circle':
@@ -2354,7 +2354,7 @@ $(function(){
 			var x = self.workingAreaWidthMM()/2;
 			var y = self.workingAreaHeightMM()/3;
 			var size = self.workingAreaHeightMM()/20;
-			
+
 			// TODO use self._prepareAndInsertSVG(fragment, previewId, origin, '', {showTransformHandles: false, embedGCode: false});
 			// replaces all code below.
             var text = uc.text(x, y, placeholderText);
