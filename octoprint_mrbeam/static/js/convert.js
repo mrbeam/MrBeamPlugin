@@ -489,7 +489,7 @@ $(function(){
 			var vectors = self.get_current_multicolor_settings();
 			var strength = 0;
 			var strongest = null;
-			for (var i = 0; i < vectors.length; i++) {
+			for (var i = 0; i < vectors.length; i++) { // heuristics: assuming that the strongest of all vector jobs is the cutting one.
 				var v = vectors[i];
 				var s = v.intensity_user * v.passes / v.feedrate;
 				if(s > strength) strongest = v;
@@ -497,6 +497,8 @@ $(function(){
 			var cut_setting = null;
 			if(strongest !== null){
 				cut_setting = {thicknessMM: thickness, cut_i: strongest.intensity_user, cut_f: strongest.feedrate, cut_p: strongest.passes};
+			} else {
+				thickness = -1; // engrave only
 			}
 
 			var e = self.get_current_engraving_settings();
@@ -519,11 +521,14 @@ $(function(){
 				};
 			}
 
-			var tmp = [cut_setting];
+			var tmp = [];
+			if(cut_setting !== null){
+				tmp.push(cut_setting);
+			}
 			if(new_material.colors[color]){
 				for (var t = 0; t < new_material.colors[color].cut.length; t++) {
 					var item = new_material.colors[color].cut[t];
-					if(item.thicknessMM !== cut_setting.thicknessMM) {
+					if(item !== null && item.thicknessMM !== cut_setting.thicknessMM) {
 						tmp.push(item);
 					}
 				}
@@ -552,6 +557,9 @@ $(function(){
 							var m = fm[i];
 							if(m.name === new_material.name){
 								self.selected_material(m);
+								self.selected_material_color(color);
+								self.selected_material_thickness(thickness);
+								self.reset_material_settings();
 								break;
 							}
 
@@ -565,9 +573,9 @@ $(function(){
 
 		self._update_custom_materials = function(list){
 			var tmp = {};
-			for (var i = 0; i < list.length; i++) {
-				var cm = list[i];
-				$.extend(true, tmp, cm);
+			for(var k in list) {
+				var cm = list[k];
+				tmp[k] = cm;
 			}
 			self.custom_materials(tmp);
 		};
@@ -664,14 +672,18 @@ $(function(){
 				self.material_thicknesses(available_thickness);
 				self.selected_material_thickness(null);
 				if(available_thickness.length === 1){
-					self.selected_material_thickness(available_thickness[0]);
-					self.dialog_state('color_assignment');
+					if(available_thickness[0] !== null){
+						self.selected_material_thickness(available_thickness[0]);
+						self.dialog_state('color_assignment');
+					} else {
+						self.selected_material_thickness(-1);
+					}
 				}
 			}
 			self.apply_engraving_proposal();
 		});
 		self.selected_material_thickness.subscribe(function(thickness){
-			if(thickness !== null && self.selected_material_color() !== null && self.selected_material !== null){
+			if(thickness !== null && self.selected_material_color() !== null && self.selected_material() !== null){
 				self.dialog_state('color_assignment');
 				self.apply_vector_proposal();
 			}

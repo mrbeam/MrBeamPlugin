@@ -92,7 +92,7 @@
 										<input id="custom_mat_name" type="text" data-bind="value:save_custom_material_name" placeholder="your name of choice">
 									</div>
 								</div>
-								<div class="control-group">
+								<div class="control-group" data-bind="visible: has_cutting_proposal()">
 									<label class="control-label" for="custom_mat_th"> {{ _('Thickness') }}</label>
 									<div class="controls"> 
 										<input id="custom_mat_th" type="number" min="0" max="38" data-bind="value:save_custom_material_thickness"> mm
@@ -101,7 +101,7 @@
 								<div class="control-group">
 									<label class="control-label" for="custom_mat_col"> {{ _('Color') }}</label>
 									<div class="controls">
-										<input id="custom_mat_col" type="color" min="0" max="38" data-bind="value:save_custom_material_color">
+										<input id="custom_mat_col" type="color" min="-1" max="38" data-bind="value:save_custom_material_color">
 									</div>
 								</div>
 								<div class="controls">
