@@ -75,7 +75,7 @@ class Materials(object):
 			try:
 				for k in key_list:
 					try:
-						self.custom_materials.remove(k)
+						del self.custom_materials[k]
 						count += 1
 					except ValueError:
 						pass

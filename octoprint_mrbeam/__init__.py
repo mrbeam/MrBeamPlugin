@@ -675,7 +675,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		from flask.ext.login import current_user
 		from octoprint.server.api import NO_CONTENT
 
-		self._logger.info("custom_material() request: %s", data)
+		# self._logger.info("custom_material() request: %s", data)
 		res = dict(
 			custom_materials=[],
 			put=0,
@@ -685,7 +685,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			if 'delete' in data:
 				materials(self).delete_custom_material(data['delete'])
 
-			if 'put' in data:
+			if 'put' in data and isinstance(data['put'],dict):
 				for key, m in data['put'].iteritems():
 					materials(self).put_custom_material(key, m)
 
@@ -695,74 +695,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._logger.exception("Exception while handling custom_materials(): ")
 			return make_response("Error while handling custom_materials request.", 500)
 
-		self._logger.info("custom_material(): response: %s", data)
+		# self._logger.info("custom_material(): response: %s", data)
 		return make_response(jsonify(res), 200)
-
-
-
-		# # get JSON from request data, or send user back home
-		# data = request.values
-		# if hasattr(request, "json") and request.json:
-		# 	data = request.json
-		# else:
-		# 	return make_response("Unable to interprete request", 400)
-		#
-		# # check if username is ok
-		# if current_user is None \
-		# 		or current_user.is_anonymous() \
-		# 		or not current_user.is_user() \
-		# 		or not current_user.is_active():
-		# 	return make_response("Invalid user", 403)
-		#
-		# # TODO store material locally / merge into yaml
-		#
-		# # see if we nee to send this to the cloud
-		# needSubmission = True
-		# if needSubmission:
-		# 	# get cloud env to use
-		# 	debug = self.get_env(self.ENV_LASER_SAFETY)
-		#
-		# 	payload = {'ts': time.time(),
-		# 			   'email': current_user.get_name(),
-		# 			   'serial': self._serial,
-		# 			   'hostname': self._hostname,
-		# 			   'material': data }
-		#
-		# 	if debug is not None and debug.upper() != self.ENV_PROD:
-		# 		payload['debug'] = debug
-		#
-		# 	self._logger.debug("SaveCustomMaterial - cloud request: url: %s, payload: %s", self.CUSTOM_MATERIAL_STORAGE_URL, payload)
-		#
-		# 	# actual request
-		# 	successfullySubmitted = False
-		# 	responseCode = ''
-		# 	responseFull = ''
-		# 	httpCode = -1
-		# 	try:
-		# 		r = requests.post(self.CUSTOM_MATERIAL_STORAGE_URL, data=payload)
-		# 		responseCode = r.text.lstrip().split(' ', 1)[0]
-		# 		responseFull = r.text
-		# 		httpCode = r.status_code
-		# 		if responseCode == 'OK' or responseCode == 'OK_DEBUG':
-		# 			successfullySubmitted = True
-		# 	except Exception as e:
-		# 		responseCode = "EXCEPTION"
-		# 		responseFull = str(e.args)
-		#
-		# 	submissionDate = time.time() if successfullySubmitted else -1
-		# 	showAgain = showAgain if successfullySubmitted else True
-		#
-		# 	# and drop a line into the log on info level this is important
-		# 	self._logger.info("CustomMaterial: confirmation response: (%s) %s, submissionDate: %s, showAgain: %s, full response: %s",
-		# 					  httpCode, responseCode, submissionDate, showAgain, responseFull)
-		# else:
-		# 	self._logger.info("CustomMaterial: custom material already sent. showAgain: %s", showAgain)
-		# 	self.setUserSetting(username, self.USER_SETTINGS_KEY_LASERSAFETY_CONFIRMATION_SHOW_AGAIN, showAgain)
-		#
-		# if needSubmission and not successfullySubmitted:
-		# 	return make_response("Failed to submit custom material to cloud.", 901)
-		# else:
-		# 	return NO_CONTENT
 
 	#~~ helpers
 
@@ -1195,7 +1129,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			camera_calibration_markers=["result"],
 			ready_to_laser=["ready"],
 			debug_event=["event"],
-			custom_materials=[], #TODO ANDY set required params
+			custom_materials=[],
 			take_undistorted_picture=[]  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
 		)
 

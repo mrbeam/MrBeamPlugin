@@ -465,7 +465,7 @@ $(function(){
 			event.preventDefault();
 			event.stopPropagation();
 			var postData = {
-                put: [],
+                put: {},
 				delete: [m.key]
             };
             OctoPrint.simpleApiCommand("mrbeam", "custom_materials", postData)
