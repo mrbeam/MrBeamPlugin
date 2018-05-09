@@ -41,6 +41,7 @@ from octoprint_mrbeam.migrate import migrate
 from octoprint_mrbeam.profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
 from octoprint_mrbeam.software_update_information import get_update_information, SW_UPDATE_TIER_PROD
 from octoprint_mrbeam.support import set_support_mode
+from .materials import materials
 
 
 
@@ -78,6 +79,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	USER_SETTINGS_KEY_LASERSAFETY_CONFIRMATION_SENT_TO_CLOUD = ['lasersafety', 'sent_to_cloud']
 	USER_SETTINGS_KEY_LASERSAFETY_CONFIRMATION_SHOW_AGAIN = ['lasersafety', 'show_again']
 
+	CUSTOM_MATERIAL_STORAGE_URL = 'https://script.google.com/a/macros/mr-beam.org/s...' # TODO
 
 
 	def __init__(self):
@@ -671,6 +673,34 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		else:
 			return NO_CONTENT
 
+	# simpleApiCommand: custom_materials;
+	def custom_materials(self, data):
+		from flask.ext.login import current_user
+		from octoprint.server.api import NO_CONTENT
+
+		# self._logger.info("custom_material() request: %s", data)
+		res = dict(
+			custom_materials=[],
+			put=0,
+			deleted=0)
+
+		try:
+			if 'delete' in data:
+				materials(self).delete_custom_material(data['delete'])
+
+			if 'put' in data and isinstance(data['put'],dict):
+				for key, m in data['put'].iteritems():
+					materials(self).put_custom_material(key, m)
+
+			res['custom_materials'] = materials(self).get_custom_materials()
+
+		except:
+			self._logger.exception("Exception while handling custom_materials(): ")
+			return make_response("Error while handling custom_materials request.", 500)
+
+		# self._logger.info("custom_material(): response: %s", data)
+		return make_response(jsonify(res), 200)
+
 	#~~ helpers
 
 	def _get_subwizard_attrs(self, start, end, callback=None):
@@ -1102,6 +1132,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			camera_calibration_markers=["result"],
 			ready_to_laser=["ready"],
 			debug_event=["event"],
+			custom_materials=[],
 			take_undistorted_picture=[]  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
 		)
 
@@ -1119,6 +1150,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._printer.set_passes(data["value"])
 		elif command == "lasersafety_confirmation":
 			return self.lasersafety_wizard_api(data)
+		elif command == "custom_materials":
+			return self.custom_materials(data)
 		elif command == "ready_to_laser":
 			return self.ready_to_laser(data)
 		elif command == "camera_calibration_markers":

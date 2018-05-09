@@ -1376,6 +1376,7 @@ $(function(){
 		};
 
 		self.draw_coord_grid = function(){
+			if(snap === null) return;
 			var grid = snap.select('#coordGrid');
 			var w = self.workingAreaWidthMM();
 			var h = self.workingAreaHeightMM();
