@@ -219,11 +219,26 @@
 								</div>
 
 								<label class="control-label">{{ _('Line distance') }}</label>
-								<div class="controls"><input id="svgtogcode_img_line_dist" class="img_intensity_input decimal_input" type="number" max="0.5" min="0.1" dialog_state="0.05" data-bind="value: beamDiameter" />&nbsp;mm</div>
+								<div class="controls"><input id="svgtogcode_img_line_dist" class="img_intensity_input decimal_input" type="number" max="0.5" min="0.1" step="0.05" data-bind="value: beamDiameter" />&nbsp;mm</div>
 								<div class="controls alert alert-info hint" data-bind="visible: showHints">
 									<span class="icon icon-question-sign" aria-hidden="true"></span>
 									Pixel / raster engravings are done line by line. This sets the distance between the single lines.
 									Smaller values allow finer engravings but require a more precise focus and are slower.
+								</div>
+								
+								<label class="control-label">{{ _('Engraving mode') }}</label>
+								<div class="controls">
+									<div class="btn-group" data-toggle="buttons-radio">
+										<button id="svgtogcode_img_engraving_mode" type="button" class="btn btn-default">Fast</button>
+										<button type="button" class="btn btn-default active">Precise</button>
+									</div>
+								</div>
+								<div class="controls alert alert-info hint" data-bind="visible: showHints">
+									<span class="icon icon-question-sign" aria-hidden="true"></span>
+									Pixel / raster engravings are done line by line.
+									In precise mode, line by line is engraved from bottom to top. The laserhead is moving over white space. 
+									In fast mode, to be engraved areas are separated to reduce work moves of the laserhead. 
+									The speed up works best on text or clipart designs, on photos there is no effect.
 								</div>
 
 

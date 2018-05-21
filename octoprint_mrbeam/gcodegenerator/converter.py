@@ -173,7 +173,7 @@ class Converter():
 
 						# contrast = 1.0, sharpening = 1.0, beam_diameter = 0.25,
 						# intensity_black = 1000, intensity_white = 0, speed_black = 30, speed_white = 500,
-						# dithering = True, pierce_time = 500, material = "default"
+						# dithering = True, pierce_time = 500, separation = True, material = "default"
 						rasterParams = self.options['raster']
 						ip = ImageProcessor(output_filehandle = fh,
 						                    contrast = rasterParams['contrast'],
@@ -187,6 +187,7 @@ class Converter():
 											speed_white = rasterParams['speed_white'],
 											dithering = rasterParams['dithering'],
 											pierce_time = rasterParams['pierce_time'],
+											separation = rasterParams['fast_mode'],
 											material = rasterParams['material'] if 'material' in rasterParams else None)
 						data = imgNode.get('href')
 						if(data is None):
