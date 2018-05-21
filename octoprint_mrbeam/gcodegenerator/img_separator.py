@@ -1,0 +1,110 @@
+# coding=utf-8
+#!/usr/bin/env python
+
+"""
+img_separator.py
+bitmap separation for speed optimized raster processing
+
+Copyright (C) 2018 Mr Beam Lasers GmbH
+Author: Teja Philipp, teja@mr-beam.org
+
+"""
+import optparse
+import logging
+from PIL import Image
+import os.path
+
+class ImageSeparator():
+
+	def __init__( self):
+		self.log = logging.getLogger(self.__class__.__name__)
+
+	def separate(self, img, threshold=255, callback=None):
+		"""
+		Separates img (a Pillow Image object) according to some magic into a list of img objects. 
+		Afterwards all parts merged togehter are equal to the input image.
+		Supports so far only Grayscale images (mode 'L')
+		Arguments:
+		img -- a Pillow Image object
+		
+		Keyword arguments:
+		threshold -- all pixels brighter than this threshold are used for separation
+		callback -- instead of waiting for the list to return, a callback(img, iteration) can be used to save memory
+		"""
+		(width, height) = img.size
+		
+		x_limit = [0] * height # [0, 0, 0, .... ]
+		iteration = 0
+		parts = []
+		while(True):
+			(x_limit, separation) = self._separate_partial(img, start_list=x_limit, threshold=threshold)
+			if(separation == None):
+				return parts
+			
+			if(callback != None):
+				callback(separation, iteration)
+			else:
+				parts.append(separation)
+				
+			all_done = all(l >= width for l in x_limit)
+			if(all_done):
+				return parts
+			iteration += 1
+	
+	def _separate_partial(self, img, start_list, threshold=255):
+
+		(width, height) = img.size
+		pxArray = img.load()
+		
+		# iterate line by line
+		tmp = None	
+		for row in range(0, height):
+			x = self._find_first_gap_in_row(pxArray, width, height, start_list[row], row, threshold=threshold)
+			if(x < width):
+				if(tmp == None): # new separated image
+					tmp = Image.new("L", (width, height), "white")
+				box = (start_list[row], row, x, row+1)
+				region = img.crop(box)
+				tmp.paste(region, box)
+										
+			start_list[row] = x
+		return (start_list, tmp)
+
+
+	def _find_first_gap_in_row(self, pxArray, w, h, x, y, threshold=255):
+		skip = True # assume white pixel at the beginning
+		
+		for i in range(x, w):
+			px = pxArray[i, y]
+				
+			brightness = px	
+			if(brightness < threshold): # "rising edge" -> colored pixel
+				skip = False
+
+			if(skip == False):
+				if(brightness >= threshold): # "falling edge" -> white pixel again
+					return i
+		
+		return w
+
+
+if __name__ == "__main__":
+	opts = optparse.OptionParser(usage="usage: %prog [options] <imagefile>")
+	opts.add_option("-t",   "--threshold", type="int", default="255", help="intensity for white (skipped) pixels, default 255", dest="threshold")
+	
+	(options, args) = opts.parse_args()
+	path = args[0]
+	filename, _ = os.path.splitext(path)
+	output_name = filename + "_"
+
+	sepp = ImageSeparator()
+
+	img = Image.open(path)
+	img = img.convert('L')
+	
+	def write_to_file_callback(part, iteration):
+		if(part != None):
+			part.save(output_name + "{:0>3}".format(iteration) + ".png", "PNG")
+
+	sepp.separate(img, callback=write_to_file_callback)
+

@@ -27,6 +27,7 @@ from PIL import ImageEnhance
 import base64
 import cStringIO
 import os.path
+from img_separator import ImageSeparator
 
 class ImageProcessor():
 
@@ -42,6 +43,7 @@ class ImageProcessor():
 	              speed_black = 500,
 	              speed_white = 3000,
 	              dithering = False,
+	              separation = True,
 	              pierce_time = 0,
 	              material = None):
 		self._log = logging.getLogger("octoprint.plugins.mrbeam.img2gcode")
@@ -62,6 +64,7 @@ class ImageProcessor():
 		self.contrastFactor = float(contrast) if contrast else 0.0
 		self.sharpeningFactor = float(sharpening) if sharpening else 0.0
 		self.dithering = (dithering == True or dithering == "True")
+		self.separation = (separation == True or dithering == "True")
 
 		self.debugPreprocessing = False
 		self.debugPreprocessing = True
@@ -88,32 +91,38 @@ class ImageProcessor():
 		comment += "; contrastFactor = {:.2f}\n".format(self.contrastFactor)
 		comment += "; sharpeningFactor = {:.2f}\n".format(self.sharpeningFactor)
 		comment += "; dithering = {}\n".format(self.dithering)
+		comment += "; separation = {}\n".format(self.separation)
 		return comment
 
-	def img_prepare(self, orig_img, w,h):
+	def img_prepare(self, orig_img, w_mm, h_mm):
 		"""
-		1.pixel reduction (w,h)
-		2.greyscale
-		3.contrast / curves (material)
+		1. pixel reduction (w,h)
+		2. remove transparency
+		3. contrast
+		4. greyscale
+		5. sharpen
+		(? .contrast / curves (material))
+		6. dithering
+		7. separation (optimizes duration)
 		"""
 
-		if(h < 0):
+		if(h_mm < 0):
 			ratio = (orig_img.size[1]/float(orig_img.size[0]))
-			h = w * ratio
+			h_mm = w_mm * ratio
 
-		dest_wpx = int(w/self.beam)
-		dest_hpx = int(h/self.beam)
+		dest_wpx = int(w_mm/self.beam)
+		dest_hpx = int(h_mm/self.beam)
 
 		self._log.info("scaling to {}x{}".format(dest_wpx, dest_hpx))
 
-		# scale
+		# 1. scale
 		img = orig_img.resize((dest_wpx, dest_hpx))
 		#img = orig_img.resize((dest_wpx, dest_hpx), Image.ANTIALIAS)
 
 		if(self.debugPreprocessing):
 			img.save("/tmp/img2gcode_1_resized.png")
 
-		# remove transparency
+		# 2. remove transparency
 		if (not self.is_inverted) and (img.mode == 'RGBA'):
 			whitebg = Image.new('RGBA', (dest_wpx, dest_hpx), "white")
 			img = Image.alpha_composite(whitebg, img)
@@ -125,8 +134,8 @@ class ImageProcessor():
 		# mirror?
 		#img = img.transpose(Image.FLIP_LEFT_RIGHT)
 
-		# contrast
-		if(self.dithering == False and self.contrastFactor > 1.0):
+		# 3. contrast
+		if(self.contrastFactor > 1.0):
 			contrast = ImageEnhance.Contrast(img)
 			img = contrast.enhance(self.contrastFactor) # 1.0 returns original
 			if(self.debugPreprocessing):
@@ -143,7 +152,7 @@ class ImageProcessor():
 			pass
 
 		# sharpness (factor: 1 => unchanged , 25 => almost b/w)
-		if(self.dithering == False and self.sharpeningFactor > 1.0):
+		if(self.sharpeningFactor > 1.0):
 			sharpness = ImageEnhance.Sharpness(img)
 			img = sharpness.enhance(self.sharpeningFactor)
 			if(self.debugPreprocessing):
@@ -155,11 +164,21 @@ class ImageProcessor():
 			if(self.debugPreprocessing):
 				img.save("/tmp/img2gcode_6_dithered.png")
 
+		# dithering
+		if(self.separation == True):
+			separator = ImageSeparator()
+			parts = separator.separate(img)
+			if(self.debugPreprocessing):
+				i = 0
+				for p in parts:
+					p.save("/tmp/img2gcode_7_part_{:0>3}.png".format(i))
+			return parts
+
 
 		# return pixel array
-		return img
+		return [img]
 
-	def generate_gcode(self, img, x,y,w,h, file_id):
+	def generate_gcode(self, imgArray, x,y,w,h, file_id):
 		settings_comment = self.get_settings_as_comment(x,y,w,h, "")
 		self._log.info("img2gcode conversion started:\n%s" % settings_comment)
 		x += self.beam/2.0
@@ -170,38 +189,43 @@ class ImageProcessor():
 		self._append_gcode('M3S0\n') # enable laser
 		last_y = -1
 
-		(width, height) = img.size
 
-		# iterate line by line
-		pix = img.load()
-		for row in range(height-1,-1,-1):
-			row_pos_y = y + (height - row) * self.beam # inverse y-coordinate as images have 0x0 at left top, mr beam at left bottom
+		for img in imgArray:
+			
+			(width, height) = img.size
 
-			# back and forth
-			pixelrange = range(0, width) if(direction_positive) else range(width-1, -1, -1)
+			# iterate line by line
+			pix = img.load()
+			for row in range(height-1,-1,-1):
+				row_pos_y = y + (height - row) * self.beam # inverse y-coordinate as images have 0x0 at left top, mr beam at left bottom
 
-			lastBrightness = self.ignore_brighter_than + 1
-			for i in pixelrange:
-				px = pix[i, row]
-				#brightness = self.get_alpha_composition(px)
-				brightness = px
-				if(brightness != lastBrightness ):
-					if(i != pixelrange[0]): # don't move after new line
-						xpos = x + self.beam * (i-1 if (direction_positive) else (i)) # calculate position; backward lines need to be shifted by +1 beam diameter
-						self._append_gcode(self.get_gcode_for_equal_pixels(lastBrightness, xpos, row_pos_y, last_y))
-						last_y = row_pos_y
-				else:
-					pass # combine equal intensity values to one move
+				# back and forth
+				pixelrange = range(0, width) if(direction_positive) else range(width-1, -1, -1)
 
-				lastBrightness = brightness
+				lastBrightness = self.ignore_brighter_than + 1
+				for i in pixelrange:
+					px = pix[i, row]
+					#brightness = self.get_alpha_composition(px)
+					brightness = px
+					if(brightness != lastBrightness ):
+						if(i != pixelrange[0]): # don't move after new line
+							xpos = x + self.beam * (i-1 if (direction_positive) else (i)) # calculate position; backward lines need to be shifted by +1 beam diameter
+							self._append_gcode(self.get_gcode_for_equal_pixels(lastBrightness, xpos, row_pos_y, last_y))
+							last_y = row_pos_y
+					else:
+						pass # combine equal intensity values to one move
 
-			if(not self._ignore_pixel_brightness(brightness) and self.get_intensity(brightness) > 0): # finish non-white line
-				end_of_line = x + pixelrange[-1] * self.beam
-				self._append_gcode(self.get_gcode_for_equal_pixels(brightness, end_of_line, row_pos_y, last_y))
-				last_y = row_pos_y
+					lastBrightness = brightness
 
-			# flip direction after each line to go back and forth
-			direction_positive = not direction_positive
+				if(not self._ignore_pixel_brightness(brightness) and self.get_intensity(brightness) > 0): # finish non-white line
+					end_of_line = x + pixelrange[-1] * self.beam
+					self._append_gcode(self.get_gcode_for_equal_pixels(brightness, end_of_line, row_pos_y, last_y))
+					last_y = row_pos_y
+
+				# flip direction after each line to go back and forth
+				direction_positive = not direction_positive
+
+			self._append_gcode(";EndPart\nM3S0\n") 
 
 		self._append_gcode(";EndImage\nM5\n") # important for gcode preview!
 		return self._output_gcode
@@ -244,8 +268,8 @@ class ImageProcessor():
 	def dataUrl_to_gcode(self, dataUrl, w,h, x,y, file_id):
 		img = self._dataurl_to_img(dataUrl)
 
-		pixArray = self.img_prepare(img, w, h)
-		gcode = self.generate_gcode(pixArray, x, y, w, h, dataUrl)
+		imgArray = self.img_prepare(img, w, h)
+		gcode = self.generate_gcode(imgArray, x, y, w, h, dataUrl)
 		return gcode
 
 	def _dataurl_to_img(self, dataUrl):
@@ -267,15 +291,15 @@ class ImageProcessor():
 		import urllib, cStringIO
 		file = cStringIO.StringIO(urllib.urlopen(url).read())
 		img = Image.open(file)
-		pixArray = self.img_prepare(img, w, h)
-		gcode = self.generate_gcode(pixArray, x, y, w, h, file_id)
+		imgArray = self.img_prepare(img, w, h)
+		gcode = self.generate_gcode(imgArray, x, y, w, h, file_id)
 		return gcode
 
 	# x,y are the lowerLeft of the image
 	def img_to_gcode(self, path, w,h, x,y, file_id):
 		img = Image.open(path)
-		pixArray = self.img_prepare(img, w, h)
-		gcode = self.generate_gcode(pixArray, x, y, w, h, file_id)
+		imgArray = self.img_prepare(img, w, h)
+		gcode = self.generate_gcode(imgArray, x, y, w, h, file_id)
 		return gcode
 
 	def twodigits(self, fl):
