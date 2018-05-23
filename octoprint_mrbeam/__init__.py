@@ -71,6 +71,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	ENV_LASER_SAFETY = "laser_safety"
 	ENV_ANALYTICS =    "analytics"
 
+	LASERSAFETY_CONFIRMATION_DIALOG_VERSION  = "0.2"
+	LASERSAFETY_CONFIRMATION_DIALOG_LANGUAGE = "en"
+
 	LASERSAFETY_CONFIRMATION_STORAGE_URL = 'https://script.google.com/a/macros/mr-beam.org/s/AKfycby3Y1RLBBiGPDcIpIg0LHd3nwgC7GjEA4xKfknbDLjm3v9-LjG1/exec'
 	USER_SETTINGS_KEY_MRBEAM = 'mrbeam'
 	USER_SETTINGS_KEY_TIMESTAMP = 'ts'
@@ -382,6 +385,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 beta_label=self.get_beta_label(),
 							 terminalEnabled=self._settings.get(['terminal']) or self.support_mode,
 							 vorlonEnabled=self.is_vorlon_enabled(),
+
+							 lasersafety_confirmation_dialog_version  = self.LASERSAFETY_CONFIRMATION_DIALOG_VERSION,
+							 lasersafety_confirmation_dialog_language = self.LASERSAFETY_CONFIRMATION_DIALOG_LANGUAGE,
 						 ))
 		r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
 
@@ -625,7 +631,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			payload = {'ts': data.get('ts', ''),
 					   'email': data.get('username', ''),
 					   'serial': self._serial,
-					   'hostname': self._hostname}
+					   'hostname': self._hostname,
+			           'dialog_version': self.LASERSAFETY_CONFIRMATION_DIALOG_VERSION,
+			           'dialog_language': self.LASERSAFETY_CONFIRMATION_DIALOG_LANGUAGE,
+			           'plugin_version': self._plugin_version,
+			           'software_tier': self._settings.get(["dev", "software_tier"]),
+			           'env': self.get_env(),
+			           }
 
 			if debug is not None and debug.upper() != self.ENV_PROD:
 				payload['debug'] = debug
