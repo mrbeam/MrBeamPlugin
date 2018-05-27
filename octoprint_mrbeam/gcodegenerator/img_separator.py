@@ -12,7 +12,12 @@ Author: Teja Philipp, teja@mr-beam.org
 import optparse
 import logging
 from PIL import Image
+import cv2
+import numpy as np
 import os.path
+
+(cvMajor, cvMinor) = cv2.__version__.split('.')[:2]
+isCV2 = cvMajor == "2"
 
 class ImageSeparator():
 
@@ -50,6 +55,43 @@ class ImageSeparator():
 			if(all_done):
 				return parts
 			iteration += 1
+			
+	def separate_contours(self, img, threshold=255, callback=None):
+		w,h = img.size
+		monochrome = np.array(img, dtype=np.uint8) # should be grayscale already
+		maxValue = 255
+		th, filtered = cv2.threshold(monochrome, threshold-1, maxValue, cv2.THRESH_BINARY);
+		cv2.imwrite("/home/teja/Desktop/test/filtered.png", filtered)
+		if(isCV2):
+			contours, hierarchy = cv2.findContours(filtered.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+		else:
+			i, contours, hierarchy = cv2.findContours(filtered, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+
+		print len(contours)
+		parts = []
+		maxArea = (w-1)*(h-1)
+		for i in range(len(contours)):
+			area = cv2.contourArea(contours[i])
+			if(area < maxArea):
+				# create mask
+				mask = cv2.bitwise_not(np.zeros((h, w), np.uint8))
+				cv2.drawContours(mask, contours, i, (0), -1) 
+				cv2.imwrite("/home/teja/Desktop/test/mask"+str(i)+".png", mask)
+
+				# apply mask to original image
+				white_bg = cv2.bitwise_not(np.zeros((h, w), np.uint8))
+				cv2.imwrite("/home/teja/Desktop/test/whitebg.png", white_bg)
+				separation_cv = cv2.bitwise_or(monochrome, mask)
+				separation = Image.fromarray(np.uint8(separation_cv))
+				#pi = Image.fromstring("L", cv.GetSize(separation), separation.tostring())
+
+				# collect results
+				if(callback != None):
+					callback(separation, i)
+				else:
+					parts.append(separation)
+			
+		return parts
 	
 	def _separate_partial(self, img, start_list, threshold=255):
 
@@ -103,8 +145,10 @@ if __name__ == "__main__":
 	img = img.convert('L')
 	
 	def write_to_file_callback(part, iteration):
+		print part
 		if(part != None):
 			part.save(output_name + "{:0>3}".format(iteration) + ".png", "PNG")
 
-	sepp.separate(img, callback=write_to_file_callback)
+	#sepp.separate(img, callback=write_to_file_callback)
+	sepp.separate_contours(img, callback=write_to_file_callback)
 

@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 """
 img2gcode.py
 functions for digesting paths into a simple list structure
@@ -106,14 +108,16 @@ class ImageProcessor():
 		7. separation (optimizes duration)
 		"""
 
+		start = time.time()
+		orig_w, orig_h = orig_img.size
 		if(h_mm < 0):
-			ratio = (orig_img.size[1]/float(orig_img.size[0]))
+			ratio = orig_w / float(orig_h)
 			h_mm = w_mm * ratio
 
 		dest_wpx = int(w_mm/self.beam)
 		dest_hpx = int(h_mm/self.beam)
 
-		self._log.info("scaling to {}x{}".format(dest_wpx, dest_hpx))
+		self._log.info("scaling {}x{} to {}x{}".format(orig_w, orig_h, dest_wpx, dest_hpx))
 
 		# 1. scale
 		img = orig_img.resize((dest_wpx, dest_hpx))
@@ -121,30 +125,37 @@ class ImageProcessor():
 
 		if(self.debugPreprocessing):
 			img.save("/tmp/img2gcode_1_resized.png")
+		self._log.debug("scaling took {} seconds".format(time.time()-start))
 
 		# 2. remove transparency
+		start = time.time()
 		if (not self.is_inverted) and (img.mode == 'RGBA'):
 			whitebg = Image.new('RGBA', (dest_wpx, dest_hpx), "white")
 			img = Image.alpha_composite(whitebg, img)
 
-		if(self.debugPreprocessing):
-			img.save("/tmp/img2gcode_2_whitebg.png")
+			if(self.debugPreprocessing):
+				img.save("/tmp/img2gcode_2_whitebg.png")
+			self._log.debug("transparency removal took {} seconds".format(time.time()-start))
 
 
 		# mirror?
 		#img = img.transpose(Image.FLIP_LEFT_RIGHT)
 
 		# 3. contrast
+		start = time.time()
 		if(self.contrastFactor > 1.0):
 			contrast = ImageEnhance.Contrast(img)
 			img = contrast.enhance(self.contrastFactor) # 1.0 returns original
 			if(self.debugPreprocessing):
 				img.save("/tmp/img2gcode_3_contrast.png")
+			self._log.debug("contrast enhancement took {} seconds".format(time.time()-start))
 
 		# greyscale
+		start = time.time()
 		img = img.convert('L')
 		if(self.debugPreprocessing):
 			img.save("/tmp/img2gcode_4_greyscale.png")
+		self._log.debug("grayscale conversion took {} seconds".format(time.time()-start))
 
 		# curves depending on material
 		if(self.material != "default") :
@@ -152,26 +163,32 @@ class ImageProcessor():
 			pass
 
 		# sharpness (factor: 1 => unchanged , 25 => almost b/w)
+		start = time.time()
 		if(self.sharpeningFactor > 1.0):
 			sharpness = ImageEnhance.Sharpness(img)
 			img = sharpness.enhance(self.sharpeningFactor)
 			if(self.debugPreprocessing):
 				img.save("/tmp/img2gcode_5_sharpened.png")
+			self._log.debug("sharpening took {} seconds".format(time.time()-start))
 
 		# dithering
 		if(self.dithering == True):
+			start = time.time()
 			img = img.convert('1')
 			if(self.debugPreprocessing):
 				img.save("/tmp/img2gcode_6_dithered.png")
+			self._log.debug("dithering took {} seconds".format(time.time()-start))
 
 		# dithering
 		if(self.separation == True):
+			start = time.time()
 			separator = ImageSeparator()
-			parts = separator.separate(img)
+			parts = separator.separate(img, threshold=self.ignore_brighter_than+1)
 			if(self.debugPreprocessing):
 				i = 0
 				for p in parts:
 					p.save("/tmp/img2gcode_7_part_{:0>3}.png".format(i))
+			self._log.debug("separation took {} seconds".format(time.time()-start))
 			return parts
 
 
