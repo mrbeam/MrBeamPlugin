@@ -70,7 +70,6 @@ class ImageProcessor():
 		self.separation = (separation == True or separation == "True")
 
 		self.debugPreprocessing = False
-		self.debugPreprocessing = True
 
 		# checks if intensity settings are inverted eg. anodized aluminum
 		self.is_inverted = self.intensity_white > self.intensity_black
@@ -124,9 +123,9 @@ class ImageProcessor():
 		img = orig_img.resize((dest_wpx, dest_hpx))
 		#img = orig_img.resize((dest_wpx, dest_hpx), Image.ANTIALIAS)
 
+		self._log.debug("scaling took {} seconds".format(time.time()-start))
 		if(self.debugPreprocessing):
 			img.save("/tmp/img2gcode_1_resized.png")
-		self._log.debug("scaling took {} seconds".format(time.time()-start))
 
 		# 2. remove transparency
 		start = time.time()
@@ -134,9 +133,9 @@ class ImageProcessor():
 			whitebg = Image.new('RGBA', (dest_wpx, dest_hpx), "white")
 			img = Image.alpha_composite(whitebg, img)
 
+			self._log.debug("transparency removal took {} seconds".format(time.time()-start))
 			if(self.debugPreprocessing):
 				img.save("/tmp/img2gcode_2_whitebg.png")
-			self._log.debug("transparency removal took {} seconds".format(time.time()-start))
 
 
 		# mirror?
@@ -147,16 +146,16 @@ class ImageProcessor():
 		if(self.contrastFactor > 1.0):
 			contrast = ImageEnhance.Contrast(img)
 			img = contrast.enhance(self.contrastFactor) # 1.0 returns original
+			self._log.debug("contrast enhancement took {} seconds".format(time.time()-start))
 			if(self.debugPreprocessing):
 				img.save("/tmp/img2gcode_3_contrast.png")
-			self._log.debug("contrast enhancement took {} seconds".format(time.time()-start))
 
 		# greyscale
 		start = time.time()
 		img = img.convert('L')
+		self._log.debug("grayscale conversion took {} seconds".format(time.time()-start))
 		if(self.debugPreprocessing):
 			img.save("/tmp/img2gcode_4_greyscale.png")
-		self._log.debug("grayscale conversion took {} seconds".format(time.time()-start))
 
 		# curves depending on material
 		if(self.material != "default") :
@@ -168,47 +167,54 @@ class ImageProcessor():
 		if(self.sharpeningFactor > 1.0):
 			sharpness = ImageEnhance.Sharpness(img)
 			img = sharpness.enhance(self.sharpeningFactor)
+			self._log.debug("sharpening took {} seconds".format(time.time()-start))
 			if(self.debugPreprocessing):
 				img.save("/tmp/img2gcode_5_sharpened.png")
-			self._log.debug("sharpening took {} seconds".format(time.time()-start))
 
 		# dithering
 		if(self.dithering == True):
 			start = time.time()
 			img = img.convert('1')
+			self._log.debug("dithering took {} seconds".format(time.time()-start))
 			if(self.debugPreprocessing):
 				img.save("/tmp/img2gcode_6_dithered.png")
-			self._log.debug("dithering took {} seconds".format(time.time()-start))
 
-		# fast mode engraving: split image at white pixels
+		# split image at white pixels
+		separator = ImageSeparator()
+
+		# 1. split by contour
+		start = time.time()
+		contour_parts = separator.separate_contours(img, threshold=self.ignore_brighter_than+1)
+		self._log.debug("contour separation took {} seconds".format(time.time()-start))
+		self._log.debug("separated into {} contours".format(len(contour_parts)))
+
+		parts = []
+		start = time.time()
+		
 		if(self.separation == True):
-			separator = ImageSeparator()
-			
-			# 1. split by contour
-			start = time.time()
-			contour_parts = separator.separate_contours(img, threshold=self.ignore_brighter_than+1)
-			self._log.debug("contour separation took {} seconds".format(time.time()-start))
-			self._log.debug("separated into {} contours".format(len(contour_parts)))
-			
-			parts = []
-			start = time.time()
 			for cp in contour_parts:
 				# 2. split contour by left-pixels-first method
-				tmp = separator.separate(cp, threshold=self.ignore_brighter_than+1)
-				parts.extend(tmp)
-			self._log.debug("left-pixels-first separation took {} seconds".format(time.time()-start))
-			self._log.debug("separated into {} parts".format(len(parts)))
+				img_data = cp['i']
+				off_x = cp['x']
+				off_y = cp['y']
+
+				tmp = separator.separate(img_data, threshold=self.ignore_brighter_than+1)
+				for p in tmp:
+					parts.append({'i': p['i'], 'x': off_x + p['x'], 'y': off_y + p['y']})
+
+				self._log.debug("left-pixels-first separation took {} seconds".format(time.time()-start))
+				self._log.debug("separated into {} parts".format(len(parts)))
+		else:
+			parts.extend(contour_parts)
 				
-			if(self.debugPreprocessing):
-				i = 0
-				for p in parts:
-					p.save("/tmp/img2gcode_7_part_{:0>3}.png".format(i))
-					i += 1
-			return parts
+		if(self.debugPreprocessing):
+			i = 0
+			for p in parts:
+				img_data = p['i']
+				img_data.save("/tmp/img2gcode_7_part_{:0>3}_@{},{}.png".format(i, p['x'], p['y']))
+				i += 1
+		return parts
 
-
-		# return pixel array
-		return [img]
 
 	def generate_gcode(self, imgArray, x,y,w,h, file_id):
 		settings_comment = self.get_settings_as_comment(x,y,w,h, "")
@@ -221,15 +227,17 @@ class ImageProcessor():
 		self._append_gcode('M3S0\n') # enable laser
 		last_y = -1
 
-
-		for img in imgArray:
+		for img_data in imgArray:
+			img = img_data['i']
+			x_off = img_data['x']*self.beam + x # mm here, img_data['x'] is in pixels
+			y_off = img_data['y']*self.beam + y # same for the y axis
 			
 			(width, height) = img.size
 
 			# iterate line by line
 			pix = img.load()
 			for row in range(height-1,-1,-1):
-				row_pos_y = y + (height - row) * self.beam # inverse y-coordinate as images have 0x0 at left top, mr beam at left bottom
+				row_pos_y = y_off + (height - row) * self.beam # inverse y-coordinate as images have 0x0 at left top, mr beam at left bottom
 
 				# back and forth
 				pixelrange = range(0, width) if(direction_positive) else range(width-1, -1, -1)
@@ -241,7 +249,7 @@ class ImageProcessor():
 					brightness = px
 					if(brightness != lastBrightness ):
 						if(i != pixelrange[0]): # don't move after new line
-							xpos = x + self.beam * (i-1 if (direction_positive) else (i)) # calculate position; backward lines need to be shifted by +1 beam diameter
+							xpos = x_off + self.beam * (i-1 if (direction_positive) else (i)) # calculate position; backward lines need to be shifted by +1 beam diameter
 							self._append_gcode(self.get_gcode_for_equal_pixels(lastBrightness, xpos, row_pos_y, last_y))
 							last_y = row_pos_y
 					else:
@@ -250,7 +258,7 @@ class ImageProcessor():
 					lastBrightness = brightness
 
 				if(not self._ignore_pixel_brightness(brightness) and self.get_intensity(brightness) > 0): # finish non-white line
-					end_of_line = x + pixelrange[-1] * self.beam
+					end_of_line = x_off + pixelrange[-1] * self.beam
 					self._append_gcode(self.get_gcode_for_equal_pixels(brightness, end_of_line, row_pos_y, last_y))
 					last_y = row_pos_y
 
@@ -437,6 +445,9 @@ if __name__ == "__main__":
 		ip = ImageProcessor(fh, options.contrast, options.sharpening, options.beam_diameter,
 		options.intensity_black, options.intensity_white, options.speed_black, options.speed_white,
 		boolDither, options.pierce_time)
+		
+		ip.debugProcessing = True
+		
 		path = args[0]
 		ip.img_to_gcode(path, options.width, options.height, options.x, options.y, path)
 		#ip.dataUrl_to_gcode(base64img, options.width, options.height, options.x, options.y)
