@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 __author__ = "teja"
 __date__ = "$Aug 9, 2015 9:42:03 AM$"
 
@@ -5,7 +8,7 @@ import optparse
 import os.path
 from PIL import Image
 
-def debug_image(gcode, pixelsize):
+def debug_image(gcode, pixelsize = 0.15):
 	import string, sys, re
 	lines = string.split(gcode, '\n')
 	xmin = sys.maxint
@@ -15,7 +18,7 @@ def debug_image(gcode, pixelsize):
 	fmin = sys.maxint
 	fmax = -sys.maxint
 	regex = re.compile("((?P<letter>[GFSMXYZPIJK])\s*(?P<value>[0-9-.]+))")
-	pixelsize_regex = re.compile(";self.beam = (?P<value>[0-9-.]+)")
+	pixelsize_regex = re.compile(";\s*self.beam = (?P<value>[0-9-.]+)")
 
 	x = 0
 	y = 0
@@ -25,13 +28,12 @@ def debug_image(gcode, pixelsize):
 	ltr = True
 	pix = []
 	for line in lines:
-		# ;self.beam = 0.20
+		# ; self.beam = 0.20
 		if(line.startswith(';')): 
-			if(line.startswith(';self.beam = ')):
-				m = pixelsize_regex.match(line);
-				if(m.groupdict()['value']):
-					pixelsize = float(m.groupdict()['value'])
-					print('found pixel size in comment:', pixelsize)
+			m = pixelsize_regex.match(line);
+			if(m != None and m.groupdict()['value']):
+				pixelsize = float(m.groupdict()['value'])
+				print('found pixel size in comment:', pixelsize)
 		
 		idx = line.find(';')
 		if(idx >= 0):
@@ -82,11 +84,10 @@ def debug_image(gcode, pixelsize):
 		if(line['g'] == '1' or line['g'] == '0'):
 			x = int((line['x']-xmin) * 1/pixelsize)
 			y = int(round(h-1 - (line['y'] - ymin) * 1/pixelsize))
-			print('y',y)
 			if(line['g'] == '1'):
-				#s = int((1-line['s'] / 1000.0) * 255) # intensity (0-1000) to luminance conversion
+				#s = int((1-line['s'] / 1000.0) * 255) # intensity (0-1300) to luminance conversion
 				#f = (line['f'] * f_factor) * 255
-				intensity = int((1-line['s'] / 1000.0) * 255) # intensity (0-1000) to luminance conversion
+				intensity = int((1-line['s'] / 1300.0) * 255) # intensity (0-1300) to luminance conversion
 				feedrate = int((line['f'] * f_factor) * 255)
 				s = (255, intensity, intensity)
 				f = (0, feedrate, 0)
@@ -94,15 +95,20 @@ def debug_image(gcode, pixelsize):
 					_min = min(last_px[0], x)
 					_max = max(last_px[0], x)
 					if(_min == _max):
-						#pixarray[x, y] = s
-						#pixarray[x+w, y] = f
-						pixarray[x, y] = s
-						pixarray[x+w, y] = f
+						try:
+							pixarray[x, y] = s
+							pixarray[x+w, y] = f
+						except IndexError:
+							print(" ? Px ({},{}) is out of range. Image width: {}, height:{})".format(x,y,w,h))
 					else:
 						x_range = range(_min, _max)
 						for px in x_range:
-							pixarray[px, y] = s
-							pixarray[px+w, y] = f
+							try:
+								pixarray[px, y] = s
+								pixarray[px+w, y] = f
+							except IndexError:
+								print(" ? Pixel ({},{}) is out of range. Image width: {}, height:{})".format(px,y,w,h))
+									
 			last_px = [x,y]
 	return img	
 	
@@ -124,7 +130,7 @@ if __name__ == "__main__":
 		
 	with open (gcodefile, "r") as f:
 		gcode = f.read()
-	img = debug_image(gcode, 0.25)
+	img = debug_image(gcode)
 	img.save(imagefile)
 
 	print("written image " + imagefile)
