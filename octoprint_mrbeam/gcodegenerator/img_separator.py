@@ -67,7 +67,6 @@ class ImageSeparator():
 		else:
 			i, contours, hierarchy = cv2.findContours(filtered, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
-		print len(contours)
 		parts = []
 		maxArea = (w-1)*(h-1)
 		for i in range(len(contours)):
