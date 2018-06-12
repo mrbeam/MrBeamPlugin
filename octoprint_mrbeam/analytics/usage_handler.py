@@ -46,12 +46,11 @@ class UsageHandler(object):
 
 	def _subscribe(self):
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_STARTED, self.event_start)
-		self._event_bus.subscribe(OctoPrintEvents.PRINT_PAUSED, self.event_write)
+		self._event_bus.subscribe(OctoPrintEvents.PRINT_PAUSED, self.event_write) # cooling breaks also send a regular pause event
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self.event_stop)
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self.event_stop)
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_CANCELLED, self.event_stop)
 		self._event_bus.subscribe(MrBeamEvents.PRINT_PROGRESS, self.event_write)
-		self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_PAUSE, self.event_write)
 
 	def event_start(self, event, payload):
 		self._load_usage_data()

@@ -72,6 +72,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	ENV_LASER_SAFETY = "laser_safety"
 	ENV_ANALYTICS =    "analytics"
 
+	LASERSAFETY_CONFIRMATION_DIALOG_VERSION  = "0.2"
+	LASERSAFETY_CONFIRMATION_DIALOG_LANGUAGE = "en"
+
 	LASERSAFETY_CONFIRMATION_STORAGE_URL = 'https://script.google.com/a/macros/mr-beam.org/s/AKfycby3Y1RLBBiGPDcIpIg0LHd3nwgC7GjEA4xKfknbDLjm3v9-LjG1/exec'
 	USER_SETTINGS_KEY_MRBEAM = 'mrbeam'
 	USER_SETTINGS_KEY_TIMESTAMP = 'ts'
@@ -277,6 +280,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		)
 
 	def on_settings_save(self, data):
+		# self._logger.info("ANDYTEST on_settings_save() %s", data)
 		if "svgDPI" in data:
 			self._settings.set_int(["svgDPI"], data["svgDPI"])
 		if "dxfScale" in data:
@@ -290,6 +294,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			else:
 				self._settings.set_boolean(["vorlon"], False)
 				self._logger.info("Disabling VORLON per user request.", terminal=True)
+		if "gcode_nextgen" in data and isinstance(data['gcode_nextgen'], collections.Iterable) and "clip_working_area" in data['gcode_nextgen']:
+			self._settings.set_boolean(["gcode_nextgen", "clip_working_area"], data['gcode_nextgen']['clip_working_area'])
 
 	def on_shutdown(self):
 		self._logger.debug("Mr Beam Plugin stopping...")
@@ -381,6 +387,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 beta_label=self.get_beta_label(),
 							 terminalEnabled=self._settings.get(['terminal']) or self.support_mode,
 							 vorlonEnabled=self.is_vorlon_enabled(),
+
+							 lasersafety_confirmation_dialog_version  = self.LASERSAFETY_CONFIRMATION_DIALOG_VERSION,
+							 lasersafety_confirmation_dialog_language = self.LASERSAFETY_CONFIRMATION_DIALOG_LANGUAGE,
 						 ))
 		r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
 
@@ -624,7 +633,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			payload = {'ts': data.get('ts', ''),
 					   'email': data.get('username', ''),
 					   'serial': self._serial,
-					   'hostname': self._hostname}
+					   'hostname': self._hostname,
+			           'dialog_version': self.LASERSAFETY_CONFIRMATION_DIALOG_VERSION,
+			           'dialog_language': self.LASERSAFETY_CONFIRMATION_DIALOG_LANGUAGE,
+			           'plugin_version': self._plugin_version,
+			           'software_tier': self._settings.get(["dev", "software_tier"]),
+			           'env': self.get_env(),
+			           }
 
 			if debug is not None and debug.upper() != self.ENV_PROD:
 				payload['debug'] = debug

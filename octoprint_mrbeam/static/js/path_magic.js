@@ -687,7 +687,8 @@ var mrbeam = mrbeam || {};
     mb_meta = mb_meta || {}
     var meta_str = "";
     for (var key in mb_meta) {
-        meta_str += ","+key+":"+mb_meta[key].replace(" ", '_');
+        var val = mb_meta[key].replace === 'function' ? mb_meta[key].replace(" ", '_') : mb_meta[key]
+        meta_str += ","+key+":"+val;
     }
     commands.push(";_gc_nextgen_svg_id:"+id.replace(' ', "_") + meta_str);
 
@@ -725,7 +726,7 @@ var mrbeam = mrbeam || {};
     subj.forEach(path => {
       if (path.length == 0)
           return
-  
+
       var startPoint = path[0];
       var endPoint = path[path.length - 1];
 

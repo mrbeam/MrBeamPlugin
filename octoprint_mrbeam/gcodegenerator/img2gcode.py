@@ -73,6 +73,7 @@ class ImageProcessor():
 
 		# checks if intensity settings are inverted eg. anodized aluminum
 		self.is_inverted = self.intensity_white > self.intensity_black
+		self.is_first_pixel = True
 
 		self._lookup_intensity = {}
 		self._lookup_feedrate = {}
@@ -226,6 +227,7 @@ class ImageProcessor():
 		self._append_gcode('F' + str(self.feedrate_white) + '\n') # set an initial feedrate
 		self._append_gcode('M3S0\n') # enable laser
 		last_y = -1
+		self.is_first_pixel = True
 
 		for img_data in imgArray:
 			img = img_data['i']
@@ -279,7 +281,7 @@ class ImageProcessor():
 
 	def get_gcode_for_equal_pixels(self, brightness, target_x, target_y, last_y, comment=""):
 		# fast skipping whitespace
-		if(self._ignore_pixel_brightness(brightness) ):
+		if self._ignore_pixel_brightness(brightness):
 			y_gcode = "Y"+self.twodigits(target_y) if target_y != last_y else ""
 			gcode = "G0X" + self.twodigits(target_x) + y_gcode + "S0" + comment +"\n"
 
@@ -300,9 +302,15 @@ class ImageProcessor():
 		else:
 			intensity = self.get_intensity(brightness)
 			feedrate = self.get_feedrate(brightness)
-			gcode = "G0Y"+self.twodigits(target_y)+"S0\n" if target_y != last_y else ""
+
+			gcode = ''
+			if self.is_first_pixel:
+				gcode = "G0X" + self.twodigits(target_x) + "Y" + self.twodigits(target_y) + "S0\n"
+			elif target_y != last_y:
+				gcode = "G0Y" + self.twodigits(target_y) + "S0\n"
 			gcode += "G1X" + self.twodigits(target_x) + "F"+str(feedrate) + "S"+str(intensity)+ comment +"\n" # move until next intensity
 
+		self.is_first_pixel = False
 		return gcode
 
 	def dataUrl_to_gcode(self, dataUrl, w,h, x,y, file_id):

@@ -36,6 +36,9 @@ class MachineCom(object):
 	GRBL_VERSION_20170919_22270fa = '0.9g_22270fa'
 	GRBL_VERSION_20180223_61638c5 = '0.9g_20180223_61638c5'
 
+	GRBL_SETTINGS_READ_WINDOW = 3.0
+	GRBL_SETTINGS_READ_BLOCK  = GRBL_SETTINGS_READ_WINDOW + 0.1
+
 	STATE_NONE = 0
 	STATE_OPEN_SERIAL = 1
 	STATE_DETECT_SERIAL = 2
@@ -126,6 +129,7 @@ class MachineCom(object):
 		self.limit_y = -1
 		# from GRBL status RX value: Number of characters queued in Grbl's serial RX receive buffer.
 		self._grbl_rx_status = -1
+		self._grbl_settings_correction_ts = 0
 
 		# regular expressions
 		self._regex_command = re.compile("^\s*\$?([GM]\d+|[THFSX])")
@@ -174,9 +178,10 @@ class MachineCom(object):
 	def _monitor_loop(self):
 		#Open the serial port.
 		if not self._openSerial():
+			self._logger.critical("_monitor_loop() Serial not open, leaving monitoring loop.")
 			return
 
-		self._log("Connected to: %s, starting monitor" % self._serial)
+		self._logger.info("Connected to: %s, starting monitor" % self._serial, terminal_as_comm=True)
 		self._changeState(self.STATE_CONNECTING)
 		if self._laserCutterProfile['grbl']['resetOnConnect']:
 			self._serial.flushInput()
@@ -206,7 +211,7 @@ class MachineCom(object):
 				elif line.startswith('$'): # Grbl settings
 					self._handle_settings_message(line)
 				elif not line and (self._state is self.STATE_CONNECTING or self._state is self.STATE_OPEN_SERIAL or self._state is self.STATE_DETECT_SERIAL):
-					self._log("Empty line received during STATE_CONNECTION, starting soft-reset")
+					self._logger.info("Empty line received during STATE_CONNECTION, starting soft-reset", terminal_as_comm=True)
 					self._sendCommand(self.COMMAND_RESET) # Serial-Connection Error
 			except:
 				self._logger.exception("Something crashed inside the monitoring loop, please report this to Mr Beam")
@@ -308,7 +313,7 @@ class MachineCom(object):
 				self._serial.write(cmd)
 				self._process_command_phase("sent", cmd)
 			except serial.SerialException:
-				self._log("Unexpected error while writing serial port: %s" % (get_exception_string()))
+				self._logger.info("Unexpected error while writing serial port: %s" % (get_exception_string()), terminal_as_comm=True)
 				self._errorValue = get_exception_string()
 				self.close(True)
 
@@ -345,7 +350,7 @@ class MachineCom(object):
 				port = ser.port
 
 			# connect to regular serial port
-			self._log("Connecting to: %s" % port)
+			self._logger.info("Connecting to: %s" % port, terminal_as_comm=True)
 			if baudrate == 0:
 				baudrates = baudrateList()
 				ser = serial.Serial(str(port), 115200 if 115200 in baudrates else baudrates[0], timeout=read_timeout, writeTimeout=10000, parity=serial.PARITY_ODD)
@@ -613,8 +618,15 @@ class MachineCom(object):
 		"""
 		This triggers a reload of GRBL settings and does a validation and correction afterwards.
 		"""
-		self._refresh_grbl_settings()
-		threading.Timer(3.0, self._verify_and_correct_loaded_grbl_settings, kwargs=dict(retries=retries)).start()
+		if time.time() - self._grbl_settings_correction_ts > self.GRBL_SETTINGS_READ_BLOCK:
+			self._grbl_settings_correction_ts = time.time()
+			self._refresh_grbl_settings()
+			myThread = threading.Timer(self.GRBL_SETTINGS_READ_WINDOW, self._verify_and_correct_loaded_grbl_settings, kwargs=dict(retries=retries))
+			myThread.daemon = True
+			myThread.name = "CommAcc2_GrblSettings"
+			myThread.start()
+		else:
+			self._logger.warn("correct_grbl_settings() got called more than once withing %s s. Ignoring this call.", self.GRBL_SETTINGS_READ_BLOCK )
 
 	def _refresh_grbl_settings(self):
 		self._grbl_settings = dict()
@@ -628,6 +640,10 @@ class MachineCom(object):
 		return "({count}) [{data}]".format(count=len(log), data=', '.join(log))
 
 	def _verify_and_correct_loaded_grbl_settings(self, retries=0):
+		tmp = time.time() - self._grbl_settings_correction_ts
+		if  tmp < self.GRBL_SETTINGS_READ_WINDOW and tmp > self.GRBL_SETTINGS_READ_BLOCK:
+			self._logger.warn("_verify_and_correct_loaded_grbl_settings() called %s s after correct_grbl_settings() but this is sketchy. Exactly %s s after that", tmp, self.GRBL_SETTINGS_READ_WINDOW)
+
 		settings_count = self._laserCutterProfile['grbl']['settings_count']
 		settings_expected = self._laserCutterProfile['grbl']['settings']
 		my_grbl_settings = self._grbl_settings.copy() # to avoid race conditions
@@ -744,7 +760,7 @@ class MachineCom(object):
 
 		oldState = self.getStateString()
 		self._state = newState
-		self._log('Changing monitoring state from \'%s\' to \'%s\'' % (oldState, self.getStateString()))
+		self._logger.debug('Changing monitoring state from \'%s\' to \'%s\'' % (oldState, self.getStateString()), terminal_as_comm=True)
 		self._callback.on_comm_state_change(newState)
 
 	def _onConnected(self, nextState):

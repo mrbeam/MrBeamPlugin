@@ -653,6 +653,33 @@ li.material_entry span {
   /*min-height: 65vh;*/
 }
 
+.modal.modal-left-side {
+	top: 50%;
+	left: -52%;
+	margin-left: 1em;
+}
+.modal.modal-left-side.fade {
+	transition: opacity 0.3s linear, left 0.3s ease-out, bottom 0.3s ease-out, margin-top 0s linear, top 0s linear;
+}
+.modal.modal-left-side.fade.in {
+	left: 0;
+}
+
+#quick_shape_dialog .control-group {
+    margin-bottom: .5em;
+}
+
+#quick_shape_dialog input[type=color], 
+#quick_shape_dialog input[type=number], 
+#quick_shape_dialog input[type=range] {
+    width: 150px;
+}
+#quick_shape_dialog form.form-horizontal {
+    margin-bottom: 0;
+}
+
+svg#area_preview.overModalBG { z-index: 1051; }
+
 .calibration_manual.text {
     width: 48%;
 	margin-bottom: 2em;
