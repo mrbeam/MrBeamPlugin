@@ -1090,7 +1090,8 @@ $(function(){
 				"dithering" : self.imgDithering(),
 				"beam_diameter" : self.beamDiameter(),
 				"pierce_time": self.engravingPiercetime(),
-                "material": self.engravingMaterial
+                "material": self.engravingMaterial,
+				"fast_mode": $('#svgtogcode_img_engraving_mode').hasClass('active')
 			};
 			return data;
 		};
