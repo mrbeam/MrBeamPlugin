@@ -29,6 +29,7 @@ from PIL import ImageEnhance
 import base64
 import cStringIO
 import os.path
+import time
 from img_separator import ImageSeparator
 
 class ImageProcessor():
@@ -66,7 +67,7 @@ class ImageProcessor():
 		self.contrastFactor = float(contrast) if contrast else 0.0
 		self.sharpeningFactor = float(sharpening) if sharpening else 0.0
 		self.dithering = (dithering == True or dithering == "True")
-		self.separation = (separation == True or dithering == "True")
+		self.separation = (separation == True or separation == "True")
 
 		self.debugPreprocessing = False
 		self.debugPreprocessing = True
@@ -179,16 +180,30 @@ class ImageProcessor():
 				img.save("/tmp/img2gcode_6_dithered.png")
 			self._log.debug("dithering took {} seconds".format(time.time()-start))
 
-		# dithering
+		# fast mode engraving: split image at white pixels
 		if(self.separation == True):
-			start = time.time()
 			separator = ImageSeparator()
-			parts = separator.separate(img, threshold=self.ignore_brighter_than+1)
+			
+			# 1. split by contour
+			start = time.time()
+			contour_parts = separator.separate_contours(img, threshold=self.ignore_brighter_than+1)
+			self._log.debug("contour separation took {} seconds".format(time.time()-start))
+			self._log.debug("separated into {} contours".format(len(contour_parts)))
+			
+			parts = []
+			start = time.time()
+			for cp in contour_parts:
+				# 2. split contour by left-pixels-first method
+				tmp = separator.separate(cp, threshold=self.ignore_brighter_than+1)
+				parts.extend(tmp)
+			self._log.debug("left-pixels-first separation took {} seconds".format(time.time()-start))
+			self._log.debug("separated into {} parts".format(len(parts)))
+				
 			if(self.debugPreprocessing):
 				i = 0
 				for p in parts:
 					p.save("/tmp/img2gcode_7_part_{:0>3}.png".format(i))
-			self._log.debug("separation took {} seconds".format(time.time()-start))
+					i += 1
 			return parts
 
 
