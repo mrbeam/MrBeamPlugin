@@ -30,6 +30,7 @@ import base64
 import cStringIO
 import os.path
 import time
+import sys
 from img_separator import ImageSeparator
 
 class ImageProcessor():
@@ -49,7 +50,13 @@ class ImageProcessor():
 	              separation = True,
 	              pierce_time = 0,
 	              material = None):
+		
+		self.debug = True
 		self._log = logging.getLogger("octoprint.plugins.mrbeam.img2gcode")
+		self._log.setLevel(logging.DEBUG)
+		lh = logging.StreamHandler(sys.stdout)
+		lh.setLevel(logging.DEBUG)
+		self._log.addHandler(lh)
 
 		self.output_filehandle = output_filehandle
 		self.beam = float(beam_diameter) if beam_diameter else 0.25
@@ -61,7 +68,7 @@ class ImageProcessor():
 		self.intensity_white = float(intensity_white) if intensity_white else 0.0
 		self.intensity_black_user = intensity_black_user
 		self.intensity_white_user = intensity_white_user
-		self.feedrate_white = float(speed_white) if speed_white else 0.0
+		self.feedrate_white = float(speed_white) if speed_white else 3000.0
 		self.feedrate_black = float(speed_black) if speed_black else 0.0
 		self.material = material
 		self.contrastFactor = float(contrast) if contrast else 0.0
@@ -69,15 +76,20 @@ class ImageProcessor():
 		self.dithering = (dithering == True or dithering == "True")
 		self.separation = (separation == True or separation == "True")
 
-		self.debugPreprocessing = False
+		# overshoot settings
+		self.overshoot_distance = 5
+		self.workingAreaWidth = 500
+
+		self.debugPreprocessing = True
 
 		# checks if intensity settings are inverted eg. anodized aluminum
 		self.is_inverted = self.intensity_white > self.intensity_black
-		self.is_first_pixel = True
+		#self.is_first_pixel = True
 
 		self._lookup_intensity = {}
 		self._lookup_feedrate = {}
 		self._output_gcode = ""
+		self.gc_ctx = GC_Context()
 
 	def get_settings_as_comment(self, x,y,w,h, file_id = ''):
 		comment =  "; Image: {:.2f}x{:.2f} @ {:.2f},{:.2f}|{}\n".format(w,h,x,y,file_id)
@@ -97,6 +109,10 @@ class ImageProcessor():
 		comment += "; separation = {}\n".format(self.separation)
 		return comment
 
+	def set_overshoot_parameter(self, overshoot_distance, workingAreaWidth=500):
+		self.overshoot_distance = overshoot_distance
+		self.workingAreaWidth = workingAreaWidth
+
 	def img_prepare(self, orig_img, w_mm, h_mm):
 		"""
 		1. pixel reduction (w,h)
@@ -113,7 +129,7 @@ class ImageProcessor():
 		orig_w, orig_h = orig_img.size
 		if(h_mm < 0):
 			ratio = orig_w / float(orig_h)
-			h_mm = w_mm * ratio
+			h_mm = w_mm / ratio
 
 		dest_wpx = int(w_mm/self.beam)
 		dest_hpx = int(h_mm/self.beam)
@@ -188,7 +204,9 @@ class ImageProcessor():
 		contour_parts = separator.separate_contours(img, threshold=self.ignore_brighter_than+1)
 		self._log.debug("contour separation took {} seconds".format(time.time()-start))
 		self._log.debug("separated into {} contours".format(len(contour_parts)))
-
+		if(len(contour_parts) == 0):
+			contour_parts = [{'i': img, 'x':0, 'y': 0}] # add full image as it was not separatable with contours method
+		
 		parts = []
 		start = time.time()
 		
@@ -217,102 +235,320 @@ class ImageProcessor():
 		return parts
 
 
-	def generate_gcode(self, imgArray, x,y,w,h, file_id):
-		settings_comment = self.get_settings_as_comment(x,y,w,h, "")
+	def generate_gcode(self, imgArray, xMM,yMM,wMM,hMM, file_id):
+		"""
+		takes an array of objects containing the separated image and converts them to gcode.
+		:param imgArray: array of imagedata containing dicts 
+		:param xMM: x position of the image in mm 
+		:param yMM: y position of the image in mm
+		:param wMM: width of the image in mm
+		:param hMM: height of the image in mm
+		:param file_id: origin file id, stored in comment for debugging / analysis
+        :type imgArray: [{i: imgdata, x: x_offset_px, y: y_offset_px }]
+        :type x: int, float
+        :type y: int, float
+        :type w: int, float
+        :type h: int, float
+        :type file_id: string
+        :returns: gcode
+        :rtype: string
+		"""
+		
+		# write all parameters used for generating the gcode into the file
+		settings_comment = self.get_settings_as_comment(xMM, yMM, wMM, hMM, "")
 		self._log.info("img2gcode conversion started:\n%s" % settings_comment)
-		x += self.beam/2.0
-		y -= self.beam/2.0
+		self._append_gcode(self.get_settings_as_comment(xMM, yMM, wMM, hMM, file_id))
+		xMM += self.beam/2.0
+		yMM -= self.beam/2.0
+		
+		# pre-condition: set feedrate, enable laser with 0 intensity.
+		self._append_gcode('F' + str(self.feedrate_white)) # set an initial feedrate
+		self.gc_ctx.f = self.feedrate_white #TODO hack. set with line above
+		self._append_gcode('M3S0') # enable laser
+		self.gc_ctx.s = 0 #TODO hack. set with line above
+		self.gc_ctx.laser_active = True #TODO hack. set with line above
+		
 		direction_positive = True
-		self._append_gcode(self.get_settings_as_comment(x,y,w,h, file_id))
-		self._append_gcode('F' + str(self.feedrate_white) + '\n') # set an initial feedrate
-		self._append_gcode('M3S0\n') # enable laser
-		last_y = -1
-		self.is_first_pixel = True
+		#self.is_first_pixel = True
 
+
+		# iterate through the image parts
 		for img_data in imgArray:
 			img = img_data['i']
-			x_off = img_data['x']*self.beam + x # mm here, img_data['x'] is in pixels
-			y_off = img_data['y']*self.beam + y # same for the y axis
+			size = img.size # size of the img fraction in pixels
+			height_px = size[1]
 			
-			(width, height) = img.size
+			# image part has its own pixel offset. Calc general absolute offset in MM
+			x_off = img_data['x']*self.beam + xMM # mm here, img_data['x'] is in pixels
+			y_off = img_data['y']*self.beam + yMM # same for the y axis
+			img_pos_mm = (x_off, y_off) # lower left corner of partial image in mm
 
+			self._append_gcode("; BeginPart @ pixel ({},{}) with dimensions {}x{}".format(img_data['x'],img_data['y'], size[0], size[1])) 
 			# iterate line by line
 			pix = img.load()
-			for row in range(height-1,-1,-1):
-				row_pos_y = y_off + (height - row) * self.beam # inverse y-coordinate as images have 0x0 at left top, mr beam at left bottom
+			for row in range(height_px-1,-1,-1):
+				#row_pos_y = y_off + (height_px - row) * self.beam # inverse y-coordinate as images have 0x0 at left top, mr beam at left bottom
 
-				# back and forth
-				pixelrange = range(0, width) if(direction_positive) else range(width-1, -1, -1)
+				line_info = self.get_pixelinfo_of_line(pix, size, row)
+				if(line_info['left'] != None):
+					# prepare line start
+					pos = self.write_gcode_for_line_start(img_pos_mm, pix, line_info, direction_positive, debug=self.debug)
 
-				lastBrightness = self.ignore_brighter_than + 1
-				for i in pixelrange:
-					px = pix[i, row]
-					#brightness = self.get_alpha_composition(px)
-					brightness = px
-					if(brightness != lastBrightness ):
-						if(i != pixelrange[0]): # don't move after new line
-							xpos = x_off + self.beam * (i-1 if (direction_positive) else (i)) # calculate position; backward lines need to be shifted by +1 beam diameter
-							self._append_gcode(self.get_gcode_for_equal_pixels(lastBrightness, xpos, row_pos_y, last_y))
-							last_y = row_pos_y
-					else:
-						pass # combine equal intensity values to one move
+					# do line
+					pos = self.write_gcode_for_trimmed_line(img_pos_mm, pix, line_info, direction_positive, debug=self.debug)
 
-					lastBrightness = brightness
+					# after line
+					pos = self.write_gcode_for_line_end(img_pos_mm, line_info, direction_positive, debug=self.debug)
+					
+					# flip direction after each line to go back and forth
+					direction_positive = not direction_positive
+				else:
+					pass # skip empty line
+					
 
-				if(not self._ignore_pixel_brightness(brightness) and self.get_intensity(brightness) > 0): # finish non-white line
-					end_of_line = x_off + pixelrange[-1] * self.beam
-					self._append_gcode(self.get_gcode_for_equal_pixels(brightness, end_of_line, row_pos_y, last_y))
-					last_y = row_pos_y
+			self._append_gcode(";EndPart") 
+			self._append_gcode("M3S0")
+			self.gc_ctx.s = 0
+			self.gc_ctx.laser_active = True
 
-				# flip direction after each line to go back and forth
-				direction_positive = not direction_positive
-
-			self._append_gcode(";EndPart\nM3S0\n") 
-
-		self._append_gcode(";EndImage\nM5\n") # important for gcode preview!
+		self._append_gcode(";EndImage\nM5") # important for gcode preview!
+		self.gc_ctx.laser_active = False
 		return self._output_gcode
 
+
+	# helper methods for gcode generation
 	def _ignore_pixel_brightness(self, brightness):
 		if(self.is_inverted): # inverted engraving, e.g. anodized aluminum
 			return (brightness < self.ignore_darker_than)
 		else:
 			return (brightness > self.ignore_brighter_than)
 
+	def get_pixelinfo_of_line(self, pixelArray, size, row_idx):
+		w_px = size[0] # width
+		h_px = size[1] # height
+		first_idx = self.get_first_juicy_pixel(pixelArray, w_px, row_idx)
+		if(first_idx != None):
+			last_idx = self.get_last_juicy_pixel(pixelArray, w_px, row_idx)
+		else: 
+			last_idx = None
+		y_idx = row_idx
+		
+		return {'left': first_idx, 'right': last_idx, 'row':y_idx, 'img_w': w_px, 'img_h': h_px }
 
-	def get_gcode_for_equal_pixels(self, brightness, target_x, target_y, last_y, comment=""):
+	def get_first_juicy_pixel(self, pixelArray, w_px, row):
+		for i in range(w_px):
+			if(pixelArray[i, row] <= self.ignore_brighter_than):
+				return i
+		return None
+
+	def get_last_juicy_pixel(self, pixelArray, w_px, row):
+		for i in range(w_px-1, -1, -1):
+			if(pixelArray[i, row] <= self.ignore_brighter_than):
+				return i
+		return None
+		
+				
+	#######################################################################
+	#
+	# gcode generation methods
+	# 
+	# all methods starting with write_gcode_*
+	# 1. write their gcode directly with the self._append_gcode method
+	# 2. write a \n at the end
+	# 3. return the final position
+	# 4. have a debug flag which adds comments to the gcode (before the final \n).
+	#
+	#######################################################################
+
+	def write_gcode_for_line_start(self, img_pos_mm, pixelArray, line_info, direction_positive, debug=False):
+		"""
+		Writes GCode to ensure the precondition of a line gcode. 
+		This includes:
+		- Move laserhead to correct starting position with G0
+		- Do the overshoot move if necessary
+		- Activate laser with 0 intensity
+		returns (x,y) last position in mm or None if not moved.
+		"""
+		
+		if(direction_positive):
+			x = img_pos_mm[0] + self.beam * line_info['left'] - self.overshoot_distance
+			x = max(x, 0)
+		else:
+			x = img_pos_mm[0] + self.beam * line_info['right'] + self.overshoot_distance
+			x = min(x, self.workingAreaWidth)
+
+		y = img_pos_mm[1] + self.beam * (line_info['img_h'] - line_info['row']) # inverse y-coordinate as images have 0x0 at left top, mr beam at left bottom
+		
+		comment = None
+		if(debug): comment = "goto line start"
+		gc = self._get_gcode_g0(x=x, y=y, comment=comment)
+		self._append_gcode(gc)
+		self.gc_ctx.s = 0
+		self.gc_ctx.x = x
+		self.gc_ctx.y = y
+		
+		if(self.overshoot_distance > 0):
+			if(direction_positive):
+				x = x + self.overshoot_distance
+			else:
+				x = x - self.overshoot_distance
+			
+			comment = None
+			if(debug): comment = "overshoot move"
+			gc = self._get_gcode_g0(x=x, comment=comment)
+			self._append_gcode(gc)
+			self.gc_ctx.s = 0
+			self.gc_ctx.x = x
+			self.gc_ctx.y = y
+		
+	
+	def write_gcode_for_line_end(self, img_pos_mm, line_info, direction_positive, debug=False):
+		"""
+		Writes GCode to ensure the postcondition of a line gcode. 
+		This includes:
+		- set laser intensity to 0
+		returns (x,y) last position in mm or None if line was empty.
+		"""
+		comment = ""
+		if(debug):
+			arrow = '->' if(direction_positive) else '<-' 
+			comment = "; EOL: x=[{} {} {}], y={}".format(line_info['left'], arrow, line_info['right'], line_info['row'])
+		
+		x = self.gc_ctx.x
+		y = self.gc_ctx.y
+		if(self.overshoot_distance > 0):
+			if(direction_positive):
+				x = x + self.overshoot_distance
+			else:
+				x = x - self.overshoot_distance
+			
+			comment = None
+			if(debug): comment = "overshoot move"
+			gc = self._get_gcode_g0(x=x, comment=comment)
+			self._append_gcode(gc)
+			self.gc_ctx.s = 0
+			self.gc_ctx.x = x
+			self.gc_ctx.y = y
+		else:
+			self._append_gcode("M3S0"+comment)
+			self.gc_ctx.s = 0
+			self.gc_ctx.x = x
+			self.gc_ctx.y = y
+
+	def write_gcode_for_trimmed_line(self, img_pos_mm, pixelArray, line_info, direction_positive, debug=False):
+		"""
+		Writes GCode for one line of juicy pixels. 
+		Preconditions:
+		- Laserhead is already moved to correct starting position with G0
+		- Laser is active (still active or switched on with M3S0)
+		
+		returns (x,y) last position in mm or None if line was empty.
+		"""
+		
+		# iterate over juicy pixels
+		if(direction_positive): 
+			pixelrange = range(line_info['left'], line_info['right']+1) 
+		else: 
+			pixelrange = range(line_info['right'], line_info['left']-1, -1)
+		
+		row = line_info['row']
+		
+		lastBrightness = self.ignore_brighter_than + 1
+		for i in pixelrange:
+			
+			brightness = pixelArray[i, row]
+			if(brightness != lastBrightness ):
+				if(i != pixelrange[0]): # don't move after new line
+					xpos = img_pos_mm[0] + self.beam * (i-1 if (direction_positive) else (i)) # calculate position; backward lines need to be shifted by +1 beam diameter
+					pos = self.write_gcode_for_equal_pixels(lastBrightness, xpos, debug=debug)
+			else:
+				pass # combine equal intensity values to one move
+
+			lastBrightness = brightness
+
+		if(not self._ignore_pixel_brightness(brightness) and self.get_intensity(brightness) > 0): # finish non-white line
+			end_of_line = img_pos_mm[0] + pixelrange[-1] * self.beam
+			pos = self.write_gcode_for_equal_pixels(brightness, end_of_line, debug=debug)
+		
+		
+	def write_gcode_for_equal_pixels(self, brightness, target_x, comment=None, debug=False):
+		"""
+		Writes gcode for a sequence of equal pixels. 
+		Choses G1 or G0 depending on brightness, adds pierce-time gcode after G0 command
+		Preconditions: 
+		- laser in position
+		- laser activated
+		"""
+		if(debug):
+			comment = "brightness: {}".format(brightness)
+		
 		# fast skipping whitespace
 		if self._ignore_pixel_brightness(brightness):
-			y_gcode = "Y"+self.twodigits(target_y) if target_y != last_y else ""
-			gcode = "G0X" + self.twodigits(target_x) + y_gcode + "S0" + comment +"\n"
+			gcode = self._get_gcode_g0(x=target_x, comment=comment)
+			self._append_gcode(gcode)
+			self.gc_ctx.s = 0
+			self.gc_ctx.x = target_x
 
 			# pierctime after skipping whitespace
-			# fixed piercetime
 			if(self.pierce_time > 0):
-				gcode += "M3S"+str(self.pierce_intensity)+ "\n" + "G4P"+str(self.pierce_time)+"\n" # Dwell for P ms
-
-			# dynamic piercetime
-			# TODO highly experimental. take line-distance into account.
-#			if(self.pierce_time > 0):
-#				mult = self.get_pierce_time_multiplier(i, row, pix, width, height, direction_positive) # 0.0 .. 1.0
-#				pt = mult * self.pierce_time
-#				if(pt > 0):
-#					pt_str = "{0:.3f}".format(pt)
-#					gcode += "S"+str(pierce_intensity)+ "\n" + "G4 P"+pt_str+"\n" # Dwell for P ms
+				gcode = self._get_gcode_g4(intensity=self.pierce_intensity, time=self.pierce_time)
+				self._append_gcode(gcode)
+				self.gc_ctx.s = self.pierce_intensity
 
 		else:
 			intensity = self.get_intensity(brightness)
 			feedrate = self.get_feedrate(brightness)
 
-			gcode = ''
-			if self.is_first_pixel:
-				gcode = "G0X" + self.twodigits(target_x) + "Y" + self.twodigits(target_y) + "S0\n"
-			elif target_y != last_y:
-				gcode = "G0Y" + self.twodigits(target_y) + "S0\n"
-			gcode += "G1X" + self.twodigits(target_x) + "F"+str(feedrate) + "S"+str(intensity)+ comment +"\n" # move until next intensity
+			
+			#if self.is_first_pixel:
+			#	gcode = self._get_gcode_g0(x=target_x, comment="first_px")
+			#	self._append_gcode(gcode)
+				
+			gcode = self._get_gcode_g1(x=target_x, s=intensity, f=feedrate, comment=comment) 
+			self._append_gcode(gcode)
+			self.gc_ctx.s = intensity
+			self.gc_ctx.f = feedrate
+			self.gc_ctx.x = target_x
+			
+		#self.is_first_pixel = False
+		return (target_x, None)
 
-		self.is_first_pixel = False
-		return gcode
-
+	def _get_gcode_g0(self, x=None, y=None, comment=None):
+		x_gc = self._get_gcode_literal("X", x)
+		y_gc = self._get_gcode_literal("Y", y)
+		c = ""
+		if(comment != None):
+			c = "; " + comment
+		return "G0{}{}S0{}".format(x_gc, y_gc, c)
+		
+	def _get_gcode_g1(self, x=None, y=None, s=None, f=None, comment=None):
+		x_gc = self._get_gcode_literal("X", x)
+		y_gc = self._get_gcode_literal("Y", y)
+		s_gc = self._get_gcode_literal("S", s)
+		f_gc = self._get_gcode_literal("F", f)
+		c = ""
+		if(comment != None):
+			c = "; " + comment
+		return "G1{}{}{}{}{}".format(x_gc, y_gc, s_gc, f_gc, c)
+		
+	def _get_gcode_g4(self, intensity=None, time=0):
+		if(time > 0):
+			if(intensity == None):
+				intensity = self.pierce_intensity
+		
+			return "M3S{}\nG4P{}\n".format(str(intensity), str(time)) # Dwell for P ms
+		else:
+			return ""
+		
+	def _get_gcode_literal(self, lit, value):
+		if(value != None):
+			if(lit == "X" or lit == "Y"):
+				return lit + self.twodigits(value)
+			if(lit == "S" or lit == "F"):
+				return lit + str(value)
+		else:
+			return ""	
+		
 	def dataUrl_to_gcode(self, dataUrl, w,h, x,y, file_id):
 		img = self._dataurl_to_img(dataUrl)
 
@@ -390,12 +626,27 @@ class ImageProcessor():
 		else:
 			return 0
 
-	def _append_gcode(self, gcode):
+	def _append_gcode(self, gcode, add_new_line=True):
 		if(self.output_filehandle is not None):
 			self.output_filehandle.write(gcode)
+			if(add_new_line):
+				self.output_filehandle.write("\n")
 		else:
 			self._output_gcode += gcode
+			if(add_new_line):
+				self._output_gcode += "\n"
 
+
+class GC_Context():
+	"""
+	Helper class to track last gcode values
+	"""
+	def __init__(self):
+		self.x = None
+		self.y = None
+		self.f = None
+		self.s = None
+		self.laser_active = False
 
 
 # debug string
@@ -433,30 +684,45 @@ if __name__ == "__main__":
 		footer = ""
 		if(options.noheaders == "false"):
 			header = '''
-	$H
-	G92X0Y0Z0
-	G90
-	M8
-	G21
+$H
+G92X0Y0Z0
+G90
+M8
+G21
 
-	'''
+'''
 			footer = '''
-	M5
-	G0X0Y0
-	M9
-	M2
-	'''
+M5
+G0X0Y0
+M9
+M2
+'''
 
 		fh.write(header)
 
 		boolDither = (options.dithering == "true")
-		ip = ImageProcessor(fh, options.contrast, options.sharpening, options.beam_diameter,
-		options.intensity_black, options.intensity_white, options.speed_black, options.speed_white,
-		boolDither, options.pierce_time)
+		ip = ImageProcessor(
+			output_filehandle = fh,
+			contrast = options.contrast,
+			sharpening = options.sharpening,
+			beam_diameter = 1.0, # for easy debugging. 
+			#beam_diameter = options.beam_diameter,
+			intensity_black = options.intensity_black,
+			intensity_white = options.intensity_white,
+			intensity_black_user = options.speed_black,
+			intensity_white_user = options.speed_white,
+			speed_black = options.speed_black,
+			speed_white = options.speed_white,
+			dithering = boolDither,
+			separation = True,
+			pierce_time = options.pierce_time,
+			material = None
+		)
 		
 		ip.debugProcessing = True
 		
 		path = args[0]
+		print options
 		ip.img_to_gcode(path, options.width, options.height, options.x, options.y, path)
 		#ip.dataUrl_to_gcode(base64img, options.width, options.height, options.x, options.y)
 
