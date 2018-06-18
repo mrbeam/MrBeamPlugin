@@ -17,6 +17,11 @@ class Migration(object):
 	VERSION_SETUP_IPTABLES           = '0.1.19'
 	VERSION_SYNC_GRBL_SETTINGS       = '0.1.24'
 	VERSION_FIX_SSH_KEY_PERMISSION   = '0.1.28'
+	VERSION_UPDATE_CHANGE_HOSTNAME_SCRIPTS   = '0.1.37'
+
+	# this is where we have files needed for migrations
+	MIGRATE_FILES_FOLDER = 'files/migrate/'
+
 
 	def __init__(self, plugin):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.migrate")
@@ -55,6 +60,9 @@ class Migration(object):
 
 				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_FIX_SSH_KEY_PERMISSION, equal_ok=False):
 					self.fix_ssh_key_permissions()
+
+				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_UPDATE_CHANGE_HOSTNAME_SCRIPTS, equal_ok=False):
+					self.update_change_hostename_apname_scripts()
 
 				# migrations end
 
@@ -157,6 +165,8 @@ class Migration(object):
 		Let's correct it to actual wifi AP name
 		"""
 		host = self.plugin.getHostname()
+		# at some point change this to: command = "sudo /root/scripts/change_apname {}".format(host)
+		# but make sure that the new change_apname script has already been installed!!! (update_change_hostename_apname_scripts)
 		command = "sudo sed -i '/.*ssid: MrBeam-F930.*/c\  ssid: {}' /etc/netconnectd.yaml".format(host)
 		code = exec_cmd(command)
 		self._logger.debug("fix_wifi_ap_name() Corrected Wifi AP name.")
@@ -237,6 +247,22 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 			default_profile['grbl']['settings'][130] = 501.1
 			laserCutterProfileManager().save(default_profile, allow_overwrite=True, make_default=True)
 			self._logger.info("add_grbl_130_maxTravel() C-Series Device: Added ['grbl']['settings'][130]=501.1 to lasercutterProfile: %s", default_profile)
+
+
+	def update_change_hostename_apname_scripts(self):
+		self._logger.info("update_change_hostename_apname_scripts() ")
+		src_change_hostname = os.path.join(__package_path__, self.MIGRATE_FILES_FOLDER, 'change_hostname')
+		src_change_apname = os.path.join(__package_path__, self.MIGRATE_FILES_FOLDER, 'change_apname')
+
+		if os.path.isfile(src_change_hostname) and src_change_apname:
+			exec_cmd("sudo cp {src} /root/scripts/change_hostname".format(src=src_change_hostname))
+			exec_cmd("sudo chmod 755 /root/scripts/change_hostname")
+
+			exec_cmd("sudo cp {src} /root/scripts/change_apname".format(src=src_change_apname))
+			exec_cmd("sudo chmod 755 /root/scripts/change_apname")
+		else:
+			self._logger.error("update_change_hostename_apname_scripts() One or more source files not found! Not Updated!")
+
 
 
 	##########################################################

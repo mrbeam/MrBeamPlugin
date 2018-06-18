@@ -95,7 +95,7 @@ class AnalyticsHandler(object):
 
 	@staticmethod
 	def _getSerialNumber():
-		return _mrbeam_plugin_implementation.getMrBeamSerial()
+		return _mrbeam_plugin_implementation.getSerialNum()
 
 	# def _getShortSerial(self):
 	# 	serial_long = self._getSerialNumber()
