@@ -41,6 +41,7 @@ from octoprint_mrbeam.migrate import migrate
 from octoprint_mrbeam.profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
 from octoprint_mrbeam.software_update_information import get_update_information, SW_UPDATE_TIER_PROD
 from octoprint_mrbeam.support import set_support_mode
+from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 
 
 
@@ -94,10 +95,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self.slicing_progress_last = -1
 		self._logger = mrb_logger("octoprint.plugins.mrbeam")
 		self._hostname = None
-		self._mbSerialnumber = None
+		self._serial_num = None
+		self._device_info = dict()
 		self._stored_frontend_notifications = []
-		self._setHostname()
-		self._setMbSerialnumber()
 		self._device_series = self._get_val_from_device_info('device_series')  # '2C'
 
 	# inside initialize() OctoPrint is already loaded, not assured during __init__()!
@@ -106,7 +106,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._logger = mrb_logger("octoprint.plugins.mrbeam")
 		self._branch = self.getBranch()
 		self._octopi_info = self.get_octopi_info()
-		self._serial = self.getMrBeamSerial()
+		self._serial_num = self.getSerialNum()
 
 		# do migration if needed
 		migrate(self)
@@ -145,8 +145,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		"""
 		msg = "MrBeam Plugin"
 		msg += " version:{}".format(self._plugin_version)
-		msg += ", host:{}".format(self._hostname)
-		msg += ", serial:{}".format(self._serial)
+		msg += ", host:{}".format(self.getHostname())
+		msg += ", serial:{}".format(self.getSerialNum())
 		msg += ", software_tier:{}".format(self._settings.get(["dev", "software_tier"]))
 		msg += ", env:{}".format(self.get_env())
 		msg += " ({}:{}".format(self.ENV_LOCAL, self.get_env(self.ENV_LOCAL))
@@ -183,8 +183,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		:return: dict of environment data
 		"""
 		return dict(version=self._plugin_version,
-		            host=self._hostname,
-		            serial=self._serial,
+		            host=self.getHostname(),
+		            serial=self._serial_num,
 		            software_tier=self._settings.get(["dev", "software_tier"]),
 		            env=self.get_env(),
 		            beamOS_image=self._octopi_info)
@@ -350,9 +350,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			if render_kwargs["templates"]["wizard"]["entries"]["firstrunend"]:
 				render_kwargs["templates"]["wizard"]["entries"]["firstrunend"][1]["template"] = "wizard/firstrun_end.jinja2"
 
-		display_version_string = "{} on {}".format(self._plugin_version, self._hostname)
+		display_version_string = "{} on {}".format(self._plugin_version, self.getHostname())
 		if self._branch:
-			display_version_string = "{} ({} branch) on {}".format(self._plugin_version, self._branch, self._hostname)
+			display_version_string = "{} ({} branch) on {}".format(self._plugin_version, self._branch, self.getHostname())
 
 		render_kwargs.update(dict(
 							 webcamStream=self._settings.get(["cam", "frontendUrl"]),
@@ -377,9 +377,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 env_laser_safety=self.get_env(self.ENV_LASER_SAFETY),
 							 env_analytics=self.get_env(self.ENV_ANALYTICS),
 
-							 displayName=self.getDisplayName(self._hostname),
-							 hostname=self._hostname,
-							 serial=self._serial,
+							 displayName=self.getDisplayName(),
+							 hostname=self.getHostname(),
+							 serial=self._serial_num,
 							 software_tier=self._settings.get(["dev", "software_tier"]),
 							 analyticsEnabled=self._settings.get(["analyticsEnabled"]),
 							 beta_label=self.get_beta_label(),
@@ -630,8 +630,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 			payload = {'ts': data.get('ts', ''),
 					   'email': data.get('username', ''),
-					   'serial': self._serial,
-					   'hostname': self._hostname,
+					   'serial': self._serial_num,
+					   'hostname': self.getHostname(),
 			           'dialog_version': self.LASERSAFETY_CONFIRMATION_DIALOG_VERSION,
 			           'dialog_language': self.LASERSAFETY_CONFIRMATION_DIALOG_LANGUAGE,
 			           'plugin_version': self._plugin_version,
@@ -741,37 +741,37 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		from flask import make_response, render_template
 		from octoprint.server import debug, LOCALES, VERSION, DISPLAY_VERSION, UI_API_KEY, BRANCH
 
-		display_version_string = "{} on {}".format(self._plugin_version, self._hostname)
+		display_version_string = "{} on {}".format(self._plugin_version, self.getHostname())
 		if self._branch:
-			display_version_string = "{} ({} branch) on {}".format(self._plugin_version, self._branch, self._hostname)
+			display_version_string = "{} ({} branch) on {}".format(self._plugin_version, self._branch, self.getHostname())
 
 		render_kwargs = dict(debug=debug,
-							firstRun=self.isFirstRun(),
-							version=dict(number=VERSION, display=DISPLAY_VERSION, branch=BRANCH),
-							uiApiKey=UI_API_KEY,
-							templates=dict(tab=[]),
-							pluginNames=dict(),
-							locales=dict(),
-							supportedExtensions=[],
-							# beamOS version
-							beamosVersionNumber=self._plugin_version,
-							beamosVersionBranch=self._branch,
-							beamosVersionDisplayVersion=display_version_string,
-							beamosVersionImage=self._octopi_info,
-							# environement
-							env=self.get_env(),
-							env_local=self.get_env(self.ENV_LOCAL),
-							env_laser_safety=self.get_env(self.ENV_LASER_SAFETY),
-							env_analytics=self.get_env(self.ENV_ANALYTICS),
-							#
-							displayName=self.getDisplayName(self._hostname),
-							hostname=self._hostname,
-							serial=self._serial,
-							beta_label=self.get_beta_label(),
-							e='null',
-							gcodeThreshold=0, #legacy
-							gcodeMobileThreshold=0, #legacy
-						 )
+		                     firstRun=self.isFirstRun(),
+		                     version=dict(number=VERSION, display=DISPLAY_VERSION, branch=BRANCH),
+		                     uiApiKey=UI_API_KEY,
+		                     templates=dict(tab=[]),
+		                     pluginNames=dict(),
+		                     locales=dict(),
+		                     supportedExtensions=[],
+		                     # beamOS version
+		                     beamosVersionNumber=self._plugin_version,
+		                     beamosVersionBranch=self._branch,
+		                     beamosVersionDisplayVersion=display_version_string,
+		                     beamosVersionImage=self._octopi_info,
+		                     # environement
+		                     env=self.get_env(),
+		                     env_local=self.get_env(self.ENV_LOCAL),
+		                     env_laser_safety=self.get_env(self.ENV_LASER_SAFETY),
+		                     env_analytics=self.get_env(self.ENV_ANALYTICS),
+		                     #
+		                     displayName=self.getDisplayName(),
+		                     hostname=self.getHostname(),
+		                     serial=self._serial_num,
+		                     beta_label=self.get_beta_label(),
+		                     e='null',
+		                     gcodeThreshold=0,  #legacy
+		                     gcodeMobileThreshold=0,  #legacy
+		                     )
 		r = make_response(render_template("initial_calibration.jinja2", **render_kwargs))
 
 		r = add_non_caching_response_headers(r)
@@ -1499,63 +1499,56 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		else:
 			return None, None
 
-	def _setHostname(self):
-		try:
-			self._hostname = socket.gethostname()
-		except:
-			self._logger.exception("Exception while reading hostname.")
-			pass
-
 	def getHostname(self):
 		"""
 		Returns device hostname like 'MrBeam2-F930'.
+		If system hostname (/etc/hostname) is differen it'll be set (overwritten!!) to the value from device_info
 		:return: String hostname
 		"""
 		if self._hostname is None:
-			self._logger.warning('Hostname was not initialized. Doing it now.')
-			self._setHostname()
+			hostname_dev_info = self._get_val_from_device_info('hostname')
+			hostname_socket = None
+			try:
+				hostname_socket = socket.gethostname()
+			except:
+				self._logger.exception("Exception while reading hostname from socket.")
+				pass
+
+			# yes, let's go with the actual host name untill changes have applied.
+			self._hostname = hostname_socket
+
+			if hostname_dev_info != hostname_socket:
+				self._logger.warn("getHostname() Hostname from device_info file does NOT match system hostname. device_info: {dev_info}, system hostname: {sys}. Setting system hostname to {dev_info}"
+				                  .format(dev_info=hostname_dev_info, sys=hostname_socket))
+				exec_cmd("sudo /root/scripts/change_hostname {}".format(hostname_dev_info))
+				exec_cmd("sudo /root/scripts/change_apname {}".format(hostname_dev_info))
+				self._logger.warn("getHostname() system hostname got changed to: {}. Requires reboot to take effect!".format(hostname_dev_info))
+
+
 		return self._hostname
 
-	def getDisplayName(self, hostName):
+	def getDisplayName(self):
 		code = None
 		name = "Mr Beam II {}"
 		preFix = "MrBeam2-"
+		hostName = self.getHostname()
 		if hostName.startswith(preFix):
 			code = hostName.replace(preFix, "")
 			return name.format(code)
 		else:
 			return name.format(hostName)
 
-	def _setMbSerialnumber(self):
-		self._mbSerialnumber = "{pi_serial}-{device_series}".format(
-			pi_serial=self._getPiSerial_not_mrb_serial(),
-			device_series=self._get_val_from_device_info('device_series'))
-
-	def getMrBeamSerial(self):
-		if self._mbSerialnumber is None:
-			self._logger.warning('Serial Number was not initialized. Doing it now.')
-			self._setMbSerialnumber()
-		return self._mbSerialnumber
-
-	def _getPiSerial_not_mrb_serial(self):
+	def getSerialNum(self):
 		"""
-		:deprecated: use getMrBeamSerial() instead
-		Get RaspberryPi's serial number from cpuinfo file
-		:return: String serial or ('0000000000000000' or 'ERROR000000000')
+		Gives you the device's Mr Beam serieal number eg "00000000E79B0313-2C"
+		The value is soley read from device_info file (/etc/mrbeam)
+		and it's cached once read.
+		:return: serial number
+		:rtype: String
 		"""
-		# Extract serial from cpuinfo file
-		cpuserial = "0000000000000000"
-		try:
-			f = open('/proc/cpuinfo', 'r')
-			for line in f:
-				if line[0:6] == 'Serial':
-					cpuserial = line[10:26]
-			f.close()
-			cpuserial = cpuserial.upper()
-		except Exception as e:
-			cpuserial = "ERROR000000000"
-
-		return cpuserial
+		if self._serial_num is None:
+			self._serial_num = self._get_val_from_device_info('serial')
+		return self._serial_num
 
 	def getBranch(self):
 		"""
@@ -1596,16 +1589,23 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# return None
 
 	def _get_val_from_device_info(self, key):
-		try:
-			with open(self.DEVIE_INFO_FILE, 'r') as f:
-				for line in f:
-					line = line.strip()
-					token = line.split('=')
-					if len(token) >= 2 and token[0] == key:
-						return token[1]
-		except Exception as e:
-			self._logger.error("Can't read device_info_file '%s' due to exception: %s", self.DEVIE_INFO_FILE, e)
-		return None
+		if not self._device_info:
+			ok = None
+			try:
+				db = dict()
+				with open(self.DEVIE_INFO_FILE, 'r') as f:
+					for line in f:
+						line = line.strip()
+						token = line.split('=')
+						if len(token) >= 2:
+							db[token[0]] = token[1]
+					ok = True
+			except Exception as e:
+				ok = False
+				self._logger.error("Can't read device_info_file '%s' due to exception: %s", self.DEVIE_INFO_FILE, e)
+			if ok:
+				self._device_info = db
+		return self._device_info.get(key, None)
 
 
 	def isFirstRun(self):
