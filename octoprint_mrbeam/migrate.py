@@ -17,12 +17,17 @@ class Migration(object):
 	VERSION_SETUP_IPTABLES           = '0.1.19'
 	VERSION_SYNC_GRBL_SETTINGS       = '0.1.24'
 	VERSION_FIX_SSH_KEY_PERMISSION   = '0.1.28'
+	VERSION_UPDATE_CHANGE_HOSTNAME_SCRIPTS   = '0.1.37'
+
+	# this is where we have files needed for migrations
+	MIGRATE_FILES_FOLDER = 'files/migrate/'
+
 
 	def __init__(self, plugin):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.migrate")
 		self.plugin = plugin
 
-		self.version_previous = self.plugin._settings.get(['version'])
+		self.version_previous = self.plugin._settings.get(['version']) or "0.0.0"
 		self.version_current  = self.plugin._plugin_version
 		self.suppress_migrations = self.plugin._settings.get(['dev', 'suppress_migrations'])
 
@@ -55,6 +60,9 @@ class Migration(object):
 
 				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_FIX_SSH_KEY_PERMISSION, equal_ok=False):
 					self.fix_ssh_key_permissions()
+
+				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_UPDATE_CHANGE_HOSTNAME_SCRIPTS, equal_ok=False):
+					self.update_change_hostename_apname_scripts()
 
 				# migrations end
 
@@ -157,6 +165,8 @@ class Migration(object):
 		Let's correct it to actual wifi AP name
 		"""
 		host = self.plugin.getHostname()
+		# at some point change this to: command = "sudo /root/scripts/change_apname {}".format(host)
+		# but make sure that the new change_apname script has already been installed!!! (update_change_hostename_apname_scripts)
 		command = "sudo sed -i '/.*ssid: MrBeam-F930.*/c\  ssid: {}' /etc/netconnectd.yaml".format(host)
 		code = exec_cmd(command)
 		self._logger.debug("fix_wifi_ap_name() Corrected Wifi AP name.")
@@ -175,14 +185,22 @@ class Migration(object):
 
 	def migrate_from_0_0_0(self):
 		self._logger.info("migrate_from_0_0_0() ")
+		write = False
 		my_profile = laserCutterProfileManager().get_default()
-		# this setting was introduce with MrbeamPlugin version 0.1.13
-		my_profile['laser']['intensity_factor'] = 13
-		self._logger.info("migrate_from_0_0_0() Set lasercutterProfile ['laser']['intensity_factor'] = 13")
-		# previous default was 300 (5min)
-		my_profile['dust']['auto_mode_time'] = 60
-		self._logger.info("migrate_from_0_0_0() Set lasercutterProfile ['dust']['auto_mode_time'] = 60")
-		laserCutterProfileManager().save(my_profile, allow_overwrite=True, make_default=True)
+		if not 'laser' in my_profile or not 'intensity_factor' in my_profile['laser'] or not my_profile['laser']['intensity_factor']:
+			# this setting was introduce with MrbeamPlugin version 0.1.13
+			my_profile['laser']['intensity_factor'] = 13
+			write = True
+			self._logger.info("migrate_from_0_0_0() Set lasercutterProfile ['laser']['intensity_factor'] = 13")
+		if not 'dust' in my_profile or not 'auto_mode_time' in my_profile['dust'] or not my_profile['dust']['auto_mode_time']:
+			# previous default was 300 (5min)
+			my_profile['dust']['auto_mode_time'] = 60
+			write = True
+			self._logger.info("migrate_from_0_0_0() Set lasercutterProfile ['dust']['auto_mode_time'] = 60")
+		if write:
+			laserCutterProfileManager().save(my_profile, allow_overwrite=True, make_default=True)
+		else:
+			self._logger.info("migrate_from_0_0_0() nothing to do here.")
 
 	def setup_iptables(self):
 		"""
@@ -231,6 +249,22 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 			self._logger.info("add_grbl_130_maxTravel() C-Series Device: Added ['grbl']['settings'][130]=501.1 to lasercutterProfile: %s", default_profile)
 
 
+	def update_change_hostename_apname_scripts(self):
+		self._logger.info("update_change_hostename_apname_scripts() ")
+		src_change_hostname = os.path.join(__package_path__, self.MIGRATE_FILES_FOLDER, 'change_hostname')
+		src_change_apname = os.path.join(__package_path__, self.MIGRATE_FILES_FOLDER, 'change_apname')
+
+		if os.path.isfile(src_change_hostname) and src_change_apname:
+			exec_cmd("sudo cp {src} /root/scripts/change_hostname".format(src=src_change_hostname))
+			exec_cmd("sudo chmod 755 /root/scripts/change_hostname")
+
+			exec_cmd("sudo cp {src} /root/scripts/change_apname".format(src=src_change_apname))
+			exec_cmd("sudo chmod 755 /root/scripts/change_apname")
+		else:
+			self._logger.error("update_change_hostename_apname_scripts() One or more source files not found! Not Updated!")
+
+
+
 	##########################################################
 	#####             lasercutterProfiles                #####
 	##########################################################
@@ -253,8 +287,8 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 				return
 			elif self.plugin._device_series == '2C':
 				self.set_lasercutterPorfile_2C()
-			elif self.plugin._device_series == '2D':
-				self.set_lasercutterPorfile_2D()
+			elif self.plugin._device_series in ('2D', '2E', '2F'):
+				self.set_lasercutterPorfile_2DEF(series=self.plugin._device_series[1])
 			else:
 				self.set_lasercutterPorfile_2all()
 			self.save_current_version()
@@ -292,25 +326,28 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 			self._logger.info("set_lasercutterPorfile_2C() Created lasercutterProfile '%s' and set as default. Content: %s", profile_id, default_profile)
 
 
-	def set_lasercutterPorfile_2D(self):
+	def set_lasercutterPorfile_2DEF(self, series):
 		"""
-		Not sure if first D Series devices going to be shipped with a proper lasercutterProfile installed...
-		In case not, let's create it.
+		In case lasercutterProfile does not exist
 		:return:
 		"""
-		profile_id = "MrBeam2D"
-		model = "D"
+		series = series.upper()
+		profile_id = "MrBeam2{}".format(series)
+		model = series
 
 		if laserCutterProfileManager().exists(profile_id):
 			laserCutterProfileManager().set_default(profile_id)
-			self._logger.info("set_lasercutterPorfile_2D() Set lasercutterProfile '%s' as default.", profile_id)
+			self._logger.info("set_lasercutterPorfile_2DEF() Set lasercutterProfile '%s' as default.", profile_id)
 		else:
 			default_profile = laserCutterProfileManager().get_default()
 			default_profile['id'] = profile_id
 			default_profile['name'] = "MrBeam2"
 			default_profile['model'] = model
 			laserCutterProfileManager().save(default_profile, allow_overwrite=True, make_default=True)
-			self._logger.info("set_lasercutterPorfile_2D() Created lasercutterProfile '%s' and set as default. Content: %s",profile_id, default_profile)
+			self._logger.info("set_lasercutterPorfile_2DEF() Created lasercutterProfile '%s' and set as default. Content: %s",profile_id, default_profile)
+
+
+			self._logger.info("set_lasercutterPorfile_2DEF() Created lasercutterProfile '%s' and set as default. Content: %s",profile_id, default_profile)
 
 
 

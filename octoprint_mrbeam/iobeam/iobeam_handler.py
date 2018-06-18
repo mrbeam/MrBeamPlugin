@@ -607,8 +607,8 @@ class IoBeamHandler(object):
 		elif action == 'debug':
 			self._logger.info("iobeam debug message: '%s'", message)
 		else:
-			self._logger.debug("_handle_iobeam_message(): Received unknown message for device 'iobeam'. NOT counting as error. Message: %s", message)
-			return 0
+			self._logger.info("iobeam message: '%s'", message)
+		return 0
 
 	def _handle_error_message(self, message, token):
 		action = token[0] if len(token) > 0 else None

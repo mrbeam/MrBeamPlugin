@@ -288,6 +288,41 @@ svg#area_preview {
     box-shadow: 2px 2px 4px #383e42;
 }
 
+#material_type #material_burger_menu {
+	display: none;
+}
+#material_type.active #material_burger_menu {
+	display: block;
+}
+
+
+#material_type.manage a#materials_manage,
+#material_type a#materials_manage_done { display: none; }
+#material_type a#materials_manage,
+#material_type.manage a#materials_manage_done { display: inline; }
+
+#materials_manage_done { transition: text-shadow 0.3s ease-in-out 0s; }
+#materials_manage_done.flash {
+	text-shadow: 0px 0px 10px #e25303;
+}
+
+#material_type ul#material_list li span.delete_me:hover { color:#e25303; }
+#material_type ul#material_list li span.delete_me { display: none; cursor: pointer; }
+#material_type.manage ul#material_list li.custom span.delete_me { display: block; }
+
+li.material_entry span.delete_me {
+    position: absolute;
+    bottom: 0;
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+    padding: 13px 17px;
+    border-radius: 25% 0 0 0;
+    right: 0;
+    top: auto;
+    left: auto;
+}
+
 .job_row {
     margin-bottom: 1em;
     border-bottom: 1px solid #999;
@@ -470,7 +505,8 @@ svg#area_preview rect
 	position:absolute;
 	left: .3em;
 	bottom: .4em;
-	color: #777;
+    color: #e25303;
+	z-index: 9999;
 }
 
 .freeTransformHandle{
@@ -552,7 +588,6 @@ li.material_entry span {
 
 #material_row {
 	width: 100%;
-	overflow-x: hidden;
 	position: relative;
 	transition: height .3s ease-in-out;
 	margin-bottom: 1em;
@@ -572,16 +607,15 @@ li.material_entry span {
     margin: 0;
 }
 
-#material_type, #material_color, #material_thickness {
-	width: 20%;
+#material_type, #material_color, #material_thickness, #save_material_flyin {
+	width: calc(200px + 2em);
 	display: inline-block;
 	box-sizing: border-box;
-	/*position: absolute;*/
+	vertical-align: top;
 	transition: width .1s ease-in;
 	background-color: #fff;
 }
 #material_type.active { width: 100%; }
-#material_type, #material_color, #material_thickness  { width: calc(200px + 2em); }
 #material_color.active { width: calc(100% - 200px - 3em); }
 #material_thickness.active { width: calc(100% - 2 * (200px + 6em)); }
 
@@ -592,6 +626,20 @@ li.material_entry span {
     background-size: cover, contain;
     border-top: 1px solid #e25303;
 }
+
+#save_material_flyin {padding-top:1em;}
+
+#save_material_flyin form { margin:0; }
+#save_material_flyin .control-group { margin-bottom:.5em; }
+#save_material_flyin label.control-label { width:120px; }
+#save_material_flyin .controls { margin-left:130px; }
+
+#custom_mat_col {
+	width: 3em;
+	height: 3em;
+}
+
+#custom_mat_th { width: 3em; margin-right: .5em; }
 
 .not_possible_on_this_material {
 	color:#999;

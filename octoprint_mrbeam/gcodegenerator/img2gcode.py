@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 """
 img2gcode.py
 functions for digesting paths into a simple list structure
@@ -27,6 +29,8 @@ from PIL import ImageEnhance
 import base64
 import cStringIO
 import os.path
+import time
+from img_separator import ImageSeparator
 
 class ImageProcessor():
 
@@ -42,6 +46,7 @@ class ImageProcessor():
 	              speed_black = 500,
 	              speed_white = 3000,
 	              dithering = False,
+	              separation = True,
 	              pierce_time = 0,
 	              material = None):
 		self._log = logging.getLogger("octoprint.plugins.mrbeam.img2gcode")
@@ -62,12 +67,13 @@ class ImageProcessor():
 		self.contrastFactor = float(contrast) if contrast else 0.0
 		self.sharpeningFactor = float(sharpening) if sharpening else 0.0
 		self.dithering = (dithering == True or dithering == "True")
+		self.separation = (separation == True or separation == "True")
 
 		self.debugPreprocessing = False
-		self.debugPreprocessing = True
 
 		# checks if intensity settings are inverted eg. anodized aluminum
 		self.is_inverted = self.intensity_white > self.intensity_black
+		self.is_first_pixel = True
 
 		self._lookup_intensity = {}
 		self._lookup_feedrate = {}
@@ -88,52 +94,67 @@ class ImageProcessor():
 		comment += "; contrastFactor = {:.2f}\n".format(self.contrastFactor)
 		comment += "; sharpeningFactor = {:.2f}\n".format(self.sharpeningFactor)
 		comment += "; dithering = {}\n".format(self.dithering)
+		comment += "; separation = {}\n".format(self.separation)
 		return comment
 
-	def img_prepare(self, orig_img, w,h):
+	def img_prepare(self, orig_img, w_mm, h_mm):
 		"""
-		1.pixel reduction (w,h)
-		2.greyscale
-		3.contrast / curves (material)
+		1. pixel reduction (w,h)
+		2. remove transparency
+		3. contrast
+		4. greyscale
+		5. sharpen
+		(? .contrast / curves (material))
+		6. dithering
+		7. separation (optimizes duration)
 		"""
 
-		if(h < 0):
-			ratio = (orig_img.size[1]/float(orig_img.size[0]))
-			h = w * ratio
+		start = time.time()
+		orig_w, orig_h = orig_img.size
+		if(h_mm < 0):
+			ratio = orig_w / float(orig_h)
+			h_mm = w_mm * ratio
 
-		dest_wpx = int(w/self.beam)
-		dest_hpx = int(h/self.beam)
+		dest_wpx = int(w_mm/self.beam)
+		dest_hpx = int(h_mm/self.beam)
 
-		self._log.info("scaling to {}x{}".format(dest_wpx, dest_hpx))
+		self._log.info("scaling {}x{} to {}x{}".format(orig_w, orig_h, dest_wpx, dest_hpx))
 
-		# scale
+		# 1. scale
 		img = orig_img.resize((dest_wpx, dest_hpx))
 		#img = orig_img.resize((dest_wpx, dest_hpx), Image.ANTIALIAS)
 
+		self._log.debug("scaling took {} seconds".format(time.time()-start))
 		if(self.debugPreprocessing):
 			img.save("/tmp/img2gcode_1_resized.png")
 
-		# remove transparency
+		# 2. remove transparency
+		start = time.time()
 		if (not self.is_inverted) and (img.mode == 'RGBA'):
 			whitebg = Image.new('RGBA', (dest_wpx, dest_hpx), "white")
 			img = Image.alpha_composite(whitebg, img)
 
-		if(self.debugPreprocessing):
-			img.save("/tmp/img2gcode_2_whitebg.png")
+			self._log.debug("transparency removal took {} seconds".format(time.time()-start))
+			if(self.debugPreprocessing):
+				img.save("/tmp/img2gcode_2_whitebg.png")
 
 
 		# mirror?
 		#img = img.transpose(Image.FLIP_LEFT_RIGHT)
 
-		# contrast
-		if(self.dithering == False and self.contrastFactor > 1.0):
+		# 3. contrast
+		start = time.time()
+		if(self.contrastFactor > 1.0):
 			contrast = ImageEnhance.Contrast(img)
 			img = contrast.enhance(self.contrastFactor) # 1.0 returns original
+			self._log.debug("contrast enhancement took {} seconds".format(time.time()-start))
 			if(self.debugPreprocessing):
 				img.save("/tmp/img2gcode_3_contrast.png")
 
 		# greyscale
+		start = time.time()
 		img = img.convert('L')
+		self._log.debug("grayscale conversion took {} seconds".format(time.time()-start))
 		if(self.debugPreprocessing):
 			img.save("/tmp/img2gcode_4_greyscale.png")
 
@@ -143,23 +164,60 @@ class ImageProcessor():
 			pass
 
 		# sharpness (factor: 1 => unchanged , 25 => almost b/w)
-		if(self.dithering == False and self.sharpeningFactor > 1.0):
+		start = time.time()
+		if(self.sharpeningFactor > 1.0):
 			sharpness = ImageEnhance.Sharpness(img)
 			img = sharpness.enhance(self.sharpeningFactor)
+			self._log.debug("sharpening took {} seconds".format(time.time()-start))
 			if(self.debugPreprocessing):
 				img.save("/tmp/img2gcode_5_sharpened.png")
 
 		# dithering
 		if(self.dithering == True):
+			start = time.time()
 			img = img.convert('1')
+			self._log.debug("dithering took {} seconds".format(time.time()-start))
 			if(self.debugPreprocessing):
 				img.save("/tmp/img2gcode_6_dithered.png")
 
+		# split image at white pixels
+		separator = ImageSeparator()
 
-		# return pixel array
-		return img
+		# 1. split by contour
+		start = time.time()
+		contour_parts = separator.separate_contours(img, threshold=self.ignore_brighter_than+1)
+		self._log.debug("contour separation took {} seconds".format(time.time()-start))
+		self._log.debug("separated into {} contours".format(len(contour_parts)))
 
-	def generate_gcode(self, img, x,y,w,h, file_id):
+		parts = []
+		start = time.time()
+		
+		if(self.separation == True):
+			for cp in contour_parts:
+				# 2. split contour by left-pixels-first method
+				img_data = cp['i']
+				off_x = cp['x']
+				off_y = cp['y']
+
+				tmp = separator.separate(img_data, threshold=self.ignore_brighter_than+1)
+				for p in tmp:
+					parts.append({'i': p['i'], 'x': off_x + p['x'], 'y': off_y + p['y']})
+
+				self._log.debug("left-pixels-first separation took {} seconds".format(time.time()-start))
+				self._log.debug("separated into {} parts".format(len(parts)))
+		else:
+			parts.extend(contour_parts)
+				
+		if(self.debugPreprocessing):
+			i = 0
+			for p in parts:
+				img_data = p['i']
+				img_data.save("/tmp/img2gcode_7_part_{:0>3}_@{},{}.png".format(i, p['x'], p['y']))
+				i += 1
+		return parts
+
+
+	def generate_gcode(self, imgArray, x,y,w,h, file_id):
 		settings_comment = self.get_settings_as_comment(x,y,w,h, "")
 		self._log.info("img2gcode conversion started:\n%s" % settings_comment)
 		x += self.beam/2.0
@@ -169,39 +227,47 @@ class ImageProcessor():
 		self._append_gcode('F' + str(self.feedrate_white) + '\n') # set an initial feedrate
 		self._append_gcode('M3S0\n') # enable laser
 		last_y = -1
+		self.is_first_pixel = True
 
-		(width, height) = img.size
+		for img_data in imgArray:
+			img = img_data['i']
+			x_off = img_data['x']*self.beam + x # mm here, img_data['x'] is in pixels
+			y_off = img_data['y']*self.beam + y # same for the y axis
+			
+			(width, height) = img.size
 
-		# iterate line by line
-		pix = img.load()
-		for row in range(height-1,-1,-1):
-			row_pos_y = y + (height - row) * self.beam # inverse y-coordinate as images have 0x0 at left top, mr beam at left bottom
+			# iterate line by line
+			pix = img.load()
+			for row in range(height-1,-1,-1):
+				row_pos_y = y_off + (height - row) * self.beam # inverse y-coordinate as images have 0x0 at left top, mr beam at left bottom
 
-			# back and forth
-			pixelrange = range(0, width) if(direction_positive) else range(width-1, -1, -1)
+				# back and forth
+				pixelrange = range(0, width) if(direction_positive) else range(width-1, -1, -1)
 
-			lastBrightness = self.ignore_brighter_than + 1
-			for i in pixelrange:
-				px = pix[i, row]
-				#brightness = self.get_alpha_composition(px)
-				brightness = px
-				if(brightness != lastBrightness ):
-					if(i != pixelrange[0]): # don't move after new line
-						xpos = x + self.beam * (i-1 if (direction_positive) else (i)) # calculate position; backward lines need to be shifted by +1 beam diameter
-						self._append_gcode(self.get_gcode_for_equal_pixels(lastBrightness, xpos, row_pos_y, last_y))
-						last_y = row_pos_y
-				else:
-					pass # combine equal intensity values to one move
+				lastBrightness = self.ignore_brighter_than + 1
+				for i in pixelrange:
+					px = pix[i, row]
+					#brightness = self.get_alpha_composition(px)
+					brightness = px
+					if(brightness != lastBrightness ):
+						if(i != pixelrange[0]): # don't move after new line
+							xpos = x_off + self.beam * (i-1 if (direction_positive) else (i)) # calculate position; backward lines need to be shifted by +1 beam diameter
+							self._append_gcode(self.get_gcode_for_equal_pixels(lastBrightness, xpos, row_pos_y, last_y))
+							last_y = row_pos_y
+					else:
+						pass # combine equal intensity values to one move
 
-				lastBrightness = brightness
+					lastBrightness = brightness
 
-			if(not self._ignore_pixel_brightness(brightness) and self.get_intensity(brightness) > 0): # finish non-white line
-				end_of_line = x + pixelrange[-1] * self.beam
-				self._append_gcode(self.get_gcode_for_equal_pixels(brightness, end_of_line, row_pos_y, last_y))
-				last_y = row_pos_y
+				if(not self._ignore_pixel_brightness(brightness) and self.get_intensity(brightness) > 0): # finish non-white line
+					end_of_line = x_off + pixelrange[-1] * self.beam
+					self._append_gcode(self.get_gcode_for_equal_pixels(brightness, end_of_line, row_pos_y, last_y))
+					last_y = row_pos_y
 
-			# flip direction after each line to go back and forth
-			direction_positive = not direction_positive
+				# flip direction after each line to go back and forth
+				direction_positive = not direction_positive
+
+			self._append_gcode(";EndPart\nM3S0\n") 
 
 		self._append_gcode(";EndImage\nM5\n") # important for gcode preview!
 		return self._output_gcode
@@ -215,7 +281,7 @@ class ImageProcessor():
 
 	def get_gcode_for_equal_pixels(self, brightness, target_x, target_y, last_y, comment=""):
 		# fast skipping whitespace
-		if(self._ignore_pixel_brightness(brightness) ):
+		if self._ignore_pixel_brightness(brightness):
 			y_gcode = "Y"+self.twodigits(target_y) if target_y != last_y else ""
 			gcode = "G0X" + self.twodigits(target_x) + y_gcode + "S0" + comment +"\n"
 
@@ -236,16 +302,22 @@ class ImageProcessor():
 		else:
 			intensity = self.get_intensity(brightness)
 			feedrate = self.get_feedrate(brightness)
-			gcode = "G0Y"+self.twodigits(target_y)+"S0\n" if target_y != last_y else ""
+
+			gcode = ''
+			if self.is_first_pixel:
+				gcode = "G0X" + self.twodigits(target_x) + "Y" + self.twodigits(target_y) + "S0\n"
+			elif target_y != last_y:
+				gcode = "G0Y" + self.twodigits(target_y) + "S0\n"
 			gcode += "G1X" + self.twodigits(target_x) + "F"+str(feedrate) + "S"+str(intensity)+ comment +"\n" # move until next intensity
 
+		self.is_first_pixel = False
 		return gcode
 
 	def dataUrl_to_gcode(self, dataUrl, w,h, x,y, file_id):
 		img = self._dataurl_to_img(dataUrl)
 
-		pixArray = self.img_prepare(img, w, h)
-		gcode = self.generate_gcode(pixArray, x, y, w, h, dataUrl)
+		imgArray = self.img_prepare(img, w, h)
+		gcode = self.generate_gcode(imgArray, x, y, w, h, dataUrl)
 		return gcode
 
 	def _dataurl_to_img(self, dataUrl):
@@ -267,15 +339,15 @@ class ImageProcessor():
 		import urllib, cStringIO
 		file = cStringIO.StringIO(urllib.urlopen(url).read())
 		img = Image.open(file)
-		pixArray = self.img_prepare(img, w, h)
-		gcode = self.generate_gcode(pixArray, x, y, w, h, file_id)
+		imgArray = self.img_prepare(img, w, h)
+		gcode = self.generate_gcode(imgArray, x, y, w, h, file_id)
 		return gcode
 
 	# x,y are the lowerLeft of the image
 	def img_to_gcode(self, path, w,h, x,y, file_id):
 		img = Image.open(path)
-		pixArray = self.img_prepare(img, w, h)
-		gcode = self.generate_gcode(pixArray, x, y, w, h, file_id)
+		imgArray = self.img_prepare(img, w, h)
+		gcode = self.generate_gcode(imgArray, x, y, w, h, file_id)
 		return gcode
 
 	def twodigits(self, fl):
@@ -381,6 +453,9 @@ if __name__ == "__main__":
 		ip = ImageProcessor(fh, options.contrast, options.sharpening, options.beam_diameter,
 		options.intensity_black, options.intensity_white, options.speed_black, options.speed_white,
 		boolDither, options.pierce_time)
+		
+		ip.debugProcessing = True
+		
 		path = args[0]
 		ip.img_to_gcode(path, options.width, options.height, options.x, options.y, path)
 		#ip.dataUrl_to_gcode(base64img, options.width, options.height, options.x, options.y)

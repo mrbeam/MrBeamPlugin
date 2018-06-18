@@ -1,6 +1,19 @@
 /* global snap, ko, $, Snap, API_BASEURL, _, CONFIG_WEBCAM_STREAM, ADDITIONAL_VIEWMODELS, mina */
 
 MRBEAM_PX2MM_FACTOR_WITH_ZOOM = 1; // global available in this viewmodel and in snap plugins at the same time.
+MRBEAM_DEBUG_RENDERING = false; 
+if(MRBEAM_DEBUG_RENDERING){
+	function debugBase64(base64URL, target=""){
+		var dbg_link = "<a target='_blank' href='"+base64URL+"'>Right click -> Open in new tab</a>";
+			new PNotify({
+				title: "render debug output " + target,
+				text: dbg_link,
+				type: "warn",
+				hide: false
+			});
+		}
+}
+
 
 $(function(){
 
@@ -1376,6 +1389,7 @@ $(function(){
 		};
 
 		self.draw_coord_grid = function(){
+			if(snap === null) return;
 			var grid = snap.select('#coordGrid');
 			var w = self.workingAreaWidthMM();
 			var h = self.workingAreaHeightMM();
@@ -1777,6 +1791,10 @@ $(function(){
 				}
 
 				var cb = function(result) {
+					if (MRBEAM_DEBUG_RENDERING) {
+						debugBase64(result, 'png_debug');
+					}
+
 					if(fillings.length > 0){
 
 						// fill rendering replaces all
@@ -1795,6 +1813,14 @@ $(function(){
 					self._cleanup_render_mess();
 				};
 
+				if(MRBEAM_DEBUG_RENDERING){
+//					var base64String = btoa(tmpSvg.innerSVG());
+					var raw = tmpSvg.innerSVG();
+					var svgString = raw.substr(raw.indexOf('<svg'));
+					var dataUrl = 'data:image/svg+xml;base64, ' + btoa(svgString);
+					debugBase64(dataUrl, 'svg_debug');
+				}
+				console.log("Rendering " + fillings.length + " filled elements.");
 				tmpSvg.renderPNG(wMM, hMM, pxPerMM, cb);
 			});
 		};
