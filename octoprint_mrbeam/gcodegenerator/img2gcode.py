@@ -167,7 +167,7 @@ class ImageProcessor():
 			if(self.debugPreprocessing):
 				img.save("/tmp/img2gcode_3_contrast.png")
 
-		# greyscale
+		# 4. greyscale
 		start = time.time()
 		img = img.convert('L')
 		self._log.debug("grayscale conversion took {} seconds".format(time.time()-start))
@@ -179,7 +179,7 @@ class ImageProcessor():
 			# TODO
 			pass
 
-		# sharpness (factor: 1 => unchanged , 25 => almost b/w)
+		# 5. sharpness (factor: 1 => unchanged , 25 => almost b/w)
 		start = time.time()
 		if(self.sharpeningFactor > 1.0):
 			sharpness = ImageEnhance.Sharpness(img)
@@ -188,7 +188,7 @@ class ImageProcessor():
 			if(self.debugPreprocessing):
 				img.save("/tmp/img2gcode_5_sharpened.png")
 
-		# dithering
+		# 6. dithering
 		if(self.dithering == True):
 			start = time.time()
 			img = img.convert('1')
@@ -196,10 +196,10 @@ class ImageProcessor():
 			if(self.debugPreprocessing):
 				img.save("/tmp/img2gcode_6_dithered.png")
 
-		# split image at white pixels
+		# 7. split image at white pixels
 		separator = ImageSeparator()
 
-		# 1. split by contour
+		# 7.1. split by contour
 		start = time.time()
 		contour_parts = separator.separate_contours(img, threshold=self.ignore_brighter_than+1)
 		self._log.debug("contour separation took {} seconds".format(time.time()-start))
@@ -210,9 +210,10 @@ class ImageProcessor():
 		parts = []
 		start = time.time()
 		
+		
 		if(self.separation == True):
 			for cp in contour_parts:
-				# 2. split contour by left-pixels-first method
+				# 7.2. split contour by left-pixels-first method
 				img_data = cp['i']
 				off_x = cp['x']
 				off_y = cp['y']

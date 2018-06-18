@@ -104,7 +104,7 @@ class ImageSeparator():
 		tmp = None	
 		for row in range(0, height):
 			x = self._find_first_gap_in_row(pxArray, width, height, start_list[row], row, threshold=threshold)
-			if(x < width):
+			if(x <= width):
 				if(tmp == None): # new separated image
 					tmp = Image.new("L", (width, height), "white")
 				box = (start_list[row], row, x, row+1)
