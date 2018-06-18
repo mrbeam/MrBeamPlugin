@@ -22,7 +22,7 @@ class UsageHandler(object):
 		self._event_bus = plugin._event_bus
 		self._settings = plugin._settings
 		self._plugin_version = plugin._plugin_version
-		self._device_serial = plugin._serial
+		self._device_serial = plugin.getSerialNum()
 
 		self.start_time_total = -1
 		self.start_time_laserhead = -1
