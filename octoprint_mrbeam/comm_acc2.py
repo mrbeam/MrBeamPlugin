@@ -36,8 +36,8 @@ class MachineCom(object):
 	GRBL_VERSION_20170919_22270fa = '0.9g_22270fa'
 	GRBL_VERSION_20180223_61638c5 = '0.9g_20180223_61638c5'
 
-	GRBL_SETTINGS_READ_WINDOW = 3.0
-	GRBL_SETTINGS_READ_BLOCK  = GRBL_SETTINGS_READ_WINDOW + 0.1
+	GRBL_SETTINGS_READ_WINDOW =     10.0
+	GRBL_SETTINGS_CHECK_FREQUENCY = 0.5
 
 	STATE_NONE = 0
 	STATE_OPEN_SERIAL = 1
@@ -618,15 +618,12 @@ class MachineCom(object):
 		"""
 		This triggers a reload of GRBL settings and does a validation and correction afterwards.
 		"""
-		if time.time() - self._grbl_settings_correction_ts > self.GRBL_SETTINGS_READ_BLOCK:
+		if time.time() - self._grbl_settings_correction_ts > self.GRBL_SETTINGS_READ_WINDOW:
 			self._grbl_settings_correction_ts = time.time()
 			self._refresh_grbl_settings()
-			myThread = threading.Timer(self.GRBL_SETTINGS_READ_WINDOW, self._verify_and_correct_loaded_grbl_settings, kwargs=dict(retries=retries))
-			myThread.daemon = True
-			myThread.name = "CommAcc2_GrblSettings"
-			myThread.start()
+			self._verify_and_correct_loaded_grbl_settings(retries=retries, timeout=self.GRBL_SETTINGS_READ_WINDOW, force_thread=True)
 		else:
-			self._logger.warn("correct_grbl_settings() got called more than once withing %s s. Ignoring this call.", self.GRBL_SETTINGS_READ_BLOCK )
+			self._logger.warn("correct_grbl_settings() got called more than once withing %s s. Ignoring this call.", self.GRBL_SETTINGS_READ_WINDOW )
 
 	def _refresh_grbl_settings(self):
 		self._grbl_settings = dict()
@@ -639,54 +636,62 @@ class MachineCom(object):
 			log.append("${id}={val} ({comment})".format(id=id, val=data['value'], comment=data['comment']))
 		return "({count}) [{data}]".format(count=len(log), data=', '.join(log))
 
-	def _verify_and_correct_loaded_grbl_settings(self, retries=0):
-		tmp = time.time() - self._grbl_settings_correction_ts
-		if  tmp < self.GRBL_SETTINGS_READ_WINDOW and tmp > self.GRBL_SETTINGS_READ_BLOCK:
-			self._logger.warn("_verify_and_correct_loaded_grbl_settings() called %s s after correct_grbl_settings() but this is sketchy. Exactly %s s after that", tmp, self.GRBL_SETTINGS_READ_WINDOW)
-
+	def _verify_and_correct_loaded_grbl_settings(self, retries=0, timeout=0.0, force_thread=False):
 		settings_count = self._laserCutterProfile['grbl']['settings_count']
 		settings_expected = self._laserCutterProfile['grbl']['settings']
-		my_grbl_settings = self._grbl_settings.copy() # to avoid race conditions
+		self._logger.debug("GRBL Settings waiting... timeout: %s, settings count: %s", timeout, len(self._grbl_settings))
 
-		log = self._get_string_loaded_grbl_settings(settings=my_grbl_settings)
-
-		commands = []
-		if len(my_grbl_settings) != settings_count:
-			self._logger.error("GRBL Settings count incorrect!! %s settings but should be %s. Writing all settings to grbl.", len(my_grbl_settings), settings_count)
-			for id, value in sorted(settings_expected.iteritems()):
-				commands.append("${id}={val}".format(id=id, val=value))
+		if force_thread or (timeout > 0.0 and len(self._grbl_settings) < settings_count):
+			timeout = timeout - self.GRBL_SETTINGS_CHECK_FREQUENCY
+			myThread = threading.Timer(self.GRBL_SETTINGS_CHECK_FREQUENCY, self._verify_and_correct_loaded_grbl_settings, kwargs=dict(retries=retries, timeout=timeout))
+			myThread.daemon = True
+			myThread.name = "CommAcc2_GrblSettings"
+			myThread.start()
 		else:
-			for id, value in sorted(settings_expected.iteritems()):
-				if not id in my_grbl_settings:
-					self._logger.error("GRBL Settings $%s - Missing entry! Should be: %s", id, value)
-					commands.append("${id}={val}".format(id=id, val=value))
-				elif my_grbl_settings[id]['value'] != value:
-					self._logger.error("GRBL Settings $%s=%s (%s) - Incorrect value! Should be: %s",
-					                   id, my_grbl_settings[id]['value'], my_grbl_settings[id]['comment'], value)
-					commands.append("${id}={val}".format(id=id, val=value))
+			my_grbl_settings = self._grbl_settings.copy() # to avoid race conditions
 
-		if len(commands) > 0:
-			msg = "GRBL Settings - Verification: FAILED"
-			self._logger.warn(msg + " - " + log)
-			self._log(msg)
-			self._logger.warn("GRBL Settings correcting: %s values", len(commands), terminal_as_comm=True)
-			for c in commands:
-				self._logger.warn("GRBL Settings correcting value: %s", c, terminal_as_comm=True)
-				# flush before and after to make sure grbl can really handle the settings command
-				self.sendCommand(self.COMMAND_FLUSH)
-				self.sendCommand(c)
-				self.sendCommand(self.COMMAND_FLUSH)
-			if retries > 0:
-				retries -= 1
-				self._logger.warn("GRBL Settings corrections done. Restarting verification...", terminal_as_comm=True)
-				self.correct_grbl_settings(retries=retries)
+			log = self._get_string_loaded_grbl_settings(settings=my_grbl_settings)
+
+			commands = []
+			if len(my_grbl_settings) != settings_count:
+				self._logger.error("GRBL Settings count incorrect!! %s settings but should be %s. Writing all settings to grbl.", len(my_grbl_settings), settings_count)
+				for id, value in sorted(settings_expected.iteritems()):
+					commands.append("${id}={val}".format(id=id, val=value))
 			else:
-				self._logger.warn("GRBL Settings corrections done. No more retries.", terminal_as_comm=True)
+				for id, value in sorted(settings_expected.iteritems()):
+					if not id in my_grbl_settings:
+						self._logger.error("GRBL Settings $%s - Missing entry! Should be: %s", id, value)
+						commands.append("${id}={val}".format(id=id, val=value))
+					elif my_grbl_settings[id]['value'] != value:
+						self._logger.error("GRBL Settings $%s=%s (%s) - Incorrect value! Should be: %s",
+						                   id, my_grbl_settings[id]['value'], my_grbl_settings[id]['comment'], value)
+						commands.append("${id}={val}".format(id=id, val=value))
 
-		else:
-			msg = "GRBL Settings - Verification: OK"
-			self._logger.info(msg + " - " + log)
-			self._log(msg)
+			if len(commands) > 0:
+				msg = "GRBL Settings - Verification: FAILED"
+				self._logger.warn(msg + " - " + log)
+				self._log(msg)
+				self._logger.warn("GRBL Settings correcting: %s values", len(commands), terminal_as_comm=True)
+				for c in commands:
+					self._logger.warn("GRBL Settings correcting value: %s", c, terminal_as_comm=True)
+					# flush before and after to make sure grbl can really handle the settings command
+					self.sendCommand(self.COMMAND_FLUSH)
+					self.sendCommand(c)
+					self.sendCommand(self.COMMAND_FLUSH)
+				if retries > 0:
+					retries -= 1
+					wait_time = 2.0
+					self._logger.warn("GRBL Settings corrections done. Restarting verification in %s s", wait_time, terminal_as_comm=True)
+					time.sleep(wait_time)
+					self._logger.warn("GRBL Settings Restarting verification...", terminal_as_comm=True)
+					self.correct_grbl_settings(retries=retries)
+				else:
+					self._logger.warn("GRBL Settings corrections done. No more retries.", terminal_as_comm=True)
+
+			else:
+				msg = "GRBL Settings - Verification: OK"
+				self._logger.info(msg + " - " + log)
+				self._log(msg)
 
 	def _process_command_phase(self, phase, command, command_type=None, gcode=None):
 		if phase not in ("queuing", "queued", "sending", "sent"):
