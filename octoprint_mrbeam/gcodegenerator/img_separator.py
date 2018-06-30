@@ -111,8 +111,6 @@ class ImageSeparator():
 				region = img.crop(box)
 				tmp.paste(region, box)
 			
-			# TODO bug: does not work with non-separatable images like photos.							
-										
 			start_list[row] = x
 		return (start_list, tmp)
 
