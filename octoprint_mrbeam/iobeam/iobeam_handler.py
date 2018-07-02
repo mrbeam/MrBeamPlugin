@@ -470,7 +470,8 @@ class IoBeamHandler(object):
 		elif lock_id is not None and lock_state == self.MESSAGE_ACTION_INTERLOCK_CLOSED:
 			self._interlocks.pop(lock_id, None)
 		elif self.MESSAGE_ERROR in message:
-			raise Exception("iobeam received InterLock error: {}".format(message))
+			self._logger.error("iobeam received InterLock error: {}".format(message))
+			return 1
 		else:
 			return self._handle_invalid_message(message)
 
