@@ -210,6 +210,10 @@ class ImageProcessor():
 		parts = []
 		start = time.time()
 		
+		if(self.debugPreprocessing):
+			for i,p in enumerate(contour_parts):
+				img_data = p['i']
+				img_data.save("/tmp/img2gcode_7_contourpart_{:0>3}_@{},{}.png".format(i, p['x'], p['y']))
 		
 		if(self.separation == True):
 			for cp in contour_parts:
@@ -228,11 +232,9 @@ class ImageProcessor():
 			parts.extend(contour_parts)
 				
 		if(self.debugPreprocessing):
-			i = 0
-			for p in parts:
+			for i,p in enumerate(parts):
 				img_data = p['i']
 				img_data.save("/tmp/img2gcode_7_part_{:0>3}_@{},{}.png".format(i, p['x'], p['y']))
-				i += 1
 		return parts
 
 
