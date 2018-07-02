@@ -411,7 +411,7 @@ $(function(){
 
 		self.removeGcode = function(file){
 			var previewId = file.previewId;
-			snap.select('#' + previewId).remove();
+			snap.selectAll('#' + previewId).remove();
 			self.placedDesigns.remove(file);
 		};
 
