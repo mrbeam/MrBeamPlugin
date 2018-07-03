@@ -25,6 +25,8 @@ def get_update_information(self):
 	tier = self._settings.get(["dev", "software_tier"])
 	_logger(self).info("SoftwareUpdate using tier: %s", tier)
 
+	config_octoprint(self, tier)
+
 	if not tier in [SW_UPDATE_TIER_NO_UPDATE]:
 
 		set_info_mrbeam_plugin(self, tier)
@@ -39,6 +41,20 @@ def get_update_information(self):
 
 	# _logger(self).debug("MrBeam Plugin provides this config (might be overridden by settings!):\n%s", yaml.dump(sw_update_config, width=50000).strip())
 	return sw_update_config
+
+
+def config_octoprint(self, tier):
+	op_swu_keys = ['plugins', 'softwareupdate', 'checks', 'octoprint']
+
+	self._settings.global_set(op_swu_keys + ['checkout_folder'], '/home/pi/OctoPrint')
+	self._settings.global_set(op_swu_keys + ['pip'], 'https://github.com/mrbeam/OctoPrint/archive/{target_version}.zip')
+	self._settings.global_set(op_swu_keys + ['user'], 'mrbeam')
+	self._settings.global_set(op_swu_keys + ['stable_branch', 'branch'], 'mrbeam2-stable')
+
+	if tier in [SW_UPDATE_TIER_DEV]:
+		self._settings.global_set_boolean(op_swu_keys + ['prerelease'], True)
+	else:
+		self._settings.global_set_boolean(op_swu_keys + ['prerelease'], False)
 
 
 def set_info_mrbeam_plugin(self, tier):
