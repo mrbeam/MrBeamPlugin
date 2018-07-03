@@ -274,6 +274,10 @@ $(function(){
 			return colFound;
 		};
 
+		self._getHexColorStr = function(inputColor){
+			var c = new Color(inputColor);
+			return c.getHex();
+		};
 
 		self.trigger_resize = function(){
 			if(typeof(snap) !== 'undefined') self.abortFreeTransforms();
@@ -531,6 +535,25 @@ $(function(){
 				newSvg.bake(); // remove transforms
 			}
 			newSvg.selectAll('path').attr({strokeWidth: '0.8', class:'vector_outline'});
+			// replace all fancy color definitions (rgba(...), hsl(...), 'pink', ...) with hex values
+			newSvg.selectAll('*[stroke]:not(#bbox)').forEach(function (el) {
+				var colStr = el.attr().stroke;
+				// handle stroke="" default value (#000000)
+				if (typeof(colStr) !== 'undefined' && colStr !== 'none') {
+					var colHex = self._getHexColorStr(colStr);
+					el.attr('stroke', colHex);
+				}
+			});
+			newSvg.selectAll('*[fill]:not(#bbox)').forEach(function (el) {
+				var colStr = el.attr().fill;
+				console.log("fill", colStr);
+				// handle fill="" default value (#000000)
+				if (typeof(colStr) !== 'undefined' && colStr !== 'none') {
+					var colHex = self._getHexColorStr(colStr);
+					el.attr('fill', colHex);
+				}
+			});
+
 			newSvg.attr({
 				id: id,
 				'mb:id':id,
