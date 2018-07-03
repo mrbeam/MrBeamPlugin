@@ -24,6 +24,8 @@ $(function(){
 
 		self.dialog_state = ko.observable('color_assignment');
 
+		self.user_materials_enabled = false;
+
 		// expert settings
 		self.showHints = ko.observable(false);
 		self.showExpertSettings = ko.observable(false);
@@ -381,26 +383,26 @@ $(function(){
 				}
 			},
 
-			custom_material: {
-				name: 'Custom',
-				img: 'custom.jpg',
-				description: 'Just a Dummy material',
-				hints: 'Figuring out material settings works best from low to high intensity and fast to slow movement.',
-				safety_notes: 'Experimenting with custom material settings is your responsibility.',
-				laser_type: 'MrBeamII-1.0',
-				colors: {
-					'd4b26f': {
-						engrave: {eng_i:[0,20], eng_f:[2000,350], pierceTime: 0, dithering: false },
-						cut: [
-							{thicknessMM: 1, cut_i:80, cut_f:700, cut_p:2},
-							{thicknessMM: 2, cut_i:100, cut_f:700, cut_p:1},
-							{thicknessMM: 3, cut_i:100, cut_f:700, cut_p:2},
-							{thicknessMM: 4, cut_i:100, cut_f:600, cut_p:3},
-							{thicknessMM: 5, cut_i:100, cut_f:300, cut_p:3}
-						]
-					}
-				}
-			}
+//			custom_material: {
+//				name: 'Custom',
+//				img: 'custom.jpg',
+//				description: 'Just a Dummy material',
+//				hints: 'Figuring out material settings works best from low to high intensity and fast to slow movement.',
+//				safety_notes: 'Experimenting with custom material settings is your responsibility.',
+//				laser_type: 'MrBeamII-1.0',
+//				colors: {
+//					'd4b26f': {
+//						engrave: {eng_i:[0,20], eng_f:[2000,350], pierceTime: 0, dithering: false },
+//						cut: [
+//							{thicknessMM: 1, cut_i:80, cut_f:700, cut_p:2},
+//							{thicknessMM: 2, cut_i:100, cut_f:700, cut_p:1},
+//							{thicknessMM: 3, cut_i:100, cut_f:700, cut_p:2},
+//							{thicknessMM: 4, cut_i:100, cut_f:600, cut_p:3},
+//							{thicknessMM: 5, cut_i:100, cut_f:300, cut_p:3}
+//						]
+//					}
+//				}
+//			}
 		};
 		self.engrave_only_thickness = {thicknessMM: -1, cut_i:'', cut_f:'', cut_p: 1};
 		self.no_engraving = {eng_i:['',''], eng_f:['',''], pierceTime: 0, dithering: false };
@@ -441,23 +443,27 @@ $(function(){
 		 });
 
 		self.flag_customized_material = function(){
-			var custom_prefix = 'My ';
-			var suggested_name = self.selected_material().name;
-			if(!suggested_name.startsWith(custom_prefix)){
-				suggested_name = custom_prefix + suggested_name;
+		    if (self.user_materials_enabled){
+                var custom_prefix = 'My ';
+                var suggested_name = self.selected_material().name;
+                if(!suggested_name.startsWith(custom_prefix)){
+                    suggested_name = custom_prefix + suggested_name;
+                }
+                self.save_custom_material_name(suggested_name);
+                self.save_custom_material_color('#'+self.selected_material_color());
+                var t = self.selected_material_thickness();
+                var tmp = t !== null ? t.thicknessMM : 1;
+                self.save_custom_material_thickness(tmp);
+                self.customized_material(true);
 			}
-			self.save_custom_material_name(suggested_name);
-			self.save_custom_material_color('#'+self.selected_material_color());
-			var t = self.selected_material_thickness();
-			var tmp = t !== null ? t.thicknessMM : 1;
-			self.save_custom_material_thickness(tmp);
-			self.customized_material(true);
 		};
 
 		self.reset_material_settings = function(){
-			self.apply_engraving_proposal();
-			self.apply_vector_proposal();
-			self.customized_material(false);
+            if (self.user_materials_enabled){
+                self.apply_engraving_proposal();
+                self.apply_vector_proposal();
+                self.customized_material(false);
+            }
 		};
 
 		self.delete_material = function(m, event){
@@ -735,7 +741,7 @@ $(function(){
 			$('.job_row .used_color:not(#cd_engraving)').addClass('not-used');
 			for (var idx = 0; idx < cols.length; idx++) {
 				var c = cols[idx];
-				var selection = $('#cd_color_'+c.hex.substr(1));
+				var selection = $('#cd_color_'+c.hex.substr(1)); // crashes on color definitions like 'rgb(0,0,0)' 
 				var exists = selection.length > 0;
 				if(! exists){
 					var drop_zone = $('#first_job .color_drop_zone');
@@ -1281,13 +1287,19 @@ $(function(){
 
 		self.onStartupComplete = function(){
 			// fill custom materials
-			OctoPrint.simpleApiCommand("mrbeam", "custom_materials", {})
-                .done(function(response){
-					self._update_custom_materials(response.custom_materials);
-				})
-                .fail(function(){
-					console.error("unable to fetch custom materials.");
-				});
+			self.user_materials_enabled = self.settings.settings.plugins.mrbeam.features.custom_materials();
+			if (self.user_materials_enabled){
+                OctoPrint.simpleApiCommand("mrbeam", "custom_materials", {})
+                    .done(function(response){
+                        self._update_custom_materials(response.custom_materials);
+                    })
+                    .fail(function(){
+                        console.error("unable to fetch custom materials.");
+                    });
+            } else {
+                material_burger_menu
+                $('#material_burger_menu').hide()
+            }
 		};
 
 		self.onSlicingProgress = function(slicer, model_path, machinecode_path, progress){

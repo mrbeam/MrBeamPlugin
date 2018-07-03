@@ -254,6 +254,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				small_paths_first = True,
 				clip_working_area = True # https://github.com/mrbeam/MrBeamPlugin/issues/134
 			),
+			features = dict(
+				custom_materials = False
+			)
 		)
 
 	def on_settings_load(self):
@@ -276,7 +279,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				small_paths_first = self._settings.get(['gcode_nextgen', 'small_paths_first']),
 				clip_working_area = self._settings.get(['gcode_nextgen', 'clip_working_area'])
 			),
-			software_update_branches = self.get_update_branch_info()
+			software_update_branches = self.get_update_branch_info(),
+			features=dict(
+				custom_materials = self._settings.get(['features', 'custom_materials'])
+			)
 		)
 
 	def on_settings_save(self, data):
@@ -296,6 +302,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self._logger.info("Disabling VORLON per user request.", terminal=True)
 		if "gcode_nextgen" in data and isinstance(data['gcode_nextgen'], collections.Iterable) and "clip_working_area" in data['gcode_nextgen']:
 			self._settings.set_boolean(["gcode_nextgen", "clip_working_area"], data['gcode_nextgen']['clip_working_area'])
+		if "features" in data and isinstance(data['features'], collections.Iterable):
+			if 'custom_materials' in data['features']:
+				self._settings.set_boolean(["features", "custom_materials"],data['features']['custom_materials'])
+
 
 	def on_shutdown(self):
 		self._logger.debug("Mr Beam Plugin stopping...")
@@ -318,7 +328,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/lib/photobooth_min.js", "js/svg_cleaner.js", "js/loginscreen_viewmodel.js",
 				"js/wizard_acl.js", "js/netconnectd_wrapper.js", "js/lasersaftey_viewmodel.js",
 				"js/ready_to_laser_viewmodel.js", "js/lib/screenfull.min.js","js/settings/camera_calibration.js",
-				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js", "js/laser_job_done_viewmodel.js", "js/loadingoverlay_viewmodel.js"],
+				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js", "js/lib/Color.js", "js/laser_job_done_viewmodel.js", "js/loadingoverlay_viewmodel.js"],
 			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css", "css/quicktext-fonts.css", "css/sliders.css"],
 			less=["less/mrbeam.less"]
 		)
