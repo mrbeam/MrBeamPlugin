@@ -1286,6 +1286,9 @@ $(function(){
 		};
 
 		self.getDocumentViewBoxMatrix = function(dim, vbox){
+			if(dim.width === null || dim.height === null){
+				return [[1,0,0],[0,1,0], [0,0,1]];
+			}
 			if(vbox !== null ){
 				var width = parseFloat(dim.width);
 				var height = parseFloat(dim.height);
