@@ -18,11 +18,13 @@ import os.path
 
 (cvMajor, cvMinor) = cv2.__version__.split('.')[:2]
 isCV2 = cvMajor == "2"
+isCV31 = cvMajor == "3" and cvMinor == "1"
 
 class ImageSeparator():
 
 	def __init__( self):
 		self.log = logging.getLogger(self.__class__.__name__)
+		self.debug = False
 
 	def separate(self, img, threshold=255, callback=None):
 		"""
@@ -61,24 +63,50 @@ class ImageSeparator():
 		monochrome = np.array(img, dtype=np.uint8) # should be grayscale already
 		maxValue = 255
 		th, filtered = cv2.threshold(monochrome, threshold-1, maxValue, cv2.THRESH_BINARY);
-		#cv2.imwrite("/tmp/separate_contours_1_threshold.png", filtered)
+		if(self.debug):
+			cv2.imwrite("/tmp/separate_contours_1_threshold.png", filtered)
+		
+		# RETR_EXTERNAL, RETR_LIST, RETR_TREE, RETR_CCOMP
+		# see https://docs.opencv.org/ref/master/d9/d8b/tutorial_py_contours_hierarchy.html
+		# TODO: switch to RETR_LIST and handle hierarchy recursively
 		if(isCV2):
-			contours, hierarchy = cv2.findContours(filtered.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+			contours, hierarchy = cv2.findContours(filtered.copy(), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+			max_w = w - 2
+			max_h = h - 2
+			self.log.info("OpenCV " + cv2.__version__ + " : filtering top level contours with img size cropped by one px on each side")
+	
 		else:
-			i, contours, hierarchy = cv2.findContours(filtered, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+			i, contours, hierarchy = cv2.findContours(filtered, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+			if(isCV31):
+				# bug in v 3.1: outermost contour is full picture cropped by 1 pixel on each side
+				max_w = w - 2
+				max_h = h - 2
+				self.log.info("OpenCV " + cv2.__version__ + " : filtering top level contours with img size cropped by one px on each side")
+			else:
+				max_w = w
+				max_h = h
 
 		parts = [] # array of dicts {'i': imgdata, 'x': x_offset, 'y': y_offset}
-		maxArea = (w-1)*(h-1)
+		
+		amount = len(contours)
+		self.log.info("Found {} contours.".format(amount))
+		if amount == 1:
+			self.log.info("No contour separation possible. Returning full image.")	
+			return {'i': img, 'x': 0, 'y':h}
+		
+		#print "hierarchy", hierarchy
 		for i in range(len(contours)):
+			# TODO  use!
+			#nextContourIdx, prevContourIdx, firstChildIdx, parentIdx = hierarchy[i]
 			area = cv2.contourArea(contours[i])
-			if(area < maxArea):
-				# get bbox
-				cnt_x,cnt_y,cnt_w,cnt_h = cv2.boundingRect(contours[i])
+			cnt_x,cnt_y,cnt_w,cnt_h = cv2.boundingRect(contours[i])
+			if(cnt_w < max_w and cnt_h < max_h):
 				
 				# create mask
 				mask = cv2.bitwise_not(np.zeros((h, w), np.uint8))
 				cv2.drawContours(mask, contours, i, (0), -1) 
-				#cv2.imwrite("/tmp/separate_contours_2_mask_"+str(i)+".png", mask)
+				if(self.debug):
+					cv2.imwrite("/tmp/separate_contours_2_mask_"+str(i)+".png", mask)
 
 				# apply mask to original image
 				separation_cv = cv2.bitwise_or(monochrome, mask)
@@ -92,6 +120,8 @@ class ImageSeparator():
 					callback(data, i)
 				else:
 					parts.append(data)
+			else:
+				self.log.info("Dropping contour to avoid double engraving. Idx {} (w*h: {}*{}) seems to be full image (w*h: {}*{})".format(i, cnt_w, cnt_h, w, h))	
 			
 		return parts
 	
@@ -133,6 +163,8 @@ class ImageSeparator():
 
 
 if __name__ == "__main__":
+	import sys
+	
 	opts = optparse.OptionParser(usage="usage: %prog [options] <imagefile>")
 	opts.add_option("-t",   "--threshold", type="int", default="255", help="intensity for white (skipped) pixels, default 255", dest="threshold")
 	
@@ -142,6 +174,10 @@ if __name__ == "__main__":
 	output_name = filename + "_"
 
 	sepp = ImageSeparator()
+	sepp.log.setLevel(logging.DEBUG)
+	lh = logging.StreamHandler(sys.stdout)
+	sepp.log.addHandler(lh)
+
 
 	img = Image.open(path)
 	img = img.convert('L')
@@ -149,7 +185,7 @@ if __name__ == "__main__":
 	def write_to_file_callback(part, iteration):
 		print part
 		if(part != None):
-			part.save(output_name + "{:0>3}".format(iteration) + ".png", "PNG")
+			part['i'].save(output_name + "{:0>3}".format(iteration) + ".png", "PNG")
 
 	#sepp.separate(img, callback=write_to_file_callback)
 	sepp.separate_contours(img, callback=write_to_file_callback)
