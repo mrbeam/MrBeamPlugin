@@ -51,6 +51,7 @@ class ImageProcessor():
 	              dithering = False,
 	              separation = True,
 	              pierce_time = 0,
+	              overshoot_distance = 0, # disabled for now. TODO: enable (1) when switch on delay is HW fixed.
 	              material = None):
 		
 		self.debug = True
@@ -76,14 +77,23 @@ class ImageProcessor():
 		self.contrastFactor = float(contrast) if contrast else 0.0
 		self.sharpeningFactor = float(sharpening) if sharpening else 0.0
 		self.dithering = (dithering == True or dithering == "True")
+		self.overshoot_distance = overshoot_distance
 		self.separation = (separation == True or separation == "True")
 
 		# overshoot settings
-		self.overshoot_distance = 5
+		# given an acceleration of 700mm/s², these are the ways neccessary to reach target speed of
+		# 5000 mm/min: 5mm
+		# 3000 mm/min: 2mm
+		# 2000 mm/min: 1mm
+		# 1000 mm/min: 0.5mm
+		# self.overshoot_distance = 1 # 1mm comfortable compromise, TODO: calculate individually
 		self.workingAreaWidth = workingAreaWidth
 		self.workingAreaHeight = workingAreaHeight
+		if(self.pierce_time > 0 and self.overshoot_distance > 0):
+			self._log.info("Disabling overshoot, pierce time is set.")
+			self.overshoot_distance = 0
 
-		self.debugPreprocessing = True
+		self.debugPreprocessing = False
 
 		# checks if intensity settings are inverted eg. anodized aluminum
 		self.is_inverted = self.intensity_white > self.intensity_black
@@ -109,6 +119,7 @@ class ImageProcessor():
 		comment += "; contrastFactor = {:.2f}\n".format(self.contrastFactor)
 		comment += "; sharpeningFactor = {:.2f}\n".format(self.sharpeningFactor)
 		comment += "; dithering = {}\n".format(self.dithering)
+		comment += "; overshoot distance = {}\n".format(self.overshoot_distance)
 		comment += "; separation = {}\n".format(self.separation)
 		return comment
 
