@@ -54,7 +54,7 @@ class ImageProcessor():
 	              overshoot_distance = 0, # disabled for now. TODO: enable (1) when switch on delay is HW fixed.
 	              material = None):
 		
-		self.debug = True
+		self.debug = False
 		self._log = logging.getLogger("octoprint.plugins.mrbeam.img2gcode")
 		self._log.setLevel(logging.DEBUG)
 		lh = logging.StreamHandler(sys.stdout)
@@ -233,9 +233,9 @@ class ImageProcessor():
 				off_x = cp['x']
 				off_y = cp['y']
 
-				tmp = separator.separate(img_data, threshold=self.ignore_brighter_than+1)
+				tmp = separator.separate(cp, threshold=self.ignore_brighter_than+1)
 				for p in tmp:
-					parts.append({'i': p['i'], 'x': off_x + p['x'], 'y': off_y + p['y']})
+					parts.append({'i': p['i'], 'x': off_x + p['x'], 'y': off_y + p['y'], 'id': p['id']})
 
 				self._log.debug("left-pixels-first separation took {} seconds".format(time.time()-start))
 				self._log.debug("separated into {} parts".format(len(parts)))
@@ -297,7 +297,7 @@ class ImageProcessor():
 			y_off = img_data['y']*self.beam + yMM # same for the y axis
 			img_pos_mm = (x_off, y_off) # lower left corner of partial image in mm
 
-			self._append_gcode("; BeginPart @ pixel ({},{}) with dimensions {}x{}".format(img_data['x'],img_data['y'], size[0], size[1])) 
+			self._append_gcode("; Begin part {} @ pixel ({},{}) with dimensions {}x{}".format(img_data['id'], img_data['x'],img_data['y'], size[0], size[1])) 
 			# iterate line by line
 			pix = img.load()
 			for row in range(height_px-1,-1,-1):
@@ -320,8 +320,9 @@ class ImageProcessor():
 					# flip direction after each line to go back and forth
 					direction_positive = not direction_positive
 				else:
-					# skip line vertical out of working area
-					self._append_gcode("; ignoring line y={}, out of working area.".format(y))
+					if(line_info['left'] != None):
+						# skip line vertical out of working area
+						self._append_gcode("; ignoring line y={}, out of working area.".format(y))
 					
 
 			self._append_gcode(";EndPart") 

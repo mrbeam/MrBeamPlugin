@@ -270,7 +270,7 @@ class Converter():
 							continue
 
 						for path in paths_by_color[colorKey]:
-							print('p', path)
+							#print('p', path)
 							curveGCode = ""
 							mbgc = path.get(_add_ns('gc', 'mb'), None)
 							if(mbgc != None):

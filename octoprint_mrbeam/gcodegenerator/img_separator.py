@@ -25,8 +25,10 @@ class ImageSeparator():
 	def __init__( self):
 		self.log = logging.getLogger(self.__class__.__name__)
 		self.debug = False
+		if(self.debug):
+			self.log.setLevel(logging.DEBUG)
 
-	def separate(self, img, threshold=255, callback=None):
+	def separate(self, img_data, threshold=255, callback=None):
 		"""
 		Separates img (a Pillow Image object) according to some magic into a list of img objects. 
 		Afterwards all parts merged togehter are equal to the input image.
@@ -38,6 +40,8 @@ class ImageSeparator():
 		threshold -- all pixels brighter than this threshold are used for separation
 		callback -- instead of waiting for the list to return, a callback(img, iteration) can be used to save memory
 		"""
+		
+		img = img_data['i']
 		(width, height) = img.size
 		
 		x_limit = [0] * height # [0, 0, 0, .... ]
@@ -48,10 +52,12 @@ class ImageSeparator():
 			if(separation == None):
 				return parts
 			
+			id_str = ':'.join([img_data['id'], str(iteration)])
+			result = {'i': separation, 'x': 0, 'y':0, 'id': id_str}
 			if(callback != None):
-				callback(separation, iteration)
+				callback(result, iteration)
 			else:
-				parts.append({'i': separation, 'x': 0, 'y':0})
+				parts.append(result)
 				
 			all_done = all(l >= width for l in x_limit)
 			if(all_done):
@@ -70,59 +76,75 @@ class ImageSeparator():
 		# see https://docs.opencv.org/ref/master/d9/d8b/tutorial_py_contours_hierarchy.html
 		# TODO: switch to RETR_LIST and handle hierarchy recursively
 		if(isCV2):
-			contours, hierarchy = cv2.findContours(filtered.copy(), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
-			max_w = w - 2
-			max_h = h - 2
+			contours, hierarchy = cv2.findContours(filtered.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 			self.log.info("OpenCV " + cv2.__version__ + " : filtering top level contours with img size cropped by one px on each side")
 	
 		else:
-			i, contours, hierarchy = cv2.findContours(filtered, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+			_, contours, hierarchy = cv2.findContours(filtered, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 			if(isCV31):
-				# bug in v 3.1: outermost contour is full picture cropped by 1 pixel on each side
-				max_w = w - 2
-				max_h = h - 2
 				self.log.info("OpenCV " + cv2.__version__ + " : filtering top level contours with img size cropped by one px on each side")
-			else:
-				max_w = w
-				max_h = h
 
 		parts = [] # array of dicts {'i': imgdata, 'x': x_offset, 'y': y_offset}
 		
 		amount = len(contours)
 		self.log.info("Found {} contours.".format(amount))
+		if(self.debug):
+			for i in range(amount):
+				nextContourIdx, prevContourIdx, firstChildIdx, parentIdx = hierarchy[0][i]
+				cnt_x,cnt_y,cnt_w,cnt_h = cv2.boundingRect(contours[i])
+				self.log.debug("Contour {}: w*h: {}*{} @ x,y: {},{} (parent: {}, child: {})".format(i, cnt_w, cnt_h, cnt_x, cnt_y, parentIdx, firstChildIdx))
+
 		if amount == 1:
 			self.log.info("No contour separation possible. Returning full image.")	
-			return [{'i': img, 'x': 0, 'y': 0}] 
+			return [{'i': img, 'x': 0, 'y': 0, 'id':'c0'}] 
 		
+			
 		#print "hierarchy", hierarchy
-		for i in range(len(contours)):
-			# TODO  use!
-			#nextContourIdx, prevContourIdx, firstChildIdx, parentIdx = hierarchy[i]
-			area = cv2.contourArea(contours[i])
+		nonWhiteParts = 0
+		for i in range(amount):
+			nextContourIdx, prevContourIdx, firstChildIdx, parentIdx = hierarchy[0][i]
 			cnt_x,cnt_y,cnt_w,cnt_h = cv2.boundingRect(contours[i])
-			if(cnt_w < max_w and cnt_h < max_h):
+
+			# create mask
+			mask = cv2.bitwise_not(np.zeros((h, w), np.uint8))
+			cv2.drawContours(mask, contours, i, (0), -1) 
+			if(firstChildIdx != -1):
+				# subtract all children masks 
+				cv2.drawContours(mask, contours, i, (255), -1, cv2.LINE_4, hierarchy, 2) 
+
+			if(self.debug):
+				cv2.imwrite("/tmp/separate_contours_2_mask_"+str(i)+".png", mask)
+
+			# apply mask to original image
+			separation_cv = cv2.bitwise_or(monochrome, mask)
+
+
+
+			cropped = separation_cv[cnt_y:cnt_y+cnt_h, cnt_x:cnt_x+cnt_w]
+
+			# check if 'white space':
+			inverted = cv2.bitwise_not(cropped)
+			if(cv2.countNonZero(inverted) > 0):
 				
-				# create mask
-				mask = cv2.bitwise_not(np.zeros((h, w), np.uint8))
-				cv2.drawContours(mask, contours, i, (0), -1) 
 				if(self.debug):
-					cv2.imwrite("/tmp/separate_contours_2_mask_"+str(i)+".png", mask)
-
-				# apply mask to original image
-				separation_cv = cv2.bitwise_or(monochrome, mask)
+					cv2.imwrite("/tmp/separate_contours_3_sliced_"+str(i)+".png", cropped)
 				
-				cropped = separation_cv[cnt_y:cnt_y+cnt_h, cnt_x:cnt_x+cnt_w]
+				# create PIL image type from cv2 type
 				separation = Image.fromarray(np.uint8(cropped))
-
-				data = {'i': separation, 'x': cnt_x, 'y':h-(cnt_y+cnt_h)} # x, y are marking lower left of the contour in pixels with origin 0,0 at bottom left
+				id_str = 'c'+str(i)
+				data = {'i': separation, 'x': cnt_x, 'y':h-(cnt_y+cnt_h), 'id':id_str} # x, y are marking lower left of the contour in pixels with origin 0,0 at bottom left
 				# collect results
 				if(callback != None):
 					callback(data, i)
 				else:
 					parts.append(data)
+				nonWhiteParts += 1
+
 			else:
-				self.log.info("Dropping contour to avoid double engraving. Idx {} (w*h: {}*{}) seems to be full image (w*h: {}*{})".format(i, cnt_w, cnt_h, w, h))	
+				self.log.debug("Contour idx {} (w*h: {}*{} @ {},{}) is only white space. Skipping...".format(i, cnt_w, cnt_h, cnt_x, cnt_y))	
+					
 			
+		self.log.info("Contour separation emitted {} parts.".format(nonWhiteParts))	
 		return parts
 	
 	def _separate_partial(self, img, start_list, threshold=255):
