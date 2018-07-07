@@ -37,6 +37,8 @@ class ImageProcessor():
 
 	def __init__( self,
 	              output_filehandle = None,
+	              workingAreaWidth = None,
+	              workingAreaHeight = None,
 	              contrast = 1.0,
 	              sharpening = 1.0,
 	              beam_diameter = 0.25,
@@ -78,7 +80,8 @@ class ImageProcessor():
 
 		# overshoot settings
 		self.overshoot_distance = 5
-		self.workingAreaWidth = 500
+		self.workingAreaWidth = workingAreaWidth
+		self.workingAreaHeight = workingAreaHeight
 
 		self.debugPreprocessing = True
 
@@ -290,20 +293,24 @@ class ImageProcessor():
 				#row_pos_y = y_off + (height_px - row) * self.beam # inverse y-coordinate as images have 0x0 at left top, mr beam at left bottom
 
 				line_info = self.get_pixelinfo_of_line(pix, size, row)
-				if(line_info['left'] != None):
+				y = img_pos_mm[1] + self.beam * (line_info['img_h'] - line_info['row']) # inverse y-coordinate as images have 0x0 at left top, mr beam at left bottom
+
+				if(line_info['left'] != None and y >= 0 and y <= self.workingAreaHeight):
+					
 					# prepare line start
-					pos = self.write_gcode_for_line_start(img_pos_mm, pix, line_info, direction_positive, debug=self.debug)
+					self.write_gcode_for_line_start(y, img_pos_mm, pix, line_info, direction_positive, debug=self.debug)
 
 					# do line
-					pos = self.write_gcode_for_trimmed_line(img_pos_mm, pix, line_info, direction_positive, debug=self.debug)
+					self.write_gcode_for_trimmed_line(img_pos_mm, pix, line_info, direction_positive, debug=self.debug)
 
 					# after line
-					pos = self.write_gcode_for_line_end(img_pos_mm, line_info, direction_positive, debug=self.debug)
+					self.write_gcode_for_line_end(img_pos_mm, line_info, direction_positive, debug=self.debug)
 					
 					# flip direction after each line to go back and forth
 					direction_positive = not direction_positive
 				else:
-					pass # skip empty line
+					# skip line vertical out of working area
+					self._append_gcode("; ignoring line y={}, out of working area.".format(y))
 					
 
 			self._append_gcode(";EndPart") 
@@ -355,30 +362,26 @@ class ImageProcessor():
 	# all methods starting with write_gcode_*
 	# 1. write their gcode directly with the self._append_gcode method
 	# 2. write a \n at the end
-	# 3. return the final position
-	# 4. have a debug flag which adds comments to the gcode (before the final \n).
+	# 3. have a debug flag which adds comments to the gcode (before the final \n).
 	#
 	#######################################################################
 
-	def write_gcode_for_line_start(self, img_pos_mm, pixelArray, line_info, direction_positive, debug=False):
+	def write_gcode_for_line_start(self, y, img_pos_mm, pixelArray, line_info, direction_positive, debug=False):
 		"""
 		Writes GCode to ensure the precondition of a line gcode. 
 		This includes:
 		- Move laserhead to correct starting position with G0
 		- Do the overshoot move if necessary
 		- Activate laser with 0 intensity
-		returns (x,y) last position in mm or None if not moved.
 		"""
 		
+		# Calculate line start coordinates (including overshoot distance)
 		if(direction_positive):
 			x = img_pos_mm[0] + self.beam * line_info['left'] - self.overshoot_distance
-			x = max(x, 0)
 		else:
 			x = img_pos_mm[0] + self.beam * line_info['right'] + self.overshoot_distance
-			x = min(x, self.workingAreaWidth)
-
-		y = img_pos_mm[1] + self.beam * (line_info['img_h'] - line_info['row']) # inverse y-coordinate as images have 0x0 at left top, mr beam at left bottom
 		
+		# Move to line start coordinates
 		comment = None
 		if(debug): comment = "goto line start"
 		gc = self._get_gcode_g0(x=x, y=y, comment=comment)
@@ -387,6 +390,7 @@ class ImageProcessor():
 		self.gc_ctx.x = x
 		self.gc_ctx.y = y
 		
+		# Calculate the overshoot move
 		if(self.overshoot_distance > 0):
 			if(direction_positive):
 				x = x + self.overshoot_distance
@@ -399,7 +403,6 @@ class ImageProcessor():
 			self._append_gcode(gc)
 			self.gc_ctx.s = 0
 			self.gc_ctx.x = x
-			self.gc_ctx.y = y
 		
 	
 	def write_gcode_for_line_end(self, img_pos_mm, line_info, direction_positive, debug=False):
@@ -407,7 +410,6 @@ class ImageProcessor():
 		Writes GCode to ensure the postcondition of a line gcode. 
 		This includes:
 		- set laser intensity to 0
-		returns (x,y) last position in mm or None if line was empty.
 		"""
 		comment = ""
 		if(debug):
@@ -415,7 +417,6 @@ class ImageProcessor():
 			comment = "; EOL: x=[{} {} {}], y={}".format(line_info['left'], arrow, line_info['right'], line_info['row'])
 		
 		x = self.gc_ctx.x
-		y = self.gc_ctx.y
 		if(self.overshoot_distance > 0):
 			if(direction_positive):
 				x = x + self.overshoot_distance
@@ -428,12 +429,10 @@ class ImageProcessor():
 			self._append_gcode(gc)
 			self.gc_ctx.s = 0
 			self.gc_ctx.x = x
-			self.gc_ctx.y = y
 		else:
 			self._append_gcode("M3S0"+comment)
 			self.gc_ctx.s = 0
 			self.gc_ctx.x = x
-			self.gc_ctx.y = y
 
 	def write_gcode_for_trimmed_line(self, img_pos_mm, pixelArray, line_info, direction_positive, debug=False):
 		"""
@@ -441,8 +440,6 @@ class ImageProcessor():
 		Preconditions:
 		- Laserhead is already moved to correct starting position with G0
 		- Laser is active (still active or switched on with M3S0)
-		
-		returns (x,y) last position in mm or None if line was empty.
 		"""
 		
 		# iterate over juicy pixels
@@ -514,22 +511,41 @@ class ImageProcessor():
 		return (target_x, None)
 
 	def _get_gcode_g0(self, x=None, y=None, comment=None):
+		x, x_cmt = self._ensure_coordinate_in_range(x, self.workingAreaWidth, 0, "X")
+		y, y_cmt = self._ensure_coordinate_in_range(y, self.workingAreaHeight, 0, "Y")
 		x_gc = self._get_gcode_literal("X", x)
 		y_gc = self._get_gcode_literal("Y", y)
-		c = ""
-		if(comment != None):
-			c = "; " + comment
-		return "G0{}{}S0{}".format(x_gc, y_gc, c)
+		all_comments = self._join_gc_comments(comment, x_cmt, y_cmt)
+		return "G0{}{}S0{}".format(x_gc, y_gc, all_comments)
 		
 	def _get_gcode_g1(self, x=None, y=None, s=None, f=None, comment=None):
+		x, x_cmt = self._ensure_coordinate_in_range(x, self.workingAreaWidth, 0)
+		y, y_cmt = self._ensure_coordinate_in_range(y, self.workingAreaHeight, 0)
 		x_gc = self._get_gcode_literal("X", x)
 		y_gc = self._get_gcode_literal("Y", y)
 		s_gc = self._get_gcode_literal("S", s)
 		f_gc = self._get_gcode_literal("F", f)
-		c = ""
-		if(comment != None):
-			c = "; " + comment
-		return "G1{}{}{}{}{}".format(x_gc, y_gc, s_gc, f_gc, c)
+
+		all_comments = self._join_gc_comments(comment, x_cmt, y_cmt)
+		return "G1{}{}{}{}{}".format(x_gc, y_gc, s_gc, f_gc, all_comments)
+	
+	def _ensure_coordinate_in_range(self, value, maximum, minimum = 0, prefix = ""):
+		# returns (cropped?) value and comment if cropped.
+		if(value == None): 
+			return (None, '')
+		elif(value < minimum):
+			return (max(value, minimum), prefix + " set to {}, was {}".format(minimum, value))
+		elif(value > maximum):
+			return (min(value, maximum), prefix + " set to {}, was {}".format(maximum, value))
+		else:
+			return (value, '')
+		
+	def _join_gc_comments(self, *args):
+		l = filter(None, args)
+		if(len(l) > 0):
+			return "; " + ", ".join(l)
+		else: 
+			return ""
 		
 	def _get_gcode_g4(self, intensity=None, time=0):
 		if(time > 0):
@@ -659,6 +675,8 @@ if __name__ == "__main__":
 	opts.add_option("-y",   "--y-position", type="float", default="0", help="y position of the image on the working area", dest="y")
 	opts.add_option("-w",   "--width", type="float", default=100, help="width of the image in mm", dest="width")
 	opts.add_option("",   "--height", type="float", default=-1, help="height of the image in mm. If omitted aspect ratio will be preserved.", dest="height")
+	opts.add_option("",   "--workingAreaWidth", type="float", default=500, help="max width in mm. (Default 500)", dest="waWidth")
+	opts.add_option("",   "--workingAreaHeight", type="float", default=390, help="max height in mm. (Default 390)", dest="waHeight")
 	opts.add_option("", "--beam-diameter", type="float", help="laser beam diameter, default 0.25mm", default=0.25, dest="beam_diameter")
 	opts.add_option("-s", "--speed", type="float", help="engraving speed, default 1000mm/min", default=1000, dest="feedrate")
 	opts.add_option("",   "--img-intensity-white", type="int", default="0", help="intensity for white pixels, default 0", dest="intensity_white")
@@ -703,6 +721,8 @@ M2
 		boolDither = (options.dithering == "true")
 		ip = ImageProcessor(
 			output_filehandle = fh,
+			workingAreaWidth = options.waWidth,
+			workingAreaHeight = options.waHeight,
 			contrast = options.contrast,
 			sharpening = options.sharpening,
 			beam_diameter = 1.0, # for easy debugging. 

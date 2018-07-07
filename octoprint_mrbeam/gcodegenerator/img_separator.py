@@ -92,7 +92,7 @@ class ImageSeparator():
 		self.log.info("Found {} contours.".format(amount))
 		if amount == 1:
 			self.log.info("No contour separation possible. Returning full image.")	
-			return [{'i': img, 'x': 0, 'y':h}]
+			return [{'i': img, 'x': 0, 'y': 0}] 
 		
 		#print "hierarchy", hierarchy
 		for i in range(len(contours)):

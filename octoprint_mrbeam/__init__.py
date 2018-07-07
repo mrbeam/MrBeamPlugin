@@ -974,7 +974,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@restricted_access
 	def generateCalibrationMarkersSvg(self):
 		profile = self.laserCutterProfileManager.get_current_or_default()
-		print profile
+		#print profile
 		xmin = '0'
 		ymin = '0'
 		xmax = str(profile['volume']['width'])
@@ -1334,10 +1334,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 			is_job_cancelled() #check before conversion started
 
+			profile = self.laserCutterProfileManager.get_current_or_default()
+			maxWidth = profile['volume']['width']
+			maxHeight = profile['volume']['depth']
+
 			#TODO implement cancelled_Jobs, to check if this particular Job has been canceled
 			#TODO implement check "_cancel_job"-loop inside engine.convert(...), to stop during conversion, too
-			engine = Converter(params, model_path)
-			engine.convert(on_progress, on_progress_args, on_progress_kwargs)
+			engine = Converter(params, model_path, workingAreaWidth = maxWidth, workingAreaHeight = maxHeight)
+			engine.convert(is_job_cancelled, on_progress, on_progress_args, on_progress_kwargs)
 
 			is_job_cancelled() #check if canceled during conversion
 

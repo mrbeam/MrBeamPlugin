@@ -45,8 +45,10 @@ class Converter():
 
 	_tempfile = "/tmp/_converter_output.tmp"
 
-	def __init__(self, params, model_path):
+	def __init__(self, params, model_path, workingAreaWidth = None, workingAreaHeight = None):
 		self._log = logging.getLogger("octoprint.plugins.mrbeam.converter")
+		self.workingAreaWidth = workingAreaWidth
+		self.workingAreaHeight = workingAreaHeight
 
 		# debugging
 		self.transform_matrix = {}
@@ -84,8 +86,9 @@ class Converter():
 		# create new file and return file handle.
 
 
-	def convert(self, on_progress=None, on_progress_args=None, on_progress_kwargs=None):
+	def convert(self, is_job_cancelled, on_progress=None, on_progress_args=None, on_progress_kwargs=None):
 
+		#TODO check if job cancelled by calling is_job_cancelled()
 		self.init_output_file()
 		self.parse()
 		options = self.options
@@ -176,6 +179,8 @@ class Converter():
 						# dithering = True, pierce_time = 500, separation = True, material = "default"
 						rasterParams = self.options['raster']
 						ip = ImageProcessor(output_filehandle = fh,
+											workingAreaWidth = self.workingAreaWidth,
+											workingAreaHeight = self.workingAreaHeight,
 						                    contrast = rasterParams['contrast'],
 						                    sharpening = rasterParams['sharpening'],
 						                    beam_diameter = rasterParams['beam_diameter'],
