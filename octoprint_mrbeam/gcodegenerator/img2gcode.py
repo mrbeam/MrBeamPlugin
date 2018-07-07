@@ -204,12 +204,9 @@ class ImageProcessor():
 		contour_parts = separator.separate_contours(img, threshold=self.ignore_brighter_than+1)
 		self._log.debug("contour separation took {} seconds".format(time.time()-start))
 		self._log.debug("separated into {} contours".format(len(contour_parts)))
-		if(len(contour_parts) == 0):
-			contour_parts = [{'i': img, 'x':0, 'y': 0}] # add full image as it was not separatable with contours method
 		
 		parts = []
 		start = time.time()
-		
 		if(self.debugPreprocessing):
 			for i,p in enumerate(contour_parts):
 				img_data = p['i']
