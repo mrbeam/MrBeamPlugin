@@ -14,10 +14,11 @@ def migrate(plugin):
 
 class Migration(object):
 
-	VERSION_SETUP_IPTABLES           = '0.1.19'
-	VERSION_SYNC_GRBL_SETTINGS       = '0.1.24'
-	VERSION_FIX_SSH_KEY_PERMISSION   = '0.1.28'
+	VERSION_SETUP_IPTABLES                   = '0.1.19'
+	VERSION_SYNC_GRBL_SETTINGS               = '0.1.24'
+	VERSION_FIX_SSH_KEY_PERMISSION           = '0.1.28'
 	VERSION_UPDATE_CHANGE_HOSTNAME_SCRIPTS   = '0.1.37'
+	VERSION_UPDATE_LOGROTATE_CONF            = '0.1.41'
 
 	# this is where we have files needed for migrations
 	MIGRATE_FILES_FOLDER = 'files/migrate/'
@@ -63,6 +64,9 @@ class Migration(object):
 
 				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_UPDATE_CHANGE_HOSTNAME_SCRIPTS, equal_ok=False):
 					self.update_change_hostename_apname_scripts()
+
+				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_UPDATE_LOGROTATE_CONF, equal_ok=False):
+					self.update_logrotate_conf()
 
 				# migrations end
 
@@ -262,6 +266,19 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 			exec_cmd("sudo chmod 755 /root/scripts/change_apname")
 		else:
 			self._logger.error("update_change_hostename_apname_scripts() One or more source files not found! Not Updated!")
+
+
+	def update_logrotate_conf(self):
+		self._logger.info("update_logrotate_conf() ")
+
+		logrotate_d_files = ['haproxy', 'iobeam', 'mrbeam_ledstrips', 'netconnectd', 'rsyslog']
+		for f in logrotate_d_files:
+			my_file = os.path.join(__package_path__, self.MIGRATE_FILES_FOLDER, 'logrotate', f)
+			exec_cmd("sudo cp {src} /etc/logrotate.d/".format(src=my_file))
+
+		exec_cmd("sudo mv /etc/cron.daily/logrotate /etc/cron.hourly")
+		exec_cmd("sudo logrotate /etc/logrotate.conf")
+		exec_cmd("sudo service cron restart")
 
 
 
