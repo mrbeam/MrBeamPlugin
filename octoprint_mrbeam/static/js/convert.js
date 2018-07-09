@@ -741,7 +741,7 @@ $(function(){
 			$('.job_row .used_color:not(#cd_engraving)').addClass('not-used');
 			for (var idx = 0; idx < cols.length; idx++) {
 				var c = cols[idx];
-				var selection = $('#cd_color_'+c.hex.substr(1));
+				var selection = $('#cd_color_'+c.hex.substr(1)); // crashes on color definitions like 'rgb(0,0,0)' 
 				var exists = selection.length > 0;
 				if(! exists){
 					var drop_zone = $('#first_job .color_drop_zone');
