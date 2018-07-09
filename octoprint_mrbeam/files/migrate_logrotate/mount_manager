@@ -1,0 +1,10 @@
+/var/log/mount_manager.log {
+    size 2M
+    rotate 2
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+    create 644 root root
+}
