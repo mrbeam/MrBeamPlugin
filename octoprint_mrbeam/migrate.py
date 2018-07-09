@@ -21,7 +21,8 @@ class Migration(object):
 	VERSION_UPDATE_LOGROTATE_CONF            = '0.1.41'
 
 	# this is where we have files needed for migrations
-	MIGRATE_FILES_FOLDER = 'files/migrate/'
+	MIGRATE_FILES_FOLDER     = 'files/migrate/'
+	MIGRATE_LOGROTATE_FOLDER = 'files/migrate_logrotate/'
 
 
 	def __init__(self, plugin):
@@ -263,11 +264,12 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 	def update_logrotate_conf(self):
 		self._logger.info("update_logrotate_conf() ")
 
-		logrotate_d_files = ['haproxy', 'iobeam', 'mrbeam_ledstrips', 'netconnectd', 'rsyslog']
+		logrotate_d_files = ['haproxy', 'iobeam', 'mount_manager', 'mrb_check', 'mrbeam_ledstrips', 'netconnectd', 'rsyslog']
 		for f in logrotate_d_files:
-			my_file = os.path.join(__package_path__, self.MIGRATE_FILES_FOLDER, 'logrotate', f)
+			my_file = os.path.join(__package_path__, self.MIGRATE_LOGROTATE_FOLDER, f)
 			exec_cmd("sudo cp {src} /etc/logrotate.d/".format(src=my_file))
 
+		exec_cmd("sudo rm /var/log/*.gz")
 		exec_cmd("sudo mv /etc/cron.daily/logrotate /etc/cron.hourly")
 		exec_cmd("sudo logrotate /etc/logrotate.conf")
 		exec_cmd("sudo service cron restart")

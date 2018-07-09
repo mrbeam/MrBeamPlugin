@@ -60,7 +60,8 @@ plugin_ignored_packages = []
 additional_setup_parameters = {'package_data': {
 									'octoprint_mrbeam': ['profiles/*.yaml',
 									                     'files/grbl/*.hex',
-									                     'files/migrate/*']},
+									                     'files/migrate/*',
+									                     'files/migrate_logrotate/*']},
 									'setup_requires': ['numpy==1.11.2']}
 
 ########################################################################################################################
