@@ -19,6 +19,7 @@ class Migration(object):
 	VERSION_FIX_SSH_KEY_PERMISSION           = '0.1.28'
 	VERSION_UPDATE_CHANGE_HOSTNAME_SCRIPTS   = '0.1.37'
 	VERSION_UPDATE_LOGROTATE_CONF            = '0.1.41'
+	VERSION_MOUNT_MANAGER_150                = '0.1.41'
 
 	# this is where we have files needed for migrations
 	MIGRATE_FILES_FOLDER     = 'files/migrate/'
@@ -68,6 +69,9 @@ class Migration(object):
 
 				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_UPDATE_LOGROTATE_CONF, equal_ok=False):
 					self.update_logrotate_conf()
+
+				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_MOUNT_MANAGER_150, equal_ok=False):
+					self.update_mount_manager()
 
 				# migrations end
 
@@ -281,6 +285,13 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 		exec_cmd("sudo mv /etc/cron.daily/logrotate /etc/cron.hourly")
 		exec_cmd("sudo logrotate /etc/logrotate.conf")
 		exec_cmd("sudo service cron restart")
+
+
+	def update_mount_manager(self):
+		self._logger.info("update_mount_manager() ")
+
+		mount_manager_file = os.path.join(__package_path__, self.MIGRATE_FILES_FOLDER, 'mount_manager')
+		exec_cmd("sudo cp {src} /root/mount_manager/mount_manager".format(src=mount_manager_file))
 
 
 
