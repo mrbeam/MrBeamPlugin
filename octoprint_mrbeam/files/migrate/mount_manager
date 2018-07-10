@@ -1,16 +1,17 @@
 #!/bin/bash
 
 # Usage:
-# call: sudo /root/mount_manager/mount_manager add|remove|clear
+# call: sudo /root/mount_manager/mount_manager add|remove|clear|version
 # clear: if no usb stick plugged in, SELFCHECK_DIR will be deleted
+# if `df /` says that there is little space on disk left, mount_manager deletes all files in var/log and ~/.octoprint/logs
 
-VERSION="1.5.0"
+VERSION="1.5.1"
 APP_DIR=/root/mount_manager
 LOG_FILE="/var/log/mount_manager.log"
 MOUNT_DIR=/media/
 
 SIG_DIR="/mrbeam"
-SIG_FILE_PATTERN="mrbeam_usb_mount*.sig"
+SIG_FILE_PATTERN="mrbeam*.sig"
 TAR_FILE_BASE="/mrbeam_usb_mount.tar.gz"
 
 SELFCHECK_DIR=/home/pi/usb_mount
@@ -216,7 +217,10 @@ do
         #### DO STUFF START #####
 
         SEARCH_PATH="${MOUNT_DIR}${plugged_in_item}${SIG_DIR}"
-        SIG_FILE_EXTERNAL=$(find ${SEARCH_PATH} -name ${SIG_FILE_PATTERN} | head -1)
+        unset -v SIG_FILE_EXTERNAL
+        for i in "${SEARCH_PATH}"/${SIG_FILE_PATTERN}; do
+          [[ $i -nt ${SIG_FILE_EXTERNAL} ]] && SIG_FILE_EXTERNAL=$i;
+        done
         SIG_FILE_EXTERNAL=$(realpath "${SIG_FILE_EXTERNAL}")
 
         SIG_FILE_INTERNAL="${SELFCHECK_DIR}/$(basename ${SIG_FILE_EXTERNAL})"
@@ -290,7 +294,7 @@ do
         fi
 
         #### DO STUFF END #####
-    
+
     fi
     ((++i))
 done
