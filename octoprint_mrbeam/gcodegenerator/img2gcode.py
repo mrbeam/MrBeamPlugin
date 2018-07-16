@@ -31,6 +31,7 @@ import cStringIO
 import os.path
 import time
 import sys
+import re
 from img_separator import ImageSeparator
 
 class ImageProcessor():
@@ -272,8 +273,8 @@ class ImageProcessor():
 		settings_comment = self.get_settings_as_comment(xMM, yMM, wMM, hMM, "")
 		self._log.info("img2gcode conversion started:\n%s" % settings_comment)
 		self._append_gcode(self.get_settings_as_comment(xMM, yMM, wMM, hMM, file_id))
-		xMM += self.beam/2.0
-		yMM -= self.beam/2.0
+		xMM += self.beam/2.0*0
+		yMM -= self.beam
 		
 		# pre-condition: set feedrate, enable laser with 0 intensity.
 		self._append_gcode('F' + str(self.feedrate_white)) # set an initial feedrate
@@ -583,7 +584,8 @@ class ImageProcessor():
 		img = self._dataurl_to_img(dataUrl)
 
 		imgArray = self.img_prepare(img, w, h)
-		gcode = self.generate_gcode(imgArray, x, y, w, h, dataUrl)
+		dataUrl64Chars = re.sub("(.{160})", "\\1\n", dataUrl, 0, re.DOTALL) # newline after 160 chars for easy .gco handling in external viewers
+		gcode = self.generate_gcode(imgArray, x, y, w, h, dataUrl64Chars)
 		return gcode
 
 	def _dataurl_to_img(self, dataUrl):
