@@ -253,8 +253,8 @@ class ImageProcessor():
 		"""
 		takes an array of objects containing the separated image and converts them to gcode.
 		:param imgArray: array of imagedata containing dicts 
-		:param xMM: x position of the image in mm 
-		:param yMM: y position of the image in mm
+		:param xMM: x position of the image in mm (origin: left bottom)
+		:param yMM: y position of the image in mm (origin: left bottom)
 		:param wMM: width of the image in mm
 		:param hMM: height of the image in mm
 		:param file_id: origin file id, stored in comment for debugging / analysis
@@ -288,23 +288,25 @@ class ImageProcessor():
 
 		# iterate through the image parts
 		for img_data in imgArray:
+			# img_data = {'i': px_data, 'x': offset_px_x, 'y':offset_px_y, 'id': id_str}
+			# note: offset_px_x and offset_px_y are offsets from top left of the unseparated original pixel image
 			img = img_data['i']
 			size = img.size # size of the img fraction in pixels
 			height_px = size[1]
 			
 			# image part has its own pixel offset. Calc general absolute offset in MM
 			x_off = img_data['x']*self.beam + xMM # mm here, img_data['x'] is in pixels
-			y_off = img_data['y']*self.beam + yMM # same for the y axis
+			y_off = hMM - img_data['y']*self.beam + yMM # mm here, but inverted for the y axis
+			self._log.info("#### yPx: {}, yMM: {}, hMM: {} => y_final: {}".format(img_data['y'], yMM, hMM, y_off))
 			img_pos_mm = (x_off, y_off) # lower left corner of partial image in mm
 
 			self._append_gcode("; Begin part {} @ pixel ({},{}) with dimensions {}x{}".format(img_data['id'], img_data['x'],img_data['y'], size[0], size[1])) 
 			# iterate line by line
 			pix = img.load()
 			for row in range(height_px-1,-1,-1):
-				#row_pos_y = y_off + (height_px - row) * self.beam # inverse y-coordinate as images have 0x0 at left top, mr beam at left bottom
 
 				line_info = self.get_pixelinfo_of_line(pix, size, row)
-				y = img_pos_mm[1] + self.beam * (line_info['img_h'] - line_info['row']) # inverse y-coordinate as images have 0x0 at left top, mr beam at left bottom
+				y = img_pos_mm[1] - (self.beam * line_info['row']) 
 
 				if(line_info['left'] != None and y >= 0 and y <= self.workingAreaHeight):
 					
