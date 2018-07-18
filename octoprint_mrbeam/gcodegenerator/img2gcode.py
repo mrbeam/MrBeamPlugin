@@ -55,12 +55,20 @@ class ImageProcessor():
 	              overshoot_distance = 0, # disabled for now. TODO: enable (1) when switch on delay is HW fixed.
 	              material = None):
 		
+		self.log = logging.getLogger("octoprint.plugins.mrbeam.img2gcode")
+		
 		self.debug = False
-		self._log = logging.getLogger("octoprint.plugins.mrbeam.img2gcode")
-		self._log.setLevel(logging.DEBUG)
-		lh = logging.StreamHandler(sys.stdout)
-		lh.setLevel(logging.DEBUG)
-		self._log.addHandler(lh)
+		try:
+			self.debug = _mrbeam_plugin_implementation._settings.get(["dev", "debug_gcode"])
+		except NameError:
+			self.debug = True
+			self.log.info("Gcode debugging enabled (not running in Mr Beam Plugin environment")
+		else:
+			self.log.info("Gcode debugging {} (read from config)".format(self.debug))
+			pass
+		
+		if(self.debug):
+			self.log.setLevel(logging.DEBUG)
 
 		self.output_filehandle = output_filehandle
 		self.beam = float(beam_diameter) if beam_diameter else 0.25
@@ -91,7 +99,7 @@ class ImageProcessor():
 		self.workingAreaWidth = workingAreaWidth
 		self.workingAreaHeight = workingAreaHeight
 		if(self.pierce_time > 0 and self.overshoot_distance > 0):
-			self._log.info("Disabling overshoot, pierce time is set.")
+			self.log.info("Disabling overshoot, pierce time is set.")
 			self.overshoot_distance = 0
 
 		self.debugPreprocessing = False
@@ -149,13 +157,13 @@ class ImageProcessor():
 		dest_wpx = int(w_mm/self.beam)
 		dest_hpx = int(h_mm/self.beam)
 
-		self._log.info("scaling {}x{} to {}x{}".format(orig_w, orig_h, dest_wpx, dest_hpx))
+		self.log.info("scaling {}x{} to {}x{}".format(orig_w, orig_h, dest_wpx, dest_hpx))
 
 		# 1. scale
 		img = orig_img.resize((dest_wpx, dest_hpx))
 		#img = orig_img.resize((dest_wpx, dest_hpx), Image.ANTIALIAS)
 
-		self._log.debug("scaling took {} seconds".format(time.time()-start))
+		self.log.debug("scaling took {} seconds".format(time.time()-start))
 		if(self.debugPreprocessing):
 			img.save("/tmp/img2gcode_1_resized.png")
 
@@ -165,7 +173,7 @@ class ImageProcessor():
 			whitebg = Image.new('RGBA', (dest_wpx, dest_hpx), "white")
 			img = Image.alpha_composite(whitebg, img)
 
-			self._log.debug("transparency removal took {} seconds".format(time.time()-start))
+			self.log.debug("transparency removal took {} seconds".format(time.time()-start))
 			if(self.debugPreprocessing):
 				img.save("/tmp/img2gcode_2_whitebg.png")
 
@@ -178,14 +186,14 @@ class ImageProcessor():
 		if(self.contrastFactor > 1.0):
 			contrast = ImageEnhance.Contrast(img)
 			img = contrast.enhance(self.contrastFactor) # 1.0 returns original
-			self._log.debug("contrast enhancement took {} seconds".format(time.time()-start))
+			self.log.debug("contrast enhancement took {} seconds".format(time.time()-start))
 			if(self.debugPreprocessing):
 				img.save("/tmp/img2gcode_3_contrast.png")
 
 		# 4. greyscale
 		start = time.time()
 		img = img.convert('L')
-		self._log.debug("grayscale conversion took {} seconds".format(time.time()-start))
+		self.log.debug("grayscale conversion took {} seconds".format(time.time()-start))
 		if(self.debugPreprocessing):
 			img.save("/tmp/img2gcode_4_greyscale.png")
 
@@ -199,7 +207,7 @@ class ImageProcessor():
 		if(self.sharpeningFactor > 1.0):
 			sharpness = ImageEnhance.Sharpness(img)
 			img = sharpness.enhance(self.sharpeningFactor)
-			self._log.debug("sharpening took {} seconds".format(time.time()-start))
+			self.log.debug("sharpening took {} seconds".format(time.time()-start))
 			if(self.debugPreprocessing):
 				img.save("/tmp/img2gcode_5_sharpened.png")
 
@@ -207,7 +215,7 @@ class ImageProcessor():
 		if(self.dithering == True):
 			start = time.time()
 			img = img.convert('1')
-			self._log.debug("dithering took {} seconds".format(time.time()-start))
+			self.log.debug("dithering took {} seconds".format(time.time()-start))
 			if(self.debugPreprocessing):
 				img.save("/tmp/img2gcode_6_dithered.png")
 
@@ -217,8 +225,8 @@ class ImageProcessor():
 		# 7.1. split by contour
 		start = time.time()
 		contour_parts = separator.separate_contours(img, threshold=self.ignore_brighter_than+1)
-		self._log.debug("contour separation took {} seconds".format(time.time()-start))
-		self._log.debug("separated into {} contours".format(len(contour_parts)))
+		self.log.debug("contour separation took {} seconds".format(time.time()-start))
+		self.log.debug("separated into {} contours".format(len(contour_parts)))
 		
 		parts = []
 		start = time.time()
@@ -238,8 +246,8 @@ class ImageProcessor():
 				for p in tmp:
 					parts.append({'i': p['i'], 'x': off_x + p['x'], 'y': off_y + p['y'], 'id': p['id']})
 
-				self._log.debug("left-pixels-first separation took {} seconds".format(time.time()-start))
-				self._log.debug("separated into {} parts".format(len(parts)))
+				self.log.debug("left-pixels-first separation took {} seconds".format(time.time()-start))
+				self.log.debug("separated into {} parts".format(len(parts)))
 		else:
 			parts.extend(contour_parts)
 				
@@ -271,7 +279,7 @@ class ImageProcessor():
 		
 		# write all parameters used for generating the gcode into the file
 		settings_comment = self.get_settings_as_comment(xMM, yMM, wMM, hMM, "")
-		self._log.info("img2gcode conversion started:\n%s" % settings_comment)
+		self.log.info("img2gcode conversion started:\n%s" % settings_comment)
 		self._append_gcode(self.get_settings_as_comment(xMM, yMM, wMM, hMM, file_id))
 		xMM += self.beam/2.0*0
 		yMM -= self.beam
@@ -298,7 +306,7 @@ class ImageProcessor():
 			# image part has its own pixel offset. Calc general absolute offset in MM
 			x_off = img_data['x']*self.beam + xMM # mm here, img_data['x'] is in pixels
 			y_off = hMM - img_data['y']*self.beam + yMM # mm here, but inverted for the y axis
-			self._log.info("#### yPx: {}, yMM: {}, hMM: {} => y_final: {}".format(img_data['y'], yMM, hMM, y_off))
+			#self.log.info("yPx: {}, yMM: {}, hMM: {} => y_final: {}".format(img_data['y'], yMM, hMM, y_off))
 			img_pos_mm = (x_off, y_off) # lower left corner of partial image in mm
 
 			self._append_gcode("; Begin part {} @ pixel ({},{}) with dimensions {}x{}".format(img_data['id'], img_data['x'],img_data['y'], size[0], size[1])) 
@@ -590,7 +598,7 @@ class ImageProcessor():
 
 	def _dataurl_to_img(self, dataUrl):
 		if(dataUrl is None):
-			self._log.info("ERROR: image is not base64 encoded")
+			self.log.info("ERROR: image is not base64 encoded")
 			return ""
 
 		# get raw base64 data
@@ -755,7 +763,9 @@ M2
 			material = None
 		)
 		
-		ip.debugProcessing = True
+		lh = logging.StreamHandler(sys.stdout)
+		lh.setLevel(logging.DEBUG)
+		ip.log.addHandler(lh)
 		
 		path = args[0]
 		print options

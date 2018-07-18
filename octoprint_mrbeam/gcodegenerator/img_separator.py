@@ -30,7 +30,17 @@ class ImageSeparator():
 		files = glob.glob(self.img_debug_folder+'/*')
 		for f in files:
 			os.remove(f)
-		self.debug = True
+		
+		self.debug = False
+		try:
+			self.debug = _mrbeam_plugin_implementation._settings.get(["dev", "debug_gcode"])
+		except NameError:
+			self.debug = True
+			self.log.info("Gcode debugging enabled (not running in Mr Beam Plugin environment")
+		else:
+			self.log.info("Gcode debugging {} (read from config)".format(self.debug))
+			pass
+		
 		if(self.debug):
 			self.log.setLevel(logging.DEBUG)
 
@@ -117,12 +127,10 @@ class ImageSeparator():
 		"""
 		w,h = img.size
 		monochrome_original = np.array(img, dtype=np.uint8) # should be grayscale already
-		self._dbg_image(monochrome_original, "0_monochrome.png")
-		global_mask = self._prepare_img_for_contour_separation(monochrome_original)
-		
-		self._dbg_image(global_mask, "1_global_mask.png")
 		id_str = "c0"
-		data = {'i': global_mask, 'x': 0, 'y':0, 'id':id_str}
+		data = {'i': monochrome_original, 'x': 0, 'y':0, 'id':id_str}
+		self._dbg_image(monochrome_original, data['id']+"_0_monochrome.png")
+		
 		to_process = [data]
 		parts = []
 		level = 0
@@ -153,8 +161,6 @@ class ImageSeparator():
 		for i in parts:
 			separation = Image.fromarray(np.uint8(i['i']))
 			i['i'] = separation
-			#i['y'] = h-(i['y']+separation_h)
-			#data = {'i': separation, 'x': cnt_x, 'y':h-(cnt_y+cnt_h), 'id':id_str} # x, y are marking lower left of the contour in pixels with origin 0,0 at bottom left
 			#TODO move callback and transformation into own function and place it directly in the recursion
 			# collect results
 			if(callback != None):
@@ -165,7 +171,7 @@ class ImageSeparator():
 			number += 1
 
 		if(self.debug):
-			self._dbg_is_separation_ok(parts, monochrome_original, "9_diff.png", "Contour separation buggy. See ")			
+			self._dbg_is_separation_ok(parts, monochrome_original, "9_diff_contours.png", "Contour separation buggy. See ")			
 				
 		return pil_images 
 
@@ -176,11 +182,15 @@ class ImageSeparator():
 		mask_data -- {'i': cv_np_array, 'x': x_offset, 'y': y_offset, 'id':id_str}
 		level -- depth of the recursion
 		"""
+		
 		img = mask_data['i']
 		h, w = img.shape
 		self.log.debug("Input {}: w*h: {}*{})".format(level, w,h))
-		self._dbg_image(img, "0_input_"+mask_data['id']+".png")
-		_, contours, hierarchy = self._get_contours(img)
+		self._dbg_image(img, mask_data['id']+"_0_input_.png")
+
+		input_mask = self._prepare_img_for_contour_separation(img)
+		self._dbg_image(input_mask, mask_data['id']+"_1_input_mask.png")
+		_, contours, hierarchy = self._get_contours(input_mask)
 		
 		parts = [] # array of mask_data dicts
 		
@@ -190,7 +200,7 @@ class ImageSeparator():
 			for i in range(amount):
 				nextContourIdx, prevContourIdx, firstChildIdx, parentIdx = hierarchy[0][i]
 				cnt_x,cnt_y,cnt_w,cnt_h = cv2.boundingRect(contours[i])
-				self.log.debug("Contour {}: w*h: {}*{} @ x,y: {},{} (parent: {}, child: {})".format(i, cnt_w, cnt_h, cnt_x, cnt_y, parentIdx, firstChildIdx))
+				self.log.debug("Contour {}#{}: w*h: {}*{} @ x,y: {},{} (parent: {}, child: {})".format(mask_data['id'], i, cnt_w, cnt_h, cnt_x, cnt_y, parentIdx, firstChildIdx))
 
 		if amount == 1:
 			self.log.info("No contour separation possible. Returning full image.")	
@@ -205,27 +215,29 @@ class ImageSeparator():
 			# create partial mask
 			mask = cv2.bitwise_not(np.zeros((h, w), np.uint8))
 			cv2.drawContours(mask, contours, i, (0), -1) 
-			#if(firstChildIdx != -1):
-				# subtract all children masks 
-			#	cv2.drawContours(mask, contours, i, (255), -1, cv2.LINE_4, hierarchy, 2) 
+			self._dbg_image(mask, id_str+"_2_contourmask.png")
 
-			self._dbg_image(mask, "2_mask_"+id_str+".png")
-
+			# crop input picture to mask size
+			mask_h, mask_w = mask.shape
+			mask_x = mask_data['x']
+			mask_y = mask_data['y']
+			cropped_original = monochrome_original[mask_y:mask_y+mask_h, mask_x:mask_x+mask_w]
+			
 			# apply mask to original image
-			separation_cv = cv2.bitwise_or(monochrome_original, mask)
+			separation_cv = cv2.bitwise_or(cropped_original, mask)
 
-			# crop original img to bbox of mask
+			# and crop again to bbox of contour
 			cnt_x,cnt_y,cnt_w,cnt_h = cv2.boundingRect(contours[i])
 			cropped = separation_cv[cnt_y:cnt_y+cnt_h, cnt_x:cnt_x+cnt_w]
 
 			if(self._is_only_whitespace(cropped)):
-				self.log.debug("Contour idx {} (w*h: {}*{} @ {},{}) is only white space. Skipping...".format(i, cnt_w, cnt_h, cnt_x, cnt_y))	
+				self.log.debug("Contour {}#{} (w*h: {}*{} @ {},{}) is only white space. Skipping...".format(mask_data['id'], i, cnt_w, cnt_h, cnt_x, cnt_y))	
 				
 			else:
 				data = {'i': cropped, 'x': cnt_x, 'y':cnt_y, 'id':id_str}
 				parts.append(data)
 				nonWhiteParts += 1
-				self._dbg_image(cropped, "3_sliced_"+id_str+".png")
+				self._dbg_image(cropped, id_str+"_3_sliced_.png")
 					
 			
 			
@@ -283,7 +295,7 @@ class ImageSeparator():
 		debug_assembly = Image.new("L", (w, h), "white")
 		
 		for i in parts:
-			self._dbg_image(i['i'],'8_output'+i['id']+'.png')
+			self._dbg_image(i['i'], i['id']+'_8_output.png')
 			debug_assembly.paste(i['i'], (i['x'], i['y']))
 		self._dbg_image(debug_assembly, "9_control.png")
 		from PIL import ImageChops
