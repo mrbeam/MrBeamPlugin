@@ -54,6 +54,7 @@ class MachineCom(object):
 	STATE_LOCKED = 12
 	STATE_HOMING = 13
 	STATE_FLASHING = 14
+	STATE_READY_TO_LASER = 15
 
 	GRBL_STATE_QUEUE = 'Queue'
 	GRBL_STATE_IDLE  = 'Idle'
@@ -1377,6 +1378,8 @@ class MachineCom(object):
 			return "Homing"
 		if self._state == self.STATE_FLASHING:
 			return "Flashing"
+		if self._state == self.STATE_READY_TO_LASER:
+			return "Ready to Start"
 		return "Unknown State (%d)" % (self._state)
 
 	def getPrintProgress(self):
@@ -1409,6 +1412,9 @@ class MachineCom(object):
 
 	def isLocked(self):
 		return self._state == self.STATE_LOCKED
+
+	def isReadyToLaser(self):
+		return self._state == self.STATE_READY_TO_LASER
 
 	def isHoming(self):
 		return self._state == self.STATE_HOMING

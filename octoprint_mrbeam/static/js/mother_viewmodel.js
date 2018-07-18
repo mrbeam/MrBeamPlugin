@@ -148,8 +148,9 @@ $(function () {
 			});
 
             // TODO forward to control viewmodel
+            self.state.isReadyToLaser = ko.observable(undefined);
             self.state.isLocked = ko.observable(true);
-            self.state.isReady = ko.observable(undefined);
+            //self.state.isReady = ko.observable(undefined); // not sure why this is injected here. should be already present in octoprints printerstate VM
             self.state.isFlashing = ko.observable(undefined);
             self.state.currentPos = ko.observable(undefined);
 			self.state.filename = ko.observable(undefined);
@@ -356,6 +357,7 @@ $(function () {
         };
 
         self._processStateData = function (data) {
+				self.state.isReadyToLaser(data.flags.readyToLaser);
 				self.state.isLocked(data.flags.locked);
 				self.state.isFlashing(data.flags.flashing);
 				self.state.isConnecting(data.text === "Connecting" || data.text === "Opening serial port");

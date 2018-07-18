@@ -125,7 +125,7 @@ class OneButtonHandler(object):
 		if event == IoBeamEvents.ONEBUTTON_PRESSED:
 			if self.print_started > 0 \
 					and time.time() - self.print_started > 1 \
-					and self._printer.get_state_id() == self.PRINTER_STATE_PRINTING:
+					and self._printer.get_state_id() == self.PRINTER_STATE_PRINTING: # TODO replace with self._printer.is_printing() ?
 				self._logger.debug("onEvent() ONEBUTTON_PRESSED: self.pause_laser()")
 				self.pause_laser(need_to_release=True, trigger='OneButton pressed, regular pause mode')
 			elif self.print_started > 0 \
@@ -441,7 +441,7 @@ class OneButtonHandler(object):
 
 	def _send_frontend_ready_to_laser_state(self, state, trigger=None):
 		self._logger.debug("_send_frontend_ready_to_laser_state() state: %s, trigger: %s", state, trigger)
-		self._plugin_manager.send_plugin_message("mrbeam", dict(ready_to_laser=state, trigger=trigger))
+		#self._plugin_manager.send_plugin_message("mrbeam", dict(ready_to_laser=state, trigger=trigger))
 
 	def shutdown_prepare_start(self):
 		self.shutdown_state = self.SHUTDOWN_STATE_PREPARE

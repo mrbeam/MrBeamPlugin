@@ -144,11 +144,15 @@ class Laser(Printer):
 	def is_flashing(self):
 		return self._comm is not None and self._comm.isFlashing()
 
+	def is_readyToLaser(self):
+		return self._comm is not None and self._comm.isReadyToLaser()
+
 	def _getStateFlags(self):
 		flags = Printer._getStateFlags(self)
 		flags.update({
 			"locked": self.is_locked(),
 			"flashing": self.is_flashing(),
+			"readyToLaser": self.is_readyToLaser(),
 		})
 		return flags
 
