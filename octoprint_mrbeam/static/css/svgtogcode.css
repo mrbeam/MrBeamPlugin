@@ -533,7 +533,7 @@ svg#area_preview rect
 #material_list {
 	margin: 0;
 	max-height: 55vh;
-	overflow: auto;
+	overflow: visible;
 }
 .material_entry {
 	display: none;
@@ -589,7 +589,7 @@ li.material_entry span {
 .thickness_sample:hover, .thickness_sample.active {font-weight: bold; }
 
 #material_row {
-    overflow: hidden;
+    overflow: visible;
     white-space: nowrap;
 	width: 100%;
 	position: relative;
@@ -620,8 +620,8 @@ li.material_entry span {
 	background-color: #fff;
 }
 #material_type.active { width: 100%; }
-#material_color.active { width: calc(100% - 200px); }
-#material_thickness.active { width: calc(100% - 2 * (200px)); }
+#material_color.active { width: calc(100% - 3300px); }
+#material_thickness.active { width: calc(100% - 2 * (300px)); }
 
 #material_thickness .engrave_only {
     border-bottom: transparent;
