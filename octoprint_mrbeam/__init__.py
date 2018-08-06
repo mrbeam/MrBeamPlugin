@@ -342,9 +342,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def on_ui_render(self, now, request, render_kwargs):
 		# if will_handle_ui returned True, we will now render our custom index
 		# template, using the render_kwargs as provided by OctoPrint
-		from flask import make_response, render_template
+		from flask import make_response, render_template, g
 
 		firstRun = render_kwargs['firstRun']
+		language = g.locale.language if g.locale else "en"
 
 		enable_accesscontrol = self._user_manager.enabled
 		accesscontrol_active = enable_accesscontrol and self._user_manager.hasBeenCustomized()
@@ -400,6 +401,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 							 lasersafety_confirmation_dialog_version  = self.LASERSAFETY_CONFIRMATION_DIALOG_VERSION,
 							 lasersafety_confirmation_dialog_language = self.LASERSAFETY_CONFIRMATION_DIALOG_LANGUAGE,
+
+							 quickstart_guide_default="QuickstartGuide_{locale}.pdf".format(locale='de' if language == 'de' else 'en'),
+							 usermanual_default="UserManual_{locale}.pdf".format(locale='de' if language == 'de' else 'en')
 						 ))
 		r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
 
