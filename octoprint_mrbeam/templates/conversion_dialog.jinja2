@@ -66,9 +66,9 @@
 								 data-bind="
 										click: function(vm, event){ $root.set_material_thickness($data, event); },
 										attr: {id: 'material_thickness_'+$data.thicknessMM },
-										css: {active: $data === $root.selected_material_thickness(), engrave_only: $data.thicknessMM === -1 },
+										css: {active: _.isEqual($data, $root.selected_material_thickness()), engrave_only: $data.thicknessMM == -1 },
 										style: { padding: ($data.thicknessMM * $root.mm2px()/2)+'mm 0' },
-										visible: ($root.selected_material_thickness() === null) || ($root.selected_material_thickness() === $data),
+										visible: ($root.selected_material_thickness() == null) || _.isEqual($root.selected_material_thickness(), $data),
 										text: $root.thickness_text($data)
 								 " ></div>
 						</div>
@@ -95,7 +95,7 @@
 								<div class="control-group" data-bind="visible: has_cutting_proposal()">
 									<label class="control-label" for="custom_mat_th"> {{ _('Thickness') }}</label>
 									<div class="controls">
-										<input id="custom_mat_th" type="number" min="0" max="38" data-bind="value:save_custom_material_thickness"> mm
+										<input id="custom_mat_th" type="number" min="0" max="38" step="0.1" data-bind="value:save_custom_material_thickness"> mm
 									</div>
 								</div>
 								<div class="control-group">
@@ -115,7 +115,7 @@
 
 				<div id="material_info">
 					<p>
-						<i class="icon-warning-sign" style="color:red;" data-bind="visible: material_safety_notes() !== ''"></i>
+						<i class="icon-warning-sign" style="color:red;" data-bind="visible: material_safety_notes()"></i>
 						<span id="safety_notes" class="" data-bind="text: material_safety_notes"></span>
 					</p>
 					<a href="#" class="dropdown" data-toggle="collapse" data-target="#more_material_info" data-bind="visible: material_description() !== '' || material_hints() !== ''">

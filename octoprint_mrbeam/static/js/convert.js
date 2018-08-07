@@ -521,7 +521,7 @@ $(function(){
 					img: 'custom.jpg',
 					description: 'custom material',
 					hints: 'Figuring out material settings works best from low to high intensity and fast to slow movement.',
-					safety_notes: 'Experimenting with custom material settings is your responsibility.',
+					safety_notes: 'Experimenting with custom material settings is at your own risk.',
 					laser_type: 'MrBeamII-1.0',
 					colors: {}
 				};
@@ -539,6 +539,10 @@ $(function(){
 					}
 				}
 			}
+            // sort before we store it.
+			tmp.sort(function(a,b){
+              return b.thicknessMM - a.thicknessMM;
+            })
 			new_material.colors[color] = {cut: tmp, engrave: engrave_setting};
 
 			var data = {};
@@ -564,7 +568,7 @@ $(function(){
 							if(m.name === new_material.name){
 								self.selected_material(m);
 								self.selected_material_color(color);
-								self.selected_material_thickness(thickness);
+								self.selected_material_thickness(cut_setting);
 								self.reset_material_settings();
 								break;
 							}
@@ -675,6 +679,11 @@ $(function(){
 				if(material.colors[color].engrave !== null){
 					available_thickness = available_thickness.concat(self.engrave_only_thickness);
 				}
+
+				available_thickness.sort(function(a,b){
+				  return b.thicknessMM - a.thicknessMM;
+				})
+
 				self.material_thicknesses(available_thickness);
 				self.selected_material_thickness(null);
 				if(available_thickness.length === 1){
@@ -682,7 +691,7 @@ $(function(){
 						self.selected_material_thickness(available_thickness[0]);
 						self.dialog_state('color_assignment');
 					} else {
-						self.selected_material_thickness(-1);
+						self.selected_material_thickness(null);
 					}
 				}
 			}
@@ -741,7 +750,7 @@ $(function(){
 			$('.job_row .used_color:not(#cd_engraving)').addClass('not-used');
 			for (var idx = 0; idx < cols.length; idx++) {
 				var c = cols[idx];
-				var selection = $('#cd_color_'+c.hex.substr(1)); // crashes on color definitions like 'rgb(0,0,0)' 
+				var selection = $('#cd_color_'+c.hex.substr(1)); // crashes on color definitions like 'rgb(0,0,0)'
 				var exists = selection.length > 0;
 				if(! exists){
 					var drop_zone = $('#first_job .color_drop_zone');
