@@ -661,7 +661,8 @@ $(function(){
 			// detect Inkscape by attribute
 			var inkscape_version = root_attrs['inkscape:version'];
 			if(inkscape_version !== undefined){
-				version = inkscape_version;
+				gen = 'inkscape';
+				version = inkscape_version.value;
 //				console.log("Generator:", gen, version);
 				return {generator: gen, version: version};
 			}
