@@ -169,6 +169,7 @@ $(function() {
                         // STATUS is a global varibale that collects all status values for important reasons... (because we can).
                         if (typeof STATUS == 'undefined') {
                             STATUS = {};
+                            window.mrbeam.status = STATUS; // I like this new place better in the mrbeam object better.
                         }
                         if ('laser_temperature' in data['status']) {
                             STATUS['laser_temperature'] = data['status']['laser_temperature'];
