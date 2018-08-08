@@ -284,7 +284,7 @@ svg#area_preview {
     box-shadow: 1px 1px 2px #383e42;
 	transition: box-shadow .1s ease-in-out;
 }
-#material_row .hover_shadow:hover { 
+#material_row .hover_shadow:hover {
     box-shadow: 2px 2px 4px #383e42;
 }
 
@@ -519,9 +519,9 @@ svg#area_preview rect
     width: 100%;
     margin: 0 0 0 -14px;
 	padding: 9px 14px;
-	border-top: 1px solid #999;	
+	border-top: 1px solid #999;
 	border-bottom: 1px solid #999;
-    line-height: 30px;	
+    line-height: 30px;
 }
 
 #color_assignment.inactive {
@@ -533,7 +533,7 @@ svg#area_preview rect
 #material_list {
 	margin: 0;
 	max-height: 55vh;
-	overflow: auto;
+	overflow: visible;
 }
 .material_entry {
 	display: none;
@@ -546,8 +546,8 @@ svg#area_preview rect
 	cursor: pointer;
 }
 
-#material_type .material_entry.selected { 
-	display: block;     
+#material_type .material_entry.selected {
+	display: block;
 	height: 60px;
     background-position: center;
 }
@@ -566,6 +566,8 @@ li.material_entry span {
 
 #thickness_list{
 	width: 200px;
+    white-space: initial;
+
 }
 
 
@@ -587,6 +589,8 @@ li.material_entry span {
 .thickness_sample:hover, .thickness_sample.active {font-weight: bold; }
 
 #material_row {
+    overflow: visible;
+    white-space: nowrap;
 	width: 100%;
 	position: relative;
 	transition: height .3s ease-in-out;
@@ -616,8 +620,8 @@ li.material_entry span {
 	background-color: #fff;
 }
 #material_type.active { width: 100%; }
-#material_color.active { width: calc(100% - 200px - 3em); }
-#material_thickness.active { width: calc(100% - 2 * (200px + 6em)); }
+#material_color.active { width: calc(100% - 3300px); }
+#material_thickness.active { width: calc(100% - 2 * (300px)); }
 
 #material_thickness .engrave_only {
     border-bottom: transparent;
@@ -669,8 +673,8 @@ li.material_entry span {
     margin-bottom: .5em;
 }
 
-#quick_shape_dialog input[type=color], 
-#quick_shape_dialog input[type=number], 
+#quick_shape_dialog input[type=color],
+#quick_shape_dialog input[type=number],
 #quick_shape_dialog input[type=range] {
     width: 150px;
 }
