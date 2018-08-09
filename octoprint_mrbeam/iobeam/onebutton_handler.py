@@ -125,13 +125,16 @@ class OneButtonHandler(object):
 		if event == IoBeamEvents.ONEBUTTON_PRESSED:
 			if self.print_started > 0 \
 					and time.time() - self.print_started > 1 \
-					and self._printer.get_state_id() == self.PRINTER_STATE_PRINTING: # TODO replace with self._printer.is_printing() ?
+					and self._printer.is_printing(): # TEST this line instead of the one below.
+					#and self._printer.get_state_id() == self.PRINTER_STATE_PRINTING: # TODO replace with self._printer.is_printing() ?
 				self._logger.debug("onEvent() ONEBUTTON_PRESSED: self.pause_laser()")
 				self.pause_laser(need_to_release=True, trigger='OneButton pressed, regular pause mode')
 			elif self.print_started > 0 \
 					and time.time() - self.print_started > 1 \
-					and self._printer.get_state_id() == self.PRINTER_STATE_PAUSED \
+					and self._printer.is_paused() \
 					and self.behave_cooling_state:
+					#and self._printer.get_state_id() == self.PRINTER_STATE_PAUSED 
+					
 				self._logger.debug("onEvent() ONEBUTTON_PRESSED: stop_cooling_behavior and pause_laser()")
 				self.stop_cooling_behavior()
 				self.pause_laser(need_to_release=True, trigger='OneButton pressed, stop_cooling_behavior and switch to pause_laser')
@@ -173,7 +176,8 @@ class OneButtonHandler(object):
 				self._logger.debug("onEvent() ONEBUTTON_RELEASED: interlock open or fan not connected: sending BUTTON_PRESS_REJECT.")
 				self._fireEvent(MrBeamEvents.BUTTON_PRESS_REJECT)
 			# resume laser (or timeout block)
-			elif self._printer.get_state_id() == self.PRINTER_STATE_PAUSED:
+			elif self._printer.is_paused():
+			#elif self._printer.get_state_id() == self.PRINTER_STATE_PAUSED:
 				if self._is_during_pause_waiting_time():
 					self._logger.debug("onEvent() ONEBUTTON_RELEASED: timeout block")
 					self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_BLOCK)
@@ -192,10 +196,12 @@ class OneButtonHandler(object):
 					self.resume_laser_if_waitingtime_is_over()
 
 		elif event == IoBeamEvents.INTERLOCK_OPEN:
-			if self._printer.get_state_id() == self.PRINTER_STATE_PRINTING:
+			#if self._printer.get_state_id() == self.PRINTER_STATE_PRINTING:
+			if self._printer.is_printing():
 				self._logger.debug("onEvent() INTERLOCK_OPEN: pausing laser")
 				self.pause_laser(need_to_release=False, trigger="INTERLOCK_OPEN")
-			elif self._printer.get_state_id() == self.PRINTER_STATE_PAUSED and self.behave_cooling_state:
+			elif self._printer.is_paused() and self.behave_cooling_state:
+			#elif self._printer.get_state_id() == self.PRINTER_STATE_PAUSED and self.behave_cooling_state:
 				self._logger.debug("onEvent() INTERLOCK_OPEN: pausing from cooling state")
 				self.pause_laser(need_to_release=False, trigger="INTERLOCK_OPEN during cooling pause")
 				self.stop_cooling_behavior()
@@ -210,7 +216,8 @@ class OneButtonHandler(object):
 		elif event == OctoPrintEvents.SLICING_DONE:
 			if not self.is_ready_to_laser() \
 					and self._printer.is_operational() \
-					and not self._printer.get_state_id() in (self.PRINTER_STATE_PRINTING, self.PRINTER_STATE_PAUSED):
+					and not (self._printer.is_printing() or self._printer.is_paused()):
+					#and not self._printer.get_state_id() in (self.PRINTER_STATE_PRINTING, self.PRINTER_STATE_PAUSED):
 				self._logger.debug("onEvent() SLICING_DONE set_rtl_file filename: %s:", 'gcode' in payload)
 				try:
 					self.set_rtl_file(payload['gcode'])
@@ -220,8 +227,9 @@ class OneButtonHandler(object):
 		elif event == OctoPrintEvents.FILE_SELECTED:
 			if not self.is_ready_to_laser(False) \
 				and self._printer.is_operational() \
-				and not self._printer.get_state_id() in (self.PRINTER_STATE_PRINTING, self.PRINTER_STATE_PAUSED) \
+				and not (self._printer.is_printing() or self._printer.is_paused()) \
 				and ('filename' in payload or len(payload) == 0):
+				#and not self._printer.get_state_id() in (self.PRINTER_STATE_PRINTING, self.PRINTER_STATE_PAUSED) 
 				self._logger.debug("onEvent() FILE_SELECTED set_ready_to_laser filename: %s:", 'filename' in payload)
 				try:
 					# OctoPrint 1.3.4 doesn't provide the file name anymore
@@ -253,8 +261,8 @@ class OneButtonHandler(object):
 	def is_cooling(self):
 		return _mrbeam_plugin_implementation._temperatureManager.is_cooling()
 
-	def is_printing(self):
-		return self._printer.get_state_id() == self.PRINTER_STATE_PRINTING
+	#def is_printing(self):
+	#	return self._printer.get_state_id() == self.PRINTER_STATE_PRINTING
 
 	def cooling_down_pause(self):
 		self.start_cooling_behavior()
@@ -358,7 +366,7 @@ class OneButtonHandler(object):
 			raise Exception("ReadyToLaser: file not found '%s'" % file)
 		if not valid_file_type(file, type="machinecode"):
 			raise Exception("ReadyToLaser: file is not of type machine code")
-		if not self._printer.is_operational() or not self._printer.get_state_id() == "OPERATIONAL":
+		if not self._printer.is_operational() or not self._printer.get_state_id() == "OPERATIONAL": 
 			raise Exception("ReadyToLaser: printer is not ready. printer state is: %s" % self._printer.get_state_id())
 
 	def _check_system_integrity(self):
@@ -440,8 +448,10 @@ class OneButtonHandler(object):
 		self._cancel_pause_safety_timeout_timer()
 
 	def _send_frontend_ready_to_laser_state(self, state, trigger=None):
+		#TODO: change state via self._printer._comm
+		# not via frontend message
 		self._logger.debug("_send_frontend_ready_to_laser_state() state: %s, trigger: %s", state, trigger)
-		#self._plugin_manager.send_plugin_message("mrbeam", dict(ready_to_laser=state, trigger=trigger))
+		self._plugin_manager.send_plugin_message("mrbeam", dict(ready_to_laser=state, trigger=trigger))
 
 	def shutdown_prepare_start(self):
 		self.shutdown_state = self.SHUTDOWN_STATE_PREPARE

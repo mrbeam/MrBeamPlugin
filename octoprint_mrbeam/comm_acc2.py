@@ -413,6 +413,9 @@ class MachineCom(object):
 		return ret
 
 	def _getNext(self):
+		if self._currentFile is None:
+			sel._log("WARN: _getNext: No file selected.")
+			return None
 		if self._finished_currentFile is False:
 			line = self._currentFile.getNext()
 			if line is None:
@@ -1206,7 +1209,8 @@ class MachineCom(object):
 			self._commandQueue.put(cmd)
 			self._send_event.set()
 
-	def selectFile(self, filename, sd):
+	def selectFile(self, filename, sd, printAfterSelect=False, pos=None):
+		print "##### COMM_ACC2 selectFile"
 		if self.isBusy():
 			return
 
@@ -1217,6 +1221,8 @@ class MachineCom(object):
 			"origin": self._currentFile.getFileLocation()
 		})
 		self._callback.on_comm_file_selected(filename, self._currentFile.getFilesize(), False)
+		if printAfterSelect:
+			self.startPrint(filename, sd, pos=pos)
 
 	def unselectFile(self):
 		if self.isBusy():
@@ -1253,6 +1259,8 @@ class MachineCom(object):
 			}
 			eventManager().fire(OctoPrintEvents.PRINT_STARTED, payload)
 
+			#self.sendCommand(self.COMMAND_HOLD)
+			self.setPause(True, send_cmd=True, pause_for_cooling=False, trigger="PauseAtJobStart", force=False)
 			self._changeState(self.STATE_PRINTING)
 		except:
 			self._logger.exception("Error while trying to start printing")

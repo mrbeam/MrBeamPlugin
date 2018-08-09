@@ -1074,8 +1074,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 						self._printer.is_printing() or self._printer.is_paused()):
 				make_response("Trying to slice into file that is currently being printed: %s" % gcode_name, 409)
 
-			select_after_slicing = False
-			print_after_slicing = False
+			select_after_slicing = True
+			print_after_slicing = True
 
 			#get job params out of data json
 			overrides = dict()
@@ -1105,10 +1105,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 				if select_after_slicing or print_after_slicing:
 					sd = False
-					filenameToSelect = self._file_manager.path_on_disk(target, gcode_name)
-					printer.select_file(filenameToSelect, sd, True)
+					try:
+						filenameToSelect = self._file_manager.path_on_disk(target, gcode_name)
+						self._printer.select_file(filenameToSelect, sd, printAfterSelect=print_after_slicing, pos=None)
+					except:
+						self._logger.exception("self._file_manager.path_on_disk")
 
 			try:
+				#TODO check this signature. does not match imho
 				self._file_manager.slice(slicer, target, filename, target, gcode_name,
 										 profile=None,#profile,
 										 printer_profile_id=None, #printerProfile,

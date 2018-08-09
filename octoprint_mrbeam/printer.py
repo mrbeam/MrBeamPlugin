@@ -112,6 +112,11 @@ class Laser(Printer):
 			return
 		self._comm.decreasePasses()
 
+	def select_file(self, path, sd, printAfterSelect=False, pos=None):
+		if self._comm is None:
+			return
+		self._comm.selectFile(path, sd, printAfterSelect=printAfterSelect, pos=pos)
+
 	def pause_print(self, force=False, trigger=None):
 		"""
 		Pause the current printjob.
