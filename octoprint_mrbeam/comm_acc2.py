@@ -414,8 +414,9 @@ class MachineCom(object):
 
 	def _getNext(self):
 		if self._currentFile is None:
-			sel._log("WARN: _getNext: No file selected.")
-			return None
+			raise Exception("_getNext: No file selected")
+			# self._log("WARN: _getNext: No file selected.")
+			# return None
 		if self._finished_currentFile is False:
 			line = self._currentFile.getNext()
 			if line is None:
@@ -1210,7 +1211,7 @@ class MachineCom(object):
 			self._send_event.set()
 
 	def selectFile(self, filename, sd, printAfterSelect=False, pos=None):
-		print "##### COMM_ACC2 selectFile"
+		self._logger.info("ANDYTEST ##### COMM_ACC2 selectFile")
 		if self.isBusy():
 			return
 
@@ -1233,8 +1234,10 @@ class MachineCom(object):
 		self._callback.on_comm_file_selected(None, None, False)
 
 	def startPrint(self, *args, **kwargs):
+		self._logger.info("ANDYTEST startPrint() args: %s, kwargs: %s", args, kwargs)
 		# TODO implement pos kw argument for resuming prints
 		if not self.isOperational():
+			self._logger.info("ANDYTEST startPrint() not isOperational(): returning")
 			return
 
 		if self._currentFile is None:
@@ -1260,7 +1263,7 @@ class MachineCom(object):
 			eventManager().fire(OctoPrintEvents.PRINT_STARTED, payload)
 
 			#self.sendCommand(self.COMMAND_HOLD)
-			self.setPause(True, send_cmd=True, pause_for_cooling=False, trigger="PauseAtJobStart", force=False)
+			# self.setPause(True, send_cmd=True, pause_for_cooling=False, trigger="PauseAtJobStart", force=False)
 			self._changeState(self.STATE_PRINTING)
 		except:
 			self._logger.exception("Error while trying to start printing")

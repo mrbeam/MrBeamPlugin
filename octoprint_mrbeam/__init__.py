@@ -1014,6 +1014,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@octoprint.plugin.BlueprintPlugin.route("/convert", methods=["POST"])
 	@restricted_access
 	def gcodeConvertCommand(self):
+		self._logger.info("ANDYTEST __init__.gcodeConvertCommand()")
 		target = "local"
 
 		# valid file commands, dict mapping command name to mandatory parameters
@@ -1023,6 +1024,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		command, data, response = get_json_command_from_request(request, valid_commands)
 		if response is not None:
 			return response
+		# self._logger.info("ANDYTEST __init__.gcodeConvertCommand() command: %s, data: %s, response: %s", command, data, response)
 
 		appendGcodeFiles = data['gcodeFilesToAppend']
 		del data['gcodeFilesToAppend']
@@ -1090,6 +1092,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 			# callback definition
 			def slicing_done(target, gcode_name, select_after_slicing, print_after_slicing, append_these_files):
+				self._logger.info("ANDYTEST __init__.gcodeConvertCommand slicing_done() target: %s, gcode_name: %s, select_after_slicing: %s, print_after_slicing: %s, append_these_files: %s", target, gcode_name, select_after_slicing, print_after_slicing, append_these_files)
 				# append additioal gcodes
 				output_path = self._file_manager.path_on_disk(target, gcode_name)
 				with open(output_path, 'ab') as wfd:
@@ -1107,6 +1110,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 					sd = False
 					try:
 						filenameToSelect = self._file_manager.path_on_disk(target, gcode_name)
+						self._logger.info("ANDYTEST calling _printer.select_file")
 						self._printer.select_file(filenameToSelect, sd, printAfterSelect=print_after_slicing, pos=None)
 					except:
 						self._logger.exception("self._file_manager.path_on_disk")
@@ -1199,7 +1203,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 
 	def ready_to_laser(self, data):
-		self._logger.debug("ready_to_laser() data: %s", data)
+		self._logger.debug("ANDYTEST ready_to_laser() data: %s", data)
 		if 'dev_start_button' in data and data['dev_start_button']:
 			if self.get_env(self.ENV_LOCAL).lower() == 'dev':
 				self._logger.info("DEV dev_start_button pressed.")

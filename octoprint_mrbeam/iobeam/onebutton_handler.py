@@ -85,8 +85,8 @@ class OneButtonHandler(object):
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_STARTED, self.onEvent)
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_PAUSED, self.onEvent)
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_RESUMED, self.onEvent)
-		self._event_bus.subscribe(OctoPrintEvents.SLICING_DONE, self.onEvent)
-		self._event_bus.subscribe(OctoPrintEvents.FILE_SELECTED, self.onEvent)
+		# self._event_bus.subscribe(OctoPrintEvents.SLICING_DONE, self.onEvent)
+		# self._event_bus.subscribe(OctoPrintEvents.FILE_SELECTED, self.onEvent)
 
 	def onEvent(self, event, payload):
 		# first, log da shit...
@@ -133,8 +133,8 @@ class OneButtonHandler(object):
 					and time.time() - self.print_started > 1 \
 					and self._printer.is_paused() \
 					and self.behave_cooling_state:
-					#and self._printer.get_state_id() == self.PRINTER_STATE_PAUSED 
-					
+					#and self._printer.get_state_id() == self.PRINTER_STATE_PAUSED
+
 				self._logger.debug("onEvent() ONEBUTTON_PRESSED: stop_cooling_behavior and pause_laser()")
 				self.stop_cooling_behavior()
 				self.pause_laser(need_to_release=True, trigger='OneButton pressed, stop_cooling_behavior and switch to pause_laser')
@@ -229,7 +229,7 @@ class OneButtonHandler(object):
 				and self._printer.is_operational() \
 				and not (self._printer.is_printing() or self._printer.is_paused()) \
 				and ('filename' in payload or len(payload) == 0):
-				#and not self._printer.get_state_id() in (self.PRINTER_STATE_PRINTING, self.PRINTER_STATE_PAUSED) 
+				#and not self._printer.get_state_id() in (self.PRINTER_STATE_PRINTING, self.PRINTER_STATE_PAUSED)
 				self._logger.debug("onEvent() FILE_SELECTED set_ready_to_laser filename: %s:", 'filename' in payload)
 				try:
 					# OctoPrint 1.3.4 doesn't provide the file name anymore
@@ -261,7 +261,8 @@ class OneButtonHandler(object):
 	def is_cooling(self):
 		return _mrbeam_plugin_implementation._temperatureManager.is_cooling()
 
-	#def is_printing(self):
+	def is_printing(self):
+		return self._printer.is_printing()
 	#	return self._printer.get_state_id() == self.PRINTER_STATE_PRINTING
 
 	def cooling_down_pause(self):
@@ -351,6 +352,8 @@ class OneButtonHandler(object):
 
 		self._logger.debug("_start_laser() LET'S LASER BABY!!! it's file %s", self.ready_to_laser_file)
 		myFile = self._file_manager.path_on_disk("local", self.ready_to_laser_file)
+
+		self._logger.info("ANDYTEST _start_laser() calling printer.select_file()")
 		result = self._printer.select_file(myFile, False, True)
 
 		self.unset_ready_to_laser(lasering=True)
@@ -366,7 +369,7 @@ class OneButtonHandler(object):
 			raise Exception("ReadyToLaser: file not found '%s'" % file)
 		if not valid_file_type(file, type="machinecode"):
 			raise Exception("ReadyToLaser: file is not of type machine code")
-		if not self._printer.is_operational() or not self._printer.get_state_id() == "OPERATIONAL": 
+		if not self._printer.is_operational() or not self._printer.get_state_id() == "OPERATIONAL":
 			raise Exception("ReadyToLaser: printer is not ready. printer state is: %s" % self._printer.get_state_id())
 
 	def _check_system_integrity(self):
