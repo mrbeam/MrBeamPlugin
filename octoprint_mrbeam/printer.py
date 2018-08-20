@@ -115,8 +115,17 @@ class Laser(Printer):
 	def select_file(self, path, sd, printAfterSelect=False, pos=None):
 		self._logger.info("ANDYTEST printer.select_file() path: %s, sd: %s, printAfterSelect: %s, pos %s", path, sd, printAfterSelect, pos)
 		if self._comm is None:
+			self._logger.error("select_file() _comm is None")
 			return
-		self._comm.selectFile(path, sd, printAfterSelect=printAfterSelect, pos=pos)
+
+		self._printAfterSelect = printAfterSelect
+		self._posAfterSelect = pos
+		# self._comm.selectFile("/" + path if sd else path, sd)
+		# self._comm.selectFile(path, sd, printAfterSelect=printAfterSelect, pos=pos)
+		self._comm.selectFile(path, sd)
+		self._updateProgressData()
+		# self._setCurrentZ(None)
+
 
 	def pause_print(self, force=False, trigger=None):
 		"""

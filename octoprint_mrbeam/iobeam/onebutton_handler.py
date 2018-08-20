@@ -75,18 +75,19 @@ class OneButtonHandler(object):
 		self.intended_pause = False
 
 	def _subscribe(self):
-		self._event_bus.subscribe(IoBeamEvents.ONEBUTTON_DOWN, self.onEvent)
-		self._event_bus.subscribe(IoBeamEvents.ONEBUTTON_PRESSED, self.onEvent)
-		self._event_bus.subscribe(IoBeamEvents.ONEBUTTON_RELEASED, self.onEvent)
-		self._event_bus.subscribe(IoBeamEvents.INTERLOCK_OPEN, self.onEvent)
-		self._event_bus.subscribe(IoBeamEvents.INTERLOCK_CLOSED, self.onEvent)
-		self._event_bus.subscribe(IoBeamEvents.DISCONNECT, self.onEvent)
-		self._event_bus.subscribe(OctoPrintEvents.CLIENT_CLOSED, self.onEvent)
-		self._event_bus.subscribe(OctoPrintEvents.PRINT_STARTED, self.onEvent)
-		self._event_bus.subscribe(OctoPrintEvents.PRINT_PAUSED, self.onEvent)
-		self._event_bus.subscribe(OctoPrintEvents.PRINT_RESUMED, self.onEvent)
+		# self._event_bus.subscribe(IoBeamEvents.ONEBUTTON_DOWN, self.onEvent)
+		# self._event_bus.subscribe(IoBeamEvents.ONEBUTTON_PRESSED, self.onEvent)
+		# self._event_bus.subscribe(IoBeamEvents.ONEBUTTON_RELEASED, self.onEvent)
+		# self._event_bus.subscribe(IoBeamEvents.INTERLOCK_OPEN, self.onEvent)
+		# self._event_bus.subscribe(IoBeamEvents.INTERLOCK_CLOSED, self.onEvent)
+		# self._event_bus.subscribe(IoBeamEvents.DISCONNECT, self.onEvent)
+		# self._event_bus.subscribe(OctoPrintEvents.CLIENT_CLOSED, self.onEvent)
+		# self._event_bus.subscribe(OctoPrintEvents.PRINT_STARTED, self.onEvent)
+		# self._event_bus.subscribe(OctoPrintEvents.PRINT_PAUSED, self.onEvent)
+		# self._event_bus.subscribe(OctoPrintEvents.PRINT_RESUMED, self.onEvent)
 		# self._event_bus.subscribe(OctoPrintEvents.SLICING_DONE, self.onEvent)
 		# self._event_bus.subscribe(OctoPrintEvents.FILE_SELECTED, self.onEvent)
+		pass
 
 	def onEvent(self, event, payload):
 		# first, log da shit...

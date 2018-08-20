@@ -1110,7 +1110,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 					sd = False
 					try:
 						filenameToSelect = self._file_manager.path_on_disk(target, gcode_name)
-						self._logger.info("ANDYTEST calling _printer.select_file")
+						self._logger.info("ANDYTEST calling _printer.select_file() filenameToSelect: %s", filenameToSelect)
 						self._printer.select_file(filenameToSelect, sd, printAfterSelect=print_after_slicing, pos=None)
 					except:
 						self._logger.exception("self._file_manager.path_on_disk")

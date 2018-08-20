@@ -1211,7 +1211,7 @@ class MachineCom(object):
 			self._send_event.set()
 
 	def selectFile(self, filename, sd, printAfterSelect=False, pos=None):
-		self._logger.info("ANDYTEST ##### COMM_ACC2 selectFile")
+		self._logger.info("ANDYTEST selectFile() filename: %s, sd: %s, printAfterSelect: %s, pos: %s", filename, sd, printAfterSelect, pos)
 		if self.isBusy():
 			return
 
@@ -1222,8 +1222,8 @@ class MachineCom(object):
 			"origin": self._currentFile.getFileLocation()
 		})
 		self._callback.on_comm_file_selected(filename, self._currentFile.getFilesize(), False)
-		if printAfterSelect:
-			self.startPrint(filename, sd, pos=pos)
+		# if printAfterSelect:
+		# 	self.startPrint(filename, sd, pos=pos)
 
 	def unselectFile(self):
 		if self.isBusy():
