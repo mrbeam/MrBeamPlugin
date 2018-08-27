@@ -148,7 +148,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		// catch browsers without native svg support
 		source.onerror = function(e) {
             var len = svgDataUri ? svgDataUri.length : -1;
-            var msg = "Error during conversion: Loading SVG dataUri into image element failed. (dataUri.lenght:"+len+")";
+            var msg = "Error during conversion: Loading SVG dataUri into image element failed. (dataUri.length:"+len+")";
             console.error(msg, e);
             var error = "<p>" + gettext("The SVG file contains clipPath elements.<br/>clipPath is not supported yet and has been removed from file.") + "</p>";
 			new PNotify({
