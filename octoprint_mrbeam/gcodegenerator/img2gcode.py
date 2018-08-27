@@ -56,6 +56,8 @@ class ImageProcessor():
 	              material = None):
 		
 		self.log = logging.getLogger("octoprint.plugins.mrbeam.img2gcode")
+		self.debugPreprocessing = False
+		self.MULTILINE_DATA_URLS = True
 		
 		self.debug = False
 		try:
@@ -102,7 +104,6 @@ class ImageProcessor():
 			self.log.info("Disabling overshoot, pierce time is set.")
 			self.overshoot_distance = 0
 
-		self.debugPreprocessing = False
 
 		# checks if intensity settings are inverted eg. anodized aluminum
 		self.is_inverted = self.intensity_white > self.intensity_black
@@ -592,8 +593,11 @@ class ImageProcessor():
 		img = self._dataurl_to_img(dataUrl)
 
 		imgArray = self.img_prepare(img, w, h)
-		dataUrl64Chars = re.sub("(.{160})", "\\1\n", dataUrl, 0, re.DOTALL) # newline after 160 chars for easy .gco handling in external viewers
-		gcode = self.generate_gcode(imgArray, x, y, w, h, dataUrl64Chars)
+		if self.MULTILINE_DATA_URLS:
+			file_id = re.sub("(.{160})", "\\1\n;", dataUrl, 0, re.DOTALL) # newline after 160 chars for easy .gco handling in external viewers
+		else:
+			file_id = dataUrl
+		gcode = self.generate_gcode(imgArray, x, y, w, h, file_id)
 		return gcode
 
 	def _dataurl_to_img(self, dataUrl):
