@@ -54,11 +54,13 @@ class ImageProcessor():
 	              pierce_time = 0,
 	              overshoot_distance = 0, # disabled for now. TODO: enable (1) when switch on delay is HW fixed.
 	              material = None):
-		
+
 		self.log = logging.getLogger("octoprint.plugins.mrbeam.img2gcode")
 		self.debugPreprocessing = False
-		self.MULTILINE_DATA_URLS = True
-		
+
+		# if True base64 image data urls embedded into the GCODE will be broken into short lines. If False it's one long line
+		self.MULTILINE_DATA_URLS = False
+
 		self.debug = False
 		try:
 			self.debug = _mrbeam_plugin_implementation._settings.get(["dev", "debug_gcode"])
@@ -68,7 +70,7 @@ class ImageProcessor():
 		else:
 			self.log.info("Gcode debugging {} (read from config)".format(self.debug))
 			pass
-		
+
 		if(self.debug):
 			self.log.setLevel(logging.DEBUG)
 
@@ -228,14 +230,14 @@ class ImageProcessor():
 		contour_parts = separator.separate_contours(img, threshold=self.ignore_brighter_than+1)
 		self.log.debug("contour separation took {} seconds".format(time.time()-start))
 		self.log.debug("separated into {} contours".format(len(contour_parts)))
-		
+
 		parts = []
 		start = time.time()
 		if(self.debugPreprocessing):
 			for i,p in enumerate(contour_parts):
 				img_data = p['i']
 				img_data.save("/tmp/img2gcode_7_contourpart_{:0>3}_@{},{}.png".format(i, p['x'], p['y']))
-		
+
 		if(self.separation == True):
 			for cp in contour_parts:
 				# 7.2. split contour by left-pixels-first method
@@ -251,7 +253,7 @@ class ImageProcessor():
 				self.log.debug("separated into {} parts".format(len(parts)))
 		else:
 			parts.extend(contour_parts)
-				
+
 		if(self.debugPreprocessing):
 			for i,p in enumerate(parts):
 				img_data = p['i']
@@ -262,7 +264,7 @@ class ImageProcessor():
 	def generate_gcode(self, imgArray, xMM,yMM,wMM,hMM, file_id):
 		"""
 		takes an array of objects containing the separated image and converts them to gcode.
-		:param imgArray: array of imagedata containing dicts 
+		:param imgArray: array of imagedata containing dicts
 		:param xMM: x position of the image in mm (origin: left bottom)
 		:param yMM: y position of the image in mm (origin: left bottom)
 		:param wMM: width of the image in mm
@@ -277,21 +279,21 @@ class ImageProcessor():
         :returns: gcode
         :rtype: string
 		"""
-		
+
 		# write all parameters used for generating the gcode into the file
 		settings_comment = self.get_settings_as_comment(xMM, yMM, wMM, hMM, "")
 		self.log.info("img2gcode conversion started:\n%s" % settings_comment)
 		self._append_gcode(self.get_settings_as_comment(xMM, yMM, wMM, hMM, file_id))
 		xMM += self.beam/2.0*0
 		yMM -= self.beam
-		
+
 		# pre-condition: set feedrate, enable laser with 0 intensity.
 		self._append_gcode('F' + str(self.feedrate_white)) # set an initial feedrate
 		self.gc_ctx.f = self.feedrate_white #TODO hack. set with line above
 		self._append_gcode('M3S0') # enable laser
 		self.gc_ctx.s = 0 #TODO hack. set with line above
 		self.gc_ctx.laser_active = True #TODO hack. set with line above
-		
+
 		direction_positive = True
 		#self.is_first_pixel = True
 
@@ -303,23 +305,23 @@ class ImageProcessor():
 			img = img_data['i']
 			size = img.size # size of the img fraction in pixels
 			height_px = size[1]
-			
+
 			# image part has its own pixel offset. Calc general absolute offset in MM
 			x_off = img_data['x']*self.beam + xMM # mm here, img_data['x'] is in pixels
 			y_off = hMM - img_data['y']*self.beam + yMM # mm here, but inverted for the y axis
 			#self.log.info("yPx: {}, yMM: {}, hMM: {} => y_final: {}".format(img_data['y'], yMM, hMM, y_off))
 			img_pos_mm = (x_off, y_off) # lower left corner of partial image in mm
 
-			self._append_gcode("; Begin part {} @ pixel ({},{}) with dimensions {}x{}".format(img_data['id'], img_data['x'],img_data['y'], size[0], size[1])) 
+			self._append_gcode("; Begin part {} @ pixel ({},{}) with dimensions {}x{}".format(img_data['id'], img_data['x'],img_data['y'], size[0], size[1]))
 			# iterate line by line
 			pix = img.load()
 			for row in range(height_px-1,-1,-1):
 
 				line_info = self.get_pixelinfo_of_line(pix, size, row)
-				y = img_pos_mm[1] - (self.beam * line_info['row']) 
+				y = img_pos_mm[1] - (self.beam * line_info['row'])
 
 				if(line_info['left'] != None and y >= 0 and y <= self.workingAreaHeight):
-					
+
 					# prepare line start
 					self.write_gcode_for_line_start(y, img_pos_mm, pix, line_info, direction_positive, debug=self.debug)
 
@@ -328,16 +330,16 @@ class ImageProcessor():
 
 					# after line
 					self.write_gcode_for_line_end(img_pos_mm, line_info, direction_positive, debug=self.debug)
-					
+
 					# flip direction after each line to go back and forth
 					direction_positive = not direction_positive
 				else:
 					if(line_info['left'] != None):
 						# skip line vertical out of working area
 						self._append_gcode("; ignoring line y={}, out of working area.".format(y))
-					
 
-			self._append_gcode(";EndPart") 
+
+			self._append_gcode(";EndPart")
 			self._append_gcode("M3S0")
 			self.gc_ctx.s = 0
 			self.gc_ctx.laser_active = True
@@ -360,10 +362,10 @@ class ImageProcessor():
 		first_idx = self.get_first_juicy_pixel(pixelArray, w_px, row_idx)
 		if(first_idx != None):
 			last_idx = self.get_last_juicy_pixel(pixelArray, w_px, row_idx)
-		else: 
+		else:
 			last_idx = None
 		y_idx = row_idx
-		
+
 		return {'left': first_idx, 'right': last_idx, 'row':y_idx, 'img_w': w_px, 'img_h': h_px }
 
 	def get_first_juicy_pixel(self, pixelArray, w_px, row):
@@ -377,12 +379,12 @@ class ImageProcessor():
 			if(pixelArray[i, row] <= self.ignore_brighter_than):
 				return i
 		return None
-		
-				
+
+
 	#######################################################################
 	#
 	# gcode generation methods
-	# 
+	#
 	# all methods starting with write_gcode_*
 	# 1. write their gcode directly with the self._append_gcode method
 	# 2. write a \n at the end
@@ -392,19 +394,19 @@ class ImageProcessor():
 
 	def write_gcode_for_line_start(self, y, img_pos_mm, pixelArray, line_info, direction_positive, debug=False):
 		"""
-		Writes GCode to ensure the precondition of a line gcode. 
+		Writes GCode to ensure the precondition of a line gcode.
 		This includes:
 		- Move laserhead to correct starting position with G0
 		- Do the overshoot move if necessary
 		- Activate laser with 0 intensity
 		"""
-		
+
 		# Calculate line start coordinates (including overshoot distance)
 		if(direction_positive):
 			x = img_pos_mm[0] + self.beam * line_info['left'] - self.overshoot_distance
 		else:
 			x = img_pos_mm[0] + self.beam * line_info['right'] + self.overshoot_distance
-		
+
 		# Move to line start coordinates
 		comment = None
 		if(debug): comment = "goto line start"
@@ -413,40 +415,40 @@ class ImageProcessor():
 		self.gc_ctx.s = 0
 		self.gc_ctx.x = x
 		self.gc_ctx.y = y
-		
+
 		# Calculate the overshoot move
 		if(self.overshoot_distance > 0):
 			if(direction_positive):
 				x = x + self.overshoot_distance
 			else:
 				x = x - self.overshoot_distance
-			
+
 			comment = None
 			if(debug): comment = "overshoot move"
 			gc = self._get_gcode_g0(x=x, comment=comment)
 			self._append_gcode(gc)
 			self.gc_ctx.s = 0
 			self.gc_ctx.x = x
-		
-	
+
+
 	def write_gcode_for_line_end(self, img_pos_mm, line_info, direction_positive, debug=False):
 		"""
-		Writes GCode to ensure the postcondition of a line gcode. 
+		Writes GCode to ensure the postcondition of a line gcode.
 		This includes:
 		- set laser intensity to 0
 		"""
 		comment = ""
 		if(debug):
-			arrow = '->' if(direction_positive) else '<-' 
+			arrow = '->' if(direction_positive) else '<-'
 			comment = "; EOL: x=[{} {} {}], y={}".format(line_info['left'], arrow, line_info['right'], line_info['row'])
-		
+
 		x = self.gc_ctx.x
 		if(self.overshoot_distance > 0):
 			if(direction_positive):
 				x = x + self.overshoot_distance
 			else:
 				x = x - self.overshoot_distance
-			
+
 			comment = None
 			if(debug): comment = "overshoot move"
 			gc = self._get_gcode_g0(x=x, comment=comment)
@@ -460,23 +462,23 @@ class ImageProcessor():
 
 	def write_gcode_for_trimmed_line(self, img_pos_mm, pixelArray, line_info, direction_positive, debug=False):
 		"""
-		Writes GCode for one line of juicy pixels. 
+		Writes GCode for one line of juicy pixels.
 		Preconditions:
 		- Laserhead is already moved to correct starting position with G0
 		- Laser is active (still active or switched on with M3S0)
 		"""
-		
+
 		# iterate over juicy pixels
-		if(direction_positive): 
-			pixelrange = range(line_info['left'], line_info['right']+1) 
-		else: 
+		if(direction_positive):
+			pixelrange = range(line_info['left'], line_info['right']+1)
+		else:
 			pixelrange = range(line_info['right'], line_info['left']-1, -1)
-		
+
 		row = line_info['row']
-		
+
 		lastBrightness = self.ignore_brighter_than + 1
 		for i in pixelrange:
-			
+
 			brightness = pixelArray[i, row]
 			if(brightness != lastBrightness ):
 				if(i != pixelrange[0]): # don't move after new line
@@ -490,19 +492,19 @@ class ImageProcessor():
 		if(not self._ignore_pixel_brightness(brightness) and self.get_intensity(brightness) > 0): # finish non-white line
 			end_of_line = img_pos_mm[0] + pixelrange[-1] * self.beam
 			pos = self.write_gcode_for_equal_pixels(brightness, end_of_line, debug=debug)
-		
-		
+
+
 	def write_gcode_for_equal_pixels(self, brightness, target_x, comment=None, debug=False):
 		"""
-		Writes gcode for a sequence of equal pixels. 
+		Writes gcode for a sequence of equal pixels.
 		Choses G1 or G0 depending on brightness, adds pierce-time gcode after G0 command
-		Preconditions: 
+		Preconditions:
 		- laser in position
 		- laser activated
 		"""
 		if(debug):
 			comment = "brightness: {}".format(brightness)
-		
+
 		# fast skipping whitespace
 		if self._ignore_pixel_brightness(brightness):
 			gcode = self._get_gcode_g0(x=target_x, comment=comment)
@@ -520,17 +522,17 @@ class ImageProcessor():
 			intensity = self.get_intensity(brightness)
 			feedrate = self.get_feedrate(brightness)
 
-			
+
 			#if self.is_first_pixel:
 			#	gcode = self._get_gcode_g0(x=target_x, comment="first_px")
 			#	self._append_gcode(gcode)
-				
-			gcode = self._get_gcode_g1(x=target_x, s=intensity, f=feedrate, comment=comment) 
+
+			gcode = self._get_gcode_g1(x=target_x, s=intensity, f=feedrate, comment=comment)
 			self._append_gcode(gcode)
 			self.gc_ctx.s = intensity
 			self.gc_ctx.f = feedrate
 			self.gc_ctx.x = target_x
-			
+
 		#self.is_first_pixel = False
 		return (target_x, None)
 
@@ -541,7 +543,7 @@ class ImageProcessor():
 		y_gc = self._get_gcode_literal("Y", y)
 		all_comments = self._join_gc_comments(comment, x_cmt, y_cmt)
 		return "G0{}{}S0{}".format(x_gc, y_gc, all_comments)
-		
+
 	def _get_gcode_g1(self, x=None, y=None, s=None, f=None, comment=None):
 		x, x_cmt = self._ensure_coordinate_in_range(x, self.workingAreaWidth, 0)
 		y, y_cmt = self._ensure_coordinate_in_range(y, self.workingAreaHeight, 0)
@@ -552,10 +554,10 @@ class ImageProcessor():
 
 		all_comments = self._join_gc_comments(comment, x_cmt, y_cmt)
 		return "G1{}{}{}{}{}".format(x_gc, y_gc, s_gc, f_gc, all_comments)
-	
+
 	def _ensure_coordinate_in_range(self, value, maximum, minimum = 0, prefix = ""):
 		# returns (cropped?) value and comment if cropped.
-		if(value == None): 
+		if(value == None):
 			return (None, '')
 		elif(value < minimum):
 			return (max(value, minimum), prefix + " set to {}, was {}".format(minimum, value))
@@ -563,23 +565,23 @@ class ImageProcessor():
 			return (min(value, maximum), prefix + " set to {}, was {}".format(maximum, value))
 		else:
 			return (value, '')
-		
+
 	def _join_gc_comments(self, *args):
 		l = filter(None, args)
 		if(len(l) > 0):
 			return "; " + ", ".join(l)
-		else: 
+		else:
 			return ""
-		
+
 	def _get_gcode_g4(self, intensity=None, time=0):
 		if(time > 0):
 			if(intensity == None):
 				intensity = self.pierce_intensity
-		
+
 			return "M3S{}\nG4P{}\n".format(str(intensity), str(time)) # Dwell for P ms
 		else:
 			return ""
-		
+
 	def _get_gcode_literal(self, lit, value):
 		if(value != None):
 			if(lit == "X" or lit == "Y"):
@@ -587,8 +589,8 @@ class ImageProcessor():
 			if(lit == "S" or lit == "F"):
 				return lit + str(value)
 		else:
-			return ""	
-		
+			return ""
+
 	def dataUrl_to_gcode(self, dataUrl, w,h, x,y, file_id):
 		img = self._dataurl_to_img(dataUrl)
 
@@ -753,7 +755,7 @@ M2
 			workingAreaHeight = options.waHeight,
 			contrast = options.contrast,
 			sharpening = options.sharpening,
-			beam_diameter = 1.0, # for easy debugging. 
+			beam_diameter = 1.0, # for easy debugging.
 			#beam_diameter = options.beam_diameter,
 			intensity_black = options.intensity_black,
 			intensity_white = options.intensity_white,
@@ -766,11 +768,11 @@ M2
 			pierce_time = options.pierce_time,
 			material = None
 		)
-		
+
 		lh = logging.StreamHandler(sys.stdout)
 		lh.setLevel(logging.DEBUG)
 		ip.log.addHandler(lh)
-		
+
 		path = args[0]
 		print options
 		ip.img_to_gcode(path, options.width, options.height, options.x, options.y, path)
