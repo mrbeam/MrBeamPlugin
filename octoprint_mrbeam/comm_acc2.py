@@ -75,6 +75,7 @@ class MachineCom(object):
 	pattern_grbl_version = re.compile("Grbl (?P<version>\S+)\s.*")
 	pattern_grbl_setting = re.compile("\$(?P<id>\d+)=(?P<value>\S+)\s\((?P<comment>.*)\)")
 
+	ALARM_CODE_COMMAND_TOO_LONG = "ALARM_CODE_COMMAND_TOO_LONG"
 
 	def __init__(self, port=None, baudrate=None, callbackObject=None, printerProfileManager=None):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.comm_acc2")
@@ -99,6 +100,7 @@ class MachineCom(object):
 		self._laserCutterProfile = laserCutterProfileManager().get_current_or_default()
 
 		self.RX_BUFFER_SIZE = 127
+		self.WORKING_RX_BUFFER_SIZE = self.RX_BUFFER_SIZE - 5
 
 		self._state = self.STATE_NONE
 		self._grbl_state = None
@@ -228,8 +230,10 @@ class MachineCom(object):
 		while self._sending_active:
 			try:
 				self._process_rt_commands()
+				self._logger.info("ANDYTEST _send_loop() isPrinting: %s, _commandQueue.empty: %s", self.isPrinting(), self._commandQueue.empty())
 				if self.isPrinting() and self._commandQueue.empty():
 					cmd = self._getNext()
+					self._logger.info("ANDYTEST _send_loop() cmd: %s", cmd)
 					if cmd is not None:
 						self.sendCommand(cmd)
 						self._callback.on_comm_progress()
@@ -254,13 +258,18 @@ class MachineCom(object):
 				self._changeState(self.STATE_ERROR)
 				eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
 				self._logger.dump_terminal_buffer(level=logging.ERROR)
+		self._logger.info("ANDYTEST Leaving _send_loop()")
 
 	def _sendCommand(self, cmd=None):
 		if cmd is None:
 			if self._cmd is None and self._commandQueue.empty():
+				self._logger.info("ANDYTEST _sendCommand() nothing to do")
 				return
 			elif self._cmd is None:
 				self._cmd = self._commandQueue.get()
+
+			self._logger.info("ANDYTEST _sendCommand() self._cmd: %s", self._cmd)
+
 			if self._cmd == self.COMMAND_FLUSH:
 				# FLUSH waits until we're no longer waiting for any OKs from GRBL
 				if self._sync_command_ts <=0:
@@ -293,19 +302,28 @@ class MachineCom(object):
 					self._sync_command_state_sent = True
 					self._sendCommand(self.COMMAND_STATUS)
 				self._send_event.set()
-			elif sum([len(x) for x in self._acc_line_buffer]) + len(self._cmd) +1 < self.RX_BUFFER_SIZE-5:
-				self._cmd, _, _  = self._process_command_phase("sending", self._cmd)
-				self._log("Send: %s" % self._cmd)
-				self._acc_line_buffer.append(self._cmd + '\n')
-				try:
-					self._serial.write(self._cmd + '\n')
-					self._process_command_phase("sent", self._cmd)
+			else:
+				my_cmd = self._cmd  # to avoid race conditions
+				if not(len(my_cmd) +1 < self.WORKING_RX_BUFFER_SIZE):
+					msg = "Error: Command too long. max: {}, cmd length: {}, cmd: {}... (shortened)".format(self.WORKING_RX_BUFFER_SIZE -1, len(my_cmd), my_cmd[0:self.WORKING_RX_BUFFER_SIZE-1])
+					self._logger.error(msg)
+					self._handle_alarm_message("Command too long to send to GRBL.", code=self.ALARM_CODE_COMMAND_TOO_LONG)
 					self._cmd = None
-					self._send_event.set()
-				except serial.SerialException:
-					self._log("Unexpected error while writing serial port: %s" % (get_exception_string()))
-					self._errorValue = get_exception_string()
-					self.close(True)
+					return
+				if sum([len(x) for x in self._acc_line_buffer]) + len(my_cmd) +1 < self.WORKING_RX_BUFFER_SIZE:
+					my_cmd, _, _  = self._process_command_phase("sending", my_cmd)
+					self._log("Send: %s" % my_cmd)
+					self._logger.info("ANDYTEST Send: %s" % my_cmd)
+					self._acc_line_buffer.append(my_cmd + '\n')
+					try:
+						self._serial.write(my_cmd + '\n')
+						self._process_command_phase("sent", my_cmd)
+						self._cmd = None
+						self._send_event.set()
+					except serial.SerialException:
+						self._log("Unexpected error while writing serial port: %s" % (get_exception_string()))
+						self._errorValue = get_exception_string()
+						self.close(True)
 		else:
 			cmd, _, _  = self._process_command_phase("sending", cmd)
 			self._log("Send: %s" % cmd)
@@ -510,31 +528,46 @@ class MachineCom(object):
 			self._changeState(self.STATE_OPERATIONAL)
 
 	def _handle_error_message(self, line):
+		"""
+		Handles error messages from GRBL
+		:param line: GRBL error respnse
+		"""
 		if "EEPROM read fail" in line:
+			self._logger.warn("_handle_error_message() 'EEPROM read fail' in line: '%s'", line)
 			return
-		self._errorValue = line
+		self._logger.error("_handle_error(): %s", error_msg)
+		self._errorValue = error_msg
 		eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
 		self._changeState(self.STATE_LOCKED)
 		self._logger.dump_terminal_buffer(level=logging.ERROR)
 
-	def _handle_alarm_message(self, line):
-		if "Hard/soft limit" in line:
+	def _handle_alarm_message(self, line, code=None):
+		errorMsg = None
+		throwErrorMessage = True
+		dumpTerminal = True
+		if code == self.ALARM_CODE_COMMAND_TOO_LONG:
+			# this is not really a GRBL alarm state. Hacky to have it handled as one...
+			errorMsg = line or str(self.ALARM_CODE_COMMAND_TOO_LONG)
+			dumpTerminal = False
+		elif "Hard/soft limit" in line:
 			errorMsg = "Machine Limit Hit. Please reset the machine and do a homing cycle"
-			self._log(errorMsg)
-			self._errorValue = errorMsg
-			eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
-			self._logger.dump_terminal_buffer(level=logging.ERROR)
 		elif "Abort during cycle" in line:
 			errorMsg = "Soft-reset detected. Please do a homing cycle"
-			self._log(errorMsg)
-			self._errorValue = errorMsg
-			self._logger.dump_terminal_buffer(level=logging.ERROR)
+			throwErrorMessage = False
 		elif "Probe fail" in line:
 			errorMsg = "Probing has failed. Please reset the machine and do a homing cycle"
+		elif "Probe fail" in line:
+			errorMsg = "Probing has failed. Please reset the machine and do a homing cycle"
+		else:
+			errorMsg = "GRBL alarm message: '{}'".format(line)
+
+		if errorMsg:
 			self._log(errorMsg)
 			self._errorValue = errorMsg
-			eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
-			self._logger.dump_terminal_buffer(level=logging.ERROR)
+			if throwErrorMessage:
+				eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
+			if dumpTerminal:
+				self._logger.dump_terminal_buffer(level=logging.ERROR)
 
 		with self._commandQueue.mutex:
 			self._commandQueue.queue.clear()
