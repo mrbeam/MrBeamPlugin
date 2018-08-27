@@ -407,7 +407,8 @@ class MachineCom(object):
 		try:
 			self._log("Recv: %s" % sanitize_ascii(ret))
 		except ValueError as e:
-			self._log("WARN: While reading last line: %s" % e)
+			# self._log("WARN: While reading last line: %s" % e)
+			self._logger.warn("Exception while sanitizing ascii intput from grbl. Excpetion: '%s', original string from grbl: '%s'", e, ret)
 			self._log("Recv: %r" % ret)
 		return ret
 
@@ -526,6 +527,12 @@ class MachineCom(object):
 			self._logger.dump_terminal_buffer(level=logging.ERROR)
 		elif "Probe fail" in line:
 			errorMsg = "Probing has failed. Please reset the machine and do a homing cycle"
+			self._log(errorMsg)
+			self._errorValue = errorMsg
+			eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
+			self._logger.dump_terminal_buffer(level=logging.ERROR)
+		else:
+			errorMsg = "GRBL Alarm: {}".format(line)
 			self._log(errorMsg)
 			self._errorValue = errorMsg
 			eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
