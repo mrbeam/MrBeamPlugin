@@ -117,7 +117,9 @@ class ImageProcessor():
 		self.gc_ctx = GC_Context()
 
 	def get_settings_as_comment(self, x,y,w,h, file_id = ''):
-		comment =  "; Image: {:.2f}x{:.2f} @ {:.2f},{:.2f}|{}\n".format(w,h,x,y,file_id)
+		# if file id has linebreaks, ensure every line has a ';' at the beginning.
+		file_id_lines = ";".join(file_id.splitlines(1))
+		comment =  "; Image: {:.2f}x{:.2f} @ {:.2f},{:.2f}|{}\n".format(w,h,x,y, file_id_lines)
 		comment += "; self.beam = {:.2f}\n".format(self.beam)
 		comment += "; pierce_time = {:.3f}s\n".format(self.pierce_time)
 		comment += "; intensity_black = {:.0f}\n".format(self.intensity_black)
@@ -596,7 +598,7 @@ class ImageProcessor():
 
 		imgArray = self.img_prepare(img, w, h)
 		if self.MULTILINE_DATA_URLS:
-			file_id = re.sub("(.{160})", "\\1\n;", dataUrl, 0, re.DOTALL) # newline after 160 chars for easy .gco handling in external viewers
+			file_id = re.sub("(.{160})", "\\1\n", dataUrl, 0, re.DOTALL) # newline after 160 chars for easy .gco handling in external viewers
 		else:
 			file_id = dataUrl
 		gcode = self.generate_gcode(imgArray, x, y, w, h, file_id)
