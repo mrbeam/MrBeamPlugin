@@ -1112,7 +1112,12 @@ $(function(){
 		};
 
 		self.enableConvertButton = ko.computed(function() {
-			if (self.slicing_in_progress() || self.workingArea.placedDesigns().length === 0 ) {
+			if (self.slicing_in_progress() 
+					|| self.workingArea.placedDesigns().length === 0
+					|| self.selected_material() == null
+					|| self.selected_material_color() == null
+					|| self.selected_material_thickness() == null
+				) {
 				return false;
 			} else {
 				return true;
