@@ -9,6 +9,7 @@ import threading
 import logging
 import glob
 import time
+import datetime
 import serial
 import re
 import Queue
@@ -126,6 +127,7 @@ class MachineCom(object):
 		self.limit_y = -1
 		# from GRBL status RX value: Number of characters queued in Grbl's serial RX receive buffer.
 		self._grbl_rx_status = -1
+        self._rx_stats = RxBufferStats()
 
 		# regular expressions
 		self._regex_command = re.compile("^\s*\$?([GM]\d+|[THFSX])")
@@ -194,7 +196,7 @@ class MachineCom(object):
 				if line.startswith('<'): # status report
 					self._handle_status_report(line)
 				elif line.startswith('ok'): # ok message :)
-					self._handle_ok_message()
+					self._handle_ok_message(line)
 				elif line.startswith('err'): # error message
 					self._handle_error_message(line)
 				elif line.startswith('ALA'): # ALARM message
@@ -428,6 +430,7 @@ class MachineCom(object):
 		}
 		self._move_home()
 		eventManager().fire(OctoPrintEvents.PRINT_DONE, payload)
+		self._logger.info(self._rx_stats.pp(print_time=self.getPrintTime()))
 
 	def _move_home(self):
 		self.sendCommand("M5")
@@ -495,9 +498,18 @@ class MachineCom(object):
 				analytics.add_laser_intensity_value(int(laser_intensity))
 
 
-	def _handle_ok_message(self):
+	def _handle_ok_message(self, line=None):
 		if self._state == self.STATE_HOMING:
 			self._changeState(self.STATE_OPERATIONAL)
+
+		# important that we add every call and count the invalid values internally!
+		rx_free = None
+		try:
+			if line is not None:
+				rx_free = int(line.split(':')[1]) # ok:127
+		except e:
+			self._logger.warn("_handle_ok_message() Can't read free_rx_bytes from line: '%s', error: %s", line, e)
+		self._rx_stats.add(rx_free)
 
 	def _handle_error_message(self, line):
 		if "EEPROM read fail" in line:
@@ -521,6 +533,12 @@ class MachineCom(object):
 			self._logger.dump_terminal_buffer(level=logging.ERROR)
 		elif "Probe fail" in line:
 			errorMsg = "Probing has failed. Please reset the machine and do a homing cycle"
+			self._log(errorMsg)
+			self._errorValue = errorMsg
+			eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
+			self._logger.dump_terminal_buffer(level=logging.ERROR)
+		else:
+			errorMsg = "GRBL Alarm: {}".format(line)
 			self._log(errorMsg)
 			self._errorValue = errorMsg
 			eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
@@ -1217,6 +1235,8 @@ class MachineCom(object):
 		self._intensity_factor = 1
 		self._finished_passes = 0
 
+		self._rx_stats.reset()
+
 		try:
 			# ensure fan is on whatever gcode follows.
 			self.sendCommand("M08")
@@ -1264,6 +1284,8 @@ class MachineCom(object):
 		}
 		eventManager().fire(OctoPrintEvents.PRINT_CANCELLED, payload)
 
+		self._logger.info(self._rx_stats.pp(print_time=self.getPrintTime()))
+
 	def setPause(self, pause, send_cmd=True, pause_for_cooling=False, trigger=None, force=False):
 		if not self._currentFile:
 			return
@@ -1295,6 +1317,7 @@ class MachineCom(object):
 				self._real_time_commands['feed_hold']=True
 			self._send_event.set()
 			eventManager().fire(OctoPrintEvents.PRINT_PAUSED, payload)
+			self._logger.info(self._rx_stats.pp(print_time=self.getPrintTime()))
 
 	def increasePasses(self):
 		self._passes += 1
@@ -1632,6 +1655,76 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
 			self.close()
 			self._logger.exception("Exception while processing line")
 			raise e
+
+
+class RxBufferStats(object):
+
+	def __init__(self):
+		self.data = {}
+		self.count = 0
+		self.errs = 0
+		self.start_ts = time.time()
+
+	def reset(self):
+		self.__init__()
+
+	def add(self, val):
+		try:
+			val = int(val)
+		except:
+			self.errs += 1
+			return
+		if not val in self.data:
+			self.data[val] = 0
+		self.data[val] += 1
+		self.count += 1
+
+	def get_min(self):
+		if self.count <= 0: return 0
+		for v, c in sorted(self.data.iteritems()):
+			if c > 0:
+				return v
+
+	def get_max(self):
+		if self.count <= 0: return 0
+		for v, c in sorted(self.data.iteritems(), reverse = True):
+			if c > 0:
+				return v
+
+	def get_avg(self):
+		if self.count <= 0: return 0
+		avg = 0
+		for v, c in sorted(self.data.iteritems()):
+			if c > 0:
+				avg += v * c
+		return avg / self.count
+
+	def pp(self, print_time=-1):
+		if print_time <=0:
+			print_time = time.time() - self.start_ts
+
+		msg = "RxBufferStats: {count} responses within {duration_h} ({duration:.2f}s): {resp_per_sec:.1f} resp/s; invalid: {errs}; min: {min}, max: {max}, avg: {avg}  - All data: ".format(
+			count=self.count,
+			duration=print_time,
+			duration_h=datetime.datetime.fromtimestamp(print_time).strftime('%H°%M′%S″'),
+			resp_per_sec=self.count/print_time,
+			errs=self.errs,
+			min=self.get_min(),
+			max=self.get_max(),
+			avg=self.get_avg()
+		)
+
+		d = []
+		for v, c in sorted(self.data.iteritems()):
+			if c > 0:
+				d.append("{v}:{c}".format(v=v, c=c))
+		msg += ', '.join(d)
+
+		return msg
+
+
+
+
 
 def convert_pause_triggers(configured_triggers):
 	triggers = {
