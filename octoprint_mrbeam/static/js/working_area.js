@@ -546,7 +546,6 @@ $(function(){
 			});
 			newSvg.selectAll('*[fill]:not(#bbox)').forEach(function (el) {
 				var colStr = el.attr().fill;
-				console.log("fill", colStr);
 				// handle fill="" default value (#000000)
 				if (typeof(colStr) !== 'undefined' && colStr !== 'none') {
 					var colHex = self._getHexColorStr(colStr);
