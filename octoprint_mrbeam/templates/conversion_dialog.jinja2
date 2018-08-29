@@ -1,13 +1,22 @@
 <div id="dialog_vector_graphics_conversion" class="modal hide fade">
     <div class="modal-header">
-        <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
-        <h3 data-bind="visible:!slicing_in_progress()">Material</h3>
+        <h3 data-bind="visible:!slicing_in_progress()">Material <span data-bind="visible:customized_material()">(customized)</span></h3>
         <h3 data-bind="visible:slicing_in_progress()">Preparing...</h3>
     </div>
     <div class="modal-body scrollable" style="box-sizing: border-box">
 		<div data-bind="visible:!slicing_in_progress()">
 			<div id="material_row" data-bind="css: {expanded: expandMaterialSelector() }">
+
 				<div id="material_type" data-bind="css: {active : selected_material() === null}">
+			        <div id="material_burger_menu" class="dropdown pull-right">
+						<a id="materials_manage" href="#" data-bind="click: function(){ $('#material_type').addClass('manage'); }" style="text-decoration: none;">
+							<i class="icon-edit icon-large"></i>&nbsp;Manage materials
+						</a>
+						<a id="materials_manage_done" href="#" data-bind="click: function(){ $('#material_type').removeClass('manage'); }" style="text-decoration: none;">
+							<i class="icon-ok icon-large"></i>&nbsp; Done
+						</a>
+					</div>
+
 					<div class="">
 						<label data-bind="visible: expandMaterialSelector">Material</label>
 						<div class="">
@@ -18,9 +27,10 @@
 								<li class='material_entry hover_shadow'
 									data-bind="click: function(vm, event){$root.set_material($data, event);},
 												style: { backgroundImage: 'url(\'/plugin/mrbeam/static/img/materials/' + $data.img + '\')' },
-												css: {selected: $root.selected_material() === $data}
+												css: {selected: $root.selected_material() === $data, custom: $data.custom === true }
 									">
-									<span href="#" data-bind="text: $data.name"></span>
+									<span data-bind="text: $data.name"></span>
+									<span class="delete_me" data-bind="click: function(data, event){ $root.delete_material($data, event); return false; }"><i class="icon icon-trash"></i></span>
 								</li>
 							</ul>
 							<div class="clearfix"></div>
@@ -47,6 +57,7 @@
 						</div>
 					</div>
 				</div>
+
 				<div id="material_thickness" data-bind="css: {active : selected_material() !== null && selected_material_color() !== null && selected_material_thickness() === null}">
 					<div>
 						<label data-bind="visible: expandMaterialSelector">Thickness</label>
@@ -68,6 +79,40 @@
 						</div>
 					</div>
 				</div>
+				
+				<div id="save_material_flyin" data-bind="visible: customized_material()">
+					<a data-bind="click: reset_material_settings"><i class="icon-repeat"></i> {{ _('Reset to defaults') }}</a>
+					<div id="save_material_form" class="dropdown">
+						<a class="dropdown-toggle" data-toggle="dropdown" href="#" ><i class="icon-star"></i> {{ _('Save custom material') }}</a>
+						<div class="dropdown-menu" role="menu" style="padding:.5em">
+							<form class="form-horizontal" style="margin:0">
+								<div class="control-group">
+									<label class="control-label" for="custom_mat_name"> {{ _('Material Name') }}</label>
+									<div class="controls">
+										<input id="custom_mat_name" type="text" data-bind="value:save_custom_material_name" placeholder="your name of choice">
+									</div>
+								</div>
+								<div class="control-group" data-bind="visible: has_cutting_proposal()">
+									<label class="control-label" for="custom_mat_th"> {{ _('Thickness') }}</label>
+									<div class="controls"> 
+										<input id="custom_mat_th" type="number" min="0" max="38" data-bind="value:save_custom_material_thickness"> mm
+									</div>
+								</div>
+								<div class="control-group">
+									<label class="control-label" for="custom_mat_col"> {{ _('Color') }}</label>
+									<div class="controls">
+										<input id="custom_mat_col" type="color" min="-1" max="38" data-bind="value:save_custom_material_color">
+									</div>
+								</div>
+								<div class="controls">
+									<a class="btn" data-toggle="dropdown" href="#"><i class="icon-remove"></i> {{ _('Cancel') }}</a>
+									<a class="btn" data-bind="click: save_material_settings"><i class="icon-ok"></i> {{ _('Save') }}</a>
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+
 				<div id="material_info">
 					<p>
 						<i class="icon-warning-sign" style="color:red;" data-bind="visible: material_safety_notes() !== ''"></i>
@@ -118,9 +163,11 @@
 								<label class="control-label">{{ _('Laser intensity range') }}</label>
 								<div class="controls">
 									<div class="input-append">
-										<input id="svgtogcode_img_intensity_white" class="img_intensity_input" type="number" min="0" max="100" data-bind="value: imgIntensityWhite">
+										<input id="svgtogcode_img_intensity_white" class="img_intensity_input" type="number" min="0" max="100" 
+											   data-bind="value: imgIntensityWhite, event: {change: flag_customized_material}">
 										<div class="svgtogcode_grayscale">&nbsp;</div>
-										<input id="svgtogcode_img_intensity_black" class="img_intensity_input" type="number" min="0" max="100" data-bind="value: imgIntensityBlack">
+										<input id="svgtogcode_img_intensity_black" class="img_intensity_input" type="number" min="0" max="100" 
+											   data-bind="value: imgIntensityBlack, event: {change: flag_customized_material}">
 									</div>
 								</div>
 								<div class="controls alert alert-info hint" data-bind="visible: showHints">
@@ -132,9 +179,11 @@
 								<label class="control-label">{{ _('Engraving speed range') }}</label>
 								<div class="controls">
 									<div class="input-append">
-										<input id="svgtogcode_img_feedrate_white" class="img_intensity_input" type="number"  min="30" data-bind="value: imgFeedrateWhite">
+										<input id="svgtogcode_img_feedrate_white" class="img_intensity_input" type="number"  min="30" 
+											   data-bind="value: imgFeedrateWhite, event: {change: flag_customized_material}">
 										<div class="svgtogcode_grayscale">&nbsp;</div>
-										<input id="svgtogcode_img_feedrate_black" class="img_intensity_input" type="number"  min="30" data-bind="value: imgFeedrateBlack">
+										<input id="svgtogcode_img_feedrate_black" class="img_intensity_input" type="number"  min="30" 
+											   data-bind="value: imgFeedrateBlack, event: {change: flag_customized_material}">
 									</div>
 								</div>
 								<div class="controls alert alert-info hint" data-bind="visible: showHints">
@@ -164,14 +213,32 @@
 
 							<div class="control-group" data-bind="visible: showExpertSettings ">
 								<label class="control-label">Pierce time</label>
-								<div class="controls"><input data-bind="value: engravingPiercetime" class="param_piercetime decimal_input" type="number" min="0" max="2000" value="0" />&nbsp;ms</div>
+								<div class="controls">
+									<input data-bind="value: engravingPiercetime, event: {change: flag_customized_material}" 
+											 class="param_piercetime decimal_input" type="number" min="0" max="2000" value="0" />&nbsp;ms
+								</div>
 
 								<label class="control-label">{{ _('Line distance') }}</label>
-								<div class="controls"><input id="svgtogcode_img_line_dist" class="img_intensity_input decimal_input" type="number" max="0.5" min="0.1" dialog_state="0.05" data-bind="value: beamDiameter" />&nbsp;mm</div>
+								<div class="controls"><input id="svgtogcode_img_line_dist" class="img_intensity_input decimal_input" type="number" max="1.0" min="0.1" step="0.05" data-bind="value: beamDiameter" />&nbsp;mm</div>
 								<div class="controls alert alert-info hint" data-bind="visible: showHints">
 									<span class="icon icon-question-sign" aria-hidden="true"></span>
 									Pixel / raster engravings are done line by line. This sets the distance between the single lines.
 									Smaller values allow finer engravings but require a more precise focus and are slower.
+								</div>
+								
+								<label class="control-label">{{ _('Engraving mode') }}</label>
+								<div class="controls">
+									<div class="btn-group" data-toggle="buttons-radio">
+										<button id="svgtogcode_img_engraving_mode" type="button" class="btn btn-default">Fast</button>
+										<button type="button" class="btn btn-default active">Precise</button>
+									</div>
+								</div>
+								<div class="controls alert alert-info hint" data-bind="visible: showHints">
+									<span class="icon icon-question-sign" aria-hidden="true"></span>
+									Pixel / raster engravings are done line by line.
+									In precise mode, line by line is engraved from bottom to top. The laserhead is moving over white space. 
+									In fast mode, to be engraved areas are separated to reduce work moves of the laserhead. 
+									The speed up works best on text or clipart designs, on photos there is no effect.
 								</div>
 
 
@@ -212,7 +279,7 @@
 								<label class="control-label">{{ _('Dithering') }}</label>
 								<div class="controls">
 									<label class="checkbox">
-										<input type="checkbox" data-bind="checked: imgDithering">{{ _('Dithering') }}
+										<input type="checkbox" data-bind="checked: imgDithering, event: {change: flag_customized_material}">{{ _('Dithering') }}
 									</label>
 								</div>
 								<div class="controls alert alert-info hint" data-bind="visible: showHints">
@@ -224,7 +291,7 @@
 						</form>
 						<div class="not_possible_on_this_material" data-bind="visible: !has_engraving_proposal()">
 							Sorry, there are no engraving settings for this material.
-							<a data-bind="click:function(){ has_engraving_proposal(true); }">I know what I am doing! Let me try my own.</a>
+							<a data-bind="click:function(){ has_engraving_proposal(true); }"> <i class="icon-arrow-right"></i> I know what I am doing! Let me try my own.</a>
 						</div>
 					</div>
 				</div>
@@ -239,7 +306,9 @@
 						<form class="job_parameters form-horizontal" data-bind="visible: has_cutting_proposal">
 							<div class="control-group">
 								<label class="control-label">Laser Intensity</label>
-								<div class="controls"><input class="param_intensity img_intensity_input" type="number" min="0" max="100" onblur="window.mrbeam.colorDragging.checkConversionParameters()"/>&nbsp;%</div>
+								<div class="controls"><input class="param_intensity img_intensity_input" type="number" min="0" max="100" 
+															 data-bind="event: {change: flag_customized_material}"
+															 onblur="window.mrbeam.colorDragging.checkConversionParameters()"/>&nbsp;%</div>
 								<div class="controls alert alert-info hint" data-bind="visible: showHints">
 									<span class="icon icon-question-sign" aria-hidden="true"></span>
 									Sets the intensity of the laser. The more intensity the deeper the effect on the material.
@@ -249,7 +318,9 @@
 							</div>
 							<div class="control-group">
 								<label class="control-label">Laser Speed</label>
-								<div class="controls"><input class="param_feedrate img_intensity_input" type="number" min="20" max="3000" onblur="window.mrbeam.colorDragging.checkConversionParameters()"/>&nbsp;mm/min</div>
+								<div class="controls"><input class="param_feedrate img_intensity_input" type="number" min="20" max="3000" 
+															 data-bind="event: {change: flag_customized_material}"
+															 onblur="window.mrbeam.colorDragging.checkConversionParameters()"/>&nbsp;mm/min</div>
 								<div class="controls alert alert-info hint" data-bind="visible: showHints">
 									<span class="icon icon-question-sign" aria-hidden="true"></span>
 									Sets the velocity of the laser head. The slower the movement the deeper the effect on the material.
@@ -259,16 +330,16 @@
 							</div>
 							<div class="control-group">
 								<label class="control-label">Passes</label>
-								<div class="controls"><input class="param_passes img_intensity_input" type="number" min="1" max="10" value="1" />&nbsp;&times;</div>
+								<div class="controls"><input data-bind="event: {change: flag_customized_material}" class="param_passes img_intensity_input" type="number" min="1" max="10" value="1" />&nbsp;&times;</div>
 							</div>
 							<div class="control-group" data-bind="visible: showExpertSettings ">
 								<label class="control-label">Pierce time</label>
-								<div class="controls"><input class="param_piercetime img_intensity_input" type="number" min="0" max="2000" value="0" />&nbsp;ms</div>
+								<div class="controls"><input data-bind="event: {change: flag_customized_material}" class="param_piercetime img_intensity_input" type="number" min="0" max="2000" value="0" />&nbsp;ms</div>
 							</div>
 						</form>
 						<div class="not_possible_on_this_material" data-bind="visible: !has_cutting_proposal()">
 							Sorry, there are no cutting settings for this material.
-							<a data-bind="click: function(){ has_cutting_proposal(true); }">I know what I am doing! Let me try my own.</a>
+							<a data-bind="click: function(){ has_cutting_proposal(true); }"> <i class="icon-arrow-right"></i> I know what I am doing! Let me try my own.</a>
 						</div>
 					</div>
 				</div>

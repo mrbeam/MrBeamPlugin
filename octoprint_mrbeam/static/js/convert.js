@@ -24,6 +24,8 @@ $(function(){
 
 		self.dialog_state = ko.observable('color_assignment');
 
+		self.user_materials_enabled = false;
+
 		// expert settings
 		self.showHints = ko.observable(false);
 		self.showExpertSettings = ko.observable(false);
@@ -379,7 +381,28 @@ $(function(){
 						]
 					}
 				}
-			}
+			},
+
+//			custom_material: {
+//				name: 'Custom',
+//				img: 'custom.jpg',
+//				description: 'Just a Dummy material',
+//				hints: 'Figuring out material settings works best from low to high intensity and fast to slow movement.',
+//				safety_notes: 'Experimenting with custom material settings is your responsibility.',
+//				laser_type: 'MrBeamII-1.0',
+//				colors: {
+//					'd4b26f': {
+//						engrave: {eng_i:[0,20], eng_f:[2000,350], pierceTime: 0, dithering: false },
+//						cut: [
+//							{thicknessMM: 1, cut_i:80, cut_f:700, cut_p:2},
+//							{thicknessMM: 2, cut_i:100, cut_f:700, cut_p:1},
+//							{thicknessMM: 3, cut_i:100, cut_f:700, cut_p:2},
+//							{thicknessMM: 4, cut_i:100, cut_f:600, cut_p:3},
+//							{thicknessMM: 5, cut_i:100, cut_f:300, cut_p:3}
+//						]
+//					}
+//				}
+//			}
 		};
 		self.engrave_only_thickness = {thicknessMM: -1, cut_i:'', cut_f:'', cut_p: 1};
 		self.no_engraving = {eng_i:['',''], eng_f:['',''], pierceTime: 0, dithering: false };
@@ -394,29 +417,14 @@ $(function(){
 		self.material_description = ko.observable('');
 		self.has_engraving_proposal = ko.observable(false);
 		self.has_cutting_proposal = ko.observable(false);
+//		self.custom_materials = ko.observableArray([]);
+		self.custom_materials = ko.observable({});
 
-//		self._engraving_params_available = function(){
-//			var mat = self.selected_material();
-//			var col = self.selected_material_color();
-//			var th = self.selected_material_thickness();
-//			if(mat === null || col === null || th === null){
-//				return false;
-//			} else {
-//				var param_set = self.get_closest_color_params();
-//				return param_set.engrave !== null;
-//			}
-//		};
-//		self._cutting_params_available = function(){
-//			var mat = self.selected_material();
-//			var col = self.selected_material_color();
-//			var th = self.selected_material_thickness();
-//			if(mat === null || col === null || th === null){
-//				return false;
-//			} else {
-//				var param_set = self.get_closest_thickness_params();
-//				return param_set.thicknessMM > 0;
-//			}
-//		};
+		self.customized_material = ko.observable(false);
+		self.save_custom_material_name = ko.observable("");
+		self.save_custom_material_thickness = ko.observable(1);
+		self.save_custom_material_color = ko.observable("#000000");
+
 
 		self.expandMaterialSelector = ko.computed(function(){
 			return self.selected_material() === null || self.selected_material_color() === null || self.selected_material_thickness() === null;
@@ -433,6 +441,150 @@ $(function(){
 			if(mat !== null)
 			return mat === null ? '' : mat.img;
 		 });
+
+		self.flag_customized_material = function(){
+		    if (self.user_materials_enabled){
+                var custom_prefix = 'My ';
+                var suggested_name = self.selected_material().name;
+                if(!suggested_name.startsWith(custom_prefix)){
+                    suggested_name = custom_prefix + suggested_name;
+                }
+                self.save_custom_material_name(suggested_name);
+                self.save_custom_material_color('#'+self.selected_material_color());
+                var t = self.selected_material_thickness();
+                var tmp = t !== null ? t.thicknessMM : 1;
+                self.save_custom_material_thickness(tmp);
+                self.customized_material(true);
+			}
+		};
+
+		self.reset_material_settings = function(){
+            if (self.user_materials_enabled){
+                self.apply_engraving_proposal();
+                self.apply_vector_proposal();
+                self.customized_material(false);
+            }
+		};
+
+		self.delete_material = function(m, event){
+			$(event.target).parents('li').remove();
+			event.preventDefault();
+			event.stopPropagation();
+			var postData = {
+                put: {},
+				delete: [m.key]
+            };
+            OctoPrint.simpleApiCommand("mrbeam", "custom_materials", postData)
+                .done(function(response){
+					console.log("deleted custom material:");
+					// remove from custom materials and deselect
+					self._update_custom_materials(response.custom_materials);
+
+					self.selected_material(null);
+				})
+                .fail(function(){
+					console.error("unable to delete custom material:", postData);
+				});
+		};
+
+		self.save_material_settings = function(){
+			var name = self.save_custom_material_name();
+			var key = self._replace_non_ascii(name).toLowerCase();
+			var thickness = self.save_custom_material_thickness();
+			var color = self.save_custom_material_color().substr(1,6);
+			var vectors = self.get_current_multicolor_settings();
+			var strength = 0;
+			var strongest = null;
+			for (var i = 0; i < vectors.length; i++) { // heuristics: assuming that the strongest of all vector jobs is the cutting one.
+				var v = vectors[i];
+				var s = v.intensity_user * v.passes / v.feedrate;
+				if(s > strength) strongest = v;
+			}
+			var cut_setting = null;
+			if(strongest !== null){
+				cut_setting = {thicknessMM: thickness, cut_i: strongest.intensity_user, cut_f: strongest.feedrate, cut_p: strongest.passes};
+			} else {
+				thickness = -1; // engrave only
+			}
+
+			var e = self.get_current_engraving_settings();
+			var engrave_setting = {eng_i: [e.intensity_white_user, e.intensity_black_user], eng_f: [e.speed_white, e.speed_black], pierceTime: e.pierce_time, dithering: e.dithering};
+
+			var new_material;
+
+			if(self.custom_materials()[key]){
+				new_material = self.custom_materials()[key];
+			}else {
+
+				new_material = {
+				name: name,
+					img: 'custom.jpg',
+					description: 'custom material',
+					hints: 'Figuring out material settings works best from low to high intensity and fast to slow movement.',
+					safety_notes: 'Experimenting with custom material settings is your responsibility.',
+					laser_type: 'MrBeamII-1.0',
+					colors: {}
+				};
+			}
+
+			var tmp = [];
+			if(cut_setting !== null){
+				tmp.push(cut_setting);
+			}
+			if(new_material.colors[color]){
+				for (var t = 0; t < new_material.colors[color].cut.length; t++) {
+					var item = new_material.colors[color].cut[t];
+					if(item !== null && item.thicknessMM !== cut_setting.thicknessMM) {
+						tmp.push(item);
+					}
+				}
+			}
+			new_material.colors[color] = {cut: tmp, engrave: engrave_setting};
+
+			var data = {};
+			data[key] = new_material;
+
+			// save it locally
+			// push it to our backend
+            var postData = {
+                'put':    data,   // optional
+                'delete': []                // optional
+            };
+            OctoPrint.simpleApiCommand("mrbeam", "custom_materials", postData)
+                .done(function(response){
+					console.log("simpleApiCall response: ", response);
+					// $('#save_material_form.dropdown').dropdown('toggle'); // buggy
+					$('#save_material_form').removeClass('open'); // workaround
+
+                    // add to custom materials and select
+					self._update_custom_materials(response.custom_materials);
+					var fm = self.filteredMaterials();
+						for (var i = 0; i < fm.length; i++) {
+							var m = fm[i];
+							if(m.name === new_material.name){
+								self.selected_material(m);
+								self.selected_material_color(color);
+								self.selected_material_thickness(thickness);
+								self.reset_material_settings();
+								break;
+							}
+
+						}
+//					self.selected_material(new_material);
+				})
+                .fail(function(){
+					console.error("unable to save custom material:", postData);
+				});
+		};
+
+		self._update_custom_materials = function(list){
+			var tmp = {};
+			for(var k in list) {
+				var cm = list[k];
+				tmp[k] = cm;
+			}
+			self.custom_materials(tmp);
+		};
 
 		self.get_closest_thickness_params = function(){
 			var selected = self.selected_material_thickness();
@@ -526,14 +678,18 @@ $(function(){
 				self.material_thicknesses(available_thickness);
 				self.selected_material_thickness(null);
 				if(available_thickness.length === 1){
-					self.selected_material_thickness(available_thickness[0]);
-					self.dialog_state('color_assignment');
+					if(available_thickness[0] !== null){
+						self.selected_material_thickness(available_thickness[0]);
+						self.dialog_state('color_assignment');
+					} else {
+						self.selected_material_thickness(-1);
+					}
 				}
 			}
 			self.apply_engraving_proposal();
 		});
 		self.selected_material_thickness.subscribe(function(thickness){
-			if(thickness !== null && self.selected_material_color() !== null && self.selected_material !== null){
+			if(thickness !== null && self.selected_material_color() !== null && self.selected_material() !== null){
 				self.dialog_state('color_assignment');
 				self.apply_vector_proposal();
 			}
@@ -545,11 +701,31 @@ $(function(){
 
         self.filterQuery = ko.observable('');
 		self.filteredMaterials = ko.computed(function(){
+			// TODO this method is called 3 times on startup: 1 time should be enough.
 			var q = self.filterQuery();
 			var out = [];
+			// List custom materials first
+			// filter custom materials
+			var customs = self.custom_materials();
+			for(var materialKey in customs){
+				var m = customs[materialKey];
+				if(m !== null){
+//					m.name = materialKey; // TODO i18n
+					if(m.name.toLowerCase().indexOf(q) >= 0){
+						m.key = materialKey;
+						m.custom = true;
+						out.push(m);
+					}
+				}
+
+			}
+//			for (var i = 0; i < self.custom_materials().length; i++) {
+//			}
+			// filter predefined materials
 			for(var materialKey in self.material_settings2){
 				var m = self.material_settings2[materialKey];
 				if(m !== null){
+					m.key = materialKey;
 //					m.name = materialKey; // TODO i18n
 					if(m.name.toLowerCase().indexOf(q) >= 0){
 						out.push(m);
@@ -565,7 +741,7 @@ $(function(){
 			$('.job_row .used_color:not(#cd_engraving)').addClass('not-used');
 			for (var idx = 0; idx < cols.length; idx++) {
 				var c = cols[idx];
-				var selection = $('#cd_color_'+c.hex.substr(1));
+				var selection = $('#cd_color_'+c.hex.substr(1)); // crashes on color definitions like 'rgb(0,0,0)' 
 				var exists = selection.length > 0;
 				if(! exists){
 					var drop_zone = $('#first_job .color_drop_zone');
@@ -594,17 +770,24 @@ $(function(){
 		};
 
 		self.set_material = function(material, ev){
-			if(typeof ev !== 'undefined' && ev.type === 'click' && typeof material === 'object' ){
-				var old_material = self.selected_material();
-				if(old_material === null){
-					self.selected_material(material);
+			if( $('#material_type').hasClass('manage') ){
+				$('#materials_manage_done').addClass('flash');
+				setTimeout(function(){
+					$('#materials_manage_done').removeClass('flash');
+				}, 300);
+			} else {
+				if(typeof ev !== 'undefined' && ev.type === 'click' && typeof material === 'object' ){
+					var old_material = self.selected_material();
+					if(old_material === null){
+						self.selected_material(material);
+					} else {
+						self.selected_material(null);
+					}
 				} else {
 					self.selected_material(null);
 				}
-			} else {
-				self.selected_material(null);
+				self.dialog_state('material_type');
 			}
-			self.dialog_state('material_type');
 		};
 		self.set_material_color = function(color, ev){
 			if(typeof ev !== 'undefined' && ev.type === 'click' ){
@@ -653,28 +836,27 @@ $(function(){
 				$(job).find('.param_passes').val(p.cut_p || 0);
 				$(job).find('.param_piercetime').val(p.cut_pierce || 0);
 			}
+//			self.customized_material(false);
 		};
 		self.apply_engraving_proposal = function(){
 			var material = self.selected_material();
 			var param_set = self.get_closest_color_params();
 			var p = self.no_engraving;
-			var name = '';
 			if(material !== null && param_set !== null && param_set.engrave !== null){
 				p = param_set.engrave;
-				name = material.name;
 				self.has_engraving_proposal(true);
 			} else {
 				self.has_engraving_proposal(false);
 				console.warn("No engraving settings available for "+ material);
 			}
 
-			var job = $('#engrave_job');
 			self.imgIntensityWhite(p.eng_i[0]);
 			self.imgIntensityBlack(p.eng_i[1]);
 			self.imgFeedrateWhite(p.eng_f[0]);
 			self.imgFeedrateBlack(p.eng_f[1]);
 			self.imgDithering(p.dithering);
 			self.engravingPiercetime(p.eng_pierce || 0);
+//			self.customized_material(false);
 		};
 
 		self._find_closest_color_to = function(hex, available_colors){
@@ -903,9 +1085,9 @@ $(function(){
 		self.get_current_engraving_settings = function () {
 			var data = {
 				"engrave_outlines" : self.engrave_outlines(),
-				"intensity_black_user" : self.imgIntensityBlack(),
+				"intensity_black_user" : parseInt(self.imgIntensityBlack()),
 				"intensity_black" : self.imgIntensityBlack() * self.profile.currentProfileData().laser.intensity_factor(),
-				"intensity_white_user" : self.imgIntensityWhite(),
+				"intensity_white_user" : parseInt(self.imgIntensityWhite()),
 				"intensity_white" : self.imgIntensityWhite() * self.profile.currentProfileData().laser.intensity_factor(),
 				"speed_black" : self.imgFeedrateBlack(),
 				"speed_white" : self.imgFeedrateWhite(),
@@ -914,13 +1096,19 @@ $(function(){
 				"dithering" : self.imgDithering(),
 				"beam_diameter" : self.beamDiameter(),
 				"pierce_time": self.engravingPiercetime(),
-                "material": self.engravingMaterial
+                "material": self.engravingMaterial,
+				"fast_mode": $('#svgtogcode_img_engraving_mode').hasClass('active')
 			};
 			return data;
 		};
 
 		self.enableConvertButton = ko.computed(function() {
-			if (self.slicing_in_progress() || self.workingArea.placedDesigns().length === 0 ) {
+			if (self.slicing_in_progress() 
+					|| self.workingArea.placedDesigns().length === 0
+					|| self.selected_material() == null
+					|| self.selected_material_color() == null
+					|| self.selected_material_thickness() == null
+				) {
 				return false;
 			} else {
 				return true;
@@ -1078,6 +1266,11 @@ $(function(){
             return no_special_chars;
 		};
 
+		self._replace_non_ascii = function(str){
+			let only_ascii = str.replace(/[\u{0080}-\u{FFFF}]/gu, "*").trim(); // remove spaces,non-Ascii chars
+			return only_ascii;
+		};
+
 		self._get_brightness = function(hex){
 			var r = parseInt(hex.substr(1,2), 16);
 			var g = parseInt(hex.substr(3,2), 16);
@@ -1095,6 +1288,23 @@ $(function(){
                 self.slicing_in_progress(false);
                 self.slicing_progress(5);
             });
+		};
+
+		self.onStartupComplete = function(){
+			// fill custom materials
+			self.user_materials_enabled = self.settings.settings.plugins.mrbeam.features.custom_materials();
+			if (self.user_materials_enabled){
+                OctoPrint.simpleApiCommand("mrbeam", "custom_materials", {})
+                    .done(function(response){
+                        self._update_custom_materials(response.custom_materials);
+                    })
+                    .fail(function(){
+                        console.error("unable to fetch custom materials.");
+                    });
+            } else {
+                material_burger_menu
+                $('#material_burger_menu').hide()
+            }
 		};
 
 		self.onSlicingProgress = function(slicer, model_path, machinecode_path, progress){

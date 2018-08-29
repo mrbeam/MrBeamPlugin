@@ -42,6 +42,7 @@ from octoprint_mrbeam.profile import laserCutterProfileManager, InvalidProfileEr
 from octoprint_mrbeam.software_update_information import get_update_information, SW_UPDATE_TIER_PROD
 from octoprint_mrbeam.support import set_support_mode
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
+from .materials import materials
 
 
 
@@ -82,6 +83,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	USER_SETTINGS_KEY_LASERSAFETY_CONFIRMATION_SENT_TO_CLOUD = ['lasersafety', 'sent_to_cloud']
 	USER_SETTINGS_KEY_LASERSAFETY_CONFIRMATION_SHOW_AGAIN = ['lasersafety', 'show_again']
 
+	CUSTOM_MATERIAL_STORAGE_URL = 'https://script.google.com/a/macros/mr-beam.org/s...' # TODO
 
 
 	def __init__(self):
@@ -220,8 +222,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				suppress_migrations = False,     # for develpment on non-MrBeam devices
 				support_mode = False
 			),
-			# TODO rename analyticsEnabled and put in analytics-dict
-			analyticsEnabled=False,  # frontend analytics Mixpanel
 			analytics=dict(
 				job_analytics = False,
 				cam_analytics = False,
@@ -252,6 +252,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				small_paths_first = True,
 				clip_working_area = True # https://github.com/mrbeam/MrBeamPlugin/issues/134
 			),
+			features = dict(
+				custom_materials = False
+			)
 		)
 
 	def on_settings_load(self):
@@ -274,7 +277,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				small_paths_first = self._settings.get(['gcode_nextgen', 'small_paths_first']),
 				clip_working_area = self._settings.get(['gcode_nextgen', 'clip_working_area'])
 			),
-			software_update_branches = self.get_update_branch_info()
+			software_update_branches = self.get_update_branch_info(),
+			features=dict(
+				custom_materials = self._settings.get(['features', 'custom_materials'])
+			)
 		)
 
 	def on_settings_save(self, data):
@@ -294,6 +300,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self._logger.info("Disabling VORLON per user request.", terminal=True)
 		if "gcode_nextgen" in data and isinstance(data['gcode_nextgen'], collections.Iterable) and "clip_working_area" in data['gcode_nextgen']:
 			self._settings.set_boolean(["gcode_nextgen", "clip_working_area"], data['gcode_nextgen']['clip_working_area'])
+		if "features" in data and isinstance(data['features'], collections.Iterable):
+			if 'custom_materials' in data['features']:
+				self._settings.set_boolean(["features", "custom_materials"],data['features']['custom_materials'])
+
 
 	def on_shutdown(self):
 		self._logger.debug("Mr Beam Plugin stopping...")
@@ -316,7 +326,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/lib/photobooth_min.js", "js/svg_cleaner.js", "js/loginscreen_viewmodel.js",
 				"js/wizard_acl.js", "js/netconnectd_wrapper.js", "js/lasersaftey_viewmodel.js",
 				"js/ready_to_laser_viewmodel.js", "js/lib/screenfull.min.js","js/settings/camera_calibration.js",
-				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js", "js/laser_job_done_viewmodel.js", "js/loadingoverlay_viewmodel.js"],
+				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js", "js/lib/Color.js", "js/laser_job_done_viewmodel.js", "js/loadingoverlay_viewmodel.js"],
 			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css", "css/quicktext-fonts.css", "css/sliders.css"],
 			less=["less/mrbeam.less"]
 		)
@@ -683,6 +693,34 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		else:
 			return NO_CONTENT
 
+	# simpleApiCommand: custom_materials;
+	def custom_materials(self, data):
+		from flask.ext.login import current_user
+		from octoprint.server.api import NO_CONTENT
+
+		# self._logger.info("custom_material() request: %s", data)
+		res = dict(
+			custom_materials=[],
+			put=0,
+			deleted=0)
+
+		try:
+			if 'delete' in data:
+				materials(self).delete_custom_material(data['delete'])
+
+			if 'put' in data and isinstance(data['put'],dict):
+				for key, m in data['put'].iteritems():
+					materials(self).put_custom_material(key, m)
+
+			res['custom_materials'] = materials(self).get_custom_materials()
+
+		except:
+			self._logger.exception("Exception while handling custom_materials(): ")
+			return make_response("Error while handling custom_materials request.", 500)
+
+		# self._logger.info("custom_material(): response: %s", data)
+		return make_response(jsonify(res), 200)
+
 	#~~ helpers
 
 	def _get_subwizard_attrs(self, start, end, callback=None):
@@ -934,7 +972,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@restricted_access
 	def generateCalibrationMarkersSvg(self):
 		profile = self.laserCutterProfileManager.get_current_or_default()
-		print profile
+		#print profile
 		xmin = '0'
 		ymin = '0'
 		xmax = str(profile['volume']['width'])
@@ -974,6 +1012,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@octoprint.plugin.BlueprintPlugin.route("/convert", methods=["POST"])
 	@restricted_access
 	def gcodeConvertCommand(self):
+		self._logger.info("ANDYTEST __init__.gcodeConvertCommand()")
 		target = "local"
 
 		# valid file commands, dict mapping command name to mandatory parameters
@@ -983,6 +1022,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		command, data, response = get_json_command_from_request(request, valid_commands)
 		if response is not None:
 			return response
+		# self._logger.info("ANDYTEST __init__.gcodeConvertCommand() command: %s, data: %s, response: %s", command, data, response)
 
 		appendGcodeFiles = data['gcodeFilesToAppend']
 		del data['gcodeFilesToAppend']
@@ -1034,8 +1074,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 						self._printer.is_printing() or self._printer.is_paused()):
 				make_response("Trying to slice into file that is currently being printed: %s" % gcode_name, 409)
 
-			select_after_slicing = False
-			print_after_slicing = False
+			select_after_slicing = True
+			print_after_slicing = True
 
 			#get job params out of data json
 			overrides = dict()
@@ -1050,6 +1090,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 			# callback definition
 			def slicing_done(target, gcode_name, select_after_slicing, print_after_slicing, append_these_files):
+				self._logger.info("ANDYTEST __init__.gcodeConvertCommand slicing_done() target: %s, gcode_name: %s, select_after_slicing: %s, print_after_slicing: %s, append_these_files: %s", target, gcode_name, select_after_slicing, print_after_slicing, append_these_files)
 				# append additioal gcodes
 				output_path = self._file_manager.path_on_disk(target, gcode_name)
 				with open(output_path, 'ab') as wfd:
@@ -1065,10 +1106,15 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 				if select_after_slicing or print_after_slicing:
 					sd = False
-					filenameToSelect = self._file_manager.path_on_disk(target, gcode_name)
-					printer.select_file(filenameToSelect, sd, True)
+					try:
+						filenameToSelect = self._file_manager.path_on_disk(target, gcode_name)
+						self._logger.info("ANDYTEST calling _printer.select_file() filenameToSelect: %s", filenameToSelect)
+						self._printer.select_file(filenameToSelect, sd, printAfterSelect=print_after_slicing, pos=None)
+					except:
+						self._logger.exception("self._file_manager.path_on_disk")
 
 			try:
+				#TODO check this signature. does not match imho
 				self._file_manager.slice(slicer, target, filename, target, gcode_name,
 										 profile=None,#profile,
 										 printer_profile_id=None, #printerProfile,
@@ -1114,6 +1160,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			camera_calibration_markers=["result"],
 			ready_to_laser=["ready"],
 			debug_event=["event"],
+			custom_materials=[],
 			take_undistorted_picture=[]  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
 		)
 
@@ -1131,6 +1178,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._printer.set_passes(data["value"])
 		elif command == "lasersafety_confirmation":
 			return self.lasersafety_wizard_api(data)
+		elif command == "custom_materials":
+			return self.custom_materials(data)
 		elif command == "ready_to_laser":
 			return self.ready_to_laser(data)
 		elif command == "camera_calibration_markers":
@@ -1152,7 +1201,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 
 	def ready_to_laser(self, data):
-		self._logger.debug("ready_to_laser() data: %s", data)
+		self._logger.debug("ANDYTEST ready_to_laser() data: %s", data)
 		if 'dev_start_button' in data and data['dev_start_button']:
 			if self.get_env(self.ENV_LOCAL).lower() == 'dev':
 				self._logger.info("DEV dev_start_button pressed.")
@@ -1291,10 +1340,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 			is_job_cancelled() #check before conversion started
 
+			profile = self.laserCutterProfileManager.get_current_or_default()
+			maxWidth = profile['volume']['width']
+			maxHeight = profile['volume']['depth']
+
 			#TODO implement cancelled_Jobs, to check if this particular Job has been canceled
 			#TODO implement check "_cancel_job"-loop inside engine.convert(...), to stop during conversion, too
-			engine = Converter(params, model_path)
-			engine.convert(on_progress, on_progress_args, on_progress_kwargs)
+			engine = Converter(params, model_path, workingAreaWidth = maxWidth, workingAreaHeight = maxHeight)
+			engine.convert(is_job_cancelled, on_progress, on_progress_args, on_progress_kwargs)
 
 			is_job_cancelled() #check if canceled during conversion
 

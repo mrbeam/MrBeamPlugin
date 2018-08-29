@@ -36,6 +36,9 @@ class MachineCom(object):
 	GRBL_VERSION_20170919_22270fa = '0.9g_22270fa'
 	GRBL_VERSION_20180223_61638c5 = '0.9g_20180223_61638c5'
 
+	GRBL_SETTINGS_READ_WINDOW =     10.0
+	GRBL_SETTINGS_CHECK_FREQUENCY = 0.5
+
 	STATE_NONE = 0
 	STATE_OPEN_SERIAL = 1
 	STATE_DETECT_SERIAL = 2
@@ -51,6 +54,7 @@ class MachineCom(object):
 	STATE_LOCKED = 12
 	STATE_HOMING = 13
 	STATE_FLASHING = 14
+	STATE_READY_TO_LASER = 15
 
 	GRBL_STATE_QUEUE = 'Queue'
 	GRBL_STATE_IDLE  = 'Idle'
@@ -71,6 +75,7 @@ class MachineCom(object):
 	pattern_grbl_version = re.compile("Grbl (?P<version>\S+)\s.*")
 	pattern_grbl_setting = re.compile("\$(?P<id>\d+)=(?P<value>\S+)\s\((?P<comment>.*)\)")
 
+	ALARM_CODE_COMMAND_TOO_LONG = "ALARM_CODE_COMMAND_TOO_LONG"
 
 	def __init__(self, port=None, baudrate=None, callbackObject=None, printerProfileManager=None):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.comm_acc2")
@@ -95,6 +100,7 @@ class MachineCom(object):
 		self._laserCutterProfile = laserCutterProfileManager().get_current_or_default()
 
 		self.RX_BUFFER_SIZE = 127
+		self.WORKING_RX_BUFFER_SIZE = self.RX_BUFFER_SIZE - 5
 
 		self._state = self.STATE_NONE
 		self._grbl_state = None
@@ -126,6 +132,7 @@ class MachineCom(object):
 		self.limit_y = -1
 		# from GRBL status RX value: Number of characters queued in Grbl's serial RX receive buffer.
 		self._grbl_rx_status = -1
+		self._grbl_settings_correction_ts = 0
 
 		# regular expressions
 		self._regex_command = re.compile("^\s*\$?([GM]\d+|[THFSX])")
@@ -174,9 +181,10 @@ class MachineCom(object):
 	def _monitor_loop(self):
 		#Open the serial port.
 		if not self._openSerial():
+			self._logger.critical("_monitor_loop() Serial not open, leaving monitoring loop.")
 			return
 
-		self._log("Connected to: %s, starting monitor" % self._serial)
+		self._logger.info("Connected to: %s, starting monitor" % self._serial, terminal_as_comm=True)
 		self._changeState(self.STATE_CONNECTING)
 		if self._laserCutterProfile['grbl']['resetOnConnect']:
 			self._serial.flushInput()
@@ -206,7 +214,7 @@ class MachineCom(object):
 				elif line.startswith('$'): # Grbl settings
 					self._handle_settings_message(line)
 				elif not line and (self._state is self.STATE_CONNECTING or self._state is self.STATE_OPEN_SERIAL or self._state is self.STATE_DETECT_SERIAL):
-					self._log("Empty line received during STATE_CONNECTION, starting soft-reset")
+					self._logger.info("Empty line received during STATE_CONNECTION, starting soft-reset", terminal_as_comm=True)
 					self._sendCommand(self.COMMAND_RESET) # Serial-Connection Error
 			except:
 				self._logger.exception("Something crashed inside the monitoring loop, please report this to Mr Beam")
@@ -222,8 +230,10 @@ class MachineCom(object):
 		while self._sending_active:
 			try:
 				self._process_rt_commands()
+				self._logger.info("ANDYTEST _send_loop() isPrinting: %s, _commandQueue.empty: %s", self.isPrinting(), self._commandQueue.empty())
 				if self.isPrinting() and self._commandQueue.empty():
 					cmd = self._getNext()
+					self._logger.info("ANDYTEST _send_loop() cmd: %s", cmd)
 					if cmd is not None:
 						self.sendCommand(cmd)
 						self._callback.on_comm_progress()
@@ -248,13 +258,18 @@ class MachineCom(object):
 				self._changeState(self.STATE_ERROR)
 				eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
 				self._logger.dump_terminal_buffer(level=logging.ERROR)
+		self._logger.info("ANDYTEST Leaving _send_loop()")
 
 	def _sendCommand(self, cmd=None):
 		if cmd is None:
 			if self._cmd is None and self._commandQueue.empty():
+				self._logger.info("ANDYTEST _sendCommand() nothing to do")
 				return
 			elif self._cmd is None:
 				self._cmd = self._commandQueue.get()
+
+			self._logger.info("ANDYTEST _sendCommand() self._cmd: %s", self._cmd)
+
 			if self._cmd == self.COMMAND_FLUSH:
 				# FLUSH waits until we're no longer waiting for any OKs from GRBL
 				if self._sync_command_ts <=0:
@@ -287,19 +302,28 @@ class MachineCom(object):
 					self._sync_command_state_sent = True
 					self._sendCommand(self.COMMAND_STATUS)
 				self._send_event.set()
-			elif sum([len(x) for x in self._acc_line_buffer]) + len(self._cmd) +1 < self.RX_BUFFER_SIZE-5:
-				self._cmd, _, _  = self._process_command_phase("sending", self._cmd)
-				self._log("Send: %s" % self._cmd)
-				self._acc_line_buffer.append(self._cmd + '\n')
-				try:
-					self._serial.write(self._cmd + '\n')
-					self._process_command_phase("sent", self._cmd)
+			else:
+				my_cmd = self._cmd  # to avoid race conditions
+				if not(len(my_cmd) +1 < self.WORKING_RX_BUFFER_SIZE):
+					msg = "Error: Command too long. max: {}, cmd length: {}, cmd: {}... (shortened)".format(self.WORKING_RX_BUFFER_SIZE -1, len(my_cmd), my_cmd[0:self.WORKING_RX_BUFFER_SIZE-1])
+					self._logger.error(msg)
+					self._handle_alarm_message("Command too long to send to GRBL.", code=self.ALARM_CODE_COMMAND_TOO_LONG)
 					self._cmd = None
-					self._send_event.set()
-				except serial.SerialException:
-					self._log("Unexpected error while writing serial port: %s" % (get_exception_string()))
-					self._errorValue = get_exception_string()
-					self.close(True)
+					return
+				if sum([len(x) for x in self._acc_line_buffer]) + len(my_cmd) +1 < self.WORKING_RX_BUFFER_SIZE:
+					my_cmd, _, _  = self._process_command_phase("sending", my_cmd)
+					self._log("Send: %s" % my_cmd)
+					self._logger.info("ANDYTEST Send: %s" % my_cmd)
+					self._acc_line_buffer.append(my_cmd + '\n')
+					try:
+						self._serial.write(my_cmd + '\n')
+						self._process_command_phase("sent", my_cmd)
+						self._cmd = None
+						self._send_event.set()
+					except serial.SerialException:
+						self._log("Unexpected error while writing serial port: %s" % (get_exception_string()))
+						self._errorValue = get_exception_string()
+						self.close(True)
 		else:
 			cmd, _, _  = self._process_command_phase("sending", cmd)
 			self._log("Send: %s" % cmd)
@@ -308,7 +332,7 @@ class MachineCom(object):
 				self._serial.write(cmd)
 				self._process_command_phase("sent", cmd)
 			except serial.SerialException:
-				self._log("Unexpected error while writing serial port: %s" % (get_exception_string()))
+				self._logger.info("Unexpected error while writing serial port: %s" % (get_exception_string()), terminal_as_comm=True)
 				self._errorValue = get_exception_string()
 				self.close(True)
 
@@ -345,7 +369,7 @@ class MachineCom(object):
 				port = ser.port
 
 			# connect to regular serial port
-			self._log("Connecting to: %s" % port)
+			self._logger.info("Connecting to: %s" % port, terminal_as_comm=True)
 			if baudrate == 0:
 				baudrates = baudrateList()
 				ser = serial.Serial(str(port), 115200 if 115200 in baudrates else baudrates[0], timeout=read_timeout, writeTimeout=10000, parity=serial.PARITY_ODD)
@@ -407,6 +431,10 @@ class MachineCom(object):
 		return ret
 
 	def _getNext(self):
+		if self._currentFile is None:
+			raise Exception("_getNext: No file selected")
+			# self._log("WARN: _getNext: No file selected.")
+			# return None
 		if self._finished_currentFile is False:
 			line = self._currentFile.getNext()
 			if line is None:
@@ -500,31 +528,46 @@ class MachineCom(object):
 			self._changeState(self.STATE_OPERATIONAL)
 
 	def _handle_error_message(self, line):
+		"""
+		Handles error messages from GRBL
+		:param line: GRBL error respnse
+		"""
 		if "EEPROM read fail" in line:
+			self._logger.warn("_handle_error_message() 'EEPROM read fail' in line: '%s'", line)
 			return
-		self._errorValue = line
+		self._logger.error("_handle_error(): %s", error_msg)
+		self._errorValue = error_msg
 		eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
 		self._changeState(self.STATE_LOCKED)
 		self._logger.dump_terminal_buffer(level=logging.ERROR)
 
-	def _handle_alarm_message(self, line):
-		if "Hard/soft limit" in line:
+	def _handle_alarm_message(self, line, code=None):
+		errorMsg = None
+		throwErrorMessage = True
+		dumpTerminal = True
+		if code == self.ALARM_CODE_COMMAND_TOO_LONG:
+			# this is not really a GRBL alarm state. Hacky to have it handled as one...
+			errorMsg = line or str(self.ALARM_CODE_COMMAND_TOO_LONG)
+			dumpTerminal = False
+		elif "Hard/soft limit" in line:
 			errorMsg = "Machine Limit Hit. Please reset the machine and do a homing cycle"
-			self._log(errorMsg)
-			self._errorValue = errorMsg
-			eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
-			self._logger.dump_terminal_buffer(level=logging.ERROR)
 		elif "Abort during cycle" in line:
 			errorMsg = "Soft-reset detected. Please do a homing cycle"
-			self._log(errorMsg)
-			self._errorValue = errorMsg
-			self._logger.dump_terminal_buffer(level=logging.ERROR)
+			throwErrorMessage = False
 		elif "Probe fail" in line:
 			errorMsg = "Probing has failed. Please reset the machine and do a homing cycle"
+		elif "Probe fail" in line:
+			errorMsg = "Probing has failed. Please reset the machine and do a homing cycle"
+		else:
+			errorMsg = "GRBL alarm message: '{}'".format(line)
+
+		if errorMsg:
 			self._log(errorMsg)
 			self._errorValue = errorMsg
-			eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
-			self._logger.dump_terminal_buffer(level=logging.ERROR)
+			if throwErrorMessage:
+				eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
+			if dumpTerminal:
+				self._logger.dump_terminal_buffer(level=logging.ERROR)
 
 		with self._commandQueue.mutex:
 			self._commandQueue.queue.clear()
@@ -613,8 +656,12 @@ class MachineCom(object):
 		"""
 		This triggers a reload of GRBL settings and does a validation and correction afterwards.
 		"""
-		self._refresh_grbl_settings()
-		threading.Timer(3.0, self._verify_and_correct_loaded_grbl_settings, kwargs=dict(retries=retries)).start()
+		if time.time() - self._grbl_settings_correction_ts > self.GRBL_SETTINGS_READ_WINDOW:
+			self._grbl_settings_correction_ts = time.time()
+			self._refresh_grbl_settings()
+			self._verify_and_correct_loaded_grbl_settings(retries=retries, timeout=self.GRBL_SETTINGS_READ_WINDOW, force_thread=True)
+		else:
+			self._logger.warn("correct_grbl_settings() got called more than once withing %s s. Ignoring this call.", self.GRBL_SETTINGS_READ_WINDOW )
 
 	def _refresh_grbl_settings(self):
 		self._grbl_settings = dict()
@@ -627,50 +674,62 @@ class MachineCom(object):
 			log.append("${id}={val} ({comment})".format(id=id, val=data['value'], comment=data['comment']))
 		return "({count}) [{data}]".format(count=len(log), data=', '.join(log))
 
-	def _verify_and_correct_loaded_grbl_settings(self, retries=0):
+	def _verify_and_correct_loaded_grbl_settings(self, retries=0, timeout=0.0, force_thread=False):
 		settings_count = self._laserCutterProfile['grbl']['settings_count']
 		settings_expected = self._laserCutterProfile['grbl']['settings']
-		my_grbl_settings = self._grbl_settings.copy() # to avoid race conditions
+		self._logger.debug("GRBL Settings waiting... timeout: %s, settings count: %s", timeout, len(self._grbl_settings))
 
-		log = self._get_string_loaded_grbl_settings(settings=my_grbl_settings)
-
-		commands = []
-		if len(my_grbl_settings) != settings_count:
-			self._logger.error("GRBL Settings count incorrect!! %s settings but should be %s. Writing all settings to grbl.", len(my_grbl_settings), settings_count)
-			for id, value in sorted(settings_expected.iteritems()):
-				commands.append("${id}={val}".format(id=id, val=value))
+		if force_thread or (timeout > 0.0 and len(self._grbl_settings) < settings_count):
+			timeout = timeout - self.GRBL_SETTINGS_CHECK_FREQUENCY
+			myThread = threading.Timer(self.GRBL_SETTINGS_CHECK_FREQUENCY, self._verify_and_correct_loaded_grbl_settings, kwargs=dict(retries=retries, timeout=timeout))
+			myThread.daemon = True
+			myThread.name = "CommAcc2_GrblSettings"
+			myThread.start()
 		else:
-			for id, value in sorted(settings_expected.iteritems()):
-				if not id in my_grbl_settings:
-					self._logger.error("GRBL Settings $%s - Missing entry! Should be: %s", id, value)
-					commands.append("${id}={val}".format(id=id, val=value))
-				elif my_grbl_settings[id]['value'] != value:
-					self._logger.error("GRBL Settings $%s=%s (%s) - Incorrect value! Should be: %s",
-					                   id, my_grbl_settings[id]['value'], my_grbl_settings[id]['comment'], value)
-					commands.append("${id}={val}".format(id=id, val=value))
+			my_grbl_settings = self._grbl_settings.copy() # to avoid race conditions
 
-		if len(commands) > 0:
-			msg = "GRBL Settings - Verification: FAILED"
-			self._logger.warn(msg + " - " + log)
-			self._log(msg)
-			self._logger.warn("GRBL Settings correcting: %s values", len(commands), terminal_as_comm=True)
-			for c in commands:
-				self._logger.warn("GRBL Settings correcting value: %s", c, terminal_as_comm=True)
-				# flush before and after to make sure grbl can really handle the settings command
-				self.sendCommand(self.COMMAND_FLUSH)
-				self.sendCommand(c)
-				self.sendCommand(self.COMMAND_FLUSH)
-			if retries > 0:
-				retries -= 1
-				self._logger.warn("GRBL Settings corrections done. Restarting verification...", terminal_as_comm=True)
-				self.correct_grbl_settings(retries=retries)
+			log = self._get_string_loaded_grbl_settings(settings=my_grbl_settings)
+
+			commands = []
+			if len(my_grbl_settings) != settings_count:
+				self._logger.error("GRBL Settings count incorrect!! %s settings but should be %s. Writing all settings to grbl.", len(my_grbl_settings), settings_count)
+				for id, value in sorted(settings_expected.iteritems()):
+					commands.append("${id}={val}".format(id=id, val=value))
 			else:
-				self._logger.warn("GRBL Settings corrections done. No more retries.", terminal_as_comm=True)
+				for id, value in sorted(settings_expected.iteritems()):
+					if not id in my_grbl_settings:
+						self._logger.error("GRBL Settings $%s - Missing entry! Should be: %s", id, value)
+						commands.append("${id}={val}".format(id=id, val=value))
+					elif my_grbl_settings[id]['value'] != value:
+						self._logger.error("GRBL Settings $%s=%s (%s) - Incorrect value! Should be: %s",
+						                   id, my_grbl_settings[id]['value'], my_grbl_settings[id]['comment'], value)
+						commands.append("${id}={val}".format(id=id, val=value))
 
-		else:
-			msg = "GRBL Settings - Verification: OK"
-			self._logger.info(msg + " - " + log)
-			self._log(msg)
+			if len(commands) > 0:
+				msg = "GRBL Settings - Verification: FAILED"
+				self._logger.warn(msg + " - " + log)
+				self._log(msg)
+				self._logger.warn("GRBL Settings correcting: %s values", len(commands), terminal_as_comm=True)
+				for c in commands:
+					self._logger.warn("GRBL Settings correcting value: %s", c, terminal_as_comm=True)
+					# flush before and after to make sure grbl can really handle the settings command
+					self.sendCommand(self.COMMAND_FLUSH)
+					self.sendCommand(c)
+					self.sendCommand(self.COMMAND_FLUSH)
+				if retries > 0:
+					retries -= 1
+					wait_time = 2.0
+					self._logger.warn("GRBL Settings corrections done. Restarting verification in %s s", wait_time, terminal_as_comm=True)
+					time.sleep(wait_time)
+					self._logger.warn("GRBL Settings Restarting verification...", terminal_as_comm=True)
+					self.correct_grbl_settings(retries=retries)
+				else:
+					self._logger.warn("GRBL Settings corrections done. No more retries.", terminal_as_comm=True)
+
+			else:
+				msg = "GRBL Settings - Verification: OK"
+				self._logger.info(msg + " - " + log)
+				self._log(msg)
 
 	def _process_command_phase(self, phase, command, command_type=None, gcode=None):
 		if phase not in ("queuing", "queued", "sending", "sent"):
@@ -744,7 +803,7 @@ class MachineCom(object):
 
 		oldState = self.getStateString()
 		self._state = newState
-		self._log('Changing monitoring state from \'%s\' to \'%s\'' % (oldState, self.getStateString()))
+		self._logger.debug('Changing monitoring state from \'%s\' to \'%s\'' % (oldState, self.getStateString()), terminal_as_comm=True)
 		self._callback.on_comm_state_change(newState)
 
 	def _onConnected(self, nextState):
@@ -1184,7 +1243,8 @@ class MachineCom(object):
 			self._commandQueue.put(cmd)
 			self._send_event.set()
 
-	def selectFile(self, filename, sd):
+	def selectFile(self, filename, sd, printAfterSelect=False, pos=None):
+		self._logger.info("ANDYTEST selectFile() filename: %s, sd: %s, printAfterSelect: %s, pos: %s", filename, sd, printAfterSelect, pos)
 		if self.isBusy():
 			return
 
@@ -1195,6 +1255,8 @@ class MachineCom(object):
 			"origin": self._currentFile.getFileLocation()
 		})
 		self._callback.on_comm_file_selected(filename, self._currentFile.getFilesize(), False)
+		# if printAfterSelect:
+		# 	self.startPrint(filename, sd, pos=pos)
 
 	def unselectFile(self):
 		if self.isBusy():
@@ -1205,8 +1267,10 @@ class MachineCom(object):
 		self._callback.on_comm_file_selected(None, None, False)
 
 	def startPrint(self, *args, **kwargs):
+		self._logger.info("ANDYTEST startPrint() args: %s, kwargs: %s", args, kwargs)
 		# TODO implement pos kw argument for resuming prints
 		if not self.isOperational():
+			self._logger.info("ANDYTEST startPrint() not isOperational(): returning")
 			return
 
 		if self._currentFile is None:
@@ -1231,6 +1295,8 @@ class MachineCom(object):
 			}
 			eventManager().fire(OctoPrintEvents.PRINT_STARTED, payload)
 
+			#self.sendCommand(self.COMMAND_HOLD)
+			# self.setPause(True, send_cmd=True, pause_for_cooling=False, trigger="PauseAtJobStart", force=False)
 			self._changeState(self.STATE_PRINTING)
 		except:
 			self._logger.exception("Error while trying to start printing")
@@ -1356,6 +1422,8 @@ class MachineCom(object):
 			return "Homing"
 		if self._state == self.STATE_FLASHING:
 			return "Flashing"
+		if self._state == self.STATE_READY_TO_LASER:
+			return "Ready to Start"
 		return "Unknown State (%d)" % (self._state)
 
 	def getPrintProgress(self):
@@ -1388,6 +1456,9 @@ class MachineCom(object):
 
 	def isLocked(self):
 		return self._state == self.STATE_LOCKED
+
+	def isReadyToLaser(self):
+		return self._state == self.STATE_READY_TO_LASER
 
 	def isHoming(self):
 		return self._state == self.STATE_HOMING

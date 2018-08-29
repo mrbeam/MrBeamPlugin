@@ -1,6 +1,19 @@
 /* global snap, ko, $, Snap, API_BASEURL, _, CONFIG_WEBCAM_STREAM, ADDITIONAL_VIEWMODELS, mina */
 
 MRBEAM_PX2MM_FACTOR_WITH_ZOOM = 1; // global available in this viewmodel and in snap plugins at the same time.
+MRBEAM_DEBUG_RENDERING = false; 
+if(MRBEAM_DEBUG_RENDERING){
+	function debugBase64(base64URL, target=""){
+		var dbg_link = "<a target='_blank' href='"+base64URL+"'>Right click -> Open in new tab</a>";
+			new PNotify({
+				title: "render debug output " + target,
+				text: dbg_link,
+				type: "warn",
+				hide: false
+			});
+		}
+}
+
 
 $(function(){
 
@@ -261,6 +274,10 @@ $(function(){
 			return colFound;
 		};
 
+		self._getHexColorStr = function(inputColor){
+			var c = new Color(inputColor);
+			return c.getHex();
+		};
 
 		self.trigger_resize = function(){
 			if(typeof(snap) !== 'undefined') self.abortFreeTransforms();
@@ -398,7 +415,7 @@ $(function(){
 
 		self.removeGcode = function(file){
 			var previewId = file.previewId;
-			snap.select('#' + previewId).remove();
+			snap.selectAll('#' + previewId).remove();
 			self.placedDesigns.remove(file);
 		};
 
@@ -410,6 +427,10 @@ $(function(){
 		self.placeSVG = function(file, callback) {
 			var url = self._getSVGserveUrl(file);
 			cb = function (fragment) {
+				if(self._isBinaryData(fragment.node.textContent)) { // workaround: only catching one loading error
+					self.file_not_readable();
+					return;
+				}
 				var id = self.getEntryId();
 				var previewId = self.generateUniqueId(id, file); // appends -# if multiple times the same design is placed.
 				var origin = file["refs"]["download"];
@@ -431,7 +452,12 @@ $(function(){
 				var insertedId = self._prepareAndInsertSVG(fragment, previewId, origin, scaleMatrixStr);
 				if(typeof callback === 'function') callback(insertedId);
 			};
-			self.loadSVG(url, cb);
+			try { // TODO Figure out why the loading exception is not caught.
+				self.loadSVG(url, cb);
+			} catch (e) {
+				console.error(e);
+				self.file_not_readable();
+			}
 		};
 
         /**
@@ -443,6 +469,10 @@ $(function(){
 			var url = self._getSVGserveUrl(file);
 
 			cb = function (fragment) {
+				if(fragment.node.textContent.trim() === ""){ // workaround. try catch does somehow not work.
+					self.file_not_readable();
+					return;
+				}
 				var origin = file["refs"]["download"];
 
 				var tx = 0;
@@ -469,7 +499,13 @@ $(function(){
 				var insertedId = self._prepareAndInsertSVG(fragment, previewId, origin, scaleMatrixStr);
 				if(typeof callback === 'function') callback(insertedId);
 			};
-			Snap.loadDXF(url, cb);
+			try { // TODO this would be the much better way. Figure out why the loading exception is not caught.
+				Snap.loadDXF(url, cb);
+			} catch (e) {
+				console.error(e);
+				self.file_not_readable();
+			}
+			
 		};
 
         /**
@@ -518,6 +554,24 @@ $(function(){
 				newSvg.bake(); // remove transforms
 			}
 			newSvg.selectAll('path').attr({strokeWidth: '0.8', class:'vector_outline'});
+			// replace all fancy color definitions (rgba(...), hsl(...), 'pink', ...) with hex values
+			newSvg.selectAll('*[stroke]:not(#bbox)').forEach(function (el) {
+				var colStr = el.attr().stroke;
+				// handle stroke="" default value (#000000)
+				if (typeof(colStr) !== 'undefined' && colStr !== 'none') {
+					var colHex = self._getHexColorStr(colStr);
+					el.attr('stroke', colHex);
+				}
+			});
+			newSvg.selectAll('*[fill]:not(#bbox)').forEach(function (el) {
+				var colStr = el.attr().fill;
+				// handle fill="" default value (#000000)
+				if (typeof(colStr) !== 'undefined' && colStr !== 'none') {
+					var colHex = self._getHexColorStr(colStr);
+					el.attr('fill', colHex);
+				}
+			});
+
 			newSvg.attr({
 				id: id,
 				'mb:id':id,
@@ -625,7 +679,8 @@ $(function(){
 			// detect Inkscape by attribute
 			var inkscape_version = root_attrs['inkscape:version'];
 			if(inkscape_version !== undefined){
-				version = inkscape_version;
+				gen = 'inkscape';
+				version = inkscape_version.value;
 //				console.log("Generator:", gen, version);
 				return {generator: gen, version: version};
 			}
@@ -697,6 +752,10 @@ $(function(){
 			}
 			console.log("Generator:", gen, version);
 			return { generator: 'unknown', version: 'unknown' };
+		};
+		
+		self._isBinaryData = function(str){
+			return /[\x00-\x08\x0E-\x1F]/.test(str)
 		};
 
         /**
@@ -1115,6 +1174,19 @@ $(function(){
     			}
             });
 		};
+		
+        self.file_not_readable = function(){
+            var error = "<p>" + gettext("Something went wrong while reading this file. <br/><h3 style='text-align:center;'>Sorry!</h3><br/>Please check it with another application. If it works there, our support team would be happy to take a look.") + "</p>";
+            new PNotify({
+                title: "Oops.",
+                text: error,
+                type: "error",
+                hide: false,
+				buttons: {
+        			sticker: false
+    			}
+            });
+		};
 
 		self.placeIMG = function (file) {
 			var url = self._getIMGserveUrl(file);
@@ -1250,6 +1322,9 @@ $(function(){
 		};
 
 		self.getDocumentViewBoxMatrix = function(dim, vbox){
+			if(dim.width === null || dim.height === null){
+				return [[1,0,0],[0,1,0], [0,0,1]];
+			}
 			if(vbox !== null ){
 				var width = parseFloat(dim.width);
 				var height = parseFloat(dim.height);
@@ -1376,6 +1451,7 @@ $(function(){
 		};
 
 		self.draw_coord_grid = function(){
+			if(snap === null) return;
 			var grid = snap.select('#coordGrid');
 			var w = self.workingAreaWidthMM();
 			var h = self.workingAreaHeightMM();
@@ -1777,6 +1853,10 @@ $(function(){
 				}
 
 				var cb = function(result) {
+					if (MRBEAM_DEBUG_RENDERING) {
+						debugBase64(result, 'png_debug');
+					}
+
 					if(fillings.length > 0){
 
 						// fill rendering replaces all
@@ -1795,6 +1875,14 @@ $(function(){
 					self._cleanup_render_mess();
 				};
 
+				if(MRBEAM_DEBUG_RENDERING){
+//					var base64String = btoa(tmpSvg.innerSVG());
+					var raw = tmpSvg.innerSVG();
+					var svgString = raw.substr(raw.indexOf('<svg'));
+					var dataUrl = 'data:image/svg+xml;base64, ' + btoa(svgString);
+					debugBase64(dataUrl, 'svg_debug');
+				}
+				console.log("Rendering " + fillings.length + " filled elements.");
 				tmpSvg.renderPNG(wMM, hMM, pxPerMM, cb);
 			});
 		};
