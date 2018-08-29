@@ -427,6 +427,10 @@ $(function(){
 		self.placeSVG = function(file, callback) {
 			var url = self._getSVGserveUrl(file);
 			cb = function (fragment) {
+				if(self._isBinaryData(fragment.node.textContent)) { // workaround: only catching one loading error
+					self.file_not_readable();
+					return;
+				}
 				var id = self.getEntryId();
 				var previewId = self.generateUniqueId(id, file); // appends -# if multiple times the same design is placed.
 				var origin = file["refs"]["download"];
@@ -448,7 +452,12 @@ $(function(){
 				var insertedId = self._prepareAndInsertSVG(fragment, previewId, origin, scaleMatrixStr);
 				if(typeof callback === 'function') callback(insertedId);
 			};
-			self.loadSVG(url, cb);
+			try { // TODO Figure out why the loading exception is not caught.
+				self.loadSVG(url, cb);
+			} catch (e) {
+				console.error(e);
+				self.file_not_readable();
+			}
 		};
 
         /**
@@ -460,6 +469,10 @@ $(function(){
 			var url = self._getSVGserveUrl(file);
 
 			cb = function (fragment) {
+				if(fragment.node.textContent.trim() === ""){ // workaround. try catch does somehow not work.
+					self.file_not_readable();
+					return;
+				}
 				var origin = file["refs"]["download"];
 
 				var tx = 0;
@@ -486,7 +499,13 @@ $(function(){
 				var insertedId = self._prepareAndInsertSVG(fragment, previewId, origin, scaleMatrixStr);
 				if(typeof callback === 'function') callback(insertedId);
 			};
-			Snap.loadDXF(url, cb);
+			try { // TODO this would be the much better way. Figure out why the loading exception is not caught.
+				Snap.loadDXF(url, cb);
+			} catch (e) {
+				console.error(e);
+				self.file_not_readable();
+			}
+			
 		};
 
         /**
@@ -733,6 +752,10 @@ $(function(){
 			}
 			console.log("Generator:", gen, version);
 			return { generator: 'unknown', version: 'unknown' };
+		};
+		
+		self._isBinaryData = function(str){
+			return /[\x00-\x08\x0E-\x1F]/.test(str)
 		};
 
         /**
@@ -1145,6 +1168,19 @@ $(function(){
                 title: "Style elements removed",
                 text: error,
                 type: "warn",
+                hide: false,
+				buttons: {
+        			sticker: false
+    			}
+            });
+		};
+		
+        self.file_not_readable = function(){
+            var error = "<p>" + gettext("Something went wrong while reading this file. <br/><h3 style='text-align:center;'>Sorry!</h3><br/>Please check it with another application. If it works there, our support team would be happy to take a look.") + "</p>";
+            new PNotify({
+                title: "Oops.",
+                text: error,
+                type: "error",
                 hide: false,
 				buttons: {
         			sticker: false
