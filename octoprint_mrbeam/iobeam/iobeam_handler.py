@@ -470,7 +470,8 @@ class IoBeamHandler(object):
 		elif lock_id is not None and lock_state == self.MESSAGE_ACTION_INTERLOCK_CLOSED:
 			self._interlocks.pop(lock_id, None)
 		elif self.MESSAGE_ERROR in message:
-			raise Exception("iobeam received InterLock error: {}".format(message))
+			self._logger.error("iobeam received InterLock error: {}".format(message))
+			return 1
 		else:
 			return self._handle_invalid_message(message)
 
@@ -607,8 +608,8 @@ class IoBeamHandler(object):
 		elif action == 'debug':
 			self._logger.info("iobeam debug message: '%s'", message)
 		else:
-			self._logger.debug("_handle_iobeam_message(): Received unknown message for device 'iobeam'. NOT counting as error. Message: %s", message)
-			return 0
+			self._logger.info("iobeam message: '%s'", message)
+		return 0
 
 	def _handle_error_message(self, message, token):
 		action = token[0] if len(token) > 0 else None

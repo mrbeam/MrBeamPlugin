@@ -148,8 +148,9 @@ $(function () {
 			});
 
             // TODO forward to control viewmodel
+            self.state.isReadyToLaser = ko.observable(undefined);
             self.state.isLocked = ko.observable(true);
-            self.state.isReady = ko.observable(undefined);
+            //self.state.isReady = ko.observable(undefined); // not sure why this is injected here. should be already present in octoprints printerstate VM
             self.state.isFlashing = ko.observable(undefined);
             self.state.currentPos = ko.observable(undefined);
 			self.state.filename = ko.observable(undefined);
@@ -356,6 +357,7 @@ $(function () {
         };
 
         self._processStateData = function (data) {
+				self.state.isReadyToLaser(data.flags.readyToLaser);
 				self.state.isLocked(data.flags.locked);
 				self.state.isFlashing(data.flags.flashing);
 				self.state.isConnecting(data.text === "Connecting" || data.text === "Opening serial port");
@@ -461,16 +463,17 @@ $(function () {
         self.gcodefiles.onEventSlicingDone = function (payload) {
             var url = API_BASEURL + "files/" + payload.gcode_location + "/" + payload.gcode;
             var data = {refs: {resource: url}, origin: payload.gcode_location, path: payload.gcode};
-            self.gcodefiles.loadFile(data, false); // loads gcode into gcode viewer
-            if (self.readyToLaser.oneButton) {
-                self.readyToLaser.setGcodeFile(payload.gcode);
-            } else {
-                var callback = function (e) {
-                    e.preventDefault();
-                    self.gcodefiles.loadFile(data, true); // starts print
-                };
-                self.show_safety_glasses_warning(callback);
-            }
+			console.log("Slicing Done - ususally now a load-file-event was sent to the backend.");
+            //self.gcodefiles.loadFile(data, false); // loads gcode into gcode viewer
+//            if (self.readyToLaser.oneButton) {
+//                self.readyToLaser.setGcodeFile(payload.gcode);
+//            } else {
+//                var callback = function (e) {
+//                    e.preventDefault();
+//                    self.gcodefiles.loadFile(data, true); // starts print
+//                };
+//                self.show_safety_glasses_warning(callback);
+//            }
 			self.gcodefiles.uploadProgress
                 .removeClass("progress-striped")
                 .removeClass("active");

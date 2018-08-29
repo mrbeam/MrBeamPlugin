@@ -139,7 +139,7 @@ $(function() {
 
                     if ('ready_to_laser' in data && data.ready_to_laser.startsWith("end")) {
                         console.log("ReadyToLaser state was ended by the server. data.ready_to_laser=", data.ready_to_laser);
-                        self._setReadyToLaserCancel(false);
+                        //self._setReadyToLaserCancel(false);
 
                         if (data.ready_to_laser == "end_lasering") {
                             new PNotify({

@@ -112,6 +112,21 @@ class Laser(Printer):
 			return
 		self._comm.decreasePasses()
 
+	def select_file(self, path, sd, printAfterSelect=False, pos=None):
+		self._logger.info("ANDYTEST printer.select_file() path: %s, sd: %s, printAfterSelect: %s, pos %s", path, sd, printAfterSelect, pos)
+		if self._comm is None:
+			self._logger.error("select_file() _comm is None")
+			return
+
+		self._printAfterSelect = printAfterSelect
+		self._posAfterSelect = pos
+		# self._comm.selectFile("/" + path if sd else path, sd)
+		# self._comm.selectFile(path, sd, printAfterSelect=printAfterSelect, pos=pos)
+		self._comm.selectFile(path, sd)
+		self._updateProgressData()
+		# self._setCurrentZ(None)
+
+
 	def pause_print(self, force=False, trigger=None):
 		"""
 		Pause the current printjob.
@@ -144,11 +159,15 @@ class Laser(Printer):
 	def is_flashing(self):
 		return self._comm is not None and self._comm.isFlashing()
 
+	def is_readyToLaser(self):
+		return self._comm is not None and self._comm.isReadyToLaser()
+
 	def _getStateFlags(self):
 		flags = Printer._getStateFlags(self)
 		flags.update({
 			"locked": self.is_locked(),
 			"flashing": self.is_flashing(),
+			"readyToLaser": self.is_readyToLaser(),
 		})
 		return flags
 
