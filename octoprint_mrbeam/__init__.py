@@ -222,8 +222,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				suppress_migrations = False,     # for develpment on non-MrBeam devices
 				support_mode = False
 			),
-			# TODO rename analyticsEnabled and put in analytics-dict
-			analyticsEnabled=False,  # frontend analytics Mixpanel
 			analytics=dict(
 				job_analytics = False,
 				cam_analytics = False,
