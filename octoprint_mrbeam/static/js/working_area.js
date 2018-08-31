@@ -1,7 +1,7 @@
 /* global snap, ko, $, Snap, API_BASEURL, _, CONFIG_WEBCAM_STREAM, ADDITIONAL_VIEWMODELS, mina */
 
 MRBEAM_PX2MM_FACTOR_WITH_ZOOM = 1; // global available in this viewmodel and in snap plugins at the same time.
-MRBEAM_DEBUG_RENDERING = false; 
+MRBEAM_DEBUG_RENDERING = false;
 if(MRBEAM_DEBUG_RENDERING){
 	function debugBase64(base64URL, target=""){
 		var dbg_link = "<a target='_blank' href='"+base64URL+"'>Right click -> Open in new tab</a>";
@@ -366,7 +366,7 @@ $(function(){
 //				return;
 //			} else {
 				var g = snap.group();
-				g.attr({id: previewId, 'mb:id':previewId});
+				g.attr({id: previewId, 'mb:id': self._normalize_mb_id(previewId)});
 				snap.select('#placedGcodes').append(g);
 				file.previewId = previewId;
 				self.placedDesigns.push(file);
@@ -505,7 +505,7 @@ $(function(){
 				console.error(e);
 				self.file_not_readable();
 			}
-			
+
 		};
 
         /**
@@ -574,7 +574,7 @@ $(function(){
 
 			newSvg.attr({
 				id: id,
-				'mb:id':id,
+				'mb:id': self._normalize_mb_id(id),
 				class: 'userSVG',
 				'mb:origin': origin
 			});
@@ -753,7 +753,7 @@ $(function(){
 			console.log("Generator:", gen, version);
 			return { generator: 'unknown', version: 'unknown' };
 		};
-		
+
 		self._isBinaryData = function(str){
 			return /[\x00-\x08\x0E-\x1F]/.test(str)
 		};
@@ -883,14 +883,14 @@ $(function(){
 		self.duplicateSVG = function(src) {
 			self.abortFreeTransforms();
 			var srcElem = snap.select('#'+src.previewId);
-			var clone_id = srcElem.attr('mb:clone_of') || src.previewId;
+			var clone_id = srcElem.attr('mb:clone_of') || self._normalize_mb_id(src.previewId);
 			var newSvg = srcElem.clone();
 			newSvg.clean_gc();
 			var file = {url: src.url, origin: src.origin, name: src.name, type: src.type, refs:{download: src.url}};
 			var id = self.getEntryId();
 			var previewId = self.generateUniqueId(id, file);
 			newSvg.attr({id: previewId,
-                'mb:id': previewId,
+                'mb:id': self._normalize_mb_id(previewId),
                 'mb:clone_of':clone_id,
                 class: 'userSVG'});
 			snap.select("#userContent").append(newSvg);
@@ -1174,7 +1174,7 @@ $(function(){
     			}
             });
 		};
-		
+
         self.file_not_readable = function(){
             var error = "<p>" + gettext("Something went wrong while reading this file. <br/><h3 style='text-align:center;'>Sorry!</h3><br/>Please check it with another application. If it works there, our support team would be happy to take a look.") + "</p>";
             new PNotify({
@@ -1206,7 +1206,7 @@ $(function(){
 				var id = self.getEntryId();
 				newImg.attr({filter: 'url(#grayscale_filter)', 'data-serveurl': url});
 				var previewId = self.generateUniqueId(id, file); // appends # if multiple times the same design is placed.
-				var imgWrapper = snap.group().attr({id: previewId, 'mb:id':previewId, class: 'userIMG'});
+				var imgWrapper = snap.group().attr({id: previewId, 'mb:id':self._normalize_mb_id(previewId), class: 'userIMG'});
 				imgWrapper.append(newImg);
 				snap.select("#userContent").append(imgWrapper);
 				imgWrapper.transformable();
@@ -1571,6 +1571,10 @@ $(function(){
             return svgStr;
         };
 
+        self._normalize_mb_id = function(id) {
+            return id ? id.replace(/\s/g, '_') : '';
+        }
+
         self.gc_options_as_string = function() {
             var gc_options = self.gc_options();
             var res = [];
@@ -1598,14 +1602,15 @@ $(function(){
                         my_meta[attrs[i].nodeName] = attrs[i].nodeValue;
                     }
                 }
-                if (my_meta['mb:id'] && id != my_meta['mb:id'] && !my_meta['mb:clone_of']) {
+                var normalized_id = self._normalize_mb_id(id);
+                if (my_meta['mb:id'] && normalized_id != my_meta['mb:id'] && !my_meta['mb:clone_of']) {
                     element.attr('mb:clone_of', my_meta['mb:id']);
                     my_meta['mb:clone_of'] = my_meta['mb:id'];
                 }
 
-                element.attr("mb:id", id);
+                element.attr("mb:id", normalized_id);
 
-                my_meta['mb:id'] = id;
+                my_meta['mb:id'] = normalized_id;
                 mb_meta[id] = my_meta;
             });
             return mb_meta;
@@ -2459,7 +2464,7 @@ $(function(){
             var group = uc.group(text, box);
             group.attr({
                 id: file.previewId,
-                'mb:id': file.previewId,
+                'mb:id': self._normalize_mb_id(file.previewId),
 				class: 'userText'
             });
 
