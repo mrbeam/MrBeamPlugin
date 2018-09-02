@@ -469,10 +469,12 @@ $(function(){
 			var url = self._getSVGserveUrl(file);
 
 			cb = function (fragment) {
-				if(fragment.node.textContent.trim() === ""){ // workaround. try catch does somehow not work.
-					self.file_not_readable();
-					return;
-				}
+				// does not work. false positives. 
+//				if(fragment.node.textContent.trim() === ""){ // workaround. try catch does somehow not work.
+//					self.file_not_readable();
+//					return;
+//				}
+
 				var origin = file["refs"]["download"];
 
 				var tx = 0;
