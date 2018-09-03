@@ -34,8 +34,23 @@ from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
 ### MachineCom #########################################################################################################
 class MachineCom(object):
 
+
+	### GRBL VERSIONs #######################################
+	# original grbl
 	GRBL_VERSION_20170919_22270fa = '0.9g_22270fa'
+	#
+	# adds rescue from home feature
 	GRBL_VERSION_20180223_61638c5 = '0.9g_20180223_61638c5'
+	GRBL_FEAT_BLOCK_VERSION_LIST_RESCUE_FROM_HOME = (GRBL_VERSION_20170919_22270fa)
+	#
+	# trieal grbl
+	# - adds rx-buffer state with every ok
+	# - adds alarm mesage on rx buffer overrun
+	GRBL_VERSION_20180828_ac367ff = '0.9g_20180828_ac367ff'
+	GRBL_FEAT_BLOCK_VERSION_LIST_RX_BUFFER_REPORTING = (GRBL_VERSION_20170919_22270fa, GRBL_VERSION_20180223_61638c5)
+	#
+	##########################################################
+
 
 	STATE_NONE = 0
 	STATE_OPEN_SERIAL = 1
@@ -127,7 +142,11 @@ class MachineCom(object):
 		self.limit_y = -1
 		# from GRBL status RX value: Number of characters queued in Grbl's serial RX receive buffer.
 		self._grbl_rx_status = -1
-        self._rx_stats = RxBufferStats()
+		self._rx_stats = RxBufferStats()
+
+		#grbl features
+		self.grbl_feat_rescue_from_home = False
+		self.grbl_feat_report_rx_buffer_state = False
 
 		# regular expressions
 		self._regex_command = re.compile("^\s*\$?([GM]\d+|[THFSX])")
@@ -502,6 +521,9 @@ class MachineCom(object):
 		if self._state == self.STATE_HOMING:
 			self._changeState(self.STATE_OPERATIONAL)
 
+		if not self.grbl_feat_report_rx_buffer_state:
+			return
+
 		# important that we add every call and count the invalid values internally!
 		rx_free = None
 		try:
@@ -587,7 +609,11 @@ class MachineCom(object):
 			self._grbl_version = match.group('version')
 		else:
 			self._logger.error("Unable to parse GRBL version from startup message: ", line)
-		self._logger.info("GRBL version: %s", self._grbl_version)
+
+		self.grbl_feat_rescue_from_home = self._grbl_version not in self.GRBL_FEAT_BLOCK_VERSION_LIST_RESCUE_FROM_HOME
+		self.grbl_feat_report_rx_buffer_state = self._grbl_version not in self.GRBL_FEAT_BLOCK_VERSION_LIST_RX_BUFFER_REPORTING
+
+		self._logger.info("GRBL version: %s, rescue_from_home: %s, report_rx_buffer_state: %s", self._grbl_version, self.grbl_feat_rescue_from_home, self.grbl_feat_report_rx_buffer_state)
 
 		self._onConnected(self.STATE_LOCKED)
 
@@ -924,13 +950,13 @@ class MachineCom(object):
 		- If laserhead needs to be rescued
 		And then rescues aka moves the laserhead out of the critical zone.
 
-		Requires GRBV v '0.9g_20180223_61638c5' because we need limit data reported.
+		Requires GRBL v '0.9g_20180223_61638c5' because we need limit data reported.
 		"""
 		if self._grbl_version is None:
 			self._logger.warn("rescue_from_home_pos() No GRBL version yet.")
 			return
 
-		if self._grbl_version == self.GRBL_VERSION_20170919_22270fa:
+		if not self.grbl_feat_rescue_from_home:
 			self._logger.info("rescue_from_home_pos() Rescue from home not supported by current GRBL version. GRBL version: %s", self._grbl_version)
 			return
 		else:
@@ -1236,6 +1262,8 @@ class MachineCom(object):
 		self._finished_passes = 0
 
 		self._rx_stats.reset()
+		if not self.grbl_feat_report_rx_buffer_state:
+			self._rx_stats.set_no_grbl_support()
 
 		try:
 			# ensure fan is on whatever gcode follows.
@@ -1663,12 +1691,15 @@ class RxBufferStats(object):
 		self.data = {}
 		self.count = 0
 		self.errs = 0
+		self.grbl_support = True
 		self.start_ts = time.time()
 
 	def reset(self):
 		self.__init__()
 
 	def add(self, val):
+		if not self.grbl_support:
+			return
 		try:
 			val = int(val)
 		except:
@@ -1678,6 +1709,9 @@ class RxBufferStats(object):
 			self.data[val] = 0
 		self.data[val] += 1
 		self.count += 1
+
+	def set_no_grbl_support(self):
+		self.grbl_support = False
 
 	def get_min(self):
 		if self.count <= 0: return 0
@@ -1700,6 +1734,9 @@ class RxBufferStats(object):
 		return avg / self.count
 
 	def pp(self, print_time=-1):
+		if not self.grbl_support:
+			return "RxBufferStats: not supported by grbl."
+
 		if print_time <=0:
 			print_time = time.time() - self.start_ts
 
