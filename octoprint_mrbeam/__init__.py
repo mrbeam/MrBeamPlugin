@@ -212,6 +212,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				debug=False, # deprected
 				terminalMaxLines = 2000,
 				env = self.ENV_PROD,
+				load_gremlins = False,
 				# env_overrides = dict(
 				# 	analytics = "DEV",
 				# 	laser_safety = "DEV",
@@ -319,17 +320,21 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def get_assets(self):
 		# Define your plugin's asset files to automatically include in the
 		# core UI here.
-		return dict(
+		assets = dict(
 			js=["js/lasercutterprofiles.js","js/mother_viewmodel.js", "js/mrbeam.js","js/color_classifier.js",
 				"js/working_area.js", "js/camera.js", "js/lib/snap.svg-min.js", "js/snap-dxf.js", "js/render_fills.js", "js/path_convert.js",
 				"js/matrix_oven.js", "js/drag_scale_rotate.js",	"js/convert.js", "js/snap_gc_plugin.js", "js/gcode_parser.js", "js/gridify.js",
 				"js/lib/photobooth_min.js", "js/svg_cleaner.js", "js/loginscreen_viewmodel.js",
 				"js/wizard_acl.js", "js/netconnectd_wrapper.js", "js/lasersaftey_viewmodel.js",
 				"js/ready_to_laser_viewmodel.js", "js/lib/screenfull.min.js","js/settings/camera_calibration.js",
-				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js", "js/lib/Color.js", "js/laser_job_done_viewmodel.js", "js/loadingoverlay_viewmodel.js"],
+				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js", "js/lib/Color.js", "js/laser_job_done_viewmodel.js", 
+				"js/loadingoverlay_viewmodel.js"],
 			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css", "css/quicktext-fonts.css", "css/sliders.css"],
 			less=["less/mrbeam.less"]
 		)
+		if(self._settings.get(["dev", "load_gremlins"])):
+			assets['js'].append('js/lib/gremlins.min.js')
+		return assets
 
 	##~~ UiPlugin mixin
 
