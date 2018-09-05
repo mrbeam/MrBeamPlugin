@@ -1734,6 +1734,9 @@ $(function(){
                     clipRect: [0,0,self.workingAreaWidthMM(), self.workingAreaHeightMM()]
                 };
             });
+			$('#quick_shape_dialog').on('hidden', function(){
+				self._qs_removeInvalid();
+			});
         };
 
 		self.onTabChange = function(current, prev){
@@ -1958,7 +1961,8 @@ $(function(){
 					circle_radius: w,
 					star_radius: w/2, star_corners:5, star_sharpness: 0.5522,
 					heart_w: w, heart_h:0.8*w, heart_lr: 0
-				}
+				},
+				invalid: false
 			};
             var previewId = self.generateUniqueId(id, file); // appends -# if multiple times the same design is placed.
 			file.previewId = previewId;
@@ -1979,22 +1983,25 @@ $(function(){
          * @param file Object representing the QuickText to edit
          */
         self.editQuickShape = function (file) {
-			self.currentQuickShapeFile = file;
-			var params = self.currentQuickShapeFile.qs_params;
-			self.showTransformHandles(self.currentQuickShapeFile.previewId, false);
+			var params = file.qs_params;
+			self.showTransformHandles(file.previewId, false);
+			self.currentQuickShapeFile = null;
+			
 			$('#quick_shape_dialog').modal({keyboard: true});
 			$('#quick_shape_dialog').one('hide', self._qs_currentQuickShapeShowTransformHandlesIfNotEmpty);
-			$('#quick_shape_rect_w').val(params.rect_w);
-			$('#quick_shape_rect_h').val(params.rect_h);
-			$('#quick_shape_rect_radius').val(params.rect_radius);
-			$('#quick_shape_circle_radius').val(params.circle_radius);
-			$('#quick_shape_star_radius').val(params.star_radius);
-			$('#quick_shape_star_corners').val(params.star_corners);
-			$('#quick_shape_star_sharpness').val(params.star_sharpness);
-			$('#quick_shape_heart_w').val(params.heart_w);
-			$('#quick_shape_heart_h').val(params.heart_h);
-			$('#quick_shape_heart_lr').val(params.heart_lr);
-			$('#quick_shape_color').val(params.color);
+			// firing those change events is necessary to work around a bug in chrome|knockout|js. Otherwise entering numbers directly does not fire the change event if the number is accidentially equal to the field content it had before .val(..).
+			$('#quick_shape_rect_w').val(params.rect_w).change();
+			$('#quick_shape_rect_h').val(params.rect_h).change();
+			$('#quick_shape_rect_radius').val(params.rect_radius).change();
+			$('#quick_shape_circle_radius').val(params.circle_radius).change();
+			$('#quick_shape_star_radius').val(params.star_radius).change();
+			$('#quick_shape_star_corners').val(params.star_corners).change();
+			$('#quick_shape_star_sharpness').val(params.star_sharpness).change();
+			$('#quick_shape_heart_w').val(params.heart_w).change();
+			$('#quick_shape_heart_h').val(params.heart_h).change();
+			$('#quick_shape_heart_lr').val(params.heart_lr).change();
+			$('#quick_shape_color').val(params.color).change();
+			self.currentQuickShapeFile = file;
 
 			$('#shape_tab_link_'+params.type.substr(1)).tab('show');
 			$('#quick_shape_dialog div.tab-pane.active input:first').focus();
@@ -2066,6 +2073,11 @@ $(function(){
 				}
 				shape.attr({d: d, stroke: qs_params.color});
 				self.currentQuickShapeFile.qs_params = qs_params;
+				if(d === ""){
+					self.currentQuickShapeFile.invalid = true;
+				} else {
+					self.currentQuickShapeFile.invalid = false;
+				}
 
 				// update fileslist
 				var displayText = self._qs_displayText(qs_params);
@@ -2074,9 +2086,21 @@ $(function(){
 		};
 
 		self._qs_getCircle = function(r){
-			return self._qs_getRect(r,r,100);
+			if(isFinite(r) && r > 0){
+				return self._qs_getRect(r,r,100);
+			} else {
+				return "";
+			}
+				
 		};
 		self._qs_getRect = function(w,h,r){
+			if(!isFinite(w) || 
+				!isFinite(h) || 
+				!isFinite(r) 
+			) {
+				return "";
+			}
+			
 			if(r <= 0){
 				var d = 'M0,0l'+w+',0 0,'+h+' '+(-w)+',0 z';
 				return d;
@@ -2149,6 +2173,14 @@ $(function(){
 		};
 
 		self._qs_getStar = function(r,c,sh){
+			if(!isFinite(r) || 
+				!isFinite(c) || 
+				!isFinite(sh) || 
+				r < 0 || 
+				c < 3  
+			) {
+				return "";
+			}
 			var points = [];
 			var step = 2*Math.PI / c;
 			var ri = (1-sh)*r;
@@ -2166,6 +2198,9 @@ $(function(){
 		};
 
 		self._qs_getHeart = function(w,h,lr){
+			if(!isFinite(w) || !isFinite(h) || !isFinite(lr)){
+				return "";
+			}
 			//         __   __
 			//        e  \ /  c
 			//       (    d    )
@@ -2265,6 +2300,21 @@ $(function(){
 					break;
 			}
 
+		};
+		
+		self._qs_removeInvalid = function(){
+			if(self.currentQuickShapeFile){
+				var remove = self.currentQuickShapeFile.invalid;
+				if(remove){
+					console.info("Removed invalid QuickShape:", self.currentQuickShapeFile);
+					self.removeSVG(self.currentQuickShapeFile);
+					self.currentQuickShapeFile = null;
+				}
+			}
+		};
+		self._qs_dialogClose = function(){
+			self._qs_removeInvalid();
+			$('#quick_shape_dialog').modal('hide');
 		};
 
         // ***********************************************************
