@@ -26,6 +26,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	/**
 	 * bakes transformations of the element and all sub-elements into coordinates
 	 * 
+	 * @param {Matrix} correctionMatrix : useful for applying additional transformations
 	 * @param {boolean} toCubics : use only cubic path segments
 	 * @param {integer} dec : number of digits after decimal separator. defaults to 5
 	 * @returns {undefined}
@@ -39,6 +40,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	/**
 	 * bakes transformations of the element and all sub-elements into coordinates
 	 * 
+	 * @param {Matrix} correctionMatrix : useful for applying additional transformations
 	 * @param {boolean} toCubics : use only cubic path segments
 	 * @param {integer} dec : number of digits after decimal separator. defaults to 5
 	 * @returns {undefined}
@@ -86,7 +88,10 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			elem.type !== "path" &&
 			elem.type !== "text" &&
 			elem.type !== "tspan" &&
-			elem.type !== "#text"){
+			elem.type !== "#text"
+			){
+			
+			console.info("Ignoring element ", elem.type);
 			return;
 		}
 

@@ -1,4 +1,4 @@
-/* global snap, ko, $, Snap, API_BASEURL, _, CONFIG_WEBCAM_STREAM, ADDITIONAL_VIEWMODELS, mina */
+/* global snap, ko, $, Snap, API_BASEURL, _, CONFIG_WEBCAM_STREAM, ADDITIONAL_VIEWMODELS, mina, BEAMOS_DISPLAY_VERSION */
 
 MRBEAM_PX2MM_FACTOR_WITH_ZOOM = 1; // global available in this viewmodel and in snap plugins at the same time.
 MRBEAM_DEBUG_RENDERING = false;
@@ -532,6 +532,7 @@ $(function(){
 			}
 
 			var newSvg = snap.group(fragment.selectAll("svg>*"));
+			newSvg.unref(true);
 
 			// handle texts
 			var hasText = newSvg.selectAll('text,tspan');
@@ -752,12 +753,12 @@ $(function(){
 					}
 				}
 			}
-			console.log("Generator:", gen, version);
+//			console.log("Generator:", gen, version);
 			return { generator: 'unknown', version: 'unknown' };
 		};
 
 		self._isBinaryData = function(str){
-			return /[\x00-\x08\x0E-\x1F]/.test(str)
+			return /[\x00-\x08\x0E-\x1F]/.test(str);
 		};
 
         /**
@@ -1753,7 +1754,6 @@ $(function(){
 		self.onAfterTabChange = function(current, prev){
 			if(current == '#workingarea'){
 				self.trigger_resize();
-				self.check_sizes_and_placements();
 			}
 			if(prev == '#settings'){
 			    // Since Settings is not a BS dialog anymore,
