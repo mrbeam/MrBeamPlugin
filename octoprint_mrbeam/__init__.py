@@ -1058,7 +1058,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			if slicer_instance.get_slicer_properties()["same_device"] and (
 						self._printer.is_printing() or self._printer.is_paused()):
 				# slicer runs on same device as OctoPrint, slicing while printing is hence disabled
-				return make_response("Cannot convert while lasering due to performance reasons".format(**locals()), 409)
+				msg = "Cannot convert while lasering due to performance reasons".format(**locals())
+				self._logger.error("gcodeConvertCommand: %s", msg)
+				return make_response(msg, 409)
 
 			import os
 			if "gcode" in data.keys() and data["gcode"]:
@@ -1079,7 +1081,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			currentOrigin, currentFilename = self._getCurrentFile()
 			if currentFilename == gcode_name and currentOrigin == target and (
 						self._printer.is_printing() or self._printer.is_paused()):
-				make_response("Trying to slice into file that is currently being printed: %s" % gcode_name, 409)
+				msg = "Trying to slice into file that is currently being printed: {}".format(gcode_name)
+				self._logger.error("gcodeConvertCommand: %s", msg)
+				make_response(msg, 409)
 
 			select_after_slicing = False
 			print_after_slicing = False
@@ -1125,7 +1129,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 										 callback_args=[target, gcode_name, select_after_slicing, print_after_slicing,
 														appendGcodeFiles])
 			except octoprint.slicing.UnknownProfile:
-				return make_response("Profile {profile} doesn't exist".format(**locals()), 400)
+				msg = "Profile {profile} doesn't exist".format(**locals())
+				self._logger.error("gcodeConvertCommand: %s", msg)
+				return make_response(msg, 400)
 
 			location = "test"  # url_for(".readGcodeFile", target=target, filename=gcode_name, _external=True)
 			result = {
