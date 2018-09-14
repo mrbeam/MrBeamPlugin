@@ -1288,6 +1288,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		try:
 			from .gcodegenerator.converter import Converter
+			from .gcodegenerator.converter import OutOfSpaceException
 
 			is_job_cancelled() #check before conversion started
 
@@ -1302,6 +1303,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		except octoprint.slicing.SlicingCancelled as e:
 			self._logger.info("Conversion cancelled")
 			raise e
+		except OutOfSpaceException as e:
+			self._logger.exception("Conversion failed: {0}".format(e.message))
+			return False, e.message
 		except Exception as e:
 			print e.__doc__
 			print e.message
