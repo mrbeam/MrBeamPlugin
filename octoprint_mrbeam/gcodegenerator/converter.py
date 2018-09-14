@@ -22,7 +22,8 @@ class Converter():
 
 	PLACEHOLDER_LASER_ON  = ";_laseron_"
 	PLACEHOLDER_LASER_OFF = ";_laseroff_"
-
+	MIN_REQUIRED_DISK_SPACE = 100 * 1024 * 1024 # 100MB, in theory 371MB is the maximum expected file size for full working area engraving at highest resolution.
+	
 	defaults = {
 		"directory": None,
 		"file": None,
@@ -83,10 +84,38 @@ class Converter():
 			pass
 		# create new file and return file handle.
 
+	def check_free_space(self):
+		disk = os.statvfs("/")
+		# calculation of disk usage
+		totalBytes = disk.f_bsize * disk.f_blocks # disk size in bytes
+		totalUsedSpace = disk.f_bsize * (disk.f_blocks - disk.f_bfree) # used bytes
+		totalAvailSpace = float(disk.f_bsize * disk.f_bfree) # 
+		totalAvailSpaceNonRoot = float(disk.f_bsize * disk.f_bavail)
+		self._log.info(
+			"Disk space: total: " + self._get_human_readable_bytes(totalBytes) 
+			+ " used: " + self._get_human_readable_bytes(totalUsedSpace)
+			+ " available: " + self._get_human_readable_bytes(totalAvailSpace)
+			+ " available for non-super user: " + self._get_human_readable_bytes(totalAvailSpaceNonRoot)
+		) 
+		if(totalAvailSpaceNonRoot < self.MIN_REQUIRED_DISK_SPACE):
+			msg ="Only " + self._get_human_readable_bytes(totalAvailSpaceNonRoot) + " space availabe. Min required: " + self._get_human_readable_bytes(self.MIN_REQUIRED_DISK_SPACE)
+			raise OutOfSpaceException(msg)
+		
+	def _get_human_readable_bytes(self, amount):
+		str = "%d Bytes" % amount
+		if(amount > 1024 and amount <= 1024*1024): # kB
+			str += " (%.2f kB)" % (amount / 1024)
+		if(amount > 1024*1024 and amount <= 1024*1024*1024): # MB
+			str += " (%.2f MB)" % (amount / 1024/1024)
+		if(amount > 1024*1024*1024): # GB
+			str += " (%.2f GB)" % (amount / 1024/1024/1024)
+		return str
 
 	def convert(self, on_progress=None, on_progress_args=None, on_progress_kwargs=None):
 
 		self.init_output_file()
+		self.check_free_space() # has to be after init_output_file (which removes old temp files occasionally)
+		
 		self.parse()
 		options = self.options
 		options['doc_root'] = self.document.getroot()
@@ -817,3 +846,8 @@ class Converter():
 
 		return [[1,0,0],[0,1,0], [0,0,1]]
 
+class OutOfSpaceException(Exception):
+	def __init__(self, value):
+		self.value = value
+	def __str__(self):
+		return repr(self.value)
