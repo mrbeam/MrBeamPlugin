@@ -1152,7 +1152,17 @@ $(function(){
 		};
 		self.onEventSlicingFailed = function(payload){
 			self.slicing_in_progress(false);
-			//console.log("onSlicingFailed" , payload);
+
+			if ('reason' in payload && typeof payload['reason'] === 'string' && payload['reason'].startsWith('OutOfSpaceException')) {
+			    var html = "<ul>";
+			    html += "<lh>To free up some disk space you may want to perform one or all of the following suggestions:</lh>";
+			    html += "<li>Delete CGODE files: Go to design library and click 'Only show GCode files' on the left. Here you can delete files from the according context menu.</li>";
+			    html += "<li>Delete design files: Go to design library and click 'Only show design files' on the left. Here you can delete files from the according context menu.</li>";
+			    html += "<li>Delete log files: Go to Settings -> logs and delete old log files per click on the trash bin icon.</li>";
+			    html += "</ul>";
+			    html += 'Find more details <a href="https://mr-beam.freshdesk.com/en/support/solutions/articles/43000068441-free-up-disk-space" target="_blank">online</a>.';
+                new PNotify({title: gettext("Get more free disk space"), text: html, type: "info", hide: false});
+			}
 		};
 
 

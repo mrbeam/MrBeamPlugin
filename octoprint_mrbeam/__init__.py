@@ -206,6 +206,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			job_time = 0.0,
 			terminal=False,
 			vorlon=False,
+			converter_min_required_disk_space=100 * 1024 * 1024, # 100MB, in theory 371MB is the maximum expected file size for full working area engraving at highest resolution.
 			dev=dict(
 				debug=False, # deprected
 				terminalMaxLines = 2000,
@@ -1294,7 +1295,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 			#TODO implement cancelled_Jobs, to check if this particular Job has been canceled
 			#TODO implement check "_cancel_job"-loop inside engine.convert(...), to stop during conversion, too
-			engine = Converter(params, model_path)
+			engine = Converter(params, model_path, min_required_disk_space=self._settings.get(['converter_min_required_disk_space']))
 			engine.convert(on_progress, on_progress_args, on_progress_kwargs)
 
 			is_job_cancelled() #check if canceled during conversion
@@ -1304,8 +1305,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._logger.info("Conversion cancelled")
 			raise e
 		except OutOfSpaceException as e:
-			self._logger.exception("Conversion failed: {0}".format(e.message))
-			return False, e.message
+			msg = "{}: {}".format(type(e).__name__, e)
+			self._logger.exception("Conversion failed: {0}".format(msg))
+			return False, msg
 		except Exception as e:
 			print e.__doc__
 			print e.message

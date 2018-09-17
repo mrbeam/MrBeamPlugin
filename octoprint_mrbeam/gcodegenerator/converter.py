@@ -22,8 +22,7 @@ class Converter():
 
 	PLACEHOLDER_LASER_ON  = ";_laseron_"
 	PLACEHOLDER_LASER_OFF = ";_laseroff_"
-	MIN_REQUIRED_DISK_SPACE = 100 * 1024 * 1024 # 100MB, in theory 371MB is the maximum expected file size for full working area engraving at highest resolution.
-	
+
 	defaults = {
 		"directory": None,
 		"file": None,
@@ -46,7 +45,7 @@ class Converter():
 
 	_tempfile = "/tmp/_converter_output.tmp"
 
-	def __init__(self, params, model_path):
+	def __init__(self, params, model_path, min_required_disk_space=0):
 		self._log = logging.getLogger("octoprint.plugins.mrbeam.converter")
 
 		# debugging
@@ -60,6 +59,7 @@ class Converter():
 		self.setoptions(params)
 		self.svg_file = model_path
 		self.document=None
+		self._min_required_disk_space = min_required_disk_space
 		self._log.info('Converter Initialized: %s' % self.options)
 		# todo need material,bounding_box_area here
 		_mrbeam_plugin_implementation._analytics_handler.store_conversion_details(self.options)
@@ -93,12 +93,13 @@ class Converter():
 		totalAvailSpaceNonRoot = float(disk.f_bsize * disk.f_bavail)
 		self._log.info(
 			"Disk space: total: " + self._get_human_readable_bytes(totalBytes) 
-			+ " used: " + self._get_human_readable_bytes(totalUsedSpace)
-			+ " available: " + self._get_human_readable_bytes(totalAvailSpace)
-			+ " available for non-super user: " + self._get_human_readable_bytes(totalAvailSpaceNonRoot)
-		) 
-		if(totalAvailSpaceNonRoot < self.MIN_REQUIRED_DISK_SPACE):
-			msg ="Only " + self._get_human_readable_bytes(totalAvailSpaceNonRoot) + " space availabe. Min required: " + self._get_human_readable_bytes(self.MIN_REQUIRED_DISK_SPACE)
+			+ ", used: " + self._get_human_readable_bytes(totalUsedSpace)
+			+ ", available: " + self._get_human_readable_bytes(totalAvailSpace)
+			+ ", available for non-super user: " + self._get_human_readable_bytes(totalAvailSpaceNonRoot)
+			+ ", min required: " + self._get_human_readable_bytes(self._min_required_disk_space)
+		)
+		if(self._min_required_disk_space > 0 and totalAvailSpaceNonRoot < self._min_required_disk_space):
+			msg ="Only " + self._get_human_readable_bytes(totalAvailSpaceNonRoot) + " disk space available. Min required: " + self._get_human_readable_bytes(self._min_required_disk_space)
 			raise OutOfSpaceException(msg)
 		
 	def _get_human_readable_bytes(self, amount):
@@ -847,7 +848,6 @@ class Converter():
 		return [[1,0,0],[0,1,0], [0,0,1]]
 
 class OutOfSpaceException(Exception):
-	def __init__(self, value):
-		self.value = value
-	def __str__(self):
-		return repr(self.value)
+	pass
+
+
