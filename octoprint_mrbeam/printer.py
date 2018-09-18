@@ -162,10 +162,10 @@ class Laser(Printer):
 		self._stateMonitor.trigger_progress_update()
 
 	def _add_position_data(self, MPos, WPos):
-		if MPos is None or WPos is None:
-			MPos = WPos = [0, 0, 0]
-		self._stateMonitor.setWorkPosition(WPos)
-		self._stateMonitor.setMachinePosition(MPos)
+		if MPos is not None:
+			self._stateMonitor.setMachinePosition(MPos)
+		if WPos is not None:
+			self._stateMonitor.setWorkPosition(WPos)
 
 	def _init_terminal(self):
 		from collections import deque
