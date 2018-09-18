@@ -18,8 +18,8 @@ class Migration(object):
 	VERSION_SYNC_GRBL_SETTINGS               = '0.1.24'
 	VERSION_FIX_SSH_KEY_PERMISSION           = '0.1.28'
 	VERSION_UPDATE_CHANGE_HOSTNAME_SCRIPTS   = '0.1.37'
-	VERSION_UPDATE_LOGROTATE_CONF            = '0.1.41'
-	VERSION_MOUNT_MANAGER_150                = '0.1.41'
+	VERSION_UPDATE_LOGROTATE_CONF            = '0.1.45'
+	VERSION_MOUNT_MANAGER_150                = '0.1.46'
 
 	# this is where we have files needed for migrations
 	MIGRATE_FILES_FOLDER     = 'files/migrate/'
