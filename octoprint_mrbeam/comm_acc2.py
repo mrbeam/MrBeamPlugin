@@ -82,6 +82,12 @@ class MachineCom(object):
 	COMMAND_FLUSH    = 'FLUSH'
 	COMMAND_SYNC     = 'SYNC' # experimental
 
+	STATUS_POLL_FREQUENCY_OPERATIONAL = 2.0
+	STATUS_POLL_FREQUENCY_PRINTING = 5.0 # set back top 1.0 if it's not causing gcode24
+	STATUS_POLL_FREQUENCY_PAUSED = 0.2
+	STATUS_POLL_FREQUENCY_SYNCING = 0.2
+	STATUS_POLL_FREQUENCY_DEFAULT = STATUS_POLL_FREQUENCY_PRINTING
+
 	GRBL_SYNC_COMMAND_WAIT_STATES = (GRBL_STATE_RUN, GRBL_STATE_QUEUE)
 	GRBL_HEX_FOLDER = 'files/grbl/'
 
@@ -90,6 +96,8 @@ class MachineCom(object):
 	pattern_grbl_version = re.compile("Grbl (?P<version>\S+)\s.*")
 	pattern_grbl_setting = re.compile("\$(?P<id>\d+)=(?P<value>\S+)\s\((?P<comment>.*)\)")
 
+	pattern_get_x_coord_from_gcode = re.compile("^G.*X(\d{1,3}\.?\d{0,3})\D.*")
+	pattern_get_y_coord_from_gcode = re.compile("^G.*Y(\d{1,3}\.?\d{0,3})\D.*")
 
 	def __init__(self, port=None, baudrate=None, callbackObject=None, printerProfileManager=None):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.comm_acc2")
@@ -122,8 +130,13 @@ class MachineCom(object):
 		self._errorValue = "Unknown Error"
 		self._serial = None
 		self._currentFile = None
-		self._status_timer = None
+		self._status_polling_timer = None
+		self._status_polling_next_ts = 0
+		self._status_polling_interval = self.STATUS_POLL_FREQUENCY_DEFAULT
 		self._acc_line_buffer = []
+		self._last_acknowledged_command = None
+		self._last_wx = -1
+		self._last_wy = -1
 		self._cmd = None
 		self._pauseWaitStartTime = None
 		self._pauseWaitTimeLost = 0.0
@@ -170,6 +183,7 @@ class MachineCom(object):
 		self.monitoring_thread = None
 		self.sending_thread = None
 		self.start_monitoring_thread()
+		self.start_status_polling_timer()
 
 
 	def start_monitoring_thread(self):
@@ -183,6 +197,12 @@ class MachineCom(object):
 		self.sending_thread = threading.Thread(target=self._send_loop, name="comm._sending_thread")
 		self.sending_thread.daemon = True
 		self.sending_thread.start()
+
+	def start_status_polling_timer(self):
+		if self._status_polling_timer is not None:
+			self._status_polling_timer.cancel()
+		self._status_polling_timer = RepeatedTimer(0.1, self._poll_status)
+		self._status_polling_timer.start()
 
 
 	def get_home_position(self):
@@ -412,7 +432,10 @@ class MachineCom(object):
 			self._send_event.set()
 			if('ok' in ret or 'error' in ret):
 				if(len(self._acc_line_buffer) > 0):
+					self._last_acknowledged_command = self._acc_line_buffer[0]
 					del self._acc_line_buffer[0]  # Delete the commands character count corresponding to the last 'ok'
+				else:
+					self._logger.error("Received OK but internal _acc_line_buffer counter is empty.")
 		except serial.SerialException:
 			self._logger.error("Unexpected error while reading serial port: %s" % (get_exception_string()), terminal_as_comm=True)
 			self._errorValue = get_exception_string()
@@ -490,6 +513,8 @@ class MachineCom(object):
 			self.MPosY = float(groups['mpos_y'])
 			wx = float(groups['pos_x'])
 			wy = float(groups['pos_y'])
+			self._last_wx = wx
+			self._last_wy = wy
 			self._callback.on_comm_pos_update([self.MPosX, self.MPosY, 0], [wx, wy, 0])
 		except:
 			self._logger.exception("Exception while handling position updates from GRBL.")
@@ -523,29 +548,60 @@ class MachineCom(object):
 				analytics.add_laser_intensity_value(int(laser_intensity))
 
 
-	def _handle_ok_message(self, line=None):
+	def _handle_ok_message(self, line):
 		if self._state == self.STATE_HOMING:
 			self._changeState(self.STATE_OPERATIONAL)
 
-		if not self.grbl_feat_report_rx_buffer_state:
-			return
+		# update working pos from acknowledged gcode
+		my_cmd = self._last_acknowledged_command
+		if my_cmd.startswith('G'):
+			x_pos = self._last_wx
+			y_pos = self._last_wy
+			match = self.pattern_get_x_coord_from_gcode.match(my_cmd)
+			if match:
+				try:
+					x_pos = float(match.group(1))
+					self._last_wx = x_pos
+				except:
+					self._logger.exception("Exception in parsing x coord from gcode. my_cmd: '%s' ", my_cmd)
+					pass
 
-		# important that we add every call and count the invalid values internally!
-		rx_free = None
-		try:
-			if line is not None:
-				rx_free = int(line.split(':')[1]) # ok:127
-		except e:
-			self._logger.warn("_handle_ok_message() Can't read free_rx_bytes from line: '%s', error: %s", line, e)
-		self._rx_stats.add(rx_free)
+			match = self.pattern_get_y_coord_from_gcode.match(my_cmd)
+			if match:
+				try:
+					y_pos = float(match.group(1))
+					self._last_wy = y_pos
+				except:
+					self._logger.exception("Exception in parsing y coord from gcode. my_cmd: '%s' ", my_cmd)
+					pass
+
+			if x_pos >= 0 or y_pos >= 0:
+				self._callback.on_comm_pos_update(None, [x_pos, y_pos, 0])
+				# since we just got a postion update we can reset the wait time for the next status poll
+				# ideally we never poll statuses during engravings
+				self._reset_status_polling_waittime()
+
+		if self.grbl_feat_report_rx_buffer_state:
+			# important that we add every call and count the invalid values internally!
+			rx_free = None
+			try:
+				if line is not None:
+					rx_free = int(line.split(':')[1]) # ok:127
+			except e:
+				self._logger.warn("_handle_ok_message() Can't read free_rx_bytes from line: '%s', error: %s", line, e)
+			self._rx_stats.add(rx_free)
 
 	def _handle_error_message(self, line):
+		# grbl repots an error if there was never any data written to it's eeprom.
+		# it's going to write default values to eeprom and everything is fine then....
 		if "EEPROM read fail" in line:
+			self._logger.debug("_handle_error_message() Ignoring this error message: '%s'", line)
 			return
 		self._errorValue = line
 		eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
 		self._changeState(self.STATE_LOCKED)
 		self._logger.dump_terminal_buffer(level=logging.ERROR)
+		self._rx_stats.pp(print_time=self.getPrintTime())
 
 	def _handle_alarm_message(self, line):
 		if "Hard/soft limit" in line:
@@ -786,21 +842,7 @@ class MachineCom(object):
 		if self._state == newState:
 			return
 
-		if newState == self.STATE_PRINTING:
-			if self._status_timer is not None:
-				self._status_timer.cancel()
-			self._status_timer = RepeatedTimer(1, self._poll_status)
-			self._status_timer.start()
-		elif newState == self.STATE_OPERATIONAL:
-			if self._status_timer is not None:
-				self._status_timer.cancel()
-			self._status_timer = RepeatedTimer(2, self._poll_status)
-			self._status_timer.start()
-		elif newState == self.STATE_PAUSED:
-			if self._status_timer is not None:
-				self._status_timer.cancel()
-			self._status_timer = RepeatedTimer(0.2, self._poll_status)
-			self._status_timer.start()
+		self._set_status_polling_interval_for_state(state=newState)
 
 		if newState == self.STATE_CLOSED or newState == self.STATE_CLOSED_WITH_ERROR:
 			if self._currentFile is not None:
@@ -841,9 +883,38 @@ class MachineCom(object):
 		return None
 
 	def _poll_status(self):
-		if self.isOperational():
-			self._real_time_commands['poll_status']=True
-			self._send_event.set()
+		"""
+		Called by RepeatedTimer self._status_polling_timer every 0.1 secs
+		We need to descide here if we should send a status request
+		"""
+		try:
+			if self.isOperational():
+				if time.time() >= self._status_polling_next_ts:
+					self._real_time_commands['poll_status'] = True
+					self._send_event.set()
+					self._status_polling_next_ts = time.time() + self._status_polling_interval
+		except:
+			self._logger.exception("Exception in status polling call: ")
+
+	def _reset_status_polling_waittime(self):
+		"""
+		Resets wait time till we should do next status polling
+		This is typically called after we received an ok with a position
+		"""
+		self._status_polling_next_ts = time.time() + self._status_polling_interval
+
+	def _set_status_polling_interval_for_state(self, state=None):
+		"""
+		Sets polling interval according to current state
+		:param state: (optional) state, if None, self._state is used
+		"""
+		state = state or self._state
+		if state == self.STATE_PRINTING:
+			self._status_polling_interval = self.STATUS_POLL_FREQUENCY_PRINTING
+		elif state == self.STATE_OPERATIONAL:
+			self._status_polling_interval = self.STATUS_POLL_FREQUENCY_OPERATIONAL
+		elif state == self.STATE_PAUSED:
+			self._status_polling_interval = self.STATUS_POLL_FREQUENCY_PAUSED
 
 	def _soft_reset(self):
 		if self.isOperational():
@@ -1171,22 +1242,15 @@ class MachineCom(object):
 				tokens = cmd.split(' ')
 				specialcmd = tokens[0].lower()
 				if specialcmd.startswith('/togglestatusreport'):
-					if self._status_timer is None:
-						self._status_timer = RepeatedTimer(1, self._poll_status)
-						self._status_timer.start()
+					if self._status_polling_interval <= 0:
+						self._set_status_polling_interval_for_state()
 					else:
-						self._status_timer.cancel()
-						self._status_timer = None
+						self._status_polling_interval = 0
 				elif specialcmd.startswith('/setstatusfrequency'):
 					try:
-						frequency = float(tokens[1])
+						self._status_polling_interval = float(tokens[1])
 					except ValueError:
-						self._log("No frequency setting found! Using 1 sec.")
-						frequency = 1
-					if self._status_timer is not None:
-						self._status_timer.cancel()
-					self._status_timer = RepeatedTimer(frequency, self._poll_status)
-					self._status_timer.start()
+						self._log("No frequency setting found! No change")
 				elif specialcmd.startswith('/disconnect'):
 					self.close()
 				elif specialcmd.startswith('/feedrate'):
@@ -1496,15 +1560,9 @@ class MachineCom(object):
 		return self._grbl_version
 
 	def close(self, isError=False, next_state=None):
-		if self._status_timer is not None:
-			try:
-				self._status_timer.cancel()
-				self._status_timer = None
-			except AttributeError:
-				pass
-
 		self._monitoring_active = False
 		self._sending_active = False
+		self._status_polling_interval = 0
 
 		printing = self.isPrinting() or self.isPaused()
 		if self._serial is not None:
