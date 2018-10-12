@@ -211,10 +211,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			job_time = 0.0,
 			terminal=False,
 			vorlon=False,
+			converter_min_required_disk_space=100 * 1024 * 1024, # 100MB, in theory 371MB is the maximum expected file size for full working area engraving at highest resolution.
 			dev=dict(
 				debug=False, # deprected
 				terminalMaxLines = 2000,
 				env = self.ENV_PROD,
+				load_gremlins = False,
 				# env_overrides = dict(
 				# 	analytics = "DEV",
 				# 	laser_safety = "DEV",
@@ -225,8 +227,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				suppress_migrations = False,     # for develpment on non-MrBeam devices
 				support_mode = False
 			),
-			# TODO rename analyticsEnabled and put in analytics-dict
-			analyticsEnabled=False,  # frontend analytics Mixpanel
 			analytics=dict(
 				job_analytics = False,
 				cam_analytics = False,
@@ -324,17 +324,21 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def get_assets(self):
 		# Define your plugin's asset files to automatically include in the
 		# core UI here.
-		return dict(
+		assets = dict(
 			js=["js/lasercutterprofiles.js","js/mother_viewmodel.js", "js/mrbeam.js","js/color_classifier.js",
 				"js/working_area.js", "js/camera.js", "js/lib/snap.svg-min.js", "js/snap-dxf.js", "js/render_fills.js", "js/path_convert.js",
-				"js/matrix_oven.js", "js/drag_scale_rotate.js",	"js/convert.js", "js/snap_gc_plugin.js", "js/gcode_parser.js", "js/gridify.js",
+				"js/matrix_oven.js", "js/unref.js", "js/drag_scale_rotate.js",	"js/convert.js", "js/snap_gc_plugin.js", "js/gcode_parser.js", "js/gridify.js",
 				"js/lib/photobooth_min.js", "js/svg_cleaner.js", "js/loginscreen_viewmodel.js",
 				"js/wizard_acl.js", "js/netconnectd_wrapper.js", "js/lasersaftey_viewmodel.js",
 				"js/ready_to_laser_viewmodel.js", "js/lib/screenfull.min.js","js/settings/camera_calibration.js",
-				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js", "js/lib/Color.js", "js/laser_job_done_viewmodel.js", "js/loadingoverlay_viewmodel.js"],
+				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js", "js/lib/Color.js", "js/laser_job_done_viewmodel.js", 
+				"js/loadingoverlay_viewmodel.js"],
 			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css", "css/quicktext-fonts.css", "css/sliders.css"],
 			less=["less/mrbeam.less"]
 		)
+		if(self._settings.get(["dev", "load_gremlins"])):
+			assets['js'].append('js/lib/gremlins.min.js')
+		return assets
 
 	##~~ UiPlugin mixin
 
@@ -345,9 +349,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def on_ui_render(self, now, request, render_kwargs):
 		# if will_handle_ui returned True, we will now render our custom index
 		# template, using the render_kwargs as provided by OctoPrint
-		from flask import make_response, render_template
+		from flask import make_response, render_template, g
 
 		firstRun = render_kwargs['firstRun']
+		language = g.locale.language if g.locale else "en"
 
 		enable_accesscontrol = self._user_manager.enabled
 		accesscontrol_active = enable_accesscontrol and self._user_manager.hasBeenCustomized()
@@ -403,6 +408,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 							 lasersafety_confirmation_dialog_version  = self.LASERSAFETY_CONFIRMATION_DIALOG_VERSION,
 							 lasersafety_confirmation_dialog_language = self.LASERSAFETY_CONFIRMATION_DIALOG_LANGUAGE,
+
+							 quickstart_guide_default="QuickstartGuide_{locale}.pdf".format(locale='de' if language == 'de' else 'en'),
+							 usermanual_default="UserManual_{locale}.pdf".format(locale='de' if language == 'de' else 'en')
 						 ))
 		r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
 
@@ -1054,7 +1062,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			if slicer_instance.get_slicer_properties()["same_device"] and (
 						self._printer.is_printing() or self._printer.is_paused()):
 				# slicer runs on same device as OctoPrint, slicing while printing is hence disabled
-				return make_response("Cannot convert while lasering due to performance reasons".format(**locals()), 409)
+				msg = "Cannot convert while lasering due to performance reasons".format(**locals())
+				self._logger.error("gcodeConvertCommand: %s", msg)
+				return make_response(msg, 409)
 
 			import os
 			if "gcode" in data.keys() and data["gcode"]:
@@ -1075,7 +1085,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			currentOrigin, currentFilename = self._getCurrentFile()
 			if currentFilename == gcode_name and currentOrigin == target and (
 						self._printer.is_printing() or self._printer.is_paused()):
-				make_response("Trying to slice into file that is currently being printed: %s" % gcode_name, 409)
+				msg = "Trying to slice into file that is currently being printed: {}".format(gcode_name)
+				self._logger.error("gcodeConvertCommand: %s", msg)
+				make_response(msg, 409)
 
 			select_after_slicing = False
 			print_after_slicing = False
@@ -1121,7 +1133,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 										 callback_args=[target, gcode_name, select_after_slicing, print_after_slicing,
 														appendGcodeFiles])
 			except octoprint.slicing.UnknownProfile:
-				return make_response("Profile {profile} doesn't exist".format(**locals()), 400)
+				msg = "Profile {profile} doesn't exist".format(**locals())
+				self._logger.error("gcodeConvertCommand: %s", msg)
+				return make_response(msg, 400)
 
 			location = "test"  # url_for(".readGcodeFile", target=target, filename=gcode_name, _external=True)
 			result = {
@@ -1333,6 +1347,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		try:
 			from .gcodegenerator.converter import Converter
+			from .gcodegenerator.converter import OutOfSpaceException
 
 			is_job_cancelled() #check before conversion started
 
@@ -1342,7 +1357,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 			#TODO implement cancelled_Jobs, to check if this particular Job has been canceled
 			#TODO implement check "_cancel_job"-loop inside engine.convert(...), to stop during conversion, too
-			engine = Converter(params, model_path, workingAreaWidth = maxWidth, workingAreaHeight = maxHeight)
+			engine = Converter(params, model_path, workingAreaWidth = maxWidth, workingAreaHeight = maxHeight, min_required_disk_space=self._settings.get(['converter_min_required_disk_space']))
 			engine.convert(is_job_cancelled, on_progress, on_progress_args, on_progress_kwargs)
 
 			is_job_cancelled() #check if canceled during conversion
@@ -1351,6 +1366,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		except octoprint.slicing.SlicingCancelled as e:
 			self._logger.info("Conversion cancelled")
 			raise e
+		except OutOfSpaceException as e:
+			msg = "{}: {}".format(type(e).__name__, e)
+			self._logger.exception("Conversion failed: {0}".format(msg))
+			return False, msg
 		except Exception as e:
 			print e.__doc__
 			print e.message

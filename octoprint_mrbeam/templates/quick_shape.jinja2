@@ -11,10 +11,10 @@
 				<li><a id="shape_tab_link_star" href="#star" data-bind="click: function(){switchQuickShape('#star')}" data-toggle="tab"><i class="icon icon-star-empty"></i></a></li>
 				<li><a id="shape_tab_link_heart" href="#heart" data-bind="click: function(){switchQuickShape('#heart')}" data-toggle="tab"><i class="icon icon-heart-empty"></i></a></li>
 			</ul>
-			
+
 			<div class="tab-content">
 				<div class="tab-pane active" id="rect">
-					<form role="form" class="form-horizontal">
+					<form role="form" class="form-horizontal" data-bind="submit: _qs_dialogClose">
 						<div class="control-group">
 							<label class="control-label"><i class="icon icon-resize-horizontal"></i></label>
 							<div class="controls">
@@ -31,7 +31,7 @@
 							<label class="control-label">Corners</label>
 							<div class="controls">
 								<!--<label class="control-label"><i class="icon icon-check-empty"></i></label>-->
-								<input id="quick_shape_rect_radius" class="precisionslider padding-top" type="range" value="0" min="0" max="100" 
+								<input id="quick_shape_rect_radius" class="precisionslider padding-top" type="range" value="0" min="0" max="100"
 									   data-bind="textInput: _qs_currentQuickShapeUpdate()" />
 								<!--<label class="control-label"><i class="icon icon-circle-blank"></i></label>-->
 							</div>
@@ -39,17 +39,17 @@
 					</form>
 				</div>
 				<div class="tab-pane" id="circle">
-					<form role="form" class="form-horizontal">
+					<form role="form" class="form-horizontal" data-bind="submit: _qs_dialogClose">
 						<div class="control-group">
 							<label class="control-label"><i class="icon">Ø</i></label>
 							<div class="controls">
-								<input type="number" id="quick_shape_circle_radius" min="0.5" data-bind="textInput: _qs_currentQuickShapeUpdate(), attr:{max: workingAreaHeightMM}">
+								<input type="number" id="quick_shape_circle_radius" min="1" data-bind="textInput: _qs_currentQuickShapeUpdate(), attr:{max: workingAreaHeightMM}">
 							</div>
 						</div>
 					</form>
 				</div>
 				<div class="tab-pane" id="star">
-					<form role="form" class="form-horizontal">
+					<form role="form" class="form-horizontal" data-bind="submit: _qs_dialogClose">
 						<div class="control-group">
 							<label class="control-label"><i class="icon">Ø</i></label>
 							<div class="controls">
@@ -71,7 +71,7 @@
 					</form>
 				</div>
 				<div class="tab-pane" id="heart">
-					<form role="form" class="form-horizontal">
+					<form role="form" class="form-horizontal" data-bind="submit: _qs_dialogClose">
 						<div class="control-group">
 							<label class="control-label"><i class="icon icon-resize-horizontal"></i></label>
 							<div class="controls">
@@ -94,7 +94,7 @@
 				</div>
 			</div>
 			<div>
-				<form role="form" class="form-horizontal" data-bind="submit: function(){$('#quick_shape_dialog').modal('hide');}" _lpchecked="1">
+				<form role="form" class="form-horizontal" data-bind="submit: _qs_dialogClose" _lpchecked="1">
 					<div class="control-group">
 						<label class="control-label">Line Color</label>
 						<div class="controls">

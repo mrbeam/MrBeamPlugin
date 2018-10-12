@@ -521,7 +521,7 @@ $(function(){
 					img: 'custom.jpg',
 					description: 'custom material',
 					hints: 'Figuring out material settings works best from low to high intensity and fast to slow movement.',
-					safety_notes: 'Experimenting with custom material settings is your responsibility.',
+					safety_notes: 'Experimenting with custom material settings is at your own risk.',
 					laser_type: 'MrBeamII-1.0',
 					colors: {}
 				};
@@ -539,6 +539,10 @@ $(function(){
 					}
 				}
 			}
+            // sort before we store it.
+			tmp.sort(function(a,b){
+              return b.thicknessMM - a.thicknessMM;
+            })
 			new_material.colors[color] = {cut: tmp, engrave: engrave_setting};
 
 			var data = {};
@@ -564,7 +568,7 @@ $(function(){
 							if(m.name === new_material.name){
 								self.selected_material(m);
 								self.selected_material_color(color);
-								self.selected_material_thickness(thickness);
+								self.selected_material_thickness(cut_setting);
 								self.reset_material_settings();
 								break;
 							}
@@ -675,6 +679,11 @@ $(function(){
 				if(material.colors[color].engrave !== null){
 					available_thickness = available_thickness.concat(self.engrave_only_thickness);
 				}
+
+				available_thickness.sort(function(a,b){
+				  return b.thicknessMM - a.thicknessMM;
+				})
+
 				self.material_thicknesses(available_thickness);
 				self.selected_material_thickness(null);
 				if(available_thickness.length === 1){
@@ -682,7 +691,7 @@ $(function(){
 						self.selected_material_thickness(available_thickness[0]);
 						self.dialog_state('color_assignment');
 					} else {
-						self.selected_material_thickness(-1);
+						self.selected_material_thickness(null);
 					}
 				}
 			}
@@ -741,7 +750,7 @@ $(function(){
 			$('.job_row .used_color:not(#cd_engraving)').addClass('not-used');
 			for (var idx = 0; idx < cols.length; idx++) {
 				var c = cols[idx];
-				var selection = $('#cd_color_'+c.hex.substr(1)); // crashes on color definitions like 'rgb(0,0,0)' 
+				var selection = $('#cd_color_'+c.hex.substr(1)); // crashes on color definitions like 'rgb(0,0,0)'
 				var exists = selection.length > 0;
 				if(! exists){
 					var drop_zone = $('#first_job .color_drop_zone');
@@ -1103,7 +1112,12 @@ $(function(){
 		};
 
 		self.enableConvertButton = ko.computed(function() {
-			if (self.slicing_in_progress() || self.workingArea.placedDesigns().length === 0 ) {
+			if (self.slicing_in_progress() 
+					|| self.workingArea.placedDesigns().length === 0
+					|| self.selected_material() == null
+					|| self.selected_material_color() == null
+					|| self.selected_material_thickness() == null
+				) {
 				return false;
 			} else {
 				return true;
@@ -1357,7 +1371,17 @@ $(function(){
 		};
 		self.onEventSlicingFailed = function(payload){
 			self.slicing_in_progress(false);
-			//console.log("onSlicingFailed" , payload);
+
+			if ('reason' in payload && typeof payload['reason'] === 'string' && payload['reason'].startsWith('OutOfSpaceException')) {
+			    var html = "<ul>";
+			    html += "<lh>To free up some disk space you may want to perform one or all of the following suggestions:</lh>";
+			    html += "<li>Delete CGODE files: Go to design library and click 'Only show GCode files' on the left. Here you can delete files from the according context menu.</li>";
+			    html += "<li>Delete design files: Go to design library and click 'Only show design files' on the left. Here you can delete files from the according context menu.</li>";
+			    html += "<li>Delete log files: Go to Settings -> logs and delete old log files per click on the trash bin icon.</li>";
+			    html += "</ul>";
+			    html += 'Find more details <a href="https://mr-beam.freshdesk.com/en/support/solutions/articles/43000068441-free-up-disk-space" target="_blank">online</a>.';
+                new PNotify({title: gettext("Get more free disk space"), text: html, type: "info", hide: false});
+			}
 		};
 
 
