@@ -79,23 +79,23 @@ class LidHandler(object):
 			self._send_state_to_analytics('lid_opened')
 			self._lid_closed = False
 			self._startStopCamera(event)
-			self._send_frontend_lid_state()
 		elif event == IoBeamEvents.LID_CLOSED:
 			self._logger.debug("onEvent() LID_CLOSED")
 			self._send_state_to_analytics('lid_closed')
 			self._lid_closed = True
 			self._startStopCamera(event)
-			self._send_frontend_lid_state()
 		elif event == OctoPrintEvents.CLIENT_OPENED:
 			self._logger.debug("onEvent() CLIENT_OPENED sending client lidClosed: %s", self._lid_closed)
 			self._client_opened = True
 			self._startStopCamera(event)
-			self._send_frontend_lid_state()
 		elif event == OctoPrintEvents.CLIENT_CLOSED:
 			self._client_opened = False
 			self._startStopCamera(event)
 		elif event == OctoPrintEvents.SHUTDOWN:
 			self.shutdown()
+
+	def is_lid_open(self):
+		return not self._lid_closed
 
 	def _printerStateChanged(self,event,payload):
 		if payload['state_string'] == 'Operational':
@@ -184,10 +184,6 @@ class LidHandler(object):
 			self._photo_creator.active = False
 			self._photo_creator.save_debug_images = False
 			self._photo_creator.undistorted_pic_path = None
-
-	def _send_frontend_lid_state(self, closed=None):
-		lid_closed = closed if closed is not None else self._lid_closed
-		self._plugin_manager.send_plugin_message("mrbeam", dict(lid_closed=lid_closed))
 
 	@staticmethod
 	def _send_state_to_analytics(eventname):
@@ -335,7 +331,6 @@ class PhotoCreator(object):
 			else:
 				self._logger.exception("Exception while taking picture from camera:")
 
-
 	def _createFolder_if_not_existing(self, filename):
 		try:
 			path = os.path.dirname(filename)
@@ -352,10 +347,6 @@ class PhotoCreator(object):
 			shutil.move(src, dest)
 		except Exception as e:
 			self._logger.warn("exception while moving file: %s", e)
-
-#		returncode = call(['mv', src, dest])
-#		if returncode != 0:
-#			self._logger.warn("_move_img() returncode is %s (sys call, should be 0)", returncode)
 
 	def _close_cam(self):
 		if self.camera is not None:

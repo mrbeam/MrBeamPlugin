@@ -102,6 +102,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._stored_frontend_notifications = []
 		self._device_series = self._get_val_from_device_info('device_series')  # '2C'
 
+		# MrBeam Events needs to be registered in OctoPrint in order to be send to the frontend later on
+		MrBeamEvents.register_with_octoprint()
+
 	# inside initialize() OctoPrint is already loaded, not assured during __init__()!
 	def initialize(self):
 		init_mrb_logger(self._printer)
@@ -982,7 +985,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@restricted_access
 	def generateCalibrationMarkersSvg(self):
 		profile = self.laserCutterProfileManager.get_current_or_default()
-		print profile
+		#print profile
 		xmin = '0'
 		ymin = '0'
 		xmax = str(profile['volume']['width'])
@@ -1166,7 +1169,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			passes=["value"],
 			lasersafety_confirmation=[],
 			camera_calibration_markers=["result"],
-			ready_to_laser=["ready"],
+			ready_to_laser=[],
 			debug_event=["event"],
 			custom_materials=[],
 			take_undistorted_picture=[]  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
@@ -1217,9 +1220,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			else:
 				self._logger.warn("DEV dev_start_button used while we're not in DEV mode. (ENV_LOCAL)")
 				return make_response("BAD REQUEST - DEV mode only.", 400)
-		elif 'ready' not in data or not data['ready']:
+		elif 'rtl_cancel' in data and data['rtl_cancel']:
 			self._oneButtonHandler.unset_ready_to_laser()
-
 		return NO_CONTENT
 
 	def take_undistorted_picture(self, is_initial_calibration):
@@ -1349,10 +1351,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 			is_job_cancelled() #check before conversion started
 
+			profile = self.laserCutterProfileManager.get_current_or_default()
+			maxWidth = profile['volume']['width']
+			maxHeight = profile['volume']['depth']
+
 			#TODO implement cancelled_Jobs, to check if this particular Job has been canceled
 			#TODO implement check "_cancel_job"-loop inside engine.convert(...), to stop during conversion, too
-			engine = Converter(params, model_path, min_required_disk_space=self._settings.get(['converter_min_required_disk_space']))
-			engine.convert(on_progress, on_progress_args, on_progress_kwargs)
+			engine = Converter(params, model_path, workingAreaWidth = maxWidth, workingAreaHeight = maxHeight, min_required_disk_space=self._settings.get(['converter_min_required_disk_space']))
+			engine.convert(is_job_cancelled, on_progress, on_progress_args, on_progress_kwargs)
 
 			is_job_cancelled() #check if canceled during conversion
 
@@ -1420,6 +1426,19 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		if event == OctoPrintEvents.CLIENT_OPENED:
 			self._replay_stored_frontend_notification()
+
+	def fire_event(self, event, payload=None):
+		'''
+		Fire an event into octoPrint's event system and adds mrb_check as payload
+		:param event:
+		:param payload: payload. If None, a payload object with mrb_state is added
+		'''
+		if payload is None:
+			payload = dict()
+		if not 'mrb_state' in payload:
+			payload["mrb_state"] = self.get_mrb_state()
+		self._logger.info("fire_event() event:%s, payload:%s", event, payload)
+		self._event_bus.fire(event, payload)
 
 
 	##~~ Progress Plugin API
@@ -1547,6 +1566,35 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		if send:
 			self._plugin_manager.send_plugin_message("mrbeam", dict(frontend_notification = notification))
+
+	def get_mrb_state(self):
+		"""
+		Returns the data set 'mrb_state' which we add to the periodic status messages
+		and almost all events which are sent to the frontend.
+		Called (among others) by LaserStateMonitor.get_current_data in printer.py
+		:return: mrb_state
+		:rtype: dict
+		"""
+		try:
+			return dict(
+				laser_temp = self._temperatureManager.get_temperature(),
+				fan_connected = self._dustManager.is_fan_connected(),
+				fan_state = self._dustManager.get_fan_state(),
+				fan_rpm = self._dustManager.get_fan_rpm(),
+				fan_dust = self._dustManager.get_dust(),
+				lid_fully_open = self._lid_handler.is_lid_open(),
+				interlocks_closed = self._ioBeam.is_interlock_closed(),
+				interlocks_open_ids = self._ioBeam.open_interlocks(),
+				rtl_mode = self._oneButtonHandler.is_ready_to_laser(),
+				pause_mode = self._printer.is_paused(),
+				cooling_mode = self._temperatureManager.is_cooling(),
+				dusting_mode = self._dustManager.is_dust_mode,
+				state = self._printer.get_state_string(),
+
+			)
+		except:
+			self._logger.exception("Exception while collecting mrb_state data: ")
+			return None
 
 	def _replay_stored_frontend_notification(self):
 		# all currently connected clients will get this notification again

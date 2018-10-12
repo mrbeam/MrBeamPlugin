@@ -75,6 +75,9 @@ mrbeam._isVersionOrHigher = function(actualVersion, expectedVersion) {
 };
 
 
+mrbeam.mrb_state = undefined;
+
+
 
 $(function() {
     function MrbeamViewModel(parameters) {

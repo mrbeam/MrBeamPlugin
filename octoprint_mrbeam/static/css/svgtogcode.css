@@ -506,7 +506,7 @@ svg#area_preview rect
 	left: .3em;
 	bottom: .4em;
     color: #e25303;
-	z-index: 9999;
+	z-index: 999;
 }
 
 .freeTransformHandle{

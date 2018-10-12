@@ -2,9 +2,9 @@
 
     <div data-bind='visible: !is_cooling_mode() || !interlocks_closed()'>
         <div class="modal-header">
-            <a href="#" class="close" data-bind='visible: !is_pause_mode(), click: cancel_btn' aria-hidden="true">&times;</a>
-            <h3 data-bind='visible: !is_pause_mode()'>{{ _('Ready To Laser?') }}</h3>
-            <h3 data-bind='visible: is_pause_mode()'>{{ _('Pause') }}</h3>
+            <a href="#" class="close" data-bind='visible: is_rtl_mode(), click: cancel_btn' aria-hidden="true">&times;</a>
+            <h3 data-bind='visible: is_rtl_mode()'>{{ _('Ready To Laser?') }}</h3>
+            <h3 data-bind='visible: !is_rtl_mode()'>{{ _('Pause') }}</h3>
         </div>
         <div class="modal-body">
             <img data-bind='visible: !is_fan_connected()' src="/plugin/mrbeam/static/img/airfilter.jpg">
@@ -15,13 +15,13 @@
             <h5 data-bind='visible: interlocks_closed() && is_fan_connected()'>Everything is ready to go.</h5>
         </div>
         <div class="modal-footer">
-            <a class="btn pull-left" data-bind='visible: !is_pause_mode(), click: cancel_btn' aria-hidden="true">{{ _('cancel') }}</a>
-            <a class="btn pull-left" data-bind='visible: is_pause_mode(), click: cancel_btn' aria-hidden="true">{{ _('Cancel Laser Job') }}</a>
+            <a class="btn pull-left" data-bind='visible: is_rtl_mode(), click: cancel_btn' aria-hidden="true">{{ _('cancel') }}</a>
+            <a class="btn pull-left" data-bind='visible: !is_rtl_mode(), click: cancel_btn' aria-hidden="true">{{ _('Cancel Laser Job') }}</a>
             <h4 class="pull-right" data-bind='visible: !is_fan_connected()'>Plugin air filter system</h4>
             <h4 class="pull-right" data-bind='visible: !interlocks_closed() && is_fan_connected()'>Close the lid</h4>
             <h4 class="pull-right" data-bind='visible: interlocks_closed() && is_fan_connected()'>Press the button to
-                <span class="dev_start_button" data-bind='visible: !is_pause_mode()'>start</span>
-                <span class="dev_start_button" data-bind='visible: is_pause_mode()'>continue</span>
+                <span class="dev_start_button" data-bind='visible: is_rtl_mode()'>start</span>
+                <span class="dev_start_button" data-bind='visible: !is_rtl_mode()'>continue</span>
             </h4>
         </div>
     </div>
