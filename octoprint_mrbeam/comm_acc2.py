@@ -54,7 +54,6 @@ class MachineCom(object):
 	STATE_LOCKED = 12
 	STATE_HOMING = 13
 	STATE_FLASHING = 14
-	STATE_READY_TO_LASER = 15
 
 	GRBL_STATE_QUEUE = 'Queue'
 	GRBL_STATE_IDLE  = 'Idle'
@@ -230,10 +229,8 @@ class MachineCom(object):
 		while self._sending_active:
 			try:
 				self._process_rt_commands()
-				self._logger.info("ANDYTEST _send_loop() isPrinting: %s, _commandQueue.empty: %s", self.isPrinting(), self._commandQueue.empty())
 				if self.isPrinting() and self._commandQueue.empty():
 					cmd = self._getNext()
-					self._logger.info("ANDYTEST _send_loop() cmd: %s", cmd)
 					if cmd is not None:
 						self.sendCommand(cmd)
 						self._callback.on_comm_progress()
@@ -258,17 +255,15 @@ class MachineCom(object):
 				self._changeState(self.STATE_ERROR)
 				eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
 				self._logger.dump_terminal_buffer(level=logging.ERROR)
-		self._logger.info("ANDYTEST Leaving _send_loop()")
+		# self._logger.info("ANDYTEST Leaving _send_loop()")
 
 	def _sendCommand(self, cmd=None):
 		if cmd is None:
 			if self._cmd is None and self._commandQueue.empty():
-				self._logger.info("ANDYTEST _sendCommand() nothing to do")
 				return
 			elif self._cmd is None:
 				self._cmd = self._commandQueue.get()
 
-			self._logger.info("ANDYTEST _sendCommand() self._cmd: %s", self._cmd)
 
 			if self._cmd == self.COMMAND_FLUSH:
 				# FLUSH waits until we're no longer waiting for any OKs from GRBL
@@ -313,7 +308,6 @@ class MachineCom(object):
 				if sum([len(x) for x in self._acc_line_buffer]) + len(my_cmd) +1 < self.WORKING_RX_BUFFER_SIZE:
 					my_cmd, _, _  = self._process_command_phase("sending", my_cmd)
 					self._log("Send: %s" % my_cmd)
-					self._logger.info("ANDYTEST Send: %s" % my_cmd)
 					self._acc_line_buffer.append(my_cmd + '\n')
 					try:
 						self._serial.write(my_cmd + '\n')
@@ -448,7 +442,8 @@ class MachineCom(object):
 			"file": self._currentFile.getFilename(),
 			"filename": os.path.basename(self._currentFile.getFilename()),
 			"origin": self._currentFile.getFileLocation(),
-			"time": self.getPrintTime()
+			"time": self.getPrintTime(),
+			"mrb_state": _mrbeam_plugin_implementation.get_mrb_state()
 		}
 		self._move_home()
 		eventManager().fire(OctoPrintEvents.PRINT_DONE, payload)
@@ -1282,7 +1277,8 @@ class MachineCom(object):
 			payload = {
 				"file": self._currentFile.getFilename(),
 				"filename": os.path.basename(self._currentFile.getFilename()),
-				"origin": self._currentFile.getFileLocation()
+				"origin": self._currentFile.getFileLocation(),
+				'mrb_state': _mrbeam_plugin_implementation.get_mrb_state()
 			}
 			eventManager().fire(OctoPrintEvents.PRINT_STARTED, payload)
 
@@ -1315,7 +1311,8 @@ class MachineCom(object):
 			"file": self._currentFile.getFilename(),
 			"filename": os.path.basename(self._currentFile.getFilename()),
 			"origin": self._currentFile.getFileLocation(),
-			"time": self.getPrintTime()
+			"time": self.getPrintTime(),
+			'mrb_state': _mrbeam_plugin_implementation.get_mrb_state()
 		}
 		eventManager().fire(OctoPrintEvents.PRINT_CANCELLED, payload)
 
@@ -1327,9 +1324,9 @@ class MachineCom(object):
 			"file": self._currentFile.getFilename(),
 			"filename": os.path.basename(self._currentFile.getFilename()),
 			"origin": self._currentFile.getFileLocation(),
-			"cooling": pause_for_cooling,
 			"trigger": trigger,
-			"time": self.getPrintTime()
+			"time": self.getPrintTime(),
+			'mrb_state': _mrbeam_plugin_implementation.get_mrb_state()
 		}
 
 		if not pause and (self.isPaused() or force):
@@ -1411,8 +1408,6 @@ class MachineCom(object):
 			return "Homing"
 		if self._state == self.STATE_FLASHING:
 			return "Flashing"
-		if self._state == self.STATE_READY_TO_LASER:
-			return "Ready to Start"
 		return "Unknown State (%d)" % (self._state)
 
 	def getPrintProgress(self):
@@ -1445,9 +1440,6 @@ class MachineCom(object):
 
 	def isLocked(self):
 		return self._state == self.STATE_LOCKED
-
-	def isReadyToLaser(self):
-		return self._state == self.STATE_READY_TO_LASER
 
 	def isHoming(self):
 		return self._state == self.STATE_HOMING
@@ -1511,7 +1503,8 @@ class MachineCom(object):
 					"file": self._currentFile.getFilename(),
 					"filename": os.path.basename(self._currentFile.getFilename()),
 					"origin": self._currentFile.getFileLocation(),
-					"time": self.getPrintTime()
+					"time": self.getPrintTime(),
+					"mrb_state": _mrbeam_plugin_implementation.get_mrb_state()
 				}
 			eventManager().fire(OctoPrintEvents.PRINT_FAILED, payload)
 		eventManager().fire(OctoPrintEvents.DISCONNECTED)

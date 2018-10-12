@@ -202,10 +202,6 @@ class OneButtonHandler(object):
 			else:
 				self._logger.debug("onEvent() INTERLOCK_OPEN: not printing, nothing to do. printer state is: %s", self._printer.get_state_id())
 
-		# elif event == IoBeamEvents.INTERLOCK_CLOSED:
-		# 	if self.is_cooling()
-
-
 		# OctoPrint 1.3.4 doesn't provide the file name in FILE_SELECTED anymore, so we need to get it here and save it for later.
 		elif event == OctoPrintEvents.SLICING_DONE:
 			if not self.is_ready_to_laser() \
@@ -268,11 +264,9 @@ class OneButtonHandler(object):
 
 	def stop_cooling_behavior(self):
 		self.behave_cooling_state = False
-		temperatureManager().send_cooling_state_to_frontend(False)
 
 	def start_cooling_behavior(self):
 		self.behave_cooling_state = True
-		temperatureManager().send_cooling_state_to_frontend(True)
 
 	def set_rtl_file(self, gcode_file):
 		self._test_conditions(gcode_file)
@@ -286,8 +280,6 @@ class OneButtonHandler(object):
 		self.ready_to_laser_ts = time.time()
 		self.print_started = -1
 		self._fireEvent(MrBeamEvents.READY_TO_LASER_START)
-		# this is redundant since frontend receives FILE_SELECTED event too
-		self._send_frontend_ready_to_laser_state(self.CLIENT_RTL_STATE_START)
 		self._check_if_still_ready_to_laser()
 
 	def unset_ready_to_laser(self, lasering=False):
@@ -297,10 +289,7 @@ class OneButtonHandler(object):
 		self.ready_to_laser_ts = -1
 		self.ready_to_laser_file = None
 		self.ready_to_laser_flag = False
-		if lasering and was_ready_to_laser:
-			self._send_frontend_ready_to_laser_state(self.CLIENT_RTL_STATE_END_LASERING)
-		elif was_ready_to_laser:
-			self._send_frontend_ready_to_laser_state(self.CLIENT_RTL_STATE_END_CANCELED)
+		if not lasering and was_ready_to_laser:
 			self._fireEvent(MrBeamEvents.READY_TO_LASER_CANCELED)
 
 	def is_ready_to_laser(self, rtl_expected_to_be_there=True):
@@ -415,8 +404,7 @@ class OneButtonHandler(object):
 		self.intended_pause = True
 		self.pause_need_to_release = self.pause_need_to_release or need_to_release;
 		self._printer.pause_print(force=force, trigger=trigger)
-		self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_START, payload=dict(trigger=trigger))
-		self._send_frontend_ready_to_laser_state(self.CLIENT_RTL_STATE_START_PAUSE, trigger)
+		self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_START, payload=dict(trigger=trigger, mrb_state=_mrbeam_plugin_implementation.get_mrb_state()))
 		self._start_pause_safety_timeout_timer()
 
 	def _is_during_pause_waiting_time(self):
@@ -427,7 +415,6 @@ class OneButtonHandler(object):
 			if not self._is_during_pause_waiting_time():
 				self._logger.debug("Resuming laser job...")
 				self._printer.resume_print()
-				self._send_frontend_ready_to_laser_state(self.CLIENT_RTL_STATE_END_RESUMED)
 				self.pause_laser_ts = -1
 				self.intended_pause = False
 			else:
@@ -438,10 +425,6 @@ class OneButtonHandler(object):
 		self.intended_pause = False
 		self.pause_need_to_release = False
 		self._cancel_pause_safety_timeout_timer()
-
-	def _send_frontend_ready_to_laser_state(self, state, trigger=None):
-		self._logger.debug("_send_frontend_ready_to_laser_state() state: %s, trigger: %s", state, trigger)
-		#self._plugin_manager.send_plugin_message("mrbeam", dict(ready_to_laser=state, trigger=trigger))
 
 	def shutdown_prepare_start(self):
 		self.shutdown_state = self.SHUTDOWN_STATE_PREPARE
@@ -493,10 +476,5 @@ class OneButtonHandler(object):
 
 
 	def _fireEvent(self, event, payload=None):
-		'''
-		Fire an event into octoPrint's event system
-		:param event:
-		:param payload:
-		'''
-		self._logger.info("_fireEvent() event:%s, payload:%s", event, payload)
-		self._event_bus.fire(event, payload)
+		_mrbeam_plugin_implementation.fire_event(event, payload)
+

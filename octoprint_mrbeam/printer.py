@@ -144,15 +144,11 @@ class Laser(Printer):
 	def is_flashing(self):
 		return self._comm is not None and self._comm.isFlashing()
 
-	def is_readyToLaser(self):
-		return self._comm is not None and self._comm.isReadyToLaser()
-
 	def _getStateFlags(self):
 		flags = Printer._getStateFlags(self)
 		flags.update({
 			"locked": self.is_locked(),
 			"flashing": self.is_flashing(),
-			"readyToLaser": self.is_readyToLaser(),
 		})
 		return flags
 
@@ -217,4 +213,7 @@ class LaserStateMonitor(StateMonitor):
 			"workPosition": self._workPosition,
 			"machinePosition": self._machinePosition
 		})
+		mrb_state = _mrbeam_plugin_implementation.get_mrb_state()
+		if mrb_state:
+			data['mrb_state'] = mrb_state
 		return data
