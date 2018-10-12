@@ -526,8 +526,8 @@ class MachineCom(object):
 		if "EEPROM read fail" in line:
 			self._logger.warn("_handle_error_message() 'EEPROM read fail' in line: '%s'", line)
 			return
-		self._logger.error("_handle_error(): %s", error_msg)
-		self._errorValue = error_msg
+		self._logger.error("_handle_error(): %s", line)
+		self._errorValue = line
 		eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
 		self._changeState(self.STATE_LOCKED)
 		self._logger.dump_terminal_buffer(level=logging.ERROR)
