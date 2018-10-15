@@ -540,9 +540,7 @@ $(function(){
 				}
 			}
             // sort before we store it.
-			tmp.sort(function(a,b){
-              return b.thicknessMM - a.thicknessMM;
-            })
+			tmp.sort(self._thickness_sort_function);
 			new_material.colors[color] = {cut: tmp, engrave: engrave_setting};
 
 			var data = {};
@@ -680,9 +678,8 @@ $(function(){
 					available_thickness = available_thickness.concat(self.engrave_only_thickness);
 				}
 
-				available_thickness.sort(function(a,b){
-				  return b.thicknessMM - a.thicknessMM;
-				})
+                console.log("available_thickness: "+available_thickness);
+				available_thickness.sort(self._thickness_sort_function);
 
 				self.material_thicknesses(available_thickness);
 				self.selected_material_thickness(null);
@@ -1463,6 +1460,12 @@ $(function(){
 			var jobs = self.get_current_multicolor_settings();
 			self.vectorJobs(jobs);
 		};
+
+		self._thickness_sort_function = function(a,b){
+		    t_a = a.thicknessMM < 0 ? 99999 : a.thicknessMM;
+		    t_b = b.thicknessMM < 0 ? 99999 : b.thicknessMM;
+            return t_a - t_b;
+        };
 
 	}
 
