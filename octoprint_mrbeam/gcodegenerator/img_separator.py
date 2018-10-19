@@ -23,15 +23,18 @@ isCV31 = cvMajor == "3" and cvMinor == "1"
 
 class ImageSeparator():
 
+	MAX_OUTER_CONTOURS = 20
+
 	def __init__( self):
-		self.log = logging.getLogger(self.__class__.__name__)
+		self.log = logging.getLogger("octoprint.plugins.mrbeam.img_separator")
+		# self.log = logging.getLogger(self.__class__.__name__)
 		self.img_debug_folder = "/tmp/separate_contours"
 
 		files = glob.glob(self.img_debug_folder+'/*')
 		for f in files:
 			os.remove(f)
 		
-		self.debug = False
+		self.debug = True
 		try:
 			self.debug = _mrbeam_plugin_implementation._settings.get(["dev", "debug_gcode"])
 		except NameError:
@@ -120,7 +123,7 @@ class ImageSeparator():
 	
 			
 	# 2. contour based separation method		
-	def separate_contours(self, img, threshold=255, callback=None):
+	def separate_contours(self, img, x=0, y=0, threshold=255, callback=None):
 		"""
 		Arguments:
 		img -- a Pillow Image object
@@ -128,7 +131,7 @@ class ImageSeparator():
 		w,h = img.size
 		monochrome_original = np.array(img, dtype=np.uint8) # should be grayscale already
 		id_str = "c0"
-		data = {'i': monochrome_original, 'x': 0, 'y':0, 'id':id_str}
+		data = {'i': monochrome_original, 'x': int(x), 'y':int(y), 'id':id_str}
 		self._dbg_image(monochrome_original, data['id']+"_0_monochrome.png")
 		
 		to_process = [data]
@@ -136,6 +139,7 @@ class ImageSeparator():
 		level = 0
 		# now split global_mask recursive 
 		while(len(to_process) > 0):
+			self.log.debug("ANDYTEST separate_contours() 1 | len(to_process): %s", len(to_process))
 			next_item = to_process.pop(0)
 			off_x = next_item['x']
 			off_y = next_item['y']
@@ -153,12 +157,11 @@ class ImageSeparator():
 						parts.append(i)
 			level += 1
 		
-				
-		
 		# create PIL image type from cv2 type
 		pil_images = []
 		number = 0
 		for i in parts:
+			self.log.debug("ANDYTEST separate_contours() 2 | i in parts: %s", i)
 			separation = Image.fromarray(np.uint8(i['i']))
 			i['i'] = separation
 			#TODO move callback and transformation into own function and place it directly in the recursion
@@ -178,13 +181,24 @@ class ImageSeparator():
 
 	def _split_by_outer_contour(self, mask_data, level, monochrome_original):
 		"""
-		Arguments:
-		mask_data -- {'i': cv_np_array, 'x': x_offset, 'y': y_offset, 'id':id_str}
-		level -- depth of the recursion
+		:param mask_data: {'i': cv_np_array, 'x': x_offset, 'y': y_offset, 'id':id_str}
+		:param level: depth of the recursion
+		:param monochrome_original:
 		"""
-		
+		# This should be improved.
+		# If there are too many too little contours found and engraved separately, the way in between these contours
+		# becomes more overhead than we save compared to the naive line-by-line algorithm.
+		# What we do so far is that we fall back to the naive algorithm if there are more than x contours found.
+		# Posible imporvements:
+		# - small objects in close proximity should be combined.
+		# - We could get bbox of any contour and check, if others are contained. But with a big banana shaped object, this might just cover everything else.
+		# - Teja: sort contours by starting pos closest end pos
+
+		self.log.info("ANDYTEST _split_by_outer_contour() params: mask_data: %s, level: %s, monochrome_original: %s", mask_data['i'].shape, level, monochrome_original.shape)
 		img = mask_data['i']
 		h, w = img.shape
+		original_offset_x =  mask_data['x']
+		original_offset_y =  mask_data['y']
 		self.log.debug("Input {}: w*h: {}*{})".format(level, w,h))
 		self._dbg_image(img, mask_data['id']+"_0_input_.png")
 
@@ -198,48 +212,66 @@ class ImageSeparator():
 		self.log.info("Found {} contours.".format(amount))
 		if(self.debug):
 			for i in range(amount):
+				self.log.debug("ANDYTEST _split_by_outer_contour() 1.1 | i in amount: %s (of %s)", i, amount)
 				nextContourIdx, prevContourIdx, firstChildIdx, parentIdx = hierarchy[0][i]
 				cnt_x,cnt_y,cnt_w,cnt_h = cv2.boundingRect(contours[i])
+				self.log.debug("ANDYTEST")
 				self.log.debug("Contour {}#{}: w*h: {}*{} @ x,y: {},{} (parent: {}, child: {})".format(mask_data['id'], i, cnt_w, cnt_h, cnt_x, cnt_y, parentIdx, firstChildIdx))
 
 		if amount == 1:
-			self.log.info("No contour separation possible. Returning full image.")	
-			return [mask_data] 
-		
-			
+			self.log.info("No contour separation possible. Returning full image.")
+			return [mask_data]
+
+		if amount > self.MAX_OUTER_CONTOURS:
+			self.log.info("Found %s contours which seems too many (max: %s). Returning full image.", amount, self.MAX_OUTER_CONTOURS)
+			return [mask_data]
+
+		import gc
 		nonWhiteParts = 0
 		for i in range(amount):
-			id_str = mask_data['id']+'.'+str(i) # use input mask id as prefix 
+			self.log.debug("ANDYTEST _split_by_outer_contour() 1.2 | --------  ")
+			self.log.debug("ANDYTEST _split_by_outer_contour() 1.2 | i in amount: %s (of %s)", i, amount)
+			id_str = mask_data['id']+'.'+str(i) # use input mask id as prefix
 			nextContourIdx, prevContourIdx, firstChildIdx, parentIdx = hierarchy[0][i]
 
 			# create partial mask
+			self.log.debug("ANDYTEST _split_by_outer_contour() 1.2 a | cv2.bitwise_not... wxh: %sx%s", w, h)
 			mask = cv2.bitwise_not(np.zeros((h, w), np.uint8))
-			cv2.drawContours(mask, contours, i, (0), -1) 
+			self.log.debug("ANDYTEST _split_by_outer_contour() 1.2 b | cv2.drawContours... ")
+			cv2.drawContours(mask, contours, i, (0), -1)
 			self._dbg_image(mask, id_str+"_2_contourmask.png")
 
 			# crop input picture to mask size
 			mask_h, mask_w = mask.shape
-			mask_x = mask_data['x']
-			mask_y = mask_data['y']
-			cropped_original = monochrome_original[mask_y:mask_y+mask_h, mask_x:mask_x+mask_w]
-			
+			self.log.info("ANDYTEST _split_by_outer_contour() 1.2 c | cv2.bitwise_or...  monochrome_original: %s", monochrome_original.shape)
+			# self.log.info("ANDYTEST _split_by_outer_contour() 1.2 c | cv2.bitwise_or...  mask_y: %s, mask_h: %s, mask_y+mask_h: %s, mask_x: %s, mask_w: %s, mask_x+mask_w: %s", mask_y, mask_h, mask_y+mask_h, mask_x, mask_w, mask_x+mask_w)
+			cropped_original = monochrome_original[0:mask_h, 0:mask_w]
+
 			# apply mask to original image
+			self.log.debug("ANDYTEST _split_by_outer_contour() 1.2 c | cv2.bitwise_or... cropped_original: %s, mask: %s", cropped_original.shape, mask.shape)
 			separation_cv = cv2.bitwise_or(cropped_original, mask)
 
 			# and crop again to bbox of contour
+			self.log.debug("ANDYTEST _split_by_outer_contour() 1.2 d | cv2.boundingRect... ")
 			cnt_x,cnt_y,cnt_w,cnt_h = cv2.boundingRect(contours[i])
 			cropped = separation_cv[cnt_y:cnt_y+cnt_h, cnt_x:cnt_x+cnt_w]
 
 			if(self._is_only_whitespace(cropped)):
 				self.log.debug("Contour {}#{} (w*h: {}*{} @ {},{}) is only white space. Skipping...".format(mask_data['id'], i, cnt_w, cnt_h, cnt_x, cnt_y))	
-				
+
 			else:
+				self.log.debug("ANDYTEST _split_by_outer_contour() 1.2 e | Contour {}#{} (w*h: {}*{} @ {},{}) ".format(mask_data['id'], i, cnt_w, cnt_h, cnt_x, cnt_y))
 				data = {'i': cropped, 'x': cnt_x, 'y':cnt_y, 'id':id_str}
 				parts.append(data)
 				nonWhiteParts += 1
 				self._dbg_image(cropped, id_str+"_3_sliced_.png")
 					
-			
+			del mask
+			del cropped
+			del cropped_original
+			del separation_cv
+			gc.collect()
+
 			
 		self.log.info("Contour separation emitted {} parts.".format(nonWhiteParts))	
 		return parts
