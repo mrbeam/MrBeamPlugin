@@ -6,6 +6,12 @@
     <div class="modal-body scrollable" style="box-sizing: border-box">
 		<div data-bind="visible:!slicing_in_progress()">
 			<div id="material_row" data-bind="css: {expanded: expandMaterialSelector() }">
+                <div>
+                    <p>
+                        <i class="icon-exclamation-sign" style="color:gray"></i>
+                        <span id="parameter_notes">The below presets are only a guidance, you might need to adjust them to your own material.</span>
+                    </p>
+                </div>
 
 				<div id="material_type" data-bind="css: {active : selected_material() === null}">
 			        <div id="material_burger_menu" class="dropdown pull-right">
@@ -16,6 +22,7 @@
 							<i class="icon-ok icon-large"></i>&nbsp; Done
 						</a>
 					</div>
+
 
 					<div class="">
 						<label >Material</label>
