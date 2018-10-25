@@ -67,8 +67,8 @@ class ImageProcessor():
 		# if True base64 image data urls embedded into the GCODE will be broken into short lines. If False it's one long line
 		self.MULTILINE_DATA_URLS = False
 
-		self.debug = True # general debug
-		self.debugPreprocessing = True # write each step image to /tmp
+		self.debug = False # general debug
+		self.debugPreprocessing = False # write each step image to /tmp
 
 		try:
 			self.debug = _mrbeam_plugin_implementation._settings.get(["dev", "debug_gcode"])
@@ -103,7 +103,6 @@ class ImageProcessor():
 		self.overshoot_distance = overshoot_distance
 		# engraving mode switches
 		self.engraving_mode = engraving_mode or self.ENGRAVING_MODE_DEFAULT
-		self.log.info("ANDYTEST self.engraving_mode: %s", self.engraving_mode)
 		self.separation = (self.engraving_mode == self.ENGRAVING_MODE_FAST)
 		self.line_by_line = (self.engraving_mode == self.ENGRAVING_MODE_BASIC)
 
@@ -309,7 +308,6 @@ class ImageProcessor():
 				img_data = p['i']
 				img_data.save("/tmp/img2gcode_7_part_{:0>3}_@{},{}.png".format(i, p['x'], p['y']))
 
-		self.log.info("ANDYTEST parts: %s", parts)
 		return parts
 
 
