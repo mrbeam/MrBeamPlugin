@@ -36,6 +36,13 @@ from img_separator import ImageSeparator
 
 class ImageProcessor():
 
+	ENGRAVING_MODE_FAST         = 'fast'
+	ENGRAVING_MODE_PRECISE      = 'precise'
+	ENGRAVING_MODE_BASIC        = 'basic'
+
+	ENGRAVING_MODE_DEFAULT      = ENGRAVING_MODE_PRECISE
+
+
 	def __init__( self,
 	              output_filehandle = None,
 	              workingAreaWidth = None,
@@ -50,7 +57,7 @@ class ImageProcessor():
 	              speed_black = 500,
 	              speed_white = 3000,
 	              dithering = False,
-	              separation = True,
+	              engraving_mode = None,
 	              pierce_time = 0,
 	              overshoot_distance = 0, # disabled for now. TODO: enable (1) when switch on delay is HW fixed.
 	              material = None):
@@ -94,7 +101,11 @@ class ImageProcessor():
 		self.sharpeningFactor = float(sharpening) if sharpening else 0.0
 		self.dithering = (dithering == True or dithering == "True")
 		self.overshoot_distance = overshoot_distance
-		self.separation = (separation == True or separation == "True")
+		# engraving mode switches
+		self.engraving_mode = engraving_mode or self.ENGRAVING_MODE_DEFAULT
+		self.log.info("ANDYTEST self.engraving_mode: %s", self.engraving_mode)
+		self.separation = (self.engraving_mode == self.ENGRAVING_MODE_FAST)
+		self.line_by_line = (self.engraving_mode == self.ENGRAVING_MODE_BASIC)
 
 		# overshoot settings
 		# given an acceleration of 700mm/s², these are the ways neccessary to reach target speed of
@@ -258,12 +269,16 @@ class ImageProcessor():
 		separator = ImageSeparator()
 
 		# 7.1. split by contour
-		self.log.debug("contour separation starting...")
-		start = time.time()
-		# contour_parts = separator.separate_contours(img, threshold=self.ignore_brighter_than+1)
-		contour_parts = separator.separate_contours(img, x=left, y=upper, threshold=self.ignore_brighter_than+1)
-		self.log.debug("contour separation took {} seconds".format(time.time()-start))
-		self.log.debug("separated into {} contours".format(len(contour_parts)))
+		contour_parts = []
+		if self.line_by_line:
+			self.log.debug("skipping contour separation, user selected line-by-line mode")
+			contour_parts = [{'i': img, 'x': left, 'y':upper, 'id':'noid'}]
+		else:
+			self.log.debug("contour separation starting...")
+			start = time.time()
+			contour_parts = separator.separate_contours(img, x=left, y=upper, threshold=self.ignore_brighter_than+1)
+			self.log.debug("contour separation took {} seconds".format(time.time()-start))
+			self.log.debug("separated into {} contours".format(len(contour_parts)))
 
 		parts = []
 		start = time.time()
@@ -801,7 +816,7 @@ M2
 			speed_black = options.speed_black,
 			speed_white = options.speed_white,
 			dithering = boolDither,
-			separation = True,
+			engraving_mode=ImageProcessor.ENGRAVING_MODE_FAST,
 			pierce_time = options.pierce_time,
 			material = None
 		)

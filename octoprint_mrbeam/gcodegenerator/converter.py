@@ -222,7 +222,7 @@ class Converter():
 											speed_white = rasterParams['speed_white'],
 											dithering = rasterParams['dithering'],
 											pierce_time = rasterParams['pierce_time'],
-											separation = rasterParams['fast_mode'],
+											engraving_mode = rasterParams['engraving_mode'],
 											material = rasterParams['material'] if 'material' in rasterParams else None)
 						data = imgNode.get('href')
 						if(data is None):

@@ -228,17 +228,26 @@
 
 								<label class="control-label">{{ _('Engraving mode') }}</label>
 								<div class="controls">
-									<div class="btn-group" data-toggle="buttons-radio">
-										<button id="svgtogcode_img_engraving_mode" type="button" class="btn btn-default">Fast</button>
-										<button type="button" class="btn btn-default active">Precise</button>
+									<div class="btn-group" id="svgtogcode_img_engraving_mode" data-toggle="buttons-radio">
+										<button type="button" value="fast" class="btn btn-default">Fast</button>
+										<button type="button" value="precise" class="btn btn-default active">Precise</button>
+										<button type="button" value="basic" class="btn btn-default">Basic</button>
 									</div>
 								</div>
 								<div class="controls alert alert-info hint" data-bind="visible: showHints">
 									<span class="icon icon-question-sign" aria-hidden="true"></span>
-									Pixel / raster engravings are done line by line.
-									In precise mode, line by line is engraved from bottom to top. The laserhead is moving over white space.
-									In fast mode, to be engraved areas are separated to reduce work moves of the laserhead.
-									The speed up works best on text or clipart designs, on photos there is no effect.
+									All engravings are processed line by line from bottom to top.
+									Depending on this option the system may cluster objects and process them separately from each other
+									to improve overall job duration by reducing "empty rides" where the laser stays off.
+									<ul>
+									    <li>Basic mode: No clustering at all, all engravings of the whole working area are processed line by line.
+									    In this mode the laserhead may have a lot of "empty rides".
+									    Use this option as fallback if you're experiencing issues with the other options.</li>
+									    <li>Precise mode: (default) Clustering is enabled. Clusters are processed successively, each cluster is processed in itself line by line.
+									    This option reduces "empty rides" moderately.</li>
+									    <li>Fast mode: Aggressive clustering also of smaller objects to reduce "empty rides" as much as possible.
+									    The speed up works best with text or clip-art designs, however there will be no effect on photo engravings.</li>
+                                    </ul>
 								</div>
 
 

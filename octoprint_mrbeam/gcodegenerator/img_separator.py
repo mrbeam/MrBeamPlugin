@@ -23,7 +23,7 @@ isCV31 = cvMajor == "3" and cvMinor == "1"
 
 class ImageSeparator():
 
-	MAX_OUTER_CONTOURS = 20
+	MAX_OUTER_CONTOURS = 30
 
 	def __init__( self):
 		self.log = logging.getLogger("octoprint.plugins.mrbeam.img_separator")
@@ -265,7 +265,8 @@ class ImageSeparator():
 				parts.append(data)
 				nonWhiteParts += 1
 				self._dbg_image(cropped, id_str+"_3_sliced_.png")
-					
+
+			# a try to prevent the system from overflowing memory wise
 			del mask
 			del cropped
 			del cropped_original
