@@ -175,7 +175,7 @@ class IoBeamHandler(object):
 		:return: True if the command was sent sucessfull (does not mean it was sucessfully executed)
 		'''
 		ok = self._send_command("{}:{}".format(self.MESSAGE_DEVICE_FAN, command))
-		# self._logger.info("ANDYTEST send_fan_command(): ok: %s, command: %s", ok, command)
+		# self._logger.info("send_fan_command(): ok: %s, command: %s", ok, command)
 		return ok
 
 	def _send_command(self, command):
