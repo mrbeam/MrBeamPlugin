@@ -101,6 +101,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._device_info = dict()
 		self._stored_frontend_notifications = []
 		self._device_series = self._get_val_from_device_info('device_series')  # '2C'
+		self.called_hosts = []
 
 		# MrBeam Events needs to be registered in OctoPrint in order to be send to the frontend later on
 		MrBeamEvents.register_with_octoprint()
@@ -350,6 +351,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# if will_handle_ui returned True, we will now render our custom index
 		# template, using the render_kwargs as provided by OctoPrint
 		from flask import make_response, render_template, g
+
+		if request.host not in self.called_hosts:
+			self.called_hosts.append(request.host)
+		self._logger.info("called hosts: %s", self.called_hosts)
 
 		firstRun = render_kwargs['firstRun']
 		language = g.locale.language if g.locale else "en"
