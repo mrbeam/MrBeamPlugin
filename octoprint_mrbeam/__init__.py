@@ -226,7 +226,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				software_tier = SW_UPDATE_TIER_PROD,
 				iobeam_disable_warnings = False, # for develpment on non-MrBeam devices
 				suppress_migrations = False,     # for develpment on non-MrBeam devices
-				support_mode = False
+				support_mode = False,
+				grbl_auto_update_enabled = True
 			),
 			analytics=dict(
 				job_analytics = False,
