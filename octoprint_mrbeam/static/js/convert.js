@@ -1294,6 +1294,10 @@ $(function(){
                 self.slicing_in_progress(false);
                 self.slicing_progress(5);
             });
+
+            $('[data-toggle="tooltip"]').tooltip({
+                html:true
+            });
 		};
 
 		self.onStartupComplete = function(){
@@ -1312,9 +1316,6 @@ $(function(){
                 $('#material_burger_menu').hide()
             }
 
-            $('[data-toggle="tooltip"]').tooltip({
-                html:true
-            });
 		};
 
 		self.onSlicingProgress = function(slicer, model_path, machinecode_path, progress){

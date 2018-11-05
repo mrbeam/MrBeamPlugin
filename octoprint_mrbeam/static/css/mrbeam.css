@@ -2057,6 +2057,11 @@ input.search-query,
     transition-duration: 0s,0s,0s,0s !IMPORTANT;
 }
 
+
+/*
+* === TOOLTIPS ===
+*/
+
 .tooltip-inner {
   max-width: 500px;
   white-space: normal;
@@ -2069,6 +2074,10 @@ input.search-query,
   border-right-color: #e25303;
   /*border-width: 0 5px 5px;*/
 }
+
+/*
+* — for parameter explanations —
+*/
 
 .icon-question-sign {
   display: inline-block;
