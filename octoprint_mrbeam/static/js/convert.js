@@ -1294,6 +1294,10 @@ $(function(){
                 self.slicing_in_progress(false);
                 self.slicing_progress(5);
             });
+
+            $('[data-toggle="tooltip"]').tooltip({
+                html:true
+            });
 		};
 
 		self.onStartupComplete = function(){
@@ -1311,6 +1315,7 @@ $(function(){
                 material_burger_menu
                 $('#material_burger_menu').hide()
             }
+
 		};
 
 		self.onSlicingProgress = function(slicer, model_path, machinecode_path, progress){
@@ -1528,7 +1533,7 @@ window.mrbeam.colorDragging = {
 
 		var data = ev.dataTransfer.getData("text");
 		if(data !== 'cd_engraving'){
-			var newJob = $('#first_job').clone(true);
+			var newJob = $('#first_job').clone(); //clone(true) --> https://github.com/twbs/bootstrap/issues/18326
 			newJob.attr('id', '');
 			var i = $('.job_row_vector').length + 1;
 			$(newJob).find('.job_title').text("Cutting Job " + i);
@@ -1540,6 +1545,11 @@ window.mrbeam.colorDragging = {
 			$(newJob).find('.assigned_colors').append(color);
 			ko.dataFor(document.getElementById("dialog_vector_graphics_conversion"))._update_color_assignments();
 		}
+
+        $('[data-toggle="tooltip"]').tooltip({
+            html:true
+        });
+
     },
 
 
