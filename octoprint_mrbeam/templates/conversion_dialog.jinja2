@@ -46,7 +46,9 @@
 				</div>
 
 				<div id="material_color" class="" data-bind="css: {active : selected_material() !== null && selected_material_color() === null}, visible: selected_material() !== null">
-					<div>
+					<div data-toggle="tooltip" data-placement="bottom" style="display: inline-block"
+                         title="Depending on the color the laser beam is reflected more or less.<br> <b>Select a color
+							close to the material's color to improve the result.</b>">
 						<label >Color</label>
 						<ul id="color_list" data-bind="foreach: material_colors">
 							<li class='material_color_entry hover_shadow' data-bind="
@@ -57,16 +59,13 @@
 								style: { backgroundColor: '#'+$data }
 							"></li>
 						</ul>
-						<div class="alert alert-info hint" data-bind="visible: showHints">
-							<span class="icon icon-question-sign" aria-hidden="true"></span>
-							Depending on the color the laser beam is reflected more or less. Select a color
-							close to the material's color to improve the result.
-						</div>
 					</div>
 				</div>
 
 				<div id="material_thickness" data-bind="css: {active : selected_material() !== null && selected_material_color() !== null && selected_material_thickness() === null}, visible: selected_material() !== null && selected_material_color() !== null">
-					<div>
+					<div class="material-control-and-label" data-toggle="tooltip" data-placement="right"
+                         title="<b>Set the thickness of the material.</b> When cutting the material it is important to tell Mr Beam
+							the thickness that he can select the correct laser settings.">
 						<label >Thickness</label>
 						<div id="thickness_list" data-bind="foreach: material_thicknesses">
 							<div class="thickness_sample hover_shadow"
@@ -78,11 +77,6 @@
 										visible: ($root.selected_material_thickness() == null) || _.isEqual($root.selected_material_thickness(), $data),
 										text: $root.thickness_text($data)
 								 " ></div>
-						</div>
-						<div class="controls alert alert-info hint" data-bind="visible: showHints">
-							<span class="icon icon-question-sign" aria-hidden="true"></span>
-							Set the thickness of the material. When cutting the material it is important to tell Mr Beam
-							the thickness that he can select the correct laser settings.
 						</div>
 					</div>
 				</div>
@@ -167,89 +161,98 @@
 						</div>
 						<form class="job_parameters form-horizontal" data-bind="visible: has_engraving_proposal">
 							<div class="control-group" >
-								<label class="control-label">{{ _('Laser intensity range') }}</label>
-								<div class="controls">
-									<div class="input-append">
-										<input id="svgtogcode_img_intensity_white" class="img_intensity_input" type="number" min="0" max="100"
-											   data-bind="value: imgIntensityWhite, event: {change: flag_customized_material}">
-										<div class="svgtogcode_grayscale">&nbsp;</div>
-										<input id="svgtogcode_img_intensity_black" class="img_intensity_input" type="number" min="0" max="100"
-											   data-bind="value: imgIntensityBlack, event: {change: flag_customized_material}">
-									</div>
-								</div>
-								<div class="controls alert alert-info hint" data-bind="visible: showHints">
-									<span class="icon icon-question-sign" aria-hidden="true"></span>
-									The intensity range used for engraving pixel graphics. Bright/white pixels use the left (lower) value, dark/black pixels the right (higher) value.
-									Equal values do not vary the laser intensity related to the pixel brightness.
-								</div>
+                                <div class="range-control-and-label" data-toggle="tooltip" data-placement="right" title="<b>The intensity range used for engraving pixel graphics.</b>
+                                <ul><li>Bright/white pixels use the left (lower) value</li>
+                                <li>Dark/black pixels use the right (higher) value.</li>
+                                </ul> Equal values do not vary the laser intensity related to the pixel brightness.">
+                                    <label class="control-label">{{ _('Laser intensity range') }}</label>
+                                    <div class="controls">
+                                        <div class="input-append">
+                                            <input id="svgtogcode_img_intensity_white" class="img_intensity_input"  type="number" min="0" max="100"
+                                                   data-bind="value: imgIntensityWhite, event: {change: flag_customized_material}">
+                                            <div class="svgtogcode_grayscale">&nbsp;</div>
+                                            <input id="svgtogcode_img_intensity_black" class="img_intensity_input" type="number" min="0" max="100"
+                                                   data-bind="value: imgIntensityBlack, event: {change: flag_customized_material}">
+                                        </div>
+                                    </div>
+                                </div>
 
-								<label class="control-label">{{ _('Engraving speed range') }}</label>
-								<div class="controls">
-									<div class="input-append">
-										<input id="svgtogcode_img_feedrate_white" class="img_intensity_input" type="number"  min="30"
-											   data-bind="value: imgFeedrateWhite, event: {change: flag_customized_material}">
-										<div class="svgtogcode_grayscale">&nbsp;</div>
-										<input id="svgtogcode_img_feedrate_black" class="img_intensity_input" type="number"  min="30"
-											   data-bind="value: imgFeedrateBlack, event: {change: flag_customized_material}">
-									</div>
-								</div>
-								<div class="controls alert alert-info hint" data-bind="visible: showHints">
-									<span class="icon icon-question-sign" aria-hidden="true"></span>
-									The movement velocity range used for engraving pixel graphics. Bright/white pixels use the left (higher) value, dark/black pixels the right (lower) value.
-									Equal values do not vary the laser velocity related to the pixel brightness.
-								</div>
 
-								<div data-bind="visible: show_line_color_mappings">
+                                <div class="range-control-and-label" data-toggle="tooltip" data-placement="right"
+                                     title="<b>The movement velocity range used for engraving pixel graphics.</b>
+                                     <ul><li>Bright/white pixels use the left (lower) value</li>
+                                     <li>Dark/black pixels use the right (higher) value.</li></ul>
+                                     Equal values do not vary the laser velocity related to the pixel brightness.">
+                                    <label class="control-label">{{ _('Engraving speed range') }}</label>
+                                    <div class="controls">
+                                        <div class="input-append">
+                                            <input id="svgtogcode_img_feedrate_white" class="img_intensity_input" type="number"  min="30"
+                                                   data-bind="value: imgFeedrateWhite, event: {change: flag_customized_material}">
+                                            <div class="svgtogcode_grayscale">&nbsp;</div>
+                                            <input id="svgtogcode_img_feedrate_black" class="img_intensity_input" type="number"  min="30"
+                                                   data-bind="value: imgFeedrateBlack, event: {change: flag_customized_material}">
+                                        </div>
+                                    </div>
+                                </div>
+
+								<div class="line-control-and-label" data-bind="visible: show_line_color_mappings" data-toggle="tooltip" data-placement="right"
+                                     title="Map the color of a vector path to a grayscale value for engraving.">>
 									<label class="control-label">{{ _('Line color mapping') }}</label>
 									<div class="controls">
 										<div id="colored_line_mapping">
 										</div>
 									</div>
 								</div>
-								<div class="controls alert alert-info hint" data-bind="visible: showHints">
-									<span class="icon icon-question-sign" aria-hidden="true"></span>
-									Map the color of a vector path to a grayscale value for engraving.
-								</div>
 
-								<div class="controls" data-bind="visible: showExpertSettings ">
+								<!--<div class="controls" data-bind="visible: showExpertSettings ">
 									<label class="checkbox">
 										<input type="checkbox" data-bind="checked: engrave_outlines">{{ _('engrave outlines of filled shapes') }}
 									</label>
-								</div>
+								</div>-->
 							</div>
 
 							<div class="control-group" data-bind="visible: showExpertSettings ">
-								<label class="control-label">Pierce time</label>
-								<div class="controls">
-									<input data-bind="value: engravingPiercetime, event: {change: flag_customized_material}"
-											 class="param_piercetime decimal_input" type="number" min="0" max="2000" value="0" />&nbsp;ms
-								</div>
+                                <div class="input-control-and-label" data-toggle="tooltip" data-placement="right"
+                                     title="<b>This is the time which Mr Beam pierces into the material without any movement at the beginning of every new line or shape before it starts moving the laser.</b><br>
+                                     For some materials Mr Beam II needs more energy to do the first pierce of a cut or engraving than it needs for the ongoing cutting/engraving.<br>
+                                     If you experience that the laser does not cut or engrave first few millimeters of each new line or shape, try to set a pierce time.
+                                     <i>Try 100ms and adjust if needed.</i>">
+                                    <label class="control-label">Pierce time</label>
+                                    <div class="controls">
+                                        <input data-bind="value: engravingPiercetime, event: {change: flag_customized_material}"
+                                                 class="param_piercetime decimal_input" type="number" min="0" max="2000" value="0" />&nbsp;ms
+                                    </div>
+                                </div>
+                                <div class="input-control-and-label" data-toggle="tooltip" data-placement="right"
+                                     title="Pixel / raster engravings are done line by line. This sets <b>the distance between the single lines.</b>
+                                        Smaller values allow finer engravings but require a more precise focus and are slower.">
+                                    <label class="control-label">{{ _('Line distance') }}</label>
+                                    <div class="controls"><input id="svgtogcode_img_line_dist" class="img_intensity_input decimal_input" type="number" max="1.0" min="0.1" step="0.05" data-bind="value: beamDiameter" />&nbsp;mm</div>
+                                </div>
 
-								<label class="control-label">{{ _('Line distance') }}</label>
-								<div class="controls"><input id="svgtogcode_img_line_dist" class="img_intensity_input decimal_input" type="number" max="1.0" min="0.1" step="0.05" data-bind="value: beamDiameter" />&nbsp;mm</div>
-								<div class="controls alert alert-info hint" data-bind="visible: showHints">
-									<span class="icon icon-question-sign" aria-hidden="true"></span>
-									Pixel / raster engravings are done line by line. This sets the distance between the single lines.
-									Smaller values allow finer engravings but require a more precise focus and are slower.
-								</div>
-
-								<label class="control-label">{{ _('Engraving mode') }}</label>
-								<div class="controls">
-									<div class="btn-group" data-toggle="buttons-radio">
-										<button id="svgtogcode_img_engraving_mode" type="button" class="btn btn-default">Fast</button>
-										<button type="button" class="btn btn-default active">Precise</button>
+                                <div class="switch-control-and-label" data-toggle="tooltip" data-placement="right"
+                                    title="All engravings are processed line by line from bottom to top.
+									Depending on this option the system may cluster objects and process them separately from each other
+									to <b>improve overall job duration by reducing 'empty rides'</b> where the laser stays off.
+                                        <ul>
+                                        <li><b>Basic mode:</b> No clustering at all, all engravings of the whole working area are processed line by line.
+									    In this mode the laserhead may have a lot of 'empty rides'.
+									    Use this option as fallback if you're experiencing issues with the other options.</li>
+									    <li><b>Precise mode:</b> Clustering is enabled. Clusters are processed successively, each cluster is processed in itself line by line.
+									    This option reduces 'empty rides' moderately.</li>
+									    <li><b>Fast mode:</b> Aggressive clustering also of smaller objects to reduce 'empty rides' as much as possible.
+									    The speed up works best with text or clip-art designs, however there will be no effect on photo engravings.</li>">
+                                    <label class="control-label">{{ _('Engraving mode') }}</label>
+                                    <div class="controls">
+									<div class="btn-group" id="svgtogcode_img_engraving_mode" data-toggle="buttons-radio">
+										<button type="button" value="fast" class="btn btn-default">Fast</button>
+										<button type="button" value="precise" class="btn btn-default active">Precise</button>
+										<button type="button" value="basic" class="btn btn-default">Basic</button>
 									</div>
 								</div>
-								<div class="controls alert alert-info hint" data-bind="visible: showHints">
-									<span class="icon icon-question-sign" aria-hidden="true"></span>
-									Pixel / raster engravings are done line by line.
-									In precise mode, line by line is engraved from bottom to top. The laserhead is moving over white space.
-									In fast mode, to be engraved areas are separated to reduce work moves of the laserhead.
-									The speed up works best on text or clipart designs, on photos there is no effect.
-								</div>
+                                </div>
 
-
-								<p >{{ _('Image Preprocessing') }}</p>
+								<h5>{{ _('Image Preprocessing') }}</h5>
 								<div class="controls">
 									<div class="img_preprocessing_preview before" style="background-image:url(/plugin/mrbeam/static/img/kitty_grayscale.png);" >before</div>
 									<div class="img_preprocessing_preview after" style="background-image:url(/plugin/mrbeam/static/img/kitty_grayscale.png);" >after
@@ -262,38 +265,35 @@
 								</div>
 
 								<div data-bind="disable:imgDithering ">
-									<label class="control-label">{{ _('Contrast') }}</label>
-									<div class="controls img_slider">
-										<input id="svgtogcode_contrast_slider" type="text" data-bind="value: imgContrast" >
-									</div>
-									<div style="clear:both"></div>
-									<div class="controls alert alert-info hint" data-bind="visible: showHints">
-										<span class="icon icon-question-sign" aria-hidden="true"></span>
-										Increases the image contrast before converting to gcode.
-									</div>
+                                    <div class="bar-control-and-label" data-toggle="tooltip" data-placement="right"
+                                         title="Increases the image contrast before converting to gcode.">
+                                        <label class="control-label">{{ _('Contrast') }}</label>
+                                        <div class="controls img_slider">
+                                            <input id="svgtogcode_contrast_slider" type="text" data-bind="value: imgContrast" >
+                                        </div>
+                                        <div style="clear:both"></div>
+                                    </div>
 
-									<label class="control-label">{{ _('Sharpening') }}</label>
-									<div class="controls img_slider">
-										<input id="svgtogcode_sharpening_slider" class="uninitialized" type="text" data-bind="value: imgSharpening">
-									</div>
-									<div style="clear:both"></div>
-									<div class="controls alert alert-info hint" data-bind="visible: showHints">
-										<span class="icon icon-question-sign" aria-hidden="true"></span>
-										Sharpens the image before converting to gcode.
-									</div>
+                                    <div class="bar-control-and-label" data-toggle="tooltip" data-placement="right"
+                                         title="Sharpens the image before converting to gcode.">
+                                        <label class="control-label">{{ _('Sharpening') }}</label>
+                                        <div class="controls img_slider">
+                                            <input id="svgtogcode_sharpening_slider" class="uninitialized" type="text" data-bind="value: imgSharpening">
+                                        </div>
+                                        <div style="clear:both"></div>
+                                    </div>
 								</div>
 
-								<label class="control-label">{{ _('Dithering') }}</label>
-								<div class="controls">
-									<label class="checkbox">
-										<input type="checkbox" data-bind="checked: imgDithering, event: {change: flag_customized_material}">{{ _('Dithering') }}
-									</label>
-								</div>
-								<div class="controls alert alert-info hint" data-bind="visible: showHints">
-									<span class="icon icon-question-sign" aria-hidden="true"></span>
-									Converts the image to solely black and white pixels.
-									Use this if the laser effect on your material is not able to transfer grayscales.
-								</div>
+                                <div class="checkbox-control-and-label" data-toggle="tooltip" data-placement="right"
+                                     title="<b>Converts the image to solely black and white pixels.</b><br>
+                                        Use this if the laser effect on your material is not able to transfer grayscales.">
+                                    <label class="control-label">{{ _('Dithering') }}</label>
+                                    <div class="controls">
+                                        <label class="checkbox">
+                                            <input type="checkbox" data-bind="checked: imgDithering, event: {change: flag_customized_material}">{{ _('Dithering') }}
+                                        </label>
+                                    </div>
+                                </div>
 							</div>
 						</form>
 						<div class="not_possible_on_this_material" data-bind="visible: !has_engraving_proposal()">
@@ -312,38 +312,49 @@
 						</div>
 						<form class="job_parameters form-horizontal" data-bind="visible: has_cutting_proposal">
 							<div class="control-group">
-								<label class="control-label">Laser Intensity</label>
-								<div class="controls"><input class="param_intensity img_intensity_input" type="number" min="0" max="100"
-															 data-bind="event: {change: flag_customized_material}"
-															 onblur="window.mrbeam.colorDragging.checkConversionParameters()"/>&nbsp;%</div>
-								<div class="controls alert alert-info hint" data-bind="visible: showHints">
-									<span class="icon icon-question-sign" aria-hidden="true"></span>
-									Sets the intensity of the laser. The more intensity the deeper the effect on the material.
-									Cutting needs higher intensities than engraving.
-									The effect in general is dependent from the material and its color and surface.
-								</div>
+                                 <div class="cutting-control-and-label" data-toggle="tooltip" data-placement="right"
+                                      title="<b>Sets the intensity of the laser.</b>The more intensity the deeper the effect on the material.<br>
+									     Cutting needs higher intensities than engraving.<br>
+									     The effect in general is dependent from the material and its color and surface.">
+                                     <label class="control-label">Laser Intensity</label>
+                                     <div class="controls"><input class="param_intensity img_intensity_input" type="number" min="0" max="100"
+                                                                 data-bind="event: {change: flag_customized_material}"
+                                                                 onblur="window.mrbeam.colorDragging.checkConversionParameters()"/>&nbsp;%</div>
+                                 </div>
 							</div>
-							<div class="control-group">
-								<label class="control-label">Laser Speed</label>
-								<div class="controls"><input class="param_feedrate img_intensity_input" type="number" min="20" max="3000"
+
+                            <div class="control-group">
+                                 <div class="cutting-control-and-label" data-toggle="tooltip" data-placement="right"
+                                      title="<b>Sets the velocity of the laser head.</b> The slower the movement the deeper the effect on the material.<br>
+                                        Cutting needs slower movement than engraving.<br>
+									    The effect in general is dependent from the material and its color and surface.">
+                                     <label class="control-label">Laser Speed</label>
+                                     <div class="controls"><input class="param_feedrate img_intensity_input" type="number" min="20" max="3000"
 															 data-bind="event: {change: flag_customized_material}"
 															 onblur="window.mrbeam.colorDragging.checkConversionParameters()"/>&nbsp;mm/min</div>
-								<div class="controls alert alert-info hint" data-bind="visible: showHints">
-									<span class="icon icon-question-sign" aria-hidden="true"></span>
-									Sets the velocity of the laser head. The slower the movement the deeper the effect on the material.
-									Cutting needs slower movement than engraving.
-									The effect in general is dependent from the material and its color and surface.
-								</div>
+                                 </div>
 							</div>
-							<div class="control-group">
-								<label class="control-label">Passes</label>
-								<div class="controls"><input data-bind="event: {change: flag_customized_material}" class="param_passes img_intensity_input" type="number" min="1" max="10" value="1" />&nbsp;&times;</div>
-							</div>
-							<div class="control-group" data-bind="visible: showExpertSettings ">
-								<label class="control-label">Pierce time</label>
-								<div class="controls"><input data-bind="event: {change: flag_customized_material}" class="param_piercetime img_intensity_input" type="number" min="0" max="2000" value="0" />&nbsp;ms</div>
+
+                            <div class="control-group">
+                                <div class="cutting-control-and-label" data-toggle="tooltip" data-placement="right"
+                                      title="Indicates the number of times the laser will run over the design to cut it. Increase the number of passes if the material does not get cut.">
+                                    <label class="control-label">Passes</label>
+                                    <div class="controls"><input data-bind="event: {change: flag_customized_material}" class="param_passes img_intensity_input" type="number" min="1" max="10" value="1" />&nbsp;&times;</div>
+                                </div>
+                            </div>
+
+							<div class="control-group" data-bind="visible: showExpertSettings">
+                                <div class="cutting-control-and-label" data-toggle="tooltip" data-placement="right"
+                                     title="<b>This is the time which Mr Beam pierces into the material without any movement at the beginning of every new line or shape before it starts moving the laser.</b><br>
+                                         For some materials Mr Beam II needs more energy to do the first pierce of a cut or engraving than it needs for the ongoing cutting/engraving.<br>
+                                         If you experience that the laser does not cut or engrave first few millimeters of each new line or shape, try to set a pierce time.
+                                         <i>Try 100ms and adjust if needed.</i>">
+                                    <label class="control-label">Pierce time</label>
+                                    <div class="controls"><input data-bind="event: {change: flag_customized_material}" class="param_piercetime img_intensity_input" type="number" min="0" max="2000" value="0" />&nbsp;ms</div>
+                                </div>
 							</div>
 						</form>
+
 						<div class="not_possible_on_this_material" data-bind="visible: !has_cutting_proposal()">
 							Sorry, there are no cutting settings for this material.
 							<a data-bind="click: function(){ has_cutting_proposal(true); }"> <i class="icon-arrow-right"></i> I know what I am doing! Let me try my own.</a>
@@ -367,9 +378,6 @@
 		<div class="pull-left" style="text-align:left;" data-bind="visible: !slicing_in_progress()">
 			<label class="checkbox">
 				<input type="checkbox" data-bind="checked: showExpertSettings">show advanced settings
-			</label>
-			<label class="checkbox">
-				<input type="checkbox" data-bind="checked: showHints">show explanations
 			</label>
 		</div>
 
