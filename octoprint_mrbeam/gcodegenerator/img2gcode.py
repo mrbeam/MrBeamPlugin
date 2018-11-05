@@ -36,6 +36,13 @@ from img_separator import ImageSeparator
 
 class ImageProcessor():
 
+	ENGRAVING_MODE_FAST         = 'fast'
+	ENGRAVING_MODE_PRECISE      = 'precise'
+	ENGRAVING_MODE_BASIC        = 'basic'
+
+	ENGRAVING_MODE_DEFAULT      = ENGRAVING_MODE_PRECISE
+
+
 	def __init__( self,
 	              output_filehandle = None,
 	              workingAreaWidth = None,
@@ -50,22 +57,25 @@ class ImageProcessor():
 	              speed_black = 500,
 	              speed_white = 3000,
 	              dithering = False,
-	              separation = True,
+	              engraving_mode = None,
 	              pierce_time = 0,
 	              overshoot_distance = 0, # disabled for now. TODO: enable (1) when switch on delay is HW fixed.
 	              material = None):
 
 		self.log = logging.getLogger("octoprint.plugins.mrbeam.img2gcode")
-		self.debugPreprocessing = False
 
 		# if True base64 image data urls embedded into the GCODE will be broken into short lines. If False it's one long line
 		self.MULTILINE_DATA_URLS = False
 
-		self.debug = False
+		self.debug = False # general debug
+		self.debugPreprocessing = False # write each step image to /tmp
+
 		try:
 			self.debug = _mrbeam_plugin_implementation._settings.get(["dev", "debug_gcode"])
+			self.debugPreprocessing = _mrbeam_plugin_implementation._settings.get(["dev", "debug_gcode"])
 		except NameError:
 			self.debug = True
+			self.debugPreprocessing = True
 			self.log.info("Gcode debugging enabled (not running in Mr Beam Plugin environment")
 		else:
 			self.log.info("Gcode debugging {} (read from config)".format(self.debug))
@@ -91,7 +101,10 @@ class ImageProcessor():
 		self.sharpeningFactor = float(sharpening) if sharpening else 0.0
 		self.dithering = (dithering == True or dithering == "True")
 		self.overshoot_distance = overshoot_distance
-		self.separation = (separation == True or separation == "True")
+		# engraving mode switches
+		self.engraving_mode = engraving_mode or self.ENGRAVING_MODE_DEFAULT
+		self.separation = (self.engraving_mode == self.ENGRAVING_MODE_FAST)
+		self.line_by_line = (self.engraving_mode == self.ENGRAVING_MODE_BASIC)
 
 		# overshoot settings
 		# given an acceleration of 700mm/s², these are the ways neccessary to reach target speed of
@@ -156,35 +169,59 @@ class ImageProcessor():
 		start = time.time()
 		orig_w, orig_h = orig_img.size
 		if(h_mm < 0):
-			ratio = orig_w / float(orig_h)
-			h_mm = w_mm / ratio
+			ratio = float(orig_w) / float(orig_h)
+			tmp_h_mm = w_mm / ratio
 
 		dest_wpx = int(w_mm/self.beam)
 		dest_hpx = int(h_mm/self.beam)
 
-		self.log.info("scaling {}x{} to {}x{}".format(orig_w, orig_h, dest_wpx, dest_hpx))
+		# do not resize if its just one pixel
+		if abs(dest_wpx - orig_w) <= 1:
+			dest_wpx = orig_w
+		if abs(dest_hpx - orig_h) <= 1:
+			dest_hpx = orig_h
+
 
 		# 1. scale
-		img = orig_img.resize((dest_wpx, dest_hpx))
-		#img = orig_img.resize((dest_wpx, dest_hpx), Image.ANTIALIAS)
+		if dest_wpx != orig_w or dest_hpx != orig_h:
+			self.log.info("scaling {}x{} to {}x{}".format(orig_w, orig_h, dest_wpx, dest_hpx))
+			img = orig_img.resize((dest_wpx, dest_hpx))
+		else:
+			img = orig_img
+			self.log.info("scaling - nothing to do, image remains {}x{}".format(orig_w, orig_h))
 
 		self.log.debug("scaling took {} seconds".format(time.time()-start))
 		if(self.debugPreprocessing):
 			img.save("/tmp/img2gcode_1_resized.png")
 
+
+		# 1a. crop to bbox
+		# TODO: this removes only transparent pixels, white pixels are still counted as content.
+		bbox = img.getbbox()
+		if bbox is None:
+			self.log.debug("img_prepare() Empty bounding box, nothing to engrave. Returning")
+			return []
+
+		left, upper, right, lower = bbox # bbox is a tuple of four
+		img = img.crop(bbox)
+		bb_w = right - left
+		bb_h = lower - upper
+		bb_area = bb_w * bb_h
+		self.log.debug("Cropped to bbox: bb_area: %s, bb_w: %s, bb_h: %s, left: %s, upper: %s, right: %s, lower: %s ", bb_area, bb_w, bb_h, left, upper, right, lower)
+		if (self.debugPreprocessing):
+			img.save("/tmp/img2gcode_1a_cropped.png")
+
+
 		# 2. remove transparency
 		start = time.time()
 		if (not self.is_inverted) and (img.mode == 'RGBA'):
-			whitebg = Image.new('RGBA', (dest_wpx, dest_hpx), "white")
+			whitebg = Image.new('RGBA', (bb_w, bb_h), "white")
 			img = Image.alpha_composite(whitebg, img)
 
 			self.log.debug("transparency removal took {} seconds".format(time.time()-start))
 			if(self.debugPreprocessing):
 				img.save("/tmp/img2gcode_2_whitebg.png")
 
-
-		# mirror?
-		#img = img.transpose(Image.FLIP_LEFT_RIGHT)
 
 		# 3. contrast
 		start = time.time()
@@ -194,6 +231,7 @@ class ImageProcessor():
 			self.log.debug("contrast enhancement took {} seconds".format(time.time()-start))
 			if(self.debugPreprocessing):
 				img.save("/tmp/img2gcode_3_contrast.png")
+
 
 		# 4. greyscale
 		start = time.time()
@@ -206,6 +244,7 @@ class ImageProcessor():
 		if(self.material != "default") :
 			# TODO
 			pass
+
 
 		# 5. sharpness (factor: 1 => unchanged , 25 => almost b/w)
 		start = time.time()
@@ -224,14 +263,21 @@ class ImageProcessor():
 			if(self.debugPreprocessing):
 				img.save("/tmp/img2gcode_6_dithered.png")
 
+
 		# 7. split image at white pixels
 		separator = ImageSeparator()
 
 		# 7.1. split by contour
-		start = time.time()
-		contour_parts = separator.separate_contours(img, threshold=self.ignore_brighter_than+1)
-		self.log.debug("contour separation took {} seconds".format(time.time()-start))
-		self.log.debug("separated into {} contours".format(len(contour_parts)))
+		contour_parts = []
+		if self.line_by_line:
+			self.log.debug("skipping contour separation, user selected line-by-line mode")
+			contour_parts = [{'i': img, 'x': left, 'y':upper, 'id':'noid'}]
+		else:
+			self.log.debug("contour separation starting...")
+			start = time.time()
+			contour_parts = separator.separate_contours(img, x=left, y=upper, threshold=self.ignore_brighter_than+1)
+			self.log.debug("contour separation took {} seconds".format(time.time()-start))
+			self.log.debug("separated into {} contours".format(len(contour_parts)))
 
 		parts = []
 		start = time.time()
@@ -242,6 +288,7 @@ class ImageProcessor():
 
 		if(self.separation == True):
 			for cp in contour_parts:
+
 				# 7.2. split contour by left-pixels-first method
 				img_data = cp['i']
 				off_x = cp['x']
@@ -260,6 +307,7 @@ class ImageProcessor():
 			for i,p in enumerate(parts):
 				img_data = p['i']
 				img_data.save("/tmp/img2gcode_7_part_{:0>3}_@{},{}.png".format(i, p['x'], p['y']))
+
 		return parts
 
 
@@ -766,7 +814,7 @@ M2
 			speed_black = options.speed_black,
 			speed_white = options.speed_white,
 			dithering = boolDither,
-			separation = True,
+			engraving_mode=ImageProcessor.ENGRAVING_MODE_FAST,
 			pierce_time = options.pierce_time,
 			material = None
 		)

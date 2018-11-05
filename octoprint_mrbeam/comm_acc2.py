@@ -43,7 +43,7 @@ class MachineCom(object):
 	GRBL_VERSION_20180223_61638c5 = '0.9g_20180223_61638c5'
 	GRBL_FEAT_BLOCK_VERSION_LIST_RESCUE_FROM_HOME = (GRBL_VERSION_20170919_22270fa)
 	#
-	# trieal grbl
+	# trial grbl
 	# - adds rx-buffer state with every ok
 	# - adds alarm mesage on rx buffer overrun
 	GRBL_VERSION_20180828_ac367ff = '0.9g_20180828_ac367ff'
@@ -165,6 +165,8 @@ class MachineCom(object):
 		self._grbl_settings_correction_ts = 0
 		self._rx_stats = RxBufferStats()
 
+		self.grbl_auto_update_enabled = _mrbeam_plugin_implementation._settings.get(['dev', 'grbl_auto_update_enabled'])
+
 		#grbl features
 		self.grbl_feat_rescue_from_home = False
 		self.grbl_feat_report_rx_buffer_state = False
@@ -186,23 +188,23 @@ class MachineCom(object):
 		# threads
 		self.monitoring_thread = None
 		self.sending_thread = None
-		self.start_monitoring_thread()
-		self.start_status_polling_timer()
+		self._start_monitoring_thread()
+		self._start_status_polling_timer()
 
 
-	def start_monitoring_thread(self):
+	def _start_monitoring_thread(self):
 		self._monitoring_active = True
 		self.monitoring_thread = threading.Thread(target=self._monitor_loop, name="comm._monitoring_thread")
 		self.monitoring_thread.daemon = True
 		self.monitoring_thread.start()
 
-	def start_sending_thread(self):
+	def _start_sending_thread(self):
 		self._sending_active = True
 		self.sending_thread = threading.Thread(target=self._send_loop, name="comm._sending_thread")
 		self.sending_thread.daemon = True
 		self.sending_thread.start()
 
-	def start_status_polling_timer(self):
+	def _start_status_polling_timer(self):
 		if self._status_polling_timer is not None:
 			self._status_polling_timer.cancel()
 		self._status_polling_timer = RepeatedTimer(0.1, self._poll_status)
@@ -228,6 +230,12 @@ class MachineCom(object):
 
 		self._logger.info("Connected to: %s, starting monitor" % self._serial, terminal_as_comm=True)
 		self._changeState(self.STATE_CONNECTING)
+
+		if self.grbl_auto_update_enabled and self._laserCutterProfile['grbl']['auto_update_file']:
+			self._logger.info("GRBL auto updating to version: %s, file: %s", self._laserCutterProfile['grbl']['auto_update_version'], self._laserCutterProfile['grbl']['auto_update_file'])
+			self.flash_grbl(grbl_file=self._laserCutterProfile['grbl']['auto_update_file'], is_connected=False)
+
+		# reset on connect
 		if self._laserCutterProfile['grbl']['resetOnConnect']:
 			self._serial.flushInput()
 			self._serial.flushOutput()
@@ -698,23 +706,17 @@ class MachineCom(object):
 
 		self.grbl_feat_rescue_from_home = self._grbl_version not in self.GRBL_FEAT_BLOCK_VERSION_LIST_RESCUE_FROM_HOME
 		self.grbl_feat_report_rx_buffer_state = self._grbl_version not in self.GRBL_FEAT_BLOCK_VERSION_LIST_RX_BUFFER_REPORTING
+		self.reset_grbl_auto_update_config()
 
-		self._logger.info("GRBL version: %s, rescue_from_home: %s, report_rx_buffer_state: %s", self._grbl_version, self.grbl_feat_rescue_from_home, self.grbl_feat_report_rx_buffer_state)
+		self._logger.info("GRBL version: %s, rescue_from_home: %s, report_rx_buffer_state: %s, auto_update: %s",
+		                  self._grbl_version,
+		                  self.grbl_feat_rescue_from_home,
+		                  self.grbl_feat_report_rx_buffer_state,
+		                  self.grbl_auto_update_enabled)
 
 		self._onConnected(self.STATE_LOCKED)
-
 		self.correct_grbl_settings()
 
-		# if not self.isOperational():
-		# 	self._onConnected(self.STATE_LOCKED)
-		# 	versionMatch = re.search("Grbl (?P<grbl>.+?)(_(?P<git>[0-9a-f]{7})(?P<dirty>-dirty)?)? \[.+\]", line)
-		# 	if versionMatch:
-		# 		# TODO uncomment version check when ready to test
-		# 		versionDict = versionMatch.groupdict()
-		# 		self._writeGrblVersionToFile(versionDict)
-		# 		if self._compareGrblVersion(versionDict) is False:
-		# 			self._flashGrbl()
-		# 		self._onConnected(self.STATE_LOCKED)
 
 	def _handle_settings_message(self, line):
 		"""
@@ -888,7 +890,7 @@ class MachineCom(object):
 			self._changeState(nextState)
 
 		if self.sending_thread is None or not self.sending_thread.isAlive():
-			self.start_sending_thread()
+			self._start_sending_thread()
 
 		payload = dict(grbl_version=self._grbl_version, port=self._port, baudrate=self._baudrate)
 		eventManager().fire(OctoPrintEvents.CONNECTED, payload)
@@ -951,11 +953,13 @@ class MachineCom(object):
 		self._serialLogger.debug(message)
 
 
-	def flash_grbl(self, grbl_file=None, verify_only=False):
+	def flash_grbl(self, grbl_file=None, verify_only=False, is_connected=True):
 		"""
 		Flashes the specified grbl file (.hex). This file must not contain a bootloader.
 		:param grbl_file:
 		:param verify_only: If true, nothing is written, current grbl is verified only
+		:param is_connected: If True, serial connection to grbl is closed before flashing and reconnected afterwards.
+			Auto updates is executed before connection to grbl is established so in this case this param should be set to False.
 		"""
 		log_verb = 'verifying' if verify_only else 'flashing'
 
@@ -992,8 +996,9 @@ class MachineCom(object):
 
 		self._logger.info("{} grbl: '%s'", log_verb.capitalize(), grbl_path)
 
-		self.close(isError=False, next_state=self.STATE_FLASHING)
-		time.sleep(1)
+		if is_connected:
+			self.close(isError=False, next_state=self.STATE_FLASHING)
+			time.sleep(1)
 
 		# FYI: Fuses can't be changed from over srial
 		params = ["avrdude", "-patmega328p", "-carduino",
@@ -1043,18 +1048,43 @@ class MachineCom(object):
 			self._logger.debug(msg_long, terminal_as_comm=True)
 			self._logger.info(msg_short, terminal_as_comm=True)
 
-		# reconnect
 		time.sleep(1.0)
-		timeout = 60
-		self._logger.info("Waiting before reconnect. (max %s secs)", timeout, terminal_as_comm=True)
-		if self.monitoring_thread is not None:
-			self.monitoring_thread.join(timeout)
 
-		if self.monitoring_thread is not None or not self.monitoring_thread.isAlive():
-			# will open serial connection
-			self.start_monitoring_thread()
-		else:
-			self._logger.info("Can't reconnect automacically. Try to reconnect manually or reboot system.")
+		# reconnect
+		if is_connected:
+			timeout = 60
+			self._logger.info("Waiting before reconnect. (max %s secs)", timeout, terminal_as_comm=True)
+			if self.monitoring_thread is not None and threading.current_thread() != self.monitoring_thread:
+				self.monitoring_thread.join(timeout)
+
+			if self.monitoring_thread is not None and not self.monitoring_thread.isAlive():
+				# will open serial connection
+				self._start_monitoring_thread()
+			else:
+				self._logger.info("Can't reconnect automacically. Try to reconnect manually or reboot system.")
+
+
+	def reset_grbl_auto_update_config(self):
+		"""
+		Resets grbl auto update configuration in lasercutterProfile if current grbl version is expected version.
+		This makes sure that once the auto update got executed sucessfully it's not done again and again.
+		Only has effect IF:
+		 - grbl_auto_update_enabled in config.yaml is True (default)
+		"""
+		if self.grbl_auto_update_enabled and self._laserCutterProfile['grbl']['auto_update_version'] is not None:
+			if self._grbl_version == self._laserCutterProfile['grbl']['auto_update_version']:
+				self._logger.info("Removing grbl auto update flags from lasercutterprofile...")
+				try:
+					self._laserCutterProfile['grbl']['auto_update_file'] = None
+					self._laserCutterProfile['grbl']['auto_update_version'] = None
+					laserCutterProfileManager().save(self._laserCutterProfile, allow_overwrite=True)
+				except:
+					self._logger.exception("Exception while saving lasercutterProfile changes to auto update controls: ")
+			else:
+				self._logger.warn("GRBL auto update still set: auto_update_file: %s, auto_update_version: %s, current grbl version: %s",
+				                  self._laserCutterProfile['grbl']['auto_update_file'],
+				                  self._laserCutterProfile['grbl']['auto_update_version'],
+				                  self._grbl_version)
 
 
 	def rescue_from_home_pos(self):

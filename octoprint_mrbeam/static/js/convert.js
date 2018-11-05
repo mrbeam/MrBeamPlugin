@@ -1103,7 +1103,7 @@ $(function(){
 				"beam_diameter" : self.beamDiameter(),
 				"pierce_time": self.engravingPiercetime(),
                 "material": self.engravingMaterial,
-				"fast_mode": $('#svgtogcode_img_engraving_mode').hasClass('active')
+				"engraving_mode": $('#svgtogcode_img_engraving_mode > .btn.active').attr('value')
 			};
 			return data;
 		};

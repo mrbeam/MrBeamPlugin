@@ -287,9 +287,9 @@ $(function() {
         self._debugDaShit = function(stuff){
             if (self.DEBUG) {
                 if (typeof(stuff) === "object") {
-                    console.log("ANDYTEST " + stuff.shift(), stuff);
+                    console.log("_debugDaShit " + stuff.shift(), stuff);
                 } else {
-                    console.log("ANDYTEST " + stuff);
+                    console.log("_debugDaShit " + stuff);
                 }
             }
         }
