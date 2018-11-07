@@ -370,10 +370,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		wizard = render_kwargs["templates"] is not None and bool(render_kwargs["templates"]["wizard"]["order"])
 
+		self._logger.info("ANDYTEST render_kwargs: %s", render_kwargs)
+		self._logger.info("ANDYTEST wizard: %s", wizard)
+
 		if render_kwargs["templates"]["wizard"]["entries"]:
-			if render_kwargs["templates"]["wizard"]["entries"]["firstrunstart"]:
+			if "firstrunstart" in render_kwargs["templates"]["wizard"]["entries"]:
 				render_kwargs["templates"]["wizard"]["entries"]["firstrunstart"][1]["template"] = "wizard/firstrun_start.jinja2"
-			if render_kwargs["templates"]["wizard"]["entries"]["firstrunend"]:
+			if "firstrunend" in render_kwargs["templates"]["wizard"]["entries"]:
 				render_kwargs["templates"]["wizard"]["entries"]["firstrunend"][1]["template"] = "wizard/firstrun_end.jinja2"
 
 		display_version_string = "{} on {}".format(self._plugin_version, self.getHostname())
@@ -483,13 +486,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# if result:
 		# 	self._logger.info("Setup Wizard showing")
 		# return result
-		return self.isFirstRun()
+		# return self.isFirstRun()
+		return True
 
 	def get_wizard_details(self):
 		return dict()
 
 	def get_wizard_version(self):
-		return 12 #random number. but we can't go down anymore, just up.
+		return 13 #random number. but we can't go down anymore, just up.
 
 	def on_wizard_finish(self, handled):
 		self._logger.info("Setup Wizard finished.")
@@ -500,13 +504,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def _is_wifi_wizard_required(self):
 		result = False
-		try:
-			pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
-			if pluginInfo is not None:
-				status = pluginInfo.implementation._get_status()
-				result = not status["connections"]["wifi"]
-		except Exception as e:
-			self._logger.exception("Exception while reading wifi state from netconnectd:")
+		if self.isFirstRun():
+			try:
+				pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
+				if pluginInfo is not None:
+					status = pluginInfo.implementation._get_status()
+					result = not status["connections"]["wifi"]
+			except Exception as e:
+				self._logger.exception("Exception while reading wifi state from netconnectd:")
 
 		self._logger.debug("_is_wifi_wizard_required() %s", result)
 		return result
@@ -536,18 +541,16 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def _get_acl_additional_wizard_template_data(self):
 		return dict(mandatory=False, suffix="_acl")
 
-
 	def _get_acl_wizard_name(self):
 		return gettext("Access Control")
-
-	# def _on_acl_wizard_finish(self, handled):
-	# 	self._log.info("ANDYTEST _on_acl_wizard_finish() test handled: " + str(handled));
 
 
 	# ~~ Saftey subwizard
 
 	def _is_lasersafety_wizard_required(self):
-		return True
+		result = self.isFirstRun()
+		self._logger.debug("_is_lasersafety_wizard_required() %s", result)
+		return result
 
 	def _get_lasersafety_wizard_details(self):
 		return dict()
@@ -558,8 +561,22 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def _get_lasersafety_wizard_name(self):
 		return gettext("Laser Safety")
 
-	# def _on_acl_wizard_finish(self, handled):
-	# 	self._log.info("ANDYTEST _on_acl_wizard_finish() test handled: " + str(handled));
+	# ~~ Whats new subwizard
+
+	def _is_whatsnew_wizard_required(self):
+		result = not self.isFirstRun()
+		self._logger.debug("_is_whatsnew_wizard_required() %s", result)
+		return result
+
+	def _get_whatsnew_wizard_details(self):
+		return dict()
+
+	def _get_whatsnew_additional_wizard_template_data(self):
+		return dict(mandatory=False, suffix="_whatsnew")
+
+	def _get_whatsnew_wizard_name(self):
+		return gettext("What's New")
+
 
 	@octoprint.plugin.BlueprintPlugin.route("/acl", methods=["POST"])
 	def acl_wizard_api(self):
