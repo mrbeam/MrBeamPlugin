@@ -475,18 +475,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	#~~ WizardPlugin API
 
 	def is_wizard_required(self):
-		# self._logger.info("ANDYTEST is_wizard_required")
-        #
-		# methods = self._get_subwizard_attrs("_is_", "_wizard_required")
-        #
-		# result = self._settings.global_get(["server", "firstRun"])
-		# if result:
-		# 	# don't even go here if firstRun is false
-		# 	result = any(map(lambda m: m(), methods.values()))
-		# if result:
-		# 	self._logger.info("Setup Wizard showing")
-		# return result
-		# return self.isFirstRun()
 		return True
 
 	def get_wizard_details(self):
@@ -524,9 +512,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def _get_wifi_wizard_name(self):
 		return gettext("Wifi Setup")
-
-	# def _on_wifi_wizard_finish(self, handled):
-	# 	self._log.info("ANDYTEST _on_wifi_wizard_finish() handled: " + str(handled));
 
 	#~~ ACL subwizard
 
