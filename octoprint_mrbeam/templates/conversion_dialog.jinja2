@@ -72,9 +72,10 @@
 								 data-bind="
 										click: function(vm, event){ $root.set_material_thickness($data, event); },
 										attr: {id: 'material_thickness_'+$data.thicknessMM },
-										css: {active: _.isEqual($data, $root.selected_material_thickness()), engrave_only: $data.thicknessMM == -1 },
+										css: {active: $root.isThicknessObjEqual($data, $root.selected_material_thickness(), 'active_name'), engrave_only: $data.thicknessMM == -1 },
+{#										css: {active: _.isEqual($data, $root.selected_material_thickness()), engrave_only: $data.thicknessMM == -1 },#}
 										style: { padding: ($data.thicknessMM * $root.mm2px()/2)+'mm 0' },
-										visible: ($root.selected_material_thickness() == null) || _.isEqual($root.selected_material_thickness(), $data),
+										visible: $root.selected_material_thickness() == null || $root.isThicknessObjEqual($data, $root.selected_material_thickness(), 'visible_name'),
 										text: $root.thickness_text($data)
 								 " ></div>
 						</div>
@@ -82,7 +83,6 @@
 				</div>
 
 				<div id="save_material_flyin" data-bind="visible: customized_material()">
-					<a data-bind="click: reset_material_settings"><i class="icon-repeat"></i> {{ _('Reset to defaults') }}</a>
 					<div id="save_material_form" class="dropdown">
 						<a class="dropdown-toggle" data-toggle="dropdown" href="#" ><i class="icon-star"></i> {{ _('Save custom material') }}</a>
 						<div class="dropdown-menu" role="menu" style="padding:.5em">
@@ -96,7 +96,9 @@
 								<div class="control-group" data-bind="visible: has_cutting_proposal()">
 									<label class="control-label" for="custom_mat_th"> {{ _('Thickness') }}</label>
 									<div class="controls">
-										<input id="custom_mat_th" type="number" min="0" max="38" step="0.1" data-bind="value:save_custom_material_thickness"> mm
+										<input id="custom_mat_th" type="number" min="0" max="38" step="0.1" data-bind="textInput:save_custom_material_thickness">
+                                        <span data-bind="visible: save_custom_material_thickness() > 0"> mm</span>
+                                        <span data-bind="visible: save_custom_material_thickness() <= 0"><strong>engrave only</strong></span>
 									</div>
 								</div>
 								<div class="control-group">
@@ -112,6 +114,7 @@
 							</form>
 						</div>
 					</div>
+                    <a data-bind="click: reset_material_settings"><i class="icon-repeat"></i> {{ _('Reset to defaults') }}</a>
 				</div>
 
 				<div id="material_info">

@@ -417,7 +417,6 @@ $(function(){
 		self.material_description = ko.observable('');
 		self.has_engraving_proposal = ko.observable(false);
 		self.has_cutting_proposal = ko.observable(false);
-//		self.custom_materials = ko.observableArray([]);
 		self.custom_materials = ko.observable({});
 
 		self.customized_material = ko.observable(false);
@@ -441,6 +440,23 @@ $(function(){
 			if(mat !== null)
 			return mat === null ? '' : mat.img;
 		 });
+
+        self.load_custom_materials = function(){
+			// fill custom materials
+			self.user_materials_enabled = self.settings.settings.plugins.mrbeam.features.custom_materials();
+			if (self.user_materials_enabled){
+			    console.log("Loading custom materials");
+                OctoPrint.simpleApiCommand("mrbeam", "custom_materials", {})
+                    .done(function(response){
+                        self._update_custom_materials(response.custom_materials);
+                    })
+                    .fail(function(){
+                        console.error("Unable to load custom materials.");
+                    });
+            } else {
+                $('#material_burger_menu').hide()
+            }
+		};
 
 		self.flag_customized_material = function(){
 		    if (self.user_materials_enabled){
@@ -490,7 +506,7 @@ $(function(){
 		self.save_material_settings = function(){
 			var name = self.save_custom_material_name();
 			var key = self._replace_non_ascii(name).toLowerCase();
-			var thickness = self.save_custom_material_thickness();
+			var thickness = parseFloat(self.save_custom_material_thickness());
 			var color = self.save_custom_material_color().substr(1,6);
 			var vectors = self.get_current_multicolor_settings();
 			var strength = 0;
@@ -501,8 +517,9 @@ $(function(){
 				if(s > strength) strongest = v;
 			}
 			var cut_setting = null;
-			if(strongest !== null){
-				cut_setting = {thicknessMM: thickness, cut_i: strongest.intensity_user, cut_f: strongest.feedrate, cut_p: strongest.passes};
+			// if thickness is 0, we assume engrave only
+			if(strongest !== null && thickness > 0){
+				cut_setting = {thicknessMM: thickness, cut_i: parseFloat(strongest.intensity_user), cut_f: parseFloat(strongest.feedrate), cut_p: parseInt(strongest.passes)};
 			} else {
 				thickness = -1; // engrave only
 			}
@@ -534,7 +551,7 @@ $(function(){
 			if(new_material.colors[color]){
 				for (var t = 0; t < new_material.colors[color].cut.length; t++) {
 					var item = new_material.colors[color].cut[t];
-					if(item !== null && item.thicknessMM !== cut_setting.thicknessMM) {
+					if(item !== null && item.thicknessMM > 0 && (cut_setting == null || item.thicknessMM !== cut_setting.thicknessMM)) {
 						tmp.push(item);
 					}
 				}
@@ -562,20 +579,25 @@ $(function(){
 					self._update_custom_materials(response.custom_materials);
 					var fm = self.filteredMaterials();
 						for (var i = 0; i < fm.length; i++) {
-							var m = fm[i];
-							if(m.name === new_material.name){
-								self.selected_material(m);
+							var my_material = fm[i];
+							if(my_material.name === new_material.name){
+								self.selected_material(my_material);
 								self.selected_material_color(color);
+								self._set_available_material_thicknesses(my_material, color);
 								self.selected_material_thickness(cut_setting);
 								self.reset_material_settings();
 								break;
 							}
-
 						}
-//					self.selected_material(new_material);
 				})
                 .fail(function(){
-					console.error("unable to save custom material:", postData);
+					console.error("Unable to save custom material: ", postData);
+					new PNotify({
+                        title: "Error while saving settings!",
+                        text: "Unable to save your custom material settings at the moment.<br/>Check connection to Mr Beam II and try again.",
+                        type: "error",
+                        hide: true
+                    });
 				});
 		};
 
@@ -585,6 +607,7 @@ $(function(){
 				var cm = list[k];
 				tmp[k] = cm;
 			}
+			console.log("Loaded custom material settings: ", Object.keys(tmp).length);
 			self.custom_materials(tmp);
 		};
 
@@ -671,21 +694,12 @@ $(function(){
 			var material = self.selected_material();
 
 			if(material !== null && color !== null){
+                self._set_available_material_thicknesses(material, color);
 
-				// autoselect thickness if only one available
-				var available_thickness = material.colors[color].cut;
-				if(material.colors[color].engrave !== null){
-					available_thickness = available_thickness.concat(self.engrave_only_thickness);
-				}
-
-                console.log("available_thickness: "+available_thickness);
-				available_thickness.sort(self._thickness_sort_function);
-
-				self.material_thicknesses(available_thickness);
 				self.selected_material_thickness(null);
-				if(available_thickness.length === 1){
-					if(available_thickness[0] !== null){
-						self.selected_material_thickness(available_thickness[0]);
+				if(self.material_thicknesses().length === 1){
+					if(self.material_thicknesses()[0] !== null){
+						self.selected_material_thickness(self.material_thicknesses()[0]);
 						self.dialog_state('color_assignment');
 					} else {
 						self.selected_material_thickness(null);
@@ -700,6 +714,20 @@ $(function(){
 				self.apply_vector_proposal();
 			}
 		});
+
+		self._set_available_material_thicknesses = function(material, color) {
+		    if(material !== null && color !== null){
+				// autoselect thickness if only one available
+				var available_thickness = material.colors[color].cut;
+				if(material.colors[color].engrave !== null){
+					available_thickness = available_thickness.concat(self.engrave_only_thickness);
+				}
+				available_thickness.sort(self._thickness_sort_function);
+
+                console.log("available_thickness: ", available_thickness);
+				self.material_thicknesses(available_thickness);
+			}
+        };
 
 		self.dialog_state.subscribe(function(new_state){
 			self._update_job_summary();
@@ -725,8 +753,6 @@ $(function(){
 				}
 
 			}
-//			for (var i = 0; i < self.custom_materials().length; i++) {
-//			}
 			// filter predefined materials
 			for(var materialKey in self.material_settings2){
 				var m = self.material_settings2[materialKey];
@@ -808,6 +834,7 @@ $(function(){
 			}
 			self.dialog_state('material_type');
 		};
+
 		self.set_material_thickness = function(thickness, ev){
 			if(typeof ev !== 'undefined' && ev.type === 'click' ){
 				var old = self.selected_material_thickness();
@@ -823,6 +850,22 @@ $(function(){
 				self.dialog_state('material_type');
 			}
 		};
+
+        /**
+         * Used by knockout / jinja to determine of two cut-objects are equal
+         * @returns {boolean|*}
+         */
+        self.isThicknessObjEqual = function(a,b) {
+		    var result = null;
+		    if (a == b ) {
+		        result = true;
+            } else if (!a || !b) {
+		        result = false;
+            } else {
+		        result = a.thicknessMM == b.thicknessMM;
+            }
+		    return result;
+        };
 
 		self.apply_vector_proposal = function(){
 			var material = self.selected_material();
@@ -1095,8 +1138,8 @@ $(function(){
 				"intensity_black" : self.imgIntensityBlack() * self.profile.currentProfileData().laser.intensity_factor(),
 				"intensity_white_user" : parseInt(self.imgIntensityWhite()),
 				"intensity_white" : self.imgIntensityWhite() * self.profile.currentProfileData().laser.intensity_factor(),
-				"speed_black" : self.imgFeedrateBlack(),
-				"speed_white" : self.imgFeedrateWhite(),
+				"speed_black" : parseInt(self.imgFeedrateBlack()),
+				"speed_white" : parseInt(self.imgFeedrateWhite()),
 				"contrast" : self.imgContrast(),
 				"sharpening" : self.imgSharpening(),
 				"dithering" : self.imgDithering(),
@@ -1300,23 +1343,9 @@ $(function(){
             });
 		};
 
-		self.onStartupComplete = function(){
-			// fill custom materials
-			self.user_materials_enabled = self.settings.settings.plugins.mrbeam.features.custom_materials();
-			if (self.user_materials_enabled){
-                OctoPrint.simpleApiCommand("mrbeam", "custom_materials", {})
-                    .done(function(response){
-                        self._update_custom_materials(response.custom_materials);
-                    })
-                    .fail(function(){
-                        console.error("unable to fetch custom materials.");
-                    });
-            } else {
-                material_burger_menu
-                $('#material_burger_menu').hide()
-            }
-
-		};
+		self.onUserLoggedIn = function(user){
+			self.load_custom_materials();
+        };
 
 		self.onSlicingProgress = function(slicer, model_path, machinecode_path, progress){
 			self.slicing_progress(progress);
