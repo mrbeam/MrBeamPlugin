@@ -5,7 +5,7 @@
 
 								<div id="state_accordion">
 									<div class="accordion-heading" id="mrb_state_header">
-										<a class="accordion-toggle" href="#statusbox"><i class="icon-info-sign"></i> {{ _('State') }}:</a><span data-bind="text: state.stateString"></span>
+										<div class="accordion-toggle"><i class="icon-info-sign"></i> {{ _('State') }}:</div><span data-bind="text: state.stateString"></span>
 									</div>
 									<div id="statusbox">
 										<div class="accordion-body collapse in" id="mrb_state_wrapper" data-bind="visible: loginState.isUser() ">
@@ -77,9 +77,9 @@
 											<div data-bind="visible: !state.isLocked() && !state.isFlashing() ">
 											<div class="accordion-heading" id="mrb_state_header">
 												<a href="#control_btns" class="dropdown" data-toggle="collapse" aria-expanded="false">
-												<i class="icon-screenshot"></i> {{ _('Position') }}:
-													<span class="caret"></span>
+												    <i class="icon-screenshot"></i> {{ _('Position') }}:
 												</a>
+                                                <span class="caret" style="vertical-align: middle"></span>
 												<input id="manual_position" class="decent_input" data-bind="attr:{placeholder: state.laserPos}" onsubmit="control.manualPosition"/>
 											</div>
 												<!--<i class="icon-edit"></i>-->
@@ -153,7 +153,7 @@
 
                                 <div class="accordion-group" id="working_area_files">
 									<div class="accordion-heading">
-										<a class="accordion-toggle" href="#wa_filelist"><i class="icon-list"></i> {{ _('Designs') }}</a>
+										<div class="accordion-toggle"><i class="icon-list"></i> {{ _('Designs') }}</div>
 										<a class="accordion-toggle pull-right" data-bind="visible: !working_area_empty(), click: clear" style="margin-right: 1em;" ><i class="icon-remove-sign"></i> {{ _('Clear all') }}</a>
 									</div>
 									<div class="accordion-body">

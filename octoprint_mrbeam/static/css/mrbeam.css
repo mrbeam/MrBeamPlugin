@@ -924,6 +924,14 @@ body {
   display: inline-block;
   color: #e25303;
 }
+
+.octoprint-container .accordion-heading div.accordion-toggle {
+  display: inline-block;
+  padding: 8px 15px;
+  color: #e25303;
+  cursor: default;
+}
+
 .octoprint-container .accordion-heading [class^="icon-"],
 .octoprint-container .accordion-heading [class*=" icon-"] {
   color: #383e42;
