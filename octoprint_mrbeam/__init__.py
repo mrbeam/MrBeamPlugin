@@ -334,7 +334,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/wizard_acl.js", "js/netconnectd_wrapper.js", "js/lasersaftey_viewmodel.js",
 				"js/ready_to_laser_viewmodel.js", "js/lib/screenfull.min.js","js/settings/camera_calibration.js",
 				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js", "js/lib/Color.js", "js/laser_job_done_viewmodel.js", 
-				"js/loadingoverlay_viewmodel.js"],
+				"js/loadingoverlay_viewmodel.js", "js/wizard_whatsnew.js"],
 			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css", "css/quicktext-fonts.css", "css/sliders.css"],
 			less=["less/mrbeam.less"]
 		)
@@ -548,19 +548,76 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	# ~~ Whats new subwizard
 
-	def _is_whatsnew_wizard_required(self):
+	def _is_whatsnew_0_wizard_required(self):
 		result = not self.isFirstRun()
-		self._logger.debug("_is_whatsnew_wizard_required() %s", result)
+		self._logger.debug("_is_whatsnew_0_wizard_required() %s", result)
 		return result
 
-	def _get_whatsnew_wizard_details(self):
+	def _get_whatsnew_0_wizard_details(self):
 		return dict()
 
-	def _get_whatsnew_additional_wizard_template_data(self):
-		return dict(mandatory=False, suffix="_whatsnew")
+	def _get_whatsnew_0_additional_wizard_template_data(self):
+		return dict(mandatory=False, suffix="_whatsnew_0")
 
-	def _get_whatsnew_wizard_name(self):
+	def _get_whatsnew_0_wizard_name(self):
 		return gettext("What's New")
+
+	def _is_whatsnew_1_wizard_required(self):
+		result = not self.isFirstRun()
+		self._logger.debug("_is_whatsnew_1_wizard_required() %s", result)
+		return result
+
+	def _get_whatsnew_1_wizard_details(self):
+		return dict()
+
+	def _get_whatsnew_1_additional_wizard_template_data(self):
+		return dict(mandatory=False, suffix="_whatsnew_1")
+
+	def _get_whatsnew_1_wizard_name(self):
+		return gettext("Custom Material Settings")
+
+	def _is_whatsnew_2_wizard_required(self):
+		result = not self.isFirstRun()
+		self._logger.debug("_is_whatsnew_2_wizard_required() %s", result)
+		return result
+
+	def _get_whatsnew_2_wizard_details(self):
+		return dict()
+
+	def _get_whatsnew_2_additional_wizard_template_data(self):
+		return dict(mandatory=False, suffix="_whatsnew_2")
+
+	def _get_whatsnew_2_wizard_name(self):
+		return gettext("Total Job Duration")
+
+	def _is_whatsnew_3_wizard_required(self):
+		result = not self.isFirstRun()
+		self._logger.debug("_is_whatsnew_4_wizard_required() %s", result)
+		return result
+
+	def _get_whatsnew_3_wizard_details(self):
+		return dict()
+
+	def _get_whatsnew_3_additional_wizard_template_data(self):
+		return dict(mandatory=False, suffix="_whatsnew_3")
+
+	def _get_whatsnew_3_wizard_name(self):
+		return gettext("Engraving Algorithms")
+
+	def _is_whatsnew_4_wizard_required(self):
+		result = not self.isFirstRun()
+		self._logger.debug("_is_whatsnew_4_wizard_required() %s", result)
+		return result
+
+	def _get_whatsnew_4_wizard_details(self):
+		return dict()
+
+	def _get_whatsnew_4_additional_wizard_template_data(self):
+		return dict(mandatory=False, suffix="_whatsnew_4")
+
+	def _get_whatsnew_4_wizard_name(self):
+		return gettext("...and more")
+
 
 
 	@octoprint.plugin.BlueprintPlugin.route("/acl", methods=["POST"])
@@ -1837,7 +1894,8 @@ def __plugin_load__():
 		],
 		appearance=dict(components=dict(
 			order=dict(
-				wizard=["plugin_mrbeam_wifi", "plugin_mrbeam_acl", "plugin_mrbeam_lasersafety"],
+				wizard=["plugin_mrbeam_wifi", "plugin_mrbeam_acl", "plugin_mrbeam_lasersafety",
+				        "plugin_mrbeam_whatsnew_0", "plugin_mrbeam_whatsnew_1", "plugin_mrbeam_whatsnew_2", "plugin_mrbeam_whatsnew_3", "plugin_mrbeam_whatsnew_4"],
 				settings = ['plugin_softwareupdate', 'accesscontrol', 'plugin_netconnectd', 'plugin_mrbeam_conversion',
 				            'plugin_mrbeam_camera', 'logs', 'plugin_mrbeam_debug', 'plugin_mrbeam_about']
 			),
