@@ -14,7 +14,7 @@
         </div>
         <div class="modal-footer">
             <h4 data-bind='visible: is_dust_mode()' class="pull-right" >Almost done...</h4>
-            <a class="btn btn-primary" data-bind='visible: !is_dust_mode(), click: cancel_btn' aria-hidden="true">{{ _('OK') }}</a>
+            <a class="btn btn-primary" id="job_done_btn" data-bind='visible: !is_dust_mode(), click: cancel_btn' aria-hidden="true">{{ _('OK') }}</a>
         </div>
     </div>
 </div>

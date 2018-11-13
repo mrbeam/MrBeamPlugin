@@ -219,7 +219,7 @@
                                      <i>Try 100ms and adjust if needed.</i>">
                                     <label class="control-label">Pierce time</label>
                                     <div class="controls">
-                                        <input data-bind="value: engravingPiercetime, event: {change: flag_customized_material}"
+                                        <input id="pierce_time_in" data-bind="value: engravingPiercetime, event: {change: flag_customized_material}"
                                                  class="param_piercetime decimal_input" type="number" min="0" max="2000" value="0" />&nbsp;ms
                                     </div>
                                 </div>
@@ -246,9 +246,9 @@
                                     <div class="controls">
 
                                   <div class="btn-group" id="svgtogcode_img_engraving_mode" data-toggle="buttons-radio">
-                                    <button type="button" value="fast" class="btn btn-default">Fast</button>
-                                    <button type="button" value="precise" class="btn btn-default active">Precise</button>
-                                    <button type="button" value="basic" class="btn btn-default">Basic</button>
+                                    <button type="button" id="fast_btn" value="fast" class="btn btn-default">Fast</button>
+                                    <button type="button" id="precise_btn" value="precise" class="btn btn-default active">Precise</button>
+                                    <button type="button" id="basic_btn" value="basic" class="btn btn-default">Basic</button>
                                   </div>
                                 </div>
                               </div>
@@ -378,14 +378,14 @@
     <div class="modal-footer">
 		<div class="pull-left" style="text-align:left;" data-bind="visible: !slicing_in_progress()">
 			<label class="checkbox">
-				<input type="checkbox" data-bind="checked: showExpertSettings">show advanced settings
+				<input type="checkbox" id="advanced_settings_cb" data-bind="checked: showExpertSettings">show advanced settings
 			</label>
 		</div>
 
         <a href="#" class="btn" aria-hidden="true"
 		   data-bind="click: $root.cancel_conversion(),
 					visible: !slicing_in_progress()">{{ _('Cancel') }}</a>
-        <a href="#" class="btn btn-primary"
+        <a href="#"  class="btn btn-primary" id="start_job_btn"
 		   data-bind="click: function() { if ($root.enableConvertButton()) { $root.convert() } },
 					enabled: enableConvertButton,
 					visible: !slicing_in_progress(),
