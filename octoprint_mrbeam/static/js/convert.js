@@ -2,6 +2,9 @@
 
 $(function(){
 
+
+
+
 	function VectorConversionViewModel(params) {
 		var self = this;
 
@@ -24,13 +27,14 @@ $(function(){
 
 		self.dialog_state = ko.observable('color_assignment');
 
-		self.user_materials_enabled = false;
+		// flag to disable this feature.
+		self.user_materials_enabled = true;
 
 		// expert settings
 		self.showHints = ko.observable(false);
 		self.showExpertSettings = ko.observable(false);
 		self.gcodeFilename = ko.observable();
-		self.pierceTime = ko.observable(0);
+		// self.pierceTime = ko.observable(0);
 
 		// vector settings
 		self.show_vector_parameters = ko.observable(true);
@@ -50,7 +54,7 @@ $(function(){
 				laser_type: 'MrBeamII-1.0',
 				colors: {
 					'000000': {
-						engrave: {eng_i:[0,100], eng_f:[1000, 30], pierceTime: 0, dithering: false },
+						engrave: {eng_i:[0,100], eng_f:[1000, 30], eng_pierce: 0, dithering: false },
 						cut: []
 					}
 				}
@@ -64,7 +68,7 @@ $(function(){
 				laser_type: 'MrBeamII-1.0',
 				colors: {
 					'd4b26f': {
-						engrave: {eng_i:[0,20], eng_f:[2000,350], pierceTime: 0, dithering: false },
+						engrave: {eng_i:[0,20], eng_f:[2000,350], eng_pierce: 0, dithering: false },
 						cut: [
 							{thicknessMM: 1, cut_i:80, cut_f:525, cut_p:2},
 							{thicknessMM: 2, cut_i:100, cut_f:525, cut_p:1},
@@ -84,7 +88,7 @@ $(function(){
 				laser_type: 'MrBeamII-1.0',
 				colors: {
 					'9c642b': {
-						engrave: {eng_i:[0,100], eng_f:[2000,260], pierceTime: 0, dithering: false },
+						engrave: {eng_i:[0,100], eng_f:[2000,260], eng_pierce: 0, dithering: false },
 						cut: []
 					}
 				}
@@ -98,7 +102,7 @@ $(function(){
 				laser_type: 'MrBeamII-1.0',
 				colors: {
 					'8b624a': {
-						engrave: {eng_i:[10,25], eng_f:[2000,850], pierceTime: 0, dithering: false },
+						engrave: {eng_i:[10,25], eng_f:[2000,850], eng_pierce: 0, dithering: false },
 						cut: [
 							{thicknessMM: 2, cut_i:100, cut_f:375, cut_p:4},
 							{thicknessMM: 3, cut_i:100, cut_f:375, cut_p:4},
@@ -117,7 +121,7 @@ $(function(){
 				laser_type: 'MrBeamII-1.0',
 				colors: {
 					'8b624a': {
-						engrave: {eng_i:[10,25], eng_f:[2000,850], pierceTime: 0, dithering: false },
+						engrave: {eng_i:[10,25], eng_f:[2000,850], eng_pierce: 0, dithering: false },
 						cut: [
 							{thicknessMM: 5, cut_i:100, cut_f:300, cut_p:4}
 						]
@@ -135,7 +139,7 @@ $(function(){
 				laser_type: 'MrBeamII-1.0',
 				colors: {
 					'c7c97c': {
-						engrave: {eng_i:[10,25], eng_f:[2000,1300], pierceTime: 0, dithering: false },
+						engrave: {eng_i:[10,25], eng_f:[2000,1300], eng_pierce: 0, dithering: false },
 						cut: [
 							{thicknessMM: 2.5, cut_i:100, cut_f:330, cut_p:3}
 						]
@@ -152,56 +156,56 @@ $(function(){
 				colors: {
 					'EB5A3E': {
 						name: 'orange',
-						engrave: {eng_i:[0,35], eng_f:[1600,1600], pierceTime: 0, dithering: false },
+						engrave: {eng_i:[0,35], eng_f:[1600,1600], eng_pierce: 0, dithering: false },
 						cut: [
 							{thicknessMM: 3, cut_i:100, cut_f:550, cut_p:2}
 						]
 					},
 					'F49A39': {
 						name: 'yellow',
-						engrave: {eng_i:[0,30], eng_f:[1200,1200], pierceTime: 0, dithering: false },
+						engrave: {eng_i:[0,30], eng_f:[1200,1200], eng_pierce: 0, dithering: false },
 						cut: [
 							{thicknessMM: 3, cut_i:100, cut_f:625, cut_p:2}
 						]
 					},
 					'293365': {
 						name: 'blue',
-						engrave: {eng_i:[0,35], eng_f:[1600,1600], pierceTime: 0, dithering: false },
+						engrave: {eng_i:[0,35], eng_f:[1600,1600], eng_pierce: 0, dithering: false },
 						cut: [
 							{thicknessMM: 3, cut_i:100, cut_f:500, cut_p:2}
 						]
 					},
 					'322F33': {
 						name: 'black',
-						engrave: {eng_i:[0,30], eng_f:[1600,1600], pierceTime: 0, dithering: false },
+						engrave: {eng_i:[0,30], eng_f:[1600,1600], eng_pierce: 0, dithering: false },
 						cut: [
 							{thicknessMM: 3, cut_i:100, cut_f:400, cut_p:2}
 						]
 					},
 					'54392E': {
 						name: 'brown',
-						engrave: {eng_i:[0,30], eng_f:[1600,1600], pierceTime: 0, dithering: false },
+						engrave: {eng_i:[0,30], eng_f:[1600,1600], eng_pierce: 0, dithering: false },
 						cut: [
 							{thicknessMM: 3, cut_i:100, cut_f:500, cut_p:2}
 						]
 					},
 					'A21F25': {
 						name: 'dunkelrot',
-						engrave: {eng_i:[0,30], eng_f:[1600,1600], pierceTime: 0, dithering: false },
+						engrave: {eng_i:[0,30], eng_f:[1600,1600], eng_pierce: 0, dithering: false },
 						cut: [
 							{thicknessMM: 3, cut_i:100, cut_f:550, cut_p:2}
 						]
 					},
 					'3E613E': {
 						name: 'green',
-						engrave: {eng_i:[0,30], eng_f:[1600,1600], pierceTime: 0, dithering: false },
+						engrave: {eng_i:[0,30], eng_f:[1600,1600], eng_pierce: 0, dithering: false },
 						cut: [
 							{thicknessMM: 3, cut_i:100, cut_f:500, cut_p:2}
 						]
 					},
 					'D91F48': {
 						name: 'pink',
-						engrave: {eng_i:[0,40], eng_f:[1600,1600], pierceTime: 0, dithering: false },
+						engrave: {eng_i:[0,40], eng_f:[1600,1600], eng_pierce: 0, dithering: false },
 						cut: [
 							{thicknessMM: 3, cut_i:100, cut_f:600, cut_p:2}
 						]
@@ -321,7 +325,7 @@ $(function(){
 				laser_type: 'MrBeamII-1.0',
 				colors: {
 					'795f39': {
-						engrave: {eng_i:[0,35], eng_f:[2000,850], pierceTime: 0, dithering: false },
+						engrave: {eng_i:[0,35], eng_f:[2000,850], eng_pierce: 0, dithering: false },
 						cut: [
 							{thicknessMM: 0.8, cut_i:100, cut_f:225, cut_p:2},
 							{thicknessMM: 1.5, cut_i:100, cut_f:110, cut_p:2},
@@ -357,7 +361,7 @@ $(function(){
 				laser_type: 'MrBeamII-1.0',
 				colors: {
 					'e7d27f': {
-						engrave: {eng_i:[18,35], eng_f:[2000,750], pierceTime: 0, dithering: false },
+						engrave: {eng_i:[18,35], eng_f:[2000,750], eng_pierce: 0, dithering: false },
 						cut: [
 							{thicknessMM: 3, cut_i:100, cut_f:110, cut_p:3},
 							{thicknessMM: 4, cut_i:100, cut_f:100, cut_p:3},
@@ -374,7 +378,7 @@ $(function(){
 				laser_type: 'MrBeamII-1.0',
 				colors: {
 					'e7d27f': {
-						engrave: {eng_i:[10,35], eng_f:[2000,850], pierceTime: 0, dithering: false },
+						engrave: {eng_i:[10,35], eng_f:[2000,850], eng_pierce: 0, dithering: false },
 						cut: [
 							{thicknessMM: 6,  cut_i:100, cut_f:160, cut_p:2},
 							{thicknessMM: 10, cut_i:100, cut_f:100, cut_p:3},
@@ -392,7 +396,7 @@ $(function(){
 //				laser_type: 'MrBeamII-1.0',
 //				colors: {
 //					'd4b26f': {
-//						engrave: {eng_i:[0,20], eng_f:[2000,350], pierceTime: 0, dithering: false },
+//						engrave: {eng_i:[0,20], eng_f:[2000,350], eng_pierce: 0, dithering: false },
 //						cut: [
 //							{thicknessMM: 1, cut_i:80, cut_f:700, cut_p:2},
 //							{thicknessMM: 2, cut_i:100, cut_f:700, cut_p:1},
@@ -404,8 +408,8 @@ $(function(){
 //				}
 //			}
 		};
-		self.engrave_only_thickness = {thicknessMM: -1, cut_i:'', cut_f:'', cut_p: 1};
-		self.no_engraving = {eng_i:['',''], eng_f:['',''], pierceTime: 0, dithering: false };
+		self.engrave_only_thickness = {thicknessMM: -1, cut_i:'', cut_f:'', cut_p: 1, cut_pierce: 0};
+		self.no_engraving = {eng_i:['',''], eng_f:['',''], eng_pierce: 0, dithering: false };
 
 		self.material_colors = ko.observableArray([]);
 		self.material_thicknesses = ko.observableArray([]);
@@ -417,7 +421,6 @@ $(function(){
 		self.material_description = ko.observable('');
 		self.has_engraving_proposal = ko.observable(false);
 		self.has_cutting_proposal = ko.observable(false);
-//		self.custom_materials = ko.observableArray([]);
 		self.custom_materials = ko.observable({});
 
 		self.customized_material = ko.observable(false);
@@ -441,6 +444,22 @@ $(function(){
 			if(mat !== null)
 			return mat === null ? '' : mat.img;
 		 });
+
+        self.load_custom_materials = function(){
+			// fill custom materials
+			if (self.user_materials_enabled){
+			    console.log("Loading custom materials");
+                OctoPrint.simpleApiCommand("mrbeam", "custom_materials", {})
+                    .done(function(response){
+                        self._update_custom_materials(response.custom_materials);
+                    })
+                    .fail(function(){
+                        console.error("Unable to load custom materials.");
+                    });
+            } else {
+                $('#material_burger_menu').hide()
+            }
+		};
 
 		self.flag_customized_material = function(){
 		    if (self.user_materials_enabled){
@@ -490,7 +509,7 @@ $(function(){
 		self.save_material_settings = function(){
 			var name = self.save_custom_material_name();
 			var key = self._replace_non_ascii(name).toLowerCase();
-			var thickness = self.save_custom_material_thickness();
+			var thickness = parseFloat(self.save_custom_material_thickness());
 			var color = self.save_custom_material_color().substr(1,6);
 			var vectors = self.get_current_multicolor_settings();
 			var strength = 0;
@@ -501,14 +520,22 @@ $(function(){
 				if(s > strength) strongest = v;
 			}
 			var cut_setting = null;
-			if(strongest !== null){
-				cut_setting = {thicknessMM: thickness, cut_i: strongest.intensity_user, cut_f: strongest.feedrate, cut_p: strongest.passes};
+			// if thickness is 0, we assume engrave only
+			if(strongest !== null && thickness > 0){
+				cut_setting = {thicknessMM: thickness,
+                    cut_i: parseFloat(strongest.intensity_user),
+                    cut_f: parseFloat(strongest.feedrate),
+                    cut_p: parseInt(strongest.passes),
+                    cut_pierce: parseInt(strongest.pierce_time)};
 			} else {
 				thickness = -1; // engrave only
 			}
 
 			var e = self.get_current_engraving_settings();
-			var engrave_setting = {eng_i: [e.intensity_white_user, e.intensity_black_user], eng_f: [e.speed_white, e.speed_black], pierceTime: e.pierce_time, dithering: e.dithering};
+			var engrave_setting = {eng_i: [e.intensity_white_user, e.intensity_black_user],
+                                    eng_f: [e.speed_white, e.speed_black],
+                                    eng_pierce: e.pierce_time,
+                                    dithering: e.dithering};
 
 			var new_material;
 
@@ -534,7 +561,7 @@ $(function(){
 			if(new_material.colors[color]){
 				for (var t = 0; t < new_material.colors[color].cut.length; t++) {
 					var item = new_material.colors[color].cut[t];
-					if(item !== null && item.thicknessMM !== cut_setting.thicknessMM) {
+					if(item !== null && item.thicknessMM > 0 && (cut_setting == null || item.thicknessMM !== cut_setting.thicknessMM)) {
 						tmp.push(item);
 					}
 				}
@@ -562,20 +589,25 @@ $(function(){
 					self._update_custom_materials(response.custom_materials);
 					var fm = self.filteredMaterials();
 						for (var i = 0; i < fm.length; i++) {
-							var m = fm[i];
-							if(m.name === new_material.name){
-								self.selected_material(m);
+							var my_material = fm[i];
+							if(my_material.name === new_material.name){
+								self.selected_material(my_material);
 								self.selected_material_color(color);
+								self._set_available_material_thicknesses(my_material, color);
 								self.selected_material_thickness(cut_setting);
 								self.reset_material_settings();
 								break;
 							}
-
 						}
-//					self.selected_material(new_material);
 				})
                 .fail(function(){
-					console.error("unable to save custom material:", postData);
+					console.error("Unable to save custom material: ", postData);
+					new PNotify({
+                        title: "Error while saving settings!",
+                        text: "Unable to save your custom material settings at the moment.<br/>Check connection to Mr Beam II and try again.",
+                        type: "error",
+                        hide: true
+                    });
 				});
 		};
 
@@ -585,6 +617,7 @@ $(function(){
 				var cm = list[k];
 				tmp[k] = cm;
 			}
+			console.log("Loaded custom material settings: ", Object.keys(tmp).length);
 			self.custom_materials(tmp);
 		};
 
@@ -671,21 +704,12 @@ $(function(){
 			var material = self.selected_material();
 
 			if(material !== null && color !== null){
+                self._set_available_material_thicknesses(material, color);
 
-				// autoselect thickness if only one available
-				var available_thickness = material.colors[color].cut;
-				if(material.colors[color].engrave !== null){
-					available_thickness = available_thickness.concat(self.engrave_only_thickness);
-				}
-
-                console.log("available_thickness: "+available_thickness);
-				available_thickness.sort(self._thickness_sort_function);
-
-				self.material_thicknesses(available_thickness);
 				self.selected_material_thickness(null);
-				if(available_thickness.length === 1){
-					if(available_thickness[0] !== null){
-						self.selected_material_thickness(available_thickness[0]);
+				if(self.material_thicknesses().length === 1){
+					if(self.material_thicknesses()[0] !== null){
+						self.selected_material_thickness(self.material_thicknesses()[0]);
 						self.dialog_state('color_assignment');
 					} else {
 						self.selected_material_thickness(null);
@@ -700,6 +724,20 @@ $(function(){
 				self.apply_vector_proposal();
 			}
 		});
+
+		self._set_available_material_thicknesses = function(material, color) {
+		    if(material !== null && color !== null){
+				// autoselect thickness if only one available
+				var available_thickness = material.colors[color].cut;
+				if(material.colors[color].engrave !== null){
+					available_thickness = available_thickness.concat(self.engrave_only_thickness);
+				}
+				available_thickness.sort(self._thickness_sort_function);
+
+                console.log("available_thickness: ", available_thickness);
+				self.material_thicknesses(available_thickness);
+			}
+        };
 
 		self.dialog_state.subscribe(function(new_state){
 			self._update_job_summary();
@@ -725,8 +763,6 @@ $(function(){
 				}
 
 			}
-//			for (var i = 0; i < self.custom_materials().length; i++) {
-//			}
 			// filter predefined materials
 			for(var materialKey in self.material_settings2){
 				var m = self.material_settings2[materialKey];
@@ -808,6 +844,7 @@ $(function(){
 			}
 			self.dialog_state('material_type');
 		};
+
 		self.set_material_thickness = function(thickness, ev){
 			if(typeof ev !== 'undefined' && ev.type === 'click' ){
 				var old = self.selected_material_thickness();
@@ -823,6 +860,22 @@ $(function(){
 				self.dialog_state('material_type');
 			}
 		};
+
+        /**
+         * Used by knockout / jinja to determine of two cut-objects are equal
+         * @returns {boolean|*}
+         */
+        self.isThicknessObjEqual = function(a,b) {
+		    var result = null;
+		    if (a == b ) {
+		        result = true;
+            } else if (!a || !b) {
+		        result = false;
+            } else {
+		        result = a.thicknessMM == b.thicknessMM;
+            }
+		    return result;
+        };
 
 		self.apply_vector_proposal = function(){
 			var material = self.selected_material();
@@ -842,7 +895,6 @@ $(function(){
 				$(job).find('.param_passes').val(p.cut_p || 0);
 				$(job).find('.param_piercetime').val(p.cut_pierce || 0);
 			}
-//			self.customized_material(false);
 		};
 		self.apply_engraving_proposal = function(){
 			var material = self.selected_material();
@@ -862,7 +914,6 @@ $(function(){
 			self.imgFeedrateBlack(p.eng_f[1]);
 			self.imgDithering(p.dithering);
 			self.engravingPiercetime(p.eng_pierce || 0);
-//			self.customized_material(false);
 		};
 
 		self._find_closest_color_to = function(hex, available_colors){
@@ -1095,13 +1146,13 @@ $(function(){
 				"intensity_black" : self.imgIntensityBlack() * self.profile.currentProfileData().laser.intensity_factor(),
 				"intensity_white_user" : parseInt(self.imgIntensityWhite()),
 				"intensity_white" : self.imgIntensityWhite() * self.profile.currentProfileData().laser.intensity_factor(),
-				"speed_black" : self.imgFeedrateBlack(),
-				"speed_white" : self.imgFeedrateWhite(),
+				"speed_black" : parseInt(self.imgFeedrateBlack()),
+				"speed_white" : parseInt(self.imgFeedrateWhite()),
 				"contrast" : self.imgContrast(),
 				"sharpening" : self.imgSharpening(),
 				"dithering" : self.imgDithering(),
-				"beam_diameter" : self.beamDiameter(),
-				"pierce_time": self.engravingPiercetime(),
+				"beam_diameter" : parseFloat(self.beamDiameter()),
+				"pierce_time": parseInt(self.engravingPiercetime()),
                 "material": self.engravingMaterial,
 				"engraving_mode": $('#svgtogcode_img_engraving_mode > .btn.active').attr('value')
 			};
@@ -1240,7 +1291,7 @@ $(function(){
 								}
 								self.slicing_in_progress(false);
 								new PNotify({
-								title: gettext("Conversion failed"),
+								    title: gettext("Conversion failed"),
 									text: gettext("Unable to start the conversion in the backend. Content length was " + length + " bytes."),
 									type: "error",
 									tag: "conversion_error",
@@ -1251,7 +1302,13 @@ $(function(){
 
 					});
 				} else {
-					console.log('params missing');
+					console.log('Conversion parameter missing');
+					new PNotify({
+                        title: gettext("Parameter missing"),
+                        text: gettext("Unable to start conversion because a parameter is missing."),
+                        type: "warn",
+                        hide: true
+                    });
 				}
 			}
 		};
@@ -1300,23 +1357,9 @@ $(function(){
             });
 		};
 
-		self.onStartupComplete = function(){
-			// fill custom materials
-			self.user_materials_enabled = self.settings.settings.plugins.mrbeam.features.custom_materials();
-			if (self.user_materials_enabled){
-                OctoPrint.simpleApiCommand("mrbeam", "custom_materials", {})
-                    .done(function(response){
-                        self._update_custom_materials(response.custom_materials);
-                    })
-                    .fail(function(){
-                        console.error("unable to fetch custom materials.");
-                    });
-            } else {
-                material_burger_menu
-                $('#material_burger_menu').hide()
-            }
-
-		};
+		self.onUserLoggedIn = function(user){
+			self.load_custom_materials();
+        };
 
 		self.onSlicingProgress = function(slicer, model_path, machinecode_path, progress){
 			self.slicing_progress(progress);
