@@ -258,9 +258,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				optimize_travel = True,
 				small_paths_first = True,
 				clip_working_area = True # https://github.com/mrbeam/MrBeamPlugin/issues/134
-			),
-			features = dict(
-				custom_materials = False
 			)
 		)
 
@@ -285,9 +282,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				clip_working_area = self._settings.get(['gcode_nextgen', 'clip_working_area'])
 			),
 			software_update_branches = self.get_update_branch_info(),
-			features=dict(
-				custom_materials = self._settings.get(['features', 'custom_materials'])
-			)
 		)
 
 	def on_settings_save(self, data):
@@ -307,9 +301,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self._logger.info("Disabling VORLON per user request.", terminal=True)
 		if "gcode_nextgen" in data and isinstance(data['gcode_nextgen'], collections.Iterable) and "clip_working_area" in data['gcode_nextgen']:
 			self._settings.set_boolean(["gcode_nextgen", "clip_working_area"], data['gcode_nextgen']['clip_working_area'])
-		if "features" in data and isinstance(data['features'], collections.Iterable):
-			if 'custom_materials' in data['features']:
-				self._settings.set_boolean(["features", "custom_materials"],data['features']['custom_materials'])
 
 
 	def on_shutdown(self):

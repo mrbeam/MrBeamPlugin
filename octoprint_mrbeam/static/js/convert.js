@@ -2,6 +2,9 @@
 
 $(function(){
 
+
+
+
 	function VectorConversionViewModel(params) {
 		var self = this;
 
@@ -24,7 +27,8 @@ $(function(){
 
 		self.dialog_state = ko.observable('color_assignment');
 
-		self.user_materials_enabled = false;
+		// flag to disable this feature.
+		self.user_materials_enabled = true;
 
 		// expert settings
 		self.showHints = ko.observable(false);
@@ -443,7 +447,6 @@ $(function(){
 
         self.load_custom_materials = function(){
 			// fill custom materials
-			self.user_materials_enabled = self.settings.settings.plugins.mrbeam.features.custom_materials();
 			if (self.user_materials_enabled){
 			    console.log("Loading custom materials");
                 OctoPrint.simpleApiCommand("mrbeam", "custom_materials", {})
