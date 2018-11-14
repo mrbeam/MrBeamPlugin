@@ -51,7 +51,7 @@
 						Then do a homing cycle.<br/>
 						<div style='text-align: center; padding:.5em;'>
 							<div class='btn-group'>
-								<button class="btn btn-default" id="homing_btn" data-bind="enable: state.isLocked() && loginState.isUser(), click: function() { OctoPrint.printer.home(['x', 'y']) }"><i class="icon-home"></i> Homing Cycle</button>
+								<button class="btn btn-default" id="homing_overlay_homing_btn" data-bind="enable: state.isLocked() && loginState.isUser(), click: function() { OctoPrint.printer.home(['x', 'y']) }"><i class="icon-home"></i> Homing Cycle</button>
 							</div>
 						</div>
 					</div>

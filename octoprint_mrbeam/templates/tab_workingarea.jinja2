@@ -159,9 +159,9 @@
 									<div class="accordion-body">
 										<div class="accordion-inner">
 											<div class="row-fluid btn-group">
-												<div class="btn span4" id="file_btn" data-bind="click: function(){$('#designlib_tab_btn').tab('show');}"><i class="icon-file"></i> {{ _('File') }} </div>
-												<div class="btn span4" id="text_btn" data-bind="click: newQuickText"><i class="icon-font"></i> {{ _('Text') }} </div>
-												<div class="btn span4" id="shape_btn" data-bind="click: newQuickShape"><i class="icon-heart-empty"></i> {{ _('Shape') }} </div>
+												<div class="btn span4" id="working_area_tab_file_btn" data-bind="click: function(){$('#designlib_tab_btn').tab('show');}"><i class="icon-file"></i> {{ _('File') }} </div>
+												<div class="btn span4" id="working_area_tab_text_btn" data-bind="click: newQuickText"><i class="icon-font"></i> {{ _('Text') }} </div>
+												<div class="btn span4" id="working_area_tab_shape_btn" data-bind="click: newQuickShape"><i class="icon-heart-empty"></i> {{ _('Shape') }} </div>
 {#												Camera not working, disabled till we fixed this. then set spans of the buttons above to span4 >#}
 {#												<div class="btn span4" data-bind="visible:files.hasCamera(), css: {disabled: !$root.loginState.isUser()}, click: files.takePhoto" >#}
 {#													<i class="icon-camera icon-white"></i>#}
@@ -230,7 +230,7 @@
 															<div class="misfit_warning">
 																<i class="icon-warning-sign" title="{{ _('exceeds working area') }}"></i>&nbsp;
 																<span>Design exceeds the working area.</span>
-																<a href="#" name="make_it_fit" data-bind="click: function(){ $root.fitSVG($data) } ">Make it fit</a>
+																<a href="#" name="working_area_tab_make_it_fit" data-bind="click: function(){ $root.fitSVG($data) } ">Make it fit</a>
 															</div>
 														</div>
 													</div>
@@ -275,7 +275,7 @@
 															<div class="misfit_warning" >
 																<i class="icon-warning-sign" title="{{ _('exceeds working area') }}"></i>&nbsp;
 																<span>Design exceeds the working area.</span>
-																<a href="#" name="make_it_fit" data-bind="click: function(){ $root.fitSVG($data) } ">Make it fit</a>
+																<a href="#" name="working_area_tab_make_it_fit" data-bind="click: function(){ $root.fitSVG($data) } ">Make it fit</a>
 															</div>
 														</div>
 													</div>
@@ -321,7 +321,7 @@
 															<div class="misfit_warning" >
 																<i class="icon-warning-sign" title="{{ _('exceeds working area') }}"></i>&nbsp;
 																<span>Design exceeds the working area.</span>
-																<a href="#" name="make_it_fit" data-bind="click: function(){ $root.fitSVG($data) } ">Make it fit</a>
+																<a href="#" name="working_area_tab_make_it_fit" data-bind="click: function(){ $root.fitSVG($data) } ">Make it fit</a>
 															</div>
 														</div>
 													</div>
@@ -366,7 +366,7 @@
 															<div class="misfit_warning" >
 																<i class="icon-warning-sign" title="{{ _('exceeds working area') }}"></i>&nbsp;
 																<span>Design exceeds the working area.</span>
-																<a href="#" name="make_it_fit" data-bind="click: function(){ $root.fitSVG($data) } ">Make it fit</a>
+																<a href="#" name="working_area_tab_make_it_fit" data-bind="click: function(){ $root.fitSVG($data) } ">Make it fit</a>
 															</div>
 														</div>
 													</div>

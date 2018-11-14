@@ -219,7 +219,7 @@
                                      <i>Try 100ms and adjust if needed.</i>">
                                     <label class="control-label">Pierce time</label>
                                     <div class="controls">
-                                        <input id="pierce_time_in" data-bind="value: engravingPiercetime, event: {change: flag_customized_material}"
+                                        <input id="parameter_assignment_pierce_time_in" data-bind="value: engravingPiercetime, event: {change: flag_customized_material}"
                                                  class="param_piercetime decimal_input" type="number" min="0" max="2000" value="0" />&nbsp;ms
                                     </div>
                                 </div>
@@ -246,9 +246,9 @@
                                     <div class="controls">
 
                                   <div class="btn-group" id="svgtogcode_img_engraving_mode" data-toggle="buttons-radio">
-                                    <button type="button" id="fast_btn" value="fast" class="btn btn-default">Fast</button>
-                                    <button type="button" id="precise_btn" value="precise" class="btn btn-default active">Precise</button>
-                                    <button type="button" id="basic_btn" value="basic" class="btn btn-default">Basic</button>
+                                    <button type="button" id="parameter_assignment_engraving_mode_fast_btn" value="fast" class="btn btn-default">Fast</button>
+                                    <button type="button" id="parameter_assignment_engraving_mode_precise_btn" value="precise" class="btn btn-default active">Precise</button>
+                                    <button type="button" id="parameter_assignment_engraving_mode_basic_btn" value="basic" class="btn btn-default">Basic</button>
                                   </div>
                                 </div>
                               </div>
@@ -378,7 +378,7 @@
     <div class="modal-footer">
 		<div class="pull-left" style="text-align:left;" data-bind="visible: !slicing_in_progress()">
 			<label class="checkbox">
-				<input type="checkbox" id="advanced_settings_cb" data-bind="checked: showExpertSettings">show advanced settings
+				<input type="checkbox" id="parameter_assignment_show_advanced_settings_cb" data-bind="checked: showExpertSettings">show advanced settings
 			</label>
 		</div>
 
