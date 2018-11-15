@@ -370,8 +370,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		wizard = render_kwargs["templates"] is not None and bool(render_kwargs["templates"]["wizard"]["order"])
 
-		self._logger.info("ANDYTEST render_kwargs: %s", render_kwargs)
-		self._logger.info("ANDYTEST wizard: %s", wizard)
 
 		if render_kwargs["templates"]["wizard"]["entries"]:
 			if "firstrunstart" in render_kwargs["templates"]["wizard"]["entries"]:
@@ -574,7 +572,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return dict(mandatory=False, suffix="_whatsnew_1")
 
 	def _get_whatsnew_1_wizard_name(self):
-		return gettext("Custom Material Settings")
+		return gettext("Total Job Duration")
 
 	def _is_whatsnew_2_wizard_required(self):
 		result = not self.isFirstRun()
@@ -588,7 +586,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return dict(mandatory=False, suffix="_whatsnew_2")
 
 	def _get_whatsnew_2_wizard_name(self):
-		return gettext("Total Job Duration")
+		return gettext("Custom Material Settings")
 
 	def _is_whatsnew_3_wizard_required(self):
 		result = not self.isFirstRun()
