@@ -49,6 +49,9 @@ class MachineCom(object):
 	GRBL_VERSION_20180828_ac367ff = '0.9g_20180828_ac367ff'
 	GRBL_FEAT_BLOCK_VERSION_LIST_RX_BUFFER_REPORTING = (GRBL_VERSION_20170919_22270fa, GRBL_VERSION_20180223_61638c5)
 	#
+	# adds G24_AVOIDED
+	GRBL_VERSION_20181116_639b86e = '0.9g_20181116_639b86e'
+	#
 	##########################################################
 
 
@@ -261,6 +264,8 @@ class MachineCom(object):
 					self._handle_feedback_message(line)
 				elif line.startswith('Grb'): # Grbl startup message
 					self._handle_startup_message(line)
+				elif line.startswith('G24_AVOIDED'):
+					self._handle_g24_avoided_message(line)
 				elif line.startswith('$'): # Grbl settings
 					self._handle_settings_message(line)
 				elif not line and (self._state is self.STATE_CONNECTING or self._state is self.STATE_OPEN_SERIAL or self._state is self.STATE_DETECT_SERIAL):
@@ -717,6 +722,34 @@ class MachineCom(object):
 		self._onConnected(self.STATE_LOCKED)
 		self.correct_grbl_settings()
 
+	def _handle_g24_avoided_message(self, line):
+		try:
+			import urllib
+			import cgi
+			line_urienc = urllib.quote_plus(line)
+			line_strippted = cgi.escape(line, True)
+			self._logger.warn("G24_AVOIDED line: '%s' (uri_encoded: %s)",line, line_urienc)
+			self._logger.dump_terminal_buffer(level=logging.WARN)
+
+			text = "<br/>Please send us debug data per email!<br/>" \
+			       "Either simply <strong><a href='mailto:{email_addr}?subject={email_subject}&body={email_body}' target='_blank'>click here</a></strong>.<br/>" \
+			       "or copy the given reason below into an email and send it to {email_addr}.<br/>" \
+			       "Thank you.<br/><br/>" \
+			       "Reason:<br>{reason}<br/><br/>"\
+			       "Why?<br>An internal event happened which we would love to track and analyse. This helps us to improve Mr Beam II. "\
+			       "Don't worry, your laser result should be fine. :-)"\
+				       .format(reason="{} ({})".format(line_strippted, line_urienc),
+	                           email_addr="support@mr-beam.org",
+	                           email_subject="G24_AVOIDED",
+	                           email_body=urllib.quote_plus("G24_AVOIDED: {} ({})".format(line, line_urienc))
+			                   )
+			_mrbeam_plugin_implementation.notify_frontend(
+				title="Help Requested!",
+				text=text,
+				type='warn',
+				sticky=True)
+		except:
+			self._logger.exception("G24_AVOIDED Exception in _handle_g24_avoided_message(): ")
 
 	def _handle_settings_message(self, line):
 		"""
