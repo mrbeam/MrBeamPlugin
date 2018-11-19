@@ -49,6 +49,9 @@ class MachineCom(object):
 	GRBL_VERSION_20180828_ac367ff = '0.9g_20180828_ac367ff'
 	GRBL_FEAT_BLOCK_VERSION_LIST_RX_BUFFER_REPORTING = (GRBL_VERSION_20170919_22270fa, GRBL_VERSION_20180223_61638c5)
 	#
+	# adds G24_AVOIDED
+	GRBL_VERSION_20181116_a437781 = '0.9g_20181116_a437781'
+	#
 	##########################################################
 
 
@@ -165,6 +168,8 @@ class MachineCom(object):
 		self._grbl_settings_correction_ts = 0
 		self._rx_stats = RxBufferStats()
 
+		self.g24_avoided_message = []
+
 		self.grbl_auto_update_enabled = _mrbeam_plugin_implementation._settings.get(['dev', 'grbl_auto_update_enabled'])
 
 		#grbl features
@@ -261,6 +266,10 @@ class MachineCom(object):
 					self._handle_feedback_message(line)
 				elif line.startswith('Grb'): # Grbl startup message
 					self._handle_startup_message(line)
+				# elif line.startswith('G24_AVOIDED'):
+				# 	self._handle_g24_avoided_message(line)
+				elif line.startswith('Corru'): # Corrupted line:
+					self._handle_corrupted_line(line)
 				elif line.startswith('$'): # Grbl settings
 					self._handle_settings_message(line)
 				elif not line and (self._state is self.STATE_CONNECTING or self._state is self.STATE_OPEN_SERIAL or self._state is self.STATE_DETECT_SERIAL):
@@ -690,6 +699,9 @@ class MachineCom(object):
 				self._errorValue = errorMsg
 				eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
 				self._logger.dump_terminal_buffer(level=logging.ERROR)
+		elif line[1:].startswith('G24'): # [G24_AVOIDED]
+			self.g24_avoided_message = []
+			self._logger.warn("G24_AVOIDED (Corrupted line data will follow)")
 		elif line[1:].startswith('Cau'): # [Caution: Unlocked]
 			pass
 		elif line[1:].startswith('Ena'): # [Enabled]
@@ -717,6 +729,63 @@ class MachineCom(object):
 		self._onConnected(self.STATE_LOCKED)
 		self.correct_grbl_settings()
 
+
+	def _handle_corrupted_line(self, line):
+		"""
+		So far this 'Corrupted line' is sent only in combination with G24_AVOIDED
+
+		> 11:39:15,866 _COMM_: Send: G1X58.32Y338.49G1X56.78Y338.57
+		> ...
+		> 11:39:16,786 _COMM_: Recv: [G24_AVOIDED]
+		> 11:39:16,789 _COMM_: Recv: Corrupted line: G1X58.32Y338.49
+		> ...
+		> 11:39:17,221 _COMM_: Recv: Corrupted line: G1X56.78Y338.57
+
+		Rsults in this output:
+		# WARNING - G24_AVOIDED line: 'G1X58.32Y338.49G1X56.78Y338.57' (hex: [47 31 58 35 38 2E 33 32 59 33 33 38 2E 34 39][47 31 58 35 36 2E 37 38 59 33 33 38 2E 35 37])
+		:param line:
+		"""
+		data = line[len('Corrupted line: '):]
+		self.g24_avoided_message.append(data)
+		if len(self.g24_avoided_message) >= 2:
+			self.send_g24_avoided_message()
+			self.g24_avoided_message = []
+
+
+	def send_g24_avoided_message(self):
+		try:
+			data_str = ''
+			data_hex = ''
+			for i in self.g24_avoided_message:
+				if i.endswith('\n'):
+					# A line always ends with a \n which is added by GRBL to evey line sent back to us.
+					i = i[:-1]
+				data_str += i
+				data_hex += '[{}]'.format(self.get_hex_str_from_str(i))
+
+			self._logger.warn("G24_AVOIDED line: '%s' (hex: %s)",data_str, data_hex)
+			self._logger.dump_terminal_buffer(level=logging.WARN)
+
+			import urllib
+			import cgi
+			text = "<br/>"\
+			       "An internal event happened which we would love to track and analyse. Please help us improve Mr Beam II by sharing the data below. Thank you for the support.<br/><br/>"\
+				    "Please send us the event details per email:<br/>" \
+			       "Either simply <strong><a href='mailto:{email_addr}?subject={email_subject}&body={email_body}' target='_blank'>click here</a></strong><br/>" \
+			       "or copy the data below into an email and send it to {email_addr}.<br/><br/>" \
+			       "Event details:<br>{reason}<br/><br/>"\
+				       .format(reason="G24_AVOIDED: {} ({})".format(cgi.escape(data_str, True), data_hex),
+	                           email_addr="support@mr-beam.org",
+	                           email_subject="G24_AVOIDED",
+	                           email_body=urllib.quote_plus("G24_AVOIDED: {} ({})\n\nJust send this email as it is, not need to add extra comments.\nThank you for your help.\n".format(data_str, data_hex))
+			                   )
+			_mrbeam_plugin_implementation.notify_frontend(
+				title="Help our Developers",
+				text=text,
+				type='warn',
+				sticky=True)
+		except:
+			self._logger.exception("G24_AVOIDED Exception in _handle_g24_avoided_message(): ")
 
 	def _handle_settings_message(self, line):
 		"""
@@ -1230,6 +1299,13 @@ class MachineCom(object):
 					self._intensity_dict[intensity_cmd] = new_intensity
 				return cmd.replace(intensity_cmd, 'S%d' % round(new_intensity))
 		return cmd
+
+	def get_hex_str_from_str(self, data):
+		res = []
+		for i in range(len(data)):
+			tmp = hex(ord(data[i]))[2:].upper()
+			res.append('0'+tmp if len(tmp)<=1 else tmp)
+		return ' '.join(res)
 
 	##~~ command handlers
 	def _gcode_G1_sending(self, cmd, cmd_type=None):
