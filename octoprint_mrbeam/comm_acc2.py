@@ -777,7 +777,7 @@ class MachineCom(object):
 				       .format(reason="G24_AVOIDED: {} ({})".format(cgi.escape(data_str, True), data_hex),
 	                           email_addr="support@mr-beam.org",
 	                           email_subject="G24_AVOIDED",
-	                           email_body=urllib.quote_plus("G24_AVOIDED: {} ({})\n\nJust send this email as it is, not need to add extra comments.\nThank you for your help.\n".format(data_str, data_hex))
+	                           email_body=urllib.quote_plus("G24_AVOIDED: {} ({})\n\nJust send this email as it is, no need to add extra comments.\nThank you for your help.\n".format(data_str, data_hex))
 			                   )
 			_mrbeam_plugin_implementation.notify_frontend(
 				title="Help our Developers",

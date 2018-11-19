@@ -384,6 +384,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 gcodeThreshold=0,
 							 wizard=wizard,
 							 now=now,
+							 language = language,
 
 							 beamosVersionNumber = self._plugin_version,
 							 beamosVersionBranch = self._branch,
@@ -1885,8 +1886,8 @@ def __plugin_load__():
 			order=dict(
 				wizard=["plugin_mrbeam_wifi", "plugin_mrbeam_acl", "plugin_mrbeam_lasersafety",
 				        "plugin_mrbeam_whatsnew_0", "plugin_mrbeam_whatsnew_1", "plugin_mrbeam_whatsnew_2", "plugin_mrbeam_whatsnew_3", "plugin_mrbeam_whatsnew_4"],
-				settings = ['plugin_softwareupdate', 'accesscontrol', 'plugin_netconnectd', 'plugin_mrbeam_conversion',
-				            'plugin_mrbeam_camera', 'logs', 'plugin_mrbeam_debug', 'plugin_mrbeam_about']
+				settings = ['plugin_mrbeam_about', 'plugin_softwareupdate', 'accesscontrol', 'plugin_netconnectd', 'plugin_mrbeam_conversion',
+				            'plugin_mrbeam_camera', 'logs', 'plugin_mrbeam_debug']
 			),
 			disabled=dict(
 				wizard=['plugin_softwareupdate'],
