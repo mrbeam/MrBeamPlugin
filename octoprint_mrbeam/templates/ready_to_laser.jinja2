@@ -20,7 +20,7 @@
             <h4 class="pull-right" data-bind='visible: !is_fan_connected()'>Plugin air filter system</h4>
             <h4 class="pull-right" data-bind='visible: !interlocks_closed() && is_fan_connected()'>Close the lid</h4>
             <h4 class="pull-right" data-bind='visible: interlocks_closed() && is_fan_connected()'>Press the button to
-                <span class="dev_start_button" data-bind='visible: is_rtl_mode()'>start</span>
+                <span class="dev_start_button" id="ready_to_laser_dev_start_btn" data-bind='visible: is_rtl_mode()'>start</span>
                 <span class="dev_start_button" data-bind='visible: !is_rtl_mode()'>continue</span>
             </h4>
         </div>
