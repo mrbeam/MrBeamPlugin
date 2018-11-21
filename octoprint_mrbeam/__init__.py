@@ -550,6 +550,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return dict(mandatory=False, suffix="_whatsnew_0")
 
 	def _get_whatsnew_0_wizard_name(self):
+		# jinja has some js that changes this to German if lang is 'de'
 		return gettext("What's New")
 
 	def _is_whatsnew_1_wizard_required(self):
@@ -564,6 +565,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return dict(mandatory=False, suffix="_whatsnew_1")
 
 	def _get_whatsnew_1_wizard_name(self):
+		# jinja has some js that changes this to German if lang is 'de'
 		return gettext("Total Job Duration")
 
 	def _is_whatsnew_2_wizard_required(self):
@@ -578,6 +580,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return dict(mandatory=False, suffix="_whatsnew_2")
 
 	def _get_whatsnew_2_wizard_name(self):
+		# jinja has some js that changes this to German if lang is 'de'
 		return gettext("Custom Material Settings")
 
 	def _is_whatsnew_3_wizard_required(self):
@@ -592,6 +595,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return dict(mandatory=False, suffix="_whatsnew_3")
 
 	def _get_whatsnew_3_wizard_name(self):
+		# jinja has some js that changes this to German if lang is 'de'
 		return gettext("Engraving Algorithms")
 
 	def _is_whatsnew_4_wizard_required(self):
@@ -606,6 +610,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return dict(mandatory=False, suffix="_whatsnew_4")
 
 	def _get_whatsnew_4_wizard_name(self):
+		# jinja has some js that changes this to German if lang is 'de'
 		return gettext("...and more")
 
 

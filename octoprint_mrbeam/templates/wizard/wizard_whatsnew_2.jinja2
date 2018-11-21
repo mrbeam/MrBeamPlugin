@@ -2,7 +2,8 @@
 
 {% if language == 'de' %}
 
-        <h3>{{ _("Speichere benutzerdefinierte Materialeinstellungen") }}</h3>
+    <script>var wizard_plugin_corewizard_whatsnew_2_title_de = "Materialeinstellungen";</script>
+    <h3>{{ _("Speichere benutzerdefinierte Materialeinstellungen") }}</h3>
 
 
     <p>
@@ -25,7 +26,7 @@
 
         <ul>
             <li>Im Bildschirm mit den Laserparametern wählst du ein Material, eine Farbe und eine Dicke, die dem von dir verwendeten Material am nächsten kommt. </li>
-            <li>Sobald du eine der Einstellungen im unteren Teil änderst, erscheinen neue Buttons neben deiner Materialauswahl:</li>
+            <li>Sobald du eine der Einstellungen im unteren Teil änderst, erscheinen neue Buttons neben deiner Materialauswahl.</li>
             <li>Klicke auf <strong>Save custom material</strong>, um einen kleinen Dialog zu öffnen,
                 in dem du deine aktuelle Intensität, Geschwindigkeit und Anzahl der Durchläufe des Gravur- und Schneidejobs speichern kannst.
                 Bevor du auf Speichern klickst, gib deinen Materialeinstellungen einen guten Namen und stelle die Dicke- und die Farbwerte ein,
@@ -46,19 +47,19 @@
                         <ul>
                             <li>Laserintensitätsbereich ("laser intensity range" ; Werte für Schwarz und Weiß)</li>
                             <li>Gravurgeschwindigkeitsbereich (“engraving speed range”; Werte für Schwarz-Weiß)</li>
-                            <li>sowie aus den Advanced Settings: Pierce Time und  und Dithering.</li>
+                            <li>sowie aus den Advanced Settings: Pierce Time und  Dithering.</li>
                         </ul>
                     </li>
                     <li>
+                        <li>Schneideauftrag:</li>
                         <ul>
-                            <li>Schneideauftrag:</li>
-                            <li>Laserintensität ("Laser intensity")</li>
+                            <li>Laserintensität ("laser intensity")</li>
                             <li>Lasergeschwindigkeit ("laser speed")</li>
                             <li>Durchläufe ("passes")</li>
-                            <li>und Pierce Time (Advanced Settings).</li>
+                            <li>und Pierce Time (in Advanced Settings).</li>
                         </ul>
                         Wenn du zum Zeitpunkt des Speicherns mehr als einen Schneidejob hast, wählt Mr Beam II automatisch den mit den stärksten Einstellungen aus,
-                        annehmend, dass es derjenige ist, der dein Material ganz durchschneiden soll</li>
+                        annehmend, dass es derjenige ist, der dein Material ganz durchschneiden soll.</li>
                 </ul>
             </li>
             <li>Wenn du im Speicherdialog einen Dickewert von 0 (Null) einstellst, wird dieser als "engrave only" interpretiert.
@@ -71,8 +72,8 @@
                 Dadurch werden alle unter diesem Namen gespeicherten Einstellungen gelöscht. Es ist nicht möglich, vordefinierte Materialeinstellungen zu löschen.</li>
             <li>Wenn du deine Materialeinstellungen nicht gespeichert hast und festgestellt hast, dass sie gut mit deinem Material funktioniert haben,
                 kannst du sie immer noch speichern, wenn der Laserjob beendet ist, indem du erneut zum Bildschirm mit den Laserparametern gehst,
-                als ob du im Begriff wärst, die gleichen Job erneut zu lasern.
-                Wenn du die Seite in deinem Browser nicht neu geladen hast oder Mr Beam II ausgeschaltet hast, findest du deine Einstellungen immer noch genau wie am Anfang.
+                als ob du im Begriff wärst, den gleichen Job erneut zu lasern.
+                Wenn du die Seite in deinem Browser nicht neu geladen, oder Mr Beam II ausgeschaltet hast, findest du deine Einstellungen immer noch genau wie am Anfang.
                 Klicke einfach auf <strong>Save custom material</strong> um sie jetzt zu speichern.</li>
             <li>Im Moment ist es nicht möglich, benutzerdefinierte Materialeinstellungen zu exportieren, zu importieren oder ein Backup zu machen.</li>
         </ul>
