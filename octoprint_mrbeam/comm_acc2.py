@@ -1476,6 +1476,7 @@ class MachineCom(object):
 		self._feedrate_factor  = 1
 		self._intensity_factor = 1
 		self._finished_passes = 0
+		self._pauseWaitTimeLost = 0.0
 
 		self._rx_stats.reset()
 		if not self.grbl_feat_report_rx_buffer_state:
