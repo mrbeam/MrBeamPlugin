@@ -1401,6 +1401,8 @@ class MachineCom(object):
 		self._intensity_factor = 1
 		self._finished_passes = 0
 
+		self._pauseWaitTimeLost = 0.0
+
 		self._rx_stats.reset()
 		if not self.grbl_feat_report_rx_buffer_state:
 			self._rx_stats.set_no_grbl_support()
