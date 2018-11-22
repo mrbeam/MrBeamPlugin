@@ -28,8 +28,8 @@ class Migration(object):
 	MIGRATE_LOGROTATE_FOLDER = 'files/migrate_logrotate/'
 
 	# grbl auto update conf
-	GRBL_AUTO_UPDATE_FILE = "grbl_0.9g_20180828_ac367ff.hex"
-	GRBL_AUTO_UPDATE_VERSION = MachineCom.GRBL_VERSION_20180828_ac367ff
+	GRBL_AUTO_UPDATE_FILE = "grbl_0.9g_20181116_a437781.hex"
+	GRBL_AUTO_UPDATE_VERSION = MachineCom.GRBL_VERSION_20181116_a437781
 
 
 	def __init__(self, plugin):
