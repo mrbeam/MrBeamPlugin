@@ -22,6 +22,7 @@ class Migration(object):
 	VERSION_UPDATE_LOGROTATE_CONF            = '0.1.45'
 	VERSION_MOUNT_MANAGER_150                = '0.1.46'
 	VERSION_GRBL_AUTO_UPDATE                 = '0.1.48'
+	VERSION_INFLATE_FILE_SYSTEM              = '0.1.51'
 
 	# this is where we have files needed for migrations
 	MIGRATE_FILES_FOLDER     = 'files/migrate/'
@@ -81,6 +82,9 @@ class Migration(object):
 
 				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_GRBL_AUTO_UPDATE, equal_ok=False):
 					self.auto_update_grbl()
+
+				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_INFLATE_FILE_SYSTEM, equal_ok=False):
+					self.inflate_file_system()
 
 				# migrations end
 
@@ -309,6 +313,11 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 		default_profile['grbl']['auto_update_version'] = self.GRBL_AUTO_UPDATE_VERSION
 		default_profile['grbl']['auto_update_file'] = self.GRBL_AUTO_UPDATE_FILE
 		laserCutterProfileManager().save(default_profile, allow_overwrite=True)
+
+
+	def inflate_file_system(self):
+		self._logger.info("inflate_file_system() ")
+		exec_cmd("sudo resize2fs -p /dev/mmcblk0p2")
 
 
 
