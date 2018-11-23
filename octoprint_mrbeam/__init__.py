@@ -85,6 +85,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	CUSTOM_MATERIAL_STORAGE_URL = 'https://script.google.com/a/macros/mr-beam.org/s...' # TODO
 
+	BOOT_GRACE_PERIOD = 10.0
+
 
 	def __init__(self):
 		self._slicing_commands = dict()
@@ -102,6 +104,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._stored_frontend_notifications = []
 		self._device_series = self._get_val_from_device_info('device_series')  # '2C'
 		self.called_hosts = []
+		self.boot_ts = time.time()
 
 		# MrBeam Events needs to be registered in OctoPrint in order to be send to the frontend later on
 		MrBeamEvents.register_with_octoprint()
@@ -1653,7 +1656,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 			)
 		except:
-			self._logger.exception("Exception while collecting mrb_state data: ")
+			if not self.is_boot_grace_period():
+				self._logger.exception("Exception while collecting mrb_state data: ")
 			return None
 
 	def _replay_stored_frontend_notification(self):
@@ -1780,6 +1784,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def isFirstRun(self):
 		return self._settings.global_get(["server", "firstRun"])
+
+	def is_boot_grace_period(self):
+		# self._logger.info("self.boot_ts: %s.%s (%s)", time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(self.boot_ts)), str(int(round(self.boot_ts * 1000)))[-3:], self.boot_ts)
+		return time.time - self.boot_ts <= self.BOOT_GRACE_PERIOD
 
 	def is_prod_env(self, type=None):
 		return self.get_env(type).upper() == self.ENV_PROD
