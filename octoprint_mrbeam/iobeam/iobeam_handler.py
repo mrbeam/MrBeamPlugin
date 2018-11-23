@@ -569,12 +569,19 @@ class IoBeamHandler(object):
 
 	def _handle_laser_message(self, message, token):
 		action = token[0] if len(token) > 0 else None
-		temp = self._as_number(token[1]) if len(token) > 1 else None
-
-		if action == self.MESSAGE_ACTION_LASER_TEMP and temp is not None:
-			self._call_callback(IoBeamValueEvents.LASER_TEMP, message, dict(temp=temp))
+		if action == self.MESSAGE_ACTION_LASER_TEMP:
+			temp = self._as_number(token[1]) if len(token) > 1 else None
+			if temp is not None:
+				self._call_callback(IoBeamValueEvents.LASER_TEMP, message, dict(temp=temp))
+		elif action == "head" and token[1] == 'data':
+			# iobeam sends the whole laserhead data print
+			try:
+				data = ":".join(token[2:]).replace("|||", "\n| ")
+				self._logger.info("laserhead: \n| %s", data)
+			except:
+				self._logger.exception("laserhead: exception while handling head:data: ")
 		else:
-			return self._handle_invalid_message(message)
+			self._logger.info("laserhead: '%s'", message)
 
 		return 0
 
