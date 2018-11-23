@@ -258,9 +258,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				optimize_travel = True,
 				small_paths_first = True,
 				clip_working_area = True # https://github.com/mrbeam/MrBeamPlugin/issues/134
-			),
-			features = dict(
-				custom_materials = False
 			)
 		)
 
@@ -285,9 +282,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				clip_working_area = self._settings.get(['gcode_nextgen', 'clip_working_area'])
 			),
 			software_update_branches = self.get_update_branch_info(),
-			features=dict(
-				custom_materials = self._settings.get(['features', 'custom_materials'])
-			)
 		)
 
 	def on_settings_save(self, data):
@@ -307,9 +301,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self._logger.info("Disabling VORLON per user request.", terminal=True)
 		if "gcode_nextgen" in data and isinstance(data['gcode_nextgen'], collections.Iterable) and "clip_working_area" in data['gcode_nextgen']:
 			self._settings.set_boolean(["gcode_nextgen", "clip_working_area"], data['gcode_nextgen']['clip_working_area'])
-		if "features" in data and isinstance(data['features'], collections.Iterable):
-			if 'custom_materials' in data['features']:
-				self._settings.set_boolean(["features", "custom_materials"],data['features']['custom_materials'])
 
 
 	def on_shutdown(self):
@@ -334,7 +325,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/wizard_acl.js", "js/netconnectd_wrapper.js", "js/lasersaftey_viewmodel.js",
 				"js/ready_to_laser_viewmodel.js", "js/lib/screenfull.min.js","js/settings/camera_calibration.js",
 				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js", "js/lib/Color.js", "js/laser_job_done_viewmodel.js", 
-				"js/loadingoverlay_viewmodel.js"],
+				"js/loadingoverlay_viewmodel.js", "js/wizard_whatsnew.js"],
 			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css", "css/quicktext-fonts.css", "css/sliders.css"],
 			less=["less/mrbeam.less"]
 		)
@@ -370,10 +361,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		wizard = render_kwargs["templates"] is not None and bool(render_kwargs["templates"]["wizard"]["order"])
 
+
 		if render_kwargs["templates"]["wizard"]["entries"]:
-			if render_kwargs["templates"]["wizard"]["entries"]["firstrunstart"]:
+			if "firstrunstart" in render_kwargs["templates"]["wizard"]["entries"]:
 				render_kwargs["templates"]["wizard"]["entries"]["firstrunstart"][1]["template"] = "wizard/firstrun_start.jinja2"
-			if render_kwargs["templates"]["wizard"]["entries"]["firstrunend"]:
+			if "firstrunend" in render_kwargs["templates"]["wizard"]["entries"]:
 				render_kwargs["templates"]["wizard"]["entries"]["firstrunend"][1]["template"] = "wizard/firstrun_end.jinja2"
 
 		display_version_string = "{} on {}".format(self._plugin_version, self.getHostname())
@@ -392,6 +384,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 gcodeThreshold=0,
 							 wizard=wizard,
 							 now=now,
+							 language = language,
 
 							 beamosVersionNumber = self._plugin_version,
 							 beamosVersionBranch = self._branch,
@@ -472,24 +465,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	#~~ WizardPlugin API
 
 	def is_wizard_required(self):
-		# self._logger.info("ANDYTEST is_wizard_required")
-        #
-		# methods = self._get_subwizard_attrs("_is_", "_wizard_required")
-        #
-		# result = self._settings.global_get(["server", "firstRun"])
-		# if result:
-		# 	# don't even go here if firstRun is false
-		# 	result = any(map(lambda m: m(), methods.values()))
-		# if result:
-		# 	self._logger.info("Setup Wizard showing")
-		# return result
-		return self.isFirstRun()
+		return True
 
 	def get_wizard_details(self):
 		return dict()
 
 	def get_wizard_version(self):
-		return 12 #random number. but we can't go down anymore, just up.
+		return 13 #random number. but we can't go down anymore, just up.
 
 	def on_wizard_finish(self, handled):
 		self._logger.info("Setup Wizard finished.")
@@ -500,13 +482,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def _is_wifi_wizard_required(self):
 		result = False
-		try:
-			pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
-			if pluginInfo is not None:
-				status = pluginInfo.implementation._get_status()
-				result = not status["connections"]["wifi"]
-		except Exception as e:
-			self._logger.exception("Exception while reading wifi state from netconnectd:")
+		if self.isFirstRun():
+			try:
+				pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
+				if pluginInfo is not None:
+					status = pluginInfo.implementation._get_status()
+					result = not status["connections"]["wifi"]
+			except Exception as e:
+				self._logger.exception("Exception while reading wifi state from netconnectd:")
 
 		self._logger.debug("_is_wifi_wizard_required() %s", result)
 		return result
@@ -519,9 +502,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def _get_wifi_wizard_name(self):
 		return gettext("Wifi Setup")
-
-	# def _on_wifi_wizard_finish(self, handled):
-	# 	self._log.info("ANDYTEST _on_wifi_wizard_finish() handled: " + str(handled));
 
 	#~~ ACL subwizard
 
@@ -536,18 +516,16 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def _get_acl_additional_wizard_template_data(self):
 		return dict(mandatory=False, suffix="_acl")
 
-
 	def _get_acl_wizard_name(self):
 		return gettext("Access Control")
-
-	# def _on_acl_wizard_finish(self, handled):
-	# 	self._log.info("ANDYTEST _on_acl_wizard_finish() test handled: " + str(handled));
 
 
 	# ~~ Saftey subwizard
 
 	def _is_lasersafety_wizard_required(self):
-		return True
+		result = self.isFirstRun()
+		self._logger.debug("_is_lasersafety_wizard_required() %s", result)
+		return result
 
 	def _get_lasersafety_wizard_details(self):
 		return dict()
@@ -558,8 +536,84 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def _get_lasersafety_wizard_name(self):
 		return gettext("Laser Safety")
 
-	# def _on_acl_wizard_finish(self, handled):
-	# 	self._log.info("ANDYTEST _on_acl_wizard_finish() test handled: " + str(handled));
+	# ~~ Whats new subwizard
+
+	def _is_whatsnew_0_wizard_required(self):
+		result = not self.isFirstRun()
+		self._logger.debug("_is_whatsnew_0_wizard_required() %s", result)
+		return result
+
+	def _get_whatsnew_0_wizard_details(self):
+		return dict()
+
+	def _get_whatsnew_0_additional_wizard_template_data(self):
+		return dict(mandatory=False, suffix="_whatsnew_0")
+
+	def _get_whatsnew_0_wizard_name(self):
+		# jinja has some js that changes this to German if lang is 'de'
+		return gettext("What's New")
+
+	def _is_whatsnew_1_wizard_required(self):
+		result = not self.isFirstRun()
+		self._logger.debug("_is_whatsnew_1_wizard_required() %s", result)
+		return result
+
+	def _get_whatsnew_1_wizard_details(self):
+		return dict()
+
+	def _get_whatsnew_1_additional_wizard_template_data(self):
+		return dict(mandatory=False, suffix="_whatsnew_1")
+
+	def _get_whatsnew_1_wizard_name(self):
+		# jinja has some js that changes this to German if lang is 'de'
+		return gettext("Total Job Duration")
+
+	def _is_whatsnew_2_wizard_required(self):
+		result = not self.isFirstRun()
+		self._logger.debug("_is_whatsnew_2_wizard_required() %s", result)
+		return result
+
+	def _get_whatsnew_2_wizard_details(self):
+		return dict()
+
+	def _get_whatsnew_2_additional_wizard_template_data(self):
+		return dict(mandatory=False, suffix="_whatsnew_2")
+
+	def _get_whatsnew_2_wizard_name(self):
+		# jinja has some js that changes this to German if lang is 'de'
+		return gettext("Custom Material Settings")
+
+	def _is_whatsnew_3_wizard_required(self):
+		result = not self.isFirstRun()
+		self._logger.debug("_is_whatsnew_4_wizard_required() %s", result)
+		return result
+
+	def _get_whatsnew_3_wizard_details(self):
+		return dict()
+
+	def _get_whatsnew_3_additional_wizard_template_data(self):
+		return dict(mandatory=False, suffix="_whatsnew_3")
+
+	def _get_whatsnew_3_wizard_name(self):
+		# jinja has some js that changes this to German if lang is 'de'
+		return gettext("Engraving Algorithms")
+
+	def _is_whatsnew_4_wizard_required(self):
+		result = not self.isFirstRun()
+		self._logger.debug("_is_whatsnew_4_wizard_required() %s", result)
+		return result
+
+	def _get_whatsnew_4_wizard_details(self):
+		return dict()
+
+	def _get_whatsnew_4_additional_wizard_template_data(self):
+		return dict(mandatory=False, suffix="_whatsnew_4")
+
+	def _get_whatsnew_4_wizard_name(self):
+		# jinja has some js that changes this to German if lang is 'de'
+		return gettext("...and more")
+
+
 
 	@octoprint.plugin.BlueprintPlugin.route("/acl", methods=["POST"])
 	def acl_wizard_api(self):
@@ -1835,9 +1889,10 @@ def __plugin_load__():
 		],
 		appearance=dict(components=dict(
 			order=dict(
-				wizard=["plugin_mrbeam_wifi", "plugin_mrbeam_acl", "plugin_mrbeam_lasersafety"],
-				settings = ['plugin_softwareupdate', 'accesscontrol', 'plugin_netconnectd', 'plugin_mrbeam_conversion',
-				            'plugin_mrbeam_camera', 'logs', 'plugin_mrbeam_debug', 'plugin_mrbeam_about']
+				wizard=["plugin_mrbeam_wifi", "plugin_mrbeam_acl", "plugin_mrbeam_lasersafety",
+				        "plugin_mrbeam_whatsnew_0", "plugin_mrbeam_whatsnew_1", "plugin_mrbeam_whatsnew_2", "plugin_mrbeam_whatsnew_3", "plugin_mrbeam_whatsnew_4"],
+				settings = ['plugin_mrbeam_about', 'plugin_softwareupdate', 'accesscontrol', 'plugin_netconnectd', 'plugin_mrbeam_conversion',
+				            'plugin_mrbeam_camera', 'logs', 'plugin_mrbeam_debug']
 			),
 			disabled=dict(
 				wizard=['plugin_softwareupdate'],
