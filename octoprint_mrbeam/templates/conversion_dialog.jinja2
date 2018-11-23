@@ -235,23 +235,28 @@
 
                                 <div class="switch-control-and-label" data-toggle="tooltip" data-placement="right"
                                     title="All engravings are processed line by line from bottom to top.
-									Depending on this option the system may cluster objects and process them separately from each other
+									The system may cluster objects and process them separately from each other
 									to <b>improve overall job duration by reducing 'empty rides'</b> where the laser stays off.
                                         <ul>
-                                        <li><b>Basic mode:</b> No clustering at all, all engravings of the whole working area are processed line by line.
-									    In this mode the laserhead may have a lot of 'empty rides'.
-									    Use this option as fallback if you're experiencing issues with the other options.</li>
-									    <li><b>Precise mode:</b> Clustering is enabled. Clusters are processed successively, each cluster is processed in itself line by line.
-									    This option reduces 'empty rides' moderately.</li>
-									    <li><b>Fast mode:</b> Aggressive clustering also of smaller objects to reduce 'empty rides' as much as possible.
-									    The speed up works best with text or clip-art designs, however there will be no effect on photo engravings.</li>">
-                                    <label class="control-label">{{ _('Engraving mode') }}</label>
+                                        <li><b>Recommended (default):</b> Clusters are processed successively and each
+                                        cluster is processed line by line. This option reduces 'empty rides' moderately and
+                                        <b>gives the best precision</b>.
+                                        </li>
+									    <li><b>Fast:</b> Aggressive clustering also of smaller objects to reduce 'empty rides' as much as possible.
+									    The higher speed might compromise the precision of some engravings, but <b>works well with text or clip-art design.</b>
+									    </li>
+									    <li><b>Basic:</b> No clustering at all, the engravings are processed line by line.
+									    In this mode the laserhead may have a lot of 'empty rides' making it slower, but the precision is not compromised.
+									    <b>Use this option as fallback</b> if you're experiencing issues with the other options.</li>
+									    </ul>
+                                        * Some designs, as photos or long texts, <b>always</b> use basic mode.">
+                                    <label class="control-label">{{ _('Engraving time optimization mode') }}</label>
                                     <div class="controls">
 
                                   <div class="btn-group" id="svgtogcode_img_engraving_mode" data-toggle="buttons-radio">
-                                    <button type="button" id="parameter_assignment_engraving_mode_fast_btn" value="fast" class="btn btn-default">Fast</button>
-                                    <button type="button" id="parameter_assignment_engraving_mode_precise_btn" value="precise" class="btn btn-default active">Precise</button>
-                                    <button type="button" id="parameter_assignment_engraving_mode_basic_btn" value="basic" class="btn btn-default">Basic</button>
+                                    <button type="button" value="precise" id="parameter_assignment_engraving_mode_precise_btn" class="btn btn-default active">Recommended</button>
+                                    <button type="button" value="fast" id="parameter_assignment_engraving_mode_fast_btn" class="btn btn-default">Fast</button>
+                                    <button type="button" value="basic" id="parameter_assignment_engraving_mode_basic_btn" class="btn btn-default">Basic</button>
                                   </div>
                                 </div>
                               </div>

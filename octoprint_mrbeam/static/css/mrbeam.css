@@ -2106,7 +2106,8 @@ input.search-query,
 }
 
 .switch-control-and-label {
-  width: 370px;
+  display: inline-block;
+  width: 415px;
 }
 
 .bar-control-and-label {
@@ -2127,4 +2128,12 @@ input.search-query,
 
 .material-control-and-label {
   max-width: 210px;
+}
+
+
+/*
+* === BUTTON GROUPS ===
+*/
+#svgtogcode_img_engraving_mode {
+  margin-top: 3%;
 }
