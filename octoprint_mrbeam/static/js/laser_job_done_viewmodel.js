@@ -11,6 +11,9 @@ $(function() {
         self.is_dust_mode = ko.observable(false);
         self.job_duration = ko.observable(0);
         self.job_duration_formatted = ko.computed(function(){
+            if (self.job_duration() < 0) {
+                return '--:--:--'
+            }
             var sec_num = parseInt(self.job_duration(), 10); // don't forget the second param
             var hours   = Math.floor(sec_num / 3600);
             var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
@@ -33,7 +36,7 @@ $(function() {
             self.is_job_done(false);
             self.job_duration(0);
             self._fromData(payload);
-        }
+        };
 
         self.onEventPrintDone = function (payload) {
             self.is_job_done(true);

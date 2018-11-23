@@ -21,7 +21,7 @@ class Migration(object):
 	VERSION_UPDATE_CHANGE_HOSTNAME_SCRIPTS   = '0.1.37'
 	VERSION_UPDATE_LOGROTATE_CONF            = '0.1.45'
 	VERSION_MOUNT_MANAGER_150                = '0.1.46'
-	VERSION_GRBL_AUTO_UPDATE                 = '0.1.48'
+	VERSION_GRBL_AUTO_UPDATE                 = '0.1.51'
 	VERSION_INFLATE_FILE_SYSTEM              = '0.1.51'
 
 	# this is where we have files needed for migrations

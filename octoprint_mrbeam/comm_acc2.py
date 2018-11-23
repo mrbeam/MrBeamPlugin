@@ -1477,6 +1477,7 @@ class MachineCom(object):
 		self._intensity_factor = 1
 		self._finished_passes = 0
 		self._pauseWaitTimeLost = 0.0
+		self._pauseWaitStartTime = None
 
 		self._rx_stats.reset()
 		if not self.grbl_feat_report_rx_buffer_state:
@@ -1565,6 +1566,13 @@ class MachineCom(object):
 			self._send_event.set()
 			eventManager().fire(OctoPrintEvents.PRINT_PAUSED, payload)
 			self._logger.info(self._rx_stats.pp(print_time=self.getPrintTime()))
+
+		if self.getPrintTime() < 0.0:
+			self._logger.warn("setPause() %s: print time is negative! print time: %s, _pauseWaitStartTime: %s, _pauseWaitTimeLost: %s",
+			                  'pausing' if pause else 'resuming',
+			                  self.getPrintTime(),
+			                  self._pauseWaitStartTime,
+			                  self._pauseWaitTimeLost)
 
 	def increasePasses(self):
 		self._passes += 1
