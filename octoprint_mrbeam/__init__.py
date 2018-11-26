@@ -73,8 +73,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	ENV_LASER_SAFETY = "laser_safety"
 	ENV_ANALYTICS =    "analytics"
 
-	LASERSAFETY_CONFIRMATION_DIALOG_VERSION  = "0.2"
-	LASERSAFETY_CONFIRMATION_DIALOG_LANGUAGE = "en"
+	LASERSAFETY_CONFIRMATION_DIALOG_VERSION  = "0.3"
 
 	LASERSAFETY_CONFIRMATION_STORAGE_URL = 'https://script.google.com/a/macros/mr-beam.org/s/AKfycby3Y1RLBBiGPDcIpIg0LHd3nwgC7GjEA4xKfknbDLjm3v9-LjG1/exec'
 	USER_SETTINGS_KEY_MRBEAM = 'mrbeam'
@@ -409,7 +408,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 vorlonEnabled=self.is_vorlon_enabled(),
 
 							 lasersafety_confirmation_dialog_version  = self.LASERSAFETY_CONFIRMATION_DIALOG_VERSION,
-							 lasersafety_confirmation_dialog_language = self.LASERSAFETY_CONFIRMATION_DIALOG_LANGUAGE,
+							 lasersafety_confirmation_dialog_language = language,
 
 							 quickstart_guide_default="QuickstartGuide_{locale}.pdf".format(locale='de' if language == 'de' else 'en'),
 							 usermanual_default="UserManual_{locale}.pdf".format(locale='de' if language == 'de' else 'en')
@@ -704,7 +703,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				or current_user.get_name() != username:
 			return make_response("Invalid user", 403)
 
-		showAgain = bool(data.get('showAgain', True))
+		show_again = bool(data.get('show_again', True))
+		dialog_language = data.get('dialog_language')
 
 		# see if we nee to send this to the cloud
 		submissionDate = self.getUserSetting(username, self.USER_SETTINGS_KEY_LASERSAFETY_CONFIRMATION_SENT_TO_CLOUD, -1)
@@ -719,7 +719,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 					   'serial': self._serial_num,
 					   'hostname': self.getHostname(),
 			           'dialog_version': self.LASERSAFETY_CONFIRMATION_DIALOG_VERSION,
-			           'dialog_language': self.LASERSAFETY_CONFIRMATION_DIALOG_LANGUAGE,
+			           'dialog_language': dialog_language,
 			           'plugin_version': self._plugin_version,
 			           'software_tier': self._settings.get(["dev", "software_tier"]),
 			           'env': self.get_env(),
@@ -753,16 +753,16 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				responseFull = str(e.args)
 
 			submissionDate = time.time() if successfullySubmitted else -1
-			showAgain = showAgain if successfullySubmitted else True
+			show_again = show_again if successfullySubmitted else True
 			self.setUserSetting(username, self.USER_SETTINGS_KEY_LASERSAFETY_CONFIRMATION_SENT_TO_CLOUD, submissionDate)
-			self.setUserSetting(username, self.USER_SETTINGS_KEY_LASERSAFETY_CONFIRMATION_SHOW_AGAIN, showAgain)
+			self.setUserSetting(username, self.USER_SETTINGS_KEY_LASERSAFETY_CONFIRMATION_SHOW_AGAIN, show_again)
 
 			# and drop a line into the log on info level this is important
 			self._logger.info("LaserSafetyNotice: confirmation response: (%s) %s, submissionDate: %s, showAgain: %s, full response: %s",
-							  httpCode, responseCode, submissionDate, showAgain, responseFull)
+							  httpCode, responseCode, submissionDate, show_again, responseFull)
 		else:
-			self._logger.info("LaserSafetyNotice: confirmation already sent. showAgain: %s", showAgain)
-			self.setUserSetting(username, self.USER_SETTINGS_KEY_LASERSAFETY_CONFIRMATION_SHOW_AGAIN, showAgain)
+			self._logger.info("LaserSafetyNotice: confirmation already sent. showAgain: %s", show_again)
+			self.setUserSetting(username, self.USER_SETTINGS_KEY_LASERSAFETY_CONFIRMATION_SHOW_AGAIN, show_again)
 
 		if needSubmission and not successfullySubmitted:
 			return make_response("Failed to submit laser safety confirmation to cloud.", 901)
