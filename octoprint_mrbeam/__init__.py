@@ -1787,7 +1787,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def is_boot_grace_period(self):
 		# self._logger.info("self.boot_ts: %s.%s (%s)", time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(self.boot_ts)), str(int(round(self.boot_ts * 1000)))[-3:], self.boot_ts)
-		return time.time - self.boot_ts <= self.BOOT_GRACE_PERIOD
+		return time.time() - self.boot_ts <= self.BOOT_GRACE_PERIOD
 
 	def is_prod_env(self, type=None):
 		return self.get_env(type).upper() == self.ENV_PROD
