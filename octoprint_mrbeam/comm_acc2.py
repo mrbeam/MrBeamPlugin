@@ -43,14 +43,20 @@ class MachineCom(object):
 	GRBL_VERSION_20180223_61638c5 = '0.9g_20180223_61638c5'
 	GRBL_FEAT_BLOCK_VERSION_LIST_RESCUE_FROM_HOME = (GRBL_VERSION_20170919_22270fa)
 	#
-	# trieal grbl
+	# trial grbl
 	# - adds rx-buffer state with every ok
 	# - adds alarm mesage on rx buffer overrun
 	GRBL_VERSION_20180828_ac367ff = '0.9g_20180828_ac367ff'
 	GRBL_FEAT_BLOCK_VERSION_LIST_RX_BUFFER_REPORTING = (GRBL_VERSION_20170919_22270fa, GRBL_VERSION_20180223_61638c5)
 	#
+	# adds G24_AVOIDED
+	GRBL_VERSION_20181116_a437781 = '0.9g_20181116_a437781'
+	#
 	##########################################################
 
+
+	GRBL_SETTINGS_READ_WINDOW =     10.0
+	GRBL_SETTINGS_CHECK_FREQUENCY = 0.5
 
 	STATE_NONE = 0
 	STATE_OPEN_SERIAL = 1
@@ -93,6 +99,9 @@ class MachineCom(object):
 	pattern_grbl_version = re.compile("Grbl (?P<version>\S+)\s.*")
 	pattern_grbl_setting = re.compile("\$(?P<id>\d+)=(?P<value>\S+)\s\((?P<comment>.*)\)")
 
+
+	ALARM_CODE_COMMAND_TOO_LONG = "ALARM_CODE_COMMAND_TOO_LONG"
+  
 	pattern_get_x_coord_from_gcode = re.compile("^G.*X(\d{1,3}\.?\d{0,3})\D.*")
 	pattern_get_y_coord_from_gcode = re.compile("^G.*Y(\d{1,3}\.?\d{0,3})\D.*")
 
@@ -119,6 +128,7 @@ class MachineCom(object):
 		self._laserCutterProfile = laserCutterProfileManager().get_current_or_default()
 
 		self.RX_BUFFER_SIZE = 127
+		self.WORKING_RX_BUFFER_SIZE = self.RX_BUFFER_SIZE - 5
 
 		self._state = self.STATE_NONE
 		self._grbl_state = None
@@ -155,7 +165,12 @@ class MachineCom(object):
 		self.limit_y = -1
 		# from GRBL status RX value: Number of characters queued in Grbl's serial RX receive buffer.
 		self._grbl_rx_status = -1
+		self._grbl_settings_correction_ts = 0
 		self._rx_stats = RxBufferStats()
+
+		self.g24_avoided_message = []
+
+		self.grbl_auto_update_enabled = _mrbeam_plugin_implementation._settings.get(['dev', 'grbl_auto_update_enabled'])
 
 		#grbl features
 		self.grbl_feat_rescue_from_home = False
@@ -178,23 +193,23 @@ class MachineCom(object):
 		# threads
 		self.monitoring_thread = None
 		self.sending_thread = None
-		self.start_monitoring_thread()
-		self.start_status_polling_timer()
+		self._start_monitoring_thread()
+		self._start_status_polling_timer()
 
 
-	def start_monitoring_thread(self):
+	def _start_monitoring_thread(self):
 		self._monitoring_active = True
 		self.monitoring_thread = threading.Thread(target=self._monitor_loop, name="comm._monitoring_thread")
 		self.monitoring_thread.daemon = True
 		self.monitoring_thread.start()
 
-	def start_sending_thread(self):
+	def _start_sending_thread(self):
 		self._sending_active = True
 		self.sending_thread = threading.Thread(target=self._send_loop, name="comm._sending_thread")
 		self.sending_thread.daemon = True
 		self.sending_thread.start()
 
-	def start_status_polling_timer(self):
+	def _start_status_polling_timer(self):
 		if self._status_polling_timer is not None:
 			self._status_polling_timer.cancel()
 		self._status_polling_timer = RepeatedTimer(0.1, self._poll_status)
@@ -215,10 +230,17 @@ class MachineCom(object):
 	def _monitor_loop(self):
 		#Open the serial port.
 		if not self._openSerial():
+			self._logger.critical("_monitor_loop() Serial not open, leaving monitoring loop.")
 			return
 
-		self._log("Connected to: %s, starting monitor" % self._serial)
+		self._logger.info("Connected to: %s, starting monitor" % self._serial, terminal_as_comm=True)
 		self._changeState(self.STATE_CONNECTING)
+
+		if self.grbl_auto_update_enabled and self._laserCutterProfile['grbl']['auto_update_file']:
+			self._logger.info("GRBL auto updating to version: %s, file: %s", self._laserCutterProfile['grbl']['auto_update_version'], self._laserCutterProfile['grbl']['auto_update_file'])
+			self.flash_grbl(grbl_file=self._laserCutterProfile['grbl']['auto_update_file'], is_connected=False)
+
+		# reset on connect
 		if self._laserCutterProfile['grbl']['resetOnConnect']:
 			self._serial.flushInput()
 			self._serial.flushOutput()
@@ -244,10 +266,14 @@ class MachineCom(object):
 					self._handle_feedback_message(line)
 				elif line.startswith('Grb'): # Grbl startup message
 					self._handle_startup_message(line)
+				# elif line.startswith('G24_AVOIDED'):
+				# 	self._handle_g24_avoided_message(line)
+				elif line.startswith('Corru'): # Corrupted line:
+					self._handle_corrupted_line(line)
 				elif line.startswith('$'): # Grbl settings
 					self._handle_settings_message(line)
 				elif not line and (self._state is self.STATE_CONNECTING or self._state is self.STATE_OPEN_SERIAL or self._state is self.STATE_DETECT_SERIAL):
-					self._log("Empty line received during STATE_CONNECTION, starting soft-reset")
+					self._logger.info("Empty line received during STATE_CONNECTION, starting soft-reset", terminal_as_comm=True)
 					self._sendCommand(self.COMMAND_RESET) # Serial-Connection Error
 			except:
 				self._logger.exception("Something crashed inside the monitoring loop, please report this to Mr Beam")
@@ -289,6 +315,7 @@ class MachineCom(object):
 				self._changeState(self.STATE_ERROR)
 				eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
 				self._logger.dump_terminal_buffer(level=logging.ERROR)
+		# self._logger.info("ANDYTEST Leaving _send_loop()")
 
 	def _sendCommand(self, cmd=None):
 		if cmd is None:
@@ -296,6 +323,8 @@ class MachineCom(object):
 				return
 			elif self._cmd is None:
 				self._cmd = self._commandQueue.get()
+
+
 			if self._cmd == self.COMMAND_FLUSH:
 				# FLUSH waits until we're no longer waiting for any OKs from GRBL
 				if self._sync_command_ts <=0:
@@ -328,19 +357,27 @@ class MachineCom(object):
 					self._sync_command_state_sent = True
 					self._sendCommand(self.COMMAND_STATUS)
 				self._send_event.set()
-			elif sum([len(x) for x in self._acc_line_buffer]) + len(self._cmd) +1 < self.RX_BUFFER_SIZE-5:
-				self._cmd, _, _  = self._process_command_phase("sending", self._cmd)
-				self._log("Send: %s" % self._cmd)
-				self._acc_line_buffer.append(self._cmd + '\n')
-				try:
-					self._serial.write(self._cmd + '\n')
-					self._process_command_phase("sent", self._cmd)
+			else:
+				my_cmd = self._cmd  # to avoid race conditions
+				if not(len(my_cmd) +1 < self.WORKING_RX_BUFFER_SIZE):
+					msg = "Error: Command too long. max: {}, cmd length: {}, cmd: {}... (shortened)".format(self.WORKING_RX_BUFFER_SIZE -1, len(my_cmd), my_cmd[0:self.WORKING_RX_BUFFER_SIZE-1])
+					self._logger.error(msg)
+					self._handle_alarm_message("Command too long to send to GRBL.", code=self.ALARM_CODE_COMMAND_TOO_LONG)
 					self._cmd = None
-					self._send_event.set()
-				except serial.SerialException:
-					self._log("Unexpected error while writing serial port: %s" % (get_exception_string()))
-					self._errorValue = get_exception_string()
-					self.close(True)
+					return
+				if sum([len(x) for x in self._acc_line_buffer]) + len(my_cmd) +1 < self.WORKING_RX_BUFFER_SIZE:
+					my_cmd, _, _  = self._process_command_phase("sending", my_cmd)
+					self._log("Send: %s" % my_cmd)
+					self._acc_line_buffer.append(my_cmd + '\n')
+					try:
+						self._serial.write(my_cmd + '\n')
+						self._process_command_phase("sent", my_cmd)
+						self._cmd = None
+						self._send_event.set()
+					except serial.SerialException:
+						self._log("Unexpected error while writing serial port: %s" % (get_exception_string()))
+						self._errorValue = get_exception_string()
+						self.close(True)
 		else:
 			cmd, _, _  = self._process_command_phase("sending", cmd)
 			self._log("Send: %s" % cmd)
@@ -349,7 +386,7 @@ class MachineCom(object):
 				self._serial.write(cmd)
 				self._process_command_phase("sent", cmd)
 			except serial.SerialException:
-				self._log("Unexpected error while writing serial port: %s" % (get_exception_string()))
+				self._logger.info("Unexpected error while writing serial port: %s" % (get_exception_string()), terminal_as_comm=True)
 				self._errorValue = get_exception_string()
 				self.close(True)
 
@@ -386,7 +423,7 @@ class MachineCom(object):
 				port = ser.port
 
 			# connect to regular serial port
-			self._log("Connecting to: %s" % port)
+			self._logger.info("Connecting to: %s" % port, terminal_as_comm=True)
 			if baudrate == 0:
 				baudrates = baudrateList()
 				ser = serial.Serial(str(port), 115200 if 115200 in baudrates else baudrates[0], timeout=read_timeout, writeTimeout=10000, parity=serial.PARITY_ODD)
@@ -446,7 +483,8 @@ class MachineCom(object):
 		try:
 			self._log("Recv: %s" % sanitize_ascii(ret))
 		except ValueError as e:
-			self._log("WARN: While reading last line: %s" % e)
+			# self._log("WARN: While reading last line: %s" % e)
+			self._logger.warn("Exception while sanitizing ascii intput from grbl. Excpetion: '%s', original string from grbl: '%s'", e, ret)
 			self._log("Recv: %r" % ret)
 		return ret
 
@@ -468,7 +506,8 @@ class MachineCom(object):
 			"file": self._currentFile.getFilename(),
 			"filename": os.path.basename(self._currentFile.getFilename()),
 			"origin": self._currentFile.getFileLocation(),
-			"time": self.getPrintTime()
+			"time": self.getPrintTime(),
+			"mrb_state": _mrbeam_plugin_implementation.get_mrb_state()
 		}
 		self._move_home()
 		eventManager().fire(OctoPrintEvents.PRINT_DONE, payload)
@@ -586,41 +625,49 @@ class MachineCom(object):
 			self._rx_stats.add(rx_free)
 
 	def _handle_error_message(self, line):
+		"""
+		Handles error messages from GRBL
+		:param line: GRBL error respnse
+		"""
 		# grbl repots an error if there was never any data written to it's eeprom.
 		# it's going to write default values to eeprom and everything is fine then....
 		if "EEPROM read fail" in line:
 			self._logger.debug("_handle_error_message() Ignoring this error message: '%s'", line)
 			return
+		self._logger.error("_handle_error(): %s", line)
 		self._errorValue = line
 		eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
 		self._changeState(self.STATE_LOCKED)
 		self._logger.dump_terminal_buffer(level=logging.ERROR)
 		self._rx_stats.pp(print_time=self.getPrintTime())
 
-	def _handle_alarm_message(self, line):
-		if "Hard/soft limit" in line:
+	def _handle_alarm_message(self, line, code=None):
+		errorMsg = None
+		throwErrorMessage = True
+		dumpTerminal = True
+		if code == self.ALARM_CODE_COMMAND_TOO_LONG:
+			# this is not really a GRBL alarm state. Hacky to have it handled as one...
+			errorMsg = line or str(self.ALARM_CODE_COMMAND_TOO_LONG)
+			dumpTerminal = False
+		elif "Hard/soft limit" in line:
 			errorMsg = "Machine Limit Hit. Please reset the machine and do a homing cycle"
-			self._log(errorMsg)
-			self._errorValue = errorMsg
-			eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
-			self._logger.dump_terminal_buffer(level=logging.ERROR)
 		elif "Abort during cycle" in line:
 			errorMsg = "Soft-reset detected. Please do a homing cycle"
-			self._log(errorMsg)
-			self._errorValue = errorMsg
-			self._logger.dump_terminal_buffer(level=logging.ERROR)
+			throwErrorMessage = False
 		elif "Probe fail" in line:
 			errorMsg = "Probing has failed. Please reset the machine and do a homing cycle"
-			self._log(errorMsg)
-			self._errorValue = errorMsg
-			eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
-			self._logger.dump_terminal_buffer(level=logging.ERROR)
+		elif "Probe fail" in line:
+			errorMsg = "Probing has failed. Please reset the machine and do a homing cycle"
 		else:
-			errorMsg = "GRBL Alarm: {}".format(line)
+			errorMsg = "GRBL alarm message: '{}'".format(line)
+
+		if errorMsg:
 			self._log(errorMsg)
 			self._errorValue = errorMsg
-			eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
-			self._logger.dump_terminal_buffer(level=logging.ERROR)
+			if throwErrorMessage:
+				eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
+			if dumpTerminal:
+				self._logger.dump_terminal_buffer(level=logging.ERROR)
 
 		with self._commandQueue.mutex:
 			self._commandQueue.queue.clear()
@@ -652,6 +699,9 @@ class MachineCom(object):
 				self._errorValue = errorMsg
 				eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
 				self._logger.dump_terminal_buffer(level=logging.ERROR)
+		elif line[1:].startswith('G24'): # [G24_AVOIDED]
+			self.g24_avoided_message = []
+			self._logger.warn("G24_AVOIDED (Corrupted line data will follow)")
 		elif line[1:].startswith('Cau'): # [Caution: Unlocked]
 			pass
 		elif line[1:].startswith('Ena'): # [Enabled]
@@ -668,23 +718,74 @@ class MachineCom(object):
 
 		self.grbl_feat_rescue_from_home = self._grbl_version not in self.GRBL_FEAT_BLOCK_VERSION_LIST_RESCUE_FROM_HOME
 		self.grbl_feat_report_rx_buffer_state = self._grbl_version not in self.GRBL_FEAT_BLOCK_VERSION_LIST_RX_BUFFER_REPORTING
+		self.reset_grbl_auto_update_config()
 
-		self._logger.info("GRBL version: %s, rescue_from_home: %s, report_rx_buffer_state: %s", self._grbl_version, self.grbl_feat_rescue_from_home, self.grbl_feat_report_rx_buffer_state)
+		self._logger.info("GRBL version: %s, rescue_from_home: %s, report_rx_buffer_state: %s, auto_update: %s",
+		                  self._grbl_version,
+		                  self.grbl_feat_rescue_from_home,
+		                  self.grbl_feat_report_rx_buffer_state,
+		                  self.grbl_auto_update_enabled)
 
 		self._onConnected(self.STATE_LOCKED)
-
 		self.correct_grbl_settings()
 
-		# if not self.isOperational():
-		# 	self._onConnected(self.STATE_LOCKED)
-		# 	versionMatch = re.search("Grbl (?P<grbl>.+?)(_(?P<git>[0-9a-f]{7})(?P<dirty>-dirty)?)? \[.+\]", line)
-		# 	if versionMatch:
-		# 		# TODO uncomment version check when ready to test
-		# 		versionDict = versionMatch.groupdict()
-		# 		self._writeGrblVersionToFile(versionDict)
-		# 		if self._compareGrblVersion(versionDict) is False:
-		# 			self._flashGrbl()
-		# 		self._onConnected(self.STATE_LOCKED)
+
+	def _handle_corrupted_line(self, line):
+		"""
+		So far this 'Corrupted line' is sent only in combination with G24_AVOIDED
+
+		> 11:39:15,866 _COMM_: Send: G1X58.32Y338.49G1X56.78Y338.57
+		> ...
+		> 11:39:16,786 _COMM_: Recv: [G24_AVOIDED]
+		> 11:39:16,789 _COMM_: Recv: Corrupted line: G1X58.32Y338.49
+		> ...
+		> 11:39:17,221 _COMM_: Recv: Corrupted line: G1X56.78Y338.57
+
+		Rsults in this output:
+		# WARNING - G24_AVOIDED line: 'G1X58.32Y338.49G1X56.78Y338.57' (hex: [47 31 58 35 38 2E 33 32 59 33 33 38 2E 34 39][47 31 58 35 36 2E 37 38 59 33 33 38 2E 35 37])
+		:param line:
+		"""
+		data = line[len('Corrupted line: '):]
+		self.g24_avoided_message.append(data)
+		if len(self.g24_avoided_message) >= 2:
+			self.send_g24_avoided_message()
+			self.g24_avoided_message = []
+
+
+	def send_g24_avoided_message(self):
+		try:
+			data_str = ''
+			data_hex = ''
+			for i in self.g24_avoided_message:
+				if i.endswith('\n'):
+					# A line always ends with a \n which is added by GRBL to evey line sent back to us.
+					i = i[:-1]
+				data_str += i
+				data_hex += '[{}]'.format(self.get_hex_str_from_str(i))
+
+			self._logger.warn("G24_AVOIDED line: '%s' (hex: %s)",data_str, data_hex)
+			self._logger.dump_terminal_buffer(level=logging.WARN)
+
+			import urllib
+			import cgi
+			text = "<br/>"\
+			       "An internal event happened which we would love to track and analyse. Please help us improve Mr Beam II by sharing the data below. Thank you for the support.<br/><br/>"\
+				    "Please send us the event details per email:<br/>" \
+			       "Either simply <strong><a href='mailto:{email_addr}?subject={email_subject}&body={email_body}' target='_blank'>click here</a></strong><br/>" \
+			       "or copy the data below into an email and send it to {email_addr}.<br/><br/>" \
+			       "Event details:<br>{reason}<br/><br/>"\
+				       .format(reason="G24_AVOIDED: {} ({})".format(cgi.escape(data_str, True), data_hex),
+	                           email_addr="support@mr-beam.org",
+	                           email_subject="G24_AVOIDED",
+	                           email_body=urllib.quote_plus("G24_AVOIDED: {} ({})\n\nJust send this email as it is, no need to add extra comments.\nThank you for your help.\n".format(data_str, data_hex))
+			                   )
+			_mrbeam_plugin_implementation.notify_frontend(
+				title="Help our Developers",
+				text=text,
+				type='warn',
+				sticky=True)
+		except:
+			self._logger.exception("G24_AVOIDED Exception in _handle_g24_avoided_message(): ")
 
 	def _handle_settings_message(self, line):
 		"""
@@ -713,8 +814,12 @@ class MachineCom(object):
 		"""
 		This triggers a reload of GRBL settings and does a validation and correction afterwards.
 		"""
-		self._refresh_grbl_settings()
-		threading.Timer(3.0, self._verify_and_correct_loaded_grbl_settings, kwargs=dict(retries=retries)).start()
+		if time.time() - self._grbl_settings_correction_ts > self.GRBL_SETTINGS_READ_WINDOW:
+			self._grbl_settings_correction_ts = time.time()
+			self._refresh_grbl_settings()
+			self._verify_and_correct_loaded_grbl_settings(retries=retries, timeout=self.GRBL_SETTINGS_READ_WINDOW, force_thread=True)
+		else:
+			self._logger.warn("correct_grbl_settings() got called more than once withing %s s. Ignoring this call.", self.GRBL_SETTINGS_READ_WINDOW )
 
 	def _refresh_grbl_settings(self):
 		self._grbl_settings = dict()
@@ -727,50 +832,62 @@ class MachineCom(object):
 			log.append("${id}={val} ({comment})".format(id=id, val=data['value'], comment=data['comment']))
 		return "({count}) [{data}]".format(count=len(log), data=', '.join(log))
 
-	def _verify_and_correct_loaded_grbl_settings(self, retries=0):
+	def _verify_and_correct_loaded_grbl_settings(self, retries=0, timeout=0.0, force_thread=False):
 		settings_count = self._laserCutterProfile['grbl']['settings_count']
 		settings_expected = self._laserCutterProfile['grbl']['settings']
-		my_grbl_settings = self._grbl_settings.copy() # to avoid race conditions
+		self._logger.debug("GRBL Settings waiting... timeout: %s, settings count: %s", timeout, len(self._grbl_settings))
 
-		log = self._get_string_loaded_grbl_settings(settings=my_grbl_settings)
-
-		commands = []
-		if len(my_grbl_settings) != settings_count:
-			self._logger.error("GRBL Settings count incorrect!! %s settings but should be %s. Writing all settings to grbl.", len(my_grbl_settings), settings_count)
-			for id, value in sorted(settings_expected.iteritems()):
-				commands.append("${id}={val}".format(id=id, val=value))
+		if force_thread or (timeout > 0.0 and len(self._grbl_settings) < settings_count):
+			timeout = timeout - self.GRBL_SETTINGS_CHECK_FREQUENCY
+			myThread = threading.Timer(self.GRBL_SETTINGS_CHECK_FREQUENCY, self._verify_and_correct_loaded_grbl_settings, kwargs=dict(retries=retries, timeout=timeout))
+			myThread.daemon = True
+			myThread.name = "CommAcc2_GrblSettings"
+			myThread.start()
 		else:
-			for id, value in sorted(settings_expected.iteritems()):
-				if not id in my_grbl_settings:
-					self._logger.error("GRBL Settings $%s - Missing entry! Should be: %s", id, value)
-					commands.append("${id}={val}".format(id=id, val=value))
-				elif my_grbl_settings[id]['value'] != value:
-					self._logger.error("GRBL Settings $%s=%s (%s) - Incorrect value! Should be: %s",
-					                   id, my_grbl_settings[id]['value'], my_grbl_settings[id]['comment'], value)
-					commands.append("${id}={val}".format(id=id, val=value))
+			my_grbl_settings = self._grbl_settings.copy() # to avoid race conditions
 
-		if len(commands) > 0:
-			msg = "GRBL Settings - Verification: FAILED"
-			self._logger.warn(msg + " - " + log)
-			self._log(msg)
-			self._logger.warn("GRBL Settings correcting: %s values", len(commands), terminal_as_comm=True)
-			for c in commands:
-				self._logger.warn("GRBL Settings correcting value: %s", c, terminal_as_comm=True)
-				# flush before and after to make sure grbl can really handle the settings command
-				self.sendCommand(self.COMMAND_FLUSH)
-				self.sendCommand(c)
-				self.sendCommand(self.COMMAND_FLUSH)
-			if retries > 0:
-				retries -= 1
-				self._logger.warn("GRBL Settings corrections done. Restarting verification...", terminal_as_comm=True)
-				self.correct_grbl_settings(retries=retries)
+			log = self._get_string_loaded_grbl_settings(settings=my_grbl_settings)
+
+			commands = []
+			if len(my_grbl_settings) != settings_count:
+				self._logger.error("GRBL Settings count incorrect!! %s settings but should be %s. Writing all settings to grbl.", len(my_grbl_settings), settings_count)
+				for id, value in sorted(settings_expected.iteritems()):
+					commands.append("${id}={val}".format(id=id, val=value))
 			else:
-				self._logger.warn("GRBL Settings corrections done. No more retries.", terminal_as_comm=True)
+				for id, value in sorted(settings_expected.iteritems()):
+					if not id in my_grbl_settings:
+						self._logger.error("GRBL Settings $%s - Missing entry! Should be: %s", id, value)
+						commands.append("${id}={val}".format(id=id, val=value))
+					elif my_grbl_settings[id]['value'] != value:
+						self._logger.error("GRBL Settings $%s=%s (%s) - Incorrect value! Should be: %s",
+						                   id, my_grbl_settings[id]['value'], my_grbl_settings[id]['comment'], value)
+						commands.append("${id}={val}".format(id=id, val=value))
 
-		else:
-			msg = "GRBL Settings - Verification: OK"
-			self._logger.info(msg + " - " + log)
-			self._log(msg)
+			if len(commands) > 0:
+				msg = "GRBL Settings - Verification: FAILED"
+				self._logger.warn(msg + " - " + log)
+				self._log(msg)
+				self._logger.warn("GRBL Settings correcting: %s values", len(commands), terminal_as_comm=True)
+				for c in commands:
+					self._logger.warn("GRBL Settings correcting value: %s", c, terminal_as_comm=True)
+					# flush before and after to make sure grbl can really handle the settings command
+					self.sendCommand(self.COMMAND_FLUSH)
+					self.sendCommand(c)
+					self.sendCommand(self.COMMAND_FLUSH)
+				if retries > 0:
+					retries -= 1
+					wait_time = 2.0
+					self._logger.warn("GRBL Settings corrections done. Restarting verification in %s s", wait_time, terminal_as_comm=True)
+					time.sleep(wait_time)
+					self._logger.warn("GRBL Settings Restarting verification...", terminal_as_comm=True)
+					self.correct_grbl_settings(retries=retries)
+				else:
+					self._logger.warn("GRBL Settings corrections done. No more retries.", terminal_as_comm=True)
+
+			else:
+				msg = "GRBL Settings - Verification: OK"
+				self._logger.info(msg + " - " + log)
+				self._log(msg)
 
 	def _process_command_phase(self, phase, command, command_type=None, gcode=None):
 		if phase not in ("queuing", "queued", "sending", "sent"):
@@ -830,7 +947,7 @@ class MachineCom(object):
 
 		oldState = self.getStateString()
 		self._state = newState
-		self._log('Changing monitoring state from \'%s\' to \'%s\'' % (oldState, self.getStateString()))
+		self._logger.debug('Changing monitoring state from \'%s\' to \'%s\'' % (oldState, self.getStateString()), terminal_as_comm=True)
 		self._callback.on_comm_state_change(newState)
 
 	def _onConnected(self, nextState):
@@ -842,7 +959,7 @@ class MachineCom(object):
 			self._changeState(nextState)
 
 		if self.sending_thread is None or not self.sending_thread.isAlive():
-			self.start_sending_thread()
+			self._start_sending_thread()
 
 		payload = dict(grbl_version=self._grbl_version, port=self._port, baudrate=self._baudrate)
 		eventManager().fire(OctoPrintEvents.CONNECTED, payload)
@@ -905,11 +1022,13 @@ class MachineCom(object):
 		self._serialLogger.debug(message)
 
 
-	def flash_grbl(self, grbl_file=None, verify_only=False):
+	def flash_grbl(self, grbl_file=None, verify_only=False, is_connected=True):
 		"""
 		Flashes the specified grbl file (.hex). This file must not contain a bootloader.
 		:param grbl_file:
 		:param verify_only: If true, nothing is written, current grbl is verified only
+		:param is_connected: If True, serial connection to grbl is closed before flashing and reconnected afterwards.
+			Auto updates is executed before connection to grbl is established so in this case this param should be set to False.
 		"""
 		log_verb = 'verifying' if verify_only else 'flashing'
 
@@ -946,8 +1065,9 @@ class MachineCom(object):
 
 		self._logger.info("{} grbl: '%s'", log_verb.capitalize(), grbl_path)
 
-		self.close(isError=False, next_state=self.STATE_FLASHING)
-		time.sleep(1)
+		if is_connected:
+			self.close(isError=False, next_state=self.STATE_FLASHING)
+			time.sleep(1)
 
 		# FYI: Fuses can't be changed from over srial
 		params = ["avrdude", "-patmega328p", "-carduino",
@@ -997,18 +1117,43 @@ class MachineCom(object):
 			self._logger.debug(msg_long, terminal_as_comm=True)
 			self._logger.info(msg_short, terminal_as_comm=True)
 
-		# reconnect
 		time.sleep(1.0)
-		timeout = 60
-		self._logger.info("Waiting before reconnect. (max %s secs)", timeout, terminal_as_comm=True)
-		if self.monitoring_thread is not None:
-			self.monitoring_thread.join(timeout)
 
-		if self.monitoring_thread is not None or not self.monitoring_thread.isAlive():
-			# will open serial connection
-			self.start_monitoring_thread()
-		else:
-			self._logger.info("Can't reconnect automacically. Try to reconnect manually or reboot system.")
+		# reconnect
+		if is_connected:
+			timeout = 60
+			self._logger.info("Waiting before reconnect. (max %s secs)", timeout, terminal_as_comm=True)
+			if self.monitoring_thread is not None and threading.current_thread() != self.monitoring_thread:
+				self.monitoring_thread.join(timeout)
+
+			if self.monitoring_thread is not None and not self.monitoring_thread.isAlive():
+				# will open serial connection
+				self._start_monitoring_thread()
+			else:
+				self._logger.info("Can't reconnect automacically. Try to reconnect manually or reboot system.")
+
+
+	def reset_grbl_auto_update_config(self):
+		"""
+		Resets grbl auto update configuration in lasercutterProfile if current grbl version is expected version.
+		This makes sure that once the auto update got executed sucessfully it's not done again and again.
+		Only has effect IF:
+		 - grbl_auto_update_enabled in config.yaml is True (default)
+		"""
+		if self.grbl_auto_update_enabled and self._laserCutterProfile['grbl']['auto_update_version'] is not None:
+			if self._grbl_version == self._laserCutterProfile['grbl']['auto_update_version']:
+				self._logger.info("Removing grbl auto update flags from lasercutterprofile...")
+				try:
+					self._laserCutterProfile['grbl']['auto_update_file'] = None
+					self._laserCutterProfile['grbl']['auto_update_version'] = None
+					laserCutterProfileManager().save(self._laserCutterProfile, allow_overwrite=True)
+				except:
+					self._logger.exception("Exception while saving lasercutterProfile changes to auto update controls: ")
+			else:
+				self._logger.warn("GRBL auto update still set: auto_update_file: %s, auto_update_version: %s, current grbl version: %s",
+				                  self._laserCutterProfile['grbl']['auto_update_file'],
+				                  self._laserCutterProfile['grbl']['auto_update_version'],
+				                  self._grbl_version)
 
 
 	def rescue_from_home_pos(self):
@@ -1154,6 +1299,13 @@ class MachineCom(object):
 					self._intensity_dict[intensity_cmd] = new_intensity
 				return cmd.replace(intensity_cmd, 'S%d' % round(new_intensity))
 		return cmd
+
+	def get_hex_str_from_str(self, data):
+		res = []
+		for i in range(len(data)):
+			tmp = hex(ord(data[i]))[2:].upper()
+			res.append('0'+tmp if len(tmp)<=1 else tmp)
+		return ' '.join(res)
 
 	##~~ command handlers
 	def _gcode_G1_sending(self, cmd, cmd_type=None):
@@ -1324,6 +1476,8 @@ class MachineCom(object):
 		self._feedrate_factor  = 1
 		self._intensity_factor = 1
 		self._finished_passes = 0
+		self._pauseWaitTimeLost = 0.0
+		self._pauseWaitStartTime = None
 
 		self._rx_stats.reset()
 		if not self.grbl_feat_report_rx_buffer_state:
@@ -1339,7 +1493,8 @@ class MachineCom(object):
 			payload = {
 				"file": self._currentFile.getFilename(),
 				"filename": os.path.basename(self._currentFile.getFilename()),
-				"origin": self._currentFile.getFileLocation()
+				"origin": self._currentFile.getFileLocation(),
+				'mrb_state': _mrbeam_plugin_implementation.get_mrb_state()
 			}
 			eventManager().fire(OctoPrintEvents.PRINT_STARTED, payload)
 
@@ -1372,7 +1527,8 @@ class MachineCom(object):
 			"file": self._currentFile.getFilename(),
 			"filename": os.path.basename(self._currentFile.getFilename()),
 			"origin": self._currentFile.getFileLocation(),
-			"time": self.getPrintTime()
+			"time": self.getPrintTime(),
+			'mrb_state': _mrbeam_plugin_implementation.get_mrb_state()
 		}
 		eventManager().fire(OctoPrintEvents.PRINT_CANCELLED, payload)
 
@@ -1386,9 +1542,9 @@ class MachineCom(object):
 			"file": self._currentFile.getFilename(),
 			"filename": os.path.basename(self._currentFile.getFilename()),
 			"origin": self._currentFile.getFileLocation(),
-			"cooling": pause_for_cooling,
 			"trigger": trigger,
-			"time": self.getPrintTime()
+			"time": self.getPrintTime(),
+			'mrb_state': _mrbeam_plugin_implementation.get_mrb_state()
 		}
 
 		if not pause and (self.isPaused() or force):
@@ -1410,6 +1566,13 @@ class MachineCom(object):
 			self._send_event.set()
 			eventManager().fire(OctoPrintEvents.PRINT_PAUSED, payload)
 			self._logger.info(self._rx_stats.pp(print_time=self.getPrintTime()))
+
+		if self.getPrintTime() < 0.0:
+			self._logger.warn("setPause() %s: print time is negative! print time: %s, _pauseWaitStartTime: %s, _pauseWaitTimeLost: %s",
+			                  'pausing' if pause else 'resuming',
+			                  self.getPrintTime(),
+			                  self._pauseWaitStartTime,
+			                  self._pauseWaitTimeLost)
 
 	def increasePasses(self):
 		self._passes += 1
@@ -1560,7 +1723,8 @@ class MachineCom(object):
 					"file": self._currentFile.getFilename(),
 					"filename": os.path.basename(self._currentFile.getFilename()),
 					"origin": self._currentFile.getFileLocation(),
-					"time": self.getPrintTime()
+					"time": self.getPrintTime(),
+					"mrb_state": _mrbeam_plugin_implementation.get_mrb_state()
 				}
 			eventManager().fire(OctoPrintEvents.PRINT_FAILED, payload)
 		eventManager().fire(OctoPrintEvents.DISCONNECTED)
@@ -1618,7 +1782,7 @@ class PrintingFileInformation(object):
 	"""
 
 	def __init__(self, filename):
-		self._logger = logging.getLogger(__name__)
+		self._logger = mrb_logger("octoprint.plugins.mrbeam.comm_acc2")
 		self._filename = filename
 		self._pos = 0
 		self._size = None

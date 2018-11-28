@@ -14,6 +14,8 @@ $(function() {
 
         self.showAgain = ko.observable(true);
 
+        self.dialog_language = window.MRBEAM_LANGUAGE;
+
 
         self.allChecked = ko.computed(function() {
             return (self.checkbox1() &&
@@ -123,7 +125,8 @@ $(function() {
                     var data = {
                         "username": self.loginStateViewModel.username(),
                         "ts": Date.now().toString(),
-                        "showAgain": self.showAgain()
+                        "show_again": self.showAgain(),
+                        "dialog_language": self.dialog_language
                     };
                     self._sendData(data);
                     return true;

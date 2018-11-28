@@ -924,6 +924,14 @@ body {
   display: inline-block;
   color: #e25303;
 }
+
+.octoprint-container .accordion-heading div.accordion-toggle {
+  display: inline-block;
+  padding: 8px 15px;
+  color: #e25303;
+  cursor: default;
+}
+
 .octoprint-container .accordion-heading [class^="icon-"],
 .octoprint-container .accordion-heading [class*=" icon-"] {
   color: #383e42;
@@ -2055,4 +2063,77 @@ input.search-query,
 
 .no-transition {
     transition-duration: 0s,0s,0s,0s !IMPORTANT;
+}
+
+
+/*
+* === TOOLTIPS ===
+*/
+
+.tooltip-inner {
+  max-width: 500px;
+  white-space: normal;
+  background-color: white;
+  border: 2px solid #e25303;
+  color: black;
+  text-align:left;
+}
+.tooltip.right .tooltip-arrow {
+  border-right-color: #e25303;
+  /*border-width: 0 5px 5px;*/
+}
+
+/*
+* — for parameter explanations —
+*/
+
+.icon-question-sign {
+  display: inline-block;
+  line-height: 30px;
+  padding-left: 3px;
+}
+
+.form-horizontal .controls {
+  width: 348px;
+}
+
+.range-control-and-label {
+  width: 530px;
+}
+
+.input-control-and-label {
+  width: 280px;
+}
+
+.switch-control-and-label {
+  display: inline-block;
+  width: 415px;
+}
+
+.bar-control-and-label {
+  width: 406px;
+}
+
+.checkbox-control-and-label {
+  width: 258px;
+}
+
+.line-control-and-label {
+  width: 500px;
+}
+
+.cutting-control-and-label {
+  width: 300px;
+}
+
+.material-control-and-label {
+  max-width: 210px;
+}
+
+
+/*
+* === BUTTON GROUPS ===
+*/
+#svgtogcode_img_engraving_mode {
+  margin-top: 3%;
 }

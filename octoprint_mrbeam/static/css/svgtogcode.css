@@ -103,7 +103,7 @@ svg .vector_outline {
 }
 .photo_attribution a {
     color: #999;
-    font-size: smaller;
+    font-size: x-small;
 }
 
 #dialog_vector_graphics_conversion .hint {
@@ -284,8 +284,43 @@ svg#area_preview {
     box-shadow: 1px 1px 2px #383e42;
 	transition: box-shadow .1s ease-in-out;
 }
-#material_row .hover_shadow:hover { 
+#material_row .hover_shadow:hover {
     box-shadow: 2px 2px 4px #383e42;
+}
+
+#material_type #material_burger_menu {
+	display: none;
+}
+#material_type.active #material_burger_menu {
+	display: block;
+}
+
+
+#material_type.manage a#materials_manage,
+#material_type a#materials_manage_done { display: none; }
+#material_type a#materials_manage,
+#material_type.manage a#materials_manage_done { display: inline; }
+
+#materials_manage_done { transition: text-shadow 0.3s ease-in-out 0s; }
+#materials_manage_done.flash {
+	text-shadow: 0px 0px 10px #e25303;
+}
+
+#material_type ul#material_list li span.delete_me:hover { color:#e25303; }
+#material_type ul#material_list li span.delete_me { display: none; cursor: pointer; }
+#material_type.manage ul#material_list li.custom span.delete_me { display: block; }
+
+li.material_entry span.delete_me {
+    position: absolute;
+    bottom: 0;
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+    padding: 13px 17px;
+    border-radius: 25% 0 0 0;
+    right: 0;
+    top: auto;
+    left: auto;
 }
 
 .job_row {
@@ -470,7 +505,8 @@ svg#area_preview rect
 	position:absolute;
 	left: .3em;
 	bottom: .4em;
-	color: #777;
+    color: #e25303;
+	z-index: 999;
 }
 
 .freeTransformHandle{
@@ -483,9 +519,9 @@ svg#area_preview rect
     width: 100%;
     margin: 0 0 0 -14px;
 	padding: 9px 14px;
-	border-top: 1px solid #999;	
+	border-top: 1px solid #999;
 	border-bottom: 1px solid #999;
-    line-height: 30px;	
+    line-height: 30px;
 }
 
 #color_assignment.inactive {
@@ -497,7 +533,7 @@ svg#area_preview rect
 #material_list {
 	margin: 0;
 	max-height: 55vh;
-	overflow: auto;
+	overflow: visible;
 }
 .material_entry {
 	display: none;
@@ -510,8 +546,8 @@ svg#area_preview rect
 	cursor: pointer;
 }
 
-#material_type .material_entry.selected { 
-	display: block;     
+#material_type .material_entry.selected {
+	display: block;
 	height: 60px;
     background-position: center;
 }
@@ -530,6 +566,8 @@ li.material_entry span {
 
 #thickness_list{
 	width: 200px;
+    white-space: initial;
+
 }
 
 
@@ -551,8 +589,9 @@ li.material_entry span {
 .thickness_sample:hover, .thickness_sample.active {font-weight: bold; }
 
 #material_row {
+    overflow: visible;
+    white-space: nowrap;
 	width: 100%;
-	overflow-x: hidden;
 	position: relative;
 	transition: height .3s ease-in-out;
 	margin-bottom: 1em;
@@ -572,18 +611,17 @@ li.material_entry span {
     margin: 0;
 }
 
-#material_type, #material_color, #material_thickness {
-	width: 20%;
+#material_type, #material_color, #material_thickness, #save_material_flyin {
+	width: calc(200px + 2em);
 	display: inline-block;
 	box-sizing: border-box;
-	/*position: absolute;*/
+	vertical-align: top;
 	transition: width .1s ease-in;
 	background-color: #fff;
 }
 #material_type.active { width: 100%; }
-#material_type, #material_color, #material_thickness  { width: calc(200px + 2em); }
-#material_color.active { width: calc(100% - 200px - 3em); }
-#material_thickness.active { width: calc(100% - 2 * (200px + 6em)); }
+#material_color.active { width: calc(100% - 3300px); }
+#material_thickness.active { width: calc(100% - 2 * (300px)); }
 
 #material_thickness .engrave_only {
     border-bottom: transparent;
@@ -592,6 +630,20 @@ li.material_entry span {
     background-size: cover, contain;
     border-top: 1px solid #e25303;
 }
+
+#save_material_flyin {padding-top:1em;}
+
+#save_material_flyin form { margin:0; }
+#save_material_flyin .control-group { margin-bottom:.5em; }
+#save_material_flyin label.control-label { width:120px; }
+#save_material_flyin .controls { margin-left:130px; }
+
+#custom_mat_col {
+	width: 3em;
+	height: 3em;
+}
+
+#custom_mat_th { width: 3em; margin-right: .5em; }
 
 .not_possible_on_this_material {
 	color:#999;
@@ -621,8 +673,8 @@ li.material_entry span {
     margin-bottom: .5em;
 }
 
-#quick_shape_dialog input[type=color], 
-#quick_shape_dialog input[type=number], 
+#quick_shape_dialog input[type=color],
+#quick_shape_dialog input[type=number],
 #quick_shape_dialog input[type=range] {
     width: 150px;
 }

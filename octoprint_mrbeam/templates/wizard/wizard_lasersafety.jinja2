@@ -1,4 +1,9 @@
-<h3><i class="icon-warning-sign" style="color:red;"></i> {{ _('Laser Safety') }}</h3>
+<h3><i class="icon-warning-sign" style="color:red;"></i>
+            {% if language == 'de' %}
+                Laser Sicherheit
+            {% else %}
+                Laser Safety
+            {% endif %}</h3>
 
 
 {% include "lasersafety_genericbody.jinja2" %}

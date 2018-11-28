@@ -273,6 +273,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             var svg = this;
 		    var bbox = svg.getBBox();
 
+		    svg.ftBeforeTransform(); // issue #295
+
 		    if(params.tx !== undefined && !isNaN(params.tx)){
                 svg.data('tx', params.tx - bbox.x);
             }
@@ -287,6 +289,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			}
 			svg.ftStoreInitialTransformMatrix();
 			svg.ftUpdateTransform();
+
+			svg.ftAfterTransform(); // issue #295
         };
 
 		Element.prototype.ftUpdateHandlesGroup = function() {

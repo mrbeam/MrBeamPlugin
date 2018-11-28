@@ -1,0 +1,169 @@
+
+
+{% if language == 'de' %}
+
+    <script>var wizard_plugin_corewizard_whatsnew_2_title_de = "Materialeinstellungen";</script>
+    <h3>{{ _("Speichere benutzerdefinierte Materialeinstellungen") }}</h3>
+
+
+    <p>
+        Endlich ist es soweit: Du kannst deine eigenen Materialeinstellungen in Mr Beam II speichern.<br/>
+        (Custom Material Settings)
+    </p>
+    <p>
+        <strong>Was macht es?</strong><br/>
+        Es speichert die Werte der aktuellen Laserparameter wie Laserintensität, Geschwindigkeit und Anzahl der Durchläufe für den Gravier- und Schneidejob.
+        Diese Werte nennen wir Materialeinstellungen, da sie sehr abhängig von der Art des verwendeten Materials sind.
+        Wenn du irgendwann später das gleiche Material verwendest, kannst du einfach deine vorab gespeicherten Materialeinstellungen auswählen und schon kann es losgehen.
+    </p>
+
+    <img id="wizard_whatsnew_custom_materials_img" src="/plugin/mrbeam/static/img/whatsnew/whatsnew_custom_materials.gif">
+
+    <p><br/></p>
+
+    <p>
+        <strong>Wie geht es?</strong><br/>
+
+        <ul>
+            <li>Im Bildschirm mit den Laserparametern wählst du ein Material, eine Farbe und eine Dicke, die dem von dir verwendeten Material am nächsten kommt. </li>
+            <li>Sobald du eine der Einstellungen im unteren Teil änderst, erscheinen neue Buttons neben deiner Materialauswahl.</li>
+            <li>Klicke auf <strong>Save custom material</strong>, um einen kleinen Dialog zu öffnen,
+                in dem du deine aktuelle Intensität, Geschwindigkeit und Anzahl der Durchläufe des Gravur- und Schneidejobs speichern kannst.
+                Bevor du auf Speichern klickst, gib deinen Materialeinstellungen einen guten Namen und stelle die Dicke- und die Farbwerte ein,
+                damit du sie später leicht wiederfinden kannst.</li>
+            <li>Um diese Einstellungen zu einem späteren Zeitpunkt zu laden, öffne einfach den Bildschirm mit den Laserparametern.
+                In der Übersicht aller Materialien findest du ein neues Material mit deinem Namen.
+                Wähle einfach Material, Farbe und Dicke aus und die Laserparameter sind mit den gespeicherten Werten vorbelegt.</li>
+        </ul>
+
+    </p>
+
+    <p>
+        <strong>Tipps und nützliche Details:</strong>
+        <ul>
+            <li>Diese Werte werden in deinen benutzerdefinierten Materialeinstellungen (custom material settings) gespeichert:
+                <ul>
+                    <li>Gravurjob:<br/>
+                        <ul>
+                            <li>Laserintensitätsbereich ("laser intensity range" ; Werte für Schwarz und Weiß)</li>
+                            <li>Gravurgeschwindigkeitsbereich (“engraving speed range”; Werte für Schwarz-Weiß)</li>
+                            <li>sowie aus den Advanced Settings: Pierce Time und  Dithering.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <li>Schneideauftrag:</li>
+                        <ul>
+                            <li>Laserintensität ("laser intensity")</li>
+                            <li>Lasergeschwindigkeit ("laser speed")</li>
+                            <li>Durchläufe ("passes")</li>
+                            <li>und Pierce Time (in Advanced Settings).</li>
+                        </ul>
+                        Wenn du zum Zeitpunkt des Speicherns mehr als einen Schneidejob hast, wählt Mr Beam II automatisch den mit den stärksten Einstellungen aus,
+                        annehmend, dass es derjenige ist, der dein Material ganz durchschneiden soll.</li>
+                </ul>
+            </li>
+            <li>Wenn du im Speicherdialog einen Dickewert von 0 (Null) einstellst, wird dieser als "engrave only" interpretiert.
+                Dies ist sinnvoll für ein Material, von dem du weißt, dass es nicht geschnitten werden kann.</li>
+            <li>Wenn du einen Namen für ein benutzerdefiniertes Material eingibst, der bereits existiert, aber eine andere Farbe oder Dicke hat,
+                werden diese neuen Werte einfach zu deinem bestehenden Material hinzugefügt.
+                Wenn alle drei Werte gleich sind (Name, Farbe und Dicke), wird deine bestehende Einstellung aktualisiert bzw. überschrieben.</li>
+            <li>Um eine benutzerdefinierte Materialeinstellung zu löschen, klickst du in der Materialübersicht auf "Manage Materials"
+                und dann auf das Papierkorb-Symbol, das bei allen benutzerdefinierten Materialien erscheint.
+                Dadurch werden alle unter diesem Namen gespeicherten Einstellungen gelöscht. Es ist nicht möglich, vordefinierte Materialeinstellungen zu löschen.</li>
+            <li>Wenn du deine Materialeinstellungen nicht gespeichert hast und festgestellt hast, dass sie gut mit deinem Material funktioniert haben,
+                kannst du sie immer noch speichern, wenn der Laserjob beendet ist, indem du erneut zum Bildschirm mit den Laserparametern gehst,
+                als ob du im Begriff wärst, den gleichen Job erneut zu lasern.
+                Wenn du die Seite in deinem Browser nicht neu geladen, oder Mr Beam II ausgeschaltet hast, findest du deine Einstellungen immer noch genau wie am Anfang.
+                Klicke einfach auf <strong>Save custom material</strong> um sie jetzt zu speichern.</li>
+            <li>Im Moment ist es nicht möglich, benutzerdefinierte Materialeinstellungen zu exportieren, zu importieren oder ein Backup zu machen.</li>
+        </ul>
+    </p>
+
+    <p>
+        <a href="https://mr-beam.freshdesk.com/de/support/solutions/articles/43000431865-eigenen-materialeinstellungen-in-mr-beam-ii-speichern" target="_blank">
+            Du kannst den gesamten Artikel auch in unserer Knowledge Base im online Support Portal nachlesen.
+        </a>
+    </p>
+
+    <p><br/></p>
+
+
+
+{% else %}
+
+    <h3>{{ _("Save Custom Material Settings") }}</h3>
+
+
+    <p>
+        It's finally there! You can save your own material settings within Mr Beam II.
+    </p>
+    <p>
+        <strong>What does it do?</strong><br/>
+        It saves the values of the current laser parameters like laser intensity, speed and number of passes for the engraving and cutting job.
+        These values are what we call material settings because they are very dependent of the kind of material you use.
+        When you use the same material at some point later, you can simply select your pre-saved material settings and are good to go.
+    </p>
+
+    <img id="wizard_whatsnew_custom_materials_img" src="/plugin/mrbeam/static/img/whatsnew/whatsnew_custom_materials.gif">
+
+    <p><br/></p>
+
+    <p>
+        <strong>How can I use it?</strong><br/>
+
+        <ul>
+            <li>In the laser parameters screen select a material, color and thickness which is most similar to the one you're using. </li>
+            <li>As soon as you modify one of the settings in the lower part, new buttons appear next to your material selection:</li>
+            <li>Click <strong>Save custom material</strong> to open a little dialog to save your current intensity, speed and passes values of the engraving and the cutting job.
+            Before you hit save give it a good name and set the thickness and color values to make your material settings easy to find again once you need it.</li>
+            <li>To load these settings any time later simply open the laser parameters screen.
+                You will find a new material with your name in the overview of all materials.
+                Simply select your material, color and thickness and the laser parameters are pre-filled with your values.</li>
+        </ul>
+
+    </p>
+
+    <p>
+        <strong>Hints and useful Details:</strong>
+        <ul>
+            <li>These values are saved in your custom material settings:
+                <ul>
+                    <li>Engraving Job:<br/>
+                        <ul>
+                            <li>Laser intensity range (values for black and white)</li>
+                            <li>engraving speed range (values for black and white)</li>
+                            <li>as well as from advanced settings: pierce time and dithering.</li>
+                        </ul>
+                    <li>Cutting Job:<br/>
+                        <ul>
+                            <li>Laser intensity</li>
+                            <li>laser speed</li>
+                            <li>passes</li>
+                            <li>and pierce time (advanced settings).</li>
+                        </ul>
+                        In case you have more than one cutting job in the moment of saving, Mr Beam II automatically chooses the one
+                        with the strongest settings assuming that this is the one intended to cut your material all the way through.</li>
+                </ul>
+            </li>
+            <li>If you choose a thickness value of 0 (zero) in the saving dialog, it's interpreted as "engrave only". This makes sense for a material which you know can not be cut.</li>
+            <li>If you enter a name for a custom material which already exists but a different color or thickness, these new values are simply added to your existing material.
+                If all three values are the same (name, color and thickness), your existing setting is updated/overwritten.</li>
+            <li>To delete a custom material settings, click "Manage materials" on the materials overview then click on the trash bin icon which appears on all custom materials.
+                This deletes all settings saved under this name. It's not possible to delete pre-defined material settings.</li>
+            <li>If you did not save your material settings and found that they worked great with your material,
+                you can still save them once your laser job has finished by going to the laser parameters screen again as if you were about to do the same job again.
+                If you have nor reloaded the page in your browser or turned Mr Beam II off, you still have your settings right there.
+                Just click <strong>Save custom material</strong> and save them.</li>
+            <li>At the moment it is not possible to export, import or backup custom material settings.</li>
+        </ul>
+    </p>
+
+    <p>
+        <a href="https://mr-beam.freshdesk.com/en/support/solutions/articles/43000431865-save-custom-material-settings" target="_blank">
+            You can find this article also in our Knowledge Base in our online Support Portal.
+        </a>
+    </p>
+
+    <p><br/></p>
+
+{% endif %}

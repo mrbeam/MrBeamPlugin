@@ -6,6 +6,7 @@ from distutils.version import StrictVersion
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from .profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
+from .comm_acc2 import MachineCom
 
 
 def migrate(plugin):
@@ -19,17 +20,24 @@ class Migration(object):
 	VERSION_FIX_SSH_KEY_PERMISSION           = '0.1.28'
 	VERSION_UPDATE_CHANGE_HOSTNAME_SCRIPTS   = '0.1.37'
 	VERSION_UPDATE_LOGROTATE_CONF            = '0.1.45'
+	VERSION_MOUNT_MANAGER_150                = '0.1.46'
+	VERSION_GRBL_AUTO_UPDATE                 = '0.1.51'
+	VERSION_INFLATE_FILE_SYSTEM              = '0.1.51'
 
 	# this is where we have files needed for migrations
 	MIGRATE_FILES_FOLDER     = 'files/migrate/'
 	MIGRATE_LOGROTATE_FOLDER = 'files/migrate_logrotate/'
+
+	# grbl auto update conf
+	GRBL_AUTO_UPDATE_FILE = "grbl_0.9g_20181116_a437781.hex"
+	GRBL_AUTO_UPDATE_VERSION = MachineCom.GRBL_VERSION_20181116_a437781
 
 
 	def __init__(self, plugin):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.migrate")
 		self.plugin = plugin
 
-		self.version_previous = self.plugin._settings.get(['version'])
+		self.version_previous = self.plugin._settings.get(['version']) or "0.0.0"
 		self.version_current  = self.plugin._plugin_version
 		self.suppress_migrations = self.plugin._settings.get(['dev', 'suppress_migrations'])
 
@@ -68,6 +76,15 @@ class Migration(object):
 
 				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_UPDATE_LOGROTATE_CONF, equal_ok=False):
 					self.update_logrotate_conf()
+
+				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_MOUNT_MANAGER_150, equal_ok=False):
+					self.update_mount_manager()
+
+				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_GRBL_AUTO_UPDATE, equal_ok=False):
+					self.auto_update_grbl()
+
+				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_INFLATE_FILE_SYSTEM, equal_ok=False):
+					self.inflate_file_system()
 
 				# migrations end
 
@@ -190,14 +207,22 @@ class Migration(object):
 
 	def migrate_from_0_0_0(self):
 		self._logger.info("migrate_from_0_0_0() ")
+		write = False
 		my_profile = laserCutterProfileManager().get_default()
-		# this setting was introduce with MrbeamPlugin version 0.1.13
-		my_profile['laser']['intensity_factor'] = 13
-		self._logger.info("migrate_from_0_0_0() Set lasercutterProfile ['laser']['intensity_factor'] = 13")
-		# previous default was 300 (5min)
-		my_profile['dust']['auto_mode_time'] = 60
-		self._logger.info("migrate_from_0_0_0() Set lasercutterProfile ['dust']['auto_mode_time'] = 60")
-		laserCutterProfileManager().save(my_profile, allow_overwrite=True, make_default=True)
+		if not 'laser' in my_profile or not 'intensity_factor' in my_profile['laser'] or not my_profile['laser']['intensity_factor']:
+			# this setting was introduce with MrbeamPlugin version 0.1.13
+			my_profile['laser']['intensity_factor'] = 13
+			write = True
+			self._logger.info("migrate_from_0_0_0() Set lasercutterProfile ['laser']['intensity_factor'] = 13")
+		if not 'dust' in my_profile or not 'auto_mode_time' in my_profile['dust'] or not my_profile['dust']['auto_mode_time']:
+			# previous default was 300 (5min)
+			my_profile['dust']['auto_mode_time'] = 60
+			write = True
+			self._logger.info("migrate_from_0_0_0() Set lasercutterProfile ['dust']['auto_mode_time'] = 60")
+		if write:
+			laserCutterProfileManager().save(my_profile, allow_overwrite=True, make_default=True)
+		else:
+			self._logger.info("migrate_from_0_0_0() nothing to do here.")
 
 	def setup_iptables(self):
 		"""
@@ -275,6 +300,26 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 		exec_cmd("sudo service cron restart")
 
 
+	def update_mount_manager(self):
+		self._logger.info("update_mount_manager() ")
+
+		mount_manager_file = os.path.join(__package_path__, self.MIGRATE_FILES_FOLDER, 'mount_manager')
+		exec_cmd("sudo cp {src} /root/mount_manager/mount_manager".format(src=mount_manager_file))
+
+
+	def auto_update_grbl(self):
+		self._logger.info("auto_update_grbl() ")
+		default_profile = laserCutterProfileManager().get_default()
+		default_profile['grbl']['auto_update_version'] = self.GRBL_AUTO_UPDATE_VERSION
+		default_profile['grbl']['auto_update_file'] = self.GRBL_AUTO_UPDATE_FILE
+		laserCutterProfileManager().save(default_profile, allow_overwrite=True)
+
+
+	def inflate_file_system(self):
+		self._logger.info("inflate_file_system() ")
+		exec_cmd("sudo resize2fs -p /dev/mmcblk0p2")
+
+
 
 	##########################################################
 	#####             lasercutterProfiles                #####
@@ -298,8 +343,8 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 				return
 			elif self.plugin._device_series == '2C':
 				self.set_lasercutterPorfile_2C()
-			elif self.plugin._device_series == '2D':
-				self.set_lasercutterPorfile_2D()
+			elif self.plugin._device_series in ('2D', '2E', '2F'):
+				self.set_lasercutterPorfile_2DEF(series=self.plugin._device_series[1])
 			else:
 				self.set_lasercutterPorfile_2all()
 			self.save_current_version()
@@ -337,25 +382,28 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 			self._logger.info("set_lasercutterPorfile_2C() Created lasercutterProfile '%s' and set as default. Content: %s", profile_id, default_profile)
 
 
-	def set_lasercutterPorfile_2D(self):
+	def set_lasercutterPorfile_2DEF(self, series):
 		"""
-		Not sure if first D Series devices going to be shipped with a proper lasercutterProfile installed...
-		In case not, let's create it.
+		In case lasercutterProfile does not exist
 		:return:
 		"""
-		profile_id = "MrBeam2D"
-		model = "D"
+		series = series.upper()
+		profile_id = "MrBeam2{}".format(series)
+		model = series
 
 		if laserCutterProfileManager().exists(profile_id):
 			laserCutterProfileManager().set_default(profile_id)
-			self._logger.info("set_lasercutterPorfile_2D() Set lasercutterProfile '%s' as default.", profile_id)
+			self._logger.info("set_lasercutterPorfile_2DEF() Set lasercutterProfile '%s' as default.", profile_id)
 		else:
 			default_profile = laserCutterProfileManager().get_default()
 			default_profile['id'] = profile_id
 			default_profile['name'] = "MrBeam2"
 			default_profile['model'] = model
 			laserCutterProfileManager().save(default_profile, allow_overwrite=True, make_default=True)
-			self._logger.info("set_lasercutterPorfile_2D() Created lasercutterProfile '%s' and set as default. Content: %s",profile_id, default_profile)
+			self._logger.info("set_lasercutterPorfile_2DEF() Created lasercutterProfile '%s' and set as default. Content: %s",profile_id, default_profile)
+
+
+			self._logger.info("set_lasercutterPorfile_2DEF() Created lasercutterProfile '%s' and set as default. Content: %s",profile_id, default_profile)
 
 
 

@@ -45,8 +45,10 @@ class Converter():
 
 	_tempfile = "/tmp/_converter_output.tmp"
 
-	def __init__(self, params, model_path, min_required_disk_space=0):
+	def __init__(self, params, model_path, workingAreaWidth = None, workingAreaHeight = None, min_required_disk_space=0):
 		self._log = logging.getLogger("octoprint.plugins.mrbeam.converter")
+		self.workingAreaWidth = workingAreaWidth
+		self.workingAreaHeight = workingAreaHeight
 
 		# debugging
 		self.transform_matrix = {}
@@ -112,8 +114,9 @@ class Converter():
 			str += " (%.2f GB)" % (amount / 1024/1024/1024)
 		return str
 
-	def convert(self, on_progress=None, on_progress_args=None, on_progress_kwargs=None):
+	def convert(self, is_job_cancelled, on_progress=None, on_progress_args=None, on_progress_kwargs=None):
 
+		#TODO check if job cancelled by calling is_job_cancelled()
 		self.init_output_file()
 		self.check_free_space() # has to be after init_output_file (which removes old temp files occasionally)
 		
@@ -203,9 +206,11 @@ class Converter():
 
 						# contrast = 1.0, sharpening = 1.0, beam_diameter = 0.25,
 						# intensity_black = 1000, intensity_white = 0, speed_black = 30, speed_white = 500,
-						# dithering = True, pierce_time = 500, material = "default"
+						# dithering = True, pierce_time = 500, separation = True, material = "default"
 						rasterParams = self.options['raster']
 						ip = ImageProcessor(output_filehandle = fh,
+											workingAreaWidth = self.workingAreaWidth,
+											workingAreaHeight = self.workingAreaHeight,
 						                    contrast = rasterParams['contrast'],
 						                    sharpening = rasterParams['sharpening'],
 						                    beam_diameter = rasterParams['beam_diameter'],
@@ -217,6 +222,7 @@ class Converter():
 											speed_white = rasterParams['speed_white'],
 											dithering = rasterParams['dithering'],
 											pierce_time = rasterParams['pierce_time'],
+											engraving_mode = rasterParams['engraving_mode'],
 											material = rasterParams['material'] if 'material' in rasterParams else None)
 						data = imgNode.get('href')
 						if(data is None):
@@ -294,7 +300,7 @@ class Converter():
 							continue
 
 						for path in paths_by_color[colorKey]:
-							print('p', path)
+							#print('p', path)
 							curveGCode = ""
 							mbgc = path.get(_add_ns('gc', 'mb'), None)
 							if(mbgc != None):

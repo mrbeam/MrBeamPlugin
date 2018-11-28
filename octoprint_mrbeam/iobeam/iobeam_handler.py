@@ -175,7 +175,7 @@ class IoBeamHandler(object):
 		:return: True if the command was sent sucessfull (does not mean it was sucessfully executed)
 		'''
 		ok = self._send_command("{}:{}".format(self.MESSAGE_DEVICE_FAN, command))
-		# self._logger.info("ANDYTEST send_fan_command(): ok: %s, command: %s", ok, command)
+		# self._logger.info("send_fan_command(): ok: %s, command: %s", ok, command)
 		return ok
 
 	def _send_command(self, command):
@@ -470,7 +470,8 @@ class IoBeamHandler(object):
 		elif lock_id is not None and lock_state == self.MESSAGE_ACTION_INTERLOCK_CLOSED:
 			self._interlocks.pop(lock_id, None)
 		elif self.MESSAGE_ERROR in message:
-			raise Exception("iobeam received InterLock error: {}".format(message))
+			self._logger.error("iobeam received InterLock error: {}".format(message))
+			return 1
 		else:
 			return self._handle_invalid_message(message)
 
@@ -568,12 +569,19 @@ class IoBeamHandler(object):
 
 	def _handle_laser_message(self, message, token):
 		action = token[0] if len(token) > 0 else None
-		temp = self._as_number(token[1]) if len(token) > 1 else None
-
-		if action == self.MESSAGE_ACTION_LASER_TEMP and temp is not None:
-			self._call_callback(IoBeamValueEvents.LASER_TEMP, message, dict(temp=temp))
+		if action == self.MESSAGE_ACTION_LASER_TEMP:
+			temp = self._as_number(token[1]) if len(token) > 1 else None
+			if temp is not None:
+				self._call_callback(IoBeamValueEvents.LASER_TEMP, message, dict(temp=temp))
+		elif action == "head" and token[1] == 'data':
+			# iobeam sends the whole laserhead data print
+			try:
+				data = ":".join(token[2:]).replace("|||", "\n| ")
+				self._logger.info("laserhead: \n| %s", data)
+			except:
+				self._logger.exception("laserhead: exception while handling head:data: ")
 		else:
-			return self._handle_invalid_message(message)
+			self._logger.info("laserhead: '%s'", message)
 
 		return 0
 
@@ -607,8 +615,8 @@ class IoBeamHandler(object):
 		elif action == 'debug':
 			self._logger.info("iobeam debug message: '%s'", message)
 		else:
-			self._logger.debug("_handle_iobeam_message(): Received unknown message for device 'iobeam'. NOT counting as error. Message: %s", message)
-			return 0
+			self._logger.info("iobeam message: '%s'", message)
+		return 0
 
 	def _handle_error_message(self, message, token):
 		action = token[0] if len(token) > 0 else None

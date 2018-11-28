@@ -213,4 +213,7 @@ class LaserStateMonitor(StateMonitor):
 			"workPosition": self._workPosition,
 			"machinePosition": self._machinePosition
 		})
+		mrb_state = _mrbeam_plugin_implementation.get_mrb_state()
+		if mrb_state:
+			data['mrb_state'] = mrb_state
 		return data

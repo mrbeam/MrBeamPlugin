@@ -54,10 +54,8 @@ class DustManager(object):
 		self._timer_interval = self.DEFAULT_TIMER_INTERVAL
 		self._timer_boost_ts = 0
 		self._auto_timer = None
-		# self._command_response = None
 		self._last_command = ''
-		# self._command_event = threading.Event()
-
+		self.is_dust_mode = False
 
 		self._subscribe()
 		self._start_timer()
@@ -68,6 +66,15 @@ class DustManager(object):
 
 
 		self._logger.debug("initialized!")
+
+	def get_fan_state(self):
+		return self._state
+
+	def get_fan_rpm(self):
+		return self._rpm
+
+	def get_dust(self):
+		return self._dust
 
 	def is_fan_connected(self):
 		return self._connected
@@ -115,7 +122,6 @@ class DustManager(object):
 
 		self._validate_values()
 		self._send_dust_to_analytics(self._dust)
-		self._send_status_to_frontend()
 
 
 	def _on_command_response(self, args):
@@ -150,7 +156,6 @@ class DustManager(object):
 		if _mrbeam_plugin_implementation._oneButtonHandler.is_printing():
 			self._logger.info("_pause_laser() trigger: %s", trigger)
 			_mrbeam_plugin_implementation._oneButtonHandler.pause_laser(need_to_release=False, trigger=trigger)
-			self._send_status_to_frontend()
 
 	def _start_dust_extraction(self, value=None):
 		"""
@@ -185,39 +190,44 @@ class DustManager(object):
 				self._logger.debug("starting trial dust extraction. current: {}, threshold: {}".format(self._dust, self.extraction_limit))
 				dust_start = self._dust
 				dust_start_ts = self._data_ts
-				self._start_dust_extraction(self.FAN_MAX_INTENSITY)
-				while self.__continue_dust_extraction(self.extraction_limit, dust_start_ts):
-					time.sleep(1)
-				self._logger.debug("finished end dusting. current: {}, threshold: {}".format(self._dust, self.extraction_limit))
-				dust_end = self._dust
-				dust_end_ts = self._data_ts
-				if dust_start_ts != dust_end_ts:
-					_mrbeam_plugin_implementation._analytics_handler.write_final_dust(dust_start, dust_start_ts, dust_end, dust_end_ts)
-				else:
-					self._logger.warning("No dust value received during extraction time. Skipping writing analytics!")
+				if self.__continue_dust_extraction(self.extraction_limit, dust_start_ts):
+					self.is_dust_mode = True
+					_mrbeam_plugin_implementation.fire_event(MrBeamEvents.DUSTING_MODE_START)
+					self._start_dust_extraction(self.FAN_MAX_INTENSITY)
+					while self.__continue_dust_extraction(self.extraction_limit, dust_start_ts):
+						time.sleep(1)
+					self._logger.debug("finished end dusting. current: {}, threshold: {}".format(self._dust, self.extraction_limit))
+					dust_end = self._dust
+					dust_end_ts = self._data_ts
+					self.is_dust_mode = False
+					if dust_start_ts != dust_end_ts:
+						_mrbeam_plugin_implementation._analytics_handler.write_final_dust(dust_start, dust_start_ts, dust_end, dust_end_ts)
+					else:
+						self._logger.warning("No dust value received during extraction time. Skipping writing analytics!")
 				self._activate_timed_auto_mode(self.auto_mode_time)
 				self._trail_extraction = None
 			else:
 				self._logger.warning("No dust value received so far. Skipping trial dust extraction!")
 		except:
 			self._logger.exception("Exception in __do_end_dusting_thread(): ")
+		self.is_dust_mode = False
 		self.send_laser_job_event()
 
 	def send_laser_job_event(self):
 		try:
 			self._logger.debug("Last event: {}".format(self._last_event))
+			my_event = None
 			if self._last_event == OctoPrintEvents.PRINT_DONE:
-				_mrbeam_plugin_implementation._event_bus.fire(MrBeamEvents.LASER_JOB_DONE)
-				_mrbeam_plugin_implementation._plugin_manager.send_plugin_message("mrbeam", dict(event=MrBeamEvents.LASER_JOB_DONE))
-				self._logger.debug("Fire event: {}".format(MrBeamEvents.LASER_JOB_DONE))
+				my_event = MrBeamEvents.LASER_JOB_DONE
 			elif self._last_event == OctoPrintEvents.PRINT_CANCELLED:
-				_mrbeam_plugin_implementation._event_bus.fire(MrBeamEvents.LASER_JOB_CANCELLED)
-				_mrbeam_plugin_implementation._plugin_manager.send_plugin_message("mrbeam", dict(event=MrBeamEvents.LASER_JOB_CANCELLED))
-				self._logger.debug("Fire event: {}".format(MrBeamEvents.LASER_JOB_CANCELLED))
+				my_event = MrBeamEvents.LASER_JOB_CANCELLED
 			elif self._last_event == OctoPrintEvents.PRINT_FAILED:
-				_mrbeam_plugin_implementation._event_bus.fire(MrBeamEvents.LASER_JOB_FAILED)
-				_mrbeam_plugin_implementation._plugin_manager.send_plugin_message("mrbeam", dict(event=MrBeamEvents.LASER_JOB_FAILED))
-				self._logger.debug("Fire event: {}".format(MrBeamEvents.LASER_JOB_FAILED))
+				my_event = MrBeamEvents.LASER_JOB_FAILED
+			if my_event:
+				_mrbeam_plugin_implementation.fire_event(my_event)
+				# if this event comes to soon after the OP PrintDone, the actual order ca get mixed up.
+				# Resend to make sure we end with a green state
+				threading.Timer(1.0, _mrbeam_plugin_implementation.fire_event, [my_event, dict(resent=True)]).start()
 		except:
 			self._logger.exception("Exception send_laser_done_event send_laser_job_event(): ")
 
@@ -314,16 +324,4 @@ class DustManager(object):
 		self._timer_interval = self.DEFAULT_TIMER_INTERVAL
 		# must not call _start_timer()!!
 
-	def _send_status_to_frontend(self):
-		payload = dict(status=dict(
-			fan_state=self._state,
-			fan_rpm = self._rpm,
-			fan_dust = self._dust,
-			fan_connected = self._connected
-		))
-		_mrbeam_plugin_implementation._plugin_manager.send_plugin_message("mrbeam", payload)
 
-	def do_debug_stuff(self):
-		from random import randint
-		val =randint(0, 255)
-		# self._send_fan_command(self.FAN_COMMAND_ON.format(int(val)))

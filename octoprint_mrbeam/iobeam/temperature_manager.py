@@ -65,7 +65,6 @@ class TemperatureManager(object):
 		self.cooling_duration = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['laser']['cooling_duration']
 		self.mode_time_based = self.cooling_duration > 0
 		self.is_cooling_since = 0
-		self.send_cooling_state_to_frontend(self.is_cooling())
 
 	def onEvent(self, event, payload):
 		if event == IoBeamValueEvents.LASER_TEMP:
@@ -80,7 +79,6 @@ class TemperatureManager(object):
 		self.temperature_ts = time.time()
 		self._check_temp_val()
 		analyticsHandler(_mrbeam_plugin_implementation).add_laser_temp_value(self.temperature)
-		self.send_status_to_frontend(self.temperature)
 
 	def request_temp(self):
 		"""
@@ -97,17 +95,19 @@ class TemperatureManager(object):
 			self._logger.info("cooling_stop()")
 			self.is_cooling_since = time.time()
 			_mrbeam_plugin_implementation._oneButtonHandler.cooling_down_pause()
-			_mrbeam_plugin_implementation._event_bus.fire(MrBeamEvents.LASER_COOLING_PAUSE, dict(temp=self.temperature))
-			self.send_cooling_state_to_frontend(True)
+			_mrbeam_plugin_implementation.fire_event(MrBeamEvents.LASER_COOLING_PAUSE, dict(temp=self.temperature))
 
 	def cooling_resume(self):
 		"""
 		Resume laser once the laser has cooled down enough.
 		"""
 		self._logger.debug("cooling_resume()")
-		_mrbeam_plugin_implementation._event_bus.fire(MrBeamEvents.LASER_COOLING_RESUME, dict(temp=self.temperature))
+		_mrbeam_plugin_implementation.fire_event(MrBeamEvents.LASER_COOLING_RESUME, dict(temp=self.temperature))
 		_mrbeam_plugin_implementation._oneButtonHandler.cooling_down_end(only_if_behavior_is_cooling=True)
 		self.is_cooling_since = 0
+
+	def get_temperature(self):
+		return self.temperature
 
 	def is_cooling(self):
 		return (self.is_cooling_since is not None and self.is_cooling_since > 0)
@@ -174,8 +174,3 @@ class TemperatureManager(object):
 			# self._logger.debug("Laser temperature nothing. Current temp: %s, self.is_cooling(): %s", self.temperatur, self.is_cooling())
 			pass
 
-	def send_cooling_state_to_frontend(self, cooling):
-		_mrbeam_plugin_implementation._plugin_manager.send_plugin_message("mrbeam", dict(cooling=cooling))
-
-	def send_status_to_frontend(self, temperature):
-		_mrbeam_plugin_implementation._plugin_manager.send_plugin_message("mrbeam", dict(status=dict(laser_temperature=temperature)))

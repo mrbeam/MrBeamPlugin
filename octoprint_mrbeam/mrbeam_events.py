@@ -1,4 +1,6 @@
 
+from octoprint_mrbeam.mrb_logger import mrb_logger
+from octoprint.events import Events as OctoPrintEvents
 
 
 
@@ -28,3 +30,16 @@ class MrBeamEvents(object):
 
 	LASER_COOLING_PAUSE        = "LaserCoolingPause"
 	LASER_COOLING_RESUME       = "LaserCoolingResume"
+
+	DUSTING_MODE_START         = "DustingModeStart"
+
+
+	@classmethod
+	def register_with_octoprint(cls):
+		"""
+		this has to be called during plugin's Constructor
+		"""
+		for k,v in vars(MrBeamEvents).iteritems():
+			if isinstance(k, basestring) and isinstance(v, basestring) and k[0].isupper():
+				setattr(OctoPrintEvents, k, v)
+

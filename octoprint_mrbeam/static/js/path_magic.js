@@ -6,7 +6,7 @@ var mrbeam = mrbeam || {};
   ////////////////////////////
     // gcode_nextgen
     // version:
-  var VERSION = '0.1'
+  var VERSION = '0.1';
     //
     //
   ////////////////////////////
@@ -129,7 +129,7 @@ var mrbeam = mrbeam || {};
       { x: r, y: y },
       { x: x, y: y }
     ];
-  }
+  };
 
 
   // --- circle
@@ -155,7 +155,7 @@ var mrbeam = mrbeam || {};
     }
 
     return pts;
-  }
+  };
 
 
   // --- ellipse
@@ -181,7 +181,7 @@ var mrbeam = mrbeam || {};
     }
 
     return pts;
-  }
+  };
 
 
   // --- line
@@ -191,7 +191,7 @@ var mrbeam = mrbeam || {};
       point(x1, y1),
       point(x2, y2)
     ];
-  }
+  };
 
 
   // --- quadratic bezier curves
@@ -275,7 +275,7 @@ var mrbeam = mrbeam || {};
     }
 
     return pts;
-  }
+  };
 
 
   // --- cubic bezier curves
@@ -364,7 +364,7 @@ var mrbeam = mrbeam || {};
     }
 
     return pts;
-  }
+  };
 
 
   // --- arc
@@ -401,7 +401,14 @@ var mrbeam = mrbeam || {};
     var s = Math.sqrt(
       (rx ** 2 * ry ** 2 - rx ** 2 * y1_ ** 2 - ry ** 2 * x1_ ** 2) /
       (rx ** 2 * y1_ ** 2 + ry ** 2 * x1_ ** 2)
-    ) * (fa == fs ? -1.0 : 1.0);
+    ) * (fa === fs ? -1.0 : 1.0);
+	
+	// few times the 3 lines above return NaN. 
+	// When the ellipsis is a circle, the top of the fraction gets negative due rounding errors.
+	// In all my (Teja) observations, the negative number was supersmall (e.g. -#.#####e-16)
+	// Therefore this Hack was introduced, setting s to 0. 
+	// Otherwise the code does not fail - but returning only a straight line from start to end point.
+	if(isNaN(s)) s = 0; // HACK
 
     var cx_ = s * rx * y1_ / ry;
     var cy_ = -s * ry * x1_ / rx;
@@ -425,10 +432,10 @@ var mrbeam = mrbeam || {};
         y: (-y1_ - cy_) / ry
       }) % (2.0 * Math.PI);
 
-    if (fs == 0 && deltaTheta > 0.0) {
+    if (fs === 0 && deltaTheta > 0.0) {
       deltaTheta -= 2.0 * Math.PI;
     }
-    if (fs != 0 && deltaTheta < 0.0) {
+    if (fs !== 0 && deltaTheta < 0.0) {
       deltaTheta += 2.0 * Math.PI;
     }
 
@@ -636,7 +643,7 @@ var mrbeam = mrbeam || {};
     }
 
     return pts;
-  }
+  };
 
   module.transform = function (paths, matrix) {
     var [m11, m12, m21, m22, tx, ty] = matrix;
@@ -684,10 +691,10 @@ var mrbeam = mrbeam || {};
   module.gcode = function (paths, id, mb_meta) {
     var commands = [];
 
-    mb_meta = mb_meta || {}
+    mb_meta = mb_meta || {};
     var meta_str = "";
     for (var key in mb_meta) {
-        var val = mb_meta[key].replace === 'function' ? mb_meta[key].replace(" ", '_') : mb_meta[key]
+        var val = mb_meta[key].replace === 'function' ? mb_meta[key].replace(" ", '_') : mb_meta[key];
         meta_str += ","+key+":"+val;
     }
     commands.push(";_gc_nextgen_svg_id:"+id.replace(' ', "_") + meta_str);
@@ -724,8 +731,8 @@ var mrbeam = mrbeam || {};
     var c = new ClipperLib.Clipper();
 
     subj.forEach(path => {
-      if (path.length == 0)
-          return
+      if (path.length === 0)
+          return;
 
       var startPoint = path[0];
       var endPoint = path[path.length - 1];

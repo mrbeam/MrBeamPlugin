@@ -1,6 +1,12 @@
 <div id="lasersafety_overlay" class="modal hide fade" data-backdrop="static" data-keyboard="false">
     <div class="modal-header">
-        <h3><i class="icon-warning-sign" style="color:red;"></i> {{ _('Laser Safety') }}</h3>
+        <h3><i class="icon-warning-sign" style="color:red;"></i>
+            {% if language == 'de' %}
+                Laser Sicherheit
+            {% else %}
+                Laser Safety
+            {% endif %}
+        </h3>
     </div>
     <div class="modal-body scrollable">
 
@@ -8,7 +14,13 @@
 
     </div>
     <div class="modal-footer">
-        <button class="btn btn-danger" data-bind="enable: allChecked(), click: agree">{{ _('I do fully understand and agree!') }}</button>
+        <button class="btn btn-danger" data-bind="enable: allChecked(), click: agree">
+            {% if language == 'de' %}
+                Ich verstehe und stimme zu!
+            {% else %}
+                I do fully understand and agree!
+            {% endif %}
+        </button>
     </div>
 </div>
 

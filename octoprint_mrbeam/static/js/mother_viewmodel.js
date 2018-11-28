@@ -33,6 +33,8 @@ $(function () {
             self.writeBranchesToSwUpdateScreen();
         };
 
+        self.state.TITLE_PRINT_BUTTON_UNPAUSED ="Starts the laser job";
+
         self.onStartup = function () {
             // TODO fetch machine profile on start
             //self.requestData();
@@ -149,7 +151,7 @@ $(function () {
 
             // TODO forward to control viewmodel
             self.state.isLocked = ko.observable(true);
-            self.state.isReady = ko.observable(undefined);
+//            self.state.isReady = ko.observable(undefined); // not sure why this is injected here. should be already present in octoprints printerstate VM
             self.state.isFlashing = ko.observable(undefined);
             self.state.currentPos = ko.observable(undefined);
 			self.state.filename = ko.observable(undefined);

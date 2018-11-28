@@ -55,6 +55,7 @@ $(function() {
         self.onStartup = function(){
             // needs to be scrollable on touch devices
             $('#wizard_dialog .modal-body').addClass('scrollable');
+            $('#wizard_dialog div.modal-footer div.text-center').hide();
         };
 
         self.onStartupComplete = function(){
@@ -112,7 +113,9 @@ $(function() {
         };
 
         self.onBeforeWizardTabChange = function(next, current) {
-            if (current && _.startsWith(current, "wizard_plugin_corewizard_acl_")) {
+            // Only when going from Access Control to the next page, not to the previous ones
+            if (current && _.startsWith(current, "wizard_plugin_corewizard_acl_")
+            && !(next === "wizard_plugin_corewizard_wifi_link") && !(next === "wizard_firstrun_start_link")) {
                 if (self.validData()) {
                     var data = {
                     "ac": true,
