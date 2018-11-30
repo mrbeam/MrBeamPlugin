@@ -119,6 +119,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# do migration if needed
 		migrate(self)
 
+		self.set_serial_setting()
+
 		# Enable or disable internal support user.
 		self.support_mode = set_support_mode(self)
 
@@ -313,6 +315,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._dustManager.shutdown()
 		time.sleep(2)
 		self._logger.info("Mr Beam Plugin stopped.")
+
+
+	def set_serial_setting(self):
+		self._settings.global_set(['serial', 'autoconnect'], True)
+		self._settings.global_set(['serial', 'baudrate'], 115200)
+		self._settings.global_set(['serial', 'port'], '/dev/ttyAMA0')
 
 	##~~ AssetPlugin mixin
 
