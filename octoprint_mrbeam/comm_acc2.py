@@ -714,7 +714,7 @@ class MachineCom(object):
 		if match:
 			self._grbl_version = match.group('version')
 		else:
-			self._logger.error("Unable to parse GRBL version from startup message: ", line)
+			self._logger.error("Unable to parse GRBL version from startup message: %s", line)
 
 		self.grbl_feat_rescue_from_home = self._grbl_version not in self.GRBL_FEAT_BLOCK_VERSION_LIST_RESCUE_FROM_HOME
 		self.grbl_feat_report_rx_buffer_state = self._grbl_version not in self.GRBL_FEAT_BLOCK_VERSION_LIST_RX_BUFFER_REPORTING
