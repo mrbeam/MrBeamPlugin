@@ -577,7 +577,9 @@ class IoBeamHandler(object):
 			# iobeam sends the whole laserhead data print
 			try:
 				data = ":".join(token[2:]).replace("|||", "\n| ")
-				self._logger.info("laserhead: \n| %s", data)
+				if data.startswith('Laserhead'):
+					data = 'ok\n| {}'.format(data)
+				self._logger.info("laserhead data: %s", data)
 			except:
 				self._logger.exception("laserhead: exception while handling head:data: ")
 		else:
