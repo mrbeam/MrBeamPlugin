@@ -85,9 +85,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	CUSTOM_MATERIAL_STORAGE_URL = 'https://script.google.com/a/macros/mr-beam.org/s...' # TODO
 
 	BOOT_GRACE_PERIOD = 10.0
+	TIME_NTP_SYNC_CHECK_FAST_COUNT =  20
+	TIME_NTP_SYNC_CHECK_INTERVAL_FAST =  10.0
+	TIME_NTP_SYNC_CHECK_INTERVAL_SLOW = 120.0
 
 
 	def __init__(self):
+		self._shutting_down = False
 		self._slicing_commands = dict()
 		self._slicing_commands_mutex = threading.Lock()
 		self._cancelled_jobs = []
@@ -104,6 +108,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._device_series = self._get_val_from_device_info('device_series')  # '2C'
 		self.called_hosts = []
 		self.boot_ts = time.time()
+		self._time_ntp_synced = False
+		self._time_ntp_check_count = 0
+		self._time_ntp_check_last_ts = 0.0
+		self._time_ntp_shift = 0.0
 
 		# MrBeam Events needs to be registered in OctoPrint in order to be send to the frontend later on
 		MrBeamEvents.register_with_octoprint()
@@ -115,6 +123,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._branch = self.getBranch()
 		self._octopi_info = self.get_octopi_info()
 		self._serial_num = self.getSerialNum()
+
+		self.start_time_ntp_timer()
 
 		# do migration if needed
 		migrate(self)
@@ -308,6 +318,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 
 	def on_shutdown(self):
+		self._shutting_down = True
 		self._logger.debug("Mr Beam Plugin stopping...")
 		self._ioBeam.shutdown()
 		self._lid_handler.shutdown()
@@ -1820,6 +1831,69 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			chunks.append("SUPPORT")
 
 		return " | ".join(chunks)
+
+
+	def is_time_ntp_synced(self):
+		return self._time_ntp_synced
+
+
+	def start_time_ntp_timer(self):
+		self.__calc_time_ntp_offset(log_out_of_sync=True)
+
+
+	def __calc_time_ntp_offset(self, log_out_of_sync=False):
+		"""
+		Checks if we have a NTP time and if the offsett is < 1min.
+		- If not, this function is called again. The first times with 10s delay, then 120sec.
+		- If yes, this fact is logged with a shift_time wich indicates the time the device was off from ntp utc time
+		    Technically it's the difference in time between the time that should have passed theoratically and
+		    that actually passed due to invisible ntp corrections.
+		:param log_out_of_sync: do not log if time is not synced
+		"""
+		ntp_offset = None
+		max_offset = 60000 #miliseconds
+		now = time.time()
+		try:
+			# ntpq_out, code = exec_cmd_output("ntpq -p", shell=True, log_cmd=False)
+			# self._logger.debug("ntpq -p:\n%s", ntpq_out)
+			cmd = "ntpq -pn | /usr/bin/awk 'BEGIN { ntp_offset=%s } $1 ~ /^\*/ { ntp_offset=$9 } END { print ntp_offset }'" % max_offset
+			output, code = exec_cmd_output(cmd, shell=True, log_cmd=False)
+			ntp_offset = float(output)
+			if ntp_offset == max_offset:
+				ntp_offset = None
+		except:
+			self._logger.exception("__calc_time_ntp_offset() Exception while reading ntpq data.")
+
+		local_time_shift = 0.0
+		interval_last = self.TIME_NTP_SYNC_CHECK_INTERVAL_FAST if self._time_ntp_check_count <= self.TIME_NTP_SYNC_CHECK_FAST_COUNT else self.TIME_NTP_SYNC_CHECK_INTERVAL_SLOW
+		interval_next = self.TIME_NTP_SYNC_CHECK_INTERVAL_FAST if self._time_ntp_check_count < self.TIME_NTP_SYNC_CHECK_FAST_COUNT else self.TIME_NTP_SYNC_CHECK_INTERVAL_SLOW
+		if self._time_ntp_check_last_ts > 0.0:
+			local_time_shift = now - self._time_ntp_check_last_ts - interval_last # if there was no shift, this should sum up to zero
+		self._time_ntp_shift += local_time_shift
+		self._time_ntp_synced = ntp_offset is not None
+		during_realtime = self.TIME_NTP_SYNC_CHECK_INTERVAL_FAST * min(self._time_ntp_check_count, self.TIME_NTP_SYNC_CHECK_FAST_COUNT) + self.TIME_NTP_SYNC_CHECK_INTERVAL_SLOW * max(0, self._time_ntp_check_count - self.TIME_NTP_SYNC_CHECK_FAST_COUNT)
+
+		msg = "is_time_ntp_synced: {synced}, time_shift: {time_shift:.2f}s, during_realtime: {during_realtime:.2f}s (checks: {checks}, local_time_shift: {local_time_shift:.2f})".format(
+			synced = self._time_ntp_synced,
+			time_shift = self._time_ntp_shift,
+			during_realtime = during_realtime,
+			checks = self._time_ntp_check_count,
+			local_time_shift = local_time_shift)
+
+		if self._time_ntp_synced or log_out_of_sync:
+			self._logger.info(msg)
+
+		self._time_ntp_check_last_ts = now
+		self._time_ntp_check_count += 1
+
+		if not self._time_ntp_synced:
+			if not self._shutting_down:
+				real_wait_time = interval_next - (time.time()-now)
+				timer = threading.Timer(real_wait_time, self.__calc_time_ntp_offset)
+				timer.daemon = True
+				timer.start()
+
+
 
 	def is_vorlon_enabled(self):
 		vorlon = self._settings.get(['vorlon'])
