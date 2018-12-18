@@ -132,8 +132,8 @@ class AnalyticsHandler(object):
 			self._logger.error('Error during write_current_software_status: {}'.format(e.message))
 
 	def _event_startup(self,event,payload):
-		ak.PLUGIN_VERSIONS = self._get_plugin_versions()
-		self._write_deviceinfo(ak.STARTUP, ak.PLUGIN_VERSIONS)
+		ak.PLUGIN_VERSION = self._get_plugin_version()
+		self._write_deviceinfo(ak.STARTUP, ak.PLUGIN_VERSION)
 
 	def _event_shutdown(self,event,payload):
 		self._write_deviceinfo(ak.SHUTDOWN)
@@ -456,25 +456,18 @@ class AnalyticsHandler(object):
 	def _init_jsonfile(self):
 		open(self._jsonfile, 'w+').close()
 		data = {
-			# ak.HOSTNAME: self._getHostName(),
 			ak.SERIALNUMBER: self._getSerialNumber(),
 			ak.LASERHEAD_VERSION: self._getLaserHeadVersion(),
-			ak.PLUGIN_VERSIONS: self._get_plugin_versions()
+			ak.PLUGIN_VERSION: self._get_plugin_version()
 		}
 		self._write_deviceinfo(ak.INIT,payload=data)
 		self._write_current_software_status()
 
-	def _get_plugin_versions(self):
-		plugin_versions = dict()
-		plugin_versions['mrbeam_plugin_v'] = _mrbeam_plugin_implementation._plugin_version
+	def _get_plugin_version(self):
+		plugin_version = dict()
+		plugin_version['mrbeam_plugin_v'] = _mrbeam_plugin_implementation._plugin_version
 
-		# netconnectd_info = self._plugin_manager.get_plugin_info('netconnectd')
-		# if netconnectd_info:
-		# 	plugin_versions['netconnectd_plugin_v'] = netconnectd_info.version
-		# findmymrbeam_info = self._plugin_manager.get_plugin_info('findmymrbeam')
-		# if findmymrbeam_info:
-		# 	plugin_versions['findmymrbeam_v'] = findmymrbeam_info.version
-		return plugin_versions
+		return plugin_version
 
 	def _append_data_to_file(self, data):
 		try:

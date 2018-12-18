@@ -6,7 +6,7 @@ class AnalyticsKeys(object):
 	TIMESTAMP = 'ts'
 	TIMESTRING = 'timestring'
 	DATA = 'data'
-	PLUGIN_VERSIONS = 'plugin_versions'
+	PLUGIN_VERSION = 'plugin_version'
 
 	### EVENT TYPES ###
 	JOB_EVENT = 'job'
