@@ -8,6 +8,7 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from analytics_keys import AnalyticsKeys as ak
+from uploader import FileUploader
 
 # singleton
 _instance = None
@@ -27,11 +28,15 @@ def existing_analyticsHandler():
 
 
 class AnalyticsHandler(object):
+
+	DELETE_FILES_AFTER_UPLOAD = False
+
+
 	def __init__(self, event_bus, settings):
 		self._event_bus = event_bus
 		self._settings = settings
 
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.analyticshandler")
+		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.analyticshandler")
 
 		self._analyticsOn = self._settings.get(['analytics','job_analytics'])
 		self._camAnalyticsOn = self._settings.get(['analytics','cam_analytics'])
@@ -49,7 +54,6 @@ class AnalyticsHandler(object):
 		self._storedConversions = list()
 
 		self._jobevent_log_version = 4
-		self._conversion_log_version = 2
 		self._deviceinfo_log_version = 2
 		self._dust_log_version = 2
 		self._cam_event_log_version = 2
@@ -58,9 +62,16 @@ class AnalyticsHandler(object):
 		if not os.path.isdir(analyticsfolder):
 			os.makedirs(analyticsfolder)
 
+		fu = FileUploader(analyticsfolder,
+		             analytics_files_prefix='analytics_log.json.',
+		             delete_on_success=self.DELETE_FILES_AFTER_UPLOAD)
+		fu.schedule_logrotation_and_startover(current_analytics_file=self._settings.get(['analytics','filename']))
+		fu.find_files_for_upload()
+
 		self._jsonfile = os.path.join(analyticsfolder, self._settings.get(['analytics','filename']))
 		if not os.path.isfile(self._jsonfile):
 			self._init_jsonfile()
+
 
 		if self._analyticsOn:
 			# check if <two days> have passed and software should be written away
@@ -278,7 +289,7 @@ class AnalyticsHandler(object):
 		data = {
 			ak.SERIALNUMBER: self._getSerialNumber(),
 			ak.TYPE: ak.JOB_EVENT,
-			ak.VERSION: self._conversion_log_version,
+			ak.VERSION: self._jobevent_log_version,
 			ak.EVENT: eventname,
 			ak.TIMESTAMP: time.time(),
 			ak.JOB_ID: None
@@ -299,7 +310,7 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.error('Error during write_conversion_details: {}'.format(e.message))
 
-	def _write_deviceinfo(self,event,payload=None):
+	def _write_deviceinfo(self,event,payload=None, prepend_nl=False):
 		try:
 			data = dict()
 			# TODO add data validation/preparation here
@@ -465,4 +476,4 @@ class AnalyticsHandler(object):
 			with open(self._jsonfile, 'a') as f:
 				f.write(dataString)
 		except Exception as e:
-			self._logger.error('Error during init json: {}'.format(e.message))
+			self._logger.error('Error while writing data: {}'.format(e.message))

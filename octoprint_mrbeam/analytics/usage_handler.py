@@ -17,7 +17,7 @@ def usageHandler(plugin):
 
 class UsageHandler(object):
 	def __init__(self, plugin):
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.usage")
+		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.usage")
 		self._plugin = plugin
 		self._event_bus = plugin._event_bus
 		self._settings = plugin._settings
