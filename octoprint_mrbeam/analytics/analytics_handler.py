@@ -313,7 +313,7 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.error('Error during write_conversion_details: {}'.format(e.message))
 
-	def _write_deviceinfo(self,event,payload=None, prepend_nl=False):
+	def _write_deviceinfo(self,event,payload=None):
 		try:
 			data = dict()
 			# TODO add data validation/preparation here
