@@ -1081,7 +1081,7 @@ $(function(){
 					$(job).find('.used_color').each(function(j, col){
 						var hex = '#' + $(col).attr('id').substr(-6);
 						data.push({
-							job: i,
+							// job: i,
 							color: hex,
 							intensity: intensity,
 							intensity_user: intensity_user,
@@ -1114,7 +1114,7 @@ $(function(){
 
 				if(self._isValidVectorSetting(intensity_user, feedrate, 1, self.engravingPiercetime())){
 					data.push({
-						job: "vector_engrave_"+i,
+						// job: "vector_engrave_"+i,
 						color: hex,
 						intensity: intensity,
 						intensity_user: intensity_user,
@@ -1132,6 +1132,7 @@ $(function(){
 		};
 
 		self._isValidVectorSetting = function(intensity, feedrate, passes, pierce_time){
+		    console.log(intensity)
 			if(intensity === '' || intensity > 100 || intensity < 0) return false;
 			if(feedrate === '' || feedrate > self.maxSpeed() || feedrate < self.minSpeed()) return false;
 			if(passes === '' || passes <= 0) return false;
@@ -1141,7 +1142,7 @@ $(function(){
 
 		self.get_current_engraving_settings = function () {
 			var data = {
-				"engrave_outlines" : self.engrave_outlines(),
+				// "engrave_outlines" : self.engrave_outlines(),
 				"intensity_black_user" : parseInt(self.imgIntensityBlack()),
 				"intensity_black" : self.imgIntensityBlack() * self.profile.currentProfileData().laser.intensity_factor(),
 				"intensity_white_user" : parseInt(self.imgIntensityWhite()),
@@ -1153,11 +1154,27 @@ $(function(){
 				"dithering" : self.imgDithering(),
 				"beam_diameter" : parseFloat(self.beamDiameter()),
 				"pierce_time": parseInt(self.engravingPiercetime()),
-                "material": self.engravingMaterial,
-				"engraving_mode": $('#svgtogcode_img_engraving_mode > .btn.active').attr('value')
+				"engraving_mode": $('#svgtogcode_img_engraving_mode > .btn.active').attr('value'),
+                "line_distance": $('#svgtogcode_img_line_dist').val()
 			};
 			return data;
 		};
+
+		self.get_current_material_settings = function () {
+			var data = {
+				"material_name": self.selected_material_name(),
+				"color": self.selected_material_color(),
+				"thickness_mm": self.selected_material_thickness()['thicknessMM'],
+                "material_key": self.selected_material()['key']
+			};
+			return data;
+		};
+
+		self.is_advanced_settings_checked = function () {
+            const advancedSettingsCb = $('#parameter_assignment_show_advanced_settings_cb');
+            let isChecked = advancedSettingsCb.is(':checked')
+            return isChecked
+        }
 
 		self.enableConvertButton = ko.computed(function() {
 			if (self.slicing_in_progress() 
@@ -1253,14 +1270,18 @@ $(function(){
 
 						var multicolor_data = self.get_current_multicolor_settings();
 						var engraving_data = self.get_current_engraving_settings();
+						var advancedSettings = self.is_advanced_settings_checked();
 						var colorStr = '<!--COLOR_PARAMS_START' +JSON.stringify(multicolor_data) + 'COLOR_PARAMS_END-->';
+						var material = self.get_current_material_settings();
 						var data = {
 							command: "convert",
 							engrave: self.do_engrave(),
 							vector : multicolor_data,
 							raster : engraving_data,
 							slicer: "svgtogcode",
-							gcode: gcodeFilename
+							gcode: gcodeFilename,
+                            material: material,
+                            advanced_settings: advancedSettings
 						};
 
 						if(self.svg !== undefined){

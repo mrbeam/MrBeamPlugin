@@ -6,6 +6,7 @@ class AnalyticsKeys(object):
 	TIMESTAMP = 'ts'
 	TIMESTRING = 'timestring'
 	DATA = 'data'
+	PLUGIN_VERSIONS = 'plugin_versions'
 
 	### EVENT TYPES ###
 	JOB_EVENT = 'job'
@@ -44,6 +45,9 @@ class AnalyticsKeys(object):
 	COOLING_DONE = 'cooling_done'
 	CONV_ENGRAVE = 'conv_eng'
 	CONV_CUT = 'conv_cut'
+	LASER_JOB = 'laser_job'
+	MATERIAL = 'material'
+
 	PRINT_EVENTS = [
 						PRINT_STARTED,
 						PRINT_PROGRESS,
