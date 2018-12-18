@@ -271,6 +271,7 @@ class AnalyticsHandler(object):
 						'svgDPI': details['svgDPI']
 					}
 					data.update(details['raster'])
+					data.update(details['material'])
 					self._store_conversion_details(eventname,payload=data)
 					# self._write_jobevent(eventname,payload=data)
 
@@ -281,6 +282,7 @@ class AnalyticsHandler(object):
 							'svgDPI': details['svgDPI']
 						}
 						data.update(color_settings)
+						data.update(details['material'])
 						self._store_conversion_details(eventname,payload=data)
 						# self._write_jobevent(eventname,payload=data)
 		except Exception as e:
