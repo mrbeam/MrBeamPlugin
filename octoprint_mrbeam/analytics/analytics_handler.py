@@ -132,7 +132,7 @@ class AnalyticsHandler(object):
 			self._logger.error('Error during write_current_software_status: {}'.format(e.message))
 
 	def _event_startup(self,event,payload):
-		payload = dict(ak.PLUGIN_VERSION = self._get_plugin_version())
+		payload = {ak.PLUGIN_VERSION: self._get_plugin_version()}
 		self._write_deviceinfo(ak.STARTUP, payload=payload)
 
 	def _event_shutdown(self,event,payload):
