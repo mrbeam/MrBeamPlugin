@@ -29,7 +29,7 @@ class Converter():
 		"svgDPI": 90,
 		"noheaders": "false",
 		"engrave": False,
-		"raster" :{
+		"raster": {
 			"intensity_white": 0,
 			"intensity_black": 500,
 			"speed_white": 1500,
@@ -41,7 +41,8 @@ class Converter():
 			"pierce_time": 0,
 		},
 		"vector": [],
-		"material": None
+		"material": None,
+		"advanced_settings": False
 	}
 
 	_tempfile = "/tmp/_converter_output.tmp"
@@ -58,7 +59,9 @@ class Converter():
 
 		self.colorParams = {}
 		self.gc_options = None
+		self._log.debug(self.defaults)
 		self.options = self.defaults
+		self._log.debug(self.options)
 		self.setoptions(params)
 		self.svg_file = model_path
 		self.document=None
