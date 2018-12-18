@@ -144,7 +144,8 @@ class AnalyticsHandler(object):
 
 	def _event_startup(self,event,payload):
 		self._write_new_line()
-		self._write_deviceinfo(ak.STARTUP)
+		payload = {ak.PLUGIN_VERSION: self._get_plugin_version()}
+		self._write_deviceinfo(ak.STARTUP, payload=payload)
 
 	def _event_shutdown(self,event,payload):
 		self._write_deviceinfo(ak.SHUTDOWN)
@@ -158,14 +159,13 @@ class AnalyticsHandler(object):
 
 
 	def _event_print_started(self, event, payload):
-		filename = os.path.basename(payload['file'])
 		self._current_job_id = 'j_{}_{}'.format(self._getSerialNumber(),time.time())
 		self._init_collectors()
 		self._isJobPaused = False
 		self._isCoolingPaused = False
 		self._isJobDone = False
 		self._write_conversion_details()
-		self._write_jobevent(ak.PRINT_STARTED, {ak.FILENAME: filename})
+		self._write_jobevent(ak.PRINT_STARTED)
 
 	def _init_collectors(self):
 		self._current_dust_collector = ValueCollector('DustColl')
@@ -265,6 +265,14 @@ class AnalyticsHandler(object):
 	def store_conversion_details(self, details):
 		try:
 			if self._analyticsOn:
+				# Line with common parameters of the laser job (for both cut and engrave)
+				eventname = ak.LASER_JOB
+				data = {
+					'advanced_settings': details['advanced_settings']
+				}
+				data.update(details['material'])
+				self._store_conversion_details(eventname, payload=data)
+
 				if 'engrave' in details and details['engrave'] == True and 'raster' in details:
 					eventname = ak.CONV_ENGRAVE
 					data = {
@@ -273,7 +281,6 @@ class AnalyticsHandler(object):
 					data.update(details['raster'])
 					data.update(details['material'])
 					self._store_conversion_details(eventname,payload=data)
-					# self._write_jobevent(eventname,payload=data)
 
 				if 'vector' in details and details['vector'] != []:
 					eventname = ak.CONV_CUT
@@ -284,7 +291,6 @@ class AnalyticsHandler(object):
 						data.update(color_settings)
 						data.update(details['material'])
 						self._store_conversion_details(eventname,payload=data)
-						# self._write_jobevent(eventname,payload=data)
 		except Exception as e:
 			self._logger.error('Error during store_conversion_details: {}'.format(e.message))
 
@@ -464,20 +470,25 @@ class AnalyticsHandler(object):
 	def _init_jsonfile(self):
 		open(self._jsonfile, 'w+').close()
 		data = {
-			ak.HOSTNAME: self._getHostName(),
 			ak.SERIALNUMBER: self._getSerialNumber(),
-			ak.LASERHEAD_VERSION: self._getLaserHeadVersion()
+			ak.LASERHEAD_VERSION: self._getLaserHeadVersion(),
+			ak.PLUGIN_VERSION: self._get_plugin_version()
 		}
 		self._write_deviceinfo(ak.INIT,payload=data)
 		self._write_current_software_status()
+
+	def _get_plugin_version(self):
+		plugin_version = dict()
+		plugin_version['mrbeam_plugin_v'] = _mrbeam_plugin_implementation._plugin_version
+
+		return plugin_version
 
 	def _write_new_line(self):
 		try:
 			if not os.path.isfile(self._jsonfile):
 				self._init_jsonfile()
-			dataString = '\n'
 			with open(self._jsonfile, 'a') as f:
-				f.write(dataString)
+				f.write('\n')
 		except Exception as e:
 			self._logger.error('Error while writing newline: {}'.format(e.message))
 
