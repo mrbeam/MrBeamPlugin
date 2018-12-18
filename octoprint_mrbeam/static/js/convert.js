@@ -1154,8 +1154,9 @@ $(function(){
 				"dithering" : self.imgDithering(),
 				"beam_diameter" : parseFloat(self.beamDiameter()),
 				"pierce_time": parseInt(self.engravingPiercetime()),
+
 				"engraving_mode": $('#svgtogcode_img_engraving_mode > .btn.active').attr('value'),
-                "line_distance": $('#svgtogcode_img_line_dist').val()
+        "line_distance": $('#svgtogcode_img_line_dist').val()
 			};
 			return data;
 		};
@@ -1280,8 +1281,8 @@ $(function(){
 							raster : engraving_data,
 							slicer: "svgtogcode",
 							gcode: gcodeFilename,
-                            material: material,
-                            advanced_settings: advancedSettings
+              material: material,
+              advanced_settings: advancedSettings
 						};
 
 						if(self.svg !== undefined){

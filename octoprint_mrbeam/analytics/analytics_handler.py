@@ -267,6 +267,7 @@ class AnalyticsHandler(object):
 						'svgDPI': details['svgDPI']
 					}
 					data.update(details['raster'])
+					data.update(details['material'])
 					self._store_conversion_details(eventname,payload=data)
 
 				if 'vector' in details and details['vector'] != []:
@@ -276,6 +277,7 @@ class AnalyticsHandler(object):
 							'svgDPI': details['svgDPI']
 						}
 						data.update(color_settings)
+						data.update(details['material'])
 						self._store_conversion_details(eventname,payload=data)
 		except Exception as e:
 			self._logger.error('Error during store_conversion_details: {}'.format(e.message))
