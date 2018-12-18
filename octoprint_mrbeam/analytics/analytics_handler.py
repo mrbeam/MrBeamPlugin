@@ -49,7 +49,7 @@ class AnalyticsHandler(object):
 		self._storedConversions = list()
 
 		self._jobevent_log_version = 4
-		self._conversion_log_version = 2
+		self._conversion_log_version = 3
 		self._deviceinfo_log_version = 2
 		self._dust_log_version = 2
 		self._cam_event_log_version = 2
@@ -259,6 +259,7 @@ class AnalyticsHandler(object):
 						'svgDPI': details['svgDPI']
 					}
 					data.update(details['raster'])
+					data.update(details['material'])
 					self._store_conversion_details(eventname,payload=data)
 					# self._write_jobevent(eventname,payload=data)
 
@@ -269,6 +270,7 @@ class AnalyticsHandler(object):
 							'svgDPI': details['svgDPI']
 						}
 						data.update(color_settings)
+						data.update(details['material'])
 						self._store_conversion_details(eventname,payload=data)
 						# self._write_jobevent(eventname,payload=data)
 		except Exception as e:

@@ -1153,8 +1153,18 @@ $(function(){
 				"dithering" : self.imgDithering(),
 				"beam_diameter" : parseFloat(self.beamDiameter()),
 				"pierce_time": parseInt(self.engravingPiercetime()),
-                "material": self.engravingMaterial,
+                // "material": self.engravingMaterial,
 				"engraving_mode": $('#svgtogcode_img_engraving_mode > .btn.active').attr('value')
+			};
+			return data;
+		};
+
+		self.get_current_material_settings = function () {
+			var data = {
+				"material_name": self.selected_material_name(),
+				"color": self.selected_material_color(),
+				"thickness_mm": self.selected_material_thickness()['thicknessMM'],
+                "material_key": self.selected_material()['key']
 			};
 			return data;
 		};
@@ -1254,13 +1264,15 @@ $(function(){
 						var multicolor_data = self.get_current_multicolor_settings();
 						var engraving_data = self.get_current_engraving_settings();
 						var colorStr = '<!--COLOR_PARAMS_START' +JSON.stringify(multicolor_data) + 'COLOR_PARAMS_END-->';
+						var material = self.get_current_material_settings();
 						var data = {
 							command: "convert",
 							engrave: self.do_engrave(),
 							vector : multicolor_data,
 							raster : engraving_data,
 							slicer: "svgtogcode",
-							gcode: gcodeFilename
+							gcode: gcodeFilename,
+                            material: material
 						};
 
 						if(self.svg !== undefined){

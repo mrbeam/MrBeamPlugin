@@ -40,7 +40,8 @@ class Converter():
 			"beam_diameter": 0.2,
 			"pierce_time": 0,
 		},
-		"vector": []
+		"vector": [],
+		"material": None
 	}
 
 	_tempfile = "/tmp/_converter_output.tmp"
@@ -62,7 +63,7 @@ class Converter():
 		self.svg_file = model_path
 		self.document=None
 		self._min_required_disk_space = min_required_disk_space
-		self._log.info('Converter Initialized: %s' % self.options)
+		self._log.info('Converter Initialized: %s', self.options)
 		# todo need material,bounding_box_area here
 		_mrbeam_plugin_implementation._analytics_handler.store_conversion_details(self.options)
 
@@ -223,7 +224,8 @@ class Converter():
 											dithering = rasterParams['dithering'],
 											pierce_time = rasterParams['pierce_time'],
 											engraving_mode = rasterParams['engraving_mode'],
-											material = rasterParams['material'] if 'material' in rasterParams else None)
+											material = self.options['material'])
+											# material = rasterParams['material'] if 'material' in rasterParams else None)
 						data = imgNode.get('href')
 						if(data is None):
 							data = imgNode.get(_add_ns('href', 'xlink'))
