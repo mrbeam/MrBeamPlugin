@@ -143,6 +143,7 @@ class AnalyticsHandler(object):
 			self._logger.error('Error during write_current_software_status: {}'.format(e.message))
 
 	def _event_startup(self,event,payload):
+		self._write_new_line()
 		self._write_deviceinfo(ak.STARTUP)
 
 	def _event_shutdown(self,event,payload):
@@ -467,6 +468,16 @@ class AnalyticsHandler(object):
 		}
 		self._write_deviceinfo(ak.INIT,payload=data)
 		self._write_current_software_status()
+
+	def _write_new_line(self):
+		try:
+			if not os.path.isfile(self._jsonfile):
+				self._init_jsonfile()
+			dataString = '\n'
+			with open(self._jsonfile, 'a') as f:
+				f.write(dataString)
+		except Exception as e:
+			self._logger.error('Error while writing newline: {}'.format(e.message))
 
 	def _append_data_to_file(self, data):
 		try:
