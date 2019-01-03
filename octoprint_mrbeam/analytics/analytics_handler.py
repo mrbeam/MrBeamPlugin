@@ -38,7 +38,7 @@ class AnalyticsHandler(object):
 
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.analyticshandler")
 
-		self._analyticsOn = self._settings.get(['analytics','job_analytics'])
+		self._analyticsOn = self._settings.get(['analyticsEnabled'])
 		self._camAnalyticsOn = self._settings.get(['analytics','cam_analytics'])
 
 		self._current_job_id = None
@@ -54,9 +54,11 @@ class AnalyticsHandler(object):
 		self._storedConversions = list()
 
 		self._jobevent_log_version = 4
-		self._deviceinfo_log_version = 2
+		self._deviceinfo_log_version = 3
 		self._dust_log_version = 2
 		self._cam_event_log_version = 2
+
+		self._logger.info("Analytics user permission: analyticsEnabled=%s", self._analyticsOn)
 
 		analyticsfolder = os.path.join(self._settings.getBaseFolder("base"), self._settings.get(['analytics','folder']))
 		if not os.path.isdir(analyticsfolder):
@@ -69,9 +71,14 @@ class AnalyticsHandler(object):
 		fu.find_files_for_upload()
 
 		self._jsonfile = os.path.join(analyticsfolder, self._settings.get(['analytics','filename']))
+
+		if self._analyticsOn:
+			self._activate_analytics()
+
+
+	def _activate_analytics(self):
 		if not os.path.isfile(self._jsonfile):
 			self._init_jsonfile()
-
 
 		if self._analyticsOn:
 			# check if <two days> have passed and software should be written away
@@ -131,6 +138,19 @@ class AnalyticsHandler(object):
 
 		return days_passed
 
+	def analytics_user_permission_change(self, analytics_enabled):
+		self._logger.info("analytics user permission change: analyticsEnabled=%s", analytics_enabled)
+		if analytics_enabled:
+			self._analyticsOn = True
+			self._settings.set_boolean(["analyticsEnabled"], True)
+			self._activate_analytics()
+			self._write_deviceinfo(ak.ANALYTICS_ENABLED, payload=dict(enabled=True))
+		else:
+			self._write_deviceinfo(ak.ANALYTICS_ENABLED, payload=dict(enabled=False))
+			self._analyticsOn = False
+			self._settings.set_boolean(["analyticsEnabled"], False)
+
+
 	def _write_current_software_status(self):
 		try:
 			# TODO get all software statuses
@@ -143,6 +163,7 @@ class AnalyticsHandler(object):
 			self._logger.error('Error during write_current_software_status: {}'.format(e.message))
 
 	def _event_startup(self,event,payload):
+		self._logger.debug("ANDYTEST analytics startup, analyticsOn: %s", self._analyticsOn)
 		self._write_new_line()
 		payload = {ak.PLUGIN_VERSION: self._get_plugin_version()}
 		self._write_deviceinfo(ak.STARTUP, payload=payload)
@@ -484,20 +505,22 @@ class AnalyticsHandler(object):
 		return plugin_version
 
 	def _write_new_line(self):
-		try:
-			if not os.path.isfile(self._jsonfile):
-				self._init_jsonfile()
-			with open(self._jsonfile, 'a') as f:
-				f.write('\n')
-		except Exception as e:
-			self._logger.error('Error while writing newline: {}'.format(e.message))
+		if self._analyticsOn:
+			try:
+				if not os.path.isfile(self._jsonfile):
+					self._init_jsonfile()
+				with open(self._jsonfile, 'a') as f:
+					f.write('\n')
+			except Exception as e:
+				self._logger.error('Error while writing newline: {}'.format(e.message))
 
 	def _append_data_to_file(self, data):
-		try:
-			if not os.path.isfile(self._jsonfile):
-				self._init_jsonfile()
-			dataString = json.dumps(data) + '\n'
-			with open(self._jsonfile, 'a') as f:
-				f.write(dataString)
-		except Exception as e:
-			self._logger.error('Error while writing data: {}'.format(e.message))
+		if self._analyticsOn:
+			try:
+				if not os.path.isfile(self._jsonfile):
+					self._init_jsonfile()
+				dataString = json.dumps(data) + '\n'
+				with open(self._jsonfile, 'a') as f:
+					f.write(dataString)
+			except Exception as e:
+				self._logger.error('Error while writing data: {}'.format(e.message))

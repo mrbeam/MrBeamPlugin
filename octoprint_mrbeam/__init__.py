@@ -243,8 +243,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				support_mode = False,
 				grbl_auto_update_enabled = True
 			),
+			analyticsEnabled=True,
 			analytics=dict(
-				job_analytics = False,
 				cam_analytics = False,
 				folder = 'analytics', # laser job analytics base folder (.octoprint/...)
 				filename = 'analytics_log.json',
@@ -315,6 +315,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self._logger.info("Disabling VORLON per user request.", terminal=True)
 		if "gcode_nextgen" in data and isinstance(data['gcode_nextgen'], collections.Iterable) and "clip_working_area" in data['gcode_nextgen']:
 			self._settings.set_boolean(["gcode_nextgen", "clip_working_area"], data['gcode_nextgen']['clip_working_area'])
+		if "analyticsEnabled" in data:
+			self._analytics_handler.analytics_user_permission_change(analytics_enabled=data['analyticsEnabled'])
 
 
 	def on_shutdown(self):
@@ -445,7 +447,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			dict(type='settings', name="File Import Settings", template='settings/svgtogcode_settings.jinja2', suffix="_conversion", custom_bindings=False),
             dict(type='settings', name="Camera Calibration", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
             dict(type='settings', name="Debug", template='settings/debug_settings.jinja2', suffix="_debug", custom_bindings=False),
-            dict(type='settings', name="About This Mr Beam", template='settings/about_settings.jinja2', suffix="_about", custom_bindings=False)
+            dict(type='settings', name="About This Mr Beam", template='settings/about_settings.jinja2', suffix="_about", custom_bindings=False),
+            dict(type='settings', name="Analytics", template='settings/analytics_settings.jinja2', suffix="_analytics", custom_bindings=False)
 			# disabled in appearance
 			# dict(type='settings', name="Serial Connection DEV", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings=False, replaces='serial')
 		 ]
@@ -1982,7 +1985,7 @@ def __plugin_load__():
 				wizard=["plugin_mrbeam_wifi", "plugin_mrbeam_acl", "plugin_mrbeam_lasersafety",
 				        "plugin_mrbeam_whatsnew_0", "plugin_mrbeam_whatsnew_1", "plugin_mrbeam_whatsnew_2", "plugin_mrbeam_whatsnew_3", "plugin_mrbeam_whatsnew_4"],
 				settings = ['plugin_mrbeam_about', 'plugin_softwareupdate', 'accesscontrol', 'plugin_netconnectd', 'plugin_mrbeam_conversion',
-				            'plugin_mrbeam_camera', 'logs', 'plugin_mrbeam_debug']
+				            'plugin_mrbeam_camera', 'plugin_mrbeam_analytics', 'logs', 'plugin_mrbeam_debug']
 			),
 			disabled=dict(
 				wizard=['plugin_softwareupdate'],

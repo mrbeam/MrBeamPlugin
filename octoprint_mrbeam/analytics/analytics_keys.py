@@ -22,6 +22,7 @@ class AnalyticsKeys(object):
 	SHUTDOWN = 'shutdown'
 	INIT = 'init_json'
 	FLASH_GRBL = 'flash_grbl'
+	ANALYTICS_ENABLED = 'analytics_enabled'
 
 
 
