@@ -112,6 +112,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._time_ntp_check_count = 0
 		self._time_ntp_check_last_ts = 0.0
 		self._time_ntp_shift = 0.0
+		self.lh = dict(serial=None, p_65=None)
 
 		# MrBeam Events needs to be registered in OctoPrint in order to be send to the frontend later on
 		MrBeamEvents.register_with_octoprint()
@@ -173,6 +174,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		msg += ",{}:{}".format(self.ENV_LASER_SAFETY, self.get_env(self.ENV_LASER_SAFETY))
 		msg += ",{}:{})".format(self.ENV_ANALYTICS, self.get_env(self.ENV_ANALYTICS))
 		msg += ", beamOS-image:{}".format(self._octopi_info)
+		msg += ", laserhead-serial:{}".format(self.lh['serial'])
 		self._logger.info(msg, terminal=True)
 
 		msg = "MrBeam Lasercutter Profile: %s" % self.laserCutterProfileManager.get_current_or_default()
@@ -207,7 +209,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		            serial=self._serial_num,
 		            software_tier=self._settings.get(["dev", "software_tier"]),
 		            env=self.get_env(),
-		            beamOS_image=self._octopi_info)
+		            beamOS_image=self._octopi_info,
+		            laserhead_serial=self.lh['serial'])
 
 	##~~ SettingsPlugin mixin
 	def get_settings_version(self):

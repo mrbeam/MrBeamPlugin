@@ -164,7 +164,10 @@ class AnalyticsHandler(object):
 
 	def _event_startup(self,event,payload):
 		self._write_new_line()
-		payload = {ak.VERSION_MRBEAM_PLUGIN: _mrbeam_plugin_implementation._plugin_version}
+		payload = {
+			ak.VERSION_MRBEAM_PLUGIN: _mrbeam_plugin_implementation._plugin_version,
+			ak.LASERHEAD_SERIAL: _mrbeam_plugin_implementation.lh['serial'],
+		}
 		self._write_deviceinfo(ak.STARTUP, payload=payload)
 
 	def _event_shutdown(self,event,payload):

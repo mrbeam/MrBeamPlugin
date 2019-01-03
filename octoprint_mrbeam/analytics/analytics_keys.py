@@ -8,6 +8,7 @@ class AnalyticsKeys(object):
 	TIMESTRING = 'timestring'
 	DATA = 'data'
 	VERSION_MRBEAM_PLUGIN = 'version_mrbeam_plugin'
+	LASERHEAD_SERIAL = 'laserhead_serial'
 
 	### EVENT TYPES ###
 	JOB_EVENT = 'job'
