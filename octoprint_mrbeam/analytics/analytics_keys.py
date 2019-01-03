@@ -4,9 +4,10 @@ class AnalyticsKeys(object):
 	VERSION = 'v'
 	EVENT = 'e'
 	TIMESTAMP = 'ts'
+	NTP_SYNCED = 'ntp'
 	TIMESTRING = 'timestring'
 	DATA = 'data'
-	PLUGIN_VERSION = 'plugin_version'
+	VERSION_MRBEAM_PLUGIN = 'version_mrbeam_plugin'
 
 	### EVENT TYPES ###
 	JOB_EVENT = 'job'

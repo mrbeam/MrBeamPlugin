@@ -163,9 +163,8 @@ class AnalyticsHandler(object):
 			self._logger.error('Error during write_current_software_status: {}'.format(e.message))
 
 	def _event_startup(self,event,payload):
-		self._logger.debug("ANDYTEST analytics startup, analyticsOn: %s", self._analyticsOn)
 		self._write_new_line()
-		payload = {ak.PLUGIN_VERSION: self._get_plugin_version()}
+		payload = {ak.VERSION_MRBEAM_PLUGIN: _mrbeam_plugin_implementation._plugin_version}
 		self._write_deviceinfo(ak.STARTUP, payload=payload)
 
 	def _event_shutdown(self,event,payload):
@@ -414,7 +413,8 @@ class AnalyticsHandler(object):
 				ak.TYPE: typename,
 				ak.VERSION: version,
 				ak.EVENT: eventname,
-				ak.TIMESTAMP: time.time()
+				ak.TIMESTAMP: time.time(),
+				ak.NTP_SYNCED: _mrbeam_plugin_implementation.is_time_ntp_synced()
 			}
 			if payload is not None:
 				data.update(payload)
@@ -493,16 +493,10 @@ class AnalyticsHandler(object):
 		data = {
 			ak.SERIALNUMBER: self._getSerialNumber(),
 			ak.LASERHEAD_VERSION: self._getLaserHeadVersion(),
-			ak.PLUGIN_VERSION: self._get_plugin_version()
+			ak.VERSION_MRBEAM_PLUGIN: _mrbeam_plugin_implementation._plugin_version
 		}
 		self._write_deviceinfo(ak.INIT,payload=data)
 		self._write_current_software_status()
-
-	def _get_plugin_version(self):
-		plugin_version = dict()
-		plugin_version['mrbeam_plugin_v'] = _mrbeam_plugin_implementation._plugin_version
-
-		return plugin_version
 
 	def _write_new_line(self):
 		if self._analyticsOn:
