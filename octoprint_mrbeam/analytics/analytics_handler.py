@@ -167,6 +167,8 @@ class AnalyticsHandler(object):
 		payload = {
 			ak.VERSION_MRBEAM_PLUGIN: _mrbeam_plugin_implementation._plugin_version,
 			ak.LASERHEAD_SERIAL: _mrbeam_plugin_implementation.lh['serial'],
+			ak.SOFTWARE_TIER: self._settings.get(["dev", "software_tier"]),
+			ak.ENV: _mrbeam_plugin_implementation.get_env()
 		}
 		self._write_deviceinfo(ak.STARTUP, payload=payload)
 
@@ -357,8 +359,9 @@ class AnalyticsHandler(object):
 			#TODO add data validation/preparation here
 			data = dict(job_id = self._current_job_id)
 
-			if event in (ak.LASERTEMP_SUM,ak.INTENSITY_SUM):
+			if event in (ak.LASERTEMP_SUM, ak.INTENSITY_SUM):
 				data[ak.LASERHEAD_VERSION] = self._getLaserHeadVersion()
+				data[ak.LASERHEAD_SERIAL] = _mrbeam_plugin_implementation.lh['serial']
 
 			if payload is not None:
 				data[ak.DATA] = payload

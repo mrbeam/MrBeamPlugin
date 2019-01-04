@@ -7,8 +7,10 @@ class AnalyticsKeys(object):
 	NTP_SYNCED = 'ntp'
 	TIMESTRING = 'timestring'
 	DATA = 'data'
+	SOFTWARE_TIER = 'sw_tier'
 	VERSION_MRBEAM_PLUGIN = 'version_mrbeam_plugin'
 	LASERHEAD_SERIAL = 'laserhead_serial'
+	ENV = 'env'
 
 	### EVENT TYPES ###
 	JOB_EVENT = 'job'
