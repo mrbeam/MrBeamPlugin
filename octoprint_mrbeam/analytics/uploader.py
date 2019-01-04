@@ -169,7 +169,7 @@ class FileUploader(object):
 			else:
 				self.is_online = False
 				text = r.text if 'text' in r else ''
-				err = "get_token failed: {} {}".format(r.status_cod, text)
+				err = "get_token failed: {} {}".format(r.status_code, text)
 				self.set_status(my_file, succ=False, err=err)
 		except Exception as e:
 			self._logger.exception("Exception while loading upload_token %s:", my_file)
