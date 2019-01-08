@@ -1190,6 +1190,33 @@ $(function(){
 			}
 		});
 
+		self._validJobForMaterial = function() {
+            /**
+             * Check if the selected designs can be engraved/cut in the selected material.
+             * @return {boolean} the validity of the designs for the material.
+             */
+		    let validCut = false;
+		    let validEng = false;
+		    let vector_jobs = $('.job_row_vector');
+			for (let i = 0; i < vector_jobs.length; i++) {
+				const vjob = vector_jobs[i];
+
+				const colorDrops = $(vjob).find('.color_drop_zone');
+				// If there is a cutting job and a cutting proposal --> valid
+				if (self.has_cutting_proposal() && colorDrops.children().length > 0) {
+				    validCut = true;
+				}
+            }
+			// If there is an engraving job and an engraving proposal --> valid
+			if (self.has_engraving_proposal() && $('#engrave_job .color_drop_zone').children(':visible').length > 0) {
+			    validEng = true;
+            }
+
+			const validJob = validCut || validEng;
+
+            return validJob
+        };
+
 		self._allParametersSet = function(){
 			var allSet = true;
 			var vector_jobs = $('.job_row_vector');
@@ -1256,8 +1283,24 @@ $(function(){
 		};
 
 		self.convert = function() {
-			if(self.gcodeFilesToAppend.length === 1 && self.svg === undefined){
-				self.files.startGcodeWithSafetyWarning(self.gcodeFilesToAppend[0]);
+			if(self.gcodeFilesToAppend.length === 1 && self.svg === undefined) {
+                self.files.startGcodeWithSafetyWarning(self.gcodeFilesToAppend[0]);
+            } else if (!self._validJobForMaterial()) {
+			    let job;
+			    let valid;
+			    if (self.has_cutting_proposal()) {
+			        job = "cut";
+			        valid = "engraving";
+                } else {
+			        job = "engraved";
+			        valid = "cutting";
+                }
+                const message = "Sorry, but the selected design can't be " + job + " in " +
+                    self.selected_material().name + ". It only works for " + valid +
+                    ", which is not supported for this material.";
+
+			    $('#conversion_material_design_error').find('.modal-body').text(message);
+                $('#conversion_material_design_error').modal('show');
 			} else {
 				if(self._allParametersSet()){
 					//self.update_colorSettings();
@@ -1281,8 +1324,8 @@ $(function(){
 							raster : engraving_data,
 							slicer: "svgtogcode",
 							gcode: gcodeFilename,
-              material: material,
-              advanced_settings: advancedSettings
+                            material: material,
+                            advanced_settings: advancedSettings
 						};
 
 						if(self.svg !== undefined){
