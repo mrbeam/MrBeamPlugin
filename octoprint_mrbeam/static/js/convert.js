@@ -1212,7 +1212,7 @@ $(function(){
 			    validEng = true;
             }
 
-			const validJob = validCut || validEng;
+			let validJob = validCut || validEng;
 
             return validJob
         };
