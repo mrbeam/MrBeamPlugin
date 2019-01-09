@@ -824,6 +824,7 @@ $(function(){
 						self.selected_material(material);
 					} else {
 						self.selected_material(null);
+						self.reset_material_settings();
 					}
 				} else {
 					self.selected_material(null);
@@ -838,6 +839,7 @@ $(function(){
 					self.selected_material_color(color);
 				} else if(self.material_colors().length > 1){
 					self.selected_material_color(null);
+					self.reset_material_settings();
 				}
 			} else {
 				self.selected_material_color(null);
@@ -854,6 +856,7 @@ $(function(){
 				} else if(self.material_thicknesses().length > 1){
 					self.selected_material_thickness(null);
 					self.dialog_state('material_type');
+					self.reset_material_settings();
 				}
 			} else {
 				self.selected_material_thickness(null);
