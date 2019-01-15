@@ -1625,7 +1625,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		:param text: the actual text
 		:param type: info, success, error, ... (default is info)
 		:param sticky: True | False (default is False)
-		:param replay_when_new_client_connects: If True the notification well be sent to all clients when a new client connects.
+		:param replay_when_new_client_connects: If True the notification will be sent to all clients when a new client connects.
 				If you send the same notification (all params have identical values) it won't be sent again.
 		:return:
 		"""
