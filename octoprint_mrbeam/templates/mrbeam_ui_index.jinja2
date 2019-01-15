@@ -176,33 +176,5 @@
 
         {% include 'javascripts.jinja2' %}
 
-		{% if analyticsEnabled %}
-		<script type="text/javascript">
-			$('a, button, input[type=checkbox], .btn, .trk').each(function(idx, element){
-				var id = $(element).attr('id');
-				if(id && id !== ""){
-					mixpanel.track_links(element, 'clicked '+ id);
-					console.log("mixpanel activated", id);
-				} else{
-					if(element.tagName === 'A'){
-						var href = $(element).attr('href');
-						if(href && href !== ""){
-							mixpanel.track_links(element, 'link '+ href);
-							console.log("mixpanel activated", href);
-						}
-					}
-				}
-			});
-
-			mixpanel.register({
-                env: MRBEAM_ENV_ANALYTICS,
-                beamOS_version: BEAMOS_DISPLAY_VERSION,
-                octoprint_version: DISPLAY_VERSION,
-                device_serial: MRBEAM_SERIAL,
-            });
-
-		</script>
-
-		{% endif %}
 	</body>
 </html>

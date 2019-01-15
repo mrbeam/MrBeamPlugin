@@ -125,6 +125,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._octopi_info = self.get_octopi_info()
 		self._serial_num = self.getSerialNum()
 
+		self._analytics_handler = analyticsHandler(self)
+
 		self.start_time_ntp_timer()
 
 		# do migration if needed
@@ -149,7 +151,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._oneButtonHandler = oneButtonHandler(self)
 		self._interlock_handler = interLockHandler(self)
 		self._lid_handler = lidHandler(self)
-		self._analytics_handler = analyticsHandler(self)
 		self._usageHandler = usageHandler(self)
 		self._led_eventhandler = LedEventListener(self._event_bus, self._printer)
 		# start iobeam socket only once other handlers are already inittialized so that we can handle info mesage

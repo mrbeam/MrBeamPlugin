@@ -16,6 +16,7 @@ class AnalyticsKeys(object):
 	JOB_EVENT = 'job'
 	DEVICE_EVENT = 'device'
 	CAM_EVENT = 'cam'
+	LOG_EVENT = 'log'
 
 	### DEVICE KEYS ###
 	HOSTNAME = 'hostname'
@@ -28,7 +29,9 @@ class AnalyticsKeys(object):
 	FLASH_GRBL = 'flash_grbl'
 	ANALYTICS_ENABLED = 'analytics_enabled'
 
-
+	### LOG EVENT KEYS ###
+	LOG = 'log'
+	EXCEPTION = 'exception'
 
 	### JOB KEYS ###
 	JOB_ID = 'job_id'

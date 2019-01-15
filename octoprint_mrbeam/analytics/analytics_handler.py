@@ -1,6 +1,7 @@
 import time
 import json
 import os.path
+import logging
 from datetime import datetime
 from value_collector import ValueCollector
 
@@ -55,8 +56,11 @@ class AnalyticsHandler(object):
 
 		self._jobevent_log_version = 4
 		self._deviceinfo_log_version = 3
+		self._logevent_version = 1
 		self._dust_log_version = 2
 		self._cam_event_log_version = 2
+
+		self.event_waiting_for_terminal_dump = None
 
 		self._logger.info("Analytics user permission: analyticsEnabled=%s", self._analyticsOn)
 
@@ -149,6 +153,48 @@ class AnalyticsHandler(object):
 			self._write_deviceinfo(ak.ANALYTICS_ENABLED, payload=dict(enabled=False))
 			self._analyticsOn = False
 			self._settings.set_boolean(["analyticsEnabled"], False)
+
+	def log_event(self, level, msg, caller=None, exception_str=None, stacktrace=None, wait_for_terminal_dump=False):
+		event = ak.LOG
+		filename = caller.filename.replace(__package_path__ + '/', '')
+		if exception_str:
+			event = ak.EXCEPTION
+		payload = {
+			'level': logging._levelNames[level] if level in logging._levelNames else level,
+			'msg': msg,
+			ak.VERSION_MRBEAM_PLUGIN: _mrbeam_plugin_implementation._plugin_version
+		}
+		if caller is not None:
+			payload.update({
+				'hash': hash('{}{}{}'.format(filename, caller.lineno, _mrbeam_plugin_implementation._plugin_version)),
+				'file': filename,
+				'line': caller.lineno,
+				'function': caller.function,
+				# code_context: caller.code_context[0].strip()
+			})
+		if exception_str:
+			payload['exception'] = exception_str
+		if stacktrace:
+			payload['stacktrace'] = stacktrace
+
+		if wait_for_terminal_dump:
+			self.event_waiting_for_terminal_dump = dict(
+				event = event,
+				payload = payload,
+			)
+		else:
+			self._write_log_event(event, payload=payload)
+
+	def log_terminal_dump(self, dump):
+		if self.event_waiting_for_terminal_dump is not None:
+			event = self.event_waiting_for_terminal_dump['event']
+			payload = self.event_waiting_for_terminal_dump['payload']
+			payload['terminal_dump'] = dump
+			self._write_log_event(event, payload=payload)
+			self.event_waiting_for_terminal_dump = None
+		else:
+			self._logger.warn("log_terminal_dump() called but no foregoing event tracked. self.event_waiting_for_terminal_dump is None. ignoring this dump.")
+
 
 
 	def _write_current_software_status(self):
@@ -353,6 +399,16 @@ class AnalyticsHandler(object):
 			self._write_event(ak.DEVICE_EVENT, event, self._deviceinfo_log_version, payload=data)
 		except Exception as e:
 			self._logger.error('Error during write_device_info: {}'.format(e.message))
+
+	def _write_log_event(self, event, payload=None):
+		try:
+			data = dict()
+			# TODO add data validation/preparation here
+			if payload is not None:
+				data[ak.DATA] = payload
+			self._write_event(ak.LOG_EVENT, event, self._logevent_version, payload=data)
+		except Exception as e:
+			self._logger.error('Error during _write_log_event: {}'.format(e.message), analytics=False)
 
 	def _write_jobevent(self,event,payload=None):
 		try:
