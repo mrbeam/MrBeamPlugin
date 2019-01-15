@@ -2,6 +2,8 @@ import time
 import json
 import os.path
 import logging
+import netifaces
+
 from datetime import datetime
 from value_collector import ValueCollector
 

@@ -28,6 +28,7 @@ class AnalyticsKeys(object):
 	INIT = 'init_json'
 	FLASH_GRBL = 'flash_grbl'
 	ANALYTICS_ENABLED = 'analytics_enabled'
+	IPS = 'ips'
 
 	### LOG EVENT KEYS ###
 	LOG = 'log'
