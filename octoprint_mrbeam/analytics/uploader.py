@@ -12,7 +12,7 @@ except:
 from octoprint_mrbeam.util.cmd_exec import exec_cmd
 
 
-TOKEN_URL           = "https://europe-west1-proud-amphora-224012.cloudfunctions.net/get_upload_token"
+TOKEN_URL           = "https://europe-west1-mrb-analytics.cloudfunctions.net/get_upload_tocken"
 UPLOAD_URL_TEMPLATE = "https://storage-upload.googleapis.com/{bucket}"
 
 
