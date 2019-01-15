@@ -6,6 +6,7 @@ import netifaces
 
 from datetime import datetime
 from value_collector import ValueCollector
+from threading import Timer
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint.events import Events as OctoPrintEvents
@@ -197,8 +198,6 @@ class AnalyticsHandler(object):
 		else:
 			self._logger.warn("log_terminal_dump() called but no foregoing event tracked. self.event_waiting_for_terminal_dump is None. ignoring this dump.")
 
-
-
 	def _write_current_software_status(self):
 		try:
 			# TODO get all software statuses
@@ -220,6 +219,10 @@ class AnalyticsHandler(object):
 		}
 		self._write_deviceinfo(ak.STARTUP, payload=payload)
 
+		# Schedule event_ip_addresses task (to write that line 15 seconds after startup)
+		t = Timer(15.0, self._event_ip_addresses)
+		t.start()
+
 	def _event_shutdown(self,event,payload):
 		self._write_deviceinfo(ak.SHUTDOWN)
 
@@ -230,6 +233,24 @@ class AnalyticsHandler(object):
 			succesful=succesful)
 		self._write_deviceinfo(ak.FLASH_GRBL, payload=payload)
 
+	def _event_ip_addresses(self):
+		try:
+			payload = dict()
+			interfaces = netifaces.interfaces()
+
+			for interface in interfaces:
+				addresses = netifaces.ifaddresses(interface)
+				payload[interface] = dict()
+				if netifaces.AF_INET in addresses:
+					payload[interface]['IPv4'] = addresses[netifaces.AF_INET][0]['addr']
+				if netifaces.AF_INET6 in addresses:
+					for idx, addr in enumerate(addresses[netifaces.AF_INET6]):
+						payload[interface]['IPv6_{}'.format(idx)] = addr['addr']
+
+			self._write_deviceinfo(ak.IPS, payload=payload)
+
+		except:
+			self._logger.exception('Exception when recording the IP addresses')
 
 	def _event_print_started(self, event, payload):
 		self._current_job_id = 'j_{}_{}'.format(self._getSerialNumber(),time.time())
