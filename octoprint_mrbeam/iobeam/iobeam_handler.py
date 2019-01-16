@@ -630,8 +630,17 @@ class IoBeamHandler(object):
 			if init and init.startswith('ok'):
 				self._logger.info("iobeam init ok: '%s'", message)
 			else:
+				# ANDYTEST add analytics=True to next log line
 				self._logger.info("iobeam init error: '%s' - requesting iobeam_debug...", message)
 				self._send_command('debug')
+				text = '<br/>A possible hardware malfunction has been detected on this device. ' \
+				       'Please contact our support team immediately at:<br/>' \
+				       '<a href="https://mr-beam.org/support" target="_blank">mr-beam.org/support</a><br/><br/>' \
+				       '<strong>Error:</strong><br/>{}'.format(message)
+				_mrbeam_plugin_implementation.notify_frontend(title="Hardware malfunction",
+				                                              text=text,
+				                                              type="error", sticky=True,
+				                                              replay_when_new_client_connects=True)
 		elif action == 'debug':
 			self._logger.info("iobeam debug message: '%s'", message)
 		else:
