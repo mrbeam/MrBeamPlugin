@@ -582,6 +582,24 @@ class IoBeamHandler(object):
 				self._logger.info("laserhead data: %s", data)
 			except:
 				self._logger.exception("laserhead: exception while handling head:data: ")
+		elif action == "serial":
+			sn = token[1]
+			if sn not in ('error'):
+				_mrbeam_plugin_implementation.lh['serial'] = sn
+				self._logger.info("laserhead serial: %s", sn)
+			else:
+				self._logger.info("laserhead: '%s'", message)
+		elif action == "power" and token[1] == '65':
+			p65 = None
+			try:
+				p65 = int(token[2])
+			except:
+				self._logger.info("laserhead: '%s'", message)
+				self._logger.warn("Can't read power 65 value as int: '%s'", token[2])
+
+			if p65 is not None:
+				_mrbeam_plugin_implementation.lh['p_65'] = p65
+				self._logger.info("laserhead p_65: %s",p65)
 		else:
 			self._logger.info("laserhead: '%s'", message)
 
