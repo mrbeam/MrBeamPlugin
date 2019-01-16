@@ -33,7 +33,7 @@ def existing_analyticsHandler():
 
 class AnalyticsHandler(object):
 
-	DELETE_FILES_AFTER_UPLOAD = False
+	DELETE_FILES_AFTER_UPLOAD = True
 
 
 	def __init__(self, event_bus, settings):
