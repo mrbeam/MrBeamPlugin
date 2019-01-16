@@ -35,7 +35,6 @@ class FileUploader(object):
 
 	def __init__(self,
 	             analytics_dir,
-	             files=[],
 	             delete_on_success=False,
 	             delay=None,
 	             analytics_files_prefix=None,
@@ -325,19 +324,5 @@ def my_callback(success, err=None):
 	print("Success: {} {}".format(success, err))
 
 
-if __name__ == "__main__":
 
-	logging.getLogger().addHandler(logging.StreamHandler())
-	logger = logging.getLogger()
-	logger.level = logging.DEBUG
-
-	file = None
-	if len(sys.argv) >= 2:
-		file = sys.argv[1]
-
-	logger.info("file: %s", file)
-
-	FileUploader(file=file, logger=logger, callback=my_callback).run()
-	time.sleep(10)
-	logger.info("done")
 
