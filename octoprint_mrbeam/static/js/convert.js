@@ -1295,7 +1295,6 @@ $(function(){
 			    let designType;
 			    if (self.workingArea.hasTextItems()) {
 			        designType = 'Quick Text'
-                    // $('#empty_job_support_link').show();
                 } else {
 			        designType = 'selected design';
 			        $('#empty_job_support_link').hide();
