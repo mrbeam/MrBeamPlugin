@@ -78,8 +78,7 @@ class MrbLogger(object):
 		if kwargs.pop('terminal', True if level >= logging.WARN else False):
 			self._terminal(level, msg, *args, **kwargs)
 		if kwargs.pop('terminal_as_comm', False):
-			level = self.LEVEL_COMM
-			self._terminal(level, msg, *args, **kwargs)
+			self._terminal(self.LEVEL_COMM, msg, *args, **kwargs)
 		if kwargs.pop('serial', False):
 			self._serial(msg, *args, **kwargs)
 		analytics =  kwargs.pop('analytics', None)

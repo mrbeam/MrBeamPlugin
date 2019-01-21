@@ -227,61 +227,64 @@ class MachineCom(object):
 		        self._laserCutterProfile['volume']['depth'] + self._laserCutterProfile['volume']['working_area_shift_y']) # y
 
 	def _monitor_loop(self):
-		#Open the serial port.
-		if not self._openSerial():
-			self._logger.critical("_monitor_loop() Serial not open, leaving monitoring loop.")
-			return
+		try:
+			#Open the serial port.
+			if not self._openSerial():
+				self._logger.critical("_monitor_loop() Serial not open, leaving monitoring loop.")
+				return
 
-		self._logger.info("Connected to: %s, starting monitor" % self._serial, terminal_as_comm=True)
-		self._changeState(self.STATE_CONNECTING)
+			self._logger.info("Connected to: %s, starting monitor" % self._serial, terminal_as_comm=True)
+			self._changeState(self.STATE_CONNECTING)
 
-		if self.grbl_auto_update_enabled and self._laserCutterProfile['grbl']['auto_update_file']:
-			self._logger.info("GRBL auto updating to version: %s, file: %s", self._laserCutterProfile['grbl']['auto_update_version'], self._laserCutterProfile['grbl']['auto_update_file'])
-			self.flash_grbl(grbl_file=self._laserCutterProfile['grbl']['auto_update_file'], is_connected=False)
+			if self.grbl_auto_update_enabled and self._laserCutterProfile['grbl']['auto_update_file']:
+				self._logger.info("GRBL auto updating to version: %s, file: %s", self._laserCutterProfile['grbl']['auto_update_version'], self._laserCutterProfile['grbl']['auto_update_file'])
+				self.flash_grbl(grbl_file=self._laserCutterProfile['grbl']['auto_update_file'], is_connected=False)
 
-		# reset on connect
-		if self._laserCutterProfile['grbl']['resetOnConnect']:
-			self._serial.flushInput()
-			self._serial.flushOutput()
-			self._sendCommand(self.COMMAND_RESET)
-		self._timeout = get_new_timeout("communication")
+			# reset on connect
+			if self._laserCutterProfile['grbl']['resetOnConnect']:
+				self._serial.flushInput()
+				self._serial.flushOutput()
+				self._sendCommand(self.COMMAND_RESET)
+			self._timeout = get_new_timeout("communication")
 
-		while self._monitoring_active:
-			try:
-				line = self._readline()
-				if line is None:
-					break
-				if line.strip() is not "":
-					self._timeout = get_new_timeout("communication")
-				if line.startswith('<'): # status report
-					self._handle_status_report(line)
-				elif line.startswith('ok'): # ok message :)
-					self._handle_ok_message(line)
-				elif line.startswith('err'): # error message
-					self._handle_error_message(line)
-				elif line.startswith('ALA'): # ALARM message
-					self._handle_alarm_message(line)
-				elif line.startswith('['): # feedback message
-					self._handle_feedback_message(line)
-				elif line.startswith('Grb'): # Grbl startup message
-					self._handle_startup_message(line)
-				# elif line.startswith('G24_AVOIDED'):
-				# 	self._handle_g24_avoided_message(line)
-				elif line.startswith('Corru'): # Corrupted line:
-					self._handle_corrupted_line(line)
-				elif line.startswith('$'): # Grbl settings
-					self._handle_settings_message(line)
-				elif not line and (self._state is self.STATE_CONNECTING or self._state is self.STATE_OPEN_SERIAL or self._state is self.STATE_DETECT_SERIAL):
-					self._logger.info("Empty line received during STATE_CONNECTION, starting soft-reset", terminal_as_comm=True)
-					self._sendCommand(self.COMMAND_RESET) # Serial-Connection Error
-			except:
-				self._logger.exception("Something crashed inside the monitoring loop, please report this to Mr Beam", terminal_dump=True)
-				errorMsg = "See octoprint.log for details"
-				self._log(errorMsg)
-				self._errorValue = errorMsg
-				self._changeState(self.STATE_ERROR)
-				eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
-		self._logger.info("Connection closed, closing down monitor", terminal_as_comm=True)
+			while self._monitoring_active:
+				try:
+					line = self._readline()
+					if line is None:
+						break
+					if line.strip() is not "":
+						self._timeout = get_new_timeout("communication")
+					if line.startswith('<'): # status report
+						self._handle_status_report(line)
+					elif line.startswith('ok'): # ok message :)
+						self._handle_ok_message(line)
+					elif line.startswith('err'): # error message
+						self._handle_error_message(line)
+					elif line.startswith('ALA'): # ALARM message
+						self._handle_alarm_message(line)
+					elif line.startswith('['): # feedback message
+						self._handle_feedback_message(line)
+					elif line.startswith('Grb'): # Grbl startup message
+						self._handle_startup_message(line)
+					# elif line.startswith('G24_AVOIDED'):
+					# 	self._handle_g24_avoided_message(line)
+					elif line.startswith('Corru'): # Corrupted line:
+						self._handle_corrupted_line(line)
+					elif line.startswith('$'): # Grbl settings
+						self._handle_settings_message(line)
+					elif not line and (self._state is self.STATE_CONNECTING or self._state is self.STATE_OPEN_SERIAL or self._state is self.STATE_DETECT_SERIAL):
+						self._logger.info("Empty line received during STATE_CONNECTION, starting soft-reset", terminal_as_comm=True)
+						self._sendCommand(self.COMMAND_RESET) # Serial-Connection Error
+				except:
+					self._logger.exception("Something crashed inside the monitoring loop, please report this to Mr Beam", terminal_dump=True)
+					errorMsg = "See octoprint.log for details"
+					self._log(errorMsg)
+					self._errorValue = errorMsg
+					self._changeState(self.STATE_ERROR)
+					eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
+			self._logger.info("Connection closed, closing down monitor", terminal_as_comm=True)
+		except:
+			self._logger.exception("Exception in _monitor_loop() thread: ")
 
 	def _send_loop(self):
 		while self._sending_active:
