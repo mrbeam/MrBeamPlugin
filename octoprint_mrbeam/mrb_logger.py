@@ -36,7 +36,8 @@ class MrbLogger(object):
 		self.logger.setLevel(logging.DEBUG)
 
 	def comm(self, msg, *args, **kwargs):
-		self._terminal(msg, *args, level=self.LEVEL_COMM, id='', **kwargs)
+		kwargs['id'] = ''
+		self._terminal(self.LEVEL_COMM, msg, *args, **kwargs)
 
 	def debug(self, msg, *args, **kwargs):
 		self.log(logging.DEBUG, msg, *args, **kwargs)
@@ -57,7 +58,9 @@ class MrbLogger(object):
 		self.log(logging.CRITICAL, msg, *args, **kwargs)
 
 	def exception(self, msg, *args, **kwargs):
-		self.log(logging.ERROR, msg, *args, exc_info=1, analytics=True, **kwargs)
+		kwargs['analytics'] = True
+		kwargs['exc_info'] = True
+		self.log(logging.ERROR, msg, *args, **kwargs)
 
 	def log(self, level, msg, *args, **kwargs):
 		"""
@@ -73,9 +76,10 @@ class MrbLogger(object):
 		:type kwargs:
 		"""
 		if kwargs.pop('terminal', True if level >= logging.WARN else False):
-			self._terminal(msg, *args, level=level, **kwargs)
+			self._terminal(level, msg, *args, **kwargs)
 		if kwargs.pop('terminal_as_comm', False):
-			self._terminal(msg, *args, level=self.LEVEL_COMM, **kwargs)
+			level = self.LEVEL_COMM
+			self._terminal(level, msg, *args, **kwargs)
 		if kwargs.pop('serial', False):
 			self._serial(msg, *args, **kwargs)
 		analytics =  kwargs.pop('analytics', None)
@@ -84,16 +88,21 @@ class MrbLogger(object):
 			analytics = True if analytics is not False else False
 			self._dump_terminal_buffer(level=level, analytics=analytics)
 		if analytics:
-			self._analytics_log_event(level, msg, terminal_dump=terminal_dump, *args, **kwargs)
+			kwargs['terminal_dump'] = terminal_dump
+			self._analytics_log_event(level, msg, *args, **kwargs)
+		# just to be shure....
+		kwargs.pop('terminal', None)
+		kwargs.pop('terminal_as_comm', None)
+		kwargs.pop('analytics', None)
+		kwargs.pop('terminal_dump', None)
 		self.logger.log(level, msg, *args, **kwargs)
 
-	def _terminal(self, msg, *args, **kwargs):
+	def _terminal(self, level, msg, *args, **kwargs):
 		global _printer
 
 		date = self._getDateString()
 		id = kwargs.pop('id', self.id)
 
-		level = kwargs.pop('level', '')
 		level = logging._levelNames[level] if level in logging._levelNames else level
 
 		msg = msg % args if args and msg else msg
@@ -115,7 +124,7 @@ class MrbLogger(object):
 		msg = msg % args if args and msg else msg
 		logging.getLogger("SERIAL").debug(msg)
 
-	def _analytics_log_event(self, level, msg, terminal_dump=False, *args, **kwargs):
+	def _analytics_log_event(self, level, msg, *args, **kwargs):
 		analytics_handler = self._get_analytics_handler()
 		if analytics_handler is not None:
 			try:
@@ -140,7 +149,7 @@ class MrbLogger(object):
 					caller,
 					exception_str,
 					stacktrace,
-					wait_for_terminal_dump=terminal_dump)
+					wait_for_terminal_dump=kwargs.get('terminal_dump', False))
 			except:
 				self.logger.exception("Exception in _analytics_log_event: ")
 

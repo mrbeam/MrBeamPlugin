@@ -111,13 +111,20 @@ class FileUploader(object):
 				self._run_threaded(delay=0.0)
 			elif self.logrotation_scheduled:
 				self.logrotation_scheduled = False
-				if self.test_online:
-					self._logger.debug("We're online: logrotating and uploading current analytics file.")
+
+				# if analytics are disabled by user, test first if there is a analytics file
+				# _is_analyticsfile_long_enough() returns False if there is None.
+				# Only test_online() if there is a file which is long enough
+				# to protect privacy of users by avoiding get_token() call to google if analytics are disabled
+				if not self._is_analyticsfile_long_enough():
+					self._logger.debug("File not long enough: not logrotating current analytics file.")
+				elif not self.test_online():
+					self._logger.debug("Not online: not logrotating current analytics file.")
+				else:
+					self._logger.debug("Logrotating and uploading current analytics file. (Long enough and we're online.)")
 					self._do_analytics_logrotate()
 					self.find_files_for_upload()
 					self._run_threaded(delay=0.0)
-				else:
-					self._logger.debug("We're not online, not logrotating current analytics file.")
 			else:
 				self.log_status()
 
@@ -127,21 +134,25 @@ class FileUploader(object):
 
 	def handle_single_file(self, my_file):
 		succ = None
-		self._logger.debug("Handling file: {}".format(self.get_status(my_file)))
+		if not self.test_online(lazy=True):
+			self.set_status(my_file, succ=False, err='Not online')
+			self._logger.debug("Not online, not handling file: {}".format(self.get_status(my_file)))
+		else:
+			self._logger.debug("Handling file: {}".format(self.get_status(my_file)))
 
-		self.verify_file(my_file)
-		if self.is_state_ok(my_file):
-
-			token_data = self.get_token(my_file)
+			self.verify_file(my_file)
 			if self.is_state_ok(my_file):
 
-				self.upload_file(my_file, token_data)
+				token_data = self.get_token(my_file)
 				if self.is_state_ok(my_file):
 
-					self.remove_file(my_file)
+					self.upload_file(my_file, token_data)
 					if self.is_state_ok(my_file):
-						# done
-						self.set_status(my_file, state=self.STATUS_DONE, succ=True)
+
+						self.remove_file(my_file)
+						if self.is_state_ok(my_file):
+							# done
+							self.set_status(my_file, state=self.STATUS_DONE, succ=True)
 
 		if self.is_state_ok(my_file):
 			succ = True
@@ -159,7 +170,12 @@ class FileUploader(object):
 		try:
 			params = self._get_system_properties()
 			params['type'] = 'analytics'
-			r = requests.get(TOKEN_URL, params=params)
+			try:
+				r = requests.get(TOKEN_URL, params=params)
+			except requests.ConnectionError as ex:
+				self.is_online = False
+				self.set_status(my_file, succ=False, err="ConnectionError: {}".format(ex))
+				return
 			if r.status_code == requests.codes.ok:
 				self.is_online = True
 				j = r.json()
@@ -223,8 +239,16 @@ class FileUploader(object):
 			self.set_status(my_file, succ=False, err="File not found")
 
 
-	def test_online(self, force=False):
+	def test_online(self, force=False, lazy=False):
+		"""
+		Tests if the system is online or not
+		:param force: forces a new check
+		:param lazy: does not perform a test, just returns the known state or True if unknown
+		:return: boolean
+		"""
 		res = self.is_online
+		if self.is_online is None and lazy:
+			return True
 		if self.is_online is None or force:
 			res = False
 			try:
@@ -252,16 +276,23 @@ class FileUploader(object):
 		self._logger.info("Analytics file upload finished. Files: %s (ok: %s, failed: %s) Details: %s", len(self.status), ok, err, self.status)
 
 	def _do_analytics_logrotate(self):
-		long_enough = False
-		if self.current_analytics_file is not None:
-			ca_full = os.path.join(self.analytics_dir, self.current_analytics_file)
-			long_enough = self._has_file_more_lines_than(ca_full, self.MIN_LIN_COUNT_TO_UPLOAD)
+		long_enough = self._is_analyticsfile_long_enough()
+		# if self.current_analytics_file is not None:
+		# 	ca_full = os.path.join(self.analytics_dir, self.current_analytics_file)
+		# 	long_enough = self._has_file_more_lines_than(ca_full, self.MIN_LIN_COUNT_TO_UPLOAD)
 		if long_enough:
 			ok = exec_cmd('sudo logrotate --force /etc/logrotate.d/analytics')
 			if not ok:
 				self._logger.warn("Unable to logrotate analytics file.")
 		else:
 			self._logger.debug("Current analytics file too short: not rotating.")
+
+	def _is_analyticsfile_long_enough(self):
+		long_enough = False
+		if self.current_analytics_file is not None:
+			ca_full = os.path.join(self.analytics_dir, self.current_analytics_file)
+			long_enough = self._has_file_more_lines_than(ca_full, self.MIN_LIN_COUNT_TO_UPLOAD)
+		return long_enough
 
 
 	def _has_file_more_lines_than(self, my_file, max_lines):
