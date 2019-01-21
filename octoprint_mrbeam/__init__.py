@@ -300,6 +300,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				clip_working_area = self._settings.get(['gcode_nextgen', 'clip_working_area'])
 			),
 			software_update_branches = self.get_update_branch_info(),
+			_version = self._plugin_version
 		)
 
 	def on_settings_save(self, data):
