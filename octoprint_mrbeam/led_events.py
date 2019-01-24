@@ -8,10 +8,7 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 class LedEventListener(CommandTrigger):
 
 	LED_EVENTS = {}
-	LED_EVENTS[Events.STARTUP] = "mrbeam_ledstrips_cli Startup"
-	# connect/disconnect to printer
-	# LED_EVENTS[Events.CONNECTED] = "mrbeam_ledstrips_cli Connected" #  remove
-	# LED_EVENTS[Events.DISCONNECTED] = "mrbeam_ledstrips_cli Disconnected" # remove
+	LED_EVENTS[Events.STARTUP] = "mrbeam_ledstrips_cli listening"
 	# connect/disconnect by client
 	LED_EVENTS[Events.CLIENT_OPENED] = "mrbeam_ledstrips_cli ClientOpened"
 	LED_EVENTS[Events.CLIENT_CLOSED] = "mrbeam_ledstrips_cli ClientClosed"
@@ -53,6 +50,8 @@ class LedEventListener(CommandTrigger):
 	LED_EVENTS[MrBeamEvents.SHUTDOWN_PREPARE_SUCCESS] = "mrbeam_ledstrips_cli Shutdown"
 	LED_EVENTS[Events.SHUTDOWN] = "mrbeam_ledstrips_cli Shutdown"
 
+	COMMAND_LISTENING_WIFI = "mrbeam_ledstrips_cli listening_wifi"
+	COMMAND_LISTENING_AP = "mrbeam_ledstrips_cli listening_ap"
 
 
 	def __init__(self, event_bus, printer):
@@ -83,6 +82,10 @@ class LedEventListener(CommandTrigger):
 			return
 
 		for command, commandType, debug in self._subscriptions[event]:
+
+			if command in (self.LED_EVENTS[Events.STARTUP], self.LED_EVENTS[Events.CLIENT_CLOSED]):
+				command = self._handleStartupCommand()
+
 			try:
 				if isinstance(command, (tuple, list, set)):
 					processedCommand = []
@@ -96,4 +99,18 @@ class LedEventListener(CommandTrigger):
 			except KeyError as e:
 				self._logger.warn("There was an error processing one or more placeholders in the following command: %s" % command)
 
+	def _handleStartupCommand(self):
+		status = None
+		wifi_connected = None
+		try:
+			pluginInfo = _mrbeam_plugin_implementation._plugin_manager.get_plugin_info("netconnectd")
+			if pluginInfo is not None:
+				status = pluginInfo.implementation._get_status()
+				wifi_connected = status["connections"]["wifi"]
+		except Exception as e:
+			self._logger.exception("Exception while reading wifi state from netconnectd:")
 
+		if wifi_connected:
+			return self.COMMAND_LISTENING_WIFI
+		else:
+			return self.COMMAND_LISTENING_AP
