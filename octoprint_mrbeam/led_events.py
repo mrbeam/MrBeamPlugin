@@ -1,5 +1,6 @@
 
 
+import threading
 from octoprint.events import Events, CommandTrigger, GenericEventListener
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
@@ -50,6 +51,8 @@ class LedEventListener(CommandTrigger):
 	LED_EVENTS[MrBeamEvents.SHUTDOWN_PREPARE_SUCCESS] = "mrbeam_ledstrips_cli Shutdown"
 	LED_EVENTS[Events.SHUTDOWN] = "mrbeam_ledstrips_cli Shutdown"
 
+	WIFI_CHECK_INTERVAL = 1.0
+
 	COMMAND_LISTENING_WIFI = "mrbeam_ledstrips_cli listening_wifi"
 	COMMAND_LISTENING_AP = "mrbeam_ledstrips_cli listening_ap"
 
@@ -58,6 +61,11 @@ class LedEventListener(CommandTrigger):
 		CommandTrigger.__init__(self, printer)
 		self._event_bus = event_bus
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.led_events")
+
+		self._watch_thread = None
+		self._watch_active = False
+		self._wifi_connected = None
+		self._ap_open = None
 
 		self._subscriptions = {}
 
@@ -75,42 +83,79 @@ class LedEventListener(CommandTrigger):
 
 	def eventCallback(self, event, payload):
 		# really, just copied this one from OctoPrint to add my debug log line.
-
 		GenericEventListener.eventCallback(self, event, payload)
 
 		if not event in self._subscriptions:
 			return
 
 		for command, commandType, debug in self._subscriptions[event]:
+			command = self._handleStartupCommand(command)
+			self._execute_command(command, commandType, debug, event, payload)
 
-			if command in (self.LED_EVENTS[Events.STARTUP], self.LED_EVENTS[Events.CLIENT_CLOSED]):
-				command = self._handleStartupCommand()
 
-			try:
-				if isinstance(command, (tuple, list, set)):
-					processedCommand = []
-					for c in command:
-						processedCommand.append(self._processCommand(c, payload))
-				else:
-					processedCommand = self._processCommand(command, payload)
+	def _execute_command(self, command, commandType, debug, event=None, payload=None):
+		try:
+			if isinstance(command, (tuple, list, set)):
+				processedCommand = []
+				for c in command:
+					processedCommand.append(self._processCommand(c, payload))
+			else:
+				processedCommand = self._processCommand(command, payload)
 
-				self._logger.debug("LED_EVENT %s: '%s'", event, processedCommand)
-				self.executeCommand(processedCommand, commandType, debug=debug)
-			except KeyError as e:
-				self._logger.warn("There was an error processing one or more placeholders in the following command: %s" % command)
+			self._logger.debug("LED_EVENT %s: '%s'", event, processedCommand)
+			self.executeCommand(processedCommand, commandType, debug=debug)
+		except KeyError as e:
+			self._logger.warn(
+				"There was an error processing one or more placeholders in the following command: %s" % command)
 
-	def _handleStartupCommand(self):
-		status = None
-		wifi_connected = None
+	def _handleStartupCommand(self, command):
+		if command in (self.LED_EVENTS[Events.STARTUP], self.LED_EVENTS[Events.CLIENT_CLOSED]):
+			self._wifi_connected = self.get_state("wifi")
+			self._ap_open = self.get_state("ap")
+			command = self._get_listening_command()
+			self._start_wifi_watcher()
+		else:
+			self._stop_wifi_watcher()
+		return command
+
+	def get_state(self, type):
+		res = None
 		try:
 			pluginInfo = _mrbeam_plugin_implementation._plugin_manager.get_plugin_info("netconnectd")
 			if pluginInfo is not None:
 				status = pluginInfo.implementation._get_status()
-				wifi_connected = status["connections"]["wifi"]
+				res = status["connections"][type]
 		except Exception as e:
 			self._logger.exception("Exception while reading wifi state from netconnectd:")
+		return res
 
-		if wifi_connected:
-			return self.COMMAND_LISTENING_WIFI
-		else:
-			return self.COMMAND_LISTENING_AP
+	def _get_listening_command(self):
+		command = self.LED_EVENTS[Events.STARTUP]
+		if self._ap_open:
+			command = self.COMMAND_LISTENING_AP
+		elif self._wifi_connected:
+			command = self.COMMAND_LISTENING_WIFI
+		return command
+
+	def _start_wifi_watcher(self, force=False):
+		if force or not self._watch_thread or not self._watch_thread.is_alive:
+			self._watch_thread = threading.Timer(self.WIFI_CHECK_INTERVAL, self.__run_wifi_watcher)
+			self._watch_thread.daemon = True
+			self._watch_thread.name = "led_events.__run_wifi_watcher"
+			self._watch_thread.start()
+
+	def _stop_wifi_watcher(self):
+		if self._watch_thread:
+			self._watch_thread.cancel()
+			self._watch_thread = None
+
+	def __run_wifi_watcher(self):
+		current_wifi = self.get_state('wifi')
+		current_ap = self.get_state('ap')
+		if current_ap != self._ap_open or current_wifi != self._wifi_connected:
+			self._wifi_connected = current_wifi
+			self._ap_open = current_ap
+			command = self._get_listening_command()
+			self._execute_command(command, "system", False)
+		self._start_wifi_watcher(force=True)
+
