@@ -94,7 +94,7 @@ $(function(){
 				}
 			},
 			'Cardboard, corrugated single wave': {
-				name: 'Cardboard, corrugated single wave',
+				name: 'Cardboard, single wave',
 				img: 'cardboard_single_wave.jpg',
 				description: 'Ordinary cardboard like most packaging is made of.',
 				hints: 'Engraving looks great if just the first layer is lasered away, that the wave is visible underneath.',
@@ -113,7 +113,7 @@ $(function(){
 				}
 			},
 			'Cardboard, corrugated double wave': {
-				name: 'Cardboard, corrugated double wave',
+				name: 'Cardboard, double wave',
 				img: 'cardboard_double_wave.jpg',
 				description: 'Ordinary cardboard like strong packaging is made of.',
 				hints: 'Engraving looks great if just the first layer is lasered away, that the wave is visible underneath.',
