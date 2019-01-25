@@ -3,6 +3,9 @@ import json
 import os.path
 import logging
 import netifaces
+import sys
+import fileinput
+import re
 
 from datetime import datetime
 from value_collector import ValueCollector
@@ -67,21 +70,24 @@ class AnalyticsHandler(object):
 
 		self._logger.info("Analytics user permission: analyticsEnabled=%s", self._analyticsOn)
 
-		analyticsfolder = os.path.join(self._settings.getBaseFolder("base"), self._settings.get(['analytics','folder']))
-		if not os.path.isdir(analyticsfolder):
-			os.makedirs(analyticsfolder)
+		self.analyticsfolder = os.path.join(self._settings.getBaseFolder("base"), self._settings.get(['analytics','folder']))
+		if not os.path.isdir(self.analyticsfolder):
+			os.makedirs(self.analyticsfolder)
 
-		fu = FileUploader(analyticsfolder,
-		             analytics_files_prefix='analytics_log.json.',
-		             delete_on_success=self.DELETE_FILES_AFTER_UPLOAD)
-		fu.schedule_logrotation_and_startover(current_analytics_file=self._settings.get(['analytics','filename']))
-		fu.find_files_for_upload()
+		if self._analyticsOn is not None:
+			self._activate_upload()
 
-		self._jsonfile = os.path.join(analyticsfolder, self._settings.get(['analytics','filename']))
+		self._jsonfile = os.path.join(self.analyticsfolder, self._settings.get(['analytics','filename']))
 
 		if self._analyticsOn:
 			self._activate_analytics()
 
+	def _activate_upload(self):
+		fu = FileUploader(self.analyticsfolder,
+						  analytics_files_prefix='analytics_log.json.',
+						  delete_on_success=self.DELETE_FILES_AFTER_UPLOAD)
+		fu.schedule_logrotation_and_startover(current_analytics_file=self._settings.get(['analytics', 'filename']))
+		fu.find_files_for_upload()
 
 	def _activate_analytics(self):
 		if not os.path.isfile(self._jsonfile):
@@ -147,13 +153,16 @@ class AnalyticsHandler(object):
 
 	def analytics_user_permission_change(self, analytics_enabled):
 		self._logger.info("analytics user permission change: analyticsEnabled=%s", analytics_enabled)
+		if self._analyticsOn is None:
+			self._activate_upload()
+
 		if analytics_enabled:
 			self._analyticsOn = True
 			self._settings.set_boolean(["analyticsEnabled"], True)
 			self._activate_analytics()
 			self._write_deviceinfo(ak.ANALYTICS_ENABLED, payload=dict(enabled=True))
 		else:
-			self._write_deviceinfo(ak.ANALYTICS_ENABLED, payload=dict(enabled=False))
+			# self._write_deviceinfo(ak.ANALYTICS_ENABLED, payload=dict(enabled=False))
 			self._analyticsOn = False
 			self._settings.set_boolean(["analyticsEnabled"], False)
 
@@ -603,3 +612,39 @@ class AnalyticsHandler(object):
 					f.write(dataString)
 			except Exception as e:
 				self._logger.error('Error while writing data: {}'.format(e.message))
+
+	def initial_analytics_procedure(self, consent):
+		if consent == 'agree':
+			self.analytics_user_permission_change(True)
+			self.process_analytics_files()
+
+		elif consent == 'disagree':
+			self.analytics_user_permission_change(False)
+			self.delete_analytics_files()
+
+	def delete_analytics_files(self):
+		self._logger.info("Deleting analytics files...")
+		folder = ak.ANALYTICS_FOLDER
+		for file in os.listdir(folder):
+			file_path = os.path.join(folder, file)
+			try:
+				if os.path.isfile(file_path) and "analytics" in file:
+					os.unlink(file_path)
+					self._logger.info('File deleted: {file}'.format(file=file_path))
+			except Exception as e:
+				self._logger.error('Error when deleting file {file}: {error}'.format(file=file_path, error=e))
+
+	def process_analytics_files(self):
+		self._logger.info("Processing analytics files...")
+		folder = ak.ANALYTICS_FOLDER
+		for file in os.listdir(folder):
+			file_path = os.path.join(folder, file)
+			try:
+				if os.path.isfile(file_path) and "analytics" in file:
+					# open + remove file_names + save
+					for idx, line in enumerate(fileinput.input(file_path, inplace=1)):
+						line = re.sub(r"\"filename\": \"[^\"]+\"", "", line)
+						sys.stdout.write(line)
+					self._logger.info('File processed: {file}'.format(file=file_path))
+			except Exception as e:
+				self._logger.error('Error when processing line {line} of file {file}: {e}'.format(line=idx, file=file_path, e=e))

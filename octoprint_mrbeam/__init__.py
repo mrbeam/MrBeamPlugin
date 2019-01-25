@@ -352,7 +352,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/wizard_acl.js", "js/netconnectd_wrapper.js", "js/lasersaftey_viewmodel.js",
 				"js/ready_to_laser_viewmodel.js", "js/lib/screenfull.min.js","js/settings/camera_calibration.js",
 				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js", "js/lib/Color.js", "js/laser_job_done_viewmodel.js", 
-				"js/loadingoverlay_viewmodel.js", "js/wizard_whatsnew.js"],
+				"js/loadingoverlay_viewmodel.js", "js/wizard_whatsnew.js", "js/wizard_analytics.js"],
 			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css", "css/quicktext-fonts.css", "css/sliders.css"],
 			less=["less/mrbeam.less"]
 		)
@@ -498,8 +498,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def get_wizard_details(self):
 		return dict()
 
-	def get_wizard_version(self):
-		return 13 #random number. but we can't go down anymore, just up.
+	def get_wizard_version(self): # TODO ANALYTICS: change return number + decrease in the config.yaml seenwizards>mrbeam
+		return 13 #random number. but we can't go down anymore, just up. 13
 
 	def on_wizard_finish(self, handled):
 		self._logger.info("Setup Wizard finished.")
@@ -641,6 +641,21 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# jinja has some js that changes this to German if lang is 'de'
 		return gettext("...and more")
 
+	# TODO ANALYTICS: create new wizard page in templates > wizard
+	def _is_analytics_wizard_required(self):
+		result = not self.isFirstRun()
+		self._logger.debug("_is_analytics_wizard_required() %s", result)
+		return result
+
+	def _get_analytics_wizard_details(self):
+		return dict()
+
+	def _get_analytics_additional_wizard_template_data(self):
+		return dict(mandatory=False, suffix="_analytics")
+
+	def _get_analytics_wizard_name(self):
+		# jinja has some js that changes this to German if lang is 'de'
+		return gettext("Analytics")
 
 
 	@octoprint.plugin.BlueprintPlugin.route("/acl", methods=["POST"])
@@ -1261,6 +1276,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			ready_to_laser=[],
 			debug_event=["event"],
 			custom_materials=[],
+			analytics_init=[],	#TODO ANALYTICS
 			take_undistorted_picture=[]  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
 		)
 
@@ -1289,8 +1305,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return self.take_undistorted_picture(is_initial_calibration=False)
 		elif command == "debug_event":
 			return self.debug_event(data)
+		elif command == "analytics_init":
+			return self.analytics_init(data)
 		return NO_CONTENT
 
+	def analytics_init(self, data):
+		if 'analyticsInitialConsent' in data:
+			self._analytics_handler.initial_analytics_procedure(data['analyticsInitialConsent'])
 
 	def debug_event(self, data):
 		event = data['event']

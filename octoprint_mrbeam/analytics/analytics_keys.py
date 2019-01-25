@@ -1,4 +1,6 @@
 class AnalyticsKeys(object):
+	ANALYTICS_FOLDER = '/home/pi/.octoprint/analytics/'
+
 	SERIALNUMBER = 'snr'
 	TYPE = 't'
 	VERSION = 'v'
