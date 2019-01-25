@@ -11,21 +11,19 @@
 
 {% else %}
     <h3>{{ _("Analytics") }}</h3>
-    <p>
+    <h4>
         Help us improve Mr Beam! <i class="fa fa-heartbeat" aria-hidden="true" style="margin-right: 3px"></i>
-    </p>
+    </h4>
     <p>
-        We would like to save some data about the usage of your Mr Beam II.
-        This data will help us have a better understanding of the Mr Beam II's ecosystem, so we can enhance your user experience.
+        In order to improve your experience with the Mr Beam II, we would like to gather some analytics data on the device operations. No information would be shared with external sources.
     </p>
 
     <div>
-        <b>Would you like to help us by sharing your Mr Beam II's data with us?</b>
         <div id="analytics_initial_consent_radio">
           <label><input type="radio" name="analytics_init_consent" value="agree" data-bind="checked: analyticsInitialConsent, click: enableLetsGoButton">
-            Yes, I am happy to help!</label>
+            Yes, I want to support Mr Beam and agree to share the analytics data.</label>
           <label><input type="radio" name="analytics_init_consent" value="disagree" data-bind="checked: analyticsInitialConsent, click: enableLetsGoButton">
-            No, I prefer to keep my privacy.</label>
+            No, I’d rather not share the analytics data.</label>
         </div>
     </div>
 
@@ -41,44 +39,27 @@
         </div>
         <div id="analytics_what_we_save" class="collapse" aria-labelledby="analytics_what_we_save_heading" data-parent="#analytics_what_we_save_accordion">
           <div class="card-body">
-            Data we will <b>save</b>:
+            Data we would <b>save</b>:
             <ul>
-                <li>Data about your jobs: duration, used material parameters, ...</li>
-                <li>Data about your device: IP addresses, ...</li>
-                <li>Data about the different errors you might get</li>
+                <li>Job data like duration, materials or parameters.</li>
+                <li>Mr Beam II device data like serial number, local IP addresses and version numbers.</li>
+                <li>More technical data, including error reports.</li>
             </ul>
             Data we will <b>not save</b>:
             <ul>
-                <li>Data about your uploaded files: their content, name, ...</li>
-                <li>Data about your user: user names, passwords, ...</li>
+                <li>Your designs, its content or file names.</li>
+                <li>Username, email address and passwords.</li>
+                <li>Location, camera pictures, public IP addresses.</li>
             </ul>
-            <p>
-                Want more detailed information? You can check our privacy policy <a href="https://mr-beam.org/" target="_blank">here!</a>
-            </p>
           </div>
         </div>
       </div>
-{#      <div class="card">#}
-{#        <div class="card-header" id="analytics_what_we_dont_save_heading">#}
-{#         <div class="mb-0">#}
-{#            <button class="btn btn-link collapsed analytics-collapsible" type="button" data-toggle="collapse" data-target="#analytics_what_we_dont_save"#}
-{#                    aria-expanded="false" aria-controls="collapseTwo">#}
-{#                Data we will not save#}
-{#            </button>#}
-{#          </div>#}
-{#        </div>#}
-{#        <div id="analytics_what_we_dont_save" class="collapse" aria-labelledby="analytics_what_we_dont_save_heading" data-parent="#analytics_what_we_save_accordion">#}
-{#          <div class="card-body">#}
-{#            <ul>#}
-{#                <li>Data about your <b>uploaded files</b>: their content, name, ...</li>#}
-{#                <li>Data about your <b>user</b>: user names, passwords, ...</li>#}
-{#            </ul>#}
-{#          </div>#}
-{#        </div>#}
-{#      </div>#}
     </div>
 
     <p>
         <i class="fa fa-info" aria-hidden="true" style="margin-right: 3px"></i>You can change the analytics settings in the settings menu whenever you want ;)
+    </p>
+    <p style="color: darkgray;font-size: 0.9em">
+        Want more detailed information? You can check our <a href="https://mr-beam.org/" target="_blank">privacy policy.</a>
     </p>
 {% endif %}
