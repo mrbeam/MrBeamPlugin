@@ -2164,9 +2164,14 @@ input.search-query,
 }
 
 input[type="radio"]{
-    vertical-align: top;
+  vertical-align: top;
 }
 
 #analytics_initial_consent_radio {
   padding: 12px;
+}
+
+#wizardTabs > li > a {
+  pointer-events: none;
+  cursor: default;
 }
