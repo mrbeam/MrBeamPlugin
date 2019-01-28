@@ -39,8 +39,6 @@ def exec_cmd_output(cmd, log_cmd=True, shell=False):
 	code = 0
 	if log_cmd:
 		_logger.debug("_execute_command() command: '%s'", cmd)
-	else:
-		_logger.debug("_execute_command() command (log_cmd=False)")
 	try:
 		output = subprocess.check_output(cmd, shell=shell, stderr=subprocess.STDOUT)
 	except subprocess.CalledProcessError as e:
