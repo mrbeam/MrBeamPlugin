@@ -1866,7 +1866,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			# self._logger.debug("ntpq -p:\n%s", ntpq_out)
 			cmd = "ntpq -pn | /usr/bin/awk 'BEGIN { ntp_offset=%s } $1 ~ /^\*/ { ntp_offset=$9 } END { print ntp_offset }'" % max_offset
 			output, code = exec_cmd_output(cmd, shell=True, log_cmd=False)
-			ntp_offset = float(output)
+			try:
+				ntp_offset = float(output)
+			except:
+				# possible output: "ntpq: read: Connection refused"
+				ntp_offset = None
+				pass
 			if ntp_offset == max_offset:
 				ntp_offset = None
 		except:
