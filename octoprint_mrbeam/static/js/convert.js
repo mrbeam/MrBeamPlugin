@@ -44,6 +44,8 @@ $(function(){
 		self.vectorJobs = ko.observableArray([]);
 		self.show_line_color_mappings = ko.observable(false);
 
+		self.engraveOnlyForced = false;
+
 		// material menu
 		self.material_settings2 = {
 			'Anodized Aluminum': {
@@ -1157,9 +1159,8 @@ $(function(){
 				"dithering" : self.imgDithering(),
 				"beam_diameter" : parseFloat(self.beamDiameter()),
 				"pierce_time": parseInt(self.engravingPiercetime()),
-
 				"engraving_mode": $('#svgtogcode_img_engraving_mode > .btn.active').attr('value'),
-        "line_distance": $('#svgtogcode_img_line_dist').val()
+                "line_distance": $('#svgtogcode_img_line_dist').val()
 			};
 			return data;
 		};
@@ -1196,7 +1197,7 @@ $(function(){
 		self._validJobForMaterial = function() {
             /**
              * Check if the selected designs can be engraved/cut in the selected material.
-             * @return {boolean} the validity of the designs for the material.
+             * @return {boolean} The validity of the designs for the material.
              */
 		    let validCut = false;
 		    let validEng = false;
@@ -1218,6 +1219,87 @@ $(function(){
 			let validJob = validCut || validEng;
 
             return validJob
+        };
+
+		self.moveJobsToEngravingEngraveModeSelected = function(thickness) {
+            /**
+             * Move all cutting jobs to engraving when the user selects "Engrave only"
+             * @param thickness The object with the user selected thickness
+             */
+            if (thickness.thicknessMM === -1) {
+                self.forceEngraveOnly();
+            } else {
+                if (self.engraveOnlyForced) {
+                    self.undoForceEngraveOnly();
+                }
+            }
+
+        };
+
+        self.moveJobsToEngravingDefaultOption = function(material) {
+            /**
+             * Move all cutting jobs to engraving when the material does not have cutting parameters
+             * @param material The object with the user selected material
+             */
+            if (!self.engraveOnlyForced) {
+                let colors = material.colors;
+                let hasCut = false;
+
+                for (let i = 0; i < Object.keys(colors).length; i++) {
+                    let color = Object.keys(colors)[i];
+                    if (colors[color].cut.length > 0) {
+                        hasCut = true;
+                    }
+                }
+
+                if (!hasCut) {
+                    self.forceEngraveOnly();
+                }
+            } else {
+                self.undoForceEngraveOnly();
+            }
+        };
+
+		self.forceEngraveOnly = function() {
+		    /**
+             * Move all the jobs from cutting to engraving
+             */
+		    console.log('Force engrave only');
+		    self.engraveOnlyForced = true;
+
+            let vector_jobs = $('.job_row_vector');
+            for (let i = 0; i < vector_jobs.length; i++) {
+                let vjob = vector_jobs[i];
+                let colorDrops = $(vjob).find('.color_drop_zone');
+
+                let jobs = colorDrops.children();
+                let numJobs = jobs.length;
+                for (let j = 0; j < numJobs; j++) {
+                    let cuttingJob = jobs[j];
+                    let moveCut = ($(cuttingJob)).detach();
+                    ($('#engrave_job > .span3 > .color_drop_zone')).append(moveCut);
+                    console.log('Cutting job: ' + cuttingJob.id);
+                }
+            }
+        };
+
+		self.undoForceEngraveOnly = function() {
+		    /**
+             * Move all the jobs from engraving to cutting (except '#cd_engraving')
+             */
+		    console.log('Undo force engrave only');
+            self.engraveOnlyForced = false;
+
+		    let engraving_jobs = $('#engrave_job .color_drop_zone').children(':visible');
+
+		    let numJobs = engraving_jobs.length;
+            for (let j = 0; j < numJobs; j++) {
+                let engravingJob = engraving_jobs[j];
+                if (engravingJob.id !== 'cd_engraving') {
+                    let moveEng = ($(engravingJob)).detach();
+                    ($('#first_job > .span3 > .color_drop_zone')).append(moveEng);
+                }
+            }
         };
 
 		self._allParametersSet = function(){
