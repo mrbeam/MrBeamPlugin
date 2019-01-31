@@ -227,7 +227,6 @@ $(function () {
                  self.terminal.checkAutoscroll();
             });
             self.terminal.activeAllFilters();
-
         };
 
         self.onStartupComplete = function() {
