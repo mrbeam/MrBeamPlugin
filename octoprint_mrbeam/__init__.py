@@ -372,8 +372,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# template, using the render_kwargs as provided by OctoPrint
 		from flask import make_response, render_template, g
 
-		if request.host not in self.called_hosts:
-			self.called_hosts.append(request.host)
+		called_hosts_dict = dict(host=request.host, ref=request.referrer)
+		if called_hosts_dict not in self.called_hosts:
+			self.called_hosts.append(called_hosts_dict)
 		self._logger.info("called hosts: %s", self.called_hosts)
 
 		firstRun = render_kwargs['firstRun']
@@ -1994,7 +1995,7 @@ def __plugin_load__():
 			order=dict(
 				wizard=["plugin_mrbeam_wifi", "plugin_mrbeam_acl", "plugin_mrbeam_lasersafety",
 				        "plugin_mrbeam_whatsnew_0", "plugin_mrbeam_whatsnew_1", "plugin_mrbeam_whatsnew_2", "plugin_mrbeam_whatsnew_3", "plugin_mrbeam_whatsnew_4"],
-				settings = ['plugin_mrbeam_about', 'plugin_softwareupdate', 'accesscontrol', 'plugin_netconnectd', 'plugin_mrbeam_conversion',
+				settings = ['plugin_mrbeam_about', 'plugin_softwareupdate', 'accesscontrol', 'plugin_netconnectd', 'plugin_findmymrbeam', 'plugin_mrbeam_conversion',
 				            'plugin_mrbeam_camera', 'plugin_mrbeam_analytics', 'logs', 'plugin_mrbeam_debug']
 			),
 			disabled=dict(
