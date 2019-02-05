@@ -112,6 +112,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._time_ntp_check_count = 0
 		self._time_ntp_check_last_ts = 0.0
 		self._time_ntp_shift = 0.0
+		self.lh = dict(serial=None, p_65=None)
 
 		# MrBeam Events needs to be registered in OctoPrint in order to be send to the frontend later on
 		MrBeamEvents.register_with_octoprint()
@@ -123,6 +124,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._branch = self.getBranch()
 		self._octopi_info = self.get_octopi_info()
 		self._serial_num = self.getSerialNum()
+
+		self._analytics_handler = analyticsHandler(self)
 
 		self.start_time_ntp_timer()
 
@@ -148,7 +151,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._oneButtonHandler = oneButtonHandler(self)
 		self._interlock_handler = interLockHandler(self)
 		self._lid_handler = lidHandler(self)
-		self._analytics_handler = analyticsHandler(self)
 		self._usageHandler = usageHandler(self)
 		self._led_eventhandler = LedEventListener(self._event_bus, self._printer)
 		# start iobeam socket only once other handlers are already inittialized so that we can handle info mesage
@@ -173,6 +175,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		msg += ",{}:{}".format(self.ENV_LASER_SAFETY, self.get_env(self.ENV_LASER_SAFETY))
 		msg += ",{}:{})".format(self.ENV_ANALYTICS, self.get_env(self.ENV_ANALYTICS))
 		msg += ", beamOS-image:{}".format(self._octopi_info)
+		msg += ", laserhead-serial:{}".format(self.lh['serial'])
 		self._logger.info(msg, terminal=True)
 
 		msg = "MrBeam Lasercutter Profile: %s" % self.laserCutterProfileManager.get_current_or_default()
@@ -207,7 +210,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		            serial=self._serial_num,
 		            software_tier=self._settings.get(["dev", "software_tier"]),
 		            env=self.get_env(),
-		            beamOS_image=self._octopi_info)
+		            beamOS_image=self._octopi_info,
+		            laserhead_serial=self.lh['serial'])
 
 	##~~ SettingsPlugin mixin
 	def get_settings_version(self):
@@ -243,8 +247,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				support_mode = False,
 				grbl_auto_update_enabled = True
 			),
+			analyticsEnabled=True,
 			analytics=dict(
-				job_analytics = False,
 				cam_analytics = False,
 				folder = 'analytics', # laser job analytics base folder (.octoprint/...)
 				filename = 'analytics_log.json',
@@ -296,6 +300,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				clip_working_area = self._settings.get(['gcode_nextgen', 'clip_working_area'])
 			),
 			software_update_branches = self.get_update_branch_info(),
+			_version = self._plugin_version
 		)
 
 	def on_settings_save(self, data):
@@ -315,6 +320,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self._logger.info("Disabling VORLON per user request.", terminal=True)
 		if "gcode_nextgen" in data and isinstance(data['gcode_nextgen'], collections.Iterable) and "clip_working_area" in data['gcode_nextgen']:
 			self._settings.set_boolean(["gcode_nextgen", "clip_working_area"], data['gcode_nextgen']['clip_working_area'])
+		if "analyticsEnabled" in data:
+			self._analytics_handler.analytics_user_permission_change(analytics_enabled=data['analyticsEnabled'])
 
 
 	def on_shutdown(self):
@@ -365,8 +372,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# template, using the render_kwargs as provided by OctoPrint
 		from flask import make_response, render_template, g
 
-		if request.host not in self.called_hosts:
-			self.called_hosts.append(request.host)
+		called_hosts_dict = dict(host=request.host, ref=request.referrer)
+		if called_hosts_dict not in self.called_hosts:
+			self.called_hosts.append(called_hosts_dict)
 		self._logger.info("called hosts: %s", self.called_hosts)
 
 		firstRun = render_kwargs['firstRun']
@@ -445,7 +453,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			dict(type='settings', name="File Import Settings", template='settings/svgtogcode_settings.jinja2', suffix="_conversion", custom_bindings=False),
             dict(type='settings', name="Camera Calibration", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
             dict(type='settings', name="Debug", template='settings/debug_settings.jinja2', suffix="_debug", custom_bindings=False),
-            dict(type='settings', name="About This Mr Beam", template='settings/about_settings.jinja2', suffix="_about", custom_bindings=False)
+            dict(type='settings', name="About This Mr Beam", template='settings/about_settings.jinja2', suffix="_about", custom_bindings=False),
+            dict(type='settings', name="Analytics", template='settings/analytics_settings.jinja2', suffix="_analytics", custom_bindings=False)
 			# disabled in appearance
 			# dict(type='settings', name="Serial Connection DEV", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings=False, replaces='serial')
 		 ]
@@ -1625,7 +1634,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		:param text: the actual text
 		:param type: info, success, error, ... (default is info)
 		:param sticky: True | False (default is False)
-		:param replay_when_new_client_connects: If True the notification well be sent to all clients when a new client connects.
+		:param replay_when_new_client_connects: If True the notification will be sent to all clients when a new client connects.
 				If you send the same notification (all params have identical values) it won't be sent again.
 		:return:
 		"""
@@ -1858,7 +1867,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			# self._logger.debug("ntpq -p:\n%s", ntpq_out)
 			cmd = "ntpq -pn | /usr/bin/awk 'BEGIN { ntp_offset=%s } $1 ~ /^\*/ { ntp_offset=$9 } END { print ntp_offset }'" % max_offset
 			output, code = exec_cmd_output(cmd, shell=True, log_cmd=False)
-			ntp_offset = float(output)
+			try:
+				ntp_offset = float(output)
+			except:
+				# possible output: "ntpq: read: Connection refused"
+				ntp_offset = None
+				pass
 			if ntp_offset == max_offset:
 				ntp_offset = None
 		except:
@@ -1981,8 +1995,8 @@ def __plugin_load__():
 			order=dict(
 				wizard=["plugin_mrbeam_wifi", "plugin_mrbeam_acl", "plugin_mrbeam_lasersafety",
 				        "plugin_mrbeam_whatsnew_0", "plugin_mrbeam_whatsnew_1", "plugin_mrbeam_whatsnew_2", "plugin_mrbeam_whatsnew_3", "plugin_mrbeam_whatsnew_4"],
-				settings = ['plugin_mrbeam_about', 'plugin_softwareupdate', 'accesscontrol', 'plugin_netconnectd', 'plugin_mrbeam_conversion',
-				            'plugin_mrbeam_camera', 'logs', 'plugin_mrbeam_debug']
+				settings = ['plugin_mrbeam_about', 'plugin_softwareupdate', 'accesscontrol', 'plugin_netconnectd', 'plugin_findmymrbeam', 'plugin_mrbeam_conversion',
+				            'plugin_mrbeam_camera', 'plugin_mrbeam_analytics', 'logs', 'plugin_mrbeam_debug']
 			),
 			disabled=dict(
 				wizard=['plugin_softwareupdate'],

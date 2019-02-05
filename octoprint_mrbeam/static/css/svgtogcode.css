@@ -295,11 +295,12 @@ svg#area_preview {
 	display: block;
 }
 
-
 #material_type.manage a#materials_manage,
+#material_type a#materials_manage_info,
 #material_type a#materials_manage_done { display: none; }
 #material_type a#materials_manage,
-#material_type.manage a#materials_manage_done { display: inline; }
+#material_type.manage a#materials_manage_info,
+#material_type.manage a#materials_manage_done { display: inline}
 
 #materials_manage_done { transition: text-shadow 0.3s ease-in-out 0s; }
 #materials_manage_done.flash {

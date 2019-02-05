@@ -107,7 +107,6 @@ class MachineCom(object):
 
 	def __init__(self, port=None, baudrate=None, callbackObject=None, printerProfileManager=None):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.comm_acc2")
-		self._serialLogger = logging.getLogger("SERIAL")
 
 		if port is None:
 			port = settings().get(["serial", "port"])
@@ -228,62 +227,64 @@ class MachineCom(object):
 		        self._laserCutterProfile['volume']['depth'] + self._laserCutterProfile['volume']['working_area_shift_y']) # y
 
 	def _monitor_loop(self):
-		#Open the serial port.
-		if not self._openSerial():
-			self._logger.critical("_monitor_loop() Serial not open, leaving monitoring loop.")
-			return
+		try:
+			#Open the serial port.
+			if not self._openSerial():
+				self._logger.critical("_monitor_loop() Serial not open, leaving monitoring loop.")
+				return
 
-		self._logger.info("Connected to: %s, starting monitor" % self._serial, terminal_as_comm=True)
-		self._changeState(self.STATE_CONNECTING)
+			self._logger.info("Connected to: %s, starting monitor" % self._serial, terminal_as_comm=True)
+			self._changeState(self.STATE_CONNECTING)
 
-		if self.grbl_auto_update_enabled and self._laserCutterProfile['grbl']['auto_update_file']:
-			self._logger.info("GRBL auto updating to version: %s, file: %s", self._laserCutterProfile['grbl']['auto_update_version'], self._laserCutterProfile['grbl']['auto_update_file'])
-			self.flash_grbl(grbl_file=self._laserCutterProfile['grbl']['auto_update_file'], is_connected=False)
+			if self.grbl_auto_update_enabled and self._laserCutterProfile['grbl']['auto_update_file']:
+				self._logger.info("GRBL auto updating to version: %s, file: %s", self._laserCutterProfile['grbl']['auto_update_version'], self._laserCutterProfile['grbl']['auto_update_file'])
+				self.flash_grbl(grbl_file=self._laserCutterProfile['grbl']['auto_update_file'], is_connected=False)
 
-		# reset on connect
-		if self._laserCutterProfile['grbl']['resetOnConnect']:
-			self._serial.flushInput()
-			self._serial.flushOutput()
-			self._sendCommand(self.COMMAND_RESET)
-		self._timeout = get_new_timeout("communication")
+			# reset on connect
+			if self._laserCutterProfile['grbl']['resetOnConnect']:
+				self._serial.flushInput()
+				self._serial.flushOutput()
+				self._sendCommand(self.COMMAND_RESET)
+			self._timeout = get_new_timeout("communication")
 
-		while self._monitoring_active:
-			try:
-				line = self._readline()
-				if line is None:
-					break
-				if line.strip() is not "":
-					self._timeout = get_new_timeout("communication")
-				if line.startswith('<'): # status report
-					self._handle_status_report(line)
-				elif line.startswith('ok'): # ok message :)
-					self._handle_ok_message(line)
-				elif line.startswith('err'): # error message
-					self._handle_error_message(line)
-				elif line.startswith('ALA'): # ALARM message
-					self._handle_alarm_message(line)
-				elif line.startswith('['): # feedback message
-					self._handle_feedback_message(line)
-				elif line.startswith('Grb'): # Grbl startup message
-					self._handle_startup_message(line)
-				# elif line.startswith('G24_AVOIDED'):
-				# 	self._handle_g24_avoided_message(line)
-				elif line.startswith('Corru'): # Corrupted line:
-					self._handle_corrupted_line(line)
-				elif line.startswith('$'): # Grbl settings
-					self._handle_settings_message(line)
-				elif not line and (self._state is self.STATE_CONNECTING or self._state is self.STATE_OPEN_SERIAL or self._state is self.STATE_DETECT_SERIAL):
-					self._logger.info("Empty line received during STATE_CONNECTION, starting soft-reset", terminal_as_comm=True)
-					self._sendCommand(self.COMMAND_RESET) # Serial-Connection Error
-			except:
-				self._logger.exception("Something crashed inside the monitoring loop, please report this to Mr Beam")
-				errorMsg = "See octoprint.log for details"
-				self._log(errorMsg)
-				self._errorValue = errorMsg
-				self._changeState(self.STATE_ERROR)
-				eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
-				self._logger.dump_terminal_buffer(level=logging.ERROR)
-		self._logger.info("Connection closed, closing down monitor", terminal_as_comm=True)
+			while self._monitoring_active:
+				try:
+					line = self._readline()
+					if line is None:
+						break
+					if line.strip() is not "":
+						self._timeout = get_new_timeout("communication")
+					if line.startswith('<'): # status report
+						self._handle_status_report(line)
+					elif line.startswith('ok'): # ok message :)
+						self._handle_ok_message(line)
+					elif line.startswith('err'): # error message
+						self._handle_error_message(line)
+					elif line.startswith('ALA'): # ALARM message
+						self._handle_alarm_message(line)
+					elif line.startswith('['): # feedback message
+						self._handle_feedback_message(line)
+					elif line.startswith('Grb'): # Grbl startup message
+						self._handle_startup_message(line)
+					# elif line.startswith('G24_AVOIDED'):
+					# 	self._handle_g24_avoided_message(line)
+					elif line.startswith('Corru'): # Corrupted line:
+						self._handle_corrupted_line(line)
+					elif line.startswith('$'): # Grbl settings
+						self._handle_settings_message(line)
+					elif not line and (self._state is self.STATE_CONNECTING or self._state is self.STATE_OPEN_SERIAL or self._state is self.STATE_DETECT_SERIAL):
+						self._logger.info("Empty line received during STATE_CONNECTION, starting soft-reset", terminal_as_comm=True)
+						self._sendCommand(self.COMMAND_RESET) # Serial-Connection Error
+				except:
+					self._logger.exception("Something crashed inside the monitoring loop, please report this to Mr Beam", terminal_dump=True)
+					errorMsg = "See octoprint.log for details"
+					self._log(errorMsg)
+					self._errorValue = errorMsg
+					self._changeState(self.STATE_ERROR)
+					eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
+			self._logger.info("Connection closed, closing down monitor", terminal_as_comm=True)
+		except:
+			self._logger.exception("Exception in _monitor_loop() thread: ")
 
 	def _send_loop(self):
 		while self._sending_active:
@@ -308,13 +309,12 @@ class MachineCom(object):
 				self._send_event.wait(1)
 				self._send_event.clear()
 			except:
-				self._logger.exception("Something crashed inside the sending loop, please report this to Mr Beam.")
+				self._logger.exception("Something crashed inside the sending loop, please report this to Mr Beam.", terminal_dump=True)
 				errorMsg = "See octoprint.log for details"
 				self._log(errorMsg)
 				self._errorValue = errorMsg
 				self._changeState(self.STATE_ERROR)
 				eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
-				self._logger.dump_terminal_buffer(level=logging.ERROR)
 		# self._logger.info("ANDYTEST Leaving _send_loop()")
 
 	def _sendCommand(self, cmd=None):
@@ -417,8 +417,7 @@ class MachineCom(object):
 					self._errorValue = 'Failed to autodetect serial port, please set it manually.'
 					self._changeState(self.STATE_ERROR)
 					eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
-					self._log("Failed to autodetect serial port, please set it manually.")
-					self._logger.dump_terminal_buffer(level=logging.ERROR)
+					self._logger.warn("Failed to autodetect serial port, please set it manually.", terminal_dump=True, serial=True)
 					return None
 				port = ser.port
 
@@ -443,10 +442,9 @@ class MachineCom(object):
 				self._errorValue = "Connection error, see Terminal tab"
 				self._changeState(self.STATE_ERROR)
 				eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
-				self._log("Unexpected error while connecting to serial port: %s %s (hook %s)" % (self._port, exception_string, name))
+				self._logger.warn("Unexpected error while connecting to serial port: %s %s (hook %s)", self._port, exception_string, name, serial=True, terminal_dump=True)
 				if "failed to set custom baud rate" in exception_string.lower():
 					self._log("Your installation does not support custom baudrates (e.g. 250000) for connecting to your printer. This is a problem of the pyserial library that OctoPrint depends on. Please update to a pyserial version that supports your baudrate or switch your printer's firmware to a standard baudrate (e.g. 115200). See https://github.com/foosel/OctoPrint/wiki/OctoPrint-support-for-250000-baud-rate-on-Raspbian")
-				self._logger.dump_terminal_buffer(level=logging.ERROR)
 				return False
 			if serial_obj is not None:
 				# first hook to succeed wins, but any can pass on to the next
@@ -564,9 +562,8 @@ class MachineCom(object):
 						self._logger.warn("_handle_status_report() Override pause since we got status '%s' from grbl.", self._grbl_state)
 						self.setPause(False, send_cmd=True, force=True, trigger="GRBL_QUEUE_OVERRIDE")
 					else:
-						self._logger.warn("_handle_status_report() Pausing since we got status '%s' from grbl.", self._grbl_state)
+						self._logger.warn("_handle_status_report() Pausing since we got status '%s' from grbl.", self._grbl_state, terminal_dump=True)
 						self.setPause(True, send_cmd=False, trigger="GRBL_QUEUE")
-						self._logger.dump_terminal_buffer(logging.WARN)
 		elif self._grbl_state == self.GRBL_STATE_RUN or self._grbl_state == self.GRBL_STATE_IDLE:
 			if time.time() - self._pause_delay_time > 0.3:
 				if self.isPaused():
@@ -634,11 +631,10 @@ class MachineCom(object):
 		if "EEPROM read fail" in line:
 			self._logger.debug("_handle_error_message() Ignoring this error message: '%s'", line)
 			return
-		self._logger.error("_handle_error(): %s", line)
+		self._logger.error("_handle_error(): %s", line, terminal_dump=True)
 		self._errorValue = line
 		eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
 		self._changeState(self.STATE_LOCKED)
-		self._logger.dump_terminal_buffer(level=logging.ERROR)
 		self._rx_stats.pp(print_time=self.getPrintTime())
 
 	def _handle_alarm_message(self, line, code=None):
@@ -662,12 +658,10 @@ class MachineCom(object):
 			errorMsg = "GRBL alarm message: '{}'".format(line)
 
 		if errorMsg:
-			self._log(errorMsg)
+			self._logger.warn(errorMsg, serial=True, terminal_dump=dumpTerminal, analytics=True)
 			self._errorValue = errorMsg
 			if throwErrorMessage:
 				eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
-			if dumpTerminal:
-				self._logger.dump_terminal_buffer(level=logging.ERROR)
 
 		with self._commandQueue.mutex:
 			self._commandQueue.queue.clear()
@@ -696,9 +690,9 @@ class MachineCom(object):
 				with self._commandQueue.mutex:
 					self._commandQueue.queue.clear()
 				self._log(errorMsg)
+				self._logger.error(errorMsg, serial=True, analytics=True, terminal_dump=True)
 				self._errorValue = errorMsg
 				eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
-				self._logger.dump_terminal_buffer(level=logging.ERROR)
 		elif line[1:].startswith('G24'): # [G24_AVOIDED]
 			self.g24_avoided_message = []
 			self._logger.warn("G24_AVOIDED (Corrupted line data will follow)")
@@ -763,27 +757,7 @@ class MachineCom(object):
 				data_str += i
 				data_hex += '[{}]'.format(self.get_hex_str_from_str(i))
 
-			self._logger.warn("G24_AVOIDED line: '%s' (hex: %s)",data_str, data_hex)
-			self._logger.dump_terminal_buffer(level=logging.WARN)
-
-			import urllib
-			import cgi
-			text = "<br/>"\
-			       "An internal event happened which we would love to track and analyse. Please help us improve Mr Beam II by sharing the data below. Thank you for the support.<br/><br/>"\
-				    "Please send us the event details per email:<br/>" \
-			       "Either simply <strong><a href='mailto:{email_addr}?subject={email_subject}&body={email_body}' target='_blank'>click here</a></strong><br/>" \
-			       "or copy the data below into an email and send it to {email_addr}.<br/><br/>" \
-			       "Event details:<br>{reason}<br/><br/>"\
-				       .format(reason="G24_AVOIDED: {} ({})".format(cgi.escape(data_str, True), data_hex),
-	                           email_addr="support@mr-beam.org",
-	                           email_subject="G24_AVOIDED",
-	                           email_body=urllib.quote_plus("G24_AVOIDED: {} ({})\n\nJust send this email as it is, no need to add extra comments.\nThank you for your help.\n".format(data_str, data_hex))
-			                   )
-			_mrbeam_plugin_implementation.notify_frontend(
-				title="Help our Developers",
-				text=text,
-				type='warn',
-				sticky=True)
+			self._logger.warn("G24_AVOIDED line: '%s' (hex: %s)",data_str, data_hex, terminal_dump=True, analytics=True)
 		except:
 			self._logger.exception("G24_AVOIDED Exception in _handle_g24_avoided_message(): ")
 
@@ -1017,9 +991,11 @@ class MachineCom(object):
 			self._send_event.set()
 
 	def _log(self, message):
-		# self._callback.on_comm_log(message)
-		self._logger.comm(message)
-		self._serialLogger.debug(message)
+		"""
+		deprecated. use mrb_logger with flag serial=True instead
+		:param message:
+		"""
+		self._logger.comm(message, serial=True)
 
 
 	def flash_grbl(self, grbl_file=None, verify_only=False, is_connected=True):
@@ -1500,11 +1476,10 @@ class MachineCom(object):
 
 			self._changeState(self.STATE_PRINTING)
 		except:
-			self._logger.exception("Error while trying to start printing")
+			self._logger.exception("Error while trying to start printing", terminal_dump=True)
 			self._errorValue = get_exception_string()
 			self._changeState(self.STATE_ERROR)
 			eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
-			self._logger.dump_terminal_buffer(level=logging.ERROR)
 
 	def cancelPrint(self):
 		if not self.isOperational():

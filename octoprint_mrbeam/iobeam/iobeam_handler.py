@@ -582,6 +582,24 @@ class IoBeamHandler(object):
 				self._logger.info("laserhead data: %s", data)
 			except:
 				self._logger.exception("laserhead: exception while handling head:data: ")
+		elif action == "serial":
+			sn = token[1]
+			if sn not in ('error'):
+				_mrbeam_plugin_implementation.lh['serial'] = sn
+				self._logger.info("laserhead serial: %s", sn)
+			else:
+				self._logger.info("laserhead: '%s'", message)
+		elif action == "power" and token[1] == '65':
+			p65 = None
+			try:
+				p65 = int(token[2])
+			except:
+				self._logger.info("laserhead: '%s'", message)
+				self._logger.warn("Can't read power 65 value as int: '%s'", token[2])
+
+			if p65 is not None:
+				_mrbeam_plugin_implementation.lh['p_65'] = p65
+				self._logger.info("laserhead p_65: %s",p65)
 		else:
 			self._logger.info("laserhead: '%s'", message)
 
@@ -612,8 +630,17 @@ class IoBeamHandler(object):
 			if init and init.startswith('ok'):
 				self._logger.info("iobeam init ok: '%s'", message)
 			else:
+				# ANDYTEST add analytics=True to next log line
 				self._logger.info("iobeam init error: '%s' - requesting iobeam_debug...", message)
 				self._send_command('debug')
+				text = '<br/>A possible hardware malfunction has been detected on this device. ' \
+				       'Please contact our support team immediately at:<br/>' \
+				       '<a href="https://mr-beam.org/support" target="_blank">mr-beam.org/support</a><br/><br/>' \
+				       '<strong>Error:</strong><br/>{}'.format(message)
+				_mrbeam_plugin_implementation.notify_frontend(title="Hardware malfunction",
+				                                              text=text,
+				                                              type="error", sticky=True,
+				                                              replay_when_new_client_connects=True)
 		elif action == 'debug':
 			self._logger.info("iobeam debug message: '%s'", message)
 		else:

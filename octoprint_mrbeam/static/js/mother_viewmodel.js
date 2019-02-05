@@ -198,6 +198,8 @@ $(function () {
         };
 
         self.onAllBound = function (allViewModels) {
+            self._force_reload_on_inconsitent_version();
+
             var tabs = $('#mrbeam-main-tabs a[data-toggle="tab"]');
             tabs.on('show', function (e) {
                 var current = e.target.hash;
@@ -225,7 +227,6 @@ $(function () {
                  self.terminal.checkAutoscroll();
             });
             self.terminal.activeAllFilters();
-
         };
 
         self.onStartupComplete = function() {
@@ -253,6 +254,22 @@ $(function () {
                 self.loadingOverlay.removeLoadingOverlay();
             } else {
                 setTimeout(self.removeLoadingOverlay, 100);
+            }
+        };
+
+        /**
+         * Reloads the frontend bypassing any cache if backend version of mr beam plugin is different from the forntend version.
+         * This happens sometimes after a software update.
+         * @private
+         */
+        self._force_reload_on_inconsitent_version = function(){
+            var settings_version = self.settings.settings.plugins.mrbeam._version();
+            if (settings_version != BEAMOS_VERSION) {
+                console.log("Frontend version check: FAILED (frontend=" + BEAMOS_VERSION + ", backend="+settings_version + ")");
+                console.log("Reloading frontend...");
+                window.location.href = "/?ts="+Date.now();
+            } else {
+                console.log("Frontend version check: OK (frontend=" + BEAMOS_VERSION + ", backend="+settings_version + ")");
             }
         };
 

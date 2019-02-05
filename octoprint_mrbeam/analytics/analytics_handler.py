@@ -1,13 +1,18 @@
 import time
 import json
 import os.path
+import logging
+import netifaces
+
 from datetime import datetime
 from value_collector import ValueCollector
+from threading import Timer
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from analytics_keys import AnalyticsKeys as ak
+from uploader import FileUploader
 
 # singleton
 _instance = None
@@ -27,13 +32,17 @@ def existing_analyticsHandler():
 
 
 class AnalyticsHandler(object):
+
+	DELETE_FILES_AFTER_UPLOAD = True
+
+
 	def __init__(self, event_bus, settings):
 		self._event_bus = event_bus
 		self._settings = settings
 
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.analyticshandler")
+		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.analyticshandler")
 
-		self._analyticsOn = self._settings.get(['analytics','job_analytics'])
+		self._analyticsOn = self._settings.get(['analyticsEnabled'])
 		self._camAnalyticsOn = self._settings.get(['analytics','cam_analytics'])
 
 		self._current_job_id = None
@@ -49,16 +58,32 @@ class AnalyticsHandler(object):
 		self._storedConversions = list()
 
 		self._jobevent_log_version = 4
-		self._conversion_log_version = 3
-		self._deviceinfo_log_version = 2
+		self._deviceinfo_log_version = 3
+		self._logevent_version = 1
 		self._dust_log_version = 2
 		self._cam_event_log_version = 2
+
+		self.event_waiting_for_terminal_dump = None
+
+		self._logger.info("Analytics user permission: analyticsEnabled=%s", self._analyticsOn)
 
 		analyticsfolder = os.path.join(self._settings.getBaseFolder("base"), self._settings.get(['analytics','folder']))
 		if not os.path.isdir(analyticsfolder):
 			os.makedirs(analyticsfolder)
 
+		fu = FileUploader(analyticsfolder,
+		             analytics_files_prefix='analytics_log.json.',
+		             delete_on_success=self.DELETE_FILES_AFTER_UPLOAD)
+		fu.schedule_logrotation_and_startover(current_analytics_file=self._settings.get(['analytics','filename']))
+		fu.find_files_for_upload()
+
 		self._jsonfile = os.path.join(analyticsfolder, self._settings.get(['analytics','filename']))
+
+		if self._analyticsOn:
+			self._activate_analytics()
+
+
+	def _activate_analytics(self):
 		if not os.path.isfile(self._jsonfile):
 			self._init_jsonfile()
 
@@ -120,6 +145,59 @@ class AnalyticsHandler(object):
 
 		return days_passed
 
+	def analytics_user_permission_change(self, analytics_enabled):
+		self._logger.info("analytics user permission change: analyticsEnabled=%s", analytics_enabled)
+		if analytics_enabled:
+			self._analyticsOn = True
+			self._settings.set_boolean(["analyticsEnabled"], True)
+			self._activate_analytics()
+			self._write_deviceinfo(ak.ANALYTICS_ENABLED, payload=dict(enabled=True))
+		else:
+			self._write_deviceinfo(ak.ANALYTICS_ENABLED, payload=dict(enabled=False))
+			self._analyticsOn = False
+			self._settings.set_boolean(["analyticsEnabled"], False)
+
+	def log_event(self, level, msg, caller=None, exception_str=None, stacktrace=None, wait_for_terminal_dump=False):
+		event = ak.LOG
+		filename = caller.filename.replace(__package_path__ + '/', '')
+		if exception_str:
+			event = ak.EXCEPTION
+		payload = {
+			'level': logging._levelNames[level] if level in logging._levelNames else level,
+			'msg': msg,
+			ak.VERSION_MRBEAM_PLUGIN: _mrbeam_plugin_implementation._plugin_version
+		}
+		if caller is not None:
+			payload.update({
+				'hash': hash('{}{}{}'.format(filename, caller.lineno, _mrbeam_plugin_implementation._plugin_version)),
+				'file': filename,
+				'line': caller.lineno,
+				'function': caller.function,
+				# code_context: caller.code_context[0].strip()
+			})
+		if exception_str:
+			payload['exception'] = exception_str
+		if stacktrace:
+			payload['stacktrace'] = stacktrace
+
+		if wait_for_terminal_dump:
+			self.event_waiting_for_terminal_dump = dict(
+				event = event,
+				payload = payload,
+			)
+		else:
+			self._write_log_event(event, payload=payload)
+
+	def log_terminal_dump(self, dump):
+		if self.event_waiting_for_terminal_dump is not None:
+			event = self.event_waiting_for_terminal_dump['event']
+			payload = self.event_waiting_for_terminal_dump['payload']
+			payload['terminal_dump'] = dump
+			self._write_log_event(event, payload=payload)
+			self.event_waiting_for_terminal_dump = None
+		else:
+			self._logger.warn("log_terminal_dump() called but no foregoing event tracked. self.event_waiting_for_terminal_dump is None. ignoring this dump.")
+
 	def _write_current_software_status(self):
 		try:
 			# TODO get all software statuses
@@ -132,8 +210,18 @@ class AnalyticsHandler(object):
 			self._logger.error('Error during write_current_software_status: {}'.format(e.message))
 
 	def _event_startup(self,event,payload):
-		payload = {ak.PLUGIN_VERSION: self._get_plugin_version()}
+		self._write_new_line()
+		payload = {
+			ak.VERSION_MRBEAM_PLUGIN: _mrbeam_plugin_implementation._plugin_version,
+			ak.LASERHEAD_SERIAL: _mrbeam_plugin_implementation.lh['serial'],
+			ak.SOFTWARE_TIER: self._settings.get(["dev", "software_tier"]),
+			ak.ENV: _mrbeam_plugin_implementation.get_env()
+		}
 		self._write_deviceinfo(ak.STARTUP, payload=payload)
+
+		# Schedule event_ip_addresses task (to write that line 15 seconds after startup)
+		t = Timer(15.0, self._event_ip_addresses)
+		t.start()
 
 	def _event_shutdown(self,event,payload):
 		self._write_deviceinfo(ak.SHUTDOWN)
@@ -145,6 +233,24 @@ class AnalyticsHandler(object):
 			succesful=succesful)
 		self._write_deviceinfo(ak.FLASH_GRBL, payload=payload)
 
+	def _event_ip_addresses(self):
+		try:
+			payload = dict()
+			interfaces = netifaces.interfaces()
+
+			for interface in interfaces:
+				addresses = netifaces.ifaddresses(interface)
+				payload[interface] = dict()
+				if netifaces.AF_INET in addresses:
+					payload[interface]['IPv4'] = addresses[netifaces.AF_INET][0]['addr']
+				if netifaces.AF_INET6 in addresses:
+					for idx, addr in enumerate(addresses[netifaces.AF_INET6]):
+						payload[interface]['IPv6_{}'.format(idx)] = addr['addr']
+
+			self._write_deviceinfo(ak.IPS, payload=payload)
+
+		except:
+			self._logger.exception('Exception when recording the IP addresses')
 
 	def _event_print_started(self, event, payload):
 		self._current_job_id = 'j_{}_{}'.format(self._getSerialNumber(),time.time())
@@ -286,7 +392,7 @@ class AnalyticsHandler(object):
 		data = {
 			ak.SERIALNUMBER: self._getSerialNumber(),
 			ak.TYPE: ak.JOB_EVENT,
-			ak.VERSION: self._conversion_log_version,
+			ak.VERSION: self._jobevent_log_version,
 			ak.EVENT: eventname,
 			ak.TIMESTAMP: time.time(),
 			ak.JOB_ID: None
@@ -317,13 +423,24 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.error('Error during write_device_info: {}'.format(e.message))
 
+	def _write_log_event(self, event, payload=None):
+		try:
+			data = dict()
+			# TODO add data validation/preparation here
+			if payload is not None:
+				data[ak.DATA] = payload
+			self._write_event(ak.LOG_EVENT, event, self._logevent_version, payload=data)
+		except Exception as e:
+			self._logger.error('Error during _write_log_event: {}'.format(e.message), analytics=False)
+
 	def _write_jobevent(self,event,payload=None):
 		try:
 			#TODO add data validation/preparation here
 			data = dict(job_id = self._current_job_id)
 
-			if event in (ak.LASERTEMP_SUM,ak.INTENSITY_SUM):
+			if event in (ak.LASERTEMP_SUM, ak.INTENSITY_SUM):
 				data[ak.LASERHEAD_VERSION] = self._getLaserHeadVersion()
+				data[ak.LASERHEAD_SERIAL] = _mrbeam_plugin_implementation.lh['serial']
 
 			if payload is not None:
 				data[ak.DATA] = payload
@@ -381,7 +498,8 @@ class AnalyticsHandler(object):
 				ak.TYPE: typename,
 				ak.VERSION: version,
 				ak.EVENT: eventname,
-				ak.TIMESTAMP: time.time()
+				ak.TIMESTAMP: time.time(),
+				ak.NTP_SYNCED: _mrbeam_plugin_implementation.is_time_ntp_synced()
 			}
 			if payload is not None:
 				data.update(payload)
@@ -460,23 +578,28 @@ class AnalyticsHandler(object):
 		data = {
 			ak.SERIALNUMBER: self._getSerialNumber(),
 			ak.LASERHEAD_VERSION: self._getLaserHeadVersion(),
-			ak.PLUGIN_VERSION: self._get_plugin_version()
+			ak.VERSION_MRBEAM_PLUGIN: _mrbeam_plugin_implementation._plugin_version
 		}
 		self._write_deviceinfo(ak.INIT,payload=data)
 		self._write_current_software_status()
 
-	def _get_plugin_version(self):
-		plugin_version = dict()
-		plugin_version['mrbeam_plugin_v'] = _mrbeam_plugin_implementation._plugin_version
-
-		return plugin_version
+	def _write_new_line(self):
+		if self._analyticsOn:
+			try:
+				if not os.path.isfile(self._jsonfile):
+					self._init_jsonfile()
+				with open(self._jsonfile, 'a') as f:
+					f.write('\n')
+			except Exception as e:
+				self._logger.error('Error while writing newline: {}'.format(e.message))
 
 	def _append_data_to_file(self, data):
-		try:
-			if not os.path.isfile(self._jsonfile):
-				self._init_jsonfile()
-			dataString = json.dumps(data) + '\n'
-			with open(self._jsonfile, 'a') as f:
-				f.write(dataString)
-		except Exception as e:
-			self._logger.error('Error during init json: {}'.format(e.message))
+		if self._analyticsOn:
+			try:
+				if not os.path.isfile(self._jsonfile):
+					self._init_jsonfile()
+				dataString = json.dumps(data) + '\n'
+				with open(self._jsonfile, 'a') as f:
+					f.write(dataString)
+			except Exception as e:
+				self._logger.error('Error while writing data: {}'.format(e.message))

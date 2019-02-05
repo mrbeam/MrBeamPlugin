@@ -4,14 +4,19 @@ class AnalyticsKeys(object):
 	VERSION = 'v'
 	EVENT = 'e'
 	TIMESTAMP = 'ts'
+	NTP_SYNCED = 'ntp'
 	TIMESTRING = 'timestring'
 	DATA = 'data'
-	PLUGIN_VERSION = 'plugin_version'
+	SOFTWARE_TIER = 'sw_tier'
+	VERSION_MRBEAM_PLUGIN = 'version_mrbeam_plugin'
+	LASERHEAD_SERIAL = 'laserhead_serial'
+	ENV = 'env'
 
 	### EVENT TYPES ###
 	JOB_EVENT = 'job'
 	DEVICE_EVENT = 'device'
 	CAM_EVENT = 'cam'
+	LOG_EVENT = 'log'
 
 	### DEVICE KEYS ###
 	HOSTNAME = 'hostname'
@@ -22,8 +27,12 @@ class AnalyticsKeys(object):
 	SHUTDOWN = 'shutdown'
 	INIT = 'init_json'
 	FLASH_GRBL = 'flash_grbl'
+	ANALYTICS_ENABLED = 'analytics_enabled'
+	IPS = 'ips'
 
-
+	### LOG EVENT KEYS ###
+	LOG = 'log'
+	EXCEPTION = 'exception'
 
 	### JOB KEYS ###
 	JOB_ID = 'job_id'
