@@ -1,0 +1,65 @@
+
+{% if language == 'de' %}
+    <h3>{{ _("Analytik") }}</h3>
+    <p>
+        Analytics German version
+    </p>
+    <p>
+        XXXXXXX
+    </p>
+
+
+{% else %}
+    <h3>{{ _("Analytics") }}</h3>
+    <h4>
+        Help us improve Mr Beam! <i class="fa fa-heartbeat" aria-hidden="true" style="margin-right: 3px"></i>
+    </h4>
+    <p>
+        In order to improve your experience with the Mr Beam II, we would like to gather some analytics data on the device operations. No information would be shared with external sources.
+    </p>
+
+    <div>
+        <div id="analytics_initial_consent_radio">
+          <label><input type="radio" name="analytics_init_consent" value="agree" data-bind="checked: analyticsInitialConsent, click: prepareLetsGoButtonToSaveAnalytics">
+            Yes, I want to support Mr Beam and agree to share the analytics data.</label>
+          <label><input type="radio" name="analytics_init_consent" value="disagree" data-bind="checked: analyticsInitialConsent, click: prepareLetsGoButtonToSaveAnalytics">
+            No, I’d rather not share the analytics data.</label>
+        </div>
+    </div>
+
+    <div class="accordion md-accordion" id="analytics_what_we_save_and_dont_accordion">
+      <div class="card">
+        <div class="card-header" id="analytics_what_we_save_heading">
+          <div class="mb-0">
+            <button class="btn btn-link collapsed analytics-collapsible" type="button" data-toggle="collapse" data-target="#analytics_what_we_save"
+                    aria-expanded="true" aria-controls="collapseOne">
+                More information about this
+            </button>
+          </div>
+        </div>
+        <div id="analytics_what_we_save" class="collapse" aria-labelledby="analytics_what_we_save_heading" data-parent="#analytics_what_we_save_accordion">
+          <div class="card-body">
+            Data we would <b>save</b>:
+            <ul>
+                <li>Job data like duration, materials or parameters.</li>
+                <li>Mr Beam II device data like serial number, local IP addresses and version numbers.</li>
+                <li>More technical data, including error reports.</li>
+            </ul>
+            Data we will <b>not save</b>:
+            <ul>
+                <li>Your designs, its content or file names.</li>
+                <li>Username, email address and passwords.</li>
+                <li>Location, camera pictures, public IP addresses.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p>
+        <i class="fa fa-info" aria-hidden="true" style="margin-right: 3px"></i>You can change the analytics settings in the settings menu whenever you want ;)
+    </p>
+    <p style="color: darkgray;font-size: 0.9em">
+        Want more detailed information? You can check our <a href="https://mr-beam.org/" target="_blank">privacy policy.</a>
+    </p>
+{% endif %}

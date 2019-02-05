@@ -2137,3 +2137,41 @@ input.search-query,
 #svgtogcode_img_engraving_mode {
   margin-top: 3%;
 }
+
+
+/*
+* === ANALYTICS  ACCORDION ===
+*/
+
+.mb-0 > button.analytics-collapsible {
+  outline: transparent;
+  text-decoration: none;
+}
+
+.mb-0 > button.collapsed:before {
+  content: "\f055";
+}
+
+.mb-0 > button:before {
+  font-family: FontAwesome;
+  content: "\f056";
+  padding-right: 5px;
+}
+
+#analytics_what_we_save {
+  padding-left: 15px;
+  margin-left: 26px;
+}
+
+input[type="radio"]{
+  vertical-align: top;
+}
+
+#analytics_initial_consent_radio {
+  padding: 12px;
+}
+
+#wizardTabs > li > a {
+  pointer-events: none;
+  cursor: default;
+}
