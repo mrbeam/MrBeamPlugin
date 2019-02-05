@@ -7,6 +7,7 @@
 $(function() {
     function LaserJobDoneViewmodel(parameters) {
         var self = this;
+        self.settings = parameters[0];
         self.is_job_done = ko.observable(false);
         self.is_dust_mode = ko.observable(false);
         self.job_duration = ko.observable(0);
@@ -26,6 +27,11 @@ $(function() {
 		});
 
         self.onStartupComplete = function(){
+            self.mapEnabled = function () {
+                return self.settings.settings.plugins.mrbeam.dev.env().upper() === "PROD";
+
+            };
+
             self.dialogElement = $('#laser_job_done_dialog');
             self.dialogElement.on('hidden', function (e) {
                 self.is_job_done(false);
@@ -71,8 +77,36 @@ $(function() {
         }
 
         self.cancel_btn = function(){
+            if (self.mapEnabled) {
+                $("#mrbeams_map_container").empty();
+                $('#mrbeams_map_container').hide();
+
+                $('#job_done_info').show();
+                $('#share_job_and_location_btn').show();
+            }
             self.is_job_done(false);
             self.dialogElement.modal("hide");
+        };
+
+        self.map_btn = function(){
+            if (self.mapEnabled) {
+                // TODO: only append if there is not appended yet from before
+                // TODO: add the real duration as argument
+                // TODO: CHECK IF THE TRIGGER IS NOT CACHED
+                console.log("DURATION: " + self.job_duration());
+                console.log("TIMESTAMP: " + Date.now());
+                let cloud_function_trigger = "https://europe-west1-mrb-jobmap.cloudfunctions.net/generate_map?duration=" + self.job_duration() + "&ts=" + Date.now();
+                $("#mrbeams_map_container").append('<iframe width="500" height="500" src=cloud_function_trigger frameborder="0" allowfullscreen=""></iframe>');
+                $('#mrbeams_map_container').show();
+                $(this).find('.modal-body').css({
+                    width:'auto', //probably not needed
+                    height:'auto', //probably not needed
+                    'max-height':'100%'
+                });
+
+                $('#job_done_info').hide();
+                $('#share_job_and_location_btn').hide();
+            }
         };
     }
 
@@ -80,8 +114,8 @@ $(function() {
     OCTOPRINT_VIEWMODELS.push([
         LaserJobDoneViewmodel,
         // e.g. loginStateViewModel, settingsViewModel, ...
-        [ /* "loginStateViewModel", "settingsViewModel" */ ],
+        [ "settingsViewModel"/* "loginStateViewModel", "settingsViewModel" */ ],
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
-        [ '#laser_job_done_dialog' ]
+        [ '#laser_job_done_dialog']
     ]);
 });
