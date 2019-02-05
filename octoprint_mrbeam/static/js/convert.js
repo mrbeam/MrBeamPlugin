@@ -1289,21 +1289,25 @@ $(function(){
 			if(self.gcodeFilesToAppend.length === 1 && self.svg === undefined) {
                 self.files.startGcodeWithSafetyWarning(self.gcodeFilesToAppend[0]);
             } else if (!self._validJobForMaterial()) {
-			    let job;
 			    let valid;
 			    if (self.has_cutting_proposal()) {
-			        job = "cut";
-			        valid = "engraving";
+			        valid = "engraved";
                 } else {
-			        job = "engraved";
-			        valid = "cutting";
+			        valid = "cut";
                 }
-                const message = "Sorry, but the selected design can't be " + job + " in " +
-                    self.selected_material().name + ". It only works for " + valid +
+			    let designType;
+			    if (self.workingArea.hasTextItems()) {
+			        designType = 'Quick Text'
+                } else {
+			        designType = 'selected design';
+			        $('#empty_job_support_link').hide();
+                }
+
+                const message = "Sorry but the " + designType + " can only be " + valid +
                     ", which is not supported for this material.";
 
-			    $('#conversion_material_design_error').find('.modal-body').text(message);
-                $('#conversion_material_design_error').modal('show');
+			    $('#empty_job_modal').find('.modal-body p').text(message);
+                $('#empty_job_modal').modal('show');
 			} else {
 				if(self._allParametersSet()){
 					//self.update_colorSettings();
