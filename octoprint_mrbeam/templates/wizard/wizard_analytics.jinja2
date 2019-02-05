@@ -2,10 +2,10 @@
 {% if language == 'de' %}
     <h3>{{ _("Analytik") }}</h3>
     <p>
-        We watch you auf Deutsch
+        Analytics German version
     </p>
     <p>
-        Big brother
+        XXXXXXX
     </p>
 
 
@@ -20,9 +20,9 @@
 
     <div>
         <div id="analytics_initial_consent_radio">
-          <label><input type="radio" name="analytics_init_consent" value="agree" data-bind="checked: analyticsInitialConsent, click: enableLetsGoButton">
+          <label><input type="radio" name="analytics_init_consent" value="agree" data-bind="checked: analyticsInitialConsent, click: prepareLetsGoButtonToSaveAnalytics">
             Yes, I want to support Mr Beam and agree to share the analytics data.</label>
-          <label><input type="radio" name="analytics_init_consent" value="disagree" data-bind="checked: analyticsInitialConsent, click: enableLetsGoButton">
+          <label><input type="radio" name="analytics_init_consent" value="disagree" data-bind="checked: analyticsInitialConsent, click: prepareLetsGoButtonToSaveAnalytics">
             No, I’d rather not share the analytics data.</label>
         </div>
     </div>

@@ -153,8 +153,6 @@ class AnalyticsHandler(object):
 
 	def analytics_user_permission_change(self, analytics_enabled):
 		self._logger.info("analytics user permission change: analyticsEnabled=%s", analytics_enabled)
-		if self._analyticsOn is None:
-			self._activate_upload()
 
 		if analytics_enabled:
 			self._analyticsOn = True
@@ -617,6 +615,7 @@ class AnalyticsHandler(object):
 		if consent == 'agree':
 			self.analytics_user_permission_change(True)
 			self.process_analytics_files()
+			self._activate_upload()
 
 		elif consent == 'disagree':
 			self.analytics_user_permission_change(False)
@@ -625,10 +624,10 @@ class AnalyticsHandler(object):
 	def delete_analytics_files(self):
 		self._logger.info("Deleting analytics files...")
 		folder = ak.ANALYTICS_FOLDER
-		for file in os.listdir(folder):
-			file_path = os.path.join(folder, file)
+		for analytics_file in os.listdir(folder):
+			file_path = os.path.join(folder, analytics_file)
 			try:
-				if os.path.isfile(file_path) and "analytics" in file:
+				if os.path.isfile(file_path) and "analytics" in analytics_file:
 					os.unlink(file_path)
 					self._logger.info('File deleted: {file}'.format(file=file_path))
 			except Exception as e:
@@ -637,10 +636,10 @@ class AnalyticsHandler(object):
 	def process_analytics_files(self):
 		self._logger.info("Processing analytics files...")
 		folder = ak.ANALYTICS_FOLDER
-		for file in os.listdir(folder):
-			file_path = os.path.join(folder, file)
+		for analytics_file in os.listdir(folder):
+			file_path = os.path.join(folder, analytics_file)
 			try:
-				if os.path.isfile(file_path) and "analytics" in file:
+				if os.path.isfile(file_path) and "analytics" in analytics_file:
 					# open + remove file_names + save
 					for idx, line in enumerate(fileinput.input(file_path, inplace=1)):
 						line = re.sub(r"\"filename\": \"[^\"]+\"", "", line)

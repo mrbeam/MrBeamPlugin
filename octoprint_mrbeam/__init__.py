@@ -498,8 +498,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def get_wizard_details(self):
 		return dict()
 
-	def get_wizard_version(self): # TODO ANALYTICS: change return number + decrease in the config.yaml seenwizards>mrbeam
-		return 13 #random number. but we can't go down anymore, just up. 13
+	def get_wizard_version(self):
+		return 13 #random number. but we can't go down anymore, just up.
 
 	def on_wizard_finish(self, handled):
 		self._logger.info("Setup Wizard finished.")
@@ -641,7 +641,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# jinja has some js that changes this to German if lang is 'de'
 		return gettext("...and more")
 
-	# TODO ANALYTICS: create new wizard page in templates > wizard
 	def _is_analytics_wizard_required(self):
 		result = not self.isFirstRun()
 		self._logger.debug("_is_analytics_wizard_required() %s", result)
@@ -1276,7 +1275,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			ready_to_laser=[],
 			debug_event=["event"],
 			custom_materials=[],
-			analytics_init=[],	#TODO ANALYTICS
+			analytics_init=[],
 			take_undistorted_picture=[]  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
 		)
 
