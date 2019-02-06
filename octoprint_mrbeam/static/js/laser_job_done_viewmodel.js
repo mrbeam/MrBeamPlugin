@@ -91,17 +91,15 @@ $(function() {
         self.map_btn = function(){
             if (self.mapEnabled) {
                 // TODO: only append if there is not appended yet from before
-                // TODO: add the real duration as argument
-                // TODO: CHECK IF THE TRIGGER IS NOT CACHED
-                console.log("DURATION: " + self.job_duration());
+                let duration = Math.floor(self.job_duration());
+                console.log("DURATION: " + duration);
                 console.log("TIMESTAMP: " + Date.now());
-                let cloud_function_trigger = "https://europe-west1-mrb-jobmap.cloudfunctions.net/generate_map?duration=" + self.job_duration() + "&ts=" + Date.now();
-                $("#mrbeams_map_container").append('<iframe width="500" height="500" src=cloud_function_trigger frameborder="0" allowfullscreen=""></iframe>');
+                let cloud_function_trigger = "https://europe-west1-mrb-jobmap.cloudfunctions.net/generate_map?duration=" + duration + "&ts=" + Date.now();
+                console.log(cloud_function_trigger);
+                $("#mrbeams_map_container").append('<iframe src="'+ cloud_function_trigger +'" width="900" height="500" frameborder="0" allowfullscreen=""></iframe>');
                 $('#mrbeams_map_container').show();
-                $(this).find('.modal-body').css({
-                    width:'auto', //probably not needed
-                    height:'auto', //probably not needed
-                    'max-height':'100%'
+                $('#laser_job_done_dialog').find('.modal').css({
+                    'overflow-y':'auto'
                 });
 
                 $('#job_done_info').hide();
