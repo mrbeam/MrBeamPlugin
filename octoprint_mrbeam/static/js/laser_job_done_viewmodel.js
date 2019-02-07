@@ -27,7 +27,7 @@ $(function() {
 		});
 
         self.onStartupComplete = function(){
-            self.mapEnabled = function () {
+            self.mapOptionEnabled = function () {
                 return self.settings.settings.plugins.mrbeam.dev.env().upper() === "PROD";
 
             };
@@ -77,31 +77,34 @@ $(function() {
         }
 
         self.cancel_btn = function(){
-            if (self.mapEnabled) {
-                $("#mrbeams_map_container").empty();
-                $('#mrbeams_map_container').hide();
+            self.is_job_done(false);
+            self.dialogElement.modal("hide");
+            if (self.mapOptionEnabled) {
+                // Let modal as it was
+                let mapContainer = $("#mrbeams_map_container");
+                let doneDialog = $('#laser_job_done_dialog');
 
+                mapContainer.empty();
+                mapContainer.hide();
+                doneDialog.removeClass('job-map-modal');
                 $('#job_done_info').show();
                 $('#share_job_and_location_btn').show();
             }
-            self.is_job_done(false);
-            self.dialogElement.modal("hide");
         };
 
         self.map_btn = function(){
-            if (self.mapEnabled) {
-                // TODO: only append if there is not appended yet from before
+            if (self.mapOptionEnabled) {
                 let duration = Math.floor(self.job_duration());
-                console.log("DURATION: " + duration);
-                console.log("TIMESTAMP: " + Date.now());
                 let cloud_function_trigger = "https://europe-west1-mrb-jobmap.cloudfunctions.net/generate_map?duration=" + duration + "&ts=" + Date.now();
                 console.log(cloud_function_trigger);
-                $("#mrbeams_map_container").append('<iframe src="'+ cloud_function_trigger +'" width="900" height="500" frameborder="0" allowfullscreen=""></iframe>');
-                $('#mrbeams_map_container').show();
-                $('#laser_job_done_dialog').find('.modal').css({
-                    'overflow-y':'auto'
-                });
 
+                // Add map to modal
+                let mapContainer = $("#mrbeams_map_container");
+                let doneDialog = $('#laser_job_done_dialog');
+
+                mapContainer.append('<iframe src="'+ cloud_function_trigger +'" width="900" height="500" frameborder="0" allowfullscreen=""></iframe>');
+                mapContainer.show();
+                doneDialog.addClass('job-map-modal');
                 $('#job_done_info').hide();
                 $('#share_job_and_location_btn').hide();
             }
