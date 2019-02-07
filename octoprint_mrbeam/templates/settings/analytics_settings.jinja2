@@ -1,25 +1,124 @@
+
+
+
+{# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! #}
+{# Wording changes must be done in both templates: wizard_analytics.jinja and analytics_settings.jinja !! #}
+{# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! #}
+
 <div id="settings_mrbeam_analytics">
     <h3>{{ _('Analytics') }}</h3>
 
-    <form class="form-horizontal">
-        <div class="control-group">
-{#            <label class="control-label" for="settings-debug-terminal">{{ _('Enable terminal') }}</label>#}
-            <div class="controls">
-                <label class="checkbox">
-                    <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.analyticsEnabled">
-                    <strong>Enable analytics</strong>
-            </label>
-                    <div>Allow Mr Beam Lasers to collect usage data from your device.
-                        This helps us to improve our hardware and software for you and all other Mr Beam II users.
-                        We respect your privacy and will never upload the content of your designs or what you laser with your Mr Beam II.
-                        <br />
-                        For more information ses our <a href="http://shop.mr-beam.org/privacy" target="_blank">privacy policy</a>.
+    {% if plugin_mrbeam_language == 'de' %}
+        <form class="form-horizontal">
+            <div class="control-group">
+    {#            <label class="control-label" for="settings-debug-terminal">{{ _('Enable terminal') }}</label>#}
+                <div class="controls" style="width: 400px">
+                    <h4>
+                        Hilf uns, Mr Beam zu verbessern! <i class="fa fa-heartbeat" aria-hidden="true" style="margin-right: 3px"></i>
+                    </h4>
+                    <label class="checkbox">
+                        <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.analyticsEnabled">
+                        <strong>Aktiviere Analytics</strong>
+                    </label>
+                    <p>
+                        Um deine User-Experience mit Mr Beam II zu verbessern,
+                        würden wir gerne ein paar Analysedaten über den Betrieb und die Nutzung des Gerätes sammeln.
+                        Diese Daten werden wir nicht mit Dritten teilen.
+                    </p>
+
+
+                    <div class="accordion md-accordion" id="analytics_what_we_save_and_dont_accordion">
+                      <div class="card">
+                        <div class="card-header" id="analytics_what_we_save_heading">
+                          <div class="mb-0">
+                            <button class="btn btn-link collapsed analytics-collapsible" type="button" data-toggle="collapse" data-target="#analytics_what_we_save"
+                                    aria-expanded="true" aria-controls="collapseOne">
+                                Mehr Informationen welche Daten wir nutzen
+                            </button>
+                          </div>
+                        </div>
+                        <div id="analytics_what_we_save" class="collapse" aria-labelledby="analytics_what_we_save_heading" data-parent="#analytics_what_we_save_accordion">
+                          <div class="card-body">
+                            Welche Daten wir <b>speichern</b>:
+                            <ul>
+                                <li>Job Daten wie Dauer, Materialien oder Paramteter.</li>
+                                <li>Mr Beam II Gerätedaten wie Seriennummer, lokale IP Adresse und Versionsnummern.</li>
+                                <li>Weitere technische Daten z.B. Fehlerberichte.</li>
+                            </ul>
+                            Welche Daten wir <b>nicht speichern</b>:
+                            <ul>
+                                <li>Deine Designs, deren Inhalt oder Dateinamen.</li>
+                                <li>Nutzernamen, Emailadressen oder Passwörter.</li>
+                                <li>Ortsdaten, Kamerabilder, öffentliche IP Adressen</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
                     </div>
+
+                    <p style="color: darkgray;font-size: 0.9em">
+                        Willst du mehr Informationen? Schau dir unsere <a href="https://mr-beam.org/" target="_blank">Datenschutzbedingungen</a> an.
+                    </p>
+
+                </div>
             </div>
-        </div>
+        </form>
+
+    {% else %}
+        <form class="form-horizontal">
+            <div class="control-group">
+    {#            <label class="control-label" for="settings-debug-terminal">{{ _('Enable terminal') }}</label>#}
+                <div class="controls" style="width: 400px">
+                    <h4>
+                        Help us improve Mr Beam! <i class="fa fa-heartbeat" aria-hidden="true" style="margin-right: 3px"></i>
+                    </h4>
+                    <label class="checkbox">
+                        <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.analyticsEnabled">
+                        <strong>Enable analytics</strong>
+                    </label>
+                    <p>
+                        In order to improve your experience with the Mr Beam II,<br/>
+                        we would like to gather some analytics data on the device operations.<br/>
+                        No information will be shared with external sources.
+                    </p>
 
 
+                    <div class="accordion md-accordion" id="analytics_what_we_save_and_dont_accordion">
+                      <div class="card">
+                        <div class="card-header" id="analytics_what_we_save_heading">
+                          <div class="mb-0">
+                            <button class="btn btn-link collapsed analytics-collapsible" type="button" data-toggle="collapse" data-target="#analytics_what_we_save"
+                                    aria-expanded="true" aria-controls="collapseOne">
+                                More information about what data we use
+                            </button>
+                          </div>
+                        </div>
+                        <div id="analytics_what_we_save" class="collapse" aria-labelledby="analytics_what_we_save_heading" data-parent="#analytics_what_we_save_accordion">
+                          <div class="card-body">
+                            Data we would <b>save</b>:
+                            <ul>
+                                <li>Job data like duration, materials or parameters.</li>
+                                <li>Mr Beam II device data like serial number, local IP addresses and version numbers.</li>
+                                <li>More technical data, including error reports.</li>
+                            </ul>
+                            Data we will <b>not save</b>:
+                            <ul>
+                                <li>Your designs, its content or file names.</li>
+                                <li>Username, email address and passwords.</li>
+                                <li>Location, camera pictures, public IP addresses.</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
-    </form>
+                    <p style="color: darkgray;font-size: 0.9em">
+                        Want more detailed information? You can check our <a href="https://mr-beam.org/" target="_blank">privacy policy.</a>
+                    </p>
+
+                </div>
+            </div>
+        </form>
+    {% endif %}
 
 </div>

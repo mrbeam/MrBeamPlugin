@@ -372,10 +372,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# template, using the render_kwargs as provided by OctoPrint
 		from flask import make_response, render_template, g
 
-		called_hosts_dict = dict(host=request.host, ref=request.referrer)
-		if called_hosts_dict not in self.called_hosts:
-			self.called_hosts.append(called_hosts_dict)
-		self._logger.info("called hosts: %s", self.called_hosts)
+		self._track_calls(request)
 
 		firstRun = render_kwargs['firstRun']
 		language = g.locale.language if g.locale else "en"
@@ -446,6 +443,16 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			r = add_non_caching_response_headers(r)
 		return r
 
+
+	def _track_calls(self, request):
+		my_call = dict(host=request.host,
+		               ref=request.referrer,
+		               remote_ip=request.headers.get("X-Forwarded-For"))
+		if not my_call in self.called_hosts:
+			self.called_hosts.append(my_call)
+			self._logger.info("First call received from: %s", my_call)
+			self._logger.info("All unique calls: %s", self.called_hosts)
+
 	##~~ TemplatePlugin mixin
 
 	def get_template_configs(self):
@@ -465,6 +472,15 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		result.extend(self._get_wizard_template_configs())
 		return result
 
+	def get_template_vars(self):
+		"""
+		Needed to have analytigs settings page in German
+		while we do not have real internationalization yet.
+		"""
+		from flask import g
+		return dict(
+			language = g.locale.language if g.locale else "en"
+		)
 
 	def _get_wizard_template_configs(self):
 		required = self._get_subwizard_attrs("_is_", "_wizard_required")
