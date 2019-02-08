@@ -57,6 +57,7 @@ class AnalyticsKeys(object):
 	CONV_ENGRAVE = 'conv_eng'
 	CONV_CUT = 'conv_cut'
 	LASER_JOB = 'laser_job'
+	DESIGN_FILE = 'design_file'
 	MATERIAL = 'material'
 
 	PRINT_EVENTS = [

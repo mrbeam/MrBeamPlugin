@@ -383,7 +383,7 @@ class AnalyticsHandler(object):
 					data.update(details['material'])
 					self._store_conversion_details(eventname,payload=data)
 
-				if 'vector' in details and details['vector'] != []:
+				if 'vector' in details and details['vector']:
 					eventname = ak.CONV_CUT
 					for color_settings in details['vector']:
 						data = {
@@ -392,6 +392,14 @@ class AnalyticsHandler(object):
 						data.update(color_settings)
 						data.update(details['material'])
 						self._store_conversion_details(eventname,payload=data)
+
+				if 'design_files' in details and details['design_files']:
+					eventname = ak.DESIGN_FILE
+					for design_file in details['design_files']:
+						data = {}
+						data.update(design_file)
+						self._store_conversion_details(eventname, payload=data)
+
 		except Exception as e:
 			self._logger.error('Error during store_conversion_details: {}'.format(e.message))
 

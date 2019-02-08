@@ -1137,7 +1137,6 @@ $(function(){
 		};
 
 		self._isValidVectorSetting = function(intensity, feedrate, passes, pierce_time){
-		    console.log(intensity)
 			if(intensity === '' || intensity > 100 || intensity < 0) return false;
 			if(feedrate === '' || feedrate > self.maxSpeed() || feedrate < self.minSpeed()) return false;
 			if(passes === '' || passes <= 0) return false;
@@ -1174,6 +1173,41 @@ $(function(){
 			};
 			return data;
 		};
+
+		self.get_design_files_info = function () {
+		    /**
+             * Get information about the design files that are going to be lasered.
+             * @return {Object} The information about the design files.
+             */
+		    let data = [];
+		    let placedDesigns = self.workingArea.placedDesigns();
+            for (let i = 0; i < placedDesigns.length; i++) {
+                let currentDesign = placedDesigns[i];
+
+                let dim_x = $('#' + currentDesign.id).find('.horizontal').val();
+                let dim_y = $('#' + currentDesign.id).find('.vertical').val();
+
+                let typePath = currentDesign.typePath;
+                let format = typePath[typePath.length - 1];
+
+                let sub_format;
+                if (format === "image") {
+                    let file_name = $('#' + currentDesign.id).find('.title').text();
+                    sub_format = file_name.split('.').pop(-1).toLowerCase();
+                }
+
+                let size = currentDesign.size;
+
+                data.push({
+                    dim_x: dim_x,
+                    dim_y: dim_y,
+                    format: format,
+                    sub_format: sub_format,
+                    size: size
+                });
+            }
+			return data;
+        };
 
 		self.is_advanced_settings_checked = function () {
             const advancedSettingsCb = $('#parameter_assignment_show_advanced_settings_cb');
@@ -1406,6 +1440,7 @@ $(function(){
 						var advancedSettings = self.is_advanced_settings_checked();
 						var colorStr = '<!--COLOR_PARAMS_START' +JSON.stringify(multicolor_data) + 'COLOR_PARAMS_END-->';
 						var material = self.get_current_material_settings();
+						var design_files = self.get_design_files_info();
 						var data = {
 							command: "convert",
 							engrave: self.do_engrave(),
@@ -1414,6 +1449,7 @@ $(function(){
 							slicer: "svgtogcode",
 							gcode: gcodeFilename,
                             material: material,
+                            design_files: design_files,
                             advanced_settings: advancedSettings
 						};
 
