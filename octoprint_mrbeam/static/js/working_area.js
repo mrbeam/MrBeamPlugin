@@ -1102,7 +1102,9 @@ $(function(){
 				var mb_meta = self._set_mb_attributes(svg);
 				svg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
 				event.target.value = cols+"×"+rows;
-				self.check_sizes_and_placements();
+				svg.ftStoreInitialTransformMatrix();
+			    svg.ftUpdateTransform();
+			    self.check_sizes_and_placements();
 			}
 		};
 
