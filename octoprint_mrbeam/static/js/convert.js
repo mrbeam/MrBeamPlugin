@@ -1194,6 +1194,39 @@ $(function(){
 			}
 		});
 
+
+		self._allJobsSkipped = function(){
+		    /**
+             * Check if all the jobs (engraving+cutting) were set to be skipped.
+             * @return {boolean} Indicator of all jobs having been moved to the "Skip" area.
+             */
+		    let allSkipped;
+
+		    // Check if there is a job to be skipped
+            if ($('#no_job .color_drop_zone').children().length > 0) {
+                allSkipped = true;
+
+                //Check if there is also an engraving or cutting job
+                if ($('#engrave_job .color_drop_zone').children(':visible').length > 0) {
+                    allSkipped = false;
+                } else {
+                    let vector_jobs = $('.job_row_vector');
+                    for (let i = 0; i < vector_jobs.length; i++) {
+                        const vjob = vector_jobs[i];
+                        const colorDrops = $(vjob).find('.color_drop_zone');
+
+                        if (colorDrops.children().length > 0) {
+                            allSkipped = false;
+                        }
+                    }
+                }
+            } else {
+                allSkipped = false;
+            }
+
+            return allSkipped
+        };
+
 		self._validJobForMaterial = function() {
             /**
              * Check if the selected designs can be engraved/cut in the selected material.
@@ -1370,6 +1403,13 @@ $(function(){
 		self.convert = function() {
 			if(self.gcodeFilesToAppend.length === 1 && self.svg === undefined) {
                 self.files.startGcodeWithSafetyWarning(self.gcodeFilesToAppend[0]);
+            } else if (self._allJobsSkipped()) {
+			    const message = "There is nothing to laser, all jobs are set to be skipped.";
+
+			    $('#empty_job_support_link').hide();
+			    $('#empty_job_modal').find('.modal-body p').text(message);
+                $('#empty_job_modal').modal('show');
+
             } else if (!self._validJobForMaterial()) {
 			    let valid;
 			    if (self.has_cutting_proposal()) {
@@ -1388,6 +1428,7 @@ $(function(){
                 const message = "Sorry but the " + designType + " can only be " + valid +
                     ", which is not supported for this material.";
 
+			    $('#empty_job_support_link').show();
 			    $('#empty_job_modal').find('.modal-body p').text(message);
                 $('#empty_job_modal').modal('show');
 			} else {
