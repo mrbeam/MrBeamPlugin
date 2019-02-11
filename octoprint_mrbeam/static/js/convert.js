@@ -1236,6 +1236,27 @@ $(function(){
 
         };
 
+		self.moveJobsToEngravingColorDefaultOption = function(color) {
+            /**
+             * Move all cutting jobs to engraving when the selected color in a material does not have cutting parameters
+             * @param color The object with the user selected color
+             */
+            if (!self.engraveOnlyForced) {
+                let hasCut = false;
+                let material = self.selected_material();
+
+                if (color in material .colors && material.colors[color].cut.length > 0) {
+                    hasCut = true;
+                }
+
+                if (!hasCut) {
+                    self.forceEngraveOnly();
+                }
+            } else {
+                self.undoForceEngraveOnly();
+            }
+        };
+
         self.moveJobsToEngravingDefaultOption = function(material) {
             /**
              * Move all cutting jobs to engraving when the material does not have cutting parameters
