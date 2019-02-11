@@ -1302,6 +1302,8 @@ $(function(){
                     console.log('Cutting job: ' + cuttingJob.id);
                 }
             }
+
+            ko.dataFor(document.getElementById("dialog_vector_graphics_conversion"))._update_color_assignments();
         };
 
 		self.undoForceEngraveOnly = function() {
@@ -1321,6 +1323,8 @@ $(function(){
                     ($('#first_job > .span3 > .color_drop_zone')).append(moveEng);
                 }
             }
+
+            ko.dataFor(document.getElementById("dialog_vector_graphics_conversion"))._update_color_assignments();
         };
 
 		self._allParametersSet = function(){
