@@ -146,19 +146,21 @@ class LedEventListener(CommandTrigger):
 		return res
 
 	def log_listening_state(self, command=None):
-		self._logger.info("LED Connectivity command: %s , state: %s", command, self._listening_state)
+		self._logger.info("LED Connectivity command: %s , state: %s, is_boot_grace_period: %s", command, self._listening_state, _mrbeam_plugin_implementation.is_boot_grace_period())
 
 	def _get_listening_command(self):
 		command = self.LED_EVENTS[Events.STARTUP]
-		if self._listening_state is not None:
-			if self._listening_state['findmrbeam']:
-				command = self.COMMAND_LISTENING_FINDMRBEAM
-			elif self._listening_state['ap'] and (self._listening_state['wifi'] or self._listening_state['wired']):
-				command = self.COMMAND_LISTENING_AP_AND_NET
-			elif self._listening_state['ap'] and not (self._listening_state['wifi'] or self._listening_state['wired']):
-				command = self.COMMAND_LISTENING_AP
-			elif self._listening_state['wifi'] or self._listening_state['wired']:
-				command = self.COMMAND_LISTENING_NET
+		if self._listening_state is not None and \
+			(self._listening_state['findmrbeam'] is not None
+			 or not _mrbeam_plugin_implementation.is_boot_grace_period()):
+				if self._listening_state['findmrbeam']:
+					command = self.COMMAND_LISTENING_FINDMRBEAM
+				elif self._listening_state['ap'] and (self._listening_state['wifi'] or self._listening_state['wired']):
+					command = self.COMMAND_LISTENING_AP_AND_NET
+				elif self._listening_state['ap'] and not (self._listening_state['wifi'] or self._listening_state['wired']):
+					command = self.COMMAND_LISTENING_AP
+				elif self._listening_state['wifi'] or self._listening_state['wired']:
+					command = self.COMMAND_LISTENING_NET
 		self.log_listening_state(command=command)
 		return command
 

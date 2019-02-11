@@ -84,7 +84,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	CUSTOM_MATERIAL_STORAGE_URL = 'https://script.google.com/a/macros/mr-beam.org/s...' # TODO
 
-	BOOT_GRACE_PERIOD = 10.0
+	BOOT_GRACE_PERIOD = 15 # seconds
 	TIME_NTP_SYNC_CHECK_FAST_COUNT =  20
 	TIME_NTP_SYNC_CHECK_INTERVAL_FAST =  10.0
 	TIME_NTP_SYNC_CHECK_INTERVAL_SLOW = 120.0
@@ -107,12 +107,16 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._stored_frontend_notifications = []
 		self._device_series = self._get_val_from_device_info('device_series')  # '2C'
 		self.called_hosts = []
-		self.boot_ts = time.time()
+
+		self._boot_grace_period_counter = 0
+		self._start_boot_grace_period_thread()
+
 		self._time_ntp_synced = False
 		self._time_ntp_check_count = 0
 		self._time_ntp_check_last_ts = 0.0
 		self._time_ntp_shift = 0.0
 		self.lh = dict(serial=None, p_65=None)
+
 
 		# MrBeam Events needs to be registered in OctoPrint in order to be send to the frontend later on
 		MrBeamEvents.register_with_octoprint()
@@ -1850,8 +1854,21 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return self._settings.global_get(["server", "firstRun"])
 
 	def is_boot_grace_period(self):
-		# self._logger.info("self.boot_ts: %s.%s (%s)", time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(self.boot_ts)), str(int(round(self.boot_ts * 1000)))[-3:], self.boot_ts)
-		return time.time() - self.boot_ts <= self.BOOT_GRACE_PERIOD
+		return self._boot_grace_period_counter < self.BOOT_GRACE_PERIOD
+
+	def _start_boot_grace_period_thread(self):
+		my_timer = threading.Timer(1.0, self._callback_boot_grace_period_thread)
+		my_timer.daemon = True
+		my_timer.name = "boot_grace_period_timer"
+		my_timer.start()
+
+	def _callback_boot_grace_period_thread(self):
+		try:
+			self._boot_grace_period_counter += 1
+			if self._boot_grace_period_counter < self.BOOT_GRACE_PERIOD:
+				self._start_boot_grace_period_thread()
+		except:
+			self._logger.exception("Exception in _callback_boot_grace_period_thread()")
 
 	def is_prod_env(self, type=None):
 		return self.get_env(type).upper() == self.ENV_PROD
