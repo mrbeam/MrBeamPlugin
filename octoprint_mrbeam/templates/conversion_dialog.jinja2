@@ -57,7 +57,7 @@
 						<label >Color</label>
 						<ul id="color_list" data-bind="foreach: material_colors">
 							<li class='material_color_entry hover_shadow' data-bind="
-								click: function(vm, event){ $root.set_material_color($data, event); },
+								click: function(vm, event){ $root.set_material_color($data, event); $root.moveJobsToEngravingColorDefaultOption($data)},
 								attr: {id: 'material_color_'+$data },
 								css: {active: $data === $root.selected_material_color() },
 								visible: ($root.selected_material_color() === null) || ($root.selected_material_color() === $data),

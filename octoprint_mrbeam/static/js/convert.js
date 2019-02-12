@@ -1270,6 +1270,27 @@ $(function(){
 
         };
 
+		self.moveJobsToEngravingColorDefaultOption = function(color) {
+            /**
+             * Move all cutting jobs to engraving when the selected color in a material does not have cutting parameters
+             * @param color The object with the user selected color
+             */
+            if (!self.engraveOnlyForced) {
+                let hasCut = false;
+                let material = self.selected_material();
+
+                if (color in material .colors && material.colors[color].cut.length > 0) {
+                    hasCut = true;
+                }
+
+                if (!hasCut) {
+                    self.forceEngraveOnly();
+                }
+            } else {
+                self.undoForceEngraveOnly();
+            }
+        };
+
         self.moveJobsToEngravingDefaultOption = function(material) {
             /**
              * Move all cutting jobs to engraving when the material does not have cutting parameters
@@ -1315,6 +1336,8 @@ $(function(){
                     console.log('Cutting job: ' + cuttingJob.id);
                 }
             }
+
+            ko.dataFor(document.getElementById("dialog_vector_graphics_conversion"))._update_color_assignments();
         };
 
 		self.undoForceEngraveOnly = function() {
@@ -1334,6 +1357,8 @@ $(function(){
                     ($('#first_job > .span3 > .color_drop_zone')).append(moveEng);
                 }
             }
+
+            ko.dataFor(document.getElementById("dialog_vector_graphics_conversion"))._update_color_assignments();
         };
 
 		self._allParametersSet = function(){
