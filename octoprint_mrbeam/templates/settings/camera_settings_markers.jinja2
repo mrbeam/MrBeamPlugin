@@ -32,8 +32,8 @@
 				<div id="NE" class="cal-row"><div class="cal-arrow NE"></div> North East: <span data-bind="text: __format_point(currentResults()['NE'])"></span></div>
 			</div>
 			<div style="margin-top:1em;">
-				<button class="btn btn-default" data-bind="click: previousMarker, visible: !calibrationComplete()">{{ _('Previous') }}</button>
-				<button class="btn btn-default" data-bind="click: nextMarker, visible: !calibrationComplete()">{{ _('Next') }}</button>
+				<button class="btn btn-default" data-bind="click: previousMarker, visible: calibrationActive()">{{ _('Previous') }}</button>
+				<button class="btn btn-default" data-bind="click: nextMarker, visible: calibrationActive()">{{ _('Next') }}</button>
 				<button class="btn btn-default" data-bind="click: saveCalibrationData, visible: calibrationComplete()">{{ _('Save Calibration') }}</button>
 			</div>
 		</div>
