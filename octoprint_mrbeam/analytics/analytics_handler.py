@@ -268,7 +268,6 @@ class AnalyticsHandler(object):
 			statvfs = os.statvfs('/')
 			total_space = statvfs.f_frsize * statvfs.f_blocks
 			available_space = statvfs.f_frsize * statvfs.f_bavail  # Available space for non-super users
-			free_space = statvfs.f_frsize * statvfs.f_bfree  # Free space for super users
 			used_space = '{used}%'.format(used=round((total_space - available_space) * 100 / total_space))
 
 			disk_space = {
