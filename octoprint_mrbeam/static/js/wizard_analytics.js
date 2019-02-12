@@ -6,37 +6,33 @@ $(function () {
 
         self.analyticsInitialConsent = ko.observable(null);
 
-        self.onAfterWizardTabChange = function (current) {
-            if (current === self.MY_WIZARD_TAB_NAME) {
-                if (self.analyticsInitialConsent() == null) {
-                    $("#wizard_dialog div.modal-footer button.button-finish").prop("disabled", true);
-                    $("#wizard_dialog div.modal-footer button.button-next").prop("disabled", true);
-                    $("#wizard_dialog div.modal-footer button.button-finish").removeAttr("onclick");
-                    $("#wizard_dialog div.modal-footer button.button-next").removeAttr("onclick");
-                }
+        self.onBeforeWizardTabChange = function(next, current) {
+            if (next !== self.MY_WIZARD_TAB_NAME && current === self.MY_WIZARD_TAB_NAME) {
+                let result = self._handleAnalyticsTabExit();
+                return result;
             }
         };
 
-        // self.onBeforeWizardTabChange = function(next, current) {
-        //     if (next !== self.MY_WIZARD_TAB_NAME && current === self.MY_WIZARD_TAB_NAME) {
-        //         console.log("Leaving Analytics Wizard, removing click listeners");
-        //         $("#wizard_dialog div.modal-footer button.button-finish").prop("disabled", false);
-        //         $("#wizard_dialog div.modal-footer button.button-next").prop("disabled", false);
-        //         $("#wizard_dialog div.modal-footer button.button-finish").removeAttr("onclick");
-        //         $("#wizard_dialog div.modal-footer button.button-next").removeAttr("onclick");
-        //         return true;
-        //     }
-        // };
-        self.onWizardFinish = function(){
-            console.log("AnalyticsWizardViewModel onWizardFinish");
+        self.onBeforeWizardFinish = function() {
+            if (!self.analyticsInitialConsent()) {
+                let result = self._handleAnalyticsTabExit();
+                return result;
+            }
         };
 
-        self.prepareLetsGoButtonToSaveAnalytics = function () {
-            $("#wizard_dialog div.modal-footer button.button-finish").prop("disabled", false);
-            $("#wizard_dialog div.modal-footer button.button-next").prop("disabled", false);
-            $("#wizard_dialog div.modal-footer button.button-finish").click(self.sendAnalyticsChoiceToServer);
-            $("#wizard_dialog div.modal-footer button.button-next").click(self.sendAnalyticsChoiceToServer);
-            return true; // "The click binding stops the default browser handler from running. In this case, the browser responds to canceling the "click" event by changing the radio buttons back to what they were before. The return true tells Knockout to allow the default behavior to happen."
+        self._handleAnalyticsTabExit = function(){
+             if (!self.analyticsInitialConsent()) {
+                 showMessageDialog({
+                     title: gettext("You need to select an option"),
+                     message: gettext("Please make a choice about analytics. <br/>You will be able to change it later in the settings if you want.")
+                 });
+                 return false;
+             }
+        };
+
+        self.onWizardFinish = function(){
+            console.log("AnalyticsWizardViewModel onWizardFinish");
+            self.sendAnalyticsChoiceToServer();
         };
 
         self.sendAnalyticsChoiceToServer = function () {
