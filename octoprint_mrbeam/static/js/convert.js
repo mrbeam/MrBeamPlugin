@@ -96,7 +96,7 @@ $(function(){
 				}
 			},
 			'Cardboard, corrugated single wave': {
-				name: 'Cardboard, corrugated single wave',
+				name: 'Cardboard, single wave',
 				img: 'cardboard_single_wave.jpg',
 				description: 'Ordinary cardboard like most packaging is made of.',
 				hints: 'Engraving looks great if just the first layer is lasered away, that the wave is visible underneath.',
@@ -115,7 +115,7 @@ $(function(){
 				}
 			},
 			'Cardboard, corrugated double wave': {
-				name: 'Cardboard, corrugated double wave',
+				name: 'Cardboard, double wave',
 				img: 'cardboard_double_wave.jpg',
 				description: 'Ordinary cardboard like strong packaging is made of.',
 				hints: 'Engraving looks great if just the first layer is lasered away, that the wave is visible underneath.',
@@ -1137,7 +1137,6 @@ $(function(){
 		};
 
 		self._isValidVectorSetting = function(intensity, feedrate, passes, pierce_time){
-		    console.log(intensity)
 			if(intensity === '' || intensity > 100 || intensity < 0) return false;
 			if(feedrate === '' || feedrate > self.maxSpeed() || feedrate < self.minSpeed()) return false;
 			if(passes === '' || passes <= 0) return false;
@@ -1174,6 +1173,41 @@ $(function(){
 			};
 			return data;
 		};
+
+		self.get_design_files_info = function () {
+		    /**
+             * Get information about the design files that are going to be lasered.
+             * @return {Object} The information about the design files.
+             */
+		    let data = [];
+		    let placedDesigns = self.workingArea.placedDesigns();
+            for (let i = 0; i < placedDesigns.length; i++) {
+                let currentDesign = placedDesigns[i];
+
+                let dim_x = $('#' + currentDesign.id).find('.horizontal').val();
+                let dim_y = $('#' + currentDesign.id).find('.vertical').val();
+
+                let typePath = currentDesign.typePath;
+                let format = typePath[typePath.length - 1];
+
+                let sub_format;
+                if (format === "image") {
+                    let file_name = $('#' + currentDesign.id).find('.title').text();
+                    sub_format = file_name.split('.').pop(-1).toLowerCase();
+                }
+
+                let size = currentDesign.size;
+
+                data.push({
+                    dim_x: dim_x,
+                    dim_y: dim_y,
+                    format: format,
+                    sub_format: sub_format,
+                    size: size
+                });
+            }
+			return data;
+        };
 
 		self.is_advanced_settings_checked = function () {
             const advancedSettingsCb = $('#parameter_assignment_show_advanced_settings_cb');
@@ -1396,21 +1430,25 @@ $(function(){
 			if(self.gcodeFilesToAppend.length === 1 && self.svg === undefined) {
                 self.files.startGcodeWithSafetyWarning(self.gcodeFilesToAppend[0]);
             } else if (!self._validJobForMaterial()) {
-			    let job;
 			    let valid;
 			    if (self.has_cutting_proposal()) {
-			        job = "cut";
-			        valid = "engraving";
+			        valid = "engraved";
                 } else {
-			        job = "engraved";
-			        valid = "cutting";
+			        valid = "cut";
                 }
-                const message = "Sorry, but the selected design can't be " + job + " in " +
-                    self.selected_material().name + ". It only works for " + valid +
+			    let designType;
+			    if (self.workingArea.hasTextItems()) {
+			        designType = 'Quick Text'
+                } else {
+			        designType = 'selected design';
+			        $('#empty_job_support_link').hide();
+                }
+
+                const message = "Sorry but the " + designType + " can only be " + valid +
                     ", which is not supported for this material.";
 
-			    $('#conversion_material_design_error').find('.modal-body').text(message);
-                $('#conversion_material_design_error').modal('show');
+			    $('#empty_job_modal').find('.modal-body p').text(message);
+                $('#empty_job_modal').modal('show');
 			} else {
 				if(self._allParametersSet()){
 					//self.update_colorSettings();
@@ -1427,6 +1465,7 @@ $(function(){
 						var advancedSettings = self.is_advanced_settings_checked();
 						var colorStr = '<!--COLOR_PARAMS_START' +JSON.stringify(multicolor_data) + 'COLOR_PARAMS_END-->';
 						var material = self.get_current_material_settings();
+						var design_files = self.get_design_files_info();
 						var data = {
 							command: "convert",
 							engrave: self.do_engrave(),
@@ -1435,6 +1474,7 @@ $(function(){
 							slicer: "svgtogcode",
 							gcode: gcodeFilename,
                             material: material,
+                            design_files: design_files,
                             advanced_settings: advancedSettings
 						};
 

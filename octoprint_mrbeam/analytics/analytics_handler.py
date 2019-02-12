@@ -3,6 +3,9 @@ import json
 import os.path
 import logging
 import netifaces
+import sys
+import fileinput
+import re
 
 from datetime import datetime
 from value_collector import ValueCollector
@@ -67,21 +70,24 @@ class AnalyticsHandler(object):
 
 		self._logger.info("Analytics user permission: analyticsEnabled=%s", self._analyticsOn)
 
-		analyticsfolder = os.path.join(self._settings.getBaseFolder("base"), self._settings.get(['analytics','folder']))
-		if not os.path.isdir(analyticsfolder):
-			os.makedirs(analyticsfolder)
+		self.analyticsfolder = os.path.join(self._settings.getBaseFolder("base"), self._settings.get(['analytics','folder']))
+		if not os.path.isdir(self.analyticsfolder):
+			os.makedirs(self.analyticsfolder)
 
-		fu = FileUploader(analyticsfolder,
-		             analytics_files_prefix='analytics_log.json.',
-		             delete_on_success=self.DELETE_FILES_AFTER_UPLOAD)
-		fu.schedule_logrotation_and_startover(current_analytics_file=self._settings.get(['analytics','filename']))
-		fu.find_files_for_upload()
+		if self._analyticsOn is not None:
+			self._activate_upload()
 
-		self._jsonfile = os.path.join(analyticsfolder, self._settings.get(['analytics','filename']))
+		self._jsonfile = os.path.join(self.analyticsfolder, self._settings.get(['analytics','filename']))
 
 		if self._analyticsOn:
 			self._activate_analytics()
 
+	def _activate_upload(self):
+		fu = FileUploader(self.analyticsfolder,
+						  analytics_files_prefix='analytics_log.json.',
+						  delete_on_success=self.DELETE_FILES_AFTER_UPLOAD)
+		fu.schedule_logrotation_and_startover(current_analytics_file=self._settings.get(['analytics', 'filename']))
+		fu.find_files_for_upload()
 
 	def _activate_analytics(self):
 		if not os.path.isfile(self._jsonfile):
@@ -147,13 +153,14 @@ class AnalyticsHandler(object):
 
 	def analytics_user_permission_change(self, analytics_enabled):
 		self._logger.info("analytics user permission change: analyticsEnabled=%s", analytics_enabled)
+
 		if analytics_enabled:
 			self._analyticsOn = True
 			self._settings.set_boolean(["analyticsEnabled"], True)
 			self._activate_analytics()
 			self._write_deviceinfo(ak.ANALYTICS_ENABLED, payload=dict(enabled=True))
 		else:
-			self._write_deviceinfo(ak.ANALYTICS_ENABLED, payload=dict(enabled=False))
+			# self._write_deviceinfo(ak.ANALYTICS_ENABLED, payload=dict(enabled=False))
 			self._analyticsOn = False
 			self._settings.set_boolean(["analyticsEnabled"], False)
 
@@ -219,9 +226,13 @@ class AnalyticsHandler(object):
 		}
 		self._write_deviceinfo(ak.STARTUP, payload=payload)
 
+		# Schedule event_disk_space task (to write that line 3 seconds after startup)
+		t1 = Timer(3.0, self._event_disk_space)
+		t1.start()
+
 		# Schedule event_ip_addresses task (to write that line 15 seconds after startup)
-		t = Timer(15.0, self._event_ip_addresses)
-		t.start()
+		t2 = Timer(15.0, self._event_ip_addresses)
+		t2.start()
 
 	def _event_shutdown(self,event,payload):
 		self._write_deviceinfo(ak.SHUTDOWN)
@@ -251,6 +262,23 @@ class AnalyticsHandler(object):
 
 		except:
 			self._logger.exception('Exception when recording the IP addresses')
+
+	def _event_disk_space(self):
+		try:
+			statvfs = os.statvfs('/')
+			total_space = statvfs.f_frsize * statvfs.f_blocks
+			available_space = statvfs.f_frsize * statvfs.f_bavail  # Available space for non-super users
+			used_space = '{used}%'.format(used=round((total_space - available_space) * 100 / total_space))
+
+			disk_space = {
+				ak.TOTAL_SPACE: total_space,
+				ak.AVAILABLE_SPACE: available_space,
+				ak.USED_SPACE: used_space,
+			}
+			self._write_deviceinfo(ak.DISK_SPACE, payload=disk_space)
+
+		except:
+			self._logger.exception('Exception when saving info about the disk space')
 
 	def _event_print_started(self, event, payload):
 		self._current_job_id = 'j_{}_{}'.format(self._getSerialNumber(),time.time())
@@ -376,7 +404,7 @@ class AnalyticsHandler(object):
 					data.update(details['material'])
 					self._store_conversion_details(eventname,payload=data)
 
-				if 'vector' in details and details['vector'] != []:
+				if 'vector' in details and details['vector']:
 					eventname = ak.CONV_CUT
 					for color_settings in details['vector']:
 						data = {
@@ -385,6 +413,14 @@ class AnalyticsHandler(object):
 						data.update(color_settings)
 						data.update(details['material'])
 						self._store_conversion_details(eventname,payload=data)
+
+				if 'design_files' in details and details['design_files']:
+					eventname = ak.DESIGN_FILE
+					for design_file in details['design_files']:
+						data = {}
+						data.update(design_file)
+						self._store_conversion_details(eventname, payload=data)
+
 		except Exception as e:
 			self._logger.error('Error during store_conversion_details: {}'.format(e.message))
 
@@ -603,3 +639,40 @@ class AnalyticsHandler(object):
 					f.write(dataString)
 			except Exception as e:
 				self._logger.error('Error while writing data: {}'.format(e.message))
+
+	def initial_analytics_procedure(self, consent):
+		if consent == 'agree':
+			self.analytics_user_permission_change(True)
+			self.process_analytics_files()
+			self._activate_upload()
+
+		elif consent == 'disagree':
+			self.analytics_user_permission_change(False)
+			self.delete_analytics_files()
+
+	def delete_analytics_files(self):
+		self._logger.info("Deleting analytics files...")
+		folder = ak.ANALYTICS_FOLDER
+		for analytics_file in os.listdir(folder):
+			file_path = os.path.join(folder, analytics_file)
+			try:
+				if os.path.isfile(file_path) and "analytics" in analytics_file:
+					os.unlink(file_path)
+					self._logger.info('File deleted: {file}'.format(file=file_path))
+			except Exception as e:
+				self._logger.error('Error when deleting file {file}: {error}'.format(file=file_path, error=e))
+
+	def process_analytics_files(self):
+		self._logger.info("Processing analytics files...")
+		folder = ak.ANALYTICS_FOLDER
+		for analytics_file in os.listdir(folder):
+			file_path = os.path.join(folder, analytics_file)
+			try:
+				if os.path.isfile(file_path) and "analytics" in analytics_file:
+					# open + remove file_names + save
+					for idx, line in enumerate(fileinput.input(file_path, inplace=1)):
+						line = re.sub(r"\"filename\": \"[^\"]+\"", "", line)
+						sys.stdout.write(line)
+					self._logger.info('File processed: {file}'.format(file=file_path))
+			except Exception as e:
+				self._logger.error('Error when processing line {line} of file {file}: {e}'.format(line=idx, file=file_path, e=e))

@@ -84,7 +84,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	CUSTOM_MATERIAL_STORAGE_URL = 'https://script.google.com/a/macros/mr-beam.org/s...' # TODO
 
-	BOOT_GRACE_PERIOD = 10.0
+	BOOT_GRACE_PERIOD = 15 # seconds
 	TIME_NTP_SYNC_CHECK_FAST_COUNT =  20
 	TIME_NTP_SYNC_CHECK_INTERVAL_FAST =  10.0
 	TIME_NTP_SYNC_CHECK_INTERVAL_SLOW = 120.0
@@ -107,12 +107,16 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._stored_frontend_notifications = []
 		self._device_series = self._get_val_from_device_info('device_series')  # '2C'
 		self.called_hosts = []
-		self.boot_ts = time.time()
+
+		self._boot_grace_period_counter = 0
+		self._start_boot_grace_period_thread()
+
 		self._time_ntp_synced = False
 		self._time_ntp_check_count = 0
 		self._time_ntp_check_last_ts = 0.0
 		self._time_ntp_shift = 0.0
 		self.lh = dict(serial=None, p_65=None)
+
 
 		# MrBeam Events needs to be registered in OctoPrint in order to be send to the frontend later on
 		MrBeamEvents.register_with_octoprint()
@@ -353,7 +357,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/wizard_acl.js", "js/netconnectd_wrapper.js", "js/lasersaftey_viewmodel.js",
 				"js/ready_to_laser_viewmodel.js", "js/lib/screenfull.min.js","js/settings/camera_calibration.js",
 				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js", "js/lib/Color.js", "js/laser_job_done_viewmodel.js", 
-				"js/loadingoverlay_viewmodel.js", "js/wizard_whatsnew.js"],
+				"js/loadingoverlay_viewmodel.js", "js/wizard_whatsnew.js", "js/wizard_analytics.js"],
 			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css", "css/quicktext-fonts.css", "css/sliders.css"],
 			less=["less/mrbeam.less"]
 		)
@@ -372,9 +376,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# template, using the render_kwargs as provided by OctoPrint
 		from flask import make_response, render_template, g
 
-		if request.host not in self.called_hosts:
-			self.called_hosts.append(request.host)
-		self._logger.info("called hosts: %s", self.called_hosts)
+		self._track_calls(request)
 
 		firstRun = render_kwargs['firstRun']
 		language = g.locale.language if g.locale else "en"
@@ -445,6 +447,16 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			r = add_non_caching_response_headers(r)
 		return r
 
+
+	def _track_calls(self, request):
+		my_call = dict(host=request.host,
+		               ref=request.referrer,
+		               remote_ip=request.headers.get("X-Forwarded-For"))
+		if not my_call in self.called_hosts:
+			self.called_hosts.append(my_call)
+			self._logger.info("First call received from: %s", my_call)
+			self._logger.info("All unique calls: %s", self.called_hosts)
+
 	##~~ TemplatePlugin mixin
 
 	def get_template_configs(self):
@@ -464,6 +476,15 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		result.extend(self._get_wizard_template_configs())
 		return result
 
+	def get_template_vars(self):
+		"""
+		Needed to have analytigs settings page in German
+		while we do not have real internationalization yet.
+		"""
+		from flask import g
+		return dict(
+			language = g.locale.language if g.locale else "en"
+		)
 
 	def _get_wizard_template_configs(self):
 		required = self._get_subwizard_attrs("_is_", "_wizard_required")
@@ -642,6 +663,20 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# jinja has some js that changes this to German if lang is 'de'
 		return gettext("...and more")
 
+	def _is_analytics_wizard_required(self):
+		result = not self.isFirstRun()
+		self._logger.debug("_is_analytics_wizard_required() %s", result)
+		return result
+
+	def _get_analytics_wizard_details(self):
+		return dict()
+
+	def _get_analytics_additional_wizard_template_data(self):
+		return dict(mandatory=False, suffix="_analytics")
+
+	def _get_analytics_wizard_name(self):
+		# jinja has some js that changes this to German if lang is 'de'
+		return gettext("Analytics")
 
 
 	@octoprint.plugin.BlueprintPlugin.route("/acl", methods=["POST"])
@@ -1262,6 +1297,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			ready_to_laser=[],
 			debug_event=["event"],
 			custom_materials=[],
+			analytics_init=[],
 			take_undistorted_picture=[]  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
 		)
 
@@ -1290,8 +1326,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return self.take_undistorted_picture(is_initial_calibration=False)
 		elif command == "debug_event":
 			return self.debug_event(data)
+		elif command == "analytics_init":
+			return self.analytics_init(data)
 		return NO_CONTENT
 
+	def analytics_init(self, data):
+		if 'analyticsInitialConsent' in data:
+			self._analytics_handler.initial_analytics_procedure(data['analyticsInitialConsent'])
 
 	def debug_event(self, data):
 		event = data['event']
@@ -1813,8 +1854,21 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return self._settings.global_get(["server", "firstRun"])
 
 	def is_boot_grace_period(self):
-		# self._logger.info("self.boot_ts: %s.%s (%s)", time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(self.boot_ts)), str(int(round(self.boot_ts * 1000)))[-3:], self.boot_ts)
-		return time.time() - self.boot_ts <= self.BOOT_GRACE_PERIOD
+		return self._boot_grace_period_counter < self.BOOT_GRACE_PERIOD
+
+	def _start_boot_grace_period_thread(self):
+		my_timer = threading.Timer(1.0, self._callback_boot_grace_period_thread)
+		my_timer.daemon = True
+		my_timer.name = "boot_grace_period_timer"
+		my_timer.start()
+
+	def _callback_boot_grace_period_thread(self):
+		try:
+			self._boot_grace_period_counter += 1
+			if self._boot_grace_period_counter < self.BOOT_GRACE_PERIOD:
+				self._start_boot_grace_period_thread()
+		except:
+			self._logger.exception("Exception in _callback_boot_grace_period_thread()")
 
 	def is_prod_env(self, type=None):
 		return self.get_env(type).upper() == self.ENV_PROD
@@ -1994,7 +2048,7 @@ def __plugin_load__():
 			order=dict(
 				wizard=["plugin_mrbeam_wifi", "plugin_mrbeam_acl", "plugin_mrbeam_lasersafety",
 				        "plugin_mrbeam_whatsnew_0", "plugin_mrbeam_whatsnew_1", "plugin_mrbeam_whatsnew_2", "plugin_mrbeam_whatsnew_3", "plugin_mrbeam_whatsnew_4"],
-				settings = ['plugin_mrbeam_about', 'plugin_softwareupdate', 'accesscontrol', 'plugin_netconnectd', 'plugin_mrbeam_conversion',
+				settings = ['plugin_mrbeam_about', 'plugin_softwareupdate', 'accesscontrol', 'plugin_netconnectd', 'plugin_findmymrbeam', 'plugin_mrbeam_conversion',
 				            'plugin_mrbeam_camera', 'plugin_mrbeam_analytics', 'logs', 'plugin_mrbeam_debug']
 			),
 			disabled=dict(

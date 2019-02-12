@@ -42,6 +42,7 @@ class Converter():
 		},
 		"vector": [],
 		"material": None,
+		"design_files": [],
 		"advanced_settings": False
 	}
 
@@ -59,9 +60,7 @@ class Converter():
 
 		self.colorParams = {}
 		self.gc_options = None
-		self._log.debug(self.defaults)
 		self.options = self.defaults
-		self._log.debug(self.options)
 		self.setoptions(params)
 		self.svg_file = model_path
 		self.document=None
