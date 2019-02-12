@@ -11,6 +11,7 @@ $(function() {
         self.is_job_done = ko.observable(false);
         self.is_dust_mode = ko.observable(false);
         self.job_duration = ko.observable(0);
+        self.is_dev_mode = ko.observable(false);
         self.job_duration_formatted = ko.computed(function(){
             if (self.job_duration() < 0) {
                 return '--:--:--'
@@ -28,8 +29,7 @@ $(function() {
 
         self.onStartupComplete = function(){
             self.mapOptionEnabled = function () {
-                return self.settings.settings.plugins.mrbeam.dev.env().upper() === "PROD";
-
+                return MRBEAM_ENV_LOCAL === "DEV";
             };
 
             self.dialogElement = $('#laser_job_done_dialog');
@@ -79,7 +79,7 @@ $(function() {
         self.cancel_btn = function(){
             self.is_job_done(false);
             self.dialogElement.modal("hide");
-            if (self.mapOptionEnabled) {
+            if (self.mapOptionEnabled()) {
                 // Let modal as it was
                 let mapContainer = $("#mrbeams_map_container");
                 let doneDialog = $('#laser_job_done_dialog');
@@ -93,16 +93,16 @@ $(function() {
         };
 
         self.map_btn = function(){
-            if (self.mapOptionEnabled) {
+            if (self.mapOptionEnabled()) {
                 let duration = Math.floor(self.job_duration());
-                let cloud_function_trigger = "https://europe-west1-mrb-jobmap.cloudfunctions.net/generate_map?duration=" + duration + "&ts=" + Date.now();
-                console.log(cloud_function_trigger);
+                let url_store_and_load_map = "https://europe-west1-mrb-jobmap.cloudfunctions.net/generate_map?duration=" + duration + "&ts=" + Date.now();
+                console.log(url_store_and_load_map);
 
                 // Add map to modal
                 let mapContainer = $("#mrbeams_map_container");
                 let doneDialog = $('#laser_job_done_dialog');
 
-                mapContainer.append('<iframe src="'+ cloud_function_trigger +'" width="900" height="500" frameborder="0" allowfullscreen=""></iframe>');
+                mapContainer.append('<iframe src="'+ url_store_and_load_map +'" width="900" height="500" frameborder="0" allowfullscreen=""></iframe>');
                 mapContainer.show();
                 doneDialog.addClass('job-map-modal');
                 $('#job_done_info').hide();

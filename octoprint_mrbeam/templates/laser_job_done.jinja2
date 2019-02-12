@@ -1,10 +1,12 @@
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"
-   integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
-   crossorigin=""/>
-<script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"
-   integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg=="
-   crossorigin=""></script>
+{% if env_local == "DEV" %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"
+       integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+       crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"
+       integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg=="
+       crossorigin=""></script>
+{% endif %}
 
 
 <div id="laser_job_done_dialog" class="modal hide fade" data-backdrop="static">
@@ -16,8 +18,10 @@
         </div>
         <div class="modal-body">
             <!--Mr Beams map-->
-            <div id="mrbeams_map_container" class="z-depth-1-half map-container" style="height: 500px; width: 700px; display: none;">
-            </div>
+            {% if env_local == "DEV" %}
+                <div id="mrbeams_map_container" class="z-depth-1-half map-container" style="height: 500px; width: 700px; display: none;">
+                </div>
+            {% endif %}
 
             <div id="job_done_info">
                 <img data-bind='visible: is_dust_mode()' src="/plugin/mrbeam/static/img/dusting.jpg">
@@ -31,7 +35,9 @@
         <div class="modal-footer">
             <h4 data-bind='visible: is_dust_mode()' class="pull-right" >Almost done...</h4>
             <a class="btn btn-primary" id="laser_job_done_done_btn" data-bind='visible: !is_dust_mode(), click: cancel_btn' aria-hidden="true">{{ _('OK') }}</a>
-            <a class="btn btn-secondary" id="share_job_and_location_btn" data-bind='visible: !is_dust_mode(), click: map_btn' aria-hidden="true">{{ _('Share my job!') }}</a>
+            {% if env_local == "DEV" %}
+                <a class="btn btn-secondary" id="share_job_and_location_btn" data-bind='visible: !is_dust_mode(), click: map_btn' aria-hidden="true">{{ _('Share my job!') }}</a>
+            {% endif %}
         </div>
     </div>
 </div>
