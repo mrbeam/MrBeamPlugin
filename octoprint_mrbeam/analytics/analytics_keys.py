@@ -13,6 +13,9 @@ class AnalyticsKeys(object):
 	VERSION_MRBEAM_PLUGIN = 'version_mrbeam_plugin'
 	LASERHEAD_SERIAL = 'laserhead_serial'
 	ENV = 'env'
+	TOTAL_SPACE = 'total'
+	AVAILABLE_SPACE = 'available'
+	USED_SPACE = 'used'
 
 	### EVENT TYPES ###
 	JOB_EVENT = 'job'
@@ -31,6 +34,7 @@ class AnalyticsKeys(object):
 	FLASH_GRBL = 'flash_grbl'
 	ANALYTICS_ENABLED = 'analytics_enabled'
 	IPS = 'ips'
+	DISK_SPACE = 'disk_space'
 
 	### LOG EVENT KEYS ###
 	LOG = 'log'
@@ -57,6 +61,7 @@ class AnalyticsKeys(object):
 	CONV_ENGRAVE = 'conv_eng'
 	CONV_CUT = 'conv_cut'
 	LASER_JOB = 'laser_job'
+	DESIGN_FILE = 'design_file'
 	MATERIAL = 'material'
 
 	PRINT_EVENTS = [

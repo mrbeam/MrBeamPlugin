@@ -226,9 +226,13 @@ class AnalyticsHandler(object):
 		}
 		self._write_deviceinfo(ak.STARTUP, payload=payload)
 
+		# Schedule event_disk_space task (to write that line 3 seconds after startup)
+		t1 = Timer(3.0, self._event_disk_space)
+		t1.start()
+
 		# Schedule event_ip_addresses task (to write that line 15 seconds after startup)
-		t = Timer(15.0, self._event_ip_addresses)
-		t.start()
+		t2 = Timer(15.0, self._event_ip_addresses)
+		t2.start()
 
 	def _event_shutdown(self,event,payload):
 		self._write_deviceinfo(ak.SHUTDOWN)
@@ -258,6 +262,23 @@ class AnalyticsHandler(object):
 
 		except:
 			self._logger.exception('Exception when recording the IP addresses')
+
+	def _event_disk_space(self):
+		try:
+			statvfs = os.statvfs('/')
+			total_space = statvfs.f_frsize * statvfs.f_blocks
+			available_space = statvfs.f_frsize * statvfs.f_bavail  # Available space for non-super users
+			used_space = '{used}%'.format(used=round((total_space - available_space) * 100 / total_space))
+
+			disk_space = {
+				ak.TOTAL_SPACE: total_space,
+				ak.AVAILABLE_SPACE: available_space,
+				ak.USED_SPACE: used_space,
+			}
+			self._write_deviceinfo(ak.DISK_SPACE, payload=disk_space)
+
+		except:
+			self._logger.exception('Exception when saving info about the disk space')
 
 	def _event_print_started(self, event, payload):
 		self._current_job_id = 'j_{}_{}'.format(self._getSerialNumber(),time.time())
@@ -383,7 +404,7 @@ class AnalyticsHandler(object):
 					data.update(details['material'])
 					self._store_conversion_details(eventname,payload=data)
 
-				if 'vector' in details and details['vector'] != []:
+				if 'vector' in details and details['vector']:
 					eventname = ak.CONV_CUT
 					for color_settings in details['vector']:
 						data = {
@@ -392,6 +413,14 @@ class AnalyticsHandler(object):
 						data.update(color_settings)
 						data.update(details['material'])
 						self._store_conversion_details(eventname,payload=data)
+
+				if 'design_files' in details and details['design_files']:
+					eventname = ak.DESIGN_FILE
+					for design_file in details['design_files']:
+						data = {}
+						data.update(design_file)
+						self._store_conversion_details(eventname, payload=data)
+
 		except Exception as e:
 			self._logger.error('Error during store_conversion_details: {}'.format(e.message))
 
