@@ -268,12 +268,12 @@ class AnalyticsHandler(object):
 			statvfs = os.statvfs('/')
 			total_space = statvfs.f_frsize * statvfs.f_blocks
 			available_space = statvfs.f_frsize * statvfs.f_bavail  # Available space for non-super users
-			used_space = '{used}%'.format(used=round((total_space - available_space) * 100 / total_space))
+			used_percent = round((total_space - available_space) * 100 / total_space)
 
 			disk_space = {
 				ak.TOTAL_SPACE: total_space,
 				ak.AVAILABLE_SPACE: available_space,
-				ak.USED_SPACE: used_space,
+				ak.USED_SPACE: used_percent,
 			}
 			self._write_deviceinfo(ak.DISK_SPACE, payload=disk_space)
 
@@ -349,7 +349,7 @@ class AnalyticsHandler(object):
 			ak.PROGRESS_LASER_TEMPERATURE: self._current_lasertemp_collector.get_latest_value(),
 			ak.PROGRESS_LASER_INTENSITY: self._current_intensity_collector.get_latest_value(),
 			ak.PROGRESS_DUST_VALUE: self._current_dust_collector.get_latest_value(),
-			ak.JOB_DURATION: int(round(payload['time']))
+			ak.JOB_DURATION: round(payload['time'], 1)
 		}
 		self._write_jobevent(ak.PRINT_PROGRESS, data)
 

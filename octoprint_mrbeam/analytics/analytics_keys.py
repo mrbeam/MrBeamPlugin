@@ -15,7 +15,7 @@ class AnalyticsKeys(object):
 	ENV = 'env'
 	TOTAL_SPACE = 'total'
 	AVAILABLE_SPACE = 'available'
-	USED_SPACE = 'used'
+	USED_SPACE = 'used_percent'
 
 	### EVENT TYPES ###
 	JOB_EVENT = 'job'
