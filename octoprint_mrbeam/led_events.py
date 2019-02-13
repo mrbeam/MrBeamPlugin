@@ -53,8 +53,10 @@ class LedEventListener(CommandTrigger):
 
 	WIFI_CHECK_INTERVAL = 1.0
 
-	COMMAND_LISTENING_WIFI = "mrbeam_ledstrips_cli listening_wifi"
-	COMMAND_LISTENING_AP = "mrbeam_ledstrips_cli listening_ap"
+	COMMAND_LISTENING_FINDMRBEAM =   "mrbeam_ledstrips_cli listening_findmrbeam"
+	COMMAND_LISTENING_AP_AND_NET =   "mrbeam_ledstrips_cli listening_ap_and_net"
+	COMMAND_LISTENING_NET =          "mrbeam_ledstrips_cli listening_net"
+	COMMAND_LISTENING_AP =           "mrbeam_ledstrips_cli listening_ap"
 
 
 	def __init__(self, event_bus, printer):
@@ -64,8 +66,7 @@ class LedEventListener(CommandTrigger):
 
 		self._watch_thread = None
 		self._watch_active = False
-		self._wifi_connected = None
-		self._ap_open = None
+		self._listening_state = None
 
 		self._subscriptions = {}
 
@@ -110,31 +111,57 @@ class LedEventListener(CommandTrigger):
 
 	def _handleStartupCommand(self, command):
 		if command in (self.LED_EVENTS[Events.STARTUP], self.LED_EVENTS[Events.CLIENT_CLOSED]):
-			self._wifi_connected = self.get_state("wifi")
-			self._ap_open = self.get_state("ap")
+			self._listening_state = self.get_listening_state()
 			command = self._get_listening_command()
 			self._start_wifi_watcher()
 		else:
 			self._stop_wifi_watcher()
 		return command
 
-	def get_state(self, type):
-		res = None
+	def get_listening_state(self):
+		res = dict(wifi=None,
+		           ap=None,
+		           wired=None,
+		           findmrbeam=None)
+		try:
+			pluginInfo = _mrbeam_plugin_implementation._plugin_manager.get_plugin_info("findmymrbeam")
+			if pluginInfo is not None:
+				res['findmrbeam'] = pluginInfo.implementation.is_registered()
+		except Exception as e:
+			self._logger.exception("Exception while reading is_registered state from findmymrbeam:")
+
 		try:
 			pluginInfo = _mrbeam_plugin_implementation._plugin_manager.get_plugin_info("netconnectd")
 			if pluginInfo is not None:
 				status = pluginInfo.implementation._get_status()
-				res = status["connections"][type]
+				if 'wifi' in status["connections"]:
+					res['wifi'] = status["connections"]['wifi']
+				if 'ap' in status["connections"]:
+					res['ap'] = status["connections"]['ap']
+				if 'wired' in status["connections"]:
+					res['wired'] = status["connections"]['wired']
 		except Exception as e:
-			self._logger.exception("Exception while reading wifi state from netconnectd:")
+			self._logger.exception("Exception while reading wifi/ap state from netconnectd:")
+
 		return res
+
+	def log_listening_state(self, command=None):
+		self._logger.info("LED Connectivity command: %s , state: %s, is_boot_grace_period: %s", command, self._listening_state, _mrbeam_plugin_implementation.is_boot_grace_period())
 
 	def _get_listening_command(self):
 		command = self.LED_EVENTS[Events.STARTUP]
-		if self._ap_open:
-			command = self.COMMAND_LISTENING_AP
-		elif self._wifi_connected:
-			command = self.COMMAND_LISTENING_WIFI
+		if self._listening_state is not None and \
+			(self._listening_state['findmrbeam'] is not None
+			 or not _mrbeam_plugin_implementation.is_boot_grace_period()):
+				if self._listening_state['findmrbeam']:
+					command = self.COMMAND_LISTENING_FINDMRBEAM
+				elif self._listening_state['ap'] and (self._listening_state['wifi'] or self._listening_state['wired']):
+					command = self.COMMAND_LISTENING_AP_AND_NET
+				elif self._listening_state['ap'] and not (self._listening_state['wifi'] or self._listening_state['wired']):
+					command = self.COMMAND_LISTENING_AP
+				elif self._listening_state['wifi'] or self._listening_state['wired']:
+					command = self.COMMAND_LISTENING_NET
+		self.log_listening_state(command=command)
 		return command
 
 	def _start_wifi_watcher(self, force=False):
@@ -150,11 +177,9 @@ class LedEventListener(CommandTrigger):
 			self._watch_thread = None
 
 	def __run_wifi_watcher(self):
-		current_wifi = self.get_state('wifi')
-		current_ap = self.get_state('ap')
-		if current_ap != self._ap_open or current_wifi != self._wifi_connected:
-			self._wifi_connected = current_wifi
-			self._ap_open = current_ap
+		current_listening_state = self.get_listening_state()
+		if current_listening_state != self._listening_state:
+			self._listening_state = current_listening_state
 			command = self._get_listening_command()
 			self._execute_command(command, "system", False)
 		self._start_wifi_watcher(force=True)

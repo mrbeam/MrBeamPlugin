@@ -5,10 +5,12 @@
 # clear: if no usb stick plugged in, SELFCHECK_DIR will be deleted
 # if `df /` says that there is little space on disk left, mount_manager deletes all files in var/log and ~/.octoprint/logs
 
-VERSION="1.5.1"
+VERSION="1.6.0"
 APP_DIR=/root/mount_manager
 LOG_FILE="/var/log/mount_manager.log"
 MOUNT_DIR=/media/
+
+OCTOPRINT_LOG="/home/pi/.octoprint/logs/octoprint.log"
 
 SIG_DIR="/mrbeam"
 SIG_FILE_PATTERN="mrbeam*.sig"
@@ -32,51 +34,68 @@ arr_plugged_in_path=()
 arr_plugged_in_label=()
 arr_plugged_in_type=()
 
-# function for mounting different file systems
+
+FLASH_PURPLE="flash_color:128:0:128:1"
+
+function signal_alert {
+    mrbeam_ledstrips_cli $1
+    sleep 3
+    mrbeam_ledstrips_cli rollback
+}
+
+# functions for mounting different file systems
+function do_mount {
+    mount -t $3 -o $4 $2 $MOUNT_DIR$1 >> $LOG_FILE 2>&1
+}
 function mounter {
     # $1 device path /dev/sd*
     # $2 name or label of device
     # $3 format or type
 
-    if [ "vfat" == "$3" ]; then
-        mount -t vfat -o utf8,uid=${user},gid=${group} $2 $MOUNT_DIR$1 >> $LOG_FILE 2>&1
-    fi
-        if [ "ntfs" == "$3" ]; then
-        mount -t ntfs -o rw $2 $MOUNT_DIR$1 >> $LOG_FILE 2>&1 #not tested
-    fi
-        if [ "hfsplus" == "$3" ]; then
-        mount -t hfsplus -o utf8,uid=${user},gid=${group} $2 $MOUNT_DIR$1 >> $LOG_FILE 2>&1 #not tested
-    fi
-        if [ "exfat" == "$3" ]; then
-        mount -t exfat -o utf8,uid=${user},gid=${group} $2 $MOUNT_DIR$1 >> $LOG_FILE 2>&1 #not tested
-    fi
-        if [ "ext4" == "$3" ]; then
-        mount -t ext4 -o defaults $2 $MOUNT_DIR$1 >> $LOG_FILE 2>&1
-    fi
+    case "$3" in
+    "vfat" | "exfat")
+        # hfsplus (not supported) and exfat not tested
+        do_mount $1 $2 $3 "utf8,uid=${user},gid=${group}"
+        ;;
+    "ntfs")
+        # ntfs not tested
+        do_mount $1 $2 $3 "rw"
+        ;;
+     "ext4")
+        do_mount $1 $2 $3 "defaults"
+        ;;
+    *)
+        return 1
+        ;;
+    esac
 }
 
-# functions for loggin output
+# functions for logging output
 function log {
     if [ "$log_private" = true ] ; then
         echo "$(date +"%Y.%m.%d %H:%M:%S") $1" >> $LOG_FILE
     fi
+
+    if [ ! -z "$2" ]; then
+        echo "$(date +"%Y.%m.%d %H:%M:%S") mrbeam_usb_mount_manager> $1" >> $2
+    fi
 }
 function log_info {
-    log "INFO: $1"
-        if [ "$log_syslog" = true ] ; then
+    log "INFO: $1" $2
+    if [ "$log_syslog" = true ] ; then
         logger $1 -p info -t ${0#./}
     fi
 }
 function log_warn {
-    log "WARNING: $1"
-        if [ "$log_syslog" = true ] ; then
-                logger $1 -p warning -t ${0#./}
+    log "WARNING: $1" $2
+    if [ "$log_syslog" = true ] ; then
+        logger $1 -p warning -t ${0#./}
     fi
 }
 function log_err {
-        log "ERROR: $1"
-        if [ "$log_syslog" = true ] ; then
-                logger $1 -p error -t ${0#./}
+    log "ERROR: $1" $2
+    if [ "$log_syslog" = true ] ; then
+        logger $1 -p error -t ${0#./}
     fi
 }
 
@@ -96,9 +115,9 @@ log_syslog=true
 
 FREE_SPACE=`df -k --output=avail / | tail -n1`
 if ((FREE_SPACE < MIN_FREE_SPACE_K)); then
-  rm -f /var/log/*
-  rm -f /home/pi/.octoprint/logs/*
-  log_warn "DISK SPACE IS LOW!!! (Free space: ${FREE_SPACE}k): Deleted all files in /var/log and /home/pi/.octoprint/logs/"
+    rm -f /var/log/*
+    rm -f /home/pi/.octoprint/logs/*
+    log_warn "DISK SPACE IS LOW!!! (Free space: ${FREE_SPACE}k): Deleted all files in /var/log and /home/pi/.octoprint/logs/"
 fi
 FREE_SPACE=`df -k --output=avail / | tail -n1`
 log_info "Free disk space is now: ${FREE_SPACE}k"
@@ -185,16 +204,16 @@ for unmounted_item in ${arr_media_unmounted[*]}
 do
         if ! [[ " ${arr_plugged_in_label[*]} " == *" ${unmounted_item} "* ]]; then
                 log_info "Unmounted and unplugged directory '${unmounted_item}' found."
-        if ! [ "$(ls -A $MOUNT_DIR$unmounted_item)" ]; then
-            log_info " - Directory is empty and will be deleted."
-            rm -rf $MOUNT_DIR$unmounted_item >> $LOG_FILE 2>&1
-            if [[ -d $SELFCHECK_DIR ]]; then
-                log_info " - SELFCHECK_DIR will be deleted."
-                rm -rf $SELFCHECK_DIR
+            if ! [ "$(ls -A $MOUNT_DIR$unmounted_item)" ]; then
+                log_info " - Directory is empty and will be deleted."
+                rm -rf $MOUNT_DIR$unmounted_item >> $LOG_FILE 2>&1
+                if [[ -d $SELFCHECK_DIR ]]; then
+                    log_info " - SELFCHECK_DIR will be deleted."
+                    rm -rf $SELFCHECK_DIR
+                fi
+            else
+                log_warn " - Directory not empty. No further action."
             fi
-        else
-            log_warn " - Directory not empty. No further action."
-        fi
         fi
 done
 
@@ -208,93 +227,101 @@ do
     else
         if [[ " ${arr_media_unmounted[*]} " == *" ${plugged_in_item} "* ]]; then
             log_info " - Unmounted yet plugged in device '${plugged_in_item}' found. It will be mounted."
-            else
+        else
             log_info " - Newly plugged in device '${plugged_in_item}' found. Directory will be created and device will be mounted."
             mkdir $MOUNT_DIR$plugged_in_item >> $LOG_FILE 2>&1
         fi
+
         mounter $plugged_in_item ${arr_plugged_in_path[i]} ${arr_plugged_in_type[i]}
-
-        #### DO STUFF START #####
-
-        SEARCH_PATH="${MOUNT_DIR}${plugged_in_item}${SIG_DIR}"
-        unset -v SIG_FILE_EXTERNAL
-        for i in "${SEARCH_PATH}"/${SIG_FILE_PATTERN}; do
-          [[ $i -nt ${SIG_FILE_EXTERNAL} ]] && SIG_FILE_EXTERNAL=$i;
-        done
-        SIG_FILE_EXTERNAL=$(realpath "${SIG_FILE_EXTERNAL}")
-
-        SIG_FILE_INTERNAL="${SELFCHECK_DIR}/$(basename ${SIG_FILE_EXTERNAL})"
-        USB_ROOT="${MOUNT_DIR}${plugged_in_item}"
-
-        # Check if selfcheck zip file is on usb-stick
-        if [[ -e "${SIG_FILE_EXTERNAL}" ]]; then
-            SIG_FILE_SIZE_EXTERNAL=$(stat -c%s "${SIG_FILE_EXTERNAL}")
-            log_info "GPG Signature: SIG_FILE found on USB-Stick: ${SIG_FILE_EXTERNAL} of size: ${SIG_FILE_SIZE_EXTERNAL}"
-
-            if gpg --verify "${SIG_FILE_EXTERNAL}"; then
-                log_info "GPG Signature: SIG_FILE ${SIG_FILE_EXTERNAL}: GPG Signature OK, handling file..."
-
-                # create selfcheck_dir
-                if [[ -d $SELFCHECK_DIR ]]; then
-                    log_warn "Director $SELFCHECK_DIR already exists. Deleting it..."
-                    rm -rf $SELFCHECK_DIR
-                fi
-                log_info "Create $SELFCHECK_DIR Directory"
-                mkdir $SELFCHECK_DIR
-                chown pi:pi $SELFCHECK_DIR
-
-
-                log_info "Copying ${SIG_FILE_EXTERNAL} to ${SIG_FILE_INTERNAL}"
-                cp ${SIG_FILE_EXTERNAL} ${SIG_FILE_INTERNAL}
-
-
-                if gpg --verify "${SIG_FILE_INTERNAL}"; then
-                    # Check with SHA256 if its the right thing
-                    log_info "GPG Signature OK"
-
-
-                    # decrypt sig file to tar file
-                    TAR_FILE_PATH="$SELFCHECK_DIR${TAR_FILE_BASE}"
-                    log_info "Unpack ${SIG_FILE_INTERNAL} to ${TAR_FILE_PATH}"
-                    gpg --output "$TAR_FILE_PATH" --decrypt "${SIG_FILE_INTERNAL}"
-
-                    # unpack tar file
-                    log_info "Unpack $TAR_FILE_PATH"
-                    CMD="tar -xzpf ${TAR_FILE_PATH} -C ${SELFCHECK_DIR}"
-                    runuser -l pi -c "$CMD"
-
-                    #/etc/systemd/system/usb_mount_manager_add.service
-                    if [ -f "${SELFCHECK_FILE}" ]; then
-                        # start selfcheck_start in new process
-                        LAUNCH="${SELFCHECK_FILE} ${LOG_FILE} ${SELFCHECK_DIR} ${USB_ROOT}"
-
-                        if [ -f "/etc/systemd/system/usb_mount_manager_add.service" ]; then
-                            log_info "Kicking off payload start script: '${LAUNCH}'"
-                            CMD="/bin/bash ${LAUNCH}"
-                            runuser -l pi -c "$CMD" &>> $LOG_FILE
-                        else
-                            # legacy. first few Mr Beam 2 devices need this since mount_manager is not
-                            log_info "Kicking off payload start script: '${LAUNCH}' using legacy 'at'"
-                            CMD="echo '/bin/bash ${LAUNCH}' | at now"
-                            runuser -l pi -c "$CMD"
-                        fi
-                     else
-                        log_warn "Payload start script not found: '${SELFCHECK_FILE}'"
-                    fi
-
-                else
-                    log_warn "GPG Signature INCORRECT after copying file to internal storage."
-                fi
-            else
-                log_warn "GPG Signature INCORRECT! Not handling file."
-            fi # and first gpg-check
+        if [ $? -ne 0 ]; then
+            log_warn "Not supported file system: ${arr_plugged_in_type[i]}" "${OCTOPRINT_LOG}"
+            signal_alert "flash_blue"
         else
-            log_info "GPG Signature: No SIG_FILE found on USB Device, normal mount done"
-            #TODO unmount
+            log_info "Detected plugged in device with supported filesystem '${arr_plugged_in_type[i]}'" "${OCTOPRINT_LOG}"
+            #### DO STUFF START #####
+
+            SEARCH_PATH="${MOUNT_DIR}${plugged_in_item}${SIG_DIR}"
+            unset -v SIG_FILE_EXTERNAL
+            for i in "${SEARCH_PATH}"/${SIG_FILE_PATTERN}; do
+              [[ $i -nt ${SIG_FILE_EXTERNAL} ]] && SIG_FILE_EXTERNAL=$i;
+            done
+            SIG_FILE_EXTERNAL=$(realpath "${SIG_FILE_EXTERNAL}")
+
+            SIG_FILE_INTERNAL="${SELFCHECK_DIR}/$(basename ${SIG_FILE_EXTERNAL})"
+            USB_ROOT="${MOUNT_DIR}${plugged_in_item}"
+
+            # Check if selfcheck zip file is on usb-stick
+            if [[ -e "${SIG_FILE_EXTERNAL}" ]]; then
+                SIG_FILE_SIZE_EXTERNAL=$(stat -c%s "${SIG_FILE_EXTERNAL}")
+                log_info "GPG Signature: SIG_FILE found on USB-Stick: ${SIG_FILE_EXTERNAL} of size: ${SIG_FILE_SIZE_EXTERNAL}" "${OCTOPRINT_LOG}"
+
+                if gpg --verify "${SIG_FILE_EXTERNAL}"; then
+                    log_info "GPG Signature: SIG_FILE ${SIG_FILE_EXTERNAL}: GPG Signature OK, handling file..."
+
+                    # create selfcheck_dir
+                    if [[ -d $SELFCHECK_DIR ]]; then
+                        log_warn "Director $SELFCHECK_DIR already exists. Deleting it..."
+                        rm -rf $SELFCHECK_DIR
+                    fi
+                    log_info "Create $SELFCHECK_DIR Directory"
+                    mkdir $SELFCHECK_DIR
+                    chown pi:pi $SELFCHECK_DIR
+
+
+                    log_info "Copying ${SIG_FILE_EXTERNAL} to ${SIG_FILE_INTERNAL}"
+                    cp ${SIG_FILE_EXTERNAL} ${SIG_FILE_INTERNAL}
+
+
+                    if gpg --verify "${SIG_FILE_INTERNAL}"; then
+                        # Check with SHA256 if its the right thing
+                        log_info "GPG Signature OK" "${OCTOPRINT_LOG}"
+
+                        # decrypt sig file to tar file
+                        TAR_FILE_PATH="$SELFCHECK_DIR${TAR_FILE_BASE}"
+                        log_info "Unpack ${SIG_FILE_INTERNAL} to ${TAR_FILE_PATH}"
+                        gpg --output "$TAR_FILE_PATH" --decrypt "${SIG_FILE_INTERNAL}"
+
+                        # unpack tar file
+                        log_info "Unpack $TAR_FILE_PATH"
+                        CMD="tar -xzpf ${TAR_FILE_PATH} -C ${SELFCHECK_DIR}"
+                        runuser -l pi -c "$CMD"
+
+                        #/etc/systemd/system/usb_mount_manager_add.service
+                        if [ -f "${SELFCHECK_FILE}" ]; then
+                            # start selfcheck_start in new process
+                            LAUNCH="${SELFCHECK_FILE} ${LOG_FILE} ${SELFCHECK_DIR} ${USB_ROOT} ${OCTOPRINT_LOG}"
+
+                            if [ -f "/etc/systemd/system/usb_mount_manager_add.service" ]; then
+                                log_info "Kicking off payload start script: '${LAUNCH}'"
+                                CMD="/bin/bash ${LAUNCH}"
+                                runuser -l pi -c "$CMD" &>> $LOG_FILE
+                            else
+                                # legacy. first few Mr Beam 2 devices need this since mount_manager is not
+                                log_info "Kicking off payload start script: '${LAUNCH}' using legacy 'at'"
+                                CMD="echo '/bin/bash ${LAUNCH}' | at now"
+                                runuser -l pi -c "$CMD"
+                            fi
+                        else
+                            log_warn "Payload start script not found: '${SELFCHECK_FILE}'" "${OCTOPRINT_LOG}"
+                            signal_alert "flash_red"
+                        fi
+
+                    else
+                        log_warn "GPG Signature INCORRECT after copying file to internal storage." "${OCTOPRINT_LOG}"
+                        signal_alert "flash_yellow"
+                    fi
+                else
+                    log_warn "GPG Signature INCORRECT! Not handling file." "${OCTOPRINT_LOG}"
+                    signal_alert "flash_yellow"
+                fi # and first gpg-check
+            else
+                log_warn "GPG Signature: No SIG_FILE found on USB Device, normal mount done" "${OCTOPRINT_LOG}"
+                signal_alert "${FLASH_PURPLE}"
+                #TODO unmount
+            fi
+
+            #### DO STUFF END #####
         fi
-
-        #### DO STUFF END #####
-
     fi
     ((++i))
 done

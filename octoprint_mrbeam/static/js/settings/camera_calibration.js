@@ -102,7 +102,7 @@ $(function () {
 					return;
 				}
 
-			if(self.calibrationComplete() || !self.calibrationActive()) return;
+			// if(self.calibrationComplete() || !self.calibrationActive()) return;
 
 			// save current stepResult
 			var step = self.calibrationMarkers[self.currentMarker];
@@ -317,8 +317,8 @@ $(function () {
 		self.saveMarkersSuccess = function (response) {
 			self.calibrationActive(false);
 			new PNotify({
-				title: gettext("Calibration finished."),
-				text: gettext("Cool, eh?"),
+				title: gettext("Camera Calibrated."),
+				text: gettext("Camera calibration was successful."),
 				type: "success",
 				hide: true
 			});

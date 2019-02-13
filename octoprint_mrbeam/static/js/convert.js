@@ -44,6 +44,8 @@ $(function(){
 		self.vectorJobs = ko.observableArray([]);
 		self.show_line_color_mappings = ko.observable(false);
 
+		self.engraveOnlyForced = false;
+
 		// material menu
 		self.material_settings2 = {
 			'Anodized Aluminum': {
@@ -94,7 +96,7 @@ $(function(){
 				}
 			},
 			'Cardboard, corrugated single wave': {
-				name: 'Cardboard, corrugated single wave',
+				name: 'Cardboard, single wave',
 				img: 'cardboard_single_wave.jpg',
 				description: 'Ordinary cardboard like most packaging is made of.',
 				hints: 'Engraving looks great if just the first layer is lasered away, that the wave is visible underneath.',
@@ -113,7 +115,7 @@ $(function(){
 				}
 			},
 			'Cardboard, corrugated double wave': {
-				name: 'Cardboard, corrugated double wave',
+				name: 'Cardboard, double wave',
 				img: 'cardboard_double_wave.jpg',
 				description: 'Ordinary cardboard like strong packaging is made of.',
 				hints: 'Engraving looks great if just the first layer is lasered away, that the wave is visible underneath.',
@@ -1135,7 +1137,6 @@ $(function(){
 		};
 
 		self._isValidVectorSetting = function(intensity, feedrate, passes, pierce_time){
-		    console.log(intensity)
 			if(intensity === '' || intensity > 100 || intensity < 0) return false;
 			if(feedrate === '' || feedrate > self.maxSpeed() || feedrate < self.minSpeed()) return false;
 			if(passes === '' || passes <= 0) return false;
@@ -1157,9 +1158,8 @@ $(function(){
 				"dithering" : self.imgDithering(),
 				"beam_diameter" : parseFloat(self.beamDiameter()),
 				"pierce_time": parseInt(self.engravingPiercetime()),
-
 				"engraving_mode": $('#svgtogcode_img_engraving_mode > .btn.active').attr('value'),
-        "line_distance": $('#svgtogcode_img_line_dist').val()
+                "line_distance": $('#svgtogcode_img_line_dist').val()
 			};
 			return data;
 		};
@@ -1173,6 +1173,41 @@ $(function(){
 			};
 			return data;
 		};
+
+		self.get_design_files_info = function () {
+		    /**
+             * Get information about the design files that are going to be lasered.
+             * @return {Object} The information about the design files.
+             */
+		    let data = [];
+		    let placedDesigns = self.workingArea.placedDesigns();
+            for (let i = 0; i < placedDesigns.length; i++) {
+                let currentDesign = placedDesigns[i];
+
+                let dim_x = $('#' + currentDesign.id).find('.horizontal').val();
+                let dim_y = $('#' + currentDesign.id).find('.vertical').val();
+
+                let typePath = currentDesign.typePath;
+                let format = typePath[typePath.length - 1];
+
+                let sub_format;
+                if (format === "image") {
+                    let file_name = $('#' + currentDesign.id).find('.title').text();
+                    sub_format = file_name.split('.').pop(-1).toLowerCase();
+                }
+
+                let size = currentDesign.size;
+
+                data.push({
+                    dim_x: dim_x,
+                    dim_y: dim_y,
+                    format: format,
+                    sub_format: sub_format,
+                    size: size
+                });
+            }
+			return data;
+        };
 
 		self.is_advanced_settings_checked = function () {
             const advancedSettingsCb = $('#parameter_assignment_show_advanced_settings_cb');
@@ -1193,10 +1228,43 @@ $(function(){
 			}
 		});
 
+
+		self._allJobsSkipped = function(){
+		    /**
+             * Check if all the jobs (engraving+cutting) were set to be skipped.
+             * @return {boolean} Indicator of all jobs having been moved to the "Skip" area.
+             */
+		    let allSkipped;
+
+		    // Check if there is a job to be skipped
+            if ($('#no_job .color_drop_zone').children().length > 0) {
+                allSkipped = true;
+
+                //Check if there is also an engraving or cutting job
+                if ($('#engrave_job .color_drop_zone').children(':visible').length > 0) {
+                    allSkipped = false;
+                } else {
+                    let vector_jobs = $('.job_row_vector');
+                    for (let i = 0; i < vector_jobs.length; i++) {
+                        const vjob = vector_jobs[i];
+                        const colorDrops = $(vjob).find('.color_drop_zone');
+
+                        if (colorDrops.children().length > 0) {
+                            allSkipped = false;
+                        }
+                    }
+                }
+            } else {
+                allSkipped = false;
+            }
+
+            return allSkipped
+        };
+
 		self._validJobForMaterial = function() {
             /**
              * Check if the selected designs can be engraved/cut in the selected material.
-             * @return {boolean} the validity of the designs for the material.
+             * @return {boolean} The validity of the designs for the material.
              */
 		    let validCut = false;
 		    let validEng = false;
@@ -1218,6 +1286,112 @@ $(function(){
 			let validJob = validCut || validEng;
 
             return validJob
+        };
+
+		self.moveJobsToEngravingEngraveModeSelected = function(thickness) {
+            /**
+             * Move all cutting jobs to engraving when the user selects "Engrave only"
+             * @param thickness The object with the user selected thickness
+             */
+            if (thickness.thicknessMM === -1) {
+                self.forceEngraveOnly();
+            } else {
+                if (self.engraveOnlyForced) {
+                    self.undoForceEngraveOnly();
+                }
+            }
+
+        };
+
+		self.moveJobsToEngravingColorDefaultOption = function(color) {
+            /**
+             * Move all cutting jobs to engraving when the selected color in a material does not have cutting parameters
+             * @param color The object with the user selected color
+             */
+            if (!self.engraveOnlyForced) {
+                let hasCut = false;
+                let material = self.selected_material();
+
+                if (color in material .colors && material.colors[color].cut.length > 0) {
+                    hasCut = true;
+                }
+
+                if (!hasCut) {
+                    self.forceEngraveOnly();
+                }
+            } else {
+                self.undoForceEngraveOnly();
+            }
+        };
+
+        self.moveJobsToEngravingDefaultOption = function(material) {
+            /**
+             * Move all cutting jobs to engraving when the material does not have cutting parameters
+             * @param material The object with the user selected material
+             */
+            if (!self.engraveOnlyForced) {
+                let colors = material.colors;
+                let hasCut = false;
+
+                for (let i = 0; i < Object.keys(colors).length; i++) {
+                    let color = Object.keys(colors)[i];
+                    if (colors[color].cut.length > 0) {
+                        hasCut = true;
+                    }
+                }
+
+                if (!hasCut) {
+                    self.forceEngraveOnly();
+                }
+            } else {
+                self.undoForceEngraveOnly();
+            }
+        };
+
+		self.forceEngraveOnly = function() {
+		    /**
+             * Move all the jobs from cutting to engraving
+             */
+		    console.log('Force engrave only');
+		    self.engraveOnlyForced = true;
+
+            let vector_jobs = $('.job_row_vector');
+            for (let i = 0; i < vector_jobs.length; i++) {
+                let vjob = vector_jobs[i];
+                let colorDrops = $(vjob).find('.color_drop_zone');
+
+                let jobs = colorDrops.children();
+                let numJobs = jobs.length;
+                for (let j = 0; j < numJobs; j++) {
+                    let cuttingJob = jobs[j];
+                    let moveCut = ($(cuttingJob)).detach();
+                    ($('#engrave_job > .span3 > .color_drop_zone')).append(moveCut);
+                    console.log('Cutting job: ' + cuttingJob.id);
+                }
+            }
+
+            ko.dataFor(document.getElementById("dialog_vector_graphics_conversion"))._update_color_assignments();
+        };
+
+		self.undoForceEngraveOnly = function() {
+		    /**
+             * Move all the jobs from engraving to cutting (except '#cd_engraving')
+             */
+		    console.log('Undo force engrave only');
+            self.engraveOnlyForced = false;
+
+		    let engraving_jobs = $('#engrave_job .color_drop_zone').children(':visible');
+
+		    let numJobs = engraving_jobs.length;
+            for (let j = 0; j < numJobs; j++) {
+                let engravingJob = engraving_jobs[j];
+                if (engravingJob.id !== 'cd_engraving') {
+                    let moveEng = ($(engravingJob)).detach();
+                    ($('#first_job > .span3 > .color_drop_zone')).append(moveEng);
+                }
+            }
+
+            ko.dataFor(document.getElementById("dialog_vector_graphics_conversion"))._update_color_assignments();
         };
 
 		self._allParametersSet = function(){
@@ -1288,22 +1462,34 @@ $(function(){
 		self.convert = function() {
 			if(self.gcodeFilesToAppend.length === 1 && self.svg === undefined) {
                 self.files.startGcodeWithSafetyWarning(self.gcodeFilesToAppend[0]);
+            } else if (self._allJobsSkipped()) {
+			    const message = "There is nothing to laser, all jobs are set to be skipped.";
+
+			    $('#empty_job_support_link').hide();
+			    $('#empty_job_modal').find('.modal-body p').text(message);
+                $('#empty_job_modal').modal('show');
+
             } else if (!self._validJobForMaterial()) {
-			    let job;
 			    let valid;
 			    if (self.has_cutting_proposal()) {
-			        job = "cut";
-			        valid = "engraving";
+			        valid = "engraved";
                 } else {
-			        job = "engraved";
-			        valid = "cutting";
+			        valid = "cut";
                 }
-                const message = "Sorry, but the selected design can't be " + job + " in " +
-                    self.selected_material().name + ". It only works for " + valid +
+			    let designType;
+			    if (self.workingArea.hasTextItems()) {
+			        designType = 'Quick Text'
+                } else {
+			        designType = 'selected design';
+			        $('#empty_job_support_link').hide();
+                }
+
+                const message = "Sorry but the " + designType + " can only be " + valid +
                     ", which is not supported for this material.";
 
-			    $('#conversion_material_design_error').find('.modal-body').text(message);
-                $('#conversion_material_design_error').modal('show');
+			    $('#empty_job_support_link').show();
+			    $('#empty_job_modal').find('.modal-body p').text(message);
+                $('#empty_job_modal').modal('show');
 			} else {
 				if(self._allParametersSet()){
 					//self.update_colorSettings();
@@ -1320,6 +1506,7 @@ $(function(){
 						var advancedSettings = self.is_advanced_settings_checked();
 						var colorStr = '<!--COLOR_PARAMS_START' +JSON.stringify(multicolor_data) + 'COLOR_PARAMS_END-->';
 						var material = self.get_current_material_settings();
+						var design_files = self.get_design_files_info();
 						var data = {
 							command: "convert",
 							engrave: self.do_engrave(),
@@ -1328,6 +1515,7 @@ $(function(){
 							slicer: "svgtogcode",
 							gcode: gcodeFilename,
                             material: material,
+                            design_files: design_files,
                             advanced_settings: advancedSettings
 						};
 

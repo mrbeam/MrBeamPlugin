@@ -37,7 +37,7 @@
 							</form>
 							<ul id="material_list" data-bind="foreach: filteredMaterials">
 								<li class='material_entry hover_shadow'
-									data-bind="click: function(vm, event){$root.set_material($data, event);},
+									data-bind="click: function(vm, event){$root.set_material($data, event); $root.moveJobsToEngravingDefaultOption($data)},
 												style: { backgroundImage: 'url(\'/plugin/mrbeam/static/img/materials/' + $data.img + '\')' },
 												css: {selected: $root.selected_material() === $data, custom: $data.custom === true }
 									">
@@ -57,7 +57,7 @@
 						<label >Color</label>
 						<ul id="color_list" data-bind="foreach: material_colors">
 							<li class='material_color_entry hover_shadow' data-bind="
-								click: function(vm, event){ $root.set_material_color($data, event); },
+								click: function(vm, event){ $root.set_material_color($data, event); $root.moveJobsToEngravingColorDefaultOption($data)},
 								attr: {id: 'material_color_'+$data },
 								css: {active: $data === $root.selected_material_color() },
 								visible: ($root.selected_material_color() === null) || ($root.selected_material_color() === $data),
@@ -75,7 +75,7 @@
 						<div id="thickness_list" data-bind="foreach: material_thicknesses">
 							<div class="thickness_sample hover_shadow"
 								 data-bind="
-										click: function(vm, event){ $root.set_material_thickness($data, event); },
+										click: function(vm, event){ $root.set_material_thickness($data, event); $root.moveJobsToEngravingEngraveModeSelected($data)},
 										attr: {id: 'material_thickness_'+$data.thicknessMM },
 										css: {active: $root.isThicknessObjEqual($data, $root.selected_material_thickness(), 'active_name'), engrave_only: $data.thicknessMM == -1 },
 {#										css: {active: _.isEqual($data, $root.selected_material_thickness()), engrave_only: $data.thicknessMM == -1 },#}
@@ -404,17 +404,22 @@
 					visible: !slicing_in_progress(),
 					css: {disabled: !$root.enableConvertButton()}">{{ _('Start') }}</a>
     </div>
-    <!-- Modal -->
-    <div id="conversion_material_design_error" class="modal hide fade" tabindex="-1" role="dialog"
-         aria-labelledby="conversion_material_design_error_label" aria-hidden="true">
+    <!-- Empty job modal -->
+    <div id="empty_job_modal" class="modal hide fade" tabindex="-1" role="dialog"
+         aria-labelledby="empty_job_label" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                    <h3 id="conversion_material_design_error_label">Empty job</h3>
+                    <h3 id="empty_job_label">Settings to be adjusted</h3>
                 </div>
                 <div class="modal-body">
                     <p></p>
+                    <a id="empty_job_support_link" href="https://mr-beam.freshdesk.com/en/support/solutions/articles/43000035378-how-can-i-cut-out-a-lettering-mr-beam-ii-only-shows-me-the-option-to-engrave-"
+                       target="_blank" style="float: right">
+                        <i class="icon-external-link icon-large" style="margin-right: .3em"></i>Learn how to cut out lettering
+                    </a>
+
                 </div>
                 <div class="modal-footer">
                     <button class="btn" data-dismiss="modal" aria-hidden="true">Ok</button>
