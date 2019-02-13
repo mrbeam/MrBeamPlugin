@@ -11,7 +11,6 @@ $(function() {
         self.is_job_done = ko.observable(false);
         self.is_dust_mode = ko.observable(false);
         self.job_duration = ko.observable(0);
-        self.is_dev_mode = ko.observable(false);
         self.job_duration_formatted = ko.computed(function(){
             if (self.job_duration() < 0) {
                 return '--:--:--'
