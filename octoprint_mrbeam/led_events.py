@@ -1,12 +1,17 @@
 
 
 import threading
+from distutils.version import StrictVersion
 from octoprint.events import Events, CommandTrigger, GenericEventListener
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
 
 class LedEventListener(CommandTrigger):
+
+	WIFI_CHECK_INTERVAL = 1.0
+	VERSION_MIN_FINDMRBEAM = StrictVersion("0.2.0")
+
 
 	LED_EVENTS = {}
 	LED_EVENTS[Events.STARTUP] = "mrbeam_ledstrips_cli listening"
@@ -51,8 +56,8 @@ class LedEventListener(CommandTrigger):
 	LED_EVENTS[MrBeamEvents.SHUTDOWN_PREPARE_SUCCESS] = "mrbeam_ledstrips_cli Shutdown"
 	LED_EVENTS[Events.SHUTDOWN] = "mrbeam_ledstrips_cli Shutdown"
 
-	WIFI_CHECK_INTERVAL = 1.0
 
+	# LISTENING COMMANDS for breathing in different colors
 	COMMAND_LISTENING_FINDMRBEAM =   "mrbeam_ledstrips_cli listening_findmrbeam"
 	COMMAND_LISTENING_AP_AND_NET =   "mrbeam_ledstrips_cli listening_ap_and_net"
 	COMMAND_LISTENING_NET =          "mrbeam_ledstrips_cli listening_net"
@@ -125,8 +130,11 @@ class LedEventListener(CommandTrigger):
 		           findmrbeam=None)
 		try:
 			pluginInfo = _mrbeam_plugin_implementation._plugin_manager.get_plugin_info("findmymrbeam")
-			if pluginInfo is not None:
+			if pluginInfo is not None and StrictVersion(pluginInfo.version) >= self.VERSION_MIN_FINDMRBEAM:
 				res['findmrbeam'] = pluginInfo.implementation.is_registered()
+			else:
+				# we know we can't read find state, so we must assume false
+				res['findmrbeam'] = False
 		except Exception as e:
 			self._logger.exception("Exception while reading is_registered state from findmymrbeam:")
 
