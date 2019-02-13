@@ -33,6 +33,8 @@ class MrBeamEvents(object):
 
 	DUSTING_MODE_START         = "DustingModeStart"
 
+	ANALYTICS_DATA             = "MrbAnalyticsData"
+
 
 	@classmethod
 	def register_with_octoprint(cls):
