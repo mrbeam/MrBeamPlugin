@@ -7,6 +7,7 @@ class AnalyticsKeys(object):
 	EVENT = 'e'
 	TIMESTAMP = 'ts'
 	NTP_SYNCED = 'ntp'
+	SESSION_ID = 'sid'
 	TIMESTRING = 'timestring'
 	DATA = 'data'
 	SOFTWARE_TIER = 'sw_tier'

@@ -6,6 +6,7 @@ import netifaces
 import sys
 import fileinput
 import re
+import uuid
 
 from datetime import datetime
 from value_collector import ValueCollector
@@ -22,7 +23,7 @@ _instance = None
 def analyticsHandler(plugin):
 	global _instance
 	if _instance is None:
-		_instance = AnalyticsHandler(plugin._event_bus, plugin._settings)
+		_instance = AnalyticsHandler(plugin)
 	return _instance
 
 def existing_analyticsHandler():
@@ -39,14 +40,17 @@ class AnalyticsHandler(object):
 	DELETE_FILES_AFTER_UPLOAD = True
 
 
-	def __init__(self, event_bus, settings):
-		self._event_bus = event_bus
-		self._settings = settings
+	def __init__(self, plugin):
+		self._plugin = plugin
+		self._event_bus = plugin._event_bus
+		self._settings = plugin._settings
 
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.analyticshandler")
 
 		self._analyticsOn = self._settings.get(['analyticsEnabled'])
 		self._camAnalyticsOn = self._settings.get(['analytics','cam_analytics'])
+
+		self._session_id = "{uuid}@{serial}".format(serial=self._plugin.getSerialNum(), uuid=uuid.uuid4().hex)
 
 		self._current_job_id = None
 		self._isJobPaused = False
@@ -68,7 +72,7 @@ class AnalyticsHandler(object):
 
 		self.event_waiting_for_terminal_dump = None
 
-		self._logger.info("Analytics user permission: analyticsEnabled=%s", self._analyticsOn)
+		self._logger.info("Analytics analyticsEnabled: %s, sid: %s", self._analyticsOn, self._session_id)
 
 		self.analyticsfolder = os.path.join(self._settings.getBaseFolder("base"), self._settings.get(['analytics','folder']))
 		if not os.path.isdir(self.analyticsfolder):
@@ -431,7 +435,9 @@ class AnalyticsHandler(object):
 			ak.VERSION: self._jobevent_log_version,
 			ak.EVENT: eventname,
 			ak.TIMESTAMP: time.time(),
-			ak.JOB_ID: None
+			ak.JOB_ID: None,
+			ak.NTP_SYNCED: _mrbeam_plugin_implementation.is_time_ntp_synced(),
+			ak.SESSION_ID: self._session_id
 		}
 		if payload is not None:
 			data.update(payload)
@@ -535,7 +541,8 @@ class AnalyticsHandler(object):
 				ak.VERSION: version,
 				ak.EVENT: eventname,
 				ak.TIMESTAMP: time.time(),
-				ak.NTP_SYNCED: _mrbeam_plugin_implementation.is_time_ntp_synced()
+				ak.NTP_SYNCED: _mrbeam_plugin_implementation.is_time_ntp_synced(),
+				ak.SESSION_ID: self._session_id
 			}
 			if payload is not None:
 				data.update(payload)
