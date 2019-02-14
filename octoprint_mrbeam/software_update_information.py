@@ -11,6 +11,9 @@ SW_UPDATE_TIER_DEV =       "DEV"
 SW_UPDATE_TIER_DEMO =      "DEMO"
 SW_UPDATE_TIER_NO_UPDATE = "NO_UPDATE"
 
+# add to the display name to modules that should be shown at the top of the list
+SORT_UP_PREFIX = ' '
+
 sw_update_config = dict()
 
 def get_modules():
@@ -36,6 +39,7 @@ def get_update_information(self):
 		set_info_netconnectd_daemon(self, tier)
 		set_info_iobeam(self, tier)
 		set_info_camera_calibration(self, tier)
+		set_info_mrb_hw_info(self, tier)
 		set_info_rpiws281x(self, tier)
 		# set_info_testplugin(self, tier) # See function definition for more details
 
@@ -64,7 +68,7 @@ def set_info_mrbeam_plugin(self, tier):
 	if _is_override_in_settings(self, module_id): return
 
 	sw_update_config[module_id] = dict(
-		displayName=_get_display_name(self, name),
+		displayName=SORT_UP_PREFIX + _get_display_name(self, name),
 		displayVersion=self._plugin_version,
 		type="github_commit", # "github_release",
 		user="mrbeam",
@@ -76,7 +80,7 @@ def set_info_mrbeam_plugin(self, tier):
 
 	if tier in [SW_UPDATE_TIER_DEV]:
 		sw_update_config[module_id] = dict(
-			displayName=_get_display_name(self, name),
+			displayName=SORT_UP_PREFIX + _get_display_name(self, name),
 			displayVersion=self._plugin_version,
 			type="github_commit",
 			user="mrbeam",
@@ -88,7 +92,7 @@ def set_info_mrbeam_plugin(self, tier):
 
 	if tier in [SW_UPDATE_TIER_DEMO]:
 		sw_update_config[module_id] = dict(
-			displayName=_get_display_name(self, name),
+			displayName=SORT_UP_PREFIX + _get_display_name(self, name),
 			displayVersion=self._plugin_version,
 			type="github_commit",
 			user="mrbeam",
@@ -329,6 +333,50 @@ def set_info_camera_calibration(self, tier):
 			restart="octoprint"
 		)
 
+def set_info_mrb_hw_info(self, tier):
+	name = "mrb_hw_info"
+	module_id = "mrb_hw_info"
+	# this module is installed outside of our virtualenv therefor we can't use default pip command.
+	# /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
+	pip_command = "sudo /usr/local/bin/pip"
+	pip_name = "mrb-hw-info"
+
+	if _is_override_in_settings(self, module_id): return
+
+	version = get_version_of_pip_module(self, pip_name, pip_command)
+	# if version is None: return
+
+	sw_update_config[module_id] = dict(
+		displayName=_get_display_name(self, name),
+		displayVersion=version,
+		type="bitbucket_commit",
+		user="mrbeam",
+		repo="mrb_hw_info",
+		branch="mrbeam2-stable",
+		branch_default="mrbeam2-stable",
+		api_user="MrBeamDev",
+		api_password="v2T5pFkmdgDqbFBJAqrt",
+		pip="git+ssh://git@bitbucket.org/mrbeam/mrb_hw_info.git@{target_version}",
+		pip_command=pip_command,
+		restart="environment"
+	)
+
+	if tier in [SW_UPDATE_TIER_DEV]:
+		sw_update_config[module_id] = dict(
+			displayName=_get_display_name(self, name),
+			displayVersion=version,
+			type="bitbucket_commit",
+			user="mrbeam",
+			repo="mrb_hw_info",
+			branch="develop",
+			branch_default="develop",
+			api_user="MrBeamDev",
+			api_password="v2T5pFkmdgDqbFBJAqrt",
+			pip="git+ssh://git@bitbucket.org/mrbeam/mrb_hw_info.git@{target_version}",
+			pip_command=pip_command,
+			restart="environment"
+		)
+
 
 def set_info_rpiws281x(self, tier):
 	name = "rpi-ws281x"
@@ -363,10 +411,6 @@ def set_info_rpiws281x(self, tier):
 
 def _get_display_name(self, name):
 	return name
-	# if tier is not None and not tier == SW_UPDATE_TIER_PROD:
-	# 	return "{} ({})".format(name, tier)
-	# else:
-	# 	return name
 
 
 def _is_override_in_settings(self, module_id):
