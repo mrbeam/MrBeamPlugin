@@ -23,6 +23,7 @@ class Migration(object):
 	VERSION_GRBL_AUTO_UPDATE                 = '0.1.53'
 	VERSION_INFLATE_FILE_SYSTEM              = '0.1.51'
 	VERSION_MOUNT_MANAGER_160                = '0.1.55'
+	VERSION_PREFILL_MRB_HW_INFO              = '0.1.55'
 
 	# this is where we have files needed for migrations
 	MIGRATE_FILES_FOLDER     = 'files/migrate/'
@@ -85,6 +86,9 @@ class Migration(object):
 
 				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_INFLATE_FILE_SYSTEM, equal_ok=False):
 					self.inflate_file_system()
+
+				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_PREFILL_MRB_HW_INFO, equal_ok=False):
+					self.prefill_software_update_for_mrb_hw_info()
 
 				# migrations end
 
@@ -318,6 +322,17 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 	def inflate_file_system(self):
 		self._logger.info("inflate_file_system() ")
 		exec_cmd("sudo resize2fs -p /dev/mmcblk0p2")
+
+
+	def prefill_software_update_for_mrb_hw_info(self):
+		from software_update_information import get_version_of_pip_module
+		vers = get_version_of_pip_module("mrb-hw-info", "sudo /usr/local/bin/pip")
+		if StrictVersion(vers) == StrictVersion('0.0.19'):
+			self._logger.info("prefill_software_update_for_mrb_hw_info() mrb-hw-info is %s, setting commit hash", vers)
+			self.plugin._settings.global_set(['plugins', 'softwareupdate', 'checks', 'mrb_hw_info', 'current'], '15dfcc2c74608adb8f07a7ea115078356f4bb09c', force=True)
+		else:
+			self._logger.info("prefill_software_update_for_mrb_hw_info() mrb-hw-info is %s, no changes to settings done.", vers)
+
 
 
 
