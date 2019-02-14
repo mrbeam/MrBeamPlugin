@@ -376,10 +376,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# template, using the render_kwargs as provided by OctoPrint
 		from flask import make_response, render_template, g
 
-		self._track_calls(request)
-
 		firstRun = render_kwargs['firstRun']
 		language = g.locale.language if g.locale else "en"
+
+		self._track_ui_render_calls(request, language)
 
 		enable_accesscontrol = self._user_manager.enabled
 		accesscontrol_active = enable_accesscontrol and self._user_manager.hasBeenCustomized()
@@ -448,14 +448,18 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return r
 
 
-	def _track_calls(self, request):
-		my_call = dict(host=request.host,
-		               ref=request.referrer,
-		               remote_ip=request.headers.get("X-Forwarded-For"))
-		if not my_call in self.called_hosts:
-			self.called_hosts.append(my_call)
-			self._logger.info("First call received from: %s", my_call)
-			self._logger.info("All unique calls: %s", self.called_hosts)
+	def _track_ui_render_calls(self, request, language):
+		remote_ip = request.headers.get("X-Forwarded-For")
+		if remote_ip is not None:
+			my_call = dict(host=request.host,
+			               ref=request.referrer,
+			               remote_ip=remote_ip,
+			               language=language)
+			if not my_call in self.called_hosts:
+				self.called_hosts.append(my_call)
+				self._logger.info("First call received from: %s", my_call)
+				self._logger.info("All unique calls: %s", self.called_hosts)
+			self._analytics_handler.log_ui_render_calls(host=my_call['host'], remote_ip=my_call['remote_ip'], referrer=my_call['ref'], language=language)
 
 	##~~ TemplatePlugin mixin
 
@@ -1556,6 +1560,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._logger.error("on_event() Error Event! Message: %s", payload['error'])
 
 		if event == OctoPrintEvents.CLIENT_OPENED:
+			self._analytics_handler.log_client_opened(payload.get('remoteAddress', None))
 			self._replay_stored_frontend_notification()
 
 	def fire_event(self, event, payload=None):

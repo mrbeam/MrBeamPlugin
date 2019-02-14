@@ -23,6 +23,7 @@ class AnalyticsKeys(object):
 	DEVICE_EVENT = 'device'
 	CAM_EVENT = 'cam'
 	LOG_EVENT = 'log'
+	CONNECTIVITY_EVENT = 'connectivity'
 
 	### DEVICE KEYS ###
 	HOSTNAME = 'hostname'
@@ -99,3 +100,17 @@ class AnalyticsKeys(object):
 	PIC_EVENT = 'pic'
 	PIC_PREP = 'pic_prep'
 	CAM_SESSION_ID = 'cs_id'
+
+
+	### CONNECTIVITY ###
+	EVENT_UI_RENDER_CALL =          'ui_render_call'
+	EVENT_CLIENT_OPENED =           'client_opened'
+	VERSION_FINDMYMRBEAM_PLUGIN =   'version_findmymrbeam_plugin'
+
+
+
+
+
+
+
+

@@ -69,6 +69,7 @@ class AnalyticsHandler(object):
 		self._logevent_version = 1
 		self._dust_log_version = 2
 		self._cam_event_log_version = 2
+		self._connectivity_event_log_version = 1
 
 		self.event_waiting_for_terminal_dump = None
 
@@ -120,6 +121,7 @@ class AnalyticsHandler(object):
 		self._event_bus.subscribe(MrBeamEvents.LASER_JOB_DONE, self._event_laser_job_done)
 		self._event_bus.subscribe(OctoPrintEvents.STARTUP, self._event_startup)
 		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self._event_shutdown)
+		self._event_bus.subscribe(MrBeamEvents.ANALYTICS_DATA, self._other_plugin_data)
 
 
 	@staticmethod
@@ -376,6 +378,42 @@ class AnalyticsHandler(object):
 				data[ak.LASERTEMP] = self._current_lasertemp_collector.get_latest_value()
 			self._write_jobevent(ak.COOLING_DONE,payload=data)
 			self._isCoolingPaused = False
+
+	def _other_plugin_data(self, event, payload):
+		try:
+			if 'plugin' in payload and 'eventname' in payload:
+				plugin = payload.get('plugin')
+				if plugin == "findmymrbeam":
+					eventname = payload.get('eventname')
+					data = payload.get('data', None)
+					self._write_event(ak.CONNECTIVITY_EVENT, eventname, self._connectivity_event_log_version, payload=dict(data=data))
+				else:
+					self._logger.warn("Unknown plugin: '%s'. payload: %s", plugin, event)
+			else:
+				self._logger.warn("Invalid payload data in event %s", event)
+		except Exception as e:
+			self._logger.error('Exception during log_ui_render_calls: {}'.format(e.message))
+
+	def log_ui_render_calls(self, host, remote_ip, referrer, language):
+		try:
+			data=dict(
+				host=host,
+				remote_ip=remote_ip,
+				referrer=referrer,
+				language=language
+			)
+			self._write_event(ak.CONNECTIVITY_EVENT, ak.EVENT_UI_RENDER_CALL, self._connectivity_event_log_version, payload=dict(data=data))
+		except Exception as e:
+			self._logger.error('Exception during log_ui_render_calls: {}'.format(e.message))
+
+	def log_client_opened(self, remote_ip):
+		try:
+			data=dict(
+				remote_ip=remote_ip
+			)
+			self._write_event(ak.CONNECTIVITY_EVENT, ak.EVENT_CLIENT_OPENED, self._connectivity_event_log_version, payload=dict(data=data))
+		except Exception as e:
+			self._logger.error('Exception during log_client_opened: {}'.format(e.message))
 
 	def write_cam_update(self,newMarkers,newCorners):
 		try:
