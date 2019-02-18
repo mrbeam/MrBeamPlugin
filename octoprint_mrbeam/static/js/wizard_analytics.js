@@ -5,16 +5,18 @@ $(function () {
         self.MY_WIZARD_TAB_NAME = "wizard_plugin_corewizard_analytics_link";
 
         self.analyticsInitialConsent = ko.observable(null);
+        self.containsAnalyticsTab = false;
 
         self.onBeforeWizardTabChange = function(next, current) {
             if (next !== self.MY_WIZARD_TAB_NAME && current === self.MY_WIZARD_TAB_NAME) {
                 let result = self._handleAnalyticsTabExit();
+                self.containsAnalyticsTab = true;
                 return result;
             }
         };
 
         self.onBeforeWizardFinish = function() {
-            if (!self.analyticsInitialConsent()) {
+            if (!self.analyticsInitialConsent() && self.containsAnalyticsTab) {
                 let result = self._handleAnalyticsTabExit();
                 return result;
             }
@@ -31,8 +33,9 @@ $(function () {
         };
 
         self.onWizardFinish = function(){
-            console.log("AnalyticsWizardViewModel onWizardFinish");
-            self.sendAnalyticsChoiceToServer();
+            if(self.containsAnalyticsTab) {
+                self.sendAnalyticsChoiceToServer();
+            }
         };
 
         self.sendAnalyticsChoiceToServer = function () {
