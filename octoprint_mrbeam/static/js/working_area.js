@@ -1107,15 +1107,17 @@ $(function(){
 			    self.check_sizes_and_placements();
 			}
 		};
-		self.imgManualContrastBrightness = function(data, event) {
+		self.imgManualAdjust = function(data, event) {
 			if (event.type === 'input' || event.type === 'blur' || event.type === 'keyUp') {
 				self.abortFreeTransforms();
 				var newContrast = $('#'+data.id+' .contrast').val(); // 0..2, 1 means no adjustment
 				var newBrightness = $('#'+data.id+' .brightness').val(); // -1..1, 0 means no adjustment
+				var newGamma = $('#'+data.id+' .gamma').val(); // // 0.2..1.8, 1 means no adjustment
 				var contrastVal = parseFloat(newContrast);
-				var brCorrection = (1 - contrastVal) / 2; // 0.5..-0.5
-				var brightnessVal = parseFloat(newBrightness) + brCorrection; // -1..1 
-				self.set_img_contrast(data.previewId, contrastVal, brightnessVal);
+				var brCorrection = (1 - contrastVal) / 2; // 0.5..-0.5 // TODO investigate if we should take gamma into account as well
+				var brightnessVal = parseFloat(newBrightness) + brCorrection;  
+				var gammaVal = parseFloat(newGamma); 
+				self.set_img_contrast(data.previewId, contrastVal, brightnessVal, gammaVal);
 			}
 		};
 		
@@ -1261,10 +1263,10 @@ $(function(){
 		self._create_img_filter = function(previewId){
 			var id = self._get_img_filter_id(previewId);
 			var str = "<feComponentTransfer class='contrast_filter' x='0%' y='0%' width='100%' height='100%' in='colormatrix' result='contrast_result'>"
-    		+ "<feFuncR type='linear' slope='1' intercept='0'/>"
-			+ "<feFuncG type='linear' slope='1' intercept='0'/>"
-			+ "<feFuncB type='linear' slope='1' intercept='0'/>"
-			+ "<feFuncA type='linear' slope='1' intercept='0'/>"
+    		+ "<feFuncR type='gamma' amplitude='1' offset='0' exponent='1'/>"
+			+ "<feFuncG type='gamma' amplitude='1' offset='0' exponent='1'/>"
+			+ "<feFuncB type='gamma' amplitude='1' offset='0' exponent='1'/>"
+			+ "<feFuncA type='identity' />"
 			+ "</feComponentTransfer>"
 			+ "<feColorMatrix class='gray_scale_filter' type='saturate' values='0' x='0%' y='0%' width='100%' height='100%' in='contrast_result' result='gray_scale'/>"
 			+ "<feConvolveMatrix class='sharpening_filter' order='3 3' kernelMatrix='0 0 0 0 1 0 0 0 0' divisor='1' bias='0' targetX='1' targetY='1' edgeMode='duplicate' preserveAlpha='true' x='0%' y='0%' width='100%' height='100%' in='gray_scale' result='sharpened'/>"
@@ -1283,14 +1285,14 @@ $(function(){
 			return "filter_" + previewId.replace('-', '__');
 		};
 		
-		self.set_img_contrast = function(previewId, contrastValue, brightnessValue){
-			if(isNaN(contrastValue) || isNaN(brightnessValue)){
+		self.set_img_contrast = function(previewId, contrastValue, brightnessValue, gammaValue){
+			if(isNaN(contrastValue) || isNaN(brightnessValue) || isNaN(gammaValue)){
 				return;
 			}
 			var filter = snap.select('#'+self._get_img_filter_id(previewId));
-			filter.select('feFuncR').attr({slope: contrastValue, intercept: brightnessValue});
-			filter.select('feFuncG').attr({slope: contrastValue, intercept: brightnessValue});
-			filter.select('feFuncB').attr({slope: contrastValue, intercept: brightnessValue});
+			filter.select('feFuncR').attr({amplitude: contrastValue, offset: brightnessValue, exponent: gammaValue});
+			filter.select('feFuncG').attr({amplitude: contrastValue, offset: brightnessValue, exponent: gammaValue});
+			filter.select('feFuncB').attr({amplitude: contrastValue, offset: brightnessValue, exponent: gammaValue});
 		};
 		
 		self.set_img_sharpen = function(previewId, value){
