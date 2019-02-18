@@ -1118,6 +1118,15 @@ $(function(){
 				self.set_img_contrast(data.previewId, contrastVal, brightnessVal);
 			}
 		};
+		
+		self.imgManualSharpen = function(data, event) {
+			if (event.type === 'input' || event.type === 'blur' || event.type === 'keyUp') {
+				self.abortFreeTransforms();
+				var newVal = $('#'+data.id+' .sharpen').val(); // 0..10, 0 means no adjustment
+				var sharpenVal = parseFloat(newVal);
+				self.set_img_sharpen(data.previewId, sharpenVal);
+			}
+		};
 
 
 		self.outsideWorkingArea = function(svg){
@@ -1251,13 +1260,15 @@ $(function(){
 		
 		self._create_img_filter = function(previewId){
 			var id = self._get_img_filter_id(previewId);
-			var str = "<feComponentTransfer x='0%' y='0%' width='100%' height='100%' in='colormatrix' result='contrast_result'>"
+			var str = "<feComponentTransfer class='contrast_filter' x='0%' y='0%' width='100%' height='100%' in='colormatrix' result='contrast_result'>"
     		+ "<feFuncR type='linear' slope='1' intercept='0'/>"
 			+ "<feFuncG type='linear' slope='1' intercept='0'/>"
 			+ "<feFuncB type='linear' slope='1' intercept='0'/>"
 			+ "<feFuncA type='linear' slope='1' intercept='0'/>"
 			+ "</feComponentTransfer>"
-			+ "<feColorMatrix type='saturate' values='0' x='0%' y='0%' width='100%' height='100%' in='contrast_result' result='colormatrix'/>";
+			+ "<feColorMatrix class='gray_scale_filter' type='saturate' values='0' x='0%' y='0%' width='100%' height='100%' in='contrast_result' result='gray_scale'/>"
+			+ "<feConvolveMatrix class='sharpening_filter' order='3 3' kernelMatrix='0 0 0 0 1 0 0 0 0' divisor='1' bias='0' targetX='1' targetY='1' edgeMode='duplicate' preserveAlpha='true' x='0%' y='0%' width='100%' height='100%' in='gray_scale' result='sharpened'/>"
+			;
 			snap.filter(str).attr({id: id});
 			return id;
 		};
@@ -1280,6 +1291,17 @@ $(function(){
 			filter.select('feFuncR').attr({slope: contrastValue, intercept: brightnessValue});
 			filter.select('feFuncG').attr({slope: contrastValue, intercept: brightnessValue});
 			filter.select('feFuncB').attr({slope: contrastValue, intercept: brightnessValue});
+		};
+		
+		self.set_img_sharpen = function(previewId, value){
+			if(isNaN(value)){
+				return;
+			}
+			var n = -value / 9.0;
+			var c = 1 + 8 * value / 9.0;
+			var matrix = [n,n,n,n,c,n,n,n,n].join(' ');
+			var filter = snap.select('#'+self._get_img_filter_id(previewId));
+			filter.select('feConvolveMatrix').attr({kernelMatrix: matrix});
 		};
 
 		self.moveSelectedDesign = function(ifX,ifY){
