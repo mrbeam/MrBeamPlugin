@@ -33,8 +33,9 @@ $(function () {
         };
 
         self.onWizardFinish = function(){
-            console.log("AnalyticsWizardViewModel onWizardFinish");
-            self.sendAnalyticsChoiceToServer();
+            if(self.containsAnalyticsTab) {
+                self.sendAnalyticsChoiceToServer();
+            }
         };
 
         self.sendAnalyticsChoiceToServer = function () {
