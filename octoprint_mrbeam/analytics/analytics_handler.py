@@ -166,17 +166,27 @@ class AnalyticsHandler(object):
 			self._activate_analytics()
 			self._write_deviceinfo(ak.ANALYTICS_ENABLED, payload=dict(enabled=True))
 		else:
+			# can not log this since the user just disagreed
 			# self._write_deviceinfo(ak.ANALYTICS_ENABLED, payload=dict(enabled=False))
 			self._analyticsOn = False
 			self._settings.set_boolean(["analyticsEnabled"], False)
 
-	def log_event(self, level, msg, caller=None, exception_str=None, stacktrace=None, wait_for_terminal_dump=False):
+	def log_event(self, level, msg,
+	              module=None,
+	              component=None,
+	              component_version=None,
+	              caller=None,
+	              exception_str=None,
+	              stacktrace=None,
+	              wait_for_terminal_dump=False):
 		filename = caller.filename.replace(__package_path__ + '/', '')
-		payload = {
-			'level': logging._levelNames[level] if level in logging._levelNames else level,
-			'msg': msg,
-			ak.VERSION_MRBEAM_PLUGIN: _mrbeam_plugin_implementation._plugin_version
-		}
+		payload = dict(
+			level= logging._levelNames[level] if level in logging._levelNames else level,
+			msg= msg,
+			module=module,
+			component= component or _mrbeam_plugin_implementation._identifier,
+			component_version= component_version or _mrbeam_plugin_implementation._plugin_version
+		)
 		if exception_str:
 			payload['level'] = ak.EXCEPTION
 		if caller is not None:

@@ -30,7 +30,8 @@ class MrbLogger(object):
 	def __init__(self, id, ignorePrinter=False):
 		global _printer
 		self.logger = logging.getLogger(id)
-		self.id = self._shorten_id(id)
+		self.id = id
+		self.id_short = self._shorten_id(id)
 		self.my_buffer = []
 		# TODO: this line overrides logging.yaml!!!
 		self.logger.setLevel(logging.DEBUG)
@@ -100,7 +101,7 @@ class MrbLogger(object):
 		global _printer
 
 		date = self._getDateString()
-		id = kwargs.pop('id', self.id)
+		id = kwargs.pop('id', self.id_short)
 
 		level = logging._levelNames[level] if level in logging._levelNames else level
 
@@ -145,9 +146,12 @@ class MrbLogger(object):
 				analytics_handler.log_event(
 					level,
 					msg,
-					caller,
-					exception_str,
-					stacktrace,
+					module = self.id,
+					component = _mrbeam_plugin_implementation._identifier,
+					component_version = _mrbeam_plugin_implementation._plugin_version,
+					caller=caller,
+					exception_str=exception_str,
+					stacktrace=stacktrace,
 					wait_for_terminal_dump=kwargs.get('terminal_dump', False))
 			except:
 				self.logger.exception("Exception in _analytics_log_event: ")
