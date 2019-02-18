@@ -1297,6 +1297,11 @@ $(function(){
 			if(isNaN(value)){
 				return;
 			}
+			// 3x3 matrix (1px radius) looks like this:
+			// -i/9  -i/9  -i/9
+			// -i/9 1+8i/9 -i/9
+			// -i/9  -i/9  -i/9
+			// i is the intensity factor: 0..40, 0 means identity projection.
 			var n = -value / 9.0;
 			var c = 1 + 8 * value / 9.0;
 			var matrix = [n,n,n,n,c,n,n,n,n].join(' ');
