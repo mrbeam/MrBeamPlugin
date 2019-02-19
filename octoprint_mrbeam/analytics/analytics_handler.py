@@ -386,20 +386,30 @@ class AnalyticsHandler(object):
 			self._write_jobevent(ak.COOLING_DONE,payload=data)
 			self._isCoolingPaused = False
 
-	def _other_plugin_data(self, event, payload):
+	def _other_plugin_data(self, event, event_payload):
 		try:
-			if 'plugin' in payload and 'eventname' in payload:
-				plugin = payload.get('plugin')
+			if 'component' in event_payload and 'type' in event_payload and 'component_version' in event_payload:
+				component = event_payload.get('component')
+				type = event_payload.get('type')
+				if type == ak.EVENT_LOG:
+					data = event_payload.get('data', dict())
+					data['component'] = component
+					data['component_version'] = event_payload.get('component_version')
+					self._write_event(ak.TYPE_LOG_EVENT, ak.EVENT_LOG, self._logevent_version, payload=dict(data=data))
+				else:
+					self._logger.warn("Unknown type: '%s' from component %s. payload: %s", type, component, event_payload)
+			elif 'plugin' in event_payload and 'eventname' in event_payload:
+				plugin = event_payload.get('plugin')
 				if plugin == "findmymrbeam":
-					eventname = payload.get('eventname')
-					data = payload.get('data', None)
+					eventname = event_payload.get('eventname')
+					data = event_payload.get('data', None)
 					self._write_event(ak.TYPE_CONNECTIVITY_EVENT, eventname, self._connectivity_event_log_version, payload=dict(data=data))
 				else:
-					self._logger.warn("Unknown plugin: '%s'. payload: %s", plugin, event)
+					self._logger.warn("Unknown plugin: '%s'. payload: %s", plugin, event_payload)
 			else:
 				self._logger.warn("Invalid payload data in event %s", event)
 		except Exception as e:
-			self._logger.error('Exception during log_ui_render_calls: {}'.format(e.message))
+			self._logger.error('Exception during _other_plugin_data: {}'.format(e.message))
 
 	def log_ui_render_calls(self, host, remote_ip, referrer, language):
 		try:
@@ -686,7 +696,7 @@ class AnalyticsHandler(object):
 			try:
 				if not os.path.isfile(self._jsonfile):
 					self._init_jsonfile()
-				dataString = json.dumps(data) + '\n'
+				dataString = json.dumps(data, sort_keys=False) + '\n'
 				with open(self._jsonfile, 'a') as f:
 					f.write(dataString)
 			except Exception as e:
