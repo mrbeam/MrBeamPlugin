@@ -803,7 +803,7 @@ $(function(){
 				id: 'cd_color_'+color.hex.substr(1),
 				style: "background-color: "+color.hex+";",
 				draggable: "true",
-				class: 'used_color'
+				class: 'used_color cutting_job_color'
 			})
 			.on({
 				dragstart: function(ev){ window.mrbeam.colorDragging.colorDragStart(ev.originalEvent); },
@@ -1118,16 +1118,29 @@ $(function(){
 				var feedrate = Math.round(speed_white + initial_factor * (speed_black - speed_white));
 
 				if(self._isValidVectorSetting(intensity_user, feedrate, 1, self.engravingPiercetime())){
-					data.push({
-						// job: "vector_engrave_"+i,
-						color: hex,
-						intensity: intensity,
-						intensity_user: intensity_user,
-						feedrate: feedrate,
-						pierce_time: self.engravingPiercetime(),
-						passes: 1,
-						material: self.engravingMaterial
+				    $('#engrave_job_drop_zone_conversion_dialog').find('.cutting_job_color').each(function(j, col){
+                        var hex = '#' + $(col).attr('id').substr(-6);
+                        data.push({
+                            // job: "vector_engrave_"+i,
+                            color: hex,
+                            intensity: intensity,
+                            intensity_user: intensity_user,
+                            feedrate: feedrate,
+                            pierce_time: self.engravingPiercetime(),
+                            passes: 1,
+                            material: self.engravingMaterial
+                        });
 					});
+					// data.push({
+					// 	// job: "vector_engrave_"+i,
+					// 	color: hex,
+					// 	intensity: intensity,
+					// 	intensity_user: intensity_user,
+					// 	feedrate: feedrate,
+					// 	pierce_time: self.engravingPiercetime(),
+					// 	passes: 1,
+					// 	material: self.engravingMaterial
+					// });
 				} else {
 					console.log("Skipping line engrave job ("+hex+"), invalid parameters.");
 				}
