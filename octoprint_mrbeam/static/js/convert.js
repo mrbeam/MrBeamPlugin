@@ -1131,16 +1131,6 @@ $(function(){
                             material: self.engravingMaterial
                         });
 					});
-					// data.push({
-					// 	// job: "vector_engrave_"+i,
-					// 	color: hex,
-					// 	intensity: intensity,
-					// 	intensity_user: intensity_user,
-					// 	feedrate: feedrate,
-					// 	pierce_time: self.engravingPiercetime(),
-					// 	passes: 1,
-					// 	material: self.engravingMaterial
-					// });
 				} else {
 					console.log("Skipping line engrave job ("+hex+"), invalid parameters.");
 				}
