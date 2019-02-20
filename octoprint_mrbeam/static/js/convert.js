@@ -1089,7 +1089,8 @@ $(function(){
 							intensity_user: intensity_user,
 							feedrate: feedrate,
 							pierce_time: piercetime,
-							passes: passes
+							passes: passes,
+                            engraved: false
 						});
 					});
 				} else {
@@ -1122,7 +1123,8 @@ $(function(){
                             intensity_user: intensity_user,
                             feedrate: feedrate,
                             pierce_time: self.engravingPiercetime(),
-                            passes: 1
+                            passes: 1,
+                            engraved: true
                         });
 					});
 				} else {
