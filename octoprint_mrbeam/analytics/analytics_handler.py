@@ -435,6 +435,8 @@ class AnalyticsHandler(object):
 
 	def store_conversion_details(self, details):
 		try:
+			self._storedConversions = list()
+
 			if self._analyticsOn:
 				# Line with common parameters of the laser job (for both cut and engrave)
 				eventname = ak.LASER_JOB
@@ -450,7 +452,6 @@ class AnalyticsHandler(object):
 						'svgDPI': details['svgDPI']
 					}
 					data.update(details['raster'])
-					data.update(details['material'])
 					self._store_conversion_details(eventname,payload=data)
 
 				if 'vector' in details and details['vector']:
@@ -460,7 +461,6 @@ class AnalyticsHandler(object):
 							'svgDPI': details['svgDPI']
 						}
 						data.update(color_settings)
-						data.update(details['material'])
 						self._store_conversion_details(eventname,payload=data)
 
 				if 'design_files' in details and details['design_files']:
@@ -475,28 +475,21 @@ class AnalyticsHandler(object):
 
 	def _store_conversion_details(self,eventname,payload=None):
 		data = {
-			ak.SERIALNUMBER: self._getSerialNumber(),
-			ak.TYPE: ak.TYPE_JOB_EVENT,
-			ak.VERSION: self._jobevent_log_version,
+			# Here we save the event so we can extract it later and add it to the analytics line (later we can't know it)
 			ak.EVENT: eventname,
-			ak.TIMESTAMP: time.time(),
-			ak.JOB_ID: None,
-			ak.NTP_SYNCED: _mrbeam_plugin_implementation.is_time_ntp_synced(),
-			ak.SESSION_ID: self._session_id
 		}
 		if payload is not None:
 			data.update(payload)
 		self._storedConversions.append(data)
 
-
 	def _write_conversion_details(self):
 		try:
-			for d in self._storedConversions:
-				# TODO Check Magic Number 10min Q: How long can a conversion be stored for one job?
-				if time.time() - d[ak.TIMESTAMP] < 600:
-					d[ak.JOB_ID] = self._current_job_id
-				self._append_data_to_file(d)
+			for conversion_details in self._storedConversions:
+				event = conversion_details[ak.EVENT]
+				conversion_details.pop(ak.EVENT)
+				self._write_jobevent(event, conversion_details)
 			self._storedConversions = list()
+
 		except Exception as e:
 			self._logger.error('Error during write_conversion_details: {}'.format(e.message))
 
@@ -525,12 +518,12 @@ class AnalyticsHandler(object):
 			#TODO add data validation/preparation here
 			data = dict(job_id = self._current_job_id)
 
-			if event in (ak.LASERTEMP_SUM, ak.INTENSITY_SUM):
-				data[ak.LASERHEAD_VERSION] = self._getLaserHeadVersion()
-				data[ak.LASERHEAD_SERIAL] = _mrbeam_plugin_implementation.lh['serial']
-
 			if payload is not None:
 				data[ak.DATA] = payload
+
+			if event in (ak.LASERTEMP_SUM, ak.INTENSITY_SUM):
+				data[ak.DATA][ak.LASERHEAD_VERSION] = self._getLaserHeadVersion()
+				data[ak.DATA][ak.LASERHEAD_SERIAL] = _mrbeam_plugin_implementation.lh['serial']
 
 			_jobevent_type = ak.TYPE_JOB_EVENT
 			self._write_event(_jobevent_type, event, self._jobevent_log_version, payload=data)
@@ -664,7 +657,6 @@ class AnalyticsHandler(object):
 	def _init_jsonfile(self):
 		open(self._jsonfile, 'w+').close()
 		data = {
-			ak.SERIALNUMBER: self._getSerialNumber(),
 			ak.LASERHEAD_VERSION: self._getLaserHeadVersion(),
 			ak.VERSION_MRBEAM_PLUGIN: _mrbeam_plugin_implementation._plugin_version
 		}
