@@ -166,20 +166,29 @@ class AnalyticsHandler(object):
 			self._activate_analytics()
 			self._write_deviceinfo(ak.ANALYTICS_ENABLED, payload=dict(enabled=True))
 		else:
+			# can not log this since the user just disagreed
 			# self._write_deviceinfo(ak.ANALYTICS_ENABLED, payload=dict(enabled=False))
 			self._analyticsOn = False
 			self._settings.set_boolean(["analyticsEnabled"], False)
 
-	def log_event(self, level, msg, caller=None, exception_str=None, stacktrace=None, wait_for_terminal_dump=False):
-		event = ak.LOG
+	def log_event(self, level, msg,
+	              module=None,
+	              component=None,
+	              component_version=None,
+	              caller=None,
+	              exception_str=None,
+	              stacktrace=None,
+	              wait_for_terminal_dump=False):
 		filename = caller.filename.replace(__package_path__ + '/', '')
+		payload = dict(
+			level= logging._levelNames[level] if level in logging._levelNames else level,
+			msg= msg,
+			module=module,
+			component= component or _mrbeam_plugin_implementation._identifier,
+			component_version= component_version or _mrbeam_plugin_implementation._plugin_version
+		)
 		if exception_str:
-			event = ak.EXCEPTION
-		payload = {
-			'level': logging._levelNames[level] if level in logging._levelNames else level,
-			'msg': msg,
-			ak.VERSION_MRBEAM_PLUGIN: _mrbeam_plugin_implementation._plugin_version
-		}
+			payload['level'] = ak.EXCEPTION
 		if caller is not None:
 			payload.update({
 				'hash': hash('{}{}{}'.format(filename, caller.lineno, _mrbeam_plugin_implementation._plugin_version)),
@@ -195,18 +204,16 @@ class AnalyticsHandler(object):
 
 		if wait_for_terminal_dump:
 			self.event_waiting_for_terminal_dump = dict(
-				event = event,
 				payload = payload,
 			)
 		else:
-			self._write_log_event(event, payload=payload)
+			self._write_log_event(payload=payload)
 
 	def log_terminal_dump(self, dump):
 		if self.event_waiting_for_terminal_dump is not None:
-			event = self.event_waiting_for_terminal_dump['event']
 			payload = self.event_waiting_for_terminal_dump['payload']
 			payload['terminal_dump'] = dump
-			self._write_log_event(event, payload=payload)
+			self._write_log_event(payload=payload)
 			self.event_waiting_for_terminal_dump = None
 		else:
 			self._logger.warn("log_terminal_dump() called but no foregoing event tracked. self.event_waiting_for_terminal_dump is None. ignoring this dump.")
@@ -386,7 +393,7 @@ class AnalyticsHandler(object):
 				if plugin == "findmymrbeam":
 					eventname = payload.get('eventname')
 					data = payload.get('data', None)
-					self._write_event(ak.CONNECTIVITY_EVENT, eventname, self._connectivity_event_log_version, payload=dict(data=data))
+					self._write_event(ak.TYPE_CONNECTIVITY_EVENT, eventname, self._connectivity_event_log_version, payload=dict(data=data))
 				else:
 					self._logger.warn("Unknown plugin: '%s'. payload: %s", plugin, event)
 			else:
@@ -402,7 +409,7 @@ class AnalyticsHandler(object):
 				referrer=referrer,
 				language=language
 			)
-			self._write_event(ak.CONNECTIVITY_EVENT, ak.EVENT_UI_RENDER_CALL, self._connectivity_event_log_version, payload=dict(data=data))
+			self._write_event(ak.TYPE_CONNECTIVITY_EVENT, ak.EVENT_UI_RENDER_CALL, self._connectivity_event_log_version, payload=dict(data=data))
 		except Exception as e:
 			self._logger.error('Exception during log_ui_render_calls: {}'.format(e.message))
 
@@ -411,7 +418,7 @@ class AnalyticsHandler(object):
 			data=dict(
 				remote_ip=remote_ip
 			)
-			self._write_event(ak.CONNECTIVITY_EVENT, ak.EVENT_CLIENT_OPENED, self._connectivity_event_log_version, payload=dict(data=data))
+			self._write_event(ak.TYPE_CONNECTIVITY_EVENT, ak.EVENT_CLIENT_OPENED, self._connectivity_event_log_version, payload=dict(data=data))
 		except Exception as e:
 			self._logger.error('Exception during log_client_opened: {}'.format(e.message))
 
@@ -468,6 +475,9 @@ class AnalyticsHandler(object):
 
 	def _store_conversion_details(self,eventname,payload=None):
 		data = {
+			ak.SERIALNUMBER: self._getSerialNumber(),
+			ak.TYPE: ak.TYPE_JOB_EVENT,
+			ak.VERSION: self._jobevent_log_version,
 			ak.EVENT: eventname,
 		}
 		if payload is not None:
@@ -491,17 +501,17 @@ class AnalyticsHandler(object):
 			# TODO add data validation/preparation here
 			if payload is not None:
 				data[ak.DATA] = payload
-			self._write_event(ak.DEVICE_EVENT, event, self._deviceinfo_log_version, payload=data)
+			self._write_event(ak.TYPE_DEVICE_EVENT, event, self._deviceinfo_log_version, payload=data)
 		except Exception as e:
 			self._logger.error('Error during write_device_info: {}'.format(e.message))
 
-	def _write_log_event(self, event, payload=None):
+	def _write_log_event(self, payload=None):
 		try:
 			data = dict()
 			# TODO add data validation/preparation here
 			if payload is not None:
 				data[ak.DATA] = payload
-			self._write_event(ak.LOG_EVENT, event, self._logevent_version, payload=data)
+			self._write_event(ak.TYPE_LOG_EVENT, ak.EVENT_LOG, self._logevent_version, payload=data)
 		except Exception as e:
 			self._logger.error('Error during _write_log_event: {}'.format(e.message), analytics=False)
 
@@ -516,8 +526,8 @@ class AnalyticsHandler(object):
 			if event in (ak.LASERTEMP_SUM, ak.INTENSITY_SUM):
 				data[ak.DATA][ak.LASERHEAD_VERSION] = self._getLaserHeadVersion()
 				data[ak.DATA][ak.LASERHEAD_SERIAL] = _mrbeam_plugin_implementation.lh['serial']
-
-			_jobevent_type = ak.JOB_EVENT
+			
+      _jobevent_type = ak.TYPE_JOB_EVENT
 			self._write_event(_jobevent_type, event, self._jobevent_log_version, payload=data)
 		except Exception as e:
 			self._logger.error('Error during write_jobevent: {}'.format(e.message))
@@ -547,7 +557,7 @@ class AnalyticsHandler(object):
 				if payload is not None:
 					data[ak.DATA] = payload
 
-				self._write_event(ak.CAM_EVENT, ak.PIC_PREP, self._cam_event_log_version, payload=data)
+				self._write_event(ak.TYPE_CAM_EVENT, ak.PIC_PREP, self._cam_event_log_version, payload=data)
 		except Exception as e:
 			self._logger.error('Error during write_cam_event: {}'.format(e.message))
 
@@ -559,7 +569,7 @@ class AnalyticsHandler(object):
 				if payload is not None:
 					data[ak.DATA] = payload
 
-				self._write_event(ak.CAM_EVENT, eventname, self._cam_event_log_version, payload=data)
+				self._write_event(ak.TYPE_CAM_EVENT, eventname, self._cam_event_log_version, payload=data)
 		except Exception as e:
 			self._logger.error('Error during write_cam_event: {}'.format(e.message))
 

@@ -19,11 +19,11 @@ class AnalyticsKeys(object):
 	USED_SPACE = 'used_percent'
 
 	### EVENT TYPES ###
-	JOB_EVENT = 'job'
-	DEVICE_EVENT = 'device'
-	CAM_EVENT = 'cam'
-	LOG_EVENT = 'log'
-	CONNECTIVITY_EVENT = 'connectivity'
+	TYPE_JOB_EVENT = 'job'
+	TYPE_DEVICE_EVENT = 'device'
+	TYPE_CAM_EVENT = 'cam'
+	TYPE_LOG_EVENT = 'log'
+	TYPE_CONNECTIVITY_EVENT = 'connectivity'
 
 	### DEVICE KEYS ###
 	HOSTNAME = 'hostname'
@@ -39,7 +39,7 @@ class AnalyticsKeys(object):
 	DISK_SPACE = 'disk_space'
 
 	### LOG EVENT KEYS ###
-	LOG = 'log'
+	EVENT_LOG = 'log_event'
 	EXCEPTION = 'exception'
 
 	### JOB KEYS ###

@@ -4,6 +4,7 @@ import os
 import subprocess
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
+from util.pip_util import get_version_of_pip_module
 
 
 SW_UPDATE_TIER_PROD =      "PROD"
@@ -11,19 +12,25 @@ SW_UPDATE_TIER_DEV =       "DEV"
 SW_UPDATE_TIER_DEMO =      "DEMO"
 SW_UPDATE_TIER_NO_UPDATE = "NO_UPDATE"
 
+# add to the display name to modules that should be shown at the top of the list
+SORT_UP_PREFIX = ' '
+
+
+_logger = mrb_logger("octoprint.plugins.mrbeam.software_update_information")
+
 sw_update_config = dict()
+
+
 
 def get_modules():
 	return sw_update_config
-
-
 
 
 def get_update_information(self):
 	result = dict()
 
 	tier = self._settings.get(["dev", "software_tier"])
-	_logger(self).info("SoftwareUpdate using tier: %s", tier)
+	_logger.info("SoftwareUpdate using tier: %s", tier)
 
 	config_octoprint(self, tier)
 
@@ -36,10 +43,11 @@ def get_update_information(self):
 		set_info_netconnectd_daemon(self, tier)
 		set_info_iobeam(self, tier)
 		set_info_camera_calibration(self, tier)
+		set_info_mrb_hw_info(self, tier)
 		set_info_rpiws281x(self, tier)
 		# set_info_testplugin(self, tier) # See function definition for more details
 
-	# _logger(self).debug("MrBeam Plugin provides this config (might be overridden by settings!):\n%s", yaml.dump(sw_update_config, width=50000).strip())
+	# _logger.debug("MrBeam Plugin provides this config (might be overridden by settings!):\n%s", yaml.dump(sw_update_config, width=50000).strip())
 	return sw_update_config
 
 
@@ -64,7 +72,7 @@ def set_info_mrbeam_plugin(self, tier):
 	if _is_override_in_settings(self, module_id): return
 
 	sw_update_config[module_id] = dict(
-		displayName=_get_display_name(self, name),
+		displayName=SORT_UP_PREFIX + _get_display_name(self, name),
 		displayVersion=self._plugin_version,
 		type="github_commit", # "github_release",
 		user="mrbeam",
@@ -76,7 +84,7 @@ def set_info_mrbeam_plugin(self, tier):
 
 	if tier in [SW_UPDATE_TIER_DEV]:
 		sw_update_config[module_id] = dict(
-			displayName=_get_display_name(self, name),
+			displayName=SORT_UP_PREFIX + _get_display_name(self, name),
 			displayVersion=self._plugin_version,
 			type="github_commit",
 			user="mrbeam",
@@ -88,7 +96,7 @@ def set_info_mrbeam_plugin(self, tier):
 
 	if tier in [SW_UPDATE_TIER_DEMO]:
 		sw_update_config[module_id] = dict(
-			displayName=_get_display_name(self, name),
+			displayName=SORT_UP_PREFIX + _get_display_name(self, name),
 			displayVersion=self._plugin_version,
 			type="github_commit",
 			user="mrbeam",
@@ -176,7 +184,7 @@ def set_info_mrbeamledstrips(self, tier):
 
 	if _is_override_in_settings(self, module_id): return
 
-	version = get_version_of_pip_module(self, pip_name, pip_command)
+	version = get_version_of_pip_module(pip_name, pip_command)
 	if version is None: return
 
 	sw_update_config[module_id] = dict(
@@ -227,7 +235,7 @@ def set_info_netconnectd_daemon(self, tier):
 
 	if _is_override_in_settings(self, module_id): return
 
-	version = get_version_of_pip_module(self, pip_name, pip_command)
+	version = get_version_of_pip_module(pip_name, pip_command)
 	if version is None: return
 
 	sw_update_config[module_id] = dict(
@@ -254,7 +262,7 @@ def set_info_iobeam(self, tier):
 
 	if _is_override_in_settings(self, module_id): return
 
-	version = get_version_of_pip_module(self, pip_name, pip_command)
+	version = get_version_of_pip_module(pip_name, pip_command)
 	if version is None: return
 
 	sw_update_config[module_id] = dict(
@@ -297,7 +305,7 @@ def set_info_camera_calibration(self, tier):
 
 	if _is_override_in_settings(self, module_id): return
 
-	version = get_version_of_pip_module(self, pip_name, pip_command)
+	version = get_version_of_pip_module(pip_name, pip_command)
 	if version is None: return
 
 	sw_update_config[module_id] = dict(
@@ -327,6 +335,50 @@ def set_info_camera_calibration(self, tier):
 			api_password="v2T5pFkmdgDqbFBJAqrt",
 			pip="git+ssh://git@bitbucket.org/mrbeam/mb_camera_calibration.git@{target_version}",
 			restart="octoprint"
+		)
+
+def set_info_mrb_hw_info(self, tier):
+	name = "mrb_hw_info"
+	module_id = "mrb_hw_info"
+	# this module is installed outside of our virtualenv therefor we can't use default pip command.
+	# /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
+	pip_command = "sudo /usr/local/bin/pip"
+	pip_name = "mrb-hw-info"
+
+	if _is_override_in_settings(self, module_id): return
+
+	version = get_version_of_pip_module(pip_name, pip_command)
+	# if version is None: return
+
+	sw_update_config[module_id] = dict(
+		displayName=_get_display_name(self, name),
+		displayVersion=version,
+		type="bitbucket_commit",
+		user="mrbeam",
+		repo="mrb_hw_info",
+		branch="mrbeam2-stable",
+		branch_default="mrbeam2-stable",
+		api_user="MrBeamDev",
+		api_password="v2T5pFkmdgDqbFBJAqrt",
+		pip="git+ssh://git@bitbucket.org/mrbeam/mrb_hw_info.git@{target_version}",
+		pip_command=pip_command,
+		restart="environment"
+	)
+
+	if tier in [SW_UPDATE_TIER_DEV]:
+		sw_update_config[module_id] = dict(
+			displayName=_get_display_name(self, name),
+			displayVersion=version,
+			type="bitbucket_commit",
+			user="mrbeam",
+			repo="mrb_hw_info",
+			branch="develop",
+			branch_default="develop",
+			api_user="MrBeamDev",
+			api_password="v2T5pFkmdgDqbFBJAqrt",
+			pip="git+ssh://git@bitbucket.org/mrbeam/mrb_hw_info.git@{target_version}",
+			pip_command=pip_command,
+			restart="environment"
 		)
 
 
@@ -363,54 +415,16 @@ def set_info_rpiws281x(self, tier):
 
 def _get_display_name(self, name):
 	return name
-	# if tier is not None and not tier == SW_UPDATE_TIER_PROD:
-	# 	return "{} ({})".format(name, tier)
-	# else:
-	# 	return name
 
 
 def _is_override_in_settings(self, module_id):
 	settings_path = ["plugins", "softwareupdate", "checks", module_id, "override"]
 	is_override = self._settings.global_get(settings_path)
 	if is_override:
-		_logger(self).info("Module %s has overriding config in settings!", module_id)
+		_logger.info("Module %s has overriding config in settings!", module_id)
 		return True
 	return False
 
 
-def get_version_of_pip_module(self, pip_name, pip_command=None):
-	version = None
-	if pip_command is None: pip_command = "pip"
-	command = "{pip_command} freeze".format(pip_command=pip_command)
-	returncode, output = _sys_command(self, command)
-	if returncode == 0:
-		lines = output.splitlines()
-		for myLine in lines:
-			token = myLine.split("==")
-			if len(token) >= 2 and token[0] == pip_name:
-				if token[1][:1] == "=":
-					version = token[1][1:]
-				else:
-					version = token[1]
-				break
-	_logger(self).debug("get_version_of_pip_module() version of pip module '%s' is '%s' (pip command '%s' returned %s)",
-						pip_name, version, pip_command, returncode)
-	return version
 
 
-# Executes a system command in shell-mode
-def _sys_command(self, command):
-	returncode = -1
-	output = None
-	try:
-		output = subprocess.check_output(command, shell=True)
-		returncode = 0
-	except subprocess.CalledProcessError as e:
-		output = e.output
-		returncode = e.returncode
-		_logger(self).warn("System command quit with error %s. Command: '%s', output: %s ", e.returncode, e.cmd, e.output)
-	return (returncode, output)
-
-
-def _logger(self):
-	return mrb_logger("octoprint.plugins.mrbeam.software_update_information")
