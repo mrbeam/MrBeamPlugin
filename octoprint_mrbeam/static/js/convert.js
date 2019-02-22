@@ -1090,7 +1090,7 @@ $(function(){
 							feedrate: feedrate,
 							pierce_time: piercetime,
 							passes: passes,
-                            engraved: false
+                            engrave: false
 						});
 					});
 				} else {
@@ -1124,7 +1124,7 @@ $(function(){
                             feedrate: feedrate,
                             pierce_time: self.engravingPiercetime(),
                             passes: 1,
-                            engraved: true
+                            engrave: true
                         });
 					});
 				} else {
