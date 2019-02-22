@@ -475,9 +475,7 @@ class AnalyticsHandler(object):
 
 	def _store_conversion_details(self,eventname,payload=None):
 		data = {
-			ak.SERIALNUMBER: self._getSerialNumber(),
-			ak.TYPE: ak.TYPE_JOB_EVENT,
-			ak.VERSION: self._jobevent_log_version,
+			# Here we save the event so we can extract it later and add it to the analytics line (later we can't know it)
 			ak.EVENT: eventname,
 		}
 		if payload is not None:
