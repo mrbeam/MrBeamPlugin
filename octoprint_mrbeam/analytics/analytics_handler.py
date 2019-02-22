@@ -526,8 +526,8 @@ class AnalyticsHandler(object):
 			if event in (ak.LASERTEMP_SUM, ak.INTENSITY_SUM):
 				data[ak.DATA][ak.LASERHEAD_VERSION] = self._getLaserHeadVersion()
 				data[ak.DATA][ak.LASERHEAD_SERIAL] = _mrbeam_plugin_implementation.lh['serial']
-			
-      _jobevent_type = ak.TYPE_JOB_EVENT
+
+			_jobevent_type = ak.TYPE_JOB_EVENT
 			self._write_event(_jobevent_type, event, self._jobevent_log_version, payload=data)
 		except Exception as e:
 			self._logger.error('Error during write_jobevent: {}'.format(e.message))
