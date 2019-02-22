@@ -45,6 +45,8 @@ $(function(){
 		self.show_line_color_mappings = ko.observable(false);
 
 		self.engraveOnlyForced = false;
+		// self.remindFocus = self.settings.settings.plugins.mrbeam.remindFocus();
+        self.showFocusReminder = true;
 
 		// material menu
 		self.material_settings2 = {
@@ -1490,7 +1492,13 @@ $(function(){
 			    $('#empty_job_support_link').show();
 			    $('#empty_job_modal').find('.modal-body p').text(message);
                 $('#empty_job_modal').modal('show');
+
+            } else if (self.showFocusReminder) {
+                $('#laserhead_focus_reminder_modal').modal('show');
+                self.showFocusReminder = false;
+
 			} else {
+			    self.showFocusReminder = true ;
 				if(self._allParametersSet()){
 					//self.update_colorSettings();
 					self.slicing_in_progress(true);
@@ -1568,6 +1576,10 @@ $(function(){
 				}
 			}
 		};
+
+		self._convertAfterFocusReminder = function(){
+		    self.convert();
+        };
 
 		self.do_engrave = function(){
 			const assigned_images = $('#engrave_job .assigned_colors').children().length;

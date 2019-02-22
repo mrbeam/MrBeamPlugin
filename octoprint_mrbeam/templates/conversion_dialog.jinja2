@@ -427,5 +427,33 @@
             </div>
         </div>
     </div>
+
+    <!-- Laserhead focus reminder modal -->
+    <div id="laserhead_focus_reminder_modal" class="modal hide fade" tabindex="-1" role="dialog"
+         aria-labelledby="laserhead_focus_reminder_modal" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h3 id="laserhead_focus_reminder_label">Hey, did you focus your laser head?</h3>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        Pleeeeeeease don't forget to focus your laserhead <3 <3
+                    </p>
+                </div>
+                <div class="modal-footer">
+{#                    <button class="btn" data-dismiss="modal" aria-hidden="true">I forgot!</button>#}
+                    <div><input type="checkbox" value="msg" data-bind="checked: spamFlavors" /> Monosodium Glutamate</div>
+                    <a href="#" class="btn" aria-hidden="true" data-dismiss="modal">{{ _('I forgot!') }}</a>
+                    <a href="#" class="btn btn-primary" id="start_job_btn_focus_reminder" data-dismiss="modal"
+                        data-bind="click: function() { $root.convert() },
+                            enabled: enableConvertButton,
+                            visible: !slicing_in_progress(),
+                            css: {disabled: !$root.enableConvertButton()}">{{ _('It\'s focused!') }}</a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
