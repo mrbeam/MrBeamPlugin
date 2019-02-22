@@ -1115,8 +1115,8 @@ $(function(){
 				var feedrate = Math.round(speed_white + initial_factor * (speed_black - speed_white));
 
 				if(self._isValidVectorSetting(intensity_user, feedrate, 1, self.engravingPiercetime())){
-				    $('#engrave_job_drop_zone_conversion_dialog').find('.cutting_job_color').each(function(j, col){
-                        var hex = '#' + $(col).attr('id').substr(-6);
+				    if($('#engrave_job_drop_zone_conversion_dialog').find('.cutting_job_color').length > 0) {
+                        var hex = '#' + $(el).attr('id').substr(-6);
                         data.push({
                             color: hex,
                             intensity: intensity,
@@ -1126,7 +1126,7 @@ $(function(){
                             passes: 1,
                             engrave: true
                         });
-					});
+					};
 				} else {
 					console.log("Skipping line engrave job ("+hex+"), invalid parameters.");
 				}
