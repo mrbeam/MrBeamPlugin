@@ -131,6 +131,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		self._analytics_handler = analyticsHandler(self)
 
+		self.focusReminder = self._settings.get(['focusReminder'])
+		self._logger.info("################################ __init__ read focus reminder: {}".format(self.focusReminder))
+
 		self.start_time_ntp_timer()
 
 		# do migration if needed
@@ -251,6 +254,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				support_mode = False,
 				grbl_auto_update_enabled = True
 			),
+			focusReminder=True,
 			analyticsEnabled=None,
 			analytics=dict(
 				cam_analytics = False,
@@ -304,7 +308,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				clip_working_area = self._settings.get(['gcode_nextgen', 'clip_working_area'])
 			),
 			software_update_branches = self.get_update_branch_info(),
-			_version = self._plugin_version
+			_version = self._plugin_version,
+			focusReminder = self._settings.get(['focusReminder']),
 		)
 
 	def on_settings_save(self, data):
@@ -326,6 +331,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._settings.set_boolean(["gcode_nextgen", "clip_working_area"], data['gcode_nextgen']['clip_working_area'])
 		if "analyticsEnabled" in data:
 			self._analytics_handler.analytics_user_permission_change(analytics_enabled=data['analyticsEnabled'])
+		if "focusReminder" in data:
+			self._settings.set_boolean(["focusReminder"], data["focusReminder"])
 
 
 	def on_shutdown(self):
@@ -1302,7 +1309,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			debug_event=["event"],
 			custom_materials=[],
 			analytics_init=[],
-			take_undistorted_picture=[]  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
+			take_undistorted_picture=[],  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
+			focus_reminder=[]
 		)
 
 	def on_api_command(self, command, data):
@@ -1332,11 +1340,22 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return self.debug_event(data)
 		elif command == "analytics_init":
 			return self.analytics_init(data)
+		elif command == "focus_reminder":
+			self._logger.info("######################################## on_api_command")
+			return self.focus_reminder(data)
 		return NO_CONTENT
 
 	def analytics_init(self, data):
 		if 'analyticsInitialConsent' in data:
 			self._analytics_handler.initial_analytics_procedure(data['analyticsInitialConsent'])
+
+	def focus_reminder(self, data):
+		self._logger.info("######################################## focus_reminder")
+		self._logger.info(self._settings.get(['version']))
+		if 'focusReminder' in data:
+			self._settings.set_boolean(["focusReminder"], data['focusReminder'])
+			self._logger.info("######################################## focus reminder saved!")
+
 
 	def debug_event(self, data):
 		event = data['event']
