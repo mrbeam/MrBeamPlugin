@@ -5,7 +5,7 @@
 # clear: if no usb stick plugged in, SELFCHECK_DIR will be deleted
 # if `df /` says that there is little space on disk left, mount_manager deletes all files in var/log and ~/.octoprint/logs
 
-VERSION="1.6.0"
+VERSION="1.6.1"
 APP_DIR=/root/mount_manager
 LOG_FILE="/var/log/mount_manager.log"
 MOUNT_DIR=/media/
@@ -219,12 +219,14 @@ done
 
 # check plugged in devices
 i=0
+j=0
 for plugged_in_item in ${arr_plugged_in_label[*]}
 do
     log_info "Plugged in device '${plugged_in_item}' will be checked."
     if [[ " ${arr_media_mounted[*]} " == *" ${plugged_in_item} "* ]]; then
         log_info " - Already mounted device '${plugged_in_item}' found. Great."
     else
+        ((++j))
         if [[ " ${arr_media_unmounted[*]} " == *" ${plugged_in_item} "* ]]; then
             log_info " - Unmounted yet plugged in device '${plugged_in_item}' found. It will be mounted."
         else
@@ -325,4 +327,12 @@ do
     fi
     ((++i))
 done
+# flash blue, if the former loop was executed 0 times
+if [ "$1" == "add" ]; then
+    if [ $j -eq 0 ]; then
+        log_warn "Could not read a USB stick" "${OCTOPRINT_LOG}"
+        signal_alert "flash_blue"
+    fi
+fi
+
 exit 0

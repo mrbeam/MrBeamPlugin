@@ -22,7 +22,7 @@ class Migration(object):
 	VERSION_UPDATE_LOGROTATE_CONF            = '0.1.45'
 	VERSION_GRBL_AUTO_UPDATE                 = '0.1.53'
 	VERSION_INFLATE_FILE_SYSTEM              = '0.1.51'
-	VERSION_MOUNT_MANAGER_160                = '0.1.55'
+	VERSION_MOUNT_MANAGER_161                = '0.1.56'
 	VERSION_PREFILL_MRB_HW_INFO              = '0.1.55'
 
 	# this is where we have files needed for migrations
@@ -78,7 +78,7 @@ class Migration(object):
 				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_UPDATE_LOGROTATE_CONF, equal_ok=False):
 					self.update_logrotate_conf()
 
-				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_MOUNT_MANAGER_160, equal_ok=False):
+				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_MOUNT_MANAGER_161, equal_ok=False):
 					self.update_mount_manager()
 
 				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_GRBL_AUTO_UPDATE, equal_ok=False):

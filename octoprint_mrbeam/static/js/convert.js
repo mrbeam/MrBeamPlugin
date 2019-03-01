@@ -804,7 +804,7 @@ $(function(){
 				id: 'cd_color_'+color.hex.substr(1),
 				style: "background-color: "+color.hex+";",
 				draggable: "true",
-				class: 'used_color'
+				class: 'used_color cutting_job_color'
 			})
 			.on({
 				dragstart: function(ev){ window.mrbeam.colorDragging.colorDragStart(ev.originalEvent); },
@@ -969,7 +969,6 @@ $(function(){
 		self.imgContrast = ko.observable(1);
 		self.beamDiameter = ko.observable(0.15);
 		self.engravingPiercetime = ko.observable(0);
-		self.engravingMaterial = null;
 
 		self.sharpeningMax = 25;
 		self.contrastMax = 2;
@@ -1081,20 +1080,18 @@ $(function(){
 				var intensity = intensity_user * self.profile.currentProfileData().laser.intensity_factor() ;
 				var feedrate = $(job).find('.param_feedrate').val();
 				var piercetime = $(job).find('.param_piercetime').val();
-				var material = $(job).find('.param_material').val();
 				var passes = $(job).find('.param_passes').val();
 				if(self._isValidVectorSetting(intensity_user, feedrate, passes, piercetime)){
 					$(job).find('.used_color').each(function(j, col){
 						var hex = '#' + $(col).attr('id').substr(-6);
 						data.push({
-							// job: i,
 							color: hex,
 							intensity: intensity,
 							intensity_user: intensity_user,
 							feedrate: feedrate,
 							pierce_time: piercetime,
 							passes: passes,
-							material: material
+                            engrave: false
 						});
 					});
 				} else {
@@ -1119,16 +1116,18 @@ $(function(){
 				var feedrate = Math.round(speed_white + initial_factor * (speed_black - speed_white));
 
 				if(self._isValidVectorSetting(intensity_user, feedrate, 1, self.engravingPiercetime())){
-					data.push({
-						// job: "vector_engrave_"+i,
-						color: hex,
-						intensity: intensity,
-						intensity_user: intensity_user,
-						feedrate: feedrate,
-						pierce_time: self.engravingPiercetime(),
-						passes: 1,
-						material: self.engravingMaterial
-					});
+				    if($('#engrave_job_drop_zone_conversion_dialog').find('.cutting_job_color').length > 0) {
+                        var hex = '#' + $(el).attr('id').substr(-6);
+                        data.push({
+                            color: hex,
+                            intensity: intensity,
+                            intensity_user: intensity_user,
+                            feedrate: feedrate,
+                            pierce_time: self.engravingPiercetime(),
+                            passes: 1,
+                            engrave: true
+                        });
+					};
 				} else {
 					console.log("Skipping line engrave job ("+hex+"), invalid parameters.");
 				}
