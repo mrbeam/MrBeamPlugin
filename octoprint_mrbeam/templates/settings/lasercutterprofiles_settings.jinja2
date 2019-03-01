@@ -66,21 +66,23 @@
             <div class="control-group">
                 <label class="control-label">{{ _('Working Area Size') }}</label>
                 <div class="controls form-inline">
-                    <label>{{ _('X') }}</label>
+                    <label>X</label>
                     <div class="input-append">
                         <input type="number" step="1" class="input-mini text-right" data-bind="value: editorVolumeWidth">
-                        <span class="add-on">mm</span>
+                        {# Translators: millimeters, unit of length #}
+                        <span class="add-on">{{ _('mm') }}</span>
                     </div>
                 </div>
                 <div class="controls form-inline">
-                    <label>{{ _('Y') }}</label>
+                    <label>Y</label>
                     <div class="input-append">
                         <input type="number" step="1" class="input-mini text-right" data-bind="value: editorVolumeDepth">
-                        <span class="add-on">mm</span>
+                        {# Translators: millimeters, unit of length #}
+                        <span class="add-on">{{ _('mm') }}</span>
                     </div>
                 </div>
 <!--                <div class="controls form-inline">
-                    <label>{{ _('Z') }}</label>
+                    <label>Z</label>
                     <div class="input-append">
                         <input type="number" step="0.01" class="input-mini text-right" data-bind="value: editorVolumeHeight">
                         <span class="add-on">mm</span>
@@ -108,30 +110,33 @@
             <div class="control-group">
                 <label class="control-label">{{ _('Axis') }}</label>
                 <div class="controls form-inline">
-                    <label>{{ _('X') }}</label>
+                    <label>X</label>
                     <div class="input-append">
                         <input type="number" class="input-mini text-right" data-bind="value: editorAxisXSpeed">
-                        <span class="add-on">mm/min</span>
+                        {# Translators: millimeters, unit of length/ minutes, unit of time #}
+                        <span class="add-on">{{ _('mm/min') }}</span>
                     </div>
                     <label class="checkbox">
                         <input type="checkbox" data-bind="checked: editorAxisXInverted"> {{ _('Invert control') }}
                     </label>
                 </div>
                 <div class="controls form-inline">
-                    <label>{{ _('Y') }}</label>
+                    <label>Y</label>
                     <div class="input-append">
                         <input type="number" class="input-mini text-right" data-bind="value: editorAxisYSpeed">
-                        <span class="add-on">mm/min</span>
+                        {# Translators: millimeters, unit of length/ minutes, unit of time #}
+                        <span class="add-on">{{ _('mm/min') }}</span>
                     </div>
                     <label class="checkbox">
                         <input type="checkbox" data-bind="checked: editorAxisYInverted"> {{ _('Invert control') }}
                     </label>
                 </div>
                 <div class="controls form-inline">
-                    <label>{{ _('Z') }}</label>
+                    <label>Z</label>
                     <div class="input-append">
                         <input type="number" class="input-mini text-right" data-bind="value: editorAxisZSpeed">
-                        <span class="add-on">mm/min</span>
+                        {# Translators: millimeters, unit of length/ minutes, unit of time #}
+                        <span class="add-on">{{ _('mm/min') }}</span>
                     </div>
                     <label class="checkbox">
                         <input type="checkbox" data-bind="checked: editorAxisZInverted"> {{ _('Invert control') }}

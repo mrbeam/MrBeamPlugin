@@ -356,7 +356,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/lib/photobooth_min.js", "js/svg_cleaner.js", "js/loginscreen_viewmodel.js",
 				"js/wizard_acl.js", "js/netconnectd_wrapper.js", "js/lasersaftey_viewmodel.js",
 				"js/ready_to_laser_viewmodel.js", "js/lib/screenfull.min.js","js/settings/camera_calibration.js",
-				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js", "js/lib/Color.js", "js/laser_job_done_viewmodel.js", 
+				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js", "js/lib/Color.js", "js/laser_job_done_viewmodel.js",
 				"js/loadingoverlay_viewmodel.js", "js/wizard_whatsnew.js", "js/wizard_analytics.js"],
 			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css", "css/quicktext-fonts.css", "css/sliders.css"],
 			less=["less/mrbeam.less"]
@@ -689,13 +689,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		from octoprint.server.api import NO_CONTENT
 
 		if not(self.isFirstRun() and self._user_manager.enabled and not self._user_manager.hasBeenCustomized()):
-			return make_response("Forbidden", 403)
+			return make_response(gettext("Forbidden"), 403)
 
 		data = request.values
 		if hasattr(request, "json") and request.json:
 			data = request.json
 		else:
-			return make_response("Unable to interprete request", 400)
+			return make_response(gettext("Unable to interprete request"), 400)
 
 		if 	"user" in data.keys() and "pass1" in data.keys() and \
 				"pass2" in data.keys() and data["pass1"] == data["pass2"]:
@@ -705,7 +705,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._user_manager.enable()
 			self._user_manager.addUser(data["user"], data["pass1"], True, ["user", "admin"], overwrite=True)
 		else:
-			return make_response("Unable to interprete request", 400)
+			return make_response(gettext("Unable to interprete request"), 400)
 
 		self._settings.save()
 		return NO_CONTENT
@@ -718,7 +718,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		# accept requests only while setup wizard is active
 		if not self.isFirstRun() or not self._is_wifi_wizard_required():
-			return make_response("Forbidden", 403)
+			return make_response(gettext("Forbidden"), 403)
 
 		data = None
 		command = None
@@ -726,7 +726,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			data = request.json
 			command = data["command"]
 		except:
-			return make_response("Unable to interprete request", 400)
+			return make_response(gettext("Unable to interprete request"), 400)
 
 		self._logger.debug("wifi_wizard_api() command: %s, data: %s", command,  pprint.pformat(data))
 
@@ -758,7 +758,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if hasattr(request, "json") and request.json:
 			data = request.json
 		else:
-			return make_response("Unable to interprete request", 400)
+			return make_response(gettext("Unable to interprete request"), 400)
 
 		# check if username is ok
 		username = data.get('username', '')
@@ -767,7 +767,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				or not current_user.is_user() \
 				or not current_user.is_active() \
 				or current_user.get_name() != username:
-			return make_response("Invalid user", 403)
+			return make_response(gettext("Invalid user"), 403)
 
 		show_again = bool(data.get('show_again', True))
 		dialog_language = data.get('dialog_language')
@@ -831,7 +831,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self.setUserSetting(username, self.USER_SETTINGS_KEY_LASERSAFETY_CONFIRMATION_SHOW_AGAIN, show_again)
 
 		if needSubmission and not successfullySubmitted:
-			return make_response("Failed to submit laser safety confirmation to cloud.", 901)
+			return make_response(gettext("Failed to submit laser safety confirmation to cloud."), 901)
 		else:
 			return NO_CONTENT
 
@@ -858,7 +858,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		except:
 			self._logger.exception("Exception while handling custom_materials(): ")
-			return make_response("Error while handling custom_materials request.", 500)
+			return make_response(gettext("Error while handling custom_materials request."), 500)
 
 		# self._logger.info("custom_material(): response: %s", data)
 		return make_response(jsonify(res), 200)
@@ -972,18 +972,18 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	#@firstrun_only_access
 	def sendInitialCalibrationMarkers(self):
 		if not "application/json" in request.headers["Content-Type"]:
-			return make_response("Expected content-type JSON", 400)
+			return make_response(gettext("Expected content-type JSON"), 400)
 
 		try:
 			json_data = request.json
 		except JSONBadRequest:
-			return make_response("Malformed JSON body in request", 400)
+			return make_response(gettext("Malformed JSON body in request"), 400)
 
 		self._logger.debug("INITIAL camera_calibration_markers() data: {}".format(json_data))
 
 
 		if not "result" in json_data or not all(k in json_data['result'] for k in ['newCorners','newMarkers']):
-			return make_response("No profile included in request", 400)
+			return make_response(gettext("No profile included in request"), 400)
 
 		self.camera_calibration_markers(json_data)
 		return NO_CONTENT
@@ -1000,15 +1000,15 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@restricted_access
 	def laserCutterProfilesAdd(self):
 		if not "application/json" in request.headers["Content-Type"]:
-			return make_response("Expected content-type JSON", 400)
+			return make_response(gettext("Expected content-type JSON"), 400)
 
 		try:
 			json_data = request.json
 		except JSONBadRequest:
-			return make_response("Malformed JSON body in request", 400)
+			return make_response(gettext("Malformed JSON body in request"), 400)
 
 		if not "profile" in json_data:
-			return make_response("No profile included in request", 400)
+			return make_response(gettext("No profile included in request"), 400)
 
 		base_profile = self.laserCutterProfileManager.get_default()
 		if "basedOn" in json_data and isinstance(json_data["basedOn"], basestring):
@@ -1033,9 +1033,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		try:
 			saved_profile = self.laserCutterProfileManager.save(profile, allow_overwrite=False, make_default=make_default)
 		except InvalidProfileError:
-			return make_response("Profile is invalid", 400)
+			return make_response(gettext("Profile is invalid"), 400)
 		except CouldNotOverwriteError:
-			return make_response("Profile already exists and overwriting was not allowed", 400)
+			return make_response(gettext("Profile already exists and overwriting was not allowed"), 400)
 		else:
 			return jsonify(dict(profile=self._convert_profile(saved_profile)))
 
@@ -1043,7 +1043,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def laserCutterProfilesGet(self, identifier):
 		profile = self.laserCutterProfileManager.get(identifier)
 		if profile is None:
-			return make_response("Unknown profile: %s" % identifier, 404)
+			return make_response(gettext("Unknown profile: %s") % identifier, 404)
 		else:
 			return jsonify(self._convert_profile(profile))
 
@@ -1057,15 +1057,15 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@restricted_access
 	def laserCutterProfilesUpdate(self, identifier):
 		if not "application/json" in request.headers["Content-Type"]:
-			return make_response("Expected content-type JSON", 400)
+			return make_response(gettext("Expected content-type JSON"), 400)
 
 		try:
 			json_data = request.json
 		except JSONBadRequest:
-			return make_response("Malformed JSON body in request", 400)
+			return make_response(gettext("Malformed JSON body in request"), 400)
 
 		if not "profile" in json_data:
-			return make_response("No profile included in request", 400)
+			return make_response(gettext("No profile included in request"), 400)
 
 		profile = self.laserCutterProfileManager.get(identifier)
 		if profile is None:
@@ -1103,9 +1103,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		try:
 			saved_profile = self.laserCutterProfileManager.save(new_profile, allow_overwrite=True, make_default=make_default)
 		except InvalidProfileError:
-			return make_response("Profile is invalid", 400)
+			return make_response(gettext("Profile is invalid"), 400)
 		except CouldNotOverwriteError:
-			return make_response("Profile already exists and overwriting was not allowed", 400)
+			return make_response(gettext("Profile already exists and overwriting was not allowed"), 400)
 		else:
 			return jsonify(dict(profile=self._convert_profile(saved_profile)))
 
@@ -1146,7 +1146,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		try:
 			self._file_manager.add_file(target, filename, fileObj, links=None, allow_overwrite=True)
 		except Exception, e:
-			return make_response("Failed to write file. Disk full?", 400)
+			return make_response(gettext("Failed to write file. Disk full?"), 400)
 		else:
 			return jsonify(dict(calibration_marker_svg=filename, target=target))
 
@@ -1310,7 +1310,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			if isinstance(data["x"], (int, long, float)) and isinstance(data["y"], (int, long, float)):
 				self._printer.position(data["x"], data["y"])
 			else:
-				return make_response("Not a number for one of the parameters", 400)
+				return make_response(gettext("Not a number for one of the parameters"), 400)
 		elif command == "feedrate":
 			self._printer.commands("/feedrate " + str(data["value"]))
 		elif command == "intensity":
@@ -1354,7 +1354,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self._event_bus.fire(IoBeamEvents.ONEBUTTON_RELEASED, 1.1)
 			else:
 				self._logger.warn("DEV dev_start_button used while we're not in DEV mode. (ENV_LOCAL)")
-				return make_response("BAD REQUEST - DEV mode only.", 400)
+				return make_response(gettext("BAD REQUEST - DEV mode only."), 400)
 		elif 'rtl_cancel' in data and data['rtl_cancel']:
 			self._oneButtonHandler.unset_ready_to_laser()
 		return NO_CONTENT

@@ -3,13 +3,13 @@
 						<div class="row-fluid">
 							<div class="span4">
 								<ul class="focus_steps">
-									<li>1. Place your material on the working area</li>
-									<li>2. Move the laser over the material</li>
-									<li>3. Put on your safety glasses</li>
-									<li>4. Turn the laser safety switch to on</li>
-									<li>&RightArrow; Now enable the focus mode</li>
-									<li>5. Adjust the focus until the laser beam is as small as possible</li>
-									<li>&RightArrow; Disable the focus mode. </li>
+									<li>{{ _('1. Place your material on the working area') }}</li>
+									<li>{{ _('2. Move the laser over the material') }}</li>
+									<li>{{ _('3. Put on your safety glasses') }}</li>
+									<li>{{ _('4. Turn the laser safety switch to on') }}</li>
+									<li>&RightArrow; {{ _('Now enable the focus mode') }}</li>
+									<li>{{ _('5. Adjust the focus until the laser beam is as small as possible') }}</li>
+									<li>&RightArrow; {{ _('Disable the focus mode.') }} </li>
 								</ul>
 								<div style="text-align:center">
 								<div class="btn-group" role="group" aria-label="focus mode control" style="">
@@ -21,7 +21,7 @@
 								<div style="text-align:center" data-bind="visible: control.showZAxis">
 									<div class="jog-panel" id="control_zaxis_focus">
 
-										Z-Axis
+										{{ _('Z-Axis') }}
 										<div class="btn-group-vertical" role="group" aria-label="z-axis control">
 											<button class="btn box" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { control.sendJogCommand('z',1) }"><i class="icon-arrow-up"></i></button>
 											<button class="btn box" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { control.sendJogCommand('z',-1) }"><i class="icon-arrow-down"></i></button>

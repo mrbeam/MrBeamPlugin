@@ -310,7 +310,7 @@ class MachineCom(object):
 				self._send_event.clear()
 			except:
 				self._logger.exception("Something crashed inside the sending loop, please report this to Mr Beam.", terminal_dump=True)
-				errorMsg = "See octoprint.log for details"
+				errorMsg = gettext("See octoprint.log for details")
 				self._log(errorMsg)
 				self._errorValue = errorMsg
 				self._changeState(self.STATE_ERROR)

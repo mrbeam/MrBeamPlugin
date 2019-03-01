@@ -8,7 +8,7 @@
     {% endif %}
 
     <div class="control-group">
-        <h5>{{ _('Mr Beam II') }}</h5>
+        <h5>Mr Beam II</h5>
         <div class="controls">
             <ul>
                 <div><strong>{{ _('Name:') }}</strong> {{ hostname }}</div>
@@ -18,11 +18,11 @@
     </div>
 
     <div class="control-group">
-        <h5>{{ _('beamOS') }}</h5>
+        <h5>beamOS</h5>
         <div class="controls">
             <ul>
                 <div><strong>{{ _('Mr Beam Plugin:') }}</strong> v{{ beamosVersionNumber }}</div>
-                <div><strong>{{ _('OctoPrint:') }}</strong> <span class="version"></span></div>
+                <div><strong>OctoPrint:</strong> <span class="version"></span></div>
                 <div><strong>{{ _('Image fingerprint:') }}</strong> {{ beamosVersionImage }}</div>
                 <div><strong>{{ _('Software tier:') }}</strong> {{ software_tier }}</div>
                 <div><strong>{{ _('Environment:') }}</strong> {{ env }}</div>
@@ -34,12 +34,13 @@
         <h5>{{ _('Documentation, Support and Privacy') }}</h5>
         <div class="controls">
             <ul>
-                <div><strong>{{ _('Quickstart Guide:') }}</strong> <a href="/plugin/mrbeam/static/docs/QuickstartGuide_en.pdf" target="_blank"> English </a>
-                    or <a href="/plugin/mrbeam/static/docs/QuickstartGuide_de.pdf" target="_blank"> German </a>
-                    or get the latest versions <a href="{{ mrbeamorg_downloads }}" target="_blank">online</a>.</div>
-                <div><strong>{{ _('User Manual:') }}</strong> <a href="/plugin/mrbeam/static/docs/UserManual_en.pdf" target="_blank"> English </a>
-                    or <a href="/plugin/mrbeam/static/docs/UserManual_de.pdf" target="_blank"> German </a>
-                    or get the latest versions <a href="{{ mrbeamorg_downloads }}" target="_blank">online</a>.</div>
+                <div><strong>{{ _('Quickstart Guide:') }}</strong> <a href="/plugin/mrbeam/static/docs/QuickstartGuide_en.pdf" target="_blank"> {{ _('English') }} </a>
+                    {{ _('or') }} <a href="/plugin/mrbeam/static/docs/QuickstartGuide_de.pdf" target="_blank"> {{ _('German') }} </a>
+                    {{ _('or get the latest versions') }} <a href="{{ mrbeamorg_downloads }}" target="_blank">{{ _('online') }}</a>.</div>
+                {#{ _("You can change this in your %(open)ssettings%(close)s.", open='<a href="/user/%d">' % user_id, close='</a>')|safe }#}
+                <div><strong>{{ _('User Manual:') }}</strong> <a href="/plugin/mrbeam/static/docs/UserManual_en.pdf" target="_blank"> {{ _('English') }} </a>
+                    {{ _('or') }} <a href="/plugin/mrbeam/static/docs/UserManual_de.pdf" target="_blank"> {{ _('German') }} </a>
+                    {{ _('or get the latest versions') }} <a href="{{ mrbeamorg_downloads }}" target="_blank">{{ _('online') }}</a>.</div>
                 <div><strong>{{ _('Online Support Portal:') }}</strong> <a href="https://www.mr-beam.org/support" target="_blank">mr-beam.org/support</a></div>
                 <div><strong>{{ _('Community Forum:') }}</strong> <a href="https://www.mr-beam.org/forum" target="_blank">mr-beam.org/forum</a></div>
                 <div><strong>{{ _('Privacy Policies:') }}</strong>

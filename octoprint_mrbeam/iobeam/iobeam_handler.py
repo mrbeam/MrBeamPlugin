@@ -9,6 +9,7 @@ from distutils.version import StrictVersion
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.lib.rwlock import RWLock
+from flask.ext.babel import gettext
 
 # singleton
 _instance = None
@@ -616,8 +617,8 @@ class IoBeamHandler(object):
 					self._logger.info("Received iobeam version: %s - version OK", self.iobeam_version)
 				else:
 					self._logger.error("Received iobeam version: %s - version OUTDATED. IOBEAM_MIN_REQUIRED_VERSION: %s", self.iobeam_version, self.IOBEAM_MIN_REQUIRED_VERSION)
-					_mrbeam_plugin_implementation.notify_frontend(title="Software Update required",
-					                                              text="Module 'iobeam' is outdated. Please run Software Update from 'Settings' > 'Software Update' before you start a laser job.",
+					_mrbeam_plugin_implementation.notify_frontend(title=gettext("Software Update required"),
+					                                              text=gettext("Module 'iobeam' is outdated. Please run Software Update from 'Settings' > 'Software Update' before you start a laser job."),
 																  type="error", sticky=True, replay_when_new_client_connects=True)
 				return 0
 			else:
@@ -637,8 +638,8 @@ class IoBeamHandler(object):
 				       'Please contact our support team immediately at:<br/>' \
 				       '<a href="https://mr-beam.org/support" target="_blank">mr-beam.org/support</a><br/><br/>' \
 				       '<strong>Error:</strong><br/>{}'.format(message)
-				_mrbeam_plugin_implementation.notify_frontend(title="Hardware malfunction",
-				                                              text=text,
+				_mrbeam_plugin_implementation.notify_frontend(title=gettext("Hardware malfunction"),
+				                                              text=gettext(text),
 				                                              type="error", sticky=True,
 				                                              replay_when_new_client_connects=True)
 		elif action == 'debug':

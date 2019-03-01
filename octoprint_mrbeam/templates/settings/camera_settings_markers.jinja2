@@ -17,9 +17,9 @@
 			<div class="marker_found_indicator" data-bind="css: { active: foundNE() }"><i class="icon-ok"></i> NE</div>
 		</div>
 		<div class="marker_selection_desc calibration_help" data-bind="visible: markersFound() && !calibrationActive()">
-			<div>{{_('Click on the arrow head of the marker in the magnified picture.<br/> \n\
-			Continue with the other markers as the picture changes.<br/>\n\
-			Once all arrowheads are marked the calibration is finished.')}}</div>
+			<div>{{_('Click on the arrow head of the marker in the magnified picture.') }}<br/> \n\
+			{{_('Continue with the other markers as the picture changes.') }}<br/>\n\
+			{{_('Once all arrowheads are marked the calibration is finished.')}}</div>
 			<div style="margin-top:1em;">
 				<button class="btn btn-default" data-bind="click: startCalibration">{{ _('Start Calibration') }}</button>
 			</div>

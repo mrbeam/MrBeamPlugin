@@ -49,10 +49,10 @@ $(function(){
 		// material menu
 		self.material_settings2 = {
 			'Anodized Aluminum': {
-				name: 'Anodized Aluminum',
+				name: gettext('Anodized Aluminum'),
 				img: 'anodized_aluminum.jpg',
-				description: 'Dark anodized aluminum can be engraved. Works on iPhones.',
-				hints: 'Requires very precise focus. Anodized aluminum turns brighter through laser engraving. Therefor we suggest to invert photos for engravings.',
+				description: gettext('Dark anodized aluminum can be engraved. Works on iPhones.'),
+				hints: gettext('Requires very precise focus. Anodized aluminum turns brighter through laser engraving. Therefor we suggest to invert photos for engravings.'),
 				laser_type: 'MrBeamII-1.0',
 				colors: {
 					'000000': {
@@ -62,11 +62,11 @@ $(function(){
 				}
 			},
 			'Balsa Wood': {
-				name: 'Balsa Wood',
+				name: gettext('Balsa Wood'),
 				img: 'balsa_wood.jpg',
 				description: '',
 				hints: '',
-				safety_notes: 'Take care about ignitions. Never run a job slower than 300 mm/min!',
+				safety_notes: gettext('Take care about ignitions. Never run a job slower than 300 mm/min!'),
 				laser_type: 'MrBeamII-1.0',
 				colors: {
 					'd4b26f': {
@@ -82,7 +82,7 @@ $(function(){
 				}
 			},
 			'Bamboo': {
-				name: 'Bamboo Wood',
+				name: gettext('Bamboo Wood'),
 				img: 'bamboo.jpg',
 				description: '',
 				hints: '',
@@ -96,11 +96,11 @@ $(function(){
 				}
 			},
 			'Cardboard, corrugated single wave': {
-				name: 'Cardboard, single wave',
+				name: gettext('Cardboard, single wave'),
 				img: 'cardboard_single_wave.jpg',
-				description: 'Ordinary cardboard like most packaging is made of.',
-				hints: 'Engraving looks great if just the first layer is lasered away, that the wave is visible underneath.',
-				safety_notes: 'Take care about ignitions. Never run a job slower than 180 mm/min!',
+				description: gettext('Ordinary cardboard like most packaging is made of.'),
+				hints: gettext('Engraving looks great if just the first layer is lasered away, that the wave is visible underneath.'),
+				safety_notes: gettext('Take care about ignitions. Never run a job slower than 180 mm/min!'),
 				laser_type: 'MrBeamII-1.0',
 				colors: {
 					'8b624a': {
@@ -115,11 +115,11 @@ $(function(){
 				}
 			},
 			'Cardboard, corrugated double wave': {
-				name: 'Cardboard, double wave',
+				name: gettext('Cardboard, double wave'),
 				img: 'cardboard_double_wave.jpg',
-				description: 'Ordinary cardboard like strong packaging is made of.',
-				hints: 'Engraving looks great if just the first layer is lasered away, that the wave is visible underneath.',
-				safety_notes: 'Take care about ignitions. Never run a job slower than 180 mm/min!',
+				description: gettext('Ordinary cardboard like strong packaging is made of.'),
+				hints: gettext('Engraving looks great if just the first layer is lasered away, that the wave is visible underneath.'),
+				safety_notes: gettext('Take care about ignitions. Never run a job slower than 180 mm/min!'),
 				laser_type: 'MrBeamII-1.0',
 				colors: {
 					'8b624a': {
@@ -133,9 +133,9 @@ $(function(){
 			'Fabric Cotton': null,
 			'Fabric Polyester': null,
 			'Finn Cardboard': {
-				name: 'Finn Cardboard',
+				name: gettext('Finn Cardboard'),
 				img: 'finn_cardboard.jpg',
-				description: 'Made out of purely wooden fibres, often used for architectural models.',
+				description: gettext('Made out of purely wooden fibres, often used for architectural models.'),
 				hints: '',
 				safety_notes: '',
 				laser_type: 'MrBeamII-1.0',
@@ -149,10 +149,10 @@ $(function(){
 				}
 			},
 			'Felt': { // took settings from IHM fair
-				name: 'Felt',
+				name: gettext('Felt'),
 				img: 'felt.jpg',
-				description: 'Acrylic felt like the one sold in many arts and craft stores.',
-				hints: 'Be aware that natural felt is something else.',
+				description: gettext('Acrylic felt like the one sold in many arts and craft stores.'),
+				hints: gettext('Be aware that natural felt is something else.'),
 				safety_notes: '',
 				laser_type: 'MrBeamII-1.0',
 				colors: {
@@ -288,10 +288,10 @@ $(function(){
 //				}
 //			},
 			'Foam Rubber': {
-				name: 'Foam Rubber',
+				name: gettext('Foam Rubber'),
 				img: 'foam_rubber.jpg',
-				description: 'Consists of poly urethane foam.',
-				hints: 'Laser parameters are highly color dependant, bright colors might need pierce time.',
+				description: gettext('Consists of poly urethane foam.'),
+				hints: gettext('Laser parameters are highly color dependant, bright colors might need pierce time.'),
 				safety_notes: '',
 				laser_type: 'MrBeamII-1.0',
 				colors: {
@@ -319,9 +319,9 @@ $(function(){
 				}
 			},
 			'Kraftplex': {
-				name: 'Kraftplex',
+				name: gettext('Kraftplex'),
 				img: 'kraftplex.jpg',
-				description: '100% natural fibers compressed under high temperature. Strong and bendable like metal.',
+				description: gettext('100% natural fibers compressed under high temperature. Strong and bendable like metal.'),
 				hints: '',
 				safety_notes: '',
 				laser_type: 'MrBeamII-1.0',
@@ -338,11 +338,11 @@ $(function(){
 			},
 			'Latex': null,
 			'Paper': {
-				name: 'Paper',
+				name: gettext('Paper'),
 				img: 'paper.jpg',
-				description: 'Ordinary paper like from an office printer.',
+				description: gettext('Ordinary paper like from an office printer.'),
 				hints: '',
-				safety_notes: 'Very fine structures may be subject of ignition.',
+				safety_notes: gettext('Very fine structures may be subject of ignition.'),
 				laser_type: 'MrBeamII-1.0',
 				colors: {
 					'e7d27f': {
@@ -355,11 +355,11 @@ $(function(){
 				}
 			},
 			'Plywood Poplar': {
-				name: 'Plywood Poplar',
+				name: gettext('Plywood Poplar'),
 				img: 'plywood.jpg',
-				description: 'Plywood from an ordinary hardware store or arts and craft supply.',
-				hints: 'Watch out for dedicated laser plywood - it has better surface quality and only natural glue.',
-				safety_notes: 'Very fine structures may be subject of ignition.',
+				description: gettext('Plywood from an ordinary hardware store or arts and craft supply.'),
+				hints: gettext('Watch out for dedicated laser plywood - it has better surface quality and only natural glue.'),
+				safety_notes: gettext('Very fine structures may be subject of ignition.'),
 				laser_type: 'MrBeamII-1.0',
 				colors: {
 					'e7d27f': {
@@ -372,10 +372,10 @@ $(function(){
 				}
 			},
 			'Wellboard': {
-				name: 'Wellboard',
+				name: gettext('Wellboard'),
 				img: 'wellboard.jpg',
-				description: '100% natural fibers similar to Kraftplex, but wavy.',
-				hints: 'Thickness is measured over the whole wave.',
+				description: gettext('100% natural fibers similar to Kraftplex, but wavy.'),
+				hints: gettext('Thickness is measured over the whole wave.'),
 				safety_notes: '',
 				laser_type: 'MrBeamII-1.0',
 				colors: {
@@ -548,9 +548,9 @@ $(function(){
 				new_material = {
 				name: name,
 					img: 'custom.jpg',
-					description: 'custom material',
-					hints: 'Figuring out material settings works best from low to high intensity and fast to slow movement.',
-					safety_notes: 'Experimenting with custom material settings is at your own risk.',
+					description: gettext('custom material'),
+					hints: gettext('Figuring out material settings works best from low to high intensity and fast to slow movement.'),
+					safety_notes: gettext('Experimenting with custom material settings is at your own risk.'),
 					laser_type: 'MrBeamII-1.0',
 					colors: {}
 				};
@@ -605,8 +605,8 @@ $(function(){
                 .fail(function(){
 					console.error("Unable to save custom material: ", postData);
 					new PNotify({
-                        title: "Error while saving settings!",
-                        text: "Unable to save your custom material settings at the moment.<br/>Check connection to Mr Beam II and try again.",
+                        title: gettext("Error while saving settings!"),
+                        text: gettext("Unable to save your custom material settings at the moment.<br/>Check connection to Mr Beam II and try again."),
                         type: "error",
                         hide: true
                     });
@@ -655,8 +655,9 @@ $(function(){
 		};
 
 		self.thickness_text = function(data){
-			if(data.thicknessMM < 0) return "engrave only";
-			else return data.thicknessMM+' mm';
+			if(data.thicknessMM < 0) return gettext("engrave only");
+			// Translators: "millimeters"
+			else return data.thicknessMM + gettext(" mm");
 		};
 
 		self.thickness_mount_pos = ko.computed(function(){
@@ -1463,7 +1464,7 @@ $(function(){
 			if(self.gcodeFilesToAppend.length === 1 && self.svg === undefined) {
                 self.files.startGcodeWithSafetyWarning(self.gcodeFilesToAppend[0]);
             } else if (self._allJobsSkipped()) {
-			    const message = "There is nothing to laser, all jobs are set to be skipped.";
+			    const message = gettext("There is nothing to laser, all jobs are set to be skipped.");
 
 			    $('#empty_job_support_link').hide();
 			    $('#empty_job_modal').find('.modal-body p').text(message);
@@ -1472,20 +1473,22 @@ $(function(){
             } else if (!self._validJobForMaterial()) {
 			    let valid;
 			    if (self.has_cutting_proposal()) {
-			        valid = "engraved";
+			        // Translators: "..can only be engraved"
+			        valid = gettext("engraved");
                 } else {
-			        valid = "cut";
+			        // Translators: "..can only be cut"
+			        valid = gettext("cut");
                 }
 			    let designType;
 			    if (self.workingArea.hasTextItems()) {
-			        designType = 'Quick Text'
+			        designType = gettext('Quick Text')
                 } else {
-			        designType = 'selected design';
+			        designType = gettext('selected design');
 			        $('#empty_job_support_link').hide();
                 }
 
-                const message = "Sorry but the " + designType + " can only be " + valid +
-                    ", which is not supported for this material.";
+                const message = gettext("Sorry but the $(designType)s can only be $(laserJob)s, " +
+                    "which is not supported for this material.") % {'designType': designType, 'laserJob': valid};
 
 			    $('#empty_job_support_link').show();
 			    $('#empty_job_modal').find('.modal-body p').text(message);
@@ -1675,12 +1678,12 @@ $(function(){
 
 			if ('reason' in payload && typeof payload['reason'] === 'string' && payload['reason'].startsWith('OutOfSpaceException')) {
 			    var html = "<ul>";
-			    html += "<lh>To free up some disk space you may want to perform one or all of the following suggestions:</lh>";
-			    html += "<li>Delete CGODE files: Go to design library and click 'Only show GCode files' on the left. Here you can delete files from the according context menu.</li>";
-			    html += "<li>Delete design files: Go to design library and click 'Only show design files' on the left. Here you can delete files from the according context menu.</li>";
-			    html += "<li>Delete log files: Go to Settings -> logs and delete old log files per click on the trash bin icon.</li>";
+			    html += ("<lh>" + gettext("To free up some disk space you may want to perform one or all of the following suggestions:") + "</lh>");
+			    html += ("<li>" + gettext("Delete CGODE files: Go to design library and click 'Only show GCode files' on the left. Here you can delete files from the according context menu.") + "</li>");
+			    html += ("<li>" + gettext("Delete design files: Go to design library and click 'Only show design files' on the left. Here you can delete files from the according context menu.") + "</li>");
+			    html += ("<li>" + gettext("Delete log files: Go to Settings -> logs and delete old log files per click on the trash bin icon.") + "</li>");
 			    html += "</ul>";
-			    html += 'Find more details <a href="https://mr-beam.freshdesk.com/en/support/solutions/articles/43000068441-free-up-disk-space" target="_blank">online</a>.';
+			    html += gettext('Find more details %(open)sonline%(close)s.') % {'open': '<a href="https://mr-beam.freshdesk.com/en/support/solutions/articles/43000068441-free-up-disk-space" target="_blank">', 'close': '</a>'};
                 new PNotify({title: gettext("Get more free disk space"), text: html, type: "info", hide: false});
 			}
 		};
@@ -1835,7 +1838,8 @@ window.mrbeam.colorDragging = {
 			var newJob = $('#first_job').clone(); //clone(true) --> https://github.com/twbs/bootstrap/issues/18326
 			newJob.attr('id', '');
 			var i = $('.job_row_vector').length + 1;
-			$(newJob).find('.job_title').text("Cutting Job " + i);
+			// Translators: "Cutting Job #number"
+			$(newJob).find('.job_title').text(gettext("Cutting Job ") + i);
 
 			newJob.find('.used_color').remove();
 			newJob.appendTo($('#additional_jobs'));
