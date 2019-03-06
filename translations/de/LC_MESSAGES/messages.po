@@ -215,13 +215,12 @@ msgid "Take care about ignitions. Never run a job slower than 300 mm/min!"
 msgstr ""
 
 #: octoprint_mrbeam/static/js/convert.js:85
-#, fuzzy
 msgid "Bamboo Wood"
-msgstr "Bamboo Wood"
+msgstr ""
 
 #: octoprint_mrbeam/static/js/convert.js:99
 msgid "Cardboard, single wave"
-msgstr "Cardboard, single wave"
+msgstr ""
 
 #: octoprint_mrbeam/static/js/convert.js:101
 msgid "Ordinary cardboard like most packaging is made of."
@@ -365,6 +364,7 @@ msgstr ""
 #: octoprint_mrbeam/static/js/working_area.js:2301
 #: octoprint_mrbeam/static/js/working_area.js:2306
 #: octoprint_mrbeam/static/js/working_area.js:2311
+#. Translators: millimeters
 msgid " mm"
 msgstr ""
 
@@ -448,9 +448,8 @@ msgid "Get more free disk space"
 msgstr ""
 
 #: octoprint_mrbeam/static/js/convert.js:1841
-#, fuzzy
 msgid "Cutting Job "
-msgstr "Schneideauftrag:"
+msgstr "Schneideauftrag "
 
 #: octoprint_mrbeam/static/js/lasercutterprofiles.js:203
 msgid "Add Profile"
@@ -657,22 +656,27 @@ msgid ""
 msgstr ""
 
 #: octoprint_mrbeam/static/js/working_area.js:1192
+#. Translators: in the sence of Ouch!
 msgid "Oops."
 msgstr ""
 
 #: octoprint_mrbeam/static/js/working_area.js:2296
+#. Translators: shape
 msgid "Circle"
 msgstr ""
 
 #: octoprint_mrbeam/static/js/working_area.js:2301
+#. Translators: shape
 msgid "Heart "
 msgstr ""
 
 #: octoprint_mrbeam/static/js/working_area.js:2306
+#. Translators: shape
 msgid "Star"
 msgstr ""
 
 #: octoprint_mrbeam/static/js/working_area.js:2311
+#. Translators: shape
 msgid "Rectangle "
 msgstr ""
 
@@ -774,6 +778,7 @@ msgstr ""
 #: octoprint_mrbeam/templates/settings/lasercutterprofiles_settings.jinja2:73
 #: octoprint_mrbeam/templates/settings/lasercutterprofiles_settings.jinja2:81
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:126
+#. Translators: millimeters
 msgid "mm"
 msgstr ""
 
@@ -900,6 +905,7 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:231
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:367
+#. Translators: milliseconds
 msgid "ms"
 msgstr ""
 
@@ -1102,6 +1108,7 @@ msgstr ""
 #: octoprint_mrbeam/templates/settings/lasercutterprofiles_settings.jinja2:117
 #: octoprint_mrbeam/templates/settings/lasercutterprofiles_settings.jinja2:128
 #: octoprint_mrbeam/templates/settings/lasercutterprofiles_settings.jinja2:139
+#. Translators: millimeters per minute
 msgid "mm/min"
 msgstr ""
 
@@ -1154,8 +1161,9 @@ msgid ""
 msgstr ""
 
 #: octoprint_mrbeam/templates/homing_overlay.jinja2:53
+#. Translators: special term which realtes to the positioning of the laser head to its Home
 msgid "Homing Cycle"
-msgstr "Homing Cycle"
+msgstr ""
 
 #: octoprint_mrbeam/templates/initial_calibration.jinja2:40
 #: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:131
@@ -1168,9 +1176,8 @@ msgid "Homepage"
 msgstr ""
 
 #: octoprint_mrbeam/templates/initial_calibration.jinja2:44
-#, fuzzy
 msgid "Source code"
-msgstr "Quellcode:"
+msgstr "Quellcode"
 
 #: octoprint_mrbeam/templates/initial_calibration.jinja2:45
 #: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:136
@@ -1614,6 +1621,7 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/quick_text.jinja2:11
 #: octoprint_mrbeam/templates/quick_text.jinja2:13
+#. Translators: the first alphabet letter capitalized and not
 msgid "Aa"
 msgstr ""
 
@@ -1957,9 +1965,8 @@ msgid "Approx. Total Job Time"
 msgstr ""
 
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:24
-#, fuzzy
 msgid "Laser Time:"
-msgstr "Lasergeschwindigkeit (\"laser speed\")"
+msgstr "Lasergeschwindigkeit (\"laser speed\"):"
 
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:27
 msgid "Processed"
@@ -2219,7 +2226,7 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:70
 msgid "Find my Mr Beam:"
-msgstr "Finde meinen Mr Beam:"
+msgstr "Find my Mr Beam:"
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:71
 msgid "Online resources:"
@@ -2539,6 +2546,7 @@ msgstr ""
 #: octoprint_mrbeam/templates/settings/serialconnection_settings.jinja2:32
 #: octoprint_mrbeam/templates/settings/serialconnection_settings.jinja2:42
 #: octoprint_mrbeam/templates/settings/serialconnection_settings.jinja2:52
+#. Translators: seconds
 msgid "s"
 msgstr ""
 
@@ -2622,7 +2630,6 @@ msgid "Hello!"
 msgstr "Hallo!"
 
 #: octoprint_mrbeam/templates/wizard/firstrun_start.jinja2:4
-#, fuzzy
 msgid ""
 "\n"
 "        <strong>Thank you for buying Mr Beam II, the friendly desktop "
@@ -2675,14 +2682,13 @@ msgid ""
 msgstr ""
 
 #: octoprint_mrbeam/templates/wizard/wizard_analytics.jinja2:18
-#, fuzzy
 msgid ""
 "In order to improve your experience with the Mr Beam II,\n"
 "    we would like to gather some analytics data on the device operations."
 msgstr ""
-"Um deine User-Experience mit Mr Beam II zu verbessern,<br/>\n"
-"                    würden wir gerne ein paar Analysedaten über den "
-"Betrieb und die Nutzung des Gerätes sammeln."
+"Um deine User-Experience mit Mr Beam II zu verbessern,\n"
+"    würden wir gerne ein paar Analysedaten über den Betrieb und die "
+"Nutzung des Gerätes sammeln."
 
 #: octoprint_mrbeam/templates/wizard/wizard_analytics.jinja2:26
 msgid "Yes, I want to support Mr Beam and agree to share the analytics data."
