@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.55\n"
 "Report-Msgid-Bugs-To: i18n@octoprint.org\n"
-"POT-Creation-Date: 2019-03-05 16:59+0000\n"
+"POT-Creation-Date: 2019-03-06 16:09+0000\n"
 "PO-Revision-Date: 2019-02-25 16:41+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -71,69 +71,8 @@ msgstr "Was gibt's neues"
 msgid "Lights showing WiFi state"
 msgstr "Lichter zeigen WLAN Status"
 
-#: octoprint_mrbeam/__init__.py:692 octoprint_mrbeam/__init__.py:721
-msgid "Forbidden"
-msgstr ""
-
-#: octoprint_mrbeam/__init__.py:698 octoprint_mrbeam/__init__.py:708
-#: octoprint_mrbeam/__init__.py:729 octoprint_mrbeam/__init__.py:761
-msgid "Unable to interprete request"
-msgstr ""
-
-#: octoprint_mrbeam/__init__.py:770
-msgid "Invalid user"
-msgstr ""
-
-#: octoprint_mrbeam/__init__.py:834
-msgid "Failed to submit laser safety confirmation to cloud."
-msgstr ""
-
-#: octoprint_mrbeam/__init__.py:861
-msgid "Error while handling custom_materials request."
-msgstr ""
-
-#: octoprint_mrbeam/__init__.py:975 octoprint_mrbeam/__init__.py:1003
-#: octoprint_mrbeam/__init__.py:1060
-msgid "Expected content-type JSON"
-msgstr ""
-
-#: octoprint_mrbeam/__init__.py:980 octoprint_mrbeam/__init__.py:1008
-#: octoprint_mrbeam/__init__.py:1065
-msgid "Malformed JSON body in request"
-msgstr ""
-
-#: octoprint_mrbeam/__init__.py:986 octoprint_mrbeam/__init__.py:1011
-#: octoprint_mrbeam/__init__.py:1068
-msgid "No profile included in request"
-msgstr ""
-
-#: octoprint_mrbeam/__init__.py:1036 octoprint_mrbeam/__init__.py:1106
-msgid "Profile is invalid"
-msgstr ""
-
-#: octoprint_mrbeam/__init__.py:1038 octoprint_mrbeam/__init__.py:1108
-msgid "Profile already exists and overwriting was not allowed"
-msgstr ""
-
-#: octoprint_mrbeam/__init__.py:1046
-#, python-format
-msgid "Unknown profile: %s"
-msgstr ""
-
-#: octoprint_mrbeam/__init__.py:1149
-msgid "Failed to write file. Disk full?"
-msgstr ""
-
-#: octoprint_mrbeam/__init__.py:1313
-msgid "Not a number for one of the parameters"
-msgstr ""
-
-#: octoprint_mrbeam/__init__.py:1357
-msgid "BAD REQUEST - DEV mode only."
-msgstr ""
-
-#: octoprint_mrbeam/comm_acc2.py:313
-msgid "See octoprint.log for details"
+#: octoprint_mrbeam/comm_acc2.py:314
+msgid "Please contact Mr Beam support team and attach octoprint.log."
 msgstr ""
 
 #: octoprint_mrbeam/iobeam/iobeam_handler.py:620
@@ -152,12 +91,6 @@ msgstr ""
 
 #: octoprint_mrbeam/iobeam/lid_handler.py:171
 msgid "Please make sure the lid of your Mr Beam II is open and wait a little..."
-msgstr ""
-
-#: octoprint_mrbeam/iobeam/lid_handler.py:173
-msgid ""
-"Error, no photocreator active, maybe you are developing and dont have a "
-"cam?"
 msgstr ""
 
 #: octoprint_mrbeam/iobeam/lid_handler.py:327
@@ -364,7 +297,6 @@ msgstr ""
 #: octoprint_mrbeam/static/js/working_area.js:2301
 #: octoprint_mrbeam/static/js/working_area.js:2306
 #: octoprint_mrbeam/static/js/working_area.js:2311
-#. Translators: millimeters
 msgid " mm"
 msgstr ""
 
@@ -656,27 +588,22 @@ msgid ""
 msgstr ""
 
 #: octoprint_mrbeam/static/js/working_area.js:1192
-#. Translators: in the sence of Ouch!
 msgid "Oops."
 msgstr ""
 
 #: octoprint_mrbeam/static/js/working_area.js:2296
-#. Translators: shape
 msgid "Circle"
 msgstr ""
 
 #: octoprint_mrbeam/static/js/working_area.js:2301
-#. Translators: shape
 msgid "Heart "
 msgstr ""
 
 #: octoprint_mrbeam/static/js/working_area.js:2306
-#. Translators: shape
 msgid "Star"
 msgstr ""
 
 #: octoprint_mrbeam/static/js/working_area.js:2311
-#. Translators: shape
 msgid "Rectangle "
 msgstr ""
 
@@ -778,7 +705,6 @@ msgstr ""
 #: octoprint_mrbeam/templates/settings/lasercutterprofiles_settings.jinja2:73
 #: octoprint_mrbeam/templates/settings/lasercutterprofiles_settings.jinja2:81
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:126
-#. Translators: millimeters
 msgid "mm"
 msgstr ""
 
@@ -905,7 +831,6 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:231
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:367
-#. Translators: milliseconds
 msgid "ms"
 msgstr ""
 
@@ -1108,7 +1033,6 @@ msgstr ""
 #: octoprint_mrbeam/templates/settings/lasercutterprofiles_settings.jinja2:117
 #: octoprint_mrbeam/templates/settings/lasercutterprofiles_settings.jinja2:128
 #: octoprint_mrbeam/templates/settings/lasercutterprofiles_settings.jinja2:139
-#. Translators: millimeters per minute
 msgid "mm/min"
 msgstr ""
 
@@ -1161,7 +1085,6 @@ msgid ""
 msgstr ""
 
 #: octoprint_mrbeam/templates/homing_overlay.jinja2:53
-#. Translators: special term which realtes to the positioning of the laser head to its Home
 msgid "Homing Cycle"
 msgstr ""
 
@@ -1621,7 +1544,6 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/quick_text.jinja2:11
 #: octoprint_mrbeam/templates/quick_text.jinja2:13
-#. Translators: the first alphabet letter capitalized and not
 msgid "Aa"
 msgstr ""
 
@@ -2546,7 +2468,6 @@ msgstr ""
 #: octoprint_mrbeam/templates/settings/serialconnection_settings.jinja2:32
 #: octoprint_mrbeam/templates/settings/serialconnection_settings.jinja2:42
 #: octoprint_mrbeam/templates/settings/serialconnection_settings.jinja2:52
-#. Translators: seconds
 msgid "s"
 msgstr ""
 
@@ -3092,4 +3013,3 @@ msgstr ""
 #: octoprint_mrbeam/templates/wizard/wizard_wifi.jinja2:78
 msgid "Reset daemon"
 msgstr ""
-
