@@ -170,7 +170,7 @@ class LidHandler(object):
 			# todo make_response, so that it will be accepted in the .done() method in frontend
 			return make_response(gettext("Please make sure the lid of your Mr Beam II is open and wait a little..."), 200)
 		else:
-			return make_response(gettext("Error, no photocreator active, maybe you are developing and dont have a cam?"), 503)
+			return make_response("Error, no photocreator active, maybe you are developing and dont have a cam?", 503)
 
 	def _start_photo_worker(self):
 		if not self._photo_creator.active:

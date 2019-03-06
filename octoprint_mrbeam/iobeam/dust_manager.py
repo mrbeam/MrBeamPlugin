@@ -7,11 +7,13 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 # singleton
 _instance = None
 
+
 def dustManager():
 	global _instance
 	if _instance is None:
 		_instance = DustManager()
 	return _instance
+
 
 class DustManager(object):
 
@@ -35,7 +37,6 @@ class DustManager(object):
 	DATA_TYPE_DYNAMIC  =  "dynamic"
 	DATA_TYPE_CONENCTED = "connected"
 
-
 	def __init__(self):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.dustmanager")
 		self.dev_mode = _mrbeam_plugin_implementation._settings.get_boolean(['dev', 'iobeam_disable_warnings'])
@@ -50,20 +51,14 @@ class DustManager(object):
 		self._last_event = None
 		self._shutting_down = False
 		self._trail_extraction = None
-		self._timer = None
-		self._timer_interval = self.DEFAULT_TIMER_INTERVAL
-		self._timer_boost_ts = 0
-		self._auto_timer = None
 		self._last_command = ''
 		self.is_dust_mode = False
 
 		self._subscribe()
-		self._start_timer()
 		self._stop_dust_extraction()
 
 		self.extraction_limit = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['dust']['extraction_limit']
 		self.auto_mode_time = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['dust']['auto_mode_time']
-
 
 		self._logger.debug("initialized!")
 
@@ -113,16 +108,18 @@ class DustManager(object):
 		else:
 			err = True
 
+		'''
 		self._connected = args['connected']
 		if self._connected is not None:
+			# Turn off the requests to the iobeam
 			self._unboost_timer_interval()
+		'''
 
 		if not err:
 			self._data_ts = time.time()
 
 		self._validate_values()
 		self._send_dust_to_analytics(self._dust)
-
 
 	def _on_command_response(self, args):
 		if args['success']:
@@ -132,7 +129,6 @@ class DustManager(object):
 		else:
 			# TODO ANDY stop laser
 			self._logger.error("Fan command responded error: received: fan:{} args: {}".format(args['message'], args))
-
 
 	def _onEvent(self, event, payload):
 		if event in (OctoPrintEvents.SLICING_DONE, MrBeamEvents.READY_TO_LASER_START, OctoPrintEvents.PRINT_STARTED):
@@ -231,7 +227,6 @@ class DustManager(object):
 		except:
 			self._logger.exception("Exception send_laser_done_event send_laser_job_event(): ")
 
-
 	def __continue_dust_extraction(self, value, started):
 		if time.time() - started > self.FINAL_DUSTING_DURATION:  # TODO: get this value from laser profile
 			return False
@@ -278,7 +273,7 @@ class DustManager(object):
 				state=self._state, rpm=self._rpm, dust=self._dust, connected=self._connected, age=(time.time() - self._data_ts)))
 			self._pause_laser(trigger="Fan values from iobeam invalid or too old.")
 
-		elif self._connected == False:
+		elif not self._connected:
 			result = False
 			self._logger.warning("Air filter is not connected: state:{state}, rpm:{rpm}, dust:{dust}, connected:{connected}, age:{age}s".format(
 				state=self._state, rpm=self._rpm, dust=self._dust, connected=self._connected, age=(time.time() - self._data_ts)))
@@ -288,40 +283,4 @@ class DustManager(object):
 
 	def _request_value(self, value):
 		return _mrbeam_plugin_implementation._ioBeam.send_fan_command(value)
-
-	def _timer_callback(self):
-		try:
-			self._request_value(self.DATA_TYPE_DYNAMIC)
-			self._validate_values()
-			self._start_timer(delay=self._timer_interval)
-		except:
-			self._logger.exception("Exception in _timer_callback(): ")
-			self._start_timer(delay=self._timer_interval)
-
-	def _start_timer(self, delay=0):
-		if self._timer:
-			self._timer.cancel()
-		if self._timer_boost_ts > 0 and time.time() - self._timer_boost_ts > self.MAX_TIMER_BOOST_DURATION:
-			self._unboost_timer_interval()
-		if not self._shutting_down:
-			if delay <=0:
-				self._timer_callback()
-			else:
-				self._timer = threading.Timer(delay, self._timer_callback)
-				self._timer.daemon = True
-				self._timer.start()
-		else:
-			self._logger.debug("Shutting down.")
-
-	def _boost_timer_interval(self):
-		self._timer_boost_ts = time.time()
-		self._timer_interval = self.BOOST_TIMER_INTERVAL
-		# want the boost immediately, se reset current timer
-		self._start_timer()
-
-	def _unboost_timer_interval(self):
-		self._timer_boost_ts = 0
-		self._timer_interval = self.DEFAULT_TIMER_INTERVAL
-		# must not call _start_timer()!!
-
 
