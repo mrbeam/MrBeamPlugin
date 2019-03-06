@@ -1561,6 +1561,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		if event == OctoPrintEvents.CLIENT_OPENED:
 			self._analytics_handler.log_client_opened(payload.get('remoteAddress', None))
+			self.fire_event(MrBeamEvents.MRB_PLUGIN_VERSION, payload=dict(version=self._plugin_version))
 			self._replay_stored_frontend_notification()
 
 	def fire_event(self, event, payload=None):
