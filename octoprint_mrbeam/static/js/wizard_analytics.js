@@ -7,10 +7,15 @@ $(function () {
         self.analyticsInitialConsent = ko.observable(null);
         self.containsAnalyticsTab = false;
 
+        self.onAfterBinding = function() {
+            if(self.is_bound()) {
+                self.containsAnalyticsTab = true;
+            }
+        };
+
         self.onBeforeWizardTabChange = function(next, current) {
             if (next !== self.MY_WIZARD_TAB_NAME && current === self.MY_WIZARD_TAB_NAME) {
                 let result = self._handleAnalyticsTabExit();
-                self.containsAnalyticsTab = true;
                 return result;
             }
         };
@@ -53,6 +58,11 @@ $(function () {
                         hide: true
                     });
                 });
+        };
+
+        self.is_bound = function(){
+            var elem = document.getElementById(DOM_ELEMENT_TO_BIND_TO);
+            return elem ? (!!ko.dataFor(elem)) : false;
         };
 
     }
