@@ -620,7 +620,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def _get_whatsnew_1_wizard_name(self):
 		# jinja has some js that changes this to German if lang is 'de'
-		return gettext("Lights showing WiFi state")
+		return gettext("New Mr Beam Status Light")
 
 	# def _is_whatsnew_2_wizard_required(self):
 	# 	result = not self.isFirstRun()
