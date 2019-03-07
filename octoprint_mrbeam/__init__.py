@@ -622,50 +622,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# jinja has some js that changes this to German if lang is 'de'
 		return gettext("New Mr Beam Status Light")
 
-	# def _is_whatsnew_2_wizard_required(self):
-	# 	result = not self.isFirstRun()
-	# 	self._logger.debug("_is_whatsnew_2_wizard_required() %s", result)
-	# 	return result
-	#
-	# def _get_whatsnew_2_wizard_details(self):
-	# 	return dict()
-	#
-	# def _get_whatsnew_2_additional_wizard_template_data(self):
-	# 	return dict(mandatory=False, suffix="_whatsnew_2")
-	#
-	# def _get_whatsnew_2_wizard_name(self):
-	# 	# jinja has some js that changes this to German if lang is 'de'
-	# 	return gettext("Custom Material Settings")
-	#
-	# def _is_whatsnew_3_wizard_required(self):
-	# 	result = not self.isFirstRun()
-	# 	self._logger.debug("_is_whatsnew_4_wizard_required() %s", result)
-	# 	return result
-	#
-	# def _get_whatsnew_3_wizard_details(self):
-	# 	return dict()
-	#
-	# def _get_whatsnew_3_additional_wizard_template_data(self):
-	# 	return dict(mandatory=False, suffix="_whatsnew_3")
-	#
-	# def _get_whatsnew_3_wizard_name(self):
-	# 	# jinja has some js that changes this to German if lang is 'de'
-	# 	return gettext("Engraving Algorithms")
-	#
-	# def _is_whatsnew_4_wizard_required(self):
-	# 	result = not self.isFirstRun()
-	# 	self._logger.debug("_is_whatsnew_4_wizard_required() %s", result)
-	# 	return result
-	#
-	# def _get_whatsnew_4_wizard_details(self):
-	# 	return dict()
-	#
-	# def _get_whatsnew_4_additional_wizard_template_data(self):
-	# 	return dict(mandatory=False, suffix="_whatsnew_4")
-	#
-	# def _get_whatsnew_4_wizard_name(self):
-	# 	# jinja has some js that changes this to German if lang is 'de'
-	# 	return gettext("...and more")
+	# ~~ Analytics subwizard
 
 	def _is_analytics_wizard_required(self):
 		result = self._settings.get(['analyticsEnabled']) is None
