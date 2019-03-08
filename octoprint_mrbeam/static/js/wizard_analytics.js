@@ -31,7 +31,7 @@ $(function () {
              if (!self.analyticsInitialConsent()) {
                  showMessageDialog({
                      title: gettext("You need to select an option"),
-                     message: gettext("Please make a choice about analytics. <br/>You will be able to change it later in the settings if you want.")
+                     message: _.sprintf(gettext("Please make a choice about analytics.%(br)sYou will be able to change it later in the settings if you want."), {br: "<br/>"})
                  });
                  return false;
              }
@@ -52,8 +52,8 @@ $(function () {
                 .fail(function () {
                     console.error("Unable to save analytics state: ", data);
                     new PNotify({
-                        title: "Error while saving settings!",
-                        text: "Unable to save your analytics state at the moment.<br/>Check connection to Mr Beam II and try again.",
+                        title: gettext("Error while saving settings!"),
+                        text: _.sprintf(gettext("Unable to save your analytics state at the moment.%(br)sCheck connection to Mr Beam II and try again."), {br: "<br/>"}),
                         type: "error",
                         hide: true
                     });
