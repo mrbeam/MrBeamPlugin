@@ -140,7 +140,7 @@ msgstr ""
 #: octoprint_mrbeam/static/js/convert.js:55
 msgid ""
 "Requires very precise focus. Anodized aluminum turns brighter through "
-"laser engraving. Therefor we suggest to invert photos for engravings."
+"laser engraving. Therefore we suggest to invert photos for engravings."
 msgstr ""
 
 #: octoprint_mrbeam/static/js/convert.js:65
@@ -391,15 +391,6 @@ msgstr ""
 #: octoprint_mrbeam/static/js/convert.js:1840
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:325
 msgid "Cutting Job "
-msgstr ""
-
-#: octoprint_mrbeam/static/js/lasercutterprofiles.js:203
-msgid "Add Profile"
-msgstr ""
-
-#: octoprint_mrbeam/static/js/lasercutterprofiles.js:203
-#, python-format
-msgid "Edit Profile \"%(name)s\""
 msgstr ""
 
 #: octoprint_mrbeam/static/js/lasersaftey_viewmodel.js:135
@@ -2201,7 +2192,7 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/settings/svgtogcode_settings.jinja2:10
 msgid ""
-"In case beamOS can\t recognize what dpi value your graphic program uses, "
+"In case beamOS can\'t recognize what dpi value your graphic program uses, "
 "this value will be the fallback. Files from Illustrator or Inkscape or "
 "Corel Draw tend to work fine regardless of this value."
 msgstr ""
