@@ -237,6 +237,12 @@ $(function () {
             self.removeLoadingOverlay();
         };
 
+        self.onEventMrbPluginVersion = function(payload) {
+            if ('version' in payload) {
+                self._force_reload_on_inconsitent_version(payload['version']);
+            }
+        };
+
         self.set_Design_lib_defaults = function(){
             self.files.listHelper.addFilter('model');
             self.files.listHelper.changeSorting('upload');
@@ -261,15 +267,16 @@ $(function () {
          * Reloads the frontend bypassing any cache if backend version of mr beam plugin is different from the forntend version.
          * This happens sometimes after a software update.
          * @private
+         * @param backend_version (optional) If no version is given the function reads it from self.settings
          */
-        self._force_reload_on_inconsitent_version = function(){
-            var settings_version = self.settings.settings.plugins.mrbeam._version();
-            if (settings_version != BEAMOS_VERSION) {
-                console.log("Frontend version check: FAILED (frontend=" + BEAMOS_VERSION + ", backend="+settings_version + ")");
+        self._force_reload_on_inconsitent_version = function(backend_version){
+            backend_version = backend_version || self.settings.settings.plugins.mrbeam._version();
+            if (backend_version != BEAMOS_VERSION) {
+                console.log("Frontend version check: FAILED (frontend=" + BEAMOS_VERSION + ", backend="+backend_version + ")");
                 console.log("Reloading frontend...");
                 window.location.href = "/?ts="+Date.now();
             } else {
-                console.log("Frontend version check: OK (frontend=" + BEAMOS_VERSION + ", backend="+settings_version + ")");
+                console.log("Frontend version check: OK (frontend=" + BEAMOS_VERSION + ", backend="+backend_version + ")");
             }
         };
 
