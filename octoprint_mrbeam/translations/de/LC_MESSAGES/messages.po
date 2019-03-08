@@ -426,7 +426,7 @@ msgstr ""
 
 #: octoprint_mrbeam/static/js/loadingoverlay_viewmodel.js:7
 msgid "beamOS is reloading..."
-msgstr ""
+msgstr "beamOS läd neu..."
 
 #: octoprint_mrbeam/static/js/mother_viewmodel.js:36
 msgid "Starts the laser job"
@@ -1407,7 +1407,7 @@ msgstr "Ich verstehe und stimme zu!"
 
 #: octoprint_mrbeam/templates/loading_overlay.jinja2:90
 msgid "beamOS is starting..."
-msgstr ""
+msgstr "beamOS startet..."
 
 #: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:3
 #: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:30
@@ -1474,7 +1474,7 @@ msgstr "QuickstartGuide_de.pdf"
 #: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:93
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:35
 msgid "Quickstart Guide"
-msgstr "Schnellstartanleitung"
+msgstr "Quickstart Guide"
 
 #: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:94
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:36
@@ -1484,7 +1484,7 @@ msgstr "UserManual_de.pdf"
 #: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:94
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:36
 msgid "User Manual"
-msgstr "Benutzerhandbuch"
+msgstr "Betriebsanleitung"
 
 #: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:96
 msgid "Support Portal"
@@ -2042,7 +2042,7 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:37
 msgid "get the latest versions"
-msgstr ""
+msgstr "neueste Versionen:"
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:37
 msgid "online"
