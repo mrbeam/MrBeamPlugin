@@ -2042,7 +2042,7 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:37
 msgid "get the latest versions"
-msgstr "neueste Versionen: online"
+msgstr "neueste Versionen:"
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:37
 msgid "online"
