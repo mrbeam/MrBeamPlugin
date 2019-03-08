@@ -7,16 +7,12 @@
 {# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! #}
 
 <h3>{{ _("Analytics") }}</h3>
-{% set docs_locale = 'en' %}
-{% if plugin_mrbeam_language == 'de' %}
-{%      set docs_locale = 'de' %}
-{% endif %}
+{% set privacy_policy = _('/plugin/mrbeam/static/docs/MrBeamAnalytics-PrivacyPolicy_en.pdf') %}
 <h4>
     {{ _('Help us improve Mr Beam!') }} <i class="fa fa-heartbeat" aria-hidden="true" style="margin-right: 3px"></i>
 </h4>
 <p>
-    {{ _('In order to improve your experience with the Mr Beam II,
-    we would like to gather some analytics data on the device operations.') }}
+    {{ _('In order to improve your experience with the Mr Beam II, we would like to gather some analytics data on the device operations.') }}
     {{ _('No information will be shared with external sources.') }}
 </p>
 
@@ -50,7 +46,7 @@
         {{ _('Data we will <b>not save</b>:') }}
         <ul>
             <li>{{ _('Your designs, its content or file names.') }}</li>
-            <li>{{ _('Usernames, email addresses and passwords.') }}</li>
+            <li>{{ _('Usernames, email addresses or passwords.') }}</li>
             <li>{{ _('Location, camera pictures, public IP addresses.') }}</li>
         </ul>
       </div>
@@ -63,5 +59,5 @@
 </p>
 <p style="color: darkgray;font-size: 0.9em">
     {# Want more detailed information? You can check our <a href="/plugin/mrbeam/static/docs/MrBeamAnalytics-PrivacyPolicy_en.pdf" target="_blank">privacy policy.</a> #}
-    {{ _("Want more detailed information? You can check our %(open)sprivacy policy%(close)s.", open='<a href="/plugin/mrbeam/static/docs/MrBeamAnalytics-PrivacyPolicy_%s.pdf" target="_blank">' % docs_locale, close='</a>')|safe }}
+    {{ _("Want more detailed information? You can check our %(open)sprivacy policy%(close)s.", open='<a href="%s" target="_blank">' % privacy_policy, close='</a>')|safe }}
 </p>

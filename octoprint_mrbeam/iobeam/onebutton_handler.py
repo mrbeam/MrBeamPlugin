@@ -358,8 +358,8 @@ class OneButtonHandler(object):
 		'''
 		temp_ok = _mrbeam_plugin_implementation._temperatureManager.is_temperature_recent()
 		if not temp_ok:
-			msg = gettext("iobeam: Laser temperature not available")
-			_mrbeam_plugin_implementation.notify_frontend(title=gettext("Error"), text=msg, type='error')
+			msg = "iobeam: Laser temperature not available"
+			_mrbeam_plugin_implementation.notify_frontend(title="Error", text=msg, type='error')
 			raise Exception(msg)
 
 		iobeam_ok = _mrbeam_plugin_implementation._ioBeam.is_iobeam_version_ok()

@@ -8,15 +8,6 @@ $(function() {
              if (self.is_bound()) {
                 // test if bound, only then it's a what's new wizard
                  $('#wizard_dialog div.modal-header h3').text("✨ " + gettext("What's New") + " ✨");
-
-                 /**
-                  * Set title labels on the left IF according variable for a german title is set.
-                  */
-                 for (var i=0; i<10; i++) {
-                     if (window['wizard_plugin_corewizard_whatsnew_'+i+'_title_de']){
-                        $('#wizard_plugin_corewizard_whatsnew_'+i+'_link a').text(window['wizard_plugin_corewizard_whatsnew_'+i+'_title_de']);
-                     }
-                 }
              } else{
                  // welcome wizard
              }

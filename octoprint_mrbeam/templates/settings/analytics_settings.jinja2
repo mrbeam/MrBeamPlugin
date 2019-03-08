@@ -7,11 +7,7 @@
 
 <div id="settings_mrbeam_analytics">
     <h3>{{ _('Analytics') }}</h3>
-    {#    Analytics link is language specific  #}
-    {% set docs_locale = 'en' %}
-    {% if plugin_mrbeam_language == 'de' %}
-    {%      set docs_locale = 'de' %}
-    {% endif %}
+    {% set privacy_policy = _('/plugin/mrbeam/static/docs/MrBeamAnalytics-PrivacyPolicy_en.pdf') %}
     <form class="form-horizontal">
         <div class="control-group">
 {#            <label class="control-label" for="settings-debug-terminal">{{ _('Enable terminal') }}</label>#}
@@ -24,8 +20,7 @@
                     <strong>{{ _('Enable analytics') }}</strong>
                 </label>
                 <p>
-                    {{ _('In order to improve your experience with the Mr Beam II,<br/>
-                    we would like to gather some analytics data on the device operations.') }}<br/>
+                    {{ _('In order to improve your experience with the Mr Beam II,<br/>we would like to gather some analytics data on the device operations.') }}<br/>
                     {{ _('No information will be shared with external sources.') }}
                 </p>
 
@@ -51,7 +46,7 @@
                         {{ _('Data we will <b>not save</b>:') }}
                         <ul>
                             <li>{{ _('Your designs, its content or file names.') }}</li>
-                            <li>{{ _('Username, email address and passwords.') }}</li>
+                            <li>{{ _('Usernames, email addresses or passwords.') }}</li>
                             <li>{{ _('Location, camera pictures, public IP addresses.') }}</li>
                         </ul>
                       </div>
@@ -60,7 +55,7 @@
                 </div>
 
                 <p style="color: darkgray;font-size: 0.9em">
-                    {{ _("Want more detailed information? You can check our %(open)sprivacy policy%(close)s.", open='<a href="/plugin/mrbeam/static/docs/MrBeamAnalytics-PrivacyPolicy_%s.pdf" target="_blank">' % docs_locale, close='</a>')|safe }}
+                    {{ _("Want more detailed information? You can check our %(open)sprivacy policy%(close)s.", open='<a href="%s" target="_blank">' % privacy_policy, close='</a>')|safe }}
                     {#{ _('Want more detailed information? You can check our') }} <a href="/plugin/mrbeam/static/docs/MrBeamAnalytics-PrivacyPolicy_{{ plugin_mrbeam_language }}.pdf" target="_blank">{{ _('privacy policy.') }}</a> #}
                 </p>
 

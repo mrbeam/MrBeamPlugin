@@ -14,10 +14,7 @@
 
 
 
-{% set safety_img = 'img/MrBeam_Sicherheitshinweise_EN.png' %}
-{% if language == 'de' %}
-{%      set safety_img = 'img/MrBeam_Sicherheitshinweise_DE.png' %}
-{% endif %}
+{% set safety_img = _('img/MrBeam_Sicherheitshinweise_EN.png') %}
 
 <p>
     <strong>{{ _('Heads up! Read the following, it is very important for your and other\'s health!') }}</strong>

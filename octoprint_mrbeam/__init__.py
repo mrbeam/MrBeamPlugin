@@ -438,8 +438,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 lasersafety_confirmation_dialog_version  = self.LASERSAFETY_CONFIRMATION_DIALOG_VERSION,
 							 lasersafety_confirmation_dialog_language = language,
 
-							 quickstart_guide_default="QuickstartGuide_{locale}.pdf".format(locale='de' if language == 'de' else 'en'),
-							 usermanual_default="UserManual_{locale}.pdf".format(locale='de' if language == 'de' else 'en')
+							 quickstart_guide_default=gettext("QuickstartGuide_en.pdf"),
+							 usermanual_default=gettext("UserManual_en.pdf")
 						 ))
 		r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
 

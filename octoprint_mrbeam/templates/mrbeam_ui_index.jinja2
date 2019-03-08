@@ -46,12 +46,15 @@
 				</div>
 				<!-- Navbar -->
 				<ul id="mrbeam-main-tabs" class="nav nav-pills pull-right">
+                    {# Translatots: Name of the tab #}
 					<li class="active"><a href="#workingarea" data-toggle="tab" id="wa_tab_btn">{{ _('working area') }}</a></li>
+                    {# Translatots: Name of the tab #}
 					<li><a href="#designlib" data-toggle="tab" id="designlib_tab_btn">{{ _('design library') }}</a></li>
                     {% if not enableFocus %}
 					<li><a href="#focus" data-toggle="tab" id="focus_tab_btn">{{ _('focus') }}</a></li>
                     {% endif %}
                     {% if terminalEnabled %}
+                    {# Translatots: Name of the tab #}
 					<li><a href="#mrb_term" data-toggle="tab" id="terminal_tab_btn">{{ _('terminal') }}</a></li>
                     {% endif %}
 
@@ -84,7 +87,7 @@
                                 <a href="#" id="exit_fullscreen_menu_item"><i class="icon-fullscreen"></i> {{ _('Exit Fullscreen') }}</a>
                             </li>
 							<li class="divider"></li>
-							<li><a href="http://www.mr-beam.org" target="_blank"><i class="icon-home"></i> {{ _('mr-beam.org') }}</a></li>
+							<li><a href="http://www.mr-beam.org" target="_blank"><i class="icon-home"></i> mr-beam.org</a></li>
 							<li><a href="http://find.mr-beam.org" target="_blank"><i class="icon-chevron-right"></i> {{ _('Find my Mr Beam') }}</a></li>
 							<li class="divider"></li>
 							<li><a href="/plugin/mrbeam/static/docs/{{ quickstart_guide_default }}" target="_blank"><i class="icon-book"></i> {{ _('Quickstart Guide') }}</a></li>

@@ -96,7 +96,7 @@ $(function() {
             if (!mrbeam.browser.is_supported){
                 new PNotify({
                         title: gettext("Browser not supported."),
-                        text: gettext("Mr Beam II makes use of latest web technologies which are not fully supported by your browser.<br/>Please use %(open)sGoogle Chrome%(close)s for Mr Beam II.") % {open: '<a href=\'http://www.google.de/chrome/\' target=\'_blank\'>', close:'</a>'},
+                        text: _.sprintf(gettext("Mr Beam II makes use of latest web technologies which are not fully supported by your browser.%(br)sPlease use %(open)sGoogle Chrome%(close)s for Mr Beam II."), {br: "<br/>", open: '<a href=\'http://www.google.de/chrome/\' target=\'_blank\'>', close:'</a>'}),
                         type: 'warn',
                         hide: false
                     });
