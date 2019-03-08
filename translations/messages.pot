@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.56\n"
 "Report-Msgid-Bugs-To: i18n@octoprint.org\n"
-"POT-Creation-Date: 2019-03-08 16:13+0000\n"
+"POT-Creation-Date: 2019-03-08 16:24+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,65 +17,55 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.5.1\n"
 
-#: octoprint_mrbeam/__init__.py:441
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:35
-msgid "QuickstartGuide_en.pdf"
-msgstr ""
-
-#: octoprint_mrbeam/__init__.py:442
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:36
-msgid "UserManual_en.pdf"
-msgstr ""
-
-#: octoprint_mrbeam/__init__.py:468
+#: octoprint_mrbeam/__init__.py:465
 #: octoprint_mrbeam/templates/settings/svgtogcode_settings.jinja2:2
 msgid "File Import Settings"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:469
+#: octoprint_mrbeam/__init__.py:466
 msgid "Camera Calibration"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:470
+#: octoprint_mrbeam/__init__.py:467
 #: octoprint_mrbeam/templates/settings/debug_settings.jinja2:2
 msgid "Debug"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:471
+#: octoprint_mrbeam/__init__.py:468
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:2
 msgid "About This Mr Beam"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:472 octoprint_mrbeam/__init__.py:683
+#: octoprint_mrbeam/__init__.py:469 octoprint_mrbeam/__init__.py:680
 #: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:9
 #: octoprint_mrbeam/templates/wizard/wizard_analytics.jinja2:9
 msgid "Analytics"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:558
+#: octoprint_mrbeam/__init__.py:555
 #: octoprint_mrbeam/templates/wizard/wizard_wifi.jinja2:1
 msgid "Wifi Setup"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:574
+#: octoprint_mrbeam/__init__.py:571
 #: octoprint_mrbeam/templates/wizard/wizard_acl.jinja2:1
 msgid "Access Control"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:591
+#: octoprint_mrbeam/__init__.py:588
 #: octoprint_mrbeam/templates/lasersafety_standalone.jinja2:4
 #: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:83
 #: octoprint_mrbeam/templates/wizard/wizard_lasersafety.jinja2:2
 msgid "Laser Safety"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:608
+#: octoprint_mrbeam/__init__.py:605
 #: octoprint_mrbeam/static/js/wizard_whatsnew.js:10
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:2
 msgid "What's New"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:623
+#: octoprint_mrbeam/__init__.py:620
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_1.jinja2:2
 msgid "Lights showing WiFi state"
 msgstr ""
@@ -1401,7 +1391,17 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:93
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:35
+msgid "QuickstartGuide_en.pdf"
+msgstr ""
+
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:93
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:35
 msgid "Quickstart Guide"
+msgstr ""
+
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:94
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:36
+msgid "UserManual_en.pdf"
 msgstr ""
 
 #: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:94

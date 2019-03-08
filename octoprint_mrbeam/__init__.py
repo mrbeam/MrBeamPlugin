@@ -436,10 +436,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 vorlonEnabled=self.is_vorlon_enabled(),
 
 							 lasersafety_confirmation_dialog_version  = self.LASERSAFETY_CONFIRMATION_DIALOG_VERSION,
-							 lasersafety_confirmation_dialog_language = language,
-
-							 quickstart_guide_default=gettext("QuickstartGuide_en.pdf"),
-							 usermanual_default=gettext("UserManual_en.pdf")
+							 lasersafety_confirmation_dialog_language = language
 						 ))
 		r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
 
