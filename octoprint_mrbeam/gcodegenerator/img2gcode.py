@@ -363,6 +363,8 @@ class ImageProcessor():
 			img_pos_mm = (x_off, y_off) # lower left corner of partial image in mm
 
 			self._append_gcode("; Begin part {} @ pixel ({},{}) with dimensions {}x{}".format(img_data['id'], img_data['x'],img_data['y'], size[0], size[1]))
+			gc = self._get_gcode_g0(self, x=x_off, y=y_off, comment="; Move to start ({},{})".format(x_off, y_off))
+			self._append_gcode(gc)
 			# iterate line by line
 			pix = img.load()
 			for row in range(height_px-1,-1,-1):
@@ -781,6 +783,7 @@ if __name__ == "__main__":
 		header = ""
 		footer = ""
 		if(options.noheaders == "false"):
+			# TODO get headers from machine_settings.py
 			header = '''
 $H
 G92X0Y0Z0
