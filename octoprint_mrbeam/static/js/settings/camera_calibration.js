@@ -102,7 +102,7 @@ $(function () {
 					return;
 				}
 
-			if(self.calibrationComplete() || !self.calibrationActive()) return;
+			// if(self.calibrationComplete() || !self.calibrationActive()) return;
 
 			// save current stepResult
 			var step = self.calibrationMarkers[self.currentMarker];
@@ -170,10 +170,10 @@ $(function () {
 				var notifyTitle;
 				if (resp.status === 200) {  // should never be 200 when failing ?? TODO
 					notifyType = 'success';
-					notifyTitle = 'Success';
+					notifyTitle = gettext("Success");
 				} else {
 					notifyType = 'warning';
-					notifyTitle = 'Error';
+					notifyTitle = gettext("Error");
 				}
 				new PNotify({
 					title: notifyTitle,
@@ -317,8 +317,8 @@ $(function () {
 		self.saveMarkersSuccess = function (response) {
 			self.calibrationActive(false);
 			new PNotify({
-				title: gettext("Calibration finished."),
-				text: gettext("Cool, eh?"),
+				title: gettext("Camera Calibrated."),
+				text: gettext("Camera calibration was successful."),
 				type: "success",
 				hide: true
 			});

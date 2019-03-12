@@ -4,6 +4,7 @@ import os
 import shutil
 import logging
 from os.path import isfile
+from flask.ext.babel import gettext
 
 # don't crash on a dev computer where you can't install picamera
 try:
@@ -167,7 +168,7 @@ class LidHandler(object):
 				self._photo_creator.set_undistorted_path()
 			self._startStopCamera("take_undistorted_picture_request")
 			# todo make_response, so that it will be accepted in the .done() method in frontend
-			return make_response('Should save Image soon, please wait.', 200)
+			return make_response(gettext("Please make sure the lid of your Mr Beam II is open and wait a little..."), 200)
 		else:
 			return make_response('Error, no photocreator active, maybe you are developing and dont have a cam?', 503)
 
@@ -323,8 +324,8 @@ class PhotoCreator(object):
 				self._logger.error("PiCamera Error while capturing picture: %s: %s", e.__class__.__name__, e)
 				self.active = False
 				_mrbeam_plugin_implementation.notify_frontend(
-					title="Camera Error",
-					text="Please try the following:<br>- Close and reopen the lid<br>- Reboot the device and reload this page",
+					title=gettext("Camera Error"),
+					text=gettext("Please try the following:<br>- Close and reopen the lid<br>- Reboot the device and reload this page"),
 					type='notice',
 					sticky=True,
 					replay_when_new_client_connects=True)

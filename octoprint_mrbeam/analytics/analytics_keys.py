@@ -1,16 +1,29 @@
 class AnalyticsKeys(object):
+	ANALYTICS_FOLDER = '/home/pi/.octoprint/analytics/'
+
 	SERIALNUMBER = 'snr'
 	TYPE = 't'
 	VERSION = 'v'
 	EVENT = 'e'
 	TIMESTAMP = 'ts'
+	NTP_SYNCED = 'ntp'
+	SESSION_ID = 'sid'
 	TIMESTRING = 'timestring'
 	DATA = 'data'
+	SOFTWARE_TIER = 'sw_tier'
+	VERSION_MRBEAM_PLUGIN = 'version_mrbeam_plugin'
+	LASERHEAD_SERIAL = 'laserhead_serial'
+	ENV = 'env'
+	TOTAL_SPACE = 'total'
+	AVAILABLE_SPACE = 'available'
+	USED_SPACE = 'used_percent'
 
 	### EVENT TYPES ###
-	JOB_EVENT = 'job'
-	DEVICE_EVENT = 'device'
-	CAM_EVENT = 'cam'
+	TYPE_JOB_EVENT = 'job'
+	TYPE_DEVICE_EVENT = 'device'
+	TYPE_CAM_EVENT = 'cam'
+	TYPE_LOG_EVENT = 'log'
+	TYPE_CONNECTIVITY_EVENT = 'connectivity'
 
 	### DEVICE KEYS ###
 	HOSTNAME = 'hostname'
@@ -21,8 +34,13 @@ class AnalyticsKeys(object):
 	SHUTDOWN = 'shutdown'
 	INIT = 'init_json'
 	FLASH_GRBL = 'flash_grbl'
+	ANALYTICS_ENABLED = 'analytics_enabled'
+	IPS = 'ips'
+	DISK_SPACE = 'disk_space'
 
-
+	### LOG EVENT KEYS ###
+	EVENT_LOG = 'log_event'
+	EXCEPTION = 'exception'
 
 	### JOB KEYS ###
 	JOB_ID = 'job_id'
@@ -44,6 +62,10 @@ class AnalyticsKeys(object):
 	COOLING_DONE = 'cooling_done'
 	CONV_ENGRAVE = 'conv_eng'
 	CONV_CUT = 'conv_cut'
+	LASER_JOB = 'laser_job'
+	DESIGN_FILE = 'design_file'
+	MATERIAL = 'material'
+
 	PRINT_EVENTS = [
 						PRINT_STARTED,
 						PRINT_PROGRESS,
@@ -78,3 +100,17 @@ class AnalyticsKeys(object):
 	PIC_EVENT = 'pic'
 	PIC_PREP = 'pic_prep'
 	CAM_SESSION_ID = 'cs_id'
+
+
+	### CONNECTIVITY ###
+	EVENT_UI_RENDER_CALL =          'ui_render_call'
+	EVENT_CLIENT_OPENED =           'client_opened'
+	VERSION_FINDMYMRBEAM_PLUGIN =   'version_findmymrbeam_plugin'
+
+
+
+
+
+
+
+

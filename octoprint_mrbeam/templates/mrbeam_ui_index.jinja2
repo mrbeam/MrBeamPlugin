@@ -39,20 +39,23 @@
 		<nav class="navbar navbar-default navbar-fixed-top" role="navigation" id="navbar" style="min-width:730px;">
 			<div class="">
 				<div class="navbar-header brand">
-					<a id="mrbeam_logo_link" class="navbar-brand" href="#"><img id="logo_wide" alt="Mr Beam Logo" src="{{ url_for('plugin.mrbeam.static', filename='img/mr-typo_x120.png') }}"><img id="logo_compact" alt="Mr Beam Logo" src="{{ url_for('plugin.mrbeam.static', filename='img/mr_x120.png') }}"></a>
+					<a id="mrbeam_logo_link" class="navbar-brand" href="#"><img id="logo_wide" alt="Mr Beam Logo" src="{{ url_for('plugin.mrbeam.static', filename='img/mr-typo_x120.png') }}"><img id="logo_compact" alt="{{ _('Mr Beam Logo') }}" src="{{ url_for('plugin.mrbeam.static', filename='img/mr_x120.png') }}"></a>
                     {% if beta_label %}
                         <span style="margin: 6px; vertical-align: -5px; font-size: 14px; font-weight: 400; color: #e25303; text-decoration: none;">{{ beta_label }}</span>
                     {% endif %}
 				</div>
 				<!-- Navbar -->
 				<ul id="mrbeam-main-tabs" class="nav nav-pills pull-right">
-					<li class="active"><a href="#workingarea" data-toggle="tab" id="wa_tab_btn">working area</a></li>
-					<li><a href="#designlib" data-toggle="tab" id="designlib_tab_btn">design library</a></li>
+                    {# Translatots: Name of the tab #}
+					<li class="active"><a href="#workingarea" data-toggle="tab" id="wa_tab_btn">{{ _('working area') }}</a></li>
+                    {# Translatots: Name of the tab #}
+					<li><a href="#designlib" data-toggle="tab" id="designlib_tab_btn">{{ _('design library') }}</a></li>
                     {% if not enableFocus %}
-					<li><a href="#focus" data-toggle="tab" id="focus_tab_btn">focus</a></li>
+					<li><a href="#focus" data-toggle="tab" id="focus_tab_btn">{{ _('focus') }}</a></li>
                     {% endif %}
                     {% if terminalEnabled %}
-					<li><a href="#mrb_term" data-toggle="tab" id="terminal_tab_btn">terminal</a></li>
+                    {# Translatots: Name of the tab #}
+					<li><a href="#mrb_term" data-toggle="tab" id="terminal_tab_btn">{{ _('terminal') }}</a></li>
                     {% endif %}
 
 					{% for key in templates.navbar.order %}
@@ -84,11 +87,11 @@
                                 <a href="#" id="exit_fullscreen_menu_item"><i class="icon-fullscreen"></i> {{ _('Exit Fullscreen') }}</a>
                             </li>
 							<li class="divider"></li>
-							<li><a href="http://www.mr-beam.org" target="_blank"><i class="icon-home"></i> {{ _('mr-beam.org') }}</a></li>
+							<li><a href="http://www.mr-beam.org" target="_blank"><i class="icon-home"></i> mr-beam.org</a></li>
 							<li><a href="http://find.mr-beam.org" target="_blank"><i class="icon-chevron-right"></i> {{ _('Find my Mr Beam') }}</a></li>
 							<li class="divider"></li>
-							<li><a href="/plugin/mrbeam/static/docs/{{ quickstart_guide_default }}" target="_blank"><i class="icon-book"></i> {{ _('Quickstart Guide') }}</a></li>
-							<li><a href="/plugin/mrbeam/static/docs/{{ usermanual_default }}" target="_blank"><i class="icon-book"></i> {{ _('User Manual') }}</a></li>
+							<li><a href="/plugin/mrbeam/static/docs/{{ _('QuickstartGuide_en.pdf') }}" target="_blank"><i class="icon-book"></i> {{ _('Quickstart Guide') }}</a></li>
+							<li><a href="/plugin/mrbeam/static/docs/{{ _('UserManual_en.pdf') }}" target="_blank"><i class="icon-book"></i> {{ _('User Manual') }}</a></li>
 							<li class="divider"></li>
 							<li><a href="https://www.mr-beam.org/support" target="_blank"><i class="icon-question-sign"></i> {{ _('Support Portal') }}</a></li>
 						</ul>
@@ -176,33 +179,5 @@
 
         {% include 'javascripts.jinja2' %}
 
-		{% if analyticsEnabled %}
-		<script type="text/javascript">
-			$('a, button, input[type=checkbox], .btn, .trk').each(function(idx, element){
-				var id = $(element).attr('id');
-				if(id && id !== ""){
-					mixpanel.track_links(element, 'clicked '+ id);
-					console.log("mixpanel activated", id);
-				} else{
-					if(element.tagName === 'A'){
-						var href = $(element).attr('href');
-						if(href && href !== ""){
-							mixpanel.track_links(element, 'link '+ href);
-							console.log("mixpanel activated", href);
-						}
-					}
-				}
-			});
-
-			mixpanel.register({
-                env: MRBEAM_ENV_ANALYTICS,
-                beamOS_version: BEAMOS_DISPLAY_VERSION,
-                octoprint_version: DISPLAY_VERSION,
-                device_serial: MRBEAM_SERIAL,
-            });
-
-		</script>
-
-		{% endif %}
 	</body>
 </html>
