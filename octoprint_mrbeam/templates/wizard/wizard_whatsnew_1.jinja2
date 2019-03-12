@@ -1,14 +1,118 @@
 
-<h3>{{ _("Lights showing WiFi state") }}</h3>
+{% if language == 'de' %}
 
-{#    <p>#}
-{#        After a laser job is done you see the total job duration in the Laser Job Finished screen:#}
-{#    </p>#}
-{##}
-{#    <img id="wizard_whatsnew_custom_materials_img" src="/plugin/mrbeam/static/img/whatsnew/whatsnew_job_duration.png">#}
-{##}
-{##}
-{#    <p><br/></p>#}
-{#    <p>#}
-{#        Should you want to brag about it, you better take a screenshot.<br/>Once you click "OK", this information is gone.#}
-{#    </p>#}
+    <script>var wizard_plugin_corewizard_whatsnew_1_title_de = "Neues Mr Beam Status Light";</script>
+    <h3>{{ _("Neues Mr Beam Status Light") }}</h3>
+
+    <p>
+        Wenn das Mr Beam Status light atmet (das Licht pulsiert langsam von unten nach oben),<br/>
+        kann eine Verbindung mit deinem Computer hergestellt werden.
+    </p>
+
+    <p>Dazu gibt es drei verschiedene Wege:</p>
+
+    <table style="width:100%; text-align:center;">
+      <tr>
+        <td colspan="3"><img id="wizard_whatsnew_mrb_lights_breathing_colors_img" src="/plugin/mrbeam/static/img/mrb_light_breathing_colors.gif"></td>
+      </tr>
+      <tr>
+        <td><strong>Orangenes Atmen:</strong></td>
+        <td><strong>Grünes Atmen:</strong></td>
+        <td><strong>Weißes Atmen:</strong></td>
+      </tr>
+      <tr>
+        <td>find.mr-beam.org</td>
+        <td>WLAN Access Point</td>
+        <td>In deinem Netzwerk</td>
+      </tr>
+    </table>
+
+
+    <p><br/></p>
+
+    <h5>Orangenes Atmen</h5>
+    <p>
+        Du erhälst Zugang zu deinem Mr Beam II über <a href="http://find.mr-beam.org" target="_blank">find.mr-beam.org</a>.
+    </p>
+
+    <h5>Grünes Atmen</h5>
+    <p>
+        Du erhälst Zugang zu deinem Mr Beam II über den WLAN Access Point.
+    </p>
+    <p>
+        Verbinde dich mit deinem Mr Beam II indem du an deinem Computer die WLAN Einstellungen öffnest <br/>
+        und das WLAN mit dem Namen "MrBeam-XXXX" auswählst.
+        <small>(XXXX steht für den individuellen Namen deines Gerätes.)</small>
+    </p>
+
+    <h5>Weißes Atmen</h5>
+    <p>
+        Verbinde dich mit deinem Mr Beam II über dein lokales Netzwerk <br/>
+        indem du die entsprechenden IP-Adressen/Hostnamen verwendest.
+    </p>
+
+    <p><br/></p>
+    <p>
+        Für mehr Information, lies unseren Knowledge-Base Artikel: <br/>
+        <a href="https://mr-beam.freshdesk.com/de/support/solutions/articles/43000488947-mr-beam-status-light-zeigt-wie-du-dich-verbinden-kannst-" target="_blank">Mr Beam Status Light zeigt, wie du dich verbinden kannst.</a>
+    </p>
+    <p><br/></p>
+
+{% else %}
+
+    <h3>{{ _("New Mr Beam Status Light") }}</h3>
+
+    <p>
+        When the Mr Beam Status Light is breathing (light is moving up and down) a connection can be set up with your computer.
+    </p>
+
+    <p>There are three different ways to do so:</p>
+
+    <table style="width:100%; text-align:center;">
+      <tr>
+        <td colspan="3"><img id="wizard_whatsnew_mrb_lights_breathing_colors_img" src="/plugin/mrbeam/static/img/mrb_light_breathing_colors.gif"></td>
+      </tr>
+      <tr>
+        <td><strong>Breathing Orange:</strong></td>
+        <td><strong>Breathing Green:</strong></td>
+        <td><strong>Breathing White:</strong></td>
+      </tr>
+      <tr>
+        <td>find.mr-beam.org</td>
+        <td>WiFi Access Point</td>
+        <td>In your network</td>
+      </tr>
+    </table>
+
+
+    <p><br/></p>
+
+    <h5>Breathing Orange</h5>
+    <p>
+        Gain access to your Mr Beam II via <a href="http://find.mr-beam.org" target="_blank">find.mr-beam.org</a>.
+    </p>
+
+    <h5>Breathing Green</h5>
+    <p>
+        Gain access to your Mr Beam II via the WiFi Access Point.
+    </p>
+    <p>
+        Connect to your Mr Beam II by opening your WiFi settings on your computer <br/>
+        and then select the WiFi called "MrBeam-XXXX".
+        <small>(XXXX stands for the individual name of your device)</small>
+    </p>
+
+    <h5>Breathing White</h5>
+    <p>
+        Connect to your Mr Beam II though your local network by using the according addresses/hostnames.
+    </p>
+
+    <p><br/></p>
+    <p>
+        For further information check out our knowledge base article: <br/>
+        <a href="https://mr-beam.freshdesk.com/en/support/solutions/articles/43000488947-mr-beam-status-light-tells-you-how-to-connect/preview" target="_blank">Mr Beam Status Light tells you how to connect.</a>
+    </p>
+    <p><br/></p>
+
+{% endif %}
+

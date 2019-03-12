@@ -356,7 +356,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/lib/photobooth_min.js", "js/svg_cleaner.js", "js/loginscreen_viewmodel.js",
 				"js/wizard_acl.js", "js/netconnectd_wrapper.js", "js/lasersaftey_viewmodel.js",
 				"js/ready_to_laser_viewmodel.js", "js/lib/screenfull.min.js","js/settings/camera_calibration.js",
-				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js", "js/lib/Color.js", "js/laser_job_done_viewmodel.js",
+				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js", "js/lib/Color.js", "js/laser_job_done_viewmodel.js", 
 				"js/loadingoverlay_viewmodel.js", "js/wizard_whatsnew.js", "js/wizard_analytics.js"],
 			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css", "css/quicktext-fonts.css", "css/sliders.css"],
 			less=["less/mrbeam.less"]
@@ -436,7 +436,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 vorlonEnabled=self.is_vorlon_enabled(),
 
 							 lasersafety_confirmation_dialog_version  = self.LASERSAFETY_CONFIRMATION_DIALOG_VERSION,
-							 lasersafety_confirmation_dialog_language = language
+							 lasersafety_confirmation_dialog_language = language,
+
+							 quickstart_guide_default="QuickstartGuide_{locale}.pdf".format(locale='de' if language == 'de' else 'en'),
+							 usermanual_default="UserManual_{locale}.pdf".format(locale='de' if language == 'de' else 'en')
 						 ))
 		r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
 
@@ -462,11 +465,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def get_template_configs(self):
 		result = [
-			dict(type='settings', name=gettext("File Import Settings"), template='settings/svgtogcode_settings.jinja2', suffix="_conversion", custom_bindings=False),
-            dict(type='settings', name=gettext("Camera Calibration"), template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
-            dict(type='settings', name=gettext("Debug"), template='settings/debug_settings.jinja2', suffix="_debug", custom_bindings=False),
-            dict(type='settings', name=gettext("About This Mr Beam"), template='settings/about_settings.jinja2', suffix="_about", custom_bindings=False),
-            dict(type='settings', name=gettext("Analytics"), template='settings/analytics_settings.jinja2', suffix="_analytics", custom_bindings=False)
+			dict(type='settings', name="File Import Settings", template='settings/svgtogcode_settings.jinja2', suffix="_conversion", custom_bindings=False),
+            dict(type='settings', name="Camera Calibration", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
+            dict(type='settings', name="Debug", template='settings/debug_settings.jinja2', suffix="_debug", custom_bindings=False),
+            dict(type='settings', name="About This Mr Beam", template='settings/about_settings.jinja2', suffix="_about", custom_bindings=False),
+            dict(type='settings', name="Analytics", template='settings/analytics_settings.jinja2', suffix="_analytics", custom_bindings=False)
 			# disabled in appearance
 			# dict(type='settings', name="Serial Connection DEV", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings=False, replaces='serial')
 		 ]

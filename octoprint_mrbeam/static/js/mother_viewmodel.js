@@ -33,7 +33,7 @@ $(function () {
             self.writeBranchesToSwUpdateScreen();
         };
 
-        self.state.TITLE_PRINT_BUTTON_UNPAUSED = gettext("Starts the laser job");
+        self.state.TITLE_PRINT_BUTTON_UNPAUSED ="Starts the laser job";
 
         self.onStartup = function () {
             // TODO fetch machine profile on start

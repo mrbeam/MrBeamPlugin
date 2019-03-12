@@ -1,5 +1,4 @@
-				{# This file should not be translated, not used #}
-                <div class="tab-pane" id="focus">
+				<div class="tab-pane" id="focus">
 					<div class="container-fluid">
 						<div class="row-fluid">
 							<div class="span4">
@@ -14,8 +13,8 @@
 								</ul>
 								<div style="text-align:center">
 								<div class="btn-group" role="group" aria-label="focus mode control" style="">
-									<button id="btn_focus_on" class="btn btn-danger" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: control.focus_on ">Enable Focus</button>
-									<button id="btn_focus_off" class="btn btn-default" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: control.focus_off ">Disable Focus</button>
+									<button id="btn_focus_on" class="btn btn-danger" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: control.focus_on ">{{ _('Enable Focus') }}</button>
+									<button id="btn_focus_off" class="btn btn-default" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: control.focus_off ">{{ _('Disable Focus') }}</button>
 								</div>
 								</div>
 

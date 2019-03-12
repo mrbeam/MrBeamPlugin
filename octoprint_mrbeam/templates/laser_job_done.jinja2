@@ -26,14 +26,14 @@
             <div id="job_done_info">
                 <img data-bind='visible: is_dust_mode()' src="/plugin/mrbeam/static/img/dusting.jpg">
                 <img data-bind='visible: !is_dust_mode()' src="/plugin/mrbeam/static/img/done.jpg">
-                <h5 data-bind='visible: is_dust_mode()'>{{ _('Please wait a few seconds until Mr Beam II cleared most of the dust particles out of the working area.') }}</h5>
-                <h5 data-bind='visible: !is_dust_mode()'>{{ _('Done. Now check out what you have created with your Mr Beam II!') }}</h5>
+                <h5 data-bind='visible: is_dust_mode()'>Please wait a few seconds until Mr Beam II cleared most of the dust particles out of the working area.</h5>
+                <h5 data-bind='visible: !is_dust_mode()'>Done. Now check out what you have created with your Mr Beam II!</h5>
             </div>
-            <h4 data-bind='visible: !is_dust_mode()'>{{ _('Laser job duration:') }} <span data-bind='text: job_duration_formatted()'></span></h4>
+            <h4 data-bind='visible: !is_dust_mode()'>Laser job duration: <span data-bind='text: job_duration_formatted()'></span></h4>
 
         </div>
         <div class="modal-footer">
-            <h4 data-bind='visible: is_dust_mode()' class="pull-right" >{{ _('Almost done...') }}</h4>
+            <h4 data-bind='visible: is_dust_mode()' class="pull-right" >Almost done...</h4>
             <a class="btn btn-primary" id="laser_job_done_done_btn" data-bind='visible: !is_dust_mode(), click: cancel_btn' aria-hidden="true">{{ _('OK') }}</a>
             {% if env_local == "DEV" %}
                 <a class="btn btn-secondary" id="share_job_and_location_btn" data-bind='visible: !is_dust_mode(), click: map_btn' aria-hidden="true">{{ _('Share my job!') }}</a>
