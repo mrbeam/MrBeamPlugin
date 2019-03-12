@@ -1004,7 +1004,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@octoprint.plugin.BlueprintPlugin.route("/profiles/<string:identifier>", methods=["DELETE"])
 	@restricted_access
 	def laserCutterProfilesDelete(self, identifier):
-		self.laserCutterProfileManager.remove(identifier)
+		self.laserCutterProfileManager.acknowledge_cmd(identifier)
 		return NO_CONTENT
 
 	@octoprint.plugin.BlueprintPlugin.route("/profiles/<string:identifier>", methods=["PATCH"])
