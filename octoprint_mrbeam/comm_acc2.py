@@ -30,7 +30,6 @@ from octoprint.util import get_exception_string, RepeatedTimer, CountedEvent, sa
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.analytics.analytics_handler import existing_analyticsHandler
 from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
-from flask.ext.babel import gettext
 
 ### MachineCom #########################################################################################################
 class MachineCom(object):
@@ -311,7 +310,7 @@ class MachineCom(object):
 				self._send_event.clear()
 			except:
 				self._logger.exception("Something crashed inside the sending loop, please report this to Mr Beam.", terminal_dump=True)
-				errorMsg = gettext("Please contact Mr Beam support team and attach octoprint.log.")
+				errorMsg = "See octoprint.log for details"
 				self._log(errorMsg)
 				self._errorValue = errorMsg
 				self._changeState(self.STATE_ERROR)

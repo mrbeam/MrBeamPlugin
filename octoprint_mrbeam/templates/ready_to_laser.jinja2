@@ -10,18 +10,18 @@
             <img data-bind='visible: !is_fan_connected()' src="/plugin/mrbeam/static/img/airfilter.jpg">
             <img data-bind='visible: !interlocks_closed() && is_fan_connected()' src="/plugin/mrbeam/static/img/closelid.jpg">
             <img data-bind='visible: interlocks_closed() && is_fan_connected()' src="/plugin/mrbeam/static/img/onebutton.jpg">
-            <h5 data-bind='visible: !is_fan_connected()'>{{ _('Can not detect air filter system. Is it plugged in?') }}</h5>
-            <h5 data-bind='visible: !interlocks_closed() && is_fan_connected()'>{{ _('Please close the lid completely before we can proceed.') }}</h5>
-            <h5 data-bind='visible: interlocks_closed() && is_fan_connected()'>{{ _('Everything is ready to go.') }}</h5>
+            <h5 data-bind='visible: !is_fan_connected()'>Can not detect air filter system. Is it plugged in?</h5>
+            <h5 data-bind='visible: !interlocks_closed() && is_fan_connected()'>Please close the lid completely before we can proceed.</h5>
+            <h5 data-bind='visible: interlocks_closed() && is_fan_connected()'>Everything is ready to go.</h5>
         </div>
         <div class="modal-footer">
             <a class="btn pull-left" data-bind='visible: is_rtl_mode(), click: cancel_btn' aria-hidden="true">{{ _('cancel') }}</a>
             <a class="btn pull-left" data-bind='visible: !is_rtl_mode(), click: cancel_btn' aria-hidden="true">{{ _('Cancel Laser Job') }}</a>
-            <h4 class="pull-right" data-bind='visible: !is_fan_connected()'>{{ _('Plugin air filter system') }}</h4>
-            <h4 class="pull-right" data-bind='visible: !interlocks_closed() && is_fan_connected()'>{{ _('Close the lid') }}</h4>
-            <h4 class="pull-right" data-bind='visible: interlocks_closed() && is_fan_connected()'>{{ _('Press the button to') }}
-                <span class="dev_start_button" id="ready_to_laser_dev_start_btn" data-bind='visible: is_rtl_mode()'>{{ _('start') }}</span>
-                <span class="dev_start_button" data-bind='visible: !is_rtl_mode()'>{{ _('continue') }}</span>
+            <h4 class="pull-right" data-bind='visible: !is_fan_connected()'>Plugin air filter system</h4>
+            <h4 class="pull-right" data-bind='visible: !interlocks_closed() && is_fan_connected()'>Close the lid</h4>
+            <h4 class="pull-right" data-bind='visible: interlocks_closed() && is_fan_connected()'>Press the button to
+                <span class="dev_start_button" id="ready_to_laser_dev_start_btn" data-bind='visible: is_rtl_mode()'>start</span>
+                <span class="dev_start_button" data-bind='visible: !is_rtl_mode()'>continue</span>
             </h4>
         </div>
     </div>
@@ -32,12 +32,12 @@
         </div>
         <div class="modal-body">
             <img src="/plugin/mrbeam/static/img/cooling.jpg">
-            <h5 >{{ _('Mr Beam II needs a short break to cool down. We\'ll continue the laser job as soon as possible. There\'s nothing you need to do at the moment.') }}</h5>
+            <h5 >Mr Beam need a short break to cool down. We'll continue the laser job as soon as possible. There's nothing you need to do at the moment.</h5>
         </div>
         <div class="modal-footer">
             <a class="btn pull-left" data-bind='click: cancel_btn' aria-hidden="true">{{ _('Cancel Laser Job') }}</a>
-            <h4 class="pull-right" data-bind='visible: !interlocks_closed()'>{{ _('Close the lid') }}</h4>
-            <h4 class="pull-right" data-bind='visible: interlocks_closed'>{{ _('Just relax') }}</h4>
+            <h4 class="pull-right" data-bind='visible: !interlocks_closed()'>Close the lid</h4>
+            <h4 class="pull-right" data-bind='visible: interlocks_closed'>Just relax</h4>
         </div>
     </div>
 

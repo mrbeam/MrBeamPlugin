@@ -31,100 +31,99 @@
                                             <ul class="scrollable">
                                                 <li>
                                                     <span class="gcommand">G0</span>:
-                                                    <span class="desc">{{ _('rapid position move') }}</span>
-                                                    <div class="params">{{ _('parameters:') }} X,Y</div>
-                                                    <div class="example">{{ _('example:') }} G0 X100 Y0</div>
+                                                    <span class="desc">rapid position move</span>
+                                                    <div class="params">parameters: X,Y</div>
+                                                    <div class="example">example: G0 X100 Y0</div>
                                                 </li>
                                                 <li>
                                                     <span class="gcommand">F</span>:
-                                                    {# Translators: set feedrate for G1,G2,G3 #}
-                                                    <span class="desc">{{ _('set feedrate for') }} G1,G2,G3</span>
-                                                    <div class="params">{{ _('parameters: value') }}</div>
-                                                    <div class="example">{{ _('example:') }} F300</div>
+                                                    <span class="desc">set feedrate for G1,G2,G3</span>
+                                                    <div class="params">parameters: value</div>
+                                                    <div class="example">example: F300</div>
                                                 </li>
                                                 <li>
                                                     <span class="gcommand">G1</span>:
-                                                    <span class="desc">{{ _('work move, line') }}</span>
-                                                    <div class="params">{{ _('parameters:') }} X,Y,F</div>
-                                                    <div class="example">{{ _('example:') }} G1 X100 Y0 F800</div>
+                                                    <span class="desc">work move, line</span>
+                                                    <div class="params">parameters: X,Y,F</div>
+                                                    <div class="example">example: G1 X100 Y0 F800</div>
                                                 </li>
                                                 <li>
                                                     <span class="gcommand">G2</span>:
-                                                    <span class="desc">{{ _('work move, arc clockwise') }}</span>
-                                                    <div class="params">{{ _('parameters:') }} X,Y,I,J,F</div>
-                                                    <div class="example">{{ _('example:') }} G2 X10 Y10 I8 J5</div>
+                                                    <span class="desc">work move, arc clockwise</span>
+                                                    <div class="params">parameters: X,Y,I,J,F</div>
+                                                    <div class="example">example: G2 X10 Y10 I8 J5</div>
                                                 </li>
                                                 <li>
                                                     <span class="gcommand">G3</span>:
-                                                    <span class="desc">{{ _('work move, arc counterclockwise') }}</span>
-                                                    <div class="params">{{ _('parameters:') }} X,Y,I,J,F</div>
-                                                    <div class="example">{{ _('example:') }} G3 X10 Y10 I8 J5</div>
+                                                    <span class="desc">work move, arc counterclockwise</span>
+                                                    <div class="params">parameters: X,Y,I,J,F</div>
+                                                    <div class="example">example: G3 X10 Y10 I8 J5</div>
                                                 </li>
                                                 <li>
                                                     <span class="gcommand">G4</span>:
-                                                    <span class="desc">{{ _('dwell') }}</span>
-                                                    <div class="params">{{ _('parameters:') }} P</div>
-                                                    <div class="example">{{ _('example:') }} G4 P0.5</div>
+                                                    <span class="desc">dwell</span>
+                                                    <div class="params">parameters: P</div>
+                                                    <div class="example">example: G4 P0.5</div>
                                                 </li>
                                                 <li>
                                                     <span class="gcommand">M3</span>:
-                                                    <span class="desc">{{ _('laser on') }}</span>
-                                                    <div class="params">{{ _('parameters:') }} S</div>
-                                                    <div class="example">{{ _('example:') }} M3 S10</div>
+                                                    <span class="desc">laser on</span>
+                                                    <div class="params">parameters: S</div>
+                                                    <div class="example">example: M3 S10</div>
                                                 </li>
                                                 <li>
                                                     <span class="gcommand">M5</span>:
-                                                    <span class="desc">{{ _('laser off') }}</span>
-                                                    <div class="params">{{ _('parameters:') }} -</div>
-                                                    <div class="example">{{ _('example:') }} M5</div>
+                                                    <span class="desc">laser off</span>
+                                                    <div class="params">parameters: -</div>
+                                                    <div class="example">example: M5</div>
                                                 </li>
                                                 <li>
                                                     <span class="gcommand">M8</span>:
-                                                    <span class="desc">{{ _('fan on') }}</span>
-                                                    <div class="params">{{ _('parameters:') }} -</div>
-                                                    <div class="example">{{ _('example:') }} M8</div>
+                                                    <span class="desc">fan on</span>
+                                                    <div class="params">parameters: -</div>
+                                                    <div class="example">example: M8</div>
                                                 </li>
                                                 <li>
                                                     <span class="gcommand">M9</span>:
-                                                    <span class="desc">{{ _('fan off') }}</span>
-                                                    <div class="params">{{ _('parameters:') }} -</div>
-                                                    <div class="example">{{ _('example:') }} M9</div>
+                                                    <span class="desc">fan off</span>
+                                                    <div class="params">parameters: -</div>
+                                                    <div class="example">example: M9</div>
                                                 </li>
                                                 <li>
                                                     <span class="gcommand">M2</span>:
-                                                    <span class="desc">{{ _('machine off') }}</span>
-                                                    <div class="params">{{ _('parameters:') }} -</div>
-                                                    <div class="example">{{ _('example:') }} M2</div>
+                                                    <span class="desc">machine off</span>
+                                                    <div class="params">parameters: -</div>
+                                                    <div class="example">example: M2</div>
                                                 </li>
                                                 <li>
                                                     <span class="gcommand">G90</span>:
-                                                    <span class="desc">{{ _('absolute coordinate mode') }}</span>
-                                                    <div class="params">{{ _('parameters:') }} -</div>
-                                                    <div class="example">{{ _('example:') }} G90</div>
+                                                    <span class="desc">absolute coordinate mode</span>
+                                                    <div class="params">parameters: -</div>
+                                                    <div class="example">example: G90</div>
                                                 </li>
                                                 <li>
                                                     <span class="gcommand">G91</span>:
-                                                    <span class="desc">{{ _('relative coordinate mode') }}</span>
-                                                    <div class="params">{{ _('parameters:') }} -</div>
-                                                    <div class="example">{{ _('example:') }} G91</div>
+                                                    <span class="desc">relative coordinate mode</span>
+                                                    <div class="params">parameters: -</div>
+                                                    <div class="example">example: G91</div>
                                                 </li>
                                                 <li>
                                                     <span class="gcommand">G92</span>:
-                                                    <span class="desc">{{ _('set coordinate origin') }}</span>
-                                                    <div class="params">{{ _('parameters:') }} X,Y</div>
-                                                    <div class="example">{{ _('example:') }} G92 X0 Y0</div>
+                                                    <span class="desc">set coordinate origin</span>
+                                                    <div class="params">parameters: X,Y</div>
+                                                    <div class="example">example: G92 X0 Y0</div>
                                                 </li>
                                                 <li>
                                                     <span class="gcommand">G20</span>:
-                                                    <span class="desc">{{ _('set units to inches') }}</span>
-                                                    <div class="params">{{ _('parameters:') }} -</div>
-                                                    <div class="example">{{ _('example:') }} G20</div>
+                                                    <span class="desc">set units to inches</span>
+                                                    <div class="params">parameters: -</div>
+                                                    <div class="example">example: G20</div>
                                                 </li>
                                                 <li>
                                                     <span class="gcommand">G21</span>:
-                                                    <span class="desc">{{ _('set units to millimeters') }}</span>
-                                                    <div class="params">{{ _('parameters:') }} -</div>
-                                                    <div class="example">{{ _('example:') }} G21</div>
+                                                    <span class="desc">set units to millimeters</span>
+                                                    <div class="params">parameters: -</div>
+                                                    <div class="example">example: G21</div>
                                                 </li>
                                             </ul>
                                         </div>
