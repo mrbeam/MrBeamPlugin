@@ -152,7 +152,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             console.error(msg, e);
             var error = "<p>" + gettext("The SVG file contains clipPath elements.<br/>clipPath is not supported yet and has been removed from file.") + "</p>";
 			new PNotify({
-				title: "Conversion failed",
+				title: gettext("Conversion failed"),
 				text: msg,
 				type: "error",
 				hide: false
