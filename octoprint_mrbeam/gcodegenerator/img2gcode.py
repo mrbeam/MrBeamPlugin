@@ -340,7 +340,7 @@ class ImageProcessor():
 		# pre-condition: set feedrate, enable laser with 0 intensity.
 		self._append_gcode('F' + str(self.feedrate_white)) # set an initial feedrate
 		self.gc_ctx.f = self.feedrate_white #TODO hack. set with line above
-		self._append_gcode('M3S0') # enable laser
+		#self._append_gcode('M3S0') # enable laser
 		self.gc_ctx.s = 0 #TODO hack. set with line above
 		self.gc_ctx.laser_active = True #TODO hack. set with line above
 
@@ -363,8 +363,9 @@ class ImageProcessor():
 			img_pos_mm = (x_off, y_off) # lower left corner of partial image in mm
 
 			self._append_gcode("; Begin part {} @ pixel ({},{}) with dimensions {}x{}".format(img_data['id'], img_data['x'],img_data['y'], size[0], size[1]))
-			gc = self._get_gcode_g0(self, x=x_off, y=y_off, comment="; Move to start ({},{})".format(x_off, y_off))
+			gc = self._get_gcode_g0(x=x_off, y=y_off, comment="; Move to start ({},{})".format(x_off, y_off))
 			self._append_gcode(gc)
+			self._append_gcode('M3S0\nG4P0.1') # initialize laser
 			# iterate line by line
 			pix = img.load()
 			for row in range(height_px-1,-1,-1):
