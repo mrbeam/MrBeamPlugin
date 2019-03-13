@@ -2,10 +2,10 @@
 
 
 def gcode_before_path(intensity = 0):
-	return "\nM3S0\nG4P0.1\nM03 S"+str(intensity)
+	return "\nM3S0\nG4P0\nM03 S"+str(intensity)
 
 def gcode_before_path_color(color = '#000000', intensity = '0'):
-	return "\nM3S0\nG4P0.1\nM03 S%s;%s" % (intensity, color) 
+	return "\nM3S0\nG4P0\nM03 S%s;%s" % (intensity, color) 
 
 def gcode_after_path():
 	return "M05"

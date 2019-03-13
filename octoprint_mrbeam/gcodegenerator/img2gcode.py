@@ -365,7 +365,7 @@ class ImageProcessor():
 			self._append_gcode("; Begin part {} @ pixel ({},{}) with dimensions {}x{}".format(img_data['id'], img_data['x'],img_data['y'], size[0], size[1]))
 			gc = self._get_gcode_g0(x=x_off, y=y_off, comment="; Move to start ({},{})".format(x_off, y_off))
 			self._append_gcode(gc)
-			self._append_gcode('M3S0\nG4P0.1') # initialize laser
+			self._append_gcode('M3S0\nG4P0') # initialize laser
 			# iterate line by line
 			pix = img.load()
 			for row in range(height_px-1,-1,-1):
