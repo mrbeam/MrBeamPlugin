@@ -104,6 +104,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._hostname = None
 		self._serial_num = None
 		self._device_info = dict()
+		self._grbl_version = None
 		self._stored_frontend_notifications = []
 		self._device_series = self._get_val_from_device_info('device_series')  # '2C'
 		self.called_hosts = []
@@ -175,10 +176,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		msg += ", serial:{}".format(self.getSerialNum())
 		msg += ", software_tier:{}".format(self._settings.get(["dev", "software_tier"]))
 		msg += ", env:{}".format(self.get_env())
-		msg += " ({}:{}".format(self.ENV_LOCAL, self.get_env(self.ENV_LOCAL))
-		msg += ",{}:{}".format(self.ENV_LASER_SAFETY, self.get_env(self.ENV_LASER_SAFETY))
-		msg += ",{}:{})".format(self.ENV_ANALYTICS, self.get_env(self.ENV_ANALYTICS))
 		msg += ", beamOS-image:{}".format(self._octopi_info)
+		msg += ", grbl_version_lastknown:{}".format(self._settings.get(["grbl_version_lastknown"]))
 		msg += ", laserhead-serial:{}".format(self.lh['serial'])
 		self._logger.info(msg, terminal=True)
 
@@ -215,6 +214,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		            software_tier=self._settings.get(["dev", "software_tier"]),
 		            env=self.get_env(),
 		            beamOS_image=self._octopi_info,
+		            grbl_version_lastknown=self._settings.get(["grbl_version_lastknown"]),
 		            laserhead_serial=self.lh['serial'])
 
 	##~~ SettingsPlugin mixin
@@ -280,7 +280,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				optimize_travel = True,
 				small_paths_first = True,
 				clip_working_area = True # https://github.com/mrbeam/MrBeamPlugin/issues/134
-			)
+			),
+			grbl_version_lastknown=None
 		)
 
 	def on_settings_load(self):
@@ -420,6 +421,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 beamosVersionBranch = self._branch,
 							 beamosVersionDisplayVersion = display_version_string,
 							 beamosVersionImage = self._octopi_info,
+							 grbl_version=self._grbl_version,
+							 laserhead_serial=self.lh['serial'],
 
 							 env=self.get_env(),
 							 env_local=self.get_env(self.ENV_LOCAL),
@@ -1517,6 +1520,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._analytics_handler.log_client_opened(payload.get('remoteAddress', None))
 			self.fire_event(MrBeamEvents.MRB_PLUGIN_VERSION, payload=dict(version=self._plugin_version))
 			self._replay_stored_frontend_notification()
+
+		if event == OctoPrintEvents.CONNECTED and 'grbl_version' in payload:
+			self._grbl_version = payload['grbl_version']
+			if self._grbl_version != self._settings.get(["grbl_version_lastknown"]):
+				self._settings.set(["grbl_version_lastknown"], self._grbl_version, force=True)
+				self._logger.info("grbl_version_lastknown updated to: %s", self._grbl_version)
+
 
 	def fire_event(self, event, payload=None):
 		'''

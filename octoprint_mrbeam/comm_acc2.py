@@ -13,7 +13,6 @@ import datetime
 import serial
 import re
 import Queue
-#TODO: remove this
 import random
 
 from yaml import load as yamlload
@@ -22,7 +21,6 @@ from subprocess import call as subprocesscall
 from flask.ext.babel import gettext
 
 import octoprint.plugin
-
 
 from octoprint.settings import settings, default_settings
 from octoprint.events import eventManager, Events as OctoPrintEvents
@@ -38,6 +36,7 @@ from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
 ### MachineCom #########################################################################################################
 class MachineCom(object):
 
+	DEBUG_PRODUCE_CHECKSUM_ERRORS = True
 
 	### GRBL VERSIONs #######################################
 	# original grbl
@@ -51,10 +50,13 @@ class MachineCom(object):
 	# - adds rx-buffer state with every ok
 	# - adds alarm mesage on rx buffer overrun
 	GRBL_VERSION_20180828_ac367ff = '0.9g_20180828_ac367ff'
-	GRBL_FEAT_BLOCK_VERSION_LIST_RX_BUFFER_REPORTING = (GRBL_VERSION_20170919_22270fa, GRBL_VERSION_20180223_61638c5)
 	#
 	# adds G24_AVOIDED
 	GRBL_VERSION_20181116_a437781 = '0.9g_20181116_a437781'
+	#
+	# adds checksums
+	GRBL_VERSION_2019_MRB_CHECKSUM = '0.9g_20190314_772ab87-dirty'
+	GRBL_FEAT_BLOCK_CHECKSUMS = (GRBL_VERSION_20170919_22270fa, GRBL_VERSION_20180223_61638c5, GRBL_VERSION_20180828_ac367ff, GRBL_VERSION_20181116_a437781)
 	#
 	##########################################################
 
@@ -78,16 +80,17 @@ class MachineCom(object):
 	STATE_HOMING = 13
 	STATE_FLASHING = 14
 
-	GRBL_STATE_QUEUE = 'Queue'
-	GRBL_STATE_IDLE  = 'Idle'
-	GRBL_STATE_RUN   = 'Run'
+	GRBL_STATE_QUEUE    = 'Queue'
+	GRBL_STATE_IDLE     = 'Idle'
+	GRBL_STATE_RUN      = 'Run'
 
-	COMMAND_STATUS   = '?'
-	COMMAND_HOLD     = '!'
-	COMMAND_RESUME   = '~'
-	COMMAND_RESET    = b'\x18'
-	COMMAND_FLUSH    = 'FLUSH'
-	COMMAND_SYNC     = 'SYNC' # experimental
+	COMMAND_STATUS      = '?'
+	COMMAND_HOLD        = '!'
+	COMMAND_RESUME      = '~'
+	COMMAND_RESET       = b'\x18'
+	COMMAND_FLUSH       = 'FLUSH'
+	COMMAND_SYNC        = 'SYNC' # experimental
+	COMMAND_RESET_ALARM = '$X'
 
 	STATUS_POLL_FREQUENCY_OPERATIONAL = 2.0
 	STATUS_POLL_FREQUENCY_PRINTING = 1.0 # set back top 1.0 if it's not causing gcode24
@@ -151,9 +154,6 @@ class MachineCom(object):
 		self._current_laser_on = False
 		self._cmd = None
 		self._recovery_lock = False
-		# self._error_troublemaker_cmd = None
-		# self._error_troublemaker_count = 0
-		# self._error_troublemaker_max = 5
 		self._recovery_ignore_further_alarm_responses = False
 		self._pauseWaitStartTime = None
 		self._pauseWaitTimeLost = 0.0
@@ -176,7 +176,6 @@ class MachineCom(object):
 		# from GRBL status RX value: Number of characters queued in Grbl's serial RX receive buffer.
 		self._grbl_rx_status = -1
 		self._grbl_settings_correction_ts = 0
-		self._rx_stats = RxBufferStats()
 
 		self.g24_avoided_message = []
 
@@ -184,7 +183,7 @@ class MachineCom(object):
 
 		#grbl features
 		self.grbl_feat_rescue_from_home = False
-		self.grbl_feat_report_rx_buffer_state = False
+		self.grbl_feat_checksums = False
 
 		# regular expressions
 		self._regex_command = re.compile("^\s*\*?\d*\s*\$?([GM]\d+|[THFSX])")
@@ -279,10 +278,8 @@ class MachineCom(object):
 						self._handle_feedback_message(line)
 					elif line.startswith('Grb'): # Grbl startup message
 						self._handle_startup_message(line)
-					# elif line.startswith('G24_AVOIDED'):
-					# 	self._handle_g24_avoided_message(line)
 					elif line.startswith('Corru'): # Corrupted line:
-						self._handle_corrupted_line(line)
+						self._handle_g24avoided_corrupted_line(line)
 					elif line.startswith('$'): # Grbl settings
 						self._handle_settings_message(line)
 					elif not line and (self._state is self.STATE_CONNECTING or self._state is self.STATE_OPEN_SERIAL or self._state is self.STATE_DETECT_SERIAL):
@@ -290,7 +287,7 @@ class MachineCom(object):
 						self._sendCommand(self.COMMAND_RESET) # Serial-Connection Error
 				except:
 					self._logger.exception("Something crashed inside the monitoring loop, please report this to Mr Beam", terminal_dump=True)
-					errorMsg = "See octoprint.log for details"
+					errorMsg = gettext("Please contact Mr Beam support team and attach octoprint.log.")
 					self._log(errorMsg)
 					self._errorValue = errorMsg
 					self._changeState(self.STATE_ERROR)
@@ -395,21 +392,24 @@ class MachineCom(object):
 					return
 				if my_cmd and self._acc_line_buffer.get_char_len() + len(my_cmd) + 1 < self.WORKING_RX_BUFFER_SIZE:
 					my_cmd, _, _  = self._process_command_phase("sending", my_cmd)
+					# In recovery: if acc_line_buffer is marked dirty we must check if it is set to clean again.
+					if self._acc_line_buffer.is_dirty() and self.COMMAND_RESET_ALARM in my_cmd:
+						self._acc_line_buffer.set_clean()
 					self._log("Send: %s" % my_cmd)
-					# self._acc_line_buffer.append(my_cmd + '\n')
 					self._acc_line_buffer.add(my_cmd + '\n',
 					                          intensity=self._current_intensity,
 					                          feedrate=self._current_feedrate,
 					                          pos_x=self._current_pos_x,
 					                          pos_y=self._current_pos_y,
 					                          laser=self._current_laser_on)
-					try:
-						# TODO: ANDYTEST remove:
-						send_cmd = my_cmd
+
+					if self.DEBUG_PRODUCE_CHECKSUM_ERRORS:
 						if random.randint(0, 500) == 1:
-							send_cmd = send_cmd[0:-1]
-							self._logger.warn("ANDYTEST randomly changed '%s' to '%s'", my_cmd, send_cmd)
-						self._serial.write(send_cmd + '\n')
+							orig_command = my_cmd
+							my_cmd = my_cmd[0:-1] + 'G'
+							self._logger.warn("DEBUG Randomly changed '%s' to '%s' to cause checksum error.", orig_command, my_cmd)
+					try:
+						self._serial.write(my_cmd + '\n')
 						self._process_command_phase("sent", my_cmd)
 						self._cmd = None
 						self._send_event.set()
@@ -519,7 +519,6 @@ class MachineCom(object):
 				cmd = self._acc_line_buffer.acknowledge_cmd()
 				if self._recovery_ignore_further_alarm_responses:
 					recovery_str = "RECOVERY END"
-				self._recovery_ignore_further_alarm_responses = False # this proves that we're back to normal
 			elif 'err' in ret or 'ALARM' in ret: # TODO: are all ALARM messages to be counted?
 				cmd = self._acc_line_buffer.decline_cmd()
 			cmd = AccLineBuffer.get_cmd_from_item(cmd)
@@ -569,7 +568,6 @@ class MachineCom(object):
 		}
 		self._move_home()
 		eventManager().fire(OctoPrintEvents.PRINT_DONE, payload)
-		self._logger.info(self._rx_stats.pp(print_time=self.getPrintTime()))
 
 	def _move_home(self):
 		self.sendCommand("M5")
@@ -637,26 +635,24 @@ class MachineCom(object):
 
 
 	def _handle_ok_message(self, line):
+		item = self._acc_line_buffer.get_last_responded()
+
+		## RECOVERY ##
+		if self._recovery_ignore_further_alarm_responses and self.COMMAND_RESET_ALARM in AccLineBuffer.get_cmd_from_item(item):
+				self._recovery_alarm_reset_confirmed = True
+		# during a recovery the first ok proves that alarm state was cleared
+		self._recovery_ignore_further_alarm_responses = False
+
+		## HOMING ##
 		if self._state == self.STATE_HOMING:
 			self._changeState(self.STATE_OPERATIONAL)
 
 		# update working pos from acknowledged gcode
-		item = self._acc_line_buffer.get_last_responded()
-		if item['cmd'].startswith('G'):
+		if item and item['cmd'].startswith('G'):
 			self._callback.on_comm_pos_update(None, [item['x'], item['y'], 0])
 			# since we just got a postion update we can reset the wait time for the next status poll
 			# ideally we never poll statuses during engravings
 			self._reset_status_polling_waittime()
-
-		if self.grbl_feat_report_rx_buffer_state:
-			# important that we add every call and count the invalid values internally!
-			rx_free = None
-			try:
-				if line is not None:
-					rx_free = int(line.split(':')[1]) # ok:127
-			except e:
-				self._logger.warn("_handle_ok_message() Can't read free_rx_bytes from line: '%s', error: %s", line, e)
-			self._rx_stats.add(rx_free)
 
 	def _handle_error_message(self, line):
 		"""
@@ -670,16 +666,14 @@ class MachineCom(object):
 			self._logger.debug("_handle_error_message() Ignoring this error message: '%s'", line)
 			return
 		if "Alarm lock" in line and self._recovery_ignore_further_alarm_responses:
-			my_cmd = AccLineBuffer.get_cmd_from_item(self._acc_line_buffer.get_last_responded())
-			self._logger.debug("_handle_error_message() Ignoring Alarm message during recovery: '%s' in command: '%s'", line, my_cmd)
-			# self._send_recovery_commands()
+			# my_cmd = AccLineBuffer.get_cmd_from_item(self._acc_line_buffer.get_last_responded())
+			# self._logger.debug("_handle_error_message() Ignoring Alarm message during recovery: '%s' in command: '%s'", line, my_cmd)
 			return
 
 		my_cmd = AccLineBuffer.get_cmd_from_item(self._acc_line_buffer.get_last_responded())
 		self._errorValue = "{} in {}".format(line, my_cmd)
 		eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
 		self._changeState(self.STATE_LOCKED)
-		self._rx_stats.pp(print_time=self.getPrintTime())
 
 	def _handle_alarm_message(self, line, code=None):
 		line = line.rstrip() if line else line
@@ -760,21 +754,26 @@ class MachineCom(object):
 			self._logger.error("Unable to parse GRBL version from startup message: %s", line)
 
 		self.grbl_feat_rescue_from_home = self._grbl_version not in self.GRBL_FEAT_BLOCK_VERSION_LIST_RESCUE_FROM_HOME
-		self.grbl_feat_report_rx_buffer_state = self._grbl_version not in self.GRBL_FEAT_BLOCK_VERSION_LIST_RX_BUFFER_REPORTING
+		self.grbl_feat_checksums = self._grbl_version not in self.GRBL_FEAT_BLOCK_CHECKSUMS
 		self.reset_grbl_auto_update_config()
 
-		self._logger.info("GRBL version: %s, rescue_from_home: %s, report_rx_buffer_state: %s, auto_update: %s",
+		self._logger.info("GRBL version: %s, rescue_from_home: %s, auto_update: %s, checksums: %s",
 		                  self._grbl_version,
 		                  self.grbl_feat_rescue_from_home,
-		                  self.grbl_feat_report_rx_buffer_state,
-		                  self.grbl_auto_update_enabled)
+		                  self.grbl_auto_update_enabled,
+		                  self.grbl_feat_checksums)
+
+		if self.DEBUG_PRODUCE_CHECKSUM_ERRORS:
+			self._logger.warn("DEBUG_PRODUCE_CHECKSUM_ERRORS is active! Do not use in PROD")
 
 		self._onConnected(self.STATE_LOCKED)
 		self.correct_grbl_settings()
 
 
-	def _handle_corrupted_line(self, line):
+	def _handle_g24avoided_corrupted_line(self, line):
 		"""
+		@deprecated: new grbl versions with checksum support do not send G24_AVOIDED anymore
+		#
 		So far this 'Corrupted line' is sent only in combination with G24_AVOIDED
 
 		> 11:39:15,866 _COMM_: Send: G1X58.32Y338.49G1X56.78Y338.57
@@ -784,7 +783,7 @@ class MachineCom(object):
 		> ...
 		> 11:39:17,221 _COMM_: Recv: Corrupted line: G1X56.78Y338.57
 
-		Rsults in this output:
+		Results in this output:
 		# WARNING - G24_AVOIDED line: 'G1X58.32Y338.49G1X56.78Y338.57' (hex: [47 31 58 35 38 2E 33 32 59 33 33 38 2E 34 39][47 31 58 35 36 2E 37 38 59 33 33 38 2E 35 37])
 		:param line:
 		"""
@@ -793,7 +792,6 @@ class MachineCom(object):
 		if len(self.g24_avoided_message) >= 2:
 			self.send_g24_avoided_message()
 			self.g24_avoided_message = []
-
 
 	def send_g24_avoided_message(self):
 		try:
@@ -806,7 +804,7 @@ class MachineCom(object):
 				data_str += i
 				data_hex += '[{}]'.format(self.get_hex_str_from_str(i))
 
-			self._logger.warn("G24_AVOIDED line: '%s' (hex: %s)",data_str, data_hex, terminal_dump=True, analytics=True)
+			self._logger.warn("G24_AVOIDED line: '%s' (hex: %s)",data_str, data_hex, analytics=True)
 		except:
 			self._logger.exception("G24_AVOIDED Exception in _handle_g24_avoided_message(): ")
 
@@ -833,12 +831,42 @@ class MachineCom(object):
 			self._logger.error("_handle_settings_message() line did not mach pattern: %s", line)
 
 	def _start_recovery_thread(self):
-		# TODO ANDYTEST What if there is already a recovery?
+		"""
+		This starts a recovery process in another thread.
+		Recovery is when GRBL reported an MRB_CHECKSUM_ERROR.
+		In this case:
+		GRBL switches to ALARM state and does not process any commands in it's serial buffer
+		however it will proceed with all commands already in the planning buffer.
+		Now our job is to resend all commands that were skipped by GRBL.
+		First we need to send a ALARM_RESET command ($X) to end grbl's alarm state.
+		Then we send all commands which got declined beginning with the one which caused the checksum error.
+		It's important that there are now new commands from the file put into the sending pipeling
+		once we sent the ALARM_RESET until e sent all commands the need to be resent (marked dirty).
+		self._recovery_lock blocks the sending-queue from reading new commands from the file.
+		Once the lock is set and we waited some time for the sending queue to clear (this timeout mechanism should
+		be improved e.g. by using a lock), we can feed the recovery commands lead by a ALARM_RESET into the sending queue.
+		All commands that have been sent after the error are marked as 'dirty', ALARM_RESET is the first 'clean' command
+		after the error. We have to make sure that we re-send all dirty commands before we re-open the sending-queue for
+		new commands from the file.
+		"""
+		if self._recovery_lock and not self._recovery_ignore_further_alarm_responses:
+			# Already in recovery
+			# Another checksum error doesn't matter until the ALARM_RESET was processed
+			# Here it was already processes and the checksum error happened afterwards.
+			# This we need to handle.
+			# We stop the running recovery thread, send anotherALARM_RESET, mark everything dirty again
+			# and keep processing all commands in the order as they come.
+			# I hope that this produces correct results.
+			self._recovery_thread_kill = True
+			self.recovery_thread.join(0.5)
 
 		self._logger.info("RECOVERY START", terminal_as_comm=True)
 		self._recovery_lock = True
 		self._recovery_ignore_further_alarm_responses = True
+		self._recovery_alarm_reset_confirmed = False
+		self._acc_line_buffer.set_dirty()
 
+		self._recovery_thread_kill = False
 		self.recovery_thread = threading.Thread(target=self.__recovery_thread, name="comm.__recovery_thread")
 		self.recovery_thread.daemon = True
 		self.recovery_thread.start()
@@ -847,17 +875,22 @@ class MachineCom(object):
 		try:
 			self._recovery_lock = True
 			self._recovery_ignore_further_alarm_responses = True
+			# TODO: would be good if we can be sure that the regular sending pipeline is really empty
+			#  instead of simply waiting potentially too long or too short and then just hoping that it is empty.
 			time.sleep(0.01)
-			recover_cmds = ["$X"]
-			while not self._acc_line_buffer.is_empty() and not self._acc_line_buffer.is_recovery_empty():
-				recover_cmds.extend(self._acc_line_buffer.recover_declined_commands())
-				while recover_cmds:
-					c = recover_cmds.pop(0)
-					self._logger.info("Re-queue: %s  RECOVERY", c, terminal_as_comm=True)
-					self.sendCommand(c)
-				time.sleep(0.001)
-			self._recovery_lock = False
-			self._logger.info("_send_recovery_commands() Recovery: Done")
+			recover_cmd = self.COMMAND_RESET_ALARM
+			while not self._recovery_thread_kill and self._acc_line_buffer.is_dirty():
+				if recover_cmd:
+					self._logger.info("Re-queue: %s  RECOVERY", recover_cmd, terminal_as_comm=True)
+					self.sendCommand(recover_cmd)
+				else:
+					time.sleep(0.001)
+				recover_cmd = self._acc_line_buffer.recover_next_command()
+			if self._recovery_thread_kill:
+				self._logger.info("_send_recovery_commands() Recovery: Starting over...")
+			else:
+				self._recovery_lock = False
+				self._logger.info("_send_recovery_commands() Recovery: Done")
 		except:
 			self._logger.exception("Exception in recovery thread: ")
 
@@ -1535,8 +1568,8 @@ class MachineCom(object):
 			cmd = cmd.encode('ascii', 'replace')
 			if not processed:
 				cmd = process_gcode_line(cmd)
-				# if cmd not in (self.COMMAND_STATUS, self.COMMAND_HOLD, self.COMMAND_RESUME, self.COMMAND_RESET, self.COMMAND_FLUSH, self.COMMAND_SYNC):
-				cmd = self._add_checksum_to_cmd(cmd)
+				if self.grbl_feat_checksums:
+					cmd = self._add_checksum_to_cmd(cmd)
 				if not cmd:
 					return
 
@@ -1581,10 +1614,6 @@ class MachineCom(object):
 		self._finished_passes = 0
 		self._pauseWaitTimeLost = 0.0
 		self._pauseWaitStartTime = None
-
-		self._rx_stats.reset()
-		if not self.grbl_feat_report_rx_buffer_state:
-			self._rx_stats.set_no_grbl_support()
 
 		try:
 			# ensure fan is on whatever gcode follows.
@@ -1634,8 +1663,6 @@ class MachineCom(object):
 		}
 		eventManager().fire(OctoPrintEvents.PRINT_CANCELLED, payload)
 
-		self._logger.info(self._rx_stats.pp(print_time=self.getPrintTime()))
-
 	def setPause(self, pause, send_cmd=True, pause_for_cooling=False, trigger=None, force=False):
 		if not self._currentFile:
 			return
@@ -1667,7 +1694,6 @@ class MachineCom(object):
 				self._real_time_commands['feed_hold']=True
 			self._send_event.set()
 			eventManager().fire(OctoPrintEvents.PRINT_PAUSED, payload)
-			self._logger.info(self._rx_stats.pp(print_time=self.getPrintTime()))
 
 		if self.getPrintTime() < 0.0:
 			self._logger.warn("setPause() %s: print time is negative! print time: %s, _pauseWaitStartTime: %s, _pauseWaitTimeLost: %s",
@@ -2009,84 +2035,6 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
 			raise e
 
 
-class RxBufferStats(object):
-
-	def __init__(self):
-		self.data = {}
-		self.count = 0
-		self.errs = 0
-		self.grbl_support = True
-		self.start_ts = time.time()
-
-	def reset(self):
-		self.__init__()
-
-	def add(self, val):
-		if not self.grbl_support:
-			return
-		try:
-			val = int(val)
-		except:
-			self.errs += 1
-			return
-		if not val in self.data:
-			self.data[val] = 0
-		self.data[val] += 1
-		self.count += 1
-
-	def set_no_grbl_support(self):
-		self.grbl_support = False
-
-	def get_min(self):
-		if self.count <= 0: return 0
-		for v, c in sorted(self.data.iteritems()):
-			if c > 0:
-				return v
-
-	def get_max(self):
-		if self.count <= 0: return 0
-		for v, c in sorted(self.data.iteritems(), reverse = True):
-			if c > 0:
-				return v
-
-	def get_avg(self):
-		if self.count <= 0: return 0
-		avg = 0
-		for v, c in sorted(self.data.iteritems()):
-			if c > 0:
-				avg += v * c
-		return avg / self.count
-
-	def pp(self, print_time=-1):
-		if not self.grbl_support:
-			return "RxBufferStats: not supported by grbl."
-
-		if print_time <=0:
-			print_time = time.time() - self.start_ts
-
-		msg = "RxBufferStats: {count} responses within {duration_h} ({duration:.2f}s): {resp_per_sec:.1f} resp/s; invalid: {errs}; min: {min}, max: {max}, avg: {avg}  - All data: ".format(
-			count=self.count,
-			duration=print_time,
-			duration_h=datetime.datetime.fromtimestamp(print_time).strftime('%H°%M′%S″'),
-			resp_per_sec=self.count/print_time,
-			errs=self.errs,
-			min=self.get_min(),
-			max=self.get_max(),
-			avg=self.get_avg()
-		)
-
-		d = []
-		for v, c in sorted(self.data.iteritems()):
-			if c > 0:
-				d.append("{v}:{c}".format(v=v, c=c))
-		msg += ', '.join(d)
-
-		return msg
-
-
-
-
-
 def convert_pause_triggers(configured_triggers):
 	triggers = {
 		"enable": [],
@@ -2127,12 +2075,6 @@ def strip_comment(line):
 	if not ";" in line:
 		# shortcut
 		return line
-
-	# ANDYTEST
-	andytest = False
-	if "ANDYTEST" in line:
-		andytest = True
-
 	escaped = False
 	result = []
 	for c in line:
@@ -2140,8 +2082,6 @@ def strip_comment(line):
 			break
 		result += c
 		escaped = (c == "\\") and not escaped
-	if andytest:
-		result.append("X666")
 	return "".join(result)
 
 def get_new_timeout(t):

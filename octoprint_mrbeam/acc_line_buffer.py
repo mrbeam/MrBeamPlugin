@@ -14,6 +14,7 @@ class AccLineBuffer(object):
 		self._last_responded = None
 		self.char_len = -1
 		self.id = 0
+		self.dirty = False
 
 	def reset(self):
 		self._lock.writer_acquire()
@@ -42,7 +43,8 @@ class AccLineBuffer(object):
 			x=pos_x,
 			y=pos_y,
 			l=laser,
-			id=self.id
+			id=self.id,
+			dirty=self.dirty
 		)
 		self.id += 1
 		self.buffer_cmds.append(d)
@@ -56,7 +58,7 @@ class AccLineBuffer(object):
 		and is ignored in get_command_count() and is_empty() and get_char_len()
 		"""
 		if self.is_empty():
-			raise ValueError("AccLineBuffer is empty, no item to acknowledge.")
+			return None # happens after a reset during cancellation of a job
 		self._lock.writer_acquire()
 		self._last_responded = self.buffer_cmds.popleft()
 		self._reset_char_len()
@@ -66,11 +68,10 @@ class AccLineBuffer(object):
 	def decline_cmd(self):
 		"""
 		Removes the oldest command (item) from the buffer and keeps it as recovery command
-		:return:
-		:rtype:
+		# TODO: if the error is not recovery, this cmd remains in memory until the next reset()
 		"""
 		if self.is_empty():
-			raise ValueError("AccLineBuffer is empty, no item to decline.")
+			return None
 		self._lock.writer_acquire()
 		self._last_responded = self.buffer_cmds.popleft()
 		self._reset_char_len()
@@ -100,57 +101,54 @@ class AccLineBuffer(object):
 		self._lock.reader_release()
 		return res
 
-	def recover_declined_commands(self):
-		res = []
+	def recover_next_command(self):
+		res = None
 		self._lock.writer_acquire()
-		for d in self.declined_cmds:
-			res.append(d['cmd'].rstrip())
-		self.declined_cmds.clear()
+		if self.declined_cmds:
+			d = self.declined_cmds.popleft()
+			res = d['cmd'].rstrip()
 		self._lock.writer_release()
 		return res
 
-	# def get_last_declined(self):
-	# 	"""
-	# 	returns the last declined command without removing it
-	# 	:return: item
-	# 	"""
-	# 	if len(self.declined_cmds) > 0:
-	# 		return self.declined_cmds[0]
-	# 	else:
-	# 		return None
+	def set_dirty(self):
+		"""
+		Marks all currently waiting and all new commands as dirty until add_cleaned is called
+		"""
+		self._lock.writer_acquire()
+		self.dirty = True
+		for c in self.buffer_cmds:
+			c['dirty'] = True
+		for c in self.declined_cmds:
+			c['dirty'] = True
+		self._lock.writer_release()
 
-	# def remove_last_declined(self):
-	# 	"""
-	# 	removes the last declined command
-	# 	:return: item
-	# 	"""
-	# 	if len(self.declined_cmds) > 0:
-	# 		return self.declined_cmds.popleft()
-	# 	else:
-	# 		return None
+	def set_clean(self):
+		"""
+		No further items will be marked as dirty. Once all dirty items left the system, it'll be seen as clean again
+		"""
+		self._lock.writer_acquire()
+		self.dirty = False
+		self._lock.writer_release()
 
-
-	# def declined_num(self):
-	# 	return len(self.declined_cmds)
-
-	# def get_cmd_list(self):
-	# 	res = []
-	# 	self._lock.reader_acquire()
-	# 	for c in self.buffer_cmds:
-	# 		res.append(c['cmd'].rstrip())
-	# 	self._lock.reader_release()
-	# 	return res
-
-	# def get_last_confirmed_item(self):
-	# def get_last_item(self):
-	# 	if self.is_empty():
-	# 		return None
-	# 	res = None
-	# 	self._lock.reader_acquire()
-	# 	if len(self.history) > 0:
-	# 		res = self.history[len(self.history)-1]
-	# 	self._lock.reader_release()
-	# 	return res
+	def is_dirty(self):
+		"""
+		Returns True if any item in any queue is marked dirty
+		"""
+		if self.dirty:
+			return True
+		res = False
+		self._lock.reader_acquire()
+		for c in self.buffer_cmds:
+			if c['dirty']:
+				res = True
+				break
+		if not res:
+			for c in self.declined_cmds:
+				if c['dirty']:
+					res = True
+					break
+		self._lock.reader_release()
+		return res
 
 	def get_command_count(self):
 		"""
@@ -203,11 +201,11 @@ class AccLineBuffer(object):
 		for c in self.buffer_cmds:
 			buffer.append(self._item_as_str(c))
 		self._lock.reader_release()
-		return "AccLineBuffer: ({len}) [{buffer}]".format(len=self.get_command_count(), buffer=", ".join(buffer))
+		return "AccLineBuffer: ({len}) acc_buffer:[{buffer}], declined_cmds:[{declined}]".format(len=self.get_command_count(), buffer=", ".join(buffer), declined=", ".join(self.declined_cmds))
 
 	def _item_as_str(self, item):
 		item['cmd'] = item['cmd'].strip() if item is not None else None
-		return "{{{id}: {cmd} (pos:{x},{y}, f:{f},i:{i},{laser})}}".format(id=item['id'], cmd=item['cmd'], x=item['x'], y=item['y'], i=item['i'], f=item['i'], laser='ON' if item['l'] else 'OFF')
+		return "{{{id}: {cmd} }}".format(id=item['id'], cmd=item['cmd'])
 
 	@staticmethod
 	def get_cmd_from_item(cmd_obj):
