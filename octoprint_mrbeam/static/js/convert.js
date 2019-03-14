@@ -52,7 +52,7 @@ $(function(){
 				name: gettext("Anodized Aluminum"),
 				img: 'anodized_aluminum.jpg',
 				description: gettext("Dark anodized aluminum can be engraved. Works on iPhones."),
-				hints: gettext("Requires very precise focus. Anodized aluminum turns brighter through laser engraving. Therefor we suggest to invert photos for engravings."),
+				hints: gettext("Requires very precise focus. Anodized aluminum turns brighter through laser engraving. Therefore we suggest to invert photos for engravings."),
 				laser_type: 'MrBeamII-1.0',
 				colors: {
 					'000000': {

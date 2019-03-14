@@ -140,7 +140,7 @@ msgstr ""
 #: octoprint_mrbeam/static/js/convert.js:55
 msgid ""
 "Requires very precise focus. Anodized aluminum turns brighter through "
-"laser engraving. Therefor we suggest to invert photos for engravings."
+"laser engraving. Therefore we suggest to invert photos for engravings."
 msgstr ""
 
 #: octoprint_mrbeam/static/js/convert.js:65
