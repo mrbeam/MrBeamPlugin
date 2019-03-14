@@ -2192,7 +2192,7 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/settings/svgtogcode_settings.jinja2:10
 msgid ""
-"In case beamOS can\t recognize what dpi value your graphic program uses, "
+"In case beamOS can\'t recognize what dpi value your graphic program uses, "
 "this value will be the fallback. Files from Illustrator or Inkscape or "
 "Corel Draw tend to work fine regardless of this value."
 msgstr ""
