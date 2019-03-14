@@ -200,7 +200,7 @@ $(function() {
             var confirmButton = $("button.btn-confirm", editDialog);
             var dialogTitle = $("h3.modal-title", editDialog);
 
-            dialogTitle.text(add ? gettext("Add Profile") : _.sprintf(gettext("Edit Profile \"%(name)s\""), {name: data.name}));
+            dialogTitle.text(add ? "Add Profile": _.sprintf("Edit Profile \"%(name)s\"", {name: data.name}));
             confirmButton.unbind("click");
             confirmButton.bind("click", function() {
                 self.confirmEditProfile(add);
