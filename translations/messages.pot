@@ -393,15 +393,6 @@ msgstr ""
 msgid "Cutting Job "
 msgstr ""
 
-#: octoprint_mrbeam/static/js/lasercutterprofiles.js:203
-msgid "Add Profile"
-msgstr ""
-
-#: octoprint_mrbeam/static/js/lasercutterprofiles.js:203
-#, python-format
-msgid "Edit Profile \"%(name)s\""
-msgstr ""
-
 #: octoprint_mrbeam/static/js/lasersaftey_viewmodel.js:135
 msgid "You need to agree to all points"
 msgstr ""
