@@ -36,7 +36,7 @@ from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
 ### MachineCom #########################################################################################################
 class MachineCom(object):
 
-	DEBUG_PRODUCE_CHECKSUM_ERRORS = True
+	DEBUG_PRODUCE_CHECKSUM_ERRORS = False
 
 	### GRBL VERSIONs #######################################
 	# original grbl
@@ -55,9 +55,11 @@ class MachineCom(object):
 	GRBL_VERSION_20181116_a437781 = '0.9g_20181116_a437781'
 	#
 	# adds checksums
-	GRBL_VERSION_2019_MRB_CHECKSUM = '0.9g_20190314_772ab87-dirty'
+	GRBL_VERSION_2019_MRB_CHECKSUM = '0.9g_20190315_772ab87-dirty'
 	GRBL_FEAT_BLOCK_CHECKSUMS = (GRBL_VERSION_20170919_22270fa, GRBL_VERSION_20180223_61638c5, GRBL_VERSION_20180828_ac367ff, GRBL_VERSION_20181116_a437781)
 	#
+	#
+	GRBL_DEFAULT_VERSION = GRBL_VERSION_2019_MRB_CHECKSUM
 	##########################################################
 
 
@@ -180,6 +182,7 @@ class MachineCom(object):
 		self.g24_avoided_message = []
 
 		self.grbl_auto_update_enabled = _mrbeam_plugin_implementation._settings.get(['dev', 'grbl_auto_update_enabled'])
+		self._terminal_show_checksums = _mrbeam_plugin_implementation._settings.get(['terminal_show_checksums'])
 
 		#grbl features
 		self.grbl_feat_rescue_from_home = False
@@ -395,7 +398,7 @@ class MachineCom(object):
 					# In recovery: if acc_line_buffer is marked dirty we must check if it is set to clean again.
 					if self._acc_line_buffer.is_dirty() and self.COMMAND_RESET_ALARM in my_cmd:
 						self._acc_line_buffer.set_clean()
-					self._log("Send: %s" % my_cmd)
+					self._log("Send: %s" % my_cmd, is_command=True)
 					self._acc_line_buffer.add(my_cmd + '\n',
 					                          intensity=self._current_intensity,
 					                          feedrate=self._current_feedrate,
@@ -407,7 +410,7 @@ class MachineCom(object):
 						if random.randint(0, 500) == 1:
 							orig_command = my_cmd
 							my_cmd = my_cmd[0:-1] + 'G'
-							self._logger.warn("DEBUG Randomly changed '%s' to '%s' to cause checksum error.", orig_command, my_cmd)
+							self._logger.warn("DEBUG Randomly changed '%s' to '%s' to cause checksum error.", orig_command, my_cmd, terminal_as_comm=True)
 					try:
 						self._serial.write(my_cmd + '\n')
 						self._process_command_phase("sent", my_cmd)
@@ -421,7 +424,6 @@ class MachineCom(object):
 			cmd, _, _  = self._process_command_phase("sending", cmd)
 			self._log("Send: %s" % cmd)
 			try:
-
 				self._serial.write(cmd)
 				self._process_command_phase("sent", cmd)
 			except serial.SerialException:
@@ -440,7 +442,7 @@ class MachineCom(object):
 
 	def _add_checksum_to_cmd(self, cmd):
 		if cmd.find('*') < 0 and cmd not in (self.COMMAND_FLUSH, self.COMMAND_SYNC):
-			cmd = "*{chk} {cmd}".format(cmd=cmd, chk=self._calc_checksum(cmd))
+			cmd = "{cmd}*{chk}".format(cmd=cmd, chk=self._calc_checksum(cmd))
 		return cmd
 
 	def _process_rt_commands(self):
@@ -536,9 +538,9 @@ class MachineCom(object):
 		if ret is None or ret == '': return ''
 		try:
 			if cmd:
-				self._log("Recv: %s  // %s  %s" % (sanitize_ascii(ret), cmd, recovery_str))
+				self._log("Recv: %s  // %s  %s" % (sanitize_ascii(ret), cmd, recovery_str), is_command=True)
 			else:
-				self._log("Recv: %s" % (sanitize_ascii(ret)))
+				self._log("Recv: %s" % (sanitize_ascii(ret)), is_command=True)
 		except ValueError as e:
 			# self._log("WARN: While reading last line: %s" % e)
 			self._logger.warn("Exception while sanitizing ascii intput from grbl. Excpetion: '%s', original string from grbl: '%s'", e, ret)
@@ -764,7 +766,7 @@ class MachineCom(object):
 		                  self.grbl_feat_checksums)
 
 		if self.DEBUG_PRODUCE_CHECKSUM_ERRORS:
-			self._logger.warn("DEBUG_PRODUCE_CHECKSUM_ERRORS is active! Do not use in PROD")
+			self._logger.warn("DEBUG_PRODUCE_CHECKSUM_ERRORS is active! Do not use in PROD", terminal_as_comm=True)
 
 		self._onConnected(self.STATE_LOCKED)
 		self.correct_grbl_settings()
@@ -814,6 +816,7 @@ class MachineCom(object):
 		:param line:
 		"""
 		match = self.pattern_grbl_setting.match(line)
+		# there are a bunch of responses that do not match and it's ok.
 		if match:
 			id = int(match.group('id'))
 			comment = match.group('comment')
@@ -827,8 +830,6 @@ class MachineCom(object):
 			if i == v and v_str.find('.') < 0:
 				value = i
 			self._grbl_settings[id] = dict(value=value, comment=comment)
-		else:
-			self._logger.error("_handle_settings_message() line did not mach pattern: %s", line)
 
 	def _start_recovery_thread(self):
 		"""
@@ -1101,18 +1102,20 @@ class MachineCom(object):
 			self._real_time_commands['soft_reset']=True
 			self._send_event.set()
 
-	def _log(self, message):
+	def _log(self, message, is_command=False):
 		"""
 		deprecated. use mrb_logger with flag serial=True instead
 		:param message:
 		"""
+		if is_command and not self._terminal_show_checksums:
+			checksum = re.compile("\*\d{1,3}\s?")
+			message = re.sub(checksum, '', message)
 		self._logger.comm(message, serial=True)
-
 
 	def flash_grbl(self, grbl_file=None, verify_only=False, is_connected=True):
 		"""
 		Flashes the specified grbl file (.hex). This file must not contain a bootloader.
-		:param grbl_file:
+		:param grbl_file: (optional) if not provided the default grbl file is used.
 		:param verify_only: If true, nothing is written, current grbl is verified only
 		:param is_connected: If True, serial connection to grbl is closed before flashing and reconnected afterwards.
 			Auto updates is executed before connection to grbl is established so in this case this param should be set to False.
@@ -1124,18 +1127,7 @@ class MachineCom(object):
 			self._logger.warn(msg, terminal_as_comm=True)
 			return
 
-		if grbl_file is None:
-			if self._grbl_version == self.GRBL_VERSION_20170919_22270fa: # legacy version string
-				grbl_file = 'grbl_0.9g_20170919_22270fa.hex'
-			elif self._grbl_version is not None:
-				# '0.9g_20180223_61638c5' => 'grbl_0.9g_20180223_61638c5.hex'
-				grbl_file = 'grbl_{}.hex'.format(self._grbl_version)
-
-
-		if grbl_file is None:
-			msg = "ERROR {} GRBL: No default filename for currently installed version '%s'.".format(log_verb, self._grbl_version)
-			self._logger.warn(msg, terminal_as_comm=True)
-			return
+		grbl_file = grbl_file or self._get_grbl_file_name()
 
 		if grbl_file.startswith('..') or grbl_file.startswith('/'):
 			msg = "ERROR {} GRBL '{}': Invalid filename.".format(log_verb, grbl_file)
@@ -1219,6 +1211,17 @@ class MachineCom(object):
 			else:
 				self._logger.info("Can't reconnect automacically. Try to reconnect manually or reboot system.")
 
+	def _get_grbl_file_name(self, grbl_version=None):
+		"""
+		Gets you the filename according to the given grbl version.
+		:param grbl_version: (optional) grbl version - If no grbl version is provided it returns you the filename of the default version for this release.
+		:return: filename
+		"""
+		grbl_version = grbl_version or self.GRBL_DEFAULT_VERSION
+		grbl_file = 'grbl_{}.hex'.format(self._grbl_version)
+		if grbl_version == self.GRBL_VERSION_20170919_22270fa:  # legacy version string
+			grbl_file = 'grbl_0.9g_20170919_22270fa.hex'
+		return grbl_file
 
 	def reset_grbl_auto_update_config(self):
 		"""
@@ -1499,71 +1502,7 @@ class MachineCom(object):
 
 	def sendCommand(self, cmd, cmd_type=None, processed=False):
 		if cmd is not None and cmd.strip().startswith('/'):
-			try:
-				cmd = cmd.strip()
-				self._log("Command: %s" % cmd)
-				self._logger.info("Terminal user command: %s", cmd)
-				tokens = cmd.split(' ')
-				specialcmd = tokens[0].lower()
-				if specialcmd.startswith('/togglestatusreport'):
-					if self._status_polling_interval <= 0:
-						self._set_status_polling_interval_for_state()
-					else:
-						self._status_polling_interval = 0
-				elif specialcmd.startswith('/setstatusfrequency'):
-					try:
-						self._status_polling_interval = float(tokens[1])
-					except ValueError:
-						self._log("No frequency setting found! No change")
-				elif specialcmd.startswith('/disconnect'):
-					self.close()
-				elif specialcmd.startswith('/feedrate'):
-					if len(tokens) > 1:
-						self._set_feedrate_override(int(tokens[1]))
-					else:
-						self._log("no feedrate given")
-				elif specialcmd.startswith('/intensity'):
-					if len(tokens) > 1:
-						data = specialcmd[8:]
-						self._set_intensity_override(int(tokens[1]))
-					else:
-						self._log("no intensity given")
-				elif specialcmd.startswith('/reset'):
-					self._log("Reset initiated")
-					self._serial.write(list(bytearray('\x18')))
-				elif specialcmd.startswith('/flash_grbl'):
-					file = None
-					if len(tokens) > 1:
-						file = tokens[1]
-						self._log("Flashing GRBL '%s'..." % file)
-					else:
-						self._log("Flashing GRBL...")
-					self.flash_grbl(file)
-				elif specialcmd.startswith('/verify_grbl'):
-					file = None
-					if len(tokens) > 1:
-						file = tokens[1]
-						self._log("Verifying GRBL '%s'..." % file)
-					else:
-						self._log("Verifying GRBL...")
-					self.flash_grbl(file, verify_only=True)
-				elif specialcmd.startswith('/correct_settings'):
-					self._log("Correcting GRBL settings...")
-					self.correct_grbl_settings()
-				else:
-					self._log("Command not found.")
-					self._log("Available commands are:")
-					self._log("   /togglestatusreport")
-					self._log("   /setstatusfrequency <interval secs>")
-					self._log("   /feedrate <f>")
-					self._log("   /intensity <s>")
-					self._log("   /disconnect")
-					self._log("   /reset")
-					self._log("   /correct_settings")
-					self._log("   /verify_grbl [<file>]")
-					self._log("   /flash_grbl [<file>]")
-			except:
-				self._logger.exception("Exception while executing terminal command '%s'", cmd, terminal_as_comm=True)
+			self._handle_user_command(cmd)
 		else:
 			cmd = cmd.encode('ascii', 'replace')
 			if not processed:
@@ -1579,6 +1518,102 @@ class MachineCom(object):
 
 			self._commandQueue.put(cmd)
 			self._send_event.set()
+
+	def _handle_user_command(self, cmd):
+		"""
+		Handles commands the user can enter on the terminal starting with /
+		"""
+		try:
+			cmd = cmd.strip()
+			self._log("Command: %s" % cmd)
+			self._logger.info("Terminal user command: %s", cmd)
+			tokens = cmd.split(' ')
+			specialcmd = tokens[0].lower()
+			if specialcmd.startswith('/togglestatusreport'):
+				if self._status_polling_interval <= 0:
+					self._set_status_polling_interval_for_state()
+				else:
+					self._status_polling_interval = 0
+			elif specialcmd.startswith('/setstatusfrequency'):
+				try:
+					self._status_polling_interval = float(tokens[1])
+				except ValueError:
+					self._log("No frequency setting found! No change")
+			elif specialcmd.startswith('/disconnect'):
+				self.close()
+			elif specialcmd.startswith('/feedrate'):
+				if len(tokens) > 1:
+					self._set_feedrate_override(int(tokens[1]))
+				else:
+					self._log("no feedrate given")
+			elif specialcmd.startswith('/intensity'):
+				if len(tokens) > 1:
+					data = specialcmd[8:]
+					self._set_intensity_override(int(tokens[1]))
+				else:
+					self._log("no intensity given")
+			elif specialcmd.startswith('/reset'):
+				self._log("Reset initiated")
+				self._serial.write(list(bytearray('\x18')))
+			elif specialcmd.startswith('/flash_grbl'):
+				# if no file given: flash default grbl version
+				file = self._get_grbl_file_name()
+				if len(tokens) > 1:
+					file = tokens[1]
+				if file in (None, '?', '-h', '--help'):
+					grbl_path = os.path.join(__package_path__, self.GRBL_HEX_FOLDER)
+					grbl_files = [f for f in os.listdir(grbl_path) if (os.path.isfile(os.path.join(grbl_path, f)) and not f.startswith('.'))]
+					self._log("Available GRBL files:")
+					for f in grbl_files:
+						self._log("    %s" % f)
+				else:
+					self._log("Flashing GRBL '%s'..." % file)
+					self.flash_grbl(file)
+			elif specialcmd.startswith('/verify_grbl'):
+				# if no file given: verify to currently installed
+				file = self._get_grbl_file_name(self._grbl_version)
+				if len(tokens) > 1:
+					file = tokens[1]
+				if file in (None, '?', '-h', '--help'):
+					grbl_path = os.path.join(__package_path__, self.GRBL_HEX_FOLDER)
+					grbl_files = [f for f in os.listdir(grbl_path) if
+					              (os.path.isfile(os.path.join(grbl_path, f)) and not f.startswith('.'))]
+					self._log("Available GRBL files:")
+					for f in grbl_files:
+						self._log("    %s" % f)
+				else:
+					self._log("Verifying GRBL '%s'..." % file)
+					self.flash_grbl(file, verify_only=True)
+			elif specialcmd.startswith('/correct_settings'):
+				self._log("Correcting GRBL settings...")
+				self.correct_grbl_settings()
+			elif specialcmd.startswith('/show_checksums'):
+				if len(tokens) > 1:
+					val = tokens[1]
+					val = val.lower() in ('show', 'on', 'true', 'yes', '1')
+					self._logger.info("ANDYTEST Showing checksums: tokens: %s, self._terminal_show_checksums: %s, val: %s", tokens, self._terminal_show_checksums, val)
+					if not self._terminal_show_checksums == val:
+						self._terminal_show_checksums = val
+						_mrbeam_plugin_implementation._settings.set_boolean(['terminal_show_checksums'], self._terminal_show_checksums, force=True)
+						self._log("Showing checksums: %s SETTINGS_SAVED" % ('on' if self._terminal_show_checksums else 'off'))
+				else:
+					self._logger.info("ANDYTEST Showing checksums: tokens: %s", tokens)
+				self._log("Showing checksums: %s" % ('on' if self._terminal_show_checksums else 'off'))
+			else:
+				self._log("Command not found.")
+				self._log("Available commands are:")
+				self._log("   /togglestatusreport")
+				self._log("   /setstatusfrequency <interval secs>")
+				self._log("   /feedrate <f>")
+				self._log("   /intensity <s>")
+				self._log("   /disconnect")
+				self._log("   /reset")
+				self._log("   /correct_settings")
+				self._log("   /show_checksums <on | off>")
+				self._log("   /verify_grbl [? | <file>] // ?: list of available files; If omitted default grbl version will be flashed.")
+				self._log("   /flash_grbl [? | <file>] // ?: list of available files; If omitted current grbl version will be verified.")
+		except:
+			self._logger.exception("Exception while executing terminal command '%s'", cmd, terminal_as_comm=True)
 
 	def selectFile(self, filename, sd):
 		if self.isBusy():

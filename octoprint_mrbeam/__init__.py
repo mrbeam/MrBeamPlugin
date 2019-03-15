@@ -233,6 +233,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			beta_label="BETA",
 			job_time = 0.0,
 			terminal=False,
+			terminal_show_checksums = True,
 			vorlon=False,
 			converter_min_required_disk_space=100 * 1024 * 1024, # 100MB, in theory 371MB is the maximum expected file size for full working area engraving at highest resolution.
 			dev=dict(
