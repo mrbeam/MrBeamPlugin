@@ -290,6 +290,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			svgDPI=self._settings.get(['svgDPI']),
 			dxfScale=self._settings.get(['dxfScale']),
 			terminal=self._settings.get(['terminal']),
+			terminal_show_checksums=self._settings.get(['terminal_show_checksums']),
 			vorlon=self.is_vorlon_enabled(),
 			analyticsEnabled=self._settings.get(['analyticsEnabled']),
 			cam=dict(enabled=self._settings.get(['cam', 'enabled']),
@@ -310,24 +311,31 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		)
 
 	def on_settings_save(self, data):
-		# self._logger.info("ANDYTEST on_settings_save() %s", data)
-		if "svgDPI" in data:
-			self._settings.set_int(["svgDPI"], data["svgDPI"])
-		if "dxfScale" in data:
-			self._settings.set_float(["dxfScale"], data["dxfScale"])
-		if "terminal" in data:
-			self._settings.set_boolean(["terminal"], data["terminal"])
-		if "vorlon" in data:
-			if data["vorlon"]:
-				self._settings.set_float(["vorlon"], time.time())
-				self._logger.warn("Enabling VORLON per user request.", terminal=True)
-			else:
-				self._settings.set_boolean(["vorlon"], False)
-				self._logger.info("Disabling VORLON per user request.", terminal=True)
-		if "gcode_nextgen" in data and isinstance(data['gcode_nextgen'], collections.Iterable) and "clip_working_area" in data['gcode_nextgen']:
-			self._settings.set_boolean(["gcode_nextgen", "clip_working_area"], data['gcode_nextgen']['clip_working_area'])
-		if "analyticsEnabled" in data:
-			self._analytics_handler.analytics_user_permission_change(analytics_enabled=data['analyticsEnabled'])
+		try:
+			# self._logger.info("ANDYTEST on_settings_save() %s", data)
+			if "svgDPI" in data:
+				self._settings.set_int(["svgDPI"], data["svgDPI"])
+			if "dxfScale" in data:
+				self._settings.set_float(["dxfScale"], data["dxfScale"])
+			if "terminal" in data:
+				self._settings.set_boolean(["terminal"], data["terminal"])
+			if "terminal_show_checksums" in data:
+				self._settings.set_boolean(["terminal_show_checksums"], data["terminal_show_checksums"])
+				self._printer._comm.set_checksum_enabled(data["terminal_show_checksums"])
+			if "vorlon" in data:
+				if data["vorlon"]:
+					self._settings.set_float(["vorlon"], time.time())
+					self._logger.warn("Enabling VORLON per user request.", terminal=True)
+				else:
+					self._settings.set_boolean(["vorlon"], False)
+					self._logger.info("Disabling VORLON per user request.", terminal=True)
+			if "gcode_nextgen" in data and isinstance(data['gcode_nextgen'], collections.Iterable) and "clip_working_area" in data['gcode_nextgen']:
+				self._settings.set_boolean(["gcode_nextgen", "clip_working_area"], data['gcode_nextgen']['clip_working_area'])
+			if "analyticsEnabled" in data:
+				self._analytics_handler.analytics_user_permission_change(analytics_enabled=data['analyticsEnabled'])
+		except Exception as e:
+			self._logger.exception("Exception in on_settings_save() ")
+			raise e
 
 
 	def on_shutdown(self):

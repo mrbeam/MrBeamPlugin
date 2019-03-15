@@ -230,6 +230,10 @@ class MachineCom(object):
 		self._status_polling_timer.start()
 
 
+	def set_checksum_enabled(self, enabled):
+		self._terminal_show_checksums = bool(enabled)
+		self._logger.info("Show checksums: %s", 'on' if self._terminal_show_checksums else 'off', terminal_as_comm=True)
+
 	def get_home_position(self):
 		"""
 		Returns the home position which usually where the head is after homing. (Except in C series)
@@ -1211,15 +1215,16 @@ class MachineCom(object):
 			else:
 				self._logger.info("Can't reconnect automacically. Try to reconnect manually or reboot system.")
 
-	def _get_grbl_file_name(self, grbl_version=None):
+	@staticmethod
+	def _get_grbl_file_name(grbl_version=None):
 		"""
 		Gets you the filename according to the given grbl version.
 		:param grbl_version: (optional) grbl version - If no grbl version is provided it returns you the filename of the default version for this release.
 		:return: filename
 		"""
-		grbl_version = grbl_version or self.GRBL_DEFAULT_VERSION
-		grbl_file = 'grbl_{}.hex'.format(self._grbl_version)
-		if grbl_version == self.GRBL_VERSION_20170919_22270fa:  # legacy version string
+		grbl_version = grbl_version or MachineCom.GRBL_DEFAULT_VERSION
+		grbl_file = 'grbl_{}.hex'.format(grbl_version)
+		if grbl_version == MachineCom.GRBL_VERSION_20170919_22270fa:  # legacy version string
 			grbl_file = 'grbl_0.9g_20170919_22270fa.hex'
 		return grbl_file
 
@@ -1587,18 +1592,6 @@ class MachineCom(object):
 			elif specialcmd.startswith('/correct_settings'):
 				self._log("Correcting GRBL settings...")
 				self.correct_grbl_settings()
-			elif specialcmd.startswith('/show_checksums'):
-				if len(tokens) > 1:
-					val = tokens[1]
-					val = val.lower() in ('show', 'on', 'true', 'yes', '1')
-					self._logger.info("ANDYTEST Showing checksums: tokens: %s, self._terminal_show_checksums: %s, val: %s", tokens, self._terminal_show_checksums, val)
-					if not self._terminal_show_checksums == val:
-						self._terminal_show_checksums = val
-						_mrbeam_plugin_implementation._settings.set_boolean(['terminal_show_checksums'], self._terminal_show_checksums, force=True)
-						self._log("Showing checksums: %s SETTINGS_SAVED" % ('on' if self._terminal_show_checksums else 'off'))
-				else:
-					self._logger.info("ANDYTEST Showing checksums: tokens: %s", tokens)
-				self._log("Showing checksums: %s" % ('on' if self._terminal_show_checksums else 'off'))
 			else:
 				self._log("Command not found.")
 				self._log("Available commands are:")
@@ -1609,7 +1602,6 @@ class MachineCom(object):
 				self._log("   /disconnect")
 				self._log("   /reset")
 				self._log("   /correct_settings")
-				self._log("   /show_checksums <on | off>")
 				self._log("   /verify_grbl [? | <file>] // ?: list of available files; If omitted default grbl version will be flashed.")
 				self._log("   /flash_grbl [? | <file>] // ?: list of available files; If omitted current grbl version will be verified.")
 		except:

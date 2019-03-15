@@ -20,18 +20,18 @@ class Migration(object):
 	VERSION_FIX_SSH_KEY_PERMISSION           = '0.1.28'
 	VERSION_UPDATE_CHANGE_HOSTNAME_SCRIPTS   = '0.1.37'
 	VERSION_UPDATE_LOGROTATE_CONF            = '0.1.45'
-	VERSION_GRBL_AUTO_UPDATE                 = '0.1.53'
 	VERSION_INFLATE_FILE_SYSTEM              = '0.1.51'
 	VERSION_MOUNT_MANAGER_161                = '0.1.56'
 	VERSION_PREFILL_MRB_HW_INFO              = '0.1.55'
+	VERSION_GRBL_AUTO_UPDATE                 = '0.1.60'
 
 	# this is where we have files needed for migrations
 	MIGRATE_FILES_FOLDER     = 'files/migrate/'
 	MIGRATE_LOGROTATE_FOLDER = 'files/migrate_logrotate/'
 
 	# grbl auto update conf
-	GRBL_AUTO_UPDATE_FILE = "grbl_0.9g_20181116_a437781.hex"
-	GRBL_AUTO_UPDATE_VERSION = MachineCom.GRBL_VERSION_20181116_a437781
+	GRBL_AUTO_UPDATE_FILE =     MachineCom._get_grbl_file_name()
+	GRBL_AUTO_UPDATE_VERSION =  MachineCom.GRBL_DEFAULT_VERSION
 
 
 	def __init__(self, plugin):
