@@ -36,7 +36,7 @@ from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
 ### MachineCom #########################################################################################################
 class MachineCom(object):
 
-	DEBUG_PRODUCE_CHECKSUM_ERRORS = False
+	DEBUG_PRODUCE_CHECKSUM_ERRORS = True
 
 	### GRBL VERSIONs #######################################
 	# original grbl
@@ -55,7 +55,7 @@ class MachineCom(object):
 	GRBL_VERSION_20181116_a437781 = '0.9g_20181116_a437781'
 	#
 	# adds checksums
-	GRBL_VERSION_2019_MRB_CHECKSUM = '0.9g_20190315_772ab87-dirty'
+	GRBL_VERSION_2019_MRB_CHECKSUM = '0.9g_20190315_30263af-dirty'
 	GRBL_FEAT_BLOCK_CHECKSUMS = (GRBL_VERSION_20170919_22270fa, GRBL_VERSION_20180223_61638c5, GRBL_VERSION_20180828_ac367ff, GRBL_VERSION_20181116_a437781)
 	#
 	#
@@ -65,6 +65,10 @@ class MachineCom(object):
 
 	GRBL_SETTINGS_READ_WINDOW =     10.0
 	GRBL_SETTINGS_CHECK_FREQUENCY = 0.5
+
+	GRBL_RX_BUFFER_SIZE = 127
+	GRBL_WORKING_RX_BUFFER_SIZE = GRBL_RX_BUFFER_SIZE - 5
+	GRBL_LINE_BUFFER_SIZE = 80
 
 	STATE_NONE = 0
 	STATE_OPEN_SERIAL = 1
@@ -134,9 +138,6 @@ class MachineCom(object):
 		self._baudrate = baudrate
 		self._callback = callbackObject
 		self._laserCutterProfile = laserCutterProfileManager().get_current_or_default()
-
-		self.RX_BUFFER_SIZE = 127
-		self.WORKING_RX_BUFFER_SIZE = self.RX_BUFFER_SIZE - 5
 
 		self._state = self.STATE_NONE
 		self._grbl_state = None
@@ -391,18 +392,18 @@ class MachineCom(object):
 				self._send_event.set()
 			else:
 				my_cmd = self._cmd  # to avoid race conditions
-				if not(len(my_cmd) +1 < self.WORKING_RX_BUFFER_SIZE):
-					msg = "Error: Command too long. max: {}, cmd length: {}, cmd: {}... (shortened)".format(self.WORKING_RX_BUFFER_SIZE -1, len(my_cmd), my_cmd[0:self.WORKING_RX_BUFFER_SIZE-1])
+				if not(len(my_cmd) +1 < self.GRBL_LINE_BUFFER_SIZE):
+					msg = "Error: Command too long. max: {}, cmd length: {}, cmd: {}... (shortened)".format(self.GRBL_LINE_BUFFER_SIZE - 1, len(my_cmd), my_cmd[0:self.GRBL_LINE_BUFFER_SIZE - 1])
 					self._logger.error(msg, analytics=True)
 					self._handle_alarm_message("Command too long to send to GRBL.", code=self.ALARM_CODE_COMMAND_TOO_LONG)
 					self._cmd = None
 					return
-				if my_cmd and self._acc_line_buffer.get_char_len() + len(my_cmd) + 1 < self.WORKING_RX_BUFFER_SIZE:
+				if my_cmd and self._acc_line_buffer.get_char_len() + len(my_cmd) + 1 < self.GRBL_WORKING_RX_BUFFER_SIZE:
 					my_cmd, _, _  = self._process_command_phase("sending", my_cmd)
 					# In recovery: if acc_line_buffer is marked dirty we must check if it is set to clean again.
 					if self._acc_line_buffer.is_dirty() and self.COMMAND_RESET_ALARM in my_cmd:
 						self._acc_line_buffer.set_clean()
-					self._log("Send: %s" % my_cmd, is_command=True)
+					self._log("Send: %s" % (my_cmd), is_command=True)
 					self._acc_line_buffer.add(my_cmd + '\n',
 					                          intensity=self._current_intensity,
 					                          feedrate=self._current_feedrate,
@@ -445,6 +446,8 @@ class MachineCom(object):
 		return checksum
 
 	def _add_checksum_to_cmd(self, cmd):
+		if cmd is None:
+			return None
 		if cmd.find('*') < 0 and cmd not in (self.COMMAND_FLUSH, self.COMMAND_SYNC):
 			cmd = "{cmd}*{chk}".format(cmd=cmd, chk=self._calc_checksum(cmd))
 		return cmd
@@ -645,7 +648,9 @@ class MachineCom(object):
 
 		## RECOVERY ##
 		if self._recovery_ignore_further_alarm_responses and self.COMMAND_RESET_ALARM in AccLineBuffer.get_cmd_from_item(item):
-				self._recovery_alarm_reset_confirmed = True
+			# the empty line we're sending before $X is also responded with an 'ok', even though it does not unlock the alarm.
+			# That's why it's important to check if $X is really the command that got acknowledged.
+			self._recovery_alarm_reset_confirmed = True
 		# during a recovery the first ok proves that alarm state was cleared
 		self._recovery_ignore_further_alarm_responses = False
 
@@ -672,8 +677,13 @@ class MachineCom(object):
 			self._logger.debug("_handle_error_message() Ignoring this error message: '%s'", line)
 			return
 		if "Alarm lock" in line and self._recovery_ignore_further_alarm_responses:
-			# my_cmd = AccLineBuffer.get_cmd_from_item(self._acc_line_buffer.get_last_responded())
-			# self._logger.debug("_handle_error_message() Ignoring Alarm message during recovery: '%s' in command: '%s'", line, my_cmd)
+			# During a recovery we can simply ignore these.
+			return
+		if "Line overflow" in line:
+			# If we get this from grbl we can assume that some newline-characters got lost
+			# and we can treat this as an MRB_CHECKSUM_ERROR.
+			# We can safely assume this because we filter too long commands before sending them.
+			self._start_recovery_thread()
 			return
 
 		my_cmd = AccLineBuffer.get_cmd_from_item(self._acc_line_buffer.get_last_responded())
@@ -882,15 +892,30 @@ class MachineCom(object):
 			self._recovery_ignore_further_alarm_responses = True
 			# TODO: would be good if we can be sure that the regular sending pipeline is really empty
 			#  instead of simply waiting potentially too long or too short and then just hoping that it is empty.
-			time.sleep(0.01)
-			recover_cmd = self.COMMAND_RESET_ALARM
+			time.sleep(1.0)
+			cmd_obj = self._acc_line_buffer.get_last_responded()
+			restart_commands = [' ', # send a new line before $X to make sure, grbl regards it as a new command.
+			                    self._add_checksum_to_cmd(self.COMMAND_RESET_ALARM)
+			                    ]
+			if cmd_obj:
+				# grbl internally adds a "S0" in case of a checksum error. (This "S0" is NOT acknowledged by grbl.)
+				# Therefor we need to turn the laser power back on.
+				# This is the intensity value which was current BEFORE this command. It might be different from
+				# a S-value within the command causing the checksum error.
+				restart_commands.append(self._add_checksum_to_cmd("S{}".format(int(cmd_obj['i']))))
+
+			recover_cmd = restart_commands.pop(0)
 			while not self._recovery_thread_kill and self._acc_line_buffer.is_dirty():
 				if recover_cmd:
 					self._logger.info("Re-queue: %s  RECOVERY", recover_cmd, terminal_as_comm=True)
-					self.sendCommand(recover_cmd)
+					self.sendCommand(recover_cmd, processed=True)
 				else:
+					# the we did'nt get a command let's wait a bit. there might be a new one shortly
+					# because grbl might still process commands on it's serial buffer.
 					time.sleep(0.001)
-				recover_cmd = self._acc_line_buffer.recover_next_command()
+				# get next command either from our static restart_commands or a dirty command from _acc_line_buffer
+				recover_cmd = restart_commands.pop(0) if restart_commands else self._acc_line_buffer.recover_next_command()
+
 			if self._recovery_thread_kill:
 				self._logger.info("_send_recovery_commands() Recovery: Starting over...")
 			else:
@@ -1355,7 +1380,7 @@ class MachineCom(object):
 				temp = round(self._actual_intensity * self._intensity_factor)
 				if temp > intensity_limit:
 					temp = intensity_limit
-					self._current_intensity = round(temp)
+					self._current_intensity = int(round(temp))
 				self.sendCommand('S%d' % self._current_intensity)
 
 	def _replace_feedrate(self, cmd):
@@ -1368,7 +1393,7 @@ class MachineCom(object):
 				if feedrate_cmd in self._feedrate_dict:
 					new_feedrate = self._feedrate_dict[feedrate_cmd]
 				else:
-					new_feedrate = round(self._actual_feedrate * self._feedrate_factor)
+					new_feedrate = int(round(self._actual_feedrate * self._feedrate_factor))
 					# TODO replace with value from printer profile
 					if new_feedrate > 5000:
 						new_feedrate = 5000
@@ -1386,7 +1411,7 @@ class MachineCom(object):
 			intensity_cmd = cmd[obj.start():obj.end()]
 			parsed_intensity = int(intensity_cmd[1:])
 			self._actual_intensity = parsed_intensity if parsed_intensity <= intensity_limit else intensity_limit
-			self._current_intensity = round(self._actual_intensity)
+			self._current_intensity = int(round(self._actual_intensity))
 			if self._actual_intensity != parsed_intensity:
 				return cmd.replace(intensity_cmd, 'S%d' % self._current_intensity)
 			elif self._intensity_factor != 1:
@@ -1394,11 +1419,11 @@ class MachineCom(object):
 				if intensity_cmd in self._intensity_dict:
 					new_intensity = self._intensity_dict[intensity_cmd]
 				else:
-					new_intensity = round(self._actual_intensity * self._intensity_factor)
+					new_intensity = int(round(self._actual_intensity * self._intensity_factor))
 					if new_intensity > intensity_limit:
 						new_intensity = intensity_limit
 					self._intensity_dict[intensity_cmd] = new_intensity
-				self._current_intensity = round(new_intensity)
+				self._current_intensity = int(round(new_intensity))
 				return cmd.replace(intensity_cmd, 'S%d' % self._current_intensity)
 		return cmd
 
@@ -1512,10 +1537,10 @@ class MachineCom(object):
 			cmd = cmd.encode('ascii', 'replace')
 			if not processed:
 				cmd = process_gcode_line(cmd)
-				if self.grbl_feat_checksums:
-					cmd = self._add_checksum_to_cmd(cmd)
 				if not cmd:
 					return
+				if self.grbl_feat_checksums:
+					cmd = self._add_checksum_to_cmd(cmd)
 
 			eepromCmd = re.search("^\$[0-9]+=.+$", cmd)
 			if(eepromCmd and self.isPrinting()):
