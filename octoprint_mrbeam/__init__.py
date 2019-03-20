@@ -332,6 +332,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if "analyticsEnabled" in data:
 			self._analytics_handler.analytics_user_permission_change(analytics_enabled=data['analyticsEnabled'])
 		if "focusReminder" in data:
+			self._logger.info("############################### on_settings_save save focus reminder: %s", data["focusReminder"])
 			self._settings.set_boolean(["focusReminder"], data["focusReminder"])
 
 
@@ -1351,9 +1352,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def focus_reminder(self, data):
 		self._logger.info("######################################## focus_reminder")
-		self._logger.info(self._settings.get(['version']))
 		if 'focusReminder' in data:
-			self._settings.set_boolean(["focusReminder"], data['focusReminder'])
+			self._logger.info("######################################## focus reminder: %s", data['focusReminder'])
+			self._settings.set_boolean(["focusReminder"], False, force=True)
 			self._logger.info("######################################## focus reminder saved!")
 
 
