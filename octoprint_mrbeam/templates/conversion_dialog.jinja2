@@ -54,7 +54,7 @@
 					<div data-toggle="tooltip" data-placement="bottom" style="display: inline-block"
                          title="{{ _('Depending on the color the laser beam is reflected more or less.') }}<br>
                                 <b>{{ _('Select a color close to the material\'s color to improve the result.') }}</b>">
-						<label >Color</label>
+						<label >{{ _('Color') }}</label>
 						<ul id="color_list" data-bind="foreach: material_colors">
 							<li class='material_color_entry hover_shadow' data-bind="
 								click: function(vm, event){ $root.set_material_color($data, event); $root.moveJobsToEngravingColorDefaultOption($data)},

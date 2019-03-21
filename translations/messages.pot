@@ -6,16 +6,16 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: Mr_Beam 0.1.56\n"
+"Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: i18n@octoprint.org\n"
-"POT-Creation-Date: 2019-03-08 16:24+0000\n"
+"POT-Creation-Date: 2019-03-21 14:54+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.5.1\n"
+"Generated-By: Babel 2.6.0\n"
 
 #: octoprint_mrbeam/__init__.py:465
 #: octoprint_mrbeam/templates/settings/svgtogcode_settings.jinja2:2
@@ -36,7 +36,7 @@ msgstr ""
 msgid "About This Mr Beam"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:469 octoprint_mrbeam/__init__.py:680
+#: octoprint_mrbeam/__init__.py:469 octoprint_mrbeam/__init__.py:637
 #: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:9
 #: octoprint_mrbeam/templates/wizard/wizard_analytics.jinja2:9
 msgid "Analytics"
@@ -66,8 +66,7 @@ msgid "What's New"
 msgstr ""
 
 #: octoprint_mrbeam/__init__.py:620
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_1.jinja2:2
-msgid "Lights showing WiFi state"
+msgid "New Mr Beam Status Light"
 msgstr ""
 
 #: octoprint_mrbeam/comm_acc2.py:314
@@ -281,7 +280,7 @@ msgid "Experimenting with custom material settings is at your own risk."
 msgstr ""
 
 #: octoprint_mrbeam/static/js/convert.js:608
-#: octoprint_mrbeam/static/js/wizard_analytics.js:50
+#: octoprint_mrbeam/static/js/wizard_analytics.js:55
 msgid "Error while saving settings!"
 msgstr ""
 
@@ -298,10 +297,10 @@ msgid "engrave only"
 msgstr ""
 
 #: octoprint_mrbeam/static/js/convert.js:660
-#: octoprint_mrbeam/static/js/working_area.js:2296
-#: octoprint_mrbeam/static/js/working_area.js:2301
-#: octoprint_mrbeam/static/js/working_area.js:2306
-#: octoprint_mrbeam/static/js/working_area.js:2311
+#: octoprint_mrbeam/static/js/working_area.js:2297
+#: octoprint_mrbeam/static/js/working_area.js:2302
+#: octoprint_mrbeam/static/js/working_area.js:2307
+#: octoprint_mrbeam/static/js/working_area.js:2312
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:105
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:238
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:126
@@ -422,20 +421,20 @@ msgstr ""
 msgid "Starts the laser job"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:501
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:508
 msgid "Slicing done"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:502
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:509
 #, python-format
 msgid "Sliced %(stl)s to %(gcode)s, took %(time).2f seconds"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:557
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:564
 msgid "Ready to laser?"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:560
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:567
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:116
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:400
 #: octoprint_mrbeam/templates/settings.jinja2:52
@@ -443,25 +442,25 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:561
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:568
 msgid "Proceed"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:562
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:569
 msgid ""
 "The laser will now start. Protect yourself and everybody in the room "
 "appropriately before proceeding!"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:563
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:570
 msgid "Are you sure you want to proceed?"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:567
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:574
 msgid "The laser will now start. Please make sure the lid is closed."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:568
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:575
 msgid "Please confirm to proceed."
 msgstr ""
 
@@ -516,18 +515,18 @@ msgstr ""
 msgid "Please retype your password."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/wizard_analytics.js:28
+#: octoprint_mrbeam/static/js/wizard_analytics.js:33
 msgid "You need to select an option"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/wizard_analytics.js:29
+#: octoprint_mrbeam/static/js/wizard_analytics.js:34
 #, python-format
 msgid ""
 "Please make a choice about analytics.%(br)sYou will be able to change it "
 "later in the settings if you want."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/wizard_analytics.js:51
+#: octoprint_mrbeam/static/js/wizard_analytics.js:56
 #, python-format
 msgid ""
 "Unable to save your analytics state at the moment.%(br)sCheck connection "
@@ -538,19 +537,19 @@ msgstr ""
 msgid "Let's go!"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1153
+#: octoprint_mrbeam/static/js/working_area.js:1154
 #, python-format
 msgid ""
 "The SVG file contains unsupported elements: '%(elemName)s' These elements"
 " got removed."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1155
+#: octoprint_mrbeam/static/js/working_area.js:1156
 #, python-format
 msgid "Unsupported elements in SVG: '%(elemName)s'"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1163
+#: octoprint_mrbeam/static/js/working_area.js:1164
 #, python-format
 msgid ""
 "The SVG file contains text elements.%(br)sIf you want to laser just their"
@@ -558,22 +557,22 @@ msgid ""
 " engraved with infill."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1165
+#: octoprint_mrbeam/static/js/working_area.js:1166
 msgid "Text elements found"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1176
+#: octoprint_mrbeam/static/js/working_area.js:1177
 msgid ""
 "The SVG file contained style elements with online references. Since "
 "online references are not supported, we removed them. The image might "
 "look a bit different now."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1178
+#: octoprint_mrbeam/static/js/working_area.js:1179
 msgid "Style elements removed"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1189
+#: octoprint_mrbeam/static/js/working_area.js:1190
 #, python-format
 msgid ""
 "Something went wrong while reading this "
@@ -581,23 +580,23 @@ msgid ""
 "If it works there, our support team would be happy to take a look."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1192
+#: octoprint_mrbeam/static/js/working_area.js:1193
 msgid "Oops."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:2296
+#: octoprint_mrbeam/static/js/working_area.js:2297
 msgid "Circle"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:2301
+#: octoprint_mrbeam/static/js/working_area.js:2302
 msgid "Heart"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:2306
+#: octoprint_mrbeam/static/js/working_area.js:2307
 msgid "Star"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:2311
+#: octoprint_mrbeam/static/js/working_area.js:2312
 msgid "Rectangle"
 msgstr ""
 
@@ -667,6 +666,11 @@ msgstr ""
 msgid "Select a color close to the material's color to improve the result."
 msgstr ""
 
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:57
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:110
+msgid "Color"
+msgstr ""
+
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:72
 msgid "Set the thickness of the material."
 msgstr ""
@@ -692,10 +696,6 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:98
 msgid "your name of choice"
-msgstr ""
-
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:110
-msgid "Color"
 msgstr ""
 
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:117
@@ -1381,22 +1381,22 @@ msgid "Find my Mr Beam"
 msgstr ""
 
 #: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:93
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:35
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:37
 msgid "QuickstartGuide_en.pdf"
 msgstr ""
 
 #: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:93
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:35
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:37
 msgid "Quickstart Guide"
 msgstr ""
 
 #: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:94
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:36
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:38
 msgid "UserManual_en.pdf"
 msgstr ""
 
 #: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:94
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:36
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:38
 msgid "User Manual"
 msgstr ""
 
@@ -1484,7 +1484,7 @@ msgid "cancel"
 msgstr ""
 
 #: octoprint_mrbeam/templates/ready_to_laser.jinja2:19
-#: octoprint_mrbeam/templates/ready_to_laser.jinja2:38
+#: octoprint_mrbeam/templates/ready_to_laser.jinja2:42
 msgid "Cancel Laser Job"
 msgstr ""
 
@@ -1493,33 +1493,29 @@ msgid "Plugin air filter system"
 msgstr ""
 
 #: octoprint_mrbeam/templates/ready_to_laser.jinja2:21
-#: octoprint_mrbeam/templates/ready_to_laser.jinja2:39
+#: octoprint_mrbeam/templates/ready_to_laser.jinja2:43
 msgid "Close the lid"
 msgstr ""
 
-#: octoprint_mrbeam/templates/ready_to_laser.jinja2:22
-msgid "Press the button to"
-msgstr ""
-
 #: octoprint_mrbeam/templates/ready_to_laser.jinja2:23
-msgid "start"
+msgid "Press the button to start"
 msgstr ""
 
-#: octoprint_mrbeam/templates/ready_to_laser.jinja2:24
-msgid "continue"
-msgstr ""
-
-#: octoprint_mrbeam/templates/ready_to_laser.jinja2:31
-msgid "Cooling"
+#: octoprint_mrbeam/templates/ready_to_laser.jinja2:26
+msgid "Press the button to continue"
 msgstr ""
 
 #: octoprint_mrbeam/templates/ready_to_laser.jinja2:35
+msgid "Cooling"
+msgstr ""
+
+#: octoprint_mrbeam/templates/ready_to_laser.jinja2:39
 msgid ""
 "Mr Beam II needs a short break to cool down. We'll continue the laser job"
 " as soon as possible. There's nothing you need to do at the moment."
 msgstr ""
 
-#: octoprint_mrbeam/templates/ready_to_laser.jinja2:40
+#: octoprint_mrbeam/templates/ready_to_laser.jinja2:44
 msgid "Just relax"
 msgstr ""
 
@@ -1918,101 +1914,105 @@ msgstr ""
 msgid "https://mr-beam.org/en/downloads/"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:8
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:10
 msgid "Mr Beam II"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:11
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:13
 msgid "Name:"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:12
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:14
 msgid "Serial:"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:21
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:23
 msgid "Mr Beam Plugin:"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:23
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:25
 msgid "Image fingerprint:"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:24
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:26
 msgid "Software tier:"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:25
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:27
 msgid "Environment:"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:31
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:33
 msgid "Documentation, Support and Privacy"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:34
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:36
 msgid "References:"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:37
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:39
 msgid "get the latest versions"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:37
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:39
 msgid "online"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:39
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:41
 msgid "Online Support Portal:"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:40
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:42
 msgid "Community Forum:"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:41
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:43
 msgid "Privacy Policies:"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:42
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:44
 msgid "Mr Beam Web Site"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:44
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:45
+msgid "find.mr-beam service"
+msgstr ""
+
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:46
 #: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:10
 #: octoprint_mrbeam/templates/wizard/wizard_analytics.jinja2:10
 msgid "/plugin/mrbeam/static/docs/MrBeamAnalytics-PrivacyPolicy_en.pdf"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:44
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:46
 msgid "Mr Beam Analytics"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:52
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:54
 msgid "Links"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:55
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:57
 msgid "Website:"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:56
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:58
 msgid "Social media:"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:65
-msgid "Find my Mr Beam:"
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:67
+msgid "find.mr-beam service:"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:66
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:68
 msgid "Online resources:"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:66
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:68
 msgid "Mr Beam Downloads"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:67
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:69
 msgid "Source code:"
 msgstr ""
 
@@ -2192,7 +2192,7 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/settings/svgtogcode_settings.jinja2:10
 msgid ""
-"In case beamOS can\'t recognize what dpi value your graphic program uses, "
+"In case beamOS can't recognize what dpi value your graphic program uses, "
 "this value will be the fallback. Files from Illustrator or Inkscape or "
 "Corel Draw tend to work fine regardless of this value."
 msgstr ""
@@ -2318,239 +2318,8 @@ msgid ""
 "this version..."
 msgstr ""
 
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:2
-msgid ""
-"https://mr-beam.freshdesk.com/en/support/solutions/articles/43000431865"
-"-save-custom-material-settings"
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:4
-msgid "Save Custom Material Settings"
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:8
-msgid ""
-"It's finally there! You can save your own material settings within Mr "
-"Beam II."
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:11
-msgid "What does it do?"
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:12
-msgid ""
-"It saves the values of the current laser parameters like laser intensity,"
-" speed and number of passes for the engraving and cutting job.\n"
-"    These values are what we call material settings because they are very"
-" dependent of the kind of material you use.\n"
-"    When you use the same material at some point later, you can simply "
-"select your pre-saved material settings and are good to go."
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:22
-msgid "How can I use it?"
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:25
-msgid ""
-"In the laser parameters screen select a material, color and thickness "
-"which is most similar to the one you're using."
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:26
-msgid ""
-"As soon as you modify one of the settings in the lower part, new buttons "
-"appear next to your material selection:"
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:27
-msgid ""
-"Click <strong>Save custom material</strong> to open a little dialog to "
-"save your current intensity, speed and passes values of the engraving and"
-" the cutting job.\n"
-"        Before you hit save give it a good name and set the thickness and"
-" color values to make your material settings easy to find again once you "
-"need it."
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:29
-msgid ""
-"To load these settings any time later simply open the laser parameters "
-"screen.\n"
-"            You will find a new material with your name in the overview "
-"of all materials.\n"
-"            Simply select your material, color and thickness and the "
-"laser parameters are pre-filled with your values."
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:37
-msgid "Hints and useful Details:"
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:39
-msgid "These values are saved in your custom material settings:"
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:41
-msgid "Engraving Job:"
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:43
-msgid "Laser intensity range (values for black and white)"
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:44
-msgid "engraving speed range (values for black and white)"
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:45
-msgid "as well as from advanced settings: pierce time and dithering."
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:47
-msgid "Cutting Job:"
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:49
-msgid "Laser intensity"
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:50
-msgid "laser speed"
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:51
-msgid "passes"
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:52
-msgid "and pierce time (advanced settings)."
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:54
-msgid ""
-"In case you have more than one cutting job in the moment of saving, Mr "
-"Beam II automatically chooses the one\n"
-"                    with the strongest settings assuming that this is the"
-" one intended to cut your material all the way through."
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:58
-msgid ""
-"If you choose a thickness value of 0 (zero) in the saving dialog, it's "
-"interpreted as \"engrave only\". This makes sense for a material which "
-"you know can not be cut."
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:59
-msgid ""
-"If you enter a name for a custom material which already exists but a "
-"different color or thickness, these new values are simply added to your "
-"existing material.\n"
-"            If all three values are the same (name, color and thickness),"
-" your existing setting is updated/overwritten."
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:61
-msgid ""
-"To delete a custom material settings, click \"Manage materials\" on the "
-"materials overview then click on the trash bin icon which appears on all "
-"custom materials.\n"
-"            This deletes all settings saved under this name. It's not "
-"possible to delete pre-defined material settings."
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:63
-msgid ""
-"If you did not save your material settings and found that they worked "
-"great with your material,\n"
-"            you can still save them once your laser job has finished by "
-"going to the laser parameters screen again as if you were about to do the"
-" same job again.\n"
-"            If you have nor reloaded the page in your browser or turned "
-"Mr Beam II off, you still have your settings right there.\n"
-"            Just click <strong>Save custom material</strong> and save "
-"them."
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:67
-msgid ""
-"At the moment it is not possible to export, import or backup custom "
-"material settings."
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:73
-msgid ""
-"You can find this article also in our Knowledge Base in our online "
-"Support Portal."
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:2
-msgid "Optimized Engraving Algorithms"
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:6
-msgid "New time optimized engraving algorithm:"
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:10
-msgid ""
-"\n"
-"   To improve processing time of engravings we’re introducing a new "
-"clustering algorithm which identifies areas of the engraving image which "
-"can be engraved separately to save time by saving \"empty rides\".\n"
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_4.jinja2:2
-msgid "...and more"
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_4.jinja2:5
-msgid "Besides these, we improved many details and and also fixed some bugs:"
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_4.jinja2:9
-msgid "Improved SVG support:"
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_4.jinja2:9
-msgid "Mr Beam now supports the following SVG elements: clones and refs."
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_4.jinja2:10
-msgid "Improved DXF support:"
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_4.jinja2:10
-msgid "DXF files from OpenScad are now supported."
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_4.jinja2:11
-msgid "Our discovery service now supports .fritz.box networks."
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_4.jinja2:12
-msgid ""
-"Fixes a bug where some users could not use the full physically available "
-"disk space. Now you can."
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_4.jinja2:13
-msgid "Fixes a bug where the laser did not turn on after pausing."
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_4.jinja2:18
-msgid "We hope you enjoy all these improvements."
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_4.jinja2:22
-msgid "...and just in case you have questions or need help:"
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_4.jinja2:23
-#, python-format
-msgid "Check out our new %(open)sMr Beam Support Portal%(close)s."
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_1.jinja2:2
+msgid "Lights showing WiFi state"
 msgstr ""
 
 #: octoprint_mrbeam/templates/wizard/wizard_wifi.jinja2:5
