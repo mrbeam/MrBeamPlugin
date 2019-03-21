@@ -1,14 +1,14 @@
-# Translations template for PROJECT.
-# Copyright (C) 2019 ORGANIZATION
-# This file is distributed under the same license as the PROJECT project.
+# Translations template for Mr_Beam.
+# Copyright (C) 2019 The OctoPrint Project
+# This file is distributed under the same license as the Mr_Beam project.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2019.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PROJECT VERSION\n"
-"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-03-19 17:27+0100\n"
+"Project-Id-Version: Mr_Beam 0.1.61\n"
+"Report-Msgid-Bugs-To: i18n@octoprint.org\n"
+"POT-Creation-Date: 2019-03-21 14:54+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -297,10 +297,10 @@ msgid "engrave only"
 msgstr ""
 
 #: octoprint_mrbeam/static/js/convert.js:660
-#: octoprint_mrbeam/static/js/working_area.js:2296
-#: octoprint_mrbeam/static/js/working_area.js:2301
-#: octoprint_mrbeam/static/js/working_area.js:2306
-#: octoprint_mrbeam/static/js/working_area.js:2311
+#: octoprint_mrbeam/static/js/working_area.js:2297
+#: octoprint_mrbeam/static/js/working_area.js:2302
+#: octoprint_mrbeam/static/js/working_area.js:2307
+#: octoprint_mrbeam/static/js/working_area.js:2312
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:105
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:238
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:126
@@ -537,19 +537,19 @@ msgstr ""
 msgid "Let's go!"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1153
+#: octoprint_mrbeam/static/js/working_area.js:1154
 #, python-format
 msgid ""
 "The SVG file contains unsupported elements: '%(elemName)s' These elements"
 " got removed."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1155
+#: octoprint_mrbeam/static/js/working_area.js:1156
 #, python-format
 msgid "Unsupported elements in SVG: '%(elemName)s'"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1163
+#: octoprint_mrbeam/static/js/working_area.js:1164
 #, python-format
 msgid ""
 "The SVG file contains text elements.%(br)sIf you want to laser just their"
@@ -557,22 +557,22 @@ msgid ""
 " engraved with infill."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1165
+#: octoprint_mrbeam/static/js/working_area.js:1166
 msgid "Text elements found"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1176
+#: octoprint_mrbeam/static/js/working_area.js:1177
 msgid ""
 "The SVG file contained style elements with online references. Since "
 "online references are not supported, we removed them. The image might "
 "look a bit different now."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1178
+#: octoprint_mrbeam/static/js/working_area.js:1179
 msgid "Style elements removed"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1189
+#: octoprint_mrbeam/static/js/working_area.js:1190
 #, python-format
 msgid ""
 "Something went wrong while reading this "
@@ -580,23 +580,23 @@ msgid ""
 "If it works there, our support team would be happy to take a look."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1192
+#: octoprint_mrbeam/static/js/working_area.js:1193
 msgid "Oops."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:2296
+#: octoprint_mrbeam/static/js/working_area.js:2297
 msgid "Circle"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:2301
+#: octoprint_mrbeam/static/js/working_area.js:2302
 msgid "Heart"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:2306
+#: octoprint_mrbeam/static/js/working_area.js:2307
 msgid "Star"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:2311
+#: octoprint_mrbeam/static/js/working_area.js:2312
 msgid "Rectangle"
 msgstr ""
 

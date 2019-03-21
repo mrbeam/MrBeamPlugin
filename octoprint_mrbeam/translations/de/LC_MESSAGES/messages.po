@@ -5,9 +5,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Mr_Beam 0.1.55\n"
+"Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: i18n@octoprint.org\n"
-"POT-Creation-Date: 2019-03-19 17:27+0100\n"
+"POT-Creation-Date: 2019-03-21 14:54+0100\n"
 "PO-Revision-Date: 2019-03-19 17:19+0100\n"
 "Last-Translator: \n"
 "Language: de\n"
@@ -337,10 +337,10 @@ msgid "engrave only"
 msgstr "nur Gravur"
 
 #: octoprint_mrbeam/static/js/convert.js:660
-#: octoprint_mrbeam/static/js/working_area.js:2296
-#: octoprint_mrbeam/static/js/working_area.js:2301
-#: octoprint_mrbeam/static/js/working_area.js:2306
-#: octoprint_mrbeam/static/js/working_area.js:2311
+#: octoprint_mrbeam/static/js/working_area.js:2297
+#: octoprint_mrbeam/static/js/working_area.js:2302
+#: octoprint_mrbeam/static/js/working_area.js:2307
+#: octoprint_mrbeam/static/js/working_area.js:2312
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:105
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:238
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:126
@@ -616,7 +616,7 @@ msgstr ""
 msgid "Let's go!"
 msgstr "Auf geht's!"
 
-#: octoprint_mrbeam/static/js/working_area.js:1153
+#: octoprint_mrbeam/static/js/working_area.js:1154
 #, python-format
 msgid ""
 "The SVG file contains unsupported elements: '%(elemName)s' These elements"
@@ -625,12 +625,12 @@ msgstr ""
 "Die SVG-Datei enthält nicht unterstützte Elemente: %(elemName)s' Diese "
 "Elemente wurden entfernt."
 
-#: octoprint_mrbeam/static/js/working_area.js:1155
+#: octoprint_mrbeam/static/js/working_area.js:1156
 #, python-format
 msgid "Unsupported elements in SVG: '%(elemName)s'"
 msgstr "Nicht unterstützte Elemente in SVG: '%(elemName)s'"
 
-#: octoprint_mrbeam/static/js/working_area.js:1163
+#: octoprint_mrbeam/static/js/working_area.js:1164
 #, python-format
 msgid ""
 "The SVG file contains text elements.%(br)sIf you want to laser just their"
@@ -641,11 +641,11 @@ msgstr ""
 " wollen,%(br)skonvertieren Sie sie in Pfade.%(br)sOtherwise werden sie "
 "mit Infill graviert."
 
-#: octoprint_mrbeam/static/js/working_area.js:1165
+#: octoprint_mrbeam/static/js/working_area.js:1166
 msgid "Text elements found"
 msgstr "Gefundene Textelemente"
 
-#: octoprint_mrbeam/static/js/working_area.js:1176
+#: octoprint_mrbeam/static/js/working_area.js:1177
 msgid ""
 "The SVG file contained style elements with online references. Since "
 "online references are not supported, we removed them. The image might "
@@ -655,11 +655,11 @@ msgstr ""
 "Referenzen nicht unterstützt werden, haben wir sie entfernt. Das Bild "
 "könnte jetzt etwas anders aussehen."
 
-#: octoprint_mrbeam/static/js/working_area.js:1178
+#: octoprint_mrbeam/static/js/working_area.js:1179
 msgid "Style elements removed"
 msgstr "Style-Elemente entfernt"
 
-#: octoprint_mrbeam/static/js/working_area.js:1189
+#: octoprint_mrbeam/static/js/working_area.js:1190
 #, python-format
 msgid ""
 "Something went wrong while reading this "
@@ -671,23 +671,23 @@ msgstr ""
 "anderen Anwendung. Wenn es dort funktioniert, schaut sich unser Support-"
 "Team gerne um."
 
-#: octoprint_mrbeam/static/js/working_area.js:1192
+#: octoprint_mrbeam/static/js/working_area.js:1193
 msgid "Oops."
 msgstr "Hoppla."
 
-#: octoprint_mrbeam/static/js/working_area.js:2296
+#: octoprint_mrbeam/static/js/working_area.js:2297
 msgid "Circle"
 msgstr "Kreis"
 
-#: octoprint_mrbeam/static/js/working_area.js:2301
+#: octoprint_mrbeam/static/js/working_area.js:2302
 msgid "Heart"
 msgstr "Herz"
 
-#: octoprint_mrbeam/static/js/working_area.js:2306
+#: octoprint_mrbeam/static/js/working_area.js:2307
 msgid "Star"
 msgstr "Stern"
 
-#: octoprint_mrbeam/static/js/working_area.js:2311
+#: octoprint_mrbeam/static/js/working_area.js:2312
 msgid "Rectangle"
 msgstr "Rechteck"
 
