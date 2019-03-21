@@ -1017,7 +1017,6 @@ $(function(){
 		// shows conversion dialog and extracts svg first
 		self.show_conversion_dialog = function() {
 		    self.showFocusReminder = self.settings.settings.plugins.mrbeam.focusReminder();
-		    console.log("##################### show conversion dialog 1: ", self.showFocusReminder)
 			self.workingArea.abortFreeTransforms();
 			self.gcodeFilesToAppend = self.workingArea.getPlacedGcodes();
 			self.show_vector_parameters(self.workingArea.hasStrokedVectors());
@@ -1465,9 +1464,7 @@ $(function(){
 		};
 
 		self.sendFocusReminderChoiceToServer = function () {
-		    console.log("PRE FOCUS REMINDER in sendFocusReminderChoiceToServer:", self.dontRemindMeAgainChecked())
 		    let focusReminder = !self.dontRemindMeAgainChecked();
-		    console.log("FOCUS REMINDER in sendFocusReminderChoiceToServer:", focusReminder)
             let data = {focusReminder: focusReminder};
             OctoPrint.simpleApiCommand("mrbeam", "focus_reminder", data)
                 .done(function (response) {
@@ -1482,6 +1479,12 @@ $(function(){
                         hide: true
                     });
                 });
+        };
+
+		self.sendDontRemindToServer = function() {
+		    if (self.dontRemindMeAgainChecked()) {
+		        self.sendFocusReminderChoiceToServer();
+            }
         };
 
 		self.convert = function() {
