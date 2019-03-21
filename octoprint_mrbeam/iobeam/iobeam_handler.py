@@ -65,7 +65,7 @@ class IoBeamHandler(object):
 
 
 	SOCKET_FILE = "/var/run/mrbeam_iobeam.sock"
-	MAX_ERRORS = 10
+	MAX_ERRORS = 50
 
 	IOBEAM_MIN_REQUIRED_VERSION = '0.4.0'
 
@@ -116,6 +116,9 @@ class IoBeamHandler(object):
 	MESSAGE_ACTION_FAN_STATE =          "state"
 	MESSAGE_ACTION_FAN_DYNAMIC =        "dynamic"
 	MESSAGE_ACTION_FAN_CONNECTED =      "connected"
+	MESSAGE_ACTION_FAN_SERIAL =         "serial"
+	MESSAGE_ACTION_FAN_EXHAUST =        "exhaust"
+	MESSAGE_ACTION_FAN_LINK_QUALITY =   "link_quality"
 
 
 	def __init__(self, event_bus, socket_file=None):
@@ -509,20 +512,22 @@ class IoBeamHandler(object):
 
 		if action == self.MESSAGE_ACTION_FAN_DYNAMIC:
 			if action.startswith(self.MESSAGE_ERROR):
-				pass
+				return 1
 			elif len(token) >= 5:
 				vals = dict(
 					state =     self._as_number(token[1]),
 					rpm =       self._as_number(token[2]),
 					dust =      self._as_number(token[3]),
 					connected = self._get_connected_val(token[4]))
+				# if token[4] == 'error':
+				# 	self._logger.warn("Received fan connection error: %s", message)
 				self._call_callback(IoBeamValueEvents.DYNAMIC_VALUE, message, vals)
 				self._call_callback(IoBeamValueEvents.STATE_VALUE, message, dict(val=vals['state']))
 				self._call_callback(IoBeamValueEvents.RPM_VALUE, message, dict(val=vals['rpm']))
 				self._call_callback(IoBeamValueEvents.DUST_VALUE, message, dict(val=vals['dust']))
 				self._call_callback(IoBeamValueEvents.CONNECTED_VALUE, message, dict(val=vals['connected']))
 				return 0
-		if action == self.MESSAGE_ACTION_DUST_VALUE:
+		elif action == self.MESSAGE_ACTION_DUST_VALUE:
 			dust_val = self._as_number(value)
 			if dust_val is not None:
 				self._call_callback(IoBeamValueEvents.DUST_VALUE, message, dict(val=dust_val))
@@ -539,6 +544,8 @@ class IoBeamHandler(object):
 			return 0
 		elif action == self.MESSAGE_ACTION_FAN_CONNECTED:
 			self._call_callback(IoBeamValueEvents.CONNECTED_VALUE, message, dict(val=self._get_connected_val(value)))
+			if value == 'error':
+				self._logger.info("Received fan connection error: %s", message)
 			return 0
 		elif action == self.MESSAGE_ACTION_FAN_VERSION:
 			self._logger.info("Received fan version %s: '%s'", value, message)
@@ -547,13 +554,24 @@ class IoBeamHandler(object):
 			return 0
 		elif action == self.MESSAGE_ACTION_FAN_TPR:
 			return 0
+		# TODO: is this needed?
 		elif action == self.MESSAGE_ACTION_FAN_STATE:
+			return 0
+		elif action == self.MESSAGE_ACTION_FAN_SERIAL:
+			self._logger.info("Received fan serial %s: '%s'", value, message)
+			return 0
+		elif action == self.MESSAGE_ACTION_FAN_EXHAUST and len(token) > 2:
+			self._logger.info("Received exhaust %s %s: '%s'", value, token[2], message)
+			return 0
+		elif action == self.MESSAGE_ACTION_FAN_LINK_QUALITY and len(token) > 2:
+			self._logger.info("Received link quality %s %s: '%s'", value, token[2], message)
 			return 0
 
 		# check if OK otherwise it's an error
 		success = value == self.MESSAGE_OK
 		payload = dict(success=success)
-		if not success: payload['error'] = token[2] if len(token) > 2 else None
+		if not success:
+			payload['error'] = token[2] if len(token) > 2 else None
 
 		if action == self.MESSAGE_ACTION_FAN_ON:
 			self._call_callback(IoBeamValueEvents.FAN_ON_RESPONSE, message, payload)
@@ -564,7 +582,7 @@ class IoBeamHandler(object):
 		elif action == self.MESSAGE_ACTION_FAN_FACTOR:
 			self._call_callback(IoBeamValueEvents.FAN_FACTOR_RESPONSE, message, payload)
 		else:
-			return self._handle_invalid_message(message)
+			self._logger.info("Received fan data: '%s'", message)
 
 		return 0
 
@@ -710,8 +728,10 @@ class IoBeamHandler(object):
 		return cmd.replace("\n", '')
 
 	def _as_number(self, str):
-		if str is None: return None
-		if str.lower() == "nan": return None
+		if str is None:
+			return None
+		if str.lower() == "nan":
+			return None
 		try:
 			return float(str)
 		except:
@@ -719,12 +739,13 @@ class IoBeamHandler(object):
 
 	def _get_connected_val(self, value):
 		connected = None
-		if value is None: return None
+		if value is None:
+			return None
 
 		value = value.lower()
 		if value in ('none', 'unknown'):
 			connected = None
-		elif value == 'false':
+		elif value == 'false' or value == 'error':
 			connected = False
 		elif value == 'true':
 			connected = True

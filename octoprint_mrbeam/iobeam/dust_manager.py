@@ -278,11 +278,13 @@ class DustManager(object):
 				state=self._state, rpm=self._rpm, dust=self._dust, connected=self._connected, age=(time.time() - self._data_ts)))
 			self._pause_laser(trigger="Fan values from iobeam invalid or too old.")
 
-		elif self._connected == False:
+		elif not self._connected:
 			result = False
 			self._logger.warning("Air filter is not connected: state:{state}, rpm:{rpm}, dust:{dust}, connected:{connected}, age:{age}s".format(
 				state=self._state, rpm=self._rpm, dust=self._dust, connected=self._connected, age=(time.time() - self._data_ts)))
 			self._pause_laser(trigger="Air filter not connected.")
+
+		# TODO: check for error case in connected val
 
 		return result
 
