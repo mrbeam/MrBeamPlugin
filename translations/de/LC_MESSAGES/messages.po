@@ -68,7 +68,7 @@ msgstr "Was gibt's neues"
 
 #: octoprint_mrbeam/__init__.py:620
 msgid "New Mr Beam Status Light"
-msgstr ""
+msgstr "Neue Mr Beam Statusleuchte"
 
 #: octoprint_mrbeam/comm_acc2.py:314
 msgid "Please contact Mr Beam support team and attach octoprint.log."
