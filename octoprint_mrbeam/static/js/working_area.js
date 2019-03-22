@@ -3,8 +3,8 @@
 MRBEAM_PX2MM_FACTOR_WITH_ZOOM = 1; // global available in this viewmodel and in snap plugins at the same time.
 MRBEAM_DEBUG_RENDERING = false;
 if(MRBEAM_DEBUG_RENDERING){
-	function debugBase64(base64URL, target=""){
-		var dbg_link = "<a target='_blank' href='"+base64URL+"'>Right click -> Open in new tab</a>";
+	function debugBase64(base64URL, target="") {
+		var dbg_link = "<a target='_blank' href='"+base64URL+"'>Right click -> Open in new tab</a>"; // debug message, no need to translate
 			new PNotify({
 				title: "render debug output " + target,
 				text: dbg_link,
@@ -900,6 +900,7 @@ $(function(){
 			file.id = id; // list entry id
 			file.previewId = previewId;
 			file.misfit = false;
+			file.typePath = src.typePath;
 
 			self.placedDesigns.push(file);
 			self.placeSmart(newSvg);
@@ -1150,9 +1151,9 @@ $(function(){
 
 		self.svg_contains_unsupported_element_warning = function(elemName){
             elemName = elemName.replace('\\:', ':');
-			var error = "<p>" + gettext("The SVG file contains unsupported elements: '"+elemName+"' These elements got removed.") + "</p>";
+			var error = "<p>" + _.sprintf(gettext("The SVG file contains unsupported elements: '%(elemName)s' These elements got removed."), {elemName: elemName}) + "</p>";
 			new PNotify({
-				title: "Unsupported elements in SVG: '"+elemName+"'",
+				title: _.sprintf(gettext("Unsupported elements in SVG: '%(elemName)s'"), {elemName: elemName}),
 				text: error,
 				type: "warn",
 				hide: false
@@ -1160,9 +1161,9 @@ $(function(){
 		};
 
 		self.svg_contains_text_warning = function(svg){
-            var error = "<p>" + gettext("The SVG file contains text elements.<br/>If you want to laser just their outlines,<br/>please convert them to paths.<br/>Otherwise they will be engraved with infill.") + "</p>";
+            var error = "<p>" + _.sprintf(gettext("The SVG file contains text elements.%(br)sIf you want to laser just their outlines,%(br)splease convert them to paths.%(br)sOtherwise they will be engraved with infill."), {br: "<br/>"}) + "</p>";
             new PNotify({
-                title: "Text elements found",
+                title: gettext("Text elements found"),
                 text: error,
                 type: "warn",
                 hide: false,
@@ -1175,7 +1176,7 @@ $(function(){
         self.svg_contains_online_style_warning = function(svg){
             var error = "<p>" + gettext("The SVG file contained style elements with online references. Since online references are not supported, we removed them. The image might look a bit different now.") + "</p>";
             new PNotify({
-                title: "Style elements removed",
+                title: gettext("Style elements removed"),
                 text: error,
                 type: "warn",
                 hide: false,
@@ -1186,9 +1187,10 @@ $(function(){
 		};
 
         self.file_not_readable = function(){
-            var error = "<p>" + gettext("Something went wrong while reading this file. <br/><h3 style='text-align:center;'>Sorry!</h3><br/>Please check it with another application. If it works there, our support team would be happy to take a look.") + "</p>";
+            var error = "<p>" + _.sprintf(gettext("Something went wrong while reading this file.%(topen)sSorry!%(tclose)sPlease check it with another application. If it works there, our support team would be happy to take a look."), {topen: "<br/><h3 style='text-align:center;'>", tclose: "</h3><br/>"}) + "</p>";
             new PNotify({
-                title: "Oops.",
+                // Translators: "in the sense of Ouch!"
+                title: gettext("Oops."),
                 text: error,
                 type: "error",
                 hide: false,
@@ -2291,19 +2293,23 @@ $(function(){
 			switch(qs_params.type){
 				case '#circle':
 					return self.currentQuickShapeFile.name !== '' ?
-						self.currentQuickShapeFile.name : "Circle Ø " + qs_params.circle_radius + ' mm';
+                        // Translators: shape
+						self.currentQuickShapeFile.name : gettext("Circle") + " Ø " + qs_params.circle_radius + " " + gettext("mm");
 					break;
 				case '#heart':
 					return self.currentQuickShapeFile.name !== '' ?
-						self.currentQuickShapeFile.name : "Heart " + qs_params.heart_w + '*' + qs_params.heart_h + ' mm';
+                        // Translators: shape
+						self.currentQuickShapeFile.name : gettext("Heart") + " " + qs_params.heart_w + '*' + qs_params.heart_h + " " + gettext("mm");
 					break;
 				case '#star':
 					return self.currentQuickShapeFile.name !== '' ?
-						self.currentQuickShapeFile.name : "Star Ø " + qs_params.circle_radius + ' mm';
+                        // Translators: shape
+						self.currentQuickShapeFile.name : gettext("Star") + " Ø " + qs_params.circle_radius + " " + gettext("mm");
 					break;
 				default: // #rect
 					return self.currentQuickShapeFile.name !== '' ?
-						self.currentQuickShapeFile.name : "Rectangle " + qs_params.rect_w + '*' + qs_params.rect_h + ' mm';
+                        // Translators: shape
+						self.currentQuickShapeFile.name : gettext("Rectangle") + " " + qs_params.rect_w + '*' + qs_params.rect_h + " " + gettext("mm");
 					break;
 			}
 

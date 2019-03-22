@@ -34,6 +34,7 @@ class MrBeamEvents(object):
 	DUSTING_MODE_START         = "DustingModeStart"
 
 	ANALYTICS_DATA             = "MrbAnalyticsData"
+	MRB_PLUGIN_VERSION         = "MrbPluginVersion"
 
 
 	@classmethod

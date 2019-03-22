@@ -362,7 +362,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/lib/photobooth_min.js", "js/svg_cleaner.js", "js/loginscreen_viewmodel.js",
 				"js/wizard_acl.js", "js/netconnectd_wrapper.js", "js/lasersaftey_viewmodel.js",
 				"js/ready_to_laser_viewmodel.js", "js/lib/screenfull.min.js","js/settings/camera_calibration.js",
-				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js", "js/lib/Color.js", "js/laser_job_done_viewmodel.js", 
+				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js", "js/lib/Color.js", "js/laser_job_done_viewmodel.js",
 				"js/loadingoverlay_viewmodel.js", "js/wizard_whatsnew.js", "js/wizard_analytics.js"],
 			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css", "css/quicktext-fonts.css", "css/sliders.css"],
 			less=["less/mrbeam.less"]
@@ -442,10 +442,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 vorlonEnabled=self.is_vorlon_enabled(),
 
 							 lasersafety_confirmation_dialog_version  = self.LASERSAFETY_CONFIRMATION_DIALOG_VERSION,
-							 lasersafety_confirmation_dialog_language = language,
-
-							 quickstart_guide_default="QuickstartGuide_{locale}.pdf".format(locale='de' if language == 'de' else 'en'),
-							 usermanual_default="UserManual_{locale}.pdf".format(locale='de' if language == 'de' else 'en')
+							 lasersafety_confirmation_dialog_language = language
 						 ))
 		r = make_response(render_template("mrbeam_ui_index.jinja2", **render_kwargs))
 
@@ -477,6 +474,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
             dict(type='settings', name="About This Mr Beam", template='settings/about_settings.jinja2', suffix="_about", custom_bindings=False),
             dict(type='settings', name="Analytics", template='settings/analytics_settings.jinja2', suffix="_analytics", custom_bindings=False),
 			dict(type='settings', name="Reminders", template='settings/reminders_settings.jinja2', suffix="_reminders", custom_bindings=False),
+      
 			# disabled in appearance
 			# dict(type='settings', name="Serial Connection DEV", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings=False, replaces='serial')
 		 ]
@@ -627,52 +625,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def _get_whatsnew_1_wizard_name(self):
 		# jinja has some js that changes this to German if lang is 'de'
-		return gettext("Lights showing WiFi state")
+		return gettext("New Mr Beam Status Light")
 
-	# def _is_whatsnew_2_wizard_required(self):
-	# 	result = not self.isFirstRun()
-	# 	self._logger.debug("_is_whatsnew_2_wizard_required() %s", result)
-	# 	return result
-	#
-	# def _get_whatsnew_2_wizard_details(self):
-	# 	return dict()
-	#
-	# def _get_whatsnew_2_additional_wizard_template_data(self):
-	# 	return dict(mandatory=False, suffix="_whatsnew_2")
-	#
-	# def _get_whatsnew_2_wizard_name(self):
-	# 	# jinja has some js that changes this to German if lang is 'de'
-	# 	return gettext("Custom Material Settings")
-	#
-	# def _is_whatsnew_3_wizard_required(self):
-	# 	result = not self.isFirstRun()
-	# 	self._logger.debug("_is_whatsnew_4_wizard_required() %s", result)
-	# 	return result
-	#
-	# def _get_whatsnew_3_wizard_details(self):
-	# 	return dict()
-	#
-	# def _get_whatsnew_3_additional_wizard_template_data(self):
-	# 	return dict(mandatory=False, suffix="_whatsnew_3")
-	#
-	# def _get_whatsnew_3_wizard_name(self):
-	# 	# jinja has some js that changes this to German if lang is 'de'
-	# 	return gettext("Engraving Algorithms")
-	#
-	# def _is_whatsnew_4_wizard_required(self):
-	# 	result = not self.isFirstRun()
-	# 	self._logger.debug("_is_whatsnew_4_wizard_required() %s", result)
-	# 	return result
-	#
-	# def _get_whatsnew_4_wizard_details(self):
-	# 	return dict()
-	#
-	# def _get_whatsnew_4_additional_wizard_template_data(self):
-	# 	return dict(mandatory=False, suffix="_whatsnew_4")
-	#
-	# def _get_whatsnew_4_wizard_name(self):
-	# 	# jinja has some js that changes this to German if lang is 'de'
-	# 	return gettext("...and more")
+	# ~~ Analytics subwizard
 
 	def _is_analytics_wizard_required(self):
 		result = self._settings.get(['analyticsEnabled']) is None
@@ -1577,6 +1532,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		if event == OctoPrintEvents.CLIENT_OPENED:
 			self._analytics_handler.log_client_opened(payload.get('remoteAddress', None))
+			self.fire_event(MrBeamEvents.MRB_PLUGIN_VERSION, payload=dict(version=self._plugin_version))
 			self._replay_stored_frontend_notification()
 
 	def fire_event(self, event, payload=None):
