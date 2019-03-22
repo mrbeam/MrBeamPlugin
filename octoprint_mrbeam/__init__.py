@@ -131,6 +131,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		self._analytics_handler = analyticsHandler(self)
 
+		self.focusReminder = self._settings.get(['focusReminder'])
+
 		self.start_time_ntp_timer()
 
 		# do migration if needed
@@ -251,6 +253,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				support_mode = False,
 				grbl_auto_update_enabled = True
 			),
+			focusReminder=True,
 			analyticsEnabled=None,
 			analytics=dict(
 				cam_analytics = False,
@@ -304,7 +307,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				clip_working_area = self._settings.get(['gcode_nextgen', 'clip_working_area'])
 			),
 			software_update_branches = self.get_update_branch_info(),
-			_version = self._plugin_version
+			_version = self._plugin_version,
+			focusReminder = self._settings.get(['focusReminder']),
 		)
 
 	def on_settings_save(self, data):
@@ -326,6 +330,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._settings.set_boolean(["gcode_nextgen", "clip_working_area"], data['gcode_nextgen']['clip_working_area'])
 		if "analyticsEnabled" in data:
 			self._analytics_handler.analytics_user_permission_change(analytics_enabled=data['analyticsEnabled'])
+		if "focusReminder" in data:
+			self._settings.set_boolean(["focusReminder"], data["focusReminder"])
 
 
 	def on_shutdown(self):
@@ -466,7 +472,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
             dict(type='settings', name=gettext("Camera Calibration"), template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
             dict(type='settings', name=gettext("Debug"), template='settings/debug_settings.jinja2', suffix="_debug", custom_bindings=False),
             dict(type='settings', name=gettext("About This Mr Beam"), template='settings/about_settings.jinja2', suffix="_about", custom_bindings=False),
-            dict(type='settings', name=gettext("Analytics"), template='settings/analytics_settings.jinja2', suffix="_analytics", custom_bindings=False)
+            dict(type='settings', name=gettext("Analytics"), template='settings/analytics_settings.jinja2', suffix="_analytics", custom_bindings=False),
+			dict(type='settings', name=gettext("Reminders"), template='settings/reminders_settings.jinja2', suffix="_reminders", custom_bindings=False),
+      
 			# disabled in appearance
 			# dict(type='settings', name="Serial Connection DEV", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings=False, replaces='serial')
 		 ]
@@ -1256,7 +1264,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			debug_event=["event"],
 			custom_materials=[],
 			analytics_init=[],
-			take_undistorted_picture=[]  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
+			take_undistorted_picture=[],  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
+			focus_reminder=[]
 		)
 
 	def on_api_command(self, command, data):
@@ -1286,11 +1295,19 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return self.debug_event(data)
 		elif command == "analytics_init":
 			return self.analytics_init(data)
+		elif command == "focus_reminder":
+			return self.focus_reminder(data)
 		return NO_CONTENT
 
 	def analytics_init(self, data):
 		if 'analyticsInitialConsent' in data:
 			self._analytics_handler.initial_analytics_procedure(data['analyticsInitialConsent'])
+
+	def focus_reminder(self, data):
+		if 'focusReminder' in data:
+			self._settings.set_boolean(["focusReminder"], data['focusReminder'])
+			self._settings.save()	# This is necessary because without it the value is not saved
+
 
 	def debug_event(self, data):
 		event = data['event']
@@ -2015,7 +2032,7 @@ def __plugin_load__():
 				        "plugin_mrbeam_whatsnew_0", "plugin_mrbeam_whatsnew_1", "plugin_mrbeam_whatsnew_2", "plugin_mrbeam_whatsnew_3", "plugin_mrbeam_whatsnew_4",
 				        "plugin_mrbeam_analytics"],
 				settings = ['plugin_mrbeam_about', 'plugin_softwareupdate', 'accesscontrol', 'plugin_netconnectd', 'plugin_findmymrbeam', 'plugin_mrbeam_conversion',
-				            'plugin_mrbeam_camera', 'plugin_mrbeam_analytics', 'logs', 'plugin_mrbeam_debug']
+				            'plugin_mrbeam_camera', 'plugin_mrbeam_analytics', 'plugin_mrbeam_reminders', 'logs', 'plugin_mrbeam_debug']
 			),
 			disabled=dict(
 				wizard=['plugin_softwareupdate'],
