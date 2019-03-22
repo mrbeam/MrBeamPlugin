@@ -46,6 +46,9 @@ $(function(){
 
 		self.engraveOnlyForced = false;
 
+		self.remindFirstTime = ko.observable(true);
+        self.dontRemindMeAgainChecked = ko.observable(false);
+
 		// material menu
 		self.material_settings2 = {
 			'Anodized Aluminum': {
@@ -1013,6 +1016,7 @@ $(function(){
 
 		// shows conversion dialog and extracts svg first
 		self.show_conversion_dialog = function() {
+		    self.showFocusReminder = ko.observable(self.settings.settings.plugins.mrbeam.focusReminder());
 			self.workingArea.abortFreeTransforms();
 			self.gcodeFilesToAppend = self.workingArea.getPlacedGcodes();
 			self.show_vector_parameters(self.workingArea.hasStrokedVectors());
@@ -1459,6 +1463,32 @@ $(function(){
 			self.data = data;
 		};
 
+		self.sendFocusReminderChoiceToServer = function () {
+		    let focusReminder = !self.dontRemindMeAgainChecked();
+            let data = {focusReminder: focusReminder};
+            OctoPrint.simpleApiCommand("mrbeam", "focus_reminder", data)
+                .done(function (response) {
+                    self.settings.requestData();
+                    console.log("simpleApiCall response for saving focus reminder state: ", response);
+                })
+                .fail(function () {
+                    self.settings.requestData();
+                    console.error("Unable to save focus reminder state: ", data);
+                    new PNotify({
+                        title: "Error while saving settings!",
+                        text: "Unable to save your focus reminder state at the moment.<br/>Check connection to Mr Beam II and try again.",
+                        type: "error",
+                        hide: true
+                    });
+                });
+        };
+
+		self.sendDontRemindToServer = function() {
+		    if (self.dontRemindMeAgainChecked()) {
+		        self.sendFocusReminderChoiceToServer();
+            }
+        };
+
 		self.convert = function() {
 			if(self.gcodeFilesToAppend.length === 1 && self.svg === undefined) {
                 self.files.startGcodeWithSafetyWarning(self.gcodeFilesToAppend[0]);
@@ -1491,7 +1521,20 @@ $(function(){
 			    $('#empty_job_support_link').show();
 			    $('#empty_job_modal').find('.modal-body p').text(message);
                 $('#empty_job_modal').modal('show');
+
+            } else if (self.showFocusReminder() && self.remindFirstTime()) {
+                $('#laserhead_focus_reminder_modal').modal('show');
+
 			} else {
+			    if (self.dontRemindMeAgainChecked()) {
+			        self.showFocusReminder(false);
+			        self.sendFocusReminderChoiceToServer();
+			        self.dontRemindMeAgainChecked(false);
+                } else {
+			        self.remindFirstTime(true);
+                }
+
+
 				if(self._allParametersSet()){
 					//self.update_colorSettings();
 					self.slicing_in_progress(true);

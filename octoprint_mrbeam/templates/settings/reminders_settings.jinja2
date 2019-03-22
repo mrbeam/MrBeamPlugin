@@ -1,0 +1,19 @@
+<div id="settings_mrbeam_reminders">
+    <h3>{{ _('Reminders') }}</h3>
+    <form class="form-horizontal">
+        <div class="control-group">
+            <div class="controls" style="width: 400px">
+                <h4>
+                    Focus Reminder
+                </h4>
+                <p>This reminder will show before being able to start a laser job, so if you forgot to focus your
+                    laserhead you will have the chance to do it and later start the job.
+                    You can disable this reminder in the moment you see it, or in this settings anytime. </p>
+                <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.focusReminder">
+                    <strong>Activate focus reminder</strong>
+                </label>
+            </div>
+        </div>
+    </form>
+</div>
