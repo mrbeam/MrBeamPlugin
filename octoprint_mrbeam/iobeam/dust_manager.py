@@ -306,7 +306,7 @@ class DustManager(object):
 		if self._timer_boost_ts > 0 and time.time() - self._timer_boost_ts > self.MAX_TIMER_BOOST_DURATION:
 			self._unboost_timer_interval()
 		if not self._shutting_down:
-			if delay <=0:
+			if delay <= 0:
 				self._timer_callback()
 			else:
 				self._timer = threading.Timer(delay, self._timer_callback)
@@ -325,5 +325,3 @@ class DustManager(object):
 		self._timer_boost_ts = 0
 		self._timer_interval = self.DEFAULT_TIMER_INTERVAL
 		# must not call _start_timer()!!
-
-

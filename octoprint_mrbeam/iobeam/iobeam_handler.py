@@ -545,7 +545,7 @@ class IoBeamHandler(object):
 		elif action == self.MESSAGE_ACTION_FAN_CONNECTED:
 			self._call_callback(IoBeamValueEvents.CONNECTED_VALUE, message, dict(val=self._get_connected_val(value)))
 			if value == 'error':
-				self._logger.info("Received fan connection error: %s", message)
+				self._logger.warn("Received fan connection error: %s", message)
 			return 0
 		elif action == self.MESSAGE_ACTION_FAN_VERSION:
 			self._logger.info("Received fan version %s: '%s'", value, message)
@@ -700,8 +700,10 @@ class IoBeamHandler(object):
 		count = 0
 		earliest = time.time()
 		for entry in self.processing_times_log:
-			if entry['processing_time'] < min: min = entry['processing_time']
-			if entry['processing_time'] > max: max = entry['processing_time']
+			if entry['processing_time'] < min:
+				min = entry['processing_time']
+			if entry['processing_time'] > max:
+				max = entry['processing_time']
 			if entry['ts'] < earliest: earliest = entry['ts']
 			sum += entry['processing_time']
 			count += 1
