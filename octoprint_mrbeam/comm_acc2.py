@@ -30,7 +30,7 @@ from octoprint.util import get_exception_string, RepeatedTimer, CountedEvent, sa
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.analytics.analytics_handler import existing_analyticsHandler
 from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
-from flask.ext.babel import gettext, lazy_gettext
+from flask.ext.babel import gettext
 
 ### MachineCom #########################################################################################################
 class MachineCom(object):
@@ -1078,7 +1078,7 @@ class MachineCom(object):
 			try:
 				# TODO: translating these doesn't work since we do not have a flash request context
 				#       meaning we don't know the user's language here.
-				msg = lazy_gettext("The update of the internal component GRBL failed.{br}It is still save to use your Mr Beam II. However, if this error persists consider to contact the {opening_tag}Mr Beam support team{closing_tag}.{br}{br}{strong_opening_tag}Error:{strong_closing_tag}{br}{error}").format(
+				msg = gettext("The update of the internal component GRBL failed.{br}It is still save to use your Mr Beam II. However, if this error persists consider to contact the {opening_tag}Mr Beam support team{closing_tag}.{br}{br}{strong_opening_tag}Error:{strong_closing_tag}{br}{error}").format(
 							opening_tag= '<a href="http://mr-beam.org/support" target="_blank">',
 		                    closing_tag='</a>',
 		                    error="GRBL update '{}' failed: {}...".format(grbl_file, output[:120]),

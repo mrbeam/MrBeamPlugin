@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-03-22 18:51+0100\n"
+"POT-Creation-Date: 2019-03-22 18:58+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -76,6 +76,14 @@ msgstr ""
 
 #: octoprint_mrbeam/comm_acc2.py:314
 msgid "Please contact Mr Beam support team and attach octoprint.log."
+msgstr ""
+
+#: octoprint_mrbeam/comm_acc2.py:1081
+msgid ""
+"The update of the internal component GRBL failed.{br}It is still save to "
+"use your Mr Beam II. However, if this error persists consider to contact "
+"the {opening_tag}Mr Beam support "
+"team{closing_tag}.{br}{br}{strong_opening_tag}Error:{strong_closing_tag}{br}{error}"
 msgstr ""
 
 #: octoprint_mrbeam/comm_acc2.py:1089
