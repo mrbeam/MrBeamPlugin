@@ -1016,7 +1016,7 @@ $(function(){
 
 		// shows conversion dialog and extracts svg first
 		self.show_conversion_dialog = function() {
-		    self.showFocusReminder = self.settings.settings.plugins.mrbeam.focusReminder();
+		    self.showFocusReminder = ko.observable(self.settings.settings.plugins.mrbeam.focusReminder());
 			self.workingArea.abortFreeTransforms();
 			self.gcodeFilesToAppend = self.workingArea.getPlacedGcodes();
 			self.show_vector_parameters(self.workingArea.hasStrokedVectors());
@@ -1468,9 +1468,11 @@ $(function(){
             let data = {focusReminder: focusReminder};
             OctoPrint.simpleApiCommand("mrbeam", "focus_reminder", data)
                 .done(function (response) {
+                    self.settings.requestData();
                     console.log("simpleApiCall response for saving focus reminder state: ", response);
                 })
                 .fail(function () {
+                    self.settings.requestData();
                     console.error("Unable to save focus reminder state: ", data);
                     new PNotify({
                         title: "Error while saving settings!",
@@ -1519,12 +1521,12 @@ $(function(){
 			    $('#empty_job_modal').find('.modal-body p').text(message);
                 $('#empty_job_modal').modal('show');
 
-            } else if (self.showFocusReminder && self.remindFirstTime()) {
+            } else if (self.showFocusReminder() && self.remindFirstTime()) {
                 $('#laserhead_focus_reminder_modal').modal('show');
 
 			} else {
 			    if (self.dontRemindMeAgainChecked()) {
-			        self.showFocusReminder = false;
+			        self.showFocusReminder(false);
 			        self.sendFocusReminderChoiceToServer();
 			        self.dontRemindMeAgainChecked(false);
                 } else {

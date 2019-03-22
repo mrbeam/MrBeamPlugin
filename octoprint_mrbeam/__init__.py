@@ -132,7 +132,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._analytics_handler = analyticsHandler(self)
 
 		self.focusReminder = self._settings.get(['focusReminder'])
-		self._logger.info("################################ __init__ read focus reminder: {}".format(self.focusReminder))
 
 		self.start_time_ntp_timer()
 
@@ -332,7 +331,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if "analyticsEnabled" in data:
 			self._analytics_handler.analytics_user_permission_change(analytics_enabled=data['analyticsEnabled'])
 		if "focusReminder" in data:
-			self._logger.info("############################### on_settings_save save focus reminder: %s", data["focusReminder"])
 			self._settings.set_boolean(["focusReminder"], data["focusReminder"])
 
 
@@ -477,7 +475,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
             dict(type='settings', name="Camera Calibration", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
             dict(type='settings', name="Debug", template='settings/debug_settings.jinja2', suffix="_debug", custom_bindings=False),
             dict(type='settings', name="About This Mr Beam", template='settings/about_settings.jinja2', suffix="_about", custom_bindings=False),
-            dict(type='settings', name="Analytics", template='settings/analytics_settings.jinja2', suffix="_analytics", custom_bindings=False)
+            dict(type='settings', name="Analytics", template='settings/analytics_settings.jinja2', suffix="_analytics", custom_bindings=False),
+			dict(type='settings', name="Reminders", template='settings/reminders_settings.jinja2', suffix="_reminders", custom_bindings=False),
 			# disabled in appearance
 			# dict(type='settings', name="Serial Connection DEV", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings=False, replaces='serial')
 		 ]
@@ -1342,7 +1341,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		elif command == "analytics_init":
 			return self.analytics_init(data)
 		elif command == "focus_reminder":
-			self._logger.info("######################################## on_api_command")
 			return self.focus_reminder(data)
 		return NO_CONTENT
 
@@ -1351,12 +1349,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._analytics_handler.initial_analytics_procedure(data['analyticsInitialConsent'])
 
 	def focus_reminder(self, data):
-		self._logger.info("######################################## focus_reminder")
 		if 'focusReminder' in data:
-			self._logger.info("######################################## focus reminder: %s", data['focusReminder'])
 			self._settings.set_boolean(["focusReminder"], data['focusReminder'])
-			self._settings.save()
-			self._logger.info("######################################## focus reminder saved!")
+			self._settings.save()	# This is necessary because without it the value is not saved
 
 
 	def debug_event(self, data):
@@ -2076,7 +2071,7 @@ def __plugin_load__():
 				        "plugin_mrbeam_whatsnew_0", "plugin_mrbeam_whatsnew_1", "plugin_mrbeam_whatsnew_2", "plugin_mrbeam_whatsnew_3", "plugin_mrbeam_whatsnew_4",
 				        "plugin_mrbeam_analytics"],
 				settings = ['plugin_mrbeam_about', 'plugin_softwareupdate', 'accesscontrol', 'plugin_netconnectd', 'plugin_findmymrbeam', 'plugin_mrbeam_conversion',
-				            'plugin_mrbeam_camera', 'plugin_mrbeam_analytics', 'logs', 'plugin_mrbeam_debug']
+				            'plugin_mrbeam_camera', 'plugin_mrbeam_analytics', 'plugin_mrbeam_reminders', 'logs', 'plugin_mrbeam_debug']
 			),
 			disabled=dict(
 				wizard=['plugin_softwareupdate'],
