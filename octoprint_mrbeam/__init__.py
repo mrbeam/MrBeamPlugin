@@ -1647,6 +1647,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def notify_frontend(self, title, text, type=None, sticky=False, replay_when_new_client_connects=False):
 		"""
 		Show a frontend notification to the user. (PNotify)
+		# TODO: All these messages will not be translated to any language. To change this we need:
+		# TODO: - either just send an error-code to the frontend and the frontend somehow knows what texts to use
+	    # TODO: - or use lazy_gettext and evaluate the resulting object here. (lazy_gettext() returns not a string but a function/object)
+	    # TODO:   To do sow we need a flask request context. We could sinply keep the request context from the last request to the webpage.
+	    # TODO:   This would be hacky but would work most of the time.
 		:param title: title of your mesasge
 		:param text: the actual text
 		:param type: info, success, error, ... (default is info)

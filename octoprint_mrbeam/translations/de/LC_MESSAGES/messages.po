@@ -7,16 +7,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-03-22 18:07+0100\n"
-"PO-Revision-Date: 2019-03-22 18:11+0100\n"
+"POT-Creation-Date: 2019-03-22 18:58+0100\n"
+"PO-Revision-Date: \n"
 "Last-Translator: \n"
-"Language-Team: de <LL@li.org>\n"
+"Language-Team: \n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"Generated-By: Babel 2.6.0\n"
 "X-Generator: Poedit 2.2.1\n"
 
 #: octoprint_mrbeam/__init__.py:471
@@ -81,6 +79,22 @@ msgid "Please contact Mr Beam support team and attach octoprint.log."
 msgstr ""
 "Bitte kontaktieren Sie das Mr Beam Support-Team und füge das octoprint.log "
 "an."
+
+#: octoprint_mrbeam/comm_acc2.py:1081
+msgid ""
+"The update of the internal component GRBL failed.{br}It is still save to use "
+"your Mr Beam II. However, if this error persists consider to contact the "
+"{opening_tag}Mr Beam support team{closing_tag}.{br}{br}{strong_opening_tag}"
+"Error:{strong_closing_tag}{br}{error}"
+msgstr ""
+"Das Update der internen Komponente GRBL ist fehlgeschlagen.{br}Du kannst "
+"deinen Mr Beam II dennoch verwenden. Wenn dieser Fehler jedoch weiterhin "
+"besteht, solltest du das {opening_tag}Mr Beam Supportteam{closing_tag}.{br}"
+"{br}{strong_opening_tag}Error:{strong_closing_tag}{br}{error}"
+
+#: octoprint_mrbeam/comm_acc2.py:1089
+msgid "GRBL Update failed"
+msgstr "GRBL-Update fehlgeschlagen"
 
 #: octoprint_mrbeam/iobeam/iobeam_handler.py:620
 msgid "Software Update required"
@@ -2754,15 +2768,3 @@ msgstr "Daemon offline"
 #: octoprint_mrbeam/templates/wizard/wizard_wifi.jinja2:78
 msgid "Reset daemon"
 msgstr "Dämon zurücksetzen"
-
-#~ msgid "Press the button to"
-#~ msgstr "Drücken Sie die Taste, um"
-
-#~ msgid "start"
-#~ msgstr "Start"
-
-#~ msgid "continue"
-#~ msgstr "weiter"
-
-#~ msgid "Find my Mr Beam:"
-#~ msgstr "Find my Mr Beam:"
