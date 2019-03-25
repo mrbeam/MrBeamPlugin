@@ -14,6 +14,7 @@ from flask.ext.babel import gettext
 # singleton
 _instance = None
 
+
 def ioBeamHandler(eventBusOct, socket_file=None):
 	global _instance
 	if _instance is None:
@@ -35,6 +36,7 @@ class IoBeamEvents(object):
 	LID_OPENED =         "iobeam.lid.opened"
 	LID_CLOSED =         "iobeam.lid.closed"
 
+
 class IoBeamValueEvents(object):
 	"""
 	These Values / events are not intended to be handled byt OctoPrints event system
@@ -52,6 +54,7 @@ class IoBeamValueEvents(object):
 	FAN_AUTO_RESPONSE =   "iobeam.fan.auto.response"
 	FAN_FACTOR_RESPONSE = "iobeam.fan.factor.response"
 
+
 class IoBeamHandler(object):
 
 	# How to test and debug:
@@ -65,7 +68,7 @@ class IoBeamHandler(object):
 
 
 	SOCKET_FILE = "/var/run/mrbeam_iobeam.sock"
-	MAX_ERRORS = 10
+	MAX_ERRORS = 50
 
 	IOBEAM_MIN_REQUIRED_VERSION = '0.4.0'
 
@@ -116,7 +119,9 @@ class IoBeamHandler(object):
 	MESSAGE_ACTION_FAN_STATE =          "state"
 	MESSAGE_ACTION_FAN_DYNAMIC =        "dynamic"
 	MESSAGE_ACTION_FAN_CONNECTED =      "connected"
-
+	MESSAGE_ACTION_FAN_SERIAL =         "serial"
+	MESSAGE_ACTION_FAN_EXHAUST =        "exhaust"
+	MESSAGE_ACTION_FAN_LINK_QUALITY =   "link_quality"
 
 	def __init__(self, event_bus, socket_file=None):
 		self._event_bus = event_bus
@@ -260,7 +265,6 @@ class IoBeamHandler(object):
 		finally:
 			self._callbacks_lock.reader_release()
 
-
 	def __execute_callback_called_by_new_thread(self, _trigger_event, acquire_lock, _callback_array, kwargs):
 		try:
 			if acquire_lock:
@@ -291,7 +295,6 @@ class IoBeamHandler(object):
 		self._worker = threading.Thread(target=self._work, name="iobeamHandler")
 		self._worker.daemon = True
 		self._worker.start()
-
 
 	def _work(self):
 		threading.current_thread().name = self.__class__.__name__
@@ -372,7 +375,6 @@ class IoBeamHandler(object):
 
 		self._logger.debug("Worker thread stopped.")
 
-
 	def _handleMessages(self, data):
 		"""
 		handles incoming data from the socket.
@@ -432,12 +434,9 @@ class IoBeamHandler(object):
 
 		return error_count, message_count
 
-
-
 	def _handle_invalid_message(self, message):
 		self._logger.warn("Received invalid message: '%s'", message)
 		return 1
-
 
 	def _handle_onebutton_message(self, message, token):
 		action = token[0] if len(token)>0 else None
@@ -458,7 +457,6 @@ class IoBeamHandler(object):
 		else:
 			return self._handle_invalid_message(message)
 		return 0
-
 
 	def _handle_interlock_message(self, message, tokens):
 		lock_id = tokens[0] if len(tokens) > 0 else None
@@ -485,7 +483,6 @@ class IoBeamHandler(object):
 
 		return 0
 
-
 	def _handle_lid_message(self, message, token):
 		action = token[0] if len(token) > 0 else None
 		payload = self._as_number(token[1]) if len(token) > 1 else None
@@ -509,20 +506,22 @@ class IoBeamHandler(object):
 
 		if action == self.MESSAGE_ACTION_FAN_DYNAMIC:
 			if action.startswith(self.MESSAGE_ERROR):
-				pass
+				return 1
 			elif len(token) >= 5:
 				vals = dict(
 					state =     self._as_number(token[1]),
 					rpm =       self._as_number(token[2]),
 					dust =      self._as_number(token[3]),
 					connected = self._get_connected_val(token[4]))
+				# if token[4] == 'error':
+				# 	self._logger.warn("Received fan connection error: %s", message)
 				self._call_callback(IoBeamValueEvents.DYNAMIC_VALUE, message, vals)
 				self._call_callback(IoBeamValueEvents.STATE_VALUE, message, dict(val=vals['state']))
 				self._call_callback(IoBeamValueEvents.RPM_VALUE, message, dict(val=vals['rpm']))
 				self._call_callback(IoBeamValueEvents.DUST_VALUE, message, dict(val=vals['dust']))
 				self._call_callback(IoBeamValueEvents.CONNECTED_VALUE, message, dict(val=vals['connected']))
 				return 0
-		if action == self.MESSAGE_ACTION_DUST_VALUE:
+		elif action == self.MESSAGE_ACTION_DUST_VALUE:
 			dust_val = self._as_number(value)
 			if dust_val is not None:
 				self._call_callback(IoBeamValueEvents.DUST_VALUE, message, dict(val=dust_val))
@@ -539,6 +538,8 @@ class IoBeamHandler(object):
 			return 0
 		elif action == self.MESSAGE_ACTION_FAN_CONNECTED:
 			self._call_callback(IoBeamValueEvents.CONNECTED_VALUE, message, dict(val=self._get_connected_val(value)))
+			if value == 'error':
+				self._logger.warn("Received fan connection error: %s", message)
 			return 0
 		elif action == self.MESSAGE_ACTION_FAN_VERSION:
 			self._logger.info("Received fan version %s: '%s'", value, message)
@@ -547,13 +548,21 @@ class IoBeamHandler(object):
 			return 0
 		elif action == self.MESSAGE_ACTION_FAN_TPR:
 			return 0
-		elif action == self.MESSAGE_ACTION_FAN_STATE:
+		elif action == self.MESSAGE_ACTION_FAN_SERIAL:
+			self._logger.info("Received fan serial %s: '%s'", value, message)
+			return 0
+		elif action == self.MESSAGE_ACTION_FAN_EXHAUST and len(token) > 2:
+			self._logger.info("Received exhaust %s %s: '%s'", value, token[2], message)
+			return 0
+		elif action == self.MESSAGE_ACTION_FAN_LINK_QUALITY and len(token) > 2:
+			self._logger.info("Received link quality %s %s: '%s'", value, token[2], message)
 			return 0
 
 		# check if OK otherwise it's an error
 		success = value == self.MESSAGE_OK
 		payload = dict(success=success)
-		if not success: payload['error'] = token[2] if len(token) > 2 else None
+		if not success:
+			payload['error'] = token[2] if len(token) > 2 else None
 
 		if action == self.MESSAGE_ACTION_FAN_ON:
 			self._call_callback(IoBeamValueEvents.FAN_ON_RESPONSE, message, payload)
@@ -564,7 +573,7 @@ class IoBeamHandler(object):
 		elif action == self.MESSAGE_ACTION_FAN_FACTOR:
 			self._call_callback(IoBeamValueEvents.FAN_FACTOR_RESPONSE, message, payload)
 		else:
-			return self._handle_invalid_message(message)
+			self._logger.info("Received fan data: '%s'", message)
 
 		return 0
 
@@ -682,8 +691,10 @@ class IoBeamHandler(object):
 		count = 0
 		earliest = time.time()
 		for entry in self.processing_times_log:
-			if entry['processing_time'] < min: min = entry['processing_time']
-			if entry['processing_time'] > max: max = entry['processing_time']
+			if entry['processing_time'] < min:
+				min = entry['processing_time']
+			if entry['processing_time'] > max:
+				max = entry['processing_time']
 			if entry['ts'] < earliest: earliest = entry['ts']
 			sum += entry['processing_time']
 			count += 1
@@ -700,7 +711,6 @@ class IoBeamHandler(object):
 		sent = self._send_command(cmd)
 		return client_name if sent else False
 
-
 	def _fireEvent(self, event, payload=None):
 		self._event_bus.fire(event, payload)
 
@@ -710,8 +720,10 @@ class IoBeamHandler(object):
 		return cmd.replace("\n", '')
 
 	def _as_number(self, str):
-		if str is None: return None
-		if str.lower() == "nan": return None
+		if str is None:
+			return None
+		if str.lower() == "nan":
+			return None
 		try:
 			return float(str)
 		except:
@@ -719,12 +731,13 @@ class IoBeamHandler(object):
 
 	def _get_connected_val(self, value):
 		connected = None
-		if value is None: return None
+		if value is None:
+			return None
 
 		value = value.lower()
 		if value in ('none', 'unknown'):
 			connected = None
-		elif value == 'false':
+		elif value == 'false' or value == 'error':
 			connected = False
 		elif value == 'true':
 			connected = True
