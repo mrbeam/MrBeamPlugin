@@ -13,6 +13,7 @@ def dustManager():
 		_instance = DustManager()
 	return _instance
 
+
 class DustManager(object):
 
 	DEFAULT_TIMER_INTERVAL = 3.0
@@ -34,7 +35,6 @@ class DustManager(object):
 
 	DATA_TYPE_DYNAMIC  =  "dynamic"
 	DATA_TYPE_CONENCTED = "connected"
-
 
 	def __init__(self):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.dustmanager")
@@ -123,7 +123,6 @@ class DustManager(object):
 		self._validate_values()
 		self._send_dust_to_analytics(self._dust)
 
-
 	def _on_command_response(self, args):
 		if args['success']:
 			if args['message'].split(':')[1] != self._last_command.split(':')[0]:
@@ -132,7 +131,6 @@ class DustManager(object):
 		else:
 			# TODO ANDY stop laser
 			self._logger.error("Fan command responded error: received: fan:{} args: {}".format(args['message'], args))
-
 
 	def _onEvent(self, event, payload):
 		if event in (OctoPrintEvents.SLICING_DONE, MrBeamEvents.READY_TO_LASER_START, OctoPrintEvents.PRINT_STARTED):
@@ -231,7 +229,6 @@ class DustManager(object):
 		except:
 			self._logger.exception("Exception send_laser_done_event send_laser_job_event(): ")
 
-
 	def __continue_dust_extraction(self, value, started):
 		if time.time() - started > self.FINAL_DUSTING_DURATION:  # TODO: get this value from laser profile
 			return False
@@ -284,8 +281,7 @@ class DustManager(object):
 				state=self._state, rpm=self._rpm, dust=self._dust, connected=self._connected, age=(time.time() - self._data_ts)))
 			self._pause_laser(trigger="Air filter not connected.")
 
-		# TODO: check for error case in connected val
-
+		# TODO: check for error case in connected val (currently, connected == True/False/None)
 		return result
 
 	def _request_value(self, value):

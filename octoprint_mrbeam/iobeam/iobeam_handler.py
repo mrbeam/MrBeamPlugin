@@ -14,6 +14,7 @@ from flask.ext.babel import gettext
 # singleton
 _instance = None
 
+
 def ioBeamHandler(eventBusOct, socket_file=None):
 	global _instance
 	if _instance is None:
@@ -35,6 +36,7 @@ class IoBeamEvents(object):
 	LID_OPENED =         "iobeam.lid.opened"
 	LID_CLOSED =         "iobeam.lid.closed"
 
+
 class IoBeamValueEvents(object):
 	"""
 	These Values / events are not intended to be handled byt OctoPrints event system
@@ -51,6 +53,7 @@ class IoBeamValueEvents(object):
 	FAN_OFF_RESPONSE =    "iobeam.fan.off.response"
 	FAN_AUTO_RESPONSE =   "iobeam.fan.auto.response"
 	FAN_FACTOR_RESPONSE = "iobeam.fan.factor.response"
+
 
 class IoBeamHandler(object):
 
@@ -119,7 +122,6 @@ class IoBeamHandler(object):
 	MESSAGE_ACTION_FAN_SERIAL =         "serial"
 	MESSAGE_ACTION_FAN_EXHAUST =        "exhaust"
 	MESSAGE_ACTION_FAN_LINK_QUALITY =   "link_quality"
-
 
 	def __init__(self, event_bus, socket_file=None):
 		self._event_bus = event_bus
@@ -263,7 +265,6 @@ class IoBeamHandler(object):
 		finally:
 			self._callbacks_lock.reader_release()
 
-
 	def __execute_callback_called_by_new_thread(self, _trigger_event, acquire_lock, _callback_array, kwargs):
 		try:
 			if acquire_lock:
@@ -294,7 +295,6 @@ class IoBeamHandler(object):
 		self._worker = threading.Thread(target=self._work, name="iobeamHandler")
 		self._worker.daemon = True
 		self._worker.start()
-
 
 	def _work(self):
 		threading.current_thread().name = self.__class__.__name__
@@ -375,7 +375,6 @@ class IoBeamHandler(object):
 
 		self._logger.debug("Worker thread stopped.")
 
-
 	def _handleMessages(self, data):
 		"""
 		handles incoming data from the socket.
@@ -435,12 +434,9 @@ class IoBeamHandler(object):
 
 		return error_count, message_count
 
-
-
 	def _handle_invalid_message(self, message):
 		self._logger.warn("Received invalid message: '%s'", message)
 		return 1
-
 
 	def _handle_onebutton_message(self, message, token):
 		action = token[0] if len(token)>0 else None
@@ -461,7 +457,6 @@ class IoBeamHandler(object):
 		else:
 			return self._handle_invalid_message(message)
 		return 0
-
 
 	def _handle_interlock_message(self, message, tokens):
 		lock_id = tokens[0] if len(tokens) > 0 else None
@@ -487,7 +482,6 @@ class IoBeamHandler(object):
 				self._fireEvent(IoBeamEvents.INTERLOCK_OPEN, now_state)
 
 		return 0
-
 
 	def _handle_lid_message(self, message, token):
 		action = token[0] if len(token) > 0 else None
@@ -553,9 +547,6 @@ class IoBeamHandler(object):
 		elif action == self.MESSAGE_ACTION_FAN_PWM_MIN:
 			return 0
 		elif action == self.MESSAGE_ACTION_FAN_TPR:
-			return 0
-		# TODO: is this needed?
-		elif action == self.MESSAGE_ACTION_FAN_STATE:
 			return 0
 		elif action == self.MESSAGE_ACTION_FAN_SERIAL:
 			self._logger.info("Received fan serial %s: '%s'", value, message)
@@ -719,7 +710,6 @@ class IoBeamHandler(object):
 		cmd = "{}:client:{}".format(self.MESSAGE_DEVICE_IOBEAM, client_name)
 		sent = self._send_command(cmd)
 		return client_name if sent else False
-
 
 	def _fireEvent(self, event, payload=None):
 		self._event_bus.fire(event, payload)
