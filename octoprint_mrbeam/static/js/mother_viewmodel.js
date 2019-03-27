@@ -33,7 +33,7 @@ $(function () {
             self.writeBranchesToSwUpdateScreen();
         };
 
-        self.state.TITLE_PRINT_BUTTON_UNPAUSED ="Starts the laser job";
+        self.state.TITLE_PRINT_BUTTON_UNPAUSED = gettext("Starts the laser job");
 
         self.onStartup = function () {
             // TODO fetch machine profile on start
@@ -237,6 +237,12 @@ $(function () {
             self.removeLoadingOverlay();
         };
 
+        self.onEventMrbPluginVersion = function(payload) {
+            if ('version' in payload) {
+                self._force_reload_on_inconsitent_version(payload['version']);
+            }
+        };
+
         self.set_Design_lib_defaults = function(){
             self.files.listHelper.addFilter('model');
             self.files.listHelper.changeSorting('upload');
@@ -250,7 +256,11 @@ $(function () {
         };
 
         self.removeLoadingOverlay = function(){
-            if (self.isStartupComplete &&  self.workingArea.camera.firstImageLoaded) {
+            // firstImageLoaded is based on jQuery.load() which is not reliable and deprecated.
+            // Therefore we lift the curtain for unsupported browsers without waiting for the bgr image to be loaded.
+            // this might not look so nice but at least it doesn't block functionality and
+            // allows the user to see the notification that his browser is not supported.
+            if (self.isStartupComplete && (!window.mrbeam.browser.is_supported || self.workingArea.camera.firstImageLoaded)) {
                 self.loadingOverlay.removeLoadingOverlay();
             } else {
                 setTimeout(self.removeLoadingOverlay, 100);
@@ -261,15 +271,16 @@ $(function () {
          * Reloads the frontend bypassing any cache if backend version of mr beam plugin is different from the forntend version.
          * This happens sometimes after a software update.
          * @private
+         * @param backend_version (optional) If no version is given the function reads it from self.settings
          */
-        self._force_reload_on_inconsitent_version = function(){
-            var settings_version = self.settings.settings.plugins.mrbeam._version();
-            if (settings_version != BEAMOS_VERSION) {
-                console.log("Frontend version check: FAILED (frontend=" + BEAMOS_VERSION + ", backend="+settings_version + ")");
+        self._force_reload_on_inconsitent_version = function(backend_version){
+            backend_version = backend_version || self.settings.settings.plugins.mrbeam._version();
+            if (backend_version != BEAMOS_VERSION) {
+                console.log("Frontend version check: FAILED (frontend=" + BEAMOS_VERSION + ", backend="+backend_version + ")");
                 console.log("Reloading frontend...");
                 window.location.href = "/?ts="+Date.now();
             } else {
-                console.log("Frontend version check: OK (frontend=" + BEAMOS_VERSION + ", backend="+settings_version + ")");
+                console.log("Frontend version check: OK (frontend=" + BEAMOS_VERSION + ", backend="+backend_version + ")");
             }
         };
 

@@ -170,10 +170,10 @@ $(function () {
 				var notifyTitle;
 				if (resp.status === 200) {  // should never be 200 when failing ?? TODO
 					notifyType = 'success';
-					notifyTitle = 'Success';
+					notifyTitle = gettext("Success");
 				} else {
 					notifyType = 'warning';
-					notifyTitle = 'Error';
+					notifyTitle = gettext("Error");
 				}
 				new PNotify({
 					title: notifyTitle,

@@ -30,7 +30,8 @@ class MrbLogger(object):
 	def __init__(self, id, ignorePrinter=False):
 		global _printer
 		self.logger = logging.getLogger(id)
-		self.id = self._shorten_id(id)
+		self.id = id
+		self.id_short = self._shorten_id(id)
 		self.my_buffer = []
 		# TODO: this line overrides logging.yaml!!!
 		self.logger.setLevel(logging.DEBUG)
@@ -77,8 +78,10 @@ class MrbLogger(object):
 		"""
 		if kwargs.pop('terminal', True if level >= logging.WARN else False):
 			self._terminal(level, msg, *args, **kwargs)
-		if kwargs.pop('terminal_as_comm', False):
+		if kwargs.pop('terminal_as_comm', False) or level == self.LEVEL_COMM:
+			kwargs['id'] = ''
 			self._terminal(self.LEVEL_COMM, msg, *args, **kwargs)
+			del kwargs['id']
 		if kwargs.pop('serial', False):
 			self._serial(msg, *args, **kwargs)
 		analytics =  kwargs.pop('analytics', None)
@@ -89,7 +92,7 @@ class MrbLogger(object):
 		if analytics:
 			kwargs['terminal_dump'] = terminal_dump
 			self._analytics_log_event(level, msg, *args, **kwargs)
-		# just to be shure....
+		# just to be sure....
 		kwargs.pop('terminal', None)
 		kwargs.pop('terminal_as_comm', None)
 		kwargs.pop('analytics', None)
@@ -100,7 +103,7 @@ class MrbLogger(object):
 		global _printer
 
 		date = self._getDateString()
-		id = kwargs.pop('id', self.id)
+		id = kwargs.pop('id', self.id_short)
 
 		level = logging._levelNames[level] if level in logging._levelNames else level
 
@@ -145,9 +148,12 @@ class MrbLogger(object):
 				analytics_handler.log_event(
 					level,
 					msg,
-					caller,
-					exception_str,
-					stacktrace,
+					module = self.id,
+					component = _mrbeam_plugin_implementation._identifier,
+					component_version = _mrbeam_plugin_implementation._plugin_version,
+					caller=caller,
+					exception_str=exception_str,
+					stacktrace=stacktrace,
 					wait_for_terminal_dump=kwargs.get('terminal_dump', False))
 			except:
 				self.logger.exception("Exception in _analytics_log_event: ")
