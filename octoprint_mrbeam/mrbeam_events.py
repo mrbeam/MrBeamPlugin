@@ -35,6 +35,7 @@ class MrBeamEvents(object):
 
 	ANALYTICS_DATA             = "MrbAnalyticsData"
 	MRB_PLUGIN_VERSION         = "MrbPluginVersion"
+	JOB_TIME_ESTIMATED         = "JobTimeEstimated"
 
 
 	@classmethod

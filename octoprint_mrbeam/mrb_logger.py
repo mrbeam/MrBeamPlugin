@@ -16,6 +16,10 @@ def init_mrb_logger(printer):
 	_printer = printer
 
 def mrb_logger(id):
+	"""
+
+	:rtype:
+	"""
 	return MrbLogger(id)
 
 

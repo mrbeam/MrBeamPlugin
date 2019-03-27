@@ -13,6 +13,7 @@
             <h5 data-bind='visible: !is_fan_connected()'>{{ _('Can not detect air filter system. Is it plugged in?') }}</h5>
             <h5 data-bind='visible: !interlocks_closed() && is_fan_connected()'>{{ _('Please close the lid completely before we can proceed.') }}</h5>
             <h5 data-bind='visible: interlocks_closed() && is_fan_connected()'>{{ _('Everything is ready to go.') }}</h5>
+            <h5 data-bind='visible: interlocks_closed() && is_fan_connected()'>{{ _(' Estimated duration: ') }}<span data-bind="text: estimated_duration" style="font-size:1.2em"></span></h5>
         </div>
         <div class="modal-footer">
             <a class="btn pull-left" data-bind='visible: is_rtl_mode(), click: cancel_btn' aria-hidden="true">{{ _('cancel') }}</a>
