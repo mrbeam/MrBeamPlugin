@@ -6,18 +6,13 @@ __copyright__ = "Copyright (C) 2013 David Braam - Released under terms of the AG
 
 import os
 import threading
-import logging
 import glob
 import time
-import datetime
 import serial
 import re
 import Queue
 import random
 
-from yaml import load as yamlload
-from yaml import dump as yamldump
-from subprocess import call as subprocesscall
 from flask.ext.babel import gettext
 
 import octoprint.plugin
@@ -27,9 +22,9 @@ from octoprint.events import eventManager, Events as OctoPrintEvents
 from octoprint.filemanager.destinations import FileDestinations
 from octoprint.util import get_exception_string, RepeatedTimer, CountedEvent, sanitize_ascii
 
-from octoprint_mrbeam.profile import laserCutterProfileManager
+from octoprint_mrbeam.printing.profile import laserCutterProfileManager
 from octoprint_mrbeam.mrb_logger import mrb_logger
-from octoprint_mrbeam.acc_line_buffer import AccLineBuffer
+from octoprint_mrbeam.printing.acc_line_buffer import AccLineBuffer
 from octoprint_mrbeam.analytics.analytics_handler import existing_analyticsHandler
 from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
 
@@ -96,16 +91,13 @@ class MachineCom(object):
 	COMMAND_RESUME      = '~'
 	COMMAND_RESET       = b'\x18'
 	COMMAND_FLUSH       = 'FLUSH'
-	COMMAND_SYNC        = 'SYNC' # experimental
 	COMMAND_RESET_ALARM = '$X'
 
 	STATUS_POLL_FREQUENCY_OPERATIONAL = 2.0
 	STATUS_POLL_FREQUENCY_PRINTING = 1.0 # set back top 1.0 if it's not causing gcode24
 	STATUS_POLL_FREQUENCY_PAUSED = 0.2
-	STATUS_POLL_FREQUENCY_SYNCING = 0.2
 	STATUS_POLL_FREQUENCY_DEFAULT = STATUS_POLL_FREQUENCY_PRINTING
 
-	GRBL_SYNC_COMMAND_WAIT_STATES = (GRBL_STATE_RUN, GRBL_STATE_QUEUE)
 	GRBL_HEX_FOLDER = 'files/grbl/'
 
 	pattern_grbl_status_legacy = re.compile("<(?P<status>\w+),.*MPos:(?P<mpos_x>[0-9.\-]+),(?P<mpos_y>[0-9.\-]+),.*WPos:(?P<pos_x>[0-9.\-]+),(?P<pos_y>[0-9.\-]+),.*RX:(?P<rx>\d+),.*laser (?P<laser_state>\w+):(?P<laser_intensity>\d+).*>")
@@ -120,7 +112,7 @@ class MachineCom(object):
 	pattern_get_y_coord_from_gcode = re.compile("^G.*Y(\d{1,3}\.?\d{0,3})\D.*")
 
 	def __init__(self, port=None, baudrate=None, callbackObject=None, printerProfileManager=None):
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.comm_acc2")
+		self._logger = mrb_logger("octoprint.plugins.mrbeam.printing.comm_acc2")
 
 		if port is None:
 			port = settings().get(["serial", "port"])
@@ -173,8 +165,7 @@ class MachineCom(object):
 		self._intensity_dict = {}
 		self._passes = 1
 		self._finished_passes = 0
-		self._sync_command_ts = -1
-		self._sync_command_state_sent = False
+		self._flush_command_ts = -1
 		self.limit_x = -1
 		self.limit_y = -1
 		# from GRBL status RX value: Number of characters queued in Grbl's serial RX receive buffer.
@@ -357,35 +348,14 @@ class MachineCom(object):
 
 			if self._cmd == self.COMMAND_FLUSH:
 				# FLUSH waits until we're no longer waiting for any OKs from GRBL
-				if self._sync_command_ts <=0:
-					self._sync_command_ts = time.time()
+				if self._flush_command_ts <=0:
+					self._flush_command_ts = time.time()
 					self._log("FLUSHing (grbl_state: {}, acc_line_buffer: {}, grbl_rx: {})".format(
 					                  self._grbl_state, self._acc_line_buffer.get_char_len(), self._grbl_rx_status))
 				if self._acc_line_buffer.is_empty():
 					self._cmd = None
-					self._log("FLUSHed ({}ms)".format(int(1000*(time.time() - self._sync_command_ts))))
-					self._sync_command_ts = -1
-				self._send_event.set()
-			elif self._cmd == self.COMMAND_SYNC:
-				# SYNC waits until we're no longer waiting for any OKs from GRBL and GRBL has reported to no be busy anymore.
-				# Still experimential: We need to test/verify/implement:
-				# - Maybe we need to turn off the laser here...
-				# - What if RX buffer remains 1 and never becomes 0? sync should handle/correct this
-				# - Do we need a timeout or something?
-				if self._sync_command_ts <=0:
-					self._sync_command_ts = time.time()
-					self._log("SYNCing (grbl_state: {}, acc_line_buffer: {}, grbl_rx: {})".format(
-					                  self._grbl_state, self._acc_line_buffer.get_char_len(), self._grbl_rx_status))
-				if self._acc_line_buffer.is_empty() and not self._grbl_state in self.GRBL_SYNC_COMMAND_WAIT_STATES:
-					# Successfully synced, let's move on
-					self._cmd = None
-					self._log("SYNCed ({}ms)".format(int(1000*(time.time() - self._sync_command_ts))))
-					self._sync_command_ts = -1
-					self._sync_command_state_sent = False
-				elif self._acc_line_buffer.is_empty() and self._grbl_state in self.GRBL_SYNC_COMMAND_WAIT_STATES and not self._sync_command_state_sent:
-					# Request a status update from GRBL to see if it's really ready.
-					self._sync_command_state_sent = True
-					self._sendCommand(self.COMMAND_STATUS)
+					self._log("FLUSHed ({}ms)".format(int(1000 * (time.time() - self._flush_command_ts))))
+					self._flush_command_ts = -1
 				self._send_event.set()
 			else:
 				my_cmd = self._cmd  # to avoid race conditions
@@ -446,7 +416,7 @@ class MachineCom(object):
 	def _add_checksum_to_cmd(self, cmd):
 		if cmd is None:
 			return None
-		if cmd.find('*') < 0 and cmd not in (self.COMMAND_FLUSH, self.COMMAND_SYNC):
+		if cmd.find('*') < 0 and cmd not in (self.COMMAND_FLUSH, ):
 			cmd = "{cmd}*{chk}".format(cmd=cmd, chk=self._calc_checksum(cmd))
 		return cmd
 
@@ -1339,7 +1309,7 @@ class MachineCom(object):
 		self.sendCommand('G1X{x}Y{y}F500S0'.format(x='-5' if self.limit_x > 0 else '0', y='-5' if self.limit_y > 0 else '0'))
 		self.sendCommand('G90')
 		self.sendCommand(self.COMMAND_FLUSH)
-		time.sleep(1) # turns out we need this :-/ Maybe SYNC will solve once SYNC is fully working
+		time.sleep(1) # turns out we need this :-/
 
 
 	def _handle_command_handler_result(self, command, command_type, gcode, handler_result):

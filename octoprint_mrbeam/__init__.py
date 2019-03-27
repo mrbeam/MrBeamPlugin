@@ -9,9 +9,7 @@ import pprint
 import socket
 import threading
 import time
-import shlex
 import collections
-import re
 from subprocess import check_output
 
 import octoprint.plugin
@@ -21,9 +19,9 @@ from flask.ext.babel import gettext
 from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping
 from octoprint.server import NO_CONTENT
 from octoprint.server.util.flask import restricted_access, get_json_command_from_request, \
-	add_non_caching_response_headers, firstrun_only_access
+	add_non_caching_response_headers
 from octoprint.util import dict_merge
-from octoprint.settings import settings, default_settings
+from octoprint.settings import settings
 from octoprint.events import Events as OctoPrintEvents
 
 from octoprint_mrbeam.iobeam.iobeam_handler import ioBeamHandler, IoBeamEvents
@@ -38,7 +36,7 @@ from octoprint_mrbeam.led_events import LedEventListener
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
 from octoprint_mrbeam.migrate import migrate
-from octoprint_mrbeam.profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
+from octoprint_mrbeam.printing.profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
 from octoprint_mrbeam.software_update_information import get_update_information, SW_UPDATE_TIER_PROD
 from octoprint_mrbeam.support import set_support_mode
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
@@ -813,8 +811,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	# simpleApiCommand: custom_materials;
 	def custom_materials(self, data):
-		from flask.ext.login import current_user
-		from octoprint.server.api import NO_CONTENT
 
 		# self._logger.info("custom_material() request: %s", data)
 		res = dict(
@@ -892,10 +888,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@octoprint.plugin.BlueprintPlugin.route("/calibration", methods=["GET"])
 	#@firstrun_only_access
 	def calibration_wrapper(self):
-		from flask import request
-		from octoprint.server.api import NO_CONTENT
 		from flask import make_response, render_template
-		from octoprint.server import debug, LOCALES, VERSION, DISPLAY_VERSION, UI_API_KEY, BRANCH
+		from octoprint.server import debug, VERSION, DISPLAY_VERSION, UI_API_KEY, BRANCH
 
 		display_version_string = "{} on {}".format(self._plugin_version, self.getHostname())
 		if self._branch:
@@ -1628,7 +1622,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	# inject a Laser object instead the original Printer from standard.py
 	def laser_factory(self, components, *args, **kwargs):
-		from .printer import Laser
+		from octoprint_mrbeam.printing.printer import Laser
 		return Laser(components['file_manager'], components['analysis_queue'], laserCutterProfileManager())
 
 	def laser_filemanager(self, *args, **kwargs):

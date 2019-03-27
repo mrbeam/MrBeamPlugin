@@ -2630,7 +2630,6 @@ $(function(){
 
     // view model class, parameters for constructor, container to bind to
     ADDITIONAL_VIEWMODELS.push([WorkingAreaViewModel,
-
 		["loginStateViewModel", "settingsViewModel", "printerStateViewModel",
 			"gcodeFilesViewModel", "laserCutterProfilesViewModel", "cameraViewModel"],
 		[document.getElementById("area_preview"),

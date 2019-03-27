@@ -1,12 +1,11 @@
 import os
 import re
 import shutil
-import subprocess
 from distutils.version import StrictVersion
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
-from .profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
-from .comm_acc2 import MachineCom
+from octoprint_mrbeam.printing.profile import laserCutterProfileManager
+from octoprint_mrbeam.printing.comm_acc2 import MachineCom
 
 
 def migrate(plugin):
