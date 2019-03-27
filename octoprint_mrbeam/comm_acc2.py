@@ -37,6 +37,7 @@ from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
 class MachineCom(object):
 
 	DEBUG_PRODUCE_CHECKSUM_ERRORS = True
+	DEBUG_PRODUCE_CHECKSUM_ERRORS_RND = 2000
 
 	### GRBL VERSIONs #######################################
 	# original grbl
@@ -412,9 +413,10 @@ class MachineCom(object):
 					                          laser=self._current_laser_on)
 
 					if self.DEBUG_PRODUCE_CHECKSUM_ERRORS:
-						if random.randint(0, 500) == 1:
+						if random.randint(0, self.DEBUG_PRODUCE_CHECKSUM_ERRORS_RND) == 1:
 							orig_command = my_cmd
-							my_cmd = my_cmd[0:-1] + 'G'
+							rnd = random.randint(0, len(my_cmd)-1)
+							my_cmd = my_cmd[:rnd-1] + chr(random.randint(0,255)) + my_cmd[rnd:]
 							self._logger.warn("DEBUG Randomly changed '%s' to '%s' to cause checksum error.", orig_command, my_cmd, terminal_as_comm=True)
 					try:
 						self._serial.write(my_cmd + '\n')
@@ -1627,8 +1629,8 @@ class MachineCom(object):
 				self._log("   /disconnect")
 				self._log("   /reset")
 				self._log("   /correct_settings")
-				self._log("   /verify_grbl [? | <file>] // ?: list of available files; If omitted default grbl version will be flashed.")
-				self._log("   /flash_grbl [? | <file>] // ?: list of available files; If omitted current grbl version will be verified.")
+				self._log("   /verify_grbl [? | <file>] // ?: list of available files; If omitted default grbl version will be verified .")
+				self._log("   /flash_grbl [? | <file>] // ?: list of available files; If omitted current grbl version will be flashed.")
 		except:
 			self._logger.exception("Exception while executing terminal command '%s'", cmd, terminal_as_comm=True)
 
