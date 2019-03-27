@@ -36,7 +36,7 @@ from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
 ### MachineCom #########################################################################################################
 class MachineCom(object):
 
-	DEBUG_PRODUCE_CHECKSUM_ERRORS = True
+	DEBUG_PRODUCE_CHECKSUM_ERRORS = False
 	DEBUG_PRODUCE_CHECKSUM_ERRORS_RND = 2000
 
 	### GRBL VERSIONs #######################################
@@ -56,7 +56,7 @@ class MachineCom(object):
 	GRBL_VERSION_20181116_a437781 = '0.9g_20181116_a437781'
 	#
 	# adds checksums
-	GRBL_VERSION_2019_MRB_CHECKSUM = '0.9g_20190315_30263af-dirty'
+	GRBL_VERSION_2019_MRB_CHECKSUM = 'grbl_0.9g_20190327_d2868b9'
 	GRBL_FEAT_BLOCK_CHECKSUMS = (GRBL_VERSION_20170919_22270fa, GRBL_VERSION_20180223_61638c5, GRBL_VERSION_20180828_ac367ff, GRBL_VERSION_20181116_a437781)
 	#
 	#

@@ -23,7 +23,7 @@ class Migration(object):
 	VERSION_INFLATE_FILE_SYSTEM              = '0.1.51'
 	VERSION_MOUNT_MANAGER_161                = '0.1.56'
 	VERSION_PREFILL_MRB_HW_INFO              = '0.1.55'
-	VERSION_GRBL_AUTO_UPDATE                 = '0.1.60'
+	VERSION_GRBL_AUTO_UPDATE                 = '0.1.61'
 
 	# this is where we have files needed for migrations
 	MIGRATE_FILES_FOLDER     = 'files/migrate/'
