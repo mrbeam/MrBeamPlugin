@@ -65,7 +65,7 @@ class AnalyticsHandler(object):
 		self._storedConversions = list()
 
 		self._jobevent_log_version = 4
-		self._deviceinfo_log_version = 3
+		self._deviceinfo_log_version = 4
 		self._logevent_version = 1
 		self._dust_log_version = 2
 		self._cam_event_log_version = 2
@@ -250,11 +250,12 @@ class AnalyticsHandler(object):
 	def _event_shutdown(self,event,payload):
 		self._write_deviceinfo(ak.SHUTDOWN)
 
-	def write_flash_grbl(self, from_version, to_version, succesful):
+	def write_flash_grbl(self, from_version, to_version, succesful, err=None):
 		payload = dict(
 			from_version=from_version,
 			to_version=to_version,
-			succesful=succesful)
+			succesful=succesful,
+			err=err)
 		self._write_deviceinfo(ak.FLASH_GRBL, payload=payload)
 
 	def _event_ip_addresses(self):

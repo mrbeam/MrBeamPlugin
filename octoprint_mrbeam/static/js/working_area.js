@@ -900,6 +900,7 @@ $(function(){
 			file.id = id; // list entry id
 			file.previewId = previewId;
 			file.misfit = false;
+			file.typePath = src.typePath;
 
 			self.placedDesigns.push(file);
 			self.placeSmart(newSvg);

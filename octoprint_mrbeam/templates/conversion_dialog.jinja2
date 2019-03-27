@@ -54,7 +54,7 @@
 					<div data-toggle="tooltip" data-placement="bottom" style="display: inline-block"
                          title="{{ _('Depending on the color the laser beam is reflected more or less.') }}<br>
                                 <b>{{ _('Select a color close to the material\'s color to improve the result.') }}</b>">
-						<label >Color</label>
+						<label >{{ _('Color') }}</label>
 						<ul id="color_list" data-bind="foreach: material_colors">
 							<li class='material_color_entry hover_shadow' data-bind="
 								click: function(vm, event){ $root.set_material_color($data, event); $root.moveJobsToEngravingColorDefaultOption($data)},
@@ -423,6 +423,39 @@
                 </div>
                 <div class="modal-footer">
                     <button class="btn" data-dismiss="modal" aria-hidden="true">{{ _('Ok') }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Laserhead focus reminder modal -->
+    <div id="laserhead_focus_reminder_modal" class="modal hide fade" tabindex="-1" role="dialog"
+         aria-labelledby="laserhead_focus_reminder_modal" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h3 id="laserhead_focus_reminder_label">{{ _('Did you focus your laserhead?') }}</h3>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        <strong>{{ _('Focus your laserhead before starting the job to get the best quality!') }}</strong>
+                    </p>
+                    <img id="laserhead_focus_reminder_image" src="/plugin/mrbeam/static/img/focus_reminder.png">
+                    <div id="laserhead_focus_reminder_alert"><i class="fa fa-exclamation-triangle" aria-hidden="true" style="color: #e25303;"></i>
+                        {{ _('Remember to turn of your Mr Beam II if you disconnect the ribbon cable!') }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div id="laserhead_focus_reminder_not_again">
+                        <input type="checkbox" value="msg" data-bind="checked: dontRemindMeAgainChecked" /> {{ _('Don\'t remind me again') }}
+                    </div>
+                    <a href="#" class="btn" aria-hidden="true" data-dismiss="modal" data-bind="click: function() { $root.remindFirstTime(false); $root.sendDontRemindToServer()}">{{ _('I forgot') }}</a>
+                    <a href="#" class="btn btn-primary" id="start_job_btn_focus_reminder" data-dismiss="modal"
+                        data-bind="click: function() { $root.remindFirstTime(false); $root.convert() },
+                            enabled: enableConvertButton,
+                            visible: !slicing_in_progress(),
+                            css: {disabled: !$root.enableConvertButton()}">{{ _('It\'s focused!') }}</a>
                 </div>
             </div>
         </div>

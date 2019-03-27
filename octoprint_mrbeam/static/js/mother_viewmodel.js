@@ -256,7 +256,11 @@ $(function () {
         };
 
         self.removeLoadingOverlay = function(){
-            if (self.isStartupComplete &&  self.workingArea.camera.firstImageLoaded) {
+            // firstImageLoaded is based on jQuery.load() which is not reliable and deprecated.
+            // Therefore we lift the curtain for unsupported browsers without waiting for the bgr image to be loaded.
+            // this might not look so nice but at least it doesn't block functionality and
+            // allows the user to see the notification that his browser is not supported.
+            if (self.isStartupComplete && (!window.mrbeam.browser.is_supported || self.workingArea.camera.firstImageLoaded)) {
                 self.loadingOverlay.removeLoadingOverlay();
             } else {
                 setTimeout(self.removeLoadingOverlay, 100);

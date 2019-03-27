@@ -1192,20 +1192,38 @@ class MachineCom(object):
 				_mrbeam_plugin_implementation._analytics_handler.write_flash_grbl(
 					from_version=from_version,
 					to_version=grbl_file,
-					succesful=(code == 0))
+					succesful=(code == 0),
+					err = None if (code == 0) else output)
 			except:
 				self._logger.exception("Exception while writing GRBL-flashing to analytics: ")
 
 		# error case
 		if code != 0 and not verify_only:
-			msg_short = "ERROR flashing GRBL '{}'".format(grbl_file)
+			msg_short = "ERROR flashing GRBL '{}': FAILED (See Avrdude output above for details.)".format(grbl_file)
 			msg_long = '{}:\n{}'.format(msg_short, output)
 			self._logger.error(msg_long, terminal_as_comm=True)
 			self._logger.error(msg_short, terminal_as_comm=True)
-			self._errorValue = "avrdude returncode: %s" % code
-			self._changeState(self.STATE_CLOSED_WITH_ERROR)
-			self._logger.info("Please reconnect manually or reboot system.", terminal_as_comm=True)
-			return
+
+			try:
+				# TODO: translating these doesn't work since we do not have a flash request context
+				#       meaning we don't know the user's language here.
+				msg = gettext("The update of the internal component GRBL failed.{br}It is still save to use your Mr Beam II. However, if this error persists consider to contact the {opening_tag}Mr Beam support team{closing_tag}.{br}{br}{strong_opening_tag}Error:{strong_closing_tag}{br}{error}").format(
+							opening_tag= '<a href="http://mr-beam.org/support" target="_blank">',
+		                    closing_tag='</a>',
+		                    error="GRBL update '{}' failed: {}...".format(grbl_file, output[:120]),
+							br="<br/>",
+							strong_opening_tag="<strong>",
+							strong_closing_tag="</strong>")
+				_mrbeam_plugin_implementation.notify_frontend(
+					title=gettext("GRBL Update failed"),
+					text=msg,
+					type='warn',
+					sticky=True,
+					replay_when_new_client_connects=True
+				)
+			except:
+				self._logger.exception("Exception while notifying frontend after failed flash_grbl: ")
+
 		elif code != 0 and verify_only:
 			msg_short = "Verification GRBL '{}': FAILED (See Avrdude output above for details.)".format(grbl_file)
 			msg_long = '{}:\n{}'.format(msg_short, output)
