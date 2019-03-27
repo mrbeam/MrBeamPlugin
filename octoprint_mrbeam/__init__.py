@@ -321,7 +321,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self._settings.set_boolean(["terminal"], data["terminal"])
 			if "terminal_show_checksums" in data:
 				self._settings.set_boolean(["terminal_show_checksums"], data["terminal_show_checksums"])
-				self._printer._comm.set_checksum_enabled(data["terminal_show_checksums"])
+				self._printer._comm.set_terminal_show_checksums(data["terminal_show_checksums"])
 			if "vorlon" in data:
 				if data["vorlon"]:
 					self._settings.set_float(["vorlon"], time.time())
@@ -1016,7 +1016,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@octoprint.plugin.BlueprintPlugin.route("/profiles/<string:identifier>", methods=["DELETE"])
 	@restricted_access
 	def laserCutterProfilesDelete(self, identifier):
-		self.laserCutterProfileManager.acknowledge_cmd(identifier)
+		self.laserCutterProfileManager.remove(identifier)
 		return NO_CONTENT
 
 	@octoprint.plugin.BlueprintPlugin.route("/profiles/<string:identifier>", methods=["PATCH"])

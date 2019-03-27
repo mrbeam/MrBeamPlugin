@@ -232,7 +232,7 @@ class MachineCom(object):
 		self._status_polling_timer.start()
 
 
-	def set_checksum_enabled(self, enabled):
+	def set_terminal_show_checksums(self, enabled):
 		self._terminal_show_checksums = bool(enabled)
 		self._logger.info("Show checksums: %s", 'on' if self._terminal_show_checksums else 'off', terminal_as_comm=True)
 
@@ -353,10 +353,6 @@ class MachineCom(object):
 			if self._cmd is None and self._commandQueue.empty():
 				return
 			elif self._cmd is None:
-				# if self._recovery_lock:
-				# 	# TODO ANDYTEST: what if the currend command is a FLUSH or SYNC??
-				# 	# Assume flush is ok, but SYNC will created deadlock in recovery
-				# 	return
 				self._cmd = self._commandQueue.get()
 
 			if self._cmd == self.COMMAND_FLUSH:
