@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-03-22 18:58+0100\n"
-"PO-Revision-Date: 2019-03-27 11:35+0100\n"
+"POT-Creation-Date: 2019-03-27 12:40+0100\n"
+"PO-Revision-Date: 2019-03-27 12:42+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de\n"
@@ -96,11 +96,11 @@ msgstr ""
 msgid "GRBL Update failed"
 msgstr "GRBL-Update fehlgeschlagen"
 
-#: octoprint_mrbeam/iobeam/iobeam_handler.py:620
+#: octoprint_mrbeam/iobeam/iobeam_handler.py:629
 msgid "Software Update required"
 msgstr "Software-Update erforderlich"
 
-#: octoprint_mrbeam/iobeam/iobeam_handler.py:621
+#: octoprint_mrbeam/iobeam/iobeam_handler.py:630
 msgid ""
 "Module 'iobeam' is outdated. Please run Software Update from 'Settings' > "
 "'Software Update' before you start a laser job."
@@ -108,7 +108,7 @@ msgstr ""
 "Das Modul 'iobeam' ist veraltet. Bitte führen Sie das Software-Update "
 "über'Einstellungen' >'Software-Update' aus, bevor Sie einen Laserjob starten."
 
-#: octoprint_mrbeam/iobeam/iobeam_handler.py:638
+#: octoprint_mrbeam/iobeam/iobeam_handler.py:647
 msgid ""
 "A possible hardware malfunction has been detected on this device. Please "
 "contact our support team immediately at:"
@@ -116,11 +116,11 @@ msgstr ""
 "Eine mögliche Hardware-Fehlfunktion wurde auf diesem Gerät erkannt. Bitte "
 "kontaktieren Sie unser Support-Team umgehend unter:"
 
-#: octoprint_mrbeam/iobeam/iobeam_handler.py:640
+#: octoprint_mrbeam/iobeam/iobeam_handler.py:649
 msgid "Error:"
 msgstr "Fehler:"
 
-#: octoprint_mrbeam/iobeam/iobeam_handler.py:641
+#: octoprint_mrbeam/iobeam/iobeam_handler.py:650
 msgid "Hardware malfunction"
 msgstr "Hardware-Fehlfunktion"
 
@@ -504,20 +504,20 @@ msgstr "beamOS läd neu..."
 msgid "Starts the laser job"
 msgstr "Startet den Laserjob"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:508
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:512
 msgid "Slicing done"
 msgstr "Slicing abgeschlossen"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:509
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:513
 #, python-format
 msgid "Sliced %(stl)s to %(gcode)s, took %(time).2f seconds"
 msgstr "Geschnitten %(stl)s bis %(gcode)s, dauerte %(time).2f Sekunden"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:564
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:568
 msgid "Ready to laser?"
 msgstr "Bereit zum Lasern?"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:567
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:571
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:116
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:400
 #: octoprint_mrbeam/templates/settings.jinja2:52
@@ -525,11 +525,11 @@ msgstr "Bereit zum Lasern?"
 msgid "Cancel"
 msgstr "Abbruch"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:568
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:572
 msgid "Proceed"
 msgstr "Fortfahren"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:569
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:573
 msgid ""
 "The laser will now start. Protect yourself and everybody in the room "
 "appropriately before proceeding!"
@@ -537,34 +537,34 @@ msgstr ""
 "Der Laser wird nun gestartet. Schützen Sie sich und alle anderen im Raum "
 "angemessen, bevor Sie fortfahren!"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:570
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:574
 msgid "Are you sure you want to proceed?"
 msgstr "Möchten Sie wirklich fortfahren?"
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:574
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:578
 msgid "The laser will now start. Please make sure the lid is closed."
 msgstr ""
 "Der Laser wird nun gestartet. Achten Sie darauf, dass der Deckel geschlossen "
 "ist."
 
-#: octoprint_mrbeam/static/js/mother_viewmodel.js:575
+#: octoprint_mrbeam/static/js/mother_viewmodel.js:579
 msgid "Please confirm to proceed."
 msgstr "Bitte bestätigen Sie, um fortzufahren."
 
-#: octoprint_mrbeam/static/js/mrbeam.js:98
+#: octoprint_mrbeam/static/js/mrbeam.js:102
 msgid "Browser not supported."
 msgstr "Browser wird nicht unterstützt."
 
-#: octoprint_mrbeam/static/js/mrbeam.js:99
+#: octoprint_mrbeam/static/js/mrbeam.js:103
 #, python-format
 msgid ""
 "Mr Beam II makes use of latest web technologies which are not fully "
-"supported by your browser.%(br)sPlease use %(open)sGoogle Chrome%(close)s "
-"for Mr Beam II."
+"supported by your browser.%(br)sPlease use the latest version of%(br)s"
+"%(open)sGoogle Chrome%(close)s for Mr Beam II."
 msgstr ""
 "Mr Beam II verwendet die neuesten Webtechnologien, die von Ihrem Browser "
-"nicht vollständig unterstützt werden.%(br)sBitte verwenden Sie "
-"%(open)sGoogle Chrome%(close)s für Mr Beam II."
+"nicht vollständig unterstützt werden.%(br)sBitte verwende die neueste "
+"Version von %(open)sGoogle Chrome%(close)s für Mr Beam II."
 
 #: octoprint_mrbeam/static/js/render_fills.js:153
 msgid ""
