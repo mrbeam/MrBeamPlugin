@@ -260,7 +260,7 @@ $(function () {
             // Therefore we lift the curtain for unsupported browsers without waiting for the bgr image to be loaded.
             // this might not look so nice but at least it doesn't block functionality and
             // allows the user to see the notification that his browser is not supported.
-            if (self.isStartupComplete && (!window.browser.is_supported || self.workingArea.camera.firstImageLoaded)) {
+            if (self.isStartupComplete && (!window.mrbeam.browser.is_supported || self.workingArea.camera.firstImageLoaded)) {
                 self.loadingOverlay.removeLoadingOverlay();
             } else {
                 setTimeout(self.removeLoadingOverlay, 100);
