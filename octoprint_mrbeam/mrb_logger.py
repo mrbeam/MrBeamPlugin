@@ -78,8 +78,10 @@ class MrbLogger(object):
 		"""
 		if kwargs.pop('terminal', True if level >= logging.WARN else False):
 			self._terminal(level, msg, *args, **kwargs)
-		if kwargs.pop('terminal_as_comm', False):
+		if kwargs.pop('terminal_as_comm', False) or level == self.LEVEL_COMM:
+			kwargs['id'] = ''
 			self._terminal(self.LEVEL_COMM, msg, *args, **kwargs)
+			del kwargs['id']
 		if kwargs.pop('serial', False):
 			self._serial(msg, *args, **kwargs)
 		analytics =  kwargs.pop('analytics', None)
@@ -90,7 +92,7 @@ class MrbLogger(object):
 		if analytics:
 			kwargs['terminal_dump'] = terminal_dump
 			self._analytics_log_event(level, msg, *args, **kwargs)
-		# just to be shure....
+		# just to be sure....
 		kwargs.pop('terminal', None)
 		kwargs.pop('terminal_as_comm', None)
 		kwargs.pop('analytics', None)
