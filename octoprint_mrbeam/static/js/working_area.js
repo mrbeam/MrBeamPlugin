@@ -91,6 +91,7 @@ $(function(){
 		self.files = params[3];
 		self.profile = params[4];
 		self.camera = params[5];
+		self.readyToLaser = params[6];
 
 		self.log = [];
 
@@ -2632,7 +2633,7 @@ $(function(){
     ADDITIONAL_VIEWMODELS.push([WorkingAreaViewModel,
 
 		["loginStateViewModel", "settingsViewModel", "printerStateViewModel",
-			"gcodeFilesViewModel", "laserCutterProfilesViewModel", "cameraViewModel"],
+			"gcodeFilesViewModel", "laserCutterProfilesViewModel", "cameraViewModel", "readyToLaserViewModel"],
 		[document.getElementById("area_preview"),
 			document.getElementById("homing_overlay"),
 			document.getElementById("working_area_files"),
