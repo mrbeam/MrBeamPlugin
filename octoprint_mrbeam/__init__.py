@@ -333,12 +333,15 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				else:
 					self._settings.set_boolean(["vorlon"], False)
 					self._logger.info("Disabling VORLON per user request.", terminal=True)
-			if "gcode_nextgen" in data and isinstance(data['gcode_nextgen'], collections.Iterable) and "clip_working_area" in data['gcode_nextgen']:
-				self._settings.set_boolean(["gcode_nextgen", "clip_working_area"], data['gcode_nextgen']['clip_working_area'])
+			if "gcode_nextgen" in data and isinstance(data['gcode_nextgen'],
+			                                          collections.Iterable) and "clip_working_area" in data[
+				'gcode_nextgen']:
+				self._settings.set_boolean(["gcode_nextgen", "clip_working_area"],
+				                           data['gcode_nextgen']['clip_working_area'])
 			if "analyticsEnabled" in data:
 				self._analytics_handler.analytics_user_permission_change(analytics_enabled=data['analyticsEnabled'])
-      if "focusReminder" in data:
-			  self._settings.set_boolean(["focusReminder"], data["focusReminder"])
+			if "focusReminder" in data:
+				self._settings.set_boolean(["focusReminder"], data["focusReminder"])
 		except Exception as e:
 			self._logger.exception("Exception in on_settings_save() ")
 			raise e
