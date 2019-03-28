@@ -267,37 +267,6 @@
                               </div>
 
 								<h5>{{ _('Image Preprocessing') }}</h5>
-								<div class="controls">
-									<div class="img_preprocessing_preview before" style="background-image:url(/plugin/mrbeam/static/img/kitty_grayscale.png);" >{{ _('before') }}</div>
-									<div class="img_preprocessing_preview after" style="background-image:url(/plugin/mrbeam/static/img/kitty_grayscale.png);" >{{ _('after') }}
-										<div class="img_preprocessing_preview contrast" style="background-image:url(/plugin/mrbeam/static/img/kitty_contrast.png);" data-bind="style: { opacity: contrastPreview }" ></div>
-										<div class="img_preprocessing_preview sharpened" style="background-image:url(/plugin/mrbeam/static/img/kitty_sharpened.png);" data-bind="style: { opacity: sharpenedPreview }" ></div>
-										<div class="img_preprocessing_preview dithered" style="background-image:url(/plugin/mrbeam/static/img/kitty_dithered_150.png);" data-bind="visible: imgDithering"></div>
-
-									</div>
-									<div class="photo_attribution"><a href="http://www.christianholmer.com" target="_blank">{{ _('Photo: Christian Holmér') }}</a></div>
-								</div>
-
-								<div data-bind="disable:imgDithering ">
-                                    <div class="bar-control-and-label" data-toggle="tooltip" data-placement="right"
-                                         title="{{ _('Increases the image contrast before converting to gcode.') }}">
-                                        <label class="control-label">{{ _('Contrast') }}</label>
-                                        <div class="controls img_slider">
-                                            <input id="svgtogcode_contrast_slider" type="text" data-bind="value: imgContrast" >
-                                        </div>
-                                        <div style="clear:both"></div>
-                                    </div>
-
-                                    <div class="bar-control-and-label" data-toggle="tooltip" data-placement="right"
-                                         title="{{ _('Sharpens the image before converting to gcode.') }}">
-                                        <label class="control-label">{{ _('Sharpening') }}</label>
-                                        <div class="controls img_slider">
-                                            <input id="svgtogcode_sharpening_slider" class="uninitialized" type="text" data-bind="value: imgSharpening">
-                                        </div>
-                                        <div style="clear:both"></div>
-                                    </div>
-								</div>
-
                                 <div class="checkbox-control-and-label" data-toggle="tooltip" data-placement="right"
                                      title="<b>{{ _('Converts the image to solely black and white pixels.') }}</b><br>
                                         {{ _('Use this if the laser effect on your material is not able to transfer grayscales.') }}">

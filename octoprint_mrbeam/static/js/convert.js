@@ -968,31 +968,11 @@ $(function(){
 		self.imgFeedrateWhite = ko.observable(1500);
 		self.imgFeedrateBlack = ko.observable(250);
 		self.imgDithering = ko.observable(false);
-		self.imgSharpening = ko.observable(1);
-		self.imgContrast = ko.observable(1);
 		self.beamDiameter = ko.observable(0.15);
 		self.engravingPiercetime = ko.observable(0);
 
 		self.sharpeningMax = 25;
 		self.contrastMax = 2;
-
-		// preprocessing preview ... returns opacity 0.0 - 1.0
-		self.sharpenedPreview = ko.computed(function(){
-			if(self.imgDithering()) return 0;
-			else {
-				var sharpeningPercents = (self.imgSharpening() - 1)/(self.sharpeningMax - 1);
-				var contrastPercents = (self.imgContrast() - 1)/(self.contrastMax - 1);
-				return sharpeningPercents - contrastPercents/2;
-			}
-		}, self);
-		self.contrastPreview = ko.computed(function(){
-			if(self.imgDithering()) return 0;
-			else {
-				var sharpeningPercents = (self.imgSharpening() - 1)/(self.sharpeningMax - 1);
-				var contrastPercents = (self.imgContrast() - 1)/(self.contrastMax - 1);
-				return contrastPercents - sharpeningPercents/2;
-			}
-		}, self);
 
 		self.get_dialog_state = function(){
 			if(self.selected_material() === null){
@@ -1157,8 +1137,6 @@ $(function(){
 				"intensity_white" : self.imgIntensityWhite() * self.profile.currentProfileData().laser.intensity_factor(),
 				"speed_black" : parseInt(self.imgFeedrateBlack()),
 				"speed_white" : parseInt(self.imgFeedrateWhite()),
-				"contrast" : self.imgContrast(),
-				"sharpening" : self.imgSharpening(),
 				"dithering" : self.imgDithering(),
 				"beam_diameter" : parseFloat(self.beamDiameter()),
 				"pierce_time": parseInt(self.engravingPiercetime()),
@@ -1645,7 +1623,6 @@ $(function(){
 			self.requestData();
 			self.state.conversion = self; // hack! injecting method to avoid circular dependency.
 			self.files.conversion = self;
-			self._configureImgSliders();
 
             $("#dialog_vector_graphics_conversion").on('hidden', function(){
                 self.slicing_in_progress(false);
@@ -1726,36 +1703,6 @@ $(function(){
 			    html += "</ul>";
 			    html += _.sprintf(gettext("Find more details %(open)sonline%(close)s."), {open: '<a href="https://mr-beam.freshdesk.com/en/support/solutions/articles/43000068441-free-up-disk-space" target="_blank">', close: '</a>'});
                 new PNotify({title: gettext("Get more free disk space"), text: html, type: "info", hide: false});
-			}
-		};
-
-
-		self._configureImgSliders = function() {
-			var el1 = $("#svgtogcode_contrast_slider");
-			if(el1.length > 0){
-				self.contrastSlider = el1.slider({
-					step: .1,
-					min: 1,
-					max: self.contrastMax,
-					value: 1,
-					tooltip: 'hide'
-				}).on("slide", function(ev){
-					self.imgContrast(ev.value);
-				});
-			}
-
-			var el2 = $("#svgtogcode_sharpening_slider");
-			if(el2.length > 0){
-				self.sharpeningSlider = el2.slider({
-					step: 1,
-					min: 1,
-					max: self.sharpeningMax,
-					value: 1,
-					class: 'img_slider',
-					tooltip: 'hide'
-				}).on("slide", function(ev){
-					self.imgSharpening(ev.value);
-				});
 			}
 		};
 

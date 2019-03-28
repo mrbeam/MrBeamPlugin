@@ -214,8 +214,6 @@ class Converter():
 						ip = ImageProcessor(output_filehandle = fh,
 											workingAreaWidth = self.workingAreaWidth,
 											workingAreaHeight = self.workingAreaHeight,
-						                    contrast = rasterParams['contrast'],
-						                    sharpening = rasterParams['sharpening'],
 						                    beam_diameter = rasterParams['beam_diameter'],
 											intensity_black = rasterParams['intensity_black'],
 											intensity_white = rasterParams['intensity_white'],
