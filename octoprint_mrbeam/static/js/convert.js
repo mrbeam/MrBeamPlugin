@@ -1592,7 +1592,7 @@ $(function(){
 								self.slicing_in_progress(false);
 								new PNotify({
 								    title: gettext("Conversion failed"),
-									text: gettext("Unable to start the conversion in the backend. Content length was " + length + " bytes."),
+									text: gettext("Unable to start the conversion in the backend. Content length was %(length)s bytes.", {length: length}),
 									type: "error",
 									tag: "conversion_error",
 									hide: false

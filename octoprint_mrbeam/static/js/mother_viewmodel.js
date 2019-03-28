@@ -509,8 +509,8 @@ $(function () {
             self.gcodefiles.uploadProgressBar.text("");
 
             new PNotify({
-                title: gettext("Slicing done"),
-                text: _.sprintf(gettext("Sliced %(stl)s to %(gcode)s, took %(time).2f seconds"), payload),
+                title: gettext("Preparation done"),
+                text: _.sprintf(gettext("Converted %(stl)s to %(gcode)s, took %(time).2f seconds"), payload),
                 type: "success"
             });
 
