@@ -163,20 +163,20 @@ $(function() {
 
             if (hours === 0) {
                 if (minutes == 1) {
-                    duration = "" + minutes + " minute"
+                    duration = "" + minutes + " " + gettext(" minute")
                 } else {
-                    duration = "" + minutes + " minutes"
+                    duration = "" + minutes + " " + gettext(" minutes")
                 }
             } else if (hours === 1) {
                 if (minutes < 10) {
                     minutes = "0" + minutes
                 }
-                duration = hours + ":" + minutes + " hour"
+                duration = hours + ":" + minutes + " " + gettext(" hour")
             } else {
                 if (minutes < 10) {
                     minutes = "0" + minutes
                 }
-                duration = hours + ":" + minutes + " hours"
+                duration = hours + ":" + minutes + " " + gettext(" hours")
             }
 
             self.estimated_duration("  ~ " + duration)
