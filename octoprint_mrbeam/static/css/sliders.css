@@ -255,7 +255,7 @@ input[type=range].img_adjust::-webkit-slider-thumb {
   height: 1em;
   width: 1em;
   border-radius: 50px;
-  background: #ffffff;
+  background: #e25303;
   cursor: pointer;
   -webkit-appearance: none;
   margin-top: -.5em;

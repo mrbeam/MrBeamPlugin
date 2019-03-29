@@ -2213,3 +2213,40 @@ input[type="radio"]{
 #laserhead_focus_reminder_alert {
   clear: both;
 }
+
+
+/*
+* === IMAGE PREPROCESSING  ACCORDION ===
+*/
+
+#working_area_image_preprocessing_link > button.image-preprocessing-collapsible {
+  outline: transparent;
+  text-decoration: none;
+  padding: 0;
+  margin: 0;
+}
+
+#working_area_image_preprocessing_heading {
+  padding: 0;
+  color: #999; /*#555*/
+}
+
+#working_area_image_preprocessing_sliders {
+  margin-left: 18px;
+}
+
+#working_area_image_preprocessing_link > button.collapsed:before {
+  padding: 0;
+  content: "\270f";
+  display: inline-block;
+  -webkit-transform: rotate(0deg);
+}
+
+#working_area_image_preprocessing_link > button:before {
+  /*font-family: FontAwesome;*/
+  padding: 0;
+  content: "\270f";
+  display: inline-block;
+  -webkit-transform: rotate(90deg);
+}
+
