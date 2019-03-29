@@ -8,6 +8,8 @@ $(function() {
     function LaserJobDoneViewmodel(parameters) {
         var self = this;
         self.settings = parameters[0];
+        self.readyToLaser = parameters[1];
+
         self.is_job_done = ko.observable(false);
         self.is_dust_mode = ko.observable(false);
         self.job_duration = ko.observable(0);
@@ -114,7 +116,7 @@ $(function() {
     OCTOPRINT_VIEWMODELS.push([
         LaserJobDoneViewmodel,
         // e.g. loginStateViewModel, settingsViewModel, ...
-        [ "settingsViewModel"/* "loginStateViewModel", "settingsViewModel" */ ],
+        [ "settingsViewModel", "readyToLaserViewModel"/* "loginStateViewModel", "settingsViewModel" */ ],
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         [ '#laser_job_done_dialog']
     ]);
