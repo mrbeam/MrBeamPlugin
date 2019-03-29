@@ -4,7 +4,7 @@ $(function() {
     function LoadingOverlayViewModel(parameters) {
         var self = this;
 
-        self.TEXT_RELOADING = 'beamOS is reloading...';
+        self.TEXT_RELOADING = gettext("beamOS is reloading...");
 
         self.display_state = ko.observable($('#loading_overlay_message').text());
 

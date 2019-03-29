@@ -1,12 +1,11 @@
 import os
 import re
 import shutil
-import subprocess
 from distutils.version import StrictVersion
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
-from .profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
-from .comm_acc2 import MachineCom
+from octoprint_mrbeam.printing.profile import laserCutterProfileManager
+from octoprint_mrbeam.printing.comm_acc2 import MachineCom
 
 
 def migrate(plugin):
@@ -20,18 +19,18 @@ class Migration(object):
 	VERSION_FIX_SSH_KEY_PERMISSION           = '0.1.28'
 	VERSION_UPDATE_CHANGE_HOSTNAME_SCRIPTS   = '0.1.37'
 	VERSION_UPDATE_LOGROTATE_CONF            = '0.1.45'
-	VERSION_GRBL_AUTO_UPDATE                 = '0.1.53'
 	VERSION_INFLATE_FILE_SYSTEM              = '0.1.51'
-	VERSION_MOUNT_MANAGER_160                = '0.1.55'
+	VERSION_MOUNT_MANAGER_161                = '0.1.56'
 	VERSION_PREFILL_MRB_HW_INFO              = '0.1.55'
+	VERSION_GRBL_AUTO_UPDATE                 = '0.1.61'
 
 	# this is where we have files needed for migrations
 	MIGRATE_FILES_FOLDER     = 'files/migrate/'
 	MIGRATE_LOGROTATE_FOLDER = 'files/migrate_logrotate/'
 
 	# grbl auto update conf
-	GRBL_AUTO_UPDATE_FILE = "grbl_0.9g_20181116_a437781.hex"
-	GRBL_AUTO_UPDATE_VERSION = MachineCom.GRBL_VERSION_20181116_a437781
+	GRBL_AUTO_UPDATE_FILE =     MachineCom._get_grbl_file_name()
+	GRBL_AUTO_UPDATE_VERSION =  MachineCom.GRBL_DEFAULT_VERSION
 
 
 	def __init__(self, plugin):
@@ -78,7 +77,7 @@ class Migration(object):
 				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_UPDATE_LOGROTATE_CONF, equal_ok=False):
 					self.update_logrotate_conf()
 
-				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_MOUNT_MANAGER_160, equal_ok=False):
+				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_MOUNT_MANAGER_161, equal_ok=False):
 					self.update_mount_manager()
 
 				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_GRBL_AUTO_UPDATE, equal_ok=False):

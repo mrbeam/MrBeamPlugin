@@ -28,7 +28,7 @@
 							</div>
 						</div>
 						<div class="control-group">
-							<label class="control-label">Corners</label>
+							<label class="control-label">{{ _('Corners') }}</label>
 							<div class="controls">
 								<!--<label class="control-label"><i class="icon icon-check-empty"></i></label>-->
 								<input id="quick_shape_rect_radius" class="precisionslider padding-top" type="range" value="0" min="0" max="100"
@@ -57,13 +57,13 @@
 							</div>
 						</div>
 						<div class="control-group">
-							<label class="control-label"><i class="icon">Corners</i></label>
+							<label class="control-label"><i class="icon">{{ _('Corners') }}</i></label>
 							<div class="controls">
 								<input type="number" id="quick_shape_star_corners" class="input-block" min="3" max="32" data-bind="textInput: _qs_currentQuickShapeUpdate()">
 							</div>
 						</div>
 						<div class="control-group">
-							<label class="control-label"><i class="icon">Sharpness</i></label>
+							<label class="control-label"><i class="icon">{{ _('Sharpness') }}</i></label>
 							<div class="controls">
 								<input type="range" id="quick_shape_star_sharpness" class="precisionslider quickshape-slider padding-top" step="0.1" min="0" max="0.9" data-bind="textInput: _qs_currentQuickShapeUpdate()" value="0.5">
 							</div>
@@ -96,7 +96,7 @@
 			<div>
 				<form role="form" class="form-horizontal" data-bind="submit: _qs_dialogClose" _lpchecked="1">
 					<div class="control-group">
-						<label class="control-label">Line Color</label>
+						<label class="control-label">{{ _('Line Color') }}</label>
 						<div class="controls">
 							<input type="color" id="quick_shape_color" data-bind="textInput: _qs_currentQuickShapeUpdate()" />
 						</div>

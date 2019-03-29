@@ -17,12 +17,16 @@ var browser = {
     is_firefox: navigator.userAgent.indexOf('Firefox') > -1,
     is_safari: navigator.userAgent.indexOf("Safari") > -1,
     is_opera: navigator.userAgent.toLowerCase().indexOf("op") > -1,
-    is_supported: null
+    is_supported: null,
+    chrome_version: null
 };
 if ((browser.is_chrome)&&(browser.is_safari)) {browser.is_safari=false;}
 if ((browser.is_chrome)&&(browser.is_opera)) {browser.is_chrome=false;}
+browser.chrome_version = navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./);
+browser.chrome_version = browser.chrome_version ? parseInt(browser.chrome_version[2], 10) : null;
+
 // supported browser
-browser.is_supported = browser.is_chrome;
+browser.is_supported = browser.is_chrome && browser.chrome_version >= 60;
 mrbeam.browser = browser;
 
 /**
@@ -95,8 +99,8 @@ $(function() {
             console.log("Supported Browser: " + mrbeam.browser.is_supported);
             if (!mrbeam.browser.is_supported){
                 new PNotify({
-                        title: "Browser not supported.",
-                        text: "Mr Beam II makes use of latest web technologies which are not fully support by your browser.<br/>Please use <a href='http://www.google.de/chrome/' target='_blank'>Google Chrome</a> for Mr Beam II.",
+                        title: gettext("Browser not supported."),
+                        text: _.sprintf(gettext("Mr Beam II makes use of latest web technologies which are not fully supported by your browser.%(br)sPlease use the latest version of%(br)s%(open)sGoogle Chrome%(close)s for Mr Beam II."), {br: "<br/>", open: '<a href=\'http://www.google.de/chrome/\' target=\'_blank\'>', close:'</a>'}),
                         type: 'warn',
                         hide: false
                     });

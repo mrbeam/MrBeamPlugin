@@ -13,11 +13,9 @@
 	</div>
 	<div id="calibration_step_2" class="calibration_step scrollable" data-bind="visible: !isInitialCalibration()" style="overflow-y: auto; height: calc(100vh - 100px);">
 		<div class='calibration_manual img' style='background-image:url(/plugin/mrbeam/static/img/cam_calibration/calpic_open_lid.svg)'></div>
-		<div class='calibration_manual text'>{{_('Wait until the engraving is finished and Mr Beam II illuminates green.\
-						Open the safety lid again')}}</div>
+		<div class='calibration_manual text'>{{_('Wait until the engraving is finished and Mr Beam II illuminates green. Open the safety lid again') }}</div>
 		<div class='calibration_manual img' style='background-image:url(/plugin/mrbeam/static/img/cam_calibration/calpic_dont_touch.svg)'></div>
-		<div class='calibration_manual text'>{{_('Do not touch the engraved material.\
-						The camera will now take a picture of the engraving.')}}</div>
+		<div class='calibration_manual text'>{{_('Do not touch the engraved material. The camera will now take a picture of the engraving.') }}</div>
 		<div>
 			<button class="btn btn-default" data-bind="click: continue_to_calibration">{{ _('Continue') }}</button>
 		</div>

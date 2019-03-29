@@ -2,14 +2,14 @@
 
 <div id="wizard_plugin_corewizard_wifi_netconnectd" data-bind="allowBindings: true">
 	<p>
-		<strong>Let's get your Mr Beam II connected to your wifi.</strong>
+		<strong>{{ _('Let\'s get your Mr Beam II connected to your wifi.') }}</strong>
 	</p>
 	<p>
-	    You can skip the wifi setup simply by clicking 'Next' without connecting to any wifi networks.
+	    {{ _('You can skip the wifi setup simply by clicking \'Next\' without connecting to any wifi networks.') }}
 	</p>
 
 	<div data-bind="visible: !hasDataLoaded()">
-		<p>Loading wifi data...</p>
+		<p>{{ _('Loading wifi data...') }}</p>
 	</div>
 
 	<div data-bind="visible: hasDataLoaded()">

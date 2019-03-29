@@ -21,7 +21,7 @@
 													<div data-bind="visible: state.isPrinting() || state.isPaused()">
 
 														<div>
-															<div id="job_printtime">Laser Time: <strong data-bind="text: state.printTimeString"></strong></div>
+															<div id="job_printtime">{{ _('Laser Time:') }} <strong data-bind="text: state.printTimeString"></strong>&nbsp;/ <span data-bind="text: readyToLaser.estimated_duration"></span></div>
 														</div>
 														<div class="progress progress-striped active">
 															<div class="bar" id="job_progressBar" data-bind="style: { width: state.progressString() + '%' }">&nbsp;{{ _('Processed') }} :  <strong data-bind="text: state.byteString"></strong></div>
@@ -67,12 +67,12 @@
 
 										<div id="mrb_control" class="accordion-inner" data-bind="visible: state.isReady() || state.isLocked() || state.isFlashing()">
 											<div data-bind="visible: state.isFlashing() ">
-												Firmware update in progress
+												{{ _('Firmware update in progress') }}
 												<div id="flashing_progress" class="progress progress-striped active" style="width: 100%;">
 													<div class="bar" style="width: 100%;"></div>
 												</div>
 												<span class="icon-exclamation-sign"></span>
-												Do not power off the Machine during the flashing process.
+												{{ _('Do not power off the Machine during the flashing process.') }}
 											</div>
 											<div data-bind="visible: !state.isLocked() && !state.isFlashing() ">
 											<div class="accordion-heading" id="mrb_state_header">
@@ -88,7 +88,7 @@
 												<div class="collapse" id="control_btns">
 
 													<div class="jog-panel" id="control_xyaxis">
-														XY-Axes
+														{{ _('XY-Axes') }}
 														<div>
 															<a id="control-yinc" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { control.sendJogCommand('y',1) }"><i class="icon-circle-arrow-up"></i></a>
 														</div>
@@ -104,7 +104,7 @@
 
 													<div class="jog-panel" id="control_zaxis">
 														<div data-bind="visible: control.showZAxis">
-															Z-Axis
+															{{ _('Z-Axis') }}
 															<div role="group" aria-label="z-axis control">
 																<a id="control-zinc" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { control.sendJogCommand('z',1) }"><i class="icon-chevron-sign-up"></i></a>
 																<a ic="control-zdec" data-bind="enable: state.isOperational() && !state.isPrinting() && loginState.isUser(), click: function() { control.sendJogCommand('z',-1) }"><i class="icon-chevron-sign-down"></i></a>
@@ -118,11 +118,12 @@
 													<div class="clearfix"></div>
 
 													<div class="distance">
-														Jog distance:
+														{{ _('Jog distance:') }}
+                                                        {# Translators: millimiters, unit of length #}
 														<input class="decent_input" type="number" min="0.1" max="100" step="10" id="jogDistance"
 															   data-bind="value: control.distance, valueUpdate: 'input'"
 															   style="width:3.5em; display: inline; margin: 0; padding-right:0;"
-														/> mm
+														/> {{ _('mm') }}
 													</div>
 												</div>
 											</div>
@@ -225,12 +226,12 @@
 																<i class="icon-copy" title="{{ _('duplicate') }}"></i>
 																<a href="#" data-bind="event: {
 																			click: function(d, event){ $root.duplicateSVG($data, event); }
-																		} ">duplicate</a>
+																		} ">{{ _('duplicate') }}</a>
 															</div>
 															<div class="misfit_warning">
 																<i class="icon-warning-sign" title="{{ _('exceeds working area') }}"></i>&nbsp;
-																<span>Design exceeds the working area.</span>
-																<a href="#" name="working_area_tab_make_it_fit" data-bind="click: function(){ $root.fitSVG($data) } ">Make it fit</a>
+																<span>{{ _('Design exceeds the working area.') }}</span>
+																<a href="#" name="working_area_tab_make_it_fit" data-bind="click: function(){ $root.fitSVG($data) } ">{{ _('Make it fit') }}</a>
 															</div>
 														</div>
 													</div>
@@ -274,8 +275,8 @@
 
 															<div class="misfit_warning" >
 																<i class="icon-warning-sign" title="{{ _('exceeds working area') }}"></i>&nbsp;
-																<span>Design exceeds the working area.</span>
-																<a href="#" name="working_area_tab_make_it_fit" data-bind="click: function(){ $root.fitSVG($data) } ">Make it fit</a>
+																<span>{{ _('Design exceeds the working area.') }}</span>
+																<a href="#" name="working_area_tab_make_it_fit" data-bind="click: function(){ $root.fitSVG($data) } ">{{ _('Make it fit') }}</a>
 															</div>
 														</div>
 													</div>
@@ -320,8 +321,8 @@
 
 															<div class="misfit_warning" >
 																<i class="icon-warning-sign" title="{{ _('exceeds working area') }}"></i>&nbsp;
-																<span>Design exceeds the working area.</span>
-																<a href="#" name="working_area_tab_make_it_fit" data-bind="click: function(){ $root.fitSVG($data) } ">Make it fit</a>
+																<span>{{ _('Design exceeds the working area.') }}</span>
+																<a href="#" name="working_area_tab_make_it_fit" data-bind="click: function(){ $root.fitSVG($data) } ">{{ _('Make it fit') }}</a>
 															</div>
 														</div>
 													</div>
@@ -365,8 +366,8 @@
 
 															<div class="misfit_warning" >
 																<i class="icon-warning-sign" title="{{ _('exceeds working area') }}"></i>&nbsp;
-																<span>Design exceeds the working area.</span>
-																<a href="#" name="working_area_tab_make_it_fit" data-bind="click: function(){ $root.fitSVG($data) } ">Make it fit</a>
+																<span>{{ _('Design exceeds the working area.') }}</span>
+																<a href="#" name="working_area_tab_make_it_fit" data-bind="click: function(){ $root.fitSVG($data) } ">{{ _('Make it fit') }}</a>
 															</div>
 														</div>
 													</div>

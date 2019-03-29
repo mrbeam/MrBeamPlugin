@@ -7,10 +7,15 @@ $(function () {
         self.analyticsInitialConsent = ko.observable(null);
         self.containsAnalyticsTab = false;
 
+        self.onAfterBinding = function() {
+            if(self.is_bound()) {
+                self.containsAnalyticsTab = true;
+            }
+        };
+
         self.onBeforeWizardTabChange = function(next, current) {
             if (next !== self.MY_WIZARD_TAB_NAME && current === self.MY_WIZARD_TAB_NAME) {
                 let result = self._handleAnalyticsTabExit();
-                self.containsAnalyticsTab = true;
                 return result;
             }
         };
@@ -26,7 +31,7 @@ $(function () {
              if (!self.analyticsInitialConsent()) {
                  showMessageDialog({
                      title: gettext("You need to select an option"),
-                     message: gettext("Please make a choice about analytics. <br/>You will be able to change it later in the settings if you want.")
+                     message: _.sprintf(gettext("Please make a choice about analytics.%(br)sYou will be able to change it later in the settings if you want."), {br: "<br/>"})
                  });
                  return false;
              }
@@ -47,12 +52,17 @@ $(function () {
                 .fail(function () {
                     console.error("Unable to save analytics state: ", data);
                     new PNotify({
-                        title: "Error while saving settings!",
-                        text: "Unable to save your analytics state at the moment.<br/>Check connection to Mr Beam II and try again.",
+                        title: gettext("Error while saving settings!"),
+                        text: _.sprintf(gettext("Unable to save your analytics state at the moment.%(br)sCheck connection to Mr Beam II and try again."), {br: "<br/>"}),
                         type: "error",
                         hide: true
                     });
                 });
+        };
+
+        self.is_bound = function(){
+            var elem = document.getElementById(DOM_ELEMENT_TO_BIND_TO);
+            return elem ? (!!ko.dataFor(elem)) : false;
         };
 
     }
