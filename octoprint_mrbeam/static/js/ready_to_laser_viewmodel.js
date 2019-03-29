@@ -137,7 +137,7 @@ $(function() {
                 self.onEventJobTimeEstimated = function (payload) {
 
                     self._fromData(payload, 'onEventJobTimeEstimated');
-                    self.formatJobTimeEstimation(payload['estimation'])
+                    self.formatJobTimeEstimation(payload['jobTimeEstimation'])
 
                 };
 

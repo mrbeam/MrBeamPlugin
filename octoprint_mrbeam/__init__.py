@@ -43,7 +43,7 @@ from octoprint_mrbeam.software_update_information import get_update_information,
 from octoprint_mrbeam.support import set_support_mode
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from .materials import materials
-from octoprint_mrbeam.gcodegenerator.estimation import Estimation
+from octoprint_mrbeam.gcodegenerator.jobtimeestimation import JobTimeEstimation
 
 
 
@@ -164,7 +164,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._ioBeam = ioBeamHandler(self._event_bus, self._settings.get(["dev", "sockets", "iobeam"]))
 		self._temperatureManager = temperatureManager()
 		self._dustManager = dustManager()
-		self.estimation = Estimation(self._event_bus)
+		self.jobTimeEstimation = JobTimeEstimation(self._event_bus)
 
 
 	def _do_initial_log(self):

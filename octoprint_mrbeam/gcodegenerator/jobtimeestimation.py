@@ -18,10 +18,10 @@ FIND_Y_VALUE = r"Y(\d+\.?\d+)"
 FIND_FEEDRATE = r"F(\d+\.?\d+)"
 
 
-class Estimation:
+class JobTimeEstimation:
 	def __init__(self, event_bus):
 		self._event_bus = event_bus
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.estimation")
+		self._logger = mrb_logger("octoprint.plugins.mrbeam.jobTimeEstimation")
 
 		self._subscribe()
 
@@ -48,7 +48,7 @@ class Estimation:
 
 		if event == OctoPrintEvents.SLICING_DONE:
 			estimation_thread = threading.Thread(target=self._calculate_estimation_threaded,
-												 name="estimation._calculate_estimation_threaded",
+												 name="jobTimeEstimation._calculate_estimation_threaded",
 												 args=(payload['gcode'],))
 			estimation_thread.daemon = True
 			estimation_thread.start()
@@ -69,7 +69,7 @@ class Estimation:
 			gcode_file = '{path}/{file}'.format(file=file_name, path=path)
 
 			payload = dict()
-			payload['estimation'] = self.estimate_job_duration(gcode_file)
+			payload['jobTimeEstimation'] = self.estimate_job_duration(gcode_file)
 			_mrbeam_plugin_implementation.fire_event(MrBeamEvents.JOB_TIME_ESTIMATED, payload)
 		except:
 			self._logger.exception("Error when calculating the job duration estimation")
