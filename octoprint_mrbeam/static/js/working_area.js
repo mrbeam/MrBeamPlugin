@@ -1109,7 +1109,28 @@ $(function(){
 			    self.check_sizes_and_placements();
 			}
 		};
-
+		self.imgManualAdjust = function(data, event) {
+			if (event.type === 'input' || event.type === 'blur' || event.type === 'keyUp') {
+				self.abortFreeTransforms();
+				var newContrast = $('#'+data.id+' .contrast').val(); // 0..2, 1 means no adjustment
+				var newBrightness = $('#'+data.id+' .brightness').val(); // -1..1, 0 means no adjustment
+				var newGamma = $('#'+data.id+' .gamma').val(); // // 0.2..1.8, 1 means no adjustment
+				var contrastVal = parseFloat(newContrast);
+				var brCorrection = (1 - contrastVal) / 2; // 0.5..-0.5 // TODO investigate if we should take gamma into account as well
+				var brightnessVal = parseFloat(newBrightness) + brCorrection;  
+				var gammaVal = parseFloat(newGamma); 
+				self.set_img_contrast(data.previewId, contrastVal, brightnessVal, gammaVal);
+			}
+		};
+		
+		self.imgManualSharpen = function(data, event) {
+			if (event.type === 'input' || event.type === 'blur' || event.type === 'keyUp') {
+				self.abortFreeTransforms();
+				var newVal = $('#'+data.id+' .sharpen').val(); // 0..10, 0 means no adjustment
+				var sharpenVal = parseFloat(newVal);
+				self.set_img_sharpen(data.previewId, sharpenVal);
+			}
+		};
 
 
 		self.outsideWorkingArea = function(svg){
@@ -1217,8 +1238,9 @@ $(function(){
 				var imgWrapper = snap.group();
 				var newImg = imgWrapper.image(url, 0, y, wMM, hMM); //.attr({transform: 'matrix(1,0,0,-1,0,'+hMM+')'});
 				var id = self.getEntryId();
-				newImg.attr({filter: 'url(#grayscale_filter)', 'data-serveurl': url});
 				var previewId = self.generateUniqueId(id, file); // appends # if multiple times the same design is placed.
+				self._create_img_filter(previewId);
+				newImg.attr({filter: 'url(#'+self._get_img_filter_id(previewId)+')', 'data-serveurl': url});
 				var imgWrapper = snap.group().attr({id: previewId, 'mb:id':self._normalize_mb_id(previewId), class: 'userIMG'});
 				imgWrapper.append(newImg);
 				snap.select("#userContent").append(imgWrapper);
@@ -1237,7 +1259,59 @@ $(function(){
 		};
 
 		self.removeIMG = function(file){
+			self._remove_img_filter(file.previewId);
 			self.removeSVG(file);
+		};
+		
+		self._create_img_filter = function(previewId){
+			var id = self._get_img_filter_id(previewId);
+			var str = "<feComponentTransfer class='contrast_filter' x='0%' y='0%' width='100%' height='100%' in='colormatrix' result='contrast_result'>"
+    		+ "<feFuncR type='gamma' amplitude='1' offset='0' exponent='1'/>"
+			+ "<feFuncG type='gamma' amplitude='1' offset='0' exponent='1'/>"
+			+ "<feFuncB type='gamma' amplitude='1' offset='0' exponent='1'/>"
+			+ "<feFuncA type='identity' />"
+			+ "</feComponentTransfer>"
+			+ "<feColorMatrix class='gray_scale_filter' type='saturate' values='0' x='0%' y='0%' width='100%' height='100%' in='contrast_result' result='gray_scale'/>"
+			+ "<feConvolveMatrix class='sharpening_filter' order='3 3' kernelMatrix='0 0 0 0 1 0 0 0 0' divisor='1' bias='0' targetX='1' targetY='1' edgeMode='duplicate' preserveAlpha='true' x='0%' y='0%' width='100%' height='100%' in='gray_scale' result='sharpened'/>"
+			;
+			snap.filter(str).attr({id: id});
+			return id;
+		};
+		
+		self._remove_img_filter = function(previewId){
+			var id =  self._get_img_filter_id(previewId);
+			var filter = snap.select('#'+id);
+			if(filter !== null) filter.remove();
+		}; 
+
+		self._get_img_filter_id = function(previewId){
+			return "filter_" + previewId.replace('-', '__');
+		};
+		
+		self.set_img_contrast = function(previewId, contrastValue, brightnessValue, gammaValue){
+			if(isNaN(contrastValue) || isNaN(brightnessValue) || isNaN(gammaValue)){
+				return;
+			}
+			var filter = snap.select('#'+self._get_img_filter_id(previewId));
+			filter.select('feFuncR').attr({amplitude: contrastValue, offset: brightnessValue, exponent: gammaValue});
+			filter.select('feFuncG').attr({amplitude: contrastValue, offset: brightnessValue, exponent: gammaValue});
+			filter.select('feFuncB').attr({amplitude: contrastValue, offset: brightnessValue, exponent: gammaValue});
+		};
+		
+		self.set_img_sharpen = function(previewId, value){
+			if(isNaN(value)){
+				return;
+			}
+			// 3x3 matrix (1px radius) looks like this:
+			// -i/9  -i/9  -i/9
+			// -i/9 1+8i/9 -i/9
+			// -i/9  -i/9  -i/9
+			// i is the intensity factor: 0..40, 0 means identity projection.
+			var n = -value / 9.0;
+			var c = 1 + 8 * value / 9.0;
+			var matrix = [n,n,n,n,c,n,n,n,n].join(' ');
+			var filter = snap.select('#'+self._get_img_filter_id(previewId));
+			filter.select('feConvolveMatrix').attr({kernelMatrix: matrix});
 		};
 
 		self.moveSelectedDesign = function(ifX,ifY){
@@ -1471,7 +1545,9 @@ $(function(){
 
 				var linedist = Math.floor(Math.max(self.workingAreaWidthMM(), self.workingAreaHeightMM()) / (max_lines * 10))*10;
 				var yPatternOffset = self.workingAreaHeightMM() % linedist;
-//				var yPatternOffset = 0;
+				if(isNaN(yPatternOffset)){
+					yPatternOffset = 0;
+				}
 
 				var marker = snap.circle(linedist/2, linedist/2, .5).attr({
 					fill: "#000000",
@@ -1541,10 +1617,12 @@ $(function(){
                     dels[i].remove();
                 }
             }
-
+			
             // embed the fonts as dataUris
-            $('#compSvg defs').append('<style id="quickTextFontPlaceholder" class="quickTextFontPlaceholder deleteAfterRendering"></style>');
-            self._qt_copyFontsToSvg(compSvg.select(".quickTextFontPlaceholder").node);
+			// TODO only if Quick Text is present
+			console.warn("debug disabled QT font copy");
+//            $('#compSvg defs').append('<style id="quickTextFontPlaceholder" class="quickTextFontPlaceholder deleteAfterRendering"></style>');
+//            self._qt_copyFontsToSvg(compSvg.select(".quickTextFontPlaceholder").node);
 
 			self.renderInfill(compSvg, fillAreas, cutOutlines, wMM, hMM, pxPerMM, function(svgWithRenderedInfill){
 				callback( self._wrapInSvgAndScale(svgWithRenderedInfill));
@@ -1582,7 +1660,7 @@ $(function(){
 
         self._normalize_mb_id = function(id) {
             return id ? id.replace(/\s/g, '_') : '';
-        }
+        };
 
         self.gc_options_as_string = function() {
             var gc_options = self.gc_options();
@@ -1799,16 +1877,16 @@ $(function(){
                 design.misfit = true;
                 $('#'+design.id).addClass('misfit');
                 svg.addClass('misfit');
-                svg.selectAll('*').forEach(function(e){e.addClass('misfit')})
+                svg.selectAll('*').forEach(function(e){e.addClass('misfit');});
                 svg.data('fitMatrix', fitMatrix);
             } else {
                 design.misfit = false;
                 $('#'+design.id).removeClass('misfit');
                 svg.removeClass('misfit');
-                svg.selectAll('*').forEach(function(e){e.removeClass('misfit')})
+                svg.selectAll('*').forEach(function(e){e.removeClass('misfit');});
                 svg.data('fitMatrix', null);
             }
-		}
+		};
 
 		self._embedAllImages = function(svg, callback){
 
@@ -1844,23 +1922,42 @@ $(function(){
 			var wPT = wMM * 90 / 25.4;
 			var hPT = hMM * 90 / 25.4;
 			var tmpSvg = self.getNewSvg('tmpSvg', wPT, hPT);
-			var attrs = {viewBox: "0 0 " + wMM + " " + hMM};
+			
+			var tmpSvg = svg.clone();
+			var attrs = {
+				id: "tmpSvg", 
+				width: wPT, 
+				height: hPT, 
+				viewBox: "0 0 " + wMM + " " + hMM,
+				'xmlns': 'http://www.w3.org/2000/svg',
+				'xmlns:mb': 'http://www.mr-beam.org/mbns',
+				'xmlns:xlink': 'http://www.w3.org/1999/xlink'
+			};
 			tmpSvg.attr(attrs);
-			// get only filled items and embed the images
-			var userContent = svg.clone();
-			tmpSvg.append(userContent);
+			
+			// copy defs for filters
+			var originalFilters = snap.selectAll('defs>filter');
+			var target = tmpSvg.select('defs');
+			for (var i = 0; i < originalFilters.length; i++) {
+				var original_id = originalFilters[i].attr('id');
+				var clone = originalFilters[i].clone();
+				var destFilter = clone.appendTo(target);
+				// restore id to keep references working
+				destFilter.attr({id: original_id});				
+			}
+			
 			self._embedAllImages(tmpSvg, function(){
-				var fillings = userContent.removeUnfilled(fillAreas);
+				var fillings = tmpSvg.removeUnfilled(fillAreas);
 				for (var i = 0; i < fillings.length; i++) {
 					var item = fillings[i];
 
 					var style = item.attr('style');
 					if (item.type === 'image' || item.type === "text" || item.type === "#text") {
 						// remove filter effects on images for proper rendering
-						if (style !== null) {
-							var strippedFilters = style.replace(/filter.+?;/g, '');
-							item.attr('style', strippedFilters);
-						}
+//						if (style !== null) {
+//							var strippedFilters = style.replace(/filter.+?;/g, '');
+//							item.attr('style', strippedFilters);
+//						}
 					} else {
 						// remove stroke from other elements
 						var styleNoStroke = 'stroke: none;';
