@@ -40,6 +40,7 @@ from octoprint_mrbeam.printing.profile import laserCutterProfileManager, Invalid
 from octoprint_mrbeam.software_update_information import get_update_information, SW_UPDATE_TIER_PROD
 from octoprint_mrbeam.support import set_support_mode
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
+from octoprint_mrbeam.cli import get_cli_commands
 from .materials import materials
 from octoprint_mrbeam.gcodegenerator.jobtimeestimation import JobTimeEstimation
 
@@ -1271,7 +1272,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			lasersafety_confirmation=[],
 			camera_calibration_markers=["result"],
 			ready_to_laser=[],
-			debug_event=["event"],
+			cli_event=["event"],
 			custom_materials=[],
 			analytics_init=[],
 			take_undistorted_picture=[],  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
@@ -1301,8 +1302,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		elif command == "take_undistorted_picture":
 			# see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
 			return self.take_undistorted_picture(is_initial_calibration=False)
-		elif command == "debug_event":
-			return self.debug_event(data)
+		elif command == "cli_event":
+			return self.cli_event(data)
 		elif command == "analytics_init":
 			return self.analytics_init(data)
 		elif command == "focus_reminder":
@@ -1319,10 +1320,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._settings.save()	# This is necessary because without it the value is not saved
 
 
-	def debug_event(self, data):
+	def cli_event(self, data):
 		event = data['event']
 		payload = data['payload'] if 'payload' in data else None
-		self._logger.info("Firing debug event: %s, payload: %s", event, payload)
+		self._logger.info("Firing cli_event: %s, payload: %s", event, payload)
 		self._event_bus.fire(event, payload)
 		return NO_CONTENT
 
@@ -1980,44 +1981,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return False
 
 
-# # this is for the command line interface we're providing
-# def clitest_commands(cli_group, pass_octoprint_ctx, *args, **kwargs):
-# 	import click
-# 	import sys
-# 	import requests.exceptions
-# 	import octoprint_client as client
-#
-# 	# > octoprint plugins mrbeam:debug_event MrBeamDebugEvent -p 42
-# 	# remember to activate venv where MrBeamPlugin is installed in
-# 	@click.command("debug_event")
-# 	@click.argument("event", default="MrBeamDebugEvent")
-# 	@click.option("--payload", "-p", default=None, help="optinal payload string")
-# 	@click.pass_context
-# 	def debug_event_command(ctx, event, payload):
-# 		if payload is not None:
-# 			payload_numer = None
-# 			try:
-# 				payload_numer = int(payload)
-# 			except:
-# 				try:
-# 					payload_numer = float(payload)
-# 				except:
-# 					pass
-# 			if payload_numer is not None:
-# 				payload = payload_numer
-#
-# 		params = dict(command="debug_event", event=event, payload=payload)
-# 		# client.init_client(cli_group.settings)
-#
-# 		click.echo("Firing debug event - params: {}".format(params))
-# 		r = client.post_json("/api/plugin/mrbeam", data=params)
-# 		try:
-# 			r.raise_for_status()
-# 		except requests.exceptions.HTTPError as e:
-# 			click.echo("Could not fire event, got {}".format(e))
-# 			sys.exit(1)
-#
-# 	return [debug_event_command]
 
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
@@ -2074,8 +2037,8 @@ def __plugin_load__():
 		"octoprint.printer.factory": __plugin_implementation__.laser_factory,
 		"octoprint.filemanager.extension_tree": __plugin_implementation__.laser_filemanager,
 		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
-		"octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook
-		# "octoprint.cli.commands": clitest_commands
+		"octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook,
+		"octoprint.cli.commands": get_cli_commands
 
 	}
 
