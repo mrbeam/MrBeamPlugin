@@ -7,6 +7,7 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 # singleton
 _instance = None
 
+
 def dustManager():
 	global _instance
 	if _instance is None:
@@ -64,7 +65,6 @@ class DustManager(object):
 		self.extraction_limit = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['dust']['extraction_limit']
 		self.auto_mode_time = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['dust']['auto_mode_time']
 
-
 		self._logger.debug("initialized!")
 
 	def get_fan_state(self):
@@ -114,9 +114,10 @@ class DustManager(object):
 			err = True
 
 		self._connected = args['connected']
+		"""
 		if self._connected is not None:
 			self._unboost_timer_interval()
-
+		"""
 		if not err:
 			self._data_ts = time.time()
 
@@ -135,10 +136,10 @@ class DustManager(object):
 	def _onEvent(self, event, payload):
 		if event in (OctoPrintEvents.SLICING_DONE, MrBeamEvents.READY_TO_LASER_START, OctoPrintEvents.PRINT_STARTED):
 			self._start_dust_extraction()
-			self._boost_timer_interval()
+			# self._boost_timer_interval()
 		elif event == MrBeamEvents.READY_TO_LASER_CANCELED:
 			self._stop_dust_extraction()
-			self._unboost_timer_interval()
+			# self._unboost_timer_interval()
 		elif event in (OctoPrintEvents.PRINT_DONE, OctoPrintEvents.PRINT_FAILED, OctoPrintEvents.PRINT_CANCELLED):
 			self._last_event = event
 			self._do_end_dusting()
@@ -284,12 +285,14 @@ class DustManager(object):
 		# TODO: check for error case in connected val (currently, connected == True/False/None)
 		return result
 
+	'''
 	def _request_value(self, value):
 		return _mrbeam_plugin_implementation._ioBeam.send_fan_command(value)
+	'''
 
 	def _timer_callback(self):
 		try:
-			self._request_value(self.DATA_TYPE_DYNAMIC)
+			# self._request_value(self.DATA_TYPE_DYNAMIC)
 			self._validate_values()
 			self._start_timer(delay=self._timer_interval)
 		except:

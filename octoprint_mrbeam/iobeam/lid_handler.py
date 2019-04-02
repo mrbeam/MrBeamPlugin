@@ -28,6 +28,7 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 # singleton
 _instance = None
 
+
 def lidHandler(plugin):
 	global _instance
 	if _instance is None:
@@ -98,17 +99,17 @@ class LidHandler(object):
 	def is_lid_open(self):
 		return not self._lid_closed
 
-	def _printerStateChanged(self,event,payload):
+	def _printerStateChanged(self, event, payload):
 		if payload['state_string'] == 'Operational':
 			# TODO CHECK IF CLIENT IS CONNECTED FOR REAL, with PING METHOD OR SIMILAR
 			self._client_opened = True
 			self._startStopCamera(event)
 
-	def _onSlicingEvent(self,event,payload):
+	def _onSlicingEvent(self, event, payload):
 		self._is_slicing = (event == OctoPrintEvents.SLICING_STARTED)
 		self._startStopCamera(event)
 
-	def _startStopCamera(self,event):
+	def _startStopCamera(self, event):
 		if self._photo_creator is not None and self.camEnabled:
 			if event in (IoBeamEvents.LID_CLOSED, OctoPrintEvents.SLICING_STARTED, OctoPrintEvents.CLIENT_CLOSED):
 				self._logger.info('Camera stopping...: event: {}, client_opened {}, is_slicing: {}, lid_closed: {}, printer.is_locked(): {}, save_debug_images: {}'.format(

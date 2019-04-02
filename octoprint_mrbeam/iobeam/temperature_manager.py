@@ -11,17 +11,19 @@ from octoprint_mrbeam.analytics.analytics_handler import analyticsHandler
 # singleton
 _instance = None
 
+
 def temperatureManager():
 	global _instance
 	if _instance is None:
 		_instance = TemperatureManager()
 	return _instance
 
+
 # This guy manages the temperature of the laser head
 class TemperatureManager(object):
 
 	TEMP_TIMER_INTERVAL = 3
-	TEMP_MAX_AGE = 10 # seconds
+	TEMP_MAX_AGE = 10  # seconds
 
 	def __init__(self):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.temperaturemanager")
@@ -80,12 +82,14 @@ class TemperatureManager(object):
 		self._check_temp_val()
 		analyticsHandler(_mrbeam_plugin_implementation).add_laser_temp_value(self.temperature)
 
+	'''
 	def request_temp(self):
 		"""
 		Send a temperature request to iobeam
 		:return: True if sent successfully, False otherwise.
 		"""
 		return _mrbeam_plugin_implementation._ioBeam.send_temperature_request()
+	'''
 
 	def cooling_stop(self):
 		"""
@@ -110,7 +114,7 @@ class TemperatureManager(object):
 		return self.temperature
 
 	def is_cooling(self):
-		return (self.is_cooling_since is not None and self.is_cooling_since > 0)
+		return self.is_cooling_since is not None and self.is_cooling_since > 0
 
 	def is_temperature_recent(self):
 		if self.temperature is None:
@@ -127,7 +131,7 @@ class TemperatureManager(object):
 	def _temp_timer_callback(self):
 		try:
 			if not self._shutting_down:
-				self.request_temp()
+				# self.request_temp()
 				self._stop_if_temp_is_not_current()
 				self._start_temp_timer()
 		except:
