@@ -49,7 +49,7 @@ $(function(){
                 }else if(data['beam_cam_new_image']['error'] === "NO_CALIBRATION: Marker Calibration Needed" && !self.needsCalibration){
                     self.needsCalibration = true;
                     new PNotify({
-                        title: gettext("Calibration Needed"),
+                        title: gettext("Calibration needed"),
                         text: gettext("Please calibrate the camera under Settings -> Camera Calibration"),
                         type: "warning",
                         tag: "calibration_needed",
