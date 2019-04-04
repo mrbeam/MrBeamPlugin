@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-04-04 12:57+0200\n"
-"PO-Revision-Date: 2019-04-04 12:58+0200\n"
+"POT-Creation-Date: 2019-04-04 13:50+0200\n"
+"PO-Revision-Date: 2019-04-04 13:50+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de\n"
@@ -782,8 +782,6 @@ msgid "Manage materials"
 msgstr "Materialien verwalten"
 
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:22
-#: octoprint_mrbeam/templates/quick_shape.jinja2:109
-#: octoprint_mrbeam/templates/quick_text.jinja2:19
 msgid "Done"
 msgstr "Erledigt"
 
@@ -1304,6 +1302,8 @@ msgid "Almost done..."
 msgstr "Fast fertig..."
 
 #: octoprint_mrbeam/templates/laser_job_done.jinja2:39
+#: octoprint_mrbeam/templates/quick_shape.jinja2:109
+#: octoprint_mrbeam/templates/quick_text.jinja2:19
 msgid "OK"
 msgstr "OK"
 

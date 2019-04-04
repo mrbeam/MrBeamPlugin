@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-04-04 12:57+0200\n"
+"POT-Creation-Date: 2019-04-04 13:50+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -681,8 +681,6 @@ msgid "Manage materials"
 msgstr ""
 
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:22
-#: octoprint_mrbeam/templates/quick_shape.jinja2:109
-#: octoprint_mrbeam/templates/quick_text.jinja2:19
 msgid "Done"
 msgstr ""
 
@@ -1132,6 +1130,8 @@ msgid "Almost done..."
 msgstr ""
 
 #: octoprint_mrbeam/templates/laser_job_done.jinja2:39
+#: octoprint_mrbeam/templates/quick_shape.jinja2:109
+#: octoprint_mrbeam/templates/quick_text.jinja2:19
 msgid "OK"
 msgstr ""
 
