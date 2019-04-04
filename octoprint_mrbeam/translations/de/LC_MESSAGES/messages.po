@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2019-04-04 13:50+0200\n"
-"PO-Revision-Date: 2019-04-04 13:50+0200\n"
+"PO-Revision-Date: 2019-04-04 13:58+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de\n"
@@ -1239,13 +1239,10 @@ msgstr ""
 msgid "Don't remind me again"
 msgstr "Erinnere mich nicht mehr"
 
-# vorherige Übersetzung lautete:
-# "Vergaß"
-# andere Option wäre:
-# "Das habe ich vergessen"
+# vergessen… passt
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:422
 msgid "I forgot"
-msgstr "Ich habe vergessen"
+msgstr "vergessen…"
 
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:427
 msgid "It's focused!"
@@ -1273,7 +1270,7 @@ msgstr "Staubabsaugung"
 
 #: octoprint_mrbeam/templates/laser_job_done.jinja2:17
 msgid "Laser Job Finished"
-msgstr "Laserjob fertiggestellt"
+msgstr "Laserjob fertig"
 
 #: octoprint_mrbeam/templates/laser_job_done.jinja2:29
 msgid ""
@@ -1285,9 +1282,7 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/laser_job_done.jinja2:30
 msgid "Done. Now check out what you have created with your Mr Beam II!"
-msgstr ""
-"Erledigt. Schauen Sie sich nun an, was Sie mit Ihrem Mr Beam II geschaffen "
-"haben!"
+msgstr "Fertig. Schau dir an, was Du mit Deinem Mr Beam II kreiert hast!"
 
 #: octoprint_mrbeam/templates/laser_job_done.jinja2:32
 msgid "Laser job duration:"
@@ -2750,13 +2745,14 @@ msgstr "Nein, ich möchte lieber keine Analysedaten teilen."
 msgid "You can change you choice in the settings menu whenever you want ;)"
 msgstr "Du kannst deine Auswahl jederzeit im Einstellungsmenü ändern ;)"
 
+# up-to-date mag ich
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:4
 msgid ""
 "Welcome to the latest version of the Mr Beam II software<br/>\n"
 "    and thank you for keeping your Mr Beam II up to date."
 msgstr ""
 "Willkommen bei neuesten Verision der Mr Beam II Software<br/>\n"
-"    und danke, dass du deinen Mr Beam II up to date hälst."
+"    und danke, dass du Deinen Mr Beam II up-to-date hälst."
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:8
 msgid ""
@@ -2784,7 +2780,7 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/wizard/wizard_wifi.jinja2:12
 msgid "Loading wifi data..."
-msgstr "Laden von WiFi-Daten..."
+msgstr "Lade WLAN-Daten..."
 
 #: octoprint_mrbeam/templates/wizard/wizard_wifi.jinja2:17
 msgid "Connection state"
