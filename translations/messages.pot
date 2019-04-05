@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-04-04 13:50+0200\n"
+"POT-Creation-Date: 2019-04-05 11:54+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1812,7 +1812,7 @@ msgid "Firmware update in progress"
 msgstr ""
 
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:75
-msgid "Do not power off the Machine during the flashing process."
+msgid "Do not power off the machine during the flashing process."
 msgstr ""
 
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:80
@@ -1977,35 +1977,35 @@ msgid "Mr Beam II"
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:13
-msgid "Name:"
+msgid "Name"
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:14
-msgid "Serial:"
+msgid "Serial number"
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:16
-msgid "Laser head:"
+msgid "Laser head"
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:26
-msgid "Mr Beam Plugin:"
+msgid "Mr Beam Plugin"
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:28
-msgid "Image fingerprint:"
+msgid "Image fingerprint"
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:29
-msgid "Software tier:"
+msgid "Software channel"
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:30
-msgid "Environment:"
+msgid "Environment"
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:31
-msgid "grbl:"
+msgid "grbl"
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:37
@@ -2013,7 +2013,7 @@ msgid "Documentation, Support and Privacy"
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:40
-msgid "References:"
+msgid "References"
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:43
@@ -2025,15 +2025,15 @@ msgid "online"
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:45
-msgid "Online Support Portal:"
+msgid "Online Support Portal"
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:46
-msgid "Community Forum:"
+msgid "Community Forum"
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:47
-msgid "Privacy Policies:"
+msgid "Privacy Policies"
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:48
@@ -2041,6 +2041,7 @@ msgid "Mr Beam Web Site"
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:49
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:71
 msgid "find.mr-beam service"
 msgstr ""
 
@@ -2059,19 +2060,15 @@ msgid "Links"
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:61
-msgid "Website:"
+msgid "Website"
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:62
-msgid "Social media:"
-msgstr ""
-
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:71
-msgid "find.mr-beam service:"
+msgid "Social media"
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:72
-msgid "Online resources:"
+msgid "Online resources"
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:72
@@ -2079,7 +2076,7 @@ msgid "Mr Beam Downloads"
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:73
-msgid "Source code:"
+msgid "Source code"
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:16
@@ -2352,11 +2349,11 @@ msgstr ""
 msgid ""
 "<p>\n"
 "    <strong>Please read the following, it is very important for the "
-"security of your Mr Beam 2!</strong>\n"
+"security of your Mr Beam II!</strong>\n"
 "</p>\n"
 "<p>\n"
-"    Your Mr Beam 2 is configured with a Access Control, meaning you won't"
-" be able to do anything with the\n"
+"    Your Mr Beam II is configured with a Access Control, meaning you "
+"won't be able to do anything with the\n"
 "    laser cutter unless you login first as a configured user. This is to "
 "<strong>prevent strangers - possibly with\n"
 "    malicious intent - to gain access to your laser cutter</strong> via "
@@ -2367,7 +2364,7 @@ msgid ""
 "<p>\n"
 "    Please <strong>set up a user account with a password</strong> as the "
 "initial administrator account which will have full access to the Mr Beam "
-"2:\n"
+"II:\n"
 "</p>"
 msgstr ""
 
