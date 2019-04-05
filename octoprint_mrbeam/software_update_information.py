@@ -9,6 +9,7 @@ from util.pip_util import get_version_of_pip_module
 
 SW_UPDATE_TIER_PROD =      "PROD"
 SW_UPDATE_TIER_DEV =       "DEV"
+SW_UPDATE_TIER_BETA =      "BETA"
 SW_UPDATE_TIER_DEMO =      "DEMO"
 SW_UPDATE_TIER_NO_UPDATE = "NO_UPDATE"
 
@@ -32,26 +33,61 @@ def get_update_information(self):
 	tier = self._settings.get(["dev", "software_tier"])
 	_logger.info("SoftwareUpdate using tier: %s", tier)
 
-	config_octoprint(self, tier)
+	_config_octoprint(self, tier)
 
 	if not tier in [SW_UPDATE_TIER_NO_UPDATE]:
 
-		set_info_mrbeam_plugin(self, tier)
-		set_info_netconnectd_plugin(self, tier)
-		set_info_findmymrbeam(self, tier)
-		set_info_mrbeamledstrips(self, tier)
-		set_info_netconnectd_daemon(self, tier)
-		set_info_iobeam(self, tier)
-		set_info_camera_calibration(self, tier)
-		set_info_mrb_hw_info(self, tier)
-		set_info_rpiws281x(self, tier)
+		_set_info_mrbeam_plugin(self, tier)
+		_set_info_netconnectd_plugin(self, tier)
+		_set_info_findmymrbeam(self, tier)
+		_set_info_mrbeamledstrips(self, tier)
+		_set_info_netconnectd_daemon(self, tier)
+		_set_info_iobeam(self, tier)
+		_set_info_camera_calibration(self, tier)
+		_set_info_mrb_hw_info(self, tier)
+		_set_info_rpiws281x(self, tier)
 		# set_info_testplugin(self, tier) # See function definition for more details
 
 	# _logger.debug("MrBeam Plugin provides this config (might be overridden by settings!):\n%s", yaml.dump(sw_update_config, width=50000).strip())
 	return sw_update_config
 
 
-def config_octoprint(self, tier):
+def software_channels_available(plugin):
+	res = [dict(id=SW_UPDATE_TIER_PROD, name="Stable"),
+	        dict(id=SW_UPDATE_TIER_BETA, name="Beta")]
+	if plugin.is_dev_env():
+		res.extend([dict(id=SW_UPDATE_TIER_DEV, name="Develop"),
+		            dict(id=SW_UPDATE_TIER_NO_UPDATE, name="No Update")])
+	return res
+
+
+def switch_software_channel(plugin, channel):
+	if channel in (SW_UPDATE_TIER_PROD, SW_UPDATE_TIER_BETA) or \
+		(plugin.is_dev_env() and channel in (SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_NO_UPDATE)):
+
+		logger.info("Switching software channel to: %s", channel)
+		plugin._settings.set(["dev", "software_tier"], channel)
+
+		try:
+			sw_update_plugin = plugin._plugin_manager.get_plugin_info("softwareupdate").implementation
+			sw_update_plugin._refresh_configured_checks = True
+
+			del sw_update_plugin._version_cache["mrbeam"]
+			del sw_update_plugin._version_cache["netconnectd"]
+			del sw_update_plugin._version_cache["findmymrbeam"]
+			del sw_update_plugin._version_cache["mrbeam-ledstrips"]
+			del sw_update_plugin._version_cache["netconnectd-daemon"]
+			del sw_update_plugin._version_cache["iobeam"]
+			del sw_update_plugin._version_cache["mb-camera-calibration"]
+			del sw_update_plugin._version_cache["mrb_hw_info"]
+			# del sw_update_plugin._version_cache["rpi-ws281x"]
+
+			sw_update_plugin._version_cache_dirty = True
+		except:
+			_logger.exception("Exception while switching software channel: ")
+
+
+def _config_octoprint(self, tier):
 	op_swu_keys = ['plugins', 'softwareupdate', 'checks', 'octoprint']
 
 	self._settings.global_set(op_swu_keys + ['checkout_folder'], '/home/pi/OctoPrint')
@@ -65,7 +101,7 @@ def config_octoprint(self, tier):
 		self._settings.global_set_boolean(op_swu_keys + ['prerelease'], False)
 
 
-def set_info_mrbeam_plugin(self, tier):
+def _set_info_mrbeam_plugin(self, tier):
 	name = "MrBeam Plugin"
 	module_id = "mrbeam"
 
@@ -106,7 +142,7 @@ def set_info_mrbeam_plugin(self, tier):
 			restart="octoprint")
 
 
-def set_info_netconnectd_plugin(self, tier):
+def _set_info_netconnectd_plugin(self, tier):
 	name = "OctoPrint-Netconnectd Plugin"
 	module_id = "netconnectd"
 
@@ -140,7 +176,7 @@ def set_info_netconnectd_plugin(self, tier):
 			restart="octoprint")
 
 
-def set_info_findmymrbeam(self, tier):
+def _set_info_findmymrbeam(self, tier):
 	name = "OctoPrint-FindMyMrBeam"
 	module_id = "findmymrbeam"
 
@@ -174,7 +210,7 @@ def set_info_findmymrbeam(self, tier):
 			restart="octoprint")
 
 
-def set_info_mrbeamledstrips(self, tier):
+def _set_info_mrbeamledstrips(self, tier):
 	name = "MrBeam LED Strips"
 	module_id = "mrbeam-ledstrips"
 	# ths module is installed outside of our virtualenv therefor we can't use default pip command.
@@ -225,7 +261,7 @@ def set_info_mrbeamledstrips(self, tier):
 			restart="environment")
 
 
-def set_info_netconnectd_daemon(self, tier):
+def _set_info_netconnectd_daemon(self, tier):
 	name = "Netconnectd Daemon"
 	module_id = "netconnectd-daemon"
 	# ths module is installed outside of our virtualenv therefor we can't use default pip command.
@@ -252,7 +288,7 @@ def set_info_netconnectd_daemon(self, tier):
 
 
 
-def set_info_iobeam(self, tier):
+def _set_info_iobeam(self, tier):
 	name = "iobeam"
 	module_id = "iobeam"
 	# this module is installed outside of our virtualenv therefor we can't use default pip command.
@@ -296,7 +332,7 @@ def set_info_iobeam(self, tier):
 			restart="environment"
 		)
 
-def set_info_camera_calibration(self, tier):
+def _set_info_camera_calibration(self, tier):
 	name = "mb_camera_calibration"
 	module_id = "mb-camera-calibration"
 	pip_name = module_id
@@ -337,7 +373,7 @@ def set_info_camera_calibration(self, tier):
 			restart="octoprint"
 		)
 
-def set_info_mrb_hw_info(self, tier):
+def _set_info_mrb_hw_info(self, tier):
 	name = "mrb_hw_info"
 	module_id = "mrb_hw_info"
 	# this module is installed outside of our virtualenv therefor we can't use default pip command.
@@ -382,7 +418,7 @@ def set_info_mrb_hw_info(self, tier):
 		)
 
 
-def set_info_rpiws281x(self, tier):
+def _set_info_rpiws281x(self, tier):
 	name = "rpi-ws281x"
 	module_id = "rpi-ws281x"
 

@@ -37,7 +37,7 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
 from octoprint_mrbeam.migrate import migrate
 from octoprint_mrbeam.printing.profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
-from octoprint_mrbeam.software_update_information import get_update_information, SW_UPDATE_TIER_PROD
+from octoprint_mrbeam.software_update_information import get_update_information, switch_software_channel, software_channels_available, SW_UPDATE_TIER_PROD
 from octoprint_mrbeam.support import set_support_mode
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.cli import get_cli_commands
@@ -68,7 +68,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	DEVIE_INFO_FILE = '/etc/mrbeam'
 
 	ENV_PROD =         "PROD"
+	ENV_DEV  =         "DEV"
 
+	# local envs are deprecated
 	ENV_LOCAL =        "local"
 	ENV_LASER_SAFETY = "laser_safety"
 	ENV_ANALYTICS =    "analytics"
@@ -244,12 +246,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				terminalMaxLines = 2000,
 				env = self.ENV_PROD,
 				load_gremlins = False,
-				# env_overrides = dict(
-				# 	analytics = "DEV",
-				# 	laser_safety = "DEV",
-				# 	local =  "DEV"
-				# ),
 				software_tier = SW_UPDATE_TIER_PROD,
+				software_tiers_available = software_channels_available(self),
 				iobeam_disable_warnings = False, # for develpment on non-MrBeam devices
 				suppress_migrations = False,     # for develpment on non-MrBeam devices
 				support_mode = False,
@@ -286,7 +284,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				small_paths_first = True,
 				clip_working_area = True # https://github.com/mrbeam/MrBeamPlugin/issues/134
 			),
-			grbl_version_lastknown=None
+			grbl_version_lastknown=None,
 		)
 
 	def on_settings_load(self):
@@ -344,7 +342,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			if "focusReminder" in data:
 				self._settings.set_boolean(["focusReminder"], data["focusReminder"])
 			if "dev" in data and "software_tier" in data['dev']:
-				self._settings.set(["dev", "software_tier"], data["dev"]["software_tier"])
+				switch_software_channel(self, data["dev"]["software_tier"])
 		except Exception as e:
 			self._logger.exception("Exception in on_settings_save() ")
 			raise e
@@ -1875,8 +1873,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def is_prod_env(self, type=None):
 		return self.get_env(type).upper() == self.ENV_PROD
 
+	def is_dev_env(self, type=None):
+		return self.get_env(type).upper() == self.ENV_DEV
+
 	def get_env(self, type=None):
-		result = self._settings.get(["dev", "env"])
+		result = self._settings.get(["dev", "env"]).upper()
 		if type is not None:
 			if type == self.ENV_LASER_SAFETY:
 				type_env = self._settings.get(["dev", "cloud_env"]) # deprected flag
