@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2019-04-05 11:54+0200\n"
-"PO-Revision-Date: 2019-04-05 12:09+0200\n"
+"PO-Revision-Date: 2019-04-05 12:57+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de\n"
@@ -1318,9 +1318,9 @@ msgid ""
 "Heads up! Read the following, it is very important for your and other's "
 "health!"
 msgstr ""
-"Achtung! Um Deine eigene als auch die Gesundheit Anderer beim Betrieb des Mr "
-"Beam II zu schützen, lies die folgenden Hinweise sorgfältig und aufmerksam "
-"durch!"
+"Achtung! Um ihre eigene als auch die Gesundheit Anderer beim Betrieb des Mr "
+"Beam II zu schützen, lesen sie die folgenden Hinweise sorgfältig und "
+"aufmerksam durch!"
 
 # Laser Safety Notes!
 #: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:23
@@ -1333,7 +1333,7 @@ msgid ""
 "Your lasercutter is classified as a Class 1 laser product according to "
 "IEC60825. "
 msgstr ""
-"Dein Mr Beam II Laserschneider ist nach IEC60825 als Laserprodukt der Klasse "
+"Ihr Mr Beam II Laserschneider ist nach IEC60825 als Laserprodukt der Klasse "
 "1 eingestuft. "
 
 # Laser Safety Notes!
@@ -1376,8 +1376,8 @@ msgid ""
 "Keep the safety housing and the safety lid <strong>always</strong> in "
 "excellent condition."
 msgstr ""
-"Achte darauf, das Sicherheitsgehäuse und den Sicherheitsdeckel "
-"<strong>immer</strong> in einwandfreiem Zustand zu halten."
+"Halten sie das Sicherheitsgehäuse und den Sicherheitsdeckel <strong>immer</"
+"strong> in einwandfreiem Zustand."
 
 # Laser Safety Notes!umgehe
 #: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:38
@@ -1386,9 +1386,9 @@ msgid ""
 "safety lid, safety switches or any other safety related device on your "
 "lasercutter."
 msgstr ""
-"Verändere, deaktiviere oder umgehe <strong>niemals</strong> das "
+"Verändern, deaktivieren oder umgehen sie <strong>niemals</strong> das "
 "Sicherheitsgehäuse, den Sicherheitsdeckel, die Sicherheitsschalter oder "
-"andere sicherheitsrelevante Vorrichtungen an Deinem Lasercutter."
+"andere sicherheitsrelevante Vorrichtungen an ihrem Lasercutter."
 
 # Laser Safety Notes!
 #: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:39
@@ -1396,30 +1396,30 @@ msgid ""
 "Damaged or modified devices are not allowed to use. Ask a certified service "
 "engineer to repair them immediately."
 msgstr ""
-"Beschädigte oder modifizierte Geräte dürfen nicht verwendet werden. Bitte "
-"einen zertifizierten Servicetechniker, diese <strong>sofort</strong> zu "
+"Beschädigte oder modifizierte Geräte dürfen nicht verwendet werden. Bitten "
+"sie einen zertifizierten Servicetechniker, diese <strong>sofort</strong> zu "
 "reparieren."
 
 # Laser Safety Notes!
 #: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:40
 msgid "Be <strong>always</strong> responsible regarding yourself and others."
 msgstr ""
-"Handle <strong>immer</strong> verantwortungsbewusst Dir selbst und Anderen "
-"gegenüber."
+"Handeln sie <strong>immer</strong> verantwortungsbewusst gegenüber sich "
+"selbst und Anderen."
 
 # Laser Safety Notes!
 #: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:41
 msgid "<strong>Never</strong> leave the device unattended during operation. "
 msgstr ""
-"Lasse das Gerät während des Betriebs <strong>niemals</strong> "
+"Lassen sie das Gerät während des Betriebs <strong>niemals</strong> "
 "unbeaufsichtigt. "
 
 # Laser Safety Notes!
 #: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:42
 msgid "<strong>Never</strong> run the device without proper exhaust system."
 msgstr ""
-"Betreibe das Gerät <strong>niemals</strong> ohne geeignete Abluftfilterung "
-"bzw. Abluftanlage."
+"Betreiben sie das Gerät <strong>niemals</strong> ohne geeignete "
+"Abluftfilterung bzw. Abluftanlage."
 
 # Laser Safety Notes!
 #: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:43
@@ -1436,7 +1436,7 @@ msgid ""
 "In closed rooms it is <strong>always</strong> necessary to filter the "
 "exhausted air."
 msgstr ""
-"Während des Betriebs in geschlossenen Räumen, muss die Abluft <strong>immer</"
+"Während des Betriebs in geschlossenen Räumen muss die Abluft <strong>immer</"
 "strong> geeignet gefiltert werden, bevor sie wieder in den Raum gelangt."
 
 # Laser Safety Notes!
@@ -1445,15 +1445,15 @@ msgid ""
 "<strong>Never</strong> put reflecting or mirroring or flammable materials "
 "under the laser."
 msgstr ""
-"Lege <strong>niemals</strong> reflektierende, spiegelnde, leicht "
+"Legen sie <strong>niemals</strong> reflektierende, spiegelnde, leicht "
 "entzündliche oder explosive Materialien in den Lasercutter."
 
 # Laser Safety Notes!
 #: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:46
 msgid "<strong>Never</strong> put the machine on a flammable surface."
 msgstr ""
-"Stelle die Maschine <strong>niemals</strong> auf eine leicht entzündliche "
-"oder explosive Unterlage."
+"Stellen sie die Maschine <strong>niemals</strong> auf eine leicht "
+"entzündliche oder explosive Unterlage."
 
 # Laser Safety Notes!
 #: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:47
@@ -1470,7 +1470,7 @@ msgid ""
 "If not operated by yourself, introduce the operating person carefully and "
 "responsibly."
 msgstr ""
-"Wenn Du dritten Personen Zugang zum Gerät ermöglichst, stelle eine "
+"Wenn sie dritten Personen Zugang zum Gerät ermöglichen, stellen sie eine "
 "sorgfältige und verantwortungsbewusste Einweisung, inklusive aller hier "
 "aufgeführten Hinweise sicher."
 
@@ -1480,7 +1480,7 @@ msgid ""
 "If you are connecting the lasercutter to a network ensure that you properly "
 "set up the network access as well as the machines access control. "
 msgstr ""
-"Ist der Lasercutter an ein Netzwerk angeschlossen, stelle sicher, dass der "
+"Ist der Lasercutter an ein Netzwerk angeschlossen, stellen sie sicher, dass der"
 "Netzwerkzugang und das Gerät selbst ausreichend gegen Missbrauch durch "
 "Dritte geschützt sind. "
 
@@ -1490,14 +1490,14 @@ msgid ""
 "Do NOT underestimate the risk of an unsecured access from the internet to "
 "your lasercutter."
 msgstr ""
-"Unterschätze <strong>nicht</strong> das Risiko eines ungesicherten Zugangs "
-"aus dem Internet zu Deinem Lasercutter. Nutze dazu auch den "
+"Unterschätzen sie <strong>nicht</strong> das Risiko eines ungesicherten "
+"Zugangs aus dem Internet zu ihrem Laserschneider. Nutzen sie dazu auch den "
 "Schlüsselschalter, um das Gerät bei Nichtbetrieb stromlos zu schalten."
 
 # Laser Safety Notes!
 #: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:54
 msgid "By proceeding you are agreeing, that"
-msgstr "Wenn Du fortfährst, stimmst Du zu, dass"
+msgstr "Um Fortzufahren stimmen sie bitte folgenden Punkten zu"
 
 # Laser Safety Notes!
 #: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:60
@@ -1591,8 +1591,8 @@ msgid ""
 "conditions above don't use this software to operate any machine emitting "
 "laser light."
 msgstr ""
-"Solltest Du Bedenken bezüglich der Lasersicherheit haben oder mit den obigen "
-"Bedingungen nicht einverstanden sein, verwende diese Software nicht."
+"Sollten sie Bedenken bezüglich der Lasersicherheit haben oder mit den obigen "
+"Bedingungen nicht einverstanden sein, verwenden sie diese Software nicht."
 
 # Laser Safety Notes!
 #: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:109
@@ -1617,20 +1617,20 @@ msgid ""
 "If you decide to not be reminded on every login, we need to store your "
 "agreement on our servers."
 msgstr ""
-"Wenn Du Dich entscheidest, nicht bei jedem Login erinnert zu werden, müssen "
-"wir Deine Zustimmung auf unseren Servern speichern."
+"Wenn sie sich entscheiden, nicht bei jedem Login erinnert zu werden, müssen "
+"wir ihre Zustimmung auf unseren Servern speichern."
 
 # Laser Safety Notes!
 #: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:120
 msgid "This includes your login email address and technical device data."
-msgstr "Dazu gehören Deine Login-Emailadresse und die technischen Gerätedaten."
+msgstr "Dazu gehören ihre Login-Emailadresse und die technischen Gerätedaten."
 
 # Laser Safety Notes!
 #: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:122
 #, python-format
 msgid "Check our %(open)sprivacy statement%(close)s for details."
 msgstr ""
-"Weitere Informationen findest Du in unserer %(open)sDatenschutzerklärung"
+"Weitere Informationen finden sie in unserer %(open)sDatenschutzerklärung"
 "%(close)s."
 
 # Laser Safety Notes!
