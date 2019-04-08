@@ -673,8 +673,8 @@ class IoBeamHandler(object):
 			correction_factor = new_intensity / 65.0
 
 		elif p_75 < self.LASER_POWER_GOAL < p_85:
-			step_difference = p_85 - p_75
-			goal_difference = float(self.LASER_POWER_GOAL) - p_75
+			step_difference = float(p_85 - p_75)
+			goal_difference = self.LASER_POWER_GOAL - p_75
 			new_intensity = goal_difference * (85-75) / step_difference + 75
 			correction_factor = new_intensity / 65.0
 

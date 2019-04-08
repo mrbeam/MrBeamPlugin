@@ -111,6 +111,8 @@ class MachineCom(object):
 	pattern_get_x_coord_from_gcode = re.compile("^G.*X(\d{1,3}\.?\d{0,3})\D.*")
 	pattern_get_y_coord_from_gcode = re.compile("^G.*Y(\d{1,3}\.?\d{0,3})\D.*")
 
+	MAX_INTENSITY_AFTER_CORRECTION = 1700
+
 	def __init__(self, port=None, baudrate=None, callbackObject=None, printerProfileManager=None):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.printing.comm_acc2")
 
@@ -1379,11 +1381,16 @@ class MachineCom(object):
 			self._actual_intensity = parsed_intensity if parsed_intensity <= intensity_limit else intensity_limit
 			self._current_intensity = int(round(self._actual_intensity))
 
+			# Limit GCode input
 			new_intensity = int(round(self._actual_intensity))
 			if new_intensity > intensity_limit:
 				new_intensity = intensity_limit
 
+			# Apply power correction factor and limit again
 			new_intensity = int(round(new_intensity * self._power_correction_factor))
+			if new_intensity > self.MAX_INTENSITY_AFTER_CORRECTION:
+				new_intensity = self.MAX_INTENSITY_AFTER_CORRECTION
+
 			self._logger.info('Intensity command changed from S{old} to S{new} (correction factor {factor})'.format(
 				old=self._actual_intensity, new=new_intensity, factor=self._power_correction_factor))
 			self._current_intensity = int(round(new_intensity))
