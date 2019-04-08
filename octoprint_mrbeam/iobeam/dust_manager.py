@@ -126,7 +126,7 @@ class DustManager(object):
 
 	def _on_command_response(self, args):
 		if args['success']:
-			if 'request_id' not in args['response'] or args['response']['request_id'] != self._last_command:
+			if 'request_id' not in args['message'] or args['message']['request_id'] != self._last_command:
 				# I'm not sure if we need to check or what to do if the command doesn't match.
 				self._logger.warn("Fan command response doesn't match expected command: expected: {} received: {} args: {}".format(self._last_command, args['response'], args))
 		else:

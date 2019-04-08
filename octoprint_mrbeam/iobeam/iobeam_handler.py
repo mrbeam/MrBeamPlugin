@@ -227,9 +227,8 @@ class IoBeamHandler(object):
 			self._logger.error("send_command() Can't send command while there's no connection on socket but _isConnected()=True!  Command: %s", command)
 			return False
 
-		command_with_nl = "{}\n".format(command)
 		try:
-			self._my_socket.sendall(json.dumps(command_with_nl))
+			self._my_socket.sendall("{}\n".format(json.dumps(command)))
 		except Exception as e:
 			self._errors += 1
 			self._logger.error("Exception while sending command '%s' to socket: %s", command, e)
@@ -600,29 +599,27 @@ class IoBeamHandler(object):
 		return 0
 
 	def _handle_onebutton(self, dataset):
-		action = None
-		payload = None
-		if 'state' in dataset and self.MESSAGE_ERROR not in dataset['state']:
-			action = dataset['state']
-			if 'value' in dataset:
-				if self.MESSAGE_ERROR not in dataset['value']:
-					payload = self._as_number(dataset['value'])
-				else:
-					self._logger.debug("Received onebtn value error: %s", dataset['value'][self.MESSAGE_ERROR])
-					return 1
+		duration = None
+		if 'state' in dataset and dataset['state']:
+			state = dataset['state']
+			if 'duration' in dataset and dataset['duration']:
+					try:
+						duration = self._as_number(dataset['duration'])
+					except:
+						self._logger.debug("Received invalid onebtn duration: %s", dataset['duration'])
+						return 1
 		else:
-			self._logger.debug("Received onebtn state error: %s", dataset['state'][self.MESSAGE_ERROR])
-			return 1
+			return self._handle_invalid_dataset(self.MESSAGE_DEVICE_ONEBUTTON, dataset)
 
-		self._logger.debug("_handle_onebutton() message: %s, action: %s, payload: %s", dataset, action, payload)
+		self._logger.debug("_handle_onebutton() message: %s, state: %s, duration: %s", dataset, state, duration)
 
-		if action == self.MESSAGE_ACTION_ONEBUTTON_PRESSED:
+		if state == self.MESSAGE_ACTION_ONEBUTTON_PRESSED:
 			self._fireEvent(IoBeamEvents.ONEBUTTON_PRESSED)
-		elif action == self.MESSAGE_ACTION_ONEBUTTON_DOWN and payload is not None:
-			self._fireEvent(IoBeamEvents.ONEBUTTON_DOWN, payload)
-		elif action == self.MESSAGE_ACTION_ONEBUTTON_RELEASED and payload is not None:
-			self._fireEvent(IoBeamEvents.ONEBUTTON_RELEASED, payload)
-		elif action == self.MESSAGE_ACTION_ONEBUTTON_UP:
+		elif state == self.MESSAGE_ACTION_ONEBUTTON_DOWN and duration is not None:
+			self._fireEvent(IoBeamEvents.ONEBUTTON_DOWN, duration)
+		elif state == self.MESSAGE_ACTION_ONEBUTTON_RELEASED and duration is not None:
+			self._fireEvent(IoBeamEvents.ONEBUTTON_RELEASED, duration)
+		elif state == self.MESSAGE_ACTION_ONEBUTTON_UP:
 			return 0
 		else:
 			return self._handle_invalid_dataset(self.MESSAGE_DEVICE_ONEBUTTON, dataset)
