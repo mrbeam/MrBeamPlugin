@@ -159,10 +159,8 @@ class MachineCom(object):
 		self._pause_delay_time = 0
 		self._feedrate_factor = 1
 		self._actual_feedrate = None
-		self._intensity_factor = 1
 		self._actual_intensity = None
 		self._feedrate_dict = {}
-		self._intensity_dict = {}
 		self._passes = 1
 		self._finished_passes = 0
 		self._flush_command_ts = -1
@@ -195,6 +193,12 @@ class MachineCom(object):
 		# hooks
 		self._pluginManager = octoprint.plugin.plugin_manager()
 		self._serial_factory_hooks = self._pluginManager.get_hooks("octoprint.comm.transport.serial.factory")
+
+		# laser power correction
+		if _mrbeam_plugin_implementation._settings.get(['laserhead', 'correction', 'enabled']):
+			self._power_correction_factor = _mrbeam_plugin_implementation._settings.get(['laserhead', 'correction', 'factor'])
+		else:
+			self._power_correction_factor = 1
 
 		# threads
 		self.monitoring_thread = None
@@ -1047,6 +1051,11 @@ class MachineCom(object):
 		payload = dict(grbl_version=self._grbl_version, port=self._port, baudrate=self._baudrate)
 		eventManager().fire(OctoPrintEvents.CONNECTED, payload)
 
+	def _set_power_correction_factor(self):
+		correction_factor = _mrbeam_plugin_implementation.lh['correction_factor']
+		self._power_correction_factor = correction_factor
+		self._logger.info("Intensity correction factor applied: {}".format(correction_factor))
+
 	def _detectPort(self, close):
 		self._log("Serial port list: %s" % (str(serialList())))
 		for p in serialList():
@@ -1340,35 +1349,6 @@ class MachineCom(object):
 		gcode = self._gcode_command_for_cmd(command)
 		return command, command_type, gcode
 
-	def _set_feedrate_override(self, value):
-		temp = value / 100.0
-		if temp > 0:
-			self._feedrate_factor = temp
-			self._feedrate_dict = {}
-			if self._actual_feedrate is not None:
-				temp = round(self._actual_feedrate * self._feedrate_factor)
-				# TODO replace with value from printer profile
-				if temp > 5000:
-					temp = 5000
-					self._current_feedrate = int(temp)
-				elif temp < 30:
-					temp = 30
-					self._current_feedrate = int(temp)
-				self.sendCommand('F%d' % self._current_feedrate)
-
-	def _set_intensity_override(self, value):
-		temp = value / 100.0
-		if temp >= 0:
-			self._intensity_factor = temp
-			self._intensity_dict = {}
-			if self._actual_intensity is not None:
-				intensity_limit = int(self._laserCutterProfile['laser']['intensity_limit'])
-				temp = round(self._actual_intensity * self._intensity_factor)
-				if temp > intensity_limit:
-					temp = intensity_limit
-					self._current_intensity = int(round(temp))
-				self.sendCommand('S%d' % self._current_intensity)
-
 	def _replace_feedrate(self, cmd):
 		obj = self._regex_feedrate.search(cmd)
 		if obj is not None:
@@ -1398,19 +1378,17 @@ class MachineCom(object):
 			parsed_intensity = int(intensity_cmd[1:])
 			self._actual_intensity = parsed_intensity if parsed_intensity <= intensity_limit else intensity_limit
 			self._current_intensity = int(round(self._actual_intensity))
-			if self._actual_intensity != parsed_intensity:
-				return cmd.replace(intensity_cmd, 'S%d' % self._current_intensity)
-			elif self._intensity_factor != 1:
-				# _intensity_factor is deprecated
-				if intensity_cmd in self._intensity_dict:
-					new_intensity = self._intensity_dict[intensity_cmd]
-				else:
-					new_intensity = int(round(self._actual_intensity * self._intensity_factor))
-					if new_intensity > intensity_limit:
-						new_intensity = intensity_limit
-					self._intensity_dict[intensity_cmd] = new_intensity
-				self._current_intensity = int(round(new_intensity))
-				return cmd.replace(intensity_cmd, 'S%d' % self._current_intensity)
+
+			new_intensity = int(round(self._actual_intensity))
+			if new_intensity > intensity_limit:
+				new_intensity = intensity_limit
+
+			new_intensity = int(round(new_intensity * self._power_correction_factor))
+			self._logger.info('Intensity command changed from S{old} to S{new} (correction factor {factor})'.format(
+				old=self._actual_intensity, new=new_intensity, factor=self._power_correction_factor))
+			self._current_intensity = int(round(new_intensity))
+
+			return cmd.replace(intensity_cmd, 'S%d' % self._current_intensity)
 		return cmd
 
 	def get_hex_str_from_str(self, data):
@@ -1603,6 +1581,39 @@ class MachineCom(object):
 			elif specialcmd.startswith('/correct_settings'):
 				self._log("Correcting GRBL settings...")
 				self.correct_grbl_settings()
+			elif specialcmd.startswith('/power_correction'):
+				if len(tokens) > 1:
+					token = int(tokens[1])
+					if token == 1:
+						self._log("Enabling power correction...")
+						_mrbeam_plugin_implementation._settings.set_boolean(["laserhead", "correction", "enabled"], True, force=True)
+						_mrbeam_plugin_implementation._settings.save()
+						_mrbeam_plugin_implementation.lh['correction_enabled'] = True
+						self._power_correction_factor = _mrbeam_plugin_implementation._settings.get(
+							['laserhead', 'correction', 'factor'])
+
+					elif token == 0:
+						self._log("Disabling power correction...")
+						_mrbeam_plugin_implementation._settings.set_boolean(["laserhead", "correction", "enabled"], False, force=True)
+						_mrbeam_plugin_implementation._settings.save()
+						_mrbeam_plugin_implementation.lh['correction_enabled'] = False
+						self._power_correction_factor = 1
+				else:
+					self._log("No parameter given (0 or 1)")
+			elif specialcmd.startswith('/terminal_show_checksums'):
+				if len(tokens) > 1:
+					token = int(tokens[1])
+					if token == 1:
+						self._log("Checksums will be shown in the terminal")
+						_mrbeam_plugin_implementation._settings.set_boolean(["terminal_show_checksums"], True, force=True)
+						_mrbeam_plugin_implementation._settings.save()
+					elif token == 0:
+						self._log("Checksums will not be shown in the terminal")
+						_mrbeam_plugin_implementation._settings.set_boolean(["terminal_show_checksums"], False, force=True)
+						_mrbeam_plugin_implementation._settings.save()
+				else:
+					self._log("No parameter given (0 or 1)")
+
 			else:
 				self._log("Command not found.")
 				self._log("Available commands are:")
@@ -1613,6 +1624,8 @@ class MachineCom(object):
 				self._log("   /disconnect")
 				self._log("   /reset")
 				self._log("   /correct_settings")
+				self._log("   /power_correction <x>  		--> Enable: x = 1; Disable: x = 0")
+				self._log("   /terminal_show_checksums <x>  --> Enable: x = 1; Disable: x = 0")
 				self._log("   /verify_grbl [? | <file>] // ?: list of available files; If omitted default grbl version will be verified .")
 				self._log("   /flash_grbl [? | <file>] // ?: list of available files; If omitted current grbl version will be flashed.")
 		except:
@@ -1646,9 +1659,8 @@ class MachineCom(object):
 		if self._currentFile is None:
 			raise ValueError("No file selected for printing")
 
-		# reset feedrate and intesity factor in case they where changed in a previous run
+		# reset feedrate in case they where changed in a previous run
 		self._feedrate_factor  = 1
-		self._intensity_factor = 1
 		self._finished_passes = 0
 		self._pauseWaitTimeLost = 0.0
 		self._pauseWaitStartTime = None
