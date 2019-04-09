@@ -247,7 +247,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				env = self.ENV_PROD,
 				load_gremlins = False,
 				software_tier = SW_UPDATE_TIER_PROD,
-				software_tiers_available = software_channels_available(self),
 				iobeam_disable_warnings = False, # for develpment on non-MrBeam devices
 				suppress_migrations = False,     # for develpment on non-MrBeam devices
 				support_mode = False,
@@ -300,6 +299,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			dev=dict(
 				env = self._settings.get(['dev', 'env']),
 				software_tier = self._settings.get(["dev", "software_tier"]),
+				software_tiers_available=software_channels_available(self),
 				terminalMaxLines = self._settings.get(['dev', 'terminalMaxLines'])),
 			gcode_nextgen=dict(
 				enabled = self._settings.get(['gcode_nextgen', 'enabled']),

@@ -1,8 +1,8 @@
 <div class="hide" id="software_channel_selector">
-    <select data-bind="value: selector">
-        <option value="PROD">Stable</option>
-        <option value="BETA">Beta</option>
-        <option value="DEV">Develop</option>
+    <select data-bind="value: selector, options: available_channels, optionsText: 'name', optionsValue: 'id', event: { change: selection_changed }">
+{#        <option value="PROD">Stable</option>#}
+{#        <option value="BETA">Beta</option>#}
+{#        <option value="DEV">Develop</option>#}
     </select>
     <span class="help-inline">Changes to the interface language will only become active after a reload of the page.</span>
 </div>
