@@ -440,7 +440,7 @@ class IoBeamHandler(object):
 																			  type="error", sticky=True,
 																			  replay_when_new_client_connects=True)
 							else:
-								self._logger.debug("Could not parse data '%s' as JSON", json_data)
+								self._logger.warn("Could not parse data '%s' as JSON", json_data)
 					except Exception as e2:
 						self._logger.debug("Some error with data '%s'", json_data)
 						self._logger.debug(e2)
