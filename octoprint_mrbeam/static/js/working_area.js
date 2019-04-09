@@ -1621,8 +1621,8 @@ $(function(){
             // embed the fonts as dataUris
 			// TODO only if Quick Text is present
 			console.warn("debug disabled QT font copy");
-//            $('#compSvg defs').append('<style id="quickTextFontPlaceholder" class="quickTextFontPlaceholder deleteAfterRendering"></style>');
-//            self._qt_copyFontsToSvg(compSvg.select(".quickTextFontPlaceholder").node);
+           $('#compSvg defs').append('<style id="quickTextFontPlaceholder" class="quickTextFontPlaceholder deleteAfterRendering"></style>');
+           self._qt_copyFontsToSvg(compSvg.select(".quickTextFontPlaceholder").node);
 
 			self.renderInfill(compSvg, fillAreas, cutOutlines, wMM, hMM, pxPerMM, function(svgWithRenderedInfill){
 				callback( self._wrapInSvgAndScale(svgWithRenderedInfill));
@@ -1919,35 +1919,28 @@ $(function(){
 		// render the infill and inject it as an image into the svg
 		self.renderInfill = function (svg, fillAreas, cutOutlines, wMM, hMM, pxPerMM, callback) {
 			//TODO cutOutlines use it and make it work
-			var wPT = wMM * 90 / 25.4;
-			var hPT = hMM * 90 / 25.4;
-			var tmpSvg = self.getNewSvg('tmpSvg', wPT, hPT);
-			
-			var tmpSvg = svg.clone();
-			var attrs = {
-				id: "tmpSvg", 
-				width: wPT, 
-				height: hPT, 
-				viewBox: "0 0 " + wMM + " " + hMM,
-				'xmlns': 'http://www.w3.org/2000/svg',
-				'xmlns:mb': 'http://www.mr-beam.org/mbns',
-				'xmlns:xlink': 'http://www.w3.org/1999/xlink'
-			};
-			tmpSvg.attr(attrs);
-			
+            var wPT = wMM * 90 / 25.4;
+            var hPT = hMM * 90 / 25.4;
+            var tmpSvg = self.getNewSvg('tmpSvg', wPT, hPT);
+            var attrs = {viewBox: "0 0 " + wMM + " " + hMM};
+            tmpSvg.attr(attrs);
+            // get only filled items and embed the images
+            var userContent = svg.clone();
+            tmpSvg.append(userContent);
+
 			// copy defs for filters
 			var originalFilters = snap.selectAll('defs>filter');
-			var target = tmpSvg.select('defs');
+			var target = userContent.select('defs');
 			for (var i = 0; i < originalFilters.length; i++) {
 				var original_id = originalFilters[i].attr('id');
 				var clone = originalFilters[i].clone();
 				var destFilter = clone.appendTo(target);
 				// restore id to keep references working
-				destFilter.attr({id: original_id});				
+				destFilter.attr({id: original_id});
 			}
-			
+
 			self._embedAllImages(tmpSvg, function(){
-				var fillings = tmpSvg.removeUnfilled(fillAreas);
+				var fillings = userContent.removeUnfilled(fillAreas);
 				for (var i = 0; i < fillings.length; i++) {
 					var item = fillings[i];
 
