@@ -1620,7 +1620,6 @@ $(function(){
 			
             // embed the fonts as dataUris
 			// TODO only if Quick Text is present
-			console.warn("debug disabled QT font copy");
            $('#compSvg defs').append('<style id="quickTextFontPlaceholder" class="quickTextFontPlaceholder deleteAfterRendering"></style>');
            self._qt_copyFontsToSvg(compSvg.select(".quickTextFontPlaceholder").node);
 
