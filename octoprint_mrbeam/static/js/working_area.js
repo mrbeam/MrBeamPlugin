@@ -904,7 +904,7 @@ $(function(){
 			file.typePath = src.typePath;
 
 			self.placedDesigns.push(file);
-			self.placeSmart(newSvg);
+			self.placeSmart(newSvg);    // TODO Iratxe: This crashes with raster images
 			newSvg.transformable();
 			newSvg.ftRegisterOnTransformCallback(self.svgTransformUpdate);
 			newSvg.ftRegisterBeforeTransformCallback(function(){
