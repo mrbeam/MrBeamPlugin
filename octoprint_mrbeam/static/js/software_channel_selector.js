@@ -8,13 +8,14 @@ $(function () {
         self.selector = ko.observable("PROD");
         self.available_channels = ko.observableArray([]);
 
+        self.waiting_for_update = 0;
+
         self.onAllBound = function () {
             let elem = $('#'+DOM_ELEMENT_TO_BIND_TO).detach();
             $('#settings_plugin_softwareupdate > h3').before(elem);
             $('#'+DOM_ELEMENT_TO_BIND_TO).show();
-        // };
-        //
-        // self.onBeforeBinding = function () {
+            $('#settings_plugin_softwareupdate > h3').hide();
+
             let channels = self.settings.settings.plugins.mrbeam.dev.software_tiers_available();
             for (let i = 0; i < channels.length; i++) {
                 let obj = {
@@ -25,30 +26,19 @@ $(function () {
             }
 
             self.selector(self.settings.settings.plugins.mrbeam.dev.software_tier());
-            // self.selector = self.settings.settings.plugins.mrbeam.dev.software_tier;
+            self.selector = self.settings.settings.plugins.mrbeam.dev.software_tier;
         };
 
-        self.onStartupComplete = function() {
-            self.selection_changed = function (event) {
-                let data = {
-                    plugins: {
-                        mrbeam: {
-                            dev: {
-                                software_tier: self.selector()
-                            }
-                        }
-                    }
-                };
-                let promise = self.settings.saveData(data);
-                promise.done(function (data, status, xhr) {
-                    console.log("ANDYTEST saved data.");
-                    console.log("ANDYTEST data: ", data);
-                    console.log("ANDYTEST status: ", status);
-                    console.log("ANDYTEST xhr: ", xhr);
-                    self._trigger_refresh();
-                });
-            };
-        }
+        self.onEventSettingsUpdated = function(data){
+            if (self.waiting_for_update > 0) {
+                self._trigger_refresh();
+            }
+            self.waiting_for_update = Math.min(self.waiting_for_update-1, 0);
+        };
+
+        self.selection_changed = function (event) {
+            self.waiting_for_update++;
+        };
 
         self._trigger_refresh = function(){
             self.softwareUpdate.performCheck(true, false, true);
