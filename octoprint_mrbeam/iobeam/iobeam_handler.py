@@ -70,7 +70,8 @@ class IoBeamHandler(object):
 	SOCKET_FILE = "/var/run/mrbeam_iobeam.sock"
 	MAX_ERRORS = 50
 
-	IOBEAM_MIN_REQUIRED_VERSION = '0.4.0'
+	IOBEAM_MIN_REQUIRED_VERSION =  '0.4.0'
+	IOBEAM_JSON_PROTOCOL_VERSION = '0.7.0'
 
 	CLIENT_ID = "MrBeamPlugin.v{vers_mrb}"
 
@@ -214,14 +215,22 @@ class IoBeamHandler(object):
 
 	def is_iobeam_version_ok(self):
 		if self.iobeam_version is None:
-			return False
+			return False, 0
+		vers_obj = None
 		try:
-			StrictVersion(self.iobeam_version)
+			vers_obj = StrictVersion(self.iobeam_version)
 		except ValueError as e:
 			self._logger.error("iobeam version invalid: '{}'. ValueError from StrictVersion: {}".format(self.iobeam_version, e))
-			return False
+			return False, 0
+		if vers_obj < StrictVersion(self.IOBEAM_MIN_REQUIRED_VERSION):
+			return False, -1
+		elif vers_obj >= StrictVersion(self.IOBEAM_JSON_PROTOCOL_VERSION):
+			return False, 1
+		else:
+			return True, 0
 
-		return StrictVersion(self.iobeam_version) >= StrictVersion(self.IOBEAM_MIN_REQUIRED_VERSION)
+
+	# return StrictVersion(self.iobeam_version) >= StrictVersion(self.IOBEAM_MIN_REQUIRED_VERSION) and StrictVersion(self.iobeam_version) < StrictVersion(self.IOBEAM_JSON_PROTOCOL_VERSION)
 
 	def subscribe(self, event, callback):
 		'''
@@ -621,14 +630,22 @@ class IoBeamHandler(object):
 			version = token[1] if len(token) > 1 else None
 			if version:
 				self.iobeam_version = version
-				ok = self.is_iobeam_version_ok()
+				ok, state = self.is_iobeam_version_ok()
 				if ok:
 					self._logger.info("Received iobeam version: %s - version OK", self.iobeam_version)
 				else:
-					self._logger.error("Received iobeam version: %s - version OUTDATED. IOBEAM_MIN_REQUIRED_VERSION: %s", self.iobeam_version, self.IOBEAM_MIN_REQUIRED_VERSION)
-					_mrbeam_plugin_implementation.notify_frontend(title=gettext("Software Update required"),
-					                                              text=gettext("Module 'iobeam' is outdated. Please run Software Update from 'Settings' > 'Software Update' before you start a laser job."),
-																  type="error", sticky=True, replay_when_new_client_connects=True)
+					if state <= 0:
+						self._logger.error("Received iobeam version: %s - version OUTDATED. IOBEAM_MIN_REQUIRED_VERSION: %s", self.iobeam_version, self.IOBEAM_MIN_REQUIRED_VERSION)
+						_mrbeam_plugin_implementation.notify_frontend(title=gettext("Software Update required"),
+						                                              text=gettext("Module 'iobeam' is outdated. Please run software update from 'Settings' > 'Software Update' before you start a laser job."),
+						                                              type="error", sticky=True, replay_when_new_client_connects=True)
+					else:
+						self._logger.error("Received iobeam version: %s - version INCOMPATIBLE. iobeam is already using new JSON protocol!", self.iobeam_version)
+						_mrbeam_plugin_implementation.notify_frontend(title=gettext("Software Update required"),
+						                                              text=gettext(
+							                                              "Module 'MrBeam Plugin' is outdated; iobeam version is newer than expected. Please run software update from 'Settings' > 'Software Update' before you start a laser job."),
+						                                              type="error", sticky=True,
+						                                              replay_when_new_client_connects=True)
 				return 0
 			else:
 				self._logger.warn("_handle_iobeam_message(): Received iobeam:version message without version number. Counting as error. Message: %s", message)
@@ -644,8 +661,8 @@ class IoBeamHandler(object):
 				self._logger.info("iobeam init error: '%s' - requesting iobeam_debug...", message)
 				self._send_command('debug')
 				text = '<br/>' + \
-					   gettext("A possible hardware malfunction has been detected on this device. Please contact our support team immediately at:") + \
-					   '<br/><a href="https://mr-beam.org/support" target="_blank">mr-beam.org/support</a><br/><br/>' \
+				       gettext("A possible hardware malfunction has been detected on this device. Please contact our support team immediately at:") + \
+				       '<br/><a href="https://mr-beam.org/support" target="_blank">mr-beam.org/support</a><br/><br/>' \
 				       '<strong>' + gettext("Error:") + '</strong><br/>{}'.format(message)
 				_mrbeam_plugin_implementation.notify_frontend(title=gettext("Hardware malfunction"),
 				                                              text=text,
@@ -664,7 +681,7 @@ class IoBeamHandler(object):
 		return 1
 
 	def _handle_unknown_device_message(self, message, token):
-		self._logger.warn("Received mesage about unknown device: %s", message)
+		self._logger.warn("Received message about unknown device: %s", message)
 		return 0
 
 	def _handle_precessing_time(self, processing_time, message, err, log_stats=False):
