@@ -347,11 +347,13 @@ class IoBeamHandler(object):
 			self._logger.info("iobeam connection established. Identified ourselves as '%s'", client_msg['client'])
 			self._fireEvent(IoBeamEvents.CONNECT)
 
+			temp_buffer = b''
 			while not self._shutdown_signaled:
 				try:
 
+					# Read MESSAGE_LENGTH_MAX bytes of data
 					try:
-						data = self._my_socket.recv(self.MESSAGE_LENGTH_MAX)
+						data = temp_buffer + self._my_socket.recv(self.MESSAGE_LENGTH_MAX)
 					except Exception as e:
 						if self.dev_mode and e.message == "timed out":
 							# self._logger.warn("Connection stale but MRBEAM_DEBUG enabled. Continuing....")
@@ -365,8 +367,23 @@ class IoBeamHandler(object):
 						self._logger.warn("Connection ended from other side. Closing connection...")
 						break
 
-					# here we see what's in the data...
-					my_errors, _ = self._handle_messages(data)
+					# Processed buffered data as messages or skip and continue buffering the data
+					if not data:
+						my_errors = 1
+						temp_buffer = b''
+					else:
+						# Split all JSON messages by new line character
+						messages = data.split(self.MESSAGE_NEWLINE)
+
+						if not data.endswith(self.MESSAGE_NEWLINE):
+							# Record remaining part of data into temp buffer, to read messages longer than MESSAGE_LENGTH_MAX
+							temp_buffer += messages.pop()
+						else:
+							temp_buffer = b''
+
+						# here we see what's in the data...
+						my_errors, _ = self._handle_messages(messages)
+
 					if my_errors > 0:
 						self._errors += my_errors
 						if self._errors >= self.MAX_ERRORS:
@@ -374,7 +391,6 @@ class IoBeamHandler(object):
 							break
 						else:
 							self._logger.warn("Received invalid message, error_count=%s", self._errors)
-
 				except:
 					self._logger.exception("Exception in socket loop. Not sure what to do, resetting connection...")
 
@@ -392,21 +408,16 @@ class IoBeamHandler(object):
 
 		self._logger.debug("Worker thread stopped.")
 
-	def _handle_messages(self, data):
+	def _handle_messages(self, messages):
 		"""
-		handles incoming data from the socket.
-		:param data:
+		Handles incoming list of messages from the socket.
+		:param messages: list of incoming dict messages
 		:return: int: number of invalid messages 0 means all messages were handled correctly
 		"""
-		if not data:
-			return 1
-
 		error_count = 0
 		message_count = 0
 		try:
-			# Split all JSON messages by new line character
-			json_list = data.split(self.MESSAGE_NEWLINE)
-			for json_data in json_list:
+			for json_data in messages:
 				if len(json_data) > 0:
 
 					message_count = + 1
@@ -478,7 +489,7 @@ class IoBeamHandler(object):
 			if len(name) <= 0:
 				err = self._handle_invalid_dataset(name, dataset)
 			elif self.MESSAGE_ERROR in dataset:
-				self._logger.debug("Received %s dataset error: %s", dataset, dataset[self.MESSAGE_ERROR])
+				self._logger.debug("Received %s dataset error: %s", name, dataset[self.MESSAGE_ERROR])
 				err += 1
 			elif len(dataset) == 0:
 				self._logger.debug("Received empty dataset %s", name)

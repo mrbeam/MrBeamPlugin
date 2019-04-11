@@ -34,9 +34,6 @@ class DustManager(object):
 	FAN_COMMAND_OFF =     "off"
 	FAN_COMMAND_AUTO =    "auto"
 
-	DATA_TYPE_DYNAMIC  =  "dynamic"
-	DATA_TYPE_CONENCTED = "connected"
-
 	def __init__(self):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.dustmanager")
 		self.dev_mode = _mrbeam_plugin_implementation._settings.get_boolean(['dev', 'iobeam_disable_warnings'])
@@ -136,10 +133,10 @@ class DustManager(object):
 	def _onEvent(self, event, payload):
 		if event in (OctoPrintEvents.SLICING_DONE, MrBeamEvents.READY_TO_LASER_START, OctoPrintEvents.PRINT_STARTED):
 			self._start_dust_extraction()
-			# self._boost_timer_interval()
+			self._boost_timer_interval()
 		elif event == MrBeamEvents.READY_TO_LASER_CANCELED:
 			self._stop_dust_extraction()
-			# self._unboost_timer_interval()
+			self._unboost_timer_interval()
 		elif event in (OctoPrintEvents.PRINT_DONE, OctoPrintEvents.PRINT_FAILED, OctoPrintEvents.PRINT_CANCELLED):
 			self._last_event = event
 			self._do_end_dusting()
