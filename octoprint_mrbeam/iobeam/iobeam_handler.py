@@ -377,7 +377,7 @@ class IoBeamHandler(object):
 
 						if not data.endswith(self.MESSAGE_NEWLINE):
 							# Record remaining part of data into temp buffer, to read messages longer than MESSAGE_LENGTH_MAX
-							temp_buffer += messages.pop()
+							temp_buffer = messages.pop()
 						else:
 							temp_buffer = b''
 
