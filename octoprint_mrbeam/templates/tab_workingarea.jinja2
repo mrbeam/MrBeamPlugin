@@ -274,17 +274,17 @@
 																			blur: function(d, event){ $root.svgManualMultiply($data, event); }} "/>
 																</br>
 
-                                                                <div class="accordion md-accordion" id="working_area_image_preprocessing">
+                                                                <div class="accordion md-accordion working_area_image_preprocessing">
                                                                   <div class="card">
-                                                                    <div class="card-header" id="working_area_image_preprocessing_heading">
-                                                                      <div class="mb-0" id="working_area_image_preprocessing_link" >
-                                                                        <button class="btn btn-link collapsed image-preprocessing-collapsible" type="button" data-toggle="collapse" data-target="#working_area_image_preprocessing_sliders"
+                                                                    <div class="card-header working_area_image_preprocessing_heading">
+                                                                      <div class="mb-0 working_area_image_preprocessing_link">
+                                                                        <button class="btn btn-link collapsed image-preprocessing-collapsible" type="button" data-toggle="collapse" data-bind="attr: { 'data-target': '#preprocessing_sliders_' + $data.id }"
                                                                                 aria-expanded="true" aria-controls="collapseOne">
                                                                             {{ _('Image Preprocessing') }}
                                                                         </button>
                                                                       </div>
                                                                     </div>
-                                                                    <div id="working_area_image_preprocessing_sliders" class="collapse" aria-labelledby="working_area_image_preprocessing_heading" data-parent="#working_area_image_preprocessing_accordion">
+                                                                    <div class="collapse working_area_image_preprocessing_sliders" data-bind="attr: { id: 'preprocessing_sliders_' + $data.id }">
                                                                       <div class="card-body">
                                                                         <i class="icon-adjust" title="{{ _('contrast') }}"></i>
                                                                         <input class="decent_input contrast img_adjust" type="range" min="1" max="5" value="1" step="0.05" data-bind="event: {
