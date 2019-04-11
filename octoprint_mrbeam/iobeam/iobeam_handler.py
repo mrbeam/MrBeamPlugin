@@ -431,13 +431,15 @@ class IoBeamHandler(object):
 						# Check if we communicate with an older version of iobeam, iobeam:version:0.6.0
 						if isinstance(json_data, basestring) and json_data.startswith("iobeam:version:"):
 							tokens = json_data.split(':')
-							version = None
+							version_str = None
+							version_obj = None
 							try:
-								version = StrictVersion(tokens[2])
+								version_str = tokens[2]
+								version_obj = StrictVersion(tokens[2])
 							except ValueError:
 								self._logger.debug("Could not parse data '%s' as JSON", json_data)
 
-							if version and version < StrictVersion(self.IOBEAM_MIN_REQUIRED_VERSION):
+							if version_obj and version_obj < StrictVersion(self.IOBEAM_MIN_REQUIRED_VERSION):
 								# Send message to the frontend
 								self._logger.error(
 									"Outdated iobeam: %s - version OUTDATED. IOBEAM_MIN_REQUIRED_VERSION: %s",
@@ -448,7 +450,7 @@ class IoBeamHandler(object):
 																			  type="error", sticky=True,
 																			  replay_when_new_client_connects=True)
 							else:
-								self._logger.debug("iobeam version ok: '%s'", version)
+								self._logger.debug("Received iobeam version: %s - version OK (legacy protocol)", version_str)
 						else:
 							self._logger.debug("Could not parse data '%s' as JSON", json_data)
 					except Exception as e2:
@@ -608,8 +610,17 @@ class IoBeamHandler(object):
 		:return: error count
 		"""
 		try:
-			data = 'ok\n| {}'.format(dataset)
-			self._logger.info("laserhead data: %s", data)
+			if 'main' in dataset and 'serial' in dataset['main']:
+				_mrbeam_plugin_implementation.lh['serial'] = dataset['main']['serial']
+			if 'power_calibrations' in dataset and dataset['power_calibrations']:
+				pwr_cali = None
+				# the last entry should be the most recent one. But who know....
+				for pc in dataset['power_calibrations']:
+					if pwr_cali is None or pc['ts'] > pwr_cali['ts']:
+						pwr_cali = pc
+				_mrbeam_plugin_implementation.lh['p_65'] = pwr_cali['power_65']
+			self._logger.info("laserhead summary: %s", _mrbeam_plugin_implementation.lh)
+			self._logger.info("laserhead complete: %s", dataset)
 		except:
 			self._logger.exception("laserhead: exception while handling head:data: ")
 		return 0
