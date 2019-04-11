@@ -890,7 +890,7 @@ $(function(){
 			var newSvg = srcElem.clone();
 			newSvg.clean_gc();
 			var file = {url: src.url, origin: src.origin, name: src.name, type: src.type, refs:{download: src.url}};
-			let prefix = clone_id.substr(0, clone_id.indexOf('_'))
+			let prefix = clone_id.substr(0, clone_id.indexOf('_'));
 			var id = self.getEntryId(prefix);
 			var previewId = self.generateUniqueId(id, file);
 			newSvg.attr({id: previewId,
@@ -898,6 +898,12 @@ $(function(){
                 'mb:clone_of':clone_id,
                 class: srcElem.attr('class')});
             self.removeHighlight(newSvg);
+
+            if (newSvg.attr('class').includes('userIMG')) {
+                let url = self._getIMGserveUrl(file);
+                self._create_img_filter(previewId);
+                newSvg.children()[0].attr({filter: 'url(#'+self._get_img_filter_id(previewId)+')', 'data-serveurl': url});
+            }
 
 			snap.select("#userContent").append(newSvg);
 
