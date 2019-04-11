@@ -890,12 +890,15 @@ $(function(){
 			var newSvg = srcElem.clone();
 			newSvg.clean_gc();
 			var file = {url: src.url, origin: src.origin, name: src.name, type: src.type, refs:{download: src.url}};
-			var id = self.getEntryId();
+			let prefix = clone_id.substr(0, clone_id.indexOf('_'))
+			var id = self.getEntryId(prefix);
 			var previewId = self.generateUniqueId(id, file);
 			newSvg.attr({id: previewId,
                 'mb:id': self._normalize_mb_id(previewId),
                 'mb:clone_of':clone_id,
-                class: 'userSVG'});
+                class: srcElem.attr('class')});
+            self.removeHighlight(newSvg);
+
 			snap.select("#userContent").append(newSvg);
 
 			file.id = id; // list entry id
@@ -904,7 +907,7 @@ $(function(){
 			file.typePath = src.typePath;
 
 			self.placedDesigns.push(file);
-			self.placeSmart(newSvg);    // TODO Iratxe: This crashes with raster images
+			self.placeSmart(newSvg);
 			newSvg.transformable();
 			newSvg.ftRegisterOnTransformCallback(self.svgTransformUpdate);
 			newSvg.ftRegisterBeforeTransformCallback(function(){
@@ -1241,7 +1244,13 @@ $(function(){
 				var previewId = self.generateUniqueId(id, file); // appends # if multiple times the same design is placed.
 				self._create_img_filter(previewId);
 				newImg.attr({filter: 'url(#'+self._get_img_filter_id(previewId)+')', 'data-serveurl': url});
-				var imgWrapper = snap.group().attr({id: previewId, 'mb:id':self._normalize_mb_id(previewId), class: 'userIMG'});
+				var imgWrapper = snap.group().attr({
+                    id: previewId,
+                    'mb:id':self._normalize_mb_id(previewId),
+                    class: 'userIMG',
+                    'mb:origin': origin
+				});
+
 				imgWrapper.append(newImg);
 				snap.select("#userContent").append(imgWrapper);
 				imgWrapper.transformable();
@@ -2628,7 +2637,8 @@ $(function(){
             group.attr({
                 id: file.previewId,
                 'mb:id': self._normalize_mb_id(file.previewId),
-				class: 'userText'
+				class: 'userText',
+                'mb:origin': origin
             });
 
             group.transformable();
