@@ -427,9 +427,17 @@ class IoBeamHandler(object):
 						elif 'response' in json_dict:
 							error_count += self._handle_response(json_dict)
 
-					except ValueError, ve:
-							# Check if we communicate with an older version of iobeam, iobeam:version:0.6.0
-							if isinstance(json_data, basestring) and json_data.startswith("iobeam:version:"):
+					except ValueError as ve:
+						# Check if we communicate with an older version of iobeam, iobeam:version:0.6.0
+						if isinstance(json_data, basestring) and json_data.startswith("iobeam:version:"):
+							tokens = json_data.split(':')
+							version = None
+							try:
+								version = StrictVersion(tokens[2])
+							except ValueError:
+								self._logger.debug("Could not parse data '%s' as JSON", json_data)
+
+							if version and version < StrictVersion(self.IOBEAM_MIN_REQUIRED_VERSION):
 								# Send message to the frontend
 								self._logger.error(
 									"Outdated iobeam: %s - version OUTDATED. IOBEAM_MIN_REQUIRED_VERSION: %s",
@@ -440,15 +448,16 @@ class IoBeamHandler(object):
 																			  type="error", sticky=True,
 																			  replay_when_new_client_connects=True)
 							else:
-								self._logger.debug("Could not parse data '%s' as JSON", json_data)
+								self._logger.debug("iobeam version ok: '%s'", version)
+						else:
+							self._logger.debug("Could not parse data '%s' as JSON", json_data)
 					except Exception as e2:
 						self._logger.debug("Some error with data '%s'", json_data)
 						self._logger.debug(e2)
 						error_count += 1
 
 		except Exception as e:
-			self._logger.debug("Error handling error")
-			self._logger.debug(e)
+			self._logger.exception(e)
 
 		return error_count, message_count
 
