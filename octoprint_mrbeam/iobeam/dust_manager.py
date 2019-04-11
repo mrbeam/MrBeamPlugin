@@ -114,10 +114,10 @@ class DustManager(object):
 			err = True
 
 		self._connected = args['connected']
-		"""
+
 		if self._connected is not None:
 			self._unboost_timer_interval()
-		"""
+
 		if not err:
 			self._data_ts = time.time()
 
@@ -284,10 +284,8 @@ class DustManager(object):
 		# TODO: check for error case in connected val (currently, connected == True/False/None)
 		return result
 
-	'''
-	def _request_value(self, value):
-		return _mrbeam_plugin_implementation._ioBeam.send_fan_command(value)
-	'''
+	# def _request_value(self, value):
+	# 	return _mrbeam_plugin_implementation._ioBeam.send_fan_command(value)
 
 	def _timer_callback(self):
 		try:
