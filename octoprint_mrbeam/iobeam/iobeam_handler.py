@@ -352,6 +352,7 @@ class IoBeamHandler(object):
 				try:
 
 					# Read MESSAGE_LENGTH_MAX bytes of data
+					data = None
 					try:
 						data = temp_buffer + self._my_socket.recv(self.MESSAGE_LENGTH_MAX)
 					except Exception as e:
