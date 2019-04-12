@@ -2255,3 +2255,15 @@ input[type="radio"]{
   -webkit-transform: rotate(45deg);
 }
 
+/*
+* === SOFTWARE CHANNEL SELECTOR ===
+*/
+#software_channel_select {
+  width: 120px;
+}
+
+#software_channel_info {
+  color: #383E42;
+  vertical-align: baseline;
+  padding-left: 5px;
+}
