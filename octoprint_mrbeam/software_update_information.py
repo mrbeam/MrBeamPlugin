@@ -10,9 +10,7 @@ from util.pip_util import get_version_of_pip_module
 
 SW_UPDATE_TIER_PROD =      "PROD"
 SW_UPDATE_TIER_DEV =       "DEV"
-SW_UPDATE_TIER_BETA =      "BETA"
-SW_UPDATE_TIER_DEMO =      "DEMO"
-SW_UPDATE_TIER_NO_UPDATE = "NO_UPDATE"
+SW_TIER_BETA =      	   "BETA"
 
 # add to the display name to modules that should be shown at the top of the list
 SORT_UP_PREFIX = ' '
@@ -36,18 +34,16 @@ def get_update_information(self):
 
 	_config_octoprint(self, tier)
 
-	if not tier in [SW_UPDATE_TIER_NO_UPDATE]:
-
-		_set_info_mrbeam_plugin(self, tier)
-		_set_info_netconnectd_plugin(self, tier)
-		_set_info_findmymrbeam(self, tier)
-		_set_info_mrbeamledstrips(self, tier)
-		_set_info_netconnectd_daemon(self, tier)
-		_set_info_iobeam(self, tier)
-		_set_info_camera_calibration(self, tier)
-		_set_info_mrb_hw_info(self, tier)
-		_set_info_rpiws281x(self, tier)
-		# set_info_testplugin(self, tier) # See function definition for more details
+	_set_info_mrbeam_plugin(self, tier)
+	_set_info_netconnectd_plugin(self, tier)
+	_set_info_findmymrbeam(self, tier)
+	_set_info_mrbeamledstrips(self, tier)
+	_set_info_netconnectd_daemon(self, tier)
+	_set_info_iobeam(self, tier)
+	_set_info_camera_calibration(self, tier)
+	_set_info_mrb_hw_info(self, tier)
+	_set_info_rpiws281x(self, tier)
+	# set_info_testplugin(self, tier) # See function definition for more details
 
 	# _logger.debug("MrBeam Plugin provides this config (might be overridden by settings!):\n%s", yaml.dump(sw_update_config, width=50000).strip())
 	return sw_update_config
@@ -55,11 +51,10 @@ def get_update_information(self):
 
 def software_channels_available(plugin):
 	res = [dict(id=SW_UPDATE_TIER_PROD, name="Stable"),
-	        dict(id=SW_UPDATE_TIER_BETA, name="Beta")]
+	        dict(id=SW_TIER_BETA, name="Beta")]
 	try:
 		if plugin.is_dev_env():
-			res.extend([dict(id=SW_UPDATE_TIER_DEV, name="Develop"),
-			            dict(id=SW_UPDATE_TIER_NO_UPDATE, name="No Update")])
+			res.extend([dict(id=SW_UPDATE_TIER_DEV, name="Develop")])
 	except:
 		pass
 	return res
@@ -68,8 +63,8 @@ def software_channels_available(plugin):
 def switch_software_channel(plugin, channel):
 	old_channel = plugin._settings.get(["dev", "software_tier"])
 
-	if (channel in (SW_UPDATE_TIER_PROD, SW_UPDATE_TIER_BETA) \
-	    or (plugin.is_dev_env() and channel in (SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_NO_UPDATE))) \
+	if (channel in (SW_UPDATE_TIER_PROD, SW_TIER_BETA) \
+	    or (plugin.is_dev_env() and channel in (SW_UPDATE_TIER_DEV, ))) \
 		and not channel == old_channel:
 		_logger.info("Switching software channel to: %s", channel)
 		plugin._settings.set(["dev", "software_tier"], channel)
@@ -130,14 +125,15 @@ def _set_info_mrbeam_plugin(self, tier):
 			pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
 			restart="octoprint")
 
-	if tier in [SW_UPDATE_TIER_DEMO]:
+	if tier in [SW_TIER_BETA]:
 		sw_update_config[module_id] = dict(
 			displayName=SORT_UP_PREFIX + _get_display_name(self, name),
 			displayVersion=self._plugin_version,
 			type="github_commit",
 			user="mrbeam",
 			repo="MrBeamPlugin",
-			branch="demo",
+			branch="mrbeam2-beta",
+			default_branch="mrbeam2-beta",
 			pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
 			restart="octoprint")
 
@@ -175,6 +171,18 @@ def _set_info_netconnectd_plugin(self, tier):
 			pip="https://github.com/mrbeam/OctoPrint-Netconnectd/archive/{target_version}.zip",
 			restart="octoprint")
 
+	if tier in [SW_TIER_BETA]:
+		sw_update_config[module_id] = dict(
+			displayName=_get_display_name(self, name),
+			displayVersion=current_version,
+			type="github_commit",
+			user="mrbeam",
+			repo="OctoPrint-Netconnectd",
+			branch="mrbeam2-beta",
+			branch_default="mrbeam2-beta",
+			pip="https://github.com/mrbeam/OctoPrint-Netconnectd/archive/{target_version}.zip",
+			restart="octoprint")
+
 
 def _set_info_findmymrbeam(self, tier):
 	name = "OctoPrint-FindMyMrBeam"
@@ -206,6 +214,18 @@ def _set_info_findmymrbeam(self, tier):
 			repo="OctoPrint-FindMyMrBeam",
 			branch="develop",
 			branch_default="develop",
+			pip="https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
+			restart="octoprint")
+
+	if tier in [SW_TIER_BETA]:
+		sw_update_config[module_id] = dict(
+			displayName=_get_display_name(self, name),
+			displayVersion=current_version,
+			type="github_commit",
+			user="mrbeam",
+			repo="OctoPrint-FindMyMrBeam",
+			branch="mrbeam2-beta",
+			branch_default="mrbeam2-beta",
 			pip="https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
 			restart="octoprint")
 
@@ -248,14 +268,15 @@ def _set_info_mrbeamledstrips(self, tier):
 			pip_command=pip_command,
 			restart="environment")
 
-	if tier in [SW_UPDATE_TIER_DEMO]:
+	if tier in [SW_TIER_BETA]:
 		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name),
 			displayVersion=version,
 			type="github_commit",
 			user="mrbeam",
 			repo="MrBeamLedStrips",
-			branch="demo",
+			branch="mrbeam2-beta",
+			branch_default="mrbeam2-beta",
 			pip="https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
 			pip_command=pip_command,
 			restart="environment")
@@ -332,6 +353,22 @@ def _set_info_iobeam(self, tier):
 			restart="environment"
 		)
 
+	if tier in [SW_TIER_BETA]:
+		sw_update_config[module_id] = dict(
+			displayName=_get_display_name(self, name),
+			displayVersion=version,
+			type="bitbucket_commit",
+			user="mrbeam",
+			repo="iobeam",
+			branch="mrbeam2-beta",
+			branch_default="mrbeam2-beta",
+			api_user="MrBeamDev",
+			api_password="v2T5pFkmdgDqbFBJAqrt",
+			pip="git+ssh://git@bitbucket.org/mrbeam/iobeam.git@{target_version}",
+			pip_command=pip_command,
+			restart="environment"
+		)
+
 def _set_info_camera_calibration(self, tier):
 	name = "mb_camera_calibration"
 	module_id = "mb-camera-calibration"
@@ -367,6 +404,21 @@ def _set_info_camera_calibration(self, tier):
 			repo="mb_camera_calibration",
 			branch="develop",
 			branch_default="develop",
+			api_user="MrBeamDev",
+			api_password="v2T5pFkmdgDqbFBJAqrt",
+			pip="git+ssh://git@bitbucket.org/mrbeam/mb_camera_calibration.git@{target_version}",
+			restart="octoprint"
+		)
+
+	if tier in [SW_TIER_BETA]:
+		sw_update_config[module_id] = dict(
+			displayName=_get_display_name(self, name),
+			displayVersion=version,
+			type="bitbucket_commit",
+			user="mrbeam",
+			repo="mb_camera_calibration",
+			branch="mrbeam2-beta",
+			branch_default="mrbeam2-beta",
 			api_user="MrBeamDev",
 			api_password="v2T5pFkmdgDqbFBJAqrt",
 			pip="git+ssh://git@bitbucket.org/mrbeam/mb_camera_calibration.git@{target_version}",
@@ -410,6 +462,22 @@ def _set_info_mrb_hw_info(self, tier):
 			repo="mrb_hw_info",
 			branch="develop",
 			branch_default="develop",
+			api_user="MrBeamDev",
+			api_password="v2T5pFkmdgDqbFBJAqrt",
+			pip="git+ssh://git@bitbucket.org/mrbeam/mrb_hw_info.git@{target_version}",
+			pip_command=pip_command,
+			restart="environment"
+		)
+
+	if tier in [SW_TIER_BETA]:
+		sw_update_config[module_id] = dict(
+			displayName=_get_display_name(self, name),
+			displayVersion=version,
+			type="bitbucket_commit",
+			user="mrbeam",
+			repo="mrb_hw_info",
+			branch="mrbeam2-beta",
+			branch_default="mrbeam2-beta",
 			api_user="MrBeamDev",
 			api_password="v2T5pFkmdgDqbFBJAqrt",
 			pip="git+ssh://git@bitbucket.org/mrbeam/mrb_hw_info.git@{target_version}",
