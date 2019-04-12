@@ -4,6 +4,7 @@ import os
 import subprocess
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
+from octoprint_mrbeam.analytics.analytics_handler import analyticsHandler
 from util.pip_util import get_version_of_pip_module
 
 
@@ -65,9 +66,11 @@ def software_channels_available(plugin):
 
 
 def switch_software_channel(plugin, channel):
+	old_channel = plugin._settings.get(["dev", "software_tier"])
+
 	if (channel in (SW_UPDATE_TIER_PROD, SW_UPDATE_TIER_BETA) \
 	    or (plugin.is_dev_env() and channel in (SW_UPDATE_TIER_DEV, SW_UPDATE_TIER_NO_UPDATE))) \
-		and not channel == plugin._settings.get(["dev", "software_tier"]):
+		and not channel == old_channel:
 		_logger.info("Switching software channel to: %s", channel)
 		plugin._settings.set(["dev", "software_tier"], channel)
 
@@ -76,17 +79,10 @@ def switch_software_channel(plugin, channel):
 			sw_update_plugin._refresh_configured_checks = True
 
 			sw_update_plugin._version_cache = dict()
-			# del sw_update_plugin._version_cache["mrbeam"]
-			# del sw_update_plugin._version_cache["netconnectd"]
-			# del sw_update_plugin._version_cache["findmymrbeam"]
-			# del sw_update_plugin._version_cache["mrbeam-ledstrips"]
-			# del sw_update_plugin._version_cache["netconnectd-daemon"]
-			# del sw_update_plugin._version_cache["iobeam"]
-			# del sw_update_plugin._version_cache["mb-camera-calibration"]
-			# del sw_update_plugin._version_cache["mrb_hw_info"]
-			# # del sw_update_plugin._version_cache["rpi-ws281x"]
 
 			sw_update_plugin._version_cache_dirty = True
+
+			analyticsHandler(_mrbeam_plugin_implementation).software_channel_switch_event(old_channel, channel)
 		except:
 			_logger.exception("Exception while switching software channel: ")
 

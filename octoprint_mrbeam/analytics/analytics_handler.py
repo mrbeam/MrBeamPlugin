@@ -65,8 +65,8 @@ class AnalyticsHandler(object):
 		self._storedConversions = list()
 
 		self._jobevent_log_version = 4
-		self._deviceinfo_log_version = 4
-		self._logevent_version = 1
+		self._deviceinfo_log_version = 5  # Changed after v0.1.61 (12-04-2019)
+		self._logevent_version = 2  # Changed after v0.1.61 (12-04-2019)
 		self._dust_log_version = 2
 		self._cam_event_log_version = 2
 		self._connectivity_event_log_version = 1
@@ -444,6 +444,18 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.error('Error during write_cam_update: {}'.format(e.message))
 
+	def software_channel_switch_event(self, old_channel, new_channel):
+		try:
+			data = {
+				ak.OLD_CHANNEL: old_channel,
+				ak.NEW_CHANNEL: new_channel,
+			}
+
+			self._write_event(ak.TYPE_DEVICE_EVENT, ak.SW_CHANNEL_SWITCH, self._deviceinfo_log_version, payload=dict(data=data))
+
+		except Exception as e:
+			self._logger.error('Error when writing the software channel switch event: {}'.format(e.message))
+
 	def store_conversion_details(self, details):
 		try:
 			self._storedConversions = list()
@@ -520,6 +532,7 @@ class AnalyticsHandler(object):
 			# TODO add data validation/preparation here
 			if payload is not None:
 				data[ak.DATA] = payload
+				data[ak.SOFTWARE_TIER] = self._settings.get(["dev", "software_tier"])
 			self._write_event(ak.TYPE_LOG_EVENT, ak.EVENT_LOG, self._logevent_version, payload=data)
 		except Exception as e:
 			self._logger.error('Error during _write_log_event: {}'.format(e.message), analytics=False)
