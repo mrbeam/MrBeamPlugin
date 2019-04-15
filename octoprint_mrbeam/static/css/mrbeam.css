@@ -1,5 +1,7 @@
 a {	color: #e25303; }
 a:hover { color: #a63e03 }
+a.muted{ color: #e25303a1 }
+a.muted:hover{ color: #e25303a1 }
 
 .btn {
   display: inline-block;
