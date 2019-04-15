@@ -1,23 +1,28 @@
 <h3>{{ _('Access Control') }}</h3>
 
-{% trans %}<p>
-    <strong>Please read the following, it is very important for the security of your Mr Beam II!</strong>
-</p>
-<p>
-    Your Mr Beam II is configured with a Access Control, meaning you won't be able to do anything with the
-    laser cutter unless you login first as a configured user. This is to <strong>prevent strangers - possibly with
-    malicious intent - to gain access to your laser cutter</strong> via the internet or another untrustworthy network
-    and using it in such a way that it is damaged or worse (i.e. causes a fire).
-</p>
-<p>
-    Please <strong>set up a user account with a password</strong> as the initial administrator account which will have full access to the Mr Beam II:
-</p>{% endtrans %}
+
+
+{% trans %}
+    <h5>Please set up a user account for your Mr Beam II.</h5>
+
+    <p><strong>Attention: Please remember your access data!</strong> <br/>
+        For security reasons, you can only use your Mr Beam II after logging in with a user account.
+        If you forget your access information, you'll need to contact the Mr Beam Support Team to reset your device.
+    </p>
+    <p>In the settings you can create additional user accounts, e.g. for family members, colleagues or friends.</p>
+
+{% endtrans %}
+
+<p><br/></p>
+
+
 <form class="form-horizontal">
     <div class="control-group" data-bind="css: {success: doUserValidation() && validUsername(), error: doUserValidation() && !validUsername()}">
         <label class="control-label" for="first_run_username">{{ _('E-mail address') }}</label>
         <div class="controls">
             <input id="wizard_plugin_corewizard_acl_input_username" type="text" class="input-medium" data-bind="value: username, valueUpdate: 'input', enable: !setup(), css: {disabled: setup()}">
-			<span class="help-inline" data-bind="visible: doUserValidation() && !validUsername()">{{ _('Invalid e-mail address') }}</span>
+            <span class="help-inline" >{{ _('This login is case-sensitive!') }}</span>
+            <span class="help-inline" data-bind="visible: doUserValidation() && !validUsername()">{{ _('Invalid e-mail address') }}</span>
         </div>
     </div>
     <div class="control-group" data-bind="css: {success: validPassword()}">
@@ -34,7 +39,4 @@
         </div>
     </div>
 </form>
-{% trans %}<p>
-    <strong>Note:</strong> Please consider using a strong password in order to prevent any other person of guessing or brute forcing your password.
-</p>
-{% endtrans %}
+

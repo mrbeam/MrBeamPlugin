@@ -25,6 +25,10 @@ $(function() {
                  */
                 self.setLoginState(false);
             }
+
+            let header_elem = $('#mrb_settings_users_header').detach();
+            $('#settings_users > table').before(header_elem);
+            header_elem.show();
         };
 
         /**
