@@ -30,6 +30,7 @@ class AnalyticsKeys(object):
 	USED_SPACE = 'used_percent'
 	CORRECTION_FACTOR = 'correction_factor'
 	CORRECTION_ENABLED = 'correction_enabled'
+	CORRECTION_OVERRIDE = 'correction_override'
 	POWER_65 = 'p_65'
 	POWER_75 = 'p_75'
 	POWER_85 = 'p_85'

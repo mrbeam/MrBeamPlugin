@@ -170,6 +170,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def _initialize_lh(self):
 		self.lh['serial'] = self._settings.get(["laserhead", "serial"])
 		self.lh['correction_factor'] = self._settings.get(["laserhead", "correction", "factor"])
+		self.lh['correction_factor_override'] = self._settings.get(["laserhead", "correction", "factor_override"])
 		self.lh['correction_enabled'] = self._settings.get(["laserhead", "correction", "enabled"])
 		self.lh['p_65'] = self._settings.get(["laserhead", "p_65"])
 		self.lh['p_75'] = self._settings.get(["laserhead", "p_75"])
@@ -267,6 +268,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				correction=dict(
 					enabled=True,
 					factor=1,
+					factor_override=None,
 				),
 				p_65=0,
 				p_75=0,

@@ -637,18 +637,28 @@ class IoBeamHandler(object):
 				_mrbeam_plugin_implementation.lh['p_85'] = p85
 				self._logger.info("laserhead p_85: %s", p85)
 
-			# If we have all the values and the correction, we calculate the power correction factor
+			# If we have all the values and the correction, we (calculate and) apply the power correction factor
 			if _mrbeam_plugin_implementation.lh['p_65'] and _mrbeam_plugin_implementation.lh['p_75'] and \
 					_mrbeam_plugin_implementation.lh['p_85']:
-				self._calculate_power_correction_factor()
 
-				# Apply laser power correction if the comm was already there
+				# Only calculate if we are not overriding
+				if not _mrbeam_plugin_implementation.lh['correction_factor_override']:
+					self._calculate_power_correction_factor()
+
+				# These values are read in the init of the comm_acc2. However, that may happen before these calculations
+				# are done so it is possible that some old values are stored instead. Here we store the new values if
+				# necessary.
 				if _mrbeam_plugin_implementation.lh['correction_enabled']:
 					try:
 						self._logger.info('Applying laser power correction factor')
 						_mrbeam_plugin_implementation._printer._comm._set_power_correction_factor()
 					except:
-						self._logger.info('Laser power correction was already applied')
+						if not _mrbeam_plugin_implementation.lh['correction_factor_override']:
+							self._logger.info("Intensity correction factor applied: {}".format(_mrbeam_plugin_implementation.lh['correction_factor']))
+						else:
+							self._logger.info("Intensity correction factor OVERRIDED: {}".format(_mrbeam_plugin_implementation.lh['correction_factor_override']))
+
+				# Write values to analytics
 				_mrbeam_plugin_implementation._analytics_handler._event_laserhead_info()
 			else:
 				self._logger.warn("Can't calculate intensity correction factor as p_65, p_75 or p_85 are not valid")

@@ -194,7 +194,12 @@ class MachineCom(object):
 
 		# laser power correction
 		if _mrbeam_plugin_implementation._settings.get(['laserhead', 'correction', 'enabled']):
-			self._power_correction_factor = _mrbeam_plugin_implementation._settings.get(['laserhead', 'correction', 'factor'])
+			if not _mrbeam_plugin_implementation._settings.get(['laserhead', 'correction', 'factor_override']):
+				self._power_correction_factor = _mrbeam_plugin_implementation._settings.get(
+					['laserhead', 'correction', 'factor'])
+			else:
+				self._power_correction_factor = _mrbeam_plugin_implementation._settings.get(
+					['laserhead', 'correction', 'factor_override'])
 		else:
 			self._power_correction_factor = 1
 
@@ -1050,9 +1055,14 @@ class MachineCom(object):
 		eventManager().fire(OctoPrintEvents.CONNECTED, payload)
 
 	def _set_power_correction_factor(self):
-		correction_factor = _mrbeam_plugin_implementation.lh['correction_factor']
+		if _mrbeam_plugin_implementation.lh['correction_factor_override']:
+			correction_factor = _mrbeam_plugin_implementation.lh['correction_factor_override']
+			self._logger.info("Intensity correction factor OVERRIDED: {}".format(correction_factor))
+		else:
+			correction_factor = _mrbeam_plugin_implementation.lh['correction_factor']
+			self._logger.info("Intensity correction factor applied: {}".format(correction_factor))
+
 		self._power_correction_factor = correction_factor
-		self._logger.info("Intensity correction factor applied: {}".format(correction_factor))
 
 	def _detectPort(self, close):
 		self._log("Serial port list: %s" % (str(serialList())))

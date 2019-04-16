@@ -302,7 +302,8 @@ class AnalyticsHandler(object):
 				ak.POWER_75: _mrbeam_plugin_implementation.lh['p_75'],
 				ak.POWER_85: _mrbeam_plugin_implementation.lh['p_85'],
 				ak.CORRECTION_FACTOR: _mrbeam_plugin_implementation.lh['correction_factor'],
-				ak.CORRECTION_ENABLED: _mrbeam_plugin_implementation.lh['correction_factor'],
+				ak.CORRECTION_ENABLED: _mrbeam_plugin_implementation.lh['correction_enabled'],
+				ak.CORRECTION_OVERRIDE: _mrbeam_plugin_implementation.lh['correction_factor_override'],
 			}
 			self._write_deviceinfo(ak.LASERHEAD_INFO, payload=laserhead_info)
 
