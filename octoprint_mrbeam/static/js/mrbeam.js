@@ -121,9 +121,10 @@ $(function() {
             if (mrbeam.isBeta() && !self.settings.settings.plugins.mrbeam.analyticsEnabled()){
                 new PNotify({
                         title: gettext("Beta user: Please consider enabling Mr Beam analytics!"),
-                        text: _.sprintf(gettext("As you are currently in our Beta channel, it would be very helpful " +
-                            "for us to get some insights of how things are going. This will help us improve and correct " +
-                            "possible errors. Thank you!%(br)s%(open)sGo to analytics settings%(close)s"), {open: '<a href=\'#\' data-toggle="tab" id="settings_analytics_link" style="font-weight:bold">', close:'</a>', br: '<br>'}),
+                        text: _.sprintf(gettext("As you are currently in our Beta channel, you would help us " +
+                            "tremendously sharing%(br)sthe laser job insights, so we can improve%(br)san overall experience " +
+                            "working with the%(br)s Mr Beam II. Thank you!%(br)s%(open)sGo to analytics settings%(close)s"),
+                            {open: '<a href=\'#\' data-toggle="tab" id="settings_analytics_link" style="font-weight:bold">', close:'</a>', br: '<br>'}),
                         type: 'warn',
                         hide: false
                     });
