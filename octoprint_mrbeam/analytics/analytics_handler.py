@@ -65,7 +65,7 @@ class AnalyticsHandler(object):
 		self._storedConversions = list()
 
 		self._jobevent_log_version = 4
-		self._deviceinfo_log_version = 5  # Changed in v61 (04-04-2019)
+		self._deviceinfo_log_version = 5  # Changed in v0.1.61 (04-04-2019)
 		self._logevent_version = 1
 		self._dust_log_version = 2
 		self._cam_event_log_version = 2

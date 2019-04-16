@@ -689,6 +689,8 @@ class IoBeamHandler(object):
 			self._settings.set_int(["laserhead", "p_85"], p_85, force=True)
 			self._settings.save()
 
+		self._logger.info('Correction factor: {cf}'.format(cf=correction_factor))
+
 	def _handle_iobeam_message(self, message, token):
 		action = token[0] if len(token) > 0 else None
 		if action == 'version':

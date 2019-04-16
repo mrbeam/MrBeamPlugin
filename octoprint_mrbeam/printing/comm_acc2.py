@@ -159,10 +159,6 @@ class MachineCom(object):
 		self._send_event = CountedEvent(max=50)
 		self._finished_currentFile = False
 		self._pause_delay_time = 0
-		self._feedrate_factor = 1
-		self._actual_feedrate = None
-		self._actual_intensity = None
-		self._feedrate_dict = {}
 		self._passes = 1
 		self._finished_passes = 0
 		self._flush_command_ts = -1
@@ -1355,21 +1351,16 @@ class MachineCom(object):
 		obj = self._regex_feedrate.search(cmd)
 		if obj is not None:
 			feedrate_cmd = cmd[obj.start():obj.end()]
-			self._actual_feedrate = int(feedrate_cmd[1:])
-			self._current_feedrate = self._actual_feedrate
-			if self._feedrate_factor != 1:
-				if feedrate_cmd in self._feedrate_dict:
-					new_feedrate = self._feedrate_dict[feedrate_cmd]
-				else:
-					new_feedrate = int(round(self._actual_feedrate * self._feedrate_factor))
-					# TODO replace with value from printer profile
-					if new_feedrate > 5000:
-						new_feedrate = 5000
-					elif new_feedrate < 30:
-						new_feedrate = 30
-					self._feedrate_dict[feedrate_cmd] = new_feedrate
-				self._current_feedrate = int(new_feedrate)
-				return cmd.replace(feedrate_cmd, 'F%d' % self._current_feedrate)
+			self._current_feedrate = int(feedrate_cmd[1:])
+
+			# Limit if necessary
+			if self._current_feedrate > 5000:
+				self._current_feedrate = 5000
+			elif self._current_feedrate < 30:
+				self._current_feedrate = 30
+
+			return cmd.replace(feedrate_cmd, 'F%d' % self._current_feedrate)
+
 		return cmd
 
 	def _replace_intensity(self, cmd):
@@ -1378,22 +1369,20 @@ class MachineCom(object):
 			intensity_limit = int(self._laserCutterProfile['laser']['intensity_limit'])
 			intensity_cmd = cmd[obj.start():obj.end()]
 			parsed_intensity = int(intensity_cmd[1:])
-			self._actual_intensity = parsed_intensity if parsed_intensity <= intensity_limit else intensity_limit
-			self._current_intensity = int(round(self._actual_intensity))
 
-			# Limit GCode input
-			new_intensity = int(round(self._actual_intensity))
-			if new_intensity > intensity_limit:
-				new_intensity = intensity_limit
+			# Limit GCode input (in case users enter a too high value in the gcode)
+			self._current_intensity = parsed_intensity
+			if self._current_intensity > intensity_limit:
+				self._current_intensity = intensity_limit
 
-			# Apply power correction factor and limit again
-			new_intensity = int(round(new_intensity * self._power_correction_factor))
-			if new_intensity > self.MAX_INTENSITY_AFTER_CORRECTION:
-				new_intensity = self.MAX_INTENSITY_AFTER_CORRECTION
+			# Apply power correction factor and limit again (in case there is something wrong with the calculation of
+			# the correction factor)
+			self._current_intensity = int(round(self._current_intensity * self._power_correction_factor))
+			if self._current_intensity > self.MAX_INTENSITY_AFTER_CORRECTION:
+				self._current_intensity = self.MAX_INTENSITY_AFTER_CORRECTION
 
-			self._logger.info('Intensity command changed from S{old} to S{new} (correction factor {factor})'.format(
-				old=self._actual_intensity, new=new_intensity, factor=self._power_correction_factor))
-			self._current_intensity = int(round(new_intensity))
+			# self._logger.info('Intensity command changed from S{old} to S{new} (correction factor {factor})'
+			# 				  .format(old=parsed_intensity, new=self._current_intensity, factor=self._power_correction_factor))
 
 			return cmd.replace(intensity_cmd, 'S%d' % self._current_intensity)
 		return cmd
@@ -1607,7 +1596,7 @@ class MachineCom(object):
 						self._power_correction_factor = 1
 				else:
 					self._log("No parameter given (0 or 1)")
-			elif specialcmd.startswith('/terminal_show_checksums'):
+			elif specialcmd.startswith('/show_checksums'):
 				if len(tokens) > 1:
 					token = int(tokens[1])
 					if token == 1:
@@ -1631,8 +1620,8 @@ class MachineCom(object):
 				self._log("   /disconnect")
 				self._log("   /reset")
 				self._log("   /correct_settings")
-				self._log("   /power_correction <x>  		--> Enable: x = 1; Disable: x = 0")
-				self._log("   /terminal_show_checksums <x>  --> Enable: x = 1; Disable: x = 0")
+				self._log("   /power_correction <x>		--> Enable: x = 1; Disable: x = 0")
+				self._log("   /show_checksums <x>		--> Enable: x = 1; Disable: x = 0")
 				self._log("   /verify_grbl [? | <file>] // ?: list of available files; If omitted default grbl version will be verified .")
 				self._log("   /flash_grbl [? | <file>] // ?: list of available files; If omitted current grbl version will be flashed.")
 		except:
@@ -1667,7 +1656,6 @@ class MachineCom(object):
 			raise ValueError("No file selected for printing")
 
 		# reset feedrate in case they where changed in a previous run
-		self._feedrate_factor  = 1
 		self._finished_passes = 0
 		self._pauseWaitTimeLost = 0.0
 		self._pauseWaitStartTime = None

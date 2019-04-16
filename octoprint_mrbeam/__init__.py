@@ -133,12 +133,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		self.focusReminder = self._settings.get(['focusReminder'])
 
-		self.lh['serial'] = self._settings.get(["laserhead", "serial"])
-		self.lh['correction_factor'] = self._settings.get(["laserhead", "correction", "factor"])
-		self.lh['correction_enabled'] = self._settings.get(["laserhead", "correction", "enabled"])
-		self.lh['p_65'] = self._settings.get(["laserhead", "p_65"])
-		self.lh['p_75'] = self._settings.get(["laserhead", "p_75"])
-		self.lh['p_85'] = self._settings.get(["laserhead", "p_85"])
+		self._initialize_lh()
 
 		self.start_time_ntp_timer()
 
@@ -172,6 +167,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._dustManager = dustManager()
 		self.jobTimeEstimation = JobTimeEstimation(self._event_bus)
 
+	def _initialize_lh(self):
+		self.lh['serial'] = self._settings.get(["laserhead", "serial"])
+		self.lh['correction_factor'] = self._settings.get(["laserhead", "correction", "factor"])
+		self.lh['correction_enabled'] = self._settings.get(["laserhead", "correction", "enabled"])
+		self.lh['p_65'] = self._settings.get(["laserhead", "p_65"])
+		self.lh['p_75'] = self._settings.get(["laserhead", "p_75"])
+		self.lh['p_85'] = self._settings.get(["laserhead", "p_85"])
 
 	def _do_initial_log(self):
 		"""
