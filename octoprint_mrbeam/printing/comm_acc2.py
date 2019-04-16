@@ -111,8 +111,6 @@ class MachineCom(object):
 	pattern_get_x_coord_from_gcode = re.compile("^G.*X(\d{1,3}\.?\d{0,3})\D.*")
 	pattern_get_y_coord_from_gcode = re.compile("^G.*Y(\d{1,3}\.?\d{0,3})\D.*")
 
-	MAX_INTENSITY_AFTER_CORRECTION = 1700
-
 	def __init__(self, port=None, baudrate=None, callbackObject=None, printerProfileManager=None):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.printing.comm_acc2")
 
@@ -193,6 +191,9 @@ class MachineCom(object):
 		self._serial_factory_hooks = self._pluginManager.get_hooks("octoprint.comm.transport.serial.factory")
 
 		# laser power correction
+		self._gcode_intensity_limit = _mrbeam_plugin_implementation._settings.get(
+			['laserhead', 'correction', 'gcode_intensity_limit'])
+
 		if _mrbeam_plugin_implementation._settings.get(['laserhead', 'correction', 'enabled']):
 			if not _mrbeam_plugin_implementation._settings.get(['laserhead', 'correction', 'factor_override']):
 				self._power_correction_factor = _mrbeam_plugin_implementation._settings.get(
@@ -1055,6 +1056,9 @@ class MachineCom(object):
 		eventManager().fire(OctoPrintEvents.CONNECTED, payload)
 
 	def _set_power_correction_factor(self):
+		self._gcode_intensity_limit = _mrbeam_plugin_implementation._settings.get(
+			['laserhead', 'correction', 'gcode_intensity_limit'])
+
 		if _mrbeam_plugin_implementation.lh['correction_factor_override']:
 			correction_factor = _mrbeam_plugin_implementation.lh['correction_factor_override']
 			self._logger.info("Intensity correction factor OVERRIDED: {}".format(correction_factor))
@@ -1388,11 +1392,13 @@ class MachineCom(object):
 			# Apply power correction factor and limit again (in case there is something wrong with the calculation of
 			# the correction factor)
 			self._current_intensity = int(round(self._current_intensity * self._power_correction_factor))
-			if self._current_intensity > self.MAX_INTENSITY_AFTER_CORRECTION:
-				self._current_intensity = self.MAX_INTENSITY_AFTER_CORRECTION
+			if self._current_intensity > self._gcode_intensity_limit:
+				self._current_intensity = self._gcode_intensity_limit
 
-			# self._logger.info('Intensity command changed from S{old} to S{new} (correction factor {factor})'
-			# 				  .format(old=parsed_intensity, new=self._current_intensity, factor=self._power_correction_factor))
+			# self._logger.info('Intensity command changed from S{old} to S{new} (correction factor {factor} and '
+			# 				  'intensity limit {limit})'.format(old=parsed_intensity, new=self._current_intensity,
+			# 													factor=self._power_correction_factor,
+			# 													limit=self._gcode_intensity_limit))
 
 			return cmd.replace(intensity_cmd, 'S%d' % self._current_intensity)
 		return cmd
