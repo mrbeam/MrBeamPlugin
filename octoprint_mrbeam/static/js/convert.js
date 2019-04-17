@@ -551,7 +551,7 @@ $(function(){
 				new_material = {
 				name: name,
 					img: 'custom.jpg',
-					description: gettext("custom material"),
+					description: gettext("Custom material settings"),
 					hints: gettext("Figuring out material settings works best from low to high intensity and fast to slow movement."),
 					safety_notes: gettext("Experimenting with custom material settings is at your own risk."),
 					laser_type: 'MrBeamII-1.0',
@@ -1697,7 +1697,7 @@ $(function(){
 			if ('reason' in payload && typeof payload['reason'] === 'string' && payload['reason'].startsWith('OutOfSpaceException')) {
 			    var html = "<ul>";
 			    html += ("<lh>" + gettext("To free up some disk space you may want to perform one or all of the following suggestions:") + "</lh>");
-			    html += ("<li>" + gettext("Delete CGODE files: Go to design library and click 'Only show GCode files' on the left. Here you can delete files from the according context menu.") + "</li>");
+			    html += ("<li>" + gettext("Delete GCode files: Go to design library and click 'Only show GCode files' on the left. Here you can delete files from the according context menu.") + "</li>");
 			    html += ("<li>" + gettext("Delete design files: Go to design library and click 'Only show design files' on the left. Here you can delete files from the according context menu.") + "</li>");
 			    html += ("<li>" + gettext("Delete log files: Go to Settings -> logs and delete old log files per click on the trash bin icon.") + "</li>");
 			    html += "</ul>";
