@@ -25,6 +25,8 @@ class AnalyticsKeys(object):
 	### DEVICE KEYS ###
 	HOSTNAME = 'hostname'
 	LASERHEAD_VERSION = 'lh_ver'
+	OLD_CHANNEL = 'new_channel'
+	NEW_CHANNEL = 'old_channel'
 	TOTAL_SPACE = 'total'
 	AVAILABLE_SPACE = 'available'
 	USED_SPACE = 'used_percent'
@@ -43,6 +45,7 @@ class AnalyticsKeys(object):
 	ANALYTICS_ENABLED = 'analytics_enabled'
 	IPS = 'ips'
 	DISK_SPACE = 'disk_space'
+	SW_CHANNEL_SWITCH = 'sw_channel_switch'
 	LASERHEAD_INFO = 'laserhead_info'
 
 	### LOG EVENT KEYS ###
