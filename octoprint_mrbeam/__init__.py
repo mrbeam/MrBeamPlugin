@@ -235,7 +235,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			current_profile_id="_mrbeam_junior", # yea, this needs to be like this # 2018: not so sure anymore...
 			svgDPI=90,
 			dxfScale=1,
-			beta_label="BETA",
+			beta_label="",
 			job_time = 0.0,
 			terminal=False,
 			terminal_show_checksums = True,
@@ -1894,8 +1894,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			chunks.append("VORLON")
 		if self.support_mode:
 			chunks.append("SUPPORT")
+		if self.is_beta_channel():
+			chunks.append("BETA")
 
-		return " | ".join(chunks)
+		# If the beta_label is an empty string and we only add 1 string, then we just take the newly added
+		if not self._settings.get(['beta_label']) and len(chunks) == 2:
+			return chunks[1]
+		else:
+			return " | ".join(chunks)
 
 
 	def is_time_ntp_synced(self):
@@ -1963,7 +1969,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				timer.daemon = True
 				timer.start()
 
-
+	def is_beta_channel(self):
+		return self._settings.get(["dev", "software_tier"]) == "BETA"
 
 	def is_vorlon_enabled(self):
 		vorlon = self._settings.get(['vorlon'])
