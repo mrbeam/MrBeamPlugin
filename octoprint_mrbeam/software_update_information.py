@@ -10,7 +10,7 @@ from util.pip_util import get_version_of_pip_module
 
 SW_UPDATE_TIER_PROD =      "PROD"
 SW_UPDATE_TIER_DEV =       "DEV"
-SW_TIER_BETA =      	   "BETA"
+SW_UPDATE_TIER_BETA =      "BETA"
 
 # add to the display name to modules that should be shown at the top of the list
 SORT_UP_PREFIX = ' '
@@ -51,7 +51,7 @@ def get_update_information(self):
 
 def software_channels_available(plugin):
 	res = [dict(id=SW_UPDATE_TIER_PROD, name="Stable"),
-	        dict(id=SW_TIER_BETA, name="Beta")]
+	       dict(id=SW_UPDATE_TIER_BETA, name="Beta")]
 	try:
 		if plugin.is_dev_env():
 			res.extend([dict(id=SW_UPDATE_TIER_DEV, name="Develop")])
@@ -63,7 +63,7 @@ def software_channels_available(plugin):
 def switch_software_channel(plugin, channel):
 	old_channel = plugin._settings.get(["dev", "software_tier"])
 
-	if (channel in (SW_UPDATE_TIER_PROD, SW_TIER_BETA) \
+	if (channel in (SW_UPDATE_TIER_PROD, SW_UPDATE_TIER_BETA) \
 	    or (plugin.is_dev_env() and channel in (SW_UPDATE_TIER_DEV, ))) \
 		and not channel == old_channel:
 		_logger.info("Switching software channel to: %s", channel)
@@ -125,7 +125,7 @@ def _set_info_mrbeam_plugin(self, tier):
 			pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
 			restart="octoprint")
 
-	if tier in [SW_TIER_BETA]:
+	if tier in [SW_UPDATE_TIER_BETA]:
 		sw_update_config[module_id] = dict(
 			displayName=SORT_UP_PREFIX + _get_display_name(self, name),
 			displayVersion=self._plugin_version,
@@ -171,7 +171,7 @@ def _set_info_netconnectd_plugin(self, tier):
 			pip="https://github.com/mrbeam/OctoPrint-Netconnectd/archive/{target_version}.zip",
 			restart="octoprint")
 
-	if tier in [SW_TIER_BETA]:
+	if tier in [SW_UPDATE_TIER_BETA]:
 		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name),
 			displayVersion=current_version,
@@ -217,7 +217,7 @@ def _set_info_findmymrbeam(self, tier):
 			pip="https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
 			restart="octoprint")
 
-	if tier in [SW_TIER_BETA]:
+	if tier in [SW_UPDATE_TIER_BETA]:
 		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name),
 			displayVersion=current_version,
@@ -268,7 +268,7 @@ def _set_info_mrbeamledstrips(self, tier):
 			pip_command=pip_command,
 			restart="environment")
 
-	if tier in [SW_TIER_BETA]:
+	if tier in [SW_UPDATE_TIER_BETA]:
 		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name),
 			displayVersion=version,
@@ -353,7 +353,7 @@ def _set_info_iobeam(self, tier):
 			restart="environment"
 		)
 
-	if tier in [SW_TIER_BETA]:
+	if tier in [SW_UPDATE_TIER_BETA]:
 		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name),
 			displayVersion=version,
@@ -410,7 +410,7 @@ def _set_info_camera_calibration(self, tier):
 			restart="octoprint"
 		)
 
-	if tier in [SW_TIER_BETA]:
+	if tier in [SW_UPDATE_TIER_BETA]:
 		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name),
 			displayVersion=version,
@@ -469,7 +469,7 @@ def _set_info_mrb_hw_info(self, tier):
 			restart="environment"
 		)
 
-	if tier in [SW_TIER_BETA]:
+	if tier in [SW_UPDATE_TIER_BETA]:
 		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name),
 			displayVersion=version,

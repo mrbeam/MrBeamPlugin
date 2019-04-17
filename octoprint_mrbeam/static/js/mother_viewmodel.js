@@ -231,8 +231,6 @@ $(function () {
         };
 
         self.onStartupComplete = function() {
-            // self.addSwUpdateTierInformation();
-            // self.inject_software_update_channel();
             self.set_Design_lib_defaults();
             self._handleStoredSocketData();
             self.isStartupComplete = true;
@@ -256,13 +254,6 @@ $(function () {
                 $('#settings_plugin_softwareupdate > h3').append(" (TIER: "+tier+")");
             }
         };
-        //
-        // self.inject_software_update_channel = function(){
-        //     let elem = $('#mrb_softwareupdate_channel_selector').clone();
-        //     $('#settings_plugin_softwareupdate > h3').after(elem);
-        //     elem.css('visibility', 'visible');
-        //
-        // };
 
         self.removeLoadingOverlay = function(){
             // firstImageLoaded is based on jQuery.load() which is not reliable and deprecated.

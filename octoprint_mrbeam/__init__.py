@@ -37,7 +37,7 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
 from octoprint_mrbeam.migrate import migrate
 from octoprint_mrbeam.printing.profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
-from octoprint_mrbeam.software_update_information import get_update_information, switch_software_channel, software_channels_available, SW_UPDATE_TIER_PROD
+from octoprint_mrbeam.software_update_information import get_update_information, switch_software_channel, software_channels_available, SW_UPDATE_TIER_PROD, SW_UPDATE_TIER_BETA
 from octoprint_mrbeam.support import set_support_mode
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.cli import get_cli_commands
@@ -1889,19 +1889,16 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def get_beta_label(self):
 		chunks = []
-		chunks.append(self._settings.get(['beta_label']))
+		if self._settings.get(['beta_label']):
+			chunks.append(self._settings.get(['beta_label']))
+		if self.is_beta_channel():
+			chunks.append("BETA")
 		if self.is_vorlon_enabled():
 			chunks.append("VORLON")
 		if self.support_mode:
 			chunks.append("SUPPORT")
-		if self.is_beta_channel():
-			chunks.append("BETA")
 
-		# If the beta_label is an empty string and we only add 1 string, then we just take the newly added
-		if not self._settings.get(['beta_label']) and len(chunks) == 2:
-			return chunks[1]
-		else:
-			return " | ".join(chunks)
+		return " | ".join(chunks)
 
 
 	def is_time_ntp_synced(self):
@@ -1970,7 +1967,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				timer.start()
 
 	def is_beta_channel(self):
-		return self._settings.get(["dev", "software_tier"]) == "BETA"
+		return self._settings.get(["dev", "software_tier"]) == SW_UPDATE_TIER_BETA
 
 	def is_vorlon_enabled(self):
 		vorlon = self._settings.get(['vorlon'])
