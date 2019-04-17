@@ -27,6 +27,8 @@ $(function () {
 
             self.selector(self.settings.settings.plugins.mrbeam.dev.software_tier());
             self.selector = self.settings.settings.plugins.mrbeam.dev.software_tier;
+
+            self._make_settings_software_update_scrollable();
         };
 
         self.onEventSettingsUpdated = function(data){
@@ -43,6 +45,21 @@ $(function () {
         self._trigger_refresh = function(){
             self.softwareUpdate.performCheck(true, false, true);
         };
+
+        /**
+         * This one wraps all content of the #settings_plugin_softwareupdate elem into a div
+         * which makes the whole page scrollable. it's a bit tricky/dirty because the content comes from OP.
+         * @private
+         */
+        self._make_settings_software_update_scrollable = function () {
+            let id_scroll_wrapper = "settings_plugin_softwareupdate_scroll_wrapper";
+            let elem_= $('#settings_plugin_softwareupdate');
+            let children = elem_.children();
+            elem_.append('<div class=\"scrollable\" style=\"padding-bottom:2em; overflow-y: auto; height: calc(100vh - 100px);\" id="'+id_scroll_wrapper+'">');
+            children.detach();
+            $('#'+id_scroll_wrapper).append(children);
+
+        }
 
     };
 
