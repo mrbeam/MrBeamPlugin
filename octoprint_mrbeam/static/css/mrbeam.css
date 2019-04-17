@@ -1,5 +1,7 @@
 a {	color: #e25303; }
 a:hover { color: #a63e03 }
+a.muted{ color: #e25303a1 }
+a.muted:hover{ color: #e25303a1 }
 
 .btn {
   display: inline-block;
@@ -2218,20 +2220,20 @@ input[type="radio"]{
 /*
 * === IMAGE PREPROCESSING  ACCORDION ===
 */
-#working_area_image_preprocessing {
+.working_area_image_preprocessing {
   margin-bottom: 0;
 }
 
-#working_area_image_preprocessing_heading {
+.working_area_image_preprocessing_heading {
   padding: 0;
   color: #999;
 }
 
-#working_area_image_preprocessing_sliders {
+.working_area_image_preprocessing_sliders {
   margin-left: 18px;
 }
 
-#working_area_image_preprocessing_link > button.image-preprocessing-collapsible {
+.working_area_image_preprocessing_link > button.image-preprocessing-collapsible {
   outline: transparent;
   /*text-decoration: none;*/
   color: #555;
@@ -2239,7 +2241,7 @@ input[type="radio"]{
   /*margin: 0;*/
 }
 
-#working_area_image_preprocessing_link > button.collapsed:before {
+.working_area_image_preprocessing_link > button.collapsed:before {
   padding: 0;
   content: "\270f";
   color: #999;
@@ -2247,7 +2249,7 @@ input[type="radio"]{
   -webkit-transform: rotate(-45deg);
 }
 
-#working_area_image_preprocessing_link > button:before {
+.working_area_image_preprocessing_link > button:before {
   padding: 0;
   content: "\270f";
   color: #999;

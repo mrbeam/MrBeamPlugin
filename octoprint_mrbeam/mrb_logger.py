@@ -53,9 +53,11 @@ class MrbLogger(object):
 		self.log(logging.WARN, msg, *args, **kwargs)
 
 	def error(self, msg, *args, **kwargs):
+		kwargs['analytics'] = True
 		self.log(logging.ERROR, msg, *args, **kwargs)
 
 	def critical(self, msg, *args, **kwargs):
+		kwargs['analytics'] = True
 		self.log(logging.CRITICAL, msg, *args, **kwargs)
 
 	def exception(self, msg, *args, **kwargs):

@@ -294,6 +294,22 @@ class AnalyticsHandler(object):
 		except:
 			self._logger.exception('Exception when saving info about the disk space')
 
+	def _event_laserhead_info(self):
+		try:
+			laserhead_info = {
+				ak.LASERHEAD_SERIAL: _mrbeam_plugin_implementation.lh['serial'],
+				ak.POWER_65: _mrbeam_plugin_implementation.lh['p_65'],
+				ak.POWER_75: _mrbeam_plugin_implementation.lh['p_75'],
+				ak.POWER_85: _mrbeam_plugin_implementation.lh['p_85'],
+				ak.CORRECTION_FACTOR: _mrbeam_plugin_implementation.lh['correction_factor'],
+				ak.CORRECTION_ENABLED: _mrbeam_plugin_implementation.lh['correction_enabled'],
+				ak.CORRECTION_OVERRIDE: _mrbeam_plugin_implementation.lh['correction_factor_override'],
+			}
+			self._write_deviceinfo(ak.LASERHEAD_INFO, payload=laserhead_info)
+
+		except:
+			self._logger.exception('Exception when saving info about the laserhead')
+
 	def _event_print_started(self, event, payload):
 		self._current_job_id = 'j_{}_{}'.format(self._getSerialNumber(),time.time())
 		self._init_collectors()
