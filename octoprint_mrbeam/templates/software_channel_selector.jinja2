@@ -1,0 +1,12 @@
+<div class="hide" id="software_channel_selector">
+    <h5>Software Channel:</h5>
+    <select id="software_channel_select" data-bind="value: selector, options: available_channels, optionsText: 'name', optionsValue: 'id', event: { change: selection_changed }"></select>
+    <span data-toggle="tooltip" data-placement="right"
+         title="<b>{{ _('Switch between the different channels of the Mr Beam II software:') }}</b><br>
+        <ul>
+            <li><b>{{ _('Stable channel') }}: </b>{{ _('Find here the last officially released software. You will not get any updates until the next release.') }}</li>
+            <li><b>{{ _('Beta channel') }}: </b>{{ _('Get the latest Mr Beam development! In this channel you can try the newest features even before they are officially released, with more frequent updates. Use this if you are curious, you can always switch back to stable if you experience errors.') }}</li>
+        </ul>">
+        <i id="software_channel_info" class="fa fa-info-circle fa-lg" aria-hidden="true"></i>
+    </span>
+</div>
