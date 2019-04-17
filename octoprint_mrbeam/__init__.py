@@ -116,7 +116,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._time_ntp_check_count = 0
 		self._time_ntp_check_last_ts = 0.0
 		self._time_ntp_shift = 0.0
-		self.lh = dict(serial=None, p_65=None)
+		self.lh = dict(serial=None, p_65=None, p_75=None, p_85=None, correction_factor=None, correction_enabled=None)
 
 
 		# MrBeam Events needs to be registered in OctoPrint in order to be send to the frontend later on
@@ -133,6 +133,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._analytics_handler = analyticsHandler(self)
 
 		self.focusReminder = self._settings.get(['focusReminder'])
+
+		self._initialize_lh()
 
 		self.start_time_ntp_timer()
 
@@ -166,6 +168,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._dustManager = dustManager()
 		self.jobTimeEstimation = JobTimeEstimation(self._event_bus)
 
+	def _initialize_lh(self):
+		self.lh['serial'] = self._settings.get(["laserhead", "serial"])
+		self.lh['correction_factor'] = self._settings.get(["laserhead", "correction", "factor"])
+		self.lh['correction_factor_override'] = self._settings.get(["laserhead", "correction", "factor_override"])
+		self.lh['correction_enabled'] = self._settings.get(["laserhead", "correction", "enabled"])
+		self.lh['p_65'] = self._settings.get(["laserhead", "p_65"])
+		self.lh['p_75'] = self._settings.get(["laserhead", "p_75"])
+		self.lh['p_85'] = self._settings.get(["laserhead", "p_85"])
 
 	def _do_initial_log(self):
 		"""
@@ -254,6 +264,18 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				suppress_migrations = False,     # for develpment on non-MrBeam devices
 				support_mode = False,
 				grbl_auto_update_enabled = True
+			),
+			laserhead=dict(
+				correction=dict(
+					enabled=True,
+					factor=1,
+					factor_override=None,
+					gcode_intensity_limit=1700,
+				),
+				p_65=0,
+				p_75=0,
+				p_85=0,
+				serial=None,
 			),
 			focusReminder=True,
 			analyticsEnabled=None,
