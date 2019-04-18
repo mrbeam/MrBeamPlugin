@@ -3,6 +3,7 @@
 $(function() {
     function LoadingOverlayViewModel(parameters) {
         var self = this;
+        self.feedbackWidget = parameters[0];
 
         self.TEXT_RELOADING = gettext("beamOS is reloading...");
 
@@ -13,6 +14,7 @@ $(function() {
             if (!event.target.activeElement.href) {
                 console.log("Display reload overlay.");
                 self.showReloading();
+                self.feedbackWidget.removeFeedbackWidget();
             }
         };
 
@@ -28,14 +30,14 @@ $(function() {
         };
 
 
-    };
+    }
 
     // view model class, parameters for constructor, container to bind to
     OCTOPRINT_VIEWMODELS.push([
         LoadingOverlayViewModel,
 
         // e.g. loginStateViewModel, settingsViewModel, ...
-        [ /* "loginStateViewModel", "settingsViewModel" */ ],
+        [ "feedbackWidget"],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         [ document.getElementById("loading_overlay") ]
