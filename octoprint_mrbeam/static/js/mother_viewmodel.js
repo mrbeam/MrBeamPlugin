@@ -2,6 +2,8 @@ $(function () {
 
     function MotherViewModel(params) {
         var self = this;
+        window.mrbeam.viewModels['motherViewModel'] = self;
+
         self.loginState = params[0];
         self.settings = params[1];
         self.state = params[2];

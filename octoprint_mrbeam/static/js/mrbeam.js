@@ -81,11 +81,14 @@ mrbeam._isVersionOrHigher = function(actualVersion, expectedVersion) {
 
 mrbeam.mrb_state = undefined;
 
+mrbeam.viewModels = {};
+
 
 
 $(function() {
     function MrbeamViewModel(parameters) {
         var self = this;
+        window.mrbeam.viewModels['mrbeamViewModel'] = self;
 
 
         self.onStartup = function(){

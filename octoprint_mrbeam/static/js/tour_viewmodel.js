@@ -1,90 +1,36 @@
 $(function () {
     function TourViewModel(params) {
         var self = this;
+        window.mrbeam.viewModels['tourViewModel'] = self;
         self.login = params[0];
         self.settings = params[1];
         self.state = params[2];
         self.working_area = params[3];
 
-        self.tour_def = null;
-        self._nextRestartStep = 0;
+        self.tourDef = null;
 
-        self.onStartupComplete = function () {
-            setTimeout(self.start_tour, 200);
+        // self.onStartupComplete = function () {
+        //     setTimeout(self.startTour, 200);
+        // };
+
+        self.btn_startTour = function () {
+            self.startTour();
         };
 
-        self.start_tour = function () {
+        self.startTour = function () {
+            // remove design file from working area, otherwise the tour won't work
+            $('div.remove-design-btn[mrb_name="Schlusselanhanger.svg"]').click();
 
-            // hopscotch.listen('show', function () {
-            //     console.log("hopscotch show: #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id'));
-            // });
-            hopscotch.listen('next', function () {
-                console.log("hopscotch next: #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id'));
-                if (self._getCurrStepProp('condition')) {
-                    if (!self._getCurrStepProp('condition')()) {
-                        console.log("hopscotch next: #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id') + " - condition: skip");
-                        hopscotch.nextStep();
-                    } else {
-                        console.log("hopscotch next: #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id') + " - condition: true");
-                    }
-                }
-                self._restartTour(self._getCurrStepProp('restartTour'));
-            });
-            // hopscotch.listen('end', function () {
-            //     console.log("hopscotch end: #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id'));
-            // });
-            // hopscotch.listen('close', function () {
-            //     console.log("hopscotch close: #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id'));
-            // });
-            hopscotch.listen('error', function (err) {
-                if (self._getCurrStepProp('retryOnError')) {
-                    console.log("hopscotch error: #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id') + " - retrying...");
-                    self._restartTour();
-                } else {
-                    console.log("hopscotch error: #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id') + " - skipping...");
-                    hopscotch.nextStep();
-                }
-            });
+            self._registerListeners();
 
-            $(window).on('beforeunload', function () {
-                console.log("hopscotch tour END: ", self.tour_def);
-                hopscotch.endTour();
-            });
-
-            self.onEventReadyToLaserStart = function (payload) {
-                let id = self._getCurrStepProp('id')
-                if (id == 'preparing_laserjob') {
-                    hopscotch.nextStep();
-                } else if (id == 'start_laserjob') {
-                    // hopscotch.refreshBubblePosition();
-                    self._restartTour(200);
-                }
-            };
-
-            self.tour_def = self.get_tour_def();
-            self._nextRestartStep = 0;
-            console.log("hopscotch tour START: ", self.tour_def);
+            self.tourDef = self._getTourDefinitions();
+            console.log("hopscotch tour START: ", self.tourDef);
             hopscotch.configure({skipIfNoElement: true});
-            hopscotch.startTour(self.tour_def);
+            hopscotch.startTour(self.tourDef);
         };
 
-        self._restartTour = function (timeout, step) {
-            timeout = parseInt(timeout) || 50;
-            step = step || (hopscotch.getCurrStepNum());
-            console.log("Restarting tour at step #" + step + " in " + timeout);
-            setTimeout(self._restart_tour_timeout, timeout, step);
-        };
 
-        self._restart_tour_timeout = function (step) {
-            console.log("Restarting tour at step #" + step);
-            hopscotch.startTour(self.tour_def, step);
-        };
-
-        self._getCurrStepProp = function (property) {
-            return hopscotch.getCurrTour()['steps'][hopscotch.getCurrStepNum()][property];
-        };
-
-        self.get_tour_def = function () {
+        self._getTourDefinitions = function () {
             let tour = [];
 
             ///// intro /////
@@ -165,7 +111,7 @@ $(function () {
                     "Just 3 quick steps..."],
                 target: "job_print",
                 placement: "right",
-                yOffset: ($('#job_print').outerHeight() / -2)
+                yOffset: -15
             }));
 
             ///// material screen /////
@@ -262,14 +208,81 @@ $(function () {
             };
         };
 
+        self._restartTour = function (timeout, step) {
+            timeout = parseInt(timeout) || 50;
+            step = step || (hopscotch.getCurrStepNum());
+            // console.log("Restarting tour at step #" + step + " in " + timeout);
+            setTimeout(self._restart_tour_timeout, timeout, step);
+        };
+
+        self._restart_tour_timeout = function (step) {
+            // console.log("Restarting tour at step #" + step);
+            hopscotch.startTour(self.tourDef, step);
+        };
+
+        self._getCurrStepProp = function (property) {
+            return hopscotch.getCurrTour()['steps'][hopscotch.getCurrStepNum()][property];
+        };
+
+        self._registerListeners = function () {
+
+            hopscotch.listen('next', function () {
+                // console.log("hopscotch next: #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id'));
+                if (self._getCurrStepProp('condition')) {
+                    if (!self._getCurrStepProp('condition')()) {
+                        // console.log("hopscotch next: #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id') + " - condition: skip");
+                        hopscotch.nextStep();
+                    } else {
+                        // console.log("hopscotch next: #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id') + " - condition: true");
+                    }
+                }
+                self._restartTour(self._getCurrStepProp('restartTour'));
+            });
+
+            hopscotch.listen('error', function (err) {
+                if (self._getCurrStepProp('retryOnError')) {
+                    // console.log("hopscotch error: #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id') + " - retrying...");
+                    self._restartTour();
+                } else {
+                    // console.log("hopscotch error: #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id') + " - skipping...");
+                    hopscotch.nextStep();
+                }
+            });
+
+            // hopscotch.listen('show', function () {
+            //     console.log("hopscotch show: #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id'));
+            // });
+            // hopscotch.listen('end', function () {
+            //     console.log("hopscotch end: #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id'));
+            // });
+            // hopscotch.listen('close', function () {
+            //     console.log("hopscotch close: #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id'));
+            // });
+
+            // remove bubbles because they're visible over the curtain
+            $(window).on('beforeunload', function () {
+                console.log("hopscotch tour END: ", self.tourDef);
+                hopscotch.endTour();
+            });
+
+            self.onEventReadyToLaserStart = function (payload) {
+                let id = self._getCurrStepProp('id')
+                if (id == 'preparing_laserjob') {
+                    hopscotch.nextStep();
+                } else if (id == 'start_laserjob') {
+                    // hopscotch.refreshBubblePosition();
+                    self._restartTour(200);
+                }
+            };
+        };
 
     }
 
-    var DOM_ELEMENT_TO_BIND_TO = "wizard_plugin_corewizard_analytics";
+    var DOM_ELEMENT_TO_BIND_TO = "tour_start_btn";
     OCTOPRINT_VIEWMODELS.push([
         TourViewModel,
-        ["loginStateViewModel", "settingsViewModel", "printerStateViewModel", "workingAreaViewModel"],
-        "#" + DOM_ELEMENT_TO_BIND_TO
+        ["loginStateViewModel", "settingsViewModel", "printerStateViewModel"],
+        [/* */]
     ]);
 });
 
