@@ -698,7 +698,7 @@ class IoBeamHandler(object):
 			correction_factor = new_intensity / 65.0
 
 		# If the correction factor changed, save values to config.yaml
-		if correction_factor != _mrbeam_plugin_implementation.lh['correction_factor']:
+		if correction_factor != _mrbeam_plugin_implementation.lh['correction_factor'] or correction_factor == 1:
 			_mrbeam_plugin_implementation.lh['correction_factor'] = correction_factor
 
 			self._settings.set(["laserhead", "serial"], _mrbeam_plugin_implementation.lh['serial'], force=True)
