@@ -2147,9 +2147,11 @@ $(function(){
 		 */
 		self._qs_currentQuickShapeUpdate = function(){
 			if (self.currentQuickShapeFile) {
-				self.currentQuickShape(self.currentQuickShapeFile.name);
 //				var type = $('#shape_tabs li.active a').attr('href');
 				var type = self.currentQuickShapeFile.qs_params.type;
+				let name = type.substr(1);
+                self.currentQuickShapeFile.name = name;
+                self.currentQuickShape(self.currentQuickShapeFile.name);
 				var qs_params = {
 					type: type,
 					color: $('#quick_shape_color').val(),
