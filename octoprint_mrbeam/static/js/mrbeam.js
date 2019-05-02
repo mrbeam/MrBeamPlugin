@@ -80,8 +80,19 @@ mrbeam._isVersionOrHigher = function(actualVersion, expectedVersion) {
 
 
 mrbeam.mrb_state = undefined;
-
 mrbeam.viewModels = {};
+
+mrbeam.isBeta = function() {
+    return MRBEAM_SW_TIER === 'BETA';
+};
+
+mrbeam.isDev = function() {
+    return MRBEAM_SW_TIER === 'DEV';
+};
+
+mrbeam.isProd = function() {
+    return MRBEAM_SW_TIER === 'PROD';
+};
 
 
 
@@ -90,6 +101,7 @@ $(function() {
         var self = this;
         window.mrbeam.viewModels['mrbeamViewModel'] = self;
 
+        self.settings = parameters[0];
 
         self.onStartup = function(){
             self.setScrollModeForTouchDevices();
@@ -107,6 +119,29 @@ $(function() {
                         type: 'warn',
                         hide: false
                     });
+            }
+
+            if (mrbeam.isBeta() && !self.settings.settings.plugins.mrbeam.analyticsEnabled()){
+                new PNotify({
+                        title: gettext("Beta user: Please consider enabling Mr Beam analytics!"),
+                        text: _.sprintf(gettext("As you are currently in our Beta channel, you would help us " +
+                            "tremendously sharing%(br)sthe laser job insights, so we can improve%(br)san overall experience " +
+                            "working with the%(br)s Mr Beam II. Thank you!%(br)s%(open)sGo to analytics settings%(close)s"),
+                            {open: '<a href=\'#\' data-toggle="tab" id="settings_analytics_link" style="font-weight:bold">', close:'</a>', br: '<br>'}),
+                        type: 'warn',
+                        hide: false
+                    });
+
+                $('#settings_analytics_link').on('click', function(event) {
+                    // Prevent url change
+                    event.preventDefault();
+                    // Open the "Settings" menu
+                    $("#settings_tab_btn").tab('show');
+                    // Go to the "Analytics" tab
+                    $('[data-toggle="tab"][href="#settings_plugin_mrbeam_analytics"]').trigger('click');
+                    // Close notification
+                    $('[title="Close"]')[0].click();
+                })
             }
         };
 
@@ -175,6 +210,7 @@ $(function() {
     // view model class, parameters for constructor, container to bind to
     OCTOPRINT_VIEWMODELS.push([
         MrbeamViewModel,
+        ["settingsViewModel"],
 
         // e.g. loginStateViewModel, settingsViewModel, ...
         [ /* "loginStateViewModel", "settingsViewModel" */ ],

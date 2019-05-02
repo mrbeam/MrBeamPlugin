@@ -14,9 +14,6 @@ class AnalyticsKeys(object):
 	VERSION_MRBEAM_PLUGIN = 'version_mrbeam_plugin'
 	LASERHEAD_SERIAL = 'laserhead_serial'
 	ENV = 'env'
-	TOTAL_SPACE = 'total'
-	AVAILABLE_SPACE = 'available'
-	USED_SPACE = 'used_percent'
 
 	### EVENT TYPES ###
 	TYPE_JOB_EVENT = 'job'
@@ -28,6 +25,17 @@ class AnalyticsKeys(object):
 	### DEVICE KEYS ###
 	HOSTNAME = 'hostname'
 	LASERHEAD_VERSION = 'lh_ver'
+	OLD_CHANNEL = 'new_channel'
+	NEW_CHANNEL = 'old_channel'
+	TOTAL_SPACE = 'total'
+	AVAILABLE_SPACE = 'available'
+	USED_SPACE = 'used_percent'
+	CORRECTION_FACTOR = 'correction_factor'
+	CORRECTION_ENABLED = 'correction_enabled'
+	CORRECTION_OVERRIDE = 'correction_override'
+	POWER_65 = 'p_65'
+	POWER_75 = 'p_75'
+	POWER_85 = 'p_85'
 
 	### EVENT KEYS ###
 	STARTUP = 'startup'
@@ -37,6 +45,8 @@ class AnalyticsKeys(object):
 	ANALYTICS_ENABLED = 'analytics_enabled'
 	IPS = 'ips'
 	DISK_SPACE = 'disk_space'
+	SW_CHANNEL_SWITCH = 'sw_channel_switch'
+	LASERHEAD_INFO = 'laserhead_info'
 
 	### LOG EVENT KEYS ###
 	EVENT_LOG = 'log_event'

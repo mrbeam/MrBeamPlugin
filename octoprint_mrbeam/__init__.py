@@ -37,7 +37,7 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
 from octoprint_mrbeam.migrate import migrate
 from octoprint_mrbeam.printing.profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
-from octoprint_mrbeam.software_update_information import get_update_information, SW_UPDATE_TIER_PROD
+from octoprint_mrbeam.software_update_information import get_update_information, switch_software_channel, software_channels_available, SW_UPDATE_TIER_PROD, SW_UPDATE_TIER_BETA
 from octoprint_mrbeam.support import set_support_mode
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.cli import get_cli_commands
@@ -68,7 +68,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	DEVIE_INFO_FILE = '/etc/mrbeam'
 
 	ENV_PROD =         "PROD"
+	ENV_DEV  =         "DEV"
 
+	# local envs are deprecated
 	ENV_LOCAL =        "local"
 	ENV_LASER_SAFETY = "laser_safety"
 	ENV_ANALYTICS =    "analytics"
@@ -116,7 +118,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._time_ntp_check_count = 0
 		self._time_ntp_check_last_ts = 0.0
 		self._time_ntp_shift = 0.0
-		self.lh = dict(serial=None, p_65=None)
+		self.lh = dict(serial=None, p_65=None, p_75=None, p_85=None, correction_factor=None, correction_enabled=None)
 
 
 		# MrBeam Events needs to be registered in OctoPrint in order to be send to the frontend later on
@@ -133,6 +135,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._analytics_handler = analyticsHandler(self)
 
 		self.focusReminder = self._settings.get(['focusReminder'])
+
+		self._initialize_lh()
 
 		self.start_time_ntp_timer()
 
@@ -166,6 +170,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._dustManager = dustManager()
 		self.jobTimeEstimation = JobTimeEstimation(self._event_bus)
 
+	def _initialize_lh(self):
+		self.lh['serial'] = self._settings.get(["laserhead", "serial"])
+		self.lh['correction_factor'] = self._settings.get(["laserhead", "correction", "factor"])
+		self.lh['correction_factor_override'] = self._settings.get(["laserhead", "correction", "factor_override"])
+		self.lh['correction_enabled'] = self._settings.get(["laserhead", "correction", "enabled"])
+		self.lh['p_65'] = self._settings.get(["laserhead", "p_65"])
+		self.lh['p_75'] = self._settings.get(["laserhead", "p_75"])
+		self.lh['p_85'] = self._settings.get(["laserhead", "p_85"])
 
 	def _do_initial_log(self):
 		"""
@@ -233,7 +245,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			current_profile_id="_mrbeam_junior", # yea, this needs to be like this # 2018: not so sure anymore...
 			svgDPI=90,
 			dxfScale=1,
-			beta_label="BETA",
+			beta_label="",
 			job_time = 0.0,
 			terminal=False,
 			terminal_show_checksums = True,
@@ -244,16 +256,23 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				terminalMaxLines = 2000,
 				env = self.ENV_PROD,
 				load_gremlins = False,
-				# env_overrides = dict(
-				# 	analytics = "DEV",
-				# 	laser_safety = "DEV",
-				# 	local =  "DEV"
-				# ),
 				software_tier = SW_UPDATE_TIER_PROD,
 				iobeam_disable_warnings = False, # for develpment on non-MrBeam devices
 				suppress_migrations = False,     # for develpment on non-MrBeam devices
 				support_mode = False,
 				grbl_auto_update_enabled = True
+			),
+			laserhead=dict(
+				correction=dict(
+					enabled=True,
+					factor=1,
+					factor_override=None,
+					gcode_intensity_limit=1700,
+				),
+				p_65=0,
+				p_75=0,
+				p_85=0,
+				serial=None,
 			),
 			focusReminder=True,
 			analyticsEnabled=None,
@@ -286,7 +305,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				small_paths_first = True,
 				clip_working_area = True # https://github.com/mrbeam/MrBeamPlugin/issues/134
 			),
-			grbl_version_lastknown=None
+			grbl_version_lastknown=None,
 		)
 
 	def on_settings_load(self):
@@ -301,7 +320,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 					 frontendUrl=self._settings.get(['cam', 'frontendUrl'])),
 			dev=dict(
 				env = self._settings.get(['dev', 'env']),
-				softwareTier = self._settings.get(["dev", "software_tier"]),
+				software_tier = self._settings.get(["dev", "software_tier"]),
+				software_tiers_available=software_channels_available(self),
 				terminalMaxLines = self._settings.get(['dev', 'terminalMaxLines'])),
 			gcode_nextgen=dict(
 				enabled = self._settings.get(['gcode_nextgen', 'enabled']),
@@ -343,6 +363,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self._analytics_handler.analytics_user_permission_change(analytics_enabled=data['analyticsEnabled'])
 			if "focusReminder" in data:
 				self._settings.set_boolean(["focusReminder"], data["focusReminder"])
+			if "dev" in data and "software_tier" in data['dev']:
+				switch_software_channel(self, data["dev"]["software_tier"])
 		except Exception as e:
 			self._logger.exception("Exception in on_settings_save() ")
 			raise e
@@ -376,7 +398,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/wizard_acl.js", "js/netconnectd_wrapper.js", "js/lasersaftey_viewmodel.js",
 				"js/ready_to_laser_viewmodel.js", "js/lib/screenfull.min.js","js/settings/camera_calibration.js",
 				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js", "js/lib/Color.js", "js/laser_job_done_viewmodel.js",
-				"js/loadingoverlay_viewmodel.js", "js/wizard_whatsnew.js", "js/wizard_analytics.js", "js/lib/hopscotch.js", "js/tour_viewmodel.js"],
+				"js/loadingoverlay_viewmodel.js", "js/wizard_whatsnew.js", "js/wizard_analytics.js", "js/software_channel_selector.js", "js/lib/hopscotch.js", "js/tour_viewmodel.js"],
 			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css", "css/quicktext-fonts.css", "css/sliders.css", "css/hopscotch.min.css"],
 			less=["less/mrbeam.less"]
 		)
@@ -1873,8 +1895,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def is_prod_env(self, type=None):
 		return self.get_env(type).upper() == self.ENV_PROD
 
+	def is_dev_env(self, type=None):
+		return self.get_env(type).upper() == self.ENV_DEV
+
 	def get_env(self, type=None):
-		result = self._settings.get(["dev", "env"])
+		result = self._settings.get(["dev", "env"]).upper()
 		if type is not None:
 			if type == self.ENV_LASER_SAFETY:
 				type_env = self._settings.get(["dev", "cloud_env"]) # deprected flag
@@ -1886,7 +1911,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def get_beta_label(self):
 		chunks = []
-		chunks.append(self._settings.get(['beta_label']))
+		if self._settings.get(['beta_label']):
+			chunks.append(self._settings.get(['beta_label']))
+		if self.is_beta_channel():
+			chunks.append("BETA")
 		if self.is_vorlon_enabled():
 			chunks.append("VORLON")
 		if self.support_mode:
@@ -1960,7 +1988,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				timer.daemon = True
 				timer.start()
 
-
+	def is_beta_channel(self):
+		return self._settings.get(["dev", "software_tier"]) == SW_UPDATE_TIER_BETA
 
 	def is_vorlon_enabled(self):
 		vorlon = self._settings.get(['vorlon'])
