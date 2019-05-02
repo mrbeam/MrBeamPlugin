@@ -88,7 +88,7 @@
 													</script>
 
 													<script type="text/html" id="files_template_model_svg">
-														<div class="file_list_entry preview_card">
+														<div class="file_list_entry preview_card" data-bind="attr: {mrb_name: name}">
 															<div class="preview" data-bind="
 																style: { 'background-image': 'url('+$root.downloadLink($data)+')' },
 																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeSVG($data); $('#wa_tab_btn').tab('show'); } }, 
@@ -141,7 +141,7 @@
 													</script>
 
 													<script type="text/html" id="files_template_model_image">
-														<div class="file_list_entry preview_card">
+														<div class="file_list_entry preview_card" data-bind="attr: {mrb_name: name}">
 															<div class="preview" data-bind="
 																style: { 'background-image': 'url('+$root.downloadLink($data)+')' },
 																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeIMG($data); $('#wa_tab_btn').tab('show'); } }, 
