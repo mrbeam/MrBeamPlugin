@@ -124,6 +124,7 @@ $(function(){
         self.fontMap = ["Allerta Stencil","Amatic SC","Comfortaa","Fredericka the Great","Kavivanar","Lobster","Merriweather","Mr Bedfort","Quattrocento","Roboto"];
         self.currentQuickTextFile = undefined;
         self.currentQuickText = ko.observable();
+        self.quickShapeNames = new Map([['rect', 'Rectangle'], ['circle', 'Circle'], ['star', 'Star'], ['heart', 'Heart']]);
         self.currentQuickShapeFile = undefined;
         self.currentQuickShape = ko.observable();
         self.lastQuickTextFontIndex = 0;
@@ -2149,7 +2150,7 @@ $(function(){
 			if (self.currentQuickShapeFile) {
 //				var type = $('#shape_tabs li.active a').attr('href');
 				var type = self.currentQuickShapeFile.qs_params.type;
-				let name = type.substr(1);
+                let name = self.quickShapeNames.get(type.substr(1));
                 self.currentQuickShapeFile.name = name;
                 self.currentQuickShape(self.currentQuickShapeFile.name);
 				var qs_params = {
