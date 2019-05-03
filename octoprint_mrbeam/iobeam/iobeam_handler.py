@@ -77,7 +77,7 @@ class IoBeamHandler(object):
 	CLIENT_ID = "MrBeamPlugin.v{vers_mrb}"
 
 	PROCESSING_TIMES_LOG_LENGTH = 100
-	PROCESSING_TIME_WARNING_THRESHOLD = 0.1
+	PROCESSING_TIME_WARNING_THRESHOLD = 0.7
 
 	MESSAGE_LENGTH_MAX = 4096
 	MESSAGE_NEWLINE = "\n"
@@ -744,7 +744,6 @@ class IoBeamHandler(object):
 			if init and init.startswith('ok'):
 				self._logger.info("iobeam init ok: '%s'", message)
 			else:
-				# ANDYTEST add analytics=True to next log line
 				self._logger.info("iobeam init error: '%s' - requesting iobeam_debug...", message)
 				self._send_command('debug')
 				self._fireEvent(MrBeamEvents.HARDWARE_MALFUNCTION, dict(iobeam_messsage=message))
@@ -752,6 +751,7 @@ class IoBeamHandler(object):
 					self.send_bottom_open_frontend_notification()
 				else:
 					self.send_hardware_malfunction_frontend_notification(message)
+			_mrbeam_plugin_implementation._analytics_handler.log_iobeam_message(self.iobeam_version, message)
 		elif action == 'runtime': # introduced in iobeam 0.6.2
 			init = token[1] if len(token) > 1 else None
 			if init and init.startswith('ok'):
@@ -763,6 +763,9 @@ class IoBeamHandler(object):
 					self.send_bottom_open_frontend_notification()
 				else:
 					self.send_hardware_malfunction_frontend_notification(message)
+			_mrbeam_plugin_implementation._analytics_handler.log_iobeam_message(self.iobeam_version, message)
+		elif action == 'i2c':
+			_mrbeam_plugin_implementation._analytics_handler.log_iobeam_message(self.iobeam_version, message)
 		elif action == 'debug':
 			self._logger.info("iobeam debug message: '%s'", message)
 		else:
@@ -786,7 +789,6 @@ class IoBeamHandler(object):
 		                                      error_count = err))
 
 		if processing_time > self.PROCESSING_TIME_WARNING_THRESHOLD:
-			# TODO: write an error to our analytics module
 			self._logger.warn("Message handling time took %ss. (Errors: %s, message: '%s')", processing_time, err, message)
 		if log_stats or processing_time > self.PROCESSING_TIME_WARNING_THRESHOLD:
 			self.log_debug_processing_stats()
