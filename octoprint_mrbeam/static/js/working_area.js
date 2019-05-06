@@ -124,7 +124,8 @@ $(function(){
         self.fontMap = ["Allerta Stencil","Amatic SC","Comfortaa","Fredericka the Great","Kavivanar","Lobster","Merriweather","Mr Bedfort","Quattrocento","Roboto"];
         self.currentQuickTextFile = undefined;
         self.currentQuickText = ko.observable();
-        self.quickShapeNames = new Map([['rect', 'Rectangle'], ['circle', 'Circle'], ['star', 'Star'], ['heart', 'Heart']]);
+        self.quickShapeNames = new Map([['rect', gettext('Rectangle')], ['circle', gettext('Circle')],
+            ['star', gettext('Star')], ['heart', gettext('Heart')]]);
         self.currentQuickShapeFile = undefined;
         self.currentQuickShape = ko.observable();
         self.lastQuickTextFontIndex = 0;
@@ -2197,8 +2198,8 @@ $(function(){
 				}
 
 				// update fileslist
-				var displayText = self._qs_displayText(qs_params);
-				$('#'+self.currentQuickShapeFile.id+' .title').text(displayText);
+				// var displayText = self._qs_displayText(qs_params);
+				$('#'+self.currentQuickShapeFile.id+' .title').text(name);
 			}
 		};
 
@@ -2397,6 +2398,7 @@ $(function(){
 			return d;
 		};
 
+		// TODO IRATXE: Remove?
 		self._qs_displayText = function(qs_params){
 			switch(qs_params.type){
 				case '#circle':
