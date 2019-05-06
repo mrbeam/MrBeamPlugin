@@ -1,18 +1,13 @@
-<div id="settings_mrbeam_reminders">
-    <h3>{{ _('Reminders') }}</h3>
+<div id="settings_mrbeam_air_filter">
+    <h3>{{ _('Air Filter') }}</h3>
     <form class="form-horizontal">
         <div class="control-group">
             <div class="controls" style="width: 400px">
                 <h4>
-                    {{ _('Focus Reminder') }}
+                    {{ _('Air filter operation hours') }}
                 </h4>
-                <p>{{ _('This reminder will show before being able to start a laser job, so if you forgot to focus your
-                    laserhead you will have the chance to do it and later start the job.
-                    You can disable this reminder in the moment you see it, or in this settings anytime.') }} </p>
-                <label class="checkbox">
-                    <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.focusReminder">
-                    <strong>{{ _('Activate focus reminder') }}</strong>
-                </label>
+                <div>{{ _('Total operation: ') }} <span data-bind="text: air_filter_usage_hours"></span>{{ _(' hours') }}</div>
+                <button class="btn" data-bind="click: resetAirFilterUsage" style="margin-top: 30px;">{{ _('Reset operation hours') }}</button>
             </div>
         </div>
     </form>

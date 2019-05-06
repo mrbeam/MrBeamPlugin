@@ -84,6 +84,17 @@ class UsageHandler(object):
 			self._usage_data['air_filter']['job_time'] = self.start_time_air_filter + job_duration
 			self._write_usage_data()
 
+	def reset_air_filter_usage(self):
+		self._usage_data['air_filter']['job_time'] = 0
+		self.start_time_air_filter = -1
+		self._write_usage_data()
+
+	def get_air_filter_usage(self):
+		if 'air_filter' in self._usage_data:
+			return self._usage_data['air_filter']['job_time']
+		else:
+			return 0
+
 	def _load_usage_data(self):
 		success = False
 		recovery_try = False
