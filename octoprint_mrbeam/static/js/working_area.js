@@ -1357,8 +1357,7 @@ $(function(){
                 svg.ftStoreInitialTransformMatrix();
                 svg.data('tx', ntx);
                 svg.data('ty', nty);
-                svg.ftUpdateTransform();
-
+                svg.ftManualTransform({tx_rel: ntx, ty_rel: nty, diffType:'absolute'})
 			}
         };
 
