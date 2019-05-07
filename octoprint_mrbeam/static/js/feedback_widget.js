@@ -10,10 +10,23 @@ $(function () {
         self.onStartupComplete = function () {
             let user = self.loginStateViewModel.username();
 
+            let channel;
+            if(MRBEAM_SW_TIER === 'BETA') {
+                channel = 'Beta'
+            } else {
+                channel = 'Stable'
+            }
+
             try{
                 window.FreshWidget.init("", {
-                    "queryString": "&widgetType=popup&helpdesk_ticket[custom_field][cf_serial_922577]=" + MRBEAM_SERIAL
-                        + "&disable[custom_field][cf_serial_922577]=true&helpdesk_ticket[requester]=" + user,
+                    "queryString": "&widgetType=popup"
+                        + "&helpdesk_ticket[custom_field][cf_serial_922577]=" + MRBEAM_SERIAL
+                        + "&disable[custom_field][cf_serial_922577]=true"
+                        + "&helpdesk_ticket[requester]=" + user
+                        + "&helpdesk_ticket[custom_field][cf_software_version_922577]=" + BEAMOS_VERSION
+                        + "&disable[custom_field][cf_software_version_922577]=true"
+                        + "&helpdesk_ticket[custom_field][cf_software_channel_922577]=" + channel
+                        + "&disable[custom_field][cf_software_channel_922577]=true",
                     "utf8": "✓",
                     "widgetType": "popup",
                     "buttonType": "text",
