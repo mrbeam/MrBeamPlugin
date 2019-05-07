@@ -1,0 +1,14 @@
+<div id="settings_mrbeam_air_filter">
+    <h3>{{ _('Air Filter') }}</h3>
+    <form class="form-horizontal">
+        <div class="control-group">
+            <div class="controls" style="width: 400px">
+                <h4>
+                    {{ _('Air filter operation hours') }}
+                </h4>
+                <div>{{ _('Total operation: ') }} <span data-bind="text: air_filter_usage_hours"></span>{{ _(' hours') }}</div>
+                <button class="btn" data-bind="click: resetAirFilterUsage" style="margin-top: 30px;">{{ _('Reset operation hours') }}</button>
+            </div>
+        </div>
+    </form>
+</div>
