@@ -221,7 +221,11 @@ $(function () {
         };
 
         self._getCurrStepProp = function (property) {
-            return hopscotch.getCurrTour()['steps'][hopscotch.getCurrStepNum()][property];
+            if (hopscotch.getCurrTour()) {
+                return hopscotch.getCurrTour()['steps'][hopscotch.getCurrStepNum()][property];
+            } else {
+                return null;
+            }
         };
 
         self._registerListeners = function () {
