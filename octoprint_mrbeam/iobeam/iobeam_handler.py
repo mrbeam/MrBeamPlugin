@@ -151,6 +151,7 @@ class IoBeamHandler(object):
 		self.processing_times_log = collections.deque([], self.PROCESSING_TIMES_LOG_LENGTH)
 
 		self._settings = _mrbeam_plugin_implementation._settings
+		self.reported_hardware_malfunctions = []
 
 	def isRunning(self):
 		return self._worker.is_alive()
@@ -741,28 +742,30 @@ class IoBeamHandler(object):
 			# introduced with iobeam 0.4.2
 			# in future versions we could make this requried and only unlock laser functionality once this was ok
 			init = token[1] if len(token) > 1 else None
+			malfunction = token[2] if len(token) > 2 else None
 			if init and init.startswith('ok'):
 				self._logger.info("iobeam init ok: '%s'", message)
 			else:
 				self._logger.info("iobeam init error: '%s' - requesting iobeam_debug...", message)
 				self._send_command('debug')
 				self._fireEvent(MrBeamEvents.HARDWARE_MALFUNCTION, dict(iobeam_messsage=message))
-				if 'bottom_open' in token:
-					self.send_bottom_open_frontend_notification()
+				if malfunction == 'bottom_open':
+					self.send_bottom_open_frontend_notification(malfunction)
 				else:
-					self.send_hardware_malfunction_frontend_notification(message)
+					self.send_hardware_malfunction_frontend_notification(malfunction, message)
 			_mrbeam_plugin_implementation._analytics_handler.log_iobeam_message(self.iobeam_version, message)
 		elif action == 'runtime': # introduced in iobeam 0.6.2
 			init = token[1] if len(token) > 1 else None
+			malfunction = token[2] if len(token) > 2 else None
 			if init and init.startswith('ok'):
 				self._logger.info("iobeam runtime ok: '%s'", message)
 			else:
 				self._logger.info("iobeam runtime error: '%s'", message)
 				self._fireEvent(MrBeamEvents.HARDWARE_MALFUNCTION, dict(iobeam_messsage=message))
-				if 'bottom_open' in token:
-					self.send_bottom_open_frontend_notification()
+				if malfunction == 'bottom_open':
+					self.send_bottom_open_frontend_notification(malfunction)
 				else:
-					self.send_hardware_malfunction_frontend_notification(message)
+					self.send_hardware_malfunction_frontend_notification(malfunction, message)
 			_mrbeam_plugin_implementation._analytics_handler.log_iobeam_message(self.iobeam_version, message)
 		elif action == 'i2c':
 			_mrbeam_plugin_implementation._analytics_handler.log_iobeam_message(self.iobeam_version, message)
@@ -793,25 +796,29 @@ class IoBeamHandler(object):
 		if log_stats or processing_time > self.PROCESSING_TIME_WARNING_THRESHOLD:
 			self.log_debug_processing_stats()
 
-	def send_hardware_malfunction_frontend_notification(self, message):
-		text = '<br/>' + \
-		       gettext(
-			       "A possible hardware malfunction has been detected on this device. Please contact our support team immediately at:") + \
-		       '<br/><a href="https://mr-beam.org/ticket" target="_blank">mr-beam.org/ticket</a><br/><br/>' \
-		       '<strong>' + gettext("Error:") + '</strong><br/>{}'.format(message.replace(':', ': ')) # add whitespaces so that longer messages break in frontend
-		_mrbeam_plugin_implementation.notify_frontend(title=gettext("Hardware malfunction"),
-		                                              text=text,
-		                                              type="error", sticky=True,
-		                                              replay_when_new_client_connects=True)
+	def send_hardware_malfunction_frontend_notification(self, malfunction, message):
+		if malfunction not in self.reported_hardware_malfunctions:
+			self.reported_hardware_malfunctions.append(malfunction)
+			text = '<br/>' + \
+			       gettext(
+				       "A possible hardware malfunction has been detected on this device. Please contact our support team immediately at:") + \
+			       '<br/><a href="https://mr-beam.org/ticket" target="_blank">mr-beam.org/ticket</a><br/><br/>' \
+			       '<strong>' + gettext("Error:") + '</strong><br/>{}'.format(message.replace(':', ': ')) # add whitespaces so that longer messages break in frontend
+			_mrbeam_plugin_implementation.notify_frontend(title=gettext("Hardware malfunction"),
+			                                              text=text,
+			                                              type="error", sticky=True,
+			                                              replay_when_new_client_connects=True)
 
-	def send_bottom_open_frontend_notification(self):
-		text = '<br/>' + \
-		       gettext("The bottom plate is not closed correctly. "
-		               "Please make sure that the bottom is correctly mounted as described in the Mr Beam II user manual.")
-		_mrbeam_plugin_implementation.notify_frontend(title=gettext("Bottom Plate Error"),
-		                                              text=text,
-		                                              type="error", sticky=True,
-		                                              replay_when_new_client_connects=True)
+	def send_bottom_open_frontend_notification(self, malfunction):
+		if malfunction not in self.reported_hardware_malfunctions:
+			self.reported_hardware_malfunctions.append(malfunction)
+			text = '<br/>' + \
+			       gettext("The bottom plate is not closed correctly. "
+			               "Please make sure that the bottom is correctly mounted as described in the Mr Beam II user manual.")
+			_mrbeam_plugin_implementation.notify_frontend(title=gettext("Bottom Plate Error"),
+			                                              text=text,
+			                                              type="error", sticky=True,
+			                                              replay_when_new_client_connects=True)
 
 	def log_debug_processing_stats(self):
 		"""

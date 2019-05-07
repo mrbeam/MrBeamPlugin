@@ -76,6 +76,7 @@ class OneButtonHandler(object):
 		self.intended_pause = False
 
 		self.hardware_malfunction = False
+		self.hardware_malfunction_notified = False
 
 	def _subscribe(self):
 		self._event_bus.subscribe(IoBeamEvents.ONEBUTTON_DOWN, self.onEvent)
@@ -88,6 +89,7 @@ class OneButtonHandler(object):
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_STARTED, self.onEvent)
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_PAUSED, self.onEvent)
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_RESUMED, self.onEvent)
+		self._event_bus.subscribe(OctoPrintEvents.SLICING_STARTED, self.onEvent)
 		self._event_bus.subscribe(OctoPrintEvents.SLICING_DONE, self.onEvent)
 		self._event_bus.subscribe(OctoPrintEvents.FILE_SELECTED, self.onEvent)
 		self._event_bus.subscribe(MrBeamEvents.HARDWARE_MALFUNCTION, self.onEvent)
@@ -206,6 +208,9 @@ class OneButtonHandler(object):
 			else:
 				self._logger.debug("onEvent() INTERLOCK_OPEN: not printing, nothing to do. printer state is: %s", self._printer.get_state_id())
 
+		elif event == OctoPrintEvents.SLICING_STARTED:
+			self.hardware_malfunction_notified = False
+
 		# OctoPrint 1.3.4 doesn't provide the file name in FILE_SELECTED anymore, so we need to get it here and save it for later.
 		elif event == OctoPrintEvents.SLICING_DONE:
 			if not self.is_ready_to_laser() \
@@ -300,8 +305,10 @@ class OneButtonHandler(object):
 		self.ready_to_laser_flag = False
 		if not lasering and was_ready_to_laser:
 			self._fireEvent(MrBeamEvents.READY_TO_LASER_CANCELED)
-		if self.hardware_malfunction:
+		if self.hardware_malfunction and not self.hardware_malfunction_notified:
+			self._logger.error("Hardware Malfunction: Not possible to start laser job.")
 			_mrbeam_plugin_implementation._replay_stored_frontend_notification()
+			self.hardware_malfunction_notified = True
 
 	def is_ready_to_laser(self, rtl_expected_to_be_there=True):
 		return self.ready_to_laser_ts> 0 \
@@ -379,8 +386,10 @@ class OneButtonHandler(object):
 			_mrbeam_plugin_implementation.notify_frontend(title=gettext("Error"), text=msg, type='error')
 			raise Exception(msg)
 
-		if self.hardware_malfunction:
+		if self.hardware_malfunction and not self.hardware_malfunction_notified:
+			self._logger.error("Hardware Malfunction: Not possible to start laser job.")
 			_mrbeam_plugin_implementation._replay_stored_frontend_notification()
+			self.hardware_malfunction_notified = True
 			raise Exception("Hardware Malfunction: Not possible to start laser job.")
 
 
