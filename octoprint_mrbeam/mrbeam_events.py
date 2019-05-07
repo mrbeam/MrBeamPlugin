@@ -37,6 +37,8 @@ class MrBeamEvents(object):
 	MRB_PLUGIN_VERSION         = "MrbPluginVersion"
 	JOB_TIME_ESTIMATED         = "JobTimeEstimated"
 
+	HARDWARE_MALFUNCTION       = "HardwareMalfunction"
+
 
 	@classmethod
 	def register_with_octoprint(cls):
