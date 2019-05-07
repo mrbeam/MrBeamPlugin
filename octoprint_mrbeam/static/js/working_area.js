@@ -2198,7 +2198,6 @@ $(function(){
 				}
 
 				// update fileslist
-				// var displayText = self._qs_displayText(qs_params);
 				$('#'+self.currentQuickShapeFile.id+' .title').text(name);
 			}
 		};
@@ -2396,33 +2395,6 @@ $(function(){
 //						+'L'+f2.join(',')
 //						+'z';
 			return d;
-		};
-
-		// TODO IRATXE: Remove?
-		self._qs_displayText = function(qs_params){
-			switch(qs_params.type){
-				case '#circle':
-					return self.currentQuickShapeFile.name !== '' ?
-                        // Translators: shape
-						self.currentQuickShapeFile.name : gettext("Circle") + " Ø " + qs_params.circle_radius + " " + gettext("mm");
-					break;
-				case '#heart':
-					return self.currentQuickShapeFile.name !== '' ?
-                        // Translators: shape
-						self.currentQuickShapeFile.name : gettext("Heart") + " " + qs_params.heart_w + '*' + qs_params.heart_h + " " + gettext("mm");
-					break;
-				case '#star':
-					return self.currentQuickShapeFile.name !== '' ?
-                        // Translators: shape
-						self.currentQuickShapeFile.name : gettext("Star") + " Ø " + qs_params.circle_radius + " " + gettext("mm");
-					break;
-				default: // #rect
-					return self.currentQuickShapeFile.name !== '' ?
-                        // Translators: shape
-						self.currentQuickShapeFile.name : gettext("Rectangle") + " " + qs_params.rect_w + '*' + qs_params.rect_h + " " + gettext("mm");
-					break;
-			}
-
 		};
 		
 		self._qs_removeInvalid = function(){
