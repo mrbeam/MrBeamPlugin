@@ -1,6 +1,7 @@
 $(function () {
     function AirFilterUsage(params) {
         let self = this;
+        window.mrbeam.viewModels['airFilterUsage'] = self;
 
         self.settings = params[0];
         self.air_filter_usage = ko.observable(0);
@@ -23,7 +24,15 @@ $(function () {
                 .fail(function(){
                     console.error("Unable to reset air filter usage counter.");
                 });
-        }
+        };
+
+        self.onSettingsShown = function() {
+            self.settings.requestData()
+                .done(function(){
+                    self.air_filter_usage(self.settings.settings.plugins.mrbeam.airFilterUsage());
+                }
+            )
+        };
 
     }
 
