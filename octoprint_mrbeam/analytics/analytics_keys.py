@@ -54,6 +54,7 @@ class AnalyticsKeys(object):
 	### LOG EVENT KEYS ###
 	EVENT_LOG = 'log_event'
 	EXCEPTION = 'exception'
+	IOBEAM =    'iobeam'
 
 	### JOB KEYS ###
 	JOB_ID = 'job_id'

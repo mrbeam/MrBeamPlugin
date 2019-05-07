@@ -1653,6 +1653,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				If you send the same notification (all params have identical values) it won't be sent again.
 		:return:
 		"""
+		text = text.replace("Mr Beam II", "Mr&nbsp;Beam&nbsp;II").replace("Mr Beam", "Mr&nbsp;Beam")
 		notification = dict(
 			title= title,
 			text= text,
@@ -1672,6 +1673,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		if send:
 			self._plugin_manager.send_plugin_message("mrbeam", dict(frontend_notification = notification))
+
+	def _replay_stored_frontend_notification(self):
+		# all currently connected clients will get this notification again
+		for n in self._stored_frontend_notifications:
+			self.notify_frontend(title = n['title'], text = n['text'], type= n['type'], sticky = n['sticky'], replay_when_new_client_connects=False)
 
 	def get_mrb_state(self):
 		"""
@@ -1702,11 +1708,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			if not self.is_boot_grace_period():
 				self._logger.exception("Exception while collecting mrb_state data: ")
 			return None
-
-	def _replay_stored_frontend_notification(self):
-		# all currently connected clients will get this notification again
-		for n in self._stored_frontend_notifications:
-			self.notify_frontend(title = n['title'], text = n['text'], type= n['type'], sticky = n['sticky'], replay_when_new_client_connects=False)
 
 	def _getCurrentFile(self):
 		currentJob = self._printer.get_current_job()
