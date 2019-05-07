@@ -2,10 +2,24 @@
  * Created by andy on 03/03/2017.
  */
 $(function() {
+    // TODO IRATXE: decide what to do with this
+    $('#settings-usersDialogAddUserName').attr('data-bind','value: $root.users.editorUsername, valueUpdate: \'afterkeydown\'');
+
     function LoginScreenViewModel(parameters) {
         var self = this;
 
+        window.ko.extenders.lowercase = function(target, option) {
+            target.subscribe(function(newValue) {
+                if(newValue !== undefined) {
+                    target(newValue.toLowerCase());
+                    console.log(newValue)
+                }
+            });
+            return target;
+        };
+
         self.loginState = parameters[0];
+        self.users = parameters[0];
 
         self.dialogElement = undefined;
         self.loginButton = undefined;
@@ -25,6 +39,13 @@ $(function() {
                  */
                 self.setLoginState(false);
             }
+            let header_elem = $('#mrb_settings_users_header').detach();
+            $('#settings_users > table').before(header_elem);
+            header_elem.show();
+
+            // OCTOPRINT ALERT --> TODO IRATXE: message for the things we change in Octoprint
+            self.loginState.loginUser.extend({lowercase: true});
+            self.users.editorUsername.extend({lowercase: true});
         };
 
         /**
@@ -105,7 +126,7 @@ $(function() {
 
     OCTOPRINT_VIEWMODELS.push([
         LoginScreenViewModel,
-        ["loginStateViewModel"],
-        ["#loginscreen_dialog"]
+        ["loginStateViewModel", "usersViewModel"],
+        ["#loginscreen_dialog", "#settings-usersDialogAddUser"]  // TODO IRATXE: remove this?
     ]);
 });

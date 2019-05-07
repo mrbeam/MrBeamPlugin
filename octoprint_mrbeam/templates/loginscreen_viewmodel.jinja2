@@ -9,7 +9,7 @@
                 <div class="control-group">
                     <label class="control-label">{{ _('E-mail address') }}</label>
                     <div class="controls">
-                        <input type="text" id="login_screen_email_address_in" class="input-medium" name="username" data-bind="valueWithInit: loginState.loginUser" placeholder="{{ _('E-mail address') }}" autocapitalize="none">
+                        <input type="text" id="login_screen_email_address_in" class="input-medium" name="username" data-bind="value: loginState.loginUser, valueUpdate: 'afterkeydown'" placeholder="{{ _('E-mail address') }}" autocapitalize="none">
                     </div>
                 </div>
                 <div class="control-group">
