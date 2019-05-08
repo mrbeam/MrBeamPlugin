@@ -82,6 +82,7 @@ $(function(){
 
 	function WorkingAreaViewModel(params) {
 		var self = this;
+		window.mrbeam.viewModels['workingAreaViewModel'] = self;
 
 		self.parser = new gcParser();
 
@@ -92,6 +93,7 @@ $(function(){
 		self.profile = params[4];
 		self.camera = params[5];
 		self.readyToLaser = params[6];
+		self.tour = params[7];
 
 		self.log = [];
 
@@ -340,6 +342,10 @@ $(function(){
 		self.mm2svgUnits = function(val){
 			return val * self.svgDPI()/25.4;
 		};
+
+		self.startTour = function(){
+		    self.tour.startTour();
+        };
 
 		self.isPlaced = function(file){
 			if(file === undefined) return false;
@@ -1353,8 +1359,7 @@ $(function(){
                 svg.ftStoreInitialTransformMatrix();
                 svg.data('tx', ntx);
                 svg.data('ty', nty);
-                svg.ftUpdateTransform();
-
+                svg.ftManualTransform({tx_rel: ntx, ty_rel: nty, diffType:'absolute'})
 			}
         };
 
@@ -2714,7 +2719,8 @@ $(function(){
     // view model class, parameters for constructor, container to bind to
     ADDITIONAL_VIEWMODELS.push([WorkingAreaViewModel,
 		["loginStateViewModel", "settingsViewModel", "printerStateViewModel",
-			"gcodeFilesViewModel", "laserCutterProfilesViewModel", "cameraViewModel", "readyToLaserViewModel"],
+			"gcodeFilesViewModel", "laserCutterProfilesViewModel", "cameraViewModel",
+            "readyToLaserViewModel", "tourViewModel"],
 		[document.getElementById("area_preview"),
 			document.getElementById("homing_overlay"),
 			document.getElementById("working_area_files"),
