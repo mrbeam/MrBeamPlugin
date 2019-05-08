@@ -44,6 +44,13 @@ $(function () {
             }
 
         };
+
+        $( window ).on('beforeunload', function(){
+            // do not show reloadingOverlay when it's a file download
+            if (!event.target.activeElement.href) {
+                self.removeFeedbackWidget();
+            }
+        });
     }
 
     // view model class, parameters for constructor, container to bind to
