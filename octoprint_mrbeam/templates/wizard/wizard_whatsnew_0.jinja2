@@ -1,9 +1,33 @@
+<h3>{{ _("Introducing Software Channels:<br/>Stable and Beta") }}</h3>
 
-<h3>{{ _("What's New") }}</h3>
+
+<div class="control-group">
+    <h5>{{ _('Stable Channel') }}: </h5>
+    <div><ul><li style="list-style: none;">{{ _('Use the most stable software for your Mr Beam II.<br/>You will only get notified about officially released and well tested software updates.') }}</li></ul></div>
+</div>
+
+
+<div class="control-group">
+    <h5>{{ _('Beta Channel') }}: </h5>
+    <div><ul><li style="list-style: none;">{{ _('Get the latest Mr Beam development! In this channel you can try the newest features even before they are officially released, with more frequent updates. Use this if you are curious, you can always switch back to hte stable channel if you experience errors.') }}</li></ul></div>
+</div>
+
+
+
+<h5>Software Channel:</h5>
 <p>
-    {{ _('Welcome to the latest version of the Mr Beam II software<br/>
-    and thank you for keeping your Mr Beam II up to date.') }}
+    {{ _('Please choose a software update channle for your Mr Beam II:') }}
 </p>
+<select id="whatsnew_software_channel_select">
+    <option value="PROD" selected="selected">Stable</option>
+    <option value="BETA">Beta</option>
+    {% if env_local == 'DEV' %}
+        <option value="DEV">Develop</option>
+    {% endif %}
+</select>
+
+
 <p>
-    {{ _('Let us give you a short overview of the new features and improvements of this version...') }}
+    {{ _('Switch between the different channels of the Mr Beam II software any time in the settings.') }}
 </p>
+
