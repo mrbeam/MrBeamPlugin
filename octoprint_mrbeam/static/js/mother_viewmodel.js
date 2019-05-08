@@ -23,6 +23,10 @@ $(function () {
         self.isStartupComplete = false;
         self.storedSocketData = [];
 
+        self.localPrintTime = 0;
+        self.serverPrintTime = 0;
+        self.printTimeInterval = null;
+
         // MrBeam Logo click activates workingarea tab
         $('#mrbeam_logo_link').click(function() {
             $('#wa_tab_btn').tab('show');
@@ -230,6 +234,8 @@ $(function () {
                  self.terminal.checkAutoscroll();
             });
             self.terminal.activeAllFilters();
+
+            self.state._processProgressData = function(){};
         };
 
         self.onStartupComplete = function() {
@@ -408,7 +414,17 @@ $(function () {
                 self.state.progress(undefined);
             }
             self.state.filepos(data.filepos);
-            self.state.printTime(data.printTime);
+            if(data.printTime !== self.serverPrintTime) {
+                self.serverPrintTime = data.printTime;
+                self.localPrintTime = data.printTime;
+                self.state.printTime(self.localPrintTime);
+
+                clearInterval(self.printTimeInterval);
+                self.printTimeInterval = setInterval(function () {
+                    self.localPrintTime++;
+                    self.state.printTime(self.localPrintTime);
+                }, 1000)
+            }
             //self.printTimeLeft(data.printTimeLeft);
         };
 
