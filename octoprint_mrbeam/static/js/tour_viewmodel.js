@@ -264,9 +264,11 @@ $(function () {
             // });
 
             // remove bubbles because they're visible over the curtain
-            $(window).on('beforeunload', function () {
-                console.log("hopscotch tour END: ", self.tourDef);
-                hopscotch.endTour();
+                $(window).on('beforeunload', function () {
+                if (!event.target.activeElement.href) {
+                    console.log("hopscotch tour END: ", self.tourDef);
+                    hopscotch.endTour();
+                }
             });
 
             self.onEventReadyToLaserStart = function (payload) {
