@@ -97,8 +97,6 @@ class Migration(object):
 					self.avrdude_autoreset_script()
 
 				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_USERNAME_LOWCASE, equal_ok=False):
-					# TODO IRATXE: create function that changes user names to lower case
-					self._logger.info("####################### IRATXE version migrate")
 					self.change_usernames_tolower()
 
 				# migrations end
