@@ -352,7 +352,22 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 		exec_cmd("sudo cp {src} {dst}".format(src=src, dst=dst))
 
 	def change_usernames_tolower(self):
-		self._logger.info("####################### IRATXE _users: %s", self._user_manager._users)
+		self._logger.info("change_usernames_tolower() ")
+		users = self.plugin._user_manager._users
+		self._logger.info("{numUsers} users:".format(numUsers=len(users)))
+
+		for key, value in users.iteritems():
+			username = value.get_name()
+
+			if any(c.isupper() for c in username):
+				lower_username = username.lower()
+				users[lower_username] = users.pop(key)
+				users[lower_username]._username = lower_username
+				self._logger.info("- User {upper} changed to {lower}".format(upper=username, lower=lower_username))
+			else:
+				self._logger.info("- User {user} not changed".format(user=username))
+
+		self.plugin._user_manager._save(force=True)
 
 
 	##########################################################
