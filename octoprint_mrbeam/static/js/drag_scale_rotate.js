@@ -281,6 +281,17 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             if(params.ty !== undefined && !isNaN(params.ty)){
                 svg.data('ty', params.ty - bbox.y2);
             }
+            // if the transformation comes from the keyboard arrows, it looks a bit different
+            if(params.tx_rel !== undefined && !isNaN(params.tx_rel)){
+                svg.data('tx', params.tx_rel);
+                svg.data('scale', 1);
+                svg.data('angle', 0);
+            }
+            if(params.ty_rel !== undefined && !isNaN(params.ty_rel)){
+                svg.data('ty', params.ty_rel);
+                svg.data('scale', 1);
+                svg.data('angle', 0);
+            }
             if(params.angle !== undefined && !isNaN(params.angle)){
 				svg.data('angle', params.angle - svg.ftGetRotation());
 			}

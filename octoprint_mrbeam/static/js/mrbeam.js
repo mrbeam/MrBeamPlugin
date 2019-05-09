@@ -80,6 +80,7 @@ mrbeam._isVersionOrHigher = function(actualVersion, expectedVersion) {
 
 
 mrbeam.mrb_state = undefined;
+mrbeam.viewModels = {};
 
 mrbeam.isBeta = function() {
     return MRBEAM_SW_TIER === 'BETA';
@@ -94,9 +95,11 @@ mrbeam.isProd = function() {
 };
 
 
+
 $(function() {
     function MrbeamViewModel(parameters) {
         var self = this;
+        window.mrbeam.viewModels['mrbeamViewModel'] = self;
 
         self.settings = parameters[0];
 

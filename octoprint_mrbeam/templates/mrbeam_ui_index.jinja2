@@ -96,6 +96,9 @@
 							<li><a href="/plugin/mrbeam/static/docs/{{ _('QuickstartGuide_en.pdf') }}" target="_blank"><i class="icon-book"></i> {{ _('Quickstart Guide') }}</a></li>
 							<li><a href="/plugin/mrbeam/static/docs/{{ _('UserManual_en.pdf') }}" target="_blank"><i class="icon-book"></i> {{ _('User Manual') }}</a></li>
 							<li class="divider"></li>
+{#							<li><a href="#tour" id="tour_start_btn" ><i class="icon-youtube-play"></i> {{ _('Take a Tour') }}</a></li>#}
+							<li><a href="#tour" id="tour_start_btn" data-bind="click: window.mrbeam.viewModels.tourViewModel.btn_startTour"><i class="icon-youtube-play"></i> {{ _('Take a Tour') }}</a></li>
+							<li class="divider"></li>
 							<li><a href="https://www.mr-beam.org/support" target="_blank"><i class="icon-question-sign"></i> {{ _('Support Portal') }}</a></li>
 						</ul>
 					</li>

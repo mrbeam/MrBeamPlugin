@@ -82,6 +82,7 @@ $(function(){
 
 	function WorkingAreaViewModel(params) {
 		var self = this;
+		window.mrbeam.viewModels['workingAreaViewModel'] = self;
 
 		self.parser = new gcParser();
 
@@ -92,6 +93,7 @@ $(function(){
 		self.profile = params[4];
 		self.camera = params[5];
 		self.readyToLaser = params[6];
+		self.tour = params[7];
 
 		self.log = [];
 
@@ -124,6 +126,8 @@ $(function(){
         self.fontMap = ["Allerta Stencil","Amatic SC","Comfortaa","Fredericka the Great","Kavivanar","Lobster","Merriweather","Mr Bedfort","Quattrocento","Roboto"];
         self.currentQuickTextFile = undefined;
         self.currentQuickText = ko.observable();
+        self.quickShapeNames = new Map([['rect', gettext('Rectangle')], ['circle', gettext('Circle')],
+            ['star', gettext('Star')], ['heart', gettext('Heart')]]);
         self.currentQuickShapeFile = undefined;
         self.currentQuickShape = ko.observable();
         self.lastQuickTextFontIndex = 0;
@@ -338,6 +342,10 @@ $(function(){
 		self.mm2svgUnits = function(val){
 			return val * self.svgDPI()/25.4;
 		};
+
+		self.startTour = function(){
+		    self.tour.startTour();
+        };
 
 		self.isPlaced = function(file){
 			if(file === undefined) return false;
@@ -1351,8 +1359,7 @@ $(function(){
                 svg.ftStoreInitialTransformMatrix();
                 svg.data('tx', ntx);
                 svg.data('ty', nty);
-                svg.ftUpdateTransform();
-
+                svg.ftManualTransform({tx_rel: ntx, ty_rel: nty, diffType:'absolute'})
 			}
         };
 
@@ -2147,9 +2154,11 @@ $(function(){
 		 */
 		self._qs_currentQuickShapeUpdate = function(){
 			if (self.currentQuickShapeFile) {
-				self.currentQuickShape(self.currentQuickShapeFile.name);
 //				var type = $('#shape_tabs li.active a').attr('href');
 				var type = self.currentQuickShapeFile.qs_params.type;
+                let name = self.quickShapeNames.get(type.substr(1));
+                self.currentQuickShapeFile.name = name;
+                self.currentQuickShape(self.currentQuickShapeFile.name);
 				var qs_params = {
 					type: type,
 					color: $('#quick_shape_color').val(),
@@ -2194,8 +2203,7 @@ $(function(){
 				}
 
 				// update fileslist
-				var displayText = self._qs_displayText(qs_params);
-				$('#'+self.currentQuickShapeFile.id+' .title').text(displayText);
+				$('#'+self.currentQuickShapeFile.id+' .title').text(name);
 			}
 		};
 
@@ -2392,32 +2400,6 @@ $(function(){
 //						+'L'+f2.join(',')
 //						+'z';
 			return d;
-		};
-
-		self._qs_displayText = function(qs_params){
-			switch(qs_params.type){
-				case '#circle':
-					return self.currentQuickShapeFile.name !== '' ?
-                        // Translators: shape
-						self.currentQuickShapeFile.name : gettext("Circle") + " Ø " + qs_params.circle_radius + " " + gettext("mm");
-					break;
-				case '#heart':
-					return self.currentQuickShapeFile.name !== '' ?
-                        // Translators: shape
-						self.currentQuickShapeFile.name : gettext("Heart") + " " + qs_params.heart_w + '*' + qs_params.heart_h + " " + gettext("mm");
-					break;
-				case '#star':
-					return self.currentQuickShapeFile.name !== '' ?
-                        // Translators: shape
-						self.currentQuickShapeFile.name : gettext("Star") + " Ø " + qs_params.circle_radius + " " + gettext("mm");
-					break;
-				default: // #rect
-					return self.currentQuickShapeFile.name !== '' ?
-                        // Translators: shape
-						self.currentQuickShapeFile.name : gettext("Rectangle") + " " + qs_params.rect_w + '*' + qs_params.rect_h + " " + gettext("mm");
-					break;
-			}
-
 		};
 		
 		self._qs_removeInvalid = function(){
@@ -2737,7 +2719,8 @@ $(function(){
     // view model class, parameters for constructor, container to bind to
     ADDITIONAL_VIEWMODELS.push([WorkingAreaViewModel,
 		["loginStateViewModel", "settingsViewModel", "printerStateViewModel",
-			"gcodeFilesViewModel", "laserCutterProfilesViewModel", "cameraViewModel", "readyToLaserViewModel"],
+			"gcodeFilesViewModel", "laserCutterProfilesViewModel", "cameraViewModel",
+            "readyToLaserViewModel", "tourViewModel"],
 		[document.getElementById("area_preview"),
 			document.getElementById("homing_overlay"),
 			document.getElementById("working_area_files"),

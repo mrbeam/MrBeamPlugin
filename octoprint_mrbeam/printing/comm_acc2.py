@@ -374,7 +374,6 @@ class MachineCom(object):
 					self._cmd = None
 					return
 				if my_cmd and self._acc_line_buffer.get_char_len() + len(my_cmd) + 1 < self.GRBL_WORKING_RX_BUFFER_SIZE:
-					my_cmd, _, _  = self._process_command_phase("sending", my_cmd)
 					# In recovery: if acc_line_buffer is marked dirty we must check if it is set to clean again.
 					if self._acc_line_buffer.is_dirty() and self.COMMAND_RESET_ALARM in my_cmd:
 						self._acc_line_buffer.set_clean()
@@ -1515,6 +1514,8 @@ class MachineCom(object):
 				cmd = process_gcode_line(cmd)
 				if not cmd:
 					return
+
+				cmd, _, _ = self._process_command_phase("sending", cmd)
 				if self.grbl_feat_checksums:
 					cmd = self._add_checksum_to_cmd(cmd)
 

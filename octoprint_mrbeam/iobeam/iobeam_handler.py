@@ -10,6 +10,7 @@ from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.lib.rwlock import RWLock
 from flask.ext.babel import gettext
+from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 # singleton
 _instance = None
@@ -76,7 +77,7 @@ class IoBeamHandler(object):
 	CLIENT_ID = "MrBeamPlugin.v{vers_mrb}"
 
 	PROCESSING_TIMES_LOG_LENGTH = 100
-	PROCESSING_TIME_WARNING_THRESHOLD = 0.1
+	PROCESSING_TIME_WARNING_THRESHOLD = 0.7
 
 	MESSAGE_LENGTH_MAX = 4096
 	MESSAGE_NEWLINE = "\n"
@@ -150,6 +151,7 @@ class IoBeamHandler(object):
 		self.processing_times_log = collections.deque([], self.PROCESSING_TIMES_LOG_LENGTH)
 
 		self._settings = _mrbeam_plugin_implementation._settings
+		self.reported_hardware_malfunctions = []
 
 	def isRunning(self):
 		return self._worker.is_alive()
@@ -698,7 +700,7 @@ class IoBeamHandler(object):
 			correction_factor = new_intensity / 65.0
 
 		# If the correction factor changed, save values to config.yaml
-		if correction_factor != _mrbeam_plugin_implementation.lh['correction_factor']:
+		if correction_factor != _mrbeam_plugin_implementation.lh['correction_factor'] or correction_factor == 1:
 			_mrbeam_plugin_implementation.lh['correction_factor'] = correction_factor
 
 			self._settings.set(["laserhead", "serial"], _mrbeam_plugin_implementation.lh['serial'], force=True)
@@ -740,20 +742,33 @@ class IoBeamHandler(object):
 			# introduced with iobeam 0.4.2
 			# in future versions we could make this requried and only unlock laser functionality once this was ok
 			init = token[1] if len(token) > 1 else None
+			malfunction = token[2] if len(token) > 2 else None
 			if init and init.startswith('ok'):
 				self._logger.info("iobeam init ok: '%s'", message)
 			else:
-				# ANDYTEST add analytics=True to next log line
 				self._logger.info("iobeam init error: '%s' - requesting iobeam_debug...", message)
 				self._send_command('debug')
-				text = '<br/>' + \
-				       gettext("A possible hardware malfunction has been detected on this device. Please contact our support team immediately at:") + \
-				       '<br/><a href="https://mr-beam.org/support" target="_blank">mr-beam.org/support</a><br/><br/>' \
-				       '<strong>' + gettext("Error:") + '</strong><br/>{}'.format(message)
-				_mrbeam_plugin_implementation.notify_frontend(title=gettext("Hardware malfunction"),
-				                                              text=text,
-				                                              type="error", sticky=True,
-				                                              replay_when_new_client_connects=True)
+				self._fireEvent(MrBeamEvents.HARDWARE_MALFUNCTION, dict(iobeam_messsage=message))
+				if malfunction == 'bottom_open':
+					self.send_bottom_open_frontend_notification(malfunction)
+				else:
+					self.send_hardware_malfunction_frontend_notification(malfunction, message)
+			_mrbeam_plugin_implementation._analytics_handler.log_iobeam_message(self.iobeam_version, message)
+		elif action == 'runtime': # introduced in iobeam 0.6.2
+			init = token[1] if len(token) > 1 else None
+			malfunction = token[2] if len(token) > 2 else None
+			if init and init.startswith('ok'):
+				self._logger.info("iobeam runtime ok: '%s'", message)
+			else:
+				self._logger.info("iobeam runtime error: '%s'", message)
+				self._fireEvent(MrBeamEvents.HARDWARE_MALFUNCTION, dict(iobeam_messsage=message))
+				if malfunction == 'bottom_open':
+					self.send_bottom_open_frontend_notification(malfunction)
+				else:
+					self.send_hardware_malfunction_frontend_notification(malfunction, message)
+			_mrbeam_plugin_implementation._analytics_handler.log_iobeam_message(self.iobeam_version, message)
+		elif action == 'i2c':
+			_mrbeam_plugin_implementation._analytics_handler.log_iobeam_message(self.iobeam_version, message)
 		elif action == 'debug':
 			self._logger.info("iobeam debug message: '%s'", message)
 		else:
@@ -777,10 +792,33 @@ class IoBeamHandler(object):
 		                                      error_count = err))
 
 		if processing_time > self.PROCESSING_TIME_WARNING_THRESHOLD:
-			# TODO: write an error to our analytics module
 			self._logger.warn("Message handling time took %ss. (Errors: %s, message: '%s')", processing_time, err, message)
 		if log_stats or processing_time > self.PROCESSING_TIME_WARNING_THRESHOLD:
 			self.log_debug_processing_stats()
+
+	def send_hardware_malfunction_frontend_notification(self, malfunction, message):
+		if malfunction not in self.reported_hardware_malfunctions:
+			self.reported_hardware_malfunctions.append(malfunction)
+			text = '<br/>' + \
+			       gettext(
+				       "A possible hardware malfunction has been detected on this device. Please contact our support team immediately at:") + \
+			       '<br/><a href="https://mr-beam.org/ticket" target="_blank">mr-beam.org/ticket</a><br/><br/>' \
+			       '<strong>' + gettext("Error:") + '</strong><br/>{}'.format(message.replace(':', ': ')) # add whitespaces so that longer messages break in frontend
+			_mrbeam_plugin_implementation.notify_frontend(title=gettext("Hardware malfunction"),
+			                                              text=text,
+			                                              type="error", sticky=True,
+			                                              replay_when_new_client_connects=True)
+
+	def send_bottom_open_frontend_notification(self, malfunction):
+		if malfunction not in self.reported_hardware_malfunctions:
+			self.reported_hardware_malfunctions.append(malfunction)
+			text = '<br/>' + \
+			       gettext("The bottom plate is not closed correctly. "
+			               "Please make sure that the bottom is correctly mounted as described in the Mr Beam II user manual.")
+			_mrbeam_plugin_implementation.notify_frontend(title=gettext("Bottom Plate Error"),
+			                                              text=text,
+			                                              type="error", sticky=True,
+			                                              replay_when_new_client_connects=True)
 
 	def log_debug_processing_stats(self):
 		"""
