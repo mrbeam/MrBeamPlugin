@@ -170,9 +170,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._dustManager = dustManager()
 		self.jobTimeEstimation = JobTimeEstimation(self._event_bus)
 
-		self._logger.info("ANDYTEST _users: %s", self._user_manager._users)
-
-
 	def _initialize_lh(self):
 		self.lh['serial'] = self._settings.get(["laserhead", "serial"])
 		self.lh['correction_factor'] = self._settings.get(["laserhead", "correction", "factor"])
