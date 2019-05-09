@@ -1,33 +1,30 @@
-<h3>{{ _("Introducing Software Channels:<br/>Stable and Beta") }}</h3>
+<h3>{{ _("Introducing Software Channels: Stable and Beta") }}</h3>
 
-    <div class="control-group span6">
-        <h5>{{ _('Stable Channel') }}: </h5>
-        <p>{{ _('Use the most stable software for your Mr Beam II.<br/>You will only get notified about officially released and well tested software updates.') }}</p>
+<div id="whatsnew_software_channel_descriptions" class="row">
+    <div class="control-group span6 ">
+        <h5><i class="fa fa-thumbs-o-up" aria-hidden="true"></i>{{ _('Stable Channel') }}: </h5>
+        <p>{{ _('Use the most stable software for your Mr Beam II. You will only get notified about officially released and well tested software updates.') }}</p>
     </div>
-
-
     <div class="control-group span6">
-        <h5>{{ _('Beta Channel') }}: </h5>
-        <p>{{ _('Get the latest Mr Beam development! In this channel you can try the newest features even before they are officially released, with more frequent updates. Use this if you are curious, you can always switch back to hte stable channel if you experience errors.') }}</p>
+        <h5><i class="fa fa-flask" aria-hidden="true"></i>{{ _('Beta Channel') }}: </h5>
+        <p>{{ _('Get the latest Mr Beam development! In this channel you can try the newest features even before they are officially released, with more frequent updates. Use this if you are curious, you can always switch back to the stable channel if you experience errors.') }}</p>
     </div>
+</div>
 
-
-<h5>Software Channel:</h5>
-<p>
-    {{ _('Please choose a software update channle for your Mr Beam II:') }}
-</p>
-<select id="whatsnew_software_channel_select">
-    <option value="PROD" selected="selected">Stable</option>
-    <option value="BETA">Beta</option>
-    {% if env_local == 'DEV' %}
-        <option value="DEV">Develop</option>
-    {% endif %}
-</select>
-
-
-<p>
-    {{ _('Switch between the different channels of the Mr Beam II software any time in the settings.') }}
-</p>
+<div id="whatsnew_software_channel_choose">
+    <label for="whatsnew_software_channel_select"><strong>{{ _('Select a channel for your Mr Beam II:') }}</strong></label>
+    <select id="whatsnew_software_channel_select">
+        <option value="PROD" selected="selected">Stable</option>
+        <option value="BETA">Beta</option>
+        {% if env_local == 'DEV' %}
+            <option value="DEV">Develop</option>
+        {% endif %}
+    </select>
+    <div>
+        <i class="fa fa-info" aria-hidden="true"></i>
+        {{ _('Switch between the different channels of the Mr Beam II software any time in the settings!') }}
+    </div>
+</div>
 
 {% if language == 'de' %}
 
