@@ -2294,11 +2294,16 @@ input[type="radio"]{
 }
 
 #whatsnew_software_channel_choose > label {
-    display: inline-block;
+  display: inline-block;
+  margin-top: 20px;
 }
 
 #whatsnew_software_channel_select {
   width: 100px;
   margin-left: 20px;
   display: inline-block;
+}
+
+#whatsnew_software_channel_switch {
+  color: #e25303;
 }
