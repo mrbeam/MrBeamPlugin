@@ -2274,3 +2274,12 @@ input[type="radio"]{
   display: inline-block;
   margin-right: 40px;
 }
+
+
+/*
+* === FRESHDESK FEEDBACK WIDGET ===
+*/
+#freshwidget-button > a {
+    padding: 6px 16px;
+    font-size: 12px;
+}
