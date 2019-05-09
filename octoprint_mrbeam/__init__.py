@@ -164,6 +164,17 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._temperatureManager = temperatureManager()
 		self._dustManager = dustManager()
 
+		self._logger.info("ANDYTEST _users: %s", self._user_manager._users)
+
+
+	def _initialize_lh(self):
+		self.lh['serial'] = self._settings.get(["laserhead", "serial"])
+		self.lh['correction_factor'] = self._settings.get(["laserhead", "correction", "factor"])
+		self.lh['correction_factor_override'] = self._settings.get(["laserhead", "correction", "factor_override"])
+		self.lh['correction_enabled'] = self._settings.get(["laserhead", "correction", "enabled"])
+		self.lh['p_65'] = self._settings.get(["laserhead", "p_65"])
+		self.lh['p_75'] = self._settings.get(["laserhead", "p_75"])
+		self.lh['p_85'] = self._settings.get(["laserhead", "p_85"])
 
 	def _do_initial_log(self):
 		"""

@@ -19,7 +19,7 @@ $(function() {
         };
 
         self.loginState = parameters[0];
-        self.users = parameters[0];
+        self.users = parameters[1];
 
         self.dialogElement = undefined;
         self.loginButton = undefined;
