@@ -18,7 +18,6 @@
         <label class="control-label" for="first_run_username">{{ _('E-mail address') }}</label>
         <div class="controls">
             <input id="wizard_plugin_corewizard_acl_input_username" type="text" class="input-medium" data-bind="value: username, valueUpdate: 'afterkeydown', enable: !setup(), css: {disabled: setup()}">
-            <span class="help-inline" >{{ _('This login is case-sensitive!') }}</span>
             <span class="help-inline" data-bind="visible: doUserValidation() && !validUsername()">{{ _('Invalid e-mail address') }}</span>
         </div>
     </div>
