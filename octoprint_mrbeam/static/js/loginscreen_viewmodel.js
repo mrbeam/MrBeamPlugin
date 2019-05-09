@@ -129,4 +129,5 @@ $(function() {
         LoginScreenViewModel,
         ["loginStateViewModel", "usersViewModel"],
         ["#loginscreen_dialog", "#settings-usersDialogAddUser"]
+    ]);
 });
