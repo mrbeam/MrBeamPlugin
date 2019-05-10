@@ -73,9 +73,13 @@ $(function () {
             let id_scroll_wrapper = "settings_plugin_softwareupdate_scroll_wrapper";
             let elem_= $('#settings_plugin_softwareupdate');
             let children = elem_.children();
-            elem_.append('<div class=\"scrollable\" style=\"padding-bottom:2em; overflow-y: auto; height: calc(100vh - 100px);\" id="'+id_scroll_wrapper+'">');
+            elem_.append('<div class=\"scrollable\" style=\"overflow-y: auto; height: calc(100vh - 100px);\" id="'+id_scroll_wrapper+'">');
             children.detach();
             $('#'+id_scroll_wrapper).append(children);
+
+            // "Check for update now" button sticky on page bottom
+            let button = $('#settings_plugin_softwareupdate_scroll_wrapper > button');
+            button.addClass('sticky-footer');
 
         };
 
