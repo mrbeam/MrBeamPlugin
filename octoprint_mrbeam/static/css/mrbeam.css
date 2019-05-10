@@ -2275,6 +2275,29 @@ input[type="radio"]{
   margin-right: 40px;
 }
 
+#settings_software_channel_descriptions {
+  margin-left: 0;
+}
+
+#settings_software_channel_descriptions > div {
+  padding-right: 15px;
+}
+
+#settings_software_channel_descriptions > div > p {
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+#settings_software_channel_descriptions > div > h5 > i, #settings_software_channel_choose > div > i {
+  margin-right: 5px;
+}
+
+.sticky-footer {
+  position: sticky;
+  bottom: 0;
+}
+
+
 /*
 * === WHAT'S NEW WIZARD ===
 */
