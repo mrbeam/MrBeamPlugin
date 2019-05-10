@@ -617,7 +617,7 @@ class MachineCom(object):
 			try:
 				if line is not None:
 					rx_free = int(line.split(':')[1]) # ok:127
-			except e:
+			except Exception as e:
 				self._logger.warn("_handle_ok_message() Can't read free_rx_bytes from line: '%s', error: %s", line, e)
 			self._rx_stats.add(rx_free)
 
