@@ -1,6 +1,8 @@
 $(function () {
     function SoftwareChannelSelector(params) {
         let self = this;
+        window.mrbeam.viewModels['softwareChannelSelector'] = self;
+
         self.loginState = params[0];
         self.settings = params[1];
         self.softwareUpdate = params[2];
@@ -39,8 +41,24 @@ $(function () {
             self.waiting_for_update = Math.min(self.waiting_for_update-1, 0);
         };
 
+
+
+        self.setChannelAsync = function(channel, waitTime){
+            waitTime = waitTime || 1500;
+            setTimeout(function(){self._setChannel(channel)}, waitTime );
+            setTimeout(function(){self._trigger_refresh(channel)}, waitTime *10);
+        };
+
         self.selection_changed = function (event) {
             self.waiting_for_update++;
+        };
+
+        self._setChannel = function(channel){
+            self.settings.settings.plugins.mrbeam.dev.software_tier(channel);
+            self.settings.saveData()
+                .done(function(){
+                    // console.log("ANDYTEST settings.saveData DONE");
+               });
         };
 
         self._trigger_refresh = function(){
@@ -58,11 +76,15 @@ $(function () {
             let id_scroll_wrapper = "settings_plugin_softwareupdate_scroll_wrapper";
             let elem_= $('#settings_plugin_softwareupdate');
             let children = elem_.children();
-            elem_.append('<div class=\"scrollable\" style=\"padding-bottom:2em; overflow-y: auto; height: calc(100vh - 100px);\" id="'+id_scroll_wrapper+'">');
+            elem_.append('<div class=\"scrollable\" style=\"overflow-y: auto; height: calc(100vh - 100px);\" id="'+id_scroll_wrapper+'">');
             children.detach();
             $('#'+id_scroll_wrapper).append(children);
 
-        }
+            // "Check for update now" button sticky on page bottom
+            let button = $('#settings_plugin_softwareupdate_scroll_wrapper > button');
+            button.addClass('sticky-footer');
+
+        };
 
     };
 

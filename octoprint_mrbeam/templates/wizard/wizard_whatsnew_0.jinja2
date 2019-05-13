@@ -1,5 +1,9 @@
 <h3>{{ _("New Software Channels!") }}</h3>
 
+{#{% if language == 'de' %}#}
+{#{% else %}#}
+{#{% endif %}#}
+
 <div id="whatsnew_software_channel_descriptions" class="row">
     <div class="control-group span6 ">
         <h5><i class="fa fa-thumbs-o-up" aria-hidden="true"></i>{{ _('Stable Channel') }}: </h5>
@@ -12,7 +16,7 @@
 </div>
 
 <div id="whatsnew_software_channel_choose">
-    <label for="whatsnew_software_channel_select"><strong>{{ _('Select a channel for your Mr Beam II:') }}</strong></label>
+    <label for="whatsnew_software_channel_select"><strong>{{ _('Select a software channel for your Mr Beam II:') }}</strong></label>
     <select id="whatsnew_software_channel_select">
         <option value="PROD" selected="selected">Stable</option>
         <option value="BETA">Beta</option>
@@ -22,31 +26,7 @@
     </select>
     <div id="whatsnew_software_channel_switch">
         <i class="fa fa-info" aria-hidden="true"></i>
-        {{ _('Switch between the different channels of the Mr Beam II software any time in the settings!') }}
+        {{ _('Switch between the different software channels of the Mr Beam II any time in the settings!') }}
     </div>
 </div>
 
-{% if language == 'de' %}
-
-    <script>var wizard_plugin_corewizard_whatsnew_0_title_de = "Was gibt's Neues";</script>
-    <h3>{{ _("Was gibt's Neues") }}</h3>
-    <p>
-        Willkommen bei der neuesten Verision der Mr Beam II Software<br/>
-        und danke, dass du deinen Mr Beam II up to date hälst.
-    </p>
-    <p>
-        Wir geben dir hier eine kurze Übersicht über die neuesten Features und Verbesserungen in dieser Version...
-    </p>
-
-{% else %}
-
-    <h3>{{ _("What's New") }}</h3>
-    <p>
-        Welcome to the latest version of the Mr Beam II software<br/>
-        and thank you for keeping your Mr Beam II up to date.
-    </p>
-    <p>
-        Let us give you a short overview of the new features and improvements of this version...
-    </p>
-
-{% endif %}

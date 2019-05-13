@@ -1,8 +1,4 @@
 
-import yaml
-import os
-import subprocess
-
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.analytics.analytics_handler import analyticsHandler
 from util.pip_util import get_version_of_pip_module
