@@ -2334,4 +2334,11 @@ input[type="radio"]{
 
 #whatsnew_software_channel_switch {
   color: #0088cc;
+
+/*
+* === FRESHDESK FEEDBACK WIDGET ===
+*/
+#freshwidget-button > a {
+    padding: 6px 16px;
+    font-size: 12px;
 }

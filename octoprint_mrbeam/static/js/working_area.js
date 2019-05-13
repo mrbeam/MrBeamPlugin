@@ -126,6 +126,8 @@ $(function(){
         self.fontMap = ["Allerta Stencil","Amatic SC","Comfortaa","Fredericka the Great","Kavivanar","Lobster","Merriweather","Mr Bedfort","Quattrocento","Roboto"];
         self.currentQuickTextFile = undefined;
         self.currentQuickText = ko.observable();
+        self.quickShapeNames = new Map([['rect', gettext('Rectangle')], ['circle', gettext('Circle')],
+            ['star', gettext('Star')], ['heart', gettext('Heart')]]);
         self.currentQuickShapeFile = undefined;
         self.currentQuickShape = ko.observable();
         self.lastQuickTextFontIndex = 0;
@@ -2154,7 +2156,7 @@ $(function(){
 			if (self.currentQuickShapeFile) {
 //				var type = $('#shape_tabs li.active a').attr('href');
 				var type = self.currentQuickShapeFile.qs_params.type;
-				let name = type.substr(1);
+                let name = self.quickShapeNames.get(type.substr(1));
                 self.currentQuickShapeFile.name = name;
                 self.currentQuickShape(self.currentQuickShapeFile.name);
 				var qs_params = {
@@ -2201,8 +2203,7 @@ $(function(){
 				}
 
 				// update fileslist
-				var displayText = self._qs_displayText(qs_params);
-				$('#'+self.currentQuickShapeFile.id+' .title').text(displayText);
+				$('#'+self.currentQuickShapeFile.id+' .title').text(name);
 			}
 		};
 
@@ -2399,32 +2400,6 @@ $(function(){
 //						+'L'+f2.join(',')
 //						+'z';
 			return d;
-		};
-
-		self._qs_displayText = function(qs_params){
-			switch(qs_params.type){
-				case '#circle':
-					return self.currentQuickShapeFile.name !== '' ?
-                        // Translators: shape
-						self.currentQuickShapeFile.name : gettext("Circle") + " Ø " + qs_params.circle_radius + " " + gettext("mm");
-					break;
-				case '#heart':
-					return self.currentQuickShapeFile.name !== '' ?
-                        // Translators: shape
-						self.currentQuickShapeFile.name : gettext("Heart") + " " + qs_params.heart_w + '*' + qs_params.heart_h + " " + gettext("mm");
-					break;
-				case '#star':
-					return self.currentQuickShapeFile.name !== '' ?
-                        // Translators: shape
-						self.currentQuickShapeFile.name : gettext("Star") + " Ø " + qs_params.circle_radius + " " + gettext("mm");
-					break;
-				default: // #rect
-					return self.currentQuickShapeFile.name !== '' ?
-                        // Translators: shape
-						self.currentQuickShapeFile.name : gettext("Rectangle") + " " + qs_params.rect_w + '*' + qs_params.rect_h + " " + gettext("mm");
-					break;
-			}
-
 		};
 		
 		self._qs_removeInvalid = function(){

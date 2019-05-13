@@ -13,6 +13,7 @@ $(function () {
         self.waiting_for_update = 0;
 
         self.onAllBound = function () {
+            // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
             let elem = $('#'+DOM_ELEMENT_TO_BIND_TO).detach();
             $('#settings_plugin_softwareupdate > h3').before(elem);
             $('#'+DOM_ELEMENT_TO_BIND_TO).show();
@@ -61,6 +62,7 @@ $(function () {
         };
 
         self._trigger_refresh = function(){
+            // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
             self.softwareUpdate.performCheck(true, false, true);
         };
 
@@ -70,6 +72,7 @@ $(function () {
          * @private
          */
         self._make_settings_software_update_scrollable = function () {
+            // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
             let id_scroll_wrapper = "settings_plugin_softwareupdate_scroll_wrapper";
             let elem_= $('#settings_plugin_softwareupdate');
             let children = elem_.children();

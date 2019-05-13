@@ -24,6 +24,7 @@ class Migration(object):
 	VERSION_PREFILL_MRB_HW_INFO              = '0.1.55'
 	VERSION_GRBL_AUTO_UPDATE                 = '0.1.61'
 	VERSION_AVRDUDE_AUTORESET_SCRIPT         = '0.1.62'
+	VERSION_USERNAME_LOWCASE				 = '0.1.62'
 
 	# this is where we have files needed for migrations
 	MIGRATE_FILES_FOLDER     = 'files/migrate/'
@@ -92,6 +93,9 @@ class Migration(object):
 
 				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_AVRDUDE_AUTORESET_SCRIPT, equal_ok=False):
 					self.avrdude_autoreset_script()
+
+				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_USERNAME_LOWCASE, equal_ok=False):
+					self.change_usernames_tolower()
 
 				# migrations end
 
@@ -342,6 +346,24 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 		src = os.path.join(__package_path__, self.MIGRATE_FILES_FOLDER, 'autoreset')
 		dst = '/usr/bin/autoreset'
 		exec_cmd("sudo cp {src} {dst}".format(src=src, dst=dst))
+
+	def change_usernames_tolower(self):
+		self._logger.info("change_usernames_tolower() ")
+		users = self.plugin._user_manager._users
+		self._logger.info("{numUsers} users:".format(numUsers=len(users)))
+
+		for key, value in users.iteritems():
+			username = value.get_name()
+
+			if any(c.isupper() for c in username):
+				lower_username = username.lower()
+				users[lower_username] = users.pop(key)
+				users[lower_username]._username = lower_username
+				self._logger.info("- User {upper} changed to {lower}".format(upper=username, lower=lower_username))
+			else:
+				self._logger.info("- User {user} not changed".format(user=username))
+
+		self.plugin._user_manager._save(force=True)
 
 
 	##########################################################
