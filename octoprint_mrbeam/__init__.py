@@ -365,9 +365,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			if "focusReminder" in data:
 				self._settings.set_boolean(["focusReminder"], data["focusReminder"])
 			if "dev" in data and "software_tier" in data['dev']:
-				self._logger.info("ANDYTEST on_settings_save software_tier: START")
 				switch_software_channel(self, data["dev"]["software_tier"])
-				self._logger.info("ANDYTEST on_settings_save software_tier: DONE")
 		except Exception as e:
 			self._logger.exception("Exception in on_settings_save() ")
 			raise e
