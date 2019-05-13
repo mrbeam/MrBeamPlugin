@@ -2,6 +2,7 @@
  * Created by andy on 03/03/2017.
  */
 $(function() {
+    // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
     $('#settings-usersDialogAddUserName').attr('data-bind','value: $root.users.editorUsername, valueUpdate: \'afterkeydown\'');
 
     function LoginScreenViewModel(parameters) {
