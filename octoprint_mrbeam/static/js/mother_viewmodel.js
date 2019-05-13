@@ -407,6 +407,17 @@ $(function () {
             }
         };
 
+        self.state.isPaused.subscribe(function (newIsPaused) {
+            if(newIsPaused) {
+                clearInterval(self.printTimeInterval);
+            } else {
+                self.printTimeInterval = setInterval(function () {
+                    self.localPrintTime++;
+                    self.state.printTime(self.localPrintTime);
+                }, 1000)
+            }
+        });
+
         self._processProgressData = function(data) {
             if (data.completion) {
                 self.state.progress(data.completion);
