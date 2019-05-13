@@ -76,6 +76,7 @@ mrbeam._isVersionOrHigher = function(actualVersion, expectedVersion) {
 
 
 mrbeam.mrb_state = undefined;
+mrbeam.viewModels = {}
 
 mrbeam.isBeta = function() {
     return MRBEAM_SW_TIER === 'BETA';

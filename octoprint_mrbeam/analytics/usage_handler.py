@@ -73,9 +73,9 @@ class UsageHandler(object):
 	def event_stop(self, event, payload):
 		if self.start_time_total >= 0 :
 			self._set_time(payload['time'])
-			self.start_time_total = -1;
-			self.start_time_air_filter = -1;
-			self.start_time_laserhead = -1;
+			self.start_time_total = -1
+			self.start_time_air_filter = -1
+			self.start_time_laserhead = -1
 
 	def _set_time(self, job_duration):
 		if job_duration is not None and job_duration > 0.0:
