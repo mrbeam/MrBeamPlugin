@@ -24,7 +24,7 @@ class Migration(object):
 	VERSION_PREFILL_MRB_HW_INFO              = '0.1.55'
 	VERSION_GRBL_AUTO_UPDATE                 = '0.1.61'
 	VERSION_AVRDUDE_AUTORESET_SCRIPT         = '0.1.62'
-	VERSION_USERNAME_LOWCASE				 = '0.1.62'
+	VERSION_USERNAME_LOWCASE				 = '0.1.63'
 
 	# this is where we have files needed for migrations
 	MIGRATE_FILES_FOLDER     = 'files/migrate/'
