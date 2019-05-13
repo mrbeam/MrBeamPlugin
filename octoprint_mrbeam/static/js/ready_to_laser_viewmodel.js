@@ -23,7 +23,7 @@ $(function() {
 
         self.is_pause_mode = ko.observable(false);
 
-        self.estimated_duration = ko.observable(null)
+        self.estimated_duration = ko.observable(null);
 
         self.DEBUG = false;
 
@@ -134,18 +134,15 @@ $(function() {
                     self._fromData(payload, 'onEventPrintCancelled');
                 };
 
-                self.onEventJobTimeEstimated = function (payload) {
-
-                    self._fromData(payload, 'onEventJobTimeEstimated');
-                    self.formatJobTimeEstimation(payload['jobTimeEstimation'])
-
-                };
-
                 self.fromCurrentData = function(data) {
                     self._fromData(data);
                 };
             } // end if oneButton
         }; // end onStartupComplete
+
+        self.onEventJobTimeEstimated = function (payload) {
+            self.formatJobTimeEstimation(payload['jobTimeEstimation']);
+        };
 
         /**
          * this is called from the outside once the slicing is done
@@ -157,29 +154,33 @@ $(function() {
 
         self.formatJobTimeEstimation = function (seconds){
             seconds = Number(seconds);
-            let hours = Math.floor(seconds / 3600);
-            let minutes = Math.floor(seconds % 3600 / 60);
-            let duration;
-
-            if (hours === 0) {
-                if (minutes == 1) {
-                    duration = "" + minutes + " " + gettext("minute")
-                } else {
-                    duration = "" + minutes + " " + gettext("minutes")
-                }
-            } else if (hours === 1) {
-                if (minutes < 10) {
-                    minutes = "0" + minutes
-                }
-                duration = hours + ":" + minutes + " " + gettext("hour")
+            if (seconds < 0) {
+                self.estimated_duration("");
             } else {
-                if (minutes < 10) {
-                    minutes = "0" + minutes
-                }
-                duration = hours + ":" + minutes + " " + gettext("hours")
-            }
+                let hours = Math.floor(seconds / 3600);
+                let minutes = Math.floor(seconds % 3600 / 60);
+                let duration;
 
-            self.estimated_duration("  ~ " + duration)
+                if (hours === 0) {
+                    if (minutes == 1) {
+                        duration = "" + minutes + " " + gettext("minute")
+                    } else {
+                        duration = "" + minutes + " " + gettext("minutes")
+                    }
+                } else if (hours === 1) {
+                    if (minutes < 10) {
+                        minutes = "0" + minutes
+                    }
+                    duration = hours + ":" + minutes + " " + gettext("hour")
+                } else {
+                    if (minutes < 10) {
+                        minutes = "0" + minutes
+                    }
+                    duration = hours + ":" + minutes + " " + gettext("hours")
+                }
+
+                self.estimated_duration("  ~ " + duration)
+            }
         };
 
         // bound to both cancel buttons
