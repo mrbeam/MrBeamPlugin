@@ -235,6 +235,9 @@ $(function () {
             });
             self.terminal.activeAllFilters();
 
+            // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
+            // our implementation here should be used instead of octoprints
+            // to fix issues with the laser job time display
             self.state._processProgressData = function(){};
         };
 
