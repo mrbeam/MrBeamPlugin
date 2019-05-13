@@ -56,6 +56,7 @@ $(function() {
             // needs to be scrollable on touch devices
             $('#wizard_dialog .modal-body').addClass('scrollable');
             $('#wizard_dialog div.modal-footer div.text-center').hide();
+            self.username = ko.observable(undefined).extend({lowercase: true});
         };
 
         self.onStartupComplete = function(){
