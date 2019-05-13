@@ -570,7 +570,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return dict()
 
 	def get_wizard_version(self):
-		return 14 #random number. but we can't go down anymore, just up.
+		return 15 #random number. but we can't go down anymore, just up.
 
 	def on_wizard_finish(self, handled):
 		self._logger.info("Setup Wizard finished.")
@@ -652,20 +652,20 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# jinja has some js that changes this to German if lang is 'de'
 		return gettext("What's New")
 
-	def _is_whatsnew_1_wizard_required(self):
-		result = not self.isFirstRun()
-		self._logger.debug("_is_whatsnew_1_wizard_required() %s", result)
-		return result
-
-	def _get_whatsnew_1_wizard_details(self):
-		return dict()
-
-	def _get_whatsnew_1_additional_wizard_template_data(self):
-		return dict(mandatory=False, suffix="_whatsnew_1")
-
-	def _get_whatsnew_1_wizard_name(self):
-		# jinja has some js that changes this to German if lang is 'de'
-		return gettext("New Mr Beam Status Light")
+	# def _is_whatsnew_1_wizard_required(self):
+	# 	result = not self.isFirstRun()
+	# 	self._logger.debug("_is_whatsnew_1_wizard_required() %s", result)
+	# 	return result
+	#
+	# def _get_whatsnew_1_wizard_details(self):
+	# 	return dict()
+	#
+	# def _get_whatsnew_1_additional_wizard_template_data(self):
+	# 	return dict(mandatory=False, suffix="_whatsnew_1")
+	#
+	# def _get_whatsnew_1_wizard_name(self):
+	# 	# jinja has some js that changes this to German if lang is 'de'
+	# 	return gettext("New Mr Beam Status Light")
 
 	# ~~ Analytics subwizard
 
