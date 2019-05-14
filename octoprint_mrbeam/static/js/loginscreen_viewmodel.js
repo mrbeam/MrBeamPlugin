@@ -129,6 +129,6 @@ $(function() {
     OCTOPRINT_VIEWMODELS.push([
         LoginScreenViewModel,
         ["loginStateViewModel", "usersViewModel"],
-        ["#loginscreen_dialog", "#settings-usersDialogAddUser"]
+        ["#loginscreen_dialog"]
     ]);
 });
