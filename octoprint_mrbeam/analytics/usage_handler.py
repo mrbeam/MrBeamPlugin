@@ -59,11 +59,12 @@ class UsageHandler(object):
 		self.start_time_total = self._usage_data['total']['job_time']
 		self.start_time_laserhead = self._usage_data['laser_heads'][-1]['job_time']
 
-		# Initialize air_filter in case it wasn't stored already
+		# Initialize air_filter in case it wasn't stored already --> From the total usage
 		if 'air_filter' not in self._usage_data:
 			self._usage_data['air_filter'] = {}
-			self._usage_data['air_filter']['complete'] = self._plugin.isFirstRun()
-			self._usage_data['air_filter']['job_time'] = -1
+			self._usage_data['air_filter']['complete'] = self._usage_data['total']['complete']
+			self._usage_data['air_filter']['job_time'] = self._usage_data['total']['job_time']
+			self._logger.info("Initializing air filter usage time: {usage}".format(usage=self._usage_data['air_filter']['job_time']))
 		self.start_time_air_filter = self._usage_data['air_filter']['job_time']
 
 	def event_write(self, event, payload):
