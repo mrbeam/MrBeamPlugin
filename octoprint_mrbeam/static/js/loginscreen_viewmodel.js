@@ -2,21 +2,8 @@
  * Created by andy on 03/03/2017.
  */
 $(function() {
-    // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
-    $('#settings-usersDialogAddUserName').attr('data-bind','value: $root.users.editorUsername, valueUpdate: \'afterkeydown\'');
-
     function LoginScreenViewModel(parameters) {
         var self = this;
-
-        window.ko.extenders.lowercase = function(target, option) {
-            target.subscribe(function(newValue) {
-                if(newValue !== undefined) {
-                    target(newValue.toLowerCase());
-                    console.log(newValue)
-                }
-            });
-            return target;
-        };
 
         self.loginState = parameters[0];
         self.users = parameters[1];
