@@ -92,16 +92,67 @@ mrbeam.isProd = function() {
 
 
 $(function() {
+    // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
+    // Force input of the "Add User" E-mail address in Settings > Access Control to lowercase.
+    $('#settings-usersDialogAddUserName').attr('data-bind','value: $root.users.editorUsername, valueUpdate: \'afterkeydown\'');
+    // Check if the entered e-mail address is valid and show error if not.
+    $('#settings-usersDialogAddUser > div.modal-body > form > div:nth-child(1)').attr('data-bind', 'css: {error: $root.mrbeam.userTyped() && !$root.mrbeam.validUsername()}');
+    $('#settings-usersDialogAddUser > div.modal-body > form > div:nth-child(1) > div').append('<span class="help-inline" data-bind="visible: $root.mrbeam.userTyped() && !$root.mrbeam.validUsername(), text: $root.mrbeam.invalidEmailHelp"></span>');
+
     function MrbeamViewModel(parameters) {
         var self = this;
 
         self.settings = parameters[0];
+        self.wizardacl = parameters[1];
+        self.users = parameters[2];
+
+        // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
+        self.settings.mrbeam = self;
+
+        self.userTyped = ko.observable(false);
+        self.invalidEmailHelp = gettext("Invalid e-mail address");
+
+        // This extender forces the input value to lowercase. Used in loginsreen_viewmode.js and wizard_acl.js
+        window.ko.extenders.lowercase = function(target, option) {
+            target.subscribe(function(newValue) {
+                if(newValue !== undefined) {
+                    target(newValue.toLowerCase());
+                }
+            });
+            return target;
+        };
+
+        self.users.currentUser.subscribe(function(currentUser) {
+            if (currentUser === undefined) {
+                // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
+                // For "Add User" set the Admin checked by default
+                self.users.editorAdmin(true)
+            }
+        });
+
+        self.users.editorUsername.subscribe(function(username) {
+            if (username) {
+                self.userTyped(true)
+            } else {
+                self.userTyped(false)
+            }
+        });
+
+        self.validUsername = ko.pureComputed(function() {
+            return self.wizardacl.regexValidateEmail.test(self.users.editorUsername())
+        });
+
 
         self.onStartup = function(){
             self.setScrollModeForTouchDevices();
 
             $(window).on("orientationchange",self.onOrientationchange);
             self.setBodyScrollTop();
+
+            // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
+            // Change "Username" label in Settings > Access Control > Add user
+            $('#settings-usersDialogAddUser > div.modal-body > form > div:nth-child(1) > label').text(gettext('E-mail address'));
+
         };
 
         self.onStartupComplete = function(){
@@ -204,10 +255,9 @@ $(function() {
     // view model class, parameters for constructor, container to bind to
     OCTOPRINT_VIEWMODELS.push([
         MrbeamViewModel,
-        ["settingsViewModel"],
 
         // e.g. loginStateViewModel, settingsViewModel, ...
-        [ /* "loginStateViewModel", "settingsViewModel" */ ],
+        ["settingsViewModel", "wizardAclViewModel", "usersViewModel"],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         [ /* ... */ ]
