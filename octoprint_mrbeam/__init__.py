@@ -1935,12 +1935,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def notify_beta_chanel(self):
 		if self.is_beta_channel():
 			msg = ("You're using Mr Beam's beta software channel. "
-			      "Find out {link1_open}what's new in the beta channel.{link1_close}<br/><br/>"
-			      "Should you experience any issues you can always switch back to our stable channel in the software update settings. "
-			      "Please don't forget to {link2_open}tell us about issues{link2_close}.".format(
-				      link1_open= '<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000507827" target="_blank">',
+			      "Find out<br/>{link1_open}what's new in the beta channel.{link1_close}<br/><br/>"
+			      "Should you experience any issues you can always switch back to our stable channel in the software update settings.<br/><br/> "
+			      "Please don't forget to<br/>{link2_open}tell us about your experience{link2_close}.".format(
+				      link1_open= '<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000507827" target="_blank"><i class="fa fa-external-link" aria-hidden="true"></i> ',
 		              link1_close= '</a>',
-		              link2_open= '<a href="https://www.mr-beam.org/ticket" target="_blank">',
+		              link2_open= '<a href="https://www.mr-beam.org/ticket" target="_blank"><i class="fa fa-external-link" aria-hidden="true"></i> ',
 		              link2_close= '</a>'))
 			_mrbeam_plugin_implementation.notify_frontend(title=gettext("Beta Channel"),
 			                                              text="<br/>"+msg,
