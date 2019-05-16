@@ -247,11 +247,13 @@ $(function() {
 
             if ('frontend_notification' in data) {
                 var notification = data['frontend_notification'];
+                var delay = (notification['delay']) ? notification['delay'] * 1000 : 10 * 1000;
                 new PNotify({
                     title: notification['title'],
                     text: notification['text'],
                     type: notification['type'] || 'info',
-                    hide: !(notification['hide'] == false || notification['sticky'] == true)
+                    hide: !(notification['hide'] == false || notification['sticky'] == true),
+                    delay: delay
                 });
             }
         };

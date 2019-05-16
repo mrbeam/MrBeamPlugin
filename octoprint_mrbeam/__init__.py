@@ -169,6 +169,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._temperatureManager = temperatureManager()
 		self._dustManager = dustManager()
 		self.jobTimeEstimation = JobTimeEstimation(self._event_bus)
+		self.notify_beta_chanel()
 
 	def _initialize_lh(self):
 		self.lh['serial'] = self._settings.get(["laserhead", "serial"])
@@ -1690,7 +1691,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
 		return [("POST", r"/convert", 10 * 1024 * 1024)]
 
-	def notify_frontend(self, title, text, type=None, sticky=False, replay_when_new_client_connects=False):
+	def notify_frontend(self, title, text, type=None, sticky=False, delay=None, replay_when_new_client_connects=False):
 		"""
 		Show a frontend notification to the user. (PNotify)
 		# TODO: All these messages will not be translated to any language. To change this we need:
@@ -1702,6 +1703,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		:param text: the actual text
 		:param type: info, success, error, ... (default is info)
 		:param sticky: True | False (default is False)
+		:param delay: (int) number of seconds the notification shows until it hides (default: 10s)
 		:param replay_when_new_client_connects: If True the notification will be sent to all clients when a new client connects.
 				If you send the same notification (all params have identical values) it won't be sent again.
 		:return:
@@ -1711,7 +1713,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			title= title,
 			text= text,
 			type=type,
-			sticky=sticky
+			sticky=sticky,
+			delay=delay
 		)
 
 		send = True
@@ -1921,7 +1924,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if self._settings.get(['beta_label']):
 			chunks.append(self._settings.get(['beta_label']))
 		if self.is_beta_channel():
-			chunks.append("BETA")
+			chunks.append('<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000507827" target="_blank">BETA</a>')
 		if self.is_vorlon_enabled():
 			chunks.append("VORLON")
 		if self.support_mode:
@@ -1929,6 +1932,21 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		return " | ".join(chunks)
 
+	def notify_beta_chanel(self):
+		if self.is_beta_channel():
+			msg = ("You're using Mr Beam's beta software channel. "
+			      "Find out {link1_open}what's new in the beta channel.{link1_close}<br/><br/>"
+			      "Should you experience any issues you can always switch back to our stable channel in the software update settings. "
+			      "Please don't forget to {link2_open}tell us about issues{link2_close}.".format(
+				      link1_open= '<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000507827" target="_blank">',
+		              link1_close= '</a>',
+		              link2_open= '<a href="https://www.mr-beam.org/ticket" target="_blank">',
+		              link2_close= '</a>'))
+			_mrbeam_plugin_implementation.notify_frontend(title=gettext("Beta Channel"),
+			                                              text="<br/>"+msg,
+			                                              type="info",
+			                                              sticky=False,
+			                                              replay_when_new_client_connects=True)
 
 	def is_time_ntp_synced(self):
 		return self._time_ntp_synced
@@ -2035,7 +2053,6 @@ def __plugin_load__():
 	__plugin_settings_overlay__ = dict(
 		plugins=dict(
 			_disabled=['cura', 'pluginmanager', 'announcements', 'corewizard', 'octopi_support']   # accepts dict | pfad.yml | callable
-			# _disabled=['cura', 'pluginmanager', 'announcements', 'corewizard', 'mrbeam']  # accepts dict | pfad.yml | callable
 		),
 		terminalFilters = [
 			dict(name="Filter beamOS messages", regex="^([0-9,.: ]+ [A-Z]+ mrbeam)", activated=True),
