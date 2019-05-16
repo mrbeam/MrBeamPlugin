@@ -53,16 +53,16 @@ class MrbLogger(object):
 		self.log(logging.WARN, msg, *args, **kwargs)
 
 	def error(self, msg, *args, **kwargs):
-		kwargs['analytics'] = True
+		kwargs['analytics'] = kwargs.get('analytics', True)
 		self.log(logging.ERROR, msg, *args, **kwargs)
 
 	def critical(self, msg, *args, **kwargs):
-		kwargs['analytics'] = True
+		kwargs['analytics'] = kwargs.get('analytics', True)
 		self.log(logging.CRITICAL, msg, *args, **kwargs)
 
 	def exception(self, msg, *args, **kwargs):
-		kwargs['analytics'] = True
-		kwargs['exc_info'] = True
+		kwargs['analytics'] = kwargs.get('analytics', True)
+		kwargs['exc_info'] = kwargs.get('exc_info', True)
 		self.log(logging.ERROR, msg, *args, **kwargs)
 
 	def log(self, level, msg, *args, **kwargs):
@@ -158,7 +158,7 @@ class MrbLogger(object):
 					stacktrace=stacktrace,
 					wait_for_terminal_dump=kwargs.get('terminal_dump', False))
 			except:
-				self.logger.exception("Exception in _analytics_log_event: ")
+				self.logger.exception("Exception in _analytics_log_event: ", analytics=False)
 
 
 	def _dump_terminal_buffer(self, level=logging.INFO, repeat=True, analytics=True):

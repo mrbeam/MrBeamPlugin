@@ -430,7 +430,8 @@ class AnalyticsHandler(object):
 			else:
 				self._logger.warn("Invalid payload data in event %s", event)
 		except Exception as e:
-			self._logger.error('Exception during _other_plugin_data: {}'.format(e.message))
+			self._logger.exception('Exception during _other_plugin_data: {}'.format(e.message))
+
 
 	def log_iobeam_message(self, iobeam_version, message):
 		self._write_event(ak.TYPE_LOG_EVENT, ak.IOBEAM, self._logevent_version,
@@ -452,7 +453,7 @@ class AnalyticsHandler(object):
 			self._write_event(ak.TYPE_CONNECTIVITY_EVENT, ak.EVENT_UI_RENDER_CALL, self._connectivity_event_log_version,
 			                  payload=dict(data=data))
 		except Exception as e:
-			self._logger.error('Exception during log_ui_render_calls: {}'.format(e.message))
+			self._logger.exception('Exception during log_ui_render_calls: {}'.format(e.message))
 
 	def log_client_opened(self, remote_ip):
 		try:
@@ -462,7 +463,7 @@ class AnalyticsHandler(object):
 			self._write_event(ak.TYPE_CONNECTIVITY_EVENT, ak.EVENT_CLIENT_OPENED, self._connectivity_event_log_version,
 			                  payload=dict(data=data))
 		except Exception as e:
-			self._logger.error('Exception during log_client_opened: {}'.format(e.message))
+			self._logger.exception('Exception during log_client_opened: {}'.format(e.message))
 
 	def write_cam_update(self, newMarkers, newCorners):
 		try:
@@ -473,7 +474,7 @@ class AnalyticsHandler(object):
 				}
 				self.write_cam_event(ak.CAM_CALIBRATION, payload=data)
 		except Exception as e:
-			self._logger.error('Error during write_cam_update: {}'.format(e.message))
+			self._logger.exception('Error during write_cam_update: {}'.format(e.message))
 
 	def software_channel_switch_event(self, old_channel, new_channel):
 		try:
@@ -486,7 +487,7 @@ class AnalyticsHandler(object):
 			                  payload=dict(data=data))
 
 		except Exception as e:
-			self._logger.error('Error when writing the software channel switch event: {}'.format(e.message))
+			self._logger.exception('Error when writing the software channel switch event: {}'.format(e.message))
 
 	def store_conversion_details(self, details):
 		try:
@@ -526,7 +527,7 @@ class AnalyticsHandler(object):
 						self._store_conversion_details(eventname, payload=data)
 
 		except Exception as e:
-			self._logger.error('Error during store_conversion_details: {}'.format(e.message))
+			self._logger.exception('Error during store_conversion_details: {}'.format(e.message))
 
 	def _store_conversion_details(self, eventname, payload=None):
 		data = {
@@ -546,7 +547,7 @@ class AnalyticsHandler(object):
 			self._storedConversions = list()
 
 		except Exception as e:
-			self._logger.error('Error during write_conversion_details: {}'.format(e.message))
+			self._logger.exception('Error during write_conversion_details: {}'.format(e.message))
 
 	def _write_deviceinfo(self, event, payload=None):
 		try:
@@ -556,7 +557,7 @@ class AnalyticsHandler(object):
 				data[ak.DATA] = payload
 			self._write_event(ak.TYPE_DEVICE_EVENT, event, self._deviceinfo_log_version, payload=data)
 		except Exception as e:
-			self._logger.error('Error during write_device_info: {}'.format(e.message))
+			self._logger.exception('Error during write_device_info: {}'.format(e.message))
 
 	def _write_log_event(self, payload=None):
 		try:
@@ -565,9 +566,9 @@ class AnalyticsHandler(object):
 			if payload is not None:
 				data[ak.DATA] = payload
 				data[ak.SOFTWARE_TIER] = self._settings.get(["dev", "software_tier"])
-			self._write_event(ak.TYPE_LOG_EVENT, ak.EVENT_LOG, self._logevent_version, payload=data)
+			self._write_event(ak.TYPE_LOG_EVENT, ak.EVENT_LOG, self._logevent_version, payload=data, analytics=False)
 		except Exception as e:
-			self._logger.error('Error during _write_log_event: {}'.format(e.message), analytics=False)
+			self._logger.exception('Error during _write_log_event: {}'.format(e.message), analytics=False)
 
 	def _write_jobevent(self, event, payload=None):
 		try:
@@ -584,7 +585,7 @@ class AnalyticsHandler(object):
 			_jobevent_type = ak.TYPE_JOB_EVENT
 			self._write_event(_jobevent_type, event, self._jobevent_log_version, payload=data)
 		except Exception as e:
-			self._logger.error('Error during write_jobevent: {}'.format(e.message))
+			self._logger.exception('Error during write_jobevent: {}'.format(e.message))
 
 	def update_cam_session_id(self, lid_state):
 		if self._camAnalyticsOn:
@@ -613,7 +614,7 @@ class AnalyticsHandler(object):
 
 				self._write_event(ak.TYPE_CAM_EVENT, ak.PIC_PREP, self._cam_event_log_version, payload=data)
 		except Exception as e:
-			self._logger.error('Error during write_cam_event: {}'.format(e.message))
+			self._logger.exception('Error during write_cam_event: {}'.format(e.message))
 
 	def write_cam_event(self, eventname, payload=None):
 		try:
@@ -625,9 +626,9 @@ class AnalyticsHandler(object):
 
 				self._write_event(ak.TYPE_CAM_EVENT, eventname, self._cam_event_log_version, payload=data)
 		except Exception as e:
-			self._logger.error('Error during write_cam_event: {}'.format(e.message))
+			self._logger.exception('Error during write_cam_event: {}'.format(e.message))
 
-	def _write_event(self, typename, eventname, version, payload=None):
+	def _write_event(self, typename, eventname, version, payload=None, analytics=False):
 		try:
 			data = {
 				ak.SERIALNUMBER: self._getSerialNumber(),
@@ -642,7 +643,7 @@ class AnalyticsHandler(object):
 				data.update(payload)
 			self._append_data_to_file(data)
 		except Exception as e:
-			self._logger.error('Error during _write_event: {}'.format(e.message))
+			self._logger.error('Error during _write_event: {}'.format(e.message), analytics=analytics)
 
 	def write_final_dust(self, dust_start, dust_start_ts, dust_end, dust_end_ts):
 		"""
@@ -682,7 +683,7 @@ class AnalyticsHandler(object):
 			try:
 				self._current_dust_collector.addValue(dust_value)
 			except Exception as e:
-				self._logger.error('Error during add_dust_value: {}'.format(e.message))
+				self._logger.exception('Error during add_dust_value: {}'.format(e.message))
 
 	def add_laser_temp_value(self, laser_temp):
 		"""
@@ -693,7 +694,7 @@ class AnalyticsHandler(object):
 			try:
 				self._current_lasertemp_collector.addValue(laser_temp)
 			except Exception as e:
-				self._logger.error('Error during add_laser_temp_value: {}'.format(e.message))
+				self._logger.exception('Error during add_laser_temp_value: {}'.format(e.message))
 
 	def add_laser_intensity_value(self, laser_intensity):
 		"""
@@ -704,14 +705,14 @@ class AnalyticsHandler(object):
 			try:
 				self._current_intensity_collector.addValue(laser_intensity)
 			except Exception as e:
-				self._logger.error('Error during add_laser_intensity_value: {}'.format(e.message))
+				self._logger.exception('Error during add_laser_intensity_value: {}'.format(e.message))
 
 	def _write_dust_log(self, data):
 		try:
 			if self._analyticsOn:
 				self._write_jobevent(ak.FINAL_DUST, payload=data)
 		except Exception as e:
-			self._logger.error('Error during write dust_log: {}'.format(e.message))
+			self._logger.exception('Error during write dust_log: {}'.format(e.message))
 
 	def _init_jsonfile(self):
 		open(self._jsonfile, 'w+').close()
@@ -730,7 +731,7 @@ class AnalyticsHandler(object):
 				with open(self._jsonfile, 'a') as f:
 					f.write('\n')
 			except Exception as e:
-				self._logger.error('Error while writing newline: {}'.format(e.message))
+				self._logger.exception('Error while writing newline: {}'.format(e.message), analytics=False)
 
 	def _append_data_to_file(self, data):
 		if self._analyticsOn:
@@ -741,7 +742,7 @@ class AnalyticsHandler(object):
 				with open(self._jsonfile, 'a') as f:
 					f.write(dataString)
 			except Exception as e:
-				self._logger.error('Error while writing data: {}'.format(e.message))
+				self._logger.exception('Error while writing data: {}'.format(e.message), analytics=False)
 
 	def initial_analytics_procedure(self, consent):
 		if consent == 'agree':
@@ -763,7 +764,7 @@ class AnalyticsHandler(object):
 					os.unlink(file_path)
 					self._logger.info('File deleted: {file}'.format(file=file_path))
 			except Exception as e:
-				self._logger.error('Error when deleting file {file}: {error}'.format(file=file_path, error=e))
+				self._logger.exception('Error when deleting file {file}: {error}'.format(file=file_path, error=e))
 
 	def process_analytics_files(self):
 		self._logger.info("Processing analytics files...")
@@ -778,5 +779,5 @@ class AnalyticsHandler(object):
 						sys.stdout.write(line)
 					self._logger.info('File processed: {file}'.format(file=file_path))
 			except Exception as e:
-				self._logger.error(
+				self._logger.exception(
 					'Error when processing line {line} of file {file}: {e}'.format(line=idx, file=file_path, e=e))
