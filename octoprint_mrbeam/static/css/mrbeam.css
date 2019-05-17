@@ -2342,11 +2342,13 @@ input[type="radio"]{
   margin-left: 0;
 }
 
-#whatsnew_software_channel_descriptions > div {
+#whatsnew_software_channel_descriptions > div,
+#whatsnew_software_channel_intro {
   padding-right: 15px;
 }
 
-#whatsnew_software_channel_descriptions > div > p {
+#whatsnew_software_channel_descriptions > div > p,
+#whatsnew_software_channel_intro{
   text-align: justify;
   text-justify: inter-word;
 }
@@ -2366,6 +2368,3 @@ input[type="radio"]{
   display: inline-block;
 }
 
-#whatsnew_software_channel_switch {
-  color: #e25303;
-}
