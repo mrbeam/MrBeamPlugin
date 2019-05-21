@@ -390,7 +390,7 @@ class AnalyticsHandler(object):
 			self._write_jobevent(ak.COOLING_DONE, payload=data)
 			self._isCoolingPaused = False
 
-	def _other_plugin_data(self, event, payload):
+	def _other_plugin_data(self, event, event_payload):
 		try:
 			if 'component' in event_payload and 'type' in event_payload and 'component_version' in event_payload:
 				component = event_payload.get('component')
@@ -401,7 +401,7 @@ class AnalyticsHandler(object):
 					data['component_version'] = event_payload.get('component_version')
 					self._write_event(ak.TYPE_LOG_EVENT, ak.EVENT_LOG, self._logevent_version, payload=dict(data=data))
 				else:
-					self._logger.warn("Unknown type: '%s' from component %s. payload: %s", type, component,
+					self._logger.warn("Unknown type: '%s' from component %s. event_payload: %s", type, component,
 					                  event_payload)
 			elif 'plugin' in event_payload and 'eventname' in event_payload:
 				plugin = event_payload.get('plugin')
