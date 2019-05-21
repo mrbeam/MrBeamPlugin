@@ -91,11 +91,13 @@ class DustManager(object):
 		_mrbeam_plugin_implementation._event_bus.subscribe(MrBeamEvents.READY_TO_LASER_START, self._onEvent)
 		_mrbeam_plugin_implementation._event_bus.subscribe(MrBeamEvents.READY_TO_LASER_START, self._onEvent)
 		_mrbeam_plugin_implementation._event_bus.subscribe(MrBeamEvents.READY_TO_LASER_CANCELED, self._onEvent)
+		_mrbeam_plugin_implementation._event_bus.subscribe(MrBeamEvents.BUTTON_PRESS_REJECT, self._onEvent)
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.SLICING_DONE, self._onEvent)
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_STARTED, self._onEvent)
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self._onEvent)
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self._onEvent)
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_CANCELLED, self._onEvent)
+		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_RESUMED, self._onEvent)
 		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self._onEvent)
 
 	def _handle_fan_data(self, args):
@@ -136,6 +138,9 @@ class DustManager(object):
 		if event in (OctoPrintEvents.SLICING_DONE, MrBeamEvents.READY_TO_LASER_START, OctoPrintEvents.PRINT_STARTED):
 			self._start_dust_extraction()
 			self._boost_timer_interval()
+		elif event in (MrBeamEvents.BUTTON_PRESS_REJECT, OctoPrintEvents.PRINT_RESUMED):
+			# just in case reset iobeam to start fan. In case fan got unplugged fanPCB might get restarted.
+			self._start_dust_extraction()
 		elif event == MrBeamEvents.READY_TO_LASER_CANCELED:
 			self._stop_dust_extraction()
 			self._unboost_timer_interval()
