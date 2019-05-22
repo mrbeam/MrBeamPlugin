@@ -2138,16 +2138,6 @@ input.search-query,
   margin-top: 3%;
 }
 
-
-/*
-* === JOBS MAP ===
-*/
-.job-map-modal {
-  width: 930px;
-  margin-left: -465px;
-  /*height: 680px;*/
-  margin-top: -340px;
-}
   
 /*
 * === ANALYTICS  ACCORDION ===
