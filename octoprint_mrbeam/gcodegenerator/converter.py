@@ -731,10 +731,11 @@ class Converter():
 		self._log.info( "wrote file: %s" % destination)
 
 	def _get_gcode_header(self):
+		
 		if(self.options['noheaders']):
-			return ""
+			return machine_settings.cooling_fan_speedup_gcode
 		else:
-			return machine_settings.gcode_header + "G21\n\n"
+			return machine_settings.gcode_header + "G21\n\n" + cooling_fan_speedup_gcode + "\n"
 
 	def _get_gcode_footer(self):
 		if(self.options['noheaders']):

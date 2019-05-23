@@ -25,6 +25,7 @@ class UsageHandler(object):
 		self._device_serial = plugin.getSerialNum()
 
 		self.start_time_total = -1
+		self.start_time_air_filter = -1
 		self.start_time_laserhead = -1
 
 		analyticsfolder = os.path.join(self._settings.getBaseFolder("base"), self._settings.get(['analytics','folder']))
@@ -41,6 +42,7 @@ class UsageHandler(object):
 	def log_usage(self):
 		self._logger.info("Usage: total: {}, current laser head: {} - {}".format( \
 			self._get_duration_humanreadable(self._usage_data['total']['job_time']), \
+			# self._get_duration_humanreadable(self._usage_data['air_filter']['job_time']), \
 			self._get_duration_humanreadable(self._usage_data['laser_heads'][-1]['job_time']), \
 			self._usage_data))
 
@@ -57,6 +59,14 @@ class UsageHandler(object):
 		self.start_time_total = self._usage_data['total']['job_time']
 		self.start_time_laserhead = self._usage_data['laser_heads'][-1]['job_time']
 
+		# Initialize air_filter in case it wasn't stored already --> From the total usage
+		if 'air_filter' not in self._usage_data:
+			self._usage_data['air_filter'] = {}
+			self._usage_data['air_filter']['complete'] = self._usage_data['total']['complete']
+			self._usage_data['air_filter']['job_time'] = self._usage_data['total']['job_time']
+			self._logger.info("Initializing air filter usage time: {usage}".format(usage=self._usage_data['air_filter']['job_time']))
+		self.start_time_air_filter = self._usage_data['air_filter']['job_time']
+
 	def event_write(self, event, payload):
 		if self.start_time_total >= 0:
 			self._set_time(payload['time'])
@@ -64,14 +74,27 @@ class UsageHandler(object):
 	def event_stop(self, event, payload):
 		if self.start_time_total >= 0 :
 			self._set_time(payload['time'])
-			self.start_time_total = -1;
-			self.start_time_laserhead = -1;
+			self.start_time_total = -1
+			self.start_time_air_filter = -1
+			self.start_time_laserhead = -1
 
 	def _set_time(self, job_duration):
 		if job_duration is not None and job_duration > 0.0:
 			self._usage_data['total']['job_time'] = self.start_time_total + job_duration
 			self._usage_data['laser_heads'][-1]['job_time'] = self.start_time_laserhead + job_duration
+			self._usage_data['air_filter']['job_time'] = self.start_time_air_filter + job_duration
 			self._write_usage_data()
+
+	def reset_air_filter_usage(self):
+		self._usage_data['air_filter']['job_time'] = 0
+		self.start_time_air_filter = -1
+		self._write_usage_data()
+
+	def get_air_filter_usage(self):
+		if 'air_filter' in self._usage_data:
+			return self._usage_data['air_filter']['job_time']
+		else:
+			return 0
 
 	def _load_usage_data(self):
 		success = False
@@ -126,6 +149,10 @@ class UsageHandler(object):
 	def _get_usage_data_template(self):
 		return {
 			'total': {
+				'job_time': 0.0,
+				'complete': self._plugin.isFirstRun(),
+			},
+			'air_filter': {
 				'job_time': 0.0,
 				'complete': self._plugin.isFirstRun(),
 			},

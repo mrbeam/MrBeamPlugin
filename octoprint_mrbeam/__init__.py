@@ -39,7 +39,7 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
 from octoprint_mrbeam.migrate import migrate
 from octoprint_mrbeam.profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
-from octoprint_mrbeam.software_update_information import get_update_information, SW_UPDATE_TIER_PROD
+from octoprint_mrbeam.software_update_information import get_update_information, switch_software_channel, software_channels_available, SW_UPDATE_TIER_PROD, SW_UPDATE_TIER_BETA
 from octoprint_mrbeam.support import set_support_mode
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from .materials import materials
@@ -68,7 +68,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	DEVIE_INFO_FILE = '/etc/mrbeam'
 
 	ENV_PROD =         "PROD"
+	ENV_DEV  =         "DEV"
 
+	# local envs are deprecated
 	ENV_LOCAL =        "local"
 	ENV_LASER_SAFETY = "laser_safety"
 	ENV_ANALYTICS =    "analytics"
@@ -162,6 +164,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._temperatureManager = temperatureManager()
 		self._dustManager = dustManager()
 
+	def _initialize_lh(self):
+		self.lh['serial'] = self._settings.get(["laserhead", "serial"])
+		self.lh['correction_factor'] = self._settings.get(["laserhead", "correction", "factor"])
+		self.lh['correction_factor_override'] = self._settings.get(["laserhead", "correction", "factor_override"])
+		self.lh['correction_enabled'] = self._settings.get(["laserhead", "correction", "enabled"])
+		self.lh['p_65'] = self._settings.get(["laserhead", "p_65"])
+		self.lh['p_75'] = self._settings.get(["laserhead", "p_75"])
+		self.lh['p_85'] = self._settings.get(["laserhead", "p_85"])
 
 	def _do_initial_log(self):
 		"""
@@ -230,7 +240,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			current_profile_id="_mrbeam_junior", # yea, this needs to be like this # 2018: not so sure anymore...
 			svgDPI=90,
 			dxfScale=1,
-			beta_label="BETA",
+			beta_label="",
 			job_time = 0.0,
 			terminal=False,
 			vorlon=False,
@@ -240,11 +250,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				terminalMaxLines = 2000,
 				env = self.ENV_PROD,
 				load_gremlins = False,
-				# env_overrides = dict(
-				# 	analytics = "DEV",
-				# 	laser_safety = "DEV",
-				# 	local =  "DEV"
-				# ),
 				software_tier = SW_UPDATE_TIER_PROD,
 				iobeam_disable_warnings = False, # for develpment on non-MrBeam devices
 				suppress_migrations = False,     # for develpment on non-MrBeam devices
@@ -280,7 +285,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				optimize_travel = True,
 				small_paths_first = True,
 				clip_working_area = True # https://github.com/mrbeam/MrBeamPlugin/issues/134
-			)
+			),
+			grbl_version_lastknown=None,
 		)
 
 	def on_settings_load(self):
@@ -294,7 +300,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 					 frontendUrl=self._settings.get(['cam', 'frontendUrl'])),
 			dev=dict(
 				env = self._settings.get(['dev', 'env']),
-				softwareTier = self._settings.get(["dev", "software_tier"]),
+				software_tier = self._settings.get(["dev", "software_tier"]),
+				software_tiers_available=software_channels_available(self),
 				terminalMaxLines = self._settings.get(['dev', 'terminalMaxLines'])),
 			gcode_nextgen=dict(
 				enabled = self._settings.get(['gcode_nextgen', 'enabled']),
@@ -304,29 +311,44 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				clip_working_area = self._settings.get(['gcode_nextgen', 'clip_working_area'])
 			),
 			software_update_branches = self.get_update_branch_info(),
-			_version = self._plugin_version
+			_version = self._plugin_version,
+			focusReminder = self._settings.get(['focusReminder']),
+			airFilterUsage = self._usageHandler.get_air_filter_usage(),
 		)
 
 	def on_settings_save(self, data):
-		# self._logger.info("ANDYTEST on_settings_save() %s", data)
-		if "svgDPI" in data:
-			self._settings.set_int(["svgDPI"], data["svgDPI"])
-		if "dxfScale" in data:
-			self._settings.set_float(["dxfScale"], data["dxfScale"])
-		if "terminal" in data:
-			self._settings.set_boolean(["terminal"], data["terminal"])
-		if "vorlon" in data:
-			if data["vorlon"]:
-				self._settings.set_float(["vorlon"], time.time())
-				self._logger.warn("Enabling VORLON per user request.", terminal=True)
-			else:
-				self._settings.set_boolean(["vorlon"], False)
-				self._logger.info("Disabling VORLON per user request.", terminal=True)
-		if "gcode_nextgen" in data and isinstance(data['gcode_nextgen'], collections.Iterable) and "clip_working_area" in data['gcode_nextgen']:
-			self._settings.set_boolean(["gcode_nextgen", "clip_working_area"], data['gcode_nextgen']['clip_working_area'])
-		if "analyticsEnabled" in data:
-			self._analytics_handler.analytics_user_permission_change(analytics_enabled=data['analyticsEnabled'])
-
+		try:
+			# self._logger.info("ANDYTEST on_settings_save() %s", data)
+			if "svgDPI" in data:
+				self._settings.set_int(["svgDPI"], data["svgDPI"])
+			if "dxfScale" in data:
+				self._settings.set_float(["dxfScale"], data["dxfScale"])
+			if "terminal" in data:
+				self._settings.set_boolean(["terminal"], data["terminal"])
+			if "terminal_show_checksums" in data:
+				self._settings.set_boolean(["terminal_show_checksums"], data["terminal_show_checksums"])
+				self._printer._comm.set_terminal_show_checksums(data["terminal_show_checksums"])
+			if "vorlon" in data:
+				if data["vorlon"]:
+					self._settings.set_float(["vorlon"], time.time())
+					self._logger.warn("Enabling VORLON per user request.", terminal=True)
+				else:
+					self._settings.set_boolean(["vorlon"], False)
+					self._logger.info("Disabling VORLON per user request.", terminal=True)
+			if "gcode_nextgen" in data and isinstance(data['gcode_nextgen'],
+			                                          collections.Iterable) and "clip_working_area" in data[
+				'gcode_nextgen']:
+				self._settings.set_boolean(["gcode_nextgen", "clip_working_area"],
+				                           data['gcode_nextgen']['clip_working_area'])
+			if "analyticsEnabled" in data:
+				self._analytics_handler.analytics_user_permission_change(analytics_enabled=data['analyticsEnabled'])
+			if "focusReminder" in data:
+				self._settings.set_boolean(["focusReminder"], data["focusReminder"])
+			if "dev" in data and "software_tier" in data['dev']:
+				switch_software_channel(self, data["dev"]["software_tier"])
+		except Exception as e:
+			self._logger.exception("Exception in on_settings_save() ")
+			raise e
 
 	def on_shutdown(self):
 		self._shutting_down = True
@@ -356,9 +378,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/lib/photobooth_min.js", "js/svg_cleaner.js", "js/loginscreen_viewmodel.js",
 				"js/wizard_acl.js", "js/netconnectd_wrapper.js", "js/lasersaftey_viewmodel.js",
 				"js/ready_to_laser_viewmodel.js", "js/lib/screenfull.min.js","js/settings/camera_calibration.js",
-				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js", "js/lib/Color.js", "js/laser_job_done_viewmodel.js", 
-				"js/loadingoverlay_viewmodel.js", "js/wizard_whatsnew.js", "js/wizard_analytics.js"],
-			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css", "css/quicktext-fonts.css", "css/sliders.css"],
+				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js", "js/lib/Color.js", "js/laser_job_done_viewmodel.js",
+				"js/loadingoverlay_viewmodel.js", "js/wizard_whatsnew.js", "js/wizard_analytics.js", "js/software_channel_selector.js", "js/lib/hopscotch.js",
+				"js/air_filter_usage.js"],
+			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css", "css/quicktext-fonts.css", "css/sliders.css", "css/hopscotch.min.css"],
 			less=["less/mrbeam.less"]
 		)
 		if(self._settings.get(["dev", "load_gremlins"])):
@@ -465,11 +488,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def get_template_configs(self):
 		result = [
-			dict(type='settings', name="File Import Settings", template='settings/svgtogcode_settings.jinja2', suffix="_conversion", custom_bindings=False),
-            dict(type='settings', name="Camera Calibration", template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
-            dict(type='settings', name="Debug", template='settings/debug_settings.jinja2', suffix="_debug", custom_bindings=False),
-            dict(type='settings', name="About This Mr Beam", template='settings/about_settings.jinja2', suffix="_about", custom_bindings=False),
-            dict(type='settings', name="Analytics", template='settings/analytics_settings.jinja2', suffix="_analytics", custom_bindings=False)
+			dict(type='settings', name=gettext("File Import Settings"), template='settings/svgtogcode_settings.jinja2', suffix="_conversion", custom_bindings=False),
+            dict(type='settings', name=gettext("Camera Calibration"), template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
+            dict(type='settings', name=gettext("Debug"), template='settings/debug_settings.jinja2', suffix="_debug", custom_bindings=False),
+            dict(type='settings', name=gettext("About This Mr Beam"), template='settings/about_settings.jinja2', suffix="_about", custom_bindings=False),
+            dict(type='settings', name=gettext("Analytics"), template='settings/analytics_settings.jinja2', suffix="_analytics", custom_bindings=False),
+			# dict(type='settings', name=gettext("Reminders"), template='settings/reminders_settings.jinja2', suffix="_reminders", custom_bindings=False),
+			dict(type='settings', name=gettext("Exhaust System"), template='settings/air_filter_settings.jinja2', suffix="_airfilter", custom_bindings=True),
+      
 			# disabled in appearance
 			# dict(type='settings', name="Serial Connection DEV", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings=False, replaces='serial')
 		 ]
@@ -525,7 +551,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return dict()
 
 	def get_wizard_version(self):
-		return 14 #random number. but we can't go down anymore, just up.
+		return 15 #random number. but we can't go down anymore, just up.
 
 	def on_wizard_finish(self, handled):
 		self._logger.info("Setup Wizard finished.")
@@ -607,20 +633,20 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# jinja has some js that changes this to German if lang is 'de'
 		return gettext("What's New")
 
-	def _is_whatsnew_1_wizard_required(self):
-		result = not self.isFirstRun()
-		self._logger.debug("_is_whatsnew_1_wizard_required() %s", result)
-		return result
-
-	def _get_whatsnew_1_wizard_details(self):
-		return dict()
-
-	def _get_whatsnew_1_additional_wizard_template_data(self):
-		return dict(mandatory=False, suffix="_whatsnew_1")
-
-	def _get_whatsnew_1_wizard_name(self):
-		# jinja has some js that changes this to German if lang is 'de'
-		return gettext("New Mr Beam Status Light")
+	# def _is_whatsnew_1_wizard_required(self):
+	# 	result = not self.isFirstRun()
+	# 	self._logger.debug("_is_whatsnew_1_wizard_required() %s", result)
+	# 	return result
+	#
+	# def _get_whatsnew_1_wizard_details(self):
+	# 	return dict()
+	#
+	# def _get_whatsnew_1_additional_wizard_template_data(self):
+	# 	return dict(mandatory=False, suffix="_whatsnew_1")
+	#
+	# def _get_whatsnew_1_wizard_name(self):
+	# 	# jinja has some js that changes this to German if lang is 'de'
+	# 	return gettext("New Mr Beam Status Light")
 
 	# ~~ Analytics subwizard
 
@@ -1259,7 +1285,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			debug_event=["event"],
 			custom_materials=[],
 			analytics_init=[],
-			take_undistorted_picture=[]  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
+			take_undistorted_picture=[],  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
+			focus_reminder=[],
+			reset_air_filter_usage=[],
 		)
 
 	def on_api_command(self, command, data):
@@ -1289,6 +1317,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return self.debug_event(data)
 		elif command == "analytics_init":
 			return self.analytics_init(data)
+		elif command == "focus_reminder":
+			return self.focus_reminder(data)
+		elif command == "reset_air_filter_usage":
+			return self._usageHandler.reset_air_filter_usage()
 		return NO_CONTENT
 
 	def analytics_init(self, data):
@@ -1641,6 +1673,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				If you send the same notification (all params have identical values) it won't be sent again.
 		:return:
 		"""
+		text = text.replace("Mr Beam II", "Mr&nbsp;Beam&nbsp;II").replace("Mr Beam", "Mr&nbsp;Beam")
 		notification = dict(
 			title= title,
 			text= text,
@@ -1660,6 +1693,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		if send:
 			self._plugin_manager.send_plugin_message("mrbeam", dict(frontend_notification = notification))
+
+	def _replay_stored_frontend_notification(self):
+		# all currently connected clients will get this notification again
+		for n in self._stored_frontend_notifications:
+			self.notify_frontend(title = n['title'], text = n['text'], type= n['type'], sticky = n['sticky'], replay_when_new_client_connects=False)
 
 	def get_mrb_state(self):
 		"""
@@ -1690,11 +1728,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			if not self.is_boot_grace_period():
 				self._logger.exception("Exception while collecting mrb_state data: ")
 			return None
-
-	def _replay_stored_frontend_notification(self):
-		# all currently connected clients will get this notification again
-		for n in self._stored_frontend_notifications:
-			self.notify_frontend(title = n['title'], text = n['text'], type= n['type'], sticky = n['sticky'], replay_when_new_client_connects=False)
 
 	def _getCurrentFile(self):
 		currentJob = self._printer.get_current_job()
@@ -1836,8 +1869,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def is_prod_env(self, type=None):
 		return self.get_env(type).upper() == self.ENV_PROD
 
+	def is_dev_env(self, type=None):
+		return self.get_env(type).upper() == self.ENV_DEV
+
 	def get_env(self, type=None):
-		result = self._settings.get(["dev", "env"])
+		result = self._settings.get(["dev", "env"]).upper()
 		if type is not None:
 			if type == self.ENV_LASER_SAFETY:
 				type_env = self._settings.get(["dev", "cloud_env"]) # deprected flag
@@ -1849,7 +1885,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def get_beta_label(self):
 		chunks = []
-		chunks.append(self._settings.get(['beta_label']))
+		if self._settings.get(['beta_label']):
+			chunks.append(self._settings.get(['beta_label']))
+		if self.is_beta_channel():
+			chunks.append("BETA")
 		if self.is_vorlon_enabled():
 			chunks.append("VORLON")
 		if self.support_mode:
@@ -1923,7 +1962,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				timer.daemon = True
 				timer.start()
 
-
+	def is_beta_channel(self):
+		return self._settings.get(["dev", "software_tier"]) == SW_UPDATE_TIER_BETA
 
 	def is_vorlon_enabled(self):
 		vorlon = self._settings.get(['vorlon'])
@@ -2013,7 +2053,7 @@ def __plugin_load__():
 				        "plugin_mrbeam_whatsnew_0", "plugin_mrbeam_whatsnew_1", "plugin_mrbeam_whatsnew_2", "plugin_mrbeam_whatsnew_3", "plugin_mrbeam_whatsnew_4",
 				        "plugin_mrbeam_analytics"],
 				settings = ['plugin_mrbeam_about', 'plugin_softwareupdate', 'accesscontrol', 'plugin_netconnectd', 'plugin_findmymrbeam', 'plugin_mrbeam_conversion',
-				            'plugin_mrbeam_camera', 'plugin_mrbeam_analytics', 'logs', 'plugin_mrbeam_debug']
+				            'plugin_mrbeam_camera', 'plugin_mrbeam_airfilter', 'plugin_mrbeam_analytics', 'plugin_mrbeam_reminders', 'logs', 'plugin_mrbeam_debug']
 			),
 			disabled=dict(
 				wizard=['plugin_softwareupdate'],

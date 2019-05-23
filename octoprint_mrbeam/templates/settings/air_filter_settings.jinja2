@@ -1,0 +1,29 @@
+<div id="settings_mrbeam_air_filter">
+    <h3 style="margin: 10px 0px 0px 0px;">{{ _('Air Filter') }}</h3>
+    <p class="muted" style="margin: 0px 0px 20px 0px;">{{ _('Mr Beam II with Air Filter only<br/>
+        Users of the basic exhaust system without an air filter can safely ignore this.') }}</p>
+
+    <form class="form-horizontal">
+        <div class="control-group">
+            <div class="controls" style="width: 100%">
+                <h4>
+                    {{ _('Air Filter Operation Hours') }}
+                </h4>
+                <div style="margin: 20px 0px;">{{ _('Total operation: ') }} <strong><span data-bind="text: air_filter_usage_hours"></span>{{ _(' hours') }}</strong></div>
+                <div>
+                    <p>{{ _('This counter helps you to know when to replace your Mr Beam Air Filter.<br/>
+                        We recommend to replace the filter components regularly:
+                        <ul>
+                            <li>Pre-filter mat every 100 operation hours</li>
+                            <li>Main filter unit every 400 operation hours</li>
+                        </ul>') }}
+                    </p>
+                    <p>{{ _('You can reset the air filter operation hours counter by clicking:') }}<br/>
+                        <a style="cursor: pointer;" data-bind="click: resetAirFilterUsage">{{ _('I just replaced the air filter') }}</a>
+                        {{ _('(Warning: there is no "are you sure" check and no way to undo the reset.)') }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

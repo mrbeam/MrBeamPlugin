@@ -617,7 +617,7 @@ class MachineCom(object):
 			try:
 				if line is not None:
 					rx_free = int(line.split(':')[1]) # ok:127
-			except e:
+			except Exception as e:
 				self._logger.warn("_handle_ok_message() Can't read free_rx_bytes from line: '%s', error: %s", line, e)
 			self._rx_stats.add(rx_free)
 
@@ -1062,20 +1062,17 @@ class MachineCom(object):
 				_mrbeam_plugin_implementation._analytics_handler.write_flash_grbl(
 					from_version=from_version,
 					to_version=grbl_file,
-					succesful=(code == 0))
+					succesful=(code == 0),
+					err = None if (code == 0) else output)
 			except:
 				self._logger.exception("Exception while writing GRBL-flashing to analytics: ")
 
 		# error case
 		if code != 0 and not verify_only:
-			msg_short = "ERROR flashing GRBL '{}'".format(grbl_file)
+			msg_short = "ERROR flashing GRBL '{}': FAILED (See Avrdude output above for details.)".format(grbl_file)
 			msg_long = '{}:\n{}'.format(msg_short, output)
 			self._logger.error(msg_long, terminal_as_comm=True)
 			self._logger.error(msg_short, terminal_as_comm=True)
-			self._errorValue = "avrdude returncode: %s" % code
-			self._changeState(self.STATE_CLOSED_WITH_ERROR)
-			self._logger.info("Please reconnect manually or reboot system.", terminal_as_comm=True)
-			return
 		elif code != 0 and verify_only:
 			msg_short = "Verification GRBL '{}': FAILED (See Avrdude output above for details.)".format(grbl_file)
 			msg_long = '{}:\n{}'.format(msg_short, output)

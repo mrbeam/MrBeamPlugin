@@ -76,12 +76,71 @@ mrbeam._isVersionOrHigher = function(actualVersion, expectedVersion) {
 
 
 mrbeam.mrb_state = undefined;
+mrbeam.viewModels = {}
 
+mrbeam.isBeta = function() {
+    return MRBEAM_SW_TIER === 'BETA';
+};
+
+mrbeam.isDev = function() {
+    return MRBEAM_SW_TIER === 'DEV';
+};
+
+mrbeam.isProd = function() {
+    return MRBEAM_SW_TIER === 'PROD';
+};
 
 
 $(function() {
+    // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
+    // Force input of the "Add User" E-mail address in Settings > Access Control to lowercase.
+    $('#settings-usersDialogAddUserName').attr('data-bind','value: $root.users.editorUsername, valueUpdate: \'afterkeydown\'');
+    // Check if the entered e-mail address is valid and show error if not.
+    $('#settings-usersDialogAddUser > div.modal-body > form > div:nth-child(1)').attr('data-bind', 'css: {error: $root.mrbeam.userTyped() && !$root.mrbeam.validUsername()}');
+    $('#settings-usersDialogAddUser > div.modal-body > form > div:nth-child(1) > div').append('<span class="help-inline" data-bind="visible: $root.mrbeam.userTyped() && !$root.mrbeam.validUsername(), text: $root.mrbeam.invalidEmailHelp"></span>');
+
     function MrbeamViewModel(parameters) {
         var self = this;
+
+        self.settings = parameters[0];
+        self.wizardacl = parameters[1];
+        self.users = parameters[2];
+
+        // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
+        self.settings.mrbeam = self;
+
+        self.userTyped = ko.observable(false);
+        self.invalidEmailHelp = gettext("Invalid e-mail address");
+
+        // This extender forces the input value to lowercase. Used in loginsreen_viewmode.js and wizard_acl.js
+        window.ko.extenders.lowercase = function(target, option) {
+            target.subscribe(function(newValue) {
+                if(newValue !== undefined) {
+                    target(newValue.toLowerCase());
+                }
+            });
+            return target;
+        };
+
+        self.users.currentUser.subscribe(function(currentUser) {
+            if (currentUser === undefined) {
+                // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
+                // For "Add User" set the Admin checked by default
+                self.users.editorAdmin(true)
+            }
+        });
+
+        self.users.editorUsername.subscribe(function(username) {
+            if (username) {
+                self.userTyped(true)
+            } else {
+                self.userTyped(false)
+            }
+        });
+
+        self.validUsername = ko.pureComputed(function() {
+            return self.wizardacl.regexValidateEmail.test(self.users.editorUsername())
+        });
 
 
         self.onStartup = function(){
@@ -89,6 +148,11 @@ $(function() {
 
             $(window).on("orientationchange",self.onOrientationchange);
             self.setBodyScrollTop();
+
+            // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
+            // Change "Username" label in Settings > Access Control > Add user
+            $('#settings-usersDialogAddUser > div.modal-body > form > div:nth-child(1) > label').text(gettext('E-mail address'));
+
         };
 
         self.onStartupComplete = function(){
@@ -100,6 +164,29 @@ $(function() {
                         type: 'warn',
                         hide: false
                     });
+            }
+
+            if (mrbeam.isBeta() && !self.settings.settings.plugins.mrbeam.analyticsEnabled()){
+                new PNotify({
+                        title: gettext("Beta user: Please consider enabling Mr Beam analytics!"),
+                        text: _.sprintf(gettext("As you are currently in our Beta channel, you would help us " +
+                            "tremendously sharing%(br)sthe laser job insights, so we can improve%(br)san overall experience " +
+                            "working with the%(br)s Mr Beam II. Thank you!%(br)s%(open)sGo to analytics settings%(close)s"),
+                            {open: '<a href=\'#\' data-toggle="tab" id="settings_analytics_link" style="font-weight:bold">', close:'</a>', br: '<br>'}),
+                        type: 'warn',
+                        hide: false
+                    });
+
+                $('#settings_analytics_link').on('click', function(event) {
+                    // Prevent url change
+                    event.preventDefault();
+                    // Open the "Settings" menu
+                    $("#settings_tab_btn").tab('show');
+                    // Go to the "Analytics" tab
+                    $('[data-toggle="tab"][href="#settings_plugin_mrbeam_analytics"]').trigger('click');
+                    // Close notification
+                    $('[title="Close"]')[0].click();
+                })
             }
         };
 
@@ -170,7 +257,7 @@ $(function() {
         MrbeamViewModel,
 
         // e.g. loginStateViewModel, settingsViewModel, ...
-        [ /* "loginStateViewModel", "settingsViewModel" */ ],
+        ["settingsViewModel", "wizardAclViewModel", "usersViewModel"],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         [ /* ... */ ]

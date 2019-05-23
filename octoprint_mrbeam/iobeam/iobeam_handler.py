@@ -9,9 +9,12 @@ from distutils.version import StrictVersion
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.lib.rwlock import RWLock
+from flask.ext.babel import gettext
+from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 # singleton
 _instance = None
+
 
 def ioBeamHandler(eventBusOct, socket_file=None):
 	global _instance
@@ -34,6 +37,7 @@ class IoBeamEvents(object):
 	LID_OPENED =         "iobeam.lid.opened"
 	LID_CLOSED =         "iobeam.lid.closed"
 
+
 class IoBeamValueEvents(object):
 	"""
 	These Values / events are not intended to be handled byt OctoPrints event system
@@ -51,6 +55,7 @@ class IoBeamValueEvents(object):
 	FAN_AUTO_RESPONSE =   "iobeam.fan.auto.response"
 	FAN_FACTOR_RESPONSE = "iobeam.fan.factor.response"
 
+
 class IoBeamHandler(object):
 
 	# How to test and debug:
@@ -64,14 +69,15 @@ class IoBeamHandler(object):
 
 
 	SOCKET_FILE = "/var/run/mrbeam_iobeam.sock"
-	MAX_ERRORS = 10
+	MAX_ERRORS = 50
 
-	IOBEAM_MIN_REQUIRED_VERSION = '0.4.0'
+	IOBEAM_MIN_REQUIRED_VERSION =  '0.4.0'
+	IOBEAM_JSON_PROTOCOL_VERSION = '0.7.0'
 
 	CLIENT_ID = "MrBeamPlugin.v{vers_mrb}"
 
 	PROCESSING_TIMES_LOG_LENGTH = 100
-	PROCESSING_TIME_WARNING_THRESHOLD = 0.1
+	PROCESSING_TIME_WARNING_THRESHOLD = 0.7
 
 	MESSAGE_LENGTH_MAX = 4096
 	MESSAGE_NEWLINE = "\n"
@@ -115,7 +121,9 @@ class IoBeamHandler(object):
 	MESSAGE_ACTION_FAN_STATE =          "state"
 	MESSAGE_ACTION_FAN_DYNAMIC =        "dynamic"
 	MESSAGE_ACTION_FAN_CONNECTED =      "connected"
-
+	MESSAGE_ACTION_FAN_SERIAL =         "serial"
+	MESSAGE_ACTION_FAN_EXHAUST =        "exhaust"
+	MESSAGE_ACTION_FAN_LINK_QUALITY =   "link_quality"
 
 	def __init__(self, event_bus, socket_file=None):
 		self._event_bus = event_bus
@@ -139,6 +147,9 @@ class IoBeamHandler(object):
 		self._initWorker(socket_file)
 
 		self.processing_times_log = collections.deque([], self.PROCESSING_TIMES_LOG_LENGTH)
+
+		self._settings = _mrbeam_plugin_implementation._settings
+		self.reported_hardware_malfunctions = []
 
 	def isRunning(self):
 		return self._worker.is_alive()
@@ -208,14 +219,22 @@ class IoBeamHandler(object):
 
 	def is_iobeam_version_ok(self):
 		if self.iobeam_version is None:
-			return False
+			return False, 0
+		vers_obj = None
 		try:
-			StrictVersion(self.iobeam_version)
+			vers_obj = StrictVersion(self.iobeam_version)
 		except ValueError as e:
 			self._logger.error("iobeam version invalid: '{}'. ValueError from StrictVersion: {}".format(self.iobeam_version, e))
-			return False
+			return False, 0
+		if vers_obj < StrictVersion(self.IOBEAM_MIN_REQUIRED_VERSION):
+			return False, -1
+		elif vers_obj >= StrictVersion(self.IOBEAM_JSON_PROTOCOL_VERSION):
+			return False, 1
+		else:
+			return True, 0
 
-		return StrictVersion(self.iobeam_version) >= StrictVersion(self.IOBEAM_MIN_REQUIRED_VERSION)
+
+	# return StrictVersion(self.iobeam_version) >= StrictVersion(self.IOBEAM_MIN_REQUIRED_VERSION) and StrictVersion(self.iobeam_version) < StrictVersion(self.IOBEAM_JSON_PROTOCOL_VERSION)
 
 	def subscribe(self, event, callback):
 		'''
@@ -259,7 +278,6 @@ class IoBeamHandler(object):
 		finally:
 			self._callbacks_lock.reader_release()
 
-
 	def __execute_callback_called_by_new_thread(self, _trigger_event, acquire_lock, _callback_array, kwargs):
 		try:
 			if acquire_lock:
@@ -290,7 +308,6 @@ class IoBeamHandler(object):
 		self._worker = threading.Thread(target=self._work, name="iobeamHandler")
 		self._worker.daemon = True
 		self._worker.start()
-
 
 	def _work(self):
 		threading.current_thread().name = self.__class__.__name__
@@ -371,7 +388,6 @@ class IoBeamHandler(object):
 
 		self._logger.debug("Worker thread stopped.")
 
-
 	def _handleMessages(self, data):
 		"""
 		handles incoming data from the socket.
@@ -431,12 +447,9 @@ class IoBeamHandler(object):
 
 		return error_count, message_count
 
-
-
 	def _handle_invalid_message(self, message):
 		self._logger.warn("Received invalid message: '%s'", message)
 		return 1
-
 
 	def _handle_onebutton_message(self, message, token):
 		action = token[0] if len(token)>0 else None
@@ -457,7 +470,6 @@ class IoBeamHandler(object):
 		else:
 			return self._handle_invalid_message(message)
 		return 0
-
 
 	def _handle_interlock_message(self, message, tokens):
 		lock_id = tokens[0] if len(tokens) > 0 else None
@@ -484,7 +496,6 @@ class IoBeamHandler(object):
 
 		return 0
 
-
 	def _handle_lid_message(self, message, token):
 		action = token[0] if len(token) > 0 else None
 		payload = self._as_number(token[1]) if len(token) > 1 else None
@@ -508,20 +519,22 @@ class IoBeamHandler(object):
 
 		if action == self.MESSAGE_ACTION_FAN_DYNAMIC:
 			if action.startswith(self.MESSAGE_ERROR):
-				pass
+				return 1
 			elif len(token) >= 5:
 				vals = dict(
 					state =     self._as_number(token[1]),
 					rpm =       self._as_number(token[2]),
 					dust =      self._as_number(token[3]),
 					connected = self._get_connected_val(token[4]))
+				# if token[4] == 'error':
+				# 	self._logger.warn("Received fan connection error: %s", message)
 				self._call_callback(IoBeamValueEvents.DYNAMIC_VALUE, message, vals)
 				self._call_callback(IoBeamValueEvents.STATE_VALUE, message, dict(val=vals['state']))
 				self._call_callback(IoBeamValueEvents.RPM_VALUE, message, dict(val=vals['rpm']))
 				self._call_callback(IoBeamValueEvents.DUST_VALUE, message, dict(val=vals['dust']))
 				self._call_callback(IoBeamValueEvents.CONNECTED_VALUE, message, dict(val=vals['connected']))
 				return 0
-		if action == self.MESSAGE_ACTION_DUST_VALUE:
+		elif action == self.MESSAGE_ACTION_DUST_VALUE:
 			dust_val = self._as_number(value)
 			if dust_val is not None:
 				self._call_callback(IoBeamValueEvents.DUST_VALUE, message, dict(val=dust_val))
@@ -538,6 +551,8 @@ class IoBeamHandler(object):
 			return 0
 		elif action == self.MESSAGE_ACTION_FAN_CONNECTED:
 			self._call_callback(IoBeamValueEvents.CONNECTED_VALUE, message, dict(val=self._get_connected_val(value)))
+			if value == 'error':
+				self._logger.warn("Received fan connection error: %s", message)
 			return 0
 		elif action == self.MESSAGE_ACTION_FAN_VERSION:
 			self._logger.info("Received fan version %s: '%s'", value, message)
@@ -546,13 +561,21 @@ class IoBeamHandler(object):
 			return 0
 		elif action == self.MESSAGE_ACTION_FAN_TPR:
 			return 0
-		elif action == self.MESSAGE_ACTION_FAN_STATE:
+		elif action == self.MESSAGE_ACTION_FAN_SERIAL:
+			self._logger.info("Received fan serial %s: '%s'", value, message)
+			return 0
+		elif action == self.MESSAGE_ACTION_FAN_EXHAUST and len(token) > 2:
+			self._logger.info("Received exhaust %s %s: '%s'", value, token[2], message)
+			return 0
+		elif action == self.MESSAGE_ACTION_FAN_LINK_QUALITY and len(token) > 2:
+			self._logger.info("Received link quality %s %s: '%s'", value, token[2], message)
 			return 0
 
 		# check if OK otherwise it's an error
 		success = value == self.MESSAGE_OK
 		payload = dict(success=success)
-		if not success: payload['error'] = token[2] if len(token) > 2 else None
+		if not success:
+			payload['error'] = token[2] if len(token) > 2 else None
 
 		if action == self.MESSAGE_ACTION_FAN_ON:
 			self._call_callback(IoBeamValueEvents.FAN_ON_RESPONSE, message, payload)
@@ -563,7 +586,7 @@ class IoBeamHandler(object):
 		elif action == self.MESSAGE_ACTION_FAN_FACTOR:
 			self._call_callback(IoBeamValueEvents.FAN_FACTOR_RESPONSE, message, payload)
 		else:
-			return self._handle_invalid_message(message)
+			self._logger.info("Received fan data: '%s'", message)
 
 		return 0
 
@@ -611,14 +634,22 @@ class IoBeamHandler(object):
 			version = token[1] if len(token) > 1 else None
 			if version:
 				self.iobeam_version = version
-				ok = self.is_iobeam_version_ok()
+				ok, state = self.is_iobeam_version_ok()
 				if ok:
 					self._logger.info("Received iobeam version: %s - version OK", self.iobeam_version)
 				else:
-					self._logger.error("Received iobeam version: %s - version OUTDATED. IOBEAM_MIN_REQUIRED_VERSION: %s", self.iobeam_version, self.IOBEAM_MIN_REQUIRED_VERSION)
-					_mrbeam_plugin_implementation.notify_frontend(title="Software Update required",
-					                                              text="Module 'iobeam' is outdated. Please run Software Update from 'Settings' > 'Software Update' before you start a laser job.",
-																  type="error", sticky=True, replay_when_new_client_connects=True)
+					if state <= 0:
+						self._logger.error("Received iobeam version: %s - version OUTDATED. IOBEAM_MIN_REQUIRED_VERSION: %s", self.iobeam_version, self.IOBEAM_MIN_REQUIRED_VERSION)
+						_mrbeam_plugin_implementation.notify_frontend(title=gettext("Software Update required"),
+						                                              text=gettext("Module 'iobeam' is outdated. Please run software update from 'Settings' > 'Software Update' before you start a laser job."),
+						                                              type="error", sticky=True, replay_when_new_client_connects=True)
+					else:
+						self._logger.error("Received iobeam version: %s - version INCOMPATIBLE. iobeam is already using new JSON protocol!", self.iobeam_version)
+						_mrbeam_plugin_implementation.notify_frontend(title=gettext("Software Update required"),
+						                                              text=gettext(
+							                                              "Module 'MrBeam Plugin' is outdated; iobeam version is newer than expected. Please run software update from 'Settings' > 'Software Update' before you start a laser job."),
+						                                              type="error", sticky=True,
+						                                              replay_when_new_client_connects=True)
 				return 0
 			else:
 				self._logger.warn("_handle_iobeam_message(): Received iobeam:version message without version number. Counting as error. Message: %s", message)
@@ -627,20 +658,33 @@ class IoBeamHandler(object):
 			# introduced with iobeam 0.4.2
 			# in future versions we could make this requried and only unlock laser functionality once this was ok
 			init = token[1] if len(token) > 1 else None
+			malfunction = token[2] if len(token) > 2 else None
 			if init and init.startswith('ok'):
 				self._logger.info("iobeam init ok: '%s'", message)
 			else:
-				# ANDYTEST add analytics=True to next log line
 				self._logger.info("iobeam init error: '%s' - requesting iobeam_debug...", message)
 				self._send_command('debug')
-				text = '<br/>A possible hardware malfunction has been detected on this device. ' \
-				       'Please contact our support team immediately at:<br/>' \
-				       '<a href="https://mr-beam.org/support" target="_blank">mr-beam.org/support</a><br/><br/>' \
-				       '<strong>Error:</strong><br/>{}'.format(message)
-				_mrbeam_plugin_implementation.notify_frontend(title="Hardware malfunction",
-				                                              text=text,
-				                                              type="error", sticky=True,
-				                                              replay_when_new_client_connects=True)
+				self._fireEvent(MrBeamEvents.HARDWARE_MALFUNCTION, dict(iobeam_messsage=message))
+				if malfunction == 'bottom_open':
+					self.send_bottom_open_frontend_notification(malfunction)
+				else:
+					self.send_hardware_malfunction_frontend_notification(malfunction, message)
+			_mrbeam_plugin_implementation._analytics_handler.log_iobeam_message(self.iobeam_version, message)
+		elif action == 'runtime': # introduced in iobeam 0.6.2
+			init = token[1] if len(token) > 1 else None
+			malfunction = token[2] if len(token) > 2 else None
+			if init and init.startswith('ok'):
+				self._logger.info("iobeam runtime ok: '%s'", message)
+			else:
+				self._logger.info("iobeam runtime error: '%s'", message)
+				self._fireEvent(MrBeamEvents.HARDWARE_MALFUNCTION, dict(iobeam_messsage=message))
+				if malfunction == 'bottom_open':
+					self.send_bottom_open_frontend_notification(malfunction)
+				else:
+					self.send_hardware_malfunction_frontend_notification(malfunction, message)
+			_mrbeam_plugin_implementation._analytics_handler.log_iobeam_message(self.iobeam_version, message)
+		elif action == 'i2c':
+			_mrbeam_plugin_implementation._analytics_handler.log_iobeam_message(self.iobeam_version, message)
 		elif action == 'debug':
 			self._logger.info("iobeam debug message: '%s'", message)
 		else:
@@ -654,7 +698,7 @@ class IoBeamHandler(object):
 		return 1
 
 	def _handle_unknown_device_message(self, message, token):
-		self._logger.warn("Received mesage about unknown device: %s", message)
+		self._logger.warn("Received message about unknown device: %s", message)
 		return 0
 
 	def _handle_precessing_time(self, processing_time, message, err, log_stats=False):
@@ -664,10 +708,33 @@ class IoBeamHandler(object):
 		                                      error_count = err))
 
 		if processing_time > self.PROCESSING_TIME_WARNING_THRESHOLD:
-			# TODO: write an error to our analytics module
 			self._logger.warn("Message handling time took %ss. (Errors: %s, message: '%s')", processing_time, err, message)
 		if log_stats or processing_time > self.PROCESSING_TIME_WARNING_THRESHOLD:
 			self.log_debug_processing_stats()
+
+	def send_hardware_malfunction_frontend_notification(self, malfunction, message):
+		if malfunction not in self.reported_hardware_malfunctions:
+			self.reported_hardware_malfunctions.append(malfunction)
+			text = '<br/>' + \
+			       gettext(
+				       "A possible hardware malfunction has been detected on this device. Please contact our support team immediately at:") + \
+			       '<br/><a href="https://mr-beam.org/ticket" target="_blank">mr-beam.org/ticket</a><br/><br/>' \
+			       '<strong>' + gettext("Error:") + '</strong><br/>{}'.format(message.replace(':', ': ')) # add whitespaces so that longer messages break in frontend
+			_mrbeam_plugin_implementation.notify_frontend(title=gettext("Hardware malfunction"),
+			                                              text=text,
+			                                              type="error", sticky=True,
+			                                              replay_when_new_client_connects=True)
+
+	def send_bottom_open_frontend_notification(self, malfunction):
+		if malfunction not in self.reported_hardware_malfunctions:
+			self.reported_hardware_malfunctions.append(malfunction)
+			text = '<br/>' + \
+			       gettext("The bottom plate is not closed correctly. "
+			               "Please make sure that the bottom is correctly mounted as described in the Mr Beam II user manual.")
+			_mrbeam_plugin_implementation.notify_frontend(title=gettext("Bottom Plate Error"),
+			                                              text=text,
+			                                              type="error", sticky=True,
+			                                              replay_when_new_client_connects=True)
 
 	def log_debug_processing_stats(self):
 		"""
@@ -681,8 +748,10 @@ class IoBeamHandler(object):
 		count = 0
 		earliest = time.time()
 		for entry in self.processing_times_log:
-			if entry['processing_time'] < min: min = entry['processing_time']
-			if entry['processing_time'] > max: max = entry['processing_time']
+			if entry['processing_time'] < min:
+				min = entry['processing_time']
+			if entry['processing_time'] > max:
+				max = entry['processing_time']
 			if entry['ts'] < earliest: earliest = entry['ts']
 			sum += entry['processing_time']
 			count += 1
@@ -699,7 +768,6 @@ class IoBeamHandler(object):
 		sent = self._send_command(cmd)
 		return client_name if sent else False
 
-
 	def _fireEvent(self, event, payload=None):
 		self._event_bus.fire(event, payload)
 
@@ -709,8 +777,10 @@ class IoBeamHandler(object):
 		return cmd.replace("\n", '')
 
 	def _as_number(self, str):
-		if str is None: return None
-		if str.lower() == "nan": return None
+		if str is None:
+			return None
+		if str.lower() == "nan":
+			return None
 		try:
 			return float(str)
 		except:
@@ -718,12 +788,13 @@ class IoBeamHandler(object):
 
 	def _get_connected_val(self, value):
 		connected = None
-		if value is None: return None
+		if value is None:
+			return None
 
 		value = value.lower()
 		if value in ('none', 'unknown'):
 			connected = None
-		elif value == 'false':
+		elif value == 'false' or value == 'error':
 			connected = False
 		elif value == 'true':
 			connected = True

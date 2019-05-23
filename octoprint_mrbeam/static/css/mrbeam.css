@@ -2138,16 +2138,6 @@ input.search-query,
   margin-top: 3%;
 }
 
-
-/*
-* === JOBS MAP ===
-*/
-.job-map-modal {
-  width: 930px;
-  margin-left: -465px;
-  /*height: 680px;*/
-  margin-top: -340px;
-}
   
 /*
 * === ANALYTICS  ACCORDION ===
@@ -2185,3 +2175,186 @@ input[type="radio"]{
   pointer-events: none;
   cursor: default;
 }
+
+
+/*
+* === LASERHEAD FOCUS REMINDER ===
+*/
+
+#laserhead_focus_reminder_image {
+  width: 70%;
+  height: 70%;
+  margin-top: 5%;
+  margin-left: 20%;
+  float:left;
+}
+
+#laserhead_focus_reminder_not_again {
+  float: left;
+}
+
+#laserhead_focus_reminder_not_again input {
+  vertical-align: top;
+}
+
+#laserhead_focus_reminder_alert {
+  clear: both;
+}
+
+
+/*
+* === IMAGE PREPROCESSING  ACCORDION ===
+*/
+.working_area_image_preprocessing {
+  margin-bottom: 0;
+}
+
+.working_area_image_preprocessing_heading {
+  padding: 0;
+  color: #999;
+}
+
+.working_area_image_preprocessing_sliders {
+  margin-left: 18px;
+}
+
+.working_area_image_preprocessing_link > button.image-preprocessing-collapsible {
+  outline: transparent;
+  /*text-decoration: none;*/
+  color: #555;
+  padding: 0;
+  /*margin: 0;*/
+}
+
+.working_area_image_preprocessing_link > button.collapsed:before {
+  padding: 0;
+  content: "\270f";
+  color: #999;
+  display: inline-block;
+  -webkit-transform: rotate(-45deg);
+}
+
+.working_area_image_preprocessing_link > button:before {
+  padding: 0;
+  content: "\270f";
+  color: #999;
+  display: inline-block;
+  -webkit-transform: rotate(45deg);
+}
+
+/*
+* === SOFTWARE CHANNEL SELECTOR ===
+*/
+#software_channel_select {
+  width: 120px;
+}
+
+#software_channel_info {
+  color: #383E42;
+  vertical-align: baseline;
+  padding-left: 5px;
+}
+
+#software_channel_selector > h5 {
+  display: inline-block;
+  margin-right: 40px;
+}
+
+#settings_software_channel_descriptions {
+  margin-left: 0;
+}
+
+#settings_software_channel_descriptions > div {
+  padding-right: 15px;
+}
+
+#settings_software_channel_descriptions > div > p {
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+#settings_software_channel_descriptions > div > h5 > i, #settings_software_channel_choose > div > i {
+  margin-right: 5px;
+}
+
+.sticky-footer {
+  position: sticky;
+  bottom: 0;
+}
+
+
+/*
+* === WHAT'S NEW WIZARD ===
+*/
+/*
+* — Beta channel —
+*/
+#whatsnew_software_channel_descriptions {
+  margin-left: 0;
+}
+
+#whatsnew_software_channel_descriptions > div {
+  padding-right: 15px;
+}
+
+#whatsnew_software_channel_descriptions > div > p {
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+#whatsnew_software_channel_descriptions > div > h5 > i, #whatsnew_software_channel_choose > div > i {
+  margin-right: 5px;
+}
+
+#whatsnew_software_channel_choose > label {
+  display: inline-block;
+  margin-top: 20px;
+}
+
+#whatsnew_software_channel_select {
+  width: 100px;
+  margin-left: 20px;
+  display: inline-block;
+}
+
+#whatsnew_software_channel_switch {
+  color: #0088cc;
+
+}
+
+/*
+* === WHAT'S NEW WIZARD ===
+*/
+/*
+* — Beta channel —
+*/
+#whatsnew_software_channel_descriptions {
+  margin-left: 0;
+}
+
+#whatsnew_software_channel_descriptions > div,
+#whatsnew_software_channel_intro {
+  padding-right: 15px;
+}
+
+#whatsnew_software_channel_descriptions > div > p,
+#whatsnew_software_channel_intro{
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+#whatsnew_software_channel_descriptions > div > h5 > i, #whatsnew_software_channel_choose > div > i {
+  margin-right: 5px;
+}
+
+#whatsnew_software_channel_choose > label {
+  display: inline-block;
+  margin-top: 20px;
+}
+
+#whatsnew_software_channel_select {
+  width: 100px;
+  margin-left: 20px;
+  display: inline-block;
+}
+
