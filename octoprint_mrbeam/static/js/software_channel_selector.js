@@ -34,18 +34,24 @@ $(function () {
             self._make_settings_software_update_scrollable();
         };
 
+        self.onStartupComplete = function() {
+            self.waiting_for_update = 0;
+        };
+
         self.onEventSettingsUpdated = function(data){
             if (self.waiting_for_update > 0) {
                 self._trigger_refresh();
             }
-            self.waiting_for_update = Math.min(self.waiting_for_update-1, 0);
+            self.waiting_for_update = Math.max(self.waiting_for_update-1, 0);
         };
 
-
+        self.onSettingsShown = function(){
+            $('#software_channel_select').val(self.settings.settings.plugins.mrbeam.dev.software_tier());
+        };
 
         self.setChannelAsync = function(channel, waitTime){
             waitTime = waitTime || 1500;
-            setTimeout(function(){self._setChannel(channel)}, waitTime );
+            setTimeout(function(){self.selection_changed(); self._setChannel(channel)}, waitTime );
             setTimeout(function(){self._trigger_refresh(channel)}, waitTime *10);
         };
 
@@ -57,7 +63,7 @@ $(function () {
             self.settings.settings.plugins.mrbeam.dev.software_tier(channel);
             self.settings.saveData()
                 .done(function(){
-                    // console.log("ANDYTEST settings.saveData DONE");
+                    // console.log("settings.saveData DONE");
                });
         };
 

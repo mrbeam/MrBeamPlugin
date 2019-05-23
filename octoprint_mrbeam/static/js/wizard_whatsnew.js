@@ -29,6 +29,15 @@ $(function() {
          self.onWizardFinish = function(){
             let selected_channel = $('#whatsnew_software_channel_select').val();
             self.softwareChannelSelector.setChannelAsync(selected_channel, 1500);
+            if (selected_channel != self.settings.settings.plugins.mrbeam.dev.software_tier()) {
+                new PNotify({
+                        title: "Switching Software Channel",
+                        text: "This takes a view seconds...",
+                        hide: true,
+                        delay: 20 * 1000,
+                        icon: "icon-cog icon-spin",
+                    });
+            }
         };
 
          self.is_bound = function(){
