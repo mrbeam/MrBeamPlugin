@@ -1,7 +1,7 @@
 import os
 import re
 import shutil
-from distutils.version import StrictVersion
+from distutils.version import LooseVersion
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.printing.profile import laserCutterProfileManager
@@ -113,11 +113,11 @@ class Migration(object):
 		if self.version_previous is None:
 			return True
 		try:
-			StrictVersion(self.version_previous)
+			LooseVersion(self.version_previous)
 		except ValueError as e:
-			self._logger.error("Previous version is invalid: '{}'. ValueError from StrictVersion: {}".format(self.version_previous, e))
+			self._logger.error("Previous version is invalid: '{}'. ValueError from LooseVersion: {}".format(self.version_previous, e))
 			return None
-		return StrictVersion(self.version_current) > StrictVersion(self.version_previous)
+		return LooseVersion(self.version_current) > LooseVersion(self.version_previous)
 
 	def _compare_versions(self, lower_vers, higher_vers, equal_ok=True):
 		"""
@@ -130,14 +130,14 @@ class Migration(object):
 		if lower_vers is None or higher_vers is None:
 			return None
 		try:
-			StrictVersion(lower_vers)
-			StrictVersion(higher_vers)
+			LooseVersion(lower_vers)
+			LooseVersion(higher_vers)
 		except ValueError as e:
-			self._logger.error("_compare_versions() One of the two version is invalid: lower_vers:{}, higher_vers:{}. ValueError from StrictVersion: {}".format(lower_vers, higher_vers, e))
+			self._logger.error("_compare_versions() One of the two version is invalid: lower_vers:{}, higher_vers:{}. ValueError from LooseVersion: {}".format(lower_vers, higher_vers, e))
 			return None
-		if StrictVersion(lower_vers) == StrictVersion(higher_vers):
+		if LooseVersion(lower_vers) == LooseVersion(higher_vers):
 			return equal_ok
-		return StrictVersion(lower_vers) < StrictVersion(higher_vers)
+		return LooseVersion(lower_vers) < LooseVersion(higher_vers)
 
 	def save_current_version(self):
 		self.plugin._settings.set(['version'], self.version_current, force=True)
@@ -334,7 +334,7 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 	def prefill_software_update_for_mrb_hw_info(self):
 		from software_update_information import get_version_of_pip_module
 		vers = get_version_of_pip_module("mrb-hw-info", "sudo /usr/local/bin/pip")
-		if StrictVersion(vers) == StrictVersion('0.0.19'):
+		if LooseVersion(vers) == LooseVersion('0.0.19'):
 			self._logger.info("prefill_software_update_for_mrb_hw_info() mrb-hw-info is %s, setting commit hash", vers)
 			self.plugin._settings.global_set(['plugins', 'softwareupdate', 'checks', 'mrb_hw_info', 'current'], '15dfcc2c74608adb8f07a7ea115078356f4bb09c', force=True)
 		else:

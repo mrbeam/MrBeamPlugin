@@ -4,7 +4,7 @@ import threading
 import time
 import datetime
 import collections
-from distutils.version import StrictVersion
+from distutils.version import LooseVersion
 
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
@@ -224,19 +224,19 @@ class IoBeamHandler(object):
 			return False, 0
 		vers_obj = None
 		try:
-			vers_obj = StrictVersion(self.iobeam_version)
+			vers_obj = LooseVersion(self.iobeam_version)
 		except ValueError as e:
-			self._logger.error("iobeam version invalid: '{}'. ValueError from StrictVersion: {}".format(self.iobeam_version, e))
+			self._logger.error("iobeam version invalid: '{}'. ValueError from LooseVersion: {}".format(self.iobeam_version, e))
 			return False, 0
-		if vers_obj < StrictVersion(self.IOBEAM_MIN_REQUIRED_VERSION):
+		if vers_obj < LooseVersion(self.IOBEAM_MIN_REQUIRED_VERSION):
 			return False, -1
-		elif vers_obj >= StrictVersion(self.IOBEAM_JSON_PROTOCOL_VERSION):
+		elif vers_obj >= LooseVersion(self.IOBEAM_JSON_PROTOCOL_VERSION):
 			return False, 1
 		else:
 			return True, 0
 
 
-	# return StrictVersion(self.iobeam_version) >= StrictVersion(self.IOBEAM_MIN_REQUIRED_VERSION) and StrictVersion(self.iobeam_version) < StrictVersion(self.IOBEAM_JSON_PROTOCOL_VERSION)
+	# return LooseVersion(self.iobeam_version) >= LooseVersion(self.IOBEAM_MIN_REQUIRED_VERSION) and LooseVersion(self.iobeam_version) < LooseVersion(self.IOBEAM_JSON_PROTOCOL_VERSION)
 
 	def subscribe(self, event, callback):
 		'''
