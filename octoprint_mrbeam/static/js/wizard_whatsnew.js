@@ -20,6 +20,16 @@ $(function() {
          self.onWizardFinish = function(){
             let selected_channel = $('#whatsnew_software_channel_select').val();
             self.softwareChannelSelector.setChannelAsync(selected_channel, 1500);
+            // selected_channel is undefined if whatsnew screen isn't show but welcome wizard is.
+            if (selected_channel != undefined && selected_channel != self.settings.settings.plugins.mrbeam.dev.software_tier()) {
+                new PNotify({
+                        title: gettext("Switching Software Channel"),
+                        text: gettext("This takes a view seconds..."),
+                        hide: true,
+                        delay: 20 * 1000,
+                        icon: "icon-cog icon-spin",
+                    });
+            }
         };
 
          self.is_bound = function(){
