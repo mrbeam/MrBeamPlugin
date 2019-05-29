@@ -90,6 +90,7 @@ class AnalyticsKeys(object):
 					]
 	FAILED_PRINT_EVENTS = [PRINT_CANCELLED,PRINT_FAILED]
 	JOB_DURATION = 'dur'
+	JOB_TIME_ESTIMATION = 'dur_esti'
 
 	DUST_START = 'd_start'
 	DUST_END = 'd_end'

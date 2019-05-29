@@ -62,6 +62,7 @@ class AnalyticsHandler(object):
 		self._current_cam_session_id = None
 		self._current_intensity_collector = None
 		self._current_lasertemp_collector = None
+		self._current_job_time_estimation = None
 
 		self._storedConversions = list()
 
@@ -124,6 +125,7 @@ class AnalyticsHandler(object):
 		self._event_bus.subscribe(OctoPrintEvents.STARTUP, self._event_startup)
 		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self._event_shutdown)
 		self._event_bus.subscribe(MrBeamEvents.ANALYTICS_DATA, self._other_plugin_data)
+		self._event_bus.subscribe(MrBeamEvents.JOB_TIME_ESTIMATED, self._event_job_time_estimated)
 
 	@staticmethod
 	def _getLaserHeadVersion():
@@ -344,7 +346,8 @@ class AnalyticsHandler(object):
 	def _event_print_done(self, event, payload):
 		if not self._isJobDone:
 			self._isJobDone = True  # prevent two jobDone events per Job
-			self._write_jobevent(ak.PRINT_DONE, payload={ak.JOB_DURATION: int(round(payload['time']))})
+			self._write_jobevent(ak.PRINT_DONE, payload={ak.JOB_DURATION: int(round(payload['time'])),
+														ak.JOB_TIME_ESTIMATION: int(round(self._current_job_time_estimation))})
 			self._write_collectors()
 
 	def _write_collectors(self):
@@ -404,6 +407,9 @@ class AnalyticsHandler(object):
 				data[ak.LASERTEMP] = self._current_lasertemp_collector.get_latest_value()
 			self._write_jobevent(ak.COOLING_DONE, payload=data)
 			self._isCoolingPaused = False
+
+	def _event_job_time_estimated(self, event, payload):
+		self._current_job_time_estimation = payload['jobTimeEstimation']
 
 	def _other_plugin_data(self, event, event_payload):
 		try:
