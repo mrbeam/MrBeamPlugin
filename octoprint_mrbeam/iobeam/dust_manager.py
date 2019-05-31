@@ -4,6 +4,8 @@ from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamValueEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
+from octoprint_mrbeam.analytics.usage_handler import usageHandler
+
 # singleton
 _instance = None
 
@@ -60,6 +62,10 @@ class DustManager(object):
 		self._subscribe()
 		self._start_timer()
 		self._stop_dust_extraction()
+
+		self._usageHandler = usageHandler(self)
+
+		self._fan_test_rpm_percentage = 50
 
 		self.extraction_limit = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['dust']['extraction_limit']
 		self.auto_mode_time = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['dust']['auto_mode_time']
@@ -135,9 +141,13 @@ class DustManager(object):
 			self._logger.error("Fan command responded error: received: fan:{} args: {}".format(args['message'], args))
 
 	def _onEvent(self, event, payload):
-		if event in (OctoPrintEvents.SLICING_DONE, MrBeamEvents.READY_TO_LASER_START, OctoPrintEvents.PRINT_STARTED):
+		if event in (OctoPrintEvents.SLICING_DONE, MrBeamEvents.READY_TO_LASER_START):  # OctoPrintEvents.PRINT_STARTED):
 			self._start_dust_extraction()
 			self._boost_timer_interval()
+		elif event == OctoPrintEvents.PRINT_STARTED:  # We start the test of the fan at 50%
+			self._start_dust_extraction(self._fan_test_rpm_percentage)
+			self._boost_timer_interval()
+			threading.Timer(15.0, self._finish_test_fan_rpm).start()
 		elif event in (MrBeamEvents.BUTTON_PRESS_REJECT, OctoPrintEvents.PRINT_RESUMED):
 			# just in case reset iobeam to start fan. In case fan got unplugged fanPCB might get restarted.
 			self._start_dust_extraction()
@@ -149,6 +159,21 @@ class DustManager(object):
 			self._do_end_dusting()
 		elif event == OctoPrintEvents.SHUTDOWN:
 			self.shutdown()
+
+	def _finish_test_fan_rpm(self):
+		# Write to analytics if the values are valid
+		if self._validate_values():
+			data = dict(
+				rpm_val=self._rpm,
+				fan_state=self._state,
+				usage_count=self._usageHandler.get_total_usage(),
+				air_filter_count=self._usageHandler.get_air_filter_usage(),
+			)
+			_mrbeam_plugin_implementation._analytics_handler._write_fan_rpm_test(data)
+
+		# Set fan to auto again
+		self._start_dust_extraction()
+		self._boost_timer_interval()
 
 	def _pause_laser(self, trigger):
 		"""

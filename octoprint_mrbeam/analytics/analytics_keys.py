@@ -76,6 +76,7 @@ class AnalyticsKeys(object):
 	LASER_JOB = 'laser_job'
 	DESIGN_FILE = 'design_file'
 	MATERIAL = 'material'
+	FAN_RPM_TEST = 'fan_rpm_test'
 
 	PRINT_EVENTS = [
 						PRINT_STARTED,
