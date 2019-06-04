@@ -714,7 +714,7 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.exception('Error during write dust_log: {}'.format(e.message))
 
-	def _write_fan_rpm_test(self, data):
+	def write_fan_rpm_test(self, data):
 		try:
 			if self._analyticsOn:
 				self._write_jobevent(ak.FAN_RPM_TEST, payload=data)
