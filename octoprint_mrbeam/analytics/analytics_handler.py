@@ -720,6 +720,13 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.exception('Error during write dust_log: {}'.format(e.message))
 
+	def write_fan_rpm_test(self, data):
+		try:
+			if self._analyticsOn:
+				self._write_jobevent(ak.FAN_RPM_TEST, payload=data)
+		except Exception as e:
+			self._logger.exception('Error during write_fan_50_test: {}'.format(e.message))
+
 	def _init_jsonfile(self):
 		open(self._jsonfile, 'w+').close()
 		data = {
