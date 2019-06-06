@@ -236,7 +236,6 @@ class AnalyticsHandler(object):
 	def _event_startup(self, event, payload):
 		self._write_new_line()
 		payload = {
-			ak.VERSION_MRBEAM_PLUGIN: _mrbeam_plugin_implementation._plugin_version,
 			ak.LASERHEAD_SERIAL: _mrbeam_plugin_implementation.lh['serial'],
 			ak.SOFTWARE_TIER: self._settings.get(["dev", "software_tier"]),
 			ak.ENV: _mrbeam_plugin_implementation.get_env()
@@ -643,7 +642,8 @@ class AnalyticsHandler(object):
 				ak.EVENT: eventname,
 				ak.TIMESTAMP: time.time(),
 				ak.NTP_SYNCED: _mrbeam_plugin_implementation.is_time_ntp_synced(),
-				ak.SESSION_ID: self._session_id
+				ak.SESSION_ID: self._session_id,
+				ak.VERSION_MRBEAM_PLUGIN: _mrbeam_plugin_implementation._plugin_version
 			}
 			if payload is not None:
 				data.update(payload)
@@ -731,7 +731,6 @@ class AnalyticsHandler(object):
 		open(self._jsonfile, 'w+').close()
 		data = {
 			ak.LASERHEAD_VERSION: self._getLaserHeadVersion(),
-			ak.VERSION_MRBEAM_PLUGIN: _mrbeam_plugin_implementation._plugin_version
 		}
 		self._write_deviceinfo(ak.INIT, payload=data)
 		self._write_current_software_status()
