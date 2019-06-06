@@ -6,6 +6,7 @@ import time
 import datetime
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint.util import RepeatedTimer
+from octoprint_mrbeam.analytics.analytics_handler import existing_analyticsHandler
 
 
 
@@ -62,12 +63,19 @@ class AccWatchDog(object):
 
 	def _do_regular_check(self):
 		try:
-			# CPU temp
-			self._cpu_temp = self._get_cpu_temp()
-			self._cpu_throttle_warnings = self._get_cpu_throttle_warnings()
-			if self._cpu_temp > self.CPU_TEMP_THRESHOLD or self._cpu_throttle_warnings:
-				self._logger.warn("CPU warning: temp: %s, throttle_warnings: %s", self._cpu_temp, self._cpu_throttle_warnings)
+			# CPU stuff
+			_cpu_temp = self._get_cpu_temp()
+			_cpu_throttle_warnings = self._get_cpu_throttle_warnings()
+			if _cpu_temp > self.CPU_TEMP_THRESHOLD or _cpu_throttle_warnings:
+				self._logger.warn("CPU warning: temp: %s, throttle_warnings: %s", _cpu_temp, _cpu_throttle_warnings)
+				if self._round_5(_cpu_temp) != self._round_5(self._cpu_temp) or _cpu_throttle_warnings != self._cpu_throttle_warnings:
+					existing_analyticsHandler().log_cpu_warning(_cpu_temp, _cpu_throttle_warnings)
+				self._cpu_temp = _cpu_temp
+				self._cpu_throttle_warnings = _cpu_throttle_warnings
+		except:
+			self._logger.exception("Exception in _do_regular_check() cpu stuff")
 
+		try:
 			# commands
 			if self._commands:
 				t = time.time() - self._commands[-1][1]
@@ -76,7 +84,7 @@ class AccWatchDog(object):
 				else:
 					self._logger.debug("All good. Last command was {:.3f}s ago.".format(t))
 		except:
-			self._logger.exception("Exception in _check()")
+			self._logger.exception("Exception in _do_regular_check() commands stuff")
 
 	def _get_state_str(self):
 		res = []
@@ -155,3 +163,6 @@ class AccWatchDog(object):
 			return t_hex
 		except:
 			self._logger.exception("Excpetion in _get_cpu_throttled() while reading cpu get_throttled: ")
+
+	def _round_5(self, x):
+		return round(x/5.0)*5.0

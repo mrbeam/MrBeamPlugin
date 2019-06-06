@@ -67,7 +67,7 @@ class AnalyticsHandler(object):
 
 		self._jobevent_log_version = 4
 		self._deviceinfo_log_version = 5  # Changed after v0.1.61 (12-04-2019)
-		self._logevent_version = 2  # Changed after v0.1.61 (12-04-2019) # added event in 0.1.62
+		self._logevent_version = 3  # Changed after v0.2.1 (2019-06-06)
 		self._dust_log_version = 2
 		self._cam_event_log_version = 2
 		self._connectivity_event_log_version = 1
@@ -219,6 +219,15 @@ class AnalyticsHandler(object):
 		else:
 			self._logger.warn(
 				"log_terminal_dump() called but no foregoing event tracked. self.event_waiting_for_terminal_dump is None. ignoring this dump.")
+
+	def log_cpu_warning(self, temp, throttle_alerts):
+		try:
+			data = {ak.DATA:{'temp': temp,
+			               'throttle_alerts': throttle_alerts}}
+			self._write_event(ak.TYPE_LOG_EVENT, ak.LOG_CPU, self._logevent_version, payload=data, analytics=True)
+		except Exception as e:
+			self._logger.exception('Error during _write_log_event: {}'.format(e.message), analytics=True)
+
 
 	def _write_current_software_status(self):
 		try:
