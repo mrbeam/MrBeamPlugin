@@ -768,6 +768,7 @@ class IoBeamHandler(object):
 					self.send_hardware_malfunction_frontend_notification(malfunction, message)
 			_mrbeam_plugin_implementation._analytics_handler.log_iobeam_message(self.iobeam_version, message)
 		elif action == 'i2c':
+			self._logger.info("iobeam i2c devices: '%s'", message)
 			_mrbeam_plugin_implementation._analytics_handler.log_iobeam_message(self.iobeam_version, message)
 		elif action == 'debug':
 			self._logger.info("iobeam debug message: '%s'", message)
