@@ -25,6 +25,7 @@ from octoprint.util import get_exception_string, RepeatedTimer, CountedEvent, sa
 from octoprint_mrbeam.printing.profile import laserCutterProfileManager
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.printing.acc_line_buffer import AccLineBuffer
+from octoprint_mrbeam.printing.acc_watch_dog import AccWatchDog
 from octoprint_mrbeam.analytics.analytics_handler import existing_analyticsHandler
 from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
 
@@ -151,6 +152,7 @@ class MachineCom(object):
 		self._cmd = None
 		self._recovery_lock = False
 		self._recovery_ignore_further_alarm_responses = False
+		self._lines_recoverd_total = 0
 		self._pauseWaitStartTime = None
 		self._pauseWaitTimeLost = 0.0
 		self._commandQueue = Queue.Queue()
@@ -203,6 +205,8 @@ class MachineCom(object):
 					['laserhead', 'correction', 'factor_override'])
 		else:
 			self._power_correction_factor = 1
+
+		self.watch_dog = AccWatchDog(self)
 
 		# threads
 		self.monitoring_thread = None
@@ -312,13 +316,16 @@ class MachineCom(object):
 				if self.isPrinting() and self._commandQueue.empty() and not self._recovery_lock:
 					cmd = self._getNext() # get next cmd form file
 					if cmd is not None:
+						# self.watch_dog.notify_command(cmd) TODO
 						self.sendCommand(cmd)
 						self._callback.on_comm_progress()
 					else:
 						# TODO: this code is about lasering the same file several times. not gonna happen in mrbII
 						if self._finished_passes >= self._passes:
 							if self._acc_line_buffer.is_empty():
+								self.watch_dog.log_state(trigger="before_set_print_finished")
 								self._set_print_finished()
+								self.watch_dog.log_state(trigger="after_set_print_finished")
 						self._currentFile.resetToBeginning()
 						cmd = self._getNext() # get next cmd form file
 						if cmd is not None:
@@ -541,6 +548,7 @@ class MachineCom(object):
 			return None
 
 	def _set_print_finished(self):
+		self._logger.debug("_set_print_finished() called")
 		self._callback.on_comm_print_job_done()
 		self._changeState(self.STATE_OPERATIONAL)
 		payload = {
@@ -548,12 +556,18 @@ class MachineCom(object):
 			"filename": os.path.basename(self._currentFile.getFilename()),
 			"origin": self._currentFile.getFileLocation(),
 			"time": self.getPrintTime(),
-			"mrb_state": _mrbeam_plugin_implementation.get_mrb_state()
+			"mrb_state": _mrbeam_plugin_implementation.get_mrb_state(),
+			'file_lines_total': self._currentFile.getLinesTotal(),
+			'file_lines_read': self._currentFile.getLinesRead(),
+			'file_lines_remaining': self._currentFile.getLinesRemaining(),
+			'lines_recovered': self._lines_recoverd_total,
 		}
+		self.watch_dog.stop()
 		self._move_home()
 		eventManager().fire(OctoPrintEvents.PRINT_DONE, payload)
 
 	def _move_home(self):
+		self._logger.debug("_move_home() called")
 		self.sendCommand("M5")
 		h_pos = self.get_home_position()
 		command = "G0X{x}Y{y}".format(x=h_pos[0], y=h_pos[1])
@@ -883,6 +897,7 @@ class MachineCom(object):
 			while not self._recovery_thread_kill and self._acc_line_buffer.is_dirty():
 				if recover_cmd:
 					self._logger.info("Re-queue: %s  RECOVERY", recover_cmd, terminal_as_comm=True)
+					self._lines_recoverd_total += 1
 					self.sendCommand(recover_cmd, processed=True)
 				else:
 					# the we did'nt get a command let's wait a bit. there might be a new one shortly
@@ -1525,6 +1540,7 @@ class MachineCom(object):
 
 			self._commandQueue.put(cmd)
 			self._send_event.set()
+			self.watch_dog.notify_command(cmd)
 
 	def _handle_user_command(self, cmd):
 		"""
@@ -1677,8 +1693,13 @@ class MachineCom(object):
 		self._pauseWaitTimeLost = 0.0
 		self._pauseWaitStartTime = None
 
+
+
 		try:
 			# ensure fan is on whatever gcode follows.
+			self.watch_dog.reset()
+			self.watch_dog.start(self._currentFile)
+
 			self.sendCommand("M08")
 
 			self._currentFile.start()
@@ -1688,9 +1709,14 @@ class MachineCom(object):
 				"file": self._currentFile.getFilename(),
 				"filename": os.path.basename(self._currentFile.getFilename()),
 				"origin": self._currentFile.getFileLocation(),
-				'mrb_state': _mrbeam_plugin_implementation.get_mrb_state()
+				'mrb_state': _mrbeam_plugin_implementation.get_mrb_state(),
+				'file_lines_total': self._currentFile.getLinesTotal(),
+				'file_lines_read': self._currentFile.getLinesRead(),
+				'file_lines_remaining': self._currentFile.getLinesRemaining(),
+				'lines_recovered': self._lines_recoverd_total,
 			}
 			eventManager().fire(OctoPrintEvents.PRINT_STARTED, payload)
+
 
 			self._changeState(self.STATE_PRINTING)
 		except:
@@ -1711,6 +1737,7 @@ class MachineCom(object):
 			self._commandQueue.queue.clear()
 		self._cmd = None
 
+		self.watch_dog.stop()
 		self._sendCommand(self.COMMAND_RESET)
 		self._acc_line_buffer.reset()
 		self._send_event.clear(completely=True)
@@ -1721,7 +1748,11 @@ class MachineCom(object):
 			"filename": os.path.basename(self._currentFile.getFilename()),
 			"origin": self._currentFile.getFileLocation(),
 			"time": self.getPrintTime(),
-			'mrb_state': _mrbeam_plugin_implementation.get_mrb_state()
+			'mrb_state': _mrbeam_plugin_implementation.get_mrb_state(),
+			'file_lines_total': self._currentFile.getLinesTotal(),
+			'file_lines_read': self._currentFile.getLinesRead(),
+			'file_lines_remaining': self._currentFile.getLinesRemaining(),
+			'lines_recovered': self._lines_recoverd_total,
 		}
 		eventManager().fire(OctoPrintEvents.PRINT_CANCELLED, payload)
 
@@ -1735,7 +1766,10 @@ class MachineCom(object):
 			"origin": self._currentFile.getFileLocation(),
 			"trigger": trigger,
 			"time": self.getPrintTime(),
-			'mrb_state': _mrbeam_plugin_implementation.get_mrb_state()
+			'mrb_state': _mrbeam_plugin_implementation.get_mrb_state(),
+			'file_lines_total': self._currentFile.getLinesTotal(),
+			'file_lines_read': self._currentFile.getLinesRead(),
+			'file_lines_remaining': self._currentFile.getLinesRemaining(),
 		}
 
 		if not pause and (self.isPaused() or force):
@@ -1744,6 +1778,7 @@ class MachineCom(object):
 				self._pauseWaitStartTime = None
 			self._pause_delay_time = time.time()
 			payload["time"] = self.getPrintTime() # we need the pasue time to be removed from time
+			self.watch_dog.start()
 			if send_cmd is True:
 				self._real_time_commands['cycle_start']=True
 			self._send_event.set()
@@ -1752,6 +1787,7 @@ class MachineCom(object):
 			if not self._pauseWaitStartTime:
 				self._pauseWaitStartTime = time.time()
 			self._pause_delay_time = time.time()
+			self.watch_dog.stop()
 			if send_cmd is True:
 				self._real_time_commands['feed_hold']=True
 			self._send_event.set()
@@ -1766,15 +1802,15 @@ class MachineCom(object):
 
 	def increasePasses(self):
 		self._passes += 1
-		self._log("increased Passes to %d" % self._passes)
+		self._logger.info("increased Passes to %d" % self._passes, terminal_as_comm=True)
 
 	def decreasePasses(self):
 		self._passes -= 1
-		self._log("decrease Passes to %d" % self._passes)
+		self._logger.info("decrease Passes to %d" % self._passes, terminal_as_comm=True)
 
 	def setPasses(self, value):
 		self._passes = value
-		self._log("set Passes to %d" % self._passes)
+		self._logger.info("set Passes to %d" % self._passes, terminal_as_comm=True)
 
 	def sendGcodeScript(self, scriptName, replacements=None):
 		pass
@@ -1914,7 +1950,11 @@ class MachineCom(object):
 					"filename": os.path.basename(self._currentFile.getFilename()),
 					"origin": self._currentFile.getFileLocation(),
 					"time": self.getPrintTime(),
-					"mrb_state": _mrbeam_plugin_implementation.get_mrb_state()
+					"mrb_state": _mrbeam_plugin_implementation.get_mrb_state(),
+					'file_lines_total': self._currentFile.getLinesTotal(),
+					'file_lines_read': self._currentFile.getLinesRead(),
+					'file_lines_remaining': self._currentFile.getLinesRemaining(),
+					'lines_recovered': self._lines_recoverd_total,
 				}
 			eventManager().fire(OctoPrintEvents.PRINT_FAILED, payload)
 		eventManager().fire(OctoPrintEvents.DISCONNECTED)
@@ -1972,7 +2012,7 @@ class PrintingFileInformation(object):
 	"""
 
 	def __init__(self, filename):
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.comm_acc2")
+		self._logger = mrb_logger("octoprint.plugins.mrbeam.comm_acc2.PrintingFileInformation")
 		self._filename = filename
 		self._pos = 0
 		self._size = None
@@ -2043,6 +2083,9 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
 		self._size = os.stat(self._filename).st_size
 		self._pos = 0
 		self._comment_size = 0
+		self._lines_total = self._calc_total_lines()
+		self._lines_read = 0
+		self._lines_read_bak = 0
 
 	def start(self):
 		"""
@@ -2050,6 +2093,8 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
 		"""
 		PrintingFileInformation.start(self)
 		self._handle = open(self._filename, "r")
+		self._lines_read = 0
+		self._lines_read_bak = 0
 
 	def close(self):
 		"""
@@ -2067,7 +2112,9 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
 		"""
 		resets the file handle so you can read from the beginning again.
 		"""
+		self._logger.debug("resetToBeginning() self._lines_read %s, self._lines_read_bak: %s", self._lines_read, self._lines_read_bak)
 		self._handle = open(self._filename, "r")
+		self._lines_read = 0
 
 	def getNext(self):
 		"""
@@ -2081,10 +2128,16 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
 			while processed is None:
 				if self._handle is None:
 					# file got closed just now
+					self._logger.debug("getNext() self._handle is None -> returning None")
 					return None
 				line = self._handle.readline()
 				if not line:
+					self._logger.debug("getNext() read line is None -> closing self._handle")
 					self.close()
+				else:
+					self._lines_read += 1
+					self._lines_read_bak += 1
+					# self._logger.debug("getNext() increased self._lines_read to %s", self._lines_read)
 				processed = process_gcode_line(line)
 				if processed is None:
 					self._comment_size += len(line)
@@ -2095,6 +2148,27 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
 			self.close()
 			self._logger.exception("Exception while processing line")
 			raise e
+
+	def getLinesTotal(self):
+		return self._lines_total
+
+	def getLinesRead(self):
+		return self._lines_read or self._lines_read_bak
+
+	def getLinesRemaining(self):
+		return self.getLinesTotal() - self.getLinesRead()
+
+	def _calc_total_lines(self):
+		res = -1
+		try:
+			tmp, code = exec_cmd_output("wc -l {} | cut -f1 -d' '".format(self._filename), shell=True)
+			if code == 0:
+				res = int(tmp)
+			else:
+				self._logger.error("Can't convert _lines_total to int: command returned exit code %s: ", code, tmp)
+		except ValueError:
+			self._logger.error("Can't convert _lines_total to int: value is %s", tmp)
+		return res
 
 
 def convert_pause_triggers(configured_triggers):

@@ -201,11 +201,16 @@ class AccLineBuffer(object):
 		for c in self.buffer_cmds:
 			buffer.append(self._item_as_str(c))
 		self._lock.reader_release()
-		return "AccLineBuffer: ({len}) acc_buffer:[{buffer}], declined_cmds:[{declined}]".format(len=self.get_command_count(), buffer=", ".join(buffer), declined=", ".join(self.declined_cmds))
+		return "AccLineBuffer: is_dirty: {dirty}, acc_buffer: ({len})[{buffer}], declined_cmds: ({len_declined})[{declined}]".format(
+			dirty=self.is_dirty(),
+			len=self.get_command_count(),
+			buffer=", ".join(buffer),
+			len_declined=len(self.declined_cmds),
+			declined=", ".join(self.declined_cmds))
 
 	def _item_as_str(self, item):
 		item['cmd'] = item['cmd'].strip() if item is not None else None
-		return "{{{id}: {cmd} }}".format(id=item['id'], cmd=item['cmd'])
+		return "{{{id}: {cmd}{dirty}}}".format(id=item['id'], cmd=item['cmd'], dirty=' !dirty!' if item['dirty'] else '')
 
 	@staticmethod
 	def get_cmd_from_item(cmd_obj):
