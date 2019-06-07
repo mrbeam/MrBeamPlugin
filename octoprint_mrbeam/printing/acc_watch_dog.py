@@ -9,9 +9,7 @@ from octoprint.util import RepeatedTimer
 from octoprint_mrbeam.analytics.analytics_handler import existing_analyticsHandler
 
 
-
 class AccWatchDog(object):
-
 	DEFAULT_COMMAND_NUM = 10
 	DEFAULT_WATCH_INTERVAL = 60.0
 
@@ -30,14 +28,14 @@ class AccWatchDog(object):
 		self._cpu_temp = self._get_cpu_temp()
 		self._cpu_throttle_warnings = self._get_cpu_throttle_warnings()
 
-		self._do_regular_check()
+		self.do_regular_check()
 
 	def start(self, current_file=None):
 		self.stop()
 		self._cmd_counter = 0
 		if current_file:
 			self._currentFile = current_file
-		self._repeatedTimer = RepeatedTimer(self.interval, self._do_regular_check, run_first=True)
+		self._repeatedTimer = RepeatedTimer(self.interval, self.do_regular_check, run_first=True)
 		self._repeatedTimer.daemon = True
 		self._repeatedTimer.start()
 		self._logger.debug("Start with interval %ss", self.interval)
@@ -59,42 +57,57 @@ class AccWatchDog(object):
 
 	def log_state(self, trigger=None):
 		t = "{:.3f}s".format(time.time() - self._commands[-1][1]) if self._commands else 'unknown'
-		self._logger.info("Log state. trigger: %s, Last command was %s\n%s", trigger, t, self._get_state_str())
+		self._logger.info("Log state. trigger: %s\n%s", trigger, t, self._get_state_str())
 
-	def _do_regular_check(self):
+	def do_regular_check(self):
+		"""
+		regularly called by repeaded timer
+		:return:
+		"""
 		try:
-			# CPU stuff
+			self._check_cpu()
+			self._check_commands()
+		except:
+			self._logger.exception("Exception in do_regular_check()")
+
+	def _check_cpu(self):
+		try:
 			_cpu_temp = self._get_cpu_temp()
 			_cpu_throttle_warnings = self._get_cpu_throttle_warnings()
 			if _cpu_temp > self.CPU_TEMP_THRESHOLD or _cpu_throttle_warnings:
-				self._logger.warn("CPU warning: temp: %s, throttle_warnings: %s", _cpu_temp, _cpu_throttle_warnings)
-				if self._round_5(_cpu_temp) != self._round_5(self._cpu_temp) or _cpu_throttle_warnings != self._cpu_throttle_warnings:
+				self._logger.warn("CPU: WARN - temp: %s, throttle_warnings: %s", _cpu_temp, _cpu_throttle_warnings)
+				if self._round_5(_cpu_temp) != self._round_5(
+					self._cpu_temp) or _cpu_throttle_warnings != self._cpu_throttle_warnings:
 					existing_analyticsHandler().log_cpu_warning(_cpu_temp, _cpu_throttle_warnings)
 				self._cpu_temp = _cpu_temp
 				self._cpu_throttle_warnings = _cpu_throttle_warnings
+			else:
+				self._logger.debug("CPU: OK - temp: %s, throttle_warnings: %s", _cpu_temp, _cpu_throttle_warnings)
 		except:
-			self._logger.exception("Exception in _do_regular_check() cpu stuff")
+			self._logger.exception("Exception in _check_cpu()")
 
+	def _check_commands(self):
 		try:
-			# commands
 			if self._commands:
 				t = time.time() - self._commands[-1][1]
 				if t > self.interval:
-					self._logger.warn("Looks like there was no command since {:.3f}s.\n{}".format(t, self._get_state_str()))
+					self._logger.warn("Commands: WARN - No command since {:.3f}s.\n{}".format(t, self._get_state_str()))
 				else:
-					self._logger.debug("All good. Last command was {:.3f}s ago.".format(t))
+					self._logger.debug("Commands: OK - Last command was {:.3f}s ago.".format(t))
 		except:
-			self._logger.exception("Exception in _do_regular_check() commands stuff")
+			self._logger.exception("Exception in _check_commands()")
 
 	def _get_state_str(self):
 		res = []
-		res.append("Commands: len: {}, file_lines_total: {}, file_lines_read: {}, file_lines_remaining: {}, _lines_recoverd_total: {}".format(
-			self._cmd_counter,
-			self._currentFile.getLinesTotal(),
-			self._currentFile.getLinesRead(),
-			self._currentFile.getLinesRemaining(),
-			self._comm_acc2._lines_recoverd_total,
-		))
+		res.append("CPU stats: temp: {}, throttle_warnings: {}".format(self._cpu_temp, self._cpu_throttle_warnings))
+		res.append(
+			"Commands: len: {}, file_lines_total: {}, file_lines_read: {}, file_lines_remaining: {}, _lines_recoverd_total: {}".format(
+				self._cmd_counter,
+				self._currentFile.getLinesTotal(),
+				self._currentFile.getLinesRead(),
+				self._currentFile.getLinesRemaining(),
+				self._comm_acc2._lines_recoverd_total,
+			))
 		res.append("Finish conditions: _finished_passes: {}, _passes: {}, _acc_line_buffer.is_empty(): {}".format(
 			self._comm_acc2._finished_passes,
 			self._comm_acc2._passes,
@@ -102,7 +115,7 @@ class AccWatchDog(object):
 		))
 		res.append(str(self._comm_acc2._acc_line_buffer))
 		cmds = []
-		for c,t in reversed(self._commands):
+		for c, t in reversed(self._commands):
 			cmds.append("({}) {}".format(datetime.datetime.fromtimestamp(t).strftime("%H:%M:%S,%f")[:-3], c))
 		res.append("Last commands: {}".format(", ".join(cmds)))
 		return "\n".join(res)
@@ -146,7 +159,8 @@ class AccWatchDog(object):
 				return []
 			throttled_binary = bin(t_int)[2:].zfill(16)
 		except:
-			self._logger.exception("Excpetion in _get_cpu_throttle_warnings while converting cpu get_throttled: %s", t_hex)
+			self._logger.exception("Excpetion in _get_cpu_throttle_warnings while converting cpu get_throttled: %s",
+			                       t_hex)
 			return []
 
 		for position, message in MESSAGES.iteritems():
@@ -165,4 +179,4 @@ class AccWatchDog(object):
 			self._logger.exception("Excpetion in _get_cpu_throttled() while reading cpu get_throttled: ")
 
 	def _round_5(self, x):
-		return round(x/5.0)*5.0
+		return round(x / 5.0) * 5.0

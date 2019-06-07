@@ -316,13 +316,13 @@ class MachineCom(object):
 				if self.isPrinting() and self._commandQueue.empty() and not self._recovery_lock:
 					cmd = self._getNext() # get next cmd form file
 					if cmd is not None:
-						# self.watch_dog.notify_command(cmd) TODO
 						self.sendCommand(cmd)
 						self._callback.on_comm_progress()
 					else:
 						# TODO: this code is about lasering the same file several times. not gonna happen in mrbII
 						if self._finished_passes >= self._passes:
 							if self._acc_line_buffer.is_empty():
+								self.watch_dog.do_regular_check()
 								self.watch_dog.log_state(trigger="before_set_print_finished")
 								self._set_print_finished()
 								self.watch_dog.log_state(trigger="after_set_print_finished")
