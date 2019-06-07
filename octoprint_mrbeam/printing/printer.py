@@ -174,50 +174,6 @@ class Laser(Printer):
 		if terminalMaxLines is not None and terminalMaxLines > 0:
 			self._log = deque(self._log, terminalMaxLines)
 
-	# def _setProgressData(self, progress, filepos, printTime, cleanedPrintTime):
-	# 	estimatedTotalPrintTime = self._estimateTotalPrintTime(progress, cleanedPrintTime)
-	# 	totalPrintTime = estimatedTotalPrintTime
-	#
-	# 	if self._selectedFile and "estimatedPrintTime" in self._selectedFile and self._selectedFile["estimatedPrintTime"]:
-	# 		statisticalTotalPrintTime = self._selectedFile["estimatedPrintTime"]
-	# 		if progress and cleanedPrintTime:
-	# 			if estimatedTotalPrintTime is None:
-	# 				totalPrintTime = statisticalTotalPrintTime
-	# 			else:
-	# 				if progress < 0.5:
-	# 					sub_progress = progress * 2
-	# 				else:
-	# 					sub_progress = 1.0
-	# 				totalPrintTime = (1 - sub_progress) * statisticalTotalPrintTime + sub_progress * estimatedTotalPrintTime
-	#
-	# 	self._progress = progress
-	# 	self._printTime = printTime
-	# 	self._printTimeLeft = totalPrintTime - cleanedPrintTime if (totalPrintTime is not None and cleanedPrintTime is not None) else None
-	#
-	# 	_lines_total = -1
-	# 	_lines_read = -1
-	# 	_lines_remaining = -1
-	# 	if self._comm and self._comm._currentFile:
-	# 		_lines_total = self._comm._currentFile.getLinesTotal()
-	# 		_lines_read = self._comm._currentFile.getLinesRead()
-	# 		_lines_remaining = self._comm._currentFile.getLinesRemaining()
-	#
-	# 	self._stateMonitor.set_progress({
-	# 		"completion": self._progress * 100 if self._progress is not None else None,
-	# 		"filepos": filepos,
-	# 		"printTime": int(self._printTime) if self._printTime is not None else None,
-	# 		"printTimeLeft": int(self._printTimeLeft) if self._printTimeLeft is not None else None,
-	# 		'file_lines_total': _lines_total,
-	# 		'file_lines_read': _lines_read,
-	# 		'file_lines_remaining': _lines_remaining,
-	# 	})
-	#
-	# 	if progress:
-	# 		progress_int = int(progress * 100)
-	# 		if self._lastProgressReport != progress_int:
-	# 			self._lastProgressReport = progress_int
-	# 			self._reportPrintProgressToPlugins(progress_int)
-
 	# maybe one day we want to introduce special MrBeam commands....
 	# def commands(self, commands):
 	# 	"""
