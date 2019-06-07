@@ -34,7 +34,10 @@ class Laser(Printer):
 					"volume": None
 				}
 			},
-			progress={"completion": None, "filepos": None, "printTime": None, "printTimeLeft": None},
+			progress={"completion": None,
+			          "filepos": None,
+			          "printTime": None,
+			          "printTimeLeft": None},
 			current_z=None
 		)
 

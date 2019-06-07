@@ -1604,10 +1604,24 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if (flooredProgress != self.print_progress_last):
 			self.print_progress_last = flooredProgress
 			print_time = None
-			if self._printer._comm is not None:
+			lines_total = None
+			lines_read = None
+			lines_remaining = None
+			lines_recovered = None
+			if self._printer and self._printer._comm is not None:
 				print_time = self._printer._comm.getPrintTime()
+				lines_recovered = self._printer._comm._lines_recoverd_total
+				if self._printer._comm._currentFile:
+					lines_total = self._printer._comm._currentFile.getLinesTotal()
+					lines_read = self._printer._comm._currentFile.getLinesRead()
+					lines_remaining = self._printer._comm._currentFile.getLinesRemaining()
 			payload = dict(progress=self.print_progress_last,
-			               time=print_time)
+			               time=print_time,
+			               file_lines_total=lines_total,
+			               file_lines_read=lines_read,
+			               file_lines_remaining=lines_remaining,
+			               lines_recovered=lines_recovered,
+			)
 			self._event_bus.fire(MrBeamEvents.PRINT_PROGRESS, payload)
 
 	def on_slicing_progress(self, slicer, source_location, source_path, destination_location, destination_path, progress):
