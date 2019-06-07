@@ -171,7 +171,11 @@ class DustManager(object):
 		try:
 			# Write to analytics if the values are valid
 			if self._validate_values():
-				rpm_average = sum(self._last_rpm_values)/len(self._last_rpm_values)
+				if len(self._last_rpm_values):
+					rpm_average = sum(self._last_rpm_values)/len(self._last_rpm_values)
+				else:
+					rpm_average = -1
+
 				data = dict(
 					rpm_val=rpm_average,
 					fan_state=self._state,
