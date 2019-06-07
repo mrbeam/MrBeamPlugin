@@ -62,6 +62,7 @@ class AnalyticsHandler(object):
 		self._current_cam_session_id = None
 		self._current_intensity_collector = None
 		self._current_lasertemp_collector = None
+		self._current_cputemp_collector = None
 		self._current_job_time_estimation = None
 
 		self._storedConversions = list()
@@ -336,6 +337,7 @@ class AnalyticsHandler(object):
 		self._current_dust_collector = ValueCollector('DustColl')
 		self._current_intensity_collector = ValueCollector('IntensityColl')
 		self._current_lasertemp_collector = ValueCollector('TempColl')
+		self._current_cputemp_collector = ValueCollector('CpuColl')
 
 	def _event_print_paused(self, event, payload):
 		# TODO add how it has been paused (lid_opened during job, frontend, onebutton)
@@ -363,12 +365,14 @@ class AnalyticsHandler(object):
 		self._write_jobevent(ak.DUST_SUM, payload=self._current_dust_collector.getSummary())
 		self._write_jobevent(ak.INTENSITY_SUM, payload=self._current_intensity_collector.getSummary())
 		self._write_jobevent(ak.LASERTEMP_SUM, payload=self._current_lasertemp_collector.getSummary())
+		self._write_jobevent(ak.CPUTEMP_SUM, payload=self._current_cputemp_collector.getSummary())
 
 	def _cleanup(self):
 		self._current_job_id = None
 		self._current_dust_collector = None
 		self._current_intensity_collector = None
 		self._current_lasertemp_collector = None
+		self._current_cputemp_collector = None
 
 	def _event_laser_job_done(self, event, payload):
 		if self._current_job_id is not None:
@@ -721,6 +725,17 @@ class AnalyticsHandler(object):
 				self._current_intensity_collector.addValue(laser_intensity)
 			except Exception as e:
 				self._logger.exception('Error during add_laser_intensity_value: {}'.format(e.message))
+
+	def add_cpu_temp_value(self, cpu_temp):
+		"""
+		:param cpu_temp:
+		:return:
+		"""
+		if self._analyticsOn and self._current_cputemp_collector is not None:
+			try:
+				self._current_cputemp_collector.addValue(cpu_temp)
+			except Exception as e:
+				self._logger.exception('Error during add_cpu_temp_value: {}'.format(e.message))
 
 	def _write_dust_log(self, data):
 		try:
