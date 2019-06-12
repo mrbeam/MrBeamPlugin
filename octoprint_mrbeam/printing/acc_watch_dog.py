@@ -74,10 +74,13 @@ class AccWatchDog(object):
 		try:
 			_cpu_temp = self._get_cpu_temp()
 			_cpu_throttle_warnings = self._get_cpu_throttle_warnings()
+			# job cputemp collector
+			existing_analyticsHandler().add_cpu_temp_value(_cpu_temp)
 			if _cpu_temp > self.CPU_TEMP_THRESHOLD or _cpu_throttle_warnings:
 				self._logger.warn("CPU: WARN - temp: %s, throttle_warnings: %s", _cpu_temp, _cpu_throttle_warnings)
 				if self._round_5(_cpu_temp) != self._round_5(
 					self._cpu_temp) or _cpu_throttle_warnings != self._cpu_throttle_warnings:
+					# cpu warnings
 					existing_analyticsHandler().log_cpu_warning(_cpu_temp, _cpu_throttle_warnings)
 				self._cpu_temp = _cpu_temp
 				self._cpu_throttle_warnings = _cpu_throttle_warnings
