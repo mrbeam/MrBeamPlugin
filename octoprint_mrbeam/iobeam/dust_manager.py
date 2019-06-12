@@ -5,6 +5,7 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamValueEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.analytics.usage_handler import usageHandler
+from collections import deque
 
 # singleton
 _instance = None
@@ -39,7 +40,7 @@ class DustManager(object):
 	DATA_TYPE_CONENCTED = "connected"
 
 	FAN_TEST_RPM_PERCENTAGE = 50
-	FAN_TEST_DURATION = 15  # seconds
+	FAN_TEST_DURATION = 35  # seconds
 
 	def __init__(self):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.dustmanager")
@@ -67,6 +68,7 @@ class DustManager(object):
 		self._stop_dust_extraction()
 
 		self._usageHandler = usageHandler(self)
+		self._last_rpm_values = deque(maxlen=5)
 
 		self.extraction_limit = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['dust']['extraction_limit']
 		self.auto_mode_time = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['dust']['auto_mode_time']
@@ -132,6 +134,8 @@ class DustManager(object):
 		self._validate_values()
 		self._send_dust_to_analytics(self._dust)
 
+		self._last_rpm_values.append(self._rpm)
+
 	def _on_command_response(self, args):
 		if args['success']:
 			if args['message'].split(':')[1] != self._last_command.split(':')[0]:
@@ -167,8 +171,13 @@ class DustManager(object):
 		try:
 			# Write to analytics if the values are valid
 			if self._validate_values():
+				if len(self._last_rpm_values):
+					rpm_average = sum(self._last_rpm_values)/len(self._last_rpm_values)
+				else:
+					rpm_average = -1
+
 				data = dict(
-					rpm_val=self._rpm,
+					rpm_val=rpm_average,
 					fan_state=self._state,
 					usage_count=self._usageHandler.get_total_usage(),
 					air_filter_count=self._usageHandler.get_air_filter_usage(),
