@@ -294,7 +294,10 @@ class AnalyticsHandler(object):
 						except requests.exceptions.RequestException as e:
 							response = e
 
-						payload[ip] = response
+						payload[interface] = {
+							"ip": ip,
+							"response": response
+						}
 
 			self._write_deviceinfo(ak.HTTP_SELF_CHECK, payload=payload)
 
