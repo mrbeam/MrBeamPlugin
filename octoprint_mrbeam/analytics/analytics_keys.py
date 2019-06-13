@@ -53,6 +53,8 @@ class AnalyticsKeys(object):
 	EXCEPTION = 'exception'
 	IOBEAM =    'iobeam'
 	LOG_CPU = 'cpu'
+	CAMERA = 'camera'
+	CAMERA_SESSION = 'camera_session'
 
 	### JOB KEYS ###
 	JOB_ID = 'job_id'

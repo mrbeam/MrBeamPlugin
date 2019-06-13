@@ -225,12 +225,28 @@ class AnalyticsHandler(object):
 
 	def log_cpu_warning(self, temp, throttle_alerts):
 		try:
-			data = {ak.DATA:{'temp': temp,
-			               'throttle_alerts': throttle_alerts}}
+			data = {'temp': temp,
+					'throttle_alerts': throttle_alerts}
 			self._write_event(ak.TYPE_LOG_EVENT, ak.LOG_CPU, self._logevent_version, payload=data, analytics=True)
 		except Exception as e:
-			self._logger.exception('Error during _write_log_event: {}'.format(e.message), analytics=True)
+			self._logger.exception('Error during log_cpu_warning: {}'.format(e.message), analytics=True)
 
+	def log_camera_session(self, errors):
+		try:
+			self._logger.info(errors)
+			success = True
+			if errors:
+				success = False
+			data = {
+				ak.DATA: {
+					'success': success,
+					'err': errors,
+				}
+			}
+			self._write_event(ak.TYPE_LOG_EVENT, ak.CAMERA, self._logevent_version, payload=data, analytics=True)
+
+		except Exception as e:
+			self._logger.exception('Error during log_camera_error: {}'.format(e.message), analytics=True)
 
 	def _write_current_software_status(self):
 		try:
@@ -578,14 +594,14 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.exception('Error during write_device_info: {}'.format(e.message))
 
-	def _write_log_event(self, payload=None):
+	def _write_log_event(self, event, payload=None):  # TODO IRATXE: ask andy
 		try:
 			data = dict()
 			# TODO add data validation/preparation here
 			if payload is not None:
 				data[ak.DATA] = payload
 				data[ak.SOFTWARE_TIER] = self._settings.get(["dev", "software_tier"])
-			self._write_event(ak.TYPE_LOG_EVENT, ak.EVENT_LOG, self._logevent_version, payload=data, analytics=False)
+			self._write_event(ak.TYPE_LOG_EVENT, event, self._logevent_version, payload=data, analytics=False)  # TODO IRATXE: ask andy
 		except Exception as e:
 			self._logger.exception('Error during _write_log_event: {}'.format(e.message), analytics=False)
 
