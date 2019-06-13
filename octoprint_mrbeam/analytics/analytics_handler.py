@@ -227,7 +227,6 @@ class AnalyticsHandler(object):
 		try:
 			data = {'temp': temp,
 					'throttle_alerts': throttle_alerts}
-			# self._write_event(ak.TYPE_LOG_EVENT, ak.LOG_CPU, self._logevent_version, payload=data, analytics=True)
 			self._write_log_event(ak.LOG_CPU, payload=data)
 		except Exception as e:
 			self._logger.exception('Error during log_cpu_warning: {}'.format(e.message), analytics=True)
@@ -242,7 +241,6 @@ class AnalyticsHandler(object):
 				'success': success,
 				'err': errors,
 			}
-			# self._write_event(ak.TYPE_LOG_EVENT, ak.CAMERA, self._logevent_version, payload=data, analytics=True)
 			self._write_log_event(ak.CAMERA, payload=data)
 
 		except Exception as e:
@@ -450,7 +448,6 @@ class AnalyticsHandler(object):
 					data['component'] = component
 					data['component_version'] = event_payload.get('component_version')
 					self._write_log_event(ak.EVENT_LOG, payload=data)
-					# self._write_event(ak.TYPE_LOG_EVENT, ak.EVENT_LOG, self._logevent_version, payload=dict(data=data))
 				else:
 					self._logger.warn("Unknown type: '%s' from component %s. payload: %s", type, component,
 					                  event_payload)
@@ -474,13 +471,6 @@ class AnalyticsHandler(object):
 			message=message
 		)
 		self._write_log_event(ak.IOBEAM, payload=data)
-		# self._write_event(ak.TYPE_LOG_EVENT, ak.IOBEAM, self._logevent_version,
-		#                   payload=dict(
-		# 	                  data=dict(
-		# 		                  version=iobeam_version,
-		# 		                  message=message
-		# 	                  )
-		#                   ))
 
 	def log_ui_render_calls(self, host, remote_ip, referrer, language):
 		try:
