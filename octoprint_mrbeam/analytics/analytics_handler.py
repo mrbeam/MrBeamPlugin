@@ -211,13 +211,13 @@ class AnalyticsHandler(object):
 				payload=payload,
 			)
 		else:
-			self._write_log_event(payload=payload)
+			self._write_log_event(ak.EVENT_LOG, payload=payload, analytics=False)
 
 	def log_terminal_dump(self, dump):
 		if self.event_waiting_for_terminal_dump is not None:
 			payload = self.event_waiting_for_terminal_dump['payload']
 			payload['terminal_dump'] = dump
-			self._write_log_event(payload=payload)
+			self._write_log_event(ak.EVENT_LOG, payload=payload, analytics=False)
 			self.event_waiting_for_terminal_dump = None
 		else:
 			self._logger.warn(
@@ -227,7 +227,8 @@ class AnalyticsHandler(object):
 		try:
 			data = {'temp': temp,
 					'throttle_alerts': throttle_alerts}
-			self._write_event(ak.TYPE_LOG_EVENT, ak.LOG_CPU, self._logevent_version, payload=data, analytics=True)
+			# self._write_event(ak.TYPE_LOG_EVENT, ak.LOG_CPU, self._logevent_version, payload=data, analytics=True)
+			self._write_log_event(ak.LOG_CPU, payload=data)
 		except Exception as e:
 			self._logger.exception('Error during log_cpu_warning: {}'.format(e.message), analytics=True)
 
@@ -238,12 +239,11 @@ class AnalyticsHandler(object):
 			if errors:
 				success = False
 			data = {
-				ak.DATA: {
-					'success': success,
-					'err': errors,
-				}
+				'success': success,
+				'err': errors,
 			}
-			self._write_event(ak.TYPE_LOG_EVENT, ak.CAMERA, self._logevent_version, payload=data, analytics=True)
+			# self._write_event(ak.TYPE_LOG_EVENT, ak.CAMERA, self._logevent_version, payload=data, analytics=True)
+			self._write_log_event(ak.CAMERA, payload=data)
 
 		except Exception as e:
 			self._logger.exception('Error during log_camera_error: {}'.format(e.message), analytics=True)
@@ -449,7 +449,8 @@ class AnalyticsHandler(object):
 					data = event_payload.get('data', dict())
 					data['component'] = component
 					data['component_version'] = event_payload.get('component_version')
-					self._write_event(ak.TYPE_LOG_EVENT, ak.EVENT_LOG, self._logevent_version, payload=dict(data=data))
+					self._write_log_event(ak.EVENT_LOG, payload=data)
+					# self._write_event(ak.TYPE_LOG_EVENT, ak.EVENT_LOG, self._logevent_version, payload=dict(data=data))
 				else:
 					self._logger.warn("Unknown type: '%s' from component %s. payload: %s", type, component,
 					                  event_payload)
@@ -467,15 +468,19 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.exception('Exception during _other_plugin_data: {}'.format(e.message))
 
-
 	def log_iobeam_message(self, iobeam_version, message):
-		self._write_event(ak.TYPE_LOG_EVENT, ak.IOBEAM, self._logevent_version,
-		                  payload=dict(
-			                  data=dict(
-				                  version=iobeam_version,
-				                  message=message
-			                  )
-		                  ))
+		data = dict(
+			version=iobeam_version,
+			message=message
+		)
+		self._write_log_event(ak.IOBEAM, payload=data)
+		# self._write_event(ak.TYPE_LOG_EVENT, ak.IOBEAM, self._logevent_version,
+		#                   payload=dict(
+		# 	                  data=dict(
+		# 		                  version=iobeam_version,
+		# 		                  message=message
+		# 	                  )
+		#                   ))
 
 	def log_ui_render_calls(self, host, remote_ip, referrer, language):
 		try:
@@ -594,14 +599,14 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.exception('Error during write_device_info: {}'.format(e.message))
 
-	def _write_log_event(self, event, payload=None):  # TODO IRATXE: ask andy
+	def _write_log_event(self, event, payload=None, analytics=False):
 		try:
 			data = dict()
 			# TODO add data validation/preparation here
 			if payload is not None:
 				data[ak.DATA] = payload
 				data[ak.SOFTWARE_TIER] = self._settings.get(["dev", "software_tier"])
-			self._write_event(ak.TYPE_LOG_EVENT, event, self._logevent_version, payload=data, analytics=False)  # TODO IRATXE: ask andy
+			self._write_event(ak.TYPE_LOG_EVENT, event, self._logevent_version, payload=data, analytics=analytics)
 		except Exception as e:
 			self._logger.exception('Error during _write_log_event: {}'.format(e.message), analytics=False)
 
