@@ -96,6 +96,12 @@ class UsageHandler(object):
 		else:
 			return 0
 
+	def get_total_usage(self):
+		if 'total' in self._usage_data:
+			return self._usage_data['total']['job_time']
+		else:
+			return 0
+
 	def _load_usage_data(self):
 		success = False
 		recovery_try = False

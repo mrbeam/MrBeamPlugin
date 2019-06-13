@@ -1,7 +1,7 @@
 import os
 import re
 import shutil
-from distutils.version import StrictVersion
+from distutils.version import LooseVersion, StrictVersion
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.printing.profile import laserCutterProfileManager
@@ -20,11 +20,11 @@ class Migration(object):
 	VERSION_UPDATE_CHANGE_HOSTNAME_SCRIPTS   = '0.1.37'
 	VERSION_UPDATE_LOGROTATE_CONF            = '0.1.45'
 	VERSION_INFLATE_FILE_SYSTEM              = '0.1.51'
-	VERSION_MOUNT_MANAGER_161                = '0.1.56'
 	VERSION_PREFILL_MRB_HW_INFO              = '0.1.55'
 	VERSION_AVRDUDE_AUTORESET_SCRIPT         = '0.2.0'
 	VERSION_USERNAME_LOWCASE				 = '0.2.0'
 	VERSION_GRBL_AUTO_UPDATE                 = '0.2.1'
+	VERSION_MOUNT_MANAGER_161                = '0.2.2'
 
 	# this is where we have files needed for migrations
 	MIGRATE_FILES_FOLDER     = 'files/migrate/'
@@ -33,6 +33,9 @@ class Migration(object):
 	# grbl auto update conf
 	GRBL_AUTO_UPDATE_FILE =     MachineCom._get_grbl_file_name()
 	GRBL_AUTO_UPDATE_VERSION =  MachineCom.GRBL_DEFAULT_VERSION
+
+	# mount manager version
+	MOUNT_MANAGER_VERSION = StrictVersion("1.6.1")
 
 
 	def __init__(self, plugin):
@@ -113,11 +116,11 @@ class Migration(object):
 		if self.version_previous is None:
 			return True
 		try:
-			StrictVersion(self.version_previous)
+			LooseVersion(self.version_previous)
 		except ValueError as e:
-			self._logger.error("Previous version is invalid: '{}'. ValueError from StrictVersion: {}".format(self.version_previous, e))
+			self._logger.error("Previous version is invalid: '{}'. ValueError from LooseVersion: {}".format(self.version_previous, e))
 			return None
-		return StrictVersion(self.version_current) > StrictVersion(self.version_previous)
+		return LooseVersion(self.version_current) > LooseVersion(self.version_previous)
 
 	def _compare_versions(self, lower_vers, higher_vers, equal_ok=True):
 		"""
@@ -130,14 +133,14 @@ class Migration(object):
 		if lower_vers is None or higher_vers is None:
 			return None
 		try:
-			StrictVersion(lower_vers)
-			StrictVersion(higher_vers)
+			LooseVersion(lower_vers)
+			LooseVersion(higher_vers)
 		except ValueError as e:
-			self._logger.error("_compare_versions() One of the two version is invalid: lower_vers:{}, higher_vers:{}. ValueError from StrictVersion: {}".format(lower_vers, higher_vers, e))
+			self._logger.error("_compare_versions() One of the two version is invalid: lower_vers:{}, higher_vers:{}. ValueError from LooseVersion: {}".format(lower_vers, higher_vers, e))
 			return None
-		if StrictVersion(lower_vers) == StrictVersion(higher_vers):
+		if LooseVersion(lower_vers) == LooseVersion(higher_vers):
 			return equal_ok
-		return StrictVersion(lower_vers) < StrictVersion(higher_vers)
+		return LooseVersion(lower_vers) < LooseVersion(higher_vers)
 
 	def save_current_version(self):
 		self.plugin._settings.set(['version'], self.version_current, force=True)
@@ -313,9 +316,24 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 
 	def update_mount_manager(self):
 		self._logger.info("update_mount_manager() ")
+		needs_update = True
+		out, code = exec_cmd_output(["/root/mount_manager/mount_manager", "version"])
+		if code == 0:
+			version = None
+			try:
+				version = StrictVersion(out)
+				needs_update = version < self.MOUNT_MANAGER_VERSION
+			except:
+				pass
 
-		mount_manager_file = os.path.join(__package_path__, self.MIGRATE_FILES_FOLDER, 'mount_manager')
-		exec_cmd("sudo cp {src} /root/mount_manager/mount_manager".format(src=mount_manager_file))
+		if needs_update:
+			self._logger.debug("update_mount_manager() updating mount_manager from v%s to v%s", version, self.MOUNT_MANAGER_VERSION)
+			mount_manager_file = os.path.join(__package_path__, self.MIGRATE_FILES_FOLDER, 'mount_manager')
+			exec_cmd(["sudo", "cp", str(mount_manager_file), "/root/mount_manager/mount_manager"], shell=False)
+			exec_cmd(["sudo", "chmod", "745", "/root/mount_manager/mount_manager"])
+			exec_cmd(["sudo", "chown", "root:root", "/root/mount_manager/mount_manager"])
+		else:
+			self._logger.debug("update_mount_manager() NOT updating mount_manager, current version: v%s", version)
 
 
 	def auto_update_grbl(self):
@@ -334,7 +352,7 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 	def prefill_software_update_for_mrb_hw_info(self):
 		from software_update_information import get_version_of_pip_module
 		vers = get_version_of_pip_module("mrb-hw-info", "sudo /usr/local/bin/pip")
-		if StrictVersion(vers) == StrictVersion('0.0.19'):
+		if LooseVersion(vers) == LooseVersion('0.0.19'):
 			self._logger.info("prefill_software_update_for_mrb_hw_info() mrb-hw-info is %s, setting commit hash", vers)
 			self.plugin._settings.global_set(['plugins', 'softwareupdate', 'checks', 'mrb_hw_info', 'current'], '15dfcc2c74608adb8f07a7ea115078356f4bb09c', force=True)
 		else:
@@ -349,6 +367,10 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 
 	def change_usernames_tolower(self):
 		self._logger.info("change_usernames_tolower() ")
+		if not self.plugin._user_manager.hasBeenCustomized():
+			self._logger.info("change_usernames_tolower() _user_manager not hasBeenCustomized(): skip")
+			return
+
 		users = self.plugin._user_manager._users
 		self._logger.info("{numUsers} users:".format(numUsers=len(users)))
 

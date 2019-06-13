@@ -62,12 +62,14 @@ class AnalyticsHandler(object):
 		self._current_cam_session_id = None
 		self._current_intensity_collector = None
 		self._current_lasertemp_collector = None
+		self._current_cputemp_collector = None
+		self._current_job_time_estimation = None
 
 		self._storedConversions = list()
 
-		self._jobevent_log_version = 4
+		self._jobevent_log_version = 5	 # Changed after v0.2.1 (03-06-2019)
 		self._deviceinfo_log_version = 5  # Changed after v0.1.61 (12-04-2019)
-		self._logevent_version = 2  # Changed after v0.1.61 (12-04-2019) # added event in 0.1.62
+		self._logevent_version = 3  # Changed after v0.2.1 (2019-06-06)
 		self._dust_log_version = 2
 		self._cam_event_log_version = 2
 		self._connectivity_event_log_version = 1
@@ -124,6 +126,7 @@ class AnalyticsHandler(object):
 		self._event_bus.subscribe(OctoPrintEvents.STARTUP, self._event_startup)
 		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self._event_shutdown)
 		self._event_bus.subscribe(MrBeamEvents.ANALYTICS_DATA, self._other_plugin_data)
+		self._event_bus.subscribe(MrBeamEvents.JOB_TIME_ESTIMATED, self._event_job_time_estimated)
 
 	@staticmethod
 	def _getLaserHeadVersion():
@@ -219,6 +222,15 @@ class AnalyticsHandler(object):
 		else:
 			self._logger.warn(
 				"log_terminal_dump() called but no foregoing event tracked. self.event_waiting_for_terminal_dump is None. ignoring this dump.")
+
+	def log_cpu_warning(self, temp, throttle_alerts):
+		try:
+			data = {ak.DATA:{'temp': temp,
+			               'throttle_alerts': throttle_alerts}}
+			self._write_event(ak.TYPE_LOG_EVENT, ak.LOG_CPU, self._logevent_version, payload=data, analytics=True)
+		except Exception as e:
+			self._logger.exception('Error during _write_log_event: {}'.format(e.message), analytics=True)
+
 
 	def _write_current_software_status(self):
 		try:
@@ -325,6 +337,7 @@ class AnalyticsHandler(object):
 		self._current_dust_collector = ValueCollector('DustColl')
 		self._current_intensity_collector = ValueCollector('IntensityColl')
 		self._current_lasertemp_collector = ValueCollector('TempColl')
+		self._current_cputemp_collector = ValueCollector('CpuColl')
 
 	def _event_print_paused(self, event, payload):
 		# TODO add how it has been paused (lid_opened during job, frontend, onebutton)
@@ -344,19 +357,22 @@ class AnalyticsHandler(object):
 	def _event_print_done(self, event, payload):
 		if not self._isJobDone:
 			self._isJobDone = True  # prevent two jobDone events per Job
-			self._write_jobevent(ak.PRINT_DONE, payload={ak.JOB_DURATION: int(round(payload['time']))})
+			self._write_jobevent(ak.PRINT_DONE, payload={ak.JOB_DURATION: int(round(payload['time'])),
+														ak.JOB_TIME_ESTIMATION: int(round(self._current_job_time_estimation))})
 			self._write_collectors()
 
 	def _write_collectors(self):
 		self._write_jobevent(ak.DUST_SUM, payload=self._current_dust_collector.getSummary())
 		self._write_jobevent(ak.INTENSITY_SUM, payload=self._current_intensity_collector.getSummary())
 		self._write_jobevent(ak.LASERTEMP_SUM, payload=self._current_lasertemp_collector.getSummary())
+		self._write_jobevent(ak.CPUTEMP_SUM, payload=self._current_cputemp_collector.getSummary())
 
 	def _cleanup(self):
 		self._current_job_id = None
 		self._current_dust_collector = None
 		self._current_intensity_collector = None
 		self._current_lasertemp_collector = None
+		self._current_cputemp_collector = None
 
 	def _event_laser_job_done(self, event, payload):
 		if self._current_job_id is not None:
@@ -404,6 +420,9 @@ class AnalyticsHandler(object):
 				data[ak.LASERTEMP] = self._current_lasertemp_collector.get_latest_value()
 			self._write_jobevent(ak.COOLING_DONE, payload=data)
 			self._isCoolingPaused = False
+
+	def _event_job_time_estimated(self, event, payload):
+		self._current_job_time_estimation = payload['jobTimeEstimation']
 
 	def _other_plugin_data(self, event, event_payload):
 		try:
@@ -707,12 +726,30 @@ class AnalyticsHandler(object):
 			except Exception as e:
 				self._logger.exception('Error during add_laser_intensity_value: {}'.format(e.message))
 
+	def add_cpu_temp_value(self, cpu_temp):
+		"""
+		:param cpu_temp:
+		:return:
+		"""
+		if self._analyticsOn and self._current_cputemp_collector is not None:
+			try:
+				self._current_cputemp_collector.addValue(cpu_temp)
+			except Exception as e:
+				self._logger.exception('Error during add_cpu_temp_value: {}'.format(e.message))
+
 	def _write_dust_log(self, data):
 		try:
 			if self._analyticsOn:
 				self._write_jobevent(ak.FINAL_DUST, payload=data)
 		except Exception as e:
 			self._logger.exception('Error during write dust_log: {}'.format(e.message))
+
+	def write_fan_rpm_test(self, data):
+		try:
+			if self._analyticsOn:
+				self._write_jobevent(ak.FAN_RPM_TEST, payload=data)
+		except Exception as e:
+			self._logger.exception('Error during write_fan_50_test: {}'.format(e.message))
 
 	def _init_jsonfile(self):
 		open(self._jsonfile, 'w+').close()

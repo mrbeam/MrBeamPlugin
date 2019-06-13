@@ -1,7 +1,7 @@
 
 
 import threading
-from distutils.version import StrictVersion
+from distutils.version import LooseVersion
 from octoprint.events import Events, CommandTrigger, GenericEventListener
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
@@ -10,7 +10,7 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 class LedEventListener(CommandTrigger):
 
 	WIFI_CHECK_INTERVAL = 1.0
-	VERSION_MIN_FINDMRBEAM = StrictVersion("0.2.0")
+	VERSION_MIN_FINDMRBEAM = LooseVersion("0.2.0")
 
 
 	LED_EVENTS = {}
@@ -130,7 +130,7 @@ class LedEventListener(CommandTrigger):
 		           findmrbeam=None)
 		try:
 			pluginInfo = _mrbeam_plugin_implementation._plugin_manager.get_plugin_info("findmymrbeam")
-			if pluginInfo is not None and StrictVersion(pluginInfo.version) >= self.VERSION_MIN_FINDMRBEAM:
+			if pluginInfo is not None and LooseVersion(pluginInfo.version) >= self.VERSION_MIN_FINDMRBEAM:
 				res['findmrbeam'] = pluginInfo.implementation.is_registered()
 			else:
 				# we know we can't read find state, so we must assume false

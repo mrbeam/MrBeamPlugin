@@ -52,6 +52,7 @@ class AnalyticsKeys(object):
 	EVENT_LOG = 'log_event'
 	EXCEPTION = 'exception'
 	IOBEAM =    'iobeam'
+	LOG_CPU = 'cpu'
 
 	### JOB KEYS ###
 	JOB_ID = 'job_id'
@@ -67,7 +68,9 @@ class AnalyticsKeys(object):
 	DUST_SUM = 'dust_summary'
 	INTENSITY_SUM = 'intensity_summary'
 	LASERTEMP = 'lasertemp'
+	CPUTEMP_SUM = 'cputemp'
 	LASERTEMP_SUM = 'lasertemp_summary'
+	CPUTEMP_SUM = 'cputemp_summary'
 	FINAL_DUST = 'final_dust'
 	COOLING_START = 'cooling_start'
 	COOLING_DONE = 'cooling_done'
@@ -76,6 +79,7 @@ class AnalyticsKeys(object):
 	LASER_JOB = 'laser_job'
 	DESIGN_FILE = 'design_file'
 	MATERIAL = 'material'
+	FAN_RPM_TEST = 'fan_rpm_test'
 
 	PRINT_EVENTS = [
 						PRINT_STARTED,
@@ -90,6 +94,7 @@ class AnalyticsKeys(object):
 					]
 	FAILED_PRINT_EVENTS = [PRINT_CANCELLED,PRINT_FAILED]
 	JOB_DURATION = 'dur'
+	JOB_TIME_ESTIMATION = 'dur_est'
 
 	DUST_START = 'd_start'
 	DUST_END = 'd_end'
