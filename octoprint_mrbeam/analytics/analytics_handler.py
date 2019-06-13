@@ -7,6 +7,7 @@ import sys
 import fileinput
 import re
 import uuid
+import requests
 
 from datetime import datetime
 from value_collector import ValueCollector
@@ -261,6 +262,10 @@ class AnalyticsHandler(object):
 		t2 = Timer(15.0, self._event_ip_addresses)
 		t2.start()
 
+		# Schedule event_http_self_check task (to write that line 20 seconds after startup)
+		t3 = Timer(20.0, self._event_http_self_check)
+		t3.start()
+
 	def _event_shutdown(self, event, payload):
 		self._write_deviceinfo(ak.SHUTDOWN)
 
@@ -271,6 +276,30 @@ class AnalyticsHandler(object):
 			succesful=succesful,
 			err=err)
 		self._write_deviceinfo(ak.FLASH_GRBL, payload=payload)
+
+	def _event_http_self_check(self):
+		try:
+			payload = dict()
+			interfaces = netifaces.interfaces()
+
+			for interface in interfaces:
+				if interface != 'lo':
+					addresses = netifaces.ifaddresses(interface)
+					if netifaces.AF_INET in addresses:
+						ip = addresses[netifaces.AF_INET][0]['addr']
+
+						try:
+							r = requests.get("http://" + ip)
+							response = r.status_code
+						except requests.exceptions.RequestException as e:
+							response = e
+
+						payload[ip] = response
+
+			self._write_deviceinfo(ak.HTTP_SELF_CHECK, payload=payload)
+
+		except:
+			self._logger.exception('Exception when performing the http self check')
 
 	def _event_ip_addresses(self):
 		try:
