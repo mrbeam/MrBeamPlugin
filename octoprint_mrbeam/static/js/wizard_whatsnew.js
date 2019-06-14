@@ -24,7 +24,7 @@ $(function() {
             if (selected_channel != undefined && selected_channel != self.settings.settings.plugins.mrbeam.dev.software_tier()) {
                 new PNotify({
                         title: gettext("Switching Software Channel"),
-                        text: gettext("This takes a view seconds..."),
+                        text: gettext("This takes a fiew seconds..."),
                         hide: true,
                         delay: 20 * 1000,
                         icon: "icon-cog icon-spin",
