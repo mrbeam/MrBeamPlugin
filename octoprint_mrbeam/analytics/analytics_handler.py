@@ -67,12 +67,7 @@ class AnalyticsHandler(object):
 
 		self._storedConversions = list()
 
-		self._jobevent_log_version = 5	 # Changed after v0.2.1 (03-06-2019)
-		self._deviceinfo_log_version = 5  # Changed after v0.1.61 (12-04-2019)
-		self._logevent_version = 3  # Changed after v0.2.1 (2019-06-06)
-		self._dust_log_version = 2
-		self._cam_event_log_version = 2
-		self._connectivity_event_log_version = 1
+		self._analytics_log_version = 6		# Merged after v0.2.1 (13-06-2019)
 
 		self.event_waiting_for_terminal_dump = None
 
@@ -227,7 +222,7 @@ class AnalyticsHandler(object):
 		try:
 			data = {ak.DATA:{'temp': temp,
 			               'throttle_alerts': throttle_alerts}}
-			self._write_event(ak.TYPE_LOG_EVENT, ak.LOG_CPU, self._logevent_version, payload=data, analytics=True)
+			self._write_event(ak.TYPE_LOG_EVENT, ak.LOG_CPU, self._analytics_log_version, payload=data, analytics=True)
 		except Exception as e:
 			self._logger.exception('Error during _write_log_event: {}'.format(e.message), analytics=True)
 
@@ -432,7 +427,7 @@ class AnalyticsHandler(object):
 					data = event_payload.get('data', dict())
 					data['component'] = component
 					data['component_version'] = event_payload.get('component_version')
-					self._write_event(ak.TYPE_LOG_EVENT, ak.EVENT_LOG, self._logevent_version, payload=dict(data=data))
+					self._write_event(ak.TYPE_LOG_EVENT, ak.EVENT_LOG, self._analytics_log_version, payload=dict(data=data))
 				else:
 					self._logger.warn("Unknown type: '%s' from component %s. payload: %s", type, component,
 					                  event_payload)
@@ -441,7 +436,7 @@ class AnalyticsHandler(object):
 				if plugin == "findmymrbeam":
 					eventname = event_payload.get('eventname')
 					data = event_payload.get('data', None)
-					self._write_event(ak.TYPE_CONNECTIVITY_EVENT, eventname, self._connectivity_event_log_version,
+					self._write_event(ak.TYPE_CONNECTIVITY_EVENT, eventname, self._analytics_log_version,
 					                  payload=dict(data=data))
 				else:
 					self._logger.warn("Unknown plugin: '%s'. payload: %s", plugin, event_payload)
@@ -452,7 +447,7 @@ class AnalyticsHandler(object):
 
 
 	def log_iobeam_message(self, iobeam_version, message):
-		self._write_event(ak.TYPE_LOG_EVENT, ak.IOBEAM, self._logevent_version,
+		self._write_event(ak.TYPE_LOG_EVENT, ak.IOBEAM, self._analytics_log_version,
 		                  payload=dict(
 			                  data=dict(
 				                  version=iobeam_version,
@@ -468,7 +463,7 @@ class AnalyticsHandler(object):
 				referrer=referrer,
 				language=language
 			)
-			self._write_event(ak.TYPE_CONNECTIVITY_EVENT, ak.EVENT_UI_RENDER_CALL, self._connectivity_event_log_version,
+			self._write_event(ak.TYPE_CONNECTIVITY_EVENT, ak.EVENT_UI_RENDER_CALL, self._analytics_log_version,
 			                  payload=dict(data=data))
 		except Exception as e:
 			self._logger.exception('Exception during log_ui_render_calls: {}'.format(e.message))
@@ -478,7 +473,7 @@ class AnalyticsHandler(object):
 			data = dict(
 				remote_ip=remote_ip
 			)
-			self._write_event(ak.TYPE_CONNECTIVITY_EVENT, ak.EVENT_CLIENT_OPENED, self._connectivity_event_log_version,
+			self._write_event(ak.TYPE_CONNECTIVITY_EVENT, ak.EVENT_CLIENT_OPENED, self._analytics_log_version,
 			                  payload=dict(data=data))
 		except Exception as e:
 			self._logger.exception('Exception during log_client_opened: {}'.format(e.message))
@@ -501,8 +496,8 @@ class AnalyticsHandler(object):
 				ak.NEW_CHANNEL: new_channel,
 			}
 
-			self._write_event(ak.TYPE_DEVICE_EVENT, ak.SW_CHANNEL_SWITCH, self._deviceinfo_log_version,
-			                  payload=dict(data=data))
+			self._write_event(ak.TYPE_DEVICE_EVENT, ak.SW_CHANNEL_SWITCH, self._analytics_log_version,
+							  payload=dict(data=data))
 
 		except Exception as e:
 			self._logger.exception('Error when writing the software channel switch event: {}'.format(e.message))
@@ -573,7 +568,7 @@ class AnalyticsHandler(object):
 			# TODO add data validation/preparation here
 			if payload is not None:
 				data[ak.DATA] = payload
-			self._write_event(ak.TYPE_DEVICE_EVENT, event, self._deviceinfo_log_version, payload=data)
+			self._write_event(ak.TYPE_DEVICE_EVENT, event, self._analytics_log_version, payload=data)
 		except Exception as e:
 			self._logger.exception('Error during write_device_info: {}'.format(e.message))
 
@@ -584,7 +579,7 @@ class AnalyticsHandler(object):
 			if payload is not None:
 				data[ak.DATA] = payload
 				data[ak.SOFTWARE_TIER] = self._settings.get(["dev", "software_tier"])
-			self._write_event(ak.TYPE_LOG_EVENT, ak.EVENT_LOG, self._logevent_version, payload=data, analytics=False)
+			self._write_event(ak.TYPE_LOG_EVENT, ak.EVENT_LOG, self._analytics_log_version, payload=data, analytics=False)
 		except Exception as e:
 			self._logger.exception('Error during _write_log_event: {}'.format(e.message), analytics=False)
 
@@ -601,7 +596,7 @@ class AnalyticsHandler(object):
 				data[ak.DATA][ak.LASERHEAD_SERIAL] = _mrbeam_plugin_implementation.lh['serial']
 
 			_jobevent_type = ak.TYPE_JOB_EVENT
-			self._write_event(_jobevent_type, event, self._jobevent_log_version, payload=data)
+			self._write_event(_jobevent_type, event, self._analytics_log_version, payload=data)
 		except Exception as e:
 			self._logger.exception('Error during write_jobevent: {}'.format(e.message))
 
@@ -630,7 +625,7 @@ class AnalyticsHandler(object):
 				if payload is not None:
 					data[ak.DATA] = payload
 
-				self._write_event(ak.TYPE_CAM_EVENT, ak.PIC_PREP, self._cam_event_log_version, payload=data)
+				self._write_event(ak.TYPE_CAM_EVENT, ak.PIC_PREP, self._analytics_log_version, payload=data)
 		except Exception as e:
 			self._logger.exception('Error during write_cam_event: {}'.format(e.message))
 
@@ -642,7 +637,7 @@ class AnalyticsHandler(object):
 				if payload is not None:
 					data[ak.DATA] = payload
 
-				self._write_event(ak.TYPE_CAM_EVENT, eventname, self._cam_event_log_version, payload=data)
+				self._write_event(ak.TYPE_CAM_EVENT, eventname, self._analytics_log_version, payload=data)
 		except Exception as e:
 			self._logger.exception('Error during write_cam_event: {}'.format(e.message))
 
