@@ -635,7 +635,7 @@ class AnalyticsHandler(object):
 			if payload is not None:
 				data[ak.DATA] = payload
 				data[ak.SOFTWARE_TIER] = self._settings.get(["dev", "software_tier"])
-			self._write_event(ak.TYPE_LOG_EVENT, event, self._logevent_version, payload=data, analytics=analytics)
+			self._write_event(ak.TYPE_LOG_EVENT, event, self._analytics_log_version, payload=data, analytics=analytics)
 		except Exception as e:
 			self._logger.exception('Error during _write_log_event: {}'.format(e.message), analytics=False)
 
