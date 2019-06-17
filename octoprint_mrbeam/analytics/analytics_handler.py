@@ -41,6 +41,9 @@ def existing_analyticsHandler():
 
 class AnalyticsHandler(object):
 	DELETE_FILES_AFTER_UPLOAD = True
+	DISK_SPACE_TIMER = 3.0
+	IP_ADDRESSES_TIMER = 15.0
+	SELF_CHECK_TIMER = 20.0
 	SELF_CHECK_USER_AGENT = 'MrBeamPlugin self check'
 
 	def __init__(self, plugin):
@@ -256,15 +259,15 @@ class AnalyticsHandler(object):
 		self._write_deviceinfo(ak.STARTUP, payload=payload)
 
 		# Schedule event_disk_space task (to write that line 3 seconds after startup)
-		t1 = Timer(3.0, self._event_disk_space)
+		t1 = Timer(self.DISK_SPACE_TIMER, self._event_disk_space)
 		t1.start()
 
 		# Schedule event_ip_addresses task (to write that line 15 seconds after startup)
-		t2 = Timer(15.0, self._event_ip_addresses)
+		t2 = Timer(self.IP_ADDRESSES_TIMER, self._event_ip_addresses)
 		t2.start()
 
 		# Schedule event_http_self_check task (to write that line 20 seconds after startup)
-		t3 = Timer(20.0, self._event_http_self_check)
+		t3 = Timer(self.SELF_CHECK_TIMER, self._event_http_self_check)
 		t3.start()
 
 	def _event_shutdown(self, event, payload):
@@ -282,6 +285,7 @@ class AnalyticsHandler(object):
 		try:
 			payload = dict()
 			interfaces = netifaces.interfaces()
+			err = None
 
 			for interface in interfaces:
 				if interface != 'lo':
@@ -297,7 +301,6 @@ class AnalyticsHandler(object):
 							r = requests.get(url, headers=headers)
 							response = r.status_code
 							elapsed_seconds = r.elapsed.total_seconds()
-							err = None
 						except requests.exceptions.RequestException as e:
 							response = -1
 							err = e
