@@ -41,6 +41,7 @@ def existing_analyticsHandler():
 
 class AnalyticsHandler(object):
 	DELETE_FILES_AFTER_UPLOAD = True
+	SELF_CHECK_USER_AGENT = 'MrBeamPlugin self check'
 
 	def __init__(self, plugin):
 		self._plugin = plugin
@@ -289,14 +290,20 @@ class AnalyticsHandler(object):
 						ip = addresses[netifaces.AF_INET][0]['addr']
 
 						try:
-							r = requests.get("http://" + ip)
+							url = "http://" + ip
+							headers = {
+								'User-Agent': self.SELF_CHECK_USER_AGENT
+							}
+							r = requests.get(url, headers=headers)
 							response = r.status_code
+							elapsed_seconds = r.elapsed.total_seconds()
 						except requests.exceptions.RequestException as e:
 							response = e
 
 						payload[interface] = {
 							"ip": ip,
-							"response": response
+							"response": response,
+							"elapsed_s": elapsed_seconds,
 						}
 
 			self._write_deviceinfo(ak.HTTP_SELF_CHECK, payload=payload)
