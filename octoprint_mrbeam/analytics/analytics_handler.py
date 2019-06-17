@@ -7,6 +7,7 @@ import sys
 import fileinput
 import re
 import uuid
+import requests
 
 from datetime import datetime
 from value_collector import ValueCollector
@@ -40,6 +41,10 @@ def existing_analyticsHandler():
 
 class AnalyticsHandler(object):
 	DELETE_FILES_AFTER_UPLOAD = True
+	DISK_SPACE_TIMER = 3.0
+	IP_ADDRESSES_TIMER = 15.0
+	SELF_CHECK_TIMER = 20.0
+	SELF_CHECK_USER_AGENT = 'MrBeamPlugin self check'
 
 	def __init__(self, plugin):
 		self._plugin = plugin
@@ -262,12 +267,16 @@ class AnalyticsHandler(object):
 		self._write_deviceinfo(ak.STARTUP, payload=payload)
 
 		# Schedule event_disk_space task (to write that line 3 seconds after startup)
-		t1 = Timer(3.0, self._event_disk_space)
+		t1 = Timer(self.DISK_SPACE_TIMER, self._event_disk_space)
 		t1.start()
 
 		# Schedule event_ip_addresses task (to write that line 15 seconds after startup)
-		t2 = Timer(15.0, self._event_ip_addresses)
+		t2 = Timer(self.IP_ADDRESSES_TIMER, self._event_ip_addresses)
 		t2.start()
+
+		# Schedule event_http_self_check task (to write that line 20 seconds after startup)
+		t3 = Timer(self.SELF_CHECK_TIMER, self._event_http_self_check)
+		t3.start()
 
 	def _event_shutdown(self, event, payload):
 		self._write_deviceinfo(ak.SHUTDOWN)
@@ -279,6 +288,42 @@ class AnalyticsHandler(object):
 			succesful=succesful,
 			err=err)
 		self._write_deviceinfo(ak.FLASH_GRBL, payload=payload)
+
+	def _event_http_self_check(self):
+		try:
+			payload = dict()
+			interfaces = netifaces.interfaces()
+			err = None
+
+			for interface in interfaces:
+				if interface != 'lo':
+					addresses = netifaces.ifaddresses(interface)
+					if netifaces.AF_INET in addresses:
+						ip = addresses[netifaces.AF_INET][0]['addr']
+
+						try:
+							url = "http://" + ip
+							headers = {
+								'User-Agent': self.SELF_CHECK_USER_AGENT
+							}
+							r = requests.get(url, headers=headers)
+							response = r.status_code
+							elapsed_seconds = r.elapsed.total_seconds()
+						except requests.exceptions.RequestException as e:
+							response = -1
+							err = e
+
+						payload[interface] = {
+							"ip": ip,
+							"response": response,
+							"elapsed_s": elapsed_seconds,
+							"err": err,
+						}
+
+			self._write_deviceinfo(ak.HTTP_SELF_CHECK, payload=payload)
+
+		except:
+			self._logger.exception('Exception when performing the http self check')
 
 	def _event_ip_addresses(self):
 		try:
