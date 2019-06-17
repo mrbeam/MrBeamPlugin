@@ -297,13 +297,16 @@ class AnalyticsHandler(object):
 							r = requests.get(url, headers=headers)
 							response = r.status_code
 							elapsed_seconds = r.elapsed.total_seconds()
+							err = None
 						except requests.exceptions.RequestException as e:
-							response = e
+							response = -1
+							err = e
 
 						payload[interface] = {
 							"ip": ip,
 							"response": response,
 							"elapsed_s": elapsed_seconds,
+							"err": err,
 						}
 
 			self._write_deviceinfo(ak.HTTP_SELF_CHECK, payload=payload)
