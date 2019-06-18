@@ -7,6 +7,8 @@ $(function(){
 
 	function VectorConversionViewModel(params) {
 		var self = this;
+		window.mrbeam.viewModels['conversionViewModel'] = self;
+		window.mrbeam.viewModels['vectorConversionViewModel'] = self; // used by tour view model
 
 		self.BRIGHTNESS_VALUE_RED   = 0.299;
 		self.BRIGHTNESS_VALUE_GREEN = 0.587;
