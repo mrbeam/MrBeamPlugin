@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2019-06-14 17:52+0200\n"
-"PO-Revision-Date: 2019-06-14 18:09+0200\n"
+"PO-Revision-Date: 2019-06-19 11:03+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: es_ES\n"
@@ -279,9 +279,8 @@ msgid "Be aware that natural felt is something else."
 msgstr "Ten en cuenta que el fieltro natural es diferente."
 
 #: octoprint_mrbeam/static/js/convert.js:294
-#, fuzzy
 msgid "Foam Rubber"
-msgstr "Espuma de Caucho"
+msgstr "Gomaespuma"
 
 #: octoprint_mrbeam/static/js/convert.js:296
 msgid "Consists of poly urethane foam."
@@ -2906,8 +2905,8 @@ msgid ""
 "    "
 msgstr ""
 "\n"
-"        <strong>¡Gracias por comprar Mr Beam II, la accesible cortadora "
-"láser de escritorio!</strong>\n"
+"        <strong>¡Gracias por comprar Mr Beam II, la cortadora láser pensada "
+"para ti!</strong>\n"
 "    "
 
 #: octoprint_mrbeam/templates/wizard/firstrun_start.jinja2:10
