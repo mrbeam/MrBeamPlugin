@@ -1,0 +1,82 @@
+<div id="settings_maintenance">
+    <h3 style="margin: 10px 0px 0px 0px;">{{ _('Maintenance') }}</h3>
+    <p class="muted" style="margin: 0px 0px 20px 0px;">{{ _('Some notes about the general maintenance') }}<br>
+        <strong>Please note that the replacement of any of the elements may be necessary earlier, depending on the usage.</strong>
+    </p>
+    <table class="table table-striped table-hover table-condensed table-hover">
+        <tr>
+            <td style="width: 75%">
+{#                <div style="color: red"><i class="fa fa-warning"></i> Oh oh, looks like your exhaust system does not work properly. Your filters may be full!</div>#}
+                <h4>Air Filter: pre-filter</h4>
+                <small class="muted">
+                    Some information about the pre-filter bla bla bla... asdklfjhaslkdfhgajhsdfglasf
+                    asdfklhasgdflasgdflikasgdfikasdf. Super interesting things about filters and prefilters.
+
+                </small>
+                <div style="margin-top: 15px">
+                    <a href="https://store.mr-beam.org/collections/featured/products/prefilter-for-the-mr-beam-airfilter-system"
+                       target="_blank" style="display: inline-block; float: left">
+                        <i class="icon-shopping-cart"></i>
+                        Buy now
+                    </a>
+                </div>
+            </td>
+            <td style="width: 20%; position: relative">
+                <div style="position: absolute; top: 25%; left: 25%;">
+                    <div style="text-align: center; font-weight: bold; font-size: 48px; padding: 12px 0;">27</div>
+                    <div style="text-align: center; font-weight: bold; font-size: 24px;">/100h</div>
+                </div>
+                <button class="btn btn-mini" data-bind="click: resetPrefilterUsage" style="position: absolute; bottom: 0; right: 0">{{ _('Reset') }}</button>
+            </td>
+{#            <td style="width: 5%; position: relative">#}
+{#                <button class="btn btn-mini btn-primary" data-bind="click: resetPrefilterUsage" style="position: absolute; bottom: 0; right: 0">{{ _('Reset') }}</button>#}
+{#            </td>#}
+        </tr>
+        <tr>
+            <td style="width: 75%">
+                <h4>Air Filter: Carbon filter</h4>
+                <small class="muted">
+                    Some information about the pre-filter bla bla bla... asdklfjhaslkdfhgajhsdfglasf
+                    asdfklhasgdflasgdflikasgdfikasdf. Super interesting things about filters and prefilters.
+
+                </small>
+                <div style="margin-top: 15px">
+                    <a href="https://store.mr-beam.org/collections/featured/products/prefilter-for-the-mr-beam-airfilter-system"
+                       target="_blank" style="display: inline-block; float: left">
+                        <i class="icon-shopping-cart"></i>
+                        Buy now
+                    </a>
+                    <a href="https://store.mr-beam.org/collections/featured/products/prefilter-for-the-mr-beam-airfilter-system"
+                       target="_blank" style="display: inline-block; float: left; margin-left: 50px;">
+                        <i class="fa fa-external-link"></i>
+                        Learn more about this
+                    </a>
+                </div>
+            </td>
+            <td style="width: 25%; position: relative">
+                <div style="position: absolute; top: 25%; left: 25%;">
+                    <div style="text-align: center; font-weight: bold; font-size: 36px; padding: 12px 0;">366</div>
+                    <div style="text-align: center; font-weight: bold; font-size: 24px;">/400h</div>
+                </div>
+                <button class="btn btn-mini" data-bind="click: resetPrefilterUsage" style="position: absolute; bottom: 0; right: 0">{{ _('Reset') }}</button>
+            </td>
+{#            <td style="width: 10%; position: relative">#}
+{#                <button class="btn btn-mini btn-primary" data-bind="click: resetPrefilterUsage" style="position: absolute; bottom: 0; right: 0">{{ _('Reset') }}</button>#}
+{#            </td>#}
+        </tr>
+    </table>
+
+    <div id="reset_counter_are_you_sure" class="modal hide fade">
+        <div class="modal-header">
+            <h4>{{ _('Did you change the %(component_to_reset)s?', component_to_reset='<span data-bind="text: component_to_reset"></span>') }}</h4>
+        </div>
+        <div class="modal-body">
+            {{ _('The hour counter for the %(component_to_reset)s will now be reset.', component_to_reset='<span data-bind="text: component_to_reset"></span>')}}.
+            {{ _('Please notice that there is no way to undo this operation') }}.
+        </div>
+        <div class="modal-footer">
+            <button type="button" data-dismiss="modal" class="btn btn-primary" id="reset_counter_btn">{{ _('Yes') }}</button>
+            <button type="button" data-dismiss="modal" class="btn">{{ _('No') }}</button>
+        </div>
+    </div>
+</div>
