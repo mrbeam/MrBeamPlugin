@@ -5,7 +5,7 @@ $(function () {
         self.login = params[0];
         self.settings = params[1];
         self.state = params[2];
-        self.working_area = params[3];
+        self.files = params[3];
 
         self.tourDef = null;
 
@@ -18,15 +18,19 @@ $(function () {
         };
 
         self.startTour = function () {
-            // remove design file from working area, otherwise the tour won't work
-            $('div.remove-design-btn[mrb_name="Schlusselanhanger.svg"]').click();
 
+            self._setPreConditions();
             self._registerListeners();
 
-            self.tourDef = self._getTourDefinitions();
+            if (mrbeam.viewModels.workingAreaViewModel && !mrbeam.viewModels.workingAreaViewModel.working_area_empty()) {
+                self.tourDef = self._getPreTourDefinitions();
+            } else {
+                self.tourDef = self._getTourDefinitions();
+            }
+
             console.log("hopscotch tour START: ", self.tourDef);
             hopscotch.configure({skipIfNoElement: true});
-            hopscotch.startTour(self.tourDef);
+            hopscotch.startTour(self.tourDef, 0);
         };
 
 
@@ -36,12 +40,27 @@ $(function () {
             ///// intro /////
             tour.push(new TourStepNoArrow({
                 id: 'intro',
-                title: ["Looks like you already set up your Mr Beam II - Congratulations!",
-                    "Do you want to do the first laserjob with us?"],
-                text: ["The only requirement is that you put the felt we provided in your Mr Beam II and then focus the laser head.",
-                    "You can find how to do that in our <a href='/plugin/mrbeam/static/docs/" + gettext("QuickstartGuide_en.pdf") + "' target='_blank'>Quickstart Guide</a>"],
-                width: 500,
+                title: ["Step-by-Sepp Tour Guide To Your First Laser Job"],
+                text: ["Looks like you already set up your Mr Beam II - Congratulations!",
+                    "Do you want us to guide you through your first laser job with this step-by-step tour?",
+                    "<strong>What do you need for this tour:</strong>",
+                    "<ul>" +
+                        "<li>Have a piece of felt by hand. Best to use the one that came with your Mr Beam II.</li>" +
+                        "<li>The laser head of your Mr Beam II has to be focused according to the thickness of the felt. "+
+                            "You can find how to do that in this <a href='https://mr-beam.freshdesk.com/support/solutions/articles/43000073345' target='_blank'>Knowledge base article</a>." +
+                            // " or in our <a href='/plugin/mrbeam/static/docs/" + gettext("QuickstartGuide_en.pdf") + "' target='_blank'>Quickstart Guide</a>" +
+                        "</li>" +
+                        "<li>About 5-10 minutes of your time.</li>" +
+                    "</ul>",
+                    "<br/>"],
+                width: 550,
                 padding: 40,
+                nextLabel: "Yes, let's go!",
+                ctaLabel: "Maybe later",
+                showCTAButton: true,
+                onCTA: function () {
+                    hopscotch.endTour();
+                },
             }));
 
             ///// homing /////
@@ -64,7 +83,25 @@ $(function () {
                 condition: function () {
                     return $("#homing_overlay_homing_btn").is(":visible");
                 }
-            }))
+            }));
+
+            tour.push(new TourStep({
+                id: 'take_picture',
+                title: "Place the felt material inside Mr Beam II",
+                text: ["<ul>" +
+                        "<li>First open the orange lid of your Mr Beam II.</li>" +
+                        "<li>Then place the felt for the laser job somewhere in the middle of Mr Beam II's working area.</li>" +
+                        "<li>Wait for the camera to take a picture. You will see a black and white picture of your felt here in your browser.</li>" +
+                        "<li>Once you have a good picture, close the lid of your Mr Beam II and click \"next\".</li>" +
+                        "</ul>"],
+                target: 'area_preview',
+                placement: "left",
+                xOffset: 150,
+                yOffset: 300,
+                width: 400,
+                nextOnTargetClick: false,
+                showNextButton: true,
+            }));
 
             ///// design lib /////
             tour.push(new TourStep({
@@ -74,7 +111,8 @@ $(function () {
                     "Here you can find some designs and later you will also be able to upload your own."],
                 target: "designlib_tab_btn",
                 placement: "bottom",
-                xOffset: 30
+                xOffset: 30,
+                onNext: function(){console.log("designlib_button: onNext: scroll down");$('#files_list').scrollTop(1E10);},
             }));
 
             tour.push(new TourStep({
@@ -82,10 +120,12 @@ $(function () {
                 title: "For your first laser job, we thought you might like this nice key ring :)",
                 text: ["Please click on this tile to place it on the <strong>working area</strong>."],
                 target: $('.file_list_entry[mrb_name="Schlusselanhanger.svg"]')[0],
-                placement: "bottom",
+                placement: "top",
                 width: 400,
-                xOffset: 'center',
-                arrowOffset: 'center'
+                xOffset: -250,
+                yOffset: 30,
+                arrowOffset: 300,
+                delay: 50,
             }));
 
             ///// working area /////
@@ -96,7 +136,7 @@ $(function () {
                     "Click \"next\" when you're done.",
                     "(You can also enter the coordinates directly in the left-side list.)"],
                 target: '#userContent > g',
-                delay: 100,
+                delay: 500,
                 retryOnError: true,
                 placement: "left",
                 nextOnTargetClick: false,
@@ -118,7 +158,7 @@ $(function () {
             tour.push(new TourStep({
                 id: 'select_material',
                 title: "Select the material",
-                text: ["It’s felt in our case, but as you can see there are many different :)"],
+                text: ["For this guide we want to use felt.", "However as you can see there are many different options. :)"],
                 target: $('li.material_entry[mrb_name="felt.jpg"]')[0],
                 placement: "bottom",
                 delay: 400,
@@ -141,7 +181,7 @@ $(function () {
                 id: 'select_thickness',
                 title: "Select the thickness of the material",
                 text: ["Select 3mm.",
-                    "Today we want our felt to be cut as well as engraved. Therefor we have to select its thickness.",
+                    "Today we want our felt to be cut as well as engraved. Therefore we have to select its thickness.",
                     "(If you want to engrave only, the thickness doesn't matter.)"],
                 target: "material_thickness_3",
                 placement: "right",
@@ -197,8 +237,10 @@ $(function () {
                 placement: 'right',
                 delay: 200,
                 fixedElement: true,
-                showNextButton: false,
-                nextOnTargetClick: true,
+                showNextButton: true,
+                nextLabel: "Done!",
+                nextOnTargetClick: false,
+                xOffset: -100,
                 yOffset: 200,
             }));
 
@@ -206,6 +248,43 @@ $(function () {
                 id: "hello-mrbeam",
                 steps: tour
             };
+        };
+
+        self._getPreTourDefinitions = function(){
+            let tour = [];
+
+            ///// intro /////
+            tour.push(new TourStep({
+                id: 'empty_woringarea',
+                title: ["Working area has to be empty to start this tour."],
+                text: ["Click here to remove all designs from your working area."],
+                target: "clear_working_area_btn",
+                placement: 'right',
+                nextOnTargetClick: true,
+                yOffset: -15,
+                showNextButton: true,
+                nextLabel: "Cancel",
+            }));
+
+            return {
+                id: "pre-tour",
+                steps: tour
+            };
+        };
+
+        self._setPreConditions = function () {
+            // switch to working area
+            $('#wa_tab_btn').tab('show');
+
+            // sort design lib by upload and scroll to bottom
+            self.files.listHelper.changeSorting('upload');
+
+            // reset any material selection
+            try {
+                window.mrbeam.viewModels.vectorConversionViewModel.set_material();
+            } catch (e) {
+                console.warn("Not abel to access window.mrbeam.viewModels.vectorConversionViewModel");
+            }
         };
 
         self._restartTour = function (timeout, step) {
@@ -228,16 +307,20 @@ $(function () {
             }
         };
 
+        self._getCurrTourId = function () {
+            return hopscotch.getCurrTour() ? hopscotch.getCurrTour().id : null;
+        }
+
         self._registerListeners = function () {
 
             hopscotch.listen('next', function () {
                 // console.log("hopscotch next: #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id'));
                 if (self._getCurrStepProp('condition')) {
                     if (!self._getCurrStepProp('condition')()) {
-                        // console.log("hopscotch next: #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id') + " - condition: skip");
+                        console.log("hopscotch next: " + self._getCurrTourId() + " #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id') + " - condition: skip");
                         hopscotch.nextStep();
                     } else {
-                        // console.log("hopscotch next: #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id') + " - condition: true");
+                        console.log("hopscotch next: " + self._getCurrTourId() + " #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id') + " - condition: true");
                     }
                 }
                 self._restartTour(self._getCurrStepProp('restartTour'));
@@ -245,17 +328,34 @@ $(function () {
 
             hopscotch.listen('error', function (err) {
                 if (self._getCurrStepProp('retryOnError')) {
-                    // console.log("hopscotch error: #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id') + " - retrying...");
+                    console.log("hopscotch error: " + self._getCurrTourId() + " #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id') + " - retrying...");
                     self._restartTour();
                 } else {
-                    // console.log("hopscotch error: #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id') + " - skipping...");
+                    console.log("hopscotch error: " + self._getCurrTourId() + " #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id') + " - skipping. er: ", err);
                     hopscotch.nextStep();
                 }
             });
 
-            // hopscotch.listen('show', function () {
-            //     console.log("hopscotch show: #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id'));
-            // });
+            hopscotch.listen('show', function () {
+                // console.log("hopscotch show: " + self._getCurrTourId() + " #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id'));
+                if (self._getCurrStepProp('nextLabel')) {
+                    console.log("hopscotch show: setting next label to: " + self._getCurrStepProp('nextLabel'));
+                    $('.hopscotch-next').html(self._getCurrStepProp('nextLabel'));
+                }
+            });
+
+            hopscotch.listen('end', function () {
+                // console.log("hopscotch end: " + self._getCurrTourId() + " #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id'));
+                if (self._getCurrTourId() == 'pre-tour' && mrbeam.viewModels.workingAreaViewModel && mrbeam.viewModels.workingAreaViewModel.working_area_empty()) {
+                    setTimeout(function(){
+                        if (self._getCurrTourId() == null) {
+                            self.startTour();
+                        }
+                    }, 10);
+
+                }
+            });
+
             // hopscotch.listen('end', function () {
             //     console.log("hopscotch end: #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id'));
             // });
@@ -264,7 +364,7 @@ $(function () {
             // });
 
             // remove bubbles because they're visible over the curtain
-                $(window).on('beforeunload', function () {
+            $(window).on('beforeunload', function () {
                 if (!event.target.activeElement.href) {
                     console.log("hopscotch tour END: ", self.tourDef);
                     hopscotch.endTour();
@@ -287,7 +387,8 @@ $(function () {
     var DOM_ELEMENT_TO_BIND_TO = "tour_start_btn";
     OCTOPRINT_VIEWMODELS.push([
         TourViewModel,
-        ["loginStateViewModel", "settingsViewModel", "printerStateViewModel"],
+        ["loginStateViewModel", "settingsViewModel", "printerStateViewModel", "filesViewModel"],
+        // ["loginStateViewModel", "settingsViewModel", "printerStateViewModel", "filesViewModel", "vectorConversionViewModel"],
         [/* */]
     ]);
 });
