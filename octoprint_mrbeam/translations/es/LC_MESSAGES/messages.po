@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2019-06-14 17:52+0200\n"
-"PO-Revision-Date: 2019-06-19 11:03+0200\n"
+"PO-Revision-Date: 2019-06-25 11:28+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: es_ES\n"
@@ -126,10 +126,13 @@ msgid ""
 "The bottom plate is not closed correctly. Please make sure that the bottom "
 "is correctly mounted as described in the Mr Beam II user manual."
 msgstr ""
+"La placa inferior no está cerrada correctamente. Asegúrate de que la parte "
+"inferior esté correctamente montada, tal y como se describe en el manual del "
+"usuario de Mr Beam II."
 
 #: octoprint_mrbeam/iobeam/iobeam_handler.py:819
 msgid "Bottom Plate Error"
-msgstr ""
+msgstr "Error de la Placa Inferior"
 
 #: octoprint_mrbeam/iobeam/lid_handler.py:171
 msgid ""
@@ -707,14 +710,12 @@ msgstr "¡Vamos allá!"
 
 # Settings > About Screen
 #: octoprint_mrbeam/static/js/wizard_whatsnew.js:26
-#, fuzzy
-#| msgid "Software channel"
 msgid "Switching Software Channel"
-msgstr "Canal de software"
+msgstr "Cambiando Canal de Software"
 
 #: octoprint_mrbeam/static/js/wizard_whatsnew.js:27
 msgid "This takes a fiew seconds..."
-msgstr ""
+msgstr "Tardará unos segundos...."
 
 #: octoprint_mrbeam/static/js/working_area.js:129
 msgid "Rectangle"
@@ -1292,7 +1293,7 @@ msgstr ""
 # Schriftzüge, Beschriftungen
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:414
 msgid " Learn how to do this."
-msgstr "Aprende cómo hacerlo."
+msgstr " Aprende cómo hacerlo."
 
 # ribbon cable =?
 # Flachbandkabel?
@@ -1348,7 +1349,7 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/laser_job_done.jinja2:13
 msgid "Done. Now check out what you have created with your Mr Beam II!"
-msgstr "¡Hecho! Ahora comprueba lo que has creado con tu Mr Beam II"
+msgstr "¡Hecho! Ahora comprueba lo que has creado con tu Mr Beam II."
 
 #: octoprint_mrbeam/templates/laser_job_done.jinja2:14
 msgid "Laser job duration:"
@@ -1944,6 +1945,9 @@ msgid ""
 "Use the most stable software for your Mr Beam II. You will only get notified "
 "about officially released and well tested software updates."
 msgstr ""
+"Utiliza el software más estable para tu Mr Beam II. Sólo se te avisará de "
+"las actualizaciones que hayan sido publicadas oficialmente y estén bien "
+"comprobadas."
 
 #: octoprint_mrbeam/templates/software_channel_selector.jinja2:11
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:10
@@ -2568,7 +2572,7 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/settings/air_filter_settings.jinja2:12
 msgid " hours"
-msgstr "horas"
+msgstr " horas"
 
 #: octoprint_mrbeam/templates/settings/air_filter_settings.jinja2:14
 msgid ""
@@ -2695,7 +2699,7 @@ msgid ""
 "Close the lid. Mr Beam will start engraving the calibration markers on the "
 "cardboard."
 msgstr ""
-"Cierre la tapa. Mr Beam comenzará a grabar los marcadores de calibración en "
+"Cierra la tapa. Mr Beam comenzará a grabar los marcadores de calibración en "
 "el cartón."
 
 #: octoprint_mrbeam/templates/settings/camera_settings.jinja2:10
@@ -2826,8 +2830,8 @@ msgstr ""
 "te olvida enfocar el\n"
 "                    cabezal láser, podrás hacerlo y más tarde comenzar el "
 "trabajo.\n"
-"                    Puedes desactivar este aviso cuando que aparezca, o en "
-"esta configuración en cualquier momento."
+"                    Puedes desactivar este aviso cuando aparezca, o en esta "
+"configuración en cualquier momento."
 
 # Settings switch
 #: octoprint_mrbeam/templates/settings/reminders_settings.jinja2:14
@@ -2984,7 +2988,7 @@ msgstr "¡Nuevos Canales de Software!"
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:15
 msgid "Select a software channel for your Mr Beam II:"
-msgstr ""
+msgstr "Selecciona un canal de software para tu Mr Beam II:"
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:25
 msgid ""
