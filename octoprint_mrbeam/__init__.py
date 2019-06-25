@@ -334,7 +334,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			software_update_branches = self.get_update_branch_info(),
 			_version = self._plugin_version,
 			focusReminder = self._settings.get(['focusReminder']),
-			airFilterUsage = self._usageHandler.get_air_filter_usage(),
+			laserHeadSerial = self.lh['serial'],
+			usage=dict(
+				prefilterUsage=self._usageHandler.get_prefilter_usage(),
+				carbonFilterUsage=self._usageHandler.get_carbon_filter_usage(),
+				laserheadUsage=self._usageHandler.get_laser_head_usage(),
+				gantryUsage=self._usageHandler.get_gantry_usage(),
+			),
 		)
 
 	def on_settings_save(self, data):
@@ -401,7 +407,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/ready_to_laser_viewmodel.js", "js/lib/screenfull.min.js","js/settings/camera_calibration.js",
 				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js", "js/lib/Color.js", "js/laser_job_done_viewmodel.js",
 				"js/loadingoverlay_viewmodel.js", "js/wizard_whatsnew.js", "js/wizard_analytics.js", "js/software_channel_selector.js", "js/lib/hopscotch.js",
-				"js/tour_viewmodel.js", "js/air_filter_usage.js", "js/feedback_widget.js", "js/maintenance.js"],
+				"js/tour_viewmodel.js", "js/feedback_widget.js", "js/maintenance.js"],
 			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css", "css/quicktext-fonts.css", "css/sliders.css", "css/hopscotch.min.css"],
 			less=["less/mrbeam.less"]
 		)
@@ -514,7 +520,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
             dict(type='settings', name=gettext("About This Mr Beam"), template='settings/about_settings.jinja2', suffix="_about", custom_bindings=False),
             dict(type='settings', name=gettext("Analytics"), template='settings/analytics_settings.jinja2', suffix="_analytics", custom_bindings=False),
 			dict(type='settings', name=gettext("Reminders"), template='settings/reminders_settings.jinja2', suffix="_reminders", custom_bindings=False),
-			dict(type='settings', name=gettext("Exhaust System"), template='settings/air_filter_settings.jinja2', suffix="_airfilter", custom_bindings=True),
 			dict(type='settings', name=gettext("Maintenance"), template='settings/maintenance_settings.jinja2', suffix="_maintenance", custom_bindings=True),
       
 			# disabled in appearance
@@ -1304,7 +1309,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			analytics_init=[],
 			take_undistorted_picture=[],  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
 			focus_reminder=[],
-			reset_air_filter_usage=[],
+			reset_prefilter_usage=[],
+			reset_carbon_filter_usage=[],
+			reset_gantry_usage=[],
 		)
 
 	def on_api_command(self, command, data):
@@ -1336,8 +1343,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return self.analytics_init(data)
 		elif command == "focus_reminder":
 			return self.focus_reminder(data)
-		elif command == "reset_air_filter_usage":
-			return self._usageHandler.reset_air_filter_usage()
+		elif command == "reset_prefilter_usage":
+			return self._usageHandler.reset_prefilter_usage()
+		elif command == "reset_carbon_filter_usage":
+			return self._usageHandler.reset_carbon_filter_usage()
+		elif command == "reset_gantry_usage":
+			return self._usageHandler.reset_gantry_usage()
 		return NO_CONTENT
 
 	def analytics_init(self, data):

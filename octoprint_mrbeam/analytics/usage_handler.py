@@ -24,9 +24,16 @@ class UsageHandler(object):
 		self._plugin_version = plugin._plugin_version
 		self._device_serial = plugin.getSerialNum()
 
+		if plugin.lh['serial']:
+			self._laser_head_serial = plugin.lh['serial']
+		else:
+			self._laser_head_serial = 'no_serial'
+
 		self.start_time_total = -1
-		self.start_time_air_filter = -1
-		self.start_time_laserhead = -1
+		self.start_time_laser_head = -1
+		self.start_time_prefilter = -1
+		self.start_time_carbon_filter = -1
+		self.start_time_gantry = -1
 
 		analyticsfolder = os.path.join(self._settings.getBaseFolder("base"), self._settings.get(['analytics','folder']))
 		if not os.path.isdir(analyticsfolder):
@@ -42,8 +49,7 @@ class UsageHandler(object):
 	def log_usage(self):
 		self._logger.info("Usage: total: {}, current laser head: {} - {}".format( \
 			self._get_duration_humanreadable(self._usage_data['total']['job_time']), \
-			# self._get_duration_humanreadable(self._usage_data['air_filter']['job_time']), \
-			self._get_duration_humanreadable(self._usage_data['laser_heads'][-1]['job_time']), \
+			self._get_duration_humanreadable(self._usage_data['laser_head'][self._laser_head_serial]['job_time']), \
 			self._usage_data))
 
 	def _subscribe(self):
@@ -57,42 +63,114 @@ class UsageHandler(object):
 	def event_start(self, event, payload):
 		self._load_usage_data()
 		self.start_time_total = self._usage_data['total']['job_time']
-		self.start_time_laserhead = self._usage_data['laser_heads'][-1]['job_time']
 
-		# Initialize air_filter in case it wasn't stored already --> From the total usage
-		if 'air_filter' not in self._usage_data:
-			self._usage_data['air_filter'] = {}
-			self._usage_data['air_filter']['complete'] = self._usage_data['total']['complete']
-			self._usage_data['air_filter']['job_time'] = self._usage_data['total']['job_time']
-			self._logger.info("Initializing air filter usage time: {usage}".format(usage=self._usage_data['air_filter']['job_time']))
-		self.start_time_air_filter = self._usage_data['air_filter']['job_time']
+		# Initialize prefilter in case it wasn't stored already --> From the total usage
+		if 'prefilter' not in self._usage_data:
+			self._usage_data['prefilter'] = {}
+			self._usage_data['prefilter']['complete'] = self._usage_data['total']['complete']
+			self._usage_data['prefilter']['job_time'] = self._usage_data['total']['job_time']
+			self._logger.info("Initializing prefilter usage time: {usage}".format(
+				usage=self._usage_data['prefilter']['job_time']))
+
+		# Initialize carbon_filter in case it wasn't stored already --> From the total usage
+		if 'carbon_filter' not in self._usage_data:
+			self._usage_data['carbon_filter'] = {}
+			self._usage_data['carbon_filter']['complete'] = self._usage_data['total']['complete']
+			self._usage_data['carbon_filter']['job_time'] = self._usage_data['total']['job_time']
+			self._logger.info("Initializing carbon filter usage time: {usage}".format(
+				usage=self._usage_data['carbon_filter']['job_time']))
+
+		# Initialize new laser heads
+		self._logger.info("################# IRATXE event_start {}".format(self._laser_head_serial))
+		if 'laser_head' not in self._usage_data:
+			self._usage_data['laser_head'] = {}
+			# TODO IRATXE: remove laser_heads?
+
+		if self._laser_head_serial not in self._usage_data['laser_head']:
+			self._usage_data['laser_head'][self._laser_head_serial] = {}
+			if self._laser_head_serial == 'no_serial':
+				self._usage_data['laser_head'][self._laser_head_serial]['complete'] = self._usage_data['total']['complete']
+				self._usage_data['laser_head'][self._laser_head_serial]['job_time'] = self._usage_data['total']['job_time']
+			else:
+				# TODO IRATXE: what if it's an old laserhead?
+				self._usage_data['laser_head'][self._laser_head_serial]['complete'] = True
+				self._usage_data['laser_head'][self._laser_head_serial]['job_time'] = 0
+
+			self._logger.info("Initializing laser head ({lh}) usage time: {usage}".format(
+				lh=self._laser_head_serial,
+				usage=self._usage_data['laser_head'][self._laser_head_serial]['job_time']))
+
+		# Initialize gantry in case it wasn't stored already --> From the total usage
+		if 'gantry' not in self._usage_data:
+			self._usage_data['gantry'] = {}
+			self._usage_data['gantry']['complete'] = self._usage_data['total']['complete']
+			self._usage_data['gantry']['job_time'] = self._usage_data['total']['job_time']
+			self._logger.info("Initializing gantry usage time: {usage}".format(
+				usage=self._usage_data['gantry']['job_time']))
+
+		self.start_time_prefilter = self._usage_data['prefilter']['job_time']
+		self.start_time_carbon_filter = self._usage_data['carbon_filter']['job_time']
+		self.start_time_laser_head = self._usage_data['laser_head'][self._laser_head_serial]['job_time']
+		self.start_time_gantry = self._usage_data['gantry']['job_time']
 
 	def event_write(self, event, payload):
 		if self.start_time_total >= 0:
 			self._set_time(payload['time'])
 
 	def event_stop(self, event, payload):
-		if self.start_time_total >= 0 :
+		if self.start_time_total >= 0:
 			self._set_time(payload['time'])
-			self.start_time_total = -1;
-			self.start_time_air_filter = -1;
-			self.start_time_laserhead = -1;
+			self.start_time_total = -1
+			self.start_time_laser_head = -1
+			self.start_time_prefilter = -1
+			self.start_time_carbon_filter = -1
+			self.start_time_gantry = -1
 
 	def _set_time(self, job_duration):
 		if job_duration is not None and job_duration > 0.0:
 			self._usage_data['total']['job_time'] = self.start_time_total + job_duration
-			self._usage_data['laser_heads'][-1]['job_time'] = self.start_time_laserhead + job_duration
-			self._usage_data['air_filter']['job_time'] = self.start_time_air_filter + job_duration
+			self._usage_data['laser_head'][self._laser_head_serial]['job_time'] = self.start_time_laser_head + job_duration
+			self._usage_data['prefilter']['job_time'] = self.start_time_prefilter + job_duration
+			self._usage_data['carbon_filter']['job_time'] = self.start_time_prefilter + job_duration
+			self._usage_data['gantry']['job_time'] = self.start_time_prefilter + job_duration
 			self._write_usage_data()
 
-	def reset_air_filter_usage(self):
-		self._usage_data['air_filter']['job_time'] = 0
-		self.start_time_air_filter = -1
+	def reset_prefilter_usage(self):
+		self._usage_data['prefilter']['job_time'] = 0
+		self.start_time_prefilter = -1
 		self._write_usage_data()
 
-	def get_air_filter_usage(self):
-		if 'air_filter' in self._usage_data:
-			return self._usage_data['air_filter']['job_time']
+	def reset_carbon_filter_usage(self):
+		self._usage_data['carbon_filter']['job_time'] = 0
+		self.start_time_prefilter = -1
+		self._write_usage_data()
+
+	def reset_gantry_usage(self):
+		self._usage_data['gantry']['job_time'] = 0
+		self.start_time_prefilter = -1
+		self._write_usage_data()
+
+	def get_prefilter_usage(self):
+		if 'prefilter' in self._usage_data:
+			return self._usage_data['prefilter']['job_time']
+		else:
+			return 0
+
+	def get_carbon_filter_usage(self):
+		if 'carbon_filter' in self._usage_data:
+			return self._usage_data['carbon_filter']['job_time']
+		else:
+			return 0
+
+	def get_laser_head_usage(self):
+		if 'laser_head' in self._usage_data and self._laser_head_serial in self._usage_data['laser_head']:
+			return self._usage_data['laser_head'][self._laser_head_serial]['job_time']
+		else:
+			return 0
+
+	def get_gantry_usage(self):
+		if 'gantry' in self._usage_data:
+			return self._usage_data['gantry']['job_time']
 		else:
 			return 0
 
@@ -140,7 +218,6 @@ class UsageHandler(object):
 			if recovery_try:
 				self._write_usage_data()
 
-
 	def _write_usage_data(self, file=None):
 		self._usage_data['version'] = self._plugin_version
 		self._usage_data['ts'] = time.time()
@@ -158,7 +235,15 @@ class UsageHandler(object):
 				'job_time': 0.0,
 				'complete': self._plugin.isFirstRun(),
 			},
-			'air_filter': {
+			'prefilter': {
+				'job_time': 0.0,
+				'complete': self._plugin.isFirstRun(),
+			},
+			'carbon_filter': {
+				'job_time': 0.0,
+				'complete': self._plugin.isFirstRun(),
+			},
+			'gantry': {
 				'job_time': 0.0,
 				'complete': self._plugin.isFirstRun(),
 			},
