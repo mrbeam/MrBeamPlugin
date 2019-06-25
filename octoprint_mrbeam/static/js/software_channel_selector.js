@@ -11,6 +11,11 @@ $(function () {
         self.available_channels = ko.observableArray([]);
 
         self.waiting_for_update = 0;
+        self.channel_display_names = {
+            "PROD": gettext('Stable'),
+            "BETA": gettext('Beta'),
+            "DEV": gettext('Develop')
+        };
 
         self.onAllBound = function () {
             // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
@@ -23,7 +28,7 @@ $(function () {
             for (let i = 0; i < channels.length; i++) {
                 let obj = {
                     id: channels[i]['id'](),
-                    name: channels[i]['name']()
+                    name: self.channel_display_names[channels[i]['id']()]
                 };
                 self.available_channels.push(obj);
             }

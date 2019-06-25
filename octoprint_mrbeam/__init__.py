@@ -169,7 +169,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._temperatureManager = temperatureManager()
 		self._dustManager = dustManager()
 		self.jobTimeEstimation = JobTimeEstimation(self._event_bus)
-		self.notify_beta_chanel()
 
 	def _initialize_lh(self):
 		self.lh['serial'] = self._settings.get(["laserhead", "serial"])
@@ -1984,22 +1983,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			chunks.append("SUPPORT")
 
 		return " | ".join(chunks)
-
-	def notify_beta_chanel(self):
-		if self.is_beta_channel():
-			msg = ("You're using Mr Beam's beta software channel. "
-			      "Find out<br/>{link1_open}what's new in the beta channel.{link1_close}<br/><br/>"
-			      "Should you experience any issues you can always switch back to our stable channel in the software update settings.<br/><br/> "
-			      "Please don't forget to<br/>{link2_open}tell us about your experience{link2_close}.".format(
-				      link1_open= '<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000507827" target="_blank"><i class="fa fa-external-link" aria-hidden="true"></i> ',
-		              link1_close= '</a>',
-		              link2_open= '<a href="https://www.mr-beam.org/ticket" target="_blank"><i class="fa fa-external-link" aria-hidden="true"></i> ',
-		              link2_close= '</a>'))
-			_mrbeam_plugin_implementation.notify_frontend(title=gettext("Beta Channel"),
-			                                              text="<br/>"+msg,
-			                                              type="info",
-			                                              sticky=False,
-			                                              replay_when_new_client_connects=True)
 
 	def is_time_ntp_synced(self):
 		return self._time_ntp_synced

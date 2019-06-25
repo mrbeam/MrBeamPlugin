@@ -14,10 +14,10 @@
 <div id="whatsnew_software_channel_choose">
     <label for="whatsnew_software_channel_select"><strong>{{ _('Select a software channel for your Mr Beam II:') }}</strong></label>
     <select id="whatsnew_software_channel_select">
-        <option value="PROD" selected="selected">Stable</option>
-        <option value="BETA">Beta</option>
+        <option value="PROD" selected="selected">{{ _('Stable') }}</option>
+        <option value="BETA">{{ _('Beta') }}</option>
         {% if env_local == 'DEV' %}
-            <option value="DEV">Develop</option>
+            <option value="DEV">{{ _('Develop') }}</option>
         {% endif %}
     </select>
     <div id="whatsnew_software_channel_switch">
