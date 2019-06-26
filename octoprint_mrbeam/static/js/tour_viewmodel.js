@@ -40,16 +40,17 @@ $(function () {
             ///// intro /////
             tour.push(new TourStepNoArrow({
                 id: 'intro',
-                title: ["Step-by-Step Tour Guide To Your First Laser Job"],
+                title: ["Step-by-Sepp Tour Guide To Your First Laser Job"],
                 text: ["Looks like you already set up your Mr Beam II - Congratulations!",
                     "Do you want us to guide you through your first laser job with this step-by-step tour?",
                     "<strong>What do you need for this tour:</strong>",
                     "<ul>" +
-                    "<li>Have a piece of felt by hand. Best to use the one that came with your Mr Beam II.</li>" +
-                    "<li>The laser head of your Mr Beam II has to be focused according to the thickness of the felt. " +
-                    "You can find how to do that in this <a href='https://mr-beam.freshdesk.com/support/solutions/articles/43000073345' target='_blank'>Knowledge base article</a>." +
-                    "</li>" +
-                    "<li>About 5-10 minutes of your time.</li>" +
+                        "<li>Have a piece of felt by hand. Best to use the one that came with your Mr Beam II.</li>" +
+                        "<li>The laser head of your Mr Beam II has to be focused according to the thickness of the felt. "+
+                            "You can find how to do that in this <a href='https://mr-beam.freshdesk.com/support/solutions/articles/43000073345' target='_blank'>Knowledge base article</a>." +
+                            // " or in our <a href='/plugin/mrbeam/static/docs/" + gettext("QuickstartGuide_en.pdf") + "' target='_blank'>Quickstart Guide</a>" +
+                        "</li>" +
+                        "<li>About 5-10 minutes of your time.</li>" +
                     "</ul>",
                     "<br/>"],
                 width: 550,
@@ -88,11 +89,11 @@ $(function () {
                 id: 'take_picture',
                 title: "Place the felt material inside Mr Beam II",
                 text: ["<ul>" +
-                "<li>First open the orange lid of your Mr Beam II.</li>" +
-                "<li>Then place the felt for the laser job somewhere in the middle of Mr Beam II's working area.</li>" +
-                "<li>Wait for the camera to take a picture. You will see a black and white picture of your felt here in your browser.</li>" +
-                "<li>Once you have a good picture, close the lid of your Mr Beam II and click \"next\".</li>" +
-                "</ul>"],
+                        "<li>First open the orange lid of your Mr Beam II.</li>" +
+                        "<li>Then place the felt for the laser job somewhere in the middle of Mr Beam II's working area.</li>" +
+                        "<li>Wait for the camera to take a picture. You will see a black and white picture of your felt here in your browser.</li>" +
+                        "<li>Once you have a good picture, close the lid of your Mr Beam II and click \"next\".</li>" +
+                        "</ul>"],
                 target: 'area_preview',
                 placement: "left",
                 xOffset: 150,
