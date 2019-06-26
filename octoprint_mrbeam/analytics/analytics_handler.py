@@ -261,7 +261,6 @@ class AnalyticsHandler(object):
 		self._write_new_line()
 		payload = {
 			ak.LASERHEAD_SERIAL: _mrbeam_plugin_implementation.lh['serial'],
-			ak.SOFTWARE_TIER: self._settings.get(["dev", "software_tier"]),
 			ak.ENV: _mrbeam_plugin_implementation.get_env()
 		}
 		self._write_deviceinfo(ak.STARTUP, payload=payload)
@@ -634,7 +633,6 @@ class AnalyticsHandler(object):
 			# TODO add data validation/preparation here
 			if payload is not None:
 				data[ak.DATA] = payload
-				data[ak.SOFTWARE_TIER] = self._settings.get(["dev", "software_tier"])
 			self._write_event(ak.TYPE_LOG_EVENT, event, self._analytics_log_version, payload=data, analytics=analytics)
 		except Exception as e:
 			self._logger.exception('Error during _write_log_event: {}'.format(e.message), analytics=False)
@@ -707,7 +705,8 @@ class AnalyticsHandler(object):
 				ak.TIMESTAMP: time.time(),
 				ak.NTP_SYNCED: _mrbeam_plugin_implementation.is_time_ntp_synced(),
 				ak.SESSION_ID: self._session_id,
-				ak.VERSION_MRBEAM_PLUGIN: _mrbeam_plugin_implementation._plugin_version
+				ak.VERSION_MRBEAM_PLUGIN: _mrbeam_plugin_implementation._plugin_version,
+				ak.SOFTWARE_TIER: self._settings.get(["dev", "software_tier"]),
 			}
 			if payload is not None:
 				data.update(payload)
