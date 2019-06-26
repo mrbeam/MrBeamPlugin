@@ -72,7 +72,7 @@ class AnalyticsHandler(object):
 
 		self._storedConversions = list()
 
-		self._analytics_log_version = 6		# Merged after v0.2.1 (13-06-2019)
+		self._analytics_log_version = 6		# Merged after v0.2.2 (13-06-2019)
 
 		self.event_waiting_for_terminal_dump = None
 
