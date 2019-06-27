@@ -1,4 +1,7 @@
 $(function () {
+    /**
+     * Tour based on hopscotch lib: http://linkedin.github.io/hopscotch/
+     */
     function TourViewModel(params) {
         var self = this;
         window.mrbeam.viewModels['tourViewModel'] = self;
@@ -8,10 +11,6 @@ $(function () {
         self.files = params[3];
 
         self.tourDef = null;
-
-        // self.onStartupComplete = function () {
-        //     setTimeout(self.startTour, 200);
-        // };
 
         self.btn_startTour = function () {
             self.startTour();
@@ -40,23 +39,23 @@ $(function () {
             ///// intro /////
             tour.push(new TourStepNoArrow({
                 id: 'intro',
-                title: ["Step-by-Sepp Tour Guide To Your First Laser Job"],
-                text: ["Looks like you already set up your Mr Beam II - Congratulations!",
-                    "Do you want us to guide you through your first laser job with this step-by-step tour?",
-                    "<strong>What do you need for this tour:</strong>",
+                title: [gettext("Step-by-Step Tour Guide To Your First Laser Job")],
+                text: [gettext("Looks like you already set up your Mr Beam II - Congratulations!"),
+                    gettext("Do you want us to guide you through your first laser job with this step-by-step tour?"),
+                    "<strong>"+gettext("What do you need for this tour:")+"</strong>",
                     "<ul>" +
-                        "<li>Have a piece of felt by hand. Best to use the one that came with your Mr Beam II.</li>" +
-                        "<li>The laser head of your Mr Beam II has to be focused according to the thickness of the felt. "+
-                            "You can find how to do that in this <a href='https://mr-beam.freshdesk.com/support/solutions/articles/43000073345' target='_blank'>Knowledge base article</a>." +
-                            // " or in our <a href='/plugin/mrbeam/static/docs/" + gettext("QuickstartGuide_en.pdf") + "' target='_blank'>Quickstart Guide</a>" +
+                        "<li>" + gettext("Have a piece of felt by hand. Best to use the one that came with your Mr Beam II.") + "</li>" +
+                        "<li>" + _.sprintf(gettext("The laser head of your Mr Beam II has to be focused according to the thickness of the felt." +
+                            "You can find how to do that in this %(opening_tag)sKnowledge base article%(closing_tag)s."),
+                            {opening_tag:"<a href='https://mr-beam.freshdesk.com/support/solutions/articles/43000073345' target='_blank'>", closing_tag:"</a>"}) +
                         "</li>" +
-                        "<li>About 5-10 minutes of your time.</li>" +
+                        "<li>" + gettext("About 5-10 minutes of your time.") + "</li>" +
                     "</ul>",
                     "<br/>"],
                 width: 550,
                 padding: 40,
-                nextLabel: "Yes, let's go!",
-                ctaLabel: "Maybe later",
+                nextLabel: gettext("Yes, let's go!"),
+                ctaLabel: gettext("Maybe later"),
                 showCTAButton: true,
                 onCTA: function () {
                     hopscotch.endTour();
@@ -66,8 +65,8 @@ $(function () {
             ///// homing /////
             tour.push(new TourStep({
                 id: 'homing_action',
-                title: "First, do the homing cycle",
-                text: "This is important so the Mr Beam II knows where the laser head is located.",
+                title: gettext("First, do the homing cycle"),
+                text: gettext("This is important so the Mr Beam II knows where the laser head is located."),
                 target: "homing_overlay_homing_btn",
                 placement: "bottom",
                 condition: function () {
@@ -77,9 +76,9 @@ $(function () {
 
             tour.push(new TourStepNoArrow({
                 id: 'homing_process',
-                title: "Look into your Mr Beam II",
-                text: ["The laser head is now moving to the upper right corner.",
-                    "Click \"next\" to proceed."],
+                title: gettext("Look into your Mr Beam II"),
+                text: [gettext("The laser head is now moving to the upper right corner."),
+                    gettext("Click \"next\" to proceed.")],
                 condition: function () {
                     return $("#homing_overlay_homing_btn").is(":visible");
                 }
@@ -87,12 +86,12 @@ $(function () {
 
             tour.push(new TourStep({
                 id: 'take_picture',
-                title: "Place the felt material inside Mr Beam II",
+                title: gettext("Place the felt material inside Mr Beam II"),
                 text: ["<ul>" +
-                        "<li>First open the orange lid of your Mr Beam II.</li>" +
-                        "<li>Then place the felt for the laser job somewhere in the middle of Mr Beam II's working area.</li>" +
-                        "<li>Wait for the camera to take a picture. You will see a black and white picture of your felt here in your browser.</li>" +
-                        "<li>Once you have a good picture, close the lid of your Mr Beam II and click \"next\".</li>" +
+                        "<li>" + gettext("First open the orange lid of your Mr Beam II.") + "</li>" +
+                        "<li>" + gettext("Then place the felt for the laser job somewhere in the middle of Mr Beam II's working area.") + "</li>" +
+                        "<li>" + gettext("Wait for the camera to take a picture. You will see a black and white picture of your felt here in your browser.") + "</li>" +
+                        "<li>" + gettext("Once you have a good picture, close the lid of your Mr Beam II and click \"next\".") + "</li>" +
                         "</ul>"],
                 target: 'area_preview',
                 placement: "left",
@@ -106,9 +105,9 @@ $(function () {
             ///// design lib /////
             tour.push(new TourStep({
                 id: 'designlib_button',
-                title: "Ready to select our design?",
-                text: ["Click on <strong>design library</strong>.",
-                    "Here you can find some designs and later you will also be able to upload your own."],
+                title: gettext("Ready to select our design?"),
+                text: [gettext("Click on <strong>design library</strong>."),
+                    gettext("Here you can find some designs and later you will also be able to upload your own.")],
                 target: "designlib_tab_btn",
                 placement: "bottom",
                 xOffset: 30,
@@ -121,9 +120,9 @@ $(function () {
 
             tour.push(new TourStep({
                 id: 'designlib_file',
-                title: "Select this design file to place it on the working area.",
-                text: ["For your first laser job, we thought you might like this nice key ring :)",
-                    "Please click on this tile to place it on the <strong>working area</strong>."],
+                title: gettext("Select this design file to place it on the working area."),
+                text: [gettext("For your first laser job, we thought you might like this nice key ring :)"),
+                    gettext("Please click on this tile to place it on the <strong>working area</strong>.")],
                 target: $('.file_list_entry[mrb_name="Schlusselanhanger.svg"]')[0] || $('.file_list_entry').last()[0],
                 additionalJQueryTargets: '.file_list_entry',
                 placement: $('.file_list_entry').length <= 8 ? "bottom" : "top",
@@ -137,10 +136,10 @@ $(function () {
             ///// working area /////
             tour.push(new TourStep({
                 id: 'arrange_on_working_area',
-                title: "Great! You can now move the design",
-                text: ["First click on it and then drag and drop it to place it on top of the material.",
-                    "Click \"next\" when you're done.",
-                    "Hint: You can also type the coordinates directly into the left-side list."],
+                title: gettext("Great! You can now move the design"),
+                text: [gettext("First click on it and then drag and drop it to place it on top of the material."),
+                    gettext("Click \"next\" when you're done."),
+                    gettext("Hint: You can also type the coordinates directly into the left-side list.")],
                 target: '#userContent > g',
                 delay: 500,
                 retryOnError: true,
@@ -152,9 +151,9 @@ $(function () {
 
             tour.push(new TourStep({
                 id: 'laser_btn',
-                title: "And... let’s proceed to select the parameters!",
-                text: ["Don't worry, the laser won't fire immediately.",
-                    "Just 3 quick steps..."],
+                title: gettext("And... let’s proceed to select the parameters!"),
+                text: [gettext("Don't worry, the laser won't fire immediately."),
+                    gettext("Just 3 quick steps...")],
                 target: "job_print",
                 placement: "right",
                 yOffset: -15
@@ -163,8 +162,8 @@ $(function () {
             ///// material screen /////
             tour.push(new TourStep({
                 id: 'select_material',
-                title: "Select the material",
-                text: ["For this guide we want to use felt.", "However as you can see there are many different options. :)"],
+                title: gettext("Select the material"),
+                text: [gettext("For this guide we want to use felt.", "However as you can see there are many different options. :)")],
                 target: $('li.material_entry[mrb_name="felt.jpg"]')[0] || $('li.material_entry')[0],
                 additionalJQueryTargets: 'li.material_entry',
                 placement: "bottom",
@@ -175,8 +174,8 @@ $(function () {
 
             tour.push(new TourStep({
                 id: 'select_color',
-                title: "Select the color of the material",
-                text: ["This is important because different colors absorb the laser differently."],
+                title: gettext("Select the color of the material"),
+                text: [gettext("This is important because different colors absorb the laser differently.")],
                 target: ["#material_color_F49A39", "#color_list :first-child"],
                 additionalJQueryTargets: '#color_list > ',
                 placement: "bottom",
@@ -187,10 +186,10 @@ $(function () {
 
             tour.push(new TourStep({
                 id: 'select_thickness',
-                title: "Select the thickness of the material",
-                text: ["Select 3mm.",
-                    "Today we want our felt to be cut as well as engraved. Therefore we have to select its thickness.",
-                    "(If you want to engrave only, the thickness doesn't matter.)"],
+                title: gettext("Select the thickness of the material"),
+                text: [gettext("Select 3mm."),
+                    gettext("Today we want our felt to be cut as well as engraved. Therefore we have to select its thickness."),
+                    gettext("(If you want to engrave only, the thickness doesn't matter.)")],
                 target: ["material_thickness_3", "div.thickness_sample:first"],
                 additionalJQueryTargets: 'div.thickness_sample',
                 placement: "right",
@@ -200,9 +199,9 @@ $(function () {
 
             tour.push(new TourStep({
                 id: 'material_ok',
-                title: "We’re ready to go!",
-                text: ["Press Start and your Mr&nbsp;Beam&nbsp;II will prepare your laser job.",
-                    "Should our pre-configured material settings not really cut it (pun intended), you can tweak them in the lower section of this screen."],
+                title: gettext("We’re ready to go!"),
+                text: [gettext("Press Start and your Mr&nbsp;Beam&nbsp;II will prepare your laser job."),
+                    gettext("Should our pre-configured material settings not really cut it (pun intended), you can tweak them in the lower section of this screen.")],
                 target: "start_job_btn",
                 placement: "top",
                 xOffset: -260,
@@ -212,12 +211,12 @@ $(function () {
 
             tour.push(new TourStep({
                 id: 'focus_reminder',
-                title: "Reminder: Is your laser head focused?",
-                text: ["The height of the laser head needs to be adjusted according to your material.",
-                    "We assumed that it is already focused.",
-                    "<strong>If it is focused</strong> click on \"It's focused!\"",
-                    "<strong>If it's NOT focused</strong>, you should cancel this tour here and focus it. " +
-                    "<a href='https://mr-beam.freshdesk.com/support/solutions/articles/43000073345-focusing-the-laser-head-' target='_blank'>Learn how to do this.</a>"],
+                title: gettext("Reminder: Is your laser head focused?"),
+                text: [gettext("The height of the laser head needs to be adjusted according to your material."),
+                    gettext("We assumed that it is already focused."),
+                    gettext("<strong>If it is focused</strong> click on \"It's focused!\""),
+                    _.sprintf(gettext("<strong>If it's NOT focused</strong> you should cancel this tour here and focus it. %(opening_tag)sLearn how to do this.%(closing_tag)s"),
+                        {opening_tag:"<a href='https://mr-beam.freshdesk.com/support/solutions/articles/43000073345-focusing-the-laser-head-' target='_blank'>", closing_tag:"</a>"})],
                 target: "start_job_btn_focus_reminder",
                 placement: "right",
                 delay: 200,
@@ -232,8 +231,8 @@ $(function () {
             ///// rtl /////
             tour.push(new TourStepNoArrow({
                 id: 'preparing_laserjob',
-                title: "Mr Beam II is now preparing your laser job",
-                text: ["This takes a few seconds. Just relax."],
+                title: gettext("Mr Beam II is now preparing your laser job"),
+                text: [gettext("This takes a few seconds. Just relax.")],
                 showNextButton: false,
                 nextOnTargetClick: true,
                 delay: 100,
@@ -241,9 +240,10 @@ $(function () {
 
             tour.push(new TourStep({
                 id: 'start_laserjob',
-                title: "Done! As soon as you click the start button on your Mr&nbsp;Beam&nbsp;II, the magic will begin 🎉",
-                text: ["Thank you for doing this first laser job with us.",
-                    "For more in-depth information you can check our <a href='http://mr-beam.org/faq' target='_blank'>knowledge base</a>, where you will find a lot of articles about Mr Beam II."],
+                title: gettext("Done! As soon as you click the start button on your Mr&nbsp;Beam&nbsp;II, the magic will begin 🎉"),
+                text: [gettext("Thank you for doing this first laser job with us."),
+                    _.sprintf(gettext("For more in-depth information you can check our %(opening_tag)sknowledge base%(closing_tag)s, where you will find a lot of articles about Mr Beam II."),
+                       {opening_tag:"<a href='http://mr-beam.org/faq' target='_blank'>", closing_tag:"</a>"})],
                 target: "ready_to_laser_dialog",
                 placement: 'right',
                 delay: 200,
@@ -257,6 +257,7 @@ $(function () {
 
             return {
                 id: "hello-mrbeam",
+                i18n: self._get_i18n_conf(),
                 steps: tour
             };
         };
@@ -267,8 +268,8 @@ $(function () {
             ///// intro /////
             tour.push(new TourStep({
                 id: 'empty_woringarea',
-                title: ["Working area has to be empty to start this tour."],
-                text: ["Click here to remove all designs from your working area."],
+                title: gettext("Working area has to be empty to start this tour."),
+                text: [gettext("Click here to remove all designs from your working area.")],
                 target: "clear_working_area_btn",
                 placement: 'right',
                 nextOnTargetClick: true,
@@ -279,9 +280,22 @@ $(function () {
 
             return {
                 id: "pre-tour",
+                i18n: self._get_i18n_conf(),
                 steps: tour
             };
         };
+
+
+        self._get_i18n_conf = function(){
+            return {
+                    nextBtn: gettext("Next"),
+                    // prevBtn: "Back",
+                    // doneBtn: "Done",
+                    // skipBtn: "Skip",
+                    closeTooltip: gettext("Close"),
+                    // stepNums : ["I", "II", "III"]
+                  }
+        }
 
         self._setPreConditions = function () {
             // switch to working area
