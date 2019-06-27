@@ -25,8 +25,8 @@ class AnalyticsKeys(object):
 	### DEVICE KEYS ###
 	HOSTNAME = 'hostname'
 	LASERHEAD_VERSION = 'lh_ver'
-	OLD_CHANNEL = 'new_channel'
-	NEW_CHANNEL = 'old_channel'
+	OLD_CHANNEL = 'old_channel'
+	NEW_CHANNEL = 'new_channel'
 	TOTAL_SPACE = 'total'
 	AVAILABLE_SPACE = 'available'
 	USED_SPACE = 'used_percent'
