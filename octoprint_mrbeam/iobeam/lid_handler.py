@@ -219,6 +219,7 @@ class PhotoCreator(object):
 	def work(self):
 		try:
 			self.active = True
+			first_capture = True
 			# todo find maximum of sleep in beginning that's not affecting UX
 			time.sleep(0.8)
 
@@ -237,7 +238,12 @@ class PhotoCreator(object):
 			while self.active and self.camera:
 				if self.keepOriginals:
 					self._init_filenames()
-				self._capture()
+
+				errors = self._capture()
+				if first_capture:
+					self._write_camera_capture_analytics(errors)
+					first_capture = False
+
 				# check if still active...
 				if self.active:
 					# todo QUESTION: should the tmp_img_raw ever be showed in frontend?
@@ -319,6 +325,8 @@ class PhotoCreator(object):
 			self.camera.capture(self.tmp_img_raw, format='jpeg')
 
 			self._logger.debug("_capture() captured picture in %ss", time.time() - now)
+			return None
+
 		except Exception as e:
 			if e.__class__.__name__.startswith('PiCamera'):
 				self._logger.error("PiCamera Error while capturing picture: %s: %s", e.__class__.__name__, e)
@@ -331,6 +339,8 @@ class PhotoCreator(object):
 					replay_when_new_client_connects=True)
 			else:
 				self._logger.exception("Exception while taking picture from camera:")
+
+			return str(e)
 
 	def _createFolder_if_not_existing(self, filename):
 		try:
@@ -399,3 +409,7 @@ class PhotoCreator(object):
 
 	def _write_pic_prep_analytics(self, cam_data):
 		_mrbeam_plugin_implementation._analytics_handler.write_pic_prep_event(payload=cam_data)
+
+	@staticmethod
+	def _write_camera_capture_analytics(errors):
+		_mrbeam_plugin_implementation._analytics_handler.log_camera_session(errors)

@@ -169,7 +169,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._temperatureManager = temperatureManager()
 		self._dustManager = dustManager()
 		self.jobTimeEstimation = JobTimeEstimation(self._event_bus)
-		self.notify_beta_chanel()
 
 	def _initialize_lh(self):
 		self.lh['serial'] = self._settings.get(["laserhead", "serial"])
@@ -393,16 +392,55 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# Define your plugin's asset files to automatically include in the
 		# core UI here.
 		assets = dict(
-			js=["js/lasercutterprofiles.js","js/mother_viewmodel.js", "js/mrbeam.js","js/color_classifier.js",
-				"js/working_area.js", "js/camera.js", "js/lib/snap.svg-min.js", "js/lib/dxf.js", "js/snap-dxf.js", "js/render_fills.js", "js/path_convert.js",
-				"js/matrix_oven.js", "js/unref.js", "js/drag_scale_rotate.js",	"js/convert.js", "js/snap_gc_plugin.js", "js/gcode_parser.js", "js/gridify.js",
-				"js/lib/photobooth_min.js", "js/svg_cleaner.js", "js/loginscreen_viewmodel.js",
-				"js/wizard_acl.js", "js/netconnectd_wrapper.js", "js/lasersaftey_viewmodel.js",
-				"js/ready_to_laser_viewmodel.js", "js/lib/screenfull.min.js","js/settings/camera_calibration.js",
-				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js", "js/lib/Color.js", "js/laser_job_done_viewmodel.js",
-				"js/loadingoverlay_viewmodel.js", "js/wizard_whatsnew.js", "js/wizard_analytics.js", "js/software_channel_selector.js", "js/lib/hopscotch.js",
-				"js/tour_viewmodel.js", "js/air_filter_usage.js", "js/feedback_widget.js"],
-			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css", "css/quicktext-fonts.css", "css/sliders.css", "css/hopscotch.min.css"],
+			js=["js/lasercutterprofiles.js",
+			    "js/mother_viewmodel.js",
+			    "js/mrbeam.js",
+			    "js/color_classifier.js",
+				"js/working_area.js",
+				"js/camera.js",
+				"js/lib/snap.svg-min.js",
+				"js/lib/dxf.js",
+				"js/snap-dxf.js",
+				"js/render_fills.js",
+				"js/path_convert.js",
+				"js/matrix_oven.js",
+				"js/unref.js",
+				"js/drag_scale_rotate.js",
+				"js/convert.js",
+				"js/snap_gc_plugin.js",
+				"js/gcode_parser.js",
+				"js/gridify.js",
+				# "js/lib/photobooth_min.js",
+				"js/svg_cleaner.js",
+				"js/loginscreen_viewmodel.js",
+				"js/wizard_acl.js",
+				"js/netconnectd_wrapper.js",
+				"js/lasersaftey_viewmodel.js",
+				"js/ready_to_laser_viewmodel.js",
+				"js/lib/screenfull.min.js",
+				"js/settings/camera_calibration.js",
+				"js/path_magic.js",
+				"js/lib/simplify.js",
+				"js/lib/clipper.js",
+				"js/lib/Color.js",
+				"js/laser_job_done_viewmodel.js",
+				"js/loadingoverlay_viewmodel.js",
+				"js/wizard_whatsnew.js",
+				"js/wizard_analytics.js",
+				"js/software_channel_selector.js",
+				"js/lib/hopscotch.js",
+				"js/tour_viewmodel.js",
+				"js/air_filter_usage.js",
+				"js/feedback_widget.js",
+				"js/material_settings.js",
+			    ],
+			css=["css/mrbeam.css",
+			     "css/svgtogcode.css",
+			     "css/ui_mods.css",
+			     "css/quicktext-fonts.css",
+			     "css/sliders.css",
+			     "css/hopscotch.min.css",
+			     ],
 			less=["less/mrbeam.less"]
 		)
 		if(self._settings.get(["dev", "load_gremlins"])):
@@ -423,7 +461,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		firstRun = render_kwargs['firstRun']
 		language = g.locale.language if g.locale else "en"
 
-		self._track_ui_render_calls(request, language)
+		if request.headers.get('User-Agent') != self._analytics_handler.SELF_CHECK_USER_AGENT:
+			self._track_ui_render_calls(request, language)
 
 		enable_accesscontrol = self._user_manager.enabled
 		accesscontrol_active = enable_accesscontrol and self._user_manager.hasBeenCustomized()
@@ -1945,22 +1984,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			chunks.append("SUPPORT")
 
 		return " | ".join(chunks)
-
-	def notify_beta_chanel(self):
-		if self.is_beta_channel():
-			msg = ("You're using Mr Beam's beta software channel. "
-			      "Find out<br/>{link1_open}what's new in the beta channel.{link1_close}<br/><br/>"
-			      "Should you experience any issues you can always switch back to our stable channel in the software update settings.<br/><br/> "
-			      "Please don't forget to<br/>{link2_open}tell us about your experience{link2_close}.".format(
-				      link1_open= '<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000507827" target="_blank"><i class="fa fa-external-link" aria-hidden="true"></i> ',
-		              link1_close= '</a>',
-		              link2_open= '<a href="https://www.mr-beam.org/ticket" target="_blank"><i class="fa fa-external-link" aria-hidden="true"></i> ',
-		              link2_close= '</a>'))
-			_mrbeam_plugin_implementation.notify_frontend(title=gettext("Beta Channel"),
-			                                              text="<br/>"+msg,
-			                                              type="info",
-			                                              sticky=False,
-			                                              replay_when_new_client_connects=True)
 
 	def is_time_ntp_synced(self):
 		return self._time_ntp_synced

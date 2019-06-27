@@ -44,6 +44,7 @@ class AnalyticsKeys(object):
 	FLASH_GRBL = 'flash_grbl'
 	ANALYTICS_ENABLED = 'analytics_enabled'
 	IPS = 'ips'
+	HTTP_SELF_CHECK = 'http_self_check'
 	DISK_SPACE = 'disk_space'
 	SW_CHANNEL_SWITCH = 'sw_channel_switch'
 	LASERHEAD_INFO = 'laserhead_info'
@@ -53,6 +54,8 @@ class AnalyticsKeys(object):
 	EXCEPTION = 'exception'
 	IOBEAM =    'iobeam'
 	LOG_CPU = 'cpu'
+	CAMERA = 'camera'
+	CAMERA_SESSION = 'camera_session'
 
 	### JOB KEYS ###
 	JOB_ID = 'job_id'
