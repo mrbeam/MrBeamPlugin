@@ -1119,7 +1119,7 @@ class MachineCom(object):
 	def _set_status_polling_interval_for_state(self, state=None):
 		"""
 		Sets polling interval according to current state
-		:param state: (optional) state, if None, self.state is used
+		:param state: (optional) state, if None, self._state is used
 		"""
 		state = state or self._state
 		if state == self.STATE_PRINTING:
