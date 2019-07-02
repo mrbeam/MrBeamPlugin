@@ -52,11 +52,15 @@ class Cpu(object):
 			self._temp[rounded] = 1
 
 	def _add_throttle_warning(self, cpu_temp, warnings, progress):
-		if len(self._throttle_warnings) > 1:
-			last_warnings = self._throttle_warnings[-1]
-			if warnings and last_warnings != warnings:
-				throttle = {'progress': progress, 'cpu_temp': cpu_temp, 'warnings': warnings}
+		if warnings:
+			throttle = {'progress': progress, 'cpu_temp': cpu_temp, 'warnings': warnings}
+			if not self._throttle_warnings:
 				self._throttle_warnings.append(throttle)
+
+			else:
+				last_warnings = self._throttle_warnings[-1]
+				if last_warnings['warnings'] != warnings:
+					self._throttle_warnings.append(throttle)
 
 	def get_cpu_data(self):
 		self._stop_temp_recording()
@@ -79,7 +83,7 @@ class Cpu(object):
 			self._add_cpu_temp_value(_cpu_temp)
 			self._add_throttle_warning(_cpu_temp, _cpu_throttle_warnings, self._progress)
 
-			self._logger.debug("################# CPU: OK - temp: %s, throttle_warnings: %s", _cpu_temp, _cpu_throttle_warnings)
+			self._logger.debug("CPU: OK - temp: %s, throttle_warnings: %s", _cpu_temp, _cpu_throttle_warnings)
 		except:
 			self._logger.exception("Exception in record_cpu_data()")
 
@@ -102,8 +106,8 @@ class Cpu(object):
 		try:
 			t_hex = self._get_cpu_throttled()
 			t_int = int(t_hex, 16)
-			if t_int == 0:
-				return []
+			# if t_int == 0:
+			# 	return []
 			throttled_binary = bin(t_int)[2:].zfill(16)
 
 			for position, message in self.MESSAGES.iteritems():

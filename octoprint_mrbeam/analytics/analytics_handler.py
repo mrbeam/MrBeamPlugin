@@ -416,15 +416,17 @@ class AnalyticsHandler(object):
 			self._write_jobevent(ak.PRINT_DONE, payload={ak.JOB_DURATION: int(round(payload['time'])),
 														ak.JOB_TIME_ESTIMATION: int(round(self._current_job_time_estimation))})
 			self._write_collectors()
-			self._write_cpu_data()
+			self._write_cpu_data(dur=payload['time'])
 
 	def _write_collectors(self):
 		self._write_jobevent(ak.DUST_SUM, payload=self._current_dust_collector.getSummary())
 		self._write_jobevent(ak.INTENSITY_SUM, payload=self._current_intensity_collector.getSummary())
 		self._write_jobevent(ak.LASERTEMP_SUM, payload=self._current_lasertemp_collector.getSummary())
 
-	def _write_cpu_data(self):
-		self._write_jobevent(ak.CPU_DATA, payload=self._current_cpu_data.get_cpu_data())
+	def _write_cpu_data(self, dur=None):
+		payload = self._current_cpu_data.get_cpu_data()
+		payload['dur'] = dur
+		self._write_jobevent(ak.CPU_DATA, payload=payload)
 
 	def _cleanup(self):
 		self._current_job_id = None
@@ -442,14 +444,14 @@ class AnalyticsHandler(object):
 		if self._current_job_id is not None:
 			self._write_jobevent(ak.PRINT_FAILED, payload={ak.JOB_DURATION: int(round(payload['time']))})
 			self._write_collectors()
-			self._write_cpu_data()
+			self._write_cpu_data(dur=payload['time'])
 			self._cleanup()
 
 	def _event_print_cancelled(self, event, payload):
 		if self._current_job_id is not None:
 			self._write_jobevent(ak.PRINT_CANCELLED, payload={ak.JOB_DURATION: int(round(payload['time']))})
 			self._write_collectors()
-			self._write_cpu_data()
+			self._write_cpu_data(dur=payload['time'])
 			self._cleanup()
 
 	def _event_print_progress(self, event, payload):
@@ -472,7 +474,7 @@ class AnalyticsHandler(object):
 	def _event_slicing_done(self, event, payload):
 		if self._current_cpu_data:
 			self._current_cpu_data.record_cpu_data()
-			self._write_cpu_data()
+			self._write_cpu_data(dur=payload['time'])
 
 	def _event_laser_cooling_pause(self, event, payload):
 		if not self._isCoolingPaused:
