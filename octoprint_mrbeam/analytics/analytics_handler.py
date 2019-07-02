@@ -380,7 +380,8 @@ class AnalyticsHandler(object):
 			self._logger.exception('Exception when saving info about the laserhead')
 
 	def _event_print_started(self, event, payload):
-		self._current_job_id = 'j_{}_{}'.format(self._getSerialNumber(), time.time())
+		if not self._current_job_id:
+			self._current_job_id = 'j_{}_{}'.format(self._getSerialNumber(), time.time())
 		self._current_cpu_data = Cpu(state='laser', repeat=True)
 		self._init_collectors()
 		self._isJobPaused = False
@@ -465,6 +466,7 @@ class AnalyticsHandler(object):
 			self._current_cpu_data.update_progress(payload['progress'])
 
 	def _event_slicing_started(self, event, payload):
+		self._current_job_id = 'j_{}_{}'.format(self._getSerialNumber(), time.time())
 		self._current_cpu_data = Cpu(state='slicing', repeat=False)
 
 	def _event_slicing_done(self, event, payload):
