@@ -306,6 +306,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				clip_working_area = True # https://github.com/mrbeam/MrBeamPlugin/issues/134
 			),
 			grbl_version_lastknown=None,
+			tour_auto_launch = False,
 		)
 
 	def on_settings_load(self):
@@ -334,6 +335,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			_version = self._plugin_version,
 			focusReminder = self._settings.get(['focusReminder']),
 			airFilterUsage = self._usageHandler.get_air_filter_usage(),
+			tour_auto_launch = self._settings.get(['tour_auto_launch']),
 		)
 
 	def on_settings_save(self, data):

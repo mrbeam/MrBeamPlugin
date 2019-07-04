@@ -18,6 +18,15 @@ $(function () {
         self._analytics_last_step_id = false;
         self._analytics_last_step_num = false;
 
+        self.onWizardFinish = function(){
+            if (self.settings.settings.plugins.mrbeam.tour_auto_launch()) {
+                console.log("TourViewModel: auto launch tour: true");
+                self.startTour();
+            } else {
+                console.log("TourViewModel: auto launch tour: false");
+            }
+        };
+
         self.btn_startTour = function () {
             self.startTour();
         };
@@ -33,7 +42,7 @@ $(function () {
                 self.tourDef = self._getTourDefinitions();
             }
 
-            console.log("hopscotch tour START: ", self.tourDef);
+            console.log("TourViewModel tour START: ", self.tourDef);
             hopscotch.configure({skipIfNoElement: true});
             hopscotch.startTour(self.tourDef, 0);
             self._analytics_tour_start();
