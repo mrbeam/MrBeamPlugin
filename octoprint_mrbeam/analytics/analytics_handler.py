@@ -11,6 +11,7 @@ import requests
 
 from datetime import datetime
 from value_collector import ValueCollector
+from cpu import Cpu
 from threading import Timer
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
@@ -67,7 +68,7 @@ class AnalyticsHandler(object):
 		self._current_cam_session_id = None
 		self._current_intensity_collector = None
 		self._current_lasertemp_collector = None
-		self._current_cputemp_collector = None
+		self._current_cpu_data = None
 		self._current_job_time_estimation = None
 
 		self._storedConversions = list()
@@ -119,6 +120,8 @@ class AnalyticsHandler(object):
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self._event_print_done)
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self._event_print_failed)
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_CANCELLED, self._event_print_cancelled)
+		self._event_bus.subscribe(OctoPrintEvents.SLICING_STARTED, self._event_slicing_started)
+		self._event_bus.subscribe(OctoPrintEvents.SLICING_DONE, self._event_slicing_done)
 		self._event_bus.subscribe(MrBeamEvents.PRINT_PROGRESS, self._event_print_progress)
 		self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_PAUSE, self._event_laser_cooling_pause)
 		self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_RESUME, self._event_laser_cooling_resume)
@@ -377,7 +380,9 @@ class AnalyticsHandler(object):
 			self._logger.exception('Exception when saving info about the laserhead')
 
 	def _event_print_started(self, event, payload):
-		self._current_job_id = 'j_{}_{}'.format(self._getSerialNumber(), time.time())
+		if not self._current_job_id:
+			self._current_job_id = 'j_{}_{}'.format(self._getSerialNumber(), time.time())
+		self._current_cpu_data = Cpu(state='laser', repeat=True)
 		self._init_collectors()
 		self._isJobPaused = False
 		self._isCoolingPaused = False
@@ -389,7 +394,6 @@ class AnalyticsHandler(object):
 		self._current_dust_collector = ValueCollector('DustColl')
 		self._current_intensity_collector = ValueCollector('IntensityColl')
 		self._current_lasertemp_collector = ValueCollector('TempColl')
-		self._current_cputemp_collector = ValueCollector('CpuColl')
 
 	def _event_print_paused(self, event, payload):
 		# TODO add how it has been paused (lid_opened during job, frontend, onebutton)
@@ -412,19 +416,24 @@ class AnalyticsHandler(object):
 			self._write_jobevent(ak.PRINT_DONE, payload={ak.JOB_DURATION: int(round(payload['time'])),
 														ak.JOB_TIME_ESTIMATION: int(round(self._current_job_time_estimation))})
 			self._write_collectors()
+			self._write_cpu_data(dur=payload['time'])
 
 	def _write_collectors(self):
 		self._write_jobevent(ak.DUST_SUM, payload=self._current_dust_collector.getSummary())
 		self._write_jobevent(ak.INTENSITY_SUM, payload=self._current_intensity_collector.getSummary())
 		self._write_jobevent(ak.LASERTEMP_SUM, payload=self._current_lasertemp_collector.getSummary())
-		self._write_jobevent(ak.CPUTEMP_SUM, payload=self._current_cputemp_collector.getSummary())
+
+	def _write_cpu_data(self, dur=None):
+		payload = self._current_cpu_data.get_cpu_data()
+		payload['dur'] = dur
+		self._write_jobevent(ak.CPU_DATA, payload=payload)
 
 	def _cleanup(self):
 		self._current_job_id = None
 		self._current_dust_collector = None
 		self._current_intensity_collector = None
 		self._current_lasertemp_collector = None
-		self._current_cputemp_collector = None
+		self._current_cpu_data = None
 
 	def _event_laser_job_done(self, event, payload):
 		if self._current_job_id is not None:
@@ -435,12 +444,14 @@ class AnalyticsHandler(object):
 		if self._current_job_id is not None:
 			self._write_jobevent(ak.PRINT_FAILED, payload={ak.JOB_DURATION: int(round(payload['time']))})
 			self._write_collectors()
+			self._write_cpu_data(dur=payload['time'])
 			self._cleanup()
 
 	def _event_print_cancelled(self, event, payload):
 		if self._current_job_id is not None:
 			self._write_jobevent(ak.PRINT_CANCELLED, payload={ak.JOB_DURATION: int(round(payload['time']))})
 			self._write_collectors()
+			self._write_cpu_data(dur=payload['time'])
 			self._cleanup()
 
 	def _event_print_progress(self, event, payload):
@@ -452,6 +463,18 @@ class AnalyticsHandler(object):
 			ak.JOB_DURATION: round(payload['time'], 1)
 		}
 		self._write_jobevent(ak.PRINT_PROGRESS, data)
+
+		if self._current_cpu_data:
+			self._current_cpu_data.update_progress(payload['progress'])
+
+	def _event_slicing_started(self, event, payload):
+		self._current_job_id = 'j_{}_{}'.format(self._getSerialNumber(), time.time())
+		self._current_cpu_data = Cpu(state='slicing', repeat=False)
+
+	def _event_slicing_done(self, event, payload):
+		if self._current_cpu_data:
+			self._current_cpu_data.record_cpu_data()
+			self._write_cpu_data(dur=payload['time'])
 
 	def _event_laser_cooling_pause(self, event, payload):
 		if not self._isCoolingPaused:
@@ -775,17 +798,6 @@ class AnalyticsHandler(object):
 				self._current_intensity_collector.addValue(laser_intensity)
 			except Exception as e:
 				self._logger.exception('Error during add_laser_intensity_value: {}'.format(e.message))
-
-	def add_cpu_temp_value(self, cpu_temp):
-		"""
-		:param cpu_temp:
-		:return:
-		"""
-		if self._analyticsOn and self._current_cputemp_collector is not None:
-			try:
-				self._current_cputemp_collector.addValue(cpu_temp)
-			except Exception as e:
-				self._logger.exception('Error during add_cpu_temp_value: {}'.format(e.message))
 
 	def _write_dust_log(self, data):
 		try:
