@@ -1,6 +1,8 @@
 $(function () {
-    function FeedbackWidget(params) {
+    function FeedbackWidgetViewModel(params) {
         let self = this;
+        window.mrbeam.viewModels['feedbackWidgetViewModel'] = self;
+        
         self.loginStateViewModel = params[0];
 
         self.removeFeedbackWidget = function(){
@@ -55,7 +57,7 @@ $(function () {
 
     // view model class, parameters for constructor, container to bind to
     OCTOPRINT_VIEWMODELS.push([
-        FeedbackWidget,
+        FeedbackWidgetViewModel,
 
         // e.g. loginStateViewModel, settingsViewModel, ...
         ["loginStateViewModel"],

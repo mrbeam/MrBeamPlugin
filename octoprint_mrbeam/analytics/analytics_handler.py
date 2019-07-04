@@ -249,6 +249,13 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.exception('Error during log_camera_error: {}'.format(e.message), analytics=True)
 
+	def log_frontend_event(self, event, payload=dict()):
+		try:
+			self._write_frontend_event(event, payload=payload)
+		except Exception as e:
+			self._logger.exception('Error during log_frontend_event: {}'.format(e.message), analytics=True)
+
+
 	def _write_current_software_status(self):
 		try:
 			# TODO get all software statuses
@@ -658,7 +665,16 @@ class AnalyticsHandler(object):
 				data[ak.DATA] = payload
 			self._write_event(ak.TYPE_LOG_EVENT, event, self._analytics_log_version, payload=data, analytics=analytics)
 		except Exception as e:
-			self._logger.exception('Error during _write_log_event: {}'.format(e.message), analytics=False)
+			self._logger.exception('Error during _write_log_event: {}'.format(e.message), analytics=analytics)
+
+	def _write_frontend_event(self, event, payload=None):
+		try:
+			data = dict()
+			if payload is not None:
+				data[ak.DATA] = payload
+			self._write_event(ak.TYPE_FRONTEND, event, self._analytics_log_version, payload=data, analytics=True)
+		except Exception as e:
+			self._logger.exception('Error during _write_log_event: {}'.format(e.message), analytics=True)
 
 	def _write_jobevent(self, event, payload=None):
 		try:
