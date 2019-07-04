@@ -5,6 +5,7 @@ import yaml
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
+from octoprint_mrbeam.analytics.analytics_handler import analyticsHandler
 
 # singleton
 _instance = None
@@ -24,11 +25,6 @@ class UsageHandler(object):
 		self._plugin_version = plugin._plugin_version
 		self._device_serial = plugin.getSerialNum()
 
-		if plugin.lh['serial']:
-			self._laser_head_serial = plugin.lh['serial']
-		else:
-			self._laser_head_serial = 'no_serial'
-
 		self.start_time_total = -1
 		self.start_time_laser_head = -1
 		self.start_time_prefilter = -1
@@ -46,10 +42,20 @@ class UsageHandler(object):
 		self._subscribe()
 		self.log_usage()
 
+		# Read laser head. If it's not possible, use last used lh. If there's no last used, use 'no_serial'
+		if plugin.lh['serial']:
+			self._laser_head_serial = plugin.lh['serial']
+			self._logger.info("###################### SERIAL")
+		elif 'last_used_lh_serial' in self._usage_data and self._usage_data['last_used_lh_serial']:
+			self._laser_head_serial = self._usage_data['last_used_lh_serial']
+			self._logger.info("###################### LAST USED")
+		else:
+			self._laser_head_serial = 'no_serial'
+			self._logger.info("###################### NO SERIAL")
+
 	def log_usage(self):
-		self._logger.info("Usage: total: {}, current laser head: {} - {}".format( \
-			self._get_duration_humanreadable(self._usage_data['total']['job_time']), \
-			self._get_duration_humanreadable(self._usage_data['laser_head'][self._laser_head_serial]['job_time']), \
+		self._logger.info("Usage: total: {} - {}".format(
+			self._get_duration_humanreadable(self._usage_data['total']['job_time']),
 			self._usage_data))
 
 	def _subscribe(self):
@@ -63,6 +69,10 @@ class UsageHandler(object):
 	def event_start(self, event, payload):
 		self._load_usage_data()
 		self.start_time_total = self._usage_data['total']['job_time']
+
+		if self._laser_head_serial and self._laser_head_serial != 'no_serial':
+			self._usage_data['last_used_lh_serial'] = self._laser_head_serial
+			self._logger.info("######################### save last used: {}".format(self._usage_data['last_used_lh_serial']))
 
 		# Initialize prefilter in case it wasn't stored already --> From the total usage
 		if 'prefilter' not in self._usage_data:
@@ -80,19 +90,35 @@ class UsageHandler(object):
 			self._logger.info("Initializing carbon filter usage time: {usage}".format(
 				usage=self._usage_data['carbon_filter']['job_time']))
 
-		# Initialize new laser heads
-		self._logger.info("################# IRATXE event_start {}".format(self._laser_head_serial))
+		# Initialize laser_head in case it wasn't stored already --> From the total usage
 		if 'laser_head' not in self._usage_data:
 			self._usage_data['laser_head'] = {}
-			# TODO IRATXE: remove laser_heads?
-
-		if self._laser_head_serial not in self._usage_data['laser_head']:
 			self._usage_data['laser_head'][self._laser_head_serial] = {}
-			if self._laser_head_serial == 'no_serial':
-				self._usage_data['laser_head'][self._laser_head_serial]['complete'] = self._usage_data['total']['complete']
-				self._usage_data['laser_head'][self._laser_head_serial]['job_time'] = self._usage_data['total']['job_time']
+			self._usage_data['laser_head'][self._laser_head_serial]['complete'] = self._usage_data['total']['complete']
+			self._usage_data['laser_head'][self._laser_head_serial]['job_time'] = self._usage_data['total']['job_time']
+
+		# Initialize new laser heads
+		self._logger.info(
+			"######################### save last used:< {}".format('################ INITIALIZE'))
+		if self._laser_head_serial not in self._usage_data['laser_head']:  # TODO IRATXE: test
+			self._logger.info(
+				"######################### save last used: {}".format('################ IFFFFFFFFFFFF'))
+			self._usage_data['laser_head'][self._laser_head_serial] = {}
+			# If it's the first lh with a serial, then read from 'no_serial' or the total
+			if not self._usage_data['last_used_lh_serial']:
+				if 'no_serial' in self._usage_data['laser_head']:
+					self._logger.info(
+						"######################### save last used: {}".format('################ IF IF'))
+					self._usage_data['laser_head'][self._laser_head_serial]['complete'] = self._usage_data['laser_head']['no_serial']['complete']
+					self._usage_data['laser_head'][self._laser_head_serial]['job_time'] = self._usage_data['laser_head']['no_serial']['job_time']
+				else:
+					self._logger.info(
+						"######################### save last used: {}".format('################ IF ELSE'))
+					self._usage_data['laser_head'][self._laser_head_serial]['complete'] = self._usage_data['total']['complete']
+					self._usage_data['laser_head'][self._laser_head_serial]['job_time'] = self._usage_data['total']['job_time']
 			else:
-				# TODO IRATXE: what if it's an old laserhead?
+				self._logger.info(
+					"######################### save last used: {}".format('################ ELSE'))
 				self._usage_data['laser_head'][self._laser_head_serial]['complete'] = True
 				self._usage_data['laser_head'][self._laser_head_serial]['job_time'] = 0
 
@@ -125,6 +151,7 @@ class UsageHandler(object):
 			self.start_time_prefilter = -1
 			self.start_time_carbon_filter = -1
 			self.start_time_gantry = -1
+			self.write_usage_analytics(action='job_finished')
 
 	def _set_time(self, job_duration):
 		if job_duration is not None and job_duration > 0.0:
@@ -139,16 +166,38 @@ class UsageHandler(object):
 		self._usage_data['prefilter']['job_time'] = 0
 		self.start_time_prefilter = -1
 		self._write_usage_data()
+		self.write_usage_analytics(action='reset_prefilter')
 
 	def reset_carbon_filter_usage(self):
 		self._usage_data['carbon_filter']['job_time'] = 0
 		self.start_time_prefilter = -1
 		self._write_usage_data()
+		self.write_usage_analytics(action='reset_carbon_filter')
+
+	def reset_laser_head_usage(self):
+		self._usage_data['laser_head'][self._laser_head_serial]['job_time'] = 0
+		self.start_time_laser_head = -1
+		self._write_usage_data()
+		self.write_usage_analytics(action='reset_laser_head')
 
 	def reset_gantry_usage(self):
 		self._usage_data['gantry']['job_time'] = 0
 		self.start_time_prefilter = -1
 		self._write_usage_data()
+		self.write_usage_analytics(action='reset_gantry')
+
+	def write_usage_analytics(self, action=None):
+		usage_data = dict(
+			prefilter=self._usage_data['prefilter']['job_time'],
+			carbon_filter=self._usage_data['carbon_filter']['job_time'],
+			laser_head=dict(
+				usage=self._usage_data['laser_head'][self._laser_head_serial]['job_time'],
+				serial_number=self._laser_head_serial),
+			gantry=self._usage_data['gantry']['job_time'],
+			action=action
+		)
+
+		analyticsHandler(_mrbeam_plugin_implementation).write_mrbeam_usage(usage_data)
 
 	def get_prefilter_usage(self):
 		if 'prefilter' in self._usage_data:
@@ -219,6 +268,7 @@ class UsageHandler(object):
 				self._write_usage_data()
 
 	def _write_usage_data(self, file=None):
+		self._logger.info("####################### _write_usage_data {}".format(self._usage_data))
 		self._usage_data['version'] = self._plugin_version
 		self._usage_data['ts'] = time.time()
 		self._usage_data['serial'] = self._device_serial
@@ -239,6 +289,12 @@ class UsageHandler(object):
 				'job_time': 0.0,
 				'complete': self._plugin.isFirstRun(),
 			},
+			'laser_head': {
+				'no_serial': {
+					'job_time': 0.0,
+					'complete': self._plugin.isFirstRun(),
+				}
+			},
 			'carbon_filter': {
 				'job_time': 0.0,
 				'complete': self._plugin.isFirstRun(),
@@ -247,13 +303,8 @@ class UsageHandler(object):
 				'job_time': 0.0,
 				'complete': self._plugin.isFirstRun(),
 			},
-			'laser_heads': [
-				{
-					'job_time': 0.0,
-					'complete': self._plugin.isFirstRun()
-				}
-			],
 			'first_write': time.time(),
+			'last_used_lh_serial': None,
 			'restored': 0,
 			'version': '0.0.0',
 			'ts': 0.0,

@@ -338,7 +338,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			usage=dict(
 				prefilterUsage=self._usageHandler.get_prefilter_usage(),
 				carbonFilterUsage=self._usageHandler.get_carbon_filter_usage(),
-				laserheadUsage=self._usageHandler.get_laser_head_usage(),
+				laserHeadUsage=self._usageHandler.get_laser_head_usage(),
 				gantryUsage=self._usageHandler.get_gantry_usage(),
 			),
 		)
@@ -1311,6 +1311,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			focus_reminder=[],
 			reset_prefilter_usage=[],
 			reset_carbon_filter_usage=[],
+			reset_laser_head_usage=[],
 			reset_gantry_usage=[],
 		)
 
@@ -1347,6 +1348,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return self._usageHandler.reset_prefilter_usage()
 		elif command == "reset_carbon_filter_usage":
 			return self._usageHandler.reset_carbon_filter_usage()
+		elif command == "reset_laser_head_usage":
+			return self._usageHandler.reset_laser_head_usage()
 		elif command == "reset_gantry_usage":
 			return self._usageHandler.reset_gantry_usage()
 		return NO_CONTENT

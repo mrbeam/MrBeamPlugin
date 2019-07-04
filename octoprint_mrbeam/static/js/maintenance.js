@@ -7,21 +7,26 @@ $(function () {
 
         self.PREFILTER = gettext('pre-filter');
         self.CARBON_FILTER = gettext('carbon filter');
-        self.LASERHEAD = gettext('laser head');
+        self.LASER_HEAD = gettext('laser head');
         self.GANTRY = gettext('gantry');
+        self.PREFILTER_LIFESPAN = 100;
+        self.CARBON_FILTER_LIFESPAN = 400;
+        self.LASER_HEAD_LIFESPAN = 100; // TODO IRATXE: which value should it be?
+        self.GANTRY_LIFESPAN = 10000;
+
 
         self.prefilterUsage = ko.observable(0);
         self.carbonFilterUsage = ko.observable(0);
-        self.laserheadUsage = ko.observable(0);
+        self.laserHeadUsage = ko.observable(0);
         self.gantryUsage = ko.observable(0);
 
         self.componentToReset = ko.observable("");
         self.laserHeadSerial = ko.observable("");
 
-        self.prefilterLifespanHours = _.sprintf(gettext("/%(lifespan)sh"), {lifespan: "100"});
-        self.carbonFilterLifespanHours = _.sprintf(gettext("/%(lifespan)sh"), {lifespan: "400"});
-        self.laserheadLifespanHours = _.sprintf(gettext("/%(lifespan)sh"), {lifespan: "10000"});
-        self.gantryLifespanHours = _.sprintf(gettext("/%(lifespan)sh"), {lifespan: "10000"});
+        self.prefilterLifespanHours = _.sprintf(gettext("/%(lifespan)s h"), {lifespan: self.PREFILTER_LIFESPAN});
+        self.carbonFilterLifespanHours = _.sprintf(gettext("/%(lifespan)s h"), {lifespan: self.CARBON_FILTER_LIFESPAN});
+        self.laserHeadLifespanHours = _.sprintf(gettext("/%(lifespan)s h"), {lifespan: self.LASER_HEAD_LIFESPAN});
+        self.gantryLifespanHours = _.sprintf(gettext("/%(lifespan)s h"), {lifespan: self.GANTRY_LIFESPAN});
 
         self.prefilterUsageHours = ko.computed(function() {
             return Math.floor(self.prefilterUsage()/3600);
@@ -29,11 +34,18 @@ $(function () {
         self.carbonFilterUsageHours = ko.computed(function() {
             return Math.floor(self.carbonFilterUsage()/3600);
         });
-        self.laserheadUsageHours = ko.computed(function() {
-            return Math.floor(self.laserheadUsage()/3600);
+        self.laserHeadUsageHours = ko.computed(function() {
+            return Math.floor(self.laserHeadUsage()/3600);
         });
         self.gantryUsageHours = ko.computed(function() {
             return Math.floor(self.gantryUsage()/3600);
+        });
+        self.actionToReset = ko.computed(function () {
+            if(self.componentToReset() === self.LASER_HEAD) {
+                return 'clean'
+            } else {
+                return 'change'
+            }
         });
 
         self.onBeforeBinding = function() {
@@ -46,7 +58,7 @@ $(function () {
                 backdrop: 'static',
                 keyboard: false
             })
-            .on('click', '#reset_counter_btn', function() {
+            .one('click', '#reset_counter_btn', function() {
                 console.log("Resetting pre-filter usage counter");
                 OctoPrint.simpleApiCommand("mrbeam", "reset_prefilter_usage", {})
                     .done(function(){
@@ -64,7 +76,7 @@ $(function () {
                 backdrop: 'static',
                 keyboard: false
             })
-            .on('click', '#reset_counter_btn', function() {
+            .one('click', '#reset_counter_btn', function() {
                 console.log("Resetting carbon filter usage counter");
                 OctoPrint.simpleApiCommand("mrbeam", "reset_carbon_filter_usage", {})
                     .done(function(){
@@ -76,13 +88,31 @@ $(function () {
             });
         };
 
+        self.resetLaserHeadUsage = function() {
+            self.componentToReset(self.LASER_HEAD);
+            $('#reset_counter_are_you_sure').modal({
+                backdrop: 'static',
+                keyboard: false
+            })
+            .one('click', '#reset_counter_btn', function() {
+                console.log("Resetting laser head usage counter");
+                OctoPrint.simpleApiCommand("mrbeam", "reset_laser_head_usage", {})
+                    .done(function(){
+                        self.laserHeadUsage(0);
+                    })
+                    .fail(function(){
+                        console.error("Unable to reset laser head usage counter.");
+                    });
+            });
+        };
+
         self.resetGantryUsage = function() {
             self.componentToReset(self.GANTRY);
             $('#reset_counter_are_you_sure').modal({
                 backdrop: 'static',
                 keyboard: false
             })
-            .on('click', '#reset_counter_btn', function() {
+            .one('click', '#reset_counter_btn', function() {
                 console.log("Resetting gantry usage counter");
                 OctoPrint.simpleApiCommand("mrbeam", "reset_gantry_usage", {})
                     .done(function(){
@@ -105,7 +135,7 @@ $(function () {
         self.loadUsageValues = function() {
             self.prefilterUsage(self.settings.settings.plugins.mrbeam.usage.prefilterUsage());
             self.carbonFilterUsage(self.settings.settings.plugins.mrbeam.usage.carbonFilterUsage());
-            self.laserheadUsage(self.settings.settings.plugins.mrbeam.usage.laserheadUsage());
+            self.laserHeadUsage(self.settings.settings.plugins.mrbeam.usage.laserHeadUsage());
             self.gantryUsage(self.settings.settings.plugins.mrbeam.usage.gantryUsage());
             self.laserHeadSerial(self.settings.settings.plugins.mrbeam.laserHeadSerial())
         }

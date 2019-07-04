@@ -30,6 +30,7 @@ class AnalyticsKeys(object):
 	TOTAL_SPACE = 'total'
 	AVAILABLE_SPACE = 'available'
 	USED_SPACE = 'used_percent'
+	MRBEAM_USAGE = 'mrbeam_usage'
 	CORRECTION_FACTOR = 'correction_factor'
 	CORRECTION_ENABLED = 'correction_enabled'
 	CORRECTION_OVERRIDE = 'correction_override'
