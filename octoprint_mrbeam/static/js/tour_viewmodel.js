@@ -9,8 +9,23 @@ $(function () {
         self.settings = params[1];
         self.state = params[2];
         self.files = params[3];
+        self.analytics = params[4];
 
         self.tourDef = null;
+
+        self._last_analytics_data_sent = null;
+        self._analytics_tour_done = false;
+        self._analytics_last_step_id = false;
+        self._analytics_last_step_num = false;
+
+        self.onWizardFinish = function(){
+            if (self.settings.settings.plugins.mrbeam.tour_auto_launch()) {
+                console.log("TourViewModel: auto launch tour: true");
+                self.startTour();
+            } else {
+                console.log("TourViewModel: auto launch tour: false");
+            }
+        };
 
         self.btn_startTour = function () {
             self.startTour();
@@ -27,9 +42,10 @@ $(function () {
                 self.tourDef = self._getTourDefinitions();
             }
 
-            console.log("hopscotch tour START: ", self.tourDef);
+            console.log("TourViewModel tour START: ", self.tourDef);
             hopscotch.configure({skipIfNoElement: true});
             hopscotch.startTour(self.tourDef, 0);
+            self._analytics_tour_start();
         };
 
 
@@ -38,7 +54,7 @@ $(function () {
 
             ///// intro /////
             tour.push(new TourStepNoArrow({
-                id: 'intro',
+                id: 'start_screen',
                 title: [gettext("Step-by-Step Tour Guide To Your First Laser Job")],
                 text: [gettext("Looks like you already set up your Mr Beam II - Congratulations!"),
                     gettext("Do you want us to guide you through your first laser job with this step-by-step tour?"),
@@ -58,6 +74,7 @@ $(function () {
                 ctaLabel: gettext("Maybe later"),
                 showCTAButton: true,
                 onCTA: function () {
+                    self._analytics_tour_done = false;
                     hopscotch.endTour();
                 },
             }));
@@ -253,6 +270,10 @@ $(function () {
                 nextOnTargetClick: false,
                 xOffset: -100,
                 yOffset: 200,
+                onShow: function () {
+                    self._onShow();
+                    self._analytics_tour_done = true;
+                },
             }));
 
             return {
@@ -275,7 +296,7 @@ $(function () {
                 nextOnTargetClick: true,
                 yOffset: -15,
                 showNextButton: true,
-                nextLabel: "Cancel",
+                nextLabel: gettext("Cancel"),
             }));
 
             return {
@@ -324,6 +345,10 @@ $(function () {
             hopscotch.startTour(self.tourDef, step);
         };
 
+        self._getCurrStepId = function () {
+            return hopscotch.getCurrTour()['steps'][hopscotch.getCurrStepNum()]['id'];
+        };
+
         self._getCurrStepProp = function (property) {
             if (hopscotch.getCurrTour()) {
                 return hopscotch.getCurrTour()['steps'][hopscotch.getCurrStepNum()][property];
@@ -336,12 +361,18 @@ $(function () {
             return hopscotch.getCurrTour() ? hopscotch.getCurrTour().id : null;
         };
 
+
+        self._getCurrTourLength = function () {
+            return hopscotch.getCurrTour() ? hopscotch.getCurrTour().steps.length : -1;
+        };
+
         self._registerListeners = function () {
 
             hopscotch.listen('next', self._onNext);
             hopscotch.listen('error', self._onError);
             hopscotch.listen('show', self._onShow);
             hopscotch.listen('end', self._onEnd);
+            hopscotch.listen('close', self._onClose);
 
 
             // remove bubbles because they're visible over the curtain
@@ -353,7 +384,7 @@ $(function () {
             });
 
             self.onEventReadyToLaserStart = function (payload) {
-                let id = self._getCurrStepProp('id')
+                let id = self._getCurrStepProp('id');
                 if (id == 'preparing_laserjob') {
                     hopscotch.nextStep();
                 } else if (id == 'start_laserjob') {
@@ -387,7 +418,10 @@ $(function () {
         };
 
         self._onShow = function () {
-            // console.log("hopscotch _onShow: " + self._getCurrTourId() + " #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id'));
+            // console.log("hopscotch _onShow: " + self._getCurrTourId() + " #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepId());
+            self._analytics_tour_done = false;
+            self._analytics_last_step_id = self._getCurrStepId();
+            self._analytics_last_step_num = hopscotch.getCurrStepNum();
             if (self._getCurrStepProp('nextLabel')) {
                 // console.log("hopscotch _onShow: setting next label to: " + self._getCurrStepProp('nextLabel'));
                 $('.hopscotch-next').html(self._getCurrStepProp('nextLabel'));
@@ -405,6 +439,7 @@ $(function () {
                     }
                 })
             }
+            self._analytics_tour_step_show();
         };
 
         self._onEnd = function () {
@@ -415,16 +450,76 @@ $(function () {
                         self.startTour();
                     }
                 }, 10);
-
+                self._analytics_tour_done = true;
+            }
+            if (self._analytics_tour_done) {
+                self._analytics_tour_finish()
+            } else {
+                self._analytics_tour_cancel()
             }
         };
+
+        self._onClose = function () {
+            // console.log("hopscotch _onClose: " + self._getCurrTourId() + " #" + hopscotch.getCurrStepNum() + ", " + self._getCurrStepProp('id'));
+            self._analytics_tour_cancel();
+        };
+
+        // analytics //
+        self._analytics_tour_start = function () {
+            self._analytics_send('tour', {
+                action: 'start',
+                tour_id: self._getCurrTourId(),
+                total_steps: self._getCurrTourLength(),
+                step: hopscotch.getCurrStepNum() + 1,
+                step_id: self._getCurrStepId(),
+            });
+        };
+
+        self._analytics_tour_step_show = function () {
+            self._analytics_send('tour', {
+                action: 'show',
+                tour_id: self._getCurrTourId(),
+                total_steps: self._getCurrTourLength(),
+                step: hopscotch.getCurrStepNum() + 1,
+                step_id: self._getCurrStepId(),
+            });
+        };
+
+        self._analytics_tour_finish = function () {
+            self._analytics_send('tour', {
+                action: 'finish',
+                tour_id: self._getCurrTourId(),
+                total_steps: self._getCurrTourLength(),
+                step: self._analytics_last_step_num + 1,
+                step_id: self._analytics_last_step_id,
+            });
+        };
+
+        self._analytics_tour_cancel = function () {
+            self._analytics_send('tour', {
+                action: 'cancel',
+                tour_id: self._getCurrTourId(),
+                total_steps: self._getCurrTourLength(),
+                step: self._analytics_last_step_num + 1,
+                step_id: self._analytics_last_step_id,
+            });
+        };
+
+
+        self._analytics_send = function (event, payload) {
+            let tmp_str = event + JSON.stringify(payload);
+            if (self._last_analytics_data_sent !== tmp_str) {
+                self._last_analytics_data_sent = tmp_str;
+                self.analytics.send_fontend_event(event, payload);
+            }
+        }
 
     }
 
     var DOM_ELEMENT_TO_BIND_TO = "tour_start_btn";
     OCTOPRINT_VIEWMODELS.push([
         TourViewModel,
-        ["loginStateViewModel", "settingsViewModel", "printerStateViewModel", "filesViewModel"],
+        ["loginStateViewModel", "settingsViewModel", "printerStateViewModel", "filesViewModel", "analyticsViewModel"],
         // ["loginStateViewModel", "settingsViewModel", "printerStateViewModel", "filesViewModel", "vectorConversionViewModel"],
         [/* */]
     ]);

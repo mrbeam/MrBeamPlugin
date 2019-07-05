@@ -21,6 +21,7 @@ class AnalyticsKeys(object):
 	TYPE_CAM_EVENT = 'cam'
 	TYPE_LOG_EVENT = 'log'
 	TYPE_CONNECTIVITY_EVENT = 'connectivity'
+	TYPE_FRONTEND = 'frontend'
 
 	### DEVICE KEYS ###
 	HOSTNAME = 'hostname'
