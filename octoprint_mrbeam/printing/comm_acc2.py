@@ -193,18 +193,20 @@ class MachineCom(object):
 		self._serial_factory_hooks = self._pluginManager.get_hooks("octoprint.comm.transport.serial.factory")
 
 		# laser power correction
-		self._gcode_intensity_limit = _mrbeam_plugin_implementation._settings.get(
-			['laserhead', 'correction', 'gcode_intensity_limit'])
+		self._power_correction_settings = _mrbeam_plugin_implementation._laserheadHandler.get_correction_settings()
+		self._current_lh_data = _mrbeam_plugin_implementation._laserheadHandler.get_current_used_lh_data()
+		self._gcode_intensity_limit = self._power_correction_settings['gcode_intensity_limit']
 
-		if _mrbeam_plugin_implementation._settings.get(['laserhead', 'correction', 'enabled']):
-			if not _mrbeam_plugin_implementation._settings.get(['laserhead', 'correction', 'factor_override']):
-				self._power_correction_factor = _mrbeam_plugin_implementation._settings.get(
-					['laserhead', 'correction', 'factor'])
+		self._power_correction_factor = 1
+		if self._power_correction_settings['correction_enabled']:
+			lh_info = self._current_lh_data['info']
+			if self._power_correction_settings['correction_factor_override']:
+				self._power_correction_factor = self._power_correction_settings['correction_factor_override']
 			else:
-				self._power_correction_factor = _mrbeam_plugin_implementation._settings.get(
-					['laserhead', 'correction', 'factor_override'])
-		else:
-			self._power_correction_factor = 1
+				if lh_info and 'correction_factor' in lh_info:
+					self._power_correction_factor = lh_info['correction_factor']
+
+		self._logger.info('Power correction factor: {}'.format(self._power_correction_factor))
 
 		self.watch_dog = AccWatchDog(self)
 
@@ -1069,19 +1071,6 @@ class MachineCom(object):
 		payload = dict(grbl_version=self._grbl_version, port=self._port, baudrate=self._baudrate)
 		eventManager().fire(OctoPrintEvents.CONNECTED, payload)
 
-	def _set_power_correction_factor(self):
-		self._gcode_intensity_limit = _mrbeam_plugin_implementation._settings.get(
-			['laserhead', 'correction', 'gcode_intensity_limit'])
-
-		if _mrbeam_plugin_implementation.lh['correction_factor_override']:
-			correction_factor = _mrbeam_plugin_implementation.lh['correction_factor_override']
-			self._logger.info("Intensity correction factor OVERRIDED: {}".format(correction_factor))
-		else:
-			correction_factor = _mrbeam_plugin_implementation.lh['correction_factor']
-			self._logger.info("Intensity correction factor applied: {}".format(correction_factor))
-
-		self._power_correction_factor = correction_factor
-
 	def _detectPort(self, close):
 		self._log("Serial port list: %s" % (str(serialList())))
 		for p in serialList():
@@ -1406,7 +1395,7 @@ class MachineCom(object):
 			# Apply power correction factor and limit again (in case there is something wrong with the calculation of
 			# the correction factor)
 			self._current_intensity = int(round(self._current_intensity * self._power_correction_factor))
-			if self._current_intensity > self._gcode_intensity_limit:
+			if self._gcode_intensity_limit and self._current_intensity > self._gcode_intensity_limit:
 				self._current_intensity = self._gcode_intensity_limit
 
 			# self._logger.info('Intensity command changed from S{old} to S{new} (correction factor {factor} and '
@@ -1615,17 +1604,16 @@ class MachineCom(object):
 					token = int(tokens[1])
 					if token == 1:
 						self._log("Enabling power correction...")
-						_mrbeam_plugin_implementation._settings.set_boolean(["laserhead", "correction", "enabled"], True, force=True)
-						_mrbeam_plugin_implementation._settings.save()
-						_mrbeam_plugin_implementation.lh['correction_enabled'] = True
-						self._power_correction_factor = _mrbeam_plugin_implementation._settings.get(
-							['laserhead', 'correction', 'factor'])
+						lh_data = _mrbeam_plugin_implementation._laserheadHandler.get_current_used_lh_data()
+						if lh_data['info'] and 'correction_factor' in lh_data['info']:
+							_mrbeam_plugin_implementation._laserheadHandler.enable_power_correction()
+							self._power_correction_factor = lh_data['info']['correction_factor']
+						else:
+							self._log("Couldn't enable power correction, there is no correction factor for laser head {}.".format(lh_data['serial']))
 
 					elif token == 0:
 						self._log("Disabling power correction...")
-						_mrbeam_plugin_implementation._settings.set_boolean(["laserhead", "correction", "enabled"], False, force=True)
-						_mrbeam_plugin_implementation._settings.save()
-						_mrbeam_plugin_implementation.lh['correction_enabled'] = False
+						_mrbeam_plugin_implementation._laserheadHandler.disable_power_correction()
 						self._power_correction_factor = 1
 				else:
 					self._log("No parameter given (0 or 1)")
