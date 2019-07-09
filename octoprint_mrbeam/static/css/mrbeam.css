@@ -2289,38 +2289,7 @@ input[type="radio"]{
 /*
 * === WHAT'S NEW WIZARD ===
 */
-/*
-* — Beta channel —
-*/
-#whatsnew_software_channel_descriptions {
-  margin-left: 0;
-}
-
-#whatsnew_software_channel_descriptions > div {
-  padding-right: 15px;
-}
-
-#whatsnew_software_channel_descriptions > div > p {
-  text-align: justify;
-  text-justify: inter-word;
-}
-
-#whatsnew_software_channel_descriptions > div > h5 > i, #whatsnew_software_channel_choose > div > i {
-  margin-right: 5px;
-}
-
-#whatsnew_software_channel_choose > label {
-  display: inline-block;
-  margin-top: 20px;
-}
-
-#whatsnew_software_channel_select {
-  width: 100px;
-  margin-left: 20px;
-  display: inline-block;
-}
-
-#whatsnew_software_channel_switch {
+.whatsnew-info-sentence {
   color: #0088cc;
 
 }

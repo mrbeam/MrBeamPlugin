@@ -1,28 +1,17 @@
-<h3>{{ _("New Software Channels!") }}</h3>
+<h3>{{ _("Improved find.mr-beam") }}</h3>
 
-<div id="whatsnew_software_channel_descriptions" class="row">
-    <div class="control-group span6 ">
-        <h5><i class="fa fa-thumbs-o-up" aria-hidden="true"></i>{{ _('Stable Channel') }}: </h5>
-        <p>{{ _('Use the most stable software for your Mr Beam II. You will only get notified about officially released and well tested software updates.') }}</p>
+<div>
+    <div>
+        <strong>find.mr-beam </strong>
+        {{ _('is an online service that helps you find your Mr Beam II device on your computer within your local network. It is very helpful and it just got better!') }}
     </div>
-    <div class="control-group span6">
-        <h5><i class="fa fa-flask" aria-hidden="true"></i>{{ _('Beta Channel') }}: </h5>
-        <p>{{ _('Get the latest Mr Beam development! In this channel you can try the newest features even before they are officially released, with more frequent updates. Use this if you are curious, you can always switch back to the stable channel if you experience errors.') }}</p>
-    </div>
-</div>
 
-<div id="whatsnew_software_channel_choose">
-    <label for="whatsnew_software_channel_select"><strong>{{ _('Select a software channel for your Mr Beam II:') }}</strong></label>
-    <select id="whatsnew_software_channel_select">
-        <option value="PROD" selected="selected">{{ _('Stable') }}</option>
-        <option value="BETA">{{ _('Beta') }}</option>
-        {% if env_local == 'DEV' %}
-            <option value="DEV">{{ _('Develop') }}</option>
-        {% endif %}
-    </select>
-    <div id="whatsnew_software_channel_switch">
-        <i class="fa fa-info" aria-hidden="true"></i>
-        {{ _('Switch between the different software channels of the Mr Beam II any time in the settings!') }}
+    <div data-bind="visible: findMrBeamWorks">
+        <br>
+        <a href="http://find.mr-beam.org" target="_blank" style="font-size: large">
+            <i class="icon-external-link icon-large"></i>
+            {{ _('Try it now!') }}
+        </a>
     </div>
 </div>
 
