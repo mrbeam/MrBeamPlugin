@@ -2291,7 +2291,17 @@ input[type="radio"]{
 */
 .whatsnew-info-sentence {
   color: #0088cc;
+}
 
+.whatsnew-try-it-now-button{
+  background: #e35303;
+  border-radius: 7px;
+  color: white;
+  font-weight: bold;
+}
+
+#whatsnew_find_mrbeam_screenshot{
+  margin: -12px 0 -5px -22px;
 }
 
 /*
@@ -2301,3 +2311,5 @@ input[type="radio"]{
     padding: 6px 16px;
     font-size: 12px;
 }
+
+.whatsnew-try-it-button
