@@ -126,8 +126,6 @@ class IoBeamHandler(object):
 	MESSAGE_ACTION_FAN_EXHAUST =        "exhaust"
 	MESSAGE_ACTION_FAN_LINK_QUALITY =   "link_quality"
 
-	LASER_POWER_GOAL = 950
-
 	def __init__(self, plugin):
 		self._plugin = plugin
 		self._event_bus = plugin._event_bus

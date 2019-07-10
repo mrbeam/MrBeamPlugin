@@ -1606,15 +1606,15 @@ class MachineCom(object):
 						self._log("Enabling power correction...")
 						lh_data = _mrbeam_plugin_implementation._laserheadHandler.get_current_used_lh_data()
 						if lh_data['info'] and 'correction_factor' in lh_data['info']:
-							_mrbeam_plugin_implementation._laserheadHandler.enable_power_correction()
 							self._power_correction_factor = lh_data['info']['correction_factor']
 						else:
 							self._log("Couldn't enable power correction, there is no correction factor for laser head {}.".format(lh_data['serial']))
 
 					elif token == 0:
 						self._log("Disabling power correction...")
-						_mrbeam_plugin_implementation._laserheadHandler.disable_power_correction()
 						self._power_correction_factor = 1
+
+					self._log("Power correction set to {}".format(self._power_correction_factor))
 				else:
 					self._log("No parameter given (0 or 1)")
 			elif specialcmd.startswith('/show_checksums'):

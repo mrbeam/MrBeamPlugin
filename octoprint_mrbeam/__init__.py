@@ -148,8 +148,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		self.laserCutterProfileManager = laserCutterProfileManager()
 
-		self._do_initial_log()
-
 		try:
 			pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
 			if pluginInfo is None:
@@ -168,6 +166,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._dustManager = dustManager()
 		self._laserheadHandler = laserheadHandler(self)
 		self.jobTimeEstimation = JobTimeEstimation(self._event_bus)
+
+		self._do_initial_log()
 
 	def _do_initial_log(self):
 		"""

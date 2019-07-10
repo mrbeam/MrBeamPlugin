@@ -34,21 +34,23 @@ class LaserheadHandler(object):
 	def set_current_used_lh_serial(self, serial):
 		if serial:
 			self._current_used_lh_serial = serial
-			self._write_laser_heads_file()
 
 			if serial not in self._lh_cache:
 				self._logger.info('Saving new laser head serial number: {}'.format(serial))
 				self._lh_cache[serial] = dict(correction_factor=1)
+			else:
+				self._write_laser_heads_file()
 
 	def set_power_measurement_value(self, measure, value):
-		if measure not in self._lh_cache[self._current_used_lh_serial]:
-			self._lh_cache[self._current_used_lh_serial][measure] = value
+		if self._current_used_lh_serial and self._current_used_lh_serial in self._lh_cache:
+			if measure not in self._lh_cache[self._current_used_lh_serial]:
+				self._lh_cache[self._current_used_lh_serial][measure] = value
 
-			lh = self._lh_cache[self._current_used_lh_serial]
-			if 'p_65' in lh and 'p_75' in lh and 'p_85' in lh:
-				self._calculate_power_correction_factor()
-				self._lh_cache[self._current_used_lh_serial]['mrbeam_plugin_version'] = self._plugin_version
-				self._write_laser_heads_file()
+				lh = self._lh_cache[self._current_used_lh_serial]
+				if 'p_65' in lh and 'p_75' in lh and 'p_85' in lh:
+					self._calculate_and_write_correction_factor()
+		else:
+			self._logger.info('Could not set_power_measurement_value. There is no info about the current laser head.')
 
 	def get_current_used_lh_data(self):
 		if self._current_used_lh_serial:
@@ -74,11 +76,11 @@ class LaserheadHandler(object):
 
 		return self._correction_settings
 
-	def enable_power_correction(self):
-		self._correction_settings['correction_enabled'] = True
-
-	def disable_power_correction(self):
-		self._correction_settings['correction_enabled'] = False
+	def _calculate_and_write_correction_factor(self):
+		correction_factor = self._calculate_power_correction_factor()
+		self._lh_cache[self._current_used_lh_serial]['correction_factor'] = correction_factor
+		self._lh_cache[self._current_used_lh_serial]['mrbeam_plugin_version'] = self._plugin_version
+		self._write_laser_heads_file()
 
 	def _calculate_power_correction_factor(self):
 		p_65 = self._lh_cache[self._current_used_lh_serial]['p_65']
@@ -99,14 +101,14 @@ class LaserheadHandler(object):
 			new_intensity = goal_difference * (85-75) / step_difference + 75
 			correction_factor = new_intensity / 65.0
 
-		self._lh_cache[self._current_used_lh_serial]['correction_factor'] = correction_factor
-
 		self._plugin._analytics_handler.event_laserhead_info()
 		self._logger.info('New correction factor calculated: {cf}'.format(cf=correction_factor))
 
+		return correction_factor
+
 	def _load_laser_heads_file(self):
-		self._logger.info('Loading laser_heads.yaml...')
 		if os.path.isfile(self._laser_heads_file):
+			self._logger.info('Loading laser_heads.yaml...')
 			try:
 				with open(self._laser_heads_file, 'r') as stream:
 					data = yaml.safe_load(stream)
