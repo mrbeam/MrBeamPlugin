@@ -446,6 +446,7 @@ class AnalyticsHandler(object):
 		if self._current_job_id is not None:
 			self._write_jobevent(ak.LASERJOB_DONE)
 			self._cleanup()
+		self._activate_upload()
 
 	def _event_print_failed(self, event, payload):
 		if self._current_job_id is not None:
