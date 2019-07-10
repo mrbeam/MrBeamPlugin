@@ -4,11 +4,13 @@ $(function() {
         window.mrbeam.viewModels['wizardWhatsnewViewModel'] = self;
 
         self.settings = parameters[0];
+        self.analytics = parameters[1];
 
         self.uuid = ko.observable(null);
         self.registered = ko.observable(null);
         self.ping = ko.observable(false);
         self.verified = ko.observable(false);
+        self.tryItButtonClicked = false;
         self.findMrBeamWorks = ko.computed(function(){
             return self.registered() && (self.ping() || self.verified())
         });
@@ -26,12 +28,26 @@ $(function() {
 
         self.onStartupComplete = function () {
             self.verifyByFrontend();
+
+            $("#try_findmrbeam_btn").button().click(function(){
+                self.tryItButtonClicked = true
+            });
         };
 
         self.onAllBound = function () {
             self.uuid(self.settings.settings.plugins.findmymrbeam.uuid());
             self.registered(self.settings.settings.plugins.findmymrbeam.registered());
             self.ping(self.settings.settings.plugins.findmymrbeam.ping());
+        };
+
+        self.onWizardFinish = function(){
+            let event = 'whatsnew_findmrbeam';
+            let payload = {
+                btn_shown: self.findMrBeamWorks(),
+                btn_clicked: self.tryItButtonClicked
+            };
+            self.analytics.send_fontend_event(event, payload);
+
         };
 
         self.verifyByFrontend = function() {
@@ -65,7 +81,7 @@ $(function() {
     var DOM_ELEMENT_TO_BIND_TO = "wizard_plugin_corewizard_whatsnew_0";
     OCTOPRINT_VIEWMODELS.push([
         WizardWhatsnewViewModel,
-        ['settingsViewModel'],
+        ['settingsViewModel', 'analyticsViewModel'],
         "#"+DOM_ELEMENT_TO_BIND_TO
     ]);
 });

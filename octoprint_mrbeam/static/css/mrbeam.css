@@ -2294,14 +2294,30 @@ input[type="radio"]{
 }
 
 .whatsnew-try-it-now-button{
-  background: #e35303;
+  background: #e25303;
+  border-color: #e25303;
   border-radius: 7px;
   color: white;
   font-weight: bold;
 }
 
+.whatsnew-try-it-now-button:hover {
+  background: #a63e03;
+  border-color: #a63e03;
+  color: white;
+  font-weight: bold;
+}
+
+.whatsnew-try-it-now-button:focus {
+  background: #e25303;
+  border-color: #e25303;
+  color: white;
+  font-weight: bold;
+}
+
 #whatsnew_find_mrbeam_screenshot{
-  margin: -12px 0 -5px -22px;
+  margin: -12px 0 0 -16px;
+   width: 435px;
 }
 
 /*
