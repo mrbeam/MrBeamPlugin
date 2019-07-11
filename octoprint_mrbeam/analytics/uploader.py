@@ -5,33 +5,34 @@ import time
 import os
 import sys
 import threading
+
 try:
 	from octoprint_mrbeam.mrb_logger import mrb_logger
 except:
 	import logging
 from octoprint_mrbeam.util.cmd_exec import exec_cmd
 
-
-TOKEN_URL           = "https://europe-west1-mrb-analytics.cloudfunctions.net/get_upload_tocken"
+TOKEN_URL = "https://europe-west1-mrb-analytics.cloudfunctions.net/get_upload_tocken"
 UPLOAD_URL_TEMPLATE = "https://storage-upload.googleapis.com/{bucket}"
 
+DELETE_FILES_AFTER_UPLOAD = True
 
 
 
 
 class FileUploader(object):
-
-	STATUS_QUEUED =     'queued'
-	STATUS_INIT =       'init'
-	STATUS_VERIFY =     'verify'
-	STATUS_GET_TOKEN =  'get_token'
-	STATUS_UPLOAD =     'upload_file'
-	STATUS_REMOVE =     'remove_file'
-	STATUS_DONE =       'done'
+	STATUS_QUEUED = 'queued'
+	STATUS_INIT = 'init'
+	STATUS_VERIFY = 'verify'
+	STATUS_GET_TOKEN = 'get_token'
+	STATUS_UPLOAD = 'upload_file'
+	STATUS_REMOVE = 'remove_file'
+	STATUS_DONE = 'done'
 
 	FILE_UPLOAD_DELAY_AFTER_INIT_DEFAULT = 15.0
-	MIN_LIN_COUNT_TO_UPLOAD = 10
+	MIN_LIN_COUNT_TO_UPLOAD = 5
 
+	_instance = None
 
 	def __init__(self,
 	             analytics_dir,
@@ -40,9 +41,11 @@ class FileUploader(object):
 	             delay=None,
 	             analytics_files_prefix=None,
 	             analytics_files_suffix=None,
-	             logger=None):
+	             logger=None,
+	             min_line_count=0):
 		self._logger = logger or mrb_logger("octoprint.plugins.mrbeam.analytics.uploader")
-		self.delay = delay or self.FILE_UPLOAD_DELAY_AFTER_INIT_DEFAULT
+		self.delay = delay if delay is not None and delay >= 0 else self.FILE_UPLOAD_DELAY_AFTER_INIT_DEFAULT
+		self.min_line_count = min_line_count
 		self.analytics_dir = analytics_dir
 		self.analytics_files_prefix = analytics_files_prefix
 		self.analytics_files_suffix = analytics_files_suffix
@@ -56,17 +59,27 @@ class FileUploader(object):
 		self.current_analytics_file = None
 		self.is_online = None
 
+	@staticmethod
+	def upload_now(plugin, delay=None, analyticsfolder=None):
+		if FileUploader._instance is None or not FileUploader._instance.is_active():
+			analyticsfolder = analyticsfolder or os.path.join(plugin._settings.getBaseFolder("base"),
+			                                                  plugin._settings.get(['analytics', 'folder']))
+			FileUploader._instance = FileUploader(analyticsfolder,
+			                  analytics_files_prefix='analytics_log.json.',
+			                  delete_on_success=DELETE_FILES_AFTER_UPLOAD,
+			                  delay=delay)
+			FileUploader._instance.schedule_logrotation_and_startover(current_analytics_file=plugin._settings.get(['analytics', 'filename']))
+			FileUploader._instance.find_files_for_upload()
 
 	def find_files_for_upload(self):
 		files = []
 		for f in os.listdir(self.analytics_dir):
 			if (self.analytics_files_prefix is None or f.startswith(self.analytics_files_prefix)) \
-					and (self.analytics_files_suffix is None or f.endswith(self.analytics_files_suffix)):
+				and (self.analytics_files_suffix is None or f.endswith(self.analytics_files_suffix)):
 				full = os.path.join(self.analytics_dir, f)
 				files.append(full)
 		self._logger.debug("Files found in folder '%s': (%s) %s", self.analytics_dir, len(files), files)
 		self.add_files(files)
-
 
 	def add_files(self, files=[]):
 		files = self._get_files_as_array(files)
@@ -75,25 +88,26 @@ class FileUploader(object):
 		self.queued_files.extend(files)
 		self.run()
 
-
 	def schedule_logrotation_and_startover(self, current_analytics_file=None):
 		self.logrotation_scheduled = True
 		self.current_analytics_file = current_analytics_file
 
+	def is_active(self):
+		return self.worker is not None and self.worker.isAlive()
 
-	def run(self,  delay=None):
+	def run(self, delay=None):
 		if self.worker is None or not self.worker.isAlive():
 			self.worker = threading.Thread(target=self._run_threaded, args=[delay])
 			self.worker.name = 'AnalyticsUploader'
-			self.worker.daemon = True # !!!!
+			self.worker.daemon = True  # !!!!
 			self.worker.start()
 		return self
 
-
-	def _run_threaded(self, delay):
+	def _run_threaded(self, delay=None):
 		try:
 			my_delay = self.delay if delay is None else delay
-			time.sleep(self.delay)
+			self._logger.debug("Waiting %s s", my_delay)
+			time.sleep(my_delay)
 			self.files = self.queued_files
 			self.queued_files = []
 
@@ -121,7 +135,8 @@ class FileUploader(object):
 				elif not self.test_online():
 					self._logger.debug("Not online: not logrotating current analytics file.")
 				else:
-					self._logger.debug("Logrotating and uploading current analytics file. (Long enough and we're online.)")
+					self._logger.debug(
+						"Logrotating and uploading current analytics file. (Long enough and we're online.)")
 					self._do_analytics_logrotate()
 					self.find_files_for_upload()
 					self._run_threaded(delay=0.0)
@@ -130,7 +145,6 @@ class FileUploader(object):
 
 		except:
 			self._logger.exception("Exception in FileUploader.run_threaded() ")
-
 
 	def handle_single_file(self, my_file):
 		succ = None
@@ -163,7 +177,6 @@ class FileUploader(object):
 
 		return succ
 
-
 	def get_token(self, my_file):
 		self.set_status(my_file, state=self.STATUS_GET_TOKEN)
 
@@ -192,7 +205,6 @@ class FileUploader(object):
 			err = "get_token for {} failed with exception: {}: {}".format(my_file, type(e).__name__, e)
 			self.set_status(my_file, succ=False, err=err)
 
-
 	def upload_file(self, my_file, token_data):
 		self.set_status(my_file, state=self.STATUS_UPLOAD)
 
@@ -215,7 +227,6 @@ class FileUploader(object):
 			err = "upload_file {} failed with exception: {}: {}".format(my_file, type(e).__name__, e)
 			self.set_status(my_file, succ=False, err=err)
 
-
 	def remove_file(self, my_file):
 		self.set_status(my_file, state=self.STATUS_REMOVE)
 
@@ -232,12 +243,10 @@ class FileUploader(object):
 			err = "remove_file {} failed with exception: {}: {}".format(my_file, type(e).__name__, e)
 			self.set_status(my_file, succ=False, err=err)
 
-
 	def verify_file(self, my_file):
 		self.set_status(my_file, state=self.STATUS_VERIFY)
 		if not os.path.isfile(my_file) and my_file in self.status:
 			self.set_status(my_file, succ=False, err="File not found")
-
 
 	def test_online(self, force=False, lazy=False):
 		"""
@@ -264,16 +273,16 @@ class FileUploader(object):
 			self.is_online = res
 		return res
 
-
 	def log_status(self):
 		ok = 0
 		err = 0
-		for k,v in self.status.iteritems():
+		for k, v in self.status.iteritems():
 			if v['succ']:
 				ok += 1
 			else:
 				err += 1
-		self._logger.info("Analytics file upload finished. Files: %s (ok: %s, failed: %s) Details: %s", len(self.status), ok, err, self.status)
+		self._logger.info("Analytics file upload finished. Files: %s (ok: %s, failed: %s) Details: %s",
+		                  len(self.status), ok, err, self.status)
 
 	def _do_analytics_logrotate(self):
 		long_enough = self._is_analyticsfile_long_enough()
@@ -291,13 +300,15 @@ class FileUploader(object):
 		long_enough = False
 		if self.current_analytics_file is not None:
 			ca_full = os.path.join(self.analytics_dir, self.current_analytics_file)
-			long_enough = self._has_file_more_lines_than(ca_full, self.MIN_LIN_COUNT_TO_UPLOAD)
+			long_enough = self._has_file_more_lines_than(ca_full, self.min_line_count)
+			# long_enough = self._has_file_more_lines_than(ca_full, self.MIN_LIN_COUNT_TO_UPLOAD)
 		return long_enough
-
 
 	def _has_file_more_lines_than(self, my_file, max_lines):
 		res = False
 		if my_file is not None and os.path.isfile(my_file):
+			if max_lines <= 0:
+				return True
 			with open(my_file) as f:
 				for i, l in enumerate(f):
 					if i > max_lines:
@@ -305,20 +316,17 @@ class FileUploader(object):
 						break
 		return res
 
-
 	def _get_system_properties(self):
 		return dict(env=_mrbeam_plugin_implementation.get_env(),
-					version=_mrbeam_plugin_implementation._plugin_version,
-					name=_mrbeam_plugin_implementation.getHostname(),
-					serial=_mrbeam_plugin_implementation._serial_num
+		            version=_mrbeam_plugin_implementation._plugin_version,
+		            name=_mrbeam_plugin_implementation.getHostname(),
+		            serial=_mrbeam_plugin_implementation._serial_num
 		            )
-
 
 	def _get_files_as_array(self, files):
 		if isinstance(files, basestring):
 			files = [files]
 		return files
-
 
 	def _init_status(self, files):
 		for my_file in files:
@@ -328,7 +336,6 @@ class FileUploader(object):
 			                            err=None,
 			                            remote_name=None,
 			                            logrotate_if_online=False)
-
 
 	def set_status(self, my_file, state=None, succ=None, err=None, remote_name=None, logrotate_if_online=None):
 		if state is not None:
@@ -342,14 +349,11 @@ class FileUploader(object):
 		if logrotate_if_online is not None:
 			self.status[my_file]['logrotate_if_online'] = logrotate_if_online
 
-
 	def get_status(self, my_file):
 		return self.status[my_file]
 
-
 	def is_state_ok(self, my_file):
 		return self.status[my_file]['succ'] is not False
-
 
 
 def my_callback(success, err=None):
@@ -371,4 +375,3 @@ if __name__ == "__main__":
 	FileUploader(file=file, logger=logger, callback=my_callback).run()
 	time.sleep(10)
 	logger.info("done")
-

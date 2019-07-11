@@ -43,6 +43,7 @@ from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.cli import get_cli_commands
 from .materials import materials
 from octoprint_mrbeam.gcodegenerator.jobtimeestimation import JobTimeEstimation
+from .analytics.uploader import FileUploader
 
 
 
@@ -1344,6 +1345,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			custom_materials=[],
 			analytics_init=[], # user's analytics choice froom welcome wizard
 			analytics_data=['event', 'payload'], # analytics data from the frontend
+			analytics_upload=[], # triggers an upload of analytics files
 			take_undistorted_picture=[],  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
 			focus_reminder=[],
 			reset_air_filter_usage=[],
@@ -1378,6 +1380,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return self.analytics_init(data)
 		elif command == "analytics_data":
 			return self.analytics_data(data)
+		elif command == "analytics_upload":
+			FileUploader.upload_now(self, delay=0.0)
+			return NO_CONTENT
 		elif command == "focus_reminder":
 			return self.focus_reminder(data)
 		elif command == "reset_air_filter_usage":
