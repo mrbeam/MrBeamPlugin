@@ -85,21 +85,12 @@ class AnalyticsHandler(object):
 			os.makedirs(self.analyticsfolder)
 
 		if self._analyticsOn is not None:
-			# self._activate_upload()
 			FileUploader.upload_now(self._plugin)
 
 		self._jsonfile = os.path.join(self.analyticsfolder, self._settings.get(['analytics', 'filename']))
 
 		if self._analyticsOn:
 			self._activate_analytics()
-
-	def _activate_upload(self):
-		FileUploader.upload_now(self._plugin)
-		# fu = FileUploader(self.analyticsfolder,
-		#                   analytics_files_prefix='analytics_log.json.',
-		#                   delete_on_success=self.DELETE_FILES_AFTER_UPLOAD)
-		# fu.schedule_logrotation_and_startover(current_analytics_file=self._settings.get(['analytics', 'filename']))
-		# fu.find_files_for_upload()
 
 	def _activate_analytics(self):
 		if not os.path.isfile(self._jsonfile):
@@ -448,7 +439,6 @@ class AnalyticsHandler(object):
 		if self._current_job_id is not None:
 			self._write_jobevent(ak.LASERJOB_DONE)
 			self._cleanup()
-		# self._activate_upload()
 		FileUploader.upload_now(self._plugin, delay=5.0)
 
 	def _event_print_failed(self, event, payload):
@@ -866,7 +856,6 @@ class AnalyticsHandler(object):
 		if consent == 'agree':
 			self.analytics_user_permission_change(True)
 			self.process_analytics_files()
-			# self._activate_upload()
 			FileUploader.upload_now(self._plugin)
 
 		elif consent == 'disagree':
