@@ -41,7 +41,6 @@ def existing_analyticsHandler():
 
 
 class AnalyticsHandler(object):
-	# DELETE_FILES_AFTER_UPLOAD = True
 	DISK_SPACE_TIMER = 3.0
 	IP_ADDRESSES_TIMER = 15.0
 	SELF_CHECK_TIMER = 20.0
