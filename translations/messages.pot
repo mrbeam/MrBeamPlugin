@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-06-27 15:38+0200\n"
+"POT-Creation-Date: 2019-07-12 11:09+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -413,6 +413,7 @@ msgid "Ready to laser?"
 msgstr ""
 
 #: octoprint_mrbeam/static/js/mother_viewmodel.js:576
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:299
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:117
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:370
 #: octoprint_mrbeam/templates/settings.jinja2:52
@@ -531,31 +532,31 @@ msgstr ""
 msgid "Develop"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:42
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:58
 msgid "Step-by-Step Tour Guide To Your First Laser Job"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:43
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:59
 msgid "Looks like you already set up your Mr Beam II - Congratulations!"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:44
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:60
 msgid ""
 "Do you want us to guide you through your first laser job with this step-"
 "by-step tour?"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:45
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:61
 msgid "What do you need for this tour:"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:47
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:63
 msgid ""
 "Have a piece of felt by hand. Best to use the one that came with your Mr "
 "Beam II."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:48
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:64
 #, python-format
 msgid ""
 "The laser head of your Mr Beam II has to be focused according to the "
@@ -563,214 +564,214 @@ msgid ""
 "%(opening_tag)sKnowledge base article%(closing_tag)s."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:52
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:68
 msgid "About 5-10 minutes of your time."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:57
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:73
 msgid "Yes, let's go!"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:58
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:74
 msgid "Maybe later"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:68
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:85
 msgid "First, do the homing cycle"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:69
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:86
 msgid "This is important so the Mr Beam II knows where the laser head is located."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:79
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:96
 msgid "Look into your Mr Beam II"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:80
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:97
 msgid "The laser head is now moving to the upper right corner."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:81
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:98
 msgid "Click \"next\" to proceed."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:89
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:106
 msgid "Place the felt material inside Mr Beam II"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:91
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:108
 msgid "First open the orange lid of your Mr Beam II."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:92
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:109
 msgid ""
 "Then place the felt for the laser job somewhere in the middle of Mr Beam "
 "II's working area."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:93
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:110
 msgid ""
 "Wait for the camera to take a picture. You will see a black and white "
 "picture of your felt here in your browser."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:94
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:111
 msgid ""
 "Once you have a good picture, close the lid of your Mr Beam II and click "
 "\"next\"."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:108
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:125
 msgid "Ready to select our design?"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:109
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:126
 msgid "Click on <strong>design library</strong>."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:110
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:127
 msgid ""
 "Here you can find some designs and later you will also be able to upload "
 "your own."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:123
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:140
 msgid "Select this design file to place it on the working area."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:124
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:141
 msgid "For your first laser job, we thought you might like this nice key ring :)"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:125
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:142
 msgid ""
 "Please click on this tile to place it on the <strong>working "
 "area</strong>."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:139
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:156
 msgid "Great! You can now move the design"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:140
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:157
 msgid ""
 "First click on it and then drag and drop it to place it on top of the "
 "material."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:141
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:158
 msgid "Click \"next\" when you're done."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:142
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:159
 msgid "Hint: You can also type the coordinates directly into the left-side list."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:154
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:171
 msgid "And... let’s proceed to select the parameters!"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:155
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:172
 msgid "Don't worry, the laser won't fire immediately."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:156
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:173
 msgid "Just 3 quick steps..."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:165
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:182
 msgid "Select the material"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:166
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:183
 msgid "For this guide we want to use felt."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:177
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:194
 msgid "Select the color of the material"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:178
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:195
 msgid "This is important because different colors absorb the laser differently."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:189
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:206
 msgid "Select the thickness of the material"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:190
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:207
 msgid "Select 3mm."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:191
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:208
 msgid ""
 "Today we want our felt to be cut as well as engraved. Therefore we have "
 "to select its thickness."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:192
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:209
 msgid "(If you want to engrave only, the thickness doesn't matter.)"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:202
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:219
 msgid "We’re ready to go!"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:203
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:220
 msgid "Press Start and your Mr&nbsp;Beam&nbsp;II will prepare your laser job."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:204
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:221
 msgid ""
 "Should our pre-configured material settings not really cut it (pun "
 "intended), you can tweak them in the lower section of this screen."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:214
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:231
 msgid "Reminder: Is your laser head focused?"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:215
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:232
 msgid ""
 "The height of the laser head needs to be adjusted according to your "
 "material."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:216
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:233
 msgid "We assumed that it is already focused."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:217
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:234
 msgid "<strong>If it is focused</strong> click on \"It's focused!\""
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:218
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:235
 #, python-format
 msgid ""
 "<strong>If it's NOT focused</strong> you should cancel this tour here and"
 " focus it. %(opening_tag)sLearn how to do this.%(closing_tag)s"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:234
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:251
 msgid "Mr Beam II is now preparing your laser job"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:235
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:252
 msgid "This takes a few seconds. Just relax."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:243
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:260
 msgid ""
 "Done! As soon as you click the start button on your Mr&nbsp;Beam&nbsp;II,"
 " the magic will begin 🎉"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:244
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:261
 msgid "Thank you for doing this first laser job with us."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:245
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:262
 #, python-format
 msgid ""
 "For more in-depth information you can check our %(opening_tag)sknowledge "
@@ -778,20 +779,20 @@ msgid ""
 "II."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:271
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:292
 msgid "Working area has to be empty to start this tour."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:272
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:293
 msgid "Click here to remove all designs from your working area."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:291
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:312
 #: octoprint_mrbeam/templates/settings/camera_settings_markers.jinja2:36
 msgid "Next"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/tour_viewmodel.js:295
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:316
 msgid "Close"
 msgstr ""
 
@@ -1646,7 +1647,7 @@ msgstr ""
 msgid "I do fully understand and agree!"
 msgstr ""
 
-#: octoprint_mrbeam/templates/loading_overlay.jinja2:90
+#: octoprint_mrbeam/templates/loading_overlay.jinja2:101
 msgid "beamOS is starting..."
 msgstr ""
 
