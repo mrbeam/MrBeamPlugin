@@ -4,7 +4,7 @@
     <div>
         <p>
             <a href="http://find.mr-beam.org" target="_blank"><strong>find.mr-beam </strong></a>
-            {{ _('is an online service that helps you to connect your Mr Beam II with your computer.<br>And we’ve got great news for you!') }}
+            {{ _('is an online service that helps you to connect your Mr Beam II with your computer.<br>And we’ve got great news for you, it just got better!') }}
         </p>
         <p>
             {{ _('1.  We added IPv6 support so it got even more reliable!') }}<br>
@@ -14,14 +14,16 @@
     </div>
 
     <div data-bind="visible: findMrBeamWorks">
-        <a href="http://find.mr-beam.org?whatsnew" target="_blank" id="try_findmrbeam_btn" class="btn whatsnew-try-it-now-button" role="button">{{ _('Try it now!') }}</a>
+        <a href="http://find.mr-beam.org?whatsnew" target="_blank" id="try_findmrbeam_btn" class="btn whatsnew-try-it-now-button" role="button">
+            <i class="fa fa-external-link" aria-hidden="true"></i>
+            {{ _('Try it now!') }}
+        </a>
     </div>
 
-    <div style="margin-top: 4px;">
-        <small class="muted">{{ _("For more information check out our %(tag_open)sKnowledge Base article%(tag_close)s.",
-            tag_open='<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000507379-find-mr-beam-discovery-service" target="_blank" class="muted">',
-            tag_close='</a>')}}
-        </small>
+    <div class="whatsnew-bottom-line-note">
+        {{ _("For more information check out our %(tag_open)sKnowledge Base article%(tag_close)s.",
+        tag_open='<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000507379-find-mr-beam-discovery-service" target="_blank" class="muted">',
+        tag_close='</a>')}}
     </div>
 </div>
 
