@@ -43,6 +43,7 @@ from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.cli import get_cli_commands
 from .materials import materials
 from octoprint_mrbeam.gcodegenerator.jobtimeestimation import JobTimeEstimation
+from .analytics.uploader import FileUploader
 
 
 
@@ -306,6 +307,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				clip_working_area = True # https://github.com/mrbeam/MrBeamPlugin/issues/134
 			),
 			grbl_version_lastknown=None,
+			tour_auto_launch = False,
 		)
 
 	def on_settings_load(self):
@@ -334,6 +336,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			_version = self._plugin_version,
 			focusReminder = self._settings.get(['focusReminder']),
 			airFilterUsage = self._usageHandler.get_air_filter_usage(),
+			tour_auto_launch = self._settings.get(['tour_auto_launch']),
 		)
 
 	def on_settings_save(self, data):
@@ -433,6 +436,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/air_filter_usage.js",
 				"js/feedback_widget.js",
 				"js/material_settings.js",
+				"js/analytics.js",
 			    ],
 			css=["css/mrbeam.css",
 			     "css/svgtogcode.css",
@@ -1339,7 +1343,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			ready_to_laser=[],
 			cli_event=["event"],
 			custom_materials=[],
-			analytics_init=[],
+			analytics_init=[], # user's analytics choice froom welcome wizard
+			analytics_data=['event', 'payload'], # analytics data from the frontend
+			analytics_upload=[], # triggers an upload of analytics files
 			take_undistorted_picture=[],  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
 			focus_reminder=[],
 			reset_air_filter_usage=[],
@@ -1372,6 +1378,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return self.cli_event(data)
 		elif command == "analytics_init":
 			return self.analytics_init(data)
+		elif command == "analytics_data":
+			return self.analytics_data(data)
+		elif command == "analytics_upload":
+			FileUploader.upload_now(self, delay=0.0)
+			return NO_CONTENT
 		elif command == "focus_reminder":
 			return self.focus_reminder(data)
 		elif command == "reset_air_filter_usage":
@@ -1382,10 +1393,17 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if 'analyticsInitialConsent' in data:
 			self._analytics_handler.initial_analytics_procedure(data['analyticsInitialConsent'])
 
+	def analytics_data(self, data):
+		event = data.get('event')
+		payload = data.get('payload', dict())
+		self._analytics_handler.log_frontend_event(event, payload)
+		return NO_CONTENT
+
 	def focus_reminder(self, data):
 		if 'focusReminder' in data:
 			self._settings.set_boolean(["focusReminder"], data['focusReminder'])
 			self._settings.save()	# This is necessary because without it the value is not saved
+		return NO_CONTENT
 
 
 	def cli_event(self, data):
