@@ -317,6 +317,28 @@ $(function () {
                     // stepNums : ["I", "II", "III"]
                   }
         }
+      
+        self._getPreTourDefinitions = function () {
+            let tour = [];
+
+            ///// intro /////
+            tour.push(new TourStep({
+                id: 'empty_woringarea',
+                title: ["Working area has to be empty to start this tour."],
+                text: ["Click here to remove all designs from your working area."],
+                target: "clear_working_area_btn",
+                placement: 'right',
+                nextOnTargetClick: true,
+                yOffset: -15,
+                showNextButton: true,
+                nextLabel: "Cancel",
+            }));
+
+            return {
+                id: "pre-tour",
+                steps: tour
+            };
+        };
 
         self._setPreConditions = function () {
             // switch to working area
@@ -361,19 +383,16 @@ $(function () {
             return hopscotch.getCurrTour() ? hopscotch.getCurrTour().id : null;
         };
 
-
         self._getCurrTourLength = function () {
             return hopscotch.getCurrTour() ? hopscotch.getCurrTour().steps.length : -1;
         };
 
         self._registerListeners = function () {
-
             hopscotch.listen('next', self._onNext);
             hopscotch.listen('error', self._onError);
             hopscotch.listen('show', self._onShow);
             hopscotch.listen('end', self._onEnd);
             hopscotch.listen('close', self._onClose);
-
 
             // remove bubbles because they're visible over the curtain
             $(window).on('beforeunload', function () {
@@ -422,6 +441,7 @@ $(function () {
             self._analytics_tour_done = false;
             self._analytics_last_step_id = self._getCurrStepId();
             self._analytics_last_step_num = hopscotch.getCurrStepNum();
+
             if (self._getCurrStepProp('nextLabel')) {
                 // console.log("hopscotch _onShow: setting next label to: " + self._getCurrStepProp('nextLabel'));
                 $('.hopscotch-next').html(self._getCurrStepProp('nextLabel'));
@@ -513,7 +533,6 @@ $(function () {
                 self.analytics.send_fontend_event(event, payload);
             }
         }
-
     }
 
     var DOM_ELEMENT_TO_BIND_TO = "tour_start_btn";

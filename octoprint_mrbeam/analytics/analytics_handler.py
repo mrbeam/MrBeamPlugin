@@ -225,7 +225,7 @@ class AnalyticsHandler(object):
 			self._write_log_event(ak.LOG_CPU, payload=data)
 		except Exception as e:
 			self._logger.exception('Error during log_cpu_warning: {}'.format(e.message), analytics=True)
-
+      
 	def log_camera_session(self, errors):
 		try:
 			self._logger.info(errors)
@@ -247,6 +247,20 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.exception('Error during log_frontend_event: {}'.format(e.message), analytics=True)
 
+	def log_camera_session(self, errors):
+		try:
+			self._logger.info(errors)
+			success = True
+			if errors:
+				success = False
+			data = {
+				'success': success,
+				'err': errors,
+			}
+			self._write_log_event(ak.CAMERA, payload=data)
+
+		except Exception as e:
+			self._logger.exception('Error during log_camera_error: {}'.format(e.message), analytics=True)
 
 	def _write_current_software_status(self):
 		try:
@@ -666,6 +680,7 @@ class AnalyticsHandler(object):
 			if payload is not None:
 				data[ak.DATA] = payload
 			self._write_event(ak.TYPE_FRONTEND, event, self._analytics_log_version, payload=data, analytics=True)
+
 		except Exception as e:
 			self._logger.exception('Error during _write_log_event: {}'.format(e.message), analytics=True)
 
