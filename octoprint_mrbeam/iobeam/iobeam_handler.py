@@ -11,15 +11,16 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.lib.rwlock import RWLock
 from flask.ext.babel import gettext
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
+from octoprint_mrbeam.iobeam.laserhead_handler import laserheadHandler
 
 # singleton
 _instance = None
 
 
-def ioBeamHandler(eventBusOct, socket_file=None):
+def ioBeamHandler(plugin):
 	global _instance
 	if _instance is None:
-		_instance = IoBeamHandler(eventBusOct, socket_file)
+		_instance = IoBeamHandler(plugin)
 	return _instance
 
 
@@ -125,10 +126,10 @@ class IoBeamHandler(object):
 	MESSAGE_ACTION_FAN_EXHAUST =        "exhaust"
 	MESSAGE_ACTION_FAN_LINK_QUALITY =   "link_quality"
 
-	LASER_POWER_GOAL = 950
-
-	def __init__(self, event_bus, socket_file=None):
-		self._event_bus = event_bus
+	def __init__(self, plugin):
+		self._plugin = plugin
+		self._event_bus = plugin._event_bus
+		self._socket_file = plugin._settings.get(["dev", "sockets", "iobeam"])
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam")
 
 		self._shutdown_signaled = False
@@ -138,7 +139,7 @@ class IoBeamHandler(object):
 		self._callbacks = dict()
 		self._callbacks_lock = RWLock()
 
-		self.dev_mode = _mrbeam_plugin_implementation._settings.get_boolean(['dev', 'iobeam_disable_warnings'])
+		self.dev_mode = plugin._settings.get_boolean(['dev', 'iobeam_disable_warnings'])
 
 		self.iobeam_version = None
 
@@ -146,12 +147,14 @@ class IoBeamHandler(object):
 		self._interlocks = dict()
 
 		self._subscribe()
-		self._initWorker(socket_file)
+		self._initWorker(self._socket_file)
 
 		self.processing_times_log = collections.deque([], self.PROCESSING_TIMES_LOG_LENGTH)
 
-		self._settings = _mrbeam_plugin_implementation._settings
+		self._settings = plugin._settings
 		self.reported_hardware_malfunctions = []
+
+		self._laserheadHandler = laserheadHandler(plugin)
 
 	def isRunning(self):
 		return self._worker.is_alive()
@@ -610,7 +613,7 @@ class IoBeamHandler(object):
 		elif action == "serial":
 			sn = token[1]
 			if sn not in ('error'):
-				_mrbeam_plugin_implementation.lh['serial'] = sn
+				self._laserheadHandler.set_current_used_lh_serial(sn)
 				self._logger.info("laserhead serial: %s", sn)
 			else:
 				self._logger.info("laserhead: '%s'", message)
@@ -623,7 +626,7 @@ class IoBeamHandler(object):
 				self._logger.warn("Can't read power 65 value as int: '%s'", token[2])
 
 			if p65 is not None:
-				_mrbeam_plugin_implementation.lh['p_65'] = p65
+				self._laserheadHandler.set_power_measurement_value('p_65', p65)
 				self._logger.info("laserhead p_65: %s", p65)
 		elif action == "power" and token[1] == '75':
 			p75 = None
@@ -634,7 +637,7 @@ class IoBeamHandler(object):
 				self._logger.warn("Can't read power 75 value as int: '%s'", token[2])
 
 			if p75 is not None:
-				_mrbeam_plugin_implementation.lh['p_75'] = p75
+				self._laserheadHandler.set_power_measurement_value('p_75', p75)
 				self._logger.info("laserhead p_75: %s", p75)
 		elif action == "power" and token[1] == '85':
 			p85 = None
@@ -645,72 +648,12 @@ class IoBeamHandler(object):
 				self._logger.warn("Can't read power 85 value as int: '%s'", token[2])
 
 			if p85 is not None:
-				_mrbeam_plugin_implementation.lh['p_85'] = p85
+				self._laserheadHandler.set_power_measurement_value('p_85', p85)
 				self._logger.info("laserhead p_85: %s", p85)
-
-			# If we have all the values and the correction, we (calculate and) apply the power correction factor
-			if _mrbeam_plugin_implementation.lh['p_65'] and _mrbeam_plugin_implementation.lh['p_75'] and \
-					_mrbeam_plugin_implementation.lh['p_85']:
-
-				# Only calculate if we are not overriding
-				if not _mrbeam_plugin_implementation.lh['correction_factor_override']:
-					self._calculate_power_correction_factor()
-
-				# These values are read in the init of the comm_acc2. However, that may happen before these calculations
-				# are done so it is possible that some old values are stored instead. Here we store the new values if
-				# necessary.
-				if _mrbeam_plugin_implementation.lh['correction_enabled']:
-					try:
-						self._logger.info('Applying laser power correction factor')
-						_mrbeam_plugin_implementation._printer._comm._set_power_correction_factor()
-					except:
-						if not _mrbeam_plugin_implementation.lh['correction_factor_override']:
-							self._logger.info("Intensity correction factor applied: {}".format(_mrbeam_plugin_implementation.lh['correction_factor']))
-						else:
-							self._logger.info("Intensity correction factor OVERRIDED: {}".format(_mrbeam_plugin_implementation.lh['correction_factor_override']))
-
-				# Write values to analytics
-				_mrbeam_plugin_implementation._analytics_handler._event_laserhead_info()
-			else:
-				self._logger.warn("Can't calculate intensity correction factor as p_65, p_75 or p_85 are not valid")
-
 		else:
 			self._logger.info("laserhead: '%s'", message)
 
 		return 0
-
-	def _calculate_power_correction_factor(self):
-		self._logger.info('Calculating laser power correction...')
-		p_65 = _mrbeam_plugin_implementation.lh['p_65']
-		p_75 = _mrbeam_plugin_implementation.lh['p_75']
-		p_85 = _mrbeam_plugin_implementation.lh['p_85']
-
-		correction_factor = 1
-
-		if p_65 < self.LASER_POWER_GOAL < p_75:
-			step_difference = float(p_75-p_65)
-			goal_difference = self.LASER_POWER_GOAL - p_65
-			new_intensity = goal_difference * (75-65) / step_difference + 65
-			correction_factor = new_intensity / 65.0
-
-		elif p_75 < self.LASER_POWER_GOAL < p_85:
-			step_difference = float(p_85 - p_75)
-			goal_difference = self.LASER_POWER_GOAL - p_75
-			new_intensity = goal_difference * (85-75) / step_difference + 75
-			correction_factor = new_intensity / 65.0
-
-		# If the correction factor changed, save values to config.yaml
-		if correction_factor != _mrbeam_plugin_implementation.lh['correction_factor'] or correction_factor == 1:
-			_mrbeam_plugin_implementation.lh['correction_factor'] = correction_factor
-
-			self._settings.set(["laserhead", "serial"], _mrbeam_plugin_implementation.lh['serial'], force=True)
-			self._settings.set_float(["laserhead", "correction", "factor"], correction_factor, force=True)
-			self._settings.set_int(["laserhead", "p_65"], p_65, force=True)
-			self._settings.set_int(["laserhead", "p_75"], p_75, force=True)
-			self._settings.set_int(["laserhead", "p_85"], p_85, force=True)
-			self._settings.save()
-
-		self._logger.info('Correction factor: {cf}'.format(cf=correction_factor))
 
 	def _handle_iobeam_message(self, message, token):
 		action = token[0] if len(token) > 0 else None
@@ -724,16 +667,21 @@ class IoBeamHandler(object):
 				else:
 					if state <= 0:
 						self._logger.error("Received iobeam version: %s - version OUTDATED. IOBEAM_MIN_REQUIRED_VERSION: %s", self.iobeam_version, self.IOBEAM_MIN_REQUIRED_VERSION)
-						_mrbeam_plugin_implementation.notify_frontend(title=gettext("Software Update required"),
-						                                              text=gettext("Module 'iobeam' is outdated. Please run software update from 'Settings' > 'Software Update' before you start a laser job."),
-						                                              type="error", sticky=True, replay_when_new_client_connects=True)
+						self._plugin.notify_frontend(title=gettext("Software Update required"),
+													 text=gettext("Module 'iobeam' is outdated. Please run software "
+																  "update from 'Settings' > 'Software Update' before "
+																  "you start a laser job."),
+													 type="error", sticky=True,
+													 replay_when_new_client_connects=True)
 					else:
 						self._logger.error("Received iobeam version: %s - version INCOMPATIBLE. iobeam is already using new JSON protocol!", self.iobeam_version)
-						_mrbeam_plugin_implementation.notify_frontend(title=gettext("Software Update required"),
-						                                              text=gettext(
-							                                              "Module 'MrBeam Plugin' is outdated; iobeam version is newer than expected. Please run software update from 'Settings' > 'Software Update' before you start a laser job."),
-						                                              type="error", sticky=True,
-						                                              replay_when_new_client_connects=True)
+						self._plugin.notify_frontend(title=gettext("Software Update required"),
+													 text=gettext("Module 'MrBeam Plugin' is outdated; iobeam version "
+																  "is newer than expected. Please run software update "
+																  "from 'Settings' > 'Software Update' before you start "
+																  "a laser job."),
+													 type="error", sticky=True,
+													 replay_when_new_client_connects=True)
 				return 0
 			else:
 				self._logger.warn("_handle_iobeam_message(): Received iobeam:version message without version number. Counting as error. Message: %s", message)
@@ -753,7 +701,7 @@ class IoBeamHandler(object):
 					self.send_bottom_open_frontend_notification(malfunction)
 				else:
 					self.send_hardware_malfunction_frontend_notification(malfunction, message)
-			_mrbeam_plugin_implementation._analytics_handler.log_iobeam_message(self.iobeam_version, message)
+			self._plugin._analytics_handler.log_iobeam_message(self.iobeam_version, message)
 		elif action == 'runtime': # introduced in iobeam 0.6.2
 			init = token[1] if len(token) > 1 else None
 			malfunction = token[2] if len(token) > 2 else None
@@ -766,10 +714,10 @@ class IoBeamHandler(object):
 					self.send_bottom_open_frontend_notification(malfunction)
 				else:
 					self.send_hardware_malfunction_frontend_notification(malfunction, message)
-			_mrbeam_plugin_implementation._analytics_handler.log_iobeam_message(self.iobeam_version, message)
+			self._plugin._analytics_handler.log_iobeam_message(self.iobeam_version, message)
 		elif action == 'i2c':
 			self._logger.info("iobeam i2c devices: '%s'", message)
-			_mrbeam_plugin_implementation._analytics_handler.log_iobeam_message(self.iobeam_version, message)
+			self._plugin._analytics_handler.log_iobeam_message(self.iobeam_version, message)
 		elif action == 'debug':
 			self._logger.info("iobeam debug message: '%s'", message)
 		else:
@@ -805,10 +753,10 @@ class IoBeamHandler(object):
 				       "A possible hardware malfunction has been detected on this device. Please contact our support team immediately at:") + \
 			       '<br/><a href="https://mr-beam.org/ticket" target="_blank">mr-beam.org/ticket</a><br/><br/>' \
 			       '<strong>' + gettext("Error:") + '</strong><br/>{}'.format(message.replace(':', ': ')) # add whitespaces so that longer messages break in frontend
-			_mrbeam_plugin_implementation.notify_frontend(title=gettext("Hardware malfunction"),
-			                                              text=text,
-			                                              type="error", sticky=True,
-			                                              replay_when_new_client_connects=True)
+			self._plugin.notify_frontend(title=gettext("Hardware malfunction"),
+			                             text=text,
+			                             type="error", sticky=True,
+			                             replay_when_new_client_connects=True)
 
 	def send_bottom_open_frontend_notification(self, malfunction):
 		if malfunction not in self.reported_hardware_malfunctions:
@@ -816,10 +764,10 @@ class IoBeamHandler(object):
 			text = '<br/>' + \
 			       gettext("The bottom plate is not closed correctly. "
 			               "Please make sure that the bottom is correctly mounted as described in the Mr Beam II user manual.")
-			_mrbeam_plugin_implementation.notify_frontend(title=gettext("Bottom Plate Error"),
-			                                              text=text,
-			                                              type="error", sticky=True,
-			                                              replay_when_new_client_connects=True)
+			self._plugin.notify_frontend(title=gettext("Bottom Plate Error"),
+			                             text=text,
+			                             type="error", sticky=True,
+			                             replay_when_new_client_connects=True)
 
 	def log_debug_processing_stats(self):
 		"""
@@ -848,7 +796,7 @@ class IoBeamHandler(object):
 			self._logger.info("Message handling stats: %s message since %s; max: %ss, avg: %ss, min: %ss", count, time_formatted, max, avg, min)
 
 	def _send_identification(self):
-		client_name = self.CLIENT_ID.format(vers_mrb=_mrbeam_plugin_implementation._plugin_version)
+		client_name = self.CLIENT_ID.format(vers_mrb=self._plugin._plugin_version)
 		cmd = "{}:client:{}".format(self.MESSAGE_DEVICE_IOBEAM, client_name)
 		sent = self._send_command(cmd)
 		return client_name if sent else False

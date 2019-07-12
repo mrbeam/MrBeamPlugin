@@ -33,3 +33,4 @@ dist
 nbproject
 .directory
 plugvenv/
+venv/

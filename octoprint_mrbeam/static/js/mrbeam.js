@@ -194,6 +194,23 @@ $(function() {
                     $('[title="Close"]')[0].click();
                 })
             }
+
+            if (mrbeam.isBeta()) {
+                 new PNotify({
+                        title: gettext("You're using Mr Beam's beta software channel. "),
+                        text: _.sprintf(gettext("Find out%(br)s%(link1_open)swhat's new in the beta channel.%(link1_close)s%(br)s%(br)s" +
+                            "Should you experience any issues you can always switch back to our stable channel in the software update settings.%(br)s%(br)s " +
+                            "Please don't forget to%(br)s%(link2_open)stell us about your experience%(link2_close)s."),
+                            {br: '</br>',
+                                link1_open: '<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000507827" target="_blank"><i class="fa fa-external-link" aria-hidden="true"></i> ',
+                                link1_close: '</a>',
+                                link2_open: '<a href="https://www.mr-beam.org/ticket" target="_blank"><i class="fa fa-external-link" aria-hidden="true"></i> ',
+                                link2_close: '</a>'}),
+                        type: 'info',
+                        hide: true
+                    });
+
+            }
         };
 
 

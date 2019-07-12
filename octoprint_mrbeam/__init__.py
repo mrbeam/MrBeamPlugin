@@ -30,6 +30,7 @@ from octoprint_mrbeam.iobeam.interlock_handler import interLockHandler
 from octoprint_mrbeam.iobeam.lid_handler import lidHandler
 from octoprint_mrbeam.iobeam.temperature_manager import temperatureManager
 from octoprint_mrbeam.iobeam.dust_manager import dustManager
+from octoprint_mrbeam.iobeam.laserhead_handler import laserheadHandler
 from octoprint_mrbeam.analytics.analytics_handler import analyticsHandler
 from octoprint_mrbeam.analytics.usage_handler import usageHandler
 from octoprint_mrbeam.led_events import LedEventListener
@@ -43,6 +44,7 @@ from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.cli import get_cli_commands
 from .materials import materials
 from octoprint_mrbeam.gcodegenerator.jobtimeestimation import JobTimeEstimation
+from .analytics.uploader import FileUploader
 
 
 
@@ -118,7 +120,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._time_ntp_check_count = 0
 		self._time_ntp_check_last_ts = 0.0
 		self._time_ntp_shift = 0.0
-		self.lh = dict(serial=None, p_65=None, p_75=None, p_85=None, correction_factor=None, correction_enabled=None)
 
 
 		# MrBeam Events needs to be registered in OctoPrint in order to be send to the frontend later on
@@ -136,8 +137,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		self.focusReminder = self._settings.get(['focusReminder'])
 
-		self._initialize_lh()
-
 		self.start_time_ntp_timer()
 
 		# do migration if needed
@@ -149,8 +148,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self.support_mode = set_support_mode(self)
 
 		self.laserCutterProfileManager = laserCutterProfileManager()
-
-		self._do_initial_log()
 
 		try:
 			pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
@@ -165,20 +162,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._usageHandler = usageHandler(self)
 		self._led_eventhandler = LedEventListener(self._event_bus, self._printer)
 		# start iobeam socket only once other handlers are already inittialized so that we can handle info mesage
-		self._ioBeam = ioBeamHandler(self._event_bus, self._settings.get(["dev", "sockets", "iobeam"]))
+		self._ioBeam = ioBeamHandler(self)
 		self._temperatureManager = temperatureManager()
 		self._dustManager = dustManager()
+		self._laserheadHandler = laserheadHandler(self)
 		self.jobTimeEstimation = JobTimeEstimation(self._event_bus)
-		self.notify_beta_chanel()
 
-	def _initialize_lh(self):
-		self.lh['serial'] = self._settings.get(["laserhead", "serial"])
-		self.lh['correction_factor'] = self._settings.get(["laserhead", "correction", "factor"])
-		self.lh['correction_factor_override'] = self._settings.get(["laserhead", "correction", "factor_override"])
-		self.lh['correction_enabled'] = self._settings.get(["laserhead", "correction", "enabled"])
-		self.lh['p_65'] = self._settings.get(["laserhead", "p_65"])
-		self.lh['p_75'] = self._settings.get(["laserhead", "p_75"])
-		self.lh['p_85'] = self._settings.get(["laserhead", "p_85"])
+		self._do_initial_log()
 
 	def _do_initial_log(self):
 		"""
@@ -194,7 +184,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		msg += ", env:{}".format(self.get_env())
 		msg += ", beamOS-image:{}".format(self._octopi_info)
 		msg += ", grbl_version_lastknown:{}".format(self._settings.get(["grbl_version_lastknown"]))
-		msg += ", laserhead-serial:{}".format(self.lh['serial'])
+		msg += ", laserhead-serial:{}".format(self._laserheadHandler.get_current_used_lh_data()['serial'])
 		self._logger.info(msg, terminal=True)
 
 		msg = "MrBeam Lasercutter Profile: %s" % self.laserCutterProfileManager.get_current_or_default()
@@ -231,7 +221,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		            env=self.get_env(),
 		            beamOS_image=self._octopi_info,
 		            grbl_version_lastknown=self._settings.get(["grbl_version_lastknown"]),
-		            laserhead_serial=self.lh['serial'])
+		            laserhead_serial=self._laserheadHandler.get_current_used_lh_data()['serial'])
 
 	##~~ SettingsPlugin mixin
 	def get_settings_version(self):
@@ -263,17 +253,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				support_mode = False,
 				grbl_auto_update_enabled = True
 			),
-			laserhead=dict(
-				correction=dict(
-					enabled=True,
-					factor=1,
-					factor_override=None,
-					gcode_intensity_limit=1700,
-				),
-				p_65=0,
-				p_75=0,
-				p_85=0,
-				serial=None,
+			laser_heads=dict(
+				filename='laser_heads.yaml'
 			),
 			focusReminder=True,
 			analyticsEnabled=None,
@@ -307,6 +288,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				clip_working_area = True # https://github.com/mrbeam/MrBeamPlugin/issues/134
 			),
 			grbl_version_lastknown=None,
+			tour_auto_launch = False,
 		)
 
 	def on_settings_load(self):
@@ -341,6 +323,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				laserHeadUsage=self._usageHandler.get_laser_head_usage(),
 				gantryUsage=self._usageHandler.get_gantry_usage(),
 			),
+			tour_auto_launch = self._settings.get(['tour_auto_launch']),
 		)
 
 	def on_settings_save(self, data):
@@ -399,16 +382,58 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# Define your plugin's asset files to automatically include in the
 		# core UI here.
 		assets = dict(
-			js=["js/lasercutterprofiles.js","js/mother_viewmodel.js", "js/mrbeam.js","js/color_classifier.js",
-				"js/working_area.js", "js/camera.js", "js/lib/snap.svg-min.js", "js/lib/dxf.js", "js/snap-dxf.js", "js/render_fills.js", "js/path_convert.js",
-				"js/matrix_oven.js", "js/unref.js", "js/drag_scale_rotate.js",	"js/convert.js", "js/snap_gc_plugin.js", "js/gcode_parser.js", "js/gridify.js",
-				"js/lib/photobooth_min.js", "js/svg_cleaner.js", "js/loginscreen_viewmodel.js",
-				"js/wizard_acl.js", "js/netconnectd_wrapper.js", "js/lasersaftey_viewmodel.js",
-				"js/ready_to_laser_viewmodel.js", "js/lib/screenfull.min.js","js/settings/camera_calibration.js",
-				"js/path_magic.js", "js/lib/simplify.js", "js/lib/clipper.js", "js/lib/Color.js", "js/laser_job_done_viewmodel.js",
-				"js/loadingoverlay_viewmodel.js", "js/wizard_whatsnew.js", "js/wizard_analytics.js", "js/software_channel_selector.js", "js/lib/hopscotch.js",
-				"js/tour_viewmodel.js", "js/feedback_widget.js", "js/maintenance.js"],
-			css=["css/mrbeam.css", "css/svgtogcode.css", "css/ui_mods.css", "css/quicktext-fonts.css", "css/sliders.css", "css/hopscotch.min.css"],
+
+			js=["js/lasercutterprofiles.js",
+			    "js/mother_viewmodel.js",
+			    "js/mrbeam.js",
+			    "js/color_classifier.js",
+				"js/working_area.js",
+				"js/camera.js",
+				"js/lib/snap.svg-min.js",
+				"js/lib/dxf.js",
+				"js/snap-dxf.js",
+				"js/render_fills.js",
+				"js/path_convert.js",
+				"js/matrix_oven.js",
+				"js/unref.js",
+				"js/drag_scale_rotate.js",
+				"js/convert.js",
+				"js/snap_gc_plugin.js",
+				"js/gcode_parser.js",
+				"js/gridify.js",
+				# "js/lib/photobooth_min.js",
+				"js/svg_cleaner.js",
+				"js/loginscreen_viewmodel.js",
+				"js/wizard_acl.js",
+				"js/netconnectd_wrapper.js",
+				"js/lasersaftey_viewmodel.js",
+				"js/ready_to_laser_viewmodel.js",
+				"js/lib/screenfull.min.js",
+				"js/settings/camera_calibration.js",
+				"js/path_magic.js",
+				"js/lib/simplify.js",
+				"js/lib/clipper.js",
+				"js/lib/Color.js",
+				"js/laser_job_done_viewmodel.js",
+				"js/loadingoverlay_viewmodel.js",
+				"js/wizard_whatsnew.js",
+				"js/wizard_analytics.js",
+				"js/software_channel_selector.js",
+				"js/lib/hopscotch.js",
+				"js/tour_viewmodel.js",
+				"js/air_filter_usage.js",
+				"js/feedback_widget.js",
+				"js/material_settings.js",
+				"js/analytics.js",
+				"js/maintenance.js",
+			    ],
+			css=["css/mrbeam.css",
+			     "css/svgtogcode.css",
+			     "css/ui_mods.css",
+			     "css/quicktext-fonts.css",
+			     "css/sliders.css",
+			     "css/hopscotch.min.css",
+			     ],
 			less=["less/mrbeam.less"]
 		)
 		if(self._settings.get(["dev", "load_gremlins"])):
@@ -429,7 +454,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		firstRun = render_kwargs['firstRun']
 		language = g.locale.language if g.locale else "en"
 
-		self._track_ui_render_calls(request, language)
+		if request.headers.get('User-Agent') != self._analytics_handler.SELF_CHECK_USER_AGENT:
+			self._track_ui_render_calls(request, language)
 
 		enable_accesscontrol = self._user_manager.enabled
 		accesscontrol_active = enable_accesscontrol and self._user_manager.hasBeenCustomized()
@@ -471,7 +497,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 beamosVersionDisplayVersion = display_version_string,
 							 beamosVersionImage = self._octopi_info,
 							 grbl_version=self._grbl_version,
-							 laserhead_serial=self.lh['serial'],
+							 laserhead_serial= self._laserheadHandler.get_current_used_lh_data()['serial'],
 
 							 env=self.get_env(),
 							 env_local=self.get_env(self.ENV_LOCAL),
@@ -1306,7 +1332,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			ready_to_laser=[],
 			cli_event=["event"],
 			custom_materials=[],
-			analytics_init=[],
+			analytics_init=[], # user's analytics choice froom welcome wizard
+			analytics_data=['event', 'payload'], # analytics data from the frontend
+			analytics_upload=[], # triggers an upload of analytics files
 			take_undistorted_picture=[],  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
 			focus_reminder=[],
 			reset_prefilter_usage=[],
@@ -1342,6 +1370,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return self.cli_event(data)
 		elif command == "analytics_init":
 			return self.analytics_init(data)
+		elif command == "analytics_data":
+			return self.analytics_data(data)
+		elif command == "analytics_upload":
+			FileUploader.upload_now(self, delay=0.0)
+			return NO_CONTENT
 		elif command == "focus_reminder":
 			return self.focus_reminder(data)
 		elif command == "reset_prefilter_usage":
@@ -1358,10 +1391,17 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if 'analyticsInitialConsent' in data:
 			self._analytics_handler.initial_analytics_procedure(data['analyticsInitialConsent'])
 
+	def analytics_data(self, data):
+		event = data.get('event')
+		payload = data.get('payload', dict())
+		self._analytics_handler.log_frontend_event(event, payload)
+		return NO_CONTENT
+
 	def focus_reminder(self, data):
 		if 'focusReminder' in data:
 			self._settings.set_boolean(["focusReminder"], data['focusReminder'])
 			self._settings.save()	# This is necessary because without it the value is not saved
+		return NO_CONTENT
 
 
 	def cli_event(self, data):
@@ -1960,22 +2000,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			chunks.append("SUPPORT")
 
 		return " | ".join(chunks)
-
-	def notify_beta_chanel(self):
-		if self.is_beta_channel():
-			msg = ("You're using Mr Beam's beta software channel. "
-			      "Find out<br/>{link1_open}what's new in the beta channel.{link1_close}<br/><br/>"
-			      "Should you experience any issues you can always switch back to our stable channel in the software update settings.<br/><br/> "
-			      "Please don't forget to<br/>{link2_open}tell us about your experience{link2_close}.".format(
-				      link1_open= '<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000507827" target="_blank"><i class="fa fa-external-link" aria-hidden="true"></i> ',
-		              link1_close= '</a>',
-		              link2_open= '<a href="https://www.mr-beam.org/ticket" target="_blank"><i class="fa fa-external-link" aria-hidden="true"></i> ',
-		              link2_close= '</a>'))
-			_mrbeam_plugin_implementation.notify_frontend(title=gettext("Beta Channel"),
-			                                              text="<br/>"+msg,
-			                                              type="info",
-			                                              sticky=False,
-			                                              replay_when_new_client_connects=True)
 
 	def is_time_ntp_synced(self):
 		return self._time_ntp_synced

@@ -46,11 +46,11 @@ def get_update_information(self):
 
 
 def software_channels_available(plugin):
-	res = [dict(id=SW_UPDATE_TIER_PROD, name="Stable"),
-	       dict(id=SW_UPDATE_TIER_BETA, name="Beta")]
+	res = [dict(id=SW_UPDATE_TIER_PROD),
+	       dict(id=SW_UPDATE_TIER_BETA)]
 	try:
 		if plugin.is_dev_env():
-			res.extend([dict(id=SW_UPDATE_TIER_DEV, name="Develop")])
+			res.extend([dict(id=SW_UPDATE_TIER_DEV)])
 	except:
 		pass
 	return res

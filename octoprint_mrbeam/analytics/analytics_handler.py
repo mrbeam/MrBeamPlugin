@@ -11,11 +11,13 @@ import requests
 
 from datetime import datetime
 from value_collector import ValueCollector
+from cpu import Cpu
 from threading import Timer
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
+from octoprint_mrbeam.iobeam.laserhead_handler import laserheadHandler
 from analytics_keys import AnalyticsKeys as ak
 from uploader import FileUploader
 
@@ -40,7 +42,6 @@ def existing_analyticsHandler():
 
 
 class AnalyticsHandler(object):
-	DELETE_FILES_AFTER_UPLOAD = True
 	DISK_SPACE_TIMER = 3.0
 	IP_ADDRESSES_TIMER = 15.0
 	SELF_CHECK_TIMER = 20.0
@@ -51,6 +52,7 @@ class AnalyticsHandler(object):
 		self._plugin = plugin
 		self._event_bus = plugin._event_bus
 		self._settings = plugin._settings
+		self._laserheadHandler = laserheadHandler(plugin)
 
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.analyticshandler")
 
@@ -68,12 +70,12 @@ class AnalyticsHandler(object):
 		self._current_cam_session_id = None
 		self._current_intensity_collector = None
 		self._current_lasertemp_collector = None
-		self._current_cputemp_collector = None
+		self._current_cpu_data = None
 		self._current_job_time_estimation = None
 
 		self._storedConversions = list()
 
-		self._analytics_log_version = 6		# Merged after v0.2.1 (13-06-2019)
+		self._analytics_log_version = 6		# Merged after v0.2.2 (13-06-2019)
 
 		self.event_waiting_for_terminal_dump = None
 
@@ -85,19 +87,12 @@ class AnalyticsHandler(object):
 			os.makedirs(self.analyticsfolder)
 
 		if self._analyticsOn is not None:
-			self._activate_upload()
+			FileUploader.upload_now(self._plugin)
 
 		self._jsonfile = os.path.join(self.analyticsfolder, self._settings.get(['analytics', 'filename']))
 
 		if self._analyticsOn:
 			self._activate_analytics()
-
-	def _activate_upload(self):
-		fu = FileUploader(self.analyticsfolder,
-		                  analytics_files_prefix='analytics_log.json.',
-		                  delete_on_success=self.DELETE_FILES_AFTER_UPLOAD)
-		fu.schedule_logrotation_and_startover(current_analytics_file=self._settings.get(['analytics', 'filename']))
-		fu.find_files_for_upload()
 
 	def _activate_analytics(self):
 		if not os.path.isfile(self._jsonfile):
@@ -120,6 +115,8 @@ class AnalyticsHandler(object):
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self._event_print_done)
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self._event_print_failed)
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_CANCELLED, self._event_print_cancelled)
+		self._event_bus.subscribe(OctoPrintEvents.SLICING_STARTED, self._event_slicing_started)
+		self._event_bus.subscribe(OctoPrintEvents.SLICING_DONE, self._event_slicing_done)
 		self._event_bus.subscribe(MrBeamEvents.PRINT_PROGRESS, self._event_print_progress)
 		self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_PAUSE, self._event_laser_cooling_pause)
 		self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_RESUME, self._event_laser_cooling_resume)
@@ -231,6 +228,27 @@ class AnalyticsHandler(object):
 			self._write_log_event(ak.LOG_CPU, payload=data)
 		except Exception as e:
 			self._logger.exception('Error during log_cpu_warning: {}'.format(e.message), analytics=True)
+      
+	def log_camera_session(self, errors):
+		try:
+			self._logger.info(errors)
+			success = True
+			if errors:
+				success = False
+			data = {
+				'success': success,
+				'err': errors,
+			}
+			self._write_log_event(ak.CAMERA, payload=data)
+
+		except Exception as e:
+			self._logger.exception('Error during log_camera_error: {}'.format(e.message), analytics=True)
+
+	def log_frontend_event(self, event, payload=dict()):
+		try:
+			self._write_frontend_event(event, payload=payload)
+		except Exception as e:
+			self._logger.exception('Error during log_frontend_event: {}'.format(e.message), analytics=True)
 
 	def log_camera_session(self, errors):
 		try:
@@ -261,9 +279,8 @@ class AnalyticsHandler(object):
 	def _event_startup(self, event, payload):
 		self._write_new_line()
 		payload = {
-			ak.LASERHEAD_SERIAL: _mrbeam_plugin_implementation.lh['serial'],
-			ak.SOFTWARE_TIER: self._settings.get(["dev", "software_tier"]),
-			ak.ENV: _mrbeam_plugin_implementation.get_env()
+			ak.LASERHEAD_SERIAL: self._laserheadHandler.get_current_used_lh_data()['serial'],
+			ak.ENV: self._plugin.get_env()
 		}
 		self._write_deviceinfo(ak.STARTUP, payload=payload)
 
@@ -365,16 +382,18 @@ class AnalyticsHandler(object):
 		except:
 			self._logger.exception('Exception when saving info about the disk space')
 
-	def _event_laserhead_info(self):
+	def event_laserhead_info(self):
 		try:
+			lh = self._laserheadHandler.get_current_used_lh_data()
+			settings = self._laserheadHandler.get_correction_settings()
 			laserhead_info = {
-				ak.LASERHEAD_SERIAL: _mrbeam_plugin_implementation.lh['serial'],
-				ak.POWER_65: _mrbeam_plugin_implementation.lh['p_65'],
-				ak.POWER_75: _mrbeam_plugin_implementation.lh['p_75'],
-				ak.POWER_85: _mrbeam_plugin_implementation.lh['p_85'],
-				ak.CORRECTION_FACTOR: _mrbeam_plugin_implementation.lh['correction_factor'],
-				ak.CORRECTION_ENABLED: _mrbeam_plugin_implementation.lh['correction_enabled'],
-				ak.CORRECTION_OVERRIDE: _mrbeam_plugin_implementation.lh['correction_factor_override'],
+				ak.LASERHEAD_SERIAL: lh['serial'],
+				ak.POWER_65: lh['info']['p_65'],
+				ak.POWER_75: lh['info']['p_75'],
+				ak.POWER_85: lh['info']['p_85'],
+				ak.CORRECTION_FACTOR: lh['info']['correction_factor'],
+				ak.CORRECTION_ENABLED: settings['correction_enabled'],
+				ak.CORRECTION_OVERRIDE: settings['correction_factor_override'],
 			}
 			self._write_deviceinfo(ak.LASERHEAD_INFO, payload=laserhead_info)
 
@@ -382,7 +401,9 @@ class AnalyticsHandler(object):
 			self._logger.exception('Exception when saving info about the laserhead')
 
 	def _event_print_started(self, event, payload):
-		self._current_job_id = 'j_{}_{}'.format(self._getSerialNumber(), time.time())
+		if not self._current_job_id:
+			self._current_job_id = 'j_{}_{}'.format(self._getSerialNumber(), time.time())
+		self._current_cpu_data = Cpu(state='laser', repeat=True)
 		self._init_collectors()
 		self._isJobPaused = False
 		self._isCoolingPaused = False
@@ -394,7 +415,6 @@ class AnalyticsHandler(object):
 		self._current_dust_collector = ValueCollector('DustColl')
 		self._current_intensity_collector = ValueCollector('IntensityColl')
 		self._current_lasertemp_collector = ValueCollector('TempColl')
-		self._current_cputemp_collector = ValueCollector('CpuColl')
 
 	def _event_print_paused(self, event, payload):
 		# TODO add how it has been paused (lid_opened during job, frontend, onebutton)
@@ -417,35 +437,43 @@ class AnalyticsHandler(object):
 			self._write_jobevent(ak.PRINT_DONE, payload={ak.JOB_DURATION: int(round(payload['time'])),
 														ak.JOB_TIME_ESTIMATION: int(round(self._current_job_time_estimation))})
 			self._write_collectors()
+			self._write_cpu_data(dur=payload['time'])
 
 	def _write_collectors(self):
 		self._write_jobevent(ak.DUST_SUM, payload=self._current_dust_collector.getSummary())
 		self._write_jobevent(ak.INTENSITY_SUM, payload=self._current_intensity_collector.getSummary())
 		self._write_jobevent(ak.LASERTEMP_SUM, payload=self._current_lasertemp_collector.getSummary())
-		self._write_jobevent(ak.CPUTEMP_SUM, payload=self._current_cputemp_collector.getSummary())
+
+	def _write_cpu_data(self, dur=None):
+		payload = self._current_cpu_data.get_cpu_data()
+		payload['dur'] = dur
+		self._write_jobevent(ak.CPU_DATA, payload=payload)
 
 	def _cleanup(self):
 		self._current_job_id = None
 		self._current_dust_collector = None
 		self._current_intensity_collector = None
 		self._current_lasertemp_collector = None
-		self._current_cputemp_collector = None
+		self._current_cpu_data = None
 
 	def _event_laser_job_done(self, event, payload):
 		if self._current_job_id is not None:
 			self._write_jobevent(ak.LASERJOB_DONE)
 			self._cleanup()
+		FileUploader.upload_now(self._plugin, delay=5.0)
 
 	def _event_print_failed(self, event, payload):
 		if self._current_job_id is not None:
 			self._write_jobevent(ak.PRINT_FAILED, payload={ak.JOB_DURATION: int(round(payload['time']))})
 			self._write_collectors()
+			self._write_cpu_data(dur=payload['time'])
 			self._cleanup()
 
 	def _event_print_cancelled(self, event, payload):
 		if self._current_job_id is not None:
 			self._write_jobevent(ak.PRINT_CANCELLED, payload={ak.JOB_DURATION: int(round(payload['time']))})
 			self._write_collectors()
+			self._write_cpu_data(dur=payload['time'])
 			self._cleanup()
 
 	def _event_print_progress(self, event, payload):
@@ -457,6 +485,18 @@ class AnalyticsHandler(object):
 			ak.JOB_DURATION: round(payload['time'], 1)
 		}
 		self._write_jobevent(ak.PRINT_PROGRESS, data)
+
+		if self._current_cpu_data:
+			self._current_cpu_data.update_progress(payload['progress'])
+
+	def _event_slicing_started(self, event, payload):
+		self._current_job_id = 'j_{}_{}'.format(self._getSerialNumber(), time.time())
+		self._current_cpu_data = Cpu(state='slicing', repeat=False)
+
+	def _event_slicing_done(self, event, payload):
+		if self._current_cpu_data:
+			self._current_cpu_data.record_cpu_data()
+			self._write_cpu_data(dur=payload['time'])
 
 	def _event_laser_cooling_pause(self, event, payload):
 		if not self._isCoolingPaused:
@@ -638,10 +678,19 @@ class AnalyticsHandler(object):
 			# TODO add data validation/preparation here
 			if payload is not None:
 				data[ak.DATA] = payload
-				data[ak.SOFTWARE_TIER] = self._settings.get(["dev", "software_tier"])
 			self._write_event(ak.TYPE_LOG_EVENT, event, self._analytics_log_version, payload=data, analytics=analytics)
 		except Exception as e:
-			self._logger.exception('Error during _write_log_event: {}'.format(e.message), analytics=False)
+			self._logger.exception('Error during _write_log_event: {}'.format(e.message), analytics=analytics)
+
+	def _write_frontend_event(self, event, payload=None):
+		try:
+			data = dict()
+			if payload is not None:
+				data[ak.DATA] = payload
+			self._write_event(ak.TYPE_FRONTEND, event, self._analytics_log_version, payload=data, analytics=True)
+
+		except Exception as e:
+			self._logger.exception('Error during _write_log_event: {}'.format(e.message), analytics=True)
 
 	def _write_jobevent(self, event, payload=None):
 		try:
@@ -653,7 +702,7 @@ class AnalyticsHandler(object):
 
 			if event in (ak.LASERTEMP_SUM, ak.INTENSITY_SUM):
 				data[ak.DATA][ak.LASERHEAD_VERSION] = self._getLaserHeadVersion()
-				data[ak.DATA][ak.LASERHEAD_SERIAL] = _mrbeam_plugin_implementation.lh['serial']
+				data[ak.DATA][ak.LASERHEAD_SERIAL] = self._laserheadHandler.get_current_used_lh_data()['serial']
 
 			_jobevent_type = ak.TYPE_JOB_EVENT
 			self._write_event(_jobevent_type, event, self._analytics_log_version, payload=data)
@@ -711,7 +760,8 @@ class AnalyticsHandler(object):
 				ak.TIMESTAMP: time.time(),
 				ak.NTP_SYNCED: _mrbeam_plugin_implementation.is_time_ntp_synced(),
 				ak.SESSION_ID: self._session_id,
-				ak.VERSION_MRBEAM_PLUGIN: _mrbeam_plugin_implementation._plugin_version
+				ak.VERSION_MRBEAM_PLUGIN: _mrbeam_plugin_implementation._plugin_version,
+				ak.SOFTWARE_TIER: self._settings.get(["dev", "software_tier"]),
 			}
 			if payload is not None:
 				data.update(payload)
@@ -781,17 +831,6 @@ class AnalyticsHandler(object):
 			except Exception as e:
 				self._logger.exception('Error during add_laser_intensity_value: {}'.format(e.message))
 
-	def add_cpu_temp_value(self, cpu_temp):
-		"""
-		:param cpu_temp:
-		:return:
-		"""
-		if self._analyticsOn and self._current_cputemp_collector is not None:
-			try:
-				self._current_cputemp_collector.addValue(cpu_temp)
-			except Exception as e:
-				self._logger.exception('Error during add_cpu_temp_value: {}'.format(e.message))
-
 	def _write_dust_log(self, data):
 		try:
 			if self._analyticsOn:
@@ -839,7 +878,7 @@ class AnalyticsHandler(object):
 		if consent == 'agree':
 			self.analytics_user_permission_change(True)
 			self.process_analytics_files()
-			self._activate_upload()
+			FileUploader.upload_now(self._plugin)
 
 		elif consent == 'disagree':
 			self.analytics_user_permission_change(False)
