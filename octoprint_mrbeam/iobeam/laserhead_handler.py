@@ -61,7 +61,12 @@ class LaserheadHandler(object):
 		else:
 			data = dict(
 				serial=None,
-				info=None
+				info=dict(
+					p_65=None,
+					p_75=None,
+					p_85=None,
+					correction_factor=1,
+				)
 			)
 		return data
 
