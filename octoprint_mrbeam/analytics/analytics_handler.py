@@ -17,7 +17,6 @@ from threading import Timer
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
-from octoprint_mrbeam.iobeam.laserhead_handler import laserheadHandler
 from analytics_keys import AnalyticsKeys as ak
 from uploader import FileUploader
 
@@ -51,7 +50,6 @@ class AnalyticsHandler(object):
 		self._plugin = plugin
 		self._event_bus = plugin._event_bus
 		self._settings = plugin._settings
-		self._laserheadHandler = laserheadHandler(plugin)
 
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.analyticshandler")
 
@@ -278,8 +276,8 @@ class AnalyticsHandler(object):
 	def _event_startup(self, event, payload):
 		self._write_new_line()
 		payload = {
-			ak.LASERHEAD_SERIAL: self._laserheadHandler.get_current_used_lh_data()['serial'],
-			ak.ENV: self._plugin.get_env()
+			ak.LASERHEAD_SERIAL: _mrbeam_plugin_implementation.lh['serial'],
+			ak.ENV: _mrbeam_plugin_implementation.get_env()
 		}
 		self._write_deviceinfo(ak.STARTUP, payload=payload)
 
@@ -378,18 +376,16 @@ class AnalyticsHandler(object):
 		except:
 			self._logger.exception('Exception when saving info about the disk space')
 
-	def event_laserhead_info(self):
+	def _event_laserhead_info(self):
 		try:
-			lh = self._laserheadHandler.get_current_used_lh_data()
-			settings = self._laserheadHandler.get_correction_settings()
 			laserhead_info = {
-				ak.LASERHEAD_SERIAL: lh['serial'],
-				ak.POWER_65: lh['info']['p_65'],
-				ak.POWER_75: lh['info']['p_75'],
-				ak.POWER_85: lh['info']['p_85'],
-				ak.CORRECTION_FACTOR: lh['info']['correction_factor'],
-				ak.CORRECTION_ENABLED: settings['correction_enabled'],
-				ak.CORRECTION_OVERRIDE: settings['correction_factor_override'],
+				ak.LASERHEAD_SERIAL: _mrbeam_plugin_implementation.lh['serial'],
+				ak.POWER_65: _mrbeam_plugin_implementation.lh['p_65'],
+				ak.POWER_75: _mrbeam_plugin_implementation.lh['p_75'],
+				ak.POWER_85: _mrbeam_plugin_implementation.lh['p_85'],
+				ak.CORRECTION_FACTOR: _mrbeam_plugin_implementation.lh['correction_factor'],
+				ak.CORRECTION_ENABLED: _mrbeam_plugin_implementation.lh['correction_enabled'],
+				ak.CORRECTION_OVERRIDE: _mrbeam_plugin_implementation.lh['correction_factor_override'],
 			}
 			self._write_deviceinfo(ak.LASERHEAD_INFO, payload=laserhead_info)
 
@@ -698,7 +694,7 @@ class AnalyticsHandler(object):
 
 			if event in (ak.LASERTEMP_SUM, ak.INTENSITY_SUM):
 				data[ak.DATA][ak.LASERHEAD_VERSION] = self._getLaserHeadVersion()
-				data[ak.DATA][ak.LASERHEAD_SERIAL] = self._laserheadHandler.get_current_used_lh_data()['serial']
+				data[ak.DATA][ak.LASERHEAD_SERIAL] = _mrbeam_plugin_implementation.lh['serial']
 
 			_jobevent_type = ak.TYPE_JOB_EVENT
 			self._write_event(_jobevent_type, event, self._analytics_log_version, payload=data)
