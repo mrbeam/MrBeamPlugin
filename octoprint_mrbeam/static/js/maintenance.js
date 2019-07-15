@@ -40,6 +40,24 @@ $(function () {
         self.gantryUsageHours = ko.computed(function() {
             return Math.floor(self.gantryUsage()/3600);
         });
+
+        self.prefilterShowWarning = ko.computed(function() {
+            let usedPercent = self.prefilterUsageHours()/self.PREFILTER_LIFESPAN*100;
+            return usedPercent > 90;
+        });
+        self.carbonFilterShowWarning = ko.computed(function() {
+            let usedPercent = self.carbonFilterUsageHours()/self.CARBON_FILTER_LIFESPAN*100;
+            return usedPercent > 90;
+        });
+        self.laserHeadShowWarning = ko.computed(function() {
+            let usedPercent = self.laserHeadUsageHours()/self.LASER_HEAD_LIFESPAN*100;
+            return usedPercent > 90;
+        });
+        self.gantryShowWarning = ko.computed(function() {
+            let usedPercent = self.gantryUsageHours()/self.GANTRY_LIFESPAN*100;
+            return usedPercent > 90;
+        });
+
         self.actionToReset = ko.computed(function () {
             if(self.componentToReset() === self.LASER_HEAD) {
                 return 'clean'

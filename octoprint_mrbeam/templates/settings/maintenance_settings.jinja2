@@ -1,114 +1,131 @@
 <div id="settings_maintenance">
-    <h3 style="margin: 10px 0px 0px 0px;">{{ _('Maintenance') }}</h3>
-    <p class="muted" style="margin: 0px 0px 20px 0px;">{{ _('Some notes about the general maintenance') }}<br>
-        <strong>Please note that the replacement of any of the elements may be necessary earlier, depending on the usage.</strong>
+    <h3 class="maintenance-title">{{ _('Maintenance') }}</h3>
+    <p class="muted maintenance-notes">{{ _('Some notes about the general maintenance') }}<br>
+        <strong>{{ _('Please note that the replacement of any of the elements may be necessary earlier, depending on the usage.') }}</strong>
     </p>
 
-    <div class="scrollable" style="padding-bottom:2em; overflow-y: auto; height: calc(100vh - 180px);">
-        <table class="table table-striped table-hover table-condensed table-hover" style="margin-bottom: 60px">
+    <div class="scrollable maintenance-scrollable">
+        <table class="table table-striped table-hover table-condensed table-hover maintenance-table">
             <tr>
-                <td style="width: 75%">
-    {#                <div style="color: red"><i class="fa fa-warning"></i> Oh oh, looks like your exhaust system does not work properly. Your filters may be full!</div>#}
-                    <h4>Air Filter: Pre-filter</h4>
-                    <small class="muted">
+                {######### PRE-FILTER #########}
+                <td class="maintenance-description-column">
+                    <h4>{{ _('Air Filter: Pre-filter') }}</h4>
+                    <small class="maintenance-description">
                         Some information about the pre-filter bla bla bla... asdklfjhaslkdfhgajhsdfglasf
-                        asdfklhasgdflasgdflikasgdfikasdf. Super interesting things about filters and prefilters.
+                        asdfklh asgdflas gdflikas gdfikasdf. Super interesting things about filters and prefilters.
+                        Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+                        permitted by applicable law.
 
                     </small>
-                    <div style="margin-top: 15px">
+                    <div class="maintenance-links">
                         <a href="https://store.mr-beam.org/collections/featured/products/prefilter-for-the-mr-beam-airfilter-system"
-                           target="_blank" style="display: inline-block; float: left">
+                           target="_blank" class="maintenance-link-shop">
                             <i class="icon-shopping-cart"></i>
-                            Buy now
+                            {{ _('Buy now') }}
                         </a>
                     </div>
                 </td>
-                <td style="width: 20%; position: relative">
-                    <h4 style="display: inline-block"><span data-bind="text: prefilterUsageHours"></span><span data-bind="text: prefilterLifespanHours"></span></h4>
-{#                    <div style="position: absolute; top: 25%; left: 25%;">#}
-{#                        <div data-bind="text: prefilterUsageHours" style="text-align: center; font-weight: bold; font-size: 36px; padding: 12px 0;"></div>#}
-{#                        <div data-bind="text: prefilterLifespanHours" style="text-align: center; font-weight: bold; font-size: 24px;"></div>#}
-{#                    </div>#}
-                    <button class="btn btn-mini" data-bind="click: resetPrefilterUsage" style="position: absolute; bottom: 0; right: 0">{{ _('Reset') }}</button>
+                <td class="maintenance-warning-column">
+                    <div data-bind="visible: prefilterShowWarning">
+                        <i class="fa fa-exclamation-triangle fa-lg" aria-hidden="true"></i>
+                    </div>
+                </td>
+                <td class="maintenance-counter-column">
+                    <h3><span data-bind="text: prefilterUsageHours, style: {color: prefilterShowWarning()? '#e25303' : ''}"></span><span data-bind="text: prefilterLifespanHours"></span></h3>
+                </td>
+                <td class="maintenance-reset-column">
+                    <button class="btn btn-mini maintenance-reset-btn" data-bind="click: resetPrefilterUsage">{{ _('Reset') }}</button>
                 </td>
             </tr>
             <tr>
-                <td style="width: 75%">
-                    <h4>Air Filter: Carbon filter</h4>
-                    <small class="muted">
-                        Some information about the pre-filter bla bla bla... asdklfjhaslkdfhgajhsdfglasf
-                        asdfklhasgdflasgdflikasgdfikasdf. Super interesting things about filters and prefilters.
+                {######### CARBON FILTER #########}
+                <td class="maintenance-description-column">
+                    <h4>{{ _('Air Filter: Carbon filter') }}</h4>
+                    <small class="maintenance-description">
+                        The programs included with the Debian GNU/Linux system are free software;
+                        the exact distribution terms for each program are described in the
+                        individual files in /usr/share/doc/*/copyright.
                     </small>
-                    <div style="margin-top: 15px">
-                        <a href="https://store.mr-beam.org/collections/featured/products/prefilter-for-the-mr-beam-airfilter-system"
-                           target="_blank" style="display: inline-block; float: left">
+                    <div class="maintenance-links">
+                        <a href="https://store.mr-beam.org/products/activated-carbon-filter-for-the-mr-beam-air-filter-system-incl-5-prefilter"
+                           target="_blank" class="maintenance-link-shop">
                             <i class="icon-shopping-cart"></i>
-                            Buy now
+                            {{ _('Buy ') }}
                         </a>
-                        <a href="https://store.mr-beam.org/collections/featured/products/prefilter-for-the-mr-beam-airfilter-system"
-                           target="_blank" style="display: inline-block; float: left; margin-left: 50px;">
+                    </div>
+                </td>
+                <td class="maintenance-warning-column">
+                    <div data-bind="visible: carbonFilterShowWarning">
+                        <i class="fa fa-exclamation-triangle fa-lg" aria-hidden="true"></i>
+                    </div>
+                </td>
+                <td class="maintenance-counter-column">
+                    <h3><span data-bind="text: carbonFilterUsageHours, style: {color: carbonFilterShowWarning()? '#e25303' : ''}"></span><span data-bind="text: carbonFilterLifespanHours"></span></h3>
+                </td>
+                <td class="maintenance-reset-column">
+                    <button class="btn btn-mini maintenance-reset-btn" data-bind="click: resetCarbonFilterUsage">{{ _('Reset') }}</button>
+                </td>
+            </tr>
+            <tr>
+                {######### LASER HEAD #########}
+                <td class="maintenance-description-column">
+                    <h4>{{ _('Laser head') }}</h4>
+                    <span class="maintenance-laserhead-serial" data-bind="text: laserHeadSerial"></span>
+                    <small class="maintenance-description">
+                        Some information about the carbon filter bla bla bla...
+                    </small>
+                    <div class="maintenance-links">
+                        <a href="https://store.mr-beam.org/products/laser-head-maintenance-service"
+                           target="_blank" class="maintenance-link-shop">
+                            <i class="icon-shopping-cart"></i>
+                            {{ _('Buy now') }}
+                        </a>
+                        <a href="https://mr-beam.freshdesk.com/en/support/solutions/articles/43000504618-how-to-clean-a-laser-head"
+                           target="_blank" class="maintenance-link-knowledge-base">
                             <i class="fa fa-external-link"></i>
-                            Learn more about this
+                            {{ _('How to clean a laser head') }}
                         </a>
                     </div>
                 </td>
-                <td style="width: 25%; position: relative">
-                    <h4 style="display: inline-block"><span data-bind="text: carbonFilterUsageHours"></span><span data-bind="text: carbonFilterLifespanHours"></span></h4>
-{#                    <div style="position: absolute; top: 25%; left: 25%;">#}
-{#                        <div data-bind="text: carbonFilterUsageHours" style="text-align: center; font-weight: bold; font-size: 36px; padding: 12px 0;"></div>#}
-{#                        <div data-bind="text: carbonFilterLifespanHours" style="text-align: center; font-weight: bold; font-size: 24px;"></div>#}
-{#                    </div>#}
-                    <button class="btn btn-mini" data-bind="click: resetCarbonFilterUsage" style="position: absolute; bottom: 0; right: 0">{{ _('Reset') }}</button>
-                </td>
-            </tr>
-            <tr>
-                <td style="width: 75%">
-    {#                <div style="color: red"><i class="fa fa-warning"></i> Oh oh, looks like your exhaust system does not work properly. Your filters may be full!</div>#}
-                    <h4 style="display: inline-block">Laser head</h4>
-                    <span data-bind="text: laserHeadSerial" style="margin-left: 30px"></span>
-                    <small class="muted" style="display: block">
-                        Some information about the carbon filter bla bla bla... asdklfjhaslkdfhgajhsdfglasf
-                    </small>
-                    <div style="margin-top: 15px">
-                        <a href="https://store.mr-beam.org/collections/featured/products/prefilter-for-the-mr-beam-airfilter-system"
-                           target="_blank" style="display: inline-block; float: left">
-                            <i class="icon-shopping-cart"></i>
-                            Buy now
-                        </a>
+                <td class="maintenance-warning-column">
+                    <div data-bind="visible: laserHeadShowWarning">
+                        <i class="fa fa-exclamation-triangle fa-lg" aria-hidden="true"></i>
                     </div>
                 </td>
-                <td style="width: 20%; position: relative">
-                    <h4 style="display: inline-block"><span data-bind="text: laserHeadUsageHours"></span><span data-bind="text: laserHeadLifespanHours"></span></h4>
-{#                    <div style="position: absolute; top: 25%; left: 25%;">#}
-{#                        <div data-bind="text: laserHeadUsageHours" style="text-align: center; font-weight: bold; font-size: 36px; padding: 12px 0;"></div>#}
-{#                        <div data-bind="text: laserHeadLifespanHours" style="text-align: center; font-weight: bold; font-size: 24px;"></div>#}
-{#                    </div>#}
-                    <button class="btn btn-mini" data-bind="click: resetLaserHeadUsage" style="position: absolute; bottom: 0; right: 0">{{ _('Reset') }}</button>
+                <td class="maintenance-counter-column">
+                    <h3><span data-bind="text: laserHeadUsageHours, style: {color: laserHeadShowWarning()? '#e25303' : ''}"></span><span data-bind="text: laserHeadLifespanHours"></span></h3>
+                </td>
+                <td class="maintenance-reset-column">
+                    <button class="btn btn-mini maintenance-reset-btn" data-bind="click: resetLaserHeadUsage">{{ _('Reset') }}</button>
                 </td>
             </tr>
             <tr>
-                <td style="width: 75%">
-                    <h4>Gantry</h4>
-                    <small class="muted">
+                {######### GANTRY #########}
+                <td class="maintenance-description-column">
+                    <h4>{{ _('Gantry') }}</h4>
+                    <small class="maintenance-description">
                         Some information about the gantry bla bla bla... asdklfjhaslkdfhgajhsdfglasf
-                        asdfklhasgdflasgdflikasgdfikasdf. Super interesting things about the granty.
+                        asdfklhas gdflasgdflik asgdfikasdf. Super interesting things about the granty.
 
                     </small>
-                    <div style="margin-top: 15px">
-                        <a href="https://store.mr-beam.org/collections/featured/products/prefilter-for-the-mr-beam-airfilter-system"
-                           target="_blank" style="display: inline-block; float: left">
-                            <i class="icon-shopping-cart"></i>
-                            Buy now
-                        </a>
+                    <div class="maintenance-links">
+{#                        <a href="https://store.mr-beam.org/collections/featured/products/prefilter-for-the-mr-beam-airfilter-system"#}
+{#                           target="_blank" class="maintenance-link-shop">#}
+{#                            <i class="icon-shopping-cart"></i>#}
+{#                            {{ _('Buy now#}
+{#                        </a>#}
                     </div>
                 </td>
-                <td style="width: 20%; position: relative">
-                    <h4 style="display: inline-block"><span data-bind="text: gantryUsageHours"></span><span data-bind="text: gantryLifespanHours"></span></h4>
-{#                    <div style="position: absolute; top: 25%; left: 25%;">#}
-{#                        <div data-bind="text: gantryUsageHours" style="text-align: center; font-weight: bold; font-size: 36px; padding: 12px 0;"></div>#}
-{#                        <div data-bind="text: gantryLifespanHours" style="text-align: center; font-weight: bold; font-size: 24px;"></div>#}
-{#                    </div>#}
-                    <button class="btn btn-mini" data-bind="click: resetGantryUsage" style="position: absolute; bottom: 0; right: 0">{{ _('Reset') }}</button>
+                <td class="maintenance-warning-column">
+                    <div data-bind="visible: gantryShowWarning">
+                        <i class="fa fa-exclamation-triangle fa-lg" aria-hidden="true"></i>
+                    </div>
+                </td>
+                <td class="maintenance-counter-column">
+                    <h3><span data-bind="text: gantryUsageHours, style: {color: gantryShowWarning()? '#e25303' : ''}"></span><span data-bind="text: gantryLifespanHours"></span></h3>
+                </td>
+                <td class="maintenance-reset-column">
+                    <button class="btn btn-mini maintenance-reset-btn" data-bind="click: resetGantryUsage">{{ _('Reset') }}</button>
                 </td>
             </tr>
         </table>
