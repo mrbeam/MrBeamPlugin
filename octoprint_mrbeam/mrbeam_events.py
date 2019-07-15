@@ -39,6 +39,8 @@ class MrBeamEvents(object):
 
 	HARDWARE_MALFUNCTION       = "HardwareMalfunction"
 
+	LASER_HEAD_READ             = "LaserHeadRead"
+
 
 	@classmethod
 	def register_with_octoprint(cls):
