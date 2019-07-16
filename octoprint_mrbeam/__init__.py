@@ -675,22 +675,52 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def _get_whatsnew_0_wizard_name(self):
 		# jinja has some js that changes this to German if lang is 'de'
-		return gettext("What's New")
+		return gettext("Improved find.mr-beam")
 
-	# def _is_whatsnew_1_wizard_required(self):
-	# 	result = not self.isFirstRun()
-	# 	self._logger.debug("_is_whatsnew_1_wizard_required() %s", result)
-	# 	return result
-	#
-	# def _get_whatsnew_1_wizard_details(self):
-	# 	return dict()
-	#
-	# def _get_whatsnew_1_additional_wizard_template_data(self):
-	# 	return dict(mandatory=False, suffix="_whatsnew_1")
-	#
-	# def _get_whatsnew_1_wizard_name(self):
-	# 	# jinja has some js that changes this to German if lang is 'de'
-	# 	return gettext("New Mr Beam Status Light")
+	def _is_whatsnew_1_wizard_required(self):
+		result = not self.isFirstRun()
+		self._logger.debug("_is_whatsnew_1_wizard_required() %s", result)
+		return result
+
+	def _get_whatsnew_1_wizard_details(self):
+		return dict()
+
+	def _get_whatsnew_1_additional_wizard_template_data(self):
+		return dict(mandatory=False, suffix="_whatsnew_1")
+
+	def _get_whatsnew_1_wizard_name(self):
+		# jinja has some js that changes this to German if lang is 'de'
+		return gettext("New Languages!")
+
+	def _is_whatsnew_2_wizard_required(self):
+		result = not self.isFirstRun()
+		self._logger.debug("_is_whatsnew_2_wizard_required() %s", result)
+		return result
+
+	def _get_whatsnew_2_wizard_details(self):
+		return dict()
+
+	def _get_whatsnew_2_additional_wizard_template_data(self):
+		return dict(mandatory=False, suffix="_whatsnew_2")
+
+	def _get_whatsnew_2_wizard_name(self):
+		# jinja has some js that changes this to German if lang is 'de'
+		return gettext("Job Time Estimation")
+
+	def _is_whatsnew_3_wizard_required(self):
+		result = not self.isFirstRun()
+		self._logger.debug("_is_whatsnew_3_wizard_required() %s", result)
+		return result
+
+	def _get_whatsnew_3_wizard_details(self):
+		return dict()
+
+	def _get_whatsnew_3_additional_wizard_template_data(self):
+		return dict(mandatory=False, suffix="_whatsnew_3")
+
+	def _get_whatsnew_3_wizard_name(self):
+		# jinja has some js that changes this to German if lang is 'de'
+		return gettext("...and more!")
 
 	# ~~ Analytics subwizard
 
