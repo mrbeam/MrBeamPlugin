@@ -8,8 +8,8 @@ msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2019-07-12 11:09+0200\n"
-"PO-Revision-Date: 2019-07-12 13:21+0200\n"
-"Last-Translator: \n"
+"PO-Revision-Date: 2019-07-16 12:46+0200\n"
+"Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
@@ -111,7 +111,7 @@ msgid ""
 msgstr ""
 "Das Update der internen Komponente GRBL ist fehlgeschlagen.{br}Du kannst "
 "Deinen Mr Beam II dennoch verwenden. Wenn dieser Fehler jedoch weiterhin "
-"besteht, kannst du das {opening_tag}Mr Beam Supportteam "
+"besteht, kannst Du das {opening_tag}Mr Beam Support Team "
 "kontaktieren{closing_tag}.{br}{br}{strong_opening_tag}Fehler:"
 "{strong_closing_tag}{br}{error}"
 
@@ -573,7 +573,7 @@ msgid ""
 msgstr ""
 "Bleibe auf dem Laufenden, was es s%(link1_open)sNeues im Beta-Kanal"
 "%(link1_close)s gibt.%(br)s%(br)sDu kannst in den Software-Update-"
-"Einstellungen jederzeit zurück in den Stabilen Kanal wechseln, solltest du "
+"Einstellungen jederzeit zurück in den Stabilen Kanal wechseln, solltest Du "
 "auf Probleme stoßen. %(br)s%(br)s Bitte vergiß nicht, %(link2_open)suns von "
 "Deiner Erfahrung zu berichten%(link2_close)s!"
 
@@ -660,7 +660,7 @@ msgstr ""
 
 #: octoprint_mrbeam/static/js/tour_viewmodel.js:68
 msgid "About 5-10 minutes of your time."
-msgstr "Etwa 5-10 Minuten deiner Zeit."
+msgstr "Etwa 5-10 Minuten Deiner Zeit."
 
 #: octoprint_mrbeam/static/js/tour_viewmodel.js:73
 msgid "Yes, let's go!"
@@ -683,7 +683,7 @@ msgstr ""
 # feststehender Begriff
 #: octoprint_mrbeam/static/js/tour_viewmodel.js:96
 msgid "Look into your Mr Beam II"
-msgstr "Schau in deinen Mr Beam II"
+msgstr "Schau in Deinen Mr Beam II"
 
 #: octoprint_mrbeam/static/js/tour_viewmodel.js:97
 msgid "The laser head is now moving to the upper right corner."
@@ -941,7 +941,7 @@ msgstr ""
 
 #: octoprint_mrbeam/static/js/wizard_acl.js:133
 msgid "You need to enter your valid e-mail address."
-msgstr "Du musst deine gültige E-Mail-Adresse eingeben."
+msgstr "Du musst eine gültige E-Mail-Adresse eingeben."
 
 #: octoprint_mrbeam/static/js/wizard_acl.js:137
 msgid "Invalid emtpy password"
@@ -2029,12 +2029,12 @@ msgid ""
 "For security reasons, you can only use your Mr Beam II after logging in with "
 "a user account."
 msgstr ""
-"Aus Sicherheitsgründen kannst du deinen Mr Beam II nur nach Anmeldung mit "
+"Aus Sicherheitsgründen kannst Du Deinen Mr Beam II nur nach Anmeldung mit "
 "einem Benutzerkonto nutzen."
 
 #: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:45
 msgid "Please remember your access data!"
-msgstr "Bitte merke dir deine Zugangsdaten gut!"
+msgstr "Bitte merke dir Deine Zugangsdaten gut!"
 
 #: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:46
 #, python-format
@@ -2044,8 +2044,8 @@ msgid ""
 "        You can find more about this in our %(tag_open)sKnowledge Base"
 "%(tag_close)s."
 msgstr ""
-"Solltest du deine Zugangsdaten einmal vergessen haben, kannst du das Mr Beam "
-"Support Team kontaktieren um dein Gerät zurückzusetzen. Mehr dazu findest du "
+"Solltest Du Deine Zugangsdaten einmal vergessen haben, kannst Du das Mr Beam "
+"Support Team kontaktieren um Dein Gerät zurückzusetzen. Mehr dazu findest Du "
 "in der %(tag_open)sKnowledge Base%(tag_close)s."
 
 #: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:45
@@ -3293,16 +3293,16 @@ msgid ""
 "\n"
 msgstr ""
 "\n"
-"    <h5>Bitte richte ein Nutzerkonto für deinen Mr Beam II ein.</h5>\n"
+"    <h5>Bitte richte ein Nutzerkonto für Deinen Mr Beam II ein.</h5>\n"
 "\n"
-"    <p><strong>Achtung: Bitte merke dir deine Zugangsdaten gut!</strong> <br/"
+"    <p><strong>Achtung: Bitte merke Dir Deine Zugangsdaten gut!</strong> <br/"
 ">\n"
-"        Aus Sicherheitsgründen kannst du deinen Mr Beam II nur nach "
+"        Aus Sicherheitsgründen kannst Du Deinen Mr Beam II nur nach "
 "Anmeldung mit einem Benutzerkonto nutzen.\n"
-"        olltest du deine Zugangsdaten einmal vergessen haben, musst du das "
-"Mr Beam Support Team kontaktieren um dein Gerät zurückzusetzen.\n"
+"        Solltest Du Deine Zugangsdaten einmal vergessen haben, musst Du das "
+"Mr Beam Support Team kontaktieren um Dein Gerät zurückzusetzen.\n"
 "    </p>\n"
-"    <p>In den Einstellungen kannst du weitere Nutzerkonten anlegen z.B. für "
+"    <p>In den Einstellungen kannst Du weitere Nutzerkonten anlegen z.B. für "
 "Familienmitglieder, Kollegen oder Freunde.</p>\n"
 "\n"
 
