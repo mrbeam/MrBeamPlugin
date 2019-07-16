@@ -5,7 +5,6 @@ $(function() {
 
         self.settings = parameters[0];
         self.analytics = parameters[1];
-        // self.mrbeam = parameters[2];
 
         self.uuid = ko.observable(null);
         self.registered = ko.observable(null);
@@ -21,12 +20,11 @@ $(function() {
             $('#wizard_dialog div.modal-footer div.text-center').hide();
             if (self.is_bound()) {
                 // test if bound, only then it's a what's new wizard
-                $('#wizard_dialog div.modal-header h3').text("✨ " + gettext("What's New") + " ✨");
-                // if(!self.mrbeam.isBeta()) {
-                //     $('#wizard_dialog div.modal-header h3').text("✨ " + gettext("What's New") + " ✨");
-                // } else {
-                //     $('#wizard_dialog div.modal-header h3').text("✨ " + gettext("What's New in the Stable channel") + " ✨");
-                // }
+                if(!window.mrbeam.isBeta()) {
+                    $('#wizard_dialog div.modal-header h3').text("✨ " + gettext("What's New") + " ✨");
+                } else {
+                    $('#wizard_dialog div.modal-header h3').text("✨ " + gettext("What's New in the Stable Channel") + " ✨");
+                }
             } else{
                 // welcome wizard
             }
