@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-07-16 17:58+0200\n"
+"POT-Creation-Date: 2019-07-17 11:20+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -774,6 +774,10 @@ msgid ""
 "For more in-depth information you can check our %(opening_tag)sknowledge "
 "base%(closing_tag)s, where you will find a lot of articles about Mr Beam "
 "II."
+msgstr ""
+
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:269
+msgid "Done!"
 msgstr ""
 
 #: octoprint_mrbeam/static/js/tour_viewmodel.js:292
