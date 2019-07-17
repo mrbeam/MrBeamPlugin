@@ -11,8 +11,9 @@ $(function () {
         self.GANTRY = gettext('gantry');
         self.PREFILTER_LIFESPAN = 100;
         self.CARBON_FILTER_LIFESPAN = 400;
-        self.LASER_HEAD_LIFESPAN = 100; // TODO IRATXE: which value should it be?
-        self.GANTRY_LIFESPAN = 10000;
+        self.LASER_HEAD_LIFESPAN = 100;
+        self.GANTRY_LIFESPAN = 100;
+        self.WARN_IF_USED_PERCENT = 100;
 
 
         self.prefilterUsage = ko.observable(0);
@@ -43,19 +44,19 @@ $(function () {
 
         self.prefilterShowWarning = ko.computed(function() {
             let usedPercent = self.prefilterUsageHours()/self.PREFILTER_LIFESPAN*100;
-            return usedPercent > 90;
+            return usedPercent > self.WARN_IF_USED_PERCENT;
         });
         self.carbonFilterShowWarning = ko.computed(function() {
             let usedPercent = self.carbonFilterUsageHours()/self.CARBON_FILTER_LIFESPAN*100;
-            return usedPercent > 90;
+            return usedPercent > self.WARN_IF_USED_PERCENT;
         });
         self.laserHeadShowWarning = ko.computed(function() {
             let usedPercent = self.laserHeadUsageHours()/self.LASER_HEAD_LIFESPAN*100;
-            return usedPercent > 90;
+            return usedPercent > self.WARN_IF_USED_PERCENT;
         });
         self.gantryShowWarning = ko.computed(function() {
             let usedPercent = self.gantryUsageHours()/self.GANTRY_LIFESPAN*100;
-            return usedPercent > 90;
+            return usedPercent > self.WARN_IF_USED_PERCENT;
         });
 
         self.actionToReset = ko.computed(function () {
