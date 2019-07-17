@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-07-12 11:09+0200\n"
-"PO-Revision-Date: 2019-07-16 12:46+0200\n"
+"POT-Creation-Date: 2019-07-17 15:22+0200\n"
+"PO-Revision-Date: 2019-07-17 15:27+0200\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -17,12 +17,12 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 2.2.3\n"
 
-#: octoprint_mrbeam/iobeam/iobeam_handler.py:727
-#: octoprint_mrbeam/iobeam/iobeam_handler.py:732
+#: octoprint_mrbeam/iobeam/iobeam_handler.py:670
+#: octoprint_mrbeam/iobeam/iobeam_handler.py:678
 msgid "Software Update required"
 msgstr "Software-Update erforderlich"
 
-#: octoprint_mrbeam/iobeam/iobeam_handler.py:728
+#: octoprint_mrbeam/iobeam/iobeam_handler.py:671
 msgid ""
 "Module 'iobeam' is outdated. Please run software update from 'Settings' > "
 "'Software Update' before you start a laser job."
@@ -30,7 +30,7 @@ msgstr ""
 "Das Modul 'iobeam' ist veraltet. Bitte führe das Software-Update über "
 "'Einstellungen' > 'Software-Update' aus, bevor Du einen Laserjob startest."
 
-#: octoprint_mrbeam/iobeam/iobeam_handler.py:733
+#: octoprint_mrbeam/iobeam/iobeam_handler.py:679
 msgid ""
 "Module 'MrBeam Plugin' is outdated; iobeam version is newer than expected. "
 "Please run software update from 'Settings' > 'Software Update' before you "
@@ -39,7 +39,7 @@ msgstr ""
 "Das Modul „MrBeam Plugin“ ist veraltet. Bitte führe das Software-Update über "
 "'Einstellungen' > 'Software-Update' aus, bevor Du einen Laserjob startest."
 
-#: octoprint_mrbeam/iobeam/iobeam_handler.py:804
+#: octoprint_mrbeam/iobeam/iobeam_handler.py:752
 msgid ""
 "A possible hardware malfunction has been detected on this device. Please "
 "contact our support team immediately at:"
@@ -47,15 +47,15 @@ msgstr ""
 "Eine mögliche Hardware-Funktionsstörung wurde auf diesem Gerät erkannt. "
 "Bitte kontaktiere unser Support-Team umgehend unter:"
 
-#: octoprint_mrbeam/iobeam/iobeam_handler.py:807
+#: octoprint_mrbeam/iobeam/iobeam_handler.py:755
 msgid "Error:"
 msgstr "Fehler:"
 
-#: octoprint_mrbeam/iobeam/iobeam_handler.py:808
+#: octoprint_mrbeam/iobeam/iobeam_handler.py:756
 msgid "Hardware malfunction"
 msgstr "Hardware-Funktionsstörung"
 
-#: octoprint_mrbeam/iobeam/iobeam_handler.py:817
+#: octoprint_mrbeam/iobeam/iobeam_handler.py:765
 msgid ""
 "The bottom plate is not closed correctly. Please make sure that the bottom "
 "is correctly mounted as described in the Mr Beam II user manual."
@@ -64,7 +64,7 @@ msgstr ""
 "Bodenplatte korrekt montiert ist wie es in der Mr Beam II-"
 "Betriebsanleitungen beschrieben ist."
 
-#: octoprint_mrbeam/iobeam/iobeam_handler.py:819
+#: octoprint_mrbeam/iobeam/iobeam_handler.py:767
 msgid "Bottom Plate Error"
 msgstr "Bodenplattenfehler"
 
@@ -96,13 +96,13 @@ msgstr "Die iobeam-Version ist veraltet. Bitte versuche ein Software-Update."
 msgid "Error"
 msgstr "Fehler"
 
-#: octoprint_mrbeam/printing/comm_acc2.py:302
-#: octoprint_mrbeam/printing/comm_acc2.py:340
+#: octoprint_mrbeam/printing/comm_acc2.py:304
+#: octoprint_mrbeam/printing/comm_acc2.py:342
 msgid "Please contact Mr Beam support team and attach octoprint.log."
 msgstr ""
 "Bitte kontaktiere das Mr Beam Support-Team und hänge das octoprint.log an."
 
-#: octoprint_mrbeam/printing/comm_acc2.py:1215
+#: octoprint_mrbeam/printing/comm_acc2.py:1204
 msgid ""
 "The update of the internal component GRBL failed.{br}It is still save to use "
 "your Mr Beam II. However, if this error persists consider to contact the "
@@ -115,7 +115,7 @@ msgstr ""
 "kontaktieren{closing_tag}.{br}{br}{strong_opening_tag}Fehler:"
 "{strong_closing_tag}{br}{error}"
 
-#: octoprint_mrbeam/printing/comm_acc2.py:1223
+#: octoprint_mrbeam/printing/comm_acc2.py:1212
 msgid "GRBL Update failed"
 msgstr "GRBL-Update fehlgeschlagen"
 
@@ -603,17 +603,14 @@ msgstr ""
 
 # Settings > About Screen
 #: octoprint_mrbeam/static/js/software_channel_selector.js:15
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:17
 msgid "Stable"
 msgstr "Stabiler Kanal"
 
 #: octoprint_mrbeam/static/js/software_channel_selector.js:16
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:18
 msgid "Beta"
 msgstr "Beta"
 
 #: octoprint_mrbeam/static/js/software_channel_selector.js:17
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:20
 msgid "Develop"
 msgstr "Develop"
 
@@ -911,6 +908,10 @@ msgstr ""
 "%(closing_tag)s besuchen, wo Du viele wissenswerte Artikel zu Mr Beam II "
 "findest."
 
+#: octoprint_mrbeam/static/js/tour_viewmodel.js:269
+msgid "Done!"
+msgstr "Fertig!"
+
 #: octoprint_mrbeam/static/js/tour_viewmodel.js:292
 msgid "Working area has to be empty to start this tour."
 msgstr "Die Arbeitsfläche muss leer sein, um diese Tour zu starten."
@@ -982,22 +983,18 @@ msgstr ""
 "Deine Einstellung zu Analytics kann im Moment nicht gespeichert werden. "
 "%(br)sPrüfe die Verbindung zu Mr Beam II und versuche es erneut."
 
-#: octoprint_mrbeam/static/js/wizard_whatsnew.js:10
+#: octoprint_mrbeam/static/js/wizard_whatsnew.js:19
 msgid "Let's go!"
 msgstr "Auf geht's!"
 
-#: octoprint_mrbeam/static/js/wizard_whatsnew.js:14
+#: octoprint_mrbeam/static/js/wizard_whatsnew.js:24
 msgid "What's New"
 msgstr "Was gibt's Neues"
 
 # Settings > About Screen
 #: octoprint_mrbeam/static/js/wizard_whatsnew.js:26
-msgid "Switching Software Channel"
-msgstr "Wechsele Software-Kanal"
-
-#: octoprint_mrbeam/static/js/wizard_whatsnew.js:27
-msgid "This takes a fiew seconds..."
-msgstr "Das dauert ein paar Sekunden..."
+msgid "What's New in the Stable Channel"
+msgstr "Was gibt’s Neues im Stabilen Kanal?"
 
 #: octoprint_mrbeam/static/js/working_area.js:129
 msgid "Rectangle"
@@ -2248,12 +2245,10 @@ msgstr "Software-Kanal"
 
 # Settings > About Screen
 #: octoprint_mrbeam/templates/software_channel_selector.jinja2:6
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:5
 msgid "Stable Channel"
 msgstr "Stabiler Kanal"
 
 #: octoprint_mrbeam/templates/software_channel_selector.jinja2:7
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:6
 msgid ""
 "Use the most stable software for your Mr Beam II. You will only get notified "
 "about officially released and well tested software updates."
@@ -2263,12 +2258,10 @@ msgstr ""
 
 # Settings > About Screen
 #: octoprint_mrbeam/templates/software_channel_selector.jinja2:10
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:9
 msgid "Beta Channel"
 msgstr "Beta-Kanal"
 
 #: octoprint_mrbeam/templates/software_channel_selector.jinja2:11
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:10
 msgid ""
 "Get the latest Mr Beam development! In this channel you can try the newest "
 "features even before they are officially released, with more frequent "
@@ -3331,26 +3324,125 @@ msgstr "Nein, ich möchte lieber keine Analysedaten teilen."
 msgid "You can change you choice in the settings menu whenever you want ;)"
 msgstr "Du kannst Deine Auswahl jederzeit im Einstellungsmenü ändern ;)"
 
-# Settings > About Screen
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:1
-msgid "New Software Channels!"
-msgstr "Neue Softwarekanäle!"
+msgid "Improved find.mr-beam"
+msgstr "find.mr-beam verbessert"
 
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:15
-msgid "Select a software channel for your Mr Beam II:"
-msgstr "Wähle einen Softwarekanal für Deinen Mr Beam II aus:"
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:25
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:7
 msgid ""
-"Switch between the different software channels of the Mr Beam II any time in "
-"the settings!"
+"is an online service that helps you to connect your Mr Beam II with your "
+"computer.<br>And we’ve got great news for you: It just got better!"
 msgstr ""
-"Wechsele jederzeit zwischen den verschiedenen Softwarekanälen des Mr Beam II "
-"in den Einstellungen!"
+"ist ein Online-Dienst, der Dir hilft, Deinen Mr Beam II mit Deinem Computer "
+"zu verbinden.<br> Und wir haben find.mr-beam jetzt noch zuverlässiger "
+"gemacht!</br>"
+
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:10
+msgid "1.  We added IPv6 support so it got even more reliable!"
+msgstr ""
+"1.  Der Service unterstützt jetzt auch IPv6 und wird dadurch deutlich "
+"zuverlässiger!"
+
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:11
+msgid ""
+"2.  We added an IP scan to make sure you find all of your Mr Beam II devices."
+msgstr ""
+"2.  Wir haben einen IP-Scan eingeführt, damit Du alle Deine Mr Beam Geräte "
+"finden kannst."
+
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:19
+msgid "Try it now!"
+msgstr "Jetzt ausprobieren!"
+
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:24
+#, python-format
+msgid ""
+"For more information check out our %(tag_open)sKnowledge Base article"
+"%(tag_close)s."
+msgstr ""
+"Weitere Informationen findest Du in unserem %(tag_open)sKnowledge Base "
+"Artikel%(tag_close)s."
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_1.jinja2:2
-msgid "Lights showing WiFi state"
-msgstr "Lichter zeigen WLAN-Status"
+msgid "New Languages!"
+msgstr "Neue Sprachen!"
+
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_1.jinja2:5
+msgid "Mr Beam II can now also speak German and Spanish!"
+msgstr "Mr Beam kann jetzt auch Deutsch und Spanisch sprechen!"
+
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_1.jinja2:6
+msgid ""
+"When you connect to your Mr Beam II, your browser's default language will be "
+"selected."
+msgstr ""
+"Wenn Du Dich mit Deinem Mr Beam II verbindest, wird die Standardsprache "
+"Deines Browsers ausgewählt."
+
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_1.jinja2:11
+msgid ""
+"You can manually select another language in the \"User Settings\" menu, "
+"under \"Interface\"."
+msgstr ""
+"Eine andere Sprache kannst Du im Menü “Nutzereinstellungen\" unter "
+"“Interface” manuell auswählen."
+
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:2
+msgid "Job Time Estimation"
+msgstr "Voraussichtliche Laserjobdauer"
+
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:4
+msgid ""
+"Get an approximate estimation of how long your laser job will take before "
+"you start it!"
+msgstr ""
+"Du siehst eine ungefähre Abschätzung, wie lange Dein Laserjob dauern wird, "
+"bevor Du ihn startest!"
+
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:6
+msgid ""
+"You will also see this estimation during the laser job, as well as when it's "
+"finished."
+msgstr "Dies Abschätzung wird auch während und nach dem Laserjob angezeigt."
+
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:2
+msgid "...and more!"
+msgstr "...und mehr!"
+
+# Settings > About Screen
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:6
+msgid "Online support form"
+msgstr "Online-Support-Formular"
+
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:6
+msgid "Contact us on our support portal directly from the Mr Beam II software!"
+msgstr ""
+"Nutze unser Support-Ticket-Formular direkt aus der Mr Beam II Software "
+"heraus."
+
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:7
+msgid "Focus reminder"
+msgstr "Fokus-Erinnerung"
+
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:7
+msgid ""
+"Do you always forget to focus the laser head before starting a job? Then "
+"this reminder might come in handy. ;) "
+msgstr ""
+"Vergisst Du auch immer, den Laserkopf zu fokussieren, bevor Du einen "
+"Laserjob startest? Dann wirst Du diese Erinnerung bestimmt mögen. ;)"
+
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:8
+msgid ".dxf file handling is now more stable."
+msgstr ".dxf-Unterstüzung ist nun stabiler."
+
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:9
+msgid "General bug fixes for stability improvement."
+msgstr "Allgemeine Bugfixes zur Verbesserung der Stabilität."
+
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:13
+msgid "We hope you enjoy this new experience!"
+msgstr "Wir hoffen, dass Du viel Freude mit diesem Update hast!"
 
 #: octoprint_mrbeam/templates/wizard/wizard_wifi.jinja2:1
 msgid "Wifi Setup"
@@ -3437,6 +3529,30 @@ msgstr "Daemon offline"
 #: octoprint_mrbeam/templates/wizard/wizard_wifi.jinja2:78
 msgid "Reset daemon"
 msgstr "Dämon zurücksetzen"
+
+# Settings > About Screen
+#~ msgid "Switching Software Channel"
+#~ msgstr "Wechsele Software-Kanal"
+
+#~ msgid "This takes a fiew seconds..."
+#~ msgstr "Das dauert ein paar Sekunden..."
+
+# Settings > About Screen
+#~ msgid "New Software Channels!"
+#~ msgstr "Neue Softwarekanäle!"
+
+#~ msgid "Select a software channel for your Mr Beam II:"
+#~ msgstr "Wähle einen Softwarekanal für Deinen Mr Beam II aus:"
+
+#~ msgid ""
+#~ "Switch between the different software channels of the Mr Beam II any time "
+#~ "in the settings!"
+#~ msgstr ""
+#~ "Wechsele jederzeit zwischen den verschiedenen Softwarekanälen des Mr Beam "
+#~ "II in den Einstellungen!"
+
+#~ msgid "Lights showing WiFi state"
+#~ msgstr "Lichter zeigen WLAN-Status"
 
 #~ msgid "Camera Calibration"
 #~ msgstr "Kamerakalibrierung"
