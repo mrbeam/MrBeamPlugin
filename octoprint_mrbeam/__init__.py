@@ -30,7 +30,6 @@ from octoprint_mrbeam.iobeam.interlock_handler import interLockHandler
 from octoprint_mrbeam.iobeam.lid_handler import lidHandler
 from octoprint_mrbeam.iobeam.temperature_manager import temperatureManager
 from octoprint_mrbeam.iobeam.dust_manager import dustManager
-from octoprint_mrbeam.iobeam.laserhead_handler import laserheadHandler
 from octoprint_mrbeam.analytics.analytics_handler import analyticsHandler
 from octoprint_mrbeam.analytics.usage_handler import usageHandler
 from octoprint_mrbeam.led_events import LedEventListener
@@ -120,6 +119,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._time_ntp_check_count = 0
 		self._time_ntp_check_last_ts = 0.0
 		self._time_ntp_shift = 0.0
+		self.lh = dict(serial=None, p_65=None, p_75=None, p_85=None, correction_factor=None, correction_enabled=None)
 
 
 		# MrBeam Events needs to be registered in OctoPrint in order to be send to the frontend later on
@@ -137,6 +137,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		self.focusReminder = self._settings.get(['focusReminder'])
 
+		self._initialize_lh()
+
 		self.start_time_ntp_timer()
 
 		# do migration if needed
@@ -148,6 +150,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self.support_mode = set_support_mode(self)
 
 		self.laserCutterProfileManager = laserCutterProfileManager()
+
+		self._do_initial_log()
 
 		try:
 			pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
@@ -162,13 +166,19 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._usageHandler = usageHandler(self)
 		self._led_eventhandler = LedEventListener(self._event_bus, self._printer)
 		# start iobeam socket only once other handlers are already inittialized so that we can handle info mesage
-		self._ioBeam = ioBeamHandler(self)
+		self._ioBeam = ioBeamHandler(self._event_bus, self._settings.get(["dev", "sockets", "iobeam"]))
 		self._temperatureManager = temperatureManager()
 		self._dustManager = dustManager()
-		self._laserheadHandler = laserheadHandler(self)
 		self.jobTimeEstimation = JobTimeEstimation(self._event_bus)
 
-		self._do_initial_log()
+	def _initialize_lh(self):
+		self.lh['serial'] = self._settings.get(["laserhead", "serial"])
+		self.lh['correction_factor'] = self._settings.get(["laserhead", "correction", "factor"])
+		self.lh['correction_factor_override'] = self._settings.get(["laserhead", "correction", "factor_override"])
+		self.lh['correction_enabled'] = self._settings.get(["laserhead", "correction", "enabled"])
+		self.lh['p_65'] = self._settings.get(["laserhead", "p_65"])
+		self.lh['p_75'] = self._settings.get(["laserhead", "p_75"])
+		self.lh['p_85'] = self._settings.get(["laserhead", "p_85"])
 
 	def _do_initial_log(self):
 		"""
@@ -184,7 +194,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		msg += ", env:{}".format(self.get_env())
 		msg += ", beamOS-image:{}".format(self._octopi_info)
 		msg += ", grbl_version_lastknown:{}".format(self._settings.get(["grbl_version_lastknown"]))
-		msg += ", laserhead-serial:{}".format(self._laserheadHandler.get_current_used_lh_data()['serial'])
+		msg += ", laserhead-serial:{}".format(self.lh['serial'])
 		self._logger.info(msg, terminal=True)
 
 		msg = "MrBeam Lasercutter Profile: %s" % self.laserCutterProfileManager.get_current_or_default()
@@ -221,7 +231,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		            env=self.get_env(),
 		            beamOS_image=self._octopi_info,
 		            grbl_version_lastknown=self._settings.get(["grbl_version_lastknown"]),
-		            laserhead_serial=self._laserheadHandler.get_current_used_lh_data()['serial'])
+		            laserhead_serial=self.lh['serial'])
 
 	##~~ SettingsPlugin mixin
 	def get_settings_version(self):
@@ -253,8 +263,17 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				support_mode = False,
 				grbl_auto_update_enabled = True
 			),
-			laser_heads=dict(
-				filename='laser_heads.yaml'
+			laserhead=dict(
+				correction=dict(
+					enabled=True,
+					factor=1,
+					factor_override=None,
+					gcode_intensity_limit=1700,
+				),
+				p_65=0,
+				p_75=0,
+				p_85=0,
+				serial=None,
 			),
 			focusReminder=True,
 			analyticsEnabled=None,
@@ -489,7 +508,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 beamosVersionDisplayVersion = display_version_string,
 							 beamosVersionImage = self._octopi_info,
 							 grbl_version=self._grbl_version,
-							 laserhead_serial= self._laserheadHandler.get_current_used_lh_data()['serial'],
+							 laserhead_serial=self.lh['serial'],
 
 							 env=self.get_env(),
 							 env_local=self.get_env(self.ENV_LOCAL),
