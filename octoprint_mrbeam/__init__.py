@@ -595,7 +595,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return dict()
 
 	def get_wizard_version(self):
-		return 15 #random number. but we can't go down anymore, just up.
+		return 16 #random number. but we can't go down anymore, just up.
 
 	def on_wizard_finish(self, handled):
 		self._logger.info("Setup Wizard finished.")
