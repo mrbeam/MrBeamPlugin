@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-07-17 11:20+0200\n"
+"POT-Creation-Date: 2019-07-17 15:22+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2805,7 +2805,7 @@ msgstr ""
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:7
 msgid ""
 "is an online service that helps you to connect your Mr Beam II with your "
-"computer.<br>And we’ve got great news for you, it just got better!"
+"computer.<br>And we’ve got great news for you: It just got better!"
 msgstr ""
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:10
@@ -2834,13 +2834,13 @@ msgid "New Languages!"
 msgstr ""
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_1.jinja2:5
-msgid "Mr Beam can now also speak German and Spanish!"
+msgid "Mr Beam II can now also speak German and Spanish!"
 msgstr ""
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_1.jinja2:6
 msgid ""
-"When you connect to your Mr Beam, your browser's default language will be"
-" selected."
+"When you connect to your Mr Beam II, your browser's default language will"
+" be selected."
 msgstr ""
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_1.jinja2:11
@@ -2855,8 +2855,8 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:4
 msgid ""
-"Get an approximate estimation of how long your laser job will take, "
-"before you start it!"
+"Get an approximate estimation of how long your laser job will take before"
+" you start it!"
 msgstr ""
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:6
@@ -2874,7 +2874,7 @@ msgid "Online support form"
 msgstr ""
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:6
-msgid "Contact us on our support portal directly from the Mr Beam software!"
+msgid "Contact us on our support portal directly from the Mr Beam II software!"
 msgstr ""
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:7
@@ -2884,7 +2884,7 @@ msgstr ""
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:7
 msgid ""
 "Do you always forget to focus the laser head before starting a job? Then "
-"this reminder might come in handy ;) "
+"this reminder might come in handy. ;) "
 msgstr ""
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:8

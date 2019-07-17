@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-07-17 11:20+0200\n"
-"PO-Revision-Date: 2019-07-17 11:25+0200\n"
+"POT-Creation-Date: 2019-07-17 15:22+0200\n"
+"PO-Revision-Date: 2019-07-17 15:25+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: es_ES\n"
@@ -3287,10 +3287,10 @@ msgstr "find.mr-beam ha mejorado"
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:7
 msgid ""
 "is an online service that helps you to connect your Mr Beam II with your "
-"computer.<br>And we’ve got great news for you, it just got better!"
+"computer.<br>And we’ve got great news for you: It just got better!"
 msgstr ""
 "es un servicio online que te ayuda a conectar tu Mr Beam II con tu ordenador."
-"<br>Y tenemos buenas noticias, ¡acaba de mejorar!"
+"<br>Y tenemos buenas noticias: ¡acaba de mejorar!"
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:10
 msgid "1.  We added IPv6 support so it got even more reliable!"
@@ -3321,16 +3321,16 @@ msgid "New Languages!"
 msgstr "¡Nuevos Idiomas!"
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_1.jinja2:5
-msgid "Mr Beam can now also speak German and Spanish!"
-msgstr "¡Mr Beam ahora también habla español y alemán!"
+msgid "Mr Beam II can now also speak German and Spanish!"
+msgstr "¡Mr Beam II ahora también habla español y alemán!"
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_1.jinja2:6
 msgid ""
-"When you connect to your Mr Beam, your browser's default language will be "
+"When you connect to your Mr Beam II, your browser's default language will be "
 "selected."
 msgstr ""
-"Cuando te conectes a tu Mr Beam, se seleccionará el idioma por defecto de tu "
-"navegador."
+"Cuando te conectes a tu Mr Beam II, se seleccionará el idioma por defecto de "
+"tu navegador."
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_1.jinja2:11
 msgid ""
@@ -3346,7 +3346,7 @@ msgstr "Estimación de la Duración del Trabajo"
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:4
 msgid ""
-"Get an approximate estimation of how long your laser job will take, before "
+"Get an approximate estimation of how long your laser job will take before "
 "you start it!"
 msgstr ""
 "Podrás ver una estimación de lo que va a durar tu trabajo ¡antes de "
@@ -3370,10 +3370,10 @@ msgid "Online support form"
 msgstr "Portal de asistencia online"
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:6
-msgid "Contact us on our support portal directly from the Mr Beam software!"
+msgid "Contact us on our support portal directly from the Mr Beam II software!"
 msgstr ""
 "Contacta con nosotros en nuestro portal de asistencia directamente desde el "
-"software de Mr Beam."
+"software de Mr Beam II."
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:7
 msgid "Focus reminder"
@@ -3382,10 +3382,10 @@ msgstr "Aviso de Enfoque"
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:7
 msgid ""
 "Do you always forget to focus the laser head before starting a job? Then "
-"this reminder might come in handy ;) "
+"this reminder might come in handy. ;) "
 msgstr ""
 "¿Eres de los que siempre se olvida de enfocar el cabezal láser antes de "
-"empezar? Entonces puede que este aviso te sea útil ;) "
+"empezar? Entonces puede que este aviso te sea útil. ;) "
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:8
 msgid ".dxf file handling is now more stable."
