@@ -266,7 +266,7 @@ $(function () {
                 delay: 200,
                 fixedElement: true,
                 showNextButton: true,
-                nextLabel: "Done!",
+                nextLabel: gettext("Done!"),
                 nextOnTargetClick: false,
                 xOffset: -100,
                 yOffset: 200,
