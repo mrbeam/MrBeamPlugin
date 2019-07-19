@@ -434,6 +434,7 @@ $(function(){
          * @param callback
          */
 		self.placeSVG = function(file, callback) {
+		    let start_ts = Date.now();
 			var url = self._getSVGserveUrl(file);
 			cb = function (fragment) {
 				if(self._isBinaryData(fragment.node.textContent)) { // workaround: only catching one loading error
@@ -460,6 +461,7 @@ $(function(){
 
 				var insertedId = self._prepareAndInsertSVG(fragment, previewId, origin, scaleMatrixStr);
 				if(typeof callback === 'function') callback(insertedId);
+			    console.log("placeSVG DONE "+ ((Date.now() - start_ts) /1000) + "s")
 			};
 			try { // TODO Figure out why the loading exception is not caught.
 				self.loadSVG(url, cb);
