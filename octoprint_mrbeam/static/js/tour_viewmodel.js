@@ -395,12 +395,10 @@ $(function () {
             hopscotch.listen('close', self._onClose);
 
             // remove bubbles because they're visible over the curtain
-            $(window).on('beforeunload', function () {
-                if (!event.target.activeElement.href) {
-                    console.log("hopscotch tour END: ", self.tourDef);
-                    hopscotch.endTour();
-                }
-            });
+            self.onCurtainClosed = function(){
+                console.log("hopscotch tour END: ", self.tourDef);
+                hopscotch.endTour();
+            };
 
             self.onEventReadyToLaserStart = function (payload) {
                 let id = self._getCurrStepProp('id');
