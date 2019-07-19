@@ -96,6 +96,7 @@ $(function(){
 		self.tour = params[7];
 
 		self.log = [];
+		self.gc_meta = {};
 
 		self.command = ko.observable(undefined);
 		self.id_counter = 1000;
@@ -434,6 +435,7 @@ $(function(){
          * @param callback
          */
 		self.placeSVG = function(file, callback) {
+		    let start_ts = Date.now();
 			var url = self._getSVGserveUrl(file);
 			cb = function (fragment) {
 				if(self._isBinaryData(fragment.node.textContent)) { // workaround: only catching one loading error
@@ -460,6 +462,7 @@ $(function(){
 
 				var insertedId = self._prepareAndInsertSVG(fragment, previewId, origin, scaleMatrixStr);
 				if(typeof callback === 'function') callback(insertedId);
+			    console.log("placeSVG DONE "+ ((Date.now() - start_ts) /1000) + "s")
 			};
 			try { // TODO Figure out why the loading exception is not caught.
 				self.loadSVG(url, cb);
@@ -597,7 +600,7 @@ $(function(){
 			});
 			newSvg.ftRegisterAfterTransformCallback(function(){
 				var mb_meta = self._set_mb_attributes(newSvg);
-				newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
+				// newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
 			});
 
 			// activate handles on all things we add to the working_area
@@ -606,9 +609,9 @@ $(function(){
 			}
 
 			var mb_meta = self._set_mb_attributes(newSvg);
-			if(switches.embedGCode){
-				newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
-			}
+			// if(switches.embedGCode){
+			// 	newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
+			// }
 
 			setTimeout(function(){
 				newSvg.ftRegisterOnTransformCallback(self.svgTransformUpdate);
@@ -667,7 +670,7 @@ $(function(){
 			self.showTransformHandles(file.previewId, true);
 
 			var mb_meta = self._set_mb_attributes(svg);
-			svg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
+			// svg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
 		};
 
 
@@ -929,7 +932,7 @@ $(function(){
 			});
 			newSvg.ftRegisterAfterTransformCallback(function(){
 			    var mb_meta = self._set_mb_attributes(newSvg);
-				newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
+				// newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
 			});
 			setTimeout(function(){
 				newSvg.ftReportTransformation();
@@ -939,7 +942,7 @@ $(function(){
             self.showTransformHandles(previewId, true);
 
             var mb_meta = self._set_mb_attributes(newSvg);
-			newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
+			// newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
 			// self.check_sizes_and_placements(); // TODO?
 		};
 
@@ -1119,7 +1122,7 @@ $(function(){
 				var dist = 2;
 				svg.grid(cols, rows, dist);
 				var mb_meta = self._set_mb_attributes(svg);
-				svg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
+				// svg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
 				event.target.value = cols+"×"+rows;
 				svg.ftStoreInitialTransformMatrix();
 			    svg.ftUpdateTransform();
@@ -1720,6 +1723,7 @@ $(function(){
 
                 my_meta['mb:id'] = normalized_id;
                 mb_meta[id] = my_meta;
+                self.gc_meta[id] = my_meta;
             });
             return mb_meta;
         };

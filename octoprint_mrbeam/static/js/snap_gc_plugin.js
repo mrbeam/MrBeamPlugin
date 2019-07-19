@@ -89,9 +89,13 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 				}
 				paths = mrbeam.path.clip(paths, clip, clip_tolerance);
 
-				mb_meta[id]['clip_working_area_clipped'] = true;
+				if (mb_meta[id]) {
+				    mb_meta[id]['clip_working_area_clipped'] = true;
+                }
 			} else {
-				mb_meta[id]['clip_working_area_clipped'] = false;
+				if (mb_meta[id]) {
+                    mb_meta[id]['clip_working_area_clipped'] = false;
+                }
 			}
 
 			// generate gcode

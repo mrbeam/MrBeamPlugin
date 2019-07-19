@@ -697,7 +697,8 @@ var mrbeam = mrbeam || {};
         var val = mb_meta[key].replace === 'function' ? mb_meta[key].replace(" ", '_') : mb_meta[key];
         meta_str += ","+key+":"+val;
     }
-    commands.push(";_gc_nextgen_svg_id:"+id.replace(' ', "_") + meta_str);
+    let my_id = id ? id.replace(' ', "_") : 'null';
+    commands.push(";_gc_nextgen_svg_id:"+my_id + meta_str);
 
     // helper for number formatting
     var fmt = (number) => number.toFixed(2);
