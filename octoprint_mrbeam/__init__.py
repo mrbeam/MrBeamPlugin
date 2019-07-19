@@ -37,6 +37,7 @@ from octoprint_mrbeam.led_events import LedEventListener
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
 from octoprint_mrbeam.migrate import migrate
+from octoprint_mrbeam.os_health_care import os_health_care
 from octoprint_mrbeam.printing.profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
 from octoprint_mrbeam.software_update_information import get_update_information, switch_software_channel, software_channels_available, SW_UPDATE_TIER_PROD, SW_UPDATE_TIER_BETA
 from octoprint_mrbeam.support import set_support_mode
@@ -139,6 +140,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		self.start_time_ntp_timer()
 
+		# do os health care
+		os_health_care(self)
 		# do migration if needed
 		migrate(self)
 
