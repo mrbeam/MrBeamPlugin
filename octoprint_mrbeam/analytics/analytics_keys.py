@@ -57,6 +57,7 @@ class AnalyticsKeys(object):
 	LOG_CPU = 'cpu'
 	CAMERA = 'camera'
 	CAMERA_SESSION = 'camera_session'
+	OS_HEALTH = 'os_health'
 
 	### JOB KEYS ###
 	JOB_ID = 'job_id'
