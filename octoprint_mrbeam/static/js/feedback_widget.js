@@ -7,7 +7,7 @@ $(function () {
 
         self.freshWidgetUrl = "https://s3.amazonaws.com/assets.freshdesk.com/widget/freshwidget.js";
 
-        self.isStartupComplete = false;
+        self.isCurtainOpen = false;
 
 
         self.onStartup = function () {
@@ -17,7 +17,7 @@ $(function () {
                 dataType: "script",
                 cache: false
             }).done(function (script, textStatus) {
-                if (self.isStartupComplete) {
+                if (self.isCurtainOpen) {
                     self.showWidget();
                 }
             }).fail(function (jqxhr, settings, exception) {
@@ -26,7 +26,7 @@ $(function () {
         };
 
         self.onCurtainOpened = function () {
-            self.isStartupComplete = true;
+            self.isCurtainOpen = true;
             if (window.FreshWidget) {
                 self.showWidget();
             }
