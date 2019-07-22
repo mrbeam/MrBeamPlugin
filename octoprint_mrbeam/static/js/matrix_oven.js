@@ -31,10 +31,10 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	 * @param {integer} dec : number of digits after decimal separator. defaults to 5
 	 * @returns {undefined}
 	 */
-	Element.prototype.bake_subtree = function (correctionMatrix, toCubics, dec) {
+	Element.prototype.bake_subtree = function (callback, correctionMatrix, toCubics, dec) {
 		var elem = this;
 		var own_transformation = elem.parent().transform().totalMatrix;
-		elem.bake(own_transformation.invert(), toCubics, dec);
+		elem.bake(callback, own_transformation.invert(), toCubics, dec);
 	};
 	
 	/**
@@ -45,18 +45,22 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	 * @param {integer} dec : number of digits after decimal separator. defaults to 5
 	 * @returns {undefined}
 	 */
-	Element.prototype.bake = function (correctionMatrix, toCubics, dec) {
-		var elem = this;
+	Element.prototype.bake = function (callback, correctionMatrix, toCubics, dec) {
+		if (!window._matrixOven) {
+		    window._matrixOven = {
+                done: 0,
+                total: 0
+            }
+            window._matrixOven.total = Math.max(1, this.selectAll('*').length);
+        }
 
-//		console.log('Elem: ', elem);
-//		if(elem.type === 'text' || elem.type === 'tspan' || elem.type === '#text'){
-//			console.log('Text: !elem', !elem);
-//			console.log('Text: !elem.paper', !elem.paper);
-//			console.log('Text: elem.type', elem.type);
-//			console.log('Text: second', (!elem.paper && (elem.type !== "text" || elem.type !== "tspan" || elem.type !== "#text")));
-//			elem.attr({type:'blub'});
-//			console.log('blub',elem.type)
-//		}
+
+	    var elem = this;
+
+		window._matrixOven.done += 1;
+        let percent = Math.min(100, (window._matrixOven.done / window._matrixOven.total) * 100);
+		callback(percent, window._matrixOven.done, window._matrixOven.total);
+
 
 		if (!elem || (!elem.paper && (elem.type !== "text" && elem.type !== "tspan" && elem.type !== "#text"))){
 			return;
@@ -71,9 +75,10 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		
 		var children = elem.children();
 		if (children.length > 0) {
+		    // callback(0, children.length);
 			for (var i = 0; i < children.length; i++) {
 				var child = children[i];
-				child.bake(correctionMatrix, toCubics, dec);
+				child.bake(callback, correctionMatrix, toCubics, dec);
 			}
 			elem.attr({transform: ''});
 			return;
