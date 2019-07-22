@@ -94,8 +94,10 @@ $(function(){
 		self.camera = params[5];
 		self.readyToLaser = params[6];
 		self.tour = params[7];
+		self.analytics = params[8];
 
 		self.log = [];
+		self.gc_meta = {};
 
 		self.command = ko.observable(undefined);
 		self.id_counter = 1000;
@@ -367,6 +369,7 @@ $(function(){
 		};
 
 		self.placeGcode = function(file){
+		    var start_ts = Date.now();
 			var previewId = self.getEntryId();
 
 			// TODO think about if double placing a gcode file is a problem.
@@ -398,6 +401,10 @@ $(function(){
 					self.draw_gcode_img_placeholder(x,y,w,h,url, '#'+previewId);
 				};
 				self.parser.parse(gcode, /(m0?3)|(m0?5)/i, pathCallback, imgCallback);
+
+				var dur = ((Date.now() - start_ts) /1000);
+			    console.log("placeGcode() DONE "+ dur + "s");
+                self._analyticsPlaceDesign('gco', dur, previewId);
 			});
 		};
 
@@ -434,7 +441,7 @@ $(function(){
          * @param callback
          */
 		self.placeSVG = function(file, callback) {
-		    let start_ts = Date.now();
+		    var start_ts = Date.now();
 			var url = self._getSVGserveUrl(file);
 			cb = function (fragment) {
 				if(self._isBinaryData(fragment.node.textContent)) { // workaround: only catching one loading error
@@ -461,7 +468,10 @@ $(function(){
 
 				var insertedId = self._prepareAndInsertSVG(fragment, previewId, origin, scaleMatrixStr);
 				if(typeof callback === 'function') callback(insertedId);
-			    console.log("placeSVG DONE "+ ((Date.now() - start_ts) /1000) + "s")
+
+				var dur = ((Date.now() - start_ts) /1000);
+			    console.log("placeSVG() DONE "+ dur + "s");
+                self._analyticsPlaceDesign('svg', dur, id);
 			};
 			try { // TODO Figure out why the loading exception is not caught.
 				self.loadSVG(url, cb);
@@ -477,6 +487,7 @@ $(function(){
          * @param callback (otional)
          */
 		self.placeDXF = function(file, callback) {
+		    var start_ts = Date.now();
 			var url = self._getSVGserveUrl(file);
 
 			cb = function (fragment) {
@@ -511,6 +522,10 @@ $(function(){
 
 				var insertedId = self._prepareAndInsertSVG(fragment, previewId, origin, scaleMatrixStr);
 				if(typeof callback === 'function') callback(insertedId);
+
+				var dur = ((Date.now() - start_ts) /1000);
+			    console.log("placeDXF() DONE "+ dur + "s");
+                self._analyticsPlaceDesign('dxf', dur, id);
 			};
 			try { // TODO this would be the much better way. Figure out why the loading exception is not caught.
 				Snap.loadDXF(url, cb);
@@ -532,6 +547,7 @@ $(function(){
          * @private
          */
 		self._prepareAndInsertSVG = function(fragment, id, origin, scaleMatrixStr, flags = {}){
+		    var start_ts = Date.now()
 
 			var switches = $.extend({showTransformHandles: true, embedGCode: true, bakeTransforms: true}, flags);
 			fragment = self._removeUnsupportedSvgElements(fragment);
@@ -565,7 +581,8 @@ $(function(){
 
 			newSvg.attr(newSvgAttrs);
 			if(switches.bakeTransforms){
-				newSvg.bake(); // remove transforms
+			    window.mrbeam.bake_progress = 0;
+				newSvg.bake(self._bake_progress_callback); // remove transforms
 			}
 			newSvg.selectAll('path').attr({strokeWidth: '0.8', class:'vector_outline'});
 			// replace all fancy color definitions (rgba(...), hsl(...), 'pink', ...) with hex values
@@ -599,7 +616,7 @@ $(function(){
 			});
 			newSvg.ftRegisterAfterTransformCallback(function(){
 				var mb_meta = self._set_mb_attributes(newSvg);
-				newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
+				// newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
 			});
 
 			// activate handles on all things we add to the working_area
@@ -608,16 +625,22 @@ $(function(){
 			}
 
 			var mb_meta = self._set_mb_attributes(newSvg);
-			if(switches.embedGCode){
-				newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
-			}
+			// if(switches.embedGCode){
+			// 	newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
+			// }
 
 			setTimeout(function(){
 				newSvg.ftRegisterOnTransformCallback(self.svgTransformUpdate);
 			}, 200);
 
+			console.log("_prepareAndInsertSVG DONE "+ ((Date.now() - start_ts) /1000) + "s")
 			return id;
 		};
+
+		self._bake_progress_callback = function(percent, done, total) {
+            window.mrbeam.bake_progress = percent;
+            // console.log("_bake_progress_callback() "+percent.toFixed()+"% | " + done + " / " + total);
+        };
 
         /**
          * Removes unsupported elements from fragment.
@@ -669,7 +692,7 @@ $(function(){
 			self.showTransformHandles(file.previewId, true);
 
 			var mb_meta = self._set_mb_attributes(svg);
-			svg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
+			// svg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
 		};
 
 
@@ -931,7 +954,7 @@ $(function(){
 			});
 			newSvg.ftRegisterAfterTransformCallback(function(){
 			    var mb_meta = self._set_mb_attributes(newSvg);
-				newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
+				// newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
 			});
 			setTimeout(function(){
 				newSvg.ftReportTransformation();
@@ -941,7 +964,7 @@ $(function(){
             self.showTransformHandles(previewId, true);
 
             var mb_meta = self._set_mb_attributes(newSvg);
-			newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
+			// newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
 			// self.check_sizes_and_placements(); // TODO?
 		};
 
@@ -1121,7 +1144,7 @@ $(function(){
 				var dist = 2;
 				svg.grid(cols, rows, dist);
 				var mb_meta = self._set_mb_attributes(svg);
-				svg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
+				// svg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
 				event.target.value = cols+"×"+rows;
 				svg.ftStoreInitialTransformMatrix();
 			    svg.ftUpdateTransform();
@@ -1242,6 +1265,7 @@ $(function(){
 		};
 
 		self.placeIMG = function (file) {
+		    var start_ts = Date.now();
 			var url = self._getIMGserveUrl(file);
 			var img = new Image();
 			img.onload = function () {
@@ -1279,6 +1303,10 @@ $(function(){
 				file.url = url;
 				file.subtype = "bitmap";
 				self.placedDesigns.push(file);
+
+				var dur = ((Date.now() - start_ts) /1000);
+			    console.log("placeIMG() DONE "+ dur + "s");
+                self._analyticsPlaceDesign('img', dur, id);
 			};
 			img.src = url;
 		};
@@ -1722,6 +1750,7 @@ $(function(){
 
                 my_meta['mb:id'] = normalized_id;
                 mb_meta[id] = my_meta;
+                self.gc_meta[id] = my_meta;
             });
             return mb_meta;
         };
@@ -2056,6 +2085,7 @@ $(function(){
          * @returns file object
          */
         self._qs_placeQuickShape = function(){
+            var start_ts = Date.now();
 
 			var w = self.workingAreaWidthMM() / 5;
 			var h = w * 0.5;
@@ -2098,6 +2128,11 @@ $(function(){
 			var scaleMatrixStr = new Snap.Matrix(1,0,0,1,x,y).toString();
 			self._prepareAndInsertSVG(fragment, previewId, origin, '', {showTransformHandles: false, embedGCode: false});
 			$('#'+previewId).attr('transform', scaleMatrixStr);
+
+			var dur = ((Date.now() - start_ts) /1000);
+            console.log("_qs_placeQuickShape() DONE "+ dur + "s");
+            self._analyticsPlaceDesign('quickShape', dur, id);
+
             return file;
         };
 
@@ -2434,13 +2469,6 @@ $(function(){
         self.newQuickText = function() {
             var file = self._qt_placeQuicktext();
             self.editQuickText(file);
-
-
-            var rules = document.styleSheets[0].rules || document.styleSheets[0].cssRules;
-            for(var x=0;x<rules.length;x++) {
-               // console.log(rules[x].name + " | " +rules[x].cssText);
-               // console.log(rules[x].cssText, rules[x]);
-            }
         };
 
         /**
@@ -2577,6 +2605,7 @@ $(function(){
          * @returns file object
          */
         self._qt_placeQuicktext = function(){
+            var start_ts = Date.now();
             var placeholderText = $('#quick_text_dialog_text_input').attr('placeholder');
 
             var file = {
@@ -2627,6 +2656,10 @@ $(function(){
             group.ftRegisterOnTransformCallback(self.svgTransformUpdate);
 
             self.placedDesigns.push(file);
+
+            var dur = ((Date.now() - start_ts) /1000);
+            console.log("_qt_placeQuicktext() DONE "+ dur + "s");
+            self._analyticsPlaceDesign('quickText', dur, file.previewId);
 
             return file;
         };
@@ -2715,6 +2748,18 @@ $(function(){
 			return {x: xPerc, y: yPerc, dx: dxPerc, dy: dyPerc};
 		};
 
+		self._analyticsPlaceDesign = function(type, dur, id){
+		    self._sendAnalytics('place_design', {
+		        type: type,
+		        dur: dur,
+                design_id: id,
+            });
+        };
+
+		self._sendAnalytics = function(event, payload){
+		    self.analytics.send_fontend_event(event, payload);
+        };
+
 	}
 
 
@@ -2722,7 +2767,7 @@ $(function(){
     ADDITIONAL_VIEWMODELS.push([WorkingAreaViewModel,
 		["loginStateViewModel", "settingsViewModel", "printerStateViewModel",
 			"gcodeFilesViewModel", "laserCutterProfilesViewModel", "cameraViewModel",
-            "readyToLaserViewModel", "tourViewModel"],
+            "readyToLaserViewModel", "tourViewModel", "analyticsViewModel"],
 		[document.getElementById("area_preview"),
 			document.getElementById("homing_overlay"),
 			document.getElementById("working_area_files"),
