@@ -2349,4 +2349,14 @@ input[type="radio"]{
     font-size: 12px;
 }
 
-.whatsnew-try-it-button
+/*.whatsnew-try-it-button*/
+
+
+/*
+* === WORKING AREA FOOTER ===
+*/
+.working_area_footer_text {
+    font-size: 10px;
+    color: darkgrey;
+    margin: 0 0 0 30px;
+}
