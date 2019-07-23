@@ -273,9 +273,12 @@ $(function () {
 					});
 				},
 				error: function (jqXHR, textStatus, errorThrown) {
-					alert("Error, status = " + textStatus + ", " +
-							"error thrown: " + errorThrown
-							);
+				    new PNotify({
+                        title: gettext("Error"),
+                        text: _.sprintf(gettext("Calibration failed.<br><br>Error:<br/>%(code)s %(status)s - %(errorThrown)s"), {code: jqXHR.status, status: textStatus, errorThrown: errorThrown}),
+                        type: "error",
+                        hide: false
+				    })
 				}
 			});
 		};
