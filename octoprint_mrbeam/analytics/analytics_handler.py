@@ -285,7 +285,8 @@ class AnalyticsHandler(object):
 		self._write_new_line()
 		payload = {
 			ak.LASERHEAD_SERIAL: self._laserheadHandler.get_current_used_lh_data()['serial'],
-			ak.ENV: self._plugin.get_env()
+			ak.ENV: self._plugin.get_env(),
+			ak.USERS: len(self._plugin._user_manager._users)  # users = self.plugin._user_manager._users
 		}
 		self._write_deviceinfo(ak.STARTUP, payload=payload)
 

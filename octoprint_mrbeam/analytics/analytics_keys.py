@@ -37,6 +37,7 @@ class AnalyticsKeys(object):
 	POWER_65 = 'p_65'
 	POWER_75 = 'p_75'
 	POWER_85 = 'p_85'
+	USERS = 'users'
 
 	### EVENT KEYS ###
 	STARTUP = 'startup'
