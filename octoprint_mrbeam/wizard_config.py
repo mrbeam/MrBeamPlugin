@@ -4,6 +4,8 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 
 class WizardConfig:
 	def __init__(self, plugin):
+		self.WIZARD_VERSION = 16  # random number. but we can't go down anymore, just up.
+
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.wizard_config")
 
 		self._plugin = plugin
@@ -11,15 +13,13 @@ class WizardConfig:
 		self._plugin_manager = plugin._plugin_manager
 		self._settings = plugin._settings
 
-		self._wizard_version = 16  # random number. but we can't go down anymore, just up.
-
 		self._is_welcome_wizard = plugin.isFirstRun()
 		self._is_whatsnew_wizard = not plugin.isFirstRun()
 
 		self._current_wizard_config = None
 
 	def get_wizard_version(self):
-		return self._wizard_version
+		return self.WIZARD_VERSION
 
 	def get_wizard_config_to_show(self):
 		wizard_config_to_show = []
@@ -38,7 +38,10 @@ class WizardConfig:
 		return wizard_config_to_show
 
 	def _welcome_wizard_config(self):
-		"""Add here the tabs that should be present in the welcome wizard"""
+		"""Add here the tabs that should be present in the welcome wizard.
+		The order of the tabs is set in __init__.py > __plugin_load__() > __plugin_settings_overlay__['appearance']['order].
+		The welcome and what's new wizard are actually the same wizard, so both are configured in the same place.
+		"""
 		welcome_wizard_tabs = dict(
 			wizard_lasersafety=dict(
 				type='wizard',
@@ -80,9 +83,11 @@ class WizardConfig:
 
 		return welcome_wizard_tabs
 
-	@staticmethod
-	def _whatsnew_wizard_config():
-		"""Add here the tabs that should be present in the what's new wizard. Remove when unnecessary."""
+	def _whatsnew_wizard_config(self):
+		"""Add here the tabs that should be present in the what's new wizard. Remove when unnecessary.
+		The order of the tabs is set in __init__.py > __plugin_load__() > __plugin_settings_overlay__['appearance']['order].
+		The welcome and what's new wizard are actually the same wizard, so both are configured in the same place.
+		"""
 		whatsnew_wizard_tabs = dict(
 			wizard_whatsnew_0=dict(
 				type='wizard',
