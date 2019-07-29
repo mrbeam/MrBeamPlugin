@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-07-17 15:22+0200\n"
+"POT-Creation-Date: 2019-07-29 12:07+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,6 +16,78 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.6.0\n"
+
+#: octoprint_mrbeam/__init__.py:538
+#: octoprint_mrbeam/templates/settings/svgtogcode_settings.jinja2:2
+msgid "File Import Settings"
+msgstr ""
+
+#: octoprint_mrbeam/__init__.py:539
+msgid "Camera Calibration"
+msgstr ""
+
+#: octoprint_mrbeam/__init__.py:540
+#: octoprint_mrbeam/templates/settings/debug_settings.jinja2:2
+msgid "Debug"
+msgstr ""
+
+#: octoprint_mrbeam/__init__.py:541
+#: octoprint_mrbeam/templates/settings/about_settings.jinja2:2
+msgid "About This Mr Beam"
+msgstr ""
+
+#: octoprint_mrbeam/__init__.py:542 octoprint_mrbeam/__init__.py:743
+#: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:9
+#: octoprint_mrbeam/templates/wizard/wizard_analytics.jinja2:9
+msgid "Analytics"
+msgstr ""
+
+#: octoprint_mrbeam/__init__.py:543
+#: octoprint_mrbeam/templates/settings/reminders_settings.jinja2:2
+msgid "Reminders"
+msgstr ""
+
+#: octoprint_mrbeam/__init__.py:544
+msgid "Exhaust System"
+msgstr ""
+
+#: octoprint_mrbeam/__init__.py:631
+#: octoprint_mrbeam/templates/wizard/wizard_wifi.jinja2:1
+msgid "Wifi Setup"
+msgstr ""
+
+#: octoprint_mrbeam/__init__.py:647
+#: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:53
+#: octoprint_mrbeam/templates/wizard/wizard_acl.jinja2:1
+msgid "Access Control"
+msgstr ""
+
+#: octoprint_mrbeam/__init__.py:664
+#: octoprint_mrbeam/templates/lasersafety_standalone.jinja2:4
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:84
+#: octoprint_mrbeam/templates/wizard/wizard_lasersafety.jinja2:2
+msgid "Laser Safety"
+msgstr ""
+
+#: octoprint_mrbeam/__init__.py:681
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:1
+msgid "Improved find.mr-beam"
+msgstr ""
+
+#: octoprint_mrbeam/__init__.py:696
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_1.jinja2:2
+msgid "New Languages!"
+msgstr ""
+
+#: octoprint_mrbeam/__init__.py:711
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:2
+msgid "Job Time Estimation"
+msgstr ""
+
+#: octoprint_mrbeam/__init__.py:726
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:2
+msgid "...and more!"
+msgstr ""
 
 #: octoprint_mrbeam/iobeam/iobeam_handler.py:670
 #: octoprint_mrbeam/iobeam/iobeam_handler.py:678
@@ -79,6 +151,7 @@ msgstr ""
 
 #: octoprint_mrbeam/iobeam/onebutton_handler.py:386
 #: octoprint_mrbeam/static/js/settings/camera_calibration.js:176
+#: octoprint_mrbeam/static/js/settings/camera_calibration.js:277
 msgid "Error"
 msgstr ""
 
@@ -173,62 +246,71 @@ msgid ""
 "supported for this material."
 msgstr ""
 
+#: octoprint_mrbeam/static/js/convert.js:1213
+msgid "Session expired"
+msgstr ""
+
 #: octoprint_mrbeam/static/js/convert.js:1214
+msgid "Please login again to start this laser job."
+msgstr ""
+
+#: octoprint_mrbeam/static/js/convert.js:1224
 #: octoprint_mrbeam/static/js/render_fills.js:155
 msgid "Conversion failed"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/convert.js:1215
+#: octoprint_mrbeam/static/js/convert.js:1225
 #, python-format
 msgid ""
-"Unable to start the conversion in the backend. Content length was "
-"%(length)s bytes."
+"Unable to start the conversion in the backend. Please try reloading this "
+"page or restarting Mr Beam II.<br/><br/>Content length was %(length)s "
+"bytes."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/convert.js:1227
+#: octoprint_mrbeam/static/js/convert.js:1238
 msgid "Parameter missing"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/convert.js:1228
+#: octoprint_mrbeam/static/js/convert.js:1239
 msgid "Unable to start conversion because a parameter is missing."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/convert.js:1341
+#: octoprint_mrbeam/static/js/convert.js:1352
 msgid ""
 "To free up some disk space you may want to perform one or all of the "
 "following suggestions:"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/convert.js:1342
+#: octoprint_mrbeam/static/js/convert.js:1353
 msgid ""
 "Delete GCode files: Go to design library and click 'Only show GCode "
 "files' on the left. Here you can delete files from the according context "
 "menu."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/convert.js:1343
+#: octoprint_mrbeam/static/js/convert.js:1354
 msgid ""
 "Delete design files: Go to design library and click 'Only show design "
 "files' on the left. Here you can delete files from the according context "
 "menu."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/convert.js:1344
+#: octoprint_mrbeam/static/js/convert.js:1355
 msgid ""
 "Delete log files: Go to Settings -> logs and delete old log files per "
 "click on the trash bin icon."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/convert.js:1346
+#: octoprint_mrbeam/static/js/convert.js:1357
 #, python-format
 msgid "Find more details %(open)sonline%(close)s."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/convert.js:1347
+#: octoprint_mrbeam/static/js/convert.js:1358
 msgid "Get more free disk space"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/convert.js:1472
+#: octoprint_mrbeam/static/js/convert.js:1483
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:295
 msgid "Cutting Job "
 msgstr ""
@@ -254,7 +336,7 @@ msgid ""
 "this warning again."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/loadingoverlay_viewmodel.js:7
+#: octoprint_mrbeam/static/js/loadingoverlay_viewmodel.js:10
 msgid "beamOS is reloading..."
 msgstr ""
 
@@ -450,8 +532,8 @@ msgid "Invalid e-mail address"
 msgstr ""
 
 #: octoprint_mrbeam/static/js/mrbeam.js:160
-#: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:10
-#: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:12
+#: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:20
+#: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:22
 #: octoprint_mrbeam/templates/wizard/wizard_acl.jinja2:21
 msgid "E-mail address"
 msgstr ""
@@ -855,35 +937,35 @@ msgstr ""
 msgid "What's New in the Stable Channel"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:129
+#: octoprint_mrbeam/static/js/working_area.js:131
 msgid "Rectangle"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:129
+#: octoprint_mrbeam/static/js/working_area.js:131
 msgid "Circle"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:130
+#: octoprint_mrbeam/static/js/working_area.js:132
 msgid "Star"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:130
+#: octoprint_mrbeam/static/js/working_area.js:132
 msgid "Heart"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1193
+#: octoprint_mrbeam/static/js/working_area.js:1218
 #, python-format
 msgid ""
 "The SVG file contains unsupported elements: '%(elemName)s' These elements"
 " got removed."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1195
+#: octoprint_mrbeam/static/js/working_area.js:1220
 #, python-format
 msgid "Unsupported elements in SVG: '%(elemName)s'"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1203
+#: octoprint_mrbeam/static/js/working_area.js:1228
 #, python-format
 msgid ""
 "The SVG file contains text elements.%(br)sIf you want to laser just their"
@@ -891,22 +973,22 @@ msgid ""
 " engraved with infill."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1205
+#: octoprint_mrbeam/static/js/working_area.js:1230
 msgid "Text elements found"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1216
+#: octoprint_mrbeam/static/js/working_area.js:1241
 msgid ""
 "The SVG file contained style elements with online references. Since "
 "online references are not supported, we removed them. The image might "
 "look a bit different now."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1218
+#: octoprint_mrbeam/static/js/working_area.js:1243
 msgid "Style elements removed"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1229
+#: octoprint_mrbeam/static/js/working_area.js:1254
 #, python-format
 msgid ""
 "Something went wrong while reading this "
@@ -914,7 +996,7 @@ msgid ""
 "If it works there, our support team would be happy to take a look."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:1232
+#: octoprint_mrbeam/static/js/working_area.js:1257
 msgid "Oops."
 msgstr ""
 
@@ -922,19 +1004,26 @@ msgstr ""
 msgid "Success"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/settings/camera_calibration.js:320
+#: octoprint_mrbeam/static/js/settings/camera_calibration.js:278
+#, python-format
+msgid ""
+"Calibration failed.<br><br>Error:<br/>%(code)s %(status)s - "
+"%(errorThrown)s"
+msgstr ""
+
+#: octoprint_mrbeam/static/js/settings/camera_calibration.js:323
 msgid "Camera Calibrated."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/settings/camera_calibration.js:321
+#: octoprint_mrbeam/static/js/settings/camera_calibration.js:324
 msgid "Camera calibration was successful."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/settings/camera_calibration.js:331
+#: octoprint_mrbeam/static/js/settings/camera_calibration.js:334
 msgid "Couldn't send calibration data."
 msgstr ""
 
-#: octoprint_mrbeam/static/js/settings/camera_calibration.js:332
+#: octoprint_mrbeam/static/js/settings/camera_calibration.js:335
 msgid "...and I have no clue why. Sorry."
 msgstr ""
 
@@ -1634,12 +1723,6 @@ msgstr ""
 msgid "Check our %(open)sprivacy statement%(close)s for details."
 msgstr ""
 
-#: octoprint_mrbeam/templates/lasersafety_standalone.jinja2:4
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:86
-#: octoprint_mrbeam/templates/wizard/wizard_lasersafety.jinja2:2
-msgid "Laser Safety"
-msgstr ""
-
 #: octoprint_mrbeam/templates/lasersafety_standalone.jinja2:14
 msgid "I do fully understand and agree!"
 msgstr ""
@@ -1648,42 +1731,48 @@ msgstr ""
 msgid "beamOS is starting..."
 msgstr ""
 
-#: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:3
-#: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:37
+#: octoprint_mrbeam/templates/loading_overlay.jinja2:110
+#: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:13
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:492
+msgid "Mr Beam Name"
+msgstr ""
+
+#: octoprint_mrbeam/templates/loading_overlay.jinja2:113
+#: octoprint_mrbeam/templates/tab_workingarea.jinja2:491
+msgid "Serial"
+msgstr ""
+
+#: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:5
+#: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:47
 msgid "Login"
 msgstr ""
 
-#: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:16
-#: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:18
+#: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:26
+#: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:28
 #: octoprint_mrbeam/templates/wizard/wizard_acl.jinja2:28
 msgid "Password"
 msgstr ""
 
-#: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:24
+#: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:34
 msgid "Remember me"
 msgstr ""
 
-#: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:29
+#: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:39
 #, python-format
 msgid "Forgot your password? Contact %(tag_open)sMr Beam Support%(tag_close)s."
 msgstr ""
 
-#: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:43
-#: octoprint_mrbeam/templates/wizard/wizard_acl.jinja2:1
-msgid "Access Control"
-msgstr ""
-
-#: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:44
+#: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:54
 msgid ""
 "For security reasons, you can only use your Mr Beam II after logging in "
 "with a user account."
 msgstr ""
 
-#: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:45
+#: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:55
 msgid "Please remember your access data!"
 msgstr ""
 
-#: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:46
+#: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:56
 #, python-format
 msgid ""
 "If you forget your access information, you'll need to contact the Mr Beam"
@@ -1692,87 +1781,87 @@ msgid ""
 "Base%(tag_close)s."
 msgstr ""
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:45
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:43
 msgid "Mr Beam Logo"
 msgstr ""
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:53
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:51
 msgid "working area"
 msgstr ""
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:55
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:53
 msgid "design library"
 msgstr ""
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:57
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:55
 msgid "focus"
 msgstr ""
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:61
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:59
 msgid "terminal"
 msgstr ""
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:84
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:82
 msgid "Settings"
 msgstr ""
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:89
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:87
 msgid "Fullscreen"
 msgstr ""
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:90
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:88
 msgid "Exit Fullscreen"
 msgstr ""
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:94
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:92
 msgid "Find my Mr Beam"
 msgstr ""
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:96
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:94
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:41
 msgid "QuickstartGuide_en.pdf"
 msgstr ""
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:96
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:94
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:41
 msgid "Quickstart Guide"
 msgstr ""
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:97
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:95
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:42
 msgid "UserManual_en.pdf"
 msgstr ""
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:97
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:95
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:42
 msgid "User Manual"
 msgstr ""
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:100
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:98
 msgid "Take a Tour"
 msgstr ""
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:102
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:100
 msgid "Support Portal"
 msgstr ""
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:140
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:138
 msgid "Version"
 msgstr ""
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:143
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:141
 msgid "Homepage"
 msgstr ""
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:144
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:142
 msgid "Sourcecode"
 msgstr ""
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:145
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:143
 msgid "Documentation"
 msgstr ""
 
-#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:146
+#: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:144
 msgid "Bugs and Requests"
 msgstr ""
 
@@ -2314,10 +2403,6 @@ msgstr ""
 msgid "Please smile"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:2
-msgid "About This Mr Beam"
-msgstr ""
-
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:5
 msgid "https://mr-beam.org/en/downloads/"
 msgstr ""
@@ -2480,11 +2565,6 @@ msgid ""
 "reset.)"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:9
-#: octoprint_mrbeam/templates/wizard/wizard_analytics.jinja2:9
-msgid "Analytics"
-msgstr ""
-
 #: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:16
 #: octoprint_mrbeam/templates/wizard/wizard_analytics.jinja2:12
 msgid "Help us improve Mr Beam!"
@@ -2625,10 +2705,6 @@ msgstr ""
 msgid "Save Calibration"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/debug_settings.jinja2:2
-msgid "Debug"
-msgstr ""
-
 #: octoprint_mrbeam/templates/settings/debug_settings.jinja2:11
 msgid "Enable Clipping"
 msgstr ""
@@ -2667,10 +2743,6 @@ msgstr ""
 msgid "Show gcode command checksums in terminal. Takes effect immediately."
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/reminders_settings.jinja2:2
-msgid "Reminders"
-msgstr ""
-
 #: octoprint_mrbeam/templates/settings/reminders_settings.jinja2:7
 msgid "Focus Reminder"
 msgstr ""
@@ -2687,10 +2759,6 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/settings/reminders_settings.jinja2:14
 msgid "Activate focus reminder"
-msgstr ""
-
-#: octoprint_mrbeam/templates/settings/svgtogcode_settings.jinja2:2
-msgid "File Import Settings"
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/svgtogcode_settings.jinja2:6
@@ -2798,10 +2866,6 @@ msgstr ""
 msgid "You can change you choice in the settings menu whenever you want ;)"
 msgstr ""
 
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:1
-msgid "Improved find.mr-beam"
-msgstr ""
-
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:7
 msgid ""
 "is an online service that helps you to connect your Mr Beam II with your "
@@ -2829,10 +2893,6 @@ msgid ""
 "article%(tag_close)s."
 msgstr ""
 
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_1.jinja2:2
-msgid "New Languages!"
-msgstr ""
-
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_1.jinja2:5
 msgid "Mr Beam II can now also speak German and Spanish!"
 msgstr ""
@@ -2849,10 +2909,6 @@ msgid ""
 "under \"Interface\"."
 msgstr ""
 
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:2
-msgid "Job Time Estimation"
-msgstr ""
-
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:4
 msgid ""
 "Get an approximate estimation of how long your laser job will take before"
@@ -2863,10 +2919,6 @@ msgstr ""
 msgid ""
 "You will also see this estimation during the laser job, as well as when "
 "it's finished."
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:2
-msgid "...and more!"
 msgstr ""
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:6
@@ -2897,10 +2949,6 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:13
 msgid "We hope you enjoy this new experience!"
-msgstr ""
-
-#: octoprint_mrbeam/templates/wizard/wizard_wifi.jinja2:1
-msgid "Wifi Setup"
 msgstr ""
 
 #: octoprint_mrbeam/templates/wizard/wizard_wifi.jinja2:5
