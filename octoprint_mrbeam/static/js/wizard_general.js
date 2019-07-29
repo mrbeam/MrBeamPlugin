@@ -6,6 +6,10 @@ $(function() {
         self.settings = parameters[0];
         self.analytics = parameters[1];
 
+        self.isWhatsnew = MRBEAM_WIZARD_TO_SHOW === 'WHATSNEW';
+        self.isWelcome = MRBEAM_WIZARD_TO_SHOW === 'WELCOME';
+
+        // WHATSNEW variables
         self.uuid = ko.observable(null);
         self.registered = ko.observable(null);
         self.ping = ko.observable(false);
@@ -18,40 +22,51 @@ $(function() {
         self.onAfterBinding = function(){
             $('#wizard_dialog div.modal-footer button.button-finish').text(gettext("Let's go!"));
             $('#wizard_dialog div.modal-footer div.text-center').hide();
-            if (self.is_bound()) {
-                // test if bound, only then it's a what's new wizard
-                if(!window.mrbeam.isBeta()) {
+
+            if (self.isWhatsnew) {
+                if (!window.mrbeam.isBeta()) {
                     $('#wizard_dialog div.modal-header h3').text("✨ " + gettext("What's New") + " ✨");
                 } else {
                     $('#wizard_dialog div.modal-header h3').text("✨ " + gettext("What's New in the Stable Channel") + " ✨");
                 }
-            } else{
-                // welcome wizard
             }
         };
 
         self.onStartupComplete = function () {
-            self.verifyByFrontend();
+            if (self.isWhatsnew) {
+                self.verifyByFrontend();
 
-            $("#try_findmrbeam_btn").button().click(function(){
-                self.tryItButtonClicked = true
-            });
+                $("#try_findmrbeam_btn").button().click(function () {
+                    self.tryItButtonClicked = true
+                });
+            }
         };
 
         self.onAllBound = function () {
-            self.uuid(self.settings.settings.plugins.findmymrbeam.uuid());
-            self.registered(self.settings.settings.plugins.findmymrbeam.registered());
-            self.ping(self.settings.settings.plugins.findmymrbeam.ping());
+            if (self.isWhatsnew) {
+                self.uuid(self.settings.settings.plugins.findmymrbeam.uuid());
+                self.registered(self.settings.settings.plugins.findmymrbeam.registered());
+                self.ping(self.settings.settings.plugins.findmymrbeam.ping());
+            }
+        };
+
+        self.onCurtainOpened = function () {
+            if (self.isWelcome) {
+                self.analytics.send_fontend_event('welcome_start', {})
+            }
         };
 
         self.onWizardFinish = function(){
-            let event = 'whatsnew_findmrbeam';
-            let payload = {
-                btn_shown: self.findMrBeamWorks(),
-                btn_clicked: self.tryItButtonClicked
-            };
-            self.analytics.send_fontend_event(event, payload);
-
+            if (self.isWhatsnew) {
+                let event = 'whatsnew_findmrbeam';
+                let payload = {
+                    btn_shown: self.findMrBeamWorks(),
+                    btn_clicked: self.tryItButtonClicked
+                };
+                self.analytics.send_fontend_event(event, payload);
+            } else if (self.isWelcome) {
+                self.analytics.send_fontend_event('welcome_finish', {})
+            }
         };
 
         self.verifyByFrontend = function() {
@@ -76,10 +91,6 @@ $(function() {
             }
         };
 
-        self.is_bound = function(){
-           var elem = document.getElementById(DOM_ELEMENT_TO_BIND_TO);
-           return elem ? (!!ko.dataFor(elem)) : false;
-        };
     }
 
     var DOM_ELEMENT_TO_BIND_TO = "wizard_plugin_corewizard_whatsnew_0";

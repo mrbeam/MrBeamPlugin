@@ -21,6 +21,14 @@ class WizardConfig:
 	def get_wizard_version(self):
 		return self.WIZARD_VERSION
 
+	def get_wizard_name(self):
+		if self._is_welcome_wizard:
+			return "WELCOME"
+		elif self._is_whatsnew_wizard:
+			return "WHATSNEW"
+		else:
+			return None
+
 	def get_wizard_config_to_show(self):
 		wizard_config_to_show = []
 
