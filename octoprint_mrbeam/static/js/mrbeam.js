@@ -16,12 +16,15 @@ var browser = {
     is_explorer: navigator.userAgent.indexOf('MSIE') > -1,
     is_firefox: navigator.userAgent.indexOf('Firefox') > -1,
     is_safari: navigator.userAgent.indexOf("Safari") > -1,
+    is_edge: navigator.userAgent.indexOf("Edge") > -1,
     is_opera: navigator.userAgent.toLowerCase().indexOf("op") > -1,
     is_supported: null,
     chrome_version: null
 };
 if ((browser.is_chrome)&&(browser.is_safari)) {browser.is_safari=false;}
 if ((browser.is_chrome)&&(browser.is_opera)) {browser.is_chrome=false;}
+if ((browser.is_chrome)&&(browser.is_edge)) {browser.is_chrome=false;}
+
 browser.chrome_version = navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./);
 browser.chrome_version = browser.chrome_version ? parseInt(browser.chrome_version[2], 10) : null;
 
