@@ -4,7 +4,7 @@ $(function () {
         window.mrbeam.viewModels['analyticsViewModel'] = self;
 
         self.send_fontend_event = function (event, payload) {
-            payload['ts'] = payload['ts'] || new Date().getTime();
+            payload['ts'] = payload['ts'] || new Date().getTime()/1000;
             return self._send(event, payload);
         };
 
