@@ -8,6 +8,13 @@ $(function() {
     function LaserJobDoneViewmodel(parameters) {
         var self = this;
         self.readyToLaser = parameters[0];
+        self.analytics = parameters[1];
+
+        self.jobDoneDialog = {
+            shown: null,
+            closed: null,
+            dur: null
+        };
 
         self.is_job_done = ko.observable(false);
         self.is_dust_mode = ko.observable(false);
@@ -47,6 +54,7 @@ $(function() {
             }
             self._fromData(payload);
             self.dialogElement.modal("show");
+            self.jobDoneDialog.shown = payload['ts'] || new Date().getTime()/1000;
         };
 
         self.onEventDustingModeStart = function(payload) {
@@ -70,11 +78,14 @@ $(function() {
             if (mrb_state) {
                 self.is_dust_mode(mrb_state['dusting_mode']);
             }
-        }
+        };
 
         self.cancel_btn = function(){
             self.is_job_done(false);
             self.dialogElement.modal("hide");
+            self.jobDoneDialog.closed = new Date().getTime()/1000;
+            self.jobDoneDialog.dur = Math.floor(self.jobDoneDialog.closed - self.jobDoneDialog.shown);
+            self.analytics.send_fontend_event('job_done_dialog', self.jobDoneDialog)
         };
     }
 
@@ -82,7 +93,7 @@ $(function() {
     OCTOPRINT_VIEWMODELS.push([
         LaserJobDoneViewmodel,
         // e.g. loginStateViewModel, settingsViewModel, ...
-        [ "readyToLaserViewModel"],
+        [ "readyToLaserViewModel", "analyticsViewModel"],
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         [ '#laser_job_done_dialog']
     ]);
