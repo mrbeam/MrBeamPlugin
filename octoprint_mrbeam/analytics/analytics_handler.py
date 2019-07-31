@@ -610,7 +610,7 @@ class AnalyticsHandler(object):
 			self._storedConversions = list()
 
 			if self._analyticsOn:
-				# Line with common parameters of the laser job (for both cut and engrave)
+				# "laser_job" line as the beginning of a job
 				eventname = ak.LASER_JOB
 				data = {
 					'advanced_settings': details['advanced_settings']
@@ -618,23 +618,32 @@ class AnalyticsHandler(object):
 				data.update(details['material'])
 				self._store_conversion_details(eventname, payload=data)
 
-				if 'engrave' in details and details['engrave'] == True and 'raster' in details:
+				# "conv_eng" line with the engraving parameters
+				if 'engrave' in details and details['engrave'] and 'raster' in details:
 					eventname = ak.CONV_ENGRAVE
+					eng_settings = details['raster']
+
 					data = {
-						'svgDPI': details['svgDPI']
+						'svgDPI': details['svgDPI'],
+						'mpr_black': self._calculate_mpr_value(eng_settings.get('intensity_black'), eng_settings.get('speed_black')),
+						'mpr_white': self._calculate_mpr_value(eng_settings.get('intensity_white'), eng_settings.get('speed_white')),
 					}
-					data.update(details['raster'])
+					data.update(eng_settings)
 					self._store_conversion_details(eventname, payload=data)
 
+				# One or many "conv_cut" lines with the cutting parameters
 				if 'vector' in details and details['vector']:
 					eventname = ak.CONV_CUT
+
 					for color_settings in details['vector']:
 						data = {
-							'svgDPI': details['svgDPI']
+							'svgDPI': details['svgDPI'],
+							'mpr': self._calculate_mpr_value(color_settings.get('intensity'), color_settings.get('feedrate'), color_settings.get('passes')),
 						}
 						data.update(color_settings)
 						self._store_conversion_details(eventname, payload=data)
 
+				# One or many "design_file" lines with the design details
 				if 'design_files' in details and details['design_files']:
 					eventname = ak.DESIGN_FILE
 					for design_file in details['design_files']:
@@ -653,6 +662,15 @@ class AnalyticsHandler(object):
 		if payload is not None:
 			data.update(payload)
 		self._storedConversions.append(data)
+
+	@staticmethod
+	def _calculate_mpr_value(intensity, speed, passes=1):
+		if intensity and speed and passes:
+			mpr = round(float(intensity) / float(speed) * int(passes), 2)
+		else:
+			mpr = None
+
+		return mpr
 
 	def _write_conversion_details(self):
 		try:
