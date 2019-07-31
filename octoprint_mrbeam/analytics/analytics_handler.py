@@ -227,7 +227,7 @@ class AnalyticsHandler(object):
 			self._write_log_event(ak.LOG_CPU, payload=data)
 		except Exception as e:
 			self._logger.exception('Error during log_cpu_warning: {}'.format(e.message), analytics=True)
-      
+
 	def log_camera_session(self, errors):
 		try:
 			self._logger.info(errors)
@@ -539,7 +539,7 @@ class AnalyticsHandler(object):
 					                  event_payload)
 			elif 'plugin' in event_payload and 'eventname' in event_payload:
 				plugin = event_payload.get('plugin')
-				if plugin == "findmymrbeam":
+				if plugin in ["findmymrbeam", "netconnectd"]:
 					eventname = event_payload.get('eventname')
 					data = event_payload.get('data', None)
 					self._write_event(ak.TYPE_CONNECTIVITY_EVENT, eventname, self._analytics_log_version,
