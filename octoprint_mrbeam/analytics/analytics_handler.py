@@ -541,13 +541,12 @@ class AnalyticsHandler(object):
 					                  event_payload)
 			elif 'plugin' in event_payload and 'eventname' in event_payload:
 				plugin = event_payload.get('plugin')
-				if plugin in ["findmymrbeam", "netconnectd"]:
+				if plugin:
 					eventname = event_payload.get('eventname')
 					data = event_payload.get('data', None)
-					self._write_event(ak.TYPE_CONNECTIVITY_EVENT, eventname, self._analytics_log_version,
-					                  payload=dict(data=data))
+					self._write_event(plugin, eventname, self._analytics_log_version, payload=dict(data=data))
 				else:
-					self._logger.warn("Unknown plugin: '%s'. payload: %s", plugin, event_payload)
+					self._logger.warn("Invalid plugin: '%s'. payload: %s", plugin, event_payload)
 			else:
 				self._logger.warn("Invalid payload data in event %s", event)
 		except Exception as e:
