@@ -8,7 +8,6 @@ class AnalyticsKeys(object):
 	TIMESTAMP = 'ts'
 	NTP_SYNCED = 'ntp'
 	SESSION_ID = 'sid'
-	TIMESTRING = 'timestring'
 	DATA = 'data'
 	SOFTWARE_TIER = 'sw_tier'
 	VERSION_MRBEAM_PLUGIN = 'version_mrbeam_plugin'
@@ -85,6 +84,8 @@ class AnalyticsKeys(object):
 	DESIGN_FILE = 'design_file'
 	MATERIAL = 'material'
 	FAN_RPM_TEST = 'fan_rpm_test'
+	FAN_RPM = 'fan_rpm'
+	FAN_STATE = 'fan_state'
 
 	PRINT_EVENTS = [
 						PRINT_STARTED,

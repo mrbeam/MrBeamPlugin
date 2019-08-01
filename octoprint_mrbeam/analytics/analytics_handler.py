@@ -485,7 +485,9 @@ class AnalyticsHandler(object):
 			ak.PROGRESS_LASER_TEMPERATURE: self._current_lasertemp_collector.get_latest_value(),
 			ak.PROGRESS_LASER_INTENSITY: self._current_intensity_collector.get_latest_value(),
 			ak.PROGRESS_DUST_VALUE: self._current_dust_collector.get_latest_value(),
-			ak.JOB_DURATION: round(payload['time'], 1)
+			ak.JOB_DURATION: round(payload['time'], 1),
+			ak.FAN_RPM: self._plugin._dustManager.get_fan_rpm(),
+			ak.FAN_STATE: self._plugin._dustManager.get_fan_state(),
 		}
 		self._write_jobevent(ak.PRINT_PROGRESS, data)
 
