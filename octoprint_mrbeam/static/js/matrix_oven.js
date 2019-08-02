@@ -2,8 +2,8 @@
 
 //    Matrix Oven - a snapsvg.io plugin to apply & remove transformations from svg files.
 //    Copyright (C) 2015  Teja Philipp <osd@tejaphilipp.de>
-//    
-//    based on work by https://gist.github.com/timo22345/9413158 
+//
+//    based on work by https://gist.github.com/timo22345/9413158
 //    and https://github.com/duopixel/Method-Draw/blob/master/editor/src/svgcanvas.js
 //
 //    This program is free software: you can redistribute it and/or modify
@@ -25,7 +25,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 	/**
 	 * bakes transformations of the element and all sub-elements into coordinates
-	 * 
+	 *
 	 * @param {Matrix} correctionMatrix : useful for applying additional transformations
 	 * @param {boolean} toCubics : use only cubic path segments
 	 * @param {integer} dec : number of digits after decimal separator. defaults to 5
@@ -36,10 +36,10 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		var own_transformation = elem.parent().transform().totalMatrix;
 		elem.bake(callback, own_transformation.invert(), toCubics, dec);
 	};
-	
+
 	/**
 	 * bakes transformations of the element and all sub-elements into coordinates
-	 * 
+	 *
 	 * @param {Matrix} correctionMatrix : useful for applying additional transformations
 	 * @param {boolean} toCubics : use only cubic path segments
 	 * @param {integer} dec : number of digits after decimal separator. defaults to 5
@@ -50,12 +50,13 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		    window._matrixOven = {
                 done: 0,
                 total: 0
-            }
+            };
             window._matrixOven.total = Math.max(1, this.selectAll('*').length);
         }
 
 
 	    var elem = this;
+		var ignoredElements = [];
 
 		window._matrixOven.done += 1;
         let percent = Math.min(100, (window._matrixOven.done / window._matrixOven.total) * 100);
@@ -63,7 +64,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 
 		if (!elem || (!elem.paper && (elem.type !== "text" && elem.type !== "tspan" && elem.type !== "#text"))){
-			return;
+			return ignoredElements;
 		} // don't handle unplaced elements. this causes double handling.
 
 		if (toCubics === undefined)
@@ -72,16 +73,17 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			dec = 5;
 		if (correctionMatrix === undefined)
 			correctionMatrix = Snap.matrix(1,0,0,1,0,0);
-		
+
 		var children = elem.children();
 		if (children.length > 0) {
 		    // callback(0, children.length);
 			for (var i = 0; i < children.length; i++) {
 				var child = children[i];
-				child.bake(callback, correctionMatrix, toCubics, dec);
+				var ie = child.bake(callback, correctionMatrix, toCubics, dec)
+				ignoredElements = ignoredElements.concat(ie);
 			}
 			elem.attr({transform: ''});
-			return;
+			return ignoredElements;
 		}
 		if (elem.type !== "circle" &&
 			elem.type !== "rect" &&
@@ -95,9 +97,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			elem.type !== "tspan" &&
 			elem.type !== "#text"
 			){
-			
 			console.info("Ignoring element ", elem.type);
-			return;
+			ignoredElements.push(elem.type);
+			return ignoredElements;
 		}
 
 		if (elem.type === "image"){
@@ -122,12 +124,12 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			var transformedY = matrix.y(x, y);
 			var transformedW = matrix.x(x+w, y+h) - transformedX;
 			var transformedH = matrix.y(x+w, y+h) - transformedY;
-			
+
 			elem.attr({x: transformedX, y: transformedY, width: transformedW, height: transformedH});
 			if(transformedH < 0){
 				elem.attr({style: 'transform: scale(1,-1); transform-origin: top', height: -transformedH});
 			}
-			return;
+			return ignoredElements;
 		}
 
 		if (elem.type === "text" || elem.type === "#text" || elem.type === "tspan"){
@@ -136,20 +138,20 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			//todo check for all possibilities. Or Maybe look for the ones we want instead of the ones that don't work
 			if(elem.node.parentNode.nodeName === "style" || elem.node.parentNode.nodeName === "title" || elem.node.parentNode.nodeName.startsWith("dc:")){
 				console.log("Skip node. Parent is :",elem.node.parentNode.nodeName);
-				return;
+				return ignoredElements;
 			}
 
 			// remove already set parent-nodes
 			//todo check if redundant
 			if(elem.parent().attr('text_set') !== undefined && elem.parent().attr('text_set') === true){
 				//parent already transformed
-				return;
+				return ignoredElements;
 			}
 
 			// replace empty text and Created with Snap
 			if(!elem.node.textContent.replace(/\s/g, '').length || elem.node.textContent === "Created with Snap"){
 				//text only contains whitespace or nothing and is skipped
-				return;
+				return ignoredElements;
 			}
 			console.log('Textelem not empty: ', elem.node.textContent);
 
@@ -191,7 +193,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			} else {
 				console.log("getCTM not available. Skipping:", parent.node.type);
 			}
-			return;
+			return ignoredElements;
 		}
 
 		var path_elem = elem.convertToPath();
@@ -205,7 +207,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		} else {
 			dec = false;
 		}
-		
+
 		function r(num) {
 			if (dec !== false) {
 				return Math.round(num * Math.pow(10, dec)) / Math.pow(10, dec);
@@ -218,8 +220,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		var d = path_elem.attr('d');
 		d = (d || "").trim();
 		var arr_orig;
-		arr = Snap.parsePathString(d); 
-		if (!toCubics) {  
+		arr = Snap.parsePathString(d);
+		if (!toCubics) {
 			arr_orig = arr;
 			arr = Snap.path.toAbsolute(arr);
 		} else {
@@ -232,7 +234,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		var matrix = transform['totalMatrix'].add(correctionMatrix);
 
 		// apply the matrix transformation on the path segments
-		var j; 
+		var j;
 		var m = arr.length;
 		var letter = '';
 		var letter_orig = '';
@@ -240,8 +242,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		var y = 0;
 		var new_segments = [];
 		var pt = {x: 0, y: 0};
-		var pt_baked = {}; 
-		var subpath_start = {}; 
+		var pt_baked = {};
+		var subpath_start = {};
 		var prevX = 0;
 		var prevY = 0;
 		subpath_start.x = null;
@@ -259,7 +261,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 				pt.x = arr[i][6];
 				pt.y = arr[i][7];
 				new_segments[i] = _arc_transform(arr[i][1], arr[i][2], arr[i][3], arr[i][4], arr[i][5], pt, matrix);
-				
+
 			} else if (letter !== 'Z') {
 				// parse other segs than Z and A
 				for (j = 1; j < arr[i].length; j = j + 2) {
@@ -295,7 +297,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 				y = subpath_start.y;
 			}
 		}
-		
+
 		// Convert all that was relative back to relative
 		// This could be combined to above, but to make code more readable
 		// this is made separately.
@@ -364,8 +366,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		path_elem.attr({transform: ''});
 		//console.log("baked matrix ", matrix, " of ", path_elem.attr('id'));
 
+        return ignoredElements;
 	};
-	
+
 	/**
 	 * Helper to apply matrix transformations to arcs.
 	 * From flatten.js (https://gist.github.com/timo22345/9413158), modified a bit.
@@ -373,7 +376,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	 * @param {type} a_rh : r1 of the ellipsis in degree
 	 * @param {type} a_rv : r2 of the ellipsis in degree
 	 * @param {type} a_offsetrot : x-axis rotation in degree
-	 * @param {type} large_arc_flag : 0 or 1 
+	 * @param {type} large_arc_flag : 0 or 1
 	 * @param {int} sweep_flag : 0 or 1
 	 * @param {object} endpoint with properties x and y
 	 * @param {type} matrix : transformation matrix
@@ -415,12 +418,12 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 		// convert implicit equation to angle and halfaxis:
 		// disabled intentionally
-		if (false && NEARZERO(B)) { // there is a bug in this optimization: does not work for path below 
-			a_offsetrot = 0;  
-//			 d="M0,350 l 50,-25 
-//           a25,25 -30 0,1 50,-25 l 50,-25 
-//           a25,50 -30 0,1 50,-25 l 50,-25 
-//           a25,75 -30 0,1 50,-25 l 50,-25 
+		if (false && NEARZERO(B)) { // there is a bug in this optimization: does not work for path below
+			a_offsetrot = 0;
+//			 d="M0,350 l 50,-25
+//           a25,25 -30 0,1 50,-25 l 50,-25
+//           a25,50 -30 0,1 50,-25 l 50,-25
+//           a25,75 -30 0,1 50,-25 l 50,-25
 //           a25,100 -30 0,1 50,-25 l 50,-25"
 //			with matrix transform="scale(0.5,2.0)"
 			A2 = A;
@@ -436,7 +439,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 				// Clamp (precision issues might need this.. not likely, but better save than sorry)
 				K = (K < 0) ? 0 : Math.sqrt(K);
-				
+
 				A2 = 0.5 * (A + C + K * ac);
 				C2 = 0.5 * (A + C - K * ac);
 				a_offsetrot = 0.5 * Math.atan2(B, ac);
@@ -457,7 +460,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			a_rh = A2;
 		}
 
-		// If the transformation matrix contain a mirror-component 
+		// If the transformation matrix contain a mirror-component
 		// winding order of the ellise needs to be changed.
 		if ((matrix.a * matrix.d) - (matrix.b * matrix.c) < 0){
 			sweep_flag = !sweep_flag ? 1 : 0;
@@ -485,15 +488,15 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	/**
 	 * Replaces an element with a path of same shape.
 	 * Supports rect, ellipse, circle, line, polyline, polygon and of course path
-	 * The element will be replaced by the path with same id. 
-	 * 
+	 * The element will be replaced by the path with same id.
+	 *
 	 * @returns {path}
 	 */
 	Element.prototype.convertToPath = function(){
 		var old_element = this;
 		var path = old_element.toPath();
 		old_element.before(path);
-		old_element.remove(); 
+		old_element.remove();
 		return path;
 	};
 });

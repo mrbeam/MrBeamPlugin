@@ -42,7 +42,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		for (var i = 0; i < elements_to_replace.length; i++) {
 			var e = elements_to_replace[i];
 			var src = e._replace_with_src();
-			if (src) {
+			if (src) { // ANDYTEST
                 used_source_elements.push(src);
             }
 		}
