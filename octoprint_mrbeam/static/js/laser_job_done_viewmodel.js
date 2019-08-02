@@ -54,7 +54,7 @@ $(function() {
             }
             self._fromData(payload);
             self.dialogElement.modal("show");
-            self.jobDoneDialog.shown = payload['ts'] || new Date().getTime()/1000;
+            self.jobDoneDialog.shown = payload['ts'] || new Date().getTime();
         };
 
         self.onEventDustingModeStart = function(payload) {
@@ -83,8 +83,8 @@ $(function() {
         self.cancel_btn = function(){
             self.is_job_done(false);
             self.dialogElement.modal("hide");
-            self.jobDoneDialog.closed = new Date().getTime()/1000;
-            self.jobDoneDialog.dur = Math.floor(self.jobDoneDialog.closed - self.jobDoneDialog.shown);
+            self.jobDoneDialog.closed = new Date().getTime();
+            self.jobDoneDialog.dur = Math.floor(self.jobDoneDialog.closed/1000 - self.jobDoneDialog.shown/1000);
             self.analytics.send_fontend_event('job_done_dialog', self.jobDoneDialog)
         };
     }

@@ -163,7 +163,6 @@ $(function() {
         self._sendLaserSafetyAnalytics = function(dialog) {
             let event = 'laser_safety';
             let payload = {
-                ts: Date.now().toString(),
                 dialog: dialog,
                 show_again: self.showAgain(),
             };
