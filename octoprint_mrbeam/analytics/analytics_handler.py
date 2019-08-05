@@ -582,6 +582,13 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.exception('Exception during log_client_opened: {}'.format(e.message))
 
+	def log_connections_state(self, connections):
+		try:
+			self._write_event(ak.TYPE_CONNECTIVITY_EVENT, ak.CONNECTIONS_STATE, self._analytics_log_version,
+			                  payload=dict(data=connections))
+		except Exception as e:
+			self._logger.exception('Exception during log_connections_state: {}'.format(e.message))
+
 	def write_cam_update(self, newMarkers, newCorners):
 		try:
 			if self._camAnalyticsOn:

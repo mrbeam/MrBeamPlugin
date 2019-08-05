@@ -128,6 +128,7 @@ class AnalyticsKeys(object):
 	EVENT_UI_RENDER_CALL =          'ui_render_call'
 	EVENT_CLIENT_OPENED =           'client_opened'
 	VERSION_FINDMYMRBEAM_PLUGIN =   'version_findmymrbeam_plugin'
+	CONNECTIONS_STATE = 			'connections_state'
 
 
 
