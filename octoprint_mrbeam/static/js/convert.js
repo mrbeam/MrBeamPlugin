@@ -814,10 +814,23 @@ $(function(){
                 let typePath = currentDesign.typePath;
                 let format = typePath[typePath.length - 1];
 
-                let sub_format;
+                let sub_format, font, text_length;
                 if (format === "image") {
                     let file_name = $('#' + currentDesign.id).find('.title').text();
                     sub_format = file_name.split('.').pop(-1).toLowerCase();
+                }
+
+                console.log('#######################');
+                console.log(format);
+                if (format === 'quicktext') {
+                    console.log(currentDesign);
+                    let qt = $('#' + currentDesign.previewId).find('text');
+                    console.log(qt);
+                    text_length = qt.text().length;
+                    console.log(text_length);
+                    font = qt.css('font-family').replace(/"/g,'');
+                    console.log(font)
+                    // font = $('#' + currentDesign.id).find('.vertical').val();
                 }
 
                 let size = currentDesign.size;
@@ -827,7 +840,9 @@ $(function(){
                     dim_y: dim_y,
                     format: format,
                     sub_format: sub_format,
-                    size: size
+                    size: size,
+                    text_length: text_length,
+                    font: font
                 });
             }
 			return data;
@@ -840,7 +855,7 @@ $(function(){
         }
 
 		self.enableConvertButton = ko.computed(function() {
-			if (self.slicing_in_progress() 
+			if (self.slicing_in_progress()
 					|| self.workingArea.placedDesigns().length === 0
 					|| self.selected_material() == null
 					|| self.selected_material_color() == null
