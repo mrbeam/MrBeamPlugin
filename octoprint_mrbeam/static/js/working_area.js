@@ -140,10 +140,12 @@ $(function(){
         // QuickText fields
         self.fontMap = ["Allerta Stencil","Amatic SC","Comfortaa","Fredericka the Great","Kavivanar","Lobster","Merriweather","Mr Bedfort","Quattrocento","Roboto"];
         self.currentQuickTextFile = undefined;
+        self.currentQuickTextAnalyticsData = undefined;
         self.currentQuickText = ko.observable();
         self.quickShapeNames = new Map([['rect', gettext('Rectangle')], ['circle', gettext('Circle')],
             ['star', gettext('Star')], ['heart', gettext('Heart')]]);
         self.currentQuickShapeFile = undefined;
+        self.currentQuickShapeAnalyticsData = undefined;
         self.currentQuickShape = ko.observable();
         self.lastQuickTextFontIndex = 0;
         self.lastQuickTextIntensity = 0; // rgb values: 0=black, 155=white
@@ -398,6 +400,8 @@ $(function(){
 //			}
 
 			self.loadGcode(file, function(gcode){
+			    var duration_load = Date.now() - start_ts;
+			    start_ts = Date.now();
 				var pathCallback = function(path){
 					var points = [];
 					var intensity = -1;
@@ -409,15 +413,29 @@ $(function(){
 					if(points.length > 0)
 					self.draw_gcode(points, intensity, '#'+previewId);
 
+
 				};
 				var imgCallback = function(x,y,w,h, url){
 					self.draw_gcode_img_placeholder(x,y,w,h,url, '#'+previewId);
 				};
 				self.parser.parse(gcode, /(m0?3)|(m0?5)/i, pathCallback, imgCallback);
 
-				var dur = ((Date.now() - start_ts) /1000);
-			    console.log("placeGcode() DONE "+ dur + "s");
-                self._analyticsPlaceDesign('gco', dur, previewId);
+				// analytics
+                var re = / beamOS:([0-9.]+) /;
+                var match = re.exec(gcode.substring(0, 1000));
+                var beamos_vers = match.length > 1 ? match[1] : null;
+                var analyticsData = {
+                    file_type: 'gco',
+                    filename_hash: file.hash,
+                    byte_size: file.size,
+                    duration_load: duration_load,
+                    duration_processing: Date.now() - start_ts,
+                    gco_generator: {
+                        generator: beamos_vers ? 'beamOS' : null,
+                        version: beamos_vers ? beamos_vers : null,
+                    }
+                };
+                self._analyticsPlaceGco(analyticsData);
 			});
 		};
 
@@ -454,9 +472,11 @@ $(function(){
          * @param callback
          */
 		self.placeSVG = function(file, callback) {
-		    // var start_ts = Date.now();
+		    var start_ts = Date.now();
 			var url = self._getSVGserveUrl(file);
 			cb = function (fragment) {
+			    var duration_load = Date.now() - start_ts;
+		        start_ts = Date.now();
 				if(self._isBinaryData(fragment.node.textContent)) { // workaround: only catching one loading error
 					self.file_not_readable();
 					return;
@@ -464,7 +484,6 @@ $(function(){
 				var id = self.getEntryId();
 				var previewId = self.generateUniqueId(id, file); // appends -# if multiple times the same design is placed.
 				var origin = file["refs"]["download"];
-				var analyticsData = {};
 				file.id = id; // list entry id
 				file.previewId = previewId;
 				file.url = url;
@@ -472,21 +491,20 @@ $(function(){
 				self.placedDesigns.push(file);
 
 				// get scale matrix
-                // fragment = self._removeUnsupportedSvgElements(fragment); // TODO check if this is necessary. Is done in prepareAndInsertSVG()
 				var generator_info = self._get_generator_info(fragment);
-				analyticsData.generator_info = generator_info;
 				var doc_dimensions = self._getDocumentDimensionAttributes(fragment);
 				var unitScaleX = self._getDocumentScaleToMM(doc_dimensions.units_x, generator_info);
 				var unitScaleY = self._getDocumentScaleToMM(doc_dimensions.units_y, generator_info);
 				var mat = self.getDocumentViewBoxMatrix(doc_dimensions, doc_dimensions.viewbox);
                 var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(unitScaleX, unitScaleY).toTransformString();
 
-				var insertedId = self._prepareAndInsertSVG(fragment, previewId, origin, scaleMatrixStr, {}, analyticsData);
+				var analyticsData = {};
+				analyticsData.file_type = 'svg';
+				analyticsData.svg_generator_info = generator_info;
+				analyticsData.duration_load = duration_load;
+                analyticsData.duration_preprocessing = Date.now() - start_ts;
+				var insertedId = self._prepareAndInsertSVG(fragment, previewId, origin, scaleMatrixStr, {}, analyticsData, file);
 				if(typeof callback === 'function') callback(insertedId);
-
-				// var dur = ((Date.now() - start_ts) /1000);
-			    // console.log("placeSVG() DONE "+ dur + "s");
-                // self._analyticsPlaceDesign('svg', dur, id);
 			};
 			try { // TODO Figure out why the loading exception is not caught.
 				self.loadSVG(url, cb);
@@ -502,16 +520,10 @@ $(function(){
          * @param callback (otional)
          */
 		self.placeDXF = function(file, callback) {
-		    // var start_ts = Date.now();
+		    var start_ts = Date.now();
 			var url = self._getSVGserveUrl(file);
-
-			cb = function (fragment) {
-				// does not work. false positives.
-//				if(fragment.node.textContent.trim() === ""){ // workaround. try catch does somehow not work.
-//					self.file_not_readable();
-//					return;
-//				}
-
+			cb = function (fragment, timestamps) {
+			    var duration_load = timestamps.load_done ? timestamps.load_done - start_ts : null;
 				var origin = file["refs"]["download"];
 
 				var tx = 0;
@@ -535,12 +547,12 @@ $(function(){
 
 				self.placedDesigns.push(file);
 
-				var insertedId = self._prepareAndInsertSVG(fragment, previewId, origin, scaleMatrixStr);
+				var analyticsData = {};
+				analyticsData.file_type = 'dxf';
+				analyticsData.duration_load = duration_load;
+				analyticsData.duration_preprocessing = timestamps.parse_start && timestamps.parse_done ? timestamps.parse_done - timestamps.parse_start : null;
+				var insertedId = self._prepareAndInsertSVG(fragment, previewId, origin, scaleMatrixStr, {}, analyticsData, file);
 				if(typeof callback === 'function') callback(insertedId);
-
-				// var dur = ((Date.now() - start_ts) /1000);
-			    // console.log("placeDXF() DONE "+ dur + "s");
-                // self._analyticsPlaceDesign('dxf', dur, id);
 			};
 			try { // TODO this would be the much better way. Figure out why the loading exception is not caught.
 				Snap.loadDXF(url, cb);
@@ -561,9 +573,39 @@ $(function(){
          * @returns {*}
          * @private
          */
-		self._prepareAndInsertSVG = function(fragment, id, origin, scaleMatrixStr, flags = {}, analyticsData={}){
-		    var start_ts = Date.now()
-            analyticsData = self._analyticsPrepareAndInsertSVG(fragment, id, origin, scaleMatrixStr, flags, analyticsData);
+		self._prepareAndInsertSVG = function(fragment, id, origin, scaleMatrixStr, flags, analyticsData, fileObj, start_ts){
+            analyticsData = analyticsData || {};
+            fileObj = fileObj || {};
+		    start_ts = start_ts || Date.now();
+
+		    if (!analyticsData._skip) { // this is a flag used by quickShape
+                analyticsData.file_type = analyticsData.file_type || fileObj.display ? fileObj.display.split('.').slice(-1)[0] : origin.split('.').slice(-1)[0];
+                analyticsData.filename_hash = fileObj.hash || origin.split('/downloads/files/local/').slice(-1)[0].hashCode();
+                analyticsData.byte_size = fileObj.size;
+                analyticsData.node_count = 0;
+                analyticsData.node_types = {};
+                analyticsData.path_char_lengths = [];
+                analyticsData.text_font_families = [];
+                analyticsData.removed_unsupported_elements = {};
+                analyticsData.removed_import_references = 0;
+                analyticsData.ignored_elements = {};
+                analyticsData.namespaces = [];
+
+                let allNodes = fragment.selectAll("*");
+                analyticsData.node_count = allNodes.length;
+                for (let i = 0; i < allNodes.length; i++) {
+                    if (!(allNodes[i].type in analyticsData.node_types)) {
+                        analyticsData.node_types[allNodes[i].type] = 0;
+                    }
+                    analyticsData.node_types[allNodes[i].type]++;
+                    if (allNodes[i].type == 'path') {
+                        analyticsData.path_char_lengths.push(allNodes[i].attr('d').length);
+                    }
+                    if (allNodes[i].type == 'text') {
+                        analyticsData.text_font_families.push(allNodes[i].node.style.fontFamily);
+                    }
+                }
+            }
 
 		    try {
                 var switches = $.extend({showTransformHandles: true, embedGCode: true, bakeTransforms: true}, flags);
@@ -660,9 +702,8 @@ $(function(){
 		        analyticsData['error'] = e.stack;
 		        console.error(e)
             } finally {
-		        analyticsData['processing_time'] = Date.now() - start_ts;
-                self._sendAnalytics('_prepareAndInsertSVG', analyticsData);
-		        console.log("_prepareAndInsertSVG: ", analyticsData);
+                analyticsData.duration_processing = Date.now() - start_ts;
+                self._analyticsPrepareAndInsertSVG(analyticsData)
             }
 		};
 
@@ -675,6 +716,7 @@ $(function(){
          * Removes unsupported elements from fragment.
          * List of elements to remove is defined within this function in var unsupportedElems
          * @param fragment
+         * @param analyticsData obj - this object gets modiyfied but not returned!!
          * @returns fragment
          * @private
          */
@@ -837,7 +879,7 @@ $(function(){
 		};
 
         /**
-         * Finds dimensions (wifth, hight, etc..) of an SVG
+         * Finds dimensions (wifth, height, etc..) of an SVG
          * @param fragment
          * @returns {{width: *, height: *, viewbox: *, units_x: *, units_y: *}}
          * @private
@@ -1308,10 +1350,12 @@ $(function(){
 		};
 
 		self.placeIMG = function (file) {
-		    var start_ts = Date.now();
+            var start_ts = Date.now();
 			var url = self._getIMGserveUrl(file);
 			var img = new Image();
 			img.onload = function () {
+			    var duration_load = Date.now() - start_ts;
+		        start_ts = Date.now();
 
 				var wpx = this.width;
 				var hpx = this.height;
@@ -1347,9 +1391,18 @@ $(function(){
 				file.subtype = "bitmap";
 				self.placedDesigns.push(file);
 
-				var dur = ((Date.now() - start_ts) /1000);
-			    console.log("placeIMG() DONE "+ dur + "s");
-                self._analyticsPlaceDesign('img', dur, id);
+				// analytics
+                let analyticsData = {
+                    id: id,
+                    pixel_width: wpx,
+                    pixel_height: hpx,
+                    byte_size: file.size,
+                    duration_load: duration_load,
+                    duration_processing: (Date.now() - start_ts),
+                    file_type: file.display.split('.').slice(-1)[0],
+                    filename_hash: file.hash,
+                };
+                self._analyticsPlaceImage(analyticsData)
 			};
 			img.src = url;
 		};
@@ -1916,6 +1969,10 @@ $(function(){
             });
 			$('#quick_shape_dialog').on('hidden', function(){
 				self._qs_removeInvalid();
+				self._qs_dialogClose();
+			});
+            $('#quick_text_dialog').on('hidden', function(){
+				self._qt_dialogClose();
 			});
         };
 
@@ -2128,8 +2185,6 @@ $(function(){
          * @returns file object
          */
         self._qs_placeQuickShape = function(){
-            var start_ts = Date.now();
-
 			var w = self.workingAreaWidthMM() / 5;
 			var h = w * 0.5;
 			var x = (self.workingAreaWidthMM() - w) / 2;
@@ -2169,12 +2224,8 @@ $(function(){
 			var fragment = Snap.parse(shapeSvg);
 
 			var scaleMatrixStr = new Snap.Matrix(1,0,0,1,x,y).toString();
-			self._prepareAndInsertSVG(fragment, previewId, origin, '', {showTransformHandles: false, embedGCode: false});
+			self._prepareAndInsertSVG(fragment, previewId, origin, '', {showTransformHandles: false, embedGCode: false}, {_skip: true});
 			$('#'+previewId).attr('transform', scaleMatrixStr);
-
-			var dur = ((Date.now() - start_ts) /1000);
-            console.log("_qs_placeQuickShape() DONE "+ dur + "s");
-            self._analyticsPlaceDesign('quickShape', dur, id);
 
             return file;
         };
@@ -2284,6 +2335,23 @@ $(function(){
 
 				// update fileslist
 				$('#'+self.currentQuickShapeFile.id+' .title').text(name);
+
+				// analytics
+                var analyticsData = {
+                    id: self.currentQuickShapeFile.id,
+                    file_type: 'quickShape',
+                    type: type.substr(1),
+                    color: qs_params.color,
+                    name: name,
+                }
+                for (let myKey in qs_params) {
+                    if (myKey.startsWith(analyticsData.type)) {
+                        analyticsData[myKey] = qs_params[myKey];
+                    }
+                }
+
+                // actual analytics are written when the dialog is closed
+                self.currentQuickShapeAnalyticsData = analyticsData;
 			}
 		};
 
@@ -2494,7 +2562,7 @@ $(function(){
 		};
 		self._qs_dialogClose = function(){
 			self._qs_removeInvalid();
-			$('#quick_shape_dialog').modal('hide');
+			self._analyticsQuickShapeUpdate(self.currentQuickShapeAnalyticsData);
 		};
 
         // ***********************************************************
@@ -2621,6 +2689,15 @@ $(function(){
 
                 // update fileslist
                 $('#'+self.currentQuickTextFile.id+' .title').text(displayText);
+
+                self.currentQuickTextAnalyticsData = {
+                    id: self.currentQuickTextFile.id,
+                    file_type: 'quickText',
+                    text_length: displayText.length,
+                    brightness: self.currentQuickTextFile.intensity,
+                    font: self.fontMap[self.currentQuickTextFile.fontIndex],
+                    font_index: self.currentQuickTextFile.fontIndex,
+                }
             }
         };
 
@@ -2700,9 +2777,10 @@ $(function(){
 
             self.placedDesigns.push(file);
 
-            var dur = ((Date.now() - start_ts) /1000);
-            console.log("_qt_placeQuicktext() DONE "+ dur + "s");
-            self._analyticsPlaceDesign('quickText', dur, file.previewId);
+            // var dur = ((Date.now() - start_ts) /1000);
+            // console.log("_qt_placeQuicktext() DONE "+ dur + "s");
+            // // self._analyticsPlaceDesign('quickText', dur, file.previewId);
+            // self._analyticsQuickTextUpdate()
 
             return file;
         };
@@ -2748,6 +2826,10 @@ $(function(){
 		    $(elem).empty();
         };
 
+		self._qt_dialogClose = function() {
+            self._analyticsQuickTextUpdate(self.currentQuickTextAnalyticsData);
+        };
+
         // ***********************************************************
 		//  QUICKTEXT end
         // ***********************************************************
@@ -2791,47 +2873,45 @@ $(function(){
 			return {x: xPerc, y: yPerc, dx: dxPerc, dy: dyPerc};
 		};
 
-		self._analyticsPrepareAndInsertSVG = function(fragment, id, origin, scaleMatrixStr, flags, analyticsData) {
-		    analyticsData = analyticsData || {};
-		    analyticsData.file_type = origin.split('.').slice(-1)[0];
-		    analyticsData.filename_hash = origin.split('/downloads/files/local/').slice(-1)[0].hashCode();
-		    analyticsData.node_count = 0;
-		    analyticsData.node_types = {};
-		    analyticsData.path_char_lengths = [];
-		    analyticsData.text_font_families = [];
-		    analyticsData.removed_unsupported_elements = {};
-		    analyticsData.removed_import_references = 0;
-		    analyticsData.ignored_elements = {};
-		    analyticsData.namespaces = [];
-
-            let allNodes = fragment.selectAll("*");
-            analyticsData.node_count = allNodes.length;
-            for(let i = 0; i < allNodes.length; i++) {
-                if (!(allNodes[i].type in analyticsData.node_types)) {
-                    analyticsData.node_types[allNodes[i].type] = 0;
-                }
-                analyticsData.node_types[allNodes[i].type]++;
-                if (allNodes[i].type == 'path') {
-                    analyticsData.path_char_lengths.push(allNodes[i].attr('d').length);
-                }
-                if (allNodes[i].type == 'text') {
-                    analyticsData.text_font_families.push(allNodes[i].node.style.fontFamily);
-                }
-            }
-            return analyticsData;
+		self._analyticsPrepareAndInsertSVG = function(analyticsData){
+		    if (analyticsData._skip) {return}
+		    analyticsData.file_type = analyticsData.file_type || null;
+		    self._sendAnalytics('svg_prepare_and_insert', analyticsData);
+		    console.log("svg_prepare_and_insert: ", analyticsData);
         };
 
-		self._analyticsPlaceDesign = function(type, dur, id){
-		    self._sendAnalytics('place_design', {
-		        type: type,
-		        dur: dur,
-                design_id: id,
-            });
+		self._analyticsPlaceImage = function(analyticsData){
+		    if (analyticsData._skip) {return}
+		    analyticsData.file_type = analyticsData.file_type || null;
+		    self._sendAnalytics('img_place', analyticsData);
+		    console.log("img_place: ", analyticsData);
+        };
+
+		self._analyticsQuickShapeUpdate = function(analyticsData){
+		    if (analyticsData) {
+                self._sendAnalytics('quick_shape_update', analyticsData);
+                console.log("quick_shape_update: ", analyticsData);
+            }
+        };
+
+		self._analyticsQuickTextUpdate = function(analyticsData){
+		    if (analyticsData) {
+                self._sendAnalytics('quick_text_update', analyticsData);
+                console.log("quick_text_update: ", analyticsData);
+            }
+        };
+
+		self._analyticsPlaceGco = function(analyticsData){
+		    if (analyticsData) {
+                self._sendAnalytics('gco_place', analyticsData);
+                console.log("gco_place: ", analyticsData);
+            }
         };
 
 		self._sendAnalytics = function(event, payload){
 		    self.analytics.send_fontend_event(event, payload);
         };
+
 
 	}
 
