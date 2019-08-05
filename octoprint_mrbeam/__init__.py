@@ -488,6 +488,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 wizard=wizard,
 							 wizard_to_show=self._wizardConfig.get_wizard_name(),
 							 now=now,
+							 init_ts_ms=time.time()*1000,
 							 language = language,
 
 							 beamosVersionNumber = self._plugin_version,
