@@ -589,6 +589,7 @@ $(function(){
                 analyticsData.path_char_lengths = [];
                 analyticsData.text_font_families = [];
                 analyticsData.removed_unsupported_elements = {};
+                analyticsData.removed_unnecessary_elements = {};
                 analyticsData.removed_import_references = 0;
                 analyticsData.ignored_elements = {};
                 analyticsData.namespaces = [];
@@ -738,9 +739,13 @@ $(function(){
                 }
             }
 
-            // find all elements with "display=none" and remove them
-            fragment.selectAll("[display=none]").remove(); // TODO check if this really works. I (tp) doubt it.
-            fragment.selectAll("script").remove();
+            // remove other unnecessary or invisible ("display=none") elements
+            let removeElements = fragment.selectAll("metadata, script, [display=none]");
+            for (var i = 0; i < removeElements.length; i++) {
+                if (!(removeElements[i] in analyticsData.removed_unnecessary_elements)) analyticsData.removed_unnecessary_elements[removeElements[i].type] = 0;
+                analyticsData.removed_unnecessary_elements[removeElements[i].type]++;
+            }
+            removeElements.remove();
             return fragment;
 		};
 

@@ -82,8 +82,11 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 				var ie = child.bake(callback, correctionMatrix, toCubics, dec)
 				ignoredElements = ignoredElements.concat(ie);
 			}
-			elem.attr({transform: ''});
-			return ignoredElements;
+            // if it's an image, we need to continue and transform the image itself
+			if (elem.type != 'image') {
+                elem.attr({transform: ''});
+                return ignoredElements;
+            }
 		}
 		if (elem.type !== "circle" &&
 			elem.type !== "rect" &&
@@ -125,7 +128,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			var transformedW = matrix.x(x+w, y+h) - transformedX;
 			var transformedH = matrix.y(x+w, y+h) - transformedY;
 
-			elem.attr({x: transformedX, y: transformedY, width: transformedW, height: transformedH});
+			elem.attr({x: transformedX, y: transformedY, width: transformedW, height: transformedH, transform: ''});
 			if(transformedH < 0){
 				elem.attr({style: 'transform: scale(1,-1); transform-origin: top', height: -transformedH});
 			}
