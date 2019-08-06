@@ -42,9 +42,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		for (var i = 0; i < elements_to_replace.length; i++) {
 			var e = elements_to_replace[i];
 			var src = e._replace_with_src();
-			if (src) { // ANDYTEST
-                used_source_elements.push(src);
-            }
+			// src might be undefined in some error cases.
+            // I intentionally let it crash here to "fail fast" since the user gets an error message.
+            used_source_elements.push(src);
 		}
 
 		// 3. remove the source elements

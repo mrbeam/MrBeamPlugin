@@ -501,6 +501,8 @@ $(function(){
 				var analyticsData = {};
 				analyticsData.file_type = 'svg';
 				analyticsData.svg_generator_info = generator_info;
+				analyticsData.svg_generator_info.generator = analyticsData.svg_generator_info.generator == 'unknown' ? null : analyticsData.svg_generator_info.generator;
+				analyticsData.svg_generator_info.version = analyticsData.svg_generator_info.version == 'unknown' ? null : analyticsData.svg_generator_info.version;
 				analyticsData.duration_load = duration_load;
                 analyticsData.duration_preprocessing = Date.now() - start_ts;
 				var insertedId = self._prepareAndInsertSVG(fragment, previewId, origin, scaleMatrixStr, {}, analyticsData, file);
@@ -701,6 +703,7 @@ $(function(){
             } catch(e) {
 		        analyticsData['error'] = e.stack;
 		        console.error(e)
+                self.svg_place_general_error(e.stack);
             } finally {
                 analyticsData.duration_processing = Date.now() - start_ts;
                 self._analyticsPrepareAndInsertSVG(analyticsData)
@@ -1340,6 +1343,21 @@ $(function(){
             new PNotify({
                 // Translators: "in the sense of Ouch!"
                 title: gettext("Oops."),
+                text: error,
+                type: "error",
+                hide: false,
+				buttons: {
+        			sticker: false
+    			}
+            });
+		};
+
+        self.svg_place_general_error = function(stack){
+            var error = "<p>" + _.sprintf(gettext("An unknown error occurred while processing this design file.")) + "</p>";
+            error += "<p>" + _.sprintf(gettext("Please try reloading this browser window and try again. If this error remains, contact the Mr Beam Support Team. Make sure you provide the error message below together with the design file your trying to process.")) + "</p>";
+            error += "<p><strong>"+ _.sprintf(gettext("Error"))+ ":</strong><br/><textarea spellcheck=\"false\" style=\"width: 95%; background-color: inherit; font-size: 12px; line-height: normal; height: 70px; color: inherit; background-color: inherit;\">" +stack+ "</textarea></p>";
+            new PNotify({
+                title: gettext("Error."),
                 text: error,
                 type: "error",
                 hide: false,
