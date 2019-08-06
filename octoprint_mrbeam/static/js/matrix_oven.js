@@ -114,11 +114,11 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			// Validity checks from http://www.w3.org/TR/SVG/shapes.html#RectElement:
 			// If 'x' and 'y' are not specified, then set both to 0. // CorelDraw is creating that sometimes
 			if (!isFinite(x)) {
-				console.log('No attribute "x" in image tag. Assuming 0.');
+				console.log('Image: No x value -> using 0 (SVG default)');
 				x = 0;
 			}
 			if (!isFinite(y)) {
-				console.log('No attribute "y" in image tag. Assuming 0.');
+				console.log('Image: No y value -> using 0 (SVG default)');
 				y = 0;
 			}
 			var transform = elem.transform(); // TODO CLEM maybe parent is needed here too! Check SVG with image and transform Matrix
