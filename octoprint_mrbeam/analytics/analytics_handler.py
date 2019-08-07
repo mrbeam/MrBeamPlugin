@@ -45,6 +45,7 @@ class AnalyticsHandler(object):
 	DISK_SPACE_TIMER = 3.0
 	IP_ADDRESSES_TIMER = 15.0
 	SELF_CHECK_TIMER = 20.0
+	MAINTENANCE_TIMER = 5.0
 	SELF_CHECK_USER_AGENT = 'MrBeamPlugin self check'
 
 	def __init__(self, plugin):
@@ -311,6 +312,9 @@ class AnalyticsHandler(object):
 			succesful=succesful,
 			err=err)
 		self._write_deviceinfo(ak.FLASH_GRBL, payload=payload)
+
+	def write_mrbeam_usage(self, usage_data):
+		self._write_deviceinfo(ak.MRBEAM_USAGE, payload=usage_data)
 
 	def _event_http_self_check(self):
 		try:

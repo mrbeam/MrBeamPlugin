@@ -180,7 +180,8 @@ class DustManager(object):
 					rpm_val=rpm_average,
 					fan_state=self._state,
 					usage_count=self._usageHandler.get_total_usage(),
-					air_filter_count=self._usageHandler.get_air_filter_usage(),
+					prefilter_count=self._usageHandler.get_prefilter_usage(),
+					carbon_filter_count=self._usageHandler.get_carbon_filter_usage(),
 				)
 				_mrbeam_plugin_implementation._analytics_handler.write_fan_rpm_test(data)
 

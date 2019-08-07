@@ -321,7 +321,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			software_update_branches = self.get_update_branch_info(),
 			_version = self._plugin_version,
 			focusReminder = self._settings.get(['focusReminder']),
-			airFilterUsage = self._usageHandler.get_air_filter_usage(),
+			laserHeadSerial = self._laserheadHandler.get_current_used_lh_data()['serial'],
+			usage=dict(
+				prefilterUsage=self._usageHandler.get_prefilter_usage(),
+				carbonFilterUsage=self._usageHandler.get_carbon_filter_usage(),
+				laserHeadUsage=self._usageHandler.get_laser_head_usage(),
+				gantryUsage=self._usageHandler.get_gantry_usage(),
+			),
 			tour_auto_launch = self._settings.get(['tour_auto_launch']),
 		)
 
@@ -381,6 +387,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# Define your plugin's asset files to automatically include in the
 		# core UI here.
 		assets = dict(
+
 			js=["js/lasercutterprofiles.js",
 			    "js/mother_viewmodel.js",
 			    "js/mrbeam.js",
@@ -419,10 +426,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/software_channel_selector.js",
 				"js/lib/hopscotch.js",
 				"js/tour_viewmodel.js",
-				"js/air_filter_usage.js",
 				"js/feedback_widget.js",
 				"js/material_settings.js",
 				"js/analytics.js",
+				"js/maintenance.js",
 			    ],
 			css=["css/mrbeam.css",
 			     "css/svgtogcode.css",
@@ -543,7 +550,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
             dict(type='settings', name=gettext("About This Mr Beam"), template='settings/about_settings.jinja2', suffix="_about", custom_bindings=False),
             dict(type='settings', name=gettext("Analytics"), template='settings/analytics_settings.jinja2', suffix="_analytics", custom_bindings=False),
 			dict(type='settings', name=gettext("Reminders"), template='settings/reminders_settings.jinja2', suffix="_reminders", custom_bindings=False),
-			dict(type='settings', name=gettext("Exhaust System"), template='settings/air_filter_settings.jinja2', suffix="_airfilter", custom_bindings=True),
+			dict(type='settings', name=gettext("Maintenance"), template='settings/maintenance_settings.jinja2', suffix="_maintenance", custom_bindings=True),
 
 			# disabled in appearance
 			# dict(type='settings', name="Serial Connection DEV", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings=False, replaces='serial')
@@ -1172,7 +1179,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			analytics_upload=[], # triggers an upload of analytics files
 			take_undistorted_picture=[],  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
 			focus_reminder=[],
-			reset_air_filter_usage=[],
+			reset_prefilter_usage=[],
+			reset_carbon_filter_usage=[],
+			reset_laser_head_usage=[],
+			reset_gantry_usage=[],
 		)
 
 	def on_api_command(self, command, data):
@@ -1209,8 +1219,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return NO_CONTENT
 		elif command == "focus_reminder":
 			return self.focus_reminder(data)
-		elif command == "reset_air_filter_usage":
-			return self._usageHandler.reset_air_filter_usage()
+		elif command == "reset_prefilter_usage":
+			return self._usageHandler.reset_prefilter_usage()
+		elif command == "reset_carbon_filter_usage":
+			return self._usageHandler.reset_carbon_filter_usage()
+		elif command == "reset_laser_head_usage":
+			return self._usageHandler.reset_laser_head_usage()
+		elif command == "reset_gantry_usage":
+			return self._usageHandler.reset_gantry_usage()
 		return NO_CONTENT
 
 	def analytics_init(self, data):
@@ -1943,8 +1959,10 @@ def __plugin_load__():
 				wizard=["plugin_mrbeam_wifi", "plugin_mrbeam_acl", "plugin_mrbeam_lasersafety",
 				        "plugin_mrbeam_whatsnew_0", "plugin_mrbeam_whatsnew_1", "plugin_mrbeam_whatsnew_2", "plugin_mrbeam_whatsnew_3", "plugin_mrbeam_whatsnew_4",
 				        "plugin_mrbeam_analytics"],
-				settings = ['plugin_mrbeam_about', 'plugin_softwareupdate', 'accesscontrol', 'plugin_netconnectd', 'plugin_findmymrbeam', 'plugin_mrbeam_conversion',
-				            'plugin_mrbeam_camera', 'plugin_mrbeam_airfilter', 'plugin_mrbeam_analytics', 'plugin_mrbeam_reminders', 'logs', 'plugin_mrbeam_debug']
+				settings=[ 'plugin_mrbeam_about', 'plugin_softwareupdate', 'accesscontrol', 'plugin_mrbeam_maintenance',
+						   'plugin_netconnectd', 'plugin_findmymrbeam', 'plugin_mrbeam_conversion',
+						   'plugin_mrbeam_camera', 'plugin_mrbeam_airfilter','plugin_mrbeam_analytics',
+						   'plugin_mrbeam_reminders', 'logs', 'plugin_mrbeam_debug' ]
 			),
 			disabled=dict(
 				wizard=['plugin_softwareupdate'],
