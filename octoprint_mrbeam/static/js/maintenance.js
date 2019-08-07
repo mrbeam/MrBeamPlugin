@@ -6,9 +6,9 @@ $(function () {
         self.settings = params[0];
 
         self.PREFILTER = gettext('pre-filter');
-        self.CARBON_FILTER = gettext('carbon filter');
+        self.CARBON_FILTER = gettext('main filter');
         self.LASER_HEAD = gettext('laser head');
-        self.GANTRY = gettext('gantry');
+        self.GANTRY = gettext('mechanics');
         self.PREFILTER_LIFESPAN = 100;
         self.CARBON_FILTER_LIFESPAN = 400;
         self.LASER_HEAD_LIFESPAN = 100;

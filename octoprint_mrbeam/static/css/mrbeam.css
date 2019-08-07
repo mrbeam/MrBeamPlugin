@@ -2398,7 +2398,7 @@ input[type="radio"]{
 }
 
 .maintenance-description {
-  display: inline-block;
+  display: block;
   margin-right: 8%;
   text-align: justify;
   text-justify: inter-word;
