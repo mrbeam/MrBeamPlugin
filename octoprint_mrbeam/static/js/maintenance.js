@@ -4,6 +4,7 @@ $(function () {
         window.mrbeam.viewModels['maintenance'] = self;
 
         self.settings = params[0];
+        self.analytics = params[1];
 
         self.PREFILTER = gettext('pre-filter');
         self.CARBON_FILTER = gettext('main filter');
@@ -69,6 +70,18 @@ $(function () {
 
         self.onBeforeBinding = function() {
             self.loadUsageValues()
+        };
+
+        self.onAllBound = function() {
+            let links = ['prefilter_shop_link', 'carbon_filter_shop_link', 'laser_head_shop_link', 'laser_head_kb_link'];
+            links.forEach(function (linkId) {
+                $('#' + linkId).click(function () {
+                    let payload = {
+                        link: linkId
+                    };
+                    self.analytics.send_fontend_event('link_click', payload)
+                })
+            });
         };
 
         self.resetPrefilterUsage = function() {
@@ -167,7 +180,7 @@ $(function () {
         Maintenance,
 
         // e.g. loginStateViewModel, settingsViewModel, ...
-        ["settingsViewModel"],
+        ["settingsViewModel", "analyticsViewModel"],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         ["#settings_maintenance"]  // This is important!
