@@ -14,6 +14,19 @@ if(MRBEAM_DEBUG_RENDERING){
 		}
 }
 
+/**
+ * https://stackoverflow.com/a/7616484
+ */
+String.prototype.hashCode = function() {
+  var hash = 0, i, chr;
+  if (this.length === 0) return hash;
+  for (i = 0; i < this.length; i++) {
+    chr   = this.charCodeAt(i);
+    hash  = ((hash << 5) - hash) + chr;
+    hash |= 0; // Convert to 32bit integer
+  }
+  return hash;
+};
 
 $(function(){
 
@@ -127,10 +140,12 @@ $(function(){
         // QuickText fields
         self.fontMap = ["Allerta Stencil","Amatic SC","Comfortaa","Fredericka the Great","Kavivanar","Lobster","Merriweather","Mr Bedfort","Quattrocento","Roboto"];
         self.currentQuickTextFile = undefined;
+        self.currentQuickTextAnalyticsData = undefined;
         self.currentQuickText = ko.observable();
         self.quickShapeNames = new Map([['rect', gettext('Rectangle')], ['circle', gettext('Circle')],
             ['star', gettext('Star')], ['heart', gettext('Heart')]]);
         self.currentQuickShapeFile = undefined;
+        self.currentQuickShapeAnalyticsData = undefined;
         self.currentQuickShape = ko.observable();
         self.lastQuickTextFontIndex = 0;
         self.lastQuickTextIntensity = 0; // rgb values: 0=black, 155=white
@@ -385,6 +400,8 @@ $(function(){
 //			}
 
 			self.loadGcode(file, function(gcode){
+			    var duration_load = Date.now() - start_ts;
+			    start_ts = Date.now();
 				var pathCallback = function(path){
 					var points = [];
 					var intensity = -1;
@@ -396,15 +413,30 @@ $(function(){
 					if(points.length > 0)
 					self.draw_gcode(points, intensity, '#'+previewId);
 
+
 				};
 				var imgCallback = function(x,y,w,h, url){
 					self.draw_gcode_img_placeholder(x,y,w,h,url, '#'+previewId);
 				};
 				self.parser.parse(gcode, /(m0?3)|(m0?5)/i, pathCallback, imgCallback);
 
-				var dur = ((Date.now() - start_ts) /1000);
-			    console.log("placeGcode() DONE "+ dur + "s");
-                self._analyticsPlaceDesign('gco', dur, previewId);
+				// analytics
+                var re = / beamOS:([0-9.]+) /;
+                var match = re.exec(gcode.substring(0, 1000));
+                var beamos_vers = match.length > 1 ? match[1] : null;
+                var analyticsData = {
+                    id: previewId,
+                    file_type: 'gco',
+                    filename_hash: file.hash,
+                    size: file.size,
+                    duration_load: duration_load,
+                    duration_processing: Date.now() - start_ts,
+                    gco_generator_info: {
+                        generator: beamos_vers ? 'beamOS' : null,
+                        version: beamos_vers ? beamos_vers : null,
+                    }
+                };
+                self._analyticsPlaceGco(analyticsData);
 			});
 		};
 
@@ -444,6 +476,8 @@ $(function(){
 		    var start_ts = Date.now();
 			var url = self._getSVGserveUrl(file);
 			cb = function (fragment) {
+			    var duration_load = Date.now() - start_ts;
+		        start_ts = Date.now();
 				if(self._isBinaryData(fragment.node.textContent)) { // workaround: only catching one loading error
 					self.file_not_readable();
 					return;
@@ -458,7 +492,6 @@ $(function(){
 				self.placedDesigns.push(file);
 
 				// get scale matrix
-                fragment = self._removeUnsupportedSvgElements(fragment); // TODO check if this is necessary. Is done in prepareAndInsertSVG()
 				var generator_info = self._get_generator_info(fragment);
 				var doc_dimensions = self._getDocumentDimensionAttributes(fragment);
 				var unitScaleX = self._getDocumentScaleToMM(doc_dimensions.units_x, generator_info);
@@ -466,12 +499,15 @@ $(function(){
 				var mat = self.getDocumentViewBoxMatrix(doc_dimensions, doc_dimensions.viewbox);
                 var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(unitScaleX, unitScaleY).toTransformString();
 
-				var insertedId = self._prepareAndInsertSVG(fragment, previewId, origin, scaleMatrixStr);
+				var analyticsData = {};
+				analyticsData.file_type = 'svg';
+				analyticsData.svg_generator_info = generator_info;
+				analyticsData.svg_generator_info.generator = analyticsData.svg_generator_info.generator == 'unknown' ? null : analyticsData.svg_generator_info.generator;
+				analyticsData.svg_generator_info.version = analyticsData.svg_generator_info.version == 'unknown' ? null : analyticsData.svg_generator_info.version;
+				analyticsData.duration_load = duration_load;
+                analyticsData.duration_preprocessing = Date.now() - start_ts;
+				var insertedId = self._prepareAndInsertSVG(fragment, previewId, origin, scaleMatrixStr, {}, analyticsData, file);
 				if(typeof callback === 'function') callback(insertedId);
-
-				var dur = ((Date.now() - start_ts) /1000);
-			    console.log("placeSVG() DONE "+ dur + "s");
-                self._analyticsPlaceDesign('svg', dur, id);
 			};
 			try { // TODO Figure out why the loading exception is not caught.
 				self.loadSVG(url, cb);
@@ -489,14 +525,8 @@ $(function(){
 		self.placeDXF = function(file, callback) {
 		    var start_ts = Date.now();
 			var url = self._getSVGserveUrl(file);
-
-			cb = function (fragment) {
-				// does not work. false positives.
-//				if(fragment.node.textContent.trim() === ""){ // workaround. try catch does somehow not work.
-//					self.file_not_readable();
-//					return;
-//				}
-
+			cb = function (fragment, timestamps) {
+			    var duration_load = timestamps.load_done ? timestamps.load_done - start_ts : null;
 				var origin = file["refs"]["download"];
 
 				var tx = 0;
@@ -520,12 +550,12 @@ $(function(){
 
 				self.placedDesigns.push(file);
 
-				var insertedId = self._prepareAndInsertSVG(fragment, previewId, origin, scaleMatrixStr);
+				var analyticsData = {};
+				analyticsData.file_type = 'dxf';
+				analyticsData.duration_load = duration_load;
+				analyticsData.duration_preprocessing = timestamps.parse_start && timestamps.parse_done ? timestamps.parse_done - timestamps.parse_start : null;
+				var insertedId = self._prepareAndInsertSVG(fragment, previewId, origin, scaleMatrixStr, {}, analyticsData, file);
 				if(typeof callback === 'function') callback(insertedId);
-
-				var dur = ((Date.now() - start_ts) /1000);
-			    console.log("placeDXF() DONE "+ dur + "s");
-                self._analyticsPlaceDesign('dxf', dur, id);
 			};
 			try { // TODO this would be the much better way. Figure out why the loading exception is not caught.
 				Snap.loadDXF(url, cb);
@@ -546,95 +576,141 @@ $(function(){
          * @returns {*}
          * @private
          */
-		self._prepareAndInsertSVG = function(fragment, id, origin, scaleMatrixStr, flags = {}){
-		    var start_ts = Date.now()
+		self._prepareAndInsertSVG = function(fragment, id, origin, scaleMatrixStr, flags, analyticsData, fileObj, start_ts){
+            analyticsData = analyticsData || {};
+            fileObj = fileObj || {};
+		    start_ts = start_ts || Date.now();
 
-			var switches = $.extend({showTransformHandles: true, embedGCode: true, bakeTransforms: true}, flags);
-			fragment = self._removeUnsupportedSvgElements(fragment);
+		    if (!analyticsData._skip) { // this is a flag used by quickShape
+                analyticsData.id = fileObj ? fileObj.id : id;
+                analyticsData.file_type = analyticsData.file_type || fileObj.display ? fileObj.display.split('.').slice(-1)[0] : origin.split('.').slice(-1)[0];
+                analyticsData.filename_hash = fileObj.hash || origin.split('/downloads/files/local/').slice(-1)[0].hashCode();
+                analyticsData.size = fileObj.size;
+                analyticsData.node_count = 0;
+                analyticsData.node_types = {};
+                analyticsData.path_char_lengths = [];
+                analyticsData.text_font_families = [];
+                analyticsData.removed_unsupported_elements = {};
+                analyticsData.removed_unnecessary_elements = {};
+                analyticsData.removed_import_references = 0;
+                analyticsData.ignored_elements = {};
+                analyticsData.namespaces = [];
 
-			// get original svg attributes
-			var newSvgAttrs = self._getDocumentNamespaceAttributes(fragment);
-			if (scaleMatrixStr) {
-				newSvgAttrs['transform'] = scaleMatrixStr;
-			}
+                let allNodes = fragment.selectAll("*");
+                analyticsData.node_count = allNodes.length;
+                for (let i = 0; i < allNodes.length; i++) {
+                    if (!(allNodes[i].type in analyticsData.node_types)) {
+                        analyticsData.node_types[allNodes[i].type] = 0;
+                    }
+                    analyticsData.node_types[allNodes[i].type]++;
+                    if (allNodes[i].type == 'path') {
+                        analyticsData.path_char_lengths.push(allNodes[i].attr('d').length);
+                    }
+                    if (allNodes[i].type == 'text') {
+                        analyticsData.text_font_families.push(allNodes[i].node.style.fontFamily);
+                    }
+                }
+            }
 
-			var newSvg = snap.group(fragment.selectAll("svg>*"));
-			newSvg.unref(true);
+		    try {
+                var switches = $.extend({showTransformHandles: true, embedGCode: true, bakeTransforms: true}, flags);
+                fragment = self._removeUnsupportedSvgElements(fragment, analyticsData);
 
-			// handle texts
-			var hasText = newSvg.selectAll('text,tspan');
-			if(hasText && hasText.length > 0){
-				self.svg_contains_text_warning(newSvg);
-			}
+                // get original svg attributes
+                var newSvgAttrs = self._getDocumentNamespaceAttributes(fragment, analyticsData);
+                if (scaleMatrixStr) {
+                    newSvgAttrs['transform'] = scaleMatrixStr;
+                }
 
-			// remove style elements with online references
-			var hasStyle = newSvg.selectAll('style');
-			if (hasStyle && hasStyle.length > 0) {
-				for(var y=0; y<hasStyle.length; y++) {
-					if (hasStyle[y].node.innerHTML && hasStyle[y].node.innerHTML.search("@import ") >= 0) {
-						self.svg_contains_online_style_warning();
-						console.warn("Removing style element: web references not supported: ", hasStyle[y].node.innerHTML);
-						hasStyle[y].node.remove();
-					}
-				}
-			}
+                var newSvg = snap.group(fragment.selectAll("svg>*"));
+                newSvg.unref(true);
 
-			newSvg.attr(newSvgAttrs);
-			if(switches.bakeTransforms){
-			    window.mrbeam.bake_progress = 0;
-				newSvg.bake(self._bake_progress_callback); // remove transforms
-			}
-			newSvg.selectAll('path').attr({strokeWidth: '0.8', class:'vector_outline'});
-			// replace all fancy color definitions (rgba(...), hsl(...), 'pink', ...) with hex values
-			newSvg.selectAll('*[stroke]:not(#bbox)').forEach(function (el) {
-				var colStr = el.attr().stroke;
-				// handle stroke="" default value (#000000)
-				if (typeof(colStr) !== 'undefined' && colStr !== 'none') {
-					var colHex = self._getHexColorStr(colStr);
-					el.attr('stroke', colHex);
-				}
-			});
-			newSvg.selectAll('*[fill]:not(#bbox)').forEach(function (el) {
-				var colStr = el.attr().fill;
-				// handle fill="" default value (#000000)
-				if (typeof(colStr) !== 'undefined' && colStr !== 'none') {
-					var colHex = self._getHexColorStr(colStr);
-					el.attr('fill', colHex);
-				}
-			});
+                // handle texts
+                var hasText = newSvg.selectAll('text,tspan');
+                if (hasText && hasText.length > 0) {
+                    self.svg_contains_text_warning(newSvg);
+                }
 
-			newSvg.attr({
-				id: id,
-				'mb:id': self._normalize_mb_id(id),
-				class: 'userSVG',
-				'mb:origin': origin
-			});
-			snap.select("#userContent").append(newSvg);
-			newSvg.transformable();
-			newSvg.ftRegisterBeforeTransformCallback(function(){
-				newSvg.clean_gc();
-			});
-			newSvg.ftRegisterAfterTransformCallback(function(){
-				var mb_meta = self._set_mb_attributes(newSvg);
-				// newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
-			});
+                // remove style elements with online references
+                var hasStyle = newSvg.selectAll('style');
+                if (hasStyle && hasStyle.length > 0) {
+                    for (var y = 0; y < hasStyle.length; y++) {
+                        if (hasStyle[y].node.innerHTML && hasStyle[y].node.innerHTML.search("@import ") >= 0) {
+                            self.svg_contains_online_style_warning();
+                            console.warn("Removing style element: web references not supported: ", hasStyle[y].node.innerHTML);
+                            analyticsData.removed_import_references++;
+                            hasStyle[y].node.remove();
+                        }
+                    }
+                }
 
-			// activate handles on all things we add to the working_area
-			if(switches.showTransformHandles){
-				self.showTransformHandles(id, true);
-			}
+                newSvg.attr(newSvgAttrs);
+                if (switches.bakeTransforms) {
+                    window.mrbeam.bake_progress = 0;
+                    var ignoredElements = newSvg.bake(self._bake_progress_callback); // remove transforms
+                    for (var i=0; i < ignoredElements.length; i++) {
+                        if (!(ignoredElements[i] in analyticsData.ignored_elements)) analyticsData.ignored_elements[ignoredElements[i]] = 0;
+                        analyticsData.ignored_elements[ignoredElements[i]]++;
+                    }
+                }
+                newSvg.selectAll('path').attr({strokeWidth: '0.8', class: 'vector_outline'});
+                // replace all fancy color definitions (rgba(...), hsl(...), 'pink', ...) with hex values
+                newSvg.selectAll('*[stroke]:not(#bbox)').forEach(function (el) {
+                    var colStr = el.attr().stroke;
+                    // handle stroke="" default value (#000000)
+                    if (typeof (colStr) !== 'undefined' && colStr !== 'none') {
+                        var colHex = self._getHexColorStr(colStr);
+                        el.attr('stroke', colHex);
+                    }
+                });
+                newSvg.selectAll('*[fill]:not(#bbox)').forEach(function (el) {
+                    var colStr = el.attr().fill;
+                    // handle fill="" default value (#000000)
+                    if (typeof (colStr) !== 'undefined' && colStr !== 'none') {
+                        var colHex = self._getHexColorStr(colStr);
+                        el.attr('fill', colHex);
+                    }
+                });
 
-			var mb_meta = self._set_mb_attributes(newSvg);
-			// if(switches.embedGCode){
-			// 	newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
-			// }
+                newSvg.attr({
+                    id: id,
+                    'mb:id': self._normalize_mb_id(id),
+                    class: 'userSVG',
+                    'mb:origin': origin
+                });
+                snap.select("#userContent").append(newSvg);
+                newSvg.transformable();
+                newSvg.ftRegisterBeforeTransformCallback(function () {
+                    newSvg.clean_gc();
+                });
+                newSvg.ftRegisterAfterTransformCallback(function () {
+                    var mb_meta = self._set_mb_attributes(newSvg);
+                    // newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
+                });
 
-			setTimeout(function(){
-				newSvg.ftRegisterOnTransformCallback(self.svgTransformUpdate);
-			}, 200);
+                // activate handles on all things we add to the working_area
+                if (switches.showTransformHandles) {
+                    self.showTransformHandles(id, true);
+                }
 
-			console.log("_prepareAndInsertSVG DONE "+ ((Date.now() - start_ts) /1000) + "s")
-			return id;
+                var mb_meta = self._set_mb_attributes(newSvg);
+                // if(switches.embedGCode){
+                // 	newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
+                // }
+
+                setTimeout(function () {
+                    newSvg.ftRegisterOnTransformCallback(self.svgTransformUpdate);
+                }, 200);
+
+                return id;
+            } catch(e) {
+		        analyticsData['error'] = e.stack;
+		        console.error(e)
+                self.svg_place_general_error(e.stack);
+            } finally {
+                analyticsData.duration_processing = Date.now() - start_ts;
+                self._analyticsPrepareAndInsertSVG(analyticsData)
+            }
 		};
 
 		self._bake_progress_callback = function(percent, done, total) {
@@ -646,10 +722,11 @@ $(function(){
          * Removes unsupported elements from fragment.
          * List of elements to remove is defined within this function in var unsupportedElems
          * @param fragment
+         * @param analyticsData obj - this object gets modiyfied but not returned!!
          * @returns fragment
          * @private
          */
-		self._removeUnsupportedSvgElements = function(fragment){
+		self._removeUnsupportedSvgElements = function(fragment, analyticsData){
 
             // add more elements that need to be removed here
             var unsupportedElems = ['clipPath', 'flowRoot', 'switch', '#adobe_illustrator_pgf'];
@@ -657,16 +734,20 @@ $(function(){
             for (var i = 0; i < unsupportedElems.length; i++) {
                 var myElem = fragment.selectAll(unsupportedElems[i]);
                 if (myElem.length !== 0) {
+                    analyticsData.removed_unsupported_elements[unsupportedElems[i]] = myElem.length;
                     console.warn("Warning: removed unsupported '"+unsupportedElems[i]+"' element in SVG");
                     self.svg_contains_unsupported_element_warning(unsupportedElems[i]);
                     myElem.remove();
                 }
             }
 
-            // find all elements with "display=none" and remove them
-            fragment.selectAll("[display=none]").remove(); // TODO check if this really works. I (tp) doubt it.
-            fragment.selectAll("script").remove();
-            fragment.selectAll("metadata").remove();
+            // remove other unnecessary or invisible ("display=none") elements
+            let removeElements = fragment.selectAll("metadata, script, [display=none]");
+            for (var i = 0; i < removeElements.length; i++) {
+                if (!(removeElements[i] in analyticsData.removed_unnecessary_elements)) analyticsData.removed_unnecessary_elements[removeElements[i].type] = 0;
+                analyticsData.removed_unnecessary_elements[removeElements[i].type]++;
+            }
+            removeElements.remove();
             return fragment;
 		};
 
@@ -714,6 +795,13 @@ $(function(){
 			}
 
 			// detect Inkscape by attribute
+            // <svg
+            //    ...
+            //    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+            //    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+            //    ...
+            //    inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
+            //    sodipodi:docname="Mr. Beam Jack of Spades Project Cards Inkscape.svg">
 			var inkscape_version = root_attrs['inkscape:version'];
 			if(inkscape_version !== undefined){
 				gen = 'inkscape';
@@ -721,6 +809,11 @@ $(function(){
 //				console.log("Generator:", gen, version);
 				return {generator: gen, version: version};
 			}
+
+			// <svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg" xmlns:bx="https://boxy-svg.com">
+			// if (root_attrs['xmlns:bx'] && root_attrs['xmlns:bx'].value.search("boxy-svg.com")>0) {
+			//     return { generator: "boxy-svg", version: "unknown" };
+            // }
 
 			// detect Illustrator by comment (works with 'save as svg')
 			// <!-- Generator: Adobe Illustrator 16.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
@@ -796,7 +889,7 @@ $(function(){
 		};
 
         /**
-         * Finds dimensions (wifth, hight, etc..) of an SVG
+         * Finds dimensions (wifth, height, etc..) of an SVG
          * @param fragment
          * @returns {{width: *, height: *, viewbox: *, units_x: *, units_y: *}}
          * @private
@@ -869,7 +962,7 @@ $(function(){
 			return scale;
 		};
 
-		self._getDocumentNamespaceAttributes = function(file){
+		self._getDocumentNamespaceAttributes = function(file, analyticsData){
 			if(file.select('svg') === null){
 				root_attrs = file.node.attributes;
 			} else {
@@ -884,6 +977,7 @@ $(function(){
 				// copy namespaces into group
 				if(attr.name.indexOf("xmlns") === 0){
 					namespaces[attr.name] = attr.value;
+					analyticsData.namespaces[attr.name] = attr.value;
 				}
 			}
 			return namespaces;
@@ -1265,11 +1359,28 @@ $(function(){
             });
 		};
 
+        self.svg_place_general_error = function(stack){
+            var error = "<p>" + _.sprintf(gettext("An unknown error occurred while processing this design file.")) + "</p>";
+            error += "<p>" + _.sprintf(gettext("Please try reloading this browser window and try again. If this error remains, contact the Mr Beam Support Team. Make sure you provide the error message below together with the design file your trying to process.")) + "</p>";
+            error += "<p><strong>"+ _.sprintf(gettext("Error"))+ ":</strong><br/><textarea spellcheck=\"false\" style=\"width: 95%; background-color: inherit; font-size: 12px; line-height: normal; height: 70px; color: inherit; background-color: inherit;\">" +stack+ "</textarea></p>";
+            new PNotify({
+                title: gettext("Error."),
+                text: error,
+                type: "error",
+                hide: false,
+				buttons: {
+        			sticker: false
+    			}
+            });
+		};
+
 		self.placeIMG = function (file) {
-		    var start_ts = Date.now();
+            var start_ts = Date.now();
 			var url = self._getIMGserveUrl(file);
 			var img = new Image();
 			img.onload = function () {
+			    var duration_load = Date.now() - start_ts;
+		        start_ts = Date.now();
 
 				var wpx = this.width;
 				var hpx = this.height;
@@ -1305,9 +1416,18 @@ $(function(){
 				file.subtype = "bitmap";
 				self.placedDesigns.push(file);
 
-				var dur = ((Date.now() - start_ts) /1000);
-			    console.log("placeIMG() DONE "+ dur + "s");
-                self._analyticsPlaceDesign('img', dur, id);
+				// analytics
+                let analyticsData = {
+                    id: id,
+                    pixel_width: wpx,
+                    pixel_height: hpx,
+                    size: file.size,
+                    duration_load: duration_load,
+                    duration_processing: (Date.now() - start_ts),
+                    file_type: file.display.split('.').slice(-1)[0],
+                    filename_hash: file.hash,
+                };
+                self._analyticsPlaceImage(analyticsData)
 			};
 			img.src = url;
 		};
@@ -1874,6 +1994,10 @@ $(function(){
             });
 			$('#quick_shape_dialog').on('hidden', function(){
 				self._qs_removeInvalid();
+				self._qs_dialogClose();
+			});
+            $('#quick_text_dialog').on('hidden', function(){
+				self._qt_dialogClose();
 			});
         };
 
@@ -2086,8 +2210,6 @@ $(function(){
          * @returns file object
          */
         self._qs_placeQuickShape = function(){
-            var start_ts = Date.now();
-
 			var w = self.workingAreaWidthMM() / 5;
 			var h = w * 0.5;
 			var x = (self.workingAreaWidthMM() - w) / 2;
@@ -2127,12 +2249,8 @@ $(function(){
 			var fragment = Snap.parse(shapeSvg);
 
 			var scaleMatrixStr = new Snap.Matrix(1,0,0,1,x,y).toString();
-			self._prepareAndInsertSVG(fragment, previewId, origin, '', {showTransformHandles: false, embedGCode: false});
+			self._prepareAndInsertSVG(fragment, previewId, origin, '', {showTransformHandles: false, embedGCode: false}, {_skip: true});
 			$('#'+previewId).attr('transform', scaleMatrixStr);
-
-			var dur = ((Date.now() - start_ts) /1000);
-            console.log("_qs_placeQuickShape() DONE "+ dur + "s");
-            self._analyticsPlaceDesign('quickShape', dur, id);
 
             return file;
         };
@@ -2242,6 +2360,23 @@ $(function(){
 
 				// update fileslist
 				$('#'+self.currentQuickShapeFile.id+' .title').text(name);
+
+				// analytics
+                var analyticsData = {
+                    id: self.currentQuickShapeFile.id,
+                    file_type: 'quickShape',
+                    type: type.substr(1),
+                    color: qs_params.color,
+                    name: name,
+                }
+                for (let myKey in qs_params) {
+                    if (myKey.startsWith(analyticsData.type)) {
+                        analyticsData[myKey] = qs_params[myKey];
+                    }
+                }
+
+                // actual analytics are written when the dialog is closed
+                self.currentQuickShapeAnalyticsData = analyticsData;
 			}
 		};
 
@@ -2452,7 +2587,7 @@ $(function(){
 		};
 		self._qs_dialogClose = function(){
 			self._qs_removeInvalid();
-			$('#quick_shape_dialog').modal('hide');
+			self._analyticsQuickShapeUpdate(self.currentQuickShapeAnalyticsData);
 		};
 
         // ***********************************************************
@@ -2579,6 +2714,15 @@ $(function(){
 
                 // update fileslist
                 $('#'+self.currentQuickTextFile.id+' .title').text(displayText);
+
+                self.currentQuickTextAnalyticsData = {
+                    id: self.currentQuickTextFile.id,
+                    file_type: 'quickText',
+                    text_length: displayText.length,
+                    brightness: self.currentQuickTextFile.intensity,
+                    font: self.fontMap[self.currentQuickTextFile.fontIndex],
+                    font_index: self.currentQuickTextFile.fontIndex,
+                }
             }
         };
 
@@ -2658,9 +2802,10 @@ $(function(){
 
             self.placedDesigns.push(file);
 
-            var dur = ((Date.now() - start_ts) /1000);
-            console.log("_qt_placeQuicktext() DONE "+ dur + "s");
-            self._analyticsPlaceDesign('quickText', dur, file.previewId);
+            // var dur = ((Date.now() - start_ts) /1000);
+            // console.log("_qt_placeQuicktext() DONE "+ dur + "s");
+            // // self._analyticsPlaceDesign('quickText', dur, file.previewId);
+            // self._analyticsQuickTextUpdate()
 
             return file;
         };
@@ -2706,6 +2851,10 @@ $(function(){
 		    $(elem).empty();
         };
 
+		self._qt_dialogClose = function() {
+            self._analyticsQuickTextUpdate(self.currentQuickTextAnalyticsData);
+        };
+
         // ***********************************************************
 		//  QUICKTEXT end
         // ***********************************************************
@@ -2749,17 +2898,49 @@ $(function(){
 			return {x: xPerc, y: yPerc, dx: dxPerc, dy: dyPerc};
 		};
 
-		self._analyticsPlaceDesign = function(type, dur, id){
-		    self._sendAnalytics('place_design', {
-		        type: type,
-		        dur: dur,
-                design_id: id,
-            });
+        /**
+         * Analytics Stuff
+         */
+
+		self._analyticsPrepareAndInsertSVG = function(analyticsData){
+		    if (analyticsData._skip) {return}
+		    analyticsData.file_type = analyticsData.file_type || null;
+		    self._sendAnalytics('workingarea_place_svg_generic', analyticsData);
+		    console.log("workingarea_place_svg_generic: ", analyticsData);
+        };
+
+		self._analyticsPlaceImage = function(analyticsData){
+		    if (analyticsData._skip) {return}
+		    analyticsData.file_type = analyticsData.file_type || null;
+		    self._sendAnalytics('workingarea_place_image', analyticsData);
+		    console.log("workingarea_place_image: ", analyticsData);
+        };
+
+		self._analyticsQuickShapeUpdate = function(analyticsData){
+		    if (analyticsData) {
+                self._sendAnalytics('workingarea_place_pickshape_update', analyticsData);
+                console.log("workingarea_place_pickshape_update: ", analyticsData);
+            }
+        };
+
+		self._analyticsQuickTextUpdate = function(analyticsData){
+		    if (analyticsData) {
+                self._sendAnalytics('workingarea_place_quicktext_update', analyticsData);
+                console.log("workingarea_place_quicktext_update: ", analyticsData);
+            }
+        };
+
+		self._analyticsPlaceGco = function(analyticsData){
+		    if (analyticsData) {
+                self._sendAnalytics('workingarea_place_gcode', analyticsData);
+                console.log("workingarea_place_gcode: ", analyticsData);
+            }
         };
 
 		self._sendAnalytics = function(event, payload){
 		    self.analytics.send_fontend_event(event, payload);
         };
+
 
 	}
 

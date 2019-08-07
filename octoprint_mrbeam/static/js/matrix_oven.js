@@ -50,12 +50,13 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		    window._matrixOven = {
                 done: 0,
                 total: 0
-            }
+            };
             window._matrixOven.total = Math.max(1, this.selectAll('*').length);
         }
 
 
 	    var elem = this;
+		var ignoredElements = [];
 
 		window._matrixOven.done += 1;
         let percent = Math.min(100, (window._matrixOven.done / window._matrixOven.total) * 100);
@@ -63,7 +64,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 
 		if (!elem || (!elem.paper && (elem.type !== "text" && elem.type !== "tspan" && elem.type !== "#text"))){
-			return;
+			return ignoredElements;
 		} // don't handle unplaced elements. this causes double handling.
 
 		if (toCubics === undefined)
@@ -78,12 +79,13 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		    // callback(0, children.length);
 			for (var i = 0; i < children.length; i++) {
 				var child = children[i];
-				child.bake(callback, correctionMatrix, toCubics, dec);
+				var ie = child.bake(callback, correctionMatrix, toCubics, dec)
+				ignoredElements = ignoredElements.concat(ie);
 			}
             // if it's an image, we need to continue and transform the image itself
 			if (elem.type != 'image') {
                 elem.attr({transform: ''});
-                return;
+                return ignoredElements;
             }
 		}
 		if (elem.type !== "circle" &&
@@ -98,9 +100,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			elem.type !== "tspan" &&
 			elem.type !== "#text"
 			){
-
 			console.info("Ignoring element ", elem.type);
-			return;
+			ignoredElements.push(elem.type);
+			return ignoredElements;
 		}
 
 		if (elem.type === "image"){
@@ -112,11 +114,11 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			// Validity checks from http://www.w3.org/TR/SVG/shapes.html#RectElement:
 			// If 'x' and 'y' are not specified, then set both to 0. // CorelDraw is creating that sometimes
 			if (!isFinite(x)) {
-				console.log('No attribute "x" in image tag. Assuming 0.');
+				console.log('Image: No x value -> using 0 (SVG default)');
 				x = 0;
 			}
 			if (!isFinite(y)) {
-				console.log('No attribute "y" in image tag. Assuming 0.');
+				console.log('Image: No y value -> using 0 (SVG default)');
 				y = 0;
 			}
 			var transform = elem.transform(); // TODO CLEM maybe parent is needed here too! Check SVG with image and transform Matrix
@@ -130,7 +132,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			if(transformedH < 0){
 				elem.attr({style: 'transform: scale(1,-1); transform-origin: top', height: -transformedH});
 			}
-			return;
+			return ignoredElements;
 		}
 
 		if (elem.type === "text" || elem.type === "#text" || elem.type === "tspan"){
@@ -139,20 +141,20 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			//todo check for all possibilities. Or Maybe look for the ones we want instead of the ones that don't work
 			if(elem.node.parentNode.nodeName === "style" || elem.node.parentNode.nodeName === "title" || elem.node.parentNode.nodeName.startsWith("dc:")){
 				console.log("Skip node. Parent is :",elem.node.parentNode.nodeName);
-				return;
+				return ignoredElements;
 			}
 
 			// remove already set parent-nodes
 			//todo check if redundant
 			if(elem.parent().attr('text_set') !== undefined && elem.parent().attr('text_set') === true){
 				//parent already transformed
-				return;
+				return ignoredElements;
 			}
 
 			// replace empty text and Created with Snap
 			if(!elem.node.textContent.replace(/\s/g, '').length || elem.node.textContent === "Created with Snap"){
 				//text only contains whitespace or nothing and is skipped
-				return;
+				return ignoredElements;
 			}
 			console.log('Textelem not empty: ', elem.node.textContent);
 
@@ -194,7 +196,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			} else {
 				console.log("getCTM not available. Skipping:", parent.node.type);
 			}
-			return;
+			return ignoredElements;
 		}
 
 		var path_elem = elem.convertToPath();
@@ -367,6 +369,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		path_elem.attr({transform: ''});
 		//console.log("baked matrix ", matrix, " of ", path_elem.attr('id'));
 
+        return ignoredElements;
 	};
 
 	/**
