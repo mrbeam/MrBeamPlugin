@@ -820,17 +820,10 @@ $(function(){
                     sub_format = file_name.split('.').pop(-1).toLowerCase();
                 }
 
-                console.log('#######################');
-                console.log(format);
                 if (format === 'quicktext') {
-                    console.log(currentDesign);
                     let qt = $('#' + currentDesign.previewId).find('text');
-                    console.log(qt);
                     text_length = qt.text().length;
-                    console.log(text_length);
                     font = qt.css('font-family').replace(/"/g,'');
-                    console.log(font)
-                    // font = $('#' + currentDesign.id).find('.vertical').val();
                 }
 
                 let size = currentDesign.size;
