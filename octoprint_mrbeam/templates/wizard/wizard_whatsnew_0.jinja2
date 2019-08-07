@@ -1,28 +1,29 @@
-<h3>{{ _("New Software Channels!") }}</h3>
+<h3>{{ _("Improved find.mr-beam") }}</h3>
 
-<div id="whatsnew_software_channel_descriptions" class="row">
-    <div class="control-group span6 ">
-        <h5><i class="fa fa-thumbs-o-up" aria-hidden="true"></i>{{ _('Stable Channel') }}: </h5>
-        <p>{{ _('Use the most stable software for your Mr Beam II. You will only get notified about officially released and well tested software updates.') }}</p>
+<div>
+    <div>
+        <p>
+            <a href="http://find.mr-beam.org" target="_blank"><strong>find.mr-beam </strong></a>
+            {{ _('is an online service that helps you to connect your Mr Beam II with your computer.<br>And we’ve got great news for you: It just got better!') }}
+        </p>
+        <p>
+            {{ _('1.  We added IPv6 support so it got even more reliable!') }}<br>
+            {{ _('2.  We added an IP scan to make sure you find all of your Mr Beam II devices.') }}
+        </p>
+        <img id="whatsnew_find_mrbeam_screenshot" src="/plugin/mrbeam/static/img/findmrbeam_improved_whatsnew.png">
     </div>
-    <div class="control-group span6">
-        <h5><i class="fa fa-flask" aria-hidden="true"></i>{{ _('Beta Channel') }}: </h5>
-        <p>{{ _('Get the latest Mr Beam development! In this channel you can try the newest features even before they are officially released, with more frequent updates. Use this if you are curious, you can always switch back to the stable channel if you experience errors.') }}</p>
-    </div>
-</div>
 
-<div id="whatsnew_software_channel_choose">
-    <label for="whatsnew_software_channel_select"><strong>{{ _('Select a software channel for your Mr Beam II:') }}</strong></label>
-    <select id="whatsnew_software_channel_select">
-        <option value="PROD" selected="selected">{{ _('Stable') }}</option>
-        <option value="BETA">{{ _('Beta') }}</option>
-        {% if env_local == 'DEV' %}
-            <option value="DEV">{{ _('Develop') }}</option>
-        {% endif %}
-    </select>
-    <div id="whatsnew_software_channel_switch">
-        <i class="fa fa-info" aria-hidden="true"></i>
-        {{ _('Switch between the different software channels of the Mr Beam II any time in the settings!') }}
+    <div data-bind="visible: findMrBeamWorks">
+        <a href="http://find.mr-beam.org?ref=whatsnew_0.3.0" target="_blank" id="try_findmrbeam_btn" class="btn whatsnew-try-it-now-button" role="button">
+            <i class="fa fa-external-link" aria-hidden="true"></i>
+            {{ _('Try it now!') }}
+        </a>
+    </div>
+
+    <div class="whatsnew-bottom-line-note">
+        {{ _("For more information check out our %(tag_open)sKnowledge Base article%(tag_close)s.",
+        tag_open='<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000507379-find-mr-beam-discovery-service" target="_blank" class="muted">',
+        tag_close='</a>')}}
     </div>
 </div>
 

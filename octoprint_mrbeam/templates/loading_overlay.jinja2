@@ -103,11 +103,14 @@
             </div>
         </div>
         <!-- The Text -->
-        <div class="loading_overlay_setting_link" style="right: 350px">
-            <p class="loading_overlay_text_small">Name: {{ hostname }}</p>
+        <div class="loading_overlay_setting_link" style="right: 500px">
+            <p class="loading_overlay_text_small">© 2019 Mr Beam Lasers GmbH</p>
         </div>
-        <div class="loading_overlay_setting_link" style="right: 160px">
-            <p class="loading_overlay_text_small">Serial: {{ serial }}</p>
+        <div class="loading_overlay_setting_link" style="right: 320px">
+            <p class="loading_overlay_text_small">{{ _('Mr Beam Name') }}: {{ hostname }}</p>
+        </div>
+        <div class="loading_overlay_setting_link" style="right: 150px">
+            <p class="loading_overlay_text_small">{{ _('Serial') }}: {{ serial }}</p>
         </div>
         <div class="loading_overlay_setting_link" style="right: 10px">
             <p class="loading_overlay_text_small">Mr Beam Plugin: v{{ beamosVersionNumber }}</p>

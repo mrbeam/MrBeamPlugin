@@ -1159,7 +1159,7 @@ $(function(){
 					//self.update_colorSettings();
 					self.slicing_in_progress(true);
 					var pixPerMM = 1/self.beamDiameter();
-//					snap.select('#userContent').embed_gc(); // hack
+					snap.select('#userContent').embed_gc(self.workingArea.flipYMatrix(), self.workingArea.gc_options(), self.workingArea.gc_meta); // hack
 					self.workingArea.getCompositionSVG(self.do_engrave(), pixPerMM, self.engrave_outlines(), function(composition){
 						self.svg = composition;
 						var filename = self.gcodeFilename();
@@ -1205,18 +1205,29 @@ $(function(){
 								console.log("Conversion started.", response);
 							},
 							error: function ( jqXHR, textStatus, errorThrown) {
-								console.error("Conversion failed with status " + jqXHR.status, textStatus, errorThrown);
-								if(length > 10000000){
-									console.error("JSON size " + length + "Bytes may be over the request maximum.");
-								}
-								self.slicing_in_progress(false);
-								new PNotify({
-								    title: gettext("Conversion failed"),
-									text: gettext("Unable to start the conversion in the backend. Content length was %(length)s bytes.", {length: length}),
-									type: "error",
-									tag: "conversion_error",
-									hide: false
-								});
+							    self.slicing_in_progress(false);
+                                console.error("Conversion failed with status " + jqXHR.status, textStatus, errorThrown);
+							    if (jqXHR.status == 401) {
+							        self.loginState.logout();
+							        new PNotify({
+                                        title: gettext("Session expired"),
+                                        text: gettext("Please login again to start this laser job."),
+                                        type: "warn",
+                                        tag: "conversion_error",
+                                        hide: false
+                                    });
+                                } else {
+                                    if (length > 10000000) {
+                                        console.error("JSON size " + length + "Bytes may be over the request maximum.");
+                                    }
+                                    new PNotify({
+                                        title: gettext("Conversion failed"),
+                                        text: _.sprintf(gettext("Unable to start the conversion in the backend. Please try reloading this page or restarting Mr Beam II.<br/><br/>Content length was %(length)s bytes."), {length: length}),
+                                        type: "error",
+                                        tag: "conversion_error",
+                                        hide: false
+                                    });
+                                }
 							}
 						});
 

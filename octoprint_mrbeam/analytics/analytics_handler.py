@@ -75,7 +75,7 @@ class AnalyticsHandler(object):
 
 		self._storedConversions = list()
 
-		self._analytics_log_version = 6		# Merged after v0.2.2 (13-06-2019)
+		self._analytics_log_version = 7		# bumped in 0.3.1.1 for os_health
 
 		self.event_waiting_for_terminal_dump = None
 
@@ -247,6 +247,12 @@ class AnalyticsHandler(object):
 	def log_frontend_event(self, event, payload=dict()):
 		try:
 			self._write_frontend_event(event, payload=payload)
+		except Exception as e:
+			self._logger.exception('Error during log_frontend_event: {}'.format(e.message), analytics=True)
+
+	def log_os_health_event(self, data):
+		try:
+			self._write_log_event(ak.OS_HEALTH, payload=data)
 		except Exception as e:
 			self._logger.exception('Error during log_frontend_event: {}'.format(e.message), analytics=True)
 
