@@ -829,6 +829,7 @@ $(function(){
                 let size = currentDesign.size;
 
                 data.push({
+                    design_id: currentDesign.id,
                     dim_x: dim_x,
                     dim_y: dim_y,
                     format: format,
