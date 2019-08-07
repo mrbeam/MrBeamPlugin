@@ -425,12 +425,13 @@ $(function(){
                 var match = re.exec(gcode.substring(0, 1000));
                 var beamos_vers = match.length > 1 ? match[1] : null;
                 var analyticsData = {
+                    id: previewId,
                     file_type: 'gco',
                     filename_hash: file.hash,
-                    byte_size: file.size,
+                    size: file.size,
                     duration_load: duration_load,
                     duration_processing: Date.now() - start_ts,
-                    gco_generator: {
+                    gco_generator_info: {
                         generator: beamos_vers ? 'beamOS' : null,
                         version: beamos_vers ? beamos_vers : null,
                     }
@@ -581,9 +582,10 @@ $(function(){
 		    start_ts = start_ts || Date.now();
 
 		    if (!analyticsData._skip) { // this is a flag used by quickShape
+                analyticsData.id = fileObj ? fileObj.id : id;
                 analyticsData.file_type = analyticsData.file_type || fileObj.display ? fileObj.display.split('.').slice(-1)[0] : origin.split('.').slice(-1)[0];
                 analyticsData.filename_hash = fileObj.hash || origin.split('/downloads/files/local/').slice(-1)[0].hashCode();
-                analyticsData.byte_size = fileObj.size;
+                analyticsData.size = fileObj.size;
                 analyticsData.node_count = 0;
                 analyticsData.node_types = {};
                 analyticsData.path_char_lengths = [];
@@ -1419,7 +1421,7 @@ $(function(){
                     id: id,
                     pixel_width: wpx,
                     pixel_height: hpx,
-                    byte_size: file.size,
+                    size: file.size,
                     duration_load: duration_load,
                     duration_processing: (Date.now() - start_ts),
                     file_type: file.display.split('.').slice(-1)[0],
@@ -2895,6 +2897,10 @@ $(function(){
 			var dyPerc = (event.originalEvent.movementY) / targetBBox.height;
 			return {x: xPerc, y: yPerc, dx: dxPerc, dy: dyPerc};
 		};
+
+        /**
+         * Analytics Stuff
+         */
 
 		self._analyticsPrepareAndInsertSVG = function(analyticsData){
 		    if (analyticsData._skip) {return}
