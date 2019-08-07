@@ -37,6 +37,8 @@ from octoprint_mrbeam.led_events import LedEventListener
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
 from octoprint_mrbeam.migrate import migrate
+from octoprint_mrbeam.os_health_care import os_health_care
+from octoprint_mrbeam.wizard_config import WizardConfig
 from octoprint_mrbeam.printing.profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
 from octoprint_mrbeam.software_update_information import get_update_information, switch_software_channel, software_channels_available, SW_UPDATE_TIER_PROD, SW_UPDATE_TIER_BETA
 from octoprint_mrbeam.support import set_support_mode
@@ -139,6 +141,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		self.start_time_ntp_timer()
 
+		# do os health care
+		os_health_care(self)
 		# do migration if needed
 		migrate(self)
 
@@ -166,6 +170,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._temperatureManager = temperatureManager()
 		self._dustManager = dustManager()
 		self._laserheadHandler = laserheadHandler(self)
+		self._wizardConfig = WizardConfig(self)
 		self.jobTimeEstimation = JobTimeEstimation(self._event_bus)
 
 		self._do_initial_log()
@@ -546,7 +551,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
             dict(type='settings', name=gettext("Analytics"), template='settings/analytics_settings.jinja2', suffix="_analytics", custom_bindings=False),
 			dict(type='settings', name=gettext("Reminders"), template='settings/reminders_settings.jinja2', suffix="_reminders", custom_bindings=False),
 			dict(type='settings', name=gettext("Maintenance"), template='settings/maintenance_settings.jinja2', suffix="_maintenance", custom_bindings=True),
-      
+
 			# disabled in appearance
 			# dict(type='settings', name="Serial Connection DEV", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings=False, replaces='serial')
 		 ]
@@ -554,7 +559,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			result.extend([
 				dict(type='settings', name="DEV Machine Profiles", template='settings/lasercutterprofiles_settings.jinja2', suffix="_lasercutterprofiles", custom_bindings=False)
 			])
-		result.extend(self._get_wizard_template_configs())
+		result.extend(self._wizardConfig.get_wizard_config_to_show())
 		return result
 
 	def get_template_vars(self):
@@ -567,34 +572,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			language = g.locale.language if g.locale else "en"
 		)
 
-	def _get_wizard_template_configs(self):
-		required = self._get_subwizard_attrs("_is_", "_wizard_required")
-		names = self._get_subwizard_attrs("_get_", "_wizard_name")
-		additional = self._get_subwizard_attrs("_get_", "_additional_wizard_template_data")
-
-		result = list()
-		for key, method in required.items():
-			if not method():
-				continue
-
-			if not key in names:
-				continue
-
-			name = names[key]()
-			if not name:
-				continue
-
-			config = dict(type="wizard", name=name, template="wizard/wizard_{}.jinja2".format(key), div="wizard_plugin_corewizard_{}".format(key))
-			if key in additional:
-				additional_result = additional[key]()
-				if additional_result:
-					config.update(additional_result)
-			result.append(config)
-
-		return result
-
 	#~~ WizardPlugin API
-
 	def is_wizard_required(self):
 		return True
 
@@ -602,126 +580,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return dict()
 
 	def get_wizard_version(self):
-		return 15 #random number. but we can't go down anymore, just up.
+		return self._wizardConfig.get_wizard_version()
 
 	def on_wizard_finish(self, handled):
 		self._logger.info("Setup Wizard finished.")
 		# map(lambda m: m(handled), self._get_subwizard_attrs("_on_", "_wizard_finish").values())
 
-
-	# ~~ Wifi subwizard
-
-	def _is_wifi_wizard_required(self):
-		result = False
-		if self.isFirstRun():
-			try:
-				pluginInfo = self._plugin_manager.get_plugin_info("netconnectd")
-				if pluginInfo is not None:
-					status = pluginInfo.implementation._get_status()
-					result = not status["connections"]["wifi"]
-			except Exception as e:
-				self._logger.exception("Exception while reading wifi state from netconnectd:")
-
-		self._logger.debug("_is_wifi_wizard_required() %s", result)
-		return result
-
-	def _get_wifi_wizard_details(self):
-		return dict()
-
-	def _get_wifi_additional_wizard_template_data(self):
-		return dict(mandatory=False, suffix="_wifi")
-
-	def _get_wifi_wizard_name(self):
-		return gettext("Wifi Setup")
-
-	#~~ ACL subwizard
-
-	def _is_acl_wizard_required(self):
-		result = self._user_manager.enabled and not self._user_manager.hasBeenCustomized()
-		self._logger.debug("_is_acl_wizard_required() %s", result)
-		return result
-
-	def _get_acl_wizard_details(self):
-		return dict()
-
-	def _get_acl_additional_wizard_template_data(self):
-		return dict(mandatory=False, suffix="_acl")
-
-	def _get_acl_wizard_name(self):
-		return gettext("Access Control")
-
-
-	# ~~ Saftey subwizard
-
-	def _is_lasersafety_wizard_required(self):
-		result = self.isFirstRun()
-		self._logger.debug("_is_lasersafety_wizard_required() %s", result)
-		return result
-
-	def _get_lasersafety_wizard_details(self):
-		return dict()
-
-	def _get_lasersafety_additional_wizard_template_data(self):
-		return dict(mandatory=False, suffix="_lasersafety")
-
-	def _get_lasersafety_wizard_name(self):
-		return gettext("Laser Safety")
-
-	# ~~ Whats new subwizard
-
-	def _is_whatsnew_0_wizard_required(self):
-		result = not self.isFirstRun()
-		self._logger.debug("_is_whatsnew_0_wizard_required() %s", result)
-		return result
-
-	def _get_whatsnew_0_wizard_details(self):
-		return dict()
-
-	def _get_whatsnew_0_additional_wizard_template_data(self):
-		return dict(mandatory=False, suffix="_whatsnew_0")
-
-	def _get_whatsnew_0_wizard_name(self):
-		# jinja has some js that changes this to German if lang is 'de'
-		return gettext("What's New")
-
-	# def _is_whatsnew_1_wizard_required(self):
-	# 	result = not self.isFirstRun()
-	# 	self._logger.debug("_is_whatsnew_1_wizard_required() %s", result)
-	# 	return result
-	#
-	# def _get_whatsnew_1_wizard_details(self):
-	# 	return dict()
-	#
-	# def _get_whatsnew_1_additional_wizard_template_data(self):
-	# 	return dict(mandatory=False, suffix="_whatsnew_1")
-	#
-	# def _get_whatsnew_1_wizard_name(self):
-	# 	# jinja has some js that changes this to German if lang is 'de'
-	# 	return gettext("New Mr Beam Status Light")
-
-	# ~~ Analytics subwizard
-
-	def _is_analytics_wizard_required(self):
-		result = self._settings.get(['analyticsEnabled']) is None
-		self._logger.debug("_is_analytics_wizard_required() %s", result)
-		return result
-
-	def _get_analytics_wizard_details(self):
-		return dict()
-
-	def _get_analytics_additional_wizard_template_data(self):
-		return dict(mandatory=False, suffix="_analytics")
-
-	def _get_analytics_wizard_name(self):
-		# jinja has some js that changes this to German if lang is 'de'
-		return gettext("Analytics")
-
-
 	@octoprint.plugin.BlueprintPlugin.route("/acl", methods=["POST"])
 	def acl_wizard_api(self):
-		from flask import request
-		from octoprint.server.api import NO_CONTENT
-
 		if not(self.isFirstRun() and self._user_manager.enabled and not self._user_manager.hasBeenCustomized()):
 			return make_response("Forbidden", 403)
 
@@ -747,9 +613,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	@octoprint.plugin.BlueprintPlugin.route("/wifi", methods=["POST"])
 	def wifi_wizard_api(self):
-		from flask import request
-		from octoprint.server.api import NO_CONTENT
-
 		# accept requests only while setup wizard is active
 		if not self.isFirstRun() or not self._is_wifi_wizard_required():
 			return make_response("Forbidden", 403)
@@ -785,7 +648,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	# simpleApiCommand: lasersafety_confirmation; simpleApiCommand: lasersafety_confirmation;
 	def lasersafety_wizard_api(self, data):
 		from flask.ext.login import current_user
-		from octoprint.server.api import NO_CONTENT
 
 		# get JSON from request data, or send user back home
 		data = request.values
@@ -896,25 +758,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return make_response(jsonify(res), 200)
 
 	#~~ helpers
-
-	def _get_subwizard_attrs(self, start, end, callback=None):
-		result = dict()
-
-		for item in dir(self):
-			if not item.startswith(start) or not item.endswith(end):
-				continue
-
-			key = item[len(start):-len(end)]
-			if not key:
-				continue
-
-			attr = getattr(self, item)
-			if callable(callback):
-				callback(key, attr)
-			result[key] = attr
-
-		return result
-
 
 	# helper method to write data to user settings
 	# this makes sure it's always written into a mrbeam folder and

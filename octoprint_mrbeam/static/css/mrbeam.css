@@ -2289,40 +2289,56 @@ input[type="radio"]{
 /*
 * === WHAT'S NEW WIZARD ===
 */
-/*
-* — Beta channel —
-*/
-#whatsnew_software_channel_descriptions {
-  margin-left: 0;
-}
-
-#whatsnew_software_channel_descriptions > div {
-  padding-right: 15px;
-}
-
-#whatsnew_software_channel_descriptions > div > p {
-  text-align: justify;
-  text-justify: inter-word;
-}
-
-#whatsnew_software_channel_descriptions > div > h5 > i, #whatsnew_software_channel_choose > div > i {
-  margin-right: 5px;
-}
-
-#whatsnew_software_channel_choose > label {
-  display: inline-block;
-  margin-top: 20px;
-}
-
-#whatsnew_software_channel_select {
-  width: 100px;
-  margin-left: 20px;
-  display: inline-block;
-}
-
-#whatsnew_software_channel_switch {
+.whatsnew-info-sentence {
   color: #0088cc;
+}
 
+.whatsnew-try-it-now-button{
+  background: #e25303;
+  border-color: #e25303;
+  border-radius: 7px;
+  color: white;
+  font-weight: bold;
+}
+
+.whatsnew-try-it-now-button:hover {
+  background: #a63e03;
+  border-color: #a63e03;
+  color: white;
+  font-weight: bold;
+}
+
+.whatsnew-try-it-now-button:focus {
+  background: #e25303;
+  border-color: #e25303;
+  color: white;
+  font-weight: bold;
+}
+
+.whatsnew-bottom-line-note {
+  margin-top: 25px;
+  color: #999;
+  font-size: 85%;
+}
+
+#whatsnew_find_mrbeam_screenshot {
+  margin: 0 0 10px -16px;
+  width: 530px;
+}
+
+#whatsnew_german_spanish {
+  width: 450px;
+  margin-top: -30px;
+}
+
+#job_time_estimation_whatsnew {
+  height: 320px;
+  margin: 0 0 10px 55px;
+}
+
+#whatsnew_enjoy_this_experience {
+  font-weight: bold;
+  margin: 50px 0 0 170px;
 }
 
 /*
@@ -2415,4 +2431,13 @@ input[type="radio"]{
 
 .maintenance-laserhead-serial {
   margin-left: 30px;
+}
+
+/*
+* === WORKING AREA FOOTER ===
+*/
+.working_area_footer_text {
+    font-size: 10px;
+    color: darkgrey;
+    margin: 0 0 0 30px;
 }
