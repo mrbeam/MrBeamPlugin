@@ -2905,35 +2905,35 @@ $(function(){
 		self._analyticsPrepareAndInsertSVG = function(analyticsData){
 		    if (analyticsData._skip) {return}
 		    analyticsData.file_type = analyticsData.file_type || null;
-		    self._sendAnalytics('svg_prepare_and_insert', analyticsData);
-		    console.log("svg_prepare_and_insert: ", analyticsData);
+		    self._sendAnalytics('workingarea_place_svg_generic', analyticsData);
+		    console.log("workingarea_place_svg_generic: ", analyticsData);
         };
 
 		self._analyticsPlaceImage = function(analyticsData){
 		    if (analyticsData._skip) {return}
 		    analyticsData.file_type = analyticsData.file_type || null;
-		    self._sendAnalytics('img_place', analyticsData);
-		    console.log("img_place: ", analyticsData);
+		    self._sendAnalytics('workingarea_place_image', analyticsData);
+		    console.log("workingarea_place_image: ", analyticsData);
         };
 
 		self._analyticsQuickShapeUpdate = function(analyticsData){
 		    if (analyticsData) {
-                self._sendAnalytics('quick_shape_update', analyticsData);
-                console.log("quick_shape_update: ", analyticsData);
+                self._sendAnalytics('workingarea_place_pickshape_update', analyticsData);
+                console.log("workingarea_place_pickshape_update: ", analyticsData);
             }
         };
 
 		self._analyticsQuickTextUpdate = function(analyticsData){
 		    if (analyticsData) {
-                self._sendAnalytics('quick_text_update', analyticsData);
-                console.log("quick_text_update: ", analyticsData);
+                self._sendAnalytics('workingarea_place_quicktext_update', analyticsData);
+                console.log("workingarea_place_quicktext_update: ", analyticsData);
             }
         };
 
 		self._analyticsPlaceGco = function(analyticsData){
 		    if (analyticsData) {
-                self._sendAnalytics('gco_place', analyticsData);
-                console.log("gco_place: ", analyticsData);
+                self._sendAnalytics('workingarea_place_gcode', analyticsData);
+                console.log("workingarea_place_gcode: ", analyticsData);
             }
         };
 
