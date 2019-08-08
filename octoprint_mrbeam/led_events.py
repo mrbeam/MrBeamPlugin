@@ -64,9 +64,10 @@ class LedEventListener(CommandTrigger):
 	COMMAND_LISTENING_AP =           "mrbeam_ledstrips_cli listening_ap"
 
 
-	def __init__(self, event_bus, printer):
-		CommandTrigger.__init__(self, printer)
-		self._event_bus = event_bus
+	def __init__(self, plugin):
+		CommandTrigger.__init__(self, plugin._printer)
+		self._event_bus = plugin._event_bus
+		self._analytics_handler = plugin._analytics_handler
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.led_events")
 
 		self._watch_thread = None
@@ -76,6 +77,8 @@ class LedEventListener(CommandTrigger):
 		self._subscriptions = {}
 
 		self._initSubscriptions()
+
+		self._connections_states = []
 
 
 	def _initSubscriptions(self):
@@ -148,6 +151,10 @@ class LedEventListener(CommandTrigger):
 					res['ap'] = status["connections"]['ap']
 				if 'wired' in status["connections"]:
 					res['wired'] = status["connections"]['wired']
+
+				if status['connections'] not in self._connections_states:
+					self._connections_states.append(status['connections'])
+					self._analytics_handler.log_connections_state(status['connections'])
 		except Exception as e:
 			self._logger.exception("Exception while reading wifi/ap state from netconnectd:")
 

@@ -8,7 +8,6 @@ class AnalyticsKeys(object):
 	TIMESTAMP = 'ts'
 	NTP_SYNCED = 'ntp'
 	SESSION_ID = 'sid'
-	TIMESTRING = 'timestring'
 	DATA = 'data'
 	SOFTWARE_TIER = 'sw_tier'
 	VERSION_MRBEAM_PLUGIN = 'version_mrbeam_plugin'
@@ -38,6 +37,7 @@ class AnalyticsKeys(object):
 	POWER_65 = 'p_65'
 	POWER_75 = 'p_75'
 	POWER_85 = 'p_85'
+	USERS = 'users'
 
 	### EVENT KEYS ###
 	STARTUP = 'startup'
@@ -47,6 +47,7 @@ class AnalyticsKeys(object):
 	ANALYTICS_ENABLED = 'analytics_enabled'
 	IPS = 'ips'
 	HTTP_SELF_CHECK = 'http_self_check'
+	INTERNET_CONNECTION = 'internet_connection'
 	DISK_SPACE = 'disk_space'
 	SW_CHANNEL_SWITCH = 'sw_channel_switch'
 	LASERHEAD_INFO = 'laserhead_info'
@@ -85,6 +86,8 @@ class AnalyticsKeys(object):
 	DESIGN_FILE = 'design_file'
 	MATERIAL = 'material'
 	FAN_RPM_TEST = 'fan_rpm_test'
+	FAN_RPM = 'fan_rpm'
+	FAN_STATE = 'fan_state'
 
 	PRINT_EVENTS = [
 						PRINT_STARTED,
@@ -127,6 +130,7 @@ class AnalyticsKeys(object):
 	EVENT_UI_RENDER_CALL =          'ui_render_call'
 	EVENT_CLIENT_OPENED =           'client_opened'
 	VERSION_FINDMYMRBEAM_PLUGIN =   'version_findmymrbeam_plugin'
+	CONNECTIONS_STATE = 			'connections_state'
 
 
 
