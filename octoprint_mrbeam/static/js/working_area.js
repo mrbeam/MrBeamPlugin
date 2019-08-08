@@ -592,7 +592,7 @@ $(function(){
                 analyticsData.text_font_families = [];
                 analyticsData.removed_unsupported_elements = {};
                 analyticsData.removed_unnecessary_elements = {};
-                analyticsData.removed_import_references = 0;
+                analyticsData.removed_import_references = {};
                 analyticsData.ignored_elements = {};
                 analyticsData.namespaces = [];
 
@@ -607,7 +607,13 @@ $(function(){
                         analyticsData.path_char_lengths.push(allNodes[i].attr('d').length);
                     }
                     if (allNodes[i].type == 'text') {
-                        analyticsData.text_font_families.push(allNodes[i].node.style.fontFamily);
+                        let fontFam = allNodes[i].node.style.fontFamily;
+                        fontFam = fontFam ? fontFam.replace(/"/g, '').replace(/'/g, "") : null;
+                        if (!fontFam || !Boolean(fontFam.trim())){
+                            fontFam = allNodes[i].node.getAttribute("font-family");
+                        }
+                        fontFam = fontFam ? fontFam.replace(/"/g, '').replace(/'/g, "") : null;
+                        analyticsData.text_font_families.push(fontFam);
                     }
                 }
             }
@@ -638,7 +644,8 @@ $(function(){
                         if (hasStyle[y].node.innerHTML && hasStyle[y].node.innerHTML.search("@import ") >= 0) {
                             self.svg_contains_online_style_warning();
                             console.warn("Removing style element: web references not supported: ", hasStyle[y].node.innerHTML);
-                            analyticsData.removed_import_references++;
+                            if (!(hasStyle[y].type in analyticsData.removed_import_references)) {analyticsData.removed_import_references[hasStyle[y].type] = 0};
+                            analyticsData.removed_import_references[hasStyle[y].type]++;
                             hasStyle[y].node.remove();
                         }
                     }
