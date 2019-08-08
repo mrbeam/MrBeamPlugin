@@ -822,7 +822,6 @@ $(function(){
 
                 if (format === 'svg') {
                     clip_working_area = self.workingArea.gc_options().clip_working_area;
-                    console.log(clip_working_area)
                 }
 
                 if (format === 'quicktext') {
