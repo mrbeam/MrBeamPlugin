@@ -76,7 +76,7 @@ class AnalyticsHandler(object):
 
 		self._storedConversions = list()
 
-		self._analytics_log_version = 7		# bumped in 0.3.1.1 for os_health
+		self._analytics_log_version = 8		# bumped in 0.3.2.1
 
 		self.event_waiting_for_terminal_dump = None
 
