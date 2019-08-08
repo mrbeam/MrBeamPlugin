@@ -814,10 +814,15 @@ $(function(){
                 let typePath = currentDesign.typePath;
                 let format = typePath[typePath.length - 1];
 
-                let sub_format, font, text_length;
+                let sub_format, font, text_length, clip_working_area;
                 if (format === "image") {
                     let file_name = $('#' + currentDesign.id).find('.title').text();
                     sub_format = file_name.split('.').pop(-1).toLowerCase();
+                }
+
+                if (format === 'svg') {
+                    clip_working_area = self.workingArea.gc_options().clip_working_area;
+                    console.log(clip_working_area)
                 }
 
                 if (format === 'quicktext') {
@@ -836,7 +841,8 @@ $(function(){
                     sub_format: sub_format,
                     size: size,
                     text_length: text_length,
-                    font: font
+                    font: font,
+                    clip_working_area: clip_working_area
                 });
             }
 			return data;
