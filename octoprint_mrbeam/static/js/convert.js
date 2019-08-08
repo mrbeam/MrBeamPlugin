@@ -814,20 +814,34 @@ $(function(){
                 let typePath = currentDesign.typePath;
                 let format = typePath[typePath.length - 1];
 
-                let sub_format;
+                let sub_format, font, text_length, clip_working_area;
                 if (format === "image") {
                     let file_name = $('#' + currentDesign.id).find('.title').text();
                     sub_format = file_name.split('.').pop(-1).toLowerCase();
                 }
 
+                if (format === 'svg') {
+                    clip_working_area = self.workingArea.gc_options().clip_working_area;
+                }
+
+                if (format === 'quicktext') {
+                    let qt = $('#' + currentDesign.previewId).find('text');
+                    text_length = qt.text().length;
+                    font = qt.css('font-family').replace(/"/g,'');
+                }
+
                 let size = currentDesign.size;
 
                 data.push({
+                    design_id: currentDesign.id,
                     dim_x: dim_x,
                     dim_y: dim_y,
                     format: format,
                     sub_format: sub_format,
-                    size: size
+                    size: size,
+                    text_length: text_length,
+                    font: font,
+                    clip_working_area: clip_working_area
                 });
             }
 			return data;
@@ -840,7 +854,7 @@ $(function(){
         }
 
 		self.enableConvertButton = ko.computed(function() {
-			if (self.slicing_in_progress() 
+			if (self.slicing_in_progress()
 					|| self.workingArea.placedDesigns().length === 0
 					|| self.selected_material() == null
 					|| self.selected_material_color() == null

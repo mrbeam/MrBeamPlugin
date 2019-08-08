@@ -3,6 +3,7 @@ $(function() {
         var self = this;
 
         self.loginStateViewModel = parameters[0];
+        self.analytics = parameters[1];
 
 
         self.checkbox1 = ko.observable(false);
@@ -30,6 +31,8 @@ $(function() {
         self.agree = function() {
             var result = self._handleExit();
             if (result) {
+                let dialog = 'stand_alone';
+                self._sendLaserSafetyAnalytics(dialog);
                 self.hideDialog();
             }
 		};
@@ -43,6 +46,12 @@ $(function() {
         self.onBeforeWizardTabChange = function(next, current) {
             if (current && _.startsWith(current, "wizard_plugin_corewizard_lasersafety")) {
                 var result = self._handleExit();
+
+                if(result) {
+                    let dialog = 'welcome_wizard';
+                    self._sendLaserSafetyAnalytics(dialog);
+                }
+
                 return result;
             }
             return true;
@@ -150,11 +159,20 @@ $(function() {
                     });
                 });
         };
+
+        self._sendLaserSafetyAnalytics = function(dialog) {
+            let event = 'laser_safety';
+            let payload = {
+                dialog: dialog,
+                show_again: self.showAgain(),
+            };
+            self.analytics.send_fontend_event(event, payload);
+        }
     }
 
     OCTOPRINT_VIEWMODELS.push([
         LaserSafetyViewModel,
-        ["loginStateViewModel"],
+        ["loginStateViewModel", "analyticsViewModel"],
         ["#wizard_plugin_corewizard_lasersafety", "#lasersafety_overlay"]
     ]);
 });

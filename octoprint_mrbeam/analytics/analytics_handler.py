@@ -45,6 +45,7 @@ class AnalyticsHandler(object):
 	DISK_SPACE_TIMER = 3.0
 	IP_ADDRESSES_TIMER = 15.0
 	SELF_CHECK_TIMER = 20.0
+	INTERNET_CONNECTION_TIMER = 25.0
 	MAINTENANCE_TIMER = 5.0
 	SELF_CHECK_USER_AGENT = 'MrBeamPlugin self check'
 
@@ -228,7 +229,7 @@ class AnalyticsHandler(object):
 			self._write_log_event(ak.LOG_CPU, payload=data)
 		except Exception as e:
 			self._logger.exception('Error during log_cpu_warning: {}'.format(e.message), analytics=True)
-      
+
 	def log_camera_session(self, errors):
 		try:
 			self._logger.info(errors)
@@ -286,7 +287,8 @@ class AnalyticsHandler(object):
 		self._write_new_line()
 		payload = {
 			ak.LASERHEAD_SERIAL: self._laserheadHandler.get_current_used_lh_data()['serial'],
-			ak.ENV: self._plugin.get_env()
+			ak.ENV: self._plugin.get_env(),
+			ak.USERS: len(self._plugin._user_manager._users)  # users = self.plugin._user_manager._users
 		}
 		self._write_deviceinfo(ak.STARTUP, payload=payload)
 
@@ -301,6 +303,10 @@ class AnalyticsHandler(object):
 		# Schedule event_http_self_check task (to write that line 20 seconds after startup)
 		t3 = Timer(self.SELF_CHECK_TIMER, self._event_http_self_check)
 		t3.start()
+
+		# Schedule event_http_self_check task (to write that line 20 seconds after startup)
+		t4 = Timer(self.INTERNET_CONNECTION_TIMER, self._event_internet_connection)
+		t4.start()
 
 	def _event_shutdown(self, event, payload):
 		self._write_deviceinfo(ak.SHUTDOWN)
@@ -338,7 +344,7 @@ class AnalyticsHandler(object):
 							elapsed_seconds = r.elapsed.total_seconds()
 						except requests.exceptions.RequestException as e:
 							response = -1
-							err = e
+							err = str(e)
 
 						payload[interface] = {
 							"ip": ip,
@@ -351,6 +357,30 @@ class AnalyticsHandler(object):
 
 		except:
 			self._logger.exception('Exception when performing the http self check')
+
+	def _event_internet_connection(self):
+		try:
+			try:
+				headers = {
+					'User-Agent': self.SELF_CHECK_USER_AGENT
+				}
+				r = requests.head('http://find.mr-beam.org', headers=headers)
+				response = r.status_code
+				err = None
+				connection = True
+			except requests.exceptions.RequestException as e:
+				response = -1
+				err = str(e)
+				connection = False
+
+			payload = {
+				"response": response,
+				"err": err,
+				"connection": connection,
+			}
+			self._write_deviceinfo(ak.INTERNET_CONNECTION, payload=payload)
+		except:
+			self._logger.exception('Exception while performing the internet check')
 
 	def _event_ip_addresses(self):
 		try:
@@ -488,7 +518,9 @@ class AnalyticsHandler(object):
 			ak.PROGRESS_LASER_TEMPERATURE: self._current_lasertemp_collector.get_latest_value(),
 			ak.PROGRESS_LASER_INTENSITY: self._current_intensity_collector.get_latest_value(),
 			ak.PROGRESS_DUST_VALUE: self._current_dust_collector.get_latest_value(),
-			ak.JOB_DURATION: round(payload['time'], 1)
+			ak.JOB_DURATION: round(payload['time'], 1),
+			ak.FAN_RPM: self._plugin._dustManager.get_fan_rpm(),
+			ak.FAN_STATE: self._plugin._dustManager.get_fan_state(),
 		}
 		self._write_jobevent(ak.PRINT_PROGRESS, data)
 
@@ -542,13 +574,12 @@ class AnalyticsHandler(object):
 					                  event_payload)
 			elif 'plugin' in event_payload and 'eventname' in event_payload:
 				plugin = event_payload.get('plugin')
-				if plugin == "findmymrbeam":
+				if plugin:
 					eventname = event_payload.get('eventname')
 					data = event_payload.get('data', None)
-					self._write_event(ak.TYPE_CONNECTIVITY_EVENT, eventname, self._analytics_log_version,
-					                  payload=dict(data=data))
+					self._write_event(plugin, eventname, self._analytics_log_version, payload=dict(data=data))
 				else:
-					self._logger.warn("Unknown plugin: '%s'. payload: %s", plugin, event_payload)
+					self._logger.warn("Invalid plugin: '%s'. payload: %s", plugin, event_payload)
 			else:
 				self._logger.warn("Invalid payload data in event %s", event)
 		except Exception as e:
@@ -584,6 +615,13 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.exception('Exception during log_client_opened: {}'.format(e.message))
 
+	def log_connections_state(self, connections):
+		try:
+			self._write_event(ak.TYPE_CONNECTIVITY_EVENT, ak.CONNECTIONS_STATE, self._analytics_log_version,
+			                  payload=dict(data=connections))
+		except Exception as e:
+			self._logger.exception('Exception during log_connections_state: {}'.format(e.message))
+
 	def write_cam_update(self, newMarkers, newCorners):
 		try:
 			if self._camAnalyticsOn:
@@ -613,7 +651,7 @@ class AnalyticsHandler(object):
 			self._storedConversions = list()
 
 			if self._analyticsOn:
-				# Line with common parameters of the laser job (for both cut and engrave)
+				# "laser_job" line as the beginning of a job
 				eventname = ak.LASER_JOB
 				data = {
 					'advanced_settings': details['advanced_settings']
@@ -621,23 +659,32 @@ class AnalyticsHandler(object):
 				data.update(details['material'])
 				self._store_conversion_details(eventname, payload=data)
 
-				if 'engrave' in details and details['engrave'] == True and 'raster' in details:
+				# "conv_eng" line with the engraving parameters
+				if 'engrave' in details and details['engrave'] and 'raster' in details:
 					eventname = ak.CONV_ENGRAVE
+					eng_settings = details['raster']
+
 					data = {
-						'svgDPI': details['svgDPI']
+						'svgDPI': details['svgDPI'],
+						'mpr_black': self._calculate_mpr_value(eng_settings.get('intensity_black'), eng_settings.get('speed_black')),
+						'mpr_white': self._calculate_mpr_value(eng_settings.get('intensity_white'), eng_settings.get('speed_white')),
 					}
-					data.update(details['raster'])
+					data.update(eng_settings)
 					self._store_conversion_details(eventname, payload=data)
 
+				# One or many "conv_cut" lines with the cutting parameters
 				if 'vector' in details and details['vector']:
 					eventname = ak.CONV_CUT
+
 					for color_settings in details['vector']:
 						data = {
-							'svgDPI': details['svgDPI']
+							'svgDPI': details['svgDPI'],
+							'mpr': self._calculate_mpr_value(color_settings.get('intensity'), color_settings.get('feedrate'), color_settings.get('passes')),
 						}
 						data.update(color_settings)
 						self._store_conversion_details(eventname, payload=data)
 
+				# One or many "design_file" lines with the design details
 				if 'design_files' in details and details['design_files']:
 					eventname = ak.DESIGN_FILE
 					for design_file in details['design_files']:
@@ -656,6 +703,15 @@ class AnalyticsHandler(object):
 		if payload is not None:
 			data.update(payload)
 		self._storedConversions.append(data)
+
+	@staticmethod
+	def _calculate_mpr_value(intensity, speed, passes=1):
+		if intensity and speed and passes:
+			mpr = round(float(intensity) / float(speed) * int(passes), 2)
+		else:
+			mpr = None
+
+		return mpr
 
 	def _write_conversion_details(self):
 		try:

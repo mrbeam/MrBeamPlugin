@@ -164,7 +164,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._interlock_handler = interLockHandler(self)
 		self._lid_handler = lidHandler(self)
 		self._usageHandler = usageHandler(self)
-		self._led_eventhandler = LedEventListener(self._event_bus, self._printer)
+		self._led_eventhandler = LedEventListener(self)
 		# start iobeam socket only once other handlers are already inittialized so that we can handle info mesage
 		self._ioBeam = ioBeamHandler(self)
 		self._temperatureManager = temperatureManager()
@@ -421,7 +421,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/lib/Color.js",
 				"js/laser_job_done_viewmodel.js",
 				"js/loadingoverlay_viewmodel.js",
-				"js/wizard_whatsnew.js",
+				"js/wizard_general.js",
 				"js/wizard_analytics.js",
 				"js/software_channel_selector.js",
 				"js/lib/hopscotch.js",
@@ -493,7 +493,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 gcodeMobileThreshold=0,
 							 gcodeThreshold=0,
 							 wizard=wizard,
+							 wizard_to_show=self._wizardConfig.get_wizard_name(),
 							 now=now,
+							 init_ts_ms=time.time()*1000,
 							 language = language,
 
 							 beamosVersionNumber = self._plugin_version,
