@@ -2918,8 +2918,8 @@ $(function(){
 
 		self._analyticsQuickShapeUpdate = function(analyticsData){
 		    if (analyticsData) {
-                self._sendAnalytics('workingarea_place_pickshape_update', analyticsData);
-                console.log("workingarea_place_pickshape_update: ", analyticsData);
+                self._sendAnalytics('workingarea_place_quickshape_update', analyticsData);
+                console.log("workingarea_place_quickshape_update: ", analyticsData);
             }
         };
 
