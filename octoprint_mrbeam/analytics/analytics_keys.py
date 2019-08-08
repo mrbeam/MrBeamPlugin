@@ -46,6 +46,7 @@ class AnalyticsKeys(object):
 	ANALYTICS_ENABLED = 'analytics_enabled'
 	IPS = 'ips'
 	HTTP_SELF_CHECK = 'http_self_check'
+	INTERNET_CONNECTION = 'internet_connection'
 	DISK_SPACE = 'disk_space'
 	SW_CHANNEL_SWITCH = 'sw_channel_switch'
 	LASERHEAD_INFO = 'laserhead_info'

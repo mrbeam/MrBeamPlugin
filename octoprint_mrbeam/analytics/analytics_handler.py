@@ -45,6 +45,7 @@ class AnalyticsHandler(object):
 	DISK_SPACE_TIMER = 3.0
 	IP_ADDRESSES_TIMER = 15.0
 	SELF_CHECK_TIMER = 20.0
+	INTERNET_CONNECTION_TIMER = 25.0
 	SELF_CHECK_USER_AGENT = 'MrBeamPlugin self check'
 
 	def __init__(self, plugin):
@@ -302,6 +303,10 @@ class AnalyticsHandler(object):
 		t3 = Timer(self.SELF_CHECK_TIMER, self._event_http_self_check)
 		t3.start()
 
+		# Schedule event_http_self_check task (to write that line 20 seconds after startup)
+		t4 = Timer(self.INTERNET_CONNECTION_TIMER, self._event_internet_connection)
+		t4.start()
+
 	def _event_shutdown(self, event, payload):
 		self._write_deviceinfo(ak.SHUTDOWN)
 
@@ -335,7 +340,7 @@ class AnalyticsHandler(object):
 							elapsed_seconds = r.elapsed.total_seconds()
 						except requests.exceptions.RequestException as e:
 							response = -1
-							err = e
+							err = str(e)
 
 						payload[interface] = {
 							"ip": ip,
@@ -348,6 +353,30 @@ class AnalyticsHandler(object):
 
 		except:
 			self._logger.exception('Exception when performing the http self check')
+
+	def _event_internet_connection(self):
+		try:
+			try:
+				headers = {
+					'User-Agent': self.SELF_CHECK_USER_AGENT
+				}
+				r = requests.head('http://find.mr-beam.org', headers=headers)
+				response = r.status_code
+				err = None
+				connection = True
+			except requests.exceptions.RequestException as e:
+				response = -1
+				err = str(e)
+				connection = False
+
+			payload = {
+				"response": response,
+				"err": err,
+				"connection": connection,
+			}
+			self._write_deviceinfo(ak.INTERNET_CONNECTION, payload=payload)
+		except:
+			self._logger.exception('Exception while performing the internet check')
 
 	def _event_ip_addresses(self):
 		try:
