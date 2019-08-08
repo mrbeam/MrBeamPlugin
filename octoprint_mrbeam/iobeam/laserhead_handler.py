@@ -2,6 +2,7 @@
 import os
 import yaml
 from octoprint_mrbeam.mrb_logger import mrb_logger
+from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 # singleton
 _instance = None
@@ -40,6 +41,9 @@ class LaserheadHandler(object):
 				self._lh_cache[serial] = dict(correction_factor=1)
 			else:
 				self._write_laser_heads_file()
+
+		self._plugin.fire_event(MrBeamEvents.LASER_HEAD_READ, dict(serial=serial))
+		self._logger.info('Current laser head serial number: {}'.format(serial))
 
 	def set_power_measurement_value(self, measure, value):
 		if self._current_used_lh_serial and self._current_used_lh_serial in self._lh_cache:

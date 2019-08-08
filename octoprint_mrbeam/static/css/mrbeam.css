@@ -2181,7 +2181,7 @@ input[type="radio"]{
 
 
 /*
-* === LASERHEAD FOCUS REMINDER ===
+* === LASER_HEAD FOCUS REMINDER ===
 */
 
 #laserhead_focus_reminder_image {
@@ -2347,6 +2347,90 @@ input[type="radio"]{
 #freshwidget-button > a {
     padding: 6px 16px;
     font-size: 12px;
+}
+
+/*
+* === MAINTENANCE SETTINGS ===
+*/
+.maintenance-title {
+  margin: 10px 0 0 0;
+}
+
+.maintenance-notes {
+  margin: 0 0 20px 0;
+}
+
+.maintenance-scrollable {
+  padding-bottom:2em;
+  overflow-y: auto;
+  height: calc(100vh - 180px);
+}
+
+.maintenance-table {
+  margin-bottom: 60px
+}
+
+.maintenance-table > tbody > tr > td {
+  vertical-align: middle;
+}
+
+.maintenance-description-column {
+  width: 50%;
+}
+
+.maintenance-description-column > h4 {
+  display: inline-block;
+}
+
+.maintenance-warning-column {
+  width: 10%;
+}
+
+.maintenance-warning-column > div {
+  text-align: center;
+}
+
+.maintenance-counter-column {
+  width: 20%;
+}
+
+.maintenance-reset-column {
+  width: 20%;
+}
+
+.maintenance-links {
+  margin-top: 15px
+}
+
+.maintenance-link-shop {
+  display: inline-block;
+  float: left
+}
+
+.maintenance-link-knowledge-base {
+  display: inline-block;
+  float: left;
+  margin-left: 50px;
+}
+
+.maintenance-description {
+  display: block;
+  margin-right: 8%;
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+.maintenance-reset-btn {
+  display: block;
+  margin: auto;
+}
+
+.maintenance-warning-column > div > .fa-exclamation-triangle {
+  color: #e25303;
+}
+
+.maintenance-laserhead-serial {
+  margin-left: 30px;
 }
 
 /*
