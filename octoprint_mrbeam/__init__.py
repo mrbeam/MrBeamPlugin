@@ -372,6 +372,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._lid_handler.shutdown()
 		self._temperatureManager.shutdown()
 		self._dustManager.shutdown()
+		self._analytics_handler.shutdown()  # TODO IRATXE: keep or not?
 		time.sleep(2)
 		self._logger.info("Mr Beam Plugin stopped.")
 

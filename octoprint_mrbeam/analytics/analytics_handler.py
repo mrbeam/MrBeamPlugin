@@ -12,7 +12,8 @@ import requests
 from datetime import datetime
 from value_collector import ValueCollector
 from cpu import Cpu
-from threading import Timer
+from threading import Timer, Thread
+from Queue import Queue
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint.events import Events as OctoPrintEvents
@@ -57,6 +58,8 @@ class AnalyticsHandler(object):
 
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.analyticshandler")
 
+		self._shutdown_signaled = False
+
 		self._analyticsOn = self._settings.get(['analyticsEnabled'])
 		self._camAnalyticsOn = self._settings.get(['analytics', 'cam_analytics'])
 
@@ -87,26 +90,43 @@ class AnalyticsHandler(object):
 		if not os.path.isdir(self.analyticsfolder):
 			os.makedirs(self.analyticsfolder)
 
-		if self._analyticsOn is not None:
+		if self._analyticsOn is not None:  # TODO IRATXE: does it upload if this is false?
 			FileUploader.upload_now(self._plugin)
 
 		self._jsonfile = os.path.join(self.analyticsfolder, self._settings.get(['analytics', 'filename']))
 
+		self._shutdown_signaled = False
+		self._analytics_queue = Queue()
+		self._analytics_writer = Thread(target=self._write_queue_to_file)
+
 		if self._analyticsOn:
 			self._activate_analytics()
+
+	def shutdown(self, *args):  # TODO IRATXE: keep or not?
+		self._logger.debug("shutdown() args: %s", args)
+		global _instance
+		_instance = None
+		self._shutdown_signaled = True
 
 	def _activate_analytics(self):
 		if not os.path.isfile(self._jsonfile):
 			self._init_jsonfile()
 
+		# Restart queue and writer thread
+		self._analytics_queue = Queue()
+		self._analytics_writer.daemon = True  # TODO IRATXE: keep or not?
+		self._analytics_writer.start()
+
 		if self._analyticsOn:
 			# check if <two days> have passed and software should be written away
+			# TODO IRATXE: delete
 			TWO_DAYS = 2
 			_days_passed_since_last_log = self._days_passed(self._jsonfile)
 			self._logger.debug('Days since last edit: {}'.format(_days_passed_since_last_log))
 			if _days_passed_since_last_log > TWO_DAYS:
 				self._write_current_software_status()
 
+			# TODO IRATXE: have this somewhere else
 			self._subscribe()
 
 	def _subscribe(self):
@@ -127,12 +147,14 @@ class AnalyticsHandler(object):
 		self._event_bus.subscribe(MrBeamEvents.ANALYTICS_DATA, self._other_plugin_data)
 		self._event_bus.subscribe(MrBeamEvents.JOB_TIME_ESTIMATED, self._event_job_time_estimated)
 
+	# TODO IRATXE: remove
 	@staticmethod
 	def _getLaserHeadVersion():
 		# TODO get Real laser_head_id
 		laser_head_version = None
 		return laser_head_version
 
+	# TODO IRATXE: remove --> in the init have a self.snr
 	@staticmethod
 	def _getSerialNumber():
 		return _mrbeam_plugin_implementation.getSerialNum()
@@ -141,10 +163,12 @@ class AnalyticsHandler(object):
 	# 	serial_long = self._getSerialNumber()
 	# 	return serial_long.split('-')[0][-8::]
 
+	# TODO IRATXE: remove
 	@staticmethod
 	def _getHostName():
 		return _mrbeam_plugin_implementation.getHostname()
 
+	# TODO IRATXE: remove
 	@staticmethod
 	def _days_passed(path_to_file):
 		"""
@@ -205,14 +229,14 @@ class AnalyticsHandler(object):
 		if stacktrace:
 			payload['stacktrace'] = stacktrace
 
-		if wait_for_terminal_dump:
+		if wait_for_terminal_dump:  # If it is a e.g. GRBL error, we will have to wait some time for the whole dump
 			self.event_waiting_for_terminal_dump = dict(
 				payload=payload,
 			)
 		else:
 			self._write_log_event(ak.EVENT_LOG, payload=payload, analytics=False)
 
-	def log_terminal_dump(self, dump):
+	def log_terminal_dump(self, dump):  # Will be used with e.g. GRBL errors
 		if self.event_waiting_for_terminal_dump is not None:
 			payload = self.event_waiting_for_terminal_dump['payload']
 			payload['terminal_dump'] = dump
@@ -245,7 +269,7 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.exception('Error during log_camera_error: {}'.format(e.message), analytics=True)
 
-	def log_frontend_event(self, event, payload=dict()):
+	def log_frontend_event(self, event, payload=dict()):  # TODO IRATXE: do we need this function?
 		try:
 			self._write_frontend_event(event, payload=payload)
 		except Exception as e:
@@ -272,7 +296,7 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.exception('Error during log_camera_error: {}'.format(e.message), analytics=True)
 
-	def _write_current_software_status(self):
+	def _write_current_software_status(self):  # TODO IRATXE: remove
 		try:
 			# TODO get all software statuses
 			# get all sw_stati and then print out status for each
@@ -827,7 +851,7 @@ class AnalyticsHandler(object):
 			}
 			if payload is not None:
 				data.update(payload)
-			self._append_data_to_file(data)
+			self._append_analytics_to_queue(data)
 		except Exception as e:
 			self._logger.error('Error during _write_event: {}'.format(e.message), analytics=analytics)
 
@@ -910,7 +934,7 @@ class AnalyticsHandler(object):
 	def _init_jsonfile(self):
 		open(self._jsonfile, 'w+').close()
 		data = {
-			ak.LASERHEAD_VERSION: self._getLaserHeadVersion(),
+			ak.LASERHEAD_VERSION: self._getLaserHeadVersion(),  # TODO IRATXE: can we remove this?
 		}
 		self._write_deviceinfo(ak.INIT, payload=data)
 		self._write_current_software_status()
@@ -925,16 +949,30 @@ class AnalyticsHandler(object):
 			except Exception as e:
 				self._logger.exception('Error while writing newline: {}'.format(e.message), analytics=False)
 
-	def _append_data_to_file(self, data):
-		if self._analyticsOn:
+	def _append_analytics_to_queue(self, data):
+		self._analytics_queue.put(data)
+		self._logger.info('################## QUEUE: {}'.format(self._analytics_queue.qsize()))
+
+	def _write_queue_to_file(self):
+		# while not self._shutdown_signaled: TODO IRATXE: keep or not
+		while True:
 			try:
 				if not os.path.isfile(self._jsonfile):
 					self._init_jsonfile()
-				dataString = json.dumps(data, sort_keys=False) + '\n'
+
 				with open(self._jsonfile, 'a') as f:
-					f.write(dataString)
+					while not self._analytics_queue.empty():
+						data = self._analytics_queue.get()
+						data_string = json.dumps(data, sort_keys=False) + '\n'
+						f.write(data_string)
+						self._logger.info('################## WRITE -- {}'.format(data['e']))
+
+				time.sleep(0.1)
+
 			except Exception as e:
 				self._logger.exception('Error while writing data: {}'.format(e.message), analytics=False)
+
+		self._logger.info('######################### SHUTDOOOOOOOWN')
 
 	def initial_analytics_procedure(self, consent):
 		if consent == 'agree':
