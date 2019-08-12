@@ -56,7 +56,6 @@ class AnalyticsHandler(object):
 		self._event_bus = plugin._event_bus
 		self._settings = plugin._settings
 		self._laserhead_handler = laserheadHandler(plugin)  # TODO IRATXE: This is still not initialized in the plugin
-		# self._dust_manager = dustManager(plugin)  # TODO IRATXE: This is still not initialized in the plugin
 		self._snr = plugin.getSerialNum()
 
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.analyticshandler")
@@ -103,7 +102,7 @@ class AnalyticsHandler(object):
 		self._shutdown_signaled = False  # TODO IRATXE: keep or not
 
 		self._analytics_queue = Queue(maxsize=self.QUEUE_MAXSIZE)
-		self._analytics_writer = Thread(target=self._write_queue_to_file)
+		self._analytics_writer = Thread(target=self._write_queue_to_analyitcs_file)
 		if self._analytics_enabled:
 			self._activate_analytics()
 
@@ -155,10 +154,10 @@ class AnalyticsHandler(object):
 			self._analytics_enabled = True
 			self._settings.set_boolean(["analyticsEnabled"], True)
 			self._activate_analytics()
-			self._write_deviceinfo(ak.ANALYTICS_ENABLED, payload=dict(enabled=True))
+			self._queue_device_event(ak.ANALYTICS_ENABLED, payload=dict(enabled=True))
 		else:
 			# can not log this since the user just disagreed
-			# self._write_deviceinfo(ak.ANALYTICS_ENABLED, payload=dict(enabled=False))
+			# self._queue_device_event(ak.ANALYTICS_ENABLED, payload=dict(enabled=False))
 			self._analytics_enabled = False
 			self._settings.set_boolean(["analyticsEnabled"], False)
 
@@ -198,13 +197,13 @@ class AnalyticsHandler(object):
 				payload=payload,
 			)
 		else:
-			self._write_log_event(ak.EVENT_LOG, payload=payload, analytics=False)
+			self._queue_log_event(ak.EVENT_LOG, payload=payload, analytics=False)
 
 	def log_terminal_dump(self, dump):  # Will be used with e.g. GRBL errors
 		if self.event_waiting_for_terminal_dump is not None:
 			payload = self.event_waiting_for_terminal_dump['payload']
 			payload['terminal_dump'] = dump
-			self._write_log_event(ak.EVENT_LOG, payload=payload, analytics=False)
+			self._queue_log_event(ak.EVENT_LOG, payload=payload, analytics=False)
 			self.event_waiting_for_terminal_dump = None
 		else:
 			self._logger.warn(
@@ -215,7 +214,7 @@ class AnalyticsHandler(object):
 		try:
 			data = {'temp': temp,
 					'throttle_alerts': throttle_alerts}
-			self._write_log_event(ak.LOG_CPU, payload=data)
+			self._queue_log_event(ak.LOG_CPU, payload=data)
 		except Exception as e:
 			self._logger.exception('Error during log_cpu_warning: {}'.format(e.message), analytics=True)
 
@@ -229,24 +228,39 @@ class AnalyticsHandler(object):
 				'success': success,
 				'err': errors,
 			}
-			self._write_log_event(ak.CAMERA, payload=data)
+			self._queue_log_event(ak.CAMERA, payload=data)
 
 		except Exception as e:
 			self._logger.exception('Error during log_camera_error: {}'.format(e.message), analytics=True)
 
-	def log_frontend_event(self, event, payload=None):  # TODO IRATXE: do we need this function?
-		if payload is None:
-			payload = dict()
+	def log_frontend_event(self, event, payload=None):
 		try:
-			self._write_frontend_event(event, payload=payload)
+			self._queue_frontend_event(event, payload=payload)
 		except Exception as e:
 			self._logger.exception('Error during log_frontend_event: {}'.format(e.message), analytics=True)
 
 	def log_os_health_event(self, data):
 		try:
-			self._write_log_event(ak.OS_HEALTH, payload=data)
+			self._queue_log_event(ak.OS_HEALTH, payload=data)
 		except Exception as e:
 			self._logger.exception('Error during log_frontend_event: {}'.format(e.message), analytics=True)
+
+	def _init_event_timers(self):
+		# disk_space --> 3s
+		t1 = Timer(self.DISK_SPACE_TIMER, self._event_disk_space)
+		t1.start()
+
+		# ips --> 15s
+		t2 = Timer(self.IP_ADDRESSES_TIMER, self._event_ip_addresses)
+		t2.start()
+
+		# http_self_check task --> 20s
+		t3 = Timer(self.SELF_CHECK_TIMER, self._event_http_self_check)
+		t3.start()
+
+		# internet_connection --> 25s
+		t4 = Timer(self.INTERNET_CONNECTION_TIMER, self._event_internet_connection)
+		t4.start()
 
 	def _event_startup(self, event, payload):
 		self._write_new_line()
@@ -255,26 +269,12 @@ class AnalyticsHandler(object):
 			ak.ENV: self._plugin.get_env(),
 			ak.USERS: len(self._plugin._user_manager._users)
 		}
-		self._write_deviceinfo(ak.STARTUP, payload=payload)
+		self._queue_device_event(ak.STARTUP, payload=payload)
+		self._init_event_timers()
 
-		# Schedule event_disk_space task (to write that line 3 seconds after startup)
-		t1 = Timer(self.DISK_SPACE_TIMER, self._event_disk_space)
-		t1.start()
-
-		# Schedule event_ip_addresses task (to write that line 15 seconds after startup)
-		t2 = Timer(self.IP_ADDRESSES_TIMER, self._event_ip_addresses)
-		t2.start()
-
-		# Schedule event_http_self_check task (to write that line 20 seconds after startup)
-		t3 = Timer(self.SELF_CHECK_TIMER, self._event_http_self_check)
-		t3.start()
-
-		# Schedule event_http_self_check task (to write that line 20 seconds after startup)
-		t4 = Timer(self.INTERNET_CONNECTION_TIMER, self._event_internet_connection)
-		t4.start()
 
 	def _event_shutdown(self, event, payload):
-		self._write_deviceinfo(ak.SHUTDOWN)
+		self._queue_device_event(ak.SHUTDOWN)
 
 	def write_flash_grbl(self, from_version, to_version, successful, err=None):
 		payload = dict(
@@ -282,10 +282,10 @@ class AnalyticsHandler(object):
 			to_version=to_version,
 			succesful=successful,
 			err=err)
-		self._write_deviceinfo(ak.FLASH_GRBL, payload=payload)
+		self._queue_device_event(ak.FLASH_GRBL, payload=payload)
 
 	def write_mrbeam_usage(self, usage_data):
-		self._write_deviceinfo(ak.MRBEAM_USAGE, payload=usage_data)
+		self._queue_device_event(ak.MRBEAM_USAGE, payload=usage_data)
 
 	def _event_http_self_check(self):
 		try:
@@ -318,7 +318,7 @@ class AnalyticsHandler(object):
 							"err": err,
 						}
 
-			self._write_deviceinfo(ak.HTTP_SELF_CHECK, payload=payload)
+			self._queue_device_event(ak.HTTP_SELF_CHECK, payload=payload)
 
 		except:
 			self._logger.exception('Exception when performing the http self check')
@@ -343,7 +343,7 @@ class AnalyticsHandler(object):
 				"err": err,
 				"connection": connection,
 			}
-			self._write_deviceinfo(ak.INTERNET_CONNECTION, payload=payload)
+			self._queue_device_event(ak.INTERNET_CONNECTION, payload=payload)
 		except:
 			self._logger.exception('Exception while performing the internet check')
 
@@ -361,7 +361,7 @@ class AnalyticsHandler(object):
 					for idx, addr in enumerate(addresses[netifaces.AF_INET6]):
 						payload[interface]['IPv6_{}'.format(idx)] = addr['addr']
 
-			self._write_deviceinfo(ak.IPS, payload=payload)
+			self._queue_device_event(ak.IPS, payload=payload)
 
 		except:
 			self._logger.exception('Exception when recording the IP addresses')
@@ -378,7 +378,7 @@ class AnalyticsHandler(object):
 				ak.AVAILABLE_SPACE: available_space,
 				ak.USED_SPACE: used_percent,
 			}
-			self._write_deviceinfo(ak.DISK_SPACE, payload=disk_space)
+			self._queue_device_event(ak.DISK_SPACE, payload=disk_space)
 
 		except:
 			self._logger.exception('Exception when saving info about the disk space')
@@ -396,7 +396,7 @@ class AnalyticsHandler(object):
 				ak.CORRECTION_ENABLED: settings['correction_enabled'],
 				ak.CORRECTION_OVERRIDE: settings['correction_factor_override'],
 			}
-			self._write_deviceinfo(ak.LASERHEAD_INFO, payload=laserhead_info)
+			self._queue_device_event(ak.LASERHEAD_INFO, payload=laserhead_info)
 
 		except:
 			self._logger.exception('Exception when saving info about the laserhead')
@@ -410,7 +410,7 @@ class AnalyticsHandler(object):
 		self._is_cooling_paused = False
 		self._is_job_done = False
 		self._write_conversion_details()
-		self._write_jobevent(ak.PRINT_STARTED)
+		self._queue_job_event(ak.PRINT_STARTED)
 
 	def _init_collectors(self):
 		self._current_dust_collector = ValueCollector('DustColl')
@@ -425,32 +425,37 @@ class AnalyticsHandler(object):
 		.is_interlock_closed()
 		"""
 		if not self._is_job_paused:  # prevent multiple printPaused events per Job
-			self._write_jobevent(ak.PRINT_PAUSED, payload={ak.JOB_DURATION: int(round(payload['time']))})
+			self._queue_job_event(ak.PRINT_PAUSED, payload={ak.JOB_DURATION: int(round(payload['time']))})
 			self._is_job_paused = True
 
 	def _event_print_resumed(self, event, payload):
 		if self._is_job_paused:  # prevent multiple printResume events per Job
-			self._write_jobevent(ak.PRINT_RESUMED, payload={ak.JOB_DURATION: int(round(payload['time']))})
+			self._queue_job_event(ak.PRINT_RESUMED, payload={ak.JOB_DURATION: int(round(payload['time']))})
 			self._is_job_paused = False
 
 	def _event_print_done(self, event, payload):
 		if not self._is_job_done:
 			self._is_job_done = True  # prevent two jobDone events per Job
-			self._write_jobevent(ak.PRINT_DONE, payload={ak.JOB_DURATION: int(round(payload['time'])),
-														 ak.JOB_TIME_ESTIMATION: int(
+			self._queue_job_event(ak.PRINT_DONE, payload={ak.JOB_DURATION: int(round(payload['time'])),
+														  ak.JOB_TIME_ESTIMATION: int(
 															 round(self._current_job_time_estimation))})
 			self._write_collectors()
 			self._write_cpu_data(dur=payload['time'])
 
 	def _write_collectors(self):
-		self._write_jobevent(ak.DUST_SUM, payload=self._current_dust_collector.getSummary())
-		self._write_jobevent(ak.INTENSITY_SUM, payload=self._current_intensity_collector.getSummary())
-		self._write_jobevent(ak.LASERTEMP_SUM, payload=self._current_lasertemp_collector.getSummary())
+		lh_info = {
+			ak.LASERHEAD_VERSION: None,  # TODO should read from _laserhead_handler()
+			ak.LASERHEAD_SERIAL: self._laserhead_handler.get_current_used_lh_data()['serial'],
+		}
+
+		self._queue_job_event(ak.DUST_SUM, payload=self._current_dust_collector.getSummary())
+		self._queue_job_event(ak.INTENSITY_SUM, payload=self._current_intensity_collector.getSummary().update(lh_info))
+		self._queue_job_event(ak.LASERTEMP_SUM, payload=self._current_lasertemp_collector.getSummary().update(lh_info))
 
 	def _write_cpu_data(self, dur=None):
 		payload = self._current_cpu_data.get_cpu_data()
 		payload['dur'] = dur
-		self._write_jobevent(ak.CPU_DATA, payload=payload)
+		self._queue_job_event(ak.CPU_DATA, payload=payload)
 
 	def _cleanup(self):
 		self._current_job_id = None
@@ -461,20 +466,20 @@ class AnalyticsHandler(object):
 
 	def _event_laser_job_done(self, event, payload):
 		if self._current_job_id is not None:
-			self._write_jobevent(ak.LASERJOB_DONE)
+			self._queue_job_event(ak.LASERJOB_DONE)
 			self._cleanup()
 		FileUploader.upload_now(self._plugin, delay=5.0)
 
 	def _event_print_failed(self, event, payload):
 		if self._current_job_id is not None:
-			self._write_jobevent(ak.PRINT_FAILED, payload={ak.JOB_DURATION: int(round(payload['time']))})
+			self._queue_job_event(ak.PRINT_FAILED, payload={ak.JOB_DURATION: int(round(payload['time']))})
 			self._write_collectors()
 			self._write_cpu_data(dur=payload['time'])
 			self._cleanup()
 
 	def _event_print_cancelled(self, event, payload):
 		if self._current_job_id is not None:
-			self._write_jobevent(ak.PRINT_CANCELLED, payload={ak.JOB_DURATION: int(round(payload['time']))})
+			self._queue_job_event(ak.PRINT_CANCELLED, payload={ak.JOB_DURATION: int(round(payload['time']))})
 			self._write_collectors()
 			self._write_cpu_data(dur=payload['time'])
 			self._cleanup()
@@ -489,7 +494,7 @@ class AnalyticsHandler(object):
 			ak.FAN_RPM: self._plugin._dustManager.get_fan_rpm(),
 			ak.FAN_STATE: self._plugin._dustManager.get_fan_state(),
 		}
-		self._write_jobevent(ak.PRINT_PROGRESS, data)
+		self._queue_job_event(ak.PRINT_PROGRESS, data)
 
 		if self._current_cpu_data:
 			self._current_cpu_data.update_progress(payload['progress'])
@@ -510,7 +515,7 @@ class AnalyticsHandler(object):
 			}
 			if self._current_lasertemp_collector:
 				data[ak.LASERTEMP] = self._current_lasertemp_collector.get_latest_value()
-			self._write_jobevent(ak.COOLING_START, payload=data)
+			self._queue_job_event(ak.COOLING_START, payload=data)
 			self._is_cooling_paused = True
 
 	def _event_laser_cooling_resume(self, event, payload):
@@ -520,7 +525,7 @@ class AnalyticsHandler(object):
 			}
 			if self._current_lasertemp_collector:
 				data[ak.LASERTEMP] = self._current_lasertemp_collector.get_latest_value()
-			self._write_jobevent(ak.COOLING_DONE, payload=data)
+			self._queue_job_event(ak.COOLING_DONE, payload=data)
 			self._is_cooling_paused = False
 
 	def _event_job_time_estimated(self, event, payload):
@@ -535,7 +540,7 @@ class AnalyticsHandler(object):
 					data = event_payload.get('data', dict())
 					data['component'] = component
 					data['component_version'] = event_payload.get('component_version')
-					self._write_log_event(ak.EVENT_LOG, payload=data)
+					self._queue_log_event(ak.EVENT_LOG, payload=data)
 				else:
 					self._logger.warn("Unknown type: '%s' from component %s. payload: %s", type, component,
 									  event_payload)
@@ -544,7 +549,7 @@ class AnalyticsHandler(object):
 				if plugin:
 					eventname = event_payload.get('event_name')
 					data = event_payload.get('data', None)
-					self._write_event(plugin, eventname, self._analytics_log_version, payload=dict(data=data))
+					self._queue_event(plugin, eventname, payload=dict(data=data))
 				else:
 					self._logger.warn("Invalid plugin: '%s'. payload: %s", plugin, event_payload)
 			else:
@@ -557,7 +562,7 @@ class AnalyticsHandler(object):
 			version=iobeam_version,
 			message=message
 		)
-		self._write_log_event(ak.IOBEAM, payload=data)
+		self._queue_log_event(ak.IOBEAM, payload=data)
 
 	def log_ui_render_calls(self, host, remote_ip, referrer, language):
 		try:
@@ -567,8 +572,7 @@ class AnalyticsHandler(object):
 				referrer=referrer,
 				language=language
 			)
-			self._write_event(ak.TYPE_CONNECTIVITY_EVENT, ak.EVENT_UI_RENDER_CALL, self._analytics_log_version,
-							  payload=dict(data=data))
+			self._queue_event(ak.TYPE_CONNECTIVITY_EVENT, ak.EVENT_UI_RENDER_CALL, payload=dict(data=data))
 		except Exception as e:
 			self._logger.exception('Exception during log_ui_render_calls: {}'.format(e.message))
 
@@ -577,15 +581,13 @@ class AnalyticsHandler(object):
 			data = dict(
 				remote_ip=remote_ip
 			)
-			self._write_event(ak.TYPE_CONNECTIVITY_EVENT, ak.EVENT_CLIENT_OPENED, self._analytics_log_version,
-							  payload=dict(data=data))
+			self._queue_event(ak.TYPE_CONNECTIVITY_EVENT, ak.EVENT_CLIENT_OPENED, payload=dict(data=data))
 		except Exception as e:
 			self._logger.exception('Exception during log_client_opened: {}'.format(e.message))
 
 	def log_connections_state(self, connections):
 		try:
-			self._write_event(ak.TYPE_CONNECTIVITY_EVENT, ak.CONNECTIONS_STATE, self._analytics_log_version,
-							  payload=dict(data=connections))
+			self._queue_event(ak.TYPE_CONNECTIVITY_EVENT, ak.CONNECTIONS_STATE, payload=dict(data=connections))
 		except Exception as e:
 			self._logger.exception('Exception during log_connections_state: {}'.format(e.message))
 
@@ -596,8 +598,7 @@ class AnalyticsHandler(object):
 				ak.NEW_CHANNEL: new_channel,
 			}
 
-			self._write_event(ak.TYPE_DEVICE_EVENT, ak.SW_CHANNEL_SWITCH, self._analytics_log_version,
-							  payload=dict(data=data))
+			self._queue_event(ak.TYPE_DEVICE_EVENT, ak.SW_CHANNEL_SWITCH, payload=dict(data=data))
 
 		except Exception as e:
 			self._logger.exception('Error when writing the software channel switch event: {}'.format(e.message))
@@ -676,77 +677,57 @@ class AnalyticsHandler(object):
 			for conversion_details in self._stored_conversions:
 				event = conversion_details[ak.EVENT]
 				conversion_details.pop(ak.EVENT)
-				self._write_jobevent(event, conversion_details)
+				self._queue_job_event(event, conversion_details)
 			self._stored_conversions = list()
 
 		except Exception as e:
 			self._logger.exception('Error during write_conversion_details: {}'.format(e.message))
 
-	def _write_deviceinfo(self, event, payload=None):
+	def _queue_device_event(self, event, payload):
+		self._queue_event(ak.TYPE_DEVICE_EVENT, event, payload=payload)
+
+	def _queue_log_event(self, event, payload, analytics=False):
+		self._queue_event(ak.TYPE_LOG_EVENT, event, payload=payload, analytics=analytics)
+
+	def _queue_frontend_event(self, event, payload):
+		self._queue_event(ak.TYPE_FRONTEND, event, payload=payload, analytics=True)
+
+	def _queue_job_event(self, event, payload):
+		job_info = {ak.JOB_ID: self._current_job_id}
+		payload.update(job_info)
+		self._queue_event(ak.TYPE_JOB_EVENT, event, payload=payload)
+
+	def _queue_connectivity_event(self, event, payload):
+		self._queue_event(ak.TYPE_CONNECTIVITY_EVENT, event, payload=payload)
+
+	def _queue_event(self, event_type, event_name, payload=None, analytics=False):
 		try:
 			data = dict()
-			# TODO add data validation/preparation here
-			if payload is not None:
-				data[ak.DATA] = payload
-			self._write_event(ak.TYPE_DEVICE_EVENT, event, self._analytics_log_version, payload=data)
-		except Exception as e:
-			self._logger.exception('Error during write_device_info: {}'.format(e.message))
+			if isinstance(payload, dict):
+				data = payload
 
-	def _write_log_event(self, event, payload=None, analytics=False):
-		try:
-			data = dict()
-			# TODO add data validation/preparation here
-			if payload is not None:
-				data[ak.DATA] = payload
-			self._write_event(ak.TYPE_LOG_EVENT, event, self._analytics_log_version, payload=data, analytics=analytics)
-		except Exception as e:
-			self._logger.exception('Error during _write_log_event: {}'.format(e.message), analytics=analytics)
-
-	def _write_frontend_event(self, event, payload=None):
-		try:
-			data = dict()
-			if payload is not None:
-				data[ak.DATA] = payload
-			self._write_event(ak.TYPE_FRONTEND, event, self._analytics_log_version, payload=data, analytics=True)
-
-		except Exception as e:
-			self._logger.exception('Error during _write_log_event: {}'.format(e.message), analytics=True)
-
-	def _write_jobevent(self, event, payload=None):
-		try:
-			# TODO add data validation/preparation here
-			data = dict(job_id=self._current_job_id)
-
-			if payload is not None:
-				data[ak.DATA] = payload
-
-			if event in (ak.LASERTEMP_SUM, ak.INTENSITY_SUM):
-				data[ak.DATA][ak.LASERHEAD_VERSION] = None  # TODO should read from _laserhead_handler()
-				data[ak.DATA][ak.LASERHEAD_SERIAL] = self._laserhead_handler.get_current_used_lh_data()['serial']
-
-			_jobevent_type = ak.TYPE_JOB_EVENT
-			self._write_event(_jobevent_type, event, self._analytics_log_version, payload=data)
-		except Exception as e:
-			self._logger.exception('Error during write_jobevent: {}'.format(e.message))
-
-	def _write_event(self, typename, eventname, version, payload=None, analytics=False):
-		try:
-			data = {
+			event = {
 				ak.SERIALNUMBER: self._snr,
-				ak.TYPE: typename,
-				ak.VERSION: version,
-				ak.EVENT: eventname,
+				ak.TYPE: event_type,
+				ak.VERSION: self._analytics_log_version,
+				ak.EVENT: event_name,
 				ak.TIMESTAMP: time.time(),
 				ak.NTP_SYNCED: self._plugin.is_time_ntp_synced(),
 				ak.SESSION_ID: self._session_id,
 				ak.VERSION_MRBEAM_PLUGIN: self._plugin._plugin_version,
 				ak.SOFTWARE_TIER: self._settings.get(["dev", "software_tier"]),
+				ak.DATA: data,
 			}
-			if payload is not None:
-				data.update(payload)
-			self._append_analytics_to_queue(data)
+
+			try:
+				self._analytics_queue.put(event)
+				self._logger.info('################## QUEUE: {}'.format(self._analytics_queue.qsize()))
+			except Queue.Full:
+				self._logger.info('Analytics queue max size reached ({}). Reinitializing...'.format(self.QUEUE_MAXSIZE))
+				self._analytics_queue = Queue(maxsize=self.QUEUE_MAXSIZE)
+
 		except Exception as e:
-			self._logger.error('Error during _write_event: {}'.format(e.message), analytics=analytics)
+			self._logger.error('Error during _queue_event: {}'.format(e.message), analytics=analytics)
 
 	def write_final_dust(self, dust_start, dust_start_ts, dust_end, dust_end_ts):
 		"""
@@ -812,19 +793,19 @@ class AnalyticsHandler(object):
 
 	def _write_dust_log(self, data):
 		try:
-			self._write_jobevent(ak.FINAL_DUST, payload=data)
+			self._queue_job_event(ak.FINAL_DUST, payload=data)
 		except Exception as e:
 			self._logger.exception('Error during write dust_log: {}'.format(e.message))
 
 	def write_fan_rpm_test(self, data):
 		try:
-			self._write_jobevent(ak.FAN_RPM_TEST, payload=data)
+			self._queue_job_event(ak.FAN_RPM_TEST, payload=data)
 		except Exception as e:
 			self._logger.exception('Error during write_fan_50_test: {}'.format(e.message))
 
 	def _init_jsonfile(self):
 		open(self._jsonfile, 'w+').close()
-		self._write_deviceinfo(ak.INIT, payload={})
+		self._queue_device_event(ak.INIT, payload={})
 
 	def _write_new_line(self):
 		try:
@@ -835,11 +816,7 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.exception('Error while writing newline: {}'.format(e.message), analytics=False)
 
-	def _append_analytics_to_queue(self, data):
-		self._analytics_queue.put(data)
-		self._logger.info('################## QUEUE: {}'.format(self._analytics_queue.qsize()))
-
-	def _write_queue_to_file(self):
+	def _write_queue_to_analyitcs_file(self):
 		# while not self._shutdown_signaled: TODO IRATXE: keep or not
 		while self._analytics_enabled:
 			try:
