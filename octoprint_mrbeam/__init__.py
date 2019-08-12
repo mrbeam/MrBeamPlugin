@@ -1296,8 +1296,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		pic_settings['calibMarkers'] = newMarkers
 		pic_settings['calibration_updated'] = True
 
-		self._analytics_handler.write_cam_update(newMarkers,newCorners)
-
 		self._logger.debug('picSettings new to save: {}'.format(pic_settings))
 		self._save_profile(pic_settings_path,pic_settings)
 

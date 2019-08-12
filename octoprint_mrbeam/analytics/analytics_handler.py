@@ -49,26 +49,30 @@ class AnalyticsHandler(object):
 	INTERNET_CONNECTION_TIMER = 25.0
 	MAINTENANCE_TIMER = 5.0
 	SELF_CHECK_USER_AGENT = 'MrBeamPlugin self check'
+	QUEUE_MAXSIZE = 100
 
 	def __init__(self, plugin):
 		self._plugin = plugin
 		self._event_bus = plugin._event_bus
 		self._settings = plugin._settings
-		self._laserheadHandler = laserheadHandler(plugin)
+		self._laserhead_handler = laserheadHandler(plugin)  # TODO IRATXE: This is still not initialized in the plugin
+		# self._dust_manager = dustManager(plugin)  # TODO IRATXE: This is still not initialized in the plugin
+		self._snr = plugin.getSerialNum()
 
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.analyticshandler")
 
-		self._shutdown_signaled = False
+		self._analytics_enabled = self._settings.get(['analyticsEnabled'])
+		if self._analytics_enabled is None:
+			self._no_choice_made = True
+		else:
+			self._no_choice_made = False
 
-		self._analyticsOn = self._settings.get(['analyticsEnabled'])
-		self._camAnalyticsOn = self._settings.get(['analytics', 'cam_analytics'])
-
-		self._session_id = "{uuid}@{serial}".format(serial=self._plugin.getSerialNum(), uuid=uuid.uuid4().hex)
+		self._session_id = "{uuid}@{serial}".format(serial=self._snr, uuid=uuid.uuid4().hex)
 
 		self._current_job_id = None
-		self._isJobPaused = False
-		self._isCoolingPaused = False
-		self._isJobDone = False
+		self._is_job_paused = False
+		self._is_cooling_paused = False
+		self._is_job_done = False
 
 		self._current_dust_collector = None
 		self._current_cam_session_id = None
@@ -77,29 +81,30 @@ class AnalyticsHandler(object):
 		self._current_cpu_data = None
 		self._current_job_time_estimation = None
 
-		self._storedConversions = list()
+		self._stored_conversions = list()  # TODO IRATXE: This is quite ugly...
 
-		self._analytics_log_version = 8		# bumped in 0.3.2.1
+		self._analytics_log_version = 8  # bumped in 0.3.2.1 TODO IRATXE: move iwo
 
 		self.event_waiting_for_terminal_dump = None
 
-		self._logger.info("Analytics analyticsEnabled: %s, sid: %s", self._analyticsOn, self._session_id)
+		self._logger.info("Analytics analyticsEnabled: %s, sid: %s", self._analytics_enabled, self._session_id)
 
-		self.analyticsfolder = os.path.join(self._settings.getBaseFolder("base"),
-		                                    self._settings.get(['analytics', 'folder']))
-		if not os.path.isdir(self.analyticsfolder):
-			os.makedirs(self.analyticsfolder)
+		self.analytics_folder = os.path.join(self._settings.getBaseFolder("base"),
+											 self._settings.get(['analytics', 'folder']))
+		if not os.path.isdir(self.analytics_folder):
+			os.makedirs(self.analytics_folder)
 
-		if self._analyticsOn is not None:  # TODO IRATXE: does it upload if this is false?
+		# It uploads any previous analytics, unless the user didn't make a choice yet
+		if not self._no_choice_made:
 			FileUploader.upload_now(self._plugin)
 
-		self._jsonfile = os.path.join(self.analyticsfolder, self._settings.get(['analytics', 'filename']))
+		self._jsonfile = os.path.join(self.analytics_folder, self._settings.get(['analytics', 'filename']))
 
-		self._shutdown_signaled = False
-		self._analytics_queue = Queue()
+		self._shutdown_signaled = False  # TODO IRATXE: keep or not
+
+		self._analytics_queue = Queue(maxsize=self.QUEUE_MAXSIZE)
 		self._analytics_writer = Thread(target=self._write_queue_to_file)
-
-		if self._analyticsOn:
+		if self._analytics_enabled:
 			self._activate_analytics()
 
 	def shutdown(self, *args):  # TODO IRATXE: keep or not?
@@ -112,22 +117,18 @@ class AnalyticsHandler(object):
 		if not os.path.isfile(self._jsonfile):
 			self._init_jsonfile()
 
-		# Restart queue and writer thread
-		self._analytics_queue = Queue()
+		# Restart queue if the analytics were disabled before
+		if not self._no_choice_made:
+			self._analytics_queue = Queue(self.QUEUE_MAXSIZE)
+		else:
+			self._no_choice_made = False
+
+		# Start writer thread
 		self._analytics_writer.daemon = True  # TODO IRATXE: keep or not?
 		self._analytics_writer.start()
 
-		if self._analyticsOn:
-			# check if <two days> have passed and software should be written away
-			# TODO IRATXE: delete
-			TWO_DAYS = 2
-			_days_passed_since_last_log = self._days_passed(self._jsonfile)
-			self._logger.debug('Days since last edit: {}'.format(_days_passed_since_last_log))
-			if _days_passed_since_last_log > TWO_DAYS:
-				self._write_current_software_status()
-
-			# TODO IRATXE: have this somewhere else
-			self._subscribe()
+		# Subscribe to OctoPrint and Mr Beam events
+		self._subscribe()
 
 	def _subscribe(self):
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_STARTED, self._event_print_started)
@@ -147,72 +148,35 @@ class AnalyticsHandler(object):
 		self._event_bus.subscribe(MrBeamEvents.ANALYTICS_DATA, self._other_plugin_data)
 		self._event_bus.subscribe(MrBeamEvents.JOB_TIME_ESTIMATED, self._event_job_time_estimated)
 
-	# TODO IRATXE: remove
-	@staticmethod
-	def _getLaserHeadVersion():
-		# TODO get Real laser_head_id
-		laser_head_version = None
-		return laser_head_version
-
-	# TODO IRATXE: remove --> in the init have a self.snr
-	@staticmethod
-	def _getSerialNumber():
-		return _mrbeam_plugin_implementation.getSerialNum()
-
-	# def _getShortSerial(self):
-	# 	serial_long = self._getSerialNumber()
-	# 	return serial_long.split('-')[0][-8::]
-
-	# TODO IRATXE: remove
-	@staticmethod
-	def _getHostName():
-		return _mrbeam_plugin_implementation.getHostname()
-
-	# TODO IRATXE: remove
-	@staticmethod
-	def _days_passed(path_to_file):
-		"""
-		Returns time that has passed since last log into analytics file in days
-		:return: int: days since last log
-		"""
-		# check days since path_to_file has been changed the last time
-		lm_ts = os.path.getmtime(path_to_file)
-		lm_date = datetime.utcfromtimestamp(lm_ts)
-
-		now_date = datetime.utcnow()
-		days_passed = (now_date - lm_date).days
-
-		return days_passed
-
 	def analytics_user_permission_change(self, analytics_enabled):
 		self._logger.info("analytics user permission change: analyticsEnabled=%s", analytics_enabled)
 
 		if analytics_enabled:
-			self._analyticsOn = True
+			self._analytics_enabled = True
 			self._settings.set_boolean(["analyticsEnabled"], True)
 			self._activate_analytics()
 			self._write_deviceinfo(ak.ANALYTICS_ENABLED, payload=dict(enabled=True))
 		else:
 			# can not log this since the user just disagreed
 			# self._write_deviceinfo(ak.ANALYTICS_ENABLED, payload=dict(enabled=False))
-			self._analyticsOn = False
+			self._analytics_enabled = False
 			self._settings.set_boolean(["analyticsEnabled"], False)
 
 	def log_event(self, level, msg,
-	              module=None,
-	              component=None,
-	              component_version=None,
-	              caller=None,
-	              exception_str=None,
-	              stacktrace=None,
-	              wait_for_terminal_dump=False):
+				  module=None,
+				  component=None,
+				  component_version=None,
+				  caller=None,
+				  exception_str=None,
+				  stacktrace=None,
+				  wait_for_terminal_dump=False):
 		filename = caller.filename.replace(__package_path__ + '/', '')
 		payload = dict(
 			level=logging._levelNames[level] if level in logging._levelNames else level,
 			msg=msg,
 			module=module,
-			component=component or _mrbeam_plugin_implementation._identifier,
-			component_version=component_version or _mrbeam_plugin_implementation._plugin_version
+			component=component or self._plugin._identifier,
+			component_version=component_version or self._plugin._plugin_version
 		)
 		if exception_str:
 			payload['level'] = ak.EXCEPTION
@@ -244,7 +208,8 @@ class AnalyticsHandler(object):
 			self.event_waiting_for_terminal_dump = None
 		else:
 			self._logger.warn(
-				"log_terminal_dump() called but no foregoing event tracked. self.event_waiting_for_terminal_dump is None. ignoring this dump.")
+				"log_terminal_dump() called but no foregoing event tracked. self.event_waiting_for_terminal_dump is "
+				"None. ignoring this dump.")
 
 	def log_cpu_warning(self, temp, throttle_alerts):
 		try:
@@ -269,7 +234,9 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.exception('Error during log_camera_error: {}'.format(e.message), analytics=True)
 
-	def log_frontend_event(self, event, payload=dict()):  # TODO IRATXE: do we need this function?
+	def log_frontend_event(self, event, payload=None):  # TODO IRATXE: do we need this function?
+		if payload is None:
+			payload = dict()
 		try:
 			self._write_frontend_event(event, payload=payload)
 		except Exception as e:
@@ -281,38 +248,12 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.exception('Error during log_frontend_event: {}'.format(e.message), analytics=True)
 
-	def log_camera_session(self, errors):
-		try:
-			self._logger.info(errors)
-			success = True
-			if errors:
-				success = False
-			data = {
-				'success': success,
-				'err': errors,
-			}
-			self._write_log_event(ak.CAMERA, payload=data)
-
-		except Exception as e:
-			self._logger.exception('Error during log_camera_error: {}'.format(e.message), analytics=True)
-
-	def _write_current_software_status(self):  # TODO IRATXE: remove
-		try:
-			# TODO get all software statuses
-			# get all sw_stati and then print out status for each
-			# for each sw_status in sw_stati:
-			# 	sw_status = dict(name='<name>',version='<x.x.x>')
-			# 	self._write_deviceinfo('sw_status',payload=sw_status)
-			pass
-		except Exception as e:
-			self._logger.error('Error during write_current_software_status: {}'.format(e.message))
-
 	def _event_startup(self, event, payload):
 		self._write_new_line()
 		payload = {
-			ak.LASERHEAD_SERIAL: self._laserheadHandler.get_current_used_lh_data()['serial'],
+			ak.LASERHEAD_SERIAL: self._laserhead_handler.get_current_used_lh_data()['serial'],
 			ak.ENV: self._plugin.get_env(),
-			ak.USERS: len(self._plugin._user_manager._users)  # users = self.plugin._user_manager._users
+			ak.USERS: len(self._plugin._user_manager._users)
 		}
 		self._write_deviceinfo(ak.STARTUP, payload=payload)
 
@@ -335,11 +276,11 @@ class AnalyticsHandler(object):
 	def _event_shutdown(self, event, payload):
 		self._write_deviceinfo(ak.SHUTDOWN)
 
-	def write_flash_grbl(self, from_version, to_version, succesful, err=None):
+	def write_flash_grbl(self, from_version, to_version, successful, err=None):
 		payload = dict(
 			from_version=from_version,
 			to_version=to_version,
-			succesful=succesful,
+			succesful=successful,
 			err=err)
 		self._write_deviceinfo(ak.FLASH_GRBL, payload=payload)
 
@@ -444,8 +385,8 @@ class AnalyticsHandler(object):
 
 	def event_laserhead_info(self):
 		try:
-			lh = self._laserheadHandler.get_current_used_lh_data()
-			settings = self._laserheadHandler.get_correction_settings()
+			lh = self._laserhead_handler.get_current_used_lh_data()
+			settings = self._laserhead_handler.get_correction_settings()
 			laserhead_info = {
 				ak.LASERHEAD_SERIAL: lh['serial'],
 				ak.POWER_65: lh['info']['p_65'],
@@ -462,12 +403,12 @@ class AnalyticsHandler(object):
 
 	def _event_print_started(self, event, payload):
 		if not self._current_job_id:
-			self._current_job_id = 'j_{}_{}'.format(self._getSerialNumber(), time.time())
+			self._current_job_id = 'j_{}_{}'.format(self._snr, time.time())
 		self._current_cpu_data = Cpu(state='laser', repeat=True)
 		self._init_collectors()
-		self._isJobPaused = False
-		self._isCoolingPaused = False
-		self._isJobDone = False
+		self._is_job_paused = False
+		self._is_cooling_paused = False
+		self._is_job_done = False
 		self._write_conversion_details()
 		self._write_jobevent(ak.PRINT_STARTED)
 
@@ -479,23 +420,25 @@ class AnalyticsHandler(object):
 	def _event_print_paused(self, event, payload):
 		# TODO add how it has been paused (lid_opened during job, frontend, onebutton)
 		"""
-		Cooling: payload holds some information if it was a cooling_pause or not.
-		Lid/Button: Currently there is no way to know other than checking the current state: _mrbeam_plugin_implementation._ioBeam .is_interlock_closed()
+		Cooling: payload holds some information if it was a cooling_pause or not. Lid/Button: Currently there is no
+		way to know other than checking the current state: _mrbeam_plugin_implementation._ioBeam
+		.is_interlock_closed()
 		"""
-		if not self._isJobPaused:  # prevent multiple printPaused events per Job
+		if not self._is_job_paused:  # prevent multiple printPaused events per Job
 			self._write_jobevent(ak.PRINT_PAUSED, payload={ak.JOB_DURATION: int(round(payload['time']))})
-			self._isJobPaused = True
+			self._is_job_paused = True
 
 	def _event_print_resumed(self, event, payload):
-		if self._isJobPaused:  # prevent multiple printResume events per Job
+		if self._is_job_paused:  # prevent multiple printResume events per Job
 			self._write_jobevent(ak.PRINT_RESUMED, payload={ak.JOB_DURATION: int(round(payload['time']))})
-			self._isJobPaused = False
+			self._is_job_paused = False
 
 	def _event_print_done(self, event, payload):
-		if not self._isJobDone:
-			self._isJobDone = True  # prevent two jobDone events per Job
+		if not self._is_job_done:
+			self._is_job_done = True  # prevent two jobDone events per Job
 			self._write_jobevent(ak.PRINT_DONE, payload={ak.JOB_DURATION: int(round(payload['time'])),
-														ak.JOB_TIME_ESTIMATION: int(round(self._current_job_time_estimation))})
+														 ak.JOB_TIME_ESTIMATION: int(
+															 round(self._current_job_time_estimation))})
 			self._write_collectors()
 			self._write_cpu_data(dur=payload['time'])
 
@@ -552,7 +495,7 @@ class AnalyticsHandler(object):
 			self._current_cpu_data.update_progress(payload['progress'])
 
 	def _event_slicing_started(self, event, payload):
-		self._current_job_id = 'j_{}_{}'.format(self._getSerialNumber(), time.time())
+		self._current_job_id = 'j_{}_{}'.format(self._snr, time.time())
 		self._current_cpu_data = Cpu(state='slicing', repeat=False)
 
 	def _event_slicing_done(self, event, payload):
@@ -561,24 +504,24 @@ class AnalyticsHandler(object):
 			self._write_cpu_data(dur=payload['time'])
 
 	def _event_laser_cooling_pause(self, event, payload):
-		if not self._isCoolingPaused:
+		if not self._is_cooling_paused:
 			data = {
 				ak.LASERTEMP: None
 			}
 			if self._current_lasertemp_collector:
 				data[ak.LASERTEMP] = self._current_lasertemp_collector.get_latest_value()
 			self._write_jobevent(ak.COOLING_START, payload=data)
-			self._isCoolingPaused = True
+			self._is_cooling_paused = True
 
 	def _event_laser_cooling_resume(self, event, payload):
-		if self._isCoolingPaused:
+		if self._is_cooling_paused:
 			data = {
 				ak.LASERTEMP: None
 			}
 			if self._current_lasertemp_collector:
 				data[ak.LASERTEMP] = self._current_lasertemp_collector.get_latest_value()
 			self._write_jobevent(ak.COOLING_DONE, payload=data)
-			self._isCoolingPaused = False
+			self._is_cooling_paused = False
 
 	def _event_job_time_estimated(self, event, payload):
 		self._current_job_time_estimation = payload['jobTimeEstimation']
@@ -595,11 +538,11 @@ class AnalyticsHandler(object):
 					self._write_log_event(ak.EVENT_LOG, payload=data)
 				else:
 					self._logger.warn("Unknown type: '%s' from component %s. payload: %s", type, component,
-					                  event_payload)
-			elif 'plugin' in event_payload and 'eventname' in event_payload:
+									  event_payload)
+			elif 'plugin' in event_payload and 'event_name' in event_payload:
 				plugin = event_payload.get('plugin')
 				if plugin:
-					eventname = event_payload.get('eventname')
+					eventname = event_payload.get('event_name')
 					data = event_payload.get('data', None)
 					self._write_event(plugin, eventname, self._analytics_log_version, payload=dict(data=data))
 				else:
@@ -625,7 +568,7 @@ class AnalyticsHandler(object):
 				language=language
 			)
 			self._write_event(ak.TYPE_CONNECTIVITY_EVENT, ak.EVENT_UI_RENDER_CALL, self._analytics_log_version,
-			                  payload=dict(data=data))
+							  payload=dict(data=data))
 		except Exception as e:
 			self._logger.exception('Exception during log_ui_render_calls: {}'.format(e.message))
 
@@ -635,27 +578,16 @@ class AnalyticsHandler(object):
 				remote_ip=remote_ip
 			)
 			self._write_event(ak.TYPE_CONNECTIVITY_EVENT, ak.EVENT_CLIENT_OPENED, self._analytics_log_version,
-			                  payload=dict(data=data))
+							  payload=dict(data=data))
 		except Exception as e:
 			self._logger.exception('Exception during log_client_opened: {}'.format(e.message))
 
 	def log_connections_state(self, connections):
 		try:
 			self._write_event(ak.TYPE_CONNECTIVITY_EVENT, ak.CONNECTIONS_STATE, self._analytics_log_version,
-			                  payload=dict(data=connections))
+							  payload=dict(data=connections))
 		except Exception as e:
 			self._logger.exception('Exception during log_connections_state: {}'.format(e.message))
-
-	def write_cam_update(self, newMarkers, newCorners):
-		try:
-			if self._camAnalyticsOn:
-				data = {
-					ak.MARKERS: newMarkers,
-					ak.CORNERS: newCorners
-				}
-				self.write_cam_event(ak.CAM_CALIBRATION, payload=data)
-		except Exception as e:
-			self._logger.exception('Error during write_cam_update: {}'.format(e.message))
 
 	def software_channel_switch_event(self, old_channel, new_channel):
 		try:
@@ -672,61 +604,63 @@ class AnalyticsHandler(object):
 
 	def store_conversion_details(self, details):
 		try:
-			self._storedConversions = list()
+			self._stored_conversions = list()
 
-			if self._analyticsOn:
-				# "laser_job" line as the beginning of a job
-				eventname = ak.LASER_JOB
+			# "laser_job" line as the beginning of a job
+			event_name = ak.LASER_JOB
+			data = {
+				'advanced_settings': details['advanced_settings']
+			}
+			data.update(details['material'])
+			self._store_conversion_details(event_name, payload=data)
+
+			# "conv_eng" line with the engraving parameters
+			if 'engrave' in details and details['engrave'] and 'raster' in details:
+				event_name = ak.CONV_ENGRAVE
+				eng_settings = details['raster']
+
 				data = {
-					'advanced_settings': details['advanced_settings']
+					'svgDPI': details['svgDPI'],
+					'mpr_black': self._calculate_mpr_value(eng_settings.get('intensity_black'),
+														   eng_settings.get('speed_black')),
+					'mpr_white': self._calculate_mpr_value(eng_settings.get('intensity_white'),
+														   eng_settings.get('speed_white')),
 				}
-				data.update(details['material'])
-				self._store_conversion_details(eventname, payload=data)
+				data.update(eng_settings)
+				self._store_conversion_details(event_name, payload=data)
 
-				# "conv_eng" line with the engraving parameters
-				if 'engrave' in details and details['engrave'] and 'raster' in details:
-					eventname = ak.CONV_ENGRAVE
-					eng_settings = details['raster']
+			# One or many "conv_cut" lines with the cutting parameters
+			if 'vector' in details and details['vector']:
+				event_name = ak.CONV_CUT
 
+				for color_settings in details['vector']:
 					data = {
 						'svgDPI': details['svgDPI'],
-						'mpr_black': self._calculate_mpr_value(eng_settings.get('intensity_black'), eng_settings.get('speed_black')),
-						'mpr_white': self._calculate_mpr_value(eng_settings.get('intensity_white'), eng_settings.get('speed_white')),
+						'mpr': self._calculate_mpr_value(color_settings.get('intensity'),
+														 color_settings.get('feedrate'), color_settings.get('passes')),
 					}
-					data.update(eng_settings)
-					self._store_conversion_details(eventname, payload=data)
+					data.update(color_settings)
+					self._store_conversion_details(event_name, payload=data)
 
-				# One or many "conv_cut" lines with the cutting parameters
-				if 'vector' in details and details['vector']:
-					eventname = ak.CONV_CUT
-
-					for color_settings in details['vector']:
-						data = {
-							'svgDPI': details['svgDPI'],
-							'mpr': self._calculate_mpr_value(color_settings.get('intensity'), color_settings.get('feedrate'), color_settings.get('passes')),
-						}
-						data.update(color_settings)
-						self._store_conversion_details(eventname, payload=data)
-
-				# One or many "design_file" lines with the design details
-				if 'design_files' in details and details['design_files']:
-					eventname = ak.DESIGN_FILE
-					for design_file in details['design_files']:
-						data = {}
-						data.update(design_file)
-						self._store_conversion_details(eventname, payload=data)
+			# One or many "design_file" lines with the design details
+			if 'design_files' in details and details['design_files']:
+				event_name = ak.DESIGN_FILE
+				for design_file in details['design_files']:
+					data = {}
+					data.update(design_file)
+					self._store_conversion_details(event_name, payload=data)
 
 		except Exception as e:
 			self._logger.exception('Error during store_conversion_details: {}'.format(e.message))
 
-	def _store_conversion_details(self, eventname, payload=None):
+	def _store_conversion_details(self, event_name, payload=None):
 		data = {
 			# Here we save the event so we can extract it later and add it to the analytics line (later we can't know it)
-			ak.EVENT: eventname,
+			ak.EVENT: event_name,
 		}
 		if payload is not None:
 			data.update(payload)
-		self._storedConversions.append(data)
+		self._stored_conversions.append(data)
 
 	@staticmethod
 	def _calculate_mpr_value(intensity, speed, passes=1):
@@ -739,11 +673,11 @@ class AnalyticsHandler(object):
 
 	def _write_conversion_details(self):
 		try:
-			for conversion_details in self._storedConversions:
+			for conversion_details in self._stored_conversions:
 				event = conversion_details[ak.EVENT]
 				conversion_details.pop(ak.EVENT)
 				self._write_jobevent(event, conversion_details)
-			self._storedConversions = list()
+			self._stored_conversions = list()
 
 		except Exception as e:
 			self._logger.exception('Error during write_conversion_details: {}'.format(e.message))
@@ -787,66 +721,25 @@ class AnalyticsHandler(object):
 				data[ak.DATA] = payload
 
 			if event in (ak.LASERTEMP_SUM, ak.INTENSITY_SUM):
-				data[ak.DATA][ak.LASERHEAD_VERSION] = self._getLaserHeadVersion()
-				data[ak.DATA][ak.LASERHEAD_SERIAL] = self._laserheadHandler.get_current_used_lh_data()['serial']
+				data[ak.DATA][ak.LASERHEAD_VERSION] = None  # TODO should read from _laserhead_handler()
+				data[ak.DATA][ak.LASERHEAD_SERIAL] = self._laserhead_handler.get_current_used_lh_data()['serial']
 
 			_jobevent_type = ak.TYPE_JOB_EVENT
 			self._write_event(_jobevent_type, event, self._analytics_log_version, payload=data)
 		except Exception as e:
 			self._logger.exception('Error during write_jobevent: {}'.format(e.message))
 
-	def update_cam_session_id(self, lid_state):
-		if self._camAnalyticsOn:
-			if lid_state == 'lid_opened':
-				self._current_cam_session_id = 'c_{}_{}'.format(self._getSerialNumber(), time.time())
-
-	def write_pic_prep_event(self, payload=None):
-		try:
-			if self._camAnalyticsOn:
-				data = dict()
-				data[ak.CAM_SESSION_ID] = self._current_cam_session_id
-				# TODO add data validation/preparation here
-				if 'precision' in payload:
-					del payload['precision']
-				if 'corners_calculated' in payload:
-					del payload['corners_calculated']
-				if 'undistorted_saved' in payload:
-					del payload['undistorted_saved']
-				if 'high_precision' in payload:
-					del payload['high_precision']
-				if 'markers_recognized' in payload:
-					del payload['markers_recognized']
-
-				if payload is not None:
-					data[ak.DATA] = payload
-
-				self._write_event(ak.TYPE_CAM_EVENT, ak.PIC_PREP, self._analytics_log_version, payload=data)
-		except Exception as e:
-			self._logger.exception('Error during write_cam_event: {}'.format(e.message))
-
-	def write_cam_event(self, eventname, payload=None):
-		try:
-			if self._camAnalyticsOn:
-				data = dict()
-
-				if payload is not None:
-					data[ak.DATA] = payload
-
-				self._write_event(ak.TYPE_CAM_EVENT, eventname, self._analytics_log_version, payload=data)
-		except Exception as e:
-			self._logger.exception('Error during write_cam_event: {}'.format(e.message))
-
 	def _write_event(self, typename, eventname, version, payload=None, analytics=False):
 		try:
 			data = {
-				ak.SERIALNUMBER: self._getSerialNumber(),
+				ak.SERIALNUMBER: self._snr,
 				ak.TYPE: typename,
 				ak.VERSION: version,
 				ak.EVENT: eventname,
 				ak.TIMESTAMP: time.time(),
-				ak.NTP_SYNCED: _mrbeam_plugin_implementation.is_time_ntp_synced(),
+				ak.NTP_SYNCED: self._plugin.is_time_ntp_synced(),
 				ak.SESSION_ID: self._session_id,
-				ak.VERSION_MRBEAM_PLUGIN: _mrbeam_plugin_implementation._plugin_version,
+				ak.VERSION_MRBEAM_PLUGIN: self._plugin._plugin_version,
 				ak.SOFTWARE_TIER: self._settings.get(["dev", "software_tier"]),
 			}
 			if payload is not None:
@@ -889,7 +782,7 @@ class AnalyticsHandler(object):
 		:param dust_value:
 		:return:
 		"""
-		if self._analyticsOn and self._current_dust_collector is not None:
+		if self._current_dust_collector is not None:
 			try:
 				self._current_dust_collector.addValue(dust_value)
 			except Exception as e:
@@ -900,7 +793,7 @@ class AnalyticsHandler(object):
 		:param laser_temp:
 		:return:
 		"""
-		if self._analyticsOn and self._current_lasertemp_collector is not None:
+		if self._current_lasertemp_collector is not None:
 			try:
 				self._current_lasertemp_collector.addValue(laser_temp)
 			except Exception as e:
@@ -911,7 +804,7 @@ class AnalyticsHandler(object):
 		Laser intensity.
 		:param laser_intensity: 0-255. Zero means laser is off
 		"""
-		if self._analyticsOn and self._current_intensity_collector is not None:
+		if self._current_intensity_collector is not None:
 			try:
 				self._current_intensity_collector.addValue(laser_intensity)
 			except Exception as e:
@@ -919,35 +812,28 @@ class AnalyticsHandler(object):
 
 	def _write_dust_log(self, data):
 		try:
-			if self._analyticsOn:
-				self._write_jobevent(ak.FINAL_DUST, payload=data)
+			self._write_jobevent(ak.FINAL_DUST, payload=data)
 		except Exception as e:
 			self._logger.exception('Error during write dust_log: {}'.format(e.message))
 
 	def write_fan_rpm_test(self, data):
 		try:
-			if self._analyticsOn:
-				self._write_jobevent(ak.FAN_RPM_TEST, payload=data)
+			self._write_jobevent(ak.FAN_RPM_TEST, payload=data)
 		except Exception as e:
 			self._logger.exception('Error during write_fan_50_test: {}'.format(e.message))
 
 	def _init_jsonfile(self):
 		open(self._jsonfile, 'w+').close()
-		data = {
-			ak.LASERHEAD_VERSION: self._getLaserHeadVersion(),  # TODO IRATXE: can we remove this?
-		}
-		self._write_deviceinfo(ak.INIT, payload=data)
-		self._write_current_software_status()
+		self._write_deviceinfo(ak.INIT, payload={})
 
 	def _write_new_line(self):
-		if self._analyticsOn:
-			try:
-				if not os.path.isfile(self._jsonfile):
-					self._init_jsonfile()
-				with open(self._jsonfile, 'a') as f:
-					f.write('\n')
-			except Exception as e:
-				self._logger.exception('Error while writing newline: {}'.format(e.message), analytics=False)
+		try:
+			if not os.path.isfile(self._jsonfile):
+				self._init_jsonfile()
+			with open(self._jsonfile, 'a') as f:
+				f.write('\n')
+		except Exception as e:
+			self._logger.exception('Error while writing newline: {}'.format(e.message), analytics=False)
 
 	def _append_analytics_to_queue(self, data):
 		self._analytics_queue.put(data)
@@ -955,7 +841,7 @@ class AnalyticsHandler(object):
 
 	def _write_queue_to_file(self):
 		# while not self._shutdown_signaled: TODO IRATXE: keep or not
-		while True:
+		while self._analytics_enabled:
 			try:
 				if not os.path.isfile(self._jsonfile):
 					self._init_jsonfile()
@@ -986,7 +872,7 @@ class AnalyticsHandler(object):
 
 	def delete_analytics_files(self):
 		self._logger.info("Deleting analytics files...")
-		folder = ak.ANALYTICS_FOLDER
+		folder = self.analytics_folder
 		for analytics_file in os.listdir(folder):
 			file_path = os.path.join(folder, analytics_file)
 			try:
@@ -998,7 +884,7 @@ class AnalyticsHandler(object):
 
 	def process_analytics_files(self):
 		self._logger.info("Processing analytics files...")
-		folder = ak.ANALYTICS_FOLDER
+		folder = self.analytics_folder
 		for analytics_file in os.listdir(folder):
 			file_path = os.path.join(folder, analytics_file)
 			try:
