@@ -67,7 +67,7 @@ class Converter():
 		self._min_required_disk_space = min_required_disk_space
 		self._log.info('Converter Initialized: %s', self.options)
 		# todo need material,bounding_box_area here
-		_mrbeam_plugin_implementation._analytics_handler.add_conversion_details(self.options)
+		self._write_conversion_details_analytics()
 
 	def setoptions(self, opts):
 		# set default values if option is missing
@@ -80,6 +80,43 @@ class Converter():
 						self.colorParams[paramSet['color']] = paramSet
 			else:
 				self._log.info("Using default %s = %s" %(key, str(self.options[key])))
+
+	@staticmethod
+	def _calculate_mpr_value(intensity, speed, passes=1):
+		if intensity and speed and passes:
+			mpr = round(float(intensity) / float(speed) * int(passes), 2)
+		else:
+			mpr = None
+
+		return mpr
+
+	def _write_conversion_details_analytics(self):
+		if 'material' in self.options:
+			_mrbeam_plugin_implementation._analytics_handler.add_material_details(self.options['material'])
+
+		if 'engrave' in self.options and self.options['engrave'] and 'raster' in self.options:
+			eng_settings = self.options['raster']
+			additional_data = {
+				'svgDPI': self.options['svgDPI'],
+				'mpr_black': self._calculate_mpr_value(eng_settings.get('intensity_black'), eng_settings.get('speed_black')),
+				'mpr_white': self._calculate_mpr_value(eng_settings.get('intensity_white'), eng_settings.get('speed_white')),
+			}
+			eng_settings.update(additional_data)
+			_mrbeam_plugin_implementation._analytics_handler.add_engraving_parameters(eng_settings)
+
+		if 'vector' in self.options and self.options['vector']:
+			for cut_settings in self.options['vector']:
+				additional_data = {
+					'svgDPI': self.options['svgDPI'],
+					'mpr': self._calculate_mpr_value(cut_settings.get('intensity'), cut_settings.get('feedrate'), cut_settings.get('passes')),
+				}
+				cut_settings.update(additional_data)
+				_mrbeam_plugin_implementation._analytics_handler.add_cutting_parameters(cut_settings)
+
+		if 'design_files' in self.options and self.options['design_files']:
+			for design_file in self.options['design_files']:
+				_mrbeam_plugin_implementation._analytics_handler.add_design_file_details(design_file)
+
 
 	def init_output_file(self):
 		# remove old file if exists.

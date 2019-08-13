@@ -86,8 +86,7 @@ class AnalyticsHandler(object):
 
 		self._logger.info("Analytics analyticsEnabled: %s, sid: %s", self._analytics_enabled, self._session_id)
 
-		self.analytics_folder = os.path.join(self._settings.getBaseFolder("base"),
-											 self._settings.get(['analytics', 'folder']))
+		self.analytics_folder = os.path.join(self._settings.getBaseFolder("base"), self._settings.get(['analytics', 'folder']))
 		if not os.path.isdir(self.analytics_folder):
 			os.makedirs(self.analytics_folder)
 
@@ -111,9 +110,6 @@ class AnalyticsHandler(object):
 		self._shutdown_signaled = True
 
 	def _activate_analytics(self):
-		# if not os.path.isfile(self._jsonfile):
-		# 	self._init_jsonfile()
-
 		# Restart queue if the analytics were disabled before
 		if not self._no_choice_made:
 			self._analytics_queue = Queue(self.QUEUE_MAXSIZE)
@@ -140,6 +136,8 @@ class AnalyticsHandler(object):
 		self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_PAUSE, self._event_laser_cooling_pause)
 		self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_RESUME, self._event_laser_cooling_resume)
 		self._event_bus.subscribe(MrBeamEvents.LASER_JOB_DONE, self._event_laser_job_done)
+		self._event_bus.subscribe(MrBeamEvents.LASER_JOB_CANCELLED, self._event_laser_job_done)
+		self._event_bus.subscribe(MrBeamEvents.LASER_JOB_FAILED, self._event_laser_job_done)
 		self._event_bus.subscribe(OctoPrintEvents.STARTUP, self._event_startup)
 		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self._event_shutdown)
 		self._event_bus.subscribe(MrBeamEvents.ANALYTICS_DATA, self._add_other_plugin_data)
@@ -261,8 +259,6 @@ class AnalyticsHandler(object):
 		t4.start()
 
 	def _event_startup(self, event, payload):
-		# self._add_new_line()
-		self._add_to_queue('\n')
 		payload = {
 			ak.LASERHEAD_SERIAL: self._laserhead_handler.get_current_used_lh_data()['serial'],
 			ak.ENV: self._plugin.get_env(),
@@ -416,7 +412,6 @@ class AnalyticsHandler(object):
 		self._current_lasertemp_collector = ValueCollector('TempColl')
 
 	def _event_print_paused(self, event, payload):
-		# TODO add how it has been paused (lid_opened during job, frontend, onebutton)
 		"""
 		Cooling: payload holds some information if it was a cooling_pause or not. Lid/Button: Currently there is no
 		way to know other than checking the current state: _mrbeam_plugin_implementation._ioBeam
@@ -434,15 +429,18 @@ class AnalyticsHandler(object):
 	def _event_print_done(self, event, payload):
 		if not self._is_job_done:
 			self._is_job_done = True  # prevent two jobDone events per Job
-			self._add_job_event(ak.PRINT_DONE, payload={ak.JOB_DURATION: int(round(payload['time'])),
-														ak.JOB_TIME_ESTIMATION: int(
-															 round(self._current_job_time_estimation))})
+			payload = {
+				ak.JOB_DURATION: int(round(payload['time'])),
+				ak.JOB_TIME_ESTIMATION: int(round(self._current_job_time_estimation))
+			}
+
+			self._add_job_event(ak.PRINT_DONE, payload=payload)
 			self._add_collector_details()
 			self._add_cpu_data(dur=payload['time'])
 
 	def _add_collector_details(self):
 		lh_info = {
-			ak.LASERHEAD_VERSION: None,  # TODO should read from _laserhead_handler()
+			ak.LASERHEAD_VERSION: None,
 			ak.LASERHEAD_SERIAL: self._laserhead_handler.get_current_used_lh_data()['serial'],
 		}
 
@@ -455,17 +453,18 @@ class AnalyticsHandler(object):
 		payload['dur'] = dur
 		self._add_job_event(ak.CPU_DATA, payload=payload)
 
-	def _cleanup(self):
+	def _cleanup_job(self):
 		self._current_job_id = None
 		self._current_dust_collector = None
 		self._current_intensity_collector = None
 		self._current_lasertemp_collector = None
 		self._current_cpu_data = None
 
+	# We will also call this from the Mr Beam events "cancelled" and "failed"
 	def _event_laser_job_done(self, event, payload):
 		if self._current_job_id is not None:
 			self._add_job_event(ak.LASERJOB_DONE)
-			self._cleanup()
+			self._cleanup_job()
 		FileUploader.upload_now(self._plugin, delay=5.0)
 
 	def _event_print_failed(self, event, payload):
@@ -473,14 +472,12 @@ class AnalyticsHandler(object):
 			self._add_job_event(ak.PRINT_FAILED, payload={ak.JOB_DURATION: int(round(payload['time']))})
 			self._add_collector_details()
 			self._add_cpu_data(dur=payload['time'])
-			self._cleanup()
 
 	def _event_print_cancelled(self, event, payload):
 		if self._current_job_id is not None:
 			self._add_job_event(ak.PRINT_CANCELLED, payload={ak.JOB_DURATION: int(round(payload['time']))})
 			self._add_collector_details()
 			self._add_cpu_data(dur=payload['time'])
-			self._cleanup()
 
 	def _event_print_progress(self, event, payload):
 		data = {
@@ -503,6 +500,7 @@ class AnalyticsHandler(object):
 		self._current_cpu_data = Cpu(state='slicing', repeat=False)
 
 	def _init_new_job(self):
+		self._cleanup_job()
 		self._current_job_id = 'j_{}_{}'.format(self._snr, time.time())
 		self._add_job_event(ak.LASERJOB_STARTED)
 
@@ -570,13 +568,13 @@ class AnalyticsHandler(object):
 
 	def add_ui_render_call_event(self, host, remote_ip, referrer, language):
 		try:
-			data = dict(
+			call = dict(
 				host=host,
 				remote_ip=remote_ip,
 				referrer=referrer,
 				language=language
 			)
-			self._add_event_to_queue(ak.TYPE_CONNECTIVITY_EVENT, ak.EVENT_UI_RENDER_CALL, payload=dict(data=data))
+			self._add_event_to_queue(ak.TYPE_CONNECTIVITY_EVENT, ak.EVENT_UI_RENDER_CALL, payload=call)
 		except Exception as e:
 			self._logger.exception('Exception during add_ui_render_call_event: {}'.format(e.message))
 
@@ -585,85 +583,51 @@ class AnalyticsHandler(object):
 			data = dict(
 				remote_ip=remote_ip
 			)
-			self._add_event_to_queue(ak.TYPE_CONNECTIVITY_EVENT, ak.EVENT_CLIENT_OPENED, payload=dict(data=data))
+			self._add_event_to_queue(ak.TYPE_CONNECTIVITY_EVENT, ak.EVENT_CLIENT_OPENED, payload=data)
 		except Exception as e:
 			self._logger.exception('Exception during add_client_opened_event: {}'.format(e.message))
 
 	def add_connections_state(self, connections):
 		try:
-			self._add_event_to_queue(ak.TYPE_CONNECTIVITY_EVENT, ak.CONNECTIONS_STATE, payload=dict(data=connections))
+			self._add_event_to_queue(ak.TYPE_CONNECTIVITY_EVENT, ak.CONNECTIONS_STATE, payload=connections)
 		except Exception as e:
 			self._logger.exception('Exception during add_connections_state: {}'.format(e.message))
 
 	def add_software_channel_switch_event(self, old_channel, new_channel):
 		try:
-			data = {
+			channels = {
 				ak.OLD_CHANNEL: old_channel,
 				ak.NEW_CHANNEL: new_channel,
 			}
 
-			self._add_event_to_queue(ak.TYPE_DEVICE_EVENT, ak.SW_CHANNEL_SWITCH, payload=data)
+			self._add_event_to_queue(ak.TYPE_DEVICE_EVENT, ak.SW_CHANNEL_SWITCH, payload=channels)
 
 		except Exception as e:
 			self._logger.exception('Error during add_software_channel_switch_event: {}'.format(e.message))
 
-	# TODO IRATXE: can we take this info from the backend direct
-	def add_conversion_details(self, details):
+	def add_material_details(self, material_details):
 		try:
-			if 'material' in details:
-				data = {
-					'advanced_settings': details['advanced_settings']
-				}
-				data.update(details['material'])
-				self._add_job_event(ak.LASER_JOB, payload=details['material'])  # TODO IRATXE: this event name does not make sense anymore
-
-			# "conv_eng" line with the engraving parameters
-			if 'engrave' in details and details['engrave'] and 'raster' in details:
-				eng_settings = details['raster']
-
-				data = {
-					'svgDPI': details['svgDPI'],
-					'mpr_black': self._calculate_mpr_value(eng_settings.get('intensity_black'),
-														   eng_settings.get('speed_black')),
-					'mpr_white': self._calculate_mpr_value(eng_settings.get('intensity_white'),
-														   eng_settings.get('speed_white')),
-				}
-				data.update(eng_settings)
-				self._add_job_event(ak.CONV_ENGRAVE, payload=data)
-
-			# One or many "conv_cut" lines with the cutting parameters
-			if 'vector' in details and details['vector']:
-				event_name = ak.CONV_CUT
-
-				for color_settings in details['vector']:
-					data = {
-						'svgDPI': details['svgDPI'],
-						'mpr': self._calculate_mpr_value(color_settings.get('intensity'),
-														 color_settings.get('feedrate'), color_settings.get('passes')),
-					}
-					data.update(color_settings)
-					self._add_job_event(ak.CONV_CUT, payload=data)
-
-			# One or many "design_file" lines with the design details
-			if 'design_files' in details and details['design_files']:
-				event_name = ak.DESIGN_FILE
-				for design_file in details['design_files']:
-					data = {}
-					data.update(design_file)
-					self._add_job_event(ak.DESIGN_FILE, payload=data)
-
+			self._add_job_event(ak.LASER_JOB, payload=material_details)  # TODO IRATXE: this name does not make sense
 		except Exception as e:
-			self._logger.exception('Error during add_conversion_details: {}'.format(e.message))
+			self._logger.exception('Error during add_material_details: {}'.format(e.message))
 
-	# TODO IRATXE: change to converter?
-	@staticmethod
-	def _calculate_mpr_value(intensity, speed, passes=1):
-		if intensity and speed and passes:
-			mpr = round(float(intensity) / float(speed) * int(passes), 2)
-		else:
-			mpr = None
+	def add_engraving_parameters(self, eng_params):
+		try:
+			self._add_job_event(ak.CONV_ENGRAVE, payload=eng_params)
+		except Exception as e:
+			self._logger.exception('Error during add_engraving_parameters: {}'.format(e.message))
 
-		return mpr
+	def add_cutting_parameters(self, cut_details):
+		try:
+			self._add_job_event(ak.CONV_CUT, payload=cut_details)
+		except Exception as e:
+			self._logger.exception('Error during add_cutting_parameters: {}'.format(e.message))
+
+	def add_design_file_details(self, design_file):
+		try:
+			self._add_job_event(ak.DESIGN_FILE, payload=design_file)
+		except Exception as e:
+			self._logger.exception('Error during add_design_file_details: {}'.format(e.message))
 
 	def _add_device_event(self, event, payload=None):
 		self._add_event_to_queue(ak.TYPE_DEVICE_EVENT, event, payload=payload)
@@ -782,7 +746,7 @@ class AnalyticsHandler(object):
 		try:
 			self._add_job_event(ak.FAN_RPM_TEST, payload=data)
 		except Exception as e:
-			self._logger.exception('Error during write_fan_50_test: {}'.format(e.message))
+			self._logger.exception('Error during add_fan_rpm_test: {}'.format(e.message))
 
 	def _init_json_file(self):
 		open(self._jsonfile, 'w+').close()
