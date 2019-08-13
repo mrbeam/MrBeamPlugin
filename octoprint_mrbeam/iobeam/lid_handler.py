@@ -402,4 +402,4 @@ class PhotoCreator(object):
 
 	@staticmethod
 	def _write_camera_capture_analytics(errors):
-		_mrbeam_plugin_implementation._analytics_handler.log_camera_session(errors)
+		_mrbeam_plugin_implementation._analytics_handler.add_camera_session(errors)

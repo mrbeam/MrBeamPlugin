@@ -108,7 +108,7 @@ class MachineCom(object):
 
 
 	ALARM_CODE_COMMAND_TOO_LONG = "ALARM_CODE_COMMAND_TOO_LONG"
-  
+
 	pattern_get_x_coord_from_gcode = re.compile("^G.*X(\d{1,3}\.?\d{0,3})\D.*")
 	pattern_get_y_coord_from_gcode = re.compile("^G.*Y(\d{1,3}\.?\d{0,3})\D.*")
 
@@ -631,7 +631,7 @@ class MachineCom(object):
 		if laser_state == 'on':
 			analytics = existing_analyticsHandler()
 			if analytics:
-				analytics.add_laser_intensity_value(int(laser_intensity))
+				analytics.collect_laser_intensity_value(int(laser_intensity))
 
 
 	def _handle_ok_message(self, line):
@@ -1183,7 +1183,7 @@ class MachineCom(object):
 
 		if not verify_only:
 			try:
-				_mrbeam_plugin_implementation._analytics_handler.write_flash_grbl(
+				_mrbeam_plugin_implementation._analytics_handler.add_grbl_flash_event(
 					from_version=from_version,
 					to_version=grbl_file,
 					succesful=(code == 0),

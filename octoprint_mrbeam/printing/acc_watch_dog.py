@@ -81,7 +81,7 @@ class AccWatchDog(object):
 				if self._round_5(_cpu_temp) != self._round_5(
 					self._cpu_temp) or _cpu_throttle_warnings != self._cpu_throttle_warnings:
 					# cpu warnings
-					existing_analyticsHandler().log_cpu_warning(_cpu_temp, _cpu_throttle_warnings)
+					existing_analyticsHandler().add_cpu_log(_cpu_temp, _cpu_throttle_warnings)
 				self._cpu_temp = _cpu_temp
 				self._cpu_throttle_warnings = _cpu_throttle_warnings
 			else:

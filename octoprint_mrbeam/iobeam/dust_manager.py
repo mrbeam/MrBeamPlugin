@@ -183,7 +183,7 @@ class DustManager(object):
 					prefilter_count=self._usageHandler.get_prefilter_usage(),
 					carbon_filter_count=self._usageHandler.get_carbon_filter_usage(),
 				)
-				_mrbeam_plugin_implementation._analytics_handler.write_fan_rpm_test(data)
+				_mrbeam_plugin_implementation._analytics_handler.add_fan_rpm_test(data)
 
 			# Set fan to auto again
 			self._start_dust_extraction()
@@ -245,7 +245,7 @@ class DustManager(object):
 					dust_end_ts = self._data_ts
 					self.is_dust_mode = False
 					if dust_start_ts != dust_end_ts:
-						_mrbeam_plugin_implementation._analytics_handler.write_final_dust(dust_start, dust_start_ts, dust_end, dust_end_ts)
+						_mrbeam_plugin_implementation._analytics_handler.add_final_dust_details(dust_start, dust_start_ts, dust_end, dust_end_ts)
 					else:
 						self._logger.warning("No dust value received during extraction time. Skipping writing analytics!")
 				self._activate_timed_auto_mode(self.auto_mode_time)
@@ -307,7 +307,7 @@ class DustManager(object):
 		:param val: measured dust value
 		:return:
 		"""
-		_mrbeam_plugin_implementation._analytics_handler.add_dust_value(val)
+		_mrbeam_plugin_implementation._analytics_handler.collect_dust_value(val)
 
 	def _validate_values(self):
 		result = True

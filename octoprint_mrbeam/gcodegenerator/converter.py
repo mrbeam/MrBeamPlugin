@@ -67,7 +67,7 @@ class Converter():
 		self._min_required_disk_space = min_required_disk_space
 		self._log.info('Converter Initialized: %s', self.options)
 		# todo need material,bounding_box_area here
-		_mrbeam_plugin_implementation._analytics_handler.store_conversion_details(self.options)
+		_mrbeam_plugin_implementation._analytics_handler.add_conversion_details(self.options)
 
 	def setoptions(self, opts):
 		# set default values if option is missing
@@ -94,10 +94,10 @@ class Converter():
 		# calculation of disk usage
 		totalBytes = disk.f_bsize * disk.f_blocks # disk size in bytes
 		totalUsedSpace = disk.f_bsize * (disk.f_blocks - disk.f_bfree) # used bytes
-		totalAvailSpace = float(disk.f_bsize * disk.f_bfree) # 
+		totalAvailSpace = float(disk.f_bsize * disk.f_bfree) #
 		totalAvailSpaceNonRoot = float(disk.f_bsize * disk.f_bavail)
 		self._log.info(
-			"Disk space: total: " + self._get_human_readable_bytes(totalBytes) 
+			"Disk space: total: " + self._get_human_readable_bytes(totalBytes)
 			+ ", used: " + self._get_human_readable_bytes(totalUsedSpace)
 			+ ", available: " + self._get_human_readable_bytes(totalAvailSpace)
 			+ ", available for non-super user: " + self._get_human_readable_bytes(totalAvailSpaceNonRoot)
@@ -106,7 +106,7 @@ class Converter():
 		if(self._min_required_disk_space > 0 and totalAvailSpaceNonRoot < self._min_required_disk_space):
 			msg ="Only " + self._get_human_readable_bytes(totalAvailSpaceNonRoot) + " disk space available. Min required: " + self._get_human_readable_bytes(self._min_required_disk_space)
 			raise OutOfSpaceException(msg)
-		
+
 	def _get_human_readable_bytes(self, amount):
 		str = "%d Bytes" % amount
 		if(amount > 1024 and amount <= 1024*1024): # kB
@@ -122,7 +122,7 @@ class Converter():
 		#TODO check if job cancelled by calling is_job_cancelled()
 		self.init_output_file()
 		self.check_free_space() # has to be after init_output_file (which removes old temp files occasionally)
-		
+
 		self.parse()
 		options = self.options
 		options['doc_root'] = self.document.getroot()
@@ -295,7 +295,7 @@ class Converter():
 					for colorKey in paths_by_color.keys():
 						if colorKey == 'none':
 							continue
-							
+
 						settings = self.colorParams.get(colorKey, {'intensity': -1, 'feedrate': -1, 'passes': 0, 'pierce_time': 0})
 						if(settings['feedrate'] == None or settings['feedrate'] == -1 or settings['intensity'] == None or settings['intensity'] <= 0):
 							self._log.info( "convert() skipping color %s, no valid settings %s." % (colorKey, settings))
@@ -729,7 +729,7 @@ class Converter():
 		self._log.info( "wrote file: %s" % destination)
 
 	def _get_gcode_header(self):
-		
+
 		if(self.options['noheaders']):
 			return machine_settings.cooling_fan_speedup_gcode
 		else:

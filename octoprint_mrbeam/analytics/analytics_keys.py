@@ -62,9 +62,12 @@ class AnalyticsKeys(object):
 	### JOB KEYS ###
 	JOB_ID = 'job_id'
 	FILENAME = 'filename'
+	SLICING_STARTED = 's_started'
+	SLICING_DONE = 's_done'
 	PRINT_STARTED = 'p_started'
 	PRINT_PROGRESS = 'p_progress'
 	PRINT_DONE = 'p_done'
+	LASERJOB_STARTED = 'laserjob_started'
 	LASERJOB_DONE = 'laserjob_done'
 	PRINT_PAUSED = 'p_paused'
 	PRINT_RESUMED = 'p_resumed'

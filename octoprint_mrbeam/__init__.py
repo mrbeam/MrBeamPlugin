@@ -541,7 +541,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self.called_hosts.append(my_call)
 				self._logger.info("First call received from: %s", my_call)
 				self._logger.info("All unique calls: %s", self.called_hosts)
-			self._analytics_handler.log_ui_render_calls(host=my_call['host'], remote_ip=my_call['remote_ip'], referrer=my_call['ref'], language=language)
+			self._analytics_handler.add_ui_render_call_event(host=my_call['host'], remote_ip=my_call['remote_ip'], referrer=my_call['ref'], language=language)
 
 	##~~ TemplatePlugin mixin
 
@@ -1239,7 +1239,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def analytics_data(self, data):
 		event = data.get('event')
 		payload = data.get('payload', dict())
-		self._analytics_handler.log_frontend_event(event, payload)
+		self._analytics_handler.add_frontend_event(event, payload)
 		return NO_CONTENT
 
 	def focus_reminder(self, data):
@@ -1469,7 +1469,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._logger.error("on_event() Error Event! Message: %s", payload['error'])
 
 		if event == OctoPrintEvents.CLIENT_OPENED:
-			self._analytics_handler.log_client_opened(payload.get('remoteAddress', None))
+			self._analytics_handler.add_client_opened_event(payload.get('remoteAddress', None))
 			self.fire_event(MrBeamEvents.MRB_PLUGIN_VERSION, payload=dict(version=self._plugin_version))
 			self._replay_stored_frontend_notification()
 

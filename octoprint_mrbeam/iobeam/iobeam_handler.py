@@ -701,7 +701,7 @@ class IoBeamHandler(object):
 					self.send_bottom_open_frontend_notification(malfunction)
 				else:
 					self.send_hardware_malfunction_frontend_notification(malfunction, message)
-			self._plugin._analytics_handler.log_iobeam_message(self.iobeam_version, message)
+			self._plugin._analytics_handler.add_iobeam_message_log(self.iobeam_version, message)
 		elif action == 'runtime': # introduced in iobeam 0.6.2
 			init = token[1] if len(token) > 1 else None
 			malfunction = token[2] if len(token) > 2 else None
@@ -714,10 +714,10 @@ class IoBeamHandler(object):
 					self.send_bottom_open_frontend_notification(malfunction)
 				else:
 					self.send_hardware_malfunction_frontend_notification(malfunction, message)
-			self._plugin._analytics_handler.log_iobeam_message(self.iobeam_version, message)
+			self._plugin._analytics_handler.add_iobeam_message_log(self.iobeam_version, message)
 		elif action == 'i2c':
 			self._logger.info("iobeam i2c devices: '%s'", message)
-			self._plugin._analytics_handler.log_iobeam_message(self.iobeam_version, message)
+			self._plugin._analytics_handler.add_iobeam_message_log(self.iobeam_version, message)
 		elif action == 'debug':
 			self._logger.info("iobeam debug message: '%s'", message)
 		else:

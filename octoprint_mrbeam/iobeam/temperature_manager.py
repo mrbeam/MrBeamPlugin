@@ -78,7 +78,7 @@ class TemperatureManager(object):
 		self.temperature = kwargs['temp']
 		self.temperature_ts = time.time()
 		self._check_temp_val()
-		analyticsHandler(_mrbeam_plugin_implementation).add_laser_temp_value(self.temperature)
+		analyticsHandler(_mrbeam_plugin_implementation).collect_laser_temp_value(self.temperature)
 
 	def request_temp(self):
 		"""

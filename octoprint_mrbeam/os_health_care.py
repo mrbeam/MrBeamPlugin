@@ -58,7 +58,7 @@ class OsHealthCare(object):
 			os_health_event=event,
 			success=success,
 		)
-		self.analyticsHandler.log_os_health_event(data)
+		self.analyticsHandler.add_os_health_log(data)
 
 	def _get_full_path_to_file(self, filename):
 		return os.path.join(__package_path__, self.HEALTHCARE_FILES_FOLDER, filename)

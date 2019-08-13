@@ -146,7 +146,7 @@ class UsageHandler(object):
 				action=action
 			)
 
-			analyticsHandler(self._plugin).write_mrbeam_usage(usage_data)
+			analyticsHandler(self._plugin).add_mrbeam_usage(usage_data)
 		except KeyError as e:
 			self._logger.info('Could not write analytics for usage, missing key: {e}'.format(e=e))
 

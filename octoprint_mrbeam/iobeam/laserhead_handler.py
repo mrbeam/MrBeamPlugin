@@ -110,7 +110,7 @@ class LaserheadHandler(object):
 			new_intensity = goal_difference * (85-75) / step_difference + 75
 			correction_factor = new_intensity / 65.0
 
-		self._plugin._analytics_handler.event_laserhead_info()
+		self._plugin._analytics_handler.add_laserhead_info()
 		self._logger.info('New correction factor calculated: {cf}'.format(cf=correction_factor))
 
 		return correction_factor
