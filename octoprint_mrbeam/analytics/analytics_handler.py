@@ -2,17 +2,14 @@ import time
 import json
 import os.path
 import logging
-import netifaces
 import sys
 import fileinput
 import re
 import uuid
-import requests
 
-from datetime import datetime
 from value_collector import ValueCollector
 from cpu import Cpu
-from threading import Timer, Thread
+from threading import Thread
 from Queue import Queue
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
@@ -20,6 +17,7 @@ from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.laserhead_handler import laserheadHandler
 from analytics_keys import AnalyticsKeys as ak
+from timer_handler import TimerHandler
 from uploader import FileUploader
 
 # singleton
@@ -43,13 +41,8 @@ def existing_analyticsHandler():
 
 
 class AnalyticsHandler(object):
-	DISK_SPACE_TIMER = 3.0
-	IP_ADDRESSES_TIMER = 15.0
-	SELF_CHECK_TIMER = 20.0
-	INTERNET_CONNECTION_TIMER = 25.0
-	MAINTENANCE_TIMER = 5.0
-	SELF_CHECK_USER_AGENT = 'MrBeamPlugin self check'
 	QUEUE_MAXSIZE = 100
+	SELF_CHECK_USER_AGENT = 'MrBeamPlugin self check'
 
 	def __init__(self, plugin):
 		self._plugin = plugin
@@ -100,6 +93,7 @@ class AnalyticsHandler(object):
 
 		self._analytics_queue = Queue(maxsize=self.QUEUE_MAXSIZE)
 		self._analytics_writer = Thread(target=self._write_queue_to_analyitcs_file)
+		self._timer_handler = TimerHandler()
 		if self._analytics_enabled:
 			self._activate_analytics()
 
@@ -119,6 +113,9 @@ class AnalyticsHandler(object):
 		# Start writer thread
 		self._analytics_writer.daemon = True  # TODO IRATXE: keep or not?
 		self._analytics_writer.start()
+
+		# Start timers for async analytics
+		self._timer_handler.start_timers()
 
 		# Subscribe to OctoPrint and Mr Beam events
 		self._subscribe()
@@ -155,6 +152,7 @@ class AnalyticsHandler(object):
 			# can not log this since the user just disagreed
 			# self._add_device_event(ak.ANALYTICS_ENABLED, payload=dict(enabled=False))
 			self._analytics_enabled = False
+			self._timer_handler.cancel_timers()
 			self._settings.set_boolean(["analyticsEnabled"], False)
 
 	def log_event(self, level, msg,
@@ -241,23 +239,6 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.exception('Error during add_frontend_event: {}'.format(e.message), analytics=True)
 
-	def _init_event_timers(self):
-		# disk_space --> 3s
-		t1 = Timer(self.DISK_SPACE_TIMER, self._add_disk_space)
-		t1.start()
-
-		# ips --> 15s
-		t2 = Timer(self.IP_ADDRESSES_TIMER, self._add_ip_addresses)
-		t2.start()
-
-		# http_self_check task --> 20s
-		t3 = Timer(self.SELF_CHECK_TIMER, self._add_http_self_check_event)
-		t3.start()
-
-		# internet_connection --> 25s
-		t4 = Timer(self.INTERNET_CONNECTION_TIMER, self._add_internet_connection_event)
-		t4.start()
-
 	def _event_startup(self, event, payload):
 		payload = {
 			ak.LASERHEAD_SERIAL: self._laserhead_handler.get_current_used_lh_data()['serial'],
@@ -265,7 +246,6 @@ class AnalyticsHandler(object):
 			ak.USERS: len(self._plugin._user_manager._users)
 		}
 		self._add_device_event(ak.STARTUP, payload=payload)
-		self._init_event_timers()
 
 	def _event_shutdown(self, event, payload):
 		self._add_device_event(ak.SHUTDOWN)
@@ -281,101 +261,17 @@ class AnalyticsHandler(object):
 	def add_mrbeam_usage(self, usage_data):
 		self._add_device_event(ak.MRBEAM_USAGE, payload=usage_data)
 
-	def _add_http_self_check_event(self):
-		try:
-			payload = dict()
-			interfaces = netifaces.interfaces()
-			err = None
+	def add_http_self_check(self, payload):
+		self._add_device_event(ak.HTTP_SELF_CHECK, payload=payload)
 
-			for interface in interfaces:
-				if interface != 'lo':
-					addresses = netifaces.ifaddresses(interface)
-					if netifaces.AF_INET in addresses:
-						ip = addresses[netifaces.AF_INET][0]['addr']
+	def add_internet_connection(self, payload):
+		self._add_device_event(ak.INTERNET_CONNECTION, payload=payload)
 
-						try:
-							url = "http://" + ip
-							headers = {
-								'User-Agent': self.SELF_CHECK_USER_AGENT
-							}
-							r = requests.get(url, headers=headers)
-							response = r.status_code
-							elapsed_seconds = r.elapsed.total_seconds()
-						except requests.exceptions.RequestException as e:
-							response = -1
-							err = str(e)
+	def add_ip_addresses(self, payload):
+		self._add_device_event(ak.IPS, payload=payload)
 
-						payload[interface] = {
-							"ip": ip,
-							"response": response,
-							"elapsed_s": elapsed_seconds,
-							"err": err,
-						}
-
-			self._add_device_event(ak.HTTP_SELF_CHECK, payload=payload)
-
-		except:
-			self._logger.exception('Exception when performing the http self check')
-
-	def _add_internet_connection_event(self):
-		try:
-			try:
-				headers = {
-					'User-Agent': self.SELF_CHECK_USER_AGENT
-				}
-				r = requests.head('http://find.mr-beam.org', headers=headers)
-				response = r.status_code
-				err = None
-				connection = True
-			except requests.exceptions.RequestException as e:
-				response = -1
-				err = str(e)
-				connection = False
-
-			payload = {
-				"response": response,
-				"err": err,
-				"connection": connection,
-			}
-			self._add_device_event(ak.INTERNET_CONNECTION, payload=payload)
-		except:
-			self._logger.exception('Exception while performing the internet check')
-
-	def _add_ip_addresses(self):
-		try:
-			payload = dict()
-			interfaces = netifaces.interfaces()
-
-			for interface in interfaces:
-				addresses = netifaces.ifaddresses(interface)
-				payload[interface] = dict()
-				if netifaces.AF_INET in addresses:
-					payload[interface]['IPv4'] = addresses[netifaces.AF_INET][0]['addr']
-				if netifaces.AF_INET6 in addresses:
-					for idx, addr in enumerate(addresses[netifaces.AF_INET6]):
-						payload[interface]['IPv6_{}'.format(idx)] = addr['addr']
-
-			self._add_device_event(ak.IPS, payload=payload)
-
-		except:
-			self._logger.exception('Exception when recording the IP addresses')
-
-	def _add_disk_space(self):
-		try:
-			statvfs = os.statvfs('/')
-			total_space = statvfs.f_frsize * statvfs.f_blocks
-			available_space = statvfs.f_frsize * statvfs.f_bavail  # Available space for non-super users
-			used_percent = round((total_space - available_space) * 100 / total_space)
-
-			disk_space = {
-				ak.TOTAL_SPACE: total_space,
-				ak.AVAILABLE_SPACE: available_space,
-				ak.USED_SPACE: used_percent,
-			}
-			self._add_device_event(ak.DISK_SPACE, payload=disk_space)
-
-		except:
-			self._logger.exception('Exception when saving info about the disk space')
+	def add_disk_space(self, payload):
+		self._add_device_event(ak.MRBEAM_USAGE, payload=payload)
 
 	def add_laserhead_info(self):
 		try:
@@ -459,22 +355,23 @@ class AnalyticsHandler(object):
 		self._current_intensity_collector = None
 		self._current_lasertemp_collector = None
 		self._current_cpu_data = None
+		self._current_job_time_estimation = None
 
 	# We will also call this from the Mr Beam events "cancelled" and "failed"
 	def _event_laser_job_done(self, event, payload):
-		if self._current_job_id is not None:
+		if not self._current_job_id:
 			self._add_job_event(ak.LASERJOB_DONE)
 			self._cleanup_job()
 		FileUploader.upload_now(self._plugin, delay=5.0)
 
 	def _event_print_failed(self, event, payload):
-		if self._current_job_id is not None:
+		if not self._current_job_id:
 			self._add_job_event(ak.PRINT_FAILED, payload={ak.JOB_DURATION: int(round(payload['time']))})
 			self._add_collector_details()
 			self._add_cpu_data(dur=payload['time'])
 
 	def _event_print_cancelled(self, event, payload):
-		if self._current_job_id is not None:
+		if not self._current_job_id:
 			self._add_job_event(ak.PRINT_CANCELLED, payload={ak.JOB_DURATION: int(round(payload['time']))})
 			self._add_collector_details()
 			self._add_cpu_data(dur=payload['time'])
@@ -551,7 +448,7 @@ class AnalyticsHandler(object):
 				if plugin:
 					eventname = event_payload.get('event_name')
 					data = event_payload.get('data', None)
-					self._add_event_to_queue(plugin, eventname, payload=dict(data=data))
+					self._add_event_to_queue(plugin, eventname, payload=data)
 				else:
 					self._logger.warn("Invalid plugin: '%s'. payload: %s", plugin, event_payload)
 			else:
@@ -706,7 +603,6 @@ class AnalyticsHandler(object):
 			ak.DUST_DIFF: dust_difference,
 			ak.DUST_PER_TIME: dust_per_time
 		}
-		self._add_dust_log(data)
 		self._add_job_event(ak.FINAL_DUST, payload=data)
 
 	def collect_dust_value(self, dust_value):
@@ -744,7 +640,8 @@ class AnalyticsHandler(object):
 
 	def add_fan_rpm_test(self, data):
 		try:
-			self._add_job_event(ak.FAN_RPM_TEST, payload=data)
+			if self._current_job_id:
+				self._add_job_event(ak.FAN_RPM_TEST, payload=data)
 		except Exception as e:
 			self._logger.exception('Error during add_fan_rpm_test: {}'.format(e.message))
 
