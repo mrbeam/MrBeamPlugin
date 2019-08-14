@@ -147,16 +147,19 @@ class MrbLogger(object):
 					exception_str = "{}: '{}'".format(exctype.__name__ if exctype is not None else None, value)
 					stacktrace = traceback.format_tb(tb)
 
-				analytics_handler.log_event(
-					level,
-					msg,
-					module = self.id,
-					component = _mrbeam_plugin_implementation._identifier,
-					component_version = _mrbeam_plugin_implementation._plugin_version,
+				event_details = dict(
+					level=level,
+					msg=msg,
+					module=self.id,
+					component=_mrbeam_plugin_implementation._identifier,
+					component_version=_mrbeam_plugin_implementation._plugin_version,
 					caller=caller,
 					exception_str=exception_str,
 					stacktrace=stacktrace,
-					wait_for_terminal_dump=kwargs.get('terminal_dump', False))
+				)
+
+				analytics_handler.add_logger_event(event_details, wait_for_terminal_dump=kwargs.get('terminal_dump', False))
+
 			except:
 				self.logger.exception("Exception in _analytics_log_event: ", analytics=False)
 
