@@ -20,6 +20,7 @@ $(function(){
 
         self.onAllBound = function () {
             self.webCamImageElem = $("#beamcam_image_svg");
+			self.cameraMarkerElem = $("#camera_markers");
             // self.webCamImageElem.removeAttr('onerror');
             self.camEnabled = self.settings.settings.plugins.mrbeam.cam.enabled();
             self.imageUrl = self.settings.settings.plugins.mrbeam.cam.frontendUrl();
@@ -44,6 +45,12 @@ $(function(){
                     const circles = '['+mf['NW']['r']+','+mf['NE']['r']+','+mf['SW']['r']+','+mf['SE']['r']+']';
                     console.log('New Image [NW,NE,SW,SE]: Pix '+pixels+' Rad '+circles,data['beam_cam_new_image']);
                 }
+				['NW', 'NE', 'SE', 'SW'].forEach(function(m) {
+					if(mf[m] !== undefined){ 
+						if(mf[m].recognized === true){ self.cameraMarkerElem.removeClass('marker'+m); }
+						else { self.cameraMarkerElem.addClass('marker'+m);}
+					}
+				});
                 if(data['beam_cam_new_image']['error'] === undefined){
                     self.needsCalibration = false;
                 }else if(data['beam_cam_new_image']['error'] === "NO_CALIBRATION: Marker Calibration Needed" && !self.needsCalibration){
