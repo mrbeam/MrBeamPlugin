@@ -51,6 +51,9 @@ $(function(){
 						else { self.cameraMarkerElem.addClass('marker'+m);}
 					}
 				});
+				
+				// TODO if camera is not active (lid closed), all marker(NW|NE|SW|SE) classes should be removed.
+				
                 if(data['beam_cam_new_image']['error'] === undefined){
                     self.needsCalibration = false;
                 }else if(data['beam_cam_new_image']['error'] === "NO_CALIBRATION: Marker Calibration Needed" && !self.needsCalibration){
