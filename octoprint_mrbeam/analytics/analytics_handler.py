@@ -48,54 +48,46 @@ class AnalyticsHandler(object):
 		self._plugin = plugin
 		self._event_bus = plugin._event_bus
 		self._settings = plugin._settings
-		self._laserhead_handler = laserheadHandler(plugin)  # TODO IRATXE: This is still not initialized in the plugin
+		self._laserhead_handler = laserheadHandler(plugin)
 		self._snr = plugin.getSerialNum()
 		self._plugin_version = plugin._plugin_version
+		self._timer_handler = TimerHandler()
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.analyticshandler")
 
+		# Mr Beam specific data
 		self._analytics_enabled = self._settings.get(['analyticsEnabled'])
-		if self._analytics_enabled is None:
-			self._no_choice_made = True
-		else:
-			self._no_choice_made = False
-
-		self._session_id = "{uuid}@{serial}".format(serial=self._snr, uuid=uuid.uuid4().hex)
-
-		self._current_job_id = None
-		self._current_job_time_estimation = None
-
-		self._current_dust_collector = None
-		self._current_intensity_collector = None
-		self._current_lasertemp_collector = None
-		self._current_cpu_data = None
-
-		self.event_waiting_for_terminal_dump = None
-
-		self._logger.info("Analytics analyticsEnabled: %s, sid: %s", self._analytics_enabled, self._session_id)
+		self._no_choice_made = True if self._analytics_enabled is None else False
 
 		self.analytics_folder = os.path.join(self._settings.getBaseFolder("base"), self._settings.get(['analytics', 'folder']))
 		if not os.path.isdir(self.analytics_folder):
 			os.makedirs(self.analytics_folder)
+		self._json_file = os.path.join(self.analytics_folder, self._settings.get(['analytics', 'filename']))
 
-		# It uploads any previous analytics, unless the user didn't make a choice yet
+		# Session-specific data
+		self._session_id = "{uuid}@{serial}".format(serial=self._snr, uuid=uuid.uuid4().hex)
+
+		# Job-specific data
+		self._current_job_id = None
+		self._current_job_time_estimation = None
+		self._current_dust_collector = None
+		self._current_intensity_collector = None
+		self._current_lasertemp_collector = None
+		self._current_cpu_data = None
+		self.event_waiting_for_terminal_dump = None
+
+		self._logger.info("Analytics analyticsEnabled: %s, sid: %s", self._analytics_enabled, self._session_id)
+
+		# Upload any previous analytics, unless the user didn't make a choice yet
 		if not self._no_choice_made:
 			FileUploader.upload_now(self._plugin)
 
-		self._jsonfile = os.path.join(self.analytics_folder, self._settings.get(['analytics', 'filename']))
-
-		self._shutdown_signaled = False  # TODO IRATXE: keep or not
-
+		# Initialize queue for analytics data and queue-to-file writer
 		self._analytics_queue = Queue(maxsize=self.QUEUE_MAXSIZE)
 		self._analytics_writer = Thread(target=self._write_queue_to_analytics_file)
-		self._timer_handler = TimerHandler()
+
+		# Activate analytics
 		if self._analytics_enabled:
 			self._activate_analytics()
-
-	def shutdown(self, *args):  # TODO IRATXE: keep or not?
-		self._logger.debug("shutdown() args: %s", args)
-		global _instance
-		_instance = None
-		self._shutdown_signaled = True
 
 	def _activate_analytics(self):
 		# Restart queue if the analytics were disabled before
@@ -105,7 +97,7 @@ class AnalyticsHandler(object):
 			self._no_choice_made = False
 
 		# Start writer thread
-		self._analytics_writer.daemon = True  # TODO IRATXE: keep or not?
+		self._analytics_writer.daemon = True
 		self._analytics_writer.start()
 
 		# Start timers for async analytics
@@ -113,176 +105,6 @@ class AnalyticsHandler(object):
 
 		# Subscribe to OctoPrint and Mr Beam events
 		self._subscribe()
-
-	def _subscribe(self):
-		self._event_bus.subscribe(OctoPrintEvents.PRINT_STARTED, self._event_print_started)
-		self._event_bus.subscribe(OctoPrintEvents.PRINT_PAUSED, self._event_print_paused)
-		self._event_bus.subscribe(OctoPrintEvents.PRINT_RESUMED, self._event_print_resumed)
-		self._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self._event_print_done)
-		self._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self._event_print_failed)
-		self._event_bus.subscribe(OctoPrintEvents.PRINT_CANCELLED, self._event_print_cancelled)
-		self._event_bus.subscribe(OctoPrintEvents.SLICING_STARTED, self._event_slicing_started)
-		self._event_bus.subscribe(OctoPrintEvents.SLICING_DONE, self._event_slicing_done)
-		self._event_bus.subscribe(MrBeamEvents.PRINT_PROGRESS, self._event_print_progress)
-		self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_PAUSE, self._event_laser_cooling_pause)
-		self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_RESUME, self._event_laser_cooling_resume)
-		self._event_bus.subscribe(MrBeamEvents.LASER_JOB_DONE, self._event_laser_job_finished)
-		self._event_bus.subscribe(MrBeamEvents.LASER_JOB_CANCELLED, self._event_laser_job_finished)
-		self._event_bus.subscribe(MrBeamEvents.LASER_JOB_FAILED, self._event_laser_job_finished)
-		self._event_bus.subscribe(OctoPrintEvents.STARTUP, self._event_startup)
-		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self._event_shutdown)
-		self._event_bus.subscribe(MrBeamEvents.ANALYTICS_DATA, self._add_other_plugin_data)
-		self._event_bus.subscribe(MrBeamEvents.JOB_TIME_ESTIMATED, self._event_job_time_estimated)
-
-	def _cleanup_job(self):
-		self._current_job_id = None
-		self._current_dust_collector = None
-		self._current_intensity_collector = None
-		self._current_lasertemp_collector = None
-		self._current_cpu_data = None
-		self._current_job_time_estimation = None
-
-	def _init_new_job(self):
-		self._cleanup_job()
-		self._current_job_id = 'j_{}_{}'.format(self._snr, time.time())
-		self._add_job_event(ak.Job.Event.LASERJOB_STARTED)
-
-	def _add_cpu_data(self, dur=None):
-		payload = self._current_cpu_data.get_cpu_data()
-		payload['dur'] = dur
-		self._add_job_event(ak.Job.Event.CPU, payload=payload)
-
-	# -------- OCTOPRINT AND MR BEAM EVENTS ----------------------------------------------------------------------------
-	def _event_startup(self, event, payload):
-		payload = {
-			ak.Device.LaserHead.SERIAL: self._laserhead_handler.get_current_used_lh_data()['serial'],
-			ak.Device.Usage.USERS: len(self._plugin._user_manager._users)
-		}
-		self._add_device_event(ak.Device.Event.STARTUP, payload=payload)
-
-	def _event_shutdown(self, event, payload):
-		self._add_device_event(ak.Device.Event.SHUTDOWN)
-
-	def _event_slicing_started(self, event, payload):
-		self._init_new_job()
-		self._add_job_event(ak.Job.Event.Slicing.STARTED)
-		self._current_cpu_data = Cpu(state='slicing', repeat=False)
-
-	def _event_slicing_done(self, event, payload):
-		if self._current_cpu_data:
-			self._current_cpu_data.record_cpu_data()
-			self._add_cpu_data(dur=payload['time'])
-		self._add_job_event(ak.Job.Event.Slicing.DONE)
-
-	def _event_print_started(self, event, payload):
-		# If there's no job_id, it may be a gcode file (no slicing), so we have to start the job here
-		if not self._current_job_id:
-			self._init_new_job()
-		self._current_cpu_data = Cpu(state='laser', repeat=True)
-		self._init_collectors()
-		self._add_job_event(ak.Job.Event.Print.STARTED)
-
-	def _event_print_progress(self, event, payload):
-		data = {
-			ak.Job.Progress.PERCENT: payload['progress'],
-			ak.Job.Progress.LASER_TEMPERATURE: self._current_lasertemp_collector.get_latest_value(),
-			ak.Job.Progress.LASER_INTENSITY: self._current_intensity_collector.get_latest_value(),
-			ak.Job.Progress.DUST_VALUE: self._current_dust_collector.get_latest_value(),
-			ak.Job.Duration.CURRENT: round(payload['time'], 1),
-			ak.Job.Fan.RPM: self._plugin._dustManager.get_fan_rpm(),
-			ak.Job.Fan.STATE: self._plugin._dustManager.get_fan_state(),
-		}
-		self._add_job_event(ak.Job.Event.Print.PROGRESS, data)
-
-		if self._current_cpu_data:
-			self._current_cpu_data.update_progress(payload['progress'])
-
-	def _event_print_paused(self, event, payload):
-		"""
-		Cooling: payload holds some information if it was a cooling_pause or not. Lid/Button: Currently there is no
-		way to know other than checking the current state: _mrbeam_plugin_implementation._ioBeam
-		.is_interlock_closed()
-		"""
-		self._add_job_event(ak.Job.Event.Print.PAUSED, payload={ak.Job.Duration.CURRENT: int(round(payload['time']))})
-
-	def _event_print_resumed(self, event, payload):
-		self._add_job_event(ak.Job.Event.Print.RESUMED, payload={ak.Job.Duration.CURRENT: int(round(payload['time']))})
-
-	def _event_laser_cooling_pause(self, event, payload):
-		data = {
-			ak.Job.LaserHead.TEMP: None
-		}
-		if self._current_lasertemp_collector:
-			data[ak.Job.LaserHead.TEMP] = self._current_lasertemp_collector.get_latest_value()
-		self._add_job_event(ak.Job.Event.Cooling.START, payload=data)
-
-	def _event_laser_cooling_resume(self, event, payload):
-		data = {
-			ak.Job.LaserHead.TEMP: None
-		}
-		if self._current_lasertemp_collector:
-			data[ak.Job.LaserHead.TEMP] = self._current_lasertemp_collector.get_latest_value()
-		self._add_job_event(ak.Job.Event.Cooling.DONE, payload=data)
-
-	def _event_print_done(self, event, payload):
-		payload = {
-			ak.Job.Duration.CURRENT: int(round(payload['time'])),
-			ak.Job.Duration.ESTIMATION: int(round(self._current_job_time_estimation))
-		}
-
-		self._add_job_event(ak.Job.Event.Print.DONE, payload=payload)
-		self._add_collector_details()
-		self._add_cpu_data(dur=payload['time'])
-
-	def _event_print_failed(self, event, payload):
-		if self._current_job_id:
-			details = {
-				ak.Job.Duration.CURRENT: int(round(payload['time'])),
-				ak.Job.ERROR: payload['error_msg'],
-			}
-			self._add_job_event(ak.Job.Event.Print.FAILED, payload=details)
-			self._add_collector_details()
-			self._add_cpu_data(dur=payload['time'])
-
-	def _event_print_cancelled(self, event, payload):
-		if self._current_job_id:
-			self._add_job_event(ak.Job.Event.Print.CANCELLED, payload={ak.Job.Duration.CURRENT: int(round(payload['time']))})
-			self._add_collector_details()
-			self._add_cpu_data(dur=payload['time'])
-
-	def _event_laser_job_finished(self, event, payload):
-		if self._current_job_id:
-			self._add_job_event(ak.Job.Event.LASERJOB_FINISHED)
-			self._cleanup_job()
-		# FileUploader.upload_now(self._plugin, delay=5.0)  # TODO IRATXE: uncomment
-
-	def _event_job_time_estimated(self, event, payload):
-		self._current_job_time_estimation = payload['jobTimeEstimation']
-
-	def _add_other_plugin_data(self, event, event_payload):
-		try:
-			if 'component' in event_payload and 'type' in event_payload and 'component_version' in event_payload:
-				component = event_payload.get('component')
-				event_type = event_payload.get('type')
-				if event_type == ak.Log.Event.EVENT_LOG:
-					data = event_payload.get('data', dict())
-					data[ak.Log.Component.NAME] = component
-					data[ak.Log.Component.VERSION] = event_payload.get('component_version')
-					self._add_log_event(ak.Log.Event.EVENT_LOG, payload=data)
-				else:
-					self._logger.warn("Unknown type: '%s' from component %s. payload: %s", event_type, component, event_payload)
-			elif 'plugin' in event_payload and 'event_name' in event_payload:
-				plugin = event_payload.get('plugin')
-				if plugin:
-					event_name = event_payload.get('eventname')
-					data = event_payload.get('data', None)
-					self._add_event_to_queue(plugin, event_name, payload=data)
-				else:
-					self._logger.warn("Invalid plugin: '%s'. payload: %s", plugin, event_payload)
-			else:
-				self._logger.warn("Invalid payload data in event %s", event)
-		except Exception as e:
-			self._logger.exception('Exception during _add_other_plugin_data: {}'.format(e))
 
 	# -------- EXTERNALLY CALLED METHODS -------------------------------------------------------------------------------
 	# INIT
@@ -544,6 +366,163 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.exception('Error during add_frontend_event: {}'.format(e), analytics=True)
 
+	# -------- OCTOPRINT AND MR BEAM EVENTS ----------------------------------------------------------------------------
+	def _subscribe(self):
+		self._event_bus.subscribe(OctoPrintEvents.PRINT_STARTED, self._event_print_started)
+		self._event_bus.subscribe(OctoPrintEvents.PRINT_PAUSED, self._event_print_paused)
+		self._event_bus.subscribe(OctoPrintEvents.PRINT_RESUMED, self._event_print_resumed)
+		self._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self._event_print_done)
+		self._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self._event_print_failed)
+		self._event_bus.subscribe(OctoPrintEvents.PRINT_CANCELLED, self._event_print_cancelled)
+		self._event_bus.subscribe(OctoPrintEvents.SLICING_STARTED, self._event_slicing_started)
+		self._event_bus.subscribe(OctoPrintEvents.SLICING_DONE, self._event_slicing_done)
+		self._event_bus.subscribe(MrBeamEvents.PRINT_PROGRESS, self._event_print_progress)
+		self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_PAUSE, self._event_laser_cooling_pause)
+		self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_RESUME, self._event_laser_cooling_resume)
+		self._event_bus.subscribe(MrBeamEvents.LASER_JOB_DONE, self._event_laser_job_finished)
+		self._event_bus.subscribe(MrBeamEvents.LASER_JOB_CANCELLED, self._event_laser_job_finished)
+		self._event_bus.subscribe(MrBeamEvents.LASER_JOB_FAILED, self._event_laser_job_finished)
+		self._event_bus.subscribe(OctoPrintEvents.STARTUP, self._event_startup)
+		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self._event_shutdown)
+		self._event_bus.subscribe(MrBeamEvents.ANALYTICS_DATA, self._add_other_plugin_data)
+		self._event_bus.subscribe(MrBeamEvents.JOB_TIME_ESTIMATED, self._event_job_time_estimated)
+
+	def _event_startup(self, event, payload):
+		payload = {
+			ak.Device.LaserHead.SERIAL: self._laserhead_handler.get_current_used_lh_data()['serial'],
+			ak.Device.Usage.USERS: len(self._plugin._user_manager._users)
+		}
+		self._add_device_event(ak.Device.Event.STARTUP, payload=payload)
+
+	def _event_shutdown(self, event, payload):
+		self._add_device_event(ak.Device.Event.SHUTDOWN)
+
+	def _event_slicing_started(self, event, payload):
+		self._init_new_job()
+		self._add_job_event(ak.Job.Event.Slicing.STARTED)
+		self._current_cpu_data = Cpu(state='slicing', repeat=False)
+
+	def _event_slicing_done(self, event, payload):
+		if self._current_cpu_data:
+			self._current_cpu_data.record_cpu_data()
+			self._add_cpu_data(dur=payload['time'])
+		self._add_job_event(ak.Job.Event.Slicing.DONE)
+
+	def _add_cpu_data(self, dur=None):
+		payload = self._current_cpu_data.get_cpu_data()
+		payload['dur'] = dur
+		self._add_job_event(ak.Job.Event.CPU, payload=payload)
+
+	def _event_print_started(self, event, payload):
+		# If there's no job_id, it may be a gcode file (no slicing), so we have to start the job here
+		if not self._current_job_id:
+			self._init_new_job()
+		self._current_cpu_data = Cpu(state='laser', repeat=True)
+		self._init_collectors()
+		self._add_job_event(ak.Job.Event.Print.STARTED)
+
+	def _event_print_progress(self, event, payload):
+		data = {
+			ak.Job.Progress.PERCENT: payload['progress'],
+			ak.Job.Progress.LASER_TEMPERATURE: self._current_lasertemp_collector.get_latest_value(),
+			ak.Job.Progress.LASER_INTENSITY: self._current_intensity_collector.get_latest_value(),
+			ak.Job.Progress.DUST_VALUE: self._current_dust_collector.get_latest_value(),
+			ak.Job.Duration.CURRENT: round(payload['time'], 1),
+			ak.Job.Fan.RPM: self._plugin._dustManager.get_fan_rpm(),
+			ak.Job.Fan.STATE: self._plugin._dustManager.get_fan_state(),
+		}
+		self._add_job_event(ak.Job.Event.Print.PROGRESS, data)
+
+		if self._current_cpu_data:
+			self._current_cpu_data.update_progress(payload['progress'])
+
+	def _event_print_paused(self, event, payload):
+		"""
+		Cooling: payload holds some information if it was a cooling_pause or not. Lid/Button: Currently there is no
+		way to know other than checking the current state: _mrbeam_plugin_implementation._ioBeam
+		.is_interlock_closed()
+		"""
+		self._add_job_event(ak.Job.Event.Print.PAUSED, payload={ak.Job.Duration.CURRENT: int(round(payload['time']))})
+
+	def _event_print_resumed(self, event, payload):
+		self._add_job_event(ak.Job.Event.Print.RESUMED, payload={ak.Job.Duration.CURRENT: int(round(payload['time']))})
+
+	def _event_laser_cooling_pause(self, event, payload):
+		data = {
+			ak.Job.LaserHead.TEMP: None
+		}
+		if self._current_lasertemp_collector:
+			data[ak.Job.LaserHead.TEMP] = self._current_lasertemp_collector.get_latest_value()
+		self._add_job_event(ak.Job.Event.Cooling.START, payload=data)
+
+	def _event_laser_cooling_resume(self, event, payload):
+		data = {
+			ak.Job.LaserHead.TEMP: None
+		}
+		if self._current_lasertemp_collector:
+			data[ak.Job.LaserHead.TEMP] = self._current_lasertemp_collector.get_latest_value()
+		self._add_job_event(ak.Job.Event.Cooling.DONE, payload=data)
+
+	def _event_print_done(self, event, payload):
+		payload = {
+			ak.Job.Duration.CURRENT: int(round(payload['time'])),
+			ak.Job.Duration.ESTIMATION: int(round(self._current_job_time_estimation))
+		}
+
+		self._add_job_event(ak.Job.Event.Print.DONE, payload=payload)
+		self._add_collector_details()
+		self._add_cpu_data(dur=payload['time'])
+
+	def _event_print_failed(self, event, payload):
+		if self._current_job_id:
+			details = {
+				ak.Job.Duration.CURRENT: int(round(payload['time'])),
+				ak.Job.ERROR: payload['error_msg'],
+			}
+			self._add_job_event(ak.Job.Event.Print.FAILED, payload=details)
+			self._add_collector_details()
+			self._add_cpu_data(dur=payload['time'])
+
+	def _event_print_cancelled(self, event, payload):
+		if self._current_job_id:
+			self._add_job_event(ak.Job.Event.Print.CANCELLED, payload={ak.Job.Duration.CURRENT: int(round(payload['time']))})
+			self._add_collector_details()
+			self._add_cpu_data(dur=payload['time'])
+
+	def _event_laser_job_finished(self, event, payload):
+		if self._current_job_id:
+			self._add_job_event(ak.Job.Event.LASERJOB_FINISHED)
+			self._cleanup_job()
+		# FileUploader.upload_now(self._plugin, delay=5.0)  # TODO IRATXE: uncomment
+
+	def _event_job_time_estimated(self, event, payload):
+		self._current_job_time_estimation = payload['jobTimeEstimation']
+
+	def _add_other_plugin_data(self, event, event_payload):
+		try:
+			if 'component' in event_payload and 'type' in event_payload and 'component_version' in event_payload:
+				component = event_payload.get('component')
+				event_type = event_payload.get('type')
+				if event_type == ak.Log.Event.EVENT_LOG:
+					data = event_payload.get('data', dict())
+					data[ak.Log.Component.NAME] = component
+					data[ak.Log.Component.VERSION] = event_payload.get('component_version')
+					self._add_log_event(ak.Log.Event.EVENT_LOG, payload=data)
+				else:
+					self._logger.warn("Unknown type: '%s' from component %s. payload: %s", event_type, component, event_payload)
+			elif 'plugin' in event_payload and 'event_name' in event_payload:
+				plugin = event_payload.get('plugin')
+				if plugin:
+					event_name = event_payload.get('eventname')
+					data = event_payload.get('data', None)
+					self._add_event_to_queue(plugin, event_name, payload=data)
+				else:
+					self._logger.warn("Invalid plugin: '%s'. payload: %s", plugin, event_payload)
+			else:
+				self._logger.warn("Invalid payload data in event %s", event)
+		except Exception as e:
+			self._logger.exception('Exception during _add_other_plugin_data: {}'.format(e))
+
 	# -------- ANALYTICS LOGS QUEUE ------------------------------------------------------------------------------------
 	def _add_device_event(self, event, payload=None):
 		self._add_event_to_queue(ak.EventType.DEVICE, event, payload=payload)
@@ -632,15 +611,28 @@ class AnalyticsHandler(object):
 		self._add_job_event(ak.Job.Event.Summary.INTENSITY, payload=self._current_intensity_collector.getSummary().update(lh_info))
 		self._add_job_event(ak.Job.Event.Summary.LASERTEMP, payload=self._current_lasertemp_collector.getSummary().update(lh_info))
 
+	# -------- JOB HELPER METHODS --------------------------------------------------------------------------------------
+	def _cleanup_job(self):
+		self._current_job_id = None
+		self._current_dust_collector = None
+		self._current_intensity_collector = None
+		self._current_lasertemp_collector = None
+		self._current_cpu_data = None
+		self._current_job_time_estimation = None
+
+	def _init_new_job(self):
+		self._cleanup_job()
+		self._current_job_id = 'j_{}_{}'.format(self._snr, time.time())
+		self._add_job_event(ak.Job.Event.LASERJOB_STARTED)
+
 	# -------- WRITER THREAD (queue --> analytics file) ----------------------------------------------------------------
 	def _write_queue_to_analytics_file(self):
-		# while not self._shutdown_signaled: TODO IRATXE: keep or not
 		while self._analytics_enabled:
 			try:
-				if not os.path.isfile(self._jsonfile):
+				if not os.path.isfile(self._json_file):
 					self._init_json_file()
 
-				with open(self._jsonfile, 'a') as f:
+				with open(self._json_file, 'a') as f:
 					while not self._analytics_queue.empty():
 						data = self._analytics_queue.get()
 						data_string = json.dumps(data, sort_keys=False) + '\n'
@@ -658,7 +650,7 @@ class AnalyticsHandler(object):
 		self._logger.info('######################### SHUTDOOOOOOOWN')  # TODO IRATXE
 
 	def _init_json_file(self):
-		open(self._jsonfile, 'w+').close()
+		open(self._json_file, 'w+').close()
 		self._add_device_event(ak.Device.Event.INIT, payload={})
 
 	# -------- INITIAL ANALYTICS PROCEDURE -----------------------------------------------------------------------------
