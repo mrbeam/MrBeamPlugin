@@ -556,7 +556,7 @@ class MachineCom(object):
 		payload = self._get_printing_file_state()
 		self.watch_dog.stop()
 		self._move_home()
-		eventManager().fire(OctoPrintEvents.PRINT_DONE, payload)
+		# eventManager().fire(OctoPrintEvents.PRINT_DONE, payload)  # TODO IRATXE: Andy, do we need this?
 
 	def _move_home(self):
 		self._logger.debug("_move_home() called")

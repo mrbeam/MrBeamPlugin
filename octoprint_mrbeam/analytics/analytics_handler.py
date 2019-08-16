@@ -340,6 +340,7 @@ class AnalyticsHandler(object):
 		:return:
 		"""
 		try:
+			self._logger.info('######################## add_final_dust_details')
 			dust_duration = round(dust_end_ts - dust_start_ts, 4)
 			dust_difference = round(dust_end - dust_start, 5)
 			dust_per_time = dust_difference / dust_duration
@@ -406,7 +407,7 @@ class AnalyticsHandler(object):
 		if self._current_cpu_data:
 			self._current_cpu_data.record_cpu_data()
 			self._add_cpu_data(dur=payload['time'])
-		self._add_job_event(ak.Job.Event.Slicing.DONE)
+		self._add_job_event(ak.Job.Event.Slicing.DONE, payload={ak.Job.Duration.CURRENT: int(round(payload['time']))})
 
 	def _add_cpu_data(self, dur=None):
 		payload = self._current_cpu_data.get_cpu_data()
@@ -464,12 +465,12 @@ class AnalyticsHandler(object):
 		self._add_job_event(ak.Job.Event.Cooling.DONE, payload=data)
 
 	def _event_print_done(self, event, payload):
-		payload = {
+		duration = {
 			ak.Job.Duration.CURRENT: int(round(payload['time'])),
 			ak.Job.Duration.ESTIMATION: int(round(self._current_job_time_estimation))
 		}
 
-		self._add_job_event(ak.Job.Event.Print.DONE, payload=payload)
+		self._add_job_event(ak.Job.Event.Print.DONE, payload=duration)
 		self._add_collector_details()
 		self._add_cpu_data(dur=payload['time'])
 

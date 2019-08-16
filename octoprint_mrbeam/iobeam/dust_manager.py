@@ -231,10 +231,12 @@ class DustManager(object):
 	def __do_end_dusting_thread(self):
 		try:
 			if self._dust is not None:
+				self._logger.info('######################## __do_end_dusting_thread')
 				self._logger.debug("starting trial dust extraction. current: {}, threshold: {}".format(self._dust, self.extraction_limit))
 				dust_start = self._dust
 				dust_start_ts = self._data_ts
 				if self.__continue_dust_extraction(self.extraction_limit, dust_start_ts):
+					self._logger.info('######################## __do_end_dusting_thread CONTINUE')
 					self.is_dust_mode = True
 					_mrbeam_plugin_implementation.fire_event(MrBeamEvents.DUSTING_MODE_START)
 					self._start_dust_extraction(self.FAN_MAX_INTENSITY)
@@ -245,6 +247,7 @@ class DustManager(object):
 					dust_end_ts = self._data_ts
 					self.is_dust_mode = False
 					if dust_start_ts != dust_end_ts:
+						self._logger.info('######################## __do_end_dusting_thread DIFFERENT TS')
 						_mrbeam_plugin_implementation._analytics_handler.add_final_dust_details(dust_start, dust_start_ts, dust_end, dust_end_ts)
 					else:
 						self._logger.warning("No dust value received during extraction time. Skipping writing analytics!")
@@ -277,8 +280,12 @@ class DustManager(object):
 
 	def __continue_dust_extraction(self, value, started):
 		if time.time() - started > self.FINAL_DUSTING_DURATION:  # TODO: get this value from laser profile
+			self._logger.info('##################### __continue_dust_extraction time issue')
 			return False
 		if self._dust is not None and self._dust < value:
+			self._logger.info('##################### __continue_dust_extraction dust issue')
+			self._logger.info('####### self._dust = {}'.format(self._dust))
+			self._logger.info('####### value = {}'.format(value))
 			return False
 		return True
 
