@@ -459,7 +459,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		firstRun = render_kwargs['firstRun']
 		language = g.locale.language if g.locale else "en"
 
-		if request.headers.get('User-Agent') != self._analytics_handler.SELF_CHECK_USER_AGENT:
+		if request.headers.get('User-Agent') != self._analytics_handler._timer_handler.SELF_CHECK_USER_AGENT:
 			self._track_ui_render_calls(request, language)
 
 		enable_accesscontrol = self._user_manager.enabled

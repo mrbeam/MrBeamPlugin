@@ -61,10 +61,10 @@ class TimerHandler:
 							err = str(e)
 
 						payload[interface] = {
-							"ip": ip,
-							"response": response,
-							"elapsed_s": elapsed_seconds,
-							"err": err,
+							ak.Device.Request.IP: ip,
+							ak.Device.Request.RESPONSE: response,
+							ak.Device.Request.ELAPSED_S: elapsed_seconds,
+							ak.Device.ERROR: err,
 						}
 
 			_mrbeam_plugin_implementation._analytics_handler.add_http_self_check(payload)
@@ -88,9 +88,9 @@ class TimerHandler:
 				connection = False
 
 			payload = {
-				"response": response,
-				"err": err,
-				"connection": connection,
+				ak.Device.Request.RESPONSE: response,
+				ak.Device.ERROR: err,
+				ak.Device.Request.CONNECTION: connection,
 			}
 			_mrbeam_plugin_implementation._analytics_handler.add_internet_connection(payload)
 
@@ -124,9 +124,9 @@ class TimerHandler:
 			used_percent = round((total_space - available_space) * 100 / total_space)
 
 			disk_space = {
-				ak.TOTAL_SPACE: total_space,
-				ak.AVAILABLE_SPACE: available_space,
-				ak.USED_SPACE: used_percent,
+				ak.Device.Usage.TOTAL_SPACE: total_space,
+				ak.Device.Usage.AVAILABLE_SPACE: available_space,
+				ak.Device.Usage.USED_SPACE: used_percent,
 			}
 			_mrbeam_plugin_implementation._analytics_handler.add_disk_space(disk_space)
 
