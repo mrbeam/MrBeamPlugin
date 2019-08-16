@@ -43,6 +43,7 @@ def existing_analyticsHandler():
 class AnalyticsHandler(object):
 	QUEUE_MAXSIZE = 100
 	SELF_CHECK_USER_AGENT = 'MrBeamPlugin self check'
+	ANALYTICS_LOG_VERSION = 8  # bumped in 0.3.2.1
 
 	def __init__(self, plugin):
 		self._plugin = plugin
@@ -51,7 +52,6 @@ class AnalyticsHandler(object):
 		self._laserhead_handler = laserheadHandler(plugin)  # TODO IRATXE: This is still not initialized in the plugin
 		self._snr = plugin.getSerialNum()
 		self._plugin_version = plugin._plugin_version
-
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.analyticshandler")
 
 		self._analytics_enabled = self._settings.get(['analyticsEnabled'])
@@ -73,8 +73,6 @@ class AnalyticsHandler(object):
 		self._current_lasertemp_collector = None
 		self._current_cpu_data = None
 		self._current_job_time_estimation = None
-
-		self._analytics_log_version = 8  # bumped in 0.3.2.1 TODO IRATXE: move iwo
 
 		self.event_waiting_for_terminal_dump = None
 
@@ -256,20 +254,24 @@ class AnalyticsHandler(object):
 			self._add_cpu_data(dur=payload['time'])
 
 	def _event_print_failed(self, event, payload):
-		if not self._current_job_id:
-			self._add_job_event(ak.PRINT_FAILED, payload={ak.JOB_DURATION: int(round(payload['time']))})
+		if self._current_job_id:
+			details = {
+				ak.JOB_DURATION: int(round(payload['time'])),
+				ak.ERROR: payload['error_msg'],
+			}
+			self._add_job_event(ak.PRINT_FAILED, payload=details)
 			self._add_collector_details()
 			self._add_cpu_data(dur=payload['time'])
 
 	def _event_print_cancelled(self, event, payload):
-		if not self._current_job_id:
+		if self._current_job_id:
 			self._add_job_event(ak.PRINT_CANCELLED, payload={ak.JOB_DURATION: int(round(payload['time']))})
 			self._add_collector_details()
 			self._add_cpu_data(dur=payload['time'])
 
 	# We will also call this from the Mr Beam events "cancelled" and "failed"
 	def _event_laser_job_done(self, event, payload):
-		if not self._current_job_id:
+		if self._current_job_id:
 			self._add_job_event(ak.LASERJOB_DONE)
 			self._cleanup_job()
 		FileUploader.upload_now(self._plugin, delay=5.0)
@@ -277,6 +279,7 @@ class AnalyticsHandler(object):
 	def _event_job_time_estimated(self, event, payload):
 		self._current_job_time_estimation = payload['jobTimeEstimation']
 
+	# TODO IRATXE: check this
 	def _add_other_plugin_data(self, event, event_payload):
 		try:
 			if 'component' in event_payload and 'type' in event_payload and 'component_version' in event_payload:
@@ -364,7 +367,6 @@ class AnalyticsHandler(object):
 
 	# MRB_LOGGER
 	def add_logger_event(self, event_details, wait_for_terminal_dump):
-		self._logger.info('################## CUIDADO, log_event!')
 		filename = event_details['caller'].filename.replace(__package_path__ + '/', '')
 
 		if event_details['level'] in logging._levelNames:
@@ -436,11 +438,14 @@ class AnalyticsHandler(object):
 
 	# IOBEAM_HANDLER
 	def add_iobeam_message_log(self, iobeam_version, message):
-		data = dict(
-			version=iobeam_version,
-			message=message
-		)
-		self._add_log_event(ak.IOBEAM, payload=data)
+		try:
+			data = dict(
+				version=iobeam_version,
+				message=message
+			)
+			self._add_log_event(ak.IOBEAM, payload=data)
+		except Exception as e:
+			self._logger.exception('Error during add_iobeam_message_log: {}'.format(e), analytics=True)
 
 	# ACC_WATCH_DOG
 	def add_cpu_log(self, temp, throttle_alerts):
@@ -478,12 +483,15 @@ class AnalyticsHandler(object):
 
 	# COMM_ACC2
 	def add_grbl_flash_event(self, from_version, to_version, successful, err=None):
-		payload = dict(
-			from_version=from_version,
-			to_version=to_version,
-			succesful=successful,
-			err=err)
-		self._add_device_event(ak.FLASH_GRBL, payload=payload)
+		try:
+			payload = dict(
+				from_version=from_version,
+				to_version=to_version,
+				succesful=successful,
+				err=err)
+			self._add_device_event(ak.FLASH_GRBL, payload=payload)
+		except Exception as e:
+			self._logger.exception('Error during add_grbl_flash_event: {}'.format(e))
 
 	# SOFTWARE_UPDATE_INFORMATION
 	def add_software_channel_switch_event(self, old_channel, new_channel):
@@ -493,7 +501,7 @@ class AnalyticsHandler(object):
 				ak.NEW_CHANNEL: new_channel,
 			}
 
-			self._add_event_to_queue(ak.TYPE_DEVICE_EVENT, ak.SW_CHANNEL_SWITCH, payload=channels)
+			self._add_device_event(ak.SW_CHANNEL_SWITCH, payload=channels)
 
 		except Exception as e:
 			self._logger.exception('Error during add_software_channel_switch_event: {}'.format(e))
@@ -501,7 +509,7 @@ class AnalyticsHandler(object):
 	# LED_EVENTS
 	def add_connections_state(self, connections):
 		try:
-			self._add_event_to_queue(ak.TYPE_CONNECTIVITY_EVENT, ak.CONNECTIONS_STATE, payload=connections)
+			self._add_connectivity_event(ak.CONNECTIONS_STATE, payload=connections)
 		except Exception as e:
 			self._logger.exception('Exception during add_connections_state: {}'.format(e))
 
@@ -523,21 +531,25 @@ class AnalyticsHandler(object):
 		:param dust_end_ts: timestamp at dust_value at job_done
 		:return:
 		"""
-		dust_duration = round(dust_end_ts - dust_start_ts, 4)
-		dust_difference = round(dust_end - dust_start, 5)
-		dust_per_time = dust_difference / dust_duration
-		self._logger.debug("dust extraction time {} from {} to {} (difference: {},gradient: {})".format(dust_duration, dust_start, dust_end, dust_difference, dust_per_time))
+		try:
+			dust_duration = round(dust_end_ts - dust_start_ts, 4)
+			dust_difference = round(dust_end - dust_start, 5)
+			dust_per_time = dust_difference / dust_duration
+			self._logger.debug("dust extraction time {} from {} to {} (difference: {},gradient: {})".format(dust_duration, dust_start, dust_end, dust_difference, dust_per_time))
 
-		data = {
-			ak.DUST_START: dust_start,
-			ak.DUST_END: dust_end,
-			ak.DUST_START_TS: dust_start_ts,
-			ak.DUST_END_TS: dust_end_ts,
-			ak.DUST_DURATION: dust_duration,
-			ak.DUST_DIFF: dust_difference,
-			ak.DUST_PER_TIME: dust_per_time
-		}
-		self._add_job_event(ak.FINAL_DUST, payload=data)
+			data = {
+				ak.DUST_START: dust_start,
+				ak.DUST_END: dust_end,
+				ak.DUST_START_TS: dust_start_ts,
+				ak.DUST_END_TS: dust_end_ts,
+				ak.DUST_DURATION: dust_duration,
+				ak.DUST_DIFF: dust_difference,
+				ak.DUST_PER_TIME: dust_per_time
+			}
+			self._add_job_event(ak.FINAL_DUST, payload=data)
+
+		except Exception as e:
+			self._logger.exception('Error during add_final_dust_details: {}'.format(e))
 
 	# OS_HEALTH_CARE
 	def add_os_health_log(self, data):
@@ -571,7 +583,7 @@ class AnalyticsHandler(object):
 			event = {
 				ak.SERIALNUMBER: self._snr,
 				ak.TYPE: event_type,
-				ak.VERSION: self._analytics_log_version,
+				ak.VERSION: self.ANALYTICS_LOG_VERSION,
 				ak.EVENT: event_name,
 				ak.TIMESTAMP: time.time(),
 				ak.NTP_SYNCED: self._plugin.is_time_ntp_synced(),
@@ -592,7 +604,7 @@ class AnalyticsHandler(object):
 	def _add_to_queue(self, element):
 		try:
 			self._analytics_queue.put(element)
-			self._logger.info('################## QUEUE: {}'.format(self._analytics_queue.qsize()))
+			self._logger.info('################## QUEUE: {}'.format(self._analytics_queue.qsize()))  # TODO IRATXE
 		except Queue.Full:
 			self._logger.info('Analytics queue max size reached ({}). Reinitializing...'.format(self.QUEUE_MAXSIZE))
 			self._analytics_queue = Queue(maxsize=self.QUEUE_MAXSIZE)
@@ -648,16 +660,16 @@ class AnalyticsHandler(object):
 						data_string = json.dumps(data, sort_keys=False) + '\n'
 						f.write(data_string)
 						if 'e' in data:
-							self._logger.info('################## WRITE -- {}'.format(data['e']))
+							self._logger.info('################## WRITE -- {}'.format(data['e']))  # TODO IRATXE
 						else:
-							self._logger.info('################## WRITE -- {}'.format(data))
+							self._logger.info('################## WRITE -- {}'.format(data))  # TODO IRATXE
 
 				time.sleep(0.1)
 
 			except Exception as e:
 				self._logger.exception('Error while writing data: {}'.format(e), analytics=False)
 
-		self._logger.info('######################### SHUTDOOOOOOOWN')
+		self._logger.info('######################### SHUTDOOOOOOOWN')  # TODO IRATXE
 
 	def _init_json_file(self):
 		open(self._jsonfile, 'w+').close()

@@ -553,17 +553,7 @@ class MachineCom(object):
 		self._logger.debug("_set_print_finished() called")
 		self._callback.on_comm_print_job_done()
 		self._changeState(self.STATE_OPERATIONAL)
-		payload = {
-			"file": self._currentFile.getFilename(),
-			"filename": os.path.basename(self._currentFile.getFilename()),
-			"origin": self._currentFile.getFileLocation(),
-			"time": self.getPrintTime(),
-			"mrb_state": _mrbeam_plugin_implementation.get_mrb_state(),
-			'file_lines_total': self._currentFile.getLinesTotal(),
-			'file_lines_read': self._currentFile.getLinesRead(),
-			'file_lines_remaining': self._currentFile.getLinesRemaining(),
-			'lines_recovered': self._lines_recoverd_total,
-		}
+		payload = self._get_printing_file_state()
 		self.watch_dog.stop()
 		self._move_home()
 		eventManager().fire(OctoPrintEvents.PRINT_DONE, payload)
@@ -676,6 +666,13 @@ class MachineCom(object):
 			# We can safely assume this because we filter too long commands before sending them.
 			self._start_recovery_thread()
 			return
+
+		printing = self.isPrinting() or self.isPaused()
+		if printing:
+			if self._currentFile is not None:
+				payload = self._get_printing_file_state()
+				payload['error_msg'] = line
+			eventManager().fire(OctoPrintEvents.PRINT_FAILED, payload)
 
 		my_cmd = AccLineBuffer.get_cmd_from_item(self._acc_line_buffer.get_last_responded())
 		self._errorValue = "{} in {}".format(line, my_cmd)
@@ -1693,16 +1690,7 @@ class MachineCom(object):
 			self._currentFile.start()
 			self._finished_currentFile = False
 
-			payload = {
-				"file": self._currentFile.getFilename(),
-				"filename": os.path.basename(self._currentFile.getFilename()),
-				"origin": self._currentFile.getFileLocation(),
-				'mrb_state': _mrbeam_plugin_implementation.get_mrb_state(),
-				'file_lines_total': self._currentFile.getLinesTotal(),
-				'file_lines_read': self._currentFile.getLinesRead(),
-				'file_lines_remaining': self._currentFile.getLinesRemaining(),
-				'lines_recovered': self._lines_recoverd_total,
-			}
+			payload = self._get_printing_file_state()
 			eventManager().fire(OctoPrintEvents.PRINT_STARTED, payload)
 
 
@@ -1731,34 +1719,15 @@ class MachineCom(object):
 		self._send_event.clear(completely=True)
 		self._changeState(self.STATE_LOCKED)
 
-		payload = {
-			"file": self._currentFile.getFilename(),
-			"filename": os.path.basename(self._currentFile.getFilename()),
-			"origin": self._currentFile.getFileLocation(),
-			"time": self.getPrintTime(),
-			'mrb_state': _mrbeam_plugin_implementation.get_mrb_state(),
-			'file_lines_total': self._currentFile.getLinesTotal(),
-			'file_lines_read': self._currentFile.getLinesRead(),
-			'file_lines_remaining': self._currentFile.getLinesRemaining(),
-			'lines_recovered': self._lines_recoverd_total,
-		}
+		payload = self._get_printing_file_state()
 		eventManager().fire(OctoPrintEvents.PRINT_CANCELLED, payload)
 
 	def setPause(self, pause, send_cmd=True, pause_for_cooling=False, trigger=None, force=False):
 		if not self._currentFile:
 			return
 
-		payload = {
-			"file": self._currentFile.getFilename(),
-			"filename": os.path.basename(self._currentFile.getFilename()),
-			"origin": self._currentFile.getFileLocation(),
-			"trigger": trigger,
-			"time": self.getPrintTime(),
-			'mrb_state': _mrbeam_plugin_implementation.get_mrb_state(),
-			'file_lines_total': self._currentFile.getLinesTotal(),
-			'file_lines_read': self._currentFile.getLinesRead(),
-			'file_lines_remaining': self._currentFile.getLinesRemaining(),
-		}
+		payload = self._get_printing_file_state()
+		payload['trigger'] = trigger
 
 		if not pause and (self.isPaused() or force):
 			if self._pauseWaitStartTime:
@@ -1914,6 +1883,21 @@ class MachineCom(object):
 	def getGrblVersion(self):
 		return self._grbl_version
 
+	def _get_printing_file_state(self):
+		file_state = {
+			"file": self._currentFile.getFilename(),
+			"filename": os.path.basename(self._currentFile.getFilename()),
+			"origin": self._currentFile.getFileLocation(),
+			"time": self.getPrintTime(),
+			'mrb_state': _mrbeam_plugin_implementation.get_mrb_state(),
+			'file_lines_total': self._currentFile.getLinesTotal(),
+			'file_lines_read': self._currentFile.getLinesRead(),
+			'file_lines_remaining': self._currentFile.getLinesRemaining(),
+			'lines_recovered': self._lines_recoverd_total,
+		}
+
+		return file_state
+
 	def close(self, isError=False, next_state=None):
 		self._monitoring_active = False
 		self._sending_active = False
@@ -1933,17 +1917,7 @@ class MachineCom(object):
 		if printing:
 			payload = None
 			if self._currentFile is not None:
-				payload = {
-					"file": self._currentFile.getFilename(),
-					"filename": os.path.basename(self._currentFile.getFilename()),
-					"origin": self._currentFile.getFileLocation(),
-					"time": self.getPrintTime(),
-					"mrb_state": _mrbeam_plugin_implementation.get_mrb_state(),
-					'file_lines_total': self._currentFile.getLinesTotal(),
-					'file_lines_read': self._currentFile.getLinesRead(),
-					'file_lines_remaining': self._currentFile.getLinesRemaining(),
-					'lines_recovered': self._lines_recoverd_total,
-				}
+				payload = self._get_printing_file_state()
 			eventManager().fire(OctoPrintEvents.PRINT_FAILED, payload)
 		eventManager().fire(OctoPrintEvents.DISCONNECTED)
 

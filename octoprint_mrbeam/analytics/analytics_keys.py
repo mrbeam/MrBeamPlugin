@@ -89,6 +89,7 @@ class AnalyticsKeys(object):
 	FAN_RPM_TEST = 'fan_rpm_test'
 	FAN_RPM = 'fan_rpm'
 	FAN_STATE = 'fan_state'
+	ERROR = 'err'
 
 	PRINT_EVENTS = [
 						PRINT_STARTED,
