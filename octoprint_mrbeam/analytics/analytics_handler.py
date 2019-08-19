@@ -511,7 +511,7 @@ class AnalyticsHandler(object):
 					self._add_log_event(ak.Log.Event.EVENT_LOG, payload=data)
 				else:
 					self._logger.warn("Unknown type: '%s' from component %s. payload: %s", event_type, component, event_payload)
-			elif 'plugin' in event_payload and 'event_name' in event_payload:
+			elif 'plugin' in event_payload and 'eventname' in event_payload:
 				plugin = event_payload.get('plugin')
 				if plugin:
 					event_name = event_payload.get('eventname')

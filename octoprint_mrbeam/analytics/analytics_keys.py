@@ -175,11 +175,3 @@ class AnalyticsKeys(object):
 			REMOTE_IP = 'remote_ip'
 			REFERRER = 'referrer'
 			LANGUAGE = 'language'
-
-
-
-
-
-
-
-
