@@ -15,9 +15,9 @@ class MrBeamEvents(object):
 	SHUTDOWN_PREPARE_CANCEL    = "ShutdownPrepareCancel"
 	SHUTDOWN_PREPARE_SUCCESS   = "ShutdownPrepareSuccess"
 
-	LASER_PAUSE_SAFTEY_TIMEOUT_START  = "LaserPauseSafetyTimeoutStart"
-	LASER_PAUSE_SAFTEY_TIMEOUT_END    = "LaserPauseSafetyTimeoutEnd"
-	LASER_PAUSE_SAFTEY_TIMEOUT_BLOCK  = "LaserPauseSafetyTimeoutBlock"
+	LASER_PAUSE_SAFETY_TIMEOUT_START  = "LaserPauseSafetyTimeoutStart"
+	LASER_PAUSE_SAFETY_TIMEOUT_END    = "LaserPauseSafetyTimeoutEnd"
+	LASER_PAUSE_SAFETY_TIMEOUT_BLOCK  = "LaserPauseSafetyTimeoutBlock"
 
 	PRINT_CANCELING_DONE       = "PrintCancelingDone"
 

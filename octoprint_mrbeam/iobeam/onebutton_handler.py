@@ -144,7 +144,7 @@ class OneButtonHandler(object):
 			elif self.pause_need_to_release and self._is_during_pause_waiting_time():
 				self._logger.debug("onEvent() ONEBUTTON_PRESSED: timeout block")
 				self.pause_need_to_release = True
-				self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_BLOCK)
+				self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFETY_TIMEOUT_BLOCK)
 
 		elif event == IoBeamEvents.ONEBUTTON_DOWN:
 			# shutdown prepare
@@ -158,7 +158,7 @@ class OneButtonHandler(object):
 			elif not self.pause_need_to_release and self._is_during_pause_waiting_time():
 				self._logger.debug("onEvent() ONEBUTTON_DOWN: timeout block")
 				self.pause_need_to_release = True
-				self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_BLOCK)
+				self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFETY_TIMEOUT_BLOCK)
 
 		elif event == IoBeamEvents.ONEBUTTON_RELEASED:
 			# pause_need_to_release
@@ -182,11 +182,11 @@ class OneButtonHandler(object):
 			elif self._printer.get_state_id() == self.PRINTER_STATE_PAUSED:
 				if self._is_during_pause_waiting_time():
 					self._logger.debug("onEvent() ONEBUTTON_RELEASED: timeout block")
-					self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_BLOCK)
+					self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFETY_TIMEOUT_BLOCK)
 				elif not self.is_interlock_closed():
 					# TODO: switch to BUTTON_PRESS_REJECT
-					self._logger.debug("onEvent() ONEBUTTON_RELEASED: interlock open: sending LASER_PAUSE_SAFTEY_TIMEOUT_BLOCK to have the light flash up.")
-					self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_BLOCK)
+					self._logger.debug("onEvent() ONEBUTTON_RELEASED: interlock open: sending LASER_PAUSE_SAFETY_TIMEOUT_BLOCK to have the light flash up.")
+					self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFETY_TIMEOUT_BLOCK)
 				elif not self.is_fan_connected():
 					self._logger.debug("onEvent() ONEBUTTON_RELEASED: fan not connected: sending BUTTON_PRESS_REJECT.")
 					self._fireEvent(MrBeamEvents.BUTTON_PRESS_REJECT)
@@ -410,7 +410,7 @@ class OneButtonHandler(object):
 
 	def _end_pause_safety_timeout(self):
 		if self.shutdown_state != self.SHUTDOWN_STATE_PREPARE:
-			self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_END)
+			self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFETY_TIMEOUT_END)
 		self._cancel_pause_safety_timeout_timer()
 
 	def _cancel_pause_safety_timeout_timer(self):
@@ -430,7 +430,8 @@ class OneButtonHandler(object):
 		self.intended_pause = True
 		self.pause_need_to_release = self.pause_need_to_release or need_to_release;
 		self._printer.pause_print(force=force, trigger=trigger)
-		self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_START, payload=dict(trigger=trigger, mrb_state=_mrbeam_plugin_implementation.get_mrb_state()))
+		# TODO IRATXE: Andy, do we need this? I think it's never used and causes a second print_paused
+		# self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFETY_TIMEOUT_START, payload=dict(trigger=trigger, mrb_state=_mrbeam_plugin_implementation.get_mrb_state()))
 		self._start_pause_safety_timeout_timer()
 
 	def _is_during_pause_waiting_time(self):
@@ -462,7 +463,7 @@ class OneButtonHandler(object):
 		self._fireEvent(MrBeamEvents.SHUTDOWN_PREPARE_CANCEL)
 		if self.shutdown_prepare_was_initiated_during_pause_saftey_timeout and not self._is_during_pause_waiting_time():
 			# we didn't fire this event when it actually timed out, so let's make up leeway
-			self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFTEY_TIMEOUT_END)
+			self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFETY_TIMEOUT_END)
 		self.shutdown_prepare_was_initiated_during_pause_saftey_timeout = None
 
 	def is_interlock_closed(self):
