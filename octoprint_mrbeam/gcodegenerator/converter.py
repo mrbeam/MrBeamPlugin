@@ -67,7 +67,7 @@ class Converter():
 		self._min_required_disk_space = min_required_disk_space
 		self._log.info('Converter Initialized: %s', self.options)
 		# todo need material,bounding_box_area here
-		self._write_conversion_details_analytics()
+		self._add_conversion_details_analytics()
 
 	def setoptions(self, opts):
 		# set default values if option is missing
@@ -90,7 +90,7 @@ class Converter():
 
 		return mpr
 
-	def _write_conversion_details_analytics(self):
+	def _add_conversion_details_analytics(self):
 		if 'material' in self.options:
 			_mrbeam_plugin_implementation._analytics_handler.add_material_details(self.options['material'])
 

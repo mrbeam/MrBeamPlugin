@@ -276,12 +276,8 @@ class DustManager(object):
 
 	def __continue_dust_extraction(self, value, started):
 		if time.time() - started > self.FINAL_DUSTING_DURATION:  # TODO: get this value from laser profile
-			self._logger.info('##################### __continue_dust_extraction time issue')
 			return False
 		if self._dust is not None and self._dust < value:
-			self._logger.info('##################### __continue_dust_extraction dust issue')
-			self._logger.info('####### self._dust = {}'.format(self._dust))
-			self._logger.info('####### value = {}'.format(value))
 			return False
 		return True
 
