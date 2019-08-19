@@ -18,26 +18,27 @@ class TimerHandler:
 	def __init__(self):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.timerhandler")
 
-		self._t1 = Timer(self.DISK_SPACE_TIMER, self._disk_space)
-		self._t2 = Timer(self.IP_ADDRESSES_TIMER, self._ip_addresses)
-		self._t3 = Timer(self.SELF_CHECK_TIMER, self._http_self_check)
-		self._t4 = Timer(self.INTERNET_CONNECTION_TIMER, self._internet_connection)
+		self._timers = []
 
 	def start_timers(self):
 		try:
-			self._t1.start()
-			self._t2.start()
-			self._t3.start()
-			self._t4.start()
+			self._timers = []
+			self._timers.append(Timer(self.DISK_SPACE_TIMER, self._disk_space))
+			self._timers.append(Timer(self.IP_ADDRESSES_TIMER, self._ip_addresses))
+			self._timers.append(Timer(self.SELF_CHECK_TIMER, self._http_self_check))
+			self._timers.append(Timer(self.INTERNET_CONNECTION_TIMER, self._internet_connection))
+
+			for timer in self._timers:
+				timer.start()
+
 		except RuntimeError as e:
 			self._logger.exception('Exception during start_timers: {}'.format(e))
 
 	def cancel_timers(self):
 		try:
-			self._t1.cancel()
-			self._t2.cancel()
-			self._t3.cancel()
-			self._t4.cancel()
+			for timer in self._timers:
+				timer.cancel()
+
 		except RuntimeError as e:
 			self._logger.exception('Exception during cancel_timers: {}'.format(e))
 

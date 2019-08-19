@@ -309,7 +309,7 @@ class AnalyticsHandler(object):
 				ak.Device.SoftwareChannel.NEW: new_channel,
 			}
 
-			self._add_device_event(ak.Device.SoftwareChannel.SWITCH, payload=channels)
+			self._add_device_event(ak.Device.Event.SW_CHANNEL_SWITCH, payload=channels)
 
 		except Exception as e:
 			self._logger.exception('Error during add_software_channel_switch_event: {}'.format(e))
@@ -340,7 +340,6 @@ class AnalyticsHandler(object):
 		:return:
 		"""
 		try:
-			self._logger.info('######################## add_final_dust_details')
 			dust_duration = round(dust_end_ts - dust_start_ts, 4)
 			dust_difference = round(dust_end - dust_start, 5)
 			dust_per_time = dust_difference / dust_duration
