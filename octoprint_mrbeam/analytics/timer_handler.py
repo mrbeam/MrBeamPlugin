@@ -24,16 +24,22 @@ class TimerHandler:
 		self._t4 = Timer(self.INTERNET_CONNECTION_TIMER, self._internet_connection)
 
 	def start_timers(self):
-		self._t1.start()
-		self._t2.start()
-		self._t3.start()
-		self._t4.start()
+		try:
+			self._t1.start()
+			self._t2.start()
+			self._t3.start()
+			self._t4.start()
+		except RuntimeError as e:
+			self._logger.exception('Exception during start_timers: {}'.format(e))
 
 	def cancel_timers(self):
-		self._t1.cancel()
-		self._t2.cancel()
-		self._t3.cancel()
-		self._t4.cancel()
+		try:
+			self._t1.cancel()
+			self._t2.cancel()
+			self._t3.cancel()
+			self._t4.cancel()
+		except RuntimeError as e:
+			self._logger.exception('Exception during cancel_timers: {}'.format(e))
 
 	def _http_self_check(self):
 		try:

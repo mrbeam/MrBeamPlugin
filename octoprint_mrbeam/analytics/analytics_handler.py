@@ -77,13 +77,15 @@ class AnalyticsHandler(object):
 
 		self._logger.info("Analytics analyticsEnabled: %s, sid: %s", self._analytics_enabled, self._session_id)
 
+		# Subscribe to OctoPrint and Mr Beam events
+		self._subscribe()
+
 		# Upload any previous analytics, unless the user didn't make a choice yet
 		if not self._no_choice_made:
 			FileUploader.upload_now(self._plugin)
 
 		# Initialize queue for analytics data and queue-to-file writer
 		self._analytics_queue = Queue(maxsize=self.QUEUE_MAXSIZE)
-		self._analytics_writer = Thread(target=self._write_queue_to_analytics_file)
 
 		# Activate analytics
 		if self._analytics_enabled:
@@ -97,14 +99,12 @@ class AnalyticsHandler(object):
 			self._no_choice_made = False
 
 		# Start writer thread
-		self._analytics_writer.daemon = True
-		self._analytics_writer.start()
+		analytics_writer = Thread(target=self._write_queue_to_analytics_file)
+		analytics_writer.daemon = True
+		analytics_writer.start()
 
 		# Start timers for async analytics
 		self._timer_handler.start_timers()
-
-		# Subscribe to OctoPrint and Mr Beam events
-		self._subscribe()
 
 	# -------- EXTERNALLY CALLED METHODS -------------------------------------------------------------------------------
 	# INIT
@@ -571,9 +571,13 @@ class AnalyticsHandler(object):
 		try:
 			self._analytics_queue.put(element)
 			self._logger.info('################## QUEUE: {}'.format(self._analytics_queue.qsize()))  # TODO IRATXE
-		except Queue.Full:
-			self._logger.info('Analytics queue max size reached ({}). Reinitializing...'.format(self.QUEUE_MAXSIZE))
-			self._analytics_queue = Queue(maxsize=self.QUEUE_MAXSIZE)
+
+			if self._analytics_queue.full():
+				self._logger.info('Analytics queue max size reached ({}). Reinitializing...'.format(self.QUEUE_MAXSIZE))
+				self._analytics_queue = Queue(maxsize=self.QUEUE_MAXSIZE)
+
+		except Exception as e:
+			self._logger.info('Error during _add_to_queue: {}'.format(e))
 
 	# -------- COLLECTOR METHODS (COMM_ACC2) ---------------------------------------------------------------------------
 	def collect_dust_value(self, dust_value):
