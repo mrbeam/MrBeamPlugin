@@ -461,13 +461,17 @@
 										<!--<feGaussianBlur in="SourceGraphic" stdDeviation="2" />-->
 										<feColorMatrix type="saturate" values="0.5"/>
 									</filter>
+									<filter id="preview_precision">
+										<feGaussianBlur in="SourceGraphic" stdDeviation="0" />
+									</filter>
 								</defs>
 								<image id="beamcam_image_svg"
 									xlink:href="/downloads/files/local/cam/beam-cam.jpg" x="0" y="0" height="100%" width="100%"
 									data-bind="attr: {
 											width: workingAreaWidthMM(),
 											height: workingAreaHeightMM()
-										}" />
+										}" 
+									filter="url(#preview_precision)" />
 									<g id="scaleGroup" data-bind="attr: { transform: scaleMatrix() }">
 										<g id="placedGcodes" data-bind="visible: true || (state.isPrinting() && !state.isPaused()), attr: { transform: 'matrix(1,0,0,-1,0,'+workingAreaHeightMM()+')' }"></g>
 										<g id="gCodePreview" data-bind="visible: state.isPrinting() || state.isPaused()"></g>
@@ -479,10 +483,12 @@
 									<g id="crosshair" transform="matrix(1, 0, 0, 1, -20, -20)"
 									   data-bind="attr: { transform: scaleMatrixCrosshair()}">
 										<circle r="0.5" cy="0" cx="0" />
-										<path d="M -15,0 H -5" />
+<!--										<path d="M -15,0 H -5" />
 										<path d="M 15,0 H 5" />
 										<path d="M 0,15 V 5" />
-										<path d="M 0,-15 V -5" />
+										<path d="M 0,-15 V -5" />-->
+										<path d="M-15,0H-5M15,0H5M0,15V5M0,-15V-5" />
+										
 									</g>
 									<g id="camera_markers" fill="#ffffff" stroke="#ff00ff" stroke-width="5">
 										<circle id="markerNW" r="5" cx="7" cy="7" />
