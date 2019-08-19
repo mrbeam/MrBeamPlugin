@@ -428,7 +428,7 @@ class OneButtonHandler(object):
 		"""
 		self.pause_laser_ts = time.time()
 		self.intended_pause = True
-		self.pause_need_to_release = self.pause_need_to_release or need_to_release;
+		self.pause_need_to_release = self.pause_need_to_release or need_to_release
 		self._printer.pause_print(force=force, trigger=trigger)
 		# TODO IRATXE: Andy, do we need this? I think it's never used and causes a second print_paused
 		# self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFETY_TIMEOUT_START, payload=dict(trigger=trigger, mrb_state=_mrbeam_plugin_implementation.get_mrb_state()))

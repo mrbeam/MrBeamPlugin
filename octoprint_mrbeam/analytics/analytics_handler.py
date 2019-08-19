@@ -376,6 +376,7 @@ class AnalyticsHandler(object):
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_CANCELLED, self._event_print_cancelled)
 		self._event_bus.subscribe(OctoPrintEvents.SLICING_STARTED, self._event_slicing_started)
 		self._event_bus.subscribe(OctoPrintEvents.SLICING_DONE, self._event_slicing_done)
+		self._event_bus.subscribe(MrBeamEvents.READY_TO_LASER_CANCELED, self._event_laser_job_finished)
 		self._event_bus.subscribe(MrBeamEvents.PRINT_PROGRESS, self._event_print_progress)
 		self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_PAUSE, self._event_laser_cooling_pause)
 		self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_RESUME, self._event_laser_cooling_resume)
