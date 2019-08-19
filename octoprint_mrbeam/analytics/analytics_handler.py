@@ -607,14 +607,20 @@ class AnalyticsHandler(object):
 		self._current_lasertemp_collector = ValueCollector('TempColl')
 
 	def _add_collector_details(self):
+		intensity_summary = self._current_intensity_collector.getSummary()
+		lasertemp_summary = self._current_lasertemp_collector.getSummary()
+
 		lh_info = {
 			ak.Device.LaserHead.VERSION: None,
 			ak.Device.LaserHead.SERIAL: self._laserhead_handler.get_current_used_lh_data()['serial'],
 		}
 
+		intensity_summary.update(lh_info)
+		lasertemp_summary.update(lh_info)
+
 		self._add_job_event(ak.Job.Event.Summary.DUST, payload=self._current_dust_collector.getSummary())
-		self._add_job_event(ak.Job.Event.Summary.INTENSITY, payload=self._current_intensity_collector.getSummary().update(lh_info))
-		self._add_job_event(ak.Job.Event.Summary.LASERTEMP, payload=self._current_lasertemp_collector.getSummary().update(lh_info))
+		self._add_job_event(ak.Job.Event.Summary.INTENSITY, payload=intensity_summary)
+		self._add_job_event(ak.Job.Event.Summary.LASERTEMP, payload=lasertemp_summary)
 
 	# -------- JOB HELPER METHODS --------------------------------------------------------------------------------------
 	def _cleanup_job(self):
