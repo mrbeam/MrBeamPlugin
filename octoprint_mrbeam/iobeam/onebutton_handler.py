@@ -429,9 +429,11 @@ class OneButtonHandler(object):
 		self.pause_laser_ts = time.time()
 		self.intended_pause = True
 		self.pause_need_to_release = self.pause_need_to_release or need_to_release
-		self._printer.pause_print(force=force, trigger=trigger)
-		# TODO IRATXE: Andy, do we need this? I think it's never used and causes a second print_paused
-		# self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFETY_TIMEOUT_START, payload=dict(trigger=trigger, mrb_state=_mrbeam_plugin_implementation.get_mrb_state()))
+
+		if trigger != 'OctoPrintEvents.PRINT_PAUSED':
+			self._printer.pause_print(force=force, trigger=trigger)
+
+		self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFETY_TIMEOUT_START, payload=dict(trigger=trigger, mrb_state=_mrbeam_plugin_implementation.get_mrb_state()))
 		self._start_pause_safety_timeout_timer()
 
 	def _is_during_pause_waiting_time(self):
@@ -448,7 +450,7 @@ class OneButtonHandler(object):
 				self._logger.info("Not resuming laser job, still in waiting time.")
 
 	def _reset_pause_configuration(self):
-		self.pause_laser_ts = -1;
+		self.pause_laser_ts = -1
 		self.intended_pause = False
 		self.pause_need_to_release = False
 		self._cancel_pause_safety_timeout_timer()
