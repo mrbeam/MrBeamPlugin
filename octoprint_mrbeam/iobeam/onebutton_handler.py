@@ -244,7 +244,7 @@ class OneButtonHandler(object):
 			# Webinterface / OctoPrint caused the pause state but ignore cooling state
 			if self.pause_laser_ts <= 0 and ('cooling' not in payload or not payload['cooling']):
 				self._logger.debug("onEvent() pause_laser(need_to_release=False)")
-				self.pause_laser(need_to_release=False, trigger="OctoPrintEvents.PRINT_PAUSED")
+				self.pause_laser(need_to_release=False, trigger="OctoPrintEvents.PRINT_PAUSED", pause_print=False)
 
 		elif event == OctoPrintEvents.PRINT_RESUMED:
 			# Webinterface / OctoPrint caused the resume
@@ -418,19 +418,22 @@ class OneButtonHandler(object):
 			self.pause_safety_timeout_timer.cancel()
 			self.pause_safety_timeout_timer = None
 
-	def pause_laser(self, need_to_release=True, force=False, trigger=None):
+	def pause_laser(self, need_to_release=True, force=False, trigger=None, pause_print=True):
 		"""
 		Pauses laser, switches machine to paused mode
 		:param need_to_release: If True (default), machine does not accept a button press for some period (3sec) and indicates this per leds.
 				This is a safety feature to prevent user from pausing and immediately resuming laser in case if he presses the button multiple times because he's nervous.
 				This is not needed if pause mode is triggered by other mechanisms than the button.
 		:param force: Forwarded to _printer. If False, com_acc isn't called if printer is already in paused state
+		:param trigger: Used for debugging purposes.
+		:param pause_print: Indicates if the pause_print method from Octoprint should be called. This is not necessary
+				if OctoPrint already did (so if the trigger was OctoPrintEvents.PRINT_PAUSED).
 		"""
 		self.pause_laser_ts = time.time()
 		self.intended_pause = True
 		self.pause_need_to_release = self.pause_need_to_release or need_to_release
 
-		if trigger != 'OctoPrintEvents.PRINT_PAUSED':
+		if pause_print:
 			self._printer.pause_print(force=force, trigger=trigger)
 
 		self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFETY_TIMEOUT_START, payload=dict(trigger=trigger, mrb_state=_mrbeam_plugin_implementation.get_mrb_state()))
