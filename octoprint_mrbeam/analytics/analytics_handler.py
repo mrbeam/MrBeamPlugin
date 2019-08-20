@@ -496,7 +496,7 @@ class AnalyticsHandler(object):
 	def _event_laser_job_finished(self, event, payload):
 		self._add_job_event(ak.Job.Event.LASERJOB_FINISHED, payload={ak.Job.STATUS: self._current_job_final_status})
 		self._cleanup_job()
-		# FileUploader.upload_now(self._plugin, delay=5.0)  # TODO IRATXE: uncomment
+		FileUploader.upload_now(self._plugin, delay=5.0)
 
 	def _event_job_time_estimated(self, event, payload):
 		self._current_job_time_estimation = payload['jobTimeEstimation']
@@ -572,7 +572,6 @@ class AnalyticsHandler(object):
 	def _add_to_queue(self, element):
 		try:
 			self._analytics_queue.put(element)
-			self._logger.info('################## QUEUE: {}'.format(self._analytics_queue.qsize()))  # TODO IRATXE
 
 			if self._analytics_queue.full():
 				self._logger.info('Analytics queue max size reached ({}). Reinitializing...'.format(self.QUEUE_MAXSIZE))
@@ -650,17 +649,11 @@ class AnalyticsHandler(object):
 						data = self._analytics_queue.get()
 						data_string = json.dumps(data, sort_keys=False) + '\n'
 						f.write(data_string)
-						if 'e' in data:
-							self._logger.info('################## WRITE -- {}'.format(data['e']))  # TODO IRATXE
-						else:
-							self._logger.info('################## WRITE -- {}'.format(data))  # TODO IRATXE
 
 				time.sleep(0.1)
 
 			except Exception as e:
 				self._logger.exception('Error while writing data: {}'.format(e), analytics=False)
-
-		self._logger.info('######################### SHUTDOOOOOOOWN')  # TODO IRATXE
 
 	def _init_json_file(self):
 		open(self._json_file, 'w+').close()
