@@ -55,9 +55,7 @@ $(function(){
 				
 				const blur = 4 - data['beam_cam_new_image']['markers_recognized'];
 				self.previewImageFilter.attr({'stdDeviation':blur});
-				
-				// TODO if camera is not active (lid closed), all marker(NW|NE|SW|SE) classes should be removed.
-				
+								
                 if(data['beam_cam_new_image']['error'] === undefined){
                     self.needsCalibration = false;
                 }else if(data['beam_cam_new_image']['error'] === "NO_CALIBRATION: Marker Calibration Needed" && !self.needsCalibration){
@@ -72,14 +70,10 @@ $(function(){
                 }
                 self.loadImage();
             }
+			
+			// If camera is not active (lid closed), all marker(NW|NE|SW|SE) classes should be removed.
 			if('interlocks_closed' in data && data.interlocks_closed === true){
 				self.cameraMarkerElem.attr('class', '');
-//				['NW', 'NE', 'SE', 'SW'].forEach(function(m) {
-//					if(mf[m] !== undefined){ 
-//						if(mf[m].recognized === true){ self.cameraMarkerElem.removeClass('marker'+m); }
-//						else { self.cameraMarkerElem.addClass('marker'+m);}
-//					}
-//				});
 			}
 			
         };
