@@ -69,6 +69,7 @@ class AnalyticsHandler(object):
 		# Job-specific data
 		self._current_job_id = None
 		self._current_job_time_estimation = None
+		self._current_job_final_status = None
 		self._current_dust_collector = None
 		self._current_intensity_collector = None
 		self._current_lasertemp_collector = None
@@ -324,6 +325,7 @@ class AnalyticsHandler(object):
 	# DUST_MANAGER
 	def add_fan_rpm_test(self, data):
 		try:
+			# The fan_rpm_test might finish after the job is done, in that case it isn't interesting for us
 			if self._current_job_id:
 				self._add_job_event(ak.Job.Event.Print.FAN_RPM_TEST, payload=data)
 		except Exception as e:
@@ -407,6 +409,7 @@ class AnalyticsHandler(object):
 		if self._current_cpu_data:
 			self._current_cpu_data.record_cpu_data()
 			self._add_cpu_data(dur=payload['time'])
+		self._current_job_final_status = 'Sliced'
 		self._add_job_event(ak.Job.Event.Slicing.DONE, payload={ak.Job.Duration.CURRENT: int(round(payload['time']))})
 
 	def _add_cpu_data(self, dur=None):
@@ -469,31 +472,30 @@ class AnalyticsHandler(object):
 			ak.Job.Duration.CURRENT: int(round(payload['time'])),
 			ak.Job.Duration.ESTIMATION: int(round(self._current_job_time_estimation))
 		}
-
+		self._current_job_final_status = 'Done'
 		self._add_job_event(ak.Job.Event.Print.DONE, payload=duration)
 		self._add_collector_details()
 		self._add_cpu_data(dur=payload['time'])
 
 	def _event_print_failed(self, event, payload):
-		if self._current_job_id:
-			details = {
-				ak.Job.Duration.CURRENT: int(round(payload['time'])),
-				ak.Job.ERROR: payload['error_msg'],
-			}
-			self._add_job_event(ak.Job.Event.Print.FAILED, payload=details)
-			self._add_collector_details()
-			self._add_cpu_data(dur=payload['time'])
+		details = {
+			ak.Job.Duration.CURRENT: int(round(payload['time'])),
+			ak.Job.ERROR: payload['error_msg'],
+		}
+		self._current_job_final_status = 'Failed'
+		self._add_job_event(ak.Job.Event.Print.FAILED, payload=details)
+		self._add_collector_details()
+		self._add_cpu_data(dur=payload['time'])
 
 	def _event_print_cancelled(self, event, payload):
-		if self._current_job_id:
-			self._add_job_event(ak.Job.Event.Print.CANCELLED, payload={ak.Job.Duration.CURRENT: int(round(payload['time']))})
-			self._add_collector_details()
-			self._add_cpu_data(dur=payload['time'])
+		self._current_job_final_status = 'Cancelled'
+		self._add_job_event(ak.Job.Event.Print.CANCELLED, payload={ak.Job.Duration.CURRENT: int(round(payload['time']))})
+		self._add_collector_details()
+		self._add_cpu_data(dur=payload['time'])
 
 	def _event_laser_job_finished(self, event, payload):
-		if self._current_job_id:
-			self._add_job_event(ak.Job.Event.LASERJOB_FINISHED)
-			self._cleanup_job()
+		self._add_job_event(ak.Job.Event.LASERJOB_FINISHED, payload={ak.Job.STATUS: self._current_job_final_status})
+		self._cleanup_job()
 		# FileUploader.upload_now(self._plugin, delay=5.0)  # TODO IRATXE: uncomment
 
 	def _event_job_time_estimated(self, event, payload):

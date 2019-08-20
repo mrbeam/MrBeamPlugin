@@ -267,7 +267,7 @@ class DustManager(object):
 			elif self._last_event == OctoPrintEvents.PRINT_FAILED:
 				my_event = MrBeamEvents.LASER_JOB_FAILED
 			if my_event:
-				_mrbeam_plugin_implementation.fire_event(my_event)
+				# _mrbeam_plugin_implementation.fire_event(my_event)  # TODO IRATXE: Andy, do we need this?
 				# if this event comes to soon after the OP PrintDone, the actual order ca get mixed up.
 				# Resend to make sure we end with a green state
 				threading.Timer(1.0, _mrbeam_plugin_implementation.fire_event, [my_event, dict(resent=True)]).start()

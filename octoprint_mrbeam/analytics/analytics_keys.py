@@ -21,6 +21,7 @@ class AnalyticsKeys(object):
 	class Job:
 		ID = 'job_id'
 		ERROR = 'err'
+		STATUS = 'status'
 
 		class Event:
 			LASERJOB_STARTED = 'laserjob_started'
