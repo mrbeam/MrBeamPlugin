@@ -110,19 +110,22 @@ class AnalyticsHandler(object):
 	# -------- EXTERNALLY CALLED METHODS -------------------------------------------------------------------------------
 	# INIT
 	def analytics_user_permission_change(self, analytics_enabled):
-		self._logger.info("analytics user permission change: analyticsEnabled=%s", analytics_enabled)
+		try:
+			self._logger.info("analytics user permission change: analyticsEnabled=%s", analytics_enabled)
 
-		if analytics_enabled:
-			self._analytics_enabled = True
-			self._settings.set_boolean(["analyticsEnabled"], True)
-			self._activate_analytics()
-			self._add_device_event(ak.Device.Event.ANALYTICS_ENABLED, payload=dict(enabled=True))
-		else:
-			# can not log this since the user just disagreed
-			# self._add_device_event(ak.Device.Event.ANALYTICS_ENABLED, payload=dict(enabled=False))
-			self._analytics_enabled = False
-			self._timer_handler.cancel_timers()
-			self._settings.set_boolean(["analyticsEnabled"], False)
+			if analytics_enabled:
+				self._analytics_enabled = True
+				self._settings.set_boolean(["analyticsEnabled"], True)
+				self._activate_analytics()
+				self._add_device_event(ak.Device.Event.ANALYTICS_ENABLED, payload=dict(enabled=True))
+			else:
+				# can not log this since the user just disagreed
+				# self._add_device_event(ak.Device.Event.ANALYTICS_ENABLED, payload=dict(enabled=False))
+				self._analytics_enabled = False
+				self._timer_handler.cancel_timers()
+				self._settings.set_boolean(["analyticsEnabled"], False)
+		except Exception as e:
+			self._logger.exception('Exception during analytics_user_permission_change: {}'.format(e))
 
 	def add_ui_render_call_event(self, host, remote_ip, referrer, language):
 		try:
@@ -151,59 +154,80 @@ class AnalyticsHandler(object):
 		try:
 			self._add_frontend_event(event, payload=payload)
 		except Exception as e:
-			self._logger.exception('Error during add_frontend_event: {}'.format(e), analytics=True)
+			self._logger.exception('Exception during add_frontend_event: {}'.format(e), analytics=True)
 
 	# TIMER_HANDLER
 	def add_mrbeam_usage(self, usage_data):
-		self._add_device_event(ak.Device.Event.MRBEAM_USAGE, payload=usage_data)
+		try:
+			self._add_device_event(ak.Device.Event.MRBEAM_USAGE, payload=usage_data)
+		except Exception as e:
+			self._logger.exception('Exception during add_mrbeam_usage: {}'.format(e))
 
 	def add_http_self_check(self, payload):
-		self._add_device_event(ak.Device.Event.HTTP_SELF_CHECK, payload=payload)
+		try:
+			self._add_device_event(ak.Device.Event.HTTP_SELF_CHECK, payload=payload)
+		except Exception as e:
+			self._logger.exception('Exception during add_http_self_check: {}'.format(e))
 
 	def add_internet_connection(self, payload):
-		self._add_device_event(ak.Device.Event.INTERNET_CONNECTION, payload=payload)
+		try:
+			self._add_device_event(ak.Device.Event.INTERNET_CONNECTION, payload=payload)
+		except Exception as e:
+			self._logger.exception('Exception during add_internet_connection: {}'.format(e))
 
 	def add_ip_addresses(self, payload):
-		self._add_device_event(ak.Device.Event.IPS, payload=payload)
+		try:
+			self._add_device_event(ak.Device.Event.IPS, payload=payload)
+		except Exception as e:
+			self._logger.exception('Exception during add_ip_addresses: {}'.format(e))
 
 	def add_disk_space(self, payload):
-		self._add_device_event(ak.Device.Event.DISK_SPACE, payload=payload)
+		try:
+			self._add_device_event(ak.Device.Event.DISK_SPACE, payload=payload)
+		except Exception as e:
+			self._logger.exception('Exception during add_disk_space: {}'.format(e))
 
 	# MRB_LOGGER
 	def add_logger_event(self, event_details, wait_for_terminal_dump):
-		filename = event_details['caller'].filename.replace(__package_path__ + '/', '')
+		try:
+			filename = event_details['caller'].filename.replace(__package_path__ + '/', '')
 
-		if event_details['level'] in logging._levelNames:
-			event_details['level'] = logging._levelNames[event_details['level']]
+			if event_details['level'] in logging._levelNames:
+				event_details['level'] = logging._levelNames[event_details['level']]
 
-		if event_details['exception_str']:
-			event_details['level'] = ak.Log.Level.EXCEPTION
+			if event_details['exception_str']:
+				event_details['level'] = ak.Log.Level.EXCEPTION
 
-		caller = event_details.pop('caller', None)
-		if caller:
-			event_details.update({
-				ak.Log.Caller.HASH: hash('{}{}{}'.format(filename, caller.lineno, self._plugin_version)),
-				ak.Log.Caller.FILE: filename,
-				ak.Log.Caller.LINE: caller.lineno,
-				ak.Log.Caller.FUNCTION: caller.function,
-				# code_context: caller.code_context[0].strip()
-			})
+			caller = event_details.pop('caller', None)
+			if caller:
+				event_details.update({
+					ak.Log.Caller.HASH: hash('{}{}{}'.format(filename, caller.lineno, self._plugin_version)),
+					ak.Log.Caller.FILE: filename,
+					ak.Log.Caller.LINE: caller.lineno,
+					ak.Log.Caller.FUNCTION: caller.function,
+					# code_context: caller.code_context[0].strip()
+				})
 
-		if wait_for_terminal_dump:  # If it is a e.g. GRBL error, we will have to wait some time for the whole dump
-			self.event_waiting_for_terminal_dump = dict(event_details)
-		else:
-			self._add_log_event(ak.Log.Event.EVENT_LOG, payload=event_details, analytics=False)
+			if wait_for_terminal_dump:  # If it is a e.g. GRBL error, we will have to wait some time for the whole dump
+				self.event_waiting_for_terminal_dump = dict(event_details)
+			else:
+				self._add_log_event(ak.Log.Event.EVENT_LOG, payload=event_details, analytics=False)
+		except Exception as e:
+			self._logger.exception('Exception during add_logger_event: {}'.format(e))
 
 	def log_terminal_dump(self, dump):  # Will be used with e.g. GRBL errors
-		if self.event_waiting_for_terminal_dump is not None:
-			payload = dict(self.event_waiting_for_terminal_dump)
-			payload[ak.Log.TERMINAL_DUMP] = dump
-			self._add_log_event(ak.Log.Event.EVENT_LOG, payload=payload, analytics=False)
-			self.event_waiting_for_terminal_dump = None
-		else:
-			self._logger.warn(
-				"log_terminal_dump() called but no foregoing event tracked. self.event_waiting_for_terminal_dump is "
-				"None. ignoring this dump.")
+		try:
+			if self.event_waiting_for_terminal_dump is not None:
+				payload = dict(self.event_waiting_for_terminal_dump)
+				payload[ak.Log.TERMINAL_DUMP] = dump
+				self._add_log_event(ak.Log.Event.EVENT_LOG, payload=payload, analytics=False)
+				self.event_waiting_for_terminal_dump = None
+			else:
+				self._logger.warn(
+					"log_terminal_dump() called but no foregoing event tracked. self.event_waiting_for_terminal_dump is "
+					"None. ignoring this dump.")
+		except Exception as e:
+			self._logger.exception('Exception during log_terminal_dump: {}'.format(e))
 
 	# LASERHEAD_HANDLER
 	def add_laserhead_info(self):
@@ -222,7 +246,7 @@ class AnalyticsHandler(object):
 			self._add_device_event(ak.Device.Event.LASERHEAD_INFO, payload=laserhead_info)
 
 		except:
-			self._logger.exception('Exception when saving info about the laserhead')
+			self._logger.exception('Exception during add_laserhead_info')
 
 	# LID_HANDLER
 	def add_camera_session(self, errors):
@@ -238,7 +262,7 @@ class AnalyticsHandler(object):
 			self._add_log_event(ak.Log.Event.CAMERA, payload=data)
 
 		except Exception as e:
-			self._logger.exception('Error during log_camera_error: {}'.format(e), analytics=True)
+			self._logger.exception('Exception during add_camera_session: {}'.format(e), analytics=True)
 
 	# IOBEAM_HANDLER
 	def add_iobeam_message_log(self, iobeam_version, message):
@@ -250,7 +274,7 @@ class AnalyticsHandler(object):
 
 			self._add_log_event(ak.Log.Event.IOBEAM, payload=iobeam_data)
 		except Exception as e:
-			self._logger.exception('Error during add_iobeam_message_log: {}'.format(e), analytics=True)
+			self._logger.exception('Exception during add_iobeam_message_log: {}'.format(e), analytics=True)
 
 	# ACC_WATCH_DOG
 	def add_cpu_log(self, temp, throttle_alerts):
@@ -261,32 +285,32 @@ class AnalyticsHandler(object):
 			}
 			self._add_log_event(ak.Log.Event.CPU, payload=cpu_data)
 		except Exception as e:
-			self._logger.exception('Error during add_cpu_log: {}'.format(e), analytics=True)
+			self._logger.exception('Exception during add_cpu_log: {}'.format(e), analytics=True)
 
 	# CONVERTER
 	def add_material_details(self, material_details):
 		try:
 			self._add_job_event(ak.Job.Event.Slicing.MATERIAL, payload=material_details)
 		except Exception as e:
-			self._logger.exception('Error during add_material_details: {}'.format(e))
+			self._logger.exception('Exception during add_material_details: {}'.format(e))
 
 	def add_engraving_parameters(self, eng_params):
 		try:
 			self._add_job_event(ak.Job.Event.Slicing.CONV_ENGRAVE, payload=eng_params)
 		except Exception as e:
-			self._logger.exception('Error during add_engraving_parameters: {}'.format(e))
+			self._logger.exception('Exception during add_engraving_parameters: {}'.format(e))
 
 	def add_cutting_parameters(self, cut_details):
 		try:
 			self._add_job_event(ak.Job.Event.Slicing.CONV_CUT, payload=cut_details)
 		except Exception as e:
-			self._logger.exception('Error during add_cutting_parameters: {}'.format(e))
+			self._logger.exception('Exception during add_cutting_parameters: {}'.format(e))
 
 	def add_design_file_details(self, design_file):
 		try:
 			self._add_job_event(ak.Job.Event.Slicing.DESIGN_FILE, payload=design_file)
 		except Exception as e:
-			self._logger.exception('Error during add_design_file_details: {}'.format(e))
+			self._logger.exception('Exception during add_design_file_details: {}'.format(e))
 
 	# COMM_ACC2
 	def add_grbl_flash_event(self, from_version, to_version, successful, err=None):
@@ -300,7 +324,7 @@ class AnalyticsHandler(object):
 
 			self._add_device_event(ak.Device.Event.FLASH_GRBL, payload=flashing)
 		except Exception as e:
-			self._logger.exception('Error during add_grbl_flash_event: {}'.format(e))
+			self._logger.exception('Exception during add_grbl_flash_event: {}'.format(e))
 
 	# SOFTWARE_UPDATE_INFORMATION
 	def add_software_channel_switch_event(self, old_channel, new_channel):
@@ -313,7 +337,7 @@ class AnalyticsHandler(object):
 			self._add_device_event(ak.Device.Event.SW_CHANNEL_SWITCH, payload=channels)
 
 		except Exception as e:
-			self._logger.exception('Error during add_software_channel_switch_event: {}'.format(e))
+			self._logger.exception('Exception during add_software_channel_switch_event: {}'.format(e))
 
 	# LED_EVENTS
 	def add_connections_state(self, connections):
@@ -329,14 +353,14 @@ class AnalyticsHandler(object):
 			if self._current_job_id:
 				self._add_job_event(ak.Job.Event.Print.FAN_RPM_TEST, payload=data)
 		except Exception as e:
-			self._logger.exception('Error during add_fan_rpm_test: {}'.format(e))
+			self._logger.exception('Exception during add_fan_rpm_test: {}'.format(e))
 
 	# OS_HEALTH_CARE
 	def add_os_health_log(self, data):
 		try:
 			self._add_log_event(ak.Log.Event.OS_HEALTH, payload=data)
 		except Exception as e:
-			self._logger.exception('Error during add_frontend_event: {}'.format(e), analytics=True)
+			self._logger.exception('Exception during add_os_health_log: {}'.format(e), analytics=True)
 
 	# -------- OCTOPRINT AND MR BEAM EVENTS ----------------------------------------------------------------------------
 	def _subscribe(self):
@@ -520,7 +544,7 @@ class AnalyticsHandler(object):
 	def _add_connectivity_event(self, event, payload):
 		self._add_event_to_queue(ak.EventType.CONNECTIVITY, event, payload=payload)
 
-	def _add_event_to_queue(self, event_type, event_name, payload=None, analytics=False):
+	def _add_event_to_queue(self, event_type, event_name, payload=None, analytics=True):
 		try:
 			data = dict()
 			if isinstance(payload, dict):
@@ -546,7 +570,7 @@ class AnalyticsHandler(object):
 			self._add_to_queue(event)
 
 		except Exception as e:
-			self._logger.error('Error during _add_event_to_queue: {}'.format(e), analytics=analytics)
+			self._logger.exception('Exception during _add_event_to_queue: {}'.format(e), analytics=analytics)
 
 	def _add_to_queue(self, element):
 		try:
@@ -557,7 +581,7 @@ class AnalyticsHandler(object):
 				self._analytics_queue = Queue(maxsize=self.QUEUE_MAXSIZE)
 
 		except Exception as e:
-			self._logger.info('Error during _add_to_queue: {}'.format(e))
+			self._logger.info('Exception during _add_to_queue: {}'.format(e))
 
 	# -------- COLLECTOR METHODS (COMM_ACC2) ---------------------------------------------------------------------------
 	def collect_dust_value(self, dust_value):
@@ -565,21 +589,21 @@ class AnalyticsHandler(object):
 			try:
 				self._current_dust_collector.addValue(dust_value)
 			except Exception as e:
-				self._logger.exception('Error during collect_dust_value: {}'.format(e))
+				self._logger.exception('Exception during collect_dust_value: {}'.format(e))
 
 	def collect_laser_temp_value(self, laser_temp):
 		if self._current_lasertemp_collector is not None:
 			try:
 				self._current_lasertemp_collector.addValue(laser_temp)
 			except Exception as e:
-				self._logger.exception('Error during collect_laser_temp_value: {}'.format(e))
+				self._logger.exception('Exception during collect_laser_temp_value: {}'.format(e))
 
 	def collect_laser_intensity_value(self, laser_intensity):
 		if self._current_intensity_collector is not None:
 			try:
 				self._current_intensity_collector.addValue(laser_intensity)
 			except Exception as e:
-				self._logger.exception('Error during save_laser_intensity_value: {}'.format(e))
+				self._logger.exception('Exception during collect_laser_intensity_value: {}'.format(e))
 
 	def _init_collectors(self):
 		self._current_dust_collector = ValueCollector('DustColl')
@@ -632,7 +656,7 @@ class AnalyticsHandler(object):
 				time.sleep(0.1)
 
 			except Exception as e:
-				self._logger.exception('Error while writing data: {}'.format(e), analytics=False)
+				self._logger.exception('Exception during _write_queue_to_analytics_file: {}'.format(e), analytics=False)
 
 	def _init_json_file(self):
 		open(self._json_file, 'w+').close()
@@ -659,7 +683,7 @@ class AnalyticsHandler(object):
 					os.unlink(file_path)
 					self._logger.info('File deleted: {file}'.format(file=file_path))
 			except Exception as e:
-				self._logger.exception('Error when deleting file {file}: {error}'.format(file=file_path, error=e))
+				self._logger.exception('Exception when deleting file {file}: {error}'.format(file=file_path, error=e))
 
 	def process_analytics_files(self):
 		self._logger.info("Processing analytics files...")
@@ -676,4 +700,4 @@ class AnalyticsHandler(object):
 					self._logger.info('File processed: {file}'.format(file=file_path))
 			except Exception as e:
 				self._logger.exception(
-					'Error when processing line {line} of file {file}: {e}'.format(line=idx, file=file_path, e=e))
+					'Exception when processing line {line} of file {file}: {e}'.format(line=idx, file=file_path, e=e))
