@@ -59,6 +59,7 @@ $(function() {
 
         self.onEventPrintDonePayload = function(payload) {
             self._fromData(payload);
+            self.dialogElement.modal("show");
         };
 
         self.onEventDustingModeStart = function(payload) {

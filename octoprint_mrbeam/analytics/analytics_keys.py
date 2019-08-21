@@ -28,7 +28,6 @@ class AnalyticsKeys(object):
 			LASERJOB_STARTED = 'laserjob_started'
 			LASERJOB_FINISHED = 'laserjob_finished'
 			CPU = 'cpu'  # This comes both in the slicing and the print
-			FINAL_DUST = 'final_dust'
 
 			class Slicing:
 				STARTED = 's_started'

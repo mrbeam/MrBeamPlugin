@@ -331,36 +331,6 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.exception('Error during add_fan_rpm_test: {}'.format(e))
 
-	def add_final_dust_details(self, dust_start, dust_start_ts, dust_end, dust_end_ts):
-		"""
-		Sends dust values after print_done (the final dust profile). This is to check how fast dust is getting less
-		in the machine and to check for filter full later.
-		:param dust_start: dust_value at state print_done
-		:param dust_start_ts: timestamp of dust_value at state print done
-		:param dust_end: dust_value at job_done
-		:param dust_end_ts: timestamp at dust_value at job_done
-		:return:
-		"""
-		try:
-			dust_duration = round(dust_end_ts - dust_start_ts, 4)
-			dust_difference = round(dust_end - dust_start, 5)
-			dust_per_time = dust_difference / dust_duration
-			self._logger.debug("dust extraction time {} from {} to {} (difference: {},gradient: {})".format(dust_duration, dust_start, dust_end, dust_difference, dust_per_time))
-
-			data = {
-				ak.Job.Dust.START: dust_start,
-				ak.Job.Dust.END: dust_end,
-				ak.Job.Dust.START_TS: dust_start_ts,
-				ak.Job.Dust.END_TS: dust_end_ts,
-				ak.Job.Dust.DURATION: dust_duration,
-				ak.Job.Dust.DIFF: dust_difference,
-				ak.Job.Dust.PER_TIME: dust_per_time,
-			}
-			self._add_job_event(ak.Job.Event.FINAL_DUST, payload=data)
-
-		except Exception as e:
-			self._logger.exception('Error during add_final_dust_details: {}'.format(e))
-
 	# OS_HEALTH_CARE
 	def add_os_health_log(self, data):
 		try:
