@@ -378,6 +378,8 @@ class AnalyticsHandler(object):
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_CANCELLED, self._event_print_cancelled)
 		self._event_bus.subscribe(OctoPrintEvents.SLICING_STARTED, self._event_slicing_started)
 		self._event_bus.subscribe(OctoPrintEvents.SLICING_DONE, self._event_slicing_done)
+		self._event_bus.subscribe(OctoPrintEvents.SLICING_CANCELLED, self._event_slicing_cancelled)
+		self._event_bus.subscribe(OctoPrintEvents.SLICING_FAILED, self._event_slicing_failed)
 		self._event_bus.subscribe(MrBeamEvents.READY_TO_LASER_CANCELED, self._event_laser_job_finished)
 		self._event_bus.subscribe(MrBeamEvents.PRINT_PROGRESS, self._event_print_progress)
 		self._event_bus.subscribe(MrBeamEvents.LASER_COOLING_PAUSE, self._event_laser_cooling_pause)
@@ -411,6 +413,12 @@ class AnalyticsHandler(object):
 			self._add_cpu_data(dur=payload['time'])
 		self._current_job_final_status = 'Sliced'
 		self._add_job_event(ak.Job.Event.Slicing.DONE, payload={ak.Job.Duration.CURRENT: int(round(payload['time']))})
+
+	def _event_slicing_failed(self, event, payload):
+		self._add_job_event(ak.Job.Event.Slicing.FAILED, payload={ak.Job.ERROR: payload['reason']})
+
+	def _event_slicing_cancelled(self, event, payload):
+		self._add_job_event(ak.Job.Event.Slicing.CANCELLED)
 
 	def _add_cpu_data(self, dur=None):
 		payload = self._current_cpu_data.get_cpu_data()

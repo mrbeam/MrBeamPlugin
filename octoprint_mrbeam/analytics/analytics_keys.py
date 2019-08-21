@@ -36,6 +36,8 @@ class AnalyticsKeys(object):
 				CONV_CUT = 'conv_cut'
 				DESIGN_FILE = 'design_file'
 				DONE = 's_done'
+				FAILED = 's_failed'
+				CANCELLED = 's_cancelled'
 
 			class Print:
 				STARTED = 'p_started'
