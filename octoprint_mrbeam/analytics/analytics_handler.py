@@ -559,6 +559,7 @@ class AnalyticsHandler(object):
 			event = {
 				ak.Header.SNR: self._snr,
 				ak.Header.TYPE: event_type,
+				ak.Header.ENV: self._plugin.get_env(),
 				ak.Header.VERSION: self.ANALYTICS_LOG_VERSION,
 				ak.Header.EVENT: event_name,
 				ak.Header.TIMESTAMP: time.time(),

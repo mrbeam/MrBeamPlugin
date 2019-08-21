@@ -2,6 +2,7 @@ class AnalyticsKeys(object):
 	class Header:
 		SNR = 'snr'
 		TYPE = 't'
+		ENV = 'env'
 		VERSION = 'v'
 		EVENT = 'e'
 		TIMESTAMP = 'ts'
