@@ -28,6 +28,7 @@ from octoprint_mrbeam.printing.acc_line_buffer import AccLineBuffer
 from octoprint_mrbeam.printing.acc_watch_dog import AccWatchDog
 from octoprint_mrbeam.analytics.analytics_handler import existing_analyticsHandler
 from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
+from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 ### MachineCom #########################################################################################################
 class MachineCom(object):
@@ -556,7 +557,7 @@ class MachineCom(object):
 		payload = self._get_printing_file_state()
 		self.watch_dog.stop()
 		self._move_home()
-		# eventManager().fire(OctoPrintEvents.PRINT_DONE, payload)  # TODO IRATXE: Andy, do we need this?
+		_mrbeam_plugin_implementation.fire_event(MrBeamEvents.PRINT_DONE_PAYLOAD, payload)
 
 	def _move_home(self):
 		self._logger.debug("_move_home() called")
