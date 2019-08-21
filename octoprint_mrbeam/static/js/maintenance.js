@@ -60,6 +60,10 @@ $(function () {
             return usedPercent > self.WARN_IF_USED_PERCENT;
         });
 
+        self.needsMaintenance = ko.computed(function () {
+            return self.prefilterShowWarning() || self.carbonFilterShowWarning() || self.laserHeadShowWarning() || self.gantryShowWarning()
+        });
+
         self.actionToReset = ko.computed(function () {
             if(self.componentToReset() === self.LASER_HEAD) {
                 return 'clean'
@@ -70,6 +74,12 @@ $(function () {
 
         self.onBeforeBinding = function() {
             self.loadUsageValues()
+        };
+
+        self.onStartupComplete = function() {
+            if (self.needsMaintenance()) {
+                self.notifyMaintenanceRequired()
+            }
         };
 
         self.onAllBound = function() {
@@ -170,10 +180,34 @@ $(function () {
             self.laserHeadUsage(self.settings.settings.plugins.mrbeam.usage.laserHeadUsage());
             self.gantryUsage(self.settings.settings.plugins.mrbeam.usage.gantryUsage());
             self.laserHeadSerial(self.settings.settings.plugins.mrbeam.laserHeadSerial())
+        };
+
+        self.notifyMaintenanceRequired = function() {
+            new PNotify({
+                title: gettext("Maintenance required"),
+                text: _.sprintf(gettext("Your Mr Beam II needs maintenance. Please check the %(open)smaintenance settings%(close)s for more information."),
+                {open: '<a href=\'#\' data-toggle="tab" id="settings_maintenance_link" style="font-weight:bold">', close: '</a>'}),
+                type: "warn",
+                hide: false});
+
+            $('#settings_maintenance_link').on('click', function(event) {
+                // Prevent url change
+                event.preventDefault();
+                // Open the "Settings" menu
+                $("#settings_tab_btn").tab('show');
+                // Go to the "Maintenance" tab
+                $('[data-toggle="tab"][href="#settings_plugin_mrbeam_maintenance"]').trigger('click');
+                // Close notification
+                $('[title="Close"]')[0].click();
+
+                // Write to analytics
+                let payload = {
+                    link: 'settings_maintenance_link'
+                };
+                self.analytics.send_fontend_event('link_click', payload)
+            });
         }
-
     }
-
 
     // view model class, parameters for constructor, container to bind to
     OCTOPRINT_VIEWMODELS.push([
