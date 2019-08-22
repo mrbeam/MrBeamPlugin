@@ -1,6 +1,7 @@
 $(function () {
     function WizardAnalyticsViewModel(parameters) {
         var self = this;
+        window.mrbeam.viewModels['wizardAnalyticsViewModel'] = self;
 
         self.MY_WIZARD_TAB_NAME = "wizard_plugin_corewizard_analytics_link";
 

@@ -53,14 +53,16 @@ class MrbLogger(object):
 		self.log(logging.WARN, msg, *args, **kwargs)
 
 	def error(self, msg, *args, **kwargs):
+		kwargs['analytics'] = kwargs.get('analytics', True)
 		self.log(logging.ERROR, msg, *args, **kwargs)
 
 	def critical(self, msg, *args, **kwargs):
+		kwargs['analytics'] = kwargs.get('analytics', True)
 		self.log(logging.CRITICAL, msg, *args, **kwargs)
 
 	def exception(self, msg, *args, **kwargs):
-		kwargs['analytics'] = True
-		kwargs['exc_info'] = True
+		kwargs['analytics'] = kwargs.get('analytics', True)
+		kwargs['exc_info'] = kwargs.get('exc_info', True)
 		self.log(logging.ERROR, msg, *args, **kwargs)
 
 	def log(self, level, msg, *args, **kwargs):
@@ -78,8 +80,10 @@ class MrbLogger(object):
 		"""
 		if kwargs.pop('terminal', True if level >= logging.WARN else False):
 			self._terminal(level, msg, *args, **kwargs)
-		if kwargs.pop('terminal_as_comm', False):
+		if kwargs.pop('terminal_as_comm', False) or level == self.LEVEL_COMM:
+			kwargs['id'] = ''
 			self._terminal(self.LEVEL_COMM, msg, *args, **kwargs)
+			del kwargs['id']
 		if kwargs.pop('serial', False):
 			self._serial(msg, *args, **kwargs)
 		analytics =  kwargs.pop('analytics', None)
@@ -90,7 +94,7 @@ class MrbLogger(object):
 		if analytics:
 			kwargs['terminal_dump'] = terminal_dump
 			self._analytics_log_event(level, msg, *args, **kwargs)
-		# just to be shure....
+		# just to be sure....
 		kwargs.pop('terminal', None)
 		kwargs.pop('terminal_as_comm', None)
 		kwargs.pop('analytics', None)
@@ -154,7 +158,7 @@ class MrbLogger(object):
 					stacktrace=stacktrace,
 					wait_for_terminal_dump=kwargs.get('terminal_dump', False))
 			except:
-				self.logger.exception("Exception in _analytics_log_event: ")
+				self.logger.exception("Exception in _analytics_log_event: ", analytics=False)
 
 
 	def _dump_terminal_buffer(self, level=logging.INFO, repeat=True, analytics=True):

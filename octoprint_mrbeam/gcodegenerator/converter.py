@@ -214,8 +214,6 @@ class Converter():
 						ip = ImageProcessor(output_filehandle = fh,
 											workingAreaWidth = self.workingAreaWidth,
 											workingAreaHeight = self.workingAreaHeight,
-						                    contrast = rasterParams['contrast'],
-						                    sharpening = rasterParams['sharpening'],
 						                    beam_diameter = rasterParams['beam_diameter'],
 											intensity_black = rasterParams['intensity_black'],
 											intensity_white = rasterParams['intensity_white'],
@@ -731,10 +729,11 @@ class Converter():
 		self._log.info( "wrote file: %s" % destination)
 
 	def _get_gcode_header(self):
+		
 		if(self.options['noheaders']):
-			return ""
+			return machine_settings.cooling_fan_speedup_gcode
 		else:
-			return machine_settings.gcode_header + "G21\n\n"
+			return machine_settings.gcode_header + "G21\n\n" + cooling_fan_speedup_gcode + "\n"
 
 	def _get_gcode_footer(self):
 		if(self.options['noheaders']):

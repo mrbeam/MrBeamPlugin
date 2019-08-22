@@ -1,14 +1,3 @@
-
-{% if env_local == "DEV" %}
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"
-       integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
-       crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"
-       integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg=="
-       crossorigin=""></script>
-{% endif %}
-
-
 <div id="laser_job_done_dialog" class="modal hide fade" data-backdrop="static">
     <div>
         <div class="modal-header">
@@ -17,27 +6,18 @@
             <h3 data-bind='visible: !is_dust_mode()'>{{ _('Laser Job Finished') }}</h3>
         </div>
         <div class="modal-body">
-            <!--Mr Beams map-->
-            {% if env_local == "DEV" %}
-                <div id="mrbeams_map_container" class="z-depth-1-half map-container" style="height: 500px; width: 700px; display: none;">
-                </div>
-            {% endif %}
 
-            <div id="job_done_info">
-                <img data-bind='visible: is_dust_mode()' src="/plugin/mrbeam/static/img/dusting.jpg">
-                <img data-bind='visible: !is_dust_mode()' src="/plugin/mrbeam/static/img/done.jpg">
-                <h5 data-bind='visible: is_dust_mode()'>{{ _('Please wait a few seconds until Mr Beam II cleared most of the dust particles out of the working area.') }}</h5>
-                <h5 data-bind='visible: !is_dust_mode()'>{{ _('Done. Now check out what you have created with your Mr Beam II!') }}</h5>
-            </div>
-            <h4 data-bind='visible: !is_dust_mode()'>{{ _('Laser job duration:') }} <span data-bind='text: job_duration_formatted()'></span></h4>
-
+            <img data-bind='visible: is_dust_mode()' src="/plugin/mrbeam/static/img/dusting.jpg">
+            <img data-bind='visible: !is_dust_mode()' src="/plugin/mrbeam/static/img/done.jpg">
+            <h5 data-bind='visible: is_dust_mode()'>{{ _('Please wait a few seconds until Mr Beam II cleared most of the dust particles out of the working area.') }}</h5>
+            <h5 data-bind='visible: !is_dust_mode()'>{{ _('Done. Now check out what you have created with your Mr Beam II!') }}</h5>
+            <h4 data-bind='visible: !is_dust_mode()'>{{ _('Laser job duration:') }} <span data-bind='text: job_duration_formatted()'>    </span>
+                <small>({{ _('Estimated:') }} <span data-bind='text: readyToLaser.estimated_duration'></span>)</small>
+            </h4>
         </div>
         <div class="modal-footer">
             <h4 data-bind='visible: is_dust_mode()' class="pull-right" >{{ _('Almost done...') }}</h4>
             <a class="btn btn-primary" id="laser_job_done_done_btn" data-bind='visible: !is_dust_mode(), click: cancel_btn' aria-hidden="true">{{ _('OK') }}</a>
-            {% if env_local == "DEV" %}
-                <a class="btn btn-secondary" id="share_job_and_location_btn" data-bind='visible: !is_dust_mode(), click: map_btn' aria-hidden="true">{{ _('Share my job!') }}</a>
-            {% endif %}
         </div>
     </div>
 </div>

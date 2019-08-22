@@ -2,6 +2,8 @@ $(function () {
 
     function MotherViewModel(params) {
         var self = this;
+        window.mrbeam.viewModels['motherViewModel'] = self;
+
         self.loginState = params[0];
         self.settings = params[1];
         self.state = params[2];
@@ -20,6 +22,10 @@ $(function () {
 
         self.isStartupComplete = false;
         self.storedSocketData = [];
+
+        self.localPrintTime = 0;
+        self.serverPrintTime = 0;
+        self.printTimeInterval = null;
 
         // MrBeam Logo click activates workingarea tab
         $('#mrbeam_logo_link').click(function() {
@@ -194,6 +200,7 @@ $(function () {
 				return formatDuration(self.state.printTime());
 			});
 
+			// self.inject_software_update_channel();
             self.setupFullscreenContols();
         };
 
@@ -227,10 +234,14 @@ $(function () {
                  self.terminal.checkAutoscroll();
             });
             self.terminal.activeAllFilters();
+
+            // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
+            // our implementation here should be used instead of octoprints
+            // to fix issues with the laser job time display
+            self.state._processProgressData = function(){};
         };
 
         self.onStartupComplete = function() {
-            self.addSwUpdateTierInformation();
             self.set_Design_lib_defaults();
             self._handleStoredSocketData();
             self.isStartupComplete = true;
@@ -399,6 +410,17 @@ $(function () {
             }
         };
 
+        self.state.isPaused.subscribe(function (newIsPaused) {
+            if(newIsPaused) {
+                clearInterval(self.printTimeInterval);
+            } else {
+                self.printTimeInterval = setInterval(function () {
+                    self.localPrintTime++;
+                    self.state.printTime(self.localPrintTime);
+                }, 1000)
+            }
+        });
+
         self._processProgressData = function(data) {
             if (data.completion) {
                 self.state.progress(data.completion);
@@ -406,7 +428,17 @@ $(function () {
                 self.state.progress(undefined);
             }
             self.state.filepos(data.filepos);
-            self.state.printTime(data.printTime);
+            if(data.printTime !== self.serverPrintTime) {
+                self.serverPrintTime = data.printTime;
+                self.localPrintTime = data.printTime;
+                self.state.printTime(self.localPrintTime);
+
+                clearInterval(self.printTimeInterval);
+                self.printTimeInterval = setInterval(function () {
+                    self.localPrintTime++;
+                    self.state.printTime(self.localPrintTime);
+                }, 1000)
+            }
             //self.printTimeLeft(data.printTimeLeft);
         };
 
@@ -422,33 +454,6 @@ $(function () {
             //self.estimatedPrintTime(data.estimatedPrintTime);
             //self.lastPrintTime(data.lastPrintTime);
         };
-
-
-//		self.state.increasePasses = function(){
-//			self.state.numberOfPasses(self.state.numberOfPasses()+1);
-//            self.state._overrideCommand({name: "passes", value: self.state.numberOfPasses()});
-//		};
-//
-//		self.state.decreasePasses = function(){
-//			var passes = Math.max(self.state.numberOfPasses()-1, 1);
-//			self.state.numberOfPasses(passes);
-//            self.state._overrideCommand({name: "passes", value: self.state.numberOfPasses()});
-//		};
-//
-//        self.state._overrideCommand = function (data, callback) {
-//            $.ajax({
-//                url: API_BASEURL + "plugin/mrbeam",
-//                type: "POST",
-//                dataType: "json",
-//                contentType: "application/json; charset=UTF-8",
-//                data: JSON.stringify({command: data.name, value: data.value}),
-//                success: function (response) {
-//                    if (callback !== undefined) {
-//                        callback();
-//                    }
-//                }
-//            });
-//        };
 
 
         // files.js viewmodel extensions
@@ -509,8 +514,8 @@ $(function () {
             self.gcodefiles.uploadProgressBar.text("");
 
             new PNotify({
-                title: gettext("Slicing done"),
-                text: _.sprintf(gettext("Sliced %(stl)s to %(gcode)s, took %(time).2f seconds"), payload),
+                title: gettext("Preparation done"),
+                text: _.sprintf(gettext("Converted %(stl)s to %(gcode)s, took %(time).2f seconds"), payload),
                 type: "success"
             });
 

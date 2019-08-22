@@ -60,6 +60,17 @@
             -webkit-animation-iteration-count: infinite;
             opacity: 0.1;
         }
+        .loading_overlay_setting_link {
+            position: fixed;
+            bottom: 5px;
+        }
+        .loading_overlay_text_small {
+            margin: 0;
+            font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+            font-size: 10px;
+            /* line-height: 20px; */
+            color: lightgrey;
+        }
 
         @-webkit-keyframes pulsate {
             0% {
@@ -90,6 +101,19 @@
                     <p id="loading_overlay_message" class="loading_overlay_text loading_overlay_red loading_overlay_pulsate3" data-bind="text: display_state">{{ _('beamOS is starting...') }}</p>
                 </div>
             </div>
+        </div>
+        <!-- The Text -->
+        <div class="loading_overlay_setting_link" style="right: 500px">
+            <p class="loading_overlay_text_small">© 2019 Mr Beam Lasers GmbH</p>
+        </div>
+        <div class="loading_overlay_setting_link" style="right: 320px">
+            <p class="loading_overlay_text_small">{{ _('Mr Beam Name') }}: {{ hostname }}</p>
+        </div>
+        <div class="loading_overlay_setting_link" style="right: 150px">
+            <p class="loading_overlay_text_small">{{ _('Serial') }}: {{ serial }}</p>
+        </div>
+        <div class="loading_overlay_setting_link" style="right: 10px">
+            <p class="loading_overlay_text_small">Mr Beam Plugin: v{{ beamosVersionNumber }}</p>
         </div>
     </div>
 </div>

@@ -6,35 +6,34 @@ __copyright__ = "Copyright (C) 2013 David Braam - Released under terms of the AG
 
 import os
 import threading
-import logging
 import glob
 import time
-import datetime
 import serial
 import re
 import Queue
+import random
 
-from yaml import load as yamlload
-from yaml import dump as yamldump
-from subprocess import call as subprocesscall
+from flask.ext.babel import gettext
 
 import octoprint.plugin
-
-from .profile import laserCutterProfileManager
 
 from octoprint.settings import settings, default_settings
 from octoprint.events import eventManager, Events as OctoPrintEvents
 from octoprint.filemanager.destinations import FileDestinations
 from octoprint.util import get_exception_string, RepeatedTimer, CountedEvent, sanitize_ascii
 
+from octoprint_mrbeam.printing.profile import laserCutterProfileManager
 from octoprint_mrbeam.mrb_logger import mrb_logger
+from octoprint_mrbeam.printing.acc_line_buffer import AccLineBuffer
+from octoprint_mrbeam.printing.acc_watch_dog import AccWatchDog
 from octoprint_mrbeam.analytics.analytics_handler import existing_analyticsHandler
 from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
-from flask.ext.babel import gettext
 
 ### MachineCom #########################################################################################################
 class MachineCom(object):
 
+	DEBUG_PRODUCE_CHECKSUM_ERRORS = False
+	DEBUG_PRODUCE_CHECKSUM_ERRORS_RND = 2000
 
 	### GRBL VERSIONs #######################################
 	# original grbl
@@ -48,16 +47,25 @@ class MachineCom(object):
 	# - adds rx-buffer state with every ok
 	# - adds alarm mesage on rx buffer overrun
 	GRBL_VERSION_20180828_ac367ff = '0.9g_20180828_ac367ff'
-	GRBL_FEAT_BLOCK_VERSION_LIST_RX_BUFFER_REPORTING = (GRBL_VERSION_20170919_22270fa, GRBL_VERSION_20180223_61638c5)
 	#
 	# adds G24_AVOIDED
 	GRBL_VERSION_20181116_a437781 = '0.9g_20181116_a437781'
 	#
+	# adds checksums
+	GRBL_VERSION_2019_MRB_CHECKSUM = '0.9g_20190327_d2868b9'
+	GRBL_FEAT_BLOCK_CHECKSUMS = (GRBL_VERSION_20170919_22270fa, GRBL_VERSION_20180223_61638c5, GRBL_VERSION_20180828_ac367ff, GRBL_VERSION_20181116_a437781)
+	#
+	#
+	GRBL_DEFAULT_VERSION = GRBL_VERSION_2019_MRB_CHECKSUM
 	##########################################################
 
 
 	GRBL_SETTINGS_READ_WINDOW =     10.0
 	GRBL_SETTINGS_CHECK_FREQUENCY = 0.5
+
+	GRBL_RX_BUFFER_SIZE = 127
+	GRBL_WORKING_RX_BUFFER_SIZE = GRBL_RX_BUFFER_SIZE - 5
+	GRBL_LINE_BUFFER_SIZE = 80
 
 	STATE_NONE = 0
 	STATE_OPEN_SERIAL = 1
@@ -75,24 +83,22 @@ class MachineCom(object):
 	STATE_HOMING = 13
 	STATE_FLASHING = 14
 
-	GRBL_STATE_QUEUE = 'Queue'
-	GRBL_STATE_IDLE  = 'Idle'
-	GRBL_STATE_RUN   = 'Run'
+	GRBL_STATE_QUEUE    = 'Queue'
+	GRBL_STATE_IDLE     = 'Idle'
+	GRBL_STATE_RUN      = 'Run'
 
-	COMMAND_STATUS   = '?'
-	COMMAND_HOLD     = '!'
-	COMMAND_RESUME   = '~'
-	COMMAND_RESET    = b'\x18'
-	COMMAND_FLUSH    = 'FLUSH'
-	COMMAND_SYNC     = 'SYNC' # experimental
+	COMMAND_STATUS      = '?'
+	COMMAND_HOLD        = '!'
+	COMMAND_RESUME      = '~'
+	COMMAND_RESET       = b'\x18'
+	COMMAND_FLUSH       = 'FLUSH'
+	COMMAND_RESET_ALARM = '$X'
 
 	STATUS_POLL_FREQUENCY_OPERATIONAL = 2.0
-	STATUS_POLL_FREQUENCY_PRINTING = 5.0 # set back top 1.0 if it's not causing gcode24
+	STATUS_POLL_FREQUENCY_PRINTING = 1.0 # set back top 1.0 if it's not causing gcode24
 	STATUS_POLL_FREQUENCY_PAUSED = 0.2
-	STATUS_POLL_FREQUENCY_SYNCING = 0.2
 	STATUS_POLL_FREQUENCY_DEFAULT = STATUS_POLL_FREQUENCY_PRINTING
 
-	GRBL_SYNC_COMMAND_WAIT_STATES = (GRBL_STATE_RUN, GRBL_STATE_QUEUE)
 	GRBL_HEX_FOLDER = 'files/grbl/'
 
 	pattern_grbl_status_legacy = re.compile("<(?P<status>\w+),.*MPos:(?P<mpos_x>[0-9.\-]+),(?P<mpos_y>[0-9.\-]+),.*WPos:(?P<pos_x>[0-9.\-]+),(?P<pos_y>[0-9.\-]+),.*RX:(?P<rx>\d+),.*laser (?P<laser_state>\w+):(?P<laser_intensity>\d+).*>")
@@ -107,7 +113,7 @@ class MachineCom(object):
 	pattern_get_y_coord_from_gcode = re.compile("^G.*Y(\d{1,3}\.?\d{0,3})\D.*")
 
 	def __init__(self, port=None, baudrate=None, callbackObject=None, printerProfileManager=None):
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.comm_acc2")
+		self._logger = mrb_logger("octoprint.plugins.mrbeam.printing.comm_acc2")
 
 		if port is None:
 			port = settings().get(["serial", "port"])
@@ -127,9 +133,6 @@ class MachineCom(object):
 		self._callback = callbackObject
 		self._laserCutterProfile = laserCutterProfileManager().get_current_or_default()
 
-		self.RX_BUFFER_SIZE = 127
-		self.WORKING_RX_BUFFER_SIZE = self.RX_BUFFER_SIZE - 5
-
 		self._state = self.STATE_NONE
 		self._grbl_state = None
 		self._grbl_version = None
@@ -140,46 +143,45 @@ class MachineCom(object):
 		self._status_polling_timer = None
 		self._status_polling_next_ts = 0
 		self._status_polling_interval = self.STATUS_POLL_FREQUENCY_DEFAULT
-		self._acc_line_buffer = []
-		self._last_acknowledged_command = None
-		self._last_wx = -1
-		self._last_wy = -1
+		self._acc_line_buffer = AccLineBuffer()
+		self._current_feedrate = None
+		self._current_intensity = None
+		self._current_pos_x = None
+		self._current_pos_y = None
+		self._current_laser_on = False
 		self._cmd = None
+		self._recovery_lock = False
+		self._recovery_ignore_further_alarm_responses = False
+		self._lines_recoverd_total = 0
 		self._pauseWaitStartTime = None
 		self._pauseWaitTimeLost = 0.0
 		self._commandQueue = Queue.Queue()
 		self._send_event = CountedEvent(max=50)
 		self._finished_currentFile = False
 		self._pause_delay_time = 0
-		self._feedrate_factor = 1
-		self._actual_feedrate = None
-		self._intensity_factor = 1
-		self._actual_intensity = None
-		self._feedrate_dict = {}
-		self._intensity_dict = {}
 		self._passes = 1
 		self._finished_passes = 0
-		self._sync_command_ts = -1
-		self._sync_command_state_sent = False
+		self._flush_command_ts = -1
 		self.limit_x = -1
 		self.limit_y = -1
 		# from GRBL status RX value: Number of characters queued in Grbl's serial RX receive buffer.
 		self._grbl_rx_status = -1
 		self._grbl_settings_correction_ts = 0
-		self._rx_stats = RxBufferStats()
 
 		self.g24_avoided_message = []
 
 		self.grbl_auto_update_enabled = _mrbeam_plugin_implementation._settings.get(['dev', 'grbl_auto_update_enabled'])
+		self._terminal_show_checksums = _mrbeam_plugin_implementation._settings.get(['terminal_show_checksums'])
 
 		#grbl features
 		self.grbl_feat_rescue_from_home = False
-		self.grbl_feat_report_rx_buffer_state = False
+		self.grbl_feat_checksums = False
 
 		# regular expressions
-		self._regex_command = re.compile("^\s*\$?([GM]\d+|[THFSX])")
+		self._regex_command = re.compile("^\s*\*?\d*\s*\$?([GM]\d+|[THFSX])")
 		self._regex_feedrate = re.compile("F\d+", re.IGNORECASE)
 		self._regex_intensity = re.compile("S\d+", re.IGNORECASE)
+		self._regex_gcode = re.compile("([XY])(\d+\.?\d*)", re.IGNORECASE)
 
 		self._real_time_commands={'poll_status':False,
 								'feed_hold':False,
@@ -190,9 +192,28 @@ class MachineCom(object):
 		self._pluginManager = octoprint.plugin.plugin_manager()
 		self._serial_factory_hooks = self._pluginManager.get_hooks("octoprint.comm.transport.serial.factory")
 
+		# laser power correction
+		self._power_correction_settings = _mrbeam_plugin_implementation._laserheadHandler.get_correction_settings()
+		self._current_lh_data = _mrbeam_plugin_implementation._laserheadHandler.get_current_used_lh_data()
+		self._gcode_intensity_limit = self._power_correction_settings['gcode_intensity_limit']
+
+		self._power_correction_factor = 1
+		if self._power_correction_settings['correction_enabled']:
+			lh_info = self._current_lh_data['info']
+			if self._power_correction_settings['correction_factor_override']:
+				self._power_correction_factor = self._power_correction_settings['correction_factor_override']
+			else:
+				if lh_info and 'correction_factor' in lh_info:
+					self._power_correction_factor = lh_info['correction_factor']
+
+		self._logger.info('Power correction factor: {}'.format(self._power_correction_factor))
+
+		self.watch_dog = AccWatchDog(self)
+
 		# threads
 		self.monitoring_thread = None
 		self.sending_thread = None
+		self.recovery_thread = None
 		self._start_monitoring_thread()
 		self._start_status_polling_timer()
 
@@ -215,6 +236,10 @@ class MachineCom(object):
 		self._status_polling_timer = RepeatedTimer(0.1, self._poll_status)
 		self._status_polling_timer.start()
 
+
+	def set_terminal_show_checksums(self, enabled):
+		self._terminal_show_checksums = bool(enabled)
+		self._logger.info("Show checksums: %s", 'on' if self._terminal_show_checksums else 'off', terminal_as_comm=True)
 
 	def get_home_position(self):
 		"""
@@ -267,10 +292,8 @@ class MachineCom(object):
 						self._handle_feedback_message(line)
 					elif line.startswith('Grb'): # Grbl startup message
 						self._handle_startup_message(line)
-					# elif line.startswith('G24_AVOIDED'):
-					# 	self._handle_g24_avoided_message(line)
 					elif line.startswith('Corru'): # Corrupted line:
-						self._handle_corrupted_line(line)
+						self._handle_g24avoided_corrupted_line(line)
 					elif line.startswith('$'): # Grbl settings
 						self._handle_settings_message(line)
 					elif not line and (self._state is self.STATE_CONNECTING or self._state is self.STATE_OPEN_SERIAL or self._state is self.STATE_DETECT_SERIAL):
@@ -278,7 +301,7 @@ class MachineCom(object):
 						self._sendCommand(self.COMMAND_RESET) # Serial-Connection Error
 				except:
 					self._logger.exception("Something crashed inside the monitoring loop, please report this to Mr Beam", terminal_dump=True)
-					errorMsg = "See octoprint.log for details"
+					errorMsg = gettext("Please contact Mr Beam support team and attach octoprint.log.")
 					self._log(errorMsg)
 					self._errorValue = errorMsg
 					self._changeState(self.STATE_ERROR)
@@ -291,17 +314,22 @@ class MachineCom(object):
 		while self._sending_active:
 			try:
 				self._process_rt_commands()
-				if self.isPrinting() and self._commandQueue.empty():
-					cmd = self._getNext()
+				# if self.isPrinting() and self._commandQueue.empty():
+				if self.isPrinting() and self._commandQueue.empty() and not self._recovery_lock:
+					cmd = self._getNext() # get next cmd form file
 					if cmd is not None:
 						self.sendCommand(cmd)
 						self._callback.on_comm_progress()
 					else:
+						# TODO: this code is about lasering the same file several times. not gonna happen in mrbII
 						if self._finished_passes >= self._passes:
-							if len(self._acc_line_buffer) == 0:
+							if self._acc_line_buffer.is_empty():
+								self.watch_dog.do_regular_check()
+								self.watch_dog.log_state(trigger="before_set_print_finished")
 								self._set_print_finished()
+								self.watch_dog.log_state(trigger="after_set_print_finished")
 						self._currentFile.resetToBeginning()
-						cmd = self._getNext()
+						cmd = self._getNext() # get next cmd form file
 						if cmd is not None:
 							self.sendCommand(cmd)
 							self._callback.on_comm_progress()
@@ -319,57 +347,59 @@ class MachineCom(object):
 		# self._logger.info("ANDYTEST Leaving _send_loop()")
 
 	def _sendCommand(self, cmd=None):
+		"""
+		Takes command from:
+		 - parameter passed to this function, (!! treated as real time command)
+		 - self._cmd or
+		 - self._commandQueue.get()
+		and writes it onto serial.
+		If command is passed as parameter it's treated as a real time command,
+		which means there are no checks if it will exceed grbl buffer current capacity.
+		:param cmd: treated as real time command
+		"""
 		if cmd is None:
 			if self._cmd is None and self._commandQueue.empty():
 				return
 			elif self._cmd is None:
 				self._cmd = self._commandQueue.get()
 
-
 			if self._cmd == self.COMMAND_FLUSH:
 				# FLUSH waits until we're no longer waiting for any OKs from GRBL
-				if self._sync_command_ts <=0:
-					self._sync_command_ts = time.time()
+				if self._flush_command_ts <=0:
+					self._flush_command_ts = time.time()
 					self._log("FLUSHing (grbl_state: {}, acc_line_buffer: {}, grbl_rx: {})".format(
-					                  self._grbl_state, sum([len(x) for x in self._acc_line_buffer]), self._grbl_rx_status))
-				if len(self._acc_line_buffer) <= 0:
+					                  self._grbl_state, self._acc_line_buffer.get_char_len(), self._grbl_rx_status))
+				if self._acc_line_buffer.is_empty():
 					self._cmd = None
-					self._log("FLUSHed ({}ms)".format(int(1000*(time.time() - self._sync_command_ts))))
-					self._sync_command_ts = -1
-				self._send_event.set()
-			elif self._cmd == self.COMMAND_SYNC:
-				# SYNC waits until we're no longer waiting for any OKs from GRBL and GRBL has reported to no be busy anymore.
-				# Still experimential: We need to test/verify/implement:
-				# - Maybe we need to turn off the laser here...
-				# - What if RX buffer remains 1 and never becomes 0? sync should handle/correct this
-				# - Do we need a timeout or something?
-				if self._sync_command_ts <=0:
-					self._sync_command_ts = time.time()
-					self._log("SYNCing (grbl_state: {}, acc_line_buffer: {}, grbl_rx: {})".format(
-					                  self._grbl_state, sum([len(x) for x in self._acc_line_buffer]), self._grbl_rx_status))
-				if len(self._acc_line_buffer) <= 0 and not self._grbl_state in self.GRBL_SYNC_COMMAND_WAIT_STATES:
-					# Successfully synced, let's move on
-					self._cmd = None
-					self._log("SYNCed ({}ms)".format(int(1000*(time.time() - self._sync_command_ts))))
-					self._sync_command_ts = -1
-					self._sync_command_state_sent = False
-				elif len(self._acc_line_buffer) <= 0 and self._grbl_state in self.GRBL_SYNC_COMMAND_WAIT_STATES and not self._sync_command_state_sent:
-					# Request a status update from GRBL to see if it's really ready.
-					self._sync_command_state_sent = True
-					self._sendCommand(self.COMMAND_STATUS)
+					self._log("FLUSHed ({}ms)".format(int(1000 * (time.time() - self._flush_command_ts))))
+					self._flush_command_ts = -1
 				self._send_event.set()
 			else:
 				my_cmd = self._cmd  # to avoid race conditions
-				if not(len(my_cmd) +1 < self.WORKING_RX_BUFFER_SIZE):
-					msg = "Error: Command too long. max: {}, cmd length: {}, cmd: {}... (shortened)".format(self.WORKING_RX_BUFFER_SIZE -1, len(my_cmd), my_cmd[0:self.WORKING_RX_BUFFER_SIZE-1])
-					self._logger.error(msg)
+				if not(len(my_cmd) +1 < self.GRBL_LINE_BUFFER_SIZE):
+					msg = "Error: Command too long. max: {}, cmd length: {}, cmd: {}... (shortened)".format(self.GRBL_LINE_BUFFER_SIZE - 1, len(my_cmd), my_cmd[0:self.GRBL_LINE_BUFFER_SIZE - 1])
+					self._logger.error(msg, analytics=True)
 					self._handle_alarm_message("Command too long to send to GRBL.", code=self.ALARM_CODE_COMMAND_TOO_LONG)
 					self._cmd = None
 					return
-				if sum([len(x) for x in self._acc_line_buffer]) + len(my_cmd) +1 < self.WORKING_RX_BUFFER_SIZE:
-					my_cmd, _, _  = self._process_command_phase("sending", my_cmd)
-					self._log("Send: %s" % my_cmd)
-					self._acc_line_buffer.append(my_cmd + '\n')
+				if my_cmd and self._acc_line_buffer.get_char_len() + len(my_cmd) + 1 < self.GRBL_WORKING_RX_BUFFER_SIZE:
+					# In recovery: if acc_line_buffer is marked dirty we must check if it is set to clean again.
+					if self._acc_line_buffer.is_dirty() and self.COMMAND_RESET_ALARM in my_cmd:
+						self._acc_line_buffer.set_clean()
+					self._log("Send: %s" % (my_cmd), is_command=True)
+					self._acc_line_buffer.add(my_cmd + '\n',
+					                          intensity=self._current_intensity,
+					                          feedrate=self._current_feedrate,
+					                          pos_x=self._current_pos_x,
+					                          pos_y=self._current_pos_y,
+					                          laser=self._current_laser_on)
+
+					if self.DEBUG_PRODUCE_CHECKSUM_ERRORS:
+						if random.randint(0, self.DEBUG_PRODUCE_CHECKSUM_ERRORS_RND) == 1:
+							orig_command = my_cmd
+							rnd = random.randint(0, len(my_cmd)-1)
+							my_cmd = my_cmd[:rnd-1] + chr(random.randint(0,255)) + my_cmd[rnd:]
+							self._logger.warn("DEBUG Randomly changed '%s' to '%s' to cause checksum error.", orig_command, my_cmd, terminal_as_comm=True)
 					try:
 						self._serial.write(my_cmd + '\n')
 						self._process_command_phase("sent", my_cmd)
@@ -383,13 +413,28 @@ class MachineCom(object):
 			cmd, _, _  = self._process_command_phase("sending", cmd)
 			self._log("Send: %s" % cmd)
 			try:
-
 				self._serial.write(cmd)
 				self._process_command_phase("sent", cmd)
 			except serial.SerialException:
 				self._logger.info("Unexpected error while writing serial port: %s" % (get_exception_string()), terminal_as_comm=True)
 				self._errorValue = get_exception_string()
 				self.close(True)
+
+	def _calc_checksum(self, cmd):
+		checksum = 0
+		for c in list(cmd):
+			# whitespaces are ignored for checksum!
+			if c != ' ':
+				checksum += ord(c)
+		checksum = checksum % 256
+		return checksum
+
+	def _add_checksum_to_cmd(self, cmd):
+		if cmd is None:
+			return None
+		if cmd.find('*') < 0 and cmd not in (self.COMMAND_FLUSH, ):
+			cmd = "{cmd}*{chk}".format(cmd=cmd, chk=self._calc_checksum(cmd))
+		return cmd
 
 	def _process_rt_commands(self):
 		if self._real_time_commands['poll_status']:
@@ -458,15 +503,18 @@ class MachineCom(object):
 		if self._serial is None:
 			return None
 		ret = None
+		cmd = None
+		recovery_str = "RECOVERY" if self._recovery_ignore_further_alarm_responses else ""
 		try:
 			ret = self._serial.readline()
 			self._send_event.set()
-			if('ok' in ret or 'error' in ret):
-				if(len(self._acc_line_buffer) > 0):
-					self._last_acknowledged_command = self._acc_line_buffer[0]
-					del self._acc_line_buffer[0]  # Delete the commands character count corresponding to the last 'ok'
-				else:
-					self._logger.error("Received OK but internal _acc_line_buffer counter is empty.")
+			if 'ok' in ret:
+				cmd = self._acc_line_buffer.acknowledge_cmd()
+				if self._recovery_ignore_further_alarm_responses:
+					recovery_str = "RECOVERY END"
+			elif 'err' in ret or 'ALARM' in ret: # TODO: are all ALARM messages to be counted?
+				cmd = self._acc_line_buffer.decline_cmd()
+			cmd = AccLineBuffer.get_cmd_from_item(cmd)
 		except serial.SerialException:
 			self._logger.error("Unexpected error while reading serial port: %s" % (get_exception_string()), terminal_as_comm=True)
 			self._errorValue = get_exception_string()
@@ -480,7 +528,10 @@ class MachineCom(object):
 			pass
 		if ret is None or ret == '': return ''
 		try:
-			self._log("Recv: %s" % sanitize_ascii(ret))
+			if cmd:
+				self._log("Recv: %s  // %s  %s" % (sanitize_ascii(ret), cmd, recovery_str), is_command=True)
+			else:
+				self._log("Recv: %s" % (sanitize_ascii(ret)), is_command=True)
 		except ValueError as e:
 			# self._log("WARN: While reading last line: %s" % e)
 			self._logger.warn("Exception while sanitizing ascii intput from grbl. Excpetion: '%s', original string from grbl: '%s'", e, ret)
@@ -499,6 +550,7 @@ class MachineCom(object):
 			return None
 
 	def _set_print_finished(self):
+		self._logger.debug("_set_print_finished() called")
 		self._callback.on_comm_print_job_done()
 		self._changeState(self.STATE_OPERATIONAL)
 		payload = {
@@ -506,13 +558,18 @@ class MachineCom(object):
 			"filename": os.path.basename(self._currentFile.getFilename()),
 			"origin": self._currentFile.getFileLocation(),
 			"time": self.getPrintTime(),
-			"mrb_state": _mrbeam_plugin_implementation.get_mrb_state()
+			"mrb_state": _mrbeam_plugin_implementation.get_mrb_state(),
+			'file_lines_total': self._currentFile.getLinesTotal(),
+			'file_lines_read': self._currentFile.getLinesRead(),
+			'file_lines_remaining': self._currentFile.getLinesRemaining(),
+			'lines_recovered': self._lines_recoverd_total,
 		}
+		self.watch_dog.stop()
 		self._move_home()
 		eventManager().fire(OctoPrintEvents.PRINT_DONE, payload)
-		self._logger.info(self._rx_stats.pp(print_time=self.getPrintTime()))
 
 	def _move_home(self):
+		self._logger.debug("_move_home() called")
 		self.sendCommand("M5")
 		h_pos = self.get_home_position()
 		command = "G0X{x}Y{y}".format(x=h_pos[0], y=h_pos[1])
@@ -545,8 +602,6 @@ class MachineCom(object):
 			self.MPosY = float(groups['mpos_y'])
 			wx = float(groups['pos_x'])
 			wy = float(groups['pos_y'])
-			self._last_wx = wx
-			self._last_wy = wy
 			self._callback.on_comm_pos_update([self.MPosX, self.MPosY, 0], [wx, wy, 0])
 		except:
 			self._logger.exception("Exception while handling position updates from GRBL.")
@@ -580,70 +635,64 @@ class MachineCom(object):
 
 
 	def _handle_ok_message(self, line):
+		item = self._acc_line_buffer.get_last_responded()
+
+		## RECOVERY ##
+		if self._recovery_ignore_further_alarm_responses and self.COMMAND_RESET_ALARM in AccLineBuffer.get_cmd_from_item(item):
+			# the empty line we're sending before $X is also responded with an 'ok', even though it does not unlock the alarm.
+			# That's why it's important to check if $X is really the command that got acknowledged.
+			self._recovery_alarm_reset_confirmed = True
+		# during a recovery the first ok proves that alarm state was cleared
+		self._recovery_ignore_further_alarm_responses = False
+
+		## HOMING ##
 		if self._state == self.STATE_HOMING:
 			self._changeState(self.STATE_OPERATIONAL)
 
 		# update working pos from acknowledged gcode
-		my_cmd = self._last_acknowledged_command
-		if my_cmd.startswith('G'):
-			x_pos = self._last_wx
-			y_pos = self._last_wy
-			match = self.pattern_get_x_coord_from_gcode.match(my_cmd)
-			if match:
-				try:
-					x_pos = float(match.group(1))
-					self._last_wx = x_pos
-				except:
-					self._logger.exception("Exception in parsing x coord from gcode. my_cmd: '%s' ", my_cmd)
-					pass
-
-			match = self.pattern_get_y_coord_from_gcode.match(my_cmd)
-			if match:
-				try:
-					y_pos = float(match.group(1))
-					self._last_wy = y_pos
-				except:
-					self._logger.exception("Exception in parsing y coord from gcode. my_cmd: '%s' ", my_cmd)
-					pass
-
-			if x_pos >= 0 or y_pos >= 0:
-				self._callback.on_comm_pos_update(None, [x_pos, y_pos, 0])
-				# since we just got a postion update we can reset the wait time for the next status poll
-				# ideally we never poll statuses during engravings
-				self._reset_status_polling_waittime()
-
-		if self.grbl_feat_report_rx_buffer_state:
-			# important that we add every call and count the invalid values internally!
-			rx_free = None
-			try:
-				if line is not None:
-					rx_free = int(line.split(':')[1]) # ok:127
-			except e:
-				self._logger.warn("_handle_ok_message() Can't read free_rx_bytes from line: '%s', error: %s", line, e)
-			self._rx_stats.add(rx_free)
+		if item and item['cmd'].startswith('G'):
+			self._callback.on_comm_pos_update(None, [item['x'], item['y'], 0])
+			# since we just got a postion update we can reset the wait time for the next status poll
+			# ideally we never poll statuses during engravings
+			self._reset_status_polling_waittime()
 
 	def _handle_error_message(self, line):
 		"""
 		Handles error messages from GRBL
 		:param line: GRBL error respnse
 		"""
+		line = line.rstrip() if line else line
 		# grbl repots an error if there was never any data written to it's eeprom.
 		# it's going to write default values to eeprom and everything is fine then....
 		if "EEPROM read fail" in line:
 			self._logger.debug("_handle_error_message() Ignoring this error message: '%s'", line)
 			return
-		self._logger.error("_handle_error(): %s", line, terminal_dump=True)
-		self._errorValue = line
+		if "Alarm lock" in line and self._recovery_ignore_further_alarm_responses:
+			# During a recovery we can simply ignore these.
+			return
+		if "Line overflow" in line:
+			# If we get this from grbl we can assume that some newline-characters got lost
+			# and we can treat this as an MRB_CHECKSUM_ERROR.
+			# We can safely assume this because we filter too long commands before sending them.
+			self._start_recovery_thread()
+			return
+
+		my_cmd = AccLineBuffer.get_cmd_from_item(self._acc_line_buffer.get_last_responded())
+		self._errorValue = "{} in {}".format(line, my_cmd)
 		eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
 		self._changeState(self.STATE_LOCKED)
-		self._rx_stats.pp(print_time=self.getPrintTime())
 
 	def _handle_alarm_message(self, line, code=None):
+		line = line.rstrip() if line else line
 		errorMsg = None
 		throwErrorMessage = True
 		dumpTerminal = True
-		if code == self.ALARM_CODE_COMMAND_TOO_LONG:
-			# this is not really a GRBL alarm state. Hacky to have it handled as one...
+		if "MRB_CHECKSUM_ERROR" in line:
+			self._start_recovery_thread()
+			# no need to stop lasering and report it to the user, we want to recover this
+			return
+		elif code == self.ALARM_CODE_COMMAND_TOO_LONG:
+			# this is not really a GRBL alarm state. Hackey to have it handled as one...
 			errorMsg = line or str(self.ALARM_CODE_COMMAND_TOO_LONG)
 			dumpTerminal = False
 		elif "Hard/soft limit" in line:
@@ -666,7 +715,7 @@ class MachineCom(object):
 
 		with self._commandQueue.mutex:
 			self._commandQueue.queue.clear()
-		self._acc_line_buffer = []
+		self._acc_line_buffer.reset()
 		self._send_event.clear(completely=True)
 		self._changeState(self.STATE_LOCKED)
 
@@ -684,7 +733,7 @@ class MachineCom(object):
 			if self.isOperational():
 				errorMsg = "Machine reset."
 				self._cmd = None
-				self._acc_line_buffer = []
+				self._acc_line_buffer.reset()
 				self._pauseWaitStartTime = None
 				self._pauseWaitTimeLost = 0.0
 				self._send_event.clear(completely=True)
@@ -712,21 +761,26 @@ class MachineCom(object):
 			self._logger.error("Unable to parse GRBL version from startup message: %s", line)
 
 		self.grbl_feat_rescue_from_home = self._grbl_version not in self.GRBL_FEAT_BLOCK_VERSION_LIST_RESCUE_FROM_HOME
-		self.grbl_feat_report_rx_buffer_state = self._grbl_version not in self.GRBL_FEAT_BLOCK_VERSION_LIST_RX_BUFFER_REPORTING
+		self.grbl_feat_checksums = self._grbl_version not in self.GRBL_FEAT_BLOCK_CHECKSUMS
 		self.reset_grbl_auto_update_config()
 
-		self._logger.info("GRBL version: %s, rescue_from_home: %s, report_rx_buffer_state: %s, auto_update: %s",
+		self._logger.info("GRBL version: %s, rescue_from_home: %s, auto_update: %s, checksums: %s",
 		                  self._grbl_version,
 		                  self.grbl_feat_rescue_from_home,
-		                  self.grbl_feat_report_rx_buffer_state,
-		                  self.grbl_auto_update_enabled)
+		                  self.grbl_auto_update_enabled,
+		                  self.grbl_feat_checksums)
+
+		if self.DEBUG_PRODUCE_CHECKSUM_ERRORS:
+			self._logger.warn("DEBUG_PRODUCE_CHECKSUM_ERRORS is active! Do not use in PROD", terminal_as_comm=True)
 
 		self._onConnected(self.STATE_LOCKED)
 		self.correct_grbl_settings()
 
 
-	def _handle_corrupted_line(self, line):
+	def _handle_g24avoided_corrupted_line(self, line):
 		"""
+		@deprecated: new grbl versions with checksum support do not send G24_AVOIDED anymore
+		#
 		So far this 'Corrupted line' is sent only in combination with G24_AVOIDED
 
 		> 11:39:15,866 _COMM_: Send: G1X58.32Y338.49G1X56.78Y338.57
@@ -736,7 +790,7 @@ class MachineCom(object):
 		> ...
 		> 11:39:17,221 _COMM_: Recv: Corrupted line: G1X56.78Y338.57
 
-		Rsults in this output:
+		Results in this output:
 		# WARNING - G24_AVOIDED line: 'G1X58.32Y338.49G1X56.78Y338.57' (hex: [47 31 58 35 38 2E 33 32 59 33 33 38 2E 34 39][47 31 58 35 36 2E 37 38 59 33 33 38 2E 35 37])
 		:param line:
 		"""
@@ -745,7 +799,6 @@ class MachineCom(object):
 		if len(self.g24_avoided_message) >= 2:
 			self.send_g24_avoided_message()
 			self.g24_avoided_message = []
-
 
 	def send_g24_avoided_message(self):
 		try:
@@ -758,7 +811,7 @@ class MachineCom(object):
 				data_str += i
 				data_hex += '[{}]'.format(self.get_hex_str_from_str(i))
 
-			self._logger.warn("G24_AVOIDED line: '%s' (hex: %s)",data_str, data_hex, terminal_dump=True, analytics=True)
+			self._logger.warn("G24_AVOIDED line: '%s' (hex: %s)",data_str, data_hex, analytics=True)
 		except:
 			self._logger.exception("G24_AVOIDED Exception in _handle_g24_avoided_message(): ")
 
@@ -768,6 +821,7 @@ class MachineCom(object):
 		:param line:
 		"""
 		match = self.pattern_grbl_setting.match(line)
+		# there are a bunch of responses that do not match and it's ok.
 		if match:
 			id = int(match.group('id'))
 			comment = match.group('comment')
@@ -781,8 +835,86 @@ class MachineCom(object):
 			if i == v and v_str.find('.') < 0:
 				value = i
 			self._grbl_settings[id] = dict(value=value, comment=comment)
-		else:
-			self._logger.error("_handle_settings_message() line did not mach pattern: %s", line)
+
+	def _start_recovery_thread(self):
+		"""
+		This starts a recovery process in another thread.
+		Recovery is when GRBL reported an MRB_CHECKSUM_ERROR.
+		In this case:
+		GRBL switches to ALARM state and does not process any commands in it's serial buffer
+		however it will proceed with all commands already in the planning buffer.
+		Now our job is to resend all commands that were skipped by GRBL.
+		First we need to send a ALARM_RESET command ($X) to end grbl's alarm state.
+		Then we send all commands which got declined beginning with the one which caused the checksum error.
+		It's important that there are now new commands from the file put into the sending pipeling
+		once we sent the ALARM_RESET until e sent all commands the need to be resent (marked dirty).
+		self._recovery_lock blocks the sending-queue from reading new commands from the file.
+		Once the lock is set and we waited some time for the sending queue to clear (this timeout mechanism should
+		be improved e.g. by using a lock), we can feed the recovery commands lead by a ALARM_RESET into the sending queue.
+		All commands that have been sent after the error are marked as 'dirty', ALARM_RESET is the first 'clean' command
+		after the error. We have to make sure that we re-send all dirty commands before we re-open the sending-queue for
+		new commands from the file.
+		"""
+		if self._recovery_lock and not self._recovery_ignore_further_alarm_responses:
+			# Already in recovery
+			# Another checksum error doesn't matter until the ALARM_RESET was processed
+			# Here it was already processes and the checksum error happened afterwards.
+			# This we need to handle.
+			# We stop the running recovery thread, send anotherALARM_RESET, mark everything dirty again
+			# and keep processing all commands in the order as they come.
+			# I hope that this produces correct results.
+			self._recovery_thread_kill = True
+			self.recovery_thread.join(0.5)
+
+		self._logger.info("RECOVERY START", terminal_as_comm=True)
+		self._recovery_lock = True
+		self._recovery_ignore_further_alarm_responses = True
+		self._recovery_alarm_reset_confirmed = False
+		self._acc_line_buffer.set_dirty()
+
+		self._recovery_thread_kill = False
+		self.recovery_thread = threading.Thread(target=self.__recovery_thread, name="comm.__recovery_thread")
+		self.recovery_thread.daemon = True
+		self.recovery_thread.start()
+
+	def __recovery_thread(self):
+		try:
+			self._recovery_lock = True
+			self._recovery_ignore_further_alarm_responses = True
+			# TODO: would be good if we can be sure that the regular sending pipeline is really empty
+			#  instead of simply waiting potentially too long or too short and then just hoping that it is empty.
+			time.sleep(1.0)
+			cmd_obj = self._acc_line_buffer.get_last_responded()
+			restart_commands = [' ', # send a new line before $X to make sure, grbl regards it as a new command.
+			                    self._add_checksum_to_cmd(self.COMMAND_RESET_ALARM)
+			                    ]
+			if cmd_obj:
+				# grbl internally adds a "S0" in case of a checksum error. (This "S0" is NOT acknowledged by grbl.)
+				# Therefor we need to turn the laser power back on.
+				# This is the intensity value which was current BEFORE this command. It might be different from
+				# a S-value within the command causing the checksum error.
+				restart_commands.append(self._add_checksum_to_cmd("S{}".format(int(cmd_obj['i']))))
+
+			recover_cmd = restart_commands.pop(0)
+			while not self._recovery_thread_kill and self._acc_line_buffer.is_dirty():
+				if recover_cmd:
+					self._logger.info("Re-queue: %s  RECOVERY", recover_cmd, terminal_as_comm=True)
+					self._lines_recoverd_total += 1
+					self.sendCommand(recover_cmd, processed=True)
+				else:
+					# the we did'nt get a command let's wait a bit. there might be a new one shortly
+					# because grbl might still process commands on it's serial buffer.
+					time.sleep(0.001)
+				# get next command either from our static restart_commands or a dirty command from _acc_line_buffer
+				recover_cmd = restart_commands.pop(0) if restart_commands else self._acc_line_buffer.recover_next_command()
+
+			if self._recovery_thread_kill:
+				self._logger.info("_send_recovery_commands() Recovery: Starting over...")
+			else:
+				self._recovery_lock = False
+				self._logger.info("_send_recovery_commands() Recovery: Done")
+		except:
+			self._logger.exception("Exception in recovery thread: ")
 
 
 	def correct_grbl_settings(self, retries=3):
@@ -991,18 +1123,20 @@ class MachineCom(object):
 			self._real_time_commands['soft_reset']=True
 			self._send_event.set()
 
-	def _log(self, message):
+	def _log(self, message, is_command=False):
 		"""
 		deprecated. use mrb_logger with flag serial=True instead
 		:param message:
 		"""
+		if is_command and not self._terminal_show_checksums:
+			checksum = re.compile("\*\d{1,3}\s?")
+			message = re.sub(checksum, '', message)
 		self._logger.comm(message, serial=True)
-
 
 	def flash_grbl(self, grbl_file=None, verify_only=False, is_connected=True):
 		"""
 		Flashes the specified grbl file (.hex). This file must not contain a bootloader.
-		:param grbl_file:
+		:param grbl_file: (optional) if not provided the default grbl file is used.
 		:param verify_only: If true, nothing is written, current grbl is verified only
 		:param is_connected: If True, serial connection to grbl is closed before flashing and reconnected afterwards.
 			Auto updates is executed before connection to grbl is established so in this case this param should be set to False.
@@ -1014,18 +1148,7 @@ class MachineCom(object):
 			self._logger.warn(msg, terminal_as_comm=True)
 			return
 
-		if grbl_file is None:
-			if self._grbl_version == self.GRBL_VERSION_20170919_22270fa: # legacy version string
-				grbl_file = 'grbl_0.9g_20170919_22270fa.hex'
-			elif self._grbl_version is not None:
-				# '0.9g_20180223_61638c5' => 'grbl_0.9g_20180223_61638c5.hex'
-				grbl_file = 'grbl_{}.hex'.format(self._grbl_version)
-
-
-		if grbl_file is None:
-			msg = "ERROR {} GRBL: No default filename for currently installed version '%s'.".format(log_verb, self._grbl_version)
-			self._logger.warn(msg, terminal_as_comm=True)
-			return
+		grbl_file = grbl_file or self._get_grbl_file_name()
 
 		if grbl_file.startswith('..') or grbl_file.startswith('/'):
 			msg = "ERROR {} GRBL '{}': Invalid filename.".format(log_verb, grbl_file)
@@ -1127,6 +1250,18 @@ class MachineCom(object):
 			else:
 				self._logger.info("Can't reconnect automacically. Try to reconnect manually or reboot system.")
 
+	@staticmethod
+	def _get_grbl_file_name(grbl_version=None):
+		"""
+		Gets you the filename according to the given grbl version.
+		:param grbl_version: (optional) grbl version - If no grbl version is provided it returns you the filename of the default version for this release.
+		:return: filename
+		"""
+		grbl_version = grbl_version or MachineCom.GRBL_DEFAULT_VERSION
+		grbl_file = 'grbl_{}.hex'.format(grbl_version)
+		if grbl_version == MachineCom.GRBL_VERSION_20170919_22270fa:  # legacy version string
+			grbl_file = 'grbl_0.9g_20170919_22270fa.hex'
+		return grbl_file
 
 	def reset_grbl_auto_update_config(self):
 		"""
@@ -1176,7 +1311,7 @@ class MachineCom(object):
 
 		if self.limit_x < 0 or self.limit_y < 0:
 			self._logger.debug("rescue_from_home_pos() No limit data yet. Requesting status update from GRBL...")
-			self.sendCommand(self.COMMAND_STATUS)
+			self._sendCommand(self.COMMAND_STATUS)
 			i=0
 			while i<200 and (self.limit_x < 0 or self.limit_y < 0):
 				i += 1
@@ -1198,7 +1333,7 @@ class MachineCom(object):
 		self.sendCommand('G1X{x}Y{y}F500S0'.format(x='-5' if self.limit_x > 0 else '0', y='-5' if self.limit_y > 0 else '0'))
 		self.sendCommand('G90')
 		self.sendCommand(self.COMMAND_FLUSH)
-		time.sleep(1) # turns out we need this :-/ Maybe SYNC will solve once SYNC is fully working
+		time.sleep(1) # turns out we need this :-/
 
 
 	def _handle_command_handler_result(self, command, command_type, gcode, handler_result):
@@ -1229,49 +1364,20 @@ class MachineCom(object):
 		gcode = self._gcode_command_for_cmd(command)
 		return command, command_type, gcode
 
-	def _set_feedrate_override(self, value):
-		temp = value / 100.0
-		if temp > 0:
-			self._feedrate_factor = temp
-			self._feedrate_dict = {}
-			if self._actual_feedrate is not None:
-				temp = round(self._actual_feedrate * self._feedrate_factor)
-				# TODO replace with value from printer profile
-				if temp > 5000:
-					temp = 5000
-				elif temp < 30:
-					temp = 30
-				self.sendCommand('F%d' % round(temp))
-
-	def _set_intensity_override(self, value):
-		temp = value / 100.0
-		if temp >= 0:
-			self._intensity_factor = temp
-			self._intensity_dict = {}
-			if self._actual_intensity is not None:
-				intensity_limit = int(self._laserCutterProfile['laser']['intensity_limit'])
-				temp = round(self._actual_intensity * self._intensity_factor)
-				if temp > intensity_limit:
-					temp = intensity_limit
-				self.sendCommand('S%d' % round(temp))
-
 	def _replace_feedrate(self, cmd):
 		obj = self._regex_feedrate.search(cmd)
 		if obj is not None:
 			feedrate_cmd = cmd[obj.start():obj.end()]
-			self._actual_feedrate = int(feedrate_cmd[1:])
-			if self._feedrate_factor != 1:
-				if feedrate_cmd in self._feedrate_dict:
-					new_feedrate = self._feedrate_dict[feedrate_cmd]
-				else:
-					new_feedrate = round(self._actual_feedrate * self._feedrate_factor)
-					# TODO replace with value from printer profile
-					if new_feedrate > 5000:
-						new_feedrate = 5000
-					elif new_feedrate < 30:
-						new_feedrate = 30
-					self._feedrate_dict[feedrate_cmd] = new_feedrate
-				return cmd.replace(feedrate_cmd, 'F%d' % round(new_feedrate))
+			self._current_feedrate = int(feedrate_cmd[1:])
+
+			# Limit if necessary
+			if self._current_feedrate > 5000:
+				self._current_feedrate = 5000
+			elif self._current_feedrate < 30:
+				self._current_feedrate = 30
+
+			return cmd.replace(feedrate_cmd, 'F%d' % self._current_feedrate)
+
 		return cmd
 
 	def _replace_intensity(self, cmd):
@@ -1280,19 +1386,24 @@ class MachineCom(object):
 			intensity_limit = int(self._laserCutterProfile['laser']['intensity_limit'])
 			intensity_cmd = cmd[obj.start():obj.end()]
 			parsed_intensity = int(intensity_cmd[1:])
-			self._actual_intensity = parsed_intensity if parsed_intensity <= intensity_limit else intensity_limit
-			if self._actual_intensity != parsed_intensity:
-				return cmd.replace(intensity_cmd, 'S%d' % round(self._actual_intensity))
-			elif self._intensity_factor != 1:
-				# _intensity_factor is deprecated
-				if intensity_cmd in self._intensity_dict:
-					new_intensity = self._intensity_dict[intensity_cmd]
-				else:
-					new_intensity = round(self._actual_intensity * self._intensity_factor)
-					if new_intensity > intensity_limit:
-						new_intensity = intensity_limit
-					self._intensity_dict[intensity_cmd] = new_intensity
-				return cmd.replace(intensity_cmd, 'S%d' % round(new_intensity))
+
+			# Limit GCode input (in case users enter a too high value in the gcode)
+			self._current_intensity = parsed_intensity
+			if self._current_intensity > intensity_limit:
+				self._current_intensity = intensity_limit
+
+			# Apply power correction factor and limit again (in case there is something wrong with the calculation of
+			# the correction factor)
+			self._current_intensity = int(round(self._current_intensity * self._power_correction_factor))
+			if self._gcode_intensity_limit and self._current_intensity > self._gcode_intensity_limit:
+				self._current_intensity = self._gcode_intensity_limit
+
+			# self._logger.info('Intensity command changed from S{old} to S{new} (correction factor {factor} and '
+			# 				  'intensity limit {limit})'.format(old=parsed_intensity, new=self._current_intensity,
+			# 													factor=self._power_correction_factor,
+			# 													limit=self._gcode_intensity_limit))
+
+			return cmd.replace(intensity_cmd, 'S%d' % self._current_intensity)
 		return cmd
 
 	def get_hex_str_from_str(self, data):
@@ -1302,25 +1413,62 @@ class MachineCom(object):
 			res.append('0'+tmp if len(tmp)<=1 else tmp)
 		return ' '.join(res)
 
+	def _parse_vals_from_gcode(self, cmd):
+		data =dict(
+			x=None,
+			y=None,
+			# can easily be extended to also find S and F: simply add these letters to the regexp...
+			# i=None,
+			# f=None
+		)
+		matches = self._regex_gcode.findall(cmd)
+		if matches:
+			for group in matches:
+				try:
+					data[group[0].lower()] = float(group[1])
+				except:
+					raise Exception("Invalid coordinate in gcode command: %s:%s in %s", group[0].lower(), group[1], cmd)
+		return data
+
+	def _remember_pos(self, data):
+		x = data.get('x', None)
+		if x is not None:
+			self._current_pos_x = x
+		y = data.get('y', None)
+		if y is not None:
+			self._current_pos_y = y
+
 	##~~ command handlers
+	def _gcode_G0_sending(self, cmd, cmd_type=None):
+		self._remember_pos(self._parse_vals_from_gcode(cmd))
+		return cmd
+
 	def _gcode_G1_sending(self, cmd, cmd_type=None):
+		self._remember_pos(self._parse_vals_from_gcode(cmd))
 		cmd = self._replace_feedrate(cmd)
 		cmd = self._replace_intensity(cmd)
 		return cmd
 
 	def _gcode_G2_sending(self, cmd, cmd_type=None):
+		self._remember_pos(self._parse_vals_from_gcode(cmd))
 		cmd = self._replace_feedrate(cmd)
 		cmd = self._replace_intensity(cmd)
 		return cmd
 
 	def _gcode_G3_sending(self, cmd, cmd_type=None):
+		self._remember_pos(self._parse_vals_from_gcode(cmd))
 		cmd = self._replace_feedrate(cmd)
 		cmd = self._replace_intensity(cmd)
 		return cmd
 
 	def _gcode_M3_sending(self, cmd, cmd_type=None):
+		self._current_laser_on = True
 		cmd = self._replace_feedrate(cmd)
 		cmd = self._replace_intensity(cmd)
+		return cmd
+
+	def _gcode_M5_sending(self, cmd, cmd_type=None):
+		self._current_laser_on = False
 		return cmd
 
 	def _gcode_G01_sending(self, cmd, cmd_type=None):
@@ -1334,6 +1482,9 @@ class MachineCom(object):
 
 	def _gcode_M03_sending(self, cmd, cmd_type=None):
 		return self._gcode_M3_sending(cmd, cmd_type)
+
+	def _gcode_M05_sending(self, cmd, cmd_type=None):
+		return self._gcode_M5_sending(cmd, cmd_type)
 
 	def _gcode_X_sent(self, cmd, cmd_type=None):
 		# since we use $X to rescue from homeposition, we don't want this to trigger homing
@@ -1360,71 +1511,7 @@ class MachineCom(object):
 
 	def sendCommand(self, cmd, cmd_type=None, processed=False):
 		if cmd is not None and cmd.strip().startswith('/'):
-			try:
-				cmd = cmd.strip()
-				self._log("Command: %s" % cmd)
-				self._logger.info("Terminal user command: %s", cmd)
-				tokens = cmd.split(' ')
-				specialcmd = tokens[0].lower()
-				if specialcmd.startswith('/togglestatusreport'):
-					if self._status_polling_interval <= 0:
-						self._set_status_polling_interval_for_state()
-					else:
-						self._status_polling_interval = 0
-				elif specialcmd.startswith('/setstatusfrequency'):
-					try:
-						self._status_polling_interval = float(tokens[1])
-					except ValueError:
-						self._log("No frequency setting found! No change")
-				elif specialcmd.startswith('/disconnect'):
-					self.close()
-				elif specialcmd.startswith('/feedrate'):
-					if len(tokens) > 1:
-						self._set_feedrate_override(int(tokens[1]))
-					else:
-						self._log("no feedrate given")
-				elif specialcmd.startswith('/intensity'):
-					if len(tokens) > 1:
-						data = specialcmd[8:]
-						self._set_intensity_override(int(tokens[1]))
-					else:
-						self._log("no intensity given")
-				elif specialcmd.startswith('/reset'):
-					self._log("Reset initiated")
-					self._serial.write(list(bytearray('\x18')))
-				elif specialcmd.startswith('/flash_grbl'):
-					file = None
-					if len(tokens) > 1:
-						file = tokens[1]
-						self._log("Flashing GRBL '%s'..." % file)
-					else:
-						self._log("Flashing GRBL...")
-					self.flash_grbl(file)
-				elif specialcmd.startswith('/verify_grbl'):
-					file = None
-					if len(tokens) > 1:
-						file = tokens[1]
-						self._log("Verifying GRBL '%s'..." % file)
-					else:
-						self._log("Verifying GRBL...")
-					self.flash_grbl(file, verify_only=True)
-				elif specialcmd.startswith('/correct_settings'):
-					self._log("Correcting GRBL settings...")
-					self.correct_grbl_settings()
-				else:
-					self._log("Command not found.")
-					self._log("Available commands are:")
-					self._log("   /togglestatusreport")
-					self._log("   /setstatusfrequency <interval secs>")
-					self._log("   /feedrate <f>")
-					self._log("   /intensity <s>")
-					self._log("   /disconnect")
-					self._log("   /reset")
-					self._log("   /correct_settings")
-					self._log("   /verify_grbl [<file>]")
-					self._log("   /flash_grbl [<file>]")
-			except:
-				self._logger.exception("Exception while executing terminal command '%s'", cmd, terminal_as_comm=True)
+			self._handle_user_command(cmd)
 		else:
 			cmd = cmd.encode('ascii', 'replace')
 			if not processed:
@@ -1432,12 +1519,134 @@ class MachineCom(object):
 				if not cmd:
 					return
 
+				cmd, _, _ = self._process_command_phase("sending", cmd)
+				if self.grbl_feat_checksums:
+					cmd = self._add_checksum_to_cmd(cmd)
+
 			eepromCmd = re.search("^\$[0-9]+=.+$", cmd)
 			if(eepromCmd and self.isPrinting()):
 				self._log("Warning: Configuration changes during print are not allowed!")
 
 			self._commandQueue.put(cmd)
 			self._send_event.set()
+			self.watch_dog.notify_command(cmd)
+
+	def _handle_user_command(self, cmd):
+		"""
+		Handles commands the user can enter on the terminal starting with /
+		"""
+		try:
+			cmd = cmd.strip()
+			self._log("Command: %s" % cmd)
+			self._logger.info("Terminal user command: %s", cmd)
+			tokens = cmd.split(' ')
+			specialcmd = tokens[0].lower()
+			if specialcmd.startswith('/togglestatusreport'):
+				if self._status_polling_interval <= 0:
+					self._set_status_polling_interval_for_state()
+				else:
+					self._status_polling_interval = 0
+			elif specialcmd.startswith('/setstatusfrequency'):
+				try:
+					self._status_polling_interval = float(tokens[1])
+				except ValueError:
+					self._log("No frequency setting found! No change")
+			elif specialcmd.startswith('/disconnect'):
+				self.close()
+			elif specialcmd.startswith('/feedrate'):
+				if len(tokens) > 1:
+					self._set_feedrate_override(int(tokens[1]))
+				else:
+					self._log("no feedrate given")
+			elif specialcmd.startswith('/intensity'):
+				if len(tokens) > 1:
+					data = specialcmd[8:]
+					self._set_intensity_override(int(tokens[1]))
+				else:
+					self._log("no intensity given")
+			elif specialcmd.startswith('/reset'):
+				self._log("Reset initiated")
+				self._serial.write(list(bytearray('\x18')))
+			elif specialcmd.startswith('/flash_grbl'):
+				# if no file given: flash default grbl version
+				file = self._get_grbl_file_name()
+				if len(tokens) > 1:
+					file = tokens[1]
+				if file in (None, '?', '-h', '--help'):
+					grbl_path = os.path.join(__package_path__, self.GRBL_HEX_FOLDER)
+					grbl_files = [f for f in os.listdir(grbl_path) if (os.path.isfile(os.path.join(grbl_path, f)) and not f.startswith('.'))]
+					self._log("Available GRBL files:")
+					for f in grbl_files:
+						self._log("    %s" % f)
+				else:
+					self._log("Flashing GRBL '%s'..." % file)
+					self.flash_grbl(file)
+			elif specialcmd.startswith('/verify_grbl'):
+				# if no file given: verify to currently installed
+				file = self._get_grbl_file_name(self._grbl_version)
+				if len(tokens) > 1:
+					file = tokens[1]
+				if file in (None, '?', '-h', '--help'):
+					grbl_path = os.path.join(__package_path__, self.GRBL_HEX_FOLDER)
+					grbl_files = [f for f in os.listdir(grbl_path) if
+					              (os.path.isfile(os.path.join(grbl_path, f)) and not f.startswith('.'))]
+					self._log("Available GRBL files:")
+					for f in grbl_files:
+						self._log("    %s" % f)
+				else:
+					self._log("Verifying GRBL '%s'..." % file)
+					self.flash_grbl(file, verify_only=True)
+			elif specialcmd.startswith('/correct_settings'):
+				self._log("Correcting GRBL settings...")
+				self.correct_grbl_settings()
+			elif specialcmd.startswith('/power_correction'):
+				if len(tokens) > 1:
+					token = int(tokens[1])
+					if token == 1:
+						self._log("Enabling power correction...")
+						lh_data = _mrbeam_plugin_implementation._laserheadHandler.get_current_used_lh_data()
+						if lh_data['info'] and 'correction_factor' in lh_data['info']:
+							self._power_correction_factor = lh_data['info']['correction_factor']
+						else:
+							self._log("Couldn't enable power correction, there is no correction factor for laser head {}.".format(lh_data['serial']))
+
+					elif token == 0:
+						self._log("Disabling power correction...")
+						self._power_correction_factor = 1
+
+					self._log("Power correction set to {}".format(self._power_correction_factor))
+				else:
+					self._log("No parameter given (0 or 1)")
+			elif specialcmd.startswith('/show_checksums'):
+				if len(tokens) > 1:
+					token = int(tokens[1])
+					if token == 1:
+						self._log("Checksums will be shown in the terminal")
+						_mrbeam_plugin_implementation._settings.set_boolean(["terminal_show_checksums"], True, force=True)
+						_mrbeam_plugin_implementation._settings.save()
+					elif token == 0:
+						self._log("Checksums will not be shown in the terminal")
+						_mrbeam_plugin_implementation._settings.set_boolean(["terminal_show_checksums"], False, force=True)
+						_mrbeam_plugin_implementation._settings.save()
+				else:
+					self._log("No parameter given (0 or 1)")
+
+			else:
+				self._log("Command not found.")
+				self._log("Available commands are:")
+				self._log("   /togglestatusreport")
+				self._log("   /setstatusfrequency <interval secs>")
+				self._log("   /feedrate <f>")
+				self._log("   /intensity <s>")
+				self._log("   /disconnect")
+				self._log("   /reset")
+				self._log("   /correct_settings")
+				self._log("   /power_correction <x>		--> Enable: x = 1; Disable: x = 0")
+				self._log("   /show_checksums <x>		--> Enable: x = 1; Disable: x = 0")
+				self._log("   /verify_grbl [? | <file>] // ?: list of available files; If omitted default grbl version will be verified .")
+				self._log("   /flash_grbl [? | <file>] // ?: list of available files; If omitted current grbl version will be flashed.")
+		except:
+			self._logger.exception("Exception while executing terminal command '%s'", cmd, terminal_as_comm=True)
 
 	def selectFile(self, filename, sd):
 		if self.isBusy():
@@ -1467,19 +1676,18 @@ class MachineCom(object):
 		if self._currentFile is None:
 			raise ValueError("No file selected for printing")
 
-		# reset feedrate and intesity factor in case they where changed in a previous run
-		self._feedrate_factor  = 1
-		self._intensity_factor = 1
+		# reset feedrate in case they where changed in a previous run
 		self._finished_passes = 0
 		self._pauseWaitTimeLost = 0.0
 		self._pauseWaitStartTime = None
 
-		self._rx_stats.reset()
-		if not self.grbl_feat_report_rx_buffer_state:
-			self._rx_stats.set_no_grbl_support()
+
 
 		try:
 			# ensure fan is on whatever gcode follows.
+			self.watch_dog.reset()
+			self.watch_dog.start(self._currentFile)
+
 			self.sendCommand("M08")
 
 			self._currentFile.start()
@@ -1489,9 +1697,14 @@ class MachineCom(object):
 				"file": self._currentFile.getFilename(),
 				"filename": os.path.basename(self._currentFile.getFilename()),
 				"origin": self._currentFile.getFileLocation(),
-				'mrb_state': _mrbeam_plugin_implementation.get_mrb_state()
+				'mrb_state': _mrbeam_plugin_implementation.get_mrb_state(),
+				'file_lines_total': self._currentFile.getLinesTotal(),
+				'file_lines_read': self._currentFile.getLinesRead(),
+				'file_lines_remaining': self._currentFile.getLinesRemaining(),
+				'lines_recovered': self._lines_recoverd_total,
 			}
 			eventManager().fire(OctoPrintEvents.PRINT_STARTED, payload)
+
 
 			self._changeState(self.STATE_PRINTING)
 		except:
@@ -1512,8 +1725,9 @@ class MachineCom(object):
 			self._commandQueue.queue.clear()
 		self._cmd = None
 
+		self.watch_dog.stop()
 		self._sendCommand(self.COMMAND_RESET)
-		self._acc_line_buffer = []
+		self._acc_line_buffer.reset()
 		self._send_event.clear(completely=True)
 		self._changeState(self.STATE_LOCKED)
 
@@ -1522,11 +1736,13 @@ class MachineCom(object):
 			"filename": os.path.basename(self._currentFile.getFilename()),
 			"origin": self._currentFile.getFileLocation(),
 			"time": self.getPrintTime(),
-			'mrb_state': _mrbeam_plugin_implementation.get_mrb_state()
+			'mrb_state': _mrbeam_plugin_implementation.get_mrb_state(),
+			'file_lines_total': self._currentFile.getLinesTotal(),
+			'file_lines_read': self._currentFile.getLinesRead(),
+			'file_lines_remaining': self._currentFile.getLinesRemaining(),
+			'lines_recovered': self._lines_recoverd_total,
 		}
 		eventManager().fire(OctoPrintEvents.PRINT_CANCELLED, payload)
-
-		self._logger.info(self._rx_stats.pp(print_time=self.getPrintTime()))
 
 	def setPause(self, pause, send_cmd=True, pause_for_cooling=False, trigger=None, force=False):
 		if not self._currentFile:
@@ -1538,7 +1754,10 @@ class MachineCom(object):
 			"origin": self._currentFile.getFileLocation(),
 			"trigger": trigger,
 			"time": self.getPrintTime(),
-			'mrb_state': _mrbeam_plugin_implementation.get_mrb_state()
+			'mrb_state': _mrbeam_plugin_implementation.get_mrb_state(),
+			'file_lines_total': self._currentFile.getLinesTotal(),
+			'file_lines_read': self._currentFile.getLinesRead(),
+			'file_lines_remaining': self._currentFile.getLinesRemaining(),
 		}
 
 		if not pause and (self.isPaused() or force):
@@ -1547,6 +1766,7 @@ class MachineCom(object):
 				self._pauseWaitStartTime = None
 			self._pause_delay_time = time.time()
 			payload["time"] = self.getPrintTime() # we need the pasue time to be removed from time
+			self.watch_dog.start()
 			if send_cmd is True:
 				self._real_time_commands['cycle_start']=True
 			self._send_event.set()
@@ -1555,11 +1775,11 @@ class MachineCom(object):
 			if not self._pauseWaitStartTime:
 				self._pauseWaitStartTime = time.time()
 			self._pause_delay_time = time.time()
+			self.watch_dog.stop()
 			if send_cmd is True:
 				self._real_time_commands['feed_hold']=True
 			self._send_event.set()
 			eventManager().fire(OctoPrintEvents.PRINT_PAUSED, payload)
-			self._logger.info(self._rx_stats.pp(print_time=self.getPrintTime()))
 
 		if self.getPrintTime() < 0.0:
 			self._logger.warn("setPause() %s: print time is negative! print time: %s, _pauseWaitStartTime: %s, _pauseWaitTimeLost: %s",
@@ -1570,15 +1790,15 @@ class MachineCom(object):
 
 	def increasePasses(self):
 		self._passes += 1
-		self._log("increased Passes to %d" % self._passes)
+		self._logger.info("increased Passes to %d" % self._passes, terminal_as_comm=True)
 
 	def decreasePasses(self):
 		self._passes -= 1
-		self._log("decrease Passes to %d" % self._passes)
+		self._logger.info("decrease Passes to %d" % self._passes, terminal_as_comm=True)
 
 	def setPasses(self, value):
 		self._passes = value
-		self._log("set Passes to %d" % self._passes)
+		self._logger.info("set Passes to %d" % self._passes, terminal_as_comm=True)
 
 	def sendGcodeScript(self, scriptName, replacements=None):
 		pass
@@ -1718,7 +1938,11 @@ class MachineCom(object):
 					"filename": os.path.basename(self._currentFile.getFilename()),
 					"origin": self._currentFile.getFileLocation(),
 					"time": self.getPrintTime(),
-					"mrb_state": _mrbeam_plugin_implementation.get_mrb_state()
+					"mrb_state": _mrbeam_plugin_implementation.get_mrb_state(),
+					'file_lines_total': self._currentFile.getLinesTotal(),
+					'file_lines_read': self._currentFile.getLinesRead(),
+					'file_lines_remaining': self._currentFile.getLinesRemaining(),
+					'lines_recovered': self._lines_recoverd_total,
 				}
 			eventManager().fire(OctoPrintEvents.PRINT_FAILED, payload)
 		eventManager().fire(OctoPrintEvents.DISCONNECTED)
@@ -1776,7 +2000,7 @@ class PrintingFileInformation(object):
 	"""
 
 	def __init__(self, filename):
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.comm_acc2")
+		self._logger = mrb_logger("octoprint.plugins.mrbeam.comm_acc2.PrintingFileInformation")
 		self._filename = filename
 		self._pos = 0
 		self._size = None
@@ -1847,6 +2071,9 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
 		self._size = os.stat(self._filename).st_size
 		self._pos = 0
 		self._comment_size = 0
+		self._lines_total = self._calc_total_lines()
+		self._lines_read = 0
+		self._lines_read_bak = 0
 
 	def start(self):
 		"""
@@ -1854,6 +2081,8 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
 		"""
 		PrintingFileInformation.start(self)
 		self._handle = open(self._filename, "r")
+		self._lines_read = 0
+		self._lines_read_bak = 0
 
 	def close(self):
 		"""
@@ -1871,7 +2100,9 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
 		"""
 		resets the file handle so you can read from the beginning again.
 		"""
+		self._logger.debug("resetToBeginning() self._lines_read %s, self._lines_read_bak: %s", self._lines_read, self._lines_read_bak)
 		self._handle = open(self._filename, "r")
+		self._lines_read = 0
 
 	def getNext(self):
 		"""
@@ -1885,10 +2116,16 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
 			while processed is None:
 				if self._handle is None:
 					# file got closed just now
+					self._logger.debug("getNext() self._handle is None -> returning None")
 					return None
 				line = self._handle.readline()
 				if not line:
+					self._logger.debug("getNext() read line is None -> closing self._handle")
 					self.close()
+				else:
+					self._lines_read += 1
+					self._lines_read_bak += 1
+					# self._logger.debug("getNext() increased self._lines_read to %s", self._lines_read)
 				processed = process_gcode_line(line)
 				if processed is None:
 					self._comment_size += len(line)
@@ -1900,83 +2137,26 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
 			self._logger.exception("Exception while processing line")
 			raise e
 
+	def getLinesTotal(self):
+		return self._lines_total
 
-class RxBufferStats(object):
+	def getLinesRead(self):
+		return self._lines_read or self._lines_read_bak
 
-	def __init__(self):
-		self.data = {}
-		self.count = 0
-		self.errs = 0
-		self.grbl_support = True
-		self.start_ts = time.time()
+	def getLinesRemaining(self):
+		return self.getLinesTotal() - self.getLinesRead()
 
-	def reset(self):
-		self.__init__()
-
-	def add(self, val):
-		if not self.grbl_support:
-			return
+	def _calc_total_lines(self):
+		res = -1
 		try:
-			val = int(val)
-		except:
-			self.errs += 1
-			return
-		if not val in self.data:
-			self.data[val] = 0
-		self.data[val] += 1
-		self.count += 1
-
-	def set_no_grbl_support(self):
-		self.grbl_support = False
-
-	def get_min(self):
-		if self.count <= 0: return 0
-		for v, c in sorted(self.data.iteritems()):
-			if c > 0:
-				return v
-
-	def get_max(self):
-		if self.count <= 0: return 0
-		for v, c in sorted(self.data.iteritems(), reverse = True):
-			if c > 0:
-				return v
-
-	def get_avg(self):
-		if self.count <= 0: return 0
-		avg = 0
-		for v, c in sorted(self.data.iteritems()):
-			if c > 0:
-				avg += v * c
-		return avg / self.count
-
-	def pp(self, print_time=-1):
-		if not self.grbl_support:
-			return "RxBufferStats: not supported by grbl."
-
-		if print_time <=0:
-			print_time = time.time() - self.start_ts
-
-		msg = "RxBufferStats: {count} responses within {duration_h} ({duration:.2f}s): {resp_per_sec:.1f} resp/s; invalid: {errs}; min: {min}, max: {max}, avg: {avg}  - All data: ".format(
-			count=self.count,
-			duration=print_time,
-			duration_h=datetime.datetime.fromtimestamp(print_time).strftime('%H°%M′%S″'),
-			resp_per_sec=self.count/print_time,
-			errs=self.errs,
-			min=self.get_min(),
-			max=self.get_max(),
-			avg=self.get_avg()
-		)
-
-		d = []
-		for v, c in sorted(self.data.iteritems()):
-			if c > 0:
-				d.append("{v}:{c}".format(v=v, c=c))
-		msg += ', '.join(d)
-
-		return msg
-
-
-
+			tmp, code = exec_cmd_output("wc -l {} | cut -f1 -d' '".format(self._filename), shell=True)
+			if code == 0:
+				res = int(tmp)
+			else:
+				self._logger.error("Can't convert _lines_total to int: command returned exit code %s: ", code, tmp)
+		except ValueError:
+			self._logger.error("Can't convert _lines_total to int: value is %s", tmp)
+		return res
 
 
 def convert_pause_triggers(configured_triggers):
@@ -2019,7 +2199,6 @@ def strip_comment(line):
 	if not ";" in line:
 		# shortcut
 		return line
-
 	escaped = False
 	result = []
 	for c in line:

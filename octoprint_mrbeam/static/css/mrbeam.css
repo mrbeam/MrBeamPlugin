@@ -1,5 +1,7 @@
 a {	color: #e25303; }
 a:hover { color: #a63e03 }
+a.muted{ color: #e25303a1 }
+a.muted:hover{ color: #e25303a1 }
 
 .btn {
   display: inline-block;
@@ -2141,18 +2143,6 @@ input.search-query,
 
 
 /*
-* === JOBS MAP ===
-*/
-
-.job-map-modal {
-  width: 930px;
-  margin-left: -465px;
-  /*height: 680px;*/
-  margin-top: -340px;
-}
-
-
-/*
 * === ANALYTICS  ACCORDION ===
 */
 
@@ -2191,7 +2181,7 @@ input[type="radio"]{
 
 
 /*
-* === LASERHEAD FOCUS REMINDER ===
+* === LASER_HEAD FOCUS REMINDER ===
 */
 
 #laserhead_focus_reminder_image {
@@ -2212,4 +2202,242 @@ input[type="radio"]{
 
 #laserhead_focus_reminder_alert {
   clear: both;
+}
+
+
+/*
+* === IMAGE PREPROCESSING  ACCORDION ===
+*/
+.working_area_image_preprocessing {
+  margin-bottom: 0;
+}
+
+.working_area_image_preprocessing_heading {
+  padding: 0;
+  color: #999;
+}
+
+.working_area_image_preprocessing_sliders {
+  margin-left: 18px;
+}
+
+.working_area_image_preprocessing_link > button.image-preprocessing-collapsible {
+  outline: transparent;
+  /*text-decoration: none;*/
+  color: #555;
+  padding: 0;
+  /*margin: 0;*/
+}
+
+.working_area_image_preprocessing_link > button.collapsed:before {
+  padding: 0;
+  content: "\270f";
+  color: #999;
+  display: inline-block;
+  -webkit-transform: rotate(-45deg);
+}
+
+.working_area_image_preprocessing_link > button:before {
+  padding: 0;
+  content: "\270f";
+  color: #999;
+  display: inline-block;
+  -webkit-transform: rotate(45deg);
+}
+
+/*
+* === SOFTWARE CHANNEL SELECTOR ===
+*/
+#software_channel_select {
+  width: 120px;
+}
+
+#software_channel_info {
+  color: #383E42;
+  vertical-align: baseline;
+  padding-left: 5px;
+}
+
+#software_channel_selector > h5 {
+  display: inline-block;
+  margin-right: 40px;
+}
+
+#settings_software_channel_descriptions {
+  margin-left: 0;
+}
+
+#settings_software_channel_descriptions > div {
+  padding-right: 15px;
+}
+
+#settings_software_channel_descriptions > div > p {
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+#settings_software_channel_descriptions > div > h5 > i, #settings_software_channel_choose > div > i {
+  margin-right: 5px;
+}
+
+.sticky-footer {
+  position: sticky;
+  bottom: 0;
+}
+
+
+/*
+* === WHAT'S NEW WIZARD ===
+*/
+.whatsnew-info-sentence {
+  color: #0088cc;
+}
+
+.whatsnew-try-it-now-button{
+  background: #e25303;
+  border-color: #e25303;
+  border-radius: 7px;
+  color: white;
+  font-weight: bold;
+}
+
+.whatsnew-try-it-now-button:hover {
+  background: #a63e03;
+  border-color: #a63e03;
+  color: white;
+  font-weight: bold;
+}
+
+.whatsnew-try-it-now-button:focus {
+  background: #e25303;
+  border-color: #e25303;
+  color: white;
+  font-weight: bold;
+}
+
+.whatsnew-bottom-line-note {
+  margin-top: 25px;
+  color: #999;
+  font-size: 85%;
+}
+
+#whatsnew_find_mrbeam_screenshot {
+  margin: 0 0 10px -16px;
+  width: 530px;
+}
+
+#whatsnew_german_spanish {
+  width: 450px;
+  margin-top: -30px;
+}
+
+#job_time_estimation_whatsnew {
+  height: 320px;
+  margin: 0 0 10px 55px;
+}
+
+#whatsnew_enjoy_this_experience {
+  font-weight: bold;
+  margin: 50px 0 0 170px;
+}
+
+/*
+* === FRESHDESK FEEDBACK WIDGET ===
+*/
+#freshwidget-button > a {
+    padding: 6px 16px;
+    font-size: 12px;
+}
+
+/*
+* === MAINTENANCE SETTINGS ===
+*/
+.maintenance-title {
+  margin: 10px 0 0 0;
+}
+
+.maintenance-notes {
+  margin: 0 0 20px 0;
+}
+
+.maintenance-scrollable {
+  padding-bottom:2em;
+  overflow-y: auto;
+  height: calc(100vh - 180px);
+}
+
+.maintenance-table {
+  margin-bottom: 60px
+}
+
+.maintenance-table > tbody > tr > td {
+  vertical-align: middle;
+}
+
+.maintenance-description-column {
+  width: 50%;
+}
+
+.maintenance-description-column > h4 {
+  display: inline-block;
+}
+
+.maintenance-warning-column {
+  width: 10%;
+}
+
+.maintenance-warning-column > div {
+  text-align: center;
+}
+
+.maintenance-counter-column {
+  width: 20%;
+}
+
+.maintenance-reset-column {
+  width: 20%;
+}
+
+.maintenance-links {
+  margin-top: 15px
+}
+
+.maintenance-link-shop {
+  display: inline-block;
+  float: left
+}
+
+.maintenance-link-knowledge-base {
+  display: inline-block;
+  float: left;
+  margin-left: 50px;
+}
+
+.maintenance-description {
+  display: block;
+  margin-right: 8%;
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+.maintenance-reset-btn {
+  display: block;
+  margin: auto;
+}
+
+.maintenance-warning-column > div > .fa-exclamation-triangle {
+  color: #e25303;
+}
+
+.maintenance-laserhead-serial {
+  margin-left: 30px;
+}
+
+/*
+* === WORKING AREA FOOTER ===
+*/
+.working_area_footer_text {
+    font-size: 10px;
+    color: darkgrey;
+    margin: 0 0 0 30px;
 }

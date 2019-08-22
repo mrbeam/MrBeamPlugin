@@ -23,6 +23,8 @@ $(function() {
 
         self.is_pause_mode = ko.observable(false);
 
+        self.estimated_duration = ko.observable(null);
+
         self.DEBUG = false;
 
 
@@ -138,12 +140,47 @@ $(function() {
             } // end if oneButton
         }; // end onStartupComplete
 
+        self.onEventJobTimeEstimated = function (payload) {
+            self.formatJobTimeEstimation(payload['jobTimeEstimation']);
+        };
+
         /**
          * this is called from the outside once the slicing is done
          * @param gcodeFile
          */
         self.setGcodeFile = function(gcodeFile){
             self.gcodeFile = gcodeFile;
+        };
+
+        self.formatJobTimeEstimation = function (seconds){
+            seconds = Number(seconds);
+            if (seconds < 0) {
+                self.estimated_duration("");
+            } else {
+                let hours = Math.floor(seconds / 3600);
+                let minutes = Math.floor(seconds % 3600 / 60);
+                let duration;
+
+                if (hours === 0) {
+                    if (minutes == 1) {
+                        duration = "" + minutes + " " + gettext("minute")
+                    } else {
+                        duration = "" + minutes + " " + gettext("minutes")
+                    }
+                } else if (hours === 1) {
+                    if (minutes < 10) {
+                        minutes = "0" + minutes
+                    }
+                    duration = hours + ":" + minutes + " " + gettext("hour")
+                } else {
+                    if (minutes < 10) {
+                        minutes = "0" + minutes
+                    }
+                    duration = hours + ":" + minutes + " " + gettext("hours")
+                }
+
+                self.estimated_duration("  ~ " + duration)
+            }
         };
 
         // bound to both cancel buttons

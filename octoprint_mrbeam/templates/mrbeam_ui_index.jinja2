@@ -1,10 +1,6 @@
 <!DOCTYPE html>
 <html>
     <head>
-        {% if vorlonEnabled %}
-            <script src="https://vorlonmrbeam.azurewebsites.net/vorlon.js"></script>
-        {% endif %}
-
         <title>{{ displayName }}</title>
 
         <meta name="mobile-web-app-capable" content="yes">
@@ -18,8 +14,6 @@
         <link rel="apple-touch-icon" sizes="114x114" href="{{ url_for('plugin.mrbeam.static', filename='img/mrb114.png') }}">
         <link rel="apple-touch-icon" sizes="144x144" href="{{ url_for('plugin.mrbeam.static', filename='img/mrb144.png') }}">
 
-        {% include 'reload_find_mrbeam.jinja2' %}
-
         {#  Dirty to have this (== body elements) in the head section.
            Chrome ends head-tag and opens body-tag which means that all following is in the page's bodey instead of the head  #}
         {% include 'loading_overlay.jinja2' %}
@@ -32,6 +26,7 @@
         {% include 'ready_to_laser.jinja2' %}
         {% include 'laser_job_done.jinja2' %}
         {% include 'loginscreen_viewmodel.jinja2' %}
+        {% include 'software_channel_selector.jinja2' %}
 
     </head>
     <body style="overflow: hidden;">
@@ -92,6 +87,9 @@
 							<li class="divider"></li>
 							<li><a href="/plugin/mrbeam/static/docs/{{ _('QuickstartGuide_en.pdf') }}" target="_blank"><i class="icon-book"></i> {{ _('Quickstart Guide') }}</a></li>
 							<li><a href="/plugin/mrbeam/static/docs/{{ _('UserManual_en.pdf') }}" target="_blank"><i class="icon-book"></i> {{ _('User Manual') }}</a></li>
+							<li class="divider"></li>
+{#							<li><a href="#tour" id="tour_start_btn" ><i class="icon-youtube-play"></i> {{ _('Take a Tour') }}</a></li>#}
+							<li><a href="#tour" id="tour_start_btn" data-bind="click: window.mrbeam.viewModels.tourViewModel.btn_startTour"><i class="icon-youtube-play"></i> {{ _('Take a Tour') }}</a></li>
 							<li class="divider"></li>
 							<li><a href="https://www.mr-beam.org/support" target="_blank"><i class="icon-question-sign"></i> {{ _('Support Portal') }}</a></li>
 						</ul>
@@ -178,6 +176,5 @@
 
 
         {% include 'javascripts.jinja2' %}
-
-	</body>
+    </body>
 </html>

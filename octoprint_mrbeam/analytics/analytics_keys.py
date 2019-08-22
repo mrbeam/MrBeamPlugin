@@ -8,15 +8,11 @@ class AnalyticsKeys(object):
 	TIMESTAMP = 'ts'
 	NTP_SYNCED = 'ntp'
 	SESSION_ID = 'sid'
-	TIMESTRING = 'timestring'
 	DATA = 'data'
 	SOFTWARE_TIER = 'sw_tier'
 	VERSION_MRBEAM_PLUGIN = 'version_mrbeam_plugin'
 	LASERHEAD_SERIAL = 'laserhead_serial'
 	ENV = 'env'
-	TOTAL_SPACE = 'total'
-	AVAILABLE_SPACE = 'available'
-	USED_SPACE = 'used_percent'
 
 	### EVENT TYPES ###
 	TYPE_JOB_EVENT = 'job'
@@ -24,10 +20,24 @@ class AnalyticsKeys(object):
 	TYPE_CAM_EVENT = 'cam'
 	TYPE_LOG_EVENT = 'log'
 	TYPE_CONNECTIVITY_EVENT = 'connectivity'
+	TYPE_FRONTEND = 'frontend'
 
 	### DEVICE KEYS ###
 	HOSTNAME = 'hostname'
 	LASERHEAD_VERSION = 'lh_ver'
+	OLD_CHANNEL = 'old_channel'
+	NEW_CHANNEL = 'new_channel'
+	TOTAL_SPACE = 'total'
+	AVAILABLE_SPACE = 'available'
+	USED_SPACE = 'used_percent'
+	MRBEAM_USAGE = 'mrbeam_usage'
+	CORRECTION_FACTOR = 'correction_factor'
+	CORRECTION_ENABLED = 'correction_enabled'
+	CORRECTION_OVERRIDE = 'correction_override'
+	POWER_65 = 'p_65'
+	POWER_75 = 'p_75'
+	POWER_85 = 'p_85'
+	USERS = 'users'
 
 	### EVENT KEYS ###
 	STARTUP = 'startup'
@@ -36,11 +46,20 @@ class AnalyticsKeys(object):
 	FLASH_GRBL = 'flash_grbl'
 	ANALYTICS_ENABLED = 'analytics_enabled'
 	IPS = 'ips'
+	HTTP_SELF_CHECK = 'http_self_check'
+	INTERNET_CONNECTION = 'internet_connection'
 	DISK_SPACE = 'disk_space'
+	SW_CHANNEL_SWITCH = 'sw_channel_switch'
+	LASERHEAD_INFO = 'laserhead_info'
 
 	### LOG EVENT KEYS ###
 	EVENT_LOG = 'log_event'
 	EXCEPTION = 'exception'
+	IOBEAM =    'iobeam'
+	LOG_CPU = 'cpu'
+	CAMERA = 'camera'
+	CAMERA_SESSION = 'camera_session'
+	OS_HEALTH = 'os_health'
 
 	### JOB KEYS ###
 	JOB_ID = 'job_id'
@@ -57,6 +76,7 @@ class AnalyticsKeys(object):
 	INTENSITY_SUM = 'intensity_summary'
 	LASERTEMP = 'lasertemp'
 	LASERTEMP_SUM = 'lasertemp_summary'
+	CPU_DATA = 'cpu'
 	FINAL_DUST = 'final_dust'
 	COOLING_START = 'cooling_start'
 	COOLING_DONE = 'cooling_done'
@@ -65,6 +85,9 @@ class AnalyticsKeys(object):
 	LASER_JOB = 'laser_job'
 	DESIGN_FILE = 'design_file'
 	MATERIAL = 'material'
+	FAN_RPM_TEST = 'fan_rpm_test'
+	FAN_RPM = 'fan_rpm'
+	FAN_STATE = 'fan_state'
 
 	PRINT_EVENTS = [
 						PRINT_STARTED,
@@ -79,6 +102,7 @@ class AnalyticsKeys(object):
 					]
 	FAILED_PRINT_EVENTS = [PRINT_CANCELLED,PRINT_FAILED]
 	JOB_DURATION = 'dur'
+	JOB_TIME_ESTIMATION = 'dur_est'
 
 	DUST_START = 'd_start'
 	DUST_END = 'd_end'
@@ -106,6 +130,7 @@ class AnalyticsKeys(object):
 	EVENT_UI_RENDER_CALL =          'ui_render_call'
 	EVENT_CLIENT_OPENED =           'client_opened'
 	VERSION_FINDMYMRBEAM_PLUGIN =   'version_findmymrbeam_plugin'
+	CONNECTIONS_STATE = 			'connections_state'
 
 
 

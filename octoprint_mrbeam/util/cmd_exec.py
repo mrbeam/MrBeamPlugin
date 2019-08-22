@@ -6,7 +6,7 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 
 _logger = mrb_logger("octoprint.plugins.mrbeam.cmd_exec")
 
-def exec_cmd(cmd):
+def exec_cmd(cmd, shell=True):
 	'''
 	Executes a system command
 	:param cmd:
@@ -18,7 +18,7 @@ def exec_cmd(cmd):
 
 	_logger.debug("_execute_command() command: '%s'", cmd)
 	try:
-		code = subprocess.call(cmd, shell=True)
+		code = subprocess.call(cmd, shell=shell)
 	except Exception as e:
 		_logger.debug("Failed to execute command '%s', return code: %s, Exception: %s", cmd, code, e)
 		return None

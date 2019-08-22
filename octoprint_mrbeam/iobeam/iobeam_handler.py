@@ -5,21 +5,23 @@ import time
 import datetime
 import collections
 import json
-from distutils.version import StrictVersion
+from distutils.version import LooseVersion
 
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.lib.rwlock import RWLock
 from flask.ext.babel import gettext
+from octoprint_mrbeam.mrbeam_events import MrBeamEvents
+from octoprint_mrbeam.iobeam.laserhead_handler import laserheadHandler
 
 # singleton
 _instance = None
 
 
-def ioBeamHandler(eventBusOct, socket_file=None):
+def ioBeamHandler(plugin):
 	global _instance
 	if _instance is None:
-		_instance = IoBeamHandler(eventBusOct, socket_file)
+		_instance = IoBeamHandler(plugin)
 	return _instance
 
 
@@ -70,11 +72,13 @@ class IoBeamHandler(object):
 	SOCKET_FILE = "/var/run/mrbeam_iobeam.sock"
 	MAX_ERRORS = 50
 
-	IOBEAM_MIN_REQUIRED_VERSION = '0.7.0'
+	IOBEAM_MIN_REQUIRED_VERSION =  '0.4.0'
+	IOBEAM_JSON_PROTOCOL_VERSION = '0.7.0'
+
 	CLIENT_NAME = "MrBeamPlugin"
 
 	PROCESSING_TIMES_LOG_LENGTH = 100
-	PROCESSING_TIME_WARNING_THRESHOLD = 0.1
+	PROCESSING_TIME_WARNING_THRESHOLD = 0.7
 
 	MESSAGE_LENGTH_MAX = 4096
 	MESSAGE_NEWLINE = "\n"
@@ -136,10 +140,13 @@ class IoBeamHandler(object):
 	DATASET_STEPRUN =            		"steprun"
 	DATASET_LASER =	            		"laser"
 	DATASET_LASERHEAD =					"laserhead"
+	DATASET_LASERHEAD_SHORT =			"laserhead_short"
 	DATASET_IOBEAM =	           	 	"iobeam"
 
-	def __init__(self, event_bus, socket_file=None):
-		self._event_bus = event_bus
+	def __init__(self, plugin):
+		self._plugin = plugin
+		self._event_bus = plugin._event_bus
+		self._socket_file = plugin._settings.get(["dev", "sockets", "iobeam"])
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam")
 
 		self._shutdown_signaled = False
@@ -149,7 +156,7 @@ class IoBeamHandler(object):
 		self._callbacks = dict()
 		self._callbacks_lock = RWLock()
 
-		self.dev_mode = _mrbeam_plugin_implementation._settings.get_boolean(['dev', 'iobeam_disable_warnings'])
+		self.dev_mode = plugin._settings.get_boolean(['dev', 'iobeam_disable_warnings'])
 
 		self.iobeam_version = None
 
@@ -157,12 +164,17 @@ class IoBeamHandler(object):
 		self._interlocks = dict()
 
 		self._subscribe()
-		self._initWorker(socket_file)
+		self._initWorker(self._socket_file)
 
 		self.processing_times_log = collections.deque([], self.PROCESSING_TIMES_LOG_LENGTH)
 
 		self.request_id = 1
 		self._request_id_lock = threading.Lock()
+
+		self._settings = plugin._settings
+		self.reported_hardware_malfunctions = []
+
+		self._laserheadHandler = laserheadHandler(plugin)
 
 	def isRunning(self):
 		return self._worker.is_alive()
@@ -230,14 +242,22 @@ class IoBeamHandler(object):
 
 	def is_iobeam_version_ok(self):
 		if self.iobeam_version is None:
-			return False
+			return False, 0
+		vers_obj = None
 		try:
-			StrictVersion(self.iobeam_version)
+			vers_obj = LooseVersion(self.iobeam_version)
 		except ValueError as e:
-			self._logger.error("iobeam version invalid: '{}'. ValueError from StrictVersion: {}".format(self.iobeam_version, e))
-			return False
+			self._logger.error("iobeam version invalid: '{}'. ValueError from LooseVersion: {}".format(self.iobeam_version, e))
+			return False, 0
+		if vers_obj < LooseVersion(self.IOBEAM_MIN_REQUIRED_VERSION):
+			return False, -1
+		elif vers_obj >= LooseVersion(self.IOBEAM_JSON_PROTOCOL_VERSION):
+			return False, 1
+		else:
+			return True, 0
 
-		return StrictVersion(self.iobeam_version) >= StrictVersion(self.IOBEAM_MIN_REQUIRED_VERSION)
+
+	# return LooseVersion(self.iobeam_version) >= LooseVersion(self.IOBEAM_MIN_REQUIRED_VERSION) and LooseVersion(self.iobeam_version) < LooseVersion(self.IOBEAM_JSON_PROTOCOL_VERSION)
 
 	def subscribe(self, event, callback):
 		"""
@@ -313,101 +333,104 @@ class IoBeamHandler(object):
 		self._worker.start()
 
 	def _work(self):
-		threading.current_thread().name = self.__class__.__name__
-		self._logger.debug("Worker thread starting, connecting to socket: %s %s", self.SOCKET_FILE, (" !!! iobeam_disable_warnings: True !!!" if self.dev_mode else ""))
-		if self.dev_mode:
-			self._logger.warn("iobeam handler: !!! iobeam_disable_warnings: True !!!")
+		try:
+			threading.current_thread().name = self.__class__.__name__
+			self._logger.debug("Worker thread starting, connecting to socket: %s %s", self.SOCKET_FILE, (" !!! iobeam_disable_warnings: True !!!" if self.dev_mode else ""))
+			if self.dev_mode:
+				self._logger.warn("iobeam handler: !!! iobeam_disable_warnings: True !!!")
 
-		while not self._shutdown_signaled:
-			self._my_socket = None
-			self._isConnected = False
-			try:
-				temp_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-				temp_socket.settimeout(10)
-				# self._logger.debug("Connecting to socket...")
-				temp_socket.connect(self.SOCKET_FILE)
-				self._my_socket = temp_socket
-			except socket.error as e:
-				self._isConnected = False
-				if self.dev_mode:
-					if not self._connectionException == str(e):
-						self._logger.error("IoBeamHandler not able to connect to socket %s, reason: %s. I'll keept trying but I won't log further failures.", self.SOCKET_FILE, e)
-						self._connectionException = str(e)
-				else:
-					self._logger.error("IoBeamHandler not able to connect to socket %s, reason: %s. ", self.SOCKET_FILE, e)
-
-				time.sleep(1)
-				continue
-
-			self._isConnected = True
-			self._errors = 0
-			self._connectionException = None
-
-			client_msg = self._send_identification()
-			self._logger.info("iobeam connection established. Identified ourselves as '%s'", client_msg['client'])
-			self._fireEvent(IoBeamEvents.CONNECT)
-
-			temp_buffer = b''
 			while not self._shutdown_signaled:
-				try:
-
-					# Read MESSAGE_LENGTH_MAX bytes of data
-					data = None
-					try:
-						data = temp_buffer + self._my_socket.recv(self.MESSAGE_LENGTH_MAX)
-					except Exception as e:
-						if self.dev_mode and e.message == "timed out":
-							# self._logger.warn("Connection stale but MRBEAM_DEBUG enabled. Continuing....")
-							continue
-						else:
-							self._logger.warn("Exception while sockect.recv(): %s - Resetting connection...", e)
-							self._logger.warn("Warning continuation %s ", e.message)
-							break
-
-					if not data:
-						self._logger.warn("Connection ended from other side. Closing connection...")
-						break
-
-					# Processed buffered data as messages or skip and continue buffering the data
-					if not data:
-						my_errors = 1
-						temp_buffer = b''
-					else:
-						# Split all JSON messages by new line character
-						messages = data.split(self.MESSAGE_NEWLINE)
-
-						if not data.endswith(self.MESSAGE_NEWLINE):
-							# Record remaining part of data into temp buffer, to read messages longer than MESSAGE_LENGTH_MAX
-							temp_buffer = messages.pop()
-						else:
-							temp_buffer = b''
-
-						# here we see what's in the data...
-						my_errors, _ = self._handle_messages(messages)
-
-					if my_errors > 0:
-						self._errors += my_errors
-						if self._errors >= self.MAX_ERRORS:
-							self._logger.warn("Resetting connection... error_count=%s, Resetting connection...", self._errors)
-							break
-						else:
-							self._logger.warn("Received invalid message, error_count=%s", self._errors)
-				except:
-					self._logger.exception("Exception in socket loop. Not sure what to do, resetting connection...")
-
-			if self._my_socket is not None:
-				self._logger.debug("Closing socket...")
-				self._my_socket.close()
 				self._my_socket = None
+				self._isConnected = False
+				try:
+					temp_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+					temp_socket.settimeout(10)
+					# self._logger.debug("Connecting to socket...")
+					temp_socket.connect(self.SOCKET_FILE)
+					self._my_socket = temp_socket
+				except socket.error as e:
+					self._isConnected = False
+					if self.dev_mode:
+						if not self._connectionException == str(e):
+							self._logger.error("IoBeamHandler not able to connect to socket %s, reason: %s. I'll keept trying but I won't log further failures.", self.SOCKET_FILE, e)
+							self._connectionException = str(e)
+					else:
+						self._logger.error("IoBeamHandler not able to connect to socket %s, reason: %s. ", self.SOCKET_FILE, e)
 
-			self._isConnected = False
-			self._fireEvent(IoBeamEvents.DISCONNECT)  # on shutdown this won't be broadcasted
+					time.sleep(1)
+					continue
 
-			if not self._shutdown_signaled:
-				self._logger.debug("Sleeping for a sec before reconnecting...")
-				time.sleep(1)
+				self._isConnected = True
+				self._errors = 0
+				self._connectionException = None
 
-		self._logger.debug("Worker thread stopped.")
+				client_msg = self._send_identification()
+				self._logger.info("iobeam connection established. Identified ourselves as '%s'", client_msg['client'])
+				self._fireEvent(IoBeamEvents.CONNECT)
+
+				temp_buffer = b''
+				while not self._shutdown_signaled:
+					try:
+
+						# Read MESSAGE_LENGTH_MAX bytes of data
+						data = None
+						try:
+							data = temp_buffer + self._my_socket.recv(self.MESSAGE_LENGTH_MAX)
+						except Exception as e:
+							if self.dev_mode and e.message == "timed out":
+								# self._logger.warn("Connection stale but MRBEAM_DEBUG enabled. Continuing....")
+								continue
+							else:
+								self._logger.warn("Exception while sockect.recv(): %s - Resetting connection...", e)
+								self._logger.warn("Warning continuation %s ", e.message)
+								break
+
+						if not data:
+							self._logger.warn("Connection ended from other side. Closing connection...")
+							break
+
+						# Processed buffered data as messages or skip and continue buffering the data
+						if not data:
+							my_errors = 1
+							temp_buffer = b''
+						else:
+							# Split all JSON messages by new line character
+							messages = data.split(self.MESSAGE_NEWLINE)
+
+							if not data.endswith(self.MESSAGE_NEWLINE):
+								# Record remaining part of data into temp buffer, to read messages longer than MESSAGE_LENGTH_MAX
+								temp_buffer = messages.pop()
+							else:
+								temp_buffer = b''
+
+							# here we see what's in the data...
+							my_errors, _ = self._handle_messages(messages)
+
+						if my_errors > 0:
+							self._errors += my_errors
+							if self._errors >= self.MAX_ERRORS:
+								self._logger.warn("Resetting connection... error_count=%s, Resetting connection...", self._errors)
+								break
+							else:
+								self._logger.warn("Received invalid message, error_count=%s", self._errors)
+					except:
+						self._logger.exception("Exception in socket loop. Not sure what to do, resetting connection...")
+
+				if self._my_socket is not None:
+					self._logger.debug("Closing socket...")
+					self._my_socket.close()
+					self._my_socket = None
+
+				self._isConnected = False
+				self._fireEvent(IoBeamEvents.DISCONNECT)  # on shutdown this won't be broadcasted
+
+				if not self._shutdown_signaled:
+					self._logger.debug("Sleeping for a sec before reconnecting...")
+					time.sleep(0.1)
+
+			self._logger.debug("Worker thread stopped.")
+		except:
+			self._logger.exception("Exception in _work(): ")
 
 	def _handle_messages(self, messages):
 		"""
@@ -424,8 +447,9 @@ class IoBeamHandler(object):
 					message_count = + 1
 
 					try:
-						json_dict = json.loads(json_data)
+						self._logger.info("ANDYTEST _handle_messages()  %s", json_data)
 
+						json_dict = json.loads(json_data)
 						# Now there could be "data" and "response"
 						if 'data' in json_dict:
 							if self.MESSAGE_ERROR not in json_dict['data']:
@@ -447,11 +471,11 @@ class IoBeamHandler(object):
 							version_obj = None
 							try:
 								version_str = tokens[2]
-								version_obj = StrictVersion(tokens[2])
+								version_obj = LooseVersion(tokens[2])
 							except ValueError:
 								self._logger.debug("Could not parse data '%s' as JSON", json_data)
 
-							if version_obj and version_obj < StrictVersion(self.IOBEAM_MIN_REQUIRED_VERSION):
+							if version_obj and version_obj < LooseVersion(self.IOBEAM_MIN_REQUIRED_VERSION):
 								# Send message to the frontend
 								self._logger.error(
 									"Outdated iobeam: %s - version OUTDATED. IOBEAM_MIN_REQUIRED_VERSION: %s",
@@ -482,6 +506,7 @@ class IoBeamHandler(object):
 		:param dataset: the contents of the dataset
 		:return: error count
 		"""
+		self._logger.info("ANDYTEST _handle_dataset() %s: %s", name, dataset)
 		error_count = 0
 		processing_start = time.time()
 
@@ -503,6 +528,9 @@ class IoBeamHandler(object):
 					err = self._handle_laser(dataset)
 				elif name == self.DATASET_LASERHEAD:
 					err = self._handle_laserhead(dataset)
+				elif name == self.DATASET_LASERHEAD_SHORT:
+					pass
+					# err = self._handle_laserhead(dataset)
 				elif name == self.DATASET_IOBEAM:
 					err = self._handle_iobeam(dataset)
 				elif name == self.DATASET_PCF:
@@ -622,17 +650,7 @@ class IoBeamHandler(object):
 		:return: error count
 		"""
 		try:
-			if 'main' in dataset and 'serial' in dataset['main']:
-				_mrbeam_plugin_implementation.lh['serial'] = dataset['main']['serial']
-			if 'power_calibrations' in dataset and dataset['power_calibrations']:
-				pwr_cali = None
-				# the last entry should be the most recent one. But who know....
-				for pc in dataset['power_calibrations']:
-					if pwr_cali is None or pc['ts'] > pwr_cali['ts']:
-						pwr_cali = pc
-				_mrbeam_plugin_implementation.lh['p_65'] = pwr_cali['power_65']
-			self._logger.info("laserhead summary: %s", _mrbeam_plugin_implementation.lh)
-			self._logger.info("laserhead complete: %s", dataset)
+			self._laserheadHandler.set_current_used_lh_data(dataset)
 		except:
 			self._logger.exception("laserhead: exception while handling head:data: ")
 		return 0
@@ -748,10 +766,23 @@ class IoBeamHandler(object):
 				if ok:
 					self._logger.info("Received iobeam version: %s - version OK", self.iobeam_version)
 				else:
-					self._logger.error("Received iobeam version: %s - version OUTDATED. IOBEAM_MIN_REQUIRED_VERSION: %s", self.iobeam_version, self.IOBEAM_MIN_REQUIRED_VERSION)
-					_mrbeam_plugin_implementation.notify_frontend(title=gettext("Software Update required"),
-					                                              text=gettext("Module 'iobeam' is outdated. Please run Software Update from 'Settings' > 'Software Update' before you start a laser job."),
-																  type="error", sticky=True, replay_when_new_client_connects=True)
+					if state <= 0:
+						self._logger.error("Received iobeam version: %s - version OUTDATED. IOBEAM_MIN_REQUIRED_VERSION: %s", self.iobeam_version, self.IOBEAM_MIN_REQUIRED_VERSION)
+						self._plugin.notify_frontend(title=gettext("Software Update required"),
+													 text=gettext("Module 'iobeam' is outdated. Please run software "
+																  "update from 'Settings' > 'Software Update' before "
+																  "you start a laser job."),
+													 type="error", sticky=True,
+													 replay_when_new_client_connects=True)
+					else:
+						self._logger.error("Received iobeam version: %s - version INCOMPATIBLE. iobeam is already using new JSON protocol!", self.iobeam_version)
+						self._plugin.notify_frontend(title=gettext("Software Update required"),
+													 text=gettext("Module 'MrBeam Plugin' is outdated; iobeam version "
+																  "is newer than expected. Please run software update "
+																  "from 'Settings' > 'Software Update' before you start "
+																  "a laser job."),
+													 type="error", sticky=True,
+													 replay_when_new_client_connects=True)
 				return 0
 			else:
 				self._logger.warn("_handle_iobeam(): Received iobeam:version message without version number. Counting as error. Message: %s", dataset)
@@ -770,7 +801,7 @@ class IoBeamHandler(object):
 				text = '<br/>' + \
 					   gettext("A possible hardware malfunction has been detected on this device. Please contact our support team immediately at:") + \
 					   '<br/><a href="https://mr-beam.org/support" target="_blank">mr-beam.org/support</a><br/><br/>' \
-				       '<strong>' + gettext("Error:") + '</strong><br/>{}'.format(dataset)
+					   '<strong>' + gettext("Error:") + '</strong><br/>{}'.format(dataset)
 				_mrbeam_plugin_implementation.notify_frontend(title=gettext("Hardware malfunction"),
 															  text=text,
 															  type="error", sticky=True,
@@ -851,6 +882,7 @@ class IoBeamHandler(object):
 		:param message: response message, e.g. {"response": {"command": {"device": "fan", ...}, "state": "ok"}}
 		:return: error count
 		"""
+		self._logger.info("ANDYTEST _handle_response() %s: %s", name, dataset)
 		error_count = 0
 		processing_start = time.time()
 
@@ -901,10 +933,33 @@ class IoBeamHandler(object):
 											  message = message,
 											  error_count = err))
 		if processing_time > self.PROCESSING_TIME_WARNING_THRESHOLD:
-			# TODO: write an error to our analytics module
 			self._logger.warn("Message handling time took %ss. (Errors: %s, message: '%s')", processing_time, err, message)
 		if log_stats or processing_time > self.PROCESSING_TIME_WARNING_THRESHOLD:
 			self.log_debug_processing_stats()
+
+	def send_hardware_malfunction_frontend_notification(self, malfunction, message):
+		if malfunction not in self.reported_hardware_malfunctions:
+			self.reported_hardware_malfunctions.append(malfunction)
+			text = '<br/>' + \
+				   gettext(
+					   "A possible hardware malfunction has been detected on this device. Please contact our support team immediately at:") + \
+				   '<br/><a href="https://mr-beam.org/ticket" target="_blank">mr-beam.org/ticket</a><br/><br/>' \
+				   '<strong>' + gettext("Error:") + '</strong><br/>{}'.format(message.replace(':', ': ')) # add whitespaces so that longer messages break in frontend
+			self._plugin.notify_frontend(title=gettext("Hardware malfunction"),
+										 text=text,
+										 type="error", sticky=True,
+										 replay_when_new_client_connects=True)
+
+	def send_bottom_open_frontend_notification(self, malfunction):
+		if malfunction not in self.reported_hardware_malfunctions:
+			self.reported_hardware_malfunctions.append(malfunction)
+			text = '<br/>' + \
+				   gettext("The bottom plate is not closed correctly. "
+						   "Please make sure that the bottom is correctly mounted as described in the Mr Beam II user manual.")
+			self._plugin.notify_frontend(title=gettext("Bottom Plate Error"),
+										 text=text,
+										 type="error", sticky=True,
+										 replay_when_new_client_connects=True)
 
 	def log_debug_processing_stats(self):
 		"""

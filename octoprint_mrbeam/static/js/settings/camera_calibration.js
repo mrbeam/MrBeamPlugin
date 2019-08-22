@@ -20,6 +20,8 @@ $(function () {
 
 		self.workingArea = parameters[1];
 		self.conversion = parameters[2];
+		self.analytics = parameters[3];
+
 		self.scaleFactor = 6;
 		// todo get ImgUrl from Backend/Have it hardcoded but right
 		self.calImgUrl = ko.observable(self.staticURL);
@@ -74,6 +76,7 @@ $(function () {
 		];
 
 		self.startCalibration = function () {
+		    self.analytics.send_fontend_event('calibration_start', {});
 			self.currentResults({});
 			self.calibrationActive(true);
 			self.nextMarker();
@@ -273,9 +276,12 @@ $(function () {
 					});
 				},
 				error: function (jqXHR, textStatus, errorThrown) {
-					alert("Error, status = " + textStatus + ", " +
-							"error thrown: " + errorThrown
-							);
+				    new PNotify({
+                        title: gettext("Error"),
+                        text: _.sprintf(gettext("Calibration failed.<br><br>Error:<br/>%(code)s %(status)s - %(errorThrown)s"), {code: jqXHR.status, status: textStatus, errorThrown: errorThrown}),
+                        type: "error",
+                        hide: false
+				    })
 				}
 			});
 		};
@@ -316,6 +322,7 @@ $(function () {
 
 		self.saveMarkersSuccess = function (response) {
 			self.calibrationActive(false);
+			self.analytics.send_fontend_event('calibration_finish', {});
 			new PNotify({
 				title: gettext("Camera Calibrated."),
 				text: gettext("Camera calibration was successful."),
@@ -384,7 +391,7 @@ $(function () {
 		CameraCalibrationViewModel,
 
 		// e.g. loginStateViewModel, settingsViewModel, ...
-		["settingsViewModel", "workingAreaViewModel", "vectorConversionViewModel"],
+		["settingsViewModel", "workingAreaViewModel", "vectorConversionViewModel", "analyticsViewModel"],
 
 		// e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
 		["#settings_plugin_mrbeam_camera"]

@@ -35,6 +35,11 @@ class MrBeamEvents(object):
 
 	ANALYTICS_DATA             = "MrbAnalyticsData"
 	MRB_PLUGIN_VERSION         = "MrbPluginVersion"
+	JOB_TIME_ESTIMATED         = "JobTimeEstimated"
+
+	HARDWARE_MALFUNCTION       = "HardwareMalfunction"
+
+	LASER_HEAD_READ             = "LaserHeadRead"
 
 
 	@classmethod

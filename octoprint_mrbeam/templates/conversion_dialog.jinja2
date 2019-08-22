@@ -39,7 +39,8 @@
 								<li class='material_entry hover_shadow'
 									data-bind="click: function(vm, event){$root.set_material($data, event); $root.moveJobsToEngravingDefaultOption($data)},
 												style: { backgroundImage: 'url(\'/plugin/mrbeam/static/img/materials/' + $data.img + '\')' },
-												css: {selected: $root.selected_material() === $data, custom: $data.custom === true }
+												css: {selected: $root.selected_material() === $data, custom: $data.custom === true },
+												attr: {mrb_name: $data.img}
 									">
 									<span data-bind="text: $data.name"></span>
 									<span class="delete_me" data-bind="click: function(data, event){ $root.delete_material($data, event); return false; }"><i class="icon icon-trash"></i></span>
@@ -89,7 +90,7 @@
 
 				<div id="save_material_flyin" data-bind="visible: customized_material()">
 					<div id="save_material_form" class="dropdown">
-						<a class="dropdown-toggle" data-toggle="dropdown" href="#" ><i class="icon-star"></i> {{ _('Save custom material') }}</a>
+						<a class="dropdown-toggle" data-toggle="dropdown" href="#" ><i class="icon-star"></i> {{ _('Save custom material setting') }}</a>
 						<div class="dropdown-menu" role="menu" style="padding:.5em">
 							<form class="form-horizontal" style="margin:0">
 								<div class="control-group">
@@ -232,7 +233,7 @@
                                     </div>
                                 </div>
                                 <div class="input-control-and-label" data-toggle="tooltip" data-placement="right"
-                                     title="{{ _('Pixel / raster engravings are done line by line. This sets <b>the distance between the single lines.') }}</b>
+                                     title="{{ _('Pixel / raster engravings are done line by line. This sets <b>the distance between the single lines.</b>') }}
                                         {{ _('Smaller values allow finer engravings but require a more precise focus and are slower.') }}">
                                     <label class="control-label">{{ _('Line distance') }}</label>
                                     <div class="controls"><input id="svgtogcode_img_line_dist" class="img_intensity_input decimal_input" type="number" max="1.0" min="0.1" step="0.05" data-bind="value: beamDiameter" />&nbsp;{{ _('mm') }}</div>
@@ -267,37 +268,6 @@
                               </div>
 
 								<h5>{{ _('Image Preprocessing') }}</h5>
-								<div class="controls">
-									<div class="img_preprocessing_preview before" style="background-image:url(/plugin/mrbeam/static/img/kitty_grayscale.png);" >{{ _('before') }}</div>
-									<div class="img_preprocessing_preview after" style="background-image:url(/plugin/mrbeam/static/img/kitty_grayscale.png);" >{{ _('after') }}
-										<div class="img_preprocessing_preview contrast" style="background-image:url(/plugin/mrbeam/static/img/kitty_contrast.png);" data-bind="style: { opacity: contrastPreview }" ></div>
-										<div class="img_preprocessing_preview sharpened" style="background-image:url(/plugin/mrbeam/static/img/kitty_sharpened.png);" data-bind="style: { opacity: sharpenedPreview }" ></div>
-										<div class="img_preprocessing_preview dithered" style="background-image:url(/plugin/mrbeam/static/img/kitty_dithered_150.png);" data-bind="visible: imgDithering"></div>
-
-									</div>
-									<div class="photo_attribution"><a href="http://www.christianholmer.com" target="_blank">{{ _('Photo: Christian Holmér') }}</a></div>
-								</div>
-
-								<div data-bind="disable:imgDithering ">
-                                    <div class="bar-control-and-label" data-toggle="tooltip" data-placement="right"
-                                         title="{{ _('Increases the image contrast before converting to gcode.') }}">
-                                        <label class="control-label">{{ _('Contrast') }}</label>
-                                        <div class="controls img_slider">
-                                            <input id="svgtogcode_contrast_slider" type="text" data-bind="value: imgContrast" >
-                                        </div>
-                                        <div style="clear:both"></div>
-                                    </div>
-
-                                    <div class="bar-control-and-label" data-toggle="tooltip" data-placement="right"
-                                         title="{{ _('Sharpens the image before converting to gcode.') }}">
-                                        <label class="control-label">{{ _('Sharpening') }}</label>
-                                        <div class="controls img_slider">
-                                            <input id="svgtogcode_sharpening_slider" class="uninitialized" type="text" data-bind="value: imgSharpening">
-                                        </div>
-                                        <div style="clear:both"></div>
-                                    </div>
-								</div>
-
                                 <div class="checkbox-control-and-label" data-toggle="tooltip" data-placement="right"
                                      title="<b>{{ _('Converts the image to solely black and white pixels.') }}</b><br>
                                         {{ _('Use this if the laser effect on your material is not able to transfer grayscales.') }}">
@@ -327,7 +297,7 @@
 						<form class="job_parameters form-horizontal" data-bind="visible: has_cutting_proposal">
 							<div class="control-group">
                                  <div class="cutting-control-and-label" data-toggle="tooltip" data-placement="right"
-                                      title="<b>{{ _('Sets the intensity of the laser.') }}</b>{{ _('The more intensity the deeper the effect on the material.') }}<br>
+                                      title="<b>{{ _('Sets the intensity of the laser.') }}</b> {{ _('The more intensity the deeper the effect on the material.') }}<br>
 									     {{ _('Cutting needs higher intensities than engraving.') }}<br>
 									     {{ _('The effect in general is dependent from the material and its color and surface.') }}">
                                      <label class="control-label">{{ _('Laser Intensity') }}</label>
@@ -439,11 +409,13 @@
                 </div>
                 <div class="modal-body">
                     <p>
-                        <strong>{{ _('Focus your laserhead before starting the job to get the best quality!') }}</strong>
+                        <strong>{{ _('Focus your laserhead before starting the job to get the best quality!') }}</strong><br>
+                        <a href="https://mr-beam.freshdesk.com/en/support/solutions/articles/43000073345-focusing-the-laser-head-" target="_blank">
+                            <i class="fa fa-external-link" aria-hidden="true"></i> {{ _(' Learn how to do this.') }}</a>
                     </p>
                     <img id="laserhead_focus_reminder_image" src="/plugin/mrbeam/static/img/focus_reminder.png">
                     <div id="laserhead_focus_reminder_alert"><i class="fa fa-exclamation-triangle" aria-hidden="true" style="color: #e25303;"></i>
-                        {{ _('Remember to turn of your Mr Beam II if you disconnect the ribbon cable!') }}
+                        {{ _('Remember to turn off your Mr Beam II if you disconnect the ribbon cable!') }}
                     </div>
                 </div>
                 <div class="modal-footer">

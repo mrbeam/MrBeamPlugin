@@ -7,6 +7,8 @@ $(function(){
 
 	function VectorConversionViewModel(params) {
 		var self = this;
+		window.mrbeam.viewModels['conversionViewModel'] = self;
+		window.mrbeam.viewModels['vectorConversionViewModel'] = self; // used by tour view model
 
 		self.BRIGHTNESS_VALUE_RED   = 0.299;
 		self.BRIGHTNESS_VALUE_GREEN = 0.587;
@@ -18,6 +20,7 @@ $(function(){
 		self.workingArea = params[3];
 		self.files = params[4];
 		self.profile = params[5];
+		self.materialSettings = params[6];
 
 		self.target = undefined;
 		self.file = undefined;
@@ -50,369 +53,8 @@ $(function(){
         self.dontRemindMeAgainChecked = ko.observable(false);
 
 		// material menu
-		self.material_settings2 = {
-			'Anodized Aluminum': {
-				name: gettext("Anodized Aluminum"),
-				img: 'anodized_aluminum.jpg',
-				description: gettext("Dark anodized aluminum can be engraved. Works on iPhones."),
-				hints: gettext("Requires very precise focus. Anodized aluminum turns brighter through laser engraving. Therefore we suggest to invert photos for engravings."),
-				laser_type: 'MrBeamII-1.0',
-				colors: {
-					'000000': {
-						engrave: {eng_i:[0,100], eng_f:[1000, 30], eng_pierce: 0, dithering: false },
-						cut: []
-					}
-				}
-			},
-			'Balsa Wood': {
-				name: gettext("Balsa Wood"),
-				img: 'balsa_wood.jpg',
-				description: '',
-				hints: '',
-				safety_notes: gettext("Take care about ignitions. Never run a job slower than 300 mm/min!"),
-				laser_type: 'MrBeamII-1.0',
-				colors: {
-					'd4b26f': {
-						engrave: {eng_i:[0,20], eng_f:[2000,350], eng_pierce: 0, dithering: false },
-						cut: [
-							{thicknessMM: 1, cut_i:80, cut_f:525, cut_p:2},
-							{thicknessMM: 2, cut_i:100, cut_f:525, cut_p:1},
-							{thicknessMM: 3, cut_i:100, cut_f:525, cut_p:2},
-							{thicknessMM: 4, cut_i:100, cut_f:450, cut_p:3},
-							{thicknessMM: 5, cut_i:100, cut_f:225, cut_p:3}
-						]
-					}
-				}
-			},
-			'Bamboo': {
-				name: gettext("Bamboo Wood"),
-				img: 'bamboo.jpg',
-				description: '',
-				hints: '',
-				safety_notes: '',
-				laser_type: 'MrBeamII-1.0',
-				colors: {
-					'9c642b': {
-						engrave: {eng_i:[0,100], eng_f:[2000,260], eng_pierce: 0, dithering: false },
-						cut: []
-					}
-				}
-			},
-			'Cardboard, corrugated single wave': {
-				name: gettext("Cardboard, single wave"),
-				img: 'cardboard_single_wave.jpg',
-				description: gettext("Ordinary cardboard like most packaging is made of."),
-				hints: gettext("Engraving looks great if just the first layer is lasered away, that the wave is visible underneath."),
-				safety_notes: gettext("Take care about ignitions. Never run a job slower than 180 mm/min!"),
-				laser_type: 'MrBeamII-1.0',
-				colors: {
-					'8b624a': {
-						engrave: {eng_i:[10,25], eng_f:[2000,850], eng_pierce: 0, dithering: false },
-						cut: [
-							{thicknessMM: 2, cut_i:100, cut_f:375, cut_p:4},
-							{thicknessMM: 3, cut_i:100, cut_f:375, cut_p:4},
-							{thicknessMM: 4, cut_i:100, cut_f:300, cut_p:4}
-							// {thicknessMM: 5, cut_i:100, cut_f:300, cut_p:5}
-						]
-					}
-				}
-			},
-			'Cardboard, corrugated double wave': {
-				name: gettext("Cardboard, double wave"),
-				img: 'cardboard_double_wave.jpg',
-				description: gettext("Ordinary cardboard like strong packaging is made of."),
-				hints: gettext("Engraving looks great if just the first layer is lasered away, that the wave is visible underneath."),
-				safety_notes: gettext("Take care about ignitions. Never run a job slower than 180 mm/min!"),
-				laser_type: 'MrBeamII-1.0',
-				colors: {
-					'8b624a': {
-						engrave: {eng_i:[10,25], eng_f:[2000,850], eng_pierce: 0, dithering: false },
-						cut: [
-							{thicknessMM: 5, cut_i:100, cut_f:300, cut_p:4}
-						]
-					}
-				}
-			},
-			'Fabric Cotton': null,
-			'Fabric Polyester': null,
-			'Finn Cardboard': {
-				name: gettext("Finn Cardboard"),
-				img: 'finn_cardboard.jpg',
-				description: gettext("Made out of purely wooden fibres, often used for architectural models."),
-				hints: '',
-				safety_notes: '',
-				laser_type: 'MrBeamII-1.0',
-				colors: {
-					'c7c97c': {
-						engrave: {eng_i:[10,25], eng_f:[2000,1300], eng_pierce: 0, dithering: false },
-						cut: [
-							{thicknessMM: 2.5, cut_i:100, cut_f:330, cut_p:3}
-						]
-					}
-				}
-			},
-			'Felt': { // took settings from IHM fair
-				name: gettext("Felt"),
-				img: 'felt.jpg',
-				description: gettext("Acrylic felt like the one sold in many arts and craft stores."),
-				hints: gettext("Be aware that natural felt is something else."),
-				safety_notes: '',
-				laser_type: 'MrBeamII-1.0',
-				colors: {
-					'EB5A3E': {
-						name: 'orange',
-						engrave: {eng_i:[0,35], eng_f:[1600,1600], eng_pierce: 0, dithering: false },
-						cut: [
-							{thicknessMM: 3, cut_i:100, cut_f:550, cut_p:2}
-						]
-					},
-					'F49A39': {
-						name: 'yellow',
-						engrave: {eng_i:[0,30], eng_f:[1200,1200], eng_pierce: 0, dithering: false },
-						cut: [
-							{thicknessMM: 3, cut_i:100, cut_f:625, cut_p:2}
-						]
-					},
-					'293365': {
-						name: 'blue',
-						engrave: {eng_i:[0,35], eng_f:[1600,1600], eng_pierce: 0, dithering: false },
-						cut: [
-							{thicknessMM: 3, cut_i:100, cut_f:500, cut_p:2}
-						]
-					},
-					'322F33': {
-						name: 'black',
-						engrave: {eng_i:[0,30], eng_f:[1600,1600], eng_pierce: 0, dithering: false },
-						cut: [
-							{thicknessMM: 3, cut_i:100, cut_f:400, cut_p:2}
-						]
-					},
-					'54392E': {
-						name: 'brown',
-						engrave: {eng_i:[0,30], eng_f:[1600,1600], eng_pierce: 0, dithering: false },
-						cut: [
-							{thicknessMM: 3, cut_i:100, cut_f:500, cut_p:2}
-						]
-					},
-					'A21F25': {
-						name: 'dunkelrot',
-						engrave: {eng_i:[0,30], eng_f:[1600,1600], eng_pierce: 0, dithering: false },
-						cut: [
-							{thicknessMM: 3, cut_i:100, cut_f:550, cut_p:2}
-						]
-					},
-					'3E613E': {
-						name: 'green',
-						engrave: {eng_i:[0,30], eng_f:[1600,1600], eng_pierce: 0, dithering: false },
-						cut: [
-							{thicknessMM: 3, cut_i:100, cut_f:500, cut_p:2}
-						]
-					},
-					'D91F48': {
-						name: 'pink',
-						engrave: {eng_i:[0,40], eng_f:[1600,1600], eng_pierce: 0, dithering: false },
-						cut: [
-							{thicknessMM: 3, cut_i:100, cut_f:600, cut_p:2}
-						]
-					},
-				}
-			},
-//			'Felt': { // old settings we had before IHM fair
-//				name: 'Felt',
-//				img: 'felt.jpg',
-//				description: 'Acrylic felt like the one sold in many arts and craft stores.',
-//				hints: 'Be aware, natural felt is something different.',
-//				safety_notes: '',
-//				laser_type: 'MrBeamII-1.0',
-//				colors: {
-//					'00b000': {
-//						name: 'green',
-//						engrave: null, // not tested yet
-//						cut: [
-//							{thicknessMM: 4, cut_i:100, cut_f:225, cut_p:1}
-//						]
-//					},
-//					'4dcaca': {
-//						name: 'baby blue',
-//						engrave: null, // not tested yet
-//						cut: [
-//							{thicknessMM: 4, cut_i:100, cut_f:100, cut_p:5}
-//						]
-//					},
-//					'181866': {
-//						name: 'royal blue',
-//						engrave: null, // not tested yet
-//						cut: [
-//							{thicknessMM: 4, cut_i:100, cut_f:260, cut_p:2}
-//						]
-//					},
-//					'c98600': {
-//						name: 'yellow',
-//						engrave: null, // not tested yet
-//						cut: [
-//							{thicknessMM: 4, cut_i:100, cut_f:260, cut_p:2}
-//						]
-//					},
-//					'eca100': {
-//						name: 'sunny yellow',
-//						engrave: null, // not tested yet
-//						cut: [
-//							{thicknessMM: 4, cut_i:100, cut_f:225, cut_p:2}
-//						]
-//					},
-//					'550024': {
-//						name: 'purple',
-//						engrave: null, // not tested yet
-//						cut: [
-//							{thicknessMM: 4, cut_i:100, cut_f:375, cut_p:2}
-//						]
-//					},
-//					'393939': {
-//						name: 'gray',
-//						engrave: null, // not tested yet
-//						cut: [
-//							{thicknessMM: 4, cut_i:100, cut_f:300, cut_p:2}
-//						]
-//					},
-//					'000000': {
-//						name: 'black',
-//						engrave: null, // not tested yet
-//						cut: [
-//							{thicknessMM: 4, cut_i:100, cut_f:300, cut_p:2}
-//						]
-//					},
-//					'e03800': {
-//						name: 'orange',
-//						engrave: null, // not tested yet
-//						cut: [
-//							{thicknessMM: 4, cut_i:100, cut_f:375, cut_p:2}
-//						]
-//					},
-//				}
-//			},
-			'Foam Rubber': {
-				name: gettext("Foam Rubber"),
-				img: 'foam_rubber.jpg',
-				description: gettext("Consists of poly urethane foam."),
-				hints: gettext("Laser parameters are highly color dependant, bright colors might need pierce time."),
-				safety_notes: '',
-				laser_type: 'MrBeamII-1.0',
-				colors: {
-					'0057a8': {
-						engrave: null,
-						cut: [{thicknessMM: 2, cut_i:100, cut_f:480, cut_p:1},
-                              {thicknessMM: 3, cut_i:100, cut_f:450, cut_p:1}]
-					},
-					'ee6d2c': {
-						engrave: null,
-						cut: [{thicknessMM: 2, cut_i:75, cut_f:140, cut_p:1}]
-					},
-					'e6e6e6': {
-						engrave: null,
-						cut: [{thicknessMM: 2, cut_i:100, cut_f:140, cut_p:1}]
-					},
-					'000000': {
-						engrave: null,
-						cut: [{thicknessMM: 2, cut_i:100, cut_f:600, cut_p:1}]
-					},
-					'41c500': {
-						engrave: null,
-						cut: [{thicknessMM: 2, cut_i:100, cut_f:600, cut_p:1}]
-					},
-				}
-			},
-			'Kraftplex': {
-				name: gettext("Kraftplex"),
-				img: 'kraftplex.jpg',
-				description: gettext("100% natural fibers compressed under high temperature. Strong and bendable like metal."),
-				hints: '',
-				safety_notes: '',
-				laser_type: 'MrBeamII-1.0',
-				colors: {
-					'795f39': {
-						engrave: {eng_i:[0,35], eng_f:[2000,850], eng_pierce: 0, dithering: false },
-						cut: [
-							{thicknessMM: 0.8, cut_i:100, cut_f:225, cut_p:2},
-							{thicknessMM: 1.5, cut_i:100, cut_f:110, cut_p:2},
-							{thicknessMM: 3,   cut_i:100, cut_f:100, cut_p:5}
-						]
-					}
-				}
-			},
-			'Latex': null,
-			'Paper': {
-				name: gettext("Paper"),
-				img: 'paper.jpg',
-				description: gettext("Ordinary paper like from an office printer."),
-				hints: '',
-				safety_notes: gettext("Very fine structures may be subject of ignition."),
-				laser_type: 'MrBeamII-1.0',
-				colors: {
-					'e7d27f': {
-						engrave: null,
-						cut: [
-							{thicknessMM: 0.1, cut_i:75, cut_f:600, cut_p:1},
-							{thicknessMM: 0.2, cut_i:85, cut_f:600, cut_p:2} //  >300g is what we said in the old system
-						]
-					}
-				}
-			},
-			'Plywood Poplar': {
-				name: gettext("Plywood Poplar"),
-				img: 'plywood.jpg',
-				description: gettext("Plywood from an ordinary hardware store or arts and craft supply."),
-				hints: gettext("Watch out for dedicated laser plywood - it has better surface quality and only natural glue."),
-				safety_notes: gettext("Very fine structures may be subject of ignition."),
-				laser_type: 'MrBeamII-1.0',
-				colors: {
-					'e7d27f': {
-						engrave: {eng_i:[18,35], eng_f:[2000,750], eng_pierce: 0, dithering: false },
-						cut: [
-							{thicknessMM: 3, cut_i:100, cut_f:110, cut_p:3},
-							{thicknessMM: 4, cut_i:100, cut_f:100, cut_p:3},
-						]
-					}
-				}
-			},
-			'Wellboard': {
-				name: gettext("Wellboard"),
-				img: 'wellboard.jpg',
-				description: gettext("100% natural fibers similar to Kraftplex, but wavy."),
-				hints: gettext("Thickness is measured over the whole wave."),
-				safety_notes: '',
-				laser_type: 'MrBeamII-1.0',
-				colors: {
-					'e7d27f': {
-						engrave: {eng_i:[10,35], eng_f:[2000,850], eng_pierce: 0, dithering: false },
-						cut: [
-							{thicknessMM: 6,  cut_i:100, cut_f:160, cut_p:2},
-							{thicknessMM: 10, cut_i:100, cut_f:100, cut_p:3},
-						]
-					}
-				}
-			},
+		self.material_settings2 = self.materialSettings.material_settings;
 
-//			custom_material: {
-//				name: 'Custom',
-//				img: 'custom.jpg',
-//				description: 'Just a Dummy material',
-//				hints: 'Figuring out material settings works best from low to high intensity and fast to slow movement.',
-//				safety_notes: 'Experimenting with custom material settings is your responsibility.',
-//				laser_type: 'MrBeamII-1.0',
-//				colors: {
-//					'd4b26f': {
-//						engrave: {eng_i:[0,20], eng_f:[2000,350], eng_pierce: 0, dithering: false },
-//						cut: [
-//							{thicknessMM: 1, cut_i:80, cut_f:700, cut_p:2},
-//							{thicknessMM: 2, cut_i:100, cut_f:700, cut_p:1},
-//							{thicknessMM: 3, cut_i:100, cut_f:700, cut_p:2},
-//							{thicknessMM: 4, cut_i:100, cut_f:600, cut_p:3},
-//							{thicknessMM: 5, cut_i:100, cut_f:300, cut_p:3}
-//						]
-//					}
-//				}
-//			}
-		};
 		self.engrave_only_thickness = {thicknessMM: -1, cut_i:'', cut_f:'', cut_p: 1, cut_pierce: 0};
 		self.no_engraving = {eng_i:['',''], eng_f:['',''], eng_pierce: 0, dithering: false };
 
@@ -551,7 +193,7 @@ $(function(){
 				new_material = {
 				name: name,
 					img: 'custom.jpg',
-					description: gettext("custom material"),
+					description: gettext("Custom material settings"),
 					hints: gettext("Figuring out material settings works best from low to high intensity and fast to slow movement."),
 					safety_notes: gettext("Experimenting with custom material settings is at your own risk."),
 					laser_type: 'MrBeamII-1.0',
@@ -968,31 +610,11 @@ $(function(){
 		self.imgFeedrateWhite = ko.observable(1500);
 		self.imgFeedrateBlack = ko.observable(250);
 		self.imgDithering = ko.observable(false);
-		self.imgSharpening = ko.observable(1);
-		self.imgContrast = ko.observable(1);
 		self.beamDiameter = ko.observable(0.15);
 		self.engravingPiercetime = ko.observable(0);
 
 		self.sharpeningMax = 25;
 		self.contrastMax = 2;
-
-		// preprocessing preview ... returns opacity 0.0 - 1.0
-		self.sharpenedPreview = ko.computed(function(){
-			if(self.imgDithering()) return 0;
-			else {
-				var sharpeningPercents = (self.imgSharpening() - 1)/(self.sharpeningMax - 1);
-				var contrastPercents = (self.imgContrast() - 1)/(self.contrastMax - 1);
-				return sharpeningPercents - contrastPercents/2;
-			}
-		}, self);
-		self.contrastPreview = ko.computed(function(){
-			if(self.imgDithering()) return 0;
-			else {
-				var sharpeningPercents = (self.imgSharpening() - 1)/(self.sharpeningMax - 1);
-				var contrastPercents = (self.imgContrast() - 1)/(self.contrastMax - 1);
-				return contrastPercents - sharpeningPercents/2;
-			}
-		}, self);
 
 		self.get_dialog_state = function(){
 			if(self.selected_material() === null){
@@ -1157,8 +779,6 @@ $(function(){
 				"intensity_white" : self.imgIntensityWhite() * self.profile.currentProfileData().laser.intensity_factor(),
 				"speed_black" : parseInt(self.imgFeedrateBlack()),
 				"speed_white" : parseInt(self.imgFeedrateWhite()),
-				"contrast" : self.imgContrast(),
-				"sharpening" : self.imgSharpening(),
 				"dithering" : self.imgDithering(),
 				"beam_diameter" : parseFloat(self.beamDiameter()),
 				"pierce_time": parseInt(self.engravingPiercetime()),
@@ -1194,20 +814,34 @@ $(function(){
                 let typePath = currentDesign.typePath;
                 let format = typePath[typePath.length - 1];
 
-                let sub_format;
+                let sub_format, font, text_length, clip_working_area;
                 if (format === "image") {
                     let file_name = $('#' + currentDesign.id).find('.title').text();
                     sub_format = file_name.split('.').pop(-1).toLowerCase();
                 }
 
+                if (format === 'svg') {
+                    clip_working_area = self.workingArea.gc_options().clip_working_area;
+                }
+
+                if (format === 'quicktext') {
+                    let qt = $('#' + currentDesign.previewId).find('text');
+                    text_length = qt.text().length;
+                    font = qt.css('font-family').replace(/"/g,'');
+                }
+
                 let size = currentDesign.size;
 
                 data.push({
+                    design_id: currentDesign.id,
                     dim_x: dim_x,
                     dim_y: dim_y,
                     format: format,
                     sub_format: sub_format,
-                    size: size
+                    size: size,
+                    text_length: text_length,
+                    font: font,
+                    clip_working_area: clip_working_area
                 });
             }
 			return data;
@@ -1220,7 +854,7 @@ $(function(){
         }
 
 		self.enableConvertButton = ko.computed(function() {
-			if (self.slicing_in_progress() 
+			if (self.slicing_in_progress()
 					|| self.workingArea.placedDesigns().length === 0
 					|| self.selected_material() == null
 					|| self.selected_material_color() == null
@@ -1475,8 +1109,8 @@ $(function(){
                     self.settings.requestData();
                     console.error("Unable to save focus reminder state: ", data);
                     new PNotify({
-                        title: "Error while saving settings!",
-                        text: "Unable to save your focus reminder state at the moment.<br/>Check connection to Mr Beam II and try again.",
+                        title: gettext("Error while saving settings!"),
+                        text: _.sprintf(gettext("Unable to save your focus reminder state at the moment.%(br)sCheck connection to Mr Beam II and try again."), {br: "<br/>"}),
                         type: "error",
                         hide: true
                     });
@@ -1539,7 +1173,7 @@ $(function(){
 					//self.update_colorSettings();
 					self.slicing_in_progress(true);
 					var pixPerMM = 1/self.beamDiameter();
-//					snap.select('#userContent').embed_gc(); // hack
+					snap.select('#userContent').embed_gc(self.workingArea.flipYMatrix(), self.workingArea.gc_options(), self.workingArea.gc_meta); // hack
 					self.workingArea.getCompositionSVG(self.do_engrave(), pixPerMM, self.engrave_outlines(), function(composition){
 						self.svg = composition;
 						var filename = self.gcodeFilename();
@@ -1585,18 +1219,29 @@ $(function(){
 								console.log("Conversion started.", response);
 							},
 							error: function ( jqXHR, textStatus, errorThrown) {
-								console.error("Conversion failed with status " + jqXHR.status, textStatus, errorThrown);
-								if(length > 10000000){
-									console.error("JSON size " + length + "Bytes may be over the request maximum.");
-								}
-								self.slicing_in_progress(false);
-								new PNotify({
-								    title: gettext("Conversion failed"),
-									text: gettext("Unable to start the conversion in the backend. Content length was " + length + " bytes."),
-									type: "error",
-									tag: "conversion_error",
-									hide: false
-								});
+							    self.slicing_in_progress(false);
+                                console.error("Conversion failed with status " + jqXHR.status, textStatus, errorThrown);
+							    if (jqXHR.status == 401) {
+							        self.loginState.logout();
+							        new PNotify({
+                                        title: gettext("Session expired"),
+                                        text: gettext("Please login again to start this laser job."),
+                                        type: "warn",
+                                        tag: "conversion_error",
+                                        hide: false
+                                    });
+                                } else {
+                                    if (length > 10000000) {
+                                        console.error("JSON size " + length + "Bytes may be over the request maximum.");
+                                    }
+                                    new PNotify({
+                                        title: gettext("Conversion failed"),
+                                        text: _.sprintf(gettext("Unable to start the conversion in the backend. Please try reloading this page or restarting Mr Beam II.%(br)s%(br)sContent length was %(length)s bytes."), {length: length, br: "<br/>"}),
+                                        type: "error",
+                                        tag: "conversion_error",
+                                        hide: false
+                                    });
+                                }
 							}
 						});
 
@@ -1645,7 +1290,6 @@ $(function(){
 			self.requestData();
 			self.state.conversion = self; // hack! injecting method to avoid circular dependency.
 			self.files.conversion = self;
-			self._configureImgSliders();
 
             $("#dialog_vector_graphics_conversion").on('hidden', function(){
                 self.slicing_in_progress(false);
@@ -1720,42 +1364,12 @@ $(function(){
 			if ('reason' in payload && typeof payload['reason'] === 'string' && payload['reason'].startsWith('OutOfSpaceException')) {
 			    var html = "<ul>";
 			    html += ("<lh>" + gettext("To free up some disk space you may want to perform one or all of the following suggestions:") + "</lh>");
-			    html += ("<li>" + gettext("Delete CGODE files: Go to design library and click 'Only show GCode files' on the left. Here you can delete files from the according context menu.") + "</li>");
+			    html += ("<li>" + gettext("Delete GCode files: Go to design library and click 'Only show GCode files' on the left. Here you can delete files from the according context menu.") + "</li>");
 			    html += ("<li>" + gettext("Delete design files: Go to design library and click 'Only show design files' on the left. Here you can delete files from the according context menu.") + "</li>");
 			    html += ("<li>" + gettext("Delete log files: Go to Settings -> logs and delete old log files per click on the trash bin icon.") + "</li>");
 			    html += "</ul>";
 			    html += _.sprintf(gettext("Find more details %(open)sonline%(close)s."), {open: '<a href="https://mr-beam.freshdesk.com/en/support/solutions/articles/43000068441-free-up-disk-space" target="_blank">', close: '</a>'});
                 new PNotify({title: gettext("Get more free disk space"), text: html, type: "info", hide: false});
-			}
-		};
-
-
-		self._configureImgSliders = function() {
-			var el1 = $("#svgtogcode_contrast_slider");
-			if(el1.length > 0){
-				self.contrastSlider = el1.slider({
-					step: .1,
-					min: 1,
-					max: self.contrastMax,
-					value: 1,
-					tooltip: 'hide'
-				}).on("slide", function(ev){
-					self.imgContrast(ev.value);
-				});
-			}
-
-			var el2 = $("#svgtogcode_sharpening_slider");
-			if(el2.length > 0){
-				self.sharpeningSlider = el2.slider({
-					step: 1,
-					min: 1,
-					max: self.sharpeningMax,
-					value: 1,
-					class: 'img_slider',
-					tooltip: 'hide'
-				}).on("slide", function(ev){
-					self.imgSharpening(ev.value);
-				});
 			}
 		};
 
@@ -1820,7 +1434,7 @@ $(function(){
 
     ADDITIONAL_VIEWMODELS.push([VectorConversionViewModel,
 		["loginStateViewModel", "settingsViewModel", "printerStateViewModel", "workingAreaViewModel",
-            "gcodeFilesViewModel", 'laserCutterProfilesViewModel'],
+            "gcodeFilesViewModel", 'laserCutterProfilesViewModel', 'materialSettingsViewModel'],
 		document.getElementById("dialog_vector_graphics_conversion")]);
 
 });

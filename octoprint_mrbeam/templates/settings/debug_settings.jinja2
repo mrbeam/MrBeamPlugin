@@ -2,6 +2,20 @@
     <h3>{{ _('Debug') }}</h3>
 
     <form class="form-horizontal">
+
+        <div class="control-group">
+            <div class="controls">
+                <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.gcode_nextgen.clip_working_area">
+                    <strong>{{ _('Enable Clipping') }}</strong>
+                    <div>{{ _('Only disable if you\'re experiencing problems.') }}</div>
+                    <div>{{ _('Designs exceeding the working area are clipped if enabled. When disabled you might experience \'machine limit hit\' errors during laserjobs. Since we had some bugs with the clipping algorithm in the past, here is an option to disable it completely.') }}</div>
+                </label>
+            </div>
+        </div>
+
+    <h3>{{ _('Terminal') }}</h3>
+
         <div class="control-group">
 {#            <label class="control-label" for="settings-debug-terminal">{{ _('Enable terminal') }}</label>#}
             <div class="controls">
@@ -14,13 +28,12 @@
         </div>
 
         <div class="control-group">
-{#            <label class="control-label" for="settings-debug-vorlon">{{ _('Disable Clipping') }}</label>#}
+{#            <label class="control-label" for="settings-debug-terminal">{{ _('Enable terminal') }}</label>#}
             <div class="controls">
                 <label class="checkbox">
-                    <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.gcode_nextgen.clip_working_area">
-                    <strong>{{ _('Enable Clipping') }}</strong>
-                    <div>{{ _('Only disable if you\'re experiencing problems.') }}</div>
-                    <div>{{ _('Designs exceeding the working area are clipped if enabled. When disabled you might experience \'machine limit hit\' errors during laserjobs. Since we had some bugs with the clipping algorithm in the past, here is an option to disable it completely.') }}</div>
+                    <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.terminal_show_checksums">
+                    <strong>{{ _('Show checksums') }}</strong>
+                    <div>{{ _('Show gcode command checksums in terminal. Takes effect immediately.') }}</div>
                 </label>
             </div>
         </div>
