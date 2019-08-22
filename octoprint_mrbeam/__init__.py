@@ -195,9 +195,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		msg = "MrBeam Lasercutter Profile: %s" % self.laserCutterProfileManager.get_current_or_default()
 		self._logger.info(msg, terminal=True)
 
-		if self.is_vorlon_enabled():
-			self._logger.warn("!!! VORLON is enabled !!!!", terminal=True)
-
 	def _convert_profiles(self, profiles):
 		result = dict()
 		for identifier, profile in profiles.items():
@@ -245,7 +242,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			job_time = 0.0,
 			terminal=False,
 			terminal_show_checksums = True,
-			vorlon=False,
 			converter_min_required_disk_space=100 * 1024 * 1024, # 100MB, in theory 371MB is the maximum expected file size for full working area engraving at highest resolution.
 			dev=dict(
 				debug=False, # deprected
@@ -302,7 +298,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			dxfScale=self._settings.get(['dxfScale']),
 			terminal=self._settings.get(['terminal']),
 			terminal_show_checksums=self._settings.get(['terminal_show_checksums']),
-			vorlon=self.is_vorlon_enabled(),
 			analyticsEnabled=self._settings.get(['analyticsEnabled']),
 			cam=dict(enabled=self._settings.get(['cam', 'enabled']),
 					 frontendUrl=self._settings.get(['cam', 'frontendUrl'])),
@@ -343,13 +338,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			if "terminal_show_checksums" in data:
 				self._settings.set_boolean(["terminal_show_checksums"], data["terminal_show_checksums"])
 				self._printer._comm.set_terminal_show_checksums(data["terminal_show_checksums"])
-			if "vorlon" in data:
-				if data["vorlon"]:
-					self._settings.set_float(["vorlon"], time.time())
-					self._logger.warn("Enabling VORLON per user request.", terminal=True)
-				else:
-					self._settings.set_boolean(["vorlon"], False)
-					self._logger.info("Disabling VORLON per user request.", terminal=True)
 			if "gcode_nextgen" in data and isinstance(data['gcode_nextgen'],
 			                                          collections.Iterable) and "clip_working_area" in data[
 				'gcode_nextgen']:
@@ -517,7 +505,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 analyticsEnabled=self._settings.get(["analyticsEnabled"]),
 							 beta_label=self.get_beta_label(),
 							 terminalEnabled=self._settings.get(['terminal']) or self.support_mode,
-							 vorlonEnabled=self.is_vorlon_enabled(),
 
 							 lasersafety_confirmation_dialog_version  = self.LASERSAFETY_CONFIRMATION_DIALOG_VERSION,
 							 lasersafety_confirmation_dialog_language = language
@@ -1838,8 +1825,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			chunks.append(self._settings.get(['beta_label']))
 		if self.is_beta_channel():
 			chunks.append('<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000507827" target="_blank">BETA</a>')
-		if self.is_vorlon_enabled():
-			chunks.append("VORLON")
 		if self.support_mode:
 			chunks.append("SUPPORT")
 
@@ -1912,25 +1897,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def is_beta_channel(self):
 		return self._settings.get(["dev", "software_tier"]) == SW_UPDATE_TIER_BETA
-
-	def is_vorlon_enabled(self):
-		vorlon = self._settings.get(['vorlon'])
-		ts = -1
-		if vorlon == True:
-			# usually we get a timestamp here. if it's a true-Boolean, it was entered manually and we keep it forever.
-			return True
-		if not vorlon:
-			return False
-		try:
-			ts = float(vorlon)
-		except:
-			pass
-		if ts > 0 and time.time() - ts < float(60 * 60 * 6):
-			return True
-		else:
-			self._settings.set_boolean(['vorlon'], False, force=True)
-			return False
-
 
 
 
