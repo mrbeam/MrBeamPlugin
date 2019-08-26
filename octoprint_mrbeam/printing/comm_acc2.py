@@ -108,7 +108,7 @@ class MachineCom(object):
 
 
 	ALARM_CODE_COMMAND_TOO_LONG = "ALARM_CODE_COMMAND_TOO_LONG"
-  
+
 	pattern_get_x_coord_from_gcode = re.compile("^G.*X(\d{1,3}\.?\d{0,3})\D.*")
 	pattern_get_y_coord_from_gcode = re.compile("^G.*Y(\d{1,3}\.?\d{0,3})\D.*")
 
@@ -2149,11 +2149,11 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
 	def _calc_total_lines(self):
 		res = -1
 		try:
-			tmp, code = exec_cmd_output("wc -l {} | cut -f1 -d' '".format(self._filename), shell=True)
+			tmp, code = exec_cmd_output("wc -l \"{}\" | cut -f1 -d' '".format(self._filename), shell=True)
 			if code == 0:
 				res = int(tmp)
 			else:
-				self._logger.error("Can't convert _lines_total to int: command returned exit code %s: ", code, tmp)
+				self._logger.error("Can't convert _lines_total to int: command returned exit code %s, output: %s", code, tmp)
 		except ValueError:
 			self._logger.error("Can't convert _lines_total to int: value is %s", tmp)
 		return res
