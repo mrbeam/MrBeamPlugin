@@ -447,8 +447,6 @@ class IoBeamHandler(object):
 					message_count = + 1
 
 					try:
-						self._logger.info("ANDYTEST _handle_messages()  %s", json_data)
-
 						json_dict = json.loads(json_data)
 						# Now there could be "data" and "response"
 						if 'data' in json_dict:
@@ -1029,7 +1027,12 @@ class IoBeamHandler(object):
 		Make and return client identification message in required format
 		:return: client identification message
 		"""
-		return {'client': {'name': self.CLIENT_NAME, 'version': _mrbeam_plugin_implementation._plugin_version}}
+		return {'client': {'name': self.CLIENT_NAME,
+		                   'version': _mrbeam_plugin_implementation._plugin_version,
+		                   'config': {'send_initial_data': True,
+		                              'update_interval': True},
+		                   }
+		        }
 
 	def next_request_id(self):
 		"""
