@@ -27,7 +27,6 @@ class DustManager(object):
 	DEFAUL_DUST_MAX_AGE = 10  # seconds
 	FAN_MAX_INTENSITY = 100
 
-	INITIAL_WARNINGS_GRACE_PERIOD = 15
 	FINAL_DUSTING_DURATION = 30
 
 	FAN_COMMAND_RETRIES = 2
@@ -138,6 +137,7 @@ class DustManager(object):
 		self._last_rpm_values.append(self._rpm)
 
 	def _on_command_response(self, args):
+		self._logger.debug("Fan command response: %s", args)
 		if args['success']:
 			if 'request_id' not in args['message'] or args['message']['request_id'] != self._last_command:
 				# I'm not sure if we need to check or what to do if the command doesn't match.
@@ -192,13 +192,14 @@ class DustManager(object):
 		except:
 			self._logger.exception("Exception in _finish_test_fan_rpm")
 
-	def _pause_laser(self, trigger):
+	def _pause_laser(self, trigger, log_message=None):
 		"""
 		Stops laser and switches to paused mode.
 		Should be called when air filters gets disconnected, dust value gets too high or when any error occurs...
 		:param trigger: A string to identify the cause/trigger that initiated paused mode
 		"""
 		if _mrbeam_plugin_implementation._oneButtonHandler.is_printing():
+			self._logger.error(log_message)
 			self._logger.info("_pause_laser() trigger: %s", trigger)
 			_mrbeam_plugin_implementation._oneButtonHandler.pause_laser(need_to_release=False, trigger=trigger)
 
@@ -296,6 +297,7 @@ class DustManager(object):
 		self._auto_timer = None
 
 	def _send_fan_command(self, action, value=None):
+		self._logger.debug("Sending fan command: action: %s, value: %s", action, value)
 		ok, self._last_command = _mrbeam_plugin_implementation._ioBeam.send_fan_command(action, value)
 		if not ok:
 			self._logger.error("Failed to send fan command to iobeam: %s %s", action, value)
@@ -313,19 +315,23 @@ class DustManager(object):
 		result = True
 		if time.time() - self._data_ts > self.DEFAUL_DUST_MAX_AGE:
 			result = False
-		if self._state is None or self._rpm is None or self._dust is None:
+		if self._state is None or self._rpm is None or self._rpm <= 0 or self._dust is None:
 			result = False
 
-		if not result and not self.dev_mode and time.time() - self._init_ts > self.INITIAL_WARNINGS_GRACE_PERIOD:
-			self._logger.error("Invalid or too old fan data from iobeam: state:{state}, rpm:{rpm}, dust:{dust}, connected:{connected}, age:{age}s".format(
-				state=self._state, rpm=self._rpm, dust=self._dust, connected=self._connected, age=(time.time() - self._data_ts)))
-			self._pause_laser(trigger="Fan values from iobeam invalid or too old.")
+		if _mrbeam_plugin_implementation._oneButtonHandler.is_printing() and self._state == 0:
+			self._logger.warn("Restarting fan since _state was 0 in printing state.")
+			self._start_dust_extraction()
+
+		if not result and not _mrbeam_plugin_implementation.is_boot_grace_period():
+			msg = "Invalid or too old fan data from iobeam: state:{state}, rpm:{rpm}, dust:{dust}, connected:{connected}, age:{age}s".format(
+				state=self._state, rpm=self._rpm, dust=self._dust, connected=self._connected, age=(time.time() - self._data_ts))
+			self._pause_laser(trigger="Fan values from iobeam invalid or too old.", log_message=msg)
 
 		elif self._connected == False:
 			result = False
-			self._logger.warning("Air filter is not connected: state:{state}, rpm:{rpm}, dust:{dust}, connected:{connected}, age:{age}s".format(
-				state=self._state, rpm=self._rpm, dust=self._dust, connected=self._connected, age=(time.time() - self._data_ts)))
-			self._pause_laser(trigger="Air filter not connected.")
+			msg = "Air filter is not connected: state:{state}, rpm:{rpm}, dust:{dust}, connected:{connected}, age:{age}s".format(
+				state=self._state, rpm=self._rpm, dust=self._dust, connected=self._connected, age=(time.time() - self._data_ts))
+			self._pause_laser(trigger="Air filter not connected.", log_message=msg)
 
 		# TODO: check for error case in connected val (currently, connected == True/False/None)
 		return result
