@@ -114,7 +114,7 @@ class LaserheadHandler(object):
 		else:
 			self._logger.info('Insufficient data for correction factor. Default factor: {cf}'.format(cf=correction_factor))
 
-		self._logger.info('Laser head info - serial={serial}, p_65={p65}, p_75={p75}, p_85={p85}, correction_factor={cf}'
+		self._logger.info('Laserhead info - serial={serial}, p_65={p65}, p_75={p75}, p_85={p85}, correction_factor={cf}'
 			.format(serial=self._current_used_lh_serial, p65=p_65, p75=p_75, p85=p_85, cf=correction_factor))
 
 		return correction_factor

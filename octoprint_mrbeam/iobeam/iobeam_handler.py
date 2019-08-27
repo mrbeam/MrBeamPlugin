@@ -833,6 +833,8 @@ class IoBeamHandler(object):
 
 		if show_notification:
 			self.send_hardware_malfunction_frontend_notification()
+		# TODO: check with iratxe if we log it as one message or separately...
+		self._plugin._analytics_handler.log_iobeam_message(self.iobeam_version, dataset)
 
 	def _handle_i2c(self, dataset):
 		self._logger.info("i2c_state: %s", dataset)
