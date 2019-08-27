@@ -64,11 +64,15 @@ $(function () {
             return self.prefilterShowWarning() || self.carbonFilterShowWarning() || self.laserHeadShowWarning() || self.gantryShowWarning()
         });
 
-        self.actionToReset = ko.computed(function () {
-            if(self.componentToReset() === self.LASER_HEAD) {
-                return 'clean'
-            } else {
-                return 'change'
+        self.componentResetQuestion = ko.computed(function () {
+            if (self.componentToReset() === self.PREFILTER) {
+                return gettext('Did you change the pre-filter?')
+            } else if (self.componentToReset() === self.CARBON_FILTER) {
+                return gettext('Did you change the main filter?')
+            } else if (self.componentToReset() === self.LASER_HEAD) {
+                return gettext('Did you clean the laser head?')
+            } else if (self.componentToReset() === self.GANTRY) {
+                return gettext('Did you clean the mechanics?')
             }
         });
 

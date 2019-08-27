@@ -134,6 +134,12 @@ class UsageHandler(object):
 		self._write_usage_data()
 		self.write_usage_analytics(action='reset_gantry')
 
+	def _log_usage_data(self, usage_data):
+		self._logger.info('USAGE DATA: prefilter={pre}, carbon_filter={carbon}, laser_head={lh}, gantry={gantry}'.format(
+			pre=usage_data['prefilter'], carbon=usage_data['carbon_filter'],
+			lh=usage_data['laser_head']['usage'], gantry=usage_data['gantry'],
+		))
+
 	def write_usage_analytics(self, action=None):
 		try:
 			usage_data = dict(
@@ -145,6 +151,8 @@ class UsageHandler(object):
 				gantry=self._usage_data['gantry']['job_time'],
 				action=action
 			)
+
+			self._log_usage_data(usage_data)
 
 			analyticsHandler(self._plugin).write_mrbeam_usage(usage_data)
 		except KeyError as e:
