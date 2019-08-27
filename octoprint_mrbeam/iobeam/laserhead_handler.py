@@ -39,9 +39,9 @@ class LaserheadHandler(object):
 		self._logger.info("Laserhead: %s", lh_data)
 		self.set_current_used_lh_serial(lh_data['main']['serial'])
 		power_data = lh_data['power_calibrations'][-1]
-		self._laserheadHandler.set_power_measurement_value('p_65', power_data.get('power_65', -1))
-		self._laserheadHandler.set_power_measurement_value('p_75', power_data.get('power_75', -1))
-		self._laserheadHandler.set_power_measurement_value('p_85', power_data.get('power_85', -1))
+		self.set_power_measurement_value('p_65', power_data.get('power_65', -1))
+		self.set_power_measurement_value('p_75', power_data.get('power_75', -1))
+		self.set_power_measurement_value('p_85', power_data.get('power_85', -1))
 
 	def set_current_used_lh_serial(self, serial):
 		if serial and self._validate_lh_serial(serial):

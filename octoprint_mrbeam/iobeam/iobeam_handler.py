@@ -142,6 +142,8 @@ class IoBeamHandler(object):
 	DATASET_LASERHEAD =					"laserhead"
 	DATASET_LASERHEAD_SHORT =			"laserhead_short"
 	DATASET_IOBEAM =	           	 	"iobeam"
+	DATASET_HW_MALFUNCTION =	   	 	"hardware_malfunction"
+	DATASET_I2C =           	   	 	"i2c"
 
 	def __init__(self, plugin):
 		self._plugin = plugin
@@ -162,6 +164,7 @@ class IoBeamHandler(object):
 
 		self._connectionException = None
 		self._interlocks = dict()
+		self._malfunction_messages = []
 
 		self._subscribe()
 		self._initWorker(self._socket_file)
@@ -172,7 +175,7 @@ class IoBeamHandler(object):
 		self._request_id_lock = threading.Lock()
 
 		self._settings = plugin._settings
-		self.reported_hardware_malfunctions = []
+		# self.reported_hardware_malfunctions = []
 
 		self._laserheadHandler = laserheadHandler(plugin)
 
@@ -320,6 +323,7 @@ class IoBeamHandler(object):
 
 	def _subscribe(self):
 		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self.shutdown)
+		self._event_bus.subscribe(OctoPrintEvents.CLIENT_OPENED, self.send_hardware_malfunction_frontend_notification)
 
 	def _initWorker(self, socket_file=None):
 		self._logger.debug("initializing worker thread")
@@ -447,6 +451,8 @@ class IoBeamHandler(object):
 					message_count = + 1
 
 					try:
+						# self._logger.info("ANDYTEST _handle_messages()  %s", json_data)
+
 						json_dict = json.loads(json_data)
 						# Now there could be "data" and "response"
 						if 'data' in json_dict:
@@ -504,7 +510,7 @@ class IoBeamHandler(object):
 		:param dataset: the contents of the dataset
 		:return: error count
 		"""
-		self._logger.info("ANDYTEST _handle_dataset() %s: %s", name, dataset)
+		# self._logger.info("ANDYTEST _handle_dataset() %s: %s", name, dataset)
 		error_count = 0
 		processing_start = time.time()
 
@@ -537,6 +543,10 @@ class IoBeamHandler(object):
 					err = self._handle_link_quality(dataset)
 				elif name == self.DATASET_FAN_EXHAUST:
 					err = self._handle_exhaust(dataset)
+				elif name == self.DATASET_HW_MALFUNCTION:
+					err = self._handle_hw_malfunction(dataset)
+				elif name == self.DATASET_I2C:
+					err = self._handle_i2c(dataset)
 				elif name == self.MESSAGE_DEVICE_UNUSED:
 					pass
 				elif name == self.MESSAGE_ERROR:
@@ -544,7 +554,7 @@ class IoBeamHandler(object):
 				else:
 					err = self._handle_unknown_dataset(name, dataset)
 		except:
-			self._logger.debug("Error handling dataset %s", dataset)
+			self._logger.exception("Error handling dataset '%s': %s", name, dataset)
 
 		if err >= 0:
 			error_count += err
@@ -603,10 +613,9 @@ class IoBeamHandler(object):
 		:return: error count
 		"""
 		if self.MESSAGE_ACTION_FAN_VERSION in dataset:
-			self._logger.info("Received fan version %s: '%s'", dataset[self.MESSAGE_ACTION_FAN_VERSION], dataset)
-
-		if self.MESSAGE_ACTION_FAN_FACTOR in dataset:
-			self._logger.info("Received fan factor %s: '%s'", dataset[self.MESSAGE_ACTION_FAN_FACTOR], dataset)
+			self._logger.info("fan_static: fanPCB v%s, factor: %s - %s", dataset.get(self.MESSAGE_ACTION_FAN_VERSION, None),
+			                                                             dataset.get(self.MESSAGE_ACTION_FAN_FACTOR, None),
+			                                                             dataset)
 		return 0
 
 	def _handle_laser(self, dataset):
@@ -806,6 +815,28 @@ class IoBeamHandler(object):
 															  replay_when_new_client_connects=True)
 		return 0
 
+	def _handle_hw_malfunction(self, dataset):
+		show_notification = False
+		self._logger.warn("hardware_malfunction: %s", dataset)
+
+		for id, data in dataset.items():
+			data = data or {}
+			msg = data.get('msg', id)
+			self._fireEvent(MrBeamEvents.HARDWARE_MALFUNCTION, dict(id=id, msg=msg, data=data))
+
+			if id == "bottom_open":
+				self.send_bottom_open_frontend_notification()
+			else:
+				if msg not in self._malfunction_messages:
+					show_notification = True
+					self._malfunction_messages.append(msg)
+
+		if show_notification:
+			self.send_hardware_malfunction_frontend_notification()
+
+	def _handle_i2c(self, dataset):
+		self._logger.info("i2c_state: %s", dataset)
+
 	def _handle_debug(self, dataset):
 		"""
 		Handle debug dataset
@@ -880,7 +911,7 @@ class IoBeamHandler(object):
 		:param message: response message, e.g. {"response": {"command": {"device": "fan", ...}, "state": "ok"}}
 		:return: error count
 		"""
-		self._logger.info("ANDYTEST _handle_response() %s: %s", name, dataset)
+		# self._logger.info("ANDYTEST _handle_response(): %s", message)
 		error_count = 0
 		processing_start = time.time()
 
@@ -935,29 +966,32 @@ class IoBeamHandler(object):
 		if log_stats or processing_time > self.PROCESSING_TIME_WARNING_THRESHOLD:
 			self.log_debug_processing_stats()
 
-	def send_hardware_malfunction_frontend_notification(self, malfunction, message):
-		if malfunction not in self.reported_hardware_malfunctions:
-			self.reported_hardware_malfunctions.append(malfunction)
+	def send_hardware_malfunction_frontend_notification(self, *args, **kwargs):
+		if self._malfunction_messages:
+			user_msg = "<br/>".join(self._malfunction_messages)
+			# if user_msg not in self.reported_hardware_malfunctions:
+			# self.reported_hardware_malfunctions.append(user_msg)
 			text = '<br/>' + \
 				   gettext(
 					   "A possible hardware malfunction has been detected on this device. Please contact our support team immediately at:") + \
 				   '<br/><a href="https://mr-beam.org/ticket" target="_blank">mr-beam.org/ticket</a><br/><br/>' \
-				   '<strong>' + gettext("Error:") + '</strong><br/>{}'.format(message.replace(':', ': ')) # add whitespaces so that longer messages break in frontend
+				   '<strong>' + gettext("Error:") + '</strong><br/>{}'.format(user_msg)
 			self._plugin.notify_frontend(title=gettext("Hardware malfunction"),
 										 text=text,
-										 type="error", sticky=True,
-										 replay_when_new_client_connects=True)
+										 type="error",
+										 sticky=True,
+			                             )
 
-	def send_bottom_open_frontend_notification(self, malfunction):
-		if malfunction not in self.reported_hardware_malfunctions:
-			self.reported_hardware_malfunctions.append(malfunction)
-			text = '<br/>' + \
-				   gettext("The bottom plate is not closed correctly. "
-						   "Please make sure that the bottom is correctly mounted as described in the Mr Beam II user manual.")
-			self._plugin.notify_frontend(title=gettext("Bottom Plate Error"),
-										 text=text,
-										 type="error", sticky=True,
-										 replay_when_new_client_connects=True)
+	def send_bottom_open_frontend_notification(self):
+		# if "bottom_open" not in self.reported_hardware_malfunctions:
+		# 	self.reported_hardware_malfunctions.append(user_msg)
+		text = '<br/>' + \
+			   gettext("The bottom plate is not closed correctly. "
+					   "Please make sure that the bottom is correctly mounted as described in the Mr Beam II user manual.")
+		self._plugin.notify_frontend(title=gettext("Bottom Plate Error"),
+									 text=text,
+									 type="error", sticky=True,
+									 replay_when_new_client_connects=True)
 
 	def log_debug_processing_stats(self):
 		"""
