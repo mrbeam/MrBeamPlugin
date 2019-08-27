@@ -137,6 +137,7 @@ class DustManager(object):
 		self._last_rpm_values.append(self._rpm)
 
 	def _on_command_response(self, args):
+		self._logger.debug("Fan command response: %s", args)
 		if args['success']:
 			if args['message'].split(':')[1] != self._last_command.split(':')[0]:
 				# I'm not sure if we need to check or what to do if the command doesn't match.
@@ -296,6 +297,7 @@ class DustManager(object):
 
 	def _send_fan_command(self, command):
 		self._last_command = command
+		self._logger.debug("Sending fan command: %s", command)
 		ok = _mrbeam_plugin_implementation._ioBeam.send_fan_command(command)
 		if not ok:
 			self._logger.error("Failed to send fan command to iobeam: %s", command)
