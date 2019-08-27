@@ -35,39 +35,22 @@ class LaserheadHandler(object):
 		self._current_used_lh_serial = self._last_used_lh_serial
 
 	def set_current_used_lh_data(self, lh_data):
-		# TODO @iratxe: please implement a nice log output here: first the important data (serial, p_65, ...) readable for humans followed by the whole data dump.
-		self._logger.info("Laserhead: %s", lh_data)
-		self.set_current_used_lh_serial(lh_data['main']['serial'])
-		power_data = lh_data['power_calibrations'][-1]
-		self.set_power_measurement_value('p_65', power_data.get('power_65', -1))
-		self.set_power_measurement_value('p_75', power_data.get('power_75', -1))
-		self.set_power_measurement_value('p_85', power_data.get('power_85', -1))
+		try:
+			self._logger.info("Laserhead: %s", lh_data)
+			self._current_used_lh_serial = lh_data['main']['serial']
+			self._write_lh_data_to_cache(lh_data)
 
-	def set_current_used_lh_serial(self, serial):
-		if serial and self._validate_lh_serial(serial):
-			self._current_used_lh_serial = serial
+			self._calculate_and_write_correction_factor()
 
-			if serial not in self._lh_cache:
-				self._logger.info('Saving new laser head serial number: {}'.format(serial))
-				self._lh_cache[serial] = dict(correction_factor=1)
-			else:
-				self._write_laser_heads_file()
+			self._plugin._analytics_handler.event_laserhead_info()
+			self._write_laser_heads_file()
+			self._plugin.fire_event(MrBeamEvents.LASER_HEAD_READ, dict(serial=lh_data['main']['serial']))
 
-		self._plugin.fire_event(MrBeamEvents.LASER_HEAD_READ, dict(serial=serial))
-		self._logger.info('Current laser head serial number: {}'.format(serial))
+		except Exception as e:
+			self._logger.exception('Exception during set_current_used_lh_data: {}'.format(e))
 
-	def set_power_measurement_value(self, measure, value):
-		if self._current_used_lh_serial and self._current_used_lh_serial in self._lh_cache:
-			if value < 0:
-				return
-			if measure not in self._lh_cache[self._current_used_lh_serial]:
-				self._lh_cache[self._current_used_lh_serial][measure] = value
-
-				lh = self._lh_cache[self._current_used_lh_serial]
-				if 'p_65' in lh and 'p_75' in lh and 'p_85' in lh:
-					self._calculate_and_write_correction_factor()
-		else:
-			self._logger.info('Could not set_power_measurement_value. There is no info about the current laser head.')
+	def _write_lh_data_to_cache(self, lh_data):
+		self._lh_cache[self._current_used_lh_serial] = lh_data
 
 	def get_current_used_lh_data(self):
 		if self._current_used_lh_serial:
@@ -79,9 +62,6 @@ class LaserheadHandler(object):
 			data = dict(
 				serial=None,
 				info=dict(
-					p_65=None,
-					p_75=None,
-					p_85=None,
 					correction_factor=1,
 				)
 			)
@@ -109,29 +89,33 @@ class LaserheadHandler(object):
 		correction_factor = self._calculate_power_correction_factor()
 		self._lh_cache[self._current_used_lh_serial]['correction_factor'] = correction_factor
 		self._lh_cache[self._current_used_lh_serial]['mrbeam_plugin_version'] = self._plugin_version
-		self._write_laser_heads_file()
 
 	def _calculate_power_correction_factor(self):
-		p_65 = self._lh_cache[self._current_used_lh_serial]['p_65']
-		p_75 = self._lh_cache[self._current_used_lh_serial]['p_75']
-		p_85 = self._lh_cache[self._current_used_lh_serial]['p_85']
+		power_calibrations = self._lh_cache[self._current_used_lh_serial]['power_calibrations'][-1]
+		p_65 = power_calibrations.get('power_65', None)
+		p_75 = power_calibrations.get('power_75', None)
+		p_85 = power_calibrations.get('power_85', None)
 
 		correction_factor = 1
 
-		if p_65 < self.LASER_POWER_GOAL < p_75:
-			step_difference = float(p_75-p_65)
-			goal_difference = self.LASER_POWER_GOAL - p_65
-			new_intensity = goal_difference * (75-65) / step_difference + 65
-			correction_factor = new_intensity / 65.0
+		if p_65 and p_75 and p_85:
+			if p_65 < self.LASER_POWER_GOAL < p_75:
+				step_difference = float(p_75-p_65)
+				goal_difference = self.LASER_POWER_GOAL - p_65
+				new_intensity = goal_difference * (75-65) / step_difference + 65
+				correction_factor = new_intensity / 65.0
 
-		elif p_75 < self.LASER_POWER_GOAL < p_85:
-			step_difference = float(p_85 - p_75)
-			goal_difference = self.LASER_POWER_GOAL - p_75
-			new_intensity = goal_difference * (85-75) / step_difference + 75
-			correction_factor = new_intensity / 65.0
+			elif p_75 < self.LASER_POWER_GOAL < p_85:
+				step_difference = float(p_85 - p_75)
+				goal_difference = self.LASER_POWER_GOAL - p_75
+				new_intensity = goal_difference * (85-75) / step_difference + 75
+				correction_factor = new_intensity / 65.0
 
-		self._plugin._analytics_handler.event_laserhead_info()
-		self._logger.info('New correction factor calculated: {cf}'.format(cf=correction_factor))
+		else:
+			self._logger.info('Insufficient data for correction factor. Default factor: {cf}'.format(cf=correction_factor))
+
+		self._logger.info('Laser head info - serial={serial}, p_65={p65}, p_75={p75}, p_85={p85}, correction_factor={cf}'
+			.format(serial=self._current_used_lh_serial, p65=p_65, p75=p_75, p85=p_85, cf=correction_factor))
 
 		return correction_factor
 
@@ -165,7 +149,7 @@ class LaserheadHandler(object):
 		file = self._laser_heads_file if file is None else file
 		try:
 			with open(file, 'w') as outfile:
-				yaml.dump(data, outfile, default_flow_style=False)
+				yaml.safe_dump(data, outfile, default_flow_style=False)
 		except:
 			self._logger.exception("Can't write file %s due to an exception: ", file)
 

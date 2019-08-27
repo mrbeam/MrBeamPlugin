@@ -422,11 +422,13 @@ class AnalyticsHandler(object):
 		try:
 			lh = self._laserheadHandler.get_current_used_lh_data()
 			settings = self._laserheadHandler.get_correction_settings()
+			power_calibration = lh['info']['power_calibrations'][-1]
+
 			laserhead_info = {
 				ak.LASERHEAD_SERIAL: lh['serial'],
-				ak.POWER_65: lh['info']['p_65'],
-				ak.POWER_75: lh['info']['p_75'],
-				ak.POWER_85: lh['info']['p_85'],
+				ak.POWER_65: power_calibration.get('power_65', None),
+				ak.POWER_75: power_calibration.get('power_75', None),
+				ak.POWER_85: power_calibration.get('power_85', None),
 				ak.CORRECTION_FACTOR: lh['info']['correction_factor'],
 				ak.CORRECTION_ENABLED: settings['correction_enabled'],
 				ak.CORRECTION_OVERRIDE: settings['correction_factor_override'],
