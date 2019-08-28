@@ -25,10 +25,10 @@ $(function () {
         self.componentToReset = ko.observable("");
         self.laserHeadSerial = ko.observable("");
 
-        self.prefilterLifespanHours = _.sprintf(gettext("/%(lifespan)s h"), {lifespan: self.PREFILTER_LIFESPAN});
-        self.carbonFilterLifespanHours = _.sprintf(gettext("/%(lifespan)s h"), {lifespan: self.CARBON_FILTER_LIFESPAN});
-        self.laserHeadLifespanHours = _.sprintf(gettext("/%(lifespan)s h"), {lifespan: self.LASER_HEAD_LIFESPAN});
-        self.gantryLifespanHours = _.sprintf(gettext("/%(lifespan)s h"), {lifespan: self.GANTRY_LIFESPAN});
+        self.prefilterLifespanHours = _.sprintf(gettext("/%(lifespan)s hrs"), {lifespan: self.PREFILTER_LIFESPAN});
+        self.carbonFilterLifespanHours = _.sprintf(gettext("/%(lifespan)s hrs"), {lifespan: self.CARBON_FILTER_LIFESPAN});
+        self.laserHeadLifespanHours = _.sprintf(gettext("/%(lifespan)s hrs"), {lifespan: self.LASER_HEAD_LIFESPAN});
+        self.gantryLifespanHours = _.sprintf(gettext("/%(lifespan)s hrs"), {lifespan: self.GANTRY_LIFESPAN});
 
         self.prefilterUsageHours = ko.computed(function() {
             return Math.floor(self.prefilterUsage()/3600);
