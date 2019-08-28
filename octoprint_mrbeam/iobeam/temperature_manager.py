@@ -27,7 +27,7 @@ class TemperatureManager(object):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.temperaturemanager")
 
 		self.temperature = None
-		self.temperature_ts = time.time()
+		self.temperature_ts = 0
 		self.temperature_max = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['laser']['max_temperature']
 		self.hysteresis_temperature = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['laser']['hysteresis_temperature']
 		self.cooling_duration = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['laser']['cooling_duration']
@@ -76,6 +76,8 @@ class TemperatureManager(object):
 
 	def handle_temp(self, kwargs):
 		self.temperature = kwargs['temp']
+		if self.temperature_ts <= 0:
+			self._logger.info("laser_temp - first temperature from laserhead: %s", self.temperature)
 		self.temperature_ts = time.time()
 		self._check_temp_val()
 		analyticsHandler(_mrbeam_plugin_implementation).collect_laser_temp_value(self.temperature)
@@ -146,7 +148,7 @@ class TemperatureManager(object):
 
 	def _stop_if_temp_is_not_current(self):
 		if not self.is_temperature_recent():
-			if not self.dev_mode:
+			if not _mrbeam_plugin_implementation.is_boot_grace_period():
 				self._logger.error("_stop_if_temp_is_not_current() Laser temperature is not recent. Stopping laser.")
 			self.cooling_stop()
 

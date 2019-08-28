@@ -389,7 +389,7 @@ class IoBeamHandler(object):
 
 			if not self._shutdown_signaled:
 				self._logger.debug("Sleeping for a sec before reconnecting...")
-				time.sleep(1)
+				time.sleep(0.1)
 
 		self._logger.debug("Worker thread stopped.")
 

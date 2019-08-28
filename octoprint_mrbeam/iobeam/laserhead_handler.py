@@ -1,6 +1,7 @@
 
 import os
 import yaml
+import re
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
@@ -17,6 +18,7 @@ def laserheadHandler(plugin):
 
 class LaserheadHandler(object):
 	LASER_POWER_GOAL = 950
+	LASERHEAD_SERIAL_REGEXP = re.compile("^[0-9a-f-]{36}$")
 
 	def __init__(self, plugin):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.laserhead")
@@ -33,7 +35,7 @@ class LaserheadHandler(object):
 		self._current_used_lh_serial = self._last_used_lh_serial
 
 	def set_current_used_lh_serial(self, serial):
-		if serial:
+		if serial and self._validate_lh_serial(serial):
 			self._current_used_lh_serial = serial
 
 			if serial not in self._lh_cache:
@@ -84,6 +86,13 @@ class LaserheadHandler(object):
 			settings['correction_enabled'] = True
 
 		return self._correction_settings
+
+	def _validate_lh_serial(self, serial):
+		try:
+			return bool(self.LASERHEAD_SERIAL_REGEXP.match(serial))
+		except:
+			self.logger.exception("_validate_lh_serial() Failed to validate serial due to exception. Serial: %s ", serial)
+			return False
 
 	def _calculate_and_write_correction_factor(self):
 		correction_factor = self._calculate_power_correction_factor()
