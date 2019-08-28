@@ -37,7 +37,7 @@ class TemperatureManager(object):
 		self.temp_timer = None
 		self.is_cooling_since = 0
 
-		self.dev_mode = _mrbeam_plugin_implementation._settings.get_boolean(['dev', 'iobeam_disable_warnings'])
+		self._msg_is_temperature_recent = None
 
 		self._shutting_down = False
 
@@ -84,20 +84,13 @@ class TemperatureManager(object):
 		self._check_temp_val()
 		analyticsHandler(_mrbeam_plugin_implementation).add_laser_temp_value(self.temperature)
 
-	'''
-	def request_temp(self):
-		"""
-		Send a temperature request to iobeam
-		:return: True if sent successfully, False otherwise.
-		"""
-		return _mrbeam_plugin_implementation._ioBeam.send_temperature_request()
-	'''
 
-	def cooling_stop(self):
+	def cooling_stop(self, err_msg=None):
 		"""
 		Stop the laser for cooling purpose
 		"""
 		if _mrbeam_plugin_implementation._oneButtonHandler.is_printing():
+			self._logger.error("cooling_stop() %s - _msg_is_temperature_recent: %s", err_msg, self._msg_is_temperature_recent)
 			self._logger.info("cooling_stop()")
 			self.is_cooling_since = time.time()
 			_mrbeam_plugin_implementation._oneButtonHandler.cooling_down_pause()
@@ -120,14 +113,13 @@ class TemperatureManager(object):
 
 	def is_temperature_recent(self):
 		if self.temperature is None:
-			if not self.dev_mode:
-				self._logger.error("is_temperature_recent(): Laser temperature is None. never received a temperature value.")
+			self._msg_is_temperature_recent = "is_temperature_recent(): Laser temperature is None. never received a temperature value."
 			return False
 		age = time.time() - self.temperature_ts
 		if age > self.TEMP_MAX_AGE:
-			self._logger.error("is_temperature_recent(): Laser temperature too old: must be more recent than %s s but actual age is %s s",
-			                   self.TEMP_MAX_AGE, age)
+			self._msg_is_temperature_recent = "is_temperature_recent(): Laser temperature too old: must be more recent than %s s but actual age is %s s" % (self.TEMP_MAX_AGE, age)
 			return False
+		self._msg_is_temperature_recent = None
 		return True
 
 	def _temp_timer_callback(self):
@@ -152,15 +144,13 @@ class TemperatureManager(object):
 
 	def _stop_if_temp_is_not_current(self):
 		if not self.is_temperature_recent():
-			if not _mrbeam_plugin_implementation.is_boot_grace_period():
-				self._logger.error("_stop_if_temp_is_not_current() Laser temperature is not recent. Stopping laser.")
-			self.cooling_stop()
+			self.cooling_stop(err_msg="Laser temperature is not recent. Stopping laser")
 
 	def _check_temp_val(self):
 		# cooling break
 		if not self.is_cooling() and (self.temperature is None or self.temperature > self.temperature_max):
-			self._logger.info("Laser temperature exceeded limit. Current temp: %s, max: %s", self.temperature, self.temperature_max)
-			self.cooling_stop()
+			msg = "Laser temperature exceeded limit. Current temp: %s, max: %s" % (self.temperature, self.temperature_max)
+			self.cooling_stop(err_msg=msg)
 		# resume hysteresis temp based
 		elif self.is_cooling() and \
 			not self.mode_time_based and \
