@@ -25,10 +25,10 @@ $(function () {
         self.componentToReset = ko.observable("");
         self.laserHeadSerial = ko.observable("");
 
-        self.prefilterLifespanHours = _.sprintf(gettext("/%(lifespan)s h"), {lifespan: self.PREFILTER_LIFESPAN});
-        self.carbonFilterLifespanHours = _.sprintf(gettext("/%(lifespan)s h"), {lifespan: self.CARBON_FILTER_LIFESPAN});
-        self.laserHeadLifespanHours = _.sprintf(gettext("/%(lifespan)s h"), {lifespan: self.LASER_HEAD_LIFESPAN});
-        self.gantryLifespanHours = _.sprintf(gettext("/%(lifespan)s h"), {lifespan: self.GANTRY_LIFESPAN});
+        self.prefilterLifespanHours = _.sprintf(gettext("/%(lifespan)s hrs"), {lifespan: self.PREFILTER_LIFESPAN});
+        self.carbonFilterLifespanHours = _.sprintf(gettext("/%(lifespan)s hrs"), {lifespan: self.CARBON_FILTER_LIFESPAN});
+        self.laserHeadLifespanHours = _.sprintf(gettext("/%(lifespan)s hrs"), {lifespan: self.LASER_HEAD_LIFESPAN});
+        self.gantryLifespanHours = _.sprintf(gettext("/%(lifespan)s hrs"), {lifespan: self.GANTRY_LIFESPAN});
 
         self.prefilterUsageHours = ko.computed(function() {
             return Math.floor(self.prefilterUsage()/3600);
@@ -64,11 +64,15 @@ $(function () {
             return self.prefilterShowWarning() || self.carbonFilterShowWarning() || self.laserHeadShowWarning() || self.gantryShowWarning()
         });
 
-        self.actionToReset = ko.computed(function () {
-            if(self.componentToReset() === self.LASER_HEAD) {
-                return 'clean'
-            } else {
-                return 'change'
+        self.componentResetQuestion = ko.computed(function () {
+            if (self.componentToReset() === self.PREFILTER) {
+                return gettext('Did you change the pre-filter?')
+            } else if (self.componentToReset() === self.CARBON_FILTER) {
+                return gettext('Did you change the main filter?')
+            } else if (self.componentToReset() === self.LASER_HEAD) {
+                return gettext('Did you clean the laser head?')
+            } else if (self.componentToReset() === self.GANTRY) {
+                return gettext('Did you clean the mechanics?')
             }
         });
 

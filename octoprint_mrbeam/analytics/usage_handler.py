@@ -134,6 +134,12 @@ class UsageHandler(object):
 		self._write_usage_data()
 		self.write_usage_analytics(action='reset_gantry')
 
+	def _log_usage_data(self, usage_data):
+		self._logger.info('USAGE DATA: prefilter={pre}, carbon_filter={carbon}, laser_head={lh}, gantry={gantry}'.format(
+			pre=usage_data['prefilter'], carbon=usage_data['carbon_filter'],
+			lh=usage_data['laser_head']['usage'], gantry=usage_data['gantry'],
+		))
+
 	def write_usage_analytics(self, action=None):
 		try:
 			usage_data = dict(
@@ -145,6 +151,8 @@ class UsageHandler(object):
 				gantry=self._usage_data['gantry']['job_time'],
 				action=action
 			)
+
+			self._log_usage_data(usage_data)
 
 			analyticsHandler(self._plugin).write_mrbeam_usage(usage_data)
 		except KeyError as e:
@@ -246,7 +254,7 @@ class UsageHandler(object):
 			self._logger.info("Initializing carbon filter usage time: {usage}".format(
 				usage=self._usage_data['carbon_filter']['job_time']))
 
-		# Initialize laser_head in case it wasn't stored already --> From the total usage
+		# Initialize laser_head in case it wasn't stored already (+ first laser head) --> From the total usage
 		if 'laser_head' not in self._usage_data:
 			self._usage_data['laser_head'] = {}
 			self._usage_data['laser_head'][self._laser_head_serial] = {}
@@ -256,20 +264,25 @@ class UsageHandler(object):
 		# Initialize new laser heads
 		if self._laser_head_serial not in self._usage_data['laser_head']:
 			num_serials_prev = len(self._usage_data['laser_head'])
-			self._usage_data['laser_head'][self._laser_head_serial] = {}
 
 			# If it's the first lh with a serial, then read from 'no_serial' (if there is) or the total
 			if num_serials_prev <= 1:
 				if 'no_serial' in self._usage_data['laser_head']:
-					self._usage_data['laser_head'][self._laser_head_serial]['complete'] = self._usage_data['laser_head']['no_serial']['complete']
-					self._usage_data['laser_head'][self._laser_head_serial]['job_time'] = self._usage_data['laser_head']['no_serial']['job_time']
+					self._usage_data['laser_head'][self._laser_head_serial] = dict(
+						complete=self._usage_data['laser_head']['no_serial']['complete'],
+						job_time=self._usage_data['laser_head']['no_serial']['job_time'],
+					)
 				else:
-					self._usage_data['laser_head'][self._laser_head_serial]['complete'] = self._usage_data['total']['complete']
-					self._usage_data['laser_head'][self._laser_head_serial]['job_time'] = self._usage_data['total']['job_time']
+					self._usage_data['laser_head'][self._laser_head_serial] = dict(
+						complete=self._usage_data['total']['complete'],
+						job_time=self._usage_data['total']['job_time'],
+					)
 			# Otherwise initialize to 0
 			else:
-				self._usage_data['laser_head'][self._laser_head_serial]['complete'] = True
-				self._usage_data['laser_head'][self._laser_head_serial]['job_time'] = 0
+				self._usage_data['laser_head'][self._laser_head_serial] = dict(
+					complete=True,
+					job_time=0,
+				)
 
 			self._logger.info("Initializing laser head ({lh}) usage time: {usage}".format(
 				lh=self._laser_head_serial,
