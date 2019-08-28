@@ -305,6 +305,7 @@ class MachineCom(object):
 					errorMsg = gettext("Please contact Mr Beam support team and attach octoprint.log.")
 					self._log(errorMsg)
 					self._errorValue = errorMsg
+					self._fire_print_failed()
 					self._changeState(self.STATE_ERROR)
 					eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
 			self._logger.info("Connection closed, closing down monitor", terminal_as_comm=True)
@@ -343,6 +344,7 @@ class MachineCom(object):
 				errorMsg = gettext("Please contact Mr Beam support team and attach octoprint.log.")
 				self._log(errorMsg)
 				self._errorValue = errorMsg
+				self._fire_print_failed()
 				self._changeState(self.STATE_ERROR)
 				eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
 		# self._logger.info("ANDYTEST Leaving _send_loop()")
@@ -678,6 +680,7 @@ class MachineCom(object):
 		my_cmd = AccLineBuffer.get_cmd_from_item(self._acc_line_buffer.get_last_responded())
 		self._errorValue = "{} in {}".format(line, my_cmd)
 		eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
+		self._fire_print_failed()
 		self._changeState(self.STATE_LOCKED)
 
 	def _handle_alarm_message(self, line, code=None):
@@ -715,6 +718,7 @@ class MachineCom(object):
 			self._commandQueue.queue.clear()
 		self._acc_line_buffer.reset()
 		self._send_event.clear(completely=True)
+		self._fire_print_failed()
 		self._changeState(self.STATE_LOCKED)
 
 		# close and open serial port to reset arduino
@@ -741,6 +745,7 @@ class MachineCom(object):
 				self._logger.error(errorMsg, serial=True, analytics=True, terminal_dump=True)
 				self._errorValue = errorMsg
 				eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
+				self._fire_print_failed()
 		elif line[1:].startswith('G24'): # [G24_AVOIDED]
 			self.g24_avoided_message = []
 			self._logger.warn("G24_AVOIDED (Corrupted line data will follow)")
@@ -1130,6 +1135,20 @@ class MachineCom(object):
 			checksum = re.compile("\*\d{1,3}\s?")
 			message = re.sub(checksum, '', message)
 		self._logger.comm(message, serial=True)
+
+	def _fire_print_failed(self, err_msg=None):
+		"""
+		Tests it printer is in printing state and fire PRINT_FAILED event if so.
+		:param err_msg:
+		:return:
+		"""
+		printing = self.isPrinting() or self.isPaused()
+		err_msg = err_msg or self.getErrorString()
+		if printing:
+			if self._currentFile is not None:
+				payload = self._get_printing_file_state()
+				payload['error_msg'] = err_msg
+			eventManager().fire(OctoPrintEvents.PRINT_FAILED, payload)
 
 	def flash_grbl(self, grbl_file=None, verify_only=False, is_connected=True):
 		"""
