@@ -1,10 +1,6 @@
 <!DOCTYPE html>
 <html>
     <head>
-        {% if vorlonEnabled %}
-            <script src="https://vorlonmrbeam.azurewebsites.net/vorlon.js"></script>
-        {% endif %}
-
         <title>{{ displayName }}</title>
 
         <meta name="mobile-web-app-capable" content="yes">
@@ -17,8 +13,6 @@
         <link rel="apple-touch-icon-precomposed" sizes="128x128" href="{{ url_for('plugin.mrbeam.static', filename='img/mrb128.png') }}">
         <link rel="apple-touch-icon" sizes="114x114" href="{{ url_for('plugin.mrbeam.static', filename='img/mrb114.png') }}">
         <link rel="apple-touch-icon" sizes="144x144" href="{{ url_for('plugin.mrbeam.static', filename='img/mrb144.png') }}">
-
-        {% include 'reload_find_mrbeam.jinja2' %}
 
         {#  Dirty to have this (== body elements) in the head section.
            Chrome ends head-tag and opens body-tag which means that all following is in the page's bodey instead of the head  #}

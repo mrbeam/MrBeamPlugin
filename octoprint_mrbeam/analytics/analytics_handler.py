@@ -74,6 +74,7 @@ class AnalyticsHandler(object):
 		self._current_intensity_collector = None
 		self._current_lasertemp_collector = None
 		self._current_cpu_data = None
+
 		self.event_waiting_for_terminal_dump = None
 
 		self._logger.info("Analytics analyticsEnabled: %s, sid: %s", self._analytics_enabled, self._session_id)
