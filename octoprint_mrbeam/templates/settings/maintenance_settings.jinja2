@@ -125,12 +125,10 @@
 
     <div id="reset_counter_are_you_sure" class="modal hide fade">
         <div class="modal-header">
-            <h4>{{ _('Did you %(action_to_reset)s the %(component_to_reset)s?',
-            action_to_reset='<span data-bind="text: actionToReset"></span>',
-            component_to_reset='<span data-bind="text: componentToReset"></span>') }}</h4>
+            <h4><span data-bind="text: componentResetQuestion"></span></h4>
         </div>
         <div class="modal-body">
-            {{ _('The hour counter for the %(component_to_reset)s will now be reset.', component_to_reset='<span data-bind="text: componentToReset"></span>')}}<br>
+            {{ _('The hour counter for the following component will now be reset: %(component_to_reset)s.', component_to_reset='<span data-bind="text: componentToReset"></span>')}}<br>
             {{ _('Please notice that there is no way to undo this operation') }}.
         </div>
         <div class="modal-footer">
