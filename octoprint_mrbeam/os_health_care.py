@@ -23,7 +23,7 @@ class OsHealthCare(object):
 		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
 
 	def _on_mrbeam_plugin_initialized(self, event, payload):
-		self._analytics_handler = self.plugin._analytics_handler
+		self._analytics_handler = self.plugin.analytics_handler
 
 	def run(self):
 		self.etc_network_interfaces()

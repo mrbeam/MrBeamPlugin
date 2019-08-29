@@ -47,9 +47,9 @@ class TemperatureManager(object):
 		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
 
 	def _on_mrbeam_plugin_initialized(self, event, payload):
-		self._iobeam = self._plugin._ioBeam
-		self._analytics_handler = self._plugin._analytics_handler
-		self._one_button_handler = self._plugin._oneButtonHandler
+		self._iobeam = self._plugin.iobeam
+		self._analytics_handler = self._plugin.analytics_handler
+		self._one_button_handler = self._plugin.onebutton_handler
 
 		self._start_temp_timer()
 

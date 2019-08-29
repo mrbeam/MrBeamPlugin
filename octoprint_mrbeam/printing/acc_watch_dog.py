@@ -80,7 +80,7 @@ class AccWatchDog(object):
 					self._cpu_temp) or _cpu_throttle_warnings != self._cpu_throttle_warnings:
 					# cpu warnings
 					if _mrbeam_plugin_implementation.mrbeam_plugin_initialized:
-						_mrbeam_plugin_implementation._analytics_handler.add_cpu_log(_cpu_temp, _cpu_throttle_warnings)
+						_mrbeam_plugin_implementation.analytics_handler.add_cpu_log(_cpu_temp, _cpu_throttle_warnings)
 				self._cpu_temp = _cpu_temp
 				self._cpu_throttle_warnings = _cpu_throttle_warnings
 			else:

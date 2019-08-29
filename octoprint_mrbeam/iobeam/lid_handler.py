@@ -58,9 +58,9 @@ class LidHandler(object):
 		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
 
 	def _on_mrbeam_plugin_initialized(self, event, payload):
-		self._temperature_manager = self._plugin._temperatureManager
-		self._iobeam = self._plugin._ioBeam
-		self._analytics_handler = self._plugin._analytics_handler
+		self._temperature_manager = self._plugin.temperature_manager
+		self._iobeam = self._plugin.iobeam
+		self._analytics_handler = self._plugin.analytics_handler
 
 		if self.camEnabled:
 			#imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
@@ -200,7 +200,7 @@ class PhotoCreator(object):
 		self.final_image_path = path
 		self.image_correction_enabled = image_correction_enabled
 		self._settings = _plugin._settings
-		self._analytics_handler = _plugin._analytics_handler
+		self._analytics_handler = _plugin.analytics_handler
 		self._laserCutterProfile = _plugin.laserCutterProfileManager.get_current_or_default()
 		self.keepOriginals = self._settings.get(["cam", "keepOriginals"])
 		self.active = False

@@ -48,7 +48,7 @@ class AnalyticsHandler(object):
 		self._event_bus = plugin._event_bus
 		self._settings = plugin._settings
 		self._snr = plugin.getSerialNum()
-		self._plugin_version = plugin._plugin_version
+		self._plugin_version = plugin.get_plugin_version()
 		self._timer_handler = TimerHandler()
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.analyticshandler")
 
@@ -93,8 +93,8 @@ class AnalyticsHandler(object):
 			self._activate_analytics()
 
 	def _on_mrbeam_plugin_initialized(self, event, payload):
-		self._laserhead_handler = self._plugin._laserheadHandler
-		self._dust_manager = self._plugin._dustManager
+		self._laserhead_handler = self._plugin.laserhead_handler
+		self._dust_manager = self._plugin.dust_manager
 
 		self._subscribe()
 
@@ -394,7 +394,7 @@ class AnalyticsHandler(object):
 	def _event_startup(self, event, payload):
 		# Here the MrBeamPlugin is not fully initialized yet, so we have to access this data direct from the plugin
 		payload = {
-			ak.Device.LaserHead.SERIAL: self._plugin._laserheadHandler.get_current_used_lh_data()['serial'],
+			ak.Device.LaserHead.SERIAL: self._plugin.laserhead_handler.get_current_used_lh_data()['serial'],
 			ak.Device.Usage.USERS: len(self._plugin._user_manager._users)
 		}
 		self._add_device_event(ak.Device.Event.STARTUP, payload=payload)
@@ -451,7 +451,7 @@ class AnalyticsHandler(object):
 	def _event_print_paused(self, event, payload):
 		"""
 		Cooling: payload holds some information if it was a cooling_pause or not. Lid/Button: Currently there is no
-		way to know other than checking the current state: _mrbeam_plugin_implementation._ioBeam
+		way to know other than checking the current state: _mrbeam_plugin_implementation.iobeam
 		.is_interlock_closed()
 		"""
 		self._add_job_event(ak.Job.Event.Print.PAUSED, payload={ak.Job.Duration.CURRENT: int(round(payload['time']))})
@@ -507,7 +507,7 @@ class AnalyticsHandler(object):
 		FileUploader.upload_now(self._plugin, delay=5.0)
 
 	def _event_job_time_estimated(self, event, payload):
-		self._current_job_time_estimation = payload['jobTimeEstimation']
+		self._current_job_time_estimation = payload['job_time_estimation']
 
 	def _add_other_plugin_data(self, event, event_payload):
 		try:

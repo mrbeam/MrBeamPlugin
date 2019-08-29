@@ -153,7 +153,8 @@ class IoBeamHandler(object):
 		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
 
 	def _on_mrbeam_plugin_initialized(self, event, payload):
-		self._laserhead_handler = self._plugin._laserheadHandler
+		self._laserhead_handler = self._plugin.laserhead_handler
+		self._analytics_handler = self._plugin.analytics_handler
 
 		self._subscribe()
 
@@ -707,7 +708,7 @@ class IoBeamHandler(object):
 					self.send_bottom_open_frontend_notification(malfunction)
 				else:
 					self.send_hardware_malfunction_frontend_notification(malfunction, message)
-			self._plugin._analytics_handler.add_iobeam_message_log(self.iobeam_version, message)
+			self._analytics_handler.add_iobeam_message_log(self.iobeam_version, message)
 		elif action == 'runtime': # introduced in iobeam 0.6.2
 			init = token[1] if len(token) > 1 else None
 			malfunction = token[2] if len(token) > 2 else None
@@ -720,10 +721,10 @@ class IoBeamHandler(object):
 					self.send_bottom_open_frontend_notification(malfunction)
 				else:
 					self.send_hardware_malfunction_frontend_notification(malfunction, message)
-			self._plugin._analytics_handler.add_iobeam_message_log(self.iobeam_version, message)
+			self._analytics_handler.add_iobeam_message_log(self.iobeam_version, message)
 		elif action == 'i2c':
 			self._logger.info("iobeam i2c devices: '%s'", message)
-			self._plugin._analytics_handler.add_iobeam_message_log(self.iobeam_version, message)
+			self._analytics_handler.add_iobeam_message_log(self.iobeam_version, message)
 		elif action == 'debug':
 			self._logger.info("iobeam debug message: '%s'", message)
 		else:
@@ -802,7 +803,7 @@ class IoBeamHandler(object):
 			self._logger.info("Message handling stats: %s message since %s; max: %ss, avg: %ss, min: %ss", count, time_formatted, max, avg, min)
 
 	def _send_identification(self):
-		client_name = self.CLIENT_ID.format(vers_mrb=self._plugin._plugin_version)
+		client_name = self.CLIENT_ID.format(vers_mrb=self._plugin.get_plugin_version())
 		cmd = "{}:client:{}".format(self.MESSAGE_DEVICE_IOBEAM, client_name)
 		sent = self._send_command(cmd)
 		return client_name if sent else False

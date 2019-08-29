@@ -43,7 +43,7 @@ class Migration(object):
 		self.plugin = plugin
 
 		self.version_previous = self.plugin._settings.get(['version']) or "0.0.0"
-		self.version_current  = self.plugin._plugin_version
+		self.version_current  = self.plugin.get_plugin_version()
 		self.suppress_migrations = self.plugin._settings.get(['dev', 'suppress_migrations'])
 
 
