@@ -19,12 +19,17 @@ FIND_FEEDRATE = r"F(\d+\.?\d+)"
 
 
 class JobTimeEstimation:
-	def __init__(self, event_bus):
-		self._event_bus = event_bus
+	def __init__(self, plugin):
+		self._plugin = plugin
+		self._event_bus = plugin._event_bus
+		self._settings = plugin._settings
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.jobTimeEstimation")
 
 		self._last_estimation = -1
 
+		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
+
+	def _on_mrbeam_plugin_initialized(self, event, payload):
 		self._subscribe()
 
 	# EVENTS
@@ -59,7 +64,6 @@ class JobTimeEstimation:
 		if event == OctoPrintEvents.CLIENT_OPENED:
 			self._send_estimate_to_frontend()
 
-
 	def _calculate_estimation_threaded(self, file_name):
 		"""Calculate the job time estimation from the gcode file.
 
@@ -72,7 +76,7 @@ class JobTimeEstimation:
 
 		try:
 			self._logger.debug("Starting thread for job time estimation")
-			path = _mrbeam_plugin_implementation._settings.getBaseFolder("uploads")
+			path = self._settings.getBaseFolder("uploads")
 			gcode_file = '{path}/{file}'.format(file=file_name, path=path)
 
 			self._last_estimation = self.estimate_job_duration(gcode_file)
@@ -80,12 +84,11 @@ class JobTimeEstimation:
 		except:
 			self._logger.exception("Error when calculating the job duration estimation")
 
-
 	def _send_estimate_to_frontend(self):
 		try:
 			payload = dict()
 			payload['jobTimeEstimation'] = self._last_estimation
-			_mrbeam_plugin_implementation.fire_event(MrBeamEvents.JOB_TIME_ESTIMATED, payload)
+			self._plugin.fire_event(MrBeamEvents.JOB_TIME_ESTIMATED, payload)
 		except:
 			self._logger.exception("Error when sending JobTimeEstimated event.")
 

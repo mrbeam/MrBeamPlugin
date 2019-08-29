@@ -11,7 +11,6 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.lib.rwlock import RWLock
 from flask.ext.babel import gettext
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
-from octoprint_mrbeam.iobeam.laserhead_handler import laserheadHandler
 
 # singleton
 _instance = None
@@ -146,15 +145,22 @@ class IoBeamHandler(object):
 		self._connectionException = None
 		self._interlocks = dict()
 
-		self._subscribe()
-		self._initWorker(self._socket_file)
-
 		self.processing_times_log = collections.deque([], self.PROCESSING_TIMES_LOG_LENGTH)
 
 		self._settings = plugin._settings
 		self.reported_hardware_malfunctions = []
 
-		self._laserheadHandler = laserheadHandler(plugin)
+		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
+
+	def _on_mrbeam_plugin_initialized(self, event, payload):
+		self._laserhead_handler = self._plugin._laserheadHandler
+
+		self._subscribe()
+
+		# We only start the iobeam listener now
+		iobeam_worker = threading.Timer(1.0, self._initWorker, [self._socket_file])
+		iobeam_worker.daemon = True
+		iobeam_worker.start()
 
 	def isRunning(self):
 		return self._worker.is_alive()
@@ -613,7 +619,7 @@ class IoBeamHandler(object):
 		elif action == "serial":
 			sn = token[1]
 			if sn not in ('error'):
-				self._laserheadHandler.set_current_used_lh_serial(sn)
+				self._laserhead_handler.set_current_used_lh_serial(sn)
 				self._logger.info("laserhead serial: %s", sn)
 			else:
 				self._logger.info("laserhead: '%s'", message)
@@ -626,7 +632,7 @@ class IoBeamHandler(object):
 				self._logger.warn("Can't read power 65 value as int: '%s'", token[2])
 
 			if p65 is not None:
-				self._laserheadHandler.set_power_measurement_value('p_65', p65)
+				self._laserhead_handler.set_power_measurement_value('p_65', p65)
 				self._logger.info("laserhead p_65: %s", p65)
 		elif action == "power" and token[1] == '75':
 			p75 = None
@@ -637,7 +643,7 @@ class IoBeamHandler(object):
 				self._logger.warn("Can't read power 75 value as int: '%s'", token[2])
 
 			if p75 is not None:
-				self._laserheadHandler.set_power_measurement_value('p_75', p75)
+				self._laserhead_handler.set_power_measurement_value('p_75', p75)
 				self._logger.info("laserhead p_75: %s", p75)
 		elif action == "power" and token[1] == '85':
 			p85 = None
@@ -648,7 +654,7 @@ class IoBeamHandler(object):
 				self._logger.warn("Can't read power 85 value as int: '%s'", token[2])
 
 			if p85 is not None:
-				self._laserheadHandler.set_power_measurement_value('p_85', p85)
+				self._laserhead_handler.set_power_measurement_value('p_85', p85)
 				self._logger.info("laserhead p_85: %s", p85)
 		else:
 			self._logger.info("laserhead: '%s'", message)

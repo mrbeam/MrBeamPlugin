@@ -15,7 +15,6 @@ from Queue import Queue
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
-from octoprint_mrbeam.iobeam.laserhead_handler import laserheadHandler
 from analytics_keys import AnalyticsKeys as ak
 from timer_handler import TimerHandler
 from uploader import FileUploader
@@ -48,7 +47,6 @@ class AnalyticsHandler(object):
 		self._plugin = plugin
 		self._event_bus = plugin._event_bus
 		self._settings = plugin._settings
-		self._laserhead_handler = laserheadHandler(plugin)
 		self._snr = plugin.getSerialNum()
 		self._plugin_version = plugin._plugin_version
 		self._timer_handler = TimerHandler()
@@ -79,8 +77,9 @@ class AnalyticsHandler(object):
 
 		self._logger.info("Analytics analyticsEnabled: %s, sid: %s", self._analytics_enabled, self._session_id)
 
-		# Subscribe to OctoPrint and Mr Beam events
-		self._subscribe()
+		# Subscribe to startup and mrb_plugin_initialize --> The rest go on _on_mrbeam_plugin_initialized
+		self._event_bus.subscribe(OctoPrintEvents.STARTUP, self._event_startup)
+		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
 
 		# Upload any previous analytics, unless the user didn't make a choice yet
 		if not self._no_choice_made:
@@ -92,6 +91,12 @@ class AnalyticsHandler(object):
 		# Activate analytics
 		if self._analytics_enabled:
 			self._activate_analytics()
+
+	def _on_mrbeam_plugin_initialized(self, event, payload):
+		self._laserhead_handler = self._plugin._laserheadHandler
+		self._dust_manager = self._plugin._dustManager
+
+		self._subscribe()
 
 	def _activate_analytics(self):
 		# Restart queue if the analytics were disabled before
@@ -382,14 +387,14 @@ class AnalyticsHandler(object):
 		self._event_bus.subscribe(MrBeamEvents.LASER_JOB_DONE, self._event_laser_job_finished)
 		self._event_bus.subscribe(MrBeamEvents.LASER_JOB_CANCELLED, self._event_laser_job_finished)
 		self._event_bus.subscribe(MrBeamEvents.LASER_JOB_FAILED, self._event_laser_job_finished)
-		self._event_bus.subscribe(OctoPrintEvents.STARTUP, self._event_startup)
 		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self._event_shutdown)
 		self._event_bus.subscribe(MrBeamEvents.ANALYTICS_DATA, self._add_other_plugin_data)
 		self._event_bus.subscribe(MrBeamEvents.JOB_TIME_ESTIMATED, self._event_job_time_estimated)
 
 	def _event_startup(self, event, payload):
+		# Here the MrBeamPlugin is not fully initialized yet, so we have to access this data direct from the plugin
 		payload = {
-			ak.Device.LaserHead.SERIAL: self._laserhead_handler.get_current_used_lh_data()['serial'],
+			ak.Device.LaserHead.SERIAL: self._plugin._laserheadHandler.get_current_used_lh_data()['serial'],
 			ak.Device.Usage.USERS: len(self._plugin._user_manager._users)
 		}
 		self._add_device_event(ak.Device.Event.STARTUP, payload=payload)
@@ -435,8 +440,8 @@ class AnalyticsHandler(object):
 			ak.Job.Progress.LASER_INTENSITY: self._current_intensity_collector.get_latest_value(),
 			ak.Job.Progress.DUST_VALUE: self._current_dust_collector.get_latest_value(),
 			ak.Job.Duration.CURRENT: round(payload['time'], 1),
-			ak.Job.Fan.RPM: self._plugin._dustManager.get_fan_rpm(),
-			ak.Job.Fan.STATE: self._plugin._dustManager.get_fan_state(),
+			ak.Job.Fan.RPM: self._dust_manager.get_fan_rpm(),
+			ak.Job.Fan.STATE: self._dust_manager.get_fan_state(),
 		}
 		self._add_job_event(ak.Job.Event.Print.PROGRESS, data)
 

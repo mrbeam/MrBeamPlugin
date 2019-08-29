@@ -26,7 +26,6 @@ from octoprint_mrbeam.printing.profile import laserCutterProfileManager
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.printing.acc_line_buffer import AccLineBuffer
 from octoprint_mrbeam.printing.acc_watch_dog import AccWatchDog
-from octoprint_mrbeam.analytics.analytics_handler import existing_analyticsHandler
 from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
@@ -619,13 +618,9 @@ class MachineCom(object):
 					self._logger.warn("_handle_status_report() Unpausing since we got status '%s' from grbl.", self._grbl_state)
 					self.setPause(False, send_cmd=False, trigger="GRBL_RUN")
 
-
 	def _handle_laser_intensity_for_analytics(self, laser_state, laser_intensity):
-		if laser_state == 'on':
-			analytics = existing_analyticsHandler()
-			if analytics:
-				analytics.collect_laser_intensity_value(int(laser_intensity))
-
+		if laser_state == 'on' and _mrbeam_plugin_implementation.mrbeam_plugin_initialized:
+			_mrbeam_plugin_implementation._analytics_handler.collect_laser_intensity_value(int(laser_intensity))
 
 	def _handle_ok_message(self, line):
 		item = self._acc_line_buffer.get_last_responded()
@@ -1200,11 +1195,12 @@ class MachineCom(object):
 
 		if not verify_only:
 			try:
-				_mrbeam_plugin_implementation._analytics_handler.add_grbl_flash_event(
-					from_version=from_version,
-					to_version=grbl_file,
-					succesful=(code == 0),
-					err = None if (code == 0) else output)
+				if _mrbeam_plugin_implementation.mrbeam_plugin_initialized:
+					_mrbeam_plugin_implementation._analytics_handler.add_grbl_flash_event(
+						from_version=from_version,
+						to_version=grbl_file,
+						succesful=(code == 0),
+						err = None if (code == 0) else output)
 			except:
 				self._logger.exception("Exception while writing GRBL-flashing to analytics: ")
 

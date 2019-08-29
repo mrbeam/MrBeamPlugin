@@ -97,6 +97,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 
 	def __init__(self):
+		self.mrbeam_plugin_initialized = False
 		self._shutting_down = False
 		self._slicing_commands = dict()
 		self._slicing_commands_mutex = threading.Lock()
@@ -134,9 +135,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._branch = self.getBranch()
 		self._octopi_info = self.get_octopi_info()
 		self._serial_num = self.getSerialNum()
-
-		self._analytics_handler = analyticsHandler(self)
-
 		self.focusReminder = self._settings.get(['focusReminder'])
 
 		self.start_time_ntp_timer()
@@ -160,6 +158,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		except Exception as e:
 			self._logger.exception("Exception while getting NetconnectdPlugin pluginInfo")
 
+		self._analytics_handler = analyticsHandler(self)
 		self._oneButtonHandler = oneButtonHandler(self)
 		self._interlock_handler = interLockHandler(self)
 		self._lid_handler = lidHandler(self)
@@ -167,11 +166,15 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._led_eventhandler = LedEventListener(self)
 		# start iobeam socket only once other handlers are already inittialized so that we can handle info mesage
 		self._ioBeam = ioBeamHandler(self)
-		self._temperatureManager = temperatureManager()
-		self._dustManager = dustManager()
+		self._temperatureManager = temperatureManager(self)
+		self._dustManager = dustManager(self)
 		self._laserheadHandler = laserheadHandler(self)
 		self._wizardConfig = WizardConfig(self)
-		self.jobTimeEstimation = JobTimeEstimation(self._event_bus)
+		self.jobTimeEstimation = JobTimeEstimation(self)
+
+		self._logger.info('MrBeamPlugin initialized!')
+		self.mrbeam_plugin_initialized = True
+		self.fire_event(MrBeamEvents.MRB_PLUGIN_INITIALIZED)
 
 		self._do_initial_log()
 
@@ -1641,26 +1644,27 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		:return: mrb_state
 		:rtype: dict
 		"""
-		try:
-			return dict(
-				laser_temp = self._temperatureManager.get_temperature(),
-				fan_connected = self._dustManager.is_fan_connected(),
-				fan_state = self._dustManager.get_fan_state(),
-				fan_rpm = self._dustManager.get_fan_rpm(),
-				fan_dust = self._dustManager.get_dust(),
-				lid_fully_open = self._lid_handler.is_lid_open(),
-				interlocks_closed = self._ioBeam.is_interlock_closed(),
-				interlocks_open_ids = self._ioBeam.open_interlocks(),
-				rtl_mode = self._oneButtonHandler.is_ready_to_laser(),
-				pause_mode = self._printer.is_paused(),
-				cooling_mode = self._temperatureManager.is_cooling(),
-				dusting_mode = self._dustManager.is_dust_mode,
-				state = self._printer.get_state_string(),
+		if self.mrbeam_plugin_initialized:
+			try:
+				return dict(
+					laser_temp = self._temperatureManager.get_temperature(),
+					fan_connected = self._dustManager.is_fan_connected(),
+					fan_state = self._dustManager.get_fan_state(),
+					fan_rpm = self._dustManager.get_fan_rpm(),
+					fan_dust = self._dustManager.get_dust(),
+					lid_fully_open = self._lid_handler.is_lid_open(),
+					interlocks_closed = self._ioBeam.is_interlock_closed(),
+					interlocks_open_ids = self._ioBeam.open_interlocks(),
+					rtl_mode = self._oneButtonHandler.is_ready_to_laser(),
+					pause_mode = self._printer.is_paused(),
+					cooling_mode = self._temperatureManager.is_cooling(),
+					dusting_mode = self._dustManager.is_dust_mode,
+					state = self._printer.get_state_string(),
 
-			)
-		except:
-			if not self.is_boot_grace_period():
-				self._logger.exception("Exception while collecting mrb_state data: ")
+				)
+			except:
+				self._logger.exception("Exception while collecting mrb_state data.")
+		else:
 			return None
 
 	def _getCurrentFile(self):

@@ -66,8 +66,8 @@ class LedEventListener(CommandTrigger):
 
 	def __init__(self, plugin):
 		CommandTrigger.__init__(self, plugin._printer)
+		self._plugin = plugin
 		self._event_bus = plugin._event_bus
-		self._analytics_handler = plugin._analytics_handler
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.led_events")
 
 		self._watch_thread = None
@@ -76,10 +76,14 @@ class LedEventListener(CommandTrigger):
 
 		self._subscriptions = {}
 
-		self._initSubscriptions()
-
 		self._connections_states = []
 
+		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
+
+	def _on_mrbeam_plugin_initialized(self, event, payload):
+		self._analytics_handler = self._plugin._analytics_handler
+
+		self._initSubscriptions()
 
 	def _initSubscriptions(self):
 		for event in self.LED_EVENTS:
@@ -132,7 +136,7 @@ class LedEventListener(CommandTrigger):
 		           wired=None,
 		           findmrbeam=None)
 		try:
-			pluginInfo = _mrbeam_plugin_implementation._plugin_manager.get_plugin_info("findmymrbeam")
+			pluginInfo = self._plugin._plugin_manager.get_plugin_info("findmymrbeam")
 			if pluginInfo is not None and LooseVersion(pluginInfo.version) >= self.VERSION_MIN_FINDMRBEAM:
 				res['findmrbeam'] = pluginInfo.implementation.is_registered()
 			else:
@@ -142,7 +146,7 @@ class LedEventListener(CommandTrigger):
 			self._logger.exception("Exception while reading is_registered state from findmymrbeam:")
 
 		try:
-			pluginInfo = _mrbeam_plugin_implementation._plugin_manager.get_plugin_info("netconnectd")
+			pluginInfo = self._plugin._plugin_manager.get_plugin_info("netconnectd")
 			if pluginInfo is not None:
 				status = pluginInfo.implementation._get_status()
 				if 'wifi' in status["connections"]:
@@ -161,13 +165,12 @@ class LedEventListener(CommandTrigger):
 		return res
 
 	def log_listening_state(self, command=None):
-		self._logger.info("LED Connectivity command: %s , state: %s, is_boot_grace_period: %s", command, self._listening_state, _mrbeam_plugin_implementation.is_boot_grace_period())
+		self._logger.info("LED Connectivity command: %s , state: %s, is_boot_grace_period: %s", command, self._listening_state, self._plugin.is_boot_grace_period())
 
 	def _get_listening_command(self):
 		command = self.LED_EVENTS[Events.STARTUP]
 		if self._listening_state is not None and \
-			(self._listening_state['findmrbeam'] is not None
-			 or not _mrbeam_plugin_implementation.is_boot_grace_period()):
+			(self._listening_state['findmrbeam'] is not None or not self._plugin.is_boot_grace_period()):
 				if self._listening_state['findmrbeam']:
 					command = self.COMMAND_LISTENING_FINDMRBEAM
 				elif self._listening_state['ap'] and (self._listening_state['wifi'] or self._listening_state['wired']):

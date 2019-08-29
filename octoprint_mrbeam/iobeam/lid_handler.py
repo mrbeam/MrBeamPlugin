@@ -5,6 +5,7 @@ import shutil
 import logging
 from os.path import isfile
 from flask.ext.babel import gettext
+from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 # don't crash on a dev computer where you can't install picamera
 try:
@@ -31,18 +32,18 @@ _instance = None
 def lidHandler(plugin):
 	global _instance
 	if _instance is None:
-		_instance = LidHandler(plugin._event_bus,
-							   plugin._plugin_manager)
+		_instance = LidHandler(plugin)
 	return _instance
 
 
 # This guy handles lid Events
 class LidHandler(object):
-	def __init__(self, event_bus, plugin_manager):
-		self._event_bus = event_bus
-		self._settings = _mrbeam_plugin_implementation._settings
-		self._printer = _mrbeam_plugin_implementation._printer
-		self._plugin_manager = plugin_manager
+	def __init__(self, plugin):
+		self._plugin = plugin
+		self._event_bus = plugin._event_bus
+		self._settings = plugin._settings
+		self._printer = plugin._printer
+		self._plugin_manager = plugin._plugin_manager
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler")
 
 		self._lid_closed = True
@@ -53,10 +54,18 @@ class LidHandler(object):
 
 		self._photo_creator = None
 		self.image_correction_enabled = self._settings.get(['cam', 'image_correction_enabled'])
+
+		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
+
+	def _on_mrbeam_plugin_initialized(self, event, payload):
+		self._temperature_manager = self._plugin._temperatureManager
+		self._iobeam = self._plugin._ioBeam
+		self._analytics_handler = self._plugin._analytics_handler
+
 		if self.camEnabled:
 			#imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
 			imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
-			self._photo_creator = PhotoCreator(self._plugin_manager, imagePath, self.image_correction_enabled)
+			self._photo_creator = PhotoCreator(self._plugin, self._plugin_manager, imagePath, self.image_correction_enabled)
 
 		self._subscribe()
 
@@ -72,7 +81,6 @@ class LidHandler(object):
 		self._event_bus.subscribe(OctoPrintEvents.SLICING_CANCELLED, self._onSlicingEvent)
 		self._event_bus.subscribe(OctoPrintEvents.PRINTER_STATE_CHANGED,self._printerStateChanged)
 
-	# TODO Question: Why is there only one onEvent() Function with if/elif/else instead of different functions for each event?
 	def onEvent(self, event, payload):
 		self._logger.debug("onEvent() event: %s, payload: %s", event, payload)
 		if event == IoBeamEvents.LID_OPENED:
@@ -186,12 +194,14 @@ class LidHandler(object):
 
 
 class PhotoCreator(object):
-	def __init__(self, _plugin_manager, path, image_correction_enabled):
+	def __init__(self, _plugin, _plugin_manager, path, image_correction_enabled):
+		self._plugin = _plugin
 		self._plugin_manager = _plugin_manager
 		self.final_image_path = path
 		self.image_correction_enabled = image_correction_enabled
-		self._settings = _mrbeam_plugin_implementation._settings
-		self._laserCutterProfile = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()
+		self._settings = _plugin._settings
+		self._analytics_handler = _plugin._analytics_handler
+		self._laserCutterProfile = _plugin.laserCutterProfileManager.get_current_or_default()
 		self.keepOriginals = self._settings.get(["cam", "keepOriginals"])
 		self.active = False
 		self.last_photo = 0
@@ -324,7 +334,7 @@ class PhotoCreator(object):
 			if e.__class__.__name__.startswith('PiCamera'):
 				self._logger.error("PiCamera Error while capturing picture: %s: %s", e.__class__.__name__, e)
 				self.active = False
-				_mrbeam_plugin_implementation.notify_frontend(
+				self._plugin.notify_frontend(
 					title=gettext("Camera Error"),
 					text=gettext("Please try the following:<br>- Close and reopen the lid<br>- Reboot the device and reload this page"),
 					type='notice',
@@ -400,6 +410,5 @@ class PhotoCreator(object):
 
 		return correction_result
 
-	@staticmethod
-	def _write_camera_capture_analytics(errors):
-		_mrbeam_plugin_implementation._analytics_handler.add_camera_session(errors)
+	def _write_camera_capture_analytics(self, errors):
+		self._analytics_handler.add_camera_session(errors)

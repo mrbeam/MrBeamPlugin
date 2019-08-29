@@ -5,8 +5,6 @@ import yaml
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
-from octoprint_mrbeam.analytics.analytics_handler import analyticsHandler
-from octoprint_mrbeam.iobeam.laserhead_handler import laserheadHandler
 
 # singleton
 _instance = None
@@ -40,12 +38,15 @@ class UsageHandler(object):
 
 		self._usage_data = None
 		self._load_usage_data()
-		self._subscribe()
 
-		self._laserheadHandler = laserheadHandler(plugin)
+		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
+
+	def _on_mrbeam_plugin_initialized(self, event, payload):
+		self._analytics_handler = self._plugin._analytics_handler
+		self._laserhead_handler = self._plugin._laserheadHandler
 
 		# Read laser head. If it's None, use 'no_serial'
-		self._lh = self._laserheadHandler.get_current_used_lh_data()
+		self._lh = self._laserhead_handler.get_current_used_lh_data()
 		if self._lh['serial']:
 			self._laser_head_serial = self._lh['serial']
 		else:
@@ -53,6 +54,8 @@ class UsageHandler(object):
 
 		self._init_missing_usage_data()
 		self.log_usage()
+
+		self._subscribe()
 
 	def log_usage(self):
 		self._logger.info("Usage: total: {}, pre-filter: {}, main filter: {}, current laser head: {}, mechanics: {} - {}".format(
@@ -75,7 +78,7 @@ class UsageHandler(object):
 	def event_laser_head_read(self, event, payload):
 		# Update laser head info if necessary --> Only update if there is a serial number different than the previous
 		if payload['serial'] and self._lh['serial'] != payload['serial']:
-			self._lh = self._laserheadHandler.get_current_used_lh_data()
+			self._lh = self._laserhead_handler.get_current_used_lh_data()
 			self._laser_head_serial = self._lh['serial']
 			self._init_missing_usage_data()
 
@@ -146,7 +149,7 @@ class UsageHandler(object):
 				action=action
 			)
 
-			analyticsHandler(self._plugin).add_mrbeam_usage(usage_data)
+			self._analytics_handler.add_mrbeam_usage(usage_data)
 		except KeyError as e:
 			self._logger.info('Could not write analytics for usage, missing key: {e}'.format(e=e))
 

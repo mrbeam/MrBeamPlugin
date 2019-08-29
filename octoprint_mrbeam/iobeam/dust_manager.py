@@ -2,18 +2,17 @@ import time
 import threading
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
-from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamValueEvents
+from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamValueEvents, IoBeamEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
-from octoprint_mrbeam.analytics.usage_handler import usageHandler
 from collections import deque
 
 # singleton
 _instance = None
 
-def dustManager():
+def dustManager(plugin):
 	global _instance
 	if _instance is None:
-		_instance = DustManager()
+		_instance = DustManager(plugin)
 	return _instance
 
 
@@ -41,9 +40,11 @@ class DustManager(object):
 	FAN_TEST_RPM_PERCENTAGE = 50
 	FAN_TEST_DURATION = 35  # seconds
 
-	def __init__(self):
+	def __init__(self, plugin):
+		self._plugin = plugin
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.dustmanager")
-		self.dev_mode = _mrbeam_plugin_implementation._settings.get_boolean(['dev', 'iobeam_disable_warnings'])
+		self.dev_mode = plugin._settings.get_boolean(['dev', 'iobeam_disable_warnings'])
+		self._event_bus = plugin._event_bus
 
 		self._state = None
 		self._dust = None
@@ -61,19 +62,26 @@ class DustManager(object):
 		self._auto_timer = None
 		self._last_command = ''
 		self.is_dust_mode = False
+		self._just_initialized = False
 
-		self._subscribe()
-		self._start_timer()
-		self._stop_dust_extraction()
-
-		self._usageHandler = usageHandler(self)
 		self._last_rpm_values = deque(maxlen=5)
 
-		self.extraction_limit = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['dust']['extraction_limit']
-		self.auto_mode_time = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['dust']['auto_mode_time']
+		self.extraction_limit = self._plugin.laserCutterProfileManager.get_current_or_default()['dust']['extraction_limit']
+		self.auto_mode_time = self._plugin.laserCutterProfileManager.get_current_or_default()['dust']['auto_mode_time']
 
+		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
 
+	def _on_mrbeam_plugin_initialized(self, event, payload):
+		self._usage_handler = self._plugin._usageHandler
+		self._iobeam = self._plugin._ioBeam
+		self._analytics_handler = self._plugin._analytics_handler
+		self._one_button_handler = self._plugin._oneButtonHandler
+
+		self._start_timer()
+		self._just_initialized = True
 		self._logger.debug("initialized!")
+
+		self._subscribe()
 
 	def get_fan_state(self):
 		return self._state
@@ -91,22 +99,21 @@ class DustManager(object):
 		self._shutting_down = True
 
 	def _subscribe(self):
-		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.DYNAMIC_VALUE, self._handle_fan_data)
-		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.FAN_ON_RESPONSE, self._on_command_response)
-		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.FAN_OFF_RESPONSE, self._on_command_response)
-		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.FAN_AUTO_RESPONSE, self._on_command_response)
-
-		_mrbeam_plugin_implementation._event_bus.subscribe(MrBeamEvents.READY_TO_LASER_START, self._onEvent)
-		_mrbeam_plugin_implementation._event_bus.subscribe(MrBeamEvents.READY_TO_LASER_START, self._onEvent)
-		_mrbeam_plugin_implementation._event_bus.subscribe(MrBeamEvents.READY_TO_LASER_CANCELED, self._onEvent)
-		_mrbeam_plugin_implementation._event_bus.subscribe(MrBeamEvents.BUTTON_PRESS_REJECT, self._onEvent)
-		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.SLICING_DONE, self._onEvent)
-		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_STARTED, self._onEvent)
-		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self._onEvent)
-		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self._onEvent)
-		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_CANCELLED, self._onEvent)
-		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_RESUMED, self._onEvent)
-		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self._onEvent)
+		self._iobeam.subscribe(IoBeamValueEvents.DYNAMIC_VALUE, self._handle_fan_data)
+		self._iobeam.subscribe(IoBeamValueEvents.FAN_ON_RESPONSE, self._on_command_response)
+		self._iobeam.subscribe(IoBeamValueEvents.FAN_OFF_RESPONSE, self._on_command_response)
+		self._iobeam.subscribe(IoBeamValueEvents.FAN_AUTO_RESPONSE, self._on_command_response)
+		self._event_bus.subscribe(MrBeamEvents.READY_TO_LASER_START, self._onEvent)
+		self._event_bus.subscribe(IoBeamEvents.CONNECT, self._onEvent)
+		self._event_bus.subscribe(MrBeamEvents.READY_TO_LASER_CANCELED, self._onEvent)
+		self._event_bus.subscribe(MrBeamEvents.BUTTON_PRESS_REJECT, self._onEvent)
+		self._event_bus.subscribe(OctoPrintEvents.SLICING_DONE, self._onEvent)
+		self._event_bus.subscribe(OctoPrintEvents.PRINT_STARTED, self._onEvent)
+		self._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self._onEvent)
+		self._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self._onEvent)
+		self._event_bus.subscribe(OctoPrintEvents.PRINT_CANCELLED, self._onEvent)
+		self._event_bus.subscribe(OctoPrintEvents.PRINT_RESUMED, self._onEvent)
+		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self._onEvent)
 
 	def _handle_fan_data(self, args):
 		err = False
@@ -166,6 +173,10 @@ class DustManager(object):
 			self._do_end_dusting()
 		elif event == OctoPrintEvents.SHUTDOWN:
 			self.shutdown()
+		elif event == IoBeamEvents.CONNECT:
+			if self._just_initialized:
+				self._stop_dust_extraction()
+				self._just_initialized = False
 
 	def _finish_test_fan_rpm(self):
 		try:
@@ -179,11 +190,11 @@ class DustManager(object):
 				data = dict(
 					rpm_val=rpm_average,
 					fan_state=self._state,
-					usage_count=self._usageHandler.get_total_usage(),
-					prefilter_count=self._usageHandler.get_prefilter_usage(),
-					carbon_filter_count=self._usageHandler.get_carbon_filter_usage(),
+					usage_count=self._usage_handler.get_total_usage(),
+					prefilter_count=self._usage_handler.get_prefilter_usage(),
+					carbon_filter_count=self._usage_handler.get_carbon_filter_usage(),
 				)
-				_mrbeam_plugin_implementation._analytics_handler.add_fan_rpm_test(data)
+				self._analytics_handler.add_fan_rpm_test(data)
 
 			# Set fan to auto again
 			self._start_dust_extraction()
@@ -197,10 +208,10 @@ class DustManager(object):
 		Should be called when air filters gets disconnected, dust value gets too high or when any error occurs...
 		:param trigger: A string to identify the cause/trigger that initiated paused mode
 		"""
-		if _mrbeam_plugin_implementation._oneButtonHandler.is_printing():
+		if self._one_button_handler.is_printing():
 			self._logger.error(log_message)
 			self._logger.info("_pause_laser() trigger: %s", trigger)
-			_mrbeam_plugin_implementation._oneButtonHandler.pause_laser(need_to_release=False, trigger=trigger)
+			self._one_button_handler.pause_laser(need_to_release=False, trigger=trigger)
 
 	def _start_dust_extraction(self, value=None):
 		"""
@@ -236,7 +247,7 @@ class DustManager(object):
 				dust_start_ts = self._data_ts
 				if self.__continue_dust_extraction(self.extraction_limit, dust_start_ts):
 					self.is_dust_mode = True
-					_mrbeam_plugin_implementation.fire_event(MrBeamEvents.DUSTING_MODE_START)
+					self._plugin.fire_event(MrBeamEvents.DUSTING_MODE_START)
 					self._start_dust_extraction(self.FAN_MAX_INTENSITY)
 					while self.__continue_dust_extraction(self.extraction_limit, dust_start_ts):
 						time.sleep(1)
@@ -263,7 +274,7 @@ class DustManager(object):
 			if my_event:
 				# if this event comes to soon after the OP PrintDone, the actual order ca get mixed up.
 				# Resend to make sure we end with a green state
-				threading.Timer(1.0, _mrbeam_plugin_implementation.fire_event, [my_event, dict(resent=True)]).start()
+				threading.Timer(1.0, self._plugin.fire_event, [my_event, dict(resent=True)]).start()
 		except:
 			self._logger.exception("Exception send_laser_done_event send_laser_job_event(): ")
 
@@ -289,7 +300,7 @@ class DustManager(object):
 	def _send_fan_command(self, command):
 		self._last_command = command
 		self._logger.debug("Sending fan command: %s", command)
-		ok = _mrbeam_plugin_implementation._ioBeam.send_fan_command(command)
+		ok = self._iobeam.send_fan_command(command)
 		if not ok:
 			self._logger.error("Failed to send fan command to iobeam: %s", command)
 		return ok
@@ -300,7 +311,7 @@ class DustManager(object):
 		:param val: measured dust value
 		:return:
 		"""
-		_mrbeam_plugin_implementation._analytics_handler.collect_dust_value(val)
+		self._analytics_handler.collect_dust_value(val)
 
 	def _validate_values(self):
 		result = True
@@ -309,11 +320,11 @@ class DustManager(object):
 		if self._state is None or self._rpm is None or self._rpm <= 0 or self._dust is None:
 			result = False
 
-		if _mrbeam_plugin_implementation._oneButtonHandler.is_printing() and self._state == 0:
+		if self._one_button_handler.is_printing() and self._state == 0:
 			self._logger.warn("Restarting fan since _state was 0 in printing state.")
 			self._start_dust_extraction()
 
-		if not result and not _mrbeam_plugin_implementation.is_boot_grace_period():
+		if not result and not self._plugin.is_boot_grace_period():
 			msg = "Invalid or too old fan data from iobeam: state:{state}, rpm:{rpm}, dust:{dust}, connected:{connected}, age:{age}s".format(
 				state=self._state, rpm=self._rpm, dust=self._dust, connected=self._connected, age=(time.time() - self._data_ts))
 			self._pause_laser(trigger="Fan values from iobeam invalid or too old.", log_message=msg)
@@ -328,7 +339,7 @@ class DustManager(object):
 		return result
 
 	def _request_value(self, value):
-		return _mrbeam_plugin_implementation._ioBeam.send_fan_command(value)
+		return self._iobeam.send_fan_command(value)
 
 	def _timer_callback(self):
 		try:

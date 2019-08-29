@@ -7,7 +7,6 @@ from octoprint.filemanager import valid_file_type
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
-from octoprint_mrbeam.iobeam.temperature_manager import temperatureManager
 from flask.ext.babel import gettext
 
 # singleton
@@ -23,6 +22,7 @@ def oneButtonHandler(plugin):
 									 plugin._settings,
 									 plugin._printer)
 	return _instance
+
 
 # This guy handles OneButton Events and many more... It's more a Hydra now... :-/
 # it basically also handles the ReadyToLaser state
@@ -56,7 +56,7 @@ class OneButtonHandler(object):
 		self._settings = settings
 		self._printer = printer
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.onebutton_handler")
-		self._subscribe()
+		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
 
 		self.ready_to_laser_ts = -1
 		self.ready_to_laser_flag = False
@@ -77,6 +77,12 @@ class OneButtonHandler(object):
 
 		self.hardware_malfunction = False
 		self.hardware_malfunction_notified = False
+
+	def _on_mrbeam_plugin_initialized(self, event, payload):
+		self._temperature_manager = self._plugin._temperatureManager
+		self._iobeam = self._plugin._ioBeam
+
+		self._subscribe()
 
 	def _subscribe(self):
 		self._event_bus.subscribe(IoBeamEvents.ONEBUTTON_DOWN, self.onEvent)
@@ -261,7 +267,7 @@ class OneButtonHandler(object):
 				self._printer.cancel_print()
 
 	def is_cooling(self):
-		return _mrbeam_plugin_implementation._temperatureManager.is_cooling()
+		return self._temperature_manager.is_cooling()
 
 	def is_printing(self):
 		return self._printer.get_state_id() == self.PRINTER_STATE_PRINTING
@@ -307,7 +313,7 @@ class OneButtonHandler(object):
 			self._fireEvent(MrBeamEvents.READY_TO_LASER_CANCELED)
 		if self.hardware_malfunction and not self.hardware_malfunction_notified:
 			self._logger.error("Hardware Malfunction: Not possible to start laser job.")
-			_mrbeam_plugin_implementation._replay_stored_frontend_notification()
+			self._plugin._replay_stored_frontend_notification()
 			self.hardware_malfunction_notified = True
 
 	def is_ready_to_laser(self, rtl_expected_to_be_there=True):
@@ -374,21 +380,21 @@ class OneButtonHandler(object):
 		We're going to need a concept of what to do if something here failes...
 		:return:
 		'''
-		temp_ok = _mrbeam_plugin_implementation._temperatureManager.is_temperature_recent()
+		temp_ok = self._temperature_manager.is_temperature_recent()
 		if not temp_ok:
 			msg = "iobeam: Laser temperature not available"
-			_mrbeam_plugin_implementation.notify_frontend(title="Error", text=msg, type='error')
+			self._plugin.notify_frontend(title="Error", text=msg, type='error')
 			raise Exception(msg)
 
-		iobeam_ok = _mrbeam_plugin_implementation._ioBeam.is_iobeam_version_ok()
+		iobeam_ok = self._iobeam.is_iobeam_version_ok()
 		if not iobeam_ok:
 			msg = gettext("iobeam version is outdated. Please try Software update.")
-			_mrbeam_plugin_implementation.notify_frontend(title=gettext("Error"), text=msg, type='error')
+			self._plugin.notify_frontend(title=gettext("Error"), text=msg, type='error')
 			raise Exception(msg)
 
 		if self.hardware_malfunction and not self.hardware_malfunction_notified:
 			self._logger.error("Hardware Malfunction: Not possible to start laser job.")
-			_mrbeam_plugin_implementation._replay_stored_frontend_notification()
+			self._plugin._replay_stored_frontend_notification()
 			self.hardware_malfunction_notified = True
 			raise Exception("Hardware Malfunction: Not possible to start laser job.")
 
@@ -436,7 +442,7 @@ class OneButtonHandler(object):
 		if pause_print:
 			self._printer.pause_print(force=force, trigger=trigger)
 
-		self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFETY_TIMEOUT_START, payload=dict(trigger=trigger, mrb_state=_mrbeam_plugin_implementation.get_mrb_state()))
+		self._fireEvent(MrBeamEvents.LASER_PAUSE_SAFETY_TIMEOUT_START, payload=dict(trigger=trigger, mrb_state=self._plugin.get_mrb_state()))
 		self._start_pause_safety_timeout_timer()
 
 	def _is_during_pause_waiting_time(self):
@@ -506,7 +512,6 @@ class OneButtonHandler(object):
 		else:
 			self._logger.warn("No shutdown command in settings. Can't shut down system per OneButton.")
 
-
 	def _fireEvent(self, event, payload=None):
-		_mrbeam_plugin_implementation.fire_event(event, payload)
+		self._plugin.fire_event(event, payload)
 

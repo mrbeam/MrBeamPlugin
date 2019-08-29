@@ -1,10 +1,10 @@
 
-from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint.events import Events as OctoPrintEvents
 
 
-
 class MrBeamEvents(object):
+	MRB_PLUGIN_INITIALIZED	   = 'MrbPluginInitialized'
+
 	PRINT_PROGRESS             = "PrintProgress"
 	SLICING_PROGRESS           = "SlicingProgress"
 
@@ -42,7 +42,6 @@ class MrBeamEvents(object):
 	HARDWARE_MALFUNCTION       = "HardwareMalfunction"
 
 	LASER_HEAD_READ             = "LaserHeadRead"
-
 
 	@classmethod
 	def register_with_octoprint(cls):

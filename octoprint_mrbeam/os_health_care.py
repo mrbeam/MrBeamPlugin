@@ -2,8 +2,8 @@
 import os
 import time
 from octoprint_mrbeam.mrb_logger import mrb_logger
-from octoprint_mrbeam.analytics.analytics_handler import analyticsHandler
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
+from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 
 def os_health_care(plugin):
@@ -19,8 +19,11 @@ class OsHealthCare(object):
 	def __init__(self, plugin):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.os_health_care")
 		self.plugin = plugin
-		self.analyticsHandler = analyticsHandler(plugin)
+		self._event_bus = plugin._event_bus
+		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
 
+	def _on_mrbeam_plugin_initialized(self, event, payload):
+		self._analytics_handler = self.plugin._analytics_handler
 
 	def run(self):
 		self.etc_network_interfaces()
@@ -58,7 +61,7 @@ class OsHealthCare(object):
 			os_health_event=event,
 			success=success,
 		)
-		self.analyticsHandler.add_os_health_log(data)
+		self._analytics_handler.add_os_health_log(data)
 
 	def _get_full_path_to_file(self, filename):
 		return os.path.join(__package_path__, self.HEALTHCARE_FILES_FOLDER, filename)
