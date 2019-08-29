@@ -28,7 +28,7 @@ class InterLockHandler(object):
 		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
 
 	def _on_mrbeam_plugin_initialized(self, event, payload):
-		self._iobeam = self._plugin._ioBeam
+		self._iobeam = self._plugin.iobeam
 
 		self._subscribe()
 

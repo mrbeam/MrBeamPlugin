@@ -193,8 +193,8 @@ class MachineCom(object):
 		self._serial_factory_hooks = self._pluginManager.get_hooks("octoprint.comm.transport.serial.factory")
 
 		# laser power correction
-		self._power_correction_settings = _mrbeam_plugin_implementation._laserheadHandler.get_correction_settings()
-		self._current_lh_data = _mrbeam_plugin_implementation._laserheadHandler.get_current_used_lh_data()
+		self._power_correction_settings = _mrbeam_plugin_implementation.laserhead_handler.get_correction_settings()
+		self._current_lh_data = _mrbeam_plugin_implementation.laserhead_handler.get_current_used_lh_data()
 		self._gcode_intensity_limit = self._power_correction_settings['gcode_intensity_limit']
 
 		self._power_correction_factor = 1
@@ -605,8 +605,8 @@ class MachineCom(object):
 		if self._grbl_state == self.GRBL_STATE_QUEUE:
 			if time.time() - self._pause_delay_time > 0.3:
 				if not self.isPaused():
-					if _mrbeam_plugin_implementation and _mrbeam_plugin_implementation._oneButtonHandler and \
-						not _mrbeam_plugin_implementation._oneButtonHandler.is_intended_pause():
+					if _mrbeam_plugin_implementation and _mrbeam_plugin_implementation.onebutton_handler and \
+						not _mrbeam_plugin_implementation.onebutton_handler.is_intended_pause():
 						self._logger.warn("_handle_status_report() Override pause since we got status '%s' from grbl.", self._grbl_state)
 						self.setPause(False, send_cmd=True, force=True, trigger="GRBL_QUEUE_OVERRIDE")
 					else:
@@ -620,7 +620,7 @@ class MachineCom(object):
 
 	def _handle_laser_intensity_for_analytics(self, laser_state, laser_intensity):
 		if laser_state == 'on' and _mrbeam_plugin_implementation.mrbeam_plugin_initialized:
-			_mrbeam_plugin_implementation._analytics_handler.collect_laser_intensity_value(int(laser_intensity))
+			_mrbeam_plugin_implementation.analytics_handler.collect_laser_intensity_value(int(laser_intensity))
 
 	def _handle_ok_message(self, line):
 		item = self._acc_line_buffer.get_last_responded()
@@ -1196,7 +1196,7 @@ class MachineCom(object):
 		if not verify_only:
 			try:
 				if _mrbeam_plugin_implementation.mrbeam_plugin_initialized:
-					_mrbeam_plugin_implementation._analytics_handler.add_grbl_flash_event(
+					_mrbeam_plugin_implementation.analytics_handler.add_grbl_flash_event(
 						from_version=from_version,
 						to_version=grbl_file,
 						succesful=(code == 0),
@@ -1617,7 +1617,7 @@ class MachineCom(object):
 					token = int(tokens[1])
 					if token == 1:
 						self._log("Enabling power correction...")
-						lh_data = _mrbeam_plugin_implementation._laserheadHandler.get_current_used_lh_data()
+						lh_data = _mrbeam_plugin_implementation.laserhead_handler.get_current_used_lh_data()
 						if lh_data['info'] and 'correction_factor' in lh_data['info']:
 							self._power_correction_factor = lh_data['info']['correction_factor']
 						else:

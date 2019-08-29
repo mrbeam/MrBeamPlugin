@@ -152,7 +152,7 @@ class MrbLogger(object):
 					msg=msg,
 					module=self.id,
 					component=_mrbeam_plugin_implementation._identifier,
-					component_version=_mrbeam_plugin_implementation._plugin_version,
+					component_version=_mrbeam_plugin_implementation.get_plugin_version(),
 					caller=caller,
 					exception_str=exception_str,
 					stacktrace=stacktrace,
@@ -202,7 +202,7 @@ class MrbLogger(object):
 	def _get_analytics_handler(self):
 		analytics_handler = None
 		try:
-			analytics_handler = _mrbeam_plugin_implementation._analytics_handler
+			analytics_handler = _mrbeam_plugin_implementation.analytics_handler
 		except:
 			self.logger.error("Not able to get analytics_handler.")
 		return analytics_handler

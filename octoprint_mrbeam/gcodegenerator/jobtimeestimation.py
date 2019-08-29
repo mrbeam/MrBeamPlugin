@@ -23,7 +23,7 @@ class JobTimeEstimation:
 		self._plugin = plugin
 		self._event_bus = plugin._event_bus
 		self._settings = plugin._settings
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.jobTimeEstimation")
+		self._logger = mrb_logger("octoprint.plugins.mrbeam.job_time_estimation")
 
 		self._last_estimation = -1
 
@@ -56,7 +56,7 @@ class JobTimeEstimation:
 
 		if event == OctoPrintEvents.SLICING_DONE:
 			estimation_thread = threading.Thread(target=self._calculate_estimation_threaded,
-												 name="jobTimeEstimation._calculate_estimation_threaded",
+												 name="job_time_estimation._calculate_estimation_threaded",
 												 args=(payload['gcode'],))
 			estimation_thread.daemon = True
 			estimation_thread.start()
@@ -87,7 +87,7 @@ class JobTimeEstimation:
 	def _send_estimate_to_frontend(self):
 		try:
 			payload = dict()
-			payload['jobTimeEstimation'] = self._last_estimation
+			payload['job_time_estimation'] = self._last_estimation
 			self._plugin.fire_event(MrBeamEvents.JOB_TIME_ESTIMATED, payload)
 		except:
 			self._logger.exception("Error when sending JobTimeEstimated event.")

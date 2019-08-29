@@ -21,7 +21,7 @@ class UsageHandler(object):
 		self._plugin = plugin
 		self._event_bus = plugin._event_bus
 		self._settings = plugin._settings
-		self._plugin_version = plugin._plugin_version
+		self._plugin_version = plugin.get_plugin_version()
 		self._device_serial = plugin.getSerialNum()
 
 		self.start_time_total = -1
@@ -42,8 +42,8 @@ class UsageHandler(object):
 		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
 
 	def _on_mrbeam_plugin_initialized(self, event, payload):
-		self._analytics_handler = self._plugin._analytics_handler
-		self._laserhead_handler = self._plugin._laserheadHandler
+		self._analytics_handler = self._plugin.analytics_handler
+		self._laserhead_handler = self._plugin.laserhead_handler
 
 		# Read laser head. If it's None, use 'no_serial'
 		self._lh = self._laserhead_handler.get_current_used_lh_data()

@@ -25,7 +25,7 @@ class LaserheadHandler(object):
 		self._plugin = plugin
 		self._settings = plugin._settings
 		self._event_bus = plugin._event_bus
-		self._plugin_version = plugin._plugin_version
+		self._plugin_version = plugin.get_plugin_version()
 
 		self._lh_cache = {}
 		self._last_used_lh_serial = None
@@ -38,7 +38,7 @@ class LaserheadHandler(object):
 		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
 
 	def _on_mrbeam_plugin_initialized(self, event, payload):
-		self._analytics_handler = self._plugin._analytics_handler
+		self._analytics_handler = self._plugin.analytics_handler
 
 	def set_current_used_lh_serial(self, serial):
 		if serial and self._validate_lh_serial(serial):

@@ -92,7 +92,7 @@ class Converter():
 
 	def _add_conversion_details_analytics(self):
 		if 'material' in self.options:
-			_mrbeam_plugin_implementation._analytics_handler.add_material_details(self.options['material'])
+			_mrbeam_plugin_implementation.analytics_handler.add_material_details(self.options['material'])
 
 		if 'engrave' in self.options and self.options['engrave'] and 'raster' in self.options:
 			eng_settings = self.options['raster']
@@ -102,7 +102,7 @@ class Converter():
 				'mpr_white': self._calculate_mpr_value(eng_settings.get('intensity_white'), eng_settings.get('speed_white')),
 			}
 			eng_settings.update(additional_data)
-			_mrbeam_plugin_implementation._analytics_handler.add_engraving_parameters(eng_settings)
+			_mrbeam_plugin_implementation.analytics_handler.add_engraving_parameters(eng_settings)
 
 		if 'vector' in self.options and self.options['vector']:
 			for cut_settings in self.options['vector']:
@@ -111,11 +111,11 @@ class Converter():
 					'mpr': self._calculate_mpr_value(cut_settings.get('intensity'), cut_settings.get('feedrate'), cut_settings.get('passes')),
 				}
 				cut_settings.update(additional_data)
-				_mrbeam_plugin_implementation._analytics_handler.add_cutting_parameters(cut_settings)
+				_mrbeam_plugin_implementation.analytics_handler.add_cutting_parameters(cut_settings)
 
 		if 'design_files' in self.options and self.options['design_files']:
 			for design_file in self.options['design_files']:
-				_mrbeam_plugin_implementation._analytics_handler.add_design_file_details(design_file)
+				_mrbeam_plugin_implementation.analytics_handler.add_design_file_details(design_file)
 
 
 	def init_output_file(self):

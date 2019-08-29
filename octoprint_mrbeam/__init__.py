@@ -158,19 +158,19 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		except Exception as e:
 			self._logger.exception("Exception while getting NetconnectdPlugin pluginInfo")
 
-		self._analytics_handler = analyticsHandler(self)
-		self._oneButtonHandler = oneButtonHandler(self)
-		self._interlock_handler = interLockHandler(self)
-		self._lid_handler = lidHandler(self)
-		self._usageHandler = usageHandler(self)
-		self._led_eventhandler = LedEventListener(self)
+		self.analytics_handler = analyticsHandler(self)
+		self.onebutton_handler = oneButtonHandler(self)
+		self.interlock_handler = interLockHandler(self)
+		self.lid_handler = lidHandler(self)
+		self.usage_handler = usageHandler(self)
+		self.led_event_listener = LedEventListener(self)
 		# start iobeam socket only once other handlers are already inittialized so that we can handle info mesage
-		self._ioBeam = ioBeamHandler(self)
-		self._temperatureManager = temperatureManager(self)
-		self._dustManager = dustManager(self)
-		self._laserheadHandler = laserheadHandler(self)
-		self._wizardConfig = WizardConfig(self)
-		self.jobTimeEstimation = JobTimeEstimation(self)
+		self.iobeam = ioBeamHandler(self)
+		self.temperature_manager = temperatureManager(self)
+		self.dust_manager = dustManager(self)
+		self.laserhead_handler = laserheadHandler(self)
+		self.wizard_config = WizardConfig(self)
+		self.job_time_estimation = JobTimeEstimation(self)
 
 		self._logger.info('MrBeamPlugin initialized!')
 		self.mrbeam_plugin_initialized = True
@@ -192,7 +192,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		msg += ", env:{}".format(self.get_env())
 		msg += ", beamOS-image:{}".format(self._octopi_info)
 		msg += ", grbl_version_lastknown:{}".format(self._settings.get(["grbl_version_lastknown"]))
-		msg += ", laserhead-serial:{}".format(self._laserheadHandler.get_current_used_lh_data()['serial'])
+		msg += ", laserhead-serial:{}".format(self.laserhead_handler.get_current_used_lh_data()['serial'])
 		self._logger.info(msg, terminal=True)
 
 		msg = "MrBeam Lasercutter Profile: %s" % self.laserCutterProfileManager.get_current_or_default()
@@ -220,13 +220,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		:return: dict of environment data
 		"""
 		return dict(version=self._plugin_version,
-		            host=self.getHostname(),
-		            serial=self._serial_num,
-		            software_tier=self._settings.get(["dev", "software_tier"]),
-		            env=self.get_env(),
-		            beamOS_image=self._octopi_info,
-		            grbl_version_lastknown=self._settings.get(["grbl_version_lastknown"]),
-		            laserhead_serial=self._laserheadHandler.get_current_used_lh_data()['serial'])
+					host=self.getHostname(),
+					serial=self._serial_num,
+					software_tier=self._settings.get(["dev", "software_tier"]),
+					env=self.get_env(),
+					beamOS_image=self._octopi_info,
+					grbl_version_lastknown=self._settings.get(["grbl_version_lastknown"]),
+					laserhead_serial=self.laserhead_handler.get_current_used_lh_data()['serial'])
 
 	##~~ SettingsPlugin mixin
 	def get_settings_version(self):
@@ -319,12 +319,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			software_update_branches = self.get_update_branch_info(),
 			_version = self._plugin_version,
 			focusReminder = self._settings.get(['focusReminder']),
-			laserHeadSerial = self._laserheadHandler.get_current_used_lh_data()['serial'],
+			laserHeadSerial = self.laserhead_handler.get_current_used_lh_data()['serial'],
 			usage=dict(
-				prefilterUsage=self._usageHandler.get_prefilter_usage(),
-				carbonFilterUsage=self._usageHandler.get_carbon_filter_usage(),
-				laserHeadUsage=self._usageHandler.get_laser_head_usage(),
-				gantryUsage=self._usageHandler.get_gantry_usage(),
+				prefilterUsage=self.usage_handler.get_prefilter_usage(),
+				carbonFilterUsage=self.usage_handler.get_carbon_filter_usage(),
+				laserHeadUsage=self.usage_handler.get_laser_head_usage(),
+				gantryUsage=self.usage_handler.get_gantry_usage(),
 			),
 			tour_auto_launch = self._settings.get(['tour_auto_launch']),
 		)
@@ -347,7 +347,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self._settings.set_boolean(["gcode_nextgen", "clip_working_area"],
 				                           data['gcode_nextgen']['clip_working_area'])
 			if "analyticsEnabled" in data:
-				self._analytics_handler.analytics_user_permission_change(analytics_enabled=data['analyticsEnabled'])
+				self.analytics_handler.analytics_user_permission_change(analytics_enabled=data['analyticsEnabled'])
 			if "focusReminder" in data:
 				self._settings.set_boolean(["focusReminder"], data["focusReminder"])
 			if "dev" in data and "software_tier" in data['dev']:
@@ -359,10 +359,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def on_shutdown(self):
 		self._shutting_down = True
 		self._logger.debug("Mr Beam Plugin stopping...")
-		self._ioBeam.shutdown()
-		self._lid_handler.shutdown()
-		self._temperatureManager.shutdown()
-		self._dustManager.shutdown()
+		self.iobeam.shutdown()
+		self.lid_handler.shutdown()
+		self.temperature_manager.shutdown()
+		self.dust_manager.shutdown()
 		time.sleep(2)
 		self._logger.info("Mr Beam Plugin stopped.")
 
@@ -449,7 +449,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		firstRun = render_kwargs['firstRun']
 		language = g.locale.language if g.locale else "en"
 
-		if request.headers.get('User-Agent') != self._analytics_handler._timer_handler.SELF_CHECK_USER_AGENT:
+		if request.headers.get('User-Agent') != self.analytics_handler._timer_handler.SELF_CHECK_USER_AGENT:
 			self._track_ui_render_calls(request, language)
 
 		enable_accesscontrol = self._user_manager.enabled
@@ -484,7 +484,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 gcodeMobileThreshold=0,
 							 gcodeThreshold=0,
 							 wizard=wizard,
-							 wizard_to_show=self._wizardConfig.get_wizard_name(),
+							 wizard_to_show=self.wizard_config.get_wizard_name(),
 							 now=now,
 							 init_ts_ms=time.time()*1000,
 							 language = language,
@@ -494,7 +494,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 beamosVersionDisplayVersion = display_version_string,
 							 beamosVersionImage = self._octopi_info,
 							 grbl_version=self._grbl_version,
-							 laserhead_serial= self._laserheadHandler.get_current_used_lh_data()['serial'],
+							 laserhead_serial= self.laserhead_handler.get_current_used_lh_data()['serial'],
 
 							 env=self.get_env(),
 							 env_local=self.get_env(self.ENV_LOCAL),
@@ -530,7 +530,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self.called_hosts.append(my_call)
 				self._logger.info("First call received from: %s", my_call)
 				self._logger.info("All unique calls: %s", self.called_hosts)
-			self._analytics_handler.add_ui_render_call_event(host=my_call['host'], remote_ip=my_call['remote_ip'], referrer=my_call['ref'], language=language)
+			self.analytics_handler.add_ui_render_call_event(host=my_call['host'], remote_ip=my_call['remote_ip'], referrer=my_call['ref'], language=language)
 
 	##~~ TemplatePlugin mixin
 
@@ -551,7 +551,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			result.extend([
 				dict(type='settings', name="DEV Machine Profiles", template='settings/lasercutterprofiles_settings.jinja2', suffix="_lasercutterprofiles", custom_bindings=False)
 			])
-		result.extend(self._wizardConfig.get_wizard_config_to_show())
+		result.extend(self.wizard_config.get_wizard_config_to_show())
 		return result
 
 	def get_template_vars(self):
@@ -572,7 +572,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return dict()
 
 	def get_wizard_version(self):
-		return self._wizardConfig.get_wizard_version()
+		return self.wizard_config.get_wizard_version()
 
 	def on_wizard_finish(self, handled):
 		self._logger.info("Setup Wizard finished.")
@@ -1212,23 +1212,23 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		elif command == "focus_reminder":
 			return self.focus_reminder(data)
 		elif command == "reset_prefilter_usage":
-			return self._usageHandler.reset_prefilter_usage()
+			return self.usage_handler.reset_prefilter_usage()
 		elif command == "reset_carbon_filter_usage":
-			return self._usageHandler.reset_carbon_filter_usage()
+			return self.usage_handler.reset_carbon_filter_usage()
 		elif command == "reset_laser_head_usage":
-			return self._usageHandler.reset_laser_head_usage()
+			return self.usage_handler.reset_laser_head_usage()
 		elif command == "reset_gantry_usage":
-			return self._usageHandler.reset_gantry_usage()
+			return self.usage_handler.reset_gantry_usage()
 		return NO_CONTENT
 
 	def analytics_init(self, data):
 		if 'analyticsInitialConsent' in data:
-			self._analytics_handler.initial_analytics_procedure(data['analyticsInitialConsent'])
+			self.analytics_handler.initial_analytics_procedure(data['analyticsInitialConsent'])
 
 	def analytics_data(self, data):
 		event = data.get('event')
 		payload = data.get('payload', dict())
-		self._analytics_handler.add_frontend_event(event, payload)
+		self.analytics_handler.add_frontend_event(event, payload)
 		return NO_CONTENT
 
 	def focus_reminder(self, data):
@@ -1256,12 +1256,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self._logger.warn("DEV dev_start_button used while we're not in DEV mode. (ENV_LOCAL)")
 				return make_response("BAD REQUEST - DEV mode only.", 400)
 		elif 'rtl_cancel' in data and data['rtl_cancel']:
-			self._oneButtonHandler.unset_ready_to_laser()
+			self.onebutton_handler.unset_ready_to_laser()
 		return NO_CONTENT
 
 	def take_undistorted_picture(self, is_initial_calibration):
 		self._logger.debug("New undistorted image is requested. is_initial_calibration: %s", is_initial_calibration)
-		image_response = self._lid_handler.take_undistorted_picture(is_initial_calibration)
+		image_response = self.lid_handler.take_undistorted_picture(is_initial_calibration)
 		self._logger.debug("Image_Response: {}".format(image_response))
 		return image_response
 
@@ -1458,7 +1458,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._logger.error("on_event() Error Event! Message: %s", payload['error'])
 
 		if event == OctoPrintEvents.CLIENT_OPENED:
-			self._analytics_handler.add_client_opened_event(payload.get('remoteAddress', None))
+			self.analytics_handler.add_client_opened_event(payload.get('remoteAddress', None))
 			self.fire_event(MrBeamEvents.MRB_PLUGIN_VERSION, payload=dict(version=self._plugin_version))
 			self._replay_stored_frontend_notification()
 
@@ -1647,18 +1647,18 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if self.mrbeam_plugin_initialized:
 			try:
 				return dict(
-					laser_temp = self._temperatureManager.get_temperature(),
-					fan_connected = self._dustManager.is_fan_connected(),
-					fan_state = self._dustManager.get_fan_state(),
-					fan_rpm = self._dustManager.get_fan_rpm(),
-					fan_dust = self._dustManager.get_dust(),
-					lid_fully_open = self._lid_handler.is_lid_open(),
-					interlocks_closed = self._ioBeam.is_interlock_closed(),
-					interlocks_open_ids = self._ioBeam.open_interlocks(),
-					rtl_mode = self._oneButtonHandler.is_ready_to_laser(),
+					laser_temp = self.temperature_manager.get_temperature(),
+					fan_connected = self.dust_manager.is_fan_connected(),
+					fan_state = self.dust_manager.get_fan_state(),
+					fan_rpm = self.dust_manager.get_fan_rpm(),
+					fan_dust = self.dust_manager.get_dust(),
+					lid_fully_open = self.lid_handler.is_lid_open(),
+					interlocks_closed = self.iobeam.is_interlock_closed(),
+					interlocks_open_ids = self.iobeam.open_interlocks(),
+					rtl_mode = self.onebutton_handler.is_ready_to_laser(),
 					pause_mode = self._printer.is_paused(),
-					cooling_mode = self._temperatureManager.is_cooling(),
-					dusting_mode = self._dustManager.is_dust_mode,
+					cooling_mode = self.temperature_manager.is_cooling(),
+					dusting_mode = self.dust_manager.is_dust_mode,
 					state = self._printer.get_state_string(),
 
 				)
@@ -1750,6 +1750,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				pass
 
 		return branch
+
+	def get_plugin_version(self):
+		return self._plugin_version
 
 	def get_octopi_info(self):
 		return self._get_val_from_device_info('octopi')

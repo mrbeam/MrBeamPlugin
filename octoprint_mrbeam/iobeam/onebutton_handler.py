@@ -79,8 +79,9 @@ class OneButtonHandler(object):
 		self.hardware_malfunction_notified = False
 
 	def _on_mrbeam_plugin_initialized(self, event, payload):
-		self._temperature_manager = self._plugin._temperatureManager
-		self._iobeam = self._plugin._ioBeam
+		self._temperature_manager = self._plugin.temperature_manager
+		self._iobeam = self._plugin.iobeam
+		self._dust_manager = self._plugin.dust_manager
 
 		self._subscribe()
 
@@ -478,16 +479,16 @@ class OneButtonHandler(object):
 		self.shutdown_prepare_was_initiated_during_pause_saftey_timeout = None
 
 	def is_interlock_closed(self):
-		if self._plugin._ioBeam:
-			return self._plugin._ioBeam.is_interlock_closed()
+		if self._iobeam:
+			return self._iobeam.is_interlock_closed()
 		else:
 			raise Exception("iobeam handler not available from Plugin.")
 
 	def is_fan_connected(self):
-		if self._plugin._dustManager:
-			return self._plugin._dustManager.is_fan_connected()
+		if self._dust_manager:
+			return self._dust_manager.is_fan_connected()
 		else:
-			raise Exception("_dustManager handler not available from Plugin.")
+			raise Exception("dust_manager handler not available from Plugin.")
 
 	def _get_shutdown_command(self):
 		c = self._settings.global_get(["server", "commands", "systemShutdownCommand"])
@@ -501,7 +502,7 @@ class OneButtonHandler(object):
 		self.shutdown_state = self.SHUTDOWN_STATE_GOING_DOWN
 		self._fireEvent(MrBeamEvents.SHUTDOWN_PREPARE_SUCCESS)
 
-		self._plugin._ioBeam.shutdown_fan()
+		self._iobeam.shutdown_fan()
 
 		if self.shutdown_command is not None:
 			try:
