@@ -1368,10 +1368,10 @@ $(function(){
 
         self.svg_place_general_error = function(stack){
             var error = "<p>" + _.sprintf(gettext("An unknown error occurred while processing this design file.")) + "</p>";
-            error += "<p>" + _.sprintf(gettext("Please try reloading this browser window and try again. If this error remains, contact the Mr Beam Support Team. Make sure you provide the error message below together with the design file your trying to process.")) + "</p>";
+            error += "<p>" + _.sprintf(gettext("Please try reloading this browser window and try again. If this error remains, contact the Mr Beam Support Team. Make sure you provide the error message below together with the design file you're trying to process.")) + "</p>";
             error += "<p><strong>"+ _.sprintf(gettext("Error"))+ ":</strong><br/><textarea spellcheck=\"false\" style=\"width: 95%; background-color: inherit; font-size: 12px; line-height: normal; height: 70px; color: inherit; background-color: inherit;\">" +stack+ "</textarea></p>";
             new PNotify({
-                title: gettext("Error."),
+                title: gettext("Error"),
                 text: error,
                 type: "error",
                 hide: false,
