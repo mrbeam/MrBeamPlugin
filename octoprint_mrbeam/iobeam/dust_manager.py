@@ -336,9 +336,6 @@ class DustManager(object):
 		# TODO: check for error case in connected val (currently, connected == True/False/None)
 		return result
 
-	# def _request_value(self, value):
-	# 	return _mrbeam_plugin_implementation._ioBeam.send_fan_command(value)
-
 	def _timer_callback(self):
 		try:
 			# self._request_value(self.DATA_TYPE_DYNAMIC)
