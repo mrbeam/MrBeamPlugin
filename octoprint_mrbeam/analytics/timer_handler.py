@@ -53,26 +53,29 @@ class TimerHandler:
 				if interface != 'lo':
 					addresses = netifaces.ifaddresses(interface)
 					if netifaces.AF_INET in addresses:
-						ip = addresses[netifaces.AF_INET][0]['addr']
+						for tmp in addresses[netifaces.AF_INET]:
+							ip = tmp['addr']
 
-						try:
-							url = "http://" + ip
-							headers = {
-								'User-Agent': self.SELF_CHECK_USER_AGENT
-							}
-							r = requests.get(url, headers=headers)
-							response = r.status_code
-							elapsed_seconds = r.elapsed.total_seconds()
-						except requests.exceptions.RequestException as e:
-							response = -1
-							err = str(e)
+							try:
+								url = "http://" + ip
+								headers = {
+									'User-Agent': self.SELF_CHECK_USER_AGENT
+								}
+								r = requests.get(url, headers=headers)
+								response = r.status_code
+								elapsed_seconds = r.elapsed.total_seconds()
+							except requests.exceptions.RequestException as e:
+								response = -1
+								err = str(e)
 
-						payload[interface] = {
-							ak.Device.Request.IP: ip,
-							ak.Device.Request.RESPONSE: response,
-							ak.Device.Request.ELAPSED_S: elapsed_seconds,
-							ak.Device.ERROR: err,
-						}
+							if interface not in payload:
+								payload[interface] = []
+							payload[interface].append({
+								ak.Device.Request.IP: ip,
+								ak.Device.Request.RESPONSE: response,
+								ak.Device.Request.ELAPSED_S: elapsed_seconds,
+								ak.Device.ERROR: err,
+							})
 
 			_mrbeam_plugin_implementation._analytics_handler.add_http_self_check(payload)
 
@@ -113,10 +116,13 @@ class TimerHandler:
 				addresses = netifaces.ifaddresses(interface)
 				payload[interface] = dict()
 				if netifaces.AF_INET in addresses:
-					payload[interface]['IPv4'] = addresses[netifaces.AF_INET][0]['addr']
+					payload[interface]['IPv4'] = []
+					for idx, addr in enumerate(addresses[netifaces.AF_INET]):
+						payload[interface]['IPv4'].append(addr['addr'])
 				if netifaces.AF_INET6 in addresses:
+					payload[interface]['IPv6'] = []
 					for idx, addr in enumerate(addresses[netifaces.AF_INET6]):
-						payload[interface]['IPv6_{}'.format(idx)] = addr['addr']
+						payload[interface]['IPv6'].append(addr['addr'])
 
 			_mrbeam_plugin_implementation._analytics_handler.add_ip_addresses(payload)
 
