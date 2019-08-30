@@ -40,7 +40,7 @@ def existing_analyticsHandler():
 
 
 class AnalyticsHandler(object):
-	QUEUE_MAXSIZE = 100
+	QUEUE_MAXSIZE = 1000
 	ANALYTICS_LOG_VERSION = 8  # bumped in 0.3.2.1
 
 	def __init__(self, plugin):
@@ -648,21 +648,27 @@ class AnalyticsHandler(object):
 
 	# -------- WRITER THREAD (queue --> analytics file) ----------------------------------------------------------------
 	def _write_queue_to_analytics_file(self):
-		while self._analytics_enabled:
-			try:
+		try:
+			while self._analytics_enabled:
 				if not os.path.isfile(self._json_file):
 					self._init_json_file()
 
-				with open(self._json_file, 'a') as f:
-					while not self._analytics_queue.empty():
+				while not self._analytics_queue.empty():
+					with open(self._json_file, 'a') as f:
 						data = self._analytics_queue.get()
-						data_string = json.dumps(data, sort_keys=False) + '\n'
-						f.write(data_string)
+						data_string = None
+						try:
+							data_string = json.dumps(data, sort_keys=False) + '\n'
+						except:
+							self._logger.info('Exception during json dump in _write_queue_to_analytics_file')
+
+						if data_string:
+							f.write(data_string)
 
 				time.sleep(0.1)
 
-			except Exception as e:
-				self._logger.exception('Exception during _write_queue_to_analytics_file: {}'.format(e), analytics=False)
+		except Exception as e:
+			self._logger.exception('Exception during _write_queue_to_analytics_file: {}'.format(e), analytics=False)
 
 	def _init_json_file(self):
 		open(self._json_file, 'w+').close()
