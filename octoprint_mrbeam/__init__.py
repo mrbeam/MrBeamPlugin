@@ -1063,7 +1063,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			resp = self._file_manager.list_files(path="", filter=mrb_filter_func, recursive=True)
 			files = resp[FileDestinations.LOCAL]
 
-			max_history_files = 3 # TODO fetch from settings
+			max_history_files = 25 # TODO fetch from settings
 			if(len(files) > max_history_files): 
 				
 				removals = []
