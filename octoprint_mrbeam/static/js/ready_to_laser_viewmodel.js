@@ -141,7 +141,7 @@ $(function() {
         }; // end onStartupComplete
 
         self.onEventJobTimeEstimated = function (payload) {
-            self.formatJobTimeEstimation(payload['jobTimeEstimation']);
+            self.formatJobTimeEstimation(payload['job_time_estimation']);
         };
 
         /**
