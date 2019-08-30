@@ -47,7 +47,7 @@ from octoprint_mrbeam.cli import get_cli_commands
 from .materials import materials
 from octoprint_mrbeam.gcodegenerator.jobtimeestimation import JobTimeEstimation
 from .analytics.uploader import FileUploader
-
+from octoprint.filemanager.destinations import FileDestinations
 
 
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
@@ -992,7 +992,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 #'volume': {'width': 500.0, 'depth': 390.0, 'height': 0.0, 'origin_offset_x': 1.1, 'origin_offset_y': 1.1},
 #'model': 'X', 'id': 'my_default', 'glasses': False}
 
-		target = 'local'
 		filename = 'CalibrationMarkers.svg'
 
 		class Wrapper(object):
@@ -1006,17 +1005,16 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 					d.close()
 		fileObj = Wrapper(filename, svg)
 		try:
-			self._file_manager.add_file(target, filename, fileObj, links=None, allow_overwrite=True)
+			self._file_manager.add_file(FileDestinations.LOCAL, filename, fileObj, links=None, allow_overwrite=True)
 		except Exception, e:
 			return make_response("Failed to write file. Disk full?", 400)
 		else:
-			return jsonify(dict(calibration_marker_svg=filename, target=target))
+			return jsonify(dict(calibration_marker_svg=filename, target=FileDestinations.LOCAL))
 
 
 	@octoprint.plugin.BlueprintPlugin.route("/convert", methods=["POST"])
 	@restricted_access
 	def gcodeConvertCommand(self):
-		target = "local"
 
 		# valid file commands, dict mapping command name to mandatory parameters
 		valid_commands = {
@@ -1033,7 +1031,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			# TODO stripping non-ascii is a hack - svg contains lots of non-ascii in <text> tags. Fix this!
 			svg = ''.join(i for i in data['svg'] if ord(i) < 128)  # strip non-ascii chars like €
 			del data['svg']
-			filename = target + "/temp.svg"
+			filename = "local/temp.svg" # 'local' is just a path here, has nothing to do with the FileDestination.LOCAL
 
 			class Wrapper(object):
 				def __init__(self, filename, content):
@@ -1045,8 +1043,41 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 						d.write(self.content)
 						d.close()
 
+			# write local/temp.svg to convert it
 			fileObj = Wrapper(filename, svg)
-			self._file_manager.add_file(target, filename, fileObj, links=None, allow_overwrite=True)
+			self._file_manager.add_file(FileDestinations.LOCAL, filename, fileObj, links=None, allow_overwrite=True)
+			
+			# safe history
+			ts = time.gmtime()
+			historyFilename = time.strftime("%Y-%m-%d_%H.%M.%S.mrb", ts)
+			historyObj = Wrapper(historyFilename, svg)
+			self._file_manager.add_file(FileDestinations.LOCAL, historyFilename, historyObj, links=None, allow_overwrite=True)
+			
+			# keep only x recent files in job history.
+			def is_history_file(entry):
+				_, extension = os.path.splitext(entry)
+				extension = extension[1:].lower()
+				return extension == "mrb"
+			
+			mrb_filter_func = lambda entry, entry_data: is_history_file(entry)
+			resp = self._file_manager.list_files(path="", filter=mrb_filter_func, recursive=True)
+			files = resp[FileDestinations.LOCAL]
+
+			max_history_files = 3 # TODO fetch from settings
+			if(len(files) > max_history_files): 
+				
+				removals = []
+				for key in files:
+					f = files[key]
+					tpl = (self._file_manager.last_modified(FileDestinations.LOCAL, path=f['path']), f['path'])
+					removals.append(tpl)
+				
+				sorted_by_age = sorted(removals, key=lambda tpl: tpl[0])
+					
+				# TODO each deletion causes an filemanager push update -> slow.
+				for i in range(0, len(sorted_by_age) - max_history_files):
+					f = sorted_by_age[i]
+					self._file_manager.remove_file(FileDestinations.LOCAL, f[1])
 
 			slicer = "svgtogcode"
 			slicer_instance = self._slicing_manager.get_slicer(slicer)
@@ -1057,7 +1088,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self._logger.error("gcodeConvertCommand: %s", msg)
 				return make_response(msg, 409)
 
-			import os
 			if "gcode" in data.keys() and data["gcode"]:
 				gcode_name = data["gcode"]
 				del data["gcode"]
@@ -1068,13 +1098,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			# append number if file exists
 			name, ext = os.path.splitext(gcode_name)
 			i = 1
-			while self._file_manager.file_exists(target, gcode_name):
+			while self._file_manager.file_exists(FileDestinations.LOCAL, gcode_name):
 				gcode_name = name + '.' + str(i) + ext
 				i += 1
 
 			# prohibit overwriting the file that is currently being printed
 			currentOrigin, currentFilename = self._getCurrentFile()
-			if currentFilename == gcode_name and currentOrigin == target and (
+			if currentFilename == gcode_name and currentOrigin == FileDestinations.LOCAL and (
 						self._printer.is_printing() or self._printer.is_paused()):
 				msg = "Trying to slice into file that is currently being printed: {}".format(gcode_name)
 				self._logger.error("gcodeConvertCommand: %s", msg)
@@ -1095,9 +1125,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._printer.set_colors(currentFilename, data['vector'])
 
 			# callback definition
-			def slicing_done(target, gcode_name, select_after_slicing, print_after_slicing, append_these_files):
+			def slicing_done(gcode_name, select_after_slicing, print_after_slicing, append_these_files):
 				# append additioal gcodes
-				output_path = self._file_manager.path_on_disk(target, gcode_name)
+				output_path = self._file_manager.path_on_disk(FileDestinations.LOCAL, gcode_name)
 				with open(output_path, 'ab') as wfd:
 					for f in append_these_files:
 						path = self._file_manager.path_on_disk(f['origin'], f['name'])
@@ -1111,17 +1141,17 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 				if select_after_slicing or print_after_slicing:
 					sd = False
-					filenameToSelect = self._file_manager.path_on_disk(target, gcode_name)
+					filenameToSelect = self._file_manager.path_on_disk(FileDestinations.LOCAL, gcode_name)
 					printer.select_file(filenameToSelect, sd, True)
 
 			try:
-				self._file_manager.slice(slicer, target, filename, target, gcode_name,
+				self._file_manager.slice(slicer, FileDestinations.LOCAL, filename, FileDestinations.LOCAL, gcode_name,
 										 profile=None,#profile,
 										 printer_profile_id=None, #printerProfile,
 										 position=None, #position,
 										 overrides=overrides,
 										 callback=slicing_done,
-										 callback_args=[target, gcode_name, select_after_slicing, print_after_slicing,
+										 callback_args=[gcode_name, select_after_slicing, print_after_slicing,
 														appendGcodeFiles])
 			except octoprint.slicing.UnknownProfile:
 				msg = "Profile {profile} doesn't exist".format(**locals())
@@ -1134,7 +1164,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"origin": "local",
 				"refs": {
 					"resource": location,
-					"download": url_for("index", _external=True) + "downloads/files/" + target + "/" + gcode_name
+					"download": url_for("index", _external=True) + "downloads/files/" + FileDestinations.LOCAL + "/" + gcode_name
 				}
 			}
 
@@ -1570,7 +1600,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				return 'image/bmp'
 			elif p.endswith('.pcx'):
 				return 'image/x-pcx'
-			elif p.endswith('.'):
+			elif p.endswith('.webp'):
 				return 'image/webp'
 
 		return dict(
@@ -1581,6 +1611,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				image=ContentTypeDetector(['jpg', 'jpeg', 'jpe', 'png', 'gif', 'bmp', 'pcx', 'webp'], _image_mime_detector),
 				svg=ContentTypeMapping(["svg"], "image/svg+xml"),
 				dxf=ContentTypeMapping(["dxf"], "application/dxf"),
+			),
+			# .mrb files are svgs, representing the whole working area of a job
+			recentjob=dict(
+				svg=ContentTypeMapping(["mrb"], "image/svg+xml"),
 			),
 			# extensions for printable machine code
 			machinecode=dict(
