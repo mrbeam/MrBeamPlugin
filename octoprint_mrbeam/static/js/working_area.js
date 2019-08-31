@@ -629,7 +629,13 @@ $(function(){
                 }
 
                 var newSvg = snap.group(fragment.selectAll("svg>*"));
-                newSvg.unref(true);
+                newSvg.attr({
+                    id: id,
+                    'mb:id': self._normalize_mb_id(id),
+                    class: 'userSVG',
+                    'mb:origin': origin
+                });
+				newSvg.unref(true);
 
                 // handle texts
                 var hasText = newSvg.selectAll('text,tspan');
@@ -679,12 +685,6 @@ $(function(){
                     }
                 });
 
-                newSvg.attr({
-                    id: id,
-                    'mb:id': self._normalize_mb_id(id),
-                    class: 'userSVG',
-                    'mb:origin': origin
-                });
                 snap.select("#userContent").append(newSvg);
                 newSvg.transformable();
                 newSvg.ftRegisterBeforeTransformCallback(function () {
