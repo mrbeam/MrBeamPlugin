@@ -630,13 +630,13 @@ $(function(){
 
 				// assign id directly after placement. otherwise it is not UI-removable in case of exceptions during placement.
                 var newSvg = snap.group(fragment.selectAll("svg>*"));
-				newSvg.attr({
+                newSvg.attr({
                     id: id,
                     'mb:id': self._normalize_mb_id(id),
                     class: 'userSVG',
                     'mb:origin': origin
                 });
-				
+
 				newSvg.unref(true);
 
                 // handle texts
