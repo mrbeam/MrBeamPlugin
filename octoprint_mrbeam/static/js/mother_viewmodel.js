@@ -251,8 +251,9 @@ $(function () {
             }
         };
 
-        self.set_Design_lib_defaults = function(){			
+        self.set_Design_lib_defaults = function(){
 			self.gcodefiles.setFilter('design');
+            self.files.listHelper.removeFilter('model');
             self.files.listHelper.changeSorting('upload');
         };
 
@@ -521,7 +522,7 @@ $(function () {
             // self.gcodefiles.requestData(undefined, undefined, self.gcodefiles.currentPath());
             self.gcodefiles.requestData({switchToPath: self.gcodefiles.currentPath()});
         };
-		
+
 		// filter function for the file list. Easier to modify than the original listHelper(). listHelper is still used for sorting.
 		self.gcodefiles.setFilter = function(filter){
 			var elem = $('#designlib');
