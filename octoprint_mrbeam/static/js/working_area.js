@@ -803,6 +803,20 @@ $(function(){
 				root_attrs = f.select('svg').node.attributes;
 			}
 
+			// detect BeamOS generated Files by attribute
+            // <svg
+            //    ...
+            //    xmlns:mb="http://www.mr-beam.org"
+            //    ...
+            //    mb:beamOS_version="0.3.4"
+			var beamOS_version = root_attrs['mb:beamOS_version'];
+			if(beamOS_version !== undefined){
+				gen = 'beamOS';
+				version = version.value;
+//				console.log("Generator:", gen, version);
+				return {generator: gen, version: version};
+			}
+
 			// detect Inkscape by attribute
 			// <svg
 			//    ...
@@ -1826,7 +1840,7 @@ $(function(){
 				svgStr = self._normalize_svg_string(svgStr);
 				var gc_otions_str = self.gc_options_as_string().replace('"', "'");
 
-				var svg = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:mb="http://www.mr-beam.org/mbns"'
+				var svg = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:mb="http://www.mr-beam.org/mbns" mb:beamOS_version="'+BEAMOS_VERSION+'"' 
 						+ ' width="'+ w +'" height="'+ h +'"  viewBox="'+ viewBox +'" mb:gc_options="'+gc_otions_str+'"><defs/>'+svgStr+'</svg>';
 				return svg;
 			} else {
