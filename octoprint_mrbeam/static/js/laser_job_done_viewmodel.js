@@ -7,8 +7,11 @@
 $(function() {
     function LaserJobDoneViewmodel(parameters) {
         var self = this;
+        window.mrbeam.viewModels['laserJobDoneViewmodel'] = self;
         self.readyToLaser = parameters[0];
         self.analytics = parameters[1];
+
+        self._switchDuration = 3000;
 
         self.jobDoneDialog = {
             shown: null,
@@ -64,6 +67,7 @@ $(function() {
         self.onEventLaserJobDone = function(payload) {
             self._fromData(payload);
             self.dialogElement.modal("show");
+            self.switchTimer();
         };
 
         self.fromCurrentData = function(payload) {
@@ -78,6 +82,20 @@ $(function() {
             if (mrb_state) {
                 self.is_dust_mode(mrb_state['dusting_mode']);
             }
+        };
+
+        self.switchTimer = function(duration){
+            setTimeout(self._switchNow, duration || self._switchDuration);
+        };
+
+        self._switchNow = function(){
+            $('#laser_job_done_image_check').removeClass('show');
+            $('#laser_job_done_image_text').addClass('show');
+        };
+
+        self._switchBack = function(){
+            $('#laser_job_done_image_check').addClass('show');
+            $('#laser_job_done_image_text').removeClass('show');
         };
 
         self.cancel_btn = function(){

@@ -2453,7 +2453,6 @@ input[type="radio"]{
 
 #laser_job_done_image_check {
     font-size: 250px;
-    /*color: rgba(255, 255, 255, 0.52);*/
     position: absolute;
     top: 10%;
     left: 0;
@@ -2461,18 +2460,23 @@ input[type="radio"]{
     width: 100%;
     display: block;
     color: transparent;
-    text-shadow: 0px 0px 100px rgba(255, 255, 255, 0);
+    text-shadow: 0px 0px 7px rgba(255, 255, 255, 0.25);
     transition: text-shadow 0.5s ease-out;
 }
 
-#laser_job_done_image_check.andytest{
-    text-shadow: 0px 0px 0px rgba(255, 255, 255, 0.7);
+#laser_job_done_image_check.show{
+    text-shadow: 0px 0px 1px rgba(255, 255, 255, 0.7);
 }
 
 
-.laser_job_done_image_text {
+#laser_job_done_image_text {
     color: white;
-    opacity: 0.8;
     text-align: center;
-    position: absolute;
+    color: transparent;
+    text-shadow: 0px 0px 20px rgba(255, 255, 255, 0);
+    transition: text-shadow 1.0s ease-out;
+}
+
+#laser_job_done_image_text.show{
+    text-shadow: 0px 0px 0px rgba(255, 255, 255, 0.95);
 }
