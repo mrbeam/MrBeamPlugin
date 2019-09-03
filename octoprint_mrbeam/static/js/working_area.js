@@ -466,7 +466,7 @@ $(function(){
 			snap.selectAll('#' + previewId).remove();
 			self.placedDesigns.remove(file);
 		};
-			
+
         /**
          * Call to place (add) a SVG file to working area
          * @param file
