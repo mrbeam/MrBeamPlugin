@@ -496,10 +496,31 @@ svg#area_preview line,
 svg#area_preview polyline,
 svg#area_preview polygon,
 svg#area_preview ellipse,
-svg#area_preview rect
-{
+svg#area_preview rect {
   vector-effect: non-scaling-stroke !important;
+}
+
+svg g#scaleGroup, 
+svg g#crosshair {
   stroke-width: 1px !important;
+}
+
+svg g#camera_markers circle {
+	opacity: 0;
+} 
+
+g#camera_markers.markerNE circle#markerNE, 
+g#camera_markers.markerSE circle#markerSE, 
+g#camera_markers.markerNW circle#markerNW, 
+g#camera_markers.markerSW circle#markerSW {
+	opacity: 1;
+	animation: blinker 1s linear infinite;
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
 }
 
 #zoomFactor {
