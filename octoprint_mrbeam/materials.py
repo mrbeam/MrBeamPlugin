@@ -93,7 +93,7 @@ class Materials(object):
 					if os.path.isfile(self.custom_materials_file):
 						with open(self.custom_materials_file) as yaml_file:
 							tmp = yaml.safe_load(yaml_file)
-							self.custom_materials = tmp['custom_materials']
+							self.custom_materials = tmp['custom_materials'] if 'custom_materials' in tmp else dict()
 						self._logger.debug("Loaded %s custom materials from file %s", len(self.custom_materials), self.custom_materials_file)
 					else:
 						self.custom_materials = dict()
