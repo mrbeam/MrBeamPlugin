@@ -222,9 +222,6 @@ $(function () {
                 callViewModels(allViewModels, "onAfterTabChange", [current, previous]);
             });
 
-
-			self.gcodefiles.listHelper.toggleFilter('model');
-
 			// terminal stuff
             terminalMaxLines = self.settings.settings.plugins.mrbeam.dev.terminalMaxLines();
             self.terminal.upperLimit(terminalMaxLines*2);
@@ -254,8 +251,8 @@ $(function () {
             }
         };
 
-        self.set_Design_lib_defaults = function(){
-            self.files.listHelper.addFilter('model');
+        self.set_Design_lib_defaults = function(){			
+			self.gcodefiles.setFilter('design');
             self.files.listHelper.changeSorting('upload');
         };
 
@@ -458,6 +455,7 @@ $(function () {
 
         // files.js viewmodel extensions
 
+		// fetches the right templates according to file type for knockouts foreach loop
         self.gcodefiles.templateFor = function (data) {
             if (data.type === 'folder') {
                 return 'files_template_folder';
@@ -466,6 +464,7 @@ $(function () {
             }
         };
 
+		// TODO Mr Beam Kit legacy code ?
         self.gcodefiles.startGcodeWithSafetyWarning = function (gcodeFile) {
             self.gcodefiles.loadFile(gcodeFile, false);
             if (self.readyToLaser.oneButton) {
@@ -522,7 +521,19 @@ $(function () {
             // self.gcodefiles.requestData(undefined, undefined, self.gcodefiles.currentPath());
             self.gcodefiles.requestData({switchToPath: self.gcodefiles.currentPath()});
         };
-
+		
+		// filter function for the file list. Easier to modify than the original listHelper(). listHelper is still used for sorting.
+		self.gcodefiles.setFilter = function(filter){
+			var elem = $('#designlib');
+			elem.attr('class', '');
+			if(filter === 'recentjob'){
+				elem.addClass('show_recentjob');
+			} else if(filter === 'machinecode'){
+				elem.addClass('show_machinecode');
+			} else {
+				elem.addClass('show_design');
+			}
+		};
 
         // settings.js viewmodel extensions
 
