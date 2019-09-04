@@ -239,8 +239,8 @@ class OneButtonHandler(object):
 					# OctoPrint 1.3.4 doesn't provide the file name anymore
 					filename = payload['filename'] if 'filename' in payload else None
 					self.set_ready_to_laser(filename)
-				except:
-					self._logger.exception("Error while going into state ReadyToLaser.")
+				except Exception as e:
+					self._logger.exception("Error while going into state ReadyToLaser: {}".format(e))
 
 
 		elif event == OctoPrintEvents.PRINT_STARTED:
@@ -361,7 +361,6 @@ class OneButtonHandler(object):
 		result = self._printer.select_file(myFile, False, True)
 
 		self.unset_ready_to_laser(lasering=True)
-
 
 	# I guess there's no reason anymore to raise these exceptions. Just returning false would be better.
 	def _test_conditions(self, file):

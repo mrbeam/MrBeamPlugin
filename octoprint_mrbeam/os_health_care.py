@@ -26,7 +26,6 @@ class OsHealthCare(object):
 
 	def run(self):
 		try:
-			self._logger.info('########################## RUNNING OS HEALTH CHECK')
 			self.etc_network_interfaces()
 		except Exception as e:
 			self._logger.exception('Exception when running the OS heath care: {}'.format(e))

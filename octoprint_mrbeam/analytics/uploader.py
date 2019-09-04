@@ -210,9 +210,9 @@ class FileUploader(object):
 
 		upload_url = UPLOAD_URL_TEMPLATE.format(bucket=token_data['bucket'])
 		post_params = token_data['request_params']
-		files = {'file': open(my_file, 'rb')}
 
 		try:
+			files = {'file': open(my_file, 'rb')}
 			r = requests.post(upload_url, data=post_params, files=files)
 			self._logger.debug("Analytics file upload: %s, file: %s", r.status_code, my_file)
 			if r.status_code in (requests.codes.ok, requests.codes.no_content):
@@ -223,7 +223,7 @@ class FileUploader(object):
 				err = "upload_file failed: {}".format(r.status_code)
 				self.set_status(my_file, succ=False, err=err)
 		except Exception as e:
-			self._logger.exception("Exception while upload_file %s:", my_file)
+			self._logger.exception("Exception while upload_file {file}: {err}", file=my_file, err=e)
 			err = "upload_file {} failed with exception: {}: {}".format(my_file, type(e).__name__, e)
 			self.set_status(my_file, succ=False, err=err)
 
