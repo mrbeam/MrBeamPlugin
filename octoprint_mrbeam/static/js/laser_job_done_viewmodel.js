@@ -101,6 +101,7 @@ $(function() {
         self.cancel_btn = function(){
             self.is_job_done(false);
             self.dialogElement.modal("hide");
+            self._switchBack();
             self.jobDoneDialog.closed = new Date().getTime();
             self.jobDoneDialog.dur = Math.floor(self.jobDoneDialog.closed/1000 - self.jobDoneDialog.shown/1000);
             self.analytics.send_fontend_event('job_done_dialog', self.jobDoneDialog)
