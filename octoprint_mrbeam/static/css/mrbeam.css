@@ -2441,3 +2441,64 @@ input[type="radio"]{
     color: darkgrey;
     margin: 0 0 0 30px;
 }
+
+/*
+* === LASER JOB DONE #madewithmrbeam ===
+*/
+
+.laser_job_done_image {
+    width: 100%;
+    height: 311px;
+    text-align: center;
+    background-repeat: no-repeat;
+    position: relative;
+}
+
+#laser_job_done_image_check {
+    font-size: 250px;
+    position: absolute;
+    top: 10%;
+    left: 0;
+    text-align: center;
+    width: 100%;
+    display: block;
+    color: transparent;
+    text-shadow: 0px 0px 7px rgba(255, 255, 255, 0.25);
+    transition: text-shadow 3.5s ease;
+    pointer-events: none;
+}
+
+#laser_job_done_image_check.show{
+    text-shadow: 0px 0px 1px rgba(255, 255, 255, 0.7);
+}
+
+#laser_job_done_image_text {
+    text-align: center;
+    line-height: 250%;
+    color: transparent;
+    text-shadow: 0px 0px 20px rgba(255, 255, 255, 0);
+    transition: text-shadow 0.8s ease-in;
+}
+
+#laser_job_done_image_text p{
+    color: transparent;
+}
+
+#laser_job_done_image_text a{
+    color: transparent;
+    text-decoration: none;"
+}
+
+#laser_job_done_image_text a:hover{
+    color: transparent;
+    text-decoration: none;"
+}
+
+#laser_job_done_image_text.show{
+    text-shadow: 0px 0px 0px rgba(255, 255, 255, 0.95);
+}
+
+.laser_job_done_image_media_icon {
+    font-size: 2em;
+    padding: 3px;
+}
