@@ -526,7 +526,10 @@ $(function () {
 		// filter function for the file list. Easier to modify than the original listHelper(). listHelper is still used for sorting.
 		self.gcodefiles.setFilter = function(filter){
 			var elem = $('#designlib');
-			elem.attr('class', '');
+			// class 'tab-pane' needs to remain there at all times
+            elem.removeClass('show_recentjob');
+            elem.removeClass('show_machinecode');
+            elem.removeClass('show_design');
 			if(filter === 'recentjob'){
 				elem.addClass('show_recentjob');
 			} else if(filter === 'machinecode'){
