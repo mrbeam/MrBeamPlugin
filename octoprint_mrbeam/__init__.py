@@ -606,7 +606,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@octoprint.plugin.BlueprintPlugin.route("/wifi", methods=["POST"])
 	def wifi_wizard_api(self):
 		# accept requests only while setup wizard is active
-		if not self.isFirstRun() or not self._is_wifi_wizard_required():
+		if not self.isFirstRun() or not self._wizardConfig._is_wifi_wizard_required():
 			return make_response("Forbidden", 403)
 
 		data = None
