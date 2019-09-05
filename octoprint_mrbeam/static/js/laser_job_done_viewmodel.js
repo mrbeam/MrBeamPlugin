@@ -11,7 +11,7 @@ $(function() {
         self.readyToLaser = parameters[0];
         self.analytics = parameters[1];
 
-        self._switchDuration = 3000;
+        self._switchDelay = 3000;
 
         self.jobDoneDialog = {
             shown: null,
@@ -84,8 +84,8 @@ $(function() {
             }
         };
 
-        self.switchTimer = function(duration){
-            setTimeout(self._switchNow, duration || self._switchDuration);
+        self.switchTimer = function(delay){
+            setTimeout(self._switchNow, delay || self._switchDelay);
         };
 
         self._switchNow = function(){
