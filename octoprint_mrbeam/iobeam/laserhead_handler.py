@@ -24,7 +24,8 @@ class LaserheadHandler(object):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.laserhead")
 		self._plugin = plugin
 		self._settings = plugin._settings
-		self._plugin_version = plugin._plugin_version
+		self._event_bus = plugin._event_bus
+		self._plugin_version = plugin.get_plugin_version()
 
 		self._lh_cache = {}
 		self._last_used_lh_serial = None
@@ -33,6 +34,11 @@ class LaserheadHandler(object):
 		self._load_laser_heads_file()  # Loads correction_settings, last_used_lh_serial and lh_cache
 
 		self._current_used_lh_serial = self._last_used_lh_serial
+
+		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
+
+	def _on_mrbeam_plugin_initialized(self, event, payload):
+		self._analytics_handler = self._plugin.analytics_handler
 
 	def set_current_used_lh_serial(self, serial):
 		if serial and self._validate_lh_serial(serial):
@@ -119,7 +125,7 @@ class LaserheadHandler(object):
 			new_intensity = goal_difference * (85-75) / step_difference + 75
 			correction_factor = new_intensity / 65.0
 
-		self._plugin._analytics_handler.event_laserhead_info()
+		self._analytics_handler.add_laserhead_info()
 		self._logger.info('New correction factor calculated: {cf}'.format(cf=correction_factor))
 
 		return correction_factor

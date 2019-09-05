@@ -26,8 +26,8 @@ from octoprint_mrbeam.printing.profile import laserCutterProfileManager
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.printing.acc_line_buffer import AccLineBuffer
 from octoprint_mrbeam.printing.acc_watch_dog import AccWatchDog
-from octoprint_mrbeam.analytics.analytics_handler import existing_analyticsHandler
 from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
+from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 ### MachineCom #########################################################################################################
 class MachineCom(object):
@@ -193,8 +193,8 @@ class MachineCom(object):
 		self._serial_factory_hooks = self._pluginManager.get_hooks("octoprint.comm.transport.serial.factory")
 
 		# laser power correction
-		self._power_correction_settings = _mrbeam_plugin_implementation._laserheadHandler.get_correction_settings()
-		self._current_lh_data = _mrbeam_plugin_implementation._laserheadHandler.get_current_used_lh_data()
+		self._power_correction_settings = _mrbeam_plugin_implementation.laserhead_handler.get_correction_settings()
+		self._current_lh_data = _mrbeam_plugin_implementation.laserhead_handler.get_current_used_lh_data()
 		self._gcode_intensity_limit = self._power_correction_settings['gcode_intensity_limit']
 
 		self._power_correction_factor = 1
@@ -304,6 +304,7 @@ class MachineCom(object):
 					errorMsg = gettext("Please contact Mr Beam support team and attach octoprint.log.")
 					self._log(errorMsg)
 					self._errorValue = errorMsg
+					self._fire_print_failed()
 					self._changeState(self.STATE_ERROR)
 					eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
 			self._logger.info("Connection closed, closing down monitor", terminal_as_comm=True)
@@ -342,6 +343,7 @@ class MachineCom(object):
 				errorMsg = gettext("Please contact Mr Beam support team and attach octoprint.log.")
 				self._log(errorMsg)
 				self._errorValue = errorMsg
+				self._fire_print_failed()
 				self._changeState(self.STATE_ERROR)
 				eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
 		# self._logger.info("ANDYTEST Leaving _send_loop()")
@@ -553,20 +555,10 @@ class MachineCom(object):
 		self._logger.debug("_set_print_finished() called")
 		self._callback.on_comm_print_job_done()
 		self._changeState(self.STATE_OPERATIONAL)
-		payload = {
-			"file": self._currentFile.getFilename(),
-			"filename": os.path.basename(self._currentFile.getFilename()),
-			"origin": self._currentFile.getFileLocation(),
-			"time": self.getPrintTime(),
-			"mrb_state": _mrbeam_plugin_implementation.get_mrb_state(),
-			'file_lines_total': self._currentFile.getLinesTotal(),
-			'file_lines_read': self._currentFile.getLinesRead(),
-			'file_lines_remaining': self._currentFile.getLinesRemaining(),
-			'lines_recovered': self._lines_recoverd_total,
-		}
+		payload = self._get_printing_file_state()
 		self.watch_dog.stop()
 		self._move_home()
-		eventManager().fire(OctoPrintEvents.PRINT_DONE, payload)
+		_mrbeam_plugin_implementation.fire_event(MrBeamEvents.PRINT_DONE_PAYLOAD, payload)
 
 	def _move_home(self):
 		self._logger.debug("_move_home() called")
@@ -613,8 +605,8 @@ class MachineCom(object):
 		if self._grbl_state == self.GRBL_STATE_QUEUE:
 			if time.time() - self._pause_delay_time > 0.3:
 				if not self.isPaused():
-					if _mrbeam_plugin_implementation and _mrbeam_plugin_implementation._oneButtonHandler and \
-						not _mrbeam_plugin_implementation._oneButtonHandler.is_intended_pause():
+					if _mrbeam_plugin_implementation and _mrbeam_plugin_implementation.onebutton_handler and \
+						not _mrbeam_plugin_implementation.onebutton_handler.is_intended_pause():
 						self._logger.warn("_handle_status_report() Override pause since we got status '%s' from grbl.", self._grbl_state)
 						self.setPause(False, send_cmd=True, force=True, trigger="GRBL_QUEUE_OVERRIDE")
 					else:
@@ -626,13 +618,9 @@ class MachineCom(object):
 					self._logger.warn("_handle_status_report() Unpausing since we got status '%s' from grbl.", self._grbl_state)
 					self.setPause(False, send_cmd=False, trigger="GRBL_RUN")
 
-
 	def _handle_laser_intensity_for_analytics(self, laser_state, laser_intensity):
-		if laser_state == 'on':
-			analytics = existing_analyticsHandler()
-			if analytics:
-				analytics.add_laser_intensity_value(int(laser_intensity))
-
+		if laser_state == 'on' and _mrbeam_plugin_implementation.mrbeam_plugin_initialized:
+			_mrbeam_plugin_implementation.analytics_handler.collect_laser_intensity_value(int(laser_intensity))
 
 	def _handle_ok_message(self, line):
 		item = self._acc_line_buffer.get_last_responded()
@@ -677,9 +665,17 @@ class MachineCom(object):
 			self._start_recovery_thread()
 			return
 
+		printing = self.isPrinting() or self.isPaused()
+		if printing:
+			if self._currentFile is not None:
+				payload = self._get_printing_file_state()
+				payload['error_msg'] = line
+			eventManager().fire(OctoPrintEvents.PRINT_FAILED, payload)
+
 		my_cmd = AccLineBuffer.get_cmd_from_item(self._acc_line_buffer.get_last_responded())
 		self._errorValue = "{} in {}".format(line, my_cmd)
 		eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
+		self._fire_print_failed()
 		self._changeState(self.STATE_LOCKED)
 
 	def _handle_alarm_message(self, line, code=None):
@@ -717,6 +713,7 @@ class MachineCom(object):
 			self._commandQueue.queue.clear()
 		self._acc_line_buffer.reset()
 		self._send_event.clear(completely=True)
+		self._fire_print_failed()
 		self._changeState(self.STATE_LOCKED)
 
 		# close and open serial port to reset arduino
@@ -743,6 +740,7 @@ class MachineCom(object):
 				self._logger.error(errorMsg, serial=True, analytics=True, terminal_dump=True)
 				self._errorValue = errorMsg
 				eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
+				self._fire_print_failed()
 		elif line[1:].startswith('G24'): # [G24_AVOIDED]
 			self.g24_avoided_message = []
 			self._logger.warn("G24_AVOIDED (Corrupted line data will follow)")
@@ -1133,6 +1131,20 @@ class MachineCom(object):
 			message = re.sub(checksum, '', message)
 		self._logger.comm(message, serial=True)
 
+	def _fire_print_failed(self, err_msg=None):
+		"""
+		Tests it printer is in printing state and fire PRINT_FAILED event if so.
+		:param err_msg:
+		:return:
+		"""
+		printing = self.isPrinting() or self.isPaused()
+		err_msg = err_msg or self.getErrorString()
+		if printing:
+			if self._currentFile is not None:
+				payload = self._get_printing_file_state()
+				payload['error_msg'] = err_msg
+			eventManager().fire(OctoPrintEvents.PRINT_FAILED, payload)
+
 	def flash_grbl(self, grbl_file=None, verify_only=False, is_connected=True):
 		"""
 		Flashes the specified grbl file (.hex). This file must not contain a bootloader.
@@ -1183,11 +1195,12 @@ class MachineCom(object):
 
 		if not verify_only:
 			try:
-				_mrbeam_plugin_implementation._analytics_handler.write_flash_grbl(
-					from_version=from_version,
-					to_version=grbl_file,
-					succesful=(code == 0),
-					err = None if (code == 0) else output)
+				if _mrbeam_plugin_implementation.mrbeam_plugin_initialized:
+					_mrbeam_plugin_implementation.analytics_handler.add_grbl_flash_event(
+						from_version=from_version,
+						to_version=grbl_file,
+						succesful=(code == 0),
+						err = None if (code == 0) else output)
 			except:
 				self._logger.exception("Exception while writing GRBL-flashing to analytics: ")
 
@@ -1604,7 +1617,7 @@ class MachineCom(object):
 					token = int(tokens[1])
 					if token == 1:
 						self._log("Enabling power correction...")
-						lh_data = _mrbeam_plugin_implementation._laserheadHandler.get_current_used_lh_data()
+						lh_data = _mrbeam_plugin_implementation.laserhead_handler.get_current_used_lh_data()
 						if lh_data['info'] and 'correction_factor' in lh_data['info']:
 							self._power_correction_factor = lh_data['info']['correction_factor']
 						else:
@@ -1693,16 +1706,7 @@ class MachineCom(object):
 			self._currentFile.start()
 			self._finished_currentFile = False
 
-			payload = {
-				"file": self._currentFile.getFilename(),
-				"filename": os.path.basename(self._currentFile.getFilename()),
-				"origin": self._currentFile.getFileLocation(),
-				'mrb_state': _mrbeam_plugin_implementation.get_mrb_state(),
-				'file_lines_total': self._currentFile.getLinesTotal(),
-				'file_lines_read': self._currentFile.getLinesRead(),
-				'file_lines_remaining': self._currentFile.getLinesRemaining(),
-				'lines_recovered': self._lines_recoverd_total,
-			}
+			payload = self._get_printing_file_state()
 			eventManager().fire(OctoPrintEvents.PRINT_STARTED, payload)
 
 
@@ -1731,34 +1735,15 @@ class MachineCom(object):
 		self._send_event.clear(completely=True)
 		self._changeState(self.STATE_LOCKED)
 
-		payload = {
-			"file": self._currentFile.getFilename(),
-			"filename": os.path.basename(self._currentFile.getFilename()),
-			"origin": self._currentFile.getFileLocation(),
-			"time": self.getPrintTime(),
-			'mrb_state': _mrbeam_plugin_implementation.get_mrb_state(),
-			'file_lines_total': self._currentFile.getLinesTotal(),
-			'file_lines_read': self._currentFile.getLinesRead(),
-			'file_lines_remaining': self._currentFile.getLinesRemaining(),
-			'lines_recovered': self._lines_recoverd_total,
-		}
+		payload = self._get_printing_file_state()
 		eventManager().fire(OctoPrintEvents.PRINT_CANCELLED, payload)
 
 	def setPause(self, pause, send_cmd=True, pause_for_cooling=False, trigger=None, force=False):
 		if not self._currentFile:
 			return
 
-		payload = {
-			"file": self._currentFile.getFilename(),
-			"filename": os.path.basename(self._currentFile.getFilename()),
-			"origin": self._currentFile.getFileLocation(),
-			"trigger": trigger,
-			"time": self.getPrintTime(),
-			'mrb_state': _mrbeam_plugin_implementation.get_mrb_state(),
-			'file_lines_total': self._currentFile.getLinesTotal(),
-			'file_lines_read': self._currentFile.getLinesRead(),
-			'file_lines_remaining': self._currentFile.getLinesRemaining(),
-		}
+		payload = self._get_printing_file_state()
+		payload['trigger'] = trigger
 
 		if not pause and (self.isPaused() or force):
 			if self._pauseWaitStartTime:
@@ -1914,6 +1899,21 @@ class MachineCom(object):
 	def getGrblVersion(self):
 		return self._grbl_version
 
+	def _get_printing_file_state(self):
+		file_state = {
+			"file": self._currentFile.getFilename(),
+			"filename": os.path.basename(self._currentFile.getFilename()),
+			"origin": self._currentFile.getFileLocation(),
+			"time": self.getPrintTime(),
+			'mrb_state': _mrbeam_plugin_implementation.get_mrb_state(),
+			'file_lines_total': self._currentFile.getLinesTotal(),
+			'file_lines_read': self._currentFile.getLinesRead(),
+			'file_lines_remaining': self._currentFile.getLinesRemaining(),
+			'lines_recovered': self._lines_recoverd_total,
+		}
+
+		return file_state
+
 	def close(self, isError=False, next_state=None):
 		self._monitoring_active = False
 		self._sending_active = False
@@ -1933,17 +1933,7 @@ class MachineCom(object):
 		if printing:
 			payload = None
 			if self._currentFile is not None:
-				payload = {
-					"file": self._currentFile.getFilename(),
-					"filename": os.path.basename(self._currentFile.getFilename()),
-					"origin": self._currentFile.getFileLocation(),
-					"time": self.getPrintTime(),
-					"mrb_state": _mrbeam_plugin_implementation.get_mrb_state(),
-					'file_lines_total': self._currentFile.getLinesTotal(),
-					'file_lines_read': self._currentFile.getLinesRead(),
-					'file_lines_remaining': self._currentFile.getLinesRemaining(),
-					'lines_recovered': self._lines_recoverd_total,
-				}
+				payload = self._get_printing_file_state()
 			eventManager().fire(OctoPrintEvents.PRINT_FAILED, payload)
 		eventManager().fire(OctoPrintEvents.DISCONNECTED)
 

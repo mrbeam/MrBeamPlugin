@@ -47,7 +47,7 @@ from octoprint_mrbeam.cli import get_cli_commands
 from .materials import materials
 from octoprint_mrbeam.gcodegenerator.jobtimeestimation import JobTimeEstimation
 from .analytics.uploader import FileUploader
-
+from octoprint.filemanager.destinations import FileDestinations
 
 
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
@@ -97,6 +97,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 
 	def __init__(self):
+		self.mrbeam_plugin_initialized = False
 		self._shutting_down = False
 		self._slicing_commands = dict()
 		self._slicing_commands_mutex = threading.Lock()
@@ -134,9 +135,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._branch = self.getBranch()
 		self._octopi_info = self.get_octopi_info()
 		self._serial_num = self.getSerialNum()
-
-		self._analytics_handler = analyticsHandler(self)
-
 		self.focusReminder = self._settings.get(['focusReminder'])
 
 		self.start_time_ntp_timer()
@@ -160,18 +158,23 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		except Exception as e:
 			self._logger.exception("Exception while getting NetconnectdPlugin pluginInfo")
 
-		self._oneButtonHandler = oneButtonHandler(self)
-		self._interlock_handler = interLockHandler(self)
-		self._lid_handler = lidHandler(self)
-		self._usageHandler = usageHandler(self)
-		self._led_eventhandler = LedEventListener(self)
+		self.analytics_handler = analyticsHandler(self)
+		self.onebutton_handler = oneButtonHandler(self)
+		self.interlock_handler = interLockHandler(self)
+		self.lid_handler = lidHandler(self)
+		self.usage_handler = usageHandler(self)
+		self.led_event_listener = LedEventListener(self)
 		# start iobeam socket only once other handlers are already inittialized so that we can handle info mesage
-		self._ioBeam = ioBeamHandler(self)
-		self._temperatureManager = temperatureManager()
-		self._dustManager = dustManager()
-		self._laserheadHandler = laserheadHandler(self)
-		self._wizardConfig = WizardConfig(self)
-		self.jobTimeEstimation = JobTimeEstimation(self._event_bus)
+		self.iobeam = ioBeamHandler(self)
+		self.temperature_manager = temperatureManager(self)
+		self.dust_manager = dustManager(self)
+		self.laserhead_handler = laserheadHandler(self)
+		self.wizard_config = WizardConfig(self)
+		self.job_time_estimation = JobTimeEstimation(self)
+
+		self._logger.info('MrBeamPlugin initialized!')
+		self.mrbeam_plugin_initialized = True
+		self.fire_event(MrBeamEvents.MRB_PLUGIN_INITIALIZED)
 
 		self._do_initial_log()
 
@@ -189,7 +192,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		msg += ", env:{}".format(self.get_env())
 		msg += ", beamOS-image:{}".format(self._octopi_info)
 		msg += ", grbl_version_lastknown:{}".format(self._settings.get(["grbl_version_lastknown"]))
-		msg += ", laserhead-serial:{}".format(self._laserheadHandler.get_current_used_lh_data()['serial'])
+		msg += ", laserhead-serial:{}".format(self.laserhead_handler.get_current_used_lh_data()['serial'])
 		self._logger.info(msg, terminal=True)
 
 		msg = "MrBeam Lasercutter Profile: %s" % self.laserCutterProfileManager.get_current_or_default()
@@ -217,13 +220,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		:return: dict of environment data
 		"""
 		return dict(version=self._plugin_version,
-		            host=self.getHostname(),
-		            serial=self._serial_num,
-		            software_tier=self._settings.get(["dev", "software_tier"]),
-		            env=self.get_env(),
-		            beamOS_image=self._octopi_info,
-		            grbl_version_lastknown=self._settings.get(["grbl_version_lastknown"]),
-		            laserhead_serial=self._laserheadHandler.get_current_used_lh_data()['serial'])
+					host=self.getHostname(),
+					serial=self._serial_num,
+					software_tier=self._settings.get(["dev", "software_tier"]),
+					env=self.get_env(),
+					beamOS_image=self._octopi_info,
+					grbl_version_lastknown=self._settings.get(["grbl_version_lastknown"]),
+					laserhead_serial=self.laserhead_handler.get_current_used_lh_data()['serial'])
 
 	##~~ SettingsPlugin mixin
 	def get_settings_version(self):
@@ -316,12 +319,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			software_update_branches = self.get_update_branch_info(),
 			_version = self._plugin_version,
 			focusReminder = self._settings.get(['focusReminder']),
-			laserHeadSerial = self._laserheadHandler.get_current_used_lh_data()['serial'],
+			laserHeadSerial = self.laserhead_handler.get_current_used_lh_data()['serial'],
 			usage=dict(
-				prefilterUsage=self._usageHandler.get_prefilter_usage(),
-				carbonFilterUsage=self._usageHandler.get_carbon_filter_usage(),
-				laserHeadUsage=self._usageHandler.get_laser_head_usage(),
-				gantryUsage=self._usageHandler.get_gantry_usage(),
+				prefilterUsage=self.usage_handler.get_prefilter_usage(),
+				carbonFilterUsage=self.usage_handler.get_carbon_filter_usage(),
+				laserHeadUsage=self.usage_handler.get_laser_head_usage(),
+				gantryUsage=self.usage_handler.get_gantry_usage(),
 			),
 			tour_auto_launch = self._settings.get(['tour_auto_launch']),
 		)
@@ -344,7 +347,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self._settings.set_boolean(["gcode_nextgen", "clip_working_area"],
 				                           data['gcode_nextgen']['clip_working_area'])
 			if "analyticsEnabled" in data:
-				self._analytics_handler.analytics_user_permission_change(analytics_enabled=data['analyticsEnabled'])
+				self.analytics_handler.analytics_user_permission_change(analytics_enabled=data['analyticsEnabled'])
 			if "focusReminder" in data:
 				self._settings.set_boolean(["focusReminder"], data["focusReminder"])
 			if "dev" in data and "software_tier" in data['dev']:
@@ -356,10 +359,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def on_shutdown(self):
 		self._shutting_down = True
 		self._logger.debug("Mr Beam Plugin stopping...")
-		self._ioBeam.shutdown()
-		self._lid_handler.shutdown()
-		self._temperatureManager.shutdown()
-		self._dustManager.shutdown()
+		self.iobeam.shutdown()
+		self.lid_handler.shutdown()
+		self.temperature_manager.shutdown()
+		self.dust_manager.shutdown()
 		time.sleep(2)
 		self._logger.info("Mr Beam Plugin stopped.")
 
@@ -446,7 +449,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		firstRun = render_kwargs['firstRun']
 		language = g.locale.language if g.locale else "en"
 
-		if request.headers.get('User-Agent') != self._analytics_handler.SELF_CHECK_USER_AGENT:
+		if request.headers.get('User-Agent') != self.analytics_handler._timer_handler.SELF_CHECK_USER_AGENT:
 			self._track_ui_render_calls(request, language)
 
 		enable_accesscontrol = self._user_manager.enabled
@@ -481,7 +484,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 gcodeMobileThreshold=0,
 							 gcodeThreshold=0,
 							 wizard=wizard,
-							 wizard_to_show=self._wizardConfig.get_wizard_name(),
+							 wizard_to_show=self.wizard_config.get_wizard_name(),
 							 now=now,
 							 init_ts_ms=time.time()*1000,
 							 language = language,
@@ -491,7 +494,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 beamosVersionDisplayVersion = display_version_string,
 							 beamosVersionImage = self._octopi_info,
 							 grbl_version=self._grbl_version,
-							 laserhead_serial= self._laserheadHandler.get_current_used_lh_data()['serial'],
+							 laserhead_serial= self.laserhead_handler.get_current_used_lh_data()['serial'],
 
 							 env=self.get_env(),
 							 env_local=self.get_env(self.ENV_LOCAL),
@@ -527,7 +530,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self.called_hosts.append(my_call)
 				self._logger.info("First call received from: %s", my_call)
 				self._logger.info("All unique calls: %s", self.called_hosts)
-			self._analytics_handler.log_ui_render_calls(host=my_call['host'], remote_ip=my_call['remote_ip'], referrer=my_call['ref'], language=language)
+			self.analytics_handler.add_ui_render_call_event(host=my_call['host'], remote_ip=my_call['remote_ip'], referrer=my_call['ref'], language=language)
 
 	##~~ TemplatePlugin mixin
 
@@ -548,7 +551,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			result.extend([
 				dict(type='settings', name="DEV Machine Profiles", template='settings/lasercutterprofiles_settings.jinja2', suffix="_lasercutterprofiles", custom_bindings=False)
 			])
-		result.extend(self._wizardConfig.get_wizard_config_to_show())
+		result.extend(self.wizard_config.get_wizard_config_to_show())
 		return result
 
 	def get_template_vars(self):
@@ -569,7 +572,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return dict()
 
 	def get_wizard_version(self):
-		return self._wizardConfig.get_wizard_version()
+		return self.wizard_config.get_wizard_version()
 
 	def on_wizard_finish(self, handled):
 		self._logger.info("Setup Wizard finished.")
@@ -992,7 +995,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 #'volume': {'width': 500.0, 'depth': 390.0, 'height': 0.0, 'origin_offset_x': 1.1, 'origin_offset_y': 1.1},
 #'model': 'X', 'id': 'my_default', 'glasses': False}
 
-		target = 'local'
 		filename = 'CalibrationMarkers.svg'
 
 		class Wrapper(object):
@@ -1006,17 +1008,16 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 					d.close()
 		fileObj = Wrapper(filename, svg)
 		try:
-			self._file_manager.add_file(target, filename, fileObj, links=None, allow_overwrite=True)
+			self._file_manager.add_file(FileDestinations.LOCAL, filename, fileObj, links=None, allow_overwrite=True)
 		except Exception, e:
 			return make_response("Failed to write file. Disk full?", 400)
 		else:
-			return jsonify(dict(calibration_marker_svg=filename, target=target))
+			return jsonify(dict(calibration_marker_svg=filename, target=FileDestinations.LOCAL))
 
 
 	@octoprint.plugin.BlueprintPlugin.route("/convert", methods=["POST"])
 	@restricted_access
 	def gcodeConvertCommand(self):
-		target = "local"
 
 		# valid file commands, dict mapping command name to mandatory parameters
 		valid_commands = {
@@ -1033,7 +1034,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			# TODO stripping non-ascii is a hack - svg contains lots of non-ascii in <text> tags. Fix this!
 			svg = ''.join(i for i in data['svg'] if ord(i) < 128)  # strip non-ascii chars like €
 			del data['svg']
-			filename = target + "/temp.svg"
+			filename = "local/temp.svg" # 'local' is just a path here, has nothing to do with the FileDestination.LOCAL
 
 			class Wrapper(object):
 				def __init__(self, filename, content):
@@ -1045,8 +1046,41 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 						d.write(self.content)
 						d.close()
 
+			# write local/temp.svg to convert it
 			fileObj = Wrapper(filename, svg)
-			self._file_manager.add_file(target, filename, fileObj, links=None, allow_overwrite=True)
+			self._file_manager.add_file(FileDestinations.LOCAL, filename, fileObj, links=None, allow_overwrite=True)
+			
+			# safe history
+			ts = time.gmtime()
+			historyFilename = time.strftime("%Y-%m-%d_%H.%M.%S.mrb", ts)
+			historyObj = Wrapper(historyFilename, svg)
+			self._file_manager.add_file(FileDestinations.LOCAL, historyFilename, historyObj, links=None, allow_overwrite=True)
+			
+			# keep only x recent files in job history.
+			def is_history_file(entry):
+				_, extension = os.path.splitext(entry)
+				extension = extension[1:].lower()
+				return extension == "mrb"
+			
+			mrb_filter_func = lambda entry, entry_data: is_history_file(entry)
+			resp = self._file_manager.list_files(path="", filter=mrb_filter_func, recursive=True)
+			files = resp[FileDestinations.LOCAL]
+
+			max_history_files = 25 # TODO fetch from settings
+			if(len(files) > max_history_files): 
+				
+				removals = []
+				for key in files:
+					f = files[key]
+					tpl = (self._file_manager.last_modified(FileDestinations.LOCAL, path=f['path']), f['path'])
+					removals.append(tpl)
+				
+				sorted_by_age = sorted(removals, key=lambda tpl: tpl[0])
+					
+				# TODO each deletion causes an filemanager push update -> slow.
+				for i in range(0, len(sorted_by_age) - max_history_files):
+					f = sorted_by_age[i]
+					self._file_manager.remove_file(FileDestinations.LOCAL, f[1])
 
 			slicer = "svgtogcode"
 			slicer_instance = self._slicing_manager.get_slicer(slicer)
@@ -1057,7 +1091,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self._logger.error("gcodeConvertCommand: %s", msg)
 				return make_response(msg, 409)
 
-			import os
 			if "gcode" in data.keys() and data["gcode"]:
 				gcode_name = data["gcode"]
 				del data["gcode"]
@@ -1068,13 +1101,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			# append number if file exists
 			name, ext = os.path.splitext(gcode_name)
 			i = 1
-			while self._file_manager.file_exists(target, gcode_name):
+			while self._file_manager.file_exists(FileDestinations.LOCAL, gcode_name):
 				gcode_name = name + '.' + str(i) + ext
 				i += 1
 
 			# prohibit overwriting the file that is currently being printed
 			currentOrigin, currentFilename = self._getCurrentFile()
-			if currentFilename == gcode_name and currentOrigin == target and (
+			if currentFilename == gcode_name and currentOrigin == FileDestinations.LOCAL and (
 						self._printer.is_printing() or self._printer.is_paused()):
 				msg = "Trying to slice into file that is currently being printed: {}".format(gcode_name)
 				self._logger.error("gcodeConvertCommand: %s", msg)
@@ -1095,9 +1128,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._printer.set_colors(currentFilename, data['vector'])
 
 			# callback definition
-			def slicing_done(target, gcode_name, select_after_slicing, print_after_slicing, append_these_files):
+			def slicing_done(gcode_name, select_after_slicing, print_after_slicing, append_these_files):
 				# append additioal gcodes
-				output_path = self._file_manager.path_on_disk(target, gcode_name)
+				output_path = self._file_manager.path_on_disk(FileDestinations.LOCAL, gcode_name)
 				with open(output_path, 'ab') as wfd:
 					for f in append_these_files:
 						path = self._file_manager.path_on_disk(f['origin'], f['name'])
@@ -1111,17 +1144,17 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 				if select_after_slicing or print_after_slicing:
 					sd = False
-					filenameToSelect = self._file_manager.path_on_disk(target, gcode_name)
+					filenameToSelect = self._file_manager.path_on_disk(FileDestinations.LOCAL, gcode_name)
 					printer.select_file(filenameToSelect, sd, True)
 
 			try:
-				self._file_manager.slice(slicer, target, filename, target, gcode_name,
+				self._file_manager.slice(slicer, FileDestinations.LOCAL, filename, FileDestinations.LOCAL, gcode_name,
 										 profile=None,#profile,
 										 printer_profile_id=None, #printerProfile,
 										 position=None, #position,
 										 overrides=overrides,
 										 callback=slicing_done,
-										 callback_args=[target, gcode_name, select_after_slicing, print_after_slicing,
+										 callback_args=[gcode_name, select_after_slicing, print_after_slicing,
 														appendGcodeFiles])
 			except octoprint.slicing.UnknownProfile:
 				msg = "Profile {profile} doesn't exist".format(**locals())
@@ -1134,7 +1167,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"origin": "local",
 				"refs": {
 					"resource": location,
-					"download": url_for("index", _external=True) + "downloads/files/" + target + "/" + gcode_name
+					"download": url_for("index", _external=True) + "downloads/files/" + FileDestinations.LOCAL + "/" + gcode_name
 				}
 			}
 
@@ -1209,23 +1242,23 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		elif command == "focus_reminder":
 			return self.focus_reminder(data)
 		elif command == "reset_prefilter_usage":
-			return self._usageHandler.reset_prefilter_usage()
+			return self.usage_handler.reset_prefilter_usage()
 		elif command == "reset_carbon_filter_usage":
-			return self._usageHandler.reset_carbon_filter_usage()
+			return self.usage_handler.reset_carbon_filter_usage()
 		elif command == "reset_laser_head_usage":
-			return self._usageHandler.reset_laser_head_usage()
+			return self.usage_handler.reset_laser_head_usage()
 		elif command == "reset_gantry_usage":
-			return self._usageHandler.reset_gantry_usage()
+			return self.usage_handler.reset_gantry_usage()
 		return NO_CONTENT
 
 	def analytics_init(self, data):
 		if 'analyticsInitialConsent' in data:
-			self._analytics_handler.initial_analytics_procedure(data['analyticsInitialConsent'])
+			self.analytics_handler.initial_analytics_procedure(data['analyticsInitialConsent'])
 
 	def analytics_data(self, data):
 		event = data.get('event')
 		payload = data.get('payload', dict())
-		self._analytics_handler.log_frontend_event(event, payload)
+		self.analytics_handler.add_frontend_event(event, payload)
 		return NO_CONTENT
 
 	def focus_reminder(self, data):
@@ -1253,12 +1286,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self._logger.warn("DEV dev_start_button used while we're not in DEV mode. (ENV_LOCAL)")
 				return make_response("BAD REQUEST - DEV mode only.", 400)
 		elif 'rtl_cancel' in data and data['rtl_cancel']:
-			self._oneButtonHandler.unset_ready_to_laser()
+			self.onebutton_handler.unset_ready_to_laser()
 		return NO_CONTENT
 
 	def take_undistorted_picture(self, is_initial_calibration):
 		self._logger.debug("New undistorted image is requested. is_initial_calibration: %s", is_initial_calibration)
-		image_response = self._lid_handler.take_undistorted_picture(is_initial_calibration)
+		image_response = self.lid_handler.take_undistorted_picture(is_initial_calibration)
 		self._logger.debug("Image_Response: {}".format(image_response))
 		return image_response
 
@@ -1281,8 +1314,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		pic_settings['cornersFromImage'] = newCorners
 		pic_settings['calibMarkers'] = newMarkers
 		pic_settings['calibration_updated'] = True
-
-		self._analytics_handler.write_cam_update(newMarkers,newCorners)
 
 		self._logger.debug('picSettings new to save: {}'.format(pic_settings))
 		self._save_profile(pic_settings_path,pic_settings)
@@ -1457,7 +1488,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._logger.error("on_event() Error Event! Message: %s", payload['error'])
 
 		if event == OctoPrintEvents.CLIENT_OPENED:
-			self._analytics_handler.log_client_opened(payload.get('remoteAddress', None))
+			self.analytics_handler.add_client_opened_event(payload.get('remoteAddress', None))
 			self.fire_event(MrBeamEvents.MRB_PLUGIN_VERSION, payload=dict(version=self._plugin_version))
 			self._replay_stored_frontend_notification()
 
@@ -1570,7 +1601,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				return 'image/bmp'
 			elif p.endswith('.pcx'):
 				return 'image/x-pcx'
-			elif p.endswith('.'):
+			elif p.endswith('.webp'):
 				return 'image/webp'
 
 		return dict(
@@ -1581,6 +1612,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				image=ContentTypeDetector(['jpg', 'jpeg', 'jpe', 'png', 'gif', 'bmp', 'pcx', 'webp'], _image_mime_detector),
 				svg=ContentTypeMapping(["svg"], "image/svg+xml"),
 				dxf=ContentTypeMapping(["dxf"], "application/dxf"),
+			),
+			# .mrb files are svgs, representing the whole working area of a job
+			recentjob=dict(
+				svg=ContentTypeMapping(["mrb"], "image/svg+xml"),
 			),
 			# extensions for printable machine code
 			machinecode=dict(
@@ -1643,26 +1678,27 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		:return: mrb_state
 		:rtype: dict
 		"""
-		try:
-			return dict(
-				laser_temp = self._temperatureManager.get_temperature(),
-				fan_connected = self._dustManager.is_fan_connected(),
-				fan_state = self._dustManager.get_fan_state(),
-				fan_rpm = self._dustManager.get_fan_rpm(),
-				fan_dust = self._dustManager.get_dust(),
-				lid_fully_open = self._lid_handler.is_lid_open(),
-				interlocks_closed = self._ioBeam.is_interlock_closed(),
-				interlocks_open_ids = self._ioBeam.open_interlocks(),
-				rtl_mode = self._oneButtonHandler.is_ready_to_laser(),
-				pause_mode = self._printer.is_paused(),
-				cooling_mode = self._temperatureManager.is_cooling(),
-				dusting_mode = self._dustManager.is_dust_mode,
-				state = self._printer.get_state_string(),
+		if self.mrbeam_plugin_initialized:
+			try:
+				return dict(
+					laser_temp = self.temperature_manager.get_temperature(),
+					fan_connected = self.dust_manager.is_fan_connected(),
+					fan_state = self.dust_manager.get_fan_state(),
+					fan_rpm = self.dust_manager.get_fan_rpm(),
+					fan_dust = self.dust_manager.get_dust(),
+					lid_fully_open = self.lid_handler.is_lid_open(),
+					interlocks_closed = self.iobeam.is_interlock_closed(),
+					interlocks_open_ids = self.iobeam.open_interlocks(),
+					rtl_mode = self.onebutton_handler.is_ready_to_laser(),
+					pause_mode = self._printer.is_paused(),
+					cooling_mode = self.temperature_manager.is_cooling(),
+					dusting_mode = self.dust_manager.is_dust_mode,
+					state = self._printer.get_state_string(),
 
-			)
-		except:
-			if not self.is_boot_grace_period():
-				self._logger.exception("Exception while collecting mrb_state data: ")
+				)
+			except:
+				self._logger.exception("Exception while collecting mrb_state data.")
+		else:
 			return None
 
 	def _getCurrentFile(self):
@@ -1748,6 +1784,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				pass
 
 		return branch
+
+	def get_plugin_version(self):
+		return self._plugin_version
 
 	def get_octopi_info(self):
 		return self._get_val_from_device_info('octopi')

@@ -57,6 +57,11 @@ $(function() {
             self.jobDoneDialog.shown = payload['ts'] || new Date().getTime();
         };
 
+        self.onEventPrintDonePayload = function(payload) {
+            self._fromData(payload);
+            self.dialogElement.modal("show");
+        };
+
         self.onEventDustingModeStart = function(payload) {
             self._fromData(payload);
         };

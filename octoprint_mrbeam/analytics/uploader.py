@@ -318,9 +318,9 @@ class FileUploader(object):
 
 	def _get_system_properties(self):
 		return dict(env=_mrbeam_plugin_implementation.get_env(),
-		            version=_mrbeam_plugin_implementation._plugin_version,
+		            version=_mrbeam_plugin_implementation.get_plugin_version(),
 		            name=_mrbeam_plugin_implementation.getHostname(),
-		            serial=_mrbeam_plugin_implementation._serial_num
+		            serial=_mrbeam_plugin_implementation.getSerialNum()
 		            )
 
 	def _get_files_as_array(self, files):

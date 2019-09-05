@@ -1,10 +1,10 @@
 
-from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint.events import Events as OctoPrintEvents
 
 
-
 class MrBeamEvents(object):
+	MRB_PLUGIN_INITIALIZED	   = 'MrbPluginInitialized'
+
 	PRINT_PROGRESS             = "PrintProgress"
 	SLICING_PROGRESS           = "SlicingProgress"
 
@@ -15,11 +15,13 @@ class MrBeamEvents(object):
 	SHUTDOWN_PREPARE_CANCEL    = "ShutdownPrepareCancel"
 	SHUTDOWN_PREPARE_SUCCESS   = "ShutdownPrepareSuccess"
 
-	LASER_PAUSE_SAFTEY_TIMEOUT_START  = "LaserPauseSafetyTimeoutStart"
-	LASER_PAUSE_SAFTEY_TIMEOUT_END    = "LaserPauseSafetyTimeoutEnd"
-	LASER_PAUSE_SAFTEY_TIMEOUT_BLOCK  = "LaserPauseSafetyTimeoutBlock"
+	LASER_PAUSE_SAFETY_TIMEOUT_START  = "LaserPauseSafetyTimeoutStart"
+	LASER_PAUSE_SAFETY_TIMEOUT_END    = "LaserPauseSafetyTimeoutEnd"
+	LASER_PAUSE_SAFETY_TIMEOUT_BLOCK  = "LaserPauseSafetyTimeoutBlock"
 
 	PRINT_CANCELING_DONE       = "PrintCancelingDone"
+
+	PRINT_DONE_PAYLOAD		   = "PrintDonePayload"
 
 	BUTTON_PRESS_REJECT        = "ButtonPressReject"
 
@@ -40,7 +42,6 @@ class MrBeamEvents(object):
 	HARDWARE_MALFUNCTION       = "HardwareMalfunction"
 
 	LASER_HEAD_READ             = "LaserHeadRead"
-
 
 	@classmethod
 	def register_with_octoprint(cls):
