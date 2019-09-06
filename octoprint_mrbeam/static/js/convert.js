@@ -163,8 +163,10 @@ $(function(){
 			var strongest = null;
 			for (var i = 0; i < vectors.length; i++) { // heuristics: assuming that the strongest of all vector jobs is the cutting one.
 				var v = vectors[i];
-				var s = v.intensity_user * v.passes / v.feedrate;
-				if(s > strength) strongest = v;
+				if (!v.engrave) {
+                    var s = v.intensity_user * v.passes / v.feedrate;
+                    if (s > strength) strongest = v;
+                }
 			}
 			var cut_setting = null;
 			// if thickness is 0, we assume engrave only

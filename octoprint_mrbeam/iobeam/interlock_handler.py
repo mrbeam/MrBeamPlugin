@@ -27,6 +27,11 @@ class InterLockHandler(object):
 		self._plugin_manager = plugin_manager
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.interlockhandler")
 
+		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
+
+	def _on_mrbeam_plugin_initialized(self, event, payload):
+		self._iobeam = self._plugin.iobeam
+
 		self._subscribe()
 
 	def _subscribe(self):
@@ -42,9 +47,9 @@ class InterLockHandler(object):
 			self.send_state()
 
 	def send_state(self):
-		if self._plugin._ioBeam:
-			self._plugin_manager.send_plugin_message("mrbeam",
-							 dict(interlocks_closed=self._plugin._ioBeam.is_interlock_closed(),
-								  interlocks_open=self._plugin._ioBeam.open_interlocks()))
+		if self._iobeam:
+			self._plugin_manager.send_plugin_message("mrbeam", dict(
+				interlocks_closed=self._iobeam.is_interlock_closed(),
+				interlocks_open=self._iobeam.open_interlocks()))
 		else:
 			raise Exception("iobeam handler not available from Plugin. Can't notify frontend about interlock state change.")

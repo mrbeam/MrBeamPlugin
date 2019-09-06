@@ -56,6 +56,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 
 	    var elem = this;
+		if(elem.type === "#text") return;
 		var ignoredElements = [];
 
 		window._matrixOven.done += 1;
@@ -63,9 +64,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		callback(percent, window._matrixOven.done, window._matrixOven.total);
 
 
-		if (!elem || (!elem.paper && (elem.type !== "text" && elem.type !== "tspan" && elem.type !== "#text"))){
-			return ignoredElements;
-		} // don't handle unplaced elements. this causes double handling.
+//		if (!elem || (!elem.paper && (elem.type !== "text" && elem.type !== "tspan" && elem.type !== "#text"))){
+//			return ignoredElements;
+//		} // don't handle unplaced elements. this causes double handling.
 
 		if (toCubics === undefined)
 			toCubics = false;
@@ -79,11 +80,14 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		    // callback(0, children.length);
 			for (var i = 0; i < children.length; i++) {
 				var child = children[i];
-				var ie = child.bake(callback, correctionMatrix, toCubics, dec)
-				ignoredElements = ignoredElements.concat(ie);
+				if(child.type !== '#text'){ // ignore plain text between xml tags (whitespace, linebreaks, no-markup plain text)
+					var ie = child.bake(callback, correctionMatrix, toCubics, dec)
+					ignoredElements = ignoredElements.concat(ie);
+				}
 			}
-            // if it's an image, we need to continue and transform the image itself
-			if (elem.type != 'image') {
+			
+            // if an element has children, but itself attributes to transform (like image, text, tspan) we need to continue and transform the element itself
+			if (elem.type !== 'image' && elem.type !== 'text' && elem.type !== 'tspan') {
                 elem.attr({transform: ''});
                 return ignoredElements;
             }
@@ -97,14 +101,13 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			elem.type !== "image" &&
 			elem.type !== "path" &&
 			elem.type !== "text" &&
-			elem.type !== "tspan" &&
-			elem.type !== "#text"
+			elem.type !== "tspan"
 			){
 			console.info("Ignoring element ", elem.type);
 			ignoredElements.push(elem.type);
 			return ignoredElements;
 		}
-
+		
 		if (elem.type === "image"){
 			var x = parseFloat(elem.attr('x')),
 				y = parseFloat(elem.attr('y')),
@@ -112,7 +115,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 				h = parseFloat(elem.attr('height'));
 
 			// Validity checks from http://www.w3.org/TR/SVG/shapes.html#RectElement:
-			// If 'x' and 'y' are not specified, then set both to 0. // CorelDraw is creating that sometimes
+			// If 'x' and 'y' are not specified, then set both to default=0. // CorelDraw is creating that sometimes
 			if (!isFinite(x)) {
 				console.log('Image: No x value -> using 0 (SVG default)');
 				x = 0;
@@ -121,7 +124,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 				console.log('Image: No y value -> using 0 (SVG default)');
 				y = 0;
 			}
-			var transform = elem.transform(); // TODO CLEM maybe parent is needed here too! Check SVG with image and transform Matrix
+			var transform = elem.transform(); 
 			var matrix = transform['totalMatrix'].add(correctionMatrix);
 			var transformedX = matrix.x(x, y);
 			var transformedY = matrix.y(x, y);
@@ -135,67 +138,15 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			return ignoredElements;
 		}
 
-		if (elem.type === "text" || elem.type === "#text" || elem.type === "tspan"){
+		// text is not supported -> just set a total matrix as surrounding groups will be baked.
+		// this makes the text at least engravable and displays it at correct position
+		if (elem.type === "text" || elem.type === "tspan"){
 
-			// remove style/title
-			//todo check for all possibilities. Or Maybe look for the ones we want instead of the ones that don't work
-			if(elem.node.parentNode.nodeName === "style" || elem.node.parentNode.nodeName === "title" || elem.node.parentNode.nodeName.startsWith("dc:")){
-				console.log("Skip node. Parent is :",elem.node.parentNode.nodeName);
-				return ignoredElements;
-			}
-
-			// remove already set parent-nodes
-			//todo check if redundant
-			if(elem.parent().attr('text_set') !== undefined && elem.parent().attr('text_set') === true){
-				//parent already transformed
-				return ignoredElements;
-			}
-
-			// replace empty text and Created with Snap
-			if(!elem.node.textContent.replace(/\s/g, '').length || elem.node.textContent === "Created with Snap"){
-				//text only contains whitespace or nothing and is skipped
-				return ignoredElements;
-			}
-			console.log('Textelem not empty: ', elem.node.textContent);
-
-			var x = parseFloat(elem.attr('x')),
-				y = parseFloat(elem.attr('y')),
-				w = parseFloat(elem.attr('width')),
-				h = parseFloat(elem.attr('height'));
-
-			// Validity checks from http://www.w3.org/TR/SVG/shapes.html#RectElement:
-			// If 'x' and 'y' are not specified, try parent.
-			if (!isFinite(x)) {
-				x = parseFloat(elem.parent().attr('x'));
-				console.log('No attribute "x" in text tag. Using parent-x:',x);
-			}
-			if (!isFinite(y)) {
-				y = parseFloat(elem.parent().attr('y'));
-				console.log('No attribute "x" in text tag. Using parent-x:',y);
-			}
-			// If 'x' and 'y' are not specified, then set both to 0. // CorelDraw is creating that sometimes
-			if (!isFinite(x)) {
-				x = 0;
-				console.log('No attribute "x" in text-parent tag. Using 0; ',x);
-			}
-			if (!isFinite(y)) {
-				y = 0;
-				console.log('No attribute "x" in text-parent tag. Using 0; ',y);
-			}
-
-			var parent = elem.parent();
-			if(parent.node.getCTM !== undefined){
-				var transform = elem.parent().transform();
+//			if(elem.node.getCTM !== undefined){ // not necessary anymore after not treating #text nodes?
+				var transform = elem.transform();
 				var matrix = transform['totalMatrix'].add(correctionMatrix);
-				var transformedX = matrix.x(x, y);
-				var transformedY = matrix.y(x, y);
-				var transformedW = matrix.x(x+w, y+h) - transformedX;
-				var transformedH = matrix.y(x+w, y+h) - transformedY;
-
-				elem.parent().attr({x: transformedX, y: transformedY, width: transformedW, height: transformedH, text_set:true});
-			} else {
-				console.log("getCTM not available. Skipping:", parent.node.type);
-			}
+				elem.attr({transform:matrix.toString()});
+//			} 
 			return ignoredElements;
 		}
 

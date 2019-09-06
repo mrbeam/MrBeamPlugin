@@ -21,7 +21,7 @@
 Snap.plugin(function (Snap, Element, Paper, global) {
 
 	/**
-	 * bakes transformations of the element and all sub-elements into coordinates
+	 * dereferences all <use> elements and replaces it with the referenced one
 	 *
 	 * @param {boolean/function} remove_sources : remove source elements after dereferencing
 	 * @returns {undefined}
@@ -77,14 +77,17 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 		// check reference and fetch node
 		var src_elem_url = elem.attr('xlink:href'); // SVG 1.1
-		if(src_elem_url == null) {
+		if(src_elem_url === null) {
 			src_elem_url = elem.attr('href'); // SVG 2.0+
 		}
-		if(src_elem_url == null || src_elem_url === ""){
+		if(src_elem_url === null || src_elem_url === ""){
 			console.log("Unable to find referenced element of ", elem);
 			return;
 		}
 		var src_elem = elem.paper.select(src_elem_url);
+		if(src_elem === null)
+			console.log("fallback selecting via snap.select instead paper.select:", src_elem_url);
+			src_elem = snap.select(src_elem_url);
 
 
 		if(src_elem){
@@ -97,7 +100,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			var y_off = attr.y || 0;
 			var use_tag_translate_M = Snap.matrix(1,0,0,1,x_off,y_off);
 			var transform_M = elem.transform().localMatrix;
-			var src_transform_M = src_elem.transform().localMatrix;
+			var src_transform_M = Snap.matrix(1,0,0,1,0,0); // workaround: assume, in <defs> are mostly no transforms.
+//			var src_transform_M = src_elem.transform().localMatrix; // raises exception? ... parse attr('transform') instead?
 			var combined_M = transform_M.multLeft(src_transform_M.multLeft(use_tag_translate_M));
 			var new_transform = combined_M.toTransformString();
 
@@ -121,7 +125,17 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 				if(attr[key]) new_attrs[key] = attr[key];
 			}
 
-			var duplicate = src_elem.clone();
+			var duplicate;
+			if(src_elem.type === 'symbol'){
+				// symbols are not rendered - therefore wrap the content in a group
+				duplicate = elem.paper.g();
+				var content = src_elem.innerSVG(); // parsing svg worked, clone() failed on #text elements.
+				var fragment = Snap.parse(content);
+				duplicate.append(fragment);
+			} else {
+				duplicate = src_elem.clone();
+			}
+			
 			duplicate.attr(new_attrs);
 			duplicate.attr('transform', new_transform);
 			elem.before(duplicate);

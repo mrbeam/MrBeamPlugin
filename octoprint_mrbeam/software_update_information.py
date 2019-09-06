@@ -1,6 +1,5 @@
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
-from octoprint_mrbeam.analytics.analytics_handler import analyticsHandler
 from util.pip_util import get_version_of_pip_module
 
 
@@ -73,7 +72,7 @@ def switch_software_channel(plugin, channel):
 
 			sw_update_plugin._version_cache_dirty = True
 
-			analyticsHandler(_mrbeam_plugin_implementation).software_channel_switch_event(old_channel, channel)
+			_mrbeam_plugin_implementation.analytics_handler.add_software_channel_switch_event(old_channel, channel)
 		except:
 			_logger.exception("Exception while switching software channel: ")
 

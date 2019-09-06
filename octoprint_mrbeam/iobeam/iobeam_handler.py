@@ -12,7 +12,6 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.lib.rwlock import RWLock
 from flask.ext.babel import gettext
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
-from octoprint_mrbeam.iobeam.laserhead_handler import laserheadHandler
 
 # singleton
 _instance = None
@@ -166,9 +165,6 @@ class IoBeamHandler(object):
 		self._interlocks = dict()
 		self._malfunction_messages = []
 
-		self._subscribe()
-		self._initWorker(self._socket_file)
-
 		self.processing_times_log = collections.deque([], self.PROCESSING_TIMES_LOG_LENGTH)
 
 		self.request_id = 1
@@ -177,7 +173,18 @@ class IoBeamHandler(object):
 		self._settings = plugin._settings
 		# self.reported_hardware_malfunctions = []
 
-		self._laserheadHandler = laserheadHandler(plugin)
+		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
+
+	def _on_mrbeam_plugin_initialized(self, event, payload):
+		self._laserhead_handler = self._plugin.laserhead_handler
+		self._analytics_handler = self._plugin.analytics_handler
+
+		self._subscribe()
+
+		# We only start the iobeam listener now
+		iobeam_worker = threading.Timer(1.0, self._initWorker, [self._socket_file])
+		iobeam_worker.daemon = True
+		iobeam_worker.start()
 
 	def isRunning(self):
 		return self._worker.is_alive()

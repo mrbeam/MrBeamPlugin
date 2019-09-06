@@ -24,7 +24,8 @@ class LaserheadHandler(object):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.laserhead")
 		self._plugin = plugin
 		self._settings = plugin._settings
-		self._plugin_version = plugin._plugin_version
+		self._event_bus = plugin._event_bus
+		self._plugin_version = plugin.get_plugin_version()
 
 		self._lh_cache = {}
 		self._last_used_lh_serial = None

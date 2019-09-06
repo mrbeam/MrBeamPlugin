@@ -1,141 +1,180 @@
 class AnalyticsKeys(object):
-	ANALYTICS_FOLDER = '/home/pi/.octoprint/analytics/'
+	class Header:
+		SNR = 'snr'
+		TYPE = 't'
+		ENV = 'env'
+		VERSION = 'v'
+		EVENT = 'e'
+		TIMESTAMP = 'ts'
+		NTP_SYNCED = 'ntp'
+		SESSION_ID = 'sid'
+		DATA = 'data'
+		SOFTWARE_TIER = 'sw_tier'
+		VERSION_MRBEAM_PLUGIN = 'version_mrbeam_plugin'
 
-	SERIALNUMBER = 'snr'
-	TYPE = 't'
-	VERSION = 'v'
-	EVENT = 'e'
-	TIMESTAMP = 'ts'
-	NTP_SYNCED = 'ntp'
-	SESSION_ID = 'sid'
-	DATA = 'data'
-	SOFTWARE_TIER = 'sw_tier'
-	VERSION_MRBEAM_PLUGIN = 'version_mrbeam_plugin'
-	LASERHEAD_SERIAL = 'laserhead_serial'
-	ENV = 'env'
+	class EventType:
+		JOB = 'job'
+		DEVICE = 'device'
+		LOG = 'log'
+		CONNECTIVITY = 'connectivity'
+		FRONTEND = 'frontend'
 
-	### EVENT TYPES ###
-	TYPE_JOB_EVENT = 'job'
-	TYPE_DEVICE_EVENT = 'device'
-	TYPE_CAM_EVENT = 'cam'
-	TYPE_LOG_EVENT = 'log'
-	TYPE_CONNECTIVITY_EVENT = 'connectivity'
-	TYPE_FRONTEND = 'frontend'
+	class Job:
+		ID = 'job_id'
+		ERROR = 'err'
+		STATUS = 'status'
 
-	### DEVICE KEYS ###
-	HOSTNAME = 'hostname'
-	LASERHEAD_VERSION = 'lh_ver'
-	OLD_CHANNEL = 'old_channel'
-	NEW_CHANNEL = 'new_channel'
-	TOTAL_SPACE = 'total'
-	AVAILABLE_SPACE = 'available'
-	USED_SPACE = 'used_percent'
-	MRBEAM_USAGE = 'mrbeam_usage'
-	CORRECTION_FACTOR = 'correction_factor'
-	CORRECTION_ENABLED = 'correction_enabled'
-	CORRECTION_OVERRIDE = 'correction_override'
-	POWER_65 = 'p_65'
-	POWER_75 = 'p_75'
-	POWER_85 = 'p_85'
-	USERS = 'users'
+		class Event:
+			LASERJOB_STARTED = 'laserjob_started'
+			LASERJOB_FINISHED = 'laserjob_finished'
+			CPU = 'cpu'  # This comes both in the slicing and the print
 
-	### EVENT KEYS ###
-	STARTUP = 'startup'
-	SHUTDOWN = 'shutdown'
-	INIT = 'init_json'
-	FLASH_GRBL = 'flash_grbl'
-	ANALYTICS_ENABLED = 'analytics_enabled'
-	IPS = 'ips'
-	HTTP_SELF_CHECK = 'http_self_check'
-	INTERNET_CONNECTION = 'internet_connection'
-	DISK_SPACE = 'disk_space'
-	SW_CHANNEL_SWITCH = 'sw_channel_switch'
-	LASERHEAD_INFO = 'laserhead_info'
+			class Slicing:
+				STARTED = 's_started'
+				MATERIAL = 'material'
+				CONV_ENGRAVE = 'conv_eng'
+				CONV_CUT = 'conv_cut'
+				DESIGN_FILE = 'design_file'
+				DONE = 's_done'
+				FAILED = 's_failed'
+				CANCELLED = 's_cancelled'
 
-	### LOG EVENT KEYS ###
-	EVENT_LOG = 'log_event'
-	EXCEPTION = 'exception'
-	IOBEAM =    'iobeam'
-	LOG_CPU = 'cpu'
-	CAMERA = 'camera'
-	CAMERA_SESSION = 'camera_session'
-	OS_HEALTH = 'os_health'
+			class Print:
+				STARTED = 'p_started'
+				PROGRESS = 'p_progress'
+				FAN_RPM_TEST = 'fan_rpm_test'
+				PAUSED = 'p_paused'
+				RESUMED = 'p_resumed'
+				CANCELLED = 'p_cancelled'
+				FAILED = 'p_failed'
+				DONE = 'p_done'
 
-	### JOB KEYS ###
-	JOB_ID = 'job_id'
-	FILENAME = 'filename'
-	PRINT_STARTED = 'p_started'
-	PRINT_PROGRESS = 'p_progress'
-	PRINT_DONE = 'p_done'
-	LASERJOB_DONE = 'laserjob_done'
-	PRINT_PAUSED = 'p_paused'
-	PRINT_RESUMED = 'p_resumed'
-	PRINT_CANCELLED = 'p_cancelled'
-	PRINT_FAILED = 'p_failed'
-	DUST_SUM = 'dust_summary'
-	INTENSITY_SUM = 'intensity_summary'
-	LASERTEMP = 'lasertemp'
-	LASERTEMP_SUM = 'lasertemp_summary'
-	CPU_DATA = 'cpu'
-	FINAL_DUST = 'final_dust'
-	COOLING_START = 'cooling_start'
-	COOLING_DONE = 'cooling_done'
-	CONV_ENGRAVE = 'conv_eng'
-	CONV_CUT = 'conv_cut'
-	LASER_JOB = 'laser_job'
-	DESIGN_FILE = 'design_file'
-	MATERIAL = 'material'
-	FAN_RPM_TEST = 'fan_rpm_test'
-	FAN_RPM = 'fan_rpm'
-	FAN_STATE = 'fan_state'
+			class Cooling:
+				START = 'cooling_start'
+				DONE = 'cooling_done'
 
-	PRINT_EVENTS = [
-						PRINT_STARTED,
-						PRINT_PROGRESS,
-						PRINT_DONE,
-						PRINT_CANCELLED,
-						PRINT_PAUSED,
-						PRINT_RESUMED,
-						PRINT_FAILED,
-						CONV_CUT,
-						CONV_ENGRAVE
-					]
-	FAILED_PRINT_EVENTS = [PRINT_CANCELLED,PRINT_FAILED]
-	JOB_DURATION = 'dur'
-	JOB_TIME_ESTIMATION = 'dur_est'
+			class Summary:
+				DUST = 'dust_summary'
+				INTENSITY = 'intensity_summary'
+				LASERTEMP = 'lasertemp_summary'
 
-	DUST_START = 'd_start'
-	DUST_END = 'd_end'
-	DUST_START_TS = 'd_start_ts'
-	DUST_END_TS = 'd_end_ts'
-	DUST_DURATION = 'd_duration'
-	DUST_DIFF = 'd_diff'
-	DUST_PER_TIME = 'd_per_time'
+		class Dust:
+			START = 'd_start'
+			END = 'd_end'
+			START_TS = 'd_start_ts'
+			END_TS = 'd_end_ts'
+			DURATION = 'd_duration'
+			DIFF = 'd_diff'
+			PER_TIME = 'd_per_time'
 
-	PROGRESS_PERCENT =           'p'
-	PROGRESS_LASER_TEMPERATURE = 'lt'
-	PROGRESS_LASER_INTENSITY =   'li'
-	PROGRESS_DUST_VALUE =        'dv'
+		class Fan:
+			RPM = 'fan_rpm'
+			STATE = 'fan_state'
 
-	### CAM KEYS ###
-	MARKERS = 'markers'
-	CORNERS = 'corners'
-	CAM_CALIBRATION = 'calibration'
-	PIC_EVENT = 'pic'
-	PIC_PREP = 'pic_prep'
-	CAM_SESSION_ID = 'cs_id'
+		class Duration:
+			CURRENT = 'dur'
+			ESTIMATION = 'dur_est'
 
+		class Progress:
+			PERCENT = 'p'
+			LASER_TEMPERATURE = 'lt'
+			LASER_INTENSITY = 'li'
+			DUST_VALUE = 'dv'
 
-	### CONNECTIVITY ###
-	EVENT_UI_RENDER_CALL =          'ui_render_call'
-	EVENT_CLIENT_OPENED =           'client_opened'
-	VERSION_FINDMYMRBEAM_PLUGIN =   'version_findmymrbeam_plugin'
-	CONNECTIONS_STATE = 			'connections_state'
+		class LaserHead:
+			TEMP = 'lasertemp'
 
+	class Device:
+		HOSTNAME = 'hostname'
+		ERROR = 'err'
+		SUCCESSFUL = 'successful'
 
+		class Event:
+			ANALYTICS_ENABLED = 'analytics_enabled'
+			INIT = 'init_json'
+			STARTUP = 'startup'
+			SHUTDOWN = 'shutdown'
+			DISK_SPACE = 'disk_space'
+			IPS = 'ips'
+			FLASH_GRBL = 'flash_grbl'
+			LASERHEAD_INFO = 'laserhead_info'
+			SW_CHANNEL_SWITCH = 'sw_channel_switch'
+			HTTP_SELF_CHECK = 'http_self_check'
+			INTERNET_CONNECTION = 'internet_connection'
+			MRBEAM_USAGE = 'mrbeam_usage'
 
+		class SoftwareChannel:
+			OLD = 'old_channel'
+			NEW = 'new_channel'
 
+		class Usage:
+			TOTAL_SPACE = 'total'
+			AVAILABLE_SPACE = 'available'
+			USED_SPACE = 'used_percent'
+			USERS = 'users'
 
+		class LaserHead:
+			SERIAL = 'laserhead_serial'
+			VERSION = 'lh_ver'
+			POWER_65 = 'p_65'
+			POWER_75 = 'p_75'
+			POWER_85 = 'p_85'
+			CORRECTION_FACTOR = 'correction_factor'
+			CORRECTION_ENABLED = 'correction_enabled'
+			CORRECTION_OVERRIDE = 'correction_override'
 
+		class Grbl:
+			FROM_VERSION = 'from_version'
+			TO_VERSION = 'to_version'
 
+		class Request:
+			RESPONSE = 'response'
+			CONNECTION = 'connection'
+			IP = 'ip'
+			ELAPSED_S = 'elapsed_s'
 
+	class Log:
+		TERMINAL_DUMP = 'terminal_dump'
+		ERROR = 'err'
+		SUCCESS = 'success'
+
+		class Event:
+			EVENT_LOG = 'log_event'
+			IOBEAM = 'iobeam'
+			CPU = 'cpu'
+			CAMERA = 'camera'
+			OS_HEALTH = 'os_health'
+
+		class Level:
+			EXCEPTION = 'exception'
+
+		class Component:
+			NAME = 'component'
+			VERSION = 'component_version'
+
+		class Caller:
+			HASH = 'hash'
+			FILE = 'file'
+			LINE = 'line'
+			FUNCTION = 'function'
+
+		class Iobeam:
+			VERSION = 'version'
+			MESSAGE = 'message'
+
+		class Cpu:
+			TEMP = 'temp'
+			THROTTLE_ALERTS = 'throttle_alerts'
+
+	class Connectivity:
+		class Event:
+			UI_RENDER_CALL = 'ui_render_call'
+			CLIENT_OPENED = 'client_opened'
+			VERSION_FINDMYMRBEAM_PLUGIN = 'version_findmymrbeam_plugin'
+			CONNECTIONS_STATE = 'connections_state'
+
+		class Call:
+			HOST = 'host'
+			REMOTE_IP = 'remote_ip'
+			REFERRER = 'referrer'
+			LANGUAGE = 'language'

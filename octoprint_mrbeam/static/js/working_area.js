@@ -21,9 +21,9 @@ String.prototype.hashCode = function() {
   var hash = 0, i, chr;
   if (this.length === 0) return hash;
   for (i = 0; i < this.length; i++) {
-    chr   = this.charCodeAt(i);
-    hash  = ((hash << 5) - hash) + chr;
-    hash |= 0; // Convert to 32bit integer
+	chr   = this.charCodeAt(i);
+	hash  = ((hash << 5) - hash) + chr;
+	hash |= 0; // Convert to 32bit integer
   }
   return hash;
 };
@@ -78,8 +78,8 @@ $(function(){
 	}
 
 	// constants
-    var HUMAN_READABLE_IDS_CONSTANTS = 'bcdfghjklmnpqrstvwxz';
-    var HUMAN_READABLE_IDS_VOCALS    = 'aeiouy';
+	var HUMAN_READABLE_IDS_CONSTANTS = 'bcdfghjklmnpqrstvwxz';
+	var HUMAN_READABLE_IDS_VOCALS    = 'aeiouy';
 
 	function getHumanReadableId(length){
 		length = length || 4;
@@ -119,7 +119,7 @@ $(function(){
 		self.availableWidth = ko.observable(undefined);
 		self.px2mm_factor = 1; // initial value
 		self.svgDPI = function(){return 90}; // initial value, gets overwritten by settings in onAllBound()
-        self.dxfScale =  function(){return 1}; // initial value, gets overwritten by settings in onAllBound()
+		self.dxfScale =  function(){return 1}; // initial value, gets overwritten by settings in onAllBound()
 
 		self.workingAreaWidthMM = ko.computed(function(){
 			return self.profile.currentProfileData().volume.width();
@@ -132,23 +132,23 @@ $(function(){
 			return Snap.matrix(1,0,0,-1,0,h);
 		}, self);
 
-        // get overwritten by settings in onAllBound()
+		// get overwritten by settings in onAllBound()
 		self.gc_options = ko.computed(function(){
 			return {enabled: false};
 		});
 
-        // QuickText fields
-        self.fontMap = ["Allerta Stencil","Amatic SC","Comfortaa","Fredericka the Great","Kavivanar","Lobster","Merriweather","Mr Bedfort","Quattrocento","Roboto"];
-        self.currentQuickTextFile = undefined;
-        self.currentQuickTextAnalyticsData = undefined;
-        self.currentQuickText = ko.observable();
-        self.quickShapeNames = new Map([['rect', gettext('Rectangle')], ['circle', gettext('Circle')],
-            ['star', gettext('Star')], ['heart', gettext('Heart')]]);
-        self.currentQuickShapeFile = undefined;
-        self.currentQuickShapeAnalyticsData = undefined;
-        self.currentQuickShape = ko.observable();
-        self.lastQuickTextFontIndex = 0;
-        self.lastQuickTextIntensity = 0; // rgb values: 0=black, 155=white
+		// QuickText fields
+		self.fontMap = ["Allerta Stencil","Amatic SC","Comfortaa","Fredericka the Great","Kavivanar","Lobster","Merriweather","Mr Bedfort","Quattrocento","Roboto"];
+		self.currentQuickTextFile = undefined;
+		self.currentQuickTextAnalyticsData = undefined;
+		self.currentQuickText = ko.observable();
+		self.quickShapeNames = new Map([['rect', gettext('Rectangle')], ['circle', gettext('Circle')],
+			['star', gettext('Star')], ['heart', gettext('Heart')]]);
+		self.currentQuickShapeFile = undefined;
+		self.currentQuickShapeAnalyticsData = undefined;
+		self.currentQuickShape = ko.observable();
+		self.lastQuickTextFontIndex = 0;
+		self.lastQuickTextIntensity = 0; // rgb values: 0=black, 155=white
 
 		self.zoom = ko.observable(1.0);
 		self.zoomPercX = ko.observable(0);
@@ -170,16 +170,16 @@ $(function(){
 			newZ = Math.min(Math.max(newZ, 0.25), 1);
 			if(newZ !== self.zoom()){
 				if(newZ == 1){
-				    self.set_zoom_offX(0);
-				    self.set_zoom_offY(0);
-                }else{
-				    var deltaWidth = self.workingAreaWidthMM() * delta;
-				    var deltaHeight = self.workingAreaHeightMM() * delta;
-				    var oldOffX = self.zoomOffX();
-				    var oldOffY = self.zoomOffY();
-				    self.set_zoom_offX(oldOffX - deltaWidth*centerX);
-				    self.set_zoom_offY(oldOffY - deltaHeight*centerY);
-                }
+					self.set_zoom_offX(0);
+					self.set_zoom_offY(0);
+				}else{
+					var deltaWidth = self.workingAreaWidthMM() * delta;
+					var deltaHeight = self.workingAreaHeightMM() * delta;
+					var oldOffX = self.zoomOffX();
+					var oldOffY = self.zoomOffY();
+					self.set_zoom_offX(oldOffX - deltaWidth*centerX);
+					self.set_zoom_offY(oldOffY - deltaHeight*centerY);
+				}
 				self.zoom(newZ);
 			}
 		};
@@ -260,12 +260,12 @@ $(function(){
 //		});
 
 		self.scaleMatrixCrosshair = function(){
-		    var x = self.crosshairX !== undefined ? self.crosshairX() : 0;
-		    var y = self.crosshairY !== undefined ? self.crosshairY() : 0;
+			var x = self.crosshairX !== undefined ? self.crosshairX() : 0;
+			var y = self.crosshairY !== undefined ? self.crosshairY() : 0;
 			var y = self.workingAreaHeightMM() - y;
-		    var m = "matrix(1, 0, 0, 1, " + x + ", " + y + ")";
-		    return m;
-        };
+			var m = "matrix(1, 0, 0, 1, " + x + ", " + y + ")";
+			return m;
+		};
 
 		self.placedDesigns = ko.observableArray([]);
 		self.working_area_empty = ko.computed(function(){
@@ -276,7 +276,7 @@ $(function(){
 			self.abortFreeTransforms();
 			snap.selectAll('#userContent>*:not(defs)').remove();
 			snap.selectAll('#placedGcodes>*').remove();
-            snap.selectAll('rect:not(#coordGrid):not(#highlightMarker)').remove();
+			snap.selectAll('rect:not(#coordGrid):not(#highlightMarker)').remove();
 			self.placedDesigns([]);
 		};
 
@@ -325,12 +325,12 @@ $(function(){
 		};
 
 		self.getXYCoord = function(evt){
-            var elemPos = evt.currentTarget.getBoundingClientRect();
-            var x = self.px2mm(evt.clientX - elemPos.left);
-            var y = self.px2mm(elemPos.bottom - evt.clientY);
-            x = Math.min(x, self.workingAreaWidthMM());
-            y = Math.min(y, self.workingAreaHeightMM());
-            return {x:x, y:y};
+			var elemPos = evt.currentTarget.getBoundingClientRect();
+			var x = self.px2mm(evt.clientX - elemPos.left);
+			var y = self.px2mm(elemPos.bottom - evt.clientY);
+			x = Math.min(x, self.workingAreaWidthMM());
+			y = Math.min(y, self.workingAreaHeightMM());
+			return {x:x, y:y};
 		};
 
 		self.crosshairX = function(){
@@ -361,8 +361,8 @@ $(function(){
 		};
 
 		self.startTour = function(){
-		    self.tour.startTour();
-        };
+			self.tour.startTour();
+		};
 
 		self.isPlaced = function(file){
 			if(file === undefined) return false;
@@ -374,17 +374,17 @@ $(function(){
 		};
 
 		self.countPlacements = function(file){
-		    // quicktexts can't get duplicated and don't have ["refs"]["download"]
-            if (file['type'] === 'quicktext' || file['type'] === 'quickshape') {
-                return 1;
-            }
+			// quicktexts can't get duplicated and don't have ["refs"]["download"]
+			if (file['type'] === 'quicktext' || file['type'] === 'quickshape') {
+				return 1;
+			}
 			var label = file["refs"]["download"];
 			var p = snap.selectAll("g[mb\\:origin='"+label+"']");
 			return p.length;
 		};
 
 		self.placeGcode = function(file){
-		    var start_ts = Date.now();
+			var start_ts = Date.now();
 			var previewId = self.getEntryId();
 
 			// TODO think about if double placing a gcode file is a problem.
@@ -400,8 +400,8 @@ $(function(){
 //			}
 
 			self.loadGcode(file, function(gcode){
-			    var duration_load = Date.now() - start_ts;
-			    start_ts = Date.now();
+				var duration_load = Date.now() - start_ts;
+				start_ts = Date.now();
 				var pathCallback = function(path){
 					var points = [];
 					var intensity = -1;
@@ -421,22 +421,22 @@ $(function(){
 				self.parser.parse(gcode, /(m0?3)|(m0?5)/i, pathCallback, imgCallback);
 
 				// analytics
-                var re = / beamOS:([0-9.]+) /;
-                var match = re.exec(gcode.substring(0, 1000));
-                var beamos_vers = match.length > 1 ? match[1] : null;
-                var analyticsData = {
-                    id: previewId,
-                    file_type: 'gco',
-                    filename_hash: file.hash,
-                    size: file.size,
-                    duration_load: duration_load,
-                    duration_processing: Date.now() - start_ts,
-                    gco_generator_info: {
-                        generator: beamos_vers ? 'beamOS' : null,
-                        version: beamos_vers ? beamos_vers : null,
-                    }
-                };
-                self._analyticsPlaceGco(analyticsData);
+				var re = / beamOS:([0-9.]+) /;
+				var match = re.exec(gcode.substring(0, 1000));
+				var beamos_vers = match.length > 1 ? match[1] : null;
+				var analyticsData = {
+					id: previewId,
+					file_type: 'gco',
+					filename_hash: file.hash,
+					size: file.size,
+					duration_load: duration_load,
+					duration_processing: Date.now() - start_ts,
+					gco_generator_info: {
+						generator: beamos_vers ? 'beamOS' : null,
+						version: beamos_vers ? beamos_vers : null,
+					}
+				};
+				self._analyticsPlaceGco(analyticsData);
 			});
 		};
 
@@ -444,20 +444,20 @@ $(function(){
 			var url = file.refs.download;
 			var date = file.date;
 			$.ajax({
-                url: url,
-                data: { "ctime": date },
-                type: "GET",
-                success: function(response, rstatus) {
-                    if(rstatus === 'success'){
+				url: url,
+				data: { "ctime": date },
+				type: "GET",
+				success: function(response, rstatus) {
+					if(rstatus === 'success'){
 						if(typeof(callback) === 'function'){
 							callback(response);
 						}
-                    }
-                },
-                error: function() {
+					}
+				},
+				error: function() {
 					console.error("working_area.js placeGcode: unable to load ", url);
-                }
-            });
+				}
+			});
 
 		};
 
@@ -467,17 +467,17 @@ $(function(){
 			self.placedDesigns.remove(file);
 		};
 
-        /**
-         * Call to place (add) a SVG file to working area
-         * @param file
-         * @param callback
-         */
+		/**
+		 * Call to place (add) a SVG file to working area
+		 * @param file
+		 * @param callback
+		 */
 		self.placeSVG = function(file, callback) {
-		    var start_ts = Date.now();
+			var start_ts = Date.now();
 			var url = self._getSVGserveUrl(file);
 			cb = function (fragment) {
-			    var duration_load = Date.now() - start_ts;
-		        start_ts = Date.now();
+				var duration_load = Date.now() - start_ts;
+				start_ts = Date.now();
 				if(self._isBinaryData(fragment.node.textContent)) { // workaround: only catching one loading error
 					self.file_not_readable();
 					return;
@@ -497,7 +497,7 @@ $(function(){
 				var unitScaleX = self._getDocumentScaleToMM(doc_dimensions.units_x, generator_info);
 				var unitScaleY = self._getDocumentScaleToMM(doc_dimensions.units_y, generator_info);
 				var mat = self.getDocumentViewBoxMatrix(doc_dimensions, doc_dimensions.viewbox);
-                var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(unitScaleX, unitScaleY).toTransformString();
+				var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(unitScaleX, unitScaleY).toTransformString();
 
 				var analyticsData = {};
 				analyticsData.file_type = 'svg';
@@ -505,7 +505,7 @@ $(function(){
 				analyticsData.svg_generator_info.generator = analyticsData.svg_generator_info.generator == 'unknown' ? null : analyticsData.svg_generator_info.generator;
 				analyticsData.svg_generator_info.version = analyticsData.svg_generator_info.version == 'unknown' ? null : analyticsData.svg_generator_info.version;
 				analyticsData.duration_load = duration_load;
-                analyticsData.duration_preprocessing = Date.now() - start_ts;
+				analyticsData.duration_preprocessing = Date.now() - start_ts;
 				var insertedId = self._prepareAndInsertSVG(fragment, previewId, origin, scaleMatrixStr, {}, analyticsData, file);
 				if(typeof callback === 'function') callback(insertedId);
 			};
@@ -517,16 +517,16 @@ $(function(){
 			}
 		};
 
-        /**
-         * Call to place (add) a DXF file to working area
-         * @param file
-         * @param callback (otional)
-         */
+		/**
+		 * Call to place (add) a DXF file to working area
+		 * @param file
+		 * @param callback (otional)
+		 */
 		self.placeDXF = function(file, callback) {
-		    var start_ts = Date.now();
+			var start_ts = Date.now();
 			var url = self._getSVGserveUrl(file);
 			cb = function (fragment, timestamps) {
-			    var duration_load = timestamps.load_done ? timestamps.load_done - start_ts : null;
+				var duration_load = timestamps.load_done ? timestamps.load_done - start_ts : null;
 				var origin = file["refs"]["download"];
 
 				var tx = 0;
@@ -538,7 +538,7 @@ $(function(){
 				if(!isNaN(origin_left) && origin_left < 0) tx = -origin_left * self.dxfScale();
 				if(!isNaN(origin_top) && origin_top < 0) ty = -origin_top * self.dxfScale();
 				// scale matrix
-                var scaleMatrixStr = new Snap.Matrix(1,0,0,1,tx,ty).scale(self.dxfScale()).toTransformString();
+				var scaleMatrixStr = new Snap.Matrix(1,0,0,1,tx,ty).scale(self.dxfScale()).toTransformString();
 
 				var id = self.getEntryId();
 				var previewId = self.generateUniqueId(id, file); // appends -# if multiple times the same design is placed.
@@ -566,196 +566,198 @@ $(function(){
 
 		};
 
-        /**
-         * This should be the common handler for everything added to the working area that is converted to SVG
-         * @param fragment svg snippet
-         * @param id generated by placeSVG, placeDXF, placeImage, quick text, quick shape, ...
-         * @param origin file url or uniq element source id
-         * @param scaleMatrixStr (optional)
+		/**
+		 * This should be the common handler for everything added to the working area that is converted to SVG
+		 * @param fragment svg snippet
+		 * @param id generated by placeSVG, placeDXF, placeImage, quick text, quick shape, ...
+		 * @param origin file url or uniq element source id
+		 * @param scaleMatrixStr (optional)
 		 * @param flags object with self-explaining keys (true per default): showTransformHandles, embedGCode, bakeTransforms
-         * @returns {*}
-         * @private
-         */
+		 * @returns {*}
+		 * @private
+		 */
 		self._prepareAndInsertSVG = function(fragment, id, origin, scaleMatrixStr, flags, analyticsData, fileObj, start_ts){
-            analyticsData = analyticsData || {};
-            fileObj = fileObj || {};
-		    start_ts = start_ts || Date.now();
+			analyticsData = analyticsData || {};
+			fileObj = fileObj || {};
+			start_ts = start_ts || Date.now();
 
-		    if (!analyticsData._skip) { // this is a flag used by quickShape
-                analyticsData.id = fileObj ? fileObj.id : id;
-                analyticsData.file_type = analyticsData.file_type || fileObj.display ? fileObj.display.split('.').slice(-1)[0] : origin.split('.').slice(-1)[0];
-                analyticsData.filename_hash = fileObj.hash || origin.split('/downloads/files/local/').slice(-1)[0].hashCode();
-                analyticsData.size = fileObj.size;
-                analyticsData.node_count = 0;
-                analyticsData.node_types = {};
-                analyticsData.path_char_lengths = [];
-                analyticsData.text_font_families = [];
-                analyticsData.removed_unsupported_elements = {};
-                analyticsData.removed_unnecessary_elements = {};
-                analyticsData.removed_import_references = {};
-                analyticsData.ignored_elements = {};
-                analyticsData.namespaces = [];
+			if (!analyticsData._skip) { // this is a flag used by quickShape
+				analyticsData.id = fileObj ? fileObj.id : id;
+				analyticsData.file_type = analyticsData.file_type || fileObj.display ? fileObj.display.split('.').slice(-1)[0] : origin.split('.').slice(-1)[0];
+				analyticsData.filename_hash = fileObj.hash || origin.split('/downloads/files/local/').slice(-1)[0].hashCode();
+				analyticsData.size = fileObj.size;
+				analyticsData.node_count = 0;
+				analyticsData.node_types = {};
+				analyticsData.path_char_lengths = [];
+				analyticsData.text_font_families = [];
+				analyticsData.removed_unsupported_elements = {};
+				analyticsData.removed_unnecessary_elements = {};
+				analyticsData.removed_import_references = {};
+				analyticsData.ignored_elements = {};
+				analyticsData.namespaces = [];
 
-                let allNodes = fragment.selectAll("*");
-                analyticsData.node_count = allNodes.length;
-                for (let i = 0; i < allNodes.length; i++) {
-                    if (!(allNodes[i].type in analyticsData.node_types)) {
-                        analyticsData.node_types[allNodes[i].type] = 0;
-                    }
-                    analyticsData.node_types[allNodes[i].type]++;
-                    if (allNodes[i].type == 'path') {
-                        analyticsData.path_char_lengths.push(allNodes[i].attr('d').length);
-                    }
-                    if (allNodes[i].type == 'text') {
-                        let fontFam = allNodes[i].node.style.fontFamily;
-                        fontFam = fontFam ? fontFam.replace(/"/g, '').replace(/'/g, "") : null;
-                        if (!fontFam || !Boolean(fontFam.trim())){
-                            fontFam = allNodes[i].node.getAttribute("font-family");
-                        }
-                        fontFam = fontFam ? fontFam.replace(/"/g, '').replace(/'/g, "") : null;
-                        analyticsData.text_font_families.push(fontFam);
-                    }
-                }
-            }
+				let allNodes = fragment.selectAll("*");
+				analyticsData.node_count = allNodes.length;
+				for (let i = 0; i < allNodes.length; i++) {
+					if (!(allNodes[i].type in analyticsData.node_types)) {
+						analyticsData.node_types[allNodes[i].type] = 0;
+					}
+					analyticsData.node_types[allNodes[i].type]++;
+					if (allNodes[i].type == 'path') {
+						analyticsData.path_char_lengths.push(allNodes[i].attr('d').length);
+					}
+					if (allNodes[i].type == 'text') {
+						let fontFam = allNodes[i].node.style.fontFamily;
+						fontFam = fontFam ? fontFam.replace(/"/g, '').replace(/'/g, "") : null;
+						if (!fontFam || !Boolean(fontFam.trim())){
+							fontFam = allNodes[i].node.getAttribute("font-family");
+						}
+						fontFam = fontFam ? fontFam.replace(/"/g, '').replace(/'/g, "") : null;
+						analyticsData.text_font_families.push(fontFam);
+					}
+				}
+			}
 
-		    try {
-                var switches = $.extend({showTransformHandles: true, embedGCode: true, bakeTransforms: true}, flags);
-                fragment = self._removeUnsupportedSvgElements(fragment, analyticsData);
+			try {
+				var switches = $.extend({showTransformHandles: true, embedGCode: true, bakeTransforms: true}, flags);
+				fragment = self._removeUnsupportedSvgElements(fragment, analyticsData);
 
-                // get original svg attributes
-                var newSvgAttrs = self._getDocumentNamespaceAttributes(fragment, analyticsData);
-                if (scaleMatrixStr) {
-                    newSvgAttrs['transform'] = scaleMatrixStr;
-                }
+				// get original svg attributes
+				var newSvgAttrs = self._getDocumentNamespaceAttributes(fragment, analyticsData);
+				if (scaleMatrixStr) {
+					newSvgAttrs['transform'] = scaleMatrixStr;
+				}
 
-                var newSvg = snap.group(fragment.selectAll("svg>*"));
-                newSvg.unref(true);
+				// assign id directly after placement. otherwise it is not UI-removable in case of exceptions during placement.
+				var newSvg = snap.group(fragment.selectAll("svg>*"));
+				newSvg.attr({
+					id: id,
+					'mb:id': self._normalize_mb_id(id),
+					class: 'userSVG',
+					'mb:origin': origin
+				});
 
-                // handle texts
-                var hasText = newSvg.selectAll('text,tspan');
-                if (hasText && hasText.length > 0) {
-                    self.svg_contains_text_warning(newSvg);
-                }
+				newSvg.unref(true);
 
-                // remove style elements with online references
-                var hasStyle = newSvg.selectAll('style');
-                if (hasStyle && hasStyle.length > 0) {
-                    for (var y = 0; y < hasStyle.length; y++) {
-                        if (hasStyle[y].node.innerHTML && hasStyle[y].node.innerHTML.search("@import ") >= 0) {
-                            self.svg_contains_online_style_warning();
-                            console.warn("Removing style element: web references not supported: ", hasStyle[y].node.innerHTML);
-                            if (!(hasStyle[y].type in analyticsData.removed_import_references)) {analyticsData.removed_import_references[hasStyle[y].type] = 0};
-                            analyticsData.removed_import_references[hasStyle[y].type]++;
-                            hasStyle[y].node.remove();
-                        }
-                    }
-                }
+				// handle texts
+				var hasText = newSvg.selectAll('text,tspan');
+				if (hasText && hasText.length > 0) {
+					self.svg_contains_text_warning(newSvg);
+				}
 
-                newSvg.attr(newSvgAttrs);
-                if (switches.bakeTransforms) {
-                    window.mrbeam.bake_progress = 0;
-                    var ignoredElements = newSvg.bake(self._bake_progress_callback); // remove transforms
-                    for (var i=0; i < ignoredElements.length; i++) {
-                        if (!(ignoredElements[i] in analyticsData.ignored_elements)) analyticsData.ignored_elements[ignoredElements[i]] = 0;
-                        analyticsData.ignored_elements[ignoredElements[i]]++;
-                    }
-                }
-                newSvg.selectAll('path').attr({strokeWidth: '0.8', class: 'vector_outline'});
-                // replace all fancy color definitions (rgba(...), hsl(...), 'pink', ...) with hex values
-                newSvg.selectAll('*[stroke]:not(#bbox)').forEach(function (el) {
-                    var colStr = el.attr().stroke;
-                    // handle stroke="" default value (#000000)
-                    if (typeof (colStr) !== 'undefined' && colStr !== 'none') {
-                        var colHex = self._getHexColorStr(colStr);
-                        el.attr('stroke', colHex);
-                    }
-                });
-                newSvg.selectAll('*[fill]:not(#bbox)').forEach(function (el) {
-                    var colStr = el.attr().fill;
-                    // handle fill="" default value (#000000)
-                    if (typeof (colStr) !== 'undefined' && colStr !== 'none') {
-                        var colHex = self._getHexColorStr(colStr);
-                        el.attr('fill', colHex);
-                    }
-                });
+				// remove style elements with online references
+				var hasStyle = newSvg.selectAll('style');
+				if (hasStyle && hasStyle.length > 0) {
+					for (var y = 0; y < hasStyle.length; y++) {
+						if (hasStyle[y].node.innerHTML && hasStyle[y].node.innerHTML.search("@import ") >= 0) {
+							self.svg_contains_online_style_warning();
+							console.warn("Removing style element: web references not supported: ", hasStyle[y].node.innerHTML);
+							if (!(hasStyle[y].type in analyticsData.removed_import_references)) {analyticsData.removed_import_references[hasStyle[y].type] = 0};
+							analyticsData.removed_import_references[hasStyle[y].type]++;
+							hasStyle[y].node.remove();
+						}
+					}
+				}
 
-                newSvg.attr({
-                    id: id,
-                    'mb:id': self._normalize_mb_id(id),
-                    class: 'userSVG',
-                    'mb:origin': origin
-                });
-                snap.select("#userContent").append(newSvg);
-                newSvg.transformable();
-                newSvg.ftRegisterBeforeTransformCallback(function () {
-                    newSvg.clean_gc();
-                });
-                newSvg.ftRegisterAfterTransformCallback(function () {
-                    var mb_meta = self._set_mb_attributes(newSvg);
-                    // newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
-                });
+				newSvg.attr(newSvgAttrs);
+				if (switches.bakeTransforms) {
+					window.mrbeam.bake_progress = 0;
+					var ignoredElements = newSvg.bake(self._bake_progress_callback); // remove transforms
+					for (var i=0; i < ignoredElements.length; i++) {
+						if (!(ignoredElements[i] in analyticsData.ignored_elements)) analyticsData.ignored_elements[ignoredElements[i]] = 0;
+						analyticsData.ignored_elements[ignoredElements[i]]++;
+					}
+				}
+				newSvg.selectAll('path').attr({strokeWidth: '0.8', class: 'vector_outline'});
+				// replace all fancy color definitions (rgba(...), hsl(...), 'pink', ...) with hex values
+				newSvg.selectAll('*[stroke]:not(#bbox)').forEach(function (el) {
+					var colStr = el.attr().stroke;
+					// handle stroke="" default value (#000000)
+					if (typeof (colStr) !== 'undefined' && colStr !== 'none') {
+						var colHex = self._getHexColorStr(colStr);
+						el.attr('stroke', colHex);
+					}
+				});
+				newSvg.selectAll('*[fill]:not(#bbox)').forEach(function (el) {
+					var colStr = el.attr().fill;
+					// handle fill="" default value (#000000)
+					if (typeof (colStr) !== 'undefined' && colStr !== 'none') {
+						var colHex = self._getHexColorStr(colStr);
+						el.attr('fill', colHex);
+					}
+				});
 
-                // activate handles on all things we add to the working_area
-                if (switches.showTransformHandles) {
-                    self.showTransformHandles(id, true);
-                }
+				snap.select("#userContent").append(newSvg);
+				newSvg.transformable();
+				newSvg.ftRegisterBeforeTransformCallback(function () {
+					newSvg.clean_gc();
+				});
+				newSvg.ftRegisterAfterTransformCallback(function () {
+					var mb_meta = self._set_mb_attributes(newSvg);
+					// newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
+				});
 
-                var mb_meta = self._set_mb_attributes(newSvg);
-                // if(switches.embedGCode){
-                // 	newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
-                // }
+				// activate handles on all things we add to the working_area
+				if (switches.showTransformHandles) {
+					self.showTransformHandles(id, true);
+				}
 
-                setTimeout(function () {
-                    newSvg.ftRegisterOnTransformCallback(self.svgTransformUpdate);
-                }, 200);
+				var mb_meta = self._set_mb_attributes(newSvg);
+				// if(switches.embedGCode){
+				// 	newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
+				// }
 
-                return id;
-            } catch(e) {
-		        analyticsData['error'] = e.stack;
-		        console.error(e)
-                self.svg_place_general_error(e.stack);
-            } finally {
-                analyticsData.duration_processing = Date.now() - start_ts;
-                self._analyticsPrepareAndInsertSVG(analyticsData)
-            }
+				setTimeout(function () {
+					newSvg.ftRegisterOnTransformCallback(self.svgTransformUpdate);
+				}, 200);
+
+				return id;
+			} catch(e) {
+				analyticsData['error'] = e.stack;
+				console.error(e)
+				self.svg_place_general_error(e.stack);
+			} finally {
+				analyticsData.duration_processing = Date.now() - start_ts;
+				self._analyticsPrepareAndInsertSVG(analyticsData)
+			}
 		};
 
 		self._bake_progress_callback = function(percent, done, total) {
-            window.mrbeam.bake_progress = percent;
-            // console.log("_bake_progress_callback() "+percent.toFixed()+"% | " + done + " / " + total);
-        };
+			window.mrbeam.bake_progress = percent;
+			// console.log("_bake_progress_callback() "+percent.toFixed()+"% | " + done + " / " + total);
+		};
 
-        /**
-         * Removes unsupported elements from fragment.
-         * List of elements to remove is defined within this function in var unsupportedElems
-         * @param fragment
-         * @param analyticsData obj - this object gets modiyfied but not returned!!
-         * @returns fragment
-         * @private
-         */
+		/**
+		 * Removes unsupported elements from fragment.
+		 * List of elements to remove is defined within this function in var unsupportedElems
+		 * @param fragment
+		 * @param analyticsData obj - this object gets modiyfied but not returned!!
+		 * @returns fragment
+		 * @private
+		 */
 		self._removeUnsupportedSvgElements = function(fragment, analyticsData){
 
-            // add more elements that need to be removed here
-            var unsupportedElems = ['clipPath', 'flowRoot', 'switch', '#adobe_illustrator_pgf'];
-            //
-            for (var i = 0; i < unsupportedElems.length; i++) {
-                var myElem = fragment.selectAll(unsupportedElems[i]);
-                if (myElem.length !== 0) {
-                    analyticsData.removed_unsupported_elements[unsupportedElems[i]] = myElem.length;
-                    console.warn("Warning: removed unsupported '"+unsupportedElems[i]+"' element in SVG");
-                    self.svg_contains_unsupported_element_warning(unsupportedElems[i]);
-                    myElem.remove();
-                }
-            }
+			// add more elements that need to be removed here
+			var unsupportedElems = ['clipPath', 'flowRoot', 'switch', '#adobe_illustrator_pgf'];
+			//
+			for (var i = 0; i < unsupportedElems.length; i++) {
+				var myElem = fragment.selectAll(unsupportedElems[i]);
+				if (myElem.length !== 0) {
+					analyticsData.removed_unsupported_elements[unsupportedElems[i]] = myElem.length;
+					console.warn("Warning: removed unsupported '"+unsupportedElems[i]+"' element in SVG");
+					self.svg_contains_unsupported_element_warning(unsupportedElems[i]);
+					myElem.remove();
+				}
+			}
 
-            // remove other unnecessary or invisible ("display=none") elements
-            let removeElements = fragment.selectAll("metadata, script, [display=none]");
-            for (var i = 0; i < removeElements.length; i++) {
-                if (!(removeElements[i] in analyticsData.removed_unnecessary_elements)) analyticsData.removed_unnecessary_elements[removeElements[i].type] = 0;
-                analyticsData.removed_unnecessary_elements[removeElements[i].type]++;
-            }
-            removeElements.remove();
-            return fragment;
+			// remove other unnecessary or invisible ("display=none") elements
+			let removeElements = fragment.selectAll("metadata, script, [display=none]");
+			for (var i = 0; i < removeElements.length; i++) {
+				if (!(removeElements[i] in analyticsData.removed_unnecessary_elements)) analyticsData.removed_unnecessary_elements[removeElements[i].type] = 0;
+				analyticsData.removed_unnecessary_elements[removeElements[i].type]++;
+			}
+			removeElements.remove();
+			return fragment;
 		};
 
 		self.loadSVG = function(url, callback){
@@ -785,12 +787,12 @@ $(function(){
 		};
 
 
-        /**
-         * Returns with what program and version the given svg file was created. E.g. 'coreldraw'
-         * @param fragment
-         * @returns {*}
-         * @private
-         */
+		/**
+		 * Returns with what program and version the given svg file was created. E.g. 'coreldraw'
+		 * @param fragment
+		 * @returns {*}
+		 * @private
+		 */
 		self._get_generator_info = function(f){
 			var gen = null;
 			var version = null;
@@ -801,14 +803,28 @@ $(function(){
 				root_attrs = f.select('svg').node.attributes;
 			}
 
-			// detect Inkscape by attribute
+			// detect BeamOS generated Files by attribute
             // <svg
             //    ...
-            //    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-            //    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+            //    xmlns:mb="http://www.mr-beam.org"
             //    ...
-            //    inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
-            //    sodipodi:docname="Mr. Beam Jack of Spades Project Cards Inkscape.svg">
+            //    mb:beamOS_version="0.3.4"
+			var beamOS_version = root_attrs['mb:beamOS_version'];
+			if(beamOS_version !== undefined){
+				gen = 'beamOS';
+				version = version.value;
+//				console.log("Generator:", gen, version);
+				return {generator: gen, version: version};
+			}
+
+			// detect Inkscape by attribute
+			// <svg
+			//    ...
+			//    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+			//    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+			//    ...
+			//    inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
+			//    sodipodi:docname="Mr. Beam Jack of Spades Project Cards Inkscape.svg">
 			var inkscape_version = root_attrs['inkscape:version'];
 			if(inkscape_version !== undefined){
 				gen = 'inkscape';
@@ -820,7 +836,7 @@ $(function(){
 			// <svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg" xmlns:bx="https://boxy-svg.com">
 			// if (root_attrs['xmlns:bx'] && root_attrs['xmlns:bx'].value.search("boxy-svg.com")>0) {
 			//     return { generator: "boxy-svg", version: "unknown" };
-            // }
+			// }
 
 			// detect Illustrator by comment (works with 'save as svg')
 			// <!-- Generator: Adobe Illustrator 16.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
@@ -895,12 +911,12 @@ $(function(){
 			return /[\x00-\x08\x0E-\x1F]/.test(str);
 		};
 
-        /**
-         * Finds dimensions (wifth, height, etc..) of an SVG
-         * @param fragment
-         * @returns {{width: *, height: *, viewbox: *, units_x: *, units_y: *}}
-         * @private
-         */
+		/**
+		 * Finds dimensions (wifth, height, etc..) of an SVG
+		 * @param fragment
+		 * @returns {{width: *, height: *, viewbox: *, units_x: *, units_y: *}}
+		 * @private
+		 */
 		self._getDocumentDimensionAttributes = function(fragment){
 			if(fragment.select('svg') === null){
 				root_attrs = fragment.node.attributes;
@@ -1029,16 +1045,16 @@ $(function(){
 			var id = self.getEntryId(prefix);
 			var previewId = self.generateUniqueId(id, file);
 			newSvg.attr({id: previewId,
-                'mb:id': self._normalize_mb_id(previewId),
-                'mb:clone_of':clone_id,
-                class: srcElem.attr('class')});
-            self.removeHighlight(newSvg);
+				'mb:id': self._normalize_mb_id(previewId),
+				'mb:clone_of':clone_id,
+				class: srcElem.attr('class')});
+			self.removeHighlight(newSvg);
 
-            if (newSvg.attr('class').includes('userIMG')) {
-                let url = self._getIMGserveUrl(file);
-                self._create_img_filter(previewId);
-                newSvg.children()[0].attr({filter: 'url(#'+self._get_img_filter_id(previewId)+')', 'data-serveurl': url});
-            }
+			if (newSvg.attr('class').includes('userIMG')) {
+				let url = self._getIMGserveUrl(file);
+				self._create_img_filter(previewId);
+				newSvg.children()[0].attr({filter: 'url(#'+self._get_img_filter_id(previewId)+')', 'data-serveurl': url});
+			}
 
 			snap.select("#userContent").append(newSvg);
 
@@ -1055,7 +1071,7 @@ $(function(){
 				newSvg.clean_gc();
 			});
 			newSvg.ftRegisterAfterTransformCallback(function(){
-			    var mb_meta = self._set_mb_attributes(newSvg);
+				var mb_meta = self._set_mb_attributes(newSvg);
 				// newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
 			});
 			setTimeout(function(){
@@ -1063,9 +1079,9 @@ $(function(){
 			}, 200);
 
 			// activate handles on all things we add to the working_area
-            self.showTransformHandles(previewId, true);
+			self.showTransformHandles(previewId, true);
 
-            var mb_meta = self._set_mb_attributes(newSvg);
+			var mb_meta = self._set_mb_attributes(newSvg);
 			// newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
 			// self.check_sizes_and_placements(); // TODO?
 		};
@@ -1121,50 +1137,50 @@ $(function(){
 			elem.transform(elemCTM);
 		};
 
-        /**
-         * toggle transformation handles
-         * @param previewId or file
-         */
+		/**
+		 * toggle transformation handles
+		 * @param previewId or file
+		 */
 		self.toggleTransformHandles = function(previewId){
-		    if (typeof previewId === "object" && previewId.previewId) {
-		        previewId = previewId.previewId;
-            }
+			if (typeof previewId === "object" && previewId.previewId) {
+				previewId = previewId.previewId;
+			}
 			var el = snap.select('#'+previewId);
 			if(el){
 				el.ftToggleHandles();
 			}
 		};
 
-        /**
-         * Show or hide transformation handles
-         * @param previewId or file
-         * @param show true or false
-         */
+		/**
+		 * Show or hide transformation handles
+		 * @param previewId or file
+		 * @param show true or false
+		 */
 		self.showTransformHandles = function(previewId, show){
-		    if (typeof previewId === "object" && previewId.previewId) {
-		        previewId = previewId.previewId;
-            }
+			if (typeof previewId === "object" && previewId.previewId) {
+				previewId = previewId.previewId;
+			}
 			var el = snap.select('#'+previewId);
 			if(el){
-			    if (show) {
-                    el.ftCreateHandles();
-                } else {
-			        el.ftRemoveHandles();
-                }
+				if (show) {
+					el.ftCreateHandles();
+				} else {
+					el.ftRemoveHandles();
+				}
 			}
 		};
 
 		self.svgTransformUpdate = function(svg) {
-            var globalScale = self.scaleMatrix().a;
+			var globalScale = self.scaleMatrix().a;
 //            var transform = svg.transform();
-            var bbox = svg.getBBox();
-            var tx = bbox.x * globalScale;
-            var ty = self.workingAreaHeightMM() - bbox.y2 * globalScale;
-            var horizontal = (bbox.x2 - bbox.x) * globalScale;
-            var vertical = (bbox.y2 - bbox.y) * globalScale;
+			var bbox = svg.getBBox();
+			var tx = bbox.x * globalScale;
+			var ty = self.workingAreaHeightMM() - bbox.y2 * globalScale;
+			var horizontal = (bbox.x2 - bbox.x) * globalScale;
+			var vertical = (bbox.y2 - bbox.y) * globalScale;
 			var rot = svg.ftGetRotation();
-            var id = svg.attr('id');
-            var label_id = id.substr(0, id.indexOf('-'));
+			var id = svg.attr('id');
+			var label_id = id.substr(0, id.indexOf('-'));
 			$('#'+label_id+' .translation').val(tx.toFixed(1) + ',' + ty.toFixed(1));
 			$('#'+label_id+' .horizontal').val(horizontal.toFixed() + 'mm');
 			$('#'+label_id+' .vertical').val(vertical.toFixed() + 'mm');
@@ -1249,8 +1265,8 @@ $(function(){
 				// svg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
 				event.target.value = cols+"×"+rows;
 				svg.ftStoreInitialTransformMatrix();
-			    svg.ftUpdateTransform();
-			    self.check_sizes_and_placements();
+				svg.ftUpdateTransform();
+				self.check_sizes_and_placements();
 			}
 		};
 		self.imgManualAdjust = function(data, event) {
@@ -1316,7 +1332,7 @@ $(function(){
 		};
 
 		self.svg_contains_unsupported_element_warning = function(elemName){
-            elemName = elemName.replace('\\:', ':');
+			elemName = elemName.replace('\\:', ':');
 			var error = "<p>" + _.sprintf(gettext("The SVG file contains unsupported elements: '%(elemName)s' These elements got removed."), {elemName: elemName}) + "</p>";
 			new PNotify({
 				title: _.sprintf(gettext("Unsupported elements in SVG: '%(elemName)s'"), {elemName: elemName}),
@@ -1327,67 +1343,67 @@ $(function(){
 		};
 
 		self.svg_contains_text_warning = function(svg){
-            var error = "<p>" + _.sprintf(gettext("The SVG file contains text elements.%(br)sIf you want to laser just their outlines,%(br)splease convert them to paths.%(br)sOtherwise they will be engraved with infill."), {br: "<br/>"}) + "</p>";
-            new PNotify({
-                title: gettext("Text elements found"),
-                text: error,
-                type: "warn",
-                hide: false,
+			var error = "<p>" + _.sprintf(gettext("The SVG file contains text elements.%(br)sIf you want to laser just their outlines,%(br)splease convert them to paths.%(br)sOtherwise they will be engraved with infill."), {br: "<br/>"}) + "</p>";
+			new PNotify({
+				title: gettext("Text elements found"),
+				text: error,
+				type: "warn",
+				hide: false,
 				buttons: {
-        			sticker: false
-    			}
-            });
+					sticker: false
+				}
+			});
 		};
 
-        self.svg_contains_online_style_warning = function(svg){
-            var error = "<p>" + gettext("The SVG file contained style elements with online references. Since online references are not supported, we removed them. The image might look a bit different now.") + "</p>";
-            new PNotify({
-                title: gettext("Style elements removed"),
-                text: error,
-                type: "warn",
-                hide: false,
+		self.svg_contains_online_style_warning = function(svg){
+			var error = "<p>" + gettext("The SVG file contained style elements with online references. Since online references are not supported, we removed them. The image might look a bit different now.") + "</p>";
+			new PNotify({
+				title: gettext("Style elements removed"),
+				text: error,
+				type: "warn",
+				hide: false,
 				buttons: {
-        			sticker: false
-    			}
-            });
+					sticker: false
+				}
+			});
 		};
 
-        self.file_not_readable = function(){
-            var error = "<p>" + _.sprintf(gettext("Something went wrong while reading this file.%(topen)sSorry!%(tclose)sPlease check it with another application. If it works there, our support team would be happy to take a look."), {topen: "<br/><h3 style='text-align:center;'>", tclose: "</h3><br/>"}) + "</p>";
-            new PNotify({
-                // Translators: "in the sense of Ouch!"
-                title: gettext("Oops."),
-                text: error,
-                type: "error",
-                hide: false,
+		self.file_not_readable = function(){
+			var error = "<p>" + _.sprintf(gettext("Something went wrong while reading this file.%(topen)sSorry!%(tclose)sPlease check it with another application. If it works there, our support team would be happy to take a look."), {topen: "<br/><h3 style='text-align:center;'>", tclose: "</h3><br/>"}) + "</p>";
+			new PNotify({
+				// Translators: "in the sense of Ouch!"
+				title: gettext("Oops."),
+				text: error,
+				type: "error",
+				hide: false,
 				buttons: {
-        			sticker: false
-    			}
-            });
+					sticker: false
+				}
+			});
 		};
 
-        self.svg_place_general_error = function(stack){
-            var error = "<p>" + _.sprintf(gettext("An unknown error occurred while processing this design file.")) + "</p>";
-            error += "<p>" + _.sprintf(gettext("Please try reloading this browser window and try again. If this error remains, contact the Mr Beam Support Team. Make sure you provide the error message below together with the design file your trying to process.")) + "</p>";
-            error += "<p><strong>"+ _.sprintf(gettext("Error"))+ ":</strong><br/><textarea spellcheck=\"false\" style=\"width: 95%; background-color: inherit; font-size: 12px; line-height: normal; height: 70px; color: inherit; background-color: inherit;\">" +stack+ "</textarea></p>";
-            new PNotify({
-                title: gettext("Error."),
-                text: error,
-                type: "error",
-                hide: false,
+		self.svg_place_general_error = function(stack){
+			var error = "<p>" + _.sprintf(gettext("An unknown error occurred while processing this design file.")) + "</p>";
+			error += "<p>" + _.sprintf(gettext("Please try reloading this browser window and try again. If this error remains, contact the Mr Beam Support Team. Make sure you provide the error message below together with the design file you're trying to process.")) + "</p>";
+			error += "<p><strong>"+ _.sprintf(gettext("Error"))+ ":</strong><br/><textarea spellcheck=\"false\" style=\"width: 95%; background-color: inherit; font-size: 12px; line-height: normal; height: 70px; color: inherit; background-color: inherit;\">" +stack+ "</textarea></p>";
+			new PNotify({
+				title: gettext("Error"),
+				text: error,
+				type: "error",
+				hide: false,
 				buttons: {
-        			sticker: false
-    			}
-            });
+					sticker: false
+				}
+			});
 		};
 
 		self.placeIMG = function (file) {
-            var start_ts = Date.now();
+			var start_ts = Date.now();
 			var url = self._getIMGserveUrl(file);
 			var img = new Image();
 			img.onload = function () {
-			    var duration_load = Date.now() - start_ts;
-		        start_ts = Date.now();
+				var duration_load = Date.now() - start_ts;
+				start_ts = Date.now();
 
 				var wpx = this.width;
 				var hpx = this.height;
@@ -1404,10 +1420,10 @@ $(function(){
 				self._create_img_filter(previewId);
 				newImg.attr({filter: 'url(#'+self._get_img_filter_id(previewId)+')', 'data-serveurl': url});
 				var imgWrapper = snap.group().attr({
-                    id: previewId,
-                    'mb:id':self._normalize_mb_id(previewId),
-                    class: 'userIMG',
-                    'mb:origin': origin
+					id: previewId,
+					'mb:id':self._normalize_mb_id(previewId),
+					class: 'userIMG',
+					'mb:origin': origin
 				});
 
 				imgWrapper.append(newImg);
@@ -1424,17 +1440,17 @@ $(function(){
 				self.placedDesigns.push(file);
 
 				// analytics
-                let analyticsData = {
-                    id: id,
-                    pixel_width: wpx,
-                    pixel_height: hpx,
-                    size: file.size,
-                    duration_load: duration_load,
-                    duration_processing: (Date.now() - start_ts),
-                    file_type: file.display.split('.').slice(-1)[0],
-                    filename_hash: file.hash,
-                };
-                self._analyticsPlaceImage(analyticsData)
+				let analyticsData = {
+					id: id,
+					pixel_width: wpx,
+					pixel_height: hpx,
+					size: file.size,
+					duration_load: duration_load,
+					duration_processing: (Date.now() - start_ts),
+					file_type: file.display.split('.').slice(-1)[0],
+					filename_hash: file.hash,
+				};
+				self._analyticsPlaceImage(analyticsData)
 			};
 			img.src = url;
 		};
@@ -1447,7 +1463,7 @@ $(function(){
 		self._create_img_filter = function(previewId){
 			var id = self._get_img_filter_id(previewId);
 			var str = "<feComponentTransfer class='contrast_filter' x='0%' y='0%' width='100%' height='100%' in='colormatrix' result='contrast_result'>"
-    		+ "<feFuncR type='gamma' amplitude='1' offset='0' exponent='1'/>"
+			+ "<feFuncR type='gamma' amplitude='1' offset='0' exponent='1'/>"
 			+ "<feFuncG type='gamma' amplitude='1' offset='0' exponent='1'/>"
 			+ "<feFuncB type='gamma' amplitude='1' offset='0' exponent='1'/>"
 			+ "<feFuncA type='identity' />"
@@ -1496,30 +1512,30 @@ $(function(){
 		};
 
 		self.moveSelectedDesign = function(ifX,ifY){
-		    var diff = 2;
-		    var transformHandles = snap.select('#handlesGroup');
+			var diff = 2;
+			var transformHandles = snap.select('#handlesGroup');
 
-		    if(transformHandles){
+			if(transformHandles){
 				var selectedId = transformHandles.data('parentId');
-			    var svg = snap.select('#'+selectedId);
-                var globalScale = self.scaleMatrix().a;
+				var svg = snap.select('#'+selectedId);
+				var globalScale = self.scaleMatrix().a;
 
-                // var bbox = svg.getBBox();
-                // var nx = bbox.x + diff * ifX;
-                // var ny = bbox.y + diff * ifY;
+				// var bbox = svg.getBBox();
+				// var nx = bbox.x + diff * ifX;
+				// var ny = bbox.y + diff * ifY;
 
-                var nx = diff * ifX;
-                var ny = diff * ifY;
+				var nx = diff * ifX;
+				var ny = diff * ifY;
 
-                var ntx = nx/globalScale;
-                var nty = ny/globalScale;
+				var ntx = nx/globalScale;
+				var nty = ny/globalScale;
 
-                svg.ftStoreInitialTransformMatrix();
-                svg.data('tx', ntx);
-                svg.data('ty', nty);
-                svg.ftManualTransform({tx_rel: ntx, ty_rel: nty, diffType:'absolute'})
+				svg.ftStoreInitialTransformMatrix();
+				svg.data('tx', ntx);
+				svg.data('ty', nty);
+				svg.ftManualTransform({tx_rel: ntx, ty_rel: nty, diffType:'absolute'})
 			}
-        };
+		};
 
 		self.removeSelectedDesign = function(){
 			var transformHandles = snap.select('#handlesGroup');
@@ -1662,33 +1678,35 @@ $(function(){
 
 		self.templateFor = function(data) {
 			if(data.type === "model" || data.type === "machinecode") {
-                var extension = data.name.split('.').pop().toLowerCase();
-                if (extension === "svg") {
-                    return "wa_template_" + data.type + "_svg";
+	   var extension = data.name.split('.').pop().toLowerCase();
+				if (extension === "svg") {
+					return "wa_template_" + data.type + "_svg";
 				} else if (extension === "dxf") {
-                    return "wa_template_" + data.type + "_svg";
-                } else if (_.contains(['jpg', 'jpeg', 'png', 'gif', 'bmp', 'pcx', 'webp'], extension)) {
-                    return "wa_template_" + data.type + "_img";
-                } else {
-                    return "wa_template_" + data.type;
-                }
-            } else if (data.type === "quicktext") {
-			    return "wa_template_quicktext";
-            } else if (data.type === "quickshape") {
-			    return "wa_template_quickshape";
+					return "wa_template_" + data.type + "_svg";
+				} else if (_.contains(['jpg', 'jpeg', 'png', 'gif', 'bmp', 'pcx', 'webp'], extension)) {
+					return "wa_template_" + data.type + "_img";
+				} else {
+					return "wa_template_" + data.type;
+				}
+			} else if (data.type === "recentjob") {
+				return "wa_template_model_svg";
+			} else if (data.type === "quicktext") {
+				return "wa_template_quicktext";
+			} else if (data.type === "quickshape") {
+				return "wa_template_quickshape";
 			} else {
 				return "wa_template_dummy";
 			}
 		};
 
 		self.getEntryId = function(prefix, length) {
-		    prefix = prefix || 'wa';
+			prefix = prefix || 'wa';
 			return prefix + "_" + getHumanReadableId(length);
 		};
 
 		self.init = function(){
 			// init snap.svg
-            snap = Snap('#area_preview');
+			snap = Snap('#area_preview');
 			self.px2mm_factor.subscribe(function(newVal){
 				if(!isNaN(newVal)){
 					MRBEAM_PX2MM_FACTOR_WITH_ZOOM = newVal;
@@ -1733,7 +1751,7 @@ $(function(){
 					fill: "#000000",
 					stroke: "none",
 					strokeWidth: 1,
-                    r: 0.75
+					r: 0.75
 				});
 
 				// dot pattern
@@ -1753,12 +1771,12 @@ $(function(){
 		};
 
 		self.generateUniqueId = function(idBase, file){
-		    var suffix = "";
-		    if (file) {
-                var suffix = self.countPlacements(file);
-            } else {
-		        suffix = self.id_counter++;
-            }
+			var suffix = "";
+			if (file) {
+				var suffix = self.countPlacements(file);
+			} else {
+				suffix = self.id_counter++;
+			}
 
 			var suffix = 0;
 			var id = idBase + "-" + suffix;
@@ -1792,16 +1810,16 @@ $(function(){
 
 			// remove all items maked with deleteBeforeRendering class
 			var dels = compSvg.selectAll('.deleteBeforeRendering');
-            if (dels && dels.length > 0) {
-                for(var i=0; i<dels.length; i++) {
-                    dels[i].remove();
-                }
-            }
+			if (dels && dels.length > 0) {
+				for(var i=0; i<dels.length; i++) {
+					dels[i].remove();
+				}
+			}
 
-            // embed the fonts as dataUris
+			// embed the fonts as dataUris
 			// TODO only if Quick Text is present
-           $('#compSvg defs').append('<style id="quickTextFontPlaceholder" class="quickTextFontPlaceholder deleteAfterRendering"></style>');
-           self._qt_copyFontsToSvg(compSvg.select(".quickTextFontPlaceholder").node);
+		   $('#compSvg defs').append('<style id="quickTextFontPlaceholder" class="quickTextFontPlaceholder deleteAfterRendering"></style>');
+		   self._qt_copyFontsToSvg(compSvg.select(".quickTextFontPlaceholder").node);
 
 			self.renderInfill(compSvg, fillAreas, cutOutlines, wMM, hMM, pxPerMM, function(svgWithRenderedInfill){
 				callback( self._wrapInSvgAndScale(svgWithRenderedInfill));
@@ -1822,7 +1840,7 @@ $(function(){
 				svgStr = self._normalize_svg_string(svgStr);
 				var gc_otions_str = self.gc_options_as_string().replace('"', "'");
 
-				var svg = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:mb="http://www.mr-beam.org/mbns"'
+				var svg = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:mb="http://www.mr-beam.org/mbns" mb:beamOS_version="'+BEAMOS_VERSION+'"' 
 						+ ' width="'+ w +'" height="'+ h +'"  viewBox="'+ viewBox +'" mb:gc_options="'+gc_otions_str+'"><defs/>'+svgStr+'</svg>';
 				return svg;
 			} else {
@@ -1831,57 +1849,57 @@ $(function(){
 		};
 
 		self._normalize_svg_string = function(svgStr){
-		    // TODO: look for better solution to solve this Firefox bug problem
-            svgStr = svgStr.replace("(\\\"","(");
-            svgStr = svgStr.replace("\\\")",")");
-            return svgStr;
-        };
+			// TODO: look for better solution to solve this Firefox bug problem
+			svgStr = svgStr.replace("(\\\"","(");
+			svgStr = svgStr.replace("\\\")",")");
+			return svgStr;
+		};
 
-        self._normalize_mb_id = function(id) {
-            return id ? id.replace(/\s/g, '_') : '';
-        };
+		self._normalize_mb_id = function(id) {
+			return id ? id.replace(/\s/g, '_') : '';
+		};
 
-        self.gc_options_as_string = function() {
-            var gc_options = self.gc_options();
-            var res = [];
-            for (var key in gc_options) {
-                res.push(key + ":" + gc_options[key]);
-            }
-            return res.join(", ");
-        };
+		self.gc_options_as_string = function() {
+			var gc_options = self.gc_options();
+			var res = [];
+			for (var key in gc_options) {
+				res.push(key + ":" + gc_options[key]);
+			}
+			return res.join(", ");
+		};
 
-        self._set_mb_attributes = function (snapSvg) {
-            var mb_meta = {};
-            snapSvg.selectAll("path").forEach(function (element) {
-                var id = element.attr('id');
+		self._set_mb_attributes = function (snapSvg) {
+			var mb_meta = {};
+			snapSvg.selectAll("path").forEach(function (element) {
+				var id = element.attr('id');
 
-                // if there's no id, let's create one
-                if (!id) {
-                    id = self.generateUniqueId(self.getEntryId('wa',6));
-                    element.attr('id', id);
-                }
+				// if there's no id, let's create one
+				if (!id) {
+					id = self.generateUniqueId(self.getEntryId('wa',6));
+					element.attr('id', id);
+				}
 
-                var my_meta = {node: element.node.nodeName || ''};
-                var attrs = element.node.attributes;
-                for (var i = 0; i < attrs.length; i++) {
-                    if (attrs[i].nodeName.startsWith('mb:') && attrs[i].nodeName != 'mb:gc') {
-                        my_meta[attrs[i].nodeName] = attrs[i].nodeValue;
-                    }
-                }
-                var normalized_id = self._normalize_mb_id(id);
-                if (my_meta['mb:id'] && normalized_id != my_meta['mb:id'] && !my_meta['mb:clone_of']) {
-                    element.attr('mb:clone_of', my_meta['mb:id']);
-                    my_meta['mb:clone_of'] = my_meta['mb:id'];
-                }
+				var my_meta = {node: element.node.nodeName || ''};
+				var attrs = element.node.attributes;
+				for (var i = 0; i < attrs.length; i++) {
+					if (attrs[i].nodeName.startsWith('mb:') && attrs[i].nodeName != 'mb:gc') {
+						my_meta[attrs[i].nodeName] = attrs[i].nodeValue;
+					}
+				}
+				var normalized_id = self._normalize_mb_id(id);
+				if (my_meta['mb:id'] && normalized_id != my_meta['mb:id'] && !my_meta['mb:clone_of']) {
+					element.attr('mb:clone_of', my_meta['mb:id']);
+					my_meta['mb:clone_of'] = my_meta['mb:id'];
+				}
 
-                element.attr("mb:id", normalized_id);
+				element.attr("mb:id", normalized_id);
 
-                my_meta['mb:id'] = normalized_id;
-                mb_meta[id] = my_meta;
-                self.gc_meta[id] = my_meta;
-            });
-            return mb_meta;
-        };
+				my_meta['mb:id'] = normalized_id;
+				mb_meta[id] = my_meta;
+				self.gc_meta[id] = my_meta;
+			});
+			return mb_meta;
+		};
 
 		self.getPlacedSvgs = function() {
 			var svgFiles = [];
@@ -1985,38 +2003,38 @@ $(function(){
 		};
 
 		self.onAllBound = function(allViewModels){
-		    self.svgDPI = self.settings.settings.plugins.mrbeam.svgDPI; // we assign ko function
-		    self.dxfScale = self.settings.settings.plugins.mrbeam.dxfScale;
-            self.gc_options = ko.computed(function(){
-                return {
-                    beamOS: BEAMOS_DISPLAY_VERSION,
-                    gc_nextgen: mrbeam.path.version,
-                    enabled: self.settings.settings.plugins.mrbeam.gcode_nextgen.enabled(),
-                    precision: self.settings.settings.plugins.mrbeam.gcode_nextgen.precision(),
-                    optimize_travel: self.settings.settings.plugins.mrbeam.gcode_nextgen.optimize_travel(),
-                    small_paths_first: self.settings.settings.plugins.mrbeam.gcode_nextgen.small_paths_first(),
-                    clip_working_area: self.settings.settings.plugins.mrbeam.gcode_nextgen.clip_working_area(),
-                    clipRect: [0,0,self.workingAreaWidthMM(), self.workingAreaHeightMM()]
-                };
-            });
+			self.svgDPI = self.settings.settings.plugins.mrbeam.svgDPI; // we assign ko function
+			self.dxfScale = self.settings.settings.plugins.mrbeam.dxfScale;
+			self.gc_options = ko.computed(function(){
+				return {
+					beamOS: BEAMOS_DISPLAY_VERSION,
+					gc_nextgen: mrbeam.path.version,
+					enabled: self.settings.settings.plugins.mrbeam.gcode_nextgen.enabled(),
+					precision: self.settings.settings.plugins.mrbeam.gcode_nextgen.precision(),
+					optimize_travel: self.settings.settings.plugins.mrbeam.gcode_nextgen.optimize_travel(),
+					small_paths_first: self.settings.settings.plugins.mrbeam.gcode_nextgen.small_paths_first(),
+					clip_working_area: self.settings.settings.plugins.mrbeam.gcode_nextgen.clip_working_area(),
+					clipRect: [0,0,self.workingAreaWidthMM(), self.workingAreaHeightMM()]
+				};
+			});
 			$('#quick_shape_dialog').on('hidden', function(){
 				self._qs_removeInvalid();
 				self._qs_dialogClose();
 			});
-            $('#quick_text_dialog').on('hidden', function(){
+			$('#quick_text_dialog').on('hidden', function(){
 				self._qt_dialogClose();
 			});
-        };
+		};
 
 		self.onTabChange = function(current, prev){
-		    if(current == '#settings'){
-		        // Since Settings is not a BS dialog anymore,
-                // we need to trigger 'show' and 'hidden' events "manually"
-                // for OctoPrint to trigger onSettingsShown() and onSettingsHidden()
-                if (self.settings && self.settings.settingsDialog) {
-                    self.settings.settingsDialog.trigger('show');
-                }
-		    }
+			if(current == '#settings'){
+				// Since Settings is not a BS dialog anymore,
+				// we need to trigger 'show' and 'hidden' events "manually"
+				// for OctoPrint to trigger onSettingsShown() and onSettingsHidden()
+				if (self.settings && self.settings.settingsDialog) {
+					self.settings.settingsDialog.trigger('show');
+				}
+			}
 		};
 
 		self.onAfterTabChange = function(current, prev){
@@ -2024,13 +2042,13 @@ $(function(){
 				self.trigger_resize();
 			}
 			if(prev == '#settings'){
-			    // Since Settings is not a BS dialog anymore,
-                // we need to trigger 'show' and 'hidden' events "manually"
-                // for OctoPrint to trigger onSettingsShown() and onSettingsHidden()
-			    if (self.settings && self.settings.settingsDialog) {
-                    self.settings.settingsDialog.trigger('hidden');
-                }
-            }
+				// Since Settings is not a BS dialog anymore,
+				// we need to trigger 'show' and 'hidden' events "manually"
+				// for OctoPrint to trigger onSettingsShown() and onSettingsHidden()
+				if (self.settings && self.settings.settingsDialog) {
+					self.settings.settingsDialog.trigger('hidden');
+				}
+			}
 		};
 
 		self.onBeforeTabChange = function(current, prev){
@@ -2043,7 +2061,7 @@ $(function(){
 					var svg = snap.select('#' + design.previewId);
 					var misfitting = self.outsideWorkingArea(svg);
 					self._mark_as_misfit(design, misfitting, svg);
-                }
+				}
 			});
 		};
 
@@ -2054,22 +2072,22 @@ $(function(){
 		 * @param svg (optional)  snap.select('#' + design.previewId);
 		 */
 		self._mark_as_misfit = function(design, fitMatrix, svg) {
-		    if (!svg) {
-		        svg = snap.select('#' + design.previewId);
-		    }
-		    if(fitMatrix && (fitMatrix.oversized || fitMatrix.outside)){
-                design.misfit = true;
-                $('#'+design.id).addClass('misfit');
-                svg.addClass('misfit');
-                svg.selectAll('*').forEach(function(e){e.addClass('misfit');});
-                svg.data('fitMatrix', fitMatrix);
-            } else {
-                design.misfit = false;
-                $('#'+design.id).removeClass('misfit');
-                svg.removeClass('misfit');
-                svg.selectAll('*').forEach(function(e){e.removeClass('misfit');});
-                svg.data('fitMatrix', null);
-            }
+			if (!svg) {
+				svg = snap.select('#' + design.previewId);
+			}
+			if(fitMatrix && (fitMatrix.oversized || fitMatrix.outside)){
+				design.misfit = true;
+				$('#'+design.id).addClass('misfit');
+				svg.addClass('misfit');
+				svg.selectAll('*').forEach(function(e){e.addClass('misfit');});
+				svg.data('fitMatrix', fitMatrix);
+			} else {
+				design.misfit = false;
+				$('#'+design.id).removeClass('misfit');
+				svg.removeClass('misfit');
+				svg.selectAll('*').forEach(function(e){e.removeClass('misfit');});
+				svg.data('fitMatrix', null);
+			}
 		};
 
 		self._embedAllImages = function(svg, callback){
@@ -2103,14 +2121,14 @@ $(function(){
 		// render the infill and inject it as an image into the svg
 		self.renderInfill = function (svg, fillAreas, cutOutlines, wMM, hMM, pxPerMM, callback) {
 			//TODO cutOutlines use it and make it work
-            var wPT = wMM * 90 / 25.4;
-            var hPT = hMM * 90 / 25.4;
-            var tmpSvg = self.getNewSvg('tmpSvg', wPT, hPT);
-            var attrs = {viewBox: "0 0 " + wMM + " " + hMM};
-            tmpSvg.attr(attrs);
-            // get only filled items and embed the images
-            var userContent = svg.clone();
-            tmpSvg.append(userContent);
+			var wPT = wMM * 90 / 25.4;
+			var hPT = hMM * 90 / 25.4;
+			var tmpSvg = self.getNewSvg('tmpSvg', wPT, hPT);
+			var attrs = {viewBox: "0 0 " + wMM + " " + hMM};
+			tmpSvg.attr(attrs);
+			// get only filled items and embed the images
+			var userContent = svg.clone();
+			tmpSvg.append(userContent);
 
 			// copy defs for filters
 			var originalFilters = snap.selectAll('defs>filter');
@@ -2190,40 +2208,40 @@ $(function(){
 		};
 
 		self.getNewSvg = function(id, w, h){
-		    var svg = Snap(w, h);
-            svg.attr('id', id);
-            svg.attr('xmlns', 'http://www.w3.org/2000/svg');
-            svg.attr('xmlns:mb', 'http://www.mr-beam.org/mbns');
-            svg.attr('xmlns:xlink', 'http://www.w3.org/1999/xlink');
-            return svg;
-        };
+			var svg = Snap(w, h);
+			svg.attr('id', id);
+			svg.attr('xmlns', 'http://www.w3.org/2000/svg');
+			svg.attr('xmlns:mb', 'http://www.mr-beam.org/mbns');
+			svg.attr('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+			return svg;
+		};
 
 		self._enableWorkingAreaOverModal = function(){ $('#area_preview').addClass('overModalBG'); }
 		self._disableWorkingAreaOverModal = function(){ setTimeout(function(){$('#area_preview').removeClass('overModalBG');},300); }
 
-        // ***********************************************************
+		// ***********************************************************
 		//  QUICKSHAPE start
-        // ***********************************************************
+		// ***********************************************************
 
 
-        self.newQuickShape = function() {
-            var file = self._qs_placeQuickShape();
-            self.editQuickShape(file);
+		self.newQuickShape = function() {
+			var file = self._qs_placeQuickShape();
+			self.editQuickShape(file);
 
-        };
+		};
 
-       /**
-         * Equivalent to self.placeSVG for QuickShape
-         * @returns file object
-         */
-        self._qs_placeQuickShape = function(){
+	   /**
+		 * Equivalent to self.placeSVG for QuickShape
+		 * @returns file object
+		 */
+		self._qs_placeQuickShape = function(){
 			var w = self.workingAreaWidthMM() / 5;
 			var h = w * 0.5;
 			var x = (self.workingAreaWidthMM() - w) / 2;
 			var y = (self.workingAreaHeightMM() - h) / 3;
 			var r = 0;
 
-            var id = self.getEntryId('qs');
+			var id = self.getEntryId('qs');
 			var origin = id;
 			var ts = Date.now();
 			var file = {
@@ -2247,9 +2265,9 @@ $(function(){
 				},
 				invalid: false
 			};
-            var previewId = self.generateUniqueId(id, file); // appends -# if multiple times the same design is placed.
+			var previewId = self.generateUniqueId(id, file); // appends -# if multiple times the same design is placed.
 			file.previewId = previewId;
-            self.placedDesigns.push(file);
+			self.placedDesigns.push(file);
 
 			var d = self._qs_getRect(w,h,r);
 			var shapeSvg = '<svg><g><path d="'+d+'" stroke-width="1" stroke="'+file.qs_params.color+'" fill="#ffffff" fill-opacity="0" /></g></svg>';
@@ -2259,14 +2277,14 @@ $(function(){
 			self._prepareAndInsertSVG(fragment, previewId, origin, '', {showTransformHandles: false, embedGCode: false}, {_skip: true});
 			$('#'+previewId).attr('transform', scaleMatrixStr);
 
-            return file;
-        };
+			return file;
+		};
 
 		/**
-         * Opens QuickText window to edit an existing QuickText object
-         * @param file Object representing the QuickText to edit
-         */
-        self.editQuickShape = function (file) {
+		 * Opens QuickText window to edit an existing QuickText object
+		 * @param file Object representing the QuickText to edit
+		 */
+		self.editQuickShape = function (file) {
 			var params = file.qs_params;
 			self.showTransformHandles(file.previewId, false);
 			self.currentQuickShapeFile = null;
@@ -2292,15 +2310,15 @@ $(function(){
 			self._qs_currentQuickShapeUpdate();
 		};
 
-		        /**
-         * shows transformation handles on QT if it exists.
-         * @private
-         */
-        self._qs_currentQuickShapeShowTransformHandlesIfNotEmpty = function() {
-            if (self.currentQuickShapeFile && self.currentQuickShapeFile.previewId) {
-                self.showTransformHandles(self.currentQuickShapeFile.previewId, true);
-            }
-        };
+				/**
+		 * shows transformation handles on QT if it exists.
+		 * @private
+		 */
+		self._qs_currentQuickShapeShowTransformHandlesIfNotEmpty = function() {
+			if (self.currentQuickShapeFile && self.currentQuickShapeFile.previewId) {
+				self.showTransformHandles(self.currentQuickShapeFile.previewId, true);
+			}
+		};
 
 		self.switchQuickShape = function (newShapeType){
 			if (self.currentQuickShapeFile) {
@@ -2319,9 +2337,9 @@ $(function(){
 			if (self.currentQuickShapeFile) {
 //				var type = $('#shape_tabs li.active a').attr('href');
 				var type = self.currentQuickShapeFile.qs_params.type;
-                let name = self.quickShapeNames.get(type.substr(1));
-                self.currentQuickShapeFile.name = name;
-                self.currentQuickShape(self.currentQuickShapeFile.name);
+				let name = self.quickShapeNames.get(type.substr(1));
+				self.currentQuickShapeFile.name = name;
+				self.currentQuickShape(self.currentQuickShapeFile.name);
 				var qs_params = {
 					type: type,
 					color: $('#quick_shape_color').val(),
@@ -2369,21 +2387,21 @@ $(function(){
 				$('#'+self.currentQuickShapeFile.id+' .title').text(name);
 
 				// analytics
-                var analyticsData = {
-                    id: self.currentQuickShapeFile.id,
-                    file_type: 'quickShape',
-                    type: type.substr(1),
-                    color: qs_params.color,
-                    name: name,
-                }
-                for (let myKey in qs_params) {
-                    if (myKey.startsWith(analyticsData.type)) {
-                        analyticsData[myKey] = qs_params[myKey];
-                    }
-                }
+				var analyticsData = {
+					id: self.currentQuickShapeFile.id,
+					file_type: 'quickShape',
+					type: type.substr(1),
+					color: qs_params.color,
+					name: name,
+				}
+				for (let myKey in qs_params) {
+					if (myKey.startsWith(analyticsData.type)) {
+						analyticsData[myKey] = qs_params[myKey];
+					}
+				}
 
-                // actual analytics are written when the dialog is closed
-                self.currentQuickShapeAnalyticsData = analyticsData;
+				// actual analytics are written when the dialog is closed
+				self.currentQuickShapeAnalyticsData = analyticsData;
 			}
 		};
 
@@ -2597,274 +2615,274 @@ $(function(){
 			self._analyticsQuickShapeUpdate(self.currentQuickShapeAnalyticsData);
 		};
 
-        // ***********************************************************
+		// ***********************************************************
 		//  QUICKSHAPE end
-        // ***********************************************************
+		// ***********************************************************
 
-        // ***********************************************************
+		// ***********************************************************
 		//  QUICKTEXT start
-        // ***********************************************************
+		// ***********************************************************
 
-        /**
-         * Opens QuickText window and places a new quickText Object
-         * to the working_area and file list.
-         */
-        self.newQuickText = function() {
-            var file = self._qt_placeQuicktext();
-            self.editQuickText(file);
-        };
+		/**
+		 * Opens QuickText window and places a new quickText Object
+		 * to the working_area and file list.
+		 */
+		self.newQuickText = function() {
+			var file = self._qt_placeQuicktext();
+			self.editQuickText(file);
+		};
 
-        /**
-         * Opens QuickText window to edit an existing QuickText object
-         * @param file Object representing the QuickText to edit
-         */
-        self.editQuickText = function(file) {
-            self.currentQuickTextFile = file;
-            self._qt_currentQuickTextUpdate();
-            $('#quick_text_dialog').one('hide', self._qt_currentQuickTextRemoveIfEmpty);
-            $('#quick_text_dialog').one('hide', self._qt_currentQuickTextShowTransformHandlesIfNotEmpty);
+		/**
+		 * Opens QuickText window to edit an existing QuickText object
+		 * @param file Object representing the QuickText to edit
+		 */
+		self.editQuickText = function(file) {
+			self.currentQuickTextFile = file;
+			self._qt_currentQuickTextUpdate();
+			$('#quick_text_dialog').one('hide', self._qt_currentQuickTextRemoveIfEmpty);
+			$('#quick_text_dialog').one('hide', self._qt_currentQuickTextShowTransformHandlesIfNotEmpty);
 			// TODO check if necessary
-            $('#quick_text_dialog').one('shown', function(){$('#quick_text_dialog_text_input').focus();});
-            $('#quick_text_dialog').modal({keyboard: true});
-            self.showTransformHandles(self.currentQuickTextFile.previewId, false);
-            $('#quick_text_dialog_intensity').val(self.currentQuickTextFile.intensity);
-            $('#quick_text_dialog_text_input').focus();
-        };
+			$('#quick_text_dialog').one('shown', function(){$('#quick_text_dialog_text_input').focus();});
+			$('#quick_text_dialog').modal({keyboard: true});
+			self.showTransformHandles(self.currentQuickTextFile.previewId, false);
+			$('#quick_text_dialog_intensity').val(self.currentQuickTextFile.intensity);
+			$('#quick_text_dialog_text_input').focus();
+		};
 
-        /**
-         * callback/subscription to changes of the text field
-         */
-        self.currentQuickText.subscribe(function(nuText) {
-            if (self.currentQuickTextFile) {
-                self.currentQuickTextFile.name = nuText;
-            }
-            self._qt_currentQuickTextUpdate();
-        });
+		/**
+		 * callback/subscription to changes of the text field
+		 */
+		self.currentQuickText.subscribe(function(nuText) {
+			if (self.currentQuickTextFile) {
+				self.currentQuickTextFile.name = nuText;
+			}
+			self._qt_currentQuickTextUpdate();
+		});
 
-        /**
-         * callback/subscription for the intensity slider
-         */
-        $('#quick_text_dialog_intensity').on("input change", function(e){
-            if (self.currentQuickTextFile) {
-                self.currentQuickTextFile.intensity = e.currentTarget.value;
-                self.lastQuickTextIntensity = self.currentQuickTextFile.intensity;
-                self._qt_currentQuickTextUpdate();
-            }
-        });
+		/**
+		 * callback/subscription for the intensity slider
+		 */
+		$('#quick_text_dialog_intensity').on("input change", function(e){
+			if (self.currentQuickTextFile) {
+				self.currentQuickTextFile.intensity = e.currentTarget.value;
+				self.lastQuickTextIntensity = self.currentQuickTextFile.intensity;
+				self._qt_currentQuickTextUpdate();
+			}
+		});
 
-        /**
-         * callback for the next font button
-         */
-        self.currentQuickTextFontNext = function() {
-            if (self.currentQuickTextFile) {
-                self.currentQuickTextFile.fontIndex++;
-                if (self.currentQuickTextFile.fontIndex >= self.fontMap.length) {
-                    self.currentQuickTextFile.fontIndex = 0;
-                }
-                self.lastQuickTextFontIndex = self.currentQuickTextFile.fontIndex;
-                self._qt_currentQuickTextUpdate();
-            }
-        };
+		/**
+		 * callback for the next font button
+		 */
+		self.currentQuickTextFontNext = function() {
+			if (self.currentQuickTextFile) {
+				self.currentQuickTextFile.fontIndex++;
+				if (self.currentQuickTextFile.fontIndex >= self.fontMap.length) {
+					self.currentQuickTextFile.fontIndex = 0;
+				}
+				self.lastQuickTextFontIndex = self.currentQuickTextFile.fontIndex;
+				self._qt_currentQuickTextUpdate();
+			}
+		};
 
-        /**
-         * callback for the previous font button
-         */
-        self.currentQuickTextFontPrev = function() {
-            if (self.currentQuickTextFile) {
-                self.currentQuickTextFile.fontIndex--;
-                if (self.currentQuickTextFile.fontIndex < 0) {
-                    self.currentQuickTextFile.fontIndex = self.fontMap.length-1;
-                }
-                self.lastQuickTextFontIndex = self.currentQuickTextFile.fontIndex;
-                self._qt_currentQuickTextUpdate();
-            }
-        };
+		/**
+		 * callback for the previous font button
+		 */
+		self.currentQuickTextFontPrev = function() {
+			if (self.currentQuickTextFile) {
+				self.currentQuickTextFile.fontIndex--;
+				if (self.currentQuickTextFile.fontIndex < 0) {
+					self.currentQuickTextFile.fontIndex = self.fontMap.length-1;
+				}
+				self.lastQuickTextFontIndex = self.currentQuickTextFile.fontIndex;
+				self._qt_currentQuickTextUpdate();
+			}
+		};
 
-        /**
-         * updates the actual SVG object and the file list object and more
-         * Needs to be called after all changes to a QuickText object
-         *
-         * Updates will be done for the QT object self.currentQuickTextFile is pointing to
-         */
-        self._qt_currentQuickTextUpdate = function(){
-            if (self.currentQuickTextFile) {
-                self.currentQuickText(self.currentQuickTextFile.name);
-                var displayText = self.currentQuickTextFile.name !== '' ?
-                    self.currentQuickTextFile.name : $('#quick_text_dialog_text_input').attr('placeholder');
+		/**
+		 * updates the actual SVG object and the file list object and more
+		 * Needs to be called after all changes to a QuickText object
+		 *
+		 * Updates will be done for the QT object self.currentQuickTextFile is pointing to
+		 */
+		self._qt_currentQuickTextUpdate = function(){
+			if (self.currentQuickTextFile) {
+				self.currentQuickText(self.currentQuickTextFile.name);
+				var displayText = self.currentQuickTextFile.name !== '' ?
+					self.currentQuickTextFile.name : $('#quick_text_dialog_text_input').attr('placeholder');
 
-                // update svg object
-                var g = snap.select('#' + self.currentQuickTextFile.previewId);
+				// update svg object
+				var g = snap.select('#' + self.currentQuickTextFile.previewId);
 				setTimeout(function () {
 					g.ftReportTransformation();
 				}, 200);
-                var text = g.select('text');
-                var ity = self.currentQuickTextFile.intensity;
-                text.attr({
-                    text: displayText,
-                    'font-family': self.fontMap[self.currentQuickTextFile.fontIndex],
-                    fill: 'rgb('+ity+','+ity+','+ity+')',
-                    // stroke: 'rgb('+ity+','+ity+','+ity+')',
-                });
-                var bb = text.getBBox();
-                g.select('rect').attr({x: bb.x, y: bb.y, width: bb.width, height: bb.height});
+				var text = g.select('text');
+				var ity = self.currentQuickTextFile.intensity;
+				text.attr({
+					text: displayText,
+					'font-family': self.fontMap[self.currentQuickTextFile.fontIndex],
+					fill: 'rgb('+ity+','+ity+','+ity+')',
+					// stroke: 'rgb('+ity+','+ity+','+ity+')',
+				});
+				var bb = text.getBBox();
+				g.select('rect').attr({x: bb.x, y: bb.y, width: bb.width, height: bb.height});
 
-                // update font of input field
-                var shadowIty = 0;
-                if (ity > 200) {
-                    shadowIty = (ity - 200) / 100;
-                }
-                $('#quick_text_dialog_text_input').css('text-shadow', 'rgba(226, 85, 3, '+shadowIty+') 0px 0px 16px');
-                $('#quick_text_dialog_text_input').css('color', 'rgb('+ity+','+ity+','+ity+')');
+				// update font of input field
+				var shadowIty = 0;
+				if (ity > 200) {
+					shadowIty = (ity - 200) / 100;
+				}
+				$('#quick_text_dialog_text_input').css('text-shadow', 'rgba(226, 85, 3, '+shadowIty+') 0px 0px 16px');
+				$('#quick_text_dialog_text_input').css('color', 'rgb('+ity+','+ity+','+ity+')');
 
-                $('#quick_text_dialog_text_input').css('font-family', self.fontMap[self.currentQuickTextFile.fontIndex]);
-                $('#quick_text_dialog_font_name').text(self.fontMap[self.currentQuickTextFile.fontIndex]);
+				$('#quick_text_dialog_text_input').css('font-family', self.fontMap[self.currentQuickTextFile.fontIndex]);
+				$('#quick_text_dialog_font_name').text(self.fontMap[self.currentQuickTextFile.fontIndex]);
 
-                // update fileslist
-                $('#'+self.currentQuickTextFile.id+' .title').text(displayText);
+				// update fileslist
+				$('#'+self.currentQuickTextFile.id+' .title').text(displayText);
 
-                self.currentQuickTextAnalyticsData = {
-                    id: self.currentQuickTextFile.id,
-                    file_type: 'quickText',
-                    text_length: displayText.length,
-                    brightness: self.currentQuickTextFile.intensity,
-                    font: self.fontMap[self.currentQuickTextFile.fontIndex],
-                    font_index: self.currentQuickTextFile.fontIndex,
-                }
-            }
-        };
+				self.currentQuickTextAnalyticsData = {
+					id: self.currentQuickTextFile.id,
+					file_type: 'quickText',
+					text_length: displayText.length,
+					brightness: self.currentQuickTextFile.intensity,
+					font: self.fontMap[self.currentQuickTextFile.fontIndex],
+					font_index: self.currentQuickTextFile.fontIndex,
+				}
+			}
+		};
 
-        /**
-         * removes an QT object with an empty text from stage
-         */
-        self._qt_currentQuickTextRemoveIfEmpty = function() {
-            if (self.currentQuickTextFile && self.currentQuickTextFile.name === '' ) {
-                self.removeSVG(self.currentQuickTextFile);
-            }
-        };
+		/**
+		 * removes an QT object with an empty text from stage
+		 */
+		self._qt_currentQuickTextRemoveIfEmpty = function() {
+			if (self.currentQuickTextFile && self.currentQuickTextFile.name === '' ) {
+				self.removeSVG(self.currentQuickTextFile);
+			}
+		};
 
-        /**
-         * shows transformation handles on QT if it exists.
-         * @private
-         */
-        self._qt_currentQuickTextShowTransformHandlesIfNotEmpty = function() {
-            if (self.currentQuickTextFile && self.currentQuickTextFile.previewId) {
-                self.showTransformHandles(self.currentQuickTextFile.previewId, true);
-            }
-        };
+		/**
+		 * shows transformation handles on QT if it exists.
+		 * @private
+		 */
+		self._qt_currentQuickTextShowTransformHandlesIfNotEmpty = function() {
+			if (self.currentQuickTextFile && self.currentQuickTextFile.previewId) {
+				self.showTransformHandles(self.currentQuickTextFile.previewId, true);
+			}
+		};
 
-        /**
-         * Equivalent to self.placeSVG for QuickText
-         * @returns file object
-         */
-        self._qt_placeQuicktext = function(){
-            var start_ts = Date.now();
-            var placeholderText = $('#quick_text_dialog_text_input').attr('placeholder');
+		/**
+		 * Equivalent to self.placeSVG for QuickText
+		 * @returns file object
+		 */
+		self._qt_placeQuicktext = function(){
+			var start_ts = Date.now();
+			var placeholderText = $('#quick_text_dialog_text_input').attr('placeholder');
 
-            var file = {
-                date: Date.now(),
-                name: '',
-                id: null,
-                previewId: null,
-                url: null,
-                misfit: false,
-                origin: 'local',
-                path: null,
-                type: "quicktext",
-                typePath: ["quicktext"],
-                fontIndex: self.lastQuickTextFontIndex,
-                intensity: self.lastQuickTextIntensity
-            };
+			var file = {
+				date: Date.now(),
+				name: '',
+				id: null,
+				previewId: null,
+				url: null,
+				misfit: false,
+				origin: 'local',
+				path: null,
+				type: "quicktext",
+				typePath: ["quicktext"],
+				fontIndex: self.lastQuickTextFontIndex,
+				intensity: self.lastQuickTextIntensity
+			};
 
-            file.id = self.getEntryId('qt');
-            file.previewId = self.generateUniqueId(file.id, file); // appends -# if multiple times the same design is placed.
+			file.id = self.getEntryId('qt');
+			file.previewId = self.generateUniqueId(file.id, file); // appends -# if multiple times the same design is placed.
 
-            var uc = snap.select("#userContent");
+			var uc = snap.select("#userContent");
 			var x = self.workingAreaWidthMM()/2;
 			var y = self.workingAreaHeightMM()/3;
 			var size = self.workingAreaHeightMM()/20;
 
 			// TODO use self._prepareAndInsertSVG(fragment, previewId, origin, '', {showTransformHandles: false, embedGCode: false});
 			// replaces all code below.
-            var text = uc.text(x, y, placeholderText);
-            text.attr('style', 'white-space: pre; font-size: '+size+'; font-family: Ubuntu; text-anchor: middle');
+			var text = uc.text(x, y, placeholderText);
+			text.attr('style', 'white-space: pre; font-size: '+size+'; font-family: Ubuntu; text-anchor: middle');
 
-            var box = uc.rect(); // will be placed and sized by self._qt_currentQuickTextUpdateText()
-            box.attr({
-                opacity: "0",
-                // opacity: "0.3",
-                // fill: "yellow"
-                class: 'deleteBeforeRendering'
-            });
+			var box = uc.rect(); // will be placed and sized by self._qt_currentQuickTextUpdateText()
+			box.attr({
+				opacity: "0",
+				// opacity: "0.3",
+				// fill: "yellow"
+				class: 'deleteBeforeRendering'
+			});
 
-            var group = uc.group(text, box);
-            group.attr({
-                id: file.previewId,
-                'mb:id': self._normalize_mb_id(file.previewId),
+			var group = uc.group(text, box);
+			group.attr({
+				id: file.previewId,
+				'mb:id': self._normalize_mb_id(file.previewId),
 				class: 'userText',
-                'mb:origin': origin
-            });
+				'mb:origin': origin
+			});
 
-            group.transformable();
-            group.ftRegisterOnTransformCallback(self.svgTransformUpdate);
+			group.transformable();
+			group.ftRegisterOnTransformCallback(self.svgTransformUpdate);
 
-            self.placedDesigns.push(file);
+			self.placedDesigns.push(file);
 
-            // var dur = ((Date.now() - start_ts) /1000);
-            // console.log("_qt_placeQuicktext() DONE "+ dur + "s");
-            // // self._analyticsPlaceDesign('quickText', dur, file.previewId);
-            // self._analyticsQuickTextUpdate()
+			// var dur = ((Date.now() - start_ts) /1000);
+			// console.log("_qt_placeQuicktext() DONE "+ dur + "s");
+			// // self._analyticsPlaceDesign('quickText', dur, file.previewId);
+			// self._analyticsQuickTextUpdate()
 
-            return file;
-        };
+			return file;
+		};
 
-        /**
-         * All fonts need to be provided as dataUrl within the SVG when rendered into a canvas. (If they're not
-         * installed on the system which we can't assume.)
-         * This copies the content of quicktext-fonts.css into the given element. It's expected that this css file
-         * contains @font-face entries with wff2 files as dataUrls. Eg:
-         * // @font-face {font-family: 'Indie Flower'; src: url(data:application/font-woff2;charset=utf-8;base64,d09GMgABAAAAAKtEABEAAAABh...) format('woff2');}
-         * All fonts to be embedded need to be in 'quicktext-fonts.css' or 'packed_plugins.css'
-         * AND their fontFamily name must be included in self.fontMap
-         * @private
-         * @param DomElement to add the font definition into
-         */
-        self._qt_copyFontsToSvg = function(elem) {
-            var styleSheets = document.styleSheets;
-            self._qt_removeFontsFromSvg(elem);
-            for(var ss=0;ss<styleSheets.length;ss++) {
-                if (styleSheets[ss].href &&
-                    (styleSheets[ss].href.includes("quicktext-fonts.css") || styleSheets[ss].href.includes("packed_plugins.css"))) {
-                    var rules = styleSheets[ss].cssRules;
-                    for(var r=0;r<rules.length;r++) {
-                         if (rules[r].constructor == CSSFontFaceRule) {
-                             // if (rules[r].cssText && rules[r].cssText.includes('MrBeamQuickText')) {
-                             if (rules[r].style && rules[r].style.fontFamily) {
-                                 var fontName = rules[r].style.fontFamily.replace(/["']/g, '').trim();
-                                 if (self.fontMap.indexOf(fontName) > -1) {
-                                     $(elem).append(rules[r].cssText);
-                                 }
-                             }
-                         }
-                    }
-                }
-            }
-        };
+		/**
+		 * All fonts need to be provided as dataUrl within the SVG when rendered into a canvas. (If they're not
+		 * installed on the system which we can't assume.)
+		 * This copies the content of quicktext-fonts.css into the given element. It's expected that this css file
+		 * contains @font-face entries with wff2 files as dataUrls. Eg:
+		 * // @font-face {font-family: 'Indie Flower'; src: url(data:application/font-woff2;charset=utf-8;base64,d09GMgABAAAAAKtEABEAAAABh...) format('woff2');}
+		 * All fonts to be embedded need to be in 'quicktext-fonts.css' or 'packed_plugins.css'
+		 * AND their fontFamily name must be included in self.fontMap
+		 * @private
+		 * @param DomElement to add the font definition into
+		 */
+		self._qt_copyFontsToSvg = function(elem) {
+			var styleSheets = document.styleSheets;
+			self._qt_removeFontsFromSvg(elem);
+			for(var ss=0;ss<styleSheets.length;ss++) {
+				if (styleSheets[ss].href &&
+					(styleSheets[ss].href.includes("quicktext-fonts.css") || styleSheets[ss].href.includes("packed_plugins.css"))) {
+					var rules = styleSheets[ss].cssRules;
+					for(var r=0;r<rules.length;r++) {
+						 if (rules[r].constructor == CSSFontFaceRule) {
+							 // if (rules[r].cssText && rules[r].cssText.includes('MrBeamQuickText')) {
+							 if (rules[r].style && rules[r].style.fontFamily) {
+								 var fontName = rules[r].style.fontFamily.replace(/["']/g, '').trim();
+								 if (self.fontMap.indexOf(fontName) > -1) {
+									 $(elem).append(rules[r].cssText);
+								 }
+							 }
+						 }
+					}
+				}
+			}
+		};
 
-        /**
-         * removes the fonts added by _qt_copyFontsToSvg()
-         * @private
-         */
+		/**
+		 * removes the fonts added by _qt_copyFontsToSvg()
+		 * @private
+		 */
 		self._qt_removeFontsFromSvg = function(elem) {
-		    $(elem).empty();
-        };
+			$(elem).empty();
+		};
 
 		self._qt_dialogClose = function() {
-            self._analyticsQuickTextUpdate(self.currentQuickTextAnalyticsData);
-        };
+			self._analyticsQuickTextUpdate(self.currentQuickTextAnalyticsData);
+		};
 
-        // ***********************************************************
+		// ***********************************************************
 		//  QUICKTEXT end
-        // ***********************************************************
+		// ***********************************************************
 
 		self.wheel_zoom = function(target, ev){
 			if (ev.originalEvent.shiftKey) {
@@ -2905,63 +2923,63 @@ $(function(){
 			return {x: xPerc, y: yPerc, dx: dxPerc, dy: dyPerc};
 		};
 
-        /**
-         * Analytics Stuff
-         */
+		/**
+		 * Analytics Stuff
+		 */
 
 		self._analyticsPrepareAndInsertSVG = function(analyticsData){
-		    if (analyticsData._skip) {return}
-		    analyticsData.file_type = analyticsData.file_type || null;
-		    self._sendAnalytics('workingarea_place_svg_generic', analyticsData);
-		    console.log("workingarea_place_svg_generic: ", analyticsData);
-        };
+			if (analyticsData._skip) {return}
+			analyticsData.file_type = analyticsData.file_type || null;
+			self._sendAnalytics('workingarea_place_svg_generic', analyticsData);
+			console.log("workingarea_place_svg_generic: ", analyticsData);
+		};
 
 		self._analyticsPlaceImage = function(analyticsData){
-		    if (analyticsData._skip) {return}
-		    analyticsData.file_type = analyticsData.file_type || null;
-		    self._sendAnalytics('workingarea_place_image', analyticsData);
-		    console.log("workingarea_place_image: ", analyticsData);
-        };
+			if (analyticsData._skip) {return}
+			analyticsData.file_type = analyticsData.file_type || null;
+			self._sendAnalytics('workingarea_place_image', analyticsData);
+			console.log("workingarea_place_image: ", analyticsData);
+		};
 
 		self._analyticsQuickShapeUpdate = function(analyticsData){
-		    if (analyticsData) {
-                self._sendAnalytics('workingarea_place_quickshape_update', analyticsData);
-                console.log("workingarea_place_quickshape_update: ", analyticsData);
-            }
-        };
+			if (analyticsData) {
+				self._sendAnalytics('workingarea_place_quickshape_update', analyticsData);
+				console.log("workingarea_place_quickshape_update: ", analyticsData);
+			}
+		};
 
 		self._analyticsQuickTextUpdate = function(analyticsData){
-		    if (analyticsData) {
-                self._sendAnalytics('workingarea_place_quicktext_update', analyticsData);
-                console.log("workingarea_place_quicktext_update: ", analyticsData);
-            }
-        };
+			if (analyticsData) {
+				self._sendAnalytics('workingarea_place_quicktext_update', analyticsData);
+				console.log("workingarea_place_quicktext_update: ", analyticsData);
+			}
+		};
 
 		self._analyticsPlaceGco = function(analyticsData){
-		    if (analyticsData) {
-                self._sendAnalytics('workingarea_place_gcode', analyticsData);
-                console.log("workingarea_place_gcode: ", analyticsData);
-            }
-        };
+			if (analyticsData) {
+				self._sendAnalytics('workingarea_place_gcode', analyticsData);
+				console.log("workingarea_place_gcode: ", analyticsData);
+			}
+		};
 
 		self._sendAnalytics = function(event, payload){
-		    self.analytics.send_fontend_event(event, payload);
-        };
+			self.analytics.send_fontend_event(event, payload);
+		};
 
 
 	}
 
 
-    // view model class, parameters for constructor, container to bind to
-    ADDITIONAL_VIEWMODELS.push([WorkingAreaViewModel,
+	// view model class, parameters for constructor, container to bind to
+	ADDITIONAL_VIEWMODELS.push([WorkingAreaViewModel,
 		["loginStateViewModel", "settingsViewModel", "printerStateViewModel",
 			"gcodeFilesViewModel", "laserCutterProfilesViewModel", "cameraViewModel",
-            "readyToLaserViewModel", "tourViewModel", "analyticsViewModel"],
+			"readyToLaserViewModel", "tourViewModel", "analyticsViewModel"],
 		[document.getElementById("area_preview"),
 			document.getElementById("homing_overlay"),
 			document.getElementById("working_area_files"),
-            document.getElementById("quick_text_dialog"),
-            document.getElementById("quick_shape_dialog"),
+			document.getElementById("quick_text_dialog"),
+			document.getElementById("quick_shape_dialog"),
 			document.getElementById("zoomFactor")
 		]]);
 

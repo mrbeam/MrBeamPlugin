@@ -5,17 +5,14 @@ from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents, IoBeamValueEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
-from octoprint_mrbeam.analytics.analytics_handler import analyticsHandler
-
 
 # singleton
 _instance = None
 
-
-def temperatureManager():
+def temperatureManager(plugin):
 	global _instance
 	if _instance is None:
-		_instance = TemperatureManager()
+		_instance = TemperatureManager(plugin)
 	return _instance
 
 
@@ -25,24 +22,24 @@ class TemperatureManager(object):
 	TEMP_TIMER_INTERVAL = 3
 	TEMP_MAX_AGE = 10  # seconds
 
-	def __init__(self):
+	def __init__(self, plugin):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.temperaturemanager")
-
+		self._plugin = plugin
+		self._event_bus = plugin._event_bus
 		self.temperature = None
 		self.temperature_ts = 0
-		self.temperature_max = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['laser']['max_temperature']
-		self.hysteresis_temperature = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['laser']['hysteresis_temperature']
-		self.cooling_duration = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['laser']['cooling_duration']
+		self.temperature_max = plugin.laserCutterProfileManager.get_current_or_default()['laser']['max_temperature']
+		self.hysteresis_temperature = plugin.laserCutterProfileManager.get_current_or_default()['laser']['hysteresis_temperature']
+		self.cooling_duration = plugin.laserCutterProfileManager.get_current_or_default()['laser']['cooling_duration']
 		self.mode_time_based = self.cooling_duration > 0
 		self.temp_timer = None
 		self.is_cooling_since = 0
 
-		self._msg_is_temperature_recent = None
+		self.dev_mode = plugin._settings.get_boolean(['dev', 'iobeam_disable_warnings'])
+        
+        self._msg_is_temperature_recent = None
 
 		self._shutting_down = False
-
-		self._subscribe()
-		self._start_temp_timer()
 
 		msg = "TemperatureManager initialized. temperature_max: {max}, {key}: {value}".format(
 			max = self.temperature_max,
@@ -50,21 +47,32 @@ class TemperatureManager(object):
 			value = self.cooling_duration if self.mode_time_based else self.hysteresis_temperature)
 		self._logger.info(msg)
 
-	def _subscribe(self):
-		_mrbeam_plugin_implementation._ioBeam.subscribe(IoBeamValueEvents.LASER_TEMP, self.handle_temp)
+		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
 
-		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self.onEvent)
-		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self.onEvent)
-		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.PRINT_CANCELLED, self.onEvent)
-		_mrbeam_plugin_implementation._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self.onEvent)
+	def _on_mrbeam_plugin_initialized(self, event, payload):
+		self._iobeam = self._plugin.iobeam
+		self._analytics_handler = self._plugin.analytics_handler
+		self._one_button_handler = self._plugin.onebutton_handler
+
+		self._start_temp_timer()
+
+		self._subscribe()
+
+	def _subscribe(self):
+		self._iobeam.subscribe(IoBeamValueEvents.LASER_TEMP, self.handle_temp)
+
+		self._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self.onEvent)
+		self._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self.onEvent)
+		self._event_bus.subscribe(OctoPrintEvents.PRINT_CANCELLED, self.onEvent)
+		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self.onEvent)
 
 	def shutdown(self):
 		self._shutting_down = True
 
 	def reset(self):
-		self.temperature_max = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['laser']['max_temperature']
-		self.hysteresis_temperature = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['laser']['hysteresis_temperature']
-		self.cooling_duration = _mrbeam_plugin_implementation.laserCutterProfileManager.get_current_or_default()['laser']['cooling_duration']
+		self.temperature_max = self._plugin.laserCutterProfileManager.get_current_or_default()['laser']['max_temperature']
+		self.hysteresis_temperature = self._plugin.laserCutterProfileManager.get_current_or_default()['laser']['hysteresis_temperature']
+		self.cooling_duration = self._plugin.laserCutterProfileManager.get_current_or_default()['laser']['cooling_duration']
 		self.mode_time_based = self.cooling_duration > 0
 		self.is_cooling_since = 0
 
@@ -82,27 +90,27 @@ class TemperatureManager(object):
 			self._logger.info("laser_temp - first temperature from laserhead: %s", self.temperature)
 		self.temperature_ts = time.time()
 		self._check_temp_val()
-		analyticsHandler(_mrbeam_plugin_implementation).add_laser_temp_value(self.temperature)
+		self._analytics_handler.collect_laser_temp_value(self.temperature)
 
 
 	def cooling_stop(self, err_msg=None):
 		"""
 		Stop the laser for cooling purpose
 		"""
-		if _mrbeam_plugin_implementation._oneButtonHandler.is_printing():
+		if self._oneButtonHandler.is_printing():
 			self._logger.error("cooling_stop() %s - _msg_is_temperature_recent: %s", err_msg, self._msg_is_temperature_recent)
 			self._logger.info("cooling_stop()")
 			self.is_cooling_since = time.time()
-			_mrbeam_plugin_implementation._oneButtonHandler.cooling_down_pause()
-			_mrbeam_plugin_implementation.fire_event(MrBeamEvents.LASER_COOLING_PAUSE, dict(temp=self.temperature))
+			self._oneButtonHandler.cooling_down_pause()
+			self.fire_event(MrBeamEvents.LASER_COOLING_PAUSE, dict(temp=self.temperature))
 
 	def cooling_resume(self):
 		"""
 		Resume laser once the laser has cooled down enough.
 		"""
 		self._logger.debug("cooling_resume()")
-		_mrbeam_plugin_implementation.fire_event(MrBeamEvents.LASER_COOLING_RESUME, dict(temp=self.temperature))
-		_mrbeam_plugin_implementation._oneButtonHandler.cooling_down_end(only_if_behavior_is_cooling=True)
+		self._plugin.fire_event(MrBeamEvents.LASER_COOLING_RESUME, dict(temp=self.temperature))
+		self._one_button_handler.cooling_down_end(only_if_behavior_is_cooling=True)
 		self.is_cooling_since = 0
 
 	def get_temperature(self):
