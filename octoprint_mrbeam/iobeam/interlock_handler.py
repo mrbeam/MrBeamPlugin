@@ -7,6 +7,7 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 # singleton
 _instance = None
 
+
 def interLockHandler(plugin):
 	global _instance
 	if _instance is None:
@@ -14,6 +15,7 @@ def interLockHandler(plugin):
 									 plugin._event_bus,
 									 plugin._plugin_manager)
 	return _instance
+
 
 # This guy handles InterLock Events
 # Honestly, I'm not sure if we need a separate handler for this...

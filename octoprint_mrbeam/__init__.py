@@ -95,7 +95,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	TIME_NTP_SYNC_CHECK_INTERVAL_FAST =  10.0
 	TIME_NTP_SYNC_CHECK_INTERVAL_SLOW = 120.0
 
-
 	def __init__(self):
 		self.mrbeam_plugin_initialized = False
 		self._shutting_down = False
@@ -247,7 +246,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			terminal_show_checksums = True,
 			converter_min_required_disk_space=100 * 1024 * 1024, # 100MB, in theory 371MB is the maximum expected file size for full working area engraving at highest resolution.
 			dev=dict(
-				debug=False, # deprected
+				debug=False,  # deprected
 				terminalMaxLines = 2000,
 				env = self.ENV_PROD,
 				load_gremlins = False,
@@ -365,7 +364,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self.dust_manager.shutdown()
 		time.sleep(2)
 		self._logger.info("Mr Beam Plugin stopped.")
-
 
 	def set_serial_setting(self):
 		self._settings.global_set(['serial', 'autoconnect'], True)
