@@ -35,6 +35,11 @@ class LaserheadHandler(object):
 
 		self._current_used_lh_serial = self._last_used_lh_serial
 
+		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
+
+	def _on_mrbeam_plugin_initialized(self, event, payload):
+		self._analytics_handler = self._plugin.analytics_handler
+
 	def set_current_used_lh_data(self, lh_data):
 		try:
 			self._logger.info("Laserhead: %s", lh_data)
@@ -43,7 +48,7 @@ class LaserheadHandler(object):
 
 			self._calculate_and_write_correction_factor()
 
-			self._plugin._analytics_handler.event_laserhead_info()
+			self._analytics_handler.add_laserhead_info()
 			self._write_laser_heads_file()
 			self._plugin.fire_event(MrBeamEvents.LASER_HEAD_READ, dict(serial=lh_data['main']['serial']))
 
@@ -67,6 +72,11 @@ class LaserheadHandler(object):
 				)
 			)
 		return data
+
+	def get_current_used_lh_power(self):
+		lh = self.get_current_used_lh_data()['info']
+		if lh and lh['power_calibrations']:
+			return lh['power_calibrations'][-1]
 
 	def get_correction_settings(self):
 		settings = self._correction_settings
@@ -92,10 +102,14 @@ class LaserheadHandler(object):
 		self._lh_cache[self._current_used_lh_serial]['mrbeam_plugin_version'] = self._plugin_version
 
 	def _calculate_power_correction_factor(self):
-		power_calibrations = self._lh_cache[self._current_used_lh_serial]['power_calibrations'][-1]
-		p_65 = power_calibrations.get('power_65', None)
-		p_75 = power_calibrations.get('power_75', None)
-		p_85 = power_calibrations.get('power_85', None)
+		power_calibration = self.get_current_used_lh_power()
+		p_65 = None
+		p_75 = None
+		p_85 = None
+		if power_calibration:
+			p_65 = power_calibration.get('power_65', None)
+			p_75 = power_calibration.get('power_75', None)
+			p_85 = power_calibration.get('power_85', None)
 
 		correction_factor = 1
 

@@ -157,6 +157,9 @@ class IoBeamHandler(object):
 		self._callbacks = dict()
 		self._callbacks_lock = RWLock()
 
+		self._laserhead_handler = None
+		self._analytics_handler = None
+
 		self.dev_mode = plugin._settings.get_boolean(['dev', 'iobeam_disable_warnings'])
 
 		self.iobeam_version = None
@@ -339,6 +342,7 @@ class IoBeamHandler(object):
 		if socket_file is not None:
 			self.SOCKET_FILE = socket_file
 
+		# this si executed on a TimerThread. let's start a plain thread, just to have it "clean"
 		self._worker = threading.Thread(target=self._work, name="iobeamHandler")
 		self._worker.daemon = True
 		self._worker.start()
@@ -664,7 +668,7 @@ class IoBeamHandler(object):
 		:return: error count
 		"""
 		try:
-			self._laserheadHandler.set_current_used_lh_data(dataset)
+			self._laserhead_handler.set_current_used_lh_data(dataset)
 		except:
 			self._logger.exception("laserhead: exception while handling head:data: ")
 		return 0

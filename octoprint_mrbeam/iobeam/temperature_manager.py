@@ -34,12 +34,13 @@ class TemperatureManager(object):
 		self.mode_time_based = self.cooling_duration > 0
 		self.temp_timer = None
 		self.is_cooling_since = 0
+		self._msg_is_temperature_recent = None
+		self._shutting_down = False
+		self._iobeam = None
+		self._analytics_handler = None
+		self._one_button_handler = None
 
 		self.dev_mode = plugin._settings.get_boolean(['dev', 'iobeam_disable_warnings'])
-        
-        self._msg_is_temperature_recent = None
-
-		self._shutting_down = False
 
 		msg = "TemperatureManager initialized. temperature_max: {max}, {key}: {value}".format(
 			max = self.temperature_max,
@@ -97,11 +98,11 @@ class TemperatureManager(object):
 		"""
 		Stop the laser for cooling purpose
 		"""
-		if self._oneButtonHandler.is_printing():
+		if self._one_button_handler and self._one_button_handler.is_printing():
 			self._logger.error("cooling_stop() %s - _msg_is_temperature_recent: %s", err_msg, self._msg_is_temperature_recent)
 			self._logger.info("cooling_stop()")
 			self.is_cooling_since = time.time()
-			self._oneButtonHandler.cooling_down_pause()
+			self._one_button_handler.cooling_down_pause()
 			self.fire_event(MrBeamEvents.LASER_COOLING_PAUSE, dict(temp=self.temperature))
 
 	def cooling_resume(self):
