@@ -1,0 +1,35 @@
+<div id="review_dialog" class="modal hide fade" data-backdrop="static">
+    <div>
+        <div class="modal-header">
+            <a href="#" class="close" data-bind='visible: !is_dust_mode(), click: cancel_btn' aria-hidden="true">&times;</a>
+            <h3 data-bind='visible: is_dust_mode()'>{{ _('Review please!') }}</h3>
+        </div>
+        <div class="modal-body">
+
+            <img data-bind='visible: is_dust_mode()' src="/plugin/mrbeam/static/img/dusting.jpg">
+            <div data-bind='visible: !is_dust_mode()' class="laser_job_done_image" style="background-image: url('/plugin/mrbeam/static/img/done_empty.jpg')">
+                <i id="laser_job_done_image_check" class="icon-ok-sign show"></i>
+                <div id="laser_job_done_image_text" style="padding: 17% 0">
+                        <p style="font-size: 2.2em">Inspire Our Community</p>
+                        <p style="font-size: 3.3em; font-weight: bold;"><a href="https://www.instagram.com/mrbeamlasers/" target="_blank">#madewithmrbeam</a></p>
+                        <div style="padding: 12px">
+                            <i class="icon-instagram laser_job_done_image_media_icon"></i>
+                            <i class="icon-facebook-sign laser_job_done_image_media_icon"></i>
+                            <i class="icon-pinterest laser_job_done_image_media_icon"></i>
+                            <i class="icon-linkedin laser_job_done_image_media_icon"></i>
+                            <i class="icon-youtube laser_job_done_image_media_icon"></i>
+                        </div>
+                    </div>
+            </div>
+            <h5 data-bind='visible: is_dust_mode()'>{{ _('Please wait a few seconds until Mr Beam II cleared most of the dust particles out of the working area.') }}</h5>
+{#            <h5 data-bind='visible: !is_dust_mode()'>{{ _('Done. Now check out what you have created with your Mr Beam II!') }}</h5>#}
+            <h4 data-bind='visible: !is_dust_mode()'>{{ _('Laser job duration:') }} <span data-bind='text: job_duration_formatted()'>    </span>
+                <small>({{ _('Estimated:') }} <span data-bind='text: readyToLaser.estimated_duration'></span>)</small>
+            </h4>
+        </div>
+        <div class="modal-footer">
+            <h4 data-bind='visible: is_dust_mode()' class="pull-right" >{{ _('Almost done...') }}</h4>
+            <a class="btn btn-primary" id="laser_job_done_done_btn" data-bind='visible: !is_dust_mode(), click: cancel_btn' aria-hidden="true">{{ _('OK') }}</a>
+        </div>
+    </div>
+</div>

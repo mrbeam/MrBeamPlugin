@@ -33,6 +33,7 @@ from octoprint_mrbeam.iobeam.dust_manager import dustManager
 from octoprint_mrbeam.iobeam.laserhead_handler import laserheadHandler
 from octoprint_mrbeam.analytics.analytics_handler import analyticsHandler
 from octoprint_mrbeam.analytics.usage_handler import usageHandler
+from octoprint_mrbeam.analytics.review_handler import ReviewHandler
 from octoprint_mrbeam.led_events import LedEventListener
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
@@ -46,7 +47,7 @@ from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.cli import get_cli_commands
 from .materials import materials
 from octoprint_mrbeam.gcodegenerator.jobtimeestimation import JobTimeEstimation
-from .analytics.uploader import FileUploader
+from .analytics.uploader import AnalyticsFileUploader
 from octoprint.filemanager.destinations import FileDestinations
 
 
@@ -158,6 +159,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._logger.exception("Exception while getting NetconnectdPlugin pluginInfo")
 
 		self.analytics_handler = analyticsHandler(self)
+		self.review_handler = ReviewHandler(self)
 		self.onebutton_handler = oneButtonHandler(self)
 		self.interlock_handler = interLockHandler(self)
 		self.lid_handler = lidHandler(self)
@@ -268,6 +270,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				usage_filename = 'usage.yaml',
 				usage_backup_filename = 'usage_bak.yaml'
 			),
+			review=dict(
+				num_succ_jobs = 0,
+				given = False,
+				filename = 'review.json'
+			),
 			cam=dict(
 				enabled=True,
 				image_correction_enabled = True,
@@ -301,6 +308,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			terminal=self._settings.get(['terminal']),
 			terminal_show_checksums=self._settings.get(['terminal_show_checksums']),
 			analyticsEnabled=self._settings.get(['analyticsEnabled']),
+			ask_for_review= self.review_handler.ask_for_review(),
 			cam=dict(enabled=self._settings.get(['cam', 'enabled']),
 					 frontendUrl=self._settings.get(['cam', 'frontendUrl'])),
 			dev=dict(
@@ -349,6 +357,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self.analytics_handler.analytics_user_permission_change(analytics_enabled=data['analyticsEnabled'])
 			if "focusReminder" in data:
 				self._settings.set_boolean(["focusReminder"], data["focusReminder"])
+			if "review_given" in data:
+				self._settings.set_boolean(['review', 'given'], data["review_given"])
 			if "dev" in data and "software_tier" in data['dev']:
 				switch_software_channel(self, data["dev"]["software_tier"])
 		except Exception as e:
@@ -504,6 +514,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 serial=self._serial_num,
 							 software_tier=self._settings.get(["dev", "software_tier"]),
 							 analyticsEnabled=self._settings.get(["analyticsEnabled"]),
+							 ask_for_review=self.review_handler.ask_for_review(),
 							 beta_label=self.get_beta_label(),
 							 terminalEnabled=self._settings.get(['terminal']) or self.support_mode,
 
@@ -1199,6 +1210,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			analytics_upload=[], # triggers an upload of analytics files
 			take_undistorted_picture=[],  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
 			focus_reminder=[],
+			review_data=[],
 			reset_prefilter_usage=[],
 			reset_carbon_filter_usage=[],
 			reset_laser_head_usage=[],
@@ -1235,11 +1247,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		elif command == "analytics_data":
 			return self.analytics_data(data)
 		elif command == "analytics_upload":
-			# Todo iratxe: what is this?
-			FileUploader.upload_now(self, delay=0.0)
+			AnalyticsFileUploader.upload_now(self)
 			return NO_CONTENT
 		elif command == "focus_reminder":
 			return self.focus_reminder(data)
+		elif command == "review_data":
+			return self.review_data(data)
 		elif command == "reset_prefilter_usage":
 			return self.usage_handler.reset_prefilter_usage()
 		elif command == "reset_carbon_filter_usage":
@@ -1258,6 +1271,15 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		event = data.get('event')
 		payload = data.get('payload', dict())
 		self.analytics_handler.add_frontend_event(event, payload)
+		return NO_CONTENT
+
+	def review_data(self, data):
+		self._logger.info('################ REVIEW_DATA')
+		event = data.get('event')
+		payload = data.get('payload', dict())
+		# TODO IRATXE: review handler add and save
+		# TODO IRATXE: add to analytics
+		self._settings.set_boolean(['review', 'given'], True)
 		return NO_CONTENT
 
 	def focus_reminder(self, data):

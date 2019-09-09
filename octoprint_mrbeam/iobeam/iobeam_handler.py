@@ -495,7 +495,7 @@ class IoBeamHandler(object):
 								self._logger.error(
 									"Outdated iobeam: %s - version OUTDATED. IOBEAM_MIN_REQUIRED_VERSION: %s",
 									json_data, self.IOBEAM_MIN_REQUIRED_VERSION)
-								_mrbeam_plugin_implementation.notify_frontend(title=gettext("Software Update required"),
+								self._plugin.notify_frontend(title=gettext("Software Update required"),
 																			  text=gettext(
 																				  "Module 'iobeam' is outdated. Please run Software Update from 'Settings' > 'Software Update' before you start a laser job."),
 																			  type="error", sticky=True,
@@ -641,7 +641,7 @@ class IoBeamHandler(object):
 
 		if "serial" in dataset:
 			if self.MESSAGE_ERROR not in dataset['serial']:
-				_mrbeam_plugin_implementation.lh['serial'] = dataset['serial']
+				_mrbeam_plugin_implementation.lh['serial'] = dataset['serial']  # todo iratxe: is this supposed to be like this?
 				self._logger.info("laserhead serial: %s", dataset['serial'])
 			else:
 				self._logger.info("laserhead: '%s'", dataset)
@@ -657,7 +657,7 @@ class IoBeamHandler(object):
 							self._logger.info("laserhead: '%s'", dataset)
 							self._logger.warn("Can't read power %s value as int: '%s'", pV, dataset['power'][pV])
 						if pwr is not None:
-							_mrbeam_plugin_implementation.lh['p_'+pV] = pwr
+							_mrbeam_plugin_implementation.lh['p_'+pV] = pwr  # todo iratxe: and this?
 							self._logger.info("laserhead p_%s: %s", pV, pwr)
 		return 0
 
@@ -820,7 +820,7 @@ class IoBeamHandler(object):
 					   gettext("A possible hardware malfunction has been detected on this device. Please contact our support team immediately at:") + \
 					   '<br/><a href="https://mr-beam.org/support" target="_blank">mr-beam.org/support</a><br/><br/>' \
 					   '<strong>' + gettext("Error:") + '</strong><br/>{}'.format(dataset)
-				_mrbeam_plugin_implementation.notify_frontend(title=gettext("Hardware malfunction"),
+				self._plugin.notify_frontend(title=gettext("Hardware malfunction"),
 															  text=text,
 															  type="error", sticky=True,
 															  replay_when_new_client_connects=True)
@@ -1075,7 +1075,7 @@ class IoBeamHandler(object):
 		:return: client identification message
 		"""
 		return {'client': {'name': self.CLIENT_NAME,
-		                   'version': _mrbeam_plugin_implementation._plugin_version,
+		                   'version': self._plugin.get_plugin_version(),
 		                   'config': {'send_initial_data': True,
 		                              'update_interval': True},
 		                   }

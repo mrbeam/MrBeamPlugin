@@ -43,29 +43,29 @@ class FileUploader:
 			remote_name=None,
 		)
 
-		self.start_uploader_thread()
+		self._start_uploader_thread()
 
 	def is_active(self):
 		return self.worker is not None and self.worker.isAlive()
 
-	def start_uploader_thread(self):
+	def _start_uploader_thread(self):
 		if self.worker is None or not self.worker.isAlive():
-			self.worker = threading.Thread(target=self.upload_and_delete_file)
+			self.worker = threading.Thread(target=self._upload_and_delete_file)
 			self.worker.name = self.__class__.__name__  # Gets the name of the current class
 			self.worker.daemon = True  # !!!!
 			self.worker.start()
 		return self
 
-	def upload_and_delete_file(self):
+	def _upload_and_delete_file(self):
 		self._logger.debug("{} upload starting...".format(self.upload_type))
 		self.status['state'] = self.STATUS_INIT
 		self.lock_file()
 
 		try:
-			if self.file_exists():
+			if self._file_exists():
 				token_data = self.get_token()
-				self.upload_file(token_data)
-				self.remove_file()
+				self._upload_file(token_data)
+				self._remove_file()
 				self._successful_upload_end()
 
 			else:
@@ -117,7 +117,7 @@ class FileUploader:
 		except Exception as e:
 			raise Exception('Exception during get_token: {}'.format(e))
 
-	def upload_file(self, token_data):
+	def _upload_file(self, token_data):
 		self.status['state'] = self.STATUS_UPLOAD
 
 		try:
@@ -132,9 +132,9 @@ class FileUploader:
 			self._logger.info('{} uploaded!'.format(self.file))
 
 		except Exception as e:
-			raise Exception('Exception during upload_file: {}'.format(e))
+			raise Exception('Exception during _upload_file: {}'.format(e))
 
-	def remove_file(self):
+	def _remove_file(self):
 		self.status['state'] = self.STATUS_REMOVE
 
 		try:
@@ -146,9 +146,9 @@ class FileUploader:
 				os.rename(self.file, new_file)
 				self._logger.debug('{} file renamed to: {}'.format(self.upload_type, new_file))
 		except Exception as e:
-			raise Exception('Exception during remove_file: {}'.format(e))
+			raise Exception('Exception during _remove_file: {}'.format(e))
 
-	def file_exists(self):
+	def _file_exists(self):
 		exists = True
 		self.status['state'] = self.STATUS_VERIFY
 		if not os.path.isfile(self.file):
@@ -165,7 +165,6 @@ class FileUploader:
 		)
 
 
-# todo iratxe: test + private methods
 class AnalyticsFileUploader(FileUploader):
 	_instance = None
 
@@ -185,8 +184,40 @@ class AnalyticsFileUploader(FileUploader):
 
 	@staticmethod
 	def upload_now(plugin):
-		if AnalyticsFileUploader._instance is None or not AnalyticsFileUploader._instance.is_active():
-			mrb_logger("octoprint.plugins.mrbeam.analytics.uploader").info('############################# UPLOAD NOW!')  # todo iratxe
-			AnalyticsFileUploader._instance = AnalyticsFileUploader(plugin)
-			AnalyticsFileUploader._instance.start_uploader_thread()
-			return
+		try:
+			if AnalyticsFileUploader._instance is None or not AnalyticsFileUploader._instance.is_active():
+				mrb_logger("octoprint.plugins.mrbeam.analytics.uploader").info('############################# UPLOAD NOW!')  # todo iratxe
+				AnalyticsFileUploader._instance = AnalyticsFileUploader(plugin)
+				AnalyticsFileUploader._instance._start_uploader_thread()
+				return
+		except Exception as e:
+			mrb_logger("octoprint.plugins.mrbeam.analytics.uploader").exception(
+				'Exception during upload_now in AnalyticsFileUploader: {}'.format(e))
+
+
+class ReviewFileUploader(FileUploader):
+	_instance = None
+
+	def __init__(self, plugin):
+		self._settings = plugin._settings
+		self._review_handler = plugin.review_handler
+
+		FileUploader.__init__(
+			self,
+			plugin,
+			directory=self._review_handler.review_folder,
+			file=self._review_handler.review_file,
+			upload_type='review',
+		)
+
+	@staticmethod
+	def upload_now(plugin):
+		try:
+			if ReviewFileUploader._instance is None or not ReviewFileUploader._instance.is_active():
+				mrb_logger("octoprint.plugins.mrbeam.analytics.uploader").info('############################# UPLOAD REVIEW!')  # todo iratxe
+				ReviewFileUploader._instance = ReviewFileUploader(plugin)
+				ReviewFileUploader._instance._start_uploader_thread()
+				return
+		except Exception as e:
+			mrb_logger("octoprint.plugins.mrbeam.analytics.uploader").exception(
+				'Exception during upload_now in ReviewFileUploader: {}'.format(e))
