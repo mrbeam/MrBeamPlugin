@@ -1,6 +1,8 @@
 $(function () {
     function ReviewViewModel(params) {
         let self = this;
+        self.settings = params[0];
+
         window.mrbeam.viewModels['reviewViewModel'] = self;
         self.window_load_ts = -1;
 
@@ -9,28 +11,27 @@ $(function () {
 
 
         setTimeout(function (){
-
-            if
-            self.showReviewDialog(true);
-
-        }, 5000); // How long do you want the delay to be (in milliseconds)?
+            if (self.askForReview) {
+                self.showReviewDialog(true);
+            }
+        }, 5000);
 
         self.sendReviewToServer = function () {
 		    let noReview = true;//!self.dontRemindMeAgainChecked();
 		    let review = '';
             let data = {noReview: noReview, review: review};
 
-            OctoPrint.simpleApiCommand("mrbeam", "focus_reminder", data)
+            OctoPrint.simpleApiCommand("mrbeam", "review_data", data)
                 .done(function (response) {
                     self.settings.requestData();
                     console.log("simpleApiCall response for saving focus reminder state: ", response);
                 })
                 .fail(function () {
                     self.settings.requestData();
-                    console.error("Unable to save focus reminder state: ", data);
+                    console.error("Unable to save review state: ", data);
                     new PNotify({
-                        title: gettext("Error while saving settings!"),
-                        text: _.sprintf(gettext("Unable to save your focus reminder state at the moment.%(br)sCheck connection to Mr Beam II and try again."), {br: "<br/>"}),
+                        title: gettext("Error while saving review!"),
+                        text: _.sprintf(gettext("Unable to save your review at the moment.%(br)sCheck connection to Mr Beam II and try again."), {br: "<br/>"}),
                         type: "error",
                         hide: true
                     });
