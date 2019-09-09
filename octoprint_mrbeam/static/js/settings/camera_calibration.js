@@ -252,7 +252,6 @@ $(function () {
 					console.log("generated_markers_svg", data);
 					var fileObj = {
 						"date": Math.floor(Date.now() / 1000),
-						"hash": "_generic_",
 						"name": "CalibrationMarkers.svg",
 						"origin": "local",
 						"path": "CalibrationMarkers.svg",
