@@ -9,7 +9,7 @@ import uuid
 
 from value_collector import ValueCollector
 from cpu import Cpu
-from threading import Thread
+from threading import Thread, Timer
 from Queue import Queue
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
@@ -17,7 +17,7 @@ from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from analytics_keys import AnalyticsKeys as ak
 from timer_handler import TimerHandler
-from uploader import FileUploader
+from uploader import AnalyticsFileUploader
 
 # singleton
 _instance = None
@@ -52,6 +52,8 @@ class AnalyticsHandler(object):
 		self._timer_handler = TimerHandler()
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.analyticshandler")
 
+		self._upload_in_progress = False
+
 		# Mr Beam specific data
 		self._analytics_enabled = self._settings.get(['analyticsEnabled'])
 		self._no_choice_made = True if self._analytics_enabled is None else False
@@ -59,7 +61,7 @@ class AnalyticsHandler(object):
 		self.analytics_folder = os.path.join(self._settings.getBaseFolder("base"), self._settings.get(['analytics', 'folder']))
 		if not os.path.isdir(self.analytics_folder):
 			os.makedirs(self.analytics_folder)
-		self._json_file = os.path.join(self.analytics_folder, self._settings.get(['analytics', 'filename']))
+		self.analytics_file = os.path.join(self.analytics_folder, self._settings.get(['analytics', 'filename']))
 
 		# Session-specific data
 		self._session_id = "{uuid}@{serial}".format(serial=self._snr, uuid=uuid.uuid4().hex)
@@ -81,10 +83,6 @@ class AnalyticsHandler(object):
 		self._event_bus.subscribe(OctoPrintEvents.STARTUP, self._event_startup)
 		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
 
-		# Upload any previous analytics, unless the user didn't make a choice yet
-		if not self._no_choice_made:
-			FileUploader.upload_now(self._plugin)
-
 		# Initialize queue for analytics data and queue-to-file writer
 		self._analytics_queue = Queue(maxsize=self.QUEUE_MAXSIZE)
 
@@ -97,6 +95,10 @@ class AnalyticsHandler(object):
 		self._dust_manager = self._plugin.dust_manager
 
 		self._subscribe()
+
+		# Upload any previous analytics, unless the user didn't make a choice yet
+		if not self._no_choice_made:
+			AnalyticsFileUploader.upload_now(self._plugin)
 
 	def _activate_analytics(self):
 		# Restart queue if the analytics were disabled before
@@ -504,7 +506,9 @@ class AnalyticsHandler(object):
 	def _event_laser_job_finished(self, event, payload):
 		self._add_job_event(ak.Job.Event.LASERJOB_FINISHED, payload={ak.Job.STATUS: self._current_job_final_status})
 		self._cleanup_job()
-		FileUploader.upload_now(self._plugin, delay=5.0)
+
+		# We have to wait until the 'laserjob_finished' line is written before we upload
+		Timer(interval=5.0, function=AnalyticsFileUploader.upload_now, args=self._plugin)
 
 	def _event_job_time_estimated(self, event, payload):
 		self._current_job_time_estimation = payload['job_time_estimation']
@@ -650,20 +654,25 @@ class AnalyticsHandler(object):
 	def _write_queue_to_analytics_file(self):
 		try:
 			while self._analytics_enabled:
-				if not os.path.isfile(self._json_file):
+				if not os.path.isfile(self.analytics_file):
 					self._init_json_file()
 
-				while not self._analytics_queue.empty():
-					with open(self._json_file, 'a') as f:
-						data = self._analytics_queue.get()
-						data_string = None
-						try:
-							data_string = json.dumps(data, sort_keys=False) + '\n'
-						except:
-							self._logger.info('Exception during json dump in _write_queue_to_analytics_file')
+				if not self._upload_in_progress:
+					while not self._analytics_queue.empty():
+						with open(self.analytics_file, 'a') as f:
+							data = self._analytics_queue.get()
+							data_string = None
+							try:
+								data_string = json.dumps(data, sort_keys=False) + '\n'
+							except:
+								self._logger.info('Exception during json dump in _write_queue_to_analytics_file')
 
-						if data_string:
-							f.write(data_string)
+							if data_string:
+								self._logger.info('############# write {}'.format(data['e']))
+								f.write(data_string)
+				# todo iratxe delete
+				else:
+					self._logger.info('########## UPLOADING. Queue: {}'.format(self._analytics_queue.qsize()))  # todo iratxe
 
 				time.sleep(0.1)
 
@@ -671,15 +680,23 @@ class AnalyticsHandler(object):
 			self._logger.exception('Exception during _write_queue_to_analytics_file: {}'.format(e), analytics=False)
 
 	def _init_json_file(self):
-		open(self._json_file, 'w+').close()
-		self._add_device_event(ak.Device.Event.INIT, payload={})
+		open(self.analytics_file, 'w+').close()
+		self._add_device_event(ak.Device.Event.INIT, payload={})  # todo iratxe, do we want this?
+
+	def pause_analytics_writer(self):
+		self._logger.info('############################# LOCK!')  # todo iratxe
+		self._upload_in_progress = True
+
+	def resume_analytics_writer(self):
+		self._logger.info('############################# UNLOCK!')  # todo iratxe
+		self._upload_in_progress = False
 
 	# -------- INITIAL ANALYTICS PROCEDURE -----------------------------------------------------------------------------
 	def initial_analytics_procedure(self, consent):
 		if consent == 'agree':
 			self.analytics_user_permission_change(True)
 			self.process_analytics_files()
-			FileUploader.upload_now(self._plugin)
+			AnalyticsFileUploader.upload_now(self._plugin)
 
 		elif consent == 'disagree':
 			self.analytics_user_permission_change(False)
