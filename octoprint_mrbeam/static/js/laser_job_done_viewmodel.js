@@ -7,8 +7,11 @@
 $(function() {
     function LaserJobDoneViewmodel(parameters) {
         var self = this;
+        window.mrbeam.viewModels['laserJobDoneViewmodel'] = self;
         self.readyToLaser = parameters[0];
         self.analytics = parameters[1];
+
+        self._switchDelay = 3000;
 
         self.jobDoneDialog = {
             shown: null,
@@ -69,6 +72,7 @@ $(function() {
         self.onEventLaserJobDone = function(payload) {
             self._fromData(payload);
             self.dialogElement.modal("show");
+            self.switchTimer();
         };
 
         self.fromCurrentData = function(payload) {
@@ -85,9 +89,24 @@ $(function() {
             }
         };
 
+        self.switchTimer = function(delay){
+            setTimeout(self._switchNow, delay || self._switchDelay);
+        };
+
+        self._switchNow = function(){
+            $('#laser_job_done_image_check').removeClass('show');
+            $('#laser_job_done_image_text').addClass('show');
+        };
+
+        self._switchBack = function(){
+            $('#laser_job_done_image_check').addClass('show');
+            $('#laser_job_done_image_text').removeClass('show');
+        };
+
         self.cancel_btn = function(){
             self.is_job_done(false);
             self.dialogElement.modal("hide");
+            self._switchBack();
             self.jobDoneDialog.closed = new Date().getTime();
             self.jobDoneDialog.dur = Math.floor(self.jobDoneDialog.closed/1000 - self.jobDoneDialog.shown/1000);
             self.analytics.send_fontend_event('job_done_dialog', self.jobDoneDialog)

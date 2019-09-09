@@ -30,7 +30,7 @@ class DustManager(object):
 	FAN_COMMAND_RETRIES = 2
 	FAN_COMMAND_WAITTIME = 1.0
 
-	FAN_COMMAND_ON =      "on:{}"
+	FAN_COMMAND_ON =      "on"
 	FAN_COMMAND_OFF =     "off"
 	FAN_COMMAND_AUTO =    "auto"
 
@@ -60,7 +60,7 @@ class DustManager(object):
 		self._timer_interval = self.DEFAULT_TIMER_INTERVAL
 		self._timer_boost_ts = 0
 		self._auto_timer = None
-		self._last_command = ''
+		self._last_command = dict(action=None, value=None)
 		self.is_dust_mode = False
 		self._just_initialized = False
 
@@ -131,6 +131,7 @@ class DustManager(object):
 			err = True
 
 		self._connected = args['connected']
+
 		if self._connected is not None:
 			self._unboost_timer_interval()
 
@@ -145,9 +146,9 @@ class DustManager(object):
 	def _on_command_response(self, args):
 		self._logger.debug("Fan command response: %s", args)
 		if args['success']:
-			if args['message'].split(':')[1] != self._last_command.split(':')[0]:
+			if 'request_id' not in args['message'] or args['message']['request_id'] != self._last_command:
 				# I'm not sure if we need to check or what to do if the command doesn't match.
-				self._logger.warn("Fan command response doesn't match expected command: expected: {} received: fan:{} args: {}".format(self._last_command, args['message'], args))
+				self._logger.warn("Fan command response doesn't match expected command: expected: {} received: {} args: {}".format(self._last_command, args['response'], args))
 		else:
 			# TODO ANDY stop laser
 			self._logger.error("Fan command responded error: received: fan:{} args: {}".format(args['message'], args))
@@ -229,7 +230,7 @@ class DustManager(object):
 				value = 100
 			elif value < 0:
 				value = 0
-			self._send_fan_command(self.FAN_COMMAND_ON.format(int(value)))
+			self._send_fan_command(self.FAN_COMMAND_ON, int(value))
 
 	def _stop_dust_extraction(self):
 		self._send_fan_command(self.FAN_COMMAND_OFF)
@@ -297,12 +298,11 @@ class DustManager(object):
 		self._stop_dust_extraction()
 		self._auto_timer = None
 
-	def _send_fan_command(self, command):
-		self._last_command = command
-		self._logger.debug("Sending fan command: %s", command)
-		ok = self._iobeam.send_fan_command(command)
+	def _send_fan_command(self, action, value=None):
+		self._logger.debug("Sending fan command: action: %s, value: %s", action, value)
+		ok, self._last_command = self._iobeam.send_fan_command(action, value)
 		if not ok:
-			self._logger.error("Failed to send fan command to iobeam: %s", command)
+			self._logger.error("Failed to send fan command to iobeam: %s %s", action, value)
 		return ok
 
 	def _send_dust_to_analytics(self, val):
@@ -338,12 +338,9 @@ class DustManager(object):
 		# TODO: check for error case in connected val (currently, connected == True/False/None)
 		return result
 
-	def _request_value(self, value):
-		return self._iobeam.send_fan_command(value)
-
 	def _timer_callback(self):
 		try:
-			self._request_value(self.DATA_TYPE_DYNAMIC)
+			# self._request_value(self.DATA_TYPE_DYNAMIC)
 			self._validate_values()
 			self._start_timer(delay=self._timer_interval)
 		except:

@@ -64,7 +64,7 @@ class OneButtonHandler(object):
 		self.ready_to_laser_timer = None
 		self.print_started = -1
 
-		self.pause_laser_ts = -1;
+		self.pause_laser_ts = -1
 		self.pause_need_to_release = False
 		self.pause_safety_timeout_timer = None
 
@@ -242,7 +242,6 @@ class OneButtonHandler(object):
 				except:
 					self._logger.exception("Error while going into state ReadyToLaser.")
 
-
 		elif event == OctoPrintEvents.PRINT_STARTED:
 			self._logger.debug("onEvent() print_started = True")
 			self.print_started = time.time();
@@ -258,13 +257,13 @@ class OneButtonHandler(object):
 			self._logger.debug("onEvent() _reset_pause_configuration()")
 			self._reset_pause_configuration()
 
-
 		elif event == OctoPrintEvents.CLIENT_CLOSED:
 			self.unset_ready_to_laser(lasering=False)
 
 		elif event == MrBeamEvents.HARDWARE_MALFUNCTION:
 			self.hardware_malfunction = True
-			if self._printer.get_state_id() in (self.PRINTER_STATE_PRINTING, self.PRINTER_STATE_PAUSED):
+			# iobeam could set stop_laser to false to avoid cancellation of current laserjob
+			if payload['data'].get('stop_laser', True) and self._printer.get_state_id() in (self.PRINTER_STATE_PRINTING, self.PRINTER_STATE_PAUSED):
 				self._printer.cancel_print()
 
 	def is_cooling(self):
@@ -314,11 +313,11 @@ class OneButtonHandler(object):
 			self._fireEvent(MrBeamEvents.READY_TO_LASER_CANCELED)
 		if self.hardware_malfunction and not self.hardware_malfunction_notified:
 			self._logger.error("Hardware Malfunction: Not possible to start laser job.")
-			self._plugin._replay_stored_frontend_notification()
+			_mrbeam_plugin_implementation._ioBeam.send_hardware_malfunction_frontend_notification()
 			self.hardware_malfunction_notified = True
 
 	def is_ready_to_laser(self, rtl_expected_to_be_there=True):
-		return self.ready_to_laser_ts> 0 \
+		return self.ready_to_laser_ts > 0 \
 			   and time.time() - self.ready_to_laser_ts < self.READY_TO_PRINT_MAX_WAITING_TIME \
 			   and self.ready_to_laser_flag \
 			   and (not rtl_expected_to_be_there or self.ready_to_laser_file is not None) \
@@ -361,7 +360,6 @@ class OneButtonHandler(object):
 		result = self._printer.select_file(myFile, False, True)
 
 		self.unset_ready_to_laser(lasering=True)
-
 
 	# I guess there's no reason anymore to raise these exceptions. Just returning false would be better.
 	def _test_conditions(self, file):
