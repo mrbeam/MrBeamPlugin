@@ -579,11 +579,12 @@ $(function(){
 		self._prepareAndInsertSVG = function(fragment, id, origin, scaleMatrixStr, flags, analyticsData, fileObj, start_ts){
             analyticsData = analyticsData || {};
             fileObj = fileObj || {};
+            origin = origin || '';
 		    start_ts = start_ts || Date.now();
 
 		    if (!analyticsData._skip) { // this is a flag used by quickShape
                 analyticsData.id = fileObj ? fileObj.id : id;
-                analyticsData.file_type = analyticsData.file_type || fileObj.display ? fileObj.display.split('.').slice(-1)[0] : origin.split('.').slice(-1)[0];
+                analyticsData.file_type = analyticsData.file_type || (fileObj.display ? fileObj.display.split('.').slice(-1)[0] : origin.split('.').slice(-1)[0]);
                 analyticsData.filename_hash = fileObj.hash || origin.split('/downloads/files/local/').slice(-1)[0].hashCode();
                 analyticsData.size = fileObj.size;
                 analyticsData.node_count = 0;
