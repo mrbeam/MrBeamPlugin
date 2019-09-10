@@ -429,6 +429,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/material_settings.js",
 				"js/analytics.js",
 				"js/maintenance.js",
+				"js/review.js"
 			    ],
 			css=["css/mrbeam.css",
 			     "css/svgtogcode.css",

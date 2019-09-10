@@ -1,30 +1,18 @@
 <div id="review_dialog" class="modal hide fade" data-backdrop="static">
     <div>
         <div class="modal-header">
-            <a href="#" class="close" data-bind='visible: showReviewDialog(), click: cancel_btn' aria-hidden="true">&times;</a>
-            <h3 data-bind='visible: showReviewDialog()'>{{ _('Review please!') }}</h3>
+            <a href="#" class="close" data-bind='click: exitBtn' aria-hidden="true">&times;</a>
+            <h3>{{ _('Review please!') }}</h3>
         </div>
         <div class="modal-body">
-
-            <div data-bind='visible: showReviewDialog()' class="laser_job_done_image" style="background-image: url('/plugin/mrbeam/static/img/done_empty.jpg')">
-                <i id="laser_job_done_image_check" class="icon-ok-sign show"></i>
-                <div id="laser_job_done_image_text" style="padding: 17% 0">
-                        <p style="font-size: 2.2em">Inspire Our Community</p>
-                        <p style="font-size: 3.3em; font-weight: bold;"><a href="https://www.instagram.com/mrbeamlasers/" target="_blank">#madewithmrbeam</a></p>
-                        <div style="padding: 12px">
-                            <i class="icon-instagram laser_job_done_image_media_icon"></i>
-                            <i class="icon-facebook-sign laser_job_done_image_media_icon"></i>
-                            <i class="icon-pinterest laser_job_done_image_media_icon"></i>
-                            <i class="icon-linkedin laser_job_done_image_media_icon"></i>
-                            <i class="icon-youtube laser_job_done_image_media_icon"></i>
-                        </div>
-                    </div>
+            <div class="form-group">
+                <label for="review_text_area">How can we improve?</label>
+                <textarea class="form-control" id="review_textarea" rows="4"></textarea>
             </div>
-            <h5 data-bind='visible: showReviewDialog()'>{{ _('Thank you <3') }}</h5>
+            <h5>{{ _('Thank you <3') }}</h5>
         </div>
         <div class="modal-footer">
-            <h4 data-bind='visible: is_dust_mode()' class="pull-right" >{{ _('Almost done...') }}</h4>
-            <a class="btn btn-primary" id="laser_job_done_done_btn" data-bind='visible: showReviewDialog(), click: cancel_btn' aria-hidden="true">{{ _('OK') }}</a>
+            <a class="btn btn-primary" id="review_done_btn" data-bind='click: exitBtn' aria-hidden="true">{{ _('OK') }}</a>
         </div>
     </div>
 </div>
