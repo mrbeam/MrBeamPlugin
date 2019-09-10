@@ -108,8 +108,8 @@ class Migration(object):
 				self._logger.warn("No migration done because 'suppress_migrations' is set to true in settings.")
 			else:
 				self._logger.debug("No migration required.")
-		except:
-			self._logger.exception("Unhandled exception during migration: ")
+		except Exception as e:
+			self._logger.exception("Unhandled exception during migration: {}".format(e))
 
 
 	def is_migration_required(self):
@@ -351,12 +351,15 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 
 	def prefill_software_update_for_mrb_hw_info(self):
 		from software_update_information import get_version_of_pip_module
-		vers = get_version_of_pip_module("mrb-hw-info", "sudo /usr/local/bin/pip")
-		if LooseVersion(vers) == LooseVersion('0.0.19'):
-			self._logger.info("prefill_software_update_for_mrb_hw_info() mrb-hw-info is %s, setting commit hash", vers)
-			self.plugin._settings.global_set(['plugins', 'softwareupdate', 'checks', 'mrb_hw_info', 'current'], '15dfcc2c74608adb8f07a7ea115078356f4bb09c', force=True)
-		else:
-			self._logger.info("prefill_software_update_for_mrb_hw_info() mrb-hw-info is %s, no changes to settings done.", vers)
+		try:
+			vers = get_version_of_pip_module("mrb-hw-info", "sudo /usr/local/bin/pip")
+			if LooseVersion(vers) == LooseVersion('0.0.19'):
+				self._logger.info("prefill_software_update_for_mrb_hw_info() mrb-hw-info is %s, setting commit hash", vers)
+				self.plugin._settings.global_set(['plugins', 'softwareupdate', 'checks', 'mrb_hw_info', 'current'], '15dfcc2c74608adb8f07a7ea115078356f4bb09c', force=True)
+			else:
+				self._logger.info("prefill_software_update_for_mrb_hw_info() mrb-hw-info is %s, no changes to settings done.", vers)
+		except Exception as e:
+			self._logger.exception('Exception in prefill_software_update_for_mrb_hw_info: {}'.format(e))
 
 
 	def avrdude_autoreset_script(self):
@@ -406,7 +409,7 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 
 			if self.plugin._device_series == '2X':
 				# 2X placeholder value.
-				self._logger.error("set_lasercutterProfile() Can't set lasercutterProfile. device_series is %s: ", self.plugin._device_series)
+				self._logger.error("set_lasercutterProfile() Can't set lasercutterProfile. device_series is %s", self.plugin._device_series)
 				return
 			elif self.plugin._device_series == '2C':
 				self.set_lasercutterPorfile_2C()

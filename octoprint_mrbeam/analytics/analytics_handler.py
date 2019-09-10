@@ -66,7 +66,7 @@ class AnalyticsHandler(object):
 
 		# Job-specific data
 		self._current_job_id = None
-		self._current_job_time_estimation = None
+		self._current_job_time_estimation = -1
 		self._current_job_final_status = None
 		self._current_dust_collector = None
 		self._current_intensity_collector = None
@@ -640,7 +640,7 @@ class AnalyticsHandler(object):
 		self._current_intensity_collector = None
 		self._current_lasertemp_collector = None
 		self._current_cpu_data = None
-		self._current_job_time_estimation = None
+		self._current_job_time_estimation = -1
 
 	def _init_new_job(self):
 		self._cleanup_job()

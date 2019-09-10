@@ -95,134 +95,146 @@ def _set_info_mrbeam_plugin(self, tier):
 	name = "MrBeam Plugin"
 	module_id = "mrbeam"
 
-	if _is_override_in_settings(self, module_id): return
+	try:
+		if _is_override_in_settings(self, module_id):
+			return
 
-	sw_update_config[module_id] = dict(
-		displayName=SORT_UP_PREFIX + _get_display_name(self, name),
-		displayVersion=self._plugin_version,
-		type="github_commit", # "github_release",
-		user="mrbeam",
-		repo="MrBeamPlugin",
-		branch="mrbeam2-stable",
-		branch_default="mrbeam2-stable",
-		pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
-		restart="octoprint")
-
-	if tier in [SW_UPDATE_TIER_DEV]:
 		sw_update_config[module_id] = dict(
 			displayName=SORT_UP_PREFIX + _get_display_name(self, name),
 			displayVersion=self._plugin_version,
-			type="github_commit",
+			type="github_commit", # "github_release",
 			user="mrbeam",
 			repo="MrBeamPlugin",
-			branch="develop",
-			branch_default="develop",
+			branch="mrbeam2-stable",
+			branch_default="mrbeam2-stable",
 			pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
 			restart="octoprint")
 
-	if tier in [SW_UPDATE_TIER_BETA]:
-		sw_update_config[module_id] = dict(
-			displayName=SORT_UP_PREFIX + _get_display_name(self, name),
-			displayVersion=self._plugin_version,
-			type="github_commit",
-			user="mrbeam",
-			repo="MrBeamPlugin",
-			branch="mrbeam2-beta",
-			default_branch="mrbeam2-beta",
-			pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
-			restart="octoprint")
+		if tier in [SW_UPDATE_TIER_DEV]:
+			sw_update_config[module_id] = dict(
+				displayName=SORT_UP_PREFIX + _get_display_name(self, name),
+				displayVersion=self._plugin_version,
+				type="github_commit",
+				user="mrbeam",
+				repo="MrBeamPlugin",
+				branch="develop",
+				branch_default="develop",
+				pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
+				restart="octoprint")
+
+		if tier in [SW_UPDATE_TIER_BETA]:
+			sw_update_config[module_id] = dict(
+				displayName=SORT_UP_PREFIX + _get_display_name(self, name),
+				displayVersion=self._plugin_version,
+				type="github_commit",
+				user="mrbeam",
+				repo="MrBeamPlugin",
+				branch="mrbeam2-beta",
+				default_branch="mrbeam2-beta",
+				pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
+				restart="octoprint")
+	except Exception as e:
+		_logger.exception('Exception during _set_info_mrbeam_plugin: {}'.format(e))
 
 
 def _set_info_netconnectd_plugin(self, tier):
 	name = "OctoPrint-Netconnectd Plugin"
 	module_id = "netconnectd"
 
-	if _is_override_in_settings(self, module_id): return
+	try:
+		if _is_override_in_settings(self, module_id):
+			return
 
-	pluginInfo = self._plugin_manager.get_plugin_info(module_id)
-	if pluginInfo is None: return
-	current_version = pluginInfo.version
+		pluginInfo = self._plugin_manager.get_plugin_info(module_id)
+		if pluginInfo is None: return
+		current_version = pluginInfo.version
 
-	sw_update_config[module_id] = dict(
-		displayName=_get_display_name(self, name),
-		displayVersion=current_version,
-		type="github_commit",
-		user="mrbeam",
-		repo="OctoPrint-Netconnectd",
-		branch="mrbeam2-stable",
-		branch_default="mrbeam2-stable",
-		pip="https://github.com/mrbeam/OctoPrint-Netconnectd/archive/{target_version}.zip",
-		restart="octoprint")
-
-	if tier in [SW_UPDATE_TIER_DEV]:
 		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name),
 			displayVersion=current_version,
 			type="github_commit",
 			user="mrbeam",
 			repo="OctoPrint-Netconnectd",
-			branch="develop",
-			branch_default="develop",
+			branch="mrbeam2-stable",
+			branch_default="mrbeam2-stable",
 			pip="https://github.com/mrbeam/OctoPrint-Netconnectd/archive/{target_version}.zip",
 			restart="octoprint")
 
-	if tier in [SW_UPDATE_TIER_BETA]:
-		sw_update_config[module_id] = dict(
-			displayName=_get_display_name(self, name),
-			displayVersion=current_version,
-			type="github_commit",
-			user="mrbeam",
-			repo="OctoPrint-Netconnectd",
-			branch="mrbeam2-beta",
-			branch_default="mrbeam2-beta",
-			pip="https://github.com/mrbeam/OctoPrint-Netconnectd/archive/{target_version}.zip",
-			restart="octoprint")
+		if tier in [SW_UPDATE_TIER_DEV]:
+			sw_update_config[module_id] = dict(
+				displayName=_get_display_name(self, name),
+				displayVersion=current_version,
+				type="github_commit",
+				user="mrbeam",
+				repo="OctoPrint-Netconnectd",
+				branch="develop",
+				branch_default="develop",
+				pip="https://github.com/mrbeam/OctoPrint-Netconnectd/archive/{target_version}.zip",
+				restart="octoprint")
+
+		if tier in [SW_UPDATE_TIER_BETA]:
+			sw_update_config[module_id] = dict(
+				displayName=_get_display_name(self, name),
+				displayVersion=current_version,
+				type="github_commit",
+				user="mrbeam",
+				repo="OctoPrint-Netconnectd",
+				branch="mrbeam2-beta",
+				branch_default="mrbeam2-beta",
+				pip="https://github.com/mrbeam/OctoPrint-Netconnectd/archive/{target_version}.zip",
+				restart="octoprint")
+	except Exception as e:
+		_logger.exception('Exception during _set_info_netconnectd_plugin: {}'.format(e))
 
 
 def _set_info_findmymrbeam(self, tier):
 	name = "OctoPrint-FindMyMrBeam"
 	module_id = "findmymrbeam"
 
-	if _is_override_in_settings(self, module_id): return
+	try:
+		if _is_override_in_settings(self, module_id):
+			return
 
-	pluginInfo = self._plugin_manager.get_plugin_info(module_id)
-	if pluginInfo is None: return
-	current_version = pluginInfo.version
+		pluginInfo = self._plugin_manager.get_plugin_info(module_id)
+		if pluginInfo is None: return
+		current_version = pluginInfo.version
 
-	sw_update_config[module_id] = dict(
-		displayName=_get_display_name(self, name),
-		displayVersion=current_version,
-		type="github_commit",
-		user="mrbeam",
-		repo="OctoPrint-FindMyMrBeam",
-		branch="mrbeam2-stable",
-		branch_default="mrbeam2-stable",
-		pip="https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
-		restart="octoprint")
-
-	if tier in [SW_UPDATE_TIER_DEV]:
 		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name),
 			displayVersion=current_version,
 			type="github_commit",
 			user="mrbeam",
 			repo="OctoPrint-FindMyMrBeam",
-			branch="develop",
-			branch_default="develop",
+			branch="mrbeam2-stable",
+			branch_default="mrbeam2-stable",
 			pip="https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
 			restart="octoprint")
 
-	if tier in [SW_UPDATE_TIER_BETA]:
-		sw_update_config[module_id] = dict(
-			displayName=_get_display_name(self, name),
-			displayVersion=current_version,
-			type="github_commit",
-			user="mrbeam",
-			repo="OctoPrint-FindMyMrBeam",
-			branch="mrbeam2-beta",
-			branch_default="mrbeam2-beta",
-			pip="https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
-			restart="octoprint")
+		if tier in [SW_UPDATE_TIER_DEV]:
+			sw_update_config[module_id] = dict(
+				displayName=_get_display_name(self, name),
+				displayVersion=current_version,
+				type="github_commit",
+				user="mrbeam",
+				repo="OctoPrint-FindMyMrBeam",
+				branch="develop",
+				branch_default="develop",
+				pip="https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
+				restart="octoprint")
+
+		if tier in [SW_UPDATE_TIER_BETA]:
+			sw_update_config[module_id] = dict(
+				displayName=_get_display_name(self, name),
+				displayVersion=current_version,
+				type="github_commit",
+				user="mrbeam",
+				repo="OctoPrint-FindMyMrBeam",
+				branch="mrbeam2-beta",
+				branch_default="mrbeam2-beta",
+				pip="https://github.com/mrbeam/OctoPrint-FindMyMrBeam/archive/{target_version}.zip",
+				restart="octoprint")
+	except Exception as e:
+		_logger.exception('Exception during _set_info_findmymrbeam: {}'.format(e))
 
 
 def _set_info_mrbeamledstrips(self, tier):
@@ -233,48 +245,52 @@ def _set_info_mrbeamledstrips(self, tier):
 	pip_command = "sudo /usr/local/bin/pip"
 	pip_name = "mrbeam-ledstrips"
 
-	if _is_override_in_settings(self, module_id): return
+	try:
+		if _is_override_in_settings(self, module_id):
+			return
 
-	version = get_version_of_pip_module(pip_name, pip_command)
-	if version is None: return
+		version = get_version_of_pip_module(pip_name, pip_command)
+		if version is None: return
 
-	sw_update_config[module_id] = dict(
-		displayName=_get_display_name(self, name),
-		displayVersion=version,
-		type="github_commit", #""github_release",
-		user="mrbeam",
-		repo="MrBeamLedStrips",
-		branch="mrbeam2-stable",
-		branch_default="mrbeam2-stable",
-		pip="https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
-		pip_command=pip_command,
-		restart="environment")
-
-	if tier in [SW_UPDATE_TIER_DEV]:
 		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name),
 			displayVersion=version,
-			type="github_commit",
+			type="github_commit", #""github_release",
 			user="mrbeam",
 			repo="MrBeamLedStrips",
-			branch="develop",
-			branch_default="develop",
+			branch="mrbeam2-stable",
+			branch_default="mrbeam2-stable",
 			pip="https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
 			pip_command=pip_command,
 			restart="environment")
 
-	if tier in [SW_UPDATE_TIER_BETA]:
-		sw_update_config[module_id] = dict(
-			displayName=_get_display_name(self, name),
-			displayVersion=version,
-			type="github_commit",
-			user="mrbeam",
-			repo="MrBeamLedStrips",
-			branch="mrbeam2-beta",
-			branch_default="mrbeam2-beta",
-			pip="https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
-			pip_command=pip_command,
-			restart="environment")
+		if tier in [SW_UPDATE_TIER_DEV]:
+			sw_update_config[module_id] = dict(
+				displayName=_get_display_name(self, name),
+				displayVersion=version,
+				type="github_commit",
+				user="mrbeam",
+				repo="MrBeamLedStrips",
+				branch="develop",
+				branch_default="develop",
+				pip="https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
+				pip_command=pip_command,
+				restart="environment")
+
+		if tier in [SW_UPDATE_TIER_BETA]:
+			sw_update_config[module_id] = dict(
+				displayName=_get_display_name(self, name),
+				displayVersion=version,
+				type="github_commit",
+				user="mrbeam",
+				repo="MrBeamLedStrips",
+				branch="mrbeam2-beta",
+				branch_default="mrbeam2-beta",
+				pip="https://github.com/mrbeam/MrBeamLedStrips/archive/{target_version}.zip",
+				pip_command=pip_command,
+				restart="environment")
+	except Exception as e:
+		_logger.exception('Exception during _set_info_mrbeamledstrips: {}'.format(e))
 
 
 def _set_info_netconnectd_daemon(self, tier):
@@ -285,23 +301,26 @@ def _set_info_netconnectd_daemon(self, tier):
 	pip_command = "sudo /usr/local/bin/pip"
 	pip_name = "netconnectd"
 
-	if _is_override_in_settings(self, module_id): return
+	try:
+		if _is_override_in_settings(self, module_id):
+			return
 
-	version = get_version_of_pip_module(pip_name, pip_command)
-	if version is None: return
+		version = get_version_of_pip_module(pip_name, pip_command)
+		if version is None: return
 
-	sw_update_config[module_id] = dict(
-		displayName=_get_display_name(self, name),
-		displayVersion=version,
-		type="github_commit",
-		user="mrbeam",
-		repo="netconnectd_mrbeam",
-		branch="mrbeam2-stable",
-		branch_default="mrbeam2-stable",
-		pip="https://github.com/mrbeam/netconnectd_mrbeam/archive/{target_version}.zip",
-		pip_command=pip_command,
-		restart="environment")
-
+		sw_update_config[module_id] = dict(
+			displayName=_get_display_name(self, name),
+			displayVersion=version,
+			type="github_commit",
+			user="mrbeam",
+			repo="netconnectd_mrbeam",
+			branch="mrbeam2-stable",
+			branch_default="mrbeam2-stable",
+			pip="https://github.com/mrbeam/netconnectd_mrbeam/archive/{target_version}.zip",
+			pip_command=pip_command,
+			restart="environment")
+	except Exception as e:
+		_logger.exception('Exception during _set_info_netconnectd_daemon: {}'.format(e))
 
 
 def _set_info_iobeam(self, tier):
@@ -312,35 +331,21 @@ def _set_info_iobeam(self, tier):
 	pip_command = "sudo /usr/local/bin/pip"
 	pip_name = "iobeam"
 
-	if _is_override_in_settings(self, module_id): return
+	try:
+		if _is_override_in_settings(self, module_id):
+			return
 
-	version = get_version_of_pip_module(pip_name, pip_command)
-	if version is None: return
+		version = get_version_of_pip_module(pip_name, pip_command)
+		if version is None: return
 
-	sw_update_config[module_id] = dict(
-		displayName=_get_display_name(self, name),
-		displayVersion=version,
-		type="bitbucket_commit",
-		user="mrbeam",
-		repo="iobeam",
-		branch="mrbeam2-stable",
-		branch_default="mrbeam2-stable",
-		api_user="MrBeamDev",
-		api_password="v2T5pFkmdgDqbFBJAqrt",
-		pip="git+ssh://git@bitbucket.org/mrbeam/iobeam.git@{target_version}",
-		pip_command=pip_command,
-		restart="environment"
-	)
-
-	if tier in [SW_UPDATE_TIER_DEV]:
 		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name),
 			displayVersion=version,
 			type="bitbucket_commit",
 			user="mrbeam",
 			repo="iobeam",
-			branch="develop",
-			branch_default="develop",
+			branch="mrbeam2-stable",
+			branch_default="mrbeam2-stable",
 			api_user="MrBeamDev",
 			api_password="v2T5pFkmdgDqbFBJAqrt",
 			pip="git+ssh://git@bitbucket.org/mrbeam/iobeam.git@{target_version}",
@@ -348,21 +353,40 @@ def _set_info_iobeam(self, tier):
 			restart="environment"
 		)
 
-	if tier in [SW_UPDATE_TIER_BETA]:
-		sw_update_config[module_id] = dict(
-			displayName=_get_display_name(self, name),
-			displayVersion=version,
-			type="bitbucket_commit",
-			user="mrbeam",
-			repo="iobeam",
-			branch="mrbeam2-beta",
-			branch_default="mrbeam2-beta",
-			api_user="MrBeamDev",
-			api_password="v2T5pFkmdgDqbFBJAqrt",
-			pip="git+ssh://git@bitbucket.org/mrbeam/iobeam.git@{target_version}",
-			pip_command=pip_command,
-			restart="environment"
-		)
+		if tier in [SW_UPDATE_TIER_DEV]:
+			sw_update_config[module_id] = dict(
+				displayName=_get_display_name(self, name),
+				displayVersion=version,
+				type="bitbucket_commit",
+				user="mrbeam",
+				repo="iobeam",
+				branch="develop",
+				branch_default="develop",
+				api_user="MrBeamDev",
+				api_password="v2T5pFkmdgDqbFBJAqrt",
+				pip="git+ssh://git@bitbucket.org/mrbeam/iobeam.git@{target_version}",
+				pip_command=pip_command,
+				restart="environment"
+			)
+
+		if tier in [SW_UPDATE_TIER_BETA]:
+			sw_update_config[module_id] = dict(
+				displayName=_get_display_name(self, name),
+				displayVersion=version,
+				type="bitbucket_commit",
+				user="mrbeam",
+				repo="iobeam",
+				branch="mrbeam2-beta",
+				branch_default="mrbeam2-beta",
+				api_user="MrBeamDev",
+				api_password="v2T5pFkmdgDqbFBJAqrt",
+				pip="git+ssh://git@bitbucket.org/mrbeam/iobeam.git@{target_version}",
+				pip_command=pip_command,
+				restart="environment"
+			)
+	except Exception as e:
+		_logger.exception('Exception during _set_info_iobeam: {}'.format(e))
+
 
 def _set_info_camera_calibration(self, tier):
 	name = "mb_camera_calibration"
@@ -371,54 +395,59 @@ def _set_info_camera_calibration(self, tier):
 	# hmmm... I thought, i don't need to provide a special pip command if we are in the venv...
 	pip_command = "/home/pi/oprint/bin/pip"
 
-	if _is_override_in_settings(self, module_id): return
+	try:
+		if _is_override_in_settings(self, module_id):
+			return
 
-	version = get_version_of_pip_module(pip_name, pip_command)
-	if version is None: return
+		version = get_version_of_pip_module(pip_name, pip_command)
+		if version is None: return
 
-	sw_update_config[module_id] = dict(
-		displayName=_get_display_name(self, name),
-		displayVersion=version,
-		type="bitbucket_commit",
-		user="mrbeam",
-		repo="mb_camera_calibration",
-		branch="mrbeam2-stable",
-		branch_default="mrbeam2-stable",
-		api_user="MrBeamDev",
-		api_password="v2T5pFkmdgDqbFBJAqrt",
-		pip="git+ssh://git@bitbucket.org/mrbeam/mb_camera_calibration.git@{target_version}",
-		restart="octoprint"
-	)
-
-	if tier in [SW_UPDATE_TIER_DEV]:
 		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name),
 			displayVersion=version,
 			type="bitbucket_commit",
 			user="mrbeam",
 			repo="mb_camera_calibration",
-			branch="develop",
-			branch_default="develop",
+			branch="mrbeam2-stable",
+			branch_default="mrbeam2-stable",
 			api_user="MrBeamDev",
 			api_password="v2T5pFkmdgDqbFBJAqrt",
 			pip="git+ssh://git@bitbucket.org/mrbeam/mb_camera_calibration.git@{target_version}",
 			restart="octoprint"
 		)
 
-	if tier in [SW_UPDATE_TIER_BETA]:
-		sw_update_config[module_id] = dict(
-			displayName=_get_display_name(self, name),
-			displayVersion=version,
-			type="bitbucket_commit",
-			user="mrbeam",
-			repo="mb_camera_calibration",
-			branch="mrbeam2-beta",
-			branch_default="mrbeam2-beta",
-			api_user="MrBeamDev",
-			api_password="v2T5pFkmdgDqbFBJAqrt",
-			pip="git+ssh://git@bitbucket.org/mrbeam/mb_camera_calibration.git@{target_version}",
-			restart="octoprint"
-		)
+		if tier in [SW_UPDATE_TIER_DEV]:
+			sw_update_config[module_id] = dict(
+				displayName=_get_display_name(self, name),
+				displayVersion=version,
+				type="bitbucket_commit",
+				user="mrbeam",
+				repo="mb_camera_calibration",
+				branch="develop",
+				branch_default="develop",
+				api_user="MrBeamDev",
+				api_password="v2T5pFkmdgDqbFBJAqrt",
+				pip="git+ssh://git@bitbucket.org/mrbeam/mb_camera_calibration.git@{target_version}",
+				restart="octoprint"
+			)
+
+		if tier in [SW_UPDATE_TIER_BETA]:
+			sw_update_config[module_id] = dict(
+				displayName=_get_display_name(self, name),
+				displayVersion=version,
+				type="bitbucket_commit",
+				user="mrbeam",
+				repo="mb_camera_calibration",
+				branch="mrbeam2-beta",
+				branch_default="mrbeam2-beta",
+				api_user="MrBeamDev",
+				api_password="v2T5pFkmdgDqbFBJAqrt",
+				pip="git+ssh://git@bitbucket.org/mrbeam/mb_camera_calibration.git@{target_version}",
+				restart="octoprint"
+			)
+	except Exception as e:
+		_logger.exception('Exception during _set_info_camera_calibration: {}'.format(e))
+
 
 def _set_info_mrb_hw_info(self, tier):
 	name = "mrb_hw_info"
@@ -428,35 +457,21 @@ def _set_info_mrb_hw_info(self, tier):
 	pip_command = "sudo /usr/local/bin/pip"
 	pip_name = "mrb-hw-info"
 
-	if _is_override_in_settings(self, module_id): return
+	try:
+		if _is_override_in_settings(self, module_id):
+			return
 
-	version = get_version_of_pip_module(pip_name, pip_command)
-	# if version is None: return
+		version = get_version_of_pip_module(pip_name, pip_command)
+		# if version is None: return
 
-	sw_update_config[module_id] = dict(
-		displayName=_get_display_name(self, name),
-		displayVersion=version,
-		type="bitbucket_commit",
-		user="mrbeam",
-		repo="mrb_hw_info",
-		branch="mrbeam2-stable",
-		branch_default="mrbeam2-stable",
-		api_user="MrBeamDev",
-		api_password="v2T5pFkmdgDqbFBJAqrt",
-		pip="git+ssh://git@bitbucket.org/mrbeam/mrb_hw_info.git@{target_version}",
-		pip_command=pip_command,
-		restart="environment"
-	)
-
-	if tier in [SW_UPDATE_TIER_DEV]:
 		sw_update_config[module_id] = dict(
 			displayName=_get_display_name(self, name),
 			displayVersion=version,
 			type="bitbucket_commit",
 			user="mrbeam",
 			repo="mrb_hw_info",
-			branch="develop",
-			branch_default="develop",
+			branch="mrbeam2-stable",
+			branch_default="mrbeam2-stable",
 			api_user="MrBeamDev",
 			api_password="v2T5pFkmdgDqbFBJAqrt",
 			pip="git+ssh://git@bitbucket.org/mrbeam/mrb_hw_info.git@{target_version}",
@@ -464,40 +479,63 @@ def _set_info_mrb_hw_info(self, tier):
 			restart="environment"
 		)
 
-	if tier in [SW_UPDATE_TIER_BETA]:
-		sw_update_config[module_id] = dict(
-			displayName=_get_display_name(self, name),
-			displayVersion=version,
-			type="bitbucket_commit",
-			user="mrbeam",
-			repo="mrb_hw_info",
-			branch="mrbeam2-beta",
-			branch_default="mrbeam2-beta",
-			api_user="MrBeamDev",
-			api_password="v2T5pFkmdgDqbFBJAqrt",
-			pip="git+ssh://git@bitbucket.org/mrbeam/mrb_hw_info.git@{target_version}",
-			pip_command=pip_command,
-			restart="environment"
-		)
+		if tier in [SW_UPDATE_TIER_DEV]:
+			sw_update_config[module_id] = dict(
+				displayName=_get_display_name(self, name),
+				displayVersion=version,
+				type="bitbucket_commit",
+				user="mrbeam",
+				repo="mrb_hw_info",
+				branch="develop",
+				branch_default="develop",
+				api_user="MrBeamDev",
+				api_password="v2T5pFkmdgDqbFBJAqrt",
+				pip="git+ssh://git@bitbucket.org/mrbeam/mrb_hw_info.git@{target_version}",
+				pip_command=pip_command,
+				restart="environment"
+			)
+
+		if tier in [SW_UPDATE_TIER_BETA]:
+			sw_update_config[module_id] = dict(
+				displayName=_get_display_name(self, name),
+				displayVersion=version,
+				type="bitbucket_commit",
+				user="mrbeam",
+				repo="mrb_hw_info",
+				branch="mrbeam2-beta",
+				branch_default="mrbeam2-beta",
+				api_user="MrBeamDev",
+				api_password="v2T5pFkmdgDqbFBJAqrt",
+				pip="git+ssh://git@bitbucket.org/mrbeam/mrb_hw_info.git@{target_version}",
+				pip_command=pip_command,
+				restart="environment"
+			)
+	except Exception as e:
+		_logger.exception('Exception during _set_info_mrb_hw_info: {}'.format(e))
 
 
 def _set_info_rpiws281x(self, tier):
 	name = "rpi-ws281x"
 	module_id = "rpi-ws281x"
 
-	if _is_override_in_settings(self, module_id): return
+	try:
+		if _is_override_in_settings(self, module_id):
+			return
 
-	sw_update_config[module_id] = dict(
-		displayName=_get_display_name(self, name),
-		displayVersion="1.0",
-		type="github_commit",
-		user="mrbeam",
-		repo="rpi_ws281x",
-		branch="master",
-		branch_default="master",
-		update_folder="/home/pi/rpi_ws281x",
-		update_script="/home/pi/rpi_ws281x/update_script.sh",
-		restart="environment")
+		sw_update_config[module_id] = dict(
+			displayName=_get_display_name(self, name),
+			displayVersion="1.0",
+			type="github_commit",
+			user="mrbeam",
+			repo="rpi_ws281x",
+			branch="master",
+			branch_default="master",
+			update_folder="/home/pi/rpi_ws281x",
+			update_script="/home/pi/rpi_ws281x/update_script.sh",
+			restart="environment")
+	except Exception as e:
+		_logger.exception('Exception during _set_info_rpiws281x: {}'.format(e))
+
 
 # This is a template to later allow the installation of a new octoprint plugin.
 # The necesarry setup.py and plugin template is in the bitbucket repo linked below.
