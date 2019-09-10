@@ -1012,6 +1012,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		else:
 			return jsonify(dict(calibration_marker_svg=filename, target=FileDestinations.LOCAL))
 
+	def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
+		"""
+		Defines the maximum size that is accepted for upload.
+		If the uploaded file size exeeds this limit,
+		you'll see only a ERR_CONNECTION_RESET in Chrome.
+		"""
+		return [("POST", r"/convert", 100 * 1024 * 1024)]
 
 	@octoprint.plugin.BlueprintPlugin.route("/convert", methods=["POST"])
 	@restricted_access
@@ -1047,34 +1054,34 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			# write local/temp.svg to convert it
 			fileObj = Wrapper(filename, svg)
 			self._file_manager.add_file(FileDestinations.LOCAL, filename, fileObj, links=None, allow_overwrite=True)
-			
+
 			# safe history
 			ts = time.gmtime()
 			historyFilename = time.strftime("%Y-%m-%d_%H.%M.%S.mrb", ts)
 			historyObj = Wrapper(historyFilename, svg)
 			self._file_manager.add_file(FileDestinations.LOCAL, historyFilename, historyObj, links=None, allow_overwrite=True)
-			
+
 			# keep only x recent files in job history.
 			def is_history_file(entry):
 				_, extension = os.path.splitext(entry)
 				extension = extension[1:].lower()
 				return extension == "mrb"
-			
+
 			mrb_filter_func = lambda entry, entry_data: is_history_file(entry)
 			resp = self._file_manager.list_files(path="", filter=mrb_filter_func, recursive=True)
 			files = resp[FileDestinations.LOCAL]
 
 			max_history_files = 25 # TODO fetch from settings
-			if(len(files) > max_history_files): 
-				
+			if(len(files) > max_history_files):
+
 				removals = []
 				for key in files:
 					f = files[key]
 					tpl = (self._file_manager.last_modified(FileDestinations.LOCAL, path=f['path']), f['path'])
 					removals.append(tpl)
-				
+
 				sorted_by_age = sorted(removals, key=lambda tpl: tpl[0])
-					
+
 				# TODO each deletion causes an filemanager push update -> slow.
 				for i in range(0, len(sorted_by_age) - max_history_files):
 					f = sorted_by_age[i]
@@ -1621,9 +1628,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				gcode=ContentTypeMapping(["gcode", "gco", "g", "nc"], "text/plain")
 			)
 		)
-
-	def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
-		return [("POST", r"/convert", 10 * 1024 * 1024)]
 
 	def notify_frontend(self, title, text, type=None, sticky=False, delay=None, replay_when_new_client_connects=False):
 		"""
