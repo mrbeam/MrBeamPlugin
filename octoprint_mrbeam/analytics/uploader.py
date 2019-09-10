@@ -223,7 +223,7 @@ class FileUploader(object):
 				err = "upload_file failed: {}".format(r.status_code)
 				self.set_status(my_file, succ=False, err=err)
 		except Exception as e:
-			self._logger.exception("Exception while upload_file {file}: {err}", file=my_file, err=e)
+			self._logger.exception("Exception while upload_file {file}: {err}".format(file=my_file, err=e))
 			err = "upload_file {} failed with exception: {}: {}".format(my_file, type(e).__name__, e)
 			self.set_status(my_file, succ=False, err=err)
 
