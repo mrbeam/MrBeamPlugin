@@ -313,7 +313,7 @@ class OneButtonHandler(object):
 			self._fireEvent(MrBeamEvents.READY_TO_LASER_CANCELED)
 		if self.hardware_malfunction and not self.hardware_malfunction_notified:
 			self._logger.error("Hardware Malfunction: Not possible to start laser job.")
-			_mrbeam_plugin_implementation._ioBeam.send_hardware_malfunction_frontend_notification()
+			self._plugin.iobeam.send_hardware_malfunction_frontend_notification()
 			self.hardware_malfunction_notified = True
 
 	def is_ready_to_laser(self, rtl_expected_to_be_there=True):

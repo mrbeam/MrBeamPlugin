@@ -72,7 +72,7 @@ def switch_software_channel(plugin, channel):
 
 			sw_update_plugin._version_cache_dirty = True
 
-			_mrbeam_plugin_implementation.analytics_handler.add_software_channel_switch_event(old_channel, channel)
+			plugin.analytics_handler.add_software_channel_switch_event(old_channel, channel)
 		except:
 			_logger.exception("Exception while switching software channel: ")
 
