@@ -30,16 +30,6 @@ def analyticsHandler(plugin):
 	return _instance
 
 
-# todo iratxe: remove
-def existing_analyticsHandler():
-	"""
-	Returns AnalyticsHandler instance only if it's already initialized. None otherwise
-	:return: None or AnalyticsHandler instance
-	"""
-	global _instance
-	return _instance
-
-
 class AnalyticsHandler(object):
 	QUEUE_MAXSIZE = 1000
 	ANALYTICS_LOG_VERSION = 8  # bumped in 0.3.2.1
@@ -670,12 +660,7 @@ class AnalyticsHandler(object):
 								self._logger.info('Exception during json dump in _write_queue_to_analytics_file')
 
 							if data_string:
-								self._logger.info('############# write {}'.format(data['e']))
 								f.write(data_string)
-				# todo iratxe delete
-				else:
-					self._logger.info('########## UPLOADING. Queue: {}'.format(self._analytics_queue.qsize()))  # todo iratxe
-
 				time.sleep(0.1)
 
 		except Exception as e:
@@ -683,14 +668,11 @@ class AnalyticsHandler(object):
 
 	def _init_json_file(self):
 		open(self.analytics_file, 'w+').close()
-		self._add_device_event(ak.Device.Event.INIT, payload={})  # todo iratxe, do we want this?
 
 	def pause_analytics_writer(self):
-		self._logger.info('############################# LOCK!')  # todo iratxe
 		self._upload_in_progress = True
 
 	def resume_analytics_writer(self):
-		self._logger.info('############################# UNLOCK!')  # todo iratxe
 		self._upload_in_progress = False
 
 	# -------- INITIAL ANALYTICS PROCEDURE -----------------------------------------------------------------------------

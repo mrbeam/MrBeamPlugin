@@ -33,7 +33,7 @@ from octoprint_mrbeam.iobeam.dust_manager import dustManager
 from octoprint_mrbeam.iobeam.laserhead_handler import laserheadHandler
 from octoprint_mrbeam.analytics.analytics_handler import analyticsHandler
 from octoprint_mrbeam.analytics.usage_handler import usageHandler
-from octoprint_mrbeam.analytics.review_handler import ReviewHandler
+from octoprint_mrbeam.analytics.review_handler import reviewHandler
 from octoprint_mrbeam.led_events import LedEventListener
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
@@ -159,7 +159,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._logger.exception("Exception while getting NetconnectdPlugin pluginInfo")
 
 		self.analytics_handler = analyticsHandler(self)
-		self.review_handler = ReviewHandler(self)
+		self.review_handler = reviewHandler(self)
 		self.onebutton_handler = oneButtonHandler(self)
 		self.interlock_handler = interLockHandler(self)
 		self.lid_handler = lidHandler(self)
@@ -357,8 +357,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self.analytics_handler.analytics_user_permission_change(analytics_enabled=data['analyticsEnabled'])
 			if "focusReminder" in data:
 				self._settings.set_boolean(["focusReminder"], data["focusReminder"])
-			if "review_given" in data:
-				self._settings.set_boolean(['review', 'given'], data["review_given"])
 			if "dev" in data and "software_tier" in data['dev']:
 				switch_software_channel(self, data["dev"]["software_tier"])
 		except Exception as e:
@@ -1253,7 +1251,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		elif command == "focus_reminder":
 			return self.focus_reminder(data)
 		elif command == "review_data":
-			return self.review_data(data)
+			return self.review_handler.save_review_data(data)
 		elif command == "reset_prefilter_usage":
 			return self.usage_handler.reset_prefilter_usage()
 		elif command == "reset_carbon_filter_usage":
@@ -1272,15 +1270,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		event = data.get('event')
 		payload = data.get('payload', dict())
 		self.analytics_handler.add_frontend_event(event, payload)
-		return NO_CONTENT
-
-	def review_data(self, data):
-		self._logger.info('################ REVIEW_DATA')
-		event = data.get('event')
-		payload = data.get('payload', dict())
-		# TODO IRATXE: review handler add and save
-		# TODO IRATXE: add to analytics
-		self._settings.set_boolean(['review', 'given'], True)
 		return NO_CONTENT
 
 	def focus_reminder(self, data):

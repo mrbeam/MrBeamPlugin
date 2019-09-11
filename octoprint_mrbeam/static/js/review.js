@@ -1,6 +1,5 @@
 $(function () {
     function ReviewViewModel(params) {
-        console.log('################### REVIEW VIEW MODEL');
         let self = this;
         self.settings = params[0];
 
@@ -22,8 +21,7 @@ $(function () {
 
         self.onEventPrintStarted = function(payload) {
             setTimeout(function () {
-                if (self.askForReview) {
-                    console.log('################### SHOW!');
+                if (self.askForReview() && self.jobTimeEstimation() >= 61) {
                     self.showReviewDialog(true);
                     self.reviewDialog.modal("show");
                 }
@@ -37,14 +35,16 @@ $(function () {
         };
 
         self.sendReviewToServer = function () {
-		    let noReview = true;//!self.dontRemindMeAgainChecked();
-            let score = 4;
+		    let noReview = false;   //todo iratxe !self.dontRemindMeAgainChecked();
+            let score = 4;  // todo iratxe
 		    let review = $('#review_textarea').val();
             let data = {
                 noReview: noReview,
                 score: score,
                 review: review
             };
+
+            self.askForReview(false);
 
             OctoPrint.simpleApiCommand("mrbeam", "review_data", data)
                 .done(function (response) {

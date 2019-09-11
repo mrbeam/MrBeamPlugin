@@ -59,10 +59,12 @@ class FileUploader:
 	def _upload_and_delete_file(self):
 		self._logger.debug("{} upload starting...".format(self.upload_type))
 		self.status['state'] = self.STATUS_INIT
-		self.lock_file()
 
 		try:
 			if self._file_exists():
+				if self.lock_file:
+					self.lock_file()
+
 				token_data = self.get_token()
 				self._upload_file(token_data)
 				self._remove_file()
@@ -77,9 +79,10 @@ class FileUploader:
 	def _successful_upload_end(self):
 		self.status['state'] = self.STATUS_DONE
 		self.status['succ'] = True
-		self.unlock_file()
 
-		self._logger.info('###################### SUCCESS!')
+		if self.unlock_file:
+			self.unlock_file()
+
 		self._logger.info('{up_type} file upload successful! - Status: {status}'.format(
 			up_type=self.upload_type,
 			status=self.status))
@@ -87,9 +90,10 @@ class FileUploader:
 	def _unsuccessful_upload_end(self, err):
 		self.status['err'] = err
 		self.status['succ'] = False
-		self.unlock_file()
 
-		self._logger.info('###################### OH NO!')
+		if self.unlock_file:
+			self.unlock_file()
+
 		self._logger.exception('{up_type} file upload was not successful: {err} - Status: {status}'.format(
 			up_type=self.upload_type,
 			err=err,
@@ -186,7 +190,6 @@ class AnalyticsFileUploader(FileUploader):
 	def upload_now(plugin):
 		try:
 			if AnalyticsFileUploader._instance is None or not AnalyticsFileUploader._instance.is_active():
-				mrb_logger("octoprint.plugins.mrbeam.analytics.uploader").info('############################# UPLOAD NOW!')  # todo iratxe
 				AnalyticsFileUploader._instance = AnalyticsFileUploader(plugin)
 				AnalyticsFileUploader._instance._start_uploader_thread()
 				return
@@ -214,7 +217,6 @@ class ReviewFileUploader(FileUploader):
 	def upload_now(plugin):
 		try:
 			if ReviewFileUploader._instance is None or not ReviewFileUploader._instance.is_active():
-				mrb_logger("octoprint.plugins.mrbeam.analytics.uploader").info('############################# UPLOAD REVIEW!')  # todo iratxe
 				ReviewFileUploader._instance = ReviewFileUploader(plugin)
 				ReviewFileUploader._instance._start_uploader_thread()
 				return
