@@ -15,8 +15,9 @@ class TimerHandler:
 
 	SELF_CHECK_USER_AGENT = 'MrBeamPlugin self check'
 
-	def __init__(self):
+	def __init__(self, plugin):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.timerhandler")
+		self._plugin = plugin
 
 		self._timers = []
 
@@ -77,7 +78,7 @@ class TimerHandler:
 								ak.Device.ERROR: err,
 							})
 
-			_mrbeam_plugin_implementation.analytics_handler.add_http_self_check(payload)
+			self._plugin.analytics_handler.add_http_self_check(payload)
 
 		except Exception as e:
 			self._logger.exception('Exception during the _http_self_check: {}'.format(e))
@@ -102,7 +103,7 @@ class TimerHandler:
 				ak.Device.ERROR: err,
 				ak.Device.Request.CONNECTION: connection,
 			}
-			_mrbeam_plugin_implementation.analytics_handler.add_internet_connection(payload)
+			self._plugin.analytics_handler.add_internet_connection(payload)
 
 		except Exception as e:
 			self._logger.exception('Exception during the _internet_connection check: {}'.format(e))
@@ -124,7 +125,7 @@ class TimerHandler:
 					for idx, addr in enumerate(addresses[netifaces.AF_INET6]):
 						payload[interface]['IPv6'].append(addr['addr'])
 
-			_mrbeam_plugin_implementation.analytics_handler.add_ip_addresses(payload)
+			self._plugin.analytics_handler.add_ip_addresses(payload)
 
 		except Exception as e:
 			self._logger.exception('Exception during the _ip_addresses check: {}'.format(e))
@@ -141,7 +142,7 @@ class TimerHandler:
 				ak.Device.Usage.AVAILABLE_SPACE: available_space,
 				ak.Device.Usage.USED_SPACE: used_percent,
 			}
-			_mrbeam_plugin_implementation.analytics_handler.add_disk_space(disk_space)
+			self._plugin.analytics_handler.add_disk_space(disk_space)
 
 		except Exception as e:
 			self._logger.exception('Exception during the _disk_space check: {}'.format(e))

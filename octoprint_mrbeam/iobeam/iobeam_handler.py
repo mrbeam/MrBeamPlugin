@@ -495,7 +495,7 @@ class IoBeamHandler(object):
 								self._logger.error(
 									"Outdated iobeam: %s - version OUTDATED. IOBEAM_MIN_REQUIRED_VERSION: %s",
 									json_data, self.IOBEAM_MIN_REQUIRED_VERSION)
-								_mrbeam_plugin_implementation.notify_frontend(title=gettext("Software Update required"),
+								self._plugin.notify_frontend(title=gettext("Software Update required"),
 																			  text=gettext(
 																				  "Module 'iobeam' is outdated. Please run Software Update from 'Settings' > 'Software Update' before you start a laser job."),
 																			  type="error", sticky=True,
@@ -639,26 +639,6 @@ class IoBeamHandler(object):
 			if dataset[self.MESSAGE_ACTION_LASER_TEMP]:
 				self._call_callback(IoBeamValueEvents.LASER_TEMP, dataset, dict(temp=self._as_number(dataset[self.MESSAGE_ACTION_LASER_TEMP])))
 
-		if "serial" in dataset:
-			if self.MESSAGE_ERROR not in dataset['serial']:
-				_mrbeam_plugin_implementation.lh['serial'] = dataset['serial']
-				self._logger.info("laserhead serial: %s", dataset['serial'])
-			else:
-				self._logger.info("laserhead: '%s'", dataset)
-
-		if "power" in dataset and isinstance(dataset, dict):
-			if self.MESSAGE_ERROR not in dataset['power']:
-				for pV in dataset['power']:
-					if self.MESSAGE_ERROR not in pV:
-						pwr = None
-						try:
-							pwr = int(dataset['power'][pV])
-						except:
-							self._logger.info("laserhead: '%s'", dataset)
-							self._logger.warn("Can't read power %s value as int: '%s'", pV, dataset['power'][pV])
-						if pwr is not None:
-							_mrbeam_plugin_implementation.lh['p_'+pV] = pwr
-							self._logger.info("laserhead p_%s: %s", pV, pwr)
 		return 0
 
 	def _handle_laserhead(self, dataset):
@@ -820,7 +800,7 @@ class IoBeamHandler(object):
 					   gettext("A possible hardware malfunction has been detected on this device. Please contact our support team immediately at:") + \
 					   '<br/><a href="https://mr-beam.org/support" target="_blank">mr-beam.org/support</a><br/><br/>' \
 					   '<strong>' + gettext("Error:") + '</strong><br/>{}'.format(dataset)
-				_mrbeam_plugin_implementation.notify_frontend(title=gettext("Hardware malfunction"),
+				self._plugin.notify_frontend(title=gettext("Hardware malfunction"),
 															  text=text,
 															  type="error", sticky=True,
 															  replay_when_new_client_connects=True)
@@ -844,8 +824,8 @@ class IoBeamHandler(object):
 
 		if show_notification:
 			self.send_hardware_malfunction_frontend_notification()
-		# TODO: check with iratxe if we log it as one message or separately...
-		self._plugin._analytics_handler.log_iobeam_message(self.iobeam_version, dataset)
+
+		self._plugin.analytics_handler.add_iobeam_message_log(self.iobeam_version, dataset)
 
 	def _handle_i2c(self, dataset):
 		self._logger.info("i2c_state: %s", dataset)
@@ -1075,7 +1055,7 @@ class IoBeamHandler(object):
 		:return: client identification message
 		"""
 		return {'client': {'name': self.CLIENT_NAME,
-		                   'version': _mrbeam_plugin_implementation._plugin_version,
+		                   'version': self._plugin.get_plugin_version(),
 		                   'config': {'send_initial_data': True,
 		                              'update_interval': True},
 		                   }

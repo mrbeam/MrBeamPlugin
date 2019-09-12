@@ -49,7 +49,7 @@ class AnalyticsHandler(object):
 		self._settings = plugin._settings
 		self._snr = plugin.getSerialNum()
 		self._plugin_version = plugin.get_plugin_version()
-		self._timer_handler = TimerHandler()
+		self._timer_handler = TimerHandler(plugin)
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.analyticshandler")
 
 		# Mr Beam specific data
