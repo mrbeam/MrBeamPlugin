@@ -145,6 +145,7 @@ class IoBeamHandler(object):
 	DATASET_IOBEAM =	           	 	"iobeam"
 	DATASET_HW_MALFUNCTION =	   	 	"hardware_malfunction"
 	DATASET_I2C =           	   	 	"i2c"
+	DATASET_I2C_TEST =           	   	"i2c_test"
 
 	def __init__(self, plugin):
 		self._plugin = plugin
@@ -156,6 +157,7 @@ class IoBeamHandler(object):
 		self._isConnected = False
 		self._my_socket = None
 		self._errors = 0
+		self._unknown_datasets = []
 		self._callbacks = dict()
 		self._callbacks_lock = RWLock()
 
@@ -564,6 +566,8 @@ class IoBeamHandler(object):
 					err = self._handle_hw_malfunction(dataset)
 				elif name == self.DATASET_I2C:
 					err = self._handle_i2c(dataset)
+				elif name == self.DATASET_I2C_TEST:
+					err = self._handle_i2c_test(dataset)
 				elif name == self.MESSAGE_DEVICE_UNUSED:
 					pass
 				elif name == self.MESSAGE_ERROR:
@@ -646,6 +650,10 @@ class IoBeamHandler(object):
 		"""
 		self._logger.info("pump_static: %s", dataset)
 		return 0
+
+	def _handle_i2c_test(self, dataset):
+		if not dataset.get('state', None) == 'ok':
+			self._logger.warn("_handle_i2c_test: %s", dataset)
 
 	def _handle_laser(self, dataset):
 		"""
@@ -892,7 +900,9 @@ class IoBeamHandler(object):
 		:param dataset:
 		:return:
 		"""
-		self._logger.warn("Received unknown dataset %s: %s", name, dataset)
+		if name not in self._unknown_datasets:
+			self._unknown_datasets.append(name)
+			self._logger.warn("Received unknown dataset %s: %s", name, dataset)
 		return 0
 
 	def _handle_invalid_message(self, message):
