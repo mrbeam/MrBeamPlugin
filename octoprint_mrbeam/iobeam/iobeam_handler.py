@@ -369,7 +369,7 @@ class IoBeamHandler(object):
 					# 		self._logger.error("IoBeamHandler not able to connect to socket %s, reason: %s. I'll keept trying but I won't log further failures.", self.SOCKET_FILE, e)
 					# 		self._connectionException = str(e)
 					# else:
-						self._logger.error("IoBeamHandler not able to connect to socket %s, reason: %s. ", self.SOCKET_FILE, e)
+					self._logger.error("IoBeamHandler not able to connect to socket %s, reason: %s. ", self.SOCKET_FILE, e)
 
 					time.sleep(1)
 					continue
