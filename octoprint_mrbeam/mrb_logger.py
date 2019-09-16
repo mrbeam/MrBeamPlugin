@@ -161,9 +161,9 @@ class MrbLogger(object):
 				analytics_handler.add_logger_event(event_details, wait_for_terminal_dump=kwargs.get('terminal_dump', False))
 
 			except:
-				self.logger.exception("Exception in _analytics_log_event: ", analytics=False)
+				self.logger.exception("Exception in _analytics_log_event: ")
 		else:
-			self.logger.error('Could not write exception to analytics, the analytics handler was not initialized.', analytics=False)
+			self.logger.error('Could not write exception to analytics, the analytics handler was not initialized.')
 
 	def _dump_terminal_buffer(self, level=logging.INFO, repeat=True, analytics=True):
 		try:
