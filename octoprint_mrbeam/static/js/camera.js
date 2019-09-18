@@ -26,6 +26,11 @@ $(function(){
             self.camEnabled = self.settings.settings.plugins.mrbeam.cam.enabled();
             self.imageUrl = self.settings.settings.plugins.mrbeam.cam.frontendUrl();
 
+            if (window.mrbeam.browser.is_safari) {
+                // svg filters don't really work in safari: https://github.com/mrbeam/MrBeamPlugin/issues/586
+                self.webCamImageElem.attr('filter', '');
+            }
+
             // loading_overlay disappears only if this is set to true
             // not working in Safari
             self.webCamImageElem.load(function(){

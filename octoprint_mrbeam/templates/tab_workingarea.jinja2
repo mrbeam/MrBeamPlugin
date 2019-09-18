@@ -277,7 +277,8 @@
 																			click: function(d, event){ $root.duplicateSVG($data, event); }
 																		} ">{{ _('duplicate') }}</a>
 
-                                                                <div class="accordion md-accordion working_area_image_preprocessing">
+{#                                                               We disabled image processing options for Safari: svg filters don't really work in safari: https://github.com/mrbeam/MrBeamPlugin/issues/586 #}
+                                                                <div class="accordion md-accordion working_area_image_preprocessing" data-bind="visible: !window.mrbeam.browser.is_safari">
                                                                   <div class="card">
                                                                     <div class="card-header working_area_image_preprocessing_heading">
                                                                       <div class="mb-0 working_area_image_preprocessing_link">

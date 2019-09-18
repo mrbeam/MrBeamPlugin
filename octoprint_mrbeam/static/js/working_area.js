@@ -1419,7 +1419,11 @@ $(function(){
 				var id = self.getEntryId();
 				var previewId = self.generateUniqueId(id, file); // appends # if multiple times the same design is placed.
 				self._create_img_filter(previewId);
-				newImg.attr({filter: 'url(#'+self._get_img_filter_id(previewId)+')', 'data-serveurl': url});
+				newImg.attr('data-serveurl', url);
+                if (!window.mrbeam.browser.is_safari) {
+                    // svg filters don't really work in safari: https://github.com/mrbeam/MrBeamPlugin/issues/586
+                    newImg.attr('filter', 'url(#' + self._get_img_filter_id(previewId) + ')');
+                }
 				var imgWrapper = snap.group().attr({
 					id: previewId,
 					'mb:id':self._normalize_mb_id(previewId),
