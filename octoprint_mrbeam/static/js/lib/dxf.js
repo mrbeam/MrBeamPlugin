@@ -2334,9 +2334,9 @@ var piecewiseToPaths = function piecewiseToPaths(k, controlPoints) {
     var cp = controlPoints.slice(i * (k - 1));
 
     if (k === 4) {
-      paths.push("<path d=\"M ".concat(cp[0].x, " ").concat(cp[0].y, " C ").concat(cp[1].x, " ").concat(cp[1].y, " ").concat(cp[2].x, " ").concat(cp[2].y, " ").concat(cp[3].x, " ").concat(cp[3].y, "\" />"));
+      paths.push("<path d=\"M ".concat(cp[0].x, " ").concat(cp[0].y, " C ").concat(cp[1].x, " ").concat(cp[1].y, " ").concat(cp[2].x, " ").concat(cp[2].y, " ").concat(cp[3].x, " ").concat(cp[3].y, "\" fill=\"none\" />"));
     } else if (k === 3) {
-      paths.push("<path d=\"M ".concat(cp[0].x, " ").concat(cp[0].y, " Q ").concat(cp[1].x, " ").concat(cp[1].y, " ").concat(cp[2].x, " ").concat(cp[2].y, "\" />"));
+      paths.push("<path d=\"M ".concat(cp[0].x, " ").concat(cp[0].y, " Q ").concat(cp[1].x, " ").concat(cp[1].y, " ").concat(cp[2].x, " ").concat(cp[2].y, "\" fill=\"none\" />"));
     }
   }
 
@@ -2421,13 +2421,7 @@ var _default = function _default(parsed) {
     elements: []
   }),
       bbox = _entities$reduce.bbox,
-      elements = _entities$reduce.elements; // V3.2.3 MrBeam modification START
-  // svgString += ' viewBox="' + [bbox.minX, -bbox.maxY, bbox.width, bbox.height].join(' ') + '"'
-  // svgString += ' width="' + bbox.width + '" height="' + bbox.height + '">'
-  // svgString += '<!-- Created with dxf.js -->'
-  // svgString += paths.join('') + '</svg>'
-  // MrBeam modification END
-
+      elements = _entities$reduce.elements;
 
   var viewBox = bbox.min.x === Infinity ? {
     x: 0,
@@ -2470,14 +2464,6 @@ var _transformVertices = _interopRequireDefault(require("./transformVertices"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
-
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
-
-function _iterableToArrayLimit(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
-
-function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
-
 /**
  * Create the 'd' attribute of a <path /> element. Interpolates curved entities.
  * @entity object, example: { type: 'LINE',
@@ -2490,19 +2476,16 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
  */
 var pathdata = function pathdata(entity) {
   var vertices = (0, _entityToPolyline["default"])(entity);
-  vertices = (0, _transformVertices["default"])(vertices, entity.transforms);
-  var bbox = vertices.reduce(function (acc, _ref) {
-    var _ref2 = _slicedToArray(_ref, 2),
-        x = _ref2[0],
-        y = _ref2[1];
+  vertices = (0, _transformVertices["default"])(vertices, entity.transforms); //  const bbox = vertices.reduce((acc, [x, y], i) => acc.expandByPoint({ x, y }), new Box2()) // throws exception on some files???
 
-    return acc.expandByPoint({
-      x: x,
-      y: y
+  var bbox = new _vecks.Box2();
+  vertices.forEach(function (point) {
+    bbox.expandByPoint({
+      x: point[0],
+      y: point[0]
     });
-  }, new _vecks.Box2());
+  });
   var d = vertices.reduce(function (acc, point, i) {
-    // console.log('#==> ', point, i)
     acc += i === 0 ? 'M' : 'L';
     acc += point[0] + ',' + point[1];
     return acc;
@@ -2582,7 +2565,7 @@ var _default = function _default(parsed) {
         }
       } else {
         if (dAttr.length > 0) {
-          acc.elements.push("<path d=\"".concat(dAttr, "\" stroke=\"").concat((0, _rgbToColorAttribute["default"])(rgb), "\" fill=\"none\" />"));
+          acc.elements.push("<path d=\"".concat(dAttr, "\" stroke=\"").concat((0, _rgbToColorAttribute["default"])(lastColor), "\" fill=\"none\" />"));
         }
 
         dAttr = _pathdata;
@@ -2621,7 +2604,7 @@ var _default = function _default(parsed) {
     width: bbox.max.x - bbox.min.x,
     height: bbox.max.y - bbox.min.y
   };
-  return "<?xml version=\"1.0\"?>\n<svg\n  xmlns=\"http://www.w3.org/2000/svg\"\n  xmlns:xlink=\"http://www.w3.org/1999/xlink\" version=\"1.1\"\n  preserveAspectRatio=\"xMinYMin meet\"\n  viewBox=\"".concat(viewBox.x, " ").concat(viewBox.y, " ").concat(viewBox.width, " ").concat(viewBox.height, "\"\n  width=\"100%\" height=\"100%\"\n><!-- Created with mrbeam/dxf.js -->\n  <g class=\"dxf-import\" transform=\"matrix(1 0 0 -1 0 ").concat(viewBox.height, ")\">\n    ").concat(_prettyData.pd.xml(elements.join('\n')), "\n  </g>\n</svg>");
+  return "<?xml version=\"1.0\"?>\n<svg\n  xmlns=\"http://www.w3.org/2000/svg\"\n  xmlns:xlink=\"http://www.w3.org/1999/xlink\" version=\"1.1\"\n  preserveAspectRatio=\"xMinYMin meet\"\n  viewBox='".concat(viewBox.x, " ").concat(viewBox.y, " ").concat(viewBox.width, " ").concat(viewBox.height, "'\n  width=\"100%\" height=\"100%\"\n><!-- Created with mrbeam/dxf.js -->\n  <g class=\"dxf-import\" transform=\"matrix(1 0 0 -1 0 ").concat(viewBox.height, ")\">\n    ").concat(_prettyData.pd.xml(elements.join('\n')), "\n  </g>\n</svg>");
 };
 
 exports["default"] = _default;
@@ -2796,10 +2779,7 @@ var _default = function _default(vertices, transforms) {
         f = _ref2[5];
 
     vertices = vertices.map(function (point) {
-      return {
-        x: point.x * a + point.y * c + e,
-        y: point.x * b + point.y * d + f
-      };
+      return [point[0] * a + point[1] * c + e, point[0] * b + point[1] * d + f];
     });
   });
   return vertices;
