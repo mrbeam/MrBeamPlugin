@@ -492,12 +492,8 @@ $(function(){
 				self.placedDesigns.push(file);
 
 				// get scale matrix
-				var generator_info = self._get_generator_info(fragment);
-				var doc_dimensions = self._getDocumentDimensionAttributes(fragment);
-				var unitScaleX = self._getDocumentScaleToMM(doc_dimensions.units_x, generator_info);
-				var unitScaleY = self._getDocumentScaleToMM(doc_dimensions.units_y, generator_info);
-				var mat = self.getDocumentViewBoxMatrix(doc_dimensions, doc_dimensions.viewbox);
-				var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(unitScaleX, unitScaleY).toTransformString();
+                var generator_info = self._get_generator_info(fragment);
+                let scaleMatrixStr = self._getScaleMatrix(fragment, generator_info).toTransformString();
 
 				var analyticsData = {};
 				analyticsData.file_type = 'svg';
@@ -628,6 +624,20 @@ $(function(){
 				if (scaleMatrixStr) {
 					newSvgAttrs['transform'] = scaleMatrixStr;
 				}
+
+				// inner svg elements: change them to group-elements
+				var innerSvgs = fragment.selectAll("svg svg");
+				for(let i=0; i<innerSvgs.length; i++){
+                    let scaleMatrix = self._getScaleMatrix(innerSvgs[i]);
+                    // Not sure why we need this step:
+                    scaleMatrix.scale(innerSvgs[i].attr('width'), innerSvgs[i].attr('height'));
+				    let content = innerSvgs[i].selectAll('*');
+				    let newGroup = snap.group();
+				    newGroup.attr({transform: scaleMatrix.toLocaleString()});
+				    newGroup.append(content);
+				    innerSvgs[i].before(newGroup);
+				    innerSvgs[i].remove();
+                }
 
 				// assign id directly after placement. otherwise it is not UI-removable in case of exceptions during placement.
 				var newSvg = snap.group(fragment.selectAll("svg>*"));
@@ -787,6 +797,14 @@ $(function(){
 			// svg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
 		};
 
+		self._getScaleMatrix = function(fragment, generator_info){
+		    generator_info = generator_info || self._get_generator_info(fragment);
+		    let doc_dimensions = self._getDocumentDimensionAttributes(fragment);
+            let unitScaleX = self._getDocumentScaleToMM(doc_dimensions.units_x, generator_info);
+            let unitScaleY = self._getDocumentScaleToMM(doc_dimensions.units_y, generator_info);
+            let mat = self.getDocumentViewBoxMatrix(doc_dimensions, doc_dimensions.viewbox);
+            return new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(unitScaleX, unitScaleY);
+        };
 
 		/**
 		 * Returns with what program and version the given svg file was created. E.g. 'coreldraw'
