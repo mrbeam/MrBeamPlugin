@@ -18,7 +18,7 @@ var browser = {
     is_safari: navigator.userAgent.indexOf("Safari") > -1,
     is_edge: navigator.userAgent.indexOf("Edge") > -1,
     is_opera: navigator.userAgent.toLowerCase().indexOf("op") > -1,
-    is_ipad: navigator.userAgent.indexOf("iPad") > -1, // I thought we might need this at some point
+    is_ipad: navigator.userAgent.indexOf("iPad") > -1,
     is_supported: null,
     chrome_version: null
 };
@@ -30,7 +30,7 @@ browser.chrome_version = navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./);
 browser.chrome_version = browser.chrome_version ? parseInt(browser.chrome_version[2], 10) : null;
 
 // supported browser
-browser.is_supported = browser.is_chrome && browser.chrome_version >= 60;
+browser.is_supported = (browser.is_chrome && browser.chrome_version >= 60) || browser.is_ipad;
 mrbeam.browser = browser;
 
 /**
