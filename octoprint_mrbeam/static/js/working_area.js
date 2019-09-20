@@ -502,7 +502,7 @@ $(function(){
 				analyticsData.svg_generator_info.version = analyticsData.svg_generator_info.version == 'unknown' ? null : analyticsData.svg_generator_info.version;
 				analyticsData.duration_load = duration_load;
 				analyticsData.duration_preprocessing = Date.now() - start_ts;
-				var insertedId = self._prepareAndInsertSVG(fragment, previewId, origin, scaleMatrixStr, {}, analyticsData, file);
+				var insertedId = self._prepareAndInsertSVG(fragment, previewId, origin, scaleMatrixStr, {}, analyticsData, file, null, generator_info);
 				if(typeof callback === 'function') callback(insertedId);
 			};
 			try { // TODO Figure out why the loading exception is not caught.
@@ -572,7 +572,7 @@ $(function(){
 		 * @returns {*}
 		 * @private
 		 */
-		self._prepareAndInsertSVG = function(fragment, id, origin, scaleMatrixStr, flags, analyticsData, fileObj, start_ts){
+		self._prepareAndInsertSVG = function(fragment, id, origin, scaleMatrixStr, flags, analyticsData, fileObj, start_ts, generator_info){
 			analyticsData = analyticsData || {};
 			fileObj = fileObj || {};
 			origin = origin || '';
@@ -628,9 +628,11 @@ $(function(){
 				// inner svg elements: change them to group-elements
 				var innerSvgs = fragment.selectAll("svg svg");
 				for(let i=0; i<innerSvgs.length; i++){
-                    let scaleMatrix = self._getScaleMatrix(innerSvgs[i]);
-                    // Not sure why we need this step:
-                    scaleMatrix.scale(innerSvgs[i].attr('width'), innerSvgs[i].attr('height'));
+                    let scaleMatrix = self._getScaleMatrix(innerSvgs[i], generator_info);
+                    if (innerSvgs[i].attr('width') && innerSvgs[i].attr('height')) {
+                        // not sure what to do if we don't have a height or if it's 100%
+                        scaleMatrix.scale(innerSvgs[i].attr('width'), innerSvgs[i].attr('height'));
+                    }
 				    let content = innerSvgs[i].selectAll('*');
 				    let newGroup = snap.group();
 				    newGroup.attr({transform: scaleMatrix.toLocaleString()});
