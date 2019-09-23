@@ -877,7 +877,7 @@ class MachineCom(object):
 			restart_commands = [' ', # send a new line before $X to make sure, grbl regards it as a new command.
 			                    self._add_checksum_to_cmd(self.COMMAND_RESET_ALARM)
 			                    ]
-			if cmd_obj:
+			if cmd_obj and cmd_obj['i'] is not None:
 				# grbl internally adds a "S0" in case of a checksum error. (This "S0" is NOT acknowledged by grbl.)
 				# Therefor we need to turn the laser power back on.
 				# This is the intensity value which was current BEFORE this command. It might be different from
