@@ -1012,6 +1012,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		else:
 			return jsonify(dict(calibration_marker_svg=filename, target=target))
 
+	def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
+		"""
+		Defines the maximum size that is accepted for upload.
+		If the uploaded file size exeeds this limit,
+		you'll see only a ERR_CONNECTION_RESET in Chrome.
+		"""
+		return [("POST", r"/convert", 100 * 1024 * 1024)]
 
 	@octoprint.plugin.BlueprintPlugin.route("/convert", methods=["POST"])
 	@restricted_access
