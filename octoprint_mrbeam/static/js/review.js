@@ -4,15 +4,43 @@ $(function () {
         self.settings = params[0];
 
         window.mrbeam.viewModels['reviewViewModel'] = self;
-        self.window_load_ts = -1;
 
         self.showReviewDialog = ko.observable(false);
         self.jobTimeEstimation = ko.observable(-1);
 
+        self.rating = ko.observable(0);
+        self.askAgain = ko.observable(true);
 
         self.onAllBound = function () {
             self.reviewDialog = $('#review_dialog');
             self.askForReview = ko.observable(self.settings.settings.plugins.mrbeam.ask_for_review());
+
+            let links = ['give_review_link', 'dont_ask_review_link'];
+            links.forEach(function (linkId) {
+                $('#' + linkId).click(function () {
+                    let payload = {
+                        link: linkId
+                    };
+                    self.analytics.send_fontend_event('link_click', payload)
+                })
+            });
+
+            $('.star').click(function(){
+                let val = $( this ).attr('value');
+                console.log("Clicked "+val+" Stars");
+                self.rating(val);
+                $('#dont_ask_review_link').hide();
+
+
+                // $('#rating_value').html(val);
+                if (val >= 4) {
+                    $('#review_thank_you').show();
+                } else if (val < 4) {
+                    // todo iratxe: show stars
+                    $('#rating_block').hide();
+                    $('#review_how_can_we_improve').show();
+                }
+            })
         };
 
         self.onEventJobTimeEstimated = function (payload) {
@@ -31,17 +59,25 @@ $(function () {
         self.exitBtn = function(){
             self.reviewDialog.modal("hide");
             // todo iratxe send analytics
-            self.sendReviewToServer()
+
+            if (self.rating() !== 0) {
+                self.sendReviewToServer()
+            }
+        };
+
+        self.exitAndDontShowAgain = function() {
+            // todo iratxe: save this
+            // todo iratxe: do we want to send the info if they said don't ask me again? I think we should
+            self.exitBtn()
         };
 
         self.sendReviewToServer = function () {
-		    let noReview = false;   //todo iratxe !self.dontRemindMeAgainChecked();
-            let score = 4;  // todo iratxe
 		    let review = $('#review_textarea').val();
             let data = {
-                noReview: noReview,
-                score: score,
-                review: review
+                askAgain: self.askAgain(),
+                rating: self.rating(),
+                review: review,
+                ts: new Date().getTime()
             };
 
             self.askForReview(false);
@@ -62,10 +98,6 @@ $(function () {
                     });
                 });
         };
-
-        $(window).load(function() {
-            self.window_load_ts = new Date().getTime()
-        });
     }
 
     // view model class, parameters for constructor, container to bind to

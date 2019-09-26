@@ -2529,3 +2529,43 @@ input[type="radio"]{
     font-size: 2em;
     padding: 3px;
 }
+
+/*
+* === USER RATING ===
+*/
+#rating_block {
+    margin: 20px 0;
+}
+
+.rating {
+    unicode-bidi:bidi-override;
+    direction:rtl;
+    font-size:50px;
+}
+
+.rating span.star {
+    font-family:FontAwesome;
+    font-weight:normal;
+    font-style:normal;
+    display:inline-block;
+}
+
+.rating span.star:hover {
+    cursor:pointer;
+}
+
+.rating span.star:before {
+    content:"\f006";
+    padding: 20px 8px;
+    color:#f8d453;
+}
+
+.rating span.star:hover:before, .rating span.star:hover~span.star:before{
+    content:"\f005";
+    color:#f8d453;
+}
+
+span.star.filled:before{
+    color:#e3cf7a;
+    content:"\f005";
+}
