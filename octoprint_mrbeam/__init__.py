@@ -115,6 +115,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._stored_frontend_notifications = []
 		self._device_series = self._get_val_from_device_info('device_series')  # '2C'
 		self.called_hosts = []
+		self._current_user = None
 
 		self._boot_grace_period_counter = 0
 		self._start_boot_grace_period_thread()
@@ -308,7 +309,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			terminal=self._settings.get(['terminal']),
 			terminal_show_checksums=self._settings.get(['terminal_show_checksums']),
 			analyticsEnabled=self._settings.get(['analyticsEnabled']),
-			ask_for_review= self.review_handler.ask_for_review(),
+			should_ask_for_review=self.review_handler.should_ask_for_review(),
 			cam=dict(enabled=self._settings.get(['cam', 'enabled']),
 					 frontendUrl=self._settings.get(['cam', 'frontendUrl'])),
 			dev=dict(
@@ -480,6 +481,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if self._branch:
 			display_version_string = "{} ({} branch) on {}".format(self._plugin_version, self._branch, self.getHostname())
 
+		self._logger.info('############################ ON UI RENDER')
 		render_kwargs.update(dict(
 							 webcamStream=self._settings.get(["cam", "frontendUrl"]),
 							 enableFocus=enable_focus,
@@ -513,7 +515,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 serial=self._serial_num,
 							 software_tier=self._settings.get(["dev", "software_tier"]),
 							 analyticsEnabled=self._settings.get(["analyticsEnabled"]),
-							 ask_for_review=self.review_handler.ask_for_review(),
+							 should_ask_for_review=self.review_handler.should_ask_for_review(),
 							 beta_label=self.get_beta_label(),
 							 terminalEnabled=self._settings.get(['terminal']) or self.support_mode,
 
@@ -771,9 +773,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	# reads a value from usersettings mrbeam category
 	def getUserSetting(self, username, key, default):
-		if not isinstance(key, list):
-			key = [key]
-		result = self._user_manager.getUserSetting(username, [self.USER_SETTINGS_KEY_MRBEAM] + key)
+		result = None
+		if username:
+			if not isinstance(key, list):
+				key = [key]
+			result = self._user_manager.getUserSetting(username, [self.USER_SETTINGS_KEY_MRBEAM] + key)
 
 		if result is None:
 			result = default
@@ -1261,6 +1265,17 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		elif command == "reset_gantry_usage":
 			return self.usage_handler.reset_gantry_usage()
 		return NO_CONTENT
+
+	def get_user_name(self):
+		from flask.ext.login import current_user
+
+		# Looks like current_user sometimes does not work, so we save it and the next time if there's no information
+		# we just use the last saved user.
+		if current_user and not current_user.is_anonymous():
+			self._current_user = current_user.get_name()
+			self._logger.info('##################### user name: {}'.format(current_user.get_name()))
+
+		return self._current_user
 
 	def analytics_init(self, data):
 		if 'analyticsInitialConsent' in data:

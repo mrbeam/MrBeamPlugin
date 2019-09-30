@@ -641,7 +641,7 @@ class IoBeamHandler(object):
 
 		if "serial" in dataset:
 			if self.MESSAGE_ERROR not in dataset['serial']:
-				_mrbeam_plugin_implementation.lh['serial'] = dataset['serial']  # todo iratxe: is this supposed to be like this?
+				_mrbeam_plugin_implementation.lh['serial'] = dataset['serial']
 				self._logger.info("laserhead serial: %s", dataset['serial'])
 			else:
 				self._logger.info("laserhead: '%s'", dataset)
@@ -657,7 +657,7 @@ class IoBeamHandler(object):
 							self._logger.info("laserhead: '%s'", dataset)
 							self._logger.warn("Can't read power %s value as int: '%s'", pV, dataset['power'][pV])
 						if pwr is not None:
-							_mrbeam_plugin_implementation.lh['p_'+pV] = pwr  # todo iratxe: and this?
+							_mrbeam_plugin_implementation.lh['p_'+pV] = pwr
 							self._logger.info("laserhead p_%s: %s", pV, pwr)
 		return 0
 

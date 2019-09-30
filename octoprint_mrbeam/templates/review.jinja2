@@ -2,8 +2,8 @@
     <div>
         <div class="modal-body">
             <a href="#" class="close" data-bind='click: exitBtn' aria-hidden="true">&times;</a>
+            <h3 id="review_question" style="display: flex; justify-content: center">{{ _('How happy are you with your Mr Beam II?') }}</h3>
             <div id="rating_block">
-                <h3 style="display: flex; justify-content: center">{{ _('How happy are you with your Mr Beam II?') }}</h3>
                 <div class="rating" style="display: flex; justify-content: center; margin: 35px 0 20px 0;">
                     <span class="star" value="5"></span><span class="star" value="4"></span><span class="star" value="3"></span><span class="star" value="2"></span><span value="1" class="star"></span>
                 </div>
@@ -20,7 +20,7 @@
         </div>
         <div class="modal-footer">
             <a id="dont_ask_review_link" class="btn btn-link" data-bind="click:exitAndDontShowAgain" style="color: dimgray">Don't ask me again</a>
-            <a id="review_done_btn" class="btn btn-primary" data-bind='click: exitBtn' aria-hidden="true">{{ _('OK') }}</a>
+            <a id="review_done_btn" class="btn btn-primary" data-bind='click:exitAndDontShowAgain' aria-hidden="true">{{ _('OK') }}</a>
         </div>
     </div>
 </div>

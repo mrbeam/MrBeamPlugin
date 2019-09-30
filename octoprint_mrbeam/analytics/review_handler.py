@@ -31,9 +31,6 @@ class ReviewHandler:
 		self.review_folder = os.path.join(self._settings.getBaseFolder("base"), self._settings.get(['analytics', 'folder']))
 		self.review_file = os.path.join(self.review_folder, self._settings.get(['review', 'filename']))
 
-		self._num_successful_jobs = self._settings.get(['review', 'num_succ_jobs'])
-		self._review_given = self._settings.get(['review', 'given'])
-
 		self._current_job_time_estimation = -1
 
 		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
@@ -47,19 +44,21 @@ class ReviewHandler:
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self._event_print_done)
 
 	def _event_print_done(self, event, payload):
-		self._num_successful_jobs += 1
-		self._settings.set_int(['review', 'num_succ_jobs'], self._num_successful_jobs)  # todo iratxe: change to user settings
-		self._settings.save()
+		num_successful_jobs = self._plugin.getUserSetting(self._plugin.get_user_name(), ['review', 'num_succ_jobs'], -1) + 1
+		self._plugin.setUserSetting(self._plugin.get_user_name(), ['review', 'num_succ_jobs'], num_successful_jobs)
 
-	def ask_for_review(self):
-		return self._num_successful_jobs >= 5 and not self._review_given
+	def should_ask_for_review(self):
+		num_successful_jobs = self._plugin.getUserSetting(self._plugin.get_user_name(), ['review', 'num_succ_jobs'], -1)
+		review_given = self._plugin.getUserSetting(self._plugin.get_user_name(), ['review', 'given'], False)
+
+		return num_successful_jobs >= 5 and not review_given
 
 	def save_review_data(self, data):
-		payload = data
-		self._logger.info('############## REVIEW DATA: {}'.format(payload))
 		self._write_review_to_file(data)
-		# self._settings.set_boolean(['review', 'given'], True)  # todo iratxe: change to user settings + uncomment
-		self._settings.save()
+
+		self._plugin.setUserSetting(self._plugin.get_user_name(), ['review', 'given'], data['dontShowAgain'])
+		self._settings.save()  # This is necessary because without it the value is not saved
+
 		ReviewFileUploader.upload_now(self._plugin)
 
 	def _write_review_to_file(self, review):

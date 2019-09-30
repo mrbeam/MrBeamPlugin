@@ -2,6 +2,7 @@ $(function () {
     function ReviewViewModel(params) {
         let self = this;
         self.settings = params[0];
+        self.analytics = params[1];
 
         window.mrbeam.viewModels['reviewViewModel'] = self;
 
@@ -9,11 +10,13 @@ $(function () {
         self.jobTimeEstimation = ko.observable(-1);
 
         self.rating = ko.observable(0);
-        self.askAgain = ko.observable(true);
+        self.dontShowAgain = ko.observable(false);
+        self.reviewGiven = ko.observable(false);
+        self.shouldAskForReview = ko.observable(false);
 
         self.onAllBound = function () {
             self.reviewDialog = $('#review_dialog');
-            self.askForReview = ko.observable(self.settings.settings.plugins.mrbeam.ask_for_review());
+            self.shouldAskForReview(self.settings.settings.plugins.mrbeam.should_ask_for_review());
 
             let links = ['give_review_link', 'dont_ask_review_link'];
             links.forEach(function (linkId) {
@@ -24,23 +27,6 @@ $(function () {
                     self.analytics.send_fontend_event('link_click', payload)
                 })
             });
-
-            $('.star').click(function(){
-                let val = $( this ).attr('value');
-                console.log("Clicked "+val+" Stars");
-                self.rating(val);
-                $('#dont_ask_review_link').hide();
-
-
-                // $('#rating_value').html(val);
-                if (val >= 4) {
-                    $('#review_thank_you').show();
-                } else if (val < 4) {
-                    // todo iratxe: show stars
-                    $('#rating_block').hide();
-                    $('#review_how_can_we_improve').show();
-                }
-            })
         };
 
         self.onEventJobTimeEstimated = function (payload) {
@@ -48,39 +34,62 @@ $(function () {
         };
 
         self.onEventPrintStarted = function(payload) {
+            self.enableRatingStars();
+
             setTimeout(function () {
-                if (self.askForReview() && self.jobTimeEstimation() >= 61) {
+                if (self.shouldAskForReview() && self.jobTimeEstimation() >= 61) {
                     self.showReviewDialog(true);
                     self.reviewDialog.modal("show");
                 }
             }, 5000);
         };
 
+        self.enableRatingStars = function() {
+            $('.star').click(function(){
+                let val = $( this ).attr('value');
+                console.log("Clicked "+val+" Stars");
+                self.rating(val);
+
+                self.disableRatingStars();
+                $('#dont_ask_review_link').hide();
+                $('#review_question').hide();
+
+                if (val >= 4) {
+                    $('#review_thank_you').show();
+                } else if (val < 4) {
+                    $('#rating_block').hide();
+                    $('#review_how_can_we_improve').show();
+                }
+            })
+        };
+
+        self.disableRatingStars = function() {
+            $('.star').off("click");
+        };
+
         self.exitBtn = function(){
             self.reviewDialog.modal("hide");
-            // todo iratxe send analytics
-
-            if (self.rating() !== 0) {
-                self.sendReviewToServer()
-            }
+            self.shouldAskForReview(false);
+            self.sendReviewToServer()
         };
 
         self.exitAndDontShowAgain = function() {
-            // todo iratxe: save this
-            // todo iratxe: do we want to send the info if they said don't ask me again? I think we should
+            self.dontShowAgain(true);
             self.exitBtn()
         };
 
         self.sendReviewToServer = function () {
 		    let review = $('#review_textarea').val();
             let data = {
-                askAgain: self.askAgain(),
+                dontShowAgain: self.dontShowAgain(),
                 rating: self.rating(),
                 review: review,
-                ts: new Date().getTime()
+                ts: new Date().getTime(),
+                env: MRBEAM_ENV_LOCAL,
+                sw_tier: MRBEAM_SW_TIER
             };
 
-            self.askForReview(false);
+            self.reviewGiven(true);  // We show it only once per session
 
             OctoPrint.simpleApiCommand("mrbeam", "review_data", data)
                 .done(function (response) {
@@ -105,7 +114,7 @@ $(function () {
         ReviewViewModel,
 
         // e.g. loginStateViewModel, settingsViewModel, ...
-        ['settingsViewModel'],
+        ['settingsViewModel', 'analyticsViewModel'],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         ['#review_dialog']
