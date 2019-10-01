@@ -71,7 +71,7 @@ class FileUploader:
 				self._successful_upload_end()
 
 			else:
-				self._unsuccessful_upload_end('{} does not exist'.format(self.file))
+				self._unsuccessful_upload_end('{} does not exist'.format(self.file), raise_except=False)
 
 		except Exception as e:
 			self._unsuccessful_upload_end(e)
@@ -87,17 +87,23 @@ class FileUploader:
 			up_type=self.upload_type,
 			status=self.status))
 
-	def _unsuccessful_upload_end(self, err):
+	def _unsuccessful_upload_end(self, err, raise_except=True):
 		self.status['err'] = err
 		self.status['succ'] = False
 
 		if self.unlock_file:
 			self.unlock_file()
 
-		self._logger.exception('{up_type} file upload was not successful: {err} - Status: {status}'.format(
-			up_type=self.upload_type,
-			err=err,
-			status=self.status))
+		if raise_except:
+			self._logger.exception('{up_type} file upload was not successful: {err} - Status: {status}'.format(
+				up_type=self.upload_type,
+				err=err,
+				status=self.status))
+		else:
+			self._logger.info('{up_type} file upload was not successful: {err} - Status: {status}'.format(
+				up_type=self.upload_type,
+				err=err,
+				status=self.status))
 
 	def get_token(self):
 		self.status['state'] = self.STATUS_GET_TOKEN

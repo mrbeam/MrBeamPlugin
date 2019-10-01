@@ -428,7 +428,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/material_settings.js",
 				"js/analytics.js",
 				"js/maintenance.js",
-				"js/review.js"
+				"js/review.js",
+				"js/util.js",
 			    ],
 			css=["css/mrbeam.css",
 			     "css/svgtogcode.css",
@@ -481,7 +482,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if self._branch:
 			display_version_string = "{} ({} branch) on {}".format(self._plugin_version, self._branch, self.getHostname())
 
-		self._logger.info('############################ ON UI RENDER')
 		render_kwargs.update(dict(
 							 webcamStream=self._settings.get(["cam", "frontendUrl"]),
 							 enableFocus=enable_focus,
@@ -1273,7 +1273,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# we just use the last saved user.
 		if current_user and not current_user.is_anonymous():
 			self._current_user = current_user.get_name()
-			self._logger.info('##################### user name: {}'.format(current_user.get_name()))
 
 		return self._current_user
 

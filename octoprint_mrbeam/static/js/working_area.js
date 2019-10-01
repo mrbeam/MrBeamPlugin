@@ -14,20 +14,6 @@ if(MRBEAM_DEBUG_RENDERING){
 		}
 }
 
-/**
- * https://stackoverflow.com/a/7616484
- */
-String.prototype.hashCode = function() {
-  var hash = 0, i, chr;
-  if (this.length === 0) return hash;
-  for (i = 0; i < this.length; i++) {
-	chr   = this.charCodeAt(i);
-	hash  = ((hash << 5) - hash) + chr;
-	hash |= 0; // Convert to 32bit integer
-  }
-  return hash;
-};
-
 $(function(){
 
 	function versionCompare(v1, v2, options) {
@@ -585,6 +571,7 @@ $(function(){
 				analyticsData.id = fileObj ? fileObj.id : id;
 				analyticsData.file_type = analyticsData.file_type || fileObj.display ? fileObj.display.split('.').slice(-1)[0] : origin.split('.').slice(-1)[0];
 				analyticsData.filename_hash = fileObj.hash || origin.split('/downloads/files/local/').slice(-1)[0].hashCode();
+				console.log('##################### hashed! ' + analyticsData.filename_hash);
 				analyticsData.size = fileObj.size;
 				analyticsData.node_count = 0;
 				analyticsData.node_types = {};
@@ -1840,7 +1827,7 @@ $(function(){
 				svgStr = self._normalize_svg_string(svgStr);
 				var gc_otions_str = self.gc_options_as_string().replace('"', "'");
 
-				var svg = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:mb="http://www.mr-beam.org/mbns" mb:beamOS_version="'+BEAMOS_VERSION+'"' 
+				var svg = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:mb="http://www.mr-beam.org/mbns" mb:beamOS_version="'+BEAMOS_VERSION+'"'
 						+ ' width="'+ w +'" height="'+ h +'"  viewBox="'+ viewBox +'" mb:gc_options="'+gc_otions_str+'"><defs/>'+svgStr+'</svg>';
 				return svg;
 			} else {

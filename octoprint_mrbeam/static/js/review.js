@@ -3,6 +3,7 @@ $(function () {
         let self = this;
         self.settings = params[0];
         self.analytics = params[1];
+        self.loginState = params[2];
 
         window.mrbeam.viewModels['reviewViewModel'] = self;
 
@@ -86,7 +87,8 @@ $(function () {
                 review: review,
                 ts: new Date().getTime(),
                 env: MRBEAM_ENV_LOCAL,
-                sw_tier: MRBEAM_SW_TIER
+                sw_tier: MRBEAM_SW_TIER,
+                user: self.loginState.username().hashCode()
             };
 
             self.reviewGiven(true);  // We show it only once per session
@@ -114,7 +116,7 @@ $(function () {
         ReviewViewModel,
 
         // e.g. loginStateViewModel, settingsViewModel, ...
-        ['settingsViewModel', 'analyticsViewModel'],
+        ['settingsViewModel', 'analyticsViewModel', 'loginStateViewModel'],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         ['#review_dialog']
