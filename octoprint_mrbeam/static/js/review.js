@@ -1,6 +1,8 @@
 $(function () {
     function ReviewViewModel(params) {
         let self = this;
+        self.REVIEW_NUMBER = 1;
+
         self.settings = params[0];
         self.analytics = params[1];
         self.loginState = params[2];
@@ -97,7 +99,8 @@ $(function () {
                 ts: new Date().getTime(),
                 env: MRBEAM_ENV_LOCAL,
                 sw_tier: MRBEAM_SW_TIER,
-                user: self.loginState.username().hashCode()
+                user: self.loginState.username().hashCode(),
+                number: self.REVIEW_NUMBER
             };
 
             self.reviewGiven(true);  // We show it only once per session
