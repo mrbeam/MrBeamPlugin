@@ -571,7 +571,6 @@ $(function(){
 				analyticsData.id = fileObj ? fileObj.id : id;
 				analyticsData.file_type = analyticsData.file_type || fileObj.display ? fileObj.display.split('.').slice(-1)[0] : origin.split('.').slice(-1)[0];
 				analyticsData.filename_hash = fileObj.hash || origin.split('/downloads/files/local/').slice(-1)[0].hashCode();
-				console.log('##################### hashed! ' + analyticsData.filename_hash);
 				analyticsData.size = fileObj.size;
 				analyticsData.node_count = 0;
 				analyticsData.node_types = {};

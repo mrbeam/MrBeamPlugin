@@ -2533,6 +2533,9 @@ input[type="radio"]{
 /*
 * === USER RATING ===
 */
+/* rating stars
+ * http://jsfiddle.net/ttyYD/1/
+*/
 #rating_block {
     margin: 20px 0;
 }
@@ -2565,7 +2568,11 @@ input[type="radio"]{
     color:#f8d453;
 }
 
-span.star.filled:before{
-    color:#e3cf7a;
+.rating span.star.filled:before{
+    color:#f8d453;
     content:"\f005";
+}
+
+.rating span.star.disabled {
+    pointer-events: none;
 }

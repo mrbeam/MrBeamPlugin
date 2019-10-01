@@ -51,7 +51,7 @@ $(function () {
                 console.log("Clicked "+val+" Stars");
                 self.rating(val);
 
-                self.disableRatingStars();
+                self.fillAndDisableRatingStars(val);
                 $('#dont_ask_review_link').hide();
                 $('#review_question').hide();
 
@@ -64,8 +64,17 @@ $(function () {
             })
         };
 
-        self.disableRatingStars = function() {
-            $('.star').off("click");
+        self.fillAndDisableRatingStars = function(userRating) {
+            let allStars = $('.star');
+            allStars.off("click");
+
+            allStars.each(function(i, obj) {
+                $( this ).addClass('disabled');
+                if ($( this ).attr('value') <= userRating) {
+                    $( this ).addClass('filled');
+                }
+            });
+
         };
 
         self.exitBtn = function(){

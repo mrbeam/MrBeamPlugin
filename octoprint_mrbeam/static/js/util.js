@@ -1,5 +1,4 @@
 $(function () {
-    console.log('########################## UTIL.JS');
     /**
      * https://stackoverflow.com/a/7616484
      */
