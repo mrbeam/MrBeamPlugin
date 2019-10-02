@@ -44,20 +44,23 @@ class ReviewHandler:
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self._event_print_done)
 
 	def _event_print_done(self, event, payload):
-		num_successful_jobs = self._plugin.getUserSetting(self._plugin.get_user_name(), ['review', 'num_succ_jobs'], -1) + 1
-		self._plugin.setUserSetting(self._plugin.get_user_name(), ['review', 'num_succ_jobs'], num_successful_jobs)
+		num_successful_jobs_user = self._plugin.getUserSetting(self._plugin.get_user_name(), ['review', 'num_succ_jobs'], -1) + 1
+		self._plugin.setUserSetting(self._plugin.get_user_name(), ['review', 'num_succ_jobs'], num_successful_jobs_user)
+
+		num_successful_jobs_mrbeam = self._settings.get(['num_succ_jobs']) + 1
+		self._settings.set_int(['num_succ_jobs'], num_successful_jobs_mrbeam)
+		self._settings.save()  # This is necessary because without it the value is not saved
 
 	def should_ask_for_review(self):
-		num_successful_jobs = self._plugin.getUserSetting(self._plugin.get_user_name(), ['review', 'num_succ_jobs'], -1)
+		num_successful_jobs_user = self._plugin.getUserSetting(self._plugin.get_user_name(), ['review', 'num_succ_jobs'], -1)
 		review_given = self._plugin.getUserSetting(self._plugin.get_user_name(), ['review', 'given'], False)
 
-		return num_successful_jobs >= 5 and not review_given
+		return num_successful_jobs_user >= 5 and not review_given
 
 	def save_review_data(self, data):
 		self._write_review_to_file(data)
 
 		self._plugin.setUserSetting(self._plugin.get_user_name(), ['review', 'given'], data['dontShowAgain'])
-		self._settings.save()  # This is necessary because without it the value is not saved
 
 		ReviewFileUploader.upload_now(self._plugin)
 

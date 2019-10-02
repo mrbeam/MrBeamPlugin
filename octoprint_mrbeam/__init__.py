@@ -300,6 +300,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			),
 			grbl_version_lastknown=None,
 			tour_auto_launch = False,
+			num_succ_jobs = 0,
 		)
 
 	def on_settings_load(self):
@@ -335,6 +336,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				gantryUsage=self.usage_handler.get_gantry_usage(),
 			),
 			tour_auto_launch = self._settings.get(['tour_auto_launch']),
+			num_succ_jobs = self._settings.get(['num_succ_jobs']),
 		)
 
 	def on_settings_save(self, data):
