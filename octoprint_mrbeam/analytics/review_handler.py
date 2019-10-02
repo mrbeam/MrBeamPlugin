@@ -21,6 +21,9 @@ def reviewHandler(plugin):
 	return _instance
 
 
+REVIEW_FILE = 'review.json'
+
+
 class ReviewHandler:
 	def __init__(self, plugin):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.review")
@@ -29,7 +32,7 @@ class ReviewHandler:
 		self._settings = plugin._settings
 
 		self.review_folder = os.path.join(self._settings.getBaseFolder("base"), self._settings.get(['analytics', 'folder']))
-		self.review_file = os.path.join(self.review_folder, self._settings.get(['review', 'filename']))
+		self.review_file = REVIEW_FILE
 
 		self._current_job_time_estimation = -1
 

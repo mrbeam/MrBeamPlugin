@@ -271,9 +271,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				usage_filename = 'usage.yaml',
 				usage_backup_filename = 'usage_bak.yaml'
 			),
-			review=dict(
-				filename = 'review.json'
-			),
 			cam=dict(
 				enabled=True,
 				image_correction_enabled = True,
