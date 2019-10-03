@@ -60,6 +60,7 @@ class ImageProcessor():
 	              engraving_mode = None,
 	              pierce_time = 0,
 	              overshoot_distance = 0, # disabled for now. TODO: enable (1) when switch on delay is HW fixed.
+	              air_pressure = 100, # DreamCut.
 	              material = None):
 
 		self.log = logging.getLogger("octoprint.plugins.mrbeam.img2gcode")
@@ -96,6 +97,7 @@ class ImageProcessor():
 		self.intensity_white_user = intensity_white_user
 		self.feedrate_white = float(speed_white) if speed_white else 3000.0
 		self.feedrate_black = float(speed_black) if speed_black else 0.0
+		self.air_pressure = float(air_pressure) if air_pressure else 100.0
 		self.material = material
 		self.contrastFactor = float(contrast) if contrast else 0.0
 		self.sharpeningFactor = float(sharpening) if sharpening else 0.0
@@ -132,7 +134,7 @@ class ImageProcessor():
 	def get_settings_as_comment(self, x,y,w,h, file_id = ''):
 		# if file id has linebreaks, ensure every line has a ';' at the beginning.
 		file_id_lines = ";".join(file_id.splitlines(1))
-		comment =  "; Image: {:.2f}x{:.2f} @ {:.2f},{:.2f}|{}\n".format(w,h,x,y, file_id_lines)
+		comment =  "; Image: {:.2f}x{:.2f} @ {:.2f},{:.2f}|{}\n".format(w,h,x,y, file_id_lines) # important for gcode preview!
 		comment += "; self.beam = {:.2f}\n".format(self.beam)
 		comment += "; pierce_time = {:.3f}s\n".format(self.pierce_time)
 		comment += "; intensity_black = {:.0f}\n".format(self.intensity_black)
@@ -148,6 +150,7 @@ class ImageProcessor():
 		comment += "; dithering = {}\n".format(self.dithering)
 		comment += "; overshoot distance = {}\n".format(self.overshoot_distance)
 		comment += "; separation = {}\n".format(self.separation)
+		comment += "; air_pressure = {:.2f}\n".format(self.air_pressure)
 		return comment
 
 	def set_overshoot_parameter(self, overshoot_distance, workingAreaWidth=500):
@@ -337,7 +340,8 @@ class ImageProcessor():
 		xMM += self.beam/2.0*0
 		yMM -= self.beam
 
-		# pre-condition: set feedrate, enable laser with 0 intensity.
+		# pre-condition: set air_pressure, set feedrate, enable laser with 0 intensity.
+		self._append_gcode(';air_pressure:' + str(self.air_pressure)) # set air_pressure
 		self._append_gcode('F' + str(self.feedrate_white)) # set an initial feedrate
 		self.gc_ctx.f = self.feedrate_white #TODO hack. set with line above
 		#self._append_gcode('M3S0') # enable laser
@@ -397,7 +401,7 @@ class ImageProcessor():
 			self.gc_ctx.s = 0
 			self.gc_ctx.laser_active = True
 
-		self._append_gcode(";EndImage\nM5") # important for gcode preview!
+		self._append_gcode(";EndImage\nM5\n;air_pressure:0") # important for gcode preview!
 		self.gc_ctx.laser_active = False
 		return self._output_gcode
 
