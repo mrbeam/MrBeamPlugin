@@ -53,7 +53,7 @@ $(function(){
         self.dontRemindMeAgainChecked = ko.observable(false);
 
 		// material menu
-		self.material_settings2 = self.materialSettings.material_settings;
+		self.material_settings2 = {}; // loaded on onAllBound()
 
 		self.engrave_only_thickness = {thicknessMM: -1, cut_i:'', cut_f:'', cut_p: 1, cut_pierce: 0};
 		self.no_engraving = {eng_i:['',''], eng_f:['',''], eng_pierce: 0, dithering: false };
@@ -1302,6 +1302,10 @@ $(function(){
                 html:true
             });
 		};
+
+		self.onAllBound = function(){
+		    self.material_settings2 = self.materialSettings.getMaterialSettings('MrBeamII-2.0'); // TODO: get type dynamically
+        };
 
 		self.onUserLoggedIn = function(user){
 			self.load_custom_materials();
