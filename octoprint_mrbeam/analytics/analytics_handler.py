@@ -645,6 +645,7 @@ class AnalyticsHandler(object):
 	# -------- WRITER THREAD (queue --> analytics file) ----------------------------------------------------------------
 	def _write_queue_to_analytics_file(self):
 		try:
+			# TODO Iratxe use threading.Lock() here
 			while self._analytics_enabled:
 				if not os.path.isfile(self.analytics_file):
 					self._init_json_file()

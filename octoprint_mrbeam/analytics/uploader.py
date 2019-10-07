@@ -57,24 +57,27 @@ class FileUploader:
 		return self
 
 	def _upload_and_delete_file(self):
-		self._logger.debug("{} upload starting...".format(self.upload_type))
-		self.status['state'] = self.STATUS_INIT
-
 		try:
-			if self._file_exists():
-				if self.lock_file:
-					self.lock_file()
+			self._logger.debug("{} upload starting...".format(self.upload_type))
+			self.status['state'] = self.STATUS_INIT
 
-				token_data = self.get_token()
-				self._upload_file(token_data)
-				self._remove_file()
-				self._successful_upload_end()
+			try:
+				if self._file_exists():
+					if self.lock_file:
+						self.lock_file()
 
-			else:
-				self._unsuccessful_upload_end('{} does not exist'.format(self.file), raise_except=False)
+					token_data = self.get_token()
+					self._upload_file(token_data)
+					self._remove_file()
+					self._successful_upload_end()
 
-		except Exception as e:
-			self._unsuccessful_upload_end(e)
+				else:
+					self._unsuccessful_upload_end('{} does not exist'.format(self.file), raise_except=False)
+			except Exception as e:
+				self._unsuccessful_upload_end(e)
+
+		except:
+			self._logger.exception("Exception in _upload_and_delete_file()")
 
 	def _successful_upload_end(self):
 		self.status['state'] = self.STATUS_DONE

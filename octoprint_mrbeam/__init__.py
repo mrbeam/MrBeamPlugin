@@ -331,6 +331,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				gantryUsage=self.usage_handler.get_gantry_usage(),
 			),
 			tour_auto_launch = self._settings.get(['tour_auto_launch']),
+			# TODO Iratxe move to usage.yaml
 			num_succ_jobs = self._settings.get(['num_succ_jobs']),
 		)
 
@@ -512,7 +513,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 serial=self._serial_num,
 							 software_tier=self._settings.get(["dev", "software_tier"]),
 							 analyticsEnabled=self._settings.get(["analyticsEnabled"]),
-							 should_ask_for_review=self.review_handler.should_ask_for_review(),
 							 beta_label=self.get_beta_label(),
 							 terminalEnabled=self._settings.get(['terminal']) or self.support_mode,
 

@@ -55,6 +55,7 @@ class ReviewHandler:
 		self._settings.save()  # This is necessary because without it the value is not saved
 
 	def should_ask_for_review(self):
+		# TODO Iratxe
 		num_successful_jobs_user = self._plugin.getUserSetting(self._plugin.get_user_name(), ['review', 'num_succ_jobs'], -1)
 		review_given = self._plugin.getUserSetting(self._plugin.get_user_name(), ['review', 'given'], False)
 

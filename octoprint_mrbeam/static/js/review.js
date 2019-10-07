@@ -19,7 +19,7 @@ $(function () {
 
         self.onAllBound = function () {
             self.reviewDialog = $('#review_dialog');
-            self.shouldAskForReview(self.settings.settings.plugins.mrbeam.should_ask_for_review());
+            self.shouldAskForReview(self.settings.settings.plugins.mrbeam.should_ask_for_review());  //todo iratxe
 
             let links = ['give_review_link', 'dont_ask_review_link'];
             links.forEach(function (linkId) {
@@ -40,8 +40,9 @@ $(function () {
             self.enableRatingStars();
 
             setTimeout(function () {
+                // The short jobs are always estimated 60s, so has to be more
                 if (self.shouldAskForReview() && self.jobTimeEstimation() >= 61) {
-                    self.showReviewDialog(true);
+                    self.showReviewDialog(true);  //todo iratxe
                     self.reviewDialog.modal("show");
                 }
             }, 5000);
@@ -93,7 +94,7 @@ $(function () {
         self.sendReviewToServer = function () {
 		    let review = $('#review_textarea').val();
             let data = {
-                dontShowAgain: self.dontShowAgain(),
+                dontShowAgain: self.dontShowAgain(),  //todo iratxe: if they press ok, we show it again
                 rating: self.rating(),
                 review: review,
                 ts: new Date().getTime(),
