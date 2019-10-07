@@ -715,7 +715,7 @@ class Converter():
 			si = curve[i]
 			feed = f if lg not in ['G01', 'G02', 'G03'] else ''
 			if s[1] == 'move':
-				g += "G0" + c(si[0]) + "\n" + machine_settings.gcode_before_path_color(color, settings['intensity'], settings['air_pressure']) + "\n" 
+				g += "G0" + c(si[0]) + "\n" + machine_settings.gcode_before_path_color(color, settings['intensity'], settings['air_pressure']) + "\n"
 				pt = int(settings['pierce_time'])
 				if pt > 0:
 					g += "G4P%.3f\n" % (round(pt / 1000.0, 4))
@@ -750,7 +750,7 @@ class Converter():
 		self._log.debug( "_use_embedded_gcode() %s", gcode[:100])
 		gcode = gcode.replace(' ', "\n")
 		feedrateCode = "F%s;%s\n" % (settings['feedrate'], color)
-		intensityCode = machine_settings.gcode_before_path_color(color, settings['intensity'], settings['air_pressure']) + "\n"
+		intensityCode = machine_settings.gcode_before_path_color(color, settings['intensity'], settings.get('air_pressure', '100')) + "\n"
 		piercetimeCode = ''
 		pt = int(settings['pierce_time'])
 		if pt > 0:
