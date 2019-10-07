@@ -23,7 +23,7 @@ class FileUploader:
 	STATUS_REMOVE = 'remove_file'
 	STATUS_DONE = 'done'
 
-	def __init__(self, plugin, directory, file, upload_type, lock_file=None, unlock_file=None):
+	def __init__(self, plugin, directory, file, upload_type, lock):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.uploader")
 		self._plugin = plugin
 		self.directory = directory
@@ -32,8 +32,9 @@ class FileUploader:
 		self.delete_on_success = DELETE_FILES_AFTER_UPLOAD
 		self.err_state = False
 		self.worker = None
-		self.lock_file = lock_file
-		self.unlock_file = unlock_file
+		# self.lock_file = lock_file
+		# self.unlock_file = unlock_file
+		self._lock = lock
 
 		self.status = dict(
 			file=self.file,
@@ -57,31 +58,35 @@ class FileUploader:
 		return self
 
 	def _upload_and_delete_file(self):
-		self._logger.debug("{} upload starting...".format(self.upload_type))
-		self.status['state'] = self.STATUS_INIT
-
 		try:
-			if self._file_exists():
-				if self.lock_file:
-					self.lock_file()
+			self._logger.debug("{} upload starting...".format(self.upload_type))
+			self.status['state'] = self.STATUS_INIT
 
-				token_data = self.get_token()
-				self._upload_file(token_data)
-				self._remove_file()
-				self._successful_upload_end()
+			try:
+				if self._file_exists():
+					# if self.lock_file:
+					# 	self.lock_file()
+					with self._lock:
+						self._logger.info('############################# LOCK UPLOADER')
+						token_data = self.get_token()
+						self._upload_file(token_data)
+						self._remove_file()
+						self._successful_upload_end()
 
-			else:
-				self._unsuccessful_upload_end('{} does not exist'.format(self.file), raise_except=False)
+				else:
+					self._unsuccessful_upload_end('{} does not exist'.format(self.file), raise_except=False)
 
+			except Exception as e:
+				self._unsuccessful_upload_end(e)
 		except Exception as e:
-			self._unsuccessful_upload_end(e)
+			self._logger.exception('Exception during _upload_and_delete_file: {}'.format(e))
 
 	def _successful_upload_end(self):
 		self.status['state'] = self.STATUS_DONE
 		self.status['succ'] = True
 
-		if self.unlock_file:
-			self.unlock_file()
+		# if self.unlock_file:
+		# 	self.unlock_file()
 
 		self._logger.info('{up_type} file upload successful! - Status: {status}'.format(
 			up_type=self.upload_type,
@@ -91,8 +96,8 @@ class FileUploader:
 		self.status['err'] = err
 		self.status['succ'] = False
 
-		if self.unlock_file:
-			self.unlock_file()
+		# if self.unlock_file:
+		# 	self.unlock_file()
 
 		if raise_except:
 			self._logger.exception('{up_type} file upload was not successful: {err} - Status: {status}'.format(
@@ -178,7 +183,7 @@ class FileUploader:
 class AnalyticsFileUploader(FileUploader):
 	_instance = None
 
-	def __init__(self, plugin):
+	def __init__(self, plugin, analytics_lock):
 		self._settings = plugin._settings
 		self._analytics_handler = plugin.analytics_handler
 
@@ -188,15 +193,14 @@ class AnalyticsFileUploader(FileUploader):
 			directory=self._analytics_handler.analytics_folder,
 			file=self._analytics_handler.analytics_file,
 			upload_type='analytics',
-			lock_file=self._analytics_handler.pause_analytics_writer,
-			unlock_file=self._analytics_handler.resume_analytics_writer,
+			lock=analytics_lock,
 		)
 
 	@staticmethod
-	def upload_now(plugin):
+	def upload_now(plugin, analytics_lock):
 		try:
 			if AnalyticsFileUploader._instance is None or not AnalyticsFileUploader._instance.is_active():
-				AnalyticsFileUploader._instance = AnalyticsFileUploader(plugin)
+				AnalyticsFileUploader._instance = AnalyticsFileUploader(plugin, analytics_lock)
 				AnalyticsFileUploader._instance._start_uploader_thread()
 				return
 		except Exception as e:
@@ -207,7 +211,7 @@ class AnalyticsFileUploader(FileUploader):
 class ReviewFileUploader(FileUploader):
 	_instance = None
 
-	def __init__(self, plugin):
+	def __init__(self, plugin, review_lock):
 		self._settings = plugin._settings
 		self._review_handler = plugin.review_handler
 
@@ -217,13 +221,14 @@ class ReviewFileUploader(FileUploader):
 			directory=self._review_handler.review_folder,
 			file=self._review_handler.review_file,
 			upload_type='review',
+			lock=review_lock,
 		)
 
 	@staticmethod
-	def upload_now(plugin):
+	def upload_now(plugin, review_lock):
 		try:
 			if ReviewFileUploader._instance is None or not ReviewFileUploader._instance.is_active():
-				ReviewFileUploader._instance = ReviewFileUploader(plugin)
+				ReviewFileUploader._instance = ReviewFileUploader(plugin, review_lock)
 				ReviewFileUploader._instance._start_uploader_thread()
 				return
 		except Exception as e:

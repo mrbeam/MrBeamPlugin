@@ -9,7 +9,7 @@ import uuid
 
 from value_collector import ValueCollector
 from cpu import Cpu
-from threading import Thread, Timer
+from threading import Thread, Timer, Lock
 from Queue import Queue
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
@@ -44,6 +44,7 @@ class AnalyticsHandler(object):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.analyticshandler")
 
 		self._upload_in_progress = False
+		self._analytics_lock = Lock()
 
 		# Mr Beam specific data
 		self._analytics_enabled = self._settings.get(['analyticsEnabled'])
@@ -89,7 +90,7 @@ class AnalyticsHandler(object):
 
 		# Upload any previous analytics, unless the user didn't make a choice yet
 		if not self._no_choice_made:
-			AnalyticsFileUploader.upload_now(self._plugin)
+			AnalyticsFileUploader.upload_now(self._plugin, self._analytics_lock)
 
 	def _activate_analytics(self):
 		# Restart queue if the analytics were disabled before
@@ -649,7 +650,7 @@ class AnalyticsHandler(object):
 				if not os.path.isfile(self.analytics_file):
 					self._init_json_file()
 
-				if not self._upload_in_progress:
+				with self._analytics_lock:
 					while not self._analytics_queue.empty():
 						with open(self.analytics_file, 'a') as f:
 							data = self._analytics_queue.get()
@@ -680,7 +681,7 @@ class AnalyticsHandler(object):
 		if consent == 'agree':
 			self.analytics_user_permission_change(True)
 			self.process_analytics_files()
-			AnalyticsFileUploader.upload_now(self._plugin)
+			AnalyticsFileUploader.upload_now(self._plugin, self._analytics_lock)
 
 		elif consent == 'disagree':
 			self.analytics_user_permission_change(False)

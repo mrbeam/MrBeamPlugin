@@ -14,12 +14,25 @@ $(function () {
 
         self.rating = ko.observable(0);
         self.dontShowAgain = ko.observable(false);
-        self.reviewGiven = ko.observable(false);
-        self.shouldAskForReview = ko.observable(false);
+        self.justGaveReview = ko.observable(false);
+
+        self.shouldAskForReview = ko.computed(function(){
+            if (self.loginState.currentUser() && self.loginState.currentUser().active) {
+                let numSuccJobs = self.loginState.currentUser().settings.mrbeam.review.num_succ_jobs;
+                let reviewGiven = self.loginState.currentUser().settings.mrbeam.review.given;
+
+                console.log('############ NUM JOBS: '+numSuccJobs);
+                console.log('############ GIVEN: '+reviewGiven);
+                console.log('############ NOW YES: '+self.justGaveReview());
+
+                return numSuccJobs >= 5 && !reviewGiven && !self.justGaveReview()
+            } else {
+                return false
+            }
+        });
 
         self.onAllBound = function () {
             self.reviewDialog = $('#review_dialog');
-            self.shouldAskForReview(self.settings.settings.plugins.mrbeam.should_ask_for_review());
 
             let links = ['give_review_link', 'dont_ask_review_link'];
             links.forEach(function (linkId) {
@@ -40,6 +53,7 @@ $(function () {
             self.enableRatingStars();
 
             setTimeout(function () {
+                // The short jobs are always estimated 60s, so has to be more
                 if (self.shouldAskForReview() && self.jobTimeEstimation() >= 61) {
                     self.showReviewDialog(true);
                     self.reviewDialog.modal("show");
@@ -49,6 +63,8 @@ $(function () {
 
         self.enableRatingStars = function() {
             $('.star').click(function(){
+                self.dontShowAgain(true);
+
                 let val = $( this ).attr('value');
                 console.log("Clicked "+val+" Stars");
                 self.rating(val);
@@ -81,7 +97,7 @@ $(function () {
 
         self.exitBtn = function(){
             self.reviewDialog.modal("hide");
-            self.shouldAskForReview(false);
+            self.justGaveReview(true);  // We show it only once per session
             self.sendReviewToServer()
         };
 
@@ -102,8 +118,6 @@ $(function () {
                 user: self.loginState.username().hashCode(),
                 number: self.REVIEW_NUMBER
             };
-
-            self.reviewGiven(true);  // We show it only once per session
 
             OctoPrint.simpleApiCommand("mrbeam", "review_data", data)
                 .done(function (response) {

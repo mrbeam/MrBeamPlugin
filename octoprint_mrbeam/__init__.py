@@ -295,7 +295,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			),
 			grbl_version_lastknown=None,
 			tour_auto_launch = False,
-			num_succ_jobs = 0,
 		)
 
 	def on_settings_load(self):
@@ -305,7 +304,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			terminal=self._settings.get(['terminal']),
 			terminal_show_checksums=self._settings.get(['terminal_show_checksums']),
 			analyticsEnabled=self._settings.get(['analyticsEnabled']),
-			should_ask_for_review=self.review_handler.should_ask_for_review(),
 			cam=dict(enabled=self._settings.get(['cam', 'enabled']),
 					 frontendUrl=self._settings.get(['cam', 'frontendUrl'])),
 			dev=dict(
@@ -331,7 +329,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				gantryUsage=self.usage_handler.get_gantry_usage(),
 			),
 			tour_auto_launch = self._settings.get(['tour_auto_launch']),
-			num_succ_jobs = self._settings.get(['num_succ_jobs']),
 		)
 
 	def on_settings_save(self, data):
@@ -512,7 +509,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 serial=self._serial_num,
 							 software_tier=self._settings.get(["dev", "software_tier"]),
 							 analyticsEnabled=self._settings.get(["analyticsEnabled"]),
-							 should_ask_for_review=self.review_handler.should_ask_for_review(),
 							 beta_label=self.get_beta_label(),
 							 terminalEnabled=self._settings.get(['terminal']) or self.support_mode,
 
