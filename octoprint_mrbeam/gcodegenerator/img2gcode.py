@@ -150,7 +150,7 @@ class ImageProcessor():
 		comment += "; dithering = {}\n".format(self.dithering)
 		comment += "; overshoot distance = {}\n".format(self.overshoot_distance)
 		comment += "; separation = {}\n".format(self.separation)
-		comment += "; air_pressure = {:.2f}\n".format(self.air_pressure)
+		comment += "; air_pressure = {}\n".format(self.air_pressure)
 		return comment
 
 	def set_overshoot_parameter(self, overshoot_distance, workingAreaWidth=500):
@@ -341,8 +341,8 @@ class ImageProcessor():
 		yMM -= self.beam
 
 		# pre-condition: set air_pressure, set feedrate, enable laser with 0 intensity.
-		self._append_gcode(';air_pressure:' + str(self.air_pressure)) # set air_pressure
-		self._append_gcode('F' + str(self.feedrate_white)) # set an initial feedrate
+		self._append_gcode('M100P{p} ;air_pressure:{p}'.format(p=self.air_pressure)) # set air_pressure
+		self._append_gcode('F{}'.format(self.feedrate_white)) # set an initial feedrate
 		self.gc_ctx.f = self.feedrate_white #TODO hack. set with line above
 		#self._append_gcode('M3S0') # enable laser
 		self.gc_ctx.s = 0 #TODO hack. set with line above
@@ -401,7 +401,8 @@ class ImageProcessor():
 			self.gc_ctx.s = 0
 			self.gc_ctx.laser_active = True
 
-		self._append_gcode(";EndImage\nM5\n;air_pressure:0") # important for gcode preview!
+		self._append_gcode(";EndImage\nM5") # important for gcode preview!
+		# self._append_gcode(";EndImage\nM5\nM100P0 ; air_pressure:0") # important for gcode preview!
 		self.gc_ctx.laser_active = False
 		return self._output_gcode
 

@@ -777,7 +777,7 @@ class Converter():
 
 	def _get_gcode_footer(self):
 		if(self.options['noheaders']):
-			return "M05\n;air_pressure:0\n"
+			return "; end of job\nM05\nM100P0 ;air_pressure off\n"
 		else:
 			return machine_settings.gcode_footer
 
