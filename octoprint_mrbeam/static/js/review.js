@@ -21,10 +21,6 @@ $(function () {
                 let numSuccJobs = self.loginState.currentUser().settings.mrbeam.review.num_succ_jobs;
                 let reviewGiven = self.loginState.currentUser().settings.mrbeam.review.given;
 
-                console.log('############ NUM JOBS: '+numSuccJobs);
-                console.log('############ GIVEN: '+reviewGiven);
-                console.log('############ NOW YES: '+self.justGaveReview());
-
                 return numSuccJobs >= 5 && !reviewGiven && !self.justGaveReview()
             } else {
                 return false
