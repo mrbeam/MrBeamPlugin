@@ -214,10 +214,6 @@ class IoBeamHandler(object):
 	def open_interlocks(self):
 		return self._interlocks.keys()
 
-	def has_compressor(self):
-		#TODO ANDYTEST
-		return True
-
 	def send_temperature_request(self):
 		"""
 		Request a single temperature value from iobeam.

@@ -31,6 +31,7 @@ from octoprint_mrbeam.iobeam.lid_handler import lidHandler
 from octoprint_mrbeam.iobeam.temperature_manager import temperatureManager
 from octoprint_mrbeam.iobeam.dust_manager import dustManager
 from octoprint_mrbeam.iobeam.laserhead_handler import laserheadHandler
+from octoprint_mrbeam.iobeam.compressor_handler import compressor_handler
 from octoprint_mrbeam.analytics.analytics_handler import analyticsHandler
 from octoprint_mrbeam.analytics.usage_handler import usageHandler
 from octoprint_mrbeam.led_events import LedEventListener
@@ -168,6 +169,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self.temperature_manager = temperatureManager(self)
 		self.dust_manager = dustManager(self)
 		self.laserhead_handler = laserheadHandler(self)
+		self.compressor_handler = compressor_handler(self)
 		self.wizard_config = WizardConfig(self)
 		self.job_time_estimation = JobTimeEstimation(self)
 

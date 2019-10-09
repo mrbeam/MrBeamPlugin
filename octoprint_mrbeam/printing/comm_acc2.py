@@ -1489,7 +1489,7 @@ class MachineCom(object):
 			if val > 100: val = 100
 			if val < 0: val = 0
 			self._logger.info("_gcode_M100_sending() compressor val: %s, cmd: %s", val, cmd)
-			self._set_air_pressure(val)
+			self._set_compressor(val)
 		return ""
 
 	def _gcode_P_sending(self, cmd, cmd_type=None):
@@ -1950,10 +1950,20 @@ class MachineCom(object):
 			eventManager().fire(OctoPrintEvents.PRINT_FAILED, payload)
 		eventManager().fire(OctoPrintEvents.DISCONNECTED)
 
-	def _set_air_pressure(self, value):
+	def _set_compressor(self, value):
 		try:
-			if _mrbeam_plugin_implementation.iobeam.has_compressor():
-				_mrbeam_plugin_implementation.iobeam.send_compressor_command(value)
+			if _mrbeam_plugin_implementation.compressor_handler.has_compressor():
+				_mrbeam_plugin_implementation.compressor_handler.set_compressor(value)
+		except:
+			self._logger.exception("Exception in _set_air_pressure() ")
+
+	def _set_compressor_pause(self, paused):
+		try:
+			if _mrbeam_plugin_implementation.compressor_handler.has_compressor():
+				if paused:
+					_mrbeam_plugin_implementation.compressor_handler.set_compressor_pause()
+				else:
+					_mrbeam_plugin_implementation.compressor_handler.set_compressor_pause()
 		except:
 			self._logger.exception("Exception in _set_air_pressure() ")
 
