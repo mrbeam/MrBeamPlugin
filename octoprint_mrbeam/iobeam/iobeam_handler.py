@@ -133,8 +133,8 @@ class IoBeamHandler(object):
 	# Possible datasets
 	DATASET_FAN_DYNAMIC =	            "fan_dynamic"
 	DATASET_FAN_STATIC = 				"fan_static"
-	DATASET_PUMP_DYNAMIC =	            "pump_dynamic"
-	DATASET_PUMP_STATIC = 				"pump_static"
+	DATASET_COMPRESSOR_DYNAMIC =        "compressor_dynamic"
+	DATASET_COMPRESSOR_STATIC =         "compressor_static"
 	DATASET_FAN_EXHAUST = 				"fan_exhaust"
 	DATASET_FAN_LINK_QUALITY= 			"fan_link_quality"
 	DATASET_PCF =          				"pcf"
@@ -549,10 +549,10 @@ class IoBeamHandler(object):
 					err = self._handle_fan_dynamic(dataset)
 				elif name == self.DATASET_FAN_STATIC:
 					err = self._handle_fan_static(dataset)
-				elif name == self.DATASET_PUMP_STATIC:
-					self._handle_pump_static(dataset)
-				elif name == self.DATASET_PUMP_DYNAMIC:
-					self._handle_pump_dynamic(dataset)
+				elif name == self.DATASET_COMPRESSOR_STATIC:
+					self._handle_compressor_static(dataset)
+				elif name == self.DATASET_COMPRESSOR_DYNAMIC:
+					self._handle_compressor_dynamic(dataset)
 				elif name == self.DATASET_LASER:
 					err = self._handle_laser(dataset)
 				elif name == self.DATASET_LASERHEAD:
@@ -645,16 +645,16 @@ class IoBeamHandler(object):
 			                                                             dataset)
 		return 0
 
-	def _handle_pump_dynamic(self, dataset):
+	def _handle_compressor_dynamic(self, dataset):
 		pass
 
-	def _handle_pump_static(self, dataset):
+	def _handle_compressor_static(self, dataset):
 		"""
-		Handle static pump data
+		Handle static compressor data
 		:param dataset:
 		:return: error count
 		"""
-		self._logger.info("pump_static: %s", dataset)
+		self._logger.info("compressor_static: %s", dataset)
 		return 0
 
 	def _handle_i2c_test(self, dataset):
