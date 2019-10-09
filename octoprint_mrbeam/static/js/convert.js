@@ -703,37 +703,14 @@ $(function(){
 
 		self.get_current_multicolor_settings = function () {
 			var data = [];
-			$('.job_row_vector').each(function(i, job){
-				var intensity_user = $(job).find('.param_intensity').val();
-				var intensity = intensity_user * self.profile.currentProfileData().laser.intensity_factor() ;
-				var feedrate = $(job).find('.param_feedrate').val();
-				var piercetime = $(job).find('.param_piercetime').val();
-				var passes = $(job).find('.param_passes').val();
-				if(self._isValidVectorSetting(intensity_user, feedrate, passes, piercetime)){
-					$(job).find('.used_color').each(function(j, col){
-						var hex = '#' + $(col).attr('id').substr(-6);
-						data.push({
-							color: hex,
-							intensity: intensity,
-							intensity_user: intensity_user,
-							feedrate: feedrate,
-							pierce_time: piercetime,
-							passes: passes,
-                            engrave: false
-						});
-					});
-				} else {
-					console.log("Skipping vector job ("+1+"), invalid parameters.");
-				}
-			});
-
+			
 			var intensity_black_user = self.imgIntensityBlack();
 			var intensity_white_user = self.imgIntensityWhite();
 			var speed_black = parseInt(self.imgFeedrateBlack());
 			var speed_white = parseInt(self.imgFeedrateWhite());
 
 			// vector icons dragged into engraving.
-			$('#colored_line_mapping input').each(function(i, el){
+			$('#engrave_job_drop_zone_conversion_dialog>.cutting_job_color').each(function(i, el){
 				var colorkey = $(el).attr('id').substr(-6);
 				var hex = '#' + colorkey;
 				var slider_id = '#adjuster_cd_color_' + colorkey;
@@ -760,6 +737,31 @@ $(function(){
 					console.log("Skipping line engrave job ("+hex+"), invalid parameters.");
 				}
 			});
+			
+			$('.job_row_vector').each(function(i, job){
+				var intensity_user = $(job).find('.param_intensity').val();
+				var intensity = intensity_user * self.profile.currentProfileData().laser.intensity_factor() ;
+				var feedrate = $(job).find('.param_feedrate').val();
+				var piercetime = $(job).find('.param_piercetime').val();
+				var passes = $(job).find('.param_passes').val();
+				if(self._isValidVectorSetting(intensity_user, feedrate, passes, piercetime)){
+					$(job).find('.used_color').each(function(j, col){
+						var hex = '#' + $(col).attr('id').substr(-6);
+						data.push({
+							color: hex,
+							intensity: intensity,
+							intensity_user: intensity_user,
+							feedrate: feedrate,
+							pierce_time: piercetime,
+							passes: passes,
+                            engrave: false
+						});
+					});
+				} else {
+					console.log("Skipping vector job ("+1+"), invalid parameters.");
+				}
+			});
+
 
 			return data;
 		};
