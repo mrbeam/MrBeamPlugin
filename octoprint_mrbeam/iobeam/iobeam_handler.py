@@ -95,6 +95,7 @@ class IoBeamHandler(object):
 	MESSAGE_DEVICE_LASER =	            "laser"
 	MESSAGE_DEVICE_UNUSED =	            "unused"
 	MESSAGE_DEVICE_IOBEAM =	            "iobeam"
+	MESSAGE_DEVICE_COMPRESSOR =	        "compressor"
 
 	MESSAGE_ACTION_ONEBUTTON_PRESSED =  "pr"
 	MESSAGE_ACTION_ONEBUTTON_DOWN =     "dn"
@@ -127,6 +128,7 @@ class IoBeamHandler(object):
 	MESSAGE_ACTION_FAN_TYPE = 			"type"
 	MESSAGE_ACTION_FAN_EXHAUST =        "exhaust"
 	MESSAGE_ACTION_FAN_LINK_QUALITY =   "link_quality"
+	MESSAGE_ACTION_COMPRESSOR_ON =      "on"
 
 	# Possible datasets
 	DATASET_FAN_DYNAMIC =	            "fan_dynamic"
@@ -212,6 +214,10 @@ class IoBeamHandler(object):
 	def open_interlocks(self):
 		return self._interlocks.keys()
 
+	def has_compressor(self):
+		#TODO ANDYTEST
+		return True
+
 	def send_temperature_request(self):
 		"""
 		Request a single temperature value from iobeam.
@@ -226,8 +232,13 @@ class IoBeamHandler(object):
 		:return: True if the command was sent sucessfull (does not mean it was sucessfully executed)
 		"""
 		command = self.get_command_msg(self.MESSAGE_DEVICE_FAN, action, value)
-		# self._logger.info("send_fan_command(): ok: %s, command: %s", ok, command)
 		return self._send_command(command), command['request_id']
+
+	def send_compressor_command(self, value=0):
+		command = self.get_command_msg(self.MESSAGE_DEVICE_COMPRESSOR, self.MESSAGE_ACTION_COMPRESSOR_ON, value)
+		succ = self._send_command(command)
+		self._logger.info("send_compressor_command(): succ: %s, command: %s",succ, command)
+		return succ, command['request_id']
 
 	def _send_command(self, command):
 		"""
@@ -531,8 +542,8 @@ class IoBeamHandler(object):
 			elif self.MESSAGE_ERROR in dataset:
 				self._logger.debug("Received %s dataset error: %s", name, dataset[self.MESSAGE_ERROR])
 				err += 1
-			elif len(dataset) == 0:
-				self._logger.debug("Received empty dataset %s", name)
+			# elif len(dataset) == 0:
+			# 	self._logger.debug("Received empty dataset %s", name)
 			else:
 				if name == self.DATASET_FAN_DYNAMIC:
 					err = self._handle_fan_dynamic(dataset)
@@ -942,28 +953,34 @@ class IoBeamHandler(object):
 			success = value == self.MESSAGE_OK
 			payload = dict(success=success)
 			if not success:
-				if self.MESSAGE_ERROR in response:
-					payload['error'] = response[self.MESSAGE_ERROR]
-				else:
-					payload['error'] = "state {}".format(response['state'])
+				try:
+					msg = response.get(self.MESSAGE_ERROR).get('msg')
+				except:
+					msg = response['state']
+				payload['error'] = msg
 				err += 1
+				self._logger.warn("Received error response from iobeam: '%s', full response: %s", msg, message)
 
-			if self.MESSAGE_COMMAND in response:
-				if 'device' in response[self.MESSAGE_COMMAND] and 'action' in response[self.MESSAGE_COMMAND]:
-					device = response[self.MESSAGE_COMMAND]['device']
-					action = response[self.MESSAGE_COMMAND]['action']
+			elif self.MESSAGE_COMMAND in response:
+				device = response[self.MESSAGE_COMMAND].get('device', None)
+				action = response[self.MESSAGE_COMMAND].get('action', None)
 
-					if device == self.MESSAGE_DEVICE_FAN:
-						if action == self.MESSAGE_ACTION_FAN_ON:
-							self._call_callback(IoBeamValueEvents.FAN_ON_RESPONSE, response, payload)
-						elif action == self.MESSAGE_ACTION_FAN_OFF:
-							self._call_callback(IoBeamValueEvents.FAN_OFF_RESPONSE, response, payload)
-						elif action == self.MESSAGE_ACTION_FAN_AUTO:
-							self._call_callback(IoBeamValueEvents.FAN_AUTO_RESPONSE, response, payload)
-						elif action == self.MESSAGE_ACTION_FAN_FACTOR:
-							self._call_callback(IoBeamValueEvents.FAN_FACTOR_RESPONSE, response, payload)
-						else:
-							self._logger.debug("Received response: %s", response)
+				if device == self.MESSAGE_DEVICE_FAN:
+					if action == self.MESSAGE_ACTION_FAN_ON:
+						self._call_callback(IoBeamValueEvents.FAN_ON_RESPONSE, response, payload)
+					elif action == self.MESSAGE_ACTION_FAN_OFF:
+						self._call_callback(IoBeamValueEvents.FAN_OFF_RESPONSE, response, payload)
+					elif action == self.MESSAGE_ACTION_FAN_AUTO:
+						self._call_callback(IoBeamValueEvents.FAN_AUTO_RESPONSE, response, payload)
+					elif action == self.MESSAGE_ACTION_FAN_FACTOR:
+						self._call_callback(IoBeamValueEvents.FAN_FACTOR_RESPONSE, response, payload)
+					else:
+						self._logger.debug("Received response: %s", response)
+				elif device == self.MESSAGE_DEVICE_COMPRESSOR:
+					self._logger.debug("ANDYTEST handling compressor response: %s", message)
+				else:
+					self._logger.debug("_handle_response() receives response for unknow device: %s", response)
+
 		if err >= 0:
 			error_count += err
 
@@ -1060,7 +1077,7 @@ class IoBeamHandler(object):
 		:return: command message
 		"""
 		command = {self.MESSAGE_COMMAND: {'device': device, 'action': action}, 'request_id': self.next_request_id()}
-		if value:
+		if value is not None:
 			command[self.MESSAGE_COMMAND]['value'] = value
 		return command
 

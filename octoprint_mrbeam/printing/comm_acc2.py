@@ -181,6 +181,7 @@ class MachineCom(object):
 		self._regex_command = re.compile("^\s*\*?\d*\s*\$?([GM]\d+|[THFSX])")
 		self._regex_feedrate = re.compile("F\d+", re.IGNORECASE)
 		self._regex_intensity = re.compile("S\d+", re.IGNORECASE)
+		self._regex_compressor = re.compile("M100\w*P(\d+)", re.IGNORECASE)
 		self._regex_gcode = re.compile("([XY])(\d+\.?\d*)", re.IGNORECASE)
 
 		self._real_time_commands={'poll_status':False,
@@ -1476,6 +1477,26 @@ class MachineCom(object):
 		self._current_laser_on = False
 		return cmd
 
+	def _gcode_M100_sending(self, cmd, cmd_type=None):
+		val = None
+		matches = self._regex_compressor.findall(cmd)
+		if matches:
+			try:
+				val = int(matches[0])
+			except:
+				raise Exception("Invalid value in gcode compressor command: %s, matches: %s", cmd, matches)
+		if val is not None:
+			if val > 100: val = 100
+			if val < 0: val = 0
+			self._logger.info("_gcode_M100_sending() compressor val: %s, cmd: %s", val, cmd)
+			self._set_air_pressure(val)
+		return ""
+
+	def _gcode_P_sending(self, cmd, cmd_type=None):
+		self._logger.info("ANDYTEST _gcode_P_sending() cmd: %s", cmd)
+		return ""
+
+
 	def _gcode_G01_sending(self, cmd, cmd_type=None):
 		return self._gcode_G1_sending(cmd, cmd_type)
 
@@ -1928,6 +1949,13 @@ class MachineCom(object):
 				payload = self._get_printing_file_state()
 			eventManager().fire(OctoPrintEvents.PRINT_FAILED, payload)
 		eventManager().fire(OctoPrintEvents.DISCONNECTED)
+
+	def _set_air_pressure(self, value):
+		try:
+			if _mrbeam_plugin_implementation.iobeam.has_compressor():
+				_mrbeam_plugin_implementation.iobeam.send_compressor_command(value)
+		except:
+			self._logger.exception("Exception in _set_air_pressure() ")
 
 ### MachineCom callback ################################################################################################
 class MachineComPrintCallback(object):
