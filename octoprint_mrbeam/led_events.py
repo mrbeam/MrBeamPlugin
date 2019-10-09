@@ -84,6 +84,8 @@ class LedEventListener(CommandTrigger):
 		self._analytics_handler = self._plugin.analytics_handler
 
 		self._initSubscriptions()
+		# We need to re-play the Startup Event for the LED system....
+		self.eventCallback(Events.STARTUP)
 
 	def _initSubscriptions(self):
 		for event in self.LED_EVENTS:
@@ -94,7 +96,7 @@ class LedEventListener(CommandTrigger):
 		self.subscribe(self.LED_EVENTS.keys())
 
 
-	def eventCallback(self, event, payload):
+	def eventCallback(self, event, payload=None):
 		# really, just copied this one from OctoPrint to add my debug log line.
 		GenericEventListener.eventCallback(self, event, payload)
 
@@ -160,7 +162,7 @@ class LedEventListener(CommandTrigger):
 					self._connections_states.append(status['connections'])
 					self._analytics_handler.add_connections_state(status['connections'])
 		except Exception as e:
-			self._logger.exception("Exception while reading wifi/ap state from netconnectd:")
+			self._logger.exception("Exception while reading wifi/ap state from netconnectd: {}".format(e))
 
 		return res
 

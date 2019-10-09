@@ -1019,6 +1019,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		else:
 			return jsonify(dict(calibration_marker_svg=filename, target=FileDestinations.LOCAL))
 
+	def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
+		"""
+		Defines the maximum size that is accepted for upload.
+		If the uploaded file size exeeds this limit,
+		you'll see only a ERR_CONNECTION_RESET in Chrome.
+		"""
+		return [("POST", r"/convert", 100 * 1024 * 1024)]
 
 	@octoprint.plugin.BlueprintPlugin.route("/convert", methods=["POST"])
 	@restricted_access
@@ -1503,7 +1510,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._logger.info("on_event() %s: %s", event, payload)
 
 		if event == OctoPrintEvents.ERROR:
-			self._logger.error("on_event() Error Event! Message: %s", payload['error'])
+			if payload.get('analytics', True):
+				self._logger.error("on_event() Error Event! Message: %s", payload['error'])
 
 		if event == OctoPrintEvents.CLIENT_OPENED:
 			self.analytics_handler.add_client_opened_event(payload.get('remoteAddress', None))
@@ -1640,9 +1648,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				gcode=ContentTypeMapping(["gcode", "gco", "g", "nc"], "text/plain")
 			)
 		)
-
-	def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
-		return [("POST", r"/convert", 10 * 1024 * 1024)]
 
 	def notify_frontend(self, title, text, type=None, sticky=False, delay=None, replay_when_new_client_connects=False):
 		"""

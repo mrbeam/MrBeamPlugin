@@ -299,14 +299,14 @@ class MachineCom(object):
 					elif not line and (self._state is self.STATE_CONNECTING or self._state is self.STATE_OPEN_SERIAL or self._state is self.STATE_DETECT_SERIAL):
 						self._logger.info("Empty line received during STATE_CONNECTION, starting soft-reset", terminal_as_comm=True)
 						self._sendCommand(self.COMMAND_RESET) # Serial-Connection Error
-				except:
-					self._logger.exception("Something crashed inside the monitoring loop, please report this to Mr Beam", terminal_dump=True)
+				except Exception as e:
+					self._logger.exception("Exception in _monitor_loop: {}".format(e), terminal_dump=True, analytics=True)
 					errorMsg = gettext("Please contact Mr Beam support team and attach octoprint.log.")
 					self._log(errorMsg)
 					self._errorValue = errorMsg
 					self._fire_print_failed()
 					self._changeState(self.STATE_ERROR)
-					eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
+					eventManager().fire(OctoPrintEvents.ERROR, dict(error=self.getErrorString(), analytics=False))
 			self._logger.info("Connection closed, closing down monitor", terminal_as_comm=True)
 		except:
 			self._logger.exception("Exception in _monitor_loop() thread: ")
@@ -338,14 +338,14 @@ class MachineCom(object):
 				self._sendCommand()
 				self._send_event.wait(1)
 				self._send_event.clear()
-			except:
-				self._logger.exception("Something crashed inside the sending loop, please report this to Mr Beam.", terminal_dump=True)
+			except Exception as e:
+				self._logger.exception("Exception in _send_loop: {}".format(e), terminal_dump=True)
 				errorMsg = gettext("Please contact Mr Beam support team and attach octoprint.log.")
 				self._log(errorMsg)
 				self._errorValue = errorMsg
 				self._fire_print_failed()
 				self._changeState(self.STATE_ERROR)
-				eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
+				eventManager().fire(OctoPrintEvents.ERROR, dict(error=self.getErrorString(), analytics=False))
 		# self._logger.info("ANDYTEST Leaving _send_loop()")
 
 	def _sendCommand(self, cmd=None):
@@ -464,8 +464,8 @@ class MachineCom(object):
 				if ser is None:
 					self._errorValue = 'Failed to autodetect serial port, please set it manually.'
 					self._changeState(self.STATE_ERROR)
-					eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
-					self._logger.warn("Failed to autodetect serial port, please set it manually.", terminal_dump=True, serial=True)
+					eventManager().fire(OctoPrintEvents.ERROR, dict(error=self.getErrorString(), analytics=False))
+					self._logger.warn("Failed to autodetect serial port, please set it manually.", terminal_dump=True, serial=True, analytics=True)
 					return None
 				port = ser.port
 
@@ -489,8 +489,8 @@ class MachineCom(object):
 				exception_string = get_exception_string()
 				self._errorValue = "Connection error, see Terminal tab"
 				self._changeState(self.STATE_ERROR)
-				eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
-				self._logger.warn("Unexpected error while connecting to serial port: %s %s (hook %s)", self._port, exception_string, name, serial=True, terminal_dump=True)
+				eventManager().fire(OctoPrintEvents.ERROR, dict(error=self.getErrorString(), analytics=False))
+				self._logger.warn("Unexpected error while connecting to serial port: %s %s (hook %s)", self._port, exception_string, name, serial=True, terminal_dump=True, analytics=True)
 				if "failed to set custom baud rate" in exception_string.lower():
 					self._log("Your installation does not support custom baudrates (e.g. 250000) for connecting to your printer. This is a problem of the pyserial library that OctoPrint depends on. Please update to a pyserial version that supports your baudrate or switch your printer's firmware to a standard baudrate (e.g. 115200). See https://github.com/foosel/OctoPrint/wiki/OctoPrint-support-for-250000-baud-rate-on-Raspbian")
 				return False
@@ -522,11 +522,11 @@ class MachineCom(object):
 			self._errorValue = get_exception_string()
 			self.close(True)
 			return None
-		except TypeError:
+		except TypeError as e:
 			# While closing or reopening sometimes we get this exception:
 			# 	File "build/bdist.linux-armv7l/egg/serial/serialposix.py", line 468, in read
 	        #     buf = os.read(self.fd, size-len(read))
-			self._logger.exception("TypeError in _readline. Did this happen while closing or re-openting serial?", terminal_as_comm=True)
+			self._logger.exception("TypeError in _readline. Did this happen while closing or re-openting serial?: {e}".format(e),terminal_as_comm=True)
 			pass
 		if ret is None or ret == '': return ''
 		try:
@@ -607,15 +607,15 @@ class MachineCom(object):
 				if not self.isPaused():
 					if _mrbeam_plugin_implementation and _mrbeam_plugin_implementation.onebutton_handler and \
 						not _mrbeam_plugin_implementation.onebutton_handler.is_intended_pause():
-						self._logger.warn("_handle_status_report() Override pause since we got status '%s' from grbl.", self._grbl_state)
+						self._logger.warn("_handle_status_report() Override pause since we got status '%s' from grbl.", self._grbl_state, analytics=True)
 						self.setPause(False, send_cmd=True, force=True, trigger="GRBL_QUEUE_OVERRIDE")
 					else:
-						self._logger.warn("_handle_status_report() Pausing since we got status '%s' from grbl.", self._grbl_state, terminal_dump=True)
+						self._logger.warn("_handle_status_report() Pausing since we got status '%s' from grbl.", self._grbl_state, terminal_dump=True, analytics=True)
 						self.setPause(True, send_cmd=False, trigger="GRBL_QUEUE")
 		elif self._grbl_state == self.GRBL_STATE_RUN or self._grbl_state == self.GRBL_STATE_IDLE:
 			if time.time() - self._pause_delay_time > 0.3:
 				if self.isPaused():
-					self._logger.warn("_handle_status_report() Unpausing since we got status '%s' from grbl.", self._grbl_state)
+					self._logger.warn("_handle_status_report() Unpausing since we got status '%s' from grbl.", self._grbl_state, analytics=True)
 					self.setPause(False, send_cmd=False, trigger="GRBL_RUN")
 
 	def _handle_laser_intensity_for_analytics(self, laser_state, laser_intensity):
@@ -665,16 +665,9 @@ class MachineCom(object):
 			self._start_recovery_thread()
 			return
 
-		printing = self.isPrinting() or self.isPaused()
-		if printing:
-			if self._currentFile is not None:
-				payload = self._get_printing_file_state()
-				payload['error_msg'] = line
-			eventManager().fire(OctoPrintEvents.PRINT_FAILED, payload)
-
 		my_cmd = AccLineBuffer.get_cmd_from_item(self._acc_line_buffer.get_last_responded())
-		self._errorValue = "{} in {}".format(line, my_cmd)
-		eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
+		self._errorValue = "GRBL: {} in {}".format(line, my_cmd)
+		eventManager().fire(OctoPrintEvents.ERROR, dict(error=self.getErrorString(), analytics=True))
 		self._fire_print_failed()
 		self._changeState(self.STATE_LOCKED)
 
@@ -692,22 +685,20 @@ class MachineCom(object):
 			errorMsg = line or str(self.ALARM_CODE_COMMAND_TOO_LONG)
 			dumpTerminal = False
 		elif "Hard/soft limit" in line:
-			errorMsg = "Machine Limit Hit. Please reset the machine and do a homing cycle"
+			errorMsg = "GRBL: Machine Limit Hit. Please reset the machine and do a homing cycle"
 		elif "Abort during cycle" in line:
-			errorMsg = "Soft-reset detected. Please do a homing cycle"
+			errorMsg = "GRBL: Soft-reset detected. Please do a homing cycle"
 			throwErrorMessage = False
 		elif "Probe fail" in line:
-			errorMsg = "Probing has failed. Please reset the machine and do a homing cycle"
-		elif "Probe fail" in line:
-			errorMsg = "Probing has failed. Please reset the machine and do a homing cycle"
+			errorMsg = "GRBL: Probing has failed. Please reset the machine and do a homing cycle"
 		else:
-			errorMsg = "GRBL alarm message: '{}'".format(line)
+			errorMsg = "GRBL: alarm message: '{}'".format(line)
 
 		if errorMsg:
 			self._logger.warn(errorMsg, serial=True, terminal_dump=dumpTerminal, analytics=True)
 			self._errorValue = errorMsg
 			if throwErrorMessage:
-				eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
+				eventManager().fire(OctoPrintEvents.ERROR, dict(error=self.getErrorString(), analytics=False))
 
 		with self._commandQueue.mutex:
 			self._commandQueue.queue.clear()
@@ -728,7 +719,7 @@ class MachineCom(object):
 		elif line[1:].startswith('\'$H'): # ['$H'|'$X' to unlock]
 			self._changeState(self.STATE_LOCKED)
 			if self.isOperational():
-				errorMsg = "Machine reset."
+				errorMsg = "GRBL: Machine reset."
 				self._cmd = None
 				self._acc_line_buffer.reset()
 				self._pauseWaitStartTime = None
@@ -739,7 +730,7 @@ class MachineCom(object):
 				self._log(errorMsg)
 				self._logger.error(errorMsg, serial=True, analytics=True, terminal_dump=True)
 				self._errorValue = errorMsg
-				eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
+				eventManager().fire(OctoPrintEvents.ERROR, dict(error=self.getErrorString(), analytics=False))
 				self._fire_print_failed()
 		elif line[1:].startswith('G24'): # [G24_AVOIDED]
 			self.g24_avoided_message = []
@@ -886,7 +877,7 @@ class MachineCom(object):
 			restart_commands = [' ', # send a new line before $X to make sure, grbl regards it as a new command.
 			                    self._add_checksum_to_cmd(self.COMMAND_RESET_ALARM)
 			                    ]
-			if cmd_obj:
+			if cmd_obj and cmd_obj['i'] is not None:
 				# grbl internally adds a "S0" in case of a checksum error. (This "S0" is NOT acknowledged by grbl.)
 				# Therefor we need to turn the laser power back on.
 				# This is the intensity value which was current BEFORE this command. It might be different from
@@ -1140,6 +1131,7 @@ class MachineCom(object):
 		printing = self.isPrinting() or self.isPaused()
 		err_msg = err_msg or self.getErrorString()
 		if printing:
+			payload = {}
 			if self._currentFile is not None:
 				payload = self._get_printing_file_state()
 				payload['error_msg'] = err_msg
@@ -1711,11 +1703,11 @@ class MachineCom(object):
 
 
 			self._changeState(self.STATE_PRINTING)
-		except:
-			self._logger.exception("Error while trying to start printing", terminal_dump=True)
+		except Exception as e:
+			self._logger.exception("Error while trying to start printing: {}".format(e), terminal_dump=True)
 			self._errorValue = get_exception_string()
 			self._changeState(self.STATE_ERROR)
-			eventManager().fire(OctoPrintEvents.ERROR, {"error": self.getErrorString()})
+			eventManager().fire(OctoPrintEvents.ERROR, dict(error=self.getErrorString(), analytics=False))
 
 	def cancelPrint(self):
 		if not self.isOperational():

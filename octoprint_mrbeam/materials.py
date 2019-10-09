@@ -99,8 +99,9 @@ class Materials(object):
 						self.custom_materials = dict()
 						self._logger.debug("No custom materials yet. File %s does not exist.", self.custom_materials_file)
 					self.custom_materials_loaded = True
-				except:
-					self._logger.exception("Exception while loading custom materials from file %s", self.custom_materials_file)
+				except Exception as e:
+					self._logger.exception("Exception while loading custom materials from file {file}: {err}".format(
+						file=self.custom_materials_file, err=e))
 					self.custom_materials = dict()
 					self.custom_materials_loaded = False
 		return self.custom_materials

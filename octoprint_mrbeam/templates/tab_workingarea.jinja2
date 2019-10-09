@@ -277,7 +277,8 @@
 																			click: function(d, event){ $root.duplicateSVG($data, event); }
 																		} ">{{ _('duplicate') }}</a>
 
-                                                                <div class="accordion md-accordion working_area_image_preprocessing">
+{#                                                               We disabled image processing options for Safari: svg filters don't really work in safari: https://github.com/mrbeam/MrBeamPlugin/issues/586 #}
+                                                                <div class="accordion md-accordion working_area_image_preprocessing" data-bind="visible: !window.mrbeam.browser.is_safari">
                                                                   <div class="card">
                                                                     <div class="card-header working_area_image_preprocessing_heading">
                                                                       <div class="mb-0 working_area_image_preprocessing_link">
@@ -289,27 +290,33 @@
                                                                     </div>
                                                                     <div class="collapse working_area_image_preprocessing_sliders" data-bind="attr: { id: 'preprocessing_sliders_' + $data.id }">
                                                                       <div class="card-body">
-                                                                        <i class="icon-adjust" title="{{ _('contrast') }}"></i>
-                                                                        <input class="decent_input contrast img_adjust" type="range" min="1" max="5" value="1" step="0.05" data-bind="event: {
-                                                                                    keyup: function(d, event){ $root.imgManualAdjust($data, event); },
-                                                                                    input: function(d, event){ $root.imgManualAdjust($data, event); },
-                                                                                    blur: function(d, event){ $root.imgManualAdjust($data, event); }} "/>
-                                                                        <i class="icon-sun" title="{{ _('brightness') }}"></i>
-                                                                        <input class="decent_input brightness img_adjust" type="range" min="-0.8" max="0.8" value="0" step="0.05" data-bind="event: {
-                                                                                    keyup: function(d, event){ $root.imgManualAdjust($data, event); },
-                                                                                    input: function(d, event){ $root.imgManualAdjust($data, event); },
-                                                                                    blur: function(d, event){ $root.imgManualAdjust($data, event); }} "/>
-                                                                        </br>
-                                                                        <i class="icon-magic" title="{{ _('sharpen') }}"></i>
-                                                                        <input class="decent_input sharpen img_adjust" type="range" min="0" max="40" value="0" step="1" data-bind="event: {
-                                                                                    keyup: function(d, event){ $root.imgManualSharpen($data, event); },
-                                                                                    input: function(d, event){ $root.imgManualSharpen($data, event); },
-                                                                                    blur: function(d, event){ $root.imgManualSharpen($data, event); }} "/>
-                                                                        <i class="" title="{{ _('gamma') }}">Γ</i>
-                                                                        <input class="decent_input gamma img_adjust" type="range" min="0.2" max="1.8" value="1" step="0.05" data-bind="event: {
-                                                                                    keyup: function(d, event){ $root.imgManualAdjust($data, event); },
-                                                                                    input: function(d, event){ $root.imgManualAdjust($data, event); },
-                                                                                    blur: function(d, event){ $root.imgManualAdjust($data, event); }} "/>
+{#                                                                      # We disabled image processing options for Safari: svg filters don't really work in safari: https://github.com/mrbeam/MrBeamPlugin/issues/586 #}
+                                                                        <div data-bind="visible: !window.mrbeam.browser.is_safari">
+                                                                            <i class="icon-adjust" title="{{ _('contrast') }}"></i>
+                                                                            <input class="decent_input contrast img_adjust" type="range" min="1" max="5" value="1" step="0.05" data-bind="event: {
+                                                                                        keyup: function(d, event){ $root.imgManualAdjust($data, event); },
+                                                                                        input: function(d, event){ $root.imgManualAdjust($data, event); },
+                                                                                        blur: function(d, event){ $root.imgManualAdjust($data, event); }} "/>
+                                                                            <i class="icon-sun" title="{{ _('brightness') }}"></i>
+                                                                            <input class="decent_input brightness img_adjust" type="range" min="-0.8" max="0.8" value="0" step="0.05" data-bind="event: {
+                                                                                        keyup: function(d, event){ $root.imgManualAdjust($data, event); },
+                                                                                        input: function(d, event){ $root.imgManualAdjust($data, event); },
+                                                                                        blur: function(d, event){ $root.imgManualAdjust($data, event); }} "/>
+                                                                            </br>
+                                                                            <i class="icon-magic" title="{{ _('sharpen') }}"></i>
+                                                                            <input class="decent_input sharpen img_adjust" type="range" min="0" max="40" value="0" step="1" data-bind="event: {
+                                                                                        keyup: function(d, event){ $root.imgManualSharpen($data, event); },
+                                                                                        input: function(d, event){ $root.imgManualSharpen($data, event); },
+                                                                                        blur: function(d, event){ $root.imgManualSharpen($data, event); }} "/>
+                                                                            <i class="" title="{{ _('gamma') }}">Γ</i>
+                                                                            <input class="decent_input gamma img_adjust" type="range" min="0.2" max="1.8" value="1" step="0.05" data-bind="event: {
+                                                                                        keyup: function(d, event){ $root.imgManualAdjust($data, event); },
+                                                                                        input: function(d, event){ $root.imgManualAdjust($data, event); },
+                                                                                        blur: function(d, event){ $root.imgManualAdjust($data, event); }} "/>
+                                                                        </div>
+                                                                        <div data-bind="visible: window.mrbeam.browser.is_safari">
+                                                                            <p>This feature is currently not available on iOS or Safari.</p>
+                                                                        </div>
                                                                       </div>
                                                                     </div>
                                                                   </div>
@@ -470,7 +477,7 @@
 									data-bind="attr: {
 											width: workingAreaWidthMM(),
 											height: workingAreaHeightMM()
-										}" 
+										}"
 									filter="url(#preview_precision)" />
 									<g id="scaleGroup" data-bind="attr: { transform: scaleMatrix() }">
 										<g id="placedGcodes" data-bind="visible: true || (state.isPrinting() && !state.isPaused()), attr: { transform: 'matrix(1,0,0,-1,0,'+workingAreaHeightMM()+')' }"></g>

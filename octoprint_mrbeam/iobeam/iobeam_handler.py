@@ -131,6 +131,8 @@ class IoBeamHandler(object):
 	# Possible datasets
 	DATASET_FAN_DYNAMIC =	            "fan_dynamic"
 	DATASET_FAN_STATIC = 				"fan_static"
+	DATASET_PUMP_DYNAMIC =	            "pump_dynamic"
+	DATASET_PUMP_STATIC = 				"pump_static"
 	DATASET_FAN_EXHAUST = 				"fan_exhaust"
 	DATASET_FAN_LINK_QUALITY= 			"fan_link_quality"
 	DATASET_PCF =          				"pcf"
@@ -143,6 +145,7 @@ class IoBeamHandler(object):
 	DATASET_IOBEAM =	           	 	"iobeam"
 	DATASET_HW_MALFUNCTION =	   	 	"hardware_malfunction"
 	DATASET_I2C =           	   	 	"i2c"
+	DATASET_I2C_TEST =           	   	"i2c_test"
 
 	def __init__(self, plugin):
 		self._plugin = plugin
@@ -154,13 +157,12 @@ class IoBeamHandler(object):
 		self._isConnected = False
 		self._my_socket = None
 		self._errors = 0
+		self._unknown_datasets = []
 		self._callbacks = dict()
 		self._callbacks_lock = RWLock()
 
 		self._laserhead_handler = None
 		self._analytics_handler = None
-
-		self.dev_mode = plugin._settings.get_boolean(['dev', 'iobeam_disable_warnings'])
 
 		self.iobeam_version = None
 
@@ -238,8 +240,7 @@ class IoBeamHandler(object):
 		if self._shutdown_signaled:
 			return False
 		if not self._isConnected:
-			if not self.dev_mode:
-				self._logger.warn("send_command() Can't send command since socket is not connected (yet?). Command: %s", command)
+			self._logger.warn("send_command() Can't send command since socket is not connected (yet?). Command: %s", command)
 			return False
 		if self._my_socket is None:
 			self._logger.error("send_command() Can't send command while there's no connection on socket but _isConnected()=True!  Command: %s", command)
@@ -350,9 +351,7 @@ class IoBeamHandler(object):
 	def _work(self):
 		try:
 			threading.current_thread().name = self.__class__.__name__
-			self._logger.debug("Worker thread starting, connecting to socket: %s %s", self.SOCKET_FILE, (" !!! iobeam_disable_warnings: True !!!" if self.dev_mode else ""))
-			if self.dev_mode:
-				self._logger.warn("iobeam handler: !!! iobeam_disable_warnings: True !!!")
+			self._logger.debug("Worker thread starting, connecting to socket: %s", self.SOCKET_FILE)
 
 			while not self._shutdown_signaled:
 				self._my_socket = None
@@ -365,12 +364,12 @@ class IoBeamHandler(object):
 					self._my_socket = temp_socket
 				except socket.error as e:
 					self._isConnected = False
-					if self.dev_mode:
-						if not self._connectionException == str(e):
-							self._logger.error("IoBeamHandler not able to connect to socket %s, reason: %s. I'll keept trying but I won't log further failures.", self.SOCKET_FILE, e)
-							self._connectionException = str(e)
-					else:
-						self._logger.error("IoBeamHandler not able to connect to socket %s, reason: %s. ", self.SOCKET_FILE, e)
+					# if self.dev_mode:
+					# 	if not self._connectionException == str(e):
+					# 		self._logger.error("IoBeamHandler not able to connect to socket %s, reason: %s. I'll keept trying but I won't log further failures.", self.SOCKET_FILE, e)
+					# 		self._connectionException = str(e)
+					# else:
+					self._logger.error("IoBeamHandler not able to connect to socket %s, reason: %s. ", self.SOCKET_FILE, e)
 
 					time.sleep(1)
 					continue
@@ -392,13 +391,13 @@ class IoBeamHandler(object):
 						try:
 							data = temp_buffer + self._my_socket.recv(self.MESSAGE_LENGTH_MAX)
 						except Exception as e:
-							if self.dev_mode and e.message == "timed out":
-								# self._logger.warn("Connection stale but MRBEAM_DEBUG enabled. Continuing....")
-								continue
-							else:
-								self._logger.warn("Exception while sockect.recv(): %s - Resetting connection...", e)
-								self._logger.warn("Warning continuation %s ", e.message)
-								break
+							# if self.dev_mode and e.message == "timed out":
+							# 	# self._logger.warn("Connection stale but MRBEAM_DEBUG enabled. Continuing....")
+							# 	continue
+							# else:
+							self._logger.warn("Exception while sockect.recv(): %s - Resetting connection...", e)
+							self._logger.warn("Warning continuation %s ", e.message)
+							break
 
 						if not data:
 							self._logger.warn("Connection ended from other side. Closing connection...")
@@ -539,6 +538,10 @@ class IoBeamHandler(object):
 					err = self._handle_fan_dynamic(dataset)
 				elif name == self.DATASET_FAN_STATIC:
 					err = self._handle_fan_static(dataset)
+				elif name == self.DATASET_PUMP_STATIC:
+					self._handle_pump_static(dataset)
+				elif name == self.DATASET_PUMP_DYNAMIC:
+					self._handle_pump_dynamic(dataset)
 				elif name == self.DATASET_LASER:
 					err = self._handle_laser(dataset)
 				elif name == self.DATASET_LASERHEAD:
@@ -558,6 +561,8 @@ class IoBeamHandler(object):
 					err = self._handle_hw_malfunction(dataset)
 				elif name == self.DATASET_I2C:
 					err = self._handle_i2c(dataset)
+				elif name == self.DATASET_I2C_TEST:
+					err = self._handle_i2c_test(dataset)
 				elif name == self.MESSAGE_DEVICE_UNUSED:
 					pass
 				elif name == self.MESSAGE_ERROR:
@@ -629,6 +634,22 @@ class IoBeamHandler(object):
 			                                                             dataset)
 		return 0
 
+	def _handle_pump_dynamic(self, dataset):
+		pass
+
+	def _handle_pump_static(self, dataset):
+		"""
+		Handle static pump data
+		:param dataset:
+		:return: error count
+		"""
+		self._logger.info("pump_static: %s", dataset)
+		return 0
+
+	def _handle_i2c_test(self, dataset):
+		if not dataset.get('state', None) == 'ok':
+			self._logger.warn("_handle_i2c_test: %s", dataset)
+
 	def _handle_laser(self, dataset):
 		"""
 		Handle laser dataset, which may contain laser temperature, serial and power
@@ -639,26 +660,6 @@ class IoBeamHandler(object):
 			if dataset[self.MESSAGE_ACTION_LASER_TEMP]:
 				self._call_callback(IoBeamValueEvents.LASER_TEMP, dataset, dict(temp=self._as_number(dataset[self.MESSAGE_ACTION_LASER_TEMP])))
 
-		if "serial" in dataset:
-			if self.MESSAGE_ERROR not in dataset['serial']:
-				_mrbeam_plugin_implementation.lh['serial'] = dataset['serial']
-				self._logger.info("laserhead serial: %s", dataset['serial'])
-			else:
-				self._logger.info("laserhead: '%s'", dataset)
-
-		if "power" in dataset and isinstance(dataset, dict):
-			if self.MESSAGE_ERROR not in dataset['power']:
-				for pV in dataset['power']:
-					if self.MESSAGE_ERROR not in pV:
-						pwr = None
-						try:
-							pwr = int(dataset['power'][pV])
-						except:
-							self._logger.info("laserhead: '%s'", dataset)
-							self._logger.warn("Can't read power %s value as int: '%s'", pV, dataset['power'][pV])
-						if pwr is not None:
-							_mrbeam_plugin_implementation.lh['p_'+pV] = pwr
-							self._logger.info("laserhead p_%s: %s", pV, pwr)
 		return 0
 
 	def _handle_laserhead(self, dataset):
@@ -844,8 +845,8 @@ class IoBeamHandler(object):
 
 		if show_notification:
 			self.send_hardware_malfunction_frontend_notification()
-		# TODO: check with iratxe if we log it as one message or separately...
-		self._plugin._analytics_handler.log_iobeam_message(self.iobeam_version, dataset)
+
+		self._plugin.analytics_handler.add_iobeam_message_log(self.iobeam_version, dataset)
 
 	def _handle_i2c(self, dataset):
 		self._logger.info("i2c_state: %s", dataset)
@@ -894,7 +895,9 @@ class IoBeamHandler(object):
 		:param dataset:
 		:return:
 		"""
-		self._logger.warn("Received unknown dataset %s: %s", name, dataset)
+		if name not in self._unknown_datasets:
+			self._unknown_datasets.append(name)
+			self._logger.warn("Received unknown dataset %s: %s", name, dataset)
 		return 0
 
 	def _handle_invalid_message(self, message):

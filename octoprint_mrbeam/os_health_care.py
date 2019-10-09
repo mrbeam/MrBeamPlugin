@@ -7,14 +7,12 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 
 def os_health_care(plugin):
-	OsHealthCare(plugin).run()
-
+	OsHealthCare(plugin)
 
 
 class OsHealthCare(object):
 
 	HEALTHCARE_FILES_FOLDER = "files/os_health_care/"
-
 
 	def __init__(self, plugin):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.os_health_care")
@@ -24,10 +22,13 @@ class OsHealthCare(object):
 
 	def _on_mrbeam_plugin_initialized(self, event, payload):
 		self._analytics_handler = self.plugin.analytics_handler
+		self.run()
 
 	def run(self):
-		self.etc_network_interfaces()
-
+		try:
+			self.etc_network_interfaces()
+		except Exception as e:
+			self._logger.exception('Exception when running the OS heath care: {}'.format(e))
 
 	def etc_network_interfaces(self):
 		needs_fix = False

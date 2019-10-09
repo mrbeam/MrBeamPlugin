@@ -40,7 +40,7 @@ class AnalyticsHandler(object):
 		self._settings = plugin._settings
 		self._snr = plugin.getSerialNum()
 		self._plugin_version = plugin.get_plugin_version()
-		self._timer_handler = TimerHandler()
+		self._timer_handler = TimerHandler(plugin)
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.analyticshandler")
 
 		self._upload_in_progress = False
@@ -60,7 +60,7 @@ class AnalyticsHandler(object):
 
 		# Job-specific data
 		self._current_job_id = None
-		self._current_job_time_estimation = None
+		self._current_job_time_estimation = -1
 		self._current_job_final_status = None
 		self._current_dust_collector = None
 		self._current_intensity_collector = None
@@ -636,7 +636,7 @@ class AnalyticsHandler(object):
 		self._current_intensity_collector = None
 		self._current_lasertemp_collector = None
 		self._current_cpu_data = None
-		self._current_job_time_estimation = None
+		self._current_job_time_estimation = -1
 
 	def _init_new_job(self):
 		self._cleanup_job()
