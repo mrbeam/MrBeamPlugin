@@ -32,8 +32,6 @@ class FileUploader:
 		self.delete_on_success = DELETE_FILES_AFTER_UPLOAD
 		self.err_state = False
 		self.worker = None
-		# self.lock_file = lock_file
-		# self.unlock_file = unlock_file
 		self._lock = lock
 
 		self.status = dict(
@@ -64,10 +62,7 @@ class FileUploader:
 
 			try:
 				if self._file_exists():
-					# if self.lock_file:
-					# 	self.lock_file()
 					with self._lock:
-						self._logger.info('############################# LOCK UPLOADER')
 						token_data = self.get_token()
 						self._upload_file(token_data)
 						self._remove_file()
@@ -85,9 +80,6 @@ class FileUploader:
 		self.status['state'] = self.STATUS_DONE
 		self.status['succ'] = True
 
-		# if self.unlock_file:
-		# 	self.unlock_file()
-
 		self._logger.info('{up_type} file upload successful! - Status: {status}'.format(
 			up_type=self.upload_type,
 			status=self.status))
@@ -95,9 +87,6 @@ class FileUploader:
 	def _unsuccessful_upload_end(self, err, raise_except=True):
 		self.status['err'] = err
 		self.status['succ'] = False
-
-		# if self.unlock_file:
-		# 	self.unlock_file()
 
 		if raise_except:
 			self._logger.exception('{up_type} file upload was not successful: {err} - Status: {status}'.format(

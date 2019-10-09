@@ -12,6 +12,7 @@ $(function () {
         self.showReviewDialog = ko.observable(false);
         self.jobTimeEstimation = ko.observable(-1);
 
+        self.ratingGiven = false;
         self.rating = ko.observable(0);
         self.dontShowAgain = ko.observable(false);
         self.justGaveReview = ko.observable(false);
@@ -59,8 +60,7 @@ $(function () {
 
         self.enableRatingStars = function() {
             $('.star').click(function(){
-                self.dontShowAgain(true);
-
+                self.ratingGiven = true;
                 let val = $( this ).attr('value');
                 console.log("Clicked "+val+" Stars");
                 self.rating(val);
@@ -91,7 +91,27 @@ $(function () {
 
         };
 
-        self.exitBtn = function(){
+        self.exitOkBtn = function() {
+            // "OK" button: we send the review but show it again if it was empty in the next session (no rating)
+            if (self.ratingGiven) {
+                self.dontShowAgain(true);
+            }
+            self.exitReview();  //We
+        };
+
+        self.exitDontAskAgainLink = function() {
+            // "don't ask me again" link: we send the review and never show it again
+            self.dontShowAgain(true);
+            self.exitReview();
+        };
+
+        self.exitXBtn = function() {
+            // "x" button in the corner: we send the review but show it again in the next session
+            self.exitReview();
+        };
+
+        self.exitReview = function (){
+            self.ratingGiven = false;
             self.reviewDialog.modal("hide");
             self.justGaveReview(true);  // We show it only once per session
             self.sendReviewToServer()
@@ -99,7 +119,7 @@ $(function () {
 
         self.exitAndDontShowAgain = function() {
             self.dontShowAgain(true);
-            self.exitBtn()
+            self.exitReview()
         };
 
         self.sendReviewToServer = function () {

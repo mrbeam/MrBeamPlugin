@@ -2544,6 +2544,9 @@ input[type="radio"]{
     unicode-bidi:bidi-override;
     direction:rtl;
     font-size:50px;
+    display: flex;
+    justify-content: center;
+    margin: 35px 0 20px 0;
 }
 
 .rating span.star {
@@ -2575,4 +2578,28 @@ input[type="radio"]{
 
 .rating span.star.disabled {
     pointer-events: none;
+}
+
+.review_title {
+    display: flex;
+    justify-content: center;
+}
+
+.review_hidden_part {
+    display: none;
+}
+
+.review_explanation {
+    margin: auto 20px 15px 20px;
+}
+
+#dont_ask_review_link {
+    color: dimgray;
+}
+
+#review_textarea {
+    display: flex;
+    margin-left: auto;
+    margin-right: auto;
+    width: 90%;
 }
