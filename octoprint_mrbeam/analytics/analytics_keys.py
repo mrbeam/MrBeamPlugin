@@ -91,7 +91,6 @@ class AnalyticsKeys(object):
 
 		class Event:
 			ANALYTICS_ENABLED = 'analytics_enabled'
-			INIT = 'init_json'
 			STARTUP = 'startup'
 			SHUTDOWN = 'shutdown'
 			DISK_SPACE = 'disk_space'
