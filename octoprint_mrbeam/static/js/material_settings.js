@@ -15,26 +15,17 @@ $(function () {
                     for (let materialKey in self.materialSettingsDatabase) {
                         if (self.materialSettingsDatabase[materialKey] && self.materialSettingsDatabase[materialKey].colors) {
                             if (materialKey in self.materialImportedSettings) {
-                                console.log("imported mat:", self.materialImportedSettings[materialKey]);
+                                // console.log("imported mat:", self.materialImportedSettings[materialKey]);
                                 self.materialSettingsDatabase[materialKey].colors = self.materialImportedSettings[materialKey].colors;
                             }
                         }
                     }
-                    console.log("loadMaterials callback: ", self.materialSettingsDatabase);
+                    // console.log("loadMaterials callback: ", self.materialSettingsDatabase);
                     callback(self.materialSettingsDatabase);
                 });
 
             return self.materialSettingsDatabase;
         };
-
-        self.loadMaterials = function (callback) {
-            // Get the material settings parsed from the files/materials.csv
-            OctoPrint.simpleApiCommand("mrbeam", "material_settings", {})
-                .done(function (response) {
-                })
-        }
-
-        // TODO fusion parameters with descriptions
 
         self.materialSettingsDatabase = {
 
