@@ -60,7 +60,7 @@ class ImageProcessor():
 	              engraving_mode = None,
 	              pierce_time = 0,
 	              overshoot_distance = 0, # disabled for now. TODO: enable (1) when switch on delay is HW fixed.
-	              air_pressure = 100, # DreamCut.
+	              compressor = 100, # DreamCut.
 	              material = None):
 
 		self.log = logging.getLogger("octoprint.plugins.mrbeam.img2gcode")
@@ -97,7 +97,7 @@ class ImageProcessor():
 		self.intensity_white_user = intensity_white_user
 		self.feedrate_white = float(speed_white) if speed_white else 3000.0
 		self.feedrate_black = float(speed_black) if speed_black else 0.0
-		self.air_pressure = float(air_pressure) if air_pressure else 100.0
+		self.compressor = float(compressor) if compressor else 100.0
 		self.material = material
 		self.contrastFactor = float(contrast) if contrast else 0.0
 		self.sharpeningFactor = float(sharpening) if sharpening else 0.0
@@ -150,7 +150,7 @@ class ImageProcessor():
 		comment += "; dithering = {}\n".format(self.dithering)
 		comment += "; overshoot distance = {}\n".format(self.overshoot_distance)
 		comment += "; separation = {}\n".format(self.separation)
-		comment += "; air_pressure = {}\n".format(self.air_pressure)
+		comment += "; mrbeam_compressor = {}\n".format(self.compressor)
 		return comment
 
 	def set_overshoot_parameter(self, overshoot_distance, workingAreaWidth=500):
@@ -340,8 +340,8 @@ class ImageProcessor():
 		xMM += self.beam/2.0*0
 		yMM -= self.beam
 
-		# pre-condition: set air_pressure, set feedrate, enable laser with 0 intensity.
-		self._append_gcode('M100P{p} ;air_pressure:{p}'.format(p=self.air_pressure)) # set air_pressure
+		# pre-condition: set mrbeam_compressor, set feedrate, enable laser with 0 intensity.
+		self._append_gcode('M100P{p} ;mrbeam_compressor:{p}'.format(p=self.compressor)) # set air_pressure
 		self._append_gcode('F{}'.format(self.feedrate_white)) # set an initial feedrate
 		self.gc_ctx.f = self.feedrate_white #TODO hack. set with line above
 		#self._append_gcode('M3S0') # enable laser
@@ -402,7 +402,7 @@ class ImageProcessor():
 			self.gc_ctx.laser_active = True
 
 		self._append_gcode(";EndImage\nM5") # important for gcode preview!
-		# self._append_gcode(";EndImage\nM5\nM100P0 ; air_pressure:0") # important for gcode preview!
+		# self._append_gcode(";EndImage\nM5\nM100P0 ; mrbeam_compressor:0") # important for gcode preview!
 		self.gc_ctx.laser_active = False
 		return self._output_gcode
 
