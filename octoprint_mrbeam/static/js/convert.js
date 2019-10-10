@@ -1194,12 +1194,12 @@ $(function(){
 						var filename = self.gcodeFilename();
 						var gcodeFilename = self._sanitize(filename) + '.gco';
 
-						var multicolor_data = self.get_current_multicolor_settings();  // todo iratxe: map compressor value
+						var multicolor_data = self.get_current_multicolor_settings();
                         for (let i = 0; i < multicolor_data.length; i++) {
                             multicolor_data[i]['cut_compressor'] = self.mapCompressorValue(multicolor_data[i]['cut_compressor']);
                         }
 
-						var engraving_data = self.get_current_engraving_settings();  // todo iratxe: map compressor value
+						var engraving_data = self.get_current_engraving_settings();
                         engraving_data['eng_compressor'] = self.mapCompressorValue(engraving_data['eng_compressor']);
 
                         var advancedSettings = self.is_advanced_settings_checked();
