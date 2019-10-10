@@ -41,7 +41,7 @@ def parse_csv(path = None, laserhead=MRBEAM):
         cur_color_has_engraving_setting = False
         cur_color_has_cutting_setting = False
         for row in reader:
-            mrbeamversion, material, colorcode, thickness_or_engrave, intensity, speed, passes, pierce_time, dithering = row[:9]
+            mrbeamversion, material, colorcode, thickness_or_engrave, intensity, speed, passes, compressor_lvl, pierce_time, dithering = row[:10]
             if not mrbeamversion in [MRBEAM, DREAMCUT, READY]:
                 # Either a comment line, unused setting or experimental settings
                 continue
@@ -66,11 +66,12 @@ def parse_csv(path = None, laserhead=MRBEAM):
             try:
                 thickness = float(thickness_or_engrave)
                 settingname = 'cut'
-                settings = [{'thicknessMM': thickness, 'cut_i': intensity, 'cut_f': speed, 'cut_p': passes}]
+                settings = [{'thicknessMM': thickness, 'cut_i': int(intensity), 'cut_f': int(speed), 'cut_p': int(passes), 'cut_compressor_lvl': int(compressor_lvl)}]
             except ValueError:
                 dithering = True if dithering == 'yes' else False
                 pierce_time = pierce_time or 0
-                settings = {'eng_pierce': int(pierce_time),
+                settings = {'engrave_compressor_lvl': int(compressor_lvl),
+							'eng_pierce': int(pierce_time),
                             'dithering': dithering}
                 settingname = 'engrave'
                 i_split = intensity.split('-')
@@ -93,7 +94,7 @@ def parse_csv(path = None, laserhead=MRBEAM):
                                                                # 'laser_type': mrbeamversion,
                                                                'colors': { colorcode: {'name': colorcode,
                                                                                        settingname: settings}}}}})
-            prev_vals = [mrbeamversion, material, colorcode, thickness_or_engrave, intensity, speed, passes, pierce_time, dithering] # update current row values for next loop
+            prev_vals = [mrbeamversion, material, colorcode, thickness_or_engrave, intensity, speed, passes, compressor_lvl, pierce_time, dithering] # update current row values for next loop
     return dictionary[laserhead]
 
 
