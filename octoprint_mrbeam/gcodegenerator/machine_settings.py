@@ -4,8 +4,8 @@
 #def gcode_before_path(intensity = 0):
 #	return "\nM3S0\nG4P0\nM03 S"+str(intensity)
 
-def gcode_before_path_color(color = '#000000', intensity = 0, air_pressure = 100):
-	return "\nM100P{p} ;air_pressure: {p} - gcode_before_path_color\nM3S0\nG4P0\nM03 S{i} ; color: {c}".format(p=air_pressure, i=intensity, c=color)
+def gcode_before_path_color(color = '#000000', intensity = 0, compressor = 100):
+	return "\nM100P{p} ;mrbeam_compressor: {p} - gcode_before_path_color\nM3S0\nG4P0\nM03 S{i} ; color: {c}".format(p=compressor, i=intensity, c=color)
 
 def gcode_after_path():
 	return "M05"
