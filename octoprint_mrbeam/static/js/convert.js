@@ -55,8 +55,8 @@ $(function(){
 		// material menu
 		self.material_settings2 = {}; // loaded on onAllBound()
 
-		self.engrave_only_thickness = {thicknessMM: -1, cut_i:'', cut_f:'', cut_p: 1, cut_pierce: 0};
-		self.no_engraving = {eng_i:['',''], eng_f:['',''], eng_pierce: 0, dithering: false };
+		self.engrave_only_thickness = {thicknessMM: -1, cut_i:'', cut_f:'', cut_p: 1, cut_pierce: 0, cut_compressor:3};
+		self.no_engraving = {eng_i:['',''], eng_f:['',''], eng_pierce: 0, eng_compressor: 3, dithering: false };
 
 		self.material_colors = ko.observableArray([]);
 		self.material_thicknesses = ko.observableArray([]);
@@ -171,21 +171,26 @@ $(function(){
 			var cut_setting = null;
 			// if thickness is 0, we assume engrave only
 			if(strongest !== null && thickness > 0){
-				cut_setting = {thicknessMM: thickness,
+				cut_setting = {
+				    thicknessMM: thickness,
                     cut_i: parseFloat(strongest.intensity_user),
                     cut_f: parseFloat(strongest.feedrate),
                     cut_p: parseInt(strongest.passes),
-                    cut_pierce: parseInt(strongest.pierce_time)};
+                    cut_pierce: parseInt(strongest.pierce_time),
+                    cut_compressor: parseInt(strongest.cut_compressor)
+				};
 			} else {
 				thickness = -1; // engrave only
 			}
 
-			// todo iratxe: add for custom materials
 			var e = self.get_current_engraving_settings();
-			var engrave_setting = {eng_i: [e.intensity_white_user, e.intensity_black_user],
-                                    eng_f: [e.speed_white, e.speed_black],
-                                    eng_pierce: e.pierce_time,
-                                    dithering: e.dithering};
+			var engrave_setting = {
+			    eng_i: [e.intensity_white_user, e.intensity_black_user],
+                eng_f: [e.speed_white, e.speed_black],
+                eng_pierce: e.pierce_time,
+                dithering: e.dithering,
+                eng_compressor: e.eng_compressor
+			};
 
 			var new_material;
 
@@ -548,6 +553,7 @@ $(function(){
 				$(job).find('.param_feedrate').val(p.cut_f);
 				$(job).find('.param_passes').val(p.cut_p || 0);
 				$(job).find('.param_piercetime').val(p.cut_pierce || 0);
+				$(job).find('.compressor_range').val(p.cut_compressor || 3);  // Here we pass the value of the range (3), not the real one (100%)
 			}
 		};
 		self.apply_engraving_proposal = function(){
@@ -568,6 +574,7 @@ $(function(){
 			self.imgFeedrateBlack(p.eng_f[1]);
 			self.imgDithering(p.dithering);
 			self.engravingPiercetime(p.eng_pierce || 0);
+			self.engravingCompressor(p.eng_compressor || 3);  // Here we pass the value of the range (3), not the real one (100%)
 		};
 
 		self._find_closest_color_to = function(hex, available_colors){
@@ -615,7 +622,7 @@ $(function(){
 		self.imgDithering = ko.observable(false);
 		self.beamDiameter = ko.observable(0.15);
 		self.engravingPiercetime = ko.observable(0);
-		self.engravingCompressor = ko.observable(3); //todo iratxe this is for custom materials + add in jinja
+		self.engravingCompressor = ko.observable(3);
 
 		self.sharpeningMax = 25;
 		self.contrastMax = 2;
@@ -703,7 +710,6 @@ $(function(){
 		};
 
 
-		// todo iratxe: add this for custom materials
 		self.get_current_multicolor_settings = function () {
 			var data = [];
 			$('.job_row_vector').each(function(i, job){
@@ -712,7 +718,7 @@ $(function(){
 				var feedrate = $(job).find('.param_feedrate').val();
 				var piercetime = $(job).find('.param_piercetime').val();
 				var passes = $(job).find('.param_passes').val();
-				let compressor = self.mapCompressorValue($(job).find('.compressor_range').val());
+				let cut_compressor = $(job).find('.compressor_range').val();
 				if(self._isValidVectorSetting(intensity_user, feedrate, passes, piercetime)){
 					$(job).find('.used_color').each(function(j, col){
 						var hex = '#' + $(col).attr('id').substr(-6);
@@ -724,7 +730,7 @@ $(function(){
 							pierce_time: piercetime,
 							passes: passes,
                             engrave: false,
-                            compressor: compressor
+                            cut_compressor: cut_compressor
 						});
 					});
 				} else {
@@ -792,7 +798,7 @@ $(function(){
 				"pierce_time": parseInt(self.engravingPiercetime()),
 				"engraving_mode": $('#svgtogcode_img_engraving_mode > .btn.active').attr('value'),
                 "line_distance": $('#svgtogcode_img_line_dist').val(),
-                "compressor": self.mapCompressorValue($('#engraving_compressor').find('.compressor_range').val()) //todo iratxe:
+                "eng_compressor": self.engravingCompressor()
 			};
 			return data;
 		};
@@ -1188,9 +1194,15 @@ $(function(){
 						var filename = self.gcodeFilename();
 						var gcodeFilename = self._sanitize(filename) + '.gco';
 
-						var multicolor_data = self.get_current_multicolor_settings();
-						var engraving_data = self.get_current_engraving_settings();
-						var advancedSettings = self.is_advanced_settings_checked();
+						var multicolor_data = self.get_current_multicolor_settings();  // todo iratxe: map compressor value
+                        for (let i = 0; i < multicolor_data.length; i++) {
+                            multicolor_data[i]['cut_compressor'] = self.mapCompressorValue(multicolor_data[i]['cut_compressor']);
+                        }
+
+						var engraving_data = self.get_current_engraving_settings();  // todo iratxe: map compressor value
+                        engraving_data['eng_compressor'] = self.mapCompressorValue(engraving_data['eng_compressor']);
+
+                        var advancedSettings = self.is_advanced_settings_checked();
 						var colorStr = '<!--COLOR_PARAMS_START' +JSON.stringify(multicolor_data) + 'COLOR_PARAMS_END-->';
 						var material = self.get_current_material_settings();
 						var design_files = self.get_design_files_info();

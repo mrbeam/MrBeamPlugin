@@ -60,7 +60,7 @@ class ImageProcessor():
 	              engraving_mode = None,
 	              pierce_time = 0,
 	              overshoot_distance = 0, # disabled for now. TODO: enable (1) when switch on delay is HW fixed.
-	              compressor = 100, # DreamCut.
+	              eng_compressor = 100, # DreamCut.
 	              material = None):
 
 		self.log = logging.getLogger("octoprint.plugins.mrbeam.img2gcode")
@@ -97,7 +97,7 @@ class ImageProcessor():
 		self.intensity_white_user = intensity_white_user
 		self.feedrate_white = float(speed_white) if speed_white else 3000.0
 		self.feedrate_black = float(speed_black) if speed_black else 0.0
-		self.compressor = float(compressor) if compressor else 100.0
+		self.compressor = float(eng_compressor) if eng_compressor else 100.0
 		self.material = material
 		self.contrastFactor = float(contrast) if contrast else 0.0
 		self.sharpeningFactor = float(sharpening) if sharpening else 0.0
