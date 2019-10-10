@@ -13,8 +13,7 @@ $(function () {
                 .done(function (response) {
                     self.materialImportedSettings = response;
                     for (let materialKey in self.materialSettingsDatabase) {
-                        if (self.materialSettingsDatabase[materialKey] && self.materialSettingsDatabase[materialKey].params) {
-                            self.materialSettingsDatabase[materialKey].laser_type =  self.default_laser_type;
+                        if (self.materialSettingsDatabase[materialKey] && self.materialSettingsDatabase[materialKey].colors) {
                             if (materialKey in self.materialImportedSettings) {
                                 console.log("imported mat:", self.materialImportedSettings[materialKey]);
                                 self.materialSettingsDatabase[materialKey].colors = self.materialImportedSettings[materialKey].colors;
