@@ -61,7 +61,8 @@ additional_setup_parameters = {'package_data': {
 									'octoprint_mrbeam': ['profiles/*.yaml',
 									                     'files/grbl/*.hex',
 									                     'files/migrate/*',
-									                     'files/migrate_logrotate/*']},
+									                     'files/migrate_logrotate/*',
+														 'files/material_settings/*']},
 									'setup_requires': ['numpy==1.11.2']}
 
 ########################################################################################################################

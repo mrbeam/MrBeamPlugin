@@ -48,7 +48,7 @@ from .materials import materials
 from octoprint_mrbeam.gcodegenerator.jobtimeestimation import JobTimeEstimation
 from .analytics.uploader import FileUploader
 from octoprint.filemanager.destinations import FileDestinations
-
+from octoprint_mrbeam.util.material_csv_parser import parse_csv
 
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
 __builtin__._mrbeam_plugin_implementation = None
@@ -1210,6 +1210,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			reset_carbon_filter_usage=[],
 			reset_laser_head_usage=[],
 			reset_gantry_usage=[],
+			material_settings=[],
 		)
 
 	def on_api_command(self, command, data):
@@ -1254,6 +1255,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return self.usage_handler.reset_laser_head_usage()
 		elif command == "reset_gantry_usage":
 			return self.usage_handler.reset_gantry_usage()
+		elif command == "material_settings":
+			# TODO select which Mr Beam version to parse the materials for
+			# TODO Load materials when the user logs in too
+			return make_response(jsonify(parse_csv()), 200)
 		return NO_CONTENT
 
 	def analytics_init(self, data):

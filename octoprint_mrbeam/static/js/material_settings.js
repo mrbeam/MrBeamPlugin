@@ -5,22 +5,39 @@ $(function () {
     function MaterialSettingsViewModel(params) {
         let self = this;
         window.mrbeam.viewModels['materialSettingsViewModel'] = self;
-
         self.default_laser_type = 'MrBeamII-1.0';
 
-        self.getMaterialSettings = function (laser_type) {
-            for (let materialKey in self.materialSettingsDatabase) {
-                if (self.materialSettingsDatabase[materialKey] && self.materialSettingsDatabase[materialKey].params) {
-                    let my_laser_type = laser_type || self.default_laser_type
-                    if (!(my_laser_type in self.materialSettingsDatabase[materialKey].params)) {
-                        my_laser_type = self.default_laser_type;
+        self.getMaterialSettings = function (callback) {
+            // TODO fuse datatsets (descriptions and settings)
+            OctoPrint.simpleApiCommand("mrbeam", "material_settings", {})
+                .done(function (response) {
+                    self.materialImportedSettings = response;
+                    for (let materialKey in self.materialSettingsDatabase) {
+                        if (self.materialSettingsDatabase[materialKey] && self.materialSettingsDatabase[materialKey].params) {
+                            self.materialSettingsDatabase[materialKey].laser_type =  self.default_laser_type;
+                            if (materialKey in self.materialImportedSettings) {
+                                console.log("imported mat:", self.materialImportedSettings[materialKey]);
+                                self.materialSettingsDatabase[materialKey].colors = self.materialImportedSettings[materialKey].colors;
+                            } else {
+                                self.materialSettingsDatabase[materialKey].colors = self.materialSettingsDatabase[materialKey].params[self.default_laser_type];
+                            }
+                        }
                     }
-                    self.materialSettingsDatabase[materialKey].laser_type = my_laser_type;
-                    self.materialSettingsDatabase[materialKey].colors = self.materialSettingsDatabase[materialKey].params[my_laser_type];
-                }
-            }
+                    console.log("loadMaterials callback: ", self.materialSettingsDatabase);
+                    callback(self.materialSettingsDatabase);
+                });
+
             return self.materialSettingsDatabase;
         };
+
+        self.loadMaterials = function (callback) {
+            // Get the material settings parsed from the files/materials.csv
+            OctoPrint.simpleApiCommand("mrbeam", "material_settings", {})
+                .done(function (response) {
+                })
+        }
+
+        // TODO fusion parameters with descriptions
 
         self.materialSettingsDatabase = {
 
