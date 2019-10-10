@@ -204,6 +204,15 @@
                                     </div>
                                 </div>
 
+                                <div class="range-control-and-label" data-toggle="tooltip" data-placement="right"
+                                     title="<b>{{ _('The power of the air compressor.') }}</b>
+                                     {{ _('Keep this value to the maximum for the best performance, unless you want to lower it because your material is very light and it\'s blown away.') }}">
+                                    <label class="control-label">{{ _('Compressor') }}</label>
+                                    <div id="engraving_compressor" class="controls">
+                                       <input class="compressor_range" type="range" min="0" max="3" value="3" list="tickmarks" {#data-bind="value: compressorRangeValue, valueUpdate: 'input'"#}/>
+                                    </div>
+                                </div>
+
 								<div class="line-control-and-label" data-bind="visible: show_line_color_mappings" data-toggle="tooltip" data-placement="right"
                                      title="{{ _('Map the color of a vector path to a grayscale value for engraving.') }}">
 									<label class="control-label">{{ _('Line color mapping') }}</label>
@@ -324,6 +333,15 @@
                                       title="{{ _('Indicates the number of times the laser will run over the design to cut it. Increase the number of passes if the material does not get cut.') }}">
                                     <label class="control-label">{{ _('Passes') }}</label>
                                     <div class="controls"><input data-bind="event: {change: flag_customized_material}" class="param_passes img_intensity_input" type="number" min="1" max="10" value="1" />&nbsp;&times;</div>
+                                </div>
+                            </div>
+
+                            <div class="range-control-and-label" data-toggle="tooltip" data-placement="right"
+                                 title="<b>{{ _('The power of the air compressor.') }}</b>
+                                 {{ _('Keep this value to the maximum for the best performance, unless you want to lower it because your material is very light and it\'s blown away.') }}">
+                                <label class="control-label">{{ _('Compressor') }}</label>
+                                <div class="controls">
+                                   <input class="compressor_range" type="range" min="0" max="3" value="3" list="tickmarks" {#data-bind="value: compressorRangeValue, valueUpdate: 'input'"#}/>
                                 </div>
                             </div>
 

@@ -180,6 +180,7 @@ $(function(){
 				thickness = -1; // engrave only
 			}
 
+			// todo iratxe: add for custom materials
 			var e = self.get_current_engraving_settings();
 			var engrave_setting = {eng_i: [e.intensity_white_user, e.intensity_black_user],
                                     eng_f: [e.speed_white, e.speed_black],
@@ -614,6 +615,7 @@ $(function(){
 		self.imgDithering = ko.observable(false);
 		self.beamDiameter = ko.observable(0.15);
 		self.engravingPiercetime = ko.observable(0);
+		self.engravingCompressor = ko.observable(3); //todo iratxe this is for custom materials + add in jinja
 
 		self.sharpeningMax = 25;
 		self.contrastMax = 2;
@@ -701,6 +703,7 @@ $(function(){
 		};
 
 
+		// todo iratxe: add this for custom materials
 		self.get_current_multicolor_settings = function () {
 			var data = [];
 			$('.job_row_vector').each(function(i, job){
@@ -709,6 +712,7 @@ $(function(){
 				var feedrate = $(job).find('.param_feedrate').val();
 				var piercetime = $(job).find('.param_piercetime').val();
 				var passes = $(job).find('.param_passes').val();
+				let compressor = self.mapCompressorValue($(job).find('.compressor_range').val());
 				if(self._isValidVectorSetting(intensity_user, feedrate, passes, piercetime)){
 					$(job).find('.used_color').each(function(j, col){
 						var hex = '#' + $(col).attr('id').substr(-6);
@@ -719,7 +723,8 @@ $(function(){
 							feedrate: feedrate,
 							pierce_time: piercetime,
 							passes: passes,
-                            engrave: false
+                            engrave: false,
+                            compressor: compressor
 						});
 					});
 				} else {
@@ -753,7 +758,8 @@ $(function(){
                             feedrate: feedrate,
                             pierce_time: self.engravingPiercetime(),
                             passes: 1,
-                            engrave: true
+                            engrave: true,
+
                         });
 					};
 				} else {
@@ -785,7 +791,8 @@ $(function(){
 				"beam_diameter" : parseFloat(self.beamDiameter()),
 				"pierce_time": parseInt(self.engravingPiercetime()),
 				"engraving_mode": $('#svgtogcode_img_engraving_mode > .btn.active').attr('value'),
-                "line_distance": $('#svgtogcode_img_line_dist').val()
+                "line_distance": $('#svgtogcode_img_line_dist').val(),
+                "compressor": self.mapCompressorValue($('#engraving_compressor').find('.compressor_range').val()) //todo iratxe:
 			};
 			return data;
 		};
@@ -1287,6 +1294,25 @@ $(function(){
 			var b = parseInt(hex.substr(5,2), 16);
 			return Math.round((r*self.BRIGHTNESS_VALUE_RED + g*self.BRIGHTNESS_VALUE_GREEN + b*self.BRIGHTNESS_VALUE_BLUE));
 		};
+
+		self.mapCompressorValue = function(rangeValue) {
+		    let backendValue;
+		    switch (rangeValue) {
+                case "0":
+                    backendValue = 10;
+                    break;
+                case "1":
+                    backendValue = 25;
+                    break;
+                case "2":
+                    backendValue = 50;
+                    break;
+                case "3":
+                    backendValue = 100;
+                    break;
+            }
+            return backendValue
+        };
 
 		self.onStartup = function() {
 			self.requestData();
