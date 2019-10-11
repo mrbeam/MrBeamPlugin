@@ -359,33 +359,51 @@ class MachineCom(object):
 		If command is passed as parameter it's treated as a real time command,
 		which means there are no checks if it will exceed grbl buffer current capacity.
 		:param cmd: treated as real time command
+
+		All commands can be either a plain string or an dict object.
+		Object-Commands can have the following keys and are executed in this order:
+		- flush: a FLUSH is performed before any other step is executed. FLUSH waits until we're no longer waiting for any OKs from GRBL
+		- compressor: Set the compressor (if present) to the given value. usually in combination with flush.
+		- cmd: a command string (sam as if cmd is a plain string)
 		"""
 		if cmd is None:
 			if self._cmd is None and self._commandQueue.empty():
 				return
 			elif self._cmd is None:
-				self._cmd = self._commandQueue.get()
+				tmp = self._commandQueue.get()
+				if isinstance(tmp, basestring):
+					self._cmd = {'cmd': tmp}
+				elif isinstance(tmp, dict):
+					self._cmd = tmp
+				else:
+					self._logger.error("_sendCommand() command is of unexpected type: %s", type(tmp))
 
-			if self._cmd == self.COMMAND_FLUSH:
+			if self._cmd.get('cmd', None) == self.COMMAND_FLUSH or self._cmd.get('flush', False):
 				# FLUSH waits until we're no longer waiting for any OKs from GRBL
 				if self._flush_command_ts <=0:
 					self._flush_command_ts = time.time()
-					self._log("FLUSHing (grbl_state: {}, acc_line_buffer: {}, grbl_rx: {})".format(
-					                  self._grbl_state, self._acc_line_buffer.get_char_len(), self._grbl_rx_status))
-				if self._acc_line_buffer.is_empty():
-					self._cmd = None
-					self._log("FLUSHed ({}ms)".format(int(1000 * (time.time() - self._flush_command_ts))))
+					self._logger.debug("FLUSHing (grbl_state: {}, acc_line_buffer: {}, grbl_rx: {})".format(
+					                  self._grbl_state, self._acc_line_buffer.get_char_len(), self._grbl_rx_status), terminal_as_comm=True)
+					return
+				elif self._acc_line_buffer.is_empty():
+					self._cmd.pop('flush', None)
+					self._logger.debug("FLUSHed ({}ms)".format(int(1000 * (time.time() - self._flush_command_ts))), terminal_as_comm=True)
 					self._flush_command_ts = -1
-				self._send_event.set()
-			else:
-				my_cmd = self._cmd  # to avoid race conditions
-				if not(len(my_cmd) +1 < self.GRBL_LINE_BUFFER_SIZE):
+				else:
+					# still flushing. do nothing else for now...
+					return
+			# SYNC: https://github.com/mrbeam/MrBeamPlugin/blob/879c03ceaeb186a862380b133eb22154dc3db602/octoprint_mrbeam/comm_acc2.py
+			if 'compressor' in self._cmd:
+				self._set_compressor(self._cmd.pop('compressor'))
+			if 'cmd' in self._cmd:
+				my_cmd = self._cmd.pop('cmd', None)  # to avoid race conditions
+				if my_cmd is None:
+					pass
+				elif not(len(my_cmd) +1 < self.GRBL_LINE_BUFFER_SIZE):
 					msg = "Error: Command too long. max: {}, cmd length: {}, cmd: {}... (shortened)".format(self.GRBL_LINE_BUFFER_SIZE - 1, len(my_cmd), my_cmd[0:self.GRBL_LINE_BUFFER_SIZE - 1])
 					self._logger.error(msg, analytics=True)
 					self._handle_alarm_message("Command too long to send to GRBL.", code=self.ALARM_CODE_COMMAND_TOO_LONG)
-					self._cmd = None
-					return
-				if my_cmd and self._acc_line_buffer.get_char_len() + len(my_cmd) + 1 < self.GRBL_WORKING_RX_BUFFER_SIZE:
+				elif my_cmd and self._acc_line_buffer.get_char_len() + len(my_cmd) + 1 < self.GRBL_WORKING_RX_BUFFER_SIZE:
 					# In recovery: if acc_line_buffer is marked dirty we must check if it is set to clean again.
 					if self._acc_line_buffer.is_dirty() and self.COMMAND_RESET_ALARM in my_cmd:
 						self._acc_line_buffer.set_clean()
@@ -406,18 +424,22 @@ class MachineCom(object):
 					try:
 						self._serial.write(my_cmd + '\n')
 						self._process_command_phase("sent", my_cmd)
-						self._cmd = None
-						self._send_event.set()
 					except serial.SerialException:
 						self._log("Unexpected error while writing serial port: %s" % (get_exception_string()))
 						self._errorValue = get_exception_string()
 						self.close(True)
+
+			if len(self._cmd) <= 0:
+				# ok, we're done with this command
+				self._cmd = None
+				self._send_event.set()
 		else:
-			cmd, _, _  = self._process_command_phase("sending", cmd)
-			self._log("Send: %s" % cmd)
+			cmd_obj  = self._process_command_phase("sending", cmd)
+			my_cmd = cmd_obj.get('cmd', '')
+			self._log("Send: %s" % my_cmd)
 			try:
-				self._serial.write(cmd)
-				self._process_command_phase("sent", cmd)
+				self._serial.write(my_cmd)
+				self._process_command_phase("sent", my_cmd)
 			except serial.SerialException:
 				self._logger.info("Unexpected error while writing serial port: %s" % (get_exception_string()), terminal_as_comm=True)
 				self._errorValue = get_exception_string()
@@ -987,8 +1009,11 @@ class MachineCom(object):
 				self._log(msg)
 
 	def _process_command_phase(self, phase, command, command_type=None, gcode=None):
+		cmd_obj = command
+		if isinstance(command, basestring):
+			cmd_obj = {'cmd': command}
 		if phase not in ("queuing", "queued", "sending", "sent"):
-			return command, command_type, gcode
+			return cmd_obj
 
 		if gcode is None:
 			gcode = self._gcode_command_for_cmd(command)
@@ -998,10 +1023,15 @@ class MachineCom(object):
 			gcodeHandler = "_gcode_" + gcode + "_" + phase
 			if hasattr(self, gcodeHandler):
 				handler_result = getattr(self, gcodeHandler)(command, cmd_type=command_type)
-				command, command_type, gcode = self._handle_command_handler_result(command, command_type, gcode, handler_result)
+				if handler_result is None:
+					cmd_obj = {'cmd': command}
+				elif isinstance(handler_result, basestring):
+					cmd_obj['cmd'] = handler_result
+				elif isinstance(handler_result, dict):
+					cmd_obj = handler_result
 
 		# finally return whatever we resulted on
-		return command, command_type, gcode
+		return cmd_obj
 
 	# TODO CLEM Inject color
 	def setColors(self,currentFileName, colors):
@@ -1342,33 +1372,33 @@ class MachineCom(object):
 		time.sleep(1) # turns out we need this :-/
 
 
-	def _handle_command_handler_result(self, command, command_type, gcode, handler_result):
-		original_tuple = (command, command_type, gcode)
-
-		if handler_result is None:
-			# handler didn't return anything, we'll just continue
-			return original_tuple
-
-		if isinstance(handler_result, basestring):
-			# handler did return just a string, we'll turn that into a 1-tuple now
-			handler_result = (handler_result,)
-		elif not isinstance(handler_result, (tuple, list)):
-			# handler didn't return an expected result format, we'll just ignore it and continue
-			return original_tuple
-
-		hook_result_length = len(handler_result)
-		if hook_result_length == 1:
-			# handler returned just the command
-			command, = handler_result
-		elif hook_result_length == 2:
-			# handler returned command and command_type
-			command, command_type = handler_result
-		else:
-			# handler returned a tuple of an unexpected length
-			return original_tuple
-
-		gcode = self._gcode_command_for_cmd(command)
-		return command, command_type, gcode
+	# def _handle_command_handler_result(self, command, command_type, gcode, handler_result):
+	# 	original_tuple = (command, command_type, gcode)
+	#
+	# 	if handler_result is None:
+	# 		# handler didn't return anything, we'll just continue
+	# 		return original_tuple
+	#
+	# 	if isinstance(handler_result, basestring):
+	# 		# handler did return just a string, we'll turn that into a 1-tuple now
+	# 		handler_result = (handler_result,)
+	# 	elif not isinstance(handler_result, (tuple, list)):
+	# 		# handler didn't return an expected result format, we'll just ignore it and continue
+	# 		return original_tuple
+	#
+	# 	hook_result_length = len(handler_result)
+	# 	if hook_result_length == 1:
+	# 		# handler returned just the command
+	# 		command, = handler_result
+	# 	elif hook_result_length == 2:
+	# 		# handler returned command and command_type
+	# 		command, command_type = handler_result
+	# 	else:
+	# 		# handler returned a tuple of an unexpected length
+	# 		return original_tuple
+	#
+	# 	gcode = self._gcode_command_for_cmd(command)
+	# 	return command, command_type, gcode
 
 	def _replace_feedrate(self, cmd):
 		obj = self._regex_feedrate.search(cmd)
@@ -1445,6 +1475,8 @@ class MachineCom(object):
 			self._current_pos_y = y
 
 	##~~ command handlers
+	# hooks are called by self._process_command_phase()
+	##~~
 	def _gcode_G0_sending(self, cmd, cmd_type=None):
 		self._remember_pos(self._parse_vals_from_gcode(cmd))
 		return cmd
@@ -1485,17 +1517,15 @@ class MachineCom(object):
 				val = int(matches[0])
 			except:
 				raise Exception("Invalid value in gcode compressor command: %s, matches: %s", cmd, matches)
-		if val is not None:
+		if val is None:
+			return {}
+		else:
 			if val > 100: val = 100
 			if val < 0: val = 0
-			self._logger.info("_gcode_M100_sending() compressor val: %s, cmd: %s", val, cmd)
-			self._set_compressor(val)
-		return ""
-
-	def _gcode_P_sending(self, cmd, cmd_type=None):
-		self._logger.info("ANDYTEST _gcode_P_sending() cmd: %s", cmd)
-		return ""
-
+			nu_cmd = {'compressor': val,
+			          'flush': True,
+			          'cmd': None}
+			return nu_cmd
 
 	def _gcode_G01_sending(self, cmd, cmd_type=None):
 		return self._gcode_G1_sending(cmd, cmd_type)
@@ -1530,32 +1560,39 @@ class MachineCom(object):
 		return cmd
 
 	def _gcode_F_sending(self, cmd, cmd_type=None):
-		cmd = self._replace_feedrate(cmd)
+		return self._replace_feedrate(cmd)
 
 	def _gcode_S_sending(self, cmd, cmd_type=None):
-		cmd = self._replace_intensity(cmd)
+		return self._replace_intensity(cmd)
 
 	def sendCommand(self, cmd, cmd_type=None, processed=False):
 		if cmd is not None and cmd.strip().startswith('/'):
 			self._handle_user_command(cmd)
 		else:
-			cmd = cmd.encode('ascii', 'replace')
-			if not processed:
+			if processed:
+				cmd_obj = {'cmd': cmd}
+			else:
+				cmd.encode('ascii', 'replace')
 				cmd = process_gcode_line(cmd)
 				if not cmd:
 					return
 
-				cmd, _, _ = self._process_command_phase("sending", cmd)
+				cmd_obj = self._process_command_phase("sending", cmd)
+				if cmd_obj is None or len(cmd_obj) <= 0:
+					return
+
 				if self.grbl_feat_checksums:
-					cmd = self._add_checksum_to_cmd(cmd)
+					cmd_obj['cmd'] = self._add_checksum_to_cmd(cmd_obj['cmd'])
 
-			eepromCmd = re.search("^\$[0-9]+=.+$", cmd)
-			if(eepromCmd and self.isPrinting()):
-				self._log("Warning: Configuration changes during print are not allowed!")
+			if cmd_obj.get('cmd', None) is not None:
+				eepromCmd = re.search("^\$[0-9]+=.+$", cmd_obj.get('cmd'))
+				if(eepromCmd and self.isPrinting()):
+					self._log("Warning: Configuration changes during print are not allowed!")
+					return
 
-			self._commandQueue.put(cmd)
+			self._commandQueue.put(cmd_obj)
 			self._send_event.set()
-			self.watch_dog.notify_command(cmd)
+			self.watch_dog.notify_command(cmd_obj)
 
 	def _handle_user_command(self, cmd):
 		"""
