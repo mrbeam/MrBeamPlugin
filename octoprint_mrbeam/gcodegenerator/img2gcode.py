@@ -341,7 +341,7 @@ class ImageProcessor():
 		yMM -= self.beam
 
 		# pre-condition: set mrbeam_compressor, set feedrate, enable laser with 0 intensity.
-		if self.compressor:
+		if self.compressor is not None:
 			self._append_gcode('M100P{p} ;mrbeam_compressor:{p}'.format(p=self.compressor)) # set air_pressure
 		self._append_gcode('F{}'.format(self.feedrate_white)) # set an initial feedrate
 		self.gc_ctx.f = self.feedrate_white #TODO hack. set with line above

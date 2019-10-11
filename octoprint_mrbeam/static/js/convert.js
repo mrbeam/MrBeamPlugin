@@ -554,7 +554,7 @@ $(function(){
 				$(job).find('.param_feedrate').val(p.cut_f);
 				$(job).find('.param_passes').val(p.cut_p || 0);
 				$(job).find('.param_piercetime').val(p.cut_pierce || 0);
-				$(job).find('.compressor_range').val(p.cut_compressor || 3);  // Here we pass the value of the range (3), not the real one (100%)
+				$(job).find('.compressor_range').val(p.cut_compressor || 0);  // Here we pass the value of the range (0), not the real one (10%)
 			}
 		};
 		self.apply_engraving_proposal = function(){
@@ -575,7 +575,7 @@ $(function(){
 			self.imgFeedrateBlack(p.eng_f[1]);
 			self.imgDithering(p.dithering);
 			self.engravingPiercetime(p.eng_pierce || 0);
-			self.engravingCompressor(p.eng_compressor || 3);  // Here we pass the value of the range (3), not the real one (100%)
+			self.engravingCompressor(p.eng_compressor || 0);  // Here we pass the value of the range (0), not the real one (10%)
 		};
 
 		self._find_closest_color_to = function(hex, available_colors){
@@ -623,7 +623,7 @@ $(function(){
 		self.imgDithering = ko.observable(false);
 		self.beamDiameter = ko.observable(0.15);
 		self.engravingPiercetime = ko.observable(0);
-		self.engravingCompressor = ko.observable(3);
+		self.engravingCompressor = ko.observable(0);
 
 		self.sharpeningMax = 25;
 		self.contrastMax = 2;
