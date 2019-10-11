@@ -1262,7 +1262,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			try:
 				return make_response(jsonify(parse_csv(laserhead="Mr Beam II")), 200) # TODO : Give parse_csv the right laserhead type
 			except Exception as err:
-				self.logger.exception(err.message)
+				self._logger.exception(err.message)
 				return make_response(err.message, 500)
 		return NO_CONTENT
 

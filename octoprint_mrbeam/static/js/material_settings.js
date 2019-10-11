@@ -13,9 +13,11 @@ $(function () {
                 .done(function (response) {
                     self.materialImportedSettings = response;
                     for (let materialKey in self.materialSettingsDatabase) {
-                        if (materialKey in self.materialSettingsDatabase[materialKey] && materialKey in self.materialImportedSettings) {
+                        if (materialKey in self.materialImportedSettings) {
                             // console.log("imported mat:", self.materialImportedSettings[materialKey]);
                             self.materialSettingsDatabase[materialKey].colors = self.materialImportedSettings[materialKey].colors;
+                        } else {
+                            delete self.materialSettingsDatabase[materialKey]
                         }
                     }
                     // console.log("loadMaterials callback: ", self.materialSettingsDatabase);

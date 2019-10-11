@@ -41,7 +41,7 @@ def parse_csv(path = None, laserhead=MRBEAM):
         cur_color_has_engraving_setting = False
         cur_color_has_cutting_setting = False
         for i, row in enumerate(reader):
-            for j in range(row):
+            for j in range(len(row)):
                 if type(row[j]) is str:
                     row[j] = row[j].strip()
             mrbeamversion, material, colorcode, thickness_or_engrave, intensity, speed, passes, compressor_lvl, pierce_time, dithering = row[:10]
@@ -67,12 +67,15 @@ def parse_csv(path = None, laserhead=MRBEAM):
                     colorcode = prev_vals[2]
 
             try:
-                thickness = float(thickness_or_engrave)
+                if type(thickness_or_engrave) is str:
+                    thickness = float(thickness_or_engrave.replace(',', '.'))
+                else:
+                    thickness = float(thickness_or_engrave)
                 settingname = 'cut'
                 settings = [{'thicknessMM': thickness, 'cut_i': int(intensity), 'cut_f': int(speed), 'cut_p': int(passes), 'cut_compressor_lvl': int(compressor_lvl)}]
             except ValueError:
                 if not thickness_or_engrave.lower().__contains__('engrav'):
-                    raise Exception("Did not understand if line {} is an engraving or cutting job".format(i))
+                    raise Exception("Did not understand if line {} is an engraving or cutting job. Type of elm is {} : {}".format(i, type(thickness_or_engrave), thickness_or_engrave))
                 dithering = True if dithering == 'yes' else False
                 pierce_time = pierce_time or 0
                 settings = {'engrave_compressor_lvl': int(compressor_lvl),
