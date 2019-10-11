@@ -237,7 +237,7 @@ $(function(){
             };
             OctoPrint.simpleApiCommand("mrbeam", "custom_materials", postData)
                 .done(function(response){
-					console.log("simpleApiCall response: ", response);
+					// console.log("simpleApiCall response: ", response);
 					// $('#save_material_form.dropdown').dropdown('toggle'); // buggy
 					$('#save_material_form').removeClass('open'); // workaround
 
@@ -421,6 +421,12 @@ $(function(){
 
 			}
 			// filter predefined materials
+            // console.log("KO computed materials : ", self.material_settings2);
+
+		    self.materialSettings.loadMaterialSettings(function (result) {
+		        self.material_settings2 = result;
+                // console.log(result)
+            });
 			for(var materialKey in self.material_settings2){
 				var m = self.material_settings2[materialKey];
 				if(m !== null){
@@ -1349,7 +1355,6 @@ $(function(){
 		};
 
 		self.onAllBound = function(){
-		    self.material_settings2 = self.materialSettings.getMaterialSettings('MrBeamII-2.0'); // TODO: get type dynamically
             self.hasCompressor(self.settings.settings.plugins.mrbeam.hw_features.has_compressor())
         };
 
