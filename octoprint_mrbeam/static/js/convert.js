@@ -416,7 +416,7 @@ $(function(){
 			// filter predefined materials
             // console.log("KO computed materials : ", self.material_settings2);
 
-		    self.materialSettings.getMaterialSettings(function (result) {
+		    self.materialSettings.loadMaterialSettings(function (result) {
 		        self.material_settings2 = result;
                 // console.log(result)
             });

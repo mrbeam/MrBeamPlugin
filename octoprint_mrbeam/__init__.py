@@ -1257,8 +1257,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return self.usage_handler.reset_gantry_usage()
 		elif command == "material_settings":
 			# TODO select which Mr Beam version to parse the materials for
-			# TODO Load materials when the user logs in too
-			return make_response(jsonify(parse_csv()), 200)
+			# TODO Select "Mr Beam II" laserhead for the DreamCut Ready variant
+			# TODO ANDY Load materials when the user logs in as well
+			return make_response(jsonify(parse_csv(laserhead="Mr Beam II")), 200) # TODO : Give parse_csv the right laserhead type
 		return NO_CONTENT
 
 	def analytics_init(self, data):
