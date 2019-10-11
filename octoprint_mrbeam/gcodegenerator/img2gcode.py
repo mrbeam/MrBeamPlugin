@@ -97,7 +97,7 @@ class ImageProcessor():
 		self.intensity_white_user = intensity_white_user
 		self.feedrate_white = float(speed_white) if speed_white else 3000.0
 		self.feedrate_black = float(speed_black) if speed_black else 0.0
-		self.compressor = float(eng_compressor) if eng_compressor else 100.0
+		self.compressor = eng_compressor  # This value might be None if there is no compressor
 		self.material = material
 		self.contrastFactor = float(contrast) if contrast else 0.0
 		self.sharpeningFactor = float(sharpening) if sharpening else 0.0
@@ -150,7 +150,7 @@ class ImageProcessor():
 		comment += "; dithering = {}\n".format(self.dithering)
 		comment += "; overshoot distance = {}\n".format(self.overshoot_distance)
 		comment += "; separation = {}\n".format(self.separation)
-		comment += "; mrbeam_compressor = {}\n".format(self.compressor)
+		comment += "; eng_compressor = {}\n".format(self.compressor)
 		return comment
 
 	def set_overshoot_parameter(self, overshoot_distance, workingAreaWidth=500):
@@ -341,7 +341,8 @@ class ImageProcessor():
 		yMM -= self.beam
 
 		# pre-condition: set mrbeam_compressor, set feedrate, enable laser with 0 intensity.
-		self._append_gcode('M100P{p} ;mrbeam_compressor:{p}'.format(p=self.compressor)) # set air_pressure
+		if self.compressor:
+			self._append_gcode('M100P{p} ;mrbeam_compressor:{p}'.format(p=self.compressor)) # set air_pressure
 		self._append_gcode('F{}'.format(self.feedrate_white)) # set an initial feedrate
 		self.gc_ctx.f = self.feedrate_white #TODO hack. set with line above
 		#self._append_gcode('M3S0') # enable laser

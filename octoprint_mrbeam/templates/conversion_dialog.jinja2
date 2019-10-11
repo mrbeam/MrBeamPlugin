@@ -204,7 +204,7 @@
                                     </div>
                                 </div>
 
-                                <div class="range-control-and-label" data-toggle="tooltip" data-placement="right"
+                                <div class="range-control-and-label" data-toggle="tooltip" data-placement="right" data-bind="visible: hasCompressor"
                                      title="<b>{{ _('The power of the air compressor.') }}</b>
                                      {{ _('Keep this value to the maximum for the best performance, unless you want to lower it because your material is very light and it\'s blown away.') }}">
                                     <label class="control-label">{{ _('Compressor') }}</label>
@@ -336,7 +336,7 @@
                                 </div>
                             </div>
 
-                            <div class="range-control-and-label" data-toggle="tooltip" data-placement="right"
+                            <div class="range-control-and-label" data-toggle="tooltip" data-placement="right" data-bind="visible: hasCompressor"
                                  title="<b>{{ _('The power of the air compressor.') }}</b>
                                  {{ _('Keep this value to the maximum for the best performance, unless you want to lower it because your material is very light and it\'s blown away.') }}">
                                 <label class="control-label">{{ _('Compressor') }}</label>

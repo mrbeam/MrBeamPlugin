@@ -39,7 +39,7 @@ class Converter():
 			"dithering": False,
 			"beam_diameter": 0.2,
 			"pierce_time": 0,
-			"eng_compressor": 100,  # todo iratxe: do we want this default?
+			"eng_compressor": 100,
 		},
 		"vector": [],
 		"material": None,
@@ -335,7 +335,7 @@ class Converter():
 						if colorKey == 'none':
 							continue
 
-						settings = self.colorParams.get(colorKey, {'intensity': -1, 'feedrate': -1, 'passes': 0, 'pierce_time': 0, 'cut_compressor': 100})  # todo iratxe: also 100 here?
+						settings = self.colorParams.get(colorKey, {'intensity': -1, 'feedrate': -1, 'passes': 0, 'pierce_time': 0, 'cut_compressor': 100})
 						if(settings['feedrate'] == None or settings['feedrate'] == -1 or settings['intensity'] == None or settings['intensity'] <= 0):
 							self._log.info( "convert() skipping color %s, no valid settings %s." % (colorKey, settings))
 							continue
@@ -777,7 +777,10 @@ class Converter():
 
 	def _get_gcode_footer(self):
 		if(self.options['noheaders']):
-			return "; end of job\nM05\nM100P0 ;mrbeam_compressor off\n"
+			if _mrbeam_plugin_implementation.compressor_handler.has_compressor():
+				return "; end of job\nM05\nM100P0 ;mrbeam_compressor off\n"
+			else:
+				return "; end of job\nM05\n"
 		else:
 			return machine_settings.gcode_footer
 

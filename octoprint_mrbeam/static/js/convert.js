@@ -75,6 +75,7 @@ $(function(){
 		self.save_custom_material_thickness = ko.observable(1);
 		self.save_custom_material_color = ko.observable("#000000");
 
+		self.hasCompressor = ko.observable(false);
 
 		self.expandMaterialSelector = ko.computed(function(){
 			return self.selected_material() === null || self.selected_material_color() === null || self.selected_material_thickness() === null;
@@ -710,7 +711,7 @@ $(function(){
 		};
 
 
-		self.get_current_multicolor_settings = function () {
+		self.get_current_multicolor_settings = function (prepareForBackend=false) {
 			var data = [];
 			$('.job_row_vector').each(function(i, job){
 				var intensity_user = $(job).find('.param_intensity').val();
@@ -719,6 +720,11 @@ $(function(){
 				var piercetime = $(job).find('.param_piercetime').val();
 				var passes = $(job).find('.param_passes').val();
 				let cut_compressor = $(job).find('.compressor_range').val();
+
+				if (prepareForBackend) {
+				    cut_compressor = self.mapCompressorValue(cut_compressor);
+                }
+
 				if(self._isValidVectorSetting(intensity_user, feedrate, passes, piercetime)){
 					$(job).find('.used_color').each(function(j, col){
 						var hex = '#' + $(col).attr('id').substr(-6);
@@ -784,7 +790,13 @@ $(function(){
 			return true;
 		};
 
-		self.get_current_engraving_settings = function () {
+		self.get_current_engraving_settings = function (prepareForBackend=false) {
+		    let eng_compressor = self.engravingCompressor();
+
+            if (prepareForBackend) {
+                eng_compressor = self.mapCompressorValue(eng_compressor);
+            }
+
 			var data = {
 				// "engrave_outlines" : self.engrave_outlines(),
 				"intensity_black_user" : parseInt(self.imgIntensityBlack()),
@@ -798,7 +810,7 @@ $(function(){
 				"pierce_time": parseInt(self.engravingPiercetime()),
 				"engraving_mode": $('#svgtogcode_img_engraving_mode > .btn.active').attr('value'),
                 "line_distance": $('#svgtogcode_img_line_dist').val(),
-                "eng_compressor": self.engravingCompressor()
+                "eng_compressor": eng_compressor
 			};
 			return data;
 		};
@@ -1193,15 +1205,8 @@ $(function(){
 						self.svg = composition;
 						var filename = self.gcodeFilename();
 						var gcodeFilename = self._sanitize(filename) + '.gco';
-
-						var multicolor_data = self.get_current_multicolor_settings();
-                        for (let i = 0; i < multicolor_data.length; i++) {
-                            multicolor_data[i]['cut_compressor'] = self.mapCompressorValue(multicolor_data[i]['cut_compressor']);
-                        }
-
-						var engraving_data = self.get_current_engraving_settings();
-                        engraving_data['eng_compressor'] = self.mapCompressorValue(engraving_data['eng_compressor']);
-
+						var multicolor_data = self.get_current_multicolor_settings(true);
+						var engraving_data = self.get_current_engraving_settings(true);
                         var advancedSettings = self.is_advanced_settings_checked();
 						var colorStr = '<!--COLOR_PARAMS_START' +JSON.stringify(multicolor_data) + 'COLOR_PARAMS_END-->';
 						var material = self.get_current_material_settings();
@@ -1308,20 +1313,22 @@ $(function(){
 		};
 
 		self.mapCompressorValue = function(rangeValue) {
-		    let backendValue;
-		    switch (rangeValue) {
-                case "0":
-                    backendValue = 10;
-                    break;
-                case "1":
-                    backendValue = 25;
-                    break;
-                case "2":
-                    backendValue = 50;
-                    break;
-                case "3":
-                    backendValue = 100;
-                    break;
+		    let backendValue = null;
+		    if (self.hasCompressor()) {
+                switch (rangeValue) {
+                    case "0":
+                        backendValue = 10;
+                        break;
+                    case "1":
+                        backendValue = 25;
+                        break;
+                    case "2":
+                        backendValue = 50;
+                        break;
+                    case "3":
+                        backendValue = 100;
+                        break;
+                }
             }
             return backendValue
         };
@@ -1343,6 +1350,7 @@ $(function(){
 
 		self.onAllBound = function(){
 		    self.material_settings2 = self.materialSettings.getMaterialSettings('MrBeamII-2.0'); // TODO: get type dynamically
+            self.hasCompressor(self.settings.settings.plugins.mrbeam.hw_features.has_compressor())
         };
 
 		self.onUserLoggedIn = function(user){
