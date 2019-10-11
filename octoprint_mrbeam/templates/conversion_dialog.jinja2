@@ -204,12 +204,12 @@
                                     </div>
                                 </div>
 
-                                <div class="range-control-and-label" data-toggle="tooltip" data-placement="right"
+                                <div class="range-control-and-label" data-toggle="tooltip" data-placement="right" data-bind="visible: hasCompressor"
                                      title="<b>{{ _('The power of the air compressor.') }}</b>
                                      {{ _('Keep this value to the maximum for the best performance, unless you want to lower it because your material is very light and it\'s blown away.') }}">
                                     <label class="control-label">{{ _('Compressor') }}</label>
                                     <div id="engraving_compressor" class="controls">
-                                       <input class="compressor_range" type="range" min="0" max="3" value="3" list="tickmarks" {#data-bind="value: compressorRangeValue, valueUpdate: 'input'"#}/>
+                                       <input class="compressor_range" type="range" min="0" max="3" data-bind="value: engravingCompressor, event: {change: flag_customized_material}"/>
                                     </div>
                                 </div>
 
@@ -336,12 +336,12 @@
                                 </div>
                             </div>
 
-                            <div class="range-control-and-label" data-toggle="tooltip" data-placement="right"
+                            <div class="range-control-and-label" data-toggle="tooltip" data-placement="right" data-bind="visible: hasCompressor"
                                  title="<b>{{ _('The power of the air compressor.') }}</b>
                                  {{ _('Keep this value to the maximum for the best performance, unless you want to lower it because your material is very light and it\'s blown away.') }}">
                                 <label class="control-label">{{ _('Compressor') }}</label>
                                 <div class="controls">
-                                   <input class="compressor_range" type="range" min="0" max="3" value="3" list="tickmarks" {#data-bind="value: compressorRangeValue, valueUpdate: 'input'"#}/>
+                                   <input class="compressor_range" type="range" min="0" max="3" value="3" data-bind="event: {change: flag_customized_material}"/>
                                 </div>
                             </div>
 

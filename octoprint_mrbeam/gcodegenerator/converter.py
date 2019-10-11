@@ -39,7 +39,7 @@ class Converter():
 			"dithering": False,
 			"beam_diameter": 0.2,
 			"pierce_time": 0,
-			"compressor": 100,
+			"eng_compressor": 100,
 		},
 		"vector": [],
 		"material": None,
@@ -262,7 +262,7 @@ class Converter():
 											dithering = rasterParams['dithering'],
 											pierce_time = rasterParams['pierce_time'],
 											engraving_mode = rasterParams['engraving_mode'],
-											compressor = rasterParams['compressor'] if 'compressor' in rasterParams else 100,
+											eng_compressor = rasterParams['eng_compressor'],
 											material = self.options['material'])
 											# material = rasterParams['material'] if 'material' in rasterParams else None)
 						data = imgNode.get('href')
@@ -335,7 +335,7 @@ class Converter():
 						if colorKey == 'none':
 							continue
 
-						settings = self.colorParams.get(colorKey, {'intensity': -1, 'feedrate': -1, 'passes': 0, 'pierce_time': 0, 'compressor': 100})
+						settings = self.colorParams.get(colorKey, {'intensity': -1, 'feedrate': -1, 'passes': 0, 'pierce_time': 0, 'cut_compressor': 100})
 						if(settings['feedrate'] == None or settings['feedrate'] == -1 or settings['intensity'] == None or settings['intensity'] <= 0):
 							self._log.info( "convert() skipping color %s, no valid settings %s." % (colorKey, settings))
 							continue
@@ -715,7 +715,7 @@ class Converter():
 			si = curve[i]
 			feed = f if lg not in ['G01', 'G02', 'G03'] else ''
 			if s[1] == 'move':
-				g += "G0" + c(si[0]) + "\n" + machine_settings.gcode_before_path_color(color, settings['intensity'], settings['compressor']) + "\n"
+				g += "G0" + c(si[0]) + "\n" + machine_settings.gcode_before_path_color(color, settings['intensity'], settings['cut_compressor']) + "\n"
 				pt = int(settings['pierce_time'])
 				if pt > 0:
 					g += "G4P%.3f\n" % (round(pt / 1000.0, 4))
@@ -750,7 +750,7 @@ class Converter():
 		self._log.debug( "_use_embedded_gcode() %s", gcode[:100])
 		gcode = gcode.replace(' ', "\n")
 		feedrateCode = "F%s;%s\n" % (settings['feedrate'], color)
-		intensityCode = machine_settings.gcode_before_path_color(color, settings['intensity'], settings.get('compressor', '100')) + "\n"
+		intensityCode = machine_settings.gcode_before_path_color(color, settings['intensity'], settings.get('cut_compressor', '100')) + "\n"
 		piercetimeCode = ''
 		pt = int(settings['pierce_time'])
 		if pt > 0:
@@ -777,7 +777,10 @@ class Converter():
 
 	def _get_gcode_footer(self):
 		if(self.options['noheaders']):
-			return "; end of job\nM05\nM100P0 ;mrbeam_compressor off\n"
+			if _mrbeam_plugin_implementation.compressor_handler.has_compressor():
+				return "; end of job\nM05\nM100P0 ;mrbeam_compressor off\n"
+			else:
+				return "; end of job\nM05\n"
 		else:
 			return machine_settings.gcode_footer
 

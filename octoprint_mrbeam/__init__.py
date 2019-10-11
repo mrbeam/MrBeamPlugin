@@ -328,6 +328,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				gantryUsage=self.usage_handler.get_gantry_usage(),
 			),
 			tour_auto_launch = self._settings.get(['tour_auto_launch']),
+			hw_features=dict(
+				has_compressor=self.compressor_handler.has_compressor(),
+			)
 		)
 
 	def on_settings_save(self, data):
