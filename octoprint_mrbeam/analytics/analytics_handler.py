@@ -43,7 +43,6 @@ class AnalyticsHandler(object):
 		self._timer_handler = TimerHandler(plugin)
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.analyticshandler")
 
-		self._upload_in_progress = False
 		self._analytics_lock = Lock()
 
 		# Mr Beam specific data
@@ -565,6 +564,7 @@ class AnalyticsHandler(object):
 				ak.Header.VERSION_MRBEAM_PLUGIN: self._plugin_version,
 				ak.Header.SOFTWARE_TIER: self._settings.get(["dev", "software_tier"]),
 				ak.Header.DATA: data,
+				ak.Header.UPTIME: self._get_uptime(),
 			}
 
 			if event_type == ak.EventType.JOB:
@@ -629,7 +629,7 @@ class AnalyticsHandler(object):
 		self._add_job_event(ak.Job.Event.Summary.INTENSITY, payload=intensity_summary)
 		self._add_job_event(ak.Job.Event.Summary.LASERTEMP, payload=lasertemp_summary)
 
-	# -------- JOB HELPER METHODS --------------------------------------------------------------------------------------
+	# -------- HELPER METHODS --------------------------------------------------------------------------------------
 	def _cleanup_job(self):
 		self._current_job_id = None
 		self._current_dust_collector = None
@@ -642,6 +642,14 @@ class AnalyticsHandler(object):
 		self._cleanup_job()
 		self._current_job_id = 'j_{}_{}'.format(self._snr, time.time())
 		self._add_job_event(ak.Job.Event.LASERJOB_STARTED)
+
+	# http://planzero.org/blog/2012/01/26/system_uptime_in_python,_a_better_way
+	@staticmethod
+	def _get_uptime():
+		with open('/proc/uptime', 'r') as f:
+			uptime = float(f.readline().split()[0])
+
+		return uptime
 
 	# -------- WRITER THREAD (queue --> analytics file) ----------------------------------------------------------------
 	def _write_queue_to_analytics_file(self):
@@ -669,12 +677,6 @@ class AnalyticsHandler(object):
 
 	def _init_json_file(self):
 		open(self.analytics_file, 'w+').close()
-
-	def pause_analytics_writer(self):
-		self._upload_in_progress = True
-
-	def resume_analytics_writer(self):
-		self._upload_in_progress = False
 
 	# -------- INITIAL ANALYTICS PROCEDURE -----------------------------------------------------------------------------
 	def initial_analytics_procedure(self, consent):
