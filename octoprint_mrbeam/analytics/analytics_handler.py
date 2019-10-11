@@ -644,12 +644,15 @@ class AnalyticsHandler(object):
 		self._add_job_event(ak.Job.Event.LASERJOB_STARTED)
 
 	# http://planzero.org/blog/2012/01/26/system_uptime_in_python,_a_better_way
-	@staticmethod
-	def _get_uptime():
-		with open('/proc/uptime', 'r') as f:
-			uptime = float(f.readline().split()[0])
+	def _get_uptime(self):
+		try:
+			with open('/proc/uptime', 'r') as f:
+				uptime = float(f.readline().split()[0])
+			return uptime
 
-		return uptime
+		except Exception as e:
+			self._logger.exception('Exception during _get_uptime: {}'.format(e), analytics=False)
+			return None
 
 	# -------- WRITER THREAD (queue --> analytics file) ----------------------------------------------------------------
 	def _write_queue_to_analytics_file(self):
