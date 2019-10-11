@@ -7,26 +7,27 @@ $(function () {
         window.mrbeam.viewModels['materialSettingsViewModel'] = self;
         self.default_laser_type = 'MrBeamII-1.0';
 
+        self.materialSettingsDatabase = {};
+
         self.loadMaterialSettings = function (callback) {
-            // TODO fuse datatsets (descriptions and settings)
+            console.log("Loading standard materials");
             OctoPrint.simpleApiCommand("mrbeam", "material_settings", {})
                 .done(function (response) {
                     self.materialImportedSettings = response;
                     for (let materialKey in self.materialSettingsDatabase) {
                         if (materialKey in self.materialImportedSettings) {
-                            // console.log("imported mat:", self.materialImportedSettings[materialKey]);
                             self.materialSettingsDatabase[materialKey].colors = self.materialImportedSettings[materialKey].colors;
                         } else {
                             delete self.materialSettingsDatabase[materialKey]
                         }
                     }
-                    // console.log("loadMaterials callback: ", self.materialSettingsDatabase);
-                    callback(self.materialSettingsDatabase);
+                    if (callback) {
+                        callback(self.materialSettingsDatabase);
+                    }
                 })
                 .fail(function (response) {
                     console.error("Unable to parse the laser settings correctly: ", response);
                 });
-            return self.materialSettingsDatabase;
         };
 
         self.materialSettingsDatabase = {

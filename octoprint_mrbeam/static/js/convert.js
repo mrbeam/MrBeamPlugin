@@ -53,7 +53,7 @@ $(function(){
         self.dontRemindMeAgainChecked = ko.observable(false);
 
 		// material menu
-		self.material_settings2 = {}; // loaded on onAllBound()
+		self.material_settings2 = {};
 
 		self.engrave_only_thickness = {thicknessMM: -1, cut_i:'', cut_f:'', cut_p: 1, cut_pierce: 0, cut_compressor:3};
 		self.no_engraving = {eng_i:['',''], eng_f:['',''], eng_pierce: 0, eng_compressor: 3, dithering: false };
@@ -92,6 +92,12 @@ $(function(){
 			if(mat !== null)
 			return mat === null ? '' : mat.img;
 		 });
+
+        self.load_standard_materials = function(){
+            self.materialSettings.loadMaterialSettings(function(res){
+                self.material_settings2 = res;
+            })
+        };
 
         self.load_custom_materials = function(){
 			// fill custom materials
@@ -420,13 +426,7 @@ $(function(){
 				}
 
 			}
-			// filter predefined materials
-            // console.log("KO computed materials : ", self.material_settings2);
 
-		    self.materialSettings.loadMaterialSettings(function (result) {
-		        self.material_settings2 = result;
-                // console.log(result)
-            });
 			for(var materialKey in self.material_settings2){
 				var m = self.material_settings2[materialKey];
 				if(m !== null){
@@ -1359,6 +1359,7 @@ $(function(){
         };
 
 		self.onUserLoggedIn = function(user){
+			self.load_standard_materials();
 			self.load_custom_materials();
         };
 
