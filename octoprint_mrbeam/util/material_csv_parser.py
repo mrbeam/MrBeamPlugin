@@ -1,8 +1,8 @@
 import sys, os, csv, json, collections
 
 MRBEAM = 'Mr Beam II'
-DREAMCUT = 'Dreamcut'
-READY = 'Dreamcut Ready'
+MRB_DREAMCUT = 'MrB II Dreamcut'
+MRB_READY = 'MrB II Dreamcut Ready'
 # Deep merging of dictionaries
 # inspired from in dict_merge in iobeam_protocol
 def dict_merge(dct, merge_dct):
@@ -40,9 +40,12 @@ def parse_csv(path = None, laserhead=MRBEAM):
         prev_vals = None
         cur_color_has_engraving_setting = False
         cur_color_has_cutting_setting = False
-        for row in reader:
+        for i, row in enumerate(reader):
+            for j in range(row):
+                if type(row[j]) is str:
+                    row[j] = row[j].strip()
             mrbeamversion, material, colorcode, thickness_or_engrave, intensity, speed, passes, compressor_lvl, pierce_time, dithering = row[:10]
-            if not mrbeamversion in [MRBEAM, DREAMCUT, READY]:
+            if not mrbeamversion in [MRBEAM, MRB_DREAMCUT, MRB_READY]:
                 # Either a comment line, unused setting or experimental settings
                 continue
             if colorcode and colorcode[0] == '#':
@@ -68,10 +71,12 @@ def parse_csv(path = None, laserhead=MRBEAM):
                 settingname = 'cut'
                 settings = [{'thicknessMM': thickness, 'cut_i': int(intensity), 'cut_f': int(speed), 'cut_p': int(passes), 'cut_compressor_lvl': int(compressor_lvl)}]
             except ValueError:
+                if not thickness_or_engrave.lower().__contains__('engrav'):
+                    raise Exception("Did not understand if line {} is an engraving or cutting job".format(i))
                 dithering = True if dithering == 'yes' else False
                 pierce_time = pierce_time or 0
                 settings = {'engrave_compressor_lvl': int(compressor_lvl),
-							'eng_pierce': int(pierce_time),
+                            'eng_pierce': int(pierce_time),
                             'dithering': dithering}
                 settingname = 'engrave'
                 i_split = intensity.split('-')
@@ -85,14 +90,14 @@ def parse_csv(path = None, laserhead=MRBEAM):
                 elif len(s_split) == 1:
                     settings.update({'eng_f': [0, int(s_split[0])]})
                 # Can be error prone
-            colorcode = colorcode # TODO get colorcode from colorname ?
+            colorname = colorcode # TODO get colorcode from colorname ?
             dict_merge(dictionary, {mrbeamversion: {material: {'name': material,
                                                                # 'img': "", # TODO
                                                                # 'description': "", # TODO
                                                                # 'hints': "", # TODO
                                                                # 'safety_notes': "", # TODO
                                                                # 'laser_type': mrbeamversion,
-                                                               'colors': { colorcode: {'name': colorcode,
+                                                               'colors': { colorcode: {'name': colorname,
                                                                                        settingname: settings}}}}})
             prev_vals = [mrbeamversion, material, colorcode, thickness_or_engrave, intensity, speed, passes, compressor_lvl, pierce_time, dithering] # update current row values for next loop
     return dictionary[laserhead]
