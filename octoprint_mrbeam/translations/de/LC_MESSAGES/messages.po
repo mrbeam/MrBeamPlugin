@@ -8,14 +8,14 @@ msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2019-09-12 17:40+0200\n"
-"PO-Revision-Date: 2019-09-12 17:42+0200\n"
+"PO-Revision-Date: 2019-10-10 19:58+0200\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 2.2.3\n"
+"X-Generator: Poedit 2.2.4\n"
 
 #: octoprint_mrbeam/iobeam/iobeam_handler.py:500
 #: octoprint_mrbeam/iobeam/iobeam_handler.py:787
@@ -1240,7 +1240,7 @@ msgstr "Erledigt"
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:26
 msgid "Learn how to save<br />custom material settings..."
 msgstr ""
-"Erfahre, wie Du <br />Deine benutzerdefinierte Materialeinstellungen "
+"Erfahre, wie Du Deine benutzerdefinierten<br />Materialeinstellungen "
 "speichern kannst....."
 
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:36
@@ -2447,7 +2447,7 @@ msgstr "Nur GCode-Dateien anzeigen"
 
 #: octoprint_mrbeam/templates/tab_designlib.jinja2:26
 msgid "Only show recent jobs"
-msgstr "Nur Design-Dateien anzeigen"
+msgstr "Nur letzte Jobs anzeigen"
 
 #: octoprint_mrbeam/templates/tab_designlib.jinja2:29
 msgid "Free"
