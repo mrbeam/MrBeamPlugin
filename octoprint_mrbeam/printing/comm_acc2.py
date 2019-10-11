@@ -378,6 +378,8 @@ class MachineCom(object):
 				else:
 					self._logger.error("_sendCommand() command is of unexpected type: %s", type(tmp))
 
+			self._logger.info("ANDYTEST ____ WORK  %s", self._cmd)
+
 			if self._cmd.get('cmd', None) == self.COMMAND_FLUSH or self._cmd.get('flush', False):
 				# FLUSH waits until we're no longer waiting for any OKs from GRBL
 				if self._flush_command_ts <=0:
@@ -396,13 +398,14 @@ class MachineCom(object):
 			if 'compressor' in self._cmd:
 				self._set_compressor(self._cmd.pop('compressor'))
 			if 'cmd' in self._cmd:
-				my_cmd = self._cmd.pop('cmd', None)  # to avoid race conditions
+				my_cmd = self._cmd.get('cmd', None)  # to avoid race conditions
 				if my_cmd is None:
-					pass
+					self._cmd.pop('cmd', None)
 				elif not(len(my_cmd) +1 < self.GRBL_LINE_BUFFER_SIZE):
 					msg = "Error: Command too long. max: {}, cmd length: {}, cmd: {}... (shortened)".format(self.GRBL_LINE_BUFFER_SIZE - 1, len(my_cmd), my_cmd[0:self.GRBL_LINE_BUFFER_SIZE - 1])
 					self._logger.error(msg, analytics=True)
 					self._handle_alarm_message("Command too long to send to GRBL.", code=self.ALARM_CODE_COMMAND_TOO_LONG)
+					self._cmd.pop('cmd', None)
 				elif my_cmd and self._acc_line_buffer.get_char_len() + len(my_cmd) + 1 < self.GRBL_WORKING_RX_BUFFER_SIZE:
 					# In recovery: if acc_line_buffer is marked dirty we must check if it is set to clean again.
 					if self._acc_line_buffer.is_dirty() and self.COMMAND_RESET_ALARM in my_cmd:
@@ -424,6 +427,7 @@ class MachineCom(object):
 					try:
 						self._serial.write(my_cmd + '\n')
 						self._process_command_phase("sent", my_cmd)
+						self._cmd.pop('cmd', None)
 					except serial.SerialException:
 						self._log("Unexpected error while writing serial port: %s" % (get_exception_string()))
 						self._errorValue = get_exception_string()
