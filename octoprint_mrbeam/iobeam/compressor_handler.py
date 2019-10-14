@@ -21,6 +21,9 @@ def compressor_handler(plugin):
 
 class CompressorHandler(object):
 
+	COMPRESSOR_MIN = 0
+	COMPRESSOR_MAX = 100
+
 	def __init__(self, plugin):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.compressorhandler")
 		self._plugin = plugin
@@ -56,6 +59,10 @@ class CompressorHandler(object):
 
 	def set_compressor(self, value, set_nominal_value=True):
 		self._logger.info("ANDYTEST setting compressor from %s to %s (set_nominal_value: %s)", self._compressor_nominal_state, value, set_nominal_value)
+		if value > self.COMPRESSOR_MAX:
+			value = self.COMPRESSOR_MAX
+		if value < self.COMPRESSOR_MIN:
+			value = self.COMPRESSOR_MIN
 		if set_nominal_value:
 			self._compressor_nominal_state = value
 		self._iobeam.send_compressor_command(value)

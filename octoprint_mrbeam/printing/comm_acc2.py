@@ -1524,8 +1524,6 @@ class MachineCom(object):
 		if val is None:
 			return {}
 		else:
-			if val > 100: val = 100
-			if val < 0: val = 0
 			nu_cmd = {'compressor': val,
 			          'flush': True,
 			          'cmd': None}
