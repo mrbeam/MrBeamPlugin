@@ -6,7 +6,7 @@
 
 def gcode_before_path_color(color = '#000000', intensity = 0, compressor = 100):
 	if compressor is not None:
-		return "\nM100P{p} ;mrbeam_compressor: {p} - gcode_before_path_color\nM3S0\nG4P0\nM03 S{i} ; color: {c}".format(p=compressor, i=intensity, c=color)
+		return "\nM3S0\nM100P{p} ;mrbeam_compressor: {p} - gcode_before_path_color\nG4P0\nM03 S{i} ; color: {c}".format(p=compressor, i=intensity, c=color)
 	else:
 		return ";gcode_before_path_color\nM3S0\nG4P0\nM03 S{i} ; color: {c}".format(i=intensity, c=color)
 
