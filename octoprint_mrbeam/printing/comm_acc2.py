@@ -479,6 +479,25 @@ class MachineCom(object):
 			self._sendCommand(self.COMMAND_RESET)
 			self._real_time_commands['soft_reset']=False
 
+	def _handle_rt_command(self, cmd):
+		"""
+		If cmd is a RT command, the RT command is sent and True is returned, False otherwise.
+		:param cmd:
+		:return:
+		"""
+		cmd = cmd.strip()
+		if cmd == self.COMMAND_STATUS:
+			self._sendCommand(self.COMMAND_STATUS)
+		elif cmd == self.COMMAND_HOLD:
+			self._sendCommand(self.COMMAND_HOLD)
+		elif cmd == self.COMMAND_RESUME:
+			self._sendCommand(self.COMMAND_RESUME)
+		elif cmd == self.COMMAND_RESET:
+			self._sendCommand(self.COMMAND_RESET)
+		else:
+			return False
+		return True
+
 	def _openSerial(self):
 		self._grbl_version = None
 		self._grbl_settings = dict()
@@ -1570,6 +1589,8 @@ class MachineCom(object):
 	def sendCommand(self, cmd, cmd_type=None, processed=False):
 		if cmd is not None and cmd.strip().startswith('/'):
 			self._handle_user_command(cmd)
+		elif self._handle_rt_command(cmd):
+			pass
 		else:
 			if processed:
 				cmd_obj = {'cmd': cmd}
