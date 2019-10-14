@@ -1323,16 +1323,16 @@ $(function(){
 		    if (self.hasCompressor()) {
                 switch (rangeValue) {
                     case "0":
-                        backendValue = 10;
+                        backendValue = 20;
                         break;
                     case "1":
-                        backendValue = 25;
-                        break;
-                    case "2":
                         backendValue = 50;
                         break;
-                    case "3":
+                    case "2":
                         backendValue = 100;
+                        break;
+                    case "3":
+                        backendValue = 200;
                         break;
                 }
             }
