@@ -2010,18 +2010,16 @@ class MachineCom(object):
 
 	def _set_compressor(self, value):
 		try:
-			if _mrbeam_plugin_implementation.compressor_handler.has_compressor():
-				_mrbeam_plugin_implementation.compressor_handler.set_compressor(value)
+			_mrbeam_plugin_implementation.compressor_handler.set_compressor(value)
 		except:
 			self._logger.exception("Exception in _set_air_pressure() ")
 
 	def _set_compressor_pause(self, paused):
 		try:
-			if _mrbeam_plugin_implementation.compressor_handler.has_compressor():
-				if paused:
-					_mrbeam_plugin_implementation.compressor_handler.set_compressor_pause()
-				else:
-					_mrbeam_plugin_implementation.compressor_handler.set_compressor_pause()
+			if paused:
+				_mrbeam_plugin_implementation.compressor_handler.set_compressor_pause()
+			else:
+				_mrbeam_plugin_implementation.compressor_handler.set_compressor_pause()
 		except:
 			self._logger.exception("Exception in _set_air_pressure() ")
 

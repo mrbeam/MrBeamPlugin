@@ -55,6 +55,8 @@ class IoBeamValueEvents(object):
 	FAN_OFF_RESPONSE =    "iobeam.fan.off.response"
 	FAN_AUTO_RESPONSE =   "iobeam.fan.auto.response"
 	FAN_FACTOR_RESPONSE = "iobeam.fan.factor.response"
+	COMPRESSOR_STATIC   = "iobeam.compressor.static"
+	COMPRESSOR_DYNAMIC  = "iobeam.compressor.dynamic"
 
 
 class IoBeamHandler(object):
@@ -297,7 +299,7 @@ class IoBeamHandler(object):
 		finally:
 			self._callbacks_lock.writer_release()
 
-	def _call_callback(self, _trigger_event, message, kwargs):
+	def _call_callback(self, _trigger_event, message, kwargs={}):
 		try:
 			self._callbacks_lock.reader_acquire()
 			if _trigger_event in self._callbacks:
@@ -535,20 +537,20 @@ class IoBeamHandler(object):
 		try:
 			if len(name) <= 0:
 				err = self._handle_invalid_dataset(name, dataset)
-			elif self.MESSAGE_ERROR in dataset:
-				self._logger.debug("Received %s dataset error: %s", name, dataset[self.MESSAGE_ERROR])
-				err += 1
-			# elif len(dataset) == 0:
-			# 	self._logger.debug("Received empty dataset %s", name)
+			# elif self.MESSAGE_ERROR in dataset:
+			# 	self._logger.debug("Received %s dataset error: %s", name, dataset[self.MESSAGE_ERROR])
+			# 	err += 1
+			# # elif len(dataset) == 0:
+			# # 	self._logger.debug("Received empty dataset %s", name)
 			else:
 				if name == self.DATASET_FAN_DYNAMIC:
 					err = self._handle_fan_dynamic(dataset)
 				elif name == self.DATASET_FAN_STATIC:
 					err = self._handle_fan_static(dataset)
 				elif name == self.DATASET_COMPRESSOR_STATIC:
-					self._handle_compressor_static(dataset)
+					err = self._handle_compressor_static(dataset)
 				elif name == self.DATASET_COMPRESSOR_DYNAMIC:
-					self._handle_compressor_dynamic(dataset)
+					err = self._handle_compressor_dynamic(dataset)
 				elif name == self.DATASET_LASER:
 					err = self._handle_laser(dataset)
 				elif name == self.DATASET_LASERHEAD:
@@ -642,7 +644,8 @@ class IoBeamHandler(object):
 		return 0
 
 	def _handle_compressor_dynamic(self, dataset):
-		pass
+		self._call_callback(IoBeamValueEvents.COMPRESSOR_DYNAMIC, dataset)
+		return 0
 
 	def _handle_compressor_static(self, dataset):
 		"""
@@ -650,7 +653,8 @@ class IoBeamHandler(object):
 		:param dataset:
 		:return: error count
 		"""
-		self._logger.info("compressor_static: %s", dataset)
+		# self._logger.info("compressor_static: %s", dataset)
+		self._call_callback(IoBeamValueEvents.COMPRESSOR_STATIC, dataset)
 		return 0
 
 	def _handle_i2c_test(self, dataset):

@@ -43,7 +43,8 @@ class CompressorHandler(object):
 		self._subscribe()
 
 	def _subscribe(self):
-		# self._iobeam.subscribe(IoBeamValueEvents.LASER_TEMP, self.handle_temp)
+		self._iobeam.subscribe(IoBeamValueEvents.COMPRESSOR_STATIC, self._handle_static_data)
+		self._iobeam.subscribe(IoBeamValueEvents.COMPRESSOR_DYNAMIC, self._handle_dynamic_data)
 
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self.set_compressor_off)
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self.set_compressor_off)
@@ -54,18 +55,18 @@ class CompressorHandler(object):
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_RESUMED, self.set_compressor_unpause)
 
 	def has_compressor(self):
-		#TODO ANDYTEST
-		return True
+		return self._compressor_present
 
 	def set_compressor(self, value, set_nominal_value=True):
-		self._logger.info("ANDYTEST setting compressor from %s to %s (set_nominal_value: %s)", self._compressor_nominal_state, value, set_nominal_value)
-		if value > self.COMPRESSOR_MAX:
-			value = self.COMPRESSOR_MAX
-		if value < self.COMPRESSOR_MIN:
-			value = self.COMPRESSOR_MIN
-		if set_nominal_value:
-			self._compressor_nominal_state = value
-		self._iobeam.send_compressor_command(value)
+		if self.has_compressor():
+			self._logger.info("ANDYTEST setting compressor from %s to %s (set_nominal_value: %s)", self._compressor_nominal_state, value, set_nominal_value)
+			if value > self.COMPRESSOR_MAX:
+				value = self.COMPRESSOR_MAX
+			if value < self.COMPRESSOR_MIN:
+				value = self.COMPRESSOR_MIN
+			if set_nominal_value:
+				self._compressor_nominal_state = value
+			self._iobeam.send_compressor_command(value)
 
 	def set_compressor_off(self, *args, **kwargs):
 		self.set_compressor(0)
@@ -76,7 +77,16 @@ class CompressorHandler(object):
 	def set_compressor_unpause(self, *args, **kwargs):
 		self.set_compressor(self._compressor_nominal_state)
 
+	def _handle_static_data(self, payload):
+		dataset = payload.get('message', {})
+		if 'version' in dataset:
+			self._compressor_present = True
+			self._logger.info("Enabling compressor. compressor_static: %s", dataset)
 
+	def _handle_dynamic_data(self, payload):
+		dataset = payload.get('message', {})
+		if len(dataset) > 1:
+			self._logger.info("ANDYTEST. compressor_dynamic: %s", dataset)
 
 
 
