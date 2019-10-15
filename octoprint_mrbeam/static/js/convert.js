@@ -777,7 +777,8 @@ $(function(){
                             pierce_time: self.engravingPiercetime(),
                             passes: 1,
                             engrave: true,
-
+                            // todo iratxe take the eng_compressor value
+                            cut_compressor: self.mapCompressorValue(self.engravingCompressor())
                         });
 					};
 				} else {
