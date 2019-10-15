@@ -378,8 +378,6 @@ class MachineCom(object):
 				else:
 					self._logger.error("_sendCommand() command is of unexpected type: %s", type(tmp))
 
-			self._logger.info("ANDYTEST ____ WORK  %s", self._cmd)
-
 			if self._cmd.get('cmd', None) == self.COMMAND_FLUSH or self._cmd.get('flush', False):
 				# FLUSH waits until we're no longer waiting for any OKs from GRBL
 				if self._flush_command_ts <=0:
