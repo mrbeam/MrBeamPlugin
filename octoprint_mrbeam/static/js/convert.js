@@ -777,7 +777,7 @@ $(function(){
                             pierce_time: self.engravingPiercetime(),
                             passes: 1,
                             engrave: true,
-
+                            cut_compressor: self.mapCompressorValue(self.engravingCompressor())
                         });
 					};
 				} else {
