@@ -1209,7 +1209,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			cli_event=["event"],
 			custom_materials=[],
 			analytics_init=[], # user's analytics choice froom welcome wizard
-			analytics_data=['event', 'payload'], # analytics data from the frontend
 			analytics_upload=[], # triggers an upload of analytics files
 			take_undistorted_picture=[],  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
 			focus_reminder=[],
@@ -1247,8 +1246,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return self.cli_event(data)
 		elif command == "analytics_init":
 			return self.analytics_init(data)
-		elif command == "analytics_data":
-			return self.analytics_data(data)
 		elif command == "analytics_upload":
 			AnalyticsFileUploader.upload_now(self)
 			return NO_CONTENT
@@ -1282,10 +1279,17 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if 'analyticsInitialConsent' in data:
 			self.analytics_handler.initial_analytics_procedure(data['analyticsInitialConsent'])
 
-	def analytics_data(self, data):
-		event = data.get('event')
-		payload = data.get('payload', dict())
-		self.analytics_handler.add_frontend_event(event, payload)
+	@octoprint.plugin.BlueprintPlugin.route("/analytics", methods=["POST"])
+	def analytics_data(self):
+		try:
+			data = request.json
+			event = data.get('event')
+			payload = data.get('payload', dict())
+			self.analytics_handler.add_frontend_event(event, payload)
+
+		except:
+			return make_response("Unable to interprete request", 400)
+
 		return NO_CONTENT
 
 	def focus_reminder(self, data):
