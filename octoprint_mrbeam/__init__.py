@@ -33,6 +33,7 @@ from octoprint_mrbeam.iobeam.dust_manager import dustManager
 from octoprint_mrbeam.iobeam.laserhead_handler import laserheadHandler
 from octoprint_mrbeam.analytics.analytics_handler import analyticsHandler
 from octoprint_mrbeam.analytics.usage_handler import usageHandler
+from octoprint_mrbeam.analytics.review_handler import reviewHandler
 from octoprint_mrbeam.led_events import LedEventListener
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.mrb_logger import init_mrb_logger, mrb_logger
@@ -46,7 +47,7 @@ from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.cli import get_cli_commands
 from .materials import materials
 from octoprint_mrbeam.gcodegenerator.jobtimeestimation import JobTimeEstimation
-from .analytics.uploader import FileUploader
+from .analytics.uploader import AnalyticsFileUploader
 from octoprint.filemanager.destinations import FileDestinations
 
 
@@ -114,6 +115,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._stored_frontend_notifications = []
 		self._device_series = self._get_val_from_device_info('device_series')  # '2C'
 		self.called_hosts = []
+		self._current_user = None
 
 		self._boot_grace_period_counter = 0
 		self._start_boot_grace_period_thread()
@@ -158,6 +160,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._logger.exception("Exception while getting NetconnectdPlugin pluginInfo")
 
 		self.analytics_handler = analyticsHandler(self)
+		self.review_handler = reviewHandler(self)
 		self.onebutton_handler = oneButtonHandler(self)
 		self.interlock_handler = interLockHandler(self)
 		self.lid_handler = lidHandler(self)
@@ -419,6 +422,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/material_settings.js",
 				"js/analytics.js",
 				"js/maintenance.js",
+				"js/review.js",
+				"js/util.js",
 			    ],
 			css=["css/mrbeam.css",
 			     "css/svgtogcode.css",
@@ -761,9 +766,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	# reads a value from usersettings mrbeam category
 	def getUserSetting(self, username, key, default):
-		if not isinstance(key, list):
-			key = [key]
-		result = self._user_manager.getUserSetting(username, [self.USER_SETTINGS_KEY_MRBEAM] + key)
+		result = None
+		if username:
+			if not isinstance(key, list):
+				key = [key]
+			result = self._user_manager.getUserSetting(username, [self.USER_SETTINGS_KEY_MRBEAM] + key)
 
 		if result is None:
 			result = default
@@ -1206,6 +1213,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			analytics_upload=[], # triggers an upload of analytics files
 			take_undistorted_picture=[],  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
 			focus_reminder=[],
+			review_data=[],
 			reset_prefilter_usage=[],
 			reset_carbon_filter_usage=[],
 			reset_laser_head_usage=[],
@@ -1242,10 +1250,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		elif command == "analytics_data":
 			return self.analytics_data(data)
 		elif command == "analytics_upload":
-			FileUploader.upload_now(self, delay=0.0)
+			AnalyticsFileUploader.upload_now(self)
 			return NO_CONTENT
 		elif command == "focus_reminder":
 			return self.focus_reminder(data)
+		elif command == "review_data":
+			return self.review_handler.save_review_data(data)
 		elif command == "reset_prefilter_usage":
 			return self.usage_handler.reset_prefilter_usage()
 		elif command == "reset_carbon_filter_usage":
@@ -1255,6 +1265,16 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		elif command == "reset_gantry_usage":
 			return self.usage_handler.reset_gantry_usage()
 		return NO_CONTENT
+
+	def get_user_name(self):
+		from flask.ext.login import current_user
+
+		# Looks like current_user sometimes does not work, so we save it and the next time if there's no information
+		# we just use the last saved user.
+		if current_user and not current_user.is_anonymous():
+			self._current_user = current_user.get_name()
+
+		return self._current_user
 
 	def analytics_init(self, data):
 		if 'analyticsInitialConsent' in data:

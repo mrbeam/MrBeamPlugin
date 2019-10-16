@@ -95,6 +95,9 @@ class UsageHandler(object):
 			self._set_time(payload['time'])
 
 	def event_stop(self, event, payload):
+		if event == OctoPrintEvents.PRINT_DONE:
+			self._usage_data['succ_jobs']['count'] = self._usage_data['succ_jobs']['count'] + 1
+
 		if self.start_time_total >= 0:
 			self._set_time(payload['time'])
 			self.start_time_total = -1
@@ -299,12 +302,21 @@ class UsageHandler(object):
 			self._logger.info("Initializing gantry usage time: {usage}".format(
 				usage=self._usage_data['gantry']['job_time']))
 
+		if 'succ_jobs' not in self._usage_data:
+			self._usage_data['succ_jobs'] = {}
+			self._usage_data['succ_jobs']['count'] = 0
+			self._usage_data['succ_jobs']['complete'] = self._plugin.isFirstRun()
+
 		self._write_usage_data()
 
 	def _get_usage_data_template(self):
 		return {
 			'total': {
 				'job_time': 0.0,
+				'complete': self._plugin.isFirstRun(),
+			},
+			'succ_jobs': {
+				'count': 0,
 				'complete': self._plugin.isFirstRun(),
 			},
 			'prefilter': {
