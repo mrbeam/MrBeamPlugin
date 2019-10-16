@@ -32,6 +32,7 @@ class CompressorHandler(object):
 		self._iobeam = None
 		self._analytics_handler = None
 
+		self._compressor_current_state = -1
 		self._compressor_nominal_state = 0
 		self._compressor_present = False
 
@@ -57,9 +58,16 @@ class CompressorHandler(object):
 	def has_compressor(self):
 		return self._compressor_present
 
+	def get_current_state(self):
+		if self.has_compressor():
+			return self._compressor_current_state
+		else:
+			return None
+
 	def set_compressor(self, value, set_nominal_value=True):
 		if self.has_compressor():
-			self._logger.info("ANDYTEST setting compressor from %s to %s (set_nominal_value: %s)", self._compressor_nominal_state, value, set_nominal_value)
+			self._logger.info("Compressor set to %s (nominal state before: %s, real state: %s)",
+			                  value, self._compressor_nominal_state, self._compressor_current_state)
 			if value > self.COMPRESSOR_MAX:
 				value = self.COMPRESSOR_MAX
 			if value < self.COMPRESSOR_MIN:
@@ -80,13 +88,21 @@ class CompressorHandler(object):
 	def _handle_static_data(self, payload):
 		dataset = payload.get('message', {})
 		if 'version' in dataset:
+			# TODO IRATXE: good point to get analytics from compressor
 			self._compressor_present = True
 			self._logger.info("Enabling compressor. compressor_static: %s", dataset)
+		else:
+			self._logger.warn("Received compressor_static dataset without version information: compressor_static: %s", dataset)
 
 	def _handle_dynamic_data(self, payload):
 		dataset = payload.get('message', {})
 		if len(dataset) > 1:
-			self._logger.info("ANDYTEST. compressor_dynamic: %s", dataset)
+			# TODO IRATXE: good point to get analytics from compressor
+			if 'state' in dataset:
+				try:
+					self._compressor_current_state = int(dataset['state'])
+				except:
+					self._logger.error("Cant convert compressor state to int from compressor_dynamic: %s", dataset)
 
 
 
