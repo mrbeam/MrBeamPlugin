@@ -777,10 +777,12 @@ class Converter():
 
 	def _get_gcode_footer(self):
 		if(self.options['noheaders']):
+			gcode = []
+			gcode.append("; end of job")
+			gcode.append("M05")
 			if _mrbeam_plugin_implementation.compressor_handler.has_compressor():
-				return "; end of job\nM05\nM100P0 ;mrbeam_compressor off\n"
-			else:
-				return "; end of job\nM05\n"
+				gcode.append("M100P0 ; mrbeam_compressor off")
+			return "\n".join(gcode)
 		else:
 			return machine_settings.gcode_footer
 

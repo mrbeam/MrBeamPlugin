@@ -342,7 +342,8 @@ class ImageProcessor():
 
 		# pre-condition: set mrbeam_compressor, set feedrate, enable laser with 0 intensity.
 		if self.compressor is not None:
-			self._append_gcode('M100P{p} ;mrbeam_compressor:{p}'.format(p=self.compressor)) # set air_pressure
+			self._append_gcode('M100P{p} ; mrbeam_compressor:{p}'.format(p=self.compressor)) # set air_pressure
+			self._append_gcode('G4P0.2   ; mrbeam_compressor spin up time')
 		self._append_gcode('F{}'.format(self.feedrate_white)) # set an initial feedrate
 		self.gc_ctx.f = self.feedrate_white #TODO hack. set with line above
 		#self._append_gcode('M3S0') # enable laser
@@ -397,8 +398,9 @@ class ImageProcessor():
 						self._append_gcode("; ignoring line y={}, out of working area.".format(y))
 
 
-			self._append_gcode(";EndPart")
+			self._append_gcode("; EndPart")
 			self._append_gcode("M3S0")
+			self._append_gcode("")
 			self.gc_ctx.s = 0
 			self.gc_ctx.laser_active = True
 

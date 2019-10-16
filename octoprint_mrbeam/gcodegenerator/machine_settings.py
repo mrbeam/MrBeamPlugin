@@ -5,10 +5,18 @@
 #	return "\nM3S0\nG4P0\nM03 S"+str(intensity)
 
 def gcode_before_path_color(color = '#000000', intensity = 0, compressor = 100):
+	gcode = []
 	if compressor is not None:
-		return "\nM3S0\nM100P{p} ;mrbeam_compressor: {p} - gcode_before_path_color\nG4P0\nM03 S{i} ; color: {c}".format(p=compressor, i=intensity, c=color)
+		gcode.append("M3S0")
+		gcode.append("M100P{p} ; mrbeam_compressor: {p} - gcode_before_path_color".format(p=compressor))
+		gcode.append("G4P0.2")
+		gcode.append("M03 S{i} ; color: {c}".format(i=intensity, c=color))
 	else:
-		return ";gcode_before_path_color\nM3S0\nG4P0\nM03 S{i} ; color: {c}".format(i=intensity, c=color)
+		gcode.append("; gcode_before_path_color")
+		gcode.append("M3S0")
+		gcode.append("G4P0")
+		gcode.append("M03 S{i} ; color: {c}".format(i=intensity, c=color))
+	return "\n".join(gcode)
 
 def gcode_after_path():
 	return "M05"
@@ -22,6 +30,7 @@ M3S0
 G4P0.5
 M5
 ; end speedup cooling fan
+
 """
 
 gcode_header = """
