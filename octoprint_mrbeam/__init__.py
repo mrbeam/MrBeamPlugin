@@ -1287,7 +1287,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			payload = data.get('payload', dict())
 			self.analytics_handler.add_frontend_event(event, payload)
 
-		except:
+		except Exception as e:
+			self._logger.exception('Could not process frontend analytics data: {e} - Data = {data}'.format(e=e, data=data))
 			return make_response("Unable to interprete request", 400)
 
 		return NO_CONTENT
