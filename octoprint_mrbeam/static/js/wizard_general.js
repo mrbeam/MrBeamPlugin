@@ -56,7 +56,7 @@ $(function() {
             }
         };
 
-        // If after finishing the welcome wizard the UI is refreshed, CONFIG_FIRST_RUN will be true again as it was cached like that.
+        // If after finishing the welcome wizard the UI is refreshed, CONFIG_FIRST_RUN might be true again as it was cached like that.
         // For that reason we check with the backend to see if it is really the first run.
         self.onBeforeBinding = function () {
             let backendIsFirstRun = self.settings.settings.plugins.mrbeam.isFirstRun();
