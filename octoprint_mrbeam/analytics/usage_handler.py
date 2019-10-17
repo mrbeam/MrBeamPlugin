@@ -112,8 +112,8 @@ class UsageHandler(object):
 			self._usage_data['total']['job_time'] = self.start_time_total + job_duration
 			self._usage_data['laser_head'][self._laser_head_serial]['job_time'] = self.start_time_laser_head + job_duration
 			self._usage_data['prefilter']['job_time'] = self.start_time_prefilter + job_duration
-			self._usage_data['carbon_filter']['job_time'] = self.start_time_prefilter + job_duration
-			self._usage_data['gantry']['job_time'] = self.start_time_prefilter + job_duration
+			self._usage_data['carbon_filter']['job_time'] = self.start_time_carbon_filter + job_duration
+			self._usage_data['gantry']['job_time'] = self.start_time_gantry + job_duration
 			self._write_usage_data()
 
 	def reset_prefilter_usage(self):
