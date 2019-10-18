@@ -2380,10 +2380,6 @@ input[type="radio"]{
   height: calc(100vh - 180px);
 }
 
-.maintenance-table {
-  margin-bottom: 60px
-}
-
 .maintenance-table > tbody > tr > td {
   vertical-align: middle;
 }

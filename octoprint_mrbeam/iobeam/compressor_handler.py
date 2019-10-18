@@ -36,6 +36,8 @@ class CompressorHandler(object):
 		self._compressor_nominal_state = 0
 		self._compressor_present = False
 
+		self._last_dynamic_data = {}
+
 		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
 
 	def _on_mrbeam_plugin_initialized(self, event, payload):
@@ -88,7 +90,6 @@ class CompressorHandler(object):
 	def _handle_static_data(self, payload):
 		dataset = payload.get('message', {})
 		if 'version' in dataset:
-			# TODO IRATXE: good point to get analytics from compressor
 			self._compressor_present = True
 			self._logger.info("Enabling compressor. compressor_static: %s", dataset)
 		else:
@@ -97,12 +98,24 @@ class CompressorHandler(object):
 	def _handle_dynamic_data(self, payload):
 		dataset = payload.get('message', {})
 		if len(dataset) > 1:
-			# TODO IRATXE: good point to get analytics from compressor
+			self._last_dynamic_data = dataset
 			if 'state' in dataset:
 				try:
 					self._compressor_current_state = int(dataset['state'])
 				except:
 					self._logger.error("Cant convert compressor state to int from compressor_dynamic: %s", dataset)
+
+	def get_compressor_data(self):
+		data = dict(
+			voltage=self._last_dynamic_data.get('voltage', None),
+			current=self._last_dynamic_data.get('current', None),
+			rpm=self._last_dynamic_data.get('rpm_actual', None),
+			pressure=self._last_dynamic_data.get('press_actual', None),
+			state=self._compressor_nominal_state,
+			mode_name=self._last_dynamic_data.get('mode_name', None),
+		)
+
+		return data
 
 
 

@@ -22,6 +22,7 @@ $(function () {
         self.laserHeadUsage = ko.observable(0);
         self.gantryUsage = ko.observable(0);
 
+        self.isMrb2Dreamcut = ko.observable(false);
         self.componentToReset = ko.observable("");
         self.laserHeadSerial = ko.observable("");
 
@@ -76,6 +77,7 @@ $(function () {
             }
         });
 
+        // The settings are already loaded here, Gina confirmed.
         self.onBeforeBinding = function() {
             self.loadUsageValues()
         };
@@ -191,10 +193,17 @@ $(function () {
         };
 
         self.loadUsageValues = function() {
+            self.isMrb2Dreamcut(self.settings.settings.plugins.mrbeam.hw_features.is_mrb_2_dreamcut());
+
+            if (!self.isMrb2Dreamcut()) {
+                self.gantryUsage(self.settings.settings.plugins.mrbeam.usage.gantryUsage());
+            } else {
+                self.gantryUsage(0);
+            }
+
             self.prefilterUsage(self.settings.settings.plugins.mrbeam.usage.prefilterUsage());
             self.carbonFilterUsage(self.settings.settings.plugins.mrbeam.usage.carbonFilterUsage());
             self.laserHeadUsage(self.settings.settings.plugins.mrbeam.usage.laserHeadUsage());
-            self.gantryUsage(self.settings.settings.plugins.mrbeam.usage.gantryUsage());
             self.laserHeadSerial(self.settings.settings.plugins.mrbeam.laserHeadSerial())
         };
 
