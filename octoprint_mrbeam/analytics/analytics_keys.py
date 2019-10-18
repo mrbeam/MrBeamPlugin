@@ -1,4 +1,4 @@
-class AnalyticsKeys(object):
+class AnalyticsKeys:
 	class Header:
 		SNR = 'snr'
 		TYPE = 't'
@@ -80,6 +80,7 @@ class AnalyticsKeys(object):
 			LASER_TEMPERATURE = 'lt'
 			LASER_INTENSITY = 'li'
 			DUST_VALUE = 'dv'
+			COMPRESSOR = 'compressor'
 
 		class LaserHead:
 			TEMP = 'lasertemp'

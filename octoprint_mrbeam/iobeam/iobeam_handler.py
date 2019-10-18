@@ -537,9 +537,9 @@ class IoBeamHandler(object):
 		try:
 			if len(name) <= 0:
 				err = self._handle_invalid_dataset(name, dataset)
-			# elif self.MESSAGE_ERROR in dataset:
-			# 	self._logger.debug("Received %s dataset error: %s", name, dataset[self.MESSAGE_ERROR])
-			# 	err += 1
+			elif self.MESSAGE_ERROR in dataset:
+				self._logger.debug("Received %s dataset error: %s", name, dataset[self.MESSAGE_ERROR])
+				err += 1
 			# # elif len(dataset) == 0:
 			# # 	self._logger.debug("Received empty dataset %s", name)
 			else:
