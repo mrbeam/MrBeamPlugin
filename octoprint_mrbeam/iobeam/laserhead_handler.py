@@ -42,18 +42,39 @@ class LaserheadHandler(object):
 
 	def set_current_used_lh_data(self, lh_data):
 		try:
-			self._logger.info("Laserhead: %s", lh_data)
-			self._current_used_lh_serial = lh_data['main']['serial']
-			self._write_lh_data_to_cache(lh_data)
+			if self._valid_lh_data(lh_data):
+				self._logger.info("Laserhead: %s", lh_data)
+				self._current_used_lh_serial = lh_data['main']['serial']
+				self._write_lh_data_to_cache(lh_data)
 
-			self._calculate_and_write_correction_factor()
+				self._calculate_and_write_correction_factor()
 
-			self._analytics_handler.add_laserhead_info()
-			self._write_laser_heads_file()
-			self._plugin.fire_event(MrBeamEvents.LASER_HEAD_READ, dict(serial=lh_data['main']['serial']))
-
+				self._analytics_handler.add_laserhead_info()
+				self._write_laser_heads_file()
+				self._plugin.fire_event(MrBeamEvents.LASER_HEAD_READ, dict(serial=lh_data['main']['serial']))
+			elif lh_data is {}:
+				self._logger.warn('Received empty laser head data from iobeam.')
+			else:
+				if lh_data.get('main', {}).get('serial', None) is None:
+					self._logger.exception('Received invalid laser head data from iobeam - no serial number')
+				else:
+					self._logger.exception('Received invalid laser head data from iobeam - invalid power calibrations data: {}'
+										   .format(lh_data.get('power_calibrations', [])))
 		except Exception as e:
 			self._logger.exception('Exception during set_current_used_lh_data: {}'.format(e))
+
+	@staticmethod
+	def _valid_lh_data(lh_data):
+		if lh_data.get('main', None) \
+			and lh_data['main'].get('serial', None) \
+			and lh_data.get('power_calibrations', None) \
+			and len(lh_data['power_calibrations']) > 0 \
+			and lh_data['power_calibrations'][-1].get('power_65', None) \
+			and lh_data['power_calibrations'][-1].get('power_75', None) \
+			and lh_data['power_calibrations'][-1].get('power_85', None):
+			return True
+		else:
+			return False
 
 	def _write_lh_data_to_cache(self, lh_data):
 		self._lh_cache[self._current_used_lh_serial] = lh_data
