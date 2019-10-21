@@ -560,7 +560,7 @@ $(function(){
 				$(job).find('.param_feedrate').val(p.cut_f);
 				$(job).find('.param_passes').val(p.cut_p || 0);
 				$(job).find('.param_piercetime').val(p.cut_pierce || 0);
-				$(job).find('.compressor_range').val(p.cut_compressor || 0);  // Here we pass the value of the range (0), not the real one (10%)
+				$(job).find('.conversion_range_slider').val(p.cut_compressor || 0);  // Here we pass the value of the range (0), not the real one (10%)
 			}
 		};
 		self.apply_engraving_proposal = function(){
@@ -725,7 +725,7 @@ $(function(){
 				var feedrate = $(job).find('.param_feedrate').val();
 				var piercetime = $(job).find('.param_piercetime').val();
 				var passes = $(job).find('.param_passes').val();
-				let cut_compressor = $(job).find('.compressor_range').val();
+				let cut_compressor = $(job).find('.conversion_range_slider').val();
 
 				if (prepareForBackend) {
 				    cut_compressor = self.mapCompressorValue(cut_compressor);
@@ -1459,14 +1459,20 @@ $(function(){
 					show_line_mappings = true;
 					var hex = '#' + id.substr(-6);
 					var slider_id = "adjuster_"+id;
-					if ($('#'+slider_id).length > 0) {
+					if ($('#'+slider_id+'_out').length > 0) {
 					    // slider element exists, just leave it as it is
-					    $('#'+slider_id).removeClass(classFlag);
+					    $('#'+slider_id+'_out').removeClass(classFlag);
                     } else {
 					    // create slider element
                         var val = 255 - self._get_brightness(hex);
-                        var icon = '<input id="'+slider_id+'" class="precisionslider coloradjuster" type="range" min="0" max="255" style="border-top-color:'+hex+';" value="'+val+'" />';
-                        line_mapping_container.append(icon);
+
+                        let outer = '<div id="' + slider_id + '_out" class="range_slider_control"></div>';
+                        let color_circle = '<div class="vector_mapping_color_circle" style="background:' + hex + '"/></div>';
+                        let slider = '<input id="'+slider_id+'" class="svgtogcode_grayscale conversion_range_slider" type="range" min="0" max="255" value="'+val+'" /></div>';
+
+                        line_mapping_container.append(outer);
+                        $('#' + slider_id + '_out').append(color_circle);
+                        $('#' + slider_id + '_out').append(slider)
                     }
 				}
 			}

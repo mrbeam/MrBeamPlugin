@@ -203,16 +203,9 @@
                                         </div>
                                     </div>
                                 </div>
+                            </div>
 
-                                <div class="range-control-and-label" data-toggle="tooltip" data-placement="right" data-bind="visible: hasCompressor"
-                                     title="<b>{{ _('The power of the air compressor.') }}</b>
-                                     {{ _('Keep this value to the maximum for the best performance, unless you want to lower it because your material is very light and it\'s blown away.') }}">
-                                    <label class="control-label">{{ _('Compressor') }}</label>
-                                    <div id="engraving_compressor" class="controls">
-                                       <input class="compressor_range" type="range" min="0" max="3" data-bind="value: engravingCompressor, event: {change: flag_customized_material}"/>
-                                    </div>
-                                </div>
-
+                            <div class="control-group" >
 								<div class="line-control-and-label" data-bind="visible: show_line_color_mappings" data-toggle="tooltip" data-placement="right"
                                      title="{{ _('Map the color of a vector path to a grayscale value for engraving.') }}">
 									<label class="control-label">{{ _('Line color mapping') }}</label>
@@ -221,6 +214,19 @@
 										</div>
 									</div>
 								</div>
+                            </div>
+
+                            <div class="control-group" >
+                                <div class="range-control-and-label" data-toggle="tooltip" data-placement="right" data-bind="visible: hasCompressor"
+                                     title="<b>{{ _('The power of the air compressor.') }}</b>
+                                     {{ _('Keep this value to the maximum for the best performance, unless you want to lower it because your material is very light and it\'s blown away.') }}">
+                                    <label class="control-label">{{ _('Compressor') }}</label>
+                                    <div id="engraving_compressor" class="controls range_slider_control">
+                                        <span class="compressor_min_label">min</span>
+                                        <input class="conversion_range_slider" type="range" min="0" max="3" data-bind="value: engravingCompressor, event: {change: flag_customized_material}"/>
+                                        <span class="compressor_max_label">max</span>
+                                    </div>
+                                </div>
 
 								<!--<div class="controls" data-bind="visible: showExpertSettings ">
 									<label class="checkbox">
@@ -336,12 +342,16 @@
                                 </div>
                             </div>
 
-                            <div class="range-control-and-label" data-toggle="tooltip" data-placement="right" data-bind="visible: hasCompressor"
-                                 title="<b>{{ _('The power of the air compressor.') }}</b>
-                                 {{ _('Keep this value to the maximum for the best performance, unless you want to lower it because your material is very light and it\'s blown away.') }}">
-                                <label class="control-label">{{ _('Compressor') }}</label>
-                                <div class="controls">
-                                   <input class="compressor_range" type="range" min="0" max="3" value="3" data-bind="event: {change: flag_customized_material}"/>
+                            <div class="control-group">
+                                <div class="range-control-and-label" data-toggle="tooltip" data-placement="right" data-bind="visible: hasCompressor"
+                                     title="<b>{{ _('The power of the air compressor.') }}</b>
+                                     {{ _('Keep this value to the maximum for the best performance, unless you want to lower it because your material is very light and it\'s blown away.') }}">
+                                    <label class="control-label">{{ _('Compressor') }}</label>
+                                    <div class="controls range_slider_control">
+                                        <span class="compressor_min_label">min</span>
+                                        <input class="conversion_range_slider" type="range" min="0" max="3" value="3" data-bind="event: {change: flag_customized_material}"/>
+                                        <span class="compressor_max_label">max</span>
+                                    </div>
                                 </div>
                             </div>
 
