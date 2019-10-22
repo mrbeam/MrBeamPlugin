@@ -48,6 +48,7 @@ class CompressorHandler(object):
 	def _subscribe(self):
 		self._iobeam.subscribe(IoBeamValueEvents.COMPRESSOR_STATIC, self._handle_static_data)
 		self._iobeam.subscribe(IoBeamValueEvents.COMPRESSOR_DYNAMIC, self._handle_dynamic_data)
+		self._iobeam.subscribe(IoBeamValueEvents.COMPRESSOR_ERROR, self._handle_error_data)
 
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self.set_compressor_off)
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self.set_compressor_off)
@@ -87,8 +88,20 @@ class CompressorHandler(object):
 	def set_compressor_unpause(self, *args, **kwargs):
 		self.set_compressor(self._compressor_nominal_state)
 
+	def _handle_error_data(self, payload):
+		dataset = payload.get('message', {})
+		self._logger.info('##############################IRATXE ERROR')
+		self._logger.info(dataset)
+		self._compressor_present = False
+		self._add_static_and_error_data_analytics(dataset)
+
 	def _handle_static_data(self, payload):
 		dataset = payload.get('message', {})
+		self._logger.info('##############################IRATXE STATIC')
+		self._logger.info(dataset)
+		if dataset:
+			self._add_static_and_error_data_analytics(dataset)
+
 		if 'version' in dataset:
 			self._compressor_present = True
 			self._logger.info("Enabling compressor. compressor_static: %s", dataset)
@@ -104,6 +117,15 @@ class CompressorHandler(object):
 					self._compressor_current_state = int(dataset['state'])
 				except:
 					self._logger.error("Cant convert compressor state to int from compressor_dynamic: %s", dataset)
+
+	def _add_static_and_error_data_analytics(self, data):
+		data = dict(
+			check=data.get('compressor_check', None),
+			error_msg=data.get('error', {}).get('msg', None),
+			error_id=data.get('error', {}).get('id', None),
+		)
+
+		self._analytics_handler.add_compressor_data(data)
 
 	def get_compressor_data(self):
 		data = dict(
