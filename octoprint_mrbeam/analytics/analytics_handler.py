@@ -374,7 +374,6 @@ class AnalyticsHandler(object):
 	# COMPRESSOR_HANDLER
 	def add_compressor_data(self, data):
 		try:
-			self._logger.info('##############################IRATXE ANALYTICS')
 			self._add_device_event(ak.Device.Event.COMPRESSOR, payload=data)
 		except Exception as e:
 			self._logger.exception('Exception during add_compressor_static_data: {}'.format(e))

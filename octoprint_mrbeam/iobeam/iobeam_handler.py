@@ -536,15 +536,17 @@ class IoBeamHandler(object):
 
 		err = -1
 		try:
-			self._logger.info('##################################### {}'.format(name))
 			if len(name) <= 0:
 				err = self._handle_invalid_dataset(name, dataset)
 			elif self.MESSAGE_ERROR in dataset:
 				self._logger.debug("Received %s dataset error: %s", name, dataset[self.MESSAGE_ERROR])
-				err += 1
 
 				if name == self.DATASET_COMPRESSOR_STATIC:
 					self._handle_compressor_error(dataset)
+				elif name == self.DATASET_COMPRESSOR_DYNAMIC:
+					pass
+				else:
+					err += 1
 			# # elif len(dataset) == 0:
 			# # 	self._logger.debug("Received empty dataset %s", name)
 			else:
@@ -668,7 +670,6 @@ class IoBeamHandler(object):
 		:param dataset:
 		:return:
 		"""
-		self._logger.info('##############################IRATXE HANDLE ERROR')
 		self._call_callback(IoBeamValueEvents.COMPRESSOR_ERROR, dataset)
 		return
 

@@ -90,15 +90,11 @@ class CompressorHandler(object):
 
 	def _handle_error_data(self, payload):
 		dataset = payload.get('message', {})
-		self._logger.info('##############################IRATXE ERROR')
-		self._logger.info(dataset)
 		self._compressor_present = False
 		self._add_static_and_error_data_analytics(dataset)
 
 	def _handle_static_data(self, payload):
 		dataset = payload.get('message', {})
-		self._logger.info('##############################IRATXE STATIC')
-		self._logger.info(dataset)
 		if dataset:
 			self._add_static_and_error_data_analytics(dataset)
 
