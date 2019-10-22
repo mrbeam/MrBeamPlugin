@@ -63,17 +63,20 @@ class LaserheadHandler(object):
 		except Exception as e:
 			self._logger.exception('Exception during set_current_used_lh_data: {}'.format(e))
 
-	@staticmethod
-	def _valid_lh_data(lh_data):
-		if lh_data.get('main', None) \
-			and lh_data['main'].get('serial', None) \
-			and lh_data.get('power_calibrations', None) \
-			and len(lh_data['power_calibrations']) > 0 \
-			and lh_data['power_calibrations'][-1].get('power_65', None) \
-			and lh_data['power_calibrations'][-1].get('power_75', None) \
-			and lh_data['power_calibrations'][-1].get('power_85', None):
-			return True
-		else:
+	def _valid_lh_data(self, lh_data):
+		try:
+			if lh_data.get('main', None) \
+				and lh_data['main'].get('serial', None) \
+				and lh_data.get('power_calibrations', None) \
+				and len(lh_data['power_calibrations']) > 0 \
+				and lh_data['power_calibrations'][-1].get('power_65', None) \
+				and lh_data['power_calibrations'][-1].get('power_75', None) \
+				and lh_data['power_calibrations'][-1].get('power_85', None):
+				return True
+			else:
+				return False
+		except Exception as e:
+			self._logger.exception('Exception during _valid_lh_data: {}'.format(e))
 			return False
 
 	def _write_lh_data_to_cache(self, lh_data):
