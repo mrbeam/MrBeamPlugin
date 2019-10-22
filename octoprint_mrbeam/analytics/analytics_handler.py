@@ -68,6 +68,7 @@ class AnalyticsHandler(object):
 		self._current_job_id = None
 		self._current_job_time_estimation = -1
 		self._current_job_final_status = None
+		self._current_job_compressor_data = None
 		self._current_dust_collector = None
 		self._current_intensity_collector = None
 		self._current_lasertemp_collector = None
@@ -95,6 +96,7 @@ class AnalyticsHandler(object):
 	def _on_mrbeam_plugin_initialized(self, event, payload):
 		self._laserhead_handler = self._plugin.laserhead_handler
 		self._dust_manager = self._plugin.dust_manager
+		self._compressor_handler = self._plugin.compressor_handler
 
 		self._subscribe()
 
@@ -444,6 +446,11 @@ class AnalyticsHandler(object):
 			ak.Job.Fan.RPM: self._dust_manager.get_fan_rpm(),
 			ak.Job.Fan.STATE: self._dust_manager.get_fan_state(),
 		}
+
+		# We only add the compressor data if there is a compressor
+		if self._compressor_handler.has_compressor():
+			data.update({ak.Job.Progress.COMPRESSOR: self._compressor_handler.get_compressor_data()})
+
 		self._add_job_event(ak.Job.Event.Print.PROGRESS, data)
 
 		if self._current_cpu_data:
@@ -641,6 +648,8 @@ class AnalyticsHandler(object):
 		self._current_lasertemp_collector = None
 		self._current_cpu_data = None
 		self._current_job_time_estimation = -1
+		self._current_job_final_status = None
+		self._current_job_compressor_data = None
 
 	def _init_new_job(self):
 		self._cleanup_job()

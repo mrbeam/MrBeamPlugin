@@ -329,8 +329,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			),
 			tour_auto_launch = self._settings.get(['tour_auto_launch']),
 			hw_features=dict(
+				is_mrb_2_dreamcut=self.is_mrb_2_dreamcut(),
 				has_compressor=self.compressor_handler.has_compressor(),
-			)
+			),
+			isFirstRun=self.isFirstRun(),
 		)
 
 	def on_settings_save(self, data):
@@ -1956,7 +1958,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def is_beta_channel(self):
 		return self._settings.get(["dev", "software_tier"]) == SW_UPDATE_TIER_BETA
 
+	def is_mrb_2(self):
+		return self._device_series in ['2C', '2D', '2E', '2F', '2G', '2V']
 
+	def is_mrb_2_dreamcut(self):
+		return self._device_series in ['2U']
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
