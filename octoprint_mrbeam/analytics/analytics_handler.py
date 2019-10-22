@@ -371,6 +371,13 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.exception('Exception during add_os_health_log: {}'.format(e), analytics=True)
 
+	# COMPRESSOR_HANDLER
+	def add_compressor_data(self, data):
+		try:
+			self._add_device_event(ak.Device.Event.COMPRESSOR, payload=data)
+		except Exception as e:
+			self._logger.exception('Exception during add_compressor_static_data: {}'.format(e))
+
 	# -------- OCTOPRINT AND MR BEAM EVENTS ----------------------------------------------------------------------------
 	def _subscribe(self):
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_STARTED, self._event_print_started)

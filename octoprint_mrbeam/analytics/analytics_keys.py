@@ -103,6 +103,7 @@ class AnalyticsKeys:
 			HTTP_SELF_CHECK = 'http_self_check'
 			INTERNET_CONNECTION = 'internet_connection'
 			MRBEAM_USAGE = 'mrbeam_usage'
+			COMPRESSOR = 'compressor'
 
 		class SoftwareChannel:
 			OLD = 'old_channel'
