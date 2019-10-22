@@ -17,6 +17,7 @@ $(function () {
         self.WARN_IF_USED_PERCENT = 100;
 
 
+        self.totalUsage = ko.observable(0);
         self.prefilterUsage = ko.observable(0);
         self.carbonFilterUsage = ko.observable(0);
         self.laserHeadUsage = ko.observable(0);
@@ -31,6 +32,9 @@ $(function () {
         self.laserHeadLifespanHours = _.sprintf(gettext("/%(lifespan)s hrs"), {lifespan: self.LASER_HEAD_LIFESPAN});
         self.gantryLifespanHours = _.sprintf(gettext("/%(lifespan)s hrs"), {lifespan: self.GANTRY_LIFESPAN});
 
+        self.totalUsageHours = ko.computed(function() {
+            return Math.floor(self.totalUsage()/36)/100;
+        });
         self.prefilterUsageHours = ko.computed(function() {
             return Math.floor(self.prefilterUsage()/3600);
         });
@@ -98,6 +102,7 @@ $(function () {
                     self.analytics.send_fontend_event('link_click', payload)
                 })
             });
+            self.updateSettingsAbout();
         };
 
         self.resetPrefilterUsage = function() {
@@ -187,7 +192,8 @@ $(function () {
         self.onSettingsShown = function() {
             self.settings.requestData()
                 .done(function(){
-                    self.loadUsageValues()
+                    self.loadUsageValues();
+                    self.updateSettingsAbout();
                 }
             )
         };
@@ -201,6 +207,7 @@ $(function () {
                 self.gantryUsage(0);
             }
 
+            self.totalUsage(self.settings.settings.plugins.mrbeam.usage.totalUsage());
             self.prefilterUsage(self.settings.settings.plugins.mrbeam.usage.prefilterUsage());
             self.carbonFilterUsage(self.settings.settings.plugins.mrbeam.usage.carbonFilterUsage());
             self.laserHeadUsage(self.settings.settings.plugins.mrbeam.usage.laserHeadUsage());
@@ -231,7 +238,11 @@ $(function () {
                 };
                 self.analytics.send_fontend_event('link_click', payload)
             });
-        }
+        };
+
+        self.updateSettingsAbout = function(){
+            $('#settings_mrbeam_about_support_total_usage_hours').html(self.totalUsageHours());
+        };
     }
 
     // view model class, parameters for constructor, container to bind to

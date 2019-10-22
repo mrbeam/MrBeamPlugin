@@ -33,6 +33,18 @@
             </div>
         </div>
 
+        {% if env_support_mode %}
+            <div class="control-group">
+                <h5>Support data</h5>
+                <div class="controls">
+                    <ul>
+                        <div><strong>Total usage:</strong> <span id="settings_mrbeam_about_support_total_usage_hours"></span> hrs</div>
+                        <div><strong>mrb_state:</strong> <span id="settings_mrbeam_about_support_mrb_state"></span></div>
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
+
         <div class="control-group">
             <h5>{{ _('Documentation, Support and Privacy') }}</h5>
             <div class="controls">
