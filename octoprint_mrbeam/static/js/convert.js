@@ -1466,7 +1466,7 @@ $(function(){
 					    // create slider element
                         var val = 255 - self._get_brightness(hex);
 
-                        let outer = '<div id="' + slider_id + '_out" class="range_slider_control"></div>';
+                        let outer = '<div id="' + slider_id + '_out"></div>';
                         let color_circle = '<div class="vector_mapping_color_circle" style="background:' + hex + '"/></div>';
                         let slider = '<input id="'+slider_id+'" class="svgtogcode_grayscale conversion_range_slider vector_mapping_slider" type="range" min="0" max="255" value="'+val+'" /></div>';
 
