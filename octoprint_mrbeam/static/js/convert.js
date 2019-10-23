@@ -53,10 +53,10 @@ $(function(){
         self.dontRemindMeAgainChecked = ko.observable(false);
 
 		// material menu
-		self.material_settings2 = self.materialSettings.material_settings;
+		self.material_settings2 = {};
 
-		self.engrave_only_thickness = {thicknessMM: -1, cut_i:'', cut_f:'', cut_p: 1, cut_pierce: 0};
-		self.no_engraving = {eng_i:['',''], eng_f:['',''], eng_pierce: 0, dithering: false };
+		self.engrave_only_thickness = {thicknessMM: -1, cut_i:'', cut_f:'', cut_p: 1, cut_pierce: 0, cut_compressor:3};
+		self.no_engraving = {eng_i:['',''], eng_f:['',''], eng_pierce: 0, eng_compressor: 3, dithering: false };
 
 		self.material_colors = ko.observableArray([]);
 		self.material_thicknesses = ko.observableArray([]);
@@ -75,6 +75,7 @@ $(function(){
 		self.save_custom_material_thickness = ko.observable(1);
 		self.save_custom_material_color = ko.observable("#000000");
 
+		self.hasCompressor = ko.observable(false);
 
 		self.expandMaterialSelector = ko.computed(function(){
 			return self.selected_material() === null || self.selected_material_color() === null || self.selected_material_thickness() === null;
@@ -91,6 +92,12 @@ $(function(){
 			if(mat !== null)
 			return mat === null ? '' : mat.img;
 		 });
+
+        self.load_standard_materials = function(){
+            self.materialSettings.loadMaterialSettings(function(res){
+                self.material_settings2 = res;
+            })
+        };
 
         self.load_custom_materials = function(){
 			// fill custom materials
@@ -171,20 +178,26 @@ $(function(){
 			var cut_setting = null;
 			// if thickness is 0, we assume engrave only
 			if(strongest !== null && thickness > 0){
-				cut_setting = {thicknessMM: thickness,
+				cut_setting = {
+				    thicknessMM: thickness,
                     cut_i: parseFloat(strongest.intensity_user),
                     cut_f: parseFloat(strongest.feedrate),
                     cut_p: parseInt(strongest.passes),
-                    cut_pierce: parseInt(strongest.pierce_time)};
+                    cut_pierce: parseInt(strongest.pierce_time),
+                    cut_compressor: parseInt(strongest.cut_compressor)
+				};
 			} else {
 				thickness = -1; // engrave only
 			}
 
 			var e = self.get_current_engraving_settings();
-			var engrave_setting = {eng_i: [e.intensity_white_user, e.intensity_black_user],
-                                    eng_f: [e.speed_white, e.speed_black],
-                                    eng_pierce: e.pierce_time,
-                                    dithering: e.dithering};
+			var engrave_setting = {
+			    eng_i: [e.intensity_white_user, e.intensity_black_user],
+                eng_f: [e.speed_white, e.speed_black],
+                eng_pierce: e.pierce_time,
+                dithering: e.dithering,
+                eng_compressor: e.eng_compressor
+			};
 
 			var new_material;
 
@@ -230,7 +243,7 @@ $(function(){
             };
             OctoPrint.simpleApiCommand("mrbeam", "custom_materials", postData)
                 .done(function(response){
-					console.log("simpleApiCall response: ", response);
+					// console.log("simpleApiCall response: ", response);
 					// $('#save_material_form.dropdown').dropdown('toggle'); // buggy
 					$('#save_material_form').removeClass('open'); // workaround
 
@@ -413,7 +426,7 @@ $(function(){
 				}
 
 			}
-			// filter predefined materials
+
 			for(var materialKey in self.material_settings2){
 				var m = self.material_settings2[materialKey];
 				if(m !== null){
@@ -547,6 +560,7 @@ $(function(){
 				$(job).find('.param_feedrate').val(p.cut_f);
 				$(job).find('.param_passes').val(p.cut_p || 0);
 				$(job).find('.param_piercetime').val(p.cut_pierce || 0);
+				$(job).find('.compressor_range').val(p.cut_compressor || 0);  // Here we pass the value of the range (0), not the real one (10%)
 			}
 		};
 		self.apply_engraving_proposal = function(){
@@ -567,6 +581,7 @@ $(function(){
 			self.imgFeedrateBlack(p.eng_f[1]);
 			self.imgDithering(p.dithering);
 			self.engravingPiercetime(p.eng_pierce || 0);
+			self.engravingCompressor(p.eng_compressor || 0);  // Here we pass the value of the range (0), not the real one (10%)
 		};
 
 		self._find_closest_color_to = function(hex, available_colors){
@@ -614,6 +629,7 @@ $(function(){
 		self.imgDithering = ko.observable(false);
 		self.beamDiameter = ko.observable(0.15);
 		self.engravingPiercetime = ko.observable(0);
+		self.engravingCompressor = ko.observable(0);
 
 		self.sharpeningMax = 25;
 		self.contrastMax = 2;
@@ -701,7 +717,7 @@ $(function(){
 		};
 
 
-		self.get_current_multicolor_settings = function () {
+		self.get_current_multicolor_settings = function (prepareForBackend=false) {
 			var data = [];
 			$('.job_row_vector').each(function(i, job){
 				var intensity_user = $(job).find('.param_intensity').val();
@@ -709,6 +725,12 @@ $(function(){
 				var feedrate = $(job).find('.param_feedrate').val();
 				var piercetime = $(job).find('.param_piercetime').val();
 				var passes = $(job).find('.param_passes').val();
+				let cut_compressor = $(job).find('.compressor_range').val();
+
+				if (prepareForBackend) {
+				    cut_compressor = self.mapCompressorValue(cut_compressor);
+                }
+
 				if(self._isValidVectorSetting(intensity_user, feedrate, passes, piercetime)){
 					$(job).find('.used_color').each(function(j, col){
 						var hex = '#' + $(col).attr('id').substr(-6);
@@ -719,7 +741,8 @@ $(function(){
 							feedrate: feedrate,
 							pierce_time: piercetime,
 							passes: passes,
-                            engrave: false
+                            engrave: false,
+                            cut_compressor: cut_compressor
 						});
 					});
 				} else {
@@ -753,7 +776,8 @@ $(function(){
                             feedrate: feedrate,
                             pierce_time: self.engravingPiercetime(),
                             passes: 1,
-                            engrave: true
+                            engrave: true,
+                            cut_compressor: self.mapCompressorValue(self.engravingCompressor())
                         });
 					};
 				} else {
@@ -772,7 +796,13 @@ $(function(){
 			return true;
 		};
 
-		self.get_current_engraving_settings = function () {
+		self.get_current_engraving_settings = function (prepareForBackend=false) {
+		    let eng_compressor = self.engravingCompressor();
+
+            if (prepareForBackend) {
+                eng_compressor = self.mapCompressorValue(eng_compressor);
+            }
+
 			var data = {
 				// "engrave_outlines" : self.engrave_outlines(),
 				"intensity_black_user" : parseInt(self.imgIntensityBlack()),
@@ -785,7 +815,8 @@ $(function(){
 				"beam_diameter" : parseFloat(self.beamDiameter()),
 				"pierce_time": parseInt(self.engravingPiercetime()),
 				"engraving_mode": $('#svgtogcode_img_engraving_mode > .btn.active').attr('value'),
-                "line_distance": $('#svgtogcode_img_line_dist').val()
+                "line_distance": $('#svgtogcode_img_line_dist').val(),
+                "eng_compressor": eng_compressor
 			};
 			return data;
 		};
@@ -1180,10 +1211,9 @@ $(function(){
 						self.svg = composition;
 						var filename = self.gcodeFilename();
 						var gcodeFilename = self._sanitize(filename) + '.gco';
-
-						var multicolor_data = self.get_current_multicolor_settings();
-						var engraving_data = self.get_current_engraving_settings();
-						var advancedSettings = self.is_advanced_settings_checked();
+						var multicolor_data = self.get_current_multicolor_settings(true);
+						var engraving_data = self.get_current_engraving_settings(true);
+                        var advancedSettings = self.is_advanced_settings_checked();
 						var colorStr = '<!--COLOR_PARAMS_START' +JSON.stringify(multicolor_data) + 'COLOR_PARAMS_END-->';
 						var material = self.get_current_material_settings();
 						var design_files = self.get_design_files_info();
@@ -1288,6 +1318,27 @@ $(function(){
 			return Math.round((r*self.BRIGHTNESS_VALUE_RED + g*self.BRIGHTNESS_VALUE_GREEN + b*self.BRIGHTNESS_VALUE_BLUE));
 		};
 
+		self.mapCompressorValue = function(rangeValue) {
+		    let backendValue = null;
+		    if (self.hasCompressor()) {
+                switch (rangeValue) {
+                    case "0":
+                        backendValue = 10;
+                        break;
+                    case "1":
+                        backendValue = 25;
+                        break;
+                    case "2":
+                        backendValue = 50;
+                        break;
+                    case "3":
+                        backendValue = 100;
+                        break;
+                }
+            }
+            return backendValue
+        };
+
 		self.onStartup = function() {
 			self.requestData();
 			self.state.conversion = self; // hack! injecting method to avoid circular dependency.
@@ -1303,7 +1354,12 @@ $(function(){
             });
 		};
 
+		self.onAllBound = function(){
+            self.hasCompressor(self.settings.settings.plugins.mrbeam.hw_features.has_compressor())
+        };
+
 		self.onUserLoggedIn = function(user){
+			self.load_standard_materials();
 			self.load_custom_materials();
         };
 
@@ -1403,14 +1459,20 @@ $(function(){
 					show_line_mappings = true;
 					var hex = '#' + id.substr(-6);
 					var slider_id = "adjuster_"+id;
-					if ($('#'+slider_id).length > 0) {
+					if ($('#'+slider_id+'_out').length > 0) {
 					    // slider element exists, just leave it as it is
-					    $('#'+slider_id).removeClass(classFlag);
+					    $('#'+slider_id+'_out').removeClass(classFlag);
                     } else {
 					    // create slider element
                         var val = 255 - self._get_brightness(hex);
-                        var icon = '<input id="'+slider_id+'" class="precisionslider coloradjuster" type="range" min="0" max="255" style="border-top-color:'+hex+';" value="'+val+'" />';
-                        line_mapping_container.append(icon);
+
+                        let outer = '<div id="' + slider_id + '_out" class="range_slider_control"></div>';
+                        let color_circle = '<div class="vector_mapping_color_circle" style="background:' + hex + '"/></div>';
+                        let slider = '<input id="'+slider_id+'" class="svgtogcode_grayscale conversion_range_slider" type="range" min="0" max="255" value="'+val+'" /></div>';
+
+                        line_mapping_container.append(outer);
+                        $('#' + slider_id + '_out').append(color_circle);
+                        $('#' + slider_id + '_out').append(slider)
                     }
 				}
 			}

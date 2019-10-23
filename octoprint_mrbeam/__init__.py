@@ -31,6 +31,7 @@ from octoprint_mrbeam.iobeam.lid_handler import lidHandler
 from octoprint_mrbeam.iobeam.temperature_manager import temperatureManager
 from octoprint_mrbeam.iobeam.dust_manager import dustManager
 from octoprint_mrbeam.iobeam.laserhead_handler import laserheadHandler
+from octoprint_mrbeam.iobeam.compressor_handler import compressor_handler
 from octoprint_mrbeam.analytics.analytics_handler import analyticsHandler
 from octoprint_mrbeam.analytics.usage_handler import usageHandler
 from octoprint_mrbeam.analytics.review_handler import reviewHandler
@@ -49,7 +50,7 @@ from .materials import materials
 from octoprint_mrbeam.gcodegenerator.jobtimeestimation import JobTimeEstimation
 from .analytics.uploader import AnalyticsFileUploader
 from octoprint.filemanager.destinations import FileDestinations
-
+from octoprint_mrbeam.util.material_csv_parser import parse_csv
 
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
 __builtin__._mrbeam_plugin_implementation = None
@@ -171,6 +172,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self.temperature_manager = temperatureManager(self)
 		self.dust_manager = dustManager(self)
 		self.laserhead_handler = laserheadHandler(self)
+		self.compressor_handler = compressor_handler(self)
 		self.wizard_config = WizardConfig(self)
 		self.job_time_estimation = JobTimeEstimation(self)
 
@@ -188,6 +190,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		"""
 		msg = "MrBeam Plugin"
 		msg += " version:{}".format(self._plugin_version)
+		msg += ", product:{}".format(self.get_product_name())
 		msg += ", host:{}".format(self.getHostname())
 		msg += ", serial:{}".format(self.getSerialNum())
 		msg += ", software_tier:{}".format(self._settings.get(["dev", "software_tier"]))
@@ -222,6 +225,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		:return: dict of environment data
 		"""
 		return dict(version=self._plugin_version,
+		            product=self.get_product_name(),
 					host=self.getHostname(),
 					serial=self._serial_num,
 					software_tier=self._settings.get(["dev", "software_tier"]),
@@ -323,12 +327,17 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			focusReminder = self._settings.get(['focusReminder']),
 			laserHeadSerial = self.laserhead_handler.get_current_used_lh_data()['serial'],
 			usage=dict(
+				totalUsage=self.usage_handler.get_total_usage(),
 				prefilterUsage=self.usage_handler.get_prefilter_usage(),
 				carbonFilterUsage=self.usage_handler.get_carbon_filter_usage(),
 				laserHeadUsage=self.usage_handler.get_laser_head_usage(),
 				gantryUsage=self.usage_handler.get_gantry_usage(),
 			),
 			tour_auto_launch = self._settings.get(['tour_auto_launch']),
+			hw_features=dict(
+				is_mrb_2_dreamcut=self.is_mrb_2_dreamcut(),
+				has_compressor=self.compressor_handler.has_compressor(),
+			),
 			isFirstRun=self.isFirstRun(),
 		)
 
@@ -504,8 +513,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 env_local=self.get_env(self.ENV_LOCAL),
 							 env_laser_safety=self.get_env(self.ENV_LASER_SAFETY),
 							 env_analytics=self.get_env(self.ENV_ANALYTICS),
+							 env_support_mode=self.support_mode,
 
-							 displayName=self.getDisplayName(),
+							 product_name=self.get_product_name(),
 							 hostname=self.getHostname(),
 							 serial=self._serial_num,
 							 software_tier=self._settings.get(["dev", "software_tier"]),
@@ -795,7 +805,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		display_version_string = "{} on {}".format(self._plugin_version, self.getHostname())
 		if self._branch:
 			display_version_string = "{} ({} branch) on {}".format(self._plugin_version, self._branch, self.getHostname())
-
 		render_kwargs = dict(debug=debug,
 		                     firstRun=self.isFirstRun(),
 		                     version=dict(number=VERSION, display=DISPLAY_VERSION, branch=BRANCH),
@@ -814,8 +823,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		                     env_local=self.get_env(self.ENV_LOCAL),
 		                     env_laser_safety=self.get_env(self.ENV_LASER_SAFETY),
 		                     env_analytics=self.get_env(self.ENV_ANALYTICS),
+		                     env_support_mode=self.support_mode,
 		                     #
-		                     displayName=self.getDisplayName(),
+		                     product_name=self.get_product_name(),
 		                     hostname=self.getHostname(),
 		                     serial=self._serial_num,
 		                     beta_label=self.get_beta_label(),
@@ -823,6 +833,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		                     gcodeThreshold=0,  #legacy
 		                     gcodeMobileThreshold=0,  #legacy
 		                     )
+
 		r = make_response(render_template("initial_calibration.jinja2", **render_kwargs))
 
 		r = add_non_caching_response_headers(r)
@@ -1218,6 +1229,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			reset_carbon_filter_usage=[],
 			reset_laser_head_usage=[],
 			reset_gantry_usage=[],
+			material_settings=[],
 		)
 
 	def on_api_command(self, command, data):
@@ -1263,6 +1275,15 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return self.usage_handler.reset_laser_head_usage()
 		elif command == "reset_gantry_usage":
 			return self.usage_handler.reset_gantry_usage()
+		elif command == "material_settings":
+			# TODO select which Mr Beam version to parse the materials for
+			# TODO Select "Mr Beam II" laserhead for the DreamCut Ready variant
+			# TODO ANDY Load materials when the user logs in as well
+			try:
+				return make_response(jsonify(parse_csv(laserhead="Mr Beam II")), 200) # TODO : Give parse_csv the right laserhead type
+			except Exception as err:
+				self._logger.exception(err.message)
+				return make_response(err.message, 500)
 		return NO_CONTENT
 
 	# TODO IRATXE: this does not properly work --> necessary for reviews
@@ -1717,6 +1738,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 					fan_state = self.dust_manager.get_fan_state(),
 					fan_rpm = self.dust_manager.get_fan_rpm(),
 					fan_dust = self.dust_manager.get_dust(),
+					compressor_state = self.compressor_handler.get_current_state(),
 					lid_fully_open = self.lid_handler.is_lid_open(),
 					interlocks_closed = self.iobeam.is_interlock_closed(),
 					interlocks_open_ids = self.iobeam.open_interlocks(),
@@ -1768,16 +1790,15 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		return self._hostname
 
-	def getDisplayName(self):
-		code = None
-		name = "Mr Beam II {}"
-		preFix = "MrBeam2-"
-		hostName = self.getHostname()
-		if hostName.startswith(preFix):
-			code = hostName.replace(preFix, "")
-			return name.format(code)
+	def get_product_name(self):
+		if self.is_mrb_2():
+			return "Mr Beam II"
+		elif self.is_mrb_2_dreamcut():
+			return "Mr Beam II dreamcut"
+		elif self.is_mrb_2_dreamcut_ready():
+			return "Mr Beam II dreamcut ready"
 		else:
-			return name.format(hostName)
+			return "Mr Beam II"
 
 	def getSerialNum(self):
 		"""
@@ -1821,16 +1842,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def get_octopi_info(self):
 		return self._get_val_from_device_info('octopi')
-		# try:
-		# 	with open('/etc/octopi_flavor', 'r') as myfile:
-		# 		flavor = myfile.read().replace('\n', '')
-		# 	with open('/etc/octopi_datetime', 'r') as myfile:
-		# 		datetime = myfile.read().replace('\n', '')
-		# 	return "{} {}".format(flavor, datetime)
-		# except Exception as e:
-		# 	# self._logger.exception("Can't read OctoPi image info due to exception:", e)
-		# 	pass
-		# return None
 
 	def _get_val_from_device_info(self, key):
 		if not self._device_info:
@@ -1968,7 +1979,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def is_beta_channel(self):
 		return self._settings.get(["dev", "software_tier"]) == SW_UPDATE_TIER_BETA
 
+	def is_mrb_2(self):
+		return self._device_series in ['2C', '2D', '2E', '2F', '2G', '2V']
 
+	def is_mrb_2_dreamcut(self):
+		return self._device_series in ['2U']
+
+	def is_mrb_2_dreamcut_ready(self):
+		return self._device_series in ['2T']
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that

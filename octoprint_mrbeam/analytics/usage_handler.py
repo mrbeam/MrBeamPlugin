@@ -29,6 +29,7 @@ class UsageHandler(object):
 		self.start_time_prefilter = -1
 		self.start_time_carbon_filter = -1
 		self.start_time_gantry = -1
+		self.start_time_compressor = -1
 
 		analyticsfolder = os.path.join(self._settings.getBaseFolder("base"), self._settings.get(['analytics','folder']))
 		if not os.path.isdir(analyticsfolder):
@@ -58,11 +59,12 @@ class UsageHandler(object):
 		self._subscribe()
 
 	def log_usage(self):
-		self._logger.info("Usage: total: {}, pre-filter: {}, main filter: {}, current laser head: {}, mechanics: {} - {}".format(
+		self._logger.info("Usage: total: {}, pre-filter: {}, main filter: {}, current laser head: {}, mechanics: {}, compressor: {} - {}".format(
 			self._get_duration_humanreadable(self._usage_data['total']['job_time']),
 			self._get_duration_humanreadable(self._usage_data['prefilter']['job_time']),
 			self._get_duration_humanreadable(self._usage_data['carbon_filter']['job_time']),
 			self._get_duration_humanreadable(self._usage_data['laser_head'][self._laser_head_serial]['job_time']),
+			self._get_duration_humanreadable(self._usage_data['compressor']['job_time']),
 			self._get_duration_humanreadable(self._usage_data['gantry']['job_time']),
 			self._usage_data))
 
@@ -89,6 +91,7 @@ class UsageHandler(object):
 		self.start_time_carbon_filter = self._usage_data['carbon_filter']['job_time']
 		self.start_time_laser_head = self._usage_data['laser_head'][self._laser_head_serial]['job_time']
 		self.start_time_gantry = self._usage_data['gantry']['job_time']
+		self.start_time_compressor = self._usage_data['compressor']['job_time']
 
 	def event_write(self, event, payload):
 		if self.start_time_total >= 0:
@@ -105,6 +108,7 @@ class UsageHandler(object):
 			self.start_time_prefilter = -1
 			self.start_time_carbon_filter = -1
 			self.start_time_gantry = -1
+			self.start_time_compressor = -1
 			self.write_usage_analytics(action='job_finished')
 
 	def _set_time(self, job_duration):
@@ -114,6 +118,9 @@ class UsageHandler(object):
 			self._usage_data['prefilter']['job_time'] = self.start_time_prefilter + job_duration
 			self._usage_data['carbon_filter']['job_time'] = self.start_time_carbon_filter + job_duration
 			self._usage_data['gantry']['job_time'] = self.start_time_gantry + job_duration
+
+			if self._plugin.compressor_handler.has_compressor():
+				self._usage_data['compressor']['job_time'] = self.start_time_compressor + job_duration
 			self._write_usage_data()
 
 	def reset_prefilter_usage(self):
@@ -141,9 +148,10 @@ class UsageHandler(object):
 		self.write_usage_analytics(action='reset_gantry')
 
 	def _log_usage_data(self, usage_data):
-		self._logger.info('USAGE DATA: prefilter={pre}, carbon_filter={carbon}, laser_head={lh}, gantry={gantry}'.format(
+		self._logger.info('USAGE DATA: prefilter={pre}, carbon_filter={carbon}, laser_head={lh}, gantry={gantry}, compressor={compressor}'.format(
 			pre=usage_data['prefilter'], carbon=usage_data['carbon_filter'],
 			lh=usage_data['laser_head']['usage'], gantry=usage_data['gantry'],
+			compressor=usage_data['compressor'],
 		))
 
 	def write_usage_analytics(self, action=None):
@@ -155,6 +163,7 @@ class UsageHandler(object):
 					usage=self._usage_data['laser_head'][self._laser_head_serial]['job_time'],
 					serial_number=self._laser_head_serial),
 				gantry=self._usage_data['gantry']['job_time'],
+				compressor=self._usage_data['compressor']['job_time'],
 				action=action
 			)
 
@@ -302,6 +311,14 @@ class UsageHandler(object):
 			self._logger.info("Initializing gantry usage time: {usage}".format(
 				usage=self._usage_data['gantry']['job_time']))
 
+		# Initialize compressor in case it wasn't stored already --> To 0
+		if 'compressor' not in self._usage_data:
+			self._usage_data['compressor'] = {}
+			self._usage_data['compressor']['complete'] = self._plugin.isFirstRun()
+			self._usage_data['compressor']['job_time'] = 0
+			self._logger.info("Initializing compressor usage time: {usage}".format(
+				usage=self._usage_data['compressor']['job_time']))
+
 		if 'succ_jobs' not in self._usage_data:
 			self._usage_data['succ_jobs'] = {}
 			self._usage_data['succ_jobs']['count'] = 0
@@ -334,6 +351,10 @@ class UsageHandler(object):
 				'complete': self._plugin.isFirstRun(),
 			},
 			'gantry': {
+				'job_time': 0.0,
+				'complete': self._plugin.isFirstRun(),
+			},
+			'compressor': {
 				'job_time': 0.0,
 				'complete': self._plugin.isFirstRun(),
 			},

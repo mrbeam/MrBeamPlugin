@@ -11,7 +11,7 @@
                 <td class="maintenance-description-column">
                     <h4>{{ _('Air Filter: Pre-filter') }}</h4>
                     <small class="maintenance-description">
-                        {{ _('The pre filter filters all coarse particles from the exhaust air. Regular changing improves the air flow and preserves the main filter.') }}
+                        {{ _('The pre filter filters all coarse particles from the exhaust air. Regular changing improves the air flow and preserves the main filter.*') }}
                     </small>
                     <div class="maintenance-links">
                         <a href="https://store.mr-beam.org/collections/featured/products/prefilter-for-the-mr-beam-airfilter-system?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page"
@@ -38,7 +38,7 @@
                 <td class="maintenance-description-column">
                     <h4>{{ _('Air Filter: Main filter') }}</h4>
                     <small class="maintenance-description">
-                        {{ _('The main filter is a combined hepa and activated carbon filter. It filters both tiny particles and odours from the exhaust air.') }}
+                        {{ _('The main filter is a combined hepa and activated carbon filter. It filters both tiny particles and odours from the exhaust air.*') }}
                     </small>
                     <div class="maintenance-links">
                         <a href="https://store.mr-beam.org/products/activated-carbon-filter-for-the-mr-beam-air-filter-system-incl-5-prefilter?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page"
@@ -93,7 +93,7 @@
                     <button class="btn btn-mini maintenance-reset-btn" data-bind="click: resetLaserHeadUsage">{{ _('Reset') }}</button>
                 </td>
             </tr>
-            <tr>
+            <tr data-bind="visible: !isMrb2Dreamcut()">
                 {######### GANTRY #########}
                 <td class="maintenance-description-column">
                     <h4>{{ _('Mechanics') }}</h4>
@@ -121,6 +121,7 @@
                 </td>
             </tr>
         </table>
+        <small class="muted">{{ _('*Users without a Mr Beam Air Filter System can safely ignore and reset this counter.') }}</small>
     </div>
 
     <div id="reset_counter_are_you_sure" class="modal hide fade">
