@@ -92,7 +92,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	CUSTOM_MATERIAL_STORAGE_URL = 'https://script.google.com/a/macros/mr-beam.org/s...' # TODO
 
-	BOOT_GRACE_PERIOD = 15 # seconds
+	BOOT_GRACE_PERIOD = 10 # seconds
 	TIME_NTP_SYNC_CHECK_FAST_COUNT =  20
 	TIME_NTP_SYNC_CHECK_INTERVAL_FAST =  10.0
 	TIME_NTP_SYNC_CHECK_INTERVAL_SLOW = 120.0
@@ -119,7 +119,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._current_user = None
 
 		self._boot_grace_period_counter = 0
-		self._start_boot_grace_period_thread()
 
 		self._time_ntp_synced = False
 		self._time_ntp_check_count = 0
@@ -138,6 +137,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._octopi_info = self.get_octopi_info()
 		self._serial_num = self.getSerialNum()
 		self.focusReminder = self._settings.get(['focusReminder'])
+
+		# listens to StartUp event to start counting boot time grace period
+		self._event_bus.subscribe(OctoPrintEvents.STARTUP, self._start_boot_grace_period_thread)
 
 		self.start_time_ntp_timer()
 
@@ -1869,7 +1871,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def is_boot_grace_period(self):
 		return self._boot_grace_period_counter < self.BOOT_GRACE_PERIOD
 
-	def _start_boot_grace_period_thread(self):
+	def _start_boot_grace_period_thread(self, *args, **kwargs):
 		my_timer = threading.Timer(1.0, self._callback_boot_grace_period_thread)
 		my_timer.daemon = True
 		my_timer.name = "boot_grace_period_timer"
@@ -1880,6 +1882,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._boot_grace_period_counter += 1
 			if self._boot_grace_period_counter < self.BOOT_GRACE_PERIOD:
 				self._start_boot_grace_period_thread()
+			else:
+				self._logger.debug("BOOT_GRACE_PERIOD ended")
 		except:
 			self._logger.exception("Exception in _callback_boot_grace_period_thread()")
 
