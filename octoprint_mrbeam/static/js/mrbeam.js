@@ -33,6 +33,17 @@ browser.chrome_version = browser.chrome_version ? parseInt(browser.chrome_versio
 browser.is_supported = (browser.is_chrome && browser.chrome_version >= 60) || browser.is_ipad;
 mrbeam.browser = browser;
 
+// Mr Beam models
+
+
+mrbeam.model.MRBEAM2 =      "Mrb2";
+mrbeam.model.MRBEAM2_DC =   "MrB2-DC";
+mrbeam.model.MRBEAM2_DCR =  "Mrb2-DCR";
+
+mrbeam.model.isMrb2 =     function(){return (MRBEAM_MODEL === mrbeam.model.MRBEAM2);}
+mrbeam.model.isMrb2DC =   function(){return (MRBEAM_MODEL === mrbeam.model.MRBEAM2_DC);}
+mrbeam.model.isMrb2DCR =  function(){return (MRBEAM_MODEL === mrbeam.model.MRBEAM2_DCR);}
+
 /**
  * Test if OctoPrint of a specific or higher version is running.
  * @param ecpectedOctoPrintVersion
