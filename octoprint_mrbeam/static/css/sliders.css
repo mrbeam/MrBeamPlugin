@@ -328,11 +328,12 @@ input[type=range].conversion_range_slider{
 	width:220px;
     height: 20px;
 	display: inline-block;
+    margin: 6px 0px;
 }
 
 input[type=range].conversion_range_slider::-webkit-slider-thumb {
     -webkit-appearance: none;
-    border: none;
+    border-radius: 5px;
     height: 26px;
     width: 5px;
     background: #444444;

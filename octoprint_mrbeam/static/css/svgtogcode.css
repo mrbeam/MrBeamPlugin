@@ -36,10 +36,13 @@ table th.settings_plugin_svgtogcode_profiles_key,table td.settings_plugin_svgtog
 	width:220px;
 	height: 20px;
 	display: inline-block;
+	border-radius: 10px;
 }
 
 .img_intensity_input {
 	width: 3.5em;
+	-webkit-border-radius: 10px;
+	border-radius: 10px;
 }
 
 svg text {
@@ -339,7 +342,22 @@ h4.job_title{
 }
 
 .job_row input {
-    max-width: 35%;
+	max-width: 35%;
+    border-radius: 18px;
+    background-color: #eeeeee;
+    border: none;
+    margin: 3px;
+    height: 18px;
+    text-align: center;
+}
+
+.job_row input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.job_row input[type="number"].param_passes::-webkit-inner-spin-button {
+    -webkit-appearance: inner-spin-button;
 }
 
 .job_row label.control-label {cursor: default; }
