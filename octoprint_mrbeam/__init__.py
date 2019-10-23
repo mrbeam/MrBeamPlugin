@@ -337,7 +337,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			),
 			tour_auto_launch = self._settings.get(['tour_auto_launch']),
 			hw_features=dict(
-				is_mrb_2_dreamcut=self.is_mrb_2_dreamcut(),
 				has_compressor=self.compressor_handler.has_compressor(),
 			),
 			isFirstRun=self.isFirstRun(),

@@ -23,7 +23,7 @@ $(function () {
         self.laserHeadUsage = ko.observable(0);
         self.gantryUsage = ko.observable(0);
 
-        self.needsGantryMaintenance = ko.observable(false);
+        self.needsGantryMaintenance = ko.observable(true);
         self.componentToReset = ko.observable("");
         self.laserHeadSerial = ko.observable("");
 
@@ -201,7 +201,7 @@ $(function () {
         self.loadUsageValues = function() {
             self.needsGantryMaintenance(window.mrbeam.model.isMrb2());
 
-            if (!self.needsGantryMaintenance()) {
+            if (self.needsGantryMaintenance()) {
                 self.gantryUsage(self.settings.settings.plugins.mrbeam.usage.gantryUsage());
             } else {
                 self.gantryUsage(0);
