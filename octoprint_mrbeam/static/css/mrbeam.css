@@ -2136,6 +2136,7 @@ input.search-query,
 
 .line-control-and-label {
   width: 500px;
+  margin: 10px 0;
 }
 
 .cutting-control-and-label {
@@ -2519,6 +2520,10 @@ input[type="radio"]{
 /*
 * === COMPRESSOR and new LINE COLOR MAPPING ===
 */
+.compressor_range {
+    height: 5px !important;
+}
+
 .compressor_min_label {
     margin: 0 1.15em 5px 1.5em
 }
@@ -2527,9 +2532,9 @@ input[type="radio"]{
     margin: 0 0 5px 1.15em
 }
 
-.range_slider_control {
-    padding-top:5px
-}
+/*.range_slider_control {*/
+/*    padding-top:5px;*/
+/*}*/
 
 .vector_mapping_color_circle {
     width:20px;
@@ -2538,6 +2543,11 @@ input[type="radio"]{
     vertical-align:middle;
     border-radius:50%;
     margin: 0 1.55em 0 1.55em;
+}
+
+.vector_mapping_slider {
+    height: 20px;
+}
 
 /*
 * === USER RATING ===

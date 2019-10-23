@@ -1468,7 +1468,7 @@ $(function(){
 
                         let outer = '<div id="' + slider_id + '_out" class="range_slider_control"></div>';
                         let color_circle = '<div class="vector_mapping_color_circle" style="background:' + hex + '"/></div>';
-                        let slider = '<input id="'+slider_id+'" class="svgtogcode_grayscale conversion_range_slider" type="range" min="0" max="255" value="'+val+'" /></div>';
+                        let slider = '<input id="'+slider_id+'" class="svgtogcode_grayscale conversion_range_slider vector_mapping_slider" type="range" min="0" max="255" value="'+val+'" /></div>';
 
                         line_mapping_container.append(outer);
                         $('#' + slider_id + '_out').append(color_circle);
