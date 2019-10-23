@@ -2538,4 +2538,77 @@ input[type="radio"]{
     vertical-align:middle;
     border-radius:50%;
     margin: 0 1.55em 0 1.55em;
+
+/*
+* === USER RATING ===
+*/
+/* rating stars
+ * http://jsfiddle.net/ttyYD/1/
+*/
+#rating_block {
+    margin: 20px 0;
+}
+
+.rating {
+    unicode-bidi:bidi-override;
+    direction:rtl;
+    font-size:50px;
+    display: flex;
+    justify-content: center;
+    margin: 35px 0 20px 0;
+}
+
+.rating span.star {
+    font-family:FontAwesome;
+    font-weight:normal;
+    font-style:normal;
+    display:inline-block;
+}
+
+.rating span.star:hover {
+    cursor:pointer;
+}
+
+.rating span.star:before {
+    content:"\f006";
+    padding: 20px 8px;
+    color:#f8d453;
+}
+
+.rating span.star:hover:before, .rating span.star:hover~span.star:before{
+    content:"\f005";
+    color:#f8d453;
+}
+
+.rating span.star.filled:before{
+    color:#f8d453;
+    content:"\f005";
+}
+
+.rating span.star.disabled {
+    pointer-events: none;
+}
+
+.review_title {
+    display: flex;
+    justify-content: center;
+}
+
+.review_hidden_part {
+    display: none;
+}
+
+.review_explanation {
+    margin: auto 20px 15px 20px;
+}
+
+#dont_ask_review_link {
+    color: dimgray;
+}
+
+#review_textarea {
+    display: flex;
+    margin-left: auto;
+    margin-right: auto;
+    width: 90%;
 }

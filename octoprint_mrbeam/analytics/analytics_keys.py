@@ -11,6 +11,7 @@ class AnalyticsKeys:
 		DATA = 'data'
 		SOFTWARE_TIER = 'sw_tier'
 		VERSION_MRBEAM_PLUGIN = 'version_mrbeam_plugin'
+		UPTIME = 'uptime'
 
 	class EventType:
 		JOB = 'job'
@@ -92,7 +93,6 @@ class AnalyticsKeys:
 
 		class Event:
 			ANALYTICS_ENABLED = 'analytics_enabled'
-			INIT = 'init_json'
 			STARTUP = 'startup'
 			SHUTDOWN = 'shutdown'
 			DISK_SPACE = 'disk_space'
