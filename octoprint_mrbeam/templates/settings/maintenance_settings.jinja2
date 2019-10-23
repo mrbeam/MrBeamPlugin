@@ -93,7 +93,7 @@
                     <button class="btn btn-mini maintenance-reset-btn" data-bind="click: resetLaserHeadUsage">{{ _('Reset') }}</button>
                 </td>
             </tr>
-            <tr data-bind="visible: !isMrb2Dreamcut()">
+            <tr data-bind="visible: needsGantryMaintenance()">
                 {######### GANTRY #########}
                 <td class="maintenance-description-column">
                     <h4>{{ _('Mechanics') }}</h4>

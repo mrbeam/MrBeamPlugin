@@ -111,6 +111,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._logger = mrb_logger("octoprint.plugins.mrbeam")
 		self._hostname = None
 		self._serial_num = None
+		self._model_id = None
 		self._device_info = dict()
 		self._grbl_version = None
 		self._stored_frontend_notifications = []
@@ -136,6 +137,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._branch = self.getBranch()
 		self._octopi_info = self.get_octopi_info()
 		self._serial_num = self.getSerialNum()
+		self._model_id = self.get_model_id()
 		self.focusReminder = self._settings.get(['focusReminder'])
 
 		# listens to StartUp event to start counting boot time grace period
@@ -337,7 +339,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			),
 			tour_auto_launch = self._settings.get(['tour_auto_launch']),
 			hw_features=dict(
-				is_mrb_2_dreamcut=self.is_mrb_2_dreamcut(),
 				has_compressor=self.compressor_handler.has_compressor(),
 			),
 			isFirstRun=self.isFirstRun(),
@@ -520,6 +521,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 product_name=self.get_product_name(),
 							 hostname=self.getHostname(),
 							 serial=self._serial_num,
+							 model=self.get_model_id(),
 							 software_tier=self._settings.get(["dev", "software_tier"]),
 							 analyticsEnabled=self._settings.get(["analyticsEnabled"]),
 							 beta_label=self.get_beta_label(),
@@ -1814,6 +1816,18 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._serial_num = self._get_val_from_device_info('serial')
 		return self._serial_num
 
+	def get_model_id(self):
+		"""
+		Gives you the device's model id liek Mrb2 or MrB2-DC
+		The value is soley read from device_info file (/etc/mrbeam)
+		and it's cached once read.
+		:return: model id
+		:rtype: String
+		"""
+		if self._model_id is None:
+			self._model_id = self._get_val_from_device_info('model', default="MrB2")
+		return self._model_id
+
 	def getBranch(self):
 		"""
 		DEPRECATED
@@ -1845,7 +1859,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def get_octopi_info(self):
 		return self._get_val_from_device_info('octopi')
 
-	def _get_val_from_device_info(self, key):
+	def _get_val_from_device_info(self, key, default=None):
 		if not self._device_info:
 			ok = None
 			try:
@@ -1862,7 +1876,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self._logger.error("Can't read device_info_file '%s' due to exception: %s", self.DEVIE_INFO_FILE, e)
 			if ok:
 				self._device_info = db
-		return self._device_info.get(key, None)
+		return self._device_info.get(key, default)
 
 
 	def isFirstRun(self):
@@ -1984,13 +1998,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return self._settings.get(["dev", "software_tier"]) == SW_UPDATE_TIER_BETA
 
 	def is_mrb_2(self):
-		return self._device_series in ['2C', '2D', '2E', '2F', '2G', '2V']
+		return self._model_id == "MrB2"
 
 	def is_mrb_2_dreamcut(self):
-		return self._device_series in ['2U']
+		return self._model_id == "MrB2-DC"
 
 	def is_mrb_2_dreamcut_ready(self):
-		return self._device_series in ['2T']
+		return self._model_id == "MrB2-DCR"
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that

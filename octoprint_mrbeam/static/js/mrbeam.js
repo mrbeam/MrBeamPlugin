@@ -33,14 +33,25 @@ browser.chrome_version = browser.chrome_version ? parseInt(browser.chrome_versio
 browser.is_supported = (browser.is_chrome && browser.chrome_version >= 60) || browser.is_ipad;
 mrbeam.browser = browser;
 
+// Mr Beam models
+mrbeam.model ={
+    MRBEAM2:        "MrB2",
+    MRBEAM2_DC:     "MrB2-DC",
+    MRBEAM2_DCR:    "Mrb2-DCR",
+    isMrb2:     function(){return (window.MRBEAM_MODEL === window.mrbeam.model.MRBEAM2);},
+    isMrb2DC:   function(){return (window.MRBEAM_MODEL === window.mrbeam.model.MRBEAM2_DC);},
+    isMrb2DCR:  function(){return (window.MRBEAM_MODEL === window.mrbeam.model.MRBEAM2_DCR);},
+};
+
+
 /**
  * Test if OctoPrint of a specific or higher version is running.
- * @param ecpectedOctoPrintVersion
+ * @param expectedOctPrintVersion
  * @returns Boolean or undefined if VERSION is not set
  */
-mrbeam.isOctoPrintVersionMin = function(ecpectedOctoPrintVersion){
+mrbeam.isOctoPrintVersionMin = function(expectedOctPrintVersion){
     if (VERSION) {
-        return mrbeam._isVersionOrHigher(VERSION.replace('v', ''), ecpectedOctoPrintVersion);
+        return mrbeam._isVersionOrHigher(VERSION.replace('v', ''), expectedOctPrintVersion);
     } else {
         return undefined;
     }
