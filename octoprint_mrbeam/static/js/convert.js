@@ -1355,7 +1355,8 @@ $(function(){
 		};
 
 		self.onAllBound = function(){
-            self.hasCompressor(self.settings.settings.plugins.mrbeam.hw_features.has_compressor())
+            self.hasCompressor(self.settings.settings.plugins.mrbeam.hw_features.has_compressor());
+            self.limitUserInput();
         };
 
 		self.onUserLoggedIn = function(user){
@@ -1437,6 +1438,7 @@ $(function(){
 
 		self._update_color_assignments = function(){
 			self._update_job_summary();
+			self.limitUserInput();
 			var jobs = $('#additional_jobs .job_row_vector');
 			for (var idx = 0; idx < jobs.length; idx++) {
 				var j = jobs[idx];
@@ -1480,6 +1482,28 @@ $(function(){
             $('#colored_line_mapping >.'+classFlag).remove();
 			self.show_line_color_mappings(show_line_mappings);
 		};
+
+		self.limitUserInput = function() {
+            $(".percentage_input").on("blur", function() {
+                let val = $(this).val();
+
+                if (val > 100) {
+                    $(this).val(100)
+                } else if (val < 0 || val === "") {
+                    $(this).val(0)
+                }
+            });
+
+            $(".speed_input").on("blur", function() {
+                let val = $(this).val();
+
+                if (val > 3000) {
+                    $(this).val(3000)
+                } else if (val < 100 || val === "") {
+                    $(this).val(100)
+                }
+            });
+        };
 
 		// quick hack
 		self._update_job_summary = function(){
