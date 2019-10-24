@@ -53,8 +53,6 @@ $(function(){
 		self.remindFirstTime = ko.observable(true);
         self.dontRemindMeAgainChecked = ko.observable(false);
 
-        self.userInputTimer = null;
-
 		// material menu
 		self.material_settings2 = {};
 
@@ -1487,29 +1485,23 @@ $(function(){
 		};
 
 		self.limitUserInput = function() {
-            $(".percentage_input").on("keyup", function() {
-                clearTimeout(self.userInputTimer);
-
-                let elem = $(this);
-                let val = elem.val();
+            $(".percentage_input").on("blur", function() {
+                let val = $(this).val();
 
                 if (val > 100) {
-                    setTimeout(function() {elem.val(100)}, self.DONE_TYPING_TIME)
+                    $(this).val(100)
                 } else if (val < 0 || val === "") {
-                    setTimeout(function() {elem.val(0)}, self.DONE_TYPING_TIME)
+                    $(this).val(0)
                 }
             });
 
-            $(".speed_input").on("keyup", function() {
-                clearTimeout(self.userInputTimer);
+            $(".speed_input").on("blur", function() {
+                let val = $(this).val();
 
-                let elem = $(this);
-                let val = elem.val();
-
-                if (val > 5000) {
-                    setTimeout(function() {elem.val(5000)}, self.DONE_TYPING_TIME)
-                } else if (val < 30 || val === "") {
-                     setTimeout(function() {elem.val(30)}, self.DONE_TYPING_TIME)
+                if (val > 3000) {
+                    $(this).val(3000)
+                } else if (val < 100 || val === "") {
+                    $(this).val(100)
                 }
             });
         };

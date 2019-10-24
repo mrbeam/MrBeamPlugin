@@ -1428,9 +1428,9 @@ class MachineCom(object):
 			self._current_feedrate = int(feedrate_cmd[1:])
 
 			# Limit if necessary
-			if self._current_feedrate > 5000:
+			if self._current_feedrate > 5000:  # The frontend limits to 3000
 				self._current_feedrate = 5000
-			elif self._current_feedrate < 30:
+			elif self._current_feedrate < 30:  # The frontend limits to 100
 				self._current_feedrate = 30
 
 			return cmd.replace(feedrate_cmd, 'F%d' % self._current_feedrate)
