@@ -93,7 +93,10 @@ $(function () {
         };
 
         self.onAllBound = function() {
-            let links = ['prefilter_shop_link', 'carbon_filter_shop_link', 'laser_head_shop_link', 'laser_head_kb_link'];
+            // Add here the new links to have analytics of the clicks:
+            let links = ['prefilter_shop_link', 'carbon_filter_shop_link', 'laser_head_shop_link', 'laser_head_kb_link',
+            'mechanical_parts_kb_link'];
+
             links.forEach(function (linkId) {
                 $('#' + linkId).click(function () {
                     let payload = {
