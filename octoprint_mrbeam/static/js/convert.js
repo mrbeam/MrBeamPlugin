@@ -1321,18 +1321,21 @@ $(function(){
 		self.mapCompressorValue = function(rangeValue) {
 		    let backendValue = null;
 		    if (self.hasCompressor()) {
-                switch (rangeValue) {
-                    case "0":
+                switch (parseInt(rangeValue)) {
+                    case 0:
                         backendValue = 10;
                         break;
-                    case "1":
+                    case 1:
                         backendValue = 25;
                         break;
-                    case "2":
+                    case 2:
                         backendValue = 50;
                         break;
-                    case "3":
+                    case 3:
                         backendValue = 100;
+                        break;
+                    default:
+                        backendValue = 10;
                         break;
                 }
             }
