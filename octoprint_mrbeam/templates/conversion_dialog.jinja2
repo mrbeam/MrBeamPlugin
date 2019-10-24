@@ -177,10 +177,10 @@
                                     <label class="control-label">{{ _('Laser intensity range') }}</label>
                                     <div class="controls">
                                         <div class="input-append">
-                                            <input id="svgtogcode_img_intensity_white" class="img_intensity_input"  type="number" min="0" max="100"
+                                            <input id="svgtogcode_img_intensity_white" class="img_intensity_input percentage_input"  type="number" min="0" max="100"
                                                    data-bind="value: imgIntensityWhite, event: {change: flag_customized_material}">
                                             <div class="svgtogcode_grayscale">&nbsp;</div>
-                                            <input id="svgtogcode_img_intensity_black" class="img_intensity_input" type="number" min="0" max="100"
+                                            <input id="svgtogcode_img_intensity_black" class="img_intensity_input percentage_input" type="number" min="0" max="100"
                                                    data-bind="value: imgIntensityBlack, event: {change: flag_customized_material}">
                                         </div>
                                     </div>
@@ -195,15 +195,17 @@
                                     <label class="control-label">{{ _('Engraving speed range') }}</label>
                                     <div class="controls">
                                         <div class="input-append">
-                                            <input id="svgtogcode_img_feedrate_white" class="img_intensity_input" type="number"  min="30"
+                                            <input id="svgtogcode_img_feedrate_white" class="img_intensity_input speed_input" type="number"  min="100" max="3000"
                                                    data-bind="value: imgFeedrateWhite, event: {change: flag_customized_material}">
                                             <div class="svgtogcode_grayscale">&nbsp;</div>
-                                            <input id="svgtogcode_img_feedrate_black" class="img_intensity_input" type="number"  min="30"
+                                            <input id="svgtogcode_img_feedrate_black" class="img_intensity_input speed_input" type="number"  min="100" max="3000"
                                                    data-bind="value: imgFeedrateBlack, event: {change: flag_customized_material}">
                                         </div>
                                     </div>
                                 </div>
+                            </div>
 
+                            <div class="control-group" >
 								<div class="line-control-and-label" data-bind="visible: show_line_color_mappings" data-toggle="tooltip" data-placement="right"
                                      title="{{ _('Map the color of a vector path to a grayscale value for engraving.') }}">
 									<label class="control-label">{{ _('Line color mapping') }}</label>
@@ -212,6 +214,19 @@
 										</div>
 									</div>
 								</div>
+                            </div>
+
+                            <div class="control-group" >
+                                <div class="range-control-and-label" data-toggle="tooltip" data-placement="right" data-bind="visible: hasCompressor"
+                                     title="<b>{{ _('The power of the air compressor.') }}</b>
+                                     {{ _('Keep this value to the maximum for the best performance, unless you want to lower it because your material is very light and it\'s blown away.') }}">
+                                    <label class="control-label">{{ _('Compressor') }}</label>
+                                    <div id="engraving_compressor" class="controls">
+                                        <span class="compressor_min_label">min</span>
+                                        <input class="conversion_range_slider compressor_range" type="range" min="0" max="3" data-bind="value: engravingCompressor, event: {change: flag_customized_material}"/>
+                                        <span class="compressor_max_label">max</span>
+                                    </div>
+                                </div>
 
 								<!--<div class="controls" data-bind="visible: showExpertSettings ">
 									<label class="checkbox">
@@ -301,7 +316,7 @@
 									     {{ _('Cutting needs higher intensities than engraving.') }}<br>
 									     {{ _('The effect in general is dependent from the material and its color and surface.') }}">
                                      <label class="control-label">{{ _('Laser Intensity') }}</label>
-                                     <div class="controls"><input class="param_intensity img_intensity_input" type="number" min="0" max="100"
+                                     <div class="controls"><input class="param_intensity img_intensity_input percentage_input" type="number" min="0" max="100"
                                                                  data-bind="event: {change: flag_customized_material}"
                                                                  onblur="window.mrbeam.colorDragging.checkConversionParameters()"/>&nbsp;%</div>
                                  </div>
@@ -313,7 +328,7 @@
                                         {{ _('Cutting needs slower movement than engraving.') }}<br>
 									    {{ _('The effect in general is dependent from the material and its color and surface.') }}">
                                      <label class="control-label">{{ _('Laser Speed') }}</label>
-                                     <div class="controls"><input class="param_feedrate img_intensity_input" type="number" min="20" max="3000"
+                                     <div class="controls"><input class="param_feedrate img_intensity_input speed_input" type="number" min="100" max="3000"
 															 data-bind="event: {change: flag_customized_material}"
 															 onblur="window.mrbeam.colorDragging.checkConversionParameters()"/>&nbsp;{{ _('mm/min') }}</div>
                                  </div>
@@ -324,6 +339,19 @@
                                       title="{{ _('Indicates the number of times the laser will run over the design to cut it. Increase the number of passes if the material does not get cut.') }}">
                                     <label class="control-label">{{ _('Passes') }}</label>
                                     <div class="controls"><input data-bind="event: {change: flag_customized_material}" class="param_passes img_intensity_input" type="number" min="1" max="10" value="1" />&nbsp;&times;</div>
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <div class="range-control-and-label" data-toggle="tooltip" data-placement="right" data-bind="visible: hasCompressor"
+                                     title="<b>{{ _('The power of the air compressor.') }}</b>
+                                     {{ _('Keep this value to the maximum for the best performance, unless you want to lower it because your material is very light and it\'s blown away.') }}">
+                                    <label class="control-label">{{ _('Compressor') }}</label>
+                                    <div class="controls">
+                                        <span class="compressor_min_label">min</span>
+                                        <input class="conversion_range_slider compressor_range" type="range" min="0" max="3" value="3" data-bind="event: {change: flag_customized_material}"/>
+                                        <span class="compressor_max_label">max</span>
+                                    </div>
                                 </div>
                             </div>
 

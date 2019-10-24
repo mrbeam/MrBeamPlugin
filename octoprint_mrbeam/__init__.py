@@ -31,6 +31,7 @@ from octoprint_mrbeam.iobeam.lid_handler import lidHandler
 from octoprint_mrbeam.iobeam.temperature_manager import temperatureManager
 from octoprint_mrbeam.iobeam.dust_manager import dustManager
 from octoprint_mrbeam.iobeam.laserhead_handler import laserheadHandler
+from octoprint_mrbeam.iobeam.compressor_handler import compressor_handler
 from octoprint_mrbeam.analytics.analytics_handler import analyticsHandler
 from octoprint_mrbeam.analytics.usage_handler import usageHandler
 from octoprint_mrbeam.analytics.review_handler import reviewHandler
@@ -49,7 +50,7 @@ from .materials import materials
 from octoprint_mrbeam.gcodegenerator.jobtimeestimation import JobTimeEstimation
 from .analytics.uploader import AnalyticsFileUploader
 from octoprint.filemanager.destinations import FileDestinations
-
+from octoprint_mrbeam.util.material_csv_parser import parse_csv
 
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
 __builtin__._mrbeam_plugin_implementation = None
@@ -91,7 +92,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	CUSTOM_MATERIAL_STORAGE_URL = 'https://script.google.com/a/macros/mr-beam.org/s...' # TODO
 
-	BOOT_GRACE_PERIOD = 15 # seconds
+	BOOT_GRACE_PERIOD = 10 # seconds
 	TIME_NTP_SYNC_CHECK_FAST_COUNT =  20
 	TIME_NTP_SYNC_CHECK_INTERVAL_FAST =  10.0
 	TIME_NTP_SYNC_CHECK_INTERVAL_SLOW = 120.0
@@ -110,6 +111,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._logger = mrb_logger("octoprint.plugins.mrbeam")
 		self._hostname = None
 		self._serial_num = None
+		self._model_id = None
 		self._device_info = dict()
 		self._grbl_version = None
 		self._stored_frontend_notifications = []
@@ -118,7 +120,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._current_user = None
 
 		self._boot_grace_period_counter = 0
-		self._start_boot_grace_period_thread()
 
 		self._time_ntp_synced = False
 		self._time_ntp_check_count = 0
@@ -136,7 +137,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._branch = self.getBranch()
 		self._octopi_info = self.get_octopi_info()
 		self._serial_num = self.getSerialNum()
+		self._model_id = self.get_model_id()
 		self.focusReminder = self._settings.get(['focusReminder'])
+
+		# listens to StartUp event to start counting boot time grace period
+		self._event_bus.subscribe(OctoPrintEvents.STARTUP, self._start_boot_grace_period_thread)
 
 		self.start_time_ntp_timer()
 
@@ -160,7 +165,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._logger.exception("Exception while getting NetconnectdPlugin pluginInfo")
 
 		self.analytics_handler = analyticsHandler(self)
-		self.review_handler = reviewHandler(self)
+		# self.review_handler = reviewHandler(self)  TODO IRATXE: disabled for now
 		self.onebutton_handler = oneButtonHandler(self)
 		self.interlock_handler = interLockHandler(self)
 		self.lid_handler = lidHandler(self)
@@ -171,6 +176,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self.temperature_manager = temperatureManager(self)
 		self.dust_manager = dustManager(self)
 		self.laserhead_handler = laserheadHandler(self)
+		self.compressor_handler = compressor_handler(self)
 		self.wizard_config = WizardConfig(self)
 		self.job_time_estimation = JobTimeEstimation(self)
 
@@ -188,6 +194,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		"""
 		msg = "MrBeam Plugin"
 		msg += " version:{}".format(self._plugin_version)
+		msg += ", product:{}".format(self.get_product_name())
 		msg += ", host:{}".format(self.getHostname())
 		msg += ", serial:{}".format(self.getSerialNum())
 		msg += ", software_tier:{}".format(self._settings.get(["dev", "software_tier"]))
@@ -222,6 +229,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		:return: dict of environment data
 		"""
 		return dict(version=self._plugin_version,
+		            product=self.get_product_name(),
 					host=self.getHostname(),
 					serial=self._serial_num,
 					software_tier=self._settings.get(["dev", "software_tier"]),
@@ -323,12 +331,17 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			focusReminder = self._settings.get(['focusReminder']),
 			laserHeadSerial = self.laserhead_handler.get_current_used_lh_data()['serial'],
 			usage=dict(
+				totalUsage=self.usage_handler.get_total_usage(),
 				prefilterUsage=self.usage_handler.get_prefilter_usage(),
 				carbonFilterUsage=self.usage_handler.get_carbon_filter_usage(),
 				laserHeadUsage=self.usage_handler.get_laser_head_usage(),
 				gantryUsage=self.usage_handler.get_gantry_usage(),
 			),
 			tour_auto_launch = self._settings.get(['tour_auto_launch']),
+			hw_features=dict(
+				has_compressor=self.compressor_handler.has_compressor(),
+			),
+			isFirstRun=self.isFirstRun(),
 		)
 
 	def on_settings_save(self, data):
@@ -422,7 +435,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/material_settings.js",
 				"js/analytics.js",
 				"js/maintenance.js",
-				"js/review.js",
+				# "js/review.js",  TODO IRATXE: disabled for now
 				"js/util.js",
 			    ],
 			css=["css/mrbeam.css",
@@ -503,10 +516,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 env_local=self.get_env(self.ENV_LOCAL),
 							 env_laser_safety=self.get_env(self.ENV_LASER_SAFETY),
 							 env_analytics=self.get_env(self.ENV_ANALYTICS),
+							 env_support_mode=self.support_mode,
 
-							 displayName=self.getDisplayName(),
+							 product_name=self.get_product_name(),
 							 hostname=self.getHostname(),
 							 serial=self._serial_num,
+							 model=self.get_model_id(),
 							 software_tier=self._settings.get(["dev", "software_tier"]),
 							 analyticsEnabled=self._settings.get(["analyticsEnabled"]),
 							 beta_label=self.get_beta_label(),
@@ -794,7 +809,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		display_version_string = "{} on {}".format(self._plugin_version, self.getHostname())
 		if self._branch:
 			display_version_string = "{} ({} branch) on {}".format(self._plugin_version, self._branch, self.getHostname())
-
 		render_kwargs = dict(debug=debug,
 		                     firstRun=self.isFirstRun(),
 		                     version=dict(number=VERSION, display=DISPLAY_VERSION, branch=BRANCH),
@@ -813,8 +827,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		                     env_local=self.get_env(self.ENV_LOCAL),
 		                     env_laser_safety=self.get_env(self.ENV_LASER_SAFETY),
 		                     env_analytics=self.get_env(self.ENV_ANALYTICS),
+		                     env_support_mode=self.support_mode,
 		                     #
-		                     displayName=self.getDisplayName(),
+		                     product_name=self.get_product_name(),
 		                     hostname=self.getHostname(),
 		                     serial=self._serial_num,
 		                     beta_label=self.get_beta_label(),
@@ -822,6 +837,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		                     gcodeThreshold=0,  #legacy
 		                     gcodeMobileThreshold=0,  #legacy
 		                     )
+
 		r = make_response(render_template("initial_calibration.jinja2", **render_kwargs))
 
 		r = add_non_caching_response_headers(r)
@@ -1209,7 +1225,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			cli_event=["event"],
 			custom_materials=[],
 			analytics_init=[], # user's analytics choice froom welcome wizard
-			analytics_data=['event', 'payload'], # analytics data from the frontend
 			analytics_upload=[], # triggers an upload of analytics files
 			take_undistorted_picture=[],  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
 			focus_reminder=[],
@@ -1218,6 +1233,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			reset_carbon_filter_usage=[],
 			reset_laser_head_usage=[],
 			reset_gantry_usage=[],
+			material_settings=[],
 		)
 
 	def on_api_command(self, command, data):
@@ -1247,15 +1263,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return self.cli_event(data)
 		elif command == "analytics_init":
 			return self.analytics_init(data)
-		elif command == "analytics_data":
-			return self.analytics_data(data)
 		elif command == "analytics_upload":
 			AnalyticsFileUploader.upload_now(self)
 			return NO_CONTENT
 		elif command == "focus_reminder":
 			return self.focus_reminder(data)
-		elif command == "review_data":
-			return self.review_handler.save_review_data(data)
+		# TODO IRATXE: disabled for now
+		# elif command == "review_data":
+		# 	return self.review_handler.save_review_data(data)
 		elif command == "reset_prefilter_usage":
 			return self.usage_handler.reset_prefilter_usage()
 		elif command == "reset_carbon_filter_usage":
@@ -1264,26 +1279,44 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return self.usage_handler.reset_laser_head_usage()
 		elif command == "reset_gantry_usage":
 			return self.usage_handler.reset_gantry_usage()
+		elif command == "material_settings":
+			# TODO select which Mr Beam version to parse the materials for
+			# TODO Select "Mr Beam II" laserhead for the DreamCut Ready variant
+			# TODO ANDY Load materials when the user logs in as well
+			try:
+				return make_response(jsonify(parse_csv(laserhead="Mr Beam II")), 200) # TODO : Give parse_csv the right laserhead type
+			except Exception as err:
+				self._logger.exception(err.message)
+				return make_response(err.message, 500)
 		return NO_CONTENT
 
-	def get_user_name(self):
-		from flask.ext.login import current_user
-
-		# Looks like current_user sometimes does not work, so we save it and the next time if there's no information
-		# we just use the last saved user.
-		if current_user and not current_user.is_anonymous():
-			self._current_user = current_user.get_name()
-
-		return self._current_user
+	# TODO IRATXE: this does not properly work --> necessary for reviews
+	# def get_user_name(self):
+	# 	from flask.ext.login import current_user
+	#
+	# 	# Looks like current_user sometimes does not work, so we save it and the next time if there's no information
+	# 	# we just use the last saved user.
+	# 	if current_user and not current_user.is_anonymous():
+	# 		self._current_user = current_user.get_name()
+	#
+	# 	return self._current_user
 
 	def analytics_init(self, data):
 		if 'analyticsInitialConsent' in data:
 			self.analytics_handler.initial_analytics_procedure(data['analyticsInitialConsent'])
 
-	def analytics_data(self, data):
-		event = data.get('event')
-		payload = data.get('payload', dict())
-		self.analytics_handler.add_frontend_event(event, payload)
+	@octoprint.plugin.BlueprintPlugin.route("/analytics", methods=["POST"])
+	def analytics_data(self):
+		try:
+			data = request.json
+			event = data.get('event')
+			payload = data.get('payload', dict())
+			self.analytics_handler.add_frontend_event(event, payload)
+
+		except Exception as e:
+			self._logger.exception('Could not process frontend analytics data: {e} - Data = {data}'.format(e=e, data=data))
+			return make_response("Unable to interprete request", 400)
+
 		return NO_CONTENT
 
 	def focus_reminder(self, data):
@@ -1709,6 +1742,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 					fan_state = self.dust_manager.get_fan_state(),
 					fan_rpm = self.dust_manager.get_fan_rpm(),
 					fan_dust = self.dust_manager.get_dust(),
+					compressor_state = self.compressor_handler.get_current_state(),
 					lid_fully_open = self.lid_handler.is_lid_open(),
 					interlocks_closed = self.iobeam.is_interlock_closed(),
 					interlocks_open_ids = self.iobeam.open_interlocks(),
@@ -1760,16 +1794,15 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		return self._hostname
 
-	def getDisplayName(self):
-		code = None
-		name = "Mr Beam II {}"
-		preFix = "MrBeam2-"
-		hostName = self.getHostname()
-		if hostName.startswith(preFix):
-			code = hostName.replace(preFix, "")
-			return name.format(code)
+	def get_product_name(self):
+		if self.is_mrbeam2():
+			return "Mr Beam II"
+		elif self.is_mrbeam2_dreamcut():
+			return "Mr Beam II dreamcut"
+		elif self.is_mrbeam2_dreamcut_ready2():
+			return "Mr Beam II dreamcut ready"
 		else:
-			return name.format(hostName)
+			return "Mr Beam II"
 
 	def getSerialNum(self):
 		"""
@@ -1782,6 +1815,18 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if self._serial_num is None:
 			self._serial_num = self._get_val_from_device_info('serial')
 		return self._serial_num
+
+	def get_model_id(self):
+		"""
+		Gives you the device's model id liek Mrb2 or MrB2-DC
+		The value is soley read from device_info file (/etc/mrbeam)
+		and it's cached once read.
+		:return: model id
+		:rtype: String
+		"""
+		if self._model_id is None:
+			self._model_id = self._get_val_from_device_info('model', default="MrB2")
+		return self._model_id
 
 	def getBranch(self):
 		"""
@@ -1813,18 +1858,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def get_octopi_info(self):
 		return self._get_val_from_device_info('octopi')
-		# try:
-		# 	with open('/etc/octopi_flavor', 'r') as myfile:
-		# 		flavor = myfile.read().replace('\n', '')
-		# 	with open('/etc/octopi_datetime', 'r') as myfile:
-		# 		datetime = myfile.read().replace('\n', '')
-		# 	return "{} {}".format(flavor, datetime)
-		# except Exception as e:
-		# 	# self._logger.exception("Can't read OctoPi image info due to exception:", e)
-		# 	pass
-		# return None
 
-	def _get_val_from_device_info(self, key):
+	def _get_val_from_device_info(self, key, default=None):
 		if not self._device_info:
 			ok = None
 			try:
@@ -1841,7 +1876,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self._logger.error("Can't read device_info_file '%s' due to exception: %s", self.DEVIE_INFO_FILE, e)
 			if ok:
 				self._device_info = db
-		return self._device_info.get(key, None)
+		return self._device_info.get(key, default)
 
 
 	def isFirstRun(self):
@@ -1850,7 +1885,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def is_boot_grace_period(self):
 		return self._boot_grace_period_counter < self.BOOT_GRACE_PERIOD
 
-	def _start_boot_grace_period_thread(self):
+	def _start_boot_grace_period_thread(self, *args, **kwargs):
 		my_timer = threading.Timer(1.0, self._callback_boot_grace_period_thread)
 		my_timer.daemon = True
 		my_timer.name = "boot_grace_period_timer"
@@ -1861,6 +1896,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._boot_grace_period_counter += 1
 			if self._boot_grace_period_counter < self.BOOT_GRACE_PERIOD:
 				self._start_boot_grace_period_thread()
+			else:
+				self._logger.debug("BOOT_GRACE_PERIOD ended")
 		except:
 			self._logger.exception("Exception in _callback_boot_grace_period_thread()")
 
@@ -1960,7 +1997,17 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def is_beta_channel(self):
 		return self._settings.get(["dev", "software_tier"]) == SW_UPDATE_TIER_BETA
 
+	def is_mrbeam2(self):
+		return self._model_id == "MRBEAM2"
 
+	def is_mrbeam2_dreamcut_ready1(self):
+		return self._model_id == "MRBEAM2_DC_R1"
+
+	def is_mrbeam2_dreamcut_ready2(self):
+		return self._model_id == "MRBEAM2_DC_R2"
+
+	def is_mrbeam2_dreamcut(self):
+		return self._model_id == "MRBEAM2_DC"
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that

@@ -17,6 +17,7 @@ $(function () {
         self.dontShowAgain = ko.observable(false);
         self.justGaveReview = ko.observable(false);
 
+        // TODO IRATXE: handle the first use case (review does not exist in the user settings)
         self.shouldAskForReview = ko.computed(function(){
             if (self.loginState.currentUser() && self.loginState.currentUser().active) {
                 let numSuccJobs = self.loginState.currentUser().settings.mrbeam.review.num_succ_jobs;

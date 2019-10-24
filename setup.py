@@ -14,7 +14,7 @@ plugin_package = "octoprint_mrbeam"
 plugin_name = "Mr_Beam"
 
 # The plugin's version. Can be overwritten within OctoPrint's internal data via __plugin_version__ in the plugin module
-plugin_version = "0.4.3.1"
+plugin_version = "0.4.4.2"
 
 # The plugin's description. Can be overwritten within OctoPrint's internal data via __plugin_description__ in the plugin
 # module
@@ -61,7 +61,8 @@ additional_setup_parameters = {'package_data': {
 									'octoprint_mrbeam': ['profiles/*.yaml',
 									                     'files/grbl/*.hex',
 									                     'files/migrate/*',
-									                     'files/migrate_logrotate/*']},
+									                     'files/migrate_logrotate/*',
+														 'files/material_settings/*']},
 									'setup_requires': ['numpy==1.11.2']}
 
 ########################################################################################################################

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-10-02 10:40+0200\n"
+"POT-Creation-Date: 2019-10-09 11:10+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1911,7 +1911,6 @@ msgid "Find my Mr Beam"
 msgstr ""
 
 #: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:88
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:41
 msgid "QuickstartGuide_en.pdf"
 msgstr ""
 
@@ -1921,7 +1920,6 @@ msgid "Quickstart Guide"
 msgstr ""
 
 #: octoprint_mrbeam/templates/mrbeam_ui_index.jinja2:89
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:49
 msgid "UserManual_en.pdf"
 msgstr ""
 
@@ -2552,10 +2550,6 @@ msgstr ""
 msgid "Documentation, Support and Privacy"
 msgstr ""
 
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:42
-msgid "QuickstartGuide_de.pdf"
-msgstr ""
-
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:46
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:55
 msgid "get the latest versions"
@@ -2564,26 +2558,6 @@ msgstr ""
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:46
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:55
 msgid "online"
-msgstr ""
-
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:50
-msgid "UserManual_de.pdf"
-msgstr ""
-
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:51
-msgid "UserManual_es.pdf"
-msgstr ""
-
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:52
-msgid "UserManual_fr.pdf"
-msgstr ""
-
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:53
-msgid "UserManual_it.pdf"
-msgstr ""
-
-#: octoprint_mrbeam/templates/settings/about_settings.jinja2:54
-msgid "UserManual_fi.pdf"
 msgstr ""
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:58

@@ -17,11 +17,13 @@ $(function () {
         self.WARN_IF_USED_PERCENT = 100;
 
 
+        self.totalUsage = ko.observable(0);
         self.prefilterUsage = ko.observable(0);
         self.carbonFilterUsage = ko.observable(0);
         self.laserHeadUsage = ko.observable(0);
         self.gantryUsage = ko.observable(0);
 
+        self.needsGantryMaintenance = ko.observable(true);
         self.componentToReset = ko.observable("");
         self.laserHeadSerial = ko.observable("");
 
@@ -30,6 +32,9 @@ $(function () {
         self.laserHeadLifespanHours = _.sprintf(gettext("/%(lifespan)s hrs"), {lifespan: self.LASER_HEAD_LIFESPAN});
         self.gantryLifespanHours = _.sprintf(gettext("/%(lifespan)s hrs"), {lifespan: self.GANTRY_LIFESPAN});
 
+        self.totalUsageHours = ko.computed(function() {
+            return Math.floor(self.totalUsage()/36)/100;
+        });
         self.prefilterUsageHours = ko.computed(function() {
             return Math.floor(self.prefilterUsage()/3600);
         });
@@ -76,6 +81,7 @@ $(function () {
             }
         });
 
+        // The settings are already loaded here, Gina confirmed.
         self.onBeforeBinding = function() {
             self.loadUsageValues()
         };
@@ -87,7 +93,10 @@ $(function () {
         };
 
         self.onAllBound = function() {
-            let links = ['prefilter_shop_link', 'carbon_filter_shop_link', 'laser_head_shop_link', 'laser_head_kb_link'];
+            // Add here the new links to have analytics of the clicks:
+            let links = ['prefilter_shop_link', 'carbon_filter_shop_link', 'laser_head_shop_link', 'laser_head_kb_link',
+            'mechanical_parts_kb_link'];
+
             links.forEach(function (linkId) {
                 $('#' + linkId).click(function () {
                     let payload = {
@@ -96,6 +105,7 @@ $(function () {
                     self.analytics.send_fontend_event('link_click', payload)
                 })
             });
+            self.updateSettingsAbout();
         };
 
         self.resetPrefilterUsage = function() {
@@ -185,16 +195,25 @@ $(function () {
         self.onSettingsShown = function() {
             self.settings.requestData()
                 .done(function(){
-                    self.loadUsageValues()
+                    self.loadUsageValues();
+                    self.updateSettingsAbout();
                 }
             )
         };
 
         self.loadUsageValues = function() {
+            self.needsGantryMaintenance(window.mrbeam.model.is_mrbeam2() || window.mrbeam.model.is_mrbeam2_dreamcut_ready1());
+
+            if (self.needsGantryMaintenance()) {
+                self.gantryUsage(self.settings.settings.plugins.mrbeam.usage.gantryUsage());
+            } else {
+                self.gantryUsage(0);
+            }
+
+            self.totalUsage(self.settings.settings.plugins.mrbeam.usage.totalUsage());
             self.prefilterUsage(self.settings.settings.plugins.mrbeam.usage.prefilterUsage());
             self.carbonFilterUsage(self.settings.settings.plugins.mrbeam.usage.carbonFilterUsage());
             self.laserHeadUsage(self.settings.settings.plugins.mrbeam.usage.laserHeadUsage());
-            self.gantryUsage(self.settings.settings.plugins.mrbeam.usage.gantryUsage());
             self.laserHeadSerial(self.settings.settings.plugins.mrbeam.laserHeadSerial())
         };
 
@@ -222,7 +241,11 @@ $(function () {
                 };
                 self.analytics.send_fontend_event('link_click', payload)
             });
-        }
+        };
+
+        self.updateSettingsAbout = function(){
+            $('#settings_mrbeam_about_support_total_usage_hours').html(self.totalUsageHours());
+        };
     }
 
     // view model class, parameters for constructor, container to bind to

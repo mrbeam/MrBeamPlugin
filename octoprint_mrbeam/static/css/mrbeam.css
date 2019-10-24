@@ -2136,6 +2136,7 @@ input.search-query,
 
 .line-control-and-label {
   width: 500px;
+  margin: 10px 0;
 }
 
 .cutting-control-and-label {
@@ -2380,10 +2381,6 @@ input[type="radio"]{
   height: calc(100vh - 180px);
 }
 
-.maintenance-table {
-  margin-bottom: 60px
-}
-
 .maintenance-table > tbody > tr > td {
   vertical-align: middle;
 }
@@ -2518,6 +2515,34 @@ input[type="radio"]{
 .laser_job_done_image_media_icon {
     font-size: 2.4em;
     padding: 0px 3px;
+}
+
+/*
+* === COMPRESSOR and new LINE COLOR MAPPING ===
+*/
+.compressor_range {
+    height: 5px !important;
+}
+
+.compressor_min_label {
+    margin: 0 1.15em 5px 1.5em
+}
+
+.compressor_max_label {
+    margin: 0 0 5px 1.15em
+}
+
+.vector_mapping_color_circle {
+    width:20px;
+    height:20px;
+    display:inline-block;
+    vertical-align:middle;
+    border-radius:50%;
+    margin: 0 1.55em 0 1.55em;
+}
+
+.vector_mapping_slider {
+    height: 20px;
 }
 
 /*

@@ -201,6 +201,7 @@ $(function() {
             if (mrb_state) {
                 window.mrbeam.mrb_state = mrb_state;
                 window.STATUS = mrb_state;
+                self.updateSettingsAbout();
 
                 if ('pause_mode' in mrb_state) {
                     self.is_pause_mode(mrb_state['pause_mode']);
@@ -319,6 +320,10 @@ $(function() {
                 self._debugDaShit("_timoutCallbackForDialog() dialogIsInTransition <= false");
                 self.dialogIsInTransition = false;
             }
+        };
+
+        self.updateSettingsAbout = function(){
+            $('#settings_mrbeam_about_support_mrb_state').html(JSON.stringify(window.mrbeam.mrb_state));
         };
 
         self._debugDaShit = function(stuff){

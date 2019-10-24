@@ -1,4 +1,4 @@
-/* 
+/*
     Created on : Jan 3, 2018, 11:11:35 AM
     Author     : teja
 */
@@ -229,9 +229,9 @@ input[type=range]::-ms-thumb {
 }*/
 
 
-
-/* IMG ADJUST SLIDERS */
-
+/*
+* === IMG ADJUST  ===
+*/
 input[type=range].img_adjust {
   -webkit-appearance: none;
   width: 100%;
@@ -316,4 +316,29 @@ input[type=range].img_adjust:focus::-ms-fill-lower {
 }
 input[type=range].img_adjust:focus::-ms-fill-upper {
   background: rgba(166, 166, 166, 0.78);
+}
+
+/*
+* === COMPRESSOR and new LINE COLOR MAPPING ===
+*/
+input[type=range].conversion_range_slider{
+    -webkit-appearance: none;
+    max-width: 100%;
+    background-color: #888888;
+	width:220px;
+    height: 20px;
+	display: inline-block;
+    margin: 6px 0px;
+}
+
+input[type=range].conversion_range_slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    border-radius: 5px;
+    height: 26px;
+    width: 5px;
+    background: #444444;
+}
+
+input[type=range].conversion_range_slider:focus {
+    outline: none;
 }
