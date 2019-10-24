@@ -13,6 +13,7 @@ $(function(){
 		self.BRIGHTNESS_VALUE_RED   = 0.299;
 		self.BRIGHTNESS_VALUE_GREEN = 0.587;
 		self.BRIGHTNESS_VALUE_BLUE  = 0.114;
+		self.DONE_TYPING_TIME = 2000;  // We assume that after 2 seconds the user has finished typing
 
 		self.loginState = params[0];
 		self.settings = params[1];
@@ -42,7 +43,7 @@ $(function(){
 		// vector settings
 		self.show_vector_parameters = ko.observable(true);
 		self.maxSpeed = ko.observable(3000);
-		self.minSpeed = ko.observable(20);
+		self.minSpeed = ko.observable(20);   // todo iratxe: 20 or 30?
 
 		self.vectorJobs = ko.observableArray([]);
 		self.show_line_color_mappings = ko.observable(false);
@@ -51,6 +52,8 @@ $(function(){
 
 		self.remindFirstTime = ko.observable(true);
         self.dontRemindMeAgainChecked = ko.observable(false);
+
+        self.userInputTimer = null;
 
 		// material menu
 		self.material_settings2 = {};
@@ -1355,7 +1358,8 @@ $(function(){
 		};
 
 		self.onAllBound = function(){
-            self.hasCompressor(self.settings.settings.plugins.mrbeam.hw_features.has_compressor())
+            self.hasCompressor(self.settings.settings.plugins.mrbeam.hw_features.has_compressor());
+            self.limitUserInput();
         };
 
 		self.onUserLoggedIn = function(user){
@@ -1437,6 +1441,7 @@ $(function(){
 
 		self._update_color_assignments = function(){
 			self._update_job_summary();
+			self.limitUserInput();
 			var jobs = $('#additional_jobs .job_row_vector');
 			for (var idx = 0; idx < jobs.length; idx++) {
 				var j = jobs[idx];
@@ -1480,6 +1485,34 @@ $(function(){
             $('#colored_line_mapping >.'+classFlag).remove();
 			self.show_line_color_mappings(show_line_mappings);
 		};
+
+		self.limitUserInput = function() {
+            $(".percentage_input").on("keyup", function() {
+                clearTimeout(self.userInputTimer);
+
+                let elem = $(this);
+                let val = elem.val();
+
+                if (val > 100) {
+                    setTimeout(function() {elem.val(100)}, self.DONE_TYPING_TIME)
+                } else if (val < 0 || val === "") {
+                    setTimeout(function() {elem.val(0)}, self.DONE_TYPING_TIME)
+                }
+            });
+
+            $(".speed_input").on("keyup", function() {
+                clearTimeout(self.userInputTimer);
+
+                let elem = $(this);
+                let val = elem.val();
+
+                if (val > 5000) {
+                    setTimeout(function() {elem.val(5000)}, self.DONE_TYPING_TIME)
+                } else if (val < 30 || val === "") {
+                     setTimeout(function() {elem.val(30)}, self.DONE_TYPING_TIME)
+                }
+            });
+        };
 
 		// quick hack
 		self._update_job_summary = function(){
