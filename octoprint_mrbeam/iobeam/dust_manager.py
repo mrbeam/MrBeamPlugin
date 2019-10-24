@@ -169,7 +169,8 @@ class DustManager(object):
 		elif event == MrBeamEvents.READY_TO_LASER_CANCELED:
 			self._stop_dust_extraction()
 			self._unboost_timer_interval()
-		elif event in (OctoPrintEvents.PRINT_DONE, OctoPrintEvents.PRINT_FAILED, OctoPrintEvents.PRINT_CANCELLED):
+		elif event in (OctoPrintEvents.PRINT_DONE, OctoPrintEvents.PRINT_FAILED, OctoPrintEvents.PRINT_CANCELLED,
+					   MrBeamEvents.LASER_JOB_DONE, MrBeamEvents.LASER_JOB_FAILED, MrBeamEvents.LASER_JOB_CANCELLED):
 			self._last_event = event
 			self._do_end_dusting()
 		elif event == OctoPrintEvents.SHUTDOWN:
@@ -259,6 +260,9 @@ class DustManager(object):
 				self._logger.warning("No dust value received so far. Skipping trial dust extraction!")
 		except:
 			self._logger.exception("Exception in __do_end_dusting_thread(): ")
+		finally:
+			time.sleep(self.FINAL_DUSTING_DURATION)
+			self._iobeam.shutdown_fan()
 		self.is_dust_mode = False
 		self.send_laser_job_event()
 
