@@ -13,7 +13,6 @@ $(function(){
 		self.BRIGHTNESS_VALUE_RED   = 0.299;
 		self.BRIGHTNESS_VALUE_GREEN = 0.587;
 		self.BRIGHTNESS_VALUE_BLUE  = 0.114;
-		self.DONE_TYPING_TIME = 2000;  // We assume that after 2 seconds the user has finished typing
 
 		self.loginState = params[0];
 		self.settings = params[1];
@@ -43,7 +42,7 @@ $(function(){
 		// vector settings
 		self.show_vector_parameters = ko.observable(true);
 		self.maxSpeed = ko.observable(3000);
-		self.minSpeed = ko.observable(20);   // todo iratxe: 20 or 30?
+		self.minSpeed = ko.observable(20);
 
 		self.vectorJobs = ko.observableArray([]);
 		self.show_line_color_mappings = ko.observable(false);
