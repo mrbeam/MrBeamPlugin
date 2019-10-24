@@ -1795,11 +1795,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return self._hostname
 
 	def get_product_name(self):
-		if self.is_mrb_2():
+		if self.is_mrbeam2():
 			return "Mr Beam II"
-		elif self.is_mrb_2_dreamcut():
+		elif self.is_mrbeam2_dreamcut():
 			return "Mr Beam II dreamcut"
-		elif self.is_mrb_2_dreamcut_ready():
+		elif self.is_mrbeam2_dreamcut_ready2():
 			return "Mr Beam II dreamcut ready"
 		else:
 			return "Mr Beam II"
@@ -1997,14 +1997,17 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def is_beta_channel(self):
 		return self._settings.get(["dev", "software_tier"]) == SW_UPDATE_TIER_BETA
 
-	def is_mrb_2(self):
-		return self._model_id == "MrB2"
+	def is_mrbeam2(self):
+		return self._model_id == "MRBEAM2"
 
-	def is_mrb_2_dreamcut(self):
-		return self._model_id == "MrB2-DC"
+	def is_mrbeam2_dreamcut_ready1(self):
+		return self._model_id == "MRBEAM2_DC_R1"
 
-	def is_mrb_2_dreamcut_ready(self):
-		return self._model_id == "MrB2-DCR"
+	def is_mrbeam2_dreamcut_ready2(self):
+		return self._model_id == "MRBEAM2_DC_R2"
+
+	def is_mrbeam2_dreamcut(self):
+		return self._model_id == "MRBEAM2_DC"
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
