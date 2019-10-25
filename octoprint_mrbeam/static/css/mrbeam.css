@@ -2110,11 +2110,15 @@ input.search-query,
 }
 
 .form-horizontal .controls {
-  width: 348px;
+  width: 430px;
 }
 
 .range-control-and-label {
-  width: 530px;
+  width: 600px;
+}
+
+.compressor-control-and-label {
+  width: 520px;
 }
 
 .input-control-and-label {
@@ -2135,7 +2139,7 @@ input.search-query,
 }
 
 .line-control-and-label {
-  width: 500px;
+  width: 470px;
   margin: 10px 0;
 }
 

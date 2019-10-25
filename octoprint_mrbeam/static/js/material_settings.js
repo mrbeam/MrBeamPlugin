@@ -28,7 +28,8 @@ $(function () {
                     }
                 })
                 .fail(function (response) {
-                    setTimeout(self.loadMaterialSettings, self.MATERIAL_SETTINGS_RETRY_TIME, callback);
+                    // todo iratxe
+                    // setTimeout(self.loadMaterialSettings, self.MATERIAL_SETTINGS_RETRY_TIME, callback);
                     console.error("Unable to load material settings. Retrying in" + self.MATERIAL_SETTINGS_RETRY_TIME/1000 + "seconds");
                 });
         };
