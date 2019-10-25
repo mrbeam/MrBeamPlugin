@@ -4,6 +4,8 @@ $(function () {
 
     function MaterialSettingsViewModel(params) {
         let self = this;
+        self.MATERIAL_SETTINGS_RETRY_TIME = 5000;
+
         window.mrbeam.viewModels['materialSettingsViewModel'] = self;
         self.default_laser_type = 'MrBeamII-1.0';
 
@@ -26,7 +28,8 @@ $(function () {
                     }
                 })
                 .fail(function (response) {
-                    console.error("Unable to parse the laser settings correctly: ", response);
+                    setTimeout(self.loadMaterialSettings, self.MATERIAL_SETTINGS_RETRY_TIME, callback);
+                    console.error("Unable to load material settings. Retrying in" + self.MATERIAL_SETTINGS_RETRY_TIME/1000 + "seconds");
                 });
         };
 
