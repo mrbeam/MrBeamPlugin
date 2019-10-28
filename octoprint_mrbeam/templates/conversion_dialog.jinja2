@@ -224,10 +224,10 @@
                                      {{ _('Keep this value to the maximum for the best performance, unless you want to lower it because your material is very light and it\'s blown away.') }}">
                                     <label class="control-label">{{ _('Compressor') }}</label>
                                     <div class="controls">
-                                        <div id="engraving_compressor">
-                                            <span class="compressor_min_label">min</span>
+                                        <div id="engraving_compressor" class="compressor_control">
+                                            <span class="compressor_min_max_label">min</span>
                                             <input class="conversion_range_slider compressor_range" type="range" min="0" max="3" data-bind="value: engravingCompressor, event: {change: flag_customized_material}"/>
-                                            <span class="compressor_max_label">max</span>
+                                            <span class="compressor_min_max_label">max</span>
                                         </div>
                                     </div>
                                 </div>
@@ -352,10 +352,10 @@
                                      {{ _('Keep this value to the maximum for the best performance, unless you want to lower it because your material is very light and it\'s blown away.') }}">
                                     <label class="control-label">{{ _('Compressor') }}</label>
                                     <div class="controls">
-                                        <div>
-                                            <span class="compressor_min_label">min</span>
+                                        <div class="compressor_control">
+                                            <span class="compressor_min_max_label">min</span>
                                             <input class="conversion_range_slider compressor_range" type="range" min="0" max="3" value="3" data-bind="event: {change: flag_customized_material}"/>
-                                            <span class="compressor_max_label">max</span>
+                                            <span class="compressor_min_max_label">max</span>
                                         </div>
                                     </div>
                                 </div>
