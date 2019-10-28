@@ -175,7 +175,7 @@
                                 <li>{{ _('Dark/black pixels use the right (higher) value.') }}</li>
                                 </ul> {{ _('Equal values do not vary the laser intensity related to the pixel brightness.') }}">
                                     <label class="control-label">{{ _('Laser intensity range') }}</label>
-                                    <div class="controls">
+                                    <div class="controls range-control">
                                         <div class="input-append">
                                             <input id="svgtogcode_img_intensity_white" class="img_intensity_input percentage_input"  type="number" min="0" max="100"
                                                    data-bind="value: imgIntensityWhite, event: {change: flag_customized_material}">
@@ -183,6 +183,7 @@
                                             <input id="svgtogcode_img_intensity_black" class="img_intensity_input percentage_input" type="number" min="0" max="100"
                                                    data-bind="value: imgIntensityBlack, event: {change: flag_customized_material}">
                                         </div>
+                                        &nbsp;%
                                     </div>
                                 </div>
 
@@ -193,7 +194,7 @@
                                      <li>{{ _('Dark/black pixels use the right (lower) value.') }}</li></ul>
                                      {{ _('Equal values do not vary the laser velocity related to the pixel brightness.') }}">
                                     <label class="control-label">{{ _('Engraving speed range') }}</label>
-                                    <div class="controls">
+                                    <div class="controls range-control">
                                         <div class="input-append">
                                             <input id="svgtogcode_img_feedrate_white" class="img_intensity_input speed_input" type="number"  min="100" max="3000"
                                                    data-bind="value: imgFeedrateWhite, event: {change: flag_customized_material}">
@@ -201,6 +202,7 @@
                                             <input id="svgtogcode_img_feedrate_black" class="img_intensity_input speed_input" type="number"  min="100" max="3000"
                                                    data-bind="value: imgFeedrateBlack, event: {change: flag_customized_material}">
                                         </div>
+                                        &nbsp;{{ _('mm/min') }}
                                     </div>
                                 </div>
                             </div>
@@ -217,14 +219,16 @@
                             </div>
 
                             <div class="control-group" >
-                                <div class="range-control-and-label" data-toggle="tooltip" data-placement="right" data-bind="visible: hasCompressor"
+                                <div class="compressor-control-and-label" data-toggle="tooltip" data-placement="right" data-bind="visible: hasCompressor"
                                      title="<b>{{ _('The power of the air compressor.') }}</b>
                                      {{ _('Keep this value to the maximum for the best performance, unless you want to lower it because your material is very light and it\'s blown away.') }}">
                                     <label class="control-label">{{ _('Compressor') }}</label>
-                                    <div id="engraving_compressor" class="controls">
-                                        <span class="compressor_min_label">min</span>
-                                        <input class="conversion_range_slider compressor_range" type="range" min="0" max="3" data-bind="value: engravingCompressor, event: {change: flag_customized_material}"/>
-                                        <span class="compressor_max_label">max</span>
+                                    <div class="controls range-control">
+                                        <div id="engraving_compressor" class="compressor_control">
+                                            <span class="compressor_min_max_label">min</span>
+                                            <input class="conversion_range_slider compressor_range" type="range" min="0" max="3" data-bind="value: engravingCompressor, event: {change: flag_customized_material}"/>
+                                            <span class="compressor_min_max_label">max</span>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -343,14 +347,16 @@
                             </div>
 
                             <div class="control-group">
-                                <div class="range-control-and-label" data-toggle="tooltip" data-placement="right" data-bind="visible: hasCompressor"
+                                <div class="compressor-control-and-label" data-toggle="tooltip" data-placement="right" data-bind="visible: hasCompressor"
                                      title="<b>{{ _('The power of the air compressor.') }}</b>
                                      {{ _('Keep this value to the maximum for the best performance, unless you want to lower it because your material is very light and it\'s blown away.') }}">
                                     <label class="control-label">{{ _('Compressor') }}</label>
                                     <div class="controls">
-                                        <span class="compressor_min_label">min</span>
-                                        <input class="conversion_range_slider compressor_range" type="range" min="0" max="3" value="3" data-bind="event: {change: flag_customized_material}"/>
-                                        <span class="compressor_max_label">max</span>
+                                        <div class="compressor_control">
+                                            <span class="compressor_min_max_label">min</span>
+                                            <input class="conversion_range_slider compressor_range" type="range" min="0" max="3" value="3" data-bind="event: {change: flag_customized_material}"/>
+                                            <span class="compressor_min_max_label">max</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
