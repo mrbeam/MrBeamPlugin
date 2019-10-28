@@ -2110,7 +2110,11 @@ input.search-query,
 }
 
 .form-horizontal .controls {
-  width: 430px;
+    width: 348px;
+}
+
+.form-horizontal .range-control {
+    width: 430px;
 }
 
 .range-control-and-label {
