@@ -202,7 +202,7 @@ $(function () {
         };
 
         self.loadUsageValues = function() {
-            self.needsGantryMaintenance(window.mrbeam.model.isMrb2());
+            self.needsGantryMaintenance(window.mrbeam.model.is_mrbeam2() || window.mrbeam.model.is_mrbeam2_dreamcut_ready1());
 
             if (self.needsGantryMaintenance()) {
                 self.gantryUsage(self.settings.settings.plugins.mrbeam.usage.gantryUsage());

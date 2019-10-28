@@ -60,6 +60,7 @@ class Converter():
 		self.orientation_points = {}
 
 		self.colorParams = {}
+		self.colorOrder = []
 		self.gc_options = None
 		self.options = self.defaults
 		self.setoptions(params)
@@ -78,6 +79,7 @@ class Converter():
 				self.options[key] = opts[key]
 				if key == "vector":
 					for paramSet in opts['vector']:
+						self.colorOrder.append(paramSet['color'])
 						self.colorParams[paramSet['color']] = paramSet
 			else:
 				self._log.info("Using default %s = %s" %(key, str(self.options[key])))
@@ -291,18 +293,7 @@ class Converter():
 					for path in self.paths[layer] :
 						self._log.info("path %s, %s, stroke: %s, fill: %s, mb:gc: %s" % ( layer.get('id'), path.get('id'), path.get('stroke'), path.get('class'), path.get(_add_ns('gc', 'mb'))[:100] ))
 
-#						if path.get('stroke') is not None: #todo catch None stroke/fill earlier
-#							stroke = path.get('stroke')
-#						elif path.get('fill') is not None:
-#							stroke = path.get('fill')
-#						elif path.get('class') is not None:
-#							stroke = path.get('class')
-#						else:
-#							stroke = 'default'
-							#continue
-
 						strokeInfo = self._get_stroke(path)
-						#print('strokeInfo:', strokeInfo)
 						if(strokeInfo['visible'] == False):
 							continue
 
@@ -318,20 +309,11 @@ class Converter():
 							processedItemCount += 1
 							report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
 
-#					curvesD = dict() #diction
-#					for colorKey in paths_by_color.keys():
-#						if colorKey == 'none':
-#							continue
-
-#						curvesD[colorKey] = self._parse_curve(paths_by_color[colorKey], layer)
-
-					#pierce_time = self.options['pierce_time']
 					layerId = layer.get('id') or '?'
 					pathId = path.get('id') or '?'
 
 					#for each color generate GCode
-					#for colorKey in curvesD.keys():
-					for colorKey in paths_by_color.keys(): # TODO fix order of colors according to frontend job order
+					for colorKey in self.colorOrder:
 						if colorKey == 'none':
 							continue
 

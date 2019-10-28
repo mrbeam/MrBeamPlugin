@@ -81,6 +81,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	ENV_LASER_SAFETY = "laser_safety"
 	ENV_ANALYTICS =    "analytics"
 
+	MODEL_MRBEAM2 =         "MRBEAM2"
+	MODEL_MRBEAM2_DC_R1 =   "MRBEAM2_DC_R1"
+	MODEL_MRBEAM2_DC_R2 =   "MRBEAM2_DC_R2"
+	MODEL_MRBEAM2_DC =      "MRBEAM2_DC"
+
 	LASERSAFETY_CONFIRMATION_DIALOG_VERSION  = "0.3"
 
 	LASERSAFETY_CONFIRMATION_STORAGE_URL = 'https://script.google.com/a/macros/mr-beam.org/s/AKfycby3Y1RLBBiGPDcIpIg0LHd3nwgC7GjEA4xKfknbDLjm3v9-LjG1/exec'
@@ -194,7 +199,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		"""
 		msg = "MrBeam Plugin"
 		msg += " version:{}".format(self._plugin_version)
-		msg += ", product:{}".format(self.get_product_name())
+		msg += ", model:{}".format(self.get_model_id())
 		msg += ", host:{}".format(self.getHostname())
 		msg += ", serial:{}".format(self.getSerialNum())
 		msg += ", software_tier:{}".format(self._settings.get(["dev", "software_tier"]))
@@ -229,7 +234,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		:return: dict of environment data
 		"""
 		return dict(version=self._plugin_version,
-		            product=self.get_product_name(),
+					model=self.get_model_id(),
 					host=self.getHostname(),
 					serial=self._serial_num,
 					software_tier=self._settings.get(["dev", "software_tier"]),
@@ -690,6 +695,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 					   'email': data.get('username', ''),
 					   'serial': self._serial_num,
 					   'hostname': self.getHostname(),
+					   'model': self.get_model_id(),
 			           'dialog_version': self.LASERSAFETY_CONFIRMATION_DIALOG_VERSION,
 			           'dialog_language': dialog_language,
 			           'plugin_version': self._plugin_version,
@@ -1795,14 +1801,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return self._hostname
 
 	def get_product_name(self):
-		if self.is_mrb_2():
+		if self.is_mrbeam2():
 			return "Mr Beam II"
-		elif self.is_mrb_2_dreamcut():
+		elif self.is_mrbeam2_dreamcut():
 			return "Mr Beam II dreamcut"
-		elif self.is_mrb_2_dreamcut_ready():
+		elif self.is_mrbeam2_dreamcut_ready1() or self.is_mrbeam2_dreamcut_ready2():
 			return "Mr Beam II dreamcut ready"
 		else:
-			return "Mr Beam II"
+			return "Mr Beam"
 
 	def getSerialNum(self):
 		"""
@@ -1818,14 +1824,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def get_model_id(self):
 		"""
-		Gives you the device's model id liek Mrb2 or MrB2-DC
+		Gives you the device's model id liek MRBEAM2 or MRBEAM2-DC
 		The value is soley read from device_info file (/etc/mrbeam)
 		and it's cached once read.
 		:return: model id
 		:rtype: String
 		"""
 		if self._model_id is None:
-			self._model_id = self._get_val_from_device_info('model', default="MrB2")
+			self._model_id = self._get_val_from_device_info('model', default=self.MODEL_MRBEAM2)
 		return self._model_id
 
 	def getBranch(self):
@@ -1997,14 +2003,17 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def is_beta_channel(self):
 		return self._settings.get(["dev", "software_tier"]) == SW_UPDATE_TIER_BETA
 
-	def is_mrb_2(self):
-		return self._model_id == "MrB2"
+	def is_mrbeam2(self):
+		return self._model_id == self.MODEL_MRBEAM2
 
-	def is_mrb_2_dreamcut(self):
-		return self._model_id == "MrB2-DC"
+	def is_mrbeam2_dreamcut_ready1(self):
+		return self._model_id == self.MODEL_MRBEAM2_DC_R1
 
-	def is_mrb_2_dreamcut_ready(self):
-		return self._model_id == "MrB2-DCR"
+	def is_mrbeam2_dreamcut_ready2(self):
+		return self._model_id == self.MODEL_MRBEAM2_DC_R2
+
+	def is_mrbeam2_dreamcut(self):
+		return self._model_id == self.MODEL_MRBEAM2_DC
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that

@@ -35,12 +35,14 @@ mrbeam.browser = browser;
 
 // Mr Beam models
 mrbeam.model ={
-    MRBEAM2:        "MrB2",
-    MRBEAM2_DC:     "MrB2-DC",
-    MRBEAM2_DCR:    "Mrb2-DCR",
-    isMrb2:     function(){return (window.MRBEAM_MODEL === window.mrbeam.model.MRBEAM2);},
-    isMrb2DC:   function(){return (window.MRBEAM_MODEL === window.mrbeam.model.MRBEAM2_DC);},
-    isMrb2DCR:  function(){return (window.MRBEAM_MODEL === window.mrbeam.model.MRBEAM2_DCR);},
+    MRBEAM2:        "MRBEAM2",
+    MRBEAM2_DC_R1:  "MRBEAM2_DC_R1",
+    MRBEAM2_DC_R2:  "MRBEAM2_DC_R2",
+    MRBEAM2_DC:     "MRBEAM2_DC",
+    is_mrbeam2:                     function(){return (window.MRBEAM_MODEL === window.mrbeam.model.MRBEAM2);},
+    is_mrbeam2_dreamcut_ready1:     function(){return (window.MRBEAM_MODEL === window.mrbeam.model.MRBEAM2_DC_R1);},
+    is_mrbeam2_dreamcut_ready2:     function(){return (window.MRBEAM_MODEL === window.mrbeam.model.MRBEAM2_DC_R2);},
+    is_mrbeam2_dreamcut:            function(){return (window.MRBEAM_MODEL === window.mrbeam.model.MRBEAM2_DC);},
 };
 
 

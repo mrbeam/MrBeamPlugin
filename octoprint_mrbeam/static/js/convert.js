@@ -719,6 +719,42 @@ $(function(){
 
 		self.get_current_multicolor_settings = function (prepareForBackend=false) {
 			var data = [];
+
+			var intensity_black_user = self.imgIntensityBlack();
+			var intensity_white_user = self.imgIntensityWhite();
+			var speed_black = parseInt(self.imgFeedrateBlack());
+			var speed_white = parseInt(self.imgFeedrateWhite());
+
+			// vector icons dragged into engraving.
+			$('#engrave_job_drop_zone_conversion_dialog>.cutting_job_color').each(function(i, el){
+				var colorkey = $(el).attr('id').substr(-6);
+				var hex = '#' + colorkey;
+				var slider_id = '#adjuster_cd_color_' + colorkey;
+				var brightness = $(slider_id).val();
+				var initial_factor = brightness / 255;
+				var intensity_user = intensity_white_user + initial_factor * (intensity_black_user - intensity_white_user);
+				var intensity = Math.round(intensity_user * self.profile.currentProfileData().laser.intensity_factor());
+				var feedrate = Math.round(speed_white + initial_factor * (speed_black - speed_white));
+
+				if(self._isValidVectorSetting(intensity_user, feedrate, 1, self.engravingPiercetime())){
+				    if($('#engrave_job_drop_zone_conversion_dialog').find('.cutting_job_color').length > 0) {
+                        var hex = '#' + $(el).attr('id').substr(-6);
+                        data.push({
+                            color: hex,
+                            intensity: intensity,
+                            intensity_user: intensity_user,
+                            feedrate: feedrate,
+                            pierce_time: self.engravingPiercetime(),
+                            passes: 1,
+                            engrave: true,
+                            cut_compressor: self.mapCompressorValue(self.engravingCompressor())
+                        });
+					};
+				} else {
+					console.log("Skipping line engrave job ("+hex+"), invalid parameters.");
+				}
+			});
+
 			$('.job_row_vector').each(function(i, job){
 				var intensity_user = $(job).find('.param_intensity').val();
 				var intensity = intensity_user * self.profile.currentProfileData().laser.intensity_factor() ;
@@ -750,40 +786,30 @@ $(function(){
 				}
 			});
 
-			var intensity_black_user = self.imgIntensityBlack();
-			var intensity_white_user = self.imgIntensityWhite();
-			var speed_black = parseInt(self.imgFeedrateBlack());
-			var speed_white = parseInt(self.imgFeedrateWhite());
+			// $('.job_row_vector').each(function(i, job){
+			// 	var intensity_user = $(job).find('.param_intensity').val();
+			// 	var intensity = intensity_user * self.profile.currentProfileData().laser.intensity_factor() ;
+			// 	var feedrate = $(job).find('.param_feedrate').val();
+			// 	var piercetime = $(job).find('.param_piercetime').val();
+			// 	var passes = $(job).find('.param_passes').val();
+			// 	if(self._isValidVectorSetting(intensity_user, feedrate, passes, piercetime)){
+			// 		$(job).find('.used_color').each(function(j, col){
+			// 			var hex = '#' + $(col).attr('id').substr(-6);
+			// 			data.push({
+			// 				color: hex,
+			// 				intensity: intensity,
+			// 				intensity_user: intensity_user,
+			// 				feedrate: feedrate,
+			// 				pierce_time: piercetime,
+			// 				passes: passes,
+            //                 engrave: false
+			// 			});
+			// 		});
+			// 	} else {
+			// 		console.log("Skipping vector job ("+1+"), invalid parameters.");
+			// 	}
+			// });
 
-			// vector icons dragged into engraving.
-			$('#colored_line_mapping input').each(function(i, el){
-				var colorkey = $(el).attr('id').substr(-6);
-				var hex = '#' + colorkey;
-				var slider_id = '#adjuster_cd_color_' + colorkey;
-				var brightness = $(slider_id).val();
-				var initial_factor = brightness / 255;
-				var intensity_user = intensity_white_user + initial_factor * (intensity_black_user - intensity_white_user);
-				var intensity = Math.round(intensity_user * self.profile.currentProfileData().laser.intensity_factor());
-				var feedrate = Math.round(speed_white + initial_factor * (speed_black - speed_white));
-
-				if(self._isValidVectorSetting(intensity_user, feedrate, 1, self.engravingPiercetime())){
-				    if($('#engrave_job_drop_zone_conversion_dialog').find('.cutting_job_color').length > 0) {
-                        var hex = '#' + $(el).attr('id').substr(-6);
-                        data.push({
-                            color: hex,
-                            intensity: intensity,
-                            intensity_user: intensity_user,
-                            feedrate: feedrate,
-                            pierce_time: self.engravingPiercetime(),
-                            passes: 1,
-                            engrave: true,
-                            cut_compressor: self.mapCompressorValue(self.engravingCompressor())
-                        });
-					};
-				} else {
-					console.log("Skipping line engrave job ("+hex+"), invalid parameters.");
-				}
-			});
 
 			return data;
 		};
@@ -1321,18 +1347,21 @@ $(function(){
 		self.mapCompressorValue = function(rangeValue) {
 		    let backendValue = null;
 		    if (self.hasCompressor()) {
-                switch (rangeValue) {
-                    case "0":
+                switch (parseInt(rangeValue)) {
+                    case 0:
                         backendValue = 10;
                         break;
-                    case "1":
+                    case 1:
                         backendValue = 25;
                         break;
-                    case "2":
+                    case 2:
                         backendValue = 50;
                         break;
-                    case "3":
+                    case 3:
                         backendValue = 100;
+                        break;
+                    default:
+                        backendValue = 10;
                         break;
                 }
             }
