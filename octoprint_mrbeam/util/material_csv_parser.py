@@ -1,8 +1,23 @@
 import sys, os, csv, json, collections
+from octoprint_mrbeam import MrBeamPlugin
 
 MRBEAM = 'Mr Beam II'
 MRB_DREAMCUT = 'MrB II Dreamcut'
 MRB_READY = 'MrB II Dreamcut Ready'
+
+def model_id_to_csv_name(id):
+    convert = {
+        MrBeamPlugin.MODEL_MRBEAM2: MRBEAM,
+        MrBeamPlugin.MODEL_MRBEAM2_DC: MRB_DREAMCUT,
+        MrBeamPlugin.MODEL_MRBEAM2_DC_R1: MRB_READY,
+        MrBeamPlugin.MODEL_MRBEAM2_DC_R2: MRB_READY,
+    }
+    if id in convert.keys():
+        return convert[id]
+    else:
+        return False
+
+
 # Deep merging of dictionaries
 # inspired from in dict_merge in iobeam_protocol
 def dict_merge(dct, merge_dct):
@@ -103,6 +118,9 @@ def parse_csv(path = None, laserhead=MRBEAM):
                                                                'colors': { colorcode: {'name': colorname,
                                                                                        settingname: settings}}}}})
             prev_vals = [mrbeamversion, material, colorcode, thickness_or_engrave, intensity, speed, passes, compressor_lvl, pierce_time, dithering] # update current row values for next loop
+    converted_laserhead = model_id_to_csv_name(laserhead)
+    if converted_laserhead:
+        laserhead = converted_laserhead
     return dictionary[laserhead]
 
 
