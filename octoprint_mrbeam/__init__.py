@@ -1752,7 +1752,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def get_model_id(self):
 		"""
-		Gives you the device's model id liek Mrb2 or MrB2-DC
+		Gives you the device's model id like MRBEAM2 or MRBEAM2_DC_R1
 		The value is soley read from device_info file (/etc/mrbeam)
 		and it's cached once read.
 		:return: model id
