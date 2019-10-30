@@ -55,8 +55,8 @@ $(function(){
 		// material menu
 		self.material_settings2 = {};
 
-		self.engrave_only_thickness = {thicknessMM: -1, cut_i:'', cut_f:'', cut_p: 1, cut_pierce: 0, cut_compressor:3};
-		self.no_engraving = {eng_i:['',''], eng_f:['',''], eng_pierce: 0, eng_compressor: 3, dithering: false };
+		self.engrave_only_thickness = {thicknessMM: -1, cut_i:'', cut_f:'', cut_p: 1, cut_pierce: 0, cut_compressor_lvl:3};
+		self.no_engraving = {eng_i:['',''], eng_f:['',''], eng_pierce: 0, engrave_compressor_lvl: 3, dithering: false };
 
 		self.material_colors = ko.observableArray([]);
 		self.material_thicknesses = ko.observableArray([]);
@@ -560,7 +560,7 @@ $(function(){
 				$(job).find('.param_feedrate').val(p.cut_f);
 				$(job).find('.param_passes').val(p.cut_p || 0);
 				$(job).find('.param_piercetime').val(p.cut_pierce || 0);
-				$(job).find('.compressor_range').val(p.cut_compressor || 0);  // Here we pass the value of the range (0), not the real one (10%)
+				$(job).find('.compressor_range').val(p.cut_compressor_lvl || 0);  // Here we pass the value of the range (0), not the real one (10%)
 			}
 		};
 		self.apply_engraving_proposal = function(){
@@ -581,7 +581,7 @@ $(function(){
 			self.imgFeedrateBlack(p.eng_f[1]);
 			self.imgDithering(p.dithering);
 			self.engravingPiercetime(p.eng_pierce || 0);
-			self.engravingCompressor(p.eng_compressor || 0);  // Here we pass the value of the range (0), not the real one (10%)
+			self.engravingCompressor(p.engrave_compressor_lvl || 0);  // Here we pass the value of the range (0), not the real one (10%)
 		};
 
 		self._find_closest_color_to = function(hex, available_colors){

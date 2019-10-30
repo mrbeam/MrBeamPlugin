@@ -1289,8 +1289,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			# TODO select which Mr Beam version to parse the materials for
 			# TODO Select "Mr Beam II" laserhead for the DreamCut Ready variant
 			# TODO ANDY Load materials when the user logs in as well
+
 			try:
-				return make_response(jsonify(parse_csv(laserhead="Mr Beam II")), 200) # TODO : Give parse_csv the right laserhead type
+				return make_response(jsonify(parse_csv(laserhead=self.get_model_id())), 200) # TODO : Give parse_csv the right laserhead type
 			except Exception as err:
 				self._logger.exception(err.message)
 				return make_response(err.message, 500)
@@ -1796,9 +1797,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				exec_cmd("sudo /root/scripts/change_hostname {}".format(hostname_dev_info))
 				exec_cmd("sudo /root/scripts/change_apname {}".format(hostname_dev_info))
 				self._logger.warn("getHostname() system hostname got changed to: {}. Requires reboot to take effect!".format(hostname_dev_info))
-
-
 		return self._hostname
+
 
 	def get_product_name(self):
 		if self.is_mrbeam2():
