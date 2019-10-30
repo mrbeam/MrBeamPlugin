@@ -14,6 +14,9 @@ $(function () {
             OctoPrint.simpleApiCommand("mrbeam", "material_settings", {})
                 .done(function (response) {
                     self.materialImportedSettings = response;
+                    console.log("Loaded standard materials!");
+                    console.log(self.materialImportedSettings);
+
                     for (let materialKey in self.materialSettingsDatabase) {
                         if (materialKey in self.materialImportedSettings) {
                             self.materialSettingsDatabase[materialKey].colors = self.materialImportedSettings[materialKey].colors;
