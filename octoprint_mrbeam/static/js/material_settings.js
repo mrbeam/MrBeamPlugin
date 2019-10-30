@@ -7,8 +7,6 @@ $(function () {
         self.MATERIAL_SETTINGS_RETRY_TIME = 5000;
 
         window.mrbeam.viewModels['materialSettingsViewModel'] = self;
-        self.default_laser_type = 'MrBeamII-1.0';
-
         self.materialSettingsDatabase = {};
 
         self.loadMaterialSettings = function (callback) {

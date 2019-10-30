@@ -1797,7 +1797,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				exec_cmd("sudo /root/scripts/change_hostname {}".format(hostname_dev_info))
 				exec_cmd("sudo /root/scripts/change_apname {}".format(hostname_dev_info))
 				self._logger.warn("getHostname() system hostname got changed to: {}. Requires reboot to take effect!".format(hostname_dev_info))
-
+		return self._hostname
 
 
 	def get_product_name(self):
