@@ -1,5 +1,5 @@
 import sys, os, csv, json, collections
-from octoprint_mrbeam import MrBeamPlugin
+import octoprint_mrbeam
 
 MRBEAM = 'Mr Beam II'
 MRB_DREAMCUT = 'MrB II Dreamcut'
@@ -7,10 +7,10 @@ MRB_READY = 'MrB II Dreamcut Ready'
 
 def model_id_to_csv_name(id):
     convert = {
-        MrBeamPlugin.MODEL_MRBEAM2: MRBEAM,
-        MrBeamPlugin.MODEL_MRBEAM2_DC: MRB_DREAMCUT,
-        MrBeamPlugin.MODEL_MRBEAM2_DC_R1: MRB_READY,
-        MrBeamPlugin.MODEL_MRBEAM2_DC_R2: MRB_READY,
+        octoprint_mrbeam.MrBeamPlugin.MODEL_MRBEAM2: MRBEAM,
+        octoprint_mrbeam.MrBeamPlugin.MODEL_MRBEAM2_DC: MRB_DREAMCUT,
+        octoprint_mrbeam.MrBeamPlugin.MODEL_MRBEAM2_DC_R1: MRB_READY,
+        octoprint_mrbeam.MrBeamPlugin.MODEL_MRBEAM2_DC_R2: MRB_READY,
     }
     if id in convert.keys():
         return convert[id]
