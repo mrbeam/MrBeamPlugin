@@ -3,14 +3,16 @@ import octoprint_mrbeam
 
 MRBEAM = 'Mr Beam II'
 MRB_DREAMCUT = 'MrB II Dreamcut'
-MRB_READY = 'MrB II Dreamcut Ready'
+MRB_READY = 'MrB II Dreamcut Ready' # not used yet
+
+DEFAULT_LASER = MRBEAM
 
 def model_id_to_csv_name(id):
     convert = {
         octoprint_mrbeam.MrBeamPlugin.MODEL_MRBEAM2: MRBEAM,
         octoprint_mrbeam.MrBeamPlugin.MODEL_MRBEAM2_DC: MRB_DREAMCUT,
-        octoprint_mrbeam.MrBeamPlugin.MODEL_MRBEAM2_DC_R1: MRB_READY,
-        octoprint_mrbeam.MrBeamPlugin.MODEL_MRBEAM2_DC_R2: MRB_READY,
+        octoprint_mrbeam.MrBeamPlugin.MODEL_MRBEAM2_DC_R1: MRBEAM,
+        octoprint_mrbeam.MrBeamPlugin.MODEL_MRBEAM2_DC_R2: MRBEAM,
     }
     if id in convert.keys():
         return convert[id]
@@ -121,7 +123,13 @@ def parse_csv(path = None, laserhead=MRBEAM):
     converted_laserhead = model_id_to_csv_name(laserhead)
     if converted_laserhead:
         laserhead = converted_laserhead
-    return dictionary[laserhead]
+    if laserhead not in dictionary:
+        laserhead = DEFAULT_LASER
+    res = dict(
+        materials=dictionary.get(laserhead, {}),
+        laser_source=laserhead
+    )
+    return res
 
 
 if __name__ == "__main__":
