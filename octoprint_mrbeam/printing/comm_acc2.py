@@ -387,6 +387,8 @@ class MachineCom(object):
 					return
 				elif self._acc_line_buffer.is_empty():
 					self._cmd.pop('flush', None)
+					if self._cmd.get('cmd', None) == self.COMMAND_FLUSH:
+						self._cmd.pop('cmd', None)
 					self._logger.debug("FLUSHed ({}ms)".format(int(1000 * (time.time() - self._flush_command_ts))), terminal_as_comm=True)
 					self._flush_command_ts = -1
 				else:
