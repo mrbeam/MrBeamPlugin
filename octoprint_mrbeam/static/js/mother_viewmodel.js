@@ -246,8 +246,8 @@ $(function () {
         };
 
         self.onEventMrbPluginVersion = function(payload) {
-            if ('version' in payload) {
-                self._force_reload_on_inconsitent_version(payload['version']);
+            if ('version' in payload || 'is_first_run' in payload) {
+                self._force_reload_on_inconsitent_version(payload['version'], payload['is_first_run']);
             }
         };
 
@@ -277,19 +277,25 @@ $(function () {
         };
 
         /**
-         * Reloads the frontend bypassing any cache if backend version of mr beam plugin is different from the forntend version.
-         * This happens sometimes after a software update.
+         * Reloads the frontend bypassing any cache if backend version of mr beam plugin is different from the frontend version
+         * or id the firstRunFlag is different.
+         * This happens sometimes after a software update or if the user used a reset stick
          * @private
          * @param backend_version (optional) If no version is given the function reads it from self.settings
+         * @param isFirstRun (optional) If no firstRun flag is given the function reads it from self.settings
          */
-        self._force_reload_on_inconsitent_version = function(backend_version){
+        self._force_reload_on_inconsitent_version = function(backend_version, isFirstRun){
             backend_version = backend_version || self.settings.settings.plugins.mrbeam._version();
-            if (backend_version != BEAMOS_VERSION) {
-                console.log("Frontend version check: FAILED (frontend=" + BEAMOS_VERSION + ", backend="+backend_version + ")");
+            if (isFirstRun === undefined) {
+                isFirstRun = self.settings.settings.plugins.mrbeam.isFirstRun();
+            }
+            if (backend_version != BEAMOS_VERSION || isFirstRun != CONFIG_FIRST_RUN) {
+                console.log("Frontend reload check: RELOAD! (version: frontend=" + BEAMOS_VERSION + ", backend=" + backend_version +
+                    ", isFirstRun: frontend=" + CONFIG_FIRST_RUN + ", backend=" + isFirstRun + ")");
                 console.log("Reloading frontend...");
-                window.location.href = "/?ts="+Date.now();
+                window.location.href = "/?ts=" + Date.now();
             } else {
-                console.log("Frontend version check: OK (frontend=" + BEAMOS_VERSION + ", backend="+backend_version + ")");
+                console.log("Frontend reload check: OK (version: "+BEAMOS_VERSION + ", isFirstRun: " + CONFIG_FIRST_RUN + ")");
             }
         };
 

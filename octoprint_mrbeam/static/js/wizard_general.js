@@ -56,23 +56,6 @@ $(function() {
             }
         };
 
-        // If after finishing the welcome wizard the UI is refreshed, CONFIG_FIRST_RUN might be true again as it was cached like that.
-        // For that reason we check with the backend to see if it is really the first run.
-        self.onBeforeBinding = function () {
-            let backendIsFirstRun = self.settings.settings.plugins.mrbeam.isFirstRun();
-
-            if (backendIsFirstRun !== CONFIG_FIRST_RUN) {
-                console.log('Backend and frontend isFirstRun are different. Setting frontend value to ' + backendIsFirstRun);
-                CONFIG_FIRST_RUN = backendIsFirstRun;
-            }
-
-            if (backendIsFirstRun === false && MRBEAM_WIZARD_TO_SHOW) {
-                MRBEAM_WIZARD_TO_SHOW = null;
-                self.isWelcome = false;
-            }
-
-        };
-
         self.onWizardFinish = function(){
             if (self.isWhatsnew) {
                 let event = 'whatsnew_findmrbeam';
@@ -83,6 +66,8 @@ $(function() {
                 self.analytics.send_fontend_event(event, payload);
             } else if (self.isWelcome) {
                 self.analytics.send_fontend_event('welcome_finish', {})
+                // avoid reloading of the frontend by a CLIENT_CONNECTED / MrbPluginVersion event
+                CONFIG_FIRST_RUN = false
             }
         };
 
