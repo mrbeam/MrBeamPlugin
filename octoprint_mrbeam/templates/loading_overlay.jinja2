@@ -60,16 +60,17 @@
             -webkit-animation-iteration-count: infinite;
             opacity: 0.1;
         }
-        .loading_overlay_setting_link {
+        .loading_overlay_footer {
             position: fixed;
             bottom: 5px;
+            right: 20px
         }
-        .loading_overlay_text_small {
-            margin: 0;
+        .loading_overlay_footer_text {
+            margin: 0 0 0 30px;
+            float: right;
+            color: lightgrey;
             font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
             font-size: 10px;
-            /* line-height: 20px; */
-            color: lightgrey;
         }
 
         @-webkit-keyframes pulsate {
@@ -103,17 +104,11 @@
             </div>
         </div>
         <!-- The Text -->
-        <div class="loading_overlay_setting_link" style="right: 500px">
-            <p class="loading_overlay_text_small">© 2019 Mr Beam Lasers GmbH</p>
-        </div>
-        <div class="loading_overlay_setting_link" style="right: 320px">
-            <p class="loading_overlay_text_small">{{ _('Mr Beam Name') }}: {{ hostname }}</p>
-        </div>
-        <div class="loading_overlay_setting_link" style="right: 150px">
-            <p class="loading_overlay_text_small">{{ _('Serial') }}: {{ serial }}</p>
-        </div>
-        <div class="loading_overlay_setting_link" style="right: 10px">
-            <p class="loading_overlay_text_small">Mr Beam Plugin: v{{ beamosVersionNumber }}</p>
+        <div id="loading_overlay_footer" class="loading_overlay_footer">
+            <div class="loading_overlay_footer_text">Mr Beam Plugin: v{{ beamosVersionNumber }}</div>
+            <div class="loading_overlay_footer_text">{{ _('Serial') }}: {{ serial }}</div>
+            <div class="loading_overlay_footer_text">{{ _('Mr Beam Name') }}: {{ hostname }}</div>
+            <div class="loading_overlay_footer_text">© 2019 Mr Beam Lasers GmbH</div>
         </div>
     </div>
 </div>

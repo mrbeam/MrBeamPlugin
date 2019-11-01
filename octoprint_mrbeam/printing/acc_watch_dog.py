@@ -118,7 +118,8 @@ class AccWatchDog(object):
 		res.append(str(self._comm_acc2._acc_line_buffer))
 		cmds = []
 		for c, t in reversed(self._commands):
-			cmds.append("({}) {}".format(datetime.datetime.fromtimestamp(t).strftime("%H:%M:%S,%f")[:-3], c))
+			cmd_str = c if isinstance(c, basestring) or (isinstance(c, dict) and len(c)>1) else c.get('cmd', None)
+			cmds.append("({}) {}".format(datetime.datetime.fromtimestamp(t).strftime("%H:%M:%S,%f")[:-3], cmd_str))
 		res.append("Last commands: {}".format(", ".join(cmds)))
 		return "\n".join(res)
 

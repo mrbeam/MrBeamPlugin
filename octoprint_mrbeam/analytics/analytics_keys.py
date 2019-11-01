@@ -1,4 +1,4 @@
-class AnalyticsKeys(object):
+class AnalyticsKeys:
 	class Header:
 		SNR = 'snr'
 		TYPE = 't'
@@ -11,6 +11,7 @@ class AnalyticsKeys(object):
 		DATA = 'data'
 		SOFTWARE_TIER = 'sw_tier'
 		VERSION_MRBEAM_PLUGIN = 'version_mrbeam_plugin'
+		UPTIME = 'uptime'
 
 	class EventType:
 		JOB = 'job'
@@ -80,6 +81,7 @@ class AnalyticsKeys(object):
 			LASER_TEMPERATURE = 'lt'
 			LASER_INTENSITY = 'li'
 			DUST_VALUE = 'dv'
+			COMPRESSOR = 'compressor'
 
 		class LaserHead:
 			TEMP = 'lasertemp'
@@ -101,6 +103,7 @@ class AnalyticsKeys(object):
 			HTTP_SELF_CHECK = 'http_self_check'
 			INTERNET_CONNECTION = 'internet_connection'
 			MRBEAM_USAGE = 'mrbeam_usage'
+			COMPRESSOR = 'compressor'
 
 		class SoftwareChannel:
 			OLD = 'old_channel'

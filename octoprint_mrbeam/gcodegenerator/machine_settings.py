@@ -1,11 +1,22 @@
 
 
 
-def gcode_before_path(intensity = 0):
-	return "\nM3S0\nG4P0\nM03 S"+str(intensity)
+#def gcode_before_path(intensity = 0):
+#	return "\nM3S0\nG4P0\nM03 S"+str(intensity)
 
-def gcode_before_path_color(color = '#000000', intensity = '0'):
-	return "\nM3S0\nG4P0\nM03 S%s;%s" % (intensity, color) 
+def gcode_before_path_color(color = '#000000', intensity = 0, compressor = 100):
+	gcode = []
+	if compressor is not None:
+		gcode.append("M3S0")
+		gcode.append("M100P{p} ; mrbeam_compressor: {p} - gcode_before_path_color".format(p=compressor))
+		gcode.append("G4P0.2")
+		gcode.append("M03 S{i} ; color: {c}".format(i=intensity, c=color))
+	else:
+		gcode.append("; gcode_before_path_color")
+		gcode.append("M3S0")
+		gcode.append("G4P0")
+		gcode.append("M03 S{i} ; color: {c}".format(i=intensity, c=color))
+	return "\n".join(gcode)
 
 def gcode_after_path():
 	return "M05"
@@ -19,6 +30,7 @@ M3S0
 G4P0.5
 M5
 ; end speedup cooling fan
+
 """
 
 gcode_header = """
@@ -30,7 +42,9 @@ M08
 
 # TODO remove this or fetch machine settings from settings.
 gcode_footer = """
+; end of job
 M05
+M100P0 ; air_pressure: 0 - gcode_footer
 G0 X500.000 Y390.000
 M09
 M02

@@ -39,11 +39,12 @@ class Converter():
 			"dithering": False,
 			"beam_diameter": 0.2,
 			"pierce_time": 0,
+			"eng_compressor": 100,
 		},
 		"vector": [],
 		"material": None,
 		"design_files": [],
-		"advanced_settings": False
+		"advanced_settings": False,
 	}
 
 	_tempfile = "/tmp/_converter_output.tmp"
@@ -59,6 +60,7 @@ class Converter():
 		self.orientation_points = {}
 
 		self.colorParams = {}
+		self.colorOrder = []
 		self.gc_options = None
 		self.options = self.defaults
 		self.setoptions(params)
@@ -77,6 +79,7 @@ class Converter():
 				self.options[key] = opts[key]
 				if key == "vector":
 					for paramSet in opts['vector']:
+						self.colorOrder.append(paramSet['color'])
 						self.colorParams[paramSet['color']] = paramSet
 			else:
 				self._log.info("Using default %s = %s" %(key, str(self.options[key])))
@@ -261,6 +264,7 @@ class Converter():
 											dithering = rasterParams['dithering'],
 											pierce_time = rasterParams['pierce_time'],
 											engraving_mode = rasterParams['engraving_mode'],
+											eng_compressor = rasterParams['eng_compressor'],
 											material = self.options['material'])
 											# material = rasterParams['material'] if 'material' in rasterParams else None)
 						data = imgNode.get('href')
@@ -289,18 +293,7 @@ class Converter():
 					for path in self.paths[layer] :
 						self._log.info("path %s, %s, stroke: %s, fill: %s, mb:gc: %s" % ( layer.get('id'), path.get('id'), path.get('stroke'), path.get('class'), path.get(_add_ns('gc', 'mb'))[:100] ))
 
-#						if path.get('stroke') is not None: #todo catch None stroke/fill earlier
-#							stroke = path.get('stroke')
-#						elif path.get('fill') is not None:
-#							stroke = path.get('fill')
-#						elif path.get('class') is not None:
-#							stroke = path.get('class')
-#						else:
-#							stroke = 'default'
-							#continue
-
 						strokeInfo = self._get_stroke(path)
-						#print('strokeInfo:', strokeInfo)
 						if(strokeInfo['visible'] == False):
 							continue
 
@@ -316,24 +309,15 @@ class Converter():
 							processedItemCount += 1
 							report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
 
-#					curvesD = dict() #diction
-#					for colorKey in paths_by_color.keys():
-#						if colorKey == 'none':
-#							continue
-
-#						curvesD[colorKey] = self._parse_curve(paths_by_color[colorKey], layer)
-
-					#pierce_time = self.options['pierce_time']
 					layerId = layer.get('id') or '?'
 					pathId = path.get('id') or '?'
 
 					#for each color generate GCode
-					#for colorKey in curvesD.keys():
-					for colorKey in paths_by_color.keys():
+					for colorKey in self.colorOrder:
 						if colorKey == 'none':
 							continue
 
-						settings = self.colorParams.get(colorKey, {'intensity': -1, 'feedrate': -1, 'passes': 0, 'pierce_time': 0})
+						settings = self.colorParams.get(colorKey, {'intensity': -1, 'feedrate': -1, 'passes': 0, 'pierce_time': 0, 'cut_compressor': 100})
 						if(settings['feedrate'] == None or settings['feedrate'] == -1 or settings['intensity'] == None or settings['intensity'] <= 0):
 							self._log.info( "convert() skipping color %s, no valid settings %s." % (colorKey, settings))
 							continue
@@ -355,6 +339,7 @@ class Converter():
 							fh.write("; Layer:" + layerId + ", outline of:" + pathId + ", stroke:" + colorKey +', '+str(settings)+"\n")
 							for p in range(0, int(settings['passes'])):
 								fh.write("; pass:%i/%s\n" % (p+1, settings['passes']))
+								# TODO tbd DreamCut different for each pass?
 								fh.write(curveGCode)
 
 			fh.write(self._get_gcode_footer())
@@ -712,7 +697,7 @@ class Converter():
 			si = curve[i]
 			feed = f if lg not in ['G01', 'G02', 'G03'] else ''
 			if s[1] == 'move':
-				g += "G0" + c(si[0]) + "\n" + machine_settings.gcode_before_path_color(color, settings['intensity']) + "\n"
+				g += "G0" + c(si[0]) + "\n" + machine_settings.gcode_before_path_color(color, settings['intensity'], settings['cut_compressor']) + "\n"
 				pt = int(settings['pierce_time'])
 				if pt > 0:
 					g += "G4P%.3f\n" % (round(pt / 1000.0, 4))
@@ -747,7 +732,7 @@ class Converter():
 		self._log.debug( "_use_embedded_gcode() %s", gcode[:100])
 		gcode = gcode.replace(' ', "\n")
 		feedrateCode = "F%s;%s\n" % (settings['feedrate'], color)
-		intensityCode = machine_settings.gcode_before_path_color(color, settings['intensity']) + "\n"
+		intensityCode = machine_settings.gcode_before_path_color(color, settings['intensity'], settings.get('cut_compressor', '100')) + "\n"
 		piercetimeCode = ''
 		pt = int(settings['pierce_time'])
 		if pt > 0:
@@ -774,7 +759,12 @@ class Converter():
 
 	def _get_gcode_footer(self):
 		if(self.options['noheaders']):
-			return "M05\n"
+			gcode = []
+			gcode.append("; end of job")
+			gcode.append("M05")
+			if _mrbeam_plugin_implementation.compressor_handler.has_compressor():
+				gcode.append("M100P0 ; mrbeam_compressor off")
+			return "\n".join(gcode)
 		else:
 			return machine_settings.gcode_footer
 

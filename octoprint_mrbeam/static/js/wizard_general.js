@@ -66,6 +66,8 @@ $(function() {
                 self.analytics.send_fontend_event(event, payload);
             } else if (self.isWelcome) {
                 self.analytics.send_fontend_event('welcome_finish', {})
+                // avoid reloading of the frontend by a CLIENT_CONNECTED / MrbPluginVersion event
+                CONFIG_FIRST_RUN = false
             }
         };
 

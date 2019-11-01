@@ -6,6 +6,7 @@ $(function () {
 
         self.send_fontend_event = function (event, payload) {
             payload['ts'] = payload['ts'] || new Date().getTime();
+            payload['browser_time'] = new Date().toLocaleString('en-GB');  //GB so that we don't get AM/PM
             return self._send(event, payload);
         };
 
@@ -14,7 +15,14 @@ $(function () {
                 event: event,
                 payload: payload || {}
             };
-            return OctoPrint.simpleApiCommand("mrbeam", "analytics_data", data);
+
+            $.ajax({
+                url: "plugin/mrbeam/analytics",
+                type: "POST",
+                dataType: "json",
+                contentType: "application/json; charset=UTF-8",
+                data: JSON.stringify(data)
+            });
         };
 
         $(window).load(function() {

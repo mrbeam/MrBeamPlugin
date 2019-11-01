@@ -2110,11 +2110,19 @@ input.search-query,
 }
 
 .form-horizontal .controls {
-  width: 348px;
+    width: 348px;
+}
+
+.form-horizontal .range-control {
+    width: 430px;
 }
 
 .range-control-and-label {
-  width: 530px;
+  width: 600px;
+}
+
+.compressor-control-and-label {
+  width: 520px;
 }
 
 .input-control-and-label {
@@ -2135,7 +2143,8 @@ input.search-query,
 }
 
 .line-control-and-label {
-  width: 500px;
+  width: 470px;
+  margin: 10px 0;
 }
 
 .cutting-control-and-label {
@@ -2380,10 +2389,6 @@ input[type="radio"]{
   height: calc(100vh - 180px);
 }
 
-.maintenance-table {
-  margin-bottom: 60px
-}
-
 .maintenance-table > tbody > tr > td {
   vertical-align: middle;
 }
@@ -2518,6 +2523,35 @@ input[type="radio"]{
 .laser_job_done_image_media_icon {
     font-size: 2.4em;
     padding: 0px 3px;
+}
+
+/*
+* === COMPRESSOR and new LINE COLOR MAPPING ===
+*/
+.compressor_range {
+    height: 5px !important;
+}
+
+.compressor_control {
+    padding: 5px
+}
+
+.compressor_min_max_label {
+    padding: 0 19px;
+    margin-bottom: 5px;
+}
+
+.vector_mapping_color_circle {
+    width:20px;
+    height:20px;
+    display:inline-block;
+    vertical-align:middle;
+    border-radius:50%;
+    margin: 0 23px 0 24px;
+}
+
+.vector_mapping_slider {
+    height: 20px;
 }
 
 /*

@@ -69,30 +69,30 @@ $(function() {
 
         };
 
-        self.keepAccessControl = function() {
-            if (!self.validData()) return;
-
-            var data = {
-                "ac": true,
-                "user": self.username(),
-                "pass1": self.password(),
-                "pass2": self.confirmedPassword()
-            };
-            self._sendData(data);
-        };
-
-        self.disableAccessControl = function() {
-            var message = gettext("If you disable Access Control <strong>and</strong> your OctoPrint installation is accessible from the internet, your printer <strong>will be accessible by everyone - that also includes the bad guys!</strong>");
-            showConfirmationDialog({
-                message: message,
-                onproceed: function (e) {
-                    var data = {
-                        "ac": false
-                    };
-                    self._sendData(data);
-                }
-            });
-        };
+        // self.keepAccessControl = function() {
+        //     if (!self.validData()) return;
+        //
+        //     var data = {
+        //         "ac": true,
+        //         "user": self.username(),
+        //         "pass1": self.password(),
+        //         "pass2": self.confirmedPassword()
+        //     };
+        //     self._sendData(data);
+        // };
+        //
+        // self.disableAccessControl = function() {
+        //     var message = gettext("If you disable Access Control <strong>and</strong> your OctoPrint installation is accessible from the internet, your printer <strong>will be accessible by everyone - that also includes the bad guys!</strong>");
+        //     showConfirmationDialog({
+        //         message: message,
+        //         onproceed: function (e) {
+        //             var data = {
+        //                 "ac": false
+        //             };
+        //             self._sendData(data);
+        //         }
+        //     });
+        // };
 
         self._sendData = function(data, callback) {
             OctoPrint.postJson("plugin/mrbeam/acl", data)
@@ -110,6 +110,17 @@ $(function() {
                     } else {
                         if (callback) callback();
                     }
+                })
+                .fail(function(){
+                    console.error("Failed to set up initial user.");
+                    new PNotify({
+                        title: gettext("Failed to create user"),
+                        text: _.sprintf(gettext("An error happened while creating user account.<br/><br/>%(opening_tag)sPlease click here to start over.%(closing_tag)s"),
+                            {opening_tag: '<a href="/?ts='+Date.now()+'">',
+                            closing_tag: '</a>'}),
+                        type: "error",
+                        hide: false
+                    });
                 });
         };
 

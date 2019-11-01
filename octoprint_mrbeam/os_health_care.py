@@ -55,7 +55,7 @@ class OsHealthCare(object):
 				time.sleep(0.1)
 				exec_cmd(['sudo', 'reboot', 'now'], shell=False)
 		else:
-			self._logger.warn("OK /etc/network/interfaces")
+			self._logger.info("OK /etc/network/interfaces")
 
 	def log_analytics(self, event, success=None):
 		data = dict(

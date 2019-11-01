@@ -43,7 +43,6 @@ class AnalyticsHandler(object):
 		self._timer_handler = TimerHandler(plugin)
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.analyticshandler")
 
-		self._upload_in_progress = False
 		self._analytics_lock = Lock()
 
 		# Mr Beam specific data
@@ -62,6 +61,7 @@ class AnalyticsHandler(object):
 		self._current_job_id = None
 		self._current_job_time_estimation = -1
 		self._current_job_final_status = None
+		self._current_job_compressor_data = None
 		self._current_dust_collector = None
 		self._current_intensity_collector = None
 		self._current_lasertemp_collector = None
@@ -85,6 +85,7 @@ class AnalyticsHandler(object):
 	def _on_mrbeam_plugin_initialized(self, event, payload):
 		self._laserhead_handler = self._plugin.laserhead_handler
 		self._dust_manager = self._plugin.dust_manager
+		self._compressor_handler = self._plugin.compressor_handler
 
 		self._subscribe()
 
@@ -363,6 +364,13 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.exception('Exception during add_os_health_log: {}'.format(e), analytics=True)
 
+	# COMPRESSOR_HANDLER
+	def add_compressor_data(self, data):
+		try:
+			self._add_device_event(ak.Device.Event.COMPRESSOR, payload=data)
+		except Exception as e:
+			self._logger.exception('Exception during add_compressor_static_data: {}'.format(e))
+
 	# -------- OCTOPRINT AND MR BEAM EVENTS ----------------------------------------------------------------------------
 	def _subscribe(self):
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_STARTED, self._event_print_started)
@@ -438,6 +446,11 @@ class AnalyticsHandler(object):
 			ak.Job.Fan.RPM: self._dust_manager.get_fan_rpm(),
 			ak.Job.Fan.STATE: self._dust_manager.get_fan_state(),
 		}
+
+		# We only add the compressor data if there is a compressor
+		if self._compressor_handler.has_compressor():
+			data.update({ak.Job.Progress.COMPRESSOR: self._compressor_handler.get_compressor_data()})
+
 		self._add_job_event(ak.Job.Event.Print.PROGRESS, data)
 
 		if self._current_cpu_data:
@@ -565,6 +578,7 @@ class AnalyticsHandler(object):
 				ak.Header.VERSION_MRBEAM_PLUGIN: self._plugin_version,
 				ak.Header.SOFTWARE_TIER: self._settings.get(["dev", "software_tier"]),
 				ak.Header.DATA: data,
+				ak.Header.UPTIME: self._get_uptime(),
 			}
 
 			if event_type == ak.EventType.JOB:
@@ -614,22 +628,24 @@ class AnalyticsHandler(object):
 		self._current_lasertemp_collector = ValueCollector('TempColl')
 
 	def _add_collector_details(self):
-		intensity_summary = self._current_intensity_collector.getSummary()
-		lasertemp_summary = self._current_lasertemp_collector.getSummary()
-
 		lh_info = {
 			ak.Device.LaserHead.VERSION: None,
 			ak.Device.LaserHead.SERIAL: self._laserhead_handler.get_current_used_lh_data()['serial'],
 		}
 
-		intensity_summary.update(lh_info)
-		lasertemp_summary.update(lh_info)
+		if self._current_dust_collector:
+			dust_summary = self._current_dust_collector.getSummary()
+			self._add_job_event(ak.Job.Event.Summary.DUST, payload=dust_summary)
+		if self._current_intensity_collector:
+			intensity_summary = self._current_intensity_collector.getSummary()
+			intensity_summary.update(lh_info)
+			self._add_job_event(ak.Job.Event.Summary.INTENSITY, payload=intensity_summary)
+		if self._current_lasertemp_collector:
+			lasertemp_summary = self._current_lasertemp_collector.getSummary()
+			lasertemp_summary.update(lh_info)
+			self._add_job_event(ak.Job.Event.Summary.LASERTEMP, payload=lasertemp_summary)
 
-		self._add_job_event(ak.Job.Event.Summary.DUST, payload=self._current_dust_collector.getSummary())
-		self._add_job_event(ak.Job.Event.Summary.INTENSITY, payload=intensity_summary)
-		self._add_job_event(ak.Job.Event.Summary.LASERTEMP, payload=lasertemp_summary)
-
-	# -------- JOB HELPER METHODS --------------------------------------------------------------------------------------
+	# -------- HELPER METHODS --------------------------------------------------------------------------------------
 	def _cleanup_job(self):
 		self._current_job_id = None
 		self._current_dust_collector = None
@@ -637,11 +653,24 @@ class AnalyticsHandler(object):
 		self._current_lasertemp_collector = None
 		self._current_cpu_data = None
 		self._current_job_time_estimation = -1
+		self._current_job_final_status = None
+		self._current_job_compressor_data = None
 
 	def _init_new_job(self):
 		self._cleanup_job()
 		self._current_job_id = 'j_{}_{}'.format(self._snr, time.time())
 		self._add_job_event(ak.Job.Event.LASERJOB_STARTED)
+
+	# http://planzero.org/blog/2012/01/26/system_uptime_in_python,_a_better_way
+	def _get_uptime(self):
+		try:
+			with open('/proc/uptime', 'r') as f:
+				uptime = float(f.readline().split()[0])
+			return uptime
+
+		except Exception as e:
+			self._logger.exception('Exception during _get_uptime: {}'.format(e), analytics=False)
+			return None
 
 	# -------- WRITER THREAD (queue --> analytics file) ----------------------------------------------------------------
 	def _write_queue_to_analytics_file(self):
@@ -669,12 +698,6 @@ class AnalyticsHandler(object):
 
 	def _init_json_file(self):
 		open(self.analytics_file, 'w+').close()
-
-	def pause_analytics_writer(self):
-		self._upload_in_progress = True
-
-	def resume_analytics_writer(self):
-		self._upload_in_progress = False
 
 	# -------- INITIAL ANALYTICS PROCEDURE -----------------------------------------------------------------------------
 	def initial_analytics_procedure(self, consent):
