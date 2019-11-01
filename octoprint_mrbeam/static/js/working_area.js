@@ -726,6 +726,7 @@ $(function(){
 
 			// add more elements that need to be removed here
 			var unsupportedElems = ['clipPath', 'flowRoot', 'switch', '#adobe_illustrator_pgf'];
+//			var unsupportedElems = ['flowRoot', 'switch', '#adobe_illustrator_pgf'];
 			//
 			for (var i = 0; i < unsupportedElems.length; i++) {
 				var myElem = fragment.selectAll(unsupportedElems[i]);
@@ -1809,8 +1810,8 @@ $(function(){
 
 			// embed the fonts as dataUris
 			// TODO only if Quick Text is present
-		   $('#compSvg defs').append('<style id="quickTextFontPlaceholder" class="quickTextFontPlaceholder deleteAfterRendering"></style>');
-		   self._qt_copyFontsToSvg(compSvg.select(".quickTextFontPlaceholder").node);
+			$('#compSvg defs').append('<style id="quickTextFontPlaceholder" class="quickTextFontPlaceholder deleteAfterRendering"></style>');
+			self._qt_copyFontsToSvg(compSvg.select(".quickTextFontPlaceholder").node);
 
 			self.renderInfill(compSvg, fillAreas, cutOutlines, wMM, hMM, pxPerMM, function(svgWithRenderedInfill){
 				callback( self._wrapInSvgAndScale(svgWithRenderedInfill));
@@ -2166,11 +2167,13 @@ $(function(){
 						svg.selectAll('image').remove();
 						svg.selectAll('.deleteAfterRendering').remove();
 						svg.selectAll('text,tspan').remove();
-
-						var waBB = snap.select('#coordGrid').getBBox();
-						var fillImage = snap.image(result, 0, 0, waBB.w, waBB.h);
-						fillImage.attr('id', 'fillRendering');
-						svg.append(fillImage);
+						
+						if(result !== null){
+							var waBB = snap.select('#coordGrid').getBBox();
+							var fillImage = snap.image(result, 0, 0, waBB.w, waBB.h);
+							fillImage.attr('id', 'fillRendering');
+							svg.append(fillImage);
+						}
 					}
 					if (typeof callback === 'function') {
 						callback(svg);
@@ -2186,7 +2189,11 @@ $(function(){
 					debugBase64(dataUrl, 'svg_debug');
 				}
 				console.log("Rendering " + fillings.length + " filled elements.");
-				tmpSvg.renderPNG(wMM, hMM, pxPerMM, cb);
+				if(fillAreas){
+					tmpSvg.renderPNG(wMM, hMM, pxPerMM, cb);
+				} else {
+					cb(null)
+				}
 			});
 		};
 
