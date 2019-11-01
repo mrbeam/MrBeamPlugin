@@ -1052,7 +1052,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@octoprint.plugin.BlueprintPlugin.route("/convert", methods=["POST"])
 	@restricted_access
 	def gcodeConvertCommand(self):
-
 		# valid file commands, dict mapping command name to mandatory parameters
 		valid_commands = {
 			"convert": []
@@ -1061,160 +1060,174 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if response is not None:
 			return response
 
-		appendGcodeFiles = data['gcodeFilesToAppend']
-		del data['gcodeFilesToAppend']
+		if not command == "convert":
+			return make_response("Invalid command", 400)
 
-		if command == "convert":
-			# TODO stripping non-ascii is a hack - svg contains lots of non-ascii in <text> tags. Fix this!
-			svg = ''.join(i for i in data['svg'] if ord(i) < 128)  # strip non-ascii chars like €
-			del data['svg']
-			filename = "local/temp.svg" # 'local' is just a path here, has nothing to do with the FileDestination.LOCAL
-
-			class Wrapper(object):
-				def __init__(self, filename, content):
-					self.filename = filename
-					self.content = content
-
-				def save(self, absolute_dest_path):
-					with open(absolute_dest_path, "w") as d:
-						d.write(self.content)
-						d.close()
-
-			# write local/temp.svg to convert it
-			fileObj = Wrapper(filename, svg)
-			self._file_manager.add_file(FileDestinations.LOCAL, filename, fileObj, links=None, allow_overwrite=True)
-
-			# safe history
-			ts = time.gmtime()
-			historyFilename = time.strftime("%Y-%m-%d_%H.%M.%S.mrb", ts)
-			historyObj = Wrapper(historyFilename, svg)
-			self._file_manager.add_file(FileDestinations.LOCAL, historyFilename, historyObj, links=None, allow_overwrite=True)
-
-			# keep only x recent files in job history.
-			def is_history_file(entry):
-				_, extension = os.path.splitext(entry)
-				extension = extension[1:].lower()
-				return extension == "mrb"
-
-			mrb_filter_func = lambda entry, entry_data: is_history_file(entry)
-			resp = self._file_manager.list_files(path="", filter=mrb_filter_func, recursive=True)
-			files = resp[FileDestinations.LOCAL]
-
-			max_history_files = 25 # TODO fetch from settings
-			if(len(files) > max_history_files):
-
-				removals = []
-				for key in files:
-					f = files[key]
-					tpl = (self._file_manager.last_modified(FileDestinations.LOCAL, path=f['path']), f['path'])
-					removals.append(tpl)
-
-				sorted_by_age = sorted(removals, key=lambda tpl: tpl[0])
-
-				# TODO each deletion causes an filemanager push update -> slow.
-				for i in range(0, len(sorted_by_age) - max_history_files):
-					f = sorted_by_age[i]
-					self._file_manager.remove_file(FileDestinations.LOCAL, f[1])
-
-			slicer = "svgtogcode"
-			slicer_instance = self._slicing_manager.get_slicer(slicer)
-			if slicer_instance.get_slicer_properties()["same_device"] and (
-						self._printer.is_printing() or self._printer.is_paused()):
-				# slicer runs on same device as OctoPrint, slicing while printing is hence disabled
-				msg = "Cannot convert while lasering due to performance reasons".format(**locals())
-				self._logger.error("gcodeConvertCommand: %s", msg)
-				return make_response(msg, 409)
-
-			if "gcode" in data.keys() and data["gcode"]:
-				gcode_name = data["gcode"]
-				del data["gcode"]
-			else:
-				name, _ = os.path.splitext(filename)
-				gcode_name = name + ".gco"
-
-			# append number if file exists
-			name, ext = os.path.splitext(gcode_name)
-			i = 1
-			while self._file_manager.file_exists(FileDestinations.LOCAL, gcode_name):
-				gcode_name = name + '.' + str(i) + ext
-				i += 1
-
-			# prohibit overwriting the file that is currently being printed
-			currentOrigin, currentFilename = self._getCurrentFile()
-			if currentFilename == gcode_name and currentOrigin == FileDestinations.LOCAL and (
-						self._printer.is_printing() or self._printer.is_paused()):
-				msg = "Trying to slice into file that is currently being printed: {}".format(gcode_name)
-				self._logger.error("gcodeConvertCommand: %s", msg)
-				make_response(msg, 409)
-
-			select_after_slicing = False
-			print_after_slicing = False
-
-			#get job params out of data json
-			overrides = dict()
-			overrides['vector'] = data['vector']
-			overrides['raster'] = data['raster']
-
-			with open(self._CONVERSION_PARAMS_PATH, 'w') as outfile:
-				json.dump(data, outfile)
-				self._logger.info('Wrote job parameters to %s', self._CONVERSION_PARAMS_PATH)
-
-			self._printer.set_colors(currentFilename, data['vector'])
-
-			# callback definition
-			def slicing_done(gcode_name, select_after_slicing, print_after_slicing, append_these_files):
-				# append additioal gcodes
-				output_path = self._file_manager.path_on_disk(FileDestinations.LOCAL, gcode_name)
-				with open(output_path, 'ab') as wfd:
-					for f in append_these_files:
-						path = self._file_manager.path_on_disk(f['origin'], f['name'])
-						wfd.write("\n; " + f['name'] + "\n")
-
-						with open(path, 'rb') as fd:
-							shutil.copyfileobj(fd, wfd, 1024 * 1024 * 10)
-
-						wfd.write("\nM05\n")  # ensure that the laser is off.
-						self._logger.info("Slicing finished: %s" % path)
-
-				if select_after_slicing or print_after_slicing:
-					sd = False
-					filenameToSelect = self._file_manager.path_on_disk(FileDestinations.LOCAL, gcode_name)
-					printer.select_file(filenameToSelect, sd, True)
-
-			try:
-				self._file_manager.slice(slicer, FileDestinations.LOCAL, filename, FileDestinations.LOCAL, gcode_name,
-										 profile=None,#profile,
-										 printer_profile_id=None, #printerProfile,
-										 position=None, #position,
-										 overrides=overrides,
-										 callback=slicing_done,
-										 callback_args=[gcode_name, select_after_slicing, print_after_slicing,
-														appendGcodeFiles])
-			except octoprint.slicing.UnknownProfile:
-				msg = "Profile {profile} doesn't exist".format(**locals())
-				self._logger.error("gcodeConvertCommand: %s", msg)
-				return make_response(msg, 400)
-
-			location = "test"  # url_for(".readGcodeFile", target=target, filename=gcode_name, _external=True)
-			result = {
-				"name": gcode_name,
-				"origin": "local",
-				"refs": {
-					"resource": location,
-					"download": url_for("index", _external=True) + "downloads/files/" + FileDestinations.LOCAL + "/" + gcode_name
-				}
-			}
-
-			r = make_response(jsonify(result), 202)
-			r.headers["Location"] = location
-			return r
+		self._convertion_thread = threading.Thread(target=self._gcodeConvertCommand_threaded, args=(command, data, response))
+		self._convertion_thread.daemon = True
+		self._convertion_thread.start()
 
 		return NO_CONTENT
+
+	def _gcodeConvertCommand_threaded(self, command, data, response):
+		try:
+			appendGcodeFiles = data['gcodeFilesToAppend']
+			del data['gcodeFilesToAppend']
+
+			if command == "convert":
+				# TODO stripping non-ascii is a hack - svg contains lots of non-ascii in <text> tags. Fix this!
+				svg = ''.join(i for i in data['svg'] if ord(i) < 128)  # strip non-ascii chars like €
+				del data['svg']
+				filename = "local/temp.svg" # 'local' is just a path here, has nothing to do with the FileDestination.LOCAL
+
+				class Wrapper(object):
+					def __init__(self, filename, content):
+						self.filename = filename
+						self.content = content
+
+					def save(self, absolute_dest_path):
+						with open(absolute_dest_path, "w") as d:
+							d.write(self.content)
+							d.close()
+
+				# write local/temp.svg to convert it
+				fileObj = Wrapper(filename, svg)
+				self._file_manager.add_file(FileDestinations.LOCAL, filename, fileObj, links=None, allow_overwrite=True)
+
+				# safe history
+				ts = time.gmtime()
+				historyFilename = time.strftime("%Y-%m-%d_%H.%M.%S.mrb", ts)
+				historyObj = Wrapper(historyFilename, svg)
+				self._file_manager.add_file(FileDestinations.LOCAL, historyFilename, historyObj, links=None, allow_overwrite=True)
+
+				# keep only x recent files in job history.
+				def is_history_file(entry):
+					_, extension = os.path.splitext(entry)
+					extension = extension[1:].lower()
+					return extension == "mrb"
+
+				mrb_filter_func = lambda entry, entry_data: is_history_file(entry)
+				resp = self._file_manager.list_files(path="", filter=mrb_filter_func, recursive=True)
+				files = resp[FileDestinations.LOCAL]
+
+				max_history_files = 25 # TODO fetch from settings
+				if(len(files) > max_history_files):
+
+					removals = []
+					for key in files:
+						f = files[key]
+						tpl = (self._file_manager.last_modified(FileDestinations.LOCAL, path=f['path']), f['path'])
+						removals.append(tpl)
+
+					sorted_by_age = sorted(removals, key=lambda tpl: tpl[0])
+
+					# TODO each deletion causes an filemanager push update -> slow.
+					for i in range(0, len(sorted_by_age) - max_history_files):
+						f = sorted_by_age[i]
+						self._file_manager.remove_file(FileDestinations.LOCAL, f[1])
+
+				slicer = "svgtogcode"
+				slicer_instance = self._slicing_manager.get_slicer(slicer)
+				if slicer_instance.get_slicer_properties()["same_device"] and (
+							self._printer.is_printing() or self._printer.is_paused()):
+					# slicer runs on same device as OctoPrint, slicing while printing is hence disabled
+					msg = "Cannot convert while lasering due to performance reasons".format(**locals())
+					self._logger.error("gcodeConvertCommand: %s", msg)
+					return make_response(msg, 409)
+
+				if "gcode" in data.keys() and data["gcode"]:
+					gcode_name = data["gcode"]
+					del data["gcode"]
+				else:
+					name, _ = os.path.splitext(filename)
+					gcode_name = name + ".gco"
+
+				# append number if file exists
+				name, ext = os.path.splitext(gcode_name)
+				i = 1
+				while self._file_manager.file_exists(FileDestinations.LOCAL, gcode_name):
+					gcode_name = name + '.' + str(i) + ext
+					i += 1
+
+				# prohibit overwriting the file that is currently being printed
+				currentOrigin, currentFilename = self._getCurrentFile()
+				if currentFilename == gcode_name and currentOrigin == FileDestinations.LOCAL and (
+							self._printer.is_printing() or self._printer.is_paused()):
+					msg = "Trying to slice into file that is currently being printed: {}".format(gcode_name)
+					self._logger.error("gcodeConvertCommand: %s", msg)
+					make_response(msg, 409)
+
+				select_after_slicing = False
+				print_after_slicing = False
+
+				#get job params out of data json
+				overrides = dict()
+				overrides['vector'] = data['vector']
+				overrides['raster'] = data['raster']
+
+				with open(self._CONVERSION_PARAMS_PATH, 'w') as outfile:
+					json.dump(data, outfile)
+					self._logger.info('Wrote job parameters to %s', self._CONVERSION_PARAMS_PATH)
+
+				self._printer.set_colors(currentFilename, data['vector'])
+
+				# callback definition
+				def slicing_done(gcode_name, select_after_slicing, print_after_slicing, append_these_files):
+					# append additioal gcodes
+					output_path = self._file_manager.path_on_disk(FileDestinations.LOCAL, gcode_name)
+					with open(output_path, 'ab') as wfd:
+						for f in append_these_files:
+							path = self._file_manager.path_on_disk(f['origin'], f['name'])
+							wfd.write("\n; " + f['name'] + "\n")
+
+							with open(path, 'rb') as fd:
+								shutil.copyfileobj(fd, wfd, 1024 * 1024 * 10)
+
+							wfd.write("\nM05\n")  # ensure that the laser is off.
+							self._logger.info("Slicing finished: %s" % path)
+
+					if select_after_slicing or print_after_slicing:
+						sd = False
+						filenameToSelect = self._file_manager.path_on_disk(FileDestinations.LOCAL, gcode_name)
+						printer.select_file(filenameToSelect, sd, True)
+
+				try:
+					self._file_manager.slice(slicer, FileDestinations.LOCAL, filename, FileDestinations.LOCAL, gcode_name,
+											 profile=None,#profile,
+											 printer_profile_id=None, #printerProfile,
+											 position=None, #position,
+											 overrides=overrides,
+											 callback=slicing_done,
+											 callback_args=[gcode_name, select_after_slicing, print_after_slicing,
+															appendGcodeFiles])
+				except octoprint.slicing.UnknownProfile:
+					msg = "Profile {profile} doesn't exist".format(**locals())
+					self._logger.error("gcodeConvertCommand: %s", msg)
+					return make_response(msg, 400)
+
+				# location = "test"  # url_for(".readGcodeFile", target=target, filename=gcode_name, _external=True)
+				# result = {
+				# 	"name": gcode_name,
+				# 	"origin": "local",
+				# 	"refs": {
+				# 		"resource": location,
+				# 		"download": url_for("index", _external=True) + "downloads/files/" + FileDestinations.LOCAL + "/" + gcode_name
+				# 	}
+				# }
+
+				# r = make_response(jsonify(result), 202)
+				# r.headers["Location"] = location
+				# return r
+
+			# return NO_CONTENT
+		except:
+			self._logger.exception("Exception in _gcodeConvertCommand_threaded()")
 
 	@octoprint.plugin.BlueprintPlugin.route("/cancel", methods=["POST"])
 	@restricted_access
 	def cancelSlicing(self):
 		self._cancel_job = True
+		self._logger.info("ANDYTEST /cancel - cancelSlicing()")
 		return NO_CONTENT
 
 	##~~ SimpleApiPlugin mixin
