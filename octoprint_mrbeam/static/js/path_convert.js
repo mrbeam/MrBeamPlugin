@@ -24,6 +24,73 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	var _convertToString = function (arr) {
 		return arr.join(',').replace(_p2s, '$1');
 	};
+	var _isDefault = function (attrName, attrValue){
+		let defaults = {
+			'alignment-baseline': 'auto',
+			'baseline-shift': '0px',
+			'clip': 'auto',
+			'clip-path': 'none',
+			'clip-rule': 'evenodd',
+			'color': 'rgb(0, 0, 0)',
+			'color-interpolation': 'srgb',
+			'color-interpolation-filters': 'linearrgb',
+			'color-profile': '',
+			'color-rendering': 'auto',
+			'cursor': 'auto',
+			'direction': 'ltr',
+			'display': 'inline',
+			'dominant-baseline': 'auto',
+			'enable-background': '',
+			'fill': 'rgb(0, 0, 0)',
+			'fill-opacity': '1',
+			'fill-rule': 'nonzero',
+			'filter': 'none',
+			'flood-color': 'rgb(0, 0, 0)',
+			'flood-opacity': '1',
+			'font-family': '"Helvetica Neue", Helvetica, Arial, sans-serif', // not really default value, but set in the html body tag 
+			'font-size': '',
+			'font-size-adjust': '',
+			'font-stretch': '100%',
+			'font-style': 'normal',
+			'font-variant': 'normal',
+			'font-weight': '400',
+			'glyph-orientation-horizontal': '',
+			'glyph-orientation-vertical': '',
+			'image-rendering': 'auto',
+			'kerning': '',
+			'letter-spacing': 'normal',
+			'lighting-color': 'rgb(255, 255, 255)',
+			'marker-end': 'none',
+			'marker-mid': 'none',
+			'marker-start': 'none',
+			'mask': 'none',
+			'opacity': '1',
+			'overflow': 'visible',
+			'pointer-events': 'auto',
+			'shape-rendering': 'auto',
+			'stop-color': 'rgb(0, 0, 0)',
+			'stop-opacity': '1',
+			'stroke': 'none',
+			'stroke-dasharray': 'none',
+			'stroke-dashoffset': '0px',
+			'stroke-linecap': 'butt',
+			'stroke-linejoin': 'miter',
+			'stroke-miterlimit': '4',
+			'stroke-opacity': '1',
+			'stroke-width': '1px',
+			'text-anchor': 'start',
+			'text-decoration': 'none',
+			'text-rendering': 'auto',
+			'unicode-bidi': 'normal',
+			'visibility': 'visible',
+			'word-spacing': '0px',
+			'writing-mode': 'horizontal-tb',
+			'class': '',
+			'style': 'clip-rule: evenodd;',
+			'transform': 'matrix(1,0,0,1,0,0)'			
+		};
+		return defaults[attrName] !== null && defaults[attrName] === attrValue; 
+	}
 	
 	Element.prototype.toPath = function (with_attrs) {
 		var old_elem = this;
@@ -46,10 +113,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		var attrs = with_attrs;
 		if(attrs === undefined){
 			// All attributes that path element can have
-			attrs = ['requiredFeatures', 'requiredExtensions', 'systemLanguage', 'id', 'xml:base', 'xml:lang', 'xml:space', 'onfocusin', 'onfocusout', 'onactivate', 'onclick', 'onmousedown', 'onmouseup', 'onmouseover', 'onmousemove', 'onmouseout', 'onload', 'alignment-baseline', 'baseline-shift', 'clip', 'clip-path', 'clip-rule', 'color', 'color-interpolation', 'color-interpolation-filters', 'color-profile', 'color-rendering', 'cursor', 'direction', 'display', 'dominant-baseline', 'enable-background', 'fill', 'fill-opacity', 'fill-rule', 'filter', 'flood-color', 'flood-opacity', 'font-family', 'font-size', 'font-size-adjust', 'font-stretch', 'font-style', 'font-variant', 'font-weight', 'glyph-orientation-horizontal', 'glyph-orientation-vertical', 'image-rendering', 'kerning', 'letter-spacing', 'lighting-color', 'marker-end', 'marker-mid', 'marker-start', 'mask', 'opacity', 'overflow', 'pointer-events', 'shape-rendering', 'stop-color', 'stop-opacity', 'stroke', 'stroke-dasharray', 'stroke-dashoffset', 'stroke-linecap', 'stroke-linejoin', 'stroke-miterlimit', 'stroke-opacity', 'stroke-width', 'text-anchor', 'text-decoration', 'text-rendering', 'unicode-bidi', 'visibility', 'word-spacing', 'writing-mode', 'class', 'style', 'externalResourcesRequired', 'transform', 'd', 'pathLength'];
+			attrs = ['requiredFeatures', 'requiredExtensions', 'systemLanguage', 'id', 'xml:base', 'xml:lang', 'xml:space', 'clip', 'clip-path', 'clip-rule', 'fill', 'fill-opacity', 'fill-rule', 'filter', 'flood-color', 'flood-opacity', 'image-rendering', 'marker-end', 'marker-mid', 'marker-start', 'mask', 'opacity', 'overflow', 'shape-rendering', 'stop-color', 'stop-opacity', 'stroke', 'stroke-dasharray', 'stroke-dashoffset', 'stroke-linecap', 'stroke-linejoin', 'stroke-miterlimit', 'stroke-opacity', 'stroke-width', 'text-anchor', 'text-decoration', 'text-rendering', 'unicode-bidi', 'visibility', 'class', 'style', 'externalResourcesRequired', 'transform', 'd', 'pathLength'];
 		}
 
-		//TODO check for default settings and don't copy
 		// Copy attributes of old_element to path
 		for(var attrIdx in attrs){
 			var attrName = attrs[attrIdx];
@@ -59,7 +125,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			} else {
 				attrValue = old_elem.attr(attrName);
 			}
-			if (attrValue) {
+			if (attrValue && !_isDefault(attrName, attrValue)) {
 				new_path_attributes[attrName] = attrValue;
 			}
 		}
