@@ -321,9 +321,11 @@ class Converter():
 						if(settings['feedrate'] == None or settings['feedrate'] == -1 or settings['intensity'] == None or settings['intensity'] <= 0):
 							self._log.info( "convert() skipping color %s, no valid settings %s." % (colorKey, settings))
 							continue
-
+						if(not colorKey in paths_by_color):
+							self._log.info( "convert() skipping color %s, no paths with this color (clipped? path in <defs>?. " % (colorKey))
+							continue
+							
 						for path in paths_by_color[colorKey]:
-							#print('p', path)
 							curveGCode = ""
 							mbgc = path.get(_add_ns('gc', 'mb'), None)
 							if(mbgc != None):
@@ -341,6 +343,7 @@ class Converter():
 								fh.write("; pass:%i/%s\n" % (p+1, settings['passes']))
 								# TODO tbd DreamCut different for each pass?
 								fh.write(curveGCode)
+							
 
 			fh.write(self._get_gcode_footer())
 
