@@ -271,6 +271,7 @@ $(function(){
 			var colHash = {};
 			var colFound = [];
 			snap.selectAll('#userContent *[stroke]:not(#bbox)').forEach(function (el) {
+				// TODO this includes stroke colors used in <defs> like patterns e.g. - should they be removed (tbd)?
 				var colHex = el.attr().stroke;
 				if (typeof(colHex) !== 'undefined' && colHex !== 'none' && typeof(colHash[colHex]) === 'undefined') {
 //					var colName = self.colorNamer.classify(colHex);
