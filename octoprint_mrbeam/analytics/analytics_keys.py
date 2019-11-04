@@ -12,6 +12,7 @@ class AnalyticsKeys:
 		SOFTWARE_TIER = 'sw_tier'
 		VERSION_MRBEAM_PLUGIN = 'version_mrbeam_plugin'
 		UPTIME = 'uptime'
+		MODEL = 'model'
 
 	class EventType:
 		JOB = 'job'
