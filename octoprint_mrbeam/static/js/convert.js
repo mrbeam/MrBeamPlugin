@@ -54,6 +54,7 @@ $(function(){
 
 		// material menu
 		self.material_settings2 = {};
+		self.material_settings2_updated_trigger= ko.observable(0);
 
 		self.engrave_only_thickness = {thicknessMM: -1, cut_i:'', cut_f:'', cut_p: 1, cut_pierce: 0, cut_compressor_lvl:3};
 		self.no_engraving = {eng_i:['',''], eng_f:['',''], eng_pierce: 0, engrave_compressor_lvl: 3, dithering: false };
@@ -96,6 +97,7 @@ $(function(){
         self.load_standard_materials = function(){
             self.materialSettings.loadMaterialSettings(function(res){
                 self.material_settings2 = res;
+                self.material_settings2_updated_trigger(Date.now());
             })
         };
 
@@ -427,16 +429,18 @@ $(function(){
 
 			}
 
-			for(var materialKey in self.material_settings2){
-				var m = self.material_settings2[materialKey];
-				if(m !== null){
-					m.key = materialKey;
+			if (self.material_settings2_updated_trigger > 0) { // just to trigger knockout observing this one
+                for (var materialKey in self.material_settings2) {
+                    var m = self.material_settings2[materialKey];
+                    if (m !== null) {
+                        m.key = materialKey;
 //					m.name = materialKey; // TODO i18n
-					if(m.name.toLowerCase().indexOf(q) >= 0){
-						out.push(m);
-					}
-				}
-			}
+                        if (m.name.toLowerCase().indexOf(q) >= 0) {
+                            out.push(m);
+                        }
+                    }
+                }
+            }
 			return out;
 		});
 
