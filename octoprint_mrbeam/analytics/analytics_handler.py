@@ -579,6 +579,7 @@ class AnalyticsHandler(object):
 				ak.Header.SOFTWARE_TIER: self._settings.get(["dev", "software_tier"]),
 				ak.Header.DATA: data,
 				ak.Header.UPTIME: self._get_uptime(),
+				ak.Header.MODEL: self._plugin.get_model_id(),
 			}
 
 			if event_type == ak.EventType.JOB:
