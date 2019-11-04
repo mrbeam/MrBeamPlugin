@@ -193,7 +193,7 @@ $(function () {
                 id: 'select_color',
                 title: gettext("Select the color of the material"),
                 text: [gettext("This is important because different colors absorb the laser differently.")],
-                target: ["#material_color_F49A39", "#color_list :first-child"],
+                target: ["#material_color_ff9900", "#color_list :first-child"],
                 additionalJQueryTargets: '#color_list > ',
                 placement: "bottom",
                 delay: 100,
@@ -317,7 +317,7 @@ $(function () {
                     // stepNums : ["I", "II", "III"]
                   }
         }
-      
+
         self._getPreTourDefinitions = function () {
             let tour = [];
 
