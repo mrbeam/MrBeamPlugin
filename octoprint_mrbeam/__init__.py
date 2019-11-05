@@ -109,6 +109,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._logger = mrb_logger("octoprint.plugins.mrbeam")
 		self._hostname = None
 		self._serial_num = None
+		self._model_id = None
 		self._device_info = dict()
 		self._grbl_version = None
 		self._stored_frontend_notifications = []
@@ -134,6 +135,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._branch = self.getBranch()
 		self._octopi_info = self.get_octopi_info()
 		self._serial_num = self.getSerialNum()
+		self._model_id = self.get_model_id()
 
 		self._analytics_handler = analyticsHandler(self)
 
@@ -183,6 +185,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		"""
 		msg = "MrBeam Plugin"
 		msg += " version:{}".format(self._plugin_version)
+		msg += ", model:{}".format(self.get_model_id())
 		msg += ", host:{}".format(self.getHostname())
 		msg += ", serial:{}".format(self.getSerialNum())
 		msg += ", software_tier:{}".format(self._settings.get(["dev", "software_tier"]))
@@ -217,6 +220,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		:return: dict of environment data
 		"""
 		return dict(version=self._plugin_version,
+		            model=self.get_model_id(),
 		            host=self.getHostname(),
 		            serial=self._serial_num,
 		            software_tier=self._settings.get(["dev", "software_tier"]),
@@ -498,9 +502,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 env_laser_safety=self.get_env(self.ENV_LASER_SAFETY),
 							 env_analytics=self.get_env(self.ENV_ANALYTICS),
 
+							 product_name=self.get_product_name(),
 							 displayName=self.getDisplayName(),
 							 hostname=self.getHostname(),
 							 serial=self._serial_num,
+							 model=self.get_model_id(),
 							 software_tier=self._settings.get(["dev", "software_tier"]),
 							 analyticsEnabled=self._settings.get(["analyticsEnabled"]),
 							 beta_label=self.get_beta_label(),
@@ -668,6 +674,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			payload = {'ts': data.get('ts', ''),
 					   'email': data.get('username', ''),
 					   'serial': self._serial_num,
+			           'model': self.get_model_id(),
 					   'hostname': self.getHostname(),
 			           'dialog_version': self.LASERSAFETY_CONFIRMATION_DIALOG_VERSION,
 			           'dialog_language': dialog_language,
@@ -806,9 +813,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		                     env_laser_safety=self.get_env(self.ENV_LASER_SAFETY),
 		                     env_analytics=self.get_env(self.ENV_ANALYTICS),
 		                     #
+		                     product_name=self.get_product_name(),
 		                     displayName=self.getDisplayName(),
 		                     hostname=self.getHostname(),
 		                     serial=self._serial_num,
+		                     model = self.get_model_id(),
 		                     beta_label=self.get_beta_label(),
 		                     e='null',
 		                     gcodeThreshold=0,  #legacy
@@ -1719,6 +1728,16 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		else:
 			return name.format(hostName)
 
+	def get_product_name(self):
+		if self.is_mrbeam2():
+			return "Mr Beam II"
+		elif self.is_mrbeam2_dreamcut():
+			return "Mr Beam II dreamcut"
+		elif self.is_mrbeam2_dreamcut_ready1() or self.is_mrbeam2_dreamcut_ready2():
+			return "Mr Beam II dreamcut ready"
+		else:
+			return "Mr Beam II"
+
 	def getSerialNum(self):
 		"""
 		Gives you the device's Mr Beam serieal number eg "00000000E79B0313-2C"
@@ -1730,6 +1749,18 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if self._serial_num is None:
 			self._serial_num = self._get_val_from_device_info('serial')
 		return self._serial_num
+
+	def get_model_id(self):
+		"""
+		Gives you the device's model id like MRBEAM2 or MRBEAM2_DC_R1
+		The value is soley read from device_info file (/etc/mrbeam)
+		and it's cached once read.
+		:return: model id
+		:rtype: String
+		"""
+		if self._model_id is None:
+			self._model_id = self._get_val_from_device_info('model', default="MRBEAM2")
+		return self._model_id
 
 	def getBranch(self):
 		"""
@@ -1769,7 +1800,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# 	pass
 		# return None
 
-	def _get_val_from_device_info(self, key):
+	def _get_val_from_device_info(self, key, default=None):
 		if not self._device_info:
 			ok = None
 			try:
@@ -1786,7 +1817,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self._logger.error("Can't read device_info_file '%s' due to exception: %s", self.DEVIE_INFO_FILE, e)
 			if ok:
 				self._device_info = db
-		return self._device_info.get(key, None)
+		return self._device_info.get(key, default)
 
 
 	def isFirstRun(self):
@@ -1837,13 +1868,24 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		return " | ".join(chunks)
 
+	def is_mrbeam2(self):
+		return self._model_id == "MRBEAM2"
+
+	def is_mrbeam2_dreamcut_ready1(self):
+		return self._model_id == "MRBEAM2_DC_R1"
+
+	def is_mrbeam2_dreamcut_ready2(self):
+		return self._model_id == "MRBEAM2_DC_R2"
+
+	def is_mrbeam2_dreamcut(self):
+		return self._model_id == "MRBEAM2_DC"
+
 	def is_time_ntp_synced(self):
 		return self._time_ntp_synced
 
 
 	def start_time_ntp_timer(self):
 		self.__calc_time_ntp_offset(log_out_of_sync=True)
-
 
 	def __calc_time_ntp_offset(self, log_out_of_sync=False):
 		"""
