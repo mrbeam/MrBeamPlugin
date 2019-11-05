@@ -106,6 +106,7 @@ $(function(){
 		self.px2mm_factor = 1; // initial value
 		self.svgDPI = function(){return 90}; // initial value, gets overwritten by settings in onAllBound()
 		self.dxfScale =  function(){return 1}; // initial value, gets overwritten by settings in onAllBound()
+		self.previewImgOpacity = ko.observable(1);
 
 		self.workingAreaWidthMM = ko.computed(function(){
 			return self.profile.currentProfileData().volume.width();
@@ -2979,6 +2980,7 @@ $(function(){
 			document.getElementById("working_area_files"),
 			document.getElementById("quick_text_dialog"),
 			document.getElementById("quick_shape_dialog"),
+			document.getElementById("camera_brightness"),
 			document.getElementById("zoomFactor")
 		]]);
 
