@@ -997,31 +997,12 @@ $(function(){
 		};
 
 		self.highlightDesign = function(data){
-			$('#userContent').addClass('dimDesigns');
 			var svgEl = $('#'+data.previewId);
 			svgEl.addClass('designHighlight');
-			self.showHighlightMarkers(data.previewId);
 		};
 		self.removeHighlight = function(data){
-			$('#userContent').removeClass('dimDesigns');
 			var svgEl = $('#'+data.previewId);
 			svgEl.removeClass('designHighlight');
-			self.showHighlightMarkers(null);
-		};
-		self.showHighlightMarkers = function(svgId) {
-//			if(svgId === null){
-//				var w = self.mm2svgUnits(self.workingAreaWidthMM());
-//				var h = self.mm2svgUnits(self.workingAreaHeightMM());
-//				snap.select('#highlightMarker').attr({x: -1, y:-1, width:0, height:0});
-//			} else {
-//				var svgEl = snap.select('#'+svgId);
-//				var bbox = svgEl.getBBox();
-//				var x = bbox.x - 20;
-//				var y = bbox.y - 20;
-//				var w = bbox.w + 40;
-//				var h = bbox.h + 40;
-//				snap.select('#highlightMarker').attr({x: x, y:y, width:w, height:h});
-//			}
 		};
 
 		self.duplicateSVG = function(src) {
