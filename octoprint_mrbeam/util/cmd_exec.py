@@ -32,7 +32,6 @@ def exec_cmd_output(cmd, log_cmd=True, shell=False):
 	Executes a system command and returns its output.
 	:param cmd:
 	:return: Tuple(String:output , int return_code)
-			If system returncode was not 0 (zero), output will be None
 	'''
 
 	output = None

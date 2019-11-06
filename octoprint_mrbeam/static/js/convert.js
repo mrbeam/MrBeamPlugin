@@ -54,6 +54,7 @@ $(function(){
 
 		// material menu
 		self.material_settings2 = {};
+		self.material_settings2_updated_trigger= ko.observable();
 
 		self.engrave_only_thickness = {thicknessMM: -1, cut_i:'', cut_f:'', cut_p: 1, cut_pierce: 0, cut_compressor_lvl:3};
 		self.no_engraving = {eng_i:['',''], eng_f:['',''], eng_pierce: 0, engrave_compressor_lvl: 3, dithering: false };
@@ -96,6 +97,8 @@ $(function(){
         self.load_standard_materials = function(){
             self.materialSettings.loadMaterialSettings(function(res){
                 self.material_settings2 = res;
+                // trigger self.filteredMaterials() to update
+                self.material_settings2_updated_trigger.notifySubscribers();
             })
         };
 
@@ -408,7 +411,9 @@ $(function(){
 
         self.filterQuery = ko.observable('');
 		self.filteredMaterials = ko.computed(function(){
-			// TODO this method is called 3 times on startup: 1 time should be enough.
+			// just to subscribe to this obserable!
+			self.material_settings2_updated_trigger();
+
 			var q = self.filterQuery();
 			var out = [];
 			// List custom materials first
@@ -424,19 +429,18 @@ $(function(){
 						out.push(m);
 					}
 				}
-
 			}
 
-			for(var materialKey in self.material_settings2){
-				var m = self.material_settings2[materialKey];
-				if(m !== null){
-					m.key = materialKey;
+            for (var materialKey in self.material_settings2) {
+                var m = self.material_settings2[materialKey];
+                if (m !== null) {
+                    m.key = materialKey;
 //					m.name = materialKey; // TODO i18n
-					if(m.name.toLowerCase().indexOf(q) >= 0){
-						out.push(m);
-					}
-				}
-			}
+                    if (m.name.toLowerCase().indexOf(q) >= 0) {
+                        out.push(m);
+                    }
+                }
+            }
 			return out;
 		});
 

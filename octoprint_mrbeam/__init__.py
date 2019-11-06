@@ -307,7 +307,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				clip_working_area = True # https://github.com/mrbeam/MrBeamPlugin/issues/134
 			),
 			grbl_version_lastknown=None,
-			tour_auto_launch = False,
+			tour_auto_launch = True,
 		)
 
 	def on_settings_load(self):
