@@ -170,7 +170,7 @@ class DustManager(object):
 			self._stop_dust_extraction()
 			self._unboost_timer_interval()
 		elif event in (OctoPrintEvents.PRINT_DONE, OctoPrintEvents.PRINT_FAILED, OctoPrintEvents.PRINT_CANCELLED,
-					   MrBeamEvents.LASER_JOB_DONE, MrBeamEvents.LASER_JOB_FAILED, MrBeamEvents.LASER_JOB_CANCELLED):
+					   MrBeamEvents.LASER_JOB_DONE, MrBeamEvents.LASER_JOB_FAILED, MrBeamEvents.LASER_JOB_CANCELLED):  # Todo iratxe: why do we repeat this with LaserJobDone?
 			self._last_event = event
 			self._do_end_dusting()
 		elif event == OctoPrintEvents.SHUTDOWN:
