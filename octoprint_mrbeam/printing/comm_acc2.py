@@ -92,12 +92,15 @@ class MachineCom(object):
 	COMMAND_RESUME      = '~'
 	COMMAND_RESET       = b'\x18'
 	COMMAND_FLUSH       = 'FLUSH'
+	COMMAND_SYNC        = 'SYNC'
 	COMMAND_RESET_ALARM = '$X'
 
 	STATUS_POLL_FREQUENCY_OPERATIONAL = 2.0
 	STATUS_POLL_FREQUENCY_PRINTING = 1.0 # set back top 1.0 if it's not causing gcode24
 	STATUS_POLL_FREQUENCY_PAUSED = 0.2
 	STATUS_POLL_FREQUENCY_DEFAULT = STATUS_POLL_FREQUENCY_PRINTING
+
+	GRBL_SYNC_COMMAND_WAIT_STATES = (GRBL_STATE_RUN, GRBL_STATE_QUEUE)
 
 	GRBL_HEX_FOLDER = 'files/grbl/'
 
@@ -394,7 +397,27 @@ class MachineCom(object):
 				else:
 					# still flushing. do nothing else for now...
 					return
-			# SYNC: https://github.com/mrbeam/MrBeamPlugin/blob/879c03ceaeb186a862380b133eb22154dc3db602/octoprint_mrbeam/comm_acc2.py
+			if self._cmd.get('cmd', None) == self.COMMAND_SYNC or self._cmd.get('sync', False):
+				# SYNC: https://github.com/mrbeam/MrBeamPlugin/blob/879c03ceaeb186a862380b133eb22154dc3db602/octoprint_mrbeam/comm_acc2.py
+				if self._sync_command_ts <= 0:
+					self._sync_command_ts = time.time()
+					self._sync_command_state_sent = False
+					self._logger.debug("SYNCing (grbl_state: {}, acc_line_buffer: {}, grbl_rx: {})".format(
+						self._grbl_state, self._acc_line_buffer.get_char_len(), self._grbl_rx_status), terminal_as_comm=True)
+				if self._acc_line_buffer.is_empty() and not (self._grbl_state in self.GRBL_SYNC_COMMAND_WAIT_STATES):
+					# Successfully synced, let's move on
+					self._cmd.pop('sync', None)
+					if self._cmd.get('cmd', None) == self.COMMAND_SYNC:
+						self._cmd.pop('cmd', None)
+					self._log("SYNCed ({}ms)".format(int(1000 * (time.time() - self._sync_command_ts))), terminal_as_comm=True)
+					self._sync_command_ts = -1
+					self._sync_command_state_sent = False
+				elif self._acc_line_buffer.is_empty() and (self._grbl_state in self.GRBL_SYNC_COMMAND_WAIT_STATES) and not self._sync_command_state_sent:
+					# Request a status update from GRBL to see if it's really ready.
+					self._sync_command_state_sent = True
+					self._log("SYNCing ({}ms) - Sending '?'".format(int(1000 * (time.time() - self._sync_command_ts))), terminal_as_comm=True)
+					self._sendCommand(self.COMMAND_STATUS)
+
 			if 'compressor' in self._cmd:
 				self._set_compressor(self._cmd.pop('compressor'))
 			if 'cmd' in self._cmd:
@@ -461,7 +484,7 @@ class MachineCom(object):
 	def _add_checksum_to_cmd(self, cmd):
 		if cmd is None:
 			return None
-		if cmd.find('*') < 0 and cmd not in (self.COMMAND_FLUSH, ):
+		if cmd.find('*') < 0 and cmd not in (self.COMMAND_FLUSH, self.COMMAND_SYNC):
 			cmd = "{cmd}*{chk}".format(cmd=cmd, chk=self._calc_checksum(cmd))
 		return cmd
 
