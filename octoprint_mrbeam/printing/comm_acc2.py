@@ -165,6 +165,8 @@ class MachineCom(object):
 		self._passes = 1
 		self._finished_passes = 0
 		self._flush_command_ts = -1
+		self._sync_command_ts = -1
+		self._sync_command_state_sent = False
 		self.limit_x = -1
 		self.limit_y = -1
 		# from GRBL status RX value: Number of characters queued in Grbl's serial RX receive buffer.
@@ -409,13 +411,13 @@ class MachineCom(object):
 					self._cmd.pop('sync', None)
 					if self._cmd.get('cmd', None) == self.COMMAND_SYNC:
 						self._cmd.pop('cmd', None)
-					self._log("SYNCed ({}ms)".format(int(1000 * (time.time() - self._sync_command_ts))), terminal_as_comm=True)
+					self._logger.debug("SYNCed ({}ms)".format(int(1000 * (time.time() - self._sync_command_ts))), terminal_as_comm=True)
 					self._sync_command_ts = -1
 					self._sync_command_state_sent = False
 				elif self._acc_line_buffer.is_empty() and (self._grbl_state in self.GRBL_SYNC_COMMAND_WAIT_STATES) and not self._sync_command_state_sent:
 					# Request a status update from GRBL to see if it's really ready.
 					self._sync_command_state_sent = True
-					self._log("SYNCing ({}ms) - Sending '?'".format(int(1000 * (time.time() - self._sync_command_ts))), terminal_as_comm=True)
+					self._logger.debug("SYNCing ({}ms) - Sending '?'".format(int(1000 * (time.time() - self._sync_command_ts))), terminal_as_comm=True)
 					self._sendCommand(self.COMMAND_STATUS)
 
 			if 'compressor' in self._cmd:
@@ -1567,7 +1569,7 @@ class MachineCom(object):
 			return {}
 		else:
 			nu_cmd = {'compressor': val,
-			          'flush': True,
+			          'sync': True,
 			          'cmd': None}
 			return nu_cmd
 
