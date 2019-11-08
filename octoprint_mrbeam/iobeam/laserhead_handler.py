@@ -56,7 +56,7 @@ class LaserheadHandler(object):
 				self._logger.warn('Received empty laser head data from iobeam.')
 			else:
 				if lh_data.get('main', {}).get('serial', None) is None:
-					self._logger.exception('Received invalid laser head data from iobeam - no serial number')
+					self._logger.exception('Received invalid laser head data from iobeam - no serial number')  # TODO IRATXE: is there an exception for all old laser heads? Add dataset maybe?
 				else:
 					self._logger.exception('Received invalid laser head data from iobeam - invalid power calibrations data: {}'
 										   .format(lh_data.get('power_calibrations', [])))
