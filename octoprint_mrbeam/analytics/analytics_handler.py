@@ -415,7 +415,12 @@ class AnalyticsHandler(object):
 			self._current_cpu_data.record_cpu_data()
 			self._add_cpu_data(dur=payload['time'])
 		self._current_job_final_status = 'Sliced'
-		self._add_job_event(ak.Job.Event.Slicing.DONE, payload={ak.Job.Duration.CURRENT: int(round(payload['time']))})
+
+		payload = {
+			ak.Job.Duration.CURRENT: int(round(payload['time'])),
+			ak.Job.Duration.ESTIMATION: int(round(self._current_job_time_estimation))
+		}
+		self._add_job_event(ak.Job.Event.Slicing.DONE, payload=payload)
 
 	def _event_slicing_failed(self, event, payload):
 		self._add_job_event(ak.Job.Event.Slicing.FAILED, payload={ak.Job.ERROR: payload['reason']})
