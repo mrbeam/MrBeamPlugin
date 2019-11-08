@@ -1269,9 +1269,6 @@ $(function(){
 							data.gcodeFilesToAppend = self.gcodeFilesToAppend;
 						}
 
-						// hack!!
-						self.files.ignoreUpdatedFilesEvent = true;
-
 						var json = JSON.stringify(data);
 						var length = json.length;
 						console.log("Conversion: " + length + " bytes have to be converted.");
@@ -1411,8 +1408,6 @@ $(function(){
 
 		self.onEventSlicingDone = function(payload){
 		    self.slicing_progress(100);
-		    // TODO: also needed for slicing canceled or faild
-		    self.files.ignoreUpdatedFilesEvent = false;
             // let's wait for onEventFileSelected() to remove the convert dialog and got to the next step
 		};
 
