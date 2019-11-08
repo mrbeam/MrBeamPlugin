@@ -572,7 +572,7 @@ class MachineCom(object):
 			# While closing or reopening sometimes we get this exception:
 			# 	File "build/bdist.linux-armv7l/egg/serial/serialposix.py", line 468, in read
 	        #     buf = os.read(self.fd, size-len(read))
-			self._logger.exception("TypeError in _readline. Did this happen while closing or re-openting serial?: {e}".format(e),terminal_as_comm=True)
+			self._logger.exception("TypeError in _readline. Did this happen while closing or re-opening serial?: {e}".format(e=e), terminal_as_comm=True)
 			pass
 		if ret is None or ret == '': return ''
 		try:
@@ -582,7 +582,7 @@ class MachineCom(object):
 				self._log("Recv: %s" % (sanitize_ascii(ret)), is_command=True)
 		except ValueError as e:
 			# self._log("WARN: While reading last line: %s" % e)
-			self._logger.warn("Exception while sanitizing ascii intput from grbl. Excpetion: '%s', original string from grbl: '%s'", e, ret)
+			self._logger.warn("Exception while sanitizing ascii input from grbl. Excpetion: '%s', original string from grbl: '%s'", e, ret)
 			self._log("Recv: %r" % ret)
 		return ret
 
@@ -653,15 +653,18 @@ class MachineCom(object):
 				if not self.isPaused():
 					if _mrbeam_plugin_implementation and _mrbeam_plugin_implementation.onebutton_handler and \
 						not _mrbeam_plugin_implementation.onebutton_handler.is_intended_pause():
-						self._logger.warn("_handle_status_report() Override pause since we got status '%s' from grbl.", self._grbl_state, analytics=True)
+						self._logger.warn("_handle_status_report() Override pause since we got status '%s' from grbl. (_flush_command_ts: %s, _sync_command_ts: %s)",
+						                  self._grbl_state, self._flush_command_ts, self._sync_command_ts, analytics=True)
 						self.setPause(False, send_cmd=True, force=True, trigger="GRBL_QUEUE_OVERRIDE")
 					else:
-						self._logger.warn("_handle_status_report() Pausing since we got status '%s' from grbl.", self._grbl_state, terminal_dump=True, analytics=True)
+						self._logger.warn("_handle_status_report() Pausing since we got status '%s' from grbl. (_flush_command_ts: %s, _sync_command_ts: %s)",
+						                  self._grbl_state, self._flush_command_ts, self._sync_command_ts, terminal_dump=True, analytics=True)
 						self.setPause(True, send_cmd=False, trigger="GRBL_QUEUE")
 		elif self._grbl_state == self.GRBL_STATE_RUN or self._grbl_state == self.GRBL_STATE_IDLE:
 			if time.time() - self._pause_delay_time > 0.3:
 				if self.isPaused():
-					self._logger.warn("_handle_status_report() Unpausing since we got status '%s' from grbl.", self._grbl_state, analytics=True)
+					self._logger.warn("_handle_status_report() Unpausing since we got status '%s' from grbl. (_flush_command_ts: %s, _sync_command_ts: %s)",
+					                  self._grbl_state, self._flush_command_ts, self._sync_command_ts, analytics=True)
 					self.setPause(False, send_cmd=False, trigger="GRBL_RUN")
 
 	def _handle_laser_intensity_for_analytics(self, laser_state, laser_intensity):
