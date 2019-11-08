@@ -455,42 +455,18 @@ body.colorDragInProgress #drop_overlay {
 	max-height: none;
 }
 
-.dimDesigns .userSVG,
-.dimDesigns .userIMG,
-.dimDesigns .userText {
-	/*opacity:.5;*/
-	/*filter:url(#dehighlight);*/
-	stroke-width: 1;
-	transition: stroke-width 0.2s ease-out;
-}
-
-.userSvg, .userText, .userIMG,
-.dimDesigns .userSVG.designHighlight,
-.dimDesigns .userIMG.designHighlight,
-.dimDesigns .userSVG .vector_outline,
-.dimDesigns .userText.designHighlight {
-	/*opacity:1;*/
-	stroke-width: 3px !important;
+.userSVG.designHighlight .vector_outline {
+	stroke-width: 2px !important;
 	filter:none;
 }
 
-.highlightMarker {
-	stroke-width: 1px;
-	stroke-dasharray: 3, 9;
-	stroke:#e25303;
-	vector-effect: non-scaling-stroke;
-	fill:none;
-	animation: drawdash 1s linear normal infinite;
-	stroke-dashoffset: 0;
+.userIMG.designHighlight image {
+	filter:none !important;
 }
 
-@keyframes drawdash {
-  from {
-    stroke-dashoffset: 0;
-  }
-  to {
-    stroke-dashoffset: 12;
-  }
+.userText.designHighlight text,
+.userText.designHighlight tspan {
+	font-weight: bold !important;
 }
 
 svg#area_preview path,

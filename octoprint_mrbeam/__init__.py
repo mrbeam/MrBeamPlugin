@@ -1052,6 +1052,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@octoprint.plugin.BlueprintPlugin.route("/convert", methods=["POST"])
 	@restricted_access
 	def gcodeConvertCommand(self):
+		# In order to reactivate the cancel button in the processing screen,
+		# we need should run the code in here in a separate thread and return the http call as soon as possible
+		# This allows the cancel request to come through.
+		# On fontend side we should prevent the system from reloading the whole file list during slicing
+		# which can be done bu doing this before we trigger the /convert request:
+		# self.files.ignoreUpdatedFilesEvent = true; Of course we should set it back once slicing is done.
+		# All this improved the cancelation speed. Still it's not good enough to justify a cancel button.
 
 		# valid file commands, dict mapping command name to mandatory parameters
 		valid_commands = {
@@ -1068,7 +1075,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			# TODO stripping non-ascii is a hack - svg contains lots of non-ascii in <text> tags. Fix this!
 			svg = ''.join(i for i in data['svg'] if ord(i) < 128)  # strip non-ascii chars like €
 			del data['svg']
-			filename = "local/temp.svg" # 'local' is just a path here, has nothing to do with the FileDestination.LOCAL
+			filename = "local/temp.svg"  # 'local' is just a path here, has nothing to do with the FileDestination.LOCAL
 
 			class Wrapper(object):
 				def __init__(self, filename, content):
@@ -1088,7 +1095,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			ts = time.gmtime()
 			historyFilename = time.strftime("%Y-%m-%d_%H.%M.%S.mrb", ts)
 			historyObj = Wrapper(historyFilename, svg)
-			self._file_manager.add_file(FileDestinations.LOCAL, historyFilename, historyObj, links=None, allow_overwrite=True)
+			self._file_manager.add_file(FileDestinations.LOCAL, historyFilename, historyObj, links=None,
+			                            allow_overwrite=True)
 
 			# keep only x recent files in job history.
 			def is_history_file(entry):
@@ -1100,8 +1108,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			resp = self._file_manager.list_files(path="", filter=mrb_filter_func, recursive=True)
 			files = resp[FileDestinations.LOCAL]
 
-			max_history_files = 25 # TODO fetch from settings
-			if(len(files) > max_history_files):
+			max_history_files = 25  # TODO fetch from settings
+			if (len(files) > max_history_files):
 
 				removals = []
 				for key in files:
@@ -1119,7 +1127,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			slicer = "svgtogcode"
 			slicer_instance = self._slicing_manager.get_slicer(slicer)
 			if slicer_instance.get_slicer_properties()["same_device"] and (
-						self._printer.is_printing() or self._printer.is_paused()):
+				self._printer.is_printing() or self._printer.is_paused()):
 				# slicer runs on same device as OctoPrint, slicing while printing is hence disabled
 				msg = "Cannot convert while lasering due to performance reasons".format(**locals())
 				self._logger.error("gcodeConvertCommand: %s", msg)
@@ -1142,7 +1150,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			# prohibit overwriting the file that is currently being printed
 			currentOrigin, currentFilename = self._getCurrentFile()
 			if currentFilename == gcode_name and currentOrigin == FileDestinations.LOCAL and (
-						self._printer.is_printing() or self._printer.is_paused()):
+				self._printer.is_printing() or self._printer.is_paused()):
 				msg = "Trying to slice into file that is currently being printed: {}".format(gcode_name)
 				self._logger.error("gcodeConvertCommand: %s", msg)
 				make_response(msg, 409)
@@ -1150,7 +1158,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			select_after_slicing = False
 			print_after_slicing = False
 
-			#get job params out of data json
+			# get job params out of data json
 			overrides = dict()
 			overrides['vector'] = data['vector']
 			overrides['raster'] = data['raster']
@@ -1183,13 +1191,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 			try:
 				self._file_manager.slice(slicer, FileDestinations.LOCAL, filename, FileDestinations.LOCAL, gcode_name,
-										 profile=None,#profile,
-										 printer_profile_id=None, #printerProfile,
-										 position=None, #position,
-										 overrides=overrides,
-										 callback=slicing_done,
-										 callback_args=[gcode_name, select_after_slicing, print_after_slicing,
-														appendGcodeFiles])
+				                         profile=None,  # profile,
+				                         printer_profile_id=None,  # printerProfile,
+				                         position=None,  # position,
+				                         overrides=overrides,
+				                         callback=slicing_done,
+				                         callback_args=[gcode_name, select_after_slicing, print_after_slicing,
+				                                        appendGcodeFiles])
 			except octoprint.slicing.UnknownProfile:
 				msg = "Profile {profile} doesn't exist".format(**locals())
 				self._logger.error("gcodeConvertCommand: %s", msg)
@@ -1201,7 +1209,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"origin": "local",
 				"refs": {
 					"resource": location,
-					"download": url_for("index", _external=True) + "downloads/files/" + FileDestinations.LOCAL + "/" + gcode_name
+					"download": url_for("index",
+					                    _external=True) + "downloads/files/" + FileDestinations.LOCAL + "/" + gcode_name
 				}
 			}
 
@@ -1215,6 +1224,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@restricted_access
 	def cancelSlicing(self):
 		self._cancel_job = True
+		self._logger.info("ANDYTEST /cancel - cancelSlicing()")
 		return NO_CONTENT
 
 	##~~ SimpleApiPlugin mixin
