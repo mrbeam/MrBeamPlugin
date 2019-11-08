@@ -89,13 +89,13 @@ def parse_csv(path = None, laserhead=MRBEAM):
                 else:
                     thickness = float(thickness_or_engrave)
                 settingname = 'cut'
-                settings = [{'thicknessMM': thickness, 'cut_i': int(intensity), 'cut_f': int(speed), 'cut_p': int(passes), 'cut_compressor_lvl': int(compressor_lvl)}]
+                settings = [{'thicknessMM': thickness, 'cut_i': int(intensity), 'cut_f': int(speed), 'cut_p': int(passes), 'cut_compressor': int(compressor_lvl)}]
             except ValueError:
                 if not thickness_or_engrave.lower().__contains__('engrav'):
                     raise Exception("Did not understand if line {} is an engraving or cutting job. Type of elm is {} : {}".format(i, type(thickness_or_engrave), thickness_or_engrave))
                 dithering = True if dithering == 'yes' else False
                 pierce_time = pierce_time or 0
-                settings = {'engrave_compressor_lvl': int(compressor_lvl),
+                settings = {'eng_compressor': int(compressor_lvl),
                             'eng_pierce': int(pierce_time),
                             'dithering': dithering}
                 settingname = 'engrave'
