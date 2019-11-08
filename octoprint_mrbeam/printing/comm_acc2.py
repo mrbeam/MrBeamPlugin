@@ -425,11 +425,12 @@ class MachineCom(object):
 							my_cmd = my_cmd[:rnd-1] + chr(random.randint(0,255)) + my_cmd[rnd:]
 							self._logger.warn("DEBUG Randomly changed '%s' to '%s' to cause checksum error.", orig_command, my_cmd, terminal_as_comm=True)
 					try:
-						self._serial.write(my_cmd + '\n')
+						self._serial.write(bytes(my_cmd + '\n'))
 						self._process_command_phase("sent", my_cmd)
 						self._cmd.pop('cmd', None)
-					except serial.SerialException:
-						self._log("Unexpected error while writing serial port: %s" % (get_exception_string()))
+					# except serial.SerialException:
+					except Exception:
+						self._logger.exception("Exception while writing to serial: cmd: %s - %s" % (my_cmd, get_exception_string()))
 						self._errorValue = get_exception_string()
 						self.close(True)
 
@@ -442,7 +443,7 @@ class MachineCom(object):
 			my_cmd = cmd_obj.get('cmd', '')
 			self._log("Send: %s" % my_cmd)
 			try:
-				self._serial.write(my_cmd)
+				self._serial.write(bytes(my_cmd))
 				self._process_command_phase("sent", my_cmd)
 			except serial.SerialException:
 				self._logger.info("Unexpected error while writing serial port: %s" % (get_exception_string()), terminal_as_comm=True)
