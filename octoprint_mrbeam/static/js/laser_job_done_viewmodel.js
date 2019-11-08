@@ -57,6 +57,7 @@ $(function() {
             }
             self._fromData(payload);
             self.dialogElement.modal("show");
+            self.switchTimer();
             self.jobDoneDialog.shown = payload['ts'] || new Date().getTime();
         };
 
@@ -71,8 +72,6 @@ $(function() {
 
         self.onEventLaserJobDone = function(payload) {
             self._fromData(payload);
-            self.dialogElement.modal("show");
-            self.switchTimer();
         };
 
         self.fromCurrentData = function(payload) {

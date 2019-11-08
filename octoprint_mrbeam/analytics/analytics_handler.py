@@ -514,7 +514,7 @@ class AnalyticsHandler(object):
 		self._cleanup_job()
 
 		# We have to wait until the 'laserjob_finished' line is written before we upload
-		Timer(interval=5.0, function=AnalyticsFileUploader.upload_now, args=[self._plugin]).start()
+		Timer(interval=5.0, function=AnalyticsFileUploader.upload_now, args=[self._plugin, self._analytics_lock]).start()
 
 	def _event_job_time_estimated(self, event, payload):
 		self._current_job_time_estimation = payload['job_time_estimation']
@@ -579,6 +579,7 @@ class AnalyticsHandler(object):
 				ak.Header.SOFTWARE_TIER: self._settings.get(["dev", "software_tier"]),
 				ak.Header.DATA: data,
 				ak.Header.UPTIME: self._get_uptime(),
+				ak.Header.MODEL: self._plugin.get_model_id(),
 			}
 
 			if event_type == ak.EventType.JOB:

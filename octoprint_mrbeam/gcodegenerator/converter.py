@@ -321,10 +321,14 @@ class Converter():
 						if(settings['feedrate'] == None or settings['feedrate'] == -1 or settings['intensity'] == None or settings['intensity'] <= 0):
 							self._log.info( "convert() skipping color %s, no valid settings %s." % (colorKey, settings))
 							continue
+
 						if(not colorKey in paths_by_color):
 							self._log.info( "convert() skipping color %s, no paths with this color (clipped? path in <defs>?. " % (colorKey))
 							continue
-							
+
+						# gcode_before_job
+						fh.write(machine_settings.gcode_before_job(color=colorKey, compressor=settings.get('cut_compressor', '100')))
+
 						for path in paths_by_color[colorKey]:
 							curveGCode = ""
 							mbgc = path.get(_add_ns('gc', 'mb'), None)
@@ -345,6 +349,8 @@ class Converter():
 								fh.write(curveGCode)
 							
 
+						# gcode_after_job
+						fh.write(machine_settings.gcode_after_job(color=colorKey))
 			fh.write(self._get_gcode_footer())
 
 		self.export_gcode()
@@ -700,7 +706,7 @@ class Converter():
 			si = curve[i]
 			feed = f if lg not in ['G01', 'G02', 'G03'] else ''
 			if s[1] == 'move':
-				g += "G0" + c(si[0]) + "\n" + machine_settings.gcode_before_path_color(color, settings['intensity'], settings['cut_compressor']) + "\n"
+				g += "G0" + c(si[0]) + "\n" + machine_settings.gcode_before_path_color(color, settings['intensity']) + "\n"
 				pt = int(settings['pierce_time'])
 				if pt > 0:
 					g += "G4P%.3f\n" % (round(pt / 1000.0, 4))
@@ -735,7 +741,7 @@ class Converter():
 		self._log.debug( "_use_embedded_gcode() %s", gcode[:100])
 		gcode = gcode.replace(' ', "\n")
 		feedrateCode = "F%s;%s\n" % (settings['feedrate'], color)
-		intensityCode = machine_settings.gcode_before_path_color(color, settings['intensity'], settings.get('cut_compressor', '100')) + "\n"
+		intensityCode = machine_settings.gcode_before_path_color(color, settings['intensity']) + "\n"
 		piercetimeCode = ''
 		pt = int(settings['pierce_time'])
 		if pt > 0:

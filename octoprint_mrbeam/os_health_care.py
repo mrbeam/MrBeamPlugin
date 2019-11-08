@@ -47,20 +47,28 @@ class OsHealthCare(object):
 
 		if needs_fix:
 			self._logger.warn("Fixing /etc/network/interfaces")
-			ok = exec_cmd(['sudo', 'cp', self._get_full_path_to_file('interfaces'), '/etc/network/interfaces'], shell=False)
-			self._logger.warn("Fixed  /etc/network/interfaces - Success: %s", ok)
-			self.log_analytics('/etc/network/interfaces', ok)
-			if ok:
-				self._logger.info("Rebooting system...", ok)
+			out, code = exec_cmd_output(['sudo', 'cp', self._get_full_path_to_file('interfaces'), '/etc/network/interfaces'], shell=False)
+			if code != 0:
+				success = False
+				self._logger.info("Could not fix /etc/network/interfaces")
+			else:
+				success = True
+				self._logger.info("Fixed /etc/network/interfaces")
+
+			self.log_analytics('/etc/network/interfaces', success=success, output=out)
+
+			if success:
+				self._logger.info("Rebooting system...")
 				time.sleep(0.1)
 				exec_cmd(['sudo', 'reboot', 'now'], shell=False)
 		else:
 			self._logger.info("OK /etc/network/interfaces")
 
-	def log_analytics(self, event, success=None):
+	def log_analytics(self, event, success=None, output=None):
 		data = dict(
 			os_health_event=event,
 			success=success,
+			output=output,
 		)
 		self._analytics_handler.add_os_health_log(data)
 
