@@ -408,8 +408,13 @@ class AnalyticsHandler(object):
 
 	def _event_startup(self, event, payload):
 		# Here the MrBeamPlugin is not fully initialized yet, so we have to access this data direct from the plugin
+		# design_filter_func = lambda entry, entry_data: is_design_file(entry)
+
+		self._logger.info('################################################################### _event_startup')
+		design_files = self._plugin._file_manager.list_files(path="", recursive=True)['local']
+		self._logger.info()
 		payload = {
-			ak.Device.LaserHead.SERIAL: self._plugin.laserhead_handler.get_current_used_lh_data()['serial'],
+			# ak.Device.LaserHead.SERIAL: self._plugin.laserhead_handler.get_current_used_lh_data()['serial'],  # todo iratxe do we want this here?
 			ak.Device.Usage.USERS: len(self._plugin._user_manager._users)
 		}
 		self._add_device_event(ak.Device.Event.STARTUP, payload=payload)

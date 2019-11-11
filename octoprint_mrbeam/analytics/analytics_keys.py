@@ -116,6 +116,7 @@ class AnalyticsKeys:
 			AVAILABLE_SPACE = 'available'
 			USED_SPACE = 'used_percent'
 			USERS = 'users'
+			FILES = 'files'
 
 		class LaserHead:
 			SERIAL = 'laserhead_serial'
