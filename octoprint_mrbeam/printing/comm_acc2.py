@@ -368,6 +368,7 @@ class MachineCom(object):
 		All commands can be either a plain string or an dict object.
 		Object-Commands can have the following keys and are executed in this order:
 		- flush: a FLUSH is performed before any other step is executed. FLUSH waits until we're no longer waiting for any OKs from GRBL
+		- sync: a SYNC is performed before any other step is executed. SYNC is like FLUSH but waits until GRBL reports IDLE state.
 		- compressor: Set the compressor (if present) to the given value. usually in combination with flush.
 		- cmd: a command string (sam as if cmd is a plain string)
 		"""
@@ -383,6 +384,7 @@ class MachineCom(object):
 				else:
 					self._logger.error("_sendCommand() command is of unexpected type: %s", type(tmp))
 
+			# FLUSH
 			if self._cmd.get('cmd', None) == self.COMMAND_FLUSH or self._cmd.get('flush', False):
 				# FLUSH waits until we're no longer waiting for any OKs from GRBL
 				if self._flush_command_ts <=0:
@@ -399,13 +401,16 @@ class MachineCom(object):
 				else:
 					# still flushing. do nothing else for now...
 					return
+
+			# SYNC
 			if self._cmd.get('cmd', None) == self.COMMAND_SYNC or self._cmd.get('sync', False):
-				# SYNC: https://github.com/mrbeam/MrBeamPlugin/blob/879c03ceaeb186a862380b133eb22154dc3db602/octoprint_mrbeam/comm_acc2.py
+				# As FLUSH but wait for GRBL going IDLE before we continue
 				if self._sync_command_ts <= 0:
 					self._sync_command_ts = time.time()
 					self._sync_command_state_sent = False
 					self._logger.debug("SYNCing (grbl_state: {}, acc_line_buffer: {}, grbl_rx: {})".format(
 						self._grbl_state, self._acc_line_buffer.get_char_len(), self._grbl_rx_status), terminal_as_comm=True)
+					return
 				if self._acc_line_buffer.is_empty() and not (self._grbl_state in self.GRBL_SYNC_COMMAND_WAIT_STATES):
 					# Successfully synced, let's move on
 					self._cmd.pop('sync', None)
@@ -419,9 +424,18 @@ class MachineCom(object):
 					self._sync_command_state_sent = True
 					self._logger.debug("SYNCing ({}ms) - Sending '?'".format(int(1000 * (time.time() - self._sync_command_ts))), terminal_as_comm=True)
 					self._sendCommand(self.COMMAND_STATUS)
+					return
+				else:
+					# still syncing. do nothing else for now...
+					return
 
+			# COMPRESSOR
 			if 'compressor' in self._cmd:
-				self._set_compressor(self._cmd.pop('compressor'))
+				comp_val = self._cmd.pop('compressor')
+				self._set_compressor(comp_val)
+				self._logger.debug("Compressor: %s", comp_val, terminal_as_comm=True)
+
+			# CMD
 			if 'cmd' in self._cmd:
 				my_cmd = self._cmd.get('cmd', None)  # to avoid race conditions
 				if my_cmd is None:
