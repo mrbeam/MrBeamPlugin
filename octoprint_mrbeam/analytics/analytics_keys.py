@@ -106,6 +106,7 @@ class AnalyticsKeys:
 			MRBEAM_USAGE = 'mrbeam_usage'
 			COMPRESSOR = 'compressor'
 			PICTURE = 'picture'
+			NUM_FILES = 'num_files'
 
 		class SoftwareChannel:
 			OLD = 'old_channel'

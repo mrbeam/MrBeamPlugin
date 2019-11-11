@@ -188,6 +188,12 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.exception('Exception during add_disk_space: {}'.format(e))
 
+	def add_num_files(self, payload):
+		try:
+			self._add_device_event(ak.Device.Event.NUM_FILES, payload=payload)
+		except Exception as e:
+			self._logger.exception('Exception during add_num_files: {}'.format(e))
+
 	# MRB_LOGGER
 	def add_logger_event(self, event_details, wait_for_terminal_dump):
 		try:
@@ -408,13 +414,8 @@ class AnalyticsHandler(object):
 
 	def _event_startup(self, event, payload):
 		# Here the MrBeamPlugin is not fully initialized yet, so we have to access this data direct from the plugin
-		# design_filter_func = lambda entry, entry_data: is_design_file(entry)
-
-		self._logger.info('################################################################### _event_startup')
-		design_files = self._plugin._file_manager.list_files(path="", recursive=True)['local']  # todo iratxe: self._logger.info(self._plugin.laser_filemanager())
-		self._logger.info()
 		payload = {
-			ak.Device.LaserHead.SERIAL: self._plugin.laserhead_handler.get_current_used_lh_data()['serial'],  # todo iratxe do we want this here?
+			ak.Device.LaserHead.SERIAL: self._plugin.laserhead_handler.get_current_used_lh_data()['serial'],
 			ak.Device.Usage.USERS: len(self._plugin._user_manager._users)
 		}
 		self._add_device_event(ak.Device.Event.STARTUP, payload=payload)
