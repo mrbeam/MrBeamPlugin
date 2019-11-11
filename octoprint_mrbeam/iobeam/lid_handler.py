@@ -278,6 +278,8 @@ class PhotoCreator(object):
 							else: # Unknown error
 								self._logger.error(errorID+errorString)
 					self._send_frontend_picture_metadata(correction_result)
+
+					self._analytics_handler.add_camera_picture_result(correction_result)
 					time.sleep(1.5)
 
 			self._logger.debug("PhotoCreator stopping...")

@@ -266,6 +266,18 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.exception('Exception during add_camera_session: {}'.format(e), analytics=True)
 
+	def add_camera_picture_result(self, correction_result):
+		try:
+			data = {
+				ak.Device.SUCCESS: correction_result.get('successful_correction', None),
+				ak.Device.ERROR: correction_result.get('error', None),
+				ak.Device.Picture.RECOGNIZED_MARKERS: correction_result.get('markers_recognized', None),
+			}
+			self._add_device_event(ak.Device.Event.PICTURE, payload=data)
+
+		except Exception as e:
+			self._logger.exception('Exception during add_camera_picture_result: {}'.format(e), analytics=True)
+
 	# IOBEAM_HANDLER
 	def add_iobeam_message_log(self, iobeam_version, message):
 		try:
@@ -320,7 +332,7 @@ class AnalyticsHandler(object):
 			flashing = {
 				ak.Device.Grbl.FROM_VERSION: from_version,
 				ak.Device.Grbl.TO_VERSION: to_version,
-				ak.Device.SUCCESSFUL: successful,
+				ak.Device.SUCCESS: successful,
 				ak.Device.ERROR: err,
 			}
 
