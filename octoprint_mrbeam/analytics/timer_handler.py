@@ -1,3 +1,5 @@
+# coding=utf-8
+
 import netifaces
 import requests
 import os
@@ -5,6 +7,7 @@ from threading import Timer
 
 from analytics_keys import AnalyticsKeys as ak
 from octoprint_mrbeam.mrb_logger import mrb_logger
+from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 
 
 class TimerHandler:
@@ -12,6 +15,7 @@ class TimerHandler:
 	IP_ADDRESSES_TIMER = 15.0
 	SELF_CHECK_TIMER = 20.0
 	INTERNET_CONNECTION_TIMER = 25.0
+	FS_CHECKSUMS = 3.0
 
 	SELF_CHECK_USER_AGENT = 'MrBeamPlugin self check'
 
@@ -28,6 +32,7 @@ class TimerHandler:
 			self._timers.append(Timer(self.IP_ADDRESSES_TIMER, self._ip_addresses))
 			self._timers.append(Timer(self.SELF_CHECK_TIMER, self._http_self_check))
 			self._timers.append(Timer(self.INTERNET_CONNECTION_TIMER, self._internet_connection))
+			self._timers.append(Timer(self.FS_CHECKSUMS, self._fs_checksums))
 
 			for timer in self._timers:
 				timer.start()
@@ -146,3 +151,25 @@ class TimerHandler:
 
 		except Exception as e:
 			self._logger.exception('Exception during the _disk_space check: {}'.format(e))
+
+	def _fs_checksums(self):
+		try:
+			# must end with /
+			folders = ['/home/pi/site-packages/octoprint_mrbeam/',
+			           '/home/pi/dist-packages/iobeam/',
+			           ]
+			res = {}
+
+			for my_folder in folders:
+				cmd = 'find "{folder}" -type f -exec md5sum {{}} \; | sort -k 2 | md5sum'.format(folder=my_folder)
+				self._logger.info("ANDYTEST _fs_checksums: cmd: %s", cmd)
+				out, code = exec_cmd_output(cmd)
+				if out:
+					res[my_folder] = out.split(' ').pop(0)
+			self._logger.info("ANDYTEST _fs_checksums: %s", res)
+		except:
+			self._logger.exception("Exception in _fs_checksums(): ")
+
+
+
+
