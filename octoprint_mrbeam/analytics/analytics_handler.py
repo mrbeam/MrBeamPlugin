@@ -128,13 +128,14 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.exception('Exception during analytics_user_permission_change: {}'.format(e))
 
-	def add_ui_render_call_event(self, host, remote_ip, referrer, language):
+	def add_ui_render_call_event(self, host, remote_ip, referrer, language, user_agent):
 		try:
 			call = {
 				ak.Connectivity.Call.HOST: host,
 				ak.Connectivity.Call.REMOTE_IP: remote_ip,
 				ak.Connectivity.Call.REFERRER: referrer,
 				ak.Connectivity.Call.LANGUAGE: language,
+				ak.Connectivity.Call.USER_AGENT: user_agent,
 			}
 
 			self._add_connectivity_event(ak.Connectivity.Event.UI_RENDER_CALL, payload=call)

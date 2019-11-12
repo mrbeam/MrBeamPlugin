@@ -190,3 +190,4 @@ class AnalyticsKeys:
 			REMOTE_IP = 'remote_ip'
 			REFERRER = 'referrer'
 			LANGUAGE = 'language'
+			USER_AGENT = 'user_agent'
