@@ -159,11 +159,12 @@ class Converter():
 
 	def convert(self, is_job_cancelled, on_progress=None, on_progress_args=None, on_progress_kwargs=None):
 
-		#TODO check if job cancelled by calling is_job_cancelled()
 		self.init_output_file()
 		self.check_free_space() # has to be after init_output_file (which removes old temp files occasionally)
 
 		self.parse()
+		is_job_cancelled() # check after parsing svg xml.
+
 		options = self.options
 		options['doc_root'] = self.document.getroot()
 
@@ -171,11 +172,10 @@ class Converter():
 		self.calculate_conversion_matrix()
 		self.collect_paths()
 
-		for p in self.paths :
-			#print "path", etree.tostring(p)
-			pass
 
 		def report_progress(on_progress, on_progress_args, on_progress_kwargs, done, total):
+			is_job_cancelled() # frequent checks between each path / image
+			#self._log.info("#### calling is_job_cancelled @ %i / %i" % (done, total))
 			if(total == 0):
 				total = 1
 
@@ -322,8 +322,14 @@ class Converter():
 							self._log.info( "convert() skipping color %s, no valid settings %s." % (colorKey, settings))
 							continue
 
+						if(not colorKey in paths_by_color):
+							self._log.info( "convert() skipping color %s, no paths with this color (clipped? path in <defs>?. " % (colorKey))
+							continue
+
+						# gcode_before_job
+						fh.write(machine_settings.gcode_before_job(color=colorKey, compressor=settings.get('cut_compressor', '100')))
+
 						for path in paths_by_color[colorKey]:
-							#print('p', path)
 							curveGCode = ""
 							mbgc = path.get(_add_ns('gc', 'mb'), None)
 							if(mbgc != None):
@@ -341,7 +347,10 @@ class Converter():
 								fh.write("; pass:%i/%s\n" % (p+1, settings['passes']))
 								# TODO tbd DreamCut different for each pass?
 								fh.write(curveGCode)
+							
 
+						# gcode_after_job
+						fh.write(machine_settings.gcode_after_job(color=colorKey))
 			fh.write(self._get_gcode_footer())
 
 		self.export_gcode()
@@ -697,7 +706,7 @@ class Converter():
 			si = curve[i]
 			feed = f if lg not in ['G01', 'G02', 'G03'] else ''
 			if s[1] == 'move':
-				g += "G0" + c(si[0]) + "\n" + machine_settings.gcode_before_path_color(color, settings['intensity'], settings['cut_compressor']) + "\n"
+				g += "G0" + c(si[0]) + "\n" + machine_settings.gcode_before_path_color(color, settings['intensity']) + "\n"
 				pt = int(settings['pierce_time'])
 				if pt > 0:
 					g += "G4P%.3f\n" % (round(pt / 1000.0, 4))
@@ -732,7 +741,7 @@ class Converter():
 		self._log.debug( "_use_embedded_gcode() %s", gcode[:100])
 		gcode = gcode.replace(' ', "\n")
 		feedrateCode = "F%s;%s\n" % (settings['feedrate'], color)
-		intensityCode = machine_settings.gcode_before_path_color(color, settings['intensity'], settings.get('cut_compressor', '100')) + "\n"
+		intensityCode = machine_settings.gcode_before_path_color(color, settings['intensity']) + "\n"
 		piercetimeCode = ''
 		pt = int(settings['pierce_time'])
 		if pt > 0:

@@ -9,6 +9,7 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 
 class TimerHandler:
 	DISK_SPACE_TIMER = 3.0
+	NUM_FILES_TIMER = 5.0
 	IP_ADDRESSES_TIMER = 15.0
 	SELF_CHECK_TIMER = 20.0
 	INTERNET_CONNECTION_TIMER = 25.0
@@ -25,6 +26,7 @@ class TimerHandler:
 		try:
 			self._timers = []
 			self._timers.append(Timer(self.DISK_SPACE_TIMER, self._disk_space))
+			self._timers.append(Timer(self.NUM_FILES_TIMER, self._num_files))
 			self._timers.append(Timer(self.IP_ADDRESSES_TIMER, self._ip_addresses))
 			self._timers.append(Timer(self.SELF_CHECK_TIMER, self._http_self_check))
 			self._timers.append(Timer(self.INTERNET_CONNECTION_TIMER, self._internet_connection))
@@ -146,3 +148,25 @@ class TimerHandler:
 
 		except Exception as e:
 			self._logger.exception('Exception during the _disk_space check: {}'.format(e))
+
+	def _num_files(self):
+		try:
+			all_files = self._plugin._file_manager.list_files(path="", recursive=True)['local']
+
+			file_counter = {}
+			for name, info in all_files.iteritems():
+
+				file_type = info.get('type', None)
+				# All the design files are called model (everything's that not gcode) but we want to know the exact type
+				if file_type == "model":
+					file_type = info.get('typePath', [None])[-1]
+
+				if file_type in file_counter:
+					file_counter[file_type] += 1
+				else:
+					file_counter[file_type] = 1
+
+			self._plugin.analytics_handler.add_num_files(file_counter)
+
+		except Exception as e:
+			self._logger.exception('Exception during the _num_files check: {}'.format(e))

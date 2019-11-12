@@ -479,6 +479,11 @@ class IoBeamHandler(object):
 							if self.MESSAGE_ERROR not in json_dict['data']:
 								# Process all data sets
 								if isinstance(json_dict['data'], dict):
+									# We have to process the iobeam dataset first, because we need the iobeam version for analytics
+									iobeam_dataset = json_dict['data'].pop('iobeam', None)
+									if iobeam_dataset:
+										error_count += self._handle_dataset('iobeam', iobeam_dataset)
+
 									for dataset in json_dict['data']:
 										error_count += self._handle_dataset(dataset, json_dict['data'][dataset])
 							else:
@@ -873,7 +878,7 @@ class IoBeamHandler(object):
 		if show_notification:
 			self.send_hardware_malfunction_frontend_notification()
 
-		self._plugin.analytics_handler.add_iobeam_message_log(self.iobeam_version, dataset)
+		self._analytics_handler.add_iobeam_message_log(self.iobeam_version, dataset)
 
 	def _handle_i2c(self, dataset):
 		self._logger.info("i2c_state: %s", dataset)

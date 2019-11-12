@@ -128,13 +128,14 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.exception('Exception during analytics_user_permission_change: {}'.format(e))
 
-	def add_ui_render_call_event(self, host, remote_ip, referrer, language):
+	def add_ui_render_call_event(self, host, remote_ip, referrer, language, user_agent):
 		try:
 			call = {
 				ak.Connectivity.Call.HOST: host,
 				ak.Connectivity.Call.REMOTE_IP: remote_ip,
 				ak.Connectivity.Call.REFERRER: referrer,
 				ak.Connectivity.Call.LANGUAGE: language,
+				ak.Connectivity.Call.USER_AGENT: user_agent,
 			}
 
 			self._add_connectivity_event(ak.Connectivity.Event.UI_RENDER_CALL, payload=call)
@@ -187,6 +188,12 @@ class AnalyticsHandler(object):
 			self._add_device_event(ak.Device.Event.DISK_SPACE, payload=payload)
 		except Exception as e:
 			self._logger.exception('Exception during add_disk_space: {}'.format(e))
+
+	def add_num_files(self, payload):
+		try:
+			self._add_device_event(ak.Device.Event.NUM_FILES, payload=payload)
+		except Exception as e:
+			self._logger.exception('Exception during add_num_files: {}'.format(e))
 
 	# MRB_LOGGER
 	def add_logger_event(self, event_details, wait_for_terminal_dump):
@@ -266,6 +273,18 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.exception('Exception during add_camera_session: {}'.format(e), analytics=True)
 
+	def add_camera_picture_result(self, correction_result):
+		try:
+			data = {
+				ak.Device.SUCCESS: correction_result.get('successful_correction', None),
+				ak.Device.ERROR: correction_result.get('error', None),
+				ak.Device.Picture.RECOGNIZED_MARKERS: correction_result.get('markers_recognized', None),
+			}
+			self._add_device_event(ak.Device.Event.PICTURE, payload=data)
+
+		except Exception as e:
+			self._logger.exception('Exception during add_camera_picture_result: {}'.format(e), analytics=True)
+
 	# IOBEAM_HANDLER
 	def add_iobeam_message_log(self, iobeam_version, message):
 		try:
@@ -320,7 +339,7 @@ class AnalyticsHandler(object):
 			flashing = {
 				ak.Device.Grbl.FROM_VERSION: from_version,
 				ak.Device.Grbl.TO_VERSION: to_version,
-				ak.Device.SUCCESSFUL: successful,
+				ak.Device.SUCCESS: successful,
 				ak.Device.ERROR: err,
 			}
 
@@ -403,7 +422,10 @@ class AnalyticsHandler(object):
 		self._add_device_event(ak.Device.Event.STARTUP, payload=payload)
 
 	def _event_shutdown(self, event, payload):
-		self._add_device_event(ak.Device.Event.SHUTDOWN)
+		payload = {
+			ak.Device.Cpu.THROTTLE_ALERTS: Cpu(state='shutdown', repeat=False).get_cpu_throttle_warnings(),
+		}
+		self._add_device_event(ak.Device.Event.SHUTDOWN, payload=payload)
 
 	def _event_slicing_started(self, event, payload):
 		self._init_new_job()
@@ -415,7 +437,12 @@ class AnalyticsHandler(object):
 			self._current_cpu_data.record_cpu_data()
 			self._add_cpu_data(dur=payload['time'])
 		self._current_job_final_status = 'Sliced'
-		self._add_job_event(ak.Job.Event.Slicing.DONE, payload={ak.Job.Duration.CURRENT: int(round(payload['time']))})
+
+		payload = {
+			ak.Job.Duration.CURRENT: int(round(payload['time'])),
+			ak.Job.Duration.ESTIMATION: int(round(self._current_job_time_estimation))
+		}
+		self._add_job_event(ak.Job.Event.Slicing.DONE, payload=payload)
 
 	def _event_slicing_failed(self, event, payload):
 		self._add_job_event(ak.Job.Event.Slicing.FAILED, payload={ak.Job.ERROR: payload['reason']})

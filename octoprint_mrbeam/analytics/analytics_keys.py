@@ -90,7 +90,7 @@ class AnalyticsKeys:
 	class Device:
 		HOSTNAME = 'hostname'
 		ERROR = 'err'
-		SUCCESSFUL = 'successful'
+		SUCCESS = 'successful'
 
 		class Event:
 			ANALYTICS_ENABLED = 'analytics_enabled'
@@ -105,6 +105,8 @@ class AnalyticsKeys:
 			INTERNET_CONNECTION = 'internet_connection'
 			MRBEAM_USAGE = 'mrbeam_usage'
 			COMPRESSOR = 'compressor'
+			PICTURE = 'picture'
+			NUM_FILES = 'num_files'
 
 		class SoftwareChannel:
 			OLD = 'old_channel'
@@ -115,6 +117,7 @@ class AnalyticsKeys:
 			AVAILABLE_SPACE = 'available'
 			USED_SPACE = 'used_percent'
 			USERS = 'users'
+			FILES = 'files'
 
 		class LaserHead:
 			SERIAL = 'laserhead_serial'
@@ -126,6 +129,9 @@ class AnalyticsKeys:
 			CORRECTION_ENABLED = 'correction_enabled'
 			CORRECTION_OVERRIDE = 'correction_override'
 
+		class Picture:
+			RECOGNIZED_MARKERS = 'recognized_markers'
+
 		class Grbl:
 			FROM_VERSION = 'from_version'
 			TO_VERSION = 'to_version'
@@ -135,6 +141,9 @@ class AnalyticsKeys:
 			CONNECTION = 'connection'
 			IP = 'ip'
 			ELAPSED_S = 'elapsed_s'
+
+		class Cpu:
+			THROTTLE_ALERTS = 'throttle_alerts'
 
 	class Log:
 		TERMINAL_DUMP = 'terminal_dump'
@@ -181,3 +190,4 @@ class AnalyticsKeys:
 			REMOTE_IP = 'remote_ip'
 			REFERRER = 'referrer'
 			LANGUAGE = 'language'
+			USER_AGENT = 'user_agent'

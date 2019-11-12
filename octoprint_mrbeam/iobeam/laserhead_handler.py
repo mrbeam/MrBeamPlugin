@@ -52,11 +52,18 @@ class LaserheadHandler(object):
 				self._analytics_handler.add_laserhead_info()
 				self._write_laser_heads_file()
 				self._plugin.fire_event(MrBeamEvents.LASER_HEAD_READ, dict(serial=lh_data['main']['serial']))
+
+			# This is for detecting mrb_hw_info v0.0.20
+			elif self._valid_lh_data_backwards_compatibility(lh_data):
+				self._logger.info("Laserhead (< v0.0.21): %s", lh_data)
+				self._logger.warning('Received old laser head data from iobeam - v0.0.20: {}'.format(lh_data), analytics=True)
+
 			elif lh_data is {}:
 				self._logger.warn('Received empty laser head data from iobeam.')
+
 			else:
 				if lh_data.get('main', {}).get('serial', None) is None:
-					self._logger.exception('Received invalid laser head data from iobeam - no serial number')
+					self._logger.exception('Received invalid laser head data from iobeam - no serial number. Laser head dataset: {}'.format(lh_data))
 				else:
 					self._logger.exception('Received invalid laser head data from iobeam - invalid power calibrations data: {}'
 										   .format(lh_data.get('power_calibrations', [])))
@@ -72,6 +79,21 @@ class LaserheadHandler(object):
 				and lh_data['power_calibrations'][-1].get('power_65', None) \
 				and lh_data['power_calibrations'][-1].get('power_75', None) \
 				and lh_data['power_calibrations'][-1].get('power_85', None):
+				return True
+			else:
+				return False
+		except Exception as e:
+			self._logger.exception('Exception during _valid_lh_data: {}'.format(e))
+			return False
+
+	def _valid_lh_data_backwards_compatibility(self, lh_data):
+		try:
+			if lh_data.get('serial', None) \
+				and lh_data.get('calibration_data', None) \
+				and len(lh_data['calibration_data']) > 0 \
+				and lh_data['calibration_data'][-1].get('power_65', None) \
+				and lh_data['calibration_data'][-1].get('power_75', None) \
+				and lh_data['calibration_data'][-1].get('power_85', None):
 				return True
 			else:
 				return False

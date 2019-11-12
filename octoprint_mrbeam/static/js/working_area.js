@@ -106,6 +106,7 @@ $(function(){
 		self.px2mm_factor = 1; // initial value
 		self.svgDPI = function(){return 90}; // initial value, gets overwritten by settings in onAllBound()
 		self.dxfScale =  function(){return 1}; // initial value, gets overwritten by settings in onAllBound()
+		self.previewImgOpacity = ko.observable(1);
 
 		self.workingAreaWidthMM = ko.computed(function(){
 			return self.profile.currentProfileData().volume.width();
@@ -271,6 +272,7 @@ $(function(){
 			var colHash = {};
 			var colFound = [];
 			snap.selectAll('#userContent *[stroke]:not(#bbox)').forEach(function (el) {
+				// TODO this includes stroke colors used in <defs> like patterns e.g. - should they be removed (tbd)?
 				var colHex = el.attr().stroke;
 				if (typeof(colHex) !== 'undefined' && colHex !== 'none' && typeof(colHash[colHex]) === 'undefined') {
 //					var colName = self.colorNamer.classify(colHex);
@@ -726,6 +728,7 @@ $(function(){
 
 			// add more elements that need to be removed here
 			var unsupportedElems = ['clipPath', 'flowRoot', 'switch', '#adobe_illustrator_pgf'];
+//			var unsupportedElems = ['flowRoot', 'switch', '#adobe_illustrator_pgf'];
 			//
 			for (var i = 0; i < unsupportedElems.length; i++) {
 				var myElem = fragment.selectAll(unsupportedElems[i]);
@@ -994,31 +997,12 @@ $(function(){
 		};
 
 		self.highlightDesign = function(data){
-			$('#userContent').addClass('dimDesigns');
 			var svgEl = $('#'+data.previewId);
 			svgEl.addClass('designHighlight');
-			self.showHighlightMarkers(data.previewId);
 		};
 		self.removeHighlight = function(data){
-			$('#userContent').removeClass('dimDesigns');
 			var svgEl = $('#'+data.previewId);
 			svgEl.removeClass('designHighlight');
-			self.showHighlightMarkers(null);
-		};
-		self.showHighlightMarkers = function(svgId) {
-//			if(svgId === null){
-//				var w = self.mm2svgUnits(self.workingAreaWidthMM());
-//				var h = self.mm2svgUnits(self.workingAreaHeightMM());
-//				snap.select('#highlightMarker').attr({x: -1, y:-1, width:0, height:0});
-//			} else {
-//				var svgEl = snap.select('#'+svgId);
-//				var bbox = svgEl.getBBox();
-//				var x = bbox.x - 20;
-//				var y = bbox.y - 20;
-//				var w = bbox.w + 40;
-//				var h = bbox.h + 40;
-//				snap.select('#highlightMarker').attr({x: x, y:y, width:w, height:h});
-//			}
 		};
 
 		self.duplicateSVG = function(src) {
@@ -1809,8 +1793,8 @@ $(function(){
 
 			// embed the fonts as dataUris
 			// TODO only if Quick Text is present
-		   $('#compSvg defs').append('<style id="quickTextFontPlaceholder" class="quickTextFontPlaceholder deleteAfterRendering"></style>');
-		   self._qt_copyFontsToSvg(compSvg.select(".quickTextFontPlaceholder").node);
+			$('#compSvg defs').append('<style id="quickTextFontPlaceholder" class="quickTextFontPlaceholder deleteAfterRendering"></style>');
+			self._qt_copyFontsToSvg(compSvg.select(".quickTextFontPlaceholder").node);
 
 			self.renderInfill(compSvg, fillAreas, cutOutlines, wMM, hMM, pxPerMM, function(svgWithRenderedInfill){
 				callback( self._wrapInSvgAndScale(svgWithRenderedInfill));
@@ -2166,11 +2150,13 @@ $(function(){
 						svg.selectAll('image').remove();
 						svg.selectAll('.deleteAfterRendering').remove();
 						svg.selectAll('text,tspan').remove();
-
-						var waBB = snap.select('#coordGrid').getBBox();
-						var fillImage = snap.image(result, 0, 0, waBB.w, waBB.h);
-						fillImage.attr('id', 'fillRendering');
-						svg.append(fillImage);
+						
+						if(result !== null){
+							var waBB = snap.select('#coordGrid').getBBox();
+							var fillImage = snap.image(result, 0, 0, waBB.w, waBB.h);
+							fillImage.attr('id', 'fillRendering');
+							svg.append(fillImage);
+						}
 					}
 					if (typeof callback === 'function') {
 						callback(svg);
@@ -2186,7 +2172,11 @@ $(function(){
 					debugBase64(dataUrl, 'svg_debug');
 				}
 				console.log("Rendering " + fillings.length + " filled elements.");
-				tmpSvg.renderPNG(wMM, hMM, pxPerMM, cb);
+				if(fillAreas){
+					tmpSvg.renderPNG(wMM, hMM, pxPerMM, cb);
+				} else {
+					cb(null)
+				}
 			});
 		};
 
@@ -2971,6 +2961,7 @@ $(function(){
 			document.getElementById("working_area_files"),
 			document.getElementById("quick_text_dialog"),
 			document.getElementById("quick_shape_dialog"),
+			document.getElementById("camera_brightness"),
 			document.getElementById("zoomFactor")
 		]]);
 

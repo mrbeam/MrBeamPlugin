@@ -92,12 +92,15 @@ class MachineCom(object):
 	COMMAND_RESUME      = '~'
 	COMMAND_RESET       = b'\x18'
 	COMMAND_FLUSH       = 'FLUSH'
+	COMMAND_SYNC        = 'SYNC'
 	COMMAND_RESET_ALARM = '$X'
 
 	STATUS_POLL_FREQUENCY_OPERATIONAL = 2.0
 	STATUS_POLL_FREQUENCY_PRINTING = 1.0 # set back top 1.0 if it's not causing gcode24
 	STATUS_POLL_FREQUENCY_PAUSED = 0.2
 	STATUS_POLL_FREQUENCY_DEFAULT = STATUS_POLL_FREQUENCY_PRINTING
+
+	GRBL_SYNC_COMMAND_WAIT_STATES = (GRBL_STATE_RUN, GRBL_STATE_QUEUE)
 
 	GRBL_HEX_FOLDER = 'files/grbl/'
 
@@ -162,6 +165,8 @@ class MachineCom(object):
 		self._passes = 1
 		self._finished_passes = 0
 		self._flush_command_ts = -1
+		self._sync_command_ts = -1
+		self._sync_command_state_sent = False
 		self.limit_x = -1
 		self.limit_y = -1
 		# from GRBL status RX value: Number of characters queued in Grbl's serial RX receive buffer.
@@ -363,6 +368,7 @@ class MachineCom(object):
 		All commands can be either a plain string or an dict object.
 		Object-Commands can have the following keys and are executed in this order:
 		- flush: a FLUSH is performed before any other step is executed. FLUSH waits until we're no longer waiting for any OKs from GRBL
+		- sync: a SYNC is performed before any other step is executed. SYNC is like FLUSH but waits until GRBL reports IDLE state.
 		- compressor: Set the compressor (if present) to the given value. usually in combination with flush.
 		- cmd: a command string (sam as if cmd is a plain string)
 		"""
@@ -378,6 +384,7 @@ class MachineCom(object):
 				else:
 					self._logger.error("_sendCommand() command is of unexpected type: %s", type(tmp))
 
+			# FLUSH
 			if self._cmd.get('cmd', None) == self.COMMAND_FLUSH or self._cmd.get('flush', False):
 				# FLUSH waits until we're no longer waiting for any OKs from GRBL
 				if self._flush_command_ts <=0:
@@ -394,9 +401,41 @@ class MachineCom(object):
 				else:
 					# still flushing. do nothing else for now...
 					return
-			# SYNC: https://github.com/mrbeam/MrBeamPlugin/blob/879c03ceaeb186a862380b133eb22154dc3db602/octoprint_mrbeam/comm_acc2.py
+
+			# SYNC
+			if self._cmd.get('cmd', None) == self.COMMAND_SYNC or self._cmd.get('sync', False):
+				# As FLUSH but wait for GRBL going IDLE before we continue
+				if self._sync_command_ts <= 0:
+					self._sync_command_ts = time.time()
+					self._sync_command_state_sent = False
+					self._logger.debug("SYNCing (grbl_state: {}, acc_line_buffer: {}, grbl_rx: {})".format(
+						self._grbl_state, self._acc_line_buffer.get_char_len(), self._grbl_rx_status), terminal_as_comm=True)
+					return
+				if self._acc_line_buffer.is_empty() and not (self._grbl_state in self.GRBL_SYNC_COMMAND_WAIT_STATES):
+					# Successfully synced, let's move on
+					self._cmd.pop('sync', None)
+					if self._cmd.get('cmd', None) == self.COMMAND_SYNC:
+						self._cmd.pop('cmd', None)
+					self._logger.debug("SYNCed ({}ms)".format(int(1000 * (time.time() - self._sync_command_ts))), terminal_as_comm=True)
+					self._sync_command_ts = -1
+					self._sync_command_state_sent = False
+				elif self._acc_line_buffer.is_empty() and (self._grbl_state in self.GRBL_SYNC_COMMAND_WAIT_STATES) and not self._sync_command_state_sent:
+					# Request a status update from GRBL to see if it's really ready.
+					self._sync_command_state_sent = True
+					self._logger.debug("SYNCing ({}ms) - Sending '?'".format(int(1000 * (time.time() - self._sync_command_ts))), terminal_as_comm=True)
+					self._sendCommand(self.COMMAND_STATUS)
+					return
+				else:
+					# still syncing. do nothing else for now...
+					return
+
+			# COMPRESSOR
 			if 'compressor' in self._cmd:
-				self._set_compressor(self._cmd.pop('compressor'))
+				comp_val = self._cmd.pop('compressor')
+				self._set_compressor(comp_val)
+				self._logger.debug("Compressor: %s", comp_val, terminal_as_comm=True)
+
+			# CMD
 			if 'cmd' in self._cmd:
 				my_cmd = self._cmd.get('cmd', None)  # to avoid race conditions
 				if my_cmd is None:
@@ -425,11 +464,12 @@ class MachineCom(object):
 							my_cmd = my_cmd[:rnd-1] + chr(random.randint(0,255)) + my_cmd[rnd:]
 							self._logger.warn("DEBUG Randomly changed '%s' to '%s' to cause checksum error.", orig_command, my_cmd, terminal_as_comm=True)
 					try:
-						self._serial.write(my_cmd + '\n')
+						self._serial.write(bytes(my_cmd + '\n'))
 						self._process_command_phase("sent", my_cmd)
 						self._cmd.pop('cmd', None)
-					except serial.SerialException:
-						self._log("Unexpected error while writing serial port: %s" % (get_exception_string()))
+					# except serial.SerialException:
+					except Exception:
+						self._logger.exception("Exception while writing to serial: cmd: %s - %s" % (my_cmd, get_exception_string()))
 						self._errorValue = get_exception_string()
 						self.close(True)
 
@@ -442,7 +482,7 @@ class MachineCom(object):
 			my_cmd = cmd_obj.get('cmd', '')
 			self._log("Send: %s" % my_cmd)
 			try:
-				self._serial.write(my_cmd)
+				self._serial.write(bytes(my_cmd))
 				self._process_command_phase("sent", my_cmd)
 			except serial.SerialException:
 				self._logger.info("Unexpected error while writing serial port: %s" % (get_exception_string()), terminal_as_comm=True)
@@ -461,7 +501,7 @@ class MachineCom(object):
 	def _add_checksum_to_cmd(self, cmd):
 		if cmd is None:
 			return None
-		if cmd.find('*') < 0 and cmd not in (self.COMMAND_FLUSH, ):
+		if cmd.find('*') < 0 and cmd not in (self.COMMAND_FLUSH, self.COMMAND_SYNC):
 			cmd = "{cmd}*{chk}".format(cmd=cmd, chk=self._calc_checksum(cmd))
 		return cmd
 
@@ -572,7 +612,7 @@ class MachineCom(object):
 			# While closing or reopening sometimes we get this exception:
 			# 	File "build/bdist.linux-armv7l/egg/serial/serialposix.py", line 468, in read
 	        #     buf = os.read(self.fd, size-len(read))
-			self._logger.exception("TypeError in _readline. Did this happen while closing or re-openting serial?: {e}".format(e),terminal_as_comm=True)
+			self._logger.exception("TypeError in _readline. Did this happen while closing or re-opening serial?: {e}".format(e=e), terminal_as_comm=True)
 			pass
 		if ret is None or ret == '': return ''
 		try:
@@ -582,7 +622,7 @@ class MachineCom(object):
 				self._log("Recv: %s" % (sanitize_ascii(ret)), is_command=True)
 		except ValueError as e:
 			# self._log("WARN: While reading last line: %s" % e)
-			self._logger.warn("Exception while sanitizing ascii intput from grbl. Excpetion: '%s', original string from grbl: '%s'", e, ret)
+			self._logger.warn("Exception while sanitizing ascii input from grbl. Excpetion: '%s', original string from grbl: '%s'", e, ret)
 			self._log("Recv: %r" % ret)
 		return ret
 
@@ -653,15 +693,18 @@ class MachineCom(object):
 				if not self.isPaused():
 					if _mrbeam_plugin_implementation and _mrbeam_plugin_implementation.onebutton_handler and \
 						not _mrbeam_plugin_implementation.onebutton_handler.is_intended_pause():
-						self._logger.warn("_handle_status_report() Override pause since we got status '%s' from grbl.", self._grbl_state, analytics=True)
+						self._logger.warn("_handle_status_report() Override pause since we got status '%s' from grbl. (_flush_command_ts: %s, _sync_command_ts: %s)",
+						                  self._grbl_state, self._flush_command_ts, self._sync_command_ts, analytics=True)
 						self.setPause(False, send_cmd=True, force=True, trigger="GRBL_QUEUE_OVERRIDE")
 					else:
-						self._logger.warn("_handle_status_report() Pausing since we got status '%s' from grbl.", self._grbl_state, terminal_dump=True, analytics=True)
+						self._logger.warn("_handle_status_report() Pausing since we got status '%s' from grbl. (_flush_command_ts: %s, _sync_command_ts: %s)",
+						                  self._grbl_state, self._flush_command_ts, self._sync_command_ts, terminal_dump=True, analytics=True)
 						self.setPause(True, send_cmd=False, trigger="GRBL_QUEUE")
 		elif self._grbl_state == self.GRBL_STATE_RUN or self._grbl_state == self.GRBL_STATE_IDLE:
 			if time.time() - self._pause_delay_time > 0.3:
 				if self.isPaused():
-					self._logger.warn("_handle_status_report() Unpausing since we got status '%s' from grbl.", self._grbl_state, analytics=True)
+					self._logger.warn("_handle_status_report() Unpausing since we got status '%s' from grbl. (_flush_command_ts: %s, _sync_command_ts: %s)",
+					                  self._grbl_state, self._flush_command_ts, self._sync_command_ts, analytics=True)
 					self.setPause(False, send_cmd=False, trigger="GRBL_RUN")
 
 	def _handle_laser_intensity_for_analytics(self, laser_state, laser_intensity):
@@ -1544,7 +1587,7 @@ class MachineCom(object):
 			return {}
 		else:
 			nu_cmd = {'compressor': val,
-			          'flush': True,
+			          'sync': True,
 			          'cmd': None}
 			return nu_cmd
 
