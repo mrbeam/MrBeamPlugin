@@ -78,7 +78,7 @@ class Cpu(object):
 	def record_cpu_data(self):
 		try:
 			_cpu_temp = self._get_cpu_temp()
-			_cpu_throttle_warnings = self._get_cpu_throttle_warnings()
+			_cpu_throttle_warnings = self.get_cpu_throttle_warnings()
 
 			self._add_cpu_temp_value(_cpu_temp)
 			self._add_throttle_warning(_cpu_temp, _cpu_throttle_warnings, self._progress)
@@ -87,7 +87,7 @@ class Cpu(object):
 		except:
 			self._logger.exception("Exception in record_cpu_data()")
 
-	def _get_cpu_throttle_warnings(self):
+	def get_cpu_throttle_warnings(self):
 		"""
 		See this https://harlemsquirrel.github.io/shell/2019/01/05/monitoring-raspberry-pi-power-and-thermal-issues.html
 		0b1010000000000000000

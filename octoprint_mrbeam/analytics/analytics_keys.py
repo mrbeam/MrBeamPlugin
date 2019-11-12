@@ -142,6 +142,9 @@ class AnalyticsKeys:
 			IP = 'ip'
 			ELAPSED_S = 'elapsed_s'
 
+		class Cpu:
+			THROTTLE_ALERTS = 'throttle_alerts'
+
 	class Log:
 		TERMINAL_DUMP = 'terminal_dump'
 		ERROR = 'err'

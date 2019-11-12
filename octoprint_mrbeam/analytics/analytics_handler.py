@@ -421,7 +421,10 @@ class AnalyticsHandler(object):
 		self._add_device_event(ak.Device.Event.STARTUP, payload=payload)
 
 	def _event_shutdown(self, event, payload):
-		self._add_device_event(ak.Device.Event.SHUTDOWN)
+		payload = {
+			ak.Device.Cpu.THROTTLE_ALERTS: Cpu(state='shutdown', repeat=False).get_cpu_throttle_warnings(),
+		}
+		self._add_device_event(ak.Device.Event.SHUTDOWN, payload=payload)
 
 	def _event_slicing_started(self, event, payload):
 		self._init_new_job()
