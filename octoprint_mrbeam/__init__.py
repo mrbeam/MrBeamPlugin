@@ -548,12 +548,19 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			my_call = dict(host=request.host,
 			               ref=request.referrer,
 			               remote_ip=remote_ip,
-			               language=language)
+			               language=language,
+						   user_agent=request.headers.get('User-Agent', None))
 			if not my_call in self.called_hosts:
 				self.called_hosts.append(my_call)
 				self._logger.info("First call received from: %s", my_call)
 				self._logger.info("All unique calls: %s", self.called_hosts)
-			self.analytics_handler.add_ui_render_call_event(host=my_call['host'], remote_ip=my_call['remote_ip'], referrer=my_call['ref'], language=language)
+				self.analytics_handler.add_ui_render_call_event(
+					host=my_call['host'],
+					remote_ip=my_call['remote_ip'],
+					referrer=my_call['ref'],
+					language=language,
+					user_agent=my_call['user_agent'],
+				)
 
 	##~~ TemplatePlugin mixin
 
