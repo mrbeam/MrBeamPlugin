@@ -224,7 +224,12 @@ class PhotoCreator(object):
 	def work(self):
 		try:
 			self.active = True
-			first_capture = True
+			session_details = dict(
+				num_pics=0,
+				errors={},
+				detected_markers={},
+			)
+
 			# todo find maximum of sleep in beginning that's not affecting UX
 			time.sleep(0.8)
 
@@ -244,10 +249,7 @@ class PhotoCreator(object):
 				if self.keepOriginals:
 					self._init_filenames()
 
-				errors = self._capture()
-				if first_capture:
-					self._write_camera_capture_analytics(errors)
-					first_capture = False
+				self._capture()
 
 				# check if still active...
 				if self.active:
@@ -278,16 +280,36 @@ class PhotoCreator(object):
 							else: # Unknown error
 								self._logger.error(errorID+errorString)
 					self._send_frontend_picture_metadata(correction_result)
+					self._save_session_details_for_analytics(session_details, correction_result)
 
-					self._analytics_handler.add_camera_picture_result(correction_result)
 					time.sleep(1.5)
 
+			self._analytics_handler.add_camera_session_details(session_details)
 			self._logger.debug("PhotoCreator stopping...")
 		except Exception as worker_exception:
 			self._logger.exception("Exception in worker thread of PhotoCreator: {}".format(worker_exception.message))
 		finally:
 			self.active = False
 			self._close_cam()
+
+	def _save_session_details_for_analytics(self, session_details, correction_result):
+		try:
+			session_details['num_pics'] += 1
+
+			error = correction_result['error']
+			if error:
+				if error in session_details['errors']:
+					session_details['errors'][error] += 1
+				else:
+					session_details['errors'][error] = 1
+
+			num_detected = correction_result.get('markers_recognized', None)
+			if num_detected in session_details['detected_markers']:
+				session_details['detected_markers'][num_detected] += 1
+			else:
+				session_details['detected_markers'][num_detected] = 1
+		except Exception as ex:
+			self._logger.exception('Exception in _save_session_details_for_analytics: {}'.format(ex))
 
 	def _send_frontend_picture_metadata(self, meta_data):
 		self._plugin_manager.send_plugin_message("mrbeam", dict(beam_cam_new_image=meta_data))
@@ -413,5 +435,3 @@ class PhotoCreator(object):
 
 		return correction_result
 
-	def _write_camera_capture_analytics(self, errors):
-		self._analytics_handler.add_camera_session(errors)

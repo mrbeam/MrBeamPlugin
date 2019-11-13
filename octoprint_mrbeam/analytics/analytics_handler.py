@@ -258,32 +258,11 @@ class AnalyticsHandler(object):
 			self._logger.exception('Exception during add_laserhead_info')
 
 	# LID_HANDLER
-	def add_camera_session(self, errors):
+	def add_camera_session_details(self, session_details):
 		try:
-			self._logger.info(errors)
-			success = True
-			if errors:
-				success = False
-			data = {
-				ak.Log.SUCCESS: success,
-				ak.Log.ERROR: errors,
-			}
-			self._add_log_event(ak.Log.Event.CAMERA, payload=data)
-
+			self._add_log_event(ak.Log.Event.CAMERA, payload=session_details)
 		except Exception as e:
 			self._logger.exception('Exception during add_camera_session: {}'.format(e), analytics=True)
-
-	def add_camera_picture_result(self, correction_result):
-		try:
-			data = {
-				ak.Device.SUCCESS: correction_result.get('successful_correction', None),
-				ak.Device.ERROR: correction_result.get('error', None),
-				ak.Device.Picture.RECOGNIZED_MARKERS: correction_result.get('markers_recognized', None),
-			}
-			self._add_device_event(ak.Device.Event.PICTURE, payload=data)
-
-		except Exception as e:
-			self._logger.exception('Exception during add_camera_picture_result: {}'.format(e), analytics=True)
 
 	# IOBEAM_HANDLER
 	def add_iobeam_message_log(self, iobeam_version, message):
