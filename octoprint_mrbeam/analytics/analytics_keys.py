@@ -90,7 +90,7 @@ class AnalyticsKeys:
 	class Device:
 		HOSTNAME = 'hostname'
 		ERROR = 'err'
-		SUCCESS = 'successful'
+		SUCCESS = 'success'
 
 		class Event:
 			ANALYTICS_ENABLED = 'analytics_enabled'
@@ -105,7 +105,6 @@ class AnalyticsKeys:
 			INTERNET_CONNECTION = 'internet_connection'
 			MRBEAM_USAGE = 'mrbeam_usage'
 			COMPRESSOR = 'compressor'
-			PICTURE = 'picture'
 			NUM_FILES = 'num_files'
 
 		class SoftwareChannel:
@@ -128,9 +127,6 @@ class AnalyticsKeys:
 			CORRECTION_FACTOR = 'correction_factor'
 			CORRECTION_ENABLED = 'correction_enabled'
 			CORRECTION_OVERRIDE = 'correction_override'
-
-		class Picture:
-			RECOGNIZED_MARKERS = 'recognized_markers'
 
 		class Grbl:
 			FROM_VERSION = 'from_version'
