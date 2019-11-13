@@ -160,12 +160,17 @@ class TimerHandler:
 			           ]
 			res = {}
 
+			# self._logger.info("ANDYTEST cmd: %s", exec_cmd_output("which find", shell=True))
+			# self._logger.info("ANDYTEST cmd: %s", exec_cmd_output("which md5sum", shell=True))
+
 			for my_folder in folders:
+				# self._logger.info("ANDYTEST cmd: %s", exec_cmd_output("ll {}".format(my_folder), shell=True))
 				cmd = 'find "{folder}" -type f -exec md5sum {{}} \; | sort -k 2 | md5sum'.format(folder=my_folder)
+				# cmd = 'find "{folder}" -type f -exec md5sum {{}} \;'.format(folder=my_folder)
 				self._logger.info("ANDYTEST _fs_checksums: cmd: %s", cmd)
-				out, code = exec_cmd_output(cmd)
+				out, code = exec_cmd_output(cmd, shell=True)
 				if out:
-					res[my_folder] = out.split(' ').pop(0)
+					res[my_folder] = out.replace("  -", '').strip()
 			self._logger.info("ANDYTEST _fs_checksums: %s", res)
 		except:
 			self._logger.exception("Exception in _fs_checksums(): ")
