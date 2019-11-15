@@ -49,6 +49,9 @@ $(function() {
         });
 
         self.validData = ko.pureComputed(function() {
+            self.passwordMismatch()
+            self.validUsername()
+            self.validPassword()
             return !self.passwordMismatch() && self.validUsername() && self.validPassword();
         });
 
