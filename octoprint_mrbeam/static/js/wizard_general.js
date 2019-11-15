@@ -44,6 +44,7 @@ $(function() {
         };
 
         self.onStartupComplete = function () {
+            // Todo iratxe: remove
             if (self.isWhatsnew) {
                 self.verifyByFrontend();
 
@@ -54,6 +55,7 @@ $(function() {
         };
 
         self.onAllBound = function () {
+            // Todo iratxe: remove
             if (self.isWhatsnew) {
                 self.uuid(self.settings.settings.plugins.findmymrbeam.uuid());
                 self.registered(self.settings.settings.plugins.findmymrbeam.registered());
@@ -68,29 +70,17 @@ $(function() {
         };
 
         self.onWizardDetails = function(response) {
-            if (self.aboutToStart) {
-                let links = response.mrbeam.details.links;
-
-                links.forEach(function (linkId) {
-                    $('#' + linkId).attr('class', 'wizard-nav-list-next')
-                });
-
-                self.aboutToStart = false;
-            }
+            self._changeNavDesignForAllTabsInitialState(response);
         };
 
         self.onBeforeWizardTabChange = function(next, current) {
-            if(current !== undefined && !self.isMandatoryStep(current)) {
-                $('#' + current).attr('class', 'wizard-nav-list-past')
-            }
+            // We change the style of the non-mandatory tabs here. For the mandatory tabs we need to wait to see if it
+            // actually changes the branch, and then change the style in that viewmodel.
+            self._changeNavDesignNonMandatoryPastTab(current);
         };
 
         self.onAfterWizardTabChange = function(current) {
-            try {
-                $('#' + current).attr('class', 'wizard-nav-list-active')
-            } catch (e) {
-                console.log('Could not change style of #' + current)
-            }
+            self._changeNavDesignActiveTab(current);
         };
 
         self.onWizardFinish = function(){
@@ -130,7 +120,32 @@ $(function() {
             }
         };
 
-        self.isMandatoryStep = function(currentTab) {
+        self._changeNavDesignForAllTabsInitialState = function(response) {
+            if (self.aboutToStart) {
+                let links = response.mrbeam.details.links;
+
+                links.forEach(function (linkId) {
+                    $('#' + linkId).attr('class', 'wizard-nav-list-next')
+                });
+                self.aboutToStart = false;
+            }
+        };
+
+        self._changeNavDesignActiveTab = function(current) {
+            try {
+                $('#' + current).attr('class', 'wizard-nav-list-active')
+            } catch (e) {
+                console.log('Could not change style of #' + current)
+            }
+        };
+
+        self._changeNavDesignNonMandatoryPastTab = function(current) {
+            if(current !== undefined && !self._isMandatoryStep(current)) {
+                $('#' + current).attr('class', 'wizard-nav-list-past')
+            }
+        };
+
+        self._isMandatoryStep = function (currentTab) {
             return self.MANDATORY_STEPS.includes(currentTab);
         }
 
