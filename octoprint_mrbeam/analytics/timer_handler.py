@@ -15,13 +15,14 @@ class TimerHandler:
 	IP_ADDRESSES_TIMER = 15.0
 	SELF_CHECK_TIMER = 20.0
 	INTERNET_CONNECTION_TIMER = 25.0
-	FS_CHECKSUMS = 3.0
+	SW_AND_CHECKSUMS = 40.0
 
 	SELF_CHECK_USER_AGENT = 'MrBeamPlugin self check'
 
-	def __init__(self, plugin):
+	def __init__(self, plugin, analytics_handler):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.timerhandler")
 		self._plugin = plugin
+		self._analytics_handler = analytics_handler
 
 		self._timers = []
 
@@ -32,7 +33,7 @@ class TimerHandler:
 			self._timers.append(Timer(self.IP_ADDRESSES_TIMER, self._ip_addresses))
 			self._timers.append(Timer(self.SELF_CHECK_TIMER, self._http_self_check))
 			self._timers.append(Timer(self.INTERNET_CONNECTION_TIMER, self._internet_connection))
-			self._timers.append(Timer(self.FS_CHECKSUMS, self._fs_checksums))
+			self._timers.append(Timer(self.SW_AND_CHECKSUMS, self._software_versions_and_checksums))
 
 			for timer in self._timers:
 				timer.start()
@@ -152,28 +153,62 @@ class TimerHandler:
 		except Exception as e:
 			self._logger.exception('Exception during the _disk_space check: {}'.format(e))
 
-	def _fs_checksums(self):
+	def _software_versions_and_checksums(self):
 		try:
 			# must end with /
-			folders = ['/home/pi/site-packages/octoprint_mrbeam/',
-			           '/home/pi/dist-packages/iobeam/',
-			           ]
-			res = {}
+			folders = {'mrbeam': {'src_path': '/home/pi/site-packages/octoprint_mrbeam/',},
+			           'iobeam': {'src_path': '/home/pi/dist-packages/iobeam/',},
+			           'findmymrbeam': {'src_path': '/home/pi/site-packages/octoprint_findmymrbeam/',},
+			           'netconnectd-daemon': {'src_path': '/home/pi/dist-packages/netconnectd/',},
+			           'netconnectd': {'src_path': '/home/pi/site-packages/octoprint_netconnectd/',},
+			           'mrb_hw_info': {'src_path': '/home/pi/dist-packages/mrb_hw_info/',},
+			           'mrbeam-ledstrips': {'src_path': '/home/pi/dist-packages/mrbeam_ledstrips/',},
+			           'octoprint': {'src_path': '/home/pi/site-packages/octoprint/',},
+			           '_dist-packages': {'src_path': '/home/pi/dist-packages/',},
+			           '_site-packages': {'src_path': '/home/pi/site-packages/',},
+			           }
+			sw_versions = self._get_software_versions()
 
-			# self._logger.info("ANDYTEST cmd: %s", exec_cmd_output("which find", shell=True))
-			# self._logger.info("ANDYTEST cmd: %s", exec_cmd_output("which md5sum", shell=True))
+			if self._analytics_handler.analytics_enabled:
+				for name, conf in folders.iteritems():
+					cmd = 'find "{folder}" -type f -exec md5sum {{}} \; | sort -k 2 | md5sum'.format(folder=conf.get('src_path'))
+					out, code = exec_cmd_output(cmd, shell=True)
+					if out:
+						if name not in sw_versions:
+							sw_versions[name] = {}
+						sw_versions[name]['checksum'] = out.replace("  -", '').strip()
 
-			for my_folder in folders:
-				# self._logger.info("ANDYTEST cmd: %s", exec_cmd_output("ll {}".format(my_folder), shell=True))
-				cmd = 'find "{folder}" -type f -exec md5sum {{}} \; | sort -k 2 | md5sum'.format(folder=my_folder)
-				# cmd = 'find "{folder}" -type f -exec md5sum {{}} \;'.format(folder=my_folder)
-				self._logger.info("ANDYTEST _fs_checksums: cmd: %s", cmd)
-				out, code = exec_cmd_output(cmd, shell=True)
-				if out:
-					res[my_folder] = out.replace("  -", '').strip()
-			self._logger.info("ANDYTEST _fs_checksums: %s", res)
+			res = []
+			for name, data in sw_versions.iteritems():
+				data['name'] = name
+				res.append(data)
+
+			self._logger.info("_software_versions_and_checksums: %s", res)
+			self._plugin.analytics_handler.add_software_versions(res)
 		except:
-			self._logger.exception("Exception in _fs_checksums(): ")
+			self._logger.exception("Exception in _software_versions_and_checksums(): ")
+
+
+	def _get_software_versions(self):
+		result = dict()
+		configured_checks = None
+		try:
+			pluginInfo = self._plugin._plugin_manager.get_plugin_info("softwareupdate")
+			if pluginInfo is not None:
+				impl = pluginInfo.implementation
+				configured_checks = impl._configured_checks
+			else:
+				self._logger.error("_get_software_versions() Can't get pluginInfo.implementation")
+		except Exception as e:
+			self._logger.exception("Exception while reading configured_checks from softwareupdate plugin. ")
+
+		if configured_checks is None:
+			self._logger.warn("_get_software_versions() Can't read software version from softwareupdate plugin.")
+		else:
+			for name, config in configured_checks.iteritems():
+				result[name] = dict(version=config.get('displayVersion', None),
+				                    commit_hash=config.get('current', None))
+		return result
 
 
 

@@ -97,6 +97,7 @@ class AnalyticsKeys:
 			STARTUP = 'startup'
 			SHUTDOWN = 'shutdown'
 			DISK_SPACE = 'disk_space'
+			SOFTWARE_VERSIONS = 'software_versions'
 			IPS = 'ips'
 			FLASH_GRBL = 'flash_grbl'
 			LASERHEAD_INFO = 'laserhead_info'
