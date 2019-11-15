@@ -96,6 +96,7 @@ class AnalyticsHandler(object):
 	def _activate_analytics(self):
 		# Restart queue if the analytics were disabled before
 		if not self._no_choice_made:
+			self._logger.info('################### DELETE QUEUE CONTENT #############################')
 			self._analytics_queue = Queue(self.QUEUE_MAXSIZE)
 		else:
 			self._no_choice_made = False
@@ -711,7 +712,6 @@ class AnalyticsHandler(object):
 		if consent == 'agree':
 			self.analytics_user_permission_change(True)
 			self.process_analytics_files()
-			AnalyticsFileUploader.upload_now(self._plugin, self._analytics_lock)
 
 		elif consent == 'disagree':
 			self.analytics_user_permission_change(False)

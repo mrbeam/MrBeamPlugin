@@ -64,13 +64,15 @@ $(function() {
         };
 
         self.onCurtainOpened = function () {
-            if (self.isWelcome) {
-                self.analytics.send_fontend_event('welcome_start', {})
-            }
+            self._sendWizardAnalytics('start', {})
         };
 
         self.onWizardDetails = function(response) {
-            self._changeNavDesignForAllTabsInitialState(response);
+            if (self.aboutToStart) {
+                let links = response.mrbeam.details.links;
+                self._changeNavDesignForAllTabsInitialState(links);
+                self._sendWizardAnalytics('details', {tabs:links})
+            }
         };
 
         self.onBeforeWizardTabChange = function(next, current) {
@@ -81,21 +83,22 @@ $(function() {
 
         self.onAfterWizardTabChange = function(current) {
             self._changeNavDesignActiveTab(current);
+            self._sendWizardAnalytics('tabChange', {changedTo:current})
         };
 
         self.onWizardFinish = function(){
+            // todo iratxe: remove
             if (self.isWhatsnew) {
                 let event = 'whatsnew_findmrbeam';
                 let payload = {
                     btn_shown: self.findMrBeamWorks(),
                     btn_clicked: self.tryItButtonClicked
                 };
-                self.analytics.send_fontend_event(event, payload);
             } else if (self.isWelcome) {
-                self.analytics.send_fontend_event('welcome_finish', {})
                 // avoid reloading of the frontend by a CLIENT_CONNECTED / MrbPluginVersion event
                 CONFIG_FIRST_RUN = false
             }
+            self._sendWizardAnalytics('finish', {})
         };
 
         self.verifyByFrontend = function() {
@@ -120,15 +123,11 @@ $(function() {
             }
         };
 
-        self._changeNavDesignForAllTabsInitialState = function(response) {
-            if (self.aboutToStart) {
-                let links = response.mrbeam.details.links;
-
-                links.forEach(function (linkId) {
-                    $('#' + linkId).attr('class', 'wizard-nav-list-next')
-                });
-                self.aboutToStart = false;
-            }
+        self._changeNavDesignForAllTabsInitialState = function(links) {
+            links.forEach(function (linkId) {
+                $('#' + linkId).attr('class', 'wizard-nav-list-next')
+            });
+            self.aboutToStart = false;
         };
 
         self._changeNavDesignActiveTab = function(current) {
@@ -145,9 +144,16 @@ $(function() {
             }
         };
 
+        self._sendWizardAnalytics = function(event, payload) {
+            payload['wizard'] = MRBEAM_WIZARD_TO_SHOW.toLowerCase();
+            payload['event'] = event;
+
+            self.analytics.send_fontend_event('wizard', payload)
+        };
+
         self._isMandatoryStep = function (currentTab) {
             return self.MANDATORY_STEPS.includes(currentTab);
-        }
+        };
 
     }
 
