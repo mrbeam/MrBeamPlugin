@@ -71,19 +71,20 @@ $(function() {
             if (self.aboutToStart) {
                 let links = response.mrbeam.details.links;
                 self._changeNavDesignForAllTabsInitialState(links);
-                self._sendWizardAnalytics('details', {tabs:links})
             }
         };
 
         self.onBeforeWizardTabChange = function(next, current) {
             // We change the style of the non-mandatory tabs here. For the mandatory tabs we need to wait to see if it
             // actually changes the branch, and then change the style in that viewmodel.
+            if (current && next) {
+                self._sendWizardAnalytics('tabChange', {from:current, to:next});
+            }
             self._changeNavDesignNonMandatoryPastTab(current);
         };
 
         self.onAfterWizardTabChange = function(current) {
             self._changeNavDesignActiveTab(current);
-            self._sendWizardAnalytics('tabChange', {changedTo:current})
         };
 
         self.onWizardFinish = function(){
