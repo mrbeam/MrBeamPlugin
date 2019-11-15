@@ -2650,3 +2650,7 @@ input[type="radio"]{
     color: darkgrey;
     text-shadow: none;
 }
+
+.status-lights-gif {
+    border:1px solid black;
+}

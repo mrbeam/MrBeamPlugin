@@ -155,7 +155,6 @@ $(function() {
         self._isMandatoryStep = function (currentTab) {
             return self.MANDATORY_STEPS.includes(currentTab);
         };
-
     }
 
     var DOM_ELEMENT_TO_BIND_TO = "wizard_plugin_corewizard_whatsnew_0";

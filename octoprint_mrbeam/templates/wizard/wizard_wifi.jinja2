@@ -1,6 +1,34 @@
 <img src="/plugin/mrbeam/static/img/welcome_dialog/wifi.png">
 
-<h3>{{ _('Wifi Setup') }}</h3>
+<h3>{{ _('Connecting to your Mr Beam') }}</h3>
+
+<div id="wizard_plugin_corewizard_wifi_status_lights">
+    <p>
+        {{ _('The Mr Beam Status Lights show you how to connect to your Mr Beam. For that, the status lights "breathe" (pulsing up and down) in different colors.') }}
+    </p>
+
+    <table style="width:100%; text-align:center;">
+        <tr>
+            <td><img id="wizard_welcome_status_lights_orange_img" class="status-lights-gif" src="/plugin/mrbeam/static/img/welcome_dialog/status_lights_orange.gif"></td>
+            <td><img id="wizard_welcome_status_lights_green_img" class="status-lights-gif" src="/plugin/mrbeam/static/img/welcome_dialog/status_lights_green.gif"></td>
+            <td><img id="wizard_welcome_status_lights_white_img" class="status-lights-gif" src="/plugin/mrbeam/static/img/welcome_dialog/status_lights_white.gif"></td>
+        </tr>
+        <tr>
+            <td>{{ _('Connect to your Mr Beam via %(strong_open)sfind.mr-beam.org%(strong_close)s', strong_open='<strong>', strong_close='</strong>') }}</td>
+            <td>{{ _('Connect directly to the %(strong_open)sMr Beam WiFi Access Point.%(strong_close)s', strong_open='<strong>', strong_close='</strong>') }}</td>
+            <td>{{ _('There are connection issues. Visit our %(strong_open)sKnowledge Base to find a solution.%(strong_close)s', strong_open='<strong>', strong_close='</strong>') }}</td>
+        </tr>
+    </table>
+
+    <strong>{{ _('Our recommendation: find.mr-beam.org') }}</strong>
+    <p>
+        {{ _('For the best user experience we recommend using the find.mr-beam.org discovery service. In order to use this service, it is necessary that your Mr Beam has an active internet connection.') }}
+    </p>
+    <p>
+        {{ _('Would you like to configure your Mr Beam\'s WiFi now?') }}
+    </p>
+
+</div>
 
 <div id="wizard_plugin_corewizard_wifi_netconnectd" data-bind="allowBindings: true">
 	<p>

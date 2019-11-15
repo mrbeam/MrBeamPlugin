@@ -1,22 +1,14 @@
+
 <img src="/plugin/mrbeam/static/img/welcome_dialog/acl.png">
 
-<h3>{{ _('Access Control') }}</h3>
-
-
+<h3>{{ _('Set up your user account') }}</h3>
 
 {% trans %}
-    <h5>Please set up a user account for your Mr Beam II.</h5>
-
-    <p><strong>Attention: Please remember your access data!</strong> <br/>
-        For security reasons, you can only use your Mr Beam II after logging in with a user account.
-        If you forget your access information, you'll need to contact the Mr Beam Support Team to reset your device.
+    <p><strong>Write your e-mail address and password. Please don't forget your access information.</strong> <br/>
+        For security reasons, your Mr Beam can only be used after logging in with a user account. You can later create additional accounts for other users of your Mr Beam.
     </p>
-    <p>In the settings you can create additional user accounts, e.g. for family members, colleagues or friends.</p>
 
 {% endtrans %}
-
-<p><br/></p>
-
 
 <form class="form-horizontal">
     <div class="control-group" data-bind="css: {success: doUserValidation() && validUsername(), error: doUserValidation() && !validUsername()}">
