@@ -178,13 +178,8 @@ class TimerHandler:
 							sw_versions[name] = {}
 						sw_versions[name]['checksum'] = out.replace("  -", '').strip()
 
-			res = []
-			for name, data in sw_versions.iteritems():
-				data['name'] = name
-				res.append(data)
-
-			self._logger.info("_software_versions_and_checksums: %s", res)
-			self._plugin.analytics_handler.add_software_versions(res)
+			self._logger.info("_software_versions_and_checksums: %s", sw_versions)
+			self._plugin.analytics_handler.add_software_versions(sw_versions)
 		except:
 			self._logger.exception("Exception in _software_versions_and_checksums(): ")
 
