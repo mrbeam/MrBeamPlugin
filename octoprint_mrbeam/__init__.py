@@ -599,7 +599,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return True
 
 	def get_wizard_details(self):
-		return dict()
+		details = dict(
+			links=self.wizard_config.get_welcome_wizard_link_ids(),
+		)
+		return details
 
 	def get_wizard_version(self):
 		return self.wizard_config.get_wizard_version()

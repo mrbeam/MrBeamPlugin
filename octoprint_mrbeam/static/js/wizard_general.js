@@ -3,11 +3,22 @@ $(function() {
         var self = this;
         window.mrbeam.viewModels['wizardWhatsnewViewModel'] = self;
 
+        self.SAFETY_LINK = 'wizard_plugin_corewizard_lasersafety_link';
+        self.ANALYTICS_LINK = 'wizard_plugin_corewizard_analytics_link';
+        self.ACL_LINK = 'wizard_plugin_corewizard_acl_link';
+
+        self.MANDATORY_STEPS = [
+            'wizard_plugin_corewizard_lasersafety_link',
+            'wizard_plugin_corewizard_analytics_link',
+            'wizard_plugin_corewizard_acl_link'
+        ];
+
         self.settings = parameters[0];
         self.analytics = parameters[1];
 
         self.isWhatsnew = MRBEAM_WIZARD_TO_SHOW === 'WHATSNEW';
         self.isWelcome = MRBEAM_WIZARD_TO_SHOW === 'WELCOME';
+        self.aboutToStart = true;
 
         // WHATSNEW variables
         self.uuid = ko.observable(null);
@@ -56,6 +67,32 @@ $(function() {
             }
         };
 
+        self.onWizardDetails = function(response) {
+            if (self.aboutToStart) {
+                let links = response.mrbeam.details.links;
+
+                links.forEach(function (linkId) {
+                    $('#' + linkId).attr('class', 'wizard-nav-list-next')
+                });
+
+                self.aboutToStart = false;
+            }
+        };
+
+        self.onBeforeWizardTabChange = function(next, current) {
+            if(current !== undefined && !self.isMandatoryStep(current)) {
+                $('#' + current).attr('class', 'wizard-nav-list-past')
+            }
+        };
+
+        self.onAfterWizardTabChange = function(current) {
+            try {
+                $('#' + current).attr('class', 'wizard-nav-list-active')
+            } catch (e) {
+                console.log('Could not change style of #' + current)
+            }
+        };
+
         self.onWizardFinish = function(){
             if (self.isWhatsnew) {
                 let event = 'whatsnew_findmrbeam';
@@ -92,6 +129,10 @@ $(function() {
                 self.verified(false);
             }
         };
+
+        self.isMandatoryStep = function(currentTab) {
+            return self.MANDATORY_STEPS.includes(currentTab);
+        }
 
     }
 

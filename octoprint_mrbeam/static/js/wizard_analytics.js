@@ -17,6 +17,10 @@ $(function () {
         self.onBeforeWizardTabChange = function(next, current) {
             if (next !== self.MY_WIZARD_TAB_NAME && current === self.MY_WIZARD_TAB_NAME) {
                 let result = self._handleAnalyticsTabExit();
+                if (result) {
+                    // We need to do this here because it's mandatory step, so it's possible that we don't actually change tab
+                    $('#' + current).attr('class', 'wizard-nav-list-past');
+                }
                 return result;
             }
         };
@@ -35,6 +39,8 @@ $(function () {
                      message: _.sprintf(gettext("Please make a choice about analytics.%(br)sYou will be able to change it later in the settings if you want."), {br: "<br/>"})
                  });
                  return false;
+             } else {
+                 return true;
              }
         };
 

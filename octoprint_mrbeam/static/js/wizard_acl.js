@@ -4,6 +4,8 @@ $(function() {
 
         self.loginStateViewModel = parameters[0];
 
+        self.userCreated = false;
+
         self.username = ko.observable(undefined);
         self.password = ko.observable(undefined);
         self.confirmedPassword = ko.observable(undefined);
@@ -48,9 +50,10 @@ $(function() {
             return self.password() && self.password().trim() != "";
         });
 
-        self.validData = ko.pureComputed(function() {
-            return !self.passwordMismatch() && self.validUsername() && self.validPassword();
-        });
+        // Todo iratxe: this one does not work! Neither with pureComputed nor with computed
+        // self.validData = ko.pureComputed(function() {
+        //     return !self.passwordMismatch() && self.validUsername() && self.validPassword();
+        // });
 
         self.onStartup = function(){
             // needs to be scrollable on touch devices
@@ -97,6 +100,7 @@ $(function() {
         self._sendData = function(data, callback) {
             OctoPrint.postJson("plugin/mrbeam/acl", data)
                 .done(function() {
+                    self.userCreated = true;
                     self.setup(true);
                     self.decision(data.ac);
                     if (data.ac) {
@@ -128,14 +132,22 @@ $(function() {
             // Only when going from Access Control to the next page, not to the previous ones
             if (current && _.startsWith(current, "wizard_plugin_corewizard_acl_")
             && !(next === "wizard_plugin_corewizard_wifi_link") && !(next === "wizard_firstrun_start_link")) {
-                if (self.validData()) {
+                if (!self.passwordMismatch() && self.validUsername() && self.validPassword()) {
                     var data = {
                     "ac": true,
                     "user": self.username(),
                     "pass1": self.password(),
                     "pass2": self.confirmedPassword()
                     };
-                    self._sendData(data);
+
+                    // We only try to send it once, otherwise it gives an error because the user already exists
+                    if (!self.userCreated) {
+                        self._sendData(data);
+                    }
+
+                    // We need to do this here because it's mandatory step, so it's possible that we don't actually change tab
+                    $('#' + current).attr('class', 'wizard-nav-list-past');
+
                     return true;
                 } else {
                     if (!self.validUsername()) {

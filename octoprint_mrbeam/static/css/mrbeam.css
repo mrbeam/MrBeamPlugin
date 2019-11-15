@@ -2627,3 +2627,26 @@ input[type="radio"]{
     margin-right: auto;
     width: 90%;
 }
+
+/*
+* === WELCOME DIALOG ===
+*/
+
+.wizard-nav-list-past > a {
+    background-color: white;
+    color: black;
+    text-shadow: none;
+}
+
+.wizard-nav-list-active > a {
+    background-color: white;
+    color: #e25303;
+    text-shadow: none;
+    font-weight: bold;
+}
+
+.wizard-nav-list-next > a {
+    background-color: white;
+    color: darkgrey;
+    text-shadow: none;
+}

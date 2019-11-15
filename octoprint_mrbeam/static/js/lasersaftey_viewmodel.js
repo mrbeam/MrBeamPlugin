@@ -50,6 +50,9 @@ $(function() {
                 if(result) {
                     let dialog = 'welcome_wizard';
                     self._sendLaserSafetyAnalytics(dialog);
+
+                    // We need to do this here because it's mandatory step, so it's possible that we don't actually change tab
+                    $('#' + current).attr('class', 'wizard-nav-list-past');
                 }
 
                 return result;
