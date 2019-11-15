@@ -132,13 +132,14 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.exception('Exception during analytics_user_permission_change: {}'.format(e))
 
-	def add_ui_render_call_event(self, host, remote_ip, referrer, language):
+	def add_ui_render_call_event(self, host, remote_ip, referrer, language, user_agent):
 		try:
 			call = {
 				ak.Connectivity.Call.HOST: host,
 				ak.Connectivity.Call.REMOTE_IP: remote_ip,
 				ak.Connectivity.Call.REFERRER: referrer,
 				ak.Connectivity.Call.LANGUAGE: language,
+				ak.Connectivity.Call.USER_AGENT: user_agent,
 			}
 
 			self._add_connectivity_event(ak.Connectivity.Event.UI_RENDER_CALL, payload=call)
@@ -192,11 +193,19 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.exception('Exception during add_disk_space: {}'.format(e))
 
+
 	def add_software_versions(self, payload):
 		try:
 			self._add_device_event(ak.Device.Event.SOFTWARE_VERSIONS, payload=payload)
 		except Exception as e:
 			self._logger.exception('Exception during add_software_versions: {}'.format(e))
+ 
+	def add_num_files(self, payload):
+		try:
+			self._add_device_event(ak.Device.Event.NUM_FILES, payload=payload)
+		except Exception as e:
+			self._logger.exception('Exception during add_num_files: {}'.format(e))
+
 
 	# MRB_LOGGER
 	def add_logger_event(self, event_details, wait_for_terminal_dump):
@@ -261,18 +270,9 @@ class AnalyticsHandler(object):
 			self._logger.exception('Exception during add_laserhead_info')
 
 	# LID_HANDLER
-	def add_camera_session(self, errors):
+	def add_camera_session_details(self, session_details):
 		try:
-			self._logger.info(errors)
-			success = True
-			if errors:
-				success = False
-			data = {
-				ak.Log.SUCCESS: success,
-				ak.Log.ERROR: errors,
-			}
-			self._add_log_event(ak.Log.Event.CAMERA, payload=data)
-
+			self._add_log_event(ak.Log.Event.CAMERA, payload=session_details)
 		except Exception as e:
 			self._logger.exception('Exception during add_camera_session: {}'.format(e), analytics=True)
 
@@ -330,7 +330,7 @@ class AnalyticsHandler(object):
 			flashing = {
 				ak.Device.Grbl.FROM_VERSION: from_version,
 				ak.Device.Grbl.TO_VERSION: to_version,
-				ak.Device.SUCCESSFUL: successful,
+				ak.Device.SUCCESS: successful,
 				ak.Device.ERROR: err,
 			}
 
@@ -413,7 +413,10 @@ class AnalyticsHandler(object):
 		self._add_device_event(ak.Device.Event.STARTUP, payload=payload)
 
 	def _event_shutdown(self, event, payload):
-		self._add_device_event(ak.Device.Event.SHUTDOWN)
+		payload = {
+			ak.Device.Cpu.THROTTLE_ALERTS: Cpu(state='shutdown', repeat=False).get_cpu_throttle_warnings(),
+		}
+		self._add_device_event(ak.Device.Event.SHUTDOWN, payload=payload)
 
 	def _event_slicing_started(self, event, payload):
 		self._init_new_job()

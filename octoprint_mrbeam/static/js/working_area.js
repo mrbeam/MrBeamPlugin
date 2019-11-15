@@ -2150,7 +2150,7 @@ $(function(){
 						svg.selectAll('image').remove();
 						svg.selectAll('.deleteAfterRendering').remove();
 						svg.selectAll('text,tspan').remove();
-						
+
 						if(result !== null){
 							var waBB = snap.select('#coordGrid').getBBox();
 							var fillImage = snap.image(result, 0, 0, waBB.w, waBB.h);
@@ -2724,7 +2724,7 @@ $(function(){
 				self.currentQuickTextAnalyticsData = {
 					id: self.currentQuickTextFile.id,
 					file_type: 'quickText',
-					text_length: displayText.length,
+					text_length: self.currentQuickTextFile.name.length,
 					brightness: self.currentQuickTextFile.intensity,
 					font: self.fontMap[self.currentQuickTextFile.fontIndex],
 					font_index: self.currentQuickTextFile.fontIndex,
@@ -2858,7 +2858,9 @@ $(function(){
 		};
 
 		self._qt_dialogClose = function() {
-			self._analyticsQuickTextUpdate(self.currentQuickTextAnalyticsData);
+            if(self.currentQuickTextAnalyticsData.text_length !== 0) {
+                self._analyticsQuickTextUpdate(self.currentQuickTextAnalyticsData);
+            }
 		};
 
 		// ***********************************************************
