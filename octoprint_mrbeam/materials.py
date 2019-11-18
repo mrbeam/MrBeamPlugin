@@ -93,15 +93,14 @@ class Materials(object):
 					if os.path.isfile(self.custom_materials_file):
 						with open(self.custom_materials_file) as yaml_file:
 							tmp = yaml.safe_load(yaml_file)
-							self.custom_materials = tmp['custom_materials'] if 'custom_materials' in tmp else dict()
+							self.custom_materials = tmp['custom_materials'] if tmp and 'custom_materials' in tmp else dict()
 						self._logger.debug("Loaded %s custom materials from file %s", len(self.custom_materials), self.custom_materials_file)
 					else:
 						self.custom_materials = dict()
 						self._logger.debug("No custom materials yet. File %s does not exist.", self.custom_materials_file)
 					self.custom_materials_loaded = True
 				except Exception as e:
-					self._logger.exception("Exception while loading custom materials from file {file}: {err}".format(
-						file=self.custom_materials_file, err=e))
+					self._logger.exception("Exception while loading custom materials from file {}".format(self.custom_materials_file))
 					self.custom_materials = dict()
 					self.custom_materials_loaded = False
 		return self.custom_materials
