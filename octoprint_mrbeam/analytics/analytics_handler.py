@@ -110,8 +110,6 @@ class AnalyticsHandler(object):
 		analytics_writer.daemon = True
 		analytics_writer.start()
 
-
-
 	# -------- EXTERNALLY CALLED METHODS -------------------------------------------------------------------------------
 	# INIT
 	def analytics_user_permission_change(self, analytics_enabled):
@@ -193,19 +191,17 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.exception('Exception during add_disk_space: {}'.format(e))
 
-
 	def add_software_versions(self, payload):
 		try:
 			self._add_device_event(ak.Device.Event.SOFTWARE_VERSIONS, payload=payload)
 		except Exception as e:
 			self._logger.exception('Exception during add_software_versions: {}'.format(e))
- 
+
 	def add_num_files(self, payload):
 		try:
 			self._add_device_event(ak.Device.Event.NUM_FILES, payload=payload)
 		except Exception as e:
 			self._logger.exception('Exception during add_num_files: {}'.format(e))
-
 
 	# MRB_LOGGER
 	def add_logger_event(self, event_details, wait_for_terminal_dump):
