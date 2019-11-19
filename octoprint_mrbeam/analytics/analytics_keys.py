@@ -153,6 +153,7 @@ class AnalyticsKeys:
 			CPU = 'cpu'
 			CAMERA = 'camera'
 			OS_HEALTH = 'os_health'
+			ANALYTICS_FILE_CROP = 'analytics_file_crop'
 
 		class Level:
 			EXCEPTION = 'exception'
@@ -174,6 +175,11 @@ class AnalyticsKeys:
 		class Cpu:
 			TEMP = 'temp'
 			THROTTLE_ALERTS = 'throttle_alerts'
+
+		class AnalyticsFile:
+			PREV_SIZE = 'prev_size'
+			NEW_SIZE = 'new_size'
+			NUM_LINES = 'num_lines'
 
 	class Connectivity:
 		class Event:
