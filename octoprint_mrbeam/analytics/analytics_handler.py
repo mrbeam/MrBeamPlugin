@@ -40,12 +40,13 @@ class AnalyticsHandler(object):
 		self._plugin = plugin
 		self._event_bus = plugin._event_bus
 		self._settings = plugin._settings
+		self._analytics_lock = Lock()
+
 		self._snr = plugin.getSerialNum()
 		self._plugin_version = plugin.get_plugin_version()
-		self._timer_handler = TimerHandler(plugin, self)
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.analyticshandler")
 
-		self._analytics_lock = Lock()
+		self._timer_handler = TimerHandler(plugin, self, self._analytics_lock)
+		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.analyticshandler")
 
 		# Mr Beam specific data
 		self.analytics_enabled = self._settings.get(['analyticsEnabled'])
@@ -202,6 +203,12 @@ class AnalyticsHandler(object):
 			self._add_device_event(ak.Device.Event.NUM_FILES, payload=payload)
 		except Exception as e:
 			self._logger.exception('Exception during add_num_files: {}'.format(e))
+
+	def add_analytics_file_crop(self, payload):
+		try:
+			self._add_device_event(ak.Log.Event.ANALYTICS_FILE_CROP, payload=payload)
+		except Exception as e:
+			self._logger.exception('Exception during add_analytics_file_crop: {}'.format(e))
 
 	# MRB_LOGGER
 	def add_logger_event(self, event_details, wait_for_terminal_dump):
