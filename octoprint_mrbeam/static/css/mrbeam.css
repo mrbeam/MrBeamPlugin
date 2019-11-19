@@ -2627,3 +2627,19 @@ input[type="radio"]{
     margin-right: auto;
     width: 90%;
 }
+
+
+/* ----- online / offline ------- */
+.online .show_only_online {
+    display: initial;
+}
+.offline .show_only_online {
+    display: none;
+}
+
+.online .show_only_offline {
+    display: none;
+}
+.offline .show_only_offline {
+    display: initial;
+}
