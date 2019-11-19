@@ -23,6 +23,7 @@ class TimerHandler:
 	FILE_CROP_TIMER = 60.0
 
 	SELF_CHECK_USER_AGENT = 'MrBeamPlugin self check'
+	ONLINE_CHECK_URL = 'https://find.mr-beam.org/onlinecheck'
 
 	def __init__(self, plugin, analytics_handler, analytics_lock):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.timerhandler")
@@ -130,7 +131,7 @@ class TimerHandler:
 				headers = {
 					'User-Agent': self.SELF_CHECK_USER_AGENT
 				}
-				r = requests.head('http://find.mr-beam.org', headers=headers)
+				r = requests.head(self.ONLINE_CHECK_URL, headers=headers)
 				response = r.status_code
 				err = None
 				connection = True
