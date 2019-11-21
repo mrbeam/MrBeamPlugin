@@ -85,6 +85,7 @@ $(function() {
 
         self.onAfterWizardTabChange = function(current) {
             self._changeNavDesignActiveTab(current);
+            $('#wizard_dialog > .modal-body').scrollTop(0)
         };
 
         self.onWizardFinish = function(){
