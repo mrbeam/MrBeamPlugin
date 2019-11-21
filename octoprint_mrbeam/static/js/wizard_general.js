@@ -15,6 +15,7 @@ $(function() {
 
         self.settings = parameters[0];
         self.analytics = parameters[1];
+        self.tour = parameters[2];
 
         self.isWhatsnew = MRBEAM_WIZARD_TO_SHOW === 'WHATSNEW';
         self.isWelcome = MRBEAM_WIZARD_TO_SHOW === 'WELCOME';
@@ -40,10 +41,17 @@ $(function() {
                 } else {
                     $('#wizard_dialog div.modal-header h3').text("✨ " + gettext("What's New in the Stable Channel") + " ✨");
                 }
+            } else if (self.isWelcome) {
+                $('#wizard_dialog div.modal-header h3').text(gettext("Welcome dialog"));
             }
         };
 
         self.onStartupComplete = function () {
+            // With this the wizard closes faster (when the button is clicked)
+            $('#wizard_dialog div.modal-footer button.button-finish').click(function(){
+                $('#wizard_dialog').modal('hide');
+            });
+
             // Todo iratxe: remove
             if (self.isWhatsnew) {
                 self.verifyByFrontend();
@@ -89,7 +97,6 @@ $(function() {
         };
 
         self.onWizardFinish = function(){
-            // todo iratxe: remove
             if (self.isWhatsnew) {
                 let event = 'whatsnew_findmrbeam';
                 let payload = {
@@ -156,12 +163,17 @@ $(function() {
         self._isMandatoryStep = function (currentTab) {
             return self.MANDATORY_STEPS.includes(currentTab);
         };
+
+        self.startGuidedTour = function () {
+            self.tour.btn_startTour();
+            return false
+        }
     }
 
     var DOM_ELEMENT_TO_BIND_TO = "wizard_plugin_corewizard_whatsnew_0";
     OCTOPRINT_VIEWMODELS.push([
         WizardWhatsnewViewModel,
-        ['settingsViewModel', 'analyticsViewModel'],
+        ['settingsViewModel', 'analyticsViewModel', 'tourViewModel'],
         "#"+DOM_ELEMENT_TO_BIND_TO
     ]);
 });

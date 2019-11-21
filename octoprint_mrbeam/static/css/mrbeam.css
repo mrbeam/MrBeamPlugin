@@ -2692,7 +2692,7 @@ input[type="radio"]{
   margin: 7px 0;
 }
 
-.welcome-wizard-end-row > img {
+.welcome-wizard-end-row img {
   max-width: 45%;
 }
 

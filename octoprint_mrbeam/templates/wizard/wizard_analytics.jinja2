@@ -7,11 +7,12 @@
 
 <h3>{{ _("Analytics") }}</h3>
 {% set privacy_policy = _('/plugin/mrbeam/static/docs/MrBeamAnalytics-PrivacyPolicy_en.pdf') %}
-<h4>
-    {{ _('Help us improve Mr Beam!') }} <i class="fa fa-heartbeat" aria-hidden="true" style="margin-right: 3px"></i>
-</h4>
+{#<h4>#}
+{#    {{ _('Help us improve Mr Beam!') }} <i class="fa fa-heartbeat" aria-hidden="true" style="margin-right: 3px"></i>#}
+{#</h4>#}
 <p>
-    {{ _('In order to improve your experience with the Mr Beam II, we would like to gather some analytics data on the device operations.') }}
+    <strong>{{ _('Help us improve Mr Beam!') }}</strong>
+    {{ _('In order to improve the experience with your Mr Beam, we would like to gather some analytics data on the device operations.') }}
     {{ _('No information will be shared with external sources.') }}
 </p>
 
@@ -29,8 +30,7 @@
     <div class="card-header" id="analytics_what_we_save_heading">
       <div class="mb-0">
         <button class="btn btn-link collapsed analytics-collapsible" type="button" data-toggle="collapse" data-target="#analytics_what_we_save"
-                aria-expanded="true" aria-controls="collapseOne" style="color: #e25303">
-                {# todo iratxe: provisional styling #}
+                aria-expanded="true" aria-controls="collapseOne" style="color: #e25303; padding-left: 0;">
             {{ _('More information about what data we use') }}
         </button>
       </div>
@@ -55,9 +55,8 @@
 </div>
 
 <p>
-    <i class="fa fa-info" aria-hidden="true" style="margin-right: 3px"></i>{{ _('You can change you choice in the settings menu whenever you want ;)') }}
+    {{ _('You can change you choice any time in the menu "Settings > Analytics".') }}
 </p>
 <p style="color: darkgray;font-size: 0.9em">
-    {# Want more detailed information? You can check our <a href="/plugin/mrbeam/static/docs/MrBeamAnalytics-PrivacyPolicy_en.pdf" target="_blank">privacy policy.</a> #}
     {{ _("Want more detailed information? You can check our %(open)sprivacy policy%(close)s.", open='<a href="%s" target="_blank">' % privacy_policy, close='</a>')|safe }}
 </p>
