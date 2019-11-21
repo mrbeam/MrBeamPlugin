@@ -2631,6 +2631,9 @@ input[type="radio"]{
 /*
 * === WELCOME DIALOG ===
 */
+#wizard_dialog > .modal-header > h3 {
+  margin-left: 15px;
+}
 
 .wizard-nav-list-past > a {
   background-color: white;

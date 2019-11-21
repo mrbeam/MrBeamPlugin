@@ -2,6 +2,9 @@ $(function() {
     function WizardAclViewModel(parameters) {
         var self = this;
 
+        self.PREVIOUS_TABS = ['wizard_plugin_corewizard_wifi_netconnectd_link', 'wizard_firstrun_start_link'];
+        self.ACL_TAB = 'wizard_plugin_corewizard_acl_link';
+
         self.loginStateViewModel = parameters[0];
 
         self.userCreated = false;
@@ -124,9 +127,8 @@ $(function() {
         };
 
         self.onBeforeWizardTabChange = function(next, current) {
-            // Only when going from Access Control to the next page, not to the previous ones
-            if (current && _.startsWith(current, "wizard_plugin_corewizard_acl_")
-            && !(next === "wizard_plugin_corewizard_wifi_link") && !(next === "wizard_firstrun_start_link")) {
+            // If the user goes from Access Control to the previous page, we don't check the input data
+            if (current && current === self.ACL_TAB && !self.PREVIOUS_TABS.includes(next)) {
                 if (!self.passwordMismatch() && self.validUsername() && self.validPassword()) {
                     var data = {
                     "ac": true,
@@ -163,6 +165,9 @@ $(function() {
                     }
                     return false;
                 }
+            } else if (self.PREVIOUS_TABS.includes(next)) {
+                // We need to do this here because it's mandatory step, so it's possible that we don't actually change tab
+                $('#' + current).attr('class', 'wizard-nav-list-past');
             }
             return true;
         };

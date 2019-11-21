@@ -3,7 +3,8 @@ $(function () {
         var self = this;
         window.mrbeam.viewModels['wizardAnalyticsViewModel'] = self;
 
-        self.MY_WIZARD_TAB_NAME = "wizard_plugin_corewizard_analytics_link";
+        self.PREVIOUS_TABS = ['wizard_plugin_corewizard_lasersafety_link', 'wizard_plugin_corewizard_acl_link', 'wizard_plugin_corewizard_wifi_netconnectd_link', 'wizard_firstrun_start_link'];
+        self.ANALYTICS_TAB = "wizard_plugin_corewizard_analytics_link";
 
         self.analyticsInitialConsent = ko.observable(null);
         self.containsAnalyticsTab = false;
@@ -15,14 +16,20 @@ $(function () {
         };
 
         self.onBeforeWizardTabChange = function(next, current) {
-            if (next !== self.MY_WIZARD_TAB_NAME && current === self.MY_WIZARD_TAB_NAME) {
+            // If the user goes from Analytics to the previous page, we don't check the input data
+            if (current && current === self.ANALYTICS_TAB && !self.PREVIOUS_TABS.includes(next)) {
+            // if (next !== self.ANALYTICS_TAB && current === self.ANALYTICS_TAB) {
                 let result = self._handleAnalyticsTabExit();
                 if (result) {
                     // We need to do this here because it's mandatory step, so it's possible that we don't actually change tab
                     $('#' + current).attr('class', 'wizard-nav-list-past');
                 }
                 return result;
+            } else if (self.PREVIOUS_TABS.includes(next)){
+                // We need to do this here because it's mandatory step, so it's possible that we don't actually change tab
+                $('#' + current).attr('class', 'wizard-nav-list-past');
             }
+            return true;
         };
 
         self.onBeforeWizardFinish = function() {
