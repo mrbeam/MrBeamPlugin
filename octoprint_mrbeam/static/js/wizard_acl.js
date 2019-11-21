@@ -50,11 +50,6 @@ $(function() {
             return self.password() && self.password().trim() != "";
         });
 
-        // Todo iratxe: this one does not work! Neither with pureComputed nor with computed
-        // self.validData = ko.pureComputed(function() {
-        //     return !self.passwordMismatch() && self.validUsername() && self.validPassword();
-        // });
-
         self.onStartup = function(){
             // needs to be scrollable on touch devices
             $('#wizard_dialog .modal-body').addClass('scrollable');
