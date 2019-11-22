@@ -449,6 +449,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			     "css/quicktext-fonts.css",
 			     "css/sliders.css",
 			     "css/hopscotch.min.css",
+			     "css/wizard.css",
 			     ],
 			less=["less/mrbeam.less"]
 		)

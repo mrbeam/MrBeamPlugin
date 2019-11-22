@@ -1,0 +1,130 @@
+/*
+* === WELCOME & WHAT'S NEW DIALOGS ===
+*/
+#wizardTabs > li > a {
+  pointer-events: none;
+  cursor: default;
+}
+
+#wizard_dialog > .modal-header > h3 {
+  margin-left: 15px;
+}
+
+.wizard-nav-list-past > a {
+  background-color: white;
+  color: black;
+  text-shadow: none;
+}
+
+.wizard-nav-list-active > a {
+  background-color: white;
+  color: #e25303;
+  text-shadow: none;
+  font-weight: bold;
+}
+
+.wizard-nav-list-next > a {
+  background-color: white;
+  color: darkgrey;
+  text-shadow: none;
+}
+
+.wizard-table {
+  border-spacing: 20px 0;
+  border-collapse: separate;
+  margin: 0 0 30px -20px;
+}
+
+.wizard-table-caption {
+  font-size: smaller;
+  text-align: justify;
+  line-height: 1.3em;
+}
+
+.wizard-table-comment {
+  text-align: center;
+  padding: 12px 0;
+  vertical-align: top;
+}
+
+.wizard-mrb-orange-button{
+  background: #e25303;
+  border-radius: 5px;
+  color: white;
+  padding: 5px 30px;
+}
+
+.wizard-mrb-orange-button:hover {
+  background: #a63e03;
+  color: white;
+  border-radius: 5px;
+}
+
+.wizard-mrb-orange-button:focus {
+  background: #e25303;
+  color: white;
+  border-radius: 5px;
+}
+
+/*
+* === Welcome Dialog ===
+*/
+
+#wizard_welcome_wifi_config_btn {
+  margin: 7px 0;
+}
+
+.welcome-wizard-end-row img {
+  max-width: 45%;
+}
+
+.welcome-wizard-end-row {
+  text-align: center;
+}
+
+.welcome-wizard-acl-form {
+  margin: 20px 0;
+}
+
+.welcome-wizard-acl-input {
+  background-color: #f9f9f9 !important;
+  width: 220px;
+  margin-left: 20px;
+}
+
+.welcome-wizard-acl-label {
+  float: left;
+  width: 135px;
+  padding-top: 5px;
+  text-align: right;
+}
+
+/* Analytics accordion */
+
+input[type="radio"]{
+  vertical-align: top;
+}
+
+.mb-0 > button.analytics-collapsible {
+  outline: transparent;
+  text-decoration: none;
+}
+
+.mb-0 > button.collapsed:before {
+  content: "\f055";
+}
+
+.mb-0 > button:before {
+  font-family: FontAwesome;
+  content: "\f056";
+  padding-right: 5px;
+}
+
+#analytics_what_we_save {
+  padding-left: 15px;
+  margin-left: 26px;
+}
+
+#analytics_initial_consent_radio {
+  padding: 12px 0;
+}
