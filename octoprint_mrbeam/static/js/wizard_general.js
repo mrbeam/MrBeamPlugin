@@ -3,14 +3,26 @@ $(function() {
         var self = this;
         window.mrbeam.viewModels['wizardWhatsnewViewModel'] = self;
 
-        self.SAFETY_LINK = 'wizard_plugin_corewizard_lasersafety_link';
-        self.ANALYTICS_LINK = 'wizard_plugin_corewizard_analytics_link';
-        self.ACL_LINK = 'wizard_plugin_corewizard_acl_link';
+        self.START_TAB = 'wizard_firstrun_start_link';
+        self.WIFI_TAB = 'wizard_plugin_corewizard_wifi_netconnectd_link';
+        self.ACL_TAB = 'wizard_plugin_corewizard_acl_link';
+        self.LASER_SAFETY_TAB = 'wizard_plugin_corewizard_lasersafety_link';
+        self.ANALYTICS_TAB = 'wizard_plugin_corewizard_analytics_link';
+        self.END_TAB = '';
+
+        self.WELCOME_TABS_IN_ORDER = [
+            self.START_TAB,
+            self.WIFI_TAB,
+            self.ACL_TAB,
+            self.LASER_SAFETY_TAB,
+            self.ANALYTICS_TAB,
+            self.END_TAB
+        ];
 
         self.MANDATORY_STEPS = [
-            'wizard_plugin_corewizard_lasersafety_link',
-            'wizard_plugin_corewizard_analytics_link',
-            'wizard_plugin_corewizard_acl_link'
+            self.LASER_SAFETY_TAB,
+            self.ANALYTICS_TAB,
+            self.ACL_TAB
         ];
 
         self.settings = parameters[0];
@@ -130,6 +142,20 @@ $(function() {
             } else {
                 self.verified(false);
             }
+        };
+
+        self.isGoingToPreviousTab = function(current, next) {
+            let current_pos = -1;
+            let next_pos = -1;
+
+            if (self.isWelcome) {
+                current_pos = self.WELCOME_TABS_IN_ORDER.indexOf(current);
+                next_pos = self.WELCOME_TABS_IN_ORDER.indexOf(next);
+            }
+
+            if (current_pos === -1 || next_pos === -1) {
+                return false;
+            } else return next_pos < current_pos;
         };
 
         self._changeNavDesignForAllTabsInitialState = function(links) {

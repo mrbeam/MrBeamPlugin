@@ -2,10 +2,8 @@ $(function() {
     function WizardAclViewModel(parameters) {
         var self = this;
 
-        self.PREVIOUS_TABS = ['wizard_plugin_corewizard_wifi_netconnectd_link', 'wizard_firstrun_start_link'];
-        self.ACL_TAB = 'wizard_plugin_corewizard_acl_link';
-
         self.loginStateViewModel = parameters[0];
+        self.wizard = parameters[1];
 
         self.userCreated = false;
 
@@ -128,48 +126,56 @@ $(function() {
 
         self.onBeforeWizardTabChange = function(next, current) {
             // If the user goes from Access Control to the previous page, we don't check the input data
-            if (current && current === self.ACL_TAB && !self.PREVIOUS_TABS.includes(next)) {
-                if (!self.passwordMismatch() && self.validUsername() && self.validPassword()) {
-                    var data = {
-                    "ac": true,
-                    "user": self.username(),
-                    "pass1": self.password(),
-                    "pass2": self.confirmedPassword()
-                    };
-
-                    // We only try to send it once, otherwise it gives an error because the user already exists
-                    if (!self.userCreated) {
-                        self._sendData(data);
-                    }
-
+            if (current && current === self.wizard.ACL_TAB) {
+                let letContinue = true;
+                if (self.wizard.isGoingToPreviousTab(current, next)) {
                     // We need to do this here because it's mandatory step, so it's possible that we don't actually change tab
                     $('#' + current).attr('class', 'wizard-nav-list-past');
-
-                    return true;
                 } else {
-                    if (!self.validUsername()) {
-                        showMessageDialog({
-                            title: gettext("Invalid e-mail address"),
-                            message: gettext("You need to enter your valid e-mail address.")
-                        });
-                    } else if (!self.validPassword()) {
-                        showMessageDialog({
-                            title: gettext("Invalid emtpy password"),
-                            message: gettext("You need to enter a valid password.")
-                        });
-                    } else if (self.passwordMismatch()) {
-                        showMessageDialog({
-                            title: gettext("Passwords do not match"),
-                            message: gettext("Please retype your password.")
-                        });
+                    letContinue = self._handleAclTabExit();
+                    if (letContinue) {
+                        // We need to do this here because it's mandatory step, so it's possible that we don't actually change tab
+                        $('#' + current).attr('class', 'wizard-nav-list-past');
                     }
-                    return false;
                 }
-            } else if (current && current === self.ACL_TAB && self.PREVIOUS_TABS.includes(next)) {
-                // We need to do this here because it's mandatory step, so it's possible that we don't actually change tab
-                $('#' + current).attr('class', 'wizard-nav-list-past');
+                return letContinue;
             }
-            return true;
+        };
+
+        self._handleAclTabExit = function() {
+            if (!self.passwordMismatch() && self.validUsername() && self.validPassword()) {
+                let data = {
+                "ac": true,
+                "user": self.username(),
+                "pass1": self.password(),
+                "pass2": self.confirmedPassword()
+                };
+
+                // We only try to send it once, otherwise it gives an error because the user already exists
+                if (!self.userCreated) {
+                    self._sendData(data);
+                }
+                return true;
+
+            } else {
+                if (!self.validUsername()) {
+                    showMessageDialog({
+                        title: gettext("Invalid e-mail address"),
+                        message: gettext("You need to enter your valid e-mail address.")
+                    });
+                } else if (!self.validPassword()) {
+                    showMessageDialog({
+                        title: gettext("Invalid emtpy password"),
+                        message: gettext("You need to enter a valid password.")
+                    });
+                } else if (self.passwordMismatch()) {
+                    showMessageDialog({
+                        title: gettext("Passwords do not match"),
+                        message: gettext("Please retype your password.")
+                    });
+                }
+                return false;
+            }
         };
 
         self.onWizardFinish = function() {
@@ -181,7 +187,7 @@ $(function() {
 
     OCTOPRINT_VIEWMODELS.push([
         WizardAclViewModel,
-        ["loginStateViewModel"],
+        ["loginStateViewModel", "wizardWhatsnewViewModel"],
         "#wizard_plugin_corewizard_acl"
     ]);
 });
