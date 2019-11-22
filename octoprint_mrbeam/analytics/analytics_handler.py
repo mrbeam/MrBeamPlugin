@@ -96,7 +96,6 @@ class AnalyticsHandler(object):
 	def _activate_analytics(self):
 		# Restart queue if the analytics were disabled before
 		if not self._no_choice_made:
-			self._logger.info('################### DELETE QUEUE CONTENT #############################')
 			self._analytics_queue = Queue(self.QUEUE_MAXSIZE)
 		else:
 			self._no_choice_made = False
