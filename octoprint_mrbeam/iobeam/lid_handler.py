@@ -226,7 +226,7 @@ class PhotoCreator(object):
 			self.active = True
 			session_details = dict(
 				num_pics=0,
-				errors={},
+				errors=[],
 				detected_markers={},
 			)
 
@@ -298,10 +298,7 @@ class PhotoCreator(object):
 
 			error = correction_result['error']
 			if error:
-				if error in session_details['errors']:
-					session_details['errors'][error] += 1
-				else:
-					session_details['errors'][error] = 1
+				session_details['errors'].append(error)
 
 			num_detected = correction_result.get('markers_recognized', None)
 			if num_detected in session_details['detected_markers']:

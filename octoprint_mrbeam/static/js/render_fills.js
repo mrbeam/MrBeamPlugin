@@ -106,7 +106,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			canvas.remove();
 			if(typeof callback === 'function'){
 				callback(elem.attr('id'));
-				console.log('embedded img');
+				console.log('embedded img ('+ canvas.width +'*' + canvas.height+' px, dataurl: '+getDataUriSize(dataUrl)+' )');
 			}
 		};
 
@@ -114,8 +114,12 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 	};
 
-	Element.prototype.renderPNG = function (wMM, hMM, pxPerMM, callback) {
+	Element.prototype.renderPNG = function (wPT, hPT, wMM, hMM, pxPerMM, callback) {
 		var elem = this;
+		//console.info("renderPNG paper width", elem.paper.attr('width'), wPT);
+		console.info("renderPNG: SVG " + wPT + '*' + hPT +" (pt) with viewBox " + wMM + '*' + hMM + ' (mm), rendering @ ' + pxPerMM + ' px/mm')
+		var bbox = elem.getBBox(); // attention, this bbox uses viewBox coordinates (mm)
+		console.info("renderPNG BBOX (in mm) to render: " + bbox.w +'*'+bbox.h + " @ " + bbox.x + ',' + bbox.y);
 
 		// get svg as dataUrl
 		var svgStr = elem.outerSVG();
@@ -126,29 +130,37 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		// init render canvas and attach to page
 		var renderCanvas = document.createElement('canvas');
 		renderCanvas.id = "renderCanvas";
-		renderCanvas.width = wMM * pxPerMM;
-		renderCanvas.height = hMM * pxPerMM;
+		renderCanvas.width = bbox.w * pxPerMM;
+		renderCanvas.height = bbox.h * pxPerMM;
 		document.getElementsByTagName('body')[0].appendChild(renderCanvas);
 		var renderCanvasContext = renderCanvas.getContext('2d');
+		renderCanvasContext.fillStyle = 'white'; // avoids one backend rendering step (has to be disabled in the backend)
+		renderCanvasContext.fillRect(0, 0, renderCanvas.width, renderCanvas.width);
 
         var source = new Image();
 
 		// render SVG image to the canvas once it loads.
 		source.onload = function () {
-			renderCanvasContext.drawImage(source, 0, 0, renderCanvas.width, renderCanvas.height);
+			
+			var srcScale = wPT / wMM; // canvas.drawImage refers to <svg> coordinates - not viewBox coordinates.
+			
+			// drawImage(source, src.x, src.y, src.width, src.height, dest.x, dest.y, dest.width, dest.height);
+			renderCanvasContext.drawImage(source, bbox.x * srcScale, bbox.y * srcScale, bbox.w * srcScale, bbox.h * srcScale, 0, 0, renderCanvas.width, renderCanvas.height);
 
 			// place fill bitmap into svg
 			var fillBitmap = renderCanvas.toDataURL("image/png");
+			console.info("renderPNG rendered dataurl has " + getDataUriSize(fillBitmap));
 			if(typeof callback === 'function'){
-				callback(fillBitmap);
+				callback(fillBitmap, bbox.x, bbox.y, bbox.w, bbox.h);
 			}
 			renderCanvas.remove();
 		};
 
 		// catch browsers without native svg support
 		source.onerror = function(e) {
-            var len = svgDataUri ? svgDataUri.length : -1;
-            var msg = "Error during conversion: Loading SVG dataUri into image element failed. (dataUri.length:"+len+")";
+//            var len = svgDataUri ? svgDataUri.length : -1;
+            var len = getDataUriSize(svgDataUri, 'B');
+            var msg = "Error during conversion: Loading SVG dataUri into image element failed. (dataUri.length: "+len+")";
             console.error(msg, e);
             var error = "<p>" + gettext("The SVG file contains clipPath elements.<br/>clipPath is not supported yet and has been removed from file.") + "</p>";
 			new PNotify({
@@ -161,6 +173,23 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 		source.src = svgDataUri;
 	};
+	
+	function getDataUriSize(datauri, unit){
+		if(! datauri) return -1;
+		var bytes = datauri.length;
+		switch(unit) { 
+			case 'B': 
+				return bytes;
+			case 'kB': 
+				return Math.floor(bytes / 1024);
+			case 'MB': 
+				return Math.floor(bytes / (1024*1024));
+			default:
+				if(bytes < 1024) return bytes + " Byte";
+				else if(bytes < 1024*1024) return Math.floor(bytes / 1024) + " kByte";
+				else return Math.floor(bytes / (1024*1024)) + " MByte";
+		}
+	}
 
 
 });
