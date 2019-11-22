@@ -39,6 +39,7 @@
   font-size: smaller;
   text-align: justify;
   line-height: 1.3em;
+  vertical-align: top;
 }
 
 .wizard-table-comment {

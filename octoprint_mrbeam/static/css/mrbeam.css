@@ -2588,3 +2588,7 @@ input.search-query,
     margin-right: auto;
     width: 90%;
 }
+
+.dont-break {
+  white-space: nowrap;
+}

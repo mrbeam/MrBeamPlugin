@@ -5,7 +5,7 @@
 <div id="wizard_plugin_corewizard_wifi_netconnectd" data-bind="allowBindings: true">
     <div id="wizard_welcome_wifi_status_lights">
         <p>
-            {{ _('The Mr Beam Status Lights show you how to connect to your Mr Beam. For that, the status lights "breathe" (pulsing up and down) in different colors.') }}
+            {{ _('The Mr Beam Status Lights show you how to connect to your Mr Beam:') }}
         </p>
 
         <table class="wizard-table">
@@ -15,9 +15,9 @@
                 <td><img src="/plugin/mrbeam/static/img/welcome_dialog/status_lights_white.gif"></td>
             </tr>
             <tr>
-                <td class="wizard-table-caption">{{ _('Connect to your Mr Beam via %(strong_open)sfind.mr-beam.org%(strong_close)s', strong_open='<strong>', strong_close='</strong>') }}</td>
+                <td class="wizard-table-caption">{{ _('Connect to your Mr Beam via %(strong_open)sfind.mr-beam.org%(strong_close)s', strong_open='<strong class="dont-break">', strong_close='</strong>') }}</td>
                 <td class="wizard-table-caption">{{ _('Connect directly to the %(strong_open)sMr Beam WiFi Access Point.%(strong_close)s', strong_open='<strong>', strong_close='</strong>') }}</td>
-                <td class="wizard-table-caption">{{ _('There are connection issues. Visit our %(strong_open)sKnowledge Base%(strong_close)s to find a solution.', strong_open='<strong>', strong_close='</strong>') }}</td>
+                <td class="wizard-table-caption">{{ _('Find your Mr Beam in your local network. Check the %(strong_open)sQuickstart Guide%(strong_close)s for more information.', strong_open='<strong>', strong_close='</strong>') }}</td>
             </tr>
         </table>
 
@@ -25,36 +25,14 @@
         <p>
             {{ _('For the best user experience we recommend using the find.mr-beam.org discovery service. In order to use this service, it is necessary that your Mr Beam has an active internet connection.') }}
         </p>
-        <p>
+        <button id="wizard_welcome_wifi_config_btn" class="btn btn-primary">{{ _('Configure WiFi') }}</button>
+        <small class="muted" style="display: inline-block">
             {{ _('You can configure the WiFi now or skip this step by clicking on the "Next" button. You can always configure the WiFi later in the settings menu.') }}
-        </p>
+        </small>
     </div>
 
-    <button id="wizard_welcome_wifi_config_btn" class="btn wizard-mrb-orange-button">{{ _('Let\'s do it!') }}</button>
-
     <div id="wizard_welcome_wifi_configuration" style="display: none">
-{#        <p>#}
-{#            <strong>{{ _('Let\'s get your Mr Beam II connected to your wifi.') }}</strong>#}
-{#        </p>#}
-{#        <p>#}
-{#            {{ _('You can skip the wifi setup simply by clicking \'Next\' without connecting to any wifi networks.') }}#}
-{#        </p>#}
-{##}
-{#        <div data-bind="visible: !hasDataLoaded()">#}
-{#            <p>{{ _('Loading wifi data...') }}</p>#}
-{#        </div>#}
-
         <div data-bind="visible: hasDataLoaded()">
-{#            <p data-bind="visible: !ip_available()">#}
-{#                <strong>{{ _('Connection state') }}:</strong> <span data-bind="text: netconnectdViewModel.connectionStateText"></span>#}
-{#            </p>#}
-{#            <p data-bind="visible: ip_available()">#}
-{#                <strong>{{ _('Ethernet') }}:</strong> <span data-bind="text: netconnectdViewModel.connectionStateTextEthernet"></span>#}
-{#            </p>#}
-{#            <p data-bind="visible: ip_available()">#}
-{#                <strong>{{ _('Wifi') }}:</strong> <span data-bind="text: netconnectdViewModel.connectionStateTextWifi"></span>#}
-{#            </p>#}
-
             <div class="pull-right" data-bind="visible: netconnectdViewModel.enableQualitySorting">
                 <small>
                     {{ _('Sort by') }}: <a href="#" data-bind="click: function() { netconnectdViewModel.listHelper.changeSorting('ssid'); }">{{ _('SSID') }} ({{ _('ascending') }})</a> | <a href="#" data-bind="click: function() { netconnectdViewModel.listHelper.changeSorting('quality'); }">{{ _('Quality') }} ({{ _('descending') }})</a>
@@ -78,23 +56,6 @@
                     </tr>
                 </tbody>
             </table>
-            {#<div class="pagination pagination-mini pagination-centered">
-                <ul>
-                    <li data-bind="css: {disabled: netconnectdViewModel.listHelper.currentPage() === 0}">
-                        <a href="#" data-bind="click: netconnectdViewModel.listHelper.prevPage">«</a>
-                    </li>
-                </ul>
-                <ul data-bind="foreach: netconnectdViewModel.listHelper.pages">
-                    <li data-bind="css: { active: $data.number === $root.netconnectdViewModel.listHelper.currentPage(), disabled: $data.number === -1 }">
-                        <a href="#" data-bind="text: $data.text, click: function() { $root.netconnectdViewModel.listHelper.changePage($data.number); }"></a>
-                    </li>
-                </ul>
-                <ul>
-                    <li data-bind="css: {disabled: netconnectdViewModel.listHelper.currentPage() === netconnectdViewModel.listHelper.lastPage()}">
-                        <a href="#" data-bind="click: netconnectdViewModel.listHelper.nextPage">»</a>
-                    </li>
-                </ul>
-            </div> #}
         </div>
 
         <button class="btn btn-primary btn-block" data-bind="click: function() { $root.netconnectdViewModel.refresh() }, enable: $root.netconnectdViewModel.daemonOnline() && $root.netconnectdViewModel.status.wifi.present()">{{ _('Refresh') }}</button>

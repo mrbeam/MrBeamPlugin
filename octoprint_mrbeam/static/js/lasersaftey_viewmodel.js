@@ -59,7 +59,7 @@ $(function() {
                     $('#' + current).attr('class', 'wizard-nav-list-past');
                 }
                 return result
-            } else if (self.PREVIOUS_TABS.includes(next)){
+            } else if (current && current === self.LASERSAFETY_TAB && self.PREVIOUS_TABS.includes(next)){
                 // We need to do this here because it's mandatory step, so it's possible that we don't actually change tab
                 $('#' + current).attr('class', 'wizard-nav-list-past');
             }

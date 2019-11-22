@@ -165,7 +165,7 @@ $(function() {
                     }
                     return false;
                 }
-            } else if (self.PREVIOUS_TABS.includes(next)) {
+            } else if (current && current === self.ACL_TAB && self.PREVIOUS_TABS.includes(next)) {
                 // We need to do this here because it's mandatory step, so it's possible that we don't actually change tab
                 $('#' + current).attr('class', 'wizard-nav-list-past');
             }
