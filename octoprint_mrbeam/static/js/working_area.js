@@ -1771,7 +1771,7 @@ $(function(){
 			//self.check_sizes_and_placements();
 		};
 
-		self.getCompositionSVG = function(fillAreas, pxPerMM, cutOutlines, callback){
+		self.getCompositionSVG = function(fillAreas, pxPerMM, engraveStroke, callback){
 			self.abortFreeTransforms();
 			var wMM = self.workingAreaWidthMM();
 			var hMM = self.workingAreaHeightMM();
@@ -1796,7 +1796,7 @@ $(function(){
 			$('#compSvg defs').append('<style id="quickTextFontPlaceholder" class="quickTextFontPlaceholder deleteAfterRendering"></style>');
 			self._qt_copyFontsToSvg(compSvg.select(".quickTextFontPlaceholder").node);
 
-			self.renderInfill(compSvg, fillAreas, cutOutlines, wMM, hMM, pxPerMM, function(svgWithRenderedInfill){
+			self.renderInfill(compSvg, wPT, hPT, fillAreas, engraveStroke, wMM, hMM, pxPerMM, function(svgWithRenderedInfill){
 				callback( self._wrapInSvgAndScale(svgWithRenderedInfill));
 				$('#compSvg').remove();
 			});
@@ -2094,11 +2094,9 @@ $(function(){
 		};
 
 		// render the infill and inject it as an image into the svg
-		self.renderInfill = function (svg, fillAreas, cutOutlines, wMM, hMM, pxPerMM, callback) {
-			//TODO cutOutlines use it and make it work
-			var wPT = wMM * 90 / 25.4;
-			var hPT = hMM * 90 / 25.4;
-			var tmpSvg = self.getNewSvg('tmpSvg', wPT, hPT);
+		self.renderInfill = function (svg, svgWidthPT, svgHeightPT, fillAreas, engraveStroke, wMM, hMM, pxPerMM, callback) {
+			//TODO engraveStroke use it and make it work
+			var tmpSvg = self.getNewSvg('tmpSvg', svgWidthPT, svgHeightPT);
 			var attrs = {viewBox: "0 0 " + wMM + " " + hMM};
 			tmpSvg.attr(attrs);
 			// get only filled items and embed the images
@@ -2121,14 +2119,8 @@ $(function(){
 				for (var i = 0; i < fillings.length; i++) {
 					var item = fillings[i];
 
-					var style = item.attr('style');
-					if (item.type === 'image' || item.type === "text" || item.type === "#text") {
-						// remove filter effects on images for proper rendering
-//						if (style !== null) {
-//							var strippedFilters = style.replace(/filter.+?;/g, '');
-//							item.attr('style', strippedFilters);
-//						}
-					} else {
+					if (item.type !== 'image' && item.type !== "text" && item.type !== "#text") {
+						var style = item.attr('style');
 						// remove stroke from other elements
 						var styleNoStroke = 'stroke: none;';
 						if (style !== null) {
@@ -2139,7 +2131,7 @@ $(function(){
 					}
 				}
 
-				var cb = function(result) {
+				var cb = function(result, x, y, w, h) {
 					if (MRBEAM_DEBUG_RENDERING) {
 						debugBase64(result, 'png_debug');
 					}
@@ -2152,8 +2144,7 @@ $(function(){
 						svg.selectAll('text,tspan').remove();
 
 						if(result !== null){
-							var waBB = snap.select('#coordGrid').getBBox();
-							var fillImage = snap.image(result, 0, 0, waBB.w, waBB.h);
+							var fillImage = snap.image(result, x, y, w, h);
 							fillImage.attr('id', 'fillRendering');
 							svg.append(fillImage);
 						}
@@ -2173,7 +2164,7 @@ $(function(){
 				}
 				console.log("Rendering " + fillings.length + " filled elements.");
 				if(fillAreas){
-					tmpSvg.renderPNG(wMM, hMM, pxPerMM, cb);
+					tmpSvg.renderPNG(svgWidthPT, svgHeightPT, wMM, hMM, pxPerMM, cb);
 				} else {
 					cb(null)
 				}

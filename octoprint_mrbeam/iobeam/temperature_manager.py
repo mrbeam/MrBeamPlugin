@@ -103,7 +103,7 @@ class TemperatureManager(object):
 			self._logger.info("cooling_stop()")
 			self.is_cooling_since = time.time()
 			self._one_button_handler.cooling_down_pause()
-			self.fire_event(MrBeamEvents.LASER_COOLING_PAUSE, dict(temp=self.temperature))
+			self._plugin.fire_event(MrBeamEvents.LASER_COOLING_PAUSE, dict(temp=self.temperature))
 
 	def cooling_resume(self):
 		"""

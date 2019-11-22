@@ -146,6 +146,7 @@ class MrbLogger(object):
 					exctype, value, tb = sys.exc_info()
 					exception_str = "{}: '{}'".format(exctype.__name__ if exctype is not None else None, value)
 					stacktrace = traceback.format_tb(tb)
+					msg = "{} - Exception: {}".format(msg, exception_str)
 
 				event_details = dict(
 					level=level,

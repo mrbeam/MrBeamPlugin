@@ -56,7 +56,7 @@ class LaserheadHandler(object):
 			# This is for detecting mrb_hw_info v0.0.20
 			elif self._valid_lh_data_backwards_compatibility(lh_data):
 				self._logger.info("Laserhead (< v0.0.21): %s", lh_data)
-				self._logger.warning('Received old laser head data from iobeam - v0.0.20: {}'.format(lh_data), analytics=True)
+				self._logger.warning('Received old laser head data from iobeam.', analytics=True)
 
 			elif lh_data is {}:
 				self._logger.warn('Received empty laser head data from iobeam.')
