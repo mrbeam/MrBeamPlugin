@@ -675,13 +675,30 @@ li.material_entry span {
 }
 
 #quick_shape_dialog input[type=color],
-#quick_shape_dialog input[type=number],
-#quick_shape_dialog input[type=range] {
+#quick_shape_dialog input[type=number] {
     width: 150px;
+}
+#quick_shape_dialog input[type=range] {
+    width: 164px;
 }
 #quick_shape_dialog form.form-horizontal {
     margin-bottom: 0;
 }
+#quick_shape_stroke_and_fill input[type=range] { 
+	width: 134px;
+}
+#quick_shape_stroke_and_fill input[type=color] {
+	width: 120px;
+}
+#quick_shape_stroke_and_fill input[type=checkbox] {
+	width: 20px;
+	height: 20px;
+	margin-right: 10px;
+}
+#quick_shape_dialog #quick_shape_fill {
+	margin-top: -1.3em;
+}
+
 
 svg#area_preview.overModalBG { z-index: 1051; }
 
