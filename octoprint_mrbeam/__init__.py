@@ -86,7 +86,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	MODEL_MRBEAM2_DC_R2 =   "MRBEAM2_DC_R2"
 	MODEL_MRBEAM2_DC =      "MRBEAM2_DC"
 
-	LASERSAFETY_CONFIRMATION_DIALOG_VERSION  = "0.3"
+	LASERSAFETY_CONFIRMATION_DIALOG_VERSION  = "0.4"
 
 	LASERSAFETY_CONFIRMATION_STORAGE_URL = 'https://script.google.com/a/macros/mr-beam.org/s/AKfycby3Y1RLBBiGPDcIpIg0LHd3nwgC7GjEA4xKfknbDLjm3v9-LjG1/exec'
 	USER_SETTINGS_KEY_MRBEAM = 'mrbeam'
