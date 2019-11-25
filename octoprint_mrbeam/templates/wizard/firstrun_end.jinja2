@@ -1,16 +1,37 @@
-<h3>{{ _('All Done!') }}</h3>
+
+<img src="/plugin/mrbeam/static/img/welcome_dialog/end.png">
+
+<h3>{{ _('Done!') }}</h3>
 
 <p>
-    {% trans %}
-        Your Mr Beam II is now all set up and ready to go. Happy lasering!
-    {% endtrans %}
+    {{ _('%(strong_open)sWhat\'s next?%(strong_close)s Check out our different resources to get the best out of your Mr Beam:', strong_open='<strong>', strong_close='</strong>') }}
 </p>
-
-
-<p>
-    <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/KKLHeGwc0RY" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-</p>
-<p>
-    {# Check out our <a href="https://www.youtube.com/channel/UC8CIMavXllp6S61JgEqSm4A" target="_blank">YouTube channel</a> to find video tutorials and more. #}
-    {{ _("Check out our %(open)sYouTube channel%(close)s to find video tutorials and more.", open='<a href="https://www.youtube.com/channel/UC8CIMavXllp6S61JgEqSm4A" target="_blank">', close='</a>')|safe }}
-</p>
+<br>
+<table class="wizard-table">
+    <tr>
+        <td class="welcome-wizard-end-row">
+            <a href="https://www.youtube.com/channel/UC8CIMavXllp6S61JgEqSm4A" target="_blank">
+                <img src="/plugin/mrbeam/static/img/welcome_dialog/youtube_icon.png">
+            </a>
+        </td>
+        <td class="welcome-wizard-end-row">
+            <a href="https://mr-beam.freshdesk.com/support/solutions" target="_blank">
+                <img src="/plugin/mrbeam/static/img/welcome_dialog/support_icon.png">
+            </a>
+        </td>
+        <td class="welcome-wizard-end-row">
+            <a onclick="window.mrbeam.viewModels.wizardWhatsnewViewModel.startGuidedTour()" href="#">
+                <img src="/plugin/mrbeam/static/img/welcome_dialog/tour_icon.png">
+            </a>
+        </td>
+    </tr>
+    <tr>
+        <td class="wizard-table-comment">{{ _('Check our %(a_strong_open)sYoutube channel%(a_strong_close)s to find tutorials and practical tips for you.',
+            a_strong_open='<a href="https://www.youtube.com/channel/UC8CIMavXllp6S61JgEqSm4A" target="_blank"><strong>', a_strong_close='</strong></a>') }}</td>
+        <td class="wizard-table-comment">{{ _('Do you want to know what to do if you need help? Visit our %(a_strong_open)sKnowledge Base%(a_strong_close)s',
+            a_strong_open='<a href="https://mr-beam.freshdesk.com/support/solutions" target="_blank"><strong>', a_strong_close='</strong></a>') }}</td>
+{#        The function call here is a bit hacky, because it did not work with knockout#}
+        <td class="wizard-table-comment">{{ _('Let\'s take a %(a_strong_open)sguided tour%(a_strong_close)s together to get your first laser job done.',
+            a_strong_open='<a onclick="window.mrbeam.viewModels.wizardWhatsnewViewModel.startGuidedTour()" href="#"><strong>', a_strong_close='</strong></a>') }}</td>
+    </tr>
+</table>

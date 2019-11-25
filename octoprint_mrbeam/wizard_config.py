@@ -45,24 +45,25 @@ class WizardConfig:
 
 		return wizard_config_to_show
 
+	# todo iratxe: same logic for what's new screen
+	def get_welcome_wizard_link_ids(self):
+		link_ids = ['wizard_firstrun_end_link']  # This one is managed by OctoPrint (the start as well, but we don't want it)
+		wizard_tabs = self._welcome_wizard_config()
+
+		for tab, data in wizard_tabs.iteritems():
+			link_ids.append(data['div']+'_link')
+
+		return link_ids
+
 	def _welcome_wizard_config(self):
 		"""Add here the tabs that should be present in the welcome wizard.
 		The order of the tabs is set in __init__.py > __plugin_load__() > __plugin_settings_overlay__['appearance']['order].
 		The welcome and what's new wizard are actually the same wizard, so both are configured in the same place.
 		"""
 		welcome_wizard_tabs = dict(
-			wizard_lasersafety=dict(
-				type='wizard',
-				name=gettext("Laser Safety"),
-				required=True,
-				mandatory=False,
-				suffix='_lasersafety',
-				template='wizard/wizard_lasersafety.jinja2',
-				div='wizard_plugin_corewizard_lasersafety',
-			),
 			wizard_wifi=dict(
 				type='wizard',
-				name=gettext("Wifi Setup"),
+				name=gettext("Connection"),
 				required=self._is_wifi_wizard_required(),
 				mandatory=False,
 				suffix='_wifi',
@@ -71,12 +72,21 @@ class WizardConfig:
 			),
 			wizard_acl=dict(
 				type='wizard',
-				name=gettext("Access Control"),
+				name=gettext("Your user"),
 				required=self._is_acl_wizard_required(),
 				mandatory=False,
 				suffix='_acl',
 				template='wizard/wizard_acl.jinja2',
 				div='wizard_plugin_corewizard_acl',
+			),
+			wizard_lasersafety=dict(
+				type='wizard',
+				name=gettext("For your safety"),
+				required=True,
+				mandatory=False,
+				suffix='_lasersafety',
+				template='wizard/wizard_lasersafety.jinja2',
+				div='wizard_plugin_corewizard_lasersafety',
 			),
 			wizard_analytics=dict(
 				type='wizard',

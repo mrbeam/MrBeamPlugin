@@ -2164,45 +2164,6 @@ input.search-query,
   margin-top: 3%;
 }
 
-
-/*
-* === ANALYTICS  ACCORDION ===
-*/
-
-.mb-0 > button.analytics-collapsible {
-  outline: transparent;
-  text-decoration: none;
-}
-
-.mb-0 > button.collapsed:before {
-  content: "\f055";
-}
-
-.mb-0 > button:before {
-  font-family: FontAwesome;
-  content: "\f056";
-  padding-right: 5px;
-}
-
-#analytics_what_we_save {
-  padding-left: 15px;
-  margin-left: 26px;
-}
-
-input[type="radio"]{
-  vertical-align: top;
-}
-
-#analytics_initial_consent_radio {
-  padding: 12px;
-}
-
-#wizardTabs > li > a {
-  pointer-events: none;
-  cursor: default;
-}
-
-
 /*
 * === LASER_HEAD FOCUS REMINDER ===
 */
@@ -2314,28 +2275,6 @@ input[type="radio"]{
 */
 .whatsnew-info-sentence {
   color: #0088cc;
-}
-
-.whatsnew-try-it-now-button{
-  background: #e25303;
-  border-color: #e25303;
-  border-radius: 7px;
-  color: white;
-  font-weight: bold;
-}
-
-.whatsnew-try-it-now-button:hover {
-  background: #a63e03;
-  border-color: #a63e03;
-  color: white;
-  font-weight: bold;
-}
-
-.whatsnew-try-it-now-button:focus {
-  background: #e25303;
-  border-color: #e25303;
-  color: white;
-  font-weight: bold;
 }
 
 .whatsnew-bottom-line-note {
@@ -2626,4 +2565,8 @@ input[type="radio"]{
     margin-left: auto;
     margin-right: auto;
     width: 90%;
+}
+
+.dont-break {
+  white-space: nowrap;
 }

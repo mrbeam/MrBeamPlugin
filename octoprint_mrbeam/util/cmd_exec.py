@@ -51,4 +51,9 @@ def exec_cmd_output(cmd, log_cmd=True, shell=False):
 		# 	output = e.output[:30]+'...' if len(e.output)>30 else e.output
 		_logger.debug("Fail to execute command '%s', return code: %s, output: '%s'", cmd, e.returncode, output)
 
+	except Exception as e:
+		code = 99
+		output = "{e}: {o}".format(e=e, o=output)
+		_logger.debug("Fail to execute command '%s', return code: %s, output: '%s'", cmd, None, output)
+
 	return output, code
