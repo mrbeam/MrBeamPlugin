@@ -19,6 +19,11 @@ $(function() {
         self.onStartup = function(){
             // needs to be scrollable on touch devices
             $('#wizard_dialog .modal-body').addClass('scrollable');
+
+            $("#wizard_welcome_wifi_config_btn").click(function(){
+                $('#wizard_welcome_wifi_configuration').show(500);
+                $('#wizard_dialog > .modal-body').animate({ scrollTop: $('#wizard_dialog > .modal-body').height() }, 'slow');
+            });
         };
 
 	}

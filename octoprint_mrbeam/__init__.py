@@ -86,7 +86,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	MODEL_MRBEAM2_DC_R2 =   "MRBEAM2_DC_R2"
 	MODEL_MRBEAM2_DC =      "MRBEAM2_DC"
 
-	LASERSAFETY_CONFIRMATION_DIALOG_VERSION  = "0.3"
+	LASERSAFETY_CONFIRMATION_DIALOG_VERSION  = "0.4"
 
 	LASERSAFETY_CONFIRMATION_STORAGE_URL = 'https://script.google.com/a/macros/mr-beam.org/s/AKfycby3Y1RLBBiGPDcIpIg0LHd3nwgC7GjEA4xKfknbDLjm3v9-LjG1/exec'
 	USER_SETTINGS_KEY_MRBEAM = 'mrbeam'
@@ -449,6 +449,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			     "css/quicktext-fonts.css",
 			     "css/sliders.css",
 			     "css/hopscotch.min.css",
+			     "css/wizard.css",
 			     ],
 			less=["less/mrbeam.less"]
 		)
@@ -599,7 +600,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return True
 
 	def get_wizard_details(self):
-		return dict()
+		details = dict(
+			links=self.wizard_config.get_welcome_wizard_link_ids(),
+		)
+		return details
 
 	def get_wizard_version(self):
 		return self.wizard_config.get_wizard_version()
@@ -636,7 +640,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@octoprint.plugin.BlueprintPlugin.route("/wifi", methods=["POST"])
 	def wifi_wizard_api(self):
 		# accept requests only while setup wizard is active
-		if not self.isFirstRun() or not self._wizardConfig._is_wifi_wizard_required():
+		if not self.isFirstRun() or not self.wizard_config._is_wifi_wizard_required():
 			return make_response("Forbidden", 403)
 
 		data = None
