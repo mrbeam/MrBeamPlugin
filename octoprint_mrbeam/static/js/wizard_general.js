@@ -179,9 +179,9 @@ $(function() {
             }
         };
 
-        self._sendWizardAnalytics = function(event, payload) {
+        self._sendWizardAnalytics = function(action, payload) {
             payload['wizard'] = MRBEAM_WIZARD_TO_SHOW.toLowerCase();
-            payload['event'] = event;
+            payload['action'] = action;
 
             self.analytics.send_fontend_event('wizard', payload)
         };
