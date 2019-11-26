@@ -50,20 +50,37 @@
             <div class="controls">
                 <ul>
                     <div><strong>{{ _('Quickstart Guide') }}:</strong>
-                        <a href="/plugin/mrbeam/static/docs/QuickstartGuide_en.pdf" target="_blank"> en </a> |
-                        <a href="/plugin/mrbeam/static/docs/QuickstartGuide_de.pdf" target="_blank"> de </a> |
-{#                        <a href="/plugin/mrbeam/static/docs/{{ _('QuickstartGuide_es.pdf') }}" target="_blank"> es </a> |#}
-{#                        <a href="/plugin/mrbeam/static/docs/{{ _('QuickstartGuide_fr.pdf') }}" target="_blank"> fr </a> |#}
-{#                        <a href="/plugin/mrbeam/static/docs/{{ _('QuickstartGuide_it.pdf') }}" target="_blank"> it </a> |#}
+                        {% if model == "MRBEAM2" %}
+                            <a href="/plugin/mrbeam/static/docs/QuickstartGuide_en.pdf" target="_blank"> en </a> |
+                            <a href="/plugin/mrbeam/static/docs/QuickstartGuide_de.pdf" target="_blank"> de </a> |
+    {#                        <a href="/plugin/mrbeam/static/docs/{{ _('QuickstartGuide_es.pdf') }}" target="_blank"> es </a> |#}
+    {#                        <a href="/plugin/mrbeam/static/docs/{{ _('QuickstartGuide_fr.pdf') }}" target="_blank"> fr </a> |#}
+    {#                        <a href="/plugin/mrbeam/static/docs/{{ _('QuickstartGuide_it.pdf') }}" target="_blank"> it </a> |#}
+                        {% else %}
+                             <a href="/plugin/mrbeam/static/docs/QuickstartGuide_en.pdf" target="_blank"> en </a> |
+                            <a href="/plugin/mrbeam/static/docs/QuickstartGuide_de.pdf" target="_blank"> de </a> |
+    {#                        <a href="/plugin/mrbeam/static/docs/{{ _('QuickstartGuide_es.pdf') }}" target="_blank"> es </a> |#}
+    {#                        <a href="/plugin/mrbeam/static/docs/{{ _('QuickstartGuide_fr.pdf') }}" target="_blank"> fr </a> |#}
+    {#                        <a href="/plugin/mrbeam/static/docs/{{ _('QuickstartGuide_it.pdf') }}" target="_blank"> it </a> |#}
+                        {% endif %}
                         {{ _('get the latest versions') }} <a href="{{ mrbeamorg_downloads }}" target="_blank">{{ _('online') }}</a>
                     </div>
                     <div><strong>{{ _('User Manual') }}:</strong>
-                        <a href="/plugin/mrbeam/static/docs/UserManual_en.pdf" target="_blank"> en </a> |
-                        <a href="/plugin/mrbeam/static/docs/UserManual_de.pdf" target="_blank"> de </a> |
-                        <a href="/plugin/mrbeam/static/docs/UserManual_es.pdf" target="_blank"> es </a> |
-                        <a href="/plugin/mrbeam/static/docs/UserManual_fr.pdf" target="_blank"> fr </a> |
-                        <a href="/plugin/mrbeam/static/docs/UserManual_it.pdf" target="_blank"> it </a> |
-                        <a href="/plugin/mrbeam/static/docs/UserManual_fi.pdf" target="_blank"> fi </a> |
+                         {% if model == "MRBEAM2" %}
+                            <a href="/plugin/mrbeam/static/docs/UserManual_en.pdf" target="_blank"> en </a> |
+                            <a href="/plugin/mrbeam/static/docs/UserManual_de.pdf" target="_blank"> de </a> |
+                            <a href="/plugin/mrbeam/static/docs/UserManual_es.pdf" target="_blank"> es </a> |
+                            <a href="/plugin/mrbeam/static/docs/UserManual_fr.pdf" target="_blank"> fr </a> |
+                            <a href="/plugin/mrbeam/static/docs/UserManual_it.pdf" target="_blank"> it </a> |
+                            <a href="/plugin/mrbeam/static/docs/UserManual_fi.pdf" target="_blank"> fi </a> |
+                        {% else %}
+                            <a href="/plugin/mrbeam/static/docs/UserManual_en.pdf" target="_blank"> en </a> |
+                            <a href="/plugin/mrbeam/static/docs/UserManual_de.pdf" target="_blank"> de </a> |
+                            <a href="/plugin/mrbeam/static/docs/UserManual_es.pdf" target="_blank"> es </a> |
+                            <a href="/plugin/mrbeam/static/docs/UserManual_fr.pdf" target="_blank"> fr </a> |
+                            <a href="/plugin/mrbeam/static/docs/UserManual_it.pdf" target="_blank"> it </a> |
+                            <a href="/plugin/mrbeam/static/docs/UserManual_fi.pdf" target="_blank"> fi </a> |
+                        {% endif %}
                         {{ _('get the latest versions') }} <a href="{{ mrbeamorg_downloads }}" target="_blank">{{ _('online') }}</a>
                     </div>
 
