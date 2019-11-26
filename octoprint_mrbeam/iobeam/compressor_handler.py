@@ -59,8 +59,7 @@ class CompressorHandler(object):
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_RESUMED, self.set_compressor_unpause)
 
 	def has_compressor(self):
-		# return self._plugin.is_mrbeam2_dreamcut()
-		return True
+		return self._plugin.is_mrbeam2_dreamcut()
 
 	def get_current_state(self):
 		if self.has_compressor():
