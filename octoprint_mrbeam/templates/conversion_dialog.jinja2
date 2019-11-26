@@ -339,14 +339,6 @@
 							</div>
 
                             <div class="control-group">
-                                <div class="cutting-control-and-label" data-toggle="tooltip" data-placement="right"
-                                      title="{{ _('Indicates the number of times the laser will run over the design to cut it. Increase the number of passes if the material does not get cut.') }}">
-                                    <label class="control-label">{{ _('Passes') }}</label>
-                                    <div class="controls"><input data-bind="event: {change: flag_customized_material}" class="param_passes img_intensity_input" type="number" min="1" max="10" value="1" />&nbsp;&times;</div>
-                                </div>
-                            </div>
-
-                            <div class="control-group">
                                 <div class="compressor-control-and-label" data-toggle="tooltip" data-placement="right" data-bind="visible: hasCompressor"
                                      title="<b>{{ _('The power of the air compressor.') }}</b>
                                      {{ _('Keep this value to the maximum for the best performance, unless you want to lower it because your material is very light and it\'s blown away.') }}">
@@ -358,6 +350,14 @@
                                             <span class="compressor_min_max_label">max</span>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <div class="cutting-control-and-label" data-toggle="tooltip" data-placement="right"
+                                      title="{{ _('Indicates the number of times the laser will run over the design to cut it. Increase the number of passes if the material does not get cut.') }}">
+                                    <label class="control-label">{{ _('Passes') }}</label>
+                                    <div class="controls"><input data-bind="event: {change: flag_customized_material}" class="param_passes img_intensity_input" type="number" min="1" max="10" value="1" />&nbsp;&times;</div>
                                 </div>
                             </div>
 
