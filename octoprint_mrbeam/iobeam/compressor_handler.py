@@ -11,12 +11,12 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 # singleton
 _instance = None
 
+
 def compressor_handler(plugin):
 	global _instance
 	if _instance is None:
 		_instance = CompressorHandler(plugin)
 	return _instance
-
 
 
 class CompressorHandler(object):
@@ -92,17 +92,21 @@ class CompressorHandler(object):
 		dataset = payload.get('message', {})
 		self._compressor_present = False
 		self._add_static_and_error_data_analytics(dataset)
+		# todo iratxe: error (1,2)
 
 	def _handle_static_data(self, payload):
 		dataset = payload.get('message', {})
 		if dataset:
 			self._add_static_and_error_data_analytics(dataset)
-
-		if 'version' in dataset:
-			self._compressor_present = True
-			self._logger.info("Enabling compressor. compressor_static: %s", dataset)
+			if 'version' in dataset:
+				self._compressor_present = True
+				self._logger.info("Enabling compressor. compressor_static: %s", dataset)
+			else:
+				self._logger.warn(
+					"Received compressor_static dataset without version information: compressor_static: %s", dataset)
 		else:
-			self._logger.warn("Received compressor_static dataset without version information: compressor_static: %s", dataset)
+			pass
+			# todo iratxe: else error (3)
 
 	def _handle_dynamic_data(self, payload):
 		dataset = payload.get('message', {})
@@ -113,6 +117,8 @@ class CompressorHandler(object):
 					self._compressor_current_state = int(dataset['state'])
 				except:
 					self._logger.error("Cant convert compressor state to int from compressor_dynamic: %s", dataset)
+
+			# todo iratxe: error ir rpm = 0 (4)
 
 	def _add_static_and_error_data_analytics(self, data):
 		data = dict(

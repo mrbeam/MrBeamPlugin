@@ -173,7 +173,6 @@ class IoBeamHandler(object):
 
 		self._connectionException = None
 		self._interlocks = dict()
-		self._malfunction_messages = []
 
 		self.processing_times_log = collections.deque([], self.PROCESSING_TIMES_LOG_LENGTH)
 
@@ -181,13 +180,13 @@ class IoBeamHandler(object):
 		self._request_id_lock = threading.Lock()
 
 		self._settings = plugin._settings
-		# self.reported_hardware_malfunctions = []
 
 		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
 
 	def _on_mrbeam_plugin_initialized(self, event, payload):
 		self._laserhead_handler = self._plugin.laserhead_handler
 		self._analytics_handler = self._plugin.analytics_handler
+		self._hw_malfunction_handler = self._plugin.hw_malfunction_handler
 
 		self._subscribe()
 
@@ -344,7 +343,7 @@ class IoBeamHandler(object):
 
 	def _subscribe(self):
 		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self.shutdown)
-		self._event_bus.subscribe(OctoPrintEvents.CLIENT_OPENED, self.send_hardware_malfunction_frontend_notification)
+		self._event_bus.subscribe(OctoPrintEvents.CLIENT_OPENED, self._hw_malfunction_handler.send_hardware_malfunction_frontend_notification)  # todo iratxe: those were only sent if there were messages
 
 	def _initWorker(self, socket_file=None):
 		self._logger.debug("initializing worker thread")
@@ -849,36 +848,21 @@ class IoBeamHandler(object):
 				self._logger.info("iobeam init error: '%s' - requesting iobeam_debug...", dataset)
 				# Add request id to the command
 				self._send_command(self.get_request_msg(["debug"]))
-				text = '<br/>' + \
-					   gettext("A possible hardware malfunction has been detected on this device. Please contact our support team immediately at:") + \
-					   '<br/><a href="https://mr-beam.org/support" target="_blank">mr-beam.org/support</a><br/><br/>' \
-					   '<strong>' + gettext("Error:") + '</strong><br/>{}'.format(dataset)
-				self._plugin.notify_frontend(title=gettext("Hardware malfunction"),
-															  text=text,
-															  type="error", sticky=True,
-															  replay_when_new_client_connects=True)
+
+				self._hw_malfunction_handler.send_possible_hardware_malfunction_frontend_notification(dataset)
 		return 0
 
 	def _handle_hw_malfunction(self, dataset):
-		show_notification = False
-		self._logger.warn("hardware_malfunction: %s", dataset)
-
-		for id, data in dataset.items():
-			data = data or {}
-			msg = data.get('msg', id)
-			self._fireEvent(MrBeamEvents.HARDWARE_MALFUNCTION, dict(id=id, msg=msg, data=data))
-
-			if id == "bottom_open":
-				self.send_bottom_open_frontend_notification()
-			else:
-				if msg not in self._malfunction_messages:
-					show_notification = True
-					self._malfunction_messages.append(msg)
-
-		if show_notification:
-			self.send_hardware_malfunction_frontend_notification()
-
-		self._analytics_handler.add_iobeam_message_log(self.iobeam_version, dataset)
+		"""
+		Handle hw malfunction dataset.
+		:param dataset:
+		:return: error count
+		"""
+		try:
+			self._hw_malfunction_handler.hw_malfunction_procedure(dataset)  # todo iratxe
+		except:
+			self._logger.exception("Exception in _handle_hw_malfunction")
+		return 0
 
 	def _handle_i2c(self, dataset):
 		self._logger.info("i2c_state: %s", dataset)
@@ -1019,33 +1003,6 @@ class IoBeamHandler(object):
 			self._logger.warn("Message handling time took %ss. (Errors: %s, message: '%s')", processing_time, err, message)
 		if log_stats or processing_time > self.PROCESSING_TIME_WARNING_THRESHOLD:
 			self.log_debug_processing_stats()
-
-	def send_hardware_malfunction_frontend_notification(self, *args, **kwargs):
-		if self._malfunction_messages:
-			user_msg = "<br/>".join(self._malfunction_messages)
-			# if user_msg not in self.reported_hardware_malfunctions:
-			# self.reported_hardware_malfunctions.append(user_msg)
-			text = '<br/>' + \
-				   gettext(
-					   "A possible hardware malfunction has been detected on this device. Please contact our support team immediately at:") + \
-				   '<br/><a href="https://mr-beam.org/ticket" target="_blank">mr-beam.org/ticket</a><br/><br/>' \
-				   '<strong>' + gettext("Error:") + '</strong><br/>{}'.format(user_msg)
-			self._plugin.notify_frontend(title=gettext("Hardware malfunction"),
-										 text=text,
-										 type="error",
-										 sticky=True,
-			                             )
-
-	def send_bottom_open_frontend_notification(self):
-		# if "bottom_open" not in self.reported_hardware_malfunctions:
-		# 	self.reported_hardware_malfunctions.append(user_msg)
-		text = '<br/>' + \
-			   gettext("The bottom plate is not closed correctly. "
-					   "Please make sure that the bottom is correctly mounted as described in the Mr Beam II user manual.")
-		self._plugin.notify_frontend(title=gettext("Bottom Plate Error"),
-									 text=text,
-									 type="error", sticky=True,
-									 replay_when_new_client_connects=True)
 
 	def log_debug_processing_stats(self):
 		"""
