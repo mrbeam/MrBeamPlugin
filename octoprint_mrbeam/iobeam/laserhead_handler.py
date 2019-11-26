@@ -17,7 +17,7 @@ def laserheadHandler(plugin):
 
 
 class LaserheadHandler(object):
-	LASER_POWER_GOAL = 950
+	LASER_POWER_GOAL_DEFAULT = 950
 	LASERHEAD_SERIAL_REGEXP = re.compile("^[0-9a-f-]{36}$")
 
 	def __init__(self, plugin):
@@ -135,6 +135,7 @@ class LaserheadHandler(object):
 
 		return self._correction_settings
 
+	# todo iratxe: not used at all??
 	def _validate_lh_serial(self, serial):
 		try:
 			return bool(self.LASERHEAD_SERIAL_REGEXP.match(serial))
@@ -152,31 +153,36 @@ class LaserheadHandler(object):
 		p_65 = None
 		p_75 = None
 		p_85 = None
+		target_power = self.LASER_POWER_GOAL_DEFAULT
 		if power_calibration:
 			p_65 = power_calibration.get('power_65', None)
 			p_75 = power_calibration.get('power_75', None)
 			p_85 = power_calibration.get('power_85', None)
+			target_power = power_calibration.get('target_power', self.LASER_POWER_GOAL_DEFAULT)
+
+			if target_power < 0 or target_power >= 1300:
+				target_power = self.LASER_POWER_GOAL_DEFAULT
 
 		correction_factor = 1
 
 		if p_65 and p_75 and p_85:
-			if p_65 < self.LASER_POWER_GOAL < p_75:
+			if p_65 < target_power < p_75:
 				step_difference = float(p_75-p_65)
-				goal_difference = self.LASER_POWER_GOAL - p_65
+				goal_difference = target_power - p_65
 				new_intensity = goal_difference * (75-65) / step_difference + 65
 				correction_factor = new_intensity / 65.0
 
-			elif p_75 < self.LASER_POWER_GOAL < p_85:
+			elif p_75 < target_power < p_85:
 				step_difference = float(p_85 - p_75)
-				goal_difference = self.LASER_POWER_GOAL - p_75
+				goal_difference = target_power - p_75
 				new_intensity = goal_difference * (85-75) / step_difference + 75
 				correction_factor = new_intensity / 65.0
 
 		else:
 			self._logger.info('Insufficient data for correction factor. Default factor: {cf}'.format(cf=correction_factor))
 
-		self._logger.info('Laserhead info - serial={serial}, p_65={p65}, p_75={p75}, p_85={p85}, correction_factor={cf}'
-			.format(serial=self._current_used_lh_serial, p65=p_65, p75=p_75, p85=p_85, cf=correction_factor))
+		self._logger.info('Laserhead info - serial={serial}, p_65={p65}, p_75={p75}, p_85={p85}, correction_factor={cf}, target_power={tp}'
+			.format(serial=self._current_used_lh_serial, p65=p_65, p75=p_75, p85=p_85, cf=correction_factor, tp=target_power))
 
 		return correction_factor
 
