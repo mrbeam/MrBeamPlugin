@@ -174,7 +174,7 @@
                                 <ul><li>{{ _('Bright/white pixels use the left (lower) value') }}</li>
                                 <li>{{ _('Dark/black pixels use the right (higher) value.') }}</li>
                                 </ul> {{ _('Equal values do not vary the laser intensity related to the pixel brightness.') }}">
-                                    <label class="control-label">{{ _('Laser intensity range') }}</label>
+                                    <label class="control-label">{{ _('Intensity range') }}</label>
                                     <div class="controls range-control">
                                         <div class="input-append">
                                             <input id="svgtogcode_img_intensity_white" class="img_intensity_input percentage_input"  type="number" min="0" max="100"
@@ -193,7 +193,7 @@
                                      <ul><li>{{ _('Bright/white pixels use the left (higher) value') }}</li>
                                      <li>{{ _('Dark/black pixels use the right (lower) value.') }}</li></ul>
                                      {{ _('Equal values do not vary the laser velocity related to the pixel brightness.') }}">
-                                    <label class="control-label">{{ _('Engraving speed range') }}</label>
+                                    <label class="control-label">{{ _('Speed range') }}</label>
                                     <div class="controls range-control">
                                         <div class="input-append">
                                             <input id="svgtogcode_img_feedrate_white" class="img_intensity_input speed_input" type="number"  min="100" max="3000"
@@ -319,7 +319,7 @@
                                       title="<b>{{ _('Sets the intensity of the laser.') }}</b> {{ _('The more intensity the deeper the effect on the material.') }}<br>
 									     {{ _('Cutting needs higher intensities than engraving.') }}<br>
 									     {{ _('The effect in general is dependent from the material and its color and surface.') }}">
-                                     <label class="control-label">{{ _('Laser Intensity') }}</label>
+                                     <label class="control-label">{{ _('Intensity') }}</label>
                                      <div class="controls"><input class="param_intensity img_intensity_input percentage_input" type="number" min="0" max="100"
                                                                  data-bind="event: {change: flag_customized_material}"
                                                                  onblur="window.mrbeam.colorDragging.checkConversionParameters()"/>&nbsp;%</div>
@@ -331,7 +331,7 @@
                                       title="<b>{{ _('Sets the velocity of the laser head.') }}</b> {{ _('The slower the movement the deeper the effect on the material.') }}<br>
                                         {{ _('Cutting needs slower movement than engraving.') }}<br>
 									    {{ _('The effect in general is dependent from the material and its color and surface.') }}">
-                                     <label class="control-label">{{ _('Laser Speed') }}</label>
+                                     <label class="control-label">{{ _('Speed') }}</label>
                                      <div class="controls"><input class="param_feedrate img_intensity_input speed_input" type="number" min="100" max="3000"
 															 data-bind="event: {change: flag_customized_material}"
 															 onblur="window.mrbeam.colorDragging.checkConversionParameters()"/>&nbsp;{{ _('mm/min') }}</div>
