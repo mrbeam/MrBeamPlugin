@@ -1616,7 +1616,7 @@ window.mrbeam.colorDragging = {
 			newJob.attr('id', '');
 			var i = $('.job_row_vector').length + 1;
 			// Translators: "Cutting Job #number"
-			$(newJob).find('.job_title').text(gettext("Cutting Job ") + i);
+			$(newJob).find('.job_title').text(gettext("Cut ") + i);
 
 			newJob.find('.used_color').remove();
 			newJob.appendTo($('#additional_jobs'));
