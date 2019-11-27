@@ -343,7 +343,7 @@ class IoBeamHandler(object):
 
 	def _subscribe(self):
 		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self.shutdown)
-		self._event_bus.subscribe(OctoPrintEvents.CLIENT_OPENED, self._hw_malfunction_handler.send_hardware_malfunction_frontend_notification)  # todo iratxe: those were only sent if there were messages
+		self._event_bus.subscribe(OctoPrintEvents.CLIENT_OPENED, self._hw_malfunction_handler.show_hw_malfunction_notification)
 
 	def _initWorker(self, socket_file=None):
 		self._logger.debug("initializing worker thread")
@@ -849,7 +849,7 @@ class IoBeamHandler(object):
 				# Add request id to the command
 				self._send_command(self.get_request_msg(["debug"]))
 
-				self._hw_malfunction_handler.send_possible_hardware_malfunction_frontend_notification(dataset)
+				self._hw_malfunction_handler.show_hw_malfunction_notification(dataset)
 		return 0
 
 	def _handle_hw_malfunction(self, dataset):
@@ -859,7 +859,7 @@ class IoBeamHandler(object):
 		:return: error count
 		"""
 		try:
-			self._hw_malfunction_handler.hw_malfunction_procedure(dataset)  # todo iratxe
+			self._hw_malfunction_handler.report_hw_malfunction(dataset)
 		except:
 			self._logger.exception("Exception in _handle_hw_malfunction")
 		return 0
