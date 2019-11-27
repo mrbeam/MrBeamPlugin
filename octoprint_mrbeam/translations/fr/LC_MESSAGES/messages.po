@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2019-10-09 11:10+0200\n"
-"PO-Revision-Date: 2019-11-27 15:25+0100\n"
+"PO-Revision-Date: 2019-11-27 15:30+0100\n"
 "Last-Translator: \n"
 "Language: fr_FR\n"
 "Language-Team: \n"
@@ -1726,7 +1726,7 @@ msgstr "C'est mis au point !"
 
 #: octoprint_mrbeam/templates/homing_overlay.jinja2:49
 msgid "Mr Beam does not know the current position."
-msgstr "Mr Beam ne connaît pas la position actuelle."
+msgstr "Mr Beam ne connaît pas sa position actuelle."
 
 #: octoprint_mrbeam/templates/homing_overlay.jinja2:50
 msgid ""
