@@ -726,7 +726,6 @@ class AnalyticsHandler(object):
 		if consent == 'agree':
 			self.analytics_user_permission_change(True)
 			self.process_analytics_files()
-			AnalyticsFileUploader.upload_now(self._plugin, self._analytics_lock)
 
 		elif consent == 'disagree':
 			self.analytics_user_permission_change(False)

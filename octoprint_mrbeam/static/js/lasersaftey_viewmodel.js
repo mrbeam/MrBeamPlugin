@@ -4,7 +4,7 @@ $(function() {
 
         self.loginStateViewModel = parameters[0];
         self.analytics = parameters[1];
-
+        self.wizard = parameters[2];
 
         self.checkbox1 = ko.observable(false);
         self.checkbox2 = ko.observable(false);
@@ -42,19 +42,25 @@ $(function() {
             $('#wizard_dialog .modal-body').addClass('scrollable');
         };
 
-		// for wizard version
         self.onBeforeWizardTabChange = function(next, current) {
-            if (current && _.startsWith(current, "wizard_plugin_corewizard_lasersafety")) {
-                var result = self._handleExit();
+            // If the user goes from Laser Safety to the previous page, we don't check the input data
+            if (current && current === self.wizard.LASER_SAFETY_TAB) {
+                let letContinue = true;
+                if (self.wizard.isGoingToPreviousTab(current, next)) {
+                    // We need to do this here because it's mandatory step, so it's possible that we don't actually change tab
+                    $('#' + current).attr('class', 'wizard-nav-list-past');
+                } else {
+                    letContinue = self._handleExit();
+                    if (letContinue) {
+                        let dialog = 'welcome_wizard';
+                        self._sendLaserSafetyAnalytics(dialog);
 
-                if(result) {
-                    let dialog = 'welcome_wizard';
-                    self._sendLaserSafetyAnalytics(dialog);
+                        // We need to do this here because it's mandatory step, so it's possible that we don't actually change tab
+                        $('#' + current).attr('class', 'wizard-nav-list-past');
+                    }
                 }
-
-                return result;
+                return letContinue;
             }
-            return true;
         };
 
         self.onUserLoggedIn = function(currentUser){
@@ -172,7 +178,7 @@ $(function() {
 
     OCTOPRINT_VIEWMODELS.push([
         LaserSafetyViewModel,
-        ["loginStateViewModel", "analyticsViewModel"],
+        ["loginStateViewModel", "analyticsViewModel", "wizardWhatsnewViewModel"],
         ["#wizard_plugin_corewizard_lasersafety", "#lasersafety_overlay"]
     ]);
 });

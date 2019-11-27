@@ -18,15 +18,6 @@ $(function () {
         self._analytics_last_step_id = false;
         self._analytics_last_step_num = false;
 
-        self.onWizardFinish = function(){
-            if (self.settings.settings.plugins.mrbeam.tour_auto_launch()) {
-                console.log("TourViewModel: auto launch tour: true");
-                self.startTour();
-            } else {
-                console.log("TourViewModel: auto launch tour: false");
-            }
-        };
-
         self.btn_startTour = function () {
             self.startTour();
         };
@@ -73,6 +64,12 @@ $(function () {
                 nextLabel: gettext("Yes, let's go!"),
                 ctaLabel: gettext("Maybe later"),
                 showCTAButton: true,
+                onNext: function () {
+                    // We click the "Let's go!" button to finish the welcome wizard, needed if the tour started from there
+                    $('#wizard_dialog div.modal-footer button.button-finish').trigger('click');
+
+                    self._onNext();
+                },
                 onCTA: function () {
                     self._analytics_tour_done = false;
                     hopscotch.endTour();
