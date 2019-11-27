@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2019-10-09 11:10+0200\n"
-"PO-Revision-Date: 2019-11-27 14:46+0100\n"
+"PO-Revision-Date: 2019-11-27 15:01+0100\n"
 "Last-Translator: \n"
 "Language: fr_FR\n"
 "Language-Team: \n"
@@ -344,8 +344,8 @@ msgid ""
 "the left. Here you can delete files from the according context menu."
 msgstr ""
 "Supprimer les fichiers GCode : Allez dans la bibliothèque de design et cliquez "
-"sur 'Afficher uniquement les fichiers GCode' à gauche. Ici, vous pouvez "
-"supprimer des fichiers à partir du menu contextuel correspondant."
+"sur 'Uniquement les fichiers GCode' à gauche. Ici, vous pouvez supprimer des "
+"fichiers à partir du menu contextuel correspondant."
 
 #: octoprint_mrbeam/static/js/convert.js:1370
 msgid ""
@@ -353,8 +353,8 @@ msgid ""
 "the left. Here you can delete files from the according context menu."
 msgstr ""
 "Supprimer les fichiers de conception : Allez dans la bibliothèque de design et "
-"cliquez sur 'Afficher uniquement les fichiers de design' à gauche. Ici, vous "
-"pouvez supprimer des fichiers à partir du menu contextuel correspondant."
+"cliquez sur 'Uniquement les fichiers de design' à gauche. Ici, vous pouvez "
+"supprimer des fichiers à partir du menu contextuel correspondant."
 
 #: octoprint_mrbeam/static/js/convert.js:1371
 msgid ""
@@ -405,7 +405,7 @@ msgstr ""
 
 #: octoprint_mrbeam/static/js/loadingoverlay_viewmodel.js:10
 msgid "beamOS is reloading..."
-msgstr "beamOS est en train de se recharger..."
+msgstr "rechargement de beamOS ..."
 
 #: octoprint_mrbeam/static/js/maintenance.js:9
 msgid "pre-filter"
@@ -2208,7 +2208,7 @@ msgstr "Bugs et Demandes"
 
 #: octoprint_mrbeam/templates/quick_shape.jinja2:4
 msgid "Quick Shape"
-msgstr "Silhouette Rapide"
+msgstr "Forme Rapide"
 
 #: octoprint_mrbeam/templates/quick_shape.jinja2:33
 #: octoprint_mrbeam/templates/quick_shape.jinja2:64
@@ -2373,19 +2373,19 @@ msgstr "Trier par taille de fichier"
 
 #: octoprint_mrbeam/templates/tab_designlib.jinja2:24
 msgid "Only show design files"
-msgstr "Afficher uniquement les fichiers de conception"
+msgstr "Uniquement les fichiers de conception"
 
 #: octoprint_mrbeam/templates/tab_designlib.jinja2:25
 msgid "Only show GCode files"
-msgstr "Afficher uniquement les fichiers Gcode"
+msgstr "Uniquement les fichiers Gcode"
 
 #: octoprint_mrbeam/templates/tab_designlib.jinja2:26
 msgid "Only show recent jobs"
-msgstr "Afficher uniquement les tâches récentes"
+msgstr "Uniquement les tâches récentes"
 
 #: octoprint_mrbeam/templates/tab_designlib.jinja2:29
 msgid "Free"
-msgstr "Libérer"
+msgstr "Espace libre"
 
 #: octoprint_mrbeam/templates/tab_designlib.jinja2:36
 msgid "Upload"
@@ -2658,7 +2658,7 @@ msgstr "Texte"
 
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:165
 msgid "Shape"
-msgstr "Silhouette"
+msgstr "Forme"
 
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:194
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:244
