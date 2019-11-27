@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2019-10-09 11:10+0200\n"
-"PO-Revision-Date: 2019-11-26 16:03+0100\n"
+"PO-Revision-Date: 2019-11-27 14:46+0100\n"
 "Last-Translator: \n"
 "Language: fr_FR\n"
 "Language-Team: \n"
@@ -357,13 +357,12 @@ msgstr ""
 "pouvez supprimer des fichiers à partir du menu contextuel correspondant."
 
 #: octoprint_mrbeam/static/js/convert.js:1371
-#, fuzzy
 msgid ""
 "Delete log files: Go to Settings -> logs and delete old log files per click on "
 "the trash bin icon."
 msgstr ""
-"Supprimer les fichiers journaux : Allez dans Paramètres -> journaux et supprimez "
-"les anciens fichiers journaux en cliquant sur l'icône de la corbeille."
+"Supprimer les fichiers journaux : Allez dans Paramètres -> Rapports, puis "
+"supprimez les anciens fichiers en cliquant sur l'icône de la corbeille."
 
 #: octoprint_mrbeam/static/js/convert.js:1373
 #, python-format
@@ -822,7 +821,7 @@ msgstr "Peut-être plus tard"
 
 #: octoprint_mrbeam/static/js/tour_viewmodel.js:85
 msgid "First, do the homing cycle"
-msgstr "Tout d'abord, faites le cycle de retour au foyer."
+msgstr "Tout d'abord, faites le cycle de retour au foyer"
 
 #: octoprint_mrbeam/static/js/tour_viewmodel.js:86
 msgid "This is important so the Mr Beam II knows where the laser head is located."
@@ -1739,7 +1738,7 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/homing_overlay.jinja2:53
 msgid "Homing Cycle"
-msgstr "Initialisation mécanique"
+msgstr "Retour au Foyer"
 
 #: octoprint_mrbeam/templates/laser_job_done.jinja2:5
 msgid "Dust extraction"
@@ -2326,7 +2325,7 @@ msgid ""
 "about officially released and well tested software updates."
 msgstr ""
 "Le logiciel le plus stable pour votre Mr Beam II. Vous ne serez que informé des "
-"mises à jour officiellement publiées et testées rigoureusement."
+"mises à jour officiellement publiées et rigoureusement testées."
 
 #: octoprint_mrbeam/templates/software_channel_selector.jinja2:10
 msgid "Beta Channel"
@@ -2500,24 +2499,20 @@ msgid "parameters: value"
 msgstr "paramètres : valeur"
 
 #: octoprint_mrbeam/templates/tab_terminal.jinja2:47
-#, fuzzy
 msgid "work move, line"
 msgstr "déplacement , ligne"
 
 #: octoprint_mrbeam/templates/tab_terminal.jinja2:53
-#, fuzzy
 msgid "work move, arc clockwise"
-msgstr "déplacement de l'œuvre dans le sens des aiguilles d'une montre"
+msgstr "déplacement, dans le sens horaire"
 
 #: octoprint_mrbeam/templates/tab_terminal.jinja2:59
-#, fuzzy
 msgid "work move, arc counterclockwise"
-msgstr "mouvement de travail, arc sens anti-horaire"
+msgstr "déplacement, dans le sens anti-horaire"
 
 #: octoprint_mrbeam/templates/tab_terminal.jinja2:65
-#, fuzzy
 msgid "dwell"
-msgstr "habiter"
+msgstr "attente"
 
 #: octoprint_mrbeam/templates/tab_terminal.jinja2:71
 msgid "laser on"
@@ -2625,7 +2620,6 @@ msgid "Z-Axis"
 msgstr "Axe Z"
 
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:121
-#, fuzzy
 msgid "Jog distance:"
 msgstr "Distance de parcours :"
 
@@ -2738,7 +2732,7 @@ msgstr "dépasse l'espace de travail"
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:376
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:425
 msgid "Design exceeds the working area."
-msgstr "La conception dépasse l'espace de travail"
+msgstr "La conception dépasse l'espace de travail."
 
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:234
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:327
@@ -2757,7 +2751,7 @@ msgstr "luminosité"
 
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:306
 msgid "sharpen"
-msgstr "Régler la netteté"
+msgstr "régler la netteté"
 
 #: octoprint_mrbeam/templates/tab_workingarea.jinja2:311
 msgid "gamma"
@@ -2799,7 +2793,7 @@ msgstr "Plugin Mr Beam"
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:28
 msgid "Image fingerprint"
-msgstr "signature de l'image"
+msgstr "Signature de l'image"
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:29
 msgid "Software channel"
@@ -2846,7 +2840,7 @@ msgstr "Site Web de Mr Beam"
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:62
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:83
 msgid "find.mr-beam service"
-msgstr "service find.mr-beam"
+msgstr "Service find.mr-beam"
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:63
 #: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:10
@@ -2917,7 +2911,9 @@ msgstr "Les données que nous <b>sauvegarderons</b> :"
 #: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:42
 #: octoprint_mrbeam/templates/wizard/wizard_analytics.jinja2:42
 msgid "Job data like duration, materials or parameters."
-msgstr "Les données des tâches comme la durée, les matériaux ou les paramètres."
+msgstr ""
+"Les informations concernant des coupes et les gravures, comprenant la durée, les "
+"matériaux et les paramètres."
 
 #: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:43
 #: octoprint_mrbeam/templates/wizard/wizard_analytics.jinja2:43
@@ -3040,27 +3036,25 @@ msgid "Save Calibration"
 msgstr "Enregistrer l'étalonnage"
 
 #: octoprint_mrbeam/templates/settings/debug_settings.jinja2:10
-#, fuzzy
 msgid "Enable Clipping"
-msgstr "Activer l'écrêtage"
+msgstr "Rogner les images en hors cadre"
 
 #: octoprint_mrbeam/templates/settings/debug_settings.jinja2:11
 msgid "Only disable if you're experiencing problems."
 msgstr "Ne désactivez que si vous rencontrez des problèmes."
 
 #: octoprint_mrbeam/templates/settings/debug_settings.jinja2:12
-#, fuzzy
 msgid ""
 "Designs exceeding the working area are clipped if enabled. When disabled you "
 "might experience 'machine limit hit' errors during laserjobs. Since we had some "
 "bugs with the clipping algorithm in the past, here is an option to disable it "
 "completely."
 msgstr ""
-"Les conceptions dépassant la zone de travail sont découpées si elles sont "
-"activées. Lorsque cette option est désactivée, vous risquez de rencontrer des "
-"erreurs de'limite de frappe' de la machine pendant les travaux laser. Comme nous "
-"avons eu quelques bugs avec l'algorithme d'écrêtage dans le passé, voici une "
-"option pour le désactiver complètement."
+"Les conceptions dépassant la zone de travail sont rognées si cette option est "
+"activées. Si désactivée, vous risquez de rencontrer des erreurs 'machine limit "
+"hit' durant vos découpes. Puisque nous avons eu quelques bugs avec l'algorithme "
+"pour rogner les images dans le passé, voici une option pour le désactiver "
+"complètement."
 
 #: octoprint_mrbeam/templates/settings/debug_settings.jinja2:17
 msgid "Terminal"
