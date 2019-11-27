@@ -343,7 +343,6 @@ class IoBeamHandler(object):
 
 	def _subscribe(self):
 		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self.shutdown)
-		self._event_bus.subscribe(OctoPrintEvents.CLIENT_OPENED, self._hw_malfunction_handler.show_hw_malfunction_notification)
 
 	def _initWorker(self, socket_file=None):
 		self._logger.debug("initializing worker thread")

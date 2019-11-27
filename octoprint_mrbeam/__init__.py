@@ -1712,7 +1712,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			)
 		)
 
-	def notify_frontend(self, title, text, type=None, sticky=False, delay=None, replay_when_new_client_connects=False):
+	def notify_frontend(self, title, text, type=None, sticky=False, delay=None, replay_when_new_client_connects=False, force=False):
 		"""
 		Show a frontend notification to the user. (PNotify)
 		# TODO: All these messages will not be translated to any language. To change this we need:
@@ -1748,7 +1748,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			else:
 				send =False
 
-		if send:
+		if send or force:
 			self._plugin_manager.send_plugin_message("mrbeam", dict(frontend_notification = notification))
 
 	def _replay_stored_frontend_notification(self):

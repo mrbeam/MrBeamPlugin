@@ -1,5 +1,6 @@
 from flask.ext.babel import gettext
 
+from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
@@ -30,6 +31,13 @@ class HwMalfunctionHandler(object):
 	def _on_mrbeam_plugin_initialized(self, event, payload):
 		self._analytics_handler = self._plugin.analytics_handler
 		self._iobeam_handler = self._plugin.iobeam
+		self._subscribe()
+
+	def _subscribe(self):
+		self._event_bus.subscribe(OctoPrintEvents.CLIENT_OPENED, self._client_opened)
+
+	def _client_opened(self, event, payload):
+		self.show_hw_malfunction_notification()
 
 	def report_hw_malfunction_from_plugin(self, malfunction_id, msg, payload=None):
 		if payload is None:
@@ -75,7 +83,7 @@ class HwMalfunctionHandler(object):
 		if bottom_open:
 			self.show_bottom_open_notification()
 
-	def show_hw_malfunction_notification(self, dataset=None):
+	def show_hw_malfunction_notification(self, dataset=None, force=False):
 		if dataset:
 			message = dataset
 		elif self._messages_to_show:
@@ -93,7 +101,8 @@ class HwMalfunctionHandler(object):
 				text=text,
 				type="error",
 				sticky=True,
-				replay_when_new_client_connects=True
+				replay_when_new_client_connects=True,
+				force=force,
 			)
 
 	def show_bottom_open_notification(self):

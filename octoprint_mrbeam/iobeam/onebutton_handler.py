@@ -216,6 +216,7 @@ class OneButtonHandler(object):
 				self._logger.debug("onEvent() INTERLOCK_OPEN: not printing, nothing to do. printer state is: %s", self._printer.get_state_id())
 
 		elif event == OctoPrintEvents.SLICING_STARTED:
+
 			self.hardware_malfunction_notified = False
 
 		# OctoPrint 1.3.4 doesn't provide the file name in FILE_SELECTED anymore, so we need to get it here and save it for later.
@@ -312,7 +313,7 @@ class OneButtonHandler(object):
 			self._fireEvent(MrBeamEvents.READY_TO_LASER_CANCELED)
 		if self._hw_malfunction.hardware_malfunction and not self.hardware_malfunction_notified:
 			self._logger.error("Hardware Malfunction: Not possible to start laser job.")
-			self._hw_malfunction.show_hw_malfunction_notification()
+			self._hw_malfunction.show_hw_malfunction_notification(force=True)
 			self.hardware_malfunction_notified = True
 
 	def is_ready_to_laser(self, rtl_expected_to_be_there=True):
