@@ -45,10 +45,14 @@ class WizardConfig:
 
 		return wizard_config_to_show
 
-	# todo iratxe: same logic for what's new screen
-	def get_welcome_wizard_link_ids(self):
-		link_ids = ['wizard_firstrun_end_link']  # This one is managed by OctoPrint (the start as well, but we don't want it)
-		wizard_tabs = self._welcome_wizard_config()
+	def get_current_wizard_link_ids(self):
+		link_ids = []
+		wizard_tabs = {}
+		if self._is_welcome_wizard:
+			link_ids = ['wizard_firstrun_end_link']  # This one is managed by OctoPrint (the start as well, but we don't want it)
+			wizard_tabs = self._welcome_wizard_config()
+		elif self._is_whatsnew_wizard:
+			wizard_tabs = self._whatsnew_wizard_config()
 
 		for tab, data in wizard_tabs.iteritems():
 			link_ids.append(data['div']+'_link')

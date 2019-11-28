@@ -91,6 +91,11 @@ $(function() {
             if (self.aboutToStart) {
                 let links = response.mrbeam.details.links;
                 self._changeNavDesignForAllTabsInitialState(links);
+
+                // For the whatsnew we have to manually set the first tab to active
+                if(self.isWhatsnew) {
+                    $('#wizard_plugin_corewizard_whatsnew_0_link').attr('class', 'wizard-nav-list-active')
+                }
             }
         };
 
