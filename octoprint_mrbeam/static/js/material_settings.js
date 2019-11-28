@@ -37,8 +37,6 @@ $(function () {
         };
 
         self.materialSettingsDatabase = {
-
-
             ///// EDIT MATERIAL SETTINGS BELOW THIS LINE ////////
             'Acrylic': {
                 name: gettext("Acrylic"),
@@ -210,7 +208,7 @@ $(function () {
             },
             'Plywood Poplar': {
                 name: gettext("Plywood Poplar"),
-                img: 'Plywood.jpg',
+                img: 'Plywood-Poplar.jpg',
                 description: gettext("Plywood from an ordinary hardware store or arts and craft supply."),
                 hints: gettext("Watch out for dedicated laser plywood - it has better surface quality and only natural glue."),
                 safety_notes: gettext("Very fine structures may be subject of ignition."),
@@ -241,10 +239,7 @@ $(function () {
                 safety_notes: '',
             },
         };
-
         ///// EDIT MATERIAL SETTINGS ABOVE THIS LINE ////////`
-
-
     }
 
 
@@ -253,5 +248,4 @@ $(function () {
             [],
             [ /* ... */]
         ]);
-
 });
