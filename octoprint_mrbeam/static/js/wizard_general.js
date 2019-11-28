@@ -33,16 +33,6 @@ $(function() {
         self.isWelcome = MRBEAM_WIZARD_TO_SHOW === 'WELCOME';
         self.aboutToStart = true;
 
-        // WHATSNEW variables
-        self.uuid = ko.observable(null);
-        self.registered = ko.observable(null);
-        self.ping = ko.observable(false);
-        self.verified = ko.observable(false);
-        self.tryItButtonClicked = false;
-        self.findMrBeamWorks = ko.computed(function(){
-            return self.registered() && (self.ping() || self.verified())
-        });
-
         self.onAfterBinding = function(){
             $('#wizard_dialog div.modal-footer button.button-finish').text(gettext("Let's go!"));
             $('#wizard_dialog div.modal-footer div.text-center').hide();
@@ -63,24 +53,6 @@ $(function() {
             $('#wizard_dialog div.modal-footer button.button-finish').click(function(){
                 $('#wizard_dialog').modal('hide');
             });
-
-            // Todo iratxe: remove
-            if (self.isWhatsnew) {
-                self.verifyByFrontend();
-
-                $("#try_findmrbeam_btn").button().click(function () {
-                    self.tryItButtonClicked = true
-                });
-            }
-        };
-
-        self.onAllBound = function () {
-            // Todo iratxe: remove
-            if (self.isWhatsnew) {
-                self.uuid(self.settings.settings.plugins.findmymrbeam.uuid());
-                self.registered(self.settings.settings.plugins.findmymrbeam.registered());
-                self.ping(self.settings.settings.plugins.findmymrbeam.ping());
-            }
         };
 
         self.onCurtainOpened = function () {
@@ -125,28 +97,6 @@ $(function() {
                 CONFIG_FIRST_RUN = false
             }
             self._sendWizardAnalytics('finish', {})
-        };
-
-        self.verifyByFrontend = function() {
-            if (self.registered()) {
-                let registryUrl = "http://find.mr-beam.org/verify";
-                let requestData = {
-                    uuid: self.uuid(),
-                    frontendHost: document.location.host
-                };
-                $.get(registryUrl, requestData)
-                    .done(function (response) {
-                        self.verified(response['verified'] || false);
-                        self.verification_response = response
-                    })
-                    .fail(function () {
-                        self.verified(false);
-                        self.verification_response = null;
-
-                    })
-            } else {
-                self.verified(false);
-            }
         };
 
         self.isGoingToPreviousTab = function(current, next) {
