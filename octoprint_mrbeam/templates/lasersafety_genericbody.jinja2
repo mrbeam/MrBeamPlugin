@@ -15,6 +15,7 @@
 
 
 {% set safety_img = _('img/MrBeam_Sicherheitshinweise_EN.png') %}
+{% set laser_safety_de = _('/plugin/mrbeam/static/docs/LaserSafetyOriginalText.pdf') %}
 
 <p>
     <strong>{{ _('Heads up! Read the following, it is very important for your and other\'s health!') }}</strong>
@@ -50,7 +51,11 @@
     {{ _('Do NOT underestimate the risk of an unsecured access from the internet to your lasercutter.') }}
 </p>
 
-<p>
+<small class="muted">
+    {{ _('Disclaimer: Versions in other languages are a translation of the %(open)soriginal German%(close)s for information purposes only. In case of discrepancy, the German original will prevail.', open='<a href="%s" target="_blank">' % laser_safety_de, close='</a>')}}
+</small><br>
+
+<p style="margin-top: 25px;">
     {{ _('By proceeding you are agreeing, that') }}
 </p>
 <ul>
