@@ -427,6 +427,8 @@ class AnalyticsHandler(object):
 		self._current_cpu_data = Cpu(state='slicing', repeat=False)
 
 	def _event_slicing_done(self, event, payload):
+		self._logger.info('####################################### SLICING DONE!')
+
 		if self._current_cpu_data:
 			self._current_cpu_data.record_cpu_data()
 			self._add_cpu_data(dur=payload['time'])
@@ -434,7 +436,6 @@ class AnalyticsHandler(object):
 
 		payload = {
 			ak.Job.Duration.CURRENT: int(round(payload['time'])),
-			ak.Job.Duration.ESTIMATION: int(round(self._current_job_time_estimation))
 		}
 		self._add_job_event(ak.Job.Event.Slicing.DONE, payload=payload)
 
@@ -539,6 +540,12 @@ class AnalyticsHandler(object):
 
 	def _event_job_time_estimated(self, event, payload):
 		self._current_job_time_estimation = payload['job_time_estimation']
+
+		if self._current_job_id:
+			payload = {
+				ak.Job.Duration.ESTIMATION: int(round(self._current_job_time_estimation)),
+			}
+			self._add_job_event(ak.Job.Event.JOB_TIME_ESTIMATED, payload=payload)
 
 	def _add_other_plugin_data(self, event, event_payload):
 		try:
