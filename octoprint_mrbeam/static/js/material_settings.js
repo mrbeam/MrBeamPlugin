@@ -84,14 +84,14 @@ $(function () {
             },
             'Cardboard, corrugated single wave': {
                 name: gettext("Cardboard, single wave"),
-                img: 'Cardboard-Single-Wave.jpg',
+                img: 'Cardboard.jpg',
                 description: gettext("Ordinary cardboard like most packaging is made of."),
                 hints: gettext("Engraving looks great if just the first layer is lasered away, that the wave is visible underneath."),
                 safety_notes: gettext("Take care about ignitions. Never run a job slower than 180 mm/min!"),
             },
             'Cardboard, corrugated double wave': {
                 name: gettext("Cardboard, double wave"),
-                img: 'Cardboard-Double-Wave.jpg',
+                img: 'Cardboard.jpg',
                 description: gettext("Ordinary cardboard like strong packaging is made of."),
                 hints: gettext("Engraving looks great if just the first layer is lasered away, that the wave is visible underneath."),
                 safety_notes: gettext("Take care about ignitions. Never run a job slower than 180 mm/min!"),
@@ -133,7 +133,7 @@ $(function () {
             },
             'Jersey Fabric': {
                 name: gettext("Jersey Fabric"),
-                img: 'Jersey-Fabric.jpg',
+                img: 'Fabric.jpg',
                 description: gettext(''),
                 hints: gettext(''),
             },
