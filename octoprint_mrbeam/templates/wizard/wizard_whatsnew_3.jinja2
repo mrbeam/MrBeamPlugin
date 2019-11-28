@@ -4,12 +4,11 @@
 <div>
     <ul>
         <li><strong>{{ _("Dreamcut support") }}: </strong>
-            {{ _('There is a new member in the Mr Beam family. Don\'t you know about our new Mr Beam Dreamcut? Check it out in %(tag_open)swww.mr-beam.org%(tag_close)s',
-            tag_open='<a href="https://www.mr-beam.org/dreamcut/" target="_blank">',
-            tag_close='</a>')}}
+            {{ _('There is a new member in the Mr Beam family. Don\'t you know about our new Mr Beam Dreamcut?')}}
+            {{ _('Check it out in <a href="https://www.mr-beam.org/en/dreamcut?/utm_source=beamos&utm_medium=beamos&utm_campaign=whatsnew_dialog" target="_blank">www.mr-beam.org</a>') }}
         </li>
         <li><strong>{{ _("Mr Beam software Guided Tour") }}: </strong>{{ _('This tour will guide new users through their first laser job. You can start it anytime from the menu:') }}</li>
-            <img src="/plugin/mrbeam/static/img/whatsnew_dialog/guided_tour.png">
+            <img style="width: 30%;" src="/plugin/mrbeam/static/img/whatsnew_dialog/guided_tour.png">
         <li><strong>{{ _("Recent jobs") }}: </strong>{{ _('You can filter the design library to find your recent jobs and reuse them.') }}</li>
         <li>{{ _("The order of the cutting jobs is now always consistent with the order the designs were added.") }}</li>
         <li>{{ _("Fixed a bug where the fan did not stop after a laser job.") }}</li>

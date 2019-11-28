@@ -113,7 +113,7 @@ class WizardConfig:
 		whatsnew_wizard_tabs = dict(
 			wizard_whatsnew_0=dict(
 				type='wizard',
-				name=gettext("New materials!"),
+				name=gettext("New materials"),
 				required=True,
 				mandatory=False,
 				suffix='_whatsnew_0',
@@ -122,7 +122,7 @@ class WizardConfig:
 			),
 			wizard_whatsnew_1=dict(
 				type='wizard',
-				name=gettext("French software"),
+				name=gettext("New language"),
 				required=True,
 				mandatory=False,
 				suffix='_whatsnew_1',
