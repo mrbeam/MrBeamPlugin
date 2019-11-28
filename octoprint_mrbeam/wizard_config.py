@@ -4,7 +4,7 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 
 class WizardConfig:
 	def __init__(self, plugin):
-		self.WIZARD_VERSION = 16  # random number. but we can't go down anymore, just up.
+		self.WIZARD_VERSION = 17  # (v0.5.0) random number. but we can't go down anymore, just up.
 
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.wizard_config")
 
@@ -113,7 +113,7 @@ class WizardConfig:
 		whatsnew_wizard_tabs = dict(
 			wizard_whatsnew_0=dict(
 				type='wizard',
-				name=gettext("Improved find.mr-beam"),
+				name=gettext("New materials!"),
 				required=True,
 				mandatory=False,
 				suffix='_whatsnew_0',
@@ -122,7 +122,7 @@ class WizardConfig:
 			),
 			wizard_whatsnew_1=dict(
 				type='wizard',
-				name=gettext("New Languages!"),
+				name=gettext("French software"),
 				required=True,
 				mandatory=False,
 				suffix='_whatsnew_1',
@@ -131,7 +131,7 @@ class WizardConfig:
 			),
 			wizard_whatsnew_2=dict(
 				type='wizard',
-				name=gettext("Job Time Estimation"),
+				name=gettext("Brightness adjustment"),
 				required=True,
 				mandatory=False,
 				suffix='_whatsnew_2',

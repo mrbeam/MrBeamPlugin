@@ -39,9 +39,9 @@ $(function() {
 
             if (self.isWhatsnew) {
                 if (!window.mrbeam.isBeta()) {
-                    $('#wizard_dialog div.modal-header h3').text("✨ " + gettext("What's New") + " ✨");
+                    $('#wizard_dialog div.modal-header h3').text(gettext("What's New"));
                 } else {
-                    $('#wizard_dialog div.modal-header h3').text("✨ " + gettext("What's New in the Stable Channel") + " ✨");
+                    $('#wizard_dialog div.modal-header h3').text(gettext("What's New in the Stable Channel"));
                 }
             } else if (self.isWelcome) {
                 $('#wizard_dialog div.modal-header h3').text(gettext("Welcome dialog"));

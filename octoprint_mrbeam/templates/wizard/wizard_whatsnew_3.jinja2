@@ -3,10 +3,16 @@
 
 <div>
     <ul>
-        <li><strong>{{ _("Online support form") }}: </strong>{{ _('Contact us on our support portal directly from the Mr Beam II software!') }}</li>
-        <li><strong>{{ _("Focus reminder") }}: </strong>{{ _('Do you always forget to focus the laser head before starting a job? Then this reminder might come in handy. ;) ') }}</li>
-        <li>{{ _(".dxf file handling is now more stable.") }}</li>
-        <li>{{ _("General bug fixes for stability improvement.") }}</li>
+        <li><strong>{{ _("Dreamcut support") }}: </strong>
+            {{ _('There is a new member in the Mr Beam family. Don\'t you know about our new Mr Beam Dreamcut? Check it out in %(tag_open)swww.mr-beam.org%(tag_close)s',
+            tag_open='<a href="https://www.mr-beam.org/dreamcut/" target="_blank">',
+            tag_close='</a>')}}
+        </li>
+        <li><strong>{{ _("Mr Beam software Guided Tour") }}: </strong>{{ _('This tour will guide new users through their first laser job. You can start it anytime from the menu:') }}</li>
+            <img src="/plugin/mrbeam/static/img/whatsnew_dialog/guided_tour.png">
+        <li><strong>{{ _("Recent jobs") }}: </strong>{{ _('You can filter the design library to find your recent jobs and reuse them.') }}</li>
+        <li>{{ _("The order of the cutting jobs is now always consistent with the order the designs were added.") }}</li>
+        <li>{{ _("Fixed a bug where the fan did not stop after a laser job.") }}</li>
     </ul>
 </div>
 <div id="whatsnew_enjoy_this_experience">
