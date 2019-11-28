@@ -22,6 +22,7 @@ class HwMalfunctionHandler(object):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.hw_malfunction")
 		self._plugin = plugin
 		self._event_bus = plugin._event_bus
+		self._printer = plugin._printer
 
 		self._messages_to_show = []
 		self.hardware_malfunction = False
@@ -40,7 +41,7 @@ class HwMalfunctionHandler(object):
 		self.show_hw_malfunction_notification()
 
 	def report_hw_malfunction_from_plugin(self, malfunction_id, msg, payload=None):
-		if payload is None:
+		if not isinstance(payload, dict):
 			payload = {}
 
 		data = dict(
@@ -48,10 +49,16 @@ class HwMalfunctionHandler(object):
 			payload=payload,
 		)
 
-		dataset = dict(
-			id=malfunction_id,
-			data=data,
-		)
+		# dataset = dict(
+		# 	id=malfunction_id,
+		# 	data=data,
+		# )
+
+		dataset = {
+			malfunction_id: data
+		}
+
+		self._logger.info('############## report: {}'.format(dataset))
 
 		self.report_hw_malfunction(dataset, from_plugin=True)
 
@@ -62,6 +69,9 @@ class HwMalfunctionHandler(object):
 		new_msg = False
 		bottom_open = False
 		for malfunction_id, data in dataset.items():
+
+			self._logger.info('#################### {}, {}'.format(malfunction_id, data))
+
 			data = data or {}
 			msg = data.get('msg', malfunction_id)
 			self._plugin.fire_event(MrBeamEvents.HARDWARE_MALFUNCTION, dict(id=malfunction_id, msg=msg, data=data))

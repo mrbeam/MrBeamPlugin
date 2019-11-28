@@ -28,6 +28,7 @@ class CompressorHandler(object):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.compressorhandler")
 		self._plugin = plugin
 		self._event_bus = plugin._event_bus
+		self._printer = plugin._printer
 
 		self._iobeam = None
 		self._analytics_handler = None
@@ -72,8 +73,9 @@ class CompressorHandler(object):
 
 	def set_compressor(self, value, set_nominal_value=True):
 		if self.has_compressor():
-			self._logger.info("Compressor set to %s (nominal state before: %s, real state: %s)",
-			                  value, self._compressor_nominal_state, self._compressor_current_state)
+			self._logger.info(
+				"Compressor set to %s (nominal state before: %s, real state: %s)",
+				value, self._compressor_nominal_state, self._compressor_current_state)
 			if value > self.COMPRESSOR_MAX:
 				value = self.COMPRESSOR_MAX
 			if value < self.COMPRESSOR_MIN:
@@ -118,11 +120,16 @@ class CompressorHandler(object):
 				except:
 					self._logger.exception("Cant convert compressor state to int from compressor_dynamic: %s", dataset)
 
-			if 'rpm_actual' in dataset:
-				if dataset['rpm_actual'] == 0:
+			# todo iratxe: 	REMOVE!!! ONLY FOR TESTING!
+			dataset['rpm_actual'] = 0
+
+			if 'rpm_actual' in dataset and (self._printer.is_printing() or self._printer.is_paused()):
+				if dataset['rpm_actual'] == 0:  # todo iratxe: and if there is an ongoing job!!!
+					self._logger.info('################################# pre rpm: {}'.format(self._num_rpm_0))
 					self._num_rpm_0 += 1
 
 					if self._num_rpm_0 >= 5:
+						self._logger.info('################################# after rpm: {}'.format(self._num_rpm_0))
 						self._hw_malfunction_handler.report_hw_malfunction_from_plugin(
 							malfunction_id='compressor',
 							msg='compressor_rpm_0')
