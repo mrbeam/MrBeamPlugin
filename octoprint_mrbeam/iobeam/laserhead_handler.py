@@ -18,6 +18,7 @@ def laserheadHandler(plugin):
 
 class LaserheadHandler(object):
 	LASER_POWER_GOAL_DEFAULT = 950
+	LASER_POWER_GOAL_MAX = 1300
 	LASERHEAD_SERIAL_REGEXP = re.compile("^[0-9a-f-]{36}$")
 
 	def __init__(self, plugin):
@@ -160,7 +161,7 @@ class LaserheadHandler(object):
 			p_85 = power_calibration.get('power_85', None)
 			target_power = power_calibration.get('target_power', self.LASER_POWER_GOAL_DEFAULT)
 
-			if target_power < 0 or target_power >= 1300:
+			if target_power < 0 or target_power >= self.LASER_POWER_GOAL_MAX:
 				target_power = self.LASER_POWER_GOAL_DEFAULT
 
 		correction_factor = 1
