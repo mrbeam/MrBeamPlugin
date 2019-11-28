@@ -427,7 +427,6 @@ class AnalyticsHandler(object):
 		self._current_cpu_data = Cpu(state='slicing', repeat=False)
 
 	def _event_slicing_done(self, event, payload):
-
 		if self._current_cpu_data:
 			self._current_cpu_data.record_cpu_data()
 			self._add_cpu_data(dur=payload['time'])
