@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2019-10-09 11:10+0200\n"
-"PO-Revision-Date: 2019-11-27 15:30+0100\n"
+"PO-Revision-Date: 2019-11-28 09:57+0100\n"
 "Last-Translator: \n"
 "Language: fr_FR\n"
 "Language-Team: \n"
@@ -711,14 +711,13 @@ msgid ""
 "working with the%(br)s Mr Beam II. Thank you!%(br)s%(open)sGo to analytics "
 "settings%(close)s"
 msgstr ""
-"Comme vous êtes actuellement sur notre version bêta, vous nous aideriez "
-"énormément à partager vos connaissances sur les tâches que vous effectuez, afin "
-"que nous puissions améliorer l'expérience globale de Mr Beam II. Merci!%(br)s"
-"%(open)sAller aux paramètres de partages de données%(close)s"
+"Comme vous êtes actuellement sur notre canal Beta, votre expérience avec Mr Beam "
+"nous interesse grandement puisque nous cherchons à en améliorer l'utilisation "
+"globale. Merci!%(br)s%(open)sAller aux paramètres de partages de données%(close)s"
 
 #: octoprint_mrbeam/static/js/mrbeam.js:204
 msgid "You're using Mr Beam's beta software channel. "
-msgstr "Vous utilisez la version bêta de Mr Beam. "
+msgstr "Vous utilisez le canal de diffusion beta de Mr Beam. "
 
 #: octoprint_mrbeam/static/js/mrbeam.js:205
 #, python-format
@@ -728,8 +727,8 @@ msgid ""
 "channel in the software update settings.%(br)s%(br)s Please don't forget to%(br)s"
 "%(link2_open)stell us about your experience%(link2_close)s."
 msgstr ""
-"Découvrez%(br)s%(link1_open)sles nouveautés de la version bêta.%(link1_close)s"
-"%(br)s%(br)sSi vous rencontrez des problèmes, vous pouvez toujours revenir à la "
+"Découvrez%(br)s%(link1_open)sles nouveautés du canal bêta.%(link1_close)s%(br)s"
+"%(br)sSi vous rencontrez des problèmes, vous pouvez toujours revenir à la "
 "version stable dans l'onglet de mise à jour logiciel.%(br)s%(br)sN'hésitez pas à "
 "nous %(link2_open)sfaire part de votre expérience%(link2_close)s."
 
@@ -1134,7 +1133,7 @@ msgstr "Quoi de Neuf"
 
 #: octoprint_mrbeam/static/js/wizard_general.js:30
 msgid "What's New in the Stable Channel"
-msgstr "Les nouveautés de la version Stable"
+msgstr "Les nouveautés du Canal Stable"
 
 #: octoprint_mrbeam/static/js/working_area.js:145
 msgid "Rectangle"
@@ -2080,7 +2079,7 @@ msgstr "N° de série"
 #: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:5
 #: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:47
 msgid "Login"
-msgstr "Pseudo"
+msgstr "S'identifier"
 
 #: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:26
 #: octoprint_mrbeam/templates/loginscreen_viewmodel.jinja2:28
@@ -2317,7 +2316,7 @@ msgstr "Canal logiciel"
 
 #: octoprint_mrbeam/templates/software_channel_selector.jinja2:6
 msgid "Stable Channel"
-msgstr "Version stable"
+msgstr "Canal Stable"
 
 #: octoprint_mrbeam/templates/software_channel_selector.jinja2:7
 msgid ""
@@ -2329,7 +2328,7 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/software_channel_selector.jinja2:10
 msgid "Beta Channel"
-msgstr "Version bêta"
+msgstr "Canal Beta"
 
 #: octoprint_mrbeam/templates/software_channel_selector.jinja2:11
 msgid ""
@@ -2338,11 +2337,11 @@ msgid ""
 "Use this if you are curious, you can always switch back to the stable channel if "
 "you experience errors."
 msgstr ""
-"Recevez les derniers ajouts à Mr Beam ! Dans cette version, vous pouvez essayer "
-"les nouvelles fonctionnalités avant même qu'elles ne soient officiellement "
-"publiées, avec des mises à jour plus fréquentes. Utilisez la si vous êtes "
-"curieux; vous pouvez toujours revenir au canal stable si vous rencontrez des "
-"erreurs."
+"Recevez les derniers ajouts à Mr Beam ! Ce canal de diffusion vous permet "
+"d'essayer les nouvelles fonctionnalités avant même qu'elles ne soient "
+"officiellement publiées, agrémenté de mises à jour plus fréquentes. Utilisez la "
+"si vous êtes curieux; vous pouvez toujours revenir à la version stable si vous "
+"rencontrez des erreurs."
 
 #: octoprint_mrbeam/templates/tab_designlib.jinja2:9
 msgid "Files"
@@ -2793,11 +2792,11 @@ msgstr "Plugin Mr Beam"
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:28
 msgid "Image fingerprint"
-msgstr "Signature de l'image"
+msgstr "Image fingerprint"
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:29
 msgid "Software channel"
-msgstr "Version logicielle"
+msgstr "Canal logiciel"
 
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:30
 msgid "Environment"
