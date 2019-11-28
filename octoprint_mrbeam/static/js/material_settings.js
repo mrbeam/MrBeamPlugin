@@ -41,8 +41,8 @@ $(function () {
             'Acrylic': {
                 name: gettext("Acrylic"),
                 img: 'Acrylic.jpg',
-                description: gettext("Acrylic"),
-                hints: gettext("Acrylic"),
+                description: gettext(''),
+                hints: gettext(''),
             },
             'Anodized Aluminum': {
                 name: gettext("Anodized Aluminum"),
@@ -99,8 +99,8 @@ $(function () {
             'Cork': {
                 name: gettext("Cork"),
                 img: 'Cork.jpg',
-                description: gettext("Cork"),
-                hints: gettext("Cork"),
+                description: gettext(''),
+                hints: gettext(''),
             },
             'Fabric Cotton': null,
             'Fabric Polyester': null,
@@ -128,14 +128,14 @@ $(function () {
             'Grey Cardboard': {
                 name: gettext("Grey Cardboard"),
                 img: 'Grey-Cardboard.jpg',
-                description: gettext("Grey Cardboard"),
-                hints: gettext("Grey Cardboard"),
+                description: gettext(''),
+                hints: gettext(''),
             },
             'Jersey Fabric': {
                 name: gettext("Jersey Fabric"),
                 img: 'Jersey-Fabric.jpg',
-                description: gettext("Jersey Fabric"),
-                hints: gettext("Jersey Fabric"),
+                description: gettext(''),
+                hints: gettext(''),
             },
             'Kraftplex': {
                 name: gettext("Kraftplex"),
@@ -147,32 +147,33 @@ $(function () {
             'Kraftplex Wave': {
                 name: gettext("Kraftplex Wave"),
                 img: 'Kraftplex-Wave.jpg',
-                description: gettext("Kraftplex Wave"),
+                description: gettext(''),
                 hints: gettext("Kraftplex (Wave)"),
             },
             'Latex':  {
                 name: gettext("Latex"),
                 img: 'Latex.jpg',
-                description: gettext("Latex"),
-                hints: gettext("Latex"),
+                description: gettext(''),
+                hints: gettext(''),
             },
             'Leather': {
                 name: gettext("Leather"),
                 img: 'Leather.jpg',
-                description: gettext("Leather"),
-                hints: gettext("Leather"),
+                description: gettext(''),
+                hints: gettext(''),
             },
             'Linoleum': {
                 name: gettext("Linoleum"),
                 img: 'Linoleum.jpg',
-                description: gettext("Linoleum"),
-                hints: gettext("Linoleum"),
+                description: gettext(''),
+                hints: gettext(''),
             },
             'Mirror': {
                 name: gettext("Mirror"),
                 img: 'Mirror.jpg',
-                description: gettext("Mirror"),
-                hints: gettext("Mirror"),
+                description: gettext(''),
+                hints: gettext(''),
+                safety_notes: gettext("Mirrors can only be engraved from the back, otherwise the laser would be reflected."),
             },
             'Paper': {
                 name: gettext("Paper"),
@@ -181,30 +182,23 @@ $(function () {
                 hints: '',
                 safety_notes: gettext("Very fine structures may be subject of ignition."),
             },
-            // TODO : Choose between polyurethane and Polypropylene
-            'Polyethylene Foam': {
+            'Foam': {
                 name: gettext("Polyethylene Foam"),
                 img: 'Polyethylene-Foam.jpg',
-                description: gettext("Polyethylene Foam"),
-                hints: gettext("Polyethylene Foam"),
-            },
-            'Polyurethane Foam': {
-                name: gettext("Polyurethane Foam"),
-                img: 'Polyurethane-Foam.jpg',
-                description: gettext("Polyurethane Foam"),
-                hints: gettext("Polyurethane Foam"),
+                description: gettext(''),
+                hints: gettext(''),
             },
             'Polypropylene': {
                 name: gettext("Polypropylene"),
                 img: 'Polypropylene.jpg',
-                description: gettext("Polypropylene"),
-                hints: gettext("Polypropylene"),
+                description: gettext(''),
+                hints: gettext(''),
             },
             'Plywood Birch': {
                 name: gettext("Plywood Birch"),
                 img: 'Plywood-Birch.jpg',
-                description: gettext("Plywood Birch"),
-                hints: gettext("Plywood Birch"),
+                description: gettext(''),
+                hints: gettext(''),
             },
             'Plywood Poplar': {
                 name: gettext("Plywood Poplar"),
@@ -216,20 +210,20 @@ $(function () {
             'Slate': {
                 name: gettext("Slate"),
                 img: 'Slate.jpg',
-                description: gettext("Slate"),
-                hints: gettext("Slate"),
+                description: gettext(''),
+                hints: gettext(''),
             },
             'Snappap': {
                 name: gettext("Snappap"),
                 img: 'Snappap.jpg',
-                description: gettext("Snappap"),
-                hints: gettext("Snappap"),
+                description: gettext(''),
+                hints: gettext(''),
             },
             'Vegan Leather': {
                 name: gettext("Vegan Leather"),
                 img: 'Vegan-Leather.jpg',
-                description: gettext("Vegan Leather"),
-                hints: gettext("Vegan Leather"),
+                description: gettext(''),
+                hints: gettext(''),
             },
             'Wellboard': {
                 name: gettext("Wellboard"),
