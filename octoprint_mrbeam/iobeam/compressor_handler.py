@@ -120,10 +120,11 @@ class CompressorHandler(object):
 				except:
 					self._logger.exception("Cant convert compressor state to int from compressor_dynamic: %s", dataset)
 
-			# todo iratxe: 	REMOVE!!! ONLY FOR TESTING!
-			dataset['rpm_actual'] = 0
-
 			if 'rpm_actual' in dataset and (self._printer.is_printing() or self._printer.is_paused()):
+				self._logger.info('################### is printing or paused')
+				# todo iratxe: 	REMOVE!!! ONLY FOR TESTING!
+				dataset['rpm_actual'] = 0
+
 				if dataset['rpm_actual'] == 0:  # todo iratxe: and if there is an ongoing job!!!
 					self._logger.info('################################# pre rpm: {}'.format(self._num_rpm_0))
 					self._num_rpm_0 += 1

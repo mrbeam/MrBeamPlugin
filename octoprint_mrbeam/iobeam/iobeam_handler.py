@@ -842,7 +842,8 @@ class IoBeamHandler(object):
 		:return: error count
 		"""
 		try:
-			self._hw_malfunction_handler.report_hw_malfunction(dataset)
+			if dataset:
+				self._hw_malfunction_handler.report_hw_malfunction(dataset)
 		except:
 			self._logger.exception("Exception in _handle_hw_malfunction")
 		return 0

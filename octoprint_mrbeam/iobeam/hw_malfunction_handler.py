@@ -63,6 +63,8 @@ class HwMalfunctionHandler(object):
 		self.report_hw_malfunction(dataset, from_plugin=True)
 
 	def report_hw_malfunction(self, dataset, from_plugin=False):
+		self._logger.info('####################### REPORT! {}'.format(dataset))
+
 		self.hardware_malfunction = True
 		self._logger.warn("hardware_malfunction: %s", dataset)
 

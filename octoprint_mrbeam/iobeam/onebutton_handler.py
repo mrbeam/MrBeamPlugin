@@ -216,7 +216,6 @@ class OneButtonHandler(object):
 				self._logger.debug("onEvent() INTERLOCK_OPEN: not printing, nothing to do. printer state is: %s", self._printer.get_state_id())
 
 		elif event == OctoPrintEvents.SLICING_STARTED:
-
 			self.hardware_malfunction_notified = False
 
 		# OctoPrint 1.3.4 doesn't provide the file name in FILE_SELECTED anymore, so we need to get it here and save it for later.
