@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2019-11-29 12:14+0100\n"
-"PO-Revision-Date: 2019-11-29 15:09+0100\n"
+"PO-Revision-Date: 2019-11-29 15:32+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -93,9 +93,9 @@ msgid ""
 "Module 'iobeam' is outdated. Please run Software Update from 'Settings' > "
 "'Software Update' before you start a laser job."
 msgstr ""
-"Le module 'iobeam' est obsolète. Veuillez exécuter la mise à jour logicielle "
-"à partir de 'Paramètres' >'Mise à jour logicielle' avant de commencer une "
-"nouvelle gravure ou découpe."
+"Le module 'iobeam' est obsolète. Veuillez mettre BeamOS à jour à partir de "
+"'Paramètres' >'Mise à Jour' avant de commencer une nouvelle gravure ou "
+"découpe."
 
 #: octoprint_mrbeam/iobeam/iobeam_handler.py:823
 msgid ""
@@ -103,8 +103,8 @@ msgid ""
 "'Software Update' before you start a laser job."
 msgstr ""
 "Le module 'iobeam' est obsolète. Veuillez exécuter la mise à jour logicielle "
-"à partir de 'Paramètres' >'Mise à jour logicielle' avant de commencer une "
-"nouvelle gravure ou découpe."
+"à partir de 'Paramètres' >'Mise à Jour' avant de commencer une nouvelle "
+"gravure ou découpe."
 
 #: octoprint_mrbeam/iobeam/iobeam_handler.py:831
 msgid ""
@@ -113,9 +113,9 @@ msgid ""
 "start a laser job."
 msgstr ""
 "Le module 'MrBeam Plugin' est obsolète et la version de 'iobeam' est plus "
-"récente que prévu.  Veuillez exécuter la mise à jour logicielle à partir de "
-"'Paramètres' >'Mise à jour logicielle' avant de commencer une nouvelle "
-"gravure ou découpe."
+"récente que prévu. Veuillez exécuter la mise à jour logicielle à partir de "
+"'Paramètres' >'Mise à Jour' avant de commencer une nouvelle gravure ou "
+"découpe."
 
 #: octoprint_mrbeam/iobeam/iobeam_handler.py:853
 #: octoprint_mrbeam/iobeam/iobeam_handler.py:1029
@@ -170,9 +170,7 @@ msgstr ""
 
 #: octoprint_mrbeam/iobeam/onebutton_handler.py:390
 msgid "iobeam version is outdated. Please try Software update."
-msgstr ""
-"la version d'iobeam est dépassée. Veuillez essayer la mise à jour du "
-"logiciel."
+msgstr "la version d'iobeam est dépassée. Veuillez mettre le logiciel à jour."
 
 #: octoprint_mrbeam/iobeam/onebutton_handler.py:391
 #: octoprint_mrbeam/static/js/settings/camera_calibration.js:179
@@ -837,9 +835,8 @@ msgid ""
 msgstr ""
 "Découvrez%(br)s%(link1_open)sles nouveautés du canal bêta.%(link1_close)s"
 "%(br)s%(br)sSi vous rencontrez des problèmes, vous pouvez toujours revenir à "
-"la version stable dans l'onglet de mise à jour logiciel.%(br)s"
-"%(br)sN'hésitez pas à nous %(link2_open)sfaire part de votre expérience"
-"%(link2_close)s."
+"la version stable dans l'onglet \"Mise à Jour\".%(br)s%(br)sN'hésitez pas à "
+"nous %(link2_open)sfaire part de votre expérience%(link2_close)s."
 
 #: octoprint_mrbeam/static/js/ready_to_laser_viewmodel.js:166
 msgid "minute"
@@ -2091,7 +2088,7 @@ msgid ""
 "It must be operated <strong>only</strong> by persons who are aware of the "
 "risks and dangers of the operation."
 msgstr ""
-"Il doit <strong>uniquement</strong> être utilisé par des personnes "
+"La machine doit <strong>uniquement</strong> être utilisé par des personnes "
 "conscientes des risques et des dangers liés à son opération."
 
 #: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:49
@@ -2136,7 +2133,7 @@ msgstr "En procédant, vous acce de ce qui suit"
 
 #: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:65
 msgid "I understand that laser light is potentially dangerous. "
-msgstr "Je comprends que la lumière du laser est potentiellement dangereuse "
+msgstr "Je comprends que la lumière du laser est potentiellement dangereuse. "
 
 #: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:66
 msgid ""
@@ -2153,7 +2150,7 @@ msgid ""
 "devices. "
 msgstr ""
 "Cette découpeuse laser vous protège du laser grâce à un boîtier de sécurité, "
-"un boîtier de sécurité, des circuits électroniques de sécurité, un système "
+"un couvercle de sécurité, des circuits électroniques de sécurité, un système "
 "d'échappement et autres dispositifs de sécurité. "
 
 #: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:74
