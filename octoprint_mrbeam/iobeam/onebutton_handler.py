@@ -75,13 +75,13 @@ class OneButtonHandler(object):
 		self.behave_cooling_state = False
 		self.intended_pause = False
 
-		self.hardware_malfunction = False
 		self.hardware_malfunction_notified = False
 
 	def _on_mrbeam_plugin_initialized(self, event, payload):
 		self._temperature_manager = self._plugin.temperature_manager
 		self._iobeam = self._plugin.iobeam
 		self._dust_manager = self._plugin.dust_manager
+		self._hw_malfunction = self._plugin.hw_malfunction_handler
 
 		self._subscribe()
 
@@ -261,9 +261,9 @@ class OneButtonHandler(object):
 			self.unset_ready_to_laser(lasering=False)
 
 		elif event == MrBeamEvents.HARDWARE_MALFUNCTION:
-			self.hardware_malfunction = True
 			# iobeam could set stop_laser to false to avoid cancellation of current laserjob
 			if payload['data'].get('stop_laser', True) and self._printer.get_state_id() in (self.PRINTER_STATE_PRINTING, self.PRINTER_STATE_PAUSED):
+				self._logger.info('Hardware Malfunction: cancelling laser job!')
 				self._printer.cancel_print()
 
 	def is_cooling(self):
@@ -311,9 +311,9 @@ class OneButtonHandler(object):
 		self.ready_to_laser_flag = False
 		if not lasering and was_ready_to_laser:
 			self._fireEvent(MrBeamEvents.READY_TO_LASER_CANCELED)
-		if self.hardware_malfunction and not self.hardware_malfunction_notified:
+		if self._hw_malfunction.hardware_malfunction and not self.hardware_malfunction_notified:
 			self._logger.error("Hardware Malfunction: Not possible to start laser job.")
-			self._plugin.iobeam.send_hardware_malfunction_frontend_notification()
+			self._hw_malfunction.show_hw_malfunction_notification(force=True)
 			self.hardware_malfunction_notified = True
 
 	def is_ready_to_laser(self, rtl_expected_to_be_there=True):
@@ -322,7 +322,7 @@ class OneButtonHandler(object):
 			   and self.ready_to_laser_flag \
 			   and (not rtl_expected_to_be_there or self.ready_to_laser_file is not None) \
 			   and self.print_started < 0 \
-			   and not self.hardware_malfunction
+			   and not self._hw_malfunction.hardware_malfunction
 
 	def is_intended_pause(self):
 		"""
@@ -376,7 +376,7 @@ class OneButtonHandler(object):
 
 	def _check_system_integrity(self):
 		'''
-		We're going to need a concept of what to do if something here failes...
+		We're going to need a concept of what to do if something here fails...
 		:return:
 		'''
 		temp_ok = self._temperature_manager.is_temperature_recent()
@@ -391,12 +391,11 @@ class OneButtonHandler(object):
 			self._plugin.notify_frontend(title=gettext("Error"), text=msg, type='error')
 			raise Exception(msg)
 
-		if self.hardware_malfunction and not self.hardware_malfunction_notified:
+		if self._hw_malfunction.hardware_malfunction and not self.hardware_malfunction_notified:
 			self._logger.error("Hardware Malfunction: Not possible to start laser job.")
 			self._plugin._replay_stored_frontend_notification()
 			self.hardware_malfunction_notified = True
 			raise Exception("Hardware Malfunction: Not possible to start laser job.")
-
 
 	def _start_ready_to_laser_timer(self):
 		self.ready_to_laser_timer = threading.Timer(self.READY_TO_PRINT_CHECK_INTERVAL, self._check_if_still_ready_to_laser)

@@ -2269,40 +2269,6 @@ input.search-query,
   bottom: 0;
 }
 
-
-/*
-* === WHAT'S NEW WIZARD ===
-*/
-.whatsnew-info-sentence {
-  color: #0088cc;
-}
-
-.whatsnew-bottom-line-note {
-  margin-top: 25px;
-  color: #999;
-  font-size: 85%;
-}
-
-#whatsnew_find_mrbeam_screenshot {
-  margin: 0 0 10px -16px;
-  width: 530px;
-}
-
-#whatsnew_german_spanish {
-  width: 450px;
-  margin-top: -30px;
-}
-
-#job_time_estimation_whatsnew {
-  height: 320px;
-  margin: 0 0 10px 55px;
-}
-
-#whatsnew_enjoy_this_experience {
-  font-weight: bold;
-  margin: 50px 0 0 170px;
-}
-
 /*
 * === FRESHDESK FEEDBACK WIDGET ===
 */

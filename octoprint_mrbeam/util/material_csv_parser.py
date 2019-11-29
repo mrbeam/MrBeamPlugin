@@ -85,14 +85,17 @@ def parse_csv(path = None, laserhead=MRBEAM):
 
             try:
                 if type(thickness_or_engrave) is str:
-                    thickness = float(thickness_or_engrave.replace(',', '.'))
+                    thickness = float(thickness_or_engrave.strip().replace(',', '.'))
                 else:
                     thickness = float(thickness_or_engrave)
                 settingname = 'cut'
-                settings = [{'thicknessMM': thickness, 'cut_i': int(intensity), 'cut_f': int(speed), 'cut_p': int(passes), 'cut_compressor': int(compressor_lvl)}]
-            except ValueError:
+                try:
+                    settings = [{'thicknessMM': thickness, 'cut_i': int(intensity), 'cut_f': int(speed), 'cut_p': int(passes), 'cut_compressor': int(compressor_lvl)}]
+                except ValueError as e:
+                    raise Exception("Can not handle line {}: exception: \"{}\", row: {}".format(i, e, row))
+            except ValueError as e:
                 if not thickness_or_engrave.lower().__contains__('engrav'):
-                    raise Exception("Did not understand if line {} is an engraving or cutting job. Type of elm is {} : {}".format(i, type(thickness_or_engrave), thickness_or_engrave))
+                    raise Exception("Did not understand if line {} is an engraving or cutting job. Type of elm is {}: '{}' row: {}, original exception: \"{}\"".format(i, type(thickness_or_engrave), thickness_or_engrave, row, e))
                 dithering = True if dithering == 'yes' else False
                 pierce_time = pierce_time or 0
                 settings = {'eng_compressor': int(compressor_lvl),

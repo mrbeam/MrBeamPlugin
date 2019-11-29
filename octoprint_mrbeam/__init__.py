@@ -30,6 +30,7 @@ from octoprint_mrbeam.iobeam.interlock_handler import interLockHandler
 from octoprint_mrbeam.iobeam.lid_handler import lidHandler
 from octoprint_mrbeam.iobeam.temperature_manager import temperatureManager
 from octoprint_mrbeam.iobeam.dust_manager import dustManager
+from octoprint_mrbeam.iobeam.hw_malfunction_handler import hwMalfunctionHandler
 from octoprint_mrbeam.iobeam.laserhead_handler import laserheadHandler
 from octoprint_mrbeam.iobeam.compressor_handler import compressor_handler
 from octoprint_mrbeam.analytics.analytics_handler import analyticsHandler
@@ -180,6 +181,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self.iobeam = ioBeamHandler(self)
 		self.temperature_manager = temperatureManager(self)
 		self.dust_manager = dustManager(self)
+		self.hw_malfunction_handler = hwMalfunctionHandler(self)
 		self.laserhead_handler = laserheadHandler(self)
 		self.compressor_handler = compressor_handler(self)
 		self.wizard_config = WizardConfig(self)
@@ -601,7 +603,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def get_wizard_details(self):
 		details = dict(
-			links=self.wizard_config.get_welcome_wizard_link_ids(),
+			links=self.wizard_config.get_current_wizard_link_ids(),
 		)
 		return details
 
@@ -1710,7 +1712,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			)
 		)
 
-	def notify_frontend(self, title, text, type=None, sticky=False, delay=None, replay_when_new_client_connects=False):
+	def notify_frontend(self, title, text, type=None, sticky=False, delay=None, replay_when_new_client_connects=False, force=False):
 		"""
 		Show a frontend notification to the user. (PNotify)
 		# TODO: All these messages will not be translated to any language. To change this we need:
@@ -1746,7 +1748,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			else:
 				send =False
 
-		if send:
+		if send or force:
 			self._plugin_manager.send_plugin_message("mrbeam", dict(frontend_notification = notification))
 
 	def _replay_stored_frontend_notification(self):

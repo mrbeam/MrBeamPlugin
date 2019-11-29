@@ -351,15 +351,6 @@ h4.job_title{
     text-align: center;
 }
 
-.job_row input[type="number"]::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-.job_row input[type="number"].param_passes::-webkit-inner-spin-button {
-    -webkit-appearance: inner-spin-button;
-}
-
 .job_row label.control-label {cursor: default; }
 
 .job_row .form-horizontal .control-group {

@@ -280,11 +280,12 @@ class AnalyticsHandler(object):
 			self._logger.exception('Exception during add_camera_session: {}'.format(e), analytics=True)
 
 	# IOBEAM_HANDLER
-	def add_iobeam_message_log(self, iobeam_version, message):
+	def add_iobeam_message_log(self, iobeam_version, message, from_plugin=False):
 		try:
 			iobeam_data = {
 				ak.Log.Iobeam.VERSION: iobeam_version,
 				ak.Log.Iobeam.MESSAGE: message,
+				ak.Log.Iobeam.FROM_PLUGIN: from_plugin,
 			}
 
 			self._add_log_event(ak.Log.Event.IOBEAM, payload=iobeam_data)
@@ -434,7 +435,6 @@ class AnalyticsHandler(object):
 
 		payload = {
 			ak.Job.Duration.CURRENT: int(round(payload['time'])),
-			ak.Job.Duration.ESTIMATION: int(round(self._current_job_time_estimation))
 		}
 		self._add_job_event(ak.Job.Event.Slicing.DONE, payload=payload)
 
@@ -539,6 +539,12 @@ class AnalyticsHandler(object):
 
 	def _event_job_time_estimated(self, event, payload):
 		self._current_job_time_estimation = payload['job_time_estimation']
+
+		if self._current_job_id:
+			payload = {
+				ak.Job.Duration.ESTIMATION: int(round(self._current_job_time_estimation)),
+			}
+			self._add_job_event(ak.Job.Event.JOB_TIME_ESTIMATED, payload=payload)
 
 	def _add_other_plugin_data(self, event, event_payload):
 		try:
