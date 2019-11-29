@@ -280,11 +280,12 @@ class AnalyticsHandler(object):
 			self._logger.exception('Exception during add_camera_session: {}'.format(e), analytics=True)
 
 	# IOBEAM_HANDLER
-	def add_iobeam_message_log(self, iobeam_version, message):
+	def add_iobeam_message_log(self, iobeam_version, message, from_plugin=False):
 		try:
 			iobeam_data = {
 				ak.Log.Iobeam.VERSION: iobeam_version,
 				ak.Log.Iobeam.MESSAGE: message,
+				ak.Log.Iobeam.FROM_PLUGIN: from_plugin,
 			}
 
 			self._add_log_event(ak.Log.Event.IOBEAM, payload=iobeam_data)

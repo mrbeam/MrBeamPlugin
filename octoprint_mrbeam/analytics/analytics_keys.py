@@ -172,6 +172,7 @@ class AnalyticsKeys:
 		class Iobeam:
 			VERSION = 'version'
 			MESSAGE = 'message'
+			FROM_PLUGIN = 'from_plugin'
 
 		class Cpu:
 			TEMP = 'temp'
