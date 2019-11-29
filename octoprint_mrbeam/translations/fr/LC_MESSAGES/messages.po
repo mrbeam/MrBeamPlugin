@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-11-29 10:45+0100\n"
-"PO-Revision-Date: 2019-11-29 14:57+0100\n"
+"POT-Creation-Date: 2019-11-29 12:14+0100\n"
+"PO-Revision-Date: 2019-11-29 15:09+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -535,10 +535,9 @@ msgid "Ordinary cardboard like most packaging is made of."
 msgstr "Carton ordinaire utilisé dans la plupart des emballages."
 
 #: octoprint_mrbeam/static/js/material_settings.js:89
-#: octoprint_mrbeam/static/js/material_settings.js:96
 msgid ""
-"Engraving looks great if just the first layer is lasered away, that the wave "
-"is visible underneath."
+"Engraving looks great if just the first layer is lasered away, so that the "
+"wave is visible underneath."
 msgstr ""
 "La gravure est parfaite si la première couche est enlevée au laser, afin que "
 "l'ondulation en dessous soit visible."
@@ -557,6 +556,14 @@ msgstr "Carton, double ondulation"
 #: octoprint_mrbeam/static/js/material_settings.js:95
 msgid "Ordinary cardboard like strong packaging is made of."
 msgstr "Carton ordinaire utilisé pour des emballages solides."
+
+#: octoprint_mrbeam/static/js/material_settings.js:96
+msgid ""
+"Engraving looks great if just the first layer is lasered away, that the wave "
+"is visible underneath."
+msgstr ""
+"La gravure est parfaite si la première couche est enlevée au laser, afin que "
+"l'ondulation en dessous soit visible."
 
 #: octoprint_mrbeam/static/js/material_settings.js:100
 msgid "Cork"
@@ -906,7 +913,7 @@ msgstr "Ce dont vous avez besoin pour cette visite :"
 
 #: octoprint_mrbeam/static/js/tour_viewmodel.js:54
 msgid ""
-"Have a piece of felt by hand. Best to use the one that came with your Mr "
+"Have a piece of felt on hand. Best to use the one that came with your Mr "
 "Beam II."
 msgstr ""
 "Prenez un morceau de feutre. Il est préférable d'utiliser celui fourni avec "
@@ -1446,11 +1453,11 @@ msgstr "Réglez l'épaisseur du matériel."
 
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:74
 msgid ""
-"When cutting the material it is important to tell Mr Beam the thickness that "
-"he can select the correct laser settings."
+"When cutting the material it is important to tell Mr Beam the thickness so "
+"that it can select the correct laser settings."
 msgstr ""
 "Lors de la découpe du matériau, il est important d'indiquer à Mr Beam "
-"l'épaisseur qu'il peut sélectionner les paramètres laser corrects."
+"l'épaisseur afin qu'il puisse sélectionner les paramètres laser corrects."
 
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:75
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:103
@@ -1514,10 +1521,11 @@ msgstr "Les pixels foncés/noirs utilisent la valeur (supérieure) à droite."
 
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:176
 msgid ""
-"Equal values do not vary the laser intensity related to the pixel brightness."
+"If you set both ends of the range to the same value, then the laser "
+"intensity won't change no matter the pixel brightness."
 msgstr ""
-"Des valeurs égales empêchent la variation d'intensité du laser selon la "
-"luminosité des pixels."
+"Des valeurs égales d'intensité maximale et minimale empêchent la variation "
+"d'intensité du laser quelque  la luminosité des pixels."
 
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:177
 msgid "Intensity range"
@@ -1594,10 +1602,9 @@ msgstr ""
 "un nouveau tracé."
 
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:245
-#: octoprint_mrbeam/templates/conversion_dialog.jinja2:367
 msgid ""
-"For some materials Mr Beam II needs more energy to do the first pierce of a "
-"cut or engraving than it needs for the ongoing cutting/engraving."
+"For some materials Mr Beam II needs more energy to do the first piercing of "
+"a cut or engraving than it needs for the ongoing cutting/engraving."
 msgstr ""
 "Pour certains matériaux, Mr Beam a besoin de plus d'énergie pour percer la "
 "surface d'une gravure que pour la découpe/gravure en cours."
@@ -1826,6 +1833,14 @@ msgstr ""
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:359
 msgid "Passes"
 msgstr "Passes"
+
+#: octoprint_mrbeam/templates/conversion_dialog.jinja2:367
+msgid ""
+"For some materials Mr Beam II needs more energy to do the first pierce of a "
+"cut or engraving than it needs for the ongoing cutting/engraving."
+msgstr ""
+"Pour certains matériaux, Mr Beam a besoin de plus d'énergie pour percer la "
+"surface d'une gravure que pour la découpe/gravure en cours."
 
 #: octoprint_mrbeam/templates/conversion_dialog.jinja2:377
 msgid "Sorry, there are no cutting settings for this material."
@@ -2090,7 +2105,7 @@ msgstr ""
 #: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:50
 msgid ""
 "If you are connecting the lasercutter to a network ensure that you properly "
-"set up the network access as well as the machines access control. "
+"set up the network access as well as the machine's access control. "
 msgstr ""
 "Si vous connectez la découpeuse laser à un réseau, assurez-vous que vous "
 "ayez correctement configuré l'accès au réseau ainsi que les permissions "
@@ -3606,7 +3621,7 @@ msgstr "Nous avons inclus des paramètres pour plus de matériaux!"
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_0.jinja2:8
 msgid ""
 "Please keep in mind that your laser head needs to be clean for the best "
-"results with this settings."
+"results with these settings."
 msgstr ""
 "Nous tenons à vous rappeler que votre tête laser nécessite d'être propre "
 "pour obtenir les meilleurs résultats avec ces paramètres."
