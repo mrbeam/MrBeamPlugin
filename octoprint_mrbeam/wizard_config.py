@@ -4,7 +4,7 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 
 class WizardConfig:
 	def __init__(self, plugin):
-		self.WIZARD_VERSION = 16  # random number. but we can't go down anymore, just up.
+		self.WIZARD_VERSION = 17  # (v0.5.0) random number. but we can't go down anymore, just up.
 
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.wizard_config")
 
@@ -45,10 +45,14 @@ class WizardConfig:
 
 		return wizard_config_to_show
 
-	# todo iratxe: same logic for what's new screen
-	def get_welcome_wizard_link_ids(self):
-		link_ids = ['wizard_firstrun_end_link']  # This one is managed by OctoPrint (the start as well, but we don't want it)
-		wizard_tabs = self._welcome_wizard_config()
+	def get_current_wizard_link_ids(self):
+		link_ids = []
+		wizard_tabs = {}
+		if self._is_welcome_wizard:
+			link_ids = ['wizard_firstrun_end_link']  # This one is managed by OctoPrint (the start as well, but we don't want it)
+			wizard_tabs = self._welcome_wizard_config()
+		elif self._is_whatsnew_wizard:
+			wizard_tabs = self._whatsnew_wizard_config()
 
 		for tab, data in wizard_tabs.iteritems():
 			link_ids.append(data['div']+'_link')
@@ -109,7 +113,7 @@ class WizardConfig:
 		whatsnew_wizard_tabs = dict(
 			wizard_whatsnew_0=dict(
 				type='wizard',
-				name=gettext("Improved find.mr-beam"),
+				name=gettext("New materials"),
 				required=True,
 				mandatory=False,
 				suffix='_whatsnew_0',
@@ -118,7 +122,7 @@ class WizardConfig:
 			),
 			wizard_whatsnew_1=dict(
 				type='wizard',
-				name=gettext("New Languages!"),
+				name=gettext("New language"),
 				required=True,
 				mandatory=False,
 				suffix='_whatsnew_1',
@@ -127,7 +131,7 @@ class WizardConfig:
 			),
 			wizard_whatsnew_2=dict(
 				type='wizard',
-				name=gettext("Job Time Estimation"),
+				name=gettext("Brightness adjustment"),
 				required=True,
 				mandatory=False,
 				suffix='_whatsnew_2',

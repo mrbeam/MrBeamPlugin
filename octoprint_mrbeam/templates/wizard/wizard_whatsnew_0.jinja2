@@ -1,29 +1,12 @@
-<h3>{{ _("Improved find.mr-beam") }}</h3>
+<h3>{{ _("New materials") }}</h3>
 
 <div>
     <div>
         <p>
-            <a href="http://find.mr-beam.org" target="_blank"><strong>find.mr-beam </strong></a>
-            {{ _('is an online service that helps you to connect your Mr Beam II with your computer.<br>And we’ve got great news for you: It just got better!') }}
+            <strong>{{ _('We included settings for more materials!') }}</strong>
         </p>
-        <p>
-            {{ _('1.  We added IPv6 support so it got even more reliable!') }}<br>
-            {{ _('2.  We added an IP scan to make sure you find all of your Mr Beam II devices.') }}
-        </p>
-        <img id="whatsnew_find_mrbeam_screenshot" src="/plugin/mrbeam/static/img/findmrbeam_improved_whatsnew.png">
-    </div>
-
-    <div data-bind="visible: findMrBeamWorks">
-        <a href="http://find.mr-beam.org?ref=whatsnew_0.3.0" target="_blank" id="try_findmrbeam_btn" class="btn whatsnew-try-it-now-button" role="button">
-            <i class="fa fa-external-link" aria-hidden="true"></i>
-            {{ _('Try it now!') }}
-        </a>
-    </div>
-
-    <div class="whatsnew-bottom-line-note">
-        {{ _("For more information check out our %(tag_open)sKnowledge Base article%(tag_close)s.",
-        tag_open='<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000507379-find-mr-beam-discovery-service" target="_blank" class="muted">',
-        tag_close='</a>')}}
+        <small class="muted">{{ _('Please keep in mind that your laser head needs to be clean for the best results with this settings.') }}</small>
+        <img class="wizard-big-img" src="/plugin/mrbeam/static/img/whatsnew_dialog/new_materials.png">
     </div>
 </div>
 
