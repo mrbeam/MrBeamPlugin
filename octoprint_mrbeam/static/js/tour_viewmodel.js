@@ -51,7 +51,7 @@ $(function () {
                     gettext("Do you want us to guide you through your first laser job with this step-by-step tour?"),
                     "<strong>"+gettext("What do you need for this tour:")+"</strong>",
                     "<ul>" +
-                        "<li>" + gettext("Have a piece of felt by hand. Best to use the one that came with your Mr Beam II.") + "</li>" +
+                        "<li>" + gettext("Have a piece of felt on hand. Best to use the one that came with your Mr Beam II.") + "</li>" +
                         "<li>" + _.sprintf(gettext("The laser head of your Mr Beam II has to be focused according to the thickness of the felt." +
                             "You can find how to do that in this %(opening_tag)sKnowledge base article%(closing_tag)s."),
                             {opening_tag:"<a href='https://mr-beam.freshdesk.com/support/solutions/articles/43000073345' target='_blank'>", closing_tag:"</a>"}) +
