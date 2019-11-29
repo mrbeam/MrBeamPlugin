@@ -71,7 +71,7 @@
 				<div id="material_thickness" data-bind="css: {active : selected_material() !== null && selected_material_color() !== null && selected_material_thickness() === null}, visible: selected_material() !== null && selected_material_color() !== null">
 					<div class="material-control-and-label" data-toggle="tooltip" data-placement="right"
                          title="<b>{{ _('Set the thickness of the material.') }}</b>
-                                    {{ _('When cutting the material it is important to tell Mr Beam the thickness that he can select the correct laser settings.') }}">
+                                    {{ _('When cutting the material it is important to tell Mr Beam the thickness so that it can select the correct laser settings.') }}">
 						<label >{{ _('Thickness') }}</label>
 						<div id="thickness_list" data-bind="foreach: material_thicknesses">
 							<div class="thickness_sample hover_shadow"
@@ -173,7 +173,7 @@
                                 <div class="range-control-and-label" data-toggle="tooltip" data-placement="right" title="<b>{{ _('The intensity range used for engraving pixel graphics.') }}</b>
                                 <ul><li>{{ _('Bright/white pixels use the left (lower) value') }}</li>
                                 <li>{{ _('Dark/black pixels use the right (higher) value.') }}</li>
-                                </ul> {{ _('Equal values do not vary the laser intensity related to the pixel brightness.') }}">
+                                </ul> {{ _('If you set both ends of the range to the same value, then the laser intensity won\'t change no matter the pixel brightness.') }}">
                                     <label class="control-label">{{ _('Intensity range') }}</label>
                                     <div class="controls range-control">
                                         <div class="input-append">
@@ -242,7 +242,7 @@
 							<div class="control-group" data-bind="visible: showExpertSettings ">
                                 <div class="input-control-and-label" data-toggle="tooltip" data-placement="right"
                                      title="<b>{{ _('This is the time which Mr Beam pierces into the material without any movement at the beginning of every new line or shape before it starts moving the laser.') }}</b><br>
-                                     {{ _('For some materials Mr Beam II needs more energy to do the first pierce of a cut or engraving than it needs for the ongoing cutting/engraving.') }}<br>
+                                     {{ _('For some materials Mr Beam II needs more energy to do the first piercing of a cut or engraving than it needs for the ongoing cutting/engraving.') }}<br>
                                      {{ _('If you experience that the laser does not cut or engrave first few millimeters of each new line or shape, try to set a pierce time.') }}
                                      <i>{{ _('Try 100ms and adjust if needed.') }}</i>">
                                     <label class="control-label">{{ _('Pierce time') }}</label>

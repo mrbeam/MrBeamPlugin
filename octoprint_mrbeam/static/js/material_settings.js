@@ -86,7 +86,7 @@ $(function () {
                 name: gettext("Cardboard, single wave"),
                 img: 'Cardboard.jpg',
                 description: gettext("Ordinary cardboard like most packaging is made of."),
-                hints: gettext("Engraving looks great if just the first layer is lasered away, that the wave is visible underneath."),
+                hints: gettext("Engraving looks great if just the first layer is lasered away, so that the wave is visible underneath."),
                 safety_notes: gettext("Take care about ignitions. Never run a job slower than 180 mm/min!"),
             },
             'Cardboard, corrugated double wave': {
