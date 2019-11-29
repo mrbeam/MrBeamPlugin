@@ -181,8 +181,8 @@ $(function () {
                 hints: '',
                 safety_notes: gettext("Very fine structures may be subject of ignition."),
             },
-            'Foam': {
-                name: gettext("Polyethylene Foam"),
+            'Polyethylene Foam': {
+                name: gettext("Foam"),
                 img: 'Polyethylene-Foam.jpg',
                 description: gettext(' '),
                 hints: gettext(' '),
