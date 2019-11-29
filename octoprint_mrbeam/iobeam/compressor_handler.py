@@ -24,6 +24,8 @@ class CompressorHandler(object):
 	COMPRESSOR_MIN = 0
 	COMPRESSOR_MAX = 100
 
+	MAX_TIMES_RPM_0 = 5
+
 	def __init__(self, plugin):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.compressorhandler")
 		self._plugin = plugin
@@ -121,16 +123,9 @@ class CompressorHandler(object):
 					self._logger.exception("Cant convert compressor state to int from compressor_dynamic: %s", dataset)
 
 			if 'rpm_actual' in dataset and (self._printer.is_printing() or self._printer.is_paused()):
-				self._logger.info('################### is printing or paused')
-				# todo iratxe: 	REMOVE!!! ONLY FOR TESTING!
-				dataset['rpm_actual'] = 0
-
-				if dataset['rpm_actual'] == 0:  # todo iratxe: and if there is an ongoing job!!!
-					self._logger.info('################################# pre rpm: {}'.format(self._num_rpm_0))
+				if dataset['rpm_actual'] == 0:
 					self._num_rpm_0 += 1
-
-					if self._num_rpm_0 >= 5:
-						self._logger.info('################################# after rpm: {}'.format(self._num_rpm_0))
+					if self._num_rpm_0 >= self.MAX_TIMES_RPM_0:
 						self._hw_malfunction_handler.report_hw_malfunction_from_plugin(
 							malfunction_id='compressor',
 							msg='compressor_rpm_0')

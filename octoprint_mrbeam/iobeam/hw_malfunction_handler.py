@@ -49,31 +49,19 @@ class HwMalfunctionHandler(object):
 			payload=payload,
 		)
 
-		# dataset = dict(
-		# 	id=malfunction_id,
-		# 	data=data,
-		# )
-
 		dataset = {
 			malfunction_id: data
 		}
 
-		self._logger.info('############## report: {}'.format(dataset))
-
 		self.report_hw_malfunction(dataset, from_plugin=True)
 
 	def report_hw_malfunction(self, dataset, from_plugin=False):
-		self._logger.info('####################### REPORT! {}'.format(dataset))
-
 		self.hardware_malfunction = True
 		self._logger.warn("hardware_malfunction: %s", dataset)
 
 		new_msg = False
 		bottom_open = False
 		for malfunction_id, data in dataset.items():
-
-			self._logger.info('#################### {}, {}'.format(malfunction_id, data))
-
 			data = data or {}
 			msg = data.get('msg', malfunction_id)
 			self._plugin.fire_event(MrBeamEvents.HARDWARE_MALFUNCTION, dict(id=malfunction_id, msg=msg, data=data))
