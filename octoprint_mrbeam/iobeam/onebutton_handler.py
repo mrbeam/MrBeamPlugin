@@ -263,6 +263,7 @@ class OneButtonHandler(object):
 		elif event == MrBeamEvents.HARDWARE_MALFUNCTION:
 			# iobeam could set stop_laser to false to avoid cancellation of current laserjob
 			if payload['data'].get('stop_laser', True) and self._printer.get_state_id() in (self.PRINTER_STATE_PRINTING, self.PRINTER_STATE_PAUSED):
+				self._logger.info('Hardware Malfunction: cancelling laser job!')
 				self._printer.cancel_print()
 
 	def is_cooling(self):
