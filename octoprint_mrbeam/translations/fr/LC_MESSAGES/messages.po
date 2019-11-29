@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2019-11-29 12:14+0100\n"
-"PO-Revision-Date: 2019-11-29 15:32+0100\n"
+"PO-Revision-Date: 2019-11-29 16:15+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -708,7 +708,7 @@ msgstr "Snappap"
 
 #: octoprint_mrbeam/static/js/material_settings.js:222
 msgid "Vegan Leather"
-msgstr "Vegan Leather"
+msgstr "Cuir Vegan"
 
 #: octoprint_mrbeam/static/js/material_settings.js:228
 msgid "Wellboard"
