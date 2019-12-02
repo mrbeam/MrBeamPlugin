@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-11-29 12:14+0100\n"
+"POT-Creation-Date: 2019-12-02 14:30+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,38 +17,38 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.6.0\n"
 
-#: octoprint_mrbeam/__init__.py:570
+#: octoprint_mrbeam/__init__.py:572
 #: octoprint_mrbeam/templates/settings/svgtogcode_settings.jinja2:2
 msgid "File Import Settings"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:571
+#: octoprint_mrbeam/__init__.py:573
 msgid "Camera Calibration"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:572
+#: octoprint_mrbeam/__init__.py:574
 #: octoprint_mrbeam/templates/settings/debug_settings.jinja2:2
 msgid "Debug"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:573
+#: octoprint_mrbeam/__init__.py:575
 #: octoprint_mrbeam/templates/settings/about_settings.jinja2:2
 msgid "About This Mr Beam"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:574
+#: octoprint_mrbeam/__init__.py:576
 #: octoprint_mrbeam/templates/settings/analytics_settings.jinja2:9
 #: octoprint_mrbeam/templates/wizard/wizard_analytics.jinja2:8
 #: octoprint_mrbeam/wizard_config.py:97
 msgid "Analytics"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:575
+#: octoprint_mrbeam/__init__.py:577
 #: octoprint_mrbeam/templates/settings/reminders_settings.jinja2:2
 msgid "Reminders"
 msgstr ""
 
-#: octoprint_mrbeam/__init__.py:576
+#: octoprint_mrbeam/__init__.py:578
 #: octoprint_mrbeam/templates/settings/maintenance_settings.jinja2:2
 msgid "Maintenance"
 msgstr ""
@@ -85,56 +85,53 @@ msgstr ""
 msgid "...and more!"
 msgstr ""
 
-#: octoprint_mrbeam/iobeam/iobeam_handler.py:512
-#: octoprint_mrbeam/iobeam/iobeam_handler.py:822
-#: octoprint_mrbeam/iobeam/iobeam_handler.py:830
-msgid "Software Update required"
-msgstr ""
-
-#: octoprint_mrbeam/iobeam/iobeam_handler.py:513
-msgid ""
-"Module 'iobeam' is outdated. Please run Software Update from 'Settings' >"
-" 'Software Update' before you start a laser job."
-msgstr ""
-
-#: octoprint_mrbeam/iobeam/iobeam_handler.py:823
-msgid ""
-"Module 'iobeam' is outdated. Please run software update from 'Settings' >"
-" 'Software Update' before you start a laser job."
-msgstr ""
-
-#: octoprint_mrbeam/iobeam/iobeam_handler.py:831
-msgid ""
-"Module 'MrBeam Plugin' is outdated; iobeam version is newer than "
-"expected. Please run software update from 'Settings' > 'Software Update' "
-"before you start a laser job."
-msgstr ""
-
-#: octoprint_mrbeam/iobeam/iobeam_handler.py:853
-#: octoprint_mrbeam/iobeam/iobeam_handler.py:1029
+#: octoprint_mrbeam/iobeam/hw_malfunction_handler.py:95
 msgid ""
 "A possible hardware malfunction has been detected on this device. Please "
 "contact our support team immediately at:"
 msgstr ""
 
-#: octoprint_mrbeam/iobeam/iobeam_handler.py:855
-#: octoprint_mrbeam/iobeam/iobeam_handler.py:1032
+#: octoprint_mrbeam/iobeam/hw_malfunction_handler.py:98
 msgid "Error:"
 msgstr ""
 
-#: octoprint_mrbeam/iobeam/iobeam_handler.py:856
-#: octoprint_mrbeam/iobeam/iobeam_handler.py:1033
+#: octoprint_mrbeam/iobeam/hw_malfunction_handler.py:100
 msgid "Hardware malfunction"
 msgstr ""
 
-#: octoprint_mrbeam/iobeam/iobeam_handler.py:1043
+#: octoprint_mrbeam/iobeam/hw_malfunction_handler.py:109
 msgid ""
 "The bottom plate is not closed correctly. Please make sure that the "
 "bottom is correctly mounted as described in the Mr Beam II user manual."
 msgstr ""
 
-#: octoprint_mrbeam/iobeam/iobeam_handler.py:1045
+#: octoprint_mrbeam/iobeam/hw_malfunction_handler.py:113
 msgid "Bottom Plate Error"
+msgstr ""
+
+#: octoprint_mrbeam/iobeam/iobeam_handler.py:509
+#: octoprint_mrbeam/iobeam/iobeam_handler.py:804
+#: octoprint_mrbeam/iobeam/iobeam_handler.py:812
+msgid "Software Update required"
+msgstr ""
+
+#: octoprint_mrbeam/iobeam/iobeam_handler.py:510
+msgid ""
+"Module 'iobeam' is outdated. Please run Software Update from 'Settings' >"
+" 'Software Update' before you start a laser job."
+msgstr ""
+
+#: octoprint_mrbeam/iobeam/iobeam_handler.py:805
+msgid ""
+"Module 'iobeam' is outdated. Please run software update from 'Settings' >"
+" 'Software Update' before you start a laser job."
+msgstr ""
+
+#: octoprint_mrbeam/iobeam/iobeam_handler.py:813
+msgid ""
+"Module 'MrBeam Plugin' is outdated; iobeam version is newer than "
+"expected. Please run software update from 'Settings' > 'Software Update' "
+"before you start a laser job."
 msgstr ""
 
 #: octoprint_mrbeam/iobeam/lid_handler.py:178
@@ -598,7 +595,7 @@ msgid "Very fine structures may be subject of ignition."
 msgstr ""
 
 #: octoprint_mrbeam/static/js/material_settings.js:185
-msgid "Polyethylene Foam"
+msgid "Foam"
 msgstr ""
 
 #: octoprint_mrbeam/static/js/material_settings.js:191
