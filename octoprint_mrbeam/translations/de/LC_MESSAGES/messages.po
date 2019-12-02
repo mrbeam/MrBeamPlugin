@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2019-11-29 12:14+0100\n"
-"PO-Revision-Date: 2019-11-29 16:57+0100\n"
+"PO-Revision-Date: 2019-12-02 14:34+0100\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -2034,7 +2034,7 @@ msgid ""
 "\" lasercutter is a class 1 laser device according to IEC60825. "
 msgstr ""
 "Ihr \"Mr Beam II\", \"Mr Beam II dreamcut ready\" oder \"Mr Beam II dreamcut"
-"\" Lasercutter ist ein Lasergerät der Klasse 1 nach IEC60825. "
+"\" Lasercutter ist gemäß IEC60825 ein Laserprodukt der Klasse 1."
 
 # Laser Safety Notes!
 #: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:28
@@ -2047,14 +2047,13 @@ msgstr ""
 
 #: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:29
 msgid "This is ensured by a redundant security system. "
-msgstr "Dies wird durch ein redundantes Sicherheitssystem gewährleistet. "
+msgstr "Dies wird durch ein redundantes Sicherheitssystem gewährleistet."
 
 #: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:30
 msgid ""
 "This security system must not be manipulated or circumvented at any time."
 msgstr ""
-"Dieses Sicherheitssystem darf zu keinem Zeitpunkt manipuliert oder umgangen "
-"werden."
+"Dieses Sicherheitssystem darf keinesfalls manipuliert oder umgangen werden."
 
 # Laser Safety Notes!
 #: octoprint_mrbeam/templates/lasersafety_genericbody.jinja2:36
