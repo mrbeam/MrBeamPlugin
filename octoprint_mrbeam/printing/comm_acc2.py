@@ -1288,7 +1288,7 @@ class MachineCom(object):
 					_mrbeam_plugin_implementation.analytics_handler.add_grbl_flash_event(
 						from_version=from_version,
 						to_version=grbl_file,
-						succesful=(code == 0),
+						successful=(code == 0),
 						err = None if (code == 0) else output)
 			except:
 				self._logger.exception("Exception while writing GRBL-flashing to analytics: ")
