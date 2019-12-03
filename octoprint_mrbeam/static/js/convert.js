@@ -468,7 +468,12 @@ $(function(){
 				id: 'cd_color_'+color.hex.substr(1),
 				style: "background-color: "+color.hex+";",
 				draggable: "true",
-				class: 'used_color cutting_job_color'
+				class: 'used_color cutting_job_color',
+                'data-toggle': 'tooltip',
+                'data-placement': 'right',
+                title: 'Drag and drop this box in the Skip area if you want to skip cutting this color. ' +
+                    'Drop it in Engrave area if you just want to engrave it, ' +
+                    'or alternatively create a new cutting job with different parameters by dropping it in the bottom section.'
 			})
 			.on({
 				dragstart: function(ev){ window.mrbeam.colorDragging.colorDragStart(ev.originalEvent); },
