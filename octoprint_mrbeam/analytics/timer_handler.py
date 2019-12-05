@@ -60,27 +60,28 @@ class TimerHandler:
 
 	def _crop_analytics_file_if_too_big(self):
 		try:
-			analytics_size = os.path.getsize(self._analytics_handler.analytics_file)
-			if analytics_size > self.MAX_FILE_SIZE_BYTES:
-				with self._analytics_lock:
-					self._logger.info('Cropping analytics file...')
+			if os.path.exists(self._analytics_handler.analytics_file):
+				analytics_size = os.path.getsize(self._analytics_handler.analytics_file)
+				if analytics_size > self.MAX_FILE_SIZE_BYTES:
+					with self._analytics_lock:
+						self._logger.info('Cropping analytics file...')
 
-					command = 'echo "$(tail -n {lines} {file})" > {file}'\
-						.format(lines=self.NUM_ROWS_TO_KEEP, file=self._analytics_handler.analytics_file)
-					success = exec_cmd(command, shell=True)
+						command = 'echo "$(tail -n {lines} {file})" > {file}'\
+							.format(lines=self.NUM_ROWS_TO_KEEP, file=self._analytics_handler.analytics_file)
+						success = exec_cmd(command, shell=True)
 
-					if success:
-						self._logger.info('Cropping of the analytics file finished.')
-					else:
-						self._logger.warning('Could not crop analytics file.')
+						if success:
+							self._logger.info('Cropping of the analytics file finished.')
+						else:
+							self._logger.warning('Could not crop analytics file.')
 
-				payload = {
-					ak.Log.SUCCESS: success,
-					ak.Log.AnalyticsFile.PREV_SIZE: analytics_size,
-					ak.Log.AnalyticsFile.NEW_SIZE: os.path.getsize(self._analytics_handler.analytics_file),
-					ak.Log.AnalyticsFile.NUM_LINES: self.NUM_ROWS_TO_KEEP,
-				}
-				self._plugin.analytics_handler.add_analytics_file_crop(payload)
+					payload = {
+						ak.Log.SUCCESS: success,
+						ak.Log.AnalyticsFile.PREV_SIZE: analytics_size,
+						ak.Log.AnalyticsFile.NEW_SIZE: os.path.getsize(self._analytics_handler.analytics_file),
+						ak.Log.AnalyticsFile.NUM_LINES: self.NUM_ROWS_TO_KEEP,
+					}
+					self._plugin.analytics_handler.add_analytics_file_crop(payload)
 
 		except Exception:
 			self._logger.exception('Exception during _crop_analytics_file_if_too_big')
