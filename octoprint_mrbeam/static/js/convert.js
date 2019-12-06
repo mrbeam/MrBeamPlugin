@@ -456,6 +456,11 @@ $(function(){
 					var drop_zone = $('#first_job .color_drop_zone');
 					var i = self._getColorIcon(c);
 					drop_zone.append(i);
+
+					// The tooltip styling has to be applied afterwards, otherwise the default styling is shown
+					i.tooltip({
+                      template: '<div class="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>'
+                    })
 				} else {
 					selection.removeClass('not-used');
 				}
