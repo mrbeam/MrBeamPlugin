@@ -4,6 +4,7 @@ import octoprint_mrbeam
 MRBEAM = 'Mr Beam II'
 MRB_DREAMCUT = 'MrB II Dreamcut'
 MRB_READY = 'MrB II Dreamcut Ready' # not used yet
+MRB_DREAMCUT_NOT_VALIDATED = "Dreamcut (not validated)"
 
 DEFAULT_LASER = MRBEAM
 
@@ -55,33 +56,44 @@ def parse_csv(path = None, laserhead=MRBEAM):
         reader = csv.reader(f)
         fields = reader.next()
         prev_vals = None
-        cur_color_has_engraving_setting = False
+        current_material = None
+        current_color = None
         cur_color_has_cutting_setting = False
         for i, row in enumerate(reader):
             for j in range(len(row)):
                 if type(row[j]) is str:
                     row[j] = row[j].strip()
             mrbeamversion, material, colorcode, thickness_or_engrave, intensity, speed, passes, compressor_lvl, pierce_time, dithering = row[:10]
+
+            if colorcode and colorcode[0] == '#':
+                colorcode = colorcode[1:] # remove the '#' from the color hex
+
+            # this is in case we have to skip the first line of a (another) material
+            if material:
+                current_material = material
+            if colorcode:
+                current_color = colorcode
+
             if not mrbeamversion in [MRBEAM, MRB_DREAMCUT, MRB_READY]:
                 # Either a comment line, unused setting or experimental settings
                 continue
-            if colorcode and colorcode[0] == '#':
-                colorcode = colorcode[1:] # remove the '#' from the color hex
-            if not prev_vals or (material and material != prev_vals[1]): # Changed from 1 material to an other
+
+            if not prev_vals or (current_material and current_material != prev_vals[1]): # Changed from 1 current_material to an other
                 # Set default engraving setting (no engraving)
                 # Set default cutting setting (no cutting)
-                # Assumes that every new material comes with a new color setting
-                dict_merge(dictionary, {mrbeamversion: {material: {'colors': {colorcode: {'engrave': None,
+                # Assumes that every new current_material comes with a new color setting
+                dict_merge(dictionary, {mrbeamversion: {current_material: {'colors': {current_color: {'engrave': None,
                                                                                           'cut': []}}}}})
-            elif prev_vals and colorcode and colorcode != prev_vals[2]:  # Changed from 1 color to the other
-                dict_merge(dictionary, {mrbeamversion: {prev_vals[1]: {'colors': {colorcode: {'engrave': None,
+            elif prev_vals and current_color and current_color != prev_vals[2]:  # Changed from 1 color to the other
+                dict_merge(dictionary, {mrbeamversion: {prev_vals[1]: {'colors': {current_color: {'engrave': None,
                                                                                               'cut': []}}}}})
+
             if prev_vals:
                 # Retain the value of the previous line if no value is given (in the case of a cell merge)
-                if not material: # No material name, assume the previous one
-                    material = prev_vals[1]
-                if not colorcode:  # No Color name, assume the previous one
-                    colorcode = prev_vals[2]
+                if not current_material: # No current_material name, assume the previous one
+                    current_material = prev_vals[1]
+                if not current_color:  # No Color name, assume the previous one
+                    current_color = prev_vals[2]
 
             try:
                 if type(thickness_or_engrave) is str:
@@ -113,16 +125,16 @@ def parse_csv(path = None, laserhead=MRBEAM):
                 elif len(s_split) == 1:
                     settings.update({'eng_f': [0, int(s_split[0])]})
                 # Can be error prone
-            colorname = colorcode # TODO get colorcode from colorname ?
-            dict_merge(dictionary, {mrbeamversion: {material: {'name': material,
+            colorname = current_color # TODO get current_color from colorname ?
+            dict_merge(dictionary, {mrbeamversion: {current_material: {'name': current_material,
                                                                # 'img': "", # TODO
                                                                # 'description': "", # TODO
                                                                # 'hints': "", # TODO
                                                                # 'safety_notes': "", # TODO
                                                                # 'laser_type': mrbeamversion,
-                                                               'colors': { colorcode: {'name': colorname,
+                                                               'colors': { current_color: {'name': colorname,
                                                                                        settingname: settings}}}}})
-            prev_vals = [mrbeamversion, material, colorcode, thickness_or_engrave, intensity, speed, passes, compressor_lvl, pierce_time, dithering] # update current row values for next loop
+            prev_vals = [mrbeamversion, current_material, current_color, thickness_or_engrave, intensity, speed, passes, compressor_lvl, pierce_time, dithering] # update current row values for next loop
     converted_laserhead = model_id_to_csv_name(laserhead)
     if converted_laserhead:
         laserhead = converted_laserhead
