@@ -276,7 +276,7 @@ class IoBeamHandler(object):
 			return True
 
 	def notify_user_old_iobeam(self):
-		self._logger.exception(
+		self._logger.error(
 			"Received iobeam version: %s - version OUTDATED. IOBEAM_MIN_REQUIRED_VERSION: %s",
 			self.iobeam_version, self.IOBEAM_MIN_REQUIRED_VERSION)
 		self._plugin.notify_frontend(
