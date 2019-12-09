@@ -387,9 +387,8 @@ class OneButtonHandler(object):
 
 		iobeam_ok = self._iobeam.is_iobeam_version_ok()
 		if not iobeam_ok:
-			msg = gettext("iobeam version is outdated. Please try Software update.")
-			self._plugin.notify_frontend(title=gettext("Error"), text=msg, type='error')
-			raise Exception(msg)
+			self._iobeam.notify_user_old_iobeam()
+			raise Exception("iobeam version is outdated. Please try Software update.")
 
 		if self._hw_malfunction.hardware_malfunction and not self.hardware_malfunction_notified:
 			self._logger.error("Hardware Malfunction: Not possible to start laser job.")
