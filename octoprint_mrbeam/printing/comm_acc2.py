@@ -16,12 +16,12 @@ import random
 from flask.ext.babel import gettext
 
 import octoprint.plugin
+import octoprint
 
 from octoprint.settings import settings, default_settings
 from octoprint.events import eventManager, Events as OctoPrintEvents
 from octoprint.filemanager.destinations import FileDestinations
 from octoprint.util import get_exception_string, RepeatedTimer, CountedEvent, sanitize_ascii
-
 from octoprint_mrbeam.printing.profile import laserCutterProfileManager
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.printing.acc_line_buffer import AccLineBuffer
@@ -30,7 +30,7 @@ from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 ### MachineCom #########################################################################################################
-class MachineCom(object):
+class MachineCom(octoprint.util.comm.MachineCom):
 
 	DEBUG_PRODUCE_CHECKSUM_ERRORS = False
 	DEBUG_PRODUCE_CHECKSUM_ERRORS_RND = 2000
