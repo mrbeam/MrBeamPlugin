@@ -146,7 +146,7 @@ class Laser(Printer):
 		return self._comm is not None and self._comm.isFlashing()
 
 	def _getStateFlags(self):
-		flags = dict(Printer._getStateFlags(self))
+		flags = dict(Printer._getStateFlags())
 		flags.update({
 			"locked": self.is_locked(),
 			"flashing": self.is_flashing(),
