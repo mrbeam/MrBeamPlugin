@@ -457,10 +457,11 @@ $(function(){
 					var i = self._getColorIcon(c);
 					drop_zone.append(i);
 
+					// todo iratxe: fix this. It works but it doesn't disappear anter droping the element somewhere else
 					// The tooltip styling has to be applied afterwards, otherwise the default styling is shown
-					i.tooltip({
-                      template: '<div class="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>'
-                    })
+					// i.tooltip({
+                    //   template: '<div class="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>'
+                    // })
 				} else {
 					selection.removeClass('not-used');
 				}
@@ -473,12 +474,13 @@ $(function(){
 				id: 'cd_color_'+color.hex.substr(1),
 				style: "background-color: "+color.hex+";",
 				draggable: "true",
-				class: 'used_color cutting_job_color',
-                'data-toggle': 'tooltip',
-                'data-placement': 'right',
-                title: 'Drag and drop this box in the Skip area if you want to skip cutting this color. ' +
-                    'Drop it in Engrave area if you just want to engrave it, ' +
-                    'or alternatively create a new cutting job with different parameters by dropping it in the bottom section.'
+				class: 'used_color cutting_job_color'
+                // todo iratxe: fix this
+                // 'data-toggle': 'tooltip',
+                // 'data-placement': 'right',
+                // title: 'Drag and drop this box in the Skip area if you want to skip cutting this color. ' +
+                //     'Drop it in Engrave area if you just want to engrave it, ' +
+                //     'or alternatively create a new cutting job with different parameters by dropping it in the bottom section.'
 			})
 			.on({
 				dragstart: function(ev){ window.mrbeam.colorDragging.colorDragStart(ev.originalEvent); },
