@@ -122,7 +122,7 @@ class CompressorHandler(object):
 				except:
 					self._logger.exception("Cant convert compressor state to int from compressor_dynamic: %s", dataset)
 
-			if 'rpm_actual' in dataset and (self._printer.is_printing() or self._printer.is_paused()):
+			if 'rpm_actual' in dataset and self._printer.is_printing():
 				if dataset['rpm_actual'] == 0:
 					self._num_rpm_0 += 1
 					if self._num_rpm_0 >= self.MAX_TIMES_RPM_0:

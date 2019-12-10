@@ -86,13 +86,7 @@ $(function() {
         };
 
         self.onWizardFinish = function(){
-            if (self.isWhatsnew) {
-                let event = 'whatsnew_findmrbeam';
-                let payload = {
-                    btn_shown: self.findMrBeamWorks(),
-                    btn_clicked: self.tryItButtonClicked
-                };
-            } else if (self.isWelcome) {
+            if (self.isWelcome) {
                 // avoid reloading of the frontend by a CLIENT_CONNECTED / MrbPluginVersion event
                 CONFIG_FIRST_RUN = false
             }
