@@ -54,7 +54,7 @@ class LaserheadHandler(object):
 				self._write_laser_heads_file()
 				self._plugin.fire_event(MrBeamEvents.LASER_HEAD_READ, dict(serial=lh_data['main']['serial']))
 
-			# This is for detecting mrb_hw_info v0.0.20
+			# BACKWARD_COMPATIBILITY: This is for detecting mrb_hw_info v0.0.20
 			elif self._valid_lh_data_backwards_compatibility(lh_data):
 				self._logger.info("Laserhead (< v0.0.21): %s", lh_data)
 				self._logger.warning('Received old laser head data from iobeam.', analytics=True)

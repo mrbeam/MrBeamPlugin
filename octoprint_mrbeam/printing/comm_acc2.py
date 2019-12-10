@@ -303,7 +303,7 @@ class MachineCom(object):
 					elif line.startswith('$'): # Grbl settings
 						self._handle_settings_message(line)
 					elif not line and (self._state is self.STATE_CONNECTING or self._state is self.STATE_OPEN_SERIAL or self._state is self.STATE_DETECT_SERIAL):
-						self._logger.info("Empty line received during STATE_CONNECTION, starting soft-reset", terminal_as_comm=True)
+						self._logger.warning("Empty line received during STATE_CONNECTION, starting soft-reset", terminal_as_comm=True, analytics=True)
 						self._sendCommand(self.COMMAND_RESET) # Serial-Connection Error
 				except Exception as e:
 					self._logger.exception("Exception in _monitor_loop: {}".format(e), terminal_dump=True, analytics=True)
@@ -1288,7 +1288,7 @@ class MachineCom(object):
 					_mrbeam_plugin_implementation.analytics_handler.add_grbl_flash_event(
 						from_version=from_version,
 						to_version=grbl_file,
-						succesful=(code == 0),
+						successful=(code == 0),
 						err = None if (code == 0) else output)
 			except:
 				self._logger.exception("Exception while writing GRBL-flashing to analytics: ")

@@ -1727,6 +1727,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		:param delay: (int) number of seconds the notification shows until it hides (default: 10s)
 		:param replay_when_new_client_connects: If True the notification will be sent to all clients when a new client connects.
 				If you send the same notification (all params have identical values) it won't be sent again.
+		:param force: forces to show the notification. Default is false.
 		:return:
 		"""
 		text = text.replace("Mr Beam II", "Mr&nbsp;Beam&nbsp;II").replace("Mr Beam", "Mr&nbsp;Beam")

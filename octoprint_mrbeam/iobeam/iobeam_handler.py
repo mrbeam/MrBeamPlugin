@@ -73,8 +73,7 @@ class IoBeamHandler(object):
 	SOCKET_FILE = "/var/run/mrbeam_iobeam.sock"
 	MAX_ERRORS = 50
 
-	IOBEAM_MIN_REQUIRED_VERSION =  '0.4.0'
-	IOBEAM_JSON_PROTOCOL_VERSION = '0.7.0'
+	IOBEAM_MIN_REQUIRED_VERSION = '0.7.4'
 
 	CLIENT_NAME = "MrBeamPlugin"
 
@@ -264,22 +263,32 @@ class IoBeamHandler(object):
 
 	def is_iobeam_version_ok(self):
 		if self.iobeam_version is None:
-			return False, 0
+			return False
 		vers_obj = None
 		try:
 			vers_obj = LooseVersion(self.iobeam_version)
 		except ValueError as e:
 			self._logger.error("iobeam version invalid: '{}'. ValueError from LooseVersion: {}".format(self.iobeam_version, e))
-			return False, 0
+			return False
 		if vers_obj < LooseVersion(self.IOBEAM_MIN_REQUIRED_VERSION):
-			return False, -1
-		elif vers_obj >= LooseVersion(self.IOBEAM_JSON_PROTOCOL_VERSION):
-			return False, 1
+			return False
 		else:
-			return True, 0
+			return True
 
-
-	# return LooseVersion(self.iobeam_version) >= LooseVersion(self.IOBEAM_MIN_REQUIRED_VERSION) and LooseVersion(self.iobeam_version) < LooseVersion(self.IOBEAM_JSON_PROTOCOL_VERSION)
+	def notify_user_old_iobeam(self):
+		self._logger.error(
+			"Received iobeam version: %s - version OUTDATED. IOBEAM_MIN_REQUIRED_VERSION: %s",
+			self.iobeam_version, self.IOBEAM_MIN_REQUIRED_VERSION)
+		self._plugin.notify_frontend(
+			title=gettext("Software Update required"),
+			text=gettext(
+				"Module 'iobeam' is outdated. Please run software update from 'Settings' > 'Software Update' "
+				"before you start a laser job."),
+			type="error",
+			sticky=True,
+			replay_when_new_client_connects=True,
+			force=True,
+		)
 
 	def subscribe(self, event, callback):
 		"""
@@ -501,18 +510,12 @@ class IoBeamHandler(object):
 							except ValueError:
 								self._logger.debug("Could not parse data '%s' as JSON", json_data)
 
-							if version_obj and version_obj < LooseVersion(self.IOBEAM_MIN_REQUIRED_VERSION):
-								# Send message to the frontend
-								self._logger.error(
-									"Outdated iobeam: %s - version OUTDATED. IOBEAM_MIN_REQUIRED_VERSION: %s",
-									json_data, self.IOBEAM_MIN_REQUIRED_VERSION)
-								self._plugin.notify_frontend(title=gettext("Software Update required"),
-																			  text=gettext(
-																				  "Module 'iobeam' is outdated. Please run Software Update from 'Settings' > 'Software Update' before you start a laser job."),
-																			  type="error", sticky=True,
-																			  replay_when_new_client_connects=True)
-							else:
-								self._logger.debug("Received iobeam version: %s - version OK (legacy protocol)", version_str)
+							# BACKWARD_COMPATIBILITY: If there is an iobeam version that does not use JSON (< v0.7.0),
+							#  we check the version number here
+							self.iobeam_version = version_str
+							if not self.is_iobeam_version_ok():
+								self.notify_user_old_iobeam()
+
 						else:
 							self._logger.debug("Could not parse data '%s' as JSON", json_data)
 					except Exception as e2:
@@ -799,23 +802,8 @@ class IoBeamHandler(object):
 				if ok:
 					self._logger.info("Received iobeam version: %s - version OK", self.iobeam_version)
 				else:
-					if state <= 0:
-						self._logger.error("Received iobeam version: %s - version OUTDATED. IOBEAM_MIN_REQUIRED_VERSION: %s", self.iobeam_version, self.IOBEAM_MIN_REQUIRED_VERSION)
-						self._plugin.notify_frontend(title=gettext("Software Update required"),
-													 text=gettext("Module 'iobeam' is outdated. Please run software "
-																  "update from 'Settings' > 'Software Update' before "
-																  "you start a laser job."),
-													 type="error", sticky=True,
-													 replay_when_new_client_connects=True)
-					else:
-						self._logger.error("Received iobeam version: %s - version INCOMPATIBLE. iobeam is already using new JSON protocol!", self.iobeam_version)
-						self._plugin.notify_frontend(title=gettext("Software Update required"),
-													 text=gettext("Module 'MrBeam Plugin' is outdated; iobeam version "
-																  "is newer than expected. Please run software update "
-																  "from 'Settings' > 'Software Update' before you start "
-																  "a laser job."),
-													 type="error", sticky=True,
-													 replay_when_new_client_connects=True)
+					self.notify_user_old_iobeam()
+
 				return 0
 			else:
 				self._logger.warn("_handle_iobeam(): Received iobeam:version message without version number. Counting as error. Message: %s", dataset)
