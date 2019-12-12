@@ -4,6 +4,8 @@ $(function () {
         var self = this;
         window.mrbeam.viewModels['motherViewModel'] = self;
 
+        self.DESIGN_STORE_IFRAME_SRC = 'http://127.0.0.1';
+
         self.loginState = params[0];
         self.settings = params[1];
         self.state = params[2];
@@ -236,6 +238,9 @@ $(function () {
             // our implementation here should be used instead of octoprints
             // to fix issues with the laser job time display
             self.state._processProgressData = function(){};
+
+            self.prepareDesignStoreTab();
+
         };
 
         self.onStartupComplete = function() {
@@ -255,6 +260,36 @@ $(function () {
 			self.gcodefiles.setFilter('design');
             self.files.listHelper.removeFilter('model');
             self.files.listHelper.changeSorting('upload');
+        };
+
+        self.prepareDesignStoreTab = function() {
+            let design_store_iframe = $('#design_store_iframe');
+			design_store_iframe.on('load', function(){
+                // Listener for messages from the iframe
+                function receiveMessages(event) {
+                    if (event.origin === self.DESIGN_STORE_IFRAME_SRC) {
+                        self.onDesignTabIframeResponse();
+                        console.log(event.data);
+                        let userData = {
+                            email: self.loginState.username(),
+                            snr: MRBEAM_SERIAL,
+                            token: null,  // todo
+                            version: BEAMOS_VERSION,
+                        };
+
+                        document.getElementById('design_store_iframe').contentWindow.postMessage(userData, self.DESIGN_STORE_IFRAME_SRC);
+                    }
+                }
+                window.addEventListener('message', receiveMessages, false);
+			});
+
+			// Add iframe source
+            design_store_iframe.attr('src', self.DESIGN_STORE_IFRAME_SRC);
+        };
+
+        self.onDesignTabIframeResponse = function() {
+            $('#design_store_iframe').show();
+            $('#design_store_offline_placeholder').hide();
         };
 
         self.addSwUpdateTierInformation = function(){
