@@ -401,27 +401,40 @@ class PhotoCreator(object):
 
 		path_to_cam_params = self._settings.get(["cam", "lensCalibrationFile"])
 		path_to_pic_settings = self._settings.get(["cam", "correctionSettingsFile"])
-		path_to_last_markers = self._settings.get(["cam", "correctionTmpFile"])
+		# TODO select new algo result if good enough
+		workspaceCorners, markers = mb_pic.prepareImage2(path_to_input_image,
+												 path_to_output_img,
+												 path_to_cam_params,
+												 path_to_pic_settings,
+												 size=mb_pic.mypicamera.RESOLUTIONS['2000x1440'],
+												 quality=95,)
 
-		# todo implement pixel2MM setting in _laserCutterProfile (the magic number 2 below)
-		outputImageWidth = int(2 * self._laserCutterProfile['volume']['width'])
-		outputImageHeight = int(2 * self._laserCutterProfile['volume']['depth'])
-		correction_result = mb_pic.prepareImage(path_to_input_image,
-												path_to_output_img,
-												path_to_cam_params,
-												path_to_pic_settings,
-												path_to_last_markers,
-												size=(outputImageWidth,outputImageHeight),
-												save_undistorted=self.undistorted_pic_path,
-												quality=75,
-												debug_out=self.save_debug_images)
+		if workspaceCorners:
+			correction_result = {'markers_found': markers,
+								 'markers_recognised': len(markers),
+								 'corners_calculated': workspaceCorners}
+		else:
+			# TODO otherwise, use these
+			path_to_last_markers = self._settings.get(["cam", "correctionTmpFile"])
 
-		if ('undistorted_saved' in correction_result and correction_result['undistorted_saved']
-			and 'markers_recognized' in correction_result and correction_result['markers_recognized'] == 4):
-			self.undistorted_pic_path = None
-			self._logger.debug("Stopping to save undistorted picture, the last one is usable for calibration.")
+			# todo implement pixel2MM setting in _laserCutterProfile (the magic number 2 below)
+			outputImageWidth = int(2 * self._laserCutterProfile['volume']['width'])
+			outputImageHeight = int(2 * self._laserCutterProfile['volume']['depth'])
+			correction_result = mb_pic.prepareImage(path_to_input_image,
+													path_to_output_img,
+													path_to_cam_params,
+													path_to_pic_settings,
+													path_to_last_markers,
+													size=(outputImageWidth,outputImageHeight),
+													save_undistorted=self.undistorted_pic_path,
+													quality=75,
+													debug_out=self.save_debug_images)
 
 
+			if ('undistorted_saved' in correction_result and correction_result['undistorted_saved']
+				and 'markers_recognized' in correction_result and correction_result['markers_recognized'] == 4):
+				self.undistorted_pic_path = None
+				self._logger.debug("Stopping to save undistorted picture, the last one is usable for calibration.")
 
 		self._logger.info("Image correction result: {}".format(correction_result))
 		# check if there was an error or not.
