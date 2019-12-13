@@ -2197,6 +2197,7 @@ $(function(){
 
 
 		self.newQuickShape = function() {
+			self.abortFreeTransforms();
 			var file = self._qs_placeQuickShape();
 			self.editQuickShape(file);
 
@@ -2229,7 +2230,10 @@ $(function(){
 				typePath: ["quickshape"],
 				qs_params: {
 					type: '#rect',
+					stroke: true,
 					color: '#e25303',
+					fill: false,
+					fill_brightness: 0,
 					rect_w: w, rect_h: h, rect_radius: r,
 					circle_radius: w,
 					star_radius: w/2, star_corners:5, star_sharpness: 0.5522,
@@ -2253,8 +2257,8 @@ $(function(){
 		};
 
 		/**
-		 * Opens QuickText window to edit an existing QuickText object
-		 * @param file Object representing the QuickText to edit
+		 * Opens QuickShape window to edit an existing QuickShape object
+		 * @param file Object representing the QuickShape to edit
 		 */
 		self.editQuickShape = function (file) {
 			var params = file.qs_params;
@@ -2263,7 +2267,9 @@ $(function(){
 
 			$('#quick_shape_dialog').modal({keyboard: true});
 			$('#quick_shape_dialog').one('hide', self._qs_currentQuickShapeShowTransformHandlesIfNotEmpty);
-			// firing those change events is necessary to work around a bug in chrome|knockout|js. Otherwise entering numbers directly does not fire the change event if the number is accidentially equal to the field content it had before .val(..).
+			// firing those change events is necessary to work around a bug in chrome|knockout|js. 
+			// Otherwise entering numbers directly does not fire the change event if the number 
+			// is accidentially equal to the field content it had before .val(..).
 			$('#quick_shape_rect_w').val(params.rect_w).change();
 			$('#quick_shape_rect_h').val(params.rect_h).change();
 			$('#quick_shape_rect_radius').val(params.rect_radius).change();
@@ -2274,7 +2280,10 @@ $(function(){
 			$('#quick_shape_heart_w').val(params.heart_w).change();
 			$('#quick_shape_heart_h').val(params.heart_h).change();
 			$('#quick_shape_heart_lr').val(params.heart_lr).change();
+			$('#quick_shape_stroke').prop("checked", params.stroke);
 			$('#quick_shape_color').val(params.color).change();
+			$('#quick_shape_fill').prop("checked", params.fill);
+			$('#quick_shape_fill_brightness').val(params.fill_brightness).change();
 			self.currentQuickShapeFile = file;
 
 			$('#shape_tab_link_'+params.type.substr(1)).tab('show');
@@ -2282,8 +2291,8 @@ $(function(){
 			self._qs_currentQuickShapeUpdate();
 		};
 
-				/**
-		 * shows transformation handles on QT if it exists.
+		/**
+		 * shows transformation handles on QS if it exists.
 		 * @private
 		 */
 		self._qs_currentQuickShapeShowTransformHandlesIfNotEmpty = function() {
@@ -2324,7 +2333,10 @@ $(function(){
 					star_sharpness: parseFloat($('#quick_shape_star_sharpness').val()),
 					heart_w: parseFloat($('#quick_shape_heart_w').val()),
 					heart_h: parseFloat($('#quick_shape_heart_h').val()),
-					heart_lr: parseFloat($('#quick_shape_heart_lr').val())
+					heart_lr: parseFloat($('#quick_shape_heart_lr').val()),
+					stroke: $('#quick_shape_stroke').prop('checked'),
+					fill_brightness: parseInt($('#quick_shape_fill_brightness').val()),
+					fill: $('#quick_shape_fill').prop('checked')
 				};
 				// update svg object
 				var g = snap.select('#' + self.currentQuickShapeFile.previewId);
@@ -2347,9 +2359,16 @@ $(function(){
 						d = self._qs_getRect(qs_params.rect_w,qs_params.rect_h,qs_params.rect_radius);
 						break;
 				}
-				shape.attr({d: d, stroke: qs_params.color});
+				let stroke = qs_params.stroke ? qs_params.color : 'none';
+				let fill = '#ffffff'; 
+				let fill_op = 0;
+				if(qs_params.fill){
+					fill = "#" + qs_params.fill_brightness.toString(16).padStart(2, '0').repeat(3);
+					fill_op = 1;
+				}
+				shape.attr({d: d, stroke: stroke, fill: fill, 'fill-opacity': fill_op});
 				self.currentQuickShapeFile.qs_params = qs_params;
-				if(d === ""){
+				if(d === "" || (qs_params.stroke === false && qs_params.fill === false)){
 					self.currentQuickShapeFile.invalid = true;
 				} else {
 					self.currentQuickShapeFile.invalid = false;
