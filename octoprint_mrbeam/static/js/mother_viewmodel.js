@@ -265,15 +265,15 @@ $(function () {
         self.prepareDesignStoreTab = function() {
             let design_store_iframe = $('#design_store_iframe');
 			design_store_iframe.on('load', function(){
-                // Listener for messages from the iframe
+                // When the iframe sends the discovery message, we respond with the user data.
                 function receiveMessages(event) {
                     if (event.origin === self.DESIGN_STORE_IFRAME_SRC) {
                         self.onDesignTabIframeResponse();
                         console.log(event.data);
                         let userData = {
                             email: self.loginState.username(),
-                            snr: MRBEAM_SERIAL,
-                            token: null,  // todo
+                            serial: MRBEAM_SERIAL,
+                            user_token: null,  // todo
                             version: BEAMOS_VERSION,
                         };
 
@@ -285,6 +285,14 @@ $(function () {
 
 			// Add iframe source
             design_store_iframe.attr('src', self.DESIGN_STORE_IFRAME_SRC);
+        };
+
+        self.signupToDesignStore = function() {
+
+        };
+
+        self.loginToDesignStore = function() {
+
         };
 
         self.onDesignTabIframeResponse = function() {
