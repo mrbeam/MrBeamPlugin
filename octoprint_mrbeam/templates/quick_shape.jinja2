@@ -43,7 +43,7 @@
 				<div class="tab-pane" id="circle">
 					<form role="form" class="form-horizontal" data-bind="submit: _qs_dialogClose">
 						<div class="control-group">
-							<label class="control-label"><i class="icon">Ø</i></label>
+							<label class="control-label"><i class="icon"></i>Ø</label>
 							<div class="controls">
 								<input type="number" id="quick_shape_circle_radius" min="1" data-bind="textInput: _qs_currentQuickShapeUpdate(), attr:{max: workingAreaHeightMM}">
                                 <span style="display:inline-block">mm</span>
@@ -54,20 +54,20 @@
 				<div class="tab-pane" id="star">
 					<form role="form" class="form-horizontal" data-bind="submit: _qs_dialogClose">
 						<div class="control-group">
-							<label class="control-label"><i class="icon">Ø</i></label>
+							<label class="control-label"><i class="icon"></i>Ø</label>
 							<div class="controls">
 								<input type="number" id="quick_shape_star_radius" class="input-block" min="0" data-bind="textInput: _qs_currentQuickShapeUpdate(), attr:{max: workingAreaHeightMM}">
                                 <span style="display:inline-block">mm</span>
 							</div>
 						</div>
 						<div class="control-group">
-							<label class="control-label"><i class="icon">{{ _('Corners') }}</i></label>
+							<label class="control-label"><i class="icon"></i>{{ _('Corners') }}</label>
 							<div class="controls">
 								<input type="number" id="quick_shape_star_corners" class="input-block" min="3" max="32" data-bind="textInput: _qs_currentQuickShapeUpdate()">
 							</div>
 						</div>
 						<div class="control-group">
-							<label class="control-label"><i class="icon">{{ _('Sharpness') }}</i></label>
+							<label class="control-label"><i class="icon"></i>{{ _('Sharpness') }}</label>
 							<div class="controls">
 								<input type="range" id="quick_shape_star_sharpness" class="precisionslider quickshape-slider padding-top" step="0.1" min="0" max="0.9" data-bind="textInput: _qs_currentQuickShapeUpdate()" value="0.5">
 							</div>
@@ -99,12 +99,43 @@
 					</form>
 				</div>
 			</div>
-			<div>
+			<div id="quick_shape_stroke_and_fill">
 				<form role="form" class="form-horizontal" data-bind="submit: _qs_dialogClose" _lpchecked="1">
 					<div class="control-group">
 						<label class="control-label">{{ _('Line Color') }}</label>
 						<div class="controls">
+							<input type="checkbox" value="stroke" id="quick_shape_stroke" checked data-bind="click: _qs_currentQuickShapeUpdate()" />
 							<input type="color" id="quick_shape_color" data-bind="textInput: _qs_currentQuickShapeUpdate()" />
+<!--							<select id="quick_shape_color_selector" >
+								<option value="#e25303" style="background-color: #e25303;"></option>
+								<option value="#000000" style="background-color: #000000;"></option>
+								<option value="#800000" style="background-color: #800000;"></option>
+								<option value="#008000" style="background-color: #008000;"></option>
+								<option value="#000080" style="background-color: #000080;"></option>
+								<option value="#808000" style="background-color: #808000;"></option>
+								<option value="#800080" style="background-color: #800080;"></option>
+								<option value="#008080" style="background-color: #008080;"></option>
+								<option value="#ff0000" style="background-color: #ff0000;"></option>
+								<option value="#00ff00" style="background-color: #00ff00;"></option>
+								<option value="#0000ff" style="background-color: #0000ff;"></option>
+								<option value="#ffff00" style="background-color: #ffff00;"></option>
+								<option value="#ff00ff" style="background-color: #ff00ff;"></option>
+								<option value="#00ffff" style="background-color: #00ffff;"></option>
+							</select>-->
+						</div>
+					</div>
+				</form>
+				
+
+				<form role="form" class="form-horizontal" data-bind="submit: _qs_dialogClose" _lpchecked="1">
+					<div class="control-group">
+						<label class="control-label">{{ _('Fill') }}</label>
+						<div class="controls">
+							<input type="checkbox" value="fill" id="quick_shape_fill" data-bind="click: _qs_currentQuickShapeUpdate()" />
+							<input type="range" id="quick_shape_fill_brightness" 
+								   class="precisionslider"
+								   data-bind="textInput: _qs_currentQuickShapeUpdate()" 
+								   value="0" min="0" max="255" />
 						</div>
 					</div>
 				</form>
