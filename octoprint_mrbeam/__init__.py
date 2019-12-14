@@ -1496,9 +1496,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		else:
 			params['log_filename'] = ''
 
+		from .gcodegenerator.converter import OutOfSpaceException
 		try:
 			from .gcodegenerator.converter import Converter
-			from .gcodegenerator.converter import OutOfSpaceException
 
 			is_job_cancelled() #check before conversion started
 
