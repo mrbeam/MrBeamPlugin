@@ -1955,7 +1955,7 @@ $(function(){
 		self.draw_gcode_img_placeholder = function(x,y,w,h,url, target){
 			if(url !== ""){
 				var p = snap.image(url,x,y,w,h).attr({
-					transform: 'matrix(1,0,0,-1,0,'+ String(h) +')',
+					transform: 'matrix(1,0,0,-1,0,'+ String(h+y*2) +')',
 					filter: 'url(#gcimage_preview)'
 				});
 
