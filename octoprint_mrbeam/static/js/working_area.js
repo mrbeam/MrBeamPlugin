@@ -2795,7 +2795,7 @@ $(function(){
 			// TODO use self._prepareAndInsertSVG(fragment, previewId, origin, '', {showTransformHandles: false, embedGCode: false});
 			// replaces all code below.
 			var text = uc.text(x, y, placeholderText);
-			text.attr('style', 'white-space: pre; font-size: '+size+'; font-family: Ubuntu; text-anchor: middle');
+			text.attr('style', 'white-space: pre; font-size: '+size+'px; font-family: Ubuntu; text-anchor: middle');
 
 			var box = uc.rect(); // will be placed and sized by self._qt_currentQuickTextUpdateText()
 			box.attr({
