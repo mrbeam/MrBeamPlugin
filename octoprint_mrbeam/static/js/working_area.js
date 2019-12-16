@@ -2847,8 +2847,9 @@ $(function(){
 					for(var r=0;r<rules.length;r++) {
 						 if (rules[r].constructor == CSSFontFaceRule) {
 							 // if (rules[r].cssText && rules[r].cssText.includes('MrBeamQuickText')) {
-							 if (rules[r].style && rules[r].style.fontFamily) {
-								 var fontName = rules[r].style.fontFamily.replace(/["']/g, '').trim();
+							 if (rules[r].style) {
+								 var fontName = rules[r].style.getPropertyValue('font-family');
+								 fontName = fontName.replace(/["']/g, '').trim();
 								 if (self.fontMap.indexOf(fontName) > -1) {
 									 $(elem).append(rules[r].cssText);
 								 }
