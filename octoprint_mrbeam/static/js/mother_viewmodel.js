@@ -266,38 +266,52 @@ $(function () {
             let design_store_iframe = $('#design_store_iframe');
 			design_store_iframe.on('load', function(){
                 // When the iframe sends the discovery message, we respond with the user data.
-                function receiveMessages(event) {
+                function receiveMessagesFromDesignStoreIframe(event) {
                     if (event.origin === self.DESIGN_STORE_IFRAME_SRC) {
-                        self.onDesignTabIframeResponse();
-                        console.log(event.data);
-                        let userData = {
-                            email: self.loginState.username(),
-                            serial: MRBEAM_SERIAL,
-                            user_token: null,  // todo
-                            version: BEAMOS_VERSION,
-                        };
-
-                        document.getElementById('design_store_iframe').contentWindow.postMessage(userData, self.DESIGN_STORE_IFRAME_SRC);
+                        console.log('## Plugin receiving ##');
+                        if (event.data.event === 'discovery') {
+                            console.log('# DISCOVERY');
+                            self.onDesignStoreDiscovery();
+                        } else if (event.data.event === 'token') {
+                            console.log('# TOKEN');
+                            self.onDesignStoreTokenReceived(event.data.payload);
+                        }
                     }
                 }
-                window.addEventListener('message', receiveMessages, false);
+                window.addEventListener('message', receiveMessagesFromDesignStoreIframe, false);
 			});
 
 			// Add iframe source
             design_store_iframe.attr('src', self.DESIGN_STORE_IFRAME_SRC);
         };
 
-        self.signupToDesignStore = function() {
+        self.sendMessageToDesignStoreIframe = function (event, payload) {
+            console.log('## Plugin sending ##');
+            let data = {
+                event: event,
+                payload: payload,
+            };
 
+            document.getElementById('design_store_iframe').contentWindow.postMessage(data, self.DESIGN_STORE_IFRAME_SRC);
         };
 
-        self.loginToDesignStore = function() {
-
-        };
-
-        self.onDesignTabIframeResponse = function() {
+        self.onDesignStoreDiscovery = function () {
             $('#design_store_iframe').show();
             $('#design_store_offline_placeholder').hide();
+
+            let userData = {
+                email: self.loginState.username(),
+                serial: MRBEAM_SERIAL,
+                user_token: null,  // todo
+                version: BEAMOS_VERSION,
+            };
+
+            self.sendMessageToDesignStoreIframe('userData', userData)
+        };
+
+        self.onDesignStoreTokenReceived = function (payload) {
+            // todo iratxe: save token to user settings
+            console.log(payload.token);
         };
 
         self.addSwUpdateTierInformation = function(){
