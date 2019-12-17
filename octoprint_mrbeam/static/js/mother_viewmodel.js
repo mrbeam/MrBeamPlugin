@@ -302,7 +302,7 @@ $(function () {
             let userData = {
                 email: self.loginState.username(),
                 serial: MRBEAM_SERIAL,
-                user_token: null,  // todo
+                user_token: self.loginState.currentUser().settings.mrbeam.user_token,
                 version: BEAMOS_VERSION,
             };
 
@@ -310,8 +310,17 @@ $(function () {
         };
 
         self.onDesignStoreTokenReceived = function (payload) {
-            // todo iratxe: save token to user settings
             console.log(payload.token);
+            self.saveTokenInUserSettings(payload.token)
+        };
+
+        self.saveTokenInUserSettings = function (token) {
+            let oldToken = self.loginState.currentUser().settings.mrbeam.user_token;
+            if (oldToken !== token) {
+                let currentUserSettings = self.loginState.currentUser().settings;
+                currentUserSettings['mrbeam']['user_token'] = token;
+                self.navigation.usersettings.updateSettings(self.loginState.currentUser().name, currentUserSettings);
+            }
         };
 
         self.addSwUpdateTierInformation = function(){
