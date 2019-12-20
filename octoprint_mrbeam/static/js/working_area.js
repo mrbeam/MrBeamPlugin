@@ -1955,7 +1955,7 @@ $(function(){
 		self.draw_gcode_img_placeholder = function(x,y,w,h,url, target){
 			if(url !== ""){
 				var p = snap.image(url,x,y,w,h).attr({
-					transform: 'matrix(1,0,0,-1,0,'+ String(h) +')',
+					transform: 'matrix(1,0,0,-1,0,'+ String(h+y*2) +')',
 					filter: 'url(#gcimage_preview)'
 				});
 
@@ -2795,7 +2795,7 @@ $(function(){
 			// TODO use self._prepareAndInsertSVG(fragment, previewId, origin, '', {showTransformHandles: false, embedGCode: false});
 			// replaces all code below.
 			var text = uc.text(x, y, placeholderText);
-			text.attr('style', 'white-space: pre; font-size: '+size+'; font-family: Ubuntu; text-anchor: middle');
+			text.attr('style', 'white-space: pre; font-size: '+size+'px; font-family: Ubuntu; text-anchor: middle');
 
 			var box = uc.rect(); // will be placed and sized by self._qt_currentQuickTextUpdateText()
 			box.attr({
@@ -2847,8 +2847,9 @@ $(function(){
 					for(var r=0;r<rules.length;r++) {
 						 if (rules[r].constructor == CSSFontFaceRule) {
 							 // if (rules[r].cssText && rules[r].cssText.includes('MrBeamQuickText')) {
-							 if (rules[r].style && rules[r].style.fontFamily) {
-								 var fontName = rules[r].style.fontFamily.replace(/["']/g, '').trim();
+							 if (rules[r].style) {
+								 var fontName = rules[r].style.getPropertyValue('font-family');
+								 fontName = fontName.replace(/["']/g, '').trim();
 								 if (self.fontMap.indexOf(fontName) > -1) {
 									 $(elem).append(rules[r].cssText);
 								 }
