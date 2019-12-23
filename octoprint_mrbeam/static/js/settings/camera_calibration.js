@@ -22,14 +22,19 @@ $(function () {
 		self.conversion = parameters[2];
 		self.analytics = parameters[3];
 
-		self.scaleFactor = 6;
+		self.zoomIn = ko.observable(false);
+		self.focusX = ko.observable(0);
+		self.focusY = ko.observable(0);
+		self.picType = ko.observable("raw");
 		// todo get ImgUrl from Backend/Have it hardcoded but right
 		self.calImgUrl = ko.observable(self.staticURL);
 		self.calImgWidth = ko.observable(2048);
 		self.calImgHeight = ko.observable(1536);
 		self.calSvgOffX = ko.observable(0);
 		self.calSvgOffY = ko.observable(0);
-		self.calSvgScale = ko.observable(1);
+		self.calSvgDx = ko.observable(0);
+		self.calSvgDy = ko.observable(0);
+		self.calSvgScale = ko.observable(4);
 		self.calibrationActive = ko.observable(false);
 		self.currentResults = ko.observable({});
 		self.calibrationComplete = ko.computed(function(){
@@ -58,22 +63,45 @@ $(function () {
 			else return p.x+','+p.y;
 		};
 
-
+		
 		self.calSvgViewBox = ko.computed(function () {
-			var w = self.calImgWidth() / self.calSvgScale();
-			var h = self.calImgHeight() / self.calSvgScale();
+			var zoom = self.zoomIn() ? self.calSvgScale() : 1;
+			var w = self.calImgWidth() / zoom;
+			var h = self.calImgHeight() / zoom;
+			var offX = Math.min(Math.max(self.focusX() - w / zoom, 0), self.calImgWidth() - w) + self.calSvgDx();
+			var offY = Math.min(Math.max(self.focusY() - h / zoom, 0), self.calImgHeight() - h) + self.calSvgDy();
+			self.calSvgOffX(offX);
+			self.calSvgOffY(offY);
 			return [self.calSvgOffX(), self.calSvgOffY(), w, h].join(' ');
 		});
 		self.currentMarker = 0;
 		self.currentMarkersFound = {};
 
 		self.calibrationMarkers = [
-			{name: 'start', desc: 'click to start', focus: [0, 0, 1]},
-			{name: 'NW', desc: 'North West', focus: [0, 0, self.scaleFactor]},
-			{name: 'SW', desc: 'North East', focus: [0, self.calImgHeight(), self.scaleFactor]},
-			{name: 'SE', desc: 'South East', focus: [self.calImgWidth(), self.calImgHeight(), self.scaleFactor]},
-			{name: 'NE', desc: 'South West', focus: [self.calImgWidth(), 0, self.scaleFactor]}
+			{name: 'start', desc: 'click to start', focus: [0, 0, false]},
+			{name: 'NW', desc: 'North West', focus: [0, 0, true]},
+			{name: 'SW', desc: 'North East', focus: [0, self.calImgHeight(), true]},
+			{name: 'SE', desc: 'South East', focus: [self.calImgWidth(), self.calImgHeight(), true]},
+			{name: 'NE', desc: 'South West', focus: [self.calImgWidth(), 0, true]}
 		];
+
+		self.larger = function(){
+			var val = Math.min(self.calSvgScale() + 1, 10);
+			self.calSvgScale(val);
+		}
+		self.smaller = function(){
+			var val = Math.max(self.calSvgScale() - 1, 1);
+			self.calSvgScale(val);
+		}
+		self.move = function(dx, dy){
+			self.calSvgDx(self.calSvgDx()+dx);
+			self.calSvgDy(self.calSvgDy()+dy);
+		}
+		self.resetMove = function(){
+			self.calSvgDx(0);
+			self.calSvgDy(0);
+		}
+
 
 		self.startCalibration = function () {
 		    self.analytics.send_fontend_event('calibration_start', {});
@@ -143,18 +171,10 @@ $(function () {
 		self._highlightStep = function(step){
 			$('.cal-row').removeClass('active');
 			$('#'+step.name).addClass('active');
-			self._zoomTo(step.focus[0], step.focus[1], step.focus[2]);
+			self.focusX(step.focus[0]);
+			self.focusY(step.focus[1]);
+			self.zoomIn(step.focus[2])
 		}
-
-		self._zoomTo = function (x, y, scale) {
-			self.calSvgScale(scale);
-			var w = self.calImgWidth() / scale;
-			var h = self.calImgHeight() / scale;
-			var offX = Math.min(Math.max(x - w / scale, 0), self.calImgWidth() - w);
-			var offY = Math.min(Math.max(y - h / scale, 0), self.calImgHeight() - h);
-			self.calSvgOffX(offX);
-			self.calSvgOffY(offY);
-		};
 
 		self.onStartupComplete = function () {
 //            console.log("CameraCalibrationViewModel.onStartup()");
@@ -216,7 +236,10 @@ $(function () {
 
                 // update image
                 if (data['beam_cam_new_image']['undistorted_saved']) {
-				    console.log("Update imgURL");
+				    console.log("Update imgURL", data);
+//                    self.rawImgUrl('/downloads/files/local/cam/undistorted.jpg' + '?' + new Date().getTime());
+//                    self.undistortedImgUrl('/downloads/files/local/cam/undistorted.jpg' + '?' + new Date().getTime());
+//                    self.croppedImgUrl('/downloads/files/local/cam/undistorted.jpg' + '?' + new Date().getTime());
                     self.calImgUrl('/downloads/files/local/cam/undistorted.jpg' + '?' + new Date().getTime());
 
                     console.log("isInitialCalibration: " + self.isInitialCalibration());
@@ -284,6 +307,10 @@ $(function () {
 				}
 			});
 		};
+		
+		self.engrave_markers_without_gui = function(){
+			
+		};
 
 
 		self.isInitialCalibration = function () {
@@ -341,10 +368,24 @@ $(function () {
 			});
 			self.reset_calibration();
 		};
+		
+		self.abortCalibration = function () {
+			self.calibrationActive(false);
+			new PNotify({
+				title: gettext("Calibration cancelled."),
+				text: gettext("Feel free to restart"),
+				type: "info",
+				hide: true
+			});
+			self.reset_calibration();
+		};
 
 		self.reset_calibration = function(){
 			self.calImgUrl(self.staticURL);
-			self._zoomTo(0,0,1);
+			self.focusX(0);
+			self.focusY(0);
+			self.zoomIn(false)
+			self.calSvgScale(1);
 			self.currentMarker = 0;
 			self.currentMarkersFound = {};
 			self.markersFound(false);
