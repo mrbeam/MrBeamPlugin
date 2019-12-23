@@ -405,7 +405,6 @@ $(function () {
 			self.focusX(0);
 			self.focusY(0);
 			self.zoomIn(false)
-			self.calSvgScale(1);
 			self.currentMarker = 0;
 			self.currentMarkersFound = {};
 			self.markersFound(false);
