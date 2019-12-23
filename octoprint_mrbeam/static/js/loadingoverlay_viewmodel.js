@@ -25,14 +25,18 @@ $(function() {
         });
 
         self.removeLoadingOverlay = function(){
-            $('#loading_overlay').hide();
+			$('body').addClass('ready');
+			setTimeout(function(){
+				$('#loading_overlay').fadeOut();
+			}, 3000);
             callViewModels(self.allViewModels, 'onCurtainOpened');
             console.log("beamOS started. overlay removed.");
             console.log("%c      ", "color: transparent; font-size: 150px; background:url('https://www.mr-beam.org/wp-content/themes/mrbeam/mysite/images/logo-icon.svg') no-repeat bottom left");
         };
 
         self.showReloading = function(){
-            self.display_state(self.TEXT_RELOADING);
+            $('body').removeClass('ready');
+			self.display_state(self.TEXT_RELOADING);
             $('#loading_overlay').show();
         };
 
