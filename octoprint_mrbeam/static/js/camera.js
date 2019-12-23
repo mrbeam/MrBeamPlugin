@@ -21,7 +21,9 @@ $(function(){
         self.onAllBound = function () {
             self.webCamImageElem = $("#beamcam_image_svg");
 			self.cameraMarkerElem = $("#camera_markers");
-			self.previewImageFilter = snap.select('#preview_precision feGaussianBlur');
+//			if(snap){
+			self.previewImageFilter = $('#preview_precision feGaussianBlur');
+//			}
             // self.webCamImageElem.removeAttr('onerror');
             self.camEnabled = self.settings.settings.plugins.mrbeam.cam.enabled();
             self.imageUrl = self.settings.settings.plugins.mrbeam.cam.frontendUrl();

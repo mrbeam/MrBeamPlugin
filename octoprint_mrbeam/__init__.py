@@ -52,6 +52,7 @@ from octoprint_mrbeam.gcodegenerator.jobtimeestimation import JobTimeEstimation
 from .analytics.uploader import AnalyticsFileUploader
 from octoprint.filemanager.destinations import FileDestinations
 from octoprint_mrbeam.util.material_csv_parser import parse_csv
+from octoprint_mrbeam.util.calibration_marker import CalibrationMarker
 
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
 __builtin__._mrbeam_plugin_implementation = None
@@ -863,7 +864,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return r
 
 	### Initial Camera Calibration - START ###
-	# The next two calls are needed for first-run and initial camera calibration
+	# The next calls are needed for first-run and initial camera calibration
 
 	@octoprint.plugin.BlueprintPlugin.route("/take_undistorted_picture", methods=["GET"])
 	#@firstrun_only_access
@@ -874,7 +875,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 
 	@octoprint.plugin.BlueprintPlugin.route("/send_calibration_markers", methods=["POST"])
-	#@firstrun_only_access
+	#@firstrun_only_access #@maintenance_stick_only_access
 	def sendInitialCalibrationMarkers(self):
 		if not "application/json" in request.headers["Content-Type"]:
 			return make_response("Expected content-type JSON", 400)
@@ -891,6 +892,40 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return make_response("No profile included in request", 400)
 
 		self.camera_calibration_markers(json_data)
+		return NO_CONTENT
+
+	@octoprint.plugin.BlueprintPlugin.route("/engrave_calibration_markers/<string:intensity>/<string:feedrate>", methods=["GET"])
+	#@firstrun_only_access #@maintenance_stick_only_access
+	def engraveCalibrationMarkers(self, intensity, feedrate):
+		profile = self.laserCutterProfileManager.get_current_or_default()
+		max_intensity = 1300 #TODO get magic numbers from profile
+		min_intensity = 0 
+		min_feedrate = 100
+		max_feedrate = 3000
+		try:
+			i = int(int(intensity)/100.0 * max_intensity)
+			f = int(feedrate)
+		except ValueError:
+			return make_response("Invalid parameters", 400)
+		
+		# validate input
+		if(i < min_intensity or i > max_intensity or f < min_feedrate or f > max_feedrate): 
+			return make_response("Invalid parameters", 400)
+		cm = CalibrationMarker(str(profile['volume']['width']), str(profile['volume']['depth']))
+		gcode = cm.getGCode(i, f)
+		
+		# run gcode
+		# check serial connection
+		if self._printer is None or self._printer._comm is None:
+			return make_response("Laser: Serial not connected", 400)
+		
+		# check if idle
+		if not self._printer.is_operational():
+			return make_response("Laser not idle", 403)
+
+		# select "file" and start
+		self._printer._comm.selectGCode(gcode)
+		self._printer._comm.startPrint()
 		return NO_CONTENT
 
 	### Initial Camera Calibration - END ###
@@ -1019,17 +1054,19 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@restricted_access
 	def generateCalibrationMarkersSvg(self):
 		profile = self.laserCutterProfileManager.get_current_or_default()
-		#print profile
-		xmin = '0'
-		ymin = '0'
-		xmax = str(profile['volume']['width'])
-		ymax = str(profile['volume']['depth'])
-		svg = """<svg id="calibration_markers-0" viewBox="%(xmin)s %(ymin)s %(xmax)s %(ymax)s" height="%(ymax)smm" width="%(xmax)smm">
-		<path id="NE" d="M%(xmax)s %(ymax)sl-20,0 5,-5 -10,-10 10,-10 10,10 5,-5 z" style="stroke:#000000; stroke-width:1px; fill:none;" />
-		<path id="NW" d="M%(xmin)s %(ymax)sl20,0 -5,-5 10,-10 -10,-10 -10,10 -5,-5 z" style="stroke:#000000; stroke-width:1px; fill:none;" />
-		<path id="SW" d="M%(xmin)s %(ymin)sl20,0 -5,5 10,10 -10,10 -10,-10 -5,5 z" style="stroke:#000000; stroke-width:1px; fill:none;" />
-		<path id="SE" d="M%(xmax)s %(ymin)sl-20,0 5,5 -10,10 10,10 10,-10 5,5 z" style="stroke:#000000; stroke-width:1px; fill:none;" />
-		</svg>"""  % {'xmin': xmin, 'xmax': xmax, 'ymin': ymin, 'ymax': ymax}
+		cm = CalibrationMarker(str(profile['volume']['width']), str(profile['volume']['depth']))
+		svg = cm.getSvg()
+#		#print profile
+#		xmin = '0'
+#		ymin = '0'
+#		xmax = str(profile['volume']['width'])
+#		ymax = str(profile['volume']['depth'])
+#		svg = """<svg id="calibration_markers-0" viewBox="%(xmin)s %(ymin)s %(xmax)s %(ymax)s" height="%(ymax)smm" width="%(xmax)smm">
+#		<path id="NE" d="M%(xmax)s %(ymax)sl-20,0 5,-5 -10,-10 10,-10 10,10 5,-5 z" style="stroke:#000000; stroke-width:1px; fill:none;" />
+#		<path id="NW" d="M%(xmin)s %(ymax)sl20,0 -5,-5 10,-10 -10,-10 -10,10 -5,-5 z" style="stroke:#000000; stroke-width:1px; fill:none;" />
+#		<path id="SW" d="M%(xmin)s %(ymin)sl20,0 -5,5 10,10 -10,10 -10,-10 -5,5 z" style="stroke:#000000; stroke-width:1px; fill:none;" />
+#		<path id="SE" d="M%(xmax)s %(ymin)sl-20,0 5,5 -10,10 10,10 10,-10 5,5 z" style="stroke:#000000; stroke-width:1px; fill:none;" />
+#		</svg>#"""  % {'xmin': xmin, 'xmax': xmax, 'ymin': ymin, 'ymax': ymax}
 
 #'name': 'Dummy Laser',
 #'volume': {'width': 500.0, 'depth': 390.0, 'height': 0.0, 'origin_offset_x': 1.1, 'origin_offset_y': 1.1},
@@ -1378,6 +1415,42 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return NO_CONTENT
 
 	def take_undistorted_picture(self, is_initial_calibration):
+		if(os.environ['HOME'] == "/home/teja"):
+			from flask import make_response
+			self._logger.debug("DEBUG MODE: Took dummy picture")
+			meta_data = {
+				"corners_calculated":{
+					"SW":[230,1519],
+					"NE":[1908,165],
+					"SE":[1912,1492],
+					"NW":[184,206]},
+					"undistorted_saved":True,
+					"error":False,
+					"successful_correction":True,
+					"markers_recognized":4,
+					"high_precision":None,
+					"blur_factor":{"SW":209.58250943072701,"NE":54.93036967592592,"SE":168.22287029320987,"NW":34.196694101508925},
+					"markers_found":{
+						"SW":{"hue_lower":105,"r":8,"y":1460,"x":182,"pixels":873,"recognized":True},
+						"NE":{"hue_lower":110,"r":19,"y":286,"x":1966,"pixels":831,"recognized":True},
+						"SE":{"hue_lower":110,"r":10,"y":1442,"x":1974,"pixels":803,"recognized":True},
+						"NW":{"hue_lower":110,"r":18,"y":326,"x":136,"pixels":814,"recognized":True}
+					},
+					"precision":{
+						"sliding_window":5,
+						"max_deviation":20,
+						"markers":{
+							"SW":{"is_precise":True,"my":1458,"mx":181,"dx":1,"dy":2},
+							"NE":{"is_precise":True,"my":283,"mx":1965,"dx":1,"dy":3},
+							"SE":{"is_precise":True,"my":1441,"mx":1974,"dx":0,"dy":1},
+							"NW":{"is_precise":True,"my":324,"mx":136,"dx":0,"dy":2}
+							},
+						"precisionCount":4
+					}
+				}
+			self._plugin_manager.send_plugin_message("mrbeam", dict(beam_cam_new_image=meta_data))
+			return make_response("DEBUG MODE: Took dummy picture", 200)
+		
 		self._logger.debug("New undistorted image is requested. is_initial_calibration: %s", is_initial_calibration)
 		image_response = self.lid_handler.take_undistorted_picture(is_initial_calibration)
 		self._logger.debug("Image_Response: {}".format(image_response))

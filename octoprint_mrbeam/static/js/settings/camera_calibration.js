@@ -309,7 +309,27 @@ $(function () {
 		};
 		
 		self.engrave_markers_without_gui = function(){
-			
+			var intensity = $('#initialcalibration_intensity').val()
+			var feedrate = $('#initialcalibration_feedrate').val()
+			var url = "/plugin/mrbeam/engrave_calibration_markers/"+intensity+"/"+feedrate
+			$.ajax({
+				type: "GET",
+				url: url,
+				data: {},
+				success: function (data) {
+					console.log("Success", url, data);
+					
+				},
+				error: function (jqXHR, textStatus, errorThrown) {
+				    new PNotify({
+                        title: gettext("Error"),
+                        text: _.sprintf(gettext("Marker engraving failed: <br>%(errmsg)s<br>Error:<br/>%(code)s %(status)s - %(errorThrown)s"), 
+						{errmsg: jqXHR.responseText, code: jqXHR.status, status: textStatus, errorThrown: errorThrown}),
+                        type: "error",
+                        hide: false
+				    })
+				}
+			});
 		};
 
 

@@ -1,6 +1,11 @@
 
 <div style="position:relative;">
 	<svg id="calibration_svg" style="max-width: 80vh; border:1px solid lightgray" width="100%" height="100%" viewBox="0 0 512 384" data-bind="attr: {viewBox: calSvgViewBox()}">
+		<defs>
+			<filter id="preview_precision">
+				<feGaussianBlur in="SourceGraphic" stdDeviation="0" />
+			</filter>
+		</defs>
 		<image style="cursor:crosshair;" data-bind="attr: {href: calImgUrl(), width:calImgWidth(), height:calImgHeight() }, click: userClick" />
 		<circle id="click_NW" r="4" cx="-100" cy="-100" class="calibration_click_indicator" />
 		<circle id="click_SW" r="4" cx="-100" cy="-100" class="calibration_click_indicator" />
@@ -20,9 +25,22 @@
 			<div>{{_('Click on the arrow head of the marker in the magnified picture.') }}<br/>
 			{{_('Continue with the other markers as the picture changes.') }}<br/>
 			{{_('Once all arrowheads are marked the calibration is finished.')}}</div>
+			<div data-bind="visible: isInitialCalibration()">
+				{{_('No markers visible?')}}
+				<a href="#reengrave_markers" class="dropdown" data-toggle="collapse" aria-expanded="false">
+					{{_('Engrave again')}}
+				</a>
+				<span class="caret" style="vertical-align: middle"></span>
+				<div class="collapse" id="reengrave_markers" style="display:inline-block;">
+					<div>
+						Intensity: <input id="initialcalibration_intensity" type="number" min="0" max="100" step="1" class="decent_input" value="50" />%,&nbsp;
+						Feedrate: <input id="initialcalibration_feedrate" type="number" min="100" max="3000" step="1" class="decent_input" value="800" />mm/min&nbsp; 
+						<button class="btn btn-danger" data-bind="click: engrave_markers_without_gui, visible: isInitialCalibration()"><i class="icon-fire"></i>&nbsp;{{ _('Engrave Markers') }}</button>
+					</div>
+				</div>
+			</div>
 			<div style="margin-top:1em;">
 				<button class="btn btn-default" data-bind="click: startCalibration">{{ _('Start Calibration') }}</button>
-				<button class="btn btn-default" data-bind="click: engrave_markers, visible: isInitialCalibration()">{{ _('Engrave Markers') }}</button>
 			</div>
 		</div>
 		<div class="marker_selection_desc calibration_summary" data-bind="visible: markersFound() && calibrationActive()">

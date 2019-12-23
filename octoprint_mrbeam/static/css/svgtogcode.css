@@ -778,3 +778,19 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	height: 2em;
 }
 
+#reengrave_markers div {
+	padding: 0em 0em 0em 1em;
+	border: 1px solid #d34843;
+	overflow: hidden;
+	margin-top: 1em;
+	box-sizing: border-box;
+}
+
+#reengrave_markers input {
+	width: 3em;
+	height: 0.75em;
+	margin-bottom: 0;
+	border-radius: 0.75em;
+	background-color: #eee;
+	margin-right: 0.3em;
+}

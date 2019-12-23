@@ -1788,6 +1788,18 @@ class MachineCom(object):
 			"origin": self._currentFile.getFileLocation()
 		})
 		self._callback.on_comm_file_selected(filename, self._currentFile.getFilesize(), False)
+		
+	def selectGCode(self, gcode):
+		if self.isBusy():
+			return
+
+		self._currentFile = PrintingGcodeFromMemoryInformation(gcode)
+		eventManager().fire(OctoPrintEvents.FILE_SELECTED, {
+			"file": self._currentFile.getFilename(),
+			"filename": os.path.basename(self._currentFile.getFilename()),
+			"origin": self._currentFile.getFileLocation()
+		})
+		self._callback.on_comm_file_selected("In_Memory_GCode", self._currentFile.getFilesize(), False)
 
 	def unselectFile(self):
 		if self.isBusy():
@@ -2279,6 +2291,72 @@ class PrintingGcodeFileInformation(PrintingFileInformation):
 			self._logger.error("Can't convert _lines_total to int: value is %s", tmp)
 		return res
 
+class PrintingGcodeFromMemoryInformation(PrintingGcodeFileInformation):
+	
+	def __init__(self, gcode):
+		PrintingFileInformation.__init__(self, "in_memory_gcode")
+		self._gcode = gcode.split("\n")
+		self._size = len(gcode)
+		self._first_line = None
+		self._offsets_callback = None
+		self._current_tool_callback = None
+		self._pos = 0
+		self._comment_size = 0
+		self._lines_total = len(self._gcode)
+		self._lines_read = 0
+		self._lines_read_bak = 0
+
+	def start(self):
+		PrintingFileInformation.start(self)
+		self._lines_read = 0
+		self._lines_read_bak = 0
+
+	def close(self):
+		PrintingFileInformation.close(self)
+		self._gcode = None
+
+	def resetToBeginning(self):
+		self._logger.debug("resetToBeginning() self._lines_read %s, self._lines_read_bak: %s", self._lines_read, self._lines_read_bak)
+		self._lines_read = 0
+		self._pos = 0
+		self._comment_size = 0
+
+	def getNext(self):
+		"""
+		Retrieves the next line for printing.
+		"""
+		if self._gcode is None:
+			raise ValueError("Line buffer is not filled")
+
+		try:
+			processed = None
+			while processed is None:
+				if self._gcode is None:
+					# file got closed just now
+					self._logger.debug("getNext() self._gcode is None -> returning None")
+					return None
+				
+				line = None
+				try:
+					line = self._gcode[self._lines_read]
+					self._lines_read += 1
+					self._lines_read_bak += 1
+					self._pos += len(line)
+				except IndexError:
+					self._logger.debug("getNext() read line raised IndexError -> closing self._gcode")
+					self.close()
+				
+				if(line != None):
+					processed = process_gcode_line(line)
+					if processed is None:
+						self._comment_size += len(line)
+			
+			return processed
+		except Exception as e:
+			self.close()
+			self._logger.exception("Exception while processing line")
+			raise e
+	
 
 def convert_pause_triggers(configured_triggers):
 	triggers = {
