@@ -125,6 +125,33 @@
 			0% { stroke-dashoffset: 250; }
 			100% { stroke-dashoffset: 75; }
 		}
+		
+		#loading_icons {
+			color: #e25303; 
+			margin: 1em;
+		}
+		#loading_icons .icon {
+			margin: 0.5em;
+			display: inline-block;
+			transform: translateX(100vw);
+			transition: transform ease-in-out 0.5s 0s;
+			visibility: hidden;
+		}
+		
+		body.loading_step1 #loading_icons .icon:nth-child(1), 
+		body.loading_step2 #loading_icons .icon:nth-child(2), 
+		body.loading_step3 #loading_icons .icon:nth-child(3), 
+		body.loading_step4 #loading_icons .icon:nth-child(4), 
+		body.loading_step5 #loading_icons .icon:nth-child(5), 
+		body.loading_step6 #loading_icons .icon:nth-child(6), 
+		body.loading_step7 #loading_icons .icon:nth-child(7), 
+		body.loading_step8 #loading_icons .icon:nth-child(8), 
+		body.loading_step9 #loading_icons .icon:nth-child(9) 
+		{ transform: none; visibility: visible; }
+		
+		body.ready #loading_icons .icon { transform: translateX(-100vw) !important }
+		
+		
     </style>
     <div class="loading_overlay_background"></div>
     <div class="loading_overlay_wrapper">
@@ -154,6 +181,17 @@
 					</svg>
 
                     <p id="loading_overlay_message" class="loading_overlay_text loading_overlay_red loading_overlay_pulsate3" data-bind="text: display_state">{{ _('beamOS is starting...') }}</p>
+					<div id="loading_icons">
+						<i class="icon-off icon-2x icon"></i>
+						<i class="icon-linux icon-2x icon"></i>
+						<i class="icon-gear icon-2x icon"></i>
+						<i class="icon-terminal icon-2x icon"></i>
+						<i class="icon-code icon-2x icon"></i>
+						<i class="icon-copy icon-2x icon"></i>
+						<i class="icon-laptop icon-2x icon"></i>
+						<i class="icon-comment-alt icon-2x icon"></i>
+						<i class="icon-beaker icon-2x icon"></i>
+					</div>
                 </div>
             </div>
         </div>
