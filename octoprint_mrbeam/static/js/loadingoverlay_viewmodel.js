@@ -28,6 +28,16 @@ $(function() {
 			$('body').addClass('ready');
 			setTimeout(function(){
 				$('#loading_overlay').fadeOut();
+				$('body').removeClass('loading_step1');
+				$('body').removeClass('loading_step2');
+				$('body').removeClass('loading_step3');
+				$('body').removeClass('loading_step4');
+				$('body').removeClass('loading_step5');
+				$('body').removeClass('loading_step6');
+				$('body').removeClass('loading_step7');
+				$('body').removeClass('loading_step8');
+				$('body').removeClass('loading_step9');
+				
 			}, 3000);
             callViewModels(self.allViewModels, 'onCurtainOpened');
             console.log("beamOS started. overlay removed.");

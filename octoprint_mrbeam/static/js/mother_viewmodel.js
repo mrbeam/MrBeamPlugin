@@ -44,6 +44,9 @@ $(function () {
         self.onStartup = function () {
             // TODO fetch machine profile on start
             //self.requestData();
+			$('body').addClass('loading_step1')
+			$('body').addClass('loading_step2')
+			
             self.control.showZAxis = ko.computed(function () {
 //				var has = self.currentProfileData()['zAxis']();
 //				return has;
@@ -202,9 +205,14 @@ $(function () {
 
 			// self.inject_software_update_channel();
             self.setupFullscreenContols();
+			$('body').addClass('loading_step3')
+			$('body').addClass('loading_step4')
+
         };
 
         self.onAllBound = function (allViewModels) {
+			$('body').addClass('loading_step5')
+			$('body').addClass('loading_step6')
             self._force_reload_on_inconsitent_version();
 
             var tabs = $('#mrbeam-main-tabs a[data-toggle="tab"]');
@@ -236,12 +244,17 @@ $(function () {
             // our implementation here should be used instead of octoprints
             // to fix issues with the laser job time display
             self.state._processProgressData = function(){};
+			$('body').addClass('loading_step7')
+			$('body').addClass('loading_step8')
+
         };
 
         self.onStartupComplete = function() {
             self.set_Design_lib_defaults();
             self._handleStoredSocketData();
             self.isStartupComplete = true;
+			$('body').addClass('loading_step9')
+
             self.removeLoadingOverlay();
         };
 
