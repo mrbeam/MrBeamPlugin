@@ -49,8 +49,13 @@ $(function(){
 
 		self.engraveOnlyForced = false;
 
+		// focus reminder
 		self.remindFirstTime = ko.observable(true);
+		self.showFocusReminder = ko.observable(true);
         self.dontRemindMeAgainChecked = ko.observable(false);
+		self.dontRemindMeAgainChecked.subscribe(function(data){
+			self.sendFocusReminderChoiceToServer();
+		});
 
 		// material menu
 		self.material_settings2 = {};
@@ -672,7 +677,14 @@ $(function(){
 
 		// shows conversion dialog and extracts svg first
 		self.show_conversion_dialog = function() {
-		    self.showFocusReminder = ko.observable(self.settings.settings.plugins.mrbeam.focusReminder());
+
+			if (self.showFocusReminder() && self.remindFirstTime()) {
+				$('#laserhead_focus_reminder_modal').modal('show');
+				self.remindFirstTime(false);
+				return;
+			}
+			self.remindFirstTime(true);
+
 			self.workingArea.abortFreeTransforms();
 			self.gcodeFilesToAppend = self.workingArea.getPlacedGcodes();
 			self.show_vector_parameters(self.workingArea.hasStrokedVectors());
@@ -1173,6 +1185,11 @@ $(function(){
 		};
 
 		self.sendFocusReminderChoiceToServer = function () {
+			// TODO
+//		    let showFocusReminder = !self.dontRemindMeAgainChecked();
+//			self.settings.settings.plugins.mrbeam.focusReminder(showFocusReminder);
+//			self.settings.saveall(); // fails on getOnlyChangedData
+			
 		    let focusReminder = !self.dontRemindMeAgainChecked();
             let data = {focusReminder: focusReminder};
             OctoPrint.simpleApiCommand("mrbeam", "focus_reminder", data)
@@ -1231,18 +1248,7 @@ $(function(){
 			    $('#empty_job_modal').find('.modal-body p').text(message);
                 $('#empty_job_modal').modal('show');
 
-            } else if (self.showFocusReminder() && self.remindFirstTime()) {
-                $('#laserhead_focus_reminder_modal').modal('show');
-
 			} else {
-			    if (self.dontRemindMeAgainChecked()) {
-			        self.showFocusReminder(false);
-			        self.sendFocusReminderChoiceToServer();
-			        self.dontRemindMeAgainChecked(false);
-                } else {
-			        self.remindFirstTime(true);
-                }
-
 
 				if(self._allParametersSet()){
 					//self.update_colorSettings();
@@ -1402,6 +1408,7 @@ $(function(){
 
 		self.onAllBound = function(){
             self.hasCompressor(self.settings.settings.plugins.mrbeam.hw_features.has_compressor());
+			self.showFocusReminder(self.settings.settings.plugins.mrbeam.focusReminder());
             self.limitUserInput();
         };
 
