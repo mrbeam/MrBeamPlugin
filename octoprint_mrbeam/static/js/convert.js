@@ -1214,6 +1214,26 @@ $(function(){
 		        self.sendFocusReminderChoiceToServer();
             }
         };
+		
+		self.move_laser_over_material = function() {
+			let x,y;
+			
+			// assumption: center of placed designs is over the material
+			let bb = snap.select('#userContent').getBBox(); // first try svgs, images, qt, qs
+			if(bb.w === 0){ // then try gcodes
+				bb = snap.select('#placedGcodes').getBBox();
+			}
+			if(bb.w > 0){
+				x = bb.cx;
+				y = bb.cy;
+			} else {
+				// fallback
+				x = self.workingArea.workingAreaWidthMM() / 2;
+				y = self.workingArea.workingAreaHeightMM() / 2;
+			}
+			
+			self.workingArea.move_laser_to_xy(x,y);
+		};
 
 		self.convert = function() {
 			if(self.gcodeFilesToAppend.length === 1 && self.svg === undefined) {
