@@ -173,7 +173,7 @@
                                 <div class="accordion-group" id="working_area_files">
 									<div class="accordion-heading">
 										<div class="accordion-toggle"><i class="icon-list"></i> {{ _('Designs') }}</div>
-										<a id="clear_working_area_btn" class="accordion-toggle pull-right" data-bind="visible: !working_area_empty(), click: clear" style="margin-right: 1em;" ><i class="icon-remove-sign"></i> {{ _('Clear all') }}</a>
+										<a id="clear_working_area_btn" class="accordion-toggle pull-right" data-bind="style: {opacity: working_area_empty() ? 0.75 : 1}, click: clear" style="margin-right: 1em;" ><i class="icon-remove-sign"></i> {{ _('Clear all') }}</a>
 									</div>
 									<div class="accordion-body">
 										<div class="accordion-inner">

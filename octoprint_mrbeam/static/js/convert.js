@@ -449,12 +449,12 @@ $(function(){
 			var cols = self.workingArea.getUsedColors();
 			$('.job_row .used_color:not(#cd_engraving)').addClass('not-used');
 			for (var idx = 0; idx < cols.length; idx++) {
-				var c = cols[idx];
-				var selection = $('#cd_color_'+c.hex.substr(1)); // crashes on color definitions like 'rgb(0,0,0)'
+				var hex = cols[idx];
+				var selection = $('#cd_color_'+hex.substr(1)); // crashes on color definitions like 'rgb(0,0,0)'
 				var exists = selection.length > 0;
 				if(! exists){
 					var drop_zone = $('#first_job .color_drop_zone');
-					var i = self._getColorIcon(c);
+					var i = self._getColorIcon(hex);
 					drop_zone.append(i);
 
 					// todo iratxe: fix this. It works but it doesn't disappear anter droping the element somewhere else
@@ -471,8 +471,8 @@ $(function(){
 
 		self._getColorIcon = function(color){
 			var i = $('<div />',{
-				id: 'cd_color_'+color.hex.substr(1),
-				style: "background-color: "+color.hex+";",
+				id: 'cd_color_'+color.substr(1),
+				style: "background-color: "+color+";",
 				draggable: "true",
 				class: 'used_color cutting_job_color'
                 // todo iratxe: fix this

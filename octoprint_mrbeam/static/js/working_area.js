@@ -191,7 +191,6 @@ $(function(){
 		});
 
 		self.hwRatio = ko.computed(function(){
-			// y/x = 297/216 junior, respectively 594/432 senior
 			var w = self.workingAreaWidthMM();
 			var h = self.workingAreaHeightMM();
 			var ratio = h / w;
@@ -267,21 +266,25 @@ $(function(){
 			self.placedDesigns([]);
 		};
 
-		self.colorNamer = new ColorClassifier();
+		//self.colorNamer = new ColorClassifier();
 		self.getUsedColors = function () {
-			var colHash = {};
-			var colFound = [];
-			snap.selectAll('#userContent *[stroke]:not(#bbox)').forEach(function (el) {
-				// TODO this includes stroke colors used in <defs> like patterns e.g. - should they be removed (tbd)?
-				var colHex = el.attr().stroke;
-				if (typeof(colHex) !== 'undefined' && colHex !== 'none' && typeof(colHash[colHex]) === 'undefined') {
-//					var colName = self.colorNamer.classify(colHex);
-					var colName = colHex;
-					colFound.push({hex: colHex, name: colName});
-					colHash[colHex] = 1;
-				}
-			});
+			let colFound = self._getColorsOfSelector('.vector_outline', 'stroke', snap.select('#userContent'));
 			return colFound;
+		};
+		
+		self._getColorsOfSelector = function(selector, color_attr = 'stroke', elem = null){
+			let root = elem === null ? snap : elem;
+			
+			let colors = [];
+			let items = root.selectAll(selector + '['+color_attr+']');
+			for (var i = 0; i < items.length; i++) {
+				let col = items[i].attr()[color_attr];
+				if(col !== 'undefined' && col !== 'none' && col !== null && col !== ''){
+					colors.push(col);
+				}
+			}
+			colors = [...new Set(colors)]; // unique
+			return colors;
 		};
 
 		self._getHexColorStr = function(inputColor){
@@ -678,28 +681,6 @@ $(function(){
 
 				snap.select("#userContent").append(newSvg);
 				self._makeItTransformable(newSvg);
-//				newSvg.transformable();
-//				newSvg.ftRegisterBeforeTransformCallback(function () {
-//					newSvg.clean_gc();
-//				});
-//				newSvg.ftRegisterAfterTransformCallback(function () {
-//					var mb_meta = self._set_mb_attributes(newSvg);
-//					// newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
-//				});
-//
-//				// activate handles on all things we add to the working_area
-//				if (switches.showTransformHandles) {
-//					self.showTransformHandles(id, true);
-//				}
-//
-//				var mb_meta = self._set_mb_attributes(newSvg);
-//				// if(switches.embedGCode){
-//				// 	newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
-//				// }
-//
-//				setTimeout(function () {
-//					newSvg.ftRegisterOnTransformCallback(self.svgTransformUpdate);
-//				}, 200);
 
 				return id;
 			} catch(e) {
@@ -1009,7 +990,13 @@ $(function(){
 		self.splitSVG = function(elem) {
 			self.abortFreeTransforms();
 			let srcElem = snap.select('#'+elem.previewId);
-			let parts = srcElem.separate_children(2);
+			let strokeColors = self._getColorsOfSelector('*', 'stroke', srcElem);
+			let parts;
+			if(strokeColors.length > 1){
+				parts = srcElem.separate_colors();
+			} else {
+				parts = srcElem.separate_children(2);
+			}
 			if(parts.length > 0){
 				self.removeSVG(elem);
 				for (let i = 0; i < parts.length; i++) {
@@ -1035,6 +1022,13 @@ $(function(){
 					// remove class which was added by mouseover in the list.
 					self.removeHighlight(file);
 				}
+			} else {
+				new PNotify({
+					title: gettext("Element not splittable."),
+					text: gettext("Can't split this element. It looks like a single path already."),
+					type: "info",
+					hide: true
+				});
 			}
 		};
 
@@ -1257,21 +1251,25 @@ $(function(){
 		};
 		self.svgManualMultiply = function(data, event) {
 			if (event.keyCode === 13 || event.type === 'blur') {
-				self.abortFreeTransforms();
-				var svg = snap.select('#'+data.previewId);
-				var gridsize = event.target.value.split(/\D+/);
-				var cols = gridsize[0] || 1;
-				var rows = gridsize[1] || 1;
-				var dist = 2;
-				svg.grid(cols, rows, dist);
-				var mb_meta = self._set_mb_attributes(svg);
-				// svg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
-				event.target.value = cols+"×"+rows;
-				svg.ftStoreInitialTransformMatrix();
-				svg.ftUpdateTransform();
-				self.check_sizes_and_placements();
+				const colsRowsStr = event.target.value;
+				const result = self._svgMultiplyUpdate(data, colsRowsStr);
+				event.target.value = result;
 			}
 		};
+		self._svgMultiplyUpdate = function(data, colsRowsStr){
+			self.abortFreeTransforms();
+			var svg = snap.select('#'+data.previewId);
+			var gridsize = colsRowsStr.split(/\D+/);
+			var cols = gridsize[0] || 1;
+			var rows = gridsize[1] || 1;
+			var dist = 2;
+			svg.grid(cols, rows, dist);
+			var mb_meta = self._set_mb_attributes(svg);
+			svg.ftStoreInitialTransformMatrix();
+			svg.ftUpdateTransform();
+			self.check_sizes_and_placements();
+			return cols+"×"+rows;
+		}
 		self.imgManualAdjust = function(data, event) {
 			if (event.type === 'input' || event.type === 'blur' || event.type === 'keyUp') {
 				self.abortFreeTransforms();
@@ -2764,6 +2762,9 @@ $(function(){
 
 				// update fileslist
 				$('#'+self.currentQuickTextFile.id+' .title').text(displayText);
+				// update clones
+				let multiply_str = $('#'+self.currentQuickTextFile.id+' input.multiply').val();
+				self._svgMultiplyUpdate(self.currentQuickTextFile, multiply_str);
 
 				self.currentQuickTextAnalyticsData = {
 					id: self.currentQuickTextFile.id,
