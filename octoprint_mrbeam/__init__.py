@@ -400,7 +400,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# core UI here.
 		assets = dict(
 
-			js=["js/lasercutterprofiles.js",
+			js=["js/helpers/quick_shape_helper.js",
+				"js/lasercutterprofiles.js",
 			    "js/mother_viewmodel.js",
 			    "js/mrbeam.js",
 			    "js/color_classifier.js",
