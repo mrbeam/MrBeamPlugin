@@ -1107,7 +1107,18 @@ $(function(){
 				self.set_img_sharpen(data.previewId, sharpenVal);
 			}
 		};
-
+		
+		self.imgManualCrop = function(data, event) {
+			if (event.type === 'input' || event.type === 'blur' || event.type === 'keyUp') {
+				let t = parseFloat($('#'+data.id+' .crop_top').val());
+				let l = parseFloat($('#'+data.id+' .crop_left').val());
+				let r = parseFloat($('#'+data.id+' .crop_right').val());
+				let b = parseFloat($('#'+data.id+' .crop_bottom').val());
+				self.set_img_crop(data.previewId, t, l, r, b);
+				if(l + r > 99) $('#'+data.id+' .crop_right').val(100-l-1);
+				if(t + b > 99) $('#'+data.id+' .crop_bottom').val(100-t-1);
+			}
+		};
 
 		self.outsideWorkingArea = function(svg){
 			var waBB = snap.select('#coordGrid').getBBox();
@@ -1332,7 +1343,16 @@ $(function(){
 			var filter = snap.select('#'+self._get_img_filter_id(previewId));
 			filter.select('feConvolveMatrix').attr({kernelMatrix: matrix});
 		};
-
+		
+		self.set_img_crop = function(previewId, top, left, right, bottom){
+			let filter = snap.select('#'+self._get_img_filter_id(previewId));
+			let x = Math.min(left, 100 - right);
+			let y = Math.min(top, 100 - bottom);
+			let width = Math.max(100 - right - left, 0);
+			let height = Math.max(100 - top - bottom, 0);
+			filter.attr({x: left+'%', y: top+'%', width: width+'%', height: height+'%' });
+		};
+		
 		self.moveSelectedDesign = function(ifX,ifY){
 			var diff = 2;
 			var transformHandles = snap.select('#handlesGroup');

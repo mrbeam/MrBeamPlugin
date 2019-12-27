@@ -173,6 +173,28 @@ input.decent_input:hover {
 	border: 1px solid gray;
 }
 
+.img_adjust_ui {
+	width: 34%;
+}
+.img_crop_ui {
+	width: 60%;
+	display: grid;
+	grid-template-areas:
+    'tl tc tr'
+    'cl cc cr'
+    'bl bc br';
+	border: 1px solid gray;
+	margin: 0.8em 0.4em;
+	height: 6em;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+}
+
+#wa_filelist .img_crop_ui input.decent_input {
+  width: 100%;
+}
+
 #manual_position {
 	max-width: 10em;
 }
