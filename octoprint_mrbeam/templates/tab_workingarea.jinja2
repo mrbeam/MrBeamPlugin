@@ -486,6 +486,10 @@
 											<feFuncB type="table" tableValues="0.1 1"></feFuncB>
 										</feComponentTransfer>
 									</filter>
+									<filter id="designHighlight" filterUnits="objectBoundingBox" color-interpolation-filters="sRGB">
+										<feDropShadow stdDeviation="5 5" in="SourceGraphic" dx="0" dy="0" flood-color="#e25303" 
+													  flood-opacity="1" result="dropShadow"/>
+									</filter>
 									<filter id="dehighlight" x="0" y="0">
 										<!--<feGaussianBlur in="SourceGraphic" stdDeviation="2" />-->
 										<feColorMatrix type="saturate" values="0.5"/>

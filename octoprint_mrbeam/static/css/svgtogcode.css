@@ -451,8 +451,8 @@ body.colorDragInProgress #drop_overlay {
 	filter:none;
 }
 
-.userIMG.designHighlight image {
-	filter:none !important;
+.userIMG.designHighlight {
+	filter: url(#designHighlight);
 }
 
 .userText.designHighlight text,
