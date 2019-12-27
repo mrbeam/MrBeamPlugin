@@ -1,8 +1,5 @@
 class QuickShapeHelper {
 	
-//};
-
-//QuickShapeHelper.prototype = {
 	static getCircle(r) {
 		if (isFinite(r) && r > 0) {
 			return this.getRect(r, r, 100);

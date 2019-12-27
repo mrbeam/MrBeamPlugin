@@ -16,68 +16,6 @@ if(MRBEAM_DEBUG_RENDERING){
 
 $(function(){
 
-	function versionCompare(v1, v2, options) {
-		var lexicographical = options && options.lexicographical,
-			zeroExtend = options && options.zeroExtend,
-			v1parts = v1.split('.'),
-			v2parts = v2.split('.');
-
-		function isValidPart(x) {
-			return (lexicographical ? /^\d+[A-Za-z]*$/ : /^\d+$/).test(x);
-		}
-
-		if (!v1parts.every(isValidPart) || !v2parts.every(isValidPart)) {
-			return NaN;
-		}
-
-		if (zeroExtend) {
-			while (v1parts.length < v2parts.length) v1parts.push("0");
-			while (v2parts.length < v1parts.length) v2parts.push("0");
-		}
-
-		if (!lexicographical) {
-			v1parts = v1parts.map(Number);
-			v2parts = v2parts.map(Number);
-		}
-
-		for (var i = 0; i < v1parts.length; ++i) {
-			if (v2parts.length === i) {
-				return 1;
-			}
-
-			if (v1parts[i] === v2parts[i]) {
-				continue;
-			}
-			else if (v1parts[i] > v2parts[i]) {
-				return 1;
-			}
-			else {
-				return -1;
-			}
-		}
-
-		if (v1parts.length !== v2parts.length) {
-			return -1;
-		}
-
-		return 0;
-	}
-
-	// constants
-	var HUMAN_READABLE_IDS_CONSTANTS = 'bcdfghjklmnpqrstvwxz';
-	var HUMAN_READABLE_IDS_VOCALS    = 'aeiouy';
-
-	function getHumanReadableId(length){
-		length = length || 4;
-		var out = [];
-		for (var i = 0; i < length/2; i++) {
-			var cIdx = Math.floor(Math.random()*HUMAN_READABLE_IDS_CONSTANTS.length);
-			var vIdx = Math.floor(Math.random()*HUMAN_READABLE_IDS_VOCALS.length);
-			out.push(HUMAN_READABLE_IDS_CONSTANTS.charAt(cIdx));
-			out.push(HUMAN_READABLE_IDS_VOCALS.charAt(vIdx));
-		}
-		return  out.join('');
-	}
 
 	function WorkingAreaViewModel(params) {
 		var self = this;
@@ -932,7 +870,7 @@ $(function(){
 			}
 			if(declaredUnit === 'px' || declaredUnit === ''){
 				if(generator.generator === 'inkscape'){
-					if(versionCompare(generator.version, '0.91') <= 0){
+					if(WorkingAreaHelper.versionCompare(generator.version, '0.91') <= 0){
 //						console.log("old inkscape, px @ 90dpi");
 						declaredUnit = 'px_inkscape_old';
 					} else {
@@ -1708,7 +1646,7 @@ $(function(){
 
 		self.getEntryId = function(prefix, length) {
 			prefix = prefix || 'wa';
-			return prefix + "_" + getHumanReadableId(length);
+			return prefix + "_" + WorkingAreaHelper.getHumanReadableId(length);
 		};
 
 		self.init = function(){
@@ -1844,7 +1782,7 @@ $(function(){
 				var h = dpiFactor * hMM;
 				var viewBox = "0 0 " + wMM + " " + hMM;
 
-				svgStr = self._normalize_svg_string(svgStr);
+				svgStr = WorkingAreaHelper.fix_svg_string(svgStr); // Firefox bug workaround.
 				var gc_otions_str = self.gc_options_as_string().replace('"', "'");
 
 				var svg = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:mb="http://www.mr-beam.org/mbns" mb:beamOS_version="'+BEAMOS_VERSION+'"'
@@ -1853,13 +1791,6 @@ $(function(){
 			} else {
 				return;
 			}
-		};
-
-		self._normalize_svg_string = function(svgStr){
-			// TODO: look for better solution to solve this Firefox bug problem
-			svgStr = svgStr.replace("(\\\"","(");
-			svgStr = svgStr.replace("\\\")",")");
-			return svgStr;
 		};
 
 		self._normalize_mb_id = function(id) {
