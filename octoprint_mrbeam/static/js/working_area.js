@@ -204,7 +204,6 @@ $(function(){
 			self.placedDesigns([]);
 		};
 
-		//self.colorNamer = new ColorClassifier();
 		self.getUsedColors = function () {
 			let colFound = self._getColorsOfSelector('.vector_outline', 'stroke', snap.select('#userContent'));
 			return colFound;
@@ -223,11 +222,6 @@ $(function(){
 			}
 			colors = [...new Set(colors)]; // unique
 			return colors;
-		};
-
-		self._getHexColorStr = function(inputColor){
-			var c = new Color(inputColor);
-			return c.getHex();
 		};
 
 		self.trigger_resize = function(){
@@ -293,6 +287,11 @@ $(function(){
 			self.tour.startTour();
 		};
 
+		/**
+		 * 
+		 * @param {type} file (OctoPrint "file" object - example: {url: elem.url, origin: elem.origin, name: name, type: "split", refs:{download: elem.url}};)
+		 * @returns {Boolean}
+		 */
 		self.isPlaced = function(file){
 			if(file === undefined) return false;
 
@@ -407,7 +406,7 @@ $(function(){
 			cb = function (fragment) {
 				var duration_load = Date.now() - start_ts;
 				start_ts = Date.now();
-				if(self._isBinaryData(fragment.node.textContent)) { // workaround: only catching one loading error
+				if(WorkingAreaHelper.isBinaryData(fragment.node.textContent)) { // workaround: only catching one loading error
 					self.file_not_readable();
 					return;
 				}
@@ -421,7 +420,7 @@ $(function(){
 				self.placedDesigns.push(file);
 
 				// get scale matrix
-				var generator_info = self._get_generator_info(fragment);
+				var generator_info = WorkingAreaHelper.getGeneratorInfo(fragment);
 				var doc_dimensions = self._getDocumentDimensionAttributes(fragment);
 				var unitScaleX = self._getDocumentScaleToMM(doc_dimensions.units_x, generator_info);
 				var unitScaleY = self._getDocumentScaleToMM(doc_dimensions.units_y, generator_info);
@@ -604,7 +603,7 @@ $(function(){
 					var colStr = el.attr().stroke;
 					// handle stroke="" default value (#000000)
 					if (typeof (colStr) !== 'undefined' && colStr !== 'none') {
-						var colHex = self._getHexColorStr(colStr);
+						var colHex = WorkingAreaHelper.getHexColorStr(colStr);
 						el.attr('stroke', colHex);
 					}
 				});
@@ -612,7 +611,7 @@ $(function(){
 					var colStr = el.attr().fill;
 					// handle fill="" default value (#000000)
 					if (typeof (colStr) !== 'undefined' && colStr !== 'none') {
-						var colHex = self._getHexColorStr(colStr);
+						var colHex = WorkingAreaHelper.getHexColorStr(colStr);
 						el.attr('fill', colHex);
 					}
 				});
@@ -697,129 +696,7 @@ $(function(){
 		};
 
 
-		/**
-		 * Returns with what program and version the given svg file was created. E.g. 'coreldraw'
-		 * @param fragment
-		 * @returns {*}
-		 * @private
-		 */
-		self._get_generator_info = function(f){
-			var gen = null;
-			var version = null;
-			var root_attrs;
-			if(f.select('svg') === null){
-				root_attrs = f.node.attributes;
-			} else {
-				root_attrs = f.select('svg').node.attributes;
-			}
 
-			// detect BeamOS generated Files by attribute
-            // <svg
-            //    ...
-            //    xmlns:mb="http://www.mr-beam.org"
-            //    ...
-            //    mb:beamOS_version="0.3.4"
-			var beamOS_version = root_attrs['mb:beamOS_version'];
-			if(beamOS_version !== undefined){
-				gen = 'beamOS';
-				version = version.value;
-//				console.log("Generator:", gen, version);
-				return {generator: gen, version: version};
-			}
-
-			// detect Inkscape by attribute
-			// <svg
-			//    ...
-			//    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-			//    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-			//    ...
-			//    inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
-			//    sodipodi:docname="Mr. Beam Jack of Spades Project Cards Inkscape.svg">
-			var inkscape_version = root_attrs['inkscape:version'];
-			if(inkscape_version !== undefined){
-				gen = 'inkscape';
-				version = inkscape_version.value;
-//				console.log("Generator:", gen, version);
-				return {generator: gen, version: version};
-			}
-
-			// <svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg" xmlns:bx="https://boxy-svg.com">
-			// if (root_attrs['xmlns:bx'] && root_attrs['xmlns:bx'].value.search("boxy-svg.com")>0) {
-			//     return { generator: "boxy-svg", version: "unknown" };
-			// }
-
-			// detect Illustrator by comment (works with 'save as svg')
-			// <!-- Generator: Adobe Illustrator 16.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
-			var children = f.node.childNodes;
-			for (var i = 0; i < children.length; i++) {
-				var node = children[i];
-				if(node.nodeType === 8){ // check for comment
-					if (node.textContent.indexOf('Illustrator') > -1) {
-						gen = 'illustrator';
-						var matches = node.textContent.match(/\d+\.\d+(\.\d+)*/g);
-						version = matches.join('_');
-//						console.log("Generator:", gen, version);
-						return { generator: gen, version: version };
-					}
-				}
-			}
-
-			// detect Illustrator by data-name (for 'export as svg')
-			if(root_attrs && root_attrs['data-name']){
-				gen = 'illustrator';
-				version = '?';
-//				console.log("Generator:", gen, version);
-				return { generator: gen, version: version };
-			}
-
-			// detect Corel Draw by comment
-			// <!-- Creator: CorelDRAW X5 -->
-			var children = f.node.childNodes;
-			for (var i = 0; i < children.length; i++) {
-				var node = children[i];
-				if(node.nodeType === 8){ // check for comment
-					if (node.textContent.indexOf('CorelDRAW') > -1) {
-						gen = 'coreldraw';
-						var version = node.textContent.match(/(Creator: CorelDRAW) (\S+)/)[2];
-//						console.log("Generator:", gen, version);
-						return { generator: gen, version: version };
-					}
-				}
-			}
-
-			// detect Method Draw by comment
-			// <!-- Created with Method Draw - http://github.com/duopixel/Method-Draw/ -->
-			for (var i = 0; i < children.length; i++) {
-				var node = children[i];
-				if(node.nodeType === 8){ // check for comment
-					if (node.textContent.indexOf('Method Draw') > -1) {
-						gen = 'method draw';
-//						console.log("Generator:", gen, version);
-						return { generator: gen, version: version };
-					}
-				}
-			}
-
-
-			// detect dxf.js generated svg
-			// <!-- Created with dxf.js -->
-			for (var i = 0; i < children.length; i++) {
-				var node = children[i];
-				if(node.nodeType === 8){ // check for comment
-					if (node.textContent.indexOf('Created with dxf.js') > -1) {
-						gen = 'dxf.js';
-						console.log("Generator:", gen, version);
-						return { generator: gen, version: version };
-					}
-				}
-			}
-//			console.log("Generator:", gen, version);
-			return { generator: 'unknown', version: 'unknown' };
-		};
-
-		self._isBinaryData = function(str){
-			return /[\x00-\x08\x0E-\x1F]/.test(str);
-		};
 
 		/**
 		 * Finds dimensions (wifth, height, etc..) of an SVG
