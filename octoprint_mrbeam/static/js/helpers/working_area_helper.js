@@ -47,9 +47,6 @@ class WorkingAreaHelper {
 		return 0;
 	}
 
-	static HUMAN_READABLE_IDS_CONSTANTS = 'bcdfghjklmnpqrstvwxz';
-	static HUMAN_READABLE_IDS_VOCALS = 'aeiouy';
-
 	static getHumanReadableId(length) {
 		length = length || 4;
 		let out = [];
@@ -205,4 +202,6 @@ class WorkingAreaHelper {
 		return /[\x00-\x08\x0E-\x1F]/.test(str);
 	}
 }
-;
+
+WorkingAreaHelper.HUMAN_READABLE_IDS_CONSTANTS = 'bcdfghjklmnpqrstvwxz';
+WorkingAreaHelper.HUMAN_READABLE_IDS_VOCALS = 'aeiouy';

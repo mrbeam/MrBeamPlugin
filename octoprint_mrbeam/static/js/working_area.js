@@ -1284,16 +1284,16 @@ $(function(){
 
 		self._create_img_filter = function(previewId){
 			var id = self._get_img_filter_id(previewId);
-			var str = "<feComponentTransfer class='contrast_filter' x='0%' y='0%' width='100%' height='100%' in='colormatrix' result='contrast_result'>"
+			var str = "<feComponentTransfer class='contrast_filter' in='colormatrix' result='contrast_result'>"
 			+ "<feFuncR type='gamma' amplitude='1' offset='0' exponent='1'/>"
 			+ "<feFuncG type='gamma' amplitude='1' offset='0' exponent='1'/>"
 			+ "<feFuncB type='gamma' amplitude='1' offset='0' exponent='1'/>"
 			+ "<feFuncA type='identity' />"
 			+ "</feComponentTransfer>"
-			+ "<feColorMatrix class='gray_scale_filter' type='saturate' values='0' x='0%' y='0%' width='100%' height='100%' in='contrast_result' result='gray_scale'/>"
-			+ "<feConvolveMatrix class='sharpening_filter' order='3 3' kernelMatrix='0 0 0 0 1 0 0 0 0' divisor='1' bias='0' targetX='1' targetY='1' edgeMode='duplicate' preserveAlpha='true' x='0%' y='0%' width='100%' height='100%' in='gray_scale' result='sharpened'/>"
+			+ "<feColorMatrix class='gray_scale_filter' type='saturate' values='0' in='contrast_result' result='gray_scale'/>"
+			+ "<feConvolveMatrix class='sharpening_filter' order='3 3' kernelMatrix='0 0 0 0 1 0 0 0 0' divisor='1' bias='0' targetX='1' targetY='1' edgeMode='duplicate' preserveAlpha='true' in='gray_scale' result='sharpened'/>"
 			;
-			snap.filter(str).attr({id: id});
+			snap.filter(str).attr({id: id, filterUnits:'objectBoundingBox', x:'0%', y:'0%', width:'100%', height:'100%'});
 			return id;
 		};
 
