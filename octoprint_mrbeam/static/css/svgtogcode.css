@@ -4,6 +4,16 @@ table th.settings_plugin_svgtogcode_profiles_key,table td.settings_plugin_svgtog
 	width: 2.5em;
 }
 
+#settings_dialog.container { width: 100%; }
+
+.calibration_step {
+	display: none;
+}
+
+.calibration_step.active {
+	display: block;
+}
+
 #gcode_reference .gcommand {
 	font-weight: bold;
 }
@@ -24,11 +34,15 @@ table th.settings_plugin_svgtogcode_profiles_key,table td.settings_plugin_svgtog
 .svgtogcode_grayscale {
 	background-image: linear-gradient(90deg, #FFFFFF, #000000);
 	width:220px;
+	height: 20px;
 	display: inline-block;
+	border-radius: 10px;
 }
 
 .img_intensity_input {
 	width: 3.5em;
+	-webkit-border-radius: 10px;
+	border-radius: 10px;
 }
 
 svg text {
@@ -38,6 +52,28 @@ svg text {
 	cursor: default;
 	pointer-events: none;
 
+}
+
+svg circle.ft_handle {
+    fill-opacity: 0.7;
+    stroke: #ff0000;
+    stroke-width: 2.5px;
+    fill: #fff;
+    vector-effect: non-scaling-stroke;
+}
+svg rect.ft_bbox_transformed {
+    stroke: #ff0000;
+    stroke-width: 2.5px;
+    vector-effect: non-scaling-stroke;
+	stroke-dasharray: 5,5;
+	fill-opacity: 0.3;
+    stroke-opacity: 1;
+	fill: #999;
+}
+
+svg .vector_outline {
+    vector-effect: non-scaling-stroke;
+	stroke-width: 0.8;
 }
 
 .img_slider{
@@ -71,7 +107,7 @@ svg text {
 }
 .photo_attribution a {
     color: #999;
-    font-size: smaller;
+    font-size: x-small;
 }
 
 #dialog_vector_graphics_conversion .hint {
@@ -132,7 +168,7 @@ input.decent_input {
 
 }
 
-input.decent_input:focus, 
+input.decent_input:focus,
 input.decent_input:hover {
 	border: 1px solid gray;
 }
@@ -194,10 +230,12 @@ input.decent_input:hover {
 #beamcam_image {
 	position:absolute;
 	user-select: none;
+	filter: brightness(200%) contrast(70%);
 	-webkit-user-select: none;
 	-ms-user-select: none;
 	-o-user-select: none;
 	-moz-user-select: none;
+
 }
 
 #beamcam_image.broken {
@@ -224,11 +262,78 @@ svg#area_preview {
 	clear: both;
 }
 
+
+#color_list { margin:0; }
+
+#color_list li.material_color_entry {
+    width: 60px;
+    height: 60px;
+	margin: 0 .5em .5em 0;
+    display: none;
+    /*border: 1px solid #ddd;*/
+    cursor: pointer;
+	transition: width .1s ease-in-out;
+	display: inline-block;
+}
+#color_list li.material_color_entry.active {
+	/*transform: scale(1.25) !important;*/
+	width: 200px !important;
+}
+#color_list li.material_color_entry:hover {
+	/*transform: scale(1.25);*/
+
+}
+
+#material_row .hover_shadow {
+    box-shadow: 1px 1px 2px #383e42;
+	transition: box-shadow .1s ease-in-out;
+}
+#material_row .hover_shadow:hover {
+    box-shadow: 2px 2px 4px #383e42;
+}
+
+#material_type #material_burger_menu {
+	display: none;
+}
+#material_type.active #material_burger_menu {
+	display: block;
+}
+
+#material_type.manage a#materials_manage,
+#material_type a#materials_manage_info,
+#material_type a#materials_manage_done { display: none; }
+#material_type a#materials_manage,
+#material_type.manage a#materials_manage_info,
+#material_type.manage a#materials_manage_done { display: inline}
+
+#materials_manage_done { transition: text-shadow 0.3s ease-in-out 0s; }
+#materials_manage_done.flash {
+	text-shadow: 0px 0px 10px #e25303;
+}
+
+#material_type ul#material_list li span.delete_me:hover { color:#e25303; }
+#material_type ul#material_list li span.delete_me { display: none; cursor: pointer; }
+#material_type.manage ul#material_list li.custom span.delete_me { display: block; }
+
+li.material_entry span.delete_me {
+    position: absolute;
+    bottom: 0;
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+    padding: 13px 17px;
+    border-radius: 25% 0 0 0;
+    right: 0;
+    top: auto;
+    left: auto;
+}
+
 .job_row {
     margin-bottom: 1em;
     border-bottom: 1px solid #999;
     padding-bottom: 1em;
 	display: flex;
+	user-select: none;
 }
 
 h4.job_title{
@@ -237,8 +342,16 @@ h4.job_title{
 }
 
 .job_row input {
-    max-width: 35%;
+	max-width: 35%;
+    border-radius: 18px;
+    background-color: #eeeeee;
+    border: none;
+    margin: 3px;
+    height: 18px;
+    text-align: center;
 }
+
+.job_row label.control-label {cursor: default; }
 
 .job_row .form-horizontal .control-group {
     margin-bottom: 5px;
@@ -250,12 +363,13 @@ h4.job_title{
     overflow: hidden;
     display: inline-block;
     border-radius: 5%;
-    /* border: 1px solid #999; */
     box-shadow: 2px 2px 4px 2px rgba(0,0,0,0.33);
     margin: 4px;
 	background-image: url(/plugin/mrbeam/static/img/line_overlay.svg);
 	background-size: cover;
 	background-position: center;
+    cursor: move;
+    cursor: -webkit-grab;
 }
 
 .img_drop_zone,
@@ -267,7 +381,7 @@ h4.job_title{
 
 /* state machine. either img or vector color drop zone highlightning*/
 #no_job .color_drop_zone.hover,
-body.engravingDrag #engrave_job .img_drop_zone.hover,
+body.colorDragInProgress #engrave_job .img_drop_zone.hover,
 body.vectorDrag .job_row_vector .color_drop_zone.hover,
 body.vectorDrag .color_drop_zone.create_job.hover {
     font-weight: 700;
@@ -279,11 +393,12 @@ body.vectorDrag .color_drop_zone.create_job.hover {
 	text-align: center;
     padding: 1em 0;
     min-height: auto;
+	user-select: none;
 }
 
 #cd_engraving {
-/*	background: linear-gradient(135deg,   
-				rgba(255, 0, 0, 1) 0%, 
+/*	background: linear-gradient(135deg,
+				rgba(255, 0, 0, 1) 0%,
 				rgba(255, 255, 0, 1) 35%,
 				rgba(0, 255, 0, 1) 50%,
 				rgba(0, 255, 255, 1) 65%,
@@ -296,6 +411,31 @@ body.colorDragInProgress #drop_overlay {
 	display: none;
 }
 
+/* eye candy for gcode generation */
+#userContent path,
+#userContent circle,
+#userContent ellipse,
+#userContent line,
+#userContent polygon,
+#userContent polyline,
+#userContent rect{
+	transition-property: stroke-dashoffset;
+	transition-duration: .5s;
+	transition-timing-function: linear;
+}
+
+#crosshair path,
+#crosshair circle {
+	stroke:#e25303;
+	stroke-width:2;
+	stroke-linecap:round;
+	stroke-linejoin:round;
+	stroke-miterlimit:4;
+	stroke-dasharray:none;
+	stroke-dashoffset:0;
+	stroke-opacity:1;
+}
+
 .checkInput {
 	border-color: red !important;
 
@@ -303,40 +443,333 @@ body.colorDragInProgress #drop_overlay {
 
 .full-tab-height {
 	height: calc(100vh - 140px);
-	max-height: none;	
+	max-height: none;
 }
 
-.dimDesigns .userSVG, 
-.dimDesigns .userIMG, 
-.dimDesigns .userText {
-	opacity:.7;
-	filter:url(#dehighlight);
-	transition: opacity 0.2s ease-out; 
-}
-
-.userSvg, .userText, .userIMG,
-.dimDesigns .userSVG.designHighlight,
-.dimDesigns .userIMG.designHighlight,
-.dimDesigns .userText.designHighlight {
-	opacity:1;
+.userSVG.designHighlight .vector_outline {
+	stroke-width: 2px !important;
 	filter:none;
 }
 
-.highlightMarker {
-	stroke-width: 1px; 
-	stroke-dasharray: 3, 9;
-	stroke:#e25303;
-	vector-effect: non-scaling-stroke;
-	fill:none;
-	animation: drawdash 1s linear normal infinite;
-	stroke-dashoffset: 0;
+.userIMG.designHighlight image {
+	filter:none !important;
 }
 
-@keyframes drawdash {
-  from {
-    stroke-dashoffset: 0;
-  }
-  to {
-    stroke-dashoffset: 12;
+.userText.designHighlight text,
+.userText.designHighlight tspan {
+	font-weight: bold !important;
+}
+
+svg#area_preview path,
+svg#area_preview circle,
+svg#area_preview line,
+svg#area_preview polyline,
+svg#area_preview polygon,
+svg#area_preview ellipse,
+svg#area_preview rect {
+  vector-effect: non-scaling-stroke !important;
+}
+
+svg g#scaleGroup,
+svg g#crosshair {
+  stroke-width: 1px !important;
+}
+
+svg g#camera_markers circle {
+	opacity: 0;
+}
+
+g#camera_markers.markerNE circle#markerNE,
+g#camera_markers.markerSE circle#markerSE,
+g#camera_markers.markerNW circle#markerNW,
+g#camera_markers.markerSW circle#markerSW {
+	opacity: 1;
+	animation: blinker 1s linear infinite;
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0;
   }
 }
+
+#zoomFactor {
+	position:absolute;
+	left: .3em;
+	bottom: .4em;
+    color: #e25303;
+	z-index: 999;
+}
+
+.freeTransformHandle{
+	fill: rgba(255,255,255,0.3);
+	stroke: #e25303;
+	stroke-width: 1px;
+}
+
+.modal_dialog_headline h3 {
+    width: 100%;
+    margin: 0 0 0 -14px;
+	padding: 9px 14px;
+	border-top: 1px solid #999;
+	border-bottom: 1px solid #999;
+    line-height: 30px;
+}
+
+#color_assignment.inactive {
+    opacity: .3;
+    filter: blur(2px);
+    pointer-events: none;
+}
+
+#material_list {
+	margin: 0;
+	max-height: 55vh;
+	overflow: visible;
+}
+.material_entry {
+	display: none;
+	width: 200px;
+	height: 100px;
+	float: left;
+	margin: 0 .5em .5em 0;
+	background-size: cover;
+	position: relative;
+	cursor: pointer;
+}
+
+#material_type .material_entry.selected {
+	display: block;
+	height: 60px;
+    background-position: center;
+}
+#material_type.active .material_entry {	display: block; }
+
+li.material_entry span {
+    position: absolute;
+    top: 0;
+    background-color: rgba(255,255,255,.85);
+    display: block;
+    width: 100%;
+    left: 0;
+    padding: 3px 8px;
+    box-sizing: border-box;
+}
+
+#thickness_list{
+	width: 200px;
+    white-space: initial;
+
+}
+
+
+.thickness_sample {
+    display: inline-block;
+	vertical-align: bottom;
+    border: 0.25mm solid #999;
+    border-left-color: transparent;
+    width: 100%;
+    background-image: url(/plugin/mrbeam/static/img/pattern_stripes.png);
+    background-size: 39%;
+    margin-bottom: 1em;
+    text-align: center;
+    height: 0;
+    line-height: 0;
+    text-shadow: 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff;
+	cursor: pointer;
+}
+.thickness_sample:hover, .thickness_sample.active {font-weight: bold; }
+
+#material_row {
+    overflow: visible;
+    white-space: nowrap;
+	width: 100%;
+	position: relative;
+	transition: height .3s ease-in-out;
+	margin-bottom: 1em;
+	user-select:none;
+}
+
+#material_row.expanded #material_info {
+	display:none;
+}
+#safety_notes {
+	font-weight: bold;
+}
+
+#material_info p,
+#material_info a {
+    color: #777;
+    margin: 0;
+}
+
+#material_type, #material_color, #material_thickness, #save_material_flyin {
+	width: calc(200px + 2em);
+	display: inline-block;
+	box-sizing: border-box;
+	vertical-align: top;
+	transition: width .1s ease-in;
+	background-color: #fff;
+}
+#material_type.active { width: 100%; }
+#material_color.active { width: calc(100% - 3300px); }
+#material_thickness.active { width: calc(100% - 2 * (300px)); }
+
+#material_thickness .engrave_only {
+    border-bottom: transparent;
+    padding: 2em 0;
+    background-image: linear-gradient(to bottom, rgba(255,255,255,0) 0%,rgba(255,255,255,1) 100%), url(/plugin/mrbeam/static/img/pattern_stripes.png);
+    background-size: cover, contain;
+    border-top: 1px solid #e25303;
+}
+
+#save_material_flyin {padding-top:1em;}
+
+#save_material_flyin form { margin:0; }
+#save_material_flyin .control-group { margin-bottom:.5em; }
+#save_material_flyin label.control-label { width:120px; }
+#save_material_flyin .controls { margin-left:130px; }
+
+#custom_mat_col {
+	width: 3em;
+	height: 3em;
+}
+
+#custom_mat_th { width: 3em; margin-right: .5em; }
+
+.not_possible_on_this_material {
+	color:#999;
+}
+
+.misfit_warning i {
+	color: #e25303;
+}
+
+#dialog_vector_graphics_conversion .modal-body {
+  /*min-height: 65vh;*/
+}
+
+.modal.modal-left-side {
+	top: 50%;
+	left: -52%;
+	margin-left: 1em;
+}
+.modal.modal-left-side.fade {
+	transition: opacity 0.3s linear, left 0.3s ease-out, bottom 0.3s ease-out, margin-top 0s linear, top 0s linear;
+}
+.modal.modal-left-side.fade.in {
+	left: 0;
+}
+
+#quick_shape_dialog .control-group {
+    margin-bottom: .5em;
+}
+
+#quick_shape_dialog input[type=color],
+#quick_shape_dialog input[type=number] {
+    width: 150px;
+}
+#quick_shape_dialog input[type=range] {
+    width: 164px;
+}
+#quick_shape_dialog form.form-horizontal {
+    margin-bottom: 0;
+}
+#quick_shape_stroke_and_fill input[type=range] { 
+	width: 134px;
+}
+#quick_shape_stroke_and_fill input[type=color] {
+	width: 120px;
+}
+#quick_shape_stroke_and_fill input[type=checkbox] {
+	width: 20px;
+	height: 20px;
+	margin-right: 10px;
+}
+#quick_shape_dialog #quick_shape_fill {
+	margin-top: -1.3em;
+}
+
+
+svg#area_preview.overModalBG { z-index: 1051; }
+
+.calibration_manual.text {
+    width: 48%;
+	margin-bottom: 2em;
+}
+.calibration_manual.img {
+    width: 48%;
+    padding-top: 32%;
+    background-repeat: no-repeat;
+    background-size: contain;
+    margin-bottom: 1em;
+}
+
+.marker_selection_desc {
+	margin-top: 1em;
+	margin-bottom: 2em;
+}
+
+.cal-arrow{
+	width: 0.8em;
+    height: 0.8em;
+    background-image: url(/plugin/mrbeam/static/img/cal_marker.svg);
+    border: 0px transparent;
+    background-repeat: no-repeat;
+    background-color: white;
+    background-size: contain;
+	display: inline-block;
+	background-position: center;
+}
+
+.cal-row { display: none; font-size: 1.5rem; }
+.cal-row.active { display: block; }
+.complete .cal-row { display: block !important; font-size: 1rem;}
+
+#NE .cal-arrow { transform: scale(-1,1); }
+#SE .cal-arrow { transform: scale(-1,-1); }
+#SW .cal-arrow { transform: scale(1,-1); }
+
+.calibration_click_indicator {
+	stroke: #ffffff;
+	stroke-width: 1;
+	fill:none;
+}
+
+.marker_found_indicator {
+	color: #DDD;
+	display: inline-block;
+    padding: 0 .5em;
+}
+.marker_found_indicator.active { color: #000; }
+
+.marker_debug_image{
+    margin-right: 20px;
+    margin-bottom: 20px;
+    border: 1px;
+    border-style: solid;
+    border-color: black;
+    height: 45vh;
+}
+
+#debug_NW_img {
+    position: fixed;
+    top: 1vh;
+    left: 1vw;
+}
+#debug_NE_img {
+    position: fixed;
+    top: 1vh;
+    right: 1vw;
+}
+#debug_SW_img {
+    position: fixed;
+    bottom: 1vh;
+    left: 1vw;
+}
+#debug_SE_img {
+    position: fixed;
+    bottom: 1vh;
+    right: 1vw;
+}
+

@@ -1,0 +1,140 @@
+<div id="settings_maintenance">
+    <h3 class="maintenance-title">{{ _('Maintenance') }}</h3>
+{#    <p class="muted maintenance-notes">{{ _('Some notes about the general maintenance') }}<br>#}
+{#        <strong>{{ _('Please note that the replacement of any of the elements may be necessary earlier, depending on the usage.') }}</strong>#}
+{#    </p>#}
+
+    <div class="scrollable maintenance-scrollable">
+        <table class="table table-striped table-hover table-condensed table-hover maintenance-table">
+            <tr>
+                {######### PRE-FILTER #########}
+                <td class="maintenance-description-column">
+                    <h4>{{ _('Air Filter: Pre-filter') }}</h4>
+                    <small class="maintenance-description">
+                        {{ _('The pre filter filters all coarse particles from the exhaust air. Regular changing improves the air flow and preserves the main filter.*') }}
+                    </small>
+                    <div class="maintenance-links">
+                        <a href="https://store.mr-beam.org/collections/featured/products/prefilter-for-the-mr-beam-airfilter-system?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page"
+                           target="_blank" id="prefilter_shop_link" class="maintenance-link-shop">
+                            <i class="icon-shopping-cart"></i>
+                            {{ _('Buy now') }}
+                        </a>
+                    </div>
+                </td>
+                <td class="maintenance-warning-column">
+                    <div data-bind="visible: prefilterShowWarning">
+                        <i class="fa fa-exclamation-triangle fa-lg" aria-hidden="true"></i>
+                    </div>
+                </td>
+                <td class="maintenance-counter-column">
+                    <h3><span data-bind="text: prefilterUsageHours, style: {color: prefilterShowWarning()? '#e25303' : ''}"></span><span data-bind="text: prefilterLifespanHours"></span></h3>
+                </td>
+                <td class="maintenance-reset-column">
+                    <button class="btn btn-mini maintenance-reset-btn" data-bind="click: resetPrefilterUsage">{{ _('Reset') }}</button>
+                </td>
+            </tr>
+            <tr>
+                {######### CARBON FILTER #########}
+                <td class="maintenance-description-column">
+                    <h4>{{ _('Air Filter: Main filter') }}</h4>
+                    <small class="maintenance-description">
+                        {{ _('The main filter is a combined hepa and activated carbon filter. It filters both tiny particles and odours from the exhaust air.*') }}
+                    </small>
+                    <div class="maintenance-links">
+                        <a href="https://store.mr-beam.org/products/activated-carbon-filter-for-the-mr-beam-air-filter-system-incl-5-prefilter?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page"
+                           target="_blank" id="carbon_filter_shop_link" class="maintenance-link-shop">
+                            <i class="icon-shopping-cart"></i>
+                            {{ _('Buy now') }}
+                        </a>
+                    </div>
+                </td>
+                <td class="maintenance-warning-column">
+                    <div data-bind="visible: carbonFilterShowWarning">
+                        <i class="fa fa-exclamation-triangle fa-lg" aria-hidden="true"></i>
+                    </div>
+                </td>
+                <td class="maintenance-counter-column">
+                    <h3><span data-bind="text: carbonFilterUsageHours, style: {color: carbonFilterShowWarning()? '#e25303' : ''}"></span><span data-bind="text: carbonFilterLifespanHours"></span></h3>
+                </td>
+                <td class="maintenance-reset-column">
+                    <button class="btn btn-mini maintenance-reset-btn" data-bind="click: resetCarbonFilterUsage">{{ _('Reset') }}</button>
+                </td>
+            </tr>
+            <tr>
+                {######### LASER HEAD #########}
+                <td class="maintenance-description-column">
+                    <h4>{{ _('Laser head') }}</h4>
+                    <span class="maintenance-laserhead-serial" data-bind="text: laserHeadSerial"></span>
+                    <small class="maintenance-description">
+                        {{ _('Clean the laser head regularly to maintain its full performance. You can either do it yourself or you can send it to us and we clean it for you!') }}
+                    </small>
+                    <div class="maintenance-links">
+                        <a href="https://store.mr-beam.org/products/laser-head-maintenance-service?utm_source=beamos&utm_medium=beamos&utm_campaign=maintenance_page"
+                           target="_blank" id="laser_head_shop_link" class="maintenance-link-shop">
+                            <i class="icon-shopping-cart"></i>
+                            {{ _('Buy now') }}
+                        </a>
+                        <a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000504618-how-to-clean-a-laser-head"
+                           target="_blank" id="laser_head_kb_link" class="maintenance-link-knowledge-base">
+                            <i class="fa fa-external-link"></i>
+                            {{ _('How to clean a laser head') }}
+                        </a>
+                    </div>
+                </td>
+                <td class="maintenance-warning-column">
+                    <div data-bind="visible: laserHeadShowWarning">
+                        <i class="fa fa-exclamation-triangle fa-lg" aria-hidden="true"></i>
+                    </div>
+                </td>
+                <td class="maintenance-counter-column">
+                    <h3><span data-bind="text: laserHeadUsageHours, style: {color: laserHeadShowWarning()? '#e25303' : ''}"></span><span data-bind="text: laserHeadLifespanHours"></span></h3>
+                </td>
+                <td class="maintenance-reset-column">
+                    <button class="btn btn-mini maintenance-reset-btn" data-bind="click: resetLaserHeadUsage">{{ _('Reset') }}</button>
+                </td>
+            </tr>
+            <tr data-bind="visible: needsGantryMaintenance()">
+                {######### GANTRY #########}
+                <td class="maintenance-description-column">
+                    <h4>{{ _('Mechanics') }}</h4>
+                    <small class="maintenance-description">
+                        {{ _('The gantry should always be clean. Oil it regularly with an acid-free oil.') }}
+                    </small>
+                    <div class="maintenance-links">
+                        <a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000536922-maintenance-caring-of-the-mechanical-parts"
+                           target="_blank" id="mechanical_parts_kb_link" class="maintenance-link-shop"> {# If there's ever a link to the shop, this class needs to be changed #}
+                            <i class="fa fa-external-link"></i>
+                            {{ _('Caring of the mechanical parts') }}
+                        </a>
+                    </div>
+                </td>
+                <td class="maintenance-warning-column">
+                    <div data-bind="visible: gantryShowWarning">
+                        <i class="fa fa-exclamation-triangle fa-lg" aria-hidden="true"></i>
+                    </div>
+                </td>
+                <td class="maintenance-counter-column">
+                    <h3><span data-bind="text: gantryUsageHours, style: {color: gantryShowWarning()? '#e25303' : ''}"></span><span data-bind="text: gantryLifespanHours"></span></h3>
+                </td>
+                <td class="maintenance-reset-column">
+                    <button class="btn btn-mini maintenance-reset-btn" data-bind="click: resetGantryUsage">{{ _('Reset') }}</button>
+                </td>
+            </tr>
+        </table>
+        <small class="muted">{{ _('*Users without a Mr Beam Air Filter System can safely ignore and reset this counter.') }}</small>
+    </div>
+
+    <div id="reset_counter_are_you_sure" class="modal hide fade">
+        <div class="modal-header">
+            <h4><span data-bind="text: componentResetQuestion"></span></h4>
+        </div>
+        <div class="modal-body">
+            {{ _('The hour counter for the following component will now be reset: %(component_to_reset)s.', component_to_reset='<span data-bind="text: componentToReset"></span>')}}<br>
+            {{ _('Please notice that there is no way to undo this operation') }}.
+        </div>
+        <div class="modal-footer">
+            <button type="button" data-dismiss="modal" class="btn btn-primary">{{ _('No') }}</button>
+            <button type="button" data-dismiss="modal" class="btn" id="reset_counter_btn">{{ _('Yes') }}</button>
+        </div>
+    </div>
+</div>

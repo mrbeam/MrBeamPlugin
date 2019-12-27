@@ -1,6 +1,8 @@
-//    Little snapsvg.io plugin to convert native svg elements to paths.
+/* global Snap */
+
+//    Path convert - a snapsvg.io plugin to convert svg native elements to paths.
 //    Copyright (C) 2015  Teja Philipp <osd@tejaphilipp.de>
-//    
+//
 //    This program is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU Affero General Public License as
 //    published by the Free Software Foundation, either version 3 of the
@@ -22,8 +24,127 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	var _convertToString = function (arr) {
 		return arr.join(',').replace(_p2s, '$1');
 	};
+	var _isDefault = function (attrName, attrValue){
+		let defaults = {
+			'alignment-baseline': 'auto',
+			'baseline-shift': '0px',
+			'clip': 'auto',
+			'clip-path': 'none',
+			'clip-rule': 'evenodd',
+			'color': 'rgb(0, 0, 0)',
+			'color-interpolation': 'srgb',
+			'color-interpolation-filters': 'linearrgb',
+			'color-profile': '',
+			'color-rendering': 'auto',
+			'cursor': 'auto',
+			'direction': 'ltr',
+			'display': 'inline',
+			'dominant-baseline': 'auto',
+			'enable-background': '',
+			'fill': 'rgb(0, 0, 0)',
+			'fill-opacity': '1',
+			'fill-rule': 'nonzero',
+			'filter': 'none',
+			'flood-color': 'rgb(0, 0, 0)',
+			'flood-opacity': '1',
+			'font-family': '"Helvetica Neue", Helvetica, Arial, sans-serif', // not really default value, but set in the html body tag 
+			'font-size': '',
+			'font-size-adjust': '',
+			'font-stretch': '100%',
+			'font-style': 'normal',
+			'font-variant': 'normal',
+			'font-weight': '400',
+			'glyph-orientation-horizontal': '',
+			'glyph-orientation-vertical': '',
+			'image-rendering': 'auto',
+			'kerning': '',
+			'letter-spacing': 'normal',
+			'lighting-color': 'rgb(255, 255, 255)',
+			'marker-end': 'none',
+			'marker-mid': 'none',
+			'marker-start': 'none',
+			'mask': 'none',
+			'opacity': '1',
+			'overflow': 'visible',
+			'pointer-events': 'auto',
+			'shape-rendering': 'auto',
+			'stop-color': 'rgb(0, 0, 0)',
+			'stop-opacity': '1',
+			'stroke': 'none',
+			'stroke-dasharray': 'none',
+			'stroke-dashoffset': '0px',
+			'stroke-linecap': 'butt',
+			'stroke-linejoin': 'miter',
+			'stroke-miterlimit': '4',
+			'stroke-opacity': '1',
+			'stroke-width': '1px',
+			'text-anchor': 'start',
+			'text-decoration': 'none',
+			'text-rendering': 'auto',
+			'unicode-bidi': 'normal',
+			'visibility': 'visible',
+			'word-spacing': '0px',
+			'writing-mode': 'horizontal-tb',
+			'class': '',
+			'style': 'clip-rule: evenodd;',
+			'transform': 'matrix(1,0,0,1,0,0)'			
+		};
+		return defaults[attrName] !== null && defaults[attrName] === attrValue; 
+	}
+	
+	Element.prototype.toPath = function (with_attrs) {
+		var old_elem = this;
+		if (old_elem.type !== "circle" &&
+			old_elem.type !== "rect" &&
+			old_elem.type !== "ellipse" &&
+			old_elem.type !== "line" &&
+			old_elem.type !== "polygon" &&
+			old_elem.type !== "polyline" &&
+			old_elem.type !== "path")
+			return;
+		
+		
+		var d = old_elem.getPathAttr(with_attrs);
+		
+		// Create new path element
+		var new_path_attributes = {};
+		
+		//set attributes that should be copied to new path
+		var attrs = with_attrs;
+		if(attrs === undefined){
+			// All attributes that path element can have
+			attrs = ['requiredFeatures', 'requiredExtensions', 'systemLanguage', 'id', 'xml:base', 'xml:lang', 'xml:space', 'clip', 'clip-path', 'clip-rule', 'fill', 'fill-opacity', 'fill-rule', 'filter', 'flood-color', 'flood-opacity', 'image-rendering', 'marker-end', 'marker-mid', 'marker-start', 'mask', 'opacity', 'overflow', 'shape-rendering', 'stop-color', 'stop-opacity', 'stroke', 'stroke-dasharray', 'stroke-dashoffset', 'stroke-linecap', 'stroke-linejoin', 'stroke-miterlimit', 'stroke-opacity', 'stroke-width', 'text-anchor', 'text-decoration', 'text-rendering', 'unicode-bidi', 'visibility', 'class', 'style', 'externalResourcesRequired', 'transform', 'd', 'pathLength'];
+		}
 
+		// Copy attributes of old_element to path
+		for(var attrIdx in attrs){
+			var attrName = attrs[attrIdx];
+			var attrValue;
+			if(attrName === 'transform') {
+				attrValue = old_elem.transform()['localMatrix'];
+			} else {
+				attrValue = old_elem.attr(attrName);
+			}
+			if (attrValue && !_isDefault(attrName, attrValue)) {
+				new_path_attributes[attrName] = attrValue;
+			}
+		}
+		
+		if (d){
+			new_path_attributes.d = d;
+		}
+		var path = old_elem.paper.path(new_path_attributes);
 
+		// get computed stroke of path and add as mb:color
+		var stroke = old_elem.attr("stroke");
+		if(stroke !== 'none' && stroke !== undefined && stroke !== ""){
+			path.attr({'mb:color': Snap.getRGB(stroke).hex});
+//			console.log("Snap.getRGB: '" + Snap.getRGB(stroke).hex + "'");
+		}
+
+		return path;
+	};
+	
 	/**
 	 * Creates a path in the same shape as the origin element
 	 * Supports rect, ellipse, circle, line, polyline, polygon and of course path
@@ -34,34 +155,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	 * 
 	 * @returns {path} path element
 	 */
-	Element.prototype.toPath = function (with_attrs) {
+	Element.prototype.getPathAttr = function () {
 		var old_element = this;
-
-		// Create new path element
-		var pathAttr = {};
-
-		//set attributes that should be copied to new path
-		var attrs = with_attrs;
-		if(attrs === undefined){
-			// All attributes that path element can have
-			attrs = ['requiredFeatures', 'requiredExtensions', 'systemLanguage', 'id', 'xml:base', 'xml:lang', 'xml:space', 'onfocusin', 'onfocusout', 'onactivate', 'onclick', 'onmousedown', 'onmouseup', 'onmouseover', 'onmousemove', 'onmouseout', 'onload', 'alignment-baseline', 'baseline-shift', 'clip', 'clip-path', 'clip-rule', 'color', 'color-interpolation', 'color-interpolation-filters', 'color-profile', 'color-rendering', 'cursor', 'direction', 'display', 'dominant-baseline', 'enable-background', 'fill', 'fill-opacity', 'fill-rule', 'filter', 'flood-color', 'flood-opacity', 'font-family', 'font-size', 'font-size-adjust', 'font-stretch', 'font-style', 'font-variant', 'font-weight', 'glyph-orientation-horizontal', 'glyph-orientation-vertical', 'image-rendering', 'kerning', 'letter-spacing', 'lighting-color', 'marker-end', 'marker-mid', 'marker-start', 'mask', 'opacity', 'overflow', 'pointer-events', 'shape-rendering', 'stop-color', 'stop-opacity', 'stroke', 'stroke-dasharray', 'stroke-dashoffset', 'stroke-linecap', 'stroke-linejoin', 'stroke-miterlimit', 'stroke-opacity', 'stroke-width', 'text-anchor', 'text-decoration', 'text-rendering', 'unicode-bidi', 'visibility', 'word-spacing', 'writing-mode', 'class', 'style', 'externalResourcesRequired', 'transform', 'd', 'pathLength'];
-		}
-
-		//TODO check for default settings and don't copy
-		// Copy attributes of old_element to path
-		for(var attrIdx in attrs){
-			var attrName = attrs[attrIdx];
-			var attrValue;
-			if(attrName === 'transform') {
-				attrValue = old_element.transform()['localMatrix'];
-			} else {
-				attrValue = old_element.attr(attrName);
-			}
-			if (attrValue) {
-				pathAttr[attrName] = attrValue;
-			}
-		}
-
 		var d = '';
 
 		var validRadius = function (val) {
@@ -76,15 +171,16 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		var num = 1.81;
 		var tag = old_element.type;
 
+		// TODO: capsule unit conversion and make it working for other units beside mm
         var convertMMtoPixel = function (val) {
 			attrList = ['rx','ry','r','cx','cy','x1','x2','y1','y2','x','y','width','height'];
     		for(var attrIdx in attrList) {
-				if(val.attr(attrList[attrIdx]) != null && val.attr(attrList[attrIdx]).indexOf('mm') > -1) {
+				if(val.attr(attrList[attrIdx]) !== null && val.attr(attrList[attrIdx]).indexOf('mm') > -1) {
 					var tmp = parseFloat(val.attr(attrList[attrIdx])) * 3.5433;
 					val.attr(attrList[attrIdx], tmp);
 				}
 			}
-		}
+		};
 
 		convertMMtoPixel(old_element);
 
@@ -125,10 +221,12 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 				d = 'M' + x1 + ',' + y1 + 'L' + x2 + ',' + y2;
 				break;
 			case 'polyline':
-				d = 'M' + old_element.attr('points');
+//				d = 'M' + old_element.attr('points');
+				d = 'M' + old_element.attr().points.trim();
 				break;
 			case 'polygon':
-				d = 'M' + old_element.attr('points') + 'Z';
+//				d = 'M' + old_element.attr('points') + 'Z';
+				d = 'M' + old_element.attr().points.trim() + 'Z';
 				break;
 			case 'rect':
 				// TODO ... 
@@ -191,23 +289,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 				break;
 		}
 
-		if (d){
-			pathAttr.d = d;
-		}
-		var path = old_element.paper.path(pathAttr);
-
-		// get computed stroke of path and add as mb:color
-		var stroke = old_element.attr("stroke");
-		if(stroke !== 'none' && stroke !== undefined && stroke !== ""){
-			path.attr({'mb:color': Snap.getRGB(stroke).hex});
-//			console.log("Snap.getRGB: '" + Snap.getRGB(stroke).hex + "'");
-		}
-
-		return path;
+		return d;
 	};
-
-
-
-
 });
 

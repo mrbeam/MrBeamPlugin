@@ -32,4 +32,5 @@ dist
 *.zip
 nbproject
 .directory
-
+plugvenv/
+venv/

@@ -17,9 +17,17 @@ $(function() {
         self.gcodeFile = undefined;
 
         self.interlocks_closed = ko.observable(true);
+        self.is_cooling_mode = ko.observable(false);
+        self.is_fan_connected = ko.observable(true);
+        self.is_rtl_mode = ko.observable(false);
+
         self.is_pause_mode = ko.observable(false);
 
+        self.estimated_duration = ko.observable(null);
+
         self.DEBUG = false;
+
+
 
         self.onStartupComplete = function () {
             self.dialogElement = $('#ready_to_laser_dialog');
@@ -60,7 +68,7 @@ $(function() {
                 });
 
                 self.dialogElement.on('hide', function () {
-                    self._setReadyToLaserCancel();
+                    self._setReadyToLaserCancel(true);
                     if (self.dialogShouldBeOpen != false) {
                         if (typeof e !== "undefined") {
                             self._debugDaShit("on(hide) skip");
@@ -101,55 +109,40 @@ $(function() {
                     })
                 };
 
-                self.onEventPrintPaused = function () {
-                    self._set_paused();
+                self.onEventReadyToLaserStart = function (payload) {
+                    self._fromData(payload, 'onEventReadyToLaserStart');
+                };
+
+                self.onEventReadyToLaserCanceled = function (payload) {
+                    self._fromData(payload, 'onEventReadyToLaserCanceled');
+                }
+
+                self.onEventPrintStarted = function (payload) {
+                    self._fromData(payload, 'onEventPrintStarted');
+                }
+
+                self.onEventPrintPaused = function (payload) {
+                    self._fromData(payload, 'onEventPrintPaused');
+                };
+
+                self.onEventPrintResumed = function (payload) {
+                    self._fromData(payload), 'onEventPrintResumed';
                 };
 
                 self.onEventPrintCancelled = function (payload) {
-                    self._debugDaShit("onEventPrintCanceled() payload: ", payload);
                     self._setReadyToLaserCancel(false);
+                    self._fromData(payload, 'onEventPrintCancelled');
                 };
 
-                // this is listening for data coming through the socket connection
-                self.onDataUpdaterPluginMessage = function(plugin, data) {
-                    if (plugin != "mrbeam") {
-                        return;
-                    }
-
-                    self._debugDaShit("onDataUpdaterPluginMessage() ", data);
-
-                    if (!data) {
-                        console.warn("onDataUpdaterPluginMessage() received empty data for plugin '"+mrbeam+"'");
-                        return;
-                    }
-
-                    if ('ready_to_laser' in data && data.ready_to_laser.startsWith("end")) {
-                        console.log("ReadyToLaser state was ended by the server. data.ready_to_laser=", data.ready_to_laser);
-                        self._setReadyToLaserCancel(false);
-
-                        if (data.ready_to_laser == "end_lasering") {
-                            new PNotify({
-                                title: gettext("Laser Started"),
-                                text: _.sprintf(gettext("It's real laser, baby!!! Be a little careful, don't leave Mr Beam alone...")),
-                                type: "success"
-                            });
-                        }
-                    } else if ('ready_to_laser' in data && data.ready_to_laser.startsWith("start")) {
-                        console.log("ReadyToLaser state was started by the server. data.ready_to_laser=", data.ready_to_laser);
-                        if (data.ready_to_laser == "start_pause") {
-                            self._set_paused();
-                        } else {
-                            self.showDialog();
-                        }
-                    }
-
-                    if ('interlocks_closed' in data) {
-                        self.interlocks_closed(Boolean(data.interlocks_closed));
-                    }
+                self.fromCurrentData = function(data) {
+                    self._fromData(data);
                 };
-
             } // end if oneButton
         }; // end onStartupComplete
+
+        self.onEventJobTimeEstimated = function (payload) {
+            self.formatJobTimeEstimation(payload['job_time_estimation']);
+        };
 
         /**
          * this is called from the outside once the slicing is done
@@ -159,39 +152,108 @@ $(function() {
             self.gcodeFile = gcodeFile;
         };
 
+        self.formatJobTimeEstimation = function (seconds){
+            seconds = Number(seconds);
+            if (seconds < 0) {
+                self.estimated_duration("");
+            } else {
+                let hours = Math.floor(seconds / 3600);
+                let minutes = Math.floor(seconds % 3600 / 60);
+                let duration;
+
+                if (hours === 0) {
+                    if (minutes == 1) {
+                        duration = "" + minutes + " " + gettext("minute")
+                    } else {
+                        duration = "" + minutes + " " + gettext("minutes")
+                    }
+                } else if (hours === 1) {
+                    if (minutes < 10) {
+                        minutes = "0" + minutes
+                    }
+                    duration = hours + ":" + minutes + " " + gettext("hour")
+                } else {
+                    if (minutes < 10) {
+                        minutes = "0" + minutes
+                    }
+                    duration = hours + ":" + minutes + " " + gettext("hours")
+                }
+
+                self.estimated_duration("  ~ " + duration)
+            }
+        };
+
         // bound to both cancel buttons
         self.cancel_btn = function(){
             self._debugDaShit("cancel_btn() ");
-            if (self.is_pause_mode()) {
-                self.state.cancel();
-            } else {
+            if (self.is_rtl_mode()){
                 self._setReadyToLaserCancel(true);
+            } else {
+                self.state.cancel();
             }
         };
 
-        self._set_paused = function(){
-            self.is_pause_mode(true);
-            self.showDialog();
-        };
+        self._fromData = function(payload, event) {
+            if (!payload || !'mrb_state' in payload || !payload['mrb_state']) {
+                return;
+            }
+            var mrb_state = payload['mrb_state'];
+            if (mrb_state) {
+                window.mrbeam.mrb_state = mrb_state;
+                window.STATUS = mrb_state;
+                self.updateSettingsAbout();
+
+                if ('pause_mode' in mrb_state) {
+                    self.is_pause_mode(mrb_state['pause_mode']);
+                }
+                if ('interlocks_closed' in mrb_state) {
+                    self.interlocks_closed(mrb_state['interlocks_closed']);
+                }
+                if ('cooling_mode' in mrb_state) {
+                    self.is_cooling_mode(mrb_state['cooling_mode']);
+                }
+                if ('fan_connected' in mrb_state) {
+                    if (mrb_state['fan_connected'] !== null) {
+                        self.is_fan_connected(mrb_state['fan_connected']);
+                    }
+                }
+                if ('rtl_mode' in mrb_state) {
+                    self.is_rtl_mode(mrb_state['rtl_mode'])
+                }
+
+                self.setDialog();
+            }
+//            console.log("_fromData() ["+event+"] pause_mode: "+self.is_pause_mode()+", interlocks_closed: "+self.interlocks_closed()+", is_cooling_mode: "+self.is_cooling_mode()+", is_fan_connected: "+self.is_fan_connected() +", is_rtl_mode: "+self.is_rtl_mode());
+        }
+
+        self.is_dialog_open = function(){
+            return self.is_pause_mode() || self.is_rtl_mode();
+        }
 
         self._setReadyToLaserCancel = function(notifyServer){
-            notifyServer = notifyServer == false ? false : true // true if undefined
             self._debugDaShit("_setReadyToLaserCancel() notifyServer: ", notifyServer)
             self.hideDialog();
             if (notifyServer) {
-                self._sendReadyToLaserRequest(false);
+                self._sendCancelReadyToLaserMode();
             }
             self.gcodeFile = undefined;
-            self.is_pause_mode(false)
         };
+
+        self.setDialog = function() {
+            if (self.is_dialog_open()) {
+                self.showDialog();
+            } else {
+                self.hideDialog();
+            }
+        }
 
         self.showDialog = function(force) {
             self._debugDaShit("showDialog() " + (force ? "force!" : ""));
             self.dialogShouldBeOpen = true;
             if ((!self.dialogIsInTransition && !self.dialogElement.hasClass('in')) || force) {
                 var param = 'show'
-                if (self.is_pause_mode()) {
-                    // not dismissable in paused mode
+                if (!self.is_rtl_mode()) {
+                    // not dismissible in paused mode
                     param = {backdrop: 'static', keyboard: (MRBEAM_ENV_LOCAL == "DEV")}
                 }
 
@@ -220,6 +282,11 @@ $(function() {
                 self._debugDaShit("hideDialog() skip");
             }
         };
+
+        self._sendCancelReadyToLaserMode = function() {
+            data = {rtl_cancel: true}
+            OctoPrint.simpleApiCommand("mrbeam", "ready_to_laser", data);
+        }
 
         self._sendReadyToLaserRequest = function(ready, dev_start_button) {
             data = {gcode: self.gcodeFile, ready: ready}
@@ -255,12 +322,16 @@ $(function() {
             }
         };
 
+        self.updateSettingsAbout = function(){
+            $('#settings_mrbeam_about_support_mrb_state').html(JSON.stringify(window.mrbeam.mrb_state));
+        };
+
         self._debugDaShit = function(stuff){
             if (self.DEBUG) {
                 if (typeof(stuff) === "object") {
-                    console.log("ANDYTEST " + stuff.shift(), stuff);
+                    console.log("_debugDaShit " + stuff.shift(), stuff);
                 } else {
-                    console.log("ANDYTEST " + stuff);
+                    console.log("_debugDaShit " + stuff);
                 }
             }
         }

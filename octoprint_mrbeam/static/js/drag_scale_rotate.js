@@ -80,8 +80,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			handleFill: "red",
 			handleStrokeDashPreset: [5,5],
 			handleStrokeWidth: 2,
-			handleLength: 22,
-			handleRadius: 16,
+			handleLength: 22, // TODO combine with handleRadius
+			handleRadius: 10, // TODO replace with minimumDraggingSize
+			handleSize: 1.25,
 			unscale: 1,
 			handleStrokeDash: "5,5"
 		};
@@ -97,15 +98,17 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		Element.prototype.ftCreateHandles = function() {
 			var ftEl = this;
 			ftEl.ftInit();
+			ftEl.ftBeforeTransform();
 			var id = ftEl.id;
 			var bb = ftEl.getBBox();
 			ftEl.ftStoreInitialTransformMatrix();
 
 			var bbT = ftEl.getBBox(1);
-			var unscale = ftEl.data('unscale');
+			var rad = ftOption.handleRadius * ftOption.unscale;
 
-			var translateHull = this.paper.select('#userContent')
-				.rect(rectObjFromBB(bbT))
+			var userContent = this.paper.select('#userContent');
+			var translateHull = userContent
+				.rect(rectObjFromBB(bbT, rad, rad))
 				.attr({fill:'grey',opacity:0.3,id:'translateHull',cursor:'move'});
 
 			//check if it needs to be on another side if design is exceeding workArea
@@ -114,31 +117,41 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			if( ftEl.matrix.x(rotX,bbT.cy) <= wa.x || ftEl.matrix.x(rotX,bbT.cy) >= wa.x2 ||
 				ftEl.matrix.y(rotX,bbT.cy) <= wa.y || ftEl.matrix.y(rotX,bbT.cy)  >= wa.y2)
 			{rotX += bbT.width + 2*ftOption.handleLength* ftOption.unscale;}
+			var handlesGroup = userContent
+				.g(translateHull)
+				.attr({id:'handlesGroup'});
 
-			var rotateDragger = this.paper.select('#userContent')
-				.circle(rotX, bbT.cy, ftOption.handleRadius * ftOption.unscale )
-				.attr({ fill: ftOption.handleFill, id: 'rotateDragger',cursor:'pointer' });
+			var rotateDragger = handlesGroup
+				.path(_getTransformHandlePath('rot')).transform('s'+ftOption.handleSize)
+				.attr({id: 'rotateDragger',cursor:'pointer', class:'freeTransformHandle' })
+				.data({cx: rotX, cy:bbT.cy});
+			handlesGroup.g(rotateDragger).transform(['t', rotX, ',', bbT.cy].join(''));
 
 			//todo make code more generic
-			var resizeDragger1 = this.paper.select('#userContent')
-				.circle(bbT.x2, bbT.y2, ftOption.handleRadius * ftOption.unscale)
-				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, cursor:'se-resize' });
+			var resizeDragger1 = handlesGroup
+				.path(_getTransformHandlePath('se')).transform('s'+ftOption.handleSize)
+				.attr({id: 'resizeDragger_'+id, cursor:'se-resize', class:'freeTransformHandle' })
+				.data({cx: bbT.x2, cy: bbT.y2});
+			handlesGroup.g(resizeDragger1).transform(['t', bbT.x2, ',', bbT.y2].join(''));
 
-			var resizeDragger2 = this.paper.select('#userContent')
-				.circle(bbT.x2, bbT.y, ftOption.handleRadius * ftOption.unscale)
-				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling',cursor:'ne-resize' });
+			var resizeDragger2 = handlesGroup
+				.path(_getTransformHandlePath('ne')).transform('s'+ftOption.handleSize)
+				.attr({id: 'resizeDragger_'+id, cursor:'ne-resize', class:'freeTransformHandle' })
+				.data({cx: bbT.x2, cy: bbT.y});
+			handlesGroup.g(resizeDragger2).transform(['t', bbT.x2, ',', bbT.y].join(''));
 
-			var resizeDragger3 = this.paper.select('#userContent')
-				.circle(bbT.x, bbT.y2, ftOption.handleRadius * ftOption.unscale)
-				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling',cursor:'sw-resize' });
+			var resizeDragger3 = handlesGroup
+				.path(_getTransformHandlePath('sw')).transform('s'+ftOption.handleSize)
+				.attr({id: 'resizeDragger_'+id, cursor:'sw-resize', class:'freeTransformHandle' })
+				.data({cx: bbT.x, cy: bbT.y2});
+			handlesGroup.g(resizeDragger3).transform(['t', bbT.x, ',', bbT.y2].join(''));
 
-			var resizeDragger4 = this.paper.select('#userContent')
-				.circle(bbT.x, bbT.y, ftOption.handleRadius * ftOption.unscale)
-				.attr({ fill: ftOption.handleFill, id: 'resizeDragger_'+id, 'vector-effect': 'non-scaling',cursor:'nw-resize' });
+			var resizeDragger4 = handlesGroup
+				.path(_getTransformHandlePath('nw')).transform('s'+ftOption.handleSize)
+				.attr({id: 'resizeDragger_'+id, cursor:'nw-resize', class:'freeTransformHandle' })
+				.data({cx: bbT.x, cy: bbT.y});
+			handlesGroup.g(resizeDragger4).transform(['t', bbT.x, ',', bbT.y].join(''));
 
-			var handlesGroup = this.paper.select('#userContent')
-				.g(translateHull,rotateDragger,resizeDragger1,resizeDragger2,resizeDragger3,resizeDragger4)
-				.attr({id:'handlesGroup'});
 
 			handlesGroup.data('parentId',ftEl.node.id);
 			ftEl.data('handlesGroup', handlesGroup );
@@ -187,9 +200,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			this.data('scale', 1);
 			this.data('tx', 0);
 			this.data('ty', 0);
-			this.data('wa', snap.select('#coordGrid').getBBox());
+			this.data('wa', this.paper.select('#coordGrid').getBBox());
 			this.data('ratio', 1);
-//			this.attr({class:'_freeTransformInProgress'});
 			this.addClass('_freeTransformInProgress');
 
 			//unscale from scaleGroup (outer Group)
@@ -234,17 +246,21 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			if(this.data( 'bb' )) this.data('bb').remove();
 			this.click( function() { this.ftCreateHandles(); } ) ;
 			this.ftCleanUp();
+			this.ftAfterTransform();
 			return this;
 		};
 
 		Element.prototype.ftUpdateTransform = function() {
 			if(this.ftGetInitialTransformMatrix() === undefined){
-				console.log('no initial transform');
+//				console.log('no initial transform');
 				return this;
 			}
+			var tx = this.data("tx") || 0;
+			var ty = this.data("ty") || 0;
+			var angle = this.data("angle") || 0;
 
-			//console.log("translate: ", this.data('tx'), this.data('ty'), 'rotate: ', this.data('angle'), 'scale: ', this.data('scale'));
-			var tstring = "t" + this.data("tx") + "," + this.data("ty") + this.ftGetInitialTransformMatrix().toTransformString() + "r" + this.data("angle") + 'S' + this.data("scale" );
+			// console.log("translate: ", this.data('tx'), this.data('ty'), 'rotate: ', this.data('angle'), 'scale: ', this.data('scale'));
+			var tstring = "t" + tx + "," + ty + this.ftGetInitialTransformMatrix().toTransformString() + "r" + angle + 'S' + this.data("scale" );
 			this.attr({ transform: tstring });
 			if(this.data("bbT")) this.ftHighlightBB(this.paper.select('#userContent'));
 			this.ftUpdateUnscale();
@@ -252,79 +268,128 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			this.ftUpdateHandlesGroup();
 			return this;
 		};
-		
+
 		Element.prototype.ftManualTransform = function(params){
-			var bbox = this.getBBox();
-			var elTransform = this.transform();
-			var tx = 0;
-			var ty = 0;
-			var angle = 0;
-			var scale = 1;
-			if(params.tx !== undefined && !isNaN(params.tx)){
-				tx = params.tx - bbox.x;
-			}
-			if(params.ty !== undefined && !isNaN(params.ty)){
-				ty = params.ty - bbox.y2;
-			}
-			if(params.angle !== undefined && !isNaN(params.angle)){
-				angle = params.angle - this.ftGetRotation();
+            var svg = this;
+		    var bbox = svg.getBBox();
+
+		    svg.ftBeforeTransform(); // issue #295
+
+		    if(params.tx !== undefined && !isNaN(params.tx)){
+                svg.data('tx', params.tx - bbox.x);
+            }
+            if(params.ty !== undefined && !isNaN(params.ty)){
+                svg.data('ty', params.ty - bbox.y2);
+            }
+            // if the transformation comes from the keyboard arrows, it looks a bit different
+            if(params.tx_rel !== undefined && !isNaN(params.tx_rel)){
+                svg.data('tx', params.tx_rel);
+                svg.data('scale', 1);
+                svg.data('angle', 0);
+            }
+            if(params.ty_rel !== undefined && !isNaN(params.ty_rel)){
+                svg.data('ty', params.ty_rel);
+                svg.data('scale', 1);
+                svg.data('angle', 0);
+            }
+            if(params.angle !== undefined && !isNaN(params.angle)){
+				svg.data('angle', params.angle - svg.ftGetRotation());
 			}
 			if(params.scale !== undefined && !isNaN(params.scale)){
-				scale = params.scale / this.ftGetScale();
+				svg.data('scale', params.scale / svg.ftGetScale());
 			}
+			svg.ftStoreInitialTransformMatrix();
+			svg.ftUpdateTransform();
 
-			var tstring = "t" + tx + "," + ty + elTransform.local + "r" + angle + 'S' + scale ;
-			this.attr({ transform: tstring });
-			this.ftReportTransformation();
-			return this;
-		};
+			svg.ftAfterTransform(); // issue #295
+        };
 
 		Element.prototype.ftUpdateHandlesGroup = function() {
 			var group = this;
-			group.parent().selectAll('#handlesGroup').forEach( function( el, i ) {
-				el.transform(group.transform().local.toString());
-			});
-			group.parent().select("#handlesGroup").selectAll('circle').forEach( function( el, i ) {
-				el.attr({'r': ftOption.handleRadius * group.data('unscale')});
-			});
+
+            group.parent().selectAll('#handlesGroup').forEach( function( el, i ) {
+                el.transform(group.transform().local.toString());
+            });
+
+            if(group.parent().select("#handlesGroup") !== null){
+			    group.parent().select("#handlesGroup").selectAll('.freeTransformHandle').forEach( function( el, i ) {
+				    var s = group.data('unscale') * ftOption.handleSize;
+				    el.transform(Snap.matrix(s,0,0,s,0,0));
+			    });
+            }
 		};
 
 		Element.prototype.ftHighlightBB = function() {
+			var rad = ftOption.handleRadius * ftOption.unscale;
 			if(this.data("bbT")) this.data("bbT").remove();
 			if(this.data("bb")) this.data("bb").remove();
 
 			// outer bbox
-			this.data("bb", this.paper.rect( rectObjFromBB( this.getBBox() ) )
+			this.data("bb", this.paper.rect( rectObjFromBB( this.getBBox(), rad ) )
 				.attr({ id: 'bbox', fill: "none", stroke: 'gray', strokeWidth: ftOption.handleStrokeWidth, strokeDasharray: ftOption.handleStrokeDash })
 				.prependTo(this.paper.select('#userContent')));
 			//TODO make more efficiently
 			// this.data('bb');
 			// transformed bbox
-			this.data("bbT", this.paper.rect( rectObjFromBB( this.getBBox(1) ) )
+			this.data("bbT", this.paper.rect( rectObjFromBB( this.getBBox(1), rad ) )
 							.attr({ fill: "none", 'vector-effect': "non-scaling-stroke", stroke: ftOption.handleFill, strokeWidth: ftOption.handleStrokeWidth, strokeDasharray: ftOption.handleStrokeDashPreset.join(',') })
-							.transform( this.transform().global.toString() ) );
+							.transform( this.transform().local.toString() ) );
 			return this;
 		};
 
 		Element.prototype.ftReportTransformation = function(){
-			if(this.data('ftCallbacks') && this.data('ftCallbacks').length > 0){
-				for (var idx = 0; idx < this.data('ftCallbacks').length; idx++) {
-					var cb = this.data('ftCallbacks')[idx];
+			if(this.data('ftOnTransformCallbacks') && this.data('ftOnTransformCallbacks').length > 0){
+				for (var idx = 0; idx < this.data('ftOnTransformCallbacks').length; idx++) {
+					var cb = this.data('ftOnTransformCallbacks')[idx];
 					cb(this);
 				}
 			}
 		};
 
-		Element.prototype.ftRegisterCallback = function(callback){
-			if(typeof this.data('ftCallbacks') === 'undefined'){
-				this.data('ftCallbacks', [callback]);
+		Element.prototype.ftRegisterOnTransformCallback = function(callback){
+			if(typeof this.data('ftOnTransformCallbacks') === 'undefined'){
+				this.data('ftOnTransformCallbacks', [callback]);
 			} else {
-				this.data('ftCallbacks').push(callback);
+				this.data('ftOnTransformCallbacks').push(callback);
 			}
 
 			this.ftReportTransformation();
 		};
-		
+
+		Element.prototype.ftAfterTransform = function(){
+			if(this.data('ftAfterTransformCallbacks') && this.data('ftAfterTransformCallbacks').length > 0){
+				for (var idx = 0; idx < this.data('ftAfterTransformCallbacks').length; idx++) {
+					var cb = this.data('ftAfterTransformCallbacks')[idx];
+					cb(this);
+				}
+			}
+		};
+
+		Element.prototype.ftRegisterAfterTransformCallback = function(callback){
+			if(typeof this.data('ftAfterTransformCallbacks') === 'undefined'){
+				this.data('ftAfterTransformCallbacks', [callback]);
+			} else {
+				this.data('ftAfterTransformCallbacks').push(callback);
+			}
+		};
+
+		Element.prototype.ftBeforeTransform = function(){
+			if(this.data('ftBeforeTransformCallbacks') && this.data('ftBeforeTransformCallbacks').length > 0){
+				for (var idx = 0; idx < this.data('ftBeforeTransformCallbacks').length; idx++) {
+					var cb = this.data('ftBeforeTransformCallbacks')[idx];
+					cb(this);
+				}
+			}
+		};
+
+		Element.prototype.ftRegisterBeforeTransformCallback = function(callback){
+			if(typeof this.data('ftBeforeTransformCallbacks') === 'undefined'){
+				this.data('ftBeforeTransformCallbacks', [callback]);
+			} else {
+				this.data('ftBeforeTransformCallbacks').push(callback);
+			}
+		};
+
 		Element.prototype.ftGetRotation = function(){
 			var transform = this.transform();
 			var startIdx = transform.local.indexOf('r') + 1;
@@ -332,7 +397,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             var rot = parseFloat(transform.local.substring(startIdx, endIdx)) || 0;
 			return rot;
 		};
-		
+
 		Element.prototype.ftGetScale = function(){
 			var transform = this.transform();
 			// get scale independent from rotation
@@ -342,8 +407,22 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 	});
 
-	function rectObjFromBB ( bb ) {
-		return { x: bb.x, y: bb.y, width: bb.width, height: bb.height };
+	function rectObjFromBB ( bb, minWidth, minHeight ) {
+		minWidth = minWidth || 0;
+		minHeight = minHeight || 0;
+		var x = bb.x;
+		var y = bb.y;
+		var w = bb.width;
+		var h = bb.height;
+		if(bb.width < minWidth){
+			w = minWidth;
+			x = x - minWidth / 2;
+		}
+		if(bb.height < minHeight){
+			bb.height = minHeight;
+			bb.y = bb.y - minHeight / 2;
+		}
+		return { x: x, y: bb.y, width: w, height: bb.height };
 	}
 
 	function elementDragStart( mainEl, x, y, ev ) {
@@ -352,12 +431,11 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 	};
 
-	function elementDragMove( mainEl, dx, dy, x, y ) {
+	function elementDragMove( mainEl, dx, dy, x, y, event ) {
 		var sgUnscale = mainEl.data('sgUnscale');
 
-		var udx = sgUnscale*dx;
-		var udy = sgUnscale*dy;
-
+		var udx = sgUnscale * dx * MRBEAM_PX2MM_FACTOR_WITH_ZOOM;
+		var udy = sgUnscale * dy * MRBEAM_PX2MM_FACTOR_WITH_ZOOM;
 		var tx = mainEl.data("otx") + +udx;
 		var ty = mainEl.data("oty") + +udy;
 		mainEl.data("tx", tx);
@@ -371,8 +449,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 	function rotateDraggerStart( mainEl ) {
 		var rotateDragger = this.parent().select('#rotateDragger');
-		var cx = +rotateDragger.attr('cx');
-		var cy = +rotateDragger.attr('cy');
+		var cx = +rotateDragger.data('cx');
+		var cy = +rotateDragger.data('cy');
 		rotateDragger.data('ocx', mainEl.matrix.x(cx,cy));
 		rotateDragger.data('ocy', mainEl.matrix.y(cx,cy));
 
@@ -430,16 +508,17 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		var bb = mainEl.getBBox();
 
 		//store height at start of dragging
-		resizeDragger.data('sHeight', bb.cy-bb.y);
-		mainEl.data('ratio', (bb.cx - bb.x)/resizeDragger.data('sHeight'));
+		var sHeight = bb.cy - bb.y;
+		resizeDragger.data('sHeight', sHeight);
+		mainEl.data('ratio', (bb.cx - bb.x) / sHeight);
 
 		//check where dragger is to adjust scaling-translation
 		elementDragStart(mainEl);
-		var vx = mainEl.matrix.x(resizeDragger.attr('cx'),resizeDragger.attr('cy'));
-		var vy = mainEl.matrix.y(resizeDragger.attr('cx'),resizeDragger.attr('cy'));
+		var vx = mainEl.matrix.x(resizeDragger.data('cx'),resizeDragger.data('cy'));
+		var vy = mainEl.matrix.y(resizeDragger.data('cx'),resizeDragger.data('cy'));
 		resizeDragger.data('signX',Math.sign(bb.cx - vx));
-		resizeDragger.data('signY',Math.sign(bb.cy - vy));
-		// console.log("Sig X/Y", resizeDragger.data('signX'), resizeDragger.data('signY'));
+		resizeDragger.data('signY',Math.sign(-bb.cy + vy));
+//		 console.log("Sig X/Y", resizeDragger.data('signX'), resizeDragger.data('signY'));
 
 	};
 
@@ -448,10 +527,17 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 	function resizeDraggerMove( mainEl, dx, dy, x, y, event ) {
 		var resizeDragger = this;
-		dy = dy/2; //apply smoothing factor of 2
-
 		var origHeight = +mainEl.data('oHeight') * +mainEl.data('angleFactor');
-		var newHeight = +resizeDragger.data('sHeight') - dy * mainEl.data('sgUnscale') * resizeDragger.data('signY');
+		var d = -dy;
+		// TODO use dx and dy, scale properly to movement.
+//		if(Math.abs(dx) > Math.abs(dy) - origHeight){
+//			d = dx;
+//		}
+
+		//apply smoothing factor of 2
+		var	delta = d/2 * MRBEAM_PX2MM_FACTOR_WITH_ZOOM;
+
+		var newHeight = +resizeDragger.data('sHeight') - delta * mainEl.data('sgUnscale') * resizeDragger.data('signY');
 		var newScale =  Math.abs(newHeight / origHeight);
 
 		//todo implement shiftkey for resize
@@ -462,11 +548,29 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		//TODO check for negative scale, what should happen?
 		mainEl.data('scale', newScale);
 
+		// drag element, nobody wants to have centered scaling
+		var tx = d/2 * +mainEl.data('ratio') * resizeDragger.data('signX')   * resizeDragger.data('signY');
+		var ty = -d/2;
 		//TODO angle, for translation of innerBB(redBB)
-		elementDragMove(mainEl,dy * +mainEl.data('ratio') * resizeDragger.data('signX') * resizeDragger.data('signY'),dy);
+		elementDragMove(mainEl, tx, ty);
 
 		mainEl.ftUpdateTransform();
 	};
+
+	function _getTransformHandlePath(type){
+		switch(type){
+			case 'nw':
+				return "M0,0v-8l-2,2 -6,-6 2,-2h-8v8l2,-2 6,6 -2,2z";
+			case 'ne':
+				return "M0,0v-8l2,2 6,-6 -2,-2h8v8l-2,-2 -6,6 2,2z";
+			case 'se':
+				return "M0,0v8l2,-2 6,6-2,2h8v-8l-2,2-6,-6 2,-2z";
+			case 'sw':
+				return "M0,0v8l-2,-2 -6,6 2,2h-8v-8l2,2 6,-6 -2,-2z";
+			case 'rot':
+				return "M 0,8 C 4.5,8 8,4.5 8,0 H 3 C 3,1.7 1.6,3 0,3 0,3 0,3 0,3 0,3 0,3 -0.3,3 -1.9,2.8 -3,1.5 -3,-0.1 c 0,-1.6 1.4,-3 3,-3 v 1.7 L 4,-5.5 0,-9.6 V -8 c -4.5,0 -8,3.6 -8,8 0,4.5 3.6,8 8,8 z";
+		}
+	}
 
 })();
 

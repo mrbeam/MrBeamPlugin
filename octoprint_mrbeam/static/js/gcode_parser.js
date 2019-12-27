@@ -1,8 +1,6 @@
 $(function() {
 	gcParser = function() {
-		self = this;
-
-		self.toolOffsets = [{x: 0, y: 0}];
+		var self = this;
 
 		self.parse = function(gcode, pathDelimiter, pathCallback, imgCallback ) {
 			var argChar, numSlice;
@@ -11,28 +9,20 @@ $(function() {
 			var clockwise = false;
 			var laser = 0;
 			var prevX = 0, prevY = 0, prevZ = -1;
-			var f, lastF = 4000;
-			var extrude = false, extrudeRelative = false, retract = 0;
+			var f, lastF = 10000;
 			var positionRelative = false;
 			var withinPixelCode = false;
 
-			var dcExtrude = false;
-			var assumeNonDC = false;
-
-			var tool = 0;
-			var prev_extrude = [{a: 0, b: 0, c: 0, e: 0, abs: 0}];
-			var prev_retract = [0];
-			var offset = self.toolOffsets[0];
-
 			var gcode_lines = gcode.split(/\n/);
+			var gcode_regex = /^(G0|G00|G1|G01|G2|G02|G3|G03|G90|G91|G92|G28|\$H|M3|M03|M5|M05)\s*(.*)/;
 
 			var model = [];
 			for (var i = 0; i < gcode_lines.length; i++) {
 				var l = gcode_lines[i];
-				if(l.startsWith(';Image')) {
+				if(l.match(/; ?Image/)) {
 					withinPixelCode = true;
 					// ;Image: 24.71x18.58 @ 2.59,1.70|http://localhost:5000/serve/files/local/filename.png
-					var re = /;Image: ([-+]?[0-9]*\.?[0-9]+)x([-+]?[0-9]*\.?[0-9]+) @ ([-+]?[0-9]*\.?[0-9]+),([-+]?[0-9]*\.?[0-9]+)\|(.*)$/;
+					var re = /; ?Image: ([-+]?[0-9]*\.?[0-9]+)x([-+]?[0-9]*\.?[0-9]+) @ ([-+]?[0-9]*\.?[0-9]+),([-+]?[0-9]*\.?[0-9]+)\|(.*)$/;
 					var match = l.match(re);
 					if(match){
 						var w = parseFloat(match[1]);
@@ -59,37 +49,41 @@ $(function() {
 				pj = undefined;
 				pp = undefined;
 				clockwise = false;
-				retract = 0;
-
-				extrude = false;
 
 				var addToModel = false;
 				var convertAndAddToModel = false;
 				var move = false;
 
+//				var gcode_parts = gcode_regex.exec(line);
+//				if(gcode_parts === null) continue;
+//				var command = gcode_parts[1];
+//				var parameters = gcode_parts[2];
+				var args = self._split_args(line);
+				if(args.length === 0) continue;
+				var command = args[0];
 
-				if (/^(?:G0|G00|G1|G01)\s+/i.test(line)) {
-					var args = line.split(/\s+/);
+				if (command === "G0" || 
+					command === "G1" ||
+					command === "G00" ||
+					command === "G01" ) {
+//					var args = self._split_args(parameters);
 
 					for (var j = 0; j < args.length; j++) {
 						switch (argChar = args[j].charAt(0).toLowerCase()) {
 							case 'x':
 								if (positionRelative) {
-									x = prevX + Number(args[j].slice(1)) + offset.x;
+									x = prevX + Number(args[j].slice(1));
 								} else {
-									x = Number(args[j].slice(1)) + offset.x;
+									x = Number(args[j].slice(1));
 								}
-
 								break;
 
 							case 'y':
 								if (positionRelative) {
-									y = prevY + Number(args[j].slice(1)) + offset.y;
+									y = prevY + Number(args[j].slice(1));
 								} else {
-									y = Number(args[j].slice(1)) + offset.y;
-//									console.log('#', gcode_lines[i-2], gcode_lines[i-1], line, y);
+									y = Number(args[j].slice(1));
 								}
-
 								break;
 
 							case 'z':
@@ -98,38 +92,6 @@ $(function() {
 								} else {
 									z = Number(args[j].slice(1));
 								}
-
-								break;
-
-							case 'e':
-							case 'a':
-							case 'b':
-							case 'c':
-								assumeNonDC = true;
-								numSlice = Number(args[j].slice(1));
-
-								if (!extrudeRelative) {
-									// absolute extrusion positioning
-									prev_extrude[tool]["abs"] = numSlice - prev_extrude[tool][argChar];
-									prev_extrude[tool][argChar] = numSlice;
-								} else {
-									prev_extrude[tool]["abs"] = numSlice;
-									prev_extrude[tool][argChar] += numSlice;
-								}
-
-								extrude = prev_extrude[tool]["abs"] > 0;
-								if (prev_extrude[tool]["abs"] < 0) {
-									prev_retract[tool] = -1;
-									retract = -1;
-								} else if (prev_extrude[tool]["abs"] === 0) {
-									retract = 0;
-								} else if (prev_extrude[tool]["abs"] > 0 && prev_retract[tool] < 0) {
-									prev_retract[tool] = 0;
-									retract = 1;
-								} else {
-									retract = 0;
-								}
-
 								break;
 
 							case 'f':
@@ -139,39 +101,36 @@ $(function() {
 						}
 					}
 
-					if (dcExtrude && !assumeNonDC) {
-						extrude = true;
-						prev_extrude[tool]["abs"] = Math.sqrt((prevX - x) * (prevX - x) + (prevY - y) * (prevY - y));
-					}
-
-					if (typeof (x) !== 'undefined' || typeof (y) !== 'undefined' || typeof (z) !== 'undefined' || retract !== 0) {
+					if (typeof (x) !== 'undefined' || typeof (y) !== 'undefined' || typeof (z) !== 'undefined' ) {
 						addToModel = true;
 						move = true;
 					}
-				} else if (/^(?:G2|G02|G3|G03)\s+/i.test(line)) {
+					
+				} else if (command === "G2" || 
+					command === "G3" ||
+					command === "G02" ||
+					command === "G03" ) {
+//					var args = self._split_args(parameters);
 					var units = "G21"; // mm
-					var args = line.split(/\s+/);
 					var lastPos = {x: prevX, y: prevY, z: prevZ};
 
-					clockwise = /^(?:G2|G02)/i.test(args[0]);
+					clockwise = command === "G2" || command === "G02";
 					for (var j = 0; j < args.length; j++) {
 						switch (argChar = args[j].charAt(0).toLowerCase()) {
 							case 'x':
 								if (positionRelative) {
-									x = prevX + Number(args[j].slice(1)) + offset.x;
+									x = prevX + Number(args[j].slice(1));
 								} else {
-									x = Number(args[j].slice(1)) + offset.x;
+									x = Number(args[j].slice(1));
 								}
-
 								break;
 
 							case 'y':
 								if (positionRelative) {
-									y = prevY + Number(args[j].slice(1)) + offset.y;
+									y = prevY + Number(args[j].slice(1));
 								} else {
-									y = Number(args[j].slice(1)) + offset.y;
+									y = Number(args[j].slice(1));
 								}
-
 								break;
 
 							case 'z':
@@ -180,53 +139,18 @@ $(function() {
 								} else {
 									z = Number(args[j].slice(1));
 								}
-
 								break;
 
 							case 'i':
-								pi = Number(args[j].slice(1)) + offset.x;
-
+								pi = Number(args[j].slice(1));
 								break;
 
 							case 'j':
-								pj = Number(args[j].slice(1)) + offset.y;
-
+								pj = Number(args[j].slice(1));
 								break;
 
 							case 'p':
 								pp = Number(args[j].slice(1));
-
-								break;
-
-							case 'e':
-							case 'a':
-							case 'b':
-							case 'c':
-								assumeNonDC = true;
-								numSlice = Number(args[j].slice(1));
-
-								if (!extrudeRelative) {
-									// absolute extrusion positioning
-									prev_extrude[tool]["abs"] = numSlice - prev_extrude[tool][argChar];
-									prev_extrude[tool][argChar] = numSlice;
-								} else {
-									prev_extrude[tool]["abs"] = numSlice;
-									prev_extrude[tool][argChar] += numSlice;
-								}
-
-								extrude = prev_extrude[tool]["abs"] > 0;
-								if (prev_extrude[tool]["abs"] < 0) {
-									prev_retract[tool] = -1;
-									retract = -1;
-								} else if (prev_extrude[tool]["abs"] === 0) {
-									retract = 0;
-								} else if (prev_extrude[tool]["abs"] > 0 && prev_retract[tool] < 0) {
-									prev_retract[tool] = 0;
-									retract = 1;
-								} else {
-									retract = 0;
-								}
-
 								break;
 
 							case 'f':
@@ -236,21 +160,14 @@ $(function() {
 						}
 					}
 
-					if (dcExtrude && !assumeNonDC) {
-						extrude = true;
-						prev_extrude[tool]["abs"] = Math.sqrt((prevX - x) * (prevX - x) + (prevY - y) * (prevY - y));
-					}
-
 					if (typeof (x) !== 'undefined' || typeof (y) !== 'undefined' || typeof (z) !== 'undefined'
-							|| typeof (pi) !== 'undefined' || typeof (pj) !== 'undefined' || typeof (pp) !== 'undefined' || retract !== 0) {
+							|| typeof (pi) !== 'undefined' || typeof (pj) !== 'undefined' || typeof (pp) !== 'undefined') {
 
 						convertAndAddToModel = true;
 						move = true;
 					}
-//				} else if (/^(?:M82)/i.test(line)) {
-//					extrudeRelative = false;
-				} else if (/^(?:M3|M03)/i.test(line)) {
-					var args = line.split(/\s+/);
+				} else if (command === 'M3' || command === 'M03') {
+//					var args = self._split_args(parameters);;
 					for (var j = 0; j < args.length; j++) {
 						switch (argChar = args[j].charAt(0).toLowerCase()) {
 							case 's':
@@ -258,22 +175,14 @@ $(function() {
 								break;
 						}
 					}
-				} else if (/^(?:M5|M05)/i.test(line)) {
+				} else if (command === 'M5' || command === 'M05') {
 					laser = 0;
-				} else if (/^(?:G91)/i.test(line)) {
+				} else if (command === 'G91') {
 					positionRelative = true;
-					extrudeRelative = true;
-				} else if (/^(?:G90)/i.test(line)) {
+				} else if (command === 'G90') {
 					positionRelative = false;
-					extrudeRelative = false;
-//				} else if (/^(?:M83)/i.test(line)) {
-//					extrudeRelative = true;
-//				} else if (/^(?:M101)/i.test(line)) {
-//					dcExtrude = true;
-//				} else if (/^(?:M103)/i.test(line)) {
-//					dcExtrude = false;
-				} else if (/^(?:G92)/i.test(line)) {
-					var args = line.split(/\s/);
+				} else if (command === 'G92') {
+//					var args = self._split_args(parameters);;
 
 					for (var j = 0; j < args.length; j++) {
 						if (!args[j])
@@ -284,18 +193,14 @@ $(function() {
 							x = 0;
 							y = 0;
 							z = 0;
-							prev_extrude[tool]["e"] = 0;
-							prev_extrude[tool]["a"] = 0;
-							prev_extrude[tool]["b"] = 0;
-							prev_extrude[tool]["c"] = 0;
 						} else {
 							switch (argChar = args[j].charAt(0).toLowerCase()) {
 								case 'x':
-									x = Number(args[j].slice(1)) + offset.x;
+									x = Number(args[j].slice(1));
 									break;
 
 								case 'y':
-									y = Number(args[j].slice(1)) + offset.y;
+									y = Number(args[j].slice(1));
 									break;
 
 								case 'z':
@@ -303,17 +208,6 @@ $(function() {
 									prevZ = z;
 									break;
 
-								case 'e':
-								case 'a':
-								case 'b':
-								case 'c':
-									numSlice = Number(args[j].slice(1));
-									if (!extrudeRelative)
-										prev_extrude[tool][argChar] = 0;
-									else {
-										prev_extrude[tool][argChar] = numSlice;
-									}
-									break;
 							}
 						}
 					}
@@ -323,8 +217,8 @@ $(function() {
 						move = false;
 					}
 
-				} else if (/^(?:G28|$H)/i.test(line)) {
-					var args = line.split(/\s/);
+				} else if (command === 'G28' || command === '$H') {
+//					var args = self._split_args(parameters);;
 
 					if (args.length === 1) {
 						// G28 with no arguments => home all axis
@@ -349,19 +243,11 @@ $(function() {
 						}
 					}
 
-					if (typeof (x) !== 'undefined' || typeof (y) !== 'undefined' || typeof (z) !== 'undefined' || retract !== 0) {
+					if (typeof (x) !== 'undefined' || typeof (y) !== 'undefined' || typeof (z) !== 'undefined' ) {
 						addToModel = true;
 						move = true;
 					}
-				} else if (/^(?:T\d+)/i.test(line)) {
-					tool = Number(line.split(/\s/)[0].slice(1));
-					if (!prev_extrude[tool])
-						prev_extrude[tool] = {a: 0, b: 0, c: 0, e: 0, abs: 0};
-					if (!prev_retract[tool])
-						prev_retract[tool] = 0;
-
-					offset = self.toolOffsets[tool] || {x: 0, y: 0};
-				}
+				} 
 
 				// ensure z is set.
 				if (typeof (z) === 'undefined') {
@@ -377,18 +263,14 @@ $(function() {
 						x: x,
 						y: y,
 						z: z,
-						extrude: extrude,
 						laser: laser,
-						retract: retract,
 						noMove: !move,
-						extrusion: (extrude || retract) && prev_extrude[tool]["abs"] ? prev_extrude[tool]["abs"] : 0,
 						prevX: prevX,
 						prevY: prevY,
 						prevZ: prevZ,
 						speed: lastF,
 						gcodeLine: i,
 						percentage: i / gcode_lines.length,
-						tool: tool
 					});
 				}
 				if (convertAndAddToModel) {
@@ -401,18 +283,14 @@ $(function() {
 							x: part[0],
 							y: part[1],
 							z: part[2],
-							extrude: extrude,
 							laser: laser,
-							retract: retract,
 							noMove: !move,
-							extrusion: (extrude || retract) && prev_extrude[tool]["abs"] ? prev_extrude[tool]["abs"] : 0,
 							prevX: lastPart[0],
 							prevY: lastPart[1],
 							prevZ: lastPart[2],
 							speed: lastF,
 							gcodeLine: i,
-							percentage: i / gcode_lines.length,
-							tool: tool
+							percentage: i / gcode_lines.length
 						});
 
 						lastPart = part;
@@ -426,7 +304,7 @@ $(function() {
 						prevY = y;
 				}
 
-				if (typeof (pathCallback) === 'function' && typeof (pathDelimiter) !== 'undefined' && pathDelimiter.test(line)) {
+				if (model.length > 0 && typeof (pathCallback) === 'function' && pathDelimiter !== undefined && pathDelimiter.test(line)) {
 					pathCallback(model);
 					model = model.slice(-1); // keep the last element as start of the next block
 				}
@@ -516,7 +394,7 @@ $(function() {
 				fta = angleA;
 			}
 
-			// THis if arc is correct
+			// This if arc is correct
 			// TODO move this into the validator
 			var r2 = Math.sqrt(bX * bX + bY * bY);
 			var percentage;
@@ -551,6 +429,30 @@ $(function() {
 			}
 
 			return parts;
+		};
+		
+		self._split_args = function(str){
+			var result = [];
+			var p = null;
+			var val = '';
+			for (var i = 0; i < str.length; i++) {
+				var char = str[i];
+				if(/[A-Z;]/.test(char)){
+					if(p !== null){
+						result.push(p+val);
+						val = '';
+					}
+					p = char;
+				} else {
+					if(char !== ' '){
+						val += char;
+					}
+				}
+			}
+			if(p !== null){
+				result.push(p+val);
+			}
+			return result;
 		};
 
 	};

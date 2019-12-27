@@ -3,134 +3,106 @@ $(function(){
 	function CameraViewModel(params) {
         var self = this;
         self.settings = params[0];
-        self.workingArea = params[1];
-        self.profile = params[2];
+        self.cameraCalibration = params[1];
 
-        self.INTERVAL_DURATION = 2000;
         self.TAB_NAME_WORKING_AREA = '#workingarea';
+        self.FALLBACK_IMAGE_URL = '/plugin/mrbeam/static/img/beam-cam-static.jpg';
 
         self.camEnabled = undefined;
+        self.needsCalibration = false;
 
-        self.intervalId = undefined;
         self.imageUrl = undefined;
         self.webCamImageElem = undefined;
-
-        self.imageLoadingDuration = -1;
-
-        self.currentTab = '';
-        self.lidClosed = undefined;
-
-        self.camera_offset_x = ko.observable(0);
-        self.camera_offset_y = ko.observable(0);
-        self.camera_scale = ko.observable(1.0);
-        self.camera_rotation = ko.observable(0.0);
-
-        self.camTransform = ko.computed(function () {
-            return "scale(" + self.camera_scale() + ") rotate(" + self.camera_rotation() + "deg) translate(" + self.camera_offset_x() + "px, " + self.camera_offset_y() + "px)"
-        });
+        self.isCamCalibrated = false;
+        self.firstImageLoaded = false;
 
         // event listener callbacks //
 
         self.onAllBound = function () {
-            self.webCamImageElem = $("#beamcam_image");
-            self.webCamSettingsImageElem = $("#webcam_image_settings"); // dev settings module
-            self.webCamSettingsImageElem.attr('src', self.webCamImageElem.attr('src'));
-            self.webCamImageElem.removeAttr('onerror');
+            self.webCamImageElem = $("#beamcam_image_svg");
+			self.cameraMarkerElem = $("#camera_markers");
+			self.previewImageFilter = snap.select('#preview_precision feGaussianBlur');
+            // self.webCamImageElem.removeAttr('onerror');
             self.camEnabled = self.settings.settings.plugins.mrbeam.cam.enabled();
             self.imageUrl = self.settings.settings.plugins.mrbeam.cam.frontendUrl();
-            self.initCameraCalibration();
 
-            // At this point we already got a lid_state through the socket connection.
-            // But back then this viewmodel wasn't bound so that doCamState (or more precisely self.workingAreaIsCurrentTab) failed.
-            // another doCamState() here solves this problem.
-            self.doCamState(undefined, 'onAllBound');
+            if (window.mrbeam.browser.is_safari) {
+                // svg filters don't really work in safari: https://github.com/mrbeam/MrBeamPlugin/issues/586
+                self.webCamImageElem.attr('filter', '');
+            }
+
+            // loading_overlay disappears only if this is set to true
+            // not working in Safari
+            self.webCamImageElem.load(function(){
+                self.firstImageLoaded = true;
+            });
+
+            // trigger initial loading of the image
+            self.loadImage();
         };
 
-        self.onBrowserTabVisibilityChange = function (state) {
-            var fakeTab = state ? self.TAB_NAME_WORKING_AREA : '#notab';
-            self.doCamState(fakeTab, 'onBrowserTabVisibilityChange');
-        };
 
-        self.onTabChange = function (current, previous) {
-            self.doCamState(current, 'onTabChange');
-        };
-
-         // this is listening for data coming through the socket connection
         self.onDataUpdaterPluginMessage = function(plugin, data) {
-            if (plugin != "mrbeam" || !data) return;
-            if ('lid_closed' in data) {
-                self.lidClosed = data.lid_closed;
-                self.doCamState(undefined, 'onDataUpdaterPluginMessage');
-            }
-        };
-
-
-        // action methods //
-
-        self.doCamState = function(currentTab, trigger){
-            // console.log("doCamState() trigger:"+trigger+
-            //     ", self.camEnabled:"+self.camEnabled+
-            //     ", self.lidClosed:"+self.lidClosed+
-            //     ", self.workingAreaIsCurrentTab("+currentTab+"):"+self.workingAreaIsCurrentTab(currentTab) +
-            //     ", self.intervalId:" + self.intervalId);
-
-            if (self.camEnabled && !self.lidClosed && self.workingAreaIsCurrentTab(currentTab)) {
-                if (!self.intervalId) {
-                    self.loadImage();
-                    self.startImageLoadingInterval();
+            if (plugin !== "mrbeam" || !data) return;
+            if ('beam_cam_new_image' in data) {
+                const mf = data['beam_cam_new_image']['markers_found'];
+                if(mf['NW'] !== undefined){
+                    const pixels = '['+mf['NW']['pixels']+','+mf['NE']['pixels']+','+mf['SW']['pixels']+','+mf['SE']['pixels']+']';
+                    const circles = '['+mf['NW']['r']+','+mf['NE']['r']+','+mf['SW']['r']+','+mf['SE']['r']+']';
+                    console.log('New Image [NW,NE,SW,SE]: Pix '+pixels+' Rad '+circles,data['beam_cam_new_image']);
                 }
-            } else {
-                if (self.intervalId) {
-                    self.stopImageLoadingInterval();
+				if(!data['beam_cam_new_image']['successful_correction']){
+					['NW', 'NE', 'SE', 'SW'].forEach(function(m) {
+						if(mf[m] !== undefined){ 
+							if(mf[m].recognized === true){ self.cameraMarkerElem.removeClass('marker'+m); }
+							else { self.cameraMarkerElem.addClass('marker'+m);}
+						}
+					});
+					self.previewImageFilter.attr({'stdDeviation': 2});
+				} else {
+					self.previewImageFilter.attr({'stdDeviation':0});
+				}
+				
+								
+                if(data['beam_cam_new_image']['error'] === undefined){
+                    self.needsCalibration = false;
+                }else if(data['beam_cam_new_image']['error'] === "NO_CALIBRATION: Marker Calibration Needed" && !self.needsCalibration){
+                    self.needsCalibration = true;
+                    new PNotify({
+                        title: gettext("Calibration needed"),
+                        text: gettext("Please calibrate the camera under Settings -> Camera Calibration"),
+                        type: "warning",
+                        tag: "calibration_needed",
+                        hide: false
+                    });
                 }
+                self.loadImage();
             }
-        };
-
-        self.initCameraCalibration = function () {
-            var s = self.settings.settings.plugins.mrbeam;
-            s.camera_offset_x.subscribe(function (newValue) {
-                self.camera_offset_x(newValue);
-            });
-            s.camera_offset_y.subscribe(function (newValue) {
-                self.camera_offset_y(newValue);
-            });
-            s.camera_scale.subscribe(function (newValue) {
-                self.camera_scale(newValue);
-            });
-            s.camera_rotation.subscribe(function (newValue) {
-                self.camera_rotation(newValue);
-            });
-
-            s.camera_offset_x.notifySubscribers(s.camera_offset_x());
-            s.camera_offset_y.notifySubscribers(s.camera_offset_y());
-            s.camera_scale.notifySubscribers(s.camera_scale());
-            s.camera_rotation.notifySubscribers(s.camera_rotation());
-
-        };
-
-        self.startImageLoadingInterval = function () {
-            var myIntervalDuration = Math.max(self.INTERVAL_DURATION, self.imageLoadingDuration);
-            self.intervalId = setInterval(self.loadImage, myIntervalDuration);
-            console.log("BeamCam updating, interval: " + Math.round(myIntervalDuration) + "ms");
-        };
-
-        self.stopImageLoadingInterval = function () {
-            window.clearInterval(self.intervalId);
-            self.intervalId = undefined;
-            console.log("BeamCam update paused");
+			
+			// If camera is not active (lid closed), all marker(NW|NE|SW|SE) classes should be removed.
+			if('interlocks_closed' in data && data.interlocks_closed === true){
+				self.cameraMarkerElem.attr('class', '');
+			}
+			
         };
 
         self.loadImage = function () {
             var myImageUrl = self.getTimestampedImageUrl();
-            var myTime = new Date().getTime();
-            $('<img>')
-                .load(function () {
-                    self.webCamImageElem.attr('src', myImageUrl);
-                    self.webCamSettingsImageElem.attr('src', myImageUrl);
-                    var myDuration = new Date().getTime() - myTime;
-                    self.addToImageLoadingDuration(myDuration);
-                })
-                .attr({src: myImageUrl});
+            var img = $('<img>');
+            img.load(function () {
+                self.webCamImageElem.attr('xlink:href', myImageUrl);
+                if (window.mrbeam.browser.is_safari) {
+                    // load() event seems not to fire in Safari.
+                    // So as a quick hack, let's set firstImageLoaded to true already here
+                    self.firstImageLoaded = true;
+                }
+            });
+            if (!self.firstImageLoaded) {
+                img.error(function () {
+                    self.webCamImageElem.attr("xlink:href", self.FALLBACK_IMAGE_URL);
+                });
+            }
+            img.attr({src: myImageUrl});
         };
 
         self.getTimestampedImageUrl = function () {
@@ -142,36 +114,14 @@ $(function(){
             }
             return result;
         };
-
-        self.addToImageLoadingDuration = function(nuDuration) {
-            if (nuDuration > 0) {
-                if (self.imageLoadingDuration > 0) {
-                    self.imageLoadingDuration = (self.imageLoadingDuration + nuDuration) / 2 ;
-                } else {
-                    self.imageLoadingDuration = nuDuration;
-                }
-            }
-        };
-
-        self.workingAreaIsCurrentTab = function(currentTab){
-            currentTab = (currentTab) ? currentTab : self.getCurrentTab();
-            return currentTab == self.TAB_NAME_WORKING_AREA;
-        }
-
-        self.getCurrentTab = function(){
-            return $('#mrbeam-main-tabs li.active a').attr('href');
-        }
     };
 
 
 
     // view model class, parameters for constructor, container to bind to
     ADDITIONAL_VIEWMODELS.push([CameraViewModel,
-		["settingsViewModel", "workingAreaViewModel", "laserCutterProfilesViewModel"],
-		[
-			document.getElementById("webcam_wrapper"),
-			document.getElementById("settings_camera_calibration")
-		]
+		["settingsViewModel"],
+		[] // nothing to bind.
 	]);
 
 });

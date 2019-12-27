@@ -2,18 +2,44 @@ $(function () {
 
     function MotherViewModel(params) {
         var self = this;
+        window.mrbeam.viewModels['motherViewModel'] = self;
+
         self.loginState = params[0];
         self.settings = params[1];
         self.state = params[2];
-        self.gcodefiles = params[3];
-        self.connection = params[4];
-        self.control = params[5];
-        self.terminal = params[6];
-        self.workingArea = params[7];
-        self.conversion = params[8];
-        self.readyToLaser = params[9];
-        self.navigation = params[10];
-        self.appearance = params[10];
+        self.files = params[3];
+        self.gcodefiles = params[4];
+        self.connection = params[5];
+        self.control = params[6];
+        self.terminal = params[7];
+        self.workingArea = params[8];
+        self.conversion = params[9];
+        self.readyToLaser = params[10];
+        self.navigation = params[11];
+        self.appearance = params[12];
+        self.loadingOverlay = params[13];
+        self.softwareUpdate = params[14];
+
+        self.isStartupComplete = false;
+        self.storedSocketData = [];
+
+        self.localPrintTime = 0;
+        self.serverPrintTime = 0;
+        self.printTimeInterval = null;
+
+        // MrBeam Logo click activates workingarea tab
+        $('#mrbeam_logo_link').click(function() {
+            $('#wa_tab_btn').tab('show');
+        });
+
+        // get the hook when softwareUpdate get data from server
+        self.fromCheckResponse_copy = self.softwareUpdate.fromCheckResponse;
+        self.softwareUpdate.fromCheckResponse = function(data, ignoreSeen, showIfNothingNew) {
+            self.fromCheckResponse_copy(data, ignoreSeen, showIfNothingNew);
+            self.writeBranchesToSwUpdateScreen();
+        };
+
+        self.state.TITLE_PRINT_BUTTON_UNPAUSED = gettext("Starts the laser job");
 
         self.onStartup = function () {
             // TODO fetch machine profile on start
@@ -45,7 +71,7 @@ $(function () {
                     $('#manual_position').addClass('warning');
                 }
             };
-			
+
 			$("#manual_position").on('keyup', function (e) {
 				if (e.keyCode === 13) {
 					self.control.manualPosition();
@@ -54,28 +80,45 @@ $(function () {
 			$("#manual_position").on('blur', function (e) {
 				self.control.manualPosition();
 			});
-			
+
 			$("body").on('keydown', function (event) {
 
 				if (!self.settings.feature_keyboardControl()) return;
-				if(	event.target.nodeName === "INPUT" 
+				if(	event.target.nodeName === "INPUT"
 					|| event.target.nodeName === "TEXTAREA"
 					|| $('.modal.in').length > 0
 				) return;
-				
+
 				var button = undefined;
+				var wa_id = $('nav li.active a').attr('href');
 				switch (event.which) {
-					case 37: // left arrow key: 
-						button = $("#control-xdec");
+					case 37: // left arrow key:
+						// button = $("#control-xdec");
+                        if(wa_id === '#workingarea'){
+							self.workingArea.moveSelectedDesign(-1,0);
+							return;
+						}
 						break;
 					case 38: // up arrow key
-						button = $("#control-yinc");
+						// button = $("#control-yinc");
+						if(wa_id === '#workingarea') {
+                            self.workingArea.moveSelectedDesign(0, -1);
+                            return;
+                        }
 						break;
 					case 39: // right arrow key
-						button = $("#control-xinc");
-						break;
+						// button = $("#control-xinc");
+						if(wa_id === '#workingarea') {
+                            self.workingArea.moveSelectedDesign(1, 0);
+                            return;
+                        }
+                        break;
 					case 40: // down arrow key
-						button = $("#control-ydec");
+						// button = $("#control-ydec");
+                        if(wa_id === '#workingarea'){
+							self.workingArea.moveSelectedDesign(0, 1);
+							return;
+						}
 						break;
 					case 33: // page up key
 					case 87: // w key
@@ -90,7 +133,7 @@ $(function () {
 						break;
 					case 8: // del key
 					case 46: // backspace key
-						if($('nav li.active a').attr('href') === '#workingarea'){
+						if(wa_id === '#workingarea'){
 							self.workingArea.removeSelectedDesign();
 							return;
 						}
@@ -113,8 +156,8 @@ $(function () {
 			});
 
             // TODO forward to control viewmodel
-            self.state.isLocked = ko.observable(undefined);
-            self.state.isReady = ko.observable(undefined);
+            self.state.isLocked = ko.observable(true);
+//            self.state.isReady = ko.observable(undefined); // not sure why this is injected here. should be already present in octoprints printerstate VM
             self.state.isFlashing = ko.observable(undefined);
             self.state.currentPos = ko.observable(undefined);
 			self.state.filename = ko.observable(undefined);
@@ -157,12 +200,13 @@ $(function () {
 				return formatDuration(self.state.printTime());
 			});
 
+			// self.inject_software_update_channel();
             self.setupFullscreenContols();
-
-
         };
 
         self.onAllBound = function (allViewModels) {
+            self._force_reload_on_inconsitent_version();
+
             var tabs = $('#mrbeam-main-tabs a[data-toggle="tab"]');
             tabs.on('show', function (e) {
                 var current = e.target.hash;
@@ -178,15 +222,6 @@ $(function () {
                 callViewModels(allViewModels, "onAfterTabChange", [current, previous]);
             });
 
-            self._configureOverrideSliders();
-
-			self.gcodefiles.listHelper.toggleFilter('model');
-
-			// adjust height of designlib scroll element
-			var height = $('#designlib').height();
-			$("#designlib .slimScrollDiv").height(height);
-			$(".gcode_files").height(height);
-
 			// terminal stuff
             terminalMaxLines = self.settings.settings.plugins.mrbeam.dev.terminalMaxLines();
             self.terminal.upperLimit(terminalMaxLines*2);
@@ -197,12 +232,72 @@ $(function () {
             });
             self.terminal.activeAllFilters();
 
+            // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
+            // our implementation here should be used instead of octoprints
+            // to fix issues with the laser job time display
+            self.state._processProgressData = function(){};
         };
 
         self.onStartupComplete = function() {
-            $('#loading_overlay').remove();
+            self.set_Design_lib_defaults();
+            self._handleStoredSocketData();
+            self.isStartupComplete = true;
+            self.removeLoadingOverlay();
         };
 
+        self.onEventMrbPluginVersion = function(payload) {
+            if ('version' in payload || 'is_first_run' in payload) {
+                self._force_reload_on_inconsitent_version(payload['version'], payload['is_first_run']);
+            }
+        };
+
+        self.set_Design_lib_defaults = function(){
+			self.gcodefiles.setFilter('design');
+            self.files.listHelper.removeFilter('model');
+            self.files.listHelper.changeSorting('upload');
+        };
+
+        self.addSwUpdateTierInformation = function(){
+            tier = self.settings.settings.plugins.mrbeam.dev.softwareTier();
+            if (tier != "PROD") {
+                $('#settings_plugin_softwareupdate > h3').append(" (TIER: "+tier+")");
+            }
+        };
+
+        self.removeLoadingOverlay = function(){
+            // firstImageLoaded is based on jQuery.load() which is not reliable and deprecated.
+            // Therefore we lift the curtain for unsupported browsers without waiting for the bgr image to be loaded.
+            // this might not look so nice but at least it doesn't block functionality and
+            // allows the user to see the notification that his browser is not supported.
+            if (self.isStartupComplete && (!window.mrbeam.browser.is_supported || self.workingArea.camera.firstImageLoaded)) {
+                self.loadingOverlay.removeLoadingOverlay();
+            } else {
+                setTimeout(self.removeLoadingOverlay, 100);
+            }
+        };
+
+        /**
+         * Reloads the frontend bypassing any cache if backend version of mr beam plugin is different from the frontend version
+         * or id the firstRunFlag is different.
+         * This happens sometimes after a software update or if the user used a reset stick
+         * @private
+         * @param backend_version (optional) If no version is given the function reads it from self.settings
+         * @param isFirstRun (optional) If no firstRun flag is given the function reads it from self.settings
+         */
+        self._force_reload_on_inconsitent_version = function(backend_version, isFirstRun){
+            backend_version = backend_version || self.settings.settings.plugins.mrbeam._version();
+            if (isFirstRun === undefined) {
+                isFirstRun = self.settings.settings.plugins.mrbeam.isFirstRun();
+            }
+            if (backend_version != BEAMOS_VERSION || isFirstRun != CONFIG_FIRST_RUN) {
+                console.log("Frontend reload check: RELOAD! (version: frontend=" + BEAMOS_VERSION + ", backend=" + backend_version +
+                    ", isFirstRun: frontend=" + CONFIG_FIRST_RUN + ", backend=" + isFirstRun + ")");
+                console.log("Reloading frontend...");
+                window.location.href = "/?ts=" + Date.now();
+            } else {
+                console.log("Frontend reload check: OK (version: "+BEAMOS_VERSION + ", isFirstRun: " + CONFIG_FIRST_RUN + ")");
+            }
+        };
 
         /**
          * controls fullscreen functionality unsing on screenfull.js
@@ -250,6 +345,32 @@ $(function () {
             }
         };
 
+        /**
+         * Shows branch info in Software Update Settings if branch is not TIER-default
+         * Takes data from softwareUpdatePlugin and sneaks branch information into it.
+         */
+        self.writeBranchesToSwUpdateScreen = function(){
+            var software_update_branches = self.settings.settings.plugins.mrbeam.software_update_branches;
+            // only if we really have some branch names inject
+            if (Object.keys(software_update_branches).length > 0) {
+                var allItems = self.softwareUpdate.versions.items();
+                var nuItems = []
+
+                for (var i = 0; i < allItems.length; i++) {
+                    var plugin_id = allItems[i]['key']
+                    var my_conf = jQuery.extend({}, allItems[i]);
+                    if (software_update_branches[plugin_id]) {
+                        var branch = software_update_branches[plugin_id]();
+                        console.log(plugin_id+": "+branch);
+                        my_conf['displayVersion'] += ' ('+branch+')';
+                    }
+                    nuItems.push(my_conf);
+                }
+                self.softwareUpdate.versions.updateItems(nuItems);
+            }
+        }
+
+
         self.fromCurrentData = function (data) {
             self._fromData(data);
         };
@@ -258,26 +379,51 @@ $(function () {
             self._fromData(data);
         };
 
-        self._fromData = function (data) {
-            self._processStateData(data.state);
-            self._processWPosData(data.workPosition);
-			self._processProgressData(data.progress);
-			self._processJobData(data.job);
+        self._fromData = function (data, noStore, force) {
+            if (self.isStartupComplete || force) {
+                self._processStateData(data.state);
+                self._processWPosData(data.workPosition);
+                self._processProgressData(data.progress);
+			    self._processJobData(data.job);
+            } else if (!noStore){
+                self.storedSocketData.push(data);
+            }
+        };
+
+        self._handleStoredSocketData = function(){
+            if (self.storedSocketData.length > 0) {
+                console.log("Handling stored socked data: " + self.storedSocketData.length);
+                for (var i = 0; i < self.storedSocketData.length; i++) {
+                    self._fromData(self.storedSocketData[i], noStore=true, force=true);
+                }
+                self.storedSocketData = [];
+            }
         };
 
         self._processStateData = function (data) {
-            self.state.isLocked(data.flags.locked);
-            self.state.isFlashing(data.flags.flashing);
-            self.state.isConnecting(data.text === "Connecting" || data.text === "Opening serial port");
-        };
+				self.state.isLocked(data.flags.locked);
+				self.state.isFlashing(data.flags.flashing);
+				self.state.isConnecting(data.text === "Connecting" || data.text === "Opening serial port");
+		};
 
         self._processWPosData = function (data) {
-            if (data === null) {
+            if (data === undefined || data === null) {
                 self.state.currentPos({x: 0, y: 0});
             } else {
                 self.state.currentPos({x: data[0], y: data[1]});
             }
         };
+
+        self.state.isPaused.subscribe(function (newIsPaused) {
+            if(newIsPaused) {
+                clearInterval(self.printTimeInterval);
+            } else {
+                self.printTimeInterval = setInterval(function () {
+                    self.localPrintTime++;
+                    self.state.printTime(self.localPrintTime);
+                }, 1000)
+            }
+        });
 
         self._processProgressData = function(data) {
             if (data.completion) {
@@ -286,7 +432,17 @@ $(function () {
                 self.state.progress(undefined);
             }
             self.state.filepos(data.filepos);
-            self.state.printTime(data.printTime);
+            if(data.printTime !== self.serverPrintTime) {
+                self.serverPrintTime = data.printTime;
+                self.localPrintTime = data.printTime;
+                self.state.printTime(self.localPrintTime);
+
+                clearInterval(self.printTimeInterval);
+                self.printTimeInterval = setInterval(function () {
+                    self.localPrintTime++;
+                    self.state.printTime(self.localPrintTime);
+                }, 1000)
+            }
             //self.printTimeLeft(data.printTimeLeft);
         };
 
@@ -303,63 +459,10 @@ $(function () {
             //self.lastPrintTime(data.lastPrintTime);
         };
 
-        self._configureOverrideSliders = function () {
-            self.state.intensityOverrideSlider = $("#intensity_override_slider").slider({
-                step: 1,
-                min: 10,
-                max: 200,
-                value: 100,
-            }).on("slideStop", function (ev) {
-                self.state.intensityOverride(ev.value);
-            });
-
-            self.state.feedrateOverrideSlider = $("#feedrate_override_slider").slider({
-                step: 1,
-                min: 10,
-                max: 200,
-                value: 100,
-            }).on("slideStop", function (ev) {
-                self.state.feedrateOverride(ev.value);
-            });
-
-        };
-
-        self.state.resetOverrideSlider = function () {
-            self.state.feedrateOverrideSlider.slider('setValue', 100);
-            self.state.intensityOverrideSlider.slider('setValue', 100);
-            self.state.intensityOverride(100);
-            self.state.feedrateOverride(100);
-        };
-
-		self.state.increasePasses = function(){
-			self.state.numberOfPasses(self.state.numberOfPasses()+1);
-            self.state._overrideCommand({name: "passes", value: self.state.numberOfPasses()});
-		};
-
-		self.state.decreasePasses = function(){
-			var passes = Math.max(self.state.numberOfPasses()-1, 1);
-			self.state.numberOfPasses(passes);
-            self.state._overrideCommand({name: "passes", value: self.state.numberOfPasses()});
-		};
-
-        self.state._overrideCommand = function (data, callback) {
-            $.ajax({
-                url: API_BASEURL + "plugin/mrbeam",
-                type: "POST",
-                dataType: "json",
-                contentType: "application/json; charset=UTF-8",
-                data: JSON.stringify({command: data.name, value: data.value}),
-                success: function (response) {
-                    if (callback !== undefined) {
-                        callback();
-                    }
-                }
-            });
-        };
-
 
         // files.js viewmodel extensions
 
+		// fetches the right templates according to file type for knockouts foreach loop
         self.gcodefiles.templateFor = function (data) {
             if (data.type === 'folder') {
                 return 'files_template_folder';
@@ -368,6 +471,7 @@ $(function () {
             }
         };
 
+		// TODO Mr Beam Kit legacy code ?
         self.gcodefiles.startGcodeWithSafetyWarning = function (gcodeFile) {
             self.gcodefiles.loadFile(gcodeFile, false);
             if (self.readyToLaser.oneButton) {
@@ -416,8 +520,8 @@ $(function () {
             self.gcodefiles.uploadProgressBar.text("");
 
             new PNotify({
-                title: gettext("Slicing done"),
-                text: _.sprintf(gettext("Sliced %(stl)s to %(gcode)s, took %(time).2f seconds"), payload),
+                title: gettext("Preparation done"),
+                text: _.sprintf(gettext("Converted %(stl)s to %(gcode)s, took %(time).2f seconds"), payload),
                 type: "success"
             });
 
@@ -425,6 +529,21 @@ $(function () {
             self.gcodefiles.requestData({switchToPath: self.gcodefiles.currentPath()});
         };
 
+		// filter function for the file list. Easier to modify than the original listHelper(). listHelper is still used for sorting.
+		self.gcodefiles.setFilter = function(filter){
+			var elem = $('#designlib');
+			// class 'tab-pane' needs to remain there at all times
+            elem.removeClass('show_recentjob');
+            elem.removeClass('show_machinecode');
+            elem.removeClass('show_design');
+			if(filter === 'recentjob'){
+				elem.addClass('show_recentjob');
+			} else if(filter === 'machinecode'){
+				elem.addClass('show_machinecode');
+			} else {
+				elem.addClass('show_design');
+			}
+		};
 
         // settings.js viewmodel extensions
 
@@ -488,7 +607,6 @@ $(function () {
 
             options.onproceed = function (e) {
                 if (typeof callback === 'function') {
-                    self.state.resetOverrideSlider();
 //                    self.state.numberOfPasses(parseInt(self.conversion.set_passes()));
 //                    self.state._overrideCommand({name: "passes", value: self.state.numberOfPasses()});
                     callback(e);
@@ -496,25 +614,15 @@ $(function () {
             };
             showConfirmationDialog(options);
         };
-
-
-        // who calls this????
-        // self.print_with_safety_glasses_warning = function () {
-        //     var callback = function (e) {
-        //         e.preventDefault();
-        //         /// ...and where is this function 'print()' defined???
-        //         self.print();
-        //     };
-        //     self.show_safety_glasses_warning(callback);
-        // };
-    }
+    };
 
 
     // view model class, parameters for constructor, container to bind to
     ADDITIONAL_VIEWMODELS.push([MotherViewModel,
-        ["loginStateViewModel", "settingsViewModel", "printerStateViewModel", "gcodeFilesViewModel",
+        ["loginStateViewModel", "settingsViewModel", "printerStateViewModel", "filesViewModel", "gcodeFilesViewModel",
             "connectionViewModel", "controlViewModel", "terminalViewModel", "workingAreaViewModel",
-            "vectorConversionViewModel", "readyToLaserViewModel", "navigationViewModel", "appearanceViewModel"],
+            "vectorConversionViewModel", "readyToLaserViewModel", "navigationViewModel", "appearanceViewModel",
+            "loadingOverlayViewModel", "softwareUpdateViewModel"],
         [document.getElementById("mrb_state"),
             document.getElementById("mrb_control"),
             document.getElementById("mrb_connection_wrapper"),

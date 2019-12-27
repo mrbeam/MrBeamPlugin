@@ -1,5 +1,7 @@
 a {	color: #e25303; }
 a:hover { color: #a63e03 }
+a.muted{ color: #e25303a1 }
+a.muted:hover{ color: #e25303a1 }
 
 .btn {
   display: inline-block;
@@ -869,6 +871,7 @@ li.nav_version {
 body {
 	padding-top: 48px;  /* necessary for navbar-fixed-top */
 	min-width:620px;
+	color: #383e42;
 }
 
 .octoprint-container {
@@ -923,6 +926,14 @@ body {
   display: inline-block;
   color: #e25303;
 }
+
+.octoprint-container .accordion-heading div.accordion-toggle {
+  display: inline-block;
+  padding: 8px 15px;
+  color: #e25303;
+  cursor: default;
+}
+
 .octoprint-container .accordion-heading [class^="icon-"],
 .octoprint-container .accordion-heading [class*=" icon-"] {
   color: #383e42;
@@ -1212,7 +1223,7 @@ ul.dropdown-menu li a {
 }
 
 .title_shortened {
-	width: 89%;
+	width: calc(100% - 1.2em);
 	overflow: hidden;
 	display: inline-block;
 	text-overflow: ellipsis;
@@ -1249,20 +1260,20 @@ ul.dropdown-menu li a {
 	box-shadow: rgba(0,0,0,.3) 0 0 9px 0;
 }
 
-#files .preview_card div.preview,	
+#files .preview_card div.preview,
 #files .icon_card div.preview {
 	padding-top: 80%;
 	width: 100%;
 	cursor: pointer;
-}	
+}
 
-#files .preview_card div.preview {	
+#files .preview_card div.preview {
 	background-position: center;
 	background-size: contain;
 	background-repeat: no-repeat;
 }
 
-#files .icon_card div.preview>i{	
+#files .icon_card div.preview>i{
 	text-align: center;
 	font-size: 6rem;
 	color: #999;
@@ -1275,6 +1286,33 @@ ul.dropdown-menu li a {
 
 #files .preview.disabled {
   opacity: 0.2;
+}
+
+#designlib #files .entry.files_template_model_svg,
+#designlib #files .entry.files_template_model_dxf,
+#designlib #files .entry.files_template_model_image,
+#designlib #files .entry.files_template_recentjob_svg,
+#designlib #files .entry.files_template_machinecode_gcode {
+	display:none;
+}
+#designlib.show_design #files .entry.files_template_model_svg,
+#designlib.show_design #files .entry.files_template_model_dxf,
+#designlib.show_design #files .entry.files_template_model_image,
+#designlib.show_recentjob #files .entry.files_template_recentjob_svg,
+#designlib.show_machinecode #files .entry.files_template_machinecode_gcode {
+	display: block;
+}
+
+#designlib #files_filter li.filter.design a i,
+#designlib #files_filter li.filter.machinecode a i,
+#designlib #files_filter li.filter.recentjob a i {
+	visibility:hidden;
+}
+
+#designlib.show_design #files_filter li.filter.design a i,
+#designlib.show_machinecode #files_filter li.filter.machinecode a i,
+#designlib.show_recentjob #files_filter li.filter.recentjob a i {
+	visibility:visible;
 }
 
 /** Control tab */
@@ -1780,19 +1818,13 @@ input.search-query,
 }
 
 
-
-#focus_description {
-	background-image: url(/plugin/mrbeam/static/img/focus_adjust_steps.png);
-	background-repeat: no-repeat;
-	background-size: contain;
-	width: 100%;
-	height: 100vh;
-}
-
-.focus_steps li {
-	list-style-type: none;
-	padding-bottom: 0.65em;
-}
+/* disabled. uses 100% cpu in the browser */
+/*#crosshair {
+    transition-property: transform;
+	transition-timing-function: linear;
+	transition-duration: 2s;
+	transition-delay: 0s;
+}*/
 
 
 .footer>* {
@@ -1974,6 +2006,20 @@ input.search-query,
 	background-size: 40px 40px;
 }
 
+.progress.active .bar {
+  transform: translateZ(0);
+  -webkit-animation: none;
+  -moz-animation: none;
+  -ms-animation: none;
+  -o-animation: none;
+  animation: none;
+/*  -webkit-animation: progress-bar-stripes 2s reverse linear infinite;
+  -moz-animation: progress-bar-stripes 2s reverse linear infinite;
+  -ms-animation: progress-bar-stripes 2s reverse linear infinite;
+  -o-animation: progress-bar-stripes 2s reverse linear infinite;
+  animation: progress-bar-stripes 2s reverse linear infinite;*/
+}
+
 #flashing_progress {
 
 }
@@ -2021,96 +2067,478 @@ input.search-query,
   display: none;
 }
 
-/**
- * range.css
- */
-input[type=range] {
-  -webkit-appearance: none;
-  margin: 3.5px 0;
-}
-input[type=range]:focus {
-  outline: none;
-}
-input[type=range]::-webkit-slider-runnable-track {
-  width: 100%;
-  height: 13px;
-  cursor: pointer;
-  background: linear-gradient(to left,  #ffffff 0%,#000000 100%);
-  border-radius: 0px;
-  border: 0.1px solid #828282;
-}
-input[type=range]::-webkit-slider-thumb {
-  border: 1px solid #000000;
-  height: 20px;
-  width: 20px;
-  border-radius: 3px;
-  background: #ffffff;
-  cursor: pointer;
-  -webkit-appearance: none;
-  margin-top: -3.6px;
-}
-input[type=range]::-moz-range-track {
-  width: 100%;
-  height: 13px;
-  cursor: pointer;
-  background: linear-gradient(to left,  #ffffff 0%,#000000 100%);
-  border-radius: 0px;
-  border: 0.1px solid #828282;
-}
-input[type=range]::-moz-range-thumb {
-  border: 1px solid #000000;
-  height: 20px;
-  width: 20px;
-  border-radius: 3px;
-  background: #ffffff;
-  cursor: pointer;
-}
-input[type=range]::-ms-track {
-  width: 100%;
-  height: 13px;
-  cursor: pointer;
-  background: transparent;
-  border-color: transparent;
-  color: transparent;
-}
-input[type=range]::-ms-fill-lower {
-  background: linear-gradient(to left,  #ffffff 0%,#000000 100%);
-  border: 0.1px solid #828282;
-  border-radius: 0px;
-}
-input[type=range]::-ms-fill-upper {
-  background: linear-gradient(to left,  #ffffff 0%,#000000 100%);
-  border: 0.1px solid #828282;
-  border-radius: 0px;
-}
-input[type=range]::-ms-thumb {
-  border: 1px solid #000000;
-  height: 20px;
-  width: 20px;
-  border-radius: 3px;
-  background: #ffffff;
-  cursor: pointer;
-  height: 13px;
-}
 
 .full-col {
 	height: calc(100vh - 60px);
 	/*overflow-y: auto;*/
 }
 
-::-webkit-scrollbar-track
-{
-	-webkit-box-shadow: inset 0 0 4px rgba(0,0,0,0.3);
-	background-color: #F5F5F5;
+/*This was to fix the body on touch devices. Not sure, maybe we'll need it....'*/
+/*.fixed {*/
+  /*position: fixed;*/
+  /*overflow: hidden;*/
+/*}*/
+
+.scrollable {
+  /* just a flag to mark elements that need to be scrollable on touch devices. Also see mrbeam.js */
 }
 
-::-webkit-scrollbar
-{
-	width: 4px;
-	background-color: #F5F5F5;
+.no-transition {
+    transition-duration: 0s,0s,0s,0s !IMPORTANT;
 }
 
-::-webkit-scrollbar-thumb
-{
-	background-color: #e25303;
+
+/*
+* === TOOLTIPS ===
+*/
+
+.tooltip-inner {
+  max-width: 500px;
+  white-space: normal;
+  background-color: white;
+  border: 2px solid #e25303;
+  color: black;
+  text-align:left;
+}
+.tooltip.right .tooltip-arrow {
+  border-right-color: #e25303;
+  /*border-width: 0 5px 5px;*/
+}
+
+/*
+* — for parameter explanations —
+*/
+
+.icon-question-sign {
+  display: inline-block;
+  line-height: 30px;
+  padding-left: 3px;
+}
+
+.form-horizontal .controls {
+    width: 348px;
+}
+
+.form-horizontal .range-control {
+    width: 430px;
+}
+
+.range-control-and-label {
+  width: 600px;
+}
+
+.compressor-control-and-label {
+  width: 520px;
+}
+
+.input-control-and-label {
+  width: 280px;
+}
+
+.switch-control-and-label {
+  display: inline-block;
+  width: 415px;
+}
+
+.bar-control-and-label {
+  width: 406px;
+}
+
+.checkbox-control-and-label {
+  width: 258px;
+}
+
+.line-control-and-label {
+  width: 470px;
+  margin: 10px 0;
+}
+
+.cutting-control-and-label {
+  width: 300px;
+}
+
+.material-control-and-label {
+  max-width: 210px;
+}
+
+
+/*
+* === BUTTON GROUPS ===
+*/
+
+#svgtogcode_img_engraving_mode {
+  margin-top: 3%;
+}
+
+/*
+* === LASER_HEAD FOCUS REMINDER ===
+*/
+
+#laserhead_focus_reminder_image {
+  width: 70%;
+  height: 70%;
+  margin-top: 5%;
+  margin-left: 20%;
+  float:left;
+}
+
+#laserhead_focus_reminder_not_again {
+  float: left;
+}
+
+#laserhead_focus_reminder_not_again input {
+  vertical-align: top;
+}
+
+#laserhead_focus_reminder_alert {
+  clear: both;
+}
+
+
+/*
+* === IMAGE PREPROCESSING  ACCORDION ===
+*/
+.working_area_image_preprocessing {
+  margin-bottom: 0;
+}
+
+.working_area_image_preprocessing_heading {
+  padding: 0;
+  color: #999;
+}
+
+.working_area_image_preprocessing_sliders {
+  margin-left: 18px;
+}
+
+.working_area_image_preprocessing_link > button.image-preprocessing-collapsible {
+  outline: transparent;
+  /*text-decoration: none;*/
+  color: #555;
+  padding: 0;
+  /*margin: 0;*/
+}
+
+.working_area_image_preprocessing_link > button.collapsed:before {
+  padding: 0;
+  content: "\270f" !important;
+  color: #999;
+  display: inline-block;
+  transform: rotate(-45deg);
+}
+
+.working_area_image_preprocessing_link > button:before {
+  padding: 0;
+  content: "\270f" !important;
+  color: #999;
+  display: inline-block;
+  transform: rotate(45deg);
+}
+
+/*
+* === SOFTWARE CHANNEL SELECTOR ===
+*/
+#software_channel_select {
+  width: 120px;
+}
+
+#software_channel_info {
+  color: #383E42;
+  vertical-align: baseline;
+  padding-left: 5px;
+}
+
+#software_channel_selector > h5 {
+  display: inline-block;
+  margin-right: 40px;
+}
+
+#settings_software_channel_descriptions {
+  margin-left: 0;
+}
+
+#settings_software_channel_descriptions > div {
+  padding-right: 15px;
+}
+
+#settings_software_channel_descriptions > div > p {
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+#settings_software_channel_descriptions > div > h5 > i, #settings_software_channel_choose > div > i {
+  margin-right: 5px;
+}
+
+.sticky-footer {
+  position: sticky;
+  bottom: 0;
+}
+
+/*
+* === FRESHDESK FEEDBACK WIDGET ===
+*/
+#freshwidget-button > a {
+    padding: 6px 16px;
+    font-size: 12px;
+}
+
+/*
+* === MAINTENANCE SETTINGS ===
+*/
+.maintenance-title {
+  margin: 10px 0 0 0;
+}
+
+.maintenance-notes {
+  margin: 0 0 20px 0;
+}
+
+.maintenance-scrollable {
+  padding-bottom:2em;
+  overflow-y: auto;
+  height: calc(100vh - 180px);
+}
+
+.maintenance-table > tbody > tr > td {
+  vertical-align: middle;
+}
+
+.maintenance-description-column {
+  width: 50%;
+}
+
+.maintenance-description-column > h4 {
+  display: inline-block;
+}
+
+.maintenance-warning-column {
+  width: 10%;
+}
+
+.maintenance-warning-column > div {
+  text-align: center;
+}
+
+.maintenance-counter-column {
+  width: 20%;
+}
+
+.maintenance-reset-column {
+  width: 20%;
+}
+
+.maintenance-links {
+  margin-top: 15px
+}
+
+.maintenance-link-shop {
+  display: inline-block;
+  float: left
+}
+
+.maintenance-link-knowledge-base {
+  display: inline-block;
+  float: left;
+  margin-left: 50px;
+}
+
+.maintenance-description {
+  display: block;
+  margin-right: 8%;
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+.maintenance-reset-btn {
+  display: block;
+  margin: auto;
+}
+
+.maintenance-warning-column > div > .fa-exclamation-triangle {
+  color: #e25303;
+}
+
+.maintenance-laserhead-serial {
+  margin-left: 30px;
+}
+
+/*
+* === WORKING AREA FOOTER ===
+*/
+.working_area_footer_text {
+    font-size: 10px;
+    color: darkgrey;
+    margin: 0 0 0 30px;
+}
+
+/*
+* === LASER JOB DONE #madewithmrbeam ===
+*/
+
+.laser_job_done_image {
+    width: 100%;
+    height: 311px;
+    text-align: center;
+    background-repeat: no-repeat;
+    position: relative;
+}
+
+#laser_job_done_image_check {
+    font-size: 250px;
+    position: absolute;
+    top: 10%;
+    left: 0;
+    text-align: center;
+    width: 100%;
+    display: block;
+    color: transparent;
+    text-shadow: 0px 0px 7px rgba(255, 255, 255, 0.25);
+    transition: text-shadow 3.5s ease;
+    pointer-events: none;
+}
+
+#laser_job_done_image_check.show{
+    text-shadow: 0px 0px 1px rgba(255, 255, 255, 0.7);
+}
+
+#laser_job_done_image_text {
+    text-align: left;
+    padding: 10% 9%;
+    /*line-height: 250%;*/
+    color: transparent;
+    text-shadow: 0px 0px 20px rgba(255, 255, 255, 0);
+    transition: text-shadow 0.8s ease-in;
+}
+
+#laser_job_done_image_text p{
+    font-weight: bold;
+    font-size: 1.8em;
+    color: transparent;
+}
+
+#laser_job_done_image_text a{
+    color: transparent;
+    text-decoration: none;"
+}
+
+#laser_job_done_image_text a:hover{
+    color: transparent;
+    text-decoration: none;"
+}
+
+#laser_job_done_image_text.show{
+    text-shadow: 0px 0px 0px rgba(255, 255, 255, 0.95);
+}
+
+.laser_job_done_image_media_icon {
+    font-size: 2.4em;
+    padding: 0px 3px;
+}
+
+/*
+* === COMPRESSOR and new LINE COLOR MAPPING ===
+*/
+.compressor_range {
+    height: 5px !important;
+}
+
+.compressor_control {
+    padding: 5px
+}
+
+.compressor_min_max_label {
+    padding: 0 19px;
+    margin-bottom: 5px;
+}
+
+.vector_mapping_color_circle {
+    width:20px;
+    height:20px;
+    display:inline-block;
+    vertical-align:middle;
+    border-radius:50%;
+    margin: 0 23px 0 24px;
+}
+
+.vector_mapping_slider {
+    height: 20px;
+}
+
+/*
+* === USER RATING ===
+*/
+/* rating stars
+ * http://jsfiddle.net/ttyYD/1/
+*/
+#rating_block {
+    margin: 20px 0;
+}
+
+.rating {
+    unicode-bidi:bidi-override;
+    direction:rtl;
+    font-size:50px;
+    display: flex;
+    justify-content: center;
+    margin: 35px 0 20px 0;
+}
+
+.rating span.star {
+    font-family:FontAwesome;
+    font-weight:normal;
+    font-style:normal;
+    display:inline-block;
+}
+
+.rating span.star:hover {
+    cursor:pointer;
+}
+
+.rating span.star:before {
+    content:"\f006";
+    padding: 20px 8px;
+    color:#f8d453;
+}
+
+.rating span.star:hover:before, .rating span.star:hover~span.star:before{
+    content:"\f005";
+    color:#f8d453;
+}
+
+.rating span.star.filled:before{
+    color:#f8d453;
+    content:"\f005";
+}
+
+.rating span.star.disabled {
+    pointer-events: none;
+}
+
+.review_title {
+    display: flex;
+    justify-content: center;
+}
+
+.review_hidden_part {
+    display: none;
+}
+
+.review_explanation {
+    margin: auto 20px 15px 20px;
+}
+
+#dont_ask_review_link {
+    color: dimgray;
+}
+
+#review_textarea {
+    display: flex;
+    margin-left: auto;
+    margin-right: auto;
+    width: 90%;
+}
+
+.dont-break {
+  white-space: nowrap;
 }

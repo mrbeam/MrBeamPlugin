@@ -1,42 +1,35 @@
-<h3>{{ _('Access Control') }}</h3>
 
-{% trans %}<p>
-    <strong>Please read the following, it is very important for the security of your Mr Beam 2!</strong>
-</p>
-<p>
-    Your Mr Beam 2 is configured with a Access Control, meaning you won't be able to do anything with the
-    laser cutter unless you login first as a configured user. This is to <strong>prevent strangers - possibly with
-    malicious intent - to gain access to your laser cutter</strong> via the internet or another untrustworthy network
-    and using it in such a way that it is damaged or worse (i.e. causes a fire).
-</p>
-<p>
-    Please <strong>set up a user account with a password</strong> as the
-    initial administrator account which will have full access to the Mr Beam 2:
-</p>{% endtrans %}
-<form class="form-horizontal">
+<img src="/plugin/mrbeam/static/img/welcome_dialog/acl.png">
+
+<h3>{{ _('Set up your user account') }}</h3>
+
+{% trans %}
+    <p>
+        Write your e-mail address and password. <strong>Please don't forget your access information.</strong>
+    </p>
+    <p>
+        For security reasons, you can only use your Mr Beam after logging in with a user account.
+        If you forget your access information, you will need to contact the Mr Beam Support Team to reset your device.
+    </p>
+    <small class="muted">
+        In the settings you can create additional user accounts, e.g. for family members, colleagues or friends.
+    </small>
+{% endtrans %}
+
+<form class="form-horizontal welcome-wizard-acl-form">
     <div class="control-group" data-bind="css: {success: doUserValidation() && validUsername(), error: doUserValidation() && !validUsername()}">
-        <label class="control-label" for="first_run_username">{{ _('E-mail address') }}</label>
-        <div class="controls">
-            <input id="wizard_plugin_corewizard_acl_input_username" type="text" class="input-medium" data-bind="value: username, valueUpdate: 'input', enable: !setup(), css: {disabled: setup()}">
-			<span class="help-inline" data-bind="visible: doUserValidation() && !validUsername()">{{ _('Invalid e-mail address') }}</span>
-        </div>
+        <label class="welcome-wizard-acl-label" for="wizard_plugin_corewizard_acl_input_username">{{ _('E-mail address') }}</label>
+        <input id="wizard_plugin_corewizard_acl_input_username" type="text" class="welcome-wizard-acl-input" data-bind="value: username, valueUpdate: 'afterkeydown', enable: !setup(), css: {disabled: setup()}">
+        <span class="help-inline" data-bind="visible: doUserValidation() && !validUsername()">{{ _('Invalid e-mail address') }}</span>
     </div>
     <div class="control-group" data-bind="css: {success: validPassword()}">
-        <label class="control-label" for="first_run_username">{{ _('Password') }}</label>
-        <div class="controls">
-            <input id="wizard_plugin_corewizard_acl_input_pw1" type="password" class="input-medium" data-bind="value: password, valueUpdate: 'input', enable: !setup(), css: {disabled: setup()}">
-        </div>
+        <label class="welcome-wizard-acl-label" for="wizard_plugin_corewizard_acl_input_pw1">{{ _('Password') }}</label>
+        <input id="wizard_plugin_corewizard_acl_input_pw1" type="password" class="welcome-wizard-acl-input" data-bind="value: password, valueUpdate: 'input', enable: !setup(), css: {disabled: setup()}">
     </div>
     <div class="control-group" data-bind="css: {error: doPwMatchValidation() && passwordMismatch(), success: doPwMatchValidation() && validPassword() && !passwordMismatch()}">
-        <label class="control-label" for="first_run_username">{{ _('Confirm Password') }}</label>
-        <div class="controls">
-            <input id="wizard_plugin_corewizard_acl_input_pw2" type="password" class="input-medium" data-bind="value: confirmedPassword, valueUpdate: 'input', enable: !setup(), css: {disabled: setup()}">
-            <span class="help-inline" data-bind="visible: doPwMatchValidation() && passwordMismatch()">{{ _('Passwords do not match') }}</span>
-        </div>
+        <label class="welcome-wizard-acl-label" for="wizard_plugin_corewizard_acl_input_pw2">{{ _('Confirm Password') }}</label>
+        <input id="wizard_plugin_corewizard_acl_input_pw2" type="password" class="welcome-wizard-acl-input" data-bind="value: confirmedPassword, valueUpdate: 'input', enable: !setup(), css: {disabled: setup()}">
+        <span class="help-inline" data-bind="visible: doPwMatchValidation() && passwordMismatch()">{{ _('Passwords do not match') }}</span>
     </div>
 </form>
-{% trans %}<p>
-    <strong>Note:</strong> Please consider using a strong password in order to prevent any other person of guessing or
-    brute forcing your password.
-</p>
-{% endtrans %}
+

@@ -1,52 +1,72 @@
 import time
 import threading
 import os
+import shutil
 import logging
-from subprocess import call
-# import mb_picture_preparation
+from os.path import isfile
+from flask.ext.babel import gettext
+from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 # don't crash on a dev computer where you can't install picamera
 try:
 	from picamera import PiCamera
-
 	PICAMERA_AVAILABLE = True
-except:
+except Exception as e:
 	PICAMERA_AVAILABLE = False
 	logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler").warn(
-		"Could not import module 'picamera'. Disabling camera integration.")
+		"Could not import module 'picamera'. Disabling camera integration. (%s: %s)", e.__class__.__name__, e)
+try:
+	import mb_picture_preparation as mb_pic
+except ImportError as e:
+	PICAMERA_AVAILABLE = False
+	logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler").warn(
+		"Could not import module 'mb_picture_preparation'. Disabling camera integration. (%s: %s)", e.__class__.__name__, e)
 
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
-
 # singleton
 _instance = None
+
 
 def lidHandler(plugin):
 	global _instance
 	if _instance is None:
-		_instance = LidHandler(plugin._event_bus,
-							   plugin._settings,
-							   plugin._plugin_manager)
+		_instance = LidHandler(plugin)
 	return _instance
 
 
 # This guy handles lid Events
 class LidHandler(object):
-	def __init__(self, event_bus, settings, plugin_manager):
-		self._event_bus = event_bus
-		self._settings = settings
-		self._plugin_manager = plugin_manager
+	def __init__(self, plugin):
+		self._plugin = plugin
+		self._event_bus = plugin._event_bus
+		self._settings = plugin._settings
+		self._printer = plugin._printer
+		self._plugin_manager = plugin._plugin_manager
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler")
 
-		self.lidClosed = True;
+		self._lid_closed = True
+		self._is_slicing = False
+		self._client_opened = False
+
 		self.camEnabled = self._settings.get(["cam", "enabled"])
 
 		self._photo_creator = None
+		self.image_correction_enabled = self._settings.get(['cam', 'image_correction_enabled'])
+
+		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
+
+	def _on_mrbeam_plugin_initialized(self, event, payload):
+		self._temperature_manager = self._plugin.temperature_manager
+		self._iobeam = self._plugin.iobeam
+		self._analytics_handler = self._plugin.analytics_handler
+
 		if self.camEnabled:
+			#imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
 			imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
-			self._photo_creator = PhotoCreator(imagePath)
+			self._photo_creator = PhotoCreator(self._plugin, self._plugin_manager, imagePath, self.image_correction_enabled)
 
 		self._subscribe()
 
@@ -55,101 +75,297 @@ class LidHandler(object):
 		self._event_bus.subscribe(IoBeamEvents.LID_CLOSED, self.onEvent)
 		self._event_bus.subscribe(OctoPrintEvents.CLIENT_OPENED, self.onEvent)
 		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self.onEvent)
+		self._event_bus.subscribe(OctoPrintEvents.CLIENT_CLOSED,self.onEvent)
+		self._event_bus.subscribe(OctoPrintEvents.SLICING_STARTED,self._onSlicingEvent)
+		self._event_bus.subscribe(OctoPrintEvents.SLICING_DONE,self._onSlicingEvent)
+		self._event_bus.subscribe(OctoPrintEvents.SLICING_FAILED,self._onSlicingEvent)
+		self._event_bus.subscribe(OctoPrintEvents.SLICING_CANCELLED, self._onSlicingEvent)
+		self._event_bus.subscribe(OctoPrintEvents.PRINTER_STATE_CHANGED,self._printerStateChanged)
 
 	def onEvent(self, event, payload):
 		self._logger.debug("onEvent() event: %s, payload: %s", event, payload)
 		if event == IoBeamEvents.LID_OPENED:
 			self._logger.debug("onEvent() LID_OPENED")
-			self.lidClosed = False;
-			if self._photo_creator and self.camEnabled:
-				self._start_photo_worker()
-			self._send_frontend_lid_state()
+			self._lid_closed = False
+			self._startStopCamera(event)
 		elif event == IoBeamEvents.LID_CLOSED:
 			self._logger.debug("onEvent() LID_CLOSED")
-			self.lidClosed = True;
-			self._end_photo_worker()
-			self._send_frontend_lid_state()
+			self._lid_closed = True
+			self._startStopCamera(event)
 		elif event == OctoPrintEvents.CLIENT_OPENED:
-			self._logger.debug("onEvent() CLIENT_OPENED sending client lidClosed:%s", self.lidClosed)
-			self._send_frontend_lid_state()
+			self._logger.debug("onEvent() CLIENT_OPENED sending client lidClosed: %s", self._lid_closed)
+			self._client_opened = True
+			self._startStopCamera(event)
+		elif event == OctoPrintEvents.CLIENT_CLOSED:
+			self._client_opened = False
+			self._startStopCamera(event)
 		elif event == OctoPrintEvents.SHUTDOWN:
-			self._logger.debug("onEvent() SHUTDOWN stopping _photo_creator")
-			self._photo_creator.active = False
+			self.shutdown()
+
+	def is_lid_open(self):
+		return not self._lid_closed
+
+	def _printerStateChanged(self, event, payload):
+		if payload['state_string'] == 'Operational':
+			# TODO CHECK IF CLIENT IS CONNECTED FOR REAL, with PING METHOD OR SIMILAR
+			self._client_opened = True
+			self._startStopCamera(event)
+
+	def _onSlicingEvent(self, event, payload):
+		self._is_slicing = (event == OctoPrintEvents.SLICING_STARTED)
+		self._startStopCamera(event)
+
+	def _startStopCamera(self, event):
+		if self._photo_creator is not None and self.camEnabled:
+			if event in (IoBeamEvents.LID_CLOSED, OctoPrintEvents.SLICING_STARTED, OctoPrintEvents.CLIENT_CLOSED):
+				self._logger.info('Camera stopping...: event: {}, client_opened {}, is_slicing: {}, lid_closed: {}, printer.is_locked(): {}, save_debug_images: {}'.format(
+						event,
+						self._client_opened,
+						self._is_slicing,
+						self._lid_closed,
+						self._printer.is_locked() if self._printer else None,
+						self._photo_creator.save_debug_images
+					))
+				self._end_photo_worker()
+			else:
+				# TODO get the states from _printer or the global state, instead of having local state as well!
+				if self._client_opened and not self._is_slicing and not self._lid_closed and not self._printer.is_locked():
+					self._logger.info('Camera starting: event: {}, client_opened {}, is_slicing: {}, lid_closed: {}, printer.is_locked(): {}, save_debug_images: {}, is_initial_calibration: {}'.format(
+							event,
+							self._client_opened,
+							self._is_slicing,
+							self._lid_closed,
+							self._printer.is_locked() if self._printer else None,
+							self._photo_creator.save_debug_images,
+							self._photo_creator.is_initial_calibration
+						))
+					self._start_photo_worker()
+				elif self._photo_creator.is_initial_calibration:
+					# camera is in first init mode
+					self._logger.info('Camera starting: initial_calibration. event: {}'.format(event))
+					self._start_photo_worker()
+				else:
+					self._logger.info('Camera not starting...: event: {}, client_opened {}, is_slicing: {}, lid_closed: {}, printer.is_locked(): {}, save_debug_images: {}'.format(
+						event,
+						self._client_opened,
+						self._is_slicing,
+						self._lid_closed,
+						self._printer.is_locked() if self._printer else None,
+						self._photo_creator.save_debug_images
+					))
+
+	def _setClientStatus(self,event):
+		if self._photo_creator is not None and self.camEnabled:
+			if event == OctoPrintEvents.CLIENT_OPENED:
+				self._start_photo_worker()
+			else:
+				self._end_photo_worker()
+
+	def shutdown(self):
+		if self._photo_creator is not None:
+			self._logger.debug("shutdown() stopping _photo_creator")
+			self._end_photo_worker()
+
+	def take_undistorted_picture(self,is_initial_calibration=False):
+		from flask import make_response
+		if self._photo_creator is not None:
+			if is_initial_calibration:
+				self._photo_creator.is_initial_calibration = True
+			else:
+				self._photo_creator.set_undistorted_path()
+			self._startStopCamera("take_undistorted_picture_request")
+			# todo make_response, so that it will be accepted in the .done() method in frontend
+			return make_response(gettext("Please make sure the lid of your Mr Beam II is open and wait a little..."), 200)
+		else:
+			return make_response('Error, no photocreator active, maybe you are developing and dont have a cam?', 503)
 
 	def _start_photo_worker(self):
-		worker = threading.Thread(target=self._photo_creator.work)
-		worker.daemon = True
-		worker.start()
+		if not self._photo_creator.active:
+			worker = threading.Thread(target=self._photo_creator.work, name='Photo-Worker')
+			worker.daemon = True
+			worker.start()
+		else:
+			self._logger.info("Another PhotoCreator thread is already active! Not starting a new one.")
 
 	def _end_photo_worker(self):
 		if self._photo_creator:
 			self._photo_creator.active = False
-
-	def _send_frontend_lid_state(self, closed=None):
-		lid_closed = closed if closed is not None else self.lidClosed
-		self._plugin_manager.send_plugin_message("mrbeam", dict(lid_closed=lid_closed))
+			self._photo_creator.save_debug_images = False
+			self._photo_creator.undistorted_pic_path = None
 
 
 class PhotoCreator(object):
-	def __init__(self, path):
-		self.imagePath = path
-		self.tmpPath = self.imagePath + ".tmp"
-		self.tmpPath2 = self.imagePath + ".tmp2"
-		self.active = True
+	def __init__(self, _plugin, _plugin_manager, path, image_correction_enabled):
+		self._plugin = _plugin
+		self._plugin_manager = _plugin_manager
+		self.final_image_path = path
+		self.image_correction_enabled = image_correction_enabled
+		self._settings = _plugin._settings
+		self._analytics_handler = _plugin.analytics_handler
+		self._laserCutterProfile = _plugin.laserCutterProfileManager.get_current_or_default()
+		self.keepOriginals = self._settings.get(["cam", "keepOriginals"])
+		self.active = False
 		self.last_photo = 0
+		self.badQualityPicCount = 0
+		self.is_initial_calibration = False
+		self.undistorted_pic_path = None
+		self.save_debug_images = self._settings.get(['cam', 'saveCorrectionDebugImages'])
 		self.camera = None
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator")
 
-		self._createFolder_if_not_existing(self.imagePath)
-		self._createFolder_if_not_existing(self.tmpPath)
-		self._createFolder_if_not_existing(self.tmpPath2)
+		self._init_filenames()
+		self._createFolder_if_not_existing(self.final_image_path)
+		self._createFolder_if_not_existing(self.tmp_img_raw)
+		self._createFolder_if_not_existing(self.tmp_img_prepared)
+
+	def set_undistorted_path(self):
+		self.undistorted_pic_path = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(['cam', 'localUndistImage'])
 
 	def work(self):
 		try:
 			self.active = True
+			session_details = dict(
+				num_pics=0,
+				errors=[],
+				detected_markers={},
+			)
+
+			# todo find maximum of sleep in beginning that's not affecting UX
+			time.sleep(0.8)
+
+			if self.is_initial_calibration:
+				self.set_undistorted_path()
+				# set_debug_images_to = save_debug_images or self._photo_creator.save_debug_images
+				self.save_debug_images = True
+
 			if not PICAMERA_AVAILABLE:
-				self._logger.warn("PiCamera is not available, not able to capture pictures.")
+				self._logger.warn("Camera disabled. Not all required modules could be loaded at startup. ")
 				self.active = False
 				return
 
+			self._logger.debug("Taking picture now.")
 			self._prepare_cam()
 			while self.active and self.camera:
+				if self.keepOriginals:
+					self._init_filenames()
+
 				self._capture()
+
 				# check if still active...
 				if self.active:
-					# self.correct_image()
-					self._move_tmp_image()
-					time.sleep(1)
+					# todo QUESTION: should the tmp_img_raw ever be showed in frontend?
+					move_from = self.tmp_img_raw
+					correction_result = dict(successful_correction=False)
+					if self.image_correction_enabled:
+						correction_result = self.correct_image(self.tmp_img_raw, self.tmp_img_prepared)
+						# todo ANDY concept of what should happen with good and bad pictures etc....
+						if correction_result['successful_correction']:
+							move_from = self.tmp_img_prepared
+							self._move_img(move_from, self.final_image_path)
+							self.badQualityPicCount = 0
+						else:
+							errorID = correction_result['error'].split(':')[0]
+							errorString = correction_result['error'].split(':')[1]
+							if errorID == 'BAD_QUALITY':
+								self.badQualityPicCount += 1
+								self._logger.error(errorString+' Number of bad quality pics: {}'.format(self.badQualityPicCount))
+								# todo get the maximum for badquality pics from settings
+								if self.badQualityPicCount > 10:
+									self._logger.error('Too many bad pics! Show bad image now.'.format(self.badQualityPicCount))
+									self._move_img(move_from, self.final_image_path)
+							elif errorID == 'NO_CALIBRATION':
+								self._logger.error(errorString)
+							elif errorID == 'NO_PICTURE_FOUND':
+								self._logger.error(errorString)
+							else: # Unknown error
+								self._logger.error(errorID+errorString)
+					self._send_frontend_picture_metadata(correction_result)
+					self._save_session_details_for_analytics(session_details, correction_result)
 
+					time.sleep(1.5)
+
+			self._analytics_handler.add_camera_session_details(session_details)
+			self._logger.debug("PhotoCreator stopping...")
+		except Exception as worker_exception:
+			self._logger.exception("Exception in worker thread of PhotoCreator: {}".format(worker_exception.message))
+		finally:
+			self.active = False
 			self._close_cam()
-		except:
-			self._logger.exception("Exception in worker thread of PhotoCreator:")
+
+	def _save_session_details_for_analytics(self, session_details, correction_result):
+		try:
+			session_details['num_pics'] += 1
+
+			error = correction_result['error']
+			if error:
+				session_details['errors'].append(error)
+
+			num_detected = correction_result.get('markers_recognized', None)
+			if num_detected in session_details['detected_markers']:
+				session_details['detected_markers'][num_detected] += 1
+			else:
+				session_details['detected_markers'][num_detected] = 1
+		except Exception as ex:
+			self._logger.exception('Exception in _save_session_details_for_analytics: {}'.format(ex))
+
+	def _send_frontend_picture_metadata(self, meta_data):
+		self._plugin_manager.send_plugin_message("mrbeam", dict(beam_cam_new_image=meta_data))
+
+	def _init_filenames(self):
+		if self.keepOriginals:
+			self.tmp_img_raw = self.final_image_path.replace('.jpg', "-tmp{}.jpg".format(time.time()))
+			self.tmp_img_prepared = self.final_image_path.replace('.jpg', '-tmp2.jpg')
+		else:
+			self.tmp_img_raw = self.final_image_path.replace('.jpg', '-tmp.jpg')
+			self.tmp_img_prepared = self.final_image_path.replace('.jpg', '-tmp2.jpg')
 
 	def _prepare_cam(self):
 		try:
+			w = self._settings.get(["cam", "cam_img_width"])
+			h = self._settings.get(["cam", "cam_img_height"])
 			now = time.time()
 
 			self.camera = PiCamera()
 			# Check with Clemens about best default values here....
-			# self.camera.resolution = (2592, 1944)
-			self.camera.resolution = (1024, 768)
+			self.camera.resolution = (w, h)
 			self.camera.vflip = True
 			self.camera.hflip = True
-			self.camera.brightness = 70
-			self.camera.color_effects = (128, 128)
+			self.camera.awb_mode = 'auto'
+			if not self.image_correction_enabled:
+				# self.camera.brightness = 70
+				self.camera.color_effects = (128, 128)
 			self.camera.start_preview()
 
 			self._logger.debug("_prepare_cam() prepared in %ss", time.time() - now)
-		except:
-			self._logger.exception("_prepare_cam() Exception while preparing camera:")
+		except Exception as e:
+			if e.__class__.__name__.startswith('PiCamera'):
+				self._logger.error("PiCamera Error while preparing camera: %s: %s", e.__class__.__name__, e)
+			else:
+				self._logger.exception("Exception while preparing camera:")
 
 	def _capture(self):
 		try:
 			now = time.time()
-			self.camera.capture(self.tmpPath, format='jpeg', resize=(1000, 800))
+			# self.camera.capture(self.tmpPath, format='jpeg', resize=(1000, 800))
+			self.camera.capture(self.tmp_img_raw, format='jpeg')
+
 			self._logger.debug("_capture() captured picture in %ss", time.time() - now)
-		except:
-			self._logger.exception("Exception while taking picture from camera:")
+			return None
+
+		except Exception as e:
+			if e.__class__.__name__.startswith('PiCamera'):
+				self._logger.error("PiCamera Error while capturing picture: %s: %s", e.__class__.__name__, e)
+				self.active = False
+				self._plugin.notify_frontend(
+					title=gettext("Camera Error"),
+					text=gettext("Please try the following:<br>- Close and reopen the lid<br>- Reboot the device and reload this page"),
+					type='notice',
+					sticky=True,
+					replay_when_new_client_connects=True)
+			else:
+				self._logger.exception("Exception while taking picture from camera:")
+
+			return str(e)
 
 	def _createFolder_if_not_existing(self, filename):
 		try:
@@ -158,30 +374,61 @@ class PhotoCreator(object):
 				os.makedirs(path)
 				self._logger.debug("Created folder '%s' for camera images.", path)
 		except:
-			self.logger.exception("Exception while creating folder '%s' for camera images:", filename)
+			self._logger.exception("Exception while creating folder '%s' for camera images:", filename)
 
-
-	def _move_tmp_image(self):
-		returncode = call(['mv', self.tmpPath, self.imagePath])
-		if returncode != 0:
-			self._logger.warn("_move_tmp_image() returncode is %s (sys call, should be 0)", returncode)
+	def _move_img(self, src, dest):
+		try:
+			if os.path.exists(dest):
+				os.remove(dest)
+			shutil.move(src, dest)
+		except Exception as e:
+			self._logger.warn("exception while moving file: %s", e)
 
 	def _close_cam(self):
 		if self.camera is not None:
 			self.camera.close()
 			self._logger.debug("_close_cam() Camera closed ")
 
-	# draft
-	def correct_image(self):
-		self._logger.debug("correct_image()")
-		path_to_input_image = self.tmpPath
-		path_to_output_img = self.tmpPath2
-		path_to_cam_params = '/home/pi/cam_calibration_output/cam_calibration_output.npz'
-		path_to_markers_file = '/home/pi/cam_calibration_output/cam_markers.npz'
+	def correct_image(self,pic_path_in,pic_path_out):
+		"""
+		:param pic_path_in:
+		:param pic_path_out:
+		:return: result dict with informations about picture preparation
+		"""
+		self._logger.debug("Starting with correction...")
+		path_to_input_image = pic_path_in
+		path_to_output_img = pic_path_out
 
-		is_high_precision = mb_picture_preparation.prepareImage(path_to_input_image,
-																path_to_output_img,
-																path_to_cam_params,
-																path_to_markers_file)
+		path_to_cam_params = self._settings.get(["cam", "lensCalibrationFile"])
+		path_to_pic_settings = self._settings.get(["cam", "correctionSettingsFile"])
+		path_to_last_markers = self._settings.get(["cam", "correctionTmpFile"])
 
-		self._logger.debug("correct_image() is_high_precision:%s", is_high_precision)
+		# todo implement pixel2MM setting in _laserCutterProfile (the magic number 2 below)
+		outputImageWidth = int(2 * self._laserCutterProfile['volume']['width'])
+		outputImageHeight = int(2 * self._laserCutterProfile['volume']['depth'])
+		correction_result = mb_pic.prepareImage(path_to_input_image,
+												path_to_output_img,
+												path_to_cam_params,
+												path_to_pic_settings,
+												path_to_last_markers,
+												size=(outputImageWidth,outputImageHeight),
+												save_undistorted=self.undistorted_pic_path,
+												quality=75,
+												debug_out=self.save_debug_images)
+
+		if ('undistorted_saved' in correction_result and correction_result['undistorted_saved']
+			and 'markers_recognized' in correction_result and correction_result['markers_recognized'] == 4):
+			self.undistorted_pic_path = None
+			self._logger.debug("Stopping to save undistorted picture, the last one is usable for calibration.")
+
+
+
+		self._logger.info("Image correction result: {}".format(correction_result))
+		# check if there was an error or not.
+		if not correction_result['error']:
+			correction_result['successful_correction'] = True
+		else:
+			correction_result['successful_correction'] = False
+
+		return correction_result
+

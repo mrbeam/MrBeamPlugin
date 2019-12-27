@@ -21,9 +21,9 @@
 										<li><a href="#" data-bind="click: function() { $root.listHelper.changeSorting('upload'); }"><i class="icon-ok" data-bind="style: {visibility: listHelper.currentSorting() == 'upload' ? 'visible' : 'hidden'}"></i> {{ _('Sort by upload date') }} ({{ _('descending') }})</a></li>
 										<li><a href="#" data-bind="click: function() { $root.listHelper.changeSorting('size'); }"><i class="icon-ok" data-bind="style: {visibility: listHelper.currentSorting() == 'size' ? 'visible' : 'hidden'}"></i> {{ _('Sort by file size') }} ({{ _('descending') }})</a></li>
 										<li class="divider"></li>
-										<li><a href="#" data-bind="click: function() { $root.listHelper.toggleFilter('machinecode'); }"><i class="icon-ok" data-bind="style: {visibility: _.contains(listHelper.currentFilters(), 'machinecode') ? 'visible' : 'hidden'}"></i> {{ _('Only show GCode files') }}</a></li>
-										<li><a href="#" data-bind="click: function() { $root.listHelper.toggleFilter('model'); }"><i class="icon-ok" data-bind="style: {visibility: _.contains(listHelper.currentFilters(), 'model') ? 'visible' : 'hidden'}"></i> {{ _('Only show design files') }}</a></li>
-										<li class="divider"></li>
+										<li class="filter design"><a href="#" data-bind="click: $root.setFilter('design')"><i class="icon-ok"></i> {{ _('Only show design files') }}</a></li>
+										<li class="filter machinecode"><a href="#" data-bind="click: $root.setFilter('machinecode')"><i class="icon-ok"></i> {{ _('Only show GCode files') }}</a></li>
+										<li class="filter recentjob"><a href="#" data-bind="click: $root.setFilter('recentjob')"><i class="icon-ok"></i> {{ _('Only show recent jobs') }}</a></li>
 									</ul>
 									<div class="muted text-right">
 										<small>{{ _('Free') }}: <span data-bind="text: freeSpaceString"></span></small>
@@ -54,11 +54,11 @@
 								<div class="designlib" >
 									<div id="files" >
 
-										<div  id="files_list">
+										<div id="files_list" style="max-height: calc(100vh - 64px); overflow-y: auto;">
 											<div class="accordion-inner">
 
 												<div class="gcode_files" data-bind="foreach: filesOnlyList" >
-													<div class="entry" data-bind="attr: { id: $root.getEntryId($data) }, template: { name: $root.templateFor($data), data: $data }"></div>
+													<div class="entry" data-bind="attr: { id: $root.getEntryId($data) }, template: { name: $root.templateFor($data), data: $data }, css:$root.templateFor($data)"></div>
 												</div>
 
 													<script type="text/html" id="files_template_machinecode_gcode">
@@ -69,7 +69,7 @@
 																" ><i class="icon-cog"></i></div>
 															<div class="title dropdown" >
 																<span class="title_shortened" data-bind="css: $root.getSuccessClass($data), style: { 'font-weight': $root.listHelper.isSelected($data) ? 'bold' : 'normal' }, text: name" ></span>
-																<a type="button" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+																<a type="button" class="dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false">
 																	<i class="icon-reorder pull-right"></i>
 																</a>
 																<ul class="dropdown-menu dropdown-menu-right" role="menu">
@@ -88,7 +88,7 @@
 													</script>
 
 													<script type="text/html" id="files_template_model_svg">
-														<div class="file_list_entry preview_card">
+														<div class="file_list_entry preview_card" data-bind="attr: {mrb_name: name}">
 															<div class="preview" data-bind="
 																style: { 'background-image': 'url('+$root.downloadLink($data)+')' },
 																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeSVG($data); $('#wa_tab_btn').tab('show'); } }, 
@@ -96,7 +96,7 @@
 																" ></div>
 															<div class="title dropdown" >
 																<span class="title_shortened" data-bind="text: name" ></span>
-																<a type="button" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+																<a type="button" class="dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false">
 																	<i class="icon-reorder pull-right"></i>
 																</a>
 																<ul class="dropdown-menu dropdown-menu-right" role="menu">
@@ -114,6 +114,33 @@
 														</div>
 													</script>
 													
+													<script type="text/html" id="files_template_recentjob_svg">
+														<div class="file_list_entry preview_card recentjob" data-bind="attr: {mrb_name: name}">
+															<div class="preview" data-bind="
+																style: { 'background-image': 'url('+$root.downloadLink($data)+')' },
+																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeSVG($data); $('#wa_tab_btn').tab('show'); } }, 
+																css: {disabled: $root.workingArea.isPlaced($data)}
+																" ></div>
+															<div class="title dropdown" >
+																<span class="title_shortened" data-bind="text: name" ></span>
+																<a type="button" class="dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false">
+																	<i class="icon-reorder pull-right"></i>
+																</a>
+																<ul class="dropdown-menu dropdown-menu-right" role="menu">
+																	<li>
+																		<a class="" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i> {{ _('Download') }}</a>
+																	</li>
+																	<li>
+																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFile($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
+																	</li>
+																	 <li class="divider"></li>
+																	<li class="uploaded">{{ _('Created at') }}: <span data-bind="text: formatTimeAgo(date)"></span></li>
+																	<li class="size">{{ _('Size') }}: <span data-bind="text: formatSize(size)"></span></li>
+																</ul>
+															</div>
+														</div>
+													</script>
+													
 													<script type="text/html" id="files_template_model_dxf">
 														<div class="file_list_entry icon_card">
 															<div class="preview" data-bind="
@@ -122,7 +149,7 @@
 																" ><i class="icon-picture"></i></div>
 															<div class="title dropdown" >
 																<span class="title_shortened" data-bind="text: name" ></span>
-																<a type="button" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+																<a type="button" class="dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false">
 																	<i class="icon-reorder pull-right"></i>
 																</a>
 																<ul class="dropdown-menu dropdown-menu-right" role="menu">
@@ -141,7 +168,7 @@
 													</script>
 
 													<script type="text/html" id="files_template_model_image">
-														<div class="file_list_entry preview_card">
+														<div class="file_list_entry preview_card" data-bind="attr: {mrb_name: name}">
 															<div class="preview" data-bind="
 																style: { 'background-image': 'url('+$root.downloadLink($data)+')' },
 																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeIMG($data); $('#wa_tab_btn').tab('show'); } }, 
@@ -149,7 +176,7 @@
 																" ></div>
 															<div class="title dropdown" >
 																<span class="title_shortened" data-bind="text: name" ></span>
-																<a type="button" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+																<a type="button" class="dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false">
 																	<i class="icon-reorder pull-right"></i>
 																</a>
 																<ul class="dropdown-menu dropdown-menu-right" role="menu">

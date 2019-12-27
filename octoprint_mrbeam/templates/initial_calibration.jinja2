@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>{{ displayName }}</title>
+
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
+        <link rel="shortcut icon" href="{{ url_for('plugin.mrbeam.static', filename='img/favicon.png') }}">
+        <link rel="icon" sizes="192x192" href="{{ url_for('plugin.mrbeam.static', filename='img/mrb192.png') }}">
+        <link rel="icon" sizes="128x128" href="{{ url_for('plugin.mrbeam.static', filename='img/mrb128.png') }}">
+        <link rel="apple-touch-icon" sizes="128x128" href="{{ url_for('plugin.mrbeam.static', filename='img/mrb128.png') }}">
+        <link rel="apple-touch-icon-precomposed" sizes="128x128" href="{{ url_for('plugin.mrbeam.static', filename='img/mrb128.png') }}">
+        <link rel="apple-touch-icon" sizes="114x114" href="{{ url_for('plugin.mrbeam.static', filename='img/mrb114.png') }}">
+        <link rel="apple-touch-icon" sizes="144x144" href="{{ url_for('plugin.mrbeam.static', filename='img/mrb144.png') }}">
+
+		<script type="text/javascript">
+			INITIAL_CALIBRATION=true;
+		</script>
+        {% include 'stylesheets.jinja2' %}
+        {% include 'initscript.jinja2' %}
+        {% include 'mrbeam_initscript.jinja2' %}
+    </head>
+    <body style="padding-top:0;">
+		<div class="octoprint-container">
+			<div class="row-fluid">
+				<div class="span12" id="settings">
+					<div id="settings_plugin_mrbeam_camera" class="container" style="width:100%;">
+						<div class="scrollable" id="settings_dialog_content">
+							<div id="initial_camera_calibration" style="margin: 1em auto; max-width:80vh;">
+								{% include 'settings/camera_settings_markers.jinja2' %}
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Plugin template files -->
+		{% if templatePlugins %}
+		{% for plugin_name in templatePlugins %}
+		{% include plugin_name+".jinja2" ignore missing %}
+		{% endfor %}
+		{% endif %}
+		<!-- End plugin template files -->
+
+        {% include 'javascripts.jinja2' %}
+
+	</body>
+</html>

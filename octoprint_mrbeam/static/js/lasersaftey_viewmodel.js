@@ -3,7 +3,8 @@ $(function() {
         var self = this;
 
         self.loginStateViewModel = parameters[0];
-
+        self.analytics = parameters[1];
+        self.wizard = parameters[2];
 
         self.checkbox1 = ko.observable(false);
         self.checkbox2 = ko.observable(false);
@@ -13,6 +14,8 @@ $(function() {
         self.checkbox6 = ko.observable(false);
 
         self.showAgain = ko.observable(true);
+
+        self.dialog_language = window.MRBEAM_LANGUAGE;
 
 
         self.allChecked = ko.computed(function() {
@@ -28,17 +31,36 @@ $(function() {
         self.agree = function() {
             var result = self._handleExit();
             if (result) {
+                let dialog = 'stand_alone';
+                self._sendLaserSafetyAnalytics(dialog);
                 self.hideDialog();
             }
 		};
 
-		// for wizard version
+        self.onStartup = function(){
+            // needs to be scrollable on touch devices
+            $('#wizard_dialog .modal-body').addClass('scrollable');
+        };
+
         self.onBeforeWizardTabChange = function(next, current) {
-            if (current && _.startsWith(current, "wizard_plugin_corewizard_lasersafety")) {
-                var result = self._handleExit();
-                return result;
+            // If the user goes from Laser Safety to the previous page, we don't check the input data
+            if (current && current === self.wizard.LASER_SAFETY_TAB) {
+                let letContinue = true;
+                if (self.wizard.isGoingToPreviousTab(current, next)) {
+                    // We need to do this here because it's mandatory step, so it's possible that we don't actually change tab
+                    $('#' + current).attr('class', 'wizard-nav-list-past');
+                } else {
+                    letContinue = self._handleExit();
+                    if (letContinue) {
+                        let dialog = 'welcome_wizard';
+                        self._sendLaserSafetyAnalytics(dialog);
+
+                        // We need to do this here because it's mandatory step, so it's possible that we don't actually change tab
+                        $('#' + current).attr('class', 'wizard-nav-list-past');
+                    }
+                }
+                return letContinue;
             }
-            return true;
         };
 
         self.onUserLoggedIn = function(currentUser){
@@ -118,7 +140,8 @@ $(function() {
                     var data = {
                         "username": self.loginStateViewModel.username(),
                         "ts": Date.now().toString(),
-                        "showAgain": self.showAgain()
+                        "show_again": self.showAgain(),
+                        "dialog_language": self.dialog_language
                     };
                     self._sendData(data);
                     return true;
@@ -142,11 +165,20 @@ $(function() {
                     });
                 });
         };
+
+        self._sendLaserSafetyAnalytics = function(dialog) {
+            let event = 'laser_safety';
+            let payload = {
+                dialog: dialog,
+                show_again: self.showAgain(),
+            };
+            self.analytics.send_fontend_event(event, payload);
+        }
     }
 
     OCTOPRINT_VIEWMODELS.push([
         LaserSafetyViewModel,
-        ["loginStateViewModel"],
+        ["loginStateViewModel", "analyticsViewModel", "wizardWhatsnewViewModel"],
         ["#wizard_plugin_corewizard_lasersafety", "#lasersafety_overlay"]
     ]);
 });

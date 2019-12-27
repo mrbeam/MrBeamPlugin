@@ -1,13 +1,18 @@
 <script lang="javascript">
-    var BEAMOS_VERSION = "{{ beamosVersion.number }}";
-    var BEAMOS_BRANCH = "{{ beamosVersion.branch }}";
-    var BEAMOS_DISPLAY_VERSION = "{{ beamosVersion.display_version }}";
-    var BEAMOS_IMAGE = "{{ beamosVersion.image }}";
-    var MRBEAM_DEBUG = "{{ MRBEAM_DEBUG }}";
-    var MRBEAM_DISPLAY_NAME = "{{ displayName }}";
+    var BEAMOS_VERSION = "{{ beamosVersionNumber }}";
+    var BEAMOS_BRANCH = "{{ beamosVersionBranch }}";
+    var BEAMOS_DISPLAY_VERSION = "{{ beamosVersionDisplayVersion }}";
+    var BEAMOS_IMAGE = "{{ beamosVersionImage }}";
+    var MRBEAM_PRODUCT_NAME = "{{ product_name }}";
     var MRBEAM_HOSTNAME = "{{ hostname }}";
     var MRBEAM_SERIAL = "{{ serial }}";
-    var MRBEAM_ENV_LOCAL = "{{ env.local }}";
-    var MRBEAM_ENV_ANALYTICS = "{{ env.analytics }}";
-    var MRBEAM_ANALYTICS_ENABLED = "{{ analyticsEnabled }}";
+    var MRBEAM_MODEL = "{{ model }}";
+    var MRBEAM_ENV_LOCAL = "{{ env_local }}";
+    var MRBEAM_ENV_SUPPORT_MODE = "{{ env_support_mode }}";
+    var MRBEAM_LANGUAGE = "{{ language }}";
+    var MRBEAM_SW_TIER = "{{ software_tier }}";
+    var MRBEAM_WIZARD_TO_SHOW = "{{ wizard_to_show }}";
+    var INIT_TS_MS = "{{ init_ts_ms }}";
+
+    window.mrbeam = {};
 </script>

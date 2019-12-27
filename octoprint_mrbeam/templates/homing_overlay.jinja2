@@ -46,12 +46,13 @@
 							font-size: 8em;
 							color: gray;
 							"></i><br/>
-						Mr Beam does not know the current position.<br/>
-						First remove any objects blocking the gantry's travel range.<br/>
-						Then do a homing cycle.<br/>
+                        <div style="width: 25%;margin: 0 auto;">
+                            <strong>{{ _('Make sure your Mr Beam is empty.') }}</strong><br/>
+                            {{ _('Then do a homing cycle so that your Mr Beam know its current position.') }}<br/>
+                        </div>
 						<div style='text-align: center; padding:.5em;'>
 							<div class='btn-group'>
-								<button class="btn btn-default" data-bind="enable: state.isLocked() && loginState.isUser(), click: function() { OctoPrint.printer.home(['x', 'y']) }"><i class="icon-home"></i> Homing Cycle</button>
+								<button class="btn btn-default" id="homing_overlay_homing_btn" data-bind="enable: state.isLocked() && loginState.isUser(), click: function() { OctoPrint.printer.home(['x', 'y']) }"><i class="icon-home"></i> {{ _('Homing Cycle') }}</button>
 							</div>
 						</div>
 					</div>

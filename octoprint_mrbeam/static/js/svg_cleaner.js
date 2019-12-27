@@ -147,7 +147,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
         var style = elem.attr("style");
         style.split(";").forEach(function (item, index) {
-            attr = item.split(":");
+            var attr = item.split(":");
             if (attr[0] in defaults && defaults[attr[0]] !== attr[1]) {
                 elem.attr(attr[0], attr[1]);
                 elem.attr("style", "");
