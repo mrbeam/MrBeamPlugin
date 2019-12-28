@@ -197,7 +197,7 @@
 
 												<script type="text/html" id="wa_template_machinecode">
 													<div class="file_list_entry" data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
-														<div class="title pull-left" data-bind="text: name"></div>
+														<div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
 														<div class="btn-group action-buttons pull-right">
 															<div class="btn btn-mini remove-design-btn" data-bind="click: function(){ $root.removeGcode($data); }"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
 														</div>
@@ -207,7 +207,7 @@
 
 												<script type="text/html" id="wa_template_model_svg">
 													<div class="file_list_entry" data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
-														<div class="title pull-left" data-bind="text: name"></div>
+														<div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
 														<div class="btn-group action-buttons pull-right">
 															<div class="btn btn-mini" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
 															<div class="btn btn-mini remove-design-btn" data-bind="click: function() { $root.removeSVG($data); }, attr: {mrb_name: $data.name}"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
@@ -261,7 +261,7 @@
 
 												<script type="text/html" id="wa_template_model_img">
 													<div class="file_list_entry" data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
-														<div class="title pull-left" data-bind="text: name"></div>
+														<div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
 														<div class="btn-group action-buttons pull-right">
 															<div class="btn btn-mini" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
 															<div class="btn btn-mini remove-design-btn" data-bind="click: function() { $root.removeIMG($data); }"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
@@ -338,7 +338,7 @@
 																							blur: function(d, event){ $root.imgManualAdjust($data, event); }} "/>
 																			</div>
 																			<div class="img_crop_ui pull-right">
-																				<input class="decent_input crop_top img_adjust" style="grid-area: tc;" type="number" min="0" max="99" value="0" step="0.5" data-bind="event: {
+																				<input class="decent_input crop_top img_adjust" style="grid-area: tc; align-self: start" type="number" min="0" max="99" value="0" step="0.5" data-bind="event: {
 																							keyup: function(d, event){ $root.imgManualCrop($data, event); },
 																							input: function(d, event){ $root.imgManualCrop($data, event); },
 																							blur: function(d, event){ $root.imgManualCrop($data, event); }} "/>
@@ -351,7 +351,7 @@
 																							keyup: function(d, event){ $root.imgManualCrop($data, event); },
 																							input: function(d, event){ $root.imgManualCrop($data, event); },
 																							blur: function(d, event){ $root.imgManualCrop($data, event); }} "/>
-																				<input class="decent_input crop_bottom img_adjust" style="grid-area: bc;" type="number" min="0" max="99" value="0" step="0.5" data-bind="event: {
+																				<input class="decent_input crop_bottom img_adjust" style="grid-area: bc; align-self: end" type="number" min="0" max="99" value="0" step="0.5" data-bind="event: {
 																							keyup: function(d, event){ $root.imgManualCrop($data, event); },
 																							input: function(d, event){ $root.imgManualCrop($data, event); },
 																							blur: function(d, event){ $root.imgManualCrop($data, event); }} "/>
@@ -376,7 +376,7 @@
 
 												<script type="text/html" id="wa_template_quicktext">
 													<div class="file_list_entry" data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
-														<div class="title pull-left" data-bind="text: name"></div>
+														<div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
 														<div class="btn-group action-buttons pull-right">
 															<div class="btn btn-mini" data-bind="click: function() { $root.editQuickText($data); }"><i class="icon-edit" title="{{ _('Edit') }}"></i></div>
 															<div class="btn btn-mini" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
@@ -425,7 +425,7 @@
 												</script>
 												<script type="text/html" id="wa_template_quickshape">
 													<div class="file_list_entry" data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
-														<div class="title pull-left" data-bind="text: name"></div>
+														<div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
 														<div class="btn-group action-buttons pull-right">
 															<div class="btn btn-mini" data-bind="click: function() { $root.editQuickShape($data); }"><i class="icon-edit" title="{{ _('Edit') }}"></i></div>
 															<div class="btn btn-mini" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>

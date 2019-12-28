@@ -220,7 +220,7 @@ $(function(){
 					colors.push(col);
 				}
 			}
-			colors = [...new Set(colors)]; // unique
+			colors = _.uniq(colors); // unique
 			return colors;
 		};
 
@@ -807,22 +807,23 @@ $(function(){
 			let srcElem = snap.select('#'+elem.previewId);
 			let strokeColors = self._getColorsOfSelector('*', 'stroke', srcElem);
 			let parts;
+			// TODO: UI for shape separation
+//			parts = srcElem.separate_by_non_intersecting_bbox(null, function(n){console.log("Separate non intersecting shapes: ", n);});
 			if(strokeColors.length > 1){
-				parts = srcElem.separate_colors();
+				parts = srcElem.separate_by_stroke_colors();
 			} else {
-				parts = srcElem.separate_children(2);
+				parts = srcElem.separate_by_native_elements(2);
 			}
 			if(parts.length > 0){
 				self.removeSVG(elem);
 				for (let i = 0; i < parts.length; i++) {
-					const name = elem.name + " ("+(i+1)+"/"+parts.length+")";
+					const name = elem.name + "."+(i+1);
 					let file = {url: elem.url, origin: elem.origin, name: name, type: "split", refs:{download: elem.url}};
 					const id = self.getEntryId();
 					const previewId = self.generateUniqueId(id, file);
 					let fragment = parts[i];
 					fragment.clean_gc();
 					fragment.attr({id: previewId})
-//					fragment.removeClass('designHighlight'); 
 					snap.select("#userContent").append(fragment);
 
 					file.id = id; // list entry id
