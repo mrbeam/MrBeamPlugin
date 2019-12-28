@@ -851,6 +851,7 @@ input[type="submit"].btn.btn-mini {
 }
 
 .navbar {
+	user-select: none;
 	margin-bottom: 0px;
 	/*margin-top: 6px;*/
 	box-shadow: 0px 0px 8px #DDD;
@@ -1786,6 +1787,8 @@ input.search-query,
 	max-width: 80%;
 	text-overflow: ellipsis;
 	overflow: hidden;
+	cursor: default;
+	user-select: none;
 }
 #wa_filelist .file_list_entry .detail_information {
 	clear: both;
