@@ -802,19 +802,27 @@ $(function(){
 			svgEl.removeClass('designHighlight');
 		};
 
-		self.splitSVG = function(elem) {
+		self.splitSVG = function(elem, event, method) {
 			self.abortFreeTransforms();
 			let srcElem = snap.select('#'+elem.previewId);
-			let strokeColors = self._getColorsOfSelector('*', 'stroke', srcElem);
+			
 			let parts;
-			// TODO: UI for shape separation
-//			parts = srcElem.separate_by_non_intersecting_bbox(null, function(n){console.log("Separate non intersecting shapes: ", n);});
-			if(strokeColors.length > 1){
-				parts = srcElem.separate_by_stroke_colors();
-			} else {
-				parts = srcElem.separate_by_native_elements(2);
+			switch(method){
+				case 'stroke-color':
+					parts = srcElem.separate_by_stroke_colors();
+					if(parts.length <= 1) failReason = "Didn't find different stroke colors.";
+					break;
+				case 'non-intersecting': // TODO: provide cancel check and proper progress callback
+					parts = srcElem.separate_by_non_intersecting_bbox(null, function(n){ console.log("Separate non intersecting shapes: ", n); });
+					if(parts.length <= 1) failReason = "Didn't find different stroke colors.";
+					break;
+				case 'divide':
+				default:
+					parts = srcElem.separate_by_native_elements(2);
+					if(parts.length <= 1) failReason = "Looks like a single path.";
 			}
-			if(parts.length > 0){
+			
+			if(parts.length > 1){
 				self.removeSVG(elem);
 				for (let i = 0; i < parts.length; i++) {
 					const name = elem.name + "."+(i+1);
@@ -829,7 +837,7 @@ $(function(){
 					file.id = id; // list entry id
 					file.previewId = previewId;
 					file.misfit = false;
-					file.typePath = elem.typePath;
+					file.typePath = file.typePath;
 
 					self.placedDesigns.push(file);
 					self._makeItTransformable(fragment);
@@ -839,9 +847,20 @@ $(function(){
 					self.removeHighlight(file);
 				}
 			} else {
+				let failReason = "";
+				switch (method) {
+					case 'stroke-color':
+						failReason = "Didn't find different stroke colors.";
+						break;
+					case 'non-intersecting':
+						failReason = "Didn't find non-intersecting shapes.";
+						break;
+					case 'divide':
+						failReason = "Looks like a single path.";
+				}
 				new PNotify({
-					title: gettext("Element not splittable."),
-					text: gettext("Can't split this element. It looks like a single path already."),
+					title: gettext("Element not splittable with this method."),
+					text: gettext("Can't split this design. " + failReason),
 					type: "info",
 					hide: true
 				});

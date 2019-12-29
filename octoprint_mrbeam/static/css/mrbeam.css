@@ -1813,6 +1813,15 @@ input.search-query,
 	width: calc(45% - 1em);
 }
 
+#wa_filelist .file_list_entry .dropdown {
+	display: inline-block;
+}
+#wa_filelist .file_list_entry .dropdown li {
+	padding: 0 0.7em;
+	color: #555;
+}
+#wa_filelist .file_list_entry .dropdown li i { color: #e25303 }
+
 .misfit_warning {
 	display: none;
 }
@@ -2216,10 +2225,12 @@ input.search-query,
 
 .working_area_image_preprocessing_link > button.image-preprocessing-collapsible {
   outline: transparent;
-  /*text-decoration: none;*/
+  text-decoration: none;
   color: #555;
   padding: 0;
   /*margin: 0;*/
+  white-space: nowrap;
+  font-size: 0.8rem;
 }
 
 .working_area_image_preprocessing_link > button.collapsed:before {
