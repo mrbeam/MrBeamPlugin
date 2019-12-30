@@ -251,6 +251,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def get_settings_defaults(self):
 		# Max img size: 2592x1944. Change requires rebuild of lens_correction_*.npz and machine recalibration.
+		# EDIT -- See 1st paragraph of https://docs.opencv.org/2.4/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html
+		# -> Multiply all coefficients with the same resize coef. Use cv2.getOptimalNewCameraMatrix to achieve that
 		image_default_width = 2048
 		image_default_height = 1536
 
