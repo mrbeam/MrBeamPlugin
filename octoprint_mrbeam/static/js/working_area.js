@@ -1855,6 +1855,9 @@ $(function(){
 			});
 			self.trigger_resize(); // initialize
 			self.init();
+			// init tinyColorPicker if not done yet
+			$("#qs_colorPicker").tinycolorpicker();
+			$("#qs_colorPicker").bind("change", self._qs_currentQuickShapeUpdate);
 		};
 
 		self.onAllBound = function(allViewModels){

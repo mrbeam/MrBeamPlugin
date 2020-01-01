@@ -1,0 +1,59 @@
+.tinyColorPicker {
+	display: inline-block;
+    width:          20px;
+    height:         20px;
+    position: relative;
+    clear: both;
+}
+
+.tinyColorPicker .track {
+    background:     #EFEFEF no-repeat 50% 50%;
+    height:         150px;
+    width:          150px;
+    padding:        10px;
+    position:       absolute;
+    cursor:         crosshair;
+    float:          left;
+    left:           -71px;
+    top:            -71px;
+    display:        none;
+    border:         1px solid #ccc;
+    z-index:        10;
+    border-radius: 150px;
+	background-image: url(../img/color_picker.png);
+}
+
+.tinyColorPicker .color {
+    width:          25px;
+    height:         25px;
+    padding:        3px;
+    border:         1px solid #ccc;
+    display:        block;
+    position:       relative;
+    z-index:        11;
+    background-color: #EFEFEF;
+    border-radius: 27px;
+    cursor: pointer;
+}
+
+.tinyColorPicker .colorInner {
+    width:          25px;
+    height:         25px;
+    border-radius: 27px;
+}
+
+.tinyColorPicker .dropdown {
+    list-style: none;
+    display: none;
+    width: 27px;
+    position: absolute;
+    top: 28px;
+    border: 1px solid #ccc;
+    left: 0;
+    z-index: 1000;
+}
+
+.tinyColorPicker .dropdown li {
+    height: 25px;
+    cursor: pointer;
+}
