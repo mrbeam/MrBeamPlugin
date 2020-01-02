@@ -75,6 +75,8 @@ class MrbPicWorker(object):
             self.images.append(img_np)
             if len(self.images) > self._maxSize:
                 del self.images[0]
+                del self.good_corner_bright[0]
+                del self.detectedBrightness[0]
             rois = {}
             goodRois = []
             for roi, _, pole in getRois(img_np):
@@ -84,7 +86,7 @@ class MrbPicWorker(object):
                     goodRois.append(pole)
             self.good_corner_bright.append(goodRois)
             self.detectedBrightness.append(rois)
-
+            # TODO auto-adjust camera shutter_speed from here
             # print("images stored : ", len(self.images))
 
     def flush(self):

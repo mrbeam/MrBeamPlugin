@@ -64,15 +64,14 @@ class MrbCamera(picamera.Picamera):
 		self.exposure_mode = 'off'
 		# Capture at the given cam fps and resolution
 
-		# Take 3 captures
 		autoShutterSpeed = self.exposure_speed
-		lastDeltas = [1]
+		lastDeltas = [1] # List of shutter speed offsets used (1 = 1 * normal shutter speed)
 		if shutterSpeedDeltas is None: # Creates default behavior
 			# construct fpsDeltas from fpsAvgDelta
 			# Go for 3 pics around the given average
-			shutterSpeedDeltas = [shutterSpeedMultDelta ** i for i in [-2, 1, ]]  # [self.framerate + i * fpsAvgDelta for i in range(-1, 2)]
+			shutterSpeedDeltas = [shutterSpeedMultDelta ** i for i in [-2, 1, ]]  # new shutter speed = shutterSpeedDelta * auto_shutter_speed
 
-		# Always take the first picture with the auto calibrated mode
+		# Always takes the first picture with the auto calibrated mode
 		for i, img in enumerate(self.capture_continuous(self.worker, format='jpeg',
 														quality=100, use_video_port=True)):
 			print("sensor : ", self.sensor_mode, " iso : ", self.iso,

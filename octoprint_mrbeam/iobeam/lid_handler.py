@@ -252,7 +252,7 @@ class PhotoCreator(object):
         self._logger.debug("Taking picture now.")
         try:
             with MrbCamera(framerate=8, resolution=camera.DEFAULT_STILL_RES, stopEvent=self.stopEvent) as cam:
-                self.serve_picture(cam, session_details)
+                self.serve_pictures(cam, session_details)
         except Exception as e:
             if e.__class__.__name__.startswith('PiCamera'):
                 self._logger.error("PiCamera Error while preparing camera: %s: %s", e.__class__.__name__, e)
@@ -260,7 +260,7 @@ class PhotoCreator(object):
                 self._logger.exception("Exception while preparing camera: %s: %s", e.__class__.__name__, e)
         self.stopEvent.set()
 
-    def serve_picture(self, cam, session_details):
+    def serve_pictures(self, cam, session_details):
         path_to_cam_params = self._settings.get(["cam", "lensCalibrationFile"])
         path_to_pic_settings = self._settings.get(["cam", "correctionSettingsFile"])
         path_to_last_markers = self._settings.get(["cam", "correctionTmpFile"])
@@ -285,35 +285,33 @@ class PhotoCreator(object):
         try:
             if self.active():
                 # TODO if first run (after open lid) : preliminary brightness measurement
+                cam.start_preview()
                 time.sleep(1.5)
                 bestShutterSpeeds = cam.apply_best_shutter_speed()  # Usually only 1 value, but there could be more
                 # TODO keep pic in RAM before saving it (no need to save if it is going to be modified or thrown out before serving)
                 cam.async_capture()  # starts capture to the cam.worker
-            latest = None
+            prev = None
             while self.active():
                 cam.wait()  # waits until the next picture is ready
                 if not self.active(): break  # check if still active...
                 # TODO If difference high -> Correct and serve new picture (will save bandwidth)
                 # TODO start capture with different brightness if we think we need it
-                #     TODO apply shutter speed adjustment from prelimminary measurements
+                #     TODO apply shutter speed adjustment from preliminary measurements
 
+                latest = cam.lastPic() # gets last picture given to cam.worker
                 cam.async_capture()  # starts capture with new settings
                 # Compare previous image with the current one.
                 # Do not save the new img if too similar
-                if latest is not None:
-                    # TODO gauss blur Compare new and old raw img.
-                    prev = prev or cv2.imread(self.tmp_img_raw)
-                    latest = cam.lastPic()
-                    if diff(latest, prev) < 50:
-                        # the difference is less than 50 pixels.
-                        # Discard this picture
-                        continue
-                    else:
-                        # Write image to disk
-                        del prev # free up RAM
+                prev = prev or cv2.imread(self.tmp_img_raw)
+                # TODO gauss blur Compare new and old raw img.
+                if diff(latest, prev) < 50:
+                    # Discard this picture
+                    continue
                 else:
-                    latest = cam.lastPic()
-                cv2.imwrite(self.tmp_img_raw, latest)
+                    cv2.imwrite(self.tmp_img_raw, latest)
+                    # Write image to disk and continue
+                    del prev
+                    prev = None # free up RAM
 
                 if self.image_correction_enabled:
                     self._logger.debug("Starting with correction...")
@@ -326,7 +324,9 @@ class PhotoCreator(object):
                                          'markers_recognised': len(markers),
                                          'corners_calculated': workspaceCorners,
                                          'successful_correction': workspaceCorners is not None}
+                    self._logger.info("New image correction result: {}".format(correction_result))
                     self._move_img(self.tmp_img_prepared, self.final_image_path)
+                    # Send result to fronted ASAP
                     self._send_frontend_picture_metadata(correction_result)
                     self.badQualityPicCount = 0
 
@@ -334,7 +334,7 @@ class PhotoCreator(object):
                     correction_result2 = detection_algo['legacy']()
 
                     # TODO join corner detection algo
-                    self._logger.info("Image correction result: {}".format(correction_result2))
+                    self._logger.info("Legacy image correction result: {}".format(correction_result2))
                     # check if there was an error or not.
                     success = not correction_result2['error']
                     correction_result2['successful_correction'] = success
@@ -361,9 +361,10 @@ class PhotoCreator(object):
                             self._logger.error(errorString)
                         else:  # Unknown error
                             self._logger.error(errorID + errorString)
+                    if not correction_result['successful_correction']:
+                        self._send_frontend_picture_metadata(correction_result2)
                     # TODO Iratxe tweak analytics
-                    self._send_frontend_picture_metadata(correction_result2)
-            self._save_session_details_for_analytics(session_details, correction_result)
+                    self._save_session_details_for_analytics(session_details, correction_result)
             # TODO compare with new algo result if good enough
 
             self._analytics_handler.add_camera_session_details(session_details)
