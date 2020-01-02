@@ -88,6 +88,58 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	
 	/**
 	 * Separates a fragment into n fragments.
+	 * Separation is determined by center x of elements bounding box. Structure is preserved for each resulting fragment.
+	 * 
+	 * Supports rect, ellipse, circle, line, polyline, polygon, text, tspan and of course path
+	 * Doesn't support use, symbol (use unref.js to avoid problems)
+	 * 
+	 * @returns {array} svg snippets (empty means not separatable)
+	 */
+	Element.prototype.separate_vertically = function () {
+		const old_element = this;
+		const bbox = old_element.getBBox();
+		const delimiter = bbox.cx;
+		let native_elements = old_element.get_native_elements() 
+		
+		let left_right = {};
+		for (let i = 0; i < native_elements.length; i++) {
+			const e = native_elements[i];
+			const lr = e.bbox.cx > delimiter ? 'r' : 'l';
+			left_right[lr] = left_right[lr] || [];
+			left_right[lr].push(e.node_id);
+		}
+		const id_sets = _.values(left_right);
+		return old_element.separate_by_ids(id_sets);
+	};
+	
+	/**
+	 * Separates a fragment into n fragments.
+	 * Separation is determined by center x of elements bounding box. Structure is preserved for each resulting fragment.
+	 * 
+	 * Supports rect, ellipse, circle, line, polyline, polygon, text, tspan and of course path
+	 * Doesn't support use, symbol (use unref.js to avoid problems)
+	 * 
+	 * @returns {array} svg snippets (empty means not separatable)
+	 */
+	Element.prototype.separate_horizontally = function () {
+		const old_element = this;
+		const bbox = old_element.getBBox();
+		const delimiter = bbox.cy;
+		let native_elements = old_element.get_native_elements() 
+		
+		let above_below = {};
+		for (let i = 0; i < native_elements.length; i++) {
+			const e = native_elements[i];
+			const ab = e.bbox.cy < delimiter ? 'a' : 'b';
+			above_below[ab] = above_below[ab] || [];
+			above_below[ab].push(e.node_id);
+		}
+		const id_sets = _.values(above_below);
+		return old_element.separate_by_ids(id_sets);
+	};
+	
+	/**
+	 * Separates a fragment into n fragments.
 	 * Separate non overlapping elements. Structure is preserved for each resulting fragment.
 	 * 
 	 * Supports rect, ellipse, circle, line, polyline, polygon, text, tspan and of course path
@@ -152,6 +204,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	 * @returns {array} svg snippets
 	 */
 	Element.prototype.separate_by_ids = function(id_sets){
+		if(id_sets.length <= 1) return []; // avoids unnecessary cloning
+		
 		const old_element = this;
 		let parts = [];
 		for (let i = 0; i < id_sets.length; i++) {
@@ -197,7 +251,14 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		let native_elements = this.selectAll('path, circle, ellipse, rect, line, polyline, polygon, image, text, tspan');
 		for (let i = 0; i < native_elements.length; i++) {
 			let ne = native_elements[i];
-			ne.attr("mb:id", ne.node.id);
+			let id = ne.node.id;
+			if(id === "") {
+				id = ne.id; // fallback, take from snap
+				ne.node.setAttribute('id', id);
+				ne.node.setAttribute('mb:id', id);
+				console.log("fallback", id);
+			}
+			ne.attr("mb:id", id);
 			natives.push({element: ne, node_id: ne.node.id, bbox: ne.getBBox(), type: ne.type, id: ne.id, stroke: ne.attr()['stroke'], fill: ne.attr()['fill']});
 		}
 		return natives;

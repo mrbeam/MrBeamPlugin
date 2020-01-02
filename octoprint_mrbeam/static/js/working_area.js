@@ -816,10 +816,16 @@ $(function(){
 					parts = srcElem.separate_by_non_intersecting_bbox(null, function(n){ console.log("Separate non intersecting shapes: ", n); });
 					if(parts.length <= 1) failReason = "Didn't find different stroke colors.";
 					break;
+				case 'horizontally':
+					parts = srcElem.separate_horizontally();
+					if(parts.length <= 1) failReason = "Not enough native elements.";
+					break;
+				case 'vertically':
 				case 'divide':
 				default:
-					parts = srcElem.separate_by_native_elements(2);
-					if(parts.length <= 1) failReason = "Looks like a single path.";
+					parts = srcElem.separate_vertically();
+					if(parts.length <= 1) failReason = "Not enough native elements.";
+					break;
 			}
 			
 			if(parts.length > 1){
