@@ -105,27 +105,27 @@
 						<label class="control-label">{{ _('Line Color') }}</label>
 						<div class="controls">
 							<input type="checkbox" value="stroke" id="quick_shape_stroke" checked data-bind="click: _qs_currentQuickShapeUpdate()" />
-							<!--<input type="color" id="quick_shape_color" data-bind="textInput: _qs_currentQuickShapeUpdate()" />-->
-							<div id="qs_colorPicker" class="tinyColorPicker">
-								<a class="color"><div class="colorInner"></div></a>
+							<div id="qs_colorPicker_stroke" class="tinyColorPicker">
+								<a class="tcp_color"><div class="colorInner"></div></a>
 								<div class="track"></div>
 								<ul class="dropdown"><li></li></ul>
-								<input type="hidden" class="colorInput" id="quick_shape_color" data-bind="change: _qs_currentQuickShapeUpdate()">
+								<input type="hidden" class="colorInput" id="quick_shape_color" >
 							</div>
 						</div>
 					</div>
 				</form>
 				
-
-				<form role="form" class="form-horizontal" data-bind="submit: _qs_dialogClose" _lpchecked="1">
+				<form role="form" class="form-horizontal" data-bind="submit: _qs_dialogClose" _lpchecked="1" style="min-height:85px;">
 					<div class="control-group">
 						<label class="control-label">{{ _('Fill') }}</label>
 						<div class="controls">
 							<input type="checkbox" value="fill" id="quick_shape_fill" data-bind="click: _qs_currentQuickShapeUpdate()" />
-							<input type="range" id="quick_shape_fill_brightness" 
-								   class="precisionslider"
-								   data-bind="textInput: _qs_currentQuickShapeUpdate()" 
-								   value="0" min="0" max="255" />
+							<div id="qs_colorPicker_fill" class="tinyColorPicker blackWhite">
+								<a class="tcp_color"><div class="colorInner"></div></a>
+								<div class="track"></div>
+								<ul class="dropdown"><li></li></ul>
+								<input type="hidden" class="colorInput" id="quick_shape_fill_brightness">
+							</div>
 						</div>
 					</div>
 				</form>

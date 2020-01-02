@@ -478,13 +478,10 @@ body.colorDragInProgress #drop_overlay {
 	filter:none;
 }
 
+.userText.designHighlight text,
+.userText.designHighlight tspan,
 .userIMG.designHighlight {
 	filter: url(#designHighlight);
-}
-
-.userText.designHighlight text,
-.userText.designHighlight tspan {
-	font-weight: bold !important;
 }
 
 svg#area_preview path,
@@ -712,9 +709,6 @@ li.material_entry span {
 	width: 20px;
 	height: 20px;
 	margin-right: 10px;
-}
-#quick_shape_dialog #quick_shape_fill {
-	margin-top: -1.3em;
 }
 
 

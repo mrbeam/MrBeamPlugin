@@ -6,6 +6,10 @@
     clear: both;
 }
 
+.tinyColorPicker.active {
+	z-index: 9999999;
+}
+
 .tinyColorPicker .track {
     background:     #EFEFEF no-repeat 50% 50%;
     height:         150px;
@@ -16,14 +20,18 @@
     float:          left;
     left:           -71px;
     top:            -71px;
-    display:        none;
+    /*display:        none;*/
     border:         1px solid #ccc;
     z-index:        10;
     border-radius: 150px;
-	background-image: url(../img/color_picker.png);
+	background-image: url(../img/color_picker_material.png);
+	transform: scale(0.1);
+	transition: transform 0.2s ease-out;
 }
 
-.tinyColorPicker .color {
+.tinyColorPicker.active .track { transform: scale(1); }
+
+.tinyColorPicker .tcp_color {
     width:          25px;
     height:         25px;
     padding:        3px;
@@ -58,6 +66,6 @@
     cursor: pointer;
 }
 
-#customMaterial_colorPicker .track {
-	background-image: url(../img/color_picker.png);
+.tinyColorPicker.blackWhite .track {
+	background-image: url(../img/color_picker_bw.png);
 }

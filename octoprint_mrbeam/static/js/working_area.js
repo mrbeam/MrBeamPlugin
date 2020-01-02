@@ -1856,8 +1856,10 @@ $(function(){
 			self.trigger_resize(); // initialize
 			self.init();
 			// init tinyColorPicker if not done yet
-			$("#qs_colorPicker").tinycolorpicker();
-			$("#qs_colorPicker").bind("change", self._qs_currentQuickShapeUpdate);
+			$("#qs_colorPicker_stroke").tinycolorpicker();
+			$("#qs_colorPicker_stroke").bind("change", self._qs_currentQuickShapeUpdate);
+			$("#qs_colorPicker_fill").tinycolorpicker();
+			$("#qs_colorPicker_fill").bind("change", self._qs_currentQuickShapeUpdate);
 		};
 
 		self.onAllBound = function(allViewModels){
@@ -2116,7 +2118,7 @@ $(function(){
 					stroke: true,
 					color: '#e25303',
 					fill: false,
-					fill_brightness: 0,
+					fill_color: '#000000',
 					rect_w: w, rect_h: h, rect_radius: r,
 					circle_radius: w,
 					star_radius: w/2, star_corners:5, star_sharpness: 0.5522,
@@ -2163,10 +2165,11 @@ $(function(){
 			$('#quick_shape_heart_h').val(params.heart_h).change();
 			$('#quick_shape_heart_lr').val(params.heart_lr).change();
 			$('#quick_shape_stroke').prop("checked", params.stroke);
-			$("#qs_colorPicker").data('plugin_tinycolorpicker').setColor(params.color);
+			$("#qs_colorPicker_stroke").data('plugin_tinycolorpicker').setColor(params.color);
 //			$('#quick_shape_color').val(params.color).change();
 			$('#quick_shape_fill').prop("checked", params.fill);
-			$('#quick_shape_fill_brightness').val(params.fill_brightness).change();
+			$("#qs_colorPicker_fill").data('plugin_tinycolorpicker').setColor(params.fill_color);
+//			$('#quick_shape_fill_brightness').val(params.fill_brightness).change();
 			self.currentQuickShapeFile = file;
 
 			$('#shape_tab_link_'+params.type.substr(1)).tab('show');
@@ -2218,7 +2221,7 @@ $(function(){
 					heart_h: parseFloat($('#quick_shape_heart_h').val()),
 					heart_lr: parseFloat($('#quick_shape_heart_lr').val()),
 					stroke: $('#quick_shape_stroke').prop('checked'),
-					fill_brightness: parseInt($('#quick_shape_fill_brightness').val()),
+					fill_color: $('#quick_shape_fill_brightness').val(),
 					fill: $('#quick_shape_fill').prop('checked')
 				};
 				// update svg object
@@ -2246,7 +2249,7 @@ $(function(){
 				let fill = '#ffffff'; 
 				let fill_op = 0;
 				if(qs_params.fill){
-					fill = "#" + qs_params.fill_brightness.toString(16).padStart(2, '0').repeat(3);
+					fill = qs_params.fill_color;
 					fill_op = 1;
 				}
 				shape.attr({d: d, stroke: stroke, fill: fill, 'fill-opacity': fill_op});
