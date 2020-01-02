@@ -8,7 +8,7 @@ from os.path import isfile
 
 import cv2
 from flask.ext.babel import gettext
-from typing import Dict, Any, Union, Callable
+# from typing import Dict, Any, Union, Callable
 
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
@@ -18,6 +18,7 @@ from octoprint_mrbeam.util.camera import MrbCamera, mse, diff
 # TODO mb pic does not rely on picamera, should not use a Try catch.
 try:
     import mb_picture_preparation as mb_pic
+    PICAMERA_AVAILABLE = True
 except ImportError as e:
     PICAMERA_AVAILABLE = False
     logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler").warn(
