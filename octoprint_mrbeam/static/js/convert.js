@@ -75,6 +75,7 @@ $(function(){
 		self.save_custom_material_name = ko.observable("");
 		self.save_custom_material_thickness = ko.observable(1);
 		self.save_custom_material_color = ko.observable("#000000");
+		
 
 		self.hasCompressor = ko.observable(false);
 
@@ -126,7 +127,9 @@ $(function(){
                     suggested_name = custom_prefix + suggested_name;
                 }
                 self.save_custom_material_name(suggested_name);
-                self.save_custom_material_color('#'+self.selected_material_color());
+				const col = '#'+self.selected_material_color();
+                self.save_custom_material_color(col);
+				$("#customMaterial_colorPicker").data('plugin_tinycolorpicker').setColor(col);
                 var t = self.selected_material_thickness();
                 var tmp = t !== null ? t.thicknessMM : 1;
                 self.save_custom_material_thickness(tmp);
@@ -1398,6 +1401,9 @@ $(function(){
             $('[data-toggle="tooltip"]').tooltip({
                 html:true
             });
+			// init tinyColorPicker if not done yet
+			$("#customMaterial_colorPicker").tinycolorpicker();
+			$("#customMaterial_colorPicker").bind("change", self.save_custom_material_color);
 		};
 
 		self.onAllBound = function(){

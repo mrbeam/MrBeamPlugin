@@ -110,7 +110,13 @@
 								<div class="control-group">
 									<label class="control-label" for="custom_mat_col"> {{ _('Color') }}</label>
 									<div class="controls">
-										<input id="custom_mat_col" type="color" min="-1" max="38" data-bind="value:save_custom_material_color">
+										<div id="customMaterial_colorPicker" class="tinyColorPicker">
+											<a class="color"><div class="colorInner"></div></a>
+											<div class="track"></div>
+											<ul class="dropdown"><li></li></ul>
+											<input type="hidden" class="colorInput" id="custom_mat_col">
+										</div>
+										<!--<input id="custom_mat_col" type="color" min="-1" max="38" data-bind="value:save_custom_material_color">-->
 									</div>
 								</div>
 								<div class="controls">

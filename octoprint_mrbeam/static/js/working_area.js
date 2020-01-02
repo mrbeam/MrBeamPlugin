@@ -2147,7 +2147,6 @@ $(function(){
 			var params = file.qs_params;
 			self.showTransformHandles(file.previewId, false);
 			self.currentQuickShapeFile = null;
-
 			$('#quick_shape_dialog').modal({keyboard: true});
 			$('#quick_shape_dialog').one('hide', self._qs_currentQuickShapeShowTransformHandlesIfNotEmpty);
 			// firing those change events is necessary to work around a bug in chrome|knockout|js. 
@@ -2164,7 +2163,8 @@ $(function(){
 			$('#quick_shape_heart_h').val(params.heart_h).change();
 			$('#quick_shape_heart_lr').val(params.heart_lr).change();
 			$('#quick_shape_stroke').prop("checked", params.stroke);
-			$('#quick_shape_color').val(params.color).change();
+			$("#qs_colorPicker").data('plugin_tinycolorpicker').setColor(params.color);
+//			$('#quick_shape_color').val(params.color).change();
 			$('#quick_shape_fill').prop("checked", params.fill);
 			$('#quick_shape_fill_brightness').val(params.fill_brightness).change();
 			self.currentQuickShapeFile = file;
