@@ -1799,7 +1799,7 @@ class MachineCom(object):
 			"filename": os.path.basename(self._currentFile.getFilename()),
 			"origin": self._currentFile.getFileLocation()
 		})
-		self._callback.on_comm_file_selected("In_Memory_GCode", self._currentFile.getFilesize(), False)
+		self._callback.on_comm_file_selected("In_Memory_GCode", len(gcode), True) # Hack: set SD-Card to true to avoid Octoprint os.stats check (which will fail of course). 
 
 	def unselectFile(self):
 		if self.isBusy():

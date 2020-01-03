@@ -919,6 +919,15 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if self._printer is None or self._printer._comm is None:
 			return make_response("Laser: Serial not connected", 400)
 		
+		if(self._printer.get_state_id() == "LOCKED"):
+			self._printer.home("xy")
+			
+		seconds = 0
+		while(self._printer.get_state_id() != "OPERATIONAL" and seconds <= 26): # homing cycle 20sec worst case, rescue from home ~ 6 sec total (?)
+			time.sleep(1.0) # wait a second
+			seconds += 1
+				
+		
 		# check if idle
 		if not self._printer.is_operational():
 			return make_response("Laser not idle", 403)

@@ -1722,12 +1722,17 @@ $(function(){
 					yPatternOffset = 0;
 				}
 
-				var marker = snap.circle(linedist/2, linedist/2, .5).attr({
-					fill: "#000000",
-					stroke: "none",
-					strokeWidth: 1,
-					r: 0.75
+//				var marker = snap.circle(linedist/2, linedist/2, .5).attr({
+//					fill: "#000000",
+//					stroke: "none",
+//					strokeWidth: 1,
+//					r: 0.75
+//				});
+				var marker = snap.path("M9,10h2M10,9v2").attr({
+					stroke: "#aaaaaa",
+					fill: "none", "stroke-width":"0.5"
 				});
+				//<path d="M8,10h4M10,8v4" stroke="#e25303" fill="none" stroke-width="0.5"></path>
 
 				// dot pattern
 				var p = marker.pattern(0, 0, linedist, linedist);

@@ -13,29 +13,31 @@
 		<circle id="click_NE" r="4" cx="-100" cy="-100" class="calibration_click_indicator" />
 	</svg>
 	<div>
-		<a class="accordion-toggle" data-bind="click:loadUndistortedPicture, visible: !cal_img_ready() && !markersFound()"><i class="icon-repeat"></i> {{ _('refresh') }}</a>
-		<div class="marker_selection_desc calibration_waiting_for_picture" data-bind="visible: !cal_img_ready() && !markersFound()">
-			<div style=""><i class="icon-spinner icon-spin"></i> {{ _('searching markers') }}</div>
+		<a class="accordion-toggle" data-bind="click:loadUndistortedPicture"><i class="icon-repeat"></i> {{ _('refresh') }}</a>
+		<div class="marker_selection_desc calibration_waiting_for_picture" >
 			<div class="marker_found_indicator" data-bind="css: { active: foundNW() }"><i class="icon-ok"></i> NW</div>
 			<div class="marker_found_indicator" data-bind="css: { active: foundSW() }"><i class="icon-ok"></i> SW</div>
 			<div class="marker_found_indicator" data-bind="css: { active: foundSE() }"><i class="icon-ok"></i> SE</div>
 			<div class="marker_found_indicator" data-bind="css: { active: foundNE() }"><i class="icon-ok"></i> NE</div>
+			<div class="marker_found_indicator" data-bind="visible: !cal_img_ready()"><i class="icon-spinner icon-spin"></i> {{ _('searching markers') }}</div>
 		</div>
-		<div class="marker_selection_desc calibration_help" data-bind="visible: markersFound() && !calibrationActive()">
+		<div class="marker_selection_desc calibration_help" data-bind="visible: cal_img_ready() && !calibrationActive()">
 			<div>{{_('Click on the arrow head of the marker in the magnified picture.') }}<br/>
 			{{_('Continue with the other markers as the picture changes.') }}<br/>
 			{{_('Once all arrowheads are marked the calibration is finished.')}}</div>
 			<div data-bind="visible: isInitialCalibration()">
-				{{_('No markers visible?')}}
+				{{_('No calibration arrows visible?')}}
 				<a href="#reengrave_markers" class="dropdown" data-toggle="collapse" aria-expanded="false">
 					{{_('Engrave again')}}
 				</a>
 				<span class="caret" style="vertical-align: middle"></span>
+				<br/>
 				<div class="collapse" id="reengrave_markers" style="display:inline-block;">
 					<div>
 						Intensity: <input id="initialcalibration_intensity" type="number" min="0" max="100" step="1" class="decent_input" value="50" />%,&nbsp;
 						Feedrate: <input id="initialcalibration_feedrate" type="number" min="100" max="3000" step="1" class="decent_input" value="800" />mm/min&nbsp; 
-						<button class="btn btn-danger" data-bind="click: engrave_markers_without_gui, visible: isInitialCalibration()"><i class="icon-fire"></i>&nbsp;{{ _('Engrave Markers') }}</button>
+						<span data-bind="visible: !interlocks_closed()" style="color: red; display: inline-block; padding: 0.8em"><i class="icon icon-warning-sign"></i> {{ _('Close the lid') }}</span>
+						<button class="btn btn-danger" data-bind="click: engrave_markers_without_gui, visible: isInitialCalibration() && interlocks_closed()"><i class="icon-fire"></i>&nbsp;{{ _('Engrave Markers') }}</button>
 					</div>
 				</div>
 			</div>
@@ -43,9 +45,9 @@
 				<button class="btn btn-default" data-bind="click: startCalibration">{{ _('Start Calibration') }}</button>
 			</div>
 		</div>
-		<div class="marker_selection_desc calibration_summary" data-bind="visible: markersFound() && calibrationActive()">
+		<div class="marker_selection_desc calibration_summary">
 			<div data-bind="css: {complete: calibrationComplete()}">
-				<div id="calibration_picture_control" style="float:right;"  data-bind="visible: isInitialCalibration()">
+				<div id="calibration_picture_control" style="position: fixed;right: 0;top: 30vh;padding: 1em;border: 1px solid gray;" data-bind="visible: isInitialCalibration()">
 					Picture:<br />
 					<input type="radio" name="picture_type" value="raw" data-bind="checked: picType" /> Raw<br />
 					<input type="radio" name="picture_type" value="lens_correction" data-bind="checked: picType" /> Lens correction<br />
@@ -74,17 +76,17 @@
 						
 					</div>
 				</div>
-				
-				<div id="NW" class="cal-row"><div class="cal-arrow NW"></div> North West: <span data-bind="text: __format_point(currentResults()['NW'])"></span></div>
-				<div id="SW" class="cal-row"><div class="cal-arrow SW"></div> South West: <span data-bind="text: __format_point(currentResults()['SW'])"></span></div>
-				<div id="SE" class="cal-row"><div class="cal-arrow SE"></div> South East: <span data-bind="text: __format_point(currentResults()['SE'])"></span></div>
-				<div id="NE" class="cal-row"><div class="cal-arrow NE"></div> North East: <span data-bind="text: __format_point(currentResults()['NE'])"></span></div>
+				<div data-bind="visible: cal_img_ready() && calibrationActive()">
+					<div id="NW" class="cal-row"><div class="cal-arrow NW"></div> North West: <span data-bind="text: __format_point(currentResults()['NW'])"></span></div>
+					<div id="SW" class="cal-row"><div class="cal-arrow SW"></div> South West: <span data-bind="text: __format_point(currentResults()['SW'])"></span></div>
+					<div id="SE" class="cal-row"><div class="cal-arrow SE"></div> South East: <span data-bind="text: __format_point(currentResults()['SE'])"></span></div>
+					<div id="NE" class="cal-row"><div class="cal-arrow NE"></div> North East: <span data-bind="text: __format_point(currentResults()['NE'])"></span></div>
+				</div>
 			</div>
 			<div style="margin-top:1em;">
 				<button class="btn btn-default" data-bind="click: previousMarker, visible: calibrationActive()">{{ _('Previous') }}</button>
 				<button class="btn btn-default" data-bind="click: nextMarker, visible: calibrationActive()">{{ _('Next') }}</button>
 				<button class="btn btn-default" data-bind="click: saveCalibrationData, visible: calibrationComplete()">{{ _('Save Calibration') }}</button>
-				<!--<button class="btn btn-warning" data-bind="click: engrave_calibration_markers, visible: calibrationActive()">{{ _('Cancel') }}</button>-->
 				<button class="btn btn-warning" data-bind="click: abortCalibration, visible: calibrationActive()">{{ _('Cancel') }}</button>
 			</div>
 		</div>

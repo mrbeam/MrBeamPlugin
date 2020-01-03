@@ -11,12 +11,17 @@ $(function () {
 		var self = this;
 
 		self.staticURL = "/plugin/mrbeam/static/img/cam_calibration/calpic_wait.svg";
-
-
+		self.rawUrl = '/downloads/files/local/cam/beam-cam-tmp.jpg';
+		self.undistortedUrl = '/downloads/files/local/cam/undistorted.jpg';
+		self.croppedUrl = '/downloads/files/local/cam/beam-cam.jpg';
+		self.camImgPath = self.staticURL;
+		
 		self.dbNWImgUrl = ko.observable("");
 		self.dbNEImgUrl = ko.observable("");
 		self.dbSWImgUrl = ko.observable("");
 		self.dbSEImgUrl = ko.observable("");
+		self.interlocks_closed = ko.observable(false);
+		self.lid_fully_open = ko.observable(false);
 
 		self.workingArea = parameters[1];
 		self.conversion = parameters[2];
@@ -25,9 +30,26 @@ $(function () {
 		self.zoomIn = ko.observable(false);
 		self.focusX = ko.observable(0);
 		self.focusY = ko.observable(0);
-		self.picType = ko.observable("raw");
+		self.picType = ko.observable(""); // raw, lens_correction, cropped
+		self.picType.subscribe(function(val){
+			switch(val){
+				case 'cropped':
+					self.camImgPath = self.croppedUrl;
+					break;
+				case 'raw':
+					self.camImgPath = self.rawUrl;
+					break;
+				case 'lens_correction':
+					self.camImgPath = self.undistortedUrl;
+					break;
+				default:
+					self.camImgPath = self.staticURL;
+			}
+			self.calImgUrl(self.camImgPath + "?" + new Date().getTime());
+		});
 		// todo get ImgUrl from Backend/Have it hardcoded but right
 		self.calImgUrl = ko.observable(self.staticURL);
+		
 		self.calImgWidth = ko.observable(2048);
 		self.calImgHeight = ko.observable(1536);
 		self.calSvgOffX = ko.observable(0);
@@ -54,9 +76,8 @@ $(function () {
 		self.foundNE = ko.observable(false);
 
         self.cal_img_ready = ko.computed(function(){
-            return self.foundNE() && self.foundNW() && self.foundSE() && self.foundSW()});
-
-        self.markersFound = ko.observable(false);
+            return self.foundNE() && self.foundNW() && self.foundSE() && self.foundSW()
+		});
 
 		self.__format_point = function(p){
 			if(typeof p === 'undefined') return '?,?';
@@ -107,6 +128,7 @@ $(function () {
 		    self.analytics.send_fontend_event('calibration_start', {});
 			self.currentResults({});
 			self.calibrationActive(true);
+			self.picType("lens_correction");
 			self.nextMarker();
 		};
 
@@ -148,7 +170,8 @@ $(function () {
 			}
 
 			if (self.currentMarker === 0) {
-				self.calImgUrl(self.staticURL);
+				self.picType("");
+//				self.calImgUrl(self.staticURL);
 				$('#calibration_box').removeClass('up').removeClass('down');
 			}
 		};
@@ -225,6 +248,17 @@ $(function () {
 		self.onDataUpdaterPluginMessage = function (plugin, data) {
 			if (plugin !== "mrbeam" || !data)
 				return;
+			if('mrb_state' in data){
+				self.interlocks_closed(data['mrb_state']['interlocks_closed']);
+//				self.fan_connected(data['fan_connected']);
+				self.lid_fully_open(data['mrb_state']['lid_fully_open']);
+//				self.machine_state(data['state']);
+//				self.pause_mode(data['pause_mode']);
+//				self.file_lines_total(data['file_lines_total']);
+//				self.file_lines_read(data['file_lines_read']);
+//				console.log(data);
+			}
+			
 			if ('beam_cam_new_image' in data) {
 				// update markers
 			    var markers = data['beam_cam_new_image']['markers_found'];
@@ -237,10 +271,7 @@ $(function () {
                 // update image
                 if (data['beam_cam_new_image']['undistorted_saved']) {
 				    console.log("Update imgURL", data);
-//                    self.rawImgUrl('/downloads/files/local/cam/undistorted.jpg' + '?' + new Date().getTime());
-//                    self.undistortedImgUrl('/downloads/files/local/cam/undistorted.jpg' + '?' + new Date().getTime());
-//                    self.croppedImgUrl('/downloads/files/local/cam/undistorted.jpg' + '?' + new Date().getTime());
-                    self.calImgUrl('/downloads/files/local/cam/undistorted.jpg' + '?' + new Date().getTime());
+                    self.calImgUrl(self.camImgPath + '?' + new Date().getTime());
 
                     console.log("isInitialCalibration: " + self.isInitialCalibration());
                     if(self.isInitialCalibration()){
@@ -255,7 +286,6 @@ $(function () {
                     if(self.cal_img_ready()){
                         console.log("Saving Markers to Frontend for Calibration");
                         console.log(markers);
-                        self.markersFound(true);
 				        self.currentMarkersFound = markers;
                     }else{
                         console.log("Not all Markers found, waiting for better Pic, please check if markers are visible.")
@@ -401,13 +431,17 @@ $(function () {
 		};
 
 		self.reset_calibration = function(){
-			self.calImgUrl(self.staticURL);
+//			self.calImgUrl(self.staticURL);
+			self.picType("");
 			self.focusX(0);
 			self.focusY(0);
 			self.zoomIn(false)
 			self.currentMarker = 0;
 			self.currentMarkersFound = {};
-			self.markersFound(false);
+			self.foundNW = ko.observable(false);
+			self.foundSW = ko.observable(false);
+			self.foundSE = ko.observable(false);
+			self.foundNE = ko.observable(false);
 			if(self.isInitialCalibration()){
 				self.loadUndistortedPicture();
 			} else {
