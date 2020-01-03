@@ -44,6 +44,7 @@ $(function () {
         self.onStartup = function () {
             // TODO fetch machine profile on start
             //self.requestData();
+
             self.control.showZAxis = ko.computed(function () {
 //				var has = self.currentProfileData()['zAxis']();
 //				return has;
