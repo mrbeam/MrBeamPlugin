@@ -153,7 +153,7 @@
 					<div class="span9">
 						<div class="job_parameters">
 							<h4>{{ _('Skip') }}</h4>
-							<span>{{ _('Drag colors on this row to skip them.') }}</span>
+							<span>{{ _('Drag cut and engrave symbols on this row to skip them.') }}</span>
 						</div>
 					</div>
 				</div>
@@ -161,7 +161,8 @@
 				<div id="engrave_job" class="job_row row-fluid">
 					<div class="span3" style="display:flex;">
 						<div id="engrave_job_drop_zone_conversion_dialog" class="assigned_colors img_drop_zone color_drop_zone" ondragover="window.mrbeam.colorDragging.colorAllowDrop(event)" ondrop="window.mrbeam.colorDragging.colorDrop(event)">
-							<div id="cd_engraving" draggable="true" class="used_color" ondragstart="window.mrbeam.colorDragging.colorDragStart(event)" ondragend="window.mrbeam.colorDragging.colorDragEnd(event)" data-bind="visible: show_image_parameters"></div>
+							<div id="cd_engraving" draggable="true" class="used_color" data-toggle="tooltip" data-placement="right" title="Drag and drop this box in the Skip area if you want to skip the engraving."
+                                 ondragstart="window.mrbeam.colorDragging.colorDragStart(event)" ondragend="window.mrbeam.colorDragging.colorDragEnd(event)" data-bind="visible: show_image_parameters"></div>
 						</div>
 					</div>
 					<div class="span9">
@@ -382,7 +383,7 @@
 				<div id="additional_jobs"></div>
 				<div class="row-fluid" data-bind="visible: show_vector_parameters()">
 					<div class="assigned_colors color_drop_zone create_job" ondragover="window.mrbeam.colorDragging.colorAllowDrop(event)" ondrop="window.mrbeam.colorDragging.colorDropCreateJob(event)">
-						{{ _('+ Drag colors here for another job +') }}
+						{{ _('+ Drag cut symbols here for another job +') }}
 					</div>
 				</div>
 			</div>
