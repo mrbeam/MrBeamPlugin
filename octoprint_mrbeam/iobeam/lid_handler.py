@@ -357,6 +357,7 @@ class PhotoCreator(object):
 			if e.__class__.__name__.startswith('PiCamera'):
 				self._logger.error("PiCamera Error while capturing picture: %s: %s", e.__class__.__name__, e)
 				self.active = False
+				# TODO closing and reopening can be done "in software". We only should report this, if the camera fails constantly.
 				self._plugin.notify_frontend(
 					title=gettext("Camera Error"),
 					text=gettext("Please try the following:<br>- Close and reopen the lid<br>- Reboot the device and reload this page"),
