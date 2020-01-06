@@ -870,8 +870,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	#@firstrun_only_access
 	def takeUndistortedPictureForInitialCalibration(self):
 		self._logger.info("INITIAL_CALIBRATION TAKE PICTURE")
-		self.take_undistorted_picture(is_initial_calibration=True)
-		return NO_CONTENT
+		# return same as the Simple Api Call
+		return self.take_undistorted_picture(is_initial_calibration=True)
 
 
 	@octoprint.plugin.BlueprintPlugin.route("/send_calibration_markers", methods=["POST"])

@@ -15,7 +15,7 @@ $(function () {
 		self.undistortedUrl = '/downloads/files/local/cam/undistorted.jpg';
 		self.croppedUrl = '/downloads/files/local/cam/beam-cam.jpg';
 		self.camImgPath = self.staticURL;
-		
+
 		self.dbNWImgUrl = ko.observable("");
 		self.dbNEImgUrl = ko.observable("");
 		self.dbSWImgUrl = ko.observable("");
@@ -31,8 +31,8 @@ $(function () {
 		self.focusX = ko.observable(0);
 		self.focusY = ko.observable(0);
 		self.picType = ko.observable(""); // raw, lens_correction, cropped
-		self.picType.subscribe(function(val){
-			switch(val){
+		self.picType.subscribe(function (val) {
+			switch (val) {
 				case 'cropped':
 					self.camImgPath = self.croppedUrl;
 					break;
@@ -49,7 +49,7 @@ $(function () {
 		});
 		// todo get ImgUrl from Backend/Have it hardcoded but right
 		self.calImgUrl = ko.observable(self.staticURL);
-		
+
 		self.calImgWidth = ko.observable(2048);
 		self.calImgHeight = ko.observable(1536);
 		self.calSvgOffX = ko.observable(0);
@@ -75,8 +75,9 @@ $(function () {
 		self.foundSE = ko.observable(false);
 		self.foundNE = ko.observable(false);
 
-        self.cal_img_ready = ko.computed(function(){
-            return self.foundNE() && self.foundNW() && self.foundSE() && self.foundSW()
+		self.cal_img_ready = ko.computed(function () {
+//			console.log("cal_img_ready: ", self.foundNE() , self.foundNW() , self.foundSE() , self.foundSW());
+			return self.foundNE() && self.foundNW() && self.foundSE() && self.foundSW();
 		});
 
 		self.__format_point = function(p){
@@ -84,7 +85,7 @@ $(function () {
 			else return p.x+','+p.y;
 		};
 
-		
+
 		self.calSvgViewBox = ko.computed(function () {
 			var zoom = self.zoomIn() ? self.calSvgScale() : 1;
 			var w = self.calImgWidth() / zoom;
@@ -125,7 +126,7 @@ $(function () {
 
 
 		self.startCalibration = function () {
-		    self.analytics.send_fontend_event('calibration_start', {});
+			self.analytics.send_fontend_event('calibration_start', {});
 			self.currentResults({});
 			self.calibrationActive(true);
 			self.picType("lens_correction");
@@ -207,29 +208,30 @@ $(function () {
 		};
 
 		self.loadUndistortedPicture = function (callback) {
-			var success_callback = function(resp){
-				if(typeof callback === 'function') callback(resp);
-				else console.log("Calibration picture requested.");
-			};
-			var error_callback = function (resp) {
-				var notifyType;
-				var notifyTitle;
-				if (resp.status === 200) {  // should never be 200 when failing ?? TODO
-					notifyType = 'success';
-					notifyTitle = gettext("Success");
-				} else {
-					notifyType = 'warning';
-					notifyTitle = gettext("Error");
-				}
+			var success_callback = function (data) {
 				new PNotify({
-					title: notifyTitle,
-					text: resp.responseText,
-					type: notifyType,
+					title: gettext("Picture requested"),
+					text: data['msg'],
+					type: 'info',
 					hide: true
 				});
-				if(typeof callback === 'function') callback(resp);
+				if (typeof callback === 'function')
+					callback(data);
+				else
+					console.log("Calibration picture requested.");
+			};
+			var error_callback = function (resp) {
+				new PNotify({
+					title: gettext("Something went wrong. It's not you, its us."),
+					text: resp.responseText,
+					type: 'warning',
+					hide: true
+				});
+				if (typeof callback === 'function')
+					callback(resp);
 			};
 			if (self.isInitialCalibration()) {
+				// only accessible during initial calibration
 				$.ajax({
 					type: "GET",
 					url: '/plugin/mrbeam/take_undistorted_picture',
@@ -238,9 +240,10 @@ $(function () {
 					error: error_callback
 				});
 			} else {
+				// requires user to be logged in
 				OctoPrint.simpleApiCommand("mrbeam", "take_undistorted_picture", {})
-					.done(success_callback)
-					.fail(error_callback);
+						.done(success_callback)
+						.fail(error_callback);
 			}
 		};
 
@@ -249,6 +252,7 @@ $(function () {
 			if (plugin !== "mrbeam" || !data)
 				return;
 			if('mrb_state' in data){
+//				console.log('machine state', data['mrb_state']);
 				self.interlocks_closed(data['mrb_state']['interlocks_closed']);
 //				self.fan_connected(data['fan_connected']);
 				self.lid_fully_open(data['mrb_state']['lid_fully_open']);
@@ -258,38 +262,38 @@ $(function () {
 //				self.file_lines_read(data['file_lines_read']);
 //				console.log(data);
 			}
-			
+
 			if ('beam_cam_new_image' in data) {
+				//console.log('New Image [NW,NE,SW,SE]:', data['beam_cam_new_image']);
 				// update markers
-			    var markers = data['beam_cam_new_image']['markers_found'];
-                self.foundNW(markers['NW'] && markers['NW'].recognized);
-                self.foundNE(markers['NE'] && markers['NE'].recognized);
-                self.foundSW(markers['SW'] && markers['SW'].recognized);
-                self.foundSE(markers['SE'] && markers['SE'].recognized);
+				var markers = data['beam_cam_new_image']['markers_found'];
+				if(!self.calibrationActive()){
+					self.foundNW(markers['NW'] && markers['NW'].recognized);
+					self.foundNE(markers['NE'] && markers['NE'].recognized);
+					self.foundSW(markers['SW'] && markers['SW'].recognized);
+					self.foundSE(markers['SE'] && markers['SE'].recognized);
+					self.foundNW.notifySubscribers(); // somehow doesn't trigger automatically
+				}
+				// update image
+				if (data['beam_cam_new_image']['undistorted_saved']) {
+					self.calImgUrl(self.camImgPath + '?' + new Date().getTime());
 
+					if (self.isInitialCalibration()) {
+						self.dbNWImgUrl('/downloads/files/local/cam/beam-cam-tmp2_debug_NW.jpg' + '?' + new Date().getTime());
+						self.dbNEImgUrl('/downloads/files/local/cam/beam-cam-tmp2_debug_NE.jpg' + '?' + new Date().getTime());
+						self.dbSWImgUrl('/downloads/files/local/cam/beam-cam-tmp2_debug_SW.jpg' + '?' + new Date().getTime());
+						self.dbSEImgUrl('/downloads/files/local/cam/beam-cam-tmp2_debug_SE.jpg' + '?' + new Date().getTime());
 
-                // update image
-                if (data['beam_cam_new_image']['undistorted_saved']) {
-				    console.log("Update imgURL", data);
-                    self.calImgUrl(self.camImgPath + '?' + new Date().getTime());
+					}
 
-                    console.log("isInitialCalibration: " + self.isInitialCalibration());
-                    if(self.isInitialCalibration()){
-                        self.dbNWImgUrl('/downloads/files/local/cam/beam-cam-tmp2_debug_NW.jpg' + '?' + new Date().getTime());
-                        self.dbNEImgUrl('/downloads/files/local/cam/beam-cam-tmp2_debug_NE.jpg' + '?' + new Date().getTime());
-                        self.dbSWImgUrl('/downloads/files/local/cam/beam-cam-tmp2_debug_SW.jpg' + '?' + new Date().getTime());
-                        self.dbSEImgUrl('/downloads/files/local/cam/beam-cam-tmp2_debug_SE.jpg' + '?' + new Date().getTime());
-
-                    }
-
-                    // check if all markers are found and image is good for calibration
-                    if(self.cal_img_ready()){
-                        console.log("Saving Markers to Frontend for Calibration");
-                        console.log(markers);
-				        self.currentMarkersFound = markers;
-                    }else{
-                        console.log("Not all Markers found, waiting for better Pic, please check if markers are visible.")
-                    }
+					// check if all markers are found and image is good for calibration
+					if (self.cal_img_ready()) {
+						console.log("Remembering markers for Calibration", markers);
+						self.currentMarkersFound = markers;
+					} else {
+						console.log("Not all Markers found, fetching new Picture.")
+						self.loadUndistortedPicture();
+					}
 				}
 			}
 		};
@@ -320,44 +324,44 @@ $(function () {
 						]
 					};
 					//clear workingArea from previous designs
-                    self.workingArea.clear();
+					self.workingArea.clear();
 					// put it on the working area
-					self.workingArea.placeSVG(fileObj, function(){
+					self.workingArea.placeSVG(fileObj, function () {
 						// start conversion
 						self.conversion.show_conversion_dialog();
 					});
 				},
 				error: function (jqXHR, textStatus, errorThrown) {
-				    new PNotify({
-                        title: gettext("Error"),
-                        text: _.sprintf(gettext("Calibration failed.<br><br>Error:<br/>%(code)s %(status)s - %(errorThrown)s"), {code: jqXHR.status, status: textStatus, errorThrown: errorThrown}),
-                        type: "error",
-                        hide: false
-				    })
+					new PNotify({
+						title: gettext("Error"),
+						text: _.sprintf(gettext("Calibration failed.<br><br>Error:<br/>%(code)s %(status)s - %(errorThrown)s"), {code: jqXHR.status, status: textStatus, errorThrown: errorThrown}),
+						type: "error",
+						hide: false
+					})
 				}
 			});
 		};
-		
-		self.engrave_markers_without_gui = function(){
+
+		self.engrave_markers_without_gui = function () {
 			var intensity = $('#initialcalibration_intensity').val()
 			var feedrate = $('#initialcalibration_feedrate').val()
-			var url = "/plugin/mrbeam/engrave_calibration_markers/"+intensity+"/"+feedrate
+			var url = "/plugin/mrbeam/engrave_calibration_markers/" + intensity + "/" + feedrate
 			$.ajax({
 				type: "GET",
 				url: url,
 				data: {},
 				success: function (data) {
 					console.log("Success", url, data);
-					
+
 				},
 				error: function (jqXHR, textStatus, errorThrown) {
-				    new PNotify({
-                        title: gettext("Error"),
-                        text: _.sprintf(gettext("Marker engraving failed: <br>%(errmsg)s<br>Error:<br/>%(code)s %(status)s - %(errorThrown)s"), 
-						{errmsg: jqXHR.responseText, code: jqXHR.status, status: textStatus, errorThrown: errorThrown}),
-                        type: "error",
-                        hide: false
-				    })
+					new PNotify({
+						title: gettext("Error"),
+						text: _.sprintf(gettext("Marker engraving failed: <br>%(errmsg)s<br>Error:<br/>%(code)s %(status)s - %(errorThrown)s"),
+								{errmsg: jqXHR.responseText, code: jqXHR.status, status: textStatus, errorThrown: errorThrown}),
+						type: "error",
+						hide: false
+					})
 				}
 			});
 		};
@@ -391,8 +395,8 @@ $(function () {
 				});
 			} else {
 				OctoPrint.simpleApiCommand("mrbeam", "camera_calibration_markers", data)
-					.done(self.saveMarkersSuccess)
-					.fail(self.saveMarkersError);
+						.done(self.saveMarkersSuccess)
+						.fail(self.saveMarkersError);
 			}
 		};
 
@@ -418,7 +422,7 @@ $(function () {
 			});
 			self.reset_calibration();
 		};
-		
+
 		self.abortCalibration = function () {
 			self.calibrationActive(false);
 			new PNotify({
@@ -430,27 +434,27 @@ $(function () {
 			self.reset_calibration();
 		};
 
-		self.reset_calibration = function(){
-//			self.calImgUrl(self.staticURL);
+		self.reset_calibration = function () {
 			self.picType("");
 			self.focusX(0);
 			self.focusY(0);
 			self.zoomIn(false)
 			self.currentMarker = 0;
 			self.currentMarkersFound = {};
-			self.foundNW = ko.observable(false);
-			self.foundSW = ko.observable(false);
-			self.foundSE = ko.observable(false);
-			self.foundNE = ko.observable(false);
-			if(self.isInitialCalibration()){
+			self.currentResults({});
+			self.foundNW(false);
+			self.foundSW(false);
+			self.foundSE(false);
+			self.foundNE(false);
+			if (self.isInitialCalibration()) {
 				self.loadUndistortedPicture();
 			} else {
 				self.goto('#calibration_step_1');
 			}
-			$('.calibration_click_indicator').attr({cx:-100, cy:-100});
+			$('.calibration_click_indicator').attr({cx: -100, cy: -100});
 		};
 
-		self.continue_to_calibration = function(){
+		self.continue_to_calibration = function () {
 			self.loadUndistortedPicture(self.next);
 		};
 
@@ -469,7 +473,7 @@ $(function () {
 
 		self.goto = function (target_id) {
 			var el = $(target_id);
-			if(el){
+			if (el) {
 				$('.calibration_step.active').removeClass('active');
 				$(target_id).addClass('active');
 			} else {

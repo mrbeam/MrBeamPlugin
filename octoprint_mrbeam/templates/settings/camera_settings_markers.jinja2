@@ -13,13 +13,15 @@
 		<circle id="click_NE" r="4" cx="-100" cy="-100" class="calibration_click_indicator" />
 	</svg>
 	<div>
-		<a class="accordion-toggle" data-bind="click:loadUndistortedPicture"><i class="icon-repeat"></i> {{ _('refresh') }}</a>
-		<div class="marker_selection_desc calibration_waiting_for_picture" >
-			<div class="marker_found_indicator" data-bind="css: { active: foundNW() }"><i class="icon-ok"></i> NW</div>
-			<div class="marker_found_indicator" data-bind="css: { active: foundSW() }"><i class="icon-ok"></i> SW</div>
-			<div class="marker_found_indicator" data-bind="css: { active: foundSE() }"><i class="icon-ok"></i> SE</div>
-			<div class="marker_found_indicator" data-bind="css: { active: foundNE() }"><i class="icon-ok"></i> NE</div>
-			<div class="marker_found_indicator" data-bind="visible: !cal_img_ready()"><i class="icon-spinner icon-spin"></i> {{ _('searching markers') }}</div>
+		<div>
+			<a class="accordion-toggle" data-bind="click:loadUndistortedPicture"><i class="icon-repeat"></i> {{ _('refresh') }}</a>
+			<div class="marker_selection_desc calibration_waiting_for_picture" >
+				<div class="marker_found_indicator" data-bind="css: { active: foundNW }"><i class="icon-ok"></i> NW</div>
+				<div class="marker_found_indicator" data-bind="css: { active: foundSW }"><i class="icon-ok"></i> SW</div>
+				<div class="marker_found_indicator" data-bind="css: { active: foundSE }"><i class="icon-ok"></i> SE</div>
+				<div class="marker_found_indicator" data-bind="css: { active: foundNE }"><i class="icon-ok"></i> NE</div>
+				<div class="marker_found_indicator" data-bind="visible: !cal_img_ready()"><i class="icon-spinner icon-spin"></i> {{ _('detecting') }}</div>
+			</div>
 		</div>
 		<div class="marker_selection_desc calibration_help" data-bind="visible: cal_img_ready() && !calibrationActive()">
 			<div>{{_('Click on the arrow head of the marker in the magnified picture.') }}<br/>

@@ -51,7 +51,7 @@ $(function(){
                 if(mf['NW'] !== undefined){
                     const pixels = '['+mf['NW']['pixels']+','+mf['NE']['pixels']+','+mf['SW']['pixels']+','+mf['SE']['pixels']+']';
                     const circles = '['+mf['NW']['r']+','+mf['NE']['r']+','+mf['SW']['r']+','+mf['SE']['r']+']';
-                    console.log('New Image [NW,NE,SW,SE]: Pix '+pixels+' Rad '+circles,data['beam_cam_new_image']);
+                    // console.log('New Image [NW,NE,SW,SE]: Pix '+pixels+' Rad '+circles,data['beam_cam_new_image']);
                 }
 				if(!data['beam_cam_new_image']['successful_correction']){
 					['NW', 'NE', 'SE', 'SW'].forEach(function(m) {
