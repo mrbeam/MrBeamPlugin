@@ -408,7 +408,7 @@ $(function () {
 		};
 
         self._processWPosData = function (data) {
-            if (data === undefined || data === null) {
+            if (data === undefined || data === null || data[0] === null || data[1] === null || isNaN(data[0]) || isNaN(data[1])) {
                 self.state.currentPos({x: 0, y: 0});
             } else {
                 self.state.currentPos({x: data[0], y: data[1]});
