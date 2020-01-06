@@ -215,7 +215,7 @@ $(function(){
 
 				new_material = {
 				name: name,
-					img: 'custom.jpg',
+					img: 'custommaterial.png',
 					description: gettext("Custom material settings"),
 					hints: gettext("Figuring out material settings works best from low to high intensity and fast to slow movement."),
 					safety_notes: gettext("Experimenting with custom material settings is at your own risk."),
@@ -1189,7 +1189,7 @@ $(function(){
 //		    let showFocusReminder = !self.dontRemindMeAgainChecked();
 //			self.settings.settings.plugins.mrbeam.focusReminder(showFocusReminder);
 //			self.settings.saveall(); // fails on getOnlyChangedData
-			
+
 		    let focusReminder = !self.dontRemindMeAgainChecked();
             let data = {focusReminder: focusReminder};
             OctoPrint.simpleApiCommand("mrbeam", "focus_reminder", data)
@@ -1214,10 +1214,10 @@ $(function(){
 		        self.sendFocusReminderChoiceToServer();
             }
         };
-		
+
 		self.move_laser_over_material = function() {
 			let x,y;
-			
+
 			// assumption: center of placed designs is over the material
 			let bb = snap.select('#userContent').getBBox(); // first try svgs, images, qt, qs
 			if(bb.w === 0){ // then try gcodes
@@ -1231,7 +1231,7 @@ $(function(){
 				x = self.workingArea.workingAreaWidthMM() / 2;
 				y = self.workingArea.workingAreaHeightMM() / 2;
 			}
-			
+
 			self.workingArea.move_laser_to_xy(x,y);
 		};
 
