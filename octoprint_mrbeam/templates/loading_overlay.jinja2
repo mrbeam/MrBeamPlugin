@@ -60,13 +60,18 @@
 			animation-iteration-count: infinite;
             opacity: 0.1;
         }
-		body.ready .loading_overlay_pulsate3 { animation:none; }
-		
+
+		body.run_loading_overlay_animation .loading_overlay_pulsate3 {
+            animation:none;
+            opacity: 1.0;
+        }
+
         .loading_overlay_footer {
             position: fixed;
             bottom: 5px;
             right: 20px
         }
+
         .loading_overlay_footer_text {
             margin: 0 0 0 30px;
             float: right;
@@ -80,21 +85,23 @@
             50% { opacity: 1.0; }
             100% { opacity: 0.5; }
         }
-		
+
 		#face {
 			transform: translateX(127px);
 			animation-iteration-count: 1;
 			animation-fill-mode: forwards;
 			animation-timing-function: ease-out;
 		}
-		
-		body.ready #face {animation-name: face_left; }
-		
+
+		body.run_loading_overlay_animation #face {
+            animation-name: face_left;
+        }
+
 		@keyframes face_left {
 			0% { transform: translateX(127px) }
 			100% { transform: translateX(0px) }
 		}
-		
+
 		#sig_mr, #sig_be, #sig_am, #sig_small_star, #sig_big_star {
 			stroke-dasharray: 250;
 			stroke-dashoffset: 250;
@@ -109,22 +116,43 @@
 			stroke-miterlimit: 4;
 			stroke-opacity: 1;
 		}
-		
-		body.ready #sig_mr, body.ready #sig_be, body.ready #sig_am, body.ready #sig_small_star, body.ready #sig_big_star {
-			animation-name: write_path; 
+
+		body.run_loading_overlay_animation #sig_mr, body.run_loading_overlay_animation #sig_be, body.run_loading_overlay_animation #sig_am, body.run_loading_overlay_animation #sig_small_star, body.run_loading_overlay_animation #sig_big_star {
+			animation-name: write_path;
 		}
-		
+
 		#face { animation-duration: 0.5s; animation-delay: 0s;  }
 		#sig_mr { animation-duration: 0.5s; animation-delay: 0.5s;  }
 		#sig_be { animation-duration: 0.6s; animation-delay: 1.0s;  }
 		#sig_am { animation-duration: 0.7s; animation-delay: 1.6s;  }
 		#sig_big_star { animation-duration: 0.5s; animation-delay: 2.1s;  }
 		#sig_small_star { animation-duration: 0.5s; animation-delay: 2.5s;  }
-		
+
 		@keyframes write_path {
 			0% { stroke-dashoffset: 250; }
 			100% { stroke-dashoffset: 75; }
 		}
+
+		#loading_icons {
+			color: #cbcbcb;
+			margin: 1em;
+		}
+		#loading_icons .icon {
+			margin: 0.3em;
+            font-size: 17px;
+			display: inline-block;
+		}
+
+		body.loading_step1 #loading_icons .icon:nth-child(1),
+		body.loading_step2 #loading_icons .icon:nth-child(2),
+		body.loading_step3 #loading_icons .icon:nth-child(3),
+		body.loading_step4 #loading_icons .icon:nth-child(4),
+		body.loading_step5 #loading_icons .icon:nth-child(5),
+		body.loading_step6 #loading_icons .icon:nth-child(6),
+		body.loading_step7 #loading_icons .icon:nth-child(7),
+		body.loading_step8 #loading_icons .icon:nth-child(8)
+		{ color: #e25303; }
+
     </style>
     <div class="loading_overlay_background"></div>
     <div class="loading_overlay_wrapper">
@@ -134,7 +162,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 1000 150" height="105" width="700">
 						<g transform="matrix(3.1003433,0,0,3.1003433,-642.75428,-1043.4841)">
 							<g id="face">
-								<path id="mustache" style="fill:#383e42;fill-opacity:1" 
+								<path id="mustache" style="fill:#383e42;fill-opacity:1"
 									  d="m 240.70457,371.80268 c 0.22923,1.31868 3.56716,1.92014 4.9857,3.03758 1.59558,1.25437 3.32507,2.23562 5.73167,2.80833 -0.43275,-0.491 -0.33213,-0.83145 -0.28673,-1.08868 4.29875,0.9177 6.13113,-1.08868 5.84591,-1.14618 -0.5364,0.16871 -0.74597,0.0719 -0.91695,0 0.74521,-0.57347 1.31792,-2.86584 1.08793,-5.27244 -1.03043,2.3491 -2.7516,2.63584 -4.06952,2.17661 -1.31792,-0.45772 -3.55203,-4.87071 -4.64147,-5.95939 0.50538,-0.053 1.11592,0.0772 1.43367,0.22923 -0.51597,-0.9177 -2.06388,-1.20444 -4.46973,-0.85945 0.28522,-0.40097 0.80119,-0.91694 2.06162,-1.26117 -4.35474,-0.23 -6.13114,3.15181 -7.16232,5.21494 h -0.12105 c -1.0327,-2.06313 -2.80834,-5.44418 -7.16383,-5.21494 1.26042,0.34423 1.77639,0.8602 2.06313,1.26117 -2.40736,-0.34499 -3.95604,-0.0583 -4.46974,0.85945 0.31624,-0.15207 0.9283,-0.28219 1.43216,-0.22923 -1.08868,1.08868 -3.32355,5.50092 -4.64147,5.95939 -1.31792,0.45923 -3.03833,0.17325 -4.06951,-2.17661 -0.22924,2.4066 0.34423,4.69897 1.08868,5.27244 -0.17098,0.0719 -0.3813,0.16871 -0.9177,0 -0.28674,0.0567 1.54791,2.06388 5.84591,1.14618 0.0477,0.25799 0.14753,0.59768 -0.28598,1.08868 2.4066,-0.57271 4.13685,-1.55396 5.73091,-2.80833 1.41855,-1.11744 4.69065,-1.68183 4.98571,-3.03758 0.32607,-0.35785 0.64685,-0.30791 0.923,0 z" />
 								<path id="glasses" style="fill:#383e42;fill-opacity:1"
 									  d="m 18.193359,17.716797 c -0.30716,0 -0.476562,0.234653 -0.476562,0.470703 v 1.972656 c 0,0.15055 0.085,0.43929 0.212891,0.50586 0.35029,0.18158 1.019943,0.531962 1.152343,0.601562 0.18006,0.0938 0.510035,0.615869 0.578125,0.886719 0.0681,0.27085 2.635864,10.438947 2.777344,10.998047 0.16568,0.65745 0.746101,1.189453 1.488281,1.189453 h 13.78125 c 0.85264,0 1.801383,-0.51996 2.226563,-1.287109 0.42594,-0.76941 4.636718,-8.375 4.636718,-8.375 h 1.445313 c 0,0 4.212732,7.606339 4.638672,8.375 0.42594,0.767909 1.371969,1.287109 2.224609,1.287109 h 13.785156 c 0.740671,0 1.322602,-0.532003 1.488282,-1.189453 0.14072,-0.55229 2.123379,-8.412133 2.755859,-10.914063 0.11953,-0.47663 0.479316,-0.909605 0.791016,-1.072265 0.19368,-0.10063 0.598986,-0.311022 0.878906,-0.457032 0.17098,-0.0885 0.294922,-0.27573 0.294922,-0.52539 v -2.041016 c -0.002,-0.19065 -0.188087,-0.425781 -0.529297,-0.425781 H 49.716797 c -0.62491,0 -1.580826,0.476577 -1.878906,0.835937 -0.29884,0.35936 -1.064453,1.388672 -1.064453,1.388672 h -2.958985 c 0,0 -0.766363,-1.029312 -1.064453,-1.388672 -0.29732,-0.36012 -1.253986,-0.835937 -1.878906,-0.835937 z M 51.5625,19.488281 h 15.283203 c 1.10079,7.6e-4 1.857161,0.892539 1.681641,1.980469 l -1.455078,8.970703 c -0.17704,1.08793 -1.222669,1.978516 -2.324219,1.978516 H 54.541016 c -1.1023,0 -2.20769,-0.878815 -2.455078,-1.953125 l -2.078126,-9.023438 c -0.24664,-1.07431 0.452388,-1.953125 1.554688,-1.953125 z m -27.423828,0.002 h 15.283203 c 1.10003,-7.5e-4 1.800134,0.878815 1.552734,1.953125 l -2.078125,9.023438 c -0.2474,1.07431 -1.352768,1.951172 -2.455078,1.951172 H 26.236328 c -1.1023,0 -2.149142,-0.890586 -2.326172,-1.978516 l -1.455078,-8.97075 c -0.17703,-1.08793 0.581294,-1.978516 1.683594,-1.978516 z"
@@ -154,6 +182,16 @@
 					</svg>
 
                     <p id="loading_overlay_message" class="loading_overlay_text loading_overlay_red loading_overlay_pulsate3" data-bind="text: display_state">{{ _('beamOS is starting...') }}</p>
+					<div id="loading_icons">
+                        <span class="icon">•</span>
+                        <span class="icon">•</span>
+                        <span class="icon">•</span>
+                        <span class="icon">•</span>
+                        <span class="icon">•</span>
+                        <span class="icon">•</span>
+                        <span class="icon">•</span>
+                        <span class="icon">•</span>
+					</div>
                 </div>
             </div>
         </div>

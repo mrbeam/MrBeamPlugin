@@ -323,7 +323,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			cam=dict(enabled=self._settings.get(['cam', 'enabled']),
 					 frontendUrl=self._settings.get(['cam', 'frontendUrl'])),
 			dev=dict(
-				env = self._settings.get(['dev', 'env']),
+				env = self.get_env(),
 				software_tier = self._settings.get(["dev", "software_tier"]),
 				software_tiers_available=software_channels_available(self),
 				terminalMaxLines = self._settings.get(['dev', 'terminalMaxLines'])),
@@ -1748,9 +1748,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		for name, config in configured_checks.iteritems():
 			if name == 'octoprint':
 				continue
-			if 'branch' in config and \
-					(('branch_default' in config and config['branch'] != config['branch_default'])
-					or (not 'branch_default' in config)):
+			if config.get('branch', None) != config.get('branch_default', None):
 				result[name] = config['branch']
 		return result
 
@@ -2014,13 +2012,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._logger.exception("Exception in _callback_boot_grace_period_thread()")
 
 	def is_prod_env(self, type=None):
-		return self.get_env(type).upper() == self.ENV_PROD
+		return self.get_env(type) == self.ENV_PROD
 
 	def is_dev_env(self, type=None):
-		return self.get_env(type).upper() == self.ENV_DEV
+		return self.get_env(type) == self.ENV_DEV
 
 	def get_env(self, type=None):
-		result = self._settings.get(["dev", "env"]).upper()
+		result = self._settings.get(["dev", "env"])
 		if type is not None:
 			if type == self.ENV_LASER_SAFETY:
 				type_env = self._settings.get(["dev", "cloud_env"]) # deprected flag
@@ -2028,6 +2026,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				type_env = self._settings.get(["dev", "env_overrides", type])
 			if type_env is not None:
 				result = type_env
+		if result is None:
+			result = self.ENV_PROD
+		result = result.upper()
 		return result
 
 	def get_beta_label(self):

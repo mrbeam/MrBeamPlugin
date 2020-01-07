@@ -24,7 +24,7 @@ class Migration(object):
 	VERSION_AVRDUDE_AUTORESET_SCRIPT         = '0.2.0'
 	VERSION_USERNAME_LOWCASE				 = '0.2.0'
 	VERSION_GRBL_AUTO_UPDATE                 = '0.2.1'
-	VERSION_MOUNT_MANAGER_163                = '0.2.4'
+	VERSION_MOUNT_MANAGER_164                = '0.5.3.2'
 
 	# this is where we have files needed for migrations
 	MIGRATE_FILES_FOLDER     = 'files/migrate/'
@@ -35,7 +35,7 @@ class Migration(object):
 	GRBL_AUTO_UPDATE_VERSION =  MachineCom.GRBL_DEFAULT_VERSION
 
 	# mount manager version
-	MOUNT_MANAGER_VERSION = StrictVersion("1.6.3")
+	MOUNT_MANAGER_VERSION = StrictVersion("1.6.4")
 
 
 	def __init__(self, plugin):
@@ -82,7 +82,7 @@ class Migration(object):
 				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_UPDATE_LOGROTATE_CONF, equal_ok=False):
 					self.update_logrotate_conf()
 
-				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_MOUNT_MANAGER_163, equal_ok=False):
+				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_MOUNT_MANAGER_164, equal_ok=False):
 					self.update_mount_manager()
 
 				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_GRBL_AUTO_UPDATE, equal_ok=False):

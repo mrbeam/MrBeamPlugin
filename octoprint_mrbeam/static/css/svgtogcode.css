@@ -675,7 +675,7 @@ li.material_entry span {
 #quick_shape_dialog form.form-horizontal {
     margin-bottom: 0;
 }
-#quick_shape_stroke_and_fill input[type=range] { 
+#quick_shape_stroke_and_fill input[type=range] {
 	width: 134px;
 }
 #quick_shape_stroke_and_fill input[type=color] {
@@ -748,18 +748,19 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	height: 45vh;
 }
 .marker_debug_image{
-    margin-right: 20px;
-    margin-bottom: 20px;
+	margin: 5px;
     border: 1px;
     border-style: solid;
     border-color: black;
     height: 15vh;
     position: fixed;
+	max-width: 26vw;
+    max-height: 50vh;
 }
 
 #debug_NW_img {
     top: 1vh;
-    left: 1vw;
+    left: 0vw;
 }
 #debug_NE_img {
     top: 1vh;
@@ -767,11 +768,11 @@ svg#area_preview.overModalBG { z-index: 1051; }
 }
 #debug_SW_img {
     bottom: 1vh;
-    left: 1vw;
+    left: 0vw;
 }
 #debug_SE_img {
     bottom: 1vh;
-    right: 1vw;
+    right: 0vw;
 }
 
 #calibration_picture_control button {
