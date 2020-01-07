@@ -444,6 +444,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/maintenance.js",
 				# "js/review.js",  TODO IRATXE: disabled for now
 				"js/util.js",
+				"js/design_store.js",
 			    ],
 			css=["css/mrbeam.css",
 			     "css/svgtogcode.css",
