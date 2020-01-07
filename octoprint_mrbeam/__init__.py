@@ -1666,9 +1666,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		for name, config in configured_checks.iteritems():
 			if name == 'octoprint':
 				continue
-			if 'branch' in config and \
-					(('branch_default' in config and config['branch'] != config['branch_default'])
-					or (not 'branch_default' in config)):
+			if config.get('branch', None) != config.get('branch_default', None):
 				result[name] = config['branch']
 		return result
 
