@@ -376,7 +376,7 @@ h4.job_title{
 .color_drop_zone {
 	min-height: 50px;
 	width: 100%;
-	border: 2px dashed transparent;
+	border: 1.5px dashed transparent;
 }
 
 /* state machine. either img or vector color drop zone highlightning*/
@@ -385,7 +385,7 @@ body.colorDragInProgress #engrave_job .img_drop_zone.hover,
 body.vectorDrag .job_row_vector .color_drop_zone.hover,
 body.vectorDrag .color_drop_zone.create_job.hover {
     font-weight: 700;
-	border-color: rgba(0,0,0,0.33);
+	border-color: #e25303;
 	transition: border-color ease-in 0.5s;
 }
 
@@ -706,8 +706,9 @@ svg#area_preview.overModalBG { z-index: 1051; }
 }
 
 .marker_selection_desc {
-	margin-top: 1em;
-	margin-bottom: 2em;
+	margin-top: 0em;
+	margin-bottom: 1em;
+	display:inline-block;
 }
 
 .cal-arrow{
@@ -722,8 +723,8 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	background-position: center;
 }
 
-.cal-row { display: none; font-size: 1.5rem; }
-.cal-row.active { display: block; }
+.cal-row { color: #DDD; font-size: 1.2rem; padding: 0.1em; }
+.cal-row.active { color: #383e42; }
 .complete .cal-row { display: block !important; font-size: 1rem;}
 
 #NE .cal-arrow { transform: scale(-1,1); }
@@ -743,33 +744,55 @@ svg#area_preview.overModalBG { z-index: 1051; }
 }
 .marker_found_indicator.active { color: #000; }
 
+.marker_debug_image:hover{
+	height: 45vh;
+}
 .marker_debug_image{
 	margin: 5px;
     border: 1px;
     border-style: solid;
     border-color: black;
+    height: 15vh;
+    position: fixed;
 	max-width: 26vw;
     max-height: 50vh;
 }
 
 #debug_NW_img {
-    position: fixed;
     top: 1vh;
     left: 0vw;
 }
 #debug_NE_img {
-    position: fixed;
     top: 1vh;
     right: 1vw;
 }
 #debug_SW_img {
-    position: fixed;
     bottom: 1vh;
     left: 0vw;
 }
 #debug_SE_img {
-    position: fixed;
     bottom: 1vh;
     right: 0vw;
 }
 
+#calibration_picture_control button {
+	width:2em;
+	height: 2em;
+}
+
+#reengrave_markers div {
+	padding: 0em 0em 0em 1em;
+	border: 1px solid #d34843;
+	overflow: hidden;
+	margin-top: 1em;
+	box-sizing: border-box;
+}
+
+#reengrave_markers input {
+	width: 3em;
+	height: 0.75em;
+	margin-bottom: 0;
+	border-radius: 0.75em;
+	background-color: #eee;
+	margin-right: 0.3em;
+}

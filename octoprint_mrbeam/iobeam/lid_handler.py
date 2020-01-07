@@ -167,15 +167,16 @@ class LidHandler(object):
 			self._end_photo_worker()
 
 	def take_undistorted_picture(self,is_initial_calibration=False):
-		from flask import make_response
+		from flask import make_response, jsonify
 		if self._photo_creator is not None:
 			if is_initial_calibration:
 				self._photo_creator.is_initial_calibration = True
 			else:
 				self._photo_creator.set_undistorted_path()
 			self._startStopCamera("take_undistorted_picture_request")
-			# todo make_response, so that it will be accepted in the .done() method in frontend
-			return make_response(gettext("Please make sure the lid of your Mr Beam II is open and wait a little..."), 200)
+
+			resp_text = {'msg': gettext("Please make sure the lid of your Mr Beam II is open and wait a little...")}
+			return make_response(jsonify(resp_text), 200)
 		else:
 			return make_response('Error, no photocreator active, maybe you are developing and dont have a cam?', 503)
 
