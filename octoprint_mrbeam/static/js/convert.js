@@ -1197,15 +1197,26 @@ $(function(){
                     self.settings.requestData();
                     console.log("simpleApiCall response for saving focus reminder state: ", response);
                 })
-                .fail(function () {
-                    self.settings.requestData();
-                    console.error("Unable to save focus reminder state: ", data);
-                    new PNotify({
-                        title: gettext("Error while saving settings!"),
-                        text: _.sprintf(gettext("Unable to save your focus reminder state at the moment.%(br)sCheck connection to Mr Beam II and try again."), {br: "<br/>"}),
-                        type: "error",
-                        hide: true
-                    });
+                .fail(function (jqXHR, textStatus, errorThrown) {
+                    if (jqXHR.status == 401) {
+                        self.loginState.logout();
+                        new PNotify({
+                            title: gettext("Session expired"),
+                            text: gettext("Please login again to continue."),
+                            type: "warn",
+                            tag: "conversion_error",
+                            hide: false
+                        });
+                    } else {
+                        self.settings.requestData();
+                        console.error("Unable to save focus reminder state: ", data);
+                        new PNotify({
+                            title: gettext("Error while saving settings!"),
+                            text: _.sprintf(gettext("Unable to save your focus reminder state at the moment.%(br)sCheck connection to Mr Beam II and try again."), {br: "<br/>"}),
+                            type: "error",
+                            hide: true
+                        });
+                    }
                 });
         };
 
