@@ -1,18 +1,18 @@
+import io
 import math
 from fractions import Fraction
 import cv2, logging
 import numpy as np
 from numpy.linalg import norm
 from itertools import chain
-try:
-    import octoprint_mrbeam.util.mrbcamera
-    from mrbcamera import MrbCamera
-    PICAMERA_AVAILABLE = True
-except Exception as e:
-    from dummycamera import DummyCamera as MrbCamera
-    PICAMERA_AVAILABLE = False
-    logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler").warn(
-            "Could not import module 'picamera'. Disabling camera integration. (%s: %s)", e.__class__.__name__, e)
+# try:
+from octoprint_mrbeam.util.camera.mrbcamera import MrbCamera, BRIGHTNESS_TOLERANCE
+PICAMERA_AVAILABLE = True
+# except Exception as e:
+#     from dummycamera import DummyCamera as MrbCamera
+#     PICAMERA_AVAILABLE = False
+#     logging.getLogger("octoprint.plugins.mrbeam.util.camera").error(
+#             "Could not import module 'mrbcamera'. Disabling camera integration. (%s: %s)", e.__class__.__name__, e)
 
 
 RESOLUTIONS = {
@@ -34,7 +34,6 @@ RATIO_W, RATIO_H = Fraction(1, 8), Fraction(1, 4)
 # Padding distance from the edges of the image (The markers are never pressed against the border)
 OFFSET_W, OFFSET_H = Fraction(1, 32), Fraction(1, 10)
 
-BRIGHTNESS_TOLERANCE = 80
 DIFF_TOLERANCE = 400
 
 MrbCamera = MrbCamera # Makes it importable
@@ -60,26 +59,35 @@ def goodBrightness(img, targetAvg=128, tolerance=BRIGHTNESS_TOLERANCE):
 class MrbPicWorker(object):
     def __init__(self, maxSize=3):
         self.images = []
+        self.firstImg = True
+        self.buffers = [io.BytesIO() for _ in range(maxSize)]
+        self.bufferIndex = 0
+        self.latest = None
         self.good_corner_bright = []
         assert(maxSize > 0)
         self._maxSize = maxSize
         self.times = []  # exposure time values
         self.detectedBrightness = []
+        self._logger = logging.getLogger("octoprint.plugins.mrbeam.util.camera.MrbPicWorker")
 
     def write(self, buf): # (self, buf: bytearray):
-        if buf.startswith(b'\xff\xd8'):
+        # try:
+        if buf.startswith(b'\xff\xd8') and not self.firstImg:
             # New frame; set the current processor going and grab
             # a spare one
-            nparr = np.frombuffer(buf, np.int8)
-            img_np = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-            self.images.append(img_np)
-            if len(self.images) > self._maxSize:
-                del self.images[0]
+            self.currentBuf().seek(0)
+            self.latest = cv2.imdecode(np.fromstring(self.currentBuf().getvalue(), np.int8),
+                                       cv2.IMREAD_COLOR)
+            self.bufferIndex = (self.bufferIndex + 1) % self._maxSize
+            self.currentBuf().seek(0)
+            self.currentBuf().truncate()
+            # TODO start thread alongside for the light processing ?
+            if len(self.good_corner_bright) > self._maxSize:
                 del self.good_corner_bright[0]
                 del self.detectedBrightness[0]
             rois = {}
             goodRois = []
-            for roi, _, pole in getRois(img_np):
+            for roi, _, pole in getRois(self.latest):
                 bright = goodBrightness(roi)
                 rois.update({pole: bright})
                 if bright == 0:
@@ -88,6 +96,16 @@ class MrbPicWorker(object):
             self.detectedBrightness.append(rois)
             # TODO auto-adjust camera shutter_speed from here
             # print("images stored : ", len(self.images))
+
+        # except Exception as e:
+        #     self._logger.error("%s, %s", e.__class__.__name__, e)
+        # Add the buffer to the currently selected buffer
+
+        self.currentBuf().write(buf)
+        self.firstImg = False
+
+    def currentBuf(self):
+        return self.buffers[self.bufferIndex]
 
     def flush(self):
         return
@@ -120,7 +138,7 @@ class MrbPicWorker(object):
 
     def saveImg(self, path, n=1):
         """Saves the last image or the n-th last image"""
-        cv2.imwrite(path, self.images[-n])
+        cv2.imwrite(path, self.latest)
 
 
 def getRois(img, ratioW=RATIO_W, ratioH=RATIO_H,  offsetW=OFFSET_W, offsetH=OFFSET_H): #(img: np.ndarray, ratioW: int=RATIO_W, ratioH: int=RATIO_H,):
@@ -137,12 +155,13 @@ def _roiSlice(img, pole, ratioW=RATIO_W, ratioH=RATIO_H,  offsetW=OFFSET_W, offs
     # _slice = _roiSlice(img, pole)
     # roi = img[_slice]
     h, w = img.shape[:2]
-    h2, w2 =  h // ratioH, w // ratioW
+    h2, w2 =  int(h * ratioH), int(w * ratioW)
+    oh, ow = int(offsetH * h), int(offsetW * w)
     borders = {
-            N: slice(offsetH, h2 + offsetH),
-            S: slice(h - h2 - offsetH, h - offsetH),
-            W: slice(offsetW, w2 + offsetW),
-            E: slice(w - w2 - offsetW, w - offsetW),
+            N: slice(oh, h2 + oh),
+            S: slice(h - h2 - oh, h - oh),
+            W: slice(ow, w2 + ow),
+            E: slice(w - w2 - ow, w - ow),
     }
     _vert, _horiz = pole # assumes the poles are written NW = 'NW' etc...
     return borders[_vert], borders[_horiz]
@@ -161,6 +180,10 @@ def mse(imageA, imageB):
 def diff(imageA, imageB, tolerance=DIFF_TOLERANCE):
     """The number of pixels that have a higher square difference than the threshold"""
     # NOTE: the two images must have the same dimension
+    if imageA.shape[0] > imageB.shape[0]:
+        imageA = cv2.resize(imageA, imageB.shape[:2][::-1])
+    if imageB.shape[0] > imageA.shape[0]:
+        imageB = cv2.resize(imageB, imageA.shape[:2][::-1])
     err = (imageA.astype("int16") - imageB.astype("int16")) ** 2
     err[err < tolerance] = 0
     return np.count_nonzero(err)

@@ -21,7 +21,7 @@ try:
     PICAMERA_AVAILABLE = True
 except ImportError as e:
     PICAMERA_AVAILABLE = False
-    logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler").warn(
+    logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler").error(
         "Could not import module 'mb_picture_preparation'. Disabling camera integration. (%s: %s)", e.__class__.__name__, e)
 
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
@@ -191,7 +191,7 @@ class LidHandler(object):
 
     def _end_photo_worker(self):
         if self._photo_creator:
-            self._photo_creator.active.unset()
+            self._photo_creator.stop()
             self._photo_creator.save_debug_images = False
             self._photo_creator.undistorted_pic_path = None
 
@@ -211,7 +211,7 @@ class PhotoCreator(object):
         self.badQualityPicCount = 0
         self.is_initial_calibration = False
         self.undistorted_pic_path = None
-        self.save_debug_images = self._settings.get(['cam', 'saveCorrectionDebugImages'])
+        self.save_debug_images = True # self._settings.get(['cam', 'saveCorrectionDebugImages'])
         self.camera = None
         self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator")
 
@@ -225,6 +225,9 @@ class PhotoCreator(object):
 
     def active(self):
         return not self.stopEvent.isSet()
+
+    def stop(self):
+        return self.stopEvent.set()
 
     def set_undistorted_path(self):
         self.undistorted_pic_path = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(['cam', 'localUndistImage'])
@@ -250,9 +253,13 @@ class PhotoCreator(object):
             self.stopEvent.set()
             return
 
-        self._logger.debug("Taking picture now.")
+        self._logger.debug("Starting the camera now.")
         try:
-            with MrbCamera(framerate=8, resolution=camera.DEFAULT_STILL_RES, stopEvent=self.stopEvent) as cam:
+            with MrbCamera(camera.MrbPicWorker(maxSize=2),
+                           framerate=8,
+                           resolution=camera.RESOLUTIONS['2000x1440'], #camera.DEFAULT_STILL_RES,
+                           stopEvent=self.stopEvent,
+                           image_correction=self.image_correction_enabled) as cam:
                 self.serve_pictures(cam, session_details)
         except Exception as e:
             if e.__class__.__name__.startswith('PiCamera'):
@@ -272,6 +279,7 @@ class PhotoCreator(object):
                                                                  path_to_pic_settings,
                                                                  size=camera.RESOLUTIONS['2000x1440'],
                                                                  quality=95,
+                                                                 debug_out=True, #self.save_debug_images,
                                                                  stopEvent=self.stopEvent),
                           'legacy': lambda: mb_pic.prepareImage(self.tmp_img_raw,
                                                                 self.tmp_img_prepared,
@@ -283,13 +291,15 @@ class PhotoCreator(object):
                                                                 quality=75,
                                                                 debug_out=self.save_debug_images,
                                                                 stopEvent=self.stopEvent, )}
+        self._logger.warning("debug state : %s", self.save_debug_images)
         try:
             if self.active():
                 # TODO if first run (after open lid) : preliminary brightness measurement
                 cam.start_preview()
-                time.sleep(1.5)
-                bestShutterSpeeds = cam.apply_best_shutter_speed()  # Usually only 1 value, but there could be more
+                time.sleep(2)
+                # bestShutterSpeeds = cam.apply_best_shutter_speed()  # Usually only 1 value, but there could be more
                 # TODO keep pic in RAM before saving it (no need to save if it is going to be modified or thrown out before serving)
+
                 cam.async_capture()  # starts capture to the cam.worker
             prev = None
             while self.active():
@@ -301,18 +311,21 @@ class PhotoCreator(object):
 
                 latest = cam.lastPic() # gets last picture given to cam.worker
                 cam.async_capture()  # starts capture with new settings
+                if latest is None:
+                    self._logger.warning("The last picture is empty :O")
+                    continue
                 # Compare previous image with the current one.
                 # Do not save the new img if too similar
-                prev = prev or cv2.imread(self.tmp_img_raw)
-                # TODO gauss blur Compare new and old raw img.
-                if diff(latest, prev) < 50:
-                    # Discard this picture
-                    continue
-                else:
-                    cv2.imwrite(self.tmp_img_raw, latest)
-                    # Write image to disk and continue
-                    del prev
-                    prev = None # free up RAM
+                # prev = prev or cv2.imread(self.tmp_img_raw)
+                # # TODO gauss blur Compare new and old raw img.
+                # if diff(latest, prev) < 50:
+                #     # Discard this picture
+                #     continue
+                # else:
+                #     cv2.imwrite(self.tmp_img_raw, latest)
+                #     # Write image to disk and continue
+                #     del prev
+                #     prev = None # free up RAM
 
                 if self.image_correction_enabled:
                     self._logger.debug("Starting with correction...")
@@ -326,11 +339,14 @@ class PhotoCreator(object):
                                          'corners_calculated': workspaceCorners,
                                          'successful_correction': workspaceCorners is not None}
                     self._logger.info("New image correction result: {}".format(correction_result))
-                    self._move_img(self.tmp_img_prepared, self.final_image_path)
                     # Send result to fronted ASAP
-                    self._send_frontend_picture_metadata(correction_result)
-                    self.badQualityPicCount = 0
+                    if workspaceCorners is not None:
+                        self._move_img(self.tmp_img_prepared, self.final_image_path)
+                        self._send_frontend_picture_metadata(correction_result)
+                        self.badQualityPicCount = 0
 
+                    # Write the img to disk for the 2nd algo
+                    cv2.imwrite(self.tmp_img_raw, latest)
                     # TODO launch other algo next on all the bad corners left from 1st algo
                     correction_result2 = detection_algo['legacy']()
 
@@ -344,7 +360,8 @@ class PhotoCreator(object):
                     # TODO tweak bestShutterSpeed if needed.
 
                     if success:
-                        self._move_img(self.tmp_img_prepared, self.final_image_path)
+                        if workspaceCorners is None:
+                            self._move_img(self.tmp_img_prepared, self.final_image_path)
                         self.badQualityPicCount = 0
                         # Use this picture
                     else:
@@ -365,7 +382,7 @@ class PhotoCreator(object):
                     if not correction_result['successful_correction']:
                         self._send_frontend_picture_metadata(correction_result2)
                     # TODO Iratxe tweak analytics
-                    self._save_session_details_for_analytics(session_details, correction_result)
+                    # self._save_session_details_for_analytics(session_details, correction_result)
             # TODO compare with new algo result if good enough
 
             self._analytics_handler.add_camera_session_details(session_details)
