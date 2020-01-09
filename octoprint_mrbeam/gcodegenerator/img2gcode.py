@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 """
 import optparse
 import logging
+import math
 from PIL import Image
 from PIL import ImageEnhance
 import base64
@@ -378,7 +379,11 @@ class ImageProcessor():
 		direction_positive = True
 		#self.is_first_pixel = True
 
-		self.profiler.stop('gc_before_img').start('write_img')
+		# sort imgArray
+		self.profiler.stop('gc_before_img').start('sort_imgArray')
+		imgArray = self._sortImgArray(imgArray);
+
+		self.profiler.stop('sort_imgArray').start('write_img')
 		# iterate through the image parts
 		for img_data in imgArray:
 			# img_data = {'i': px_data, 'x': offset_px_x, 'y':offset_px_y, 'id': id_str}
@@ -439,6 +444,31 @@ class ImageProcessor():
 		return self.profiler
 
 	# helper methods for gcode generation
+	def _sortImgArray(self, imgArray):
+		# pragmatic O(n^2) sorting
+		out = []
+		# We want the laserhead begins bottom left (ltr reading direction). So put this as starting point.
+		lastPos = (0, self.workingAreaHeight/self.beam) # untransformed px coordinates here: 0,0 is top left. 
+		while(len(imgArray) > 0):
+			dist = float('inf')
+			closest = None
+			for img in imgArray:
+				(w,h) = img['i'].size
+				start = (img['x'], img['y']+h)
+				dst = self._dist(start, lastPos)
+				if(dst < dist):
+					closest = img
+					dist = dst
+			
+			out.append(closest)
+			imgArray.remove(closest)
+			lastPos = (closest['x']+closest['i'].size[0], closest['y'])
+
+		return out
+		
+	def _dist(self, p0, p1):
+		return math.sqrt((p0[0] - p1[0])**2 + (p0[1] - p1[1])**2)
+
 	def _ignore_pixel_brightness(self, brightness):
 		if(self.is_inverted): # inverted engraving, e.g. anodized aluminum
 			return (brightness < self.ignore_darker_than)
