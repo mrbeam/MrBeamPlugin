@@ -95,6 +95,9 @@ class CompressorHandler(object):
 	def set_compressor_unpause(self, *args, **kwargs):
 		self.set_compressor(self._compressor_nominal_state)
 
+	def resend_compressor(self):
+		self.set_compressor(self._compressor_nominal_state, set_nominal_value=False)
+
 	def _handle_static_data(self, payload):
 		dataset = payload.get('message', {})
 		if dataset:
@@ -126,9 +129,19 @@ class CompressorHandler(object):
 				if dataset['rpm_actual'] == 0:
 					self._num_rpm_0 += 1
 					if self._num_rpm_0 >= self.MAX_TIMES_RPM_0:
+						self._logger.error(
+							"Compressor zero rpm value! Max tries reached, throwing HARDWARE MALFUNCTION, turning off compressor. (current real state: %s, zero-rpm-count %s)",
+							self._compressor_current_state, self._num_rpm_0)
+						# avoid overheating an potential further damage
+						self.set_compressor_off()
 						self._hw_malfunction_handler.report_hw_malfunction_from_plugin(
 							malfunction_id='compressor',
 							msg='compressor_rpm_0')
+					else:
+						self.resend_compressor()
+						self._logger.warn(
+							"Compressor zero rpm value! Resending nominal state: %s, current real state: %s, zero-rpm-count %s",
+							self._compressor_nominal_state, self._compressor_current_state, self._num_rpm_0)
 				else:
 					self._num_rpm_0 = 0
 		else:

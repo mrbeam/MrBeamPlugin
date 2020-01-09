@@ -21,7 +21,9 @@ $(function(){
         self.onAllBound = function () {
             self.webCamImageElem = $("#beamcam_image_svg");
 			self.cameraMarkerElem = $("#camera_markers");
-			self.previewImageFilter = snap.select('#preview_precision feGaussianBlur');
+//			if(snap){
+			self.previewImageFilter = $('#preview_precision feGaussianBlur');
+//			}
             // self.webCamImageElem.removeAttr('onerror');
             self.camEnabled = self.settings.settings.plugins.mrbeam.cam.enabled();
             self.imageUrl = self.settings.settings.plugins.mrbeam.cam.frontendUrl();
@@ -49,7 +51,7 @@ $(function(){
                 if(mf['NW'] !== undefined){
                     const pixels = '['+mf['NW']['pixels']+','+mf['NE']['pixels']+','+mf['SW']['pixels']+','+mf['SE']['pixels']+']';
                     const circles = '['+mf['NW']['r']+','+mf['NE']['r']+','+mf['SW']['r']+','+mf['SE']['r']+']';
-                    console.log('New Image [NW,NE,SW,SE]: Pix '+pixels+' Rad '+circles,data['beam_cam_new_image']);
+                    // console.log('New Image [NW,NE,SW,SE]: Pix '+pixels+' Rad '+circles,data['beam_cam_new_image']);
                 }
 				if(!data['beam_cam_new_image']['successful_correction']){
 					['NW', 'NE', 'SE', 'SW'].forEach(function(m) {

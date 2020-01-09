@@ -1,12 +1,11 @@
 import io
-import math
 from fractions import Fraction
 import cv2, logging
 import numpy as np
 from numpy.linalg import norm
 from itertools import chain
 # try:
-from octoprint_mrbeam.util.camera.mrbcamera import MrbCamera, BRIGHTNESS_TOLERANCE
+from octoprint_mrbeam.camera.mrbcamera import MrbCamera, BRIGHTNESS_TOLERANCE
 PICAMERA_AVAILABLE = True
 # except Exception as e:
 #     from dummycamera import DummyCamera as MrbCamera

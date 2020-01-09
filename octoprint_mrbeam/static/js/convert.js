@@ -49,8 +49,13 @@ $(function(){
 
 		self.engraveOnlyForced = false;
 
+		// focus reminder
 		self.remindFirstTime = ko.observable(true);
+		self.showFocusReminder = ko.observable(true);
         self.dontRemindMeAgainChecked = ko.observable(false);
+		self.dontRemindMeAgainChecked.subscribe(function(data){
+			self.sendFocusReminderChoiceToServer();
+		});
 
 		// material menu
 		self.material_settings2 = {};
@@ -210,7 +215,7 @@ $(function(){
 
 				new_material = {
 				name: name,
-					img: 'custom.jpg',
+					img: 'custommaterial.png',
 					description: gettext("Custom material settings"),
 					hints: gettext("Figuring out material settings works best from low to high intensity and fast to slow movement."),
 					safety_notes: gettext("Experimenting with custom material settings is at your own risk."),
@@ -456,12 +461,9 @@ $(function(){
 					var drop_zone = $('#first_job .color_drop_zone');
 					var i = self._getColorIcon(c);
 					drop_zone.append(i);
-
-					// todo iratxe: fix this. It works but it doesn't disappear anter droping the element somewhere else
-					// The tooltip styling has to be applied afterwards, otherwise the default styling is shown
-					// i.tooltip({
-                    //   template: '<div class="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>'
-                    // })
+					i.tooltip({
+						template: '<div class="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>'
+					});
 				} else {
 					selection.removeClass('not-used');
 				}
@@ -474,16 +476,16 @@ $(function(){
 				id: 'cd_color_'+color.hex.substr(1),
 				style: "background-color: "+color.hex+";",
 				draggable: "true",
-				class: 'used_color cutting_job_color'
-                // todo iratxe: fix this
-                // 'data-toggle': 'tooltip',
-                // 'data-placement': 'right',
-                // title: 'Drag and drop this box in the Skip area if you want to skip cutting this color. ' +
-                //     'Drop it in Engrave area if you just want to engrave it, ' +
-                //     'or alternatively create a new cutting job with different parameters by dropping it in the bottom section.'
+				class: 'used_color cutting_job_color',
+				// todo iratxe: fix this
+				'data-toggle': 'tooltip',
+				'data-placement': 'right',
+				title: 'Drag and drop this box in the Skip area if you want to skip cutting this color. ' +
+						'Drop it in Engrave area if you just want to engrave it, ' +
+						'or alternatively create a new cutting job with different parameters by dropping it in the bottom section.'
 			})
 			.on({
-				dragstart: function(ev){ window.mrbeam.colorDragging.colorDragStart(ev.originalEvent); },
+				dragstart: function(ev){ $(ev.target).tooltip('hide'); window.mrbeam.colorDragging.colorDragStart(ev.originalEvent); },
 				dragend: function(ev){ window.mrbeam.colorDragging.colorDragEnd(ev.originalEvent); }
 			});
 
@@ -672,7 +674,14 @@ $(function(){
 
 		// shows conversion dialog and extracts svg first
 		self.show_conversion_dialog = function() {
-		    self.showFocusReminder = ko.observable(self.settings.settings.plugins.mrbeam.focusReminder());
+
+			if (self.showFocusReminder() && self.remindFirstTime()) {
+				$('#laserhead_focus_reminder_modal').modal('show');
+				self.remindFirstTime(false);
+				return;
+			}
+			self.remindFirstTime(true);
+
 			self.workingArea.abortFreeTransforms();
 			self.gcodeFilesToAppend = self.workingArea.getPlacedGcodes();
 			self.show_vector_parameters(self.workingArea.hasStrokedVectors());
@@ -1173,6 +1182,11 @@ $(function(){
 		};
 
 		self.sendFocusReminderChoiceToServer = function () {
+			// TODO
+//		    let showFocusReminder = !self.dontRemindMeAgainChecked();
+//			self.settings.settings.plugins.mrbeam.focusReminder(showFocusReminder);
+//			self.settings.saveall(); // fails on getOnlyChangedData
+
 		    let focusReminder = !self.dontRemindMeAgainChecked();
             let data = {focusReminder: focusReminder};
             OctoPrint.simpleApiCommand("mrbeam", "focus_reminder", data)
@@ -1180,15 +1194,26 @@ $(function(){
                     self.settings.requestData();
                     console.log("simpleApiCall response for saving focus reminder state: ", response);
                 })
-                .fail(function () {
-                    self.settings.requestData();
-                    console.error("Unable to save focus reminder state: ", data);
-                    new PNotify({
-                        title: gettext("Error while saving settings!"),
-                        text: _.sprintf(gettext("Unable to save your focus reminder state at the moment.%(br)sCheck connection to Mr Beam II and try again."), {br: "<br/>"}),
-                        type: "error",
-                        hide: true
-                    });
+                .fail(function (jqXHR, textStatus, errorThrown) {
+                    if (jqXHR.status == 401) {
+                        self.loginState.logout();
+                        new PNotify({
+                            title: gettext("Session expired"),
+                            text: gettext("Please login again to continue."),
+                            type: "warn",
+                            tag: "conversion_error",
+                            hide: false
+                        });
+                    } else {
+                        self.settings.requestData();
+                        console.error("Unable to save focus reminder state: ", data);
+                        new PNotify({
+                            title: gettext("Error while saving settings!"),
+                            text: _.sprintf(gettext("Unable to save your focus reminder state at the moment.%(br)sCheck connection to Mr Beam II and try again."), {br: "<br/>"}),
+                            type: "error",
+                            hide: true
+                        });
+                    }
                 });
         };
 
@@ -1197,6 +1222,26 @@ $(function(){
 		        self.sendFocusReminderChoiceToServer();
             }
         };
+
+		self.move_laser_over_material = function() {
+			let x,y;
+
+			// assumption: center of placed designs is over the material
+			let bb = snap.select('#userContent').getBBox(); // first try svgs, images, qt, qs
+			if(bb.w === 0){ // then try gcodes
+				bb = snap.select('#placedGcodes').getBBox();
+			}
+			if(bb.w > 0){
+				x = bb.cx;
+				y = bb.cy;
+			} else {
+				// fallback
+				x = self.workingArea.workingAreaWidthMM() / 2;
+				y = self.workingArea.workingAreaHeightMM() / 2;
+			}
+
+			self.workingArea.move_laser_to_xy(x,y);
+		};
 
 		self.convert = function() {
 			if(self.gcodeFilesToAppend.length === 1 && self.svg === undefined) {
@@ -1231,18 +1276,7 @@ $(function(){
 			    $('#empty_job_modal').find('.modal-body p').text(message);
                 $('#empty_job_modal').modal('show');
 
-            } else if (self.showFocusReminder() && self.remindFirstTime()) {
-                $('#laserhead_focus_reminder_modal').modal('show');
-
 			} else {
-			    if (self.dontRemindMeAgainChecked()) {
-			        self.showFocusReminder(false);
-			        self.sendFocusReminderChoiceToServer();
-			        self.dontRemindMeAgainChecked(false);
-                } else {
-			        self.remindFirstTime(true);
-                }
-
 
 				if(self._allParametersSet()){
 					//self.update_colorSettings();
@@ -1402,6 +1436,7 @@ $(function(){
 
 		self.onAllBound = function(){
             self.hasCompressor(self.settings.settings.plugins.mrbeam.hw_features.has_compressor());
+			self.showFocusReminder(self.settings.settings.plugins.mrbeam.focusReminder());
             self.limitUserInput();
         };
 

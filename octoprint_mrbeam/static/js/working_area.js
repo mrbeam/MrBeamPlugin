@@ -300,16 +300,8 @@ $(function(){
 
 		self.move_laser = function(data, evt){
 			self.abortFreeTransforms();
-			if(self.state.isOperational() && !self.state.isPrinting() && !self.state.isLocked()){
-				var coord = self.getXYCoord(evt);
-				$.ajax({
-					url: API_BASEURL + "plugin/mrbeam",
-					type: "POST",
-					dataType: "json",
-					contentType: "application/json; charset=UTF8",
-					data: JSON.stringify({"command": "position", x:parseFloat(coord.x.toFixed(2)), y:parseFloat(coord.y.toFixed(2))})
-				});
-			}
+			const coord = self.getXYCoord(evt);
+			self.move_laser_to_xy(coord.x, coord.y);
 		};
 
 		self.getXYCoord = function(evt){
@@ -320,7 +312,21 @@ $(function(){
 			y = Math.min(y, self.workingAreaHeightMM());
 			return {x:x, y:y};
 		};
-
+		
+		self.move_laser_to_xy = function(x,y){
+			if(self.state.isOperational() && !self.state.isPrinting() && !self.state.isLocked()){
+				$.ajax({
+					url: API_BASEURL + "plugin/mrbeam",
+					type: "POST",
+					dataType: "json",
+					contentType: "application/json; charset=UTF8",
+					data: JSON.stringify({"command": "position", x:parseFloat(x.toFixed(2)), y:parseFloat(y.toFixed(2))})
+				});
+			} else {
+				console.warn("Move Laser command while machine state not idle: " + self.state.stateString());
+			}
+		};
+		
 		self.crosshairX = function(){
 			var pos = self.state.currentPos();
 			if(pos !== undefined){
@@ -1722,12 +1728,17 @@ $(function(){
 					yPatternOffset = 0;
 				}
 
-				var marker = snap.circle(linedist/2, linedist/2, .5).attr({
-					fill: "#000000",
-					stroke: "none",
-					strokeWidth: 1,
-					r: 0.75
+//				var marker = snap.circle(linedist/2, linedist/2, .5).attr({
+//					fill: "#000000",
+//					stroke: "none",
+//					strokeWidth: 1,
+//					r: 0.75
+//				});
+				var marker = snap.path("M9,10h2M10,9v2").attr({
+					stroke: "#aaaaaa",
+					fill: "none", "stroke-width":"0.5"
 				});
+				//<path d="M8,10h4M10,8v4" stroke="#e25303" fill="none" stroke-width="0.5"></path>
 
 				// dot pattern
 				var p = marker.pattern(0, 0, linedist, linedist);

@@ -7,9 +7,9 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 import logging
 # import numpy as np
 # import cv2
-# from octoprint_mrbeam.util.camera import MrbPicWorker
+# from octoprint_mrbeam.camera import MrbPicWorker
 # from multiprocessing import Pool
-# import octoprint_mrbeam.util.camera
+# import octoprint_mrbeam.camera
 
 BRIGHTNESS_TOLERANCE = 80
 

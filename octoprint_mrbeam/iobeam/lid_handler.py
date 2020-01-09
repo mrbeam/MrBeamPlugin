@@ -4,7 +4,6 @@ from threading import Event
 import os
 import shutil
 import logging
-from os.path import isfile
 
 import cv2
 from flask.ext.babel import gettext
@@ -13,8 +12,9 @@ from flask.ext.babel import gettext
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 # don't crash on a dev computer where you can't install picamera
-import octoprint_mrbeam.util.camera as camera
-from octoprint_mrbeam.util.camera import MrbCamera, mse, diff
+import octoprint_mrbeam.camera as camera
+from octoprint_mrbeam.camera import MrbCamera
+
 # TODO mb pic does not rely on picamera, should not use a Try catch.
 try:
     import mb_picture_preparation as mb_pic
@@ -177,7 +177,8 @@ class LidHandler(object):
                 self._photo_creator.set_undistorted_path()
             self._startStopCamera("take_undistorted_picture_request")
             # this will be accepted in the .done() method in frontend
-            return make_response(gettext("Please make sure the lid of your Mr Beam II is open and wait a little..."), 200)
+            resp_text = {'msg': gettext("Please make sure the lid of your Mr Beam II is open and wait a little...")}
+            return make_response(jsonify(resp_text), 200)
         else:
             return make_response('Error, no photocreator active, maybe you are developing and dont have a cam?', 503)
 
@@ -257,7 +258,7 @@ class PhotoCreator(object):
         try:
             with MrbCamera(camera.MrbPicWorker(maxSize=2),
                            framerate=8,
-                           resolution=camera.RESOLUTIONS['2000x1440'], #camera.DEFAULT_STILL_RES,
+                           resolution=camera.RESOLUTIONS['2000x1440'],  #camera.DEFAULT_STILL_RES,
                            stopEvent=self.stopEvent,
                            image_correction=self.image_correction_enabled) as cam:
                 self.serve_pictures(cam, session_details)
@@ -274,13 +275,13 @@ class PhotoCreator(object):
         path_to_last_markers = self._settings.get(["cam", "correctionTmpFile"])
         # TODO camera resolution and outpic res are independent
         detection_algo = {'new': lambda raw_pic: mb_pic.prepareImage2(raw_pic,
-                                                                 self.tmp_img_prepared,
-                                                                 path_to_cam_params,
-                                                                 path_to_pic_settings,
-                                                                 size=camera.RESOLUTIONS['2000x1440'],
-                                                                 quality=95,
-                                                                 debug_out=True, #self.save_debug_images,
-                                                                 stopEvent=self.stopEvent),
+                                                                      self.tmp_img_prepared,
+                                                                      path_to_cam_params,
+                                                                      path_to_pic_settings,
+                                                                      size=camera.RESOLUTIONS['2000x1440'],
+                                                                      quality=95,
+                                                                      debug_out=True,  #self.save_debug_images,
+                                                                      stopEvent=self.stopEvent),
                           'legacy': lambda: mb_pic.prepareImage(self.tmp_img_raw,
                                                                 self.tmp_img_prepared,
                                                                 path_to_cam_params,
@@ -345,8 +346,12 @@ class PhotoCreator(object):
                         self._send_frontend_picture_metadata(correction_result)
                         self.badQualityPicCount = 0
 
+                    # resize img to be used for the legacy algo
+                    w = self._settings.get(["cam", "cam_img_width"])
+                    h = self._settings.get(["cam", "cam_img_height"])
                     # Write the img to disk for the 2nd algo
-                    cv2.imwrite(self.tmp_img_raw, latest)
+                    cv2.imwrite(self.tmp_img_raw, cv2.resize(latest, (h, w)))
+
                     # TODO launch other algo next on all the bad corners left from 1st algo
                     correction_result2 = detection_algo['legacy']()
 
