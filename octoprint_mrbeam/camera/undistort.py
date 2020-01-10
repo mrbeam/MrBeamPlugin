@@ -72,7 +72,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
     :param stopEvent: used to exit gracefully
     :param threads: number of threads to use for the marker detection. Set -1, 1, 2, 3 or 4. (recommended : 4, default: -1)
     """
-    logger = logging.getLogger('mb_picture_preparation')
+    logger = logging.getLogger('mrbeam.camera.undistort')
     if debug_out:
         logger.setLevel(logging.DEBUG)
         logger.info("DEBUG enabled")
@@ -205,7 +205,8 @@ def _getColoredMarkerPositions(img, marker_settings, debug_out_path=None, blur=5
             results[qd] = (p.apply_async(_getColoredMarkerPosition,
                                          args=(roi,),
                                          kwds=dict(debug_out_path=debug_out_path,
-                                                   blur=blur)), pos)
+                                                   blur=blur,
+                                                   quadrant=qd)), pos)
         while not all(r.ready() for r, pos in results.values()):
             time.sleep(.1)
         p.close()
@@ -230,7 +231,7 @@ def _getColoredMarkerPositions(img, marker_settings, debug_out_path=None, blur=5
     return outputPoints
 
 def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, rmin=8, rmax=30):
-    logger = logging.getLogger('mb_picture_preparation')
+    logger = logging.getLogger('mrbeam.camera.undistort')
     # TODO Use mask to eliminate false positives
     # Smooth out picture
     roiBlur = cv2.GaussianBlur(roi, (blur, blur), 0)
@@ -329,12 +330,6 @@ def _get_hue_mask(hsv_roi, bandsize=11, pixTrigAmount=500, pixTooMany=3000): #(h
     :param hsv_roi: the roi in hsv format
     :return: huemask,affected,hue_lower
     """
-    # def rmOutliers(_hsv):
-    #     _v = cv2.transform(_hsv, np.array([[0, 0, 1]]))
-    #     com, std = center_of_mass(_v), standard_deviation(_v)
-    #     r = 14 # Todo max inner radius
-    #     if std > 1.8 * r:
-    # TODO look for compact spread or not
     # debugShow(hsv_roi, "_get_hue_mask")
     def maximisePixCount(maskGenerator):
         # TODO look for clusters of pixels
@@ -369,9 +364,10 @@ def _get_hue_mask(hsv_roi, bandsize=11, pixTrigAmount=500, pixTooMany=3000): #(h
                 yield elm
 
     return maximisePixCount(concatGen([_slidingHueMask(hsv_roi, bandsize, sBound=(60, 255), vBound=(60, 255), dS=4, dV=4),
-                                       _slidingHueMask(hsv_roi, bandsize+5, sBound=(40, 180), vBound=(180, 255), dS=12, dV=12, ascending=False)]))
+                                       _slidingHueMask(hsv_roi, bandsize+5, sBound=(40, 255), vBound=(180, 255), dS=15, dV=15, ascending=False)]))
 
-def _slidingHueMask(hsv_roi, bandSize, sBound=(0, 255), vBound=(0, 255), dS=5, dV=4, ascending=True, refine=-1): #(hsv_roi: np.ndarray, bandSize: int, sBound=(0, 255), vBound=(0, 255), dS=5, dV=4, ascending= True, refine=-1):
+def _slidingHueMask(hsv_roi, bandSize, sBound=(0, 255), vBound=(0, 255), dS=5, dV=4, ascending=True, refine=-1):
+    #(hsv_roi: np.ndarray, bandSize: int, sBound=(0, 255), vBound=(0, 255), dS=5, dV=4, ascending= True, refine=-1):
     """
     Generates masks of the input image by thresholding the image hue inside a certain range.
     That range is then slided around inside HUE_BAND_LB and HUE_BAND_UP. (wraps around when reaching
@@ -395,8 +391,6 @@ def _slidingHueMask(hsv_roi, bandSize, sBound=(0, 255), vBound=(0, 255), dS=5, d
     # dS = 5 # expand Saturation filter window by this size
     vBand = np.linspace(v2, v1, len(bands)).astype(int)
     # dV = 4 # expand Value filter window by this size
-    # print("hsv shape : ", hsv_roi.shape)
-    # print("####### ", h1, h2, s1, s2, v1, v2, bands )
     for i, band in enumerate(bands[:-2]):
         if ascending:
             lb = np.array([bands[i]   % 180,     sBand[i]  -dS,           vBand[i+2]-dV], np.uint8)
