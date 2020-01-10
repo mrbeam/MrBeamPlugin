@@ -12,8 +12,10 @@ from flask.ext.babel import gettext
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 # don't crash on a dev computer where you can't install picamera
-import octoprint_mrbeam.camera as camera
+import octoprint_mrbeam.camera
 from octoprint_mrbeam.camera import MrbCamera
+from octoprint_mrbeam.camera.undistort import prepareImage
+from octoprint_mrbeam.camera.undistort import _getCamParams, _getPicSettings, DIST_KEY, MTX_KEY
 
 # TODO mb pic does not rely on picamera, should not use a Try catch.
 try:
@@ -66,7 +68,6 @@ class LidHandler(object):
         self._analytics_handler = self._plugin.analytics_handler
 
         if self.camEnabled:
-            #imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
             imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
             self._photo_creator = PhotoCreator(self._plugin, self._plugin_manager, imagePath, self.image_correction_enabled)
 
@@ -198,7 +199,7 @@ class LidHandler(object):
 
 
 class PhotoCreator(object):
-    def __init__(self, _plugin, _plugin_manager, path, image_correction_enabled):
+    def __init__(self, _plugin, _plugin_manager, path, image_correction_enabled, debug=False):
         self._plugin = _plugin
         self._plugin_manager = _plugin_manager
         self.final_image_path = path
@@ -215,7 +216,8 @@ class PhotoCreator(object):
         self.save_debug_images = True # self._settings.get(['cam', 'saveCorrectionDebugImages'])
         self.camera = None
         self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator")
-
+        if debug: self._logger.setLevel(logging.DEBUG)
+        else:     self._logger.setLevel(logging.INFO)
         if self._settings.get(["cam", "keepOriginals"]):
             self.tmp_img_raw = self.final_image_path.replace('.jpg', "-tmp{}.jpg".format(time.time()))
             self.tmp_img_prepared = self.final_image_path.replace('.jpg', '-tmp2.jpg')
@@ -256,11 +258,10 @@ class PhotoCreator(object):
 
         self._logger.debug("Starting the camera now.")
         try:
-            with MrbCamera(camera.MrbPicWorker(maxSize=2),
+            with MrbCamera(octoprint_mrbeam.camera.MrbPicWorker(maxSize=2),
                            framerate=8,
-                           resolution=camera.RESOLUTIONS['2000x1440'],  #camera.DEFAULT_STILL_RES,
-                           stopEvent=self.stopEvent,
-                           image_correction=self.image_correction_enabled) as cam:
+                           resolution=octoprint_mrbeam.camera.LEGACY_STILL_RES,  # TODO camera.DEFAULT_STILL_RES,
+                           stopEvent=self.stopEvent,) as cam:
                 self.serve_pictures(cam, session_details)
         except Exception as e:
             if e.__class__.__name__.startswith('PiCamera'):
@@ -273,21 +274,39 @@ class PhotoCreator(object):
         path_to_cam_params = self._settings.get(["cam", "lensCalibrationFile"])
         path_to_pic_settings = self._settings.get(["cam", "correctionSettingsFile"])
         path_to_last_markers = self._settings.get(["cam", "correctionTmpFile"])
+
+        mrb_volume = self._laserCutterProfile['volume']
+        out_pic_size = int(mrb_volume['width'] * 4), int(mrb_volume['depth'] * 4)
+        self._logger.debug("Will send images with size %s", out_pic_size)
+        # resize img to be used for the legacy algo
+        w = self._settings.get(["cam", "cam_img_width"])
+        h = self._settings.get(["cam", "cam_img_height"])
+
+        # load cam_params from file
+        cam_params = _getCamParams(path_to_cam_params)
+        self._logger.debug('Loaded cam_params: {}'.format(cam_params))
+
+        # load pic_settings json
+        pic_settings = _getPicSettings(path_to_pic_settings)
+        self._logger.debug('Loaded pic_settings: {}'.format(pic_settings))
+
         # TODO camera resolution and outpic res are independent
-        detection_algo = {'new': lambda raw_pic: mb_pic.prepareImage2(raw_pic,
-                                                                      self.tmp_img_prepared,
-                                                                      path_to_cam_params,
-                                                                      path_to_pic_settings,
-                                                                      size=camera.RESOLUTIONS['2000x1440'],
-                                                                      quality=95,
-                                                                      debug_out=True,  #self.save_debug_images,
-                                                                      stopEvent=self.stopEvent),
+        detection_algo = {'new': lambda raw_pic: prepareImage(input_image=raw_pic,
+                                                              path_to_output_image=self.tmp_img_prepared,
+                                                              cam_dist=cam_params[DIST_KEY],
+                                                              cam_matrix=cam_params[MTX_KEY],
+                                                              pic_settings=pic_settings,
+                                                              size=out_pic_size,
+                                                              quality=100,
+                                                              debug_out=True,  #self.save_debug_images,
+                                                              stopEvent=self.stopEvent,
+                                                              threads=4),
                           'legacy': lambda: mb_pic.prepareImage(self.tmp_img_raw,
                                                                 self.tmp_img_prepared,
                                                                 path_to_cam_params,
                                                                 path_to_pic_settings,
                                                                 path_to_last_markers,
-                                                                size=camera.RESOLUTIONS['2000x1440'],  # (h, w),
+                                                                size=out_pic_size,  # (h, w),
                                                                 save_undistorted=self.undistorted_pic_path,
                                                                 quality=75,
                                                                 debug_out=self.save_debug_images,
@@ -326,46 +345,41 @@ class PhotoCreator(object):
                 #     cv2.imwrite(self.tmp_img_raw, latest)
                 #     # Write image to disk and continue
                 #     del prev
-                #     prev = None # free up RAM
+                #     prev = None # free up RAM ?
 
                 if self.image_correction_enabled:
                     self._logger.debug("Starting with correction...")
                     # TODO Toggle : choose which algo to run first ; only run on bad corners from previous run
                     workspaceCorners, markers = detection_algo['new'](latest)
-                    # Do not convert between pixels and mm : calculate distances using a fraction of the corrected output img.
-                    # mrb_volume = self._laserCutterProfile['volume']['width']
-                    # h, w = mrb_volume['depth'], mrb_volume['width']
-                    correction_result = {'markers_found':      markers,
+                    for k, v in markers.items():
+                        if v is None: del markers[k]
+                    success_1 = workspaceCorners is not None
+                    # Conform to the legacy result to be sent to frontend
+                    correction_result = {'markers_found':      None if markers is None else list(markers.keys()), # {k: v.astype(int) for k, v in markers.items()},
                                          'markers_recognised': len(markers),
-                                         'corners_calculated': workspaceCorners,
-                                         'successful_correction': workspaceCorners is not None}
+                                         'corners_calculated': None if workspaceCorners is None else list(workspaceCorners), # {k: v.astype(int) for k, v in workspaceCorners.items()},
+                                         'successful_correction': success_1}
                     self._logger.info("New image correction result: {}".format(correction_result))
                     # Send result to fronted ASAP
-                    if workspaceCorners is not None:
+                    if success_1:
                         self._move_img(self.tmp_img_prepared, self.final_image_path)
                         self._send_frontend_picture_metadata(correction_result)
                         self.badQualityPicCount = 0
 
-                    # resize img to be used for the legacy algo
-                    w = self._settings.get(["cam", "cam_img_width"])
-                    h = self._settings.get(["cam", "cam_img_height"])
                     # Write the img to disk for the 2nd algo
-                    cv2.imwrite(self.tmp_img_raw, cv2.resize(latest, (h, w)))
+                    cv2.imwrite(self.tmp_img_raw, cv2.resize(latest, (w, h)))
 
-                    # TODO launch other algo next on all the bad corners left from 1st algo
                     correction_result2 = detection_algo['legacy']()
 
-                    # TODO join corner detection algo
-                    self._logger.info("Legacy image correction result: {}".format(correction_result2))
-                    # check if there was an error or not.
-                    success = not correction_result2['error']
-                    correction_result2['successful_correction'] = success
+                    self._logger.debug("Legacy image correction result: {}".format(correction_result2))
+                    success_2 = not correction_result2['error']
+                    correction_result2['successful_correction'] = success_2
                     # TODO if this brightness was good enough for all the corner detection for this pic, then only use this for next pic.
 
                     # TODO tweak bestShutterSpeed if needed.
 
-                    if success:
-                        if workspaceCorners is None:
+                    if success_2:
+                        if not success_1:
                             self._move_img(self.tmp_img_prepared, self.final_image_path)
                         self.badQualityPicCount = 0
                         # Use this picture
@@ -384,7 +398,7 @@ class PhotoCreator(object):
                             self._logger.error(errorString)
                         else:  # Unknown error
                             self._logger.error(errorID + errorString)
-                    if not correction_result['successful_correction']:
+                    if not success_1:
                         self._send_frontend_picture_metadata(correction_result2)
                     # TODO Iratxe tweak analytics
                     # self._save_session_details_for_analytics(session_details, correction_result)
@@ -414,30 +428,6 @@ class PhotoCreator(object):
     def _send_frontend_picture_metadata(self, meta_data):
         self._plugin_manager.send_plugin_message("mrbeam", dict(beam_cam_new_image=meta_data))
 
-    def _capture(self):
-        try:
-            now = time.time()
-            # self.camera.capture(self.tmpPath, format='jpeg', resize=(1000, 800))
-            self.camera.capture(self.tmp_img_raw, format='jpeg')
-
-            self._logger.debug("_capture() captured picture in %ss", time.time() - now)
-            return None
-
-        except Exception as e:
-            if e.__class__.__name__.startswith('PiCamera'):
-                self._logger.error("PiCamera Error while capturing picture: %s: %s", e.__class__.__name__, e)
-                self.stopEvent.set()
-                self._plugin.notify_frontend(
-                    title=gettext("Camera Error"),
-                    text=gettext("Please try the following:<br>- Close and reopen the lid<br>- Reboot the device and reload this page"),
-                    type='notice',
-                    sticky=True,
-                    replay_when_new_client_connects=True)
-            else:
-                self._logger.exception("Exception while taking picture from camera: %s: %s", e.__class__.__name__, e)
-
-            return str(e)
-
     def _createFolder_if_not_existing(self, filename):
         try:
             path = os.path.dirname(filename)
@@ -454,77 +444,3 @@ class PhotoCreator(object):
             shutil.move(src, dest)
         except Exception as e:
             self._logger.warn("exception while moving file: %s", e)
-
-    def _close_cam(self):
-        if self.camera is not None:
-            self.camera.close()
-            self._logger.debug("_close_cam() Camera closed ")
-
-    def correct_image(self,pic_path_in,pic_path_out, algo='legacy', stopEvent=None):
-        """
-        :param pic_path_in:
-        :param pic_path_out:
-        :return: result dict with informations about picture preparation
-        """
-        self._logger.debug("Starting with correction...")
-        path_to_input_image = pic_path_in
-        path_to_output_img = pic_path_out
-
-        path_to_cam_params = self._settings.get(["cam", "lensCalibrationFile"])
-        path_to_pic_settings = self._settings.get(["cam", "correctionSettingsFile"])
-        # TODO select new algo result if good enough
-        # TODO camera resolution and outpic res are independent
-
-        # TODO Toggle : choose which algo to run first ; only run on bad corners from previous run
-        workspaceCorners, markers = mb_pic.prepareImage2(path_to_input_image,
-                                                         path_to_output_img,
-                                                         path_to_cam_params,
-                                                         path_to_pic_settings,
-                                                         size=mb_pic.mypicamera.RESOLUTIONS['2000x1440'],
-                                                         quality=95,
-                                                         stopEvent=stopEvent)
-        # Do not convert between pixels and mm : calculate distances using a fraction of the corrected output img.
-        mrb_volume = self._laserCutterProfile['volume']['width']
-        h, w = mrb_volume['depth'], mrb_volume['width']
-
-        if workspaceCorners:
-            correction_result = {'markers_found': markers,
-                                 'markers_recognised': len(markers),
-                                 'corners_calculated': workspaceCorners}
-        else:
-            # TODO launch other algo next on all the bad corners left from 1st algo
-            path_to_last_markers = self._settings.get(["cam", "correctionTmpFile"])
-
-            # todo implement pixel2MM setting in _laserCutterProfile (the magic number 2 below)
-            outputImageWidth = int(2 * self._laserCutterProfile['volume']['width'])
-            outputImageHeight = int(2 * self._laserCutterProfile['volume']['depth'])
-            correction_result = mb_pic.prepareImage(path_to_input_image,
-                                                    path_to_output_img,
-                                                    path_to_cam_params,
-                                                    path_to_pic_settings,
-                                                    path_to_last_markers,
-                                                    size=(outputImageWidth,outputImageHeight),
-                                                    save_undistorted=self.undistorted_pic_path,
-                                                    quality=75,
-                                                    debug_out=self.save_debug_images,
-                                                    stopEvent=stopEvent,)
-
-        # TODO stop the JSON bs, just use normal variables .....................................
-        # TODO join corner detection algo
-        if ('undistorted_saved' in correction_result and correction_result['undistorted_saved']
-                and 'markers_recognized' in correction_result and correction_result['markers_recognized'] == 4):
-                self.undistorted_pic_path = None
-                self._logger.debug("Stopping to save undistorted picture, the last one is usable for calibration.")
-
-
-        # TODO add up results
-        # TODO run 2nd algo on remaining corners for analytics : not multicore ; don't impact other processes
-        self._logger.info("Image correction result: {}".format(correction_result))
-        # check if there was an error or not.
-        if not correction_result['error']:
-            correction_result['successful_correction'] = True
-        else:
-            correction_result['successful_correction'] = False
-
-        return correction_result
-

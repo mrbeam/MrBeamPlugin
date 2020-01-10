@@ -4,25 +4,27 @@ import cv2, logging
 import numpy as np
 from numpy.linalg import norm
 from itertools import chain
-# try:
-from octoprint_mrbeam.camera.mrbcamera import MrbCamera, BRIGHTNESS_TOLERANCE
-PICAMERA_AVAILABLE = True
-# except Exception as e:
-#     from dummycamera import DummyCamera as MrbCamera
-#     PICAMERA_AVAILABLE = False
-#     logging.getLogger("octoprint.plugins.mrbeam.util.camera").error(
-#             "Could not import module 'mrbcamera'. Disabling camera integration. (%s: %s)", e.__class__.__name__, e)
+from threading import Event
 
+try:
+    from octoprint_mrbeam.camera.mrbcamera import MrbCamera, BRIGHTNESS_TOLERANCE
+    PICAMERA_AVAILABLE = True
+except ImportError as e:
+    from dummycamera import DummyCamera as MrbCamera
+    PICAMERA_AVAILABLE = False
+    logging.getLogger("octoprint.plugins.mrbeam.util.camera").error(
+            "Could not import module 'mrbcamera'. Disabling camera integration. (%s: %s)", e.__class__.__name__, e)
+
+MrbCamera = MrbCamera # Makes it importable (e.g. from [...].camera import MrbCamera)
 
 RESOLUTIONS = {
         '1000x780':  (1000, 780),
         '1920x1080': (1920, 1080),
-        '2592x1952': (2592, 1952),
+        '2000x1440': (2000, 1440),
+        '2048x1536': (2048, 1536),
         '2592x1944': (2592, 1944),
-        '2000x1440': (2000, 1440)
+        '2592x1952': (2592, 1952),
 }
-DEFAULT_STILL_RES = RESOLUTIONS['2592x1944']  # Be careful : Resolutions accepted as increments of 32 horizontally and 16 vertically
-
 
 N, W, S, E = 'N','W','S','E'
 NW,NE,SW,SE = N+W, N+E, S+W, S+E
@@ -33,26 +35,13 @@ RATIO_W, RATIO_H = Fraction(1, 8), Fraction(1, 4)
 # Padding distance from the edges of the image (The markers are never pressed against the border)
 OFFSET_W, OFFSET_H = Fraction(1, 32), Fraction(1, 10)
 
+LEGACY_STILL_RES = RESOLUTIONS['2048x1536'] # from octoprint_mrbeam __init___ : get_settings_defaults
+DEFAULT_STILL_RES = RESOLUTIONS['2592x1944']  # Be careful : Resolutions accepted as increments of 32 horizontally and 16 vertically
+
+# threshold; 2 consecutive pictures need to have a minimum difference
+# before being undistorted and served
 DIFF_TOLERANCE = 400
 
-MrbCamera = MrbCamera # Makes it importable
-
-def goodBrightness(img, targetAvg=128, tolerance=BRIGHTNESS_TOLERANCE):
-    """
-    Returns 0 if the brightness is inside the tolerance margins,
-    Returns the offset brightness if outside
-    """
-    if len(img.shape) == 3:
-        # create brightness with euclidean norm
-        brightness = np.average(norm(img, axis=0))
-    else:
-        # Grayscale
-        brightness = np.average(img)
-
-    if abs(brightness - targetAvg) < tolerance:
-        return 0
-    else:
-        return brightness - targetAvg
 
 
 class MrbPicWorker(object):
@@ -67,10 +56,18 @@ class MrbPicWorker(object):
         self._maxSize = maxSize
         self.times = []  # exposure time values
         self.detectedBrightness = []
-        self._logger = logging.getLogger("octoprint.plugins.mrbeam.util.camera.MrbPicWorker")
+        self.busy = Event()
+        self._logger = logging.getLogger("octoprint.plugins.mrbeam.camera.MrbPicWorker")
+        self._logger.setLevel(logging.WARNING)
 
-    def write(self, buf): # (self, buf: bytearray):
-        # try:
+    def currentBuf(self):
+        return self.buffers[self.bufferIndex]
+
+    def flush(self):
+        return
+
+    def write(self, buf):  # (self, buf: bytearray):
+        self.busy.set()
         if buf.startswith(b'\xff\xd8') and not self.firstImg:
             # New frame; set the current processor going and grab
             # a spare one
@@ -94,20 +91,11 @@ class MrbPicWorker(object):
             self.good_corner_bright.append(goodRois)
             self.detectedBrightness.append(rois)
             # TODO auto-adjust camera shutter_speed from here
-            # print("images stored : ", len(self.images))
 
-        # except Exception as e:
-        #     self._logger.error("%s, %s", e.__class__.__name__, e)
         # Add the buffer to the currently selected buffer
-
         self.currentBuf().write(buf)
         self.firstImg = False
-
-    def currentBuf(self):
-        return self.buffers[self.bufferIndex]
-
-    def flush(self):
-        return
+        self.busy.clear()
 
     def allCornersCovered(self):
         # TODO good_corners_bright changed
@@ -165,7 +153,45 @@ def _roiSlice(img, pole, ratioW=RATIO_W, ratioH=RATIO_H,  offsetW=OFFSET_W, offs
     _vert, _horiz = pole # assumes the poles are written NW = 'NW' etc...
     return borders[_vert], borders[_horiz]
 
+def _calculateRoiOffsets(imgH, imgW, ratioH, ratioW):
+    """
+    :param imgH: height of the image px
+    :param imgW: width of the image in px
+    :param ratioH: if set to n show 1/n of the height in roi
+    :param ratioW: if set to n show 1/n of the width in roi
+    :return: qd Dict with P1 and P2 for each quadrant to cut roi off
+    """
+    offsets = {
+            # TODO Use slices instead
+            NW: {"p1": (0, 0),
+                 "p2": (imgH // ratioH, imgW // ratioW)},
+            SW: {"p1": (imgH - imgH // ratioH, 0),
+                 "p2": (imgH, imgW // ratioW)},
+            NE: {"p1": (0, imgW - imgW // ratioW),
+                 "p2": (imgH // ratioH, imgW)},
+            SE: {"p1": (imgH - imgH // ratioH, imgW - imgW // ratioW),
+                 "p2": (imgH, imgW)}}
+    return offsets
+
+def goodBrightness(img, targetAvg=128, tolerance=BRIGHTNESS_TOLERANCE):
+    """
+    Returns 0 if the brightness is inside the tolerance margins,
+    Returns the offset brightness if outside
+    """
+    if len(img.shape) == 3:
+        # create brightness with euclidean norm
+        brightness = np.average(norm(img, axis=0))
+    else:
+        # Grayscale
+        brightness = np.average(img)
+
+    if abs(brightness - targetAvg) < tolerance:
+        return 0
+    else:
+        return brightness - targetAvg
+
 def mse(imageA, imageB):
+    # TODO : Use this to compare 2 consecutive images?
     # the 'Mean Squared Error' between the two images is the
     # sum of the squared difference between the two images;
     # NOTE: the two images must have the same dimension
@@ -177,6 +203,7 @@ def mse(imageA, imageB):
     return err
 
 def diff(imageA, imageB, tolerance=DIFF_TOLERANCE):
+    # TODO : Use this to compare 2 consecutive images?
     """The number of pixels that have a higher square difference than the threshold"""
     # NOTE: the two images must have the same dimension
     if imageA.shape[0] > imageB.shape[0]:

@@ -3,30 +3,41 @@ from itertools import chain
 from picamera import PiCamera # The official picamera package
 import time
 import threading
-from octoprint_mrbeam.mrb_logger import mrb_logger
 import logging
-# import numpy as np
-# import cv2
-# from octoprint_mrbeam.camera import MrbPicWorker
-# from multiprocessing import Pool
-# import octoprint_mrbeam.camera
 
-BRIGHTNESS_TOLERANCE = 80
+# from octoprint_mrbeam.camera import MrbPicWorker # TODO check why this fails
+
+BRIGHTNESS_TOLERANCE = 80 # TODO Keep the brightness of the images tolerable
 
 class LoopThread(threading.Thread):
+    """Loops over the target function instead of stopping"""
 
     def __init__(self, target, stopFlag, args=(), kwargs=None):
-        threading.Thread.__init__(self, target=self.loop,)
+        """
+        Loops over the target function instead of stopping
+        At the end of each loop, the self.running Event is cleared.
+        To start a new loop, set the Event again ( loopThread.running.set() )
+
+        :param target: target function
+        :type target: Callable
+        :param stopFlag: set this flag to break the loop
+        :type stopFlag: threading.Event
+        :param args: args passed to the target
+        :type args: tuple, NoneType
+        :param kwargs: kwargs passed to the target
+        :type kwargs: Map, NoneType
+        """
+        threading.Thread.__init__(self, target=self._loop,)
         # self.daemon = False
         self.running = threading.Event()
         self.running.clear()
         self.stopFlag = stopFlag
-        self._logger = mrb_logger('octoprint.plugins.mrbeam.loopthread')
-
+        self._logger = logging.getLogger('octoprint.plugins.mrbeam.loopthread')
+        self._logger.setLevel(logging.WARNING)
         self.ret = None
         self.t = target
         self._logger.info("Initialised loopthread!")
-        self.__args = args
+        self.__args = args or ()
         self.__kw = kwargs or {}
 
     def run(self):
@@ -36,7 +47,7 @@ class LoopThread(threading.Thread):
             self._logger.warning("mrbeam.loopthread : %s, %s", e.__class__.__name__, e)
 
 
-    def loop(self, *args):
+    def _loop(self):
         self.stopFlag.clear()
         self.running.set()
         while not self.stopFlag.isSet():
@@ -50,7 +61,19 @@ class LoopThread(threading.Thread):
 
 class MrbCamera(PiCamera):
     # TODO do stuff here, like the calibration algo
-    def __init__(self, worker, stopEvent=None, image_correction=True, *args, **kwargs):
+    def __init__(self, worker, stopEvent=None, *args, **kwargs):
+        """
+        Record pictures asynchronously in order to perform corrections
+        simultaneously on the previous images.
+        :param worker: The pictures are recorded into this
+        :type worker: str, "writable", filename or class with a write function (see PiCamera.capture input)
+        :param stopEvent: will exit gracefully when this Event is set
+        :type stopEvent: threading.Event
+        :param args: passed on to Picamera.__init__()
+        :type args: tuple
+        :param kwargs: passed on to Picamera.__init__()
+        :type kwargs: Map
+        """
         now = time.time()
         # TODO set sensor mode and framerate etc...
         super(MrbCamera, self).__init__(*args, **kwargs)
@@ -58,15 +81,10 @@ class MrbCamera(PiCamera):
         self.hflip = True
         self.awb_mode = 'auto'
         self.stopEvent = stopEvent or threading.Event() # creates an unset event if not given
-        self.image_correction_enabled = image_correction
-        if not self.image_correction_enabled:
-            # self.brightness = 70
-            self.color_effects = (128, 128)
         self.start_preview()
-        self._logger = mrb_logger("octoprint.plugins.mrbeam.util.camera.mrbcamera")
+        self._logger = logging.getLogger("octoprint.plugins.mrbeam.util.camera.mrbcamera")
+        self._logger.setLevel(logging.WARNING)
         self._logger.debug("_prepare_cam() prepared in %ss", time.time() - now)
-        self._logger.info("here my args %s -- and kw %s", args, kwargs)
-        self.picReady = threading.Event()
         self.busy = threading.Event()
         self.worker = worker
         self.captureLoop = LoopThread(target=self.capture,
@@ -137,7 +155,17 @@ class MrbCamera(PiCamera):
                 time.sleep(.5)  # self.shutter_speed / 10**6 * 10 # transition to next shutter speed
 
     def async_capture(self, *args, **kw):
-        # TODO asynchronously produce img, return None when done
+        """
+        Starts or signals the camera to start taking a new picture.
+        The new picture can be retrieved with MrbCamera.lastPic()
+        Wait for the picture to be taken with MrbCamera.wait()
+        :param args:
+        :type args:
+        :param kw:
+        :type kw:
+        :return:
+        :rtype:
+        """
         # self._logger.info("captureLoop running %s, stopFlag %s, shutter speed %s",
         #                   self.captureLoop.running.isSet(),
         #                   self.captureLoop.stopFlag.isSet(),
@@ -150,12 +178,15 @@ class MrbCamera(PiCamera):
             self.captureLoop.running.set() # Asks the loop to continue running, see LoopThread
 
     def wait(self):
-        while self.captureLoop.running.isSet():
-            # self._logger.info("camera still running ...")
-            # TODO return something special to know it has been killed
+        """
+        Wait for the camera to be done capturing a picture. Blocking call.
+        It is ignored when stopEvent is set.
+        """
+        while self.captureLoop.running.isSet() or self.worker.busy.isSet():
             if self.stopEvent.isSet(): return
             time.sleep(.2)
         return
 
     def lastPic(self):
+        """Returns the last picture taken"""
         return self.worker.latest
