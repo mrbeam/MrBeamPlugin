@@ -1063,6 +1063,55 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		"""
 		return [("POST", r"/convert", 100 * 1024 * 1024)]
 
+	@octoprint.plugin.BlueprintPlugin.route("/save_store_bought_svg", methods=["POST"])
+	@restricted_access
+	def save_store_bought_svg(self):
+		# valid file commands, dict mapping command name to mandatory parameters
+		valid_commands = {
+			"save_svg": []
+		}
+		command, data, response = get_json_command_from_request(request, valid_commands)
+		if response is not None:
+			return response
+
+		if command == "save_svg":
+			# TODO stripping non-ascii is a hack - svg contains lots of non-ascii in <text> tags. Fix this!
+			svg = ''.join(i for i in data['svg_string'] if ord(i) < 128)  # strip non-ascii chars like €
+
+			del data['svg_string']
+			file_name = str(data['file_name']) + ".svg"
+
+			class Wrapper(object):
+				def __init__(self, file_name, content):
+					self.filename = file_name
+					self.content = content
+
+				def save(self, absolute_dest_path):
+					with open(absolute_dest_path, "w") as d:
+						d.write(self.content)
+						d.close()
+
+			# write local/temp.svg to convert it
+			fileObj = Wrapper(file_name, svg)
+			self._file_manager.add_file(FileDestinations.LOCAL, file_name, fileObj, links=None, allow_overwrite=True)  # todo iratxe: what if the user uploads a file with the same name?
+
+			location = "test"  # url_for(".readGcodeFile", target=target, filename=gcode_name, _external=True) todo iratxe: what is this for?
+			result = {
+				"name": file_name,
+				"origin": "local",
+				"refs": {
+					"resource": location,
+					"download": url_for("index",
+										_external=True) + "downloads/files/" + FileDestinations.LOCAL + "/" + file_name
+				}
+			}
+
+			r = make_response(jsonify(result), 202)
+			r.headers["Location"] = location
+			return r
+
+		return NO_CONTENT
+
 	@octoprint.plugin.BlueprintPlugin.route("/convert", methods=["POST"])
 	@restricted_access
 	def gcodeConvertCommand(self):
