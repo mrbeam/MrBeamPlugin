@@ -317,6 +317,7 @@ class Converter():
 							paths_by_color[stroke] = []
 						d = path.get("d")
 						if d != '':
+							# TODO add start and end of path
 							paths_by_color[stroke].append(path)# += path
 							processedItemCount += 1
 							report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
@@ -324,6 +325,9 @@ class Converter():
 					layerId = layer.get('id') or '?'
 					pathId = path.get('id') or '?'
 
+					# set initial laser pos, assuming pleasant left to right, bottom to top processing order
+					current_x = 0
+					current_y = 0
 					#for each color generate GCode
 					for colorKey in self.colorOrder:
 						if colorKey == 'none':
@@ -341,6 +345,15 @@ class Converter():
 						# gcode_before_job
 						fh.write(machine_settings.gcode_before_job(color=colorKey, compressor=settings.get('cut_compressor', '100')))
 
+						# TODO sort paths
+						# check length (below ??? paths sort, above just go)
+						# while len(paths_by_color[colorKey]) > 0:
+							# get current pos 
+							# pick closest starting point to (current_x, current_y)
+							# process...
+							# set current_x, current_y
+							# drop from list
+						
 						for path in paths_by_color[colorKey]:
 							curveGCode = ""
 							mbgc = path.get(_add_ns('gc', 'mb'), None)
@@ -411,6 +424,7 @@ class Converter():
 						or i.tag == _add_ns( 'ellipse', 'svg' ) or i.tag == 'ellipse' \
 						or i.tag == _add_ns( 'circle', 'svg' ) or	i.tag == 'circle':
 
+						# TODO not necessary if path has embedded gcode
 						i.set("d", get_path_d(i))
 						self._handle_node(i, layer)
 

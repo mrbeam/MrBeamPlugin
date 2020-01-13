@@ -8,6 +8,7 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from flask.ext.babel import gettext
+from octoprint_mrbeam.printing.comm_acc2 import PrintingGcodeFromMemoryInformation
 
 # singleton
 _instance = None
@@ -364,15 +365,22 @@ class OneButtonHandler(object):
 	# I guess there's no reason anymore to raise these exceptions. Just returning false would be better.
 	def _test_conditions(self, file):
 		self._logger.debug("_test_conditions() laser file %s, printer state: %s", file, self._printer.get_state_id())
+		self._logger.debug("file %s, class %s, str %s", file, file.__class__, str(file))
+		
+		if (str(file) is "in_memory_gcode"): # should be (but doesn't work) isinstance(PrintingGcodeFromMemoryInformation): 
+			if not self._printer.is_operational() or not self._printer.get_state_id() == "OPERATIONAL":
+				raise Exception("ReadyToLaser: printer is not ready. printer state is: %s" % self._printer.get_state_id())
 
-		if file is None:
-			raise Exception("ReadyToLaser: file is None")
-		if not self._file_manager.file_exists("local", file):
-			raise Exception("ReadyToLaser: file not found '%s'" % file)
-		if not valid_file_type(file, type="machinecode"):
-			raise Exception("ReadyToLaser: file is not of type machine code")
-		if not self._printer.is_operational() or not self._printer.get_state_id() == "OPERATIONAL":
-			raise Exception("ReadyToLaser: printer is not ready. printer state is: %s" % self._printer.get_state_id())
+		else:
+			if not self._printer.is_operational() or not self._printer.get_state_id() == "OPERATIONAL":
+				raise Exception("ReadyToLaser: printer is not ready. printer state is: %s" % self._printer.get_state_id())
+			if file is None:
+				raise Exception("ReadyToLaser: file is None")
+			if not self._file_manager.file_exists("local", file):
+				raise Exception("ReadyToLaser: file not found '%s'" % file)
+			if not valid_file_type(file, type="machinecode"):
+				raise Exception("ReadyToLaser: file is not of type machine code")
+			
 
 	def _check_system_integrity(self):
 		'''
