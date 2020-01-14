@@ -29,13 +29,15 @@
 										</form>
 									</div>
 									<ul class="file_list_filter" id="files_filter">
-										<li><a href="#" data-bind="click: function() { $root.listHelper.changeSorting('name'); }"><i class="icon-ok" data-bind="style: {visibility: listHelper.currentSorting() == 'name' ? 'visible' : 'hidden'}"></i> {{ _('Sort by name') }} ({{ _('ascending') }})</a></li>
-										<li><a href="#" data-bind="click: function() { $root.listHelper.changeSorting('upload'); }"><i class="icon-ok" data-bind="style: {visibility: listHelper.currentSorting() == 'upload' ? 'visible' : 'hidden'}"></i> {{ _('Sort by upload date') }} ({{ _('descending') }})</a></li>
-										<li><a href="#" data-bind="click: function() { $root.listHelper.changeSorting('size'); }"><i class="icon-ok" data-bind="style: {visibility: listHelper.currentSorting() == 'size' ? 'visible' : 'hidden'}"></i> {{ _('Sort by file size') }} ({{ _('descending') }})</a></li>
-										<li class="divider"></li>
-										<li class="filter design"><a href="#" data-bind="click: $root.setFilter('design')"><i class="icon-ok"></i> {{ _('Only show design files') }}</a></li>
-										<li class="filter machinecode"><a href="#" data-bind="click: $root.setFilter('machinecode')"><i class="icon-ok"></i> {{ _('Only show GCode files') }}</a></li>
-										<li class="filter recentjob"><a href="#" data-bind="click: $root.setFilter('recentjob')"><i class="icon-ok"></i> {{ _('Only show recent jobs') }}</a></li>
+                                        <div style="font-weight: 900">{{ _('Sort') }}</div>
+										<li><input type="radio" name="designLibSorting" id="design_lib_sort_name_radio" data-bind="click: function() { $root.listHelper.changeSorting('name'); return true;}" />{{ _('Name') }} ({{ _('ascending') }})</li>
+										<li><input type="radio" name="designLibSorting" id="design_lib_sort_upload_radio" data-bind="click: function() { $root.listHelper.changeSorting('upload'); return true;}" />{{ _('Upload date') }} ({{ _('descending') }})</li>
+                                        <li><input type="radio" name="designLibSorting" id="design_lib_sort_size_radio" data-bind="click: function() { $root.listHelper.changeSorting('size'); return true;}" />{{ _('File size') }} ({{ _('descending') }})</li>
+                                        <br>
+                                        <div style="font-weight: 900">{{ _('Filter') }}</div>
+                                        <li><input type="radio" name="designLibFilter" id="design_lib_filter_design_radio" data-bind="click: function() { $root.setFilter('design'); return true;}" />{{ _('Design files') }}</li>
+										<li><input type="radio" name="designLibFilter" id="design_lib_filter_gcode_radio" data-bind="click: function() { $root.setFilter('machinecode'); return true;}" />{{ _('GCode files') }}</li>
+                                        <li><input type="radio" name="designLibFilter" id="design_lib_filter_recent_radio" data-bind="click: function() { $root.setFilter('recentjob'); return true;}" />{{ _('Recent jobs') }}</li>
 									</ul>
 									<div class="muted text-right">
 										<small>{{ _('Free') }}: <span data-bind="text: freeSpaceString"></span></small>
