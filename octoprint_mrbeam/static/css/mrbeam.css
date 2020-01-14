@@ -43,6 +43,7 @@ a.muted:hover{ color: #e25303a1 }
   cursor: default;
   background: #E4E4E4;
   border-color: #E4E4E4;
+  box-shadow: none;
 }
 
 .btn-large {
@@ -126,6 +127,7 @@ input[type="button"].btn-block {
   background: #E4E4E4;
   border-color: #E4E4E4;
   color: #595959;
+  box-shadow: none;
 }
 
 .btn-warning {
@@ -1210,6 +1212,7 @@ ul.dropdown-menu li a {
 .rounded_container {
     box-shadow: rgba(0,0,0,0.2) 1px 2.5px 6px 0;
     border-radius: 8px;
+    margin-bottom: 20px;
 }
 
 #files .preview_card div.preview,
@@ -1680,6 +1683,10 @@ input.search-query,
 	display: block;
 }
 */
+
+.file_list_entry .action-buttons {
+    margin: 5px 5px 0 0;
+}
 
 #wa_filelist .file_list_entry {
 	border-bottom: 1px dotted lightgray;
