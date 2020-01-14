@@ -112,6 +112,7 @@ input[type="button"].btn-block {
   border: 2px solid #ffffff;
   box-sizing: border-box;
   border-radius: 8px;
+  background: #e25303;
   /*box-shadow: 0px 0px 0px 1.5px #e25303 inset;*/
   outline: none;
 }
@@ -1211,7 +1212,6 @@ ul.dropdown-menu li a {
 .rounded_container {
     box-shadow: rgba(0,0,0,0.2) 1px 2.5px 6px 0;
     border-radius: 8px;
-    margin-bottom: 20px;
 }
 
 #files .preview_card div.preview,
@@ -1831,6 +1831,10 @@ input.search-query,
 	margin-top: 8px;
 }
 
+.file_list_filter {
+    margin: 0;
+}
+
 .file_list_filter li {
 	list-style-type: none
 }
@@ -1838,6 +1842,11 @@ input.search-query,
 .file_list_filter li.divider {
 	border-bottom: 1px dotted #ADADAD;
 	height: 1px;
+}
+
+.file_list_filter li input {
+    vertical-align: top;
+    margin-right: 10px;
 }
 
 .safety_glasses_heads_up .modal-body p:first-of-type {
