@@ -851,6 +851,7 @@ input[type="submit"].btn.btn-mini {
 }
 
 .navbar {
+	user-select: none;
 	margin-bottom: 0px;
 	/*margin-top: 6px;*/
 	box-shadow: 0px 0px 8px #DDD;
@@ -1786,6 +1787,8 @@ input.search-query,
 	max-width: 80%;
 	text-overflow: ellipsis;
 	overflow: hidden;
+	cursor: default;
+	user-select: none;
 }
 #wa_filelist .file_list_entry .detail_information {
 	clear: both;
@@ -1809,6 +1812,15 @@ input.search-query,
 #wa_filelist .detail_information input.wide {
 	width: calc(45% - 1em);
 }
+
+#wa_filelist .file_list_entry .dropdown {
+	display: inline-block;
+}
+#wa_filelist .file_list_entry .dropdown li {
+	padding: 0 0.7em;
+	color: #555;
+}
+#wa_filelist .file_list_entry .dropdown li i { color: #e25303 }
 
 .misfit_warning {
 	display: none;
@@ -1865,6 +1877,10 @@ input.search-query,
   margin-bottom:.3em;
 }
 
+/* hack to avoid that the burger menu is pushed out of the viewable area.*/
+#working_area_files .entry:last-of-type {
+  margin-bottom: 162px; 
+}
 
 #wa_filelist>div {
 	height: 50vh;
@@ -2213,26 +2229,28 @@ input.search-query,
 
 .working_area_image_preprocessing_link > button.image-preprocessing-collapsible {
   outline: transparent;
-  /*text-decoration: none;*/
+  text-decoration: none;
   color: #555;
   padding: 0;
   /*margin: 0;*/
+  white-space: nowrap;
+  font-size: 0.8rem;
 }
 
 .working_area_image_preprocessing_link > button.collapsed:before {
   padding: 0;
-  content: "\270f";
+  content: "\270f" !important;
   color: #999;
   display: inline-block;
-  -webkit-transform: rotate(-45deg);
+  transform: rotate(-45deg);
 }
 
 .working_area_image_preprocessing_link > button:before {
   padding: 0;
-  content: "\270f";
+  content: "\270f" !important;
   color: #999;
   display: inline-block;
-  -webkit-transform: rotate(45deg);
+  transform: rotate(45deg);
 }
 
 /*

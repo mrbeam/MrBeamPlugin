@@ -4,6 +4,11 @@ table th.settings_plugin_svgtogcode_profiles_key,table td.settings_plugin_svgtog
 	width: 2.5em;
 }
 
+.unselectable, label, a, .btn {
+	-webkit-user-drag: none;
+	user-select: none;
+} 	
+
 #settings_dialog.container { width: 100%; }
 
 .calibration_step {
@@ -171,6 +176,28 @@ input.decent_input {
 input.decent_input:focus,
 input.decent_input:hover {
 	border: 1px solid gray;
+}
+
+.img_adjust_ui {
+	width: 34%;
+}
+.img_crop_ui {
+	width: 60%;
+	display: grid;
+	grid-template-areas:
+    'tl tc tr'
+    'cl cc cr'
+    'bl bc br';
+	border: 1px solid gray;
+	margin: 0.8em 0.4em;
+	height: 6em;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+}
+
+#wa_filelist .img_crop_ui input.decent_input {
+  width: 100%;
 }
 
 #manual_position {
@@ -451,13 +478,10 @@ body.colorDragInProgress #drop_overlay {
 	filter:none;
 }
 
-.userIMG.designHighlight image {
-	filter:none !important;
-}
-
 .userText.designHighlight text,
-.userText.designHighlight tspan {
-	font-weight: bold !important;
+.userText.designHighlight tspan,
+.userIMG.designHighlight {
+	filter: url(#designHighlight);
 }
 
 svg#area_preview path,
@@ -500,6 +524,38 @@ g#camera_markers.markerSW circle#markerSW {
     color: #e25303;
 	z-index: 999;
 }
+
+#zoom_monitor_wrapper {
+	max-width: 20vh; 
+	position: relative; 
+	margin: auto;
+}
+#zoom_monitor {
+	width: 100%;
+	position: relative;
+	background-color: #f1f1f1;
+	border:	1px solid #ccc;
+}
+#zoom_monitor>div {
+	border: 1px solid #e25303;
+	background-color: #fff;
+	position: absolute;
+	box-sizing: border-box;
+}
+#zoom_monitor_hint {
+	pointer-events: none; 
+	width:90%; 
+	position: absolute; 
+	top: 50%; 
+	left: 50%; 
+	transform: translate(-50%, -50%); 
+	text-align:center;
+}
+
+#wa_view_settings_body div.accordion-inner>div:nth-child(1n+2) {
+	margin-top: 1em;
+}
+
 
 .freeTransformHandle{
 	fill: rgba(255,255,255,0.3);
@@ -685,9 +741,6 @@ li.material_entry span {
 	width: 20px;
 	height: 20px;
 	margin-right: 10px;
-}
-#quick_shape_dialog #quick_shape_fill {
-	margin-top: -1.3em;
 }
 
 
