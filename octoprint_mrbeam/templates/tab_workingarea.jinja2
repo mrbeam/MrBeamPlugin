@@ -63,20 +63,22 @@
 													</div>
 													<div>
 														<label>
-															<i class="icon icon-search"></i> {{ _('Zoom') }}:<span data-bind="text:zoom_factor_text"></span>
-                                                            <span class="pull-right muted">{{ _('Scroll to zoom in or out') }}</span>
+															<i class="icon icon-search"></i> {{ _('Zoom') }}: <span data-bind="text:zoom_factor_text"></span>
 														</label>
-														<div id="zoom_monitor" data-bind="
-																style: { 'padding-bottom': (100 * hwRatio())+'%' },
-																event: { mousewheel: wheel_zoom_monitor }
-															 ">
-															<div data-bind="style: {
-																	width: (100*zoom())+'%',
-																	'padding-bottom': (100*zoom()*hwRatio())+'%',
-																	left: (zoomOffX() / workingAreaWidthMM() * 100) + '%',
-																	top: (zoomOffY() / workingAreaHeightMM() * 100) + '%'
-																}, event: { mousemove: mouse_drag_monitor }">
+														<div id="zoom_monitor_wrapper">
+															<div id="zoom_monitor" data-bind="
+																	style: { 'padding-bottom': (100 * hwRatio())+'%' },
+																	event: { mousewheel: wheel_zoom_monitor }
+																 ">
+																<div data-bind="style: {
+																		width: (100*zoom())+'%',
+																		'padding-bottom': (100*zoom()*hwRatio())+'%',
+																		left: (zoomOffX() / workingAreaWidthMM() * 100) + '%',
+																		top: (zoomOffY() / workingAreaHeightMM() * 100) + '%'
+																	}, event: { mousemove: mouse_drag_monitor }">
+																</div>
 															</div>
+															<div id="zoom_monitor_hint" data-bind="visible: (zoom() === 1)" class="muted">{{ _('Scroll to zoom') }}</div>
 														</div>
 													</div>
 												</div>

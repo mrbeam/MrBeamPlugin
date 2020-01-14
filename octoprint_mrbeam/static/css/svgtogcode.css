@@ -4,7 +4,7 @@ table th.settings_plugin_svgtogcode_profiles_key,table td.settings_plugin_svgtog
 	width: 2.5em;
 }
 
-a, .btn {
+.unselectable, label, a, .btn {
 	-webkit-user-drag: none;
 	user-select: none;
 } 	
@@ -525,6 +525,11 @@ g#camera_markers.markerSW circle#markerSW {
 	z-index: 999;
 }
 
+#zoom_monitor_wrapper {
+	max-width: 20vh; 
+	position: relative; 
+	margin: auto;
+}
 #zoom_monitor {
 	width: 100%;
 	position: relative;
@@ -536,6 +541,15 @@ g#camera_markers.markerSW circle#markerSW {
 	background-color: #fff;
 	position: absolute;
 	box-sizing: border-box;
+}
+#zoom_monitor_hint {
+	pointer-events: none; 
+	width:90%; 
+	position: absolute; 
+	top: 50%; 
+	left: 50%; 
+	transform: translate(-50%, -50%); 
+	text-align:center;
 }
 
 #wa_view_settings_body div.accordion-inner>div:nth-child(1n+2) {
