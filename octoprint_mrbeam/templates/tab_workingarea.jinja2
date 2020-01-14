@@ -64,7 +64,7 @@
 												</div>
 											</div>
 										</div>
-										
+
 										<div id="camera_status" class="accordion-inner">
 											<div class="accordion-heading ">
 												<a href="#camera_brightness" class="dropdown" data-toggle="collapse" aria-expanded="false">
@@ -75,14 +75,14 @@
 											<div class="collapse" id="camera_brightness">
 												<div class="accordion-inner muted">
 													<i class="icon-adjust"></i>
-													<input type="range" min="0" max="1" step="0.01" 
+													<input type="range" min="0" max="1" step="0.01"
 														   style="width:80%;"
 														   class="decent_input img_adjust"
-														   value="0" data-bind="value: previewImgOpacity, valueUpdate: 'input'"> 
+														   value="0" data-bind="value: previewImgOpacity, valueUpdate: 'input'">
 												</div>
 											</div>
 										</div>
-										
+
 										<div id="mrb_control" class="accordion-inner" data-bind="visible: state.isReady() || state.isLocked() || state.isFlashing()">
 											<div data-bind="visible: state.isFlashing() ">
 												{{ _('Firmware update in progress') }}
@@ -459,6 +459,7 @@
 							<div class="span8" style="position:relative">
 								{% include 'homing_overlay.jinja2' %}
 								<div id="zoomFactor" data-bind="text: zoom_factor_text"></div>
+                                <div id="markerTooltip" style="visibility: hidden">ANDYTEST TOOLTIP</div>
 								<svg id="area_preview" class="workingarea" visibility="hidden"
 									 data-bind="style: {
 											width: workingAreaWidthPx()+'px',
@@ -486,9 +487,6 @@
 										<!--<feGaussianBlur in="SourceGraphic" stdDeviation="2" />-->
 										<feColorMatrix type="saturate" values="0.5"/>
 									</filter>
-									<filter id="preview_precision">
-										<feGaussianBlur in="SourceGraphic" stdDeviation="0" />
-									</filter>
 								</defs>
 								<image id="beamcam_image_svg"
 									xlink:href="/downloads/files/local/cam/beam-cam.jpg" x="0" y="0" height="100%" width="100%"
@@ -496,8 +494,7 @@
 											width: workingAreaWidthMM(),
 											height: workingAreaHeightMM(),
 											opacity: previewImgOpacity()
-										}"
-									filter="url(#preview_precision)" />
+										}" />
 									<g id="scaleGroup" data-bind="attr: { transform: scaleMatrix() }">
 										<g id="placedGcodes" data-bind="visible: true || (state.isPrinting() && !state.isPaused()), attr: { transform: 'matrix(1,0,0,-1,0,'+workingAreaHeightMM()+')' }"></g>
 										<g id="gCodePreview" data-bind="visible: state.isPrinting() || state.isPaused()"></g>
@@ -511,10 +508,18 @@
 										<path d="M-15,0H-5M15,0H5M0,15V5M0,-15V-5" />
 									</g>
 									<g id="camera_markers" fill="#ffffff" stroke="#ff00ff" stroke-width="5">
-										<circle id="markerNW" r="5" cx="7" cy="7" />
-										<circle id="markerNE" r="5" cx="-7" cy="7" data-bind="attr: {cx: workingAreaWidthMM()-7}" />
-										<circle id="markerSW" r="5" cx="7" cy="-7" data-bind="attr: {cy: workingAreaHeightMM()-7}" />
-										<circle id="markerSE" r="5" cx="-7" cy="-7" data-bind="attr: {cx: workingAreaWidthMM()-7, cy: workingAreaHeightMM()-7}" />
+                                        <circle id="markerNW" r="5" cx="7" cy="7">
+                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera. Try to close and reopen the lid.') }}</title>
+                                        </circle>
+										<circle id="markerNE" r="5" cx="-7" cy="7" data-bind="attr: {cx: workingAreaWidthMM()-7}" >
+                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera. Try to close and reopen the lid.') }}</title>
+                                        </circle>
+										<circle id="markerSW" r="5" cx="7" cy="-7" data-bind="attr: {cy: workingAreaHeightMM()-7}" >
+                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera. Try to close and reopen the lid.') }}</title>
+                                        </circle>
+										<circle id="markerSE" r="5" cx="-7" cy="-7" data-bind="attr: {cx: workingAreaWidthMM()-7, cy: workingAreaHeightMM()-7}" >
+                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera. Try to close and reopen the lid.') }}</title>
+                                        </circle>
 									</g>
 								</svg>
 							</div>

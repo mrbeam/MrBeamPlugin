@@ -2,9 +2,6 @@
 <div style="position:relative;">
 	<svg id="calibration_svg" style="max-width: 80vh; border:1px solid lightgray" width="100%" height="100%" viewBox="0 0 512 384" data-bind="attr: {viewBox: calSvgViewBox()}">
 		<defs>
-			<filter id="preview_precision">
-				<feGaussianBlur in="SourceGraphic" stdDeviation="0" />
-			</filter>
 		</defs>
 		<image style="cursor:crosshair;" data-bind="attr: {href: calImgUrl(), width:calImgWidth(), height:calImgHeight() }, click: userClick" />
 		<circle id="click_NW" r="4" cx="-100" cy="-100" class="calibration_click_indicator" />
@@ -58,7 +55,7 @@
 					Zoom: <span data-bind="text: calSvgScale" ></span> <br/>
 					<button class="btn-default" data-bind="click: smaller">-</button><button class="btn-default" data-bind="click: larger">+</button>
 					<br />
-					Move: 
+					Move:
 					<div>
 						<div class="btn-group">
 							<button class="btn-default" data-bind="click: move(-50,-50)">&#8598;</button>
@@ -75,7 +72,7 @@
 							<button class="btn-default" data-bind="click: move(0,50)">&#8595;</button>
 							<button class="btn-default" data-bind="click: move(50,50)">&#8600;</button>
 						</div>
-						
+
 					</div>
 				</div>
 				<div data-bind="visible: cal_img_ready() && calibrationActive()">
