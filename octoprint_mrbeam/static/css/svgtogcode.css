@@ -525,6 +525,24 @@ g#camera_markers.markerSW circle#markerSW {
 	z-index: 999;
 }
 
+#zoom_monitor {
+	width: 100%;
+	position: relative;
+	background-color: #f1f1f1;
+	border:	1px solid #ccc;
+}
+#zoom_monitor>div {
+	border: 1px solid #e25303;
+	background-color: #fff;
+	position: absolute;
+	box-sizing: border-box;
+}
+
+#wa_view_settings_body div.accordion-inner>div:nth-child(1n+2) {
+	margin-top: 1em;
+}
+
+
 .freeTransformHandle{
 	fill: rgba(255,255,255,0.3);
 	stroke: #e25303;

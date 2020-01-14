@@ -45,6 +45,10 @@ $(function(){
 		self.svgDPI = function(){return 90}; // initial value, gets overwritten by settings in onAllBound()
 		self.dxfScale =  function(){return 1}; // initial value, gets overwritten by settings in onAllBound()
 		self.previewImgOpacity = ko.observable(1);
+		self.previewImgOpacity.subscribe(function(newVal){
+			let col = newVal > 0.25 ? '#eeeeee':'#999999';
+			$('#coord_pattern_marker').attr('stroke', col);
+		});
 
 		self.workingAreaWidthMM = ko.computed(function(){
 			return self.profile.currentProfileData().volume.width();
@@ -76,8 +80,8 @@ $(function(){
 		self.lastQuickTextIntensity = 0; // rgb values: 0=black, 155=white
 
 		self.zoom = ko.observable(1.0);
-		self.zoomPercX = ko.observable(0);
-		self.zoomPercY = ko.observable(0);
+//		self.zoomPercX = ko.observable(0);
+//		self.zoomPercY = ko.observable(0);
 		self.zoomOffX = ko.observable(0);
 		self.zoomOffY = ko.observable(0);
 		self.zoomViewBox = ko.computed(function(){
@@ -1621,14 +1625,9 @@ $(function(){
 					yPatternOffset = 0;
 				}
 
-//				var marker = snap.circle(linedist/2, linedist/2, .5).attr({
-//					fill: "#000000",
-//					stroke: "none",
-//					strokeWidth: 1,
-//					r: 0.75
-//				});
 				var marker = snap.path("M9,10h2M10,9v2").attr({
-					stroke: "#aaaaaa",
+					id: "coord_pattern_marker",
+					stroke: "#eeeeee",
 					fill: "none", "stroke-width":"0.5"
 				});
 				//<path d="M8,10h4M10,8v4" stroke="#e25303" fill="none" stroke-width="0.5"></path>
@@ -2590,18 +2589,15 @@ $(function(){
 		//  QUICKTEXT end
 		// ***********************************************************
 
-		self.wheel_zoom = function(target, ev){
+		// on working_area: only works if shift key is down
+		self.wheel_zoom_wa = function(target, ev){
 			if (ev.originalEvent.shiftKey) {
-				var wheel = ev.originalEvent.wheelDelta;
-				var targetBBox = ev.currentTarget.getBoundingClientRect();
-				var xPerc = (ev.clientX - targetBBox.left) / targetBBox.width;
-				var yPerc = (ev.clientY - targetBBox.top) / targetBBox.height;
-				var deltaZoom = Math.sign(-wheel)/100;
-				self.set_zoom_factor(deltaZoom, xPerc, yPerc);
+				self.wheel_zoom_monitor(target, ev)
 			}
 		};
 
-		self.mouse_drag = function(target, ev){
+		// on working_area: opposite direction than on monitor
+		self.mouse_drag_wa = function(target, ev){
 			if (ev.originalEvent.shiftKey) {
 				var pos = self._get_pointer_event_position_MM(ev, ev.currentTarget);
 				var newOffX = self.zoomOffX() - pos.dx;
@@ -2610,7 +2606,26 @@ $(function(){
 				self.set_zoom_offY(newOffY);
 			}
 		};
+		
+		self.wheel_zoom_monitor = function(target, ev){
+			var wheel = ev.originalEvent.wheelDelta;
+			var targetBBox = ev.currentTarget.getBoundingClientRect();
+			var xPerc = (ev.clientX - targetBBox.left) / targetBBox.width;
+			var yPerc = (ev.clientY - targetBBox.top) / targetBBox.height;
+			var deltaZoom = Math.sign(-wheel)/100;
+			self.set_zoom_factor(deltaZoom, xPerc, yPerc);
+		};
 
+		self.mouse_drag_monitor = function(target, ev){
+			if(ev.originalEvent.buttons === 1){
+				var pos = self._get_pointer_event_position_MM(ev, ev.currentTarget);
+				var newOffX = self.zoomOffX() + pos.dx;
+				var newOffY = self.zoomOffY() + pos.dy;
+				self.set_zoom_offX(newOffX);
+				self.set_zoom_offY(newOffY);
+			}
+		};
+		
 		self._get_pointer_event_position_MM = function(event, target){
 			var percPos = self._get_pointer_event_position_Percent(event, target);
 			var x = percPos.x * self.workingAreaWidthMM() * self.zoom() + self.zoomOffX();
@@ -2686,7 +2701,7 @@ $(function(){
 			document.getElementById("working_area_files"),
 			document.getElementById("quick_text_dialog"),
 			document.getElementById("quick_shape_dialog"),
-			document.getElementById("camera_brightness"),
+			document.getElementById("wa_view_settings"),
 			document.getElementById("zoomFactor")
 		]]);
 

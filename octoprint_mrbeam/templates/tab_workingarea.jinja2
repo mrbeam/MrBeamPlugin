@@ -26,29 +26,6 @@
 														<div class="progress progress-striped active">
 															<div class="bar" id="job_progressBar" data-bind="style: { width: state.progressString() + '%' }">&nbsp;{{ _('Processed') }} :  <strong data-bind="text: state.byteString"></strong></div>
 														</div>
-<!--
-														<div class="overrideSlider">
-															<input id="intensity_override_slider" type="text" data-bind="sliderValue: state.intensityOverride">
-															<span data-bind="text:state.intensityOverride()">100</span>% Intensity
-														</div>
-														<div class="overrideSlider">
-															<input id="feedrate_override_slider" type="text" data-bind="sliderValue: state.feedrateOverride">
-															<span data-bind="text:state.feedrateOverride()">100</span>% Feedrate
-														</div>
-														<div class="repeatGcode">
-															<div class="btn-group">
-																<button type="button" class="btn btn-default btn-number" data-bind="enable: state.numberOfPasses() > 1, click:state.decreasePasses">
-																	<span class="icon-minus"></span>
-																</button>
-																<input type="text" class="input-mini text-right" value="1" min="1" max="10" data-bind="value:state.numberOfPasses()">
-																<button type="button" class="btn btn-default btn-number" data-bind="click:state.increasePasses">
-																	<span class="icon-plus"></span>
-																</button>
-															</div>
-															<span>Passes</span>
-
-														</div>
--->
 
 													</div>
 													<!--                                {{ _('Print Time') }}: <strong data-bind="text: printTimeString"></strong><br>
@@ -65,20 +42,42 @@
 											</div>
 										</div>
 										
-										<div id="camera_status" class="accordion-inner">
+										<div id="wa_view_settings" class="accordion-inner">
 											<div class="accordion-heading ">
-												<a href="#camera_brightness" class="dropdown" data-toggle="collapse" aria-expanded="false">
-													<i class="icon-camera"></i> {{ _('Camera') }}:
+												<a href="#wa_view_settings_body" class="dropdown" data-toggle="collapse" aria-expanded="false">
+													<i class="icon icon-file-alt"></i> {{ _('Preview') }}:
 												</a>
 												<span class="caret" style="vertical-align: middle"></span>
 											</div>
-											<div class="collapse" id="camera_brightness">
+											<div class="collapse" id="wa_view_settings_body">
 												<div class="accordion-inner muted">
-													<i class="icon-adjust"></i>
-													<input type="range" min="0" max="1" step="0.01" 
-														   style="width:80%;"
-														   class="decent_input img_adjust"
-														   value="0" data-bind="value: previewImgOpacity, valueUpdate: 'input'"> 
+													<div>
+														<label>
+															<i class="icon-camera"></i> {{ _('Camera') }}:
+														</label>
+														<i class="icon-adjust"></i>
+														<input type="range" min="0" max="1" step="0.01" 
+															   style="width:80%;"
+															   class="decent_input img_adjust"
+															   value="0" data-bind="value: previewImgOpacity, valueUpdate: 'input'"> 
+													</div>
+													<div>
+														<label>
+															<i class="icon icon-search"></i> {{ _('Zoom') }}:<span data-bind="text:zoom_factor_text"></span>
+														</label>
+														<div id="zoom_monitor" data-bind="
+																style: { 'padding-bottom': (100 * hwRatio())+'%' },
+																event: { mousewheel: wheel_zoom_monitor }
+															 ">
+															<div data-bind="style: { 
+																	width: (100*zoom())+'%', 
+																	'padding-bottom': (100*zoom()*hwRatio())+'%',
+																	left: (zoomOffX() / workingAreaWidthMM() * 100) + '%',
+																	top: (zoomOffY() / workingAreaHeightMM() * 100) + '%'
+																}, event: { mousemove: mouse_drag_monitor }">
+															</div>
+														</div>
+													</div>
 												</div>
 											</div>
 										</div>
@@ -512,7 +511,7 @@
 											viewBox: zoomViewBox(),
 											visibility: 'visible'
 										},
-										event: { mousewheel: wheel_zoom, mousemove: mouse_drag }
+										event: { mousewheel: wheel_zoom_wa, mousemove: mouse_drag_wa }
 									 "
 									 xmlns:mb="http://www.mr-beam.org/mbns">
 								<defs>
