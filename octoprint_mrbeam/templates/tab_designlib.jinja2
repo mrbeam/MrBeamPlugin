@@ -4,16 +4,16 @@
 						<div class="row-fluid" id="files_wrapper">
 							<div class="span4">
 
-								<div id="design_lib_search" class="">
-									<div class="accordion-heading">
-										<span class="accordion-toggle" ><i class="icon-list"></i> {{ _('Files') }}</span>
-										<!--<a class="accordion-toggle" data-toggle="collapse" href="#files_search" style="text-decoration: none;"><i class="icon-search dropdown-toggle"></i><span class="caret" style="margin: .5em;"></span></a>-->
-
-									</div>
+								<div id="design_lib_search" class="file_managing_container rounded_container">
+{#									<div class="accordion-heading">#}
+{#										<span class="accordion-toggle" ><i class="icon-list"></i> {{ _('Files') }}</span>#}
+{#										<!--<a class="accordion-toggle" data-toggle="collapse" href="#files_search" style="text-decoration: none;"><i class="icon-search dropdown-toggle"></i><span class="caret" style="margin: .5em;"></span></a>-->#}
+{##}
+{#									</div>#}
 
 									<div id="files_search" class="">
 										<form class="form-search" data-bind="submit: performSearch">
-											<input type="text" style="width:90%;" class="input-block search-query" data-bind="value: searchQuery, valueUpdate: 'input'" placeholder="{{ _('Search...') }}">
+											<input type="text" style="width:94%;" class="input-block search-query" data-bind="value: searchQuery, valueUpdate: 'input'" placeholder="{{ _('Search...') }}">
 										</form>
 									</div>
 									<ul class="file_list_filter" id="files_filter">
@@ -31,7 +31,7 @@
 									<div style="display: none;" data-bind="visible: loginState.isUser">
 										<div class="row-fluid upload-buttons">
 
-											<span class="btn btn-primary fileinput-button " data-bind="css: {disabled: !$root.loginState.isUser(), span12: !hasCamera(), span8: hasCamera()}" style="margin-bottom: 10px">
+											<span class="btn fileinput-button " data-bind="css: {disabled: !$root.loginState.isUser(), span12: !hasCamera(), span8: hasCamera()}" style="margin-bottom: 10px">
 												<i class="icon-upload-alt icon-white"></i>
 												<span>{{ _('Upload') }}</span>
 												<input id="gcode_upload" type="file" name="file" class="fileinput-button" data-bind="enable: loginState.isUser()">
@@ -54,7 +54,7 @@
 								<div class="designlib" >
 									<div id="files" >
 
-										<div id="files_list" style="max-height: calc(100vh - 64px); overflow-y: auto;">
+										<div id="files_list">
 											<div class="accordion-inner">
 
 												<div class="gcode_files" data-bind="foreach: filesOnlyList" >
@@ -62,9 +62,9 @@
 												</div>
 
 													<script type="text/html" id="files_template_machinecode_gcode">
-														<div class="file_list_entry icon_card">
+														<div class="file_list_entry icon_card rounded_container">
 															<div class="preview" data-bind="
-																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeGcode($data); $('#wa_tab_btn').tab('show'); } }, 
+																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeGcode($data); $('#wa_tab_btn').tab('show'); } },
 																css: {disabled: $root.workingArea.isPlaced($data)}
 																" ><i class="icon-cog"></i></div>
 															<div class="title dropdown" >
@@ -84,14 +84,14 @@
 																	<li class="size">{{ _('Size') }}: <span data-bind="text: formatSize(size)"></span></li>
 																</ul>
 															</div>
-														</div>	
+														</div>
 													</script>
 
 													<script type="text/html" id="files_template_model_svg">
-														<div class="file_list_entry preview_card" data-bind="attr: {mrb_name: name}">
+														<div class="file_list_entry preview_card rounded_container" data-bind="attr: {mrb_name: name}">
 															<div class="preview" data-bind="
 																style: { 'background-image': 'url('+$root.downloadLink($data)+')' },
-																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeSVG($data); $('#wa_tab_btn').tab('show'); } }, 
+																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeSVG($data); $('#wa_tab_btn').tab('show'); } },
 																css: {disabled: $root.workingArea.isPlaced($data)}
 																" ></div>
 															<div class="title dropdown" >
@@ -113,12 +113,12 @@
 															</div>
 														</div>
 													</script>
-													
+
 													<script type="text/html" id="files_template_recentjob_svg">
-														<div class="file_list_entry preview_card recentjob" data-bind="attr: {mrb_name: name}">
+														<div class="file_list_entry preview_card recentjob rounded_container" data-bind="attr: {mrb_name: name}">
 															<div class="preview" data-bind="
 																style: { 'background-image': 'url('+$root.downloadLink($data)+')' },
-																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeSVG($data); $('#wa_tab_btn').tab('show'); } }, 
+																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeSVG($data); $('#wa_tab_btn').tab('show'); } },
 																css: {disabled: $root.workingArea.isPlaced($data)}
 																" ></div>
 															<div class="title dropdown" >
@@ -140,11 +140,11 @@
 															</div>
 														</div>
 													</script>
-													
+
 													<script type="text/html" id="files_template_model_dxf">
-														<div class="file_list_entry icon_card">
+														<div class="file_list_entry icon_card rounded_container">
 															<div class="preview" data-bind="
-																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeDXF($data); $('#wa_tab_btn').tab('show'); } }, 
+																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeDXF($data); $('#wa_tab_btn').tab('show'); } },
 																css: {disabled: $root.workingArea.isPlaced($data)}
 																" ><i class="icon-picture"></i></div>
 															<div class="title dropdown" >
@@ -164,14 +164,14 @@
 																	<li class="size">{{ _('Size') }}: <span data-bind="text: formatSize(size)"></span></li>
 																</ul>
 															</div>
-														</div>												
+														</div>
 													</script>
 
 													<script type="text/html" id="files_template_model_image">
-														<div class="file_list_entry preview_card" data-bind="attr: {mrb_name: name}">
+														<div class="file_list_entry preview_card rounded_container" data-bind="attr: {mrb_name: name}">
 															<div class="preview" data-bind="
 																style: { 'background-image': 'url('+$root.downloadLink($data)+')' },
-																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeIMG($data); $('#wa_tab_btn').tab('show'); } }, 
+																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeIMG($data); $('#wa_tab_btn').tab('show'); } },
 																css: {disabled: $root.workingArea.isPlaced($data)}
 																" ></div>
 															<div class="title dropdown" >
