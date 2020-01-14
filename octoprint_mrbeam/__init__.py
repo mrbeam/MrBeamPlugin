@@ -1311,6 +1311,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			reset_laser_head_usage=[],
 			reset_gantry_usage=[],
 			material_settings=[],
+			on_camera_picture_transfer=[],
 		)
 
 	def on_api_command(self, command, data):
@@ -1366,6 +1367,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			except Exception as err:
 				self._logger.exception(err.message)
 				return make_response(err.message, 500)
+		elif command == "on_camera_picture_transfer":
+			self.lid_handler.on_front_end_pic_received()
 		return NO_CONTENT
 
 	# TODO IRATXE: this does not properly work --> necessary for reviews

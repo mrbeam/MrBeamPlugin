@@ -6,6 +6,8 @@ from numpy.linalg import norm
 from itertools import chain
 from threading import Event
 
+from octoprint_mrbeam.util import logtime
+
 try:
     from octoprint_mrbeam.camera.mrbcamera import MrbCamera, BRIGHTNESS_TOLERANCE
     PICAMERA_AVAILABLE = True
@@ -40,12 +42,11 @@ DEFAULT_STILL_RES = RESOLUTIONS['2592x1944']  # Be careful : Resolutions accepte
 
 # threshold; 2 consecutive pictures need to have a minimum difference
 # before being undistorted and served
-DIFF_TOLERANCE = 400
-
+DIFF_TOLERANCE = 30
 
 
 class MrbPicWorker(object):
-    def __init__(self, maxSize=3):
+    def __init__(self, maxSize=3, debug=False):
         self.images = []
         self.firstImg = True
         self.buffers = [io.BytesIO() for _ in range(maxSize)]
@@ -55,50 +56,45 @@ class MrbPicWorker(object):
         assert(maxSize > 0)
         self._maxSize = maxSize
         self.times = []  # exposure time values
-        self.detectedBrightness = []
+        self.adjust_brightness = []
         self.busy = Event()
-        self._logger = logging.getLogger("octoprint.plugins.mrbeam.camera.MrbPicWorker")
-        self._logger.setLevel(logging.WARNING)
+        self._logger = logging.getLogger("mrbeam.camera.MrbPicWorker")
+        if debug: self._logger.setLevel(logging.DEBUG)
 
     def currentBuf(self):
         return self.buffers[self.bufferIndex]
 
     def flush(self):
-        return
+        # Is called when the camera is done writing the whole image into the buffer
+        self.currentBuf().seek(0)
+        self.latest = cv2.imdecode(np.fromstring(self.currentBuf().getvalue(), np.int8),
+                                   cv2.IMREAD_COLOR)
+        self.bufferIndex = (self.bufferIndex + 1) % self._maxSize
+        self.currentBuf().seek(0)
+        self.currentBuf().truncate()
+        if len(self.good_corner_bright) > self._maxSize:
+            del self.good_corner_bright[0]
+            del self.adjust_brightness[0]
+        bright_adjust, goodRois = brightness_result(self.latest)
+        self.good_corner_bright.append(goodRois)
+        self.adjust_brightness.append(bright_adjust)
+        self.busy.clear()
+        self._logger.debug("Flushing done")
 
     def write(self, buf):  # (self, buf: bytearray):
-        self.busy.set()
-        if buf.startswith(b'\xff\xd8') and not self.firstImg:
-            # New frame; set the current processor going and grab
-            # a spare one
-            self.currentBuf().seek(0)
-            self.latest = cv2.imdecode(np.fromstring(self.currentBuf().getvalue(), np.int8),
-                                       cv2.IMREAD_COLOR)
-            self.bufferIndex = (self.bufferIndex + 1) % self._maxSize
-            self.currentBuf().seek(0)
-            self.currentBuf().truncate()
-            # TODO start thread alongside for the light processing ?
-            if len(self.good_corner_bright) > self._maxSize:
-                del self.good_corner_bright[0]
-                del self.detectedBrightness[0]
-            rois = {}
-            goodRois = []
-            for roi, _, pole in getRois(self.latest):
-                bright = goodBrightness(roi)
-                rois.update({pole: bright})
-                if bright == 0:
-                    goodRois.append(pole)
-            self.good_corner_bright.append(goodRois)
-            self.detectedBrightness.append(rois)
-            # TODO auto-adjust camera shutter_speed from here
-
+        """
+        Write into the current buffer.
+        Will automatically change buffer when a new JPEG image is detected.
+        """
+        if buf.startswith(b'\xff\xd8') and self.currentBuf().tell() > 0:
+            # New frame; and the current buffer is not flushed.
+            self.flush()
         # Add the buffer to the currently selected buffer
+        self.busy.set()
         self.currentBuf().write(buf)
-        self.firstImg = False
-        self.busy.clear()
 
     def allCornersCovered(self):
-        # TODO good_corners_bright changed
+        """Tells if the buffered pictures cumulatively offer a good brightness for each corner"""
         return all(qd in chain(self.good_corner_bright) for qd in QD_KEYS)
 
     def bestImg(self, targetAvg=128):
@@ -112,6 +108,7 @@ class MrbPicWorker(object):
 
     def merge(self, names=None):  # Iterator=None):
         """Use the Mertens picture merging algo to create an HDR-like picture"""
+        # DEPRECATED
         # When told to flush (this indicates end of recording), shut
         # down in an orderly fashion.
         print("images fused : ", len(self.images))
@@ -124,11 +121,40 @@ class MrbPicWorker(object):
         return merge_mertens.process(self.images) * 255  # , times=times
 
     def saveImg(self, path, n=1):
-        """Saves the last image or the n-th last image"""
-        cv2.imwrite(path, self.latest)
+        """Saves the last image or the n-th last buffer"""
+        assert(0 < n <= self._maxSize)
+        f = io.open(path, 'wb')
+        ret = f.write(self.buffers[-n])
+        f.close()
+        return ret
 
+def brightness_result(pic):
+    """
+    Will measure which corner has an appropriate amount of brightness, and which
+    corner seems to have a brightness correction.
+    :param pic: picture to measure on
+    :type pic: np.ndarray
+    :return: a dict listiing the corners that need shutter speed adjustment,
+    :return: a list that of the corners that are fine
+    :rtype: Tuple(map, list)
+    """
+    bright_adjust = {}
+    goodRois = []
+    for roi, _, pole in getRois(pic):
+        brightness = goodBrightness(roi)
+        if brightness == 0:
+            goodRois.append(pole)
+        else:
+            bright_adjust.update({pole: brightness})
+    return bright_adjust, goodRois
 
 def getRois(img, ratioW=RATIO_W, ratioH=RATIO_H,  offsetW=OFFSET_W, offsetH=OFFSET_H): #(img: np.ndarray, ratioW: int=RATIO_W, ratioH: int=RATIO_H,):
+    """
+    :param img: the input image from which to get the ROIs from
+    :param ratioH: return this fraction of the height of the roi
+    :param ratioW: return this fraction of the width  of the roi
+    :yields: a slice of the image corresponding to an ROI, it's position and it's name (pole)
+    """
     # Generator
     for pole in QD_KEYS:
         _sliceVert, _sliceHoriz = _roiSlice(img, pole, ratioW, ratioH, offsetW, offsetH)
@@ -138,6 +164,13 @@ def getRois(img, ratioW=RATIO_W, ratioH=RATIO_H,  offsetW=OFFSET_W, offsetH=OFFS
         yield img[_sliceVert, _sliceHoriz], np.array([row, col]), pole
 
 def _roiSlice(img, pole, ratioW=RATIO_W, ratioH=RATIO_H,  offsetW=OFFSET_W, offsetH=OFFSET_H): #(img: np.ndarray, pole: [str, None], ratioW: int=RATIO_W, ratioH: int=RATIO_H, ):
+    """
+    :param imgH: height of the image px
+    :param imgW: width of the image in px
+    :param ratioH: if set to n show 1/n of the height in roi
+    :param ratioW: if set to n show 1/n of the width in roi
+    :return: qd Dict with P1 and P2 for each quadrant to cut roi off
+    """
     # returns a slice of the img that can be used directly as:
     # _slice = _roiSlice(img, pole)
     # roi = img[_slice]
@@ -153,32 +186,13 @@ def _roiSlice(img, pole, ratioW=RATIO_W, ratioH=RATIO_H,  offsetW=OFFSET_W, offs
     _vert, _horiz = pole # assumes the poles are written NW = 'NW' etc...
     return borders[_vert], borders[_horiz]
 
-def _calculateRoiOffsets(imgH, imgW, ratioH, ratioW):
-    """
-    :param imgH: height of the image px
-    :param imgW: width of the image in px
-    :param ratioH: if set to n show 1/n of the height in roi
-    :param ratioW: if set to n show 1/n of the width in roi
-    :return: qd Dict with P1 and P2 for each quadrant to cut roi off
-    """
-    offsets = {
-            # TODO Use slices instead
-            NW: {"p1": (0, 0),
-                 "p2": (imgH // ratioH, imgW // ratioW)},
-            SW: {"p1": (imgH - imgH // ratioH, 0),
-                 "p2": (imgH, imgW // ratioW)},
-            NE: {"p1": (0, imgW - imgW // ratioW),
-                 "p2": (imgH // ratioH, imgW)},
-            SE: {"p1": (imgH - imgH // ratioH, imgW - imgW // ratioW),
-                 "p2": (imgH, imgW)}}
-    return offsets
-
 def goodBrightness(img, targetAvg=128, tolerance=BRIGHTNESS_TOLERANCE):
     """
     Returns 0 if the brightness is inside the tolerance margins,
     Returns the offset brightness if outside
     """
     if len(img.shape) == 3:
+        # Colored RGB or BGR (*Do Not* use HSV images with this function)
         # create brightness with euclidean norm
         brightness = np.average(norm(img, axis=0))
     else:
@@ -190,26 +204,40 @@ def goodBrightness(img, targetAvg=128, tolerance=BRIGHTNESS_TOLERANCE):
     else:
         return brightness - targetAvg
 
-def mse(imageA, imageB):
-    # TODO : Use this to compare 2 consecutive images?
-    # the 'Mean Squared Error' between the two images is the
-    # sum of the squared difference between the two images;
-    # NOTE: the two images must have the same dimension
-    err = np.sum((imageA.astype("float") - imageB.astype("float")) ** 2)
-    err /= float(imageA.shape[0] * imageA.shape[1])
+def get_same_size(imageA, imageB, upscale=True):
+    """
+    Resizes the smallest to fit the larger image, or the other way around if upscale is False.
+    :param imageA:
+    :type imageA: np.ndarray
+    :param imageB:
+    :type imageB: np.ndarray
+    :return: The resized versions of imageA and imageB
+    :rtype: Tuple(np.ndarray, np.ndarray)
+    """
+    if (    upscale and imageA.shape[0] > imageB.shape[0]) or \
+       (not upscale and imageB.shape[0] > imageA.shape[0]):
+        return cv2.resize(imageA, imageB.shape[:2][::-1]), imageB
+    elif (    upscale and imageB.shape[0] > imageA.shape[0]) or \
+       (not upscale and imageA.shape[0] > imageB.shape[0]):
+        return imageA, cv2.resize(imageB, imageA.shape[:2][::-1])
+    else:
+        return imageA, imageB
 
-    # return the MSE, the lower the error, the more "similar"
-    # the two images are
-    return err
-
-def diff(imageA, imageB, tolerance=DIFF_TOLERANCE):
-    # TODO : Use this to compare 2 consecutive images?
-    """The number of pixels that have a higher square difference than the threshold"""
-    # NOTE: the two images must have the same dimension
-    if imageA.shape[0] > imageB.shape[0]:
-        imageA = cv2.resize(imageA, imageB.shape[:2][::-1])
-    if imageB.shape[0] > imageA.shape[0]:
-        imageB = cv2.resize(imageB, imageA.shape[:2][::-1])
-    err = (imageA.astype("int16") - imageB.astype("int16")) ** 2
-    err[err < tolerance] = 0
-    return np.count_nonzero(err)
+@logtime
+def gaussBlurDiff(imageA, imageB, thresh=DIFF_TOLERANCE, blur=7, resize = 1):
+    """
+    Compares the two images by blurring them. If the strongest difference measured
+    is higher than the threshold, then they are considered to be different and
+    the function returns True.
+    """
+    assert(blur % 2 == 1)
+    images = [imageA, imageB]
+    # Resize the images if need be
+    if resize != 1:
+        images = [cv2.resize(img, tuple(int(s * resize) for s in img.shape[:2])) for img in images]
+    images = list(get_same_size(*images, upscale=False))
+    images = [cv2.GaussianBlur(img, (blur, blur), 2 * blur) for img in images]
+    images = np.asarray(images, dtype=np.int16) # No int overflow
+    diff = np.max(np.abs(np.diff(images, axis=0)))
+    logging.getLogger('gaussBlurDiff').debug("Gauss blur diff value: %d", diff)
+    return np.max(np.abs(np.diff(images, axis=0))) > thresh

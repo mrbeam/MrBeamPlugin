@@ -98,6 +98,8 @@ $(function(){
                     // So as a quick hack, let's set firstImageLoaded to true already here
                     self.firstImageLoaded = true;
                 }
+                // TODO respond to backend to tell we have loaded the picture
+                OctoPrint.simpleApiCommand("mrbeam", "on_camera_picture_transfer", {})
             });
             if (!self.firstImageLoaded) {
                 img.error(function () {

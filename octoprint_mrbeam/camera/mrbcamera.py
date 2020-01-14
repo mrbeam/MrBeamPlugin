@@ -33,10 +33,9 @@ class LoopThread(threading.Thread):
         self.running.clear()
         self.stopFlag = stopFlag
         self._logger = logging.getLogger('octoprint.plugins.mrbeam.loopthread')
-        self._logger.setLevel(logging.WARNING)
         self.ret = None
         self.t = target
-        self._logger.info("Initialised loopthread!")
+        self._logger.debug("Loopthread initialised")
         self.__args = args or ()
         self.__kw = kwargs or {}
 
@@ -83,8 +82,6 @@ class MrbCamera(PiCamera):
         self.stopEvent = stopEvent or threading.Event() # creates an unset event if not given
         self.start_preview()
         self._logger = logging.getLogger("octoprint.plugins.mrbeam.util.camera.mrbcamera")
-        self._logger.setLevel(logging.WARNING)
-        self._logger.debug("_prepare_cam() prepared in %ss", time.time() - now)
         self.busy = threading.Event()
         self.worker = worker
         self.captureLoop = LoopThread(target=self.capture,
@@ -96,8 +93,6 @@ class MrbCamera(PiCamera):
     def apply_best_shutter_speed(self, shutterSpeedMultDelta=2, shutterSpeedDeltas=None):
         """
         Applies to the camera the best shutter speed to detect all the markers
-        :param outputs: path to save merged picture. If None : Does not merge and save
-        :type outputs: None or str
         :param fpsAvgDelta:
         :param shutterSpeedDeltas:
         :return:
@@ -172,7 +167,7 @@ class MrbCamera(PiCamera):
         #                   self.shutter_speed)
         time.sleep(.1)
         if not self.captureLoop.isAlive():
-            self._logger.info("capture loop not alive")
+            self._logger.debug("capture loop not alive, starting now")
             self.captureLoop.start()
         else:
             self.captureLoop.running.set() # Asks the loop to continue running, see LoopThread
@@ -184,7 +179,7 @@ class MrbCamera(PiCamera):
         """
         while self.captureLoop.running.isSet() or self.worker.busy.isSet():
             if self.stopEvent.isSet(): return
-            time.sleep(.2)
+            time.sleep(.02)
         return
 
     def lastPic(self):

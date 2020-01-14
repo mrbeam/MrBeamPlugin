@@ -6,7 +6,6 @@ from octoprint_mrbeam.camera import RESOLUTIONS, QD_KEYS
 import octoprint_mrbeam.camera as beamcam
 from octoprint_mrbeam.util import dict_merge
 
-MARKER_SETTINGS_KEY = 'markerSettings'
 CALIB_MARKERS_KEY = 'calibMarkers'
 CORNERS_KEY = 'cornersFromImage'
 M2C_VECTOR_KEY = 'marker2cornerVecs'
@@ -22,10 +21,7 @@ HUE_BAND_LB_KEY = 'hue_lower_bound'
 HUE_BAND_LB = 125
 HUE_BAND_UB = 185 # if value > 180 : loops back to 0
 
-PIC_SETTINGS = {MARKER_SETTINGS_KEY: {HUE_BAND_LB_KEY: HUE_BAND_LB,
-                                      RATIO_W_KEY: beamcam.RATIO_W, RATIO_H_KEY: beamcam.RATIO_H,
-                                      },
-                CALIB_MARKERS_KEY: None, CORNERS_KEY: None, M2C_VECTOR_KEY: None, CALIBRATION_UPDATED_KEY: False}
+PIC_SETTINGS = {CALIB_MARKERS_KEY: None, CORNERS_KEY: None, M2C_VECTOR_KEY: None, CALIBRATION_UPDATED_KEY: False}
 
 import logging
 import time
@@ -85,6 +81,11 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
         pic_settings = _getPicSettings(pic_settings, custom_pic_settings)
         logger.debug('Loaded pic_settings: {}'.format(pic_settings))
 
+    if not (M2C_VECTOR_KEY in pic_settings and _isValidQdDict(pic_settings[M2C_VECTOR_KEY])):
+        pic_settings[M2C_VECTOR_KEY] = None
+        logger.error('No valid M2C_VECTORS found, please calibrate.')
+        return None, None
+
     if type(input_image) is str:
         # check image path
         logger.debug('Starting to prepare Image. \ninput: <{}> \noutput: <{}>\ncam dist : <{}>\ncam matrix: <{}>\nsize:{}\nquality:{}\nsave_undistorted:{}\ndebug_out:{}'.format(
@@ -121,25 +122,14 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 
     if stopEvent.isSet(): return None, None
 
-    # TODO check blurriness of image ?
-    # blur_factor = getBlurFactorLastMarkers(img, lastMarkersMeansD)
-    # logger.debug('blur_factor: {}'.format(blur_factor))
-    # result['blur_factor'] = blur_factor
-    # if blur_factor and any(blur_factor[qd] < pic_settings[BLUR_FACTOR_THRESHOLD_KEY] for qd in QD_KEYS):
-    #     logger.debug('BAD_QUALITY:Image is too blurry!')
-    #     result[ERROR_KEY] = 'BAD_QUALITY:Image is too blurry'
-    #     return result
-    # logger.debug('Blur Factors calculated. {}'.format(blur_factor))
-
     # search markers on undistorted pic
     dbg_markers = os.path.join(dirname(path_to_output_image), "markers", basename(path_to_output_image))
     _mkdir(dirname(dbg_markers))
     outputPoints = _getColoredMarkerPositions(img,
-                                              pic_settings[MARKER_SETTINGS_KEY],
                                               debug_out_path=dbg_markers,
                                               blur=blur,
                                               threads=threads)
-    logger.info('positions found: \n%s\n%s\n%s\n%s', *outputPoints.items())
+    logger.debug('positions found: \n%s\n%s\n%s\n%s', *outputPoints.items())
     markers = {qd: val['pos'] if val is not None else None for qd, val in outputPoints.items()}
 
     if stopEvent.isSet(): return None, markers
@@ -158,11 +148,6 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
     if debug_out:
         save_debug_img(_debug_drawMarkers(img, markers), path_to_output_image, "drawmarkers")
 
-    if not M2C_VECTOR_KEY in pic_settings and _isValidQdDict(pic_settings[M2C_VECTOR_KEY]):
-        pic_settings[M2C_VECTOR_KEY] = None
-        logger.error('No valid M2C_VECTORS found, please calibrate. Setting all to None.')
-        return None, markers
-
     # get corners of working area
     workspaceCorners = {qd: markers[qd] + pic_settings[M2C_VECTOR_KEY][qd][::-1] for qd in QD_KEYS}
     logger.debug("Workspace corners \n%s\n%s\n%s\n%s", *workspaceCorners.items())
@@ -175,20 +160,19 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
     if stopEvent.isSet(): return None, markers
 
     # resize and do NOT make greyscale, then save it
-    logger.debug("Just making sure, you did want an image of size %s, right?", size)
-    cv2.imwrite(filename=path_to_output_image,
-                img=cv2.resize(warpedImg, size),
-                params=[int(cv2.IMWRITE_JPEG_QUALITY), quality])
-    # resize and MAKE greyscale, then save it
-    # cv2.imwrite(filename=path_to_output_img,
-    #             img=cv2.cvtColor(cv2.resize(warpedImg, size), cv2.COLOR_BGR2GRAY),
+    # cv2.imwrite(filename=path_to_output_image,
+    #             img=cv2.resize(warpedImg, size),
     #             params=[int(cv2.IMWRITE_JPEG_QUALITY), quality])
+    # resize and MAKE greyscale, then save it
+    cv2.imwrite(filename=path_to_output_image,
+                img=cv2.cvtColor(cv2.resize(warpedImg, size), cv2.COLOR_BGR2GRAY),
+                params=[int(cv2.IMWRITE_JPEG_QUALITY), quality])
 
     logger.debug('prepareImage(...) took {} s'.format((time.time()-start_time)))
 
     return workspaceCorners, markers
 
-def _getColoredMarkerPositions(img, marker_settings, debug_out_path=None, blur=5, threads=-1):
+def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1):
     """Allows a multi-processing implementation of the marker detection algo. Up to 4 processes needed."""
     outputPoints = {}
     # check all 4 corners
@@ -227,7 +211,6 @@ def _getColoredMarkerPositions(img, marker_settings, debug_out_path=None, blur=5
                                                          quadrant=qd)
             if outputPoints[qd] is not None:
                 outputPoints[qd]['pos'] += pos
-
     return outputPoints
 
 def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, rmin=8, rmax=30):
@@ -263,14 +246,15 @@ def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, r
     # Get the second most common label (The biggest white blob)
     most_present_label = unique_labels[np.argmax(counts_elements)]
     # get the average coordinates of that blob
-    center = np.average(np.transpose(np.nonzero(labels == most_present_label)), axis=0)
-    centerOfMass = center
+    non_zeros = np.transpose(np.nonzero(labels == most_present_label))
+    center = (np.max(non_zeros, axis=0) + np.min(non_zeros, axis=0)) / 2
+    # TODO extra precision : apply marker_mask to find more precise location to the marker
 
     # --------- Use contours to find the markers and their area ----------
     # contours = cv2.findContours(hsvMask, cv2.RETR_EXTERNAL,
     #                            cv2.CHAIN_APPROX_SIMPLE)
     # contours = imutils.grab_contours(contours)
-    # centerOfMass = None
+    # center = None
     # if len(contours) == 0:
     #     logger.warning("No blobs found!")
     # for c in contours:
@@ -285,30 +269,32 @@ def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, r
     #         # cy = y + h / 2
     #         mmt = cv2.moments(convexWrap)
     #         if mmt['m00'] == 0:
-    #             centerOfMass = np.array([0, 0])
+    #             center = np.array([0, 0])
     #         else:
-    #             centerOfMass = np.array([float(mmt['m01']) / mmt['m00'], float(mmt['m10']) / mmt['m00']], dtype=np.float32) # cy, cx
+    #             center = np.array([float(mmt['m01']) / mmt['m00'], float(mmt['m10']) / mmt['m00']], dtype=np.float32) # cy, cx
     #         break
 
-    # if centerOfMass is None:
+    # if center is None:
     #     # TODO replace scipy center_of_mass. We don't want scipy dependencies
     #     # contour detection failed, failsafe with the center of mass
     #     weights = cv2.transform(hsv_roiBlurThreshBand, np.array([[0.6, 0., 0.8]]))
-    #     centerOfMass = center_of_mass(weights)
+    #     center = center_of_mass(weights)
     # ensure at least some circles were found
-    logger.debug("Writing debug image at %s", debug_out_path)
-    if centerOfMass is None:
+    if debug_out_path is not None:
+        debug_quad_path = debug_out_path.replace('.jpg', '{}.jpg'.format(quadrant))
+        logger.debug("Writing debug image at %s", debug_out_path)
+    if center is None:
         if debug_out_path is not None:
-            cv2.imwrite(debug_out_path.replace('.jpg', '{}.jpg'.format(quadrant)), hsvMask)
+            cv2.imwrite(debug_quad_path, hsvMask)
             # debugShow(roiBlurOtsuBand, "shape")
         return None  # hue_lower=hue_lower, pixels=affected, )
     else:
         if debug_out_path is not None:
-            y, x = np.round(centerOfMass).astype("int") # y, x
+            y, x = np.round(center).astype("int") # y, x
             debug_roi = cv2.circle(hsvMask, (x, y), 5, (255, 255, 255), 2)
-            cv2.imwrite(debug_out_path.replace('.jpg', '{}.jpg'.format(quadrant)), debug_roi)
+            cv2.imwrite(debug_quad_path.replace('.jpg', '{}.jpg'.format(quadrant)), debug_roi)
             # debugShow(debug_roi, "shape")
-        return dict(pos=centerOfMass, )  # pixels=affected, hue_lower=hue_lower)
+        return dict(pos=center, )  # pixels=affected, hue_lower=hue_lower)
 
 def _undistortImage(img, dist, mtx):
     """Apply the camera calibration matrices to distort the picture back straight"""
@@ -336,8 +322,10 @@ def _get_hue_mask(hsv_roi, bandsize=11, pixTrigAmount=500, pixTooMany=3000): #(h
         trigger = False
         ret = None
         _mask = None
+        _prev_mask = None
         pix_amount = -1
         for maskedImg, mask in maskGenerator:
+
             # debugShow(maskedImg, "maskedImg")
             coloredPix = np.count_nonzero(mask) # # counts for each value of h s and v
             if not trigger and coloredPix > pixTrigAmount:
@@ -350,7 +338,14 @@ def _get_hue_mask(hsv_roi, bandsize=11, pixTrigAmount=500, pixTooMany=3000): #(h
                 pix_amount = coloredPix
                 ret, _mask = maskedImg, mask
             elif trigger and pix_amount > coloredPix:
-                return ret, _mask # the previous img
+                # Merge with previous masks to maximise the quality of the circle
+                if _prev_mask is None:
+                    # _mask cannot be None
+                    return ret, cv2.bitwise_or(_mask, mask)
+                else:
+                    # the previous img
+                    return ret, reduce(cv2.bitwise_or, (_prev_mask, _mask, mask))
+            _prev_mask = _mask
         return ret, _mask
 
     # TODO see itertools.chain
@@ -539,10 +534,10 @@ def _getPicSettings(path_to_settings_file, custom_pic_settings=None):
             pic_settings = PIC_SETTINGS
             settings_changed = True
 
-        if not MARKER_SETTINGS_KEY in pic_settings or not all(param in pic_settings[MARKER_SETTINGS_KEY] for param in PIC_SETTINGS[MARKER_SETTINGS_KEY].keys()):
-            logging.info('Bad picture settings file, loaded default marker settings')
-            pic_settings[MARKER_SETTINGS_KEY] = PIC_SETTINGS[MARKER_SETTINGS_KEY]
-            settings_changed = True
+        # if not MARKER_SETTINGS_KEY in pic_settings or not all(param in pic_settings[MARKER_SETTINGS_KEY] for param in PIC_SETTINGS[MARKER_SETTINGS_KEY].keys()):
+        #     logging.info('Bad picture settings file, loaded default marker settings')
+        #     pic_settings[MARKER_SETTINGS_KEY] = PIC_SETTINGS[MARKER_SETTINGS_KEY]
+        #     settings_changed = True
 
     return pic_settings
 
