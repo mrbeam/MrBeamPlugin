@@ -480,12 +480,9 @@ $(function(){
 				style: "background-color: "+color+";",
 				draggable: "true",
 				class: 'used_color cutting_job_color',
-				// todo iratxe: fix this
 				'data-toggle': 'tooltip',
 				'data-placement': 'right',
-				title: 'Drag and drop this box in the Skip area if you want to skip cutting this color. ' +
-						'Drop it in Engrave area if you just want to engrave it, ' +
-						'or alternatively create a new cutting job with different parameters by dropping it in the bottom section.'
+				title: gettext('Drag and drop this box in the Skip area if you want to skip cutting this color. Drop it in Engrave area if you just want to engrave it, or alternatively create a new cutting job with different parameters by dropping it in the bottom section.')
 			})
 			.on({
 				dragstart: function(ev){ $(ev.target).tooltip('hide'); window.mrbeam.colorDragging.colorDragStart(ev.originalEvent); },
