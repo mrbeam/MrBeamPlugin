@@ -80,6 +80,7 @@ $(function(){
 		self.save_custom_material_name = ko.observable("");
 		self.save_custom_material_thickness = ko.observable(1);
 		self.save_custom_material_color = ko.observable("#000000");
+		
 
 		self.hasCompressor = ko.observable(false);
 
@@ -131,7 +132,9 @@ $(function(){
                     suggested_name = custom_prefix + suggested_name;
                 }
                 self.save_custom_material_name(suggested_name);
-                self.save_custom_material_color('#'+self.selected_material_color());
+				const col = '#'+self.selected_material_color();
+                self.save_custom_material_color(col);
+				$("#customMaterial_colorPicker").data('plugin_tinycolorpicker').setColor(col);
                 var t = self.selected_material_thickness();
                 var tmp = t !== null ? t.thicknessMM : 1;
                 self.save_custom_material_thickness(tmp);
@@ -454,12 +457,12 @@ $(function(){
 			var cols = self.workingArea.getUsedColors();
 			$('.job_row .used_color:not(#cd_engraving)').addClass('not-used');
 			for (var idx = 0; idx < cols.length; idx++) {
-				var c = cols[idx];
-				var selection = $('#cd_color_'+c.hex.substr(1)); // crashes on color definitions like 'rgb(0,0,0)'
+				var hex = cols[idx];
+				var selection = $('#cd_color_'+hex.substr(1)); // crashes on color definitions like 'rgb(0,0,0)'
 				var exists = selection.length > 0;
 				if(! exists){
 					var drop_zone = $('#first_job .color_drop_zone');
-					var i = self._getColorIcon(c);
+					var i = self._getColorIcon(hex);
 					drop_zone.append(i);
 					i.tooltip({
 						template: '<div class="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>'
@@ -473,16 +476,13 @@ $(function(){
 
 		self._getColorIcon = function(color){
 			var i = $('<div />',{
-				id: 'cd_color_'+color.hex.substr(1),
-				style: "background-color: "+color.hex+";",
+				id: 'cd_color_'+color.substr(1),
+				style: "background-color: "+color+";",
 				draggable: "true",
 				class: 'used_color cutting_job_color',
-				// todo iratxe: fix this
 				'data-toggle': 'tooltip',
 				'data-placement': 'right',
-				title: 'Drag and drop this box in the Skip area if you want to skip cutting this color. ' +
-						'Drop it in Engrave area if you just want to engrave it, ' +
-						'or alternatively create a new cutting job with different parameters by dropping it in the bottom section.'
+				title: gettext('Drag and drop this box in the Skip area if you want to skip cutting this color. Drop it in Engrave area if you just want to engrave it, or alternatively create a new cutting job with different parameters by dropping it in the bottom section.')
 			})
 			.on({
 				dragstart: function(ev){ $(ev.target).tooltip('hide'); window.mrbeam.colorDragging.colorDragStart(ev.originalEvent); },
@@ -1432,6 +1432,9 @@ $(function(){
             $('[data-toggle="tooltip"]').tooltip({
                 html:true
             });
+			// init tinyColorPicker if not done yet
+			$("#customMaterial_colorPicker").tinycolorpicker();
+			$("#customMaterial_colorPicker").bind("change", self.save_custom_material_color);
 		};
 
 		self.onAllBound = function(){
