@@ -458,7 +458,8 @@ class PhotoCreator(object):
                                                                        indent=2,
                                                                        default=json_serialisor))
             cam.stop_preview()
-            self._analytics_handler.add_camera_session_details(session_details)
+            if session_details['nb_pics'] > 0:
+                self._analytics_handler.add_camera_session_details(session_details)
             self._logger.debug("PhotoCreator stopping...")
         except Exception as worker_exception:
             self._logger.exception("Exception in worker thread of PhotoCreator: {}".format(worker_exception.message))
