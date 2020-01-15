@@ -1,5 +1,9 @@
+import copy
+import json
+import numpy as np
 import time
 import threading
+from math import sqrt
 from threading import Event
 import os
 import shutil
@@ -16,7 +20,7 @@ import octoprint_mrbeam.camera
 from octoprint_mrbeam.camera import MrbCamera, gaussBlurDiff
 from octoprint_mrbeam.camera.undistort import prepareImage
 from octoprint_mrbeam.camera.undistort import _getCamParams, _getPicSettings, DIST_KEY, MTX_KEY
-
+from octoprint_mrbeam.util import json_serialisor, logme
 # TODO mb pic does not rely on picamera, should not use a Try catch.
 try:
     import mb_picture_preparation as mb_pic
@@ -32,7 +36,6 @@ OK_QUALITY = 75 # default JPEG quality served to the user
 TOP_QUALITY = 90 # best compression quality we want to serve the user
 DEFAULT_MM_TO_PX = 2 # How many pixels / mm is used for the output image
 
-QUALITIES = [40, 50, 60, 70, 80, 90, 100]
 SIMILAR_PICS_BEFORE_REFRESH = 20
 
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
@@ -78,7 +81,11 @@ class LidHandler(object):
 
         if self.camEnabled:
             imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
-            self._photo_creator = PhotoCreator(self._plugin, self._plugin_manager, imagePath, self.image_correction_enabled, debug=False)
+            self._photo_creator = PhotoCreator(self._plugin,
+                                               self._plugin_manager,
+                                               imagePath,
+                                               self.image_correction_enabled,
+                                               debug=False)
 
         self._subscribe()
 
@@ -256,11 +263,6 @@ class PhotoCreator(object):
 
     def work(self):
         self.stopEvent.clear()
-        session_details = dict(
-            num_pics=0,
-            errors=[],
-            detected_markers={},
-        )
 
         # todo find maximum of sleep in beginning that's not affecting UX
         time.sleep(0.8)
@@ -281,7 +283,7 @@ class PhotoCreator(object):
                            framerate=8,
                            resolution=octoprint_mrbeam.camera.LEGACY_STILL_RES,  # TODO camera.DEFAULT_STILL_RES,
                            stopEvent=self.stopEvent,) as cam:
-                self.serve_pictures(cam, session_details)
+                self.serve_pictures(cam)
         except Exception as e:
             if e.__class__.__name__.startswith('PiCamera'):
                 self._logger.error("PiCamera Error while preparing camera: %s: %s", e.__class__.__name__, e)
@@ -289,7 +291,7 @@ class PhotoCreator(object):
                 self._logger.exception("Exception while preparing camera: %s: %s", e.__class__.__name__, e)
         self.stopEvent.set()
 
-    def serve_pictures(self, cam, session_details):
+    def serve_pictures(self, cam):
         """
         Takes pictures, isolates the work area and serves it to the user at progressively better resolutions.
         After a certain number of similar pictures, Mr Beam serves a better quality pictures
@@ -299,13 +301,16 @@ class PhotoCreator(object):
         2000 x 1560, 65% JPEG quality ~ 400 kB
         # 2000 x 1560, 75% JPEG quality ~ 600 kB
         # 2000 x 1560, 90% JPEG quality (lossless) ~ 1 MB
+
+        Data used to compare the two algorithms is also retrieved and sent over at the end of this session
+
         :param cam: The camera that will record
         :type cam: MrbCamera
-        :param session_details: Session details for analytics
-        :type session_details: dict
         :return: None
         :rtype: NoneType
         """
+
+        session_details = blank_session_details()
         self._serve_asap.set()
         path_to_cam_params = self._settings.get(["cam", "lensCalibrationFile"])
         path_to_pic_settings = self._settings.get(["cam", "correctionSettingsFile"])
@@ -346,11 +351,9 @@ class PhotoCreator(object):
                                                                 stopEvent=self.stopEvent, )}
         try:
             if self.active():
-                # TODO if first run (after open lid) : preliminary brightness measurement
                 cam.start_preview()
                 time.sleep(2)
                 # bestShutterSpeeds = cam.apply_best_shutter_speed()  # Usually only 1 value, but there could be more
-                # TODO keep pic in RAM before saving it (no need to save if it is going to be modified or thrown out before serving)
 
                 cam.async_capture()  # starts capture to the cam.worker
             # --- Decide on the picture quality to give to the user and whether the pic is different ---
@@ -402,10 +405,11 @@ class PhotoCreator(object):
                 if self.image_correction_enabled:
                     self._logger.debug("Starting with correction...")
                     # TODO Toggle : choose which algo to run first ; only run on bad corners from previous run
-                    success_1, correction_result = self._new_detect_algo(latest, cam_params,
-                                                                         pic_settings,
-                                                                         scaled_output_size,
-                                                                         quality=quality)
+                    success_1, correction_result, markers = self._new_detect_algo(latest, cam_params,
+                                                                                  pic_settings,
+                                                                                  scaled_output_size,
+                                                                                  quality=quality)
+                    if not self.active(): break
                     # Send result to fronted ASAP
                     if success_1:
                         self._ready_to_send_pic(correction_result)
@@ -417,8 +421,7 @@ class PhotoCreator(object):
                                                                              path_to_last_markers,
                                                                              scaled_output_size,
                                                                              quality=quality)
-                    # TODO if this brightness was good enough for all the corner detection for this pic, then only use this for next pic.
-                    # TODO tweak bestShutterSpeed if needed.
+                    if not self.active(): break
 
                     if not success_2:
                         errorID = correction_result2['error'].split(':')[0]
@@ -441,10 +444,20 @@ class PhotoCreator(object):
                     elif not success_1:
                         # Just tell front end that there was an error
                         self._send_frontend_picture_metadata(correction_result2)
-                    # TODO Iratxe tweak analytics
-                    # self._save_session_details_for_analytics(session_details, correction_result)
-            # TODO compare with new algo result if good enough
-
+                    self._add_result_to_analytics(session_details,
+                                                  'new',
+                                                  markers,
+                                                  increment_pic=True,
+                                                  error=None)
+                    self._add_result_to_analytics(session_details,
+                                                  'legacy',
+                                                  correction_result2['markers_found'],
+                                                  increment_pic=False,
+                                                  error=correction_result2['error'])
+                    self._logger.debug("Analytics: %s", json.dumps(session_details,
+                                                                       indent=2,
+                                                                       default=json_serialisor))
+            cam.stop_preview()
             self._analytics_handler.add_camera_session_details(session_details)
             self._logger.debug("PhotoCreator stopping...")
         except Exception as worker_exception:
@@ -463,6 +476,7 @@ class PhotoCreator(object):
                                                  debug_out=self.debug,  # self.save_debug_images,
                                                  stopEvent=self.stopEvent,
                                                  threads=4)
+        if not self.active(): return False, None, None
         for k, v in markers.items():
             if v is None: del markers[k]
         success_1 = workspaceCorners is not None
@@ -473,8 +487,7 @@ class PhotoCreator(object):
                              'corners_calculated':    None if workspaceCorners is None else list(workspaceCorners),
                              # {k: v.astype(int) for k, v in workspaceCorners.items()},
                              'successful_correction': success_1}
-        self._logger.debug("New image correction result: {}".format(correction_result))
-        return success_1, correction_result
+        return success_1, correction_result, markers
 
     def _legacy_detect_algo(self, pic,
                             path_to_cam_params,
@@ -497,26 +510,62 @@ class PhotoCreator(object):
                                               debug_out=self.save_debug_images,
                                               stopEvent=self.stopEvent, )
 
-        self._logger.debug("Legacy image correction result: {}".format(correction_result2))
         success_2 = not correction_result2['error']
         correction_result2['successful_correction'] = success_2
         return success_2, correction_result2
 
-    def _save_session_details_for_analytics(self, session_details, correction_result):
-        try:
-            session_details['num_pics'] += 1
-
-            error = correction_result['error']
-            if error:
-                session_details['errors'].append(error)
-
-            num_detected = correction_result.get('markers_recognized', None)
-            if num_detected in session_details['detected_markers']:
-                session_details['detected_markers'][num_detected] += 1
+    # @logme(True)
+    def _add_result_to_analytics(self,
+                                 session_details,
+                                 algo,
+                                 markers,
+                                 increment_pic=False,
+                                 colorspace='hsv',
+                                 avg_colors=None,
+                                 med_colors=None,
+                                 upload_speed=None,
+                                 error=None):
+        assert(algo in ['new', 'legacy'])
+        # Legacy algo only gives us a list of found corners
+        assert(type(markers) is dict or type(markers) is list)
+        def add_to_stat(pos, avg, std, mass):
+            # gives a new avg value and approximate std when merging the new position value.
+            # mass is the weight given to the previous avg and std.
+            if avg is not None and std is not None:
+                avg, std = np.asarray(avg), np.asarray(std)
+                _new_avg = (mass * avg + pos) / (mass + 1)
+                _new_std = np.sqrt((mass * std) ** 2 + (pos - _new_avg) ** 2) / (mass + 1)
             else:
-                session_details['detected_markers'][num_detected] = 1
+                _new_avg = np.array(pos, dtype=float)
+                _new_std = np.zeros(2, dtype=float)
+            return _new_avg, _new_std
+
+        _s = session_details
+        try:
+            if increment_pic: _s['nb_pics'] += 1
+            for qd in octoprint_mrbeam.camera.QD_KEYS:
+                _s_marker = _s[algo]['markers'][qd]
+                _marker = None
+                if algo == 'new' and qd in markers.keys() and markers[qd] is not None:
+                    _marker = np.asarray(markers[qd])
+                elif algo == 'legacy' and markers[qd]['x'] is not None:
+                    _marker = np.asarray([markers[qd]['y'], markers[qd]['x']])
+                if _marker is not None:
+                    _success_mass = _s_marker['found']
+                    _n_avg, _n_std = add_to_stat(_marker,
+                                                 _s_marker['avg_pos'],
+                                                 _s_marker['std_pos'],
+                                                 _success_mass)
+                    _s_marker['avg_pos'] = _n_avg.tolist()
+                    _s_marker['std_pos'] = _n_std.tolist()
+                    _s_marker['found'] += 1
+                else:
+                    _s_marker['missed'] += 1
+
+            if error:
+                _s[algo]['errors'].append(error)
         except Exception as ex:
-            self._logger.exception('Exception in _save_session_details_for_analytics: {}'.format(ex))
+            self._logger.exception('Exception in _save__s_for_analytics: {}'.format(ex))
 
     def _ready_to_send_pic(self, correction_result, force=False):
         self.last_correction_result = correction_result
@@ -551,3 +600,41 @@ class PhotoCreator(object):
             shutil.move(src, dest)
         except Exception as e:
             self._logger.warn("exception while moving file: %s", e)
+
+def blank_session_details():
+    """
+    Add to these session details when taking the pictures.
+    Do not send back as-is (won't convert to JSON)
+    session_details = { 'new': {'markers': {'NW': {'missed': int,
+                                                   'found': int,
+                                                   'avg_pos': [float, float],
+                                                   'std_pos': float,
+                                                   'colorspace': str,
+                                                   'avg_color_when_missed': [[int, int, int], ...],
+                                                   'median_color_when_missed': [[int, int, int], ...]}
+                                            'SE': {...},
+                                            'SW': {...},
+                                            'NE': {...}},
+                                'errors': list(dict)},
+                        'legacy': {...},
+                        'mean_upload_speed': int}
+    """
+    _init_marker = {'missed':  0,
+                    'found':   0,
+                    'avg_pos': None,
+                    'std_pos': None,
+                    # The following fields are unused for now
+                    # 'colorspace': 'hsv',
+                    # 'avg_color_when_missed': [],
+                    # 'median_color_when_missed': []
+                    }
+    _init_result = {'markers': {'NW': copy.deepcopy(_init_marker),
+                                'SE': copy.deepcopy(_init_marker),
+                                'SW': copy.deepcopy(_init_marker),
+                                'NE': copy.deepcopy(_init_marker)},
+                    'errors':  []}
+    session_details = {'nb_pics':           0,
+                       'new':               copy.deepcopy(_init_result),
+                       'legacy':            copy.deepcopy(_init_result),
+                       'avg_upload_speed': None}
+    return session_details

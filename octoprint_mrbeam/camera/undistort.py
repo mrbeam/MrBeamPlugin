@@ -105,7 +105,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
             return None, None
     elif type(input_image) is np.ndarray:
         logger.debug('Starting to prepare Image. \ninput: <{}> \noutput: <{}>\ncam dist : <{}>\ncam matrix: <{}>\nsize:{}\nquality:{}\nsave_undistorted:{}\ndebug_out:{}'.format(
-                "<numpy ndarray>", path_to_output_image, cam_dist, cam_matrix,
+                "numpy ndarray", path_to_output_image, cam_dist, cam_matrix,
                 size, quality, save_undistorted, debug_out))
         img = input_image
     else:
@@ -245,40 +245,11 @@ def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, r
     counts_elements[black_label_index] = 0
     # Get the second most common label (The biggest white blob)
     most_present_label = unique_labels[np.argmax(counts_elements)]
-    # get the average coordinates of that blob
+    # get the geometrical center of that blob
     non_zeros = np.transpose(np.nonzero(labels == most_present_label))
     center = (np.max(non_zeros, axis=0) + np.min(non_zeros, axis=0)) / 2
     # TODO extra precision : apply marker_mask to find more precise location to the marker
 
-    # --------- Use contours to find the markers and their area ----------
-    # contours = cv2.findContours(hsvMask, cv2.RETR_EXTERNAL,
-    #                            cv2.CHAIN_APPROX_SIMPLE)
-    # contours = imutils.grab_contours(contours)
-    # center = None
-    # if len(contours) == 0:
-    #     logger.warning("No blobs found!")
-    # for c in contours:
-    #     area = cv2.contourArea(c)
-    #     logger.info("Here is a blob of area : %d", area)
-    #     if area > 100 and area < 2500:
-    #         logger.warning("Found a nice blob! :D debug out path : %s", debug_out_path)
-    #         convexWrap = cv2.convexHull(c)
-    #         cv2.drawContours(roiBlurOtsuBand, convexWrap, -1, (0, 255, 0), 3)
-    #         # x, y, w, h = cv2.boundingRect(convexWrap)
-    #         # cx = x + w / 2
-    #         # cy = y + h / 2
-    #         mmt = cv2.moments(convexWrap)
-    #         if mmt['m00'] == 0:
-    #             center = np.array([0, 0])
-    #         else:
-    #             center = np.array([float(mmt['m01']) / mmt['m00'], float(mmt['m10']) / mmt['m00']], dtype=np.float32) # cy, cx
-    #         break
-
-    # if center is None:
-    #     # TODO replace scipy center_of_mass. We don't want scipy dependencies
-    #     # contour detection failed, failsafe with the center of mass
-    #     weights = cv2.transform(hsv_roiBlurThreshBand, np.array([[0.6, 0., 0.8]]))
-    #     center = center_of_mass(weights)
     # ensure at least some circles were found
     if debug_out_path is not None:
         debug_quad_path = debug_out_path.replace('.jpg', '{}.jpg'.format(quadrant))
