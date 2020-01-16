@@ -2278,6 +2278,9 @@ $(function(){
 
 				// update fileslist
 				$('#'+self.currentQuickShapeFile.id+' .title').text(name);
+				// update clones if present
+				let colsRowsStr = $('#'+self.currentQuickShapeFile.id+' input.multiply').val();
+				self._svgMultiplyUpdate(self.currentQuickShapeFile, colsRowsStr);
 
 				// analytics
 				var analyticsData = {
