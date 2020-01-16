@@ -158,10 +158,6 @@ class ImageProcessor():
 		comment += "; eng_compressor = {}\n".format(self.compressor)
 		return comment
 
-	def set_overshoot_parameter(self, overshoot_distance, workingAreaWidth=500):
-		self.overshoot_distance = overshoot_distance
-		self.workingAreaWidth = workingAreaWidth
-
 	def img_prepare(self, img, w_mm, h_mm):
 		"""
 		1. pixel reduction (w,h)
@@ -207,7 +203,7 @@ class ImageProcessor():
 		self.log.info("#####")
 		self.log.info(bbox)
 		self.log.info((0,0,dest_wpx, dest_hpx))
-		
+
 		if(False):
 			self.profiler.start('crop')
 
@@ -284,7 +280,7 @@ class ImageProcessor():
 				self.separation = False
 				self.line_by_line = True
 				self.log.warn("Dithering overwrites engraving mode (workaround for #455)") # TODO fix in frontend. separation does never make sense with dithering
-				
+
 			if(self.debugPreprocessing):
 				img.save("/tmp/img2gcode_6_dithered.png")
 
@@ -448,7 +444,7 @@ class ImageProcessor():
 		# pragmatic O(n^2) sorting
 		out = []
 		# We want the laserhead begins bottom left (ltr reading direction). So put this as starting point.
-		lastPos = (0, self.workingAreaHeight/self.beam) # untransformed px coordinates here: 0,0 is top left. 
+		lastPos = (0, self.workingAreaHeight/self.beam) # untransformed px coordinates here: 0,0 is top left.
 		while(len(imgArray) > 0):
 			dist = float('inf')
 			closest = None
@@ -459,13 +455,13 @@ class ImageProcessor():
 				if(dst < dist):
 					closest = img
 					dist = dst
-			
+
 			out.append(closest)
 			imgArray.remove(closest)
 			lastPos = (closest['x']+closest['i'].size[0], closest['y'])
 
 		return out
-		
+
 	def _dist(self, p0, p1):
 		return math.sqrt((p0[0] - p1[0])**2 + (p0[1] - p1[1])**2)
 
