@@ -210,7 +210,7 @@ $(function () {
                 name: gettext("Slate"),
                 img: 'Slate.jpg',
                 description: gettext(' '),
-                hints: gettext(' '),
+                hints: gettext('When engraving slate, the engraving becomes brighter than the original material. Possibly the design template should be inverted.'),
             },
             'Snappap': {
                 name: gettext("Snappap"),
