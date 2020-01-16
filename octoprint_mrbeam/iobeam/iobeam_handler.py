@@ -954,7 +954,7 @@ class IoBeamHandler(object):
 					else:
 						self._logger.debug("Received response: %s", response)
 				elif device == self.MESSAGE_DEVICE_COMPRESSOR:
-					self._logger.debug("ANDYTEST handling compressor response: %s", message)
+					self._logger.debug("handling compressor response: %s", message)
 				else:
 					self._logger.debug("_handle_response() receives response for unknow device: %s", response)
 
