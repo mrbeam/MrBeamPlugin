@@ -158,10 +158,6 @@ class ImageProcessor():
 		comment += "; eng_compressor = {}\n".format(self.compressor)
 		return comment
 
-	def set_overshoot_parameter(self, overshoot_distance, workingAreaWidth=500):
-		self.overshoot_distance = overshoot_distance
-		self.workingAreaWidth = workingAreaWidth
-
 	def img_prepare(self, img, w_mm, h_mm):
 		"""
 		1. pixel reduction (w,h)
