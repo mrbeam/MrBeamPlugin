@@ -1,21 +1,21 @@
 #!/bin/sh
 
 ### BEGIN INIT INFO
-# Provides:          etc_initd_netconnectd
+# Provides:          netconnectd
 # Required-Start:    $local_fs networking
 # Required-Stop:
 # Should-Start:
 # Should-Stop:
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: etc_initd_netconnectd daemon
-# Description:       Starts the etc_initd_netconnectd daemon with the parameters specified in
-#                    /etc/default/etc_initd_netconnectd.
+# Short-Description: netconnectd daemon
+# Description:       Starts the netconnectd daemon with the parameters specified in
+#                    /etc/default/netconnectd.
 ### END INIT INFO
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-DESC="etc_initd_netconnectd"
-NAME="etc_initd_netconnectd"
+DESC="netconnectd"
+NAME="netconnectd"
 DAEMON=/usr/local/bin/netconnectd
 PIDFILE=/var/run/$NAME.pid
 SOCKET=/var/run/$NAME.sock
@@ -42,7 +42,7 @@ else
 		sed -i "s/wlan[01]/wlan0/g" $CONFIGFILE
 fi
 
-# Exit if etc_initd_netconnectd is not installed
+# Exit if netconnectd is not installed
 [ -x "$DAEMON" ] || exit 0
 
 # Load the VERBOSE setting and other rcS variables
