@@ -263,6 +263,7 @@ class Converter():
 											workingAreaWidth = self.workingAreaWidth,
 											workingAreaHeight = self.workingAreaHeight,
 						                    beam_diameter = rasterParams['beam_diameter'],
+						                    overshoot_distance = rasterParams.get('overshoot', 0),
 											intensity_black = rasterParams['intensity_black'],
 											intensity_white = rasterParams['intensity_white'],
 											intensity_black_user = rasterParams['intensity_black_user'],
@@ -285,7 +286,7 @@ class Converter():
 							ip.imgurl_to_gcode(data, w, h, upperLeft[0], lowerRight[1], file_id)
 						else:
 							self._log.error("Unable to parse img data", data)
-						
+
 						profiler.nest_data(ip.get_profiler())
 
 						processedItemCount += 1
@@ -348,12 +349,12 @@ class Converter():
 						# TODO sort paths
 						# check length (below ??? paths sort, above just go)
 						# while len(paths_by_color[colorKey]) > 0:
-							# get current pos 
+							# get current pos
 							# pick closest starting point to (current_x, current_y)
 							# process...
 							# set current_x, current_y
 							# drop from list
-						
+
 						for path in paths_by_color[colorKey]:
 							curveGCode = ""
 							mbgc = path.get(_add_ns('gc', 'mb'), None)
@@ -372,7 +373,7 @@ class Converter():
 								fh.write("; pass:%i/%s\n" % (p+1, settings['passes']))
 								# TODO tbd DreamCut different for each pass?
 								fh.write(curveGCode)
-							
+
 
 						# TODO check if _after_job should be one(two?) levels less indented
 						# gcode_after_job
