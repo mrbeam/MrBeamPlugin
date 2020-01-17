@@ -1239,6 +1239,16 @@ ul.dropdown-menu li a {
     border-radius: 8px;
 }
 
+.rounded_container .rounded_container_title {
+    font-weight: 900;
+    margin-top: -20px;
+}
+
+.rounded_container .rounded_container_hr {
+    margin: 10px -20px;
+    border: 1px solid #595959;
+}
+
 #files .preview_card div.preview,
 #files .icon_card div.preview {
 	padding-top: 80%;
