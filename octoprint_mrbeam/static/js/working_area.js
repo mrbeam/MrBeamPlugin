@@ -558,6 +558,7 @@ $(function(){
 			}
 
 			try {
+				// bake() kills gradients because gradient coordinates are not transformed.
 				var switches = $.extend({showTransformHandles: true, embedGCode: true, bakeTransforms: true}, flags);
 				fragment = self._removeUnsupportedSvgElements(fragment, analyticsData);
 
@@ -597,6 +598,9 @@ $(function(){
 						}
 					}
 				}
+				
+				// remove elements hidden by display:none
+				newSvg.selectAll('[style*="display:none"]').remove(); // TODO: maybe support different writings ("display: none" e.g.)
 
 				newSvg.attr(newSvgAttrs);
 				if (switches.bakeTransforms) {
