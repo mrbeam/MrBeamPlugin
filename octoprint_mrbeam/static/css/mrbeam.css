@@ -10,6 +10,7 @@ a.muted:hover{ color: #e25303a1 }
   border-color: white;
   color: #595959;
   font-weight: 900;
+  padding: 8px 40px;
 }
 
 .btn-group-vertical>.btn:first-child,
@@ -57,19 +58,43 @@ a.muted:hover{ color: #e25303a1 }
 .btn-small {
   padding: 2px 10px;
   font-size: 11.9px;
+  border-radius: 6px;
 }
 .btn-small [class^="icon-"],
 .btn-small [class*=" icon-"] {
   margin-top: 0;
 }
+
+.btn-group-vertical>.btn:first-child,
+.btn-group>.btn-small:first-child {
+  border-radius: 6px 0 0 6px;
+}
+
+.btn-group-vertical>.btn:last-child,
+.btn-group>.btn-small:last-child {
+  border-radius: 0 6px 6px 0;
+}
+
 .btn-mini [class^="icon-"],
 .btn-mini [class*=" icon-"] {
   margin-top: -1px;
 }
 .btn-mini {
+  border-radius: 4px;
   padding: 0 6px;
   font-size: 10.5px;
 }
+
+.btn-group-vertical>.btn:first-child,
+.btn-group>.btn-mini:first-child {
+  border-radius: 4px 0 0 4px;
+}
+
+.btn-group-vertical>.btn:last-child,
+.btn-group>.btn-mini:last-child {
+  border-radius: 0 4px 4px 0;
+}
+
 .btn-block {
   display: block;
   width: 100%;
