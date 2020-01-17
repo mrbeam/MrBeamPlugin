@@ -25,7 +25,7 @@ class Migration(object):
 	VERSION_USERNAME_LOWCASE				 = '0.2.0'
 	VERSION_GRBL_AUTO_UPDATE                 = '0.2.1'
 	VERSION_MOUNT_MANAGER_164                = '0.5.3.2'
-	VERSION_INITD_NETCONNECTD                = '0.5.3.3'
+	VERSION_INITD_NETCONNECTD                = '0.5.5'
 
 	# this is where we have files needed for migrations
 	MIGRATE_FILES_FOLDER     = 'files/migrate/'
