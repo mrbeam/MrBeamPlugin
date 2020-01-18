@@ -435,7 +435,7 @@ $(function(){
 				var unitScaleX = self._getDocumentScaleToMM(doc_dimensions.units_x, generator_info);
 				var unitScaleY = self._getDocumentScaleToMM(doc_dimensions.units_y, generator_info);
 				var mat = self.getDocumentViewBoxMatrix(doc_dimensions, doc_dimensions.viewbox);
-				var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(unitScaleX, unitScaleY).toTransformString();
+				var scaleMatrixStr = new Snap.Matrix(mat[0][0] * unitScaleX, mat[0][1], mat[1][0], mat[1][1]*unitScaleY,-mat[2][0]* unitScaleX,-mat[2][1]*unitScaleY).toTransformString();
 
 				var analyticsData = {};
 				analyticsData.file_type = 'svg';
