@@ -603,9 +603,6 @@ $(function(){
 					}
 				}
 				
-				// remove elements hidden by display:none
-				newSvg.selectAll('[style*="display:none"]').remove(); // TODO: maybe support different writings ("display: none" e.g.)
-
 				newSvg.attr(newSvgAttrs);
 				if (switches.bakeTransforms) {
 					window.mrbeam.bake_progress = 0;
@@ -676,9 +673,9 @@ $(function(){
 					myElem.remove();
 				}
 			}
-
+			
 			// remove other unnecessary or invisible ("display=none") elements
-			let removeElements = fragment.selectAll("metadata, script, [display=none]");
+			let removeElements = fragment.selectAll('metadata, script, [display=none], [style*="display:none"]');
 			for (var i = 0; i < removeElements.length; i++) {
 				if (!(removeElements[i] in analyticsData.removed_unnecessary_elements)) analyticsData.removed_unnecessary_elements[removeElements[i].type] = 0;
 				analyticsData.removed_unnecessary_elements[removeElements[i].type]++;
@@ -688,7 +685,12 @@ $(function(){
 		};
 
 		self.loadSVG = function(url, callback){
-			Snap.load(url, callback);
+			Snap.ajax(url, function (req) {
+				// add more filters for trouble character here.
+				let svgStr = req.responseText.replace(/\u00A0/g, ' '); // remove no-break-space ASCII:160, utf16:00a0
+				let fragment = Snap.parse(svgStr);
+				callback(fragment);
+			});
 		};
 
 		self.removeSVG = function(file){
