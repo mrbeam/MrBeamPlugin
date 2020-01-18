@@ -1174,11 +1174,11 @@ $(function(){
 			var dx = 0;
 			var dy = 0;
 			var outside = false;
-			if(svgBB.x < waBB.x){
+			if(svgBB.x < waBB.x){ // outside on the left
 				dx = -svgBB.x + 0.01;
 				outside = true;
-			} else if(svgBB.x2 > waBB.x2){
-				dx = -svgBB.x + 0.01;
+			} else if(svgBB.x2 > waBB.x2){ // outside on the right
+				dx = -svgBB.x2 + waBB.x2 - 0.01;
 				outside = true;
 			}
 			if(svgBB.y < waBB.y){
