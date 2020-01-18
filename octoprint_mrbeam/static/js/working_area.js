@@ -420,6 +420,10 @@ $(function(){
 					self.file_not_readable();
 					return;
 				}
+				if(WorkingAreaHelper.isEmptyFile(fragment.node.textContent)) { // zerobyte files
+					self.file_not_readable();
+					return;
+				}
 				var id = self.getEntryId();
 				var previewId = self.generateUniqueId(id, file); // appends -# if multiple times the same design is placed.
 				var origin = file["refs"]["download"];
