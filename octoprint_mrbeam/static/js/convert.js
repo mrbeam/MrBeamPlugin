@@ -472,6 +472,7 @@ $(function(){
 				}
 			}
 			$('.job_row .not-used').remove();
+			self._update_color_assignments(); // removes line-color-engraving sliders of not in use colors
 		};
 
 		self._getColorIcon = function(color){
