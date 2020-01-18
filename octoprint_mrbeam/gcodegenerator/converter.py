@@ -54,6 +54,8 @@ class Converter():
 		self._log = logging.getLogger("octoprint.plugins.mrbeam.converter")
 		self.workingAreaWidth = workingAreaWidth
 		self.workingAreaHeight = workingAreaHeight
+		self.optimize_path_order = True
+		self.optimize_max_paths = 500
 
 		# debugging
 		self.transform_matrix = {}
@@ -299,7 +301,6 @@ class Converter():
 			# paths
 			self._log.info( 'Vector conversion: %s paths' % len(self.paths))
 
-			vector_conversion_analytics = {'frontend': 0, 'backend':0, 'vectors':0}
 			for layer in self.layers :
 				if layer in self.paths :
 					paths_by_color = dict()
@@ -318,7 +319,6 @@ class Converter():
 							paths_by_color[stroke] = []
 						d = path.get("d")
 						if d != '':
-							# TODO add start and end of path
 							paths_by_color[stroke].append(path)# += path
 							processedItemCount += 1
 							report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
@@ -326,9 +326,10 @@ class Converter():
 					layerId = layer.get('id') or '?'
 					pathId = path.get('id') or '?'
 
-					# set initial laser pos, assuming pleasant left to right, bottom to top processing order
+					# path_sorting: set initial laser pos, assuming pleasant left to right, bottom to top processing order
 					current_x = 0
 					current_y = 0
+					
 					#for each color generate GCode
 					for colorKey in self.colorOrder:
 						if colorKey == 'none':
@@ -346,16 +347,31 @@ class Converter():
 						# gcode_before_job
 						fh.write(machine_settings.gcode_before_job(color=colorKey, compressor=settings.get('cut_compressor', '100')))
 
-						# TODO sort paths
-						# check length (below ??? paths sort, above just go)
-						# while len(paths_by_color[colorKey]) > 0:
-							# get current pos
+						self._log.info( "convert() path sorting active: %s, path size %i below maximum %i." % (self.optimize_path_order, len(paths_by_color[colorKey]), self.optimize_max_paths))
+						# if this O(n^2) algorithm blows performance, limit inner loop to just search within the first 100 items. 
+						while len(paths_by_color[colorKey]) > 0:
+							path_sorting = self.optimize_path_order and (len(paths_by_color[colorKey]) < self.optimize_max_paths)
 							# pick closest starting point to (current_x, current_y)
-							# process...
-							# set current_x, current_y
-							# drop from list
+							closestPath = None
+							if(path_sorting):
+								dist = float('inf')
+								for p in paths_by_color[colorKey]:
+									start_x = p.get(_add_ns('start_x', 'mb'), None)
+									start_y = p.get(_add_ns('start_y', 'mb'), None)
 
-						for path in paths_by_color[colorKey]:
+									if(start_x != None and start_y != None):
+										d = pow(float(start_x) - current_x, 2) + pow(float(start_y) - current_y, 2)
+										if(d < dist):
+											dist = d
+											closestPath = p
+							
+							path = None
+							if(closestPath != None):
+								path = closestPath
+							else:
+								path = paths_by_color[colorKey][0]
+
+							# process next / closest path...
 							curveGCode = ""
 							mbgc = path.get(_add_ns('gc', 'mb'), None)
 							if(mbgc != None):
@@ -373,7 +389,16 @@ class Converter():
 								fh.write("; pass:%i/%s\n" % (p+1, settings['passes']))
 								# TODO tbd DreamCut different for each pass?
 								fh.write(curveGCode)
-
+								
+							# set current position after processing the path
+							end_x = path.get(_add_ns('end_x', 'mb'), None)
+							end_y = path.get(_add_ns('end_y', 'mb'), None)
+							if(end_x != None and end_y != None):
+								current_x = float(end_x)
+								current_y = float(end_y)
+							
+							# finally removed processed path
+							paths_by_color[colorKey].remove(path)
 
 						# TODO check if _after_job should be one(two?) levels less indented
 						# gcode_after_job
