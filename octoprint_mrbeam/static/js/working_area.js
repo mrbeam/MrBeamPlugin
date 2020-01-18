@@ -1701,6 +1701,8 @@ $(function(){
 					dels[i].remove();
 				}
 			}
+			// TODO why not shorter?
+			// compSvg.selectAll('.deleteBeforeRendering').remove();
 
 			// embed the fonts as dataUris
 			// TODO only if Quick Text is present
@@ -2073,7 +2075,8 @@ $(function(){
 				}
 				console.log("Rendering " + fillings.length + " filled elements.");
 				if(fillAreas){
-					tmpSvg.renderPNG(svgWidthPT, svgHeightPT, wMM, hMM, pxPerMM, cb);
+					let renderBBoxMM = tmpSvg.getBBox(); // if #712 still fails, fetch this bbox earlier (getCompositionSvg()). 
+					tmpSvg.renderPNG(svgWidthPT, svgHeightPT, wMM, hMM, pxPerMM, renderBBoxMM, cb);
 				} else {
 					cb(null)
 				}
