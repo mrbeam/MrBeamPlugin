@@ -400,8 +400,10 @@ class PhotoCreator(object):
                         # TODO use response from front-end
                         pic_qual_index += 1
                         prev = latest
-                    elif nb_consecutive_similar_pics % SIMILAR_PICS_BEFORE_REFRESH == 0:
-                        # TODO override frontend lacking response
+                    elif nb_consecutive_similar_pics % SIMILAR_PICS_BEFORE_REFRESH == 0: # \
+                            # and not self._serve_asap.isSet():
+                        # Frontend lacking response after a given time
+                        # Send a new picture just to make sure
                         # Use previously set quality and scale factor
                         prev = latest
                         # Try to send a picture despite the client not responding / being ready
@@ -490,10 +492,10 @@ class PhotoCreator(object):
                                                               debug_out=self.debug,  # self.save_debug_images,
                                                               stopEvent=self.stopEvent,
                                                               threads=4)
-        if not self.active(): return False, None, None
+        if not self.active(): return False, None, None, None
         success_1 = workspaceCorners is not None
         # Conform to the legacy result to be sent to frontend
-        correction_result = {'markers_found':         list(map(copy.copy(QD_KEYS).remove, missed)),
+        correction_result = {'markers_found':         list(filter(lambda q: q not in missed, QD_KEYS)),
                              # {k: v.astype(int) for k, v in markers.items()},
                              'markers_recognised':    4 - len(missed),
                              'corners_calculated':    None if workspaceCorners is None else list(workspaceCorners),
@@ -600,6 +602,7 @@ class PhotoCreator(object):
             self._serve_asap.set()
 
     def _send_frontend_picture_metadata(self, meta_data):
+        self._logger.debug("Sending results to front-end :\n%s" % json.dumps(dict(beam_cam_new_image=meta_data), default=json_serialisor))
         self._plugin_manager.send_plugin_message("mrbeam", dict(beam_cam_new_image=meta_data))
 
     def _createFolder_if_not_existing(self, filename):

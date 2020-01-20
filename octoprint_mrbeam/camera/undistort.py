@@ -269,18 +269,16 @@ def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, r
     if debug_out_path is not None:
         debug_quad_path = debug_out_path.replace('.jpg', '{}.jpg'.format(quadrant))
         logger.debug("Writing debug image at %s", debug_out_path)
-    if center is None:
-        if debug_out_path is not None:
+        if center is None:
             cv2.imwrite(debug_quad_path, hsvMask)
             # debugShow(roiBlurOtsuBand, "shape")
-        return None  # hue_lower=hue_lower, pixels=affected, )
-    else:
-        if debug_out_path is not None:
+        else:
             y, x = np.round(center).astype("int") # y, x
             debug_roi = cv2.circle(hsvMask, (x, y), 5, (255, 255, 255), 2)
             cv2.imwrite(debug_quad_path.replace('.jpg', '{}.jpg'.format(quadrant)), debug_roi)
             # debugShow(debug_roi, "shape")
-        return dict(pos=center, )  # pixels=affected, hue_lower=hue_lower)
+    if center is None: return None  # hue_lower=hue_lower, pixels=affected, )
+    else:              return dict(pos=center, )  # pixels=affected, hue_lower=hue_lower)
 
 def _undistortImage(img, dist, mtx):
     """Apply the camera calibration matrices to distort the picture back straight"""
