@@ -272,7 +272,7 @@ def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, r
             # debugShow(roiBlurOtsuBand, "shape")
         else:
             y, x = np.round(center).astype("int") # y, x
-            debug_roi = cv2.circle(hsvMask, (x, y), 5, (255, 255, 255), 2)
+            debug_roi = cv2.drawMarker(cv2.cvtColor(hsvMask, cv2.COLOR_GRAY2BGR), (x, y), (0, 0, 255), cv2.MARKER_CROSS)
             cv2.imwrite(debug_quad_path, debug_roi)
             # debugShow(debug_roi, "shape")
     if center is None: return None  # hue_lower=hue_lower, pixels=affected, )
