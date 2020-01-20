@@ -35,7 +35,7 @@ QD_KEYS = [NW,NE,SW,SE]
 # Size of the corner search area
 RATIO_W, RATIO_H = Fraction(1, 8), Fraction(1, 4)
 # Padding distance from the edges of the image (The markers are never pressed against the border)
-OFFSET_W, OFFSET_H = Fraction(1, 36), Fraction(1, 20)
+OFFSET_W, OFFSET_H = Fraction(0, 36), Fraction(1, 20)
 
 LEGACY_STILL_RES = RESOLUTIONS['2048x1536'] # from octoprint_mrbeam __init___ : get_settings_defaults
 DEFAULT_STILL_RES = RESOLUTIONS['2592x1944']  # Be careful : Resolutions accepted as increments of 32 horizontally and 16 vertically
@@ -147,7 +147,7 @@ def getRois(img, ratioW=RATIO_W, ratioH=RATIO_H,  offsetW=OFFSET_W, offsetH=OFFS
     """
     # Generator
     for pole in QD_KEYS:
-        _sliceVert, _sliceHoriz = _roiSlice(img, pole, ratioW, ratioH, offsetW, offsetH)
+        _sliceVert, _sliceHoriz = _roiSlice(img, pole, ratioW=ratioW, ratioH=ratioH, offsetW=offsetW, offsetH=offsetH)
         h, w = img.shape[:2]
         row, col = _sliceVert.start, _sliceHoriz.start
         # print("row: {}, col {}".format(row, col))

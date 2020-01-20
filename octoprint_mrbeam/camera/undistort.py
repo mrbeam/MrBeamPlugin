@@ -78,7 +78,6 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
         logger.info("DEBUG enabled")
     else:
         logger.setLevel(logging.WARNING)
-    start_time = time.time()
 
     err = None
 
@@ -146,11 +145,12 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 
     # check if picture should be thrown away
     # if less then 3 markers are found
-    if len(missed) > 1:  # elif # filter out None values
-        err = 'BAD_QUALITY:Too few markers (circles) recognized.'
-        logger.debug(err)
-        return None, markers, missed, err
-    elif len(missed) == 1 and len(markers) == 4:
+    # if len(missed) > 1 and len(markers) == 4:  # elif # filter out None values
+    #     err = 'BAD_QUALITY:Too few markers (circles) recognized.'
+    #     logger.debug(err)
+    #     return None, markers, missed, err
+    # elif len(missed) == 1 and len(markers) == 4:
+    if len(missed) > 1 and len(markers) == 4:
         err = "Missed marker %s" % missed[0]
         logger.warning(err)
     elif len(markers) < 4:
@@ -182,8 +182,6 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
     cv2.imwrite(filename=path_to_output_image,
                 img=cv2.cvtColor(cv2.resize(warpedImg, size), cv2.COLOR_BGR2GRAY),
                 params=[int(cv2.IMWRITE_JPEG_QUALITY), quality])
-
-    logger.debug('prepareImage(...) took {} s'.format((time.time()-start_time)))
 
     return workspaceCorners, markers, missed, err
 
@@ -275,7 +273,7 @@ def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, r
         else:
             y, x = np.round(center).astype("int") # y, x
             debug_roi = cv2.circle(hsvMask, (x, y), 5, (255, 255, 255), 2)
-            cv2.imwrite(debug_quad_path.replace('.jpg', '{}.jpg'.format(quadrant)), debug_roi)
+            cv2.imwrite(debug_quad_path, debug_roi)
             # debugShow(debug_roi, "shape")
     if center is None: return None  # hue_lower=hue_lower, pixels=affected, )
     else:              return dict(pos=center, )  # pixels=affected, hue_lower=hue_lower)
@@ -342,10 +340,16 @@ def _get_hue_mask(hsv_roi, bandsize=11, pixTrigAmount=500, pixTooMany=3000): #(h
             for elm in concatGen(generators[1:]):
                 yield elm
 
-    return maximisePixCount(concatGen([_slidingHueMask(hsv_roi, bandsize, sBound=(60, 255), vBound=(60, 255), dS=4, dV=4),
-                                       _slidingHueMask(hsv_roi, bandsize+5, sBound=(40, 255), vBound=(180, 255), dS=15, dV=15, ascending=False)]))
+    return maximisePixCount(concatGen([_slidingHueMask(hsv_roi, bandsize+2, sBound=(60, 255), vBound=(60, 255), dS=4, dV=4),
+                                       # High light situaton : Markers always have a high value and broad variety of saturation
+                                       _slidingHueMask(hsv_roi, bandsize+5, sBound=(40, 255), vBound=(180, 255), dS=15, dV=15, ascending=False),
+                                       # Cold to neutral and dim light doesn't make the markers pop out as well :
+                                       # Both value and saturation are bad, but Hue is usually pretty high
+                                       #
+                                       _slidingHueMask(hsv_roi, bandsize+5, hBound=(145, 190), sBound=(50, 200), vBound=(60, 220), dS=17, dV=17),
+                                       ]))
 
-def _slidingHueMask(hsv_roi, bandSize, sBound=(0, 255), vBound=(0, 255), dS=5, dV=4, ascending=True, refine=-1):
+def _slidingHueMask(hsv_roi, bandSize, hBound=None, sBound=(0, 255), vBound=(0, 255), dS=5, dV=4, ascending=True, refine=-1):
     #(hsv_roi: np.ndarray, bandSize: int, sBound=(0, 255), vBound=(0, 255), dS=5, dV=4, ascending= True, refine=-1):
     """
     Generates masks of the input image by thresholding the image hue inside a certain range.
@@ -356,14 +360,16 @@ def _slidingHueMask(hsv_roi, bandSize, sBound=(0, 255), vBound=(0, 255), dS=5, d
         after sliding, takes the best performing band, and perform a local maxima search with the dichotomic search
     """
     if ascending:
-        h1, h2 = HUE_BAND_LB, HUE_BAND_UB
+        if hBound is not None: h1, h2 = hBound
+        else: h1, h2 = HUE_BAND_LB, HUE_BAND_UB
         s1, s2 = sBound
         v1, v2 = vBound
     else:
-        h1, h2 = HUE_BAND_UB, HUE_BAND_LB
+        if hBound is not None: h2, h1 = hBound
+        else: h2, h1 = HUE_BAND_LB, HUE_BAND_UB
         s1, s2 = sBound[::-1]
         v1, v2 = vBound[::-1]
-    bands = np.linspace(h1, h2, int((HUE_BAND_UB - HUE_BAND_LB) / bandSize * 2) + 1)
+    bands = np.linspace(h1, h2, int(abs(h2-h1) / bandSize * 2) + 1)
     # bands.append(h2)
     # subdivide Saturation and Hue in same number of bands (S growing, H decreasing)
     sBand = np.linspace(s1, s2, len(bands)).astype(int)

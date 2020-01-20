@@ -240,7 +240,7 @@ class PhotoCreator(object):
         self.camera = None
         self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator")
         self.debug = debug
-        self._serve_asap = Event()
+        self._front_ready = Event()
         self.last_correction_result = None
         if debug: self._logger.setLevel(logging.DEBUG)
         else:     self._logger.setLevel(logging.INFO)
@@ -311,7 +311,7 @@ class PhotoCreator(object):
         """
 
         session_details = blank_session_details()
-        self._serve_asap.set()
+        self._front_ready.set()
         path_to_cam_params = self._settings.get(["cam", "lensCalibrationFile"])
         path_to_pic_settings = self._settings.get(["cam", "correctionSettingsFile"])
         path_to_last_markers = self._settings.get(["cam", "correctionTmpFile"])
@@ -400,16 +400,13 @@ class PhotoCreator(object):
                         # TODO use response from front-end
                         pic_qual_index += 1
                         prev = latest
-                    elif nb_consecutive_similar_pics % SIMILAR_PICS_BEFORE_REFRESH == 0: # \
-                            # and not self._serve_asap.isSet():
-                        # Frontend lacking response after a given time
-                        # Send a new picture just to make sure
-                        # Use previously set quality and scale factor
-                        prev = latest
+                    elif nb_consecutive_similar_pics % SIMILAR_PICS_BEFORE_REFRESH == 0 \
+                            and not self._front_ready.isSet():
                         # Try to send a picture despite the client not responding / being ready
-                        self._serve_asap.set()
+                        prev = latest
+                        self._front_ready.set()
                     else:
-                        time.sleep(1) # Let the raspberry breathe a bit
+                        time.sleep(1.5) # Let the raspberry breathe a bit (prevent overheating)
                         continue
                 # Get the desired scale and quality of the picture to serve
                 upscale_factor , quality = pic_qualities[pic_qual_index]
@@ -491,7 +488,7 @@ class PhotoCreator(object):
                                                               quality=quality,
                                                               debug_out=self.debug,  # self.save_debug_images,
                                                               stopEvent=self.stopEvent,
-                                                              threads=4)
+                                                              threads=-1)
         if not self.active(): return False, None, None, None
         success_1 = workspaceCorners is not None
         # Conform to the legacy result to be sent to frontend
@@ -592,14 +589,15 @@ class PhotoCreator(object):
         self.send_pic_asap(force=force)
 
     def send_pic_asap(self, force=False):
-        if force or self._pic_available.isSet() and self._serve_asap.isSet():
+        if force or self._pic_available.isSet() and self._front_ready.isSet():
+            # Both front and backend sould be ready to send/receive a new picture
             self._move_img(self.tmp_img_prepared, self.final_image_path)
             self._send_frontend_picture_metadata(self.last_correction_result)
             self._pic_available.clear()
-            self._serve_asap.clear()
+            self._front_ready.clear()
         else:
-            # TODO 2nd picture slow connect will be served
-            self._serve_asap.set()
+            # Front end finished loading the picture
+            self._front_ready.set()
 
     def _send_frontend_picture_metadata(self, meta_data):
         self._logger.debug("Sending results to front-end :\n%s" % json.dumps(dict(beam_cam_new_image=meta_data), default=json_serialisor))
