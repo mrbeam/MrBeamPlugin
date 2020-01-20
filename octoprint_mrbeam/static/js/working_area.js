@@ -420,6 +420,10 @@ $(function(){
 					self.file_not_readable();
 					return;
 				}
+				if(WorkingAreaHelper.isEmptyFile(fragment.node.textContent)) { // zerobyte files
+					self.file_not_readable();
+					return;
+				}
 				var id = self.getEntryId();
 				var previewId = self.generateUniqueId(id, file); // appends -# if multiple times the same design is placed.
 				var origin = file["refs"]["download"];
@@ -435,7 +439,7 @@ $(function(){
 				var unitScaleX = self._getDocumentScaleToMM(doc_dimensions.units_x, generator_info);
 				var unitScaleY = self._getDocumentScaleToMM(doc_dimensions.units_y, generator_info);
 				var mat = self.getDocumentViewBoxMatrix(doc_dimensions, doc_dimensions.viewbox);
-				var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(unitScaleX, unitScaleY).toTransformString();
+				var scaleMatrixStr = new Snap.Matrix(mat[0][0] * unitScaleX, mat[0][1], mat[1][0], mat[1][1]*unitScaleY,-mat[2][0]* unitScaleX,-mat[2][1]*unitScaleY).toTransformString();
 
 				var analyticsData = {};
 				analyticsData.file_type = 'svg';
@@ -558,6 +562,7 @@ $(function(){
 			}
 
 			try {
+				// bake() kills gradients because gradient coordinates are not transformed.
 				var switches = $.extend({showTransformHandles: true, embedGCode: true, bakeTransforms: true}, flags);
 				fragment = self._removeUnsupportedSvgElements(fragment, analyticsData);
 
@@ -597,7 +602,7 @@ $(function(){
 						}
 					}
 				}
-
+				
 				newSvg.attr(newSvgAttrs);
 				if (switches.bakeTransforms) {
 					window.mrbeam.bake_progress = 0;
@@ -668,9 +673,9 @@ $(function(){
 					myElem.remove();
 				}
 			}
-
+			
 			// remove other unnecessary or invisible ("display=none") elements
-			let removeElements = fragment.selectAll("metadata, script, [display=none]");
+			let removeElements = fragment.selectAll('metadata, script, [display=none], [style*="display:none"]');
 			for (var i = 0; i < removeElements.length; i++) {
 				if (!(removeElements[i] in analyticsData.removed_unnecessary_elements)) analyticsData.removed_unnecessary_elements[removeElements[i].type] = 0;
 				analyticsData.removed_unnecessary_elements[removeElements[i].type]++;
@@ -680,7 +685,12 @@ $(function(){
 		};
 
 		self.loadSVG = function(url, callback){
-			Snap.load(url, callback);
+			Snap.ajax(url, function (req) {
+				// add more filters for trouble character here.
+				let svgStr = req.responseText.replace(/\u00A0/g, ' '); // remove no-break-space ASCII:160, utf16:00a0
+				let fragment = Snap.parse(svgStr);
+				callback(fragment);
+			});
 		};
 
 		self.removeSVG = function(file){
@@ -1170,11 +1180,11 @@ $(function(){
 			var dx = 0;
 			var dy = 0;
 			var outside = false;
-			if(svgBB.x < waBB.x){
+			if(svgBB.x < waBB.x){ // outside on the left
 				dx = -svgBB.x + 0.01;
 				outside = true;
-			} else if(svgBB.x2 > waBB.x2){
-				dx = -svgBB.x + 0.01;
+			} else if(svgBB.x2 > waBB.x2){ // outside on the right
+				dx = -svgBB.x2 + waBB.x2 - 0.01;
 				outside = true;
 			}
 			if(svgBB.y < waBB.y){
@@ -1693,6 +1703,8 @@ $(function(){
 					dels[i].remove();
 				}
 			}
+			// TODO why not shorter?
+			// compSvg.selectAll('.deleteBeforeRendering').remove();
 
 			// embed the fonts as dataUris
 			// TODO only if Quick Text is present
@@ -2065,7 +2077,8 @@ $(function(){
 				}
 				console.log("Rendering " + fillings.length + " filled elements.");
 				if(fillAreas){
-					tmpSvg.renderPNG(svgWidthPT, svgHeightPT, wMM, hMM, pxPerMM, cb);
+					let renderBBoxMM = tmpSvg.getBBox(); // if #712 still fails, fetch this bbox earlier (getCompositionSvg()). 
+					tmpSvg.renderPNG(svgWidthPT, svgHeightPT, wMM, hMM, pxPerMM, renderBBoxMM, cb);
 				} else {
 					cb(null)
 				}
@@ -2278,6 +2291,9 @@ $(function(){
 
 				// update fileslist
 				$('#'+self.currentQuickShapeFile.id+' .title').text(name);
+				// update clones if present
+				let colsRowsStr = $('#'+self.currentQuickShapeFile.id+' input.multiply').val();
+				self._svgMultiplyUpdate(self.currentQuickShapeFile, colsRowsStr);
 
 				// analytics
 				var analyticsData = {

@@ -114,11 +114,18 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 	};
 
-	Element.prototype.renderPNG = function (wPT, hPT, wMM, hMM, pxPerMM, callback) {
+	Element.prototype.renderPNG = function (wPT, hPT, wMM, hMM, pxPerMM, renderBBoxMM=null, callback=null) {
 		var elem = this;
 		//console.info("renderPNG paper width", elem.paper.attr('width'), wPT);
-		console.info("renderPNG: SVG " + wPT + '*' + hPT +" (pt) with viewBox " + wMM + '*' + hMM + ' (mm), rendering @ ' + pxPerMM + ' px/mm')
-		var bbox = elem.getBBox(); // attention, this bbox uses viewBox coordinates (mm)
+		console.info("renderPNG: SVG " + wPT + '*' + hPT +" (pt) with viewBox " + wMM + '*' + hMM + ' (mm), rendering @ ' + pxPerMM + ' px/mm, cropping to bbox (mm): '+renderBBoxMM);
+
+		let bbox; // attention, this bbox uses viewBox coordinates (mm)
+		if(renderBBoxMM === null){
+			// warning: correct result depends upon all resources (img, fonts, ...) have to be fully loaded already.
+			bbox = elem.getBBox();
+		} else {
+			bbox = renderBBoxMM;
+		}
 
         // Quick fix: in some browsers the bbox is too tight, so we just add an extra 10% to all the sides, making the height and width 20% larger in total
         bbox.x = bbox.x - bbox.width * 0.1;
@@ -126,7 +133,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
         bbox.w = bbox.w * 1.2;
         bbox.h = bbox.h * 1.2;
 
-		console.info("renderPNG BBOX (in mm) to render: " + bbox.w +'*'+bbox.h + " @ " + bbox.x + ',' + bbox.y);
+		console.info("enlarged renderBBox (in mm): " + bbox.w +'*'+bbox.h + " @ " + bbox.x + ',' + bbox.y);
 
 		// get svg as dataUrl
 		var svgStr = elem.outerSVG();

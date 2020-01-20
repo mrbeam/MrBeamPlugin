@@ -1140,6 +1140,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if command == "convert":
 			# TODO stripping non-ascii is a hack - svg contains lots of non-ascii in <text> tags. Fix this!
 			svg = ''.join(i for i in data['svg'] if ord(i) < 128)  # strip non-ascii chars like €
+			# strip &nbsp; in attributes? see bug #383
 			del data['svg']
 			filename = "local/temp.svg"  # 'local' is just a path here, has nothing to do with the FileDestination.LOCAL
 

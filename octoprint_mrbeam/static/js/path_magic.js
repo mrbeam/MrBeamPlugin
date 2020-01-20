@@ -510,11 +510,15 @@ var mrbeam = mrbeam || {};
           }]);
           break;
         case "Z": // close path
-          var polyline = peek(polylines);
-          polyline.push({
-            x: polyline[0].x,
-            y: polyline[0].y
-          });
+          if(polylines.length > 0){ // more robust against d="MZ" (=> polylines=[]), sometimes crashed here.
+            var polyline = peek(polylines);
+            polyline.push({
+              x: polyline[0].x,
+              y: polyline[0].y
+            });
+		  } else {
+            console.warn('Closing path attempt while path was empty.');  
+		  }
           break;
         case "L": // line
           var polyline = peek(polylines);

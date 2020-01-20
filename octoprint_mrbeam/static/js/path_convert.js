@@ -133,8 +133,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		if (d){
 			new_path_attributes.d = d;
 		}
-		var path = old_elem.paper.path(new_path_attributes);
-
+		// TODO? try catch snap errors here in case d is bogus. remove element, to avoid crashes in the conversion.		
+		let path = old_elem.paper.path(new_path_attributes);
+ 
 		// get computed stroke of path and add as mb:color
 		var stroke = old_elem.attr("stroke");
 		if(stroke !== 'none' && stroke !== undefined && stroke !== ""){
@@ -221,15 +222,18 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 				d = 'M' + x1 + ',' + y1 + 'L' + x2 + ',' + y2;
 				break;
 			case 'polyline':
-//				d = 'M' + old_element.attr('points');
-				d = 'M' + old_element.attr().points.trim();
+				let points = old_element.attr().points;
+				if(points && points.length > 0){
+					d = 'M' + old_element.attr().points.trim();
+				} 
 				break;
 			case 'polygon':
-//				d = 'M' + old_element.attr('points') + 'Z';
-				d = 'M' + old_element.attr().points.trim() + 'Z';
+				let pts = old_element.attr().points;
+//				if(pts && pts.length > 0){
+					d = 'M' + old_element.attr().points.trim() + 'Z';
+//				}
 				break;
 			case 'rect':
-				// TODO ... 
 				var rx = parseFloat(old_element.attr('rx')),
 					ry = parseFloat(old_element.attr('ry')),
 					x = parseFloat(old_element.attr('x')),

@@ -201,6 +201,9 @@ class WorkingAreaHelper {
 	static isBinaryData(str) {
 		return /[\x00-\x08\x0E-\x1F]/.test(str);
 	}
+	static isEmptyFile(str) {
+		return str === "";
+	}
 }
 
 WorkingAreaHelper.HUMAN_READABLE_IDS_CONSTANTS = 'bcdfghjklmnpqrstvwxz';
