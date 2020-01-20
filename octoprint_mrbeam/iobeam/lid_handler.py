@@ -85,7 +85,7 @@ class LidHandler(object):
                                                self._plugin_manager,
                                                imagePath,
                                                self.image_correction_enabled,
-                                               debug=True)
+                                               debug=False)
 
         self._subscribe()
 
@@ -488,7 +488,7 @@ class PhotoCreator(object):
                                                               quality=quality,
                                                               debug_out=self.debug,  # self.save_debug_images,
                                                               stopEvent=self.stopEvent,
-                                                              threads=-1)
+                                                              threads=4)
         if not self.active(): return False, None, None, None
         success_1 = workspaceCorners is not None
         # Conform to the legacy result to be sent to frontend
