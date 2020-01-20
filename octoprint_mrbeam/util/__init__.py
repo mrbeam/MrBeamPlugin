@@ -41,7 +41,7 @@ def json_serialisor(elm):
             elif "__repr__" in dir(elm):
                 return repr(elm)
             else:
-                return "Not JSON serialisable"
+                return "Not JSON serialisable type : {}".format(type(elm))
 
 def log_output(logger, ret):
     logger.debug("output:\n%s" % json.dumps(ret, indent=2, default=json_serialisor))

@@ -90,6 +90,14 @@ class MrbCamera(PiCamera):
                                       kwargs={'format': 'jpeg'},)
         # TODO load the default settings
 
+    def anti_rolling_shutter_banding(self):
+        """mitigates the horizontal banding due to rolling shutter interaction with 50Hz/60Hz lights"""
+        # TODO 60Hz countries
+        self._logger.debug("Shutter speed : %i", self.shutter_speed)
+        self._logger.debug("Exposur speed : %i", self.exposure_speed)
+        autoShutterSpeed = self.exposure_speed
+        # self.shutter_speed = 10
+
     def apply_best_shutter_speed(self, shutterSpeedMultDelta=2, shutterSpeedDeltas=None):
         """
         Applies to the camera the best shutter speed to detect all the markers

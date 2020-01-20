@@ -78,6 +78,7 @@ class MrbPicWorker(object):
         bright_adjust, goodRois = brightness_result(self.latest)
         self.good_corner_bright.append(goodRois)
         self.adjust_brightness.append(bright_adjust)
+        # TODO adjust camera shutter speed with these brightness measurements
         self.busy.clear()
         self._logger.debug("Flushing done")
 
@@ -95,9 +96,11 @@ class MrbPicWorker(object):
 
     def allCornersCovered(self):
         """Tells if the buffered pictures cumulatively offer a good brightness for each corner"""
+        # Unused atm
         return all(qd in chain(self.good_corner_bright) for qd in QD_KEYS)
 
     def bestImg(self, targetAvg=128):
+        # Unused atm
         bestIndex = -1
         bestDist = -1
         for i, img in enumerate(self.images):
@@ -106,22 +109,9 @@ class MrbPicWorker(object):
                 bestIndex = i
         return bestIndex, self.images[bestIndex]
 
-    def merge(self, names=None):  # Iterator=None):
-        """Use the Mertens picture merging algo to create an HDR-like picture"""
-        # DEPRECATED
-        # When told to flush (this indicates end of recording), shut
-        # down in an orderly fashion.
-        print("images fused : ", len(self.images))
-        for i, img in enumerate(self.images):
-            if names:
-                cv2.imwrite(next(names), img)
-            else:
-                cv2.imwrite("really%i.jpg" % i, img)
-        merge_mertens = cv2.createMergeMertens()
-        return merge_mertens.process(self.images) * 255  # , times=times
-
     def saveImg(self, path, n=1):
         """Saves the last image or the n-th last buffer"""
+        # Unused atm
         assert(0 < n <= self._maxSize)
         f = io.open(path, 'wb')
         ret = f.write(self.buffers[-n])
@@ -223,7 +213,7 @@ def get_same_size(imageA, imageB, upscale=True):
     else:
         return imageA, imageB
 
-@logtime
+# @logtime
 def gaussBlurDiff(imageA, imageB, thresh=DIFF_TOLERANCE, blur=7, resize = 1):
     """
     Compares the two images by blurring them. If the strongest difference measured

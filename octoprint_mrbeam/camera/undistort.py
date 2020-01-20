@@ -17,6 +17,8 @@ MTX_KEY = 'mtx'
 RATIO_W_KEY = 'ratioW'
 RATIO_H_KEY = 'ratioH'
 
+STOP_EVENT_ERR = 'StopEvent was raised'
+
 HUE_BAND_LB_KEY = 'hue_lower_bound'
 HUE_BAND_LB = 125
 HUE_BAND_UB = 185 # if value > 180 : loops back to 0
@@ -42,6 +44,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
                  cam_dist,  #: ? np.ndarray ?,
                  cam_matrix,  #: ? np.ndarray ?,
                  pic_settings,  #: Map or str
+                 last_markers=None, # {'NW': np.array(I, J), ... }
                  size=RESOLUTIONS['1000x780'],
                  quality=90,
                  save_undistorted=None,
@@ -59,6 +62,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
     :param cam_dist: camera distance matrix (see cv2.camera_calibrate)
     :param cam_matrix: camera distortion matrix (see cv2.camera_calibrate)
     :param pic_settings: path to - or map as given by - pic_config.yaml
+    :param last_markers: used to compensate if a (single) marker is covered or unrecognised
     :param size : (width,height) of output image size, default is (1000,780)
     :param quality: set quality of output image from 0 to 100, default is 90
     :param save_undistorted: path to where the undistorted picture should be saved
@@ -76,6 +80,8 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
         logger.setLevel(logging.WARNING)
     start_time = time.time()
 
+    err = None
+
     # load pic_settings json
     if type(pic_settings) is str:
         pic_settings = _getPicSettings(pic_settings, custom_pic_settings)
@@ -83,8 +89,9 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 
     if not (M2C_VECTOR_KEY in pic_settings and _isValidQdDict(pic_settings[M2C_VECTOR_KEY])):
         pic_settings[M2C_VECTOR_KEY] = None
-        logger.error('No valid M2C_VECTORS found, please calibrate.')
-        return None, None
+        err = 'No valid M2C_VECTORS found, please calibrate.'
+        logger.error(err)
+        return None, None, None, err
 
     if type(input_image) is str:
         # check image path
@@ -94,15 +101,14 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
         if not isfile(input_image):
             no_Image_error_String = 'Could not find a picture under path: <{}>'.format(input_image)
             logger.error(no_Image_error_String)
-            # result[ERROR_KEY] = 'NO_PICTURE_FOUND:{}'.format(no_Image_error_String)
-            # return result
-            return None, None
+            return None, None, None, no_Image_error_String
 
         # load image
         img = cv2.imread(input_image, cv2.IMREAD_COLOR) #BGR
         if img is None:
-            logger.error('Could not load Image. Please check Camera and path_to_image.')
-            return None, None
+            err = 'Could not load Image. Please check Camera and path_to_image.'
+            logger.error(err)
+            return None, None, None, err
     elif type(input_image) is np.ndarray:
         logger.debug('Starting to prepare Image. \ninput: <{}> \noutput: <{}>\ncam dist : <{}>\ncam matrix: <{}>\nsize:{}\nquality:{}\nsave_undistorted:{}\ndebug_out:{}'.format(
                 "numpy ndarray", path_to_output_image, cam_dist, cam_matrix,
@@ -112,15 +118,11 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
         raise ValueError("path_to_input_image in mb_pic needs to be a path (string) or a numpy array")
     # undistort image with cam_params
     img = _undistortImage(img, cam_dist, cam_matrix)
-    if img is None:
-        # result[ERROR_KEY] = 'NO_PICTURE_FOUND: Could not load image from path <{}>'.format(path_to_input_image)
-        # return result
-        return None, None
 
     if debug_out:
         save_debug_img(img, path_to_output_image, "undistorted")
 
-    if stopEvent.isSet(): return None, None
+    if stopEvent.isSet(): return None, None, None, STOP_EVENT_ERR
 
     # search markers on undistorted pic
     dbg_markers = os.path.join(dirname(path_to_output_image), "markers", basename(path_to_output_image))
@@ -130,34 +132,47 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
                                               blur=blur,
                                               threads=threads)
     logger.debug('positions found: \n%s\n%s\n%s\n%s', *outputPoints.items())
-    markers = {qd: val['pos'] if val is not None else None for qd, val in outputPoints.items()}
-
-    if stopEvent.isSet(): return None, markers
+    markers = {}
+    # list of missed markers
+    missed = []
+    # TODO Python3 elegant filter : if len(list(filter(None.__ne__, markers.values()))) < 4: # elif # filter out None values
+    for qd, val in outputPoints.items():
+        if val is None:
+            if last_markers is not None and qd in last_markers.keys():
+                markers[qd] = last_markers[qd]
+            missed.append(qd)
+        else:
+            markers[qd] = val['pos']
 
     # check if picture should be thrown away
-    # if less then n markers are found
-    # TODO Python3 elegant filter : if len(list(filter(None.__ne__, markers.values()))) < 4: # elif # filter out None values
-    len_markers = 0
-    for v in markers.values():
-        if v is not None:
-            len_markers += 1
-    if len_markers < 4:  # elif # filter out None values
-        logger.debug('BAD_QUALITY:Too few markers (circles) recognized.')
-        return None, markers
+    # if less then 3 markers are found
+    if len(missed) > 1:  # elif # filter out None values
+        err = 'BAD_QUALITY:Too few markers (circles) recognized.'
+        logger.debug(err)
+        return None, markers, missed, err
+    elif len(missed) == 1 and len(markers) == 4:
+        err = "Missed marker %s" % missed[0]
+        logger.warning(err)
+    elif len(markers) < 4:
+        err = "Missed marker(s) %s, no(t enough) history to guess missing marker position(s)" % missed
+        logger.warning(err)
+        return None, markers, missed, err
 
-    if debug_out:
-        save_debug_img(_debug_drawMarkers(img, markers), path_to_output_image, "drawmarkers")
+    if stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR
+
+    if debug_out: save_debug_img(_debug_drawMarkers(img, markers), path_to_output_image, "drawmarkers")
 
     # get corners of working area
     workspaceCorners = {qd: markers[qd] + pic_settings[M2C_VECTOR_KEY][qd][::-1] for qd in QD_KEYS}
-    logger.debug("Workspace corners \n%s\n%s\n%s\n%s", *workspaceCorners.items())
+    logger.debug("Workspace corners \nNW % 14s  NE % 14s\nSW % 14s  SE % 14s"
+                 % tuple(map(np.ndarray.tolist, map(workspaceCorners.__getitem__, ['NW', 'NE', 'SW', 'SE']))))
     if debug_out: save_debug_img(_debug_drawCorners(img, workspaceCorners), path_to_output_image, "drawcorners")
 
     # warp image
     warpedImg = _warpImgByCorners(img, workspaceCorners)
     if debug_out: save_debug_img(warpedImg, path_to_output_image, "colorwarp")
 
-    if stopEvent.isSet(): return None, markers
+    if stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR
 
     # resize and do NOT make greyscale, then save it
     # cv2.imwrite(filename=path_to_output_image,
@@ -170,7 +185,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 
     logger.debug('prepareImage(...) took {} s'.format((time.time()-start_time)))
 
-    return workspaceCorners, markers
+    return workspaceCorners, markers, missed, err
 
 def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1):
     """Allows a multi-processing implementation of the marker detection algo. Up to 4 processes needed."""
@@ -418,16 +433,6 @@ def _warpImgByCorners(image, corners):
     # compute warped image
     warpedImg = cv2.warpPerspective(image, transMatrix, (maxWidth, maxHeight))
     return warpedImg
-
-def getBlurFactor(image):
-    """
-    input : image (bgr/color)
-    output: blur factor
-    """
-    # blurry_factor = variance_of_laplacian
-    # compute the Laplacian of the image and then return the focus
-    # measure, which is simply the variance of the Laplacian
-    return cv2.Laplacian(image, cv2.CV_64F).var()
 
 def _debug_drawMarkers(raw_img, markers):
     """Draw the markers onto an image"""
