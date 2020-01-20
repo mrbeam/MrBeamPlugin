@@ -34,7 +34,7 @@ SIMILAR_PICS_BEFORE_UPSCALE = 3
 LOW_QUALITY = 65 # low JPEG quality for compressing bigger pictures
 OK_QUALITY = 75 # default JPEG quality served to the user
 TOP_QUALITY = 90 # best compression quality we want to serve the user
-DEFAULT_MM_TO_PX = 2 # How many pixels / mm is used for the output image
+DEFAULT_MM_TO_PX = 1 # How many pixels / mm is used for the output image
 
 SIMILAR_PICS_BEFORE_REFRESH = 20
 
@@ -360,11 +360,15 @@ class PhotoCreator(object):
             # --- Decide on the picture quality to give to the user and whether the pic is different ---
             prev = None # previous image
             nb_consecutive_similar_pics = 0
-            # Stop
             # Output image has a resolution based on the physical size of the workspace
-            upscale_factor = DEFAULT_MM_TO_PX
             # JPEG compression quality of output image
-            quality = OK_QUALITY
+            # Doubling the upscale factor will quadruple the image resolution while and
+            # multiply file size by around 2.8 (depending on image quality)
+            pic_qualities = [
+                    [1 * DEFAULT_MM_TO_PX, LOW_QUALITY],
+                    [4 * DEFAULT_MM_TO_PX, LOW_QUALITY]
+            ]
+            pic_qual_index = 0
             # Marker positions detected on the last loop
             markers = None
             while self.active():
@@ -384,20 +388,17 @@ class PhotoCreator(object):
                     # The 2 images are different, try to work on this one.
                     prev = latest # no need to copy because latest should be immutable
                     nb_consecutive_similar_pics = 0
-                    upscale_factor = DEFAULT_MM_TO_PX
-                    quality = OK_QUALITY
+                    pic_qual_index = 0
                     # TODO change the upscale factor depending on how fast the connection is
                 else:
                     # Picture too similar to the previous, discard or upscale it
                     nb_consecutive_similar_pics += 1
-                    if nb_consecutive_similar_pics % SIMILAR_PICS_BEFORE_UPSCALE == 0 and upscale_factor < 4:
+                    if nb_consecutive_similar_pics % SIMILAR_PICS_BEFORE_UPSCALE == 0 \
+                            and pic_qual_index < len(pic_qualities) - 1:
                         # TODO don't upscale if the connection is too bad
                         # TODO check connection through netconnectd ?
                         # TODO use response from front-end
-                        # Doubling the upscale factor will quadruple the image resolution while and
-                        # multiply file size by around 2.8
-                        upscale_factor *= 2
-                        quality = LOW_QUALITY
+                        pic_qual_index += 1
                         prev = latest
                     elif nb_consecutive_similar_pics % SIMILAR_PICS_BEFORE_REFRESH == 0:
                         # TODO override frontend lacking response
@@ -408,6 +409,8 @@ class PhotoCreator(object):
                     else:
                         time.sleep(1) # Let the raspberry breathe a bit
                         continue
+                # Get the desired scale and quality of the picture to serve
+                upscale_factor , quality = pic_qualities[pic_qual_index]
                 scaled_output_size = tuple(int(upscale_factor * i) for i in out_pic_size)
                 # --- Correct captured image ---
                 self._logger.debug("Starting with correction...")
