@@ -297,7 +297,8 @@ class PhotoCreator(object):
         After a certain number of similar pictures, Mr Beam serves a better quality pictures
         As of writing this doc, it will go through these settings:
         # 500 x 390, 75% JPEG quality ~ 60 kB
-        1000 x 780, 75% JPEG quality ~ 200 kB
+        1000 x 780, 65% JPEG quality ~ 45 kB
+        # 1000 x 780, 75% JPEG quality ~ 200 kB
         2000 x 1560, 65% JPEG quality ~ 400 kB
         # 2000 x 1560, 75% JPEG quality ~ 600 kB
         # 2000 x 1560, 90% JPEG quality (lossless) ~ 1 MB

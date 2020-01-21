@@ -73,7 +73,6 @@ class MrbCamera(PiCamera):
         :param kwargs: passed on to Picamera.__init__()
         :type kwargs: Map
         """
-        now = time.time()
         # TODO set sensor mode and framerate etc...
         super(MrbCamera, self).__init__(*args, **kwargs)
         self.vflip = True

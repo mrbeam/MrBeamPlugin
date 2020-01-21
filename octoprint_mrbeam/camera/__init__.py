@@ -46,6 +46,13 @@ DIFF_TOLERANCE = 30
 
 
 class MrbPicWorker(object):
+    """
+    The class that take care of buffering the pictures taken from the camera.
+    It can also do frame-by-frame work, but it could hurt recording speed (better
+    to split the work on a different thread)
+    See "Advanced Recipies" in the PiCamera tutorials:
+    https://picamera.readthedocs.io/en/release-1.13/recipes2.html
+    """
     def __init__(self, maxSize=3, debug=False):
         self.images = []
         self.firstImg = True
@@ -144,6 +151,7 @@ def getRois(img, ratioW=RATIO_W, ratioH=RATIO_H,  offsetW=OFFSET_W, offsetH=OFFS
     :param ratioH: return this fraction of the height of the roi
     :param ratioW: return this fraction of the width  of the roi
     :yields: a slice of the image corresponding to an ROI, it's position and it's name (pole)
+    :rtype numpy.ndarray, numpy.ndarray, str
     """
     # Generator
     for pole in QD_KEYS:
@@ -155,15 +163,23 @@ def getRois(img, ratioW=RATIO_W, ratioH=RATIO_H,  offsetW=OFFSET_W, offsetH=OFFS
 
 def _roiSlice(img, pole, ratioW=RATIO_W, ratioH=RATIO_H,  offsetW=OFFSET_W, offsetH=OFFSET_H): #(img: np.ndarray, pole: [str, None], ratioW: int=RATIO_W, ratioH: int=RATIO_H, ):
     """
-    :param imgH: height of the image px
-    :param imgW: width of the image in px
-    :param ratioH: if set to n show 1/n of the height in roi
-    :param ratioW: if set to n show 1/n of the width in roi
-    :return: qd Dict with P1 and P2 for each quadrant to cut roi off
+    Returns a slice of the img that can be used directly as:
+    :param img: the input image from which to get the ROIs from
+    :type img: numpy.ndarray
+    :param pole: The corner region of the image ('NW', 'NE', 'SW', 'SE')
+    :type pole: basestring
+    :param ratioW: return this fraction of the width  of the roi
+    :type ratioW: Union[float, Fraction]
+    :param ratioH: return this fraction of the height of the roi
+    :type ratioH: Union[float, Fraction]
+    :param offsetW: distance from the border of the picture (width-wise)
+    :type offsetW: Union[float, Fraction]
+    :param offsetH: distance from the border of the picture (height-wise)
+    :type offsetH: Union[float, Fraction]
+    :return: A slice of a corner region of the input image
+    :rtype: tuple[slice]
     """
-    # returns a slice of the img that can be used directly as:
-    # _slice = _roiSlice(img, pole)
-    # roi = img[_slice]
+    assert(0 < ratioH < 1 and 0 < ratioW < 1)
     h, w = img.shape[:2]
     h2, w2 =  int(h * ratioH), int(w * ratioW)
     oh, ow = int(offsetH * h), int(offsetW * w)
@@ -178,8 +194,14 @@ def _roiSlice(img, pole, ratioW=RATIO_W, ratioH=RATIO_H,  offsetW=OFFSET_W, offs
 
 def goodBrightness(img, targetAvg=128, tolerance=BRIGHTNESS_TOLERANCE):
     """
-    Returns 0 if the brightness is inside the tolerance margins,
-    Returns the offset brightness if outside
+    Determines of the image brightness is - within a tolerance margin - close
+    to a target brightness.
+    :param img: Input image
+    :type img: numpy.ndarray
+    :param targetAvg: The target brightness level
+    :type targetAvg: Positive int
+    :returns: 0 if the brightness is inside the tolerance margins or the offset brightness if not
+    :rtype int
     """
     if len(img.shape) == 3:
         # Colored RGB or BGR (*Do Not* use HSV images with this function)

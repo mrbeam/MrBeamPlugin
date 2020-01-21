@@ -1,3 +1,7 @@
+from collections import Iterable
+from typing import Union
+from itertools import chain
+
 from multiprocessing import Pool
 from fractions import Fraction
 from numpy.linalg import norm
@@ -226,7 +230,24 @@ def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1):
                 outputPoints[qd]['pos'] += pos
     return outputPoints
 
-def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, rmin=8, rmax=30):
+def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d_min=8, d_max=30):
+    """
+    Takes
+    :param roi:
+    :type roi:
+    :param debug_out_path:
+    :type debug_out_path:
+    :param blur:
+    :type blur:
+    :param quadrant: The corner region of the image ('NW', 'NE', 'SW', 'SE')
+    :type quadrant: basestring
+    :param d_min: minimal diameter of the *inner* (distorted) marker edge
+    :type d_min: int
+    :param d_max: maximal diameter of the *outer* (distorted) marker edge
+    :type d_max: int
+    :return:
+    :rtype:
+    """
     logger = logging.getLogger('mrbeam.camera.undistort')
     # TODO Use mask to eliminate false positives
     # Smooth out picture
@@ -287,67 +308,96 @@ def _undistortImage(img, dist, mtx):
     mapx, mapy = cv2.initUndistortRectifyMap(mtx, dist, None, newcameramtx, (w, h), 5)
     return cv2.remap(img, mapx, mapy, cv2.INTER_LINEAR)
 
+def isMarkerMask(mask):
+    """
+    Tests the mask to know if it could plausably be a marker
+    :param mask: The mask to compare
+    :type mask: Union[Iterable, numpy.ndarray]
+    :return: True if it is a marker (circle-ish), False if not
+    :rtype: generator[bool]
+    """
+    marker_mask_tester = cv2.imread(os.path.join(os.path.dirname(__file__), "marker_mask"))
+    # todo resize mask to correct size
+    # todo crop / resize mask to same size as marker_mask_tester
+    # Tests if the mask is completely inside the marker_mask_tester
+    if isinstance(mask, np.ndarray):
+        yield all(mask == cv2.bitwise_and(marker_mask_tester, mask))
+    elif isinstance(mask, Iterable):
+        for _mask in mask:
+            assert(isinstance(_mask, np.ndarray))
+            yield all(_mask == cv2.bitwise_and(marker_mask_tester, _mask))
+    else:
+        raise TypeError("Expected a numpy array or a sequence of numpy arrays")
+
 def _get_hue_mask(hsv_roi, bandsize=11, pixTrigAmount=500, pixTooMany=3000): #(hsv_roi: np.ndarray, bandsize=11, pixTrigAmount=500, pixTooMany=3000):
     """
     Returns hue mask with dynamic hue range. Tries to find the right amount of pixels in a given hue window
     not enough pixels have been found (less than PIXEL_THRESHOLD_UPPER)
     Uses a local maxima finder (maximisePixCount) to get the optimal mask as given by
     a generator (concatGen and _slidingHueMask)
-    :param ms: markersettings
-    :param qd: quadrant
+
     :param hsv_roi: the roi in hsv format
-    :return: huemask,affected,hue_lower
+    :type hsv_roi:
+    :param bandsize:
+    :type bandsize:
+    :param pixTrigAmount:
+    :type pixTrigAmount:
+    :param pixTooMany:
+    :type pixTooMany:
+    :return: the best corresponding mask and the hsv window that created the mask
+    :rtype: Union[tuple[np.ndarray, tuple[numpy.ndarray]], tuple[NoneType]]
     """
     # debugShow(hsv_roi, "_get_hue_mask")
     def maximisePixCount(maskGenerator):
         # TODO look for clusters of pixels
         trigger = False
-        ret = None
         _mask = None
+        _bounds = None
         _prev_mask = None
+        _prev_bounds = None
         pix_amount = -1
-        for maskedImg, mask in maskGenerator:
+        for mask, bounds in maskGenerator:
 
             # debugShow(maskedImg, "maskedImg")
             coloredPix = np.count_nonzero(mask) # # counts for each value of h s and v
             if not trigger and coloredPix > pixTrigAmount:
                 # print("##########triggered : ", coloredPix)
+                # The mask has a minimum amount of pixels & the pixel count is increasing
                 trigger = True
                 pix_amount = coloredPix
-                ret, _mask = maskedImg, mask
+                _mask, _bounds = mask, bounds
             elif trigger and (pix_amount == -1 or coloredPix > pix_amount):
                 # print("trigger : {}, better pixies amount : {} < {}".format(trigger, pix_amount, coloredPix))
+                # The mask has a minimum amount of pixels and is still growing
                 pix_amount = coloredPix
-                ret, _mask = maskedImg, mask
+                _mask, _bounds = mask, bounds
             elif trigger and pix_amount > coloredPix:
+                # The amount of pixels on the mask is now decreasing
                 # Merge with previous masks to maximise the quality of the circle
+                _lb, _ub = np.asarray(_bounds).tolist()
+                lb, ub = np.asarray(bounds).tolist()
                 if _prev_mask is None:
                     # _mask cannot be None
-                    return ret, cv2.bitwise_or(_mask, mask)
+                    ret_bounds = (np.asarray(min(lb, _lb)), np.asarray(max(_ub, ub)))
+                    return cv2.bitwise_or(_mask, mask), ret_bounds
                 else:
+
+                    _prev_lb, _prev_ub = np.asarray(_prev_bounds).tolist()
+                    ret_bounds = tuple(map(np.asarray, [min(lb, _lb, _prev_lb),
+                                                        max(ub, _ub, _prev_ub)]))
                     # the previous img
-                    return ret, reduce(cv2.bitwise_or, (_prev_mask, _mask, mask))
-            _prev_mask = _mask
-        return ret, _mask
+                    return reduce(cv2.bitwise_or, (_prev_mask, _mask, mask)), ret_bounds
+                    # TODO Yield in order to cycle through local maximas
+            _prev_mask, _prev_bounds = _mask, _bounds
+        return None, None
 
-    # TODO see itertools.chain
-    def concatGen(generators):
-        if len(generators) == 0:
-            return
-        else:
-            for elm in generators[0]:
-                yield elm
-            for elm in concatGen(generators[1:]):
-                yield elm
-
-    return maximisePixCount(concatGen([_slidingHueMask(hsv_roi, bandsize+2, sBound=(60, 255), vBound=(60, 255), dS=4, dV=4),
-                                       # High light situaton : Markers always have a high value and broad variety of saturation
-                                       _slidingHueMask(hsv_roi, bandsize+5, sBound=(40, 255), vBound=(180, 255), dS=15, dV=15, ascending=False),
-                                       # Cold to neutral and dim light doesn't make the markers pop out as well :
-                                       # Both value and saturation are bad, but Hue is usually pretty high
-                                       #
-                                       _slidingHueMask(hsv_roi, bandsize+5, hBound=(145, 190), sBound=(50, 200), vBound=(60, 220), dS=17, dV=17),
-                                       ]))
+    return maximisePixCount(chain([_slidingHueMask(hsv_roi, bandsize+2, sBound=(60, 255), vBound=(60, 255), dS=4, dV=4),
+                                   # High light situaton : Markers always have a high value and broad variety of saturation
+                                   _slidingHueMask(hsv_roi, bandsize+5, sBound=(40, 255), vBound=(180, 255), dS=15, dV=15, ascending=False),
+                                   # Cold to neutral and dim light doesn't make the markers pop out as well :
+                                   # Both value and saturation are bad, but Hue is usually pretty high
+                                   _slidingHueMask(hsv_roi, bandsize+5, hBound=(145, 190), sBound=(50, 200), vBound=(60, 220), dS=17, dV=17),
+                                   ]))
 
 def _slidingHueMask(hsv_roi, bandSize, hBound=None, sBound=(0, 255), vBound=(0, 255), dS=5, dV=4, ascending=True, refine=-1):
     #(hsv_roi: np.ndarray, bandSize: int, sBound=(0, 255), vBound=(0, 255), dS=5, dV=4, ascending= True, refine=-1):
@@ -358,6 +408,8 @@ def _slidingHueMask(hsv_roi, bandSize, hBound=None, sBound=(0, 255), vBound=(0, 
     Slides with increments of bandSize / 2
     if refine:
         after sliding, takes the best performing band, and perform a local maxima search with the dichotomic search
+    :returns
+    :rtype numpy.ndarray, tuple[np.ndarray]
     """
     if ascending:
         if hBound is not None: h1, h2 = hBound
@@ -376,6 +428,7 @@ def _slidingHueMask(hsv_roi, bandSize, hBound=None, sBound=(0, 255), vBound=(0, 
     # dS = 5 # expand Saturation filter window by this size
     vBand = np.linspace(v2, v1, len(bands)).astype(int)
     # dV = 4 # expand Value filter window by this size
+    lb, ub, _lb, _ub = None, None, None, None
     for i, band in enumerate(bands[:-2]):
         if ascending:
             lb = np.array([bands[i]   % 180,     sBand[i]  -dS,           vBand[i+2]-dV], np.uint8)
@@ -383,21 +436,23 @@ def _slidingHueMask(hsv_roi, bandSize, hBound=None, sBound=(0, 255), vBound=(0, 
         else:
             ub = np.array([bands[i]   % 180, min(sBand[i]  +dS, 255), min(vBand[i+2]+dV, 255)], np.uint8)
             lb = np.array([bands[i+2] % 180,     sBand[i+2]-dS,           vBand[i]  -dV], np.uint8)
-        if     (ascending and bands[i] <= 180 and bands[i+2] >  180) or \
-                (not ascending and bands[i]  > 180 and bands[i+2] <= 180) :
-            _ub = np.array([180, ub[1], ub[2]], np.uint8)
-            _lb = np.array([0  , lb[1], lb[2]], np.uint8)
-            # print("_lb {} _ub {}".format(_lb, _ub))
-            lmask = cv2.inRange(hsv_roi, lb, _ub)
-            rmask = cv2.inRange(hsv_roi, _lb, ub)
-            mask = cv2.bitwise_or(lmask, rmask)
-        else:
-            mask = cv2.inRange(hsv_roi, lb, ub)
+        mask = _inRange(hsv_roi, lb, ub)
         # print("lb {} ub {}".format(lb, ub))
         # print("mask pix number ", np.count_nonzero(mask))
-        out = 255 * np.ones(hsv_roi.shape)
-        out = cv2.bitwise_and(hsv_roi, hsv_roi, mask=mask)
-        yield out, mask
+        yield mask, (lb, ub)
+
+def _inRange(img, lb, ub, colortype='hsv'):
+    """cv2.inRange wrapper that allows hue bounds to wrap around a the max value of 180"""
+    if colortype == 'hsv' and lb[0] <= 180 and ub[0] > 180:
+        _ub = np.array([180, ub[1], ub[2]], np.uint8)
+        _lb = np.array([0, lb[1], lb[2]], np.uint8)
+        lmask = cv2.inRange(img, lb, _ub)
+        rmask = cv2.inRange(img, _lb, ub)
+        mask = cv2.bitwise_or(lmask, rmask)
+    else:
+        mask = cv2.inRange(img, lb, ub)
+    return mask
+
 
 def _warpImgByCorners(image, corners):
     """
