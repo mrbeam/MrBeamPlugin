@@ -252,6 +252,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def get_settings_defaults(self):
 		# Max img size: 2592x1944. Change requires rebuild of lens_correction_*.npz and machine recalibration.
+		# EDIT -- See 1st paragraph of https://docs.opencv.org/2.4/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html
+		# -> Multiply all coefficients with the same resize coef. Use cv2.getOptimalNewCameraMatrix to achieve that
 		image_default_width = 2048
 		image_default_height = 1536
 
@@ -1315,6 +1317,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			reset_laser_head_usage=[],
 			reset_gantry_usage=[],
 			material_settings=[],
+			on_camera_picture_transfer=[],
 		)
 
 	def on_api_command(self, command, data):
@@ -1370,6 +1373,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			except Exception as err:
 				self._logger.exception(err.message)
 				return make_response(err.message, 500)
+		elif command == "on_camera_picture_transfer":
+			self.lid_handler.on_front_end_pic_received()
 		return NO_CONTENT
 
 	# TODO IRATXE: this does not properly work --> necessary for reviews
