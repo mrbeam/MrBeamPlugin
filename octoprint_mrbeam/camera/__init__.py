@@ -12,7 +12,7 @@ try:
     from octoprint_mrbeam.camera.mrbcamera import MrbCamera, BRIGHTNESS_TOLERANCE
     PICAMERA_AVAILABLE = True
 except ImportError as e:
-    from dummycamera import DummyCamera as MrbCamera
+    from dummy import DummyCamera as MrbCamera
     PICAMERA_AVAILABLE = False
     logging.getLogger("octoprint.plugins.mrbeam.util.camera").error(
             "Could not import module 'mrbcamera'. Disabling camera integration. (%s: %s)", e.__class__.__name__, e)

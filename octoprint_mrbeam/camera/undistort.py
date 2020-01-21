@@ -1,12 +1,15 @@
-from collections import Iterable
+import argparse
+import textwrap
+from collections import Iterable, Mapping
+from threading import Event
+from types import NoneType
 from typing import Union
 from itertools import chain
-
 from multiprocessing import Pool
 from fractions import Fraction
 from numpy.linalg import norm
 
-from octoprint_mrbeam.camera import RESOLUTIONS, QD_KEYS
+from octoprint_mrbeam.camera import RESOLUTIONS, QD_KEYS, PICAMERA_AVAILABLE
 import octoprint_mrbeam.camera as beamcam
 from octoprint_mrbeam.util import dict_merge
 
@@ -32,6 +35,7 @@ PIC_SETTINGS = {CALIB_MARKERS_KEY: None, CORNERS_KEY: None, M2C_VECTOR_KEY: None
 import logging
 import time
 import os
+import os.path as path
 from os.path import dirname, basename, isfile, exists
 import cv2
 import numpy as np
@@ -51,12 +55,12 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
                  last_markers=None, # {'NW': np.array(I, J), ... }
                  size=RESOLUTIONS['1000x780'],
                  quality=90,
-                 save_undistorted=None,
                  debug_out=False,
                  blur=7,
                  custom_pic_settings=None,
                  stopEvent=None,
                  threads=-1):
+    # type: (Union[str, np.ndarray], basestring, np.ndarray, np.ndarray, Union[Mapping, basestring], Union[dict, None], tuple, int, bool, int, Union[None, Mapping], Union[None, Event], int) -> object
     """
     Loads image from path_to_input_image, does some preparations (undistort, warp)
     on it and saves it to path_to_output_img.
@@ -69,7 +73,6 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
     :param last_markers: used to compensate if a (single) marker is covered or unrecognised
     :param size : (width,height) of output image size, default is (1000,780)
     :param quality: set quality of output image from 0 to 100, default is 90
-    :param save_undistorted: path to where the undistorted picture should be saved
     :param debug_out: True if all in between pictures should be saved to output path directory
     :param blur: Amount of blur for the marker detection
     :param custom_pic_settings: Map : used to update certain keys of the pic settings file
@@ -98,9 +101,9 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 
     if type(input_image) is str:
         # check image path
-        logger.debug('Starting to prepare Image. \ninput: <{}> \noutput: <{}>\ncam dist : <{}>\ncam matrix: <{}>\nsize:{}\nquality:{}\nsave_undistorted:{}\ndebug_out:{}'.format(
+        logger.debug('Starting to prepare Image. \ninput: <{}> \noutput: <{}>\ncam dist : <{}>\ncam matrix: <{}>\nsize:{}\nquality:{}\ndebug_out:{}'.format(
                 input_image, path_to_output_image, cam_dist, cam_matrix,
-                size, quality, save_undistorted, debug_out))
+                size, quality, debug_out))
         if not isfile(input_image):
             no_Image_error_String = 'Could not find a picture under path: <{}>'.format(input_image)
             logger.error(no_Image_error_String)
@@ -113,9 +116,9 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
             logger.error(err)
             return None, None, None, err
     elif type(input_image) is np.ndarray:
-        logger.debug('Starting to prepare Image. \ninput: <{}> \noutput: <{}>\ncam dist : <{}>\ncam matrix: <{}>\nsize:{}\nquality:{}\nsave_undistorted:{}\ndebug_out:{}'.format(
+        logger.debug('Starting to prepare Image. \ninput: <{}> \noutput: <{}>\ncam dist : <{}>\ncam matrix: <{}>\nsize:{}\nquality:{}\ndebug_out:{}'.format(
                 "numpy ndarray", path_to_output_image, cam_dist, cam_matrix,
-                size, quality, save_undistorted, debug_out))
+                size, quality, debug_out))
         img = input_image
     else:
         raise ValueError("path_to_input_image in mb_pic needs to be a path (string) or a numpy array")
@@ -193,7 +196,6 @@ def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1):
     """Allows a multi-processing implementation of the marker detection algo. Up to 4 processes needed."""
     outputPoints = {}
     # check all 4 corners
-    CORES = 4 # recommended to use 4 processes for the 4 different threads
     if threads > 0:
         # takes around ~ 10MB RAM / thread
         p = Pool(threads)
@@ -232,7 +234,8 @@ def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1):
 
 def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d_min=8, d_max=30):
     """
-    Takes
+    Tries to find a single pink marker inside the image (or the Region of Interest).
+    It then outputs the information about found marker (for now, just its center position).
     :param roi:
     :type roi:
     :param debug_out_path:
@@ -299,16 +302,7 @@ def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d
     if center is None: return None  # hue_lower=hue_lower, pixels=affected, )
     else:              return dict(pos=center, )  # pixels=affected, hue_lower=hue_lower)
 
-def _undistortImage(img, dist, mtx):
-    """Apply the camera calibration matrices to distort the picture back straight"""
-    h, w = img.shape[:2]
-    newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, (w, h))
-
-    # undistort image
-    mapx, mapy = cv2.initUndistortRectifyMap(mtx, dist, None, newcameramtx, (w, h), 5)
-    return cv2.remap(img, mapx, mapy, cv2.INTER_LINEAR)
-
-def isMarkerMask(mask):
+def isMarkerMask(mask, d_min, d_max):
     """
     Tests the mask to know if it could plausably be a marker
     :param mask: The mask to compare
@@ -453,6 +447,14 @@ def _inRange(img, lb, ub, colortype='hsv'):
         mask = cv2.inRange(img, lb, ub)
     return mask
 
+def _undistortImage(img, dist, mtx):
+    """Apply the camera calibration matrices to distort the picture back straight"""
+    h, w = img.shape[:2]
+    newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, (w, h))
+
+    # undistort image
+    mapx, mapy = cv2.initUndistortRectifyMap(mtx, dist, None, newcameramtx, (w, h), 5)
+    return cv2.remap(img, mapx, mapy, cv2.INTER_LINEAR)
 
 def _warpImgByCorners(image, corners):
     """
@@ -586,3 +588,78 @@ def _isValidQdDict(qdDict):
     else:
         result = all(qd in qdDict and len(qdDict[qd]) == 2 for qd in QD_KEYS)
     return result
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Detect the markers in the pictures provided or from the camera",
+                                     formatter_class=argparse.RawDescriptionHelpFormatter,
+                                     epilog=textwrap.dedent('''\
+    Examples
+    =============================================================
+    Find the markers in the .jpg pictures contained in my_picture_folder and
+    save the undistorted pictures in my_picture_folder/undistort/
+      python undistort.py my_picture_folder/*.jpg
+    Undistort picture.jpg and store the result in path/to/undistort/picture.jpg
+      ls path/to/picture.jpg | entr python undistort.py /path/to/picture.jpg
+    '''))
+    # parser.add_argument('outfolder', nargs='?',# type=argparse.FileType('w'),
+    #                     default='markers_out')
+    parser.add_argument('images', metavar = 'IMG', nargs='+',
+                        default=['auto'])
+    parser.add_argument('-p', '--parameters', metavar='PARAM.npz', required=True,
+                        default="/home/pi/.octoprint/cam/lens_correction_2048x1536.npz",
+                        help="The file storing the camera lens correction")
+    parser.add_argument('-c', '--config', metavar='PIC_CONFIG.yaml', required=False,
+                        default="/home/pi/.octoprint/cam/pic_settings.yaml",
+                        help="?")
+    parser.add_argument('-q', '--quality', metavar='Q', type=int, required=False, default=65,
+                        help="jpg compression quality, default is 65 (percent)")
+    parser.add_argument('-l', '--lastmarkers', metavar='MARKERS.json', required=False,
+                        help="")
+    # Dummy camera for debugging the camera.__init__ and camera.dummy
+    # parser.add_argument('-d', '--dummy', required=False, action='store_true', default=not(PICAMERA_AVAILABLE),
+    #                     help="Use a dummy camera that emulates taking the provided pictures")
+    parser.add_argument("-j", metavar="THREADS", type=int, required=False, default=4,
+                        help="Number of worker threads")
+    parser.add_argument('-o', '--out-folder', metavar='OUTFOLDER', required=False,
+                        help="Save the undistorted pictures in this folder")
+    parser.add_argument('-s', '--save-markers', metavar='OUT.npz', required=False,
+                        help="Save the found markers in OUT.npz for later comparison")
+    parser.add_argument('-D', '--debug', required=False, action='store_true', default=False,
+                        help="Save intermediary debug images in the output folder")
+
+    args = parser.parse_args()
+    print(format(args.config))
+    # imgFiles = list(map(lambda x: x.strip('\n'), args.inimg))
+    # print(imgFiles)
+    if args.out_folder:
+        out_folder = args.outfolder
+    else:
+        out_folder = os.path.join(os.path.dirname(args.images[0]), "undistort")
+    print("Saving detected markers to folder %s" % out_folder)
+
+    cam_params = _getCamParams(args.parameters)
+
+    # load pic_settings json
+    pic_settings = _getPicSettings(args.last)
+    markers = None
+    for img_path in args.images:
+        img = cv2.imread(img_path)
+
+        workspaceCorners, markers, missed, err = prepareImage(img,
+                                                              path.join(out_folder, path.basename(img_path)),
+                                                              cam_params[DIST_KEY],
+                                                              cam_params[MTX_KEY],
+                                                              pic_settings=pic_settings,
+                                                              last_markers=None,
+                                                              size=(2000, 1560),
+                                                              quality=args.quality,
+                                                              debug_out=args.debug,
+                                                              blur=7,
+                                                              stopEvent=None,
+                                                              threads=-1)
+
+        # TODO save in npz file
+
+    # outpath = img + ".out.jpg"
+    if not os.path.exists(args.outfolder):
+        os.mkdir(args.outfolder)
