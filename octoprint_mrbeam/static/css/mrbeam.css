@@ -2,13 +2,14 @@ a {	color: #e25303; }
 a:hover { color: #a63e03 }
 a.muted{ color: #e25303a1 }
 a.muted:hover{ color: #e25303a1 }
+button:focus { outline:0 !important;}
 
 .btn {
   background: #FFFFFF;
   box-shadow: 1px 2px 6px rgba(0, 0, 0, 0.25);
   border-radius: 8px;
   border-color: white;
-  color: #595959;
+  color: #383E42;
   font-weight: 900;
   padding: 8px 40px;
 }
@@ -27,7 +28,7 @@ a.muted:hover{ color: #e25303a1 }
 .btn:active,
 .btn.active {
   box-shadow: none;
-  border: 1px solid #595959;
+  border: 1px solid #383E42;
   box-sizing: border-box;
   border-radius: 8px;
   background: #FFFFFF;
@@ -152,7 +153,7 @@ input[type="button"].btn-block {
   cursor: default;
   background: #E4E4E4;
   border-color: #E4E4E4;
-  color: #595959;
+  color: #383E42;
   box-shadow: none;
 }
 
@@ -1247,7 +1248,7 @@ ul.dropdown-menu li a {
 
 .rounded_container .rounded_container_hr {
     margin: 10px -20px;
-    border: 1px solid #595959;
+    border: 1px solid #383E42;
 }
 
 #files .preview_card div.preview,
