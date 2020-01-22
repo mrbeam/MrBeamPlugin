@@ -1,6 +1,9 @@
 from itertools import chain
+try:
+    from picamera import PiCamera
+except Exception:
+    raise ImportError("Could not import PiCamera")
 
-from picamera import PiCamera # The official picamera package
 import time
 import threading
 import logging

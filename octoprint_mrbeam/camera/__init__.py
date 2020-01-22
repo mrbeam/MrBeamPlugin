@@ -9,7 +9,7 @@ from threading import Event
 from octoprint_mrbeam.util import logtime
 
 try:
-    from octoprint_mrbeam.camera.mrbcamera import MrbCamera, BRIGHTNESS_TOLERANCE
+    from octoprint_mrbeam.camera.mrbcamera import MrbCamera # , BRIGHTNESS_TOLERANCE
     PICAMERA_AVAILABLE = True
 except ImportError as e:
     from dummy import DummyCamera as MrbCamera
@@ -193,7 +193,7 @@ def _roiSlice(img, pole, ratioW=RATIO_W, ratioH=RATIO_H,  offsetW=OFFSET_W, offs
     _vert, _horiz = pole # assumes the poles are written NW = 'NW' etc...
     return borders[_vert], borders[_horiz]
 
-def goodBrightness(img, targetAvg=128, tolerance=BRIGHTNESS_TOLERANCE):
+def goodBrightness(img, targetAvg=128, tolerance=80):
     """
     Determines of the image brightness is - within a tolerance margin - close
     to a target brightness.
