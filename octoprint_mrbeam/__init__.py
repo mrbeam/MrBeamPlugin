@@ -389,6 +389,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self.temperature_manager.shutdown()
 		self.dust_manager.shutdown()
 		time.sleep(2)
+		# TODO join all child threads
 		self._logger.info("Mr Beam Plugin stopped.")
 
 	def set_serial_setting(self):
