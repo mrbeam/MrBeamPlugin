@@ -28,6 +28,9 @@ $(function () {
                         } else if (event.data.event === 'svg') {
                             console.log('# SVG');
                             self.onSvgReceived(event.data.payload);
+                        } else if (event.data.event == 'viewLibrary') {
+                            console.log('# VIEW LIBRARY');
+                            $('#designlib_tab_btn').trigger('click');
                         }
                     }
                 }
@@ -68,7 +71,6 @@ $(function () {
         };
 
         self.onSvgReceived = function (payload) {
-            console.log(payload.svg_string);
             self.downloadSvgToMrBeam(payload.svg_string, payload.file_name);
         };
 
