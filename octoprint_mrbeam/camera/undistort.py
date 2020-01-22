@@ -1,9 +1,10 @@
 import argparse
 import textwrap
 from collections import Iterable, Mapping
+from copy import copy
 from threading import Event
 from types import NoneType
-from typing import Union
+# from typing import Union
 from itertools import chain
 from multiprocessing import Pool
 from fractions import Fraction
@@ -11,7 +12,7 @@ from numpy.linalg import norm
 
 from octoprint_mrbeam.camera import RESOLUTIONS, QD_KEYS, PICAMERA_AVAILABLE
 import octoprint_mrbeam.camera as beamcam
-from octoprint_mrbeam.util import dict_merge
+from octoprint_mrbeam.util import dict_merge, logme, debug_logger
 
 CALIB_MARKERS_KEY = 'calibMarkers'
 CORNERS_KEY = 'cornersFromImage'
@@ -137,7 +138,6 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
                                               debug_out_path=dbg_markers,
                                               blur=blur,
                                               threads=threads)
-    logger.debug('positions found: \n%s\n%s\n%s\n%s', *outputPoints.items())
     markers = {}
     # list of missed markers
     missed = []
@@ -149,7 +149,6 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
             missed.append(qd)
         else:
             markers[qd] = val['pos']
-
     # check if picture should be thrown away
     # if less then 3 markers are found
     # if len(missed) > 1 and len(markers) == 4:  # elif # filter out None values
@@ -158,7 +157,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
     #     return None, markers, missed, err
     # elif len(missed) == 1 and len(markers) == 4:
     if len(missed) > 1 and len(markers) == 4:
-        err = "Missed marker %s" % missed[0]
+        err = "Missed marker %s" % missed
         logger.warning(err)
     elif len(markers) < 4:
         err = "Missed marker(s) %s, no(t enough) history to guess missing marker position(s)" % missed
@@ -267,8 +266,9 @@ def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d
     # debugShow(roiBlurThresh, "otsu")
     hsv_roiBlurThresh     =  cv2.cvtColor(    roiBlurThresh,     cv2.COLOR_BGR2HSV)
     # Use a sliding hue mask with a local maxima detector to find the magenta markers
-    hsv_roiBlurThreshBand, hsvMask = _get_hue_mask(hsv_roiBlurThresh, bandsize=23, pixTrigAmount = PIXEL_THRESHOLD_MIN)
-    if hsv_roiBlurThreshBand is None:
+    # logger.debug("%s hsv_roiBlurThresh avg H %d S %d V %d" % tuple(chain([quadrant], np.average(hsv_roiBlurThresh, axis=(0,1)).tolist())))
+    hsvMask, bands = _get_hue_mask(hsv_roiBlurThresh, bandsize=23, pixTrigAmount = PIXEL_THRESHOLD_MIN)
+    if hsvMask is None:
         cv2.imwrite(debug_out_path.replace('.jpg', '{}.jpg'.format(quadrant)), roiBlurThresh)
         return None
     # Label each separate zones on the mask (The black background + the white blobs)
@@ -290,7 +290,6 @@ def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d
     # ensure at least some circles were found
     if debug_out_path is not None:
         debug_quad_path = debug_out_path.replace('.jpg', '{}.jpg'.format(quadrant))
-        logger.debug("Writing debug image at %s", debug_out_path)
         if center is None:
             cv2.imwrite(debug_quad_path, hsvMask)
             # debugShow(roiBlurOtsuBand, "shape")
@@ -351,7 +350,7 @@ def _get_hue_mask(hsv_roi, bandsize=11, pixTrigAmount=500, pixTooMany=3000): #(h
         _prev_bounds = None
         pix_amount = -1
         for mask, bounds in maskGenerator:
-
+            # debug_logger().debug("Bounds :\n%s\n%s" % bounds)
             # debugShow(maskedImg, "maskedImg")
             coloredPix = np.count_nonzero(mask) # # counts for each value of h s and v
             if not trigger and coloredPix > pixTrigAmount:
@@ -383,15 +382,25 @@ def _get_hue_mask(hsv_roi, bandsize=11, pixTrigAmount=500, pixTooMany=3000): #(h
                     return reduce(cv2.bitwise_or, (_prev_mask, _mask, mask)), ret_bounds
                     # TODO Yield in order to cycle through local maximas
             _prev_mask, _prev_bounds = _mask, _bounds
-        return None, None
+        return _mask, _bounds
 
-    return maximisePixCount(chain([_slidingHueMask(hsv_roi, bandsize+2, sBound=(60, 255), vBound=(60, 255), dS=4, dV=4),
-                                   # High light situaton : Markers always have a high value and broad variety of saturation
-                                   _slidingHueMask(hsv_roi, bandsize+5, sBound=(40, 255), vBound=(180, 255), dS=15, dV=15, ascending=False),
-                                   # Cold to neutral and dim light doesn't make the markers pop out as well :
-                                   # Both value and saturation are bad, but Hue is usually pretty high
-                                   _slidingHueMask(hsv_roi, bandsize+5, hBound=(145, 190), sBound=(50, 200), vBound=(60, 220), dS=17, dV=17),
-                                   ]))
+    # itertools.chain does not chain generators
+    def concatGen(generators):
+        if len(generators) == 0:
+            return
+        else:
+            for elm in generators[0]:
+                yield elm
+            for elm in concatGen(generators[1:]):
+                yield elm
+
+    return maximisePixCount(concatGen([_slidingHueMask(hsv_roi, bandsize+2, sBound=(60, 255), vBound=(60, 255), dS=4, dV=4),
+                                       # High light situaton : Markers always have a high value and broad variety of saturation
+                                       _slidingHueMask(hsv_roi, bandsize+5, sBound=(40, 255), vBound=(180, 255), dS=15, dV=15, ascending=False),
+                                       # Cold to neutral and dim light doesn't make the markers pop out as well :
+                                       # Saturation is bad, but Hue is usually pretty high
+                                       _slidingHueMask(hsv_roi, bandsize+4, hBound=(145, 190), sBound=(50, 220), vBound=(60, 200), dS=20, dV=20),
+                                       ]))
 
 def _slidingHueMask(hsv_roi, bandSize, hBound=None, sBound=(0, 255), vBound=(0, 255), dS=5, dV=4, ascending=True, refine=-1):
     #(hsv_roi: np.ndarray, bandSize: int, sBound=(0, 255), vBound=(0, 255), dS=5, dV=4, ascending= True, refine=-1):
@@ -425,11 +434,11 @@ def _slidingHueMask(hsv_roi, bandSize, hBound=None, sBound=(0, 255), vBound=(0, 
     lb, ub, _lb, _ub = None, None, None, None
     for i, band in enumerate(bands[:-2]):
         if ascending:
-            lb = np.array([bands[i]   % 180,     sBand[i]  -dS,           vBand[i+2]-dV], np.uint8)
-            ub = np.array([bands[i+2] % 180, min(sBand[i+2]+dS, 255), min(vBand[i]  +dV, 255)], np.uint8)
+            lb = np.array([bands[i]  ,     sBand[i]  -dS,           vBand[i+2]-dV], np.uint8)
+            ub = np.array([bands[i+2], min(sBand[i+2]+dS, 255), min(vBand[i]  +dV, 255)], np.uint8)
         else:
-            ub = np.array([bands[i]   % 180, min(sBand[i]  +dS, 255), min(vBand[i+2]+dV, 255)], np.uint8)
-            lb = np.array([bands[i+2] % 180,     sBand[i+2]-dS,           vBand[i]  -dV], np.uint8)
+            ub = np.array([bands[i]  , min(sBand[i]  +dS, 255), min(vBand[i+2]+dV, 255)], np.uint8)
+            lb = np.array([bands[i+2],     sBand[i+2]-dS,           vBand[i]  -dV], np.uint8)
         mask = _inRange(hsv_roi, lb, ub)
         # print("lb {} ub {}".format(lb, ub))
         # print("mask pix number ", np.count_nonzero(mask))
@@ -438,10 +447,12 @@ def _slidingHueMask(hsv_roi, bandSize, hBound=None, sBound=(0, 255), vBound=(0, 
 def _inRange(img, lb, ub, colortype='hsv'):
     """cv2.inRange wrapper that allows hue bounds to wrap around a the max value of 180"""
     if colortype == 'hsv' and lb[0] <= 180 and ub[0] > 180:
+        __ub = copy(ub)
+        __ub[0] %= 180
         _ub = np.array([180, ub[1], ub[2]], np.uint8)
         _lb = np.array([0, lb[1], lb[2]], np.uint8)
         lmask = cv2.inRange(img, lb, _ub)
-        rmask = cv2.inRange(img, _lb, ub)
+        rmask = cv2.inRange(img, _lb, __ub)
         mask = cv2.bitwise_or(lmask, rmask)
     else:
         mask = cv2.inRange(img, lb, ub)

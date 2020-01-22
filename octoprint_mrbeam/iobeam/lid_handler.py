@@ -83,7 +83,7 @@ class LidHandler(object):
         self._analytics_handler = self._plugin.analytics_handler
         self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._subscribe)
 
-    def _subscribe(self):
+    def _subscribe(self, event, payload):
         self._event_bus.subscribe(IoBeamEvents.LID_OPENED, self.onEvent)
         self._event_bus.subscribe(IoBeamEvents.LID_CLOSED, self.onEvent)
         self._event_bus.subscribe(OctoPrintEvents.CLIENT_OPENED, self.onEvent)
@@ -192,7 +192,7 @@ class LidHandler(object):
             return make_response('Error, no photocreator active, maybe you are developing and dont have a cam?', 503)
 
     def _start_photo_worker(self):
-        if not self._photo_creator.active():
+        if not (self._photo_creator.active() or self._photo_creator.worker.isAlive()):
             self._photo_creator.start()
         else:
             self._logger.info("Another PhotoCreator thread is already active! Not starting a new one.")
@@ -241,6 +241,8 @@ class PhotoCreator(object):
         return not self.stopEvent.isSet()
 
     def start(self):
+        if self.active():
+            self.stop()
         self.stopEvent.clear()
         self.worker = threading.Thread(target=self.work, name='Photo-Worker')
         self.worker.daemon = True
@@ -248,14 +250,15 @@ class PhotoCreator(object):
 
     def stop(self):
         self.stopEvent.set()
-        return self.worker.join()
+        if self.worker.isAlive():
+            return self.worker.join()
+        else:
+            return
 
     def set_undistorted_path(self):
         self.undistorted_pic_path = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(['cam', 'localUndistImage'])
 
     def work(self):
-        self.stopEvent.clear()
-
         # todo find maximum of sleep in beginning that's not affecting UX
         time.sleep(0.8)
 
@@ -349,8 +352,8 @@ class PhotoCreator(object):
                 time.sleep(2)
                 # bestShutterSpeeds = cam.apply_best_shutter_speed()  # Usually only 1 value, but there could be more
 
-                cam.anti_rolling_shutter_banding()
-                cam.async_capture()  # starts capture to the cam.worker
+                # TODO cam.anti_rolling_shutter_banding()
+                cam.start()  # starts capture to the cam.worker
             # --- Decide on the picture quality to give to the user and whether the pic is different ---
             prev = None # previous image
             nb_consecutive_similar_pics = 0
@@ -367,6 +370,7 @@ class PhotoCreator(object):
             markers = None
             while self.active():
                 cam.wait()  # waits until the next picture is ready
+                if not self.active(): break
                 latest = cam.lastPic() # gets last picture given by cam.worker
                 cam.async_capture()  # starts capture with new settings
                 if latest is None:
@@ -459,9 +463,9 @@ class PhotoCreator(object):
                                               correction_result2['markers_found'],
                                               increment_pic=False,
                                               error=correction_result2['error'])
-                self._logger.debug("Analytics: %s", json.dumps(session_details,
-                                                                   indent=2,
-                                                                   default=json_serialisor))
+                # self._logger.debug("Analytics: %s", json.dumps(session_details,
+                #                                                    indent=2,
+                #                                                    default=json_serialisor))
             cam.stop_preview()
             if session_details['num_pics'] > 0:
                 self._analytics_handler.add_camera_session_details(session_details)
@@ -483,7 +487,7 @@ class PhotoCreator(object):
                                                               debug_out=self.debug,  # self.save_debug_images,
                                                               stopEvent=self.stopEvent,
                                                               threads=4)
-        if not self.active(): return False, None, None, None
+        if not self.active(): return False, None, None, None, None
         success_1 = workspaceCorners is not None
         # Conform to the legacy result to be sent to frontend
         correction_result = {'markers_found':         list(filter(lambda q: q not in missed, QD_KEYS)),

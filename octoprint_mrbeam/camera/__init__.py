@@ -67,6 +67,7 @@ class MrbPicWorker(object):
         self.busy = Event()
         self._logger = logging.getLogger("mrbeam.camera.MrbPicWorker")
         if debug: self._logger.setLevel(logging.DEBUG)
+        else: self._logger.setLevel(logging.WARNING)
 
     def currentBuf(self):
         return self.buffers[self.bufferIndex]
@@ -251,5 +252,4 @@ def gaussBlurDiff(imageA, imageB, thresh=DIFF_TOLERANCE, blur=7, resize = 1):
     images = [cv2.GaussianBlur(img, (blur, blur), 2 * blur) for img in images]
     images = np.asarray(images, dtype=np.int16) # No int overflow
     diff = np.max(np.abs(np.diff(images, axis=0)))
-    logging.getLogger('gaussBlurDiff').debug("Gauss blur diff value: %d", diff)
     return np.max(np.abs(np.diff(images, axis=0))) > thresh

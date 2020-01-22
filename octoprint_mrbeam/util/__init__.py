@@ -28,9 +28,12 @@ def json_serialisor(elm):
     elif isinstance(elm, np.ndarray):
         # convert the array elements into serialisable stuff, and change the array to nested lists
         shape = elm.shape
-        _e = elm.reshape((np.prod(shape),))
-        _e = np.asarray(map(json_serialisor, _e))
-        return _e.reshape(shape).tolist()
+        if max(shape) < 10 :
+            _e = elm.reshape((np.prod(shape),))
+            _e = np.asarray(map(json_serialisor, _e))
+            return _e.reshape(shape).tolist()
+        else :
+            return "numpy array with shape %s and type %s " % (elm.shape, elm.dtype)
     else:
         try:
             json.dumps(elm)
