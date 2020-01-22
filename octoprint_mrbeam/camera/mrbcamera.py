@@ -45,9 +45,7 @@ class LoopThread(threading.Thread):
         except Exception as e:
             self._logger.warning("mrbeam.loopthread : %s, %s", e.__class__.__name__, e)
 
-
     def _loop(self):
-        self.stopFlag.clear()
         self.running.set()
         while not self.stopFlag.isSet():
             try:
@@ -73,7 +71,6 @@ class MrbCamera(PiCamera):
         :param kwargs: passed on to Picamera.__init__()
         :type kwargs: Map
         """
-        now = time.time()
         # TODO set sensor mode and framerate etc...
         super(MrbCamera, self).__init__(*args, **kwargs)
         self.vflip = True
@@ -157,6 +154,13 @@ class MrbCamera(PiCamera):
                 # Need to wait for the shutter speed to take effect ??
                 time.sleep(.5)  # self.shutter_speed / 10**6 * 10 # transition to next shutter speed
 
+    def start(self):
+        if not self.captureLoop.isAlive() and not self.stopEvent.isSet():
+            self._logger.debug("capture loop not alive, starting now")
+            self.captureLoop.start()
+        else:
+            self._logger.info("Camera already running or stopEvent set")
+
     def async_capture(self, *args, **kw):
         """
         Starts or signals the camera to start taking a new picture.
@@ -174,11 +178,7 @@ class MrbCamera(PiCamera):
         #                   self.captureLoop.stopFlag.isSet(),
         #                   self.shutter_speed)
         time.sleep(.1)
-        if not self.captureLoop.isAlive():
-            self._logger.debug("capture loop not alive, starting now")
-            self.captureLoop.start()
-        else:
-            self.captureLoop.running.set() # Asks the loop to continue running, see LoopThread
+        self.captureLoop.running.set() # Asks the loop to continue running, see LoopThread
 
     def wait(self):
         """

@@ -17,7 +17,7 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 # don't crash on a dev computer where you can't install picamera
 import octoprint_mrbeam.camera
-from octoprint_mrbeam.camera import MrbCamera, gaussBlurDiff, QD_KEYS
+from octoprint_mrbeam.camera import MrbCamera, gaussBlurDiff, QD_KEYS, PICAMERA_AVAILABLE
 from octoprint_mrbeam.camera.undistort import prepareImage
 from octoprint_mrbeam.camera.undistort import _getCamParams, _getPicSettings, DIST_KEY, MTX_KEY
 from octoprint_mrbeam.util import json_serialisor, logme
@@ -69,15 +69,7 @@ class LidHandler(object):
 
         self.camEnabled = self._settings.get(["cam", "enabled"])
 
-        self._photo_creator = None
         self.image_correction_enabled = self._settings.get(['cam', 'image_correction_enabled'])
-
-        self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
-
-    def _on_mrbeam_plugin_initialized(self, event, payload):
-        self._temperature_manager = self._plugin.temperature_manager
-        self._iobeam = self._plugin.iobeam
-        self._analytics_handler = self._plugin.analytics_handler
 
         if self.camEnabled:
             imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
@@ -86,10 +78,12 @@ class LidHandler(object):
                                                imagePath,
                                                self.image_correction_enabled,
                                                debug=False)
+        else:
+            self._photo_creator = None
+        self._analytics_handler = self._plugin.analytics_handler
+        self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._subscribe)
 
-        self._subscribe()
-
-    def _subscribe(self):
+    def _subscribe(self, event, payload):
         self._event_bus.subscribe(IoBeamEvents.LID_OPENED, self.onEvent)
         self._event_bus.subscribe(IoBeamEvents.LID_CLOSED, self.onEvent)
         self._event_bus.subscribe(OctoPrintEvents.CLIENT_OPENED, self.onEvent)
@@ -178,13 +172,6 @@ class LidHandler(object):
                         self._photo_creator.save_debug_images
                     ))
 
-    def _setClientStatus(self,event):
-        if self._photo_creator is not None and self.camEnabled:
-            if event == OctoPrintEvents.CLIENT_OPENED:
-                self._start_photo_worker()
-            else:
-                self._end_photo_worker()
-
     def shutdown(self):
         if self._photo_creator is not None:
             self._logger.debug("shutdown() stopping _photo_creator")
@@ -205,10 +192,8 @@ class LidHandler(object):
             return make_response('Error, no photocreator active, maybe you are developing and dont have a cam?', 503)
 
     def _start_photo_worker(self):
-        if not self._photo_creator.active():
-            worker = threading.Thread(target=self._photo_creator.work, name='Photo-Worker')
-            worker.daemon = True
-            worker.start()
+        if not (self._photo_creator.active() or self._photo_creator.worker.isAlive()):
+            self._photo_creator.start()
         else:
             self._logger.info("Another PhotoCreator thread is already active! Not starting a new one.")
 
@@ -237,11 +222,11 @@ class PhotoCreator(object):
         self.is_initial_calibration = False
         self.undistorted_pic_path = None
         self.save_debug_images = self._settings.get(['cam', 'saveCorrectionDebugImages'])
-        self.camera = None
         self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator")
         self.debug = debug
         self._front_ready = Event()
         self.last_correction_result = None
+        self.worker = threading.Thread()
         if debug: self._logger.setLevel(logging.DEBUG)
         else:     self._logger.setLevel(logging.INFO)
         if self._settings.get(["cam", "keepOriginals"]):
@@ -255,21 +240,32 @@ class PhotoCreator(object):
     def active(self):
         return not self.stopEvent.isSet()
 
+    def start(self):
+        if self.active():
+            self.stop()
+        self.stopEvent.clear()
+        self.worker = threading.Thread(target=self.work, name='Photo-Worker')
+        self.worker.daemon = True
+        self.worker.start()
+
     def stop(self):
-        return self.stopEvent.set()
+        self.stopEvent.set()
+        if self.worker.isAlive():
+            return self.worker.join()
+        else:
+            return
 
     def set_undistorted_path(self):
         self.undistorted_pic_path = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(['cam', 'localUndistImage'])
 
     def work(self):
-        self.stopEvent.clear()
-
         # todo find maximum of sleep in beginning that's not affecting UX
         time.sleep(0.8)
 
         if self.is_initial_calibration:
             self.set_undistorted_path()
             # set_debug_images_to = save_debug_images or self._photo_creator.save_debug_images
+            # TODO save marker colors
             self.save_debug_images = True
 
         if not PICAMERA_AVAILABLE:
@@ -297,7 +293,8 @@ class PhotoCreator(object):
         After a certain number of similar pictures, Mr Beam serves a better quality pictures
         As of writing this doc, it will go through these settings:
         # 500 x 390, 75% JPEG quality ~ 60 kB
-        1000 x 780, 75% JPEG quality ~ 200 kB
+        1000 x 780, 65% JPEG quality ~ 45 kB
+        # 1000 x 780, 75% JPEG quality ~ 200 kB
         2000 x 1560, 65% JPEG quality ~ 400 kB
         # 2000 x 1560, 75% JPEG quality ~ 600 kB
         # 2000 x 1560, 90% JPEG quality (lossless) ~ 1 MB
@@ -355,8 +352,8 @@ class PhotoCreator(object):
                 time.sleep(2)
                 # bestShutterSpeeds = cam.apply_best_shutter_speed()  # Usually only 1 value, but there could be more
 
-                cam.anti_rolling_shutter_banding()
-                cam.async_capture()  # starts capture to the cam.worker
+                # TODO cam.anti_rolling_shutter_banding()
+                cam.start()  # starts capture to the cam.worker
             # --- Decide on the picture quality to give to the user and whether the pic is different ---
             prev = None # previous image
             nb_consecutive_similar_pics = 0
@@ -373,6 +370,7 @@ class PhotoCreator(object):
             markers = None
             while self.active():
                 cam.wait()  # waits until the next picture is ready
+                if not self.active(): break
                 latest = cam.lastPic() # gets last picture given by cam.worker
                 cam.async_capture()  # starts capture with new settings
                 if latest is None:
@@ -465,9 +463,9 @@ class PhotoCreator(object):
                                               correction_result2['markers_found'],
                                               increment_pic=False,
                                               error=correction_result2['error'])
-                self._logger.debug("Analytics: %s", json.dumps(session_details,
-                                                                   indent=2,
-                                                                   default=json_serialisor))
+                # self._logger.debug("Analytics: %s", json.dumps(session_details,
+                #                                                    indent=2,
+                #                                                    default=json_serialisor))
             cam.stop_preview()
             if session_details['num_pics'] > 0:
                 self._analytics_handler.add_camera_session_details(session_details)
@@ -489,7 +487,7 @@ class PhotoCreator(object):
                                                               debug_out=self.debug,  # self.save_debug_images,
                                                               stopEvent=self.stopEvent,
                                                               threads=4)
-        if not self.active(): return False, None, None, None
+        if not self.active(): return False, None, None, None, None
         success_1 = workspaceCorners is not None
         # Conform to the legacy result to be sent to frontend
         correction_result = {'markers_found':         list(filter(lambda q: q not in missed, QD_KEYS)),
