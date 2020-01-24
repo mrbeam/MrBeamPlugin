@@ -258,13 +258,6 @@ $(function () {
             self.files.listHelper.changeSorting('upload');
         };
 
-        self.addSwUpdateTierInformation = function(){
-            tier = self.settings.settings.plugins.mrbeam.dev.softwareTier();
-            if (tier != "PROD") {
-                $('#settings_plugin_softwareupdate > h3').append(" (TIER: "+tier+")");
-            }
-        };
-
         self.removeLoadingOverlay = function(){
             // firstImageLoaded is based on jQuery.load() which is not reliable and deprecated.
             // Therefore we lift the curtain for unsupported browsers without waiting for the bgr image to be loaded.
