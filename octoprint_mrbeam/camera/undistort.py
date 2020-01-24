@@ -96,7 +96,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 
     if not (M2C_VECTOR_KEY in pic_settings and _isValidQdDict(pic_settings[M2C_VECTOR_KEY])):
         pic_settings[M2C_VECTOR_KEY] = None
-        err = 'No_valid_M2C_VECTORS_found,_please_calibrate.'
+        err = 'No_valid_M2C_VECTORS_found-_please_calibrate'
         logger.error(err)
         return None, None, None, err
 
@@ -113,7 +113,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
         # load image
         img = cv2.imread(input_image, cv2.IMREAD_COLOR) #BGR
         if img is None:
-            err = 'Could not load Image. Please check Camera and path_to_image.'
+            err = 'Could_not_load_Image-_Please_check_Camera_and_-path_to_image'
             logger.error(err)
             return None, None, None, err
     elif type(input_image) is np.ndarray:
@@ -122,7 +122,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
                 size, quality, debug_out))
         img = input_image
     else:
-        raise ValueError("path_to_input_image in camera undistort needs to be a path (string) or a numpy array")
+        raise ValueError("path_to_input_image-_in_camera_undistort_needs_to_be_a_path_(string)_or_a_numpy_array")
     # undistort image with cam_params
     img = _undistortImage(img, cam_dist, cam_matrix)
 
@@ -543,16 +543,16 @@ def _getCamParams(path_to_params_file):
     :returns cam_params as dict
     """
     if not isfile(path_to_params_file) or os.stat(path_to_params_file).st_size == 0:
-        logging.error("Please_provide_a_valid:_PATH_TO/camera_params_npz_or_similiar")
-        raise MbPicPrepError("Please_provide_a_valid:_PATH_TO/camera_params_npz_or_similiar")
+        logging.error("Please_provide_a_valid-_PATH_TO/camera_params_npz_or_similiar")
+        raise MbPicPrepError("Please_provide_a_valid-_PATH_TO/camera_params_npz_or_similiar")
     else:
         try:
             valDict = np.load(path_to_params_file)
         except Exception as e:
-            raise MbPicPrepError('Exception_while_loading_cam_params:_{}'.format(e))
+            raise MbPicPrepError('Exception_while_loading_cam_params-_{}'.format(e))
 
         if not all(param in valDict for param in [DIST_KEY, MTX_KEY]):
-            raise MbPicPrepError('CamParams_missing_in_File,_please_do_a_new_Camera_Calibration_(Chessboard)')
+            raise MbPicPrepError('CamParams_missing_in_File-_please_do_a_new_Camera_Calibration_(Chessboard)')
 
     return valDict
 
@@ -563,7 +563,7 @@ def _getPicSettings(path_to_settings_file, custom_pic_settings=None):
     :return: pic_settings as dict
     """
     if not isfile(path_to_settings_file) or os.stat(path_to_settings_file).st_size == 0:
-        print("No pic_settings file found, created new one.")
+        # print("No pic_settings file found, created new one.")
         pic_settings = PIC_SETTINGS
         if custom_pic_settings is not None:
             pic_settings = dict_merge(pic_settings, custom_pic_settings)

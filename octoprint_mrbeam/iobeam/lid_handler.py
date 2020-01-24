@@ -282,9 +282,9 @@ class PhotoCreator(object):
                 self.serve_pictures(cam)
         except Exception as e:
             if e.__class__.__name__.startswith('PiCamera'):
-                self._logger.error("PiCamera Error while preparing camera: %s: %s", e.__class__.__name__, e)
+                self._logger.error("PiCamera_Error_while_preparing_camera_%s_%s", e.__class__.__name__, e)
             else:
-                self._logger.exception("Exception while preparing camera: %s: %s", e.__class__.__name__, e)
+                self._logger.exception("Exception_while_preparing_camera_%s_%s", e.__class__.__name__, e)
         self.stopEvent.set()
 
     def serve_pictures(self, cam):
@@ -415,9 +415,9 @@ class PhotoCreator(object):
                     if errorID == 'BAD_QUALITY':
                         self.badQualityPicCount += 1
                         self._logger.error(
-                                errorString + '_Number_of_bad_quality_pics:_{}'.format(self.badQualityPicCount))
+                                errorString + '_Number_of_bad_quality_pics_{}'.format(self.badQualityPicCount))
                         if self.badQualityPicCount > 10:
-                            self._logger.error('Too_many_bad_pics!_Show_bad_image_now'.format(self.badQualityPicCount))
+                            self._logger.error('Too_many_bad_pics-_Show_bad_image_now'.format(self.badQualityPicCount))
                             self._ready_to_send_pic(correction_result2)
                     elif errorID == 'NO_CALIBRATION' or errorID == 'NO_PICTURE_FOUND':
                         self._logger.error(errorString)
@@ -448,7 +448,7 @@ class PhotoCreator(object):
                 self._analytics_handler.add_camera_session_details(session_details)
             self._logger.debug("PhotoCreator_stopping")
         except Exception as worker_exception:
-            self._logger.exception("Exception in worker thread of PhotoCreator: {}".format(worker_exception.message))
+            self._logger.exception("Exception_in_worker_thread_of_PhotoCreator-_{}".format(worker_exception.message))
 
     def _new_detect_algo(self, pic, cam_params, pic_settings, out_pic_size, last_markers=None, quality=OK_QUALITY):
         # Only for the purpose of the transition of 1 detection type to the other.
@@ -556,7 +556,7 @@ class PhotoCreator(object):
                     _s[algo]['errors'][error] = 1
 
         except Exception as ex:
-            self._logger.exception('Exception in _save__s_for_analytics: {}'.format(ex))
+            self._logger.exception('Exception_in-_save__s_for_analytics-_{}'.format(ex))
 
     def _ready_to_send_pic(self, correction_result, force=False):
         self.last_correction_result = correction_result
@@ -585,7 +585,7 @@ class PhotoCreator(object):
                 os.makedirs(path)
                 self._logger.debug("Created folder '%s' for camera images.", path)
         except:
-            self._logger.exception("Exception while creating folder '%s' for camera images:", filename)
+            self._logger.exception("Exception_while_creating_folder_'%s'_for_camera_images-_", filename)
 
     def _move_img(self, src, dest):
         try:
@@ -593,7 +593,7 @@ class PhotoCreator(object):
                 os.remove(dest)
             shutil.move(src, dest)
         except Exception as e:
-            self._logger.warn("exception while moving file: %s", e)
+            self._logger.warn("exception_while_moving_file-_%s", e)
 
 def blank_session_details():
     """
