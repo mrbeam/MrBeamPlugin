@@ -848,3 +848,23 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	background-color: #eee;
 	margin-right: 0.3em;
 }
+
+body.scanMode #scanEventHandler {
+	width: 100%;
+	height: 100%;
+	fill: rgba(255,255,255,0);
+}
+
+body.scanMode #coordGrid{
+	opacity: 0;
+}
+
+#scanArea {
+	fill: none;
+	stroke: none;
+	stroke-width: 1;
+}
+
+body.scanMode #scanArea {
+	stroke: #e25303;
+}

@@ -1120,10 +1120,14 @@ $(function(){
 		self._svgMultiplyUpdate = function(data, colsRowsStr){
 			self.abortFreeTransforms();
 			var svg = snap.select('#'+data.previewId);
-			var gridsize = colsRowsStr.split(/\D+/);
-			var cols = gridsize[0] || 1;
-			var rows = gridsize[1] || 1;
 			var dist = 2;
+			var cols = 1;
+			var rows = 1;
+			if(colsRowsStr !== undefined){ 
+				var gridsize = colsRowsStr.split(/\D+/);
+				cols = gridsize[0] || 1;
+				rows = gridsize[1] || 1;
+			}
 			svg.grid(cols, rows, dist);
 			var mb_meta = self._set_mb_attributes(svg);
 			svg.ftStoreInitialTransformMatrix();
@@ -1305,11 +1309,6 @@ $(function(){
 
 				imgWrapper.append(newImg);
 				snap.select("#userContent").append(imgWrapper);
-//				imgWrapper.transformable();
-//				imgWrapper.ftRegisterOnTransformCallback(self.svgTransformUpdate);
-//				setTimeout(function(){
-//					imgWrapper.ftReportTransformation();
-//				}, 200);
 				self._makeItTransformable(imgWrapper);
 				
 				file.id = id;
@@ -1332,6 +1331,23 @@ $(function(){
 				self._analyticsPlaceImage(analyticsData)
 			};
 			img.src = url;
+		};
+		
+		self.placeImgUrl = function(url){
+			const name = "Data URL.png";
+			let file = {
+				date: Date.now(),
+				display: "URL: "+name,
+				name: name,
+				origin: "url",
+				path: "url",
+				refs: {download: url, resource: url},
+				size: url.length,
+				type: "model",
+				typePath: (2) ["model", "image"],
+				weight: 1
+			};
+			self.placeIMG(file);
 		};
 
 		self.removeIMG = function(file){
@@ -1555,7 +1571,11 @@ $(function(){
 
 		self._getSVGserveUrl = function(file){
 			if (file && file["refs"] && file["refs"]["download"]) {
-				var url = file.refs.download +'?'+ Date.now(); // be sure to avoid caching.
+				var url = file.refs.download;
+				if(!url.startsWith("data:")) {
+					// be sure to avoid caching.
+					url = url+'?'+ Date.now();
+				}
 				return url;
 			}
 		};
@@ -2603,6 +2623,84 @@ $(function(){
 
 		// ***********************************************************
 		//  QUICKTEXT end
+		// ***********************************************************
+
+		// ***********************************************************
+		//  QUICKSCAN start
+		// ***********************************************************
+
+		self.enableScanMode = function(){
+			document.body.classList.toggle('scanMode');
+		};
+		
+		self.scanStart = function(vm, ev){
+			if(ev.buttons === 1){
+				let targetBBox = ev.currentTarget.getBoundingClientRect();
+				const x = (ev.clientX - targetBBox.left);
+				const y = (ev.clientY - targetBBox.top);
+				self.scanArea = snap.select('#scanArea');
+				self.scanRect = {x1: x, y1: y, x2: x, y2: y};
+			}
+		};
+		
+		self.scanUpdate = function(vm, ev){
+			if(ev.buttons === 1){
+				let targetBBox = ev.currentTarget.getBoundingClientRect();
+				const x = (ev.clientX - targetBBox.left);
+				const y = (ev.clientY - targetBBox.top);
+				self.scanRect.x2 = x;
+				self.scanRect.y2 = y;
+				self.scanArea.attr({
+					x: Math.min(self.scanRect.x1, self.scanRect.x2) / targetBBox.width * self.workingAreaWidthMM(),
+					y: Math.min(self.scanRect.y1, self.scanRect.y2) / targetBBox.height * self.workingAreaHeightMM(),
+					width: Math.abs(self.scanRect.x1 - self.scanRect.x2) / targetBBox.width * self.workingAreaWidthMM(),
+					height: Math.abs(self.scanRect.y1 - self.scanRect.y2) / targetBBox.height * self.workingAreaHeightMM()
+				});
+			} 
+		};
+		
+		self.scanEnd = function(vm, ev){
+			if(ev.buttons === 0){
+				let targetBBox = ev.currentTarget.getBoundingClientRect();
+				const scanWindowPerc = {
+					x: Math.min(self.scanRect.x1, self.scanRect.x2) / targetBBox.width,
+					y: Math.min(self.scanRect.y1, self.scanRect.y2) / targetBBox.height,
+					width: Math.abs(self.scanRect.x1 - self.scanRect.x2) / targetBBox.width,
+					height: Math.abs(self.scanRect.y1 - self.scanRect.y2) / targetBBox.height
+				}
+				console.log("scanRect", scanWindowPerc);
+				document.body.classList.remove('scanMode');
+				
+				// load image
+				let url = self.camera.webCamImageElem[0].getAttribute('xlink:href');
+				var image = new Image();
+
+				image.onload = function (result) {
+					// crop image
+					let canvas = document.createElement('canvas');
+					const nw = this.naturalWidth;
+					const nh = this.naturalHeight;
+					canvas.width = nw * scanWindowPerc.width;
+					canvas.height = nh * scanWindowPerc.height;
+					const x = nw * scanWindowPerc.x;
+					const y = nh * scanWindowPerc.y;
+
+					canvas.getContext('2d').drawImage(this, -x, -y);
+					var dataUrl = canvas.toDataURL('image/png');
+					canvas.remove();
+					// place image
+					self.placeImgUrl(dataUrl);
+				};
+
+				image.src = url;
+				self.scanArea.attr({x: 0, y: 0, width: 0, height: 0 });
+				self.scanRect = null;
+			}
+		};
+		
+
+		// ***********************************************************
+		//  QUICKSCAN end
 		// ***********************************************************
 
 		// on working_area: only works if shift key is down
