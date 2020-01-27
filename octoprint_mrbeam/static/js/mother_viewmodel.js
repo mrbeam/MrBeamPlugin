@@ -233,13 +233,6 @@ $(function () {
             });
             self.terminal.activeAllFilters();
 			
-			// brightness realtime adjust
-			window.mrbeam.leds_brightness = function(val){
-				let br = parseInt(val);
-				OctoPrint.simpleApiCommand("mrbeam", "leds_brightness", {brightness: br});
-
-			}
-
             // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
             // our implementation here should be used instead of octoprints
             // to fix issues with the laser job time display

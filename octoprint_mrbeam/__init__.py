@@ -596,7 +596,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
             dict(type='settings', name=gettext("Analytics"), template='settings/analytics_settings.jinja2', suffix="_analytics", custom_bindings=False),
 			dict(type='settings', name=gettext("Reminders"), template='settings/reminders_settings.jinja2', suffix="_reminders", custom_bindings=False),
 			dict(type='settings', name=gettext("Maintenance"), template='settings/maintenance_settings.jinja2', suffix="_maintenance", custom_bindings=True),
-			dict(type='settings', name=gettext("LEDs"), template='settings/leds_settings.jinja2', suffix="_leds", custom_bindings=False),
+			dict(type='settings', name=gettext("LEDs"), template='settings/leds_settings.jinja2', suffix="_leds", custom_bindings=True),
 
 			# disabled in appearance
 			# dict(type='settings', name="Serial Connection DEV", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings=False, replaces='serial')

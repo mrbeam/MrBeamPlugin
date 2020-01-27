@@ -1,4 +1,4 @@
-<div id="settings_mrbeam_debug">
+<div id="settings_plugin_mrbeam_leds">
     <h3>{{ _('LEDs') }}</h3>
 
 	<form class="form-horizontal">
@@ -6,9 +6,8 @@
             <label class="control-label" for="settings-leds-brightness">{{ _('Brightness') }}</label>
             <div class="controls">
                 <input id="settings-leds-brightness"
-					    oninput="window.mrbeam.leds_brightness(this.value)"
-						onchange="window.mrbeam.leds_brightness(this.value)" class="img_adjust" style="margin: 1.05em 0 2em 0;" 
-					   type="range" min="7" max="255" step="8" data-bind="value: settings.plugins.mrbeam.leds.brightness" />
+					class="img_adjust" style="margin: 1.05em 0 2em 0;" 
+					type="range" min="7" max="255" step="8" data-bind="value: edge_brightness, valueUpdate: 'input'" />
                 <br />
                 <div><small>{{ _("Adjust the overall brightness of Mr Beam's illuminated edges.") }}</small></div>
             </div>

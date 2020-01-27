@@ -64,7 +64,8 @@ class LedEventListener(CommandTrigger):
 	COMMAND_LISTENING_AP =           "mrbeam_ledstrips_cli listening_ap"
 
 	# LEDSTRIPS SETTINGS for adjusting brightness and maybe more some time
-	COMMAND_SET_BRIGHTNESS =         "mrbeam_ledstrips_cli set:brightness:{__brightness}"
+	COMMAND_SET_EDGEBRIGHTNESS =         "mrbeam_ledstrips_cli set:edge_brightness:{__brightness}"
+	COMMAND_SET_INSIDEBRIGHTNESS =         "mrbeam_ledstrips_cli set:inside_brightness:{__brightness}"
 
 	def __init__(self, plugin):
 		CommandTrigger.__init__(self, plugin._printer)
@@ -84,7 +85,14 @@ class LedEventListener(CommandTrigger):
 
 	def set_brightness(self, brightness):
 		if(isinstance(brightness, int) and brightness > 0 and brightness <= 255):
-			command = self.COMMAND_SET_BRIGHTNESS.replace('{__brightness}', str(brightness))
+			command = self.COMMAND_SET_EDGEBRIGHTNESS.replace('{__brightness}', str(brightness))
+			commandType = "system"
+			debug = False
+			self._execute_command(command, commandType, debug)
+
+	def set_inside_brightness(self, brightness):
+		if(isinstance(brightness, int) and brightness > 0 and brightness <= 255):
+			command = self.COMMAND_SET_INSIDEBRIGHTNESS.replace('{__brightness}', str(brightness))
 			commandType = "system"
 			debug = False
 			self._execute_command(command, commandType, debug)
