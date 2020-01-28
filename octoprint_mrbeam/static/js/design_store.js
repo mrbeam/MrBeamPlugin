@@ -102,7 +102,11 @@ $(function () {
                 success: function (response) {
                     console.log("Store bought design saved.", response);
 
-                    // todo iratxe: change button from "Downloading" to "Done" or whatever
+                    // We still wait a couple of seconds before telling the store, because the design is not loaded yet.
+                    // Note: the Octoprint events FileAdded and UpdatedFiles come before this, so they are not helpful in this case.
+                    setTimeout(function () {
+                        self.sendMessageToDesignStoreIframe('downloadOk', {})
+                    }, 2000);
                 },
                 error: function ( jqXHR, textStatus, errorThrown) {
                     console.error("Store bought design saving failed with status " + jqXHR.status, textStatus, errorThrown);
@@ -115,7 +119,6 @@ $(function () {
                     });
                 }
             });
-
         }
     }
 
