@@ -540,6 +540,14 @@
 										<!--<feGaussianBlur in="SourceGraphic" stdDeviation="2" />-->
 										<feColorMatrix type="saturate" values="0.5"/>
 									</filter>
+                                    <filter id="scan_text_mode">
+                                        <feGaussianBlur stdDeviation="0.1"></feGaussianBlur>
+                                        <feComponentTransfer>
+                                            <feFuncR tableValues="0 0 0 1 1 1 1" type="discrete"></feFuncR>
+                                            <feFuncG tableValues="0 0 0 1 1 1 1" type="discrete"></feFuncG>
+                                            <feFuncB tableValues="0 0 0 1 1 1 1" type="discrete"></feFuncB>
+                                        </feComponentTransfer>
+                                    </filter>
 								</defs>
 								<image id="beamcam_image_svg"
 									xlink:href="/downloads/files/local/cam/beam-cam.jpg" x="0" y="0" height="100%" width="100%"
@@ -575,9 +583,9 @@
                                         </circle>
 									</g>
 									<rect id="scanArea" x="0" y="0" width="0" height="0" ></rect>
-									<rect id="scanEventHandler" x="0" y="0" width="0" height="0" stroke="none" fill="none" 
+									<rect id="scanEventHandler" x="0" y="0" width="0" height="0" stroke="none" fill="none"
 										  data-bind="event: {mousedown: scanStart, mousemove: scanUpdate, mouseup: scanEnd}"></rect>
-									
+
 								</svg>
 							</div>
                             <div id="working_area_footer">
