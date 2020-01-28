@@ -178,7 +178,7 @@ class LidHandler(object):
             self._end_photo_worker()
 
     def take_undistorted_picture(self,is_initial_calibration=False):
-        from flask import make_response
+        from flask import make_response, jsonify
         if self._photo_creator is not None:
             if is_initial_calibration:
                 self._photo_creator.is_initial_calibration = True
