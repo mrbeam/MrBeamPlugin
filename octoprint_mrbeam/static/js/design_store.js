@@ -20,18 +20,27 @@ $(function () {
                 function receiveMessagesFromDesignStoreIframe(event) {
                     if (event.origin === self.DESIGN_STORE_IFRAME_SRC) {
                         console.log('## Plugin receiving ##');
-                        if (event.data.event === 'discovery') {
-                            console.log('# DISCOVERY');
-                            self.onDiscoveryReceived();
-                        } else if (event.data.event === 'token') {
-                            console.log('# TOKEN');
-                            self.onTokenReceived(event.data.payload);
-                        } else if (event.data.event === 'svg') {
-                            console.log('# SVG');
-                            self.onSvgReceived(event.data.payload);
-                        } else if (event.data.event == 'viewLibrary') {
-                            console.log('# VIEW LIBRARY');
-                            $('#designlib_tab_btn').trigger('click');
+                        switch (event.data.event) {
+                            case 'discovery':
+                                console.log('# DISCOVERY');
+                                self.onDiscoveryReceived();
+                                break;
+                            case 'token':
+                                console.log('# TOKEN');
+                                self.onTokenReceived(event.data.payload);
+                                break;
+                            case 'svg':
+                                console.log('# SVG');
+                                self.onSvgReceived(event.data.payload);
+                                break;
+                            case 'viewLibrary':
+                                console.log('# VIEW LIBRARY');
+                                $('#designlib_tab_btn').trigger('click');
+                                break;
+                            case 'notification':
+                                console.log('# NOTIFICATION');
+                                new PNotify(event.data.payload);
+                                break;
                         }
                     }
                 }
