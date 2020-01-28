@@ -29,12 +29,12 @@
 										</form>
 									</div>
 									<ul class="file_list_filter" id="files_filter">
-                                        <div style="font-weight: 900">{{ _('Sort') }}</div>
+                                        <div><strong>{{ _('Sort') }}</strong></div>
 										<li><input type="radio" name="designLibSorting" id="design_lib_sort_name_radio" data-bind="click: function() { $root.listHelper.changeSorting('name'); return true;}" />{{ _('Name') }} ({{ _('ascending') }})</li>
 										<li><input type="radio" name="designLibSorting" id="design_lib_sort_upload_radio" data-bind="click: function() { $root.listHelper.changeSorting('upload'); return true;}" />{{ _('Upload date') }} ({{ _('descending') }})</li>
                                         <li><input type="radio" name="designLibSorting" id="design_lib_sort_size_radio" data-bind="click: function() { $root.listHelper.changeSorting('size'); return true;}" />{{ _('File size') }} ({{ _('descending') }})</li>
                                         <br>
-                                        <div style="font-weight: 900">{{ _('Filter') }}</div>
+                                        <div><strong>{{ _('Filter') }}</strong></div>
                                         <li><input type="radio" name="designLibFilter" id="design_lib_filter_design_radio" data-bind="click: function() { $root.setFilter('design'); return true;}" />{{ _('Design files') }}</li>
 										<li><input type="radio" name="designLibFilter" id="design_lib_filter_gcode_radio" data-bind="click: function() { $root.setFilter('machinecode'); return true;}" />{{ _('GCode files') }}</li>
                                         <li><input type="radio" name="designLibFilter" id="design_lib_filter_recent_radio" data-bind="click: function() { $root.setFilter('recentjob'); return true;}" />{{ _('Recent jobs') }}</li>
