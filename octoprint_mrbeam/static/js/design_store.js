@@ -8,6 +8,7 @@ $(function () {
         self.loginState = params[0];
         self.navigation = params[1];
 
+        // todo: should we do this before?
         self.onAllBound = function () {
             self.prepareDesignStoreTab();
         };
@@ -60,6 +61,7 @@ $(function () {
                 serial: MRBEAM_SERIAL,
                 user_token: self.loginState.currentUser().settings.mrbeam.user_token,
                 version: BEAMOS_VERSION,
+                language: MRBEAM_LANGUAGE,
             };
 
             self.sendMessageToDesignStoreIframe('userData', userData)
