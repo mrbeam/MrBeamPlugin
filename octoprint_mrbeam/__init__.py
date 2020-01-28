@@ -5,6 +5,7 @@ import __builtin__
 import copy
 import json
 import os
+import platform
 import pprint
 import socket
 import threading
@@ -23,6 +24,8 @@ from octoprint.server.util.flask import restricted_access, get_json_command_from
 from octoprint.util import dict_merge
 from octoprint.settings import settings
 from octoprint.events import Events as OctoPrintEvents
+
+IS_X86 = platform.machine() == 'x86_64'
 
 from octoprint_mrbeam.iobeam.iobeam_handler import ioBeamHandler, IoBeamEvents
 from octoprint_mrbeam.iobeam.onebutton_handler import oneButtonHandler
@@ -73,7 +76,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				   octoprint.plugin.EnvironmentDetectionPlugin):
 
 	# CONSTANTS
-	DEVIE_INFO_FILE = '/etc/mrbeam'
+	DEVICE_INFO_FILE = '/etc/mrbeam'
 
 	ENV_PROD =         "PROD"
 	ENV_DEV  =         "DEV"
@@ -907,7 +910,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def engraveCalibrationMarkers(self, intensity, feedrate):
 		profile = self.laserCutterProfileManager.get_current_or_default()
 		max_intensity = 1300 #TODO get magic numbers from profile
-		min_intensity = 0 
+		min_intensity = 0
 		min_feedrate = 100
 		max_feedrate = 3000
 		try:
@@ -915,27 +918,27 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			f = int(feedrate)
 		except ValueError:
 			return make_response("Invalid parameters", 400)
-		
+
 		# validate input
-		if(i < min_intensity or i > max_intensity or f < min_feedrate or f > max_feedrate): 
+		if(i < min_intensity or i > max_intensity or f < min_feedrate or f > max_feedrate):
 			return make_response("Invalid parameters", 400)
 		cm = CalibrationMarker(str(profile['volume']['width']), str(profile['volume']['depth']))
 		gcode = cm.getGCode(i, f)
-		
+
 		# run gcode
 		# check serial connection
 		if self._printer is None or self._printer._comm is None:
 			return make_response("Laser: Serial not connected", 400)
-		
+
 		if(self._printer.get_state_id() == "LOCKED"):
 			self._printer.home("xy")
-			
+
 		seconds = 0
 		while(self._printer.get_state_id() != "OPERATIONAL" and seconds <= 26): # homing cycle 20sec worst case, rescue from home ~ 6 sec total (?)
 			time.sleep(1.0) # wait a second
 			seconds += 1
-				
-		
+
+
 		# check if idle
 		if not self._printer.is_operational():
 			return make_response("Laser not idle", 403)
@@ -1471,7 +1474,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				}
 			self._plugin_manager.send_plugin_message("mrbeam", dict(beam_cam_new_image=meta_data))
 			return make_response("DEBUG MODE: Took dummy picture", 200)
-		
+
 		self._logger.debug("New undistorted image is requested. is_initial_calibration: %s", is_initial_calibration)
 		image_response = self.lid_handler.take_undistorted_picture(is_initial_calibration)
 		self._logger.debug("Image_Response: {}".format(image_response))
@@ -1892,7 +1895,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def getHostname(self):
 		"""
 		Returns device hostname like 'MrBeam2-F930'.
-		If system hostname (/etc/hostname) is differen it'll be set (overwritten!!) to the value from device_info
+		If system hostname (/etc/hostname) is different it'll be set (overwritten!!) to the value from device_info
 		:return: String hostname
 		"""
 		if self._hostname is None:
@@ -1907,7 +1910,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			# yes, let's go with the actual host name untill changes have applied.
 			self._hostname = hostname_socket
 
-			if hostname_dev_info != hostname_socket:
+			if hostname_dev_info != hostname_socket and not IS_X86:
 				self._logger.warn("getHostname() Hostname from device_info file does NOT match system hostname. device_info: {dev_info}, system hostname: {sys}. Setting system hostname to {dev_info}"
 				                  .format(dev_info=hostname_dev_info, sys=hostname_socket))
 				exec_cmd("sudo /root/scripts/change_hostname {}".format(hostname_dev_info))
@@ -1986,19 +1989,25 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			ok = None
 			try:
 				db = dict()
-				with open(self.DEVIE_INFO_FILE, 'r') as f:
+				with open(self.DEVICE_INFO_FILE, 'r') as f:
 					for line in f:
 						line = line.strip()
 						token = line.split('=')
 						if len(token) >= 2:
 							db[token[0]] = token[1]
-					ok = True
+				return self._device_info.get(key, default)
 			except Exception as e:
 				ok = False
-				self._logger.error("Can't read device_info_file '%s' due to exception: %s", self.DEVIE_INFO_FILE, e)
-			if ok:
-				self._device_info = db
-		return self._device_info.get(key, default)
+				self._logger.error("Can't read device_info_file '%s' due to exception: %s", self.DEVICE_INFO_FILE, e)
+				if IS_X86:
+					self._device_info = dict(
+						octopi="PROD 2019-12-12 13:05 1576155948",
+						hostname="MrBeam-DEV",
+						device_series="2X",
+						device_type="MrBeam2X",
+						serial="000000000694FD5D-2X",
+						image_correction_markers="MrBeam2C-pink",)
+					return self._device_info.get(key, default)
 
 
 	def isFirstRun(self):
