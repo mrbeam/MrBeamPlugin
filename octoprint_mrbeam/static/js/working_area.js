@@ -212,10 +212,10 @@ $(function(){
 			let colFound = self._getColorsOfSelector('.vector_outline', 'stroke', snap.select('#userContent'));
 			return colFound;
 		};
-		
+
 		self._getColorsOfSelector = function(selector, color_attr = 'stroke', elem = null){
 			let root = elem === null ? snap : elem;
-			
+
 			let colors = [];
 			let items = root.selectAll(selector + '['+color_attr+']');
 			for (var i = 0; i < items.length; i++) {
@@ -251,7 +251,7 @@ $(function(){
 			y = Math.min(y, self.workingAreaHeightMM());
 			return {x:x, y:y};
 		};
-		
+
 		self.move_laser_to_xy = function(x,y){
 			if(self.state.isOperational() && !self.state.isPrinting() && !self.state.isLocked()){
 				$.ajax({
@@ -265,7 +265,7 @@ $(function(){
 				console.warn("Move Laser command while machine state not idle: " + self.state.stateString());
 			}
 		};
-		
+
 		self.crosshairX = function(){
 			var pos = self.state.currentPos();
 			if(pos !== undefined){
@@ -298,7 +298,7 @@ $(function(){
 		};
 
 		/**
-		 * 
+		 *
 		 * @param {type} file (OctoPrint "file" object - example: {url: elem.url, origin: elem.origin, name: name, type: "split", refs:{download: elem.url}};)
 		 * @returns {Boolean}
 		 */
@@ -602,7 +602,7 @@ $(function(){
 						}
 					}
 				}
-				
+
 				newSvg.attr(newSvgAttrs);
 				if (switches.bakeTransforms) {
 					window.mrbeam.bake_progress = 0;
@@ -673,7 +673,7 @@ $(function(){
 					myElem.remove();
 				}
 			}
-			
+
 			// remove other unnecessary or invisible ("display=none") elements
 			let removeElements = fragment.selectAll('metadata, script, [display=none], [style*="display:none"]');
 			for (var i = 0; i < removeElements.length; i++) {
@@ -825,7 +825,7 @@ $(function(){
 		self.splitSVG = function(elem, event, method) {
 			self.abortFreeTransforms();
 			let srcElem = snap.select('#'+elem.previewId);
-			
+
 			let parts;
 			switch(method){
 				case 'stroke-color':
@@ -847,7 +847,7 @@ $(function(){
 					if(parts.length <= 1) failReason = "Not enough native elements.";
 					break;
 			}
-			
+
 			if(parts.length > 1){
 				self.removeSVG(elem);
 				for (let i = 0; i < parts.length; i++) {
@@ -906,7 +906,7 @@ $(function(){
 			file.id = id; // list entry id
 			file.previewId = previewId;
 			file.misfit = false;
-			file.typePath = src.typePath; 
+			file.typePath = src.typePath;
 			newSvg.attr({id: previewId,
 				'mb:id': self._normalize_mb_id(previewId),
 				'mb:clone_of':clone_id,
@@ -928,7 +928,7 @@ $(function(){
 			self._makeItTransformable(newSvg);
 			self.check_sizes_and_placements();
 		};
-		
+
 
 		self.placeSmart = function(elem){ // TODO: bug - should not place outside working area
 			var spacer = 2;
@@ -1120,10 +1120,14 @@ $(function(){
 		self._svgMultiplyUpdate = function(data, colsRowsStr){
 			self.abortFreeTransforms();
 			var svg = snap.select('#'+data.previewId);
-			var gridsize = colsRowsStr.split(/\D+/);
-			var cols = gridsize[0] || 1;
-			var rows = gridsize[1] || 1;
 			var dist = 2;
+			var cols = 1;
+			var rows = 1;
+			if(colsRowsStr !== undefined){
+				var gridsize = colsRowsStr.split(/\D+/);
+				cols = gridsize[0] || 1;
+				rows = gridsize[1] || 1;
+			}
 			svg.grid(cols, rows, dist);
 			var mb_meta = self._set_mb_attributes(svg);
 			svg.ftStoreInitialTransformMatrix();
@@ -1153,7 +1157,7 @@ $(function(){
 				self.set_img_sharpen(data.previewId, sharpenVal);
 			}
 		};
-		
+
 		self.imgManualCrop = function(data, event) {
 			if (event.type === 'input' || event.type === 'blur' || event.type === 'keyUp') {
 				let t = parseFloat($('#'+data.id+' .crop_top').val());
@@ -1270,10 +1274,11 @@ $(function(){
 			});
 		};
 
-		self.placeIMG = function (file) {
+		self.placeIMG = function (file, textMode) {
 			var start_ts = Date.now();
 			var url = self._getIMGserveUrl(file);
 			var img = new Image();
+			textMode = textMode || false;
 			img.onload = function () {
 				var duration_load = Date.now() - start_ts;
 				start_ts = Date.now();
@@ -1300,18 +1305,16 @@ $(function(){
 					id: previewId,
 					'mb:id':self._normalize_mb_id(previewId),
 					class: 'userIMG',
-					'mb:origin': origin
+					'mb:origin': origin,
 				});
+                if (textMode) {
+                    imgWrapper.attr('style', "filter: url(#scan_text_mode)")
+                }
 
 				imgWrapper.append(newImg);
 				snap.select("#userContent").append(imgWrapper);
-//				imgWrapper.transformable();
-//				imgWrapper.ftRegisterOnTransformCallback(self.svgTransformUpdate);
-//				setTimeout(function(){
-//					imgWrapper.ftReportTransformation();
-//				}, 200);
 				self._makeItTransformable(imgWrapper);
-				
+
 				file.id = id;
 				file.previewId = previewId;
 				file.url = url;
@@ -1332,6 +1335,23 @@ $(function(){
 				self._analyticsPlaceImage(analyticsData)
 			};
 			img.src = url;
+		};
+
+		self.placeImgUrl = function(url){
+			const name = "Data URL.png";
+			let file = {
+				date: Date.now(),
+				display: "URL: "+name,
+				name: name,
+				origin: "url",
+				path: "url",
+				refs: {download: url, resource: url},
+				size: url.length,
+				type: "model",
+				typePath: (2) ["model", "image"],
+				weight: 1
+			};
+			self.placeIMG(file, true);
 		};
 
 		self.removeIMG = function(file){
@@ -1389,7 +1409,7 @@ $(function(){
 			var filter = snap.select('#'+self._get_img_filter_id(previewId));
 			filter.select('feConvolveMatrix').attr({kernelMatrix: matrix});
 		};
-		
+
 		self.set_img_crop = function(previewId, top, left, right, bottom){
 			let filter = snap.select('#'+self._get_img_filter_id(previewId));
 			let x = Math.min(left, 100 - right);
@@ -1398,7 +1418,7 @@ $(function(){
 			let height = Math.max(100 - top - bottom, 0);
 			filter.attr({x: left+'%', y: top+'%', width: width+'%', height: height+'%' });
 		};
-		
+
 		self.moveSelectedDesign = function(ifX,ifY){
 			var diff = 2;
 			var transformHandles = snap.select('#handlesGroup');
@@ -1555,7 +1575,11 @@ $(function(){
 
 		self._getSVGserveUrl = function(file){
 			if (file && file["refs"] && file["refs"]["download"]) {
-				var url = file.refs.download +'?'+ Date.now(); // be sure to avoid caching.
+				var url = file.refs.download;
+				if(!url.startsWith("data:")) {
+					// be sure to avoid caching.
+					url = url+'?'+ Date.now();
+				}
 				return url;
 			}
 		};
@@ -2077,7 +2101,7 @@ $(function(){
 				}
 				console.log("Rendering " + fillings.length + " filled elements.");
 				if(fillAreas){
-					let renderBBoxMM = tmpSvg.getBBox(); // if #712 still fails, fetch this bbox earlier (getCompositionSvg()). 
+					let renderBBoxMM = tmpSvg.getBBox(); // if #712 still fails, fetch this bbox earlier (getCompositionSvg()).
 					tmpSvg.renderPNG(svgWidthPT, svgHeightPT, wMM, hMM, pxPerMM, renderBBoxMM, cb);
 				} else {
 					cb(null)
@@ -2180,8 +2204,8 @@ $(function(){
 			self.currentQuickShapeFile = null;
 			$('#quick_shape_dialog').modal({keyboard: true});
 			$('#quick_shape_dialog').one('hide', self._qs_currentQuickShapeShowTransformHandlesIfNotEmpty);
-			// firing those change events is necessary to work around a bug in chrome|knockout|js. 
-			// Otherwise entering numbers directly does not fire the change event if the number 
+			// firing those change events is necessary to work around a bug in chrome|knockout|js.
+			// Otherwise entering numbers directly does not fire the change event if the number
 			// is accidentially equal to the field content it had before .val(..).
 			$('#quick_shape_rect_w').val(params.rect_w).change();
 			$('#quick_shape_rect_h').val(params.rect_h).change();
@@ -2275,7 +2299,7 @@ $(function(){
 						break;
 				}
 				let stroke = qs_params.stroke ? qs_params.color : 'none';
-				let fill = '#ffffff'; 
+				let fill = '#ffffff';
 				let fill_op = 0;
 				if(qs_params.fill){
 					fill = qs_params.fill_color;
@@ -2605,6 +2629,84 @@ $(function(){
 		//  QUICKTEXT end
 		// ***********************************************************
 
+		// ***********************************************************
+		//  QUICKSCAN start
+		// ***********************************************************
+
+		self.enableScanMode = function(){
+			document.body.classList.toggle('scanMode');
+		};
+
+		self.scanStart = function(vm, ev){
+			if(ev.buttons === 1){
+				let targetBBox = ev.currentTarget.getBoundingClientRect();
+				const x = (ev.clientX - targetBBox.left);
+				const y = (ev.clientY - targetBBox.top);
+				self.scanArea = snap.select('#scanArea');
+				self.scanRect = {x1: x, y1: y, x2: x, y2: y};
+			}
+		};
+
+		self.scanUpdate = function(vm, ev){
+			if(ev.buttons === 1){
+				let targetBBox = ev.currentTarget.getBoundingClientRect();
+				const x = (ev.clientX - targetBBox.left);
+				const y = (ev.clientY - targetBBox.top);
+				self.scanRect.x2 = x;
+				self.scanRect.y2 = y;
+				self.scanArea.attr({
+					x: Math.min(self.scanRect.x1, self.scanRect.x2) / targetBBox.width * self.workingAreaWidthMM(),
+					y: Math.min(self.scanRect.y1, self.scanRect.y2) / targetBBox.height * self.workingAreaHeightMM(),
+					width: Math.abs(self.scanRect.x1 - self.scanRect.x2) / targetBBox.width * self.workingAreaWidthMM(),
+					height: Math.abs(self.scanRect.y1 - self.scanRect.y2) / targetBBox.height * self.workingAreaHeightMM()
+				});
+			}
+		};
+
+		self.scanEnd = function(vm, ev){
+			if(ev.buttons === 0){
+				let targetBBox = ev.currentTarget.getBoundingClientRect();
+				const scanWindowPerc = {
+					x: Math.min(self.scanRect.x1, self.scanRect.x2) / targetBBox.width,
+					y: Math.min(self.scanRect.y1, self.scanRect.y2) / targetBBox.height,
+					width: Math.abs(self.scanRect.x1 - self.scanRect.x2) / targetBBox.width,
+					height: Math.abs(self.scanRect.y1 - self.scanRect.y2) / targetBBox.height
+				}
+				console.log("scanRect", scanWindowPerc);
+				document.body.classList.remove('scanMode');
+
+				// load image
+				let url = self.camera.webCamImageElem[0].getAttribute('xlink:href');
+				var image = new Image();
+
+				image.onload = function (result) {
+					// crop image
+					let canvas = document.createElement('canvas');
+					const nw = this.naturalWidth;
+					const nh = this.naturalHeight;
+					canvas.width = nw * scanWindowPerc.width;
+					canvas.height = nh * scanWindowPerc.height;
+					const x = nw * scanWindowPerc.x;
+					const y = nh * scanWindowPerc.y;
+
+					canvas.getContext('2d').drawImage(this, -x, -y);
+					var dataUrl = canvas.toDataURL('image/png');
+					canvas.remove();
+					// place image
+					self.placeImgUrl(dataUrl);
+				};
+
+				image.src = url;
+				self.scanArea.attr({x: 0, y: 0, width: 0, height: 0 });
+				self.scanRect = null;
+			}
+		};
+
+
+		// ***********************************************************
+		//  QUICKSCAN end
+		// ***********************************************************
+
 		// on working_area: only works if shift key is down
 		self.wheel_zoom_wa = function(target, ev){
 			if (ev.originalEvent.shiftKey) {
@@ -2622,7 +2724,7 @@ $(function(){
 				self.set_zoom_offY(newOffY);
 			}
 		};
-		
+
 		self.wheel_zoom_monitor = function(target, ev){
 			var wheel = ev.originalEvent.wheelDelta;
 			var targetBBox = ev.currentTarget.getBoundingClientRect();
@@ -2641,7 +2743,7 @@ $(function(){
 				self.set_zoom_offY(newOffY);
 			}
 		};
-		
+
 		self._get_pointer_event_position_MM = function(event, target){
 			var percPos = self._get_pointer_event_position_Percent(event, target);
 			var x = percPos.x * self.workingAreaWidthMM() * self.zoom() + self.zoomOffX();
