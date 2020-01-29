@@ -386,12 +386,12 @@ class IoBeamHandler(object):
 					self._my_socket = temp_socket
 				except socket.error as e:
 					self._isConnected = False
-					# if self.dev_mode:
-					# 	if not self._connectionException == str(e):
-					# 		self._logger.error("IoBeamHandler not able to connect to socket %s, reason: %s. I'll keept trying but I won't log further failures.", self.SOCKET_FILE, e)
-					# 		self._connectionException = str(e)
-					# else:
-					self._logger.error("IoBeamHandler not able to connect to socket %s, reason: %s. ", self.SOCKET_FILE, e)
+					if IS_X86:
+						if not self._connectionException == str(e):
+							self._logger.error("IoBeamHandler not able to connect to socket %s, reason: %s. I'll keept trying but I won't log further failures.", self.SOCKET_FILE, e)
+							self._connectionException = str(e)
+					else:
+						self._logger.error("IoBeamHandler not able to connect to socket %s, reason: %s. ", self.SOCKET_FILE, e)
 
 					time.sleep(1)
 					continue
