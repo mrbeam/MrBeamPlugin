@@ -541,12 +541,23 @@
 										<feColorMatrix type="saturate" values="0.5"/>
 									</filter>
                                     <filter id="scan_text_mode">
-                                        <feGaussianBlur stdDeviation="0.1"></feGaussianBlur>
-                                        <feComponentTransfer>
-                                            <feFuncR tableValues="0 0 0 1 1 1 1" type="discrete"></feFuncR>
-                                            <feFuncG tableValues="0 0 0 1 1 1 1" type="discrete"></feFuncG>
-                                            <feFuncB tableValues="0 0 0 1 1 1 1" type="discrete"></feFuncB>
-                                        </feComponentTransfer>
+{#                                        Gaussian Blur will widen the text #}
+{#                                        <feGaussianBlur stdDeviation="0.1"></feGaussianBlur>#}
+{#                                        This enables color thresholding : #}
+{#                                        <feComponentTransfer>#}
+{#                                            <feFuncR tableValues="0 0 0 1 1 1 1" type="discrete"></feFuncR>#}
+{#                                            <feFuncG tableValues="0 0 0 1 1 1 1" type="discrete"></feFuncG>#}
+{#                                            <feFuncB tableValues="0 0 0 1 1 1 1" type="discrete"></feFuncB>#}
+{#                                        </feComponentTransfer>#}
+{#                                       Variant of the Sobel edge detection; be sure that the sum of the matrix elements != 0 #}
+                                        <feConvolveMatrix kernelMatrix="1 0 -1
+                                                                        2 1 -2
+                                                                        1 0 -1"
+                                                          preserveAlpha="true"/>
+                                        <feConvolveMatrix kernelMatrix=" 1  2  1
+                                                                         0  1  0
+                                                                        -1 -2 -1"
+                                                          preserveAlpha="true"/>
                                     </filter>
 								</defs>
 								<image id="beamcam_image_svg"
