@@ -7,7 +7,10 @@ import collections
 import json
 from distutils.version import LooseVersion
 
+from octoprint_mrbeam import IS_X86
+
 from octoprint.events import Events as OctoPrintEvents
+
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.lib.rwlock import RWLock
 from flask.ext.babel import gettext
@@ -257,8 +260,11 @@ class IoBeamHandler(object):
 			self._my_socket.sendall("{}\n".format(json.dumps(command)))
 		except Exception as e:
 			self._errors += 1
-			self._logger.error("Exception while sending command '%s' to socket: %s", command, e)
-			return False
+			if IS_X86:
+				self._logger.debug("Exception while sending command '%s' to socket: %s", command, e)
+			else:
+				self._logger.error("Exception while sending command '%s' to socket: %s", command, e)
+				return False
 		return True
 
 	def is_iobeam_version_ok(self):

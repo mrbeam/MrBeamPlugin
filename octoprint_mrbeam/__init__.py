@@ -564,7 +564,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			               ref=request.referrer,
 			               remote_ip=remote_ip,
 			               language=language,
-						   user_agent=request.headers.get('User-Agent', None))
+			               user_agent=request.headers.get('User-Agent', None))
 			if not my_call in self.called_hosts:
 				self.called_hosts.append(my_call)
 				self._logger.info("First call received from: %s", my_call)
