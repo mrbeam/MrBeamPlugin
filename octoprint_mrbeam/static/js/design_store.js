@@ -7,6 +7,7 @@ $(function () {
 
         self.loginState = params[0];
         self.navigation = params[1];
+        self.analytics = params[2];
 
         // todo: should we do this before?
         self.onAllBound = function () {
@@ -19,28 +20,25 @@ $(function () {
                 // When the iframe sends the discovery message, we respond with the user data.
                 function receiveMessagesFromDesignStoreIframe(event) {
                     if (event.origin === self.DESIGN_STORE_IFRAME_SRC) {
-                        console.log('## Plugin receiving ##');
+                        console.log('## Plugin receiving ##  --  ' + event.data.event);
                         switch (event.data.event) {
                             case 'discovery':
-                                console.log('# DISCOVERY');
                                 self.onDiscoveryReceived();
                                 break;
                             case 'token':
-                                console.log('# TOKEN');
                                 self.onTokenReceived(event.data.payload);
                                 break;
                             case 'svg':
-                                console.log('# SVG');
                                 self.onSvgReceived(event.data.payload);
                                 break;
                             case 'viewLibrary':
-                                console.log('# VIEW LIBRARY');
                                 $('#designlib_tab_btn').trigger('click');
                                 break;
                             case 'notification':
-                                console.log('# NOTIFICATION');
                                 new PNotify(event.data.payload);
                                 break;
+                            case 'analytics':
+                                self.analytics.send_fontend_event('store', event.data.payload)
                         }
                     }
                 }
@@ -121,7 +119,7 @@ $(function () {
                     console.error("Store bought design saving failed with status " + jqXHR.status, textStatus, errorThrown);
                     new PNotify({
                         title: gettext("Could not download design"),
-                        text: gettext("The purchased design could not be downloaded. Please download again."),    //todo iratxe: specify this error
+                        text: gettext("The purchased design could not be downloaded. Please download again."),
                         type: "error",
                         tag: "purchase_error",
                         hide: false
@@ -135,7 +133,7 @@ $(function () {
     OCTOPRINT_VIEWMODELS.push([
         DesignStore,
         // e.g. loginStateViewModel, settingsViewModel, ...
-        ["loginStateViewModel", "navigationViewModel"],
+        ["loginStateViewModel", "navigationViewModel", "analyticsViewModel"],
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         ["#designstore"]
     ]);
