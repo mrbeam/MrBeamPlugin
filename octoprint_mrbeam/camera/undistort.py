@@ -118,7 +118,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
             return None, None, None, err
     elif type(input_image) is np.ndarray:
         logger.debug('Starting to prepare Image. \ninput: <{}> - output: <{}>\ncam dist : <{}>\ncam matrix: <{}>\noutput_img_size:{} - quality:{} - debug_out:{}'.format(
-                "%s shaped numpy array" % input_image.shape, path_to_output_image, cam_dist, cam_matrix,
+                "{} shaped numpy array".format(input_image.shape), path_to_output_image, cam_dist, cam_matrix,
                 size, quality, debug_out))
         img = input_image
     else:
