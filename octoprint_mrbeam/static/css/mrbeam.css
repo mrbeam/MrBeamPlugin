@@ -34,7 +34,6 @@ button:focus { outline:0 !important;}
 .btn.active {
   box-shadow: none;
   border: 1px solid #383E42;
-  /*box-sizing: border-box;*/
   border-radius: 8px;
   background: #FFFFFF;
 }
@@ -140,13 +139,9 @@ input[type="button"].btn-block {
 .btn-primary:focus,
 .btn-primary:active,
 .btn-primary.active {
-  /*box-shadow: none;*/
-  /*border: 2px solid #e25303;*/
   border: 2px solid #ffffff;
-  box-sizing: border-box;
   border-radius: 8px;
   background: #e25303;
-  /*box-shadow: 0px 0px 0px 1.5px #e25303 inset;*/
   outline: none;
 }
 
@@ -1878,7 +1873,7 @@ input.search-query,
 
 /* hack to avoid that the burger menu is pushed out of the viewable area.*/
 #working_area_files .entry:last-of-type {
-  margin-bottom: 162px; 
+  margin-bottom: 162px;
 }
 
 #wa_filelist>div {
