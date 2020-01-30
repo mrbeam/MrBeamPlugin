@@ -17,6 +17,7 @@
         {#  Dirty to have this (== body elements) in the head section.
            Chrome ends head-tag and opens body-tag which means that all following is in the page's bodey instead of the head  #}
         {% include 'loading_overlay.jinja2' %}
+        <script>document.body.classList.add("loading_step1");</script>
 
 
         {% include 'stylesheets.jinja2' %}
@@ -182,6 +183,8 @@
 		<!-- End of generic plugin template files -->
 
 
+        <script>document.body.classList.add("loading_step2");</script>
         {% include 'javascripts.jinja2' %}
+        <script>document.body.classList.add("loading_step3");</script>
     </body>
 </html>

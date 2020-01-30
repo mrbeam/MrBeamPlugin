@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 """
 import optparse
 import logging
+import math
 from PIL import Image
 from PIL import ImageEnhance
 import base64
@@ -33,6 +34,7 @@ import time
 import sys
 import re
 from img_separator import ImageSeparator
+from profiler import Profiler
 
 class ImageProcessor():
 
@@ -64,6 +66,8 @@ class ImageProcessor():
 	              material = None):
 
 		self.log = logging.getLogger("octoprint.plugins.mrbeam.img2gcode")
+		self.profiler = Profiler("img2gcode")
+		self.profiler.start('init')
 
 		# if True base64 image data urls embedded into the GCODE will be broken into short lines. If False it's one long line
 		self.MULTILINE_DATA_URLS = False
@@ -130,11 +134,12 @@ class ImageProcessor():
 		self._lookup_feedrate = {}
 		self._output_gcode = ""
 		self.gc_ctx = GC_Context()
+		self.profiler.stop('init')
 
 	def get_settings_as_comment(self, x,y,w,h, file_id = ''):
 		# if file id has linebreaks, ensure every line has a ';' at the beginning.
 		file_id_lines = ";".join(file_id.splitlines(1))
-		comment =  "; Image: {:.2f}x{:.2f} @ {:.2f},{:.2f}|{}\n".format(w,h,x,y, file_id_lines) # important for gcode preview!
+		comment =  "; Image: {:.2f}x{:.2f} @ {:.2f},{:.2f}|{}\n".format(w,h,x,y, file_id_lines) # important for gcode preview! DO NOT CHANGE!!!
 		comment += "; self.beam = {:.2f}\n".format(self.beam)
 		comment += "; pierce_time = {:.3f}s\n".format(self.pierce_time)
 		comment += "; intensity_black = {:.0f}\n".format(self.intensity_black)
@@ -153,11 +158,7 @@ class ImageProcessor():
 		comment += "; eng_compressor = {}\n".format(self.compressor)
 		return comment
 
-	def set_overshoot_parameter(self, overshoot_distance, workingAreaWidth=500):
-		self.overshoot_distance = overshoot_distance
-		self.workingAreaWidth = workingAreaWidth
-
-	def img_prepare(self, orig_img, w_mm, h_mm):
+	def img_prepare(self, img, w_mm, h_mm):
 		"""
 		1. pixel reduction (w,h)
 		2. remove transparency
@@ -168,9 +169,8 @@ class ImageProcessor():
 		6. dithering
 		7. separation (optimizes duration)
 		"""
-
-		start = time.time()
-		orig_w, orig_h = orig_img.size
+		self.debugPreprocessing = False
+		orig_w, orig_h = img.size
 		if(h_mm < 0):
 			ratio = float(orig_w) / float(orig_h)
 			tmp_h_mm = w_mm / ratio
@@ -184,62 +184,76 @@ class ImageProcessor():
 		if abs(dest_hpx - orig_h) <= 1:
 			dest_hpx = orig_h
 
+		# performance measurement
+		self.profiler.start('scale')
 
 		# 1. scale
 		if dest_wpx != orig_w or dest_hpx != orig_h:
 			self.log.info("scaling {}x{} to {}x{}".format(orig_w, orig_h, dest_wpx, dest_hpx))
-			img = orig_img.resize((dest_wpx, dest_hpx))
+			img = img.resize((dest_wpx, dest_hpx))
 		else:
-			img = orig_img
 			self.log.info("scaling - nothing to do, image remains {}x{}".format(orig_w, orig_h))
 
-		self.log.debug("scaling took {} seconds".format(time.time()-start))
 		if(self.debugPreprocessing):
 			img.save("/tmp/img2gcode_1_resized.png")
+		self.profiler.stop('scale')
 
-
-		# 1a. crop to bbox
-		# TODO: this removes only transparent pixels, white pixels are still counted as content.
+		left, upper, right, lower = (0,0,dest_wpx, dest_hpx)
 		bbox = img.getbbox()
-		if bbox is None:
-			self.log.debug("img_prepare() Empty bounding box, nothing to engrave. Returning")
-			return []
+		self.log.info("#####")
+		self.log.info(bbox)
+		self.log.info((0,0,dest_wpx, dest_hpx))
 
-		left, upper, right, lower = bbox # bbox is a tuple of four
-		img = img.crop(bbox)
-		bb_w = right - left
-		bb_h = lower - upper
-		bb_area = bb_w * bb_h
-		self.log.debug("Cropped to bbox: bb_area: %s, bb_w: %s, bb_h: %s, left: %s, upper: %s, right: %s, lower: %s ", bb_area, bb_w, bb_h, left, upper, right, lower)
-		if (self.debugPreprocessing):
-			img.save("/tmp/img2gcode_1a_cropped.png")
+		if(False):
+			self.profiler.start('crop')
+
+			# 1a. crop to bbox
+			# TODO: this removes only transparent pixels, white pixels are still counted as content.
+			bbox = img.getbbox()
+			if bbox is None:
+				self.log.debug("img_prepare() Empty bounding box, nothing to engrave. Returning")
+				return []
+
+			left, upper, right, lower = bbox # bbox is a tuple of four
+			bb_w = right - left
+			bb_h = lower - upper
+			if(bb_w != dest_wpx or bb_h != dest_hpx):
+				img = img.crop(bbox)
+				old_pixels = dest_wpx * dest_hpx
+				bb_area = bb_w * bb_h
+				ratio = bb_area / old_pixels
+				self.log.debug("Cropped to bbox: Pixel reduction: %i -> %i (%f%%), bb_w: %s, bb_h: %s, left: %s, upper: %s, right: %s, lower: %s ", old_pixels, bb_area, ratio, bb_w, bb_h, left, upper, right, lower)
+				if (self.debugPreprocessing):
+					img.save("/tmp/img2gcode_1a_cropped.png")
+
+			else:
+				self.log.debug("Cropping skipped. Not necessary.")
 
 
-		# 2. remove transparency
-		start = time.time()
-		if (not self.is_inverted) and (img.mode == 'RGBA'):
-			whitebg = Image.new('RGBA', (bb_w, bb_h), "white")
-			img = Image.alpha_composite(whitebg, img)
+			self.profiler.stop('crop').start('remove_transparency')
 
-			self.log.debug("transparency removal took {} seconds".format(time.time()-start))
-			if(self.debugPreprocessing):
-				img.save("/tmp/img2gcode_2_whitebg.png")
+			# 2. remove transparency
+			if (not self.is_inverted) and (img.mode == 'RGBA'):
+				whitebg = Image.new('RGBA', (bb_w, bb_h), "white")
+				img = Image.alpha_composite(whitebg, img)
 
+				if(self.debugPreprocessing):
+					img.save("/tmp/img2gcode_2_whitebg.png")
+
+			self.profiler.stop('remove_transparency').start('contrast')
 
 		# 3. contrast
-		start = time.time()
 		if(self.contrastFactor > 1.0):
 			contrast = ImageEnhance.Contrast(img)
 			img = contrast.enhance(self.contrastFactor) # 1.0 returns original
-			self.log.debug("contrast enhancement took {} seconds".format(time.time()-start))
 			if(self.debugPreprocessing):
 				img.save("/tmp/img2gcode_3_contrast.png")
 
+		self.profiler.stop('contrast').start('greyscale')
+
 
 		# 4. greyscale
-		start = time.time()
 		img = img.convert('L')
-		self.log.debug("grayscale conversion took {} seconds".format(time.time()-start))
 		if(self.debugPreprocessing):
 			img.save("/tmp/img2gcode_4_greyscale.png")
 
@@ -248,28 +262,34 @@ class ImageProcessor():
 			# TODO
 			pass
 
+		self.profiler.stop('greyscale').start('sharpness')
 
 		# 5. sharpness (factor: 1 => unchanged , 25 => almost b/w)
-		start = time.time()
 		if(self.sharpeningFactor > 1.0):
 			sharpness = ImageEnhance.Sharpness(img)
 			img = sharpness.enhance(self.sharpeningFactor)
-			self.log.debug("sharpening took {} seconds".format(time.time()-start))
 			if(self.debugPreprocessing):
 				img.save("/tmp/img2gcode_5_sharpened.png")
 
+		self.profiler.stop('sharpness').start('dithering')
+
 		# 6. dithering
 		if(self.dithering == True):
-			start = time.time()
 			img = img.convert('1')
-			self.log.debug("dithering took {} seconds".format(time.time()-start))
+			if(self.separation or not self.line_by_line):
+				self.separation = False
+				self.line_by_line = True
+				self.log.warn("Dithering overwrites engraving mode (workaround for #455)") # TODO fix in frontend. separation does never make sense with dithering
+
 			if(self.debugPreprocessing):
 				img.save("/tmp/img2gcode_6_dithered.png")
 
+		self.profiler.stop('dithering')
 
 		# 7. split image at white pixels
 		separator = ImageSeparator()
 
+		self.profiler.start('separation_contour')
 		# 7.1. split by contour
 		contour_parts = []
 		if self.line_by_line:
@@ -277,17 +297,17 @@ class ImageProcessor():
 			contour_parts = [{'i': img, 'x': left, 'y':upper, 'id':'noid'}]
 		else:
 			self.log.debug("contour separation starting...")
-			start = time.time()
 			contour_parts = separator.separate_contours(img, x=left, y=upper, threshold=self.ignore_brighter_than+1)
-			self.log.debug("contour separation took {} seconds".format(time.time()-start))
 			self.log.debug("separated into {} contours".format(len(contour_parts)))
 
 		parts = []
-		start = time.time()
 		if(self.debugPreprocessing):
 			for i,p in enumerate(contour_parts):
 				img_data = p['i']
 				img_data.save("/tmp/img2gcode_7_contourpart_{:0>3}_@{},{}.png".format(i, p['x'], p['y']))
+
+
+		self.profiler.stop('separation_contour').start('separation_lpf')
 
 		if(self.separation == True):
 			for cp in contour_parts:
@@ -301,7 +321,6 @@ class ImageProcessor():
 				for p in tmp:
 					parts.append({'i': p['i'], 'x': off_x + p['x'], 'y': off_y + p['y'], 'id': p['id']})
 
-				self.log.debug("left-pixels-first separation took {} seconds".format(time.time()-start))
 				self.log.debug("separated into {} parts".format(len(parts)))
 		else:
 			parts.extend(contour_parts)
@@ -311,6 +330,7 @@ class ImageProcessor():
 				img_data = p['i']
 				img_data.save("/tmp/img2gcode_7_part_{:0>3}_@{},{}.png".format(i, p['x'], p['y']))
 
+		self.profiler.stop('separation_lpf').finalize()
 		return parts
 
 
@@ -334,9 +354,11 @@ class ImageProcessor():
 		"""
 
 		# write all parameters used for generating the gcode into the file
+		self.profiler.start('settings_as_comment')
 		settings_comment = self.get_settings_as_comment(xMM, yMM, wMM, hMM, "")
 		self.log.info("img2gcode conversion started:\n%s" % settings_comment)
 		self._append_gcode(self.get_settings_as_comment(xMM, yMM, wMM, hMM, file_id))
+		self.profiler.stop('settings_as_comment').start('gc_before_img')
 		xMM += self.beam/2.0*0
 		yMM -= self.beam
 
@@ -353,7 +375,11 @@ class ImageProcessor():
 		direction_positive = True
 		#self.is_first_pixel = True
 
+		# sort imgArray
+		self.profiler.stop('gc_before_img').start('sort_imgArray')
+		imgArray = self._sortImgArray(imgArray);
 
+		self.profiler.stop('sort_imgArray').start('write_img')
 		# iterate through the image parts
 		for img_data in imgArray:
 			# img_data = {'i': px_data, 'x': offset_px_x, 'y':offset_px_y, 'id': id_str}
@@ -406,11 +432,39 @@ class ImageProcessor():
 
 		self._append_gcode(";EndImage\nM5") # important for gcode preview!
 		# self._append_gcode(";EndImage\nM5\nM100P0 ; mrbeam_compressor:0") # important for gcode preview!
+		self.profiler.stop('write_img')
 		self.gc_ctx.laser_active = False
 		return self._output_gcode
 
+	def get_profiler(self):
+		return self.profiler
 
 	# helper methods for gcode generation
+	def _sortImgArray(self, imgArray):
+		# pragmatic O(n^2) sorting
+		out = []
+		# We want the laserhead begins bottom left (ltr reading direction). So put this as starting point.
+		lastPos = (0, self.workingAreaHeight/self.beam) # untransformed px coordinates here: 0,0 is top left.
+		while(len(imgArray) > 0):
+			dist = float('inf')
+			closest = None
+			for img in imgArray:
+				(w,h) = img['i'].size
+				start = (img['x'], img['y']+h)
+				dst = self._dist(start, lastPos)
+				if(dst < dist):
+					closest = img
+					dist = dst
+
+			out.append(closest)
+			imgArray.remove(closest)
+			lastPos = (closest['x']+closest['i'].size[0], closest['y'])
+
+		return out
+
+	def _dist(self, p0, p1):
+		return math.sqrt((p0[0] - p1[0])**2 + (p0[1] - p1[1])**2)
+
 	def _ignore_pixel_brightness(self, brightness):
 		if(self.is_inverted): # inverted engraving, e.g. anodized aluminum
 			return (brightness < self.ignore_darker_than)

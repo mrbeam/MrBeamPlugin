@@ -44,6 +44,7 @@ $(function () {
         self.onStartup = function () {
             // TODO fetch machine profile on start
             //self.requestData();
+
             self.control.showZAxis = ko.computed(function () {
 //				var has = self.currentProfileData()['zAxis']();
 //				return has;
@@ -260,13 +261,6 @@ $(function () {
             $("#design_lib_filter_design_radio").prop("checked", true);
         };
 
-        self.addSwUpdateTierInformation = function(){
-            tier = self.settings.settings.plugins.mrbeam.dev.softwareTier();
-            if (tier != "PROD") {
-                $('#settings_plugin_softwareupdate > h3').append(" (TIER: "+tier+")");
-            }
-        };
-
         self.removeLoadingOverlay = function(){
             // firstImageLoaded is based on jQuery.load() which is not reliable and deprecated.
             // Therefore we lift the curtain for unsupported browsers without waiting for the bgr image to be loaded.
@@ -410,7 +404,7 @@ $(function () {
 		};
 
         self._processWPosData = function (data) {
-            if (data === undefined || data === null) {
+            if (data === undefined || data === null || data[0] === null || data[1] === null || isNaN(data[0]) || isNaN(data[1])) {
                 self.state.currentPos({x: 0, y: 0});
             } else {
                 self.state.currentPos({x: data[0], y: data[1]});

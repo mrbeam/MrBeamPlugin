@@ -88,7 +88,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			
             // if an element has children, but itself attributes to transform (like image, text, tspan) we need to continue and transform the element itself
 			if (elem.type !== 'image' && elem.type !== 'text' && elem.type !== 'tspan') {
-                elem.attr({transform: ''});
+                // elem.attr({transform: ''}); // sets transform="matrix(1.0,0,1,0,0)
+				elem.node.removeAttribute('transform'); // removes attribute completely.
                 return ignoredElements;
             }
 		}
@@ -131,7 +132,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			var transformedW = matrix.x(x+w, y+h) - transformedX;
 			var transformedH = matrix.y(x+w, y+h) - transformedY;
 
-			elem.attr({x: transformedX, y: transformedY, width: transformedW, height: transformedH, transform: ''});
+			elem.attr({x: transformedX, y: transformedY, width: transformedW, height: transformedH});
+			elem.node.removeAttribute('transform'); // prefer less attributes.
+
 			if(transformedH < 0){
 				elem.attr({style: 'transform: scale(1,-1); transform-origin: top', height: -transformedH});
 			}
@@ -317,7 +320,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 		var d_str = _convertToString(new_segments);
 		path_elem.attr({d: d_str});
-		path_elem.attr({transform: ''});
+		//path_elem.attr({transform: ''});
+		path_elem.node.removeAttribute('transform'); // prefer less attributes.
 		//console.log("baked matrix ", matrix, " of ", path_elem.attr('id'));
 
         return ignoredElements;

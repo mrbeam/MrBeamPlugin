@@ -9,6 +9,7 @@ import fileinput
 import re
 import uuid
 
+from octoprint_mrbeam.util import json_serialisor
 from value_collector import ValueCollector
 from cpu import Cpu
 from threading import Thread, Timer, Lock
@@ -34,7 +35,7 @@ def analyticsHandler(plugin):
 
 class AnalyticsHandler(object):
 	QUEUE_MAXSIZE = 1000
-	ANALYTICS_LOG_VERSION = 8  # bumped in 0.3.2.1
+	ANALYTICS_LOG_VERSION = 9  # bumped in 0.3.2.1
 
 	def __init__(self, plugin):
 		self._plugin = plugin
@@ -713,7 +714,7 @@ class AnalyticsHandler(object):
 							data = self._analytics_queue.get()
 							data_string = None
 							try:
-								data_string = json.dumps(data, sort_keys=False) + '\n'
+								data_string = json.dumps(data, sort_keys=False, default=json_serialisor) + '\n'
 							except:
 								self._logger.info('Exception during json dump in _write_queue_to_analytics_file')
 

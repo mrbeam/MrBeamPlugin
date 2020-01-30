@@ -510,11 +510,15 @@ var mrbeam = mrbeam || {};
           }]);
           break;
         case "Z": // close path
-          var polyline = peek(polylines);
-          polyline.push({
-            x: polyline[0].x,
-            y: polyline[0].y
-          });
+          if(polylines.length > 0){ // more robust against d="MZ" (=> polylines=[]), sometimes crashed here.
+            var polyline = peek(polylines);
+            polyline.push({
+              x: polyline[0].x,
+              y: polyline[0].y
+            });
+		  } else {
+            console.warn('Closing path attempt while path was empty.');  
+		  }
           break;
         case "L": // line
           var polyline = peek(polylines);
@@ -690,6 +694,8 @@ var mrbeam = mrbeam || {};
 
   module.gcode = function (paths, id, mb_meta) {
     var commands = [];
+	let first_point = null;
+	let last_point = null;
 
     mb_meta = mb_meta || {};
     var meta_str = "";
@@ -705,6 +711,7 @@ var mrbeam = mrbeam || {};
 
     paths.forEach(function (path) {
       var pt = path[0];
+	  first_point = first_point || pt;
 
       commands.push(`G0X${fmt(pt.x)}Y${fmt(pt.y)}`);
       commands.push(";_laseron_");
@@ -712,6 +719,7 @@ var mrbeam = mrbeam || {};
       for (let i = 1; i < path.length; i += 1) {
         pt = path[i];
         commands.push(`G1X${fmt(pt.x)}Y${fmt(pt.y)}`);
+		last_point = pt;
       }
 
       commands.push(";_laseroff_");
@@ -719,7 +727,7 @@ var mrbeam = mrbeam || {};
 
     var gcode = commands.join(" ");
 
-    return gcode;
+    return {gcode: gcode, begin: first_point, end: last_point};
   };
 
   module.clip = function (paths, clip, tolerance) {

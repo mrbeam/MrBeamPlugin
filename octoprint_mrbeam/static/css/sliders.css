@@ -234,7 +234,7 @@ input[type=range]::-ms-thumb {
 */
 input[type=range].img_adjust {
   -webkit-appearance: none;
-  width: 100%;
+  width: 80% !important;
   /*margin: 12.5px 0;*/
 }
 input[type=range].img_adjust:focus {

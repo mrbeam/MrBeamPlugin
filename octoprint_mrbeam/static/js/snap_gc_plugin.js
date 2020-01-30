@@ -99,9 +99,16 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			}
 
 			// generate gcode
-			var gcode = mrbeam.path.gcode(paths, id, mb_meta[id]);
+			var gcodeObj = mrbeam.path.gcode(paths, id, mb_meta[id]);
 
-			element.attr("mb:gc", gcode || " ");
+			element.attr({
+				"mb:gc": gcodeObj.gcode || " ",
+				// start and end of path for easier sorting / way optimization
+				"mb:start_x": gcodeObj.begin.x || "",
+				"mb:start_y": gcodeObj.begin.y || "",
+				"mb:end_x": gcodeObj.end.x || "",
+				"mb:end_y": gcodeObj.end.y || ""
+			});
 		});
 	};
 

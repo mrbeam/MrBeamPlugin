@@ -110,7 +110,13 @@
 								<div class="control-group">
 									<label class="control-label" for="custom_mat_col"> {{ _('Color') }}</label>
 									<div class="controls">
-										<input id="custom_mat_col" type="color" min="-1" max="38" data-bind="value:save_custom_material_color">
+										<div id="customMaterial_colorPicker" class="tinyColorPicker">
+											<a class="tcp_color"><div class="colorInner"></div></a>
+											<div class="track"></div>
+											<ul class="dropdown"><li></li></ul>
+											<input type="hidden" class="colorInput" id="custom_mat_col">
+										</div>
+										<!--<input id="custom_mat_col" type="color" min="-1" max="38" data-bind="value:save_custom_material_color">-->
 									</div>
 								</div>
 								<div class="controls">
@@ -259,6 +265,13 @@
                                     <div class="controls"><input id="svgtogcode_img_line_dist" class="img_intensity_input decimal_input" type="number" max="1.0" min="0.1" step="0.05" data-bind="value: beamDiameter" />&nbsp;{{ _('mm') }}</div>
                                 </div>
 
+                                <div class="input-control-and-label" data-toggle="tooltip" data-placement="right"
+                                     title="{{ _('BETA! Ignored if pierce time is set.') }}">
+                                    <label class="control-label">{{ _('Overshoot') }}</label>
+                                    <div class="controls">
+                                        <input id="svgtogcode_img_overshoot" class="img_intensity_input decimal_input" type="number" max="10.0" min="0.0" step="0.1" data-bind="value: overshoot" />&nbsp;{{ _('mm') }}</div>
+                                </div>
+
                                 <div class="switch-control-and-label" data-toggle="tooltip" data-placement="right"
                                     title="{{ _('All engravings are processed line by line from bottom to top.') }}
 									        {{ _('The system may cluster objects and process them separately from each other to <b>improve overall job duration by reducing \'empty rides\'</b> where the laser stays off.') }}
@@ -285,6 +298,7 @@
                                     <button type="button" value="basic" id="parameter_assignment_engraving_mode_basic_btn" class="btn btn-default">{{ _('Basic') }}</button>
                                   </div>
                                 </div>
+
                               </div>
 
 								<h5>{{ _('Image Preprocessing') }}</h5>
@@ -454,14 +468,16 @@
                 </div>
                 <div class="modal-footer">
                     <div id="laserhead_focus_reminder_not_again">
-                        <input type="checkbox" value="msg" data-bind="checked: dontRemindMeAgainChecked" /> {{ _('Don\'t remind me again') }}
+                        <label>
+							<input type="checkbox" value="msg" data-bind="checked: dontRemindMeAgainChecked" /> {{ _('Don\'t remind me again') }}
+						</label>
                     </div>
-                    <a href="#" class="btn" aria-hidden="true" data-dismiss="modal" data-bind="click: function() { $root.remindFirstTime(false); $root.sendDontRemindToServer()}">{{ _('I forgot') }}</a>
+                    <a href="#" class="btn" aria-hidden="true" data-dismiss="modal" data-bind="click: function() {}">{{ _('I forgot') }}</a>
+                    <a href="#" style="display: none;" class="btn" aria-hidden="true" data-bind="click: move_laser_over_material">{{ _('Move over the material') }}</a>
                     <a href="#" class="btn btn-primary" id="start_job_btn_focus_reminder" data-dismiss="modal"
-                        data-bind="click: function() { $root.remindFirstTime(false); $root.convert() },
+                        data-bind="click: show_conversion_dialog,
                             enabled: enableConvertButton,
-                            visible: !slicing_in_progress(),
-                            css: {disabled: !$root.enableConvertButton()}">{{ _('It\'s focused!') }}</a>
+                            visible: !slicing_in_progress()">{{ _('It\'s focused!') }}</a>
                 </div>
             </div>
         </div>
