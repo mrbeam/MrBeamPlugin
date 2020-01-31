@@ -11,15 +11,20 @@ $(function () {
 		var self = this;
 		self.settings = parameters[0];
 
-		self.staticURL = "/plugin/mrbeam/static/img/cam_calibration/calpic_wait.svg";
-		self.croppedUrl = '/downloads/files/local/cam/beam-cam.jpg';
-		self.camImgPath = self.staticURL;
-		self.edge_brightness = ko.observable(self.settings.settings.plugins.mrbeam.leds.brightness);
+		self.edge_brightness = ko.observable(255);
 		self.edge_brightness.extend({ rateLimit: { timeout: 500, method: "notifyWhenChangesStop" } });
 		self.edge_brightness.subscribe(function(val){
 			let br = parseInt(val);
 			OctoPrint.simpleApiCommand("mrbeam", "leds_brightness", {brightness: br});
+			self.settings.settings.plugins.mrbeam.leds.brightness(val);
+			self.settings.saveData(undefined, function(newSettings){
+				console.log("Saved LEDs edge brightness", newSettings.plugins.mrbeam.leds.brightness);
+			});
 		});
+
+		self.on_settings_initialized = function(data){
+			self.edge_brightness(self.settings.settings.plugins.mrbeam.leds.brightness);
+		}
 
 //		// brightness realtime adjust
 //		window.mrbeam.leds_brightness = function(val){
