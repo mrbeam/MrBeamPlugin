@@ -179,6 +179,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self.usage_handler = usageHandler(self)
 		self.led_event_listener = LedEventListener(self)
 		self.led_event_listener.set_brightness(self._settings.get(["leds", "brightness"]))
+		self.led_event_listener.set_fps(self._settings.get(["leds", "fps"]))
 		# start iobeam socket only once other handlers are already inittialized so that we can handle info mesage
 		self.iobeam = ioBeamHandler(self)
 		self.temperature_manager = temperatureManager(self)
@@ -316,7 +317,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			grbl_version_lastknown=None,
 			tour_auto_launch = True,
 			leds = dict(
-				brightness = 255
+				brightness = 255,
+				fps = 28
 			)
 		)
 
@@ -357,7 +359,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			hw_features=dict(
 				has_compressor=self.compressor_handler.has_compressor(),
 			),
-			leds=dict(brightness=self._settings.get(['leds', 'brightness'])),
+			leds=dict(
+				brightness=self._settings.get(['leds', 'brightness']),
+				fps=self._settings.get(['leds', 'fps']),
+			),
 			isFirstRun=self.isFirstRun(),
 		)
 
@@ -388,6 +393,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				switch_software_channel(self, data["dev"]["software_tier"])
 			if "leds" in data and "brightness" in data["leds"]:
 				self._settings.set_int(["leds", "brightness"], data["leds"]["brightness"])
+			if "leds" in data and "fps" in data["leds"]:
+				self._settings.set_int(["leds", "fps"], data["leds"]["fps"])
 		except Exception as e:
 			self._logger.exception("Exception in on_settings_save() ")
 			raise e
@@ -808,17 +815,20 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# self._logger.info("custom_material(): response: %s", data)
 		return make_response(jsonify(res), 200)
 
-	# simpleApiCommand: leds_brightness;
-	def leds_brightness(self, data):
-		self._logger.info("leds_brightness() request: %s", data)
+	# simpleApiCommand: leds;
+	def leds(self, data):
+		self._logger.info("leds() request: %s", data)
 
 		try:
 			if 'brightness' in data:
 				br = int(data['brightness'])
 				self.led_event_listener.set_brightness(br)
+			if 'fps' in data:
+				fps = int(data['fps'])
+				self.led_event_listener.set_fps(fps)
 		except:
-			self._logger.exception("Exception while setting LEDs brightness: ")
-			return make_response("Error while setting LEDs brightness.", 500)
+			self._logger.exception("Exception while adjusting LEDs : ")
+			return make_response("Error while adjusting LEDs.", 500)
 
 		return make_response("", 204)
 
@@ -1347,7 +1357,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			reset_gantry_usage=[],
 			material_settings=[],
 			on_camera_picture_transfer=[],
-			leds_brightness=["brightness"],
+			leds=[],
 		)
 
 	def on_api_command(self, command, data):
@@ -1405,8 +1415,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				return make_response(err.message, 500)
 		elif command == "on_camera_picture_transfer":
 			self.lid_handler.on_front_end_pic_received()
-		elif command == "leds_brightness":
-			self.leds_brightness(data)
+		elif command == "leds":
+			if ("brightness" in data and isinstance(data["brightness"], (int))) or ("leds" in data and isinstance(data["fps"], (int))):
+				self.leds(data)
 		return NO_CONTENT
 
 	# TODO IRATXE: this does not properly work --> necessary for reviews

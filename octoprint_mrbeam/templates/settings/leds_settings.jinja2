@@ -12,5 +12,15 @@
                 <div><small>{{ _("Adjust the overall brightness of Mr Beam's illuminated edges.") }}</small></div>
             </div>
         </div>
+        <div class="control-group">
+            <label class="control-label" for="settings-leds-fps">{{ _('Animation speed') }}</label>
+            <div class="controls">
+                <input id="settings-leds-fps"
+					class="img_adjust" style="margin: 1.05em 0 2em 0;" 
+					type="range" min="15" max="45" step="1" data-bind="value: leds_fps, valueUpdate: 'input'" />
+                <br />
+                <div><small>{{ _("Adjust the animation speed of Mr Beam's illuminated edges.") }}</small></div>
+            </div>
+        </div>
     </form>
 </div>
