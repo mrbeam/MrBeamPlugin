@@ -132,6 +132,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._time_ntp_check_count = 0
 		self._time_ntp_check_last_ts = 0.0
 		self._time_ntp_shift = 0.0
+		
+		self._mac_addrs = self._get_mac_addresses()
 
 
 		# MrBeam Events needs to be registered in OctoPrint in order to be send to the frontend later on
@@ -242,6 +244,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 					serial=self._serial_num,
 					software_tier=self._settings.get(["dev", "software_tier"]),
 					env=self.get_env(),
+					mac_addrs=self._mac_addrs,
 					beamOS_image=self._octopi_info,
 					grbl_version_lastknown=self._settings.get(["grbl_version_lastknown"]),
 					laserhead_serial=self.laserhead_handler.get_current_used_lh_data()['serial'])
@@ -530,6 +533,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 laserhead_serial= self.laserhead_handler.get_current_used_lh_data()['serial'],
 
 							 env=self.get_env(),
+							 mac_addrs=self._mac_addrs,
 							 env_local=self.get_env(self.ENV_LOCAL),
 							 env_laser_safety=self.get_env(self.ENV_LASER_SAFETY),
 							 env_analytics=self.get_env(self.ENV_ANALYTICS),
@@ -2133,6 +2137,22 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def is_mrbeam2_dreamcut(self):
 		return self._model_id == self.MODEL_MRBEAM2_DC
+	
+	def _get_mac_addresses(self):
+		nw_base = '/sys/class/net'
+		# Get name of the Ethernet interface
+		interfaces = dict()
+		try:
+			for root, dirs, files in os.walk(nw_base):
+				for ifc in dirs:
+					if(ifc != 'lo'):
+						mac = open('%s/%s/address' % (nw_base, ifc)).read()
+						interfaces[ifc] = mac[0:17]
+		except:
+			self._logger.exception("_get_mag_addresses Exception while reading %s." % nw_base)
+
+		self._logger.info("_get_mag_addresses() found %s" % interfaces)
+		return interfaces
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
