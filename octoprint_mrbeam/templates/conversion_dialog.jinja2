@@ -372,7 +372,7 @@
                                 <div class="cutting-control-and-label" data-toggle="tooltip" data-placement="right"
                                       title="{{ _('Indicates the number of times the laser will run over the design to cut it. Increase the number of passes if the material does not get cut.') }}">
                                     <label class="control-label">{{ _('Passes') }}</label>
-                                    <div class="controls"><input data-bind="event: {change: flag_customized_material}" class="param_passes img_intensity_input" type="number" min="1" max="10" value="1" />&nbsp;&times;</div>
+                                    <div class="controls"><input data-bind="event: {change: flag_customized_material}" class="param_passes img_intensity_input" type="number" min="1" max="10" value="1" />&nbsp;&times;&nbsp;&nbsp;<label><input type="checkbox" class="param_progressive"/>{{ _('progressive') }}</label></div>
                                 </div>
                             </div>
 
