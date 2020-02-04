@@ -56,7 +56,7 @@ $(function() {
                     self.resetLoadingSteps();
                 }, 3000);
             } else {
-                $('#loading_overlay').hide();
+                $('#loading_overlay').fadeOut();
                 self.resetLoadingSteps();
             }
             callViewModels(self.allViewModels, 'onCurtainOpened');
@@ -65,7 +65,7 @@ $(function() {
         self.skipClick = function(){
             self.showAnimation = false;
             if (self.isAnimationRunning()) {
-                $('#loading_overlay').hide();
+                $('#loading_overlay').fadeOut();
                 self.resetLoadingSteps();
             }
         };
