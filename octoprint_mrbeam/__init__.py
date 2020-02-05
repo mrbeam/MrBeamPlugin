@@ -604,7 +604,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
             dict(type='settings', name=gettext("Analytics"), template='settings/analytics_settings.jinja2', suffix="_analytics", custom_bindings=False),
 			dict(type='settings', name=gettext("Reminders"), template='settings/reminders_settings.jinja2', suffix="_reminders", custom_bindings=False),
 			dict(type='settings', name=gettext("Maintenance"), template='settings/maintenance_settings.jinja2', suffix="_maintenance", custom_bindings=True),
-			dict(type='settings', name=gettext("LEDs"), template='settings/leds_settings.jinja2', suffix="_leds", custom_bindings=True),
+			dict(type='settings', name=gettext("Mr Beam Lights"), template='settings/leds_settings.jinja2', suffix="_leds", custom_bindings=True),
 
 			# disabled in appearance
 			# dict(type='settings', name="Serial Connection DEV", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings=False, replaces='serial')
@@ -816,16 +816,26 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return make_response(jsonify(res), 200)
 
 	# simpleApiCommand: leds;
-	def leds(self, data):
+	def set_leds_update(self, data):
 		self._logger.info("leds() request: %s", data)
 
 		try:
-			if 'brightness' in data:
-				br = int(data['brightness'])
+			br = data.get('brightness', None)
+			try:
+				br = int(br)
+			except TypeError:
+				pass
+			if br is not None:
 				self.led_event_listener.set_brightness(br)
-			if 'fps' in data:
-				fps = int(data['fps'])
+
+			fps = data.get('fps', None)
+			try:
+				fps = int(fps)
+			except TypeError:
+				pass
+			if fps is not None:
 				self.led_event_listener.set_fps(fps)
+
 		except:
 			self._logger.exception("Exception while adjusting LEDs : ")
 			return make_response("Error while adjusting LEDs.", 500)
@@ -945,7 +955,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def engraveCalibrationMarkers(self, intensity, feedrate):
 		profile = self.laserCutterProfileManager.get_current_or_default()
 		max_intensity = 1300 #TODO get magic numbers from profile
-		min_intensity = 0 
+		min_intensity = 0
 		min_feedrate = 100
 		max_feedrate = 3000
 		try:
@@ -953,27 +963,27 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			f = int(feedrate)
 		except ValueError:
 			return make_response("Invalid parameters", 400)
-		
+
 		# validate input
-		if(i < min_intensity or i > max_intensity or f < min_feedrate or f > max_feedrate): 
+		if(i < min_intensity or i > max_intensity or f < min_feedrate or f > max_feedrate):
 			return make_response("Invalid parameters", 400)
 		cm = CalibrationMarker(str(profile['volume']['width']), str(profile['volume']['depth']))
 		gcode = cm.getGCode(i, f)
-		
+
 		# run gcode
 		# check serial connection
 		if self._printer is None or self._printer._comm is None:
 			return make_response("Laser: Serial not connected", 400)
-		
+
 		if(self._printer.get_state_id() == "LOCKED"):
 			self._printer.home("xy")
-			
+
 		seconds = 0
 		while(self._printer.get_state_id() != "OPERATIONAL" and seconds <= 26): # homing cycle 20sec worst case, rescue from home ~ 6 sec total (?)
 			time.sleep(1.0) # wait a second
 			seconds += 1
-				
-		
+
+
 		# check if idle
 		if not self._printer.is_operational():
 			return make_response("Laser not idle", 403)
@@ -1416,8 +1426,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		elif command == "on_camera_picture_transfer":
 			self.lid_handler.on_front_end_pic_received()
 		elif command == "leds":
-			if ("brightness" in data and isinstance(data["brightness"], (int))) or ("leds" in data and isinstance(data["fps"], (int))):
-				self.leds(data)
+			# if ("brightness" in data and isinstance(data["brightness"], (int))) or ("leds" in data and isinstance(data["fps"], (int))):
+			self.set_leds_update(data)
 		return NO_CONTENT
 
 	# TODO IRATXE: this does not properly work --> necessary for reviews
@@ -1513,7 +1523,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				}
 			self._plugin_manager.send_plugin_message("mrbeam", dict(beam_cam_new_image=meta_data))
 			return make_response("DEBUG MODE: Took dummy picture", 200)
-		
+
 		self._logger.debug("New undistorted image is requested. is_initial_calibration: %s", is_initial_calibration)
 		image_response = self.lid_handler.take_undistorted_picture(is_initial_calibration)
 		self._logger.debug("Image_Response: {}".format(image_response))
@@ -2206,7 +2216,7 @@ def __plugin_load__():
 				settings=[ 'plugin_mrbeam_about', 'plugin_softwareupdate', 'accesscontrol', 'plugin_mrbeam_maintenance',
 						   'plugin_netconnectd', 'plugin_findmymrbeam', 'plugin_mrbeam_conversion',
 						   'plugin_mrbeam_camera', 'plugin_mrbeam_airfilter','plugin_mrbeam_analytics',
-						   'plugin_mrbeam_reminders', 'logs', 'plugin_mrbeam_debug' ]
+						   'plugin_mrbeam_reminders', 'plugin_mrbeam_leds', 'logs', 'plugin_mrbeam_debug' ]
 			),
 			disabled=dict(
 				wizard=['plugin_softwareupdate'],
