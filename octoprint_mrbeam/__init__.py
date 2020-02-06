@@ -118,6 +118,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._logger = mrb_logger("octoprint.plugins.mrbeam")
 		self._hostname = None
 		self._serial_num = None
+		self._mac_addrs = dict()
 		self._model_id = None
 		self._device_info = dict()
 		self._grbl_version = None
@@ -132,7 +133,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._time_ntp_check_count = 0
 		self._time_ntp_check_last_ts = 0.0
 		self._time_ntp_shift = 0.0
-
 
 		# MrBeam Events needs to be registered in OctoPrint in order to be send to the frontend later on
 		MrBeamEvents.register_with_octoprint()
@@ -530,6 +530,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 laserhead_serial= self.laserhead_handler.get_current_used_lh_data()['serial'],
 
 							 env=self.get_env(),
+							 mac_addrs=self._get_mac_addresses(),
 							 env_local=self.get_env(self.ENV_LOCAL),
 							 env_laser_safety=self.get_env(self.ENV_LASER_SAFETY),
 							 env_analytics=self.get_env(self.ENV_ANALYTICS),
@@ -907,7 +908,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def engraveCalibrationMarkers(self, intensity, feedrate):
 		profile = self.laserCutterProfileManager.get_current_or_default()
 		max_intensity = 1300 #TODO get magic numbers from profile
-		min_intensity = 0 
+		min_intensity = 0
 		min_feedrate = 100
 		max_feedrate = 3000
 		try:
@@ -915,27 +916,27 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			f = int(feedrate)
 		except ValueError:
 			return make_response("Invalid parameters", 400)
-		
+
 		# validate input
-		if(i < min_intensity or i > max_intensity or f < min_feedrate or f > max_feedrate): 
+		if(i < min_intensity or i > max_intensity or f < min_feedrate or f > max_feedrate):
 			return make_response("Invalid parameters", 400)
 		cm = CalibrationMarker(str(profile['volume']['width']), str(profile['volume']['depth']))
 		gcode = cm.getGCode(i, f)
-		
+
 		# run gcode
 		# check serial connection
 		if self._printer is None or self._printer._comm is None:
 			return make_response("Laser: Serial not connected", 400)
-		
+
 		if(self._printer.get_state_id() == "LOCKED"):
 			self._printer.home("xy")
-			
+
 		seconds = 0
 		while(self._printer.get_state_id() != "OPERATIONAL" and seconds <= 26): # homing cycle 20sec worst case, rescue from home ~ 6 sec total (?)
 			time.sleep(1.0) # wait a second
 			seconds += 1
-				
-		
+
+
 		# check if idle
 		if not self._printer.is_operational():
 			return make_response("Laser not idle", 403)
@@ -1471,7 +1472,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				}
 			self._plugin_manager.send_plugin_message("mrbeam", dict(beam_cam_new_image=meta_data))
 			return make_response("DEBUG MODE: Took dummy picture", 200)
-		
+
 		self._logger.debug("New undistorted image is requested. is_initial_calibration: %s", is_initial_calibration)
 		image_response = self.lid_handler.take_undistorted_picture(is_initial_calibration)
 		self._logger.debug("Image_Response: {}".format(image_response))
@@ -2133,6 +2134,24 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def is_mrbeam2_dreamcut(self):
 		return self._model_id == self.MODEL_MRBEAM2_DC
+
+	def _get_mac_addresses(self):
+		if not self._mac_addrs:
+			nw_base = '/sys/class/net'
+			# Get name of the Ethernet interface
+			interfaces = dict()
+			try:
+				for root, dirs, files in os.walk(nw_base):
+					for ifc in dirs:
+						if(ifc != 'lo'):
+							mac = open('%s/%s/address' % (nw_base, ifc)).read()
+							interfaces[ifc] = mac[0:17]
+			except:
+				self._logger.exception("_get_mag_addresses Exception while reading %s." % nw_base)
+
+			self._logger.debug("_get_mag_addresses() found %s" % interfaces)
+			self._mac_addrs = interfaces
+		return self._mac_addrs
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
