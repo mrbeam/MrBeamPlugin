@@ -50,8 +50,9 @@ class AnalyticsHandler(object):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.analyticshandler")
 
 		# Mr Beam specific data
-		self.analytics_enabled = self._settings.get(['analyticsEnabled'])
-		self._no_choice_made = True if self.analytics_enabled is None else False
+		self._analytics_enabled = self._settings.get(['analyticsEnabled'])
+		self._support_mode = plugin.support_mode
+		self._no_choice_made = True if self._analytics_enabled is None else False
 
 		self.analytics_folder = os.path.join(self._settings.getBaseFolder("base"), self._settings.get(['analytics', 'folder']))
 		if not os.path.isdir(self.analytics_folder):
@@ -73,7 +74,7 @@ class AnalyticsHandler(object):
 
 		self.event_waiting_for_terminal_dump = None
 
-		self._logger.info("Analytics analyticsEnabled: %s, sid: %s", self.analytics_enabled, self._session_id)
+		self._logger.info("Analytics analyticsEnabled: %s, sid: %s", self.is_analytics_enabled(), self._session_id)
 
 		# Subscribe to startup and mrb_plugin_initialize --> The rest go on _on_mrbeam_plugin_initialized
 		self._event_bus.subscribe(OctoPrintEvents.STARTUP, self._event_startup)
@@ -83,7 +84,7 @@ class AnalyticsHandler(object):
 		self._analytics_queue = collections.deque(maxlen=self.QUEUE_MAXSIZE)
 
 		# Activate analytics
-		if self.analytics_enabled:
+		if self.is_analytics_enabled():
 			self._activate_analytics()
 
 	def _on_mrbeam_plugin_initialized(self, event, payload):
@@ -112,6 +113,9 @@ class AnalyticsHandler(object):
 		analytics_writer.daemon = True
 		analytics_writer.start()
 
+	def is_analytics_enabled(self):
+		return self._analytics_enabled and not self._support_mode
+
 	# -------- EXTERNALLY CALLED METHODS -------------------------------------------------------------------------------
 	# INIT
 	def analytics_user_permission_change(self, analytics_enabled):
@@ -119,14 +123,14 @@ class AnalyticsHandler(object):
 			self._logger.info("analytics user permission change: analyticsEnabled=%s", analytics_enabled)
 
 			if analytics_enabled:
-				self.analytics_enabled = True
+				self._analytics_enabled = True
 				self._settings.set_boolean(["analyticsEnabled"], True)
 				self._activate_analytics()
 				self._add_device_event(ak.Device.Event.ANALYTICS_ENABLED, payload=dict(enabled=True))
 			else:
 				# can not log this since the user just disagreed
 				# self._add_device_event(ak.Device.Event.ANALYTICS_ENABLED, payload=dict(enabled=False))
-				self.analytics_enabled = False
+				self._analytics_enabled = False
 				self._timer_handler.cancel_timers()
 				self._settings.set_boolean(["analyticsEnabled"], False)
 		except Exception as e:
@@ -713,7 +717,7 @@ class AnalyticsHandler(object):
 	# -------- WRITER THREAD (queue --> analytics file) ----------------------------------------------------------------
 	def _write_queue_to_analytics_file(self):
 		try:
-			while self.analytics_enabled:
+			while self.is_analytics_enabled():
 				if not os.path.isfile(self.analytics_file):
 					self._init_json_file()
 
