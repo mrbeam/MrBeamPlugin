@@ -35,7 +35,7 @@ def analyticsHandler(plugin):
 
 class AnalyticsHandler(object):
 	QUEUE_MAXSIZE = 1000
-	ANALYTICS_LOG_VERSION = 9  # bumped in 0.3.2.1
+	ANALYTICS_LOG_VERSION = 10  # bumped in 0.5.5.1
 
 	def __init__(self, plugin):
 		self._plugin = plugin
@@ -292,6 +292,20 @@ class AnalyticsHandler(object):
 			self._add_log_event(ak.Log.Event.IOBEAM, payload=iobeam_data)
 		except Exception as e:
 			self._logger.exception('Exception during add_iobeam_message_log: {}'.format(e), analytics=True)
+
+	def add_iobeam_i2c_monitoring(self, iobeam_version, state, method, current_devices, lost_devices, new_devices):
+		try:
+			iobeam_data = {
+				ak.Log.I2cMonitoring.VERSION: iobeam_version,
+				ak.Log.I2cMonitoring.STATE: state,
+				ak.Log.I2cMonitoring.METHOD: method,
+				ak.Log.I2cMonitoring.CURRENT_DEVICES: current_devices,
+				ak.Log.I2cMonitoring.LOST_DEVICES: lost_devices,
+				ak.Log.I2cMonitoring.NEW_DEVICES: new_devices,
+			}
+			self._add_log_event(ak.Log.Event.I2C_MONITORING, payload=iobeam_data)
+		except Exception as e:
+			self._logger.exception('Exception during add_iobeam_i2c_monitoring: {}'.format(e), analytics=True)
 
 	# ACC_WATCH_DOG
 	def add_cpu_log(self, temp, throttle_alerts):
