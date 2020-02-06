@@ -666,10 +666,16 @@ class IoBeamHandler(object):
 
 	def _handle_i2c_monitoring(self, dataset):
 		if not dataset.get('state', None) == 'ok':
-			analytics = False
-			if self._last_i2c_monitoring_dataset is None or self._last_i2c_monitoring_dataset.get('state', None) == 'ok':
-				analytics = True
-			self._logger.error("i2c_monitoring state change reported: %s", dataset, analytics=analytics)
+			self._logger.error("i2c_monitoring state change reported: %s", dataset, analytics=False)
+			if not self._last_i2c_monitoring_dataset is None and not self._last_i2c_monitoring_dataset.get('state', None) == dataset.get('state', None):
+				dataset_data = dataset.get('data', dict())
+				params = dict(iobeam_version=self.iobeam_version,
+					state=dataset.get('state', None),
+					method=dataset_data.get('test_mode', None),
+					current_devices=dataset_data.get('current_devices', []),
+					lost_devices=dataset_data.get('lost_devices', []),
+					new_devices=dataset_data.get('new_devices', []))
+				self._analytics_handler.add_iobeam_i2c_monitoring(**params)
 		self._last_i2c_monitoring_dataset = dataset
 
 	def _handle_laser(self, dataset):
