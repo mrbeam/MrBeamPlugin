@@ -550,6 +550,7 @@ class PhotoCreator(object):
                     _s_marker['missed'] += 1
 
             if error:
+                error = error.replace(".","-").replace(",","-")
                 if error in _s[algo]['errors']:
                     _s[algo]['errors'][error] += 1
                 else:
