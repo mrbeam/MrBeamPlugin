@@ -48,6 +48,18 @@ $(function(){
 		self.previewImgOpacity.subscribe(function(newVal){
 			let col = newVal > 0.25 ? '#eeeeee':'#999999';
 			$('#coord_pattern_marker').attr('stroke', col);
+			if(newVal !== self.settings.settings.plugins.mrbeam.cam.previewOpacity()){
+				if (self.settings.savetimer !== undefined) {
+					clearTimeout(self.settings.savetimer);
+				}
+				self.settings.settings.plugins.mrbeam.cam.previewOpacity(newVal);
+				self.settings.savetimer = setTimeout(function () {
+						self.settings.saveData(undefined, function(newSettings){
+							console.log("Saved previewOpacity", newSettings.plugins.mrbeam.cam.previewOpacity);
+							self.settings.savetimer = undefined;
+						});
+					}, 2000);
+			}
 		});
 
 		self.workingAreaWidthMM = ko.computed(function(){
@@ -1893,6 +1905,8 @@ $(function(){
 		self.onAllBound = function(allViewModels){
 			self.svgDPI = self.settings.settings.plugins.mrbeam.svgDPI; // we assign ko function
 			self.dxfScale = self.settings.settings.plugins.mrbeam.dxfScale;
+			self.previewImgOpacity(self.settings.settings.plugins.mrbeam.cam.previewOpacity());
+			
 			self.gc_options = ko.computed(function(){
 				return {
 					beamOS: BEAMOS_DISPLAY_VERSION,

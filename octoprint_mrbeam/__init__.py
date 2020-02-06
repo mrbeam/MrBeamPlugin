@@ -178,6 +178,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self.lid_handler = lidHandler(self)
 		self.usage_handler = usageHandler(self)
 		self.led_event_listener = LedEventListener(self)
+		self.led_event_listener.set_brightness(self._settings.get(["leds", "brightness"]))
+		self.led_event_listener.set_fps(self._settings.get(["leds", "fps"]))
 		# start iobeam socket only once other handlers are already inittialized so that we can handle info mesage
 		self.iobeam = ioBeamHandler(self)
 		self.temperature_manager = temperatureManager(self)
@@ -295,6 +297,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				cam_img_width = image_default_width,
 				cam_img_height = image_default_height,
 				frontendUrl="/downloads/files/local/cam/beam-cam.jpg",
+				previewOpacity=1,
 				localFilePath="cam/beam-cam.jpg",
 				localUndistImage="cam/undistorted.jpg",
 				keepOriginals=False,
@@ -313,6 +316,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			),
 			grbl_version_lastknown=None,
 			tour_auto_launch = True,
+			leds = dict(
+				brightness = 255,
+				fps = 28
+			)
 		)
 
 	def on_settings_load(self):
@@ -323,7 +330,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			terminal_show_checksums=self._settings.get(['terminal_show_checksums']),
 			analyticsEnabled=self._settings.get(['analyticsEnabled']),
 			cam=dict(enabled=self._settings.get(['cam', 'enabled']),
-					 frontendUrl=self._settings.get(['cam', 'frontendUrl'])),
+					 frontendUrl=self._settings.get(['cam', 'frontendUrl']),
+					 previewOpacity=self._settings.get(['cam', 'previewOpacity'])),
 			dev=dict(
 				env = self.get_env(),
 				software_tier = self._settings.get(["dev", "software_tier"]),
@@ -351,12 +359,18 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			hw_features=dict(
 				has_compressor=self.compressor_handler.has_compressor(),
 			),
+			leds=dict(
+				brightness=self._settings.get(['leds', 'brightness']),
+				fps=self._settings.get(['leds', 'fps']),
+			),
 			isFirstRun=self.isFirstRun(),
 		)
 
 	def on_settings_save(self, data):
 		try:
 			# self._logger.info("ANDYTEST on_settings_save() %s", data)
+			if "cam" in data and "previewOpacity" in data["cam"]:
+				self._settings.set_float(["cam", "previewOpacity"], data["cam"]["previewOpacity"])
 			if "svgDPI" in data:
 				self._settings.set_int(["svgDPI"], data["svgDPI"])
 			if "dxfScale" in data:
@@ -377,6 +391,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self._settings.set_boolean(["focusReminder"], data["focusReminder"])
 			if "dev" in data and "software_tier" in data['dev']:
 				switch_software_channel(self, data["dev"]["software_tier"])
+			if "leds" in data and "brightness" in data["leds"]:
+				self._settings.set_int(["leds", "brightness"], data["leds"]["brightness"])
+			if "leds" in data and "fps" in data["leds"]:
+				self._settings.set_int(["leds", "fps"], data["leds"]["fps"])
 		except Exception as e:
 			self._logger.exception("Exception in on_settings_save() ")
 			raise e
@@ -435,6 +453,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/ready_to_laser_viewmodel.js",
 				"js/lib/screenfull.min.js",
 				"js/settings/camera_calibration.js",
+				"js/settings/leds.js",
 				"js/path_magic.js",
 				"js/lib/simplify.js",
 				"js/lib/clipper.js",
@@ -586,6 +605,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
             dict(type='settings', name=gettext("Analytics"), template='settings/analytics_settings.jinja2', suffix="_analytics", custom_bindings=False),
 			dict(type='settings', name=gettext("Reminders"), template='settings/reminders_settings.jinja2', suffix="_reminders", custom_bindings=False),
 			dict(type='settings', name=gettext("Maintenance"), template='settings/maintenance_settings.jinja2', suffix="_maintenance", custom_bindings=True),
+			dict(type='settings', name=gettext("Mr Beam Lights"), template='settings/leds_settings.jinja2', suffix="_leds", custom_bindings=True),
 
 			# disabled in appearance
 			# dict(type='settings', name="Serial Connection DEV", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings=False, replaces='serial')
@@ -795,6 +815,34 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		# self._logger.info("custom_material(): response: %s", data)
 		return make_response(jsonify(res), 200)
+
+	# simpleApiCommand: leds;
+	def set_leds_update(self, data):
+		self._logger.info("leds() request: %s", data)
+
+		try:
+			br = data.get('brightness', None)
+			try:
+				br = int(br)
+			except TypeError:
+				pass
+			if br is not None:
+				self.led_event_listener.set_brightness(br)
+
+			fps = data.get('fps', None)
+			try:
+				fps = int(fps)
+			except TypeError:
+				pass
+			if fps is not None:
+				self.led_event_listener.set_fps(fps)
+
+		except:
+			self._logger.exception("Exception while adjusting LEDs : ")
+			return make_response("Error while adjusting LEDs.", 500)
+
+		return make_response("", 204)
+
 
 	#~~ helpers
 
@@ -1320,6 +1368,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			reset_gantry_usage=[],
 			material_settings=[],
 			on_camera_picture_transfer=[],
+			leds=[],
 		)
 
 	def on_api_command(self, command, data):
@@ -1377,6 +1426,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				return make_response(err.message, 500)
 		elif command == "on_camera_picture_transfer":
 			self.lid_handler.on_front_end_pic_received()
+		elif command == "leds":
+			# if ("brightness" in data and isinstance(data["brightness"], (int))) or ("leds" in data and isinstance(data["fps"], (int))):
+			self.set_leds_update(data)
 		return NO_CONTENT
 
 	# TODO IRATXE: this does not properly work --> necessary for reviews
@@ -2183,7 +2235,7 @@ def __plugin_load__():
 				settings=[ 'plugin_mrbeam_about', 'plugin_softwareupdate', 'accesscontrol', 'plugin_mrbeam_maintenance',
 						   'plugin_netconnectd', 'plugin_findmymrbeam', 'plugin_mrbeam_conversion',
 						   'plugin_mrbeam_camera', 'plugin_mrbeam_airfilter','plugin_mrbeam_analytics',
-						   'plugin_mrbeam_reminders', 'logs', 'plugin_mrbeam_debug' ]
+						   'plugin_mrbeam_reminders', 'plugin_mrbeam_leds', 'logs', 'plugin_mrbeam_debug' ]
 			),
 			disabled=dict(
 				wizard=['plugin_softwareupdate'],

@@ -16,19 +16,19 @@ from flask.ext.babel import gettext
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 # don't crash on a dev computer where you can't install picamera
-import octoprint_mrbeam.camera
-from octoprint_mrbeam.camera import MrbCamera, gaussBlurDiff, QD_KEYS, PICAMERA_AVAILABLE
-from octoprint_mrbeam.camera.undistort import prepareImage
-from octoprint_mrbeam.camera.undistort import _getCamParams, _getPicSettings, DIST_KEY, MTX_KEY
-from octoprint_mrbeam.util import json_serialisor, logme
-# TODO mb pic does not rely on picamera, should not use a Try catch.
 try:
-    import mb_picture_preparation as mb_pic
-    PICAMERA_AVAILABLE = True
+	import octoprint_mrbeam.camera
+	from octoprint_mrbeam.camera import MrbCamera, gaussBlurDiff, QD_KEYS, PICAMERA_AVAILABLE
+	from octoprint_mrbeam.camera.undistort import prepareImage
+	from octoprint_mrbeam.camera.undistort import _getCamParams, _getPicSettings, DIST_KEY, MTX_KEY
+	from octoprint_mrbeam.util import json_serialisor, logme
+	# TODO mb pic does not rely on picamera, should not use a Try catch.
+	import mb_picture_preparation as mb_pic
+	PICAMERA_AVAILABLE = True
 except ImportError as e:
-    PICAMERA_AVAILABLE = False
-    logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler").error(
-        "Could not import module 'mb_picture_preparation'. Disabling camera integration. (%s: %s)", e.__class__.__name__, e)
+	PICAMERA_AVAILABLE = False
+	logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler").error(
+		"Could not import module 'mb_picture_preparation'. Disabling camera integration. (%s: %s)", e.__class__.__name__, e)
 
 SIMILAR_PICS_BEFORE_UPSCALE = 3
 LOW_QUALITY = 65 # low JPEG quality for compressing bigger pictures
@@ -71,7 +71,7 @@ class LidHandler(object):
 
         self.image_correction_enabled = self._settings.get(['cam', 'image_correction_enabled'])
 
-        if self.camEnabled:
+        if self.camEnabled and PICAMERA_AVAILABLE:
             imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
             self._photo_creator = PhotoCreator(self._plugin,
                                                self._plugin_manager,
