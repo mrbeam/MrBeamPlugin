@@ -8,12 +8,12 @@ import sys
 import fileinput
 import re
 import uuid
+import collections
 
 from octoprint_mrbeam.util import json_serialisor
 from value_collector import ValueCollector
 from cpu import Cpu
 from threading import Thread, Timer, Lock
-from Queue import Queue
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint.events import Events as OctoPrintEvents
@@ -80,7 +80,7 @@ class AnalyticsHandler(object):
 		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
 
 		# Initialize queue for analytics data and queue-to-file writer
-		self._analytics_queue = Queue(maxsize=self.QUEUE_MAXSIZE)
+		self._analytics_queue = collections.deque(maxlen=self.QUEUE_MAXSIZE)
 
 		# Activate analytics
 		if self.analytics_enabled:
@@ -103,7 +103,7 @@ class AnalyticsHandler(object):
 	def _activate_analytics(self):
 		# Restart queue if the analytics were disabled before
 		if not self._no_choice_made:
-			self._analytics_queue = Queue(self.QUEUE_MAXSIZE)
+			self._analytics_queue = collections.deque(maxlen=self.QUEUE_MAXSIZE)
 		else:
 			self._no_choice_made = False
 
@@ -634,12 +634,7 @@ class AnalyticsHandler(object):
 
 	def _add_to_queue(self, element):
 		try:
-			self._analytics_queue.put(element)
-
-			if self._analytics_queue.full():
-				self._logger.info('Analytics queue max size reached ({}). Reinitializing...'.format(self.QUEUE_MAXSIZE))
-				self._analytics_queue = Queue(maxsize=self.QUEUE_MAXSIZE)
-
+			self._analytics_queue.append(element)
 		except Exception as e:
 			self._logger.info('Exception during _add_to_queue: {}'.format(e))
 
@@ -723,9 +718,9 @@ class AnalyticsHandler(object):
 					self._init_json_file()
 
 				with self._analytics_lock:
-					while not self._analytics_queue.empty():
+					while self._analytics_queue:
 						with open(self.analytics_file, 'a') as f:
-							data = self._analytics_queue.get()
+							data = self._analytics_queue.popleft()
 							data_string = None
 							try:
 								data_string = json.dumps(data, sort_keys=False, default=json_serialisor) + '\n'
