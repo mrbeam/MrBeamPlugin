@@ -646,7 +646,6 @@ $(function(){
 		self.imgFeedrateBlack = ko.observable(250);
 		self.imgDithering = ko.observable(false);
 		self.beamDiameter = ko.observable(0.15);
-		self.overshoot = ko.observable(1.0);
 		self.engravingPiercetime = ko.observable(0);
 		self.engravingCompressor = ko.observable(0);
 
@@ -865,7 +864,6 @@ $(function(){
 				"speed_white" : parseInt(self.imgFeedrateWhite()),
 				"dithering" : self.imgDithering(),
 				"beam_diameter" : parseFloat(self.beamDiameter()),
-				"overshoot" : parseFloat(self.overshoot()),
 				"pierce_time": parseInt(self.engravingPiercetime()),
 				"engraving_mode": $('#svgtogcode_img_engraving_mode > .btn.active').attr('value'),
                 "line_distance": $('#svgtogcode_img_line_dist').val(),

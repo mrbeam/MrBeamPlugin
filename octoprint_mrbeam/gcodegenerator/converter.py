@@ -263,7 +263,7 @@ class Converter():
 											workingAreaWidth = self.workingAreaWidth,
 											workingAreaHeight = self.workingAreaHeight,
 						                    beam_diameter = rasterParams['beam_diameter'],
-						                    overshoot_distance = rasterParams.get('overshoot', 0),
+						                    overshoot_distance = 1,
 											intensity_black = rasterParams['intensity_black'],
 											intensity_white = rasterParams['intensity_white'],
 											intensity_black_user = rasterParams['intensity_black_user'],
