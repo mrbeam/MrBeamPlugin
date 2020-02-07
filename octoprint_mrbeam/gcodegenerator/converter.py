@@ -265,7 +265,7 @@ class Converter():
 											workingAreaWidth = self.workingAreaWidth,
 											workingAreaHeight = self.workingAreaHeight,
 						                    beam_diameter = rasterParams['beam_diameter'],
-						                    overshoot_distance = rasterParams.get('overshoot', 0),
+						                    overshoot_distance = 1,
 											intensity_black = rasterParams['intensity_black'],
 											intensity_white = rasterParams['intensity_white'],
 											intensity_black_user = rasterParams['intensity_black_user'],
@@ -329,7 +329,7 @@ class Converter():
 					# path_sorting: set initial laser pos, assuming pleasant left to right, bottom to top processing order
 					current_x = 0
 					current_y = 0
-					
+
 					#for each color generate GCode
 					for colorKey in self.colorOrder:
 						if colorKey == 'none':
@@ -348,7 +348,7 @@ class Converter():
 						fh.write(machine_settings.gcode_before_job(color=colorKey, compressor=settings.get('cut_compressor', '100')))
 
 						self._log.info( "convert() path sorting active: %s, path size %i below maximum %i." % (self.optimize_path_order, len(paths_by_color[colorKey]), self.optimize_max_paths))
-						# if this O(n^2) algorithm blows performance, limit inner loop to just search within the first 100 items. 
+						# if this O(n^2) algorithm blows performance, limit inner loop to just search within the first 100 items.
 						while len(paths_by_color[colorKey]) > 0:
 							path_sorting = self.optimize_path_order and (len(paths_by_color[colorKey]) < self.optimize_max_paths)
 							# pick closest starting point to (current_x, current_y)
@@ -364,7 +364,7 @@ class Converter():
 										if(d < dist):
 											dist = d
 											closestPath = p
-							
+
 							path = None
 							if(closestPath != None):
 								path = closestPath
@@ -385,7 +385,7 @@ class Converter():
 
 
 							fh.write("; Layer:" + layerId + ", outline of:" + pathId + ", stroke:" + colorKey +', '+str(settings)+"\n")
-							ity = settings['intensity'] 
+							ity = settings['intensity']
 							pt = settings['pierce_time']
 							fr = int(settings['feedrate'])
 							passes = int(settings['passes'])
@@ -398,14 +398,14 @@ class Converter():
 								# TODO tbd DreamCut different for each pass?
 								gc = self._replace_params_gcode(curveGCode, colorKey, f, ity, pt)
 								fh.write(gc)
-								
+
 							# set current position after processing the path
 							end_x = path.get(_add_ns('end_x', 'mb'), None)
 							end_y = path.get(_add_ns('end_y', 'mb'), None)
 							if(end_x != None and end_y != None):
 								current_x = float(end_x)
 								current_y = float(end_y)
-							
+
 							# finally removed processed path
 							paths_by_color[colorKey].remove(path)
 

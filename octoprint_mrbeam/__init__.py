@@ -2201,7 +2201,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			except:
 				self._logger.exception("_get_mag_addresses Exception while reading %s." % nw_base)
 
-			self._logger.debug("_get_mag_addresses() found %s" % interfaces)
+			self._logger.debug("_get_mac_addresses() found %s" % interfaces)
 			self._mac_addrs = interfaces
 		return self._mac_addrs
 

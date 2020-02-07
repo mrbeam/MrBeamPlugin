@@ -61,7 +61,7 @@ class ImageProcessor():
 	              dithering = False,
 	              engraving_mode = None,
 	              pierce_time = 0,
-	              overshoot_distance = 0, # disabled for now. TODO: enable (1) when switch on delay is HW fixed.
+	              overshoot_distance = 1,
 	              eng_compressor = 100, # DreamCut.
 	              material = None):
 
