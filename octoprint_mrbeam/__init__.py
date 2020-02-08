@@ -314,6 +314,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				small_paths_first = True,
 				clip_working_area = True # https://github.com/mrbeam/MrBeamPlugin/issues/134
 			),
+			machine = dict(
+				backlash_compensation_x = 0.0 # applied in img2gcode on lines in negative direction.
+			),
 			grbl_version_lastknown=None,
 			tour_auto_launch = True,
 			leds = dict(

@@ -74,6 +74,8 @@ class ImageProcessor():
 
 		self.debug = False # general debug
 		self.debugPreprocessing = False # write each step image to /tmp
+		# backlash compensation will be applied only on lines in negative axis direction
+		self.backlash_compensation_x = _mrbeam_plugin_implementation._settings.get(["machine", "backlash_compensation_x"])
 
 		try:
 			self.debug = _mrbeam_plugin_implementation._settings.get(["dev", "debug_gcode"])
@@ -148,6 +150,7 @@ class ImageProcessor():
 		comment += "; intensity_white_user = {}\n".format(self.intensity_white_user)
 		comment += "; feedrate_white = {:.0f}\n".format(self.feedrate_white)
 		comment += "; feedrate_black = {:.0f}\n".format(self.feedrate_black)
+		comment += "; backlash_compensation_x = {:.3f}\n".format(self.backlash_compensation_x)
 
 		comment += "; material = {}\n".format(self.material)
 		comment += "; contrastFactor = {:.2f}\n".format(self.contrastFactor)
@@ -523,11 +526,13 @@ class ImageProcessor():
 		if(direction_positive):
 			x = img_pos_mm[0] + self.beam * line_info['left'] - self.overshoot_distance
 		else:
-			x = img_pos_mm[0] + self.beam * line_info['right'] + self.overshoot_distance
+			x = img_pos_mm[0] + self.beam * line_info['right'] + self.overshoot_distance + self.backlash_compensation_x
 
 		# Move to line start coordinates
 		comment = None
-		if(debug): comment = "goto line start"
+		if(debug): 
+			arrow = '->' if(direction_positive) else "<- [backlash_compensation_x: {:.3f}]".format(self.backlash_compensation_x)
+			comment = "goto line start" + arrow
 		gc = self._get_gcode_g0(x=x, y=y, comment=comment)
 		self._append_gcode(gc)
 		self.gc_ctx.s = 0
@@ -601,6 +606,7 @@ class ImageProcessor():
 			if(brightness != lastBrightness ):
 				if(i != pixelrange[0]): # don't move after new line
 					xpos = img_pos_mm[0] + self.beam * (i-1 if (direction_positive) else (i)) # calculate position; backward lines need to be shifted by +1 beam diameter
+					xpos = xpos if (direction_positive) else xpos + self.backlash_compensation_x
 					pos = self.write_gcode_for_equal_pixels(lastBrightness, xpos, debug=debug)
 			else:
 				pass # combine equal intensity values to one move
@@ -609,6 +615,7 @@ class ImageProcessor():
 
 		if(not self._ignore_pixel_brightness(brightness) and self.get_intensity(brightness) > 0): # finish non-white line
 			end_of_line = img_pos_mm[0] + pixelrange[-1] * self.beam
+			end_of_line = end_of_line if (direction_positive) else end_of_line + self.backlash_compensation_x
 			pos = self.write_gcode_for_equal_pixels(brightness, end_of_line, debug=debug)
 
 
