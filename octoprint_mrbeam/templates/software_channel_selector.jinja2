@@ -1,3 +1,6 @@
+{#    Download link is language specific  #}
+{% set mrbeamorg_downloads = _('https://mr-beam.org/en/downloads/') %}
+
 <div class="hide" id="software_channel_selector">
     <h4 style="display: inline">{{ _('Software Channel') }}:</h4>
     <select id="software_channel_select" data-bind="value: selector, options: available_channels, optionsText: 'name', optionsValue: 'id', event: { change: selection_changed }"></select>
@@ -5,6 +8,10 @@
         <div class="control-group span6 ">
             <h5><i class="fa fa-thumbs-o-up" aria-hidden="true"></i>{{ _('Stable Channel') }}: </h5>
             <p>{{ _('Use the most stable software for your Mr Beam II. You will only get notified about officially released and well tested software updates.') }}</p>
+            <p>{{ _('You can also download the latest STABLE software update at %(opening_tag)smr-beam.org/downloads%(closing_tag)s and update your Mr Beam per USB stick.',
+                    opening_tag= '<a href="' + mrbeamorg_downloads + '" target="_blank">',
+                    closing_tag='</a>'
+                    ) }}</p>
         </div>
         <div class="control-group span6">
             <h5><i class="fa fa-flask" aria-hidden="true"></i>{{ _('Beta Channel') }}: </h5>
