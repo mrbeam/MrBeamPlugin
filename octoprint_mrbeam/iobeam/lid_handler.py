@@ -535,7 +535,7 @@ class PhotoCreator(object):
                 _marker = None
                 if algo == 'new' and qd in markers.keys() and markers[qd] is not None:
                     _marker = np.asarray(markers[qd])
-                elif algo == 'legacy' and markers[qd]['x'] is not None:
+                elif algo == 'legacy' and qd in markers.keys() and markers[qd]['x'] is not None:
                     _marker = np.asarray([markers[qd]['y'], markers[qd]['x']])
                 if _marker is not None:
                     _success_mass = _s_marker['found']
