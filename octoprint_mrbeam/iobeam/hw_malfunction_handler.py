@@ -2,6 +2,7 @@
 
 
 import threading
+import urllib
 
 from flask.ext.babel import gettext
 
@@ -95,7 +96,7 @@ class HwMalfunctionHandler(object):
 		text = '<br/>' + gettext(
 			"The bottom plate is not closed correctly. "
 			"Please make sure that the bottom is correctly mounted as described in the Mr Beam II user manual.") + \
-			self._get_knowledgebase_link()
+			self._get_knowledgebase_link(url='https://mr-beam.freshdesk.com/support/solutions/articles/43000557280')
 		return dict(
 			title=gettext("Bottom Plate Error"),
 			text=text,
@@ -106,11 +107,10 @@ class HwMalfunctionHandler(object):
 
 	def _get_notification_leaserheadunit_missing(self, msg):
 		text = '<br/>' + gettext(
-			"No laser head unit connected. "
+			"Laser head unit not found. "
 			"Please make sure that the laser head unit is connected correctly.") + \
-			self._get_knowledgebase_link() + \
+			self._get_knowledgebase_link(url='https://mr-beam.freshdesk.com/support/solutions/articles/43000557279') + \
 			self._get_error_text(msg)
-			# self._get_knowledgebase_link(url='https://mr-beam.freshdesk.com/support/solutions/articles/43000035379-is-mr-beam-ii-certified-') + \
 		return dict(
 			title=gettext("No laser head unit found"),
 			text=text,
@@ -122,7 +122,7 @@ class HwMalfunctionHandler(object):
 	def _get_notification_hardware_malfunction(self, msgs=[]):
 		text = '<br/>' + gettext(
 			'A possible hardware malfunction has been detected on this device. Please contact our support team immediately at:') + \
-			self._get_knowledgebase_link() + \
+			self._get_knowledgebase_link(url='https://mr-beam.freshdesk.com/support/solutions/articles/43000557281') + \
 			self._get_error_text(msgs)
 		return dict(
 			title=gettext("Hardware malfunction"),
@@ -132,16 +132,31 @@ class HwMalfunctionHandler(object):
 			replay_when_new_client_connects=True,
 		)
 
-	def _get_knowledgebase_link(self, url=None, utm_campaign=None):
-		url = "{url}?utm_source=beamos&utm_medium=beamos&utm_campaign={utm_campaign}&beamos_version={version}&beamos_env={env}".format(
-			url=url or "https://mr-beam.org/support",
+	def _get_knowledgebase_link(self, url=None, err=None, utm_campaign=None):
+		specific_url = url is not None
+		url = url or "https://mr-beam.org/support"
+		params = dict(
+			utm_source='beamos',
+			utm_medium='beamos',
 			utm_campaign=utm_campaign or "hw_malfunction",
 			version=self._plugin.get_plugin_version(),
-			env=self._plugin.get_env())
-		return "<br /><br />" + gettext('Get more help in our %(opening_tag)sKnowledge Base%(closing_tag)s' % {
-			'opening_tag': '<a href="{}" target="_blank">'.format(url),
-			'closing_tag': '</a>',
-		})
+			env=self._plugin.get_env(),
+		)
+		if err:
+			params['error'] = err if isinstance(err, basestring) else ';'.join(err)
+		full_url = "{url}?{params}".format(url=url, params=urllib.urlencode(params))
+		if specific_url:
+			return "<br /><br />" + gettext('For more information check out this %(opening_tag)sKnowledge Base article%(closing_tag)s' % {
+				'opening_tag': '<a href="{}" target="_blank"><strong>'.format(full_url),
+				'closing_tag': '</strong></a>',
+				'line_break': '<br />'
+			})
+		else:
+			return "<br /><br />" + gettext(
+				'Browse our %(opening_tag)sKnowledge Base%(closing_tag)s' % {
+					'opening_tag': '<a href="{}" target="_blank"><strong>'.format(full_url),
+					'closing_tag': '</strong></a>',
+				})
 
 	def _get_error_text(self, msg):
 		msg = msg if isinstance(msg, basestring) else '<br />'.join(msg)
