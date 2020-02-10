@@ -786,7 +786,7 @@ $(function(){
 				var intensity = intensity_user * self.profile.currentProfileData().laser.intensity_factor() ;
 				var feedrate = $(job).find('.param_feedrate').val();
 				var piercetime = $(job).find('.param_piercetime').val();
-				var progressive = $(job).find('.param_progressive').val();
+				var progressive = $(job).find('.param_progressive').prop('checked');
 				var passes = $(job).find('.param_passes').val();
 				let cut_compressor = $(job).find('.compressor_range').val();
 
