@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-02-11 13:50+0100\n"
+"POT-Creation-Date: 2020-02-11 15:02+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -47,19 +47,16 @@ msgstr ""
 msgid "Hardware malfunction"
 msgstr ""
 
-#: octoprint_mrbeam/iobeam/hw_malfunction_handler.py:150
+#: octoprint_mrbeam/iobeam/hw_malfunction_handler.py:149
 #, python-format
 msgid ""
 "For more information check out this %(opening_tag)sKnowledge Base "
-"article%(closing_tag)sopening_tag<a href=\"{}\" "
-"target=\"_blank\"><strong>"
+"article%(closing_tag)s"
 msgstr ""
 
-#: octoprint_mrbeam/iobeam/hw_malfunction_handler.py:157
+#: octoprint_mrbeam/iobeam/hw_malfunction_handler.py:155
 #, python-format
-msgid ""
-"Browse our %(opening_tag)sKnowledge Base%(closing_tag)sopening_tag<a "
-"href=\"{}\" target=\"_blank\"><strong>"
+msgid "Browse our %(opening_tag)sKnowledge Base%(closing_tag)s"
 msgstr ""
 
 #: octoprint_mrbeam/iobeam/hw_malfunction_handler.py:163
@@ -1157,7 +1154,7 @@ msgid "Picture requested"
 msgstr ""
 
 #: octoprint_mrbeam/static/js/settings/camera_calibration.js:225
-msgid "Something went wrong. It's not you, its us."
+msgid "Something went wrong. It's not you, it's us."
 msgstr ""
 
 #: octoprint_mrbeam/static/js/settings/camera_calibration.js:337
@@ -2115,7 +2112,7 @@ msgid "Line Color"
 msgstr ""
 
 #: octoprint_mrbeam/templates/quick_shape.jinja2:120
-msgid "Fill"
+msgid "Fill Color"
 msgstr ""
 
 #: octoprint_mrbeam/templates/quick_text.jinja2:8
