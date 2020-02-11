@@ -222,7 +222,7 @@ $(function () {
 			};
 			var error_callback = function (resp) {
 				new PNotify({
-					title: gettext("Something went wrong. It's not you, its us."),
+					title: gettext("Something went wrong. It's not you, it's us."),
 					text: resp.responseText,
 					type: 'warning',
 					hide: true
