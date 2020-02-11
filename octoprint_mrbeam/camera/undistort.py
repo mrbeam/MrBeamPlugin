@@ -31,6 +31,9 @@ HUE_BAND_LB_KEY = 'hue_lower_bound'
 HUE_BAND_LB = 125
 HUE_BAND_UB = 185 # if value > 180 : loops back to 0
 
+MIN_MARKER_PIX = 150
+MAX_MARKER_PIX = 900
+
 PIC_SETTINGS = {CALIB_MARKERS_KEY: None, CORNERS_KEY: None, M2C_VECTOR_KEY: None, CALIBRATION_UPDATED_KEY: False}
 
 import logging
@@ -41,7 +44,7 @@ from os.path import dirname, basename, isfile, exists
 import cv2
 import numpy as np
 
-PIXEL_THRESHOLD_MIN = 200
+PIXEL_THRESHOLD_MIN = MIN_MARKER_PIX
 
 
 class MbPicPrepError(Exception):
@@ -129,7 +132,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
     if debug_out:
         save_debug_img(img, path_to_output_image, "undistorted")
 
-    if stopEvent.isSet(): return None, None, None, STOP_EVENT_ERR
+    if stopEvent and stopEvent.isSet(): return None, None, None, STOP_EVENT_ERR
 
     # search markers on undistorted pic
     dbg_markers = os.path.join(dirname(path_to_output_image), "markers", basename(path_to_output_image))
@@ -164,7 +167,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
         logger.warning(err)
         return None, markers, missed, err
 
-    if stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR
+    if stopEvent and stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR
 
     if debug_out: save_debug_img(_debug_drawMarkers(img, markers), path_to_output_image, "drawmarkers")
 
@@ -178,7 +181,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
     warpedImg = _warpImgByCorners(img, workspaceCorners)
     if debug_out: save_debug_img(warpedImg, path_to_output_image, "colorwarp")
 
-    if stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR
+    if stopEvent and stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR
 
     # resize and do NOT make greyscale, then save it
     # cv2.imwrite(filename=path_to_output_image,
@@ -231,7 +234,7 @@ def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1):
                 outputPoints[qd]['pos'] += pos
     return outputPoints
 
-def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d_min=8, d_max=30):
+def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d_min=8, d_max=30, visual_debug=False):
     """
     Tries to find a single pink marker inside the image (or the Region of Interest).
     It then outputs the information about found marker (for now, just its center position).
@@ -250,58 +253,35 @@ def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d
     :return:
     :rtype:
     """
-    logger = logging.getLogger('mrbeam.camera.undistort')
-    # TODO Use mask to eliminate false positives
     # Smooth out picture
     roiBlur = cv2.GaussianBlur(roi, (blur, blur), 0)
     # Use the opposite color of Magenta (Green) to contrast the markers the most
     transformToGreen = np.array([[.0, 1.0, .0]])
     greenBlur = cv2.transform(roiBlur, transformToGreen)
-    # debugShow(greenBlur, "green")
+    # if visual_debug: debugShow(greenBlur, "green")
     # Threshold the green channel
     ret, threshOtsuMask = cv2.threshold(greenBlur, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
     blocksize = 11
     gaussianMask = cv2.adaptiveThreshold(greenBlur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, blocksize, 2)
     roiBlurThresh         =  cv2.bitwise_and( roiBlur, roiBlur, mask=cv2.bitwise_or(threshOtsuMask, gaussianMask))
-    # debugShow(roiBlurThresh, "otsu")
     hsv_roiBlurThresh     =  cv2.cvtColor(    roiBlurThresh,     cv2.COLOR_BGR2HSV)
     # Use a sliding hue mask with a local maxima detector to find the magenta markers
-    # logger.debug("%s hsv_roiBlurThresh avg H %d S %d V %d" % tuple(chain([quadrant], np.average(hsv_roiBlurThresh, axis=(0,1)).tolist())))
-    hsvMask, bands = _get_hue_mask(hsv_roiBlurThresh, bandsize=23, pixTrigAmount = PIXEL_THRESHOLD_MIN)
-    if hsvMask is None:
-        cv2.imwrite(debug_out_path.replace('.jpg', '{}.jpg'.format(quadrant)), roiBlurThresh)
-        return None
-    # Label each separate zones on the mask (The black background + the white blobs)
-    lenLabels, labels = cv2.connectedComponents(hsvMask)
-    # logger.debug("Nb of labels : %d", lenLabels)
+    debug_quad_path = debug_out_path.replace('.jpg', '{}.jpg'.format(quadrant))
+    for hsvMask, bands in _get_hue_mask(hsv_roiBlurThresh, bandsize=23):
+        if visual_debug: cv2.imshow(quadrant, hsvMask); cv2.waitKey(0)
+        for spot, center, start, stop in _get_white_spots(hsvMask):
+            spot.dtype = np.uint8
+            if visual_debug: cv2.imshow("{} : spot".format(quadrant), cv2.imdecode(np.fromiter(spot, dtype=np.uint8), cv2.IMREAD_GRAYSCALE)); cv2.waitKey(0)
+            if isMarkerMask(spot[start[0]:stop[0], start[1]:stop[1]]):
+                y, x = np.round(center).astype("int")  # y, x
+                debug_roi = cv2.drawMarker(cv2.cvtColor(hsvMask, cv2.COLOR_GRAY2BGR), (x, y), (0, 0, 255), cv2.MARKER_CROSS)
+                cv2.imwrite(debug_quad_path, debug_roi)
+                return dict(pos=center, )
+    # No marker found
+    cv2.imwrite(debug_quad_path, roiBlurThresh)
+    return None
 
-    unique_labels, counts_elements = np.unique(labels, return_counts=True)
-    # logger.debug("Nb of each labels : %s", counts_elements)
-    # Sort out the most common (background black) label by setting it's freq to 0
-    black_label_index = np.argmax(counts_elements)
-    counts_elements[black_label_index] = 0
-    # Get the second most common label (The biggest white blob)
-    most_present_label = unique_labels[np.argmax(counts_elements)]
-    # get the geometrical center of that blob
-    non_zeros = np.transpose(np.nonzero(labels == most_present_label))
-    center = (np.max(non_zeros, axis=0) + np.min(non_zeros, axis=0)) / 2
-    # TODO extra precision : apply marker_mask to find more precise location to the marker
-
-    # ensure at least some circles were found
-    if debug_out_path is not None:
-        debug_quad_path = debug_out_path.replace('.jpg', '{}.jpg'.format(quadrant))
-        if center is None:
-            cv2.imwrite(debug_quad_path, hsvMask)
-            # debugShow(roiBlurOtsuBand, "shape")
-        else:
-            y, x = np.round(center).astype("int") # y, x
-            debug_roi = cv2.drawMarker(cv2.cvtColor(hsvMask, cv2.COLOR_GRAY2BGR), (x, y), (0, 0, 255), cv2.MARKER_CROSS)
-            cv2.imwrite(debug_quad_path, debug_roi)
-            # debugShow(debug_roi, "shape")
-    if center is None: return None  # hue_lower=hue_lower, pixels=affected, )
-    else:              return dict(pos=center, )  # pixels=affected, hue_lower=hue_lower)
-
-def isMarkerMask(mask, d_min, d_max):
+def isMarkerMask(mask, d_min=10, d_max=60, visual_debug=False):
     """
     Tests the mask to know if it could plausably be a marker
     :param mask: The mask to compare
@@ -309,20 +289,26 @@ def isMarkerMask(mask, d_min, d_max):
     :return: True if it is a marker (circle-ish), False if not
     :rtype: generator[bool]
     """
-    marker_mask_tester = cv2.imread(os.path.join(os.path.dirname(__file__), "marker_mask"))
+    path = os.path.join(os.path.dirname(__file__), "marker_mask.bmp")
+    marker_mask_tester = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+    h1, w1 = marker_mask_tester.shape[:2]
+    h2, w2 = mask.shape[:2]
+    if h2 > h1 or w2 > w1:
+        return False
     # todo resize mask to correct size
-    # todo crop / resize mask to same size as marker_mask_tester
-    # Tests if the mask is completely inside the marker_mask_tester
-    if isinstance(mask, np.ndarray):
-        yield all(mask == cv2.bitwise_and(marker_mask_tester, mask))
-    elif isinstance(mask, Iterable):
-        for _mask in mask:
-            assert(isinstance(_mask, np.ndarray))
-            yield all(_mask == cv2.bitwise_and(marker_mask_tester, _mask))
-    else:
-        raise TypeError("Expected a numpy array or a sequence of numpy arrays")
+    # crop / resize mask to same size as marker_mask_tester
 
-def _get_hue_mask(hsv_roi, bandsize=11, pixTrigAmount=500, pixTooMany=3000): #(hsv_roi: np.ndarray, bandsize=11, pixTrigAmount=500, pixTooMany=3000):
+    # Center the mask on a canvas the size of the test mask
+    marker = np.zeros(marker_mask_tester.shape[:2], dtype=np.uint8)
+    offH, offW = (h1 - h2)//2, (w1-w2)//2
+    marker[offH:h2+offH, offW:w2+offW] = mask
+    if visual_debug: cv2.imshow("My marker", marker * 255)
+    # Tests if the mask is completely inside the marker_mask_tester,
+    # i.e. it didn't change after applying the mask
+    return np.all(marker == cv2.bitwise_and(marker_mask_tester, marker))
+
+def _get_hue_mask(hsv_roi, bandsize=11, pixTrigAmount=MIN_MARKER_PIX):
+    #(hsv_roi: np.ndarray, bandsize=11, pixTrigAmount=500, pixTooMany=3000):
     """
     Returns hue mask with dynamic hue range. Tries to find the right amount of pixels in a given hue window
     not enough pixels have been found (less than PIXEL_THRESHOLD_UPPER)
@@ -348,41 +334,34 @@ def _get_hue_mask(hsv_roi, bandsize=11, pixTrigAmount=500, pixTooMany=3000): #(h
         _bounds = None
         _prev_mask = None
         _prev_bounds = None
-        pix_amount = -1
         for mask, bounds in maskGenerator:
             # debug_logger().debug("Bounds :\n%s\n%s" % bounds)
             # debugShow(maskedImg, "maskedImg")
             coloredPix = np.count_nonzero(mask) # # counts for each value of h s and v
             if not trigger and coloredPix > pixTrigAmount:
-                # print("##########triggered : ", coloredPix)
                 # The mask has a minimum amount of pixels & the pixel count is increasing
                 trigger = True
-                pix_amount = coloredPix
                 _mask, _bounds = mask, bounds
-            elif trigger and (pix_amount == -1 or coloredPix > pix_amount):
-                # print("trigger : {}, better pixies amount : {} < {}".format(trigger, pix_amount, coloredPix))
-                # The mask has a minimum amount of pixels and is still growing
-                pix_amount = coloredPix
-                _mask, _bounds = mask, bounds
-            elif trigger and pix_amount > coloredPix:
-                # The amount of pixels on the mask is now decreasing
+            elif trigger:
                 # Merge with previous masks to maximise the quality of the circle
                 _lb, _ub = np.asarray(_bounds).tolist()
                 lb, ub = np.asarray(bounds).tolist()
                 if _prev_mask is None:
                     # _mask cannot be None
-                    ret_bounds = (np.asarray(min(lb, _lb)), np.asarray(max(_ub, ub)))
-                    return cv2.bitwise_or(_mask, mask), ret_bounds
+                    ret_bounds = (np.asarray(map(min, zip(lb, _lb))), np.asarray(map( max, zip(_ub, ub))))
+                    yield cv2.bitwise_or(_mask, mask), ret_bounds
+                    trigger = False
                 else:
-
                     _prev_lb, _prev_ub = np.asarray(_prev_bounds).tolist()
-                    ret_bounds = tuple(map(np.asarray, [min(lb, _lb, _prev_lb),
-                                                        max(ub, _ub, _prev_ub)]))
+                    ret_bounds = tuple(map(np.asarray, [map(min, zip(lb, _lb, _prev_lb)),
+                                                        map(max, zip(ub, _ub, _prev_ub))]))
                     # the previous img
-                    return reduce(cv2.bitwise_or, (_prev_mask, _mask, mask)), ret_bounds
-                    # TODO Yield in order to cycle through local maximas
+                    yield reduce(cv2.bitwise_or, (_prev_mask, _mask, mask)), ret_bounds
+                    trigger = False
+            _mask, _bounds = mask, bounds
             _prev_mask, _prev_bounds = _mask, _bounds
-        return _mask, _bounds
+        if trigger: yield _mask, _bounds
+        # else: print("No suitable mask found")
 
     # itertools.chain does not chain generators
     def concatGen(generators):
@@ -398,8 +377,8 @@ def _get_hue_mask(hsv_roi, bandsize=11, pixTrigAmount=500, pixTooMany=3000): #(h
                                        # High light situaton : Markers always have a high value and broad variety of saturation
                                        _slidingHueMask(hsv_roi, bandsize+5, sBound=(40, 255), vBound=(180, 255), dS=15, dV=15, ascending=False),
                                        # Cold to neutral and dim light doesn't make the markers pop out as well :
-                                       # Saturation is bad, but Hue is usually pretty high
-                                       _slidingHueMask(hsv_roi, bandsize+4, hBound=(145, 190), sBound=(50, 220), vBound=(60, 200), dS=20, dV=20),
+                                       # Saturation is bad
+                                       _slidingHueMask(hsv_roi, bandsize+4, hBound=(110, 190), sBound=(50, 240), vBound=(60, 220), dS=20, dV=20),
                                        ]))
 
 def _slidingHueMask(hsv_roi, bandSize, hBound=None, sBound=(0, 255), vBound=(0, 255), dS=5, dV=4, ascending=True, refine=-1):
@@ -505,6 +484,22 @@ def _warpImgByCorners(image, corners):
     # compute warped image
     warpedImg = cv2.warpPerspective(image, transMatrix, (maxWidth, maxHeight))
     return warpedImg
+
+def _get_white_spots(mask, min_pix=MIN_MARKER_PIX, max_pix=MAX_MARKER_PIX):
+    """Iterates over the white connected spots on the picture (aka white blobs)"""
+    # Label each separate zones on the mask (The black background + the white blobs)
+    lenLabels, labels = cv2.connectedComponents(mask)
+    unique_labels, counts_elements = np.unique(labels, return_counts=True)
+    # The filter also filters out the black background
+    filtered_elm = filter(lambda (count, _): max_pix > count > min_pix, zip(counts_elements, unique_labels))
+    unique_labels = [label for _, label in sorted(filtered_elm)]
+    for label in unique_labels:
+        bool_connected_spot = labels == label
+        # get the geometrical center of that blob
+        non_zeros = np.transpose(np.nonzero(bool_connected_spot))
+        start, stop = np.min(non_zeros, axis=0) , np.max(non_zeros, axis=0)
+        center = (start + stop) / 2
+        yield bool_connected_spot, center, start, stop
 
 def _debug_drawMarkers(raw_img, markers):
     """Draw the markers onto an image"""
