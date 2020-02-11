@@ -224,10 +224,10 @@ $(function(){
 			let colFound = self._getColorsOfSelector('.vector_outline', 'stroke', snap.select('#userContent'));
 			return colFound;
 		};
-		
+
 		self._getColorsOfSelector = function(selector, color_attr = 'stroke', elem = null){
 			let root = elem === null ? snap : elem;
-			
+
 			let colors = [];
 			let items = root.selectAll(selector + '['+color_attr+']');
 			for (var i = 0; i < items.length; i++) {
@@ -263,7 +263,7 @@ $(function(){
 			y = Math.min(y, self.workingAreaHeightMM());
 			return {x:x, y:y};
 		};
-		
+
 		self.move_laser_to_xy = function(x,y){
 			if(self.state.isOperational() && !self.state.isPrinting() && !self.state.isLocked()){
 				$.ajax({
@@ -277,7 +277,7 @@ $(function(){
 				console.warn("Move Laser command while machine state not idle: " + self.state.stateString());
 			}
 		};
-		
+
 		self.crosshairX = function(){
 			var pos = self.state.currentPos();
 			if(pos !== undefined){
@@ -310,7 +310,7 @@ $(function(){
 		};
 
 		/**
-		 * 
+		 *
 		 * @param {type} file (OctoPrint "file" object - example: {url: elem.url, origin: elem.origin, name: name, type: "split", refs:{download: elem.url}};)
 		 * @returns {Boolean}
 		 */
@@ -614,7 +614,7 @@ $(function(){
 						}
 					}
 				}
-				
+
 				newSvg.attr(newSvgAttrs);
 				if (switches.bakeTransforms) {
 					window.mrbeam.bake_progress = 0;
@@ -685,7 +685,7 @@ $(function(){
 					myElem.remove();
 				}
 			}
-			
+
 			// remove other unnecessary or invisible ("display=none") elements
 			let removeElements = fragment.selectAll('metadata, script, [display=none], [style*="display:none"]');
 			for (var i = 0; i < removeElements.length; i++) {
@@ -837,7 +837,7 @@ $(function(){
 		self.splitSVG = function(elem, event, method) {
 			self.abortFreeTransforms();
 			let srcElem = snap.select('#'+elem.previewId);
-			
+
 			let parts;
 			switch(method){
 				case 'stroke-color':
@@ -859,7 +859,7 @@ $(function(){
 					if(parts.length <= 1) failReason = "Not enough native elements.";
 					break;
 			}
-			
+
 			if(parts.length > 1){
 				self.removeSVG(elem);
 				for (let i = 0; i < parts.length; i++) {
@@ -888,17 +888,17 @@ $(function(){
 				let failReason = "";
 				switch (method) {
 					case 'stroke-color':
-						failReason = "Didn't find different stroke colors.";
+						failReason = gettext("Didn't find different stroke colors.");
 						break;
 					case 'non-intersecting':
-						failReason = "Didn't find non-intersecting shapes.";
+						failReason = gettext("Didn't find non-intersecting shapes.");
 						break;
 					case 'divide':
-						failReason = "Looks like a single path.";
+						failReason = gettext("Looks like a single path.");
 				}
 				new PNotify({
 					title: gettext("Element not splittable with this method."),
-					text: gettext("Can't split this design. " + failReason),
+					text: gettext("Can't split this design. %(failReason)s") % failReason,
 					type: "info",
 					hide: true
 				});
@@ -918,7 +918,7 @@ $(function(){
 			file.id = id; // list entry id
 			file.previewId = previewId;
 			file.misfit = false;
-			file.typePath = src.typePath; 
+			file.typePath = src.typePath;
 			newSvg.attr({id: previewId,
 				'mb:id': self._normalize_mb_id(previewId),
 				'mb:clone_of':clone_id,
@@ -940,7 +940,7 @@ $(function(){
 			self._makeItTransformable(newSvg);
 			self.check_sizes_and_placements();
 		};
-		
+
 
 		self.placeSmart = function(elem){ // TODO: bug - should not place outside working area
 			var spacer = 2;
@@ -1165,7 +1165,7 @@ $(function(){
 				self.set_img_sharpen(data.previewId, sharpenVal);
 			}
 		};
-		
+
 		self.imgManualCrop = function(data, event) {
 			if (event.type === 'input' || event.type === 'blur' || event.type === 'keyUp') {
 				let t = parseFloat($('#'+data.id+' .crop_top').val());
@@ -1323,7 +1323,7 @@ $(function(){
 //					imgWrapper.ftReportTransformation();
 //				}, 200);
 				self._makeItTransformable(imgWrapper);
-				
+
 				file.id = id;
 				file.previewId = previewId;
 				file.url = url;
@@ -1401,7 +1401,7 @@ $(function(){
 			var filter = snap.select('#'+self._get_img_filter_id(previewId));
 			filter.select('feConvolveMatrix').attr({kernelMatrix: matrix});
 		};
-		
+
 		self.set_img_crop = function(previewId, top, left, right, bottom){
 			let filter = snap.select('#'+self._get_img_filter_id(previewId));
 			let x = Math.min(left, 100 - right);
@@ -1410,7 +1410,7 @@ $(function(){
 			let height = Math.max(100 - top - bottom, 0);
 			filter.attr({x: left+'%', y: top+'%', width: width+'%', height: height+'%' });
 		};
-		
+
 		self.moveSelectedDesign = function(ifX,ifY){
 			var diff = 2;
 			var transformHandles = snap.select('#handlesGroup');
@@ -1906,7 +1906,7 @@ $(function(){
 			self.svgDPI = self.settings.settings.plugins.mrbeam.svgDPI; // we assign ko function
 			self.dxfScale = self.settings.settings.plugins.mrbeam.dxfScale;
 			self.previewImgOpacity(self.settings.settings.plugins.mrbeam.cam.previewOpacity());
-			
+
 			self.gc_options = ko.computed(function(){
 				return {
 					beamOS: BEAMOS_DISPLAY_VERSION,
@@ -2091,7 +2091,7 @@ $(function(){
 				}
 				console.log("Rendering " + fillings.length + " filled elements.");
 				if(fillAreas){
-					let renderBBoxMM = tmpSvg.getBBox(); // if #712 still fails, fetch this bbox earlier (getCompositionSvg()). 
+					let renderBBoxMM = tmpSvg.getBBox(); // if #712 still fails, fetch this bbox earlier (getCompositionSvg()).
 					tmpSvg.renderPNG(svgWidthPT, svgHeightPT, wMM, hMM, pxPerMM, renderBBoxMM, cb);
 				} else {
 					cb(null)
@@ -2194,8 +2194,8 @@ $(function(){
 			self.currentQuickShapeFile = null;
 			$('#quick_shape_dialog').modal({keyboard: true});
 			$('#quick_shape_dialog').one('hide', self._qs_currentQuickShapeShowTransformHandlesIfNotEmpty);
-			// firing those change events is necessary to work around a bug in chrome|knockout|js. 
-			// Otherwise entering numbers directly does not fire the change event if the number 
+			// firing those change events is necessary to work around a bug in chrome|knockout|js.
+			// Otherwise entering numbers directly does not fire the change event if the number
 			// is accidentially equal to the field content it had before .val(..).
 			$('#quick_shape_rect_w').val(params.rect_w).change();
 			$('#quick_shape_rect_h').val(params.rect_h).change();
@@ -2289,7 +2289,7 @@ $(function(){
 						break;
 				}
 				let stroke = qs_params.stroke ? qs_params.color : 'none';
-				let fill = '#ffffff'; 
+				let fill = '#ffffff';
 				let fill_op = 0;
 				if(qs_params.fill){
 					fill = qs_params.fill_color;
@@ -2636,7 +2636,7 @@ $(function(){
 				self.set_zoom_offY(newOffY);
 			}
 		};
-		
+
 		self.wheel_zoom_monitor = function(target, ev){
 			var wheel = ev.originalEvent.wheelDelta;
 			var targetBBox = ev.currentTarget.getBoundingClientRect();
@@ -2655,7 +2655,7 @@ $(function(){
 				self.set_zoom_offY(newOffY);
 			}
 		};
-		
+
 		self._get_pointer_event_position_MM = function(event, target){
 			var percPos = self._get_pointer_event_position_Percent(event, target);
 			var x = percPos.x * self.workingAreaWidthMM() * self.zoom() + self.zoomOffX();
