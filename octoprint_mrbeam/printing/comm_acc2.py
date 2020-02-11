@@ -1303,13 +1303,14 @@ class MachineCom(object):
 			try:
 				# TODO: translating these doesn't work since we do not have a flash request context
 				#       meaning we don't know the user's language here.
-				msg = gettext("The update of the internal component GRBL failed.{br}It is still save to use your Mr Beam II. However, if this error persists consider to contact the {opening_tag}Mr Beam support team{closing_tag}.{br}{br}{strong_opening_tag}Error:{strong_closing_tag}{br}{error}").format(
+				msg = gettext("The update of the internal component GRBL failed.{br}It is still save to use your Mr Beam II. However, if this error persists consider to contact the {opening_tag}Mr Beam support team{closing_tag}.{br}{br}{strong_opening_tag}Error:{strong_closing_tag}{br}{error}".format(
 							opening_tag= '<a href="http://mr-beam.org/support" target="_blank">',
 		                    closing_tag='</a>',
 		                    error="GRBL update '{}' failed: {}...".format(grbl_file, output[:120]),
 							br="<br/>",
 							strong_opening_tag="<strong>",
 							strong_closing_tag="</strong>")
+				)
 				_mrbeam_plugin_implementation.notify_frontend(
 					title=gettext("GRBL Update failed"),
 					text=msg,

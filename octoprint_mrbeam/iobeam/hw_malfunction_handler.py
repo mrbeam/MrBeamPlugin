@@ -146,17 +146,17 @@ class HwMalfunctionHandler(object):
 			params['error'] = err if isinstance(err, basestring) else ';'.join(err)
 		full_url = "{url}?{params}".format(url=url, params=urllib.urlencode(params))
 		if specific_url:
-			return "<br /><br />" + gettext('For more information check out this %(opening_tag)sKnowledge Base article%(closing_tag)s') % {
+			return "<br /><br />" + gettext('For more information check out this %(opening_tag)sKnowledge Base article%(closing_tag)s' % {
 				'opening_tag': '<a href="{}" target="_blank"><strong>'.format(full_url),
 				'closing_tag': '</strong></a>',
 				'line_break': '<br />'
-			}
+			})
 		else:
 			return "<br /><br />" + gettext(
-				'Browse our %(opening_tag)sKnowledge Base%(closing_tag)s') % {
+				'Browse our %(opening_tag)sKnowledge Base%(closing_tag)s' % {
 					'opening_tag': '<a href="{}" target="_blank"><strong>'.format(full_url),
 					'closing_tag': '</strong></a>',
-				}
+				})
 
 	def _get_error_text(self, msg):
 		msg = msg if isinstance(msg, basestring) else '<br />'.join(msg)
