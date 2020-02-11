@@ -267,7 +267,7 @@ def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d
     hsv_roiBlurThresh     =  cv2.cvtColor(    roiBlurThresh,     cv2.COLOR_BGR2HSV)
     # Use a sliding hue mask with a local maxima detector to find the magenta markers
     debug_quad_path = debug_out_path.replace('.jpg', '{}.jpg'.format(quadrant))
-    for hsvMask, bands in _get_hue_mask(hsv_roiBlurThresh, bandsize=23, pixTrigAmount = PIXEL_THRESHOLD_MIN):
+    for hsvMask, bands in _get_hue_mask(hsv_roiBlurThresh, bandsize=23):
         if visual_debug: cv2.imshow(quadrant, hsvMask); cv2.waitKey(0)
         for spot, center, start, stop in _get_white_spots(hsvMask):
             spot.dtype = np.uint8
@@ -290,7 +290,6 @@ def isMarkerMask(mask, d_min=10, d_max=60, visual_debug=False):
     :rtype: generator[bool]
     """
     path = os.path.join(os.path.dirname(__file__), "marker_mask.bmp")
-    print("path : ", path)
     marker_mask_tester = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
     h1, w1 = marker_mask_tester.shape[:2]
     h2, w2 = mask.shape[:2]
@@ -299,15 +298,17 @@ def isMarkerMask(mask, d_min=10, d_max=60, visual_debug=False):
     # todo resize mask to correct size
     # crop / resize mask to same size as marker_mask_tester
 
-    # Center the mask on canvas the size of the test mask
+    # Center the mask on a canvas the size of the test mask
     marker = np.zeros(marker_mask_tester.shape[:2], dtype=np.uint8)
     offH, offW = (h1 - h2)//2, (w1-w2)//2
     marker[offH:h2+offH, offW:w2+offW] = mask
     if visual_debug: cv2.imshow("My marker", marker * 255)
-    # Tests if the mask is completely inside the marker_mask_tester
+    # Tests if the mask is completely inside the marker_mask_tester,
+    # i.e. it didn't change after applying the mask
     return np.all(marker == cv2.bitwise_and(marker_mask_tester, marker))
 
-def _get_hue_mask(hsv_roi, bandsize=11, pixTrigAmount=500, pixTooMany=3000): #(hsv_roi: np.ndarray, bandsize=11, pixTrigAmount=500, pixTooMany=3000):
+def _get_hue_mask(hsv_roi, bandsize=11, pixTrigAmount=MIN_MARKER_PIX):
+    #(hsv_roi: np.ndarray, bandsize=11, pixTrigAmount=500, pixTooMany=3000):
     """
     Returns hue mask with dynamic hue range. Tries to find the right amount of pixels in a given hue window
     not enough pixels have been found (less than PIXEL_THRESHOLD_UPPER)
@@ -337,7 +338,6 @@ def _get_hue_mask(hsv_roi, bandsize=11, pixTrigAmount=500, pixTooMany=3000): #(h
             # debug_logger().debug("Bounds :\n%s\n%s" % bounds)
             # debugShow(maskedImg, "maskedImg")
             coloredPix = np.count_nonzero(mask) # # counts for each value of h s and v
-            # print("    Pixel count : %s" % coloredPix)
             if not trigger and coloredPix > pixTrigAmount:
                 # The mask has a minimum amount of pixels & the pixel count is increasing
                 trigger = True
@@ -489,13 +489,10 @@ def _get_white_spots(mask, min_pix=MIN_MARKER_PIX, max_pix=MAX_MARKER_PIX):
     """Iterates over the white connected spots on the picture (aka white blobs)"""
     # Label each separate zones on the mask (The black background + the white blobs)
     lenLabels, labels = cv2.connectedComponents(mask)
-    # logger.debug("Nb of labels : %d", lenLabels)
     unique_labels, counts_elements = np.unique(labels, return_counts=True)
     # The filter also filters out the black background
     filtered_elm = filter(lambda (count, _): max_pix > count > min_pix, zip(counts_elements, unique_labels))
     unique_labels = [label for _, label in sorted(filtered_elm)]
-    # logging.debug("Nb of elm in filtered labels : %s" % [count for count, _ in filtered_elm])
-    # print("Nb of elm in filtered labels : %s" % [count for count, _ in filtered_elm])
     for label in unique_labels:
         bool_connected_spot = labels == label
         # get the geometrical center of that blob
