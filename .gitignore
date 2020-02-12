@@ -21,6 +21,7 @@ octoprint_mrbeam/gcodegenerator/simplestyle.pyc
 octoprint_mrbeam/gcodegenerator/simpletransform.pyc
 octoprint_mrbeam/printer.pyc
 octoprint_mrbeam/profile.pyc
+octoprint_mrbeam/test/cam/**.jpg
 *.pyc
 *.swp
 .idea
