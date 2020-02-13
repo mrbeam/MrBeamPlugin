@@ -383,7 +383,7 @@ def _get_hue_mask(hsv_roi, pixTrigAmount=MIN_MARKER_PIX):
                                        _slidingHueMask(hsv_roi, steps=4, hBound=(110, 190), sBound=(40, 240), vBound=(40, 220)),
                                        ]))
 
-def _slidingHueMask(hsv_roi, steps, hBound=None, sBound=None, vBound=None, ascending=True):
+def _slidingHueMask(hsv_roi, steps, hBound=(HUE_BAND_LB, HUE_BAND_UB), sBound=(30, 255), vBound=(30, 255), ascending=True):
     #(hsv_roi: np.ndarray, bandSize: int, sBound=(0, 255), vBound=(0, 255), dS=5, dV=4, ascending= True, refine=-1):
     """
     Generates masks of the input image by thresholding the image hue inside a certain range.
@@ -394,11 +394,9 @@ def _slidingHueMask(hsv_roi, steps, hBound=None, sBound=None, vBound=None, ascen
     :rtype numpy.ndarray, tuple[np.ndarray]
     """
     if ascending:
-        if hBound is not None: h1, h2 = hBound
-        else: h1, h2 = HUE_BAND_LB, HUE_BAND_UB
+        h1, h2 = min(hBound), max(hBound)
     else:
-        if hBound is not None: h2, h1 = hBound
-        else: h2, h1 = HUE_BAND_LB, HUE_BAND_UB
+        h2, h1 = min(hBound), max(hBound)
     bands = np.linspace(h1, h2, num=steps, endpoint=True)
     for i, band in enumerate(bands[:-1]):
         if ascending: l_i, u_i = i, i+1
