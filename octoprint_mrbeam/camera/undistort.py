@@ -267,7 +267,7 @@ def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d
     hsv_roiBlurThresh     =  cv2.cvtColor(    roiBlurThresh,     cv2.COLOR_BGR2HSV)
     # Use a sliding hue mask with a local maxima detector to find the magenta markers
     debug_quad_path = debug_out_path.replace('.jpg', '{}.jpg'.format(quadrant))
-    for hsvMask, bands in _get_hue_mask(hsv_roiBlurThresh, bandsize=23):
+    for hsvMask, bands in _get_hue_mask(hsv_roiBlurThresh):
         if visual_debug: cv2.imshow(quadrant, hsvMask); cv2.waitKey(0)
         for spot, center, start, stop in _get_white_spots(hsvMask):
             spot.dtype = np.uint8
@@ -309,7 +309,7 @@ def isMarkerMask(mask, d_min=10, d_max=60, visual_debug=False):
     # i.e. it didn't change after applying the mask
     return np.all(marker == cv2.bitwise_and(marker_mask_tester, marker))
 
-def _get_hue_mask(hsv_roi, bandsize=11, pixTrigAmount=MIN_MARKER_PIX):
+def _get_hue_mask(hsv_roi, pixTrigAmount=MIN_MARKER_PIX):
     #(hsv_roi: np.ndarray, bandsize=11, pixTrigAmount=500, pixTooMany=3000):
     """
     Returns hue mask with dynamic hue range. Tries to find the right amount of pixels in a given hue window
@@ -375,54 +375,36 @@ def _get_hue_mask(hsv_roi, bandsize=11, pixTrigAmount=MIN_MARKER_PIX):
             for elm in concatGen(generators[1:]):
                 yield elm
 
-    return maximisePixCount(concatGen([_slidingHueMask(hsv_roi, bandsize+2, sBound=(60, 255), vBound=(60, 255), dS=4, dV=4),
+    return maximisePixCount(concatGen([_slidingHueMask(hsv_roi, steps=4, sBound=(60, 255), vBound=(60, 255)),
                                        # High light situaton : Markers always have a high value and broad variety of saturation
-                                       _slidingHueMask(hsv_roi, bandsize+5, sBound=(40, 255), vBound=(180, 255), dS=15, dV=15, ascending=False),
-                                       # Cold to neutral and dim light doesn't make the markers pop out as well :
-                                       # Saturation is bad
-                                       _slidingHueMask(hsv_roi, bandsize+4, hBound=(110, 190), sBound=(50, 240), vBound=(60, 220), dS=20, dV=20),
+                                       _slidingHueMask(hsv_roi, steps=3, sBound=(40, 255), vBound=(180, 255), ascending=False),
+                                       # dim light doesn't make the markers pop out as well :
+                                       _slidingHueMask(hsv_roi, steps=4, hBound=(110, 190), sBound=(40, 240), vBound=(40, 220)),
+                                       # Last hope
+                                       _slidingHueMask(hsv_roi, steps=4, hBound=(110, 200), sBound=(30, 255), vBound=(20, 255)),
                                        ]))
 
-def _slidingHueMask(hsv_roi, bandSize, hBound=None, sBound=(0, 255), vBound=(0, 255), dS=5, dV=4, ascending=True, refine=-1):
+def _slidingHueMask(hsv_roi, steps, hBound=(HUE_BAND_LB, HUE_BAND_UB), sBound=(30, 255), vBound=(30, 255), ascending=True):
     #(hsv_roi: np.ndarray, bandSize: int, sBound=(0, 255), vBound=(0, 255), dS=5, dV=4, ascending= True, refine=-1):
     """
     Generates masks of the input image by thresholding the image hue inside a certain range.
     That range is then slided around inside HUE_BAND_LB and HUE_BAND_UP. (wraps around when reaching
     the maximum hue of 180 in order to be circular)
-    Slides with increments of bandSize / 2
-    if refine:
-        after sliding, takes the best performing band, and perform a local maxima search with the dichotomic search
+    Slides with given number of steps
     :returns
     :rtype numpy.ndarray, tuple[np.ndarray]
     """
     if ascending:
-        if hBound is not None: h1, h2 = hBound
-        else: h1, h2 = HUE_BAND_LB, HUE_BAND_UB
-        s1, s2 = sBound
-        v1, v2 = vBound
+        h1, h2 = min(hBound), max(hBound)
     else:
-        if hBound is not None: h2, h1 = hBound
-        else: h2, h1 = HUE_BAND_LB, HUE_BAND_UB
-        s1, s2 = sBound[::-1]
-        v1, v2 = vBound[::-1]
-    bands = np.linspace(h1, h2, int(abs(h2-h1) / bandSize * 2) + 1)
-    # bands.append(h2)
-    # subdivide Saturation and Hue in same number of bands (S growing, H decreasing)
-    sBand = np.linspace(s1, s2, len(bands)).astype(int)
-    # dS = 5 # expand Saturation filter window by this size
-    vBand = np.linspace(v2, v1, len(bands)).astype(int)
-    # dV = 4 # expand Value filter window by this size
-    lb, ub, _lb, _ub = None, None, None, None
-    for i, band in enumerate(bands[:-2]):
-        if ascending:
-            lb = np.array([bands[i]  ,     sBand[i]  -dS,           vBand[i+2]-dV], np.uint8)
-            ub = np.array([bands[i+2], min(sBand[i+2]+dS, 255), min(vBand[i]  +dV, 255)], np.uint8)
-        else:
-            ub = np.array([bands[i]  , min(sBand[i]  +dS, 255), min(vBand[i+2]+dV, 255)], np.uint8)
-            lb = np.array([bands[i+2],     sBand[i+2]-dS,           vBand[i]  -dV], np.uint8)
+        h2, h1 = min(hBound), max(hBound)
+    bands = np.linspace(h1, h2, num=steps, endpoint=True)
+    for i, band in enumerate(bands[:-1]):
+        if ascending: l_i, u_i = i, i+1
+        else:         l_i, u_i = i+1, i
+        lb = np.array([bands[l_i], sBound[0], vBound[0]], np.uint8)
+        ub = np.array([bands[u_i], sBound[1], vBound[1]], np.uint8)
         mask = _inRange(hsv_roi, lb, ub)
-        # print("lb {} ub {}".format(lb, ub))
-        # print("mask pix number ", np.count_nonzero(mask))
         yield mask, (lb, ub)
 
 def _inRange(img, lb, ub, colortype='hsv'):
