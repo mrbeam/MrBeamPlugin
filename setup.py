@@ -62,7 +62,8 @@ additional_setup_parameters = {'package_data': {
 									                     'files/grbl/*.hex',
 									                     'files/migrate/*',
 									                     'files/migrate_logrotate/*',
-														 'files/material_settings/*']},
+									                     'files/material_settings/*',
+									                     'files/camera/*']},
 									'setup_requires': ['numpy==1.11.2']}
 
 ########################################################################################################################
