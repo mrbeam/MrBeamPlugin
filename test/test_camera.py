@@ -9,7 +9,7 @@ from octoprint_mrbeam.camera import undistort
 from octoprint_mrbeam.printing.profile import LaserCutterProfileManager
 import cv2
 
-CAM_FOLDER = path.join(path.dirname(path.abspath(__file__)), "cam")
+CAM_FOLDER = path.join(path.dirname(path.abspath(__file__)), "files/cam")
 
 path_to_cam_params = path.join(CAM_FOLDER, "lens_correction_2048x1536.npz")
 path_to_pic_settings = path.join(CAM_FOLDER, "pic_settings.yaml")
