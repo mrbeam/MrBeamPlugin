@@ -378,9 +378,10 @@ def _get_hue_mask(hsv_roi, pixTrigAmount=MIN_MARKER_PIX):
     return maximisePixCount(concatGen([_slidingHueMask(hsv_roi, steps=4, sBound=(60, 255), vBound=(60, 255)),
                                        # High light situaton : Markers always have a high value and broad variety of saturation
                                        _slidingHueMask(hsv_roi, steps=3, sBound=(40, 255), vBound=(180, 255), ascending=False),
-                                       # Cold to neutral and dim light doesn't make the markers pop out as well :
-                                       # Last hope
+                                       # dim light doesn't make the markers pop out as well :
                                        _slidingHueMask(hsv_roi, steps=4, hBound=(110, 190), sBound=(40, 240), vBound=(40, 220)),
+                                       # Last hope
+                                       _slidingHueMask(hsv_roi, steps=4, hBound=(110, 200), sBound=(30, 255), vBound=(20, 255)),
                                        ]))
 
 def _slidingHueMask(hsv_roi, steps, hBound=(HUE_BAND_LB, HUE_BAND_UB), sBound=(30, 255), vBound=(30, 255), ascending=True):
