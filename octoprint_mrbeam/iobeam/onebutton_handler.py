@@ -7,6 +7,7 @@ from octoprint.filemanager import valid_file_type
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
+from octoprint_mrbeam.user_notification_system import LegacyNotification
 from flask.ext.babel import gettext
 from octoprint_mrbeam.printing.comm_acc2 import PrintingGcodeFromMemoryInformation
 
@@ -56,6 +57,7 @@ class OneButtonHandler(object):
 		self._file_manager = file_manager
 		self._settings = settings
 		self._printer = printer
+		self._user_notification_system = plugin.user_notification_system
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.onebutton_handler")
 		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
 
@@ -366,8 +368,8 @@ class OneButtonHandler(object):
 	def _test_conditions(self, file):
 		self._logger.debug("_test_conditions() laser file %s, printer state: %s", file, self._printer.get_state_id())
 		self._logger.debug("file %s, class %s, str %s", file, file.__class__, str(file))
-		
-		if (str(file) is "in_memory_gcode"): # should be (but doesn't work) isinstance(PrintingGcodeFromMemoryInformation): 
+
+		if (str(file) is "in_memory_gcode"): # should be (but doesn't work) isinstance(PrintingGcodeFromMemoryInformation):
 			if not self._printer.is_operational() or not self._printer.get_state_id() == "OPERATIONAL":
 				raise Exception("ReadyToLaser: printer is not ready. printer state is: %s" % self._printer.get_state_id())
 
@@ -380,7 +382,7 @@ class OneButtonHandler(object):
 				raise Exception("ReadyToLaser: file not found '%s'" % file)
 			if not valid_file_type(file, type="machinecode"):
 				raise Exception("ReadyToLaser: file is not of type machine code")
-			
+
 
 	def _check_system_integrity(self):
 		'''
@@ -390,7 +392,11 @@ class OneButtonHandler(object):
 		temp_ok = self._temperature_manager.is_temperature_recent()
 		if not temp_ok:
 			msg = "iobeam: Laser temperature not available"
-			self._plugin.notify_frontend(title="Error", text=msg, type='error')
+			self._user_notification_system.show_notifications(LegacyNotification(
+				title="Error",
+				text=msg,
+				pnotify_type='error',
+			))
 			raise Exception(msg)
 
 		iobeam_ok = self._iobeam.is_iobeam_version_ok()
@@ -400,7 +406,7 @@ class OneButtonHandler(object):
 
 		if self._hw_malfunction.hardware_malfunction and not self.hardware_malfunction_notified:
 			self._logger.error("Hardware Malfunction: Not possible to start laser job.")
-			self._plugin._replay_stored_frontend_notification()
+			self._user_notification_system.replay_notifications()
 			self.hardware_malfunction_notified = True
 			raise Exception("Hardware Malfunction: Not possible to start laser job.")
 
