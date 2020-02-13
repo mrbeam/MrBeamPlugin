@@ -337,7 +337,7 @@ def _get_hue_mask(hsv_roi, pixTrigAmount=MIN_MARKER_PIX):
         _prev_mask = None
         _prev_bounds = None
         for mask, bounds in maskGenerator:
-            debug_logger().debug("Bounds :\n%s\n%s" % bounds)
+            # debug_logger().debug("Bounds :\n%s\n%s" % bounds)
             # debugShow(maskedImg, "maskedImg")
             coloredPix = np.count_nonzero(mask) # # counts for each value of h s and v
             if not trigger and coloredPix > pixTrigAmount:
