@@ -291,6 +291,8 @@ def isMarkerMask(mask, d_min=10, d_max=60, visual_debug=False):
     """
     path = os.path.join(os.path.dirname(__file__), "../files/camera/marker_mask.bmp")
     marker_mask_tester = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+    if marker_mask_tester is None:
+        raise OSError("File not found : %s" % path)
     h1, w1 = marker_mask_tester.shape[:2]
     h2, w2 = mask.shape[:2]
     if h2 > h1 or w2 > w1:
