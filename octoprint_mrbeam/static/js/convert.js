@@ -80,7 +80,7 @@ $(function(){
 		self.save_custom_material_name = ko.observable("");
 		self.save_custom_material_thickness = ko.observable(1);
 		self.save_custom_material_color = ko.observable("#000000");
-		
+
 
 		self.hasCompressor = ko.observable(false);
 
