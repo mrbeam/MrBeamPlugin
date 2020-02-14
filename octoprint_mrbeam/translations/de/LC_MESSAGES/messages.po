@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-02-11 15:02+0100\n"
-"PO-Revision-Date: 2020-02-11 15:03+0100\n"
+"POT-Creation-Date: 2020-02-14 11:27+0100\n"
+"PO-Revision-Date: 2020-02-14 13:09+0100\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -54,18 +54,20 @@ msgstr ""
 msgid "Hardware malfunction"
 msgstr "Hardware-Funktionsstörung"
 
-#: octoprint_mrbeam/iobeam/hw_malfunction_handler.py:149
+#: octoprint_mrbeam/iobeam/hw_malfunction_handler.py:150
 #, python-format
 msgid ""
 "For more information check out this %(opening_tag)sKnowledge Base article"
-"%(closing_tag)s"
+"%(closing_tag)sopening_tag<a href=\"{}\" target=\"_blank\"><strong>"
 msgstr ""
 "Weitere Informationen findest Du in diesem %(opening_tag)sKnowledge Base-"
 "Artikel%(closing_tag)s"
 
-#: octoprint_mrbeam/iobeam/hw_malfunction_handler.py:155
+#: octoprint_mrbeam/iobeam/hw_malfunction_handler.py:157
 #, python-format
-msgid "Browse our %(opening_tag)sKnowledge Base%(closing_tag)s"
+msgid ""
+"Browse our %(opening_tag)sKnowledge Base%(closing_tag)sopening_tag<a href="
+"\"{}\" target=\"_blank\"><strong>"
 msgstr "Gehe zu unserer %(opening_tag)sKnowledge Base%(closing_tag)s"
 
 #: octoprint_mrbeam/iobeam/hw_malfunction_handler.py:163
@@ -109,7 +111,7 @@ msgid "Please contact Mr Beam support team and attach octoprint.log."
 msgstr ""
 "Bitte kontaktiere das Mr Beam Support-Team und hänge das octoprint.log an."
 
-#: octoprint_mrbeam/printing/comm_acc2.py:1306
+#: octoprint_mrbeam/printing/comm_acc2.py:1309
 msgid ""
 "The update of the internal component GRBL failed.{br}It is still save to use "
 "your Mr Beam II. However, if this error persists consider to contact the "
@@ -122,7 +124,7 @@ msgstr ""
 "kontaktieren{closing_tag}.{br}{br}{strong_opening_tag}Fehler:"
 "{strong_closing_tag}{br}{error}"
 
-#: octoprint_mrbeam/printing/comm_acc2.py:1314
+#: octoprint_mrbeam/printing/comm_acc2.py:1315
 msgid "GRBL Update failed"
 msgstr "GRBL-Update fehlgeschlagen"
 
@@ -1234,13 +1236,25 @@ msgstr "Stern"
 msgid "Heart"
 msgstr "Herz"
 
+#: octoprint_mrbeam/static/js/working_area.js:869
+msgid "No different line colors found."
+msgstr "Keine unterschiedlichen Linienfarben gefunden."
+
+#: octoprint_mrbeam/static/js/working_area.js:872
+msgid "No non-intersecting shapes found."
+msgstr "Keine nicht-überlappenden Formen gefunden."
+
+#: octoprint_mrbeam/static/js/working_area.js:875
+msgid "Looks like a single path."
+msgstr "Sieht nach einem einzigen Pfad aus."
+
 #: octoprint_mrbeam/static/js/working_area.js:878
 msgid "Element not splittable with this method."
 msgstr "Element is nicht zerteilbar mit dieser Methode."
 
 #: octoprint_mrbeam/static/js/working_area.js:879
-msgid "Can't split this design. "
-msgstr "Dieses Design kann nicht zerteilt werden"
+msgid "Can't split this design."
+msgstr "Dieses Design kann nicht zerteilt werden."
 
 #: octoprint_mrbeam/static/js/working_area.js:1199
 #, python-format
