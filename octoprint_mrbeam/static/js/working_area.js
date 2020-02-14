@@ -866,17 +866,17 @@ $(function(){
 				let failReason = "";
 				switch (method) {
 					case 'stroke-color':
-						failReason = "Didn't find different stroke colors.";
+						failReason = gettext("No different line colors found.");
 						break;
 					case 'non-intersecting':
-						failReason = "Didn't find non-intersecting shapes.";
+						failReason = gettext("No non-intersecting shapes found.");
 						break;
 					case 'divide':
-						failReason = "Looks like a single path.";
+						failReason = gettext("Looks like a single path.");
 				}
 				new PNotify({
 					title: gettext("Element not splittable with this method."),
-					text: gettext("Can't split this design. " + failReason),
+					text: gettext("Can't split this design.") + ' ' + failReason,
 					type: "info",
 					hide: true
 				});
