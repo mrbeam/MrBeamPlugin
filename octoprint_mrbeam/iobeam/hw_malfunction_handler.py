@@ -9,7 +9,6 @@ from flask.ext.babel import gettext
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
-from octoprint_mrbeam.user_notification_system import ErrorNotification
 
 # singleton
 _instance = None
@@ -82,27 +81,21 @@ class HwMalfunctionHandler(object):
 		general_malfunctions = []
 		for malfunction_id, data in self._messages_to_show.items():
 			if malfunction_id == self.MALFUNCTION_ID_BOTTOM_OPEN:
-				notifications.append(ErrorNotification(
-					notification_id='err_bottom_open',
-					knowledgebase_url='https://mr-beam.freshdesk.com/support/solutions/articles/43000557280',
-					utm_campaign='hw_malfunction'
-				))
+				notifications.append(self._user_notification_system.get_notification(
+					notification_id='err_bottom_open', replay=True))
 			elif malfunction_id == self.MALFUNCTION_ID_LASERHEADUNIT_MISSING:
-				notifications.append(ErrorNotification(
+				notifications.append(self._user_notification_system.get_notification(
 					notification_id='err_leaserheadunit_missing',
 					err_msg=data.get('msg', None),
-					knowledgebase_url='https://mr-beam.freshdesk.com/support/solutions/articles/43000557279',
-					utm_campaign='hw_malfunction'
+					replay=True,
 				))
 			else:
 				general_malfunctions.append(data.get('msg', None))
 
 		if general_malfunctions:
-			notifications.append(ErrorNotification(
-				notification_id='err_hwardware_malfunction',
-				err_msg=general_malfunctions,
-				knowledgebase_url='https://mr-beam.freshdesk.com/support/solutions/articles/43000557281',
-				utm_campaign='hw_malfunction'
-			))
+			notifications.append(self._user_notification_system.get_notification(
+				notification_id='err_hardware_malfunction', replay=True, err_msg=general_malfunctions))
 
 		self._user_notification_system.show_notifications(notifications)
+
+

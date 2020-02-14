@@ -38,13 +38,36 @@ class UserNotificationSystem(object):
 	def _on_mrbeam_plugin_initialized(self, *args, **kwargs):
 		self._analytics_handler = self._plugin.analytics_handler
 
+	@staticmethod
+	def get_notification(notification_id, err_msg=[], replay=False):
+		return dict(
+			notification_id=notification_id,
+			err_msg=err_msg,
+			replay=replay
+		)
+
+	@staticmethod
+	def get_legacy_notification(title, text, err_msg=[], replay=False, is_err=False):
+		res = dict(
+			title=title,
+			text=text,
+			replay=replay,
+		)
+		if err_msg or is_err:
+			res['type'] = 'error'
+			res['hide'] = False
+			res['err_msg'] = err_msg
+			res['replay'] = True
+		return res
 
 	def show_notifications(self, notifications):
-		if issubclass(type(notifications), Notification):
+		if not isinstance(notifications, list):
 			notifications = [notifications]
 
 		for n in notifications:
-			if n['replay_when_new_client_connects']:
+			if 'notification_id' not in n:
+				n['notification_id'] = 'legacy_{}'.format(uuid.uuid4())
+			if n['replay']:
 				self._stored_notifications[n['notification_id']] = n
 
 		self._send(notifications)
@@ -61,62 +84,4 @@ class UserNotificationSystem(object):
 				notifications=notifications,
 			)
 		))
-
-
-
-class Notification(dict):
-
-	def __init__(self, notification_id, **kwargs):
-		"""
-		Show a frontend notification to the user. (PNotify)
-		!!! All notifications need templates in user_notifications_viewmodel.js !!! (except LegacyNotification)
-		:param notification_id: id to identify this notification. New notifications will replace existing notifications with the same id.
-		:param pnotify_type: info, success, error, ... (default is info)
-		:param sticky: True | False (default is False)
-		:param delay: (int) number of seconds the notification shows until it hides (default: 10s)
-		:param replay_when_new_client_connects: If True the notification will be sent to all clients when a new client connects.
-				If you send the same notification (all params have identical values) it won't be sent again.
-		:param title: (deprecated!) title of your mesasge
-		:param text: (deprecated!) the actual text
-		"""
-		super(Notification, self).__init__()
-		self['notification_id'] = notification_id
-		self['pnotify_type'] = 'info'
-		self['sticky'] = False
-		self['delay'] = None
-		self['replay_when_new_client_connects'] = False
-		self.update(kwargs)
-
-
-class LegacyNotification(Notification):
-
-	def __init__(self, title, text, **kwargs):
-		legacy_id = 'legacy_{}'.format(uuid.uuid4())
-		super(LegacyNotification, self).__init__(legacy_id, **kwargs)
-		self['title'] = title
-		self['text'] = text
-
-
-class ErrorNotification(Notification):
-
-	def __init__(self, notification_id, err_msg=[], knowledgebase_url=None, utm_campaign=None, **kwargs):
-		global _plugin_version, _plugin_env
-		super(ErrorNotification, self).__init__(notification_id)
-		self['pnotify_type'] = 'error'
-		self['sticky'] = True
-		self['replay_when_new_client_connects'] = True
-		self['err_msg'] = err_msg
-		self['knowledgebase_showlink'] = True
-		self['knowledgebase_url'] = knowledgebase_url
-		self['knowledgebase_params'] = dict(
-			utm_medium='beamos',
-			utm_source='beamos',
-			utm_campaign=utm_campaign or "notification",
-			version=_plugin_version,
-			env=_plugin_env,
-		)
-		if err_msg:
-			self['knowledgebase_params']['error'] = err_msg
-		self.update(kwargs)
-
 

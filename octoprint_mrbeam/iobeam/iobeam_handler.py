@@ -12,7 +12,6 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.lib.rwlock import RWLock
 from flask.ext.babel import gettext
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
-from octoprint_mrbeam.user_notification_system import LegacyNotification
 
 # singleton
 _instance = None
@@ -282,13 +281,13 @@ class IoBeamHandler(object):
 		self._logger.error(
 			"Received iobeam version: %s - version OUTDATED. IOBEAM_MIN_REQUIRED_VERSION: %s",
 			self.iobeam_version, self.IOBEAM_MIN_REQUIRED_VERSION)
-		self._user_notification_system.show_notifications(LegacyNotification(
-			title="Software Update required",
-			text="Module 'iobeam' is outdated. Please run software update from 'Settings' > 'Software Update' before you start a laser job.",
-			pnotify_type="error",
-			sticky=True,
-			replay_when_new_client_connects=True,
-		))
+		self._user_notification_system.show_notifications(
+			self._user_notification_system.get_legacy_notification(
+				title="Software Update required",
+				text="Module 'iobeam' is outdated. Please run software update from 'Settings' > 'Software Update' before you start a laser job.",
+				is_err=True,
+			)
+		)
 
 	def subscribe(self, event, callback):
 		"""

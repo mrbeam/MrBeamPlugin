@@ -28,7 +28,6 @@ from octoprint_mrbeam.printing.acc_line_buffer import AccLineBuffer
 from octoprint_mrbeam.printing.acc_watch_dog import AccWatchDog
 from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
-from octoprint_mrbeam.user_notification_system import LegacyNotification
 
 ### MachineCom #########################################################################################################
 class MachineCom(object):
@@ -1309,13 +1308,13 @@ class MachineCom(object):
 							br="<br/>",
 							strong_opening_tag="<strong>",
 							strong_closing_tag="</strong>")
-				_mrbeam_plugin_implementation.user_notification_system.show_notifications(LegacyNotification(
-					title="GRBL Update failed",
-					text=msg,
-					pnotify_type='warn',
-					sticky=True,
-					replay_when_new_client_connects=True
-				))
+				_mrbeam_plugin_implementation.user_notification_system.show_notifications(
+					_mrbeam_plugin_implementation.user_notification_system.get_legacy_notification(
+						title="GRBL Update failed",
+						text=msg,
+						is_err=True
+					)
+				)
 			except:
 				self._logger.exception("Exception while notifying frontend after failed flash_grbl: ")
 

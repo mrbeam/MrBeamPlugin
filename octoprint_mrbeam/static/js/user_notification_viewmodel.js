@@ -11,14 +11,29 @@ $(function () {
             err_leaserheadunit_missing: {
                 title: gettext("No laser head unit found"),
                 text: gettext("Laser head unit not found. Please make sure that the laser head unit is connected correctly."),
+                type: 'error',
+                hide: false,
+                knowledgebase: {
+                    url: 'https://mr-beam.freshdesk.com/support/solutions/articles/43000557279-error-laser-head-unit-not-found',
+                }
             },
             err_bottom_open: {
                 title: gettext("Bottom Plate Error"),
                 text: gettext("The bottom plate is not closed correctly. Please make sure that the bottom is correctly mounted as described in the Mr Beam II user manual."),
+                type: 'error',
+                hide: false,
+                knowledgebase: {
+                    url: 'https://mr-beam.freshdesk.com/support/solutions/articles/43000557280-error-bottom-plate-error',
+                }
             },
-            err_hwardware_malfunction: {
+            err_hardware_malfunction: {
                 title: gettext("Hardware malfunction"),
                 text: gettext("A possible hardware malfunction has been detected on this device. "),
+                type: 'error',
+                hide: false,
+                knowledgebase: {
+                    url: 'https://mr-beam.freshdesk.com/support/solutions/articles/43000557281-error-hardware-malfunction',
+                }
             }
         }
 
@@ -55,30 +70,41 @@ $(function () {
 
         self._getPnObj = function (notification_conf) {
             let pn_obj = {
-                id: notification_conf.notification_id || 'id_' + Date.now(),
-                title: notification_conf.title || "Message",
-                text: notification_conf.text || '',
-                type: notification_conf.pnotify_type || 'info',
-                hide: !(notification_conf.sticky == true),
-                delay: (notification_conf.delay || 10) * 1000
-            }
+                    id: notification_conf.notification_id || 'id_' + Date.now(),
+                    title: notification_conf.title || "Message",
+                    text: notification_conf.text || '',
+                    type: notification_conf.type || 'info',
+                    hide: notification_conf.hide === undefined ? true : notification_conf.hide,
+                    delay: notification_conf.delay || 10 * 1000,
+                }
             if (notification_conf.notification_id in self._notification_templates) {
-                pn_obj.title = self._notification_templates[notification_conf.notification_id].title || pn_obj.title
-                pn_obj.text = '<br/ >' + self._notification_templates[notification_conf.notification_id].text || pn_obj.text
-
-                if (notification_conf.knowledgebase_showlink) {
-                    pn_obj.text += self._getKnowledgeBaseLink(notification_conf.knowledgebase_url, notification_conf.knowledgebase_params)
-                }
-                if (notification_conf.err_msg) {
-                    pn_obj.text += self._getErrorString(notification_conf.err_msg)
-                }
+                pn_obj = {...pn_obj, ...self._notification_templates[notification_conf.notification_id]}
             }
+
+            if ('knowledgebase' in pn_obj) {
+                pn_obj.text += self._getKnowledgeBaseLink(pn_obj.knowledgebase)
+            }
+            if (notification_conf.err_msg && notification_conf.err_msg.length > 0) {
+                pn_obj.text += self._getErrorString(notification_conf.err_msg)
+            }
+
+            console.log("ANDYTEST notification_conf: ", notification_conf)
+            console.log("ANDYTEST pn_obj: ", pn_obj)
             return pn_obj
         }
 
-        self._getKnowledgeBaseLink = function (kb_url, kb_params) {
-            let specific_url = !!kb_url
-            kb_url = kb_url || "https://mr-beam.org/support"
+        self._getKnowledgeBaseLink = function (kb_konf) {
+            let specific_url = 'url' in kb_konf
+            let kb_url = kb_konf.url || "https://mr-beam.org/support"
+            let default_params = {
+                utm_medium: 'beamos',
+                utm_source: 'beamos',
+                utm_campaign: "notification",
+                version: BEAMOS_VERSION,
+                env: MRBEAM_ENV_LOCAL,
+            }
+            // this merges two objects. If both objects have a property with the same name, then the second object property overwrites the first.
+            let kb_params = {...default_params, ...kb_konf.params}
             kb_url = kb_url + '?' + $.param(kb_params);
             if (specific_url) {
                 return "<br /><br />" +

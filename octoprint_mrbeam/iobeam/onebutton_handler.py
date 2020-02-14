@@ -7,7 +7,6 @@ from octoprint.filemanager import valid_file_type
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
-from octoprint_mrbeam.user_notification_system import LegacyNotification
 from flask.ext.babel import gettext
 from octoprint_mrbeam.printing.comm_acc2 import PrintingGcodeFromMemoryInformation
 
@@ -392,11 +391,13 @@ class OneButtonHandler(object):
 		temp_ok = self._temperature_manager.is_temperature_recent()
 		if not temp_ok:
 			msg = "iobeam: Laser temperature not available"
-			self._user_notification_system.show_notifications(LegacyNotification(
-				title="Error",
-				text=msg,
-				pnotify_type='error',
-			))
+			self._user_notification_system.show_notifications(
+				self._user_notification_system.get_legacy_notification(
+					title="Error",
+					text=msg,
+					is_err=True,
+				)
+			)
 			raise Exception(msg)
 
 		iobeam_ok = self._iobeam.is_iobeam_version_ok()
