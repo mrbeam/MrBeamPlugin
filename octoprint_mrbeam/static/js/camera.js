@@ -41,21 +41,20 @@ $(function(){
         };
 
 
-        self.onDataUpdaterPluginMessage = function(plugin, data) {
-            if (plugin !== "mrbeam" || !data) return;
-            if ('beam_cam_new_image' in data) {
-                const mf = data['beam_cam_new_image']['markers_found'];
-				if(!data['beam_cam_new_image']['successful_correction']){
-					['NW', 'NE', 'SE', 'SW'].forEach(function(m) {
-						if(mf[m] !== undefined){
-							if(mf[m].recognized === true){
-							    self.cameraMarkerElem.removeClass('marker'+m);
-							} else {
-							    self.cameraMarkerElem.addClass('marker'+m);
-							}
+		self.onDataUpdaterPluginMessage = function(plugin, data) {
+			if (plugin !== "mrbeam" || !data) return;
+			if ('beam_cam_new_image' in data) {
+				const mf = data['beam_cam_new_image']['markers_found'];
+				['NW', 'NE', 'SE', 'SW'].forEach(function(m) {
+					if(mf[m] !== undefined){
+						// legacy algo uses dictionnary
+						if(mf[m].recognized === true){
+							self.cameraMarkerElem.removeClass('marker'+m);
+						} else {
+							self.cameraMarkerElem.addClass('marker'+m);
 						}
-					});
-				}
+					}
+				});
 
 
                 if(data['beam_cam_new_image']['error'] === undefined){
