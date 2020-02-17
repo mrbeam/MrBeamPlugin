@@ -25,6 +25,17 @@ class AccLineBuffer(object):
 		self.id = 0
 		self._lock.writer_release()
 
+	def set_empty(self):
+		"""
+		Only to correct counting errors!
+		:return:
+		"""
+		self._lock.writer_acquire()
+		self._last_responded = self.buffer_cmds.pop()
+		self.buffer_cmds.clear()
+		self._reset_char_len()
+		self._lock.writer_release()
+
 	def add(self, cmd, intensity, feedrate, pos_x, pos_y, laser):
 		"""
 		Add a new command (item)
