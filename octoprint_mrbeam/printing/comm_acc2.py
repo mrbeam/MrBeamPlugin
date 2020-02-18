@@ -1899,10 +1899,10 @@ class MachineCom(object):
 
 
 		try:
-			# ensure fan is on whatever gcode follows.
 			self.watch_dog.reset()
 			self.watch_dog.start(self._currentFile)
 
+			# ensure fan is on whatever gcode follows.
 			self.sendCommand("M08")
 
 			self._currentFile.start()
@@ -1923,7 +1923,7 @@ class MachineCom(object):
 		if not self.isOperational():
 			return
 
-		# first pause (feed hold) bevore doing the soft reset in order to retain machine pos.
+		# first pause (feed hold) before doing the soft reset in order to retain machine pos.
 		self._sendCommand(self.COMMAND_HOLD)
 		time.sleep(0.5)
 
