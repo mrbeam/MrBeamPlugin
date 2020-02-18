@@ -417,7 +417,7 @@ class MachineCom(object):
 						and (time.time() - self._grbl_rx_last_change > self.STATUS_POLL_FREQUENCY_PRINTING*2 + 0.1)\
 						and not self._acc_line_buffer.is_empty():
 					# We used generous timing here to be sure that this state is persistent.
-					self._logger.warn("FLUSHing clogged! Clearing commands in %s", self._acc_line_buffer)
+					self._logger.warn("FLUSHing clogged! Clearing commands in %s", self._acc_line_buffer, terminal_as_comm=True, analytics=True)
 					self._acc_line_buffer.reset_clogged()
 				else:
 					# still flushing. do nothing else for now...
@@ -462,7 +462,7 @@ class MachineCom(object):
 						and (time.time() - self._grbl_rx_last_change > self.STATUS_POLL_FREQUENCY_PRINTING*2 + 0.1)\
 						and not self._acc_line_buffer.is_empty():
 					# We used generous timing here to be sure that this state is persistent.
-					self._logger.warn("SYNCing clogged! Clearing commands in %s", self._acc_line_buffer)
+					self._logger.warn("SYNCing clogged! Clearing commands in %s", self._acc_line_buffer, terminal_as_comm=True, analytics=True)
 					self._acc_line_buffer.reset_clogged()
 				else:
 					# still syncing. do nothing else for now...
