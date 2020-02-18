@@ -34,6 +34,7 @@ class MachineCom(object):
 
 	DEBUG_PRODUCE_CHECKSUM_ERRORS = False
 	DEBUG_PRODUCE_CHECKSUM_ERRORS_RND = 2000
+	DEBUG_PRODUCE_FAKE_SYNC_ERRORS = False
 
 	### GRBL VERSIONs #######################################
 	# original grbl
@@ -147,6 +148,7 @@ class MachineCom(object):
 		self._status_polling_timer = None
 		self._status_polling_next_ts = 0
 		self._status_polling_interval = self.STATUS_POLL_FREQUENCY_DEFAULT
+		self._status_last_ts = 0
 		self._acc_line_buffer = AccLineBuffer()
 		self._current_feedrate = None
 		self._current_intensity = None
@@ -172,6 +174,7 @@ class MachineCom(object):
 		self.limit_y = -1
 		# from GRBL status RX value: Number of characters queued in Grbl's serial RX receive buffer.
 		self._grbl_rx_status = -1
+		self._grbl_rx_last_change = -1
 		self._grbl_settings_correction_ts = 0
 
 		self.g24_avoided_message = []
@@ -392,6 +395,15 @@ class MachineCom(object):
 					self._flush_command_ts = time.time()
 					self._logger.debug("FLUSHing (grbl_state: {}, acc_line_buffer: {}, grbl_rx: {})".format(
 					                  self._grbl_state, self._acc_line_buffer.get_char_len(), self._grbl_rx_status), terminal_as_comm=True)
+					if self.DEBUG_PRODUCE_FAKE_SYNC_ERRORS and self._grbl_rx_status > 0:
+						self._acc_line_buffer.add('DUMMY\n',
+						                          intensity=self._current_intensity,
+						                          feedrate=self._current_feedrate,
+						                          pos_x=self._current_pos_x,
+						                          pos_y=self._current_pos_y,
+						                          laser=self._current_laser_on)
+						self._logger.debug("FLUSHing DEBUG_PRODUCE_FAKE_SYNC_ERRORS added fake command (grbl_state: {}, acc_line_buffer: {}, grbl_rx: {})".format(
+								self._grbl_state, self._acc_line_buffer.get_char_len(), self._grbl_rx_status), terminal_as_comm=True)
 					return
 				elif self._acc_line_buffer.is_empty():
 					self._cmd.pop('flush', None)
@@ -399,10 +411,14 @@ class MachineCom(object):
 						self._cmd.pop('cmd', None)
 					self._logger.debug("FLUSHed ({}ms)".format(int(1000 * (time.time() - self._flush_command_ts))), terminal_as_comm=True)
 					self._flush_command_ts = -1
-				elif self._state == self.STATE_PRINTING and not self._acc_line_buffer.is_empty() and not (self._grbl_state in self.GRBL_SYNC_COMMAND_WAIT_STATES):
-					# clogged!!
-					self._logger.warn("FLUSHing clogged! _state: %s, _grbl_state: %s, %s", self._state, self._grbl_state, self._acc_line_buffer)
-					self._acc_line_buffer.set_empty()
+				elif (time.time() - self._flush_command_ts) > 3.0 \
+						and (self._status_last_ts > self._flush_command_ts) \
+						and self._grbl_rx_status == 0 \
+						and (time.time() - self._grbl_rx_last_change > self.STATUS_POLL_FREQUENCY_PRINTING*2 + 0.1)\
+						and not self._acc_line_buffer.is_empty():
+					# We used generous timing here to be sure that this state is persistent.
+					self._logger.warn("FLUSHing clogged! Clearing commands in %s", self._acc_line_buffer)
+					self._acc_line_buffer.reset_clogged()
 				else:
 					# still flushing. do nothing else for now...
 					return
@@ -416,15 +432,15 @@ class MachineCom(object):
 					self._logger.debug("SYNCing (grbl_state: {}, acc_line_buffer: {}, grbl_rx: {})".format(
 						self._grbl_state, self._acc_line_buffer.get_char_len(), self._grbl_rx_status),
 						terminal_as_comm=True)
-					# ANDYTEST add fake command
-					self._acc_line_buffer.add('DUMMY\n',
-					                          intensity=self._current_intensity,
-					                          feedrate=self._current_feedrate,
-					                          pos_x=self._current_pos_x,
-					                          pos_y=self._current_pos_y,
-					                          laser=self._current_laser_on)
-					self._logger.debug("SYNCing with fake command (grbl_state: {}, acc_line_buffer: {}, grbl_rx: {})".format(
-						self._grbl_state, self._acc_line_buffer.get_char_len(), self._grbl_rx_status), terminal_as_comm=True)
+					if self.DEBUG_PRODUCE_FAKE_SYNC_ERRORS and self._grbl_rx_status > 0:
+						self._acc_line_buffer.add('DUMMY\n',
+						                          intensity=self._current_intensity,
+						                          feedrate=self._current_feedrate,
+						                          pos_x=self._current_pos_x,
+						                          pos_y=self._current_pos_y,
+						                          laser=self._current_laser_on)
+						self._logger.debug("SYNCing DEBUG_PRODUCE_FAKE_SYNC_ERRORS added fake command (grbl_state: {}, acc_line_buffer: {}, grbl_rx: {})".format(
+								self._grbl_state, self._acc_line_buffer.get_char_len(), self._grbl_rx_status), terminal_as_comm=True)
 					return
 				elif self._acc_line_buffer.is_empty() and not (self._grbl_state in self.GRBL_SYNC_COMMAND_WAIT_STATES):
 					# Successfully synced, let's move on
@@ -440,10 +456,14 @@ class MachineCom(object):
 					self._logger.debug("SYNCing ({}ms) - Sending '?'".format(int(1000 * (time.time() - self._sync_command_ts))), terminal_as_comm=True)
 					self._sendCommand(self.COMMAND_STATUS)
 					return
-				elif self._state == self.STATE_PRINTING and not self._acc_line_buffer.is_empty() and (self._grbl_state in self.GRBL_SYNC_COMMAND_IDLE_STATES):
-					# clogged!!
-					self._logger.warn("SYNCing clogged! _state: %s, _grbl_state: %s, %s", self._state, self._grbl_state, self._acc_line_buffer)
-					self._acc_line_buffer.set_empty()
+				elif (time.time() - self._sync_command_ts) > 3.0 \
+						and (self._status_last_ts > self._sync_command_ts) \
+						and self._grbl_rx_status == 0 \
+						and (time.time() - self._grbl_rx_last_change > self.STATUS_POLL_FREQUENCY_PRINTING*2 + 0.1)\
+						and not self._acc_line_buffer.is_empty():
+					# We used generous timing here to be sure that this state is persistent.
+					self._logger.warn("SYNCing clogged! Clearing commands in %s", self._acc_line_buffer)
+					self._acc_line_buffer.reset_clogged()
 				else:
 					# still syncing. do nothing else for now...
 					return
@@ -691,7 +711,15 @@ class MachineCom(object):
 		if 'limit_y' in groups: self.limit_y = time.time() if groups['limit_y'] else 0
 
 		# grbl_character_buffer
-		if 'rx' in groups: self._grbl_rx_status = groups['rx'] if groups['rx'] else -1
+		if 'rx' in groups:
+			rx = -1
+			try:
+				rx = int(groups['rx'])
+			except ValueError:
+				self._logger.error("Can't convert RX value from GRBL status to int. RX value: %s", groups['rx'])
+			if not rx == self._grbl_rx_status:
+				self._grbl_rx_status = rx
+				self._grbl_rx_last_change = time.time()
 
 		# positions
 		try:
@@ -726,6 +754,8 @@ class MachineCom(object):
 					                  self._grbl_state, self._flush_command_ts, self._sync_command_ts, analytics=True)
 					self.setPause(False, send_cmd=False, trigger="GRBL_RUN")
 
+		self._status_last_ts = time.time()
+
 	def _handle_laser_intensity_for_analytics(self, laser_state, laser_intensity):
 		if laser_state == 'on' and _mrbeam_plugin_implementation.mrbeam_plugin_initialized:
 			_mrbeam_plugin_implementation.analytics_handler.collect_laser_intensity_value(int(laser_intensity))
@@ -745,12 +775,12 @@ class MachineCom(object):
 		if self._state == self.STATE_HOMING:
 			self._changeState(self.STATE_OPERATIONAL)
 
-		# update working pos from acknowledged gcode
-		if item and item['cmd'].startswith('G'):
-			self._callback.on_comm_pos_update(None, [item['x'], item['y'], 0])
-			# since we just got a postion update we can reset the wait time for the next status poll
-			# ideally we never poll statuses during engravings
-			self._reset_status_polling_waittime()
+		# # update working pos from acknowledged gcode
+		# if item and item['cmd'].startswith('G'):
+		# 	self._callback.on_comm_pos_update(None, [item['x'], item['y'], 0])
+		# 	# since we just got a postion update we can reset the wait time for the next status poll
+		# 	# ideally we never poll statuses during engravings
+		# 	self._reset_status_polling_waittime()
 
 	def _handle_error_message(self, line):
 		"""

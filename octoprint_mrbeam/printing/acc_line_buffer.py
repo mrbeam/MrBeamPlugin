@@ -25,10 +25,10 @@ class AccLineBuffer(object):
 		self.id = 0
 		self._lock.writer_release()
 
-	def set_empty(self):
+	def reset_clogged(self):
 		"""
-		Only to correct counting errors!
-		:return:
+		Should we find out that our counting got incorrect (e.g. we missed an 'ok' from grbl)
+		this resets the command counter. Should be called only when you're sure that grbl's serial buffer is empty.
 		"""
 		self._lock.writer_acquire()
 		self._last_responded = self.buffer_cmds.pop()
