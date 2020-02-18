@@ -35,6 +35,9 @@ class Migration(object):
 	GRBL_AUTO_UPDATE_FILE =     MachineCom._get_grbl_file_name()
 	GRBL_AUTO_UPDATE_VERSION =  MachineCom.GRBL_DEFAULT_VERSION
 
+	# GRBL version that should be updated, regardless...
+	GRBL_VERSIONS_NEED_UPDATE = ['0.9g_20190329_ec6a7c7-dirty']
+
 	# mount manager version
 	MOUNT_MANAGER_VERSION = StrictVersion("1.6.4")
 
@@ -87,6 +90,8 @@ class Migration(object):
 					self.update_mount_manager()
 
 				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_GRBL_AUTO_UPDATE, equal_ok=False):
+					self.auto_update_grbl()
+				if self.plugin._settings.get(['grbl_version_lastknown']) in self.GRBL_VERSIONS_NEED_UPDATE:
 					self.auto_update_grbl()
 
 				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_INFLATE_FILE_SYSTEM, equal_ok=False):
