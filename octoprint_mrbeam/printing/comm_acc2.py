@@ -101,6 +101,7 @@ class MachineCom(object):
 	STATUS_POLL_FREQUENCY_DEFAULT = STATUS_POLL_FREQUENCY_PRINTING
 
 	GRBL_SYNC_COMMAND_WAIT_STATES = (GRBL_STATE_RUN, GRBL_STATE_QUEUE)
+	GRBL_SYNC_COMMAND_IDLE_STATES = (GRBL_STATE_IDLE,)
 
 	GRBL_HEX_FOLDER = 'files/grbl/'
 
@@ -400,7 +401,7 @@ class MachineCom(object):
 					self._flush_command_ts = -1
 				elif self._state == self.STATE_PRINTING and not self._acc_line_buffer.is_empty() and not (self._grbl_state in self.GRBL_SYNC_COMMAND_WAIT_STATES):
 					# clogged!!
-					self._logger.warn("FLUSHing clogged! _grbl_state: %s, %s", self._grbl_state, self._acc_line_buffer)
+					self._logger.warn("FLUSHing clogged! _state: %s, _grbl_state: %s, %s", self._state, self._grbl_state, self._acc_line_buffer)
 					self._acc_line_buffer.set_empty()
 				else:
 					# still flushing. do nothing else for now...
@@ -412,6 +413,9 @@ class MachineCom(object):
 				if self._sync_command_ts <= 0:
 					self._sync_command_ts = time.time()
 					self._sync_command_state_sent = False
+					self._logger.debug("SYNCing (grbl_state: {}, acc_line_buffer: {}, grbl_rx: {})".format(
+						self._grbl_state, self._acc_line_buffer.get_char_len(), self._grbl_rx_status),
+						terminal_as_comm=True)
 					# ANDYTEST add fake command
 					self._acc_line_buffer.add('DUMMY\n',
 					                          intensity=self._current_intensity,
@@ -419,7 +423,7 @@ class MachineCom(object):
 					                          pos_x=self._current_pos_x,
 					                          pos_y=self._current_pos_y,
 					                          laser=self._current_laser_on)
-					self._logger.debug("SYNCing (grbl_state: {}, acc_line_buffer: {}, grbl_rx: {})".format(
+					self._logger.debug("SYNCing with fake command (grbl_state: {}, acc_line_buffer: {}, grbl_rx: {})".format(
 						self._grbl_state, self._acc_line_buffer.get_char_len(), self._grbl_rx_status), terminal_as_comm=True)
 					return
 				elif self._acc_line_buffer.is_empty() and not (self._grbl_state in self.GRBL_SYNC_COMMAND_WAIT_STATES):
@@ -436,9 +440,9 @@ class MachineCom(object):
 					self._logger.debug("SYNCing ({}ms) - Sending '?'".format(int(1000 * (time.time() - self._sync_command_ts))), terminal_as_comm=True)
 					self._sendCommand(self.COMMAND_STATUS)
 					return
-				elif self._state == self.STATE_PRINTING and not self._acc_line_buffer.is_empty() and not (self._grbl_state in self.GRBL_SYNC_COMMAND_WAIT_STATES):
+				elif self._state == self.STATE_PRINTING and not self._acc_line_buffer.is_empty() and (self._grbl_state in self.GRBL_SYNC_COMMAND_IDLE_STATES):
 					# clogged!!
-					self._logger.warn("SYNCing clogged! _grbl_state: %s, %s", self._grbl_state, self._acc_line_buffer)
+					self._logger.warn("SYNCing clogged! _state: %s, _grbl_state: %s, %s", self._state, self._grbl_state, self._acc_line_buffer)
 					self._acc_line_buffer.set_empty()
 				else:
 					# still syncing. do nothing else for now...
