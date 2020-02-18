@@ -288,6 +288,10 @@ $(function(){
 			var tmp = {};
 			for(var k in list) {
 				var cm = list[k];
+				// legacy:
+				if (cm.img == 'custom.jpg') {
+				    cm.img = 'custommaterial.png'
+                }
 				tmp[k] = cm;
 			}
 			console.log("Loaded custom material settings: ", Object.keys(tmp).length);
