@@ -33,6 +33,7 @@ from octoprint_mrbeam.iobeam.dust_manager import dustManager
 from octoprint_mrbeam.iobeam.hw_malfunction_handler import hwMalfunctionHandler
 from octoprint_mrbeam.iobeam.laserhead_handler import laserheadHandler
 from octoprint_mrbeam.iobeam.compressor_handler import compressor_handler
+from octoprint_mrbeam.user_notification_system import user_notification_system
 from octoprint_mrbeam.analytics.analytics_handler import analyticsHandler
 from octoprint_mrbeam.analytics.usage_handler import usageHandler
 from octoprint_mrbeam.analytics.review_handler import reviewHandler
@@ -122,7 +123,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._model_id = None
 		self._device_info = dict()
 		self._grbl_version = None
-		self._stored_frontend_notifications = []
 		self._device_series = self._get_val_from_device_info('device_series')  # '2C'
 		self.called_hosts = []
 		self._current_user = None
@@ -172,6 +172,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._logger.exception("Exception while getting NetconnectdPlugin pluginInfo")
 
 		self.analytics_handler = analyticsHandler(self)
+		self.user_notification_system = user_notification_system(self)
 		# self.review_handler = reviewHandler(self)  TODO IRATXE: disabled for now
 		self.onebutton_handler = oneButtonHandler(self)
 		self.interlock_handler = interLockHandler(self)
@@ -471,6 +472,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/maintenance.js",
 				# "js/review.js",  TODO IRATXE: disabled for now
 				"js/util.js",
+				"js/user_notification_viewmodel.js",
 			    ],
 			css=["css/mrbeam.css",
 			     "css/tinyColorPicker.css",
@@ -1726,7 +1728,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if event == OctoPrintEvents.CLIENT_OPENED:
 			self.analytics_handler.add_client_opened_event(payload.get('remoteAddress', None))
 			self.fire_event(MrBeamEvents.MRB_PLUGIN_VERSION, payload=dict(version=self._plugin_version, is_first_run=self.isFirstRun()))
-			self._replay_stored_frontend_notification()
 
 		if event == OctoPrintEvents.CONNECTED and 'grbl_version' in payload:
 			self._grbl_version = payload['grbl_version']
@@ -1857,50 +1858,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			)
 		)
 
-	def notify_frontend(self, title, text, type=None, sticky=False, delay=None, replay_when_new_client_connects=False, force=False):
-		"""
-		Show a frontend notification to the user. (PNotify)
-		# TODO: All these messages will not be translated to any language. To change this we need:
-		# TODO: - either just send an error-code to the frontend and the frontend somehow knows what texts to use
-	    # TODO: - or use lazy_gettext and evaluate the resulting object here. (lazy_gettext() returns not a string but a function/object)
-	    # TODO:   To do sow we need a flask request context. We could sinply keep the request context from the last request to the webpage.
-	    # TODO:   This would be hacky but would work most of the time.
-		:param title: title of your mesasge
-		:param text: the actual text
-		:param type: info, success, error, ... (default is info)
-		:param sticky: True | False (default is False)
-		:param delay: (int) number of seconds the notification shows until it hides (default: 10s)
-		:param replay_when_new_client_connects: If True the notification will be sent to all clients when a new client connects.
-				If you send the same notification (all params have identical values) it won't be sent again.
-		:param force: forces to show the notification. Default is false.
-		:return:
-		"""
-		text = text.replace("Mr Beam II", "Mr&nbsp;Beam&nbsp;II").replace("Mr Beam", "Mr&nbsp;Beam")
-		notification = dict(
-			title= title,
-			text= text,
-			type=type,
-			sticky=sticky,
-			delay=delay
-		)
-
-		send = True
-		if replay_when_new_client_connects:
-			my_hash = hash(frozenset(notification.items()))
-			existing = next((item for item in self._stored_frontend_notifications if item["h"] == my_hash), None)
-			if existing is None:
-				notification['h'] = my_hash
-				self._stored_frontend_notifications.append(notification)
-			else:
-				send =False
-
-		if send or force:
-			self._plugin_manager.send_plugin_message("mrbeam", dict(frontend_notification = notification))
-
-	def _replay_stored_frontend_notification(self):
-		# all currently connected clients will get this notification again
-		for n in self._stored_frontend_notifications:
-			self.notify_frontend(title = n['title'], text = n['text'], type= n['type'], sticky = n['sticky'], replay_when_new_client_connects=False)
 
 	def get_mrb_state(self):
 		"""
