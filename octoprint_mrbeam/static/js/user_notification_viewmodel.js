@@ -88,8 +88,6 @@ $(function () {
                 pn_obj.text += self._getErrorString(notification_conf.err_msg)
             }
 
-            console.log("ANDYTEST notification_conf: ", notification_conf)
-            console.log("ANDYTEST pn_obj: ", pn_obj)
             return pn_obj
         }
 

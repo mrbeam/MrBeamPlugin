@@ -21,7 +21,7 @@ $(function () {
 				console.log("Saved LEDs edge brightness", newSettings.plugins.mrbeam.leds.brightness);
 			});
 		});
-		
+
 		self.leds_fps = ko.observable(28);
 		self.leds_fps.extend({ rateLimit: { timeout: 500, method: "notifyWhenChangesStop" } });
 		self.leds_fps.subscribe(function(val){
@@ -37,10 +37,8 @@ $(function () {
 		self.onAllBound = function(data){
 			let br = self.settings.settings.plugins.mrbeam.leds.brightness();
 			self.edge_brightness(br);
-			console.warn("init LED brightness (edges)", br);
 			let fps = self.settings.settings.plugins.mrbeam.leds.fps();
 			self.leds_fps(fps);
-			console.log("init LED fps (edges)", fps);
 		}
 
 	}
