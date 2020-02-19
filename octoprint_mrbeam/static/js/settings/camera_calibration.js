@@ -201,11 +201,14 @@ $(function () {
 		}
 
 		self.onStartupComplete = function () {
-//            console.log("CameraCalibrationViewModel.onStartup()");
 			if(self.isInitialCalibration()){
 				self.loadUndistortedPicture();
 			}
 		};
+
+		self.onSettingsShown = function(){
+		    self.goto('#calibration_step_1');
+        }
 
 		self.loadUndistortedPicture = function (callback) {
 			var success_callback = function (data) {
