@@ -1897,9 +1897,9 @@ class MachineCom(object):
 		self._pauseWaitTimeLost = 0.0
 		self._pauseWaitStartTime = None
 
-
-
 		try:
+			self._acc_line_buffer.reset()
+
 			self.watch_dog.reset()
 			self.watch_dog.start(self._currentFile)
 
