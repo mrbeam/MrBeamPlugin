@@ -175,7 +175,7 @@ $(function(){
 			var name = self.save_custom_material_name();
 			var key = self._replace_non_ascii(name).toLowerCase();
 			var thickness = parseFloat(self.save_custom_material_thickness());
-			var color = self.save_custom_material_color().substr(1,6);
+			var color = $('#custom_mat_col').val().substr(1,6);
 			var vectors = self.get_current_multicolor_settings();
 			var strength = 0;
 			var strongest = null;
@@ -288,6 +288,10 @@ $(function(){
 			var tmp = {};
 			for(var k in list) {
 				var cm = list[k];
+				// legacy:
+				if (cm.img == 'custom.jpg') {
+				    cm.img = 'custommaterial.png'
+                }
 				tmp[k] = cm;
 			}
 			console.log("Loaded custom material settings: ", Object.keys(tmp).length);
