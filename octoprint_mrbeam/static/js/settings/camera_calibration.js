@@ -12,7 +12,7 @@ $(function () {
 
 		self.staticURL = "/plugin/mrbeam/static/img/cam_calibration/calpic_wait.svg";
 		self.rawUrl = '/downloads/files/local/cam/beam-cam-tmp.jpg';
-		self.undistortedUrl = '/downloads/files/local/cam/undistorted.jpg';
+		self.undistortedUrl = '/downloads/files/local/cam/undistorted/beam-cam-tmp2.jpg';
 		self.croppedUrl = '/downloads/files/local/cam/beam-cam.jpg';
 		self.camImgPath = self.staticURL;
 
@@ -60,6 +60,7 @@ $(function () {
 		self.calibrationActive = ko.observable(false);
 		self.currentResults = ko.observable({});
 		self.calibrationComplete = ko.computed(function(){
+			console.log("current results : ", self.currentResults());
 			var markers = ['NW', 'NE', 'SW', 'SE'];
 			for (var i = 0; i < markers.length; i++) {
 				var k = markers[i];
@@ -76,7 +77,7 @@ $(function () {
 		self.foundNE = ko.observable(false);
 
 		self.cal_img_ready = ko.computed(function () {
-//			console.log("cal_img_ready: ", self.foundNE() , self.foundNW() , self.foundSE() , self.foundSW());
+			console.log("cal_img_ready: ", self.foundNE() , self.foundNW() , self.foundSE() , self.foundSW());
 			return self.foundNE() && self.foundNW() && self.foundSE() && self.foundSW();
 		});
 
@@ -264,14 +265,23 @@ $(function () {
 			}
 
 			if ('beam_cam_new_image' in data) {
-				//console.log('New Image [NW,NE,SW,SE]:', data['beam_cam_new_image']);
+				console.log('New Image [NW,NE,SW,SE]:', data['beam_cam_new_image']);
 				// update markers
 				var markers = data['beam_cam_new_image']['markers_found'];
 				if(!self.calibrationActive()){
-					self.foundNW(markers['NW'] && markers['NW'].recognized);
-					self.foundNE(markers['NE'] && markers['NE'].recognized);
-					self.foundSW(markers['SW'] && markers['SW'].recognized);
-					self.foundSE(markers['SE'] && markers['SE'].recognized);
+					if(markers instanceof Array) {
+						// New algo
+						self.foundNW(markers.includes('NW'));
+						self.foundNE(markers.includes('NE'));
+						self.foundSW(markers.includes('SW'));
+						self.foundSE(markers.includes('SE'));
+					} else {
+						// Legacy algo
+						self.foundNW(markers['NW'] && markers['NW'].recognized);
+						self.foundNE(markers['NE'] && markers['NE'].recognized);
+						self.foundSW(markers['SW'] && markers['SW'].recognized);
+						self.foundSE(markers['SE'] && markers['SE'].recognized);
+					}
 					self.foundNW.notifySubscribers(); // somehow doesn't trigger automatically
 				}
 				// update image
@@ -291,7 +301,7 @@ $(function () {
 						console.log("Remembering markers for Calibration", markers);
 						self.currentMarkersFound = markers;
 					} else {
-						console.log("Not all Markers found, fetching new Picture.")
+						console.log("Not all Markers found, fetching new Picture.");
 						self.loadUndistortedPicture();
 					}
 				}

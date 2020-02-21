@@ -60,6 +60,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
                  size=RESOLUTIONS['1000x780'],
                  quality=90,
                  debug_out=False,
+                 undistorted=False,
                  blur=7,
                  custom_pic_settings=None,
                  stopEvent=None,
@@ -129,7 +130,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
     # undistort image with cam_params
     img = _undistortImage(img, cam_dist, cam_matrix)
 
-    if debug_out:
+    if debug_out or undistorted:
         save_debug_img(img, path_to_output_image, "undistorted")
 
     if stopEvent and stopEvent.isSet(): return None, None, None, STOP_EVENT_ERR
@@ -513,8 +514,8 @@ def save_debug_img(img, normal_img_path, folderName):
     cv2.imwrite(dbg_path, img)
 
 def _mkdir(folder):
-    if not exists(dirname(folder)):
-        os.mkdir(dirname(folder))
+    if not exists(folder):
+        os.makedirs(folder)
 
 def _getCamParams(path_to_params_file):
     """
