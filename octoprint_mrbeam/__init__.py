@@ -1536,10 +1536,16 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# transform dict
 		# todo replace/do better
 		newCorners = {}
-		for qd in data['result']['newCorners']:
-			newCorners[qd] = [data['result']['newCorners'][qd]['x'],data['result']['newCorners'][qd]['y']]
-
 		newMarkers = {}
+		for qd in data['result']['newCorners']:
+			if 'x' in data['result']['newCorners'][qd].keys():
+				# Legacy algo
+				newCorners[qd] = [data['result']['newCorners'][qd]['x'],data['result']['newCorners'][qd]['y']]
+			else:
+				# New algo
+				newCorners[qd] = data['result']['newCorners'][qd]
+
+
 		for qd in data['result']['newMarkers']:
 			newMarkers[qd] = [data['result']['newMarkers'][qd]['x'],data['result']['newMarkers'][qd]['y']]
 
@@ -1549,6 +1555,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		pic_settings['cornersFromImage'] = newCorners
 		pic_settings['calibMarkers'] = newMarkers
 		pic_settings['calibration_updated'] = True
+		pic_settings['hostname_KEY'] = self._hostname
 
 		self._logger.debug('picSettings new to save: {}'.format(pic_settings))
 		self._save_profile(pic_settings_path,pic_settings)

@@ -474,6 +474,7 @@ class PhotoCreator(object):
                              'markers_recognised':    4 - len(missed),
                              'corners_calculated':    None if workspaceCorners is None else list(workspaceCorners),
                              # {k: v.astype(int) for k, v in workspaceCorners.items()},
+                             'markers_pos':           {qd: pos.tolist() for qd, pos in markers.items()},
                              'successful_correction': success_1,
                              'undistorted_saved':     True,
                              'error': err}

@@ -128,7 +128,7 @@ $(function () {
 
 		self.startCalibration = function () {
 			self.analytics.send_fontend_event('calibration_start', {});
-			self.currentResults({});
+			// self.currentResults({});
 			self.calibrationActive(true);
 			self.picType("lens_correction");
 			self.nextMarker();
@@ -268,22 +268,23 @@ $(function () {
 				console.log('New Image [NW,NE,SW,SE]:', data['beam_cam_new_image']);
 				// update markers
 				var markers = data['beam_cam_new_image']['markers_found'];
-				if(!self.calibrationActive()){
-					if(markers instanceof Array) {
-						// New algo
-						self.foundNW(markers.includes('NW'));
-						self.foundNE(markers.includes('NE'));
-						self.foundSW(markers.includes('SW'));
-						self.foundSE(markers.includes('SE'));
-					} else {
-						// Legacy algo
-						self.foundNW(markers['NW'] && markers['NW'].recognized);
-						self.foundNE(markers['NE'] && markers['NE'].recognized);
-						self.foundSW(markers['SW'] && markers['SW'].recognized);
-						self.foundSE(markers['SE'] && markers['SE'].recognized);
-					}
-					self.foundNW.notifySubscribers(); // somehow doesn't trigger automatically
+				// Not taking care of an active calibration or not allows for an immediate calibration based on previous marker detection
+				// if(!self.calibrationActive()){
+				if(markers instanceof Array) {
+					// New algo
+					self.foundNW(markers.includes('NW'));
+					self.foundNE(markers.includes('NE'));
+					self.foundSW(markers.includes('SW'));
+					self.foundSE(markers.includes('SE'));
+				} else {
+					// Legacy algo
+					self.foundNW(markers['NW'] && markers['NW'].recognized);
+					self.foundNE(markers['NE'] && markers['NE'].recognized);
+					self.foundSW(markers['SW'] && markers['SW'].recognized);
+					self.foundSE(markers['SE'] && markers['SE'].recognized);
 				}
+				self.foundNW.notifySubscribers(); // somehow doesn't trigger automatically
+				// }
 				// update image
 				if (data['beam_cam_new_image']['undistorted_saved']) {
 					self.calImgUrl(self.camImgPath + '?' + new Date().getTime());
@@ -299,7 +300,13 @@ $(function () {
 					// check if all markers are found and image is good for calibration
 					if (self.cal_img_ready()) {
 						console.log("Remembering markers for Calibration", markers);
-						self.currentMarkersFound = markers;
+						if (markers instanceof array){
+							// New alog
+							self.currentMarkersFound = data['beam_cam_new_image']['markers_pos']
+						} else {
+							// Legacy algo
+							self.currentMarkersFound = markers;
+						}
 					} else {
 						console.log("Not all Markers found, fetching new Picture.");
 						self.loadUndistortedPicture();
