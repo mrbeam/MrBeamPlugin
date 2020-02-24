@@ -259,8 +259,6 @@ class PhotoCreator(object):
         self.undistorted_pic_path = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(['cam', 'localUndistImage'])
 
     def work(self):
-        # todo find maximum of sleep in beginning that's not affecting UX
-        time.sleep(0.8)
 
         if self.is_initial_calibration:
             self.set_undistorted_path()
@@ -327,7 +325,7 @@ class PhotoCreator(object):
         try:
             if self.active():
                 cam.start_preview()
-                time.sleep(2)
+                time.sleep(3)
                 # bestShutterSpeeds = cam.apply_best_shutter_speed()  # Usually only 1 value, but there could be more
 
                 # TODO cam.anti_rolling_shutter_banding()
