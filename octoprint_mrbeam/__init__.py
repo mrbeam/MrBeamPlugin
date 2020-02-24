@@ -1537,17 +1537,18 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# todo replace/do better
 		newCorners = {}
 		newMarkers = {}
-		for qd in data['result']['newCorners']:
-			if 'x' in data['result']['newCorners'][qd].keys():
-				# Legacy algo
-				newCorners[qd] = [data['result']['newCorners'][qd]['x'],data['result']['newCorners'][qd]['y']]
-			else:
-				# New algo
-				newCorners[qd] = data['result']['newCorners'][qd]
 
+
+		for qd in data['result']['newCorners']:
+			newCorners[qd] = [data['result']['newCorners'][qd]['x'],data['result']['newCorners'][qd]['y']]
 
 		for qd in data['result']['newMarkers']:
-			newMarkers[qd] = [data['result']['newMarkers'][qd]['x'],data['result']['newMarkers'][qd]['y']]
+			if type(data['result']['newMarkers'][qd]) is dict:
+				# Legacy algo
+				newMarkers[qd] = [data['result']['newMarkers'][qd]['x'],data['result']['newMarkers'][qd]['y']]
+			else:
+				# New algo
+				newMarkers[qd] = data['result']['newMarkers'][qd]
 
 		pic_settings_path = self._settings.get(["cam", "correctionSettingsFile"])
 		pic_settings = self._load_profile(pic_settings_path)

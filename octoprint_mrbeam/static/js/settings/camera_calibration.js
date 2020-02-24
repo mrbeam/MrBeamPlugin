@@ -60,7 +60,7 @@ $(function () {
 		self.calibrationActive = ko.observable(false);
 		self.currentResults = ko.observable({});
 		self.calibrationComplete = ko.computed(function(){
-			console.log("current results : ", self.currentResults());
+			// console.log("current results : ", self.currentResults());
 			var markers = ['NW', 'NE', 'SW', 'SE'];
 			for (var i = 0; i < markers.length; i++) {
 				var k = markers[i];
@@ -265,7 +265,7 @@ $(function () {
 			}
 
 			if ('beam_cam_new_image' in data) {
-				console.log('New Image [NW,NE,SW,SE]:', data['beam_cam_new_image']);
+				// console.log('New Image [NW,NE,SW,SE]:', data['beam_cam_new_image']);
 				// update markers
 				var markers = data['beam_cam_new_image']['markers_found'];
 				// Not taking care of an active calibration or not allows for an immediate calibration based on previous marker detection
@@ -299,17 +299,21 @@ $(function () {
 
 					// check if all markers are found and image is good for calibration
 					if (self.cal_img_ready()) {
-						console.log("Remembering markers for Calibration", markers);
-						if (markers instanceof array){
+						// console.log("Remembering markers for Calibration", markers);
+						if (markers instanceof Array){
 							// New alog
-							self.currentMarkersFound = data['beam_cam_new_image']['markers_pos']
+							self.currentMarkersFound = data['beam_cam_new_image']['markers_pos'];
+							//	i, j -> x, y conversion
+							['NW', 'NE', 'SE', 'SW'].forEach(function(m) {self.currentMarkersFound[m] = self.currentMarkersFound[m].reverse();} );
 						} else {
 							// Legacy algo
 							self.currentMarkersFound = markers;
 						}
-					} else {
-						console.log("Not all Markers found, fetching new Picture.");
-						self.loadUndistortedPicture();
+					}
+					else if(self.calibrationActive()){
+						console.log("Not all Markers found, are the pink circles obstructed?");
+						// As long as all the corners were not found, the camera will continue to take pictures
+						// self.loadUndistortedPicture();
 					}
 				}
 			}
