@@ -407,6 +407,7 @@ class PhotoCreator(object):
                                                                          quality=quality)
                 if not self.active(): break
 
+                self._logger.debug("correct result 2 %s", correction_result2)
                 if not success_2:
                     errorID = correction_result2['error'].split(':')[0]
                     errorString = correction_result2['error'].split(':')[1]
@@ -459,7 +460,8 @@ class PhotoCreator(object):
                                                               last_markers=last_markers,
                                                               size=out_pic_size,
                                                               quality=quality,
-                                                              debug_out=self.debug,  # self.save_debug_images,
+                                                              debug_out=self.save_debug_images,  # self.save_debug_images,
+                                                              undistorted=True,
                                                               stopEvent=self.stopEvent,
                                                               threads=4)
         if not self.active(): return False, None, None, None, None
@@ -470,7 +472,9 @@ class PhotoCreator(object):
                              'markers_recognised':    4 - len(missed),
                              'corners_calculated':    None if workspaceCorners is None else list(workspaceCorners),
                              # {k: v.astype(int) for k, v in workspaceCorners.items()},
+                             'markers_pos':           {qd: pos.tolist() for qd, pos in markers.items()},
                              'successful_correction': success_1,
+                             'undistorted_saved':     True,
                              'error': err}
         return success_1, correction_result, markers, missed, err
 
