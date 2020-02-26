@@ -4,7 +4,7 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 
 class WizardConfig:
 	def __init__(self, plugin):
-		self.WIZARD_VERSION = 17  # (v0.5.0) random number. but we can't go down anymore, just up.
+		self.WIZARD_VERSION = 18  # (v0.6.0) random number. but we can't go down anymore, just up.
 
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.wizard_config")
 
@@ -60,7 +60,8 @@ class WizardConfig:
 		return link_ids
 
 	def _welcome_wizard_config(self):
-		"""Add here the tabs that should be present in the welcome wizard.
+		"""
+		Add here the tabs that should be present in the welcome wizard.
 		The order of the tabs is set in __init__.py > __plugin_load__() > __plugin_settings_overlay__['appearance']['order].
 		The welcome and what's new wizard are actually the same wizard, so both are configured in the same place.
 		"""
@@ -106,14 +107,17 @@ class WizardConfig:
 		return welcome_wizard_tabs
 
 	def _whatsnew_wizard_config(self):
-		"""Add here the tabs that should be present in the what's new wizard. Remove when unnecessary.
+		"""
+		Add here the tabs that should be present in the what's new wizard. Remove when unnecessary.
 		The order of the tabs is set in __init__.py > __plugin_load__() > __plugin_settings_overlay__['appearance']['order].
 		The welcome and what's new wizard are actually the same wizard, so both are configured in the same place.
+
+		Change the "required" to False if that slide should not be present in the dialog, revert otherwise.
 		"""
 		whatsnew_wizard_tabs = dict(
 			wizard_whatsnew_0=dict(
 				type='wizard',
-				name=gettext("New materials"),
+				name=gettext("Zoom"),
 				required=True,
 				mandatory=False,
 				suffix='_whatsnew_0',
@@ -122,8 +126,8 @@ class WizardConfig:
 			),
 			wizard_whatsnew_1=dict(
 				type='wizard',
-				name=gettext("New language"),
-				required=True,
+				name=gettext(""),
+				required=False,
 				mandatory=False,
 				suffix='_whatsnew_1',
 				template='wizard/wizard_whatsnew_1.jinja2',
@@ -131,8 +135,8 @@ class WizardConfig:
 			),
 			wizard_whatsnew_2=dict(
 				type='wizard',
-				name=gettext("Brightness adjustment"),
-				required=True,
+				name=gettext(""),
+				required=False,
 				mandatory=False,
 				suffix='_whatsnew_2',
 				template='wizard/wizard_whatsnew_2.jinja2',
