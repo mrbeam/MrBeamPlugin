@@ -247,28 +247,29 @@
 																<a href="#" data-bind="event: {
 																			click: function(d, event){ $root.duplicateSVG($data, event); }
 																		} ">{{ _('duplicate') }}</a>
-																<div class='dropdown pull-right' style='display:inline-block;' >
-																	<a href="#" class="wa_list_item_burger_menu dropdown-toggle" data-toggle="dropdown">
-																		<i class="icon-reorder"></i><b class="caret"></b>
-																	</a>
-																	<ul class="dropdown-menu">
-																		<li>
-																			<i class="icon-sitemap" title="{{ _('split') }}"></i> split
-																			<a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'stroke-color'); }} ">{{ _('by stroke color') }}</a>
-																			<a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'non-intersecting'); }} ">{{ _('into shapes (keep overlapping)') }}</a>
-																			<a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'vertically'); }} ">{{ _('vertically') }}</a>
-																			<a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'horizontally'); }} ">{{ _('horizontally') }}</a>
-																		</li>
-<!--																		<li class="divider"></li>
-																		<li>
-																			<i class="icon-copy" title="{{ _('duplicate') }}"></i>
-																			<a href="#" data-bind="event: {
-																				click: function(d, event){ $root.duplicateSVG($data, event); }
-																				} ">{{ _('duplicate') }}</a>
-																		</li>-->
-																	</ul>
-																</div>
-
+                                                                {% if software_tier in ["BETA", "DEV"] %}
+                                                                    <div class='dropdown pull-right' style='display:inline-block;' >
+                                                                        <a href="#" class="wa_list_item_burger_menu dropdown-toggle" data-toggle="dropdown">
+                                                                            <i class="icon-reorder"></i><b class="caret"></b>
+                                                                        </a>
+                                                                        <ul class="dropdown-menu">
+                                                                            <li>
+                                                                                <i class="icon-sitemap" title="{{ _('split') }}"></i> split
+                                                                                <a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'stroke-color'); }} ">{{ _('by stroke color') }}</a>
+                                                                                <a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'non-intersecting'); }} ">{{ _('into shapes (keep overlapping)') }}</a>
+                                                                                <a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'vertically'); }} ">{{ _('vertically') }}</a>
+                                                                                <a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'horizontally'); }} ">{{ _('horizontally') }}</a>
+                                                                            </li>
+    <!--																		<li class="divider"></li>
+                                                                            <li>
+                                                                                <i class="icon-copy" title="{{ _('duplicate') }}"></i>
+                                                                                <a href="#" data-bind="event: {
+                                                                                    click: function(d, event){ $root.duplicateSVG($data, event); }
+                                                                                    } ">{{ _('duplicate') }}</a>
+                                                                            </li>-->
+                                                                        </ul>
+                                                                    </div>
+                                                                {% endif %}
 															</div>
 															<div class="misfit_warning">
 																<i class="icon-warning-sign" title="{{ _('exceeds working area') }}"></i>&nbsp;
