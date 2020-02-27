@@ -126,8 +126,8 @@ class WizardConfig:
 			),
 			wizard_whatsnew_1=dict(
 				type='wizard',
-				name=gettext(""),
-				required=False,
+				name=gettext("Quick Shapes"),
+				required=True,
 				mandatory=False,
 				suffix='_whatsnew_1',
 				template='wizard/wizard_whatsnew_1.jinja2',
