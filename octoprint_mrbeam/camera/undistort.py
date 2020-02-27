@@ -32,7 +32,7 @@ HUE_BAND_LB = 125
 HUE_BAND_UB = 185 # if value > 180 : loops back to 0
 
 MIN_MARKER_PIX = 150
-MAX_MARKER_PIX = 900
+MAX_MARKER_PIX = 1200
 
 PIC_SETTINGS = {CALIB_MARKERS_KEY: None, CORNERS_KEY: None, M2C_VECTOR_KEY: None, CALIBRATION_UPDATED_KEY: False}
 
@@ -265,18 +265,17 @@ def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d
     blocksize = 11
     gaussianMask = cv2.adaptiveThreshold(greenBlur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, blocksize, 2)
     roiBlurThresh         =  cv2.bitwise_and( roiBlur, roiBlur, mask=cv2.bitwise_or(threshOtsuMask, gaussianMask))
-    hsv_roiBlurThresh     =  cv2.cvtColor(    roiBlurThresh,     cv2.COLOR_BGR2HSV)
-    # Use a sliding hue mask with a local maxima detector to find the magenta markers
     debug_quad_path = debug_out_path.replace('.jpg', '{}.jpg'.format(quadrant))
-    for hsvMask, bands in _get_hue_mask(hsv_roiBlurThresh):
-        if visual_debug: cv2.imshow(quadrant, hsvMask); cv2.waitKey(0)
-        for spot, center, start, stop in _get_white_spots(hsvMask):
-            spot.dtype = np.uint8
-            if visual_debug: cv2.imshow("{} : spot".format(quadrant), cv2.imdecode(np.fromiter(spot, dtype=np.uint8), cv2.IMREAD_GRAYSCALE)); cv2.waitKey(0)
-            if isMarkerMask(spot[start[0]:stop[0], start[1]:stop[1]]):
+    for spot, center, start, stop in _get_white_spots(cv2.bitwise_or(threshOtsuMask, gaussianMask)):
+        spot.dtype = np.uint8
+        if visual_debug: cv2.imshow("{} : spot".format(quadrant), cv2.imdecode(np.fromiter(spot, dtype=np.uint8), cv2.IMREAD_GRAYSCALE)); cv2.waitKey(0)
+        if isMarkerMask(spot[start[0]:stop[0], start[1]:stop[1]]):
+            hue_vals = roiBlurThresh[:,:,0]
+            avg_hue = np.average([roiBlurThresh[pos] for pos in np.nonzero(cv2.bitwise_and(hue_vals, hue_vals, mask=spot))])
+            if HUE_BAND_LB <= avg_hue <= 180 or 0 <= avg_hue <= HUE_BAND_UB:
                 y, x = np.round(center).astype("int")  # y, x
-                debug_roi = cv2.drawMarker(cv2.cvtColor(hsvMask, cv2.COLOR_GRAY2BGR), (x, y), (0, 0, 255), cv2.MARKER_CROSS)
-                cv2.imwrite(debug_quad_path, debug_roi)
+                debug_roi = cv2.drawMarker(cv2.cvtColor(cv2.bitwise_or(threshOtsuMask, gaussianMask), cv2.COLOR_GRAY2BGR), (x, y), (0, 0, 255), cv2.MARKER_CROSS, line_type=4)
+                cv2.imwrite(debug_quad_path, debug_roi, params=[cv2.IMWRITE_JPEG_QUALITY, 100])
                 return dict(pos=center, )
     # No marker found
     cv2.imwrite(debug_quad_path, roiBlurThresh)
