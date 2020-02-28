@@ -1730,8 +1730,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._logger.info("on_event() %s: %s", event, payload)
 
 		if event == OctoPrintEvents.ERROR:
-			if payload.get('analytics', True):
-				self._logger.error("on_event() Error Event! Message: %s", payload['error'])
+			analytics = payload.get('analytics', True)
+			if analytics:
+				self._logger.error("on_event() Error Event! Message: %s", payload['error'], analytics=analytics)
 
 		if event == OctoPrintEvents.CLIENT_OPENED:
 			self.analytics_handler.add_client_opened_event(payload.get('remoteAddress', None))

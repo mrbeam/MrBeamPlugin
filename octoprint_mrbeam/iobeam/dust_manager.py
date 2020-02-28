@@ -151,7 +151,7 @@ class DustManager(object):
 				self._logger.warn("Fan command response doesn't match expected command: expected: {} received: {} args: {}".format(self._last_command, args.get('response', None), args))
 		else:
 			# TODO ANDY stop laser
-			self._logger.error("Fan command responded error: received: fan:{} args: {}".format(args['message'], args))
+			self._logger.error("Fan command responded error: received: fan:{} args: {}".format(args['message'], args), analytics='fan-command-error-response')
 
 	def _onEvent(self, event, payload):
 		if event in (OctoPrintEvents.SLICING_DONE, MrBeamEvents.READY_TO_LASER_START):  # OctoPrintEvents.PRINT_STARTED):
@@ -203,14 +203,14 @@ class DustManager(object):
 		except:
 			self._logger.exception("Exception in _finish_test_fan_rpm")
 
-	def _pause_laser(self, trigger, log_message=None):
+	def _pause_laser(self, trigger, analytics=None, log_message=None):
 		"""
 		Stops laser and switches to paused mode.
 		Should be called when air filters gets disconnected, dust value gets too high or when any error occurs...
 		:param trigger: A string to identify the cause/trigger that initiated paused mode
 		"""
 		if self._one_button_handler.is_printing():
-			self._logger.error(log_message)
+			self._logger.error(log_message, analytics=analytics)
 			self._logger.info("_pause_laser() trigger: %s", trigger)
 			self._one_button_handler.pause_laser(need_to_release=False, trigger=trigger)
 
@@ -330,7 +330,7 @@ class DustManager(object):
 		if not result and not self._plugin.is_boot_grace_period():
 			msg = "Invalid or too old fan data from iobeam: state:{state}, rpm:{rpm}, dust:{dust}, connected:{connected}, age:{age}s".format(
 				state=self._state, rpm=self._rpm, dust=self._dust, connected=self._connected, age=(time.time() - self._data_ts))
-			self._pause_laser(trigger="Fan values from iobeam invalid or too old.", log_message=msg)
+			self._pause_laser(trigger="Fan values from iobeam invalid or too old.", analytics='invalid-old-fan-data', log_message=msg)
 
 		elif self._connected == False:
 			result = False

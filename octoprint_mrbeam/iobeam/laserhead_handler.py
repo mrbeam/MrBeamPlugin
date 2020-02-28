@@ -64,10 +64,10 @@ class LaserheadHandler(object):
 
 			else:
 				if lh_data.get('main', {}).get('serial', None) is None:
-					self._logger.exception('Received invalid laser head data from iobeam - no serial number. Laser head dataset: {}'.format(lh_data))
+					self._logger.exception('Received invalid laser head data from iobeam - no serial number. Laser head dataset: {}'.format(lh_data), analytics='received-no-lh-data')
 				else:
 					self._logger.exception('Received invalid laser head data from iobeam - invalid power calibrations data: {}'
-										   .format(lh_data.get('power_calibrations', [])))
+										   .format(lh_data.get('power_calibrations', [])), analytics='invalid-power-calibration')
 		except Exception as e:
 			self._logger.exception('Exception during set_current_used_lh_data: {}'.format(e))
 
