@@ -56,10 +56,12 @@ class CompressorHandler(object):
 		self._iobeam.subscribe(IoBeamValueEvents.COMPRESSOR_STATIC, self._handle_static_data)
 		self._iobeam.subscribe(IoBeamValueEvents.COMPRESSOR_DYNAMIC, self._handle_dynamic_data)
 
-		self._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self.set_compressor_off)
-		self._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self.set_compressor_off)
-		self._event_bus.subscribe(OctoPrintEvents.PRINT_CANCELLED, self.set_compressor_off)
-		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self.set_compressor_off)
+		self._event_bus.subscribe(OctoPrintEvents.PRINT_STARTED, self.set_compressor_job_start)
+
+		self._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self.set_compressor_job_end)
+		self._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self.set_compressor_job_end)
+		self._event_bus.subscribe(OctoPrintEvents.PRINT_CANCELLED, self.set_compressor_job_end)
+		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self.set_compressor_job_end)
 
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_PAUSED, self.set_compressor_pause)
 		self._event_bus.subscribe(OctoPrintEvents.PRINT_RESUMED, self.set_compressor_unpause)
@@ -73,11 +75,11 @@ class CompressorHandler(object):
 		else:
 			return None
 
-	def set_compressor(self, value, set_nominal_value=True):
+	def set_compressor(self, value, set_nominal_value=True, msg=''):
 		if self.has_compressor():
 			self._logger.info(
-				"Compressor set to %s (nominal state before: %s, real state: %s)",
-				value, self._compressor_nominal_state, self._compressor_current_state)
+				"Compressor set to %s %s (nominal state before: %s, real state: %s)",
+				value, msg, self._compressor_nominal_state, self._compressor_current_state)
 			if value > self.COMPRESSOR_MAX:
 				value = self.COMPRESSOR_MAX
 			if value < self.COMPRESSOR_MIN:
@@ -86,14 +88,23 @@ class CompressorHandler(object):
 				self._compressor_nominal_state = value
 			self._iobeam.send_compressor_command(value)
 
-	def set_compressor_off(self, *args, **kwargs):
-		self.set_compressor(0)
+	def set_compressor_job_start(self, event, *args, **kwargs):
+		self.set_compressor(self.COMPRESSOR_MAX, msg=event)
+
+	def set_compressor_job_end(self, event, *args, **kwargs):
+		self.set_compressor(self.COMPRESSOR_MIN, msg=event)
+
+	def set_compressor_off(self):
+		self.set_compressor(self.COMPRESSOR_MIN)
 
 	def set_compressor_pause(self, *args, **kwargs):
-		self.set_compressor(0, set_nominal_value=False)
+		self.set_compressor(self.COMPRESSOR_MIN, set_nominal_value=False)
 
 	def set_compressor_unpause(self, *args, **kwargs):
 		self.set_compressor(self._compressor_nominal_state)
+
+	def resend_compressor(self):
+		self.set_compressor(self._compressor_nominal_state, set_nominal_value=False)
 
 	def _handle_static_data(self, payload):
 		dataset = payload.get('message', {})
@@ -126,9 +137,19 @@ class CompressorHandler(object):
 				if dataset['rpm_actual'] == 0:
 					self._num_rpm_0 += 1
 					if self._num_rpm_0 >= self.MAX_TIMES_RPM_0:
+						self._logger.error(
+							"Compressor zero rpm value! Max tries reached, throwing HARDWARE MALFUNCTION, turning off compressor. (current real state: %s, zero-rpm-count %s)",
+							self._compressor_current_state, self._num_rpm_0)
+						# avoid overheating an potential further damage
+						self.set_compressor_off()
 						self._hw_malfunction_handler.report_hw_malfunction_from_plugin(
 							malfunction_id='compressor',
 							msg='compressor_rpm_0')
+					else:
+						self.resend_compressor()
+						self._logger.warn(
+							"Compressor zero rpm value! Resending nominal state: %s, current real state: %s, zero-rpm-count %s",
+							self._compressor_nominal_state, self._compressor_current_state, self._num_rpm_0)
 				else:
 					self._num_rpm_0 = 0
 		else:

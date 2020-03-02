@@ -67,13 +67,16 @@
   border-radius: 5px;
 }
 
+.wizard-content {
+  width: 90%;
+}
+
 .wizard-centered-img {
   display: block;
   margin: 0 auto;
 }
 
 .wizard-big-img {
-  width: 90%;
   margin: 25px 0;
 }
 

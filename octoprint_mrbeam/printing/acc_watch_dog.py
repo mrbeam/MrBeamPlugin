@@ -60,7 +60,7 @@ class AccWatchDog(object):
 
 	def do_regular_check(self):
 		"""
-		regularly called by repeaded timer
+		regularly called by repeated timer
 		:return:
 		"""
 		try:

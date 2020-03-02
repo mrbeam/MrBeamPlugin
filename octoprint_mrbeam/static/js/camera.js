@@ -21,7 +21,6 @@ $(function(){
         self.onAllBound = function () {
             self.webCamImageElem = $("#beamcam_image_svg");
 			self.cameraMarkerElem = $("#camera_markers");
-			self.previewImageFilter = snap.select('#preview_precision feGaussianBlur');
             // self.webCamImageElem.removeAttr('onerror');
             self.camEnabled = self.settings.settings.plugins.mrbeam.cam.enabled();
             self.imageUrl = self.settings.settings.plugins.mrbeam.cam.frontendUrl();
@@ -42,28 +41,22 @@ $(function(){
         };
 
 
-        self.onDataUpdaterPluginMessage = function(plugin, data) {
-            if (plugin !== "mrbeam" || !data) return;
-            if ('beam_cam_new_image' in data) {
-                const mf = data['beam_cam_new_image']['markers_found'];
-                if(mf['NW'] !== undefined){
-                    const pixels = '['+mf['NW']['pixels']+','+mf['NE']['pixels']+','+mf['SW']['pixels']+','+mf['SE']['pixels']+']';
-                    const circles = '['+mf['NW']['r']+','+mf['NE']['r']+','+mf['SW']['r']+','+mf['SE']['r']+']';
-                    console.log('New Image [NW,NE,SW,SE]: Pix '+pixels+' Rad '+circles,data['beam_cam_new_image']);
-                }
-				if(!data['beam_cam_new_image']['successful_correction']){
-					['NW', 'NE', 'SE', 'SW'].forEach(function(m) {
-						if(mf[m] !== undefined){ 
-							if(mf[m].recognized === true){ self.cameraMarkerElem.removeClass('marker'+m); }
-							else { self.cameraMarkerElem.addClass('marker'+m);}
+		self.onDataUpdaterPluginMessage = function(plugin, data) {
+			if (plugin !== "mrbeam" || !data) return;
+			if ('beam_cam_new_image' in data) {
+				const mf = data['beam_cam_new_image']['markers_found'];
+				['NW', 'NE', 'SE', 'SW'].forEach(function(m) {
+					if(mf[m] !== undefined){
+						// legacy algo uses dictionnary
+						if(mf[m].recognized === true){
+							self.cameraMarkerElem.removeClass('marker'+m);
+						} else {
+							self.cameraMarkerElem.addClass('marker'+m);
 						}
-					});
-					self.previewImageFilter.attr({'stdDeviation': 2});
-				} else {
-					self.previewImageFilter.attr({'stdDeviation':0});
-				}
-				
-								
+					}
+				});
+
+
                 if(data['beam_cam_new_image']['error'] === undefined){
                     self.needsCalibration = false;
                 }else if(data['beam_cam_new_image']['error'] === "NO_CALIBRATION: Marker Calibration Needed" && !self.needsCalibration){
@@ -78,12 +71,12 @@ $(function(){
                 }
                 self.loadImage();
             }
-			
+
 			// If camera is not active (lid closed), all marker(NW|NE|SW|SE) classes should be removed.
 			if('interlocks_closed' in data && data.interlocks_closed === true){
 				self.cameraMarkerElem.attr('class', '');
 			}
-			
+
         };
 
         self.loadImage = function () {

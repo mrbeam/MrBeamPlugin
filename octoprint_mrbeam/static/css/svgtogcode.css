@@ -4,6 +4,11 @@ table th.settings_plugin_svgtogcode_profiles_key,table td.settings_plugin_svgtog
 	width: 2.5em;
 }
 
+.unselectable, label, a, .btn {
+	-webkit-user-drag: none;
+	user-select: none;
+}
+
 #settings_dialog.container { width: 100%; }
 
 .calibration_step {
@@ -171,6 +176,28 @@ input.decent_input {
 input.decent_input:focus,
 input.decent_input:hover {
 	border: 1px solid gray;
+}
+
+.img_adjust_ui {
+	width: 34%;
+}
+.img_crop_ui {
+	width: 60%;
+	display: grid;
+	grid-template-areas:
+    'tl tc tr'
+    'cl cc cr'
+    'bl bc br';
+	border: 1px solid gray;
+	margin: 0.8em 0.4em;
+	height: 6em;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+}
+
+#wa_filelist .img_crop_ui input.decent_input {
+  width: 100%;
 }
 
 #manual_position {
@@ -376,7 +403,7 @@ h4.job_title{
 .color_drop_zone {
 	min-height: 50px;
 	width: 100%;
-	border: 2px dashed transparent;
+	border: 1.5px dashed transparent;
 }
 
 /* state machine. either img or vector color drop zone highlightning*/
@@ -385,7 +412,7 @@ body.colorDragInProgress #engrave_job .img_drop_zone.hover,
 body.vectorDrag .job_row_vector .color_drop_zone.hover,
 body.vectorDrag .color_drop_zone.create_job.hover {
     font-weight: 700;
-	border-color: rgba(0,0,0,0.33);
+	border-color: #e25303;
 	transition: border-color ease-in 0.5s;
 }
 
@@ -451,14 +478,12 @@ body.colorDragInProgress #drop_overlay {
 	filter:none;
 }
 
-.userIMG.designHighlight image {
-	filter:none !important;
-}
-
-.userText.designHighlight text,
-.userText.designHighlight tspan {
-	font-weight: bold !important;
-}
+/* moved to styles.jonja2 since it gets broken*/
+/*.userText.designHighlight text,*/
+/*.userText.designHighlight tspan,*/
+/*.userIMG.designHighlight {*/
+/*	filter: url(#designHighlight);*/
+/*}*/
 
 svg#area_preview path,
 svg#area_preview circle,
@@ -500,6 +525,38 @@ g#camera_markers.markerSW circle#markerSW {
     color: #e25303;
 	z-index: 999;
 }
+
+#zoom_monitor_wrapper {
+	max-width: 20vh;
+	position: relative;
+	margin: auto;
+}
+#zoom_monitor {
+	width: 100%;
+	position: relative;
+	background-color: #f1f1f1;
+	border:	1px solid #ccc;
+}
+#zoom_monitor>div {
+	border: 1px solid #e25303;
+	background-color: #fff;
+	position: absolute;
+	box-sizing: border-box;
+}
+#zoom_monitor_hint {
+	pointer-events: none;
+	width:90%;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	text-align:center;
+}
+
+#wa_view_settings_body div.accordion-inner>div:nth-child(1n+2) {
+	margin-top: 1em;
+}
+
 
 .freeTransformHandle{
 	fill: rgba(255,255,255,0.3);
@@ -675,7 +732,7 @@ li.material_entry span {
 #quick_shape_dialog form.form-horizontal {
     margin-bottom: 0;
 }
-#quick_shape_stroke_and_fill input[type=range] { 
+#quick_shape_stroke_and_fill input[type=range] {
 	width: 134px;
 }
 #quick_shape_stroke_and_fill input[type=color] {
@@ -686,10 +743,6 @@ li.material_entry span {
 	height: 20px;
 	margin-right: 10px;
 }
-#quick_shape_dialog #quick_shape_fill {
-	margin-top: -1.3em;
-}
-
 
 svg#area_preview.overModalBG { z-index: 1051; }
 
@@ -706,8 +759,9 @@ svg#area_preview.overModalBG { z-index: 1051; }
 }
 
 .marker_selection_desc {
-	margin-top: 1em;
-	margin-bottom: 2em;
+	margin-top: 0em;
+	margin-bottom: 1em;
+	display:inline-block;
 }
 
 .cal-arrow{
@@ -722,8 +776,8 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	background-position: center;
 }
 
-.cal-row { display: none; font-size: 1.5rem; }
-.cal-row.active { display: block; }
+.cal-row { color: #DDD; font-size: 1.2rem; padding: 0.1em; }
+.cal-row.active { color: #383e42; }
 .complete .cal-row { display: block !important; font-size: 1rem;}
 
 #NE .cal-arrow { transform: scale(-1,1); }
@@ -743,33 +797,55 @@ svg#area_preview.overModalBG { z-index: 1051; }
 }
 .marker_found_indicator.active { color: #000; }
 
+.marker_debug_image:hover{
+	height: 45vh;
+}
 .marker_debug_image{
-    margin: 5px;
+	margin: 5px;
     border: 1px;
     border-style: solid;
     border-color: black;
-    max-width: 26vw;
+    height: 15vh;
+    position: fixed;
+	max-width: 26vw;
     max-height: 50vh;
 }
 
 #debug_NW_img {
-    position: fixed;
     top: 1vh;
     left: 0vw;
 }
 #debug_NE_img {
-    position: fixed;
     top: 1vh;
     right: 1vw;
 }
 #debug_SW_img {
-    position: fixed;
     bottom: 1vh;
     left: 0vw;
 }
 #debug_SE_img {
-    position: fixed;
     bottom: 1vh;
     right: 0vw;
 }
 
+#calibration_picture_control button {
+	width:2em;
+	height: 2em;
+}
+
+#reengrave_markers div {
+	padding: 0em 0em 0em 1em;
+	border: 1px solid #d34843;
+	overflow: hidden;
+	margin-top: 1em;
+	box-sizing: border-box;
+}
+
+#reengrave_markers input {
+	width: 3em;
+	height: 0.75em;
+	margin-bottom: 0;
+	border-radius: 0.75em;
+	background-color: #eee;
+	margin-right: 0.3em;
+}

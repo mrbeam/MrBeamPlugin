@@ -167,15 +167,16 @@ class LidHandler(object):
 			self._end_photo_worker()
 
 	def take_undistorted_picture(self,is_initial_calibration=False):
-		from flask import make_response
+		from flask import make_response, jsonify
 		if self._photo_creator is not None:
 			if is_initial_calibration:
 				self._photo_creator.is_initial_calibration = True
 			else:
 				self._photo_creator.set_undistorted_path()
 			self._startStopCamera("take_undistorted_picture_request")
-			# todo make_response, so that it will be accepted in the .done() method in frontend
-			return make_response(gettext("Please make sure the lid of your Mr Beam II is open and wait a little..."), 200)
+
+			resp_text = {'msg': gettext("Please make sure the lid of your Mr Beam II is open and wait a little...")}
+			return make_response(jsonify(resp_text), 200)
 		else:
 			return make_response('Error, no photocreator active, maybe you are developing and dont have a cam?', 503)
 
@@ -356,6 +357,7 @@ class PhotoCreator(object):
 			if e.__class__.__name__.startswith('PiCamera'):
 				self._logger.error("PiCamera Error while capturing picture: %s: %s", e.__class__.__name__, e)
 				self.active = False
+				# TODO closing and reopening can be done "in software". We only should report this, if the camera fails constantly.
 				self._plugin.notify_frontend(
 					title=gettext("Camera Error"),
 					text=gettext("Please try the following:<br>- Close and reopen the lid<br>- Reboot the device and reload this page"),

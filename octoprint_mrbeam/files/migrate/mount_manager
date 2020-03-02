@@ -5,7 +5,7 @@
 # clear: if no usb stick plugged in, SELFCHECK_DIR will be deleted
 # if `df /` says that there is little space on disk left, mount_manager deletes all files in var/log and ~/.octoprint/logs
 
-VERSION="1.6.3"
+VERSION="1.6.4"
 APP_DIR=/root/mount_manager
 LOG_FILE="/var/log/mount_manager.log"
 MOUNT_DIR=/media/
@@ -41,6 +41,10 @@ function signal_alert {
     mrbeam_ledstrips_cli $1
     sleep 3
     mrbeam_ledstrips_cli rollback
+}
+
+function signal_busy {
+  mrbeam_ledstrips_cli flash_color:40:40:40:5
 }
 
 # functions for mounting different file systems
@@ -274,6 +278,8 @@ if [ "$1" == "add" ]; then
 
                     if gpg --verify "${SIG_FILE_EXTERNAL}"; then
                         log_info "GPG Signature: SIG_FILE ${SIG_FILE_EXTERNAL}: GPG Signature OK, handling file..."
+
+                        signal_busy
 
                         # create selfcheck_dir
                         if [[ -d $SELFCHECK_DIR ]]; then

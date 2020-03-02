@@ -13,6 +13,7 @@ import simplestyle
 import simpletransform
 import cubicsuperpath
 
+from profiler import Profiler
 from img2gcode import ImageProcessor
 from svg_util import get_path_d, _add_ns, unittouu
 
@@ -158,19 +159,24 @@ class Converter():
 		return str
 
 	def convert(self, is_job_cancelled, on_progress=None, on_progress_args=None, on_progress_kwargs=None):
-
+		profiler = Profiler('convert')
+		profiler.start('s1_start')
 		self.init_output_file()
 		self.check_free_space() # has to be after init_output_file (which removes old temp files occasionally)
 
+		profiler.stop('s1_start').start('s2_parse')
 		self.parse()
 		is_job_cancelled() # check after parsing svg xml.
+		profiler.stop('s2_parse').start('s3_matrix')
 
 		options = self.options
 		options['doc_root'] = self.document.getroot()
 
 		# Get all Gcodetools data from the scene.
 		self.calculate_conversion_matrix()
+		profiler.stop('s3_matrix').start('s4_paths')
 		self.collect_paths()
+		profiler.stop('s4_paths').start('preparing_progress')
 
 
 		def report_progress(on_progress, on_progress_args, on_progress_kwargs, done, total):
@@ -201,6 +207,7 @@ class Converter():
 
 		processedItemCount = 0
 		report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
+		profiler.stop('preparing_progress').start('write_gco_header')
 
 		with open(self._tempfile, 'a') as fh:
 			# write comments to gcode
@@ -213,6 +220,7 @@ class Converter():
 			fh.write(self._get_gcode_header())
 
 			# images
+			profiler.stop('write_gco_header').start('s5_images')
 			self._log.info( 'Raster conversion: %s' % self.options['engrave'])
 			for layer in self.layers :
 				if layer in self.images and self.options['engrave']:
@@ -255,6 +263,7 @@ class Converter():
 											workingAreaWidth = self.workingAreaWidth,
 											workingAreaHeight = self.workingAreaHeight,
 						                    beam_diameter = rasterParams['beam_diameter'],
+						                    overshoot_distance = 1,
 											intensity_black = rasterParams['intensity_black'],
 											intensity_white = rasterParams['intensity_white'],
 											intensity_black_user = rasterParams['intensity_black_user'],
@@ -278,15 +287,19 @@ class Converter():
 						else:
 							self._log.error("Unable to parse img data", data)
 
+						profiler.nest_data(ip.get_profiler())
+
 						processedItemCount += 1
 						report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
 					else:
 						self._log.info("postponing non-image layer %s" % ( layer.get('id') ))
 
+			profiler.stop('s5_images').start('s6_vectors')
 
 			# paths
 			self._log.info( 'Vector conversion: %s paths' % len(self.paths))
 
+			vector_conversion_analytics = {'frontend': 0, 'backend':0, 'vectors':0}
 			for layer in self.layers :
 				if layer in self.paths :
 					paths_by_color = dict()
@@ -305,6 +318,7 @@ class Converter():
 							paths_by_color[stroke] = []
 						d = path.get("d")
 						if d != '':
+							# TODO add start and end of path
 							paths_by_color[stroke].append(path)# += path
 							processedItemCount += 1
 							report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
@@ -312,6 +326,9 @@ class Converter():
 					layerId = layer.get('id') or '?'
 					pathId = path.get('id') or '?'
 
+					# set initial laser pos, assuming pleasant left to right, bottom to top processing order
+					current_x = 0
+					current_y = 0
 					#for each color generate GCode
 					for colorKey in self.colorOrder:
 						if colorKey == 'none':
@@ -328,6 +345,15 @@ class Converter():
 
 						# gcode_before_job
 						fh.write(machine_settings.gcode_before_job(color=colorKey, compressor=settings.get('cut_compressor', '100')))
+
+						# TODO sort paths
+						# check length (below ??? paths sort, above just go)
+						# while len(paths_by_color[colorKey]) > 0:
+							# get current pos
+							# pick closest starting point to (current_x, current_y)
+							# process...
+							# set current_x, current_y
+							# drop from list
 
 						for path in paths_by_color[colorKey]:
 							curveGCode = ""
@@ -347,13 +373,18 @@ class Converter():
 								fh.write("; pass:%i/%s\n" % (p+1, settings['passes']))
 								# TODO tbd DreamCut different for each pass?
 								fh.write(curveGCode)
-							
 
+
+						# TODO check if _after_job should be one(two?) levels less indented
 						# gcode_after_job
 						fh.write(machine_settings.gcode_after_job(color=colorKey))
 			fh.write(self._get_gcode_footer())
 
+		profiler.stop('s6_vectors').start('s7_export')
 		self.export_gcode()
+		profiler.stop('s7_export')
+		summary = profiler.finalize().getShortSummary()
+		self._log.info("conversion finished. Timing: %s", summary)
 
 
 	def collect_paths(self):
@@ -394,6 +425,7 @@ class Converter():
 						or i.tag == _add_ns( 'ellipse', 'svg' ) or i.tag == 'ellipse' \
 						or i.tag == _add_ns( 'circle', 'svg' ) or	i.tag == 'circle':
 
+						# TODO not necessary if path has embedded gcode
 						i.set("d", get_path_d(i))
 						self._handle_node(i, layer)
 

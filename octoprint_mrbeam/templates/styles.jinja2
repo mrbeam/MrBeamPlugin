@@ -1,0 +1,8 @@
+{# some styles get broken when packed into one css file. As a hackaround, we put those thyles here #}
+<style>
+    .userText.designHighlight text,
+    .userText.designHighlight tspan,
+    .userIMG.designHighlight {
+        filter: url(#designHighlight);
+    }
+</style>

@@ -105,37 +105,27 @@
 						<label class="control-label">{{ _('Line Color') }}</label>
 						<div class="controls">
 							<input type="checkbox" value="stroke" id="quick_shape_stroke" checked data-bind="click: _qs_currentQuickShapeUpdate()" />
-							<input type="color" id="quick_shape_color" data-bind="textInput: _qs_currentQuickShapeUpdate()" />
-<!--							<select id="quick_shape_color_selector" >
-								<option value="#e25303" style="background-color: #e25303;"></option>
-								<option value="#000000" style="background-color: #000000;"></option>
-								<option value="#800000" style="background-color: #800000;"></option>
-								<option value="#008000" style="background-color: #008000;"></option>
-								<option value="#000080" style="background-color: #000080;"></option>
-								<option value="#808000" style="background-color: #808000;"></option>
-								<option value="#800080" style="background-color: #800080;"></option>
-								<option value="#008080" style="background-color: #008080;"></option>
-								<option value="#ff0000" style="background-color: #ff0000;"></option>
-								<option value="#00ff00" style="background-color: #00ff00;"></option>
-								<option value="#0000ff" style="background-color: #0000ff;"></option>
-								<option value="#ffff00" style="background-color: #ffff00;"></option>
-								<option value="#ff00ff" style="background-color: #ff00ff;"></option>
-								<option value="#00ffff" style="background-color: #00ffff;"></option>
-							</select>-->
+							<div id="qs_colorPicker_stroke" class="tinyColorPicker">
+								<a class="tcp_color"><div class="colorInner"></div></a>
+								<div class="track"></div>
+								<ul class="dropdown"><li></li></ul>
+								<input type="hidden" class="colorInput" id="quick_shape_color" >
+							</div>
 						</div>
 					</div>
 				</form>
-				
 
-				<form role="form" class="form-horizontal" data-bind="submit: _qs_dialogClose" _lpchecked="1">
+				<form role="form" class="form-horizontal" data-bind="submit: _qs_dialogClose" _lpchecked="1" style="min-height:85px;">
 					<div class="control-group">
-						<label class="control-label">{{ _('Fill') }}</label>
+						<label class="control-label">{{ _('Fill Color') }}</label>
 						<div class="controls">
 							<input type="checkbox" value="fill" id="quick_shape_fill" data-bind="click: _qs_currentQuickShapeUpdate()" />
-							<input type="range" id="quick_shape_fill_brightness" 
-								   class="precisionslider"
-								   data-bind="textInput: _qs_currentQuickShapeUpdate()" 
-								   value="0" min="0" max="255" />
+							<div id="qs_colorPicker_fill" class="tinyColorPicker blackWhite">
+								<a class="tcp_color"><div class="colorInner"></div></a>
+								<div class="track"></div>
+								<ul class="dropdown"><li></li></ul>
+								<input type="hidden" class="colorInput" id="quick_shape_fill_brightness">
+							</div>
 						</div>
 					</div>
 				</form>
