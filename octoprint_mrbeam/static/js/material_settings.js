@@ -22,6 +22,7 @@ $(function () {
                     for (let materialKey in self.materialSettingsDatabase) {
                         if (materialKey in materialImportedSettings) {
                             self.materialSettingsDatabase[materialKey].colors = materialImportedSettings[materialKey].colors;
+                            self.materialSettingsDatabase[materialKey].custom = false
                         } else {
                             delete self.materialSettingsDatabase[materialKey]
                         }
