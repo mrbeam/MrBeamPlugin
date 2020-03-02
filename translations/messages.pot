@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-02-27 11:27+0100\n"
+"POT-Creation-Date: 2020-02-28 15:14+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -3329,14 +3329,23 @@ msgid ""
 msgstr ""
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:2
-msgid "Brightness adjustment"
+msgid "New language"
 msgstr ""
 
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:4
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:5
+msgid "Mr Beam can now also speak Italian!"
+msgstr ""
+
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:6
 msgid ""
-"You can now adjust the <strong>brightness of the camera pictures</strong>"
-" to improve your experience with the Working Area in case you have dark "
-"materials."
+"When you connect to your Mr Beam, your browser's default language will be"
+" selected."
+msgstr ""
+
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:9
+msgid ""
+"You can manually select another language in the \"User Settings\" menu, "
+"under \"Interface\"."
 msgstr ""
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:7

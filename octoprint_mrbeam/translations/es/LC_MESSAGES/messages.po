@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-02-27 11:27+0100\n"
-"PO-Revision-Date: 2020-02-27 12:13+0100\n"
+"POT-Creation-Date: 2020-02-28 15:14+0100\n"
+"PO-Revision-Date: 2020-02-28 15:37+0100\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: es_ES\n"
@@ -3719,18 +3719,28 @@ msgstr ""
 "seleccionando dinámicamente el color del borde y el relleno."
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:2
-msgid "Brightness adjustment"
-msgstr "Ajuste de brillo"
+msgid "New language"
+msgstr "Nuevo idioma"
 
-#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:4
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:5
+msgid "Mr Beam can now also speak Italian!"
+msgstr "¡Mr Beam ahora también habla italiano!"
+
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:6
 msgid ""
-"You can now adjust the <strong>brightness of the camera pictures</strong> to "
-"improve your experience with the Working Area in case you have dark "
-"materials."
+"When you connect to your Mr Beam, your browser's default language will be "
+"selected."
 msgstr ""
-"Ahora puedes ajustar el <strong>brillo de las imágenes de la cámara</strong> "
-"para mejorar tu experiencia con el Área de Trabajo en caso de que uses "
-"materiales oscuros."
+"Cuando te conectes a tu Mr Beam, se seleccionará el idioma por defecto de tu "
+"navegador."
+
+#: octoprint_mrbeam/templates/wizard/wizard_whatsnew_2.jinja2:9
+msgid ""
+"You can manually select another language in the \"User Settings\" menu, "
+"under \"Interface\"."
+msgstr ""
+"Puedes seleccionar otro idioma manualmente en \"Ajustes de Usuario\" > "
+"\"Interface\"."
 
 #: octoprint_mrbeam/templates/wizard/wizard_whatsnew_3.jinja2:7
 msgid "The laser head's position shown is now more consistent."
@@ -3863,11 +3873,20 @@ msgstr "Daemon apagado"
 msgid "Reset daemon"
 msgstr "Resetear daemon"
 
+#~ msgid "Brightness adjustment"
+#~ msgstr "Ajuste de brillo"
+
+#~ msgid ""
+#~ "You can now adjust the <strong>brightness of the camera pictures</strong> "
+#~ "to improve your experience with the Working Area in case you have dark "
+#~ "materials."
+#~ msgstr ""
+#~ "Ahora puedes ajustar el <strong>brillo de las imágenes de la cámara</"
+#~ "strong> para mejorar tu experiencia con el Área de Trabajo en caso de que "
+#~ "uses materiales oscuros."
+
 #~ msgid "New materials"
 #~ msgstr "Nuevos materiales"
-
-#~ msgid "New language"
-#~ msgstr "Nuevo idioma"
 
 #~ msgid ""
 #~ "Module 'iobeam' is outdated. Please run Software Update from 'Settings' > "
@@ -3933,23 +3952,6 @@ msgstr "Resetear daemon"
 #~ msgstr ""
 #~ "Por favor, ten en cuenta que el cabezal láser debe estar limpio para "
 #~ "obtener los mejores resultados con estos ajustes."
-
-#~ msgid "Mr Beam can now also speak French!"
-#~ msgstr "¡Mr Beam ahora también habla francés!"
-
-#~ msgid ""
-#~ "When you connect to your Mr Beam, your browser's default language will be "
-#~ "selected."
-#~ msgstr ""
-#~ "Cuando te conectes a tu Mr Beam, se seleccionará el idioma por defecto de "
-#~ "tu navegador."
-
-#~ msgid ""
-#~ "You can manually select another language in the \"User Settings\" menu, "
-#~ "under \"Interface\"."
-#~ msgstr ""
-#~ "Puedes seleccionar otro idioma manualmente en \"Ajustes de Usuario\" > "
-#~ "\"Interface\"."
 
 #~ msgid "Dreamcut support"
 #~ msgstr "Soporte para dreamcut"

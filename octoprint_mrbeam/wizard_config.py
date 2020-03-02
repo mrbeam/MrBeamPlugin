@@ -135,8 +135,8 @@ class WizardConfig:
 			),
 			wizard_whatsnew_2=dict(
 				type='wizard',
-				name=gettext(""),
-				required=False,
+				name=gettext("New language"),
+				required=True,
 				mandatory=False,
 				suffix='_whatsnew_2',
 				template='wizard/wizard_whatsnew_2.jinja2',
