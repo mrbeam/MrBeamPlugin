@@ -24,6 +24,7 @@ from octoprint.util import dict_merge
 from octoprint.settings import settings
 from octoprint.events import Events as OctoPrintEvents
 
+from octoprint_mrbeam.__version import __version__
 from octoprint_mrbeam.iobeam.iobeam_handler import ioBeamHandler, IoBeamEvents
 from octoprint_mrbeam.iobeam.onebutton_handler import oneButtonHandler
 from octoprint_mrbeam.iobeam.interlock_handler import interLockHandler
@@ -139,6 +140,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	# inside initialize() OctoPrint is already loaded, not assured during __init__()!
 	def initialize(self):
+		self._plugin_version = __version__
 		init_mrb_logger(self._printer)
 		self._logger = mrb_logger("octoprint.plugins.mrbeam")
 		self._branch = self.getBranch()
