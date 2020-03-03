@@ -77,7 +77,9 @@ $(function(){
 		self.custom_materials = ko.observable({});
 
 		self.customized_material = ko.observable(false);
+		self.save_custom_material_image = ko.observable("");
 		self.save_custom_material_name = ko.observable("");
+		self.save_custom_material_description = ko.observable("");
 		self.save_custom_material_thickness = ko.observable(1);
 		self.save_custom_material_color = ko.observable("#000000");
 
@@ -126,12 +128,15 @@ $(function(){
 
 		self.flag_customized_material = function(){
 		    if (self.user_materials_enabled){
-                var custom_prefix = 'My ';
-                var suggested_name = self.selected_material().name;
-                if(!suggested_name.startsWith(custom_prefix)){
-                    suggested_name = custom_prefix + suggested_name;
+                if (!self.selected_material().custom) {
+                    self.save_custom_material_name(gettext('My') + ' ' + self.selected_material().name);
+                    self.save_custom_material_image(null);
+                    self.save_custom_material_description('')
+                } else {
+                    self.save_custom_material_name(self.selected_material().name);
+                    self.save_custom_material_image(self.selected_material().img);
+                    self.save_custom_material_description(self.selected_material().description)
                 }
-                self.save_custom_material_name(suggested_name);
 				const col = '#'+self.selected_material_color();
                 self.save_custom_material_color(col);
 				$("#customMaterial_colorPicker").data('plugin_tinycolorpicker').setColor(col);
@@ -217,12 +222,16 @@ $(function(){
 			}else {
 
 				new_material = {
-				name: name,
-					img: 'custommaterial.png',
-					description: gettext("Custom material settings"),
-					hints: gettext("Figuring out material settings works best from low to high intensity and fast to slow movement."),
-					safety_notes: gettext("Experimenting with custom material settings is at your own risk."),
+				    name: name,
+				    // name: $(name).text(),
+					img: self.save_custom_material_image(),
+					description: self.save_custom_material_description(),
+					// description: $(self.save_custom_material_description()).text(),
+					hints: "",
+					safety_notes: gettext("Custom material setting! Use at your own risk."),
 					laser_type: 'MrBeamII-1.0',
+                    model: MRBEAM_MODEL,
+                    custom: true,
 					colors: {}
 				};
 			}
@@ -284,14 +293,34 @@ $(function(){
 				});
 		};
 
+         self._save_material_load_local_image = function (img_file) {
+            var options = {
+                maxWidth: 200,
+                maxHeight: 100,
+                canvas: true,
+                cover: true,
+                crop: true,
+                orientation: true,
+                // pixelRatio: window.devicePixelRatio,
+                downsamplingRatio: 0.5,
+            }
+            loadImage(img_file, self._on_save_material_local_image_loaded, options)
+        }
+
+        self._on_save_material_local_image_loaded = function (elem) {
+            self.save_custom_material_image(elem.toDataURL('image/jpeg', 40));
+            // $("#reset").show();
+        }
+
+
 		self._update_custom_materials = function(list){
 			var tmp = {};
 			for(var k in list) {
 				var cm = list[k];
-				cm.custom = true
+				cm.custom = true;
 				// legacy:
-				if (cm.img == 'custom.jpg') {
-				    cm.img = 'custommaterial.png'
+				if (cm.img == 'custom.jpg' || cm.img == 'custommaterial.png') {
+				    cm.img = null
                 }
 				tmp[k] = cm;
 			}
@@ -1454,6 +1483,17 @@ $(function(){
 			// init tinyColorPicker if not done yet
 			$("#customMaterial_colorPicker").tinycolorpicker();
 			$("#customMaterial_colorPicker").bind("change", self.save_custom_material_color);
+			// for custom material image laoder
+            $("#custom_material_image").click(function (ev) {
+                $("#custom_material_file_input").click();
+            });
+            $('#custom_material_file_input').on('change', function (ev) {
+                self._save_material_load_local_image(ev.target.files[0])
+            });
+            // $("#reset").click(function () {
+            //     setDefaultImage()
+            // });
+
 		};
 
 		self.onAllBound = function(){

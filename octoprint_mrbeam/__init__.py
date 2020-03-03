@@ -475,6 +475,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				# "js/review.js",  TODO IRATXE: disabled for now
 				"js/util.js",
 				"js/user_notification_viewmodel.js",
+				"js/lib/load-image.all.min.js",     # to load custom material images
 			    ],
 			css=["css/mrbeam.css",
 			     "css/tinyColorPicker.css",
