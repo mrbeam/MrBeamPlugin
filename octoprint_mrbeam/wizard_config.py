@@ -4,7 +4,7 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 
 class WizardConfig:
 	def __init__(self, plugin):
-		self.WIZARD_VERSION = 17  # (v0.5.0) random number. but we can't go down anymore, just up.
+		self.WIZARD_VERSION = 18  # (v0.6.0) random number. but we can't go down anymore, just up.
 
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.wizard_config")
 
