@@ -226,7 +226,7 @@ $(function(){
 				    // name: $(name).text(),
 					img: self.save_custom_material_image(),
 					description: self.save_custom_material_description(),
-					// description: $(self.save_custom_material_description()).text(),
+					// var stripedHtml = $("<div>").html(htmlString).text();
 					hints: "",
 					safety_notes: gettext("Custom material setting! Use at your own risk."),
 					laser_type: 'MrBeamII-1.0',
