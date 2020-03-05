@@ -26,6 +26,7 @@ class Migration(object):
 	VERSION_GRBL_AUTO_UPDATE                 = '0.2.1'
 	VERSION_MOUNT_MANAGER_164                = '0.5.3.2'
 	VERSION_INITD_NETCONNECTD                = '0.5.5'
+	VERSION_DELETE_UPLOADED_STL_FILES        = '0.6.1'
 
 	# this is where we have files needed for migrations
 	MIGRATE_FILES_FOLDER     = 'files/migrate/'
@@ -108,6 +109,9 @@ class Migration(object):
 
 				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_INITD_NETCONNECTD, equal_ok=False):
 					self.update_etc_initd_netconnectd()
+
+				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_DELETE_UPLOADED_STL_FILES, equal_ok=False):
+					self.delete_uploaded_stl_files()
 
 				# migrations end
 
@@ -405,6 +409,10 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 		src = os.path.join(__package_path__, self.MIGRATE_FILES_FOLDER, 'etc_initd_netconnectd')
 		dst = '/etc/init.d/netconnectd'
 		exec_cmd("sudo cp {src} {dst}".format(src=src, dst=dst))
+
+	def delete_uploaded_stl_files(self):
+		self._logger.info("delete_uploaded_stl_files() ")
+		exec_cmd("rm -f /home/pi/.octoprint/uploads/*.stl")
 
 
 

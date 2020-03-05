@@ -169,12 +169,23 @@ $(function() {
         self.onStartup = function(){
             // self.setScrollModeForTouchDevices();
 
+            // set env flag in body for experimental_feature_beta and  experimental_feature_dev
+            if (MRBEAM_ENV_LOCAL == "DEV") {
+             $('body').addClass('end_dev')
+             $('body').removeClass('end_prod')
+            } else if (MRBEAM_ENV_LOCAL == "BETA") {
+             $('body').addClass('end_beta')
+             $('body').removeClass('end_prod')
+            }
+
             $(window).on("orientationchange",self.onOrientationchange);
             self.setBodyScrollTop();
 
             // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
             // Change "Username" label in Settings > Access Control > Add user
             $('#settings-usersDialogAddUser > div.modal-body > form > div:nth-child(1) > label').text(gettext('E-mail address'));
+
+
 
         };
 

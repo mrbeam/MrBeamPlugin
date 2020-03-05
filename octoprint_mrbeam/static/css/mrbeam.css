@@ -2595,3 +2595,23 @@ input.search-query,
     opacity: 0.8;
 }
 
+
+* === EXPERIMENTIAL FEATURES ===
+*/
+
+.env_prod .experimental_feature_dev,
+.env_beta .experimental_feature_dev {
+    display: none !important;
+}
+.env_dev .experimental_feature_dev {
+    display: initial;
+}
+
+.env_prod .experimental_feature_beta {
+    display: none !important;
+}
+.env_dev .experimental_feature_beta,
+.env_beta .experimental_feature_beta {
+    display: initial;
+}
+

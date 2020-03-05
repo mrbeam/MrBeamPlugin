@@ -16,6 +16,7 @@ import octoprint.plugin
 import requests
 from flask import request, jsonify, make_response, url_for
 from flask.ext.babel import gettext
+import octoprint.filemanager as op_filemanager
 from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping
 from octoprint.server import NO_CONTENT
 from octoprint.server.util.flask import restricted_access, get_json_command_from_request, \
@@ -1351,7 +1352,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@restricted_access
 	def cancelSlicing(self):
 		self._cancel_job = True
-		self._logger.info("ANDYTEST /cancel - cancelSlicing()")
 		return NO_CONTENT
 
 	##~~ SimpleApiPlugin mixin
@@ -1870,7 +1870,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			),
 			# extensions for printable machine code
 			machinecode=dict(
-				gcode=ContentTypeMapping(["gcode", "gco", "g", "nc"], "text/plain")
+				gcode=ContentTypeMapping(["nc"], "text/plain") # already defined by OP: "gcode", "gco", "g"
 			)
 		)
 
@@ -2177,6 +2177,23 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._logger.debug("_get_mac_addresses() found %s" % interfaces)
 			self._mac_addrs = interfaces
 		return self._mac_addrs
+
+
+
+# MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
+# Per default OP always accepts .stl files.
+# Here we monkey-pathc the removel of this file type
+def _op_filemanager_full_extension_tree_wrapper():
+	res = op_filemanager.full_extension_tree_original()
+	res.get('model', {}).pop('stl', None)
+	return res
+
+if not 'full_extension_tree_original' in dir(op_filemanager):
+	op_filemanager.full_extension_tree_original = op_filemanager.full_extension_tree
+	op_filemanager.full_extension_tree = _op_filemanager_full_extension_tree_wrapper
+
+
+
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
