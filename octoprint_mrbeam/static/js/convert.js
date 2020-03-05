@@ -219,19 +219,23 @@ $(function(){
 
 			if(self.custom_materials()[key]){
 				new_material = self.custom_materials()[key];
+				new_material.description = $("<div>").html(self.save_custom_material_description()).text()
+                new_material.img = self.save_custom_material_image()
+                new_material.safety_notes = gettext("Custom material setting! Use at your own risk.")
+                new_material.model = MRBEAM_MODEL
+                new_material.custom = true,
+                new_material.v = BEAMOS_VERSION
 			}else {
-
 				new_material = {
-				    name: name,
-				    // name: $("<div>").html(name()).text(),
+				    name: $("<div>").html(name()).text(),
 					img: self.save_custom_material_image(),
-					description: self.save_custom_material_description(),
-					// description: $("<div>").html(self.save_custom_material_description()).text(),
+					description: $("<div>").html(self.save_custom_material_description()).text(),
 					hints: "",
 					safety_notes: gettext("Custom material setting! Use at your own risk."),
 					laser_type: 'MrBeamII-1.0',
                     model: MRBEAM_MODEL,
                     custom: true,
+                    v: BEAMOS_VERSION,
 					colors: {}
 				};
 			}
