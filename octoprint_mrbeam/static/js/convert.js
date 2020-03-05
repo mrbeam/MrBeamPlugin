@@ -77,7 +77,9 @@ $(function(){
 		self.custom_materials = ko.observable({});
 
 		self.customized_material = ko.observable(false);
+		self.save_custom_material_image = ko.observable("");
 		self.save_custom_material_name = ko.observable("");
+		self.save_custom_material_description = ko.observable("");
 		self.save_custom_material_thickness = ko.observable(1);
 		self.save_custom_material_color = ko.observable("#000000");
 
@@ -126,12 +128,15 @@ $(function(){
 
 		self.flag_customized_material = function(){
 		    if (self.user_materials_enabled){
-                var custom_prefix = 'My ';
-                var suggested_name = self.selected_material().name;
-                if(!suggested_name.startsWith(custom_prefix)){
-                    suggested_name = custom_prefix + suggested_name;
+                if (!self.selected_material().custom) {
+                    self.save_custom_material_name(gettext('My') + ' ' + self.selected_material().name);
+                    self.save_custom_material_image(null);
+                    self.save_custom_material_description('')
+                } else {
+                    self.save_custom_material_name(self.selected_material().name);
+                    self.save_custom_material_image(self.selected_material().img);
+                    self.save_custom_material_description(self.selected_material().description)
                 }
-                self.save_custom_material_name(suggested_name);
 				const col = '#'+self.selected_material_color();
                 self.save_custom_material_color(col);
 				$("#customMaterial_colorPicker").data('plugin_tinycolorpicker').setColor(col);
@@ -214,15 +219,23 @@ $(function(){
 
 			if(self.custom_materials()[key]){
 				new_material = self.custom_materials()[key];
+				new_material.description = $("<div>").html(self.save_custom_material_description()).text()
+                new_material.img = self.save_custom_material_image()
+                new_material.safety_notes = gettext("Custom material setting! Use at your own risk.")
+                new_material.model = MRBEAM_MODEL
+                new_material.custom = true,
+                new_material.v = BEAMOS_VERSION
 			}else {
-
 				new_material = {
-				name: name,
-					img: 'custommaterial.png',
-					description: gettext("Custom material settings"),
-					hints: gettext("Figuring out material settings works best from low to high intensity and fast to slow movement."),
-					safety_notes: gettext("Experimenting with custom material settings is at your own risk."),
+				    name: $("<div>").html(name).text(),
+					img: self.save_custom_material_image(),
+					description: $("<div>").html(self.save_custom_material_description()).text(),
+					hints: "",
+					safety_notes: gettext("Custom material setting! Use at your own risk."),
 					laser_type: 'MrBeamII-1.0',
+                    model: MRBEAM_MODEL,
+                    custom: true,
+                    v: BEAMOS_VERSION,
 					colors: {}
 				};
 			}
@@ -250,12 +263,10 @@ $(function(){
 			// push it to our backend
             var postData = {
                 'put':    data,   // optional
-                'delete': []                // optional
+                'delete': []      // optional
             };
             OctoPrint.simpleApiCommand("mrbeam", "custom_materials", postData)
                 .done(function(response){
-					// console.log("simpleApiCall response: ", response);
-					// $('#save_material_form.dropdown').dropdown('toggle'); // buggy
 					$('#save_material_form').removeClass('open'); // workaround
 
                     // add to custom materials and select
@@ -284,14 +295,75 @@ $(function(){
 				});
 		};
 
+		self.restore_material_settings = function(materials){
+		    var postData = {
+		        'reset':  true,
+                'put':    materials,   // optional
+                'delete': []      // optional
+            };
+            OctoPrint.simpleApiCommand("mrbeam", "custom_materials", postData)
+                .done(function(response){
+					$('#save_material_form').removeClass('open'); // workaround
+
+                    // add to custom materials and select
+					self._update_custom_materials(response.custom_materials);
+					self.selected_material(null)
+					self.reset_material_settings()
+					new PNotify({
+                        title: gettext("Custom Material Settings restored."),
+                        text: _.sprintf(gettext("Successfully restored %(number)d custom materials from file."), {number: Object.keys(materials).length}),
+                        type: "info",
+                        hide: true
+                    });
+
+
+				})
+                .fail(function(){
+					console.error("Unable to restore custom material settings: ", postData);
+					new PNotify({
+                        title: gettext("Error while saving settings!"),
+                        text: _.sprintf(gettext("Unable to save your custom material settings at the moment.%(br)sCheck connection to Mr Beam II and try again."), {br: "<br/>"}),
+                        type: "error",
+                        hide: true
+                    });
+				});
+        };
+
+        self._save_material_load_local_image = function (img_file) {
+            var options = {
+                maxWidth: 200,
+                maxHeight: 100,
+                canvas: true,
+                cover: true,
+                crop: true,
+                orientation: true,
+                // pixelRatio: window.devicePixelRatio,
+                downsamplingRatio: 0.5,
+            }
+            loadImage(img_file, self._on_save_material_local_image_loaded, options)
+        };
+
+        self._on_save_material_local_image_loaded = function (elem) {
+            self.save_custom_material_image(elem.toDataURL('image/jpeg', 40));
+        };
+
+        self.reset_save_custom_material_image = function(){
+            self.save_custom_material_image('');
+        };
+
+        self.show_save_custom_material_reset_button = ko.computed(function(){
+            return self.save_custom_material_image() && self.save_custom_material_image().length > 0
+        });
+
+
 		self._update_custom_materials = function(list){
 			var tmp = {};
 			for(var k in list) {
 				var cm = list[k];
-				cm.custom = true
+				cm.custom = true;
 				// legacy:
-				if (cm.img == 'custom.jpg') {
-				    cm.img = 'custommaterial.png'
+				if (cm.img == 'custom.jpg' || cm.img == 'custommaterial.png') {
+				    cm.img = null
                 }
 				tmp[k] = cm;
 			}
@@ -1454,6 +1526,17 @@ $(function(){
 			// init tinyColorPicker if not done yet
 			$("#customMaterial_colorPicker").tinycolorpicker();
 			$("#customMaterial_colorPicker").bind("change", self.save_custom_material_color);
+			// for custom material image laoder
+            $("#custom_material_image").click(function (ev) {
+                $("#custom_material_file_input").click();
+            });
+            $('#custom_material_file_input').on('change', function (ev) {
+                self._save_material_load_local_image(ev.target.files[0])
+            });
+            // $("#reset").click(function () {
+            //     setDefaultImage()
+            // });
+
 		};
 
 		self.onAllBound = function(){

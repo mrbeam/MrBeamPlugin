@@ -87,6 +87,12 @@ class Materials(object):
 		return res
 
 
+	def reset_all_custom_materials(self):
+		self._logger.info("Resetting all custom material settings!!!!")
+		self.custom_materials = {}
+		self._save(force=True)
+
+
 	def _load(self, force=False):
 		if not self.custom_materials_loaded or force:
 				try:
