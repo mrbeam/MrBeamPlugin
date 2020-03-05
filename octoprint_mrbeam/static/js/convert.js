@@ -227,7 +227,7 @@ $(function(){
                 new_material.v = BEAMOS_VERSION
 			}else {
 				new_material = {
-				    name: $("<div>").html(name()).text(),
+				    name: $("<div>").html(name).text(),
 					img: self.save_custom_material_image(),
 					description: $("<div>").html(self.save_custom_material_description()).text(),
 					hints: "",
@@ -327,9 +327,9 @@ $(function(){
                         hide: true
                     });
 				});
-        }
+        };
 
-         self._save_material_load_local_image = function (img_file) {
+        self._save_material_load_local_image = function (img_file) {
             var options = {
                 maxWidth: 200,
                 maxHeight: 100,
@@ -341,12 +341,19 @@ $(function(){
                 downsamplingRatio: 0.5,
             }
             loadImage(img_file, self._on_save_material_local_image_loaded, options)
-        }
+        };
 
         self._on_save_material_local_image_loaded = function (elem) {
             self.save_custom_material_image(elem.toDataURL('image/jpeg', 40));
-            // $("#reset").show();
-        }
+        };
+
+        self.reset_save_custom_material_image = function(){
+            self.save_custom_material_image('');
+        };
+
+        self.show_save_custom_material_reset_button = ko.computed(function(){
+            return self.save_custom_material_image() && self.save_custom_material_image().length > 0
+        });
 
 
 		self._update_custom_materials = function(list){
