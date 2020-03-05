@@ -263,12 +263,10 @@ $(function(){
 			// push it to our backend
             var postData = {
                 'put':    data,   // optional
-                'delete': []                // optional
+                'delete': []      // optional
             };
             OctoPrint.simpleApiCommand("mrbeam", "custom_materials", postData)
                 .done(function(response){
-					// console.log("simpleApiCall response: ", response);
-					// $('#save_material_form.dropdown').dropdown('toggle'); // buggy
 					$('#save_material_form').removeClass('open'); // workaround
 
                     // add to custom materials and select
@@ -296,6 +294,40 @@ $(function(){
                     });
 				});
 		};
+
+		self.restore_material_settings = function(materials){
+		    var postData = {
+		        'reset':  true,
+                'put':    materials,   // optional
+                'delete': []      // optional
+            };
+            OctoPrint.simpleApiCommand("mrbeam", "custom_materials", postData)
+                .done(function(response){
+					$('#save_material_form').removeClass('open'); // workaround
+
+                    // add to custom materials and select
+					self._update_custom_materials(response.custom_materials);
+					self.selected_material(null)
+					self.reset_material_settings()
+					new PNotify({
+                        title: gettext("Custom Material Settings restored."),
+                        text: _.sprintf(gettext("Successfully restored %(number)d custom materials from file."), {number: Object.keys(materials).length}),
+                        type: "info",
+                        hide: true
+                    });
+
+
+				})
+                .fail(function(){
+					console.error("Unable to restore custom material settings: ", postData);
+					new PNotify({
+                        title: gettext("Error while saving settings!"),
+                        text: _.sprintf(gettext("Unable to save your custom material settings at the moment.%(br)sCheck connection to Mr Beam II and try again."), {br: "<br/>"}),
+                        type: "error",
+                        hide: true
+                    });
+				});
+        }
 
          self._save_material_load_local_image = function (img_file) {
             var options = {

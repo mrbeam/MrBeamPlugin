@@ -9,6 +9,7 @@
 $(function () {
 	function CameraCalibrationViewModel(parameters) {
 		var self = this;
+		window.mrbeam.viewModels['cameraCalibrationViewModel'] = self;
 
 		self.staticURL = "/plugin/mrbeam/static/img/cam_calibration/calpic_wait.svg";
 		self.rawUrl = '/downloads/files/local/cam/beam-cam-tmp.jpg';
