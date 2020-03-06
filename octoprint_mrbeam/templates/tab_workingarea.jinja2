@@ -26,29 +26,6 @@
 														<div class="progress progress-striped active">
 															<div class="bar" id="job_progressBar" data-bind="style: { width: state.progressString() + '%' }">&nbsp;{{ _('Processed') }} :  <strong data-bind="text: state.byteString"></strong></div>
 														</div>
-<!--
-														<div class="overrideSlider">
-															<input id="intensity_override_slider" type="text" data-bind="sliderValue: state.intensityOverride">
-															<span data-bind="text:state.intensityOverride()">100</span>% Intensity
-														</div>
-														<div class="overrideSlider">
-															<input id="feedrate_override_slider" type="text" data-bind="sliderValue: state.feedrateOverride">
-															<span data-bind="text:state.feedrateOverride()">100</span>% Feedrate
-														</div>
-														<div class="repeatGcode">
-															<div class="btn-group">
-																<button type="button" class="btn btn-default btn-number" data-bind="enable: state.numberOfPasses() > 1, click:state.decreasePasses">
-																	<span class="icon-minus"></span>
-																</button>
-																<input type="text" class="input-mini text-right" value="1" min="1" max="10" data-bind="value:state.numberOfPasses()">
-																<button type="button" class="btn btn-default btn-number" data-bind="click:state.increasePasses">
-																	<span class="icon-plus"></span>
-																</button>
-															</div>
-															<span>Passes</span>
-
-														</div>
--->
 
 													</div>
 													<!--                                {{ _('Print Time') }}: <strong data-bind="text: printTimeString"></strong><br>
@@ -64,25 +41,50 @@
 												</div>
 											</div>
 										</div>
-										
-										<div id="camera_status" class="accordion-inner">
+
+										<div id="wa_view_settings" class="accordion-inner">
 											<div class="accordion-heading ">
-												<a href="#camera_brightness" class="dropdown" data-toggle="collapse" aria-expanded="false">
-													<i class="icon-camera"></i> {{ _('Camera') }}:
+												<a href="#wa_view_settings_body" class="dropdown" data-toggle="collapse" aria-expanded="false">
+													<i class="icon-camera"></i> {{ _('Preview') }}:
 												</a>
 												<span class="caret" style="vertical-align: middle"></span>
 											</div>
-											<div class="collapse" id="camera_brightness">
-												<div class="accordion-inner muted">
-													<i class="icon-adjust"></i>
-													<input type="range" min="0" max="1" step="0.01" 
-														   style="width:80%;"
-														   class="decent_input img_adjust"
-														   value="0" data-bind="value: previewImgOpacity, valueUpdate: 'input'"> 
+											<div class="collapse" id="wa_view_settings_body">
+												<div class="accordion-inner">
+													<div>
+														<label>
+															{{ _('Brightness') }}:
+														</label>
+														<i class="icon-adjust"></i>
+														<input type="range" min="0" max="1" step="0.01"
+															   style="width:80%;"
+															   class="decent_input img_adjust"
+															   value="0" data-bind="value: previewImgOpacity, valueUpdate: 'input'">
+													</div>
+													<div>
+														<label>
+															{{ _('Zoom') }}: <span data-bind="text:zoom_factor_text"></span>
+														</label>
+														<div id="zoom_monitor_wrapper">
+															<div id="zoom_monitor" data-bind="
+																	style: { 'padding-bottom': (100 * hwRatio())+'%' },
+																	event: { mousewheel: wheel_zoom_monitor }
+																 ">
+																<div data-bind="style: {
+																		width: (100*zoom())+'%',
+																		'padding-bottom': (100*zoom()*hwRatio())+'%',
+																		left: (zoomOffX() / workingAreaWidthMM() * 100) + '%',
+																		top: (zoomOffY() / workingAreaHeightMM() * 100) + '%'
+																	}, event: { mousemove: mouse_drag_monitor }">
+																</div>
+															</div>
+															<div id="zoom_monitor_hint" data-bind="visible: (zoom() === 1)" class="muted">{{ _('Scroll to zoom') }}</div>
+														</div>
+													</div>
 												</div>
 											</div>
 										</div>
-										
+
 										<div id="mrb_control" class="accordion-inner" data-bind="visible: state.isReady() || state.isLocked() || state.isFlashing()">
 											<div data-bind="visible: state.isFlashing() ">
 												{{ _('Firmware update in progress') }}
@@ -172,8 +174,8 @@
 
                                 <div class="accordion-group" id="working_area_files">
 									<div class="accordion-heading">
-										<div class="accordion-toggle"><i class="icon-list"></i> {{ _('Designs') }}</div>
-										<a id="clear_working_area_btn" class="accordion-toggle pull-right" data-bind="visible: !working_area_empty(), click: clear" style="margin-right: 1em;" ><i class="icon-remove-sign"></i> {{ _('Clear all') }}</a>
+										<div class="accordion-toggle unselectable"><i class="icon-list"></i> {{ _('Designs') }}</div>
+										<a id="clear_working_area_btn" class="accordion-toggle pull-right" data-bind="style: {opacity: working_area_empty() ? 0.75 : 1}, click: clear" style="margin-right: 1em;" ><i class="icon-remove-sign"></i> {{ _('Clear all') }}</a>
 									</div>
 									<div class="accordion-body">
 										<div class="accordion-inner">
@@ -197,7 +199,7 @@
 
 												<script type="text/html" id="wa_template_machinecode">
 													<div class="file_list_entry" data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
-														<div class="title pull-left" data-bind="text: name"></div>
+														<div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
 														<div class="btn-group action-buttons pull-right">
 															<div class="btn btn-mini remove-design-btn" data-bind="click: function(){ $root.removeGcode($data); }"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
 														</div>
@@ -207,7 +209,7 @@
 
 												<script type="text/html" id="wa_template_model_svg">
 													<div class="file_list_entry" data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
-														<div class="title pull-left" data-bind="text: name"></div>
+														<div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
 														<div class="btn-group action-buttons pull-right">
 															<div class="btn btn-mini" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
 															<div class="btn btn-mini remove-design-btn" data-bind="click: function() { $root.removeSVG($data); }, attr: {mrb_name: $data.name}"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
@@ -245,6 +247,28 @@
 																<a href="#" data-bind="event: {
 																			click: function(d, event){ $root.duplicateSVG($data, event); }
 																		} ">{{ _('duplicate') }}</a>
+																<div class='dropdown pull-right experimental_feature_beta' style='display:inline-block;' >
+																	<a href="#" class="wa_list_item_burger_menu dropdown-toggle" data-toggle="dropdown">
+																		<i class="icon-reorder"></i><b class="caret"></b>
+																	</a>
+																	<ul class="dropdown-menu">
+																		<li>
+																			<i class="icon-sitemap" title="{{ _('split') }}"></i> split
+																			<a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'stroke-color'); }} ">{{ _('by stroke color') }}</a>
+																			<a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'non-intersecting'); }} ">{{ _('into shapes (keep overlapping)') }}</a>
+																			<a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'vertically'); }} ">{{ _('vertically') }}</a>
+																			<a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'horizontally'); }} ">{{ _('horizontally') }}</a>
+																		</li>
+																	    <li class="divider experimental_feature_dev"></li>
+																		<li class="experimental_feature_dev">
+																			<i class="icon-copy" title="{{ _('duplicate') }}"></i>
+																			<a href="#" data-bind="event: {
+																				click: function(d, event){ $root.duplicateSVG($data, event); }
+																				} ">{{ _('duplicate') }}</a>
+																		</li>
+																	</ul>
+																</div>
+
 															</div>
 															<div class="misfit_warning">
 																<i class="icon-warning-sign" title="{{ _('exceeds working area') }}"></i>&nbsp;
@@ -257,7 +281,7 @@
 
 												<script type="text/html" id="wa_template_model_img">
 													<div class="file_list_entry" data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
-														<div class="title pull-left" data-bind="text: name"></div>
+														<div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
 														<div class="btn-group action-buttons pull-right">
 															<div class="btn btn-mini" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
 															<div class="btn btn-mini remove-design-btn" data-bind="click: function() { $root.removeIMG($data); }"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
@@ -310,27 +334,49 @@
                                                                       <div class="card-body">
 {#                                                                      # We disabled image processing options for Safari: svg filters don't really work in safari: https://github.com/mrbeam/MrBeamPlugin/issues/586 #}
                                                                         <div data-bind="visible: !window.mrbeam.browser.is_safari">
-                                                                            <i class="icon-adjust" title="{{ _('contrast') }}"></i>
-                                                                            <input class="decent_input contrast img_adjust" type="range" min="1" max="5" value="1" step="0.05" data-bind="event: {
-                                                                                        keyup: function(d, event){ $root.imgManualAdjust($data, event); },
-                                                                                        input: function(d, event){ $root.imgManualAdjust($data, event); },
-                                                                                        blur: function(d, event){ $root.imgManualAdjust($data, event); }} "/>
-                                                                            <i class="icon-sun" title="{{ _('brightness') }}"></i>
-                                                                            <input class="decent_input brightness img_adjust" type="range" min="-0.8" max="0.8" value="0" step="0.05" data-bind="event: {
-                                                                                        keyup: function(d, event){ $root.imgManualAdjust($data, event); },
-                                                                                        input: function(d, event){ $root.imgManualAdjust($data, event); },
-                                                                                        blur: function(d, event){ $root.imgManualAdjust($data, event); }} "/>
-                                                                            </br>
-                                                                            <i class="icon-magic" title="{{ _('sharpen') }}"></i>
-                                                                            <input class="decent_input sharpen img_adjust" type="range" min="0" max="40" value="0" step="1" data-bind="event: {
-                                                                                        keyup: function(d, event){ $root.imgManualSharpen($data, event); },
-                                                                                        input: function(d, event){ $root.imgManualSharpen($data, event); },
-                                                                                        blur: function(d, event){ $root.imgManualSharpen($data, event); }} "/>
-                                                                            <i class="" title="{{ _('gamma') }}">Γ</i>
-                                                                            <input class="decent_input gamma img_adjust" type="range" min="0.2" max="1.8" value="1" step="0.05" data-bind="event: {
-                                                                                        keyup: function(d, event){ $root.imgManualAdjust($data, event); },
-                                                                                        input: function(d, event){ $root.imgManualAdjust($data, event); },
-                                                                                        blur: function(d, event){ $root.imgManualAdjust($data, event); }} "/>
+																			<div class="img_adjust_ui pull-left">
+																				<i class="icon-adjust" title="{{ _('contrast') }}"></i>
+																				<input class="decent_input contrast img_adjust" type="range" min="1" max="5" value="1" step="0.05" data-bind="event: {
+																							keyup: function(d, event){ $root.imgManualAdjust($data, event); },
+																							input: function(d, event){ $root.imgManualAdjust($data, event); },
+																							blur: function(d, event){ $root.imgManualAdjust($data, event); }} "/>
+																				<i class="icon-sun" title="{{ _('brightness') }}"></i>
+																				<input class="decent_input brightness img_adjust" type="range" min="-0.8" max="0.8" value="0" step="0.05" data-bind="event: {
+																							keyup: function(d, event){ $root.imgManualAdjust($data, event); },
+																							input: function(d, event){ $root.imgManualAdjust($data, event); },
+																							blur: function(d, event){ $root.imgManualAdjust($data, event); }} "/>
+																				</br>
+																				<i class="icon-magic" title="{{ _('sharpen') }}"></i>
+																				<input class="decent_input sharpen img_adjust" type="range" min="0" max="40" value="0" step="1" data-bind="event: {
+																							keyup: function(d, event){ $root.imgManualSharpen($data, event); },
+																							input: function(d, event){ $root.imgManualSharpen($data, event); },
+																							blur: function(d, event){ $root.imgManualSharpen($data, event); }} "/>
+																				<i class="" title="{{ _('gamma') }}">Γ</i>
+																				<input class="decent_input gamma img_adjust" type="range" min="0.2" max="1.8" value="1" step="0.05" data-bind="event: {
+																							keyup: function(d, event){ $root.imgManualAdjust($data, event); },
+																							input: function(d, event){ $root.imgManualAdjust($data, event); },
+																							blur: function(d, event){ $root.imgManualAdjust($data, event); }} "/>
+																			</div>
+																			<div class="img_crop_ui pull-right">
+																				<input class="decent_input crop_top img_adjust" style="grid-area: tc; align-self: start" type="number" min="0" max="99" value="0" step="0.5" data-bind="event: {
+																							keyup: function(d, event){ $root.imgManualCrop($data, event); },
+																							input: function(d, event){ $root.imgManualCrop($data, event); },
+																							blur: function(d, event){ $root.imgManualCrop($data, event); }} "/>
+																				<input class="decent_input crop_left img_adjust" style="grid-area: cl;" type="number" min="0" max="99" value="0" step="0.5" data-bind="event: {
+																							keyup: function(d, event){ $root.imgManualCrop($data, event); },
+																							input: function(d, event){ $root.imgManualCrop($data, event); },
+																							blur: function(d, event){ $root.imgManualCrop($data, event); }} "/>
+																				<div style='grid-area:cc'><i class="icon icon-crop" title="{{ _('crop') }}"></i></div>
+																				<input class="decent_input crop_right img_adjust" style="grid-area: cr;" type="number" min="0" max="99" value="0" step="0.5" data-bind="event: {
+																							keyup: function(d, event){ $root.imgManualCrop($data, event); },
+																							input: function(d, event){ $root.imgManualCrop($data, event); },
+																							blur: function(d, event){ $root.imgManualCrop($data, event); }} "/>
+																				<input class="decent_input crop_bottom img_adjust" style="grid-area: bc; align-self: end" type="number" min="0" max="99" value="0" step="0.5" data-bind="event: {
+																							keyup: function(d, event){ $root.imgManualCrop($data, event); },
+																							input: function(d, event){ $root.imgManualCrop($data, event); },
+																							blur: function(d, event){ $root.imgManualCrop($data, event); }} "/>
+
+																			</div>
                                                                         </div>
                                                                         <div data-bind="visible: window.mrbeam.browser.is_safari">
                                                                             <p>This feature is currently not available on iOS or Safari.</p>
@@ -350,7 +396,7 @@
 
 												<script type="text/html" id="wa_template_quicktext">
 													<div class="file_list_entry" data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
-														<div class="title pull-left" data-bind="text: name"></div>
+														<div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
 														<div class="btn-group action-buttons pull-right">
 															<div class="btn btn-mini" data-bind="click: function() { $root.editQuickText($data); }"><i class="icon-edit" title="{{ _('Edit') }}"></i></div>
 															<div class="btn btn-mini" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
@@ -399,7 +445,7 @@
 												</script>
 												<script type="text/html" id="wa_template_quickshape">
 													<div class="file_list_entry" data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
-														<div class="title pull-left" data-bind="text: name"></div>
+														<div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
 														<div class="btn-group action-buttons pull-right">
 															<div class="btn btn-mini" data-bind="click: function() { $root.editQuickShape($data); }"><i class="icon-edit" title="{{ _('Edit') }}"></i></div>
 															<div class="btn btn-mini" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
@@ -468,7 +514,7 @@
 											viewBox: zoomViewBox(),
 											visibility: 'visible'
 										},
-										event: { mousewheel: wheel_zoom, mousemove: mouse_drag }
+										event: { mousewheel: wheel_zoom_wa, mousemove: mouse_drag_wa }
 									 "
 									 xmlns:mb="http://www.mr-beam.org/mbns">
 								<defs>
@@ -477,17 +523,18 @@
 									</filter>
 									<filter id="gcimage_preview">
 										<feComponentTransfer>
-											<feFuncR type="table" tableValues="1"></feFuncR>
-											<feFuncG type="table" tableValues="0.2 1"></feFuncG>
-											<feFuncB type="table" tableValues="0.2 1"></feFuncB>
+											<feFuncR type="table" tableValues="0.9 1"></feFuncR>
+											<feFuncG type="table" tableValues="0.3 1"></feFuncG>
+											<feFuncB type="table" tableValues="0.1 1"></feFuncB>
 										</feComponentTransfer>
+									</filter>
+									<filter id="designHighlight" filterUnits="objectBoundingBox" color-interpolation-filters="sRGB">
+										<feDropShadow stdDeviation="5 5" in="SourceGraphic" dx="0" dy="0" flood-color="#e25303"
+													  flood-opacity="1" result="dropShadow"/>
 									</filter>
 									<filter id="dehighlight" x="0" y="0">
 										<!--<feGaussianBlur in="SourceGraphic" stdDeviation="2" />-->
 										<feColorMatrix type="saturate" values="0.5"/>
-									</filter>
-									<filter id="preview_precision">
-										<feGaussianBlur in="SourceGraphic" stdDeviation="0" />
 									</filter>
 								</defs>
 								<image id="beamcam_image_svg"
@@ -496,8 +543,7 @@
 											width: workingAreaWidthMM(),
 											height: workingAreaHeightMM(),
 											opacity: previewImgOpacity()
-										}"
-									filter="url(#preview_precision)" />
+										}" />
 									<g id="scaleGroup" data-bind="attr: { transform: scaleMatrix() }">
 										<g id="placedGcodes" data-bind="visible: true || (state.isPrinting() && !state.isPaused()), attr: { transform: 'matrix(1,0,0,-1,0,'+workingAreaHeightMM()+')' }"></g>
 										<g id="gCodePreview" data-bind="visible: state.isPrinting() || state.isPaused()"></g>
@@ -511,10 +557,18 @@
 										<path d="M-15,0H-5M15,0H5M0,15V5M0,-15V-5" />
 									</g>
 									<g id="camera_markers" fill="#ffffff" stroke="#ff00ff" stroke-width="5">
-										<circle id="markerNW" r="5" cx="7" cy="7" />
-										<circle id="markerNE" r="5" cx="-7" cy="7" data-bind="attr: {cx: workingAreaWidthMM()-7}" />
-										<circle id="markerSW" r="5" cx="7" cy="-7" data-bind="attr: {cy: workingAreaHeightMM()-7}" />
-										<circle id="markerSE" r="5" cx="-7" cy="-7" data-bind="attr: {cx: workingAreaWidthMM()-7, cy: workingAreaHeightMM()-7}" />
+                                        <circle id="markerNW" r="5" cx="7" cy="7">
+                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera. Try to close and reopen the lid.') }}</title>
+                                        </circle>
+										<circle id="markerNE" r="5" cx="-7" cy="7" data-bind="attr: {cx: workingAreaWidthMM()-7}" >
+                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera. Try to close and reopen the lid.') }}</title>
+                                        </circle>
+										<circle id="markerSW" r="5" cx="7" cy="-7" data-bind="attr: {cy: workingAreaHeightMM()-7}" >
+                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera. Try to close and reopen the lid.') }}</title>
+                                        </circle>
+										<circle id="markerSE" r="5" cx="-7" cy="-7" data-bind="attr: {cx: workingAreaWidthMM()-7, cy: workingAreaHeightMM()-7}" >
+                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera. Try to close and reopen the lid.') }}</title>
+                                        </circle>
 									</g>
 								</svg>
 							</div>

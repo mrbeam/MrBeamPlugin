@@ -4,7 +4,7 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 
 class WizardConfig:
 	def __init__(self, plugin):
-		self.WIZARD_VERSION = 16  # random number. but we can't go down anymore, just up.
+		self.WIZARD_VERSION = 18  # (v0.6.0) random number. but we can't go down anymore, just up.
 
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.wizard_config")
 
@@ -45,24 +45,30 @@ class WizardConfig:
 
 		return wizard_config_to_show
 
+	def get_current_wizard_link_ids(self):
+		link_ids = []
+		wizard_tabs = {}
+		if self._is_welcome_wizard:
+			link_ids = ['wizard_firstrun_end_link']  # This one is managed by OctoPrint (the start as well, but we don't want it)
+			wizard_tabs = self._welcome_wizard_config()
+		elif self._is_whatsnew_wizard:
+			wizard_tabs = self._whatsnew_wizard_config()
+
+		for tab, data in wizard_tabs.iteritems():
+			link_ids.append(data['div']+'_link')
+
+		return link_ids
+
 	def _welcome_wizard_config(self):
-		"""Add here the tabs that should be present in the welcome wizard.
+		"""
+		Add here the tabs that should be present in the welcome wizard.
 		The order of the tabs is set in __init__.py > __plugin_load__() > __plugin_settings_overlay__['appearance']['order].
 		The welcome and what's new wizard are actually the same wizard, so both are configured in the same place.
 		"""
 		welcome_wizard_tabs = dict(
-			wizard_lasersafety=dict(
-				type='wizard',
-				name=gettext("Laser Safety"),
-				required=True,
-				mandatory=False,
-				suffix='_lasersafety',
-				template='wizard/wizard_lasersafety.jinja2',
-				div='wizard_plugin_corewizard_lasersafety',
-			),
 			wizard_wifi=dict(
 				type='wizard',
-				name=gettext("Wifi Setup"),
+				name=gettext("Connection"),
 				required=self._is_wifi_wizard_required(),
 				mandatory=False,
 				suffix='_wifi',
@@ -71,12 +77,21 @@ class WizardConfig:
 			),
 			wizard_acl=dict(
 				type='wizard',
-				name=gettext("Access Control"),
+				name=gettext("Your user"),
 				required=self._is_acl_wizard_required(),
 				mandatory=False,
 				suffix='_acl',
 				template='wizard/wizard_acl.jinja2',
 				div='wizard_plugin_corewizard_acl',
+			),
+			wizard_lasersafety=dict(
+				type='wizard',
+				name=gettext("For your safety"),
+				required=True,
+				mandatory=False,
+				suffix='_lasersafety',
+				template='wizard/wizard_lasersafety.jinja2',
+				div='wizard_plugin_corewizard_lasersafety',
 			),
 			wizard_analytics=dict(
 				type='wizard',
@@ -92,14 +107,17 @@ class WizardConfig:
 		return welcome_wizard_tabs
 
 	def _whatsnew_wizard_config(self):
-		"""Add here the tabs that should be present in the what's new wizard. Remove when unnecessary.
+		"""
+		Add here the tabs that should be present in the what's new wizard. Remove when unnecessary.
 		The order of the tabs is set in __init__.py > __plugin_load__() > __plugin_settings_overlay__['appearance']['order].
 		The welcome and what's new wizard are actually the same wizard, so both are configured in the same place.
+
+		Change the "required" to False if that slide should not be present in the dialog, revert otherwise.
 		"""
 		whatsnew_wizard_tabs = dict(
 			wizard_whatsnew_0=dict(
 				type='wizard',
-				name=gettext("Improved find.mr-beam"),
+				name=gettext("Zoom"),
 				required=True,
 				mandatory=False,
 				suffix='_whatsnew_0',
@@ -108,7 +126,7 @@ class WizardConfig:
 			),
 			wizard_whatsnew_1=dict(
 				type='wizard',
-				name=gettext("New Languages!"),
+				name=gettext("Quick Shapes"),
 				required=True,
 				mandatory=False,
 				suffix='_whatsnew_1',
@@ -117,7 +135,7 @@ class WizardConfig:
 			),
 			wizard_whatsnew_2=dict(
 				type='wizard',
-				name=gettext("Job Time Estimation"),
+				name=gettext("New language"),
 				required=True,
 				mandatory=False,
 				suffix='_whatsnew_2',
@@ -132,6 +150,15 @@ class WizardConfig:
 				suffix='_whatsnew_3',
 				template='wizard/wizard_whatsnew_3.jinja2',
 				div='wizard_plugin_corewizard_whatsnew_3',
+			),
+			wizard_analytics=dict(
+				type='wizard',
+				name=gettext("Analytics"),
+				required=self._is_analytics_wizard_required(),
+				mandatory=False,
+				suffix='_analytics',
+				template='wizard/wizard_analytics.jinja2',
+				div='wizard_plugin_corewizard_analytics',
 			)
 		)
 

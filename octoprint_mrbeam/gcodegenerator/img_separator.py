@@ -32,7 +32,7 @@ class ImageSeparator():
 		files = glob.glob(self.img_debug_folder+'/*')
 		for f in files:
 			os.remove(f)
-		
+
 		self.debug = True
 		try:
 			self.debug = _mrbeam_plugin_implementation._settings.get(["dev", "debug_gcode"])
@@ -42,7 +42,7 @@ class ImageSeparator():
 		else:
 			self.log.info("Gcode debugging {} (read from config)".format(self.debug))
 			pass
-		
+
 		if(self.debug):
 			self.log.setLevel(logging.DEBUG)
 
@@ -50,35 +50,43 @@ class ImageSeparator():
 	# 1. separation method called "left pixels first"
 	def separate(self, img_data, threshold=255, callback=None):
 		"""
-		Separates img (a Pillow Image object) according to some magic into a list of img objects. 
+		Separates img (a Pillow Image object) according to some magic into a list of img objects.
 		Afterwards all parts merged togehter are equal to the input image.
 		Supports so far only Grayscale images (mode 'L')
 		Arguments:
 		img -- a Pillow Image object
-		
+
 		Keyword arguments:
 		threshold -- all pixels brighter than this threshold are used for separation
 		callback -- instead of waiting for the list to return, a callback(img, iteration) can be used to save memory
 		"""
-		
+
 		img = img_data['i']
 		(width, height) = img.size
-		
+
 		x_limit = [0] * height # [0, 0, 0, .... ]
 		iteration = 0
+		pixel_count = 0
 		parts = []
 		while(True):
 			(x_limit, separation) = self._separate_partial(img, start_list=x_limit, threshold=threshold)
 			if(separation == None):
 				return parts
-			
+
+			pixel_count += separation.size[0] * separation.size[0]
+			if pixel_count > 60000000000:
+				# 60000000000 is a pretty random value. i found that it tends to crash (due to memory) if higher.
+				# But it depends on the image. Some images can got till 1.3 times that value without problems....
+				self.log.warn("Skipping separate() too many pixel in mem. iterations: %s, total pixel_count: %s", iteration, pixel_count, analytics=True)
+				return None
+
 			id_str = ':'.join([img_data['id'], str(iteration)])
 			result = {'i': separation, 'x': 0, 'y':0, 'id': id_str}
 			if(callback != None):
 				callback(result, iteration)
 			else:
 				parts.append(result)
-				
+
 			all_done = all(l >= width for l in x_limit)
 			if(all_done):
 				return parts
@@ -88,9 +96,9 @@ class ImageSeparator():
 
 		(width, height) = img.size
 		pxArray = img.load()
-		
+
 		# iterate line by line
-		tmp = None	
+		tmp = None
 		for row in range(0, height):
 			x = self._find_first_gap_in_row(pxArray, width, height, start_list[row], row, threshold=threshold)
 			if(x <= width):
@@ -99,29 +107,29 @@ class ImageSeparator():
 				box = (start_list[row], row, x, row+1)
 				region = img.crop(box)
 				tmp.paste(region, box)
-			
+
 			start_list[row] = x
 		return (start_list, tmp)
 
 
 	def _find_first_gap_in_row(self, pxArray, w, h, x, y, threshold=255):
 		skip = True # assume white pixel at the beginning
-		
+
 		for i in range(x, w):
 			px = pxArray[i, y]
-				
-			brightness = px	
+
+			brightness = px
 			if(brightness < threshold): # "rising edge" -> colored pixel
 				skip = False
 
 			if(skip == False):
 				if(brightness >= threshold): # "falling edge" -> white pixel again
 					return i
-		
+
 		return w
-	
-			
-	# 2. contour based separation method		
+
+
+	# 2. contour based separation method
 	def separate_contours(self, img, x=0, y=0, threshold=255, callback=None):
 		"""
 		Arguments:
@@ -132,11 +140,11 @@ class ImageSeparator():
 		id_str = "c0"
 		data = {'i': monochrome_original, 'x': int(x), 'y':int(y), 'id':id_str}
 		self._dbg_image(monochrome_original, data['id']+"_0_monochrome.png")
-		
+
 		to_process = [data]
 		parts = []
 		level = 0
-		# now split global_mask recursive 
+		# now split global_mask recursive
 		while(len(to_process) > 0):
 			next_item = to_process.pop(0)
 			off_x = next_item['x']
@@ -154,7 +162,7 @@ class ImageSeparator():
 					else:
 						parts.append(i)
 			level += 1
-		
+
 		# create PIL image type from cv2 type
 		pil_images = []
 		number = 0
@@ -171,9 +179,9 @@ class ImageSeparator():
 			number += 1
 
 		if(self.debug):
-			self._dbg_is_separation_ok(parts, monochrome_original, "9_diff_contours.png", "Contour separation buggy. See ")			
-				
-		return pil_images 
+			self._dbg_is_separation_ok(parts, monochrome_original, "9_diff_contours.png", "Contour separation buggy. See ")
+
+		return pil_images
 
 
 	def _split_by_outer_contour(self, mask_data, level, monochrome_original):
@@ -201,9 +209,9 @@ class ImageSeparator():
 		input_mask = self._prepare_img_for_contour_separation(img)
 		self._dbg_image(input_mask, mask_data['id']+"_1_input_mask.png")
 		_, contours, hierarchy = self._get_contours(input_mask)
-		
+
 		parts = [] # array of mask_data dicts
-		
+
 		amount = len(contours)
 		self.log.info("Found {} contours.".format(amount))
 		if(self.debug):
@@ -243,7 +251,7 @@ class ImageSeparator():
 			cropped = separation_cv[cnt_y:cnt_y+cnt_h, cnt_x:cnt_x+cnt_w]
 
 			if(self._is_only_whitespace(cropped)):
-				self.log.debug("Contour {}#{} (w*h: {}*{} @ {},{}) is only white space. Skipping...".format(mask_data['id'], i, cnt_w, cnt_h, cnt_x, cnt_y))	
+				self.log.debug("Contour {}#{} (w*h: {}*{} @ {},{}) is only white space. Skipping...".format(mask_data['id'], i, cnt_w, cnt_h, cnt_x, cnt_y))
 
 			else:
 				data = {'i': cropped, 'x': cnt_x, 'y':cnt_y, 'id':id_str}
@@ -258,21 +266,21 @@ class ImageSeparator():
 			del separation_cv
 			gc.collect()
 
-			
-		self.log.info("Contour separation emitted {} parts.".format(nonWhiteParts))	
+
+		self.log.info("Contour separation emitted {} parts.".format(nonWhiteParts))
 		return parts
-	
-		
-		
+
+
+
 	def _prepare_img_for_contour_separation(self, monochrome, threshold=255):
 		maxValue = 255
 		th, filtered = cv2.threshold(monochrome, threshold-1, maxValue, cv2.THRESH_BINARY);
-		
+
 		#if(pixel_at_0,0 is white):
 		filtered = cv2.bitwise_not(filtered) # invert. find_contours looks for bright objects on dark background.
 		return filtered
 
-	
+
 	def _get_contours(self, img, method=cv2.RETR_EXTERNAL):
 		# RETR_EXTERNAL, RETR_LIST, RETR_TREE, RETR_CCOMP
 		# see https://docs.opencv.org/ref/master/d9/d8b/tutorial_py_contours_hierarchy.html
@@ -280,13 +288,13 @@ class ImageSeparator():
 		if(isCV2):
 			contours, hierarchy = cv2.findContours(img.copy(), method, cv2.CHAIN_APPROX_SIMPLE)
 			self.log.info("OpenCV " + cv2.__version__ + " : filtering top level contours with img size cropped by one px on each side")
-	
+
 		else:
 			_, contours, hierarchy = cv2.findContours(img, method, cv2.CHAIN_APPROX_SIMPLE)
 			if(isCV31):
 				self.log.info("OpenCV " + cv2.__version__ + " : filtering top level contours with img size cropped by one px on each side")
 		return (img, contours, hierarchy)
-	
+
 	def _is_only_whitespace(self, img):
 		# check if 'white space':
 		inverted = cv2.bitwise_not(img)
@@ -311,7 +319,7 @@ class ImageSeparator():
 			original = Image.fromarray(np.uint8(original))
 		w,h = original.size
 		debug_assembly = Image.new("L", (w, h), "white")
-		
+
 		for i in parts:
 			self._dbg_image(i['i'], i['id']+'_8_output.png')
 			debug_assembly.paste(i['i'], (i['x'], i['y']))
@@ -329,10 +337,10 @@ class ImageSeparator():
 
 if __name__ == "__main__":
 	import sys
-	
+
 	opts = optparse.OptionParser(usage="usage: %prog [options] <imagefile>")
 	opts.add_option("-t",   "--threshold", type="int", default="255", help="intensity for white (skipped) pixels, default 255", dest="threshold")
-	
+
 	(options, args) = opts.parse_args()
 	path = args[0]
 	filename, _ = os.path.splitext(path)
@@ -353,8 +361,8 @@ if __name__ == "__main__":
 		if(True):
 			img.save("/tmp/img2gcode_2_whitebg.png")
 	img = img.convert('L')
-	
-	
+
+
 	def write_to_file_callback(part, iteration):
 		print part
 		if(part != None):

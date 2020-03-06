@@ -13,6 +13,7 @@ import simplestyle
 import simpletransform
 import cubicsuperpath
 
+from profiler import Profiler
 from img2gcode import ImageProcessor
 from svg_util import get_path_d, _add_ns, unittouu
 
@@ -53,6 +54,8 @@ class Converter():
 		self._log = logging.getLogger("octoprint.plugins.mrbeam.converter")
 		self.workingAreaWidth = workingAreaWidth
 		self.workingAreaHeight = workingAreaHeight
+		self.optimize_path_order = True
+		self.optimize_max_paths = 500
 
 		# debugging
 		self.transform_matrix = {}
@@ -158,19 +161,24 @@ class Converter():
 		return str
 
 	def convert(self, is_job_cancelled, on_progress=None, on_progress_args=None, on_progress_kwargs=None):
-
+		profiler = Profiler('convert')
+		profiler.start('s1_start')
 		self.init_output_file()
 		self.check_free_space() # has to be after init_output_file (which removes old temp files occasionally)
 
+		profiler.stop('s1_start').start('s2_parse')
 		self.parse()
 		is_job_cancelled() # check after parsing svg xml.
+		profiler.stop('s2_parse').start('s3_matrix')
 
 		options = self.options
 		options['doc_root'] = self.document.getroot()
 
 		# Get all Gcodetools data from the scene.
 		self.calculate_conversion_matrix()
+		profiler.stop('s3_matrix').start('s4_paths')
 		self.collect_paths()
+		profiler.stop('s4_paths').start('preparing_progress')
 
 
 		def report_progress(on_progress, on_progress_args, on_progress_kwargs, done, total):
@@ -201,6 +209,7 @@ class Converter():
 
 		processedItemCount = 0
 		report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
+		profiler.stop('preparing_progress').start('write_gco_header')
 
 		with open(self._tempfile, 'a') as fh:
 			# write comments to gcode
@@ -213,6 +222,7 @@ class Converter():
 			fh.write(self._get_gcode_header())
 
 			# images
+			profiler.stop('write_gco_header').start('s5_images')
 			self._log.info( 'Raster conversion: %s' % self.options['engrave'])
 			for layer in self.layers :
 				if layer in self.images and self.options['engrave']:
@@ -255,6 +265,7 @@ class Converter():
 											workingAreaWidth = self.workingAreaWidth,
 											workingAreaHeight = self.workingAreaHeight,
 						                    beam_diameter = rasterParams['beam_diameter'],
+						                    overshoot_distance = 1,
 											intensity_black = rasterParams['intensity_black'],
 											intensity_white = rasterParams['intensity_white'],
 											intensity_black_user = rasterParams['intensity_black_user'],
@@ -278,11 +289,14 @@ class Converter():
 						else:
 							self._log.error("Unable to parse img data", data)
 
+						profiler.nest_data(ip.get_profiler())
+
 						processedItemCount += 1
 						report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
 					else:
 						self._log.info("postponing non-image layer %s" % ( layer.get('id') ))
 
+			profiler.stop('s5_images').start('s6_vectors')
 
 			# paths
 			self._log.info( 'Vector conversion: %s paths' % len(self.paths))
@@ -291,7 +305,7 @@ class Converter():
 				if layer in self.paths :
 					paths_by_color = dict()
 					for path in self.paths[layer] :
-						self._log.info("path %s, %s, stroke: %s, fill: %s, mb:gc: %s" % ( layer.get('id'), path.get('id'), path.get('stroke'), path.get('class'), path.get(_add_ns('gc', 'mb'))[:100] ))
+						self._log.info("path %s, %s, stroke: %s, fill: %s, mb:gc: %s" % ( layer.get('id', None), path.get('id', None), path.get('stroke', None), path.get('class', None), path.get(_add_ns('gc', 'mb'), '')[:100]))
 
 						strokeInfo = self._get_stroke(path)
 						if(strokeInfo['visible'] == False):
@@ -309,8 +323,12 @@ class Converter():
 							processedItemCount += 1
 							report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
 
-					layerId = layer.get('id') or '?'
-					pathId = path.get('id') or '?'
+					layerId = layer.get('id', '?')
+					pathId = path.get('id', '?')
+
+					# path_sorting: set initial laser pos, assuming pleasant left to right, bottom to top processing order
+					current_x = 0
+					current_y = 0
 
 					#for each color generate GCode
 					for colorKey in self.colorOrder:
@@ -329,31 +347,78 @@ class Converter():
 						# gcode_before_job
 						fh.write(machine_settings.gcode_before_job(color=colorKey, compressor=settings.get('cut_compressor', '100')))
 
-						for path in paths_by_color[colorKey]:
+						self._log.info( "convert() path sorting active: %s, path size %i below maximum %i." % (self.optimize_path_order, len(paths_by_color[colorKey]), self.optimize_max_paths))
+						# if this O(n^2) algorithm blows performance, limit inner loop to just search within the first 100 items.
+						while len(paths_by_color[colorKey]) > 0:
+							path_sorting = self.optimize_path_order and (len(paths_by_color[colorKey]) < self.optimize_max_paths)
+							# pick closest starting point to (current_x, current_y)
+							closestPath = None
+							if(path_sorting):
+								dist = float('inf')
+								for p in paths_by_color[colorKey]:
+									start_x = p.get(_add_ns('start_x', 'mb'), None)
+									start_y = p.get(_add_ns('start_y', 'mb'), None)
+
+									if(start_x != None and start_y != None):
+										d = pow(float(start_x) - current_x, 2) + pow(float(start_y) - current_y, 2)
+										if(d < dist):
+											dist = d
+											closestPath = p
+
+							path = None
+							if(closestPath != None):
+								path = closestPath
+							else:
+								path = paths_by_color[colorKey][0]
+
+							# process next / closest path...
 							curveGCode = ""
 							mbgc = path.get(_add_ns('gc', 'mb'), None)
 							if(mbgc != None):
-								curveGCode = self._use_embedded_gcode(mbgc, colorKey, settings)
+								curveGCode = self._use_embedded_gcode(mbgc)
 							else:
 								d = path.get('d')
 								csp = cubicsuperpath.parsePath(d)
 								csp = self._apply_transforms(path, csp)
 								curve = self._parse_curve(csp, layer)
-								curveGCode = self._generate_gcode(curve, settings, colorKey)
+								curveGCode = self._generate_gcode(curve)
 
 
 							fh.write("; Layer:" + layerId + ", outline of:" + pathId + ", stroke:" + colorKey +', '+str(settings)+"\n")
-							for p in range(0, int(settings['passes'])):
+							ity = settings['intensity']
+							pt = settings['pierce_time']
+							fr = int(settings['feedrate'])
+							passes = int(settings['passes'])
+							for p in range(0, passes):
+								if settings.get('progressive', False):
+									f = round(fr * (1 - 0.5 * p/(passes - 1)))
+								else:
+									f = fr
 								fh.write("; pass:%i/%s\n" % (p+1, settings['passes']))
 								# TODO tbd DreamCut different for each pass?
-								fh.write(curveGCode)
-							
+								gc = self._replace_params_gcode(curveGCode, colorKey, f, ity, pt)
+								fh.write(gc)
 
+							# set current position after processing the path
+							end_x = path.get(_add_ns('end_x', 'mb'), None)
+							end_y = path.get(_add_ns('end_y', 'mb'), None)
+							if(end_x != None and end_y != None):
+								current_x = float(end_x)
+								current_y = float(end_y)
+
+							# finally removed processed path
+							paths_by_color[colorKey].remove(path)
+
+						# TODO check if _after_job should be one(two?) levels less indented
 						# gcode_after_job
 						fh.write(machine_settings.gcode_after_job(color=colorKey))
 			fh.write(self._get_gcode_footer())
 
+		profiler.stop('s6_vectors').start('s7_export')
 		self.export_gcode()
+		profiler.stop('s7_export')
+		summary = profiler.finalize().getShortSummary()
+		self._log.info("conversion finished. Timing: %s", summary)
 
 
 	def collect_paths(self):
@@ -394,6 +459,7 @@ class Converter():
 						or i.tag == _add_ns( 'ellipse', 'svg' ) or i.tag == 'ellipse' \
 						or i.tag == _add_ns( 'circle', 'svg' ) or	i.tag == 'circle':
 
+						# TODO not necessary if path has embedded gcode
 						i.set("d", get_path_d(i))
 						self._handle_node(i, layer)
 
@@ -679,8 +745,8 @@ class Converter():
 ###		Curve definition [start point, type = {'arc','line','move','end'}, arc center, arc angle, end point, [zstart, zend]]
 ###
 ################################################################################
-	def _generate_gcode(self, curve, settings, color='#000000'):
-		self._log.info( "_generate_gcode()")
+	def _generate_gcode(self, curve):
+		self._log.warn( "_generate_gcode() - deprecated")
 
 		def c(c):
 			# returns gcode for coordinates/parameters
@@ -699,28 +765,23 @@ class Converter():
 		g = ""
 
 		lg = 'G00'
-		f = "F%s;%s" % (settings['feedrate'], color)
 		for i in range(1, len(curve)):
 			#	Creating Gcode for curve between s=curve[i-1] and si=curve[i] start at s[0] end at s[4]=si[0]
 			s = curve[i - 1]
 			si = curve[i]
-			feed = f if lg not in ['G01', 'G02', 'G03'] else ''
 			if s[1] == 'move':
-				g += "G0" + c(si[0]) + "\n" + machine_settings.gcode_before_path_color(color, settings['intensity']) + "\n"
-				pt = int(settings['pierce_time'])
-				if pt > 0:
-					g += "G4P%.3f\n" % (round(pt / 1000.0, 4))
+				g += "G0" + c(si[0]) + "\n" + self.PLACEHOLDER_LASER_ON + "\n"
 				lg = 'G00'
 			elif s[1] == 'end':
-				g += machine_settings.gcode_after_path() + "\n"
+				g += self.PLACEHOLDER_LASER_OFF + "\n"
 				lg = 'G00'
 			elif s[1] == 'line':
-				if lg == "G00": g += "G01 " + feed + "\n"
+				if lg == "G00": g += self.PLACEHOLDER_LASER_ON + "\n"
 				g += "G01 " + c(si[0]) + "\n"
 				lg = 'G01'
 			elif s[1] == 'arc':
 				r = [(s[2][0] - s[0][0]), (s[2][1] - s[0][1])]
-				if lg == "G00": g += "G01" + feed + "\n"
+				if lg == "G00": g += self.PLACEHOLDER_LASER_ON + "\n"
 				if (r[0] ** 2 + r[1] ** 2) > .1:
 					r1, r2 = (Point(s[0]) - Point(s[2])), (Point(si[0]) - Point(s[2]))
 					if abs(r1.mag() - r2.mag()) < 0.001:
@@ -731,24 +792,26 @@ class Converter():
 						g += ("G02" if s[3] < 0 else "G03") + c(si[0]) + " R%f" % (r) + "\n"
 					lg = 'G02'
 				else:
-					g += "G01" + c(si[0]) + feed + "\n"
+					g += "G01" + c(si[0]) + "\n"
 					lg = 'G01'
 		if si[1] == 'end':
-			g += machine_settings.gcode_after_path() + "\n"
+			g += self.PLACEHOLDER_LASER_OFF + "\n"
 		return g
 
-	def _use_embedded_gcode(self, gcode, color, settings) :
+	def _use_embedded_gcode(self, gcode) :
 		self._log.debug( "_use_embedded_gcode() %s", gcode[:100])
-		gcode = gcode.replace(' ', "\n")
-		feedrateCode = "F%s;%s\n" % (settings['feedrate'], color)
-		intensityCode = machine_settings.gcode_before_path_color(color, settings['intensity']) + "\n"
+		return gcode.replace(' ', "\n")
+
+	def _replace_params_gcode(self, gcode, color, feedrate, intensity, pierce_time) :
+		self._log.debug( "_replace_params_gcode() %i %s", len(gcode), gcode[:100])
+		feedrateCode = "F%s;%s\n" % (feedrate, color)
+		intensityCode = machine_settings.gcode_before_path_color(color, intensity) + "\n"
 		piercetimeCode = ''
-		pt = int(settings['pierce_time'])
+		pt = int(pierce_time)
 		if pt > 0:
 			piercetimeCode = "G4P%.3f\n" % (round(pt / 1000.0, 4))
 		gcode = gcode.replace(self.PLACEHOLDER_LASER_ON, feedrateCode + intensityCode + piercetimeCode) + "\n"
 		gcode = gcode.replace(self.PLACEHOLDER_LASER_OFF, machine_settings.gcode_after_path()) + "\n"
-
 		return gcode
 
 

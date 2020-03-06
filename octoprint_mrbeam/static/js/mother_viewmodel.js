@@ -44,6 +44,7 @@ $(function () {
         self.onStartup = function () {
             // TODO fetch machine profile on start
             //self.requestData();
+
             self.control.showZAxis = ko.computed(function () {
 //				var has = self.currentProfileData()['zAxis']();
 //				return has;
@@ -231,7 +232,7 @@ $(function () {
                  self.terminal.checkAutoscroll();
             });
             self.terminal.activeAllFilters();
-
+			
             // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
             // our implementation here should be used instead of octoprints
             // to fix issues with the laser job time display
@@ -255,13 +256,6 @@ $(function () {
 			self.gcodefiles.setFilter('design');
             self.files.listHelper.removeFilter('model');
             self.files.listHelper.changeSorting('upload');
-        };
-
-        self.addSwUpdateTierInformation = function(){
-            tier = self.settings.settings.plugins.mrbeam.dev.softwareTier();
-            if (tier != "PROD") {
-                $('#settings_plugin_softwareupdate > h3').append(" (TIER: "+tier+")");
-            }
         };
 
         self.removeLoadingOverlay = function(){
@@ -407,7 +401,7 @@ $(function () {
 		};
 
         self._processWPosData = function (data) {
-            if (data === undefined || data === null) {
+            if (data === undefined || data === null || data[0] === null || data[1] === null || isNaN(data[0]) || isNaN(data[1])) {
                 self.state.currentPos({x: 0, y: 0});
             } else {
                 self.state.currentPos({x: data[0], y: data[1]});

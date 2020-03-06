@@ -8,11 +8,12 @@ import sys
 import fileinput
 import re
 import uuid
+import collections
 
+from octoprint_mrbeam.util import json_serialisor
 from value_collector import ValueCollector
 from cpu import Cpu
 from threading import Thread, Timer, Lock
-from Queue import Queue
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint.events import Events as OctoPrintEvents
@@ -34,22 +35,24 @@ def analyticsHandler(plugin):
 
 class AnalyticsHandler(object):
 	QUEUE_MAXSIZE = 1000
-	ANALYTICS_LOG_VERSION = 8  # bumped in 0.3.2.1
+	ANALYTICS_LOG_VERSION = 10  # bumped in 0.5.5.1
 
 	def __init__(self, plugin):
 		self._plugin = plugin
 		self._event_bus = plugin._event_bus
 		self._settings = plugin._settings
-		self._snr = plugin.getSerialNum()
-		self._plugin_version = plugin.get_plugin_version()
-		self._timer_handler = TimerHandler(plugin, self)
-		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.analyticshandler")
-
 		self._analytics_lock = Lock()
 
+		self._snr = plugin.getSerialNum()
+		self._plugin_version = plugin.get_plugin_version()
+
+		self._timer_handler = TimerHandler(plugin, self, self._analytics_lock)
+		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.analyticshandler")
+
 		# Mr Beam specific data
-		self.analytics_enabled = self._settings.get(['analyticsEnabled'])
-		self._no_choice_made = True if self.analytics_enabled is None else False
+		self._analytics_enabled = self._settings.get(['analyticsEnabled'])
+		self._support_mode = plugin.support_mode
+		self._no_choice_made = True if self._analytics_enabled is None else False
 
 		self.analytics_folder = os.path.join(self._settings.getBaseFolder("base"), self._settings.get(['analytics', 'folder']))
 		if not os.path.isdir(self.analytics_folder):
@@ -71,17 +74,17 @@ class AnalyticsHandler(object):
 
 		self.event_waiting_for_terminal_dump = None
 
-		self._logger.info("Analytics analyticsEnabled: %s, sid: %s", self.analytics_enabled, self._session_id)
+		self._logger.info("Analytics analyticsEnabled: %s, sid: %s", self.is_analytics_enabled(), self._session_id)
 
 		# Subscribe to startup and mrb_plugin_initialize --> The rest go on _on_mrbeam_plugin_initialized
 		self._event_bus.subscribe(OctoPrintEvents.STARTUP, self._event_startup)
 		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
 
 		# Initialize queue for analytics data and queue-to-file writer
-		self._analytics_queue = Queue(maxsize=self.QUEUE_MAXSIZE)
+		self._analytics_queue = collections.deque(maxlen=self.QUEUE_MAXSIZE)
 
 		# Activate analytics
-		if self.analytics_enabled:
+		if self.is_analytics_enabled():
 			self._activate_analytics()
 
 	def _on_mrbeam_plugin_initialized(self, event, payload):
@@ -101,7 +104,7 @@ class AnalyticsHandler(object):
 	def _activate_analytics(self):
 		# Restart queue if the analytics were disabled before
 		if not self._no_choice_made:
-			self._analytics_queue = Queue(self.QUEUE_MAXSIZE)
+			self._analytics_queue = collections.deque(maxlen=self.QUEUE_MAXSIZE)
 		else:
 			self._no_choice_made = False
 
@@ -110,7 +113,8 @@ class AnalyticsHandler(object):
 		analytics_writer.daemon = True
 		analytics_writer.start()
 
-
+	def is_analytics_enabled(self):
+		return self._analytics_enabled and not self._support_mode
 
 	# -------- EXTERNALLY CALLED METHODS -------------------------------------------------------------------------------
 	# INIT
@@ -119,14 +123,14 @@ class AnalyticsHandler(object):
 			self._logger.info("analytics user permission change: analyticsEnabled=%s", analytics_enabled)
 
 			if analytics_enabled:
-				self.analytics_enabled = True
+				self._analytics_enabled = True
 				self._settings.set_boolean(["analyticsEnabled"], True)
 				self._activate_analytics()
 				self._add_device_event(ak.Device.Event.ANALYTICS_ENABLED, payload=dict(enabled=True))
 			else:
 				# can not log this since the user just disagreed
 				# self._add_device_event(ak.Device.Event.ANALYTICS_ENABLED, payload=dict(enabled=False))
-				self.analytics_enabled = False
+				self._analytics_enabled = False
 				self._timer_handler.cancel_timers()
 				self._settings.set_boolean(["analyticsEnabled"], False)
 		except Exception as e:
@@ -193,19 +197,23 @@ class AnalyticsHandler(object):
 		except Exception as e:
 			self._logger.exception('Exception during add_disk_space: {}'.format(e))
 
-
 	def add_software_versions(self, payload):
 		try:
 			self._add_device_event(ak.Device.Event.SOFTWARE_VERSIONS, payload=payload)
 		except Exception as e:
 			self._logger.exception('Exception during add_software_versions: {}'.format(e))
- 
+
 	def add_num_files(self, payload):
 		try:
 			self._add_device_event(ak.Device.Event.NUM_FILES, payload=payload)
 		except Exception as e:
 			self._logger.exception('Exception during add_num_files: {}'.format(e))
 
+	def add_analytics_file_crop(self, payload):
+		try:
+			self._add_device_event(ak.Log.Event.ANALYTICS_FILE_CROP, payload=payload)
+		except Exception as e:
+			self._logger.exception('Exception during add_analytics_file_crop: {}'.format(e))
 
 	# MRB_LOGGER
 	def add_logger_event(self, event_details, wait_for_terminal_dump):
@@ -277,16 +285,31 @@ class AnalyticsHandler(object):
 			self._logger.exception('Exception during add_camera_session: {}'.format(e), analytics=True)
 
 	# IOBEAM_HANDLER
-	def add_iobeam_message_log(self, iobeam_version, message):
+	def add_iobeam_message_log(self, iobeam_version, message, from_plugin=False):
 		try:
 			iobeam_data = {
 				ak.Log.Iobeam.VERSION: iobeam_version,
 				ak.Log.Iobeam.MESSAGE: message,
+				ak.Log.Iobeam.FROM_PLUGIN: from_plugin,
 			}
 
 			self._add_log_event(ak.Log.Event.IOBEAM, payload=iobeam_data)
 		except Exception as e:
 			self._logger.exception('Exception during add_iobeam_message_log: {}'.format(e), analytics=True)
+
+	def add_iobeam_i2c_monitoring(self, iobeam_version, state, method, current_devices, lost_devices, new_devices):
+		try:
+			iobeam_data = {
+				ak.Log.I2cMonitoring.VERSION: iobeam_version,
+				ak.Log.I2cMonitoring.STATE: state,
+				ak.Log.I2cMonitoring.METHOD: method,
+				ak.Log.I2cMonitoring.CURRENT_DEVICES: current_devices,
+				ak.Log.I2cMonitoring.LOST_DEVICES: lost_devices,
+				ak.Log.I2cMonitoring.NEW_DEVICES: new_devices,
+			}
+			self._add_log_event(ak.Log.Event.I2C_MONITORING, payload=iobeam_data)
+		except Exception as e:
+			self._logger.exception('Exception during add_iobeam_i2c_monitoring: {}'.format(e), analytics=True)
 
 	# ACC_WATCH_DOG
 	def add_cpu_log(self, temp, throttle_alerts):
@@ -431,7 +454,6 @@ class AnalyticsHandler(object):
 
 		payload = {
 			ak.Job.Duration.CURRENT: int(round(payload['time'])),
-			ak.Job.Duration.ESTIMATION: int(round(self._current_job_time_estimation))
 		}
 		self._add_job_event(ak.Job.Event.Slicing.DONE, payload=payload)
 
@@ -537,6 +559,12 @@ class AnalyticsHandler(object):
 	def _event_job_time_estimated(self, event, payload):
 		self._current_job_time_estimation = payload['job_time_estimation']
 
+		if self._current_job_id:
+			payload = {
+				ak.Job.Duration.ESTIMATION: int(round(self._current_job_time_estimation)),
+			}
+			self._add_job_event(ak.Job.Event.JOB_TIME_ESTIMATED, payload=payload)
+
 	def _add_other_plugin_data(self, event, event_payload):
 		try:
 			if 'component' in event_payload and 'type' in event_payload and 'component_version' in event_payload:
@@ -610,12 +638,7 @@ class AnalyticsHandler(object):
 
 	def _add_to_queue(self, element):
 		try:
-			self._analytics_queue.put(element)
-
-			if self._analytics_queue.full():
-				self._logger.info('Analytics queue max size reached ({}). Reinitializing...'.format(self.QUEUE_MAXSIZE))
-				self._analytics_queue = Queue(maxsize=self.QUEUE_MAXSIZE)
-
+			self._analytics_queue.append(element)
 		except Exception as e:
 			self._logger.info('Exception during _add_to_queue: {}'.format(e))
 
@@ -694,17 +717,17 @@ class AnalyticsHandler(object):
 	# -------- WRITER THREAD (queue --> analytics file) ----------------------------------------------------------------
 	def _write_queue_to_analytics_file(self):
 		try:
-			while self.analytics_enabled:
+			while self.is_analytics_enabled():
 				if not os.path.isfile(self.analytics_file):
 					self._init_json_file()
 
 				with self._analytics_lock:
-					while not self._analytics_queue.empty():
+					while self._analytics_queue:
 						with open(self.analytics_file, 'a') as f:
-							data = self._analytics_queue.get()
+							data = self._analytics_queue.popleft()
 							data_string = None
 							try:
-								data_string = json.dumps(data, sort_keys=False) + '\n'
+								data_string = json.dumps(data, sort_keys=False, default=json_serialisor) + '\n'
 							except:
 								self._logger.info('Exception during json dump in _write_queue_to_analytics_file')
 
@@ -723,7 +746,6 @@ class AnalyticsHandler(object):
 		if consent == 'agree':
 			self.analytics_user_permission_change(True)
 			self.process_analytics_files()
-			AnalyticsFileUploader.upload_now(self._plugin, self._analytics_lock)
 
 		elif consent == 'disagree':
 			self.analytics_user_permission_change(False)

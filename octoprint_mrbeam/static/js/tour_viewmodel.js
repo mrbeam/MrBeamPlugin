@@ -18,15 +18,6 @@ $(function () {
         self._analytics_last_step_id = false;
         self._analytics_last_step_num = false;
 
-        self.onWizardFinish = function(){
-            if (self.settings.settings.plugins.mrbeam.tour_auto_launch()) {
-                console.log("TourViewModel: auto launch tour: true");
-                self.startTour();
-            } else {
-                console.log("TourViewModel: auto launch tour: false");
-            }
-        };
-
         self.btn_startTour = function () {
             self.startTour();
         };
@@ -60,7 +51,7 @@ $(function () {
                     gettext("Do you want us to guide you through your first laser job with this step-by-step tour?"),
                     "<strong>"+gettext("What do you need for this tour:")+"</strong>",
                     "<ul>" +
-                        "<li>" + gettext("Have a piece of felt by hand. Best to use the one that came with your Mr Beam II.") + "</li>" +
+                        "<li>" + gettext("Have a piece of felt on hand. Best to use the one that came with your Mr Beam II.") + "</li>" +
                         "<li>" + _.sprintf(gettext("The laser head of your Mr Beam II has to be focused according to the thickness of the felt." +
                             "You can find how to do that in this %(opening_tag)sKnowledge base article%(closing_tag)s."),
                             {opening_tag:"<a href='https://mr-beam.freshdesk.com/support/solutions/articles/43000073345' target='_blank'>", closing_tag:"</a>"}) +
@@ -73,6 +64,12 @@ $(function () {
                 nextLabel: gettext("Yes, let's go!"),
                 ctaLabel: gettext("Maybe later"),
                 showCTAButton: true,
+                onNext: function () {
+                    // We click the "Let's go!" button to finish the welcome wizard, needed if the tour started from there
+                    $('#wizard_dialog div.modal-footer button.button-finish').trigger('click');
+
+                    self._onNext();
+                },
                 onCTA: function () {
                     self._analytics_tour_done = false;
                     hopscotch.endTour();
@@ -181,7 +178,7 @@ $(function () {
                 id: 'select_material',
                 title: gettext("Select the material"),
                 text: [gettext("For this guide we want to use felt.", "However as you can see there are many different options. :)")],
-                target: $('li.material_entry[mrb_name="felt.jpg"]')[0] || $('li.material_entry')[0],
+                target: $('li.material_entry[mrb_name$="Felt.jpg"]')[0] || $('li.material_entry')[0],
                 additionalJQueryTargets: 'li.material_entry',
                 placement: "bottom",
                 delay: 400,
@@ -193,7 +190,7 @@ $(function () {
                 id: 'select_color',
                 title: gettext("Select the color of the material"),
                 text: [gettext("This is important because different colors absorb the laser differently.")],
-                target: ["#material_color_ff9900", "#color_list :first-child"],
+                target: ["#material_color_eb5a3e", "#color_list :first-child"],
                 additionalJQueryTargets: '#color_list > ',
                 placement: "bottom",
                 delay: 100,

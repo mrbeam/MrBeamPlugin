@@ -30,6 +30,7 @@ class AnalyticsKeys:
 			LASERJOB_STARTED = 'laserjob_started'
 			LASERJOB_FINISHED = 'laserjob_finished'
 			CPU = 'cpu'  # This comes both in the slicing and the print
+			JOB_TIME_ESTIMATED = 'job_time_estimated'  # This comes after the slicing but before the printing
 
 			class Slicing:
 				STARTED = 's_started'
@@ -153,6 +154,8 @@ class AnalyticsKeys:
 			CPU = 'cpu'
 			CAMERA = 'camera'
 			OS_HEALTH = 'os_health'
+			ANALYTICS_FILE_CROP = 'analytics_file_crop'
+			I2C_MONITORING = 'i2c_monitoring'
 
 		class Level:
 			EXCEPTION = 'exception'
@@ -170,10 +173,24 @@ class AnalyticsKeys:
 		class Iobeam:
 			VERSION = 'version'
 			MESSAGE = 'message'
+			FROM_PLUGIN = 'from_plugin'
+
+		class I2cMonitoring:
+			VERSION = 'version'
+			STATE = 'state'
+			METHOD = 'method'
+			CURRENT_DEVICES = 'current_devices'
+			LOST_DEVICES = 'lost_devices'
+			NEW_DEVICES = 'new_devices'
 
 		class Cpu:
 			TEMP = 'temp'
 			THROTTLE_ALERTS = 'throttle_alerts'
+
+		class AnalyticsFile:
+			PREV_SIZE = 'prev_size'
+			NEW_SIZE = 'new_size'
+			NUM_LINES = 'num_lines'
 
 	class Connectivity:
 		class Event:

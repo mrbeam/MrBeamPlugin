@@ -17,9 +17,11 @@
         {#  Dirty to have this (== body elements) in the head section.
            Chrome ends head-tag and opens body-tag which means that all following is in the page's bodey instead of the head  #}
         {% include 'loading_overlay.jinja2' %}
+        <script>document.body.classList.add("loading_step1");</script>
 
 
         {% include 'stylesheets.jinja2' %}
+        {% include 'styles.jinja2' %}
         {% include 'initscript.jinja2' %}
         {% include 'mrbeam_initscript.jinja2' %}
         {% include 'lasersafety_standalone.jinja2' %}
@@ -30,7 +32,7 @@
         {% include 'software_channel_selector.jinja2' %}
 
     </head>
-    <body style="overflow: hidden;" class="online">
+    <body style="overflow: hidden;" class="env_prod online">
 		<div class="container-fluid octoprint-container">
 		<nav class="navbar navbar-default navbar-fixed-top" role="navigation" id="navbar" style="min-width:730px;">
 			<div class="">
@@ -86,10 +88,14 @@
 							<li><a href="http://www.mr-beam.org" target="_blank"><i class="icon-home"></i> mr-beam.org</a></li>
 							<li><a href="http://find.mr-beam.org" target="_blank"><i class="icon-chevron-right"></i> {{ _('Find my Mr Beam') }}</a></li>
 							<li class="divider"></li>
-							<li><a href="/plugin/mrbeam/static/docs/{{ _('QuickstartGuide_en.pdf') }}" target="_blank"><i class="icon-book"></i> {{ _('Quickstart Guide') }}</a></li>
-							<li><a href="/plugin/mrbeam/static/docs/{{ _('UserManual_en.pdf') }}" target="_blank"><i class="icon-book"></i> {{ _('User Manual') }}</a></li>
+                             {% if model in ["MRBEAM2", "MRBEAM2_DC_R1"] %}
+                                <li><a href="/plugin/mrbeam/static/docs/{{ _('QuickstartGuide_en.pdf') }}" target="_blank"><i class="icon-book"></i> {{ _('Quickstart Guide') }}</a></li>
+                                <li><a href="/plugin/mrbeam/static/docs/{{ _('UserManual_en.pdf') }}" target="_blank"><i class="icon-book"></i> {{ _('User Manual') }}</a></li>
+                            {% else %}
+                                <li><a href="/plugin/mrbeam/static/docs/{{ _('QuickstartGuide_dreamcut_en.pdf') }}" target="_blank"><i class="icon-book"></i> {{ _('Quickstart Guide') }}</a></li>
+                                <li><a href="/plugin/mrbeam/static/docs/{{ _('UserManual_dreamcut_en.pdf') }}" target="_blank"><i class="icon-book"></i> {{ _('User Manual') }}</a></li>
+                            {% endif %}
 							<li class="divider"></li>
-{#							<li><a href="#tour" id="tour_start_btn" ><i class="icon-youtube-play"></i> {{ _('Take a Tour') }}</a></li>#}
 							<li><a href="#tour" id="tour_start_btn" data-bind="click: window.mrbeam.viewModels.tourViewModel.btn_startTour"><i class="icon-youtube-play"></i> {{ _('Take a Tour') }}</a></li>
 							<li class="divider"></li>
 							<li><a href="https://www.mr-beam.org/support" target="_blank"><i class="icon-question-sign"></i> {{ _('Support Portal') }}</a></li>
@@ -176,6 +182,8 @@
 		<!-- End of generic plugin template files -->
 
 
+        <script>document.body.classList.add("loading_step2");</script>
         {% include 'javascripts.jinja2' %}
+        <script>document.body.classList.add("loading_step3");</script>
     </body>
 </html>

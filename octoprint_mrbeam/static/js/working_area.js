@@ -16,68 +16,6 @@ if(MRBEAM_DEBUG_RENDERING){
 
 $(function(){
 
-	function versionCompare(v1, v2, options) {
-		var lexicographical = options && options.lexicographical,
-			zeroExtend = options && options.zeroExtend,
-			v1parts = v1.split('.'),
-			v2parts = v2.split('.');
-
-		function isValidPart(x) {
-			return (lexicographical ? /^\d+[A-Za-z]*$/ : /^\d+$/).test(x);
-		}
-
-		if (!v1parts.every(isValidPart) || !v2parts.every(isValidPart)) {
-			return NaN;
-		}
-
-		if (zeroExtend) {
-			while (v1parts.length < v2parts.length) v1parts.push("0");
-			while (v2parts.length < v1parts.length) v2parts.push("0");
-		}
-
-		if (!lexicographical) {
-			v1parts = v1parts.map(Number);
-			v2parts = v2parts.map(Number);
-		}
-
-		for (var i = 0; i < v1parts.length; ++i) {
-			if (v2parts.length === i) {
-				return 1;
-			}
-
-			if (v1parts[i] === v2parts[i]) {
-				continue;
-			}
-			else if (v1parts[i] > v2parts[i]) {
-				return 1;
-			}
-			else {
-				return -1;
-			}
-		}
-
-		if (v1parts.length !== v2parts.length) {
-			return -1;
-		}
-
-		return 0;
-	}
-
-	// constants
-	var HUMAN_READABLE_IDS_CONSTANTS = 'bcdfghjklmnpqrstvwxz';
-	var HUMAN_READABLE_IDS_VOCALS    = 'aeiouy';
-
-	function getHumanReadableId(length){
-		length = length || 4;
-		var out = [];
-		for (var i = 0; i < length/2; i++) {
-			var cIdx = Math.floor(Math.random()*HUMAN_READABLE_IDS_CONSTANTS.length);
-			var vIdx = Math.floor(Math.random()*HUMAN_READABLE_IDS_VOCALS.length);
-			out.push(HUMAN_READABLE_IDS_CONSTANTS.charAt(cIdx));
-			out.push(HUMAN_READABLE_IDS_VOCALS.charAt(vIdx));
-		}
-		return  out.join('');
-	}
 
 	function WorkingAreaViewModel(params) {
 		var self = this;
@@ -107,6 +45,22 @@ $(function(){
 		self.svgDPI = function(){return 90}; // initial value, gets overwritten by settings in onAllBound()
 		self.dxfScale =  function(){return 1}; // initial value, gets overwritten by settings in onAllBound()
 		self.previewImgOpacity = ko.observable(1);
+		self.previewImgOpacity.subscribe(function(newVal){
+			let col = newVal > 0.25 ? '#eeeeee':'#999999';
+			$('#coord_pattern_marker').attr('stroke', col);
+			if(newVal !== self.settings.settings.plugins.mrbeam.cam.previewOpacity()){
+				if (self.settings.savetimer !== undefined) {
+					clearTimeout(self.settings.savetimer);
+				}
+				self.settings.settings.plugins.mrbeam.cam.previewOpacity(newVal);
+				self.settings.savetimer = setTimeout(function () {
+						self.settings.saveData(undefined, function(newSettings){
+							console.log("Saved previewOpacity", newSettings.plugins.mrbeam.cam.previewOpacity);
+							self.settings.savetimer = undefined;
+						});
+					}, 2000);
+			}
+		});
 
 		self.workingAreaWidthMM = ko.computed(function(){
 			return self.profile.currentProfileData().volume.width();
@@ -138,8 +92,8 @@ $(function(){
 		self.lastQuickTextIntensity = 0; // rgb values: 0=black, 155=white
 
 		self.zoom = ko.observable(1.0);
-		self.zoomPercX = ko.observable(0);
-		self.zoomPercY = ko.observable(0);
+//		self.zoomPercX = ko.observable(0);
+//		self.zoomPercY = ko.observable(0);
 		self.zoomOffX = ko.observable(0);
 		self.zoomOffY = ko.observable(0);
 		self.zoomViewBox = ko.computed(function(){
@@ -191,7 +145,6 @@ $(function(){
 		});
 
 		self.hwRatio = ko.computed(function(){
-			// y/x = 297/216 junior, respectively 594/432 senior
 			var w = self.workingAreaWidthMM();
 			var h = self.workingAreaHeightMM();
 			var ratio = h / w;
@@ -267,26 +220,24 @@ $(function(){
 			self.placedDesigns([]);
 		};
 
-		self.colorNamer = new ColorClassifier();
 		self.getUsedColors = function () {
-			var colHash = {};
-			var colFound = [];
-			snap.selectAll('#userContent *[stroke]:not(#bbox)').forEach(function (el) {
-				// TODO this includes stroke colors used in <defs> like patterns e.g. - should they be removed (tbd)?
-				var colHex = el.attr().stroke;
-				if (typeof(colHex) !== 'undefined' && colHex !== 'none' && typeof(colHash[colHex]) === 'undefined') {
-//					var colName = self.colorNamer.classify(colHex);
-					var colName = colHex;
-					colFound.push({hex: colHex, name: colName});
-					colHash[colHex] = 1;
-				}
-			});
+			let colFound = self._getColorsOfSelector('.vector_outline', 'stroke', snap.select('#userContent'));
 			return colFound;
 		};
 
-		self._getHexColorStr = function(inputColor){
-			var c = new Color(inputColor);
-			return c.getHex();
+		self._getColorsOfSelector = function(selector, color_attr = 'stroke', elem = null){
+			let root = elem === null ? snap : elem;
+
+			let colors = [];
+			let items = root.selectAll(selector + '['+color_attr+']');
+			for (var i = 0; i < items.length; i++) {
+				let col = items[i].attr()[color_attr];
+				if(col !== 'undefined' && col !== 'none' && col !== null && col !== ''){
+					colors.push(col);
+				}
+			}
+			colors = _.uniq(colors); // unique
+			return colors;
 		};
 
 		self.trigger_resize = function(){
@@ -300,16 +251,8 @@ $(function(){
 
 		self.move_laser = function(data, evt){
 			self.abortFreeTransforms();
-			if(self.state.isOperational() && !self.state.isPrinting() && !self.state.isLocked()){
-				var coord = self.getXYCoord(evt);
-				$.ajax({
-					url: API_BASEURL + "plugin/mrbeam",
-					type: "POST",
-					dataType: "json",
-					contentType: "application/json; charset=UTF8",
-					data: JSON.stringify({"command": "position", x:parseFloat(coord.x.toFixed(2)), y:parseFloat(coord.y.toFixed(2))})
-				});
-			}
+			const coord = self.getXYCoord(evt);
+			self.move_laser_to_xy(coord.x, coord.y);
 		};
 
 		self.getXYCoord = function(evt){
@@ -319,6 +262,20 @@ $(function(){
 			x = Math.min(x, self.workingAreaWidthMM());
 			y = Math.min(y, self.workingAreaHeightMM());
 			return {x:x, y:y};
+		};
+
+		self.move_laser_to_xy = function(x,y){
+			if(self.state.isOperational() && !self.state.isPrinting() && !self.state.isLocked()){
+				$.ajax({
+					url: API_BASEURL + "plugin/mrbeam",
+					type: "POST",
+					dataType: "json",
+					contentType: "application/json; charset=UTF8",
+					data: JSON.stringify({"command": "position", x:parseFloat(x.toFixed(2)), y:parseFloat(y.toFixed(2))})
+				});
+			} else {
+				console.warn("Move Laser command while machine state not idle: " + self.state.stateString());
+			}
 		};
 
 		self.crosshairX = function(){
@@ -352,6 +309,11 @@ $(function(){
 			self.tour.startTour();
 		};
 
+		/**
+		 *
+		 * @param {type} file (OctoPrint "file" object - example: {url: elem.url, origin: elem.origin, name: name, type: "split", refs:{download: elem.url}};)
+		 * @returns {Boolean}
+		 */
 		self.isPlaced = function(file){
 			if(file === undefined) return false;
 
@@ -466,7 +428,11 @@ $(function(){
 			cb = function (fragment) {
 				var duration_load = Date.now() - start_ts;
 				start_ts = Date.now();
-				if(self._isBinaryData(fragment.node.textContent)) { // workaround: only catching one loading error
+				if(WorkingAreaHelper.isBinaryData(fragment.node.textContent)) { // workaround: only catching one loading error
+					self.file_not_readable();
+					return;
+				}
+				if(WorkingAreaHelper.isEmptyFile(fragment.node.textContent)) { // zerobyte files
 					self.file_not_readable();
 					return;
 				}
@@ -480,12 +446,12 @@ $(function(){
 				self.placedDesigns.push(file);
 
 				// get scale matrix
-				var generator_info = self._get_generator_info(fragment);
+				var generator_info = WorkingAreaHelper.getGeneratorInfo(fragment);
 				var doc_dimensions = self._getDocumentDimensionAttributes(fragment);
 				var unitScaleX = self._getDocumentScaleToMM(doc_dimensions.units_x, generator_info);
 				var unitScaleY = self._getDocumentScaleToMM(doc_dimensions.units_y, generator_info);
 				var mat = self.getDocumentViewBoxMatrix(doc_dimensions, doc_dimensions.viewbox);
-				var scaleMatrixStr = new Snap.Matrix(mat[0][0],mat[0][1],mat[1][0],mat[1][1],mat[0][2],mat[1][2]).scale(unitScaleX, unitScaleY).toTransformString();
+				var scaleMatrixStr = new Snap.Matrix(mat[0][0] * unitScaleX, mat[0][1], mat[1][0], mat[1][1]*unitScaleY,-mat[2][0]* unitScaleX,-mat[2][1]*unitScaleY).toTransformString();
 
 				var analyticsData = {};
 				analyticsData.file_type = 'svg';
@@ -608,6 +574,7 @@ $(function(){
 			}
 
 			try {
+				// bake() kills gradients because gradient coordinates are not transformed.
 				var switches = $.extend({showTransformHandles: true, embedGCode: true, bakeTransforms: true}, flags);
 				fragment = self._removeUnsupportedSvgElements(fragment, analyticsData);
 
@@ -663,7 +630,7 @@ $(function(){
 					var colStr = el.attr().stroke;
 					// handle stroke="" default value (#000000)
 					if (typeof (colStr) !== 'undefined' && colStr !== 'none') {
-						var colHex = self._getHexColorStr(colStr);
+						var colHex = WorkingAreaHelper.getHexColorStr(colStr);
 						el.attr('stroke', colHex);
 					}
 				});
@@ -671,34 +638,13 @@ $(function(){
 					var colStr = el.attr().fill;
 					// handle fill="" default value (#000000)
 					if (typeof (colStr) !== 'undefined' && colStr !== 'none') {
-						var colHex = self._getHexColorStr(colStr);
+						var colHex = WorkingAreaHelper.getHexColorStr(colStr);
 						el.attr('fill', colHex);
 					}
 				});
 
 				snap.select("#userContent").append(newSvg);
-				newSvg.transformable();
-				newSvg.ftRegisterBeforeTransformCallback(function () {
-					newSvg.clean_gc();
-				});
-				newSvg.ftRegisterAfterTransformCallback(function () {
-					var mb_meta = self._set_mb_attributes(newSvg);
-					// newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
-				});
-
-				// activate handles on all things we add to the working_area
-				if (switches.showTransformHandles) {
-					self.showTransformHandles(id, true);
-				}
-
-				var mb_meta = self._set_mb_attributes(newSvg);
-				// if(switches.embedGCode){
-				// 	newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
-				// }
-
-				setTimeout(function () {
-					newSvg.ftRegisterOnTransformCallback(self.svgTransformUpdate);
-				}, 200);
+				self._makeItTransformable(newSvg);
 
 				return id;
 			} catch(e) {
@@ -741,7 +687,7 @@ $(function(){
 			}
 
 			// remove other unnecessary or invisible ("display=none") elements
-			let removeElements = fragment.selectAll("metadata, script, [display=none]");
+			let removeElements = fragment.selectAll('metadata, script, [display=none], [style*="display:none"]');
 			for (var i = 0; i < removeElements.length; i++) {
 				if (!(removeElements[i] in analyticsData.removed_unnecessary_elements)) analyticsData.removed_unnecessary_elements[removeElements[i].type] = 0;
 				analyticsData.removed_unnecessary_elements[removeElements[i].type]++;
@@ -751,7 +697,12 @@ $(function(){
 		};
 
 		self.loadSVG = function(url, callback){
-			Snap.load(url, callback);
+			Snap.ajax(url, function (req) {
+				// add more filters for trouble character here.
+				let svgStr = req.responseText.replace(/\u00A0/g, ' '); // remove no-break-space ASCII:160, utf16:00a0
+				let fragment = Snap.parse(svgStr);
+				callback(fragment);
+			});
 		};
 
 		self.removeSVG = function(file){
@@ -777,129 +728,7 @@ $(function(){
 		};
 
 
-		/**
-		 * Returns with what program and version the given svg file was created. E.g. 'coreldraw'
-		 * @param fragment
-		 * @returns {*}
-		 * @private
-		 */
-		self._get_generator_info = function(f){
-			var gen = null;
-			var version = null;
-			var root_attrs;
-			if(f.select('svg') === null){
-				root_attrs = f.node.attributes;
-			} else {
-				root_attrs = f.select('svg').node.attributes;
-			}
 
-			// detect BeamOS generated Files by attribute
-            // <svg
-            //    ...
-            //    xmlns:mb="http://www.mr-beam.org"
-            //    ...
-            //    mb:beamOS_version="0.3.4"
-			var beamOS_version = root_attrs['mb:beamOS_version'];
-			if(beamOS_version !== undefined){
-				gen = 'beamOS';
-				version = version.value;
-//				console.log("Generator:", gen, version);
-				return {generator: gen, version: version};
-			}
-
-			// detect Inkscape by attribute
-			// <svg
-			//    ...
-			//    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-			//    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-			//    ...
-			//    inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
-			//    sodipodi:docname="Mr. Beam Jack of Spades Project Cards Inkscape.svg">
-			var inkscape_version = root_attrs['inkscape:version'];
-			if(inkscape_version !== undefined){
-				gen = 'inkscape';
-				version = inkscape_version.value;
-//				console.log("Generator:", gen, version);
-				return {generator: gen, version: version};
-			}
-
-			// <svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg" xmlns:bx="https://boxy-svg.com">
-			// if (root_attrs['xmlns:bx'] && root_attrs['xmlns:bx'].value.search("boxy-svg.com")>0) {
-			//     return { generator: "boxy-svg", version: "unknown" };
-			// }
-
-			// detect Illustrator by comment (works with 'save as svg')
-			// <!-- Generator: Adobe Illustrator 16.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
-			var children = f.node.childNodes;
-			for (var i = 0; i < children.length; i++) {
-				var node = children[i];
-				if(node.nodeType === 8){ // check for comment
-					if (node.textContent.indexOf('Illustrator') > -1) {
-						gen = 'illustrator';
-						var matches = node.textContent.match(/\d+\.\d+(\.\d+)*/g);
-						version = matches.join('_');
-//						console.log("Generator:", gen, version);
-						return { generator: gen, version: version };
-					}
-				}
-			}
-
-			// detect Illustrator by data-name (for 'export as svg')
-			if(root_attrs && root_attrs['data-name']){
-				gen = 'illustrator';
-				version = '?';
-//				console.log("Generator:", gen, version);
-				return { generator: gen, version: version };
-			}
-
-			// detect Corel Draw by comment
-			// <!-- Creator: CorelDRAW X5 -->
-			var children = f.node.childNodes;
-			for (var i = 0; i < children.length; i++) {
-				var node = children[i];
-				if(node.nodeType === 8){ // check for comment
-					if (node.textContent.indexOf('CorelDRAW') > -1) {
-						gen = 'coreldraw';
-						var version = node.textContent.match(/(Creator: CorelDRAW) (\S+)/)[2];
-//						console.log("Generator:", gen, version);
-						return { generator: gen, version: version };
-					}
-				}
-			}
-
-			// detect Method Draw by comment
-			// <!-- Created with Method Draw - http://github.com/duopixel/Method-Draw/ -->
-			for (var i = 0; i < children.length; i++) {
-				var node = children[i];
-				if(node.nodeType === 8){ // check for comment
-					if (node.textContent.indexOf('Method Draw') > -1) {
-						gen = 'method draw';
-//						console.log("Generator:", gen, version);
-						return { generator: gen, version: version };
-					}
-				}
-			}
-
-
-			// detect dxf.js generated svg
-			// <!-- Created with dxf.js -->
-			for (var i = 0; i < children.length; i++) {
-				var node = children[i];
-				if(node.nodeType === 8){ // check for comment
-					if (node.textContent.indexOf('Created with dxf.js') > -1) {
-						gen = 'dxf.js';
-						console.log("Generator:", gen, version);
-						return { generator: gen, version: version };
-					}
-				}
-			}
-//			console.log("Generator:", gen, version);
-			return { generator: 'unknown', version: 'unknown' };
-		};
-
-		self._isBinaryData = function(str){
-			return /[\x00-\x08\x0E-\x1F]/.test(str);
-		};
 
 		/**
 		 * Finds dimensions (wifth, height, etc..) of an SVG
@@ -950,7 +779,7 @@ $(function(){
 			}
 			if(declaredUnit === 'px' || declaredUnit === ''){
 				if(generator.generator === 'inkscape'){
-					if(versionCompare(generator.version, '0.91') <= 0){
+					if(WorkingAreaHelper.versionCompare(generator.version, '0.91') <= 0){
 //						console.log("old inkscape, px @ 90dpi");
 						declaredUnit = 'px_inkscape_old';
 					} else {
@@ -1005,16 +834,91 @@ $(function(){
 			svgEl.removeClass('designHighlight');
 		};
 
+		self.splitSVG = function(elem, event, method) {
+			self.abortFreeTransforms();
+			let srcElem = snap.select('#'+elem.previewId);
+
+			let parts;
+			switch(method){
+				case 'stroke-color':
+					parts = srcElem.separate_by_stroke_colors();
+					if(parts.length <= 1) failReason = "Didn't find different stroke colors.";
+					break;
+				case 'non-intersecting': // TODO: provide cancel check and proper progress callback
+					parts = srcElem.separate_by_non_intersecting_bbox(null, function(n){ console.log("Separate non intersecting shapes: ", n); });
+					if(parts.length <= 1) failReason = "Didn't find different stroke colors.";
+					break;
+				case 'horizontally':
+					parts = srcElem.separate_horizontally();
+					if(parts.length <= 1) failReason = "Not enough native elements.";
+					break;
+				case 'vertically':
+				case 'divide':
+				default:
+					parts = srcElem.separate_vertically();
+					if(parts.length <= 1) failReason = "Not enough native elements.";
+					break;
+			}
+
+			if(parts.length > 1){
+				self.removeSVG(elem);
+				for (let i = 0; i < parts.length; i++) {
+					const name = elem.name + "."+(i+1);
+					let file = {url: elem.url, origin: elem.origin, name: name, type: "split", refs:{download: elem.url}};
+					const id = self.getEntryId();
+					const previewId = self.generateUniqueId(id, file);
+					let fragment = parts[i];
+					fragment.clean_gc();
+					fragment.attr({id: previewId})
+					snap.select("#userContent").append(fragment);
+
+					file.id = id; // list entry id
+					file.previewId = previewId;
+					file.misfit = false;
+					file.typePath = file.typePath;
+
+					self.placedDesigns.push(file);
+					self._makeItTransformable(fragment);
+
+					let mb_meta = self._set_mb_attributes(fragment);
+					// remove class which was added by mouseover in the list.
+					self.removeHighlight(file);
+				}
+			} else {
+				let failReason = "";
+				switch (method) {
+					case 'stroke-color':
+						failReason = gettext("No different line colors found.");
+						break;
+					case 'non-intersecting':
+						failReason = gettext("No non-intersecting shapes found.");
+						break;
+					case 'divide':
+						failReason = gettext("Looks like a single path.");
+				}
+				new PNotify({
+					title: gettext("Element not splittable with this method."),
+					text: gettext("Can't split this design.") + ' ' + failReason,
+					type: "info",
+					hide: true
+				});
+			}
+		};
+
 		self.duplicateSVG = function(src) {
 			self.abortFreeTransforms();
 			var srcElem = snap.select('#'+src.previewId);
 			var clone_id = srcElem.attr('mb:clone_of') || self._normalize_mb_id(src.previewId);
 			var newSvg = srcElem.clone();
 			newSvg.clean_gc();
-			var file = {url: src.url, origin: src.origin, name: src.name, type: src.type, refs:{download: src.url}};
 			let prefix = clone_id.substr(0, clone_id.indexOf('_'));
 			var id = self.getEntryId(prefix);
+			var file = _.cloneDeep(src); // clone from src as quicktext has additional fields here.
 			var previewId = self.generateUniqueId(id, file);
+			file.id = id; // list entry id
+			file.previewId = previewId;
+			file.misfit = false;
+			file.typePath = src.typePath;
 			newSvg.attr({id: previewId,
 				'mb:id': self._normalize_mb_id(previewId),
 				'mb:clone_of':clone_id,
@@ -1029,35 +933,16 @@ $(function(){
 
 			snap.select("#userContent").append(newSvg);
 
-			file.id = id; // list entry id
-			file.previewId = previewId;
-			file.misfit = false;
-			file.typePath = src.typePath;
 
 			self.placedDesigns.push(file);
 			self.placeSmart(newSvg);
-			newSvg.transformable();
-			newSvg.ftRegisterOnTransformCallback(self.svgTransformUpdate);
-			newSvg.ftRegisterBeforeTransformCallback(function(){
-				newSvg.clean_gc();
-			});
-			newSvg.ftRegisterAfterTransformCallback(function(){
-				var mb_meta = self._set_mb_attributes(newSvg);
-				// newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
-			});
-			setTimeout(function(){
-				newSvg.ftReportTransformation();
-			}, 200);
-
-			// activate handles on all things we add to the working_area
-			self.showTransformHandles(previewId, true);
-
-			var mb_meta = self._set_mb_attributes(newSvg);
-			// newSvg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
-			// self.check_sizes_and_placements(); // TODO?
+			self.removeHighlight(file);
+			self._makeItTransformable(newSvg);
+			self.check_sizes_and_placements();
 		};
 
-		self.placeSmart = function(elem){
+
+		self.placeSmart = function(elem){ // TODO: bug - should not place outside working area
 			var spacer = 2;
 			var label = elem.attr('mb:origin');
 			var placed = snap.selectAll("g[mb\\:origin='"+label+"']");
@@ -1107,6 +992,20 @@ $(function(){
 			elemCTM.f += dy;
 			elem.transform(elemCTM);
 		};
+
+		self._makeItTransformable = function(fragment){
+			fragment.transformable();
+			fragment.ftRegisterOnTransformCallback(self.svgTransformUpdate);
+			fragment.ftRegisterBeforeTransformCallback(function () {
+				fragment.clean_gc();
+			});
+			fragment.ftRegisterAfterTransformCallback(function () {
+				var mb_meta = self._set_mb_attributes(fragment);
+			});
+			setTimeout(function () {
+				fragment.ftReportTransformation();
+			}, 200);
+		}
 
 		/**
 		 * toggle transformation handles
@@ -1225,21 +1124,25 @@ $(function(){
 		};
 		self.svgManualMultiply = function(data, event) {
 			if (event.keyCode === 13 || event.type === 'blur') {
-				self.abortFreeTransforms();
-				var svg = snap.select('#'+data.previewId);
-				var gridsize = event.target.value.split(/\D+/);
-				var cols = gridsize[0] || 1;
-				var rows = gridsize[1] || 1;
-				var dist = 2;
-				svg.grid(cols, rows, dist);
-				var mb_meta = self._set_mb_attributes(svg);
-				// svg.embed_gc(self.flipYMatrix(), self.gc_options(), mb_meta);
-				event.target.value = cols+"×"+rows;
-				svg.ftStoreInitialTransformMatrix();
-				svg.ftUpdateTransform();
-				self.check_sizes_and_placements();
+				const colsRowsStr = event.target.value;
+				const result = self._svgMultiplyUpdate(data, colsRowsStr);
+				event.target.value = result;
 			}
 		};
+		self._svgMultiplyUpdate = function(data, colsRowsStr){
+			self.abortFreeTransforms();
+			var svg = snap.select('#'+data.previewId);
+			var gridsize = colsRowsStr.split(/\D+/);
+			var cols = gridsize[0] || 1;
+			var rows = gridsize[1] || 1;
+			var dist = 2;
+			svg.grid(cols, rows, dist);
+			var mb_meta = self._set_mb_attributes(svg);
+			svg.ftStoreInitialTransformMatrix();
+			svg.ftUpdateTransform();
+			self.check_sizes_and_placements();
+			return cols+"×"+rows;
+		}
 		self.imgManualAdjust = function(data, event) {
 			if (event.type === 'input' || event.type === 'blur' || event.type === 'keyUp') {
 				self.abortFreeTransforms();
@@ -1263,6 +1166,17 @@ $(function(){
 			}
 		};
 
+		self.imgManualCrop = function(data, event) {
+			if (event.type === 'input' || event.type === 'blur' || event.type === 'keyUp') {
+				let t = parseFloat($('#'+data.id+' .crop_top').val());
+				let l = parseFloat($('#'+data.id+' .crop_left').val());
+				let r = parseFloat($('#'+data.id+' .crop_right').val());
+				let b = parseFloat($('#'+data.id+' .crop_bottom').val());
+				self.set_img_crop(data.previewId, t, l, r, b);
+				if(l + r > 99) $('#'+data.id+' .crop_right').val(100-l-1);
+				if(t + b > 99) $('#'+data.id+' .crop_bottom').val(100-t-1);
+			}
+		};
 
 		self.outsideWorkingArea = function(svg){
 			var waBB = snap.select('#coordGrid').getBBox();
@@ -1278,11 +1192,11 @@ $(function(){
 			var dx = 0;
 			var dy = 0;
 			var outside = false;
-			if(svgBB.x < waBB.x){
+			if(svgBB.x < waBB.x){ // outside on the left
 				dx = -svgBB.x + 0.01;
 				outside = true;
-			} else if(svgBB.x2 > waBB.x2){
-				dx = -svgBB.x + 0.01;
+			} else if(svgBB.x2 > waBB.x2){ // outside on the right
+				dx = -svgBB.x2 + waBB.x2 - 0.01;
 				outside = true;
 			}
 			if(svgBB.y < waBB.y){
@@ -1403,11 +1317,13 @@ $(function(){
 
 				imgWrapper.append(newImg);
 				snap.select("#userContent").append(imgWrapper);
-				imgWrapper.transformable();
-				imgWrapper.ftRegisterOnTransformCallback(self.svgTransformUpdate);
-				setTimeout(function(){
-					imgWrapper.ftReportTransformation();
-				}, 200);
+//				imgWrapper.transformable();
+//				imgWrapper.ftRegisterOnTransformCallback(self.svgTransformUpdate);
+//				setTimeout(function(){
+//					imgWrapper.ftReportTransformation();
+//				}, 200);
+				self._makeItTransformable(imgWrapper);
+
 				file.id = id;
 				file.previewId = previewId;
 				file.url = url;
@@ -1437,16 +1353,16 @@ $(function(){
 
 		self._create_img_filter = function(previewId){
 			var id = self._get_img_filter_id(previewId);
-			var str = "<feComponentTransfer class='contrast_filter' x='0%' y='0%' width='100%' height='100%' in='colormatrix' result='contrast_result'>"
+			var str = "<feComponentTransfer class='contrast_filter' in='colormatrix' result='contrast_result'>"
 			+ "<feFuncR type='gamma' amplitude='1' offset='0' exponent='1'/>"
 			+ "<feFuncG type='gamma' amplitude='1' offset='0' exponent='1'/>"
 			+ "<feFuncB type='gamma' amplitude='1' offset='0' exponent='1'/>"
 			+ "<feFuncA type='identity' />"
 			+ "</feComponentTransfer>"
-			+ "<feColorMatrix class='gray_scale_filter' type='saturate' values='0' x='0%' y='0%' width='100%' height='100%' in='contrast_result' result='gray_scale'/>"
-			+ "<feConvolveMatrix class='sharpening_filter' order='3 3' kernelMatrix='0 0 0 0 1 0 0 0 0' divisor='1' bias='0' targetX='1' targetY='1' edgeMode='duplicate' preserveAlpha='true' x='0%' y='0%' width='100%' height='100%' in='gray_scale' result='sharpened'/>"
+			+ "<feColorMatrix class='gray_scale_filter' type='saturate' values='0' in='contrast_result' result='gray_scale'/>"
+			+ "<feConvolveMatrix class='sharpening_filter' order='3 3' kernelMatrix='0 0 0 0 1 0 0 0 0' divisor='1' bias='0' targetX='1' targetY='1' edgeMode='duplicate' preserveAlpha='true' in='gray_scale' result='sharpened'/>"
 			;
-			snap.filter(str).attr({id: id});
+			snap.filter(str).attr({id: id, filterUnits:'objectBoundingBox', x:'0%', y:'0%', width:'100%', height:'100%'});
 			return id;
 		};
 
@@ -1484,6 +1400,15 @@ $(function(){
 			var matrix = [n,n,n,n,c,n,n,n,n].join(' ');
 			var filter = snap.select('#'+self._get_img_filter_id(previewId));
 			filter.select('feConvolveMatrix').attr({kernelMatrix: matrix});
+		};
+
+		self.set_img_crop = function(previewId, top, left, right, bottom){
+			let filter = snap.select('#'+self._get_img_filter_id(previewId));
+			let x = Math.min(left, 100 - right);
+			let y = Math.min(top, 100 - bottom);
+			let width = Math.max(100 - right - left, 0);
+			let height = Math.max(100 - top - bottom, 0);
+			filter.attr({x: left+'%', y: top+'%', width: width+'%', height: height+'%' });
 		};
 
 		self.moveSelectedDesign = function(ifX,ifY){
@@ -1653,7 +1578,7 @@ $(function(){
 
 		self.templateFor = function(data) {
 			if(data.type === "model" || data.type === "machinecode") {
-	   var extension = data.name.split('.').pop().toLowerCase();
+				var extension = data.name.split('.').pop().toLowerCase();
 				if (extension === "svg") {
 					return "wa_template_" + data.type + "_svg";
 				} else if (extension === "dxf") {
@@ -1663,7 +1588,7 @@ $(function(){
 				} else {
 					return "wa_template_" + data.type;
 				}
-			} else if (data.type === "recentjob") {
+			} else if (data.type === "recentjob" || data.type === "split") {
 				return "wa_template_model_svg";
 			} else if (data.type === "quicktext") {
 				return "wa_template_quicktext";
@@ -1676,7 +1601,7 @@ $(function(){
 
 		self.getEntryId = function(prefix, length) {
 			prefix = prefix || 'wa';
-			return prefix + "_" + getHumanReadableId(length);
+			return prefix + "_" + WorkingAreaHelper.getHumanReadableId(length);
 		};
 
 		self.init = function(){
@@ -1722,12 +1647,12 @@ $(function(){
 					yPatternOffset = 0;
 				}
 
-				var marker = snap.circle(linedist/2, linedist/2, .5).attr({
-					fill: "#000000",
-					stroke: "none",
-					strokeWidth: 1,
-					r: 0.75
+				var marker = snap.path("M9,10h2M10,9v2").attr({
+					id: "coord_pattern_marker",
+					stroke: "#eeeeee",
+					fill: "none", "stroke-width":"0.5"
 				});
+				//<path d="M8,10h4M10,8v4" stroke="#e25303" fill="none" stroke-width="0.5"></path>
 
 				// dot pattern
 				var p = marker.pattern(0, 0, linedist, linedist);
@@ -1771,7 +1696,7 @@ $(function(){
 			//self.check_sizes_and_placements();
 		};
 
-		self.getCompositionSVG = function(fillAreas, pxPerMM, cutOutlines, callback){
+		self.getCompositionSVG = function(fillAreas, pxPerMM, engraveStroke, callback){
 			self.abortFreeTransforms();
 			var wMM = self.workingAreaWidthMM();
 			var hMM = self.workingAreaHeightMM();
@@ -1790,13 +1715,15 @@ $(function(){
 					dels[i].remove();
 				}
 			}
+			// TODO why not shorter?
+			// compSvg.selectAll('.deleteBeforeRendering').remove();
 
 			// embed the fonts as dataUris
 			// TODO only if Quick Text is present
 			$('#compSvg defs').append('<style id="quickTextFontPlaceholder" class="quickTextFontPlaceholder deleteAfterRendering"></style>');
 			self._qt_copyFontsToSvg(compSvg.select(".quickTextFontPlaceholder").node);
 
-			self.renderInfill(compSvg, fillAreas, cutOutlines, wMM, hMM, pxPerMM, function(svgWithRenderedInfill){
+			self.renderInfill(compSvg, wPT, hPT, fillAreas, engraveStroke, wMM, hMM, pxPerMM, function(svgWithRenderedInfill){
 				callback( self._wrapInSvgAndScale(svgWithRenderedInfill));
 				$('#compSvg').remove();
 			});
@@ -1812,7 +1739,7 @@ $(function(){
 				var h = dpiFactor * hMM;
 				var viewBox = "0 0 " + wMM + " " + hMM;
 
-				svgStr = self._normalize_svg_string(svgStr);
+				svgStr = WorkingAreaHelper.fix_svg_string(svgStr); // Firefox bug workaround.
 				var gc_otions_str = self.gc_options_as_string().replace('"', "'");
 
 				var svg = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:mb="http://www.mr-beam.org/mbns" mb:beamOS_version="'+BEAMOS_VERSION+'"'
@@ -1821,13 +1748,6 @@ $(function(){
 			} else {
 				return;
 			}
-		};
-
-		self._normalize_svg_string = function(svgStr){
-			// TODO: look for better solution to solve this Firefox bug problem
-			svgStr = svgStr.replace("(\\\"","(");
-			svgStr = svgStr.replace("\\\")",")");
-			return svgStr;
 		};
 
 		self._normalize_mb_id = function(id) {
@@ -1955,7 +1875,7 @@ $(function(){
 		self.draw_gcode_img_placeholder = function(x,y,w,h,url, target){
 			if(url !== ""){
 				var p = snap.image(url,x,y,w,h).attr({
-					transform: 'matrix(1,0,0,-1,0,'+ String(h) +')',
+					transform: 'matrix(1,0,0,-1,0,'+ String(h+y*2) +')',
 					filter: 'url(#gcimage_preview)'
 				});
 
@@ -1975,11 +1895,18 @@ $(function(){
 			});
 			self.trigger_resize(); // initialize
 			self.init();
+			// init tinyColorPicker if not done yet
+			$("#qs_colorPicker_stroke").tinycolorpicker();
+			$("#qs_colorPicker_stroke").bind("change", self._qs_currentQuickShapeUpdate);
+			$("#qs_colorPicker_fill").tinycolorpicker();
+			$("#qs_colorPicker_fill").bind("change", self._qs_currentQuickShapeUpdate);
 		};
 
 		self.onAllBound = function(allViewModels){
 			self.svgDPI = self.settings.settings.plugins.mrbeam.svgDPI; // we assign ko function
 			self.dxfScale = self.settings.settings.plugins.mrbeam.dxfScale;
+			self.previewImgOpacity(self.settings.settings.plugins.mrbeam.cam.previewOpacity());
+
 			self.gc_options = ko.computed(function(){
 				return {
 					beamOS: BEAMOS_DISPLAY_VERSION,
@@ -2094,11 +2021,9 @@ $(function(){
 		};
 
 		// render the infill and inject it as an image into the svg
-		self.renderInfill = function (svg, fillAreas, cutOutlines, wMM, hMM, pxPerMM, callback) {
-			//TODO cutOutlines use it and make it work
-			var wPT = wMM * 90 / 25.4;
-			var hPT = hMM * 90 / 25.4;
-			var tmpSvg = self.getNewSvg('tmpSvg', wPT, hPT);
+		self.renderInfill = function (svg, svgWidthPT, svgHeightPT, fillAreas, engraveStroke, wMM, hMM, pxPerMM, callback) {
+			//TODO engraveStroke use it and make it work
+			var tmpSvg = self.getNewSvg('tmpSvg', svgWidthPT, svgHeightPT);
 			var attrs = {viewBox: "0 0 " + wMM + " " + hMM};
 			tmpSvg.attr(attrs);
 			// get only filled items and embed the images
@@ -2121,14 +2046,8 @@ $(function(){
 				for (var i = 0; i < fillings.length; i++) {
 					var item = fillings[i];
 
-					var style = item.attr('style');
-					if (item.type === 'image' || item.type === "text" || item.type === "#text") {
-						// remove filter effects on images for proper rendering
-//						if (style !== null) {
-//							var strippedFilters = style.replace(/filter.+?;/g, '');
-//							item.attr('style', strippedFilters);
-//						}
-					} else {
+					if (item.type !== 'image' && item.type !== "text" && item.type !== "#text") {
+						var style = item.attr('style');
 						// remove stroke from other elements
 						var styleNoStroke = 'stroke: none;';
 						if (style !== null) {
@@ -2139,7 +2058,7 @@ $(function(){
 					}
 				}
 
-				var cb = function(result) {
+				var cb = function(result, x, y, w, h) {
 					if (MRBEAM_DEBUG_RENDERING) {
 						debugBase64(result, 'png_debug');
 					}
@@ -2152,8 +2071,7 @@ $(function(){
 						svg.selectAll('text,tspan').remove();
 
 						if(result !== null){
-							var waBB = snap.select('#coordGrid').getBBox();
-							var fillImage = snap.image(result, 0, 0, waBB.w, waBB.h);
+							var fillImage = snap.image(result, x, y, w, h);
 							fillImage.attr('id', 'fillRendering');
 							svg.append(fillImage);
 						}
@@ -2173,7 +2091,8 @@ $(function(){
 				}
 				console.log("Rendering " + fillings.length + " filled elements.");
 				if(fillAreas){
-					tmpSvg.renderPNG(wMM, hMM, pxPerMM, cb);
+					let renderBBoxMM = tmpSvg.getBBox(); // if #712 still fails, fetch this bbox earlier (getCompositionSvg()).
+					tmpSvg.renderPNG(svgWidthPT, svgHeightPT, wMM, hMM, pxPerMM, renderBBoxMM, cb);
 				} else {
 					cb(null)
 				}
@@ -2206,6 +2125,7 @@ $(function(){
 
 
 		self.newQuickShape = function() {
+			self.abortFreeTransforms();
 			var file = self._qs_placeQuickShape();
 			self.editQuickShape(file);
 
@@ -2238,7 +2158,10 @@ $(function(){
 				typePath: ["quickshape"],
 				qs_params: {
 					type: '#rect',
+					stroke: true,
 					color: '#e25303',
+					fill: false,
+					fill_color: '#000000',
 					rect_w: w, rect_h: h, rect_radius: r,
 					circle_radius: w,
 					star_radius: w/2, star_corners:5, star_sharpness: 0.5522,
@@ -2250,7 +2173,7 @@ $(function(){
 			file.previewId = previewId;
 			self.placedDesigns.push(file);
 
-			var d = self._qs_getRect(w,h,r);
+			var d = QuickShapeHelper.getRect(w,h,r);
 			var shapeSvg = '<svg><g><path d="'+d+'" stroke-width="1" stroke="'+file.qs_params.color+'" fill="#ffffff" fill-opacity="0" /></g></svg>';
 			var fragment = Snap.parse(shapeSvg);
 
@@ -2262,17 +2185,18 @@ $(function(){
 		};
 
 		/**
-		 * Opens QuickText window to edit an existing QuickText object
-		 * @param file Object representing the QuickText to edit
+		 * Opens QuickShape window to edit an existing QuickShape object
+		 * @param file Object representing the QuickShape to edit
 		 */
 		self.editQuickShape = function (file) {
 			var params = file.qs_params;
 			self.showTransformHandles(file.previewId, false);
 			self.currentQuickShapeFile = null;
-
 			$('#quick_shape_dialog').modal({keyboard: true});
 			$('#quick_shape_dialog').one('hide', self._qs_currentQuickShapeShowTransformHandlesIfNotEmpty);
-			// firing those change events is necessary to work around a bug in chrome|knockout|js. Otherwise entering numbers directly does not fire the change event if the number is accidentially equal to the field content it had before .val(..).
+			// firing those change events is necessary to work around a bug in chrome|knockout|js.
+			// Otherwise entering numbers directly does not fire the change event if the number
+			// is accidentially equal to the field content it had before .val(..).
 			$('#quick_shape_rect_w').val(params.rect_w).change();
 			$('#quick_shape_rect_h').val(params.rect_h).change();
 			$('#quick_shape_rect_radius').val(params.rect_radius).change();
@@ -2283,7 +2207,12 @@ $(function(){
 			$('#quick_shape_heart_w').val(params.heart_w).change();
 			$('#quick_shape_heart_h').val(params.heart_h).change();
 			$('#quick_shape_heart_lr').val(params.heart_lr).change();
-			$('#quick_shape_color').val(params.color).change();
+			$('#quick_shape_stroke').prop("checked", params.stroke);
+			$("#qs_colorPicker_stroke").data('plugin_tinycolorpicker').setColor(params.color);
+//			$('#quick_shape_color').val(params.color).change();
+			$('#quick_shape_fill').prop("checked", params.fill);
+			$("#qs_colorPicker_fill").data('plugin_tinycolorpicker').setColor(params.fill_color);
+//			$('#quick_shape_fill_brightness').val(params.fill_brightness).change();
 			self.currentQuickShapeFile = file;
 
 			$('#shape_tab_link_'+params.type.substr(1)).tab('show');
@@ -2291,8 +2220,8 @@ $(function(){
 			self._qs_currentQuickShapeUpdate();
 		};
 
-				/**
-		 * shows transformation handles on QT if it exists.
+		/**
+		 * shows transformation handles on QS if it exists.
 		 * @private
 		 */
 		self._qs_currentQuickShapeShowTransformHandlesIfNotEmpty = function() {
@@ -2333,7 +2262,10 @@ $(function(){
 					star_sharpness: parseFloat($('#quick_shape_star_sharpness').val()),
 					heart_w: parseFloat($('#quick_shape_heart_w').val()),
 					heart_h: parseFloat($('#quick_shape_heart_h').val()),
-					heart_lr: parseFloat($('#quick_shape_heart_lr').val())
+					heart_lr: parseFloat($('#quick_shape_heart_lr').val()),
+					stroke: $('#quick_shape_stroke').prop('checked'),
+					fill_color: $('#quick_shape_fill_brightness').val(),
+					fill: $('#quick_shape_fill').prop('checked')
 				};
 				// update svg object
 				var g = snap.select('#' + self.currentQuickShapeFile.previewId);
@@ -2344,21 +2276,28 @@ $(function(){
 				var d;
 				switch(qs_params.type){
 					case '#circle':
-						d = self._qs_getCircle(qs_params.circle_radius);
+						d = QuickShapeHelper.getCircle(qs_params.circle_radius);
 						break;
 					case '#star':
-						d = self._qs_getStar(qs_params.star_radius,qs_params.star_corners,qs_params.star_sharpness);
+						d = QuickShapeHelper.getStar(qs_params.star_radius,qs_params.star_corners,qs_params.star_sharpness);
 						break;
 					case '#heart':
-						d = self._qs_getHeart(qs_params.heart_w,qs_params.heart_h,qs_params.heart_lr);
+						d = QuickShapeHelper.getHeart(qs_params.heart_w,qs_params.heart_h,qs_params.heart_lr);
 						break;
 					default: // #rect
-						d = self._qs_getRect(qs_params.rect_w,qs_params.rect_h,qs_params.rect_radius);
+						d = QuickShapeHelper.getRect(qs_params.rect_w,qs_params.rect_h,qs_params.rect_radius);
 						break;
 				}
-				shape.attr({d: d, stroke: qs_params.color});
+				let stroke = qs_params.stroke ? qs_params.color : 'none';
+				let fill = '#ffffff';
+				let fill_op = 0;
+				if(qs_params.fill){
+					fill = qs_params.fill_color;
+					fill_op = 1;
+				}
+				shape.attr({d: d, stroke: stroke, fill: fill, 'fill-opacity': fill_op});
 				self.currentQuickShapeFile.qs_params = qs_params;
-				if(d === ""){
+				if(d === "" || (qs_params.stroke === false && qs_params.fill === false)){
 					self.currentQuickShapeFile.invalid = true;
 				} else {
 					self.currentQuickShapeFile.invalid = false;
@@ -2366,6 +2305,9 @@ $(function(){
 
 				// update fileslist
 				$('#'+self.currentQuickShapeFile.id+' .title').text(name);
+				// update clones if present
+				let colsRowsStr = $('#'+self.currentQuickShapeFile.id+' input.multiply').val();
+				self._svgMultiplyUpdate(self.currentQuickShapeFile, colsRowsStr);
 
 				// analytics
 				var analyticsData = {
@@ -2384,201 +2326,6 @@ $(function(){
 				// actual analytics are written when the dialog is closed
 				self.currentQuickShapeAnalyticsData = analyticsData;
 			}
-		};
-
-		self._qs_getCircle = function(r){
-			if(isFinite(r) && r > 0){
-				return self._qs_getRect(r,r,100);
-			} else {
-				return "";
-			}
-
-		};
-		self._qs_getRect = function(w,h,r){
-			if(!isFinite(w) ||
-				!isFinite(h) ||
-				!isFinite(r)
-			) {
-				return "";
-			}
-
-			if(r <= 0){
-				var d = 'M0,0l'+w+',0 0,'+h+' '+(-w)+',0 z';
-				return d;
-			} else {
-				//     a___________b
-				//    /             \
-				//   h               c
-				//   |               |
-				//   g               d
-				//    \             /
-				//     f___________e
-
-				var rx;
-				var ry;
-				if(r <= 50){
-					rx = r/50 * Math.min(w, h)/2;
-					ry = rx;
-				} else {
-					var rBig = Math.max(w, h)/2;
-					var rSmall = Math.min(w, h)/2;
-					if(w > h) {
-						rx = rSmall + (r-50)/50 * (rBig - rSmall);
-						ry = rSmall;
-					} else {
-						ry = rSmall + (r-50)/50 * (rBig - rSmall);
-						rx = rSmall;
-					}
-				}
-
-				var q = 0.552284749831; // circle approximation with cubic beziers: (4/3)*tan(pi/8) = 0.552284749831
-
-				var a = [rx,0];
-				var b = [w-rx,0];
-				var c = [w,ry];
-				var c1 = [b[0] + q*rx, b[1]];
-				var c2 = [c[0], c[1] - q*ry];
-				var d = [w,h-ry];
-				var e = [w-rx,h];
-				var e1 = [d[0], d[1] + q*ry];
-				var e2 = [e[0] + q*rx, e[1]];
-				var f = [rx,h];
-				var g = [0,h-ry];
-				var g1 = [f[0] - q*rx, f[1]];
-				var g2 = [g[0], g[1] + q*ry];
-				var h = [0,ry];
-				var a1 = [h[0], h[1] - q*ry];
-				var a2 = [a[0] - q*rx, a[1]];
-
-				var d = 'M'+a.join(',')
-						+'L'+b.join(',')
-						+'C'+c1.join(',')
-						+' '+c2.join(',')
-						+' '+c.join(',')
-						+'L'+d.join(',')
-						+'C'+e1.join(',')
-						+' '+e2.join(',')
-						+' '+e.join(',')
-						+'L'+f.join(',')
-						+'C'+g1.join(',')
-						+' '+g2.join(',')
-						+' '+g.join(',')
-						+'L'+h.join(',')
-						+'C'+a1.join(',')
-						+' '+a2.join(',')
-						+' '+a.join(',')
-						+'z';
-				return d;
-
-			}
-		};
-
-		self._qs_getStar = function(r,c,sh){
-			if(!isFinite(r) ||
-				!isFinite(c) ||
-				!isFinite(sh) ||
-				r < 0 ||
-				c < 3
-			) {
-				return "";
-			}
-			var points = [];
-			var step = 2*Math.PI / c;
-			var ri = (1-sh)*r;
-			for (var i = 0; i < c; i++) {
-				var angle_outer = i * step;
-				var angle_inner = angle_outer + step/2;
-				var pox = Math.cos(angle_outer) * r;
-				var poy = Math.sin(angle_outer) * r;
-				var pix = Math.cos(angle_inner) * ri;
-				var piy = Math.sin(angle_inner) * ri;
-				points.push(pox, poy, pix, piy);
-			}
-			var d = 'M'+points[0]+','+points[1]+'L'+points.join(' ') +'z';
-			return d;
-		};
-
-		self._qs_getHeart = function(w,h,lr){
-			if(!isFinite(w) || !isFinite(h) || !isFinite(lr)){
-				return "";
-			}
-			//         __   __
-			//        e  \ /  c
-			//       (    d    )
-			//        f       b
-			//         \     /
-			//          \   /
-			//            a
-			var dx = w/5 * 0.78;
-			var dy = h/5 * 0.96;
-			var q = 0.552284749831; // circle approximation with cubic beziers: (4/3)*tan(pi/8) = 0.552284749831
-			var rx = dx;
-			var ry = dy;
-
-			var bb = 1.5; // fatter ears
-			var earx = 0.4; // longer ears
-			var r_comp = Math.max(0,lr)*0.7;
-			var l_comp = Math.min(0,lr)*0.7;
-
-			var a = [3*dx, 5*dy];
-			var b = [(5+r_comp)*dx, 3*dy];
-			var b1 = [a[0] +dx +lr*dx, a[1] - dy];
-			var b2 = [b[0] - dx/2, b[1] + dy/2];
-			var c = [(5+earx)*dx, (1-earx)*dy];
-			var c1 = [b[0] + q*rx, b[1] - q*ry];
-			var c2 = [c[0] + q*rx*bb, c[1] + q*ry*bb];
-			var d = [3*dx, 1*dy];
-			var d1 = [c[0] - q*rx*bb, c[1] - q*ry*bb];
-			var d2 = [d[0] + q*rx, d[1] - q*ry];
-			var e = [(1-earx)*dx, (1-earx)*dy];
-			var e1 = [d[0] - q*rx, d[1] - q*ry];
-			var e2 = [e[0] + q*rx*bb, e[1] - q*ry*bb];
-			var f = [(1+l_comp)*dx, 3*dy];
-			var f1 = [e[0] - q*rx*bb, e[1] + q*ry*bb];
-			var f2 = [f[0] - q*rx, f[1] - q*ry];
-			var a1 = [f[0] + dx/2, f[1] + dy/2];
-			var a2 = [a[0] -dx +lr*dx, a[1] - dy];
-
-			var d = 'M'+a.join(',')
-						+'C'+b1.join(',')
-						+' '+b2.join(',')
-						+' '+b.join(',')
-						+'C'+c1.join(',')
-						+' '+c2.join(',')
-						+' '+c.join(',')
-						+'C'+d1.join(',')
-						+' '+d2.join(',')
-						+' '+d.join(',')
-						+'C'+e1.join(',')
-						+' '+e2.join(',')
-						+' '+e.join(',')
-						+'C'+f1.join(',')
-						+' '+f2.join(',')
-						+' '+f.join(',')
-						+'C'+a1.join(',')
-						+' '+a2.join(',')
-						+' '+a.join(',')
-						+'z';
-// Debug bezier handles
-//						+'M'+a.join(',')
-//						+'L'+b1.join(',')
-//						+'M'+a.join(',')
-//						+'L'+a2.join(',')
-
-//						+'M'+c.join(',')
-//						+'L'+d1.join(',')
-//						+'M'+d.join(',')
-//						+'L'+d2.join(',')
-//
-//						+'M'+e1.join(',')
-//						+'L'+e.join(',')
-//						+'L'+e2.join(',')
-//
-//						+'M'+f1.join(',')
-//						+'L'+f.join(',')
-//						+'L'+f2.join(',')
-//						+'z';
-			return d;
 		};
 
 		self._qs_removeInvalid = function(){
@@ -2720,6 +2467,9 @@ $(function(){
 
 				// update fileslist
 				$('#'+self.currentQuickTextFile.id+' .title').text(displayText);
+				// update clones
+				let multiply_str = $('#'+self.currentQuickTextFile.id+' input.multiply').val();
+				self._svgMultiplyUpdate(self.currentQuickTextFile, multiply_str);
 
 				self.currentQuickTextAnalyticsData = {
 					id: self.currentQuickTextFile.id,
@@ -2785,7 +2535,7 @@ $(function(){
 			// TODO use self._prepareAndInsertSVG(fragment, previewId, origin, '', {showTransformHandles: false, embedGCode: false});
 			// replaces all code below.
 			var text = uc.text(x, y, placeholderText);
-			text.attr('style', 'white-space: pre; font-size: '+size+'; font-family: Ubuntu; text-anchor: middle');
+			text.attr('style', 'white-space: pre; font-size: '+size+'px; font-family: Ubuntu; text-anchor: middle');
 
 			var box = uc.rect(); // will be placed and sized by self._qt_currentQuickTextUpdateText()
 			box.attr({
@@ -2803,8 +2553,9 @@ $(function(){
 				'mb:origin': origin
 			});
 
-			group.transformable();
-			group.ftRegisterOnTransformCallback(self.svgTransformUpdate);
+			self._makeItTransformable(group);
+//			group.transformable();
+//			group.ftRegisterOnTransformCallback(self.svgTransformUpdate);
 
 			self.placedDesigns.push(file);
 
@@ -2837,8 +2588,9 @@ $(function(){
 					for(var r=0;r<rules.length;r++) {
 						 if (rules[r].constructor == CSSFontFaceRule) {
 							 // if (rules[r].cssText && rules[r].cssText.includes('MrBeamQuickText')) {
-							 if (rules[r].style && rules[r].style.fontFamily) {
-								 var fontName = rules[r].style.fontFamily.replace(/["']/g, '').trim();
+							 if (rules[r].style) {
+								 var fontName = rules[r].style.getPropertyValue('font-family');
+								 fontName = fontName.replace(/["']/g, '').trim();
 								 if (self.fontMap.indexOf(fontName) > -1) {
 									 $(elem).append(rules[r].cssText);
 								 }
@@ -2867,22 +2619,38 @@ $(function(){
 		//  QUICKTEXT end
 		// ***********************************************************
 
-		self.wheel_zoom = function(target, ev){
+		// on working_area: only works if shift key is down
+		self.wheel_zoom_wa = function(target, ev){
 			if (ev.originalEvent.shiftKey) {
-				var wheel = ev.originalEvent.wheelDelta;
-				var targetBBox = ev.currentTarget.getBoundingClientRect();
-				var xPerc = (ev.clientX - targetBBox.left) / targetBBox.width;
-				var yPerc = (ev.clientY - targetBBox.top) / targetBBox.height;
-				var deltaZoom = Math.sign(-wheel)/100;
-				self.set_zoom_factor(deltaZoom, xPerc, yPerc);
+				self.wheel_zoom_monitor(target, ev)
 			}
 		};
 
-		self.mouse_drag = function(target, ev){
+		// on working_area: opposite direction than on monitor
+		self.mouse_drag_wa = function(target, ev){
 			if (ev.originalEvent.shiftKey) {
 				var pos = self._get_pointer_event_position_MM(ev, ev.currentTarget);
 				var newOffX = self.zoomOffX() - pos.dx;
 				var newOffY = self.zoomOffY() - pos.dy;
+				self.set_zoom_offX(newOffX);
+				self.set_zoom_offY(newOffY);
+			}
+		};
+
+		self.wheel_zoom_monitor = function(target, ev){
+			var wheel = ev.originalEvent.wheelDelta;
+			var targetBBox = ev.currentTarget.getBoundingClientRect();
+			var xPerc = (ev.clientX - targetBBox.left) / targetBBox.width;
+			var yPerc = (ev.clientY - targetBBox.top) / targetBBox.height;
+			var deltaZoom = Math.sign(-wheel)/100;
+			self.set_zoom_factor(deltaZoom, xPerc, yPerc);
+		};
+
+		self.mouse_drag_monitor = function(target, ev){
+			if(ev.originalEvent.buttons === 1){
+				var pos = self._get_pointer_event_position_MM(ev, ev.currentTarget);
+				var newOffX = self.zoomOffX() + pos.dx;
+				var newOffY = self.zoomOffY() + pos.dy;
 				self.set_zoom_offX(newOffX);
 				self.set_zoom_offY(newOffY);
 			}
@@ -2963,7 +2731,7 @@ $(function(){
 			document.getElementById("working_area_files"),
 			document.getElementById("quick_text_dialog"),
 			document.getElementById("quick_shape_dialog"),
-			document.getElementById("camera_brightness"),
+			document.getElementById("wa_view_settings"),
 			document.getElementById("zoomFactor")
 		]]);
 

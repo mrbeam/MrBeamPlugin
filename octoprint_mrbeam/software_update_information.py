@@ -30,6 +30,7 @@ def get_update_information(self):
 	_config_octoprint(self, tier)
 
 	_set_info_mrbeam_plugin(self, tier)
+	_set_info_mrbeamdoc(self, tier)
 	_set_info_netconnectd_plugin(self, tier)
 	_set_info_findmymrbeam(self, tier)
 	_set_info_mrbeamledstrips(self, tier)
@@ -130,11 +131,62 @@ def _set_info_mrbeam_plugin(self, tier):
 				user="mrbeam",
 				repo="MrBeamPlugin",
 				branch="mrbeam2-beta",
-				default_branch="mrbeam2-beta",
+				branch_default="mrbeam2-beta",
 				pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
 				restart="octoprint")
 	except Exception as e:
 		_logger.exception('Exception during _set_info_mrbeam_plugin: {}'.format(e))
+
+
+def _set_info_mrbeamdoc(self, tier):
+	name = "Mr Beam Documentation"
+	module_id = "mrbeamdoc"
+
+	try:
+		if _is_override_in_settings(self, module_id):
+			return
+
+		current_version = "-"
+		pluginInfo = self._plugin_manager.get_plugin_info(module_id)
+		if pluginInfo is not None:
+			current_version = pluginInfo.version
+
+		sw_update_config[module_id] = dict(
+			displayName= _get_display_name(self, name),
+			displayVersion=current_version,
+			type="github_commit", # "github_release",
+			user="mrbeam",
+			repo="MrBeamDoc",
+			branch="mrbeam2-stable",
+			branch_default="mrbeam2-stable",
+			pip="https://github.com/mrbeam/MrBeamDoc/archive/{target_version}.zip",
+			restart="octoprint")
+
+		if tier in [SW_UPDATE_TIER_DEV]:
+			sw_update_config[module_id] = dict(
+				displayName= _get_display_name(self, name),
+				displayVersion=current_version,
+				type="github_commit",
+				user="mrbeam",
+				repo="MrBeamDoc",
+				branch="develop",
+				branch_default="develop",
+				pip="https://github.com/mrbeam/MrBeamDoc/archive/{target_version}.zip",
+				restart="octoprint")
+
+		if tier in [SW_UPDATE_TIER_BETA]:
+			sw_update_config[module_id] = dict(
+				displayName= _get_display_name(self, name),
+				displayVersion=current_version,
+				type="github_commit",
+				user="mrbeam",
+				repo="MrBeamDoc",
+				branch="mrbeam2-beta",
+				branch_default="mrbeam2-beta",
+				pip="https://github.com/mrbeam/MrBeamDoc/archive/{target_version}.zip",
+				restart="octoprint")
+	except Exception as e:
+		_logger.exception('Exception during _set_info_mrbeamdoc: {}'.format(e))
 
 
 def _set_info_netconnectd_plugin(self, tier):

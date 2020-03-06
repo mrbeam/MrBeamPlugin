@@ -57,7 +57,6 @@ class IoBeamValueEvents(object):
 	FAN_FACTOR_RESPONSE = "iobeam.fan.factor.response"
 	COMPRESSOR_STATIC   = "iobeam.compressor.static"
 	COMPRESSOR_DYNAMIC  = "iobeam.compressor.dynamic"
-	COMPRESSOR_ERROR  = "iobeam.compressor.error"
 
 
 class IoBeamHandler(object):
@@ -74,8 +73,7 @@ class IoBeamHandler(object):
 	SOCKET_FILE = "/var/run/mrbeam_iobeam.sock"
 	MAX_ERRORS = 50
 
-	IOBEAM_MIN_REQUIRED_VERSION =  '0.4.0'
-	IOBEAM_JSON_PROTOCOL_VERSION = '0.7.0'
+	IOBEAM_MIN_REQUIRED_VERSION = '0.7.4'
 
 	CLIENT_NAME = "MrBeamPlugin"
 
@@ -150,7 +148,7 @@ class IoBeamHandler(object):
 	DATASET_IOBEAM =	           	 	"iobeam"
 	DATASET_HW_MALFUNCTION =	   	 	"hardware_malfunction"
 	DATASET_I2C =           	   	 	"i2c"
-	DATASET_I2C_TEST =           	   	"i2c_test"
+	DATASET_I2C_MONITORING =            "i2c_monitoring"
 
 	def __init__(self, plugin):
 		self._plugin = plugin
@@ -173,21 +171,22 @@ class IoBeamHandler(object):
 
 		self._connectionException = None
 		self._interlocks = dict()
-		self._malfunction_messages = []
 
 		self.processing_times_log = collections.deque([], self.PROCESSING_TIMES_LOG_LENGTH)
 
 		self.request_id = 1
 		self._request_id_lock = threading.Lock()
+		self._last_i2c_monitoring_dataset = None
 
 		self._settings = plugin._settings
-		# self.reported_hardware_malfunctions = []
 
 		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
 
 	def _on_mrbeam_plugin_initialized(self, event, payload):
 		self._laserhead_handler = self._plugin.laserhead_handler
 		self._analytics_handler = self._plugin.analytics_handler
+		self._hw_malfunction_handler = self._plugin.hw_malfunction_handler
+		self._user_notification_system = self._plugin.user_notification_system
 
 		self._subscribe()
 
@@ -266,22 +265,29 @@ class IoBeamHandler(object):
 
 	def is_iobeam_version_ok(self):
 		if self.iobeam_version is None:
-			return False, 0
+			return False
 		vers_obj = None
 		try:
 			vers_obj = LooseVersion(self.iobeam_version)
 		except ValueError as e:
 			self._logger.error("iobeam version invalid: '{}'. ValueError from LooseVersion: {}".format(self.iobeam_version, e))
-			return False, 0
+			return False
 		if vers_obj < LooseVersion(self.IOBEAM_MIN_REQUIRED_VERSION):
-			return False, -1
-		elif vers_obj >= LooseVersion(self.IOBEAM_JSON_PROTOCOL_VERSION):
-			return False, 1
+			return False
 		else:
-			return True, 0
+			return True
 
-
-	# return LooseVersion(self.iobeam_version) >= LooseVersion(self.IOBEAM_MIN_REQUIRED_VERSION) and LooseVersion(self.iobeam_version) < LooseVersion(self.IOBEAM_JSON_PROTOCOL_VERSION)
+	def notify_user_old_iobeam(self):
+		self._logger.error(
+			"Received iobeam version: %s - version OUTDATED. IOBEAM_MIN_REQUIRED_VERSION: %s",
+			self.iobeam_version, self.IOBEAM_MIN_REQUIRED_VERSION)
+		self._user_notification_system.show_notifications(
+			self._user_notification_system.get_legacy_notification(
+				title="Software Update required",
+				text="Module 'iobeam' is outdated. Please run software update from 'Settings' > 'Software Update' before you start a laser job.",
+				is_err=True,
+			)
+		)
 
 	def subscribe(self, event, callback):
 		"""
@@ -344,7 +350,6 @@ class IoBeamHandler(object):
 
 	def _subscribe(self):
 		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self.shutdown)
-		self._event_bus.subscribe(OctoPrintEvents.CLIENT_OPENED, self.send_hardware_malfunction_frontend_notification)
 
 	def _initWorker(self, socket_file=None):
 		self._logger.debug("initializing worker thread")
@@ -504,18 +509,12 @@ class IoBeamHandler(object):
 							except ValueError:
 								self._logger.debug("Could not parse data '%s' as JSON", json_data)
 
-							if version_obj and version_obj < LooseVersion(self.IOBEAM_MIN_REQUIRED_VERSION):
-								# Send message to the frontend
-								self._logger.error(
-									"Outdated iobeam: %s - version OUTDATED. IOBEAM_MIN_REQUIRED_VERSION: %s",
-									json_data, self.IOBEAM_MIN_REQUIRED_VERSION)
-								self._plugin.notify_frontend(title=gettext("Software Update required"),
-																			  text=gettext(
-																				  "Module 'iobeam' is outdated. Please run Software Update from 'Settings' > 'Software Update' before you start a laser job."),
-																			  type="error", sticky=True,
-																			  replay_when_new_client_connects=True)
-							else:
-								self._logger.debug("Received iobeam version: %s - version OK (legacy protocol)", version_str)
+							# BACKWARD_COMPATIBILITY: If there is an iobeam version that does not use JSON (< v0.7.0),
+							#  we check the version number here
+							self.iobeam_version = version_str
+							if not self.is_iobeam_version_ok():
+								self.notify_user_old_iobeam()
+
 						else:
 							self._logger.debug("Could not parse data '%s' as JSON", json_data)
 					except Exception as e2:
@@ -545,13 +544,7 @@ class IoBeamHandler(object):
 				err = self._handle_invalid_dataset(name, dataset)
 			elif self.MESSAGE_ERROR in dataset:
 				self._logger.debug("Received %s dataset error: %s", name, dataset[self.MESSAGE_ERROR])
-
-				if name == self.DATASET_COMPRESSOR_STATIC:
-					self._handle_compressor_error(dataset)
-				elif name == self.DATASET_COMPRESSOR_DYNAMIC:
-					pass
-				else:
-					err += 1
+				err += 1
 			# # elif len(dataset) == 0:
 			# # 	self._logger.debug("Received empty dataset %s", name)
 			else:
@@ -582,8 +575,8 @@ class IoBeamHandler(object):
 					err = self._handle_hw_malfunction(dataset)
 				elif name == self.DATASET_I2C:
 					err = self._handle_i2c(dataset)
-				elif name == self.DATASET_I2C_TEST:
-					err = self._handle_i2c_test(dataset)
+				elif name == self.DATASET_I2C_MONITORING:
+					err = self._handle_i2c_monitoring(dataset)
 				elif name == self.MESSAGE_DEVICE_UNUSED:
 					pass
 				elif name == self.MESSAGE_ERROR:
@@ -669,18 +662,19 @@ class IoBeamHandler(object):
 		self._call_callback(IoBeamValueEvents.COMPRESSOR_STATIC, dataset)
 		return 0
 
-	def _handle_compressor_error(self, dataset):
-		"""
-		Handle compressor error data
-		:param dataset:
-		:return:
-		"""
-		self._call_callback(IoBeamValueEvents.COMPRESSOR_ERROR, dataset)
-		return
-
-	def _handle_i2c_test(self, dataset):
+	def _handle_i2c_monitoring(self, dataset):
 		if not dataset.get('state', None) == 'ok':
-			self._logger.warn("_handle_i2c_test: %s", dataset)
+			self._logger.error("i2c_monitoring state change reported: %s", dataset, analytics=False)
+			if not self._last_i2c_monitoring_dataset is None and not self._last_i2c_monitoring_dataset.get('state', None) == dataset.get('state', None):
+				dataset_data = dataset.get('data', dict())
+				params = dict(iobeam_version=self.iobeam_version,
+					state=dataset.get('state', None),
+					method=dataset_data.get('test_mode', None),
+					current_devices=dataset_data.get('current_devices', []),
+					lost_devices=dataset_data.get('lost_devices', []),
+					new_devices=dataset_data.get('new_devices', []))
+				self._analytics_handler.add_iobeam_i2c_monitoring(**params)
+		self._last_i2c_monitoring_dataset = dataset
 
 	def _handle_laser(self, dataset):
 		"""
@@ -817,23 +811,8 @@ class IoBeamHandler(object):
 				if ok:
 					self._logger.info("Received iobeam version: %s - version OK", self.iobeam_version)
 				else:
-					if state <= 0:
-						self._logger.error("Received iobeam version: %s - version OUTDATED. IOBEAM_MIN_REQUIRED_VERSION: %s", self.iobeam_version, self.IOBEAM_MIN_REQUIRED_VERSION)
-						self._plugin.notify_frontend(title=gettext("Software Update required"),
-													 text=gettext("Module 'iobeam' is outdated. Please run software "
-																  "update from 'Settings' > 'Software Update' before "
-																  "you start a laser job."),
-													 type="error", sticky=True,
-													 replay_when_new_client_connects=True)
-					else:
-						self._logger.error("Received iobeam version: %s - version INCOMPATIBLE. iobeam is already using new JSON protocol!", self.iobeam_version)
-						self._plugin.notify_frontend(title=gettext("Software Update required"),
-													 text=gettext("Module 'MrBeam Plugin' is outdated; iobeam version "
-																  "is newer than expected. Please run software update "
-																  "from 'Settings' > 'Software Update' before you start "
-																  "a laser job."),
-													 type="error", sticky=True,
-													 replay_when_new_client_connects=True)
+					self.notify_user_old_iobeam()
+
 				return 0
 			else:
 				self._logger.warn("_handle_iobeam(): Received iobeam:version message without version number. Counting as error. Message: %s", dataset)
@@ -849,36 +828,22 @@ class IoBeamHandler(object):
 				self._logger.info("iobeam init error: '%s' - requesting iobeam_debug...", dataset)
 				# Add request id to the command
 				self._send_command(self.get_request_msg(["debug"]))
-				text = '<br/>' + \
-					   gettext("A possible hardware malfunction has been detected on this device. Please contact our support team immediately at:") + \
-					   '<br/><a href="https://mr-beam.org/support" target="_blank">mr-beam.org/support</a><br/><br/>' \
-					   '<strong>' + gettext("Error:") + '</strong><br/>{}'.format(dataset)
-				self._plugin.notify_frontend(title=gettext("Hardware malfunction"),
-															  text=text,
-															  type="error", sticky=True,
-															  replay_when_new_client_connects=True)
+
+				self._hw_malfunction_handler.show_hw_malfunction_notification(dataset)
 		return 0
 
 	def _handle_hw_malfunction(self, dataset):
-		show_notification = False
-		self._logger.warn("hardware_malfunction: %s", dataset)
-
-		for id, data in dataset.items():
-			data = data or {}
-			msg = data.get('msg', id)
-			self._fireEvent(MrBeamEvents.HARDWARE_MALFUNCTION, dict(id=id, msg=msg, data=data))
-
-			if id == "bottom_open":
-				self.send_bottom_open_frontend_notification()
-			else:
-				if msg not in self._malfunction_messages:
-					show_notification = True
-					self._malfunction_messages.append(msg)
-
-		if show_notification:
-			self.send_hardware_malfunction_frontend_notification()
-
-		self._analytics_handler.add_iobeam_message_log(self.iobeam_version, dataset)
+		"""
+		Handle hw malfunction dataset.
+		:param dataset:
+		:return: error count
+		"""
+		try:
+			if dataset:
+				self._hw_malfunction_handler.report_hw_malfunction(dataset)
+		except:
+			self._logger.exception("Exception in _handle_hw_malfunction")
+		return 0
 
 	def _handle_i2c(self, dataset):
 		self._logger.info("i2c_state: %s", dataset)
@@ -998,7 +963,7 @@ class IoBeamHandler(object):
 					else:
 						self._logger.debug("Received response: %s", response)
 				elif device == self.MESSAGE_DEVICE_COMPRESSOR:
-					self._logger.debug("ANDYTEST handling compressor response: %s", message)
+					self._logger.debug("handling compressor response: %s", message)
 				else:
 					self._logger.debug("_handle_response() receives response for unknow device: %s", response)
 
@@ -1019,33 +984,6 @@ class IoBeamHandler(object):
 			self._logger.warn("Message handling time took %ss. (Errors: %s, message: '%s')", processing_time, err, message)
 		if log_stats or processing_time > self.PROCESSING_TIME_WARNING_THRESHOLD:
 			self.log_debug_processing_stats()
-
-	def send_hardware_malfunction_frontend_notification(self, *args, **kwargs):
-		if self._malfunction_messages:
-			user_msg = "<br/>".join(self._malfunction_messages)
-			# if user_msg not in self.reported_hardware_malfunctions:
-			# self.reported_hardware_malfunctions.append(user_msg)
-			text = '<br/>' + \
-				   gettext(
-					   "A possible hardware malfunction has been detected on this device. Please contact our support team immediately at:") + \
-				   '<br/><a href="https://mr-beam.org/ticket" target="_blank">mr-beam.org/ticket</a><br/><br/>' \
-				   '<strong>' + gettext("Error:") + '</strong><br/>{}'.format(user_msg)
-			self._plugin.notify_frontend(title=gettext("Hardware malfunction"),
-										 text=text,
-										 type="error",
-										 sticky=True,
-			                             )
-
-	def send_bottom_open_frontend_notification(self):
-		# if "bottom_open" not in self.reported_hardware_malfunctions:
-		# 	self.reported_hardware_malfunctions.append(user_msg)
-		text = '<br/>' + \
-			   gettext("The bottom plate is not closed correctly. "
-					   "Please make sure that the bottom is correctly mounted as described in the Mr Beam II user manual.")
-		self._plugin.notify_frontend(title=gettext("Bottom Plate Error"),
-									 text=text,
-									 type="error", sticky=True,
-									 replay_when_new_client_connects=True)
 
 	def log_debug_processing_stats(self):
 		"""

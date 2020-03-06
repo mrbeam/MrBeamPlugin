@@ -24,7 +24,9 @@ class Migration(object):
 	VERSION_AVRDUDE_AUTORESET_SCRIPT         = '0.2.0'
 	VERSION_USERNAME_LOWCASE				 = '0.2.0'
 	VERSION_GRBL_AUTO_UPDATE                 = '0.2.1'
-	VERSION_MOUNT_MANAGER_163                = '0.2.4'
+	VERSION_MOUNT_MANAGER_164                = '0.5.3.2'
+	VERSION_INITD_NETCONNECTD                = '0.5.5'
+	VERSION_DELETE_UPLOADED_STL_FILES        = '0.6.1'
 
 	# this is where we have files needed for migrations
 	MIGRATE_FILES_FOLDER     = 'files/migrate/'
@@ -34,8 +36,11 @@ class Migration(object):
 	GRBL_AUTO_UPDATE_FILE =     MachineCom._get_grbl_file_name()
 	GRBL_AUTO_UPDATE_VERSION =  MachineCom.GRBL_DEFAULT_VERSION
 
+	# GRBL version that should be updated, regardless...
+	GRBL_VERSIONS_NEED_UPDATE = ['0.9g_20190329_ec6a7c7-dirty']
+
 	# mount manager version
-	MOUNT_MANAGER_VERSION = StrictVersion("1.6.3")
+	MOUNT_MANAGER_VERSION = StrictVersion("1.6.4")
 
 
 	def __init__(self, plugin):
@@ -82,10 +87,12 @@ class Migration(object):
 				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_UPDATE_LOGROTATE_CONF, equal_ok=False):
 					self.update_logrotate_conf()
 
-				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_MOUNT_MANAGER_163, equal_ok=False):
+				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_MOUNT_MANAGER_164, equal_ok=False):
 					self.update_mount_manager()
 
 				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_GRBL_AUTO_UPDATE, equal_ok=False):
+					self.auto_update_grbl()
+				if self.plugin._settings.get(['grbl_version_lastknown']) in self.GRBL_VERSIONS_NEED_UPDATE:
 					self.auto_update_grbl()
 
 				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_INFLATE_FILE_SYSTEM, equal_ok=False):
@@ -99,6 +106,12 @@ class Migration(object):
 
 				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_USERNAME_LOWCASE, equal_ok=False):
 					self.change_usernames_tolower()
+
+				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_INITD_NETCONNECTD, equal_ok=False):
+					self.update_etc_initd_netconnectd()
+
+				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_DELETE_UPLOADED_STL_FILES, equal_ok=False):
+					self.delete_uploaded_stl_files()
 
 				# migrations end
 
@@ -389,6 +402,18 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 				self._logger.info("- User {user} not changed".format(user=username))
 
 		self.plugin._user_manager._save(force=True)
+
+
+	def update_etc_initd_netconnectd(self):
+		self._logger.info("update_etc_initd_netconnectd() ")
+		src = os.path.join(__package_path__, self.MIGRATE_FILES_FOLDER, 'etc_initd_netconnectd')
+		dst = '/etc/init.d/netconnectd'
+		exec_cmd("sudo cp {src} {dst}".format(src=src, dst=dst))
+
+	def delete_uploaded_stl_files(self):
+		self._logger.info("delete_uploaded_stl_files() ")
+		exec_cmd("rm -f /home/pi/.octoprint/uploads/*.stl")
+
 
 
 	##########################################################

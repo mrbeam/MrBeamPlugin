@@ -49,8 +49,13 @@ $(function(){
 
 		self.engraveOnlyForced = false;
 
+		// focus reminder
 		self.remindFirstTime = ko.observable(true);
+		self.showFocusReminder = ko.observable(true);
         self.dontRemindMeAgainChecked = ko.observable(false);
+		self.dontRemindMeAgainChecked.subscribe(function(data){
+			self.sendFocusReminderChoiceToServer();
+		});
 
 		// material menu
 		self.material_settings2 = {};
@@ -72,9 +77,12 @@ $(function(){
 		self.custom_materials = ko.observable({});
 
 		self.customized_material = ko.observable(false);
+		self.save_custom_material_image = ko.observable("");
 		self.save_custom_material_name = ko.observable("");
+		self.save_custom_material_description = ko.observable("");
 		self.save_custom_material_thickness = ko.observable(1);
 		self.save_custom_material_color = ko.observable("#000000");
+
 
 		self.hasCompressor = ko.observable(false);
 
@@ -120,13 +128,18 @@ $(function(){
 
 		self.flag_customized_material = function(){
 		    if (self.user_materials_enabled){
-                var custom_prefix = 'My ';
-                var suggested_name = self.selected_material().name;
-                if(!suggested_name.startsWith(custom_prefix)){
-                    suggested_name = custom_prefix + suggested_name;
+                if (!self.selected_material().custom) {
+                    self.save_custom_material_name(gettext('My') + ' ' + self.selected_material().name);
+                    self.save_custom_material_image(null);
+                    self.save_custom_material_description('')
+                } else {
+                    self.save_custom_material_name(self.selected_material().name);
+                    self.save_custom_material_image(self.selected_material().img);
+                    self.save_custom_material_description(self.selected_material().description)
                 }
-                self.save_custom_material_name(suggested_name);
-                self.save_custom_material_color('#'+self.selected_material_color());
+				const col = '#'+self.selected_material_color();
+                self.save_custom_material_color(col);
+				$("#customMaterial_colorPicker").data('plugin_tinycolorpicker').setColor(col);
                 var t = self.selected_material_thickness();
                 var tmp = t !== null ? t.thicknessMM : 1;
                 self.save_custom_material_thickness(tmp);
@@ -167,7 +180,7 @@ $(function(){
 			var name = self.save_custom_material_name();
 			var key = self._replace_non_ascii(name).toLowerCase();
 			var thickness = parseFloat(self.save_custom_material_thickness());
-			var color = self.save_custom_material_color().substr(1,6);
+			var color = $('#custom_mat_col').val().substr(1,6);
 			var vectors = self.get_current_multicolor_settings();
 			var strength = 0;
 			var strongest = null;
@@ -206,15 +219,23 @@ $(function(){
 
 			if(self.custom_materials()[key]){
 				new_material = self.custom_materials()[key];
+				new_material.description = $("<div>").html(self.save_custom_material_description()).text()
+                new_material.img = self.save_custom_material_image()
+                new_material.safety_notes = gettext("Custom material setting! Use at your own risk.")
+                new_material.model = MRBEAM_MODEL
+                new_material.custom = true,
+                new_material.v = BEAMOS_VERSION
 			}else {
-
 				new_material = {
-				name: name,
-					img: 'custom.jpg',
-					description: gettext("Custom material settings"),
-					hints: gettext("Figuring out material settings works best from low to high intensity and fast to slow movement."),
-					safety_notes: gettext("Experimenting with custom material settings is at your own risk."),
+				    name: $("<div>").html(name).text(),
+					img: self.save_custom_material_image(),
+					description: $("<div>").html(self.save_custom_material_description()).text(),
+					hints: "",
+					safety_notes: gettext("Custom material setting! Use at your own risk."),
 					laser_type: 'MrBeamII-1.0',
+                    model: MRBEAM_MODEL,
+                    custom: true,
+                    v: BEAMOS_VERSION,
 					colors: {}
 				};
 			}
@@ -242,12 +263,10 @@ $(function(){
 			// push it to our backend
             var postData = {
                 'put':    data,   // optional
-                'delete': []                // optional
+                'delete': []      // optional
             };
             OctoPrint.simpleApiCommand("mrbeam", "custom_materials", postData)
                 .done(function(response){
-					// console.log("simpleApiCall response: ", response);
-					// $('#save_material_form.dropdown').dropdown('toggle'); // buggy
 					$('#save_material_form').removeClass('open'); // workaround
 
                     // add to custom materials and select
@@ -276,10 +295,76 @@ $(function(){
 				});
 		};
 
+		self.restore_material_settings = function(materials){
+		    var postData = {
+		        'reset':  true,
+                'put':    materials,   // optional
+                'delete': []      // optional
+            };
+            OctoPrint.simpleApiCommand("mrbeam", "custom_materials", postData)
+                .done(function(response){
+					$('#save_material_form').removeClass('open'); // workaround
+
+                    // add to custom materials and select
+					self._update_custom_materials(response.custom_materials);
+					self.selected_material(null)
+					self.reset_material_settings()
+					new PNotify({
+                        title: gettext("Custom Material Settings restored."),
+                        text: _.sprintf(gettext("Successfully restored %(number)d custom materials from file."), {number: Object.keys(materials).length}),
+                        type: "info",
+                        hide: true
+                    });
+
+
+				})
+                .fail(function(){
+					console.error("Unable to restore custom material settings: ", postData);
+					new PNotify({
+                        title: gettext("Error while saving settings!"),
+                        text: _.sprintf(gettext("Unable to save your custom material settings at the moment.%(br)sCheck connection to Mr Beam II and try again."), {br: "<br/>"}),
+                        type: "error",
+                        hide: true
+                    });
+				});
+        };
+
+        self._save_material_load_local_image = function (img_file) {
+            var options = {
+                maxWidth: 200,
+                maxHeight: 100,
+                canvas: true,
+                cover: true,
+                crop: true,
+                orientation: true,
+                // pixelRatio: window.devicePixelRatio,
+                downsamplingRatio: 0.5,
+            }
+            loadImage(img_file, self._on_save_material_local_image_loaded, options)
+        };
+
+        self._on_save_material_local_image_loaded = function (elem) {
+            self.save_custom_material_image(elem.toDataURL('image/jpeg', 40));
+        };
+
+        self.reset_save_custom_material_image = function(){
+            self.save_custom_material_image('');
+        };
+
+        self.show_save_custom_material_reset_button = ko.computed(function(){
+            return self.save_custom_material_image() && self.save_custom_material_image().length > 0
+        });
+
+
 		self._update_custom_materials = function(list){
 			var tmp = {};
 			for(var k in list) {
 				var cm = list[k];
+				cm.custom = true;
+				// legacy:
+				if (cm.img == 'custom.jpg' || cm.img == 'custommaterial.png') {
+				    cm.img = null
+                }
 				tmp[k] = cm;
 			}
 			console.log("Loaded custom material settings: ", Object.keys(tmp).length);
@@ -441,6 +526,17 @@ $(function(){
                     }
                 }
             }
+
+            // sort by language dependent name
+            out.sort(function(a, b){
+                // custom material first
+                if (a.custom && !b.custom) return -1
+                if (!a.custom && b.custom) return 1
+                // then sort by name
+                if (a.name == b.name) return 0
+                return (a.name < b.name) ? -1 : 1
+            })
+
 			return out;
 		});
 
@@ -449,29 +545,36 @@ $(function(){
 			var cols = self.workingArea.getUsedColors();
 			$('.job_row .used_color:not(#cd_engraving)').addClass('not-used');
 			for (var idx = 0; idx < cols.length; idx++) {
-				var c = cols[idx];
-				var selection = $('#cd_color_'+c.hex.substr(1)); // crashes on color definitions like 'rgb(0,0,0)'
+				var hex = cols[idx];
+				var selection = $('#cd_color_'+hex.substr(1)); // crashes on color definitions like 'rgb(0,0,0)'
 				var exists = selection.length > 0;
 				if(! exists){
 					var drop_zone = $('#first_job .color_drop_zone');
-					var i = self._getColorIcon(c);
+					var i = self._getColorIcon(hex);
 					drop_zone.append(i);
+					i.tooltip({
+						template: '<div class="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>'
+					});
 				} else {
 					selection.removeClass('not-used');
 				}
 			}
 			$('.job_row .not-used').remove();
+			self._update_color_assignments(); // removes line-color-engraving sliders of not in use colors
 		};
 
 		self._getColorIcon = function(color){
 			var i = $('<div />',{
-				id: 'cd_color_'+color.hex.substr(1),
-				style: "background-color: "+color.hex+";",
+				id: 'cd_color_'+color.substr(1),
+				style: "background-color: "+color+";",
 				draggable: "true",
-				class: 'used_color cutting_job_color'
+				class: 'used_color cutting_job_color',
+				'data-toggle': 'tooltip',
+				'data-placement': 'right',
+				title: gettext('Drag and drop this box in the Skip area if you want to skip cutting this color. Drop it in Engrave area if you just want to engrave it, or alternatively create a new cutting job with different parameters by dropping it in the bottom section.')
 			})
 			.on({
-				dragstart: function(ev){ window.mrbeam.colorDragging.colorDragStart(ev.originalEvent); },
+				dragstart: function(ev){ $(ev.target).tooltip('hide'); window.mrbeam.colorDragging.colorDragStart(ev.originalEvent); },
 				dragend: function(ev){ window.mrbeam.colorDragging.colorDragEnd(ev.originalEvent); }
 			});
 
@@ -660,7 +763,14 @@ $(function(){
 
 		// shows conversion dialog and extracts svg first
 		self.show_conversion_dialog = function() {
-		    self.showFocusReminder = ko.observable(self.settings.settings.plugins.mrbeam.focusReminder());
+
+			if (self.showFocusReminder() && self.remindFirstTime()) {
+				$('#laserhead_focus_reminder_modal').modal('show');
+				self.remindFirstTime(false);
+				return;
+			}
+			self.remindFirstTime(true);
+
 			self.workingArea.abortFreeTransforms();
 			self.gcodeFilesToAppend = self.workingArea.getPlacedGcodes();
 			self.show_vector_parameters(self.workingArea.hasStrokedVectors());
@@ -764,6 +874,7 @@ $(function(){
 				var intensity = intensity_user * self.profile.currentProfileData().laser.intensity_factor() ;
 				var feedrate = $(job).find('.param_feedrate').val();
 				var piercetime = $(job).find('.param_piercetime').val();
+				var progressive = $(job).find('.param_progressive').prop('checked');
 				var passes = $(job).find('.param_passes').val();
 				let cut_compressor = $(job).find('.compressor_range').val();
 
@@ -781,6 +892,7 @@ $(function(){
 							feedrate: feedrate,
 							pierce_time: piercetime,
 							passes: passes,
+							progressive: progressive,
                             engrave: false,
                             cut_compressor: cut_compressor
 						});
@@ -1161,6 +1273,11 @@ $(function(){
 		};
 
 		self.sendFocusReminderChoiceToServer = function () {
+			// TODO
+//		    let showFocusReminder = !self.dontRemindMeAgainChecked();
+//			self.settings.settings.plugins.mrbeam.focusReminder(showFocusReminder);
+//			self.settings.saveall(); // fails on getOnlyChangedData
+
 		    let focusReminder = !self.dontRemindMeAgainChecked();
             let data = {focusReminder: focusReminder};
             OctoPrint.simpleApiCommand("mrbeam", "focus_reminder", data)
@@ -1168,15 +1285,26 @@ $(function(){
                     self.settings.requestData();
                     console.log("simpleApiCall response for saving focus reminder state: ", response);
                 })
-                .fail(function () {
-                    self.settings.requestData();
-                    console.error("Unable to save focus reminder state: ", data);
-                    new PNotify({
-                        title: gettext("Error while saving settings!"),
-                        text: _.sprintf(gettext("Unable to save your focus reminder state at the moment.%(br)sCheck connection to Mr Beam II and try again."), {br: "<br/>"}),
-                        type: "error",
-                        hide: true
-                    });
+                .fail(function (jqXHR, textStatus, errorThrown) {
+                    if (jqXHR.status == 401) {
+                        self.loginState.logout();
+                        new PNotify({
+                            title: gettext("Session expired"),
+                            text: gettext("Please login again to continue."),
+                            type: "warn",
+                            tag: "conversion_error",
+                            hide: false
+                        });
+                    } else {
+                        self.settings.requestData();
+                        console.error("Unable to save focus reminder state: ", data);
+                        new PNotify({
+                            title: gettext("Error while saving settings!"),
+                            text: _.sprintf(gettext("Unable to save your focus reminder state at the moment.%(br)sCheck connection to Mr Beam II and try again."), {br: "<br/>"}),
+                            type: "error",
+                            hide: true
+                        });
+                    }
                 });
         };
 
@@ -1185,6 +1313,26 @@ $(function(){
 		        self.sendFocusReminderChoiceToServer();
             }
         };
+
+		self.move_laser_over_material = function() {
+			let x,y;
+
+			// assumption: center of placed designs is over the material
+			let bb = snap.select('#userContent').getBBox(); // first try svgs, images, qt, qs
+			if(bb.w === 0){ // then try gcodes
+				bb = snap.select('#placedGcodes').getBBox();
+			}
+			if(bb.w > 0){
+				x = bb.cx;
+				y = bb.cy;
+			} else {
+				// fallback
+				x = self.workingArea.workingAreaWidthMM() / 2;
+				y = self.workingArea.workingAreaHeightMM() / 2;
+			}
+
+			self.workingArea.move_laser_to_xy(x,y);
+		};
 
 		self.convert = function() {
 			if(self.gcodeFilesToAppend.length === 1 && self.svg === undefined) {
@@ -1219,18 +1367,7 @@ $(function(){
 			    $('#empty_job_modal').find('.modal-body p').text(message);
                 $('#empty_job_modal').modal('show');
 
-            } else if (self.showFocusReminder() && self.remindFirstTime()) {
-                $('#laserhead_focus_reminder_modal').modal('show');
-
 			} else {
-			    if (self.dontRemindMeAgainChecked()) {
-			        self.showFocusReminder(false);
-			        self.sendFocusReminderChoiceToServer();
-			        self.dontRemindMeAgainChecked(false);
-                } else {
-			        self.remindFirstTime(true);
-                }
-
 
 				if(self._allParametersSet()){
 					//self.update_colorSettings();
@@ -1386,10 +1523,25 @@ $(function(){
             $('[data-toggle="tooltip"]').tooltip({
                 html:true
             });
+			// init tinyColorPicker if not done yet
+			$("#customMaterial_colorPicker").tinycolorpicker();
+			$("#customMaterial_colorPicker").bind("change", self.save_custom_material_color);
+			// for custom material image laoder
+            $("#custom_material_image").click(function (ev) {
+                $("#custom_material_file_input").click();
+            });
+            $('#custom_material_file_input').on('change', function (ev) {
+                self._save_material_load_local_image(ev.target.files[0])
+            });
+            // $("#reset").click(function () {
+            //     setDefaultImage()
+            // });
+
 		};
 
 		self.onAllBound = function(){
             self.hasCompressor(self.settings.settings.plugins.mrbeam.hw_features.has_compressor());
+			self.showFocusReminder(self.settings.settings.plugins.mrbeam.focusReminder());
             self.limitUserInput();
         };
 
@@ -1616,7 +1768,7 @@ window.mrbeam.colorDragging = {
 			newJob.attr('id', '');
 			var i = $('.job_row_vector').length + 1;
 			// Translators: "Cutting Job #number"
-			$(newJob).find('.job_title').text(gettext("Cutting Job ") + i);
+			$(newJob).find('.job_title').text(gettext("Cut ") + i);
 
 			newJob.find('.used_color').remove();
 			newJob.appendTo($('#additional_jobs'));

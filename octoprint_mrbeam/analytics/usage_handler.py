@@ -157,6 +157,7 @@ class UsageHandler(object):
 	def write_usage_analytics(self, action=None):
 		try:
 			usage_data = dict(
+				total=self._usage_data['total']['job_time'],
 				prefilter=self._usage_data['prefilter']['job_time'],
 				carbon_filter=self._usage_data['carbon_filter']['job_time'],
 				laser_head=dict(
