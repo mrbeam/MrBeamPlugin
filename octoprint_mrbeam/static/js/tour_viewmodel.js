@@ -173,6 +173,26 @@ $(function () {
                 yOffset: -15
             }));
 
+            tour.push(new TourStep({
+                id: 'focus_reminder',
+                title: gettext("Reminder: Is your laser head focused?"),
+                text: [gettext("The height of the laser head needs to be adjusted according to your material."),
+                    gettext("We assumed that it is already focused."),
+                    gettext("<strong>If it is focused</strong> click on \"It's focused!\""),
+                    _.sprintf(gettext("<strong>If it's NOT focused</strong> you should cancel this tour here and focus it. %(opening_tag)sLearn how to do this.%(closing_tag)s"),
+                        {opening_tag:"<a href='https://mr-beam.freshdesk.com/support/solutions/articles/43000073345-focusing-the-laser-head-' target='_blank'>", closing_tag:"</a>"})],
+                target: "start_job_btn_focus_reminder",
+                placement: "right",
+                delay: 200,
+                fixedElement: true,
+                yOffset: -150,
+                arrowOffset: 145,
+                condition: function () {
+                    return self.settings.settings.plugins.mrbeam.focusReminder();
+                }
+            }));
+
+
             ///// material screen /////
             tour.push(new TourStep({
                 id: 'select_material',
@@ -223,24 +243,6 @@ $(function () {
                 arrowOffset: 270
             }));
 
-            tour.push(new TourStep({
-                id: 'focus_reminder',
-                title: gettext("Reminder: Is your laser head focused?"),
-                text: [gettext("The height of the laser head needs to be adjusted according to your material."),
-                    gettext("We assumed that it is already focused."),
-                    gettext("<strong>If it is focused</strong> click on \"It's focused!\""),
-                    _.sprintf(gettext("<strong>If it's NOT focused</strong> you should cancel this tour here and focus it. %(opening_tag)sLearn how to do this.%(closing_tag)s"),
-                        {opening_tag:"<a href='https://mr-beam.freshdesk.com/support/solutions/articles/43000073345-focusing-the-laser-head-' target='_blank'>", closing_tag:"</a>"})],
-                target: "start_job_btn_focus_reminder",
-                placement: "right",
-                delay: 200,
-                fixedElement: true,
-                yOffset: -150,
-                arrowOffset: 145,
-                condition: function () {
-                    return self.settings.settings.plugins.mrbeam.focusReminder();
-                }
-            }));
 
             ///// rtl /////
             tour.push(new TourStepNoArrow({
@@ -257,7 +259,7 @@ $(function () {
                 title: gettext("Done! As soon as you click the start button on your Mr&nbsp;Beam&nbsp;II, the magic will begin 🎉"),
                 text: [gettext("Thank you for doing this first laser job with us."),
                     _.sprintf(gettext("For more in-depth information you can check our %(opening_tag)sknowledge base%(closing_tag)s, where you will find a lot of articles about Mr Beam II."),
-                       {opening_tag:"<a href='http://mr-beam.org/faq' target='_blank'>", closing_tag:"</a>"})],
+                       {opening_tag:"<a href='http://mr-beam.org/support' target='_blank'>", closing_tag:"</a>"})],
                 target: "ready_to_laser_dialog",
                 placement: 'right',
                 delay: 200,
