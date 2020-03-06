@@ -36,8 +36,12 @@
                 </div>
 
             <div class="pull-right muted" style="padding: 20px 5px 0px 0;">
-                <small class="muted">{{ _("Forgot your password? Contact %(tag_open)sMr Beam Support%(tag_close)s.",
-                        tag_open='<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000500137" target="_blank" class="muted">',
+                <small class="muted show_only_online">{{ _("Forgot your password? Contact %(tag_open)sMr Beam Support%(tag_close)s.",
+                        tag_open='<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000500137" target="_blank" class="muted"><i class="icon-external-link"></i>&nbsp;',
+                        tag_close='</a>')|safe}}
+                </small>
+                <small class="muted show_only_offline">{{ _("Forgot your password? Contact %(tag_open)sMr Beam Support%(tag_close)s.",
+                        tag_open='<a href="#" onclick="mrbeam.openOfflineKbUrl(\'43000500137_how_to_login.pdf\')" class="muted"><i class="icon-file-text"></i>&nbsp;',
                         tag_close='</a>')|safe}}
                 </small>
             </div>
@@ -52,11 +56,21 @@
 <div id="mrb_settings_users_header" class="hide" style="width: 70%; padding: 0 0 15px 0;">
     <h3>{{ _("Access Control") }}</h3>
     <p>{{ _("For security reasons, you can only use your Mr Beam II after logging in with a user account.") }}</p>
-    <p><strong>{{ _("Please remember your access data!") }}</strong><br/>
+    <p class="show_only_online"><strong>{{ _("Please remember your access data!") }}</strong><br/>
         {{ _("If you forget your access information, you'll need to contact the Mr Beam Support Team to reset your device.
         You can find more about this in our %(tag_open)sKnowledge Base%(tag_close)s.",
-                tag_open='<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000500137" target="_blank">',
+                tag_open='<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000500137" target="_blank"><i class="icon-external-link"></i>&nbsp;',
+                tag_close='</a>') }}
+    </p>
+    <p class="show_only_offline"><strong>{{ _("Please remember your access data!") }}</strong><br/>
+        {{ _("If you forget your access information, you'll need to contact the Mr Beam Support Team to reset your device.
+        You can find more about this in our %(tag_open)sKnowledge Base%(tag_close)s.",
+                tag_open='<a href="#" onclick="mrbeam.openOfflineKbUrl(\'43000500137_how_to_login.pdf\')"><i class="icon-file-text"></i>&nbsp;',
                 tag_close='</a>') }}
     </p>
     <p><br/></p>
 </div>
+
+
+
+
