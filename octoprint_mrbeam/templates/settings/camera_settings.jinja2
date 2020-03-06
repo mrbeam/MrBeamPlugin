@@ -21,14 +21,24 @@
                 </ul>
             </div>
         </div>
-        <div class='calibration_manual text'>{{ _("For more information, please have a look at our article on %(opening_tag)scamera calibration%(closing_tag)s.",
-                opening_tag='<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000065908-camera-calibration" target="_blank">',
+        <div class='calibration_manual text show_only_online'>{{ _("For more information, please have a look at our article on %(opening_tag)scamera calibration%(closing_tag)s.",
+                opening_tag='<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000065908-camera-calibration" target="_blank"><i class="icon-external-link"></i>&nbsp;',
                 closing_tag='</a>') }}</div>
-        <div class='calibration_manual text'>{{ _("Positioning with the Mr Beam II camera is simple and fairly accurate,
+        <div class='calibration_manual text show_only_offline'>{{ _("For more information, please have a look at our article on %(opening_tag)scamera calibration%(closing_tag)s.",
+                opening_tag='<a href="#" onclick="mrbeam.openOfflineKbUrl(\'43000065908_camer_calibration.pdf\')"><i class="icon-file-text"></i>&nbsp;',
+                closing_tag='</a>') }}</div>
+
+        <div class='calibration_manual text show_only_online'>{{ _("Positioning with the Mr Beam II camera is simple and fairly accurate,
         but there can be deviations of up to +/- 5mm. If a laser job needs to be positioned very accurately,
         we recommend using %(opening_tag)smanual positioning%(closing_tag)s.",
-                opening_tag='<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000065874-manual-positioning" target="_blank">',
+                opening_tag='<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000065874-manual-positioning" target="_blank"><i class="icon-external-link"></i>&nbsp;',
                 closing_tag='</a>') }}</div>
+        <div class='calibration_manual text show_only_offline'>{{ _("Positioning with the Mr Beam II camera is simple and fairly accurate,
+        but there can be deviations of up to +/- 5mm. If a laser job needs to be positioned very accurately,
+        we recommend using %(opening_tag)smanual positioning%(closing_tag)s.",
+                opening_tag='<a href="#" onclick="mrbeam.openOfflineKbUrl(\'43000065874_manual_positioning.pdf\')"><i class="icon-external-link"></i>&nbsp;',
+                closing_tag='</a>') }}</div>
+
         <div class='calibration_manual text'>
             {{ _("The following instructions will guide you step by step through the recalibration of your camera:") }}
         </div>

@@ -52,9 +52,13 @@ $(function () {
                     "<strong>"+gettext("What do you need for this tour:")+"</strong>",
                     "<ul>" +
                         "<li>" + gettext("Have a piece of felt on hand. Best to use the one that came with your Mr Beam II.") + "</li>" +
-                        "<li>" + _.sprintf(gettext("The laser head of your Mr Beam II has to be focused according to the thickness of the felt." +
+                        "<li class='show_only_online'>" + _.sprintf(gettext("The laser head of your Mr Beam II has to be focused according to the thickness of the felt." +
                             "You can find how to do that in this %(opening_tag)sKnowledge base article%(closing_tag)s."),
-                            {opening_tag:"<a href='https://mr-beam.freshdesk.com/support/solutions/articles/43000073345' target='_blank'>", closing_tag:"</a>"}) +
+                            {opening_tag:"<a href='https://mr-beam.freshdesk.com/support/solutions/articles/43000073345' target='_blank'><i class=\"icon-external-link\"></i>&nbsp;", closing_tag:"</a>"}) +
+                        "</li>" +
+                        "<li class='show_only_offline'>" + _.sprintf(gettext("The laser head of your Mr Beam II has to be focused according to the thickness of the felt." +
+                            "You can find how to do that in this %(opening_tag)sKnowledge base article%(closing_tag)s."),
+                            {opening_tag:"<a href='#' onclick=\"mrbeam.openOfflineKbUrl('43000073345_Focusing_the_laser_head.pdf');\"><i class='icon-file-text'></i>&nbsp;", closing_tag:"</a>"}) +
                         "</li>" +
                         "<li>" + gettext("About 5-10 minutes of your time.") + "</li>" +
                     "</ul>",

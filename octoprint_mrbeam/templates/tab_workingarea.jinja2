@@ -5,7 +5,15 @@
 
 								<div id="state_accordion">
 									<div class="accordion-heading" id="mrb_state_header">
-										<div class="accordion-toggle"><i class="icon-info-sign"></i> {{ _('State') }}:</div><span data-bind="text: state.stateString"></span>
+										<div class="accordion-toggle"><i class="icon-info-sign"></i> {{ _('State') }}:</div>
+                                        <span title="{{ _("Mr Beam's current state") }}">
+                                            <i class="icon-inbox"></i> <span data-bind="text: state.stateString"></span>
+                                        </span>
+                                        <span title="{{ _("Your current Internet connection state") }}" style="margin-left: 15px;">
+                                            <i class="icon-globe"></i>
+                                            <span class="show_only_online">{{ _("Online") }}</span>
+                                            <span class="show_only_offline">{{ _("Offline") }}</span>
+                                        </span>
 									</div>
 									<div id="statusbox">
 										<div class="accordion-body collapse in" id="mrb_state_wrapper" data-bind="visible: loginState.isUser() ">

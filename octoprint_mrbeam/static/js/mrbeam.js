@@ -109,8 +109,41 @@ mrbeam._isVersionOrHigher = function (actualVersion, expectedVersion) {
     }
 };
 
+/**
+ * Opens an offline version of the KB (pdf) in a new tab/window respecting user's language
+ * @param document - document name without path: '43000431865_custom_materials.pdf'
+ *                   The document itself needs to be located in static/docs/offline_kb/{locale}/{doc}
+ * @param availableLanguages - Array of languages in which the document is available. default: ['en', 'de']
+ * @returns false
+ */
+mrbeam.openOfflineKbUrl = function (document, availableLanguages) {
+    availableLanguages = availableLanguages || ['en', 'de']
+    var myLang = 'en'
+    if (typeof LOCALE !== 'undefined' && availableLanguages.includes(LOCALE)) {
+        myLang = LOCALE
+    }
+    var url = "/plugin/mrbeam/static/docs/offline_kb/" + myLang + "/" + document;
+    window.open(url, '_blank')
+    return false;
+}
+
+/**
+ * For debugging offline_kb articles.
+ * Stops periodic online check and sets the state to offline/
+ * @param locale - if set changes the global LOCALE param.
+ *                 (Note that most content doesn't change right away, but offline_kb links do.)
+ */
+mrbeam.debugSetOfflineState = function(locale){
+    if (locale) {
+        LOCALE = locale;
+    }
+    // this will terribly crash if page is not initialized as expected.
+    mrbeam.viewModels.mrbeamViewModel.debugSetOfflineState();
+};
+
 
 mrbeam.mrb_state = undefined;
+mrbeam.isOnline = undefined;
 mrbeam.viewModels = {};
 
 mrbeam.isBeta = function () {
@@ -146,6 +179,7 @@ $(function () {
         self.settings.mrbeam = self;
 
         self._online_check_last_state = null;
+        self._online_check_interval = null;
 
         self.userTyped = ko.observable(false);
         self.invalidEmailHelp = gettext("Invalid e-mail address");
@@ -185,10 +219,10 @@ $(function () {
             self.start_online_check_interval();
 
             // set env flag in body for experimental_feature_beta and  experimental_feature_dev
-            if (MRBEAM_ENV_LOCAL == "DEV") {
+            if (mrbeam.isDev()) {
              $('body').addClass('end_dev')
              $('body').removeClass('end_prod')
-            } else if (MRBEAM_ENV_LOCAL == "BETA") {
+            } else if (mrbeam.isBeta()) {
              $('body').addClass('end_beta')
              $('body').removeClass('end_prod')
             }
@@ -333,8 +367,15 @@ $(function () {
 
         self.start_online_check_interval = function () {
             self.do_online_check();
-            setInterval(self.do_online_check, 60*1000);
+            self._online_check_interval = setInterval(self.do_online_check, 60*1000);
         };
+
+        self.debugSetOfflineState = function(offline) {
+            let online = typeof offline !== 'undefined' ? offline : false;
+            clearInterval(self._online_check_interval)
+            mrbeam.isOnline = online;
+            self.set_offline_links(online)
+        }
 
         self.do_online_check = function () {
             $.ajax({
@@ -347,12 +388,14 @@ $(function () {
                         console.log("Online check: Online");
                     }
                     self._online_check_last_state = true;
+                    mrbeam.isOnline = true;
                     self.set_offline_links(self._online_check_last_state);
                 })
                 .fail(function () {
                     if (self._online_check_last_state !== false) {
                         console.log("Online check: Offline");
                     }
+                    mrbeam.isOnline = false;
                     self._online_check_last_state = false;
                     self.set_offline_links(self._online_check_last_state);
 

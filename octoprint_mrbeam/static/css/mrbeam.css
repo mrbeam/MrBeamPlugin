@@ -2595,8 +2595,8 @@ input.search-query,
     opacity: 0.8;
 }
 
-
-* === EXPERIMENTIAL FEATURES ===
+/**
+* === EXPERIMENTAL FEATURES ===
 */
 
 .env_prod .experimental_feature_dev,
@@ -2616,17 +2616,12 @@ input.search-query,
 }
 
 /* ----- online / offline ------- */
-.online .show_only_online {
-    display: initial;
-}
 .offline .show_only_online {
-    display: none;
+    display: none !important;
 }
 
 .online .show_only_offline {
-    display: none;
+    display: none !important;
 }
-.offline .show_only_offline {
-    display: initial;
-}
+
 
