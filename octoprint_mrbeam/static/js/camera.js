@@ -23,7 +23,6 @@ $(function(){
         self.objectZ = ko.observable(0); // in mm
         self.cornerMargin = ko.observable(DEFAULT_MARGIN / 2);
         self.objectZoom = ko.computed(function () {
-            console.log("Refreshing : objZ ", self.objectZ());
             return 100 * self.cornerMargin() * (1 - self.objectZ() / MAX_OBJECT_HEIGHT);
         });
 
