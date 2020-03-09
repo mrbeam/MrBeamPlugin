@@ -1,0 +1,44 @@
+<div id="settings_mrbeam_custom_material">
+    <h3>{{ _('Custom Material Settings') }}</h3>
+
+    <div class="scrollable" style="padding-bottom:2em; overflow-y: auto; height: calc(100vh - 150px);">
+
+        <div>
+            {{ _("To learn how to creat, use and manage custom material settings, read this %(opening_tag)sKnowledge Base article%(closing_tag)s.",
+                    opening_tag='<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000431865-save-custom-material-settings" target="_blank">',
+                    closing_tag='</a>') }}
+        </div>
+
+
+        <div class="control-group">
+            <h5>{{ _("Backup") }}</h5>
+            <div class="controls">
+                <ul>
+                    <div>{{ _("Download all custom material settings as file: ") }}</div>
+                    <div><a data-bind="text: getBackupFilename(),
+                                      attr: {href: backupDataUrl,
+                                             download: getBackupFilename()}"></a></div>
+                </ul>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h5>{{ _("Restore") }}</h5>
+            <div class="controls">
+                <ul>
+                    <div>{{ _("Restore your custom material settings from a backup file.") }}</div>
+                    <div><strong>{{ _("Warning") }}:</strong> {{ _("All existing custom material settings will be overwritten!") }}</div>
+                </ul>
+                <ul>
+                    <div>
+                        <button class="btn btn-mini" data-bind="click: function(){$('#settings_mrbeam_custom_material_restore_input').click();}">Restore from backup file</button>
+                        <input id="settings_mrbeam_custom_material_restore_input" type="file" style="display: none">
+                    </div>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+
+
+</div>

@@ -126,7 +126,7 @@ $(function() {
                 };
 
                 self.onEventPrintResumed = function (payload) {
-                    self._fromData(payload), 'onEventPrintResumed';
+                    self._fromData(payload, 'onEventPrintResumed');
                 };
 
                 self.onEventPrintCancelled = function (payload) {
@@ -324,6 +324,22 @@ $(function() {
 
         self.updateSettingsAbout = function(){
             $('#settings_mrbeam_about_support_mrb_state').html(JSON.stringify(window.mrbeam.mrb_state));
+
+            // it's ugly to have this here.
+            var msg = [
+            'MRBEAM_MODEL: ' + MRBEAM_MODEL,
+            'MRBEAM_HOSTNAME: ' + MRBEAM_HOSTNAME,
+            'MRBEAM_SERIAL: ' + MRBEAM_SERIAL,
+            'MRBEAM_LASER_HEAD_SERIAL: ' + MRBEAM_LASER_HEAD_SERIAL,
+            'MRBEAM_GRBL_VERSION: ' + MRBEAM_GRBL_VERSION,
+            'MRBEAM_ENV_SUPPORT_MODE: ' + MRBEAM_ENV_SUPPORT_MODE,
+            'BEAMOS_IMAGE: ' + BEAMOS_IMAGE,
+            'MRBEAM_LANGUAGE: ' + MRBEAM_LANGUAGE,
+            'BEAMOS_VERSION: ' + BEAMOS_VERSION,
+            'MRBEAM_SW_TIER: ' + MRBEAM_SW_TIER,
+            'MRBEAM_ENV: ' + MRBEAM_ENV,
+            ]
+            $('#settings_mrbeam_debug_state').html(msg.join('\n')+'\n'+JSON.stringify(window.mrbeam.mrb_state, null, 2));
         };
 
         self._debugDaShit = function(stuff){

@@ -9,6 +9,8 @@
 $(function () {
 	function LedsViewModel(parameters) {
 		var self = this;
+		window.mrbeam.viewModels['ledsViewModel'] = self;
+
 		self.settings = parameters[0];
 
 		self.edge_brightness = ko.observable(255);

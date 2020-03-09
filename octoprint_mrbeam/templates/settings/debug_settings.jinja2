@@ -1,43 +1,56 @@
 <div id="settings_mrbeam_debug">
-    <h3>{{ _('Debug') }}</h3>
 
-    <form class="form-horizontal">
+    <div class="scrollable" style="padding-bottom:2em; overflow-y: auto; height: calc(100vh - 150px);">
 
-        <div class="control-group">
-            <div class="controls">
-                <label class="checkbox">
-                    <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.gcode_nextgen.clip_working_area">
-                    <strong>{{ _('Enable Clipping') }}</strong>
-                    <div>{{ _('Only disable if you\'re experiencing problems.') }}</div>
-                    <div>{{ _('Designs exceeding the working area are clipped if enabled. When disabled you might experience \'machine limit hit\' errors during laserjobs. Since we had some bugs with the clipping algorithm in the past, here is an option to disable it completely.') }}</div>
-                </label>
+        <h3>{{ _('Debug') }}</h3>
+
+        <form class="form-horizontal">
+
+            <div class="control-group">
+                <div class="controls">
+                    <label class="checkbox">
+                        <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.gcode_nextgen.clip_working_area">
+                        <strong>{{ _('Enable Clipping') }}</strong>
+                        <div>{{ _('Only disable if you\'re experiencing problems.') }}</div>
+                        <div>{{ _('Designs exceeding the working area are clipped if enabled. When disabled you might experience \'machine limit hit\' errors during laserjobs. Since we had some bugs with the clipping algorithm in the past, here is an option to disable it completely.') }}</div>
+                    </label>
+                </div>
             </div>
-        </div>
 
-    <h3>{{ _('Terminal') }}</h3>
+        <h3>{{ _('Terminal') }}</h3>
 
-        <div class="control-group">
-{#            <label class="control-label" for="settings-debug-terminal">{{ _('Enable terminal') }}</label>#}
-            <div class="controls">
-                <label class="checkbox">
-                    <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.terminal">
-                    <strong>{{ _('Enable terminal') }}</strong>
-                    <div>{{ _('Requires full page reload: <strong>Shift + F5</strong> (Windows and Linux) or <strong>Ctrl + Shift + r</strong> (Mac)') }}</div>
-                </label>
+            <div class="control-group">
+    {#            <label class="control-label" for="settings-debug-terminal">{{ _('Enable terminal') }}</label>#}
+                <div class="controls">
+                    <label class="checkbox">
+                        <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.terminal">
+                        <strong>{{ _('Enable terminal') }}</strong>
+                        <div>{{ _('Requires full page reload: <strong>Shift + F5</strong> (Windows and Linux) or <strong>Ctrl + Shift + r</strong> (Mac)') }}</div>
+                    </label>
+                </div>
             </div>
-        </div>
 
-        <div class="control-group">
-{#            <label class="control-label" for="settings-debug-terminal">{{ _('Enable terminal') }}</label>#}
-            <div class="controls">
-                <label class="checkbox">
-                    <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.terminal_show_checksums">
-                    <strong>{{ _('Show checksums') }}</strong>
-                    <div>{{ _('Show gcode command checksums in terminal. Takes effect immediately.') }}</div>
-                </label>
+            <div class="control-group">
+    {#            <label class="control-label" for="settings-debug-terminal">{{ _('Enable terminal') }}</label>#}
+                <div class="controls">
+                    <label class="checkbox">
+                        <input type="checkbox" data-bind="checked: settings.plugins.mrbeam.terminal_show_checksums">
+                        <strong>{{ _('Show checksums') }}</strong>
+                        <div>{{ _('Show gcode command checksums in terminal. Takes effect immediately.') }}</div>
+                    </label>
+                </div>
             </div>
-        </div>
 
-    </form>
+
+        <h3>{{ _('Device State') }}</h3>
+            <div class="control-group">
+                <div class="controls">
+                    <textarea id="settings_mrbeam_debug_state" readonly style="width: 550px; height: 650px; margin: 0 0 10px 25px;"></textarea>
+                </div>
+            </div>
+
+        </form>
+
+    </div>
 
 </div>

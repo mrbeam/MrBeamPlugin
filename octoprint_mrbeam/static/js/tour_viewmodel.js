@@ -178,7 +178,7 @@ $(function () {
                 id: 'select_material',
                 title: gettext("Select the material"),
                 text: [gettext("For this guide we want to use felt.", "However as you can see there are many different options. :)")],
-                target: $('li.material_entry[mrb_name="Felt.jpg"]')[0] || $('li.material_entry')[0],
+                target: $('li.material_entry[mrb_name$="Felt.jpg"]')[0] || $('li.material_entry')[0],
                 additionalJQueryTargets: 'li.material_entry',
                 placement: "bottom",
                 delay: 400,

@@ -16,6 +16,7 @@ import octoprint.plugin
 import requests
 from flask import request, jsonify, make_response, url_for
 from flask.ext.babel import gettext
+import octoprint.filemanager as op_filemanager
 from octoprint.filemanager import ContentTypeDetector, ContentTypeMapping
 from octoprint.server import NO_CONTENT
 from octoprint.server.util.flask import restricted_access, get_json_command_from_request, \
@@ -24,6 +25,7 @@ from octoprint.util import dict_merge
 from octoprint.settings import settings
 from octoprint.events import Events as OctoPrintEvents
 
+from octoprint_mrbeam.__version import __version__
 from octoprint_mrbeam.iobeam.iobeam_handler import ioBeamHandler, IoBeamEvents
 from octoprint_mrbeam.iobeam.onebutton_handler import oneButtonHandler
 from octoprint_mrbeam.iobeam.interlock_handler import interLockHandler
@@ -139,6 +141,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	# inside initialize() OctoPrint is already loaded, not assured during __init__()!
 	def initialize(self):
+		self._plugin_version = __version__
 		init_mrb_logger(self._printer)
 		self._logger = mrb_logger("octoprint.plugins.mrbeam")
 		self._branch = self.getBranch()
@@ -473,6 +476,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				# "js/review.js",  TODO IRATXE: disabled for now
 				"js/util.js",
 				"js/user_notification_viewmodel.js",
+				"js/lib/load-image.all.min.js",     # to load custom material images
+				"js/settings/custom_material.js",
 			    ],
 			css=["css/mrbeam.css",
 			     "css/tinyColorPicker.css",
@@ -608,6 +613,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			dict(type='settings', name=gettext("Reminders"), template='settings/reminders_settings.jinja2', suffix="_reminders", custom_bindings=False),
 			dict(type='settings', name=gettext("Maintenance"), template='settings/maintenance_settings.jinja2', suffix="_maintenance", custom_bindings=True),
 			dict(type='settings', name=gettext("Mr Beam Lights"), template='settings/leds_settings.jinja2', suffix="_leds", custom_bindings=True),
+			dict(type='settings', name=gettext("Custom Material Settings"), template='settings/custom_material_settings.jinja2', suffix="_custom_material", custom_bindings=True),
 
 			# disabled in appearance
 			# dict(type='settings', name="Serial Connection DEV", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings=False, replaces='serial')
@@ -802,6 +808,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			deleted=0)
 
 		try:
+			if  data.get('reset', False) == True:
+				materials(self).reset_all_custom_materials()
+
 			if 'delete' in data:
 				materials(self).delete_custom_material(data['delete'])
 
@@ -1343,7 +1352,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@restricted_access
 	def cancelSlicing(self):
 		self._cancel_job = True
-		self._logger.info("ANDYTEST /cancel - cancelSlicing()")
 		return NO_CONTENT
 
 	##~~ SimpleApiPlugin mixin
@@ -1862,7 +1870,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			),
 			# extensions for printable machine code
 			machinecode=dict(
-				gcode=ContentTypeMapping(["gcode", "gco", "g", "nc"], "text/plain")
+				gcode=ContentTypeMapping(["nc"], "text/plain") # already defined by OP: "gcode", "gco", "g"
 			)
 		)
 
@@ -2170,6 +2178,23 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._mac_addrs = interfaces
 		return self._mac_addrs
 
+
+
+# MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
+# Per default OP always accepts .stl files.
+# Here we monkey-pathc the removel of this file type
+def _op_filemanager_full_extension_tree_wrapper():
+	res = op_filemanager.full_extension_tree_original()
+	res.get('model', {}).pop('stl', None)
+	return res
+
+if not 'full_extension_tree_original' in dir(op_filemanager):
+	op_filemanager.full_extension_tree_original = op_filemanager.full_extension_tree
+	op_filemanager.full_extension_tree = _op_filemanager_full_extension_tree_wrapper
+
+
+
+
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
 # can be overwritten via __plugin_xyz__ control properties. See the documentation for that.
@@ -2199,7 +2224,7 @@ def __plugin_load__():
 				        "plugin_mrbeam_analytics"],
 				settings=[ 'plugin_mrbeam_about', 'plugin_softwareupdate', 'accesscontrol', 'plugin_mrbeam_maintenance',
 						   'plugin_netconnectd', 'plugin_findmymrbeam', 'plugin_mrbeam_conversion',
-						   'plugin_mrbeam_camera', 'plugin_mrbeam_airfilter','plugin_mrbeam_analytics',
+						   'plugin_mrbeam_camera', 'plugin_mrbeam_custom_material', 'plugin_mrbeam_airfilter','plugin_mrbeam_analytics',
 						   'plugin_mrbeam_reminders', 'plugin_mrbeam_leds', 'logs', 'plugin_mrbeam_debug' ]
 			),
 			disabled=dict(

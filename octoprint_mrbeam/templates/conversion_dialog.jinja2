@@ -38,7 +38,7 @@
 							<ul id="material_list" data-bind="foreach: filteredMaterials">
 								<li class='material_entry hover_shadow'
 									data-bind="click: function(vm, event){$root.set_material($data, event); $root.moveJobsToEngravingDefaultOption($data)},
-												style: { backgroundImage: 'url(\'/plugin/mrbeam/static/img/materials/' + $data.img + '\')' },
+												style: { backgroundImage: 'url(\'' + ($data.img || '/plugin/mrbeam/static/img/materials/custommaterial.png') + '\')' },
 												css: {selected: $root.selected_material() === $data, custom: $data.custom === true },
 												attr: {mrb_name: $data.img}
 									">
@@ -91,14 +91,40 @@
 				<div id="save_material_flyin" data-bind="visible: customized_material()">
 					<div id="save_material_form" class="dropdown">
 						<a class="dropdown-toggle" data-toggle="dropdown" href="#" ><i class="icon-star"></i> {{ _('Save custom material setting') }}</a>
-						<div class="dropdown-menu" role="menu" style="padding:.5em">
-							<form class="form-horizontal" style="margin:0">
-								<div class="control-group">
+						<div class="dropdown-menu" role="menu" style=" width: 400px; padding:.5em .5em 1.5em .5em;">
+                            <h4 style="margin: 15px 25px;">{{ _('Save Custom Material Setting') }}</h4>
+							<form class="form-horizontal" style="margin:0" onsubmit="event.preventDefault();">
+                                <div class="control-group">
+									<label class="control-label" for="custom_material_image"> {{ _('Material Image') }}</label>
+									<div class="controls">
+                                        <input type="file" id="custom_material_file_input" style="display: none"/>
+                                        <input id="custom_material_image" type="image" alt=""
+                                               data-bind="attr: {src: save_custom_material_image}"
+                                               class="material_entry hover_shadow"
+                                               style="width:200px; background-image: url('/plugin/mrbeam/static/img/materials/custommaterial.png'); background-size: cover;">
+									    <button id="custom_material_image_reset" class="btn btn-link"
+                                                data-bind="visible: show_save_custom_material_reset_button,
+                                                            click: reset_save_custom_material_image">
+                                                    <i class="icon-remove-sign"></i>
+                                        </button>
+                                        <button id="custom_material_image_edit" class="btn btn-link" style="display: initial">
+                                                    <i class="icon-edit-sign"></i>
+                                        </button>
+                                    </div>
+								</div>
+                                <div class="control-group">
 									<label class="control-label" for="custom_mat_name"> {{ _('Material Name') }}</label>
 									<div class="controls">
-										<input id="custom_mat_name" type="text" data-bind="value:save_custom_material_name" placeholder="{{ _('your name of choice') }}">
+										<input id="custom_mat_name" type="text" data-bind="value:save_custom_material_name" style="width: 188px;">
 									</div>
 								</div>
+                                <div class="control-group">
+									<label class="control-label" for="custom_material_description"> {{ _('Description') }}</label>
+									<div class="controls">
+                                        <textarea id="custom_material_description" data-bind="value:save_custom_material_description" style="width: 188px"></textarea>
+									</div>
+								</div>
+
 								<div class="control-group" data-bind="visible: has_cutting_proposal()">
 									<label class="control-label" for="custom_mat_th"> {{ _('Thickness') }}</label>
 									<div class="controls">
@@ -365,7 +391,7 @@
                                 <div class="cutting-control-and-label" data-toggle="tooltip" data-placement="right"
                                       title="{{ _('Indicates the number of times the laser will run over the design to cut it. Increase the number of passes if the material does not get cut.') }}">
                                     <label class="control-label">{{ _('Passes') }}</label>
-                                    <div class="controls"><input data-bind="event: {change: flag_customized_material}" class="param_passes img_intensity_input" type="number" min="1" max="10" value="1" />&nbsp;&times;&nbsp;&nbsp;<label><input type="checkbox" class="param_progressive"/>{{ _('progressive') }}</label></div>
+                                    <div class="controls"><input data-bind="event: {change: flag_customized_material}" class="param_passes img_intensity_input" type="number" min="1" max="10" value="1" />&nbsp;&times;&nbsp;&nbsp;<label class="experimental_feature_dev"><input type="checkbox" class="param_progressive"/>{{ _('progressive') }}</label></div>
                                 </div>
                             </div>
 
