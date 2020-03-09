@@ -38,7 +38,7 @@ MIN_MARKER_PIX = 700
 MAX_MARKER_PIX = 1200
 
 # Height (mm) from the bottom of the work area to the camera lens.
-CAMERA_HEIGHT = 580
+CAMERA_HEIGHT = 582
 # Height (mm) - max height at which the Mr Beam II can laser an object.
 MAX_OBJ_HEIGHT = 38
 
@@ -465,12 +465,12 @@ def _warpImgByCorners(image, corners, zoomed_out=False):
     maxHeight = max(int(height1), int(height2))
 
     if zoomed_out:
-        factor = float(MAX_OBJ_HEIGHT) / CAMERA_HEIGHT
+        factor = float(MAX_OBJ_HEIGHT) / CAMERA_HEIGHT / 2
         min_dst_x = factor * maxWidth
         max_dst_x = (1+factor) * maxWidth
         min_dst_y = factor * maxHeight
         max_dst_y = (1+factor) * maxHeight
-        dst_size = (int(factor * maxWidth), int(factor*maxHeight))
+        dst_size = (int((1+2*factor) * maxWidth), int((1+2*factor)*maxHeight))
     else:
         min_dst_x, max_dst_x = 0, maxWidth - 1
         min_dst_y, max_dst_y = 0, maxHeight -1

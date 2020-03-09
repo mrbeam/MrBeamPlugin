@@ -19,7 +19,7 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 try:
 	import octoprint_mrbeam.camera
 	from octoprint_mrbeam.camera import MrbCamera, gaussBlurDiff, QD_KEYS, PICAMERA_AVAILABLE
-	from octoprint_mrbeam.camera.undistort import prepareImage
+	from octoprint_mrbeam.camera.undistort import prepareImage, MAX_OBJ_HEIGHT, CAMERA_HEIGHT
 	from octoprint_mrbeam.camera.undistort import _getCamParams, _getPicSettings, DIST_KEY, MTX_KEY
 	from octoprint_mrbeam.util import json_serialisor, logme
 	# TODO mb pic does not rely on picamera, should not use a Try catch.
@@ -220,7 +220,7 @@ class PhotoCreator(object):
         self.stopEvent = Event()
         self.stopEvent.set()
         self._pic_available = Event()
-        self.zoomed_out = False
+        self.zoomed_out = True
         self._pic_available.clear()
         self.last_photo = 0
         self.badQualityPicCount = 0
@@ -482,6 +482,7 @@ class PhotoCreator(object):
                              'markers_pos':           {qd: pos.tolist() for qd, pos in markers.items()},
                              'successful_correction': success_1,
                              'undistorted_saved':     True,
+                             'workspace_corner_ratio': float(MAX_OBJ_HEIGHT) / CAMERA_HEIGHT / 2,
                              'error': err}
         return success_1, correction_result, markers, missed, err
 
