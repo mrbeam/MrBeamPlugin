@@ -217,6 +217,7 @@
 
 												<script type="text/html" id="wa_template_model_svg">
 													<div class="file_list_entry" data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
+{#														<div style="background-color: #f50000;" class="pull-left used_color cutting_job_color" data-toggle="tooltip" data-placement="right" title="" data-original-title="Blablabla"></div>#}
 														<div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
 														<div class="btn-group action-buttons pull-right">
 															<div class="btn btn-mini" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>

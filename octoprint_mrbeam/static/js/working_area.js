@@ -220,8 +220,9 @@ $(function(){
 			self.placedDesigns([]);
 		};
 
-		self.getUsedColors = function () {
-			let colFound = self._getColorsOfSelector('.vector_outline', 'stroke', snap.select('#userContent'));
+		self.getUsedColors = function (elem_id) {
+		    elem = snap.select(elem_id) || snap.select('#userContent')
+			let colFound = self._getColorsOfSelector('.vector_outline', 'stroke', elem);
 			return colFound;
 		};
 
