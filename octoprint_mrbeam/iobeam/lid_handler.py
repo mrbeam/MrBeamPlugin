@@ -19,7 +19,7 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 try:
 	import octoprint_mrbeam.camera
 	from octoprint_mrbeam.camera import MrbCamera, gaussBlurDiff, QD_KEYS, PICAMERA_AVAILABLE
-	from octoprint_mrbeam.camera.undistort import prepareImage
+	from octoprint_mrbeam.camera.undistort import prepareImage, MAX_OBJ_HEIGHT, CAMERA_HEIGHT
 	from octoprint_mrbeam.camera.undistort import _getCamParams, _getPicSettings, DIST_KEY, MTX_KEY
 	from octoprint_mrbeam.util import json_serialisor, logme
 	# TODO mb pic does not rely on picamera, should not use a Try catch.
@@ -203,6 +203,10 @@ class LidHandler(object):
             self._photo_creator.save_debug_images = False
             self._photo_creator.undistorted_pic_path = None
 
+    def compensate_for_obj_height(self, compensate=False):
+        if self._photo_creator is not None:
+            self._photo_creator.zoomed_out = compensate
+
 
 class PhotoCreator(object):
     def __init__(self, _plugin, _plugin_manager, path, image_correction_enabled, debug=False):
@@ -216,6 +220,7 @@ class PhotoCreator(object):
         self.stopEvent = Event()
         self.stopEvent.set()
         self._pic_available = Event()
+        self.zoomed_out = True
         self._pic_available.clear()
         self.last_photo = 0
         self.badQualityPicCount = 0
@@ -392,7 +397,8 @@ class PhotoCreator(object):
                                                                                            pic_settings,
                                                                                            scaled_output_size,
                                                                                            last_markers=markers,
-                                                                                           quality=quality)
+                                                                                           quality=quality,
+                                                                                           zoomed_out=self.zoomed_out)
                 if not self.active(): break
                 # Send result to fronted ASAP
                 if success_1:
@@ -449,7 +455,7 @@ class PhotoCreator(object):
         except Exception as worker_exception:
             self._logger.exception("Exception_in_worker_thread_of_PhotoCreator-_{}".format(worker_exception.message))
 
-    def _new_detect_algo(self, pic, cam_params, pic_settings, out_pic_size, last_markers=None, quality=OK_QUALITY):
+    def _new_detect_algo(self, pic, cam_params, pic_settings, out_pic_size, last_markers=None, quality=OK_QUALITY, zoomed_out=False):
         # Only for the purpose of the transition of 1 detection type to the other.
         # This should otherwise just be part of serve_pictures()
         workspaceCorners, markers, missed, err = prepareImage(input_image=pic,
@@ -460,6 +466,7 @@ class PhotoCreator(object):
                                                               last_markers=last_markers,
                                                               size=out_pic_size,
                                                               quality=quality,
+                                                              zoomed_out=zoomed_out,
                                                               debug_out=self.save_debug_images,  # self.save_debug_images,
                                                               undistorted=True,
                                                               stopEvent=self.stopEvent,
@@ -475,6 +482,7 @@ class PhotoCreator(object):
                              'markers_pos':           {qd: pos.tolist() for qd, pos in markers.items()},
                              'successful_correction': success_1,
                              'undistorted_saved':     True,
+                             'workspace_corner_ratio': float(MAX_OBJ_HEIGHT) / CAMERA_HEIGHT / 2,
                              'error': err}
         return success_1, correction_result, markers, missed, err
 
