@@ -31,8 +31,17 @@ HUE_BAND_LB_KEY = 'hue_lower_bound'
 HUE_BAND_LB = 125
 HUE_BAND_UB = 185 # if value > 180 : loops back to 0
 
+# Minimum and Maximum number of pixels a marker should have
+# as seen on the edge detection masks
+# TODO make scalable with picture resolution
 MIN_MARKER_PIX = 700
 MAX_MARKER_PIX = 1200
+
+# Height (mm) from the bottom of the work area to the camera lens.
+CAMERA_HEIGHT = 580
+# Height (mm) - max height at which the Mr Beam II can laser an object.
+MAX_OBJ_HEIGHT = 38
+
 
 PIC_SETTINGS = {CALIB_MARKERS_KEY: None, CORNERS_KEY: None, M2C_VECTOR_KEY: None, CALIBRATION_UPDATED_KEY: False}
 
@@ -59,13 +68,14 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
                  last_markers=None, # {'NW': np.array(I, J), ... }
                  size=RESOLUTIONS['1000x780'],
                  quality=90,
+                 zoomed_out=False,
                  debug_out=False,
                  undistorted=False,
                  blur=7,
                  custom_pic_settings=None,
                  stopEvent=None,
                  threads=-1):
-    # type: (Union[str, np.ndarray], basestring, np.ndarray, np.ndarray, Union[Mapping, basestring], Union[dict, None], tuple, int, bool, int, Union[None, Mapping], Union[None, Event], int) -> object
+    # type: (Union[str, np.ndarray], basestring, np.ndarray, np.ndarray, Union[Mapping, basestring], Union[dict, None], tuple, int, bool, bool, bool, int, Union[None, Mapping], Union[None, Event], int) -> object
     """
     Loads image from path_to_input_image, does some preparations (undistort, warp)
     on it and saves it to path_to_output_img.
@@ -78,6 +88,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
     :param last_markers: used to compensate if a (single) marker is covered or unrecognised
     :param size : (width,height) of output image size, default is (1000,780)
     :param quality: set quality of output image from 0 to 100, default is 90
+    :param zoomed_out: zoom out on the final picture in order to account for object height
     :param debug_out: True if all in between pictures should be saved to output path directory
     :param blur: Amount of blur for the marker detection
     :param custom_pic_settings: Map : used to update certain keys of the pic settings file
@@ -179,7 +190,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
     if debug_out: save_debug_img(_debug_drawCorners(img, workspaceCorners), path_to_output_image, "drawcorners")
 
     # warp image
-    warpedImg = _warpImgByCorners(img, workspaceCorners)
+    warpedImg = _warpImgByCorners(img, workspaceCorners, zoomed_out)
     if debug_out: save_debug_img(warpedImg, path_to_output_image, "colorwarp")
 
     if stopEvent and stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR
@@ -430,11 +441,12 @@ def _undistortImage(img, dist, mtx):
     mapx, mapy = cv2.initUndistortRectifyMap(mtx, dist, None, newcameramtx, (w, h), 5)
     return cv2.remap(img, mapx, mapy, cv2.INTER_LINEAR)
 
-def _warpImgByCorners(image, corners):
+def _warpImgByCorners(image, corners, zoomed_out=False):
     """
     Warps the region delimited by the corners in order to straighten it.
     :param image: takes an opencv image
     :param corners: as qd-dict
+    :param zoomed_out: wether to zoom out the pic to account for object height
     :return: image with corners warped
     """
 
@@ -452,21 +464,35 @@ def _warpImgByCorners(image, corners):
     height2 = norm(nw - sw)
     maxHeight = max(int(height1), int(height2))
 
+    if zoomed_out:
+        factor = float(MAX_OBJ_HEIGHT) / CAMERA_HEIGHT
+        min_dst_x = factor * maxWidth
+        max_dst_x = (1+factor) * maxWidth
+        min_dst_y = factor * maxHeight
+        max_dst_y = (1+factor) * maxHeight
+        dst_size = (int(factor * maxWidth), int(factor*maxHeight))
+    else:
+        min_dst_x, max_dst_x = 0, maxWidth - 1
+        min_dst_y, max_dst_y = 0, maxHeight -1
+        dst_size = (maxWidth, maxHeight)
+
+
+
     # source points for matrix calculation
     src = np.array((nw[::-1], ne[::-1], se[::-1], sw[::-1]), dtype="float32")
 
     # destination points in the same order
-    dst = np.array([
-            [0, 0],  # nw
-            [maxWidth - 1, 0],  # ne
-            [maxWidth - 1, maxHeight - 1],  # sw
-            [0, maxHeight - 1]], dtype="float32")  # se
+    dst = np.array([[min_dst_x, min_dst_y],  # nw
+                    [max_dst_x, min_dst_y],  # ne
+                    [max_dst_x, max_dst_y],  # sw
+                    [min_dst_x, max_dst_y]], # se
+                   dtype="float32")
 
     # get the perspective transform matrix
     transMatrix = cv2.getPerspectiveTransform(src, dst)
 
     # compute warped image
-    warpedImg = cv2.warpPerspective(image, transMatrix, (maxWidth, maxHeight))
+    warpedImg = cv2.warpPerspective(image, transMatrix, dst_size)
     return warpedImg
 
 def _get_white_spots(mask, min_pix=MIN_MARKER_PIX, max_pix=MAX_MARKER_PIX):
@@ -643,6 +669,7 @@ if __name__ == "__main__":
                                                               last_markers=None,
                                                               size=(2000, 1560),
                                                               quality=args.quality,
+                                                              zoomed_out=False,
                                                               debug_out=args.debug,
                                                               blur=7,
                                                               stopEvent=None,
