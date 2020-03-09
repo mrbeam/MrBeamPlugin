@@ -1,7 +1,3 @@
-MAX_OBJECT_HEIGHT = 38; // in mm
-DEFAULT_MARGIN = MAX_OBJECT_HEIGHT / 582;
-
-
 $(function(){
 
 	function CameraViewModel(params) {
@@ -19,12 +15,6 @@ $(function(){
         self.webCamImageElem = undefined;
         self.isCamCalibrated = false;
         self.firstImageLoaded = false;
-
-        self.objectZ = ko.observable(0); // in mm
-        self.cornerMargin = ko.observable(DEFAULT_MARGIN / 2);
-        self.objectZoom = ko.computed(function () {
-            return 100 * self.cornerMargin() * (1 - self.objectZ() / MAX_OBJECT_HEIGHT);
-        });
 
         // event listener callbacks //
 
@@ -73,9 +63,9 @@ $(function(){
                     }
                 });
 
-                if (data['beam_cam_new_image']['error'] === undefined) {
+                if(data['beam_cam_new_image']['error'] === undefined){
                     self.needsCalibration = false;
-                } else if (data['beam_cam_new_image']['error'] === "NO_CALIBRATION: Marker Calibration Needed" && !self.needsCalibration) {
+                }else if(data['beam_cam_new_image']['error'] === "NO_CALIBRATION: Marker Calibration Needed" && !self.needsCalibration){
                     self.needsCalibration = true;
                     new PNotify({
                         title: gettext("Calibration needed"),
@@ -84,14 +74,6 @@ $(function(){
                         tag: "calibration_needed",
                         hide: false
                     });
-                }
-                if ('workspace_corner_ratio' in data['beam_cam_new_image']) {
-                    // workspace_corner_ratio should be a float
-                    // describing the fraction of the img where
-                    // the z=0 view starts.
-                    self.cornerMargin(data['beam_cam_new_image']['workspace_corner_ratio']);
-                } else {
-                    self.cornerMargin(0)
                 }
                 self.loadImage();
             }
