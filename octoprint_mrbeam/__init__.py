@@ -1379,6 +1379,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			material_settings=[],
 			on_camera_picture_transfer=[],
 			leds=[],
+			compensate_obj_height=[],
 		)
 
 	def on_api_command(self, command, data):
@@ -1439,6 +1440,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		elif command == "leds":
 			# if ("brightness" in data and isinstance(data["brightness"], (int))) or ("leds" in data and isinstance(data["fps"], (int))):
 			self.set_leds_update(data)
+		elif command == "compensate_obj_height":
+			self.lid_handler.compensate_for_obj_height(bool(data))
 		return NO_CONTENT
 
 	# TODO IRATXE: this does not properly work --> necessary for reviews

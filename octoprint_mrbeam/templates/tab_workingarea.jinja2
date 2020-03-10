@@ -89,6 +89,14 @@
 															<div id="zoom_monitor_hint" data-bind="visible: (zoom() === 1)" class="muted">{{ _('Scroll to zoom') }}</div>
 														</div>
 													</div>
+                                                    <div class="experimental_feature_beta">
+                                                        {{ _('Object height') }}
+{#                                                         Translators: millimiters, unit of length#}
+                                                        <input class="decent_input" type="number" min="0" max="38" step="1" id="objectZ_input" value="0"
+                                                               data-bind="value: camera.objectZ, valueUpdate: 'input'"
+                                                               style="width:3.5em; display: inline; margin: 0; padding-right:0;"
+                                                        /> {{ _('mm') }}
+                                                    </div>
 												</div>
 											</div>
 										</div>
@@ -545,13 +553,17 @@
 										<feColorMatrix type="saturate" values="0.5"/>
 									</filter>
 								</defs>
-								<image id="beamcam_image_svg"
-									xlink:href="/downloads/files/local/cam/beam-cam.jpg" x="0" y="0" height="100%" width="100%"
-									data-bind="attr: {
-											width: workingAreaWidthMM(),
-											height: workingAreaHeightMM(),
-											opacity: previewImgOpacity()
-										}" />
+                                    <g id="obj_height_scale"
+                                       transform="scale(1)"
+                                       data-bind="attr: { transform: zObjectImgTransform() }">
+                                        <image id="beamcam_image_svg"
+                                            xlink:href="/downloads/files/local/cam/beam-cam.jpg" x="0" y="0"
+                                            data-bind="attr: {
+                                                    width: workingAreaWidthMM(),
+                                                    height: workingAreaHeightMM(),
+                                                    opacity: previewImgOpacity()
+                                                }" />
+                                    </g>
 									<g id="scaleGroup" data-bind="attr: { transform: scaleMatrix() }">
 										<g id="placedGcodes" data-bind="visible: true || (state.isPrinting() && !state.isPaused()), attr: { transform: 'matrix(1,0,0,-1,0,'+workingAreaHeightMM()+')' }"></g>
 										<g id="gCodePreview" data-bind="visible: state.isPrinting() || state.isPaused()"></g>
