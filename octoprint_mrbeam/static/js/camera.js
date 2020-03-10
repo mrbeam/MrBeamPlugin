@@ -22,10 +22,9 @@ $(function(){
 
         self.objectZ = ko.observable(0); // in mm
         self.cornerMargin = ko.observable(DEFAULT_MARGIN / 2);
-        self.objectZoom = ko.computed(function () {
-            return 100 * self.cornerMargin() * (1 - self.objectZ() / MAX_OBJECT_HEIGHT);
+        self.imgHeightScale = ko.computed(function () {
+            return self.cornerMargin() * (1 - self.objectZ() / MAX_OBJECT_HEIGHT);
         });
-
         // event listener callbacks //
 
         self.onAllBound = function () {
