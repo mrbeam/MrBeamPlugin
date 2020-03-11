@@ -1917,7 +1917,7 @@ class MachineCom(object):
 			self._changeState(self.STATE_ERROR)
 			eventManager().fire(OctoPrintEvents.ERROR, dict(error=self.getErrorString(), analytics=False))
 
-	def cancelPrint(self):
+	def cancelPrint(self, failed=False, error_msg=False):
 		if not self.isOperational():
 			return
 
@@ -1936,7 +1936,14 @@ class MachineCom(object):
 		self._changeState(self.STATE_LOCKED)
 
 		payload = self._get_printing_file_state()
-		eventManager().fire(OctoPrintEvents.PRINT_CANCELLED, payload)
+
+		if failed:
+			if not payload.get('error_msg', None):
+				payload['error_msg'] = error_msg
+
+			eventManager().fire(OctoPrintEvents.PRINT_FAILED, payload)
+		else:
+			eventManager().fire(OctoPrintEvents.PRINT_CANCELLED, payload)
 
 	def setPause(self, pause, send_cmd=True, pause_for_cooling=False, trigger=None, force=False):
 		if not self._currentFile:
