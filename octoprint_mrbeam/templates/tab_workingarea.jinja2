@@ -219,9 +219,9 @@
 													<div class="file_list_entry" data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
 {#                                                        <div data-bind="text: ko.toJSON($data, function(k,v){return (k=='parent') ? undefined : v})"></div>#}
                                                         <div data-bind="visible: components_engrave" class="pull-left wa_used_color" style="background-image: url('/plugin/mrbeam/static/img/img_and_fills2.svg')"></div>
-                                                        <div data-bind="foreach: {data: components, as: 'myComponent'}">
+                                                        <!-- ko foreach: {data: components, as: 'myComponent'} -->
 														    <div data-bind="style: {'background-color': myComponent}" class="pull-left wa_used_color"></div>
-                                                        </div>
+                                                        <!-- /ko -->
 
 
 														<div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
@@ -463,9 +463,9 @@
 												<script type="text/html" id="wa_template_quickshape">
 													<div class="file_list_entry" data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
                                                         <div data-bind="visible: components_engrave" class="pull-left wa_used_color" style="background-image: url('/plugin/mrbeam/static/img/img_and_fills2.svg')" ></div>
-                                                        <div data-bind="foreach: {data: components, as: 'myComponent'}">
+                                                        <!-- ko foreach: {data: components, as: 'myComponent'} -->
 														    <div data-bind="style: {'background-color': myComponent}" class="pull-left wa_used_color" ></div>
-                                                        </div>
+                                                        <!-- /ko -->
 														<div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
 														<div class="btn-group action-buttons pull-right">
 															<div class="btn btn-mini" data-bind="click: function() { $root.editQuickShape($data); }"><i class="icon-edit" title="{{ _('Edit') }}"></i></div>
