@@ -244,7 +244,7 @@ $(function () {
             if (!mrbeam.browser.is_supported) {
                 new PNotify({
                     title: gettext("Browser not supported."),
-                    text: _.sprintf(gettext("Mr Beam II makes use of latest web technologies which are not fully supported by your browser.%(br)sPlease use the latest version of%(br)s%(open)sGoogle Chrome%(close)s for Mr Beam II."), {
+                    text: _.sprintf(gettext("Mr Beam makes use of latest web technologies which are not fully supported by your browser.%(br)sPlease use the latest version of%(br)s%(open)sGoogle Chrome%(close)s for Mr Beam."), {
                         br: "<br/>",
                         open: '<a href=\'http://www.google.de/chrome/\' target=\'_blank\'>',
                         close: '</a>'
@@ -259,7 +259,7 @@ $(function () {
                     title: gettext("Beta user: Please consider enabling Mr Beam analytics!"),
                     text: _.sprintf(gettext("As you are currently in our Beta channel, you would help us " +
                         "tremendously sharing%(br)sthe laser job insights, so we can improve%(br)san overall experience " +
-                        "working with the%(br)s Mr Beam II. Thank you!%(br)s%(open)sGo to analytics settings%(close)s"),
+                        "working with the%(br)s Mr Beam. Thank you!%(br)s%(open)sGo to analytics settings%(close)s"),
                         {
                             open: '<a href=\'#\' data-toggle="tab" id="settings_analytics_link" style="font-weight:bold">',
                             close: '</a>',

@@ -288,7 +288,7 @@ $(function(){
 					console.error("Unable to save custom material: ", postData);
 					new PNotify({
                         title: gettext("Error while saving settings!"),
-                        text: _.sprintf(gettext("Unable to save your custom material settings at the moment.%(br)sCheck connection to Mr Beam II and try again."), {br: "<br/>"}),
+                        text: _.sprintf(gettext("Unable to save your custom material settings at the moment.%(br)sCheck connection to Mr Beam and try again."), {br: "<br/>"}),
                         type: "error",
                         hide: true
                     });
@@ -322,7 +322,7 @@ $(function(){
 					console.error("Unable to restore custom material settings: ", postData);
 					new PNotify({
                         title: gettext("Error while saving settings!"),
-                        text: _.sprintf(gettext("Unable to save your custom material settings at the moment.%(br)sCheck connection to Mr Beam II and try again."), {br: "<br/>"}),
+                        text: _.sprintf(gettext("Unable to save your custom material settings at the moment.%(br)sCheck connection to Mr Beam and try again."), {br: "<br/>"}),
                         type: "error",
                         hide: true
                     });
@@ -1300,7 +1300,7 @@ $(function(){
                         console.error("Unable to save focus reminder state: ", data);
                         new PNotify({
                             title: gettext("Error while saving settings!"),
-                            text: _.sprintf(gettext("Unable to save your focus reminder state at the moment.%(br)sCheck connection to Mr Beam II and try again."), {br: "<br/>"}),
+                            text: _.sprintf(gettext("Unable to save your focus reminder state at the moment.%(br)sCheck connection to Mr Beam and try again."), {br: "<br/>"}),
                             type: "error",
                             hide: true
                         });
@@ -1436,7 +1436,7 @@ $(function(){
                                     }
                                     new PNotify({
                                         title: gettext("Conversion failed"),
-                                        text: _.sprintf(gettext("Unable to start the conversion in the backend. Please try reloading this page or restarting Mr Beam II.%(br)s%(br)sContent length was %(length)s bytes."), {length: length, br: "<br/>"}),
+                                        text: _.sprintf(gettext("Unable to start the conversion in the backend. Please try reloading this page or restarting Mr Beam.%(br)s%(br)sContent length was %(length)s bytes."), {length: length, br: "<br/>"}),
                                         type: "error",
                                         tag: "conversion_error",
                                         hide: false
