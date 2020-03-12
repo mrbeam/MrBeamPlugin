@@ -1350,7 +1350,7 @@ class MachineCom(object):
 			self._logger.error(msg_short, terminal_as_comm=True)
 
 			try:
-				msg = "The update of the internal component GRBL failed.{br}It is still save to use your Mr Beam. However, if this error persists consider to contact the {opening_tag}Mr Beam support team{closing_tag}.{br}{br}{strong_opening_tag}Error:{strong_closing_tag}{br}{error}".format(
+				msg = "The update of the internal component GRBL failed.{br}It is still safe to use your Mr Beam. However, if this error persists consider to contact the {opening_tag}Mr Beam support team{closing_tag}.{br}{br}{strong_opening_tag}Error:{strong_closing_tag}{br}{error}".format(
 							opening_tag= '<a href="http://mr-beam.org/support" target="_blank">',
 							closing_tag='</a>',
 							error="GRBL update '{}' failed: {}...".format(grbl_file, output[:120]),
