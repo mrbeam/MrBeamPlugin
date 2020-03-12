@@ -404,47 +404,51 @@ class PhotoCreator(object):
                 if success_1:
                     self._ready_to_send_pic(correction_result)
                     self.badQualityPicCount = 0
+                if cam_params is not None:
+                    success_2, correction_result2 = self._legacy_detect_algo(latest,
+                                                                             path_to_cam_params,
+                                                                             path_to_pic_settings,
+                                                                             path_to_last_markers,
+                                                                             scaled_output_size,
+                                                                             quality=quality)
+                    if not self.active(): break
 
-                success_2, correction_result2 = self._legacy_detect_algo(latest,
-                                                                         path_to_cam_params,
-                                                                         path_to_pic_settings,
-                                                                         path_to_last_markers,
-                                                                         scaled_output_size,
-                                                                         quality=quality)
-                if not self.active(): break
-
-                self._logger.debug("correct result 2 %s", correction_result2)
-                if not success_2:
-                    errorID = correction_result2['error'].split(':')[0]
-                    errorString = correction_result2['error'].split(':')[1]
-                    if errorID == 'BAD_QUALITY':
-                        self.badQualityPicCount += 1
-                        self._logger.error(
-                                errorString + '_Number_of_bad_quality_pics_{}'.format(self.badQualityPicCount))
-                        if self.badQualityPicCount > 10:
-                            self._logger.error('Too_many_bad_pics-_Show_bad_image_now'.format(self.badQualityPicCount))
-                            self._ready_to_send_pic(correction_result2)
-                    elif errorID == 'NO_CALIBRATION' or errorID == 'NO_PICTURE_FOUND':
-                        self._logger.error(errorString)
-                    else:  # Unknown error
-                        self._logger.error(errorID + errorString)
-                if success_2 and not success_1:
-                    self._ready_to_send_pic(correction_result2)
-                    self.badQualityPicCount = 0
-                    # Use this picture
+                    self._logger.debug("correct result 2 %s", correction_result2)
+                    if not success_2:
+                        errorID = correction_result2['error'].split(':')[0]
+                        errorString = correction_result2['error'].split(':')[1]
+                        if errorID == 'BAD_QUALITY':
+                            self.badQualityPicCount += 1
+                            self._logger.error(
+                                    errorString + '_Number_of_bad_quality_pics_{}'.format(self.badQualityPicCount))
+                            if self.badQualityPicCount > 10:
+                                self._logger.error('Too_many_bad_pics-_Show_bad_image_now'.format(self.badQualityPicCount))
+                                self._ready_to_send_pic(correction_result2)
+                        elif errorID == 'NO_CALIBRATION' or errorID == 'NO_PICTURE_FOUND':
+                            self._logger.error(errorString)
+                        else:  # Unknown error
+                            self._logger.error(errorID + errorString)
+                    if success_2 and not success_1:
+                        self._ready_to_send_pic(correction_result2)
+                        self.badQualityPicCount = 0
+                        # Use this picture
+                    elif not success_1:
+                        # Just tell front end that there was an error
+                        self._send_frontend_picture_metadata(correction_result2)
+                    self._add_result_to_analytics(session_details,
+                                                  'legacy',
+                                                  correction_result2['markers_found'],
+                                                  increment_pic=False,
+                                                  error=correction_result2['error'])
                 elif not success_1:
                     # Just tell front end that there was an error
-                    self._send_frontend_picture_metadata(correction_result2)
+                    self._send_frontend_picture_metadata(correction_result)
+
                 self._add_result_to_analytics(session_details,
                                               'new',
                                               markers,
                                               increment_pic=True,
                                               error=err)
-                self._add_result_to_analytics(session_details,
-                                              'legacy',
-                                              correction_result2['markers_found'],
-                                              increment_pic=False,
-                                              error=correction_result2['error'])
                 # self._logger.debug("Analytics: %s", json.dumps(session_details,
                 #                                                    indent=2,
                 #                                                    default=json_serialisor))
@@ -458,11 +462,15 @@ class PhotoCreator(object):
     def _new_detect_algo(self, pic, cam_params, pic_settings, out_pic_size, last_markers=None, quality=OK_QUALITY, zoomed_out=False):
         # Only for the purpose of the transition of 1 detection type to the other.
         # This should otherwise just be part of serve_pictures()
+        if cam_params is not None:
+            dist, mtx = cam_params[DIST_KEY], cam_params[MTX_KEY]
+        else:
+            dist, mtx = None, None
         workspaceCorners, markers, missed, err = prepareImage(input_image=pic,
                                                               path_to_output_image=self.tmp_img_prepared,
-                                                              cam_dist=cam_params[DIST_KEY],
-                                                              cam_matrix=cam_params[MTX_KEY],
                                                               pic_settings=pic_settings,
+                                                              cam_dist=dist,
+                                                              cam_matrix=mtx,
                                                               last_markers=last_markers,
                                                               size=out_pic_size,
                                                               quality=quality,
