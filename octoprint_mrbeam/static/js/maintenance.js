@@ -220,7 +220,7 @@ $(function () {
         self.notifyMaintenanceRequired = function() {
             new PNotify({
                 title: gettext("Maintenance required"),
-                text: _.sprintf(gettext("Regular maintenance on your Mr Beam II is due.%(br)s Please check the %(open)smaintenance settings%(close)s for details."),
+                text: _.sprintf(gettext("Regular maintenance on your Mr Beam is due.%(br)s Please check the %(open)smaintenance settings%(close)s for details."),
                 {br: '<br>', open: '<a href=\'#\' data-toggle="tab" id="settings_maintenance_link" style="font-weight:bold">', close: '</a>'}),
                 type: "warn",
                 hide: false});

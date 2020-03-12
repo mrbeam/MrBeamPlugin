@@ -186,7 +186,7 @@ class LidHandler(object):
                 self._photo_creator.set_undistorted_path()
             self._startStopCamera("take_undistorted_picture_request")
             # this will be accepted in the .done() method in frontend
-            resp_text = {'msg': gettext("Please make sure the lid of your Mr Beam II is open and wait a little...")}
+            resp_text = {'msg': gettext("Please make sure the lid of your Mr Beam is open and wait a little...")}
             return make_response(jsonify(resp_text), 200)
         else:
             return make_response('Error, no photocreator active, maybe you are developing and dont have a cam?', 503)

@@ -28,12 +28,12 @@
                 opening_tag='<a href="#" onclick="mrbeam.openOfflineKbUrl(\'43000065908_camer_calibration.pdf\')"><i class="icon-file-text"></i>&nbsp;',
                 closing_tag='</a>') }}</div>
 
-        <div class='calibration_manual text show_only_online'>{{ _("Positioning with the Mr Beam II camera is simple and fairly accurate,
+        <div class='calibration_manual text show_only_online'>{{ _("Positioning with the Mr Beam camera is simple and fairly accurate,
         but there can be deviations of up to +/- 5mm. If a laser job needs to be positioned very accurately,
         we recommend using %(opening_tag)smanual positioning%(closing_tag)s.",
                 opening_tag='<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000065874-manual-positioning" target="_blank"><i class="icon-external-link"></i>&nbsp;',
                 closing_tag='</a>') }}</div>
-        <div class='calibration_manual text show_only_offline'>{{ _("Positioning with the Mr Beam II camera is simple and fairly accurate,
+        <div class='calibration_manual text show_only_offline'>{{ _("Positioning with the Mr Beam camera is simple and fairly accurate,
         but there can be deviations of up to +/- 5mm. If a laser job needs to be positioned very accurately,
         we recommend using %(opening_tag)smanual positioning%(closing_tag)s.",
                 opening_tag='<a href="#" onclick="mrbeam.openOfflineKbUrl(\'43000065874_manual_positioning.pdf\')"><i class="icon-external-link"></i>&nbsp;',
@@ -51,7 +51,7 @@
 	<div id="calibration_step_2" class="calibration_step active scrollable" data-bind="visible: !isInitialCalibration()">
         <h3>{{ _('Camera Calibration') }}</h3>
 		<div class='calibration_manual img' style='background-image:url(/plugin/mrbeam/static/img/cam_calibration/calpic_material_size.svg)'></div>
-		<div class='calibration_manual text'>{{_('Please put a material like cardboard inside your Mr Beam II that it covers the whole working area.')}}</div>
+		<div class='calibration_manual text'>{{_('Please put a material like cardboard inside your Mr Beam that it covers the whole working area.')}}</div>
 		<div class='calibration_manual img' style='background-image:url(/plugin/mrbeam/static/img/cam_calibration/calpic_close_lid.svg)'></div>
 		<div class='calibration_manual text'>{{_('Close the lid. Mr Beam will start engraving the calibration markers on the cardboard.')}}</div>
 		<div class='calibration_manual text'>{{_('Do not touch the engraved material. The camera will now take a picture of the engraving.') }}</div>
@@ -65,7 +65,7 @@
 	<div id="calibration_step_3" class="calibration_step scrollable" data-bind="visible: !isInitialCalibration()" style="overflow-y: auto; height: calc(100vh - 100px);">
         <h3>{{ _('Camera Calibration') }}</h3>
 		<div class='calibration_manual img' style='background-image:url(/plugin/mrbeam/static/img/cam_calibration/calpic_open_lid.svg)'></div>
-		<div class='calibration_manual text'>{{_('Wait until the engraving is finished and Mr Beam II illuminates green. Open the safety lid again') }}</div>
+		<div class='calibration_manual text'>{{_('Wait until the engraving is finished and Mr Beam illuminates green. Open the safety lid again') }}</div>
 		<div class='calibration_manual img' style='background-image:url(/plugin/mrbeam/static/img/cam_calibration/calpic_dont_touch.svg)'></div>
 		<div class='calibration_manual text'>{{_('Do not touch the engraved material. The camera will now take a picture of the engraving.') }}</div>
 		<div>
