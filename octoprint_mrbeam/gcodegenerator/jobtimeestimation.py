@@ -55,9 +55,10 @@ class JobTimeEstimation:
 		"""
 
 		if event == OctoPrintEvents.SLICING_DONE:
-			estimation_thread = threading.Thread(target=self._calculate_estimation_threaded,
-                                                 name="job_time_estimation._calculate_estimation_threaded",
-                                                 args=(payload['gcode'],))
+			estimation_thread = threading.Thread(
+				target=self._calculate_estimation_threaded,
+				name="job_time_estimation._calculate_estimation_threaded",
+				args=(payload['gcode'],))
 			estimation_thread.daemon = True
 			estimation_thread.start()
 
