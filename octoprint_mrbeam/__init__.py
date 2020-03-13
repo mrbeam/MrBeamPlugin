@@ -2108,9 +2108,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			local_time_shift = now - self._time_ntp_check_last_ts - interval_last  # if there was no shift, this should sum up to zero
 		self._time_ntp_shift += local_time_shift
 		self._time_ntp_synced = ntp_offset is not None
-		during_realtime = self.TIME_NTP_SYNC_CHECK_INTERVAL_FAST * min(self._time_ntp_check_count,
-		                                                               self.TIME_NTP_SYNC_CHECK_FAST_COUNT) + self.TIME_NTP_SYNC_CHECK_INTERVAL_SLOW * max(0,
-		                                                                                                                                                   self._time_ntp_check_count - self.TIME_NTP_SYNC_CHECK_FAST_COUNT)
+		during_realtime = self.TIME_NTP_SYNC_CHECK_INTERVAL_FAST * min(self._time_ntp_check_count, self.TIME_NTP_SYNC_CHECK_FAST_COUNT) \
+						  + self.TIME_NTP_SYNC_CHECK_INTERVAL_SLOW * max(0,self._time_ntp_check_count - self.TIME_NTP_SYNC_CHECK_FAST_COUNT)
 
 		msg = "is_time_ntp_synced: {synced}, time_shift: {time_shift:.2f}s, during_realtime: {during_realtime:.2f}s (checks: {checks}, local_time_shift: {local_time_shift:.2f})".format(
 			synced=self._time_ntp_synced,
