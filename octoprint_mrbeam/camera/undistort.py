@@ -62,9 +62,9 @@ class MbPicPrepError(Exception):
 
 def prepareImage(input_image,  #: Union[str, np.ndarray],
                  path_to_output_image,  #: str,
-                 cam_dist,  #: ? np.ndarray ?,
-                 cam_matrix,  #: ? np.ndarray ?,
                  pic_settings,  #: Map or str
+                 cam_dist=None,  #: ? np.ndarray ?,
+                 cam_matrix=None,  #: ? np.ndarray ?,
                  last_markers=None, # {'NW': np.array(I, J), ... }
                  size=RESOLUTIONS['1000x780'],
                  quality=90,
@@ -138,8 +138,9 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
         img = input_image
     else:
         raise ValueError("path_to_input_image-_in_camera_undistort_needs_to_be_a_path_(string)_or_a_numpy_array")
-    # undistort image with cam_params
-    img = _undistortImage(img, cam_dist, cam_matrix)
+    if cam_dist and cam_matrix:
+        # undistort image with cam_params
+        img = _undistortImage(img, cam_dist, cam_matrix)
 
     if debug_out or undistorted:
         save_debug_img(img, path_to_output_image, "undistorted")
@@ -548,8 +549,8 @@ def _getCamParams(path_to_params_file):
     :returns cam_params as dict
     """
     if not isfile(path_to_params_file) or os.stat(path_to_params_file).st_size == 0:
-        logging.error("Please_provide_a_valid-_PATH_TO/camera_params_npz_or_similiar")
-        raise MbPicPrepError("Please_provide_a_valid-_PATH_TO/camera_params_npz_or_similiar")
+        logging.warning("Camera calibration file not found.")
+        return None
     else:
         try:
             valDict = np.load(path_to_params_file)
@@ -558,7 +559,6 @@ def _getCamParams(path_to_params_file):
 
         if not all(param in valDict for param in [DIST_KEY, MTX_KEY]):
             raise MbPicPrepError('CamParams_missing_in_File-_please_do_a_new_Camera_Calibration_(Chessboard)')
-
     return valDict
 
 def _getPicSettings(path_to_settings_file, custom_pic_settings=None):
