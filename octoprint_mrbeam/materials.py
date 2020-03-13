@@ -1,4 +1,3 @@
-
 import os
 import yaml
 from octoprint_mrbeam.mrb_logger import mrb_logger
