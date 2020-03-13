@@ -30,7 +30,7 @@ except ImportError as e:
 	logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler").error(
 		"Could not import module 'mb_picture_preparation'. Disabling camera integration. (%s: %s)", e.__class__.__name__, e)
 
-SIMILAR_PICS_BEFORE_UPSCALE = 3
+SIMILAR_PICS_BEFORE_UPSCALE = 1
 LOW_QUALITY = 65 # low JPEG quality for compressing bigger pictures
 OK_QUALITY = 75 # default JPEG quality served to the user
 TOP_QUALITY = 90 # best compression quality we want to serve the user
@@ -64,6 +64,7 @@ class LidHandler(object):
         self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler")
 
         self._lid_closed = True
+        self._interlock_closed = True
         self._is_slicing = False
         self._client_opened = False
 
@@ -85,6 +86,8 @@ class LidHandler(object):
 
     def _subscribe(self, event, payload):
         self._event_bus.subscribe(IoBeamEvents.LID_OPENED, self.onEvent)
+        self._event_bus.subscribe(IoBeamEvents.INTERLOCK_OPEN, self.onEvent)
+        self._event_bus.subscribe(IoBeamEvents.INTERLOCK_CLOSED, self.onEvent)
         self._event_bus.subscribe(IoBeamEvents.LID_CLOSED, self.onEvent)
         self._event_bus.subscribe(OctoPrintEvents.CLIENT_OPENED, self.onEvent)
         self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self.onEvent)
@@ -100,6 +103,14 @@ class LidHandler(object):
         if event == IoBeamEvents.LID_OPENED:
             self._logger.debug("onEvent() LID_OPENED")
             self._lid_closed = False
+            self._startStopCamera(event)
+        if event == IoBeamEvents.INTERLOCK_OPEN:
+            self._logger.debug("onEvent() INTERLOCK_OPEN")
+            self._interlock_closed = False
+            self._startStopCamera(event)
+        if event == IoBeamEvents.INTERLOCK_CLOSED:
+            self._logger.debug("onEvent() INTERLOCK_CLOSED")
+            self._interlock_closed = True
             self._startStopCamera(event)
         elif event == IoBeamEvents.LID_CLOSED:
             self._logger.debug("onEvent() LID_CLOSED")
@@ -147,7 +158,7 @@ class LidHandler(object):
                 self._end_photo_worker()
             else:
                 # TODO get the states from _printer or the global state, instead of having local state as well!
-                if self._client_opened and not self._is_slicing and not self._lid_closed and not self._printer.is_locked():
+                if self._client_opened and not self._is_slicing and not self._interlock_closed and not self._printer.is_locked():
                     self._logger.info('Camera starting - event: {}, client_opened {}, is_slicing: {}\nlid_closed: {}, printer.is_locked(): {}, save_debug_images: {}, is_initial_calibration: {}'.format(
                             event,
                             self._client_opened,
@@ -328,13 +339,13 @@ class PhotoCreator(object):
         pic_settings = _getPicSettings(path_to_pic_settings)
         self._logger.debug('Loaded pic_settings: {}'.format(pic_settings))
         try:
-            if self.active():
-                cam.start_preview()
-                time.sleep(3)
-                # bestShutterSpeeds = cam.apply_best_shutter_speed()  # Usually only 1 value, but there could be more
-
-                # TODO cam.anti_rolling_shutter_banding()
-                cam.start()  # starts capture to the cam.worker
+            if not self.active(): return
+            cam.start_preview()
+            time.sleep(2)
+            # bestShutterSpeeds = cam.apply_best_shutter_speed()  # Usually only 1 value, but there could be more
+            # TODO cam.anti_rolling_shutter_banding()
+            if not self.active(): return
+            cam.start()  # starts capture to the cam.worker
             # --- Decide on the picture quality to give to the user and whether the pic is different ---
             prev = None # previous image
             nb_consecutive_similar_pics = 0
@@ -349,6 +360,11 @@ class PhotoCreator(object):
             pic_qual_index = 0
             # Marker positions detected on the last loop
             markers = None
+            # waste the first picture : doesn't matter how long we wait to warm up, the colors will be off.
+            cam.wait()
+            # The lid didn't open during waiting time
+            if not self.active() or self._plugin.lid_handler._lid_closed: return
+            cam.async_capture()
             while self.active():
                 cam.wait()  # waits until the next picture is ready
                 if not self.active(): break
