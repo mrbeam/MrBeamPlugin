@@ -184,7 +184,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self.led_event_listener = LedEventListener(self)
 		self.led_event_listener.set_brightness(self._settings.get(["leds", "brightness"]))
 		self.led_event_listener.set_fps(self._settings.get(["leds", "fps"]))
-		# start iobeam socket only once other handlers are already inittialized so that we can handle info mesage
+		# start iobeam socket only once other handlers are already initialized so that we can handle info message
 		self.iobeam = ioBeamHandler(self)
 		self.temperature_manager = temperatureManager(self)
 		self.dust_manager = dustManager(self)
@@ -273,13 +273,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			terminal_show_checksums = True,
 			converter_min_required_disk_space=100 * 1024 * 1024, # 100MB, in theory 371MB is the maximum expected file size for full working area engraving at highest resolution.
 			dev=dict(
-				debug=False,  # deprected
+				debug=False,  # deprecated
 				terminalMaxLines = 2000,
 				env = self.ENV_PROD,
 				load_gremlins = False,
 				software_tier = SW_UPDATE_TIER_PROD,
-				iobeam_disable_warnings = False, # for develpment on non-MrBeam devices
-				suppress_migrations = False,     # for develpment on non-MrBeam devices
+				iobeam_disable_warnings = False, # for development on non-MrBeam devices
+				suppress_migrations = False,     # for development on non-MrBeam devices
 				support_mode = False,
 				grbl_auto_update_enabled = True
 			),
@@ -490,7 +490,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			     ],
 			less=["less/mrbeam.less"]
 		)
-		if(self._settings.get(["dev", "load_gremlins"])):
+		if self._settings.get(["dev", "load_gremlins"]):
 			assets['js'].append('js/lib/gremlins.min.js')
 		return assets
 
@@ -627,7 +627,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def get_template_vars(self):
 		"""
-		Needed to have analytigs settings page in German
+		Needed to have analytics settings page in German
 		while we do not have real internationalization yet.
 		"""
 		from flask import g
@@ -689,7 +689,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			data = request.json
 			command = data["command"]
 		except:
-			return make_response("Unable to interprete request", 400)
+			return make_response("Unable to interpret request", 400)
 
 		self._logger.debug("wifi_wizard_api() command: %s, data: %s", command,  pprint.pformat(data))
 
@@ -703,7 +703,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		except Exception as e:
 			self._logger.exception("Exception while executing wifi command '%s' in netconnectd: " +
 					   "(This might be totally ok since this plugin throws an exception if we were rejected by the " +
-					   "wifi for invalid password or other non-exceprional things.)", command)
+					   "wifi for invalid password or other non-exceptional things.)", command)
 			return make_response(e.message, 500)
 
 		self._logger.debug("wifi_wizard_api() result: %s", result)
@@ -720,7 +720,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if hasattr(request, "json") and request.json:
 			data = request.json
 		else:
-			return make_response("Unable to interprete request", 400)
+			return make_response("Unable to interpret request", 400)
 
 		# check if username is ok
 		username = data.get('username', '')
@@ -859,7 +859,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	# helper method to write data to user settings
 	# this makes sure it's always written into a mrbeam folder and
-	# a last updated timestamp as well as the mrbeam pluin version are added
+	# a last updated timestamp as well as the mrbeam plugin version are added
 	def setUserSetting(self, username, key, value):
 		if not isinstance(key, list):
 			key = [key]
@@ -910,7 +910,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		                     beamosVersionBranch=self._branch,
 		                     beamosVersionDisplayVersion=display_version_string,
 		                     beamosVersionImage=self._octopi_info,
-		                     # environement
+		                     # environment
 		                     env=self.get_env(),
 		                     env_local=self.get_env(self.ENV_LOCAL),
 		                     env_laser_safety=self.get_env(self.ENV_LASER_SAFETY),
@@ -977,7 +977,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return make_response("Invalid parameters", 400)
 
 		# validate input
-		if(i < min_intensity or i > max_intensity or f < min_feedrate or f > max_feedrate):
+		if i < min_intensity or i > max_intensity or f < min_feedrate or f > max_feedrate:
 			return make_response("Invalid parameters", 400)
 		cm = CalibrationMarker(str(profile['volume']['width']), str(profile['volume']['depth']))
 		gcode = cm.getGCode(i, f)
@@ -987,11 +987,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if self._printer is None or self._printer._comm is None:
 			return make_response("Laser: Serial not connected", 400)
 
-		if(self._printer.get_state_id() == "LOCKED"):
+		if self._printer.get_state_id() == "LOCKED":
 			self._printer.home("xy")
 
 		seconds = 0
-		while(self._printer.get_state_id() != "OPERATIONAL" and seconds <= 26): # homing cycle 20sec worst case, rescue from home ~ 6 sec total (?)
+		while self._printer.get_state_id() != "OPERATIONAL" and seconds <= 26: # homing cycle 20sec worst case, rescue from home ~ 6 sec total (?)
 			time.sleep(1.0) # wait a second
 			seconds += 1
 
@@ -1163,7 +1163,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		fileObj = Wrapper(filename, svg)
 		try:
 			self._file_manager.add_file(FileDestinations.LOCAL, filename, fileObj, links=None, allow_overwrite=True)
-		except Exception, e:
+		except Exception as e:
 			return make_response("Failed to write file. Disk full?", 400)
 		else:
 			return jsonify(dict(calibration_marker_svg=filename, target=FileDestinations.LOCAL))
@@ -1182,10 +1182,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# In order to reactivate the cancel button in the processing screen,
 		# we need should run the code in here in a separate thread and return the http call as soon as possible
 		# This allows the cancel request to come through.
-		# On fontend side we should prevent the system from reloading the whole file list during slicing
+		# On frontend side we should prevent the system from reloading the whole file list during slicing
 		# which can be done bu doing this before we trigger the /convert request:
 		# self.files.ignoreUpdatedFilesEvent = true; Of course we should set it back once slicing is done.
-		# All this improved the cancelation speed. Still it's not good enough to justify a cancel button.
+		# All this improved the cancellation speed. Still it's not good enough to justify a cancel button.
 
 		# valid file commands, dict mapping command name to mandatory parameters
 		valid_commands = {
@@ -1237,7 +1237,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			files = resp[FileDestinations.LOCAL]
 
 			max_history_files = 25  # TODO fetch from settings
-			if (len(files) > max_history_files):
+			if len(files) > max_history_files:
 
 				removals = []
 				for key in files:
@@ -1247,7 +1247,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 				sorted_by_age = sorted(removals, key=lambda tpl: tpl[0])
 
-				# TODO each deletion causes an filemanager push update -> slow.
+				# TODO each deletion causes a filemanager push update -> slow.
 				for i in range(0, len(sorted_by_age) - max_history_files):
 					f = sorted_by_age[i]
 					self._file_manager.remove_file(FileDestinations.LOCAL, f[1])
@@ -1299,7 +1299,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 			# callback definition
 			def slicing_done(gcode_name, select_after_slicing, print_after_slicing, append_these_files):
-				# append additioal gcodes
+				# append additional gcodes
 				output_path = self._file_manager.path_on_disk(FileDestinations.LOCAL, gcode_name)
 				with open(output_path, 'ab') as wfd:
 					for f in append_these_files:
@@ -1367,7 +1367,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			ready_to_laser=[],
 			cli_event=["event"],
 			custom_materials=[],
-			analytics_init=[], # user's analytics choice froom welcome wizard
+			analytics_init=[], # user's analytics choice from welcome wizard
 			analytics_upload=[], # triggers an upload of analytics files
 			take_undistorted_picture=[],  # see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
 			focus_reminder=[],
@@ -1469,7 +1469,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		except Exception as e:
 			self._logger.exception('Could not process frontend analytics data: {e} - Data = {data}'.format(e=e, data=data))
-			return make_response("Unable to interprete request", 400)
+			return make_response("Unable to interpret request", 400)
 
 		return NO_CONTENT
 
@@ -1502,7 +1502,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return NO_CONTENT
 
 	def take_undistorted_picture(self, is_initial_calibration):
-		if(os.environ['HOME'] == "/home/teja"):
+		if os.environ['HOME'] == "/home/teja":
 			from flask import make_response
 			self._logger.debug("DEBUG MODE: Took dummy picture")
 			meta_data = {
@@ -1690,8 +1690,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._logger.exception("Conversion failed: {0}".format(msg))
 			return False, msg
 		except Exception as e:
-			print e.__doc__
-			print e.message
+			print(e.__doc__)
+			print(e.message)
 			self._logger.exception("Conversion error ({0}): {1}".format(e.__doc__, e.message))
 			return False, "Unknown error, please consult the log file"
 
@@ -1757,11 +1757,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 
 	def fire_event(self, event, payload=None):
-		'''
+		"""
 		Fire an event into octoPrint's event system and adds mrb_check as payload
 		:param event:
 		:param payload: payload. If None, a payload object with mrb_state is added
-		'''
+		"""
 		if payload is None:
 			payload = dict()
 		if not 'mrb_state' in payload:
@@ -1775,7 +1775,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def on_print_progress(self, storage, path, progress):
 		# TODO: this method should be moved into printer.py or comm_acc2 or so.
 		flooredProgress = progress - (progress % 10)
-		if (flooredProgress != self.print_progress_last):
+		if flooredProgress != self.print_progress_last:
 			self.print_progress_last = flooredProgress
 			print_time = None
 			lines_total = None
@@ -1801,7 +1801,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def on_slicing_progress(self, slicer, source_location, source_path, destination_location, destination_path, progress):
 		# TODO: this method should be moved into printer.py or comm_acc2 or so.
 		flooredProgress = progress - (progress % 10)
-		if (flooredProgress != self.slicing_progress_last):
+		if flooredProgress != self.slicing_progress_last:
 			self.slicing_progress_last = flooredProgress
 			payload = dict(progress=self.slicing_progress_last)
 			self._event_bus.fire(MrBeamEvents.SLICING_PROGRESS, payload)
@@ -1922,7 +1922,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def getHostname(self):
 		"""
 		Returns device hostname like 'MrBeam2-F930'.
-		If system hostname (/etc/hostname) is differen it'll be set (overwritten!!) to the value from device_info
+		If system hostname (/etc/hostname) is different it'll be set (overwritten!!) to the value from device_info
 		:return: String hostname
 		"""
 		if self._hostname is None:
@@ -1934,7 +1934,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self._logger.exception("Exception while reading hostname from socket.")
 				pass
 
-			# yes, let's go with the actual host name untill changes have applied.
+			# yes, let's go with the actual host name until changes have applied.
 			self._hostname = hostname_socket
 
 			if hostname_dev_info != hostname_socket:
@@ -1991,7 +1991,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			output = check_output(command, shell=True)
 			branch = output[1:].strip()
 		except Exception as e:
-			# 	self._logger.debug("getBranch: unable to exceute 'git branch' due to exception: %s", e)
+			# 	self._logger.debug("getBranch: unable to execute 'git branch' due to exception: %s", e)
 			pass
 
 		if not branch:
@@ -2000,7 +2000,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				output = check_output(command, shell=True)
 				branch = output[1:].strip()
 			except Exception as e:
-				# 	self._logger.debug("getBranch: unable to exceute 'cd /home/pi/MrBeamPlugin/; git branch' due to exception: %s", e)
+				# 	self._logger.debug("getBranch: unable to execute 'cd /home/pi/MrBeamPlugin/; git branch' due to exception: %s", e)
 				pass
 
 		return branch
@@ -2063,7 +2063,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		result = self._settings.get(["dev", "env"])
 		if type is not None:
 			if type == self.ENV_LASER_SAFETY:
-				type_env = self._settings.get(["dev", "cloud_env"]) # deprected flag
+				type_env = self._settings.get(["dev", "cloud_env"]) # deprecated flag
 			else:
 				type_env = self._settings.get(["dev", "env_overrides", type])
 			if type_env is not None:
@@ -2094,10 +2094,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def __calc_time_ntp_offset(self, log_out_of_sync=False):
 		"""
-		Checks if we have a NTP time and if the offsett is < 1min.
+		Checks if we have a NTP time and if the offset is < 1min.
 		- If not, this function is called again. The first times with 10s delay, then 120sec.
-		- If yes, this fact is logged with a shift_time wich indicates the time the device was off from ntp utc time
-		    Technically it's the difference in time between the time that should have passed theoratically and
+		- If yes, this fact is logged with a shift_time which indicates the time the device was off from ntp utc time
+		    Technically it's the difference in time between the time that should have passed theoretically and
 		    that actually passed due to invisible ntp corrections.
 		:param log_out_of_sync: do not log if time is not synced
 		"""
@@ -2172,7 +2172,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			try:
 				for root, dirs, files in os.walk(nw_base):
 					for ifc in dirs:
-						if(ifc != 'lo'):
+						if ifc != 'lo':
 							mac = open('%s/%s/address' % (nw_base, ifc)).read()
 							interfaces[ifc] = mac[0:17]
 			except:
@@ -2186,7 +2186,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 # MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
 # Per default OP always accepts .stl files.
-# Here we monkey-pathc the removel of this file type
+# Here we monkey-patch the remove of this file type
 def _op_filemanager_full_extension_tree_wrapper():
 	res = op_filemanager.full_extension_tree_original()
 	res.get('model', {}).pop('stl', None)
