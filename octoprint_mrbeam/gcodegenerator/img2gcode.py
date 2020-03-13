@@ -61,7 +61,7 @@ class ImageProcessor():
 	              dithering = False,
 	              engraving_mode = None,
 	              pierce_time = 0,
-	              overshoot_distance = 0, # disabled for now. TODO: enable (1) when switch on delay is HW fixed.
+	              overshoot_distance = 1,
 	              eng_compressor = 100, # DreamCut.
 	              material = None):
 
@@ -318,8 +318,11 @@ class ImageProcessor():
 				off_y = cp['y']
 
 				tmp = separator.separate(cp, threshold=self.ignore_brighter_than+1)
-				for p in tmp:
-					parts.append({'i': p['i'], 'x': off_x + p['x'], 'y': off_y + p['y'], 'id': p['id']})
+				if tmp is None:
+					parts.extend(contour_parts)
+				else:
+					for p in tmp:
+						parts.append({'i': p['i'], 'x': off_x + p['x'], 'y': off_y + p['y'], 'id': p['id']})
 
 				self.log.debug("separated into {} parts".format(len(parts)))
 		else:

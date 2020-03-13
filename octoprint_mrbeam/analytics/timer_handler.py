@@ -207,7 +207,7 @@ class TimerHandler:
 			           }
 			sw_versions = self._get_software_versions()
 
-			if self._analytics_handler.analytics_enabled:
+			if self._analytics_handler.is_analytics_enabled():
 				for name, conf in folders.iteritems():
 					cmd = 'find "{folder}" -type f -exec md5sum {{}} \; | sort -k 2 | md5sum'.format(folder=conf.get('src_path'))
 					out, code = exec_cmd_output(cmd, shell=True)

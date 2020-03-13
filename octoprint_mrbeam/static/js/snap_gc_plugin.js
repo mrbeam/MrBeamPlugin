@@ -33,6 +33,19 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		this.selectAll("path").forEach(function (element) {
 
 			var id = element.attr('id');
+			if (id===null && element.attr('paper')===null){
+			    element.attr({
+                    "mb:gc": " ",
+                    "mb:start_x": "",
+                    "mb:start_y": "",
+                    "mb:end_x": "",
+                    "mb:end_y": ""
+                });
+			    console.warn("Skipping element not yet rendered by the browser: (You might see an id and paper in your browser's dev tools, but it can't be read programmatically!)", element);
+			    return; // like continue in js forEach
+            } else if(!id) {
+			    id='?_'+Date.now()
+            }
 
 			// calculate transformation matrix
 			var matrix = element.transform().totalMatrix;
@@ -99,9 +112,16 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			}
 
 			// generate gcode
-			var gcode = mrbeam.path.gcode(paths, id, mb_meta[id]);
+			var gcodeObj = mrbeam.path.gcode(paths, id, mb_meta[id]);
 
-			element.attr("mb:gc", gcode || " ");
+			element.attr({
+				"mb:gc": gcodeObj.gcode || " ",
+				// start and end of path for easier sorting / way optimization
+				"mb:start_x": gcodeObj.begin.x || "",
+				"mb:start_y": gcodeObj.begin.y || "",
+				"mb:end_x": gcodeObj.end.x || "",
+				"mb:end_y": gcodeObj.end.y || ""
+			});
 		});
 	};
 

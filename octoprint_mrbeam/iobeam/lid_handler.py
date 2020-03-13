@@ -16,19 +16,19 @@ from flask.ext.babel import gettext
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 # don't crash on a dev computer where you can't install picamera
-import octoprint_mrbeam.camera
-from octoprint_mrbeam.camera import MrbCamera, gaussBlurDiff, QD_KEYS, PICAMERA_AVAILABLE
-from octoprint_mrbeam.camera.undistort import prepareImage
-from octoprint_mrbeam.camera.undistort import _getCamParams, _getPicSettings, DIST_KEY, MTX_KEY
-from octoprint_mrbeam.util import json_serialisor, logme
-# TODO mb pic does not rely on picamera, should not use a Try catch.
 try:
-    import mb_picture_preparation as mb_pic
-    PICAMERA_AVAILABLE = True
+	import octoprint_mrbeam.camera
+	from octoprint_mrbeam.camera import MrbCamera, gaussBlurDiff, QD_KEYS, PICAMERA_AVAILABLE
+	from octoprint_mrbeam.camera.undistort import prepareImage, MAX_OBJ_HEIGHT, CAMERA_HEIGHT
+	from octoprint_mrbeam.camera.undistort import _getCamParams, _getPicSettings, DIST_KEY, MTX_KEY
+	from octoprint_mrbeam.util import json_serialisor, logme
+	# TODO mb pic does not rely on picamera, should not use a Try catch.
+	import mb_picture_preparation as mb_pic
+	PICAMERA_AVAILABLE = True
 except ImportError as e:
-    PICAMERA_AVAILABLE = False
-    logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler").error(
-        "Could not import module 'mb_picture_preparation'. Disabling camera integration. (%s: %s)", e.__class__.__name__, e)
+	PICAMERA_AVAILABLE = False
+	logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler").error(
+		"Could not import module 'mb_picture_preparation'. Disabling camera integration. (%s: %s)", e.__class__.__name__, e)
 
 SIMILAR_PICS_BEFORE_UPSCALE = 3
 LOW_QUALITY = 65 # low JPEG quality for compressing bigger pictures
@@ -71,7 +71,7 @@ class LidHandler(object):
 
         self.image_correction_enabled = self._settings.get(['cam', 'image_correction_enabled'])
 
-        if self.camEnabled:
+        if self.camEnabled and PICAMERA_AVAILABLE:
             imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
             self._photo_creator = PhotoCreator(self._plugin,
                                                self._plugin_manager,
@@ -136,7 +136,7 @@ class LidHandler(object):
     def _startStopCamera(self, event):
         if self._photo_creator is not None and self.camEnabled:
             if event in (IoBeamEvents.LID_CLOSED, OctoPrintEvents.SLICING_STARTED, OctoPrintEvents.CLIENT_CLOSED):
-                self._logger.info('Camera stopping...: event: {}, client_opened {}, is_slicing: {}, lid_closed: {}, printer.is_locked(): {}, save_debug_images: {}'.format(
+                self._logger.info('Camera stopping - event: {}, client_opened {}, is_slicing: {}\nlid_closed: {}, printer.is_locked(): {}, save_debug_images: {}'.format(
                         event,
                         self._client_opened,
                         self._is_slicing,
@@ -148,7 +148,7 @@ class LidHandler(object):
             else:
                 # TODO get the states from _printer or the global state, instead of having local state as well!
                 if self._client_opened and not self._is_slicing and not self._lid_closed and not self._printer.is_locked():
-                    self._logger.info('Camera starting: event: {}, client_opened {}, is_slicing: {}, lid_closed: {}, printer.is_locked(): {}, save_debug_images: {}, is_initial_calibration: {}'.format(
+                    self._logger.info('Camera starting - event: {}, client_opened {}, is_slicing: {}\nlid_closed: {}, printer.is_locked(): {}, save_debug_images: {}, is_initial_calibration: {}'.format(
                             event,
                             self._client_opened,
                             self._is_slicing,
@@ -163,7 +163,7 @@ class LidHandler(object):
                     self._logger.info('Camera starting: initial_calibration. event: {}'.format(event))
                     self._start_photo_worker()
                 else:
-                    self._logger.debug('Camera not supposed to start now. event: {}, client_opened {}, is_slicing: {}, lid_closed: {}, printer.is_locked(): {}, save_debug_images: {}'.format(
+                    self._logger.debug('Camera not supposed to start now. event: {}, client_opened {}, is_slicing: {}\nlid_closed: {}, printer.is_locked(): {}, save_debug_images: {}'.format(
                         event,
                         self._client_opened,
                         self._is_slicing,
@@ -186,7 +186,7 @@ class LidHandler(object):
                 self._photo_creator.set_undistorted_path()
             self._startStopCamera("take_undistorted_picture_request")
             # this will be accepted in the .done() method in frontend
-            resp_text = {'msg': gettext("Please make sure the lid of your Mr Beam II is open and wait a little...")}
+            resp_text = {'msg': gettext("Please make sure the lid of your Mr Beam is open and wait a little...")}
             return make_response(jsonify(resp_text), 200)
         else:
             return make_response('Error, no photocreator active, maybe you are developing and dont have a cam?', 503)
@@ -203,6 +203,10 @@ class LidHandler(object):
             self._photo_creator.save_debug_images = False
             self._photo_creator.undistorted_pic_path = None
 
+    def compensate_for_obj_height(self, compensate=False):
+        if self._photo_creator is not None:
+            self._photo_creator.zoomed_out = compensate
+
 
 class PhotoCreator(object):
     def __init__(self, _plugin, _plugin_manager, path, image_correction_enabled, debug=False):
@@ -216,6 +220,7 @@ class PhotoCreator(object):
         self.stopEvent = Event()
         self.stopEvent.set()
         self._pic_available = Event()
+        self.zoomed_out = True
         self._pic_available.clear()
         self.last_photo = 0
         self.badQualityPicCount = 0
@@ -259,8 +264,6 @@ class PhotoCreator(object):
         self.undistorted_pic_path = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(['cam', 'localUndistImage'])
 
     def work(self):
-        # todo find maximum of sleep in beginning that's not affecting UX
-        time.sleep(0.8)
 
         if self.is_initial_calibration:
             self.set_undistorted_path()
@@ -282,9 +285,9 @@ class PhotoCreator(object):
                 self.serve_pictures(cam)
         except Exception as e:
             if e.__class__.__name__.startswith('PiCamera'):
-                self._logger.error("PiCamera Error while preparing camera: %s: %s", e.__class__.__name__, e)
+                self._logger.error("PiCamera_Error_while_preparing_camera_%s_%s", e.__class__.__name__, e)
             else:
-                self._logger.exception("Exception while preparing camera: %s: %s", e.__class__.__name__, e)
+                self._logger.exception("Exception_while_preparing_camera_%s_%s", e.__class__.__name__, e)
         self.stopEvent.set()
 
     def serve_pictures(self, cam):
@@ -324,32 +327,10 @@ class PhotoCreator(object):
         # load pic_settings json
         pic_settings = _getPicSettings(path_to_pic_settings)
         self._logger.debug('Loaded pic_settings: {}'.format(pic_settings))
-
-        # TODO camera resolution and outpic res are independent
-        # detection_algo = {'new': lambda raw_pic: prepareImage(input_image=raw_pic,
-        #                                                       path_to_output_image=self.tmp_img_prepared,
-        #                                                       cam_dist=cam_params[DIST_KEY],
-        #                                                       cam_matrix=cam_params[MTX_KEY],
-        #                                                       pic_settings=pic_settings,
-        #                                                       size=out_pic_size,
-        #                                                       quality=100,
-        #                                                       debug_out=self.debug,  #self.save_debug_images,
-        #                                                       stopEvent=self.stopEvent,
-        #                                                       threads=4),
-        #                   'legacy': lambda: mb_pic.prepareImage(self.tmp_img_raw,
-        #                                                         self.tmp_img_prepared,
-        #                                                         path_to_cam_params,
-        #                                                         path_to_pic_settings,
-        #                                                         path_to_last_markers,
-        #                                                         size=out_pic_size,  # (h, w),
-        #                                                         save_undistorted=self.undistorted_pic_path,
-        #                                                         quality=75,
-        #                                                         debug_out=self.save_debug_images,
-        #                                                         stopEvent=self.stopEvent, )}
         try:
             if self.active():
                 cam.start_preview()
-                time.sleep(2)
+                time.sleep(3)
                 # bestShutterSpeeds = cam.apply_best_shutter_speed()  # Usually only 1 value, but there could be more
 
                 # TODO cam.anti_rolling_shutter_banding()
@@ -416,14 +397,14 @@ class PhotoCreator(object):
                                                                                            pic_settings,
                                                                                            scaled_output_size,
                                                                                            last_markers=markers,
-                                                                                           quality=quality)
+                                                                                           quality=quality,
+                                                                                           zoomed_out=self.zoomed_out)
                 if not self.active(): break
                 # Send result to fronted ASAP
                 if success_1:
                     self._ready_to_send_pic(correction_result)
                     self.badQualityPicCount = 0
 
-                # only run the 2nd algo on bad corners from previous run
                 success_2, correction_result2 = self._legacy_detect_algo(latest,
                                                                          path_to_cam_params,
                                                                          path_to_pic_settings,
@@ -432,15 +413,16 @@ class PhotoCreator(object):
                                                                          quality=quality)
                 if not self.active(): break
 
+                self._logger.debug("correct result 2 %s", correction_result2)
                 if not success_2:
                     errorID = correction_result2['error'].split(':')[0]
                     errorString = correction_result2['error'].split(':')[1]
                     if errorID == 'BAD_QUALITY':
                         self.badQualityPicCount += 1
                         self._logger.error(
-                                errorString + ' Number of bad quality pics: {}'.format(self.badQualityPicCount))
+                                errorString + '_Number_of_bad_quality_pics_{}'.format(self.badQualityPicCount))
                         if self.badQualityPicCount > 10:
-                            self._logger.error('Too many bad pics! Show bad image now.'.format(self.badQualityPicCount))
+                            self._logger.error('Too_many_bad_pics-_Show_bad_image_now'.format(self.badQualityPicCount))
                             self._ready_to_send_pic(correction_result2)
                     elif errorID == 'NO_CALIBRATION' or errorID == 'NO_PICTURE_FOUND':
                         self._logger.error(errorString)
@@ -469,11 +451,11 @@ class PhotoCreator(object):
             cam.stop_preview()
             if session_details['num_pics'] > 0:
                 self._analytics_handler.add_camera_session_details(session_details)
-            self._logger.debug("PhotoCreator stopping...")
+            self._logger.debug("PhotoCreator_stopping")
         except Exception as worker_exception:
-            self._logger.exception("Exception in worker thread of PhotoCreator: {}".format(worker_exception.message))
+            self._logger.exception("Exception_in_worker_thread_of_PhotoCreator-_{}".format(worker_exception.message))
 
-    def _new_detect_algo(self, pic, cam_params, pic_settings, out_pic_size, last_markers=None, quality=OK_QUALITY):
+    def _new_detect_algo(self, pic, cam_params, pic_settings, out_pic_size, last_markers=None, quality=OK_QUALITY, zoomed_out=False):
         # Only for the purpose of the transition of 1 detection type to the other.
         # This should otherwise just be part of serve_pictures()
         workspaceCorners, markers, missed, err = prepareImage(input_image=pic,
@@ -484,7 +466,9 @@ class PhotoCreator(object):
                                                               last_markers=last_markers,
                                                               size=out_pic_size,
                                                               quality=quality,
-                                                              debug_out=self.debug,  # self.save_debug_images,
+                                                              zoomed_out=zoomed_out,
+                                                              debug_out=self.save_debug_images,  # self.save_debug_images,
+                                                              undistorted=True,
                                                               stopEvent=self.stopEvent,
                                                               threads=4)
         if not self.active(): return False, None, None, None, None
@@ -495,7 +479,10 @@ class PhotoCreator(object):
                              'markers_recognised':    4 - len(missed),
                              'corners_calculated':    None if workspaceCorners is None else list(workspaceCorners),
                              # {k: v.astype(int) for k, v in workspaceCorners.items()},
+                             'markers_pos':           {qd: pos.tolist() for qd, pos in markers.items()},
                              'successful_correction': success_1,
+                             'undistorted_saved':     True,
+                             'workspace_corner_ratio': float(MAX_OBJ_HEIGHT) / CAMERA_HEIGHT / 2,
                              'error': err}
         return success_1, correction_result, markers, missed, err
 
@@ -558,7 +545,7 @@ class PhotoCreator(object):
                 _marker = None
                 if algo == 'new' and qd in markers.keys() and markers[qd] is not None:
                     _marker = np.asarray(markers[qd])
-                elif algo == 'legacy' and markers[qd]['x'] is not None:
+                elif algo == 'legacy' and qd in markers.keys() and markers[qd]['x'] is not None:
                     _marker = np.asarray([markers[qd]['y'], markers[qd]['x']])
                 if _marker is not None:
                     _success_mass = _s_marker['found']
@@ -573,13 +560,14 @@ class PhotoCreator(object):
                     _s_marker['missed'] += 1
 
             if error:
+                error = error.replace(".","-").replace(",","-")
                 if error in _s[algo]['errors']:
                     _s[algo]['errors'][error] += 1
                 else:
                     _s[algo]['errors'][error] = 1
 
         except Exception as ex:
-            self._logger.exception('Exception in _save__s_for_analytics: {}'.format(ex))
+            self._logger.exception('Exception_in-_save__s_for_analytics-_{}'.format(ex))
 
     def _ready_to_send_pic(self, correction_result, force=False):
         self.last_correction_result = correction_result
@@ -608,7 +596,7 @@ class PhotoCreator(object):
                 os.makedirs(path)
                 self._logger.debug("Created folder '%s' for camera images.", path)
         except:
-            self._logger.exception("Exception while creating folder '%s' for camera images:", filename)
+            self._logger.exception("Exception_while_creating_folder_'%s'_for_camera_images-_", filename)
 
     def _move_img(self, src, dest):
         try:
@@ -616,7 +604,7 @@ class PhotoCreator(object):
                 os.remove(dest)
             shutil.move(src, dest)
         except Exception as e:
-            self._logger.warn("exception while moving file: %s", e)
+            self._logger.warn("exception_while_moving_file-_%s", e)
 
 def blank_session_details():
     """

@@ -5,7 +5,15 @@
 
 								<div id="state_accordion">
 									<div class="accordion-heading" id="mrb_state_header">
-										<div class="accordion-toggle"><i class="icon-info-sign"></i> {{ _('State') }}:</div><span data-bind="text: state.stateString"></span>
+										<div class="accordion-toggle"><i class="icon-info-sign"></i> {{ _('State') }}:</div>
+                                        <span title="{{ _("Mr Beam's current state") }}">
+                                            <i class="icon-inbox"></i> <span data-bind="text: state.stateString"></span>
+                                        </span>
+                                        <span title="{{ _("Your current Internet connection state") }}" style="margin-left: 15px;">
+                                            <i class="icon-globe"></i>
+                                            <span class="show_only_online">{{ _("Online") }}</span>
+                                            <span class="show_only_offline">{{ _("Offline") }}</span>
+                                        </span>
 									</div>
 									<div id="statusbox">
 										<div class="accordion-body collapse in" id="mrb_state_wrapper" data-bind="visible: loginState.isUser() ">
@@ -81,6 +89,14 @@
 															<div id="zoom_monitor_hint" data-bind="visible: (zoom() === 1)" class="muted">{{ _('Scroll to zoom') }}</div>
 														</div>
 													</div>
+                                                    <div class="experimental_feature_beta">
+                                                        {{ _('Object height') }}
+{#                                                         Translators: millimiters, unit of length#}
+                                                        <input class="decent_input" type="number" min="0" max="38" step="1" id="objectZ_input" value="0"
+                                                               data-bind="value: camera.objectZ, valueUpdate: 'input'"
+                                                               style="width:3.5em; display: inline; margin: 0; padding-right:0;"
+                                                        /> {{ _('mm') }}
+                                                    </div>
 												</div>
 											</div>
 										</div>
@@ -248,7 +264,7 @@
 																<a href="#" data-bind="event: {
 																			click: function(d, event){ $root.duplicateSVG($data, event); }
 																		} ">{{ _('duplicate') }}</a>
-																<div class='dropdown pull-right' style='display:inline-block;' >
+																<div class='dropdown pull-right experimental_feature_beta' style='display:inline-block;' >
 																	<a href="#" class="wa_list_item_burger_menu dropdown-toggle" data-toggle="dropdown">
 																		<i class="icon-reorder"></i><b class="caret"></b>
 																	</a>
@@ -260,13 +276,13 @@
 																			<a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'vertically'); }} ">{{ _('vertically') }}</a>
 																			<a href="#" data-bind="event: {click: function(d, event){ $root.splitSVG($data, event, 'horizontally'); }} ">{{ _('horizontally') }}</a>
 																		</li>
-<!--																		<li class="divider"></li>
-																		<li>
+																	    <li class="divider experimental_feature_dev"></li>
+																		<li class="experimental_feature_dev">
 																			<i class="icon-copy" title="{{ _('duplicate') }}"></i>
 																			<a href="#" data-bind="event: {
 																				click: function(d, event){ $root.duplicateSVG($data, event); }
 																				} ">{{ _('duplicate') }}</a>
-																		</li>-->
+																		</li>
 																	</ul>
 																</div>
 
@@ -508,7 +524,6 @@
 							<div class="span8" style="position:relative">
 								{% include 'homing_overlay.jinja2' %}
 								<div id="zoomFactor" data-bind="text: zoom_factor_text"></div>
-                                <div id="markerTooltip" style="visibility: hidden">ANDYTEST TOOLTIP</div>
 								<svg id="area_preview" class="workingarea" visibility="hidden"
 									 data-bind="style: {
 											width: workingAreaWidthPx()+'px',
@@ -549,13 +564,17 @@
                                         </feComponentTransfer>
                                     </filter>
 								</defs>
-								<image id="beamcam_image_svg"
-									xlink:href="/downloads/files/local/cam/beam-cam.jpg" x="0" y="0" height="100%" width="100%"
-									data-bind="attr: {
-											width: workingAreaWidthMM(),
-											height: workingAreaHeightMM(),
-											opacity: previewImgOpacity()
-										}" />
+                                    <g id="obj_height_scale"
+                                       transform="scale(1)"
+                                       data-bind="attr: { transform: zObjectImgTransform() }">
+                                        <image id="beamcam_image_svg"
+                                            xlink:href="/downloads/files/local/cam/beam-cam.jpg" x="0" y="0"
+                                            data-bind="attr: {
+                                                    width: workingAreaWidthMM(),
+                                                    height: workingAreaHeightMM(),
+                                                    opacity: previewImgOpacity()
+                                                }" />
+                                    </g>
 									<g id="scaleGroup" data-bind="attr: { transform: scaleMatrix() }">
 										<g id="placedGcodes" data-bind="visible: true || (state.isPrinting() && !state.isPaused()), attr: { transform: 'matrix(1,0,0,-1,0,'+workingAreaHeightMM()+')' }"></g>
 										<g id="gCodePreview" data-bind="visible: state.isPrinting() || state.isPaused()"></g>

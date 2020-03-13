@@ -25,11 +25,23 @@ MTX_KEY = 'mtx'
 RATIO_W_KEY = 'ratioW'
 RATIO_H_KEY = 'ratioH'
 
-STOP_EVENT_ERR = 'StopEvent was raised'
+STOP_EVENT_ERR = 'StopEvent_was_raised'
 
 HUE_BAND_LB_KEY = 'hue_lower_bound'
 HUE_BAND_LB = 125
 HUE_BAND_UB = 185 # if value > 180 : loops back to 0
+
+# Minimum and Maximum number of pixels a marker should have
+# as seen on the edge detection masks
+# TODO make scalable with picture resolution
+MIN_MARKER_PIX = 700
+MAX_MARKER_PIX = 1500
+
+# Height (mm) from the bottom of the work area to the camera lens.
+CAMERA_HEIGHT = 582
+# Height (mm) - max height at which the Mr Beam II can laser an object.
+MAX_OBJ_HEIGHT = 38
+
 
 PIC_SETTINGS = {CALIB_MARKERS_KEY: None, CORNERS_KEY: None, M2C_VECTOR_KEY: None, CALIBRATION_UPDATED_KEY: False}
 
@@ -41,7 +53,7 @@ from os.path import dirname, basename, isfile, exists
 import cv2
 import numpy as np
 
-PIXEL_THRESHOLD_MIN = 200
+PIXEL_THRESHOLD_MIN = MIN_MARKER_PIX
 
 
 class MbPicPrepError(Exception):
@@ -56,12 +68,14 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
                  last_markers=None, # {'NW': np.array(I, J), ... }
                  size=RESOLUTIONS['1000x780'],
                  quality=90,
+                 zoomed_out=False,
                  debug_out=False,
+                 undistorted=False,
                  blur=7,
                  custom_pic_settings=None,
                  stopEvent=None,
                  threads=-1):
-    # type: (Union[str, np.ndarray], basestring, np.ndarray, np.ndarray, Union[Mapping, basestring], Union[dict, None], tuple, int, bool, int, Union[None, Mapping], Union[None, Event], int) -> object
+    # type: (Union[str, np.ndarray], basestring, np.ndarray, np.ndarray, Union[Mapping, basestring], Union[dict, None], tuple, int, bool, bool, bool, int, Union[None, Mapping], Union[None, Event], int) -> object
     """
     Loads image from path_to_input_image, does some preparations (undistort, warp)
     on it and saves it to path_to_output_img.
@@ -74,6 +88,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
     :param last_markers: used to compensate if a (single) marker is covered or unrecognised
     :param size : (width,height) of output image size, default is (1000,780)
     :param quality: set quality of output image from 0 to 100, default is 90
+    :param zoomed_out: zoom out on the final picture in order to account for object height
     :param debug_out: True if all in between pictures should be saved to output path directory
     :param blur: Amount of blur for the marker detection
     :param custom_pic_settings: Map : used to update certain keys of the pic settings file
@@ -96,13 +111,13 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 
     if not (M2C_VECTOR_KEY in pic_settings and _isValidQdDict(pic_settings[M2C_VECTOR_KEY])):
         pic_settings[M2C_VECTOR_KEY] = None
-        err = 'No valid M2C_VECTORS found, please calibrate.'
+        err = 'No_valid_M2C_VECTORS_found-_please_calibrate'
         logger.error(err)
         return None, None, None, err
 
     if type(input_image) is str:
         # check image path
-        logger.debug('Starting to prepare Image. \ninput: <{}> \noutput: <{}>\ncam dist : <{}>\ncam matrix: <{}>\nsize:{}\nquality:{}\ndebug_out:{}'.format(
+        logger.debug('Starting to prepare Image. \ninput: <{}> - output: <{}>\ncam dist : <{}>\ncam matrix: <{}>\noutput_img_size:{} - quality:{} - debug_out:{}'.format(
                 input_image, path_to_output_image, cam_dist, cam_matrix,
                 size, quality, debug_out))
         if not isfile(input_image):
@@ -113,23 +128,23 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
         # load image
         img = cv2.imread(input_image, cv2.IMREAD_COLOR) #BGR
         if img is None:
-            err = 'Could not load Image. Please check Camera and path_to_image.'
+            err = 'Could_not_load_Image-_Please_check_Camera_and_-path_to_image'
             logger.error(err)
             return None, None, None, err
     elif type(input_image) is np.ndarray:
-        logger.debug('Starting to prepare Image. \ninput: <{}> \noutput: <{}>\ncam dist : <{}>\ncam matrix: <{}>\nsize:{}\nquality:{}\ndebug_out:{}'.format(
-                "numpy ndarray", path_to_output_image, cam_dist, cam_matrix,
+        logger.debug('Starting to prepare Image. \ninput: <{} shape arr> - output: <{}>\ncam dist : <{}>\ncam matrix: <{}>\noutput_img_size:{} - quality:{} - debug_out:{}'.format(
+                input_image.shape, path_to_output_image, cam_dist, cam_matrix,
                 size, quality, debug_out))
         img = input_image
     else:
-        raise ValueError("path_to_input_image in mb_pic needs to be a path (string) or a numpy array")
+        raise ValueError("path_to_input_image-_in_camera_undistort_needs_to_be_a_path_(string)_or_a_numpy_array")
     # undistort image with cam_params
     img = _undistortImage(img, cam_dist, cam_matrix)
 
-    if debug_out:
+    if debug_out or undistorted:
         save_debug_img(img, path_to_output_image, "undistorted")
 
-    if stopEvent.isSet(): return None, None, None, STOP_EVENT_ERR
+    if stopEvent and stopEvent.isSet(): return None, None, None, STOP_EVENT_ERR
 
     # search markers on undistorted pic
     dbg_markers = os.path.join(dirname(path_to_output_image), "markers", basename(path_to_output_image))
@@ -164,7 +179,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
         logger.warning(err)
         return None, markers, missed, err
 
-    if stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR
+    if stopEvent and stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR
 
     if debug_out: save_debug_img(_debug_drawMarkers(img, markers), path_to_output_image, "drawmarkers")
 
@@ -175,10 +190,10 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
     if debug_out: save_debug_img(_debug_drawCorners(img, workspaceCorners), path_to_output_image, "drawcorners")
 
     # warp image
-    warpedImg = _warpImgByCorners(img, workspaceCorners)
+    warpedImg = _warpImgByCorners(img, workspaceCorners, zoomed_out)
     if debug_out: save_debug_img(warpedImg, path_to_output_image, "colorwarp")
 
-    if stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR
+    if stopEvent and stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR
 
     # resize and do NOT make greyscale, then save it
     # cv2.imwrite(filename=path_to_output_image,
@@ -231,7 +246,7 @@ def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1):
                 outputPoints[qd]['pos'] += pos
     return outputPoints
 
-def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d_min=8, d_max=30):
+def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d_min=8, d_max=30, visual_debug=False):
     """
     Tries to find a single pink marker inside the image (or the Region of Interest).
     It then outputs the information about found marker (for now, just its center position).
@@ -250,58 +265,34 @@ def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d
     :return:
     :rtype:
     """
-    logger = logging.getLogger('mrbeam.camera.undistort')
-    # TODO Use mask to eliminate false positives
     # Smooth out picture
     roiBlur = cv2.GaussianBlur(roi, (blur, blur), 0)
     # Use the opposite color of Magenta (Green) to contrast the markers the most
     transformToGreen = np.array([[.0, 1.0, .0]])
     greenBlur = cv2.transform(roiBlur, transformToGreen)
-    # debugShow(greenBlur, "green")
+    # if visual_debug: debugShow(greenBlur, "green")
     # Threshold the green channel
     ret, threshOtsuMask = cv2.threshold(greenBlur, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
     blocksize = 11
     gaussianMask = cv2.adaptiveThreshold(greenBlur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, blocksize, 2)
     roiBlurThresh         =  cv2.bitwise_and( roiBlur, roiBlur, mask=cv2.bitwise_or(threshOtsuMask, gaussianMask))
-    # debugShow(roiBlurThresh, "otsu")
-    hsv_roiBlurThresh     =  cv2.cvtColor(    roiBlurThresh,     cv2.COLOR_BGR2HSV)
-    # Use a sliding hue mask with a local maxima detector to find the magenta markers
-    # logger.debug("%s hsv_roiBlurThresh avg H %d S %d V %d" % tuple(chain([quadrant], np.average(hsv_roiBlurThresh, axis=(0,1)).tolist())))
-    hsvMask, bands = _get_hue_mask(hsv_roiBlurThresh, bandsize=23, pixTrigAmount = PIXEL_THRESHOLD_MIN)
-    if hsvMask is None:
-        cv2.imwrite(debug_out_path.replace('.jpg', '{}.jpg'.format(quadrant)), roiBlurThresh)
-        return None
-    # Label each separate zones on the mask (The black background + the white blobs)
-    lenLabels, labels = cv2.connectedComponents(hsvMask)
-    # logger.debug("Nb of labels : %d", lenLabels)
+    debug_quad_path = debug_out_path.replace('.jpg', '{}.jpg'.format(quadrant))
+    for spot, center, start, stop in _get_white_spots(cv2.bitwise_or(threshOtsuMask, gaussianMask)):
+        spot.dtype = np.uint8
+        if visual_debug: cv2.imshow("{} : spot".format(quadrant), cv2.imdecode(np.fromiter(spot, dtype=np.uint8), cv2.IMREAD_GRAYSCALE)); cv2.waitKey(0)
+        if isMarkerMask(spot[start[0]:stop[0], start[1]:stop[1]]):
+            hue_vals = roiBlurThresh[:,:,0]
+            avg_hue = np.average([roiBlurThresh[pos] for pos in np.nonzero(cv2.bitwise_and(hue_vals, hue_vals, mask=spot))])
+            if HUE_BAND_LB <= avg_hue <= 180 or 0 <= avg_hue <= HUE_BAND_UB:
+                y, x = np.round(center).astype("int")  # y, x
+                debug_roi = cv2.drawMarker(cv2.cvtColor(cv2.bitwise_or(threshOtsuMask, gaussianMask), cv2.COLOR_GRAY2BGR), (x, y), (0, 0, 255), cv2.MARKER_CROSS, line_type=4)
+                cv2.imwrite(debug_quad_path, debug_roi, params=[cv2.IMWRITE_JPEG_QUALITY, 100])
+                return dict(pos=center, )
+    # No marker found
+    cv2.imwrite(debug_quad_path, roiBlurThresh)
+    return None
 
-    unique_labels, counts_elements = np.unique(labels, return_counts=True)
-    # logger.debug("Nb of each labels : %s", counts_elements)
-    # Sort out the most common (background black) label by setting it's freq to 0
-    black_label_index = np.argmax(counts_elements)
-    counts_elements[black_label_index] = 0
-    # Get the second most common label (The biggest white blob)
-    most_present_label = unique_labels[np.argmax(counts_elements)]
-    # get the geometrical center of that blob
-    non_zeros = np.transpose(np.nonzero(labels == most_present_label))
-    center = (np.max(non_zeros, axis=0) + np.min(non_zeros, axis=0)) / 2
-    # TODO extra precision : apply marker_mask to find more precise location to the marker
-
-    # ensure at least some circles were found
-    if debug_out_path is not None:
-        debug_quad_path = debug_out_path.replace('.jpg', '{}.jpg'.format(quadrant))
-        if center is None:
-            cv2.imwrite(debug_quad_path, hsvMask)
-            # debugShow(roiBlurOtsuBand, "shape")
-        else:
-            y, x = np.round(center).astype("int") # y, x
-            debug_roi = cv2.drawMarker(cv2.cvtColor(hsvMask, cv2.COLOR_GRAY2BGR), (x, y), (0, 0, 255), cv2.MARKER_CROSS)
-            cv2.imwrite(debug_quad_path, debug_roi)
-            # debugShow(debug_roi, "shape")
-    if center is None: return None  # hue_lower=hue_lower, pixels=affected, )
-    else:              return dict(pos=center, )  # pixels=affected, hue_lower=hue_lower)
-
-def isMarkerMask(mask, d_min, d_max):
+def isMarkerMask(mask, d_min=10, d_max=60, visual_debug=False):
     """
     Tests the mask to know if it could plausably be a marker
     :param mask: The mask to compare
@@ -309,20 +300,28 @@ def isMarkerMask(mask, d_min, d_max):
     :return: True if it is a marker (circle-ish), False if not
     :rtype: generator[bool]
     """
-    marker_mask_tester = cv2.imread(os.path.join(os.path.dirname(__file__), "marker_mask"))
+    path = os.path.join(os.path.dirname(__file__), "../files/camera/marker_mask.bmp")
+    marker_mask_tester = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+    if marker_mask_tester is None:
+        raise OSError("File not found : %s" % path)
+    h1, w1 = marker_mask_tester.shape[:2]
+    h2, w2 = mask.shape[:2]
+    if h2 > h1 or w2 > w1:
+        return False
     # todo resize mask to correct size
-    # todo crop / resize mask to same size as marker_mask_tester
-    # Tests if the mask is completely inside the marker_mask_tester
-    if isinstance(mask, np.ndarray):
-        yield all(mask == cv2.bitwise_and(marker_mask_tester, mask))
-    elif isinstance(mask, Iterable):
-        for _mask in mask:
-            assert(isinstance(_mask, np.ndarray))
-            yield all(_mask == cv2.bitwise_and(marker_mask_tester, _mask))
-    else:
-        raise TypeError("Expected a numpy array or a sequence of numpy arrays")
+    # crop / resize mask to same size as marker_mask_tester
 
-def _get_hue_mask(hsv_roi, bandsize=11, pixTrigAmount=500, pixTooMany=3000): #(hsv_roi: np.ndarray, bandsize=11, pixTrigAmount=500, pixTooMany=3000):
+    # Center the mask on a canvas the size of the test mask
+    marker = np.zeros(marker_mask_tester.shape[:2], dtype=np.uint8)
+    offH, offW = (h1 - h2)//2, (w1-w2)//2
+    marker[offH:h2+offH, offW:w2+offW] = mask
+    if visual_debug: cv2.imshow("My marker", marker * 255)
+    # Tests if the mask is completely inside the marker_mask_tester,
+    # i.e. it didn't change after applying the mask
+    return np.all(marker == cv2.bitwise_and(marker_mask_tester, marker))
+
+def _get_hue_mask(hsv_roi, pixTrigAmount=MIN_MARKER_PIX):
+    #(hsv_roi: np.ndarray, bandsize=11, pixTrigAmount=500, pixTooMany=3000):
     """
     Returns hue mask with dynamic hue range. Tries to find the right amount of pixels in a given hue window
     not enough pixels have been found (less than PIXEL_THRESHOLD_UPPER)
@@ -348,41 +347,34 @@ def _get_hue_mask(hsv_roi, bandsize=11, pixTrigAmount=500, pixTooMany=3000): #(h
         _bounds = None
         _prev_mask = None
         _prev_bounds = None
-        pix_amount = -1
         for mask, bounds in maskGenerator:
             # debug_logger().debug("Bounds :\n%s\n%s" % bounds)
             # debugShow(maskedImg, "maskedImg")
             coloredPix = np.count_nonzero(mask) # # counts for each value of h s and v
             if not trigger and coloredPix > pixTrigAmount:
-                # print("##########triggered : ", coloredPix)
                 # The mask has a minimum amount of pixels & the pixel count is increasing
                 trigger = True
-                pix_amount = coloredPix
                 _mask, _bounds = mask, bounds
-            elif trigger and (pix_amount == -1 or coloredPix > pix_amount):
-                # print("trigger : {}, better pixies amount : {} < {}".format(trigger, pix_amount, coloredPix))
-                # The mask has a minimum amount of pixels and is still growing
-                pix_amount = coloredPix
-                _mask, _bounds = mask, bounds
-            elif trigger and pix_amount > coloredPix:
-                # The amount of pixels on the mask is now decreasing
+            elif trigger:
                 # Merge with previous masks to maximise the quality of the circle
                 _lb, _ub = np.asarray(_bounds).tolist()
                 lb, ub = np.asarray(bounds).tolist()
                 if _prev_mask is None:
                     # _mask cannot be None
-                    ret_bounds = (np.asarray(min(lb, _lb)), np.asarray(max(_ub, ub)))
-                    return cv2.bitwise_or(_mask, mask), ret_bounds
+                    ret_bounds = (np.asarray(map(min, zip(lb, _lb))), np.asarray(map( max, zip(_ub, ub))))
+                    yield cv2.bitwise_or(_mask, mask), ret_bounds
+                    trigger = False
                 else:
-
                     _prev_lb, _prev_ub = np.asarray(_prev_bounds).tolist()
-                    ret_bounds = tuple(map(np.asarray, [min(lb, _lb, _prev_lb),
-                                                        max(ub, _ub, _prev_ub)]))
+                    ret_bounds = tuple(map(np.asarray, [map(min, zip(lb, _lb, _prev_lb)),
+                                                        map(max, zip(ub, _ub, _prev_ub))]))
                     # the previous img
-                    return reduce(cv2.bitwise_or, (_prev_mask, _mask, mask)), ret_bounds
-                    # TODO Yield in order to cycle through local maximas
+                    yield reduce(cv2.bitwise_or, (_prev_mask, _mask, mask)), ret_bounds
+                    trigger = False
+            _mask, _bounds = mask, bounds
             _prev_mask, _prev_bounds = _mask, _bounds
-        return _mask, _bounds
+        if trigger: yield _mask, _bounds
+        # else: print("No suitable mask found")
 
     # itertools.chain does not chain generators
     def concatGen(generators):
@@ -394,54 +386,36 @@ def _get_hue_mask(hsv_roi, bandsize=11, pixTrigAmount=500, pixTooMany=3000): #(h
             for elm in concatGen(generators[1:]):
                 yield elm
 
-    return maximisePixCount(concatGen([_slidingHueMask(hsv_roi, bandsize+2, sBound=(60, 255), vBound=(60, 255), dS=4, dV=4),
+    return maximisePixCount(concatGen([_slidingHueMask(hsv_roi, steps=4, sBound=(60, 255), vBound=(60, 255)),
                                        # High light situaton : Markers always have a high value and broad variety of saturation
-                                       _slidingHueMask(hsv_roi, bandsize+5, sBound=(40, 255), vBound=(180, 255), dS=15, dV=15, ascending=False),
-                                       # Cold to neutral and dim light doesn't make the markers pop out as well :
-                                       # Saturation is bad, but Hue is usually pretty high
-                                       _slidingHueMask(hsv_roi, bandsize+4, hBound=(145, 190), sBound=(50, 220), vBound=(60, 200), dS=20, dV=20),
+                                       _slidingHueMask(hsv_roi, steps=3, sBound=(40, 255), vBound=(180, 255), ascending=False),
+                                       # dim light doesn't make the markers pop out as well :
+                                       _slidingHueMask(hsv_roi, steps=4, hBound=(110, 190), sBound=(40, 240), vBound=(40, 220)),
+                                       # Last hope
+                                       _slidingHueMask(hsv_roi, steps=4, hBound=(110, 200), sBound=(30, 255), vBound=(20, 255)),
                                        ]))
 
-def _slidingHueMask(hsv_roi, bandSize, hBound=None, sBound=(0, 255), vBound=(0, 255), dS=5, dV=4, ascending=True, refine=-1):
+def _slidingHueMask(hsv_roi, steps, hBound=(HUE_BAND_LB, HUE_BAND_UB), sBound=(30, 255), vBound=(30, 255), ascending=True):
     #(hsv_roi: np.ndarray, bandSize: int, sBound=(0, 255), vBound=(0, 255), dS=5, dV=4, ascending= True, refine=-1):
     """
     Generates masks of the input image by thresholding the image hue inside a certain range.
     That range is then slided around inside HUE_BAND_LB and HUE_BAND_UP. (wraps around when reaching
     the maximum hue of 180 in order to be circular)
-    Slides with increments of bandSize / 2
-    if refine:
-        after sliding, takes the best performing band, and perform a local maxima search with the dichotomic search
+    Slides with given number of steps
     :returns
     :rtype numpy.ndarray, tuple[np.ndarray]
     """
     if ascending:
-        if hBound is not None: h1, h2 = hBound
-        else: h1, h2 = HUE_BAND_LB, HUE_BAND_UB
-        s1, s2 = sBound
-        v1, v2 = vBound
+        h1, h2 = min(hBound), max(hBound)
     else:
-        if hBound is not None: h2, h1 = hBound
-        else: h2, h1 = HUE_BAND_LB, HUE_BAND_UB
-        s1, s2 = sBound[::-1]
-        v1, v2 = vBound[::-1]
-    bands = np.linspace(h1, h2, int(abs(h2-h1) / bandSize * 2) + 1)
-    # bands.append(h2)
-    # subdivide Saturation and Hue in same number of bands (S growing, H decreasing)
-    sBand = np.linspace(s1, s2, len(bands)).astype(int)
-    # dS = 5 # expand Saturation filter window by this size
-    vBand = np.linspace(v2, v1, len(bands)).astype(int)
-    # dV = 4 # expand Value filter window by this size
-    lb, ub, _lb, _ub = None, None, None, None
-    for i, band in enumerate(bands[:-2]):
-        if ascending:
-            lb = np.array([bands[i]  ,     sBand[i]  -dS,           vBand[i+2]-dV], np.uint8)
-            ub = np.array([bands[i+2], min(sBand[i+2]+dS, 255), min(vBand[i]  +dV, 255)], np.uint8)
-        else:
-            ub = np.array([bands[i]  , min(sBand[i]  +dS, 255), min(vBand[i+2]+dV, 255)], np.uint8)
-            lb = np.array([bands[i+2],     sBand[i+2]-dS,           vBand[i]  -dV], np.uint8)
+        h2, h1 = min(hBound), max(hBound)
+    bands = np.linspace(h1, h2, num=steps, endpoint=True)
+    for i, band in enumerate(bands[:-1]):
+        if ascending: l_i, u_i = i, i+1
+        else:         l_i, u_i = i+1, i
+        lb = np.array([bands[l_i], sBound[0], vBound[0]], np.uint8)
+        ub = np.array([bands[u_i], sBound[1], vBound[1]], np.uint8)
         mask = _inRange(hsv_roi, lb, ub)
-        # print("lb {} ub {}".format(lb, ub))
-        # print("mask pix number ", np.count_nonzero(mask))
         yield mask, (lb, ub)
 
 def _inRange(img, lb, ub, colortype='hsv'):
@@ -467,11 +441,12 @@ def _undistortImage(img, dist, mtx):
     mapx, mapy = cv2.initUndistortRectifyMap(mtx, dist, None, newcameramtx, (w, h), 5)
     return cv2.remap(img, mapx, mapy, cv2.INTER_LINEAR)
 
-def _warpImgByCorners(image, corners):
+def _warpImgByCorners(image, corners, zoomed_out=False):
     """
     Warps the region delimited by the corners in order to straighten it.
     :param image: takes an opencv image
     :param corners: as qd-dict
+    :param zoomed_out: wether to zoom out the pic to account for object height
     :return: image with corners warped
     """
 
@@ -489,22 +464,52 @@ def _warpImgByCorners(image, corners):
     height2 = norm(nw - sw)
     maxHeight = max(int(height1), int(height2))
 
+    if zoomed_out:
+        factor = float(MAX_OBJ_HEIGHT) / CAMERA_HEIGHT / 2
+        min_dst_x = factor * maxWidth
+        max_dst_x = (1+factor) * maxWidth
+        min_dst_y = factor * maxHeight
+        max_dst_y = (1+factor) * maxHeight
+        dst_size = (int((1+2*factor) * maxWidth), int((1+2*factor)*maxHeight))
+    else:
+        min_dst_x, max_dst_x = 0, maxWidth - 1
+        min_dst_y, max_dst_y = 0, maxHeight -1
+        dst_size = (maxWidth, maxHeight)
+
+
+
     # source points for matrix calculation
     src = np.array((nw[::-1], ne[::-1], se[::-1], sw[::-1]), dtype="float32")
 
     # destination points in the same order
-    dst = np.array([
-            [0, 0],  # nw
-            [maxWidth - 1, 0],  # ne
-            [maxWidth - 1, maxHeight - 1],  # sw
-            [0, maxHeight - 1]], dtype="float32")  # se
+    dst = np.array([[min_dst_x, min_dst_y],  # nw
+                    [max_dst_x, min_dst_y],  # ne
+                    [max_dst_x, max_dst_y],  # sw
+                    [min_dst_x, max_dst_y]], # se
+                   dtype="float32")
 
     # get the perspective transform matrix
     transMatrix = cv2.getPerspectiveTransform(src, dst)
 
     # compute warped image
-    warpedImg = cv2.warpPerspective(image, transMatrix, (maxWidth, maxHeight))
+    warpedImg = cv2.warpPerspective(image, transMatrix, dst_size)
     return warpedImg
+
+def _get_white_spots(mask, min_pix=MIN_MARKER_PIX, max_pix=MAX_MARKER_PIX):
+    """Iterates over the white connected spots on the picture (aka white blobs)"""
+    # Label each separate zones on the mask (The black background + the white blobs)
+    lenLabels, labels = cv2.connectedComponents(mask)
+    unique_labels, counts_elements = np.unique(labels, return_counts=True)
+    # The filter also filters out the black background
+    filtered_elm = filter(lambda (count, _): max_pix > count > min_pix, zip(counts_elements, unique_labels))
+    unique_labels = [label for _, label in sorted(filtered_elm)]
+    for label in unique_labels:
+        bool_connected_spot = labels == label
+        # get the geometrical center of that blob
+        non_zeros = np.transpose(np.nonzero(bool_connected_spot))
+        start, stop = np.min(non_zeros, axis=0) , np.max(non_zeros, axis=0)
+        center = (start + stop) / 2
+        yield bool_connected_spot, center, start, stop
 
 def _debug_drawMarkers(raw_img, markers):
     """Draw the markers onto an image"""
@@ -534,8 +539,8 @@ def save_debug_img(img, normal_img_path, folderName):
     cv2.imwrite(dbg_path, img)
 
 def _mkdir(folder):
-    if not exists(dirname(folder)):
-        os.mkdir(dirname(folder))
+    if not exists(folder):
+        os.makedirs(folder)
 
 def _getCamParams(path_to_params_file):
     """
@@ -543,16 +548,16 @@ def _getCamParams(path_to_params_file):
     :returns cam_params as dict
     """
     if not isfile(path_to_params_file) or os.stat(path_to_params_file).st_size == 0:
-        logging.error("Please provide a valid: PATH_TO/camera_params.npz or similiar")
-        raise MbPicPrepError("Please provide a valid: PATH_TO/camera_params.npz or similiar")
+        logging.error("Please_provide_a_valid-_PATH_TO/camera_params_npz_or_similiar")
+        raise MbPicPrepError("Please_provide_a_valid-_PATH_TO/camera_params_npz_or_similiar")
     else:
         try:
             valDict = np.load(path_to_params_file)
         except Exception as e:
-            raise MbPicPrepError('Exception while loading cam_params: {}'.format(e))
+            raise MbPicPrepError('Exception_while_loading_cam_params-_{}'.format(e))
 
         if not all(param in valDict for param in [DIST_KEY, MTX_KEY]):
-            raise MbPicPrepError('CamParams missing in File, please do a new Camera Calibration. (Chessboard)')
+            raise MbPicPrepError('CamParams_missing_in_File-_please_do_a_new_Camera_Calibration_(Chessboard)')
 
     return valDict
 
@@ -563,7 +568,7 @@ def _getPicSettings(path_to_settings_file, custom_pic_settings=None):
     :return: pic_settings as dict
     """
     if not isfile(path_to_settings_file) or os.stat(path_to_settings_file).st_size == 0:
-        print("No pic_settings file found, created new one.")
+        # print("No pic_settings file found, created new one.")
         pic_settings = PIC_SETTINGS
         if custom_pic_settings is not None:
             pic_settings = dict_merge(pic_settings, custom_pic_settings)
@@ -578,7 +583,7 @@ def _getPicSettings(path_to_settings_file, custom_pic_settings=None):
                     pic_settings[M2C_VECTOR_KEY][qd] = np.array(pic_settings[M2C_VECTOR_KEY][qd])
             settings_changed = False
         except:
-            print("Exception while loading '%s' > pic_settings file not readable, created new one. ", yaml_file)
+            # print("Exception while loading '%s' > pic_settings file not readable, created new one. ", yaml_file)
             pic_settings = PIC_SETTINGS
             settings_changed = True
 
@@ -664,6 +669,7 @@ if __name__ == "__main__":
                                                               last_markers=None,
                                                               size=(2000, 1560),
                                                               quality=args.quality,
+                                                              zoomed_out=False,
                                                               debug_out=args.debug,
                                                               blur=7,
                                                               stopEvent=None,

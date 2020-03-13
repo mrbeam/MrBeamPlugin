@@ -48,6 +48,18 @@ $(function(){
 		self.previewImgOpacity.subscribe(function(newVal){
 			let col = newVal > 0.25 ? '#eeeeee':'#999999';
 			$('#coord_pattern_marker').attr('stroke', col);
+			if(newVal !== self.settings.settings.plugins.mrbeam.cam.previewOpacity()){
+				if (self.settings.savetimer !== undefined) {
+					clearTimeout(self.settings.savetimer);
+				}
+				self.settings.settings.plugins.mrbeam.cam.previewOpacity(newVal);
+				self.settings.savetimer = setTimeout(function () {
+						self.settings.saveData(undefined, function(newSettings){
+							console.log("Saved previewOpacity", newSettings.plugins.mrbeam.cam.previewOpacity);
+							self.settings.savetimer = undefined;
+						});
+					}, 2000);
+			}
 		});
 
 		self.workingAreaWidthMM = ko.computed(function(){
@@ -56,6 +68,13 @@ $(function(){
 		self.workingAreaHeightMM = ko.computed(function(){
 			return self.profile.currentProfileData().volume.depth();
 		}, self);
+		self.imgTranslate = ko.computed(function () {
+			// Used for the translate transformation of the picture on the work area
+			return [-self.workingAreaWidthMM(),-self.workingAreaHeightMM()].map(x=>x*self.camera.imgHeightScale()).join(' ');
+		});
+		self.zObjectImgTransform = ko.computed(function() {
+			return 'scale('+(1 + 2*self.camera.imgHeightScale())+') translate('+self.imgTranslate()+')';
+		});
 		self.flipYMatrix = ko.computed(function(){
 			var h = self.workingAreaHeightMM();
 			return Snap.matrix(1,0,0,-1,0,h);
@@ -876,17 +895,17 @@ $(function(){
 				let failReason = "";
 				switch (method) {
 					case 'stroke-color':
-						failReason = "Didn't find different stroke colors.";
+						failReason = gettext("No different line colors found.");
 						break;
 					case 'non-intersecting':
-						failReason = "Didn't find non-intersecting shapes.";
+						failReason = gettext("No non-intersecting shapes found.");
 						break;
 					case 'divide':
-						failReason = "Looks like a single path.";
+						failReason = gettext("Looks like a single path.");
 				}
 				new PNotify({
 					title: gettext("Element not splittable with this method."),
-					text: gettext("Can't split this design. " + failReason),
+					text: gettext("Can't split this design.") + ' ' + failReason,
 					type: "info",
 					hide: true
 				});
@@ -1917,6 +1936,8 @@ $(function(){
 		self.onAllBound = function(allViewModels){
 			self.svgDPI = self.settings.settings.plugins.mrbeam.svgDPI; // we assign ko function
 			self.dxfScale = self.settings.settings.plugins.mrbeam.dxfScale;
+			self.previewImgOpacity(self.settings.settings.plugins.mrbeam.cam.previewOpacity());
+
 			self.gc_options = ko.computed(function(){
 				return {
 					beamOS: BEAMOS_DISPLAY_VERSION,

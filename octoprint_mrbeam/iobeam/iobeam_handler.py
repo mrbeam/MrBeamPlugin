@@ -151,7 +151,7 @@ class IoBeamHandler(object):
 	DATASET_IOBEAM =	           	 	"iobeam"
 	DATASET_HW_MALFUNCTION =	   	 	"hardware_malfunction"
 	DATASET_I2C =           	   	 	"i2c"
-	DATASET_I2C_TEST =           	   	"i2c_test"
+	DATASET_I2C_MONITORING =            "i2c_monitoring"
 
 	def __init__(self, plugin):
 		self._plugin = plugin
@@ -179,6 +179,7 @@ class IoBeamHandler(object):
 
 		self.request_id = 1
 		self._request_id_lock = threading.Lock()
+		self._last_i2c_monitoring_dataset = None
 
 		self._settings = plugin._settings
 
@@ -188,6 +189,7 @@ class IoBeamHandler(object):
 		self._laserhead_handler = self._plugin.laserhead_handler
 		self._analytics_handler = self._plugin.analytics_handler
 		self._hw_malfunction_handler = self._plugin.hw_malfunction_handler
+		self._user_notification_system = self._plugin.user_notification_system
 
 		self._subscribe()
 
@@ -285,15 +287,12 @@ class IoBeamHandler(object):
 		self._logger.error(
 			"Received iobeam version: %s - version OUTDATED. IOBEAM_MIN_REQUIRED_VERSION: %s",
 			self.iobeam_version, self.IOBEAM_MIN_REQUIRED_VERSION)
-		self._plugin.notify_frontend(
-			title=gettext("Software Update required"),
-			text=gettext(
-				"Module 'iobeam' is outdated. Please run software update from 'Settings' > 'Software Update' "
-				"before you start a laser job."),
-			type="error",
-			sticky=True,
-			replay_when_new_client_connects=True,
-			force=True,
+		self._user_notification_system.show_notifications(
+			self._user_notification_system.get_legacy_notification(
+				title="Software Update required",
+				text="Module 'iobeam' is outdated. Please run software update from 'Settings' > 'Software Update' before you start a laser job.",
+				is_err=True,
+			)
 		)
 
 	def subscribe(self, event, callback):
@@ -582,8 +581,8 @@ class IoBeamHandler(object):
 					err = self._handle_hw_malfunction(dataset)
 				elif name == self.DATASET_I2C:
 					err = self._handle_i2c(dataset)
-				elif name == self.DATASET_I2C_TEST:
-					err = self._handle_i2c_test(dataset)
+				elif name == self.DATASET_I2C_MONITORING:
+					err = self._handle_i2c_monitoring(dataset)
 				elif name == self.MESSAGE_DEVICE_UNUSED:
 					pass
 				elif name == self.MESSAGE_ERROR:
@@ -669,9 +668,19 @@ class IoBeamHandler(object):
 		self._call_callback(IoBeamValueEvents.COMPRESSOR_STATIC, dataset)
 		return 0
 
-	def _handle_i2c_test(self, dataset):
+	def _handle_i2c_monitoring(self, dataset):
 		if not dataset.get('state', None) == 'ok':
-			self._logger.warn("_handle_i2c_test: %s", dataset)
+			self._logger.error("i2c_monitoring state change reported: %s", dataset, analytics=False)
+			if not self._last_i2c_monitoring_dataset is None and not self._last_i2c_monitoring_dataset.get('state', None) == dataset.get('state', None):
+				dataset_data = dataset.get('data', dict())
+				params = dict(iobeam_version=self.iobeam_version,
+					state=dataset.get('state', None),
+					method=dataset_data.get('test_mode', None),
+					current_devices=dataset_data.get('current_devices', []),
+					lost_devices=dataset_data.get('lost_devices', []),
+					new_devices=dataset_data.get('new_devices', []))
+				self._analytics_handler.add_iobeam_i2c_monitoring(**params)
+		self._last_i2c_monitoring_dataset = dataset
 
 	def _handle_laser(self, dataset):
 		"""
