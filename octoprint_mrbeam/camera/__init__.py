@@ -42,7 +42,7 @@ DEFAULT_STILL_RES = RESOLUTIONS['2592x1944']  # Be careful : Resolutions accepte
 
 # threshold; 2 consecutive pictures need to have a minimum difference
 # before being undistorted and served
-DIFF_TOLERANCE = 30
+DIFF_TOLERANCE = 50
 
 
 class MrbPicWorker(object):
