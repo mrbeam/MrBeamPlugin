@@ -61,7 +61,7 @@ class ImageProcessor():
 	              dithering = False,
 	              engraving_mode = None,
 	              pierce_time = 0,
-	              overshoot_distance = 1,
+	              overshoot_distance = 1.0,
 	              eng_compressor = 100, # DreamCut.
 	              material = None):
 
@@ -123,7 +123,7 @@ class ImageProcessor():
 		self.workingAreaHeight = workingAreaHeight
 		if(self.pierce_time > 0 and self.overshoot_distance > 0):
 			self.log.info("Disabling overshoot, pierce time is set.")
-			self.overshoot_distance = 0
+			self.overshoot_distance = 0.0
 
 
 		# checks if intensity settings are inverted eg. anodized aluminum
@@ -520,10 +520,9 @@ class ImageProcessor():
 		"""
 
 		# Calculate line start coordinates (including overshoot distance)
-		if(direction_positive):
-			x = img_pos_mm[0] + self.beam * line_info['left'] - self.overshoot_distance
-		else:
-			x = img_pos_mm[0] + self.beam * line_info['right'] + self.overshoot_distance
+		direction = 1 if direction_positive else -1
+		side = 'left' if direction_positive else 'right'
+		x = img_pos_mm[0] + self.beam * line_info[side] - direction * self.overshoot_distance
 
 		# Move to line start coordinates
 		comment = None
@@ -536,15 +535,13 @@ class ImageProcessor():
 
 		# Calculate the overshoot move
 		if(self.overshoot_distance > 0):
-			if(direction_positive):
-				x = x + self.overshoot_distance
-			else:
-				x = x - self.overshoot_distance
-
+			x += direction * self.overshoot_distance / 2
 			comment = None
 			if(debug): comment = "overshoot move"
-			gc = self._get_gcode_g0(x=x, comment=comment)
-			self._append_gcode(gc)
+			self._append_gcode(self._get_gcode_g0(x=x, comment=comment))
+			self._append_gcode('M3S0') # initialize laser
+			x += direction * self.overshoot_distance / 2
+			self._append_gcode(self._get_gcode_g0(x=x, comment=comment))
 			self.gc_ctx.s = 0
 			self.gc_ctx.x = x
 
@@ -562,15 +559,15 @@ class ImageProcessor():
 
 		x = self.gc_ctx.x
 		if(self.overshoot_distance > 0):
-			if(direction_positive):
-				x = x + self.overshoot_distance
-			else:
-				x = x - self.overshoot_distance
+			direction = 1 if direction_positive else -1
+			x += direction * self.overshoot_distance / 2
 
 			comment = None
 			if(debug): comment = "overshoot move"
-			gc = self._get_gcode_g0(x=x, comment=comment)
-			self._append_gcode(gc)
+			self._append_gcode(self._get_gcode_g0(x=x, comment=comment))
+			self._append_gcode('M5') # shutdown laser
+			x += direction * self.overshoot_distance / 2
+			self._append_gcode(self._get_gcode_g0(x=x, comment=comment))
 			self.gc_ctx.s = 0
 			self.gc_ctx.x = x
 		else:
@@ -757,7 +754,7 @@ class ImageProcessor():
 		if(not brightness in self._lookup_intensity):
 			intensity = (1.0 - brightness/255.0) * (self.intensity_black - self.intensity_white) + self.intensity_white
 			self._lookup_intensity[brightness] = int(intensity)
-		return self._lookup_intensity[brightness];
+		return self._lookup_intensity[brightness]
 
 	def get_feedrate(self, brightness):
 		if(not brightness in self._lookup_feedrate):
