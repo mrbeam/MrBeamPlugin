@@ -477,7 +477,10 @@ class AnalyticsHandler(object):
 		self._add_job_event(ak.Job.Event.Print.STARTED)
 
 	def _event_print_progress(self, event, payload):
-		laser_temp, laser_intensity, dust_value = None
+		laser_temp = None
+		laser_intensity = None
+		dust_value = None
+
 		if self._current_lasertemp_collector:
 			laser_temp = self._current_lasertemp_collector.get_latest_value()
 		if self._current_intensity_collector:

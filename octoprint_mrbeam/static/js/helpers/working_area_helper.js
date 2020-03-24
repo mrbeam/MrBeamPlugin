@@ -62,7 +62,7 @@ class WorkingAreaHelper {
 	/**
 	 * Workaround of a firefox bug which breaks quotes / brackets.
 	 * Solution is pragmatic - just replacing bogus characters after things got wrong.
-	 * 
+	 *
 	 * @param {type} svgStr
 	 * @returns {string} svgStr
 	 */
@@ -80,7 +80,7 @@ class WorkingAreaHelper {
 
 	/**
 	 * Returns with what program and version the given svg file was created. E.g. 'coreldraw'
-	 * 
+	 *
 	 * @param fragment (result of Snaps .select() .selectAll() .parse(), ...
 	 * @returns {object} keys: generator, version
 	 */
@@ -201,8 +201,10 @@ class WorkingAreaHelper {
 	static isBinaryData(str) {
 		return /[\x00-\x08\x0E-\x1F]/.test(str);
 	}
-	static isEmptyFile(str) {
-		return str === "";
+
+	static isEmptyFile(fragment) {
+	    // https://github.com/mrbeam/MrBeamPlugin/issues/787
+	    return fragment.node.querySelectorAll('svg > *').length <= 0
 	}
 }
 

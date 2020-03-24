@@ -1,4 +1,3 @@
-
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from util.pip_util import get_version_of_pip_module
 
@@ -613,7 +612,3 @@ def _is_override_in_settings(self, module_id):
 		_logger.info("Module %s has overriding config in settings!", module_id)
 		return True
 	return False
-
-
-
-
