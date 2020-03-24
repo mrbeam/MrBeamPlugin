@@ -444,8 +444,8 @@ $(function(){
 					self.file_not_readable();
 					return;
 				}
-				if(WorkingAreaHelper.isEmptyFile(fragment.node.textContent)) { // zerobyte files
-					self.file_not_readable();
+				if(WorkingAreaHelper.isEmptyFile(fragment)) { // empty svg files
+					self.empty_svg();
 					return;
 				}
 				var id = self.getEntryId();
@@ -1277,10 +1277,22 @@ $(function(){
 		};
 
 		self.file_not_readable = function(){
-			var error = "<p>" + _.sprintf(gettext("Something went wrong while reading this file.%(topen)sSorry!%(tclose)sPlease check it with another application. If it works there, our support team would be happy to take a look."), {topen: "<br/><h3 style='text-align:center;'>", tclose: "</h3><br/>"}) + "</p>";
+			var error = "<p>" + _.sprintf(gettext("The selected design file can not be handled. Please make sure it is a valid design file.")) + "</p>";
 			new PNotify({
-				// Translators: "in the sense of Ouch!"
-				title: gettext("Oops."),
+				title: gettext("File error."),
+				text: error,
+				type: "error",
+				hide: false,
+				buttons: {
+					sticker: false
+				}
+			});
+		};
+
+		self.empty_svg = function(){
+			var error = "<p>" + _.sprintf(gettext("The selected design file does not have any content.")) + "</p>";
+			new PNotify({
+				title: gettext("Empty File."),
 				text: error,
 				type: "error",
 				hide: false,
