@@ -501,6 +501,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			    "js/lib/load-image.all.min.js",  # to load custom material images
 			    "js/settings/custom_material.js",
 				"js/design_store.js",
+				"js/settings_menu_navigation.js",
 			    ],
 			css=["css/mrbeam.css",
 			     "css/backlash_settings.css",

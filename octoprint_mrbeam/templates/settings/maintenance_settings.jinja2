@@ -30,7 +30,7 @@
                     <h3><span data-bind="text: prefilterUsageHours, style: {color: prefilterShowWarning()? '#e25303' : ''}"></span><span data-bind="text: prefilterLifespanHours"></span></h3>
                 </td>
                 <td class="maintenance-reset-column">
-                    <button class="btn btn-mini maintenance-reset-btn" data-bind="click: resetPrefilterUsage">{{ _('Reset') }}</button>
+                    <button class="btn maintenance-reset-btn" data-bind="click: resetPrefilterUsage">{{ _('Reset') }}</button>
                 </td>
             </tr>
             <tr>
@@ -57,7 +57,7 @@
                     <h3><span data-bind="text: carbonFilterUsageHours, style: {color: carbonFilterShowWarning()? '#e25303' : ''}"></span><span data-bind="text: carbonFilterLifespanHours"></span></h3>
                 </td>
                 <td class="maintenance-reset-column">
-                    <button class="btn btn-mini maintenance-reset-btn" data-bind="click: resetCarbonFilterUsage">{{ _('Reset') }}</button>
+                    <button class="btn maintenance-reset-btn" data-bind="click: resetCarbonFilterUsage">{{ _('Reset') }}</button>
                 </td>
             </tr>
             <tr>
@@ -90,7 +90,7 @@
                     <h3><span data-bind="text: laserHeadUsageHours, style: {color: laserHeadShowWarning()? '#e25303' : ''}"></span><span data-bind="text: laserHeadLifespanHours"></span></h3>
                 </td>
                 <td class="maintenance-reset-column">
-                    <button class="btn btn-mini maintenance-reset-btn" data-bind="click: resetLaserHeadUsage">{{ _('Reset') }}</button>
+                    <button class="btn maintenance-reset-btn" data-bind="click: resetLaserHeadUsage">{{ _('Reset') }}</button>
                 </td>
             </tr>
             <tr data-bind="visible: needsGantryMaintenance()">
@@ -117,7 +117,7 @@
                     <h3><span data-bind="text: gantryUsageHours, style: {color: gantryShowWarning()? '#e25303' : ''}"></span><span data-bind="text: gantryLifespanHours"></span></h3>
                 </td>
                 <td class="maintenance-reset-column">
-                    <button class="btn btn-mini maintenance-reset-btn" data-bind="click: resetGantryUsage">{{ _('Reset') }}</button>
+                    <button class="btn maintenance-reset-btn" data-bind="click: resetGantryUsage">{{ _('Reset') }}</button>
                 </td>
             </tr>
         </table>
