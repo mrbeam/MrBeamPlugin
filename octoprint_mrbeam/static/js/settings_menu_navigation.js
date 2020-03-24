@@ -1,5 +1,4 @@
 $(document).ready(function () {
-    console.log("-----------------------------------------");
     let settingsElement = $("#settings_dialog #settings_dialog_menu ul li");
     // let settingsActiveElement = $("#settings_dialog #settings_dialog_menu ul li.active");
     settingsElement.hover(
@@ -9,5 +8,4 @@ $(document).ready(function () {
         function () {
                 $(this).prev().removeClass("prev");
         });
-    console.log("-----------------------------------------");
 });
