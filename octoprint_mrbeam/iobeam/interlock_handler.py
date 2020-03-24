@@ -12,8 +12,8 @@ def interLockHandler(plugin):
 	global _instance
 	if _instance is None:
 		_instance = InterLockHandler(plugin,
-									 plugin._event_bus,
-									 plugin._plugin_manager)
+                                     plugin._event_bus,
+                                     plugin._plugin_manager)
 	return _instance
 
 
