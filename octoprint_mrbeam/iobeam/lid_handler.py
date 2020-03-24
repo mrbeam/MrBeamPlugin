@@ -9,7 +9,6 @@ import os
 import shutil
 import logging
 
-import cv2
 from flask.ext.babel import gettext
 # from typing import Dict, Any, Union, Callable
 
@@ -23,7 +22,6 @@ try:
 	from octoprint_mrbeam.camera.undistort import _getCamParams, _getPicSettings, DIST_KEY, MTX_KEY
 	from octoprint_mrbeam.util import json_serialisor, logme
 	# TODO mb pic does not rely on picamera, should not use a Try catch.
-	import mb_picture_preparation as mb_pic
 	PICAMERA_AVAILABLE = True
 except ImportError as e:
 	PICAMERA_AVAILABLE = False
@@ -420,42 +418,9 @@ class PhotoCreator(object):
 				if success_1:
 					self._ready_to_send_pic(correction_result)
 					self.badQualityPicCount = 0
-				if cam_params is not None:
-					success_2, correction_result2 = self._legacy_detect_algo(latest,
-                                                                             path_to_cam_params,
-                                                                             path_to_pic_settings,
-                                                                             path_to_last_markers,
-                                                                             scaled_output_size,
-                                                                             quality=quality)
 					if not self.active(): break
-
-					self._logger.debug("correct result 2 %s", correction_result2)
-					if not success_2:
-						errorID = correction_result2['error'].split(':')[0]
-						errorString = correction_result2['error'].split(':')[1]
-						if errorID == 'BAD_QUALITY':
-							self.badQualityPicCount += 1
-							self._logger.error(errorString + '_Number_of_bad_quality_pics_{}'.format(self.badQualityPicCount))
-							if self.badQualityPicCount > 10:
-								self._logger.error('Too_many_bad_pics-_Show_bad_image_now'.format(self.badQualityPicCount))
-								self._ready_to_send_pic(correction_result2)
-						elif errorID == 'NO_CALIBRATION' or errorID == 'NO_PICTURE_FOUND':
-							self._logger.error(errorString)
-						else:  # Unknown error
-							self._logger.error(errorID + errorString)
-					if success_2 and not success_1:
-						self._ready_to_send_pic(correction_result2)
-						self.badQualityPicCount = 0
-						# Use this picture
-					elif not success_1:
-						# Just tell front end that there was an error
-						self._send_frontend_picture_metadata(correction_result2)
-					self._add_result_to_analytics(session_details,
-                                                  'legacy',
-                                                  correction_result2['markers_found'],
-                                                  increment_pic=False,
-                                                  error=correction_result2['error'])
-				elif not success_1:
+				else:
+					self.badQualityPicCount += 1
 					# Just tell front end that there was an error
 					self._send_frontend_picture_metadata(correction_result)
 
@@ -508,31 +473,6 @@ class PhotoCreator(object):
                              'workspace_corner_ratio': float(MAX_OBJ_HEIGHT) / CAMERA_HEIGHT / 2,
                              'error': err}
 		return success_1, correction_result, markers, missed, err
-
-	def _legacy_detect_algo(self, pic,
-                            path_to_cam_params,
-                            path_to_pic_settings,
-                            path_to_last_markers,
-                            out_pic_size,
-                            quality=OK_QUALITY):
-		# Write the img to disk for the 2nd algo
-		w = self._settings.get(["cam", "cam_img_width"])
-		h = self._settings.get(["cam", "cam_img_height"])
-		cv2.imwrite(self.tmp_img_raw, cv2.resize(pic, (w, h)))
-		correction_result2 = mb_pic.prepareImage(self.tmp_img_raw,
-                                              self.tmp_img_prepared,
-                                              path_to_cam_params,
-                                              path_to_pic_settings,
-                                              path_to_last_markers,
-                                              size=out_pic_size,  # (h, w),
-                                              save_undistorted=self.undistorted_pic_path,
-                                              quality=quality,
-                                              debug_out=self.save_debug_images,
-                                              stopEvent=self.stopEvent, )
-
-		success_2 = not correction_result2['error']
-		correction_result2['successful_correction'] = success_2
-		return success_2, correction_result2
 
 	# @logme(True)
 	def _add_result_to_analytics(self,
