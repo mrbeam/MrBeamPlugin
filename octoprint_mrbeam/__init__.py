@@ -5,6 +5,7 @@ import __builtin__
 import copy
 import json
 import os
+import platform
 import pprint
 import socket
 import threading
@@ -24,6 +25,8 @@ from octoprint.server.util.flask import restricted_access, get_json_command_from
 from octoprint.util import dict_merge
 from octoprint.settings import settings
 from octoprint.events import Events as OctoPrintEvents
+
+IS_X86 = platform.machine() == 'x86_64'
 
 from octoprint_mrbeam.__version import __version__
 from octoprint_mrbeam.iobeam.iobeam_handler import ioBeamHandler, IoBeamEvents
@@ -75,7 +78,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
                    octoprint.plugin.ShutdownPlugin,
                    octoprint.plugin.EnvironmentDetectionPlugin):
 	# CONSTANTS
-	DEVIE_INFO_FILE = '/etc/mrbeam'
+	DEVICE_INFO_FILE = '/etc/mrbeam'
 
 	ENV_PROD = "PROD"
 	ENV_DEV = "DEV"
@@ -1921,10 +1924,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			# yes, let's go with the actual host name until changes have applied.
 			self._hostname = hostname_socket
 
-			if hostname_dev_info != hostname_socket:
-				self._logger.warn(
-					"getHostname() Hostname from device_info file does NOT match system hostname. device_info: {dev_info}, system hostname: {sys}. Setting system hostname to {dev_info}"
-					.format(dev_info=hostname_dev_info, sys=hostname_socket))
+			if hostname_dev_info != hostname_socket and not IS_X86:
+				self._logger.warn("getHostname() Hostname from device_info file does NOT match system hostname. device_info: {dev_info}, system hostname: {sys}. Setting system hostname to {dev_info}"
+				                  .format(dev_info=hostname_dev_info, sys=hostname_socket))
 				exec_cmd("sudo /root/scripts/change_hostname {}".format(hostname_dev_info))
 				exec_cmd("sudo /root/scripts/change_apname {}".format(hostname_dev_info))
 				self._logger.warn("getHostname() system hostname got changed to: {}. Requires reboot to take effect!".format(hostname_dev_info))
@@ -2000,19 +2002,25 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			ok = None
 			try:
 				db = dict()
-				with open(self.DEVIE_INFO_FILE, 'r') as f:
+				with open(self.DEVICE_INFO_FILE, 'r') as f:
 					for line in f:
 						line = line.strip()
 						token = line.split('=')
 						if len(token) >= 2:
 							db[token[0]] = token[1]
-					ok = True
+				return self._device_info.get(key, default)
 			except Exception as e:
 				ok = False
-				self._logger.error("Can't read device_info_file '%s' due to exception: %s", self.DEVIE_INFO_FILE, e)
-			if ok:
-				self._device_info = db
-		return self._device_info.get(key, default)
+				self._logger.error("Can't read device_info_file '%s' due to exception: %s", self.DEVICE_INFO_FILE, e)
+				if IS_X86:
+					self._device_info = dict(
+						octopi="PROD 2019-12-12 13:05 1576155948",
+						hostname="MrBeam-DEV",
+						device_series="2X",
+						device_type="MrBeam2X",
+						serial="000000000694FD5D-2X",
+						image_correction_markers="MrBeam2C-pink",)
+					return self._device_info.get(key, default)
 
 	def isFirstRun(self):
 		return self._settings.global_get(["server", "firstRun"])
