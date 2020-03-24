@@ -452,6 +452,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/maintenance.js",
 				# "js/review.js",  TODO IRATXE: disabled for now
 				"js/util.js",
+				"js/settings_menu_navigation.js",
 			    ],
 			css=["css/mrbeam.css",
 			     "css/tinyColorPicker.css",
