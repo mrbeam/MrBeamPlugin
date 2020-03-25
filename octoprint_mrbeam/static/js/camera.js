@@ -55,20 +55,10 @@ $(function(){
             if ('beam_cam_new_image' in data) {
                 const mf = data['beam_cam_new_image']['markers_found'];
                 ['NW', 'NE', 'SE', 'SW'].forEach(function(m) {
-                    if(mf[m] !== undefined) {
-                        // legacy algo uses dictionnary
-                        if (mf[m].recognized === true) {
-                            self.cameraMarkerElem.removeClass('marker' + m);
-                        } else {
-                            self.cameraMarkerElem.addClass('marker' + m);
-                        }
+                    if(mf.includes(m)) {
+                        self.cameraMarkerElem.removeClass('marker' + m);
                     } else {
-                        // New algo lists the detected corners
-                        if(mf.includes(m)) {
-                            self.cameraMarkerElem.removeClass('marker' + m);
-                        } else {
-                            self.cameraMarkerElem.addClass('marker' + m);
-                        }
+                        self.cameraMarkerElem.addClass('marker' + m);
                     }
                 });
 
