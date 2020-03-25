@@ -138,7 +138,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 		img = input_image
 	else:
 		raise ValueError("path_to_input_image-_in_camera_undistort_needs_to_be_a_path_(string)_or_a_numpy_array")
-	if cam_dist and cam_matrix:
+	if cam_dist is not None and cam_matrix is not None:
 		# undistort image with cam_params
 		img = _undistortImage(img, cam_dist, cam_matrix)
 
