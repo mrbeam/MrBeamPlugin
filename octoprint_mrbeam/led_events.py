@@ -1,5 +1,3 @@
-
-
 import threading
 from distutils.version import LooseVersion
 from octoprint.events import Events, CommandTrigger, GenericEventListener

@@ -174,6 +174,8 @@ $(function() {
                         message: gettext("Please retype your password.")
                     });
                 }
+
+                $('#wizard_dialog > .modal-body').scrollTop($('#wizard_dialog > .modal-body').height());
                 return false;
             }
         };

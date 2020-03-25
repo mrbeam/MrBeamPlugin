@@ -977,9 +977,9 @@ class IoBeamHandler(object):
 
 	def _handle_processing_time(self, processing_time, message, err, log_stats=False):
 		self.processing_times_log.append(dict(ts=time.time(),
-											  processing_time = processing_time,
-											  message = message,
-											  error_count = err))
+                                              processing_time = processing_time,
+                                              message = message,
+                                              error_count = err))
 		if processing_time > self.PROCESSING_TIME_WARNING_THRESHOLD:
 			self._logger.warn("Message handling time took %ss. (Errors: %s, message: '%s')", processing_time, err, message)
 		if log_stats or processing_time > self.PROCESSING_TIME_WARNING_THRESHOLD:

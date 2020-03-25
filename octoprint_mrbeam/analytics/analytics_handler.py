@@ -477,11 +477,22 @@ class AnalyticsHandler(object):
 		self._add_job_event(ak.Job.Event.Print.STARTED)
 
 	def _event_print_progress(self, event, payload):
+		laser_temp = None
+		laser_intensity = None
+		dust_value = None
+
+		if self._current_lasertemp_collector:
+			laser_temp = self._current_lasertemp_collector.get_latest_value()
+		if self._current_intensity_collector:
+			laser_intensity = self._current_intensity_collector.get_latest_value()
+		if self._current_dust_collector:
+			dust_value = self._current_dust_collector.get_latest_value()
+
 		data = {
 			ak.Job.Progress.PERCENT: payload['progress'],
-			ak.Job.Progress.LASER_TEMPERATURE: self._current_lasertemp_collector.get_latest_value(),
-			ak.Job.Progress.LASER_INTENSITY: self._current_intensity_collector.get_latest_value(),
-			ak.Job.Progress.DUST_VALUE: self._current_dust_collector.get_latest_value(),
+			ak.Job.Progress.LASER_TEMPERATURE: laser_temp,
+			ak.Job.Progress.LASER_INTENSITY: laser_intensity,
+			ak.Job.Progress.DUST_VALUE: dust_value,
 			ak.Job.Duration.CURRENT: round(payload['time'], 1),
 			ak.Job.Fan.RPM: self._dust_manager.get_fan_rpm(),
 			ak.Job.Fan.STATE: self._dust_manager.get_fan_state(),

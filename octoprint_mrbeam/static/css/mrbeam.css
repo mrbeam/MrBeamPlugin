@@ -2563,7 +2563,40 @@ input.search-query,
 
 
 /*
-* === USER RATING ===
+* === CUSTOM MATERIAL IMAGE ===
+*/
+
+#custom_material_image_reset {
+    position: absolute;
+    transform: translate(-105%);
+    font-size: 1.5em;
+    color: white;
+    opacity: 0.8;
+    text-decoration: none;
+}
+
+#custom_material_image_reset:hover {
+    color: black;
+    opacity: 0.8;
+}
+
+#custom_material_image_edit {
+    position: absolute;
+    top: 125px;
+    transform: translate(-105%);
+    font-size: 1.5em;
+    color: white;
+    opacity: 0.8;
+    pointer-events: none;
+}
+
+#custom_material_image:hover ~ #custom_material_image_edit {
+    color: black;
+    opacity: 0.8;
+}
+
+/**
+* === EXPERIMENTAL FEATURES ===
 */
 
 .env_prod .experimental_feature_dev,
@@ -2581,3 +2614,14 @@ input.search-query,
 .env_beta .experimental_feature_beta {
     display: initial;
 }
+
+/* ----- online / offline ------- */
+.offline .show_only_online {
+    display: none !important;
+}
+
+.online .show_only_offline {
+    display: none !important;
+}
+
+

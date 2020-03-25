@@ -66,8 +66,7 @@ class HwMalfunctionHandler(object):
 			self._messages_to_show[malfunction_id] = data
 			self._plugin.fire_event(MrBeamEvents.HARDWARE_MALFUNCTION, dict(id=malfunction_id, msg=msg, data=data))
 
-		self._analytics_handler.add_iobeam_message_log(self._iobeam_handler.iobeam_version, dataset,
-		                                               from_plugin=from_plugin)
+		self._analytics_handler.add_iobeam_message_log(self._iobeam_handler.iobeam_version, dataset, from_plugin=from_plugin)
 		self._start_notification_timer()
 
 	def _start_notification_timer(self):
@@ -76,7 +75,7 @@ class HwMalfunctionHandler(object):
 		self._timer = threading.Timer(1.0, self.show_hw_malfunction_notification)
 		self._timer.start()
 
-	def show_hw_malfunction_notification(self, force=False):
+	def show_hw_malfunction_notification(self):
 		notifications = []
 		general_malfunctions = []
 		for malfunction_id, data in self._messages_to_show.items():

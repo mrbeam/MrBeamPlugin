@@ -5,7 +5,15 @@
 
 								<div id="state_accordion">
 									<div class="accordion-heading" id="mrb_state_header">
-										<div class="accordion-toggle"><i class="icon-info-sign"></i> {{ _('State') }}:</div><span data-bind="text: state.stateString"></span>
+										<div class="accordion-toggle"><i class="icon-info-sign"></i> {{ _('State') }}:</div>
+                                        <span title="{{ _("Mr Beam's current state") }}">
+                                            <i class="icon-inbox"></i> <span data-bind="text: state.stateString"></span>
+                                        </span>
+                                        <span title="{{ _("Your current Internet connection state") }}" style="margin-left: 15px;">
+                                            <i class="icon-globe"></i>
+                                            <span class="show_only_online">{{ _("Online") }}</span>
+                                            <span class="show_only_offline">{{ _("Offline") }}</span>
+                                        </span>
 									</div>
 									<div id="statusbox">
 										<div class="accordion-body collapse in" id="mrb_state_wrapper" data-bind="visible: loginState.isUser() ">
@@ -81,6 +89,14 @@
 															<div id="zoom_monitor_hint" data-bind="visible: (zoom() === 1)" class="muted">{{ _('Scroll to zoom') }}</div>
 														</div>
 													</div>
+                                                    <div class="experimental_feature_beta">
+                                                        {{ _('Object height') }}
+{#                                                         Translators: millimiters, unit of length#}
+                                                        <input class="decent_input" type="number" min="0" max="38" step="1" id="objectZ_input" value="0"
+                                                               data-bind="value: camera.objectZ, valueUpdate: 'input'"
+                                                               style="width:3.5em; display: inline; margin: 0; padding-right:0;"
+                                                        /> {{ _('mm') }}
+                                                    </div>
 												</div>
 											</div>
 										</div>
@@ -209,6 +225,13 @@
 
 												<script type="text/html" id="wa_template_model_svg">
 													<div class="file_list_entry" data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
+{#                                                        <div data-bind="text: ko.toJSON($data, function(k,v){return (k=='parent') ? undefined : v})"></div>#}
+                                                        <div data-bind="visible: components_engrave" class="pull-left wa_used_color" style="background-image: url('/plugin/mrbeam/static/img/img_and_fills2.svg')"></div>
+                                                        <!-- ko foreach: {data: components, as: 'myComponent'} -->
+														    <div data-bind="style: {'background-color': myComponent}" class="pull-left wa_used_color"></div>
+                                                        <!-- /ko -->
+
+
 														<div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
 														<div class="btn-group action-buttons pull-right">
 															<div class="btn btn-mini" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
@@ -281,6 +304,7 @@
 
 												<script type="text/html" id="wa_template_model_img">
 													<div class="file_list_entry" data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
+                                                        <div class="pull-left wa_used_color" style="background-image: url('/plugin/mrbeam/static/img/img_and_fills2.svg')"></div>
 														<div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
 														<div class="btn-group action-buttons pull-right">
 															<div class="btn btn-mini" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
@@ -396,6 +420,7 @@
 
 												<script type="text/html" id="wa_template_quicktext">
 													<div class="file_list_entry" data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
+                                                        <div class="pull-left wa_used_color" style="background-image: url('/plugin/mrbeam/static/img/img_and_fills2.svg')"></div>
 														<div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
 														<div class="btn-group action-buttons pull-right">
 															<div class="btn btn-mini" data-bind="click: function() { $root.editQuickText($data); }"><i class="icon-edit" title="{{ _('Edit') }}"></i></div>
@@ -445,6 +470,10 @@
 												</script>
 												<script type="text/html" id="wa_template_quickshape">
 													<div class="file_list_entry" data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
+                                                        <div data-bind="visible: components_engrave" class="pull-left wa_used_color" style="background-image: url('/plugin/mrbeam/static/img/img_and_fills2.svg')" ></div>
+                                                        <!-- ko foreach: {data: components, as: 'myComponent'} -->
+														    <div data-bind="style: {'background-color': myComponent}" class="pull-left wa_used_color" ></div>
+                                                        <!-- /ko -->
 														<div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
 														<div class="btn-group action-buttons pull-right">
 															<div class="btn btn-mini" data-bind="click: function() { $root.editQuickShape($data); }"><i class="icon-edit" title="{{ _('Edit') }}"></i></div>
@@ -537,13 +566,17 @@
 										<feColorMatrix type="saturate" values="0.5"/>
 									</filter>
 								</defs>
-								<image id="beamcam_image_svg"
-									xlink:href="/downloads/files/local/cam/beam-cam.jpg" x="0" y="0" height="100%" width="100%"
-									data-bind="attr: {
-											width: workingAreaWidthMM(),
-											height: workingAreaHeightMM(),
-											opacity: previewImgOpacity()
-										}" />
+                                    <g id="obj_height_scale"
+                                       transform="scale(1)"
+                                       data-bind="attr: { transform: zObjectImgTransform() }">
+                                        <image id="beamcam_image_svg"
+                                            xlink:href="/downloads/files/local/cam/beam-cam.jpg" x="0" y="0"
+                                            data-bind="attr: {
+                                                    width: workingAreaWidthMM(),
+                                                    height: workingAreaHeightMM(),
+                                                    opacity: previewImgOpacity()
+                                                }" />
+                                    </g>
 									<g id="scaleGroup" data-bind="attr: { transform: scaleMatrix() }">
 										<g id="placedGcodes" data-bind="visible: true || (state.isPrinting() && !state.isPaused()), attr: { transform: 'matrix(1,0,0,-1,0,'+workingAreaHeightMM()+')' }"></g>
 										<g id="gCodePreview" data-bind="visible: state.isPrinting() || state.isPaused()"></g>

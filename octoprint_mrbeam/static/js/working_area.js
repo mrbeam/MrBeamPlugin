@@ -68,6 +68,13 @@ $(function(){
 		self.workingAreaHeightMM = ko.computed(function(){
 			return self.profile.currentProfileData().volume.depth();
 		}, self);
+		self.imgTranslate = ko.computed(function () {
+			// Used for the translate transformation of the picture on the work area
+			return [-self.workingAreaWidthMM(),-self.workingAreaHeightMM()].map(x=>x*self.camera.imgHeightScale()).join(' ');
+		});
+		self.zObjectImgTransform = ko.computed(function() {
+			return 'scale('+(1 + 2*self.camera.imgHeightScale())+') translate('+self.imgTranslate()+')';
+		});
 		self.flipYMatrix = ko.computed(function(){
 			var h = self.workingAreaHeightMM();
 			return Snap.matrix(1,0,0,-1,0,h);
@@ -220,10 +227,15 @@ $(function(){
 			self.placedDesigns([]);
 		};
 
-		self.getUsedColors = function () {
-			let colFound = self._getColorsOfSelector('.vector_outline', 'stroke', snap.select('#userContent'));
-			return colFound;
+		self.getUsedColors = function (elem) {
+		    elem = !elem ? snap.select('#userContent') : (typeof elem == 'string' ? snap.select(elem) : elem)
+			return self._getColorsOfSelector('.vector_outline', 'stroke', elem);
 		};
+
+		self.hasEngraveOnlyComponents = function(elem){
+		    elem = !elem ? snap.select('#userContent') : (typeof elem == 'string' ? snap.select(elem) : elem)
+		    return  elem.selectAll("image").length > 0 || self.hasFilledVectors(elem)
+        }
 
 		self._getColorsOfSelector = function(selector, color_attr = 'stroke', elem = null){
 			let root = elem === null ? snap : elem;
@@ -432,8 +444,8 @@ $(function(){
 					self.file_not_readable();
 					return;
 				}
-				if(WorkingAreaHelper.isEmptyFile(fragment.node.textContent)) { // zerobyte files
-					self.file_not_readable();
+				if(WorkingAreaHelper.isEmptyFile(fragment)) { // empty svg files
+					self.empty_svg();
 					return;
 				}
 				var id = self.getEntryId();
@@ -443,6 +455,8 @@ $(function(){
 				file.previewId = previewId;
 				file.url = url;
 				file.misfit = false;
+				file.components = ko.observableArray();
+				file.components_engrave = ko.observable(false);
 				self.placedDesigns.push(file);
 
 				// get scale matrix
@@ -501,7 +515,8 @@ $(function(){
 				file.previewId = previewId;
 				file.url = url;
 				file.misfit = false;
-
+				file.components = ko.observableArray();
+				file.components_engrave = ko.observable(false);
 				self.placedDesigns.push(file);
 
 				var analyticsData = {};
@@ -645,6 +660,14 @@ $(function(){
 
 				snap.select("#userContent").append(newSvg);
 				self._makeItTransformable(newSvg);
+
+				//
+                if ('components' in fileObj) {
+                    fileObj.components.push(...self.getUsedColors(newSvg))
+                }
+                if ('components_engrave' in fileObj) {
+                    fileObj.components_engrave(self.hasEngraveOnlyComponents(newSvg))
+                }
 
 				return id;
 			} catch(e) {
@@ -1254,10 +1277,22 @@ $(function(){
 		};
 
 		self.file_not_readable = function(){
-			var error = "<p>" + _.sprintf(gettext("Something went wrong while reading this file.%(topen)sSorry!%(tclose)sPlease check it with another application. If it works there, our support team would be happy to take a look."), {topen: "<br/><h3 style='text-align:center;'>", tclose: "</h3><br/>"}) + "</p>";
+			var error = "<p>" + _.sprintf(gettext("The selected design file can not be handled. Please make sure it is a valid design file.")) + "</p>";
 			new PNotify({
-				// Translators: "in the sense of Ouch!"
-				title: gettext("Oops."),
+				title: gettext("File error."),
+				text: error,
+				type: "error",
+				hide: false,
+				buttons: {
+					sticker: false
+				}
+			});
+		};
+
+		self.empty_svg = function(){
+			var error = "<p>" + _.sprintf(gettext("The selected design file does not have any content.")) + "</p>";
+			new PNotify({
+				title: gettext("Empty File."),
 				text: error,
 				type: "error",
 				hide: false,
@@ -1831,10 +1866,10 @@ $(function(){
 			return gcodeFiles;
 		}, self);
 
-		self.hasFilledVectors = function(){
-			var el = snap.selectAll('#userContent *');
-			for (var i = 0; i < el.length; i++) {
-				var e = el[i];
+		self.hasFilledVectors = function(elem){
+		    elem = !elem ? snap.selectAll('#userContent *') : (typeof elem == 'string' ? snap.select(elem) : elem.selectAll("*"))
+			for (var i = 0; i < elem.length; i++) {
+				var e = elem[i];
 				if (["path", "circle", "ellipse", "rect", "line", "polyline", "polygon", "path"].indexOf(e.type) >= 0){
 					var fill = e.attr('fill');
 					var op = e.attr('fill-opacity');
@@ -2167,6 +2202,8 @@ $(function(){
 					star_radius: w/2, star_corners:5, star_sharpness: 0.5522,
 					heart_w: w, heart_h:0.8*w, heart_lr: 0
 				},
+                components: ko.observableArray(),
+				components_engrave: ko.observable(false),
 				invalid: false
 			};
 			var previewId = self.generateUniqueId(id, file); // appends -# if multiple times the same design is placed.
@@ -2267,6 +2304,14 @@ $(function(){
 					fill_color: $('#quick_shape_fill_brightness').val(),
 					fill: $('#quick_shape_fill').prop('checked')
 				};
+
+				self.currentQuickShapeFile.components.removeAll()
+                if (qs_params.stroke) {
+                    self.currentQuickShapeFile.components.push(qs_params.color)
+                }
+				self.currentQuickShapeFile.components_engrave(qs_params.fill)
+
+
 				// update svg object
 				var g = snap.select('#' + self.currentQuickShapeFile.previewId);
 				setTimeout(function () {

@@ -399,6 +399,19 @@ h4.job_title{
     cursor: -webkit-grab;
 }
 
+.wa_used_color {
+    width: 20px;
+    height: 20px;
+    overflow: hidden;
+    display: inline-block;
+    border-radius: 5%;
+    box-shadow: 0.5px 0.5px 2px 0.5px rgba(0,0,0,0.33);
+    margin: 0px 6px 4px 0px;
+	background-image: url(/plugin/mrbeam/static/img/line_overlay.svg);
+	background-size: cover;
+	background-position: center;
+}
+
 .img_drop_zone,
 .color_drop_zone {
 	min-height: 50px;

@@ -64,38 +64,11 @@
 													<script type="text/html" id="files_template_machinecode_gcode">
 														<div class="file_list_entry icon_card">
 															<div class="preview" data-bind="
-																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeGcode($data); $('#wa_tab_btn').tab('show'); } }, 
+																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeGcode($data); $('#wa_tab_btn').tab('show'); } },
 																css: {disabled: $root.workingArea.isPlaced($data)}
 																" ><i class="icon-cog"></i></div>
 															<div class="title dropdown" >
-																<span class="title_shortened" data-bind="css: $root.getSuccessClass($data), style: { 'font-weight': $root.listHelper.isSelected($data) ? 'bold' : 'normal' }, text: name" ></span>
-																<a type="button" class="dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false">
-																	<i class="icon-reorder pull-right"></i>
-																</a>
-																<ul class="dropdown-menu dropdown-menu-right" role="menu">
-																	<li>
-																		<a class="" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i> {{ _('Download') }}</a>
-																	</li>
-																	<li>
-																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFile($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
-																	</li>
-																	 <li class="divider"></li>
-																	<li class="uploaded">{{ _('Uploaded') }}: <span data-bind="text: formatTimeAgo(date)"></span></li>
-																	<li class="size">{{ _('Size') }}: <span data-bind="text: formatSize(size)"></span></li>
-																</ul>
-															</div>
-														</div>	
-													</script>
-
-													<script type="text/html" id="files_template_model_svg">
-														<div class="file_list_entry preview_card" data-bind="attr: {mrb_name: name}">
-															<div class="preview" data-bind="
-																style: { 'background-image': 'url('+$root.downloadLink($data)+')' },
-																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeSVG($data); $('#wa_tab_btn').tab('show'); } }, 
-																css: {disabled: $root.workingArea.isPlaced($data)}
-																" ></div>
-															<div class="title dropdown" >
-																<span class="title_shortened" data-bind="text: name" ></span>
+																<span class="title_shortened" data-bind="css: $root.getSuccessClass($data), style: { 'font-weight': $root.listHelper.isSelected($data) ? 'bold' : 'normal' }, text: name, attr: {title: name}" ></span>
 																<a type="button" class="dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false">
 																	<i class="icon-reorder pull-right"></i>
 																</a>
@@ -113,16 +86,43 @@
 															</div>
 														</div>
 													</script>
-													
+
+													<script type="text/html" id="files_template_model_svg">
+														<div class="file_list_entry preview_card" data-bind="attr: {mrb_name: name}">
+															<div class="preview" data-bind="
+																style: { 'background-image': 'url('+$root.downloadLink($data)+')' },
+																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeSVG($data); $('#wa_tab_btn').tab('show'); } },
+																css: {disabled: $root.workingArea.isPlaced($data)}
+																" ></div>
+															<div class="title dropdown" >
+																<span class="title_shortened" data-bind="text: name, attr: {title: name}" ></span>
+																<a type="button" class="dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false">
+																	<i class="icon-reorder pull-right"></i>
+																</a>
+																<ul class="dropdown-menu dropdown-menu-right" role="menu">
+																	<li>
+																		<a class="" data-bind="attr: {href: $root.downloadLink($data), css: {disabled: !$root.downloadLink($data)}}"><i class="icon-download-alt" title="{{ _('Download') }}"></i> {{ _('Download') }}</a>
+																	</li>
+																	<li>
+																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFile($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
+																	</li>
+																	 <li class="divider"></li>
+																	<li class="uploaded">{{ _('Uploaded') }}: <span data-bind="text: formatTimeAgo(date)"></span></li>
+																	<li class="size">{{ _('Size') }}: <span data-bind="text: formatSize(size)"></span></li>
+																</ul>
+															</div>
+														</div>
+													</script>
+
 													<script type="text/html" id="files_template_recentjob_svg">
 														<div class="file_list_entry preview_card recentjob" data-bind="attr: {mrb_name: name}">
 															<div class="preview" data-bind="
 																style: { 'background-image': 'url('+$root.downloadLink($data)+')' },
-																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeSVG($data); $('#wa_tab_btn').tab('show'); } }, 
+																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeSVG($data); $('#wa_tab_btn').tab('show'); } },
 																css: {disabled: $root.workingArea.isPlaced($data)}
 																" ></div>
 															<div class="title dropdown" >
-																<span class="title_shortened" data-bind="text: name" ></span>
+																<span class="title_shortened" data-bind="text: name, attr: {title: name}" ></span>
 																<a type="button" class="dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false">
 																	<i class="icon-reorder pull-right"></i>
 																</a>
@@ -140,15 +140,15 @@
 															</div>
 														</div>
 													</script>
-													
+
 													<script type="text/html" id="files_template_model_dxf">
 														<div class="file_list_entry icon_card">
 															<div class="preview" data-bind="
-																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeDXF($data); $('#wa_tab_btn').tab('show'); } }, 
+																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeDXF($data); $('#wa_tab_btn').tab('show'); } },
 																css: {disabled: $root.workingArea.isPlaced($data)}
 																" ><i class="icon-picture"></i></div>
 															<div class="title dropdown" >
-																<span class="title_shortened" data-bind="text: name" ></span>
+																<span class="title_shortened" data-bind="text: name, attr: {title: name}" ></span>
 																<a type="button" class="dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false">
 																	<i class="icon-reorder pull-right"></i>
 																</a>
@@ -164,18 +164,18 @@
 																	<li class="size">{{ _('Size') }}: <span data-bind="text: formatSize(size)"></span></li>
 																</ul>
 															</div>
-														</div>												
+														</div>
 													</script>
 
 													<script type="text/html" id="files_template_model_image">
 														<div class="file_list_entry preview_card" data-bind="attr: {mrb_name: name}">
 															<div class="preview" data-bind="
 																style: { 'background-image': 'url('+$root.downloadLink($data)+')' },
-																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeIMG($data); $('#wa_tab_btn').tab('show'); } }, 
+																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeIMG($data); $('#wa_tab_btn').tab('show'); } },
 																css: {disabled: $root.workingArea.isPlaced($data)}
 																" ></div>
 															<div class="title dropdown" >
-																<span class="title_shortened" data-bind="text: name" ></span>
+																<span class="title_shortened" data-bind="text: name, attr: {title: name}" ></span>
 																<a type="button" class="dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false">
 																	<i class="icon-reorder pull-right"></i>
 																</a>
@@ -205,7 +205,7 @@
 													</script>
 
 													<script type="text/html" id="files_template_folder">
-														<div class="title" data-bind="text: name"></div>
+														<div class="title" data-bind="text: name, attr: {title: name}"></div>
 													</script>
 
 											</div>

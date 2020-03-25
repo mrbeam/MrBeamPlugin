@@ -233,9 +233,9 @@ class OneButtonHandler(object):
 
 		elif event == OctoPrintEvents.FILE_SELECTED:
 			if not self.is_ready_to_laser(False) \
-				and self._printer.is_operational() \
-				and not self._printer.get_state_id() in (self.PRINTER_STATE_PRINTING, self.PRINTER_STATE_PAUSED) \
-				and ('filename' in payload or len(payload) == 0):
+					and self._printer.is_operational() \
+					and not self._printer.get_state_id() in (self.PRINTER_STATE_PRINTING, self.PRINTER_STATE_PAUSED) \
+					and ('filename' in payload or len(payload) == 0):
 				self._logger.debug("onEvent() FILE_SELECTED set_ready_to_laser filename: %s:", 'filename' in payload)
 				try:
 					# OctoPrint 1.3.4 doesn't provide the file name anymore
@@ -266,7 +266,7 @@ class OneButtonHandler(object):
 			# iobeam could set stop_laser to false to avoid cancellation of current laserjob
 			if payload['data'].get('stop_laser', True) and self._printer.get_state_id() in (self.PRINTER_STATE_PRINTING, self.PRINTER_STATE_PAUSED):
 				self._logger.info('Hardware Malfunction: cancelling laser job!')
-				self._printer.cancel_print()
+				self._printer.fail_print(error_msg='HW malfunction during job')
 
 	def is_cooling(self):
 		return self._temperature_manager.is_cooling()
@@ -315,7 +315,7 @@ class OneButtonHandler(object):
 			self._fireEvent(MrBeamEvents.READY_TO_LASER_CANCELED)
 		if self._hw_malfunction.hardware_malfunction and not self.hardware_malfunction_notified:
 			self._logger.error("Hardware Malfunction: Not possible to start laser job.")
-			self._hw_malfunction.show_hw_malfunction_notification(force=True)
+			self._hw_malfunction.show_hw_malfunction_notification()
 			self.hardware_malfunction_notified = True
 
 	def is_ready_to_laser(self, rtl_expected_to_be_there=True):

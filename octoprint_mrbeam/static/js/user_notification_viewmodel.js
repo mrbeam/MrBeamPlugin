@@ -19,7 +19,7 @@ $(function () {
             },
             err_bottom_open: {
                 title: gettext("Bottom Plate Error"),
-                text: gettext("The bottom plate is not closed correctly. Please make sure that the bottom is correctly mounted as described in the Mr Beam II user manual."),
+                text: gettext("The bottom plate is not closed correctly. Please make sure that the bottom is correctly mounted as described in the Mr Beam user manual."),
                 type: 'error',
                 hide: false,
                 knowledgebase: {

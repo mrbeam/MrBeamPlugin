@@ -64,10 +64,10 @@ class LaserheadHandler(object):
 
 			else:
 				if lh_data.get('main', {}).get('serial', None) is None:
-					self._logger.exception('Received invalid laser head data from iobeam - no serial number. Laser head dataset: {}'.format(lh_data))
+					self._logger.exception('Received invalid laser head data from iobeam - no serial number. Laser head dataset: {}'.format(lh_data), analytics='received-no-lh-data')
 				else:
 					self._logger.exception('Received invalid laser head data from iobeam - invalid power calibrations data: {}'
-										   .format(lh_data.get('power_calibrations', [])))
+                                           .format(lh_data.get('power_calibrations', [])), analytics='invalid-power-calibration')
 		except Exception as e:
 			self._logger.exception('Exception during set_current_used_lh_data: {}'.format(e))
 
@@ -183,7 +183,7 @@ class LaserheadHandler(object):
 			self._logger.info('Insufficient data for correction factor. Default factor: {cf}'.format(cf=correction_factor))
 
 		self._logger.info('Laserhead info - serial={serial}, p_65={p65}, p_75={p75}, p_85={p85}, correction_factor={cf}, target_power={tp}'
-			.format(serial=self._current_used_lh_serial, p65=p_65, p75=p_75, p85=p_85, cf=correction_factor, tp=target_power))
+		    .format(serial=self._current_used_lh_serial, p65=p_65, p75=p_75, p85=p_85, cf=correction_factor, tp=target_power))
 
 		return correction_factor
 

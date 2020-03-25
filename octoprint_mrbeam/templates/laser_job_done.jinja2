@@ -25,8 +25,8 @@
                         </div>
                     </div>
             </div>
-            <h5 data-bind='visible: is_dust_mode()'>{{ _('Please wait a few seconds until Mr Beam II cleared most of the dust particles out of the working area.') }}</h5>
-{#            <h5 data-bind='visible: !is_dust_mode()'>{{ _('Done. Now check out what you have created with your Mr Beam II!') }}</h5>#}
+            <h5 data-bind='visible: is_dust_mode()'>{{ _('Please wait a few seconds until Mr Beam cleared most of the dust particles out of the working area.') }}</h5>
+{#            <h5 data-bind='visible: !is_dust_mode()'>{{ _('Done. Now check out what you have created with your Mr Beam!') }}</h5>#}
             <h4 data-bind='visible: !is_dust_mode()'>{{ _('Laser job duration:') }} <span data-bind='text: job_duration_formatted()'>    </span>
                 <small>({{ _('Estimated:') }} <span data-bind='text: readyToLaser.estimated_duration'></span>)</small>
             </h4>
