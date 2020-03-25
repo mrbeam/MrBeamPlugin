@@ -19,6 +19,7 @@ $(function () {
         self.appearance = params[12];
         self.loadingOverlay = params[13];
         self.softwareUpdate = params[14];
+        self.analytics = params[15];
 
         self.isStartupComplete = false;
         self.storedSocketData = [];
@@ -232,7 +233,7 @@ $(function () {
                  self.terminal.checkAutoscroll();
             });
             self.terminal.activeAllFilters();
-			
+
             // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
             // our implementation here should be used instead of octoprints
             // to fix issues with the laser job time display
@@ -311,6 +312,8 @@ $(function () {
                     console.log("screenfull: go_fullscreen_menu_item click");
                     screenfull.request();
                     self._updateFullscreenButton(true);
+
+                    self.analytics.send_fontend_event('link_click', {link: 'go_fullscreen_menu_item'})
                 });
                 $('#exit_fullscreen_menu_item').on( "click", function() {
                     console.log("screenfull: exit_fullscreen_menu_item click");
@@ -616,7 +619,7 @@ $(function () {
         ["loginStateViewModel", "settingsViewModel", "printerStateViewModel", "filesViewModel", "gcodeFilesViewModel",
             "connectionViewModel", "controlViewModel", "terminalViewModel", "workingAreaViewModel",
             "vectorConversionViewModel", "readyToLaserViewModel", "navigationViewModel", "appearanceViewModel",
-            "loadingOverlayViewModel", "softwareUpdateViewModel"],
+            "loadingOverlayViewModel", "softwareUpdateViewModel", "analyticsViewModel"],
         [document.getElementById("mrb_state"),
             document.getElementById("mrb_control"),
             document.getElementById("mrb_connection_wrapper"),
