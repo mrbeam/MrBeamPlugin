@@ -1,10 +1,7 @@
 import os
-import platform
 import re
 import shutil
 from distutils.version import LooseVersion, StrictVersion
-
-from octoprint_mrbeam import IS_X86
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.printing.profile import laserCutterProfileManager
@@ -52,7 +49,7 @@ class Migration(object):
 
 		self.version_previous = self.plugin._settings.get(['version']) or "0.0.0"
 		self.version_current  = self.plugin.get_plugin_version()
-		self.suppress_migrations = self.plugin._settings.get(['dev', 'suppress_migrations']) or IS_X86
+		self.suppress_migrations = self.plugin._settings.get(['dev', 'suppress_migrations'])
 
 
 	def run(self):

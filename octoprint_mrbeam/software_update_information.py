@@ -293,7 +293,7 @@ def _set_info_mrbeamledstrips(self, tier):
 	module_id = "mrbeam-ledstrips"
 	# ths module is installed outside of our virtualenv therefor we can't use default pip command.
 	# /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
-	pip_command = "/usr/local/bin/pip"
+	pip_command = "sudo /usr/local/bin/pip"
 	pip_name = "mrbeam-ledstrips"
 
 	try:
@@ -349,7 +349,7 @@ def _set_info_netconnectd_daemon(self, tier):
 	module_id = "netconnectd-daemon"
 	# ths module is installed outside of our virtualenv therefor we can't use default pip command.
 	# /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
-	pip_command = "/usr/local/bin/pip"
+	pip_command = "sudo /usr/local/bin/pip"
 	pip_name = "netconnectd"
 
 	try:
@@ -379,7 +379,7 @@ def _set_info_iobeam(self, tier):
 	module_id = "iobeam"
 	# this module is installed outside of our virtualenv therefor we can't use default pip command.
 	# /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
-	pip_command = "/usr/local/bin/pip"
+	pip_command = "sudo /usr/local/bin/pip"
 	pip_name = "iobeam"
 
 	try:
@@ -505,7 +505,7 @@ def _set_info_mrb_hw_info(self, tier):
 	module_id = "mrb_hw_info"
 	# this module is installed outside of our virtualenv therefor we can't use default pip command.
 	# /usr/local/lib/python2.7/dist-packages must be writable for pi user otherwise OctoPrint won't accept this as a valid pip command
-	pip_command = "/usr/local/bin/pip"
+	pip_command = "sudo /usr/local/bin/pip"
 	pip_name = "mrb-hw-info"
 
 	try:
