@@ -4,7 +4,7 @@ import time
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
-from octoprint_mrbeam import IS_X86
+
 
 def os_health_care(plugin):
 	OsHealthCare(plugin)
@@ -25,7 +25,6 @@ class OsHealthCare(object):
 		self.run()
 
 	def run(self):
-		if IS_X86: return
 		try:
 			self.etc_network_interfaces()
 		except Exception as e:
