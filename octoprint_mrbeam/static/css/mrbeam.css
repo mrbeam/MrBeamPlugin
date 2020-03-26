@@ -3041,7 +3041,7 @@ input#img-preprocess-gamma {
     position: inherit;
     width: 198px;
     float: right;
-    margin-right: 8px;
+    margin: 0 8px 6px 0;
 }
 
 #settings_plugin_softwareupdate .advanced-option-cont {
