@@ -1,14 +1,17 @@
 from itertools import chain
+
+from octoprint_mrbeam.mrb_logger import mrb_logger
+from octoprint_mrbeam.camera import Camera
+
 try:
 	from picamera import PiCamera
-except Exception:
+except OSError:
+	# TODO Teja : uninstall picamera on your device :D
 	raise ImportError("Could not import PiCamera")
 
 import time
 import threading
 import logging
-
-# from octoprint_mrbeam.camera import MrbPicWorker # TODO check why this fails
 
 BRIGHTNESS_TOLERANCE = 80 # TODO Keep the brightness of the images tolerable
 
@@ -60,7 +63,7 @@ class LoopThread(threading.Thread):
 			self.running.wait()
 
 
-class MrbCamera(PiCamera):
+class MrbCamera(PiCamera, Camera):
 	# TODO do stuff here, like the calibration algo
 	def __init__(self, worker, stopEvent=None, *args, **kwargs):
 		"""
@@ -82,7 +85,7 @@ class MrbCamera(PiCamera):
 		self.awb_mode = 'auto'
 		self.stopEvent = stopEvent or threading.Event()  # creates an unset event if not given
 		self.start_preview()
-		self._logger = logging.getLogger("octoprint.plugins.mrbeam.util.camera.mrbcamera")
+		self._logger = mrb_logger("octoprint.plugins.mrbeam.util.camera.mrbcamera", lvl=logging.INFO)
 		self.busy = threading.Event()
 		self.worker = worker
 		self.captureLoop = LoopThread(
@@ -96,7 +99,7 @@ class MrbCamera(PiCamera):
 		"""mitigates the horizontal banding due to rolling shutter interaction with 50Hz/60Hz lights"""
 		# TODO 60Hz countries
 		self._logger.debug("Shutter speed : %i", self.shutter_speed)
-		self._logger.debug("Exposur speed : %i", self.exposure_speed)
+		self._logger.debug("Exposure speed : %i", self.exposure_speed)
 		autoShutterSpeed = self.exposure_speed
 		# self.shutter_speed = 10
 
@@ -165,7 +168,7 @@ class MrbCamera(PiCamera):
 			self._logger.debug("capture loop not alive, starting now")
 			self.captureLoop.start()
 		else:
-			self._logger.info("Camera already running or stopEvent set")
+			self._logger.debug("Camera already running or stopEvent set")
 
 	def async_capture(self, *args, **kw):
 		"""
@@ -179,10 +182,10 @@ class MrbCamera(PiCamera):
 		:return:
 		:rtype:
 		"""
-		# self._logger.info("captureLoop running %s, stopFlag %s, shutter speed %s",
-		#                   self.captureLoop.running.isSet(),
-		#                   self.captureLoop.stopFlag.isSet(),
-		#                   self.shutter_speed)
+		self._logger.debug("captureLoop running %s, stopFlag %s, shutter speed %s",
+		                  self.captureLoop.running.isSet(),
+		                  self.captureLoop.stopFlag.isSet(),
+		                  self.shutter_speed)
 		time.sleep(.1)
 		self.captureLoop.running.set()  # Asks the loop to continue running, see LoopThread
 

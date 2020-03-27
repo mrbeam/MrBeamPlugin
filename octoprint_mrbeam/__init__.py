@@ -1536,7 +1536,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._logger.debug("camera_calibration_markers() data: {}".format(data))
 
 		# transform dict
-		# todo replace/do better
 		newCorners = {}
 		newMarkers = {}
 
@@ -1544,12 +1543,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			newCorners[qd] = [data['result']['newCorners'][qd]['x'], data['result']['newCorners'][qd]['y']]
 
 		for qd in data['result']['newMarkers']:
-			if type(data['result']['newMarkers'][qd]) is dict:
-				# Legacy algo
-				newMarkers[qd] = [data['result']['newMarkers'][qd]['x'], data['result']['newMarkers'][qd]['y']]
-			else:
-				# New algo
-				newMarkers[qd] = data['result']['newMarkers'][qd]
+			newMarkers[qd] = data['result']['newMarkers'][qd]
 
 		pic_settings_path = self._settings.get(["cam", "correctionSettingsFile"])
 		pic_settings = self._load_profile(pic_settings_path)
@@ -1561,8 +1555,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		self._logger.debug('picSettings new to save: {}'.format(pic_settings))
 		self._save_profile(pic_settings_path, pic_settings)
-
-		# todo delete old undistorted image, still needed?
 
 		return NO_CONTENT
 
