@@ -1087,18 +1087,32 @@ $(function(){
 
 		self.svgManualTranslate = function(data, event) {
 			if (event.keyCode === 13 || event.type === 'blur') {
-				self.abortFreeTransforms();
 				var svg = snap.select('#'+data.previewId);
 				var globalScale = self.scaleMatrix().a;
-				var newTranslateStr = event.target.value;
-				var nt = newTranslateStr.split(/[^0-9.-]/); // TODO improve
-				var ntx = nt[0] / globalScale;
-				var nty = (self.workingAreaHeightMM() - nt[1]) / globalScale;
+				// var newTranslateStr = event.target.value;
+				// var nt = newTranslateStr.split(/[^0-9.-]/); // TODO improve
+                var nt = self.splitStringToTwoValues(event.target.value)
+                if (nt) {
+                    var ntx = nt[0] / globalScale;
+                    var nty = (self.workingAreaHeightMM() - nt[1]) / globalScale;
 
-				svg.ftManualTransform({tx: ntx, ty: nty, diffType:'absolute'});
-				self.check_sizes_and_placements();
+                    self.abortFreeTransforms();
+                    svg.ftManualTransform({tx: ntx, ty: nty, diffType: 'absolute'});
+                    self.check_sizes_and_placements();
+                } else {
+                    // TODO:
+                    svg.ftUpdateTransform();
+			        svg.ftAfterTransform();
+                }
 			}
 		};
+
+		self.splitStringToTwoValues = function(myString){
+		    if (!myString) {return null}
+		    if (myString.match(/[a-zA-Z]/) || myString.match(/^\d+$/)) {return null}
+            let m = myString.match(/(-?\d+[.,]?\d*)[^0-9-]*(-?\d+[.,]?\d*)/)
+            return [m[1], m[2]]
+        }
 
 
 		self.svgManualRotate = function(data, event) {
