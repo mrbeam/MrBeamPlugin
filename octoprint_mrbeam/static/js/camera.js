@@ -12,7 +12,6 @@ $(function(){
         self.TAB_NAME_WORKING_AREA = '#workingarea';
         self.FALLBACK_IMAGE_URL = '/plugin/mrbeam/static/img/beam-cam-static.jpg';
 
-        self.camEnabled = undefined;
         self.needsCalibration = false;
 
         self.imageUrl = undefined;
@@ -31,7 +30,6 @@ $(function(){
             self.webCamImageElem = $("#beamcam_image_svg");
 			self.cameraMarkerElem = $("#camera_markers");
             // self.webCamImageElem.removeAttr('onerror');
-            self.camEnabled = self.settings.settings.plugins.mrbeam.cam.enabled();
             self.imageUrl = self.settings.settings.plugins.mrbeam.cam.frontendUrl();
 
             if (window.mrbeam.browser.is_safari) {

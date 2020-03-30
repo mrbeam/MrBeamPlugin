@@ -295,8 +295,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				usage_backup_filename='usage_bak.yaml'
 			),
 			cam=dict(
-				enabled=True,
-				image_correction_enabled=True,
 				cam_img_width=image_default_width,
 				cam_img_height=image_default_height,
 				frontendUrl="/downloads/files/local/cam/beam-cam.jpg",
@@ -332,8 +330,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			terminal=self._settings.get(['terminal']),
 			terminal_show_checksums=self._settings.get(['terminal_show_checksums']),
 			analyticsEnabled=self._settings.get(['analyticsEnabled']),
-			cam=dict(enabled=self._settings.get(['cam', 'enabled']),
-			         frontendUrl=self._settings.get(['cam', 'frontendUrl']),
+			cam=dict(frontendUrl=self._settings.get(['cam', 'frontendUrl']),
 			         previewOpacity=self._settings.get(['cam', 'previewOpacity'])),
 			dev=dict(
 				env=self.get_env(),
