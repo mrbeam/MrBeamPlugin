@@ -177,7 +177,8 @@ class LidHandler(object):
 			return make_response('Error, no photocreator active, maybe you are developing and dont have a cam?', 503)
 
 	def _start_photo_worker(self):
-		if not (self._photo_creator.active() or self._photo_creator.worker.isAlive()):
+		if not self._photo_creator.active() \
+				and (self._photo_creator.worker is None or not self._photo_creator.worker.isAlive()):
 			self._photo_creator.start()
 		else:
 			self._logger.info("Another PhotoCreator thread is already active! Not starting a new one.")
@@ -214,7 +215,7 @@ class PhotoCreator(object):
 		self.debug = debug
 		self._front_ready = Event()
 		self.last_correction_result = None
-		self.worker = threading.Thread()
+		self.worker = None
 		if debug: self._logger.setLevel(logging.DEBUG)
 		else:     self._logger.setLevel(logging.INFO)
 		if self._settings.get(["cam", "keepOriginals"]):
@@ -231,6 +232,12 @@ class PhotoCreator(object):
 	def start(self):
 		if self.active():
 			self.stop()
+		if self.worker is not None and self.worker.is_alive():
+			if not self.stopEvent.is_set():
+				self._logger.debug("Worker already running, not stopping it")
+				return
+			else:
+				self.worker.join()
 		self.stopEvent.clear()
 		self.worker = threading.Thread(target=self.work, name='Photo-Worker')
 		self.worker.daemon = True
@@ -238,7 +245,7 @@ class PhotoCreator(object):
 
 	def stop(self):
 		self.stopEvent.set()
-		if self.worker.isAlive():
+		if self.worker is not None:
 			return self.worker.join()
 		else:
 			return
