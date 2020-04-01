@@ -12,7 +12,6 @@ $(function(){
         self.TAB_NAME_WORKING_AREA = '#workingarea';
         self.FALLBACK_IMAGE_URL = '/plugin/mrbeam/static/img/beam-cam-static.jpg';
 
-        self.camEnabled = undefined;
         self.needsCalibration = false;
 
         self.imageUrl = undefined;
@@ -31,7 +30,6 @@ $(function(){
             self.webCamImageElem = $("#beamcam_image_svg");
 			self.cameraMarkerElem = $("#camera_markers");
             // self.webCamImageElem.removeAttr('onerror');
-            self.camEnabled = self.settings.settings.plugins.mrbeam.cam.enabled();
             self.imageUrl = self.settings.settings.plugins.mrbeam.cam.frontendUrl();
 
             if (window.mrbeam.browser.is_safari) {
@@ -55,20 +53,10 @@ $(function(){
             if ('beam_cam_new_image' in data) {
                 const mf = data['beam_cam_new_image']['markers_found'];
                 ['NW', 'NE', 'SE', 'SW'].forEach(function(m) {
-                    if(mf[m] !== undefined) {
-                        // legacy algo uses dictionnary
-                        if (mf[m].recognized === true) {
-                            self.cameraMarkerElem.removeClass('marker' + m);
-                        } else {
-                            self.cameraMarkerElem.addClass('marker' + m);
-                        }
+                    if(mf.includes(m)) {
+                        self.cameraMarkerElem.removeClass('marker' + m);
                     } else {
-                        // New algo lists the detected corners
-                        if(mf.includes(m)) {
-                            self.cameraMarkerElem.removeClass('marker' + m);
-                        } else {
-                            self.cameraMarkerElem.addClass('marker' + m);
-                        }
+                        self.cameraMarkerElem.addClass('marker' + m);
                     }
                 });
 

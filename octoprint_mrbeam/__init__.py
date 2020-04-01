@@ -298,8 +298,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				usage_backup_filename='usage_bak.yaml'
 			),
 			cam=dict(
-				enabled=True,
-				image_correction_enabled=True,
 				cam_img_width=image_default_width,
 				cam_img_height=image_default_height,
 				frontendUrl="/downloads/files/local/cam/beam-cam.jpg",
@@ -335,8 +333,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			terminal=self._settings.get(['terminal']),
 			terminal_show_checksums=self._settings.get(['terminal_show_checksums']),
 			analyticsEnabled=self._settings.get(['analyticsEnabled']),
-			cam=dict(enabled=self._settings.get(['cam', 'enabled']),
-			         frontendUrl=self._settings.get(['cam', 'frontendUrl']),
+			cam=dict(frontendUrl=self._settings.get(['cam', 'frontendUrl']),
 			         previewOpacity=self._settings.get(['cam', 'previewOpacity'])),
 			dev=dict(
 				env=self.get_env(),
@@ -1539,7 +1536,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._logger.debug("camera_calibration_markers() data: {}".format(data))
 
 		# transform dict
-		# todo replace/do better
 		newCorners = {}
 		newMarkers = {}
 
@@ -1547,12 +1543,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			newCorners[qd] = [data['result']['newCorners'][qd]['x'], data['result']['newCorners'][qd]['y']]
 
 		for qd in data['result']['newMarkers']:
-			if type(data['result']['newMarkers'][qd]) is dict:
-				# Legacy algo
-				newMarkers[qd] = [data['result']['newMarkers'][qd]['x'], data['result']['newMarkers'][qd]['y']]
-			else:
-				# New algo
-				newMarkers[qd] = data['result']['newMarkers'][qd]
+			newMarkers[qd] = data['result']['newMarkers'][qd]
 
 		pic_settings_path = self._settings.get(["cam", "correctionSettingsFile"])
 		pic_settings = self._load_profile(pic_settings_path)
@@ -1564,8 +1555,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		self._logger.debug('picSettings new to save: {}'.format(pic_settings))
 		self._save_profile(pic_settings_path, pic_settings)
-
-		# todo delete old undistorted image, still needed?
 
 		return NO_CONTENT
 
