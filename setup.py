@@ -36,7 +36,7 @@ plugin_url = "https://github.com/mrbeam/MrBeamPlugin"
 plugin_license = "AGPLv3"
 
 # Any additional requirements besides OctoPrint should be listed here
-plugin_requires = ['webcolors', 'pillow', 'lxml', 'numpy==1.11.2']
+plugin_requires = ['webcolors', 'pillow', 'lxml', 'numpy==1.11.2', 'picamera']
 
 ### --------------------------------------------------------------------------------------------------------------------
 ### More advanced options that you usually shouldn't have to touch follow after this point
@@ -68,7 +68,7 @@ additional_setup_parameters = {
 		                     'files/migrate_logrotate/*',
 		                     'files/material_settings/*',
 		                     'files/camera/*']},
-	'setup_requires': ['numpy==1.11.2', 'picamera; platform_machine=="armv7l"']}
+	'setup_requires': ['numpy==1.11.2']} # , 'picamera; platform_machine=="armv7l"']} # TODO upgrade to pip 18.0
 
 ########################################################################################################################
 
