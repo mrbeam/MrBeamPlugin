@@ -60,6 +60,13 @@
 											<div class="collapse" id="wa_view_settings_body">
 												<div class="accordion-inner">
 													<div>
+													<span data-bind="style: {'color': camera.imgResolutionColor(), 'font-weight': 'bold', 'width': '100%'}, html: camera.imgResolution()"></span> Picture Quality
+														<span id="imgQualityNotice" class="muted">
+															Open the lid and keep your hands off the working area
+															for a few seconds to receive a higher resolution image
+														</span>
+													</div>
+													<div>
 														<label>
 															{{ _('Brightness') }}:
 														</label>
