@@ -1902,7 +1902,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		:return: String hostname
 		"""
 		if self._hostname is None:
-			hostname_dev_info = self._get_val_from_device_info('hostname')
+			# hostname_dev_info = self._get_val_from_device_info('hostname')
+			hostname_dev_info = self._device_info.get('hostname')
 			hostname_socket = None
 			try:
 				hostname_socket = socket.gethostname()
@@ -1988,18 +1989,15 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def _get_val_from_device_info(self, key, default=None):
 		if not self._device_info:
-			ok = None
 			try:
-				db = dict()
 				with open(self.DEVICE_INFO_FILE, 'r') as f:
 					for line in f:
 						line = line.strip()
 						token = line.split('=')
 						if len(token) >= 2:
-							db[token[0]] = token[1]
+							self._device_info[token[0]] = token[1]
 				return self._device_info.get(key, default)
 			except Exception as e:
-				ok = False
 				self._logger.error("Can't read device_info_file '%s' due to exception: %s", self.DEVICE_INFO_FILE, e)
 				if IS_X86:
 					self._device_info = dict(
