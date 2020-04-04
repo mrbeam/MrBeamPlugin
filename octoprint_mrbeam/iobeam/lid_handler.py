@@ -16,10 +16,10 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 # don't crash on a dev computer where you can't install picamera
 import octoprint_mrbeam.camera
-from octoprint_mrbeam.camera.mrbcamera import MrbCamera
 from octoprint_mrbeam.camera import gaussBlurDiff, QD_KEYS, PICAMERA_AVAILABLE
 from octoprint_mrbeam.util import json_serialisor, logme
 if PICAMERA_AVAILABLE:
+	from octoprint_mrbeam.camera.mrbcamera import MrbCamera
 	from octoprint_mrbeam.camera.undistort import prepareImage, MAX_OBJ_HEIGHT, \
 		CAMERA_HEIGHT, _getCamParams, _getPicSettings, DIST_KEY, MTX_KEY
 
