@@ -382,14 +382,14 @@ input[type="submit"].btn.btn-mini {
 .btn-link {
   border-color: transparent;
   cursor: pointer;
-  color: #0088cc;
+  color: #e25303;
   -webkit-border-radius: 0;
   -moz-border-radius: 0;
   border-radius: 0;
 }
 .btn-link:hover,
 .btn-link:focus {
-  color: #005580;
+  color: #a63e03;
   text-decoration: underline;
   background-color: transparent;
 }
@@ -1230,6 +1230,54 @@ ul.dropdown-menu li a {
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
+
+/* Selection of multiple items in the design library */
+
+#files .file_list_entry .selection_box {
+	position: absolute;
+	top: 12px;
+	right: 12px;
+	font-size: 30px;
+	width: 30px;
+	height: 30px;
+	background-color: white;
+	border: 2px solid #383e42;
+	border-radius: 4px;
+	opacity:0;
+	transition: opacity 0.2s ease-in;
+	z-index: 9999;
+}
+
+#files .file_list_entry:hover .selection_box,
+#files .file_list_entry .selection_box.selected { opacity: 1; }
+
+#files .selection_box i { display: none; }
+#files .selection_box.selected i { display: inline; }
+
+
+#bulkActions {
+	border: 1px solid #e25303;
+	padding: 2em;
+	border-radius: 3px;
+}
+
+#bulkActions .description {
+	text-align: center;
+	margin-bottom: 1em;
+}
+#bulkActions .description_head {
+	font-size: 1.5em;
+	margin-bottom: 0.5em;
+}
+.description_details {
+  color: #999;
+}
+
+#bulkActions .action_btns {
+	text-align: center;
+}
+
+/* End Selection of multiple items in the design library */
 
 #files .file_list_entry li.size,
 #files .file_list_entry li.uploaded {

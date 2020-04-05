@@ -2642,7 +2642,7 @@ $(function(){
 				id: file.previewId,
 				'mb:id': self._normalize_mb_id(file.previewId),
 				class: 'userText',
-				'mb:origin': origin
+				'mb:origin': origin // TODO ??? wtf? 
 			});
 
 			self._makeItTransformable(group);
