@@ -256,7 +256,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 				id = ne.id; // fallback, take from snap
 				ne.node.setAttribute('id', id);
 				ne.node.setAttribute('mb:id', id);
-				console.log("fallback", id);
+//				console.log("fallback", id);
 			}
 			ne.attr("mb:id", id);
 			natives.push({element: ne, node_id: ne.node.id, bbox: ne.getBBox(), type: ne.type, id: ne.id, stroke: ne.attr()['stroke'], fill: ne.attr()['fill']});
