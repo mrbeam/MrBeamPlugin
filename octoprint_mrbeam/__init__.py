@@ -1996,7 +1996,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 						token = line.split('=')
 						if len(token) >= 2:
 							self._device_info[token[0]] = token[1]
-				return self._device_info.get(key, default)
 			except Exception as e:
 				self._logger.error("Can't read device_info_file '%s' due to exception: %s", self.DEVICE_INFO_FILE, e)
 				if IS_X86:
@@ -2007,7 +2006,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 						device_type="MrBeam2X",
 						serial="000000000694FD5D-2X",
 						image_correction_markers="MrBeam2C-pink",)
-					return self._device_info.get(key, default)
+		return self._device_info.get(key, default)
 
 	def isFirstRun(self):
 		return self._settings.global_get(["server", "firstRun"])
