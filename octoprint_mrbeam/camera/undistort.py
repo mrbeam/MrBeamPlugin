@@ -28,8 +28,8 @@ RATIO_H_KEY = 'ratioH'
 STOP_EVENT_ERR = 'StopEvent_was_raised'
 
 HUE_BAND_LB_KEY = 'hue_lower_bound'
-HUE_BAND_LB = 125
-HUE_BAND_UB = 185 # if value > 180 : loops back to 0
+HUE_BAND_LB = 105
+HUE_BAND_UB = 200 # if value > 180 : loops back to 0
 
 # Minimum and Maximum number of pixels a marker should have
 # as seen on the edge detection masks

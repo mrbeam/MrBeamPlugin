@@ -5,19 +5,20 @@ import numpy as np
 from numpy.linalg import norm
 from itertools import chain
 from threading import Event
+from abc import ABCMeta, abstractmethod
+# Python 3 : use ABC instead of ABCMeta
+
 
 from octoprint_mrbeam.util import logtime
 
 try:
-	from octoprint_mrbeam.camera.mrbcamera import MrbCamera # , BRIGHTNESS_TOLERANCE
+	import picamera
 	PICAMERA_AVAILABLE = True
 except ImportError as e:
-	from dummy import DummyCamera as MrbCamera
 	PICAMERA_AVAILABLE = False
 	logging.getLogger("octoprint.plugins.mrbeam.util.camera").error(
-			"Could not import module 'mrbcamera'. Disabling camera integration. (%s: %s)", e.__class__.__name__, e)
+		"Could not import module 'mrbcamera'. Disabling camera integration. (%s: %s)", e.__class__.__name__, e)
 
-MrbCamera = MrbCamera # Makes it importable (e.g. from [...].camera import MrbCamera)
 
 RESOLUTIONS = {
 		'1000x780':  (1000, 780),
@@ -44,6 +45,18 @@ DEFAULT_STILL_RES = RESOLUTIONS['2592x1944']  # Be careful : Resolutions accepte
 # before being undistorted and served
 DIFF_TOLERANCE = 50
 
+class Camera:
+	__metaclass__ = ABCMeta
+
+	@abstractmethod
+	def __init__(self, stopEvent=None, *args, **kw):
+		pass
+
+	@abstractmethod
+	def async_capture(self):
+		pass
+
+	pass
 
 class MrbPicWorker(object):
 	"""
@@ -88,7 +101,6 @@ class MrbPicWorker(object):
 		self.adjust_brightness.append(bright_adjust)
 		# TODO adjust camera shutter speed with these brightness measurements
 		self.busy.clear()
-		self._logger.debug("Flushing done")
 
 	def write(self, buf):  # (self, buf: bytearray):
 		"""

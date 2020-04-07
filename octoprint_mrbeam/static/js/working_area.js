@@ -1155,10 +1155,14 @@ $(function(){
 		self._svgMultiplyUpdate = function(data, colsRowsStr){
 			self.abortFreeTransforms();
 			var svg = snap.select('#'+data.previewId);
-			var gridsize = colsRowsStr.split(/\D+/);
-			var cols = gridsize[0] || 1;
-			var rows = gridsize[1] || 1;
 			var dist = 2;
+			var cols = 1;
+			var rows = 1;
+			if(colsRowsStr !== undefined){
+				var gridsize = colsRowsStr.split(/\D+/);
+				cols = gridsize[0] || 1;
+				rows = gridsize[1] || 1;
+			}
 			svg.grid(cols, rows, dist);
 			var mb_meta = self._set_mb_attributes(svg);
 			svg.ftStoreInitialTransformMatrix();
@@ -1317,10 +1321,11 @@ $(function(){
 			});
 		};
 
-		self.placeIMG = function (file) {
+		self.placeIMG = function (file, textMode) {
 			var start_ts = Date.now();
 			var url = self._getIMGserveUrl(file);
 			var img = new Image();
+			textMode = textMode || false;
 			img.onload = function () {
 				var duration_load = Date.now() - start_ts;
 				start_ts = Date.now();
@@ -1347,16 +1352,14 @@ $(function(){
 					id: previewId,
 					'mb:id':self._normalize_mb_id(previewId),
 					class: 'userIMG',
-					'mb:origin': origin
+					'mb:origin': origin,
 				});
+                if (textMode) {
+                    imgWrapper.attr('style', "filter: url(#scan_text_mode)")
+                }
 
 				imgWrapper.append(newImg);
 				snap.select("#userContent").append(imgWrapper);
-//				imgWrapper.transformable();
-//				imgWrapper.ftRegisterOnTransformCallback(self.svgTransformUpdate);
-//				setTimeout(function(){
-//					imgWrapper.ftReportTransformation();
-//				}, 200);
 				self._makeItTransformable(imgWrapper);
 
 				file.id = id;
@@ -1379,6 +1382,23 @@ $(function(){
 				self._analyticsPlaceImage(analyticsData)
 			};
 			img.src = url;
+		};
+
+		self.placeImgUrl = function(url){
+			const name = "Data URL.png";
+			let file = {
+				date: Date.now(),
+				display: "URL: "+name,
+				name: name,
+				origin: "url",
+				path: "url",
+				refs: {download: url, resource: url},
+				size: url.length,
+				type: "model",
+				typePath: (2) ["model", "image"],
+				weight: 1
+			};
+			self.placeIMG(file, true);
 		};
 
 		self.removeIMG = function(file){
@@ -1602,7 +1622,11 @@ $(function(){
 
 		self._getSVGserveUrl = function(file){
 			if (file && file["refs"] && file["refs"]["download"]) {
-				var url = file.refs.download +'?'+ Date.now(); // be sure to avoid caching.
+				var url = file.refs.download;
+				if(!url.startsWith("data:")) {
+					// be sure to avoid caching.
+					url = url+'?'+ Date.now();
+				}
 				return url;
 			}
 		};
