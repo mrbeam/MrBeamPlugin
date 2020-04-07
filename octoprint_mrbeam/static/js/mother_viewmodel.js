@@ -500,7 +500,11 @@ $(function () {
 			for (var i = 0; i < items.length; i++) {
 				var elem = items[i];
 				let data = ko.dataFor(elem);
-				self.gcodefiles.removeFile(data);
+				if(data.type === 'folder'){
+					self.gcodefiles.removeFolder(data);
+				}else{
+					self.gcodefiles.removeFile(data);
+				}
 			}
 			items.remove();
 			$('#bulkActions').slideUp();
