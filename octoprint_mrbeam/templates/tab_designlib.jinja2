@@ -243,7 +243,7 @@
 															<div class="selection_box"  data-bind="click: function(data, ev){$root.updateSelection($data, ev)}, clickBubble: false;"><i class="icon icon-ok"></i></div>
 															<div class="preview" data-bind=" click: function(data){ $root.cancelSelection(); $root.changeFolder(data); }"></div>
 															<div class="title dropdown dropup">
-																<span class="title_shortened" data-bind="text: name, attr: {title: name}, style: { 'font-weight': $root.listHelper.isSelected($data) ? 'bold' : 'normal' " ></span>
+																<span class="title_shortened" data-bind="text: display, attr: {title: name}, style: { 'font-weight': $root.listHelper.isSelected($data) ? 'bold' : 'normal' " ></span>
 																<a type="button" class="dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false">
 																	<i class="icon-reorder pull-right"></i>
 																</a>
@@ -258,7 +258,7 @@
 																</ul>
 															</div>
 															
-															<div class="internal" data-bind="visible: name != display">{{ _('Internal') }}: <span data-bind="text: name"></span></div>
+															<!--<div class="internal" data-bind="visible: name != display">{{ _('Internal') }}: <span data-bind="text: name"></span></div>-->
 														</div>
 													</script>
 
