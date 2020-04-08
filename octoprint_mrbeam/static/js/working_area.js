@@ -1074,7 +1074,7 @@ $(function(){
 			var rot = svg.ftGetRotation();
 			var id = svg.attr('id');
 			var label_id = id.substr(0, id.indexOf('-'));
-			$('#'+label_id+' .translation').val(tx.toFixed(1) + ',' + ty.toFixed(1));
+			$('#'+label_id+' .translation').val(tx.toFixed(1) + ', ' + ty.toFixed(1));
 			$('#'+label_id+' .horizontal').val(horizontal.toFixed() + 'mm');
 			$('#'+label_id+' .vertical').val(vertical.toFixed() + 'mm');
 			$('#'+label_id+' .rotation').val(rot.toFixed(1) + '°');
@@ -1089,9 +1089,7 @@ $(function(){
 			if (event.keyCode === 13 || event.type === 'blur') {
 				var svg = snap.select('#'+data.previewId);
 				var globalScale = self.scaleMatrix().a;
-				// var newTranslateStr = event.target.value;
-				// var nt = newTranslateStr.split(/[^0-9.-]/); // TODO improve
-                var nt = self.splitStringToTwoValues(event.target.value)
+                var nt = WorkingAreaHelper.splitStringToTwoValues(event.target.value)
                 if (nt) {
                     var ntx = nt[0] / globalScale;
                     var nty = (self.workingAreaHeightMM() - nt[1]) / globalScale;
@@ -1100,21 +1098,12 @@ $(function(){
                     svg.ftManualTransform({tx: ntx, ty: nty, diffType: 'absolute'});
                     self.check_sizes_and_placements();
                 } else {
-                    // TODO:
+                    // reset to previous value
                     svg.ftUpdateTransform();
 			        svg.ftAfterTransform();
                 }
 			}
 		};
-
-		self.splitStringToTwoValues = function(myString){
-		    if (!myString) {return null}
-		    if (myString.match(/[a-zA-Z]/) || myString.match(/^\d+$/)) {return null}
-            let m = myString.match(/(-?\d+[.,]?\d*)[^0-9-]*(-?\d+[.,]?\d*)/)
-            return [m[1], m[2]]
-        }
-
-
 		self.svgManualRotate = function(data, event) {
 			if (event.keyCode === 13 || event.type === 'blur') {
 				self.abortFreeTransforms();
