@@ -2604,7 +2604,7 @@ input.search-query,
     display: none !important;
 }
 .env_dev .experimental_feature_dev {
-    display: initial;
+    display: inherit;
 }
 
 .env_prod .experimental_feature_beta {
@@ -2612,7 +2612,7 @@ input.search-query,
 }
 .env_dev .experimental_feature_beta,
 .env_beta .experimental_feature_beta {
-    display: initial;
+    display: inherit;
 }
 
 /* ----- online / offline ------- */
