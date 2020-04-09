@@ -960,7 +960,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		profile = self.laserCutterProfileManager.get_current_or_default()
 		max_intensity = 1300  # TODO get magic numbers from profile
 		min_intensity = 0
-		min_feedrate = 100
+		min_feedrate = 50
 		max_feedrate = 3000
 		try:
 			i = int(int(intensity) / 100.0 * max_intensity)

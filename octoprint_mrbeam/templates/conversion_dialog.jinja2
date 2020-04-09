@@ -232,10 +232,10 @@
                                     <label class="control-label">{{ _('Speed range') }}</label>
                                     <div class="controls range-control">
                                         <div class="input-append">
-                                            <input id="svgtogcode_img_feedrate_white" class="img_intensity_input speed_input" type="number"  min="100" max="3000"
+                                            <input id="svgtogcode_img_feedrate_white" class="img_intensity_input speed_input" type="number"  min="50" max="3000"
                                                    data-bind="value: imgFeedrateWhite, event: {change: flag_customized_material}">
                                             <div class="svgtogcode_grayscale">&nbsp;</div>
-                                            <input id="svgtogcode_img_feedrate_black" class="img_intensity_input speed_input" type="number"  min="100" max="3000"
+                                            <input id="svgtogcode_img_feedrate_black" class="img_intensity_input speed_input" type="number"  min="50" max="3000"
                                                    data-bind="value: imgFeedrateBlack, event: {change: flag_customized_material}">
                                         </div>
                                         &nbsp;{{ _('mm/min') }}
@@ -369,7 +369,7 @@
                                         {{ _('Cutting needs slower movement than engraving.') }}<br>
 									    {{ _('The effect in general is dependent from the material and its color and surface.') }}">
                                      <label class="control-label">{{ _('Speed') }}</label>
-                                     <div class="controls"><input class="param_feedrate img_intensity_input speed_input" type="number" min="100" max="3000"
+                                     <div class="controls"><input class="param_feedrate img_intensity_input speed_input" type="number" min="50" max="3000"
 															 data-bind="event: {change: flag_customized_material}"
 															 onblur="window.mrbeam.colorDragging.checkConversionParameters()"/>&nbsp;{{ _('mm/min') }}</div>
                                  </div>
