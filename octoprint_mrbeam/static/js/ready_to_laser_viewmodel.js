@@ -192,6 +192,10 @@ $(function() {
                 self.state.cancel();
             }
         };
+		
+		self.repeat_job = function(){
+			self._sendReadyToLaserRequest(true, false);
+		};
 
         self._fromData = function(payload, event) {
             if (!payload || !'mrb_state' in payload || !payload['mrb_state']) {
