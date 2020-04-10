@@ -22,5 +22,10 @@
                 <div><small>{{ _("Adjust the animation speed of Mr Beam Lights.") }}</small></div>
             </div>
         </div>
+        <div class="control-group" data-bind="visible: show_reset_btn">
+            <div class="controls">
+                <a data-bind="click: reset_leds_settings"><i class="icon-repeat"></i> Reset to defaults</a><br />
+            </div>
+        </div>
     </form>
 </div>
