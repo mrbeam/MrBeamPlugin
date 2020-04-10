@@ -529,8 +529,8 @@ $(function () {
             }
         };
 
-		// TODO Mr Beam Kit legacy code ?
-        self.gcodefiles.startGcodeWithSafetyWarning = function (gcodeFile) {
+        // starts a single GCode file.
+		self.gcodefiles.startGcodeWithSafetyWarning = function (gcodeFile) {
             self.gcodefiles.loadFile(gcodeFile, false);
             if (self.readyToLaser.oneButton) {
                 self.readyToLaser.setGcodeFile(gcodeFile.path);

@@ -33,7 +33,7 @@
         </div>
         <div class="modal-footer">
             <h4 data-bind='visible: is_dust_mode()' class="pull-right" >{{ _('Almost done...') }}</h4>
-            <a class="btn btn-primary" id="laser_job_done_repeat_btn" data-bind='visible: !is_dust_mode(), click: repeat_job' aria-hidden="true"><i class="icon icon-repeat"></i> {{ _('Repeat Job') }}</a>
+            <a class="btn btn-link" id="laser_job_done_repeat_btn" data-bind='visible: !is_dust_mode(), click: repeat_job' aria-hidden="true"><i class="icon icon-repeat"></i> {{ _('Repeat Job') }}</a>
             <a class="btn btn-primary" id="laser_job_done_done_btn" data-bind='visible: !is_dust_mode(), click: cancel_btn' aria-hidden="true">{{ _('Close') }}</a>
         </div>
     </div>
