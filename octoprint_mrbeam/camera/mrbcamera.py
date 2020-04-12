@@ -5,6 +5,7 @@ from octoprint_mrbeam.camera import Camera
 
 try:
 	from picamera import PiCamera
+	import picamera
 except OSError:
 	# TODO Teja : uninstall picamera on your device :D
 	raise ImportError("Could not import PiCamera")
@@ -39,7 +40,7 @@ class LoopThread(threading.Thread):
 		self.running = threading.Event()
 		self.running.clear()
 		self.stopFlag = stopFlag
-		self._logger = logging.getLogger('octoprint.plugins.mrbeam.loopthread')
+		self._logger = mrb_logger('octoprint.plugins.mrbeam.loopthread', lvl=logging.INFO)
 		self.ret = None
 		self.t = target
 		self._logger.debug("Loopthread initialised")
@@ -57,8 +58,13 @@ class LoopThread(threading.Thread):
 		while not self.stopFlag.isSet():
 			try:
 				self.ret = self.t(*self.__args, **self.__kw)
+			except picamera.exc.PiCameraMMALError as e:
+				self.running.clear()
+				self.stopFlag.set()
+				self._logger.exception(" %s, %s", e.__class__.__name__, e)
+				return
 			except Exception as e:
-				self._logger.error("ERROR %s, %s", e.__class__.__name__, e)
+				self._logger.exception(" %s, %s", e.__class__.__name__, e)
 			self.running.clear()
 			self.running.wait()
 
