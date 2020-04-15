@@ -2,7 +2,7 @@ from itertools import chain
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.camera import Camera
-
+from . import exc
 try:
 	from picamera import PiCamera
 	import picamera
@@ -13,6 +13,7 @@ except OSError:
 import time
 import threading
 import logging
+
 
 BRIGHTNESS_TOLERANCE = 80 # TODO Keep the brightness of the images tolerable
 
@@ -58,15 +59,12 @@ class LoopThread(threading.Thread):
 		while not self.stopFlag.isSet():
 			try:
 				self.ret = self.t(*self.__args, **self.__kw)
-			except picamera.exc.PiCameraMMALError as e:
-				self.running.clear()
-				self.stopFlag.set()
-				self._logger.exception(" %s, %s", e.__class__.__name__, e)
-				return
 			except Exception as e:
 				self._logger.exception(" %s, %s", e.__class__.__name__, e)
+				raise
 			self.running.clear()
-			self.running.wait()
+			while not self.stopFlag.isSet() and not self.running.isSet():
+				self.running.wait(.2)
 
 
 class MrbCamera(PiCamera, Camera):
@@ -175,6 +173,12 @@ class MrbCamera(PiCamera, Camera):
 			self.captureLoop.start()
 		else:
 			self._logger.debug("Camera already running or stopEvent set")
+
+	def stop(self, timeout=None):
+		if self.captureLoop.is_alive() and not self.stopEvent.isSet():
+			self.stopEvent.set()
+			self.captureLoop.running.clear()
+			self.captureLoop.join(timeout)
 
 	def async_capture(self, *args, **kw):
 		"""

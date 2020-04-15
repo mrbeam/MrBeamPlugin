@@ -19,6 +19,7 @@ import octoprint_mrbeam.camera
 from octoprint_mrbeam.camera.mrbcamera import MrbCamera
 from octoprint_mrbeam.camera import gaussBlurDiff, QD_KEYS, PICAMERA_AVAILABLE
 from octoprint_mrbeam.util import json_serialisor, logme
+import octoprint_mrbeam.camera.exc as exc
 if PICAMERA_AVAILABLE:
 	from octoprint_mrbeam.camera.undistort import prepareImage, MAX_OBJ_HEIGHT, \
 		CAMERA_HEIGHT, _getCamParams, _getPicSettings, DIST_KEY, MTX_KEY
@@ -324,7 +325,12 @@ class PhotoCreator(object):
 			# bestShutterSpeeds = cam.apply_best_shutter_speed()  # Usually only 1 value, but there could be more
 			# TODO cam.anti_rolling_shutter_banding()
 			if not self.active(): return
-			cam.start()  # starts capture to the cam.worker
+			try:
+				cam.start()  # starts capture to the cam.worker
+			except exc.CameraConnectionException as e:
+				cam.stop()
+				self._logger.error(" %s, %s", e.__class__.__name__, e)
+				return
 			# --- Decide on the picture quality to give to the user and whether the pic is different ---
 			prev = None # previous image
 			nb_consecutive_similar_pics = 0
