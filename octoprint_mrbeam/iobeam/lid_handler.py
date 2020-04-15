@@ -135,7 +135,7 @@ class LidHandler(object):
 
 	def _startStopCamera(self, event):
 		if self._photo_creator is not None:
-			status = ' event: {}, client_opened {}, is_slicing: {}\nlid_closed: {}, printer.is_locked(): {}, save_debug_images: {}'.format(
+			status = ' - event: {}\nclient_opened {}, is_slicing: {}\nlid_closed: {}, printer.is_locked(): {}, save_debug_images: {}'.format(
 						event,
 						self._client_opened,
 						self._is_slicing,
@@ -178,14 +178,16 @@ class LidHandler(object):
 			return make_response('Error, no photocreator active, maybe you are developing and dont have a cam?', 503)
 
 	def _start_photo_worker(self):
-		if not self._photo_creator.active() \
-				and (self._photo_creator.worker is None or not self._photo_creator.worker.isAlive()):
-			self._photo_creator.start()
+		if not self._photo_creator.active:
+			if self._photo_creator.stopping:
+				self._photo_creator.restart()
+			else:
+				self._photo_creator.start()
 		else:
 			self._logger.info("Another PhotoCreator thread is already active! Not starting a new one.")
 
 	def _end_photo_worker(self):
-		if self._photo_creator:
+		if self._photo_creator is not None:
 			self._photo_creator.stop()
 			self._photo_creator.save_debug_images = False
 			self._photo_creator.undistorted_pic_path = None
@@ -205,6 +207,7 @@ class PhotoCreator(object):
 		self._laserCutterProfile = _plugin.laserCutterProfileManager.get_current_or_default()
 		self.stopEvent = Event()
 		self.stopEvent.set()
+		self.activeFlag = Event()
 		self._pic_available = Event()
 		self._pic_available.clear()
 		self.zoomed_out = True
@@ -212,6 +215,7 @@ class PhotoCreator(object):
 		self.is_initial_calibration = False
 		self.undistorted_pic_path = None
 		self.save_debug_images = self._settings.get(['cam', 'saveCorrectionDebugImages'])
+		self.undistorted_pic_path = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(['cam', 'localUndistImage'])
 		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator")
 		self.debug = debug
 		self._front_ready = Event()
@@ -227,38 +231,47 @@ class PhotoCreator(object):
 			self.tmp_img_prepared = self.final_image_path.replace('.jpg', '-tmp2.jpg')
 		map(self._createFolder_if_not_existing, [self.final_image_path, self.tmp_img_raw, self.tmp_img_prepared])
 
+	@property
 	def active(self):
-		return not self.stopEvent.isSet()
+		return self.activeFlag.isSet()
+
+	@active.setter
+	def active(self, val):
+		# @type val: bool
+		if val: self.activeFlag.set()
+		else:   self.activeFlag.clear()
 
 	def start(self):
-		if self.active():
+		if self.active and not self.stopping:
+			self._logger.debug("PhotoCreator worker already running.")
+			return
+		elif self.active:
+			self._logger.debug("worker shutting down but still active, waiting for it to stop before restart.")
 			self.stop()
-		if self.worker is not None and self.worker.is_alive():
-			if not self.stopEvent.is_set():
-				self._logger.debug("Worker already running, not stopping it")
-				return
-			else:
-				self.worker.join()
 		self.stopEvent.clear()
+		self.active = True
 		self.worker = threading.Thread(target=self.work, name='Photo-Worker')
 		self.worker.daemon = True
 		self.worker.start()
 
 	def stop(self):
+		if not self.active: self._logger.debug("Worker already stopped")
 		self.stopEvent.set()
-		if self.worker is not None:
-			return self.worker.join()
-		else:
-			return
+		if self.worker is not None and self.worker.is_alive():
+			self.worker.join()
+		self.active = False
 
-	def set_undistorted_path(self):
-		self.undistorted_pic_path = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(['cam', 'localUndistImage'])
+	@property
+	def stopping(self):
+		return self.stopEvent.isSet()
+
+	def restart(self):
+		if self.active:
+			self.stop()
+		self.start()
 
 	def work(self):
-
 		if self.is_initial_calibration:
-			self.set_undistorted_path()
-			# set_debug_images_to = save_debug_images or self._photo_creator.save_debug_images
 			# TODO save marker colors
 			self.save_debug_images = True
 
@@ -270,13 +283,13 @@ class PhotoCreator(object):
 		self._logger.debug("Starting the camera now.")
 		try:
 			with MrbCamera(octoprint_mrbeam.camera.MrbPicWorker(maxSize=2, debug=self.debug),
-                           framerate=8,
+                           # framerate=8,
                            resolution=octoprint_mrbeam.camera.LEGACY_STILL_RES,  # TODO camera.DEFAULT_STILL_RES,
                            stopEvent=self.stopEvent,) as cam:
 				self.serve_pictures(cam)
 		except Exception as e:
 			if e.__class__.__name__.startswith('PiCamera'):
-				self._logger.error("PiCamera_Error_while_preparing_camera_%s_%s", e.__class__.__name__, e)
+				self._logger.exception("PiCamera_Error_while_preparing_camera_%s_%s", e.__class__.__name__, e)
 			else:
 				self._logger.exception("Exception_while_preparing_camera_%s_%s", e.__class__.__name__, e)
 		self.stopEvent.set()
@@ -305,7 +318,6 @@ class PhotoCreator(object):
 		self._front_ready.set()
 		path_to_cam_params = self._settings.get(["cam", "lensCalibrationFile"])
 		path_to_pic_settings = self._settings.get(["cam", "correctionSettingsFile"])
-		path_to_last_markers = self._settings.get(["cam", "correctionTmpFile"])
 
 		mrb_volume = self._laserCutterProfile['volume']
 		out_pic_size = mrb_volume['width'], mrb_volume['depth']
@@ -319,17 +331,17 @@ class PhotoCreator(object):
 		pic_settings = _getPicSettings(path_to_pic_settings)
 		self._logger.debug('Loaded pic_settings: {}'.format(pic_settings))
 		try:
-			if not self.active(): return
+			if self.stopping: return
 			cam.start_preview()
-			time.sleep(2)
+			self.stopEvent.wait(2)
 			# bestShutterSpeeds = cam.apply_best_shutter_speed()  # Usually only 1 value, but there could be more
 			# TODO cam.anti_rolling_shutter_banding()
-			if not self.active(): return
+			if self.stopping: return
 			try:
 				cam.start()  # starts capture to the cam.worker
 			except exc.CameraConnectionException as e:
-				cam.stop()
-				self._logger.error(" %s, %s", e.__class__.__name__, e)
+				self._logger.exception(" %s, %s", e.__class__.__name__, e)
+				cam.stop(1)
 				return
 			# --- Decide on the picture quality to give to the user and whether the pic is different ---
 			prev = None # previous image
@@ -349,21 +361,21 @@ class PhotoCreator(object):
 			cam.wait()
 			while self._plugin.lid_handler._lid_closed:
 				# Wait for the lid to be completely open
-				if self._plugin.lid_handler._interlock_closed or not self.active():
+				if self._plugin.lid_handler._interlock_closed or self.stopping:
 					return
 				time.sleep(.2)
 			# The lid didn't open during waiting time
 			cam.async_capture()
-			while self.active():
+			while not self.stopping:
 				cam.wait()  # waits until the next picture is ready
-				if not self.active(): break
+				if self.stopping: break
 				latest = cam.lastPic() # gets last picture given by cam.worker
 				cam.async_capture()  # starts capture with new settings
 				if latest is None:
 					# The first picture will be empty, should wait for the 2nd one.
 					self._logger.info("The last picture is empty")
 					continue
-				if not self.active(): break  # check if still active...
+				if self.stopping: break  # check if still active...
 				# TODO start capture with different brightness if we think we need it
 				#     TODO apply shutter speed adjustment from preliminary measurements
 
@@ -414,7 +426,7 @@ class PhotoCreator(object):
 				                                                      undistorted=True,
 				                                                      stopEvent=self.stopEvent,
 				                                                      threads=4)
-				if not self.active(): return False, None, None, None, None
+				if self.stopping: return False, None, None, None, None
 				success = workspaceCorners is not None
 				# Conform to the legacy result to be sent to frontend
 				correction_result = {'markers_found': list(filter(lambda q: q not in missed, QD_KEYS)),

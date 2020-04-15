@@ -52,7 +52,8 @@ class LoopThread(threading.Thread):
 		try:
 			threading.Thread.run(self)
 		except Exception as e:
-			self._logger.warning("mrbeam.loopthread : %s, %s", e.__class__.__name__, e)
+			self._logger.exception("mrbeam.loopthread : %s, %s", e.__class__.__name__, e)
+			raise
 
 	def _loop(self):
 		self.running.set()
