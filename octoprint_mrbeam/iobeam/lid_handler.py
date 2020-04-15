@@ -289,10 +289,13 @@ class PhotoCreator(object):
 				self.serve_pictures(cam)
 		except exc.CameraConnectionException as e:
 			self._logger.exception(" %s, %s", e.__class__.__name__, e)
-			# TODO Notify front end
-			self._logger.info("Restarting the work after some sleep")
-			self.stopEvent.wait(5)
-			if not self.stopping:
+			self._logger.info("Restarting work() after some sleep")
+			self._plugin.user_notification_system.show_notifications(
+				self._plugin.user_notification_system.get_notification(
+					notification_id='warn_cam_conn_err',
+					replay=True))
+			self.stopEvent.clear()
+			if not self.stopEvent.wait(5.0):
 				self.work()
 			return
 		except Exception as e:
@@ -338,132 +341,127 @@ class PhotoCreator(object):
 		# load pic_settings json
 		pic_settings = _getPicSettings(path_to_pic_settings)
 		self._logger.debug('Loaded pic_settings: {}'.format(pic_settings))
+		if self.stopping: return
+		cam.start_preview()
+		self.stopEvent.wait(2)
+		if self.stopping: return
 		try:
-			if self.stopping: return
-			cam.start_preview()
-			self.stopEvent.wait(2)
-			# bestShutterSpeeds = cam.apply_best_shutter_speed()  # Usually only 1 value, but there could be more
-			# TODO cam.anti_rolling_shutter_banding()
-			if self.stopping: return
-			try:
-				cam.start()  # starts capture to the cam.worker
-			except exc.CameraConnectionException as e:
-				self._logger.exception(" %s, %s", e.__class__.__name__, e)
-				cam.stop(1)
-				raise
-			# --- Decide on the picture quality to give to the user and whether the pic is different ---
-			prev = None # previous image
-			nb_consecutive_similar_pics = 0
-			# Output image has a resolution based on the physical size of the workspace
-			# JPEG compression quality of output image
-			# Doubling the upscale factor will quadruple the image resolution while and
-			# multiply file size by around 2.8 (depending on image quality)
-			pic_qualities = [
-					[1 * DEFAULT_MM_TO_PX, LOW_QUALITY],
-					[4 * DEFAULT_MM_TO_PX, LOW_QUALITY]
-			]
-			pic_qual_index = 0
-			# Marker positions detected on the last loop
-			markers = None
-			# waste the first picture : doesn't matter how long we wait to warm up, the colors will be off.
-			cam.wait()
-			while self._plugin.lid_handler._lid_closed:
-				# Wait for the lid to be completely open
-				if self._plugin.lid_handler._interlock_closed or self.stopping:
-					return
-				time.sleep(.2)
-			# The lid didn't open during waiting time
-			cam.async_capture()
-			while not self.stopping:
-				cam.wait()  # waits until the next picture is ready
-				if self.stopping: break
-				latest = cam.lastPic() # gets last picture given by cam.worker
-				cam.async_capture()  # starts capture with new settings
-				if latest is None:
-					# The first picture will be empty, should wait for the 2nd one.
-					self._logger.info("The last picture is empty")
+			cam.start()  # starts capture to the cam.worker
+		except exc.CameraConnectionException as e:
+			self._logger.exception(" %s, %s", e.__class__.__name__, e)
+			cam.stop(1)
+			raise
+		# --- Decide on the picture quality to give to the user and whether the pic is different ---
+		prev = None # previous image
+		nb_consecutive_similar_pics = 0
+		# Output image has a resolution based on the physical size of the workspace
+		# JPEG compression quality of output image
+		# Doubling the upscale factor will quadruple the image resolution while and
+		# multiply file size by around 2.8 (depending on image quality)
+		pic_qualities = [
+				[1 * DEFAULT_MM_TO_PX, LOW_QUALITY],
+				[4 * DEFAULT_MM_TO_PX, LOW_QUALITY]
+		]
+		pic_qual_index = 0
+		# Marker positions detected on the last loop
+		markers = None
+		# waste the first picture : doesn't matter how long we wait to warm up, the colors will be off.
+		cam.wait()
+		while self._plugin.lid_handler._lid_closed:
+			# Wait for the lid to be completely open
+			if self._plugin.lid_handler._interlock_closed or self.stopping:
+				return
+			time.sleep(.2)
+		# The lid didn't open during waiting time
+		cam.async_capture()
+		while not self.stopping:
+			cam.wait()  # waits until the next picture is ready
+			if self.stopping: break
+			latest = cam.lastPic() # gets last picture given by cam.worker
+			cam.async_capture()  # starts capture with new settings
+			if latest is None:
+				# The first picture will be empty, should wait for the 2nd one.
+				self._logger.info("The last picture is empty")
+				continue
+			if self.stopping: break  # check if still active...
+			# TODO start capture with different brightness if we think we need it
+			#     TODO apply shutter speed adjustment from preliminary measurements
+
+			# Compare previous image with the current one.
+			if prev is None or gaussBlurDiff(latest, prev, resize=.5):
+				# The 2 images are different, try to work on this one.
+				prev = latest # no need to copy because latest should be immutable
+				nb_consecutive_similar_pics = 0
+				pic_qual_index = 0
+				# TODO change the upscale factor depending on how fast the connection is
+			else:
+				# Picture too similar to the previous, discard or upscale it
+				nb_consecutive_similar_pics += 1
+				if nb_consecutive_similar_pics % SIMILAR_PICS_BEFORE_UPSCALE == 0 \
+						and pic_qual_index < len(pic_qualities) - 1:
+					# TODO don't upscale if the connection is too bad
+					# TODO check connection through netconnectd ?
+					# TODO use response from front-end
+					pic_qual_index += 1
+					prev = latest
+				elif nb_consecutive_similar_pics % SIMILAR_PICS_BEFORE_REFRESH == 0 \
+						and not self._front_ready.isSet():
+					# Try to send a picture despite the client not responding / being ready
+					prev = latest
+					self._front_ready.set()
+				else:
+					time.sleep(1.5) # Let the raspberry breathe a bit (prevent overheating)
 					continue
-				if self.stopping: break  # check if still active...
-				# TODO start capture with different brightness if we think we need it
-				#     TODO apply shutter speed adjustment from preliminary measurements
+			# Get the desired scale and quality of the picture to serve
+			upscale_factor , quality = pic_qualities[pic_qual_index]
+			scaled_output_size = tuple(int(upscale_factor * i) for i in out_pic_size)
+			# --- Correct captured image ---
+			self._logger.debug("Starting with correction...")
+			if cam_params is not None:
+				dist, mtx = cam_params[DIST_KEY], cam_params[MTX_KEY]
+			else:
+				dist, mtx = None, None
+			workspaceCorners, markers, missed, err = prepareImage(input_image=latest,
+																  path_to_output_image=self.tmp_img_prepared,
+																  pic_settings=pic_settings,
+																  cam_dist=dist,
+																  cam_matrix=mtx,
+																  last_markers=markers,
+																  size=scaled_output_size,
+																  quality=quality,
+																  zoomed_out=self.zoomed_out,
+																  debug_out=self.save_debug_images,  # self.save_debug_images,
+																  undistorted=True,
+																  stopEvent=self.stopEvent,
+																  threads=4)
+			if self.stopping: return False, None, None, None, None
+			success = workspaceCorners is not None
+			# Conform to the legacy result to be sent to frontend
+			correction_result = {'markers_found': list(filter(lambda q: q not in missed, QD_KEYS)),
+								 # {k: v.astype(int) for k, v in markers.items()},
+								 'markers_recognised': 4 - len(missed),
+								 'corners_calculated': None if workspaceCorners is None else list(workspaceCorners),
+								 # {k: v.astype(int) for k, v in workspaceCorners.items()},
+								 'markers_pos': {qd: pos.tolist() for qd, pos in markers.items()},
+								 'successful_correction': success,
+								 'undistorted_saved': True,
+								 'workspace_corner_ratio': float(MAX_OBJ_HEIGHT) / CAMERA_HEIGHT / 2,
+								 'error': err}
+			# Send result to fronted ASAP
+			if success:
+				self._ready_to_send_pic(correction_result)
+			else:
+				# Just tell front end that there was an error
+				self._send_frontend_picture_metadata(correction_result)
 
-				# Compare previous image with the current one.
-				if prev is None or gaussBlurDiff(latest, prev, resize=.5):
-					# The 2 images are different, try to work on this one.
-					prev = latest # no need to copy because latest should be immutable
-					nb_consecutive_similar_pics = 0
-					pic_qual_index = 0
-					# TODO change the upscale factor depending on how fast the connection is
-				else:
-					# Picture too similar to the previous, discard or upscale it
-					nb_consecutive_similar_pics += 1
-					if nb_consecutive_similar_pics % SIMILAR_PICS_BEFORE_UPSCALE == 0 \
-							and pic_qual_index < len(pic_qualities) - 1:
-						# TODO don't upscale if the connection is too bad
-						# TODO check connection through netconnectd ?
-						# TODO use response from front-end
-						pic_qual_index += 1
-						prev = latest
-					elif nb_consecutive_similar_pics % SIMILAR_PICS_BEFORE_REFRESH == 0 \
-							and not self._front_ready.isSet():
-						# Try to send a picture despite the client not responding / being ready
-						prev = latest
-						self._front_ready.set()
-					else:
-						time.sleep(1.5) # Let the raspberry breathe a bit (prevent overheating)
-						continue
-				# Get the desired scale and quality of the picture to serve
-				upscale_factor , quality = pic_qualities[pic_qual_index]
-				scaled_output_size = tuple(int(upscale_factor * i) for i in out_pic_size)
-				# --- Correct captured image ---
-				self._logger.debug("Starting with correction...")
-				if cam_params is not None:
-					dist, mtx = cam_params[DIST_KEY], cam_params[MTX_KEY]
-				else:
-					dist, mtx = None, None
-				workspaceCorners, markers, missed, err = prepareImage(input_image=latest,
-				                                                      path_to_output_image=self.tmp_img_prepared,
-				                                                      pic_settings=pic_settings,
-				                                                      cam_dist=dist,
-				                                                      cam_matrix=mtx,
-				                                                      last_markers=markers,
-				                                                      size=scaled_output_size,
-				                                                      quality=quality,
-				                                                      zoomed_out=self.zoomed_out,
-				                                                      debug_out=self.save_debug_images,  # self.save_debug_images,
-				                                                      undistorted=True,
-				                                                      stopEvent=self.stopEvent,
-				                                                      threads=4)
-				if self.stopping: return False, None, None, None, None
-				success = workspaceCorners is not None
-				# Conform to the legacy result to be sent to frontend
-				correction_result = {'markers_found': list(filter(lambda q: q not in missed, QD_KEYS)),
-				                     # {k: v.astype(int) for k, v in markers.items()},
-				                     'markers_recognised': 4 - len(missed),
-				                     'corners_calculated': None if workspaceCorners is None else list(workspaceCorners),
-				                     # {k: v.astype(int) for k, v in workspaceCorners.items()},
-				                     'markers_pos': {qd: pos.tolist() for qd, pos in markers.items()},
-				                     'successful_correction': success,
-				                     'undistorted_saved': True,
-				                     'workspace_corner_ratio': float(MAX_OBJ_HEIGHT) / CAMERA_HEIGHT / 2,
-				                     'error': err}
-				# Send result to fronted ASAP
-				if success:
-					self._ready_to_send_pic(correction_result)
-				else:
-					# Just tell front end that there was an error
-					self._send_frontend_picture_metadata(correction_result)
-
-				self._add_result_to_analytics(session_details,
-                                              markers,
-                                              increment_pic=True,
-                                              error=err)
-			cam.stop_preview()
-			if session_details['num_pics'] > 0:
-				self._analytics_handler.add_camera_session_details(session_details)
-			self._logger.debug("PhotoCreator_stopping")
-		except Exception as worker_exception:
-			self._logger.exception("Exception_in_worker_thread_of_PhotoCreator-_{}".format(worker_exception.message))
+			self._add_result_to_analytics(session_details,
+										  markers,
+										  increment_pic=True,
+										  error=err)
+		cam.stop_preview()
+		if session_details['num_pics'] > 0:
+			self._analytics_handler.add_camera_session_details(session_details)
+		self._logger.debug("PhotoCreator_stopping")
 
 	# @logme(True)
 	def _add_result_to_analytics(self,
