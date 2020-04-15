@@ -241,23 +241,23 @@ class PhotoCreator(object):
 		if val: self.activeFlag.set()
 		else:   self.activeFlag.clear()
 
-	def start(self):
+	def start(self, blocking=True):
 		if self.active and not self.stopping:
 			self._logger.debug("PhotoCreator worker already running.")
 			return
 		elif self.active:
 			self._logger.debug("worker shutting down but still active, waiting for it to stop before restart.")
-			self.stop()
+			self.stop(blocking)
 		self.stopEvent.clear()
 		self.active = True
 		self.worker = threading.Thread(target=self.work, name='Photo-Worker')
 		self.worker.daemon = True
 		self.worker.start()
 
-	def stop(self):
+	def stop(self, blocking=True):
 		if not self.active: self._logger.debug("Worker already stopped")
 		self.stopEvent.set()
-		if self.worker is not None and self.worker.is_alive():
+		if blocking and self.worker is not None and self.worker.is_alive():
 			self.worker.join()
 		self.active = False
 
@@ -265,10 +265,10 @@ class PhotoCreator(object):
 	def stopping(self):
 		return self.stopEvent.isSet()
 
-	def restart(self):
+	def restart(self, blocking=True):
 		if self.active:
-			self.stop()
-		self.start()
+			self.stop(blocking)
+		self.start(blocking)
 
 	def work(self):
 		if self.is_initial_calibration:
@@ -287,6 +287,14 @@ class PhotoCreator(object):
                            resolution=octoprint_mrbeam.camera.LEGACY_STILL_RES,  # TODO camera.DEFAULT_STILL_RES,
                            stopEvent=self.stopEvent,) as cam:
 				self.serve_pictures(cam)
+		except exc.CameraConnectionException as e:
+			self._logger.exception(" %s, %s", e.__class__.__name__, e)
+			# TODO Notify front end
+			self._logger.info("Restarting the work after some sleep")
+			self.stopEvent.wait(5)
+			if not self.stopping:
+				self.work()
+			return
 		except Exception as e:
 			if e.__class__.__name__.startswith('PiCamera'):
 				self._logger.exception("PiCamera_Error_while_preparing_camera_%s_%s", e.__class__.__name__, e)
@@ -342,7 +350,7 @@ class PhotoCreator(object):
 			except exc.CameraConnectionException as e:
 				self._logger.exception(" %s, %s", e.__class__.__name__, e)
 				cam.stop(1)
-				return
+				raise
 			# --- Decide on the picture quality to give to the user and whether the pic is different ---
 			prev = None # previous image
 			nb_consecutive_similar_pics = 0
