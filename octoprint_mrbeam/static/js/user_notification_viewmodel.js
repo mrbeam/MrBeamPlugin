@@ -46,7 +46,10 @@ $(function () {
                 text: gettext("The camera has had a small issue, please restart your Mr Beam if you need to use the camera to continue with your work."),
                 type: 'error',
                 hide: false,
-            }
+                knowledgebase: {
+                    url: 'https://support.mr-beam.org/en/support/solutions/articles/43000570474-error-camera-error',
+                }
+            },
         };
 
 
