@@ -37,9 +37,15 @@ $(function () {
             },
             warn_cam_conn_err: {
                 title: gettext("Camera busy"),
-                text: gettext("The camera has had a small issue, it will take a few seconds to restart"),
+                text: gettext("The camera was stopped recently, it will take a few seconds to restart."),
                 type: 'info',
                 hide: true,
+            },
+            err_cam_conn_err: {
+                title: gettext("Camera connection Error"),
+                text: gettext("The camera has had a small issue, please restart your Mr Beam if you need to use the camera to continue with your work."),
+                type: 'error',
+                hide: false,
             }
         };
 

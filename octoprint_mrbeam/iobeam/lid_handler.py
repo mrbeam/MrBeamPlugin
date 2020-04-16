@@ -31,6 +31,7 @@ TOP_QUALITY = 90 # best compression quality we want to serve the user
 DEFAULT_MM_TO_PX = 1 # How many pixels / mm is used for the output image
 
 SIMILAR_PICS_BEFORE_REFRESH = 20
+MAX_PIC_THREAD_RETRIES = 2
 
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 from octoprint.events import Events as OctoPrintEvents
@@ -216,13 +217,14 @@ class PhotoCreator(object):
 		self.undistorted_pic_path = None
 		self.save_debug_images = self._settings.get(['cam', 'saveCorrectionDebugImages'])
 		self.undistorted_pic_path = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(['cam', 'localUndistImage'])
-		self._logger = logging.getLogger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator")
 		self.debug = debug
 		self._front_ready = Event()
 		self.last_correction_result = None
 		self.worker = None
-		if debug: self._logger.setLevel(logging.DEBUG)
-		else:     self._logger.setLevel(logging.INFO)
+		if debug:
+			self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator", logging.DEBUG)
+		else:
+			self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator", logging.INFO)
 		if self._settings.get(["cam", "keepOriginals"]):
 			self.tmp_img_raw = self.final_image_path.replace('.jpg', "-tmp{}.jpg".format(time.time()))
 			self.tmp_img_prepared = self.final_image_path.replace('.jpg', '-tmp2.jpg')
@@ -270,7 +272,7 @@ class PhotoCreator(object):
 			self.stop(blocking)
 		self.start(blocking)
 
-	def work(self):
+	def work(self, recurse_nb=0):
 		if self.is_initial_calibration:
 			# TODO save marker colors
 			self.save_debug_images = True
@@ -289,14 +291,21 @@ class PhotoCreator(object):
 				self.serve_pictures(cam)
 		except exc.CameraConnectionException as e:
 			self._logger.exception(" %s, %s", e.__class__.__name__, e)
-			self._logger.info("Restarting work() after some sleep")
-			self._plugin.user_notification_system.show_notifications(
-				self._plugin.user_notification_system.get_notification(
-					notification_id='warn_cam_conn_err',
-					replay=True))
-			self.stopEvent.clear()
-			if not self.stopEvent.wait(5.0):
-				self.work()
+			if recurse_nb < MAX_PIC_THREAD_RETRIES:
+				self._logger.info("Restarting work() after some sleep")
+				self._plugin.user_notification_system.show_notifications(
+					self._plugin.user_notification_system.get_notification(
+						notification_id='warn_cam_conn_err',
+						replay=True))
+				self.stopEvent.clear()
+				if not self.stopEvent.wait(5.0):
+					self.work(recurse_nb=recurse_nb+1)
+			else:
+				self._logger.error("Recursive restart : too many times, displaying Error message.")
+				self._plugin.user_notification_system.show_notifications(
+					self._plugin.user_notification_system.get_notification(
+						notification_id='err_cam_conn_err',
+						replay=True))
 			return
 		except Exception as e:
 			if e.__class__.__name__.startswith('PiCamera'):

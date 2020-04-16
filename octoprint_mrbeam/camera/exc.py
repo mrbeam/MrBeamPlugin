@@ -1,15 +1,9 @@
 try:
-	import picamera
-	Err = picamera.exc.PiCameraError
-	MMALErr = picamera.exc.PiCameraMMALError
+	import picamera.exc.PiCameraError as _Exc
+	import picamera.exc.PiCameraMMALError as _ConnErr
 except ImportError, OSError:
-	Err = Exception
-	MMALErr = Exception
+	_Exc = Exception
+	_ConnErr = Exception
 
-class CameraException(Err):
-	pass
-
-class CameraConnectionException(MMALErr, Err):
-	def __init__(self, status, prefix=""):
-		MMALErr.__init__(self, status)
-	pass
+CameraException = _Exc
+CameraConnectionException = _ConnErr
