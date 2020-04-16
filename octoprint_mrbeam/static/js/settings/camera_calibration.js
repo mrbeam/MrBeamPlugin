@@ -12,8 +12,8 @@ $(function () {
 		window.mrbeam.viewModels['cameraCalibrationViewModel'] = self;
 
 		self.staticURL = "/plugin/mrbeam/static/img/cam_calibration/calpic_wait.svg";
-		self.rawUrl = '/downloads/files/local/cam/beam-cam-tmp.jpg';
-		self.undistortedUrl = '/downloads/files/local/cam/undistorted/beam-cam-tmp2.jpg';
+		self.rawUrl = '/downloads/files/local/cam/debug/raw.jpg';
+		self.undistortedUrl = '/downloads/files/local/cam/debug/undistorted.jpg';
 		self.croppedUrl = '/downloads/files/local/cam/beam-cam.jpg';
 		self.camImgPath = self.staticURL;
 
@@ -294,25 +294,19 @@ $(function () {
 					self.calImgUrl(self.camImgPath + '?' + new Date().getTime());
 
 					if (self.isInitialCalibration()) {
-						self.dbNWImgUrl('/downloads/files/local/cam/beam-cam-tmp2_debug_NW.jpg' + '?' + new Date().getTime());
-						self.dbNEImgUrl('/downloads/files/local/cam/beam-cam-tmp2_debug_NE.jpg' + '?' + new Date().getTime());
-						self.dbSWImgUrl('/downloads/files/local/cam/beam-cam-tmp2_debug_SW.jpg' + '?' + new Date().getTime());
-						self.dbSEImgUrl('/downloads/files/local/cam/beam-cam-tmp2_debug_SE.jpg' + '?' + new Date().getTime());
+						self.dbNWImgUrl('/downloads/files/local/cam/debug/NW.jpg' + '?' + new Date().getTime());
+						self.dbNEImgUrl('/downloads/files/local/cam/debug/NE.jpg' + '?' + new Date().getTime());
+						self.dbSWImgUrl('/downloads/files/local/cam/debug/SW.jpg' + '?' + new Date().getTime());
+						self.dbSEImgUrl('/downloads/files/local/cam/debug/SE.jpg' + '?' + new Date().getTime());
 
 					}
 
 					// check if all markers are found and image is good for calibration
 					if (self.cal_img_ready()) {
 						// console.log("Remembering markers for Calibration", markers);
-						if (markers instanceof Array){
-							// New alog
-							self.currentMarkersFound = data['beam_cam_new_image']['markers_pos'];
-							//	i, j -> x, y conversion
-							['NW', 'NE', 'SE', 'SW'].forEach(function(m) {self.currentMarkersFound[m] = self.currentMarkersFound[m].reverse();} );
-						} else {
-							// Legacy algo
-							self.currentMarkersFound = markers;
-						}
+						self.currentMarkersFound = data['beam_cam_new_image']['markers_pos'];
+						//	i, j -> x, y conversion
+						['NW', 'NE', 'SE', 'SW'].forEach(function(m) {self.currentMarkersFound[m] = self.currentMarkersFound[m].reverse();} );
 					}
 					else if(self.calibrationActive()){
 						console.log("Not all Markers found, are the pink circles obstructed?");

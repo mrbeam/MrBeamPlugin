@@ -102,6 +102,12 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	else:
 		logger.setLevel(logging.WARNING)
 
+	def save_debug_img(img, name):
+		"""Saves the image in a folder along the given path"""
+		dbg_path = os.path.join(dirname(path_to_output_image), "debug", name + ".jpg")
+		_mkdir(dirname(dbg_path))
+		cv2.imwrite(dbg_path, img)
+
 	err = None
 
 	# load pic_settings json
@@ -138,17 +144,20 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 		img = input_image
 	else:
 		raise ValueError("path_to_input_image-_in_camera_undistort_needs_to_be_a_path_(string)_or_a_numpy_array")
+
+	if debug_out: save_debug_img(img, "raw")
+
 	if cam_dist is not None and cam_matrix is not None:
 		# undistort image with cam_params
 		img = _undistortImage(img, cam_dist, cam_matrix)
 
 	if debug_out or undistorted:
-		save_debug_img(img, path_to_output_image, "undistorted")
+		save_debug_img(img, "undistorted")
 
 	if stopEvent and stopEvent.isSet(): return None, None, None, STOP_EVENT_ERR
 
 	# search markers on undistorted pic
-	dbg_markers = os.path.join(dirname(path_to_output_image), "markers", basename(path_to_output_image))
+	dbg_markers = os.path.join(dirname(path_to_output_image), "debug", ".jpg")
 	_mkdir(dirname(dbg_markers))
 	outputPoints = _getColoredMarkerPositions(img,
                                               debug_out_path=dbg_markers,
@@ -182,17 +191,17 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 
 	if stopEvent and stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR
 
-	if debug_out: save_debug_img(_debug_drawMarkers(img, markers), path_to_output_image, "drawmarkers")
+	if debug_out: save_debug_img(_debug_drawMarkers(img, markers), "drawmarkers")
 
 	# get corners of working area
 	workspaceCorners = {qd: markers[qd] + pic_settings[M2C_VECTOR_KEY][qd][::-1] for qd in QD_KEYS}
 	logger.debug("Workspace corners \nNW % 14s  NE % 14s\nSW % 14s  SE % 14s"
                  % tuple(map(np.ndarray.tolist, map(workspaceCorners.__getitem__, ['NW', 'NE', 'SW', 'SE']))))
-	if debug_out: save_debug_img(_debug_drawCorners(img, workspaceCorners), path_to_output_image, "drawcorners")
+	if debug_out: save_debug_img(_debug_drawCorners(img, workspaceCorners), "drawcorners")
 
 	# warp image
 	warpedImg = _warpImgByCorners(img, workspaceCorners, zoomed_out)
-	if debug_out: save_debug_img(warpedImg, path_to_output_image, "colorwarp")
+	if debug_out: save_debug_img(warpedImg, "colorwarp")
 
 	if stopEvent and stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR
 
@@ -532,12 +541,6 @@ def _debug_drawCorners(raw_img, corners):
 		cv2.circle(img, (cx, cy), 15, (150, 0, 0), 4)
 		cv2.putText(img, 'C - '+qd, (cx + 15, cy - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 150, 0), 2, cv2.LINE_AA)
 	return img
-
-def save_debug_img(img, normal_img_path, folderName):
-	"""Saves the image in a folder along the given path"""
-	dbg_path = os.path.join(dirname(normal_img_path), folderName, basename(normal_img_path))
-	_mkdir(dirname(dbg_path))
-	cv2.imwrite(dbg_path, img)
 
 def _mkdir(folder):
 	if not exists(folder):
