@@ -97,11 +97,9 @@ class LidHandler(object):
 		if event == IoBeamEvents.INTERLOCK_OPEN:
 			self._logger.debug("onEvent() INTERLOCK_OPEN")
 			self._interlock_closed = False
-			self._startStopCamera(event)
 		if event == IoBeamEvents.INTERLOCK_CLOSED:
 			self._logger.debug("onEvent() INTERLOCK_CLOSED")
 			self._interlock_closed = True
-			self._startStopCamera(event)
 		elif event == IoBeamEvents.LID_CLOSED:
 			self._logger.debug("onEvent() LID_CLOSED")
 			self._lid_closed = True

@@ -42,7 +42,7 @@ $(function () {
                 hide: true,
             },
             err_cam_conn_err: {
-                title: gettext("Camera connection Error"),
+                title: gettext("Camera Error"),
                 text: gettext("The camera has had a small issue, please restart your Mr Beam if you need to use the camera to continue with your work."),
                 type: 'error',
                 hide: false,
