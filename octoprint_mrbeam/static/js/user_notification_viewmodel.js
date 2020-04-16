@@ -47,7 +47,7 @@ $(function () {
                 type: 'error',
                 hide: false,
                 knowledgebase: {
-                    url: 'https://support.mr-beam.org/en/support/solutions/articles/43000570474-error-camera-error',
+                    url: 'https://support.mr-beam.org/support/solutions/articles/43000570474-error-camera-error',
                 }
             },
         };
