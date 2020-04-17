@@ -63,6 +63,7 @@ $(function () {
 			if (Object.keys(self.camera.markersFound()).length !== 4) return false;
 			return Object.values(self.camera.markersFound()).reduce((x,y) => x && y);
 		});
+		self.markersFoundPosition = ko.observable({});
 
 		self.__format_point = function(p){
 			if(typeof p === 'undefined') return '?,?';
@@ -80,7 +81,6 @@ $(function () {
 			return [self.calSvgOffX(), self.calSvgOffY(), w, h].join(' ');
 		});
 		self.currentMarker = 0;
-		self.currentMarkersFound = ko.observable({});
 
 		self.calibrationMarkers = [
 			{name: 'start', desc: 'click to start', focus: [0, 0, false]},
@@ -252,7 +252,7 @@ $(function () {
 			if ('beam_cam_new_image' in data) {
 				// console.log('New Image [NW,NE,SW,SE]:', data['beam_cam_new_image']);
 				// update image
-				if (data['beam_cam_new_image']['undistorted_saved']) {
+				if (data['beam_cam_new_image']['undistorted_saved'] && ! self.calibrationActive()) {
 					if (! ['raw', 'lens_correction', 'cropped'].includes(self.picType()))
 						self.picType('lens_correction');
 					else
@@ -268,9 +268,10 @@ $(function () {
 					// check if all markers are found and image is good for calibration
 					if (self.cal_img_ready()) {
 						// console.log("Remembering markers for Calibration", markers);
-						self.currentMarkersFound = data['beam_cam_new_image']['markers_pos'];
+						_tmp = data['beam_cam_new_image']['markers_pos'];
 						//	i, j -> x, y conversion
-						['NW', 'NE', 'SE', 'SW'].forEach(function(m) {self.currentMarkersFound[m] = self.currentMarkersFound[m].reverse();} );
+						['NW', 'NE', 'SE', 'SW'].forEach(function(m) {_tmp[m] = _tmp[m].reverse();} );
+						self.markersFoundPosition(_tmp)
 					}
 					else if(self.calibrationActive()){
 						console.log("Not all Markers found, are the pink circles obstructed?");
@@ -358,7 +359,7 @@ $(function () {
 		self.saveCalibrationData = function () {
 			var data = {
 				result: {
-					newMarkers: self.currentMarkersFound(),
+					newMarkers: self.markersFoundPosition(),
 					newCorners: self.currentResults()
 				}
 			};
@@ -423,7 +424,7 @@ $(function () {
 			self.focusY(0);
 			self.zoomIn(false);
 			self.currentMarker = 0;
-			self.currentMarkersFound({});
+			self.markersFoundPosition({});
 			self.currentResults({});
 			if (self.isInitialCalibration()) {
 				self.loadUndistortedPicture();

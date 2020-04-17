@@ -58,7 +58,7 @@ $(function(){
             if (plugin !== "mrbeam" || !data) return;
             if ('beam_cam_new_image' in data) {
                 const mf = data['beam_cam_new_image']['markers_found'];
-                _markersFound = {}
+                _markersFound = {};
                 MARKERS.forEach(function(m) {
                     if(mf.includes(m)) {
                         _markersFound[m] = true;
