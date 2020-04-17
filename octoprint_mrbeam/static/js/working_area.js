@@ -1,4 +1,4 @@
-/* global snap, ko, $, Snap, API_BASEURL, _, CONFIG_WEBCAM_STREAM, ADDITIONAL_VIEWMODELS, mina, BEAMOS_DISPLAY_VERSION */
+/* global snap, ko, $, Snap, API_BASEURL, _, CONFIG_WEBCAM_STREAM, ADDITIONAL_VIEWMODELS, mina, BEAMOS_DISPLAY_VERSION, WorkingAreaHelper */
 
 MRBEAM_PX2MM_FACTOR_WITH_ZOOM = 1; // global available in this viewmodel and in snap plugins at the same time.
 MRBEAM_DEBUG_RENDERING = false;
@@ -11,7 +11,40 @@ if(MRBEAM_DEBUG_RENDERING){
 				type: "warn",
 				hide: false
 			});
+	}
+	
+	(function(console){
+		/**
+		 * Convenient storing large data objects (json, dataUri, base64 encoded images, ...) from the console.
+		 * 
+		 * @param {object} data to save (means download)
+		 * @param {string} filename used for download
+		 * @returns {undefined}
+		 */
+		console.save = function(data, filename){
+
+			if(!data) {
+				console.error('Console.save: No data')
+				return;
+			}
+
+			if(!filename) filename = 'console.json'
+
+			if(typeof data === "object"){
+				data = JSON.stringify(data, undefined, 4)
+			}
+
+			var blob = new Blob([data], {type: 'text/json'}),
+				e    = document.createEvent('MouseEvents'),
+				a    = document.createElement('a')
+
+			a.download = filename
+			a.href = window.URL.createObjectURL(blob)
+			a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':')
+			e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
+			a.dispatchEvent(e)
 		}
+	})(console)
 }
 
 $(function(){
@@ -410,9 +443,9 @@ $(function(){
 						points.push( [ item.x, item.y ] );
 						intensity = item.laser;
 					}
-					if(points.length > 0)
-					self.draw_gcode(points, intensity, '#'+previewId);
-
+					if(points.length > 0){
+						self.draw_gcode(points, intensity, '#'+previewId);
+					}
 
 				};
 				var imgCallback = function(x,y,w,h, url){
@@ -627,8 +660,11 @@ $(function(){
 				var switches = $.extend({showTransformHandles: true, embedGCode: true, bakeTransforms: true}, flags);
 				fragment = self._removeUnsupportedSvgElements(fragment, analyticsData);
 
-				// get original svg attributes
-				var newSvgAttrs = self._getDocumentNamespaceAttributes(fragment, analyticsData);
+				// get original svg namespaces and store into working area root node
+				let namespaces = self._getDocumentNamespaceAttributes(fragment);
+				snap.attr(namespaces);
+				_.merge(analyticsData.namespaces, namespaces); // analyticsData.namespaces is the destination object
+				var newSvgAttrs = {}
 				if (scaleMatrixStr) {
 					newSvgAttrs['transform'] = scaleMatrixStr;
 				}
@@ -853,7 +889,7 @@ $(function(){
 			return scale;
 		};
 
-		self._getDocumentNamespaceAttributes = function(file, analyticsData){
+		self._getDocumentNamespaceAttributes = function(file){
 			if(file.select('svg') === null){
 				root_attrs = file.node.attributes;
 			} else {
@@ -868,7 +904,6 @@ $(function(){
 				// copy namespaces into group
 				if(attr.name.indexOf("xmlns") === 0){
 					namespaces[attr.name] = attr.value;
-					analyticsData.namespaces[attr.name] = attr.value;
 				}
 			}
 			return namespaces;
@@ -1790,6 +1825,8 @@ $(function(){
 			var wPT = wMM * 90 / 25.4;  // TODO ... switch to 96dpi ?
 			var hPT = hMM * 90 / 25.4;
 			var compSvg = self.getNewSvg('compSvg', wPT, hPT);
+			var namespaces = self._getDocumentNamespaceAttributes(snap);
+			compSvg.attr(namespaces)
 			var attrs = {};
 			var content = compSvg.g(attrs);
 			var userContent = snap.select("#userContent").clone();
@@ -1806,17 +1843,18 @@ $(function(){
 			// compSvg.selectAll('.deleteBeforeRendering').remove();
 
 			// embed the fonts as dataUris
-			// TODO only if Quick Text is present
-			$('#compSvg defs').append('<style id="quickTextFontPlaceholder" class="quickTextFontPlaceholder deleteAfterRendering"></style>');
-			self._qt_copyFontsToSvg(compSvg.select(".quickTextFontPlaceholder").node);
+			if(userContent.selectAll('.userText').length > 0){
+				$('#compSvg defs').append('<style id="quickTextFontPlaceholder" class="quickTextFontPlaceholder deleteAfterRendering"></style>');
+				self._qt_copyFontsToSvg(compSvg.select(".quickTextFontPlaceholder").node);
+			}
 
-			self.renderInfill(compSvg, wPT, hPT, fillAreas, engraveStroke, wMM, hMM, pxPerMM, function(svgWithRenderedInfill){
-				callback( self._wrapInSvgAndScale(svgWithRenderedInfill));
+			self.renderInfill(compSvg, namespaces, wPT, hPT, fillAreas, engraveStroke, wMM, hMM, pxPerMM, function(svgWithRenderedInfill){
+				callback( self._wrapInSvgAndScale(svgWithRenderedInfill, namespaces));
 				$('#compSvg').remove();
 			});
 		};
 
-		self._wrapInSvgAndScale = function(content){
+		self._wrapInSvgAndScale = function(content, namespaces){
 			var svgStr = content.innerSVG();
 			if(svgStr !== ''){
 				var wMM = self.workingAreaWidthMM();
@@ -1829,8 +1867,17 @@ $(function(){
 				svgStr = WorkingAreaHelper.fix_svg_string(svgStr); // Firefox bug workaround.
 				var gc_otions_str = self.gc_options_as_string().replace('"', "'");
 
-				var svg = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:mb="http://www.mr-beam.org/mbns" mb:beamOS_version="'+BEAMOS_VERSION+'"'
-						+ ' width="'+ w +'" height="'+ h +'"  viewBox="'+ viewBox +'" mb:gc_options="'+gc_otions_str+'"><defs/>'+svgStr+'</svg>';
+				// ensure namespaces are present
+				namespaces['xmlns'] = "http://www.w3.org/2000/svg";
+				namespaces['xmlns:mb'] = "http://www.mr-beam.org/mbns";
+				let nsList = Object.keys(namespaces).map(key => `${key}="${namespaces[key]}"`).join(" ");
+				var svg = `
+<svg version="1.1" ${nsList} 
+  mb:beamOS_version="${BEAMOS_VERSION}" 
+  width="${w}" height="${h}"  viewBox="${viewBox}" mb:gc_options="${gc_otions_str}">
+<defs/>
+  ${svgStr}
+</svg>`;
 				return svg;
 			} else {
 				return;
@@ -2108,14 +2155,17 @@ $(function(){
 		};
 
 		// render the infill and inject it as an image into the svg
-		self.renderInfill = function (svg, svgWidthPT, svgHeightPT, fillAreas, engraveStroke, wMM, hMM, pxPerMM, callback) {
+		self.renderInfill = function (svg, namespaces, svgWidthPT, svgHeightPT, fillAreas, engraveStroke, wMM, hMM, pxPerMM, callback) {
 			//TODO engraveStroke use it and make it work
 			var tmpSvg = self.getNewSvg('tmpSvg', svgWidthPT, svgHeightPT);
-			var attrs = {viewBox: "0 0 " + wMM + " " + hMM};
+			var attrs = {};
+			_.merge(attrs, namespaces)
+			attrs.viewBox = "0 0 " + wMM + " " + hMM;
 			tmpSvg.attr(attrs);
 			// get only filled items and embed the images
 			var userContent = svg.clone();
 			tmpSvg.append(userContent);
+			
 
 			// copy defs for filters
 			var originalFilters = snap.selectAll('defs>filter');
