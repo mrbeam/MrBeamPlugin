@@ -189,6 +189,12 @@ class LidHandler(object):
 			self._photo_creator.save_debug_images = False
 			self._photo_creator.undistorted_pic_path = None
 
+	def restart_worker(self):
+		raise NotImplementedError()
+		# if self._photo_creator:
+		# 	self._photo_creator.restart()
+
+
 	def compensate_for_obj_height(self, compensate=False):
 		if self._photo_creator is not None:
 			self._photo_creator.zoomed_out = compensate

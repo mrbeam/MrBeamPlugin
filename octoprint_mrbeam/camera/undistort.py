@@ -16,7 +16,7 @@ from octoprint_mrbeam.util import dict_merge, logme, debug_logger
 
 CALIB_MARKERS_KEY = 'calibMarkers'
 CORNERS_KEY = 'cornersFromImage'
-M2C_VECTOR_KEY = 'marker2cornerVecs'
+M2C_VECTOR_KEY = 'marker2cornerVecs' # DEPRECATED Key
 BLUR_FACTOR_THRESHOLD_KEY = 'blur_factor_threshold'
 CALIBRATION_UPDATED_KEY = 'calibration_updated'
 VERSION_KEY = 'version'
@@ -43,7 +43,7 @@ CAMERA_HEIGHT = 582
 MAX_OBJ_HEIGHT = 38
 
 
-PIC_SETTINGS = {CALIB_MARKERS_KEY: None, CORNERS_KEY: None, M2C_VECTOR_KEY: None, CALIBRATION_UPDATED_KEY: False}
+PIC_SETTINGS = {CALIB_MARKERS_KEY: None, CORNERS_KEY: None, CALIBRATION_UPDATED_KEY: False}
 
 import logging
 import time
@@ -114,12 +114,12 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	if type(pic_settings) is str:
 		pic_settings = _getPicSettings(pic_settings, custom_pic_settings)
 		logger.debug('Loaded pic_settings: {}'.format(pic_settings))
-
-	if not (M2C_VECTOR_KEY in pic_settings and _isValidQdDict(pic_settings[M2C_VECTOR_KEY])):
-		pic_settings[M2C_VECTOR_KEY] = None
-		err = 'No_valid_M2C_VECTORS_found-_please_calibrate'
-		logger.error(err)
-		return None, None, None, err
+	for k in [CALIB_MARKERS_KEY, CORNERS_KEY]:
+		if not (k in pic_settings and _isValidQdDict(pic_settings[k])):
+			pic_settings[k] = None
+			err = 'No_valid_keys_found-_please_calibrate'
+			logger.error(err)
+			return None, None, None, err
 
 	if type(input_image) is str:
 		# check image path
@@ -194,7 +194,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	if debug_out: save_debug_img(_debug_drawMarkers(img, markers), "drawmarkers")
 
 	# get corners of working area
-	workspaceCorners = {qd: markers[qd] + pic_settings[M2C_VECTOR_KEY][qd][::-1] for qd in QD_KEYS}
+	workspaceCorners = {qd: markers[qd] - pic_settings[CALIB_MARKERS_KEY][qd][::-1] + pic_settings[CORNERS_KEY][qd][::-1] for qd in QD_KEYS}
 	logger.debug("Workspace corners \nNW % 14s  NE % 14s\nSW % 14s  SE % 14s"
                  % tuple(map(np.ndarray.tolist, map(workspaceCorners.__getitem__, ['NW', 'NE', 'SW', 'SE']))))
 	if debug_out: save_debug_img(_debug_drawCorners(img, workspaceCorners), "drawcorners")
@@ -581,9 +581,10 @@ def _getPicSettings(path_to_settings_file, custom_pic_settings=None):
 		try:
 			with open(path_to_settings_file) as yaml_file:
 				pic_settings = yaml.safe_load(yaml_file)
-			if M2C_VECTOR_KEY in pic_settings and pic_settings[M2C_VECTOR_KEY] is not None:
-				for qd in QD_KEYS:
-					pic_settings[M2C_VECTOR_KEY][qd] = np.array(pic_settings[M2C_VECTOR_KEY][qd])
+			for k in [CALIB_MARKERS_KEY, CORNERS_KEY]:
+				if k in pic_settings.keys() and pic_settings[k] is not None:
+					for qd in QD_KEYS:
+						pic_settings[k][qd] = np.array(pic_settings[k][qd])
 			settings_changed = False
 		except:
 			# print("Exception while loading '%s' > pic_settings file not readable, created new one. ", yaml_file)
