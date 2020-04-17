@@ -26,6 +26,7 @@ RATIO_W_KEY = 'ratioW'
 RATIO_H_KEY = 'ratioH'
 
 STOP_EVENT_ERR = 'StopEvent_was_raised'
+ERR_NEED_CALIB = 'Camera_calibration_is_needed'
 
 HUE_BAND_LB_KEY = 'hue_lower_bound'
 HUE_BAND_LB = 105
@@ -62,7 +63,7 @@ class MbPicPrepError(Exception):
 
 def prepareImage(input_image,  #: Union[str, np.ndarray],
                  path_to_output_image,  #: str,
-                 pic_settings,  #: Map or str
+                 pic_settings=None,  #: Map or str
                  cam_dist=None,  #: ? np.ndarray ?,
                  cam_matrix=None,  #: ? np.ndarray ?,
                  last_markers=None, # {'NW': np.array(I, J), ... }
@@ -109,17 +110,6 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 		cv2.imwrite(dbg_path, img)
 
 	err = None
-
-	# load pic_settings json
-	if type(pic_settings) is str:
-		pic_settings = _getPicSettings(pic_settings, custom_pic_settings)
-		logger.debug('Loaded pic_settings: {}'.format(pic_settings))
-	for k in [CALIB_MARKERS_KEY, CORNERS_KEY]:
-		if not (k in pic_settings and _isValidQdDict(pic_settings[k])):
-			pic_settings[k] = None
-			err = 'No_valid_keys_found-_please_calibrate'
-			logger.error(err)
-			return None, None, None, err
 
 	if type(input_image) is str:
 		# check image path
@@ -193,8 +183,24 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 
 	if debug_out: save_debug_img(_debug_drawMarkers(img, markers), "drawmarkers")
 
+
+	# load pic_settings json
+	if pic_settings is not None:
+		if type(pic_settings) is str:
+			_pic_settings = _getPicSettings(pic_settings, custom_pic_settings)
+			logger.debug('Loaded pic_settings: {}'.format(pic_settings))
+		else:
+			_pic_settings = pic_settings
+	else:
+		return None, markers, missed, ERR_NEED_CALIB
+
+	for k in [CALIB_MARKERS_KEY, CORNERS_KEY]:
+		if not (k in _pic_settings and _isValidQdDict(_pic_settings[k])):
+			_pic_settings[k] = None
+			logger.warning(ERR_NEED_CALIB)
+			return None, markers, missed, ERR_NEED_CALIB
 	# get corners of working area
-	workspaceCorners = {qd: markers[qd] - pic_settings[CALIB_MARKERS_KEY][qd][::-1] + pic_settings[CORNERS_KEY][qd][::-1] for qd in QD_KEYS}
+	workspaceCorners = {qd: markers[qd] - _pic_settings[CALIB_MARKERS_KEY][qd][::-1] + _pic_settings[CORNERS_KEY][qd][::-1] for qd in QD_KEYS}
 	logger.debug("Workspace corners \nNW % 14s  NE % 14s\nSW % 14s  SE % 14s"
                  % tuple(map(np.ndarray.tolist, map(workspaceCorners.__getitem__, ['NW', 'NE', 'SW', 'SE']))))
 	if debug_out: save_debug_img(_debug_drawCorners(img, workspaceCorners), "drawcorners")

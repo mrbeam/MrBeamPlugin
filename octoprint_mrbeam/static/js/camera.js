@@ -18,7 +18,7 @@ $(function(){
         self.rawUrl = '/downloads/files/local/cam/debug/raw.jpg'; // TODO get from settings
         self.undistortedUrl = '/downloads/files/local/cam/debug/undistorted.jpg'; // TODO get from settings
         self.croppedUrl = '/downloads/files/local/cam/beam-cam.jpg';
-        self.timestampedImgUrl= ko.observable("");
+        self.timestampedImgUrl = ko.observable("");
         self.webCamImageElem = undefined;
         self.isCamCalibrated = false;
         self.firstImageLoaded = false;

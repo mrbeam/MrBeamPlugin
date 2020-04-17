@@ -32,7 +32,7 @@ $(function () {
 		self.picType.subscribe(function (val) {
 			switch (val) {
 				case 'cropped':
-					self.calImgUrl(self.camera.timestampedUrl());
+					self.calImgUrl(self.camera.timestampedImgUrl());
 					break;
 				case 'raw':
 					self.calImgUrl(self.camera.rawUrl + "?" + new Date().getTime());

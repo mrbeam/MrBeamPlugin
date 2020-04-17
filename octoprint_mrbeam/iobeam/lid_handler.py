@@ -8,6 +8,7 @@ from threading import Event
 import os
 import shutil
 import logging
+from multiprocessing import Manager
 
 from flask.ext.babel import gettext
 # from typing import Dict, Any, Union, Callable
@@ -54,6 +55,7 @@ class LidHandler(object):
 		self._settings = plugin._settings
 		self._printer = plugin._printer
 		self._plugin_manager = plugin._plugin_manager
+		self._laserCutterProfile = plugin.laserCutterProfileManager.get_current_or_default()
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler",
 		                          logging.INFO)
 		self._lid_closed = True
@@ -69,6 +71,8 @@ class LidHandler(object):
                                                debug=False)
 		else:
 			self._photo_creator = None
+		self.refresh_pic_settings = Event() # TODO placeholder for when we delete PhotoCreator
+
 		self._analytics_handler = self._plugin.analytics_handler
 		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._subscribe)
 
@@ -177,9 +181,23 @@ class LidHandler(object):
 			return make_response('Error, no photocreator active, maybe you are developing and dont have a cam?', 503)
 
 	def _start_photo_worker(self):
+		path_to_cam_params = self._settings.get(["cam", "lensCalibrationFile"])
+		path_to_pic_settings = self._settings.get(["cam", "correctionSettingsFile"])
+
+		mrb_volume = self._laserCutterProfile['volume']
+		out_pic_size = mrb_volume['width'], mrb_volume['depth']
+		self._logger.debug("Will send images with size %s", out_pic_size)
+
+		# load cam_params from file
+		cam_params = _getCamParams(path_to_cam_params)
+		self._logger.debug('Loaded cam_params: {}'.format(cam_params))
+
+		# load pic_settings json
+		pic_settings = _getPicSettings(path_to_pic_settings)
+		self._logger.debug('Loaded pic_settings: {}'.format(pic_settings))
 		if not self._photo_creator.active() \
 				and (self._photo_creator.worker is None or not self._photo_creator.worker.isAlive()):
-			self._photo_creator.start()
+			self._photo_creator.start(pic_settings, cam_params, out_pic_size)
 		else:
 			self._logger.info("Another PhotoCreator thread is already active! Not starting a new one.")
 
@@ -194,6 +212,9 @@ class LidHandler(object):
 		# if self._photo_creator:
 		# 	self._photo_creator.restart()
 
+	def refresh_settings(self):
+		# Let's the worker know to refresh the picture settings while running
+		self._photo_creator.refresh_pic_settings.set()
 
 	def compensate_for_obj_height(self, compensate=False):
 		if self._photo_creator is not None:
@@ -207,11 +228,11 @@ class PhotoCreator(object):
 		self.final_image_path = path
 		self._settings = _plugin._settings
 		self._analytics_handler = _plugin.analytics_handler
-		self._laserCutterProfile = _plugin.laserCutterProfileManager.get_current_or_default()
 		self.stopEvent = Event()
 		self.stopEvent.set()
 		self._pic_available = Event()
 		self._pic_available.clear()
+		self.refresh_pic_settings = Event()
 		self.zoomed_out = True
 		self.last_photo = 0
 		self.is_initial_calibration = False
@@ -235,7 +256,7 @@ class PhotoCreator(object):
 	def active(self):
 		return not self.stopEvent.isSet()
 
-	def start(self):
+	def start(self, pic_settings=None, cam_params=None, out_pic_size=None):
 		if self.active():
 			self.stop()
 		if self.worker is not None and self.worker.is_alive():
@@ -245,7 +266,10 @@ class PhotoCreator(object):
 			else:
 				self.worker.join()
 		self.stopEvent.clear()
-		self.worker = threading.Thread(target=self.work, name='Photo-Worker')
+		self.worker = threading.Thread(target=self.work, name='Photo-Worker',
+		                               kwargs={'pic_settings': pic_settings,
+		                                       'cam_params': cam_params,
+		                                       'out_pic_size': out_pic_size})
 		self.worker.daemon = True
 		self.worker.start()
 
@@ -259,7 +283,7 @@ class PhotoCreator(object):
 	def set_undistorted_path(self):
 		self.undistorted_pic_path = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(['cam', 'localUndistImage'])
 
-	def work(self):
+	def work(self, pic_settings=None, cam_params=None, out_pic_size=None):
 
 		if self.is_initial_calibration:
 			self.set_undistorted_path()
@@ -278,7 +302,7 @@ class PhotoCreator(object):
                            framerate=8,
                            resolution=octoprint_mrbeam.camera.LEGACY_STILL_RES,  # TODO camera.DEFAULT_STILL_RES,
                            stopEvent=self.stopEvent,) as cam:
-				self.serve_pictures(cam)
+				self.serve_pictures(cam, pic_settings=pic_settings, cam_params=cam_params, out_pic_size=out_pic_size)
 		except Exception as e:
 			if e.__class__.__name__.startswith('PiCamera'):
 				self._logger.error("PiCamera_Error_while_preparing_camera_%s_%s", e.__class__.__name__, e)
@@ -286,7 +310,7 @@ class PhotoCreator(object):
 				self._logger.exception("Exception_while_preparing_camera_%s_%s", e.__class__.__name__, e)
 		self.stopEvent.set()
 
-	def serve_pictures(self, cam):
+	def serve_pictures(self, cam, pic_settings=None, cam_params=None, out_pic_size=None):
 		"""
 		Takes pictures, isolates the work area and serves it to the user at progressively better resolutions.
 		After a certain number of similar pictures, Mr Beam serves a better quality pictures
@@ -308,21 +332,6 @@ class PhotoCreator(object):
 
 		session_details = blank_session_details()
 		self._front_ready.set()
-		path_to_cam_params = self._settings.get(["cam", "lensCalibrationFile"])
-		path_to_pic_settings = self._settings.get(["cam", "correctionSettingsFile"])
-		path_to_last_markers = self._settings.get(["cam", "correctionTmpFile"])
-
-		mrb_volume = self._laserCutterProfile['volume']
-		out_pic_size = mrb_volume['width'], mrb_volume['depth']
-		self._logger.debug("Will send images with size %s", out_pic_size)
-
-		# load cam_params from file
-		cam_params = _getCamParams(path_to_cam_params)
-		self._logger.debug('Loaded cam_params: {}'.format(cam_params))
-
-		# load pic_settings json
-		pic_settings = _getPicSettings(path_to_pic_settings)
-		self._logger.debug('Loaded pic_settings: {}'.format(pic_settings))
 		try:
 			if not self.active(): return
 			cam.start_preview()
@@ -355,6 +364,10 @@ class PhotoCreator(object):
 			# The lid didn't open during waiting time
 			cam.async_capture()
 			while self.active():
+				if self.refresh_pic_settings.isSet():
+					path_to_pic_settings = self._settings.get(["cam", "correctionSettingsFile"])
+					self._logger.info("Refreshing picture settings from %s" % path_to_pic_settings)
+					pic_settings = _getPicSettings(path_to_pic_settings)
 				cam.wait()  # waits until the next picture is ready
 				if not self.active(): break
 				latest = cam.lastPic() # gets last picture given by cam.worker
