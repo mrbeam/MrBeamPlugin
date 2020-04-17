@@ -61,16 +61,10 @@ $(function () {
             self.control.manualPosition = function () {
                 $('#manual_position').removeClass('warning');
                 var s = $('#manual_position').val();
-                var tmp = s.split(/[^0-9.,-\\+]+/);
-                if (tmp.length === 2) {
-                    var x = parseFloat(tmp[0]);
-                    var y = parseFloat(tmp[1]);
-                    if (!isNaN(x) && !isNaN(y)) {
-                        self.control.sendCustomCommand({type: 'command', command: "G0X" + x + "Y" + y});
-                        $('#manual_position').val('');
-                    } else {
-                        $('#manual_position').addClass('warning');
-                    }
+                var pos = WorkingAreaHelper.splitStringToTwoValues(s)
+                if (pos) {
+                    self.control.sendCustomCommand({type: 'command', command: "G0X" + pos[0] + "Y" + pos[1]});
+                    $('#manual_position').val('');
                 } else {
                     $('#manual_position').addClass('warning');
                 }
@@ -195,7 +189,7 @@ $(function () {
                 if (!pos) {
                     return "(?, ?)";
                 } else {
-                    return "(" + pos.x + ", " + pos.y + ")";
+                    return pos.x + ", " + pos.y;
                 }
             }, this);
 			self.state.printTimeString = ko.computed(function() {

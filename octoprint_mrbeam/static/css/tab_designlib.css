@@ -208,7 +208,7 @@
 }
 
 #files .file_list_entry.folder {
-	background-image: url(http://localhost:5000/plugin/mrbeam/static/img/folder.svg);
+	background-image: url(/plugin/mrbeam/static/img/folder.svg);
 	background-repeat: no-repeat;
 	background-size: contain;
 	background-position: 50% 100%;

@@ -206,6 +206,27 @@ class WorkingAreaHelper {
 	    // https://github.com/mrbeam/MrBeamPlugin/issues/787
 	    return fragment.node.querySelectorAll('svg > *').length <= 0
 	}
+
+	/**
+     * Parses two number values (float or int) from given string.
+     * Tries to accept any comma and any delimiter between the two numbers
+     * @param myString
+     * @returns {null|[float,float]}
+     */
+    static splitStringToTwoValues(myString){
+        let res = null
+        if (myString && !(myString.match(/[a-zA-Z]/) || myString.match(/^\d+$/))) {
+            let m = myString.match(/^(-?\d+)[^0-9-]*(-?\d+)$/) || myString.match(/(-?\d+[.,]?\d*)[^0-9-]*(-?\d+[.,]?\d*)/)
+            if (m) {
+                let x = parseFloat(m[1]);
+                let y = parseFloat(m[2]);
+                if (!isNaN(x) && !isNaN(y)) {
+                    res = [x, y]
+                }
+            }
+        }
+        return res
+    }
 }
 
 WorkingAreaHelper.HUMAN_READABLE_IDS_CONSTANTS = 'bcdfghjklmnpqrstvwxz';

@@ -220,11 +220,11 @@ $(function () {
 
             // set env flag in body for experimental_feature_beta and  experimental_feature_dev
             if (mrbeam.isDev()) {
-             $('body').addClass('end_dev')
-             $('body').removeClass('end_prod')
+             $('body').addClass('env_dev')
+             $('body').removeClass('env_prod')
             } else if (mrbeam.isBeta()) {
-             $('body').addClass('end_beta')
-             $('body').removeClass('end_prod')
+             $('body').addClass('env_beta')
+             $('body').removeClass('env_prod')
             }
 
             $(window).on("orientationchange",self.onOrientationchange);
