@@ -2731,11 +2731,11 @@ $(function(){
 		};
 
 		self.wheel_zoom_monitor = function(target, ev){
-			var wheel = ev.originalEvent.wheelDelta;
+			var wheel = ev.originalEvent.deltaY;
 			var targetBBox = ev.currentTarget.getBoundingClientRect();
-			var xPerc = (ev.clientX - targetBBox.left) / targetBBox.width;
-			var yPerc = (ev.clientY - targetBBox.top) / targetBBox.height;
-			var deltaZoom = Math.sign(-wheel)/100;
+			var xPerc = (ev.originalEvent.clientX - targetBBox.left) / targetBBox.width;
+			var yPerc = (ev.originalEvent.clientY - targetBBox.top) / targetBBox.height;
+			var deltaZoom = Math.sign(wheel)/100;
 			self.set_zoom_factor(deltaZoom, xPerc, yPerc);
 		};
 
