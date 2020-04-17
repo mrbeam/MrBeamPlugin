@@ -322,6 +322,44 @@ $(function(){
 		};
 
 		/**
+		 * Adds an entry to the list of placed designs. 
+		 * Instead of pushing directly in the ko.observableArray, this method does some sanity checks
+		 * 
+		 * @param {type} file
+		 * @returns {undefined}
+		 */
+		self._listPlacedItem = function(file){
+			/**
+			 * file = {
+			 * id: <string> DOM id of the entry in the file list
+			 * previewId: <string> DOM id of the group in the svg. usually the id with -0 attached. 
+			 * url: download url where it was fetched from (raspberry download url)
+			 * misfit: flag if it fits into the working area
+			 * type <string> used to select the correct template (model_svg, machinecode, model_img, split, ... )
+			 * components: knockout observableArray containing stroke colors (will be set here in this method)
+			 * components_engrave: knockout observable with boolean inside (will be set here in this method)
+			 * ...
+			 * }
+			 */
+			
+			// check if already in the working area svg
+			const elem = snap.select('#'+file.previewId);
+			if(!elem){
+				console.warn("No svg fragment placed for this previewId: "+file.previewId);
+			}
+			// check if it is transformable
+			if(!(elem.data && typeof(elem.data('ftBeforeTransformCallbacks')) === 'object')){
+				console.warn("Svg fragment is not transformable: "+file.previewId);
+			}
+
+			if(elem){
+				file.components = ko.observableArray(self.getUsedColors(elem));
+				file.components_engrave = ko.observable(self.hasEngraveOnlyComponents(elem))				
+				self.placedDesigns.push(file);
+			}
+		};
+
+		/**
 		 *
 		 * @param {type} file (OctoPrint "file" object - example: {url: elem.url, origin: elem.origin, name: name, type: "split", refs:{download: elem.url}};)
 		 * @returns {Boolean}
@@ -358,7 +396,7 @@ $(function(){
 				g.attr({id: previewId, 'mb:id': self._normalize_mb_id(previewId)});
 				snap.select('#placedGcodes').append(g);
 				file.previewId = previewId;
-				self.placedDesigns.push(file);
+				self._listPlacedItem(file);
 //			}
 
 			self.loadGcode(file, function(gcode){
@@ -455,9 +493,6 @@ $(function(){
 				file.previewId = previewId;
 				file.url = url;
 				file.misfit = false;
-				file.components = ko.observableArray();
-				file.components_engrave = ko.observable(false);
-				self.placedDesigns.push(file);
 
 				// get scale matrix
 				var generator_info = WorkingAreaHelper.getGeneratorInfo(fragment);
@@ -475,6 +510,7 @@ $(function(){
 				analyticsData.duration_load = duration_load;
 				analyticsData.duration_preprocessing = Date.now() - start_ts;
 				var insertedId = self._prepareAndInsertSVG(fragment, previewId, origin, scaleMatrixStr, {}, analyticsData, file);
+				self._listPlacedItem(file);
 				if(typeof callback === 'function') callback(insertedId);
 			};
 			try { // TODO Figure out why the loading exception is not caught.
@@ -515,15 +551,13 @@ $(function(){
 				file.previewId = previewId;
 				file.url = url;
 				file.misfit = false;
-				file.components = ko.observableArray();
-				file.components_engrave = ko.observable(false);
-				self.placedDesigns.push(file);
 
 				var analyticsData = {};
 				analyticsData.file_type = 'dxf';
 				analyticsData.duration_load = duration_load;
 				analyticsData.duration_preprocessing = timestamps.parse_start && timestamps.parse_done ? timestamps.parse_done - timestamps.parse_start : null;
 				var insertedId = self._prepareAndInsertSVG(fragment, previewId, origin, scaleMatrixStr, {}, analyticsData, file);
+				self._listPlacedItem(file);
 				if(typeof callback === 'function') callback(insertedId);
 			};
 			try { // TODO this would be the much better way. Figure out why the loading exception is not caught.
@@ -659,15 +693,7 @@ $(function(){
 				});
 
 				snap.select("#userContent").append(newSvg);
-				self._makeItTransformable(newSvg);
-
-				//
-                if ('components' in fileObj) {
-                    fileObj.components.push(...self.getUsedColors(newSvg))
-                }
-                if ('components_engrave' in fileObj) {
-                    fileObj.components_engrave(self.hasEngraveOnlyComponents(newSvg))
-                }
+				self._makeItTransformable(snap.select('#'+id)); // after placement ids have changed => select freshly placed fragment via id.
 
 				return id;
 			} catch(e) {
@@ -886,6 +912,7 @@ $(function(){
 			if(parts.length > 1){
 				self.removeSVG(elem);
 				for (let i = 0; i < parts.length; i++) {
+	
 					const name = elem.name + "."+(i+1);
 					let file = {url: elem.url, origin: elem.origin, name: name, type: "split", refs:{download: elem.url}};
 					const id = self.getEntryId();
@@ -893,19 +920,16 @@ $(function(){
 					let fragment = parts[i];
 					fragment.clean_gc();
 					fragment.attr({id: previewId})
-					snap.select("#userContent").append(fragment);
 
 					file.id = id; // list entry id
 					file.previewId = previewId;
 					file.misfit = false;
-					file.typePath = file.typePath;
-
-					self.placedDesigns.push(file);
-					self._makeItTransformable(fragment);
 
 					let mb_meta = self._set_mb_attributes(fragment);
 					// remove class which was added by mouseover in the list.
 					self.removeHighlight(file);
+					self._prepareAndInsertSVG(fragment, previewId, elem.origin, "");
+					self._listPlacedItem(file);
 				}
 			} else {
 				let failReason = "";
@@ -946,7 +970,6 @@ $(function(){
 				'mb:id': self._normalize_mb_id(previewId),
 				'mb:clone_of':clone_id,
 				class: srcElem.attr('class')});
-			self.removeHighlight(newSvg);
 
 			if (newSvg.attr('class').includes('userIMG')) {
 				let url = self._getIMGserveUrl(file);
@@ -954,14 +977,15 @@ $(function(){
 				newSvg.children()[0].attr({filter: 'url(#'+self._get_img_filter_id(previewId)+')', 'data-serveurl': url});
 			}
 
+			// TODO use self._prepareAndInsertSVG()
 			snap.select("#userContent").append(newSvg);
-
-
-			self.placedDesigns.push(file);
 			self.placeSmart(newSvg);
+			self.removeHighlight(newSvg);
 			self.removeHighlight(file);
 			self._makeItTransformable(newSvg);
 			self.check_sizes_and_placements();
+
+			self._listPlacedItem(file);
 		};
 
 
@@ -1362,6 +1386,7 @@ $(function(){
                 }
 
 				imgWrapper.append(newImg);
+				// TODO use self._prepareAndInsertSVG()
 				snap.select("#userContent").append(imgWrapper);
 				self._makeItTransformable(imgWrapper);
 
@@ -1369,7 +1394,7 @@ $(function(){
 				file.previewId = previewId;
 				file.url = url;
 				file.subtype = "bitmap";
-				self.placedDesigns.push(file);
+				self._listPlacedItem(file);
 
 				// analytics
 				let analyticsData = {
@@ -2229,13 +2254,10 @@ $(function(){
 					star_radius: w/2, star_corners:5, star_sharpness: 0.5522,
 					heart_w: w, heart_h:0.8*w, heart_lr: 0
 				},
-                components: ko.observableArray(),
-				components_engrave: ko.observable(false),
 				invalid: false
 			};
 			var previewId = self.generateUniqueId(id, file); // appends -# if multiple times the same design is placed.
 			file.previewId = previewId;
-			self.placedDesigns.push(file);
 
 			var d = QuickShapeHelper.getRect(w,h,r);
 			var shapeSvg = '<svg><g><path d="'+d+'" stroke-width="1" stroke="'+file.qs_params.color+'" fill="#ffffff" fill-opacity="0" /></g></svg>';
@@ -2243,6 +2265,7 @@ $(function(){
 
 			var scaleMatrixStr = new Snap.Matrix(1,0,0,1,x,y).toString();
 			self._prepareAndInsertSVG(fragment, previewId, origin, '', {showTransformHandles: false, embedGCode: false}, {_skip: true});
+			self._listPlacedItem(file);
 			$('#'+previewId).attr('transform', scaleMatrixStr);
 
 			return file;
@@ -2622,14 +2645,12 @@ $(function(){
 				id: file.previewId,
 				'mb:id': self._normalize_mb_id(file.previewId),
 				class: 'userText',
-				'mb:origin': origin
+				'mb:origin': origin // TODO ??? wtf? 
 			});
 
 			self._makeItTransformable(group);
-//			group.transformable();
-//			group.ftRegisterOnTransformCallback(self.svgTransformUpdate);
 
-			self.placedDesigns.push(file);
+			self._listPlacedItem(file);
 
 			// var dur = ((Date.now() - start_ts) /1000);
 			// console.log("_qt_placeQuicktext() DONE "+ dur + "s");
