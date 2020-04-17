@@ -3,12 +3,10 @@ import json
 import numpy as np
 import time
 import threading
-from math import sqrt
 from threading import Event
 import os
 import shutil
 import logging
-from multiprocessing import Manager
 
 from flask.ext.babel import gettext
 # from typing import Dict, Any, Union, Callable
