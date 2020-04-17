@@ -581,12 +581,13 @@
                                        transform="scale(1)"
                                        data-bind="attr: { transform: zObjectImgTransform() }">
                                         <image id="beamcam_image_svg"
-                                            xlink:href="/downloads/files/local/cam/beam-cam.jpg" x="0" y="0"
+                                            xlink:href="" x="0" y="0"
                                             data-bind="attr: {
                                                     width: workingAreaWidthMM(),
                                                     height: workingAreaHeightMM(),
-                                                    opacity: previewImgOpacity()
-                                                }" />
+                                                    opacity: previewImgOpacity(),
+                                                    'xlink:href': camera.timestampedImgUrl()
+                                               }" />
                                     </g>
 									<g id="scaleGroup" data-bind="attr: { transform: scaleMatrix() }">
 										<g id="placedGcodes" data-bind="visible: true || (state.isPrinting() && !state.isPaused()), attr: { transform: 'matrix(1,0,0,-1,0,'+workingAreaHeightMM()+')' }"></g>

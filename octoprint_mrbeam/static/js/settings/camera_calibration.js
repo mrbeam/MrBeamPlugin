@@ -12,10 +12,6 @@ $(function () {
 		window.mrbeam.viewModels['cameraCalibrationViewModel'] = self;
 
 		self.staticURL = "/plugin/mrbeam/static/img/cam_calibration/calpic_wait.svg";
-		self.rawUrl = '/downloads/files/local/cam/debug/raw.jpg';
-		self.undistortedUrl = '/downloads/files/local/cam/debug/undistorted.jpg';
-		self.croppedUrl = '/downloads/files/local/cam/beam-cam.jpg';
-		self.camImgPath = self.staticURL;
 
 		self.dbNWImgUrl = ko.observable("");
 		self.dbNEImgUrl = ko.observable("");
@@ -27,6 +23,7 @@ $(function () {
 		self.workingArea = parameters[1];
 		self.conversion = parameters[2];
 		self.analytics = parameters[3];
+		self.camera = self.workingArea.camera;
 
 		self.zoomIn = ko.observable(false);
 		self.focusX = ko.observable(0);
@@ -35,20 +32,18 @@ $(function () {
 		self.picType.subscribe(function (val) {
 			switch (val) {
 				case 'cropped':
-					self.camImgPath = self.croppedUrl;
+					self.calImgUrl(self.camera.timestampedUrl());
 					break;
 				case 'raw':
-					self.camImgPath = self.rawUrl;
+					self.calImgUrl(self.camera.rawUrl + "?" + new Date().getTime());
 					break;
 				case 'lens_correction':
-					self.camImgPath = self.undistortedUrl;
+					self.calImgUrl(self.camera.undistortedUrl + "?" + new Date().getTime());
 					break;
 				default:
-					self.camImgPath = self.staticURL;
+					self.calImgUrl(self.staticURL);
 			}
-			self.calImgUrl(self.camImgPath + "?" + new Date().getTime());
 		});
-		// todo get ImgUrl from Backend/Have it hardcoded but right
 		self.calImgUrl = ko.observable(self.staticURL);
 
 		self.calImgWidth = ko.observable(2048);
@@ -61,32 +56,18 @@ $(function () {
 		self.calibrationActive = ko.observable(false);
 		self.currentResults = ko.observable({});
 		self.calibrationComplete = ko.computed(function(){
-			// console.log("current results : ", self.currentResults());
-			var markers = ['NW', 'NE', 'SW', 'SE'];
-			for (var i = 0; i < markers.length; i++) {
-				var k = markers[i];
-				var m = self.currentResults()[k];
-				if(typeof m === 'undefined' || isNaN(m.x) || isNaN(m.y)){
-					return false;
-				}
-			}
-			return true;
+			if (Object.keys(self.currentResults()).length !== 4) return false;
+			return Object.values(self.currentResults()).reduce((x,y) => x && y);
 		});
-		self.foundNW = ko.observable(false);
-		self.foundSW = ko.observable(false);
-		self.foundSE = ko.observable(false);
-		self.foundNE = ko.observable(false);
-
 		self.cal_img_ready = ko.computed(function () {
-			console.log("cal_img_ready: ", self.foundNE() , self.foundNW() , self.foundSE() , self.foundSW());
-			return self.foundNE() && self.foundNW() && self.foundSE() && self.foundSW();
+			if (Object.keys(self.camera.markersFound()).length !== 4) return false;
+			return Object.values(self.camera.markersFound()).reduce((x,y) => x && y);
 		});
 
 		self.__format_point = function(p){
 			if(typeof p === 'undefined') return '?,?';
 			else return p.x+','+p.y;
 		};
-
 
 		self.calSvgViewBox = ko.computed(function () {
 			var zoom = self.zoomIn() ? self.calSvgScale() : 1;
@@ -99,7 +80,7 @@ $(function () {
 			return [self.calSvgOffX(), self.calSvgOffY(), w, h].join(' ');
 		});
 		self.currentMarker = 0;
-		self.currentMarkersFound = {};
+		self.currentMarkersFound = ko.observable({});
 
 		self.calibrationMarkers = [
 			{name: 'start', desc: 'click to start', focus: [0, 0, false]},
@@ -270,35 +251,18 @@ $(function () {
 
 			if ('beam_cam_new_image' in data) {
 				// console.log('New Image [NW,NE,SW,SE]:', data['beam_cam_new_image']);
-				// update markers
-				var markers = data['beam_cam_new_image']['markers_found'];
-				// Not taking care of an active calibration or not allows for an immediate calibration based on previous marker detection
-				// if(!self.calibrationActive()){
-				if(markers instanceof Array) {
-					// New algo
-					self.foundNW(markers.includes('NW'));
-					self.foundNE(markers.includes('NE'));
-					self.foundSW(markers.includes('SW'));
-					self.foundSE(markers.includes('SE'));
-				} else {
-					// Legacy algo
-					self.foundNW(markers['NW'] && markers['NW'].recognized);
-					self.foundNE(markers['NE'] && markers['NE'].recognized);
-					self.foundSW(markers['SW'] && markers['SW'].recognized);
-					self.foundSE(markers['SE'] && markers['SE'].recognized);
-				}
-				self.foundNW.notifySubscribers(); // somehow doesn't trigger automatically
-				// }
 				// update image
 				if (data['beam_cam_new_image']['undistorted_saved']) {
-					self.calImgUrl(self.camImgPath + '?' + new Date().getTime());
+					if (! ['raw', 'lens_correction', 'cropped'].includes(self.picType()))
+						self.picType('lens_correction');
+					else
+						self.calImgUrl(self.camera.getTimestampedImageUrl(self.calImgUrl()));
 
 					if (self.isInitialCalibration()) {
 						self.dbNWImgUrl('/downloads/files/local/cam/debug/NW.jpg' + '?' + new Date().getTime());
 						self.dbNEImgUrl('/downloads/files/local/cam/debug/NE.jpg' + '?' + new Date().getTime());
 						self.dbSWImgUrl('/downloads/files/local/cam/debug/SW.jpg' + '?' + new Date().getTime());
 						self.dbSEImgUrl('/downloads/files/local/cam/debug/SE.jpg' + '?' + new Date().getTime());
-
 					}
 
 					// check if all markers are found and image is good for calibration
@@ -394,7 +358,7 @@ $(function () {
 		self.saveCalibrationData = function () {
 			var data = {
 				result: {
-					newMarkers: self.currentMarkersFound,
+					newMarkers: self.currentMarkersFound(),
 					newCorners: self.currentResults()
 				}
 			};
@@ -457,14 +421,10 @@ $(function () {
 			self.picType("");
 			self.focusX(0);
 			self.focusY(0);
-			self.zoomIn(false)
+			self.zoomIn(false);
 			self.currentMarker = 0;
-			self.currentMarkersFound = {};
+			self.currentMarkersFound({});
 			self.currentResults({});
-			self.foundNW(false);
-			self.foundSW(false);
-			self.foundSE(false);
-			self.foundNE(false);
 			if (self.isInitialCalibration()) {
 				self.loadUndistortedPicture();
 			} else {
