@@ -363,9 +363,11 @@ class PhotoCreator(object):
 			cam.async_capture()
 			while self.active():
 				if self.refresh_pic_settings.isSet():
+					self.refresh_pic_settings.clear()
 					path_to_pic_settings = self._settings.get(["cam", "correctionSettingsFile"])
 					self._logger.info("Refreshing picture settings from %s" % path_to_pic_settings)
 					pic_settings = _getPicSettings(path_to_pic_settings)
+					prev=None # Forces to take a new picture
 				cam.wait()  # waits until the next picture is ready
 				if not self.active(): break
 				latest = cam.lastPic() # gets last picture given by cam.worker
