@@ -1879,7 +1879,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 					rtl_mode=self.onebutton_handler.is_ready_to_laser(),
 					pause_mode=self._printer.is_paused(),
 					cooling_mode=self.temperature_manager.is_cooling(),
-					dusting_mode=self.dust_manager.is_dust_mode,
+					dusting_mode=self.dust_manager.is_final_extraction_mode,
 					state=self._printer.get_state_string(),
 
 				)
