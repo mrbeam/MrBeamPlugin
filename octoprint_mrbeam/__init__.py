@@ -961,7 +961,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		profile = self.laserCutterProfileManager.get_current_or_default()
 		max_intensity = 1300  # TODO get magic numbers from profile
 		min_intensity = 0
-		min_feedrate = 100
+		min_feedrate = 50
 		max_feedrate = 3000
 		try:
 			i = int(int(intensity) / 100.0 * max_intensity)
@@ -1997,7 +1997,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 						token = line.split('=')
 						if len(token) >= 2:
 							self._device_info[token[0]] = token[1]
-				return self._device_info.get(key, default)
 			except Exception as e:
 				self._logger.error("Can't read device_info_file '%s' due to exception: %s", self.DEVICE_INFO_FILE, e)
 				if IS_X86:
@@ -2008,7 +2007,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 						device_type="MrBeam2X",
 						serial="000000000694FD5D-2X",
 						image_correction_markers="MrBeam2C-pink",)
-					return self._device_info.get(key, default)
+		return self._device_info.get(key, default)
 
 	def isFirstRun(self):
 		return self._settings.global_get(["server", "firstRun"])

@@ -1098,7 +1098,7 @@ $(function(){
 			var rot = svg.ftGetRotation();
 			var id = svg.attr('id');
 			var label_id = id.substr(0, id.indexOf('-'));
-			$('#'+label_id+' .translation').val(tx.toFixed(1) + ',' + ty.toFixed(1));
+			$('#'+label_id+' .translation').val(tx.toFixed(1) + ', ' + ty.toFixed(1));
 			$('#'+label_id+' .horizontal').val(horizontal.toFixed() + 'mm');
 			$('#'+label_id+' .vertical').val(vertical.toFixed() + 'mm');
 			$('#'+label_id+' .rotation').val(rot.toFixed(1) + '°');
@@ -1111,20 +1111,23 @@ $(function(){
 
 		self.svgManualTranslate = function(data, event) {
 			if (event.keyCode === 13 || event.type === 'blur') {
-				self.abortFreeTransforms();
 				var svg = snap.select('#'+data.previewId);
 				var globalScale = self.scaleMatrix().a;
-				var newTranslateStr = event.target.value;
-				var nt = newTranslateStr.split(/[^0-9.-]/); // TODO improve
-				var ntx = nt[0] / globalScale;
-				var nty = (self.workingAreaHeightMM() - nt[1]) / globalScale;
+                var nt = WorkingAreaHelper.splitStringToTwoValues(event.target.value)
+                if (nt) {
+                    var ntx = nt[0] / globalScale;
+                    var nty = (self.workingAreaHeightMM() - nt[1]) / globalScale;
 
-				svg.ftManualTransform({tx: ntx, ty: nty, diffType:'absolute'});
-				self.check_sizes_and_placements();
+                    self.abortFreeTransforms();
+                    svg.ftManualTransform({tx: ntx, ty: nty, diffType: 'absolute'});
+                    self.check_sizes_and_placements();
+                } else {
+                    // reset to previous value
+                    svg.ftUpdateTransform();
+			        svg.ftAfterTransform();
+                }
 			}
 		};
-
-
 		self.svgManualRotate = function(data, event) {
 			if (event.keyCode === 13 || event.type === 'blur') {
 				self.abortFreeTransforms();

@@ -318,23 +318,34 @@ class DustManager(object):
 
 	def _validate_values(self):
 		result = True
+		errs = []
 		if time.time() - self._data_ts > self.DEFAUL_DUST_MAX_AGE:
 			result = False
-		if self._state is None or self._rpm is None or self._rpm <= 0 or self._dust is None:
+			errs.append("data too old. age:{:.2f}".format(time.time() - self._data_ts))
+		
+		if self._state is None:
 			result = False
+			errs.append("fan state:{}".format(self._state))
+		if self._rpm is None or self._rpm <= 0:
+			result = False
+			errs.append("rpm:{}".format(self._rpm))
+		if self._dust is None:
+			result = False
+			errs.append("dust:{}".format(self._dust))
 
 		if self._one_button_handler.is_printing() and self._state == 0:
 			self._logger.warn("Restarting fan since _state was 0 in printing state.")
 			self._start_dust_extraction()
 
 		if not result and not self._plugin.is_boot_grace_period():
-			msg = "Invalid or too old fan data from iobeam: state:{state}, rpm:{rpm}, dust:{dust}, connected:{connected}, age:{age}s".format(
+			msg = "Fan error: {errs}".format(errs=", ".join(errs))
+			log_message = msg + " - Data from iobeam: state:{state}, rpm:{rpm}, dust:{dust}, connected:{connected}, age:{age:.2f}s".format(
 				state=self._state, rpm=self._rpm, dust=self._dust, connected=self._connected, age=(time.time() - self._data_ts))
-			self._pause_laser(trigger="Fan values from iobeam invalid or too old.", analytics='invalid-old-fan-data', log_message=msg)
+			self._pause_laser(trigger=msg, analytics='invalid-old-fan-data', log_message=msg)
 
 		elif self._connected == False:
 			result = False
-			msg = "Air filter is not connected: state:{state}, rpm:{rpm}, dust:{dust}, connected:{connected}, age:{age}s".format(
+			msg = "Air filter is not connected: state:{state}, rpm:{rpm}, dust:{dust}, connected:{connected}, age:{age:.2f}s".format(
 				state=self._state, rpm=self._rpm, dust=self._dust, connected=self._connected, age=(time.time() - self._data_ts))
 			self._pause_laser(trigger="Air filter not connected.", log_message=msg)
 
