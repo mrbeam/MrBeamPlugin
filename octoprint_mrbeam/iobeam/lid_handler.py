@@ -287,6 +287,9 @@ class PhotoCreator(object):
                            resolution=octoprint_mrbeam.camera.LEGACY_STILL_RES,  # TODO camera.DEFAULT_STILL_RES,
                            stopEvent=self.stopEvent,) as cam:
 				self.serve_pictures(cam)
+			if recurse_nb > 0:
+				self._analytics_handler.add_camera_session_details({'errors': exc.formatForAnalytics(exc.CAM_CONNRECOVER)})
+				pass
 		except exc.CameraConnectionException as e:
 			self._logger.exception(" %s, %s", e.__class__.__name__, e)
 			if recurse_nb < MAX_PIC_THREAD_RETRIES:
@@ -304,6 +307,8 @@ class PhotoCreator(object):
 					self._plugin.user_notification_system.get_notification(
 						notification_id='err_cam_conn_err',
 						replay=True))
+				self._analytics_handler.add_camera_session_details({'errors': exc.formatForAnalytics(exc.CAM_CONN,
+				                                                                                     count=MAX_PIC_THREAD_RETRIES)})
 			return
 		except Exception as e:
 			if e.__class__.__name__.startswith('PiCamera'):
