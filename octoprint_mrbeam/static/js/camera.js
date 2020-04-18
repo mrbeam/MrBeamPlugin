@@ -49,17 +49,10 @@ $(function(){
 
         // Image resolution notification //
         self.imgResolution = ko.observable('Low');
-        self.imgResolutionColor = ko.computed(function () {
-            if (self.imgResolution() === 'Low') {
-                $("#imgQualityNotice").attr('style', "display: inherit");
-                return 'orange';
-            }
-            else {
-                $("#imgQualityNotice").attr('style', "display: none");
-                return 'green';
-            }
+        self.imgResolutionNoticeDisplay = ko.computed(function () {
+            if (self.imgResolution() === 'Low') return 'inherit';
+            else return 'none';
         });
-        self.imgResolutionNoticeVisibility = ko.observable(true)
 
 
         self.onDataUpdaterPluginMessage = function(plugin, data) {
