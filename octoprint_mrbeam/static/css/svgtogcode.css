@@ -7,7 +7,7 @@ table th.settings_plugin_svgtogcode_profiles_key,table td.settings_plugin_svgtog
 .unselectable, label, a, .btn {
 	-webkit-user-drag: none;
 	user-select: none;
-} 	
+}
 
 #settings_dialog.container { width: 100%; }
 
@@ -399,6 +399,19 @@ h4.job_title{
     cursor: -webkit-grab;
 }
 
+.wa_used_color {
+    width: 20px;
+    height: 20px;
+    overflow: hidden;
+    display: inline-block;
+    border-radius: 5%;
+    box-shadow: 0.5px 0.5px 2px 0.5px rgba(0,0,0,0.33);
+    margin: 0px 6px 4px 0px;
+	background-image: url(/plugin/mrbeam/static/img/line_overlay.svg);
+	background-size: cover;
+	background-position: center;
+}
+
 .img_drop_zone,
 .color_drop_zone {
 	min-height: 50px;
@@ -478,11 +491,12 @@ body.colorDragInProgress #drop_overlay {
 	filter:none;
 }
 
-.userText.designHighlight text,
-.userText.designHighlight tspan,
-.userIMG.designHighlight {
-	filter: url(#designHighlight);
-}
+/* moved to styles.jonja2 since it gets broken*/
+/*.userText.designHighlight text,*/
+/*.userText.designHighlight tspan,*/
+/*.userIMG.designHighlight {*/
+/*	filter: url(#designHighlight);*/
+/*}*/
 
 svg#area_preview path,
 svg#area_preview circle,
@@ -526,8 +540,8 @@ g#camera_markers.markerSW circle#markerSW {
 }
 
 #zoom_monitor_wrapper {
-	max-width: 20vh; 
-	position: relative; 
+	max-width: 20vh;
+	position: relative;
 	margin: auto;
 }
 #zoom_monitor {
@@ -543,12 +557,12 @@ g#camera_markers.markerSW circle#markerSW {
 	box-sizing: border-box;
 }
 #zoom_monitor_hint {
-	pointer-events: none; 
-	width:90%; 
-	position: absolute; 
-	top: 50%; 
-	left: 50%; 
-	transform: translate(-50%, -50%); 
+	pointer-events: none;
+	width:90%;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
 	text-align:center;
 }
 
@@ -848,3 +862,4 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	background-color: #eee;
 	margin-right: 0.3em;
 }
+

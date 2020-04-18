@@ -7,7 +7,10 @@ import collections
 import json
 from distutils.version import LooseVersion
 
+from octoprint_mrbeam import IS_X86
+
 from octoprint.events import Events as OctoPrintEvents
+
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.lib.rwlock import RWLock
 from flask.ext.babel import gettext
@@ -186,6 +189,7 @@ class IoBeamHandler(object):
 		self._laserhead_handler = self._plugin.laserhead_handler
 		self._analytics_handler = self._plugin.analytics_handler
 		self._hw_malfunction_handler = self._plugin.hw_malfunction_handler
+		self._user_notification_system = self._plugin.user_notification_system
 
 		self._subscribe()
 
@@ -258,8 +262,11 @@ class IoBeamHandler(object):
 			self._my_socket.sendall("{}\n".format(json.dumps(command)))
 		except Exception as e:
 			self._errors += 1
-			self._logger.error("Exception while sending command '%s' to socket: %s", command, e)
-			return False
+			if IS_X86:
+				self._logger.debug("Exception while sending command '%s' to socket: %s", command, e)
+			else:
+				self._logger.error("Exception while sending command '%s' to socket: %s", command, e)
+				return False
 		return True
 
 	def is_iobeam_version_ok(self):
@@ -280,15 +287,12 @@ class IoBeamHandler(object):
 		self._logger.error(
 			"Received iobeam version: %s - version OUTDATED. IOBEAM_MIN_REQUIRED_VERSION: %s",
 			self.iobeam_version, self.IOBEAM_MIN_REQUIRED_VERSION)
-		self._plugin.notify_frontend(
-			title=gettext("Software Update required"),
-			text=gettext(
-				"Module 'iobeam' is outdated. Please run software update from 'Settings' > 'Software Update' "
-				"before you start a laser job."),
-			type="error",
-			sticky=True,
-			replay_when_new_client_connects=True,
-			force=True,
+		self._user_notification_system.show_notifications(
+			self._user_notification_system.get_legacy_notification(
+				title="Software Update required",
+				text="Module 'iobeam' is outdated. Please run software update from 'Settings' > 'Software Update' before you start a laser job.",
+				is_err=True,
+			)
 		)
 
 	def subscribe(self, event, callback):
@@ -381,12 +385,12 @@ class IoBeamHandler(object):
 					self._my_socket = temp_socket
 				except socket.error as e:
 					self._isConnected = False
-					# if self.dev_mode:
-					# 	if not self._connectionException == str(e):
-					# 		self._logger.error("IoBeamHandler not able to connect to socket %s, reason: %s. I'll keept trying but I won't log further failures.", self.SOCKET_FILE, e)
-					# 		self._connectionException = str(e)
-					# else:
-					self._logger.error("IoBeamHandler not able to connect to socket %s, reason: %s. ", self.SOCKET_FILE, e)
+					if IS_X86:
+						if not self._connectionException == str(e):
+							self._logger.error("IoBeamHandler not able to connect to socket %s, reason: %s. I'll keept trying but I won't log further failures.", self.SOCKET_FILE, e)
+							self._connectionException = str(e)
+					else:
+						self._logger.error("IoBeamHandler not able to connect to socket %s, reason: %s. ", self.SOCKET_FILE, e)
 
 					time.sleep(1)
 					continue
@@ -979,9 +983,9 @@ class IoBeamHandler(object):
 
 	def _handle_processing_time(self, processing_time, message, err, log_stats=False):
 		self.processing_times_log.append(dict(ts=time.time(),
-											  processing_time = processing_time,
-											  message = message,
-											  error_count = err))
+                                              processing_time = processing_time,
+                                              message = message,
+                                              error_count = err))
 		if processing_time > self.PROCESSING_TIME_WARNING_THRESHOLD:
 			self._logger.warn("Message handling time took %ss. (Errors: %s, message: '%s')", processing_time, err, message)
 		if log_stats or processing_time > self.PROCESSING_TIME_WARNING_THRESHOLD:

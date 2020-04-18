@@ -1,8 +1,6 @@
-
 import time
 import os.path
 from octoprint_mrbeam.mrb_logger import mrb_logger
-
 
 
 SUPPORT_STICK_FILE_PATH = '/home/pi/usb_mount/support'
@@ -11,10 +9,7 @@ SUPPORT_STICK_FILE_PATH = '/home/pi/usb_mount/support'
 USER_NAME = 'support@mr-beam.org'
 USER_PW   = 'a'
 
-
 _logger = mrb_logger("octoprint.plugins.mrbeam.support")
-
-
 
 def set_support_mode(plugin):
 	"""
@@ -32,7 +27,6 @@ def set_support_mode(plugin):
 	set_support_user(plugin, support_mode_enabled)
 
 	return support_mode_enabled
-
 
 def set_support_user(plugin, support_mode):
 	"""
@@ -54,6 +48,3 @@ def set_support_user(plugin, support_mode):
 			plugin._user_manager.removeUser(USER_NAME)
 		except:
 			pass
-
-
-

@@ -1,3 +1,7 @@
+MAX_OBJECT_HEIGHT = 38; // in mm
+DEFAULT_MARGIN = MAX_OBJECT_HEIGHT / 582;
+
+
 $(function(){
 
 	function CameraViewModel(params) {
@@ -8,7 +12,6 @@ $(function(){
         self.TAB_NAME_WORKING_AREA = '#workingarea';
         self.FALLBACK_IMAGE_URL = '/plugin/mrbeam/static/img/beam-cam-static.jpg';
 
-        self.camEnabled = undefined;
         self.needsCalibration = false;
 
         self.imageUrl = undefined;
@@ -16,13 +19,17 @@ $(function(){
         self.isCamCalibrated = false;
         self.firstImageLoaded = false;
 
+        self.objectZ = ko.observable(0); // in mm
+        self.cornerMargin = ko.observable(DEFAULT_MARGIN / 2);
+        self.imgHeightScale = ko.computed(function () {
+            return self.cornerMargin() * (1 - self.objectZ() / MAX_OBJECT_HEIGHT);
+        });
         // event listener callbacks //
 
         self.onAllBound = function () {
             self.webCamImageElem = $("#beamcam_image_svg");
 			self.cameraMarkerElem = $("#camera_markers");
             // self.webCamImageElem.removeAttr('onerror');
-            self.camEnabled = self.settings.settings.plugins.mrbeam.cam.enabled();
             self.imageUrl = self.settings.settings.plugins.mrbeam.cam.frontendUrl();
 
             if (window.mrbeam.browser.is_safari) {
@@ -46,26 +53,16 @@ $(function(){
             if ('beam_cam_new_image' in data) {
                 const mf = data['beam_cam_new_image']['markers_found'];
                 ['NW', 'NE', 'SE', 'SW'].forEach(function(m) {
-                    if(mf[m] !== undefined) {
-                        // legacy algo uses dictionnary
-                        if (mf[m].recognized === true) {
-                            self.cameraMarkerElem.removeClass('marker' + m);
-                        } else {
-                            self.cameraMarkerElem.addClass('marker' + m);
-                        }
+                    if(mf.includes(m)) {
+                        self.cameraMarkerElem.removeClass('marker' + m);
                     } else {
-                        // New algo lists the detected corners
-                        if(mf.includes(m)) {
-                            self.cameraMarkerElem.removeClass('marker' + m);
-                        } else {
-                            self.cameraMarkerElem.addClass('marker' + m);
-                        }
+                        self.cameraMarkerElem.addClass('marker' + m);
                     }
                 });
 
-                if(data['beam_cam_new_image']['error'] === undefined){
+                if (data['beam_cam_new_image']['error'] === undefined) {
                     self.needsCalibration = false;
-                }else if(data['beam_cam_new_image']['error'] === "NO_CALIBRATION: Marker Calibration Needed" && !self.needsCalibration){
+                } else if (data['beam_cam_new_image']['error'] === "NO_CALIBRATION: Marker Calibration Needed" && !self.needsCalibration) {
                     self.needsCalibration = true;
                     new PNotify({
                         title: gettext("Calibration needed"),
@@ -74,6 +71,14 @@ $(function(){
                         tag: "calibration_needed",
                         hide: false
                     });
+                }
+                if ('workspace_corner_ratio' in data['beam_cam_new_image']) {
+                    // workspace_corner_ratio should be a float
+                    // describing the fraction of the img where
+                    // the z=0 view starts.
+                    self.cornerMargin(data['beam_cam_new_image']['workspace_corner_ratio']);
+                } else {
+                    self.cornerMargin(0)
                 }
                 self.loadImage();
             }

@@ -305,7 +305,7 @@ class Converter():
 				if layer in self.paths :
 					paths_by_color = dict()
 					for path in self.paths[layer] :
-						self._log.info("path %s, %s, stroke: %s, fill: %s, mb:gc: %s" % ( layer.get('id'), path.get('id'), path.get('stroke'), path.get('class'), path.get(_add_ns('gc', 'mb'))[:100] ))
+						self._log.info("path %s, %s, stroke: %s, fill: %s, mb:gc: %s" % ( layer.get('id', None), path.get('id', None), path.get('stroke', None), path.get('class', None), path.get(_add_ns('gc', 'mb'), '')[:100]))
 
 						strokeInfo = self._get_stroke(path)
 						if(strokeInfo['visible'] == False):
@@ -323,8 +323,8 @@ class Converter():
 							processedItemCount += 1
 							report_progress(on_progress, on_progress_args, on_progress_kwargs, processedItemCount, itemAmount)
 
-					layerId = layer.get('id') or '?'
-					pathId = path.get('id') or '?'
+					layerId = layer.get('id', '?')
+					pathId = path.get('id', '?')
 
 					# path_sorting: set initial laser pos, assuming pleasant left to right, bottom to top processing order
 					current_x = 0
@@ -390,7 +390,7 @@ class Converter():
 							fr = int(settings['feedrate'])
 							passes = int(settings['passes'])
 							for p in range(0, passes):
-								if(settings['progressive'] == 'on'):
+								if settings.get('progressive', False):
 									f = round(fr * (1 - 0.5 * p/(passes - 1)))
 								else:
 									f = fr

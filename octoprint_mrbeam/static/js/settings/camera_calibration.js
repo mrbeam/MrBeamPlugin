@@ -9,10 +9,11 @@
 $(function () {
 	function CameraCalibrationViewModel(parameters) {
 		var self = this;
+		window.mrbeam.viewModels['cameraCalibrationViewModel'] = self;
 
 		self.staticURL = "/plugin/mrbeam/static/img/cam_calibration/calpic_wait.svg";
 		self.rawUrl = '/downloads/files/local/cam/beam-cam-tmp.jpg';
-		self.undistortedUrl = '/downloads/files/local/cam/undistorted.jpg';
+		self.undistortedUrl = '/downloads/files/local/cam/undistorted/beam-cam-tmp2.jpg';
 		self.croppedUrl = '/downloads/files/local/cam/beam-cam.jpg';
 		self.camImgPath = self.staticURL;
 
@@ -60,6 +61,7 @@ $(function () {
 		self.calibrationActive = ko.observable(false);
 		self.currentResults = ko.observable({});
 		self.calibrationComplete = ko.computed(function(){
+			// console.log("current results : ", self.currentResults());
 			var markers = ['NW', 'NE', 'SW', 'SE'];
 			for (var i = 0; i < markers.length; i++) {
 				var k = markers[i];
@@ -76,7 +78,7 @@ $(function () {
 		self.foundNE = ko.observable(false);
 
 		self.cal_img_ready = ko.computed(function () {
-//			console.log("cal_img_ready: ", self.foundNE() , self.foundNW() , self.foundSE() , self.foundSW());
+			console.log("cal_img_ready: ", self.foundNE() , self.foundNW() , self.foundSE() , self.foundSW());
 			return self.foundNE() && self.foundNW() && self.foundSE() && self.foundSW();
 		});
 
@@ -127,7 +129,7 @@ $(function () {
 
 		self.startCalibration = function () {
 			self.analytics.send_fontend_event('calibration_start', {});
-			self.currentResults({});
+			// self.currentResults({});
 			self.calibrationActive(true);
 			self.picType("lens_correction");
 			self.nextMarker();
@@ -201,11 +203,14 @@ $(function () {
 		}
 
 		self.onStartupComplete = function () {
-//            console.log("CameraCalibrationViewModel.onStartup()");
 			if(self.isInitialCalibration()){
 				self.loadUndistortedPicture();
 			}
 		};
+
+		self.onSettingsShown = function(){
+		    self.goto('#calibration_step_1');
+        }
 
 		self.loadUndistortedPicture = function (callback) {
 			var success_callback = function (data) {
@@ -222,7 +227,7 @@ $(function () {
 			};
 			var error_callback = function (resp) {
 				new PNotify({
-					title: gettext("Something went wrong. It's not you, its us."),
+					title: gettext("Something went wrong. It's not you, it's us."),
 					text: resp.responseText,
 					type: 'warning',
 					hide: true
@@ -264,16 +269,26 @@ $(function () {
 			}
 
 			if ('beam_cam_new_image' in data) {
-				//console.log('New Image [NW,NE,SW,SE]:', data['beam_cam_new_image']);
+				// console.log('New Image [NW,NE,SW,SE]:', data['beam_cam_new_image']);
 				// update markers
 				var markers = data['beam_cam_new_image']['markers_found'];
-				if(!self.calibrationActive()){
+				// Not taking care of an active calibration or not allows for an immediate calibration based on previous marker detection
+				// if(!self.calibrationActive()){
+				if(markers instanceof Array) {
+					// New algo
+					self.foundNW(markers.includes('NW'));
+					self.foundNE(markers.includes('NE'));
+					self.foundSW(markers.includes('SW'));
+					self.foundSE(markers.includes('SE'));
+				} else {
+					// Legacy algo
 					self.foundNW(markers['NW'] && markers['NW'].recognized);
 					self.foundNE(markers['NE'] && markers['NE'].recognized);
 					self.foundSW(markers['SW'] && markers['SW'].recognized);
 					self.foundSE(markers['SE'] && markers['SE'].recognized);
-					self.foundNW.notifySubscribers(); // somehow doesn't trigger automatically
 				}
+				self.foundNW.notifySubscribers(); // somehow doesn't trigger automatically
+				// }
 				// update image
 				if (data['beam_cam_new_image']['undistorted_saved']) {
 					self.calImgUrl(self.camImgPath + '?' + new Date().getTime());
@@ -288,11 +303,21 @@ $(function () {
 
 					// check if all markers are found and image is good for calibration
 					if (self.cal_img_ready()) {
-						console.log("Remembering markers for Calibration", markers);
-						self.currentMarkersFound = markers;
-					} else {
-						console.log("Not all Markers found, fetching new Picture.")
-						self.loadUndistortedPicture();
+						// console.log("Remembering markers for Calibration", markers);
+						if (markers instanceof Array){
+							// New alog
+							self.currentMarkersFound = data['beam_cam_new_image']['markers_pos'];
+							//	i, j -> x, y conversion
+							['NW', 'NE', 'SE', 'SW'].forEach(function(m) {self.currentMarkersFound[m] = self.currentMarkersFound[m].reverse();} );
+						} else {
+							// Legacy algo
+							self.currentMarkersFound = markers;
+						}
+					}
+					else if(self.calibrationActive()){
+						console.log("Not all Markers found, are the pink circles obstructed?");
+						// As long as all the corners were not found, the camera will continue to take pictures
+						// self.loadUndistortedPicture();
 					}
 				}
 			}

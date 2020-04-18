@@ -68,6 +68,13 @@ $(function(){
 		self.workingAreaHeightMM = ko.computed(function(){
 			return self.profile.currentProfileData().volume.depth();
 		}, self);
+		self.imgTranslate = ko.computed(function () {
+			// Used for the translate transformation of the picture on the work area
+			return [-self.workingAreaWidthMM(),-self.workingAreaHeightMM()].map(x=>x*self.camera.imgHeightScale()).join(' ');
+		});
+		self.zObjectImgTransform = ko.computed(function() {
+			return 'scale('+(1 + 2*self.camera.imgHeightScale())+') translate('+self.imgTranslate()+')';
+		});
 		self.flipYMatrix = ko.computed(function(){
 			var h = self.workingAreaHeightMM();
 			return Snap.matrix(1,0,0,-1,0,h);
@@ -220,14 +227,19 @@ $(function(){
 			self.placedDesigns([]);
 		};
 
-		self.getUsedColors = function () {
-			let colFound = self._getColorsOfSelector('.vector_outline', 'stroke', snap.select('#userContent'));
-			return colFound;
+		self.getUsedColors = function (elem) {
+		    elem = !elem ? snap.select('#userContent') : (typeof elem == 'string' ? snap.select(elem) : elem)
+			return self._getColorsOfSelector('.vector_outline', 'stroke', elem);
 		};
-		
+
+		self.hasEngraveOnlyComponents = function(elem){
+		    elem = !elem ? snap.select('#userContent') : (typeof elem == 'string' ? snap.select(elem) : elem)
+		    return  elem.selectAll("image").length > 0 || self.hasFilledVectors(elem)
+        }
+
 		self._getColorsOfSelector = function(selector, color_attr = 'stroke', elem = null){
 			let root = elem === null ? snap : elem;
-			
+
 			let colors = [];
 			let items = root.selectAll(selector + '['+color_attr+']');
 			for (var i = 0; i < items.length; i++) {
@@ -263,7 +275,7 @@ $(function(){
 			y = Math.min(y, self.workingAreaHeightMM());
 			return {x:x, y:y};
 		};
-		
+
 		self.move_laser_to_xy = function(x,y){
 			if(self.state.isOperational() && !self.state.isPrinting() && !self.state.isLocked()){
 				$.ajax({
@@ -277,7 +289,7 @@ $(function(){
 				console.warn("Move Laser command while machine state not idle: " + self.state.stateString());
 			}
 		};
-		
+
 		self.crosshairX = function(){
 			var pos = self.state.currentPos();
 			if(pos !== undefined){
@@ -310,7 +322,7 @@ $(function(){
 		};
 
 		/**
-		 * 
+		 *
 		 * @param {type} file (OctoPrint "file" object - example: {url: elem.url, origin: elem.origin, name: name, type: "split", refs:{download: elem.url}};)
 		 * @returns {Boolean}
 		 */
@@ -432,8 +444,8 @@ $(function(){
 					self.file_not_readable();
 					return;
 				}
-				if(WorkingAreaHelper.isEmptyFile(fragment.node.textContent)) { // zerobyte files
-					self.file_not_readable();
+				if(WorkingAreaHelper.isEmptyFile(fragment)) { // empty svg files
+					self.empty_svg();
 					return;
 				}
 				var id = self.getEntryId();
@@ -443,6 +455,8 @@ $(function(){
 				file.previewId = previewId;
 				file.url = url;
 				file.misfit = false;
+				file.components = ko.observableArray();
+				file.components_engrave = ko.observable(false);
 				self.placedDesigns.push(file);
 
 				// get scale matrix
@@ -501,7 +515,8 @@ $(function(){
 				file.previewId = previewId;
 				file.url = url;
 				file.misfit = false;
-
+				file.components = ko.observableArray();
+				file.components_engrave = ko.observable(false);
 				self.placedDesigns.push(file);
 
 				var analyticsData = {};
@@ -614,7 +629,7 @@ $(function(){
 						}
 					}
 				}
-				
+
 				newSvg.attr(newSvgAttrs);
 				if (switches.bakeTransforms) {
 					window.mrbeam.bake_progress = 0;
@@ -645,6 +660,14 @@ $(function(){
 
 				snap.select("#userContent").append(newSvg);
 				self._makeItTransformable(newSvg);
+
+				//
+                if ('components' in fileObj) {
+                    fileObj.components.push(...self.getUsedColors(newSvg))
+                }
+                if ('components_engrave' in fileObj) {
+                    fileObj.components_engrave(self.hasEngraveOnlyComponents(newSvg))
+                }
 
 				return id;
 			} catch(e) {
@@ -685,7 +708,7 @@ $(function(){
 					myElem.remove();
 				}
 			}
-			
+
 			// remove other unnecessary or invisible ("display=none") elements
 			let removeElements = fragment.selectAll('metadata, script, [display=none], [style*="display:none"]');
 			for (var i = 0; i < removeElements.length; i++) {
@@ -837,7 +860,7 @@ $(function(){
 		self.splitSVG = function(elem, event, method) {
 			self.abortFreeTransforms();
 			let srcElem = snap.select('#'+elem.previewId);
-			
+
 			let parts;
 			switch(method){
 				case 'stroke-color':
@@ -859,7 +882,7 @@ $(function(){
 					if(parts.length <= 1) failReason = "Not enough native elements.";
 					break;
 			}
-			
+
 			if(parts.length > 1){
 				self.removeSVG(elem);
 				for (let i = 0; i < parts.length; i++) {
@@ -888,17 +911,17 @@ $(function(){
 				let failReason = "";
 				switch (method) {
 					case 'stroke-color':
-						failReason = "Didn't find different stroke colors.";
+						failReason = gettext("No different line colors found.");
 						break;
 					case 'non-intersecting':
-						failReason = "Didn't find non-intersecting shapes.";
+						failReason = gettext("No non-intersecting shapes found.");
 						break;
 					case 'divide':
-						failReason = "Looks like a single path.";
+						failReason = gettext("Looks like a single path.");
 				}
 				new PNotify({
 					title: gettext("Element not splittable with this method."),
-					text: gettext("Can't split this design. " + failReason),
+					text: gettext("Can't split this design.") + ' ' + failReason,
 					type: "info",
 					hide: true
 				});
@@ -918,7 +941,7 @@ $(function(){
 			file.id = id; // list entry id
 			file.previewId = previewId;
 			file.misfit = false;
-			file.typePath = src.typePath; 
+			file.typePath = src.typePath;
 			newSvg.attr({id: previewId,
 				'mb:id': self._normalize_mb_id(previewId),
 				'mb:clone_of':clone_id,
@@ -940,7 +963,7 @@ $(function(){
 			self._makeItTransformable(newSvg);
 			self.check_sizes_and_placements();
 		};
-		
+
 
 		self.placeSmart = function(elem){ // TODO: bug - should not place outside working area
 			var spacer = 2;
@@ -1051,7 +1074,7 @@ $(function(){
 			var rot = svg.ftGetRotation();
 			var id = svg.attr('id');
 			var label_id = id.substr(0, id.indexOf('-'));
-			$('#'+label_id+' .translation').val(tx.toFixed(1) + ',' + ty.toFixed(1));
+			$('#'+label_id+' .translation').val(tx.toFixed(1) + ', ' + ty.toFixed(1));
 			$('#'+label_id+' .horizontal').val(horizontal.toFixed() + 'mm');
 			$('#'+label_id+' .vertical').val(vertical.toFixed() + 'mm');
 			$('#'+label_id+' .rotation').val(rot.toFixed(1) + '°');
@@ -1064,20 +1087,23 @@ $(function(){
 
 		self.svgManualTranslate = function(data, event) {
 			if (event.keyCode === 13 || event.type === 'blur') {
-				self.abortFreeTransforms();
 				var svg = snap.select('#'+data.previewId);
 				var globalScale = self.scaleMatrix().a;
-				var newTranslateStr = event.target.value;
-				var nt = newTranslateStr.split(/[^0-9.-]/); // TODO improve
-				var ntx = nt[0] / globalScale;
-				var nty = (self.workingAreaHeightMM() - nt[1]) / globalScale;
+                var nt = WorkingAreaHelper.splitStringToTwoValues(event.target.value)
+                if (nt) {
+                    var ntx = nt[0] / globalScale;
+                    var nty = (self.workingAreaHeightMM() - nt[1]) / globalScale;
 
-				svg.ftManualTransform({tx: ntx, ty: nty, diffType:'absolute'});
-				self.check_sizes_and_placements();
+                    self.abortFreeTransforms();
+                    svg.ftManualTransform({tx: ntx, ty: nty, diffType: 'absolute'});
+                    self.check_sizes_and_placements();
+                } else {
+                    // reset to previous value
+                    svg.ftUpdateTransform();
+			        svg.ftAfterTransform();
+                }
 			}
 		};
-
-
 		self.svgManualRotate = function(data, event) {
 			if (event.keyCode === 13 || event.type === 'blur') {
 				self.abortFreeTransforms();
@@ -1132,10 +1158,14 @@ $(function(){
 		self._svgMultiplyUpdate = function(data, colsRowsStr){
 			self.abortFreeTransforms();
 			var svg = snap.select('#'+data.previewId);
-			var gridsize = colsRowsStr.split(/\D+/);
-			var cols = gridsize[0] || 1;
-			var rows = gridsize[1] || 1;
 			var dist = 2;
+			var cols = 1;
+			var rows = 1;
+			if(colsRowsStr !== undefined){
+				var gridsize = colsRowsStr.split(/\D+/);
+				cols = gridsize[0] || 1;
+				rows = gridsize[1] || 1;
+			}
 			svg.grid(cols, rows, dist);
 			var mb_meta = self._set_mb_attributes(svg);
 			svg.ftStoreInitialTransformMatrix();
@@ -1165,7 +1195,7 @@ $(function(){
 				self.set_img_sharpen(data.previewId, sharpenVal);
 			}
 		};
-		
+
 		self.imgManualCrop = function(data, event) {
 			if (event.type === 'input' || event.type === 'blur' || event.type === 'keyUp') {
 				let t = parseFloat($('#'+data.id+' .crop_top').val());
@@ -1254,10 +1284,22 @@ $(function(){
 		};
 
 		self.file_not_readable = function(){
-			var error = "<p>" + _.sprintf(gettext("Something went wrong while reading this file.%(topen)sSorry!%(tclose)sPlease check it with another application. If it works there, our support team would be happy to take a look."), {topen: "<br/><h3 style='text-align:center;'>", tclose: "</h3><br/>"}) + "</p>";
+			var error = "<p>" + _.sprintf(gettext("The selected design file can not be handled. Please make sure it is a valid design file.")) + "</p>";
 			new PNotify({
-				// Translators: "in the sense of Ouch!"
-				title: gettext("Oops."),
+				title: gettext("File error."),
+				text: error,
+				type: "error",
+				hide: false,
+				buttons: {
+					sticker: false
+				}
+			});
+		};
+
+		self.empty_svg = function(){
+			var error = "<p>" + _.sprintf(gettext("The selected design file does not have any content.")) + "</p>";
+			new PNotify({
+				title: gettext("Empty File."),
 				text: error,
 				type: "error",
 				hide: false,
@@ -1282,10 +1324,11 @@ $(function(){
 			});
 		};
 
-		self.placeIMG = function (file) {
+		self.placeIMG = function (file, textMode) {
 			var start_ts = Date.now();
 			var url = self._getIMGserveUrl(file);
 			var img = new Image();
+			textMode = textMode || false;
 			img.onload = function () {
 				var duration_load = Date.now() - start_ts;
 				start_ts = Date.now();
@@ -1312,18 +1355,16 @@ $(function(){
 					id: previewId,
 					'mb:id':self._normalize_mb_id(previewId),
 					class: 'userIMG',
-					'mb:origin': origin
+					'mb:origin': origin,
 				});
+                if (textMode) {
+                    imgWrapper.attr('style', "filter: url(#scan_text_mode)")
+                }
 
 				imgWrapper.append(newImg);
 				snap.select("#userContent").append(imgWrapper);
-//				imgWrapper.transformable();
-//				imgWrapper.ftRegisterOnTransformCallback(self.svgTransformUpdate);
-//				setTimeout(function(){
-//					imgWrapper.ftReportTransformation();
-//				}, 200);
 				self._makeItTransformable(imgWrapper);
-				
+
 				file.id = id;
 				file.previewId = previewId;
 				file.url = url;
@@ -1344,6 +1385,23 @@ $(function(){
 				self._analyticsPlaceImage(analyticsData)
 			};
 			img.src = url;
+		};
+
+		self.placeImgUrl = function(url){
+			const name = "Data URL.png";
+			let file = {
+				date: Date.now(),
+				display: "URL: "+name,
+				name: name,
+				origin: "url",
+				path: "url",
+				refs: {download: url, resource: url},
+				size: url.length,
+				type: "model",
+				typePath: (2) ["model", "image"],
+				weight: 1
+			};
+			self.placeIMG(file, true);
 		};
 
 		self.removeIMG = function(file){
@@ -1401,7 +1459,7 @@ $(function(){
 			var filter = snap.select('#'+self._get_img_filter_id(previewId));
 			filter.select('feConvolveMatrix').attr({kernelMatrix: matrix});
 		};
-		
+
 		self.set_img_crop = function(previewId, top, left, right, bottom){
 			let filter = snap.select('#'+self._get_img_filter_id(previewId));
 			let x = Math.min(left, 100 - right);
@@ -1410,7 +1468,7 @@ $(function(){
 			let height = Math.max(100 - top - bottom, 0);
 			filter.attr({x: left+'%', y: top+'%', width: width+'%', height: height+'%' });
 		};
-		
+
 		self.moveSelectedDesign = function(ifX,ifY){
 			var diff = 2;
 			var transformHandles = snap.select('#handlesGroup');
@@ -1567,7 +1625,11 @@ $(function(){
 
 		self._getSVGserveUrl = function(file){
 			if (file && file["refs"] && file["refs"]["download"]) {
-				var url = file.refs.download +'?'+ Date.now(); // be sure to avoid caching.
+				var url = file.refs.download;
+				if(!url.startsWith("data:")) {
+					// be sure to avoid caching.
+					url = url+'?'+ Date.now();
+				}
 				return url;
 			}
 		};
@@ -1831,10 +1893,10 @@ $(function(){
 			return gcodeFiles;
 		}, self);
 
-		self.hasFilledVectors = function(){
-			var el = snap.selectAll('#userContent *');
-			for (var i = 0; i < el.length; i++) {
-				var e = el[i];
+		self.hasFilledVectors = function(elem){
+		    elem = !elem ? snap.selectAll('#userContent *') : (typeof elem == 'string' ? snap.select(elem) : elem.selectAll("*"))
+			for (var i = 0; i < elem.length; i++) {
+				var e = elem[i];
 				if (["path", "circle", "ellipse", "rect", "line", "polyline", "polygon", "path"].indexOf(e.type) >= 0){
 					var fill = e.attr('fill');
 					var op = e.attr('fill-opacity');
@@ -1906,7 +1968,7 @@ $(function(){
 			self.svgDPI = self.settings.settings.plugins.mrbeam.svgDPI; // we assign ko function
 			self.dxfScale = self.settings.settings.plugins.mrbeam.dxfScale;
 			self.previewImgOpacity(self.settings.settings.plugins.mrbeam.cam.previewOpacity());
-			
+
 			self.gc_options = ko.computed(function(){
 				return {
 					beamOS: BEAMOS_DISPLAY_VERSION,
@@ -2091,7 +2153,7 @@ $(function(){
 				}
 				console.log("Rendering " + fillings.length + " filled elements.");
 				if(fillAreas){
-					let renderBBoxMM = tmpSvg.getBBox(); // if #712 still fails, fetch this bbox earlier (getCompositionSvg()). 
+					let renderBBoxMM = tmpSvg.getBBox(); // if #712 still fails, fetch this bbox earlier (getCompositionSvg()).
 					tmpSvg.renderPNG(svgWidthPT, svgHeightPT, wMM, hMM, pxPerMM, renderBBoxMM, cb);
 				} else {
 					cb(null)
@@ -2167,6 +2229,8 @@ $(function(){
 					star_radius: w/2, star_corners:5, star_sharpness: 0.5522,
 					heart_w: w, heart_h:0.8*w, heart_lr: 0
 				},
+                components: ko.observableArray(),
+				components_engrave: ko.observable(false),
 				invalid: false
 			};
 			var previewId = self.generateUniqueId(id, file); // appends -# if multiple times the same design is placed.
@@ -2194,8 +2258,8 @@ $(function(){
 			self.currentQuickShapeFile = null;
 			$('#quick_shape_dialog').modal({keyboard: true});
 			$('#quick_shape_dialog').one('hide', self._qs_currentQuickShapeShowTransformHandlesIfNotEmpty);
-			// firing those change events is necessary to work around a bug in chrome|knockout|js. 
-			// Otherwise entering numbers directly does not fire the change event if the number 
+			// firing those change events is necessary to work around a bug in chrome|knockout|js.
+			// Otherwise entering numbers directly does not fire the change event if the number
 			// is accidentially equal to the field content it had before .val(..).
 			$('#quick_shape_rect_w').val(params.rect_w).change();
 			$('#quick_shape_rect_h').val(params.rect_h).change();
@@ -2267,6 +2331,14 @@ $(function(){
 					fill_color: $('#quick_shape_fill_brightness').val(),
 					fill: $('#quick_shape_fill').prop('checked')
 				};
+
+				self.currentQuickShapeFile.components.removeAll()
+                if (qs_params.stroke) {
+                    self.currentQuickShapeFile.components.push(qs_params.color)
+                }
+				self.currentQuickShapeFile.components_engrave(qs_params.fill)
+
+
 				// update svg object
 				var g = snap.select('#' + self.currentQuickShapeFile.previewId);
 				setTimeout(function () {
@@ -2289,7 +2361,7 @@ $(function(){
 						break;
 				}
 				let stroke = qs_params.stroke ? qs_params.color : 'none';
-				let fill = '#ffffff'; 
+				let fill = '#ffffff';
 				let fill_op = 0;
 				if(qs_params.fill){
 					fill = qs_params.fill_color;
@@ -2636,7 +2708,7 @@ $(function(){
 				self.set_zoom_offY(newOffY);
 			}
 		};
-		
+
 		self.wheel_zoom_monitor = function(target, ev){
 			var wheel = ev.originalEvent.wheelDelta;
 			var targetBBox = ev.currentTarget.getBoundingClientRect();
@@ -2655,7 +2727,7 @@ $(function(){
 				self.set_zoom_offY(newOffY);
 			}
 		};
-		
+
 		self._get_pointer_event_position_MM = function(event, target){
 			var percPos = self._get_pointer_event_position_Percent(event, target);
 			var x = percPos.x * self.workingAreaWidthMM() * self.zoom() + self.zoomOffX();

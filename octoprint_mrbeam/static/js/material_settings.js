@@ -22,6 +22,8 @@ $(function () {
                     for (let materialKey in self.materialSettingsDatabase) {
                         if (materialKey in materialImportedSettings) {
                             self.materialSettingsDatabase[materialKey].colors = materialImportedSettings[materialKey].colors;
+                            self.materialSettingsDatabase[materialKey].custom = false
+                            self.materialSettingsDatabase[materialKey].img = "/plugin/mrbeam/static/img/materials/" + self.materialSettingsDatabase[materialKey].img
                         } else {
                             delete self.materialSettingsDatabase[materialKey]
                         }
@@ -47,7 +49,7 @@ $(function () {
             'Anodized Aluminum': {
                 name: gettext("Anodized Aluminum"),
                 img: 'Anodized-Aluminum.jpg',
-                description: gettext("Dark anodized aluminum can be engraved. Works on iPhones."),
+                description: gettext("Dark anodized aluminum can be engraved."),
                 hints: gettext("Requires very precise focus. Anodized aluminum turns brighter through laser engraving. Therefore we suggest to invert photos for engravings."),
                 // colors: {
                 //     '000000': {

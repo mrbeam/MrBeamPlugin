@@ -1879,7 +1879,7 @@ input.search-query,
 
 /* hack to avoid that the burger menu is pushed out of the viewable area.*/
 #working_area_files .entry:last-of-type {
-  margin-bottom: 162px; 
+  margin-bottom: 162px;
 }
 
 #wa_filelist>div {
@@ -2560,3 +2560,68 @@ input.search-query,
 .dont-break {
   white-space: nowrap;
 }
+
+
+/*
+* === CUSTOM MATERIAL IMAGE ===
+*/
+
+#custom_material_image_reset {
+    position: absolute;
+    transform: translate(-105%);
+    font-size: 1.5em;
+    color: white;
+    opacity: 0.8;
+    text-decoration: none;
+}
+
+#custom_material_image_reset:hover {
+    color: black;
+    opacity: 0.8;
+}
+
+#custom_material_image_edit {
+    position: absolute;
+    top: 125px;
+    transform: translate(-105%);
+    font-size: 1.5em;
+    color: white;
+    opacity: 0.8;
+    pointer-events: none;
+}
+
+#custom_material_image:hover ~ #custom_material_image_edit {
+    color: black;
+    opacity: 0.8;
+}
+
+/**
+* === EXPERIMENTAL FEATURES ===
+*/
+
+.env_prod .experimental_feature_dev,
+.env_beta .experimental_feature_dev {
+    display: none !important;
+}
+.env_dev .experimental_feature_dev {
+    display: inherit;
+}
+
+.env_prod .experimental_feature_beta {
+    display: none !important;
+}
+.env_dev .experimental_feature_beta,
+.env_beta .experimental_feature_beta {
+    display: inherit;
+}
+
+/* ----- online / offline ------- */
+.offline .show_only_online {
+    display: none !important;
+}
+
+.online .show_only_offline {
+    display: none !important;
+}
+
+

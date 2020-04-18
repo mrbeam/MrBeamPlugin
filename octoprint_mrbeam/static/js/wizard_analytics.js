@@ -67,7 +67,7 @@ $(function () {
                     console.error("Unable to save analytics state: ", data);
                     new PNotify({
                         title: gettext("Error while saving settings!"),
-                        text: _.sprintf(gettext("Unable to save your analytics state at the moment.%(br)sCheck connection to Mr Beam II and try again."), {br: "<br/>"}),
+                        text: _.sprintf(gettext("Unable to save your analytics state at the moment.%(br)sCheck connection to Mr Beam and try again."), {br: "<br/>"}),
                         type: "error",
                         hide: true
                     });
