@@ -53,6 +53,7 @@ class ImageProcessor:
 	              contrast = 1.0,
 	              sharpening = 1.0,
 	              beam_diameter = 0.25,
+	              backlash_x = 0.0,
 	              intensity_black = 500,
 	              intensity_white = 0,
 	              intensity_black_user = None,
@@ -73,10 +74,10 @@ class ImageProcessor:
 		# if True base64 image data urls embedded into the GCODE will be broken into short lines. If False it's one long line
 		self.MULTILINE_DATA_URLS = False
 
-		self.debug = False # general debug
+		self.debug = True # general debug
 		self.debugPreprocessing = False # write each step image to /tmp
 		# backlash compensation will be applied only on lines in negative axis direction
-		self.backlash_compensation_x = _mrbeam_plugin_implementation._settings.get(["machine", "backlash_compensation_x"])
+		self.backlash_compensation_x = backlash_x
 
 		try:
 			self.debug = _mrbeam_plugin_implementation._settings.get(["dev", "debug_gcode"])
@@ -175,9 +176,12 @@ class ImageProcessor:
 		"""
 		self.debugPreprocessing = False
 		orig_w, orig_h = img.size
+		if w_mm < 0:
+			w_mm = orig_w * self.beam
+		
 		if h_mm < 0:
-			ratio = float(orig_w) / float(orig_h)
-			tmp_h_mm = w_mm / ratio
+			ratio = orig_w / float(orig_h)
+			h_mm = w_mm / ratio
 
 		dest_wpx = int(w_mm/self.beam)
 		dest_hpx = int(h_mm/self.beam)
@@ -203,48 +207,48 @@ class ImageProcessor:
 		self.profiler.stop('scale')
 
 		left, upper, right, lower = (0, 0, dest_wpx, dest_hpx)
-		bbox = img.getbbox()
-		self.log.info("#####")
-		self.log.info(bbox)
-		self.log.info((0, 0, dest_wpx, dest_hpx))
-
-		if(False):
-			self.profiler.start('crop')
-
-			# 1a. crop to bbox
-			# TODO: this removes only transparent pixels, white pixels are still counted as content.
-			bbox = img.getbbox()
-			if bbox is None:
-				self.log.debug("img_prepare() Empty bounding box, nothing to engrave. Returning")
-				return []
-
-			left, upper, right, lower = bbox # bbox is a tuple of four
-			bb_w = right - left
-			bb_h = lower - upper
-			if bb_w != dest_wpx or bb_h != dest_hpx:
-				img = img.crop(bbox)
-				old_pixels = dest_wpx * dest_hpx
-				bb_area = bb_w * bb_h
-				ratio = bb_area / old_pixels
-				self.log.debug("Cropped to bbox: Pixel reduction: %i -> %i (%f%%), bb_w: %s, bb_h: %s, left: %s, upper: %s, right: %s, lower: %s ", old_pixels, bb_area, ratio, bb_w, bb_h, left, upper, right, lower)
-				if self.debugPreprocessing:
-					img.save("/tmp/img2gcode_1a_cropped.png")
-
-			else:
-				self.log.debug("Cropping skipped. Not necessary.")
-
-
-			self.profiler.stop('crop').start('remove_transparency')
-
-			# 2. remove transparency
-			if (not self.is_inverted) and (img.mode == 'RGBA'):
-				whitebg = Image.new('RGBA', (bb_w, bb_h), "white")
-				img = Image.alpha_composite(whitebg, img)
-
-				if self.debugPreprocessing:
-					img.save("/tmp/img2gcode_2_whitebg.png")
-
-			self.profiler.stop('remove_transparency').start('contrast')
+#		bbox = img.getbbox()
+#		self.log.info("#####")
+#		self.log.info(bbox)
+#		self.log.info((0, 0, dest_wpx, dest_hpx))
+#
+#		if(False):
+#			self.profiler.start('crop')
+#
+#			# 1a. crop to bbox
+#			# TODO: this removes only transparent pixels, white pixels are still counted as content.
+#			bbox = img.getbbox()
+#			if bbox is None:
+#				self.log.debug("img_prepare() Empty bounding box, nothing to engrave. Returning")
+#				return []
+#
+#			left, upper, right, lower = bbox # bbox is a tuple of four
+#			bb_w = right - left
+#			bb_h = lower - upper
+#			if bb_w != dest_wpx or bb_h != dest_hpx:
+#				img = img.crop(bbox)
+#				old_pixels = dest_wpx * dest_hpx
+#				bb_area = bb_w * bb_h
+#				ratio = bb_area / old_pixels
+#				self.log.debug("Cropped to bbox: Pixel reduction: %i -> %i (%f%%), bb_w: %s, bb_h: %s, left: %s, upper: %s, right: %s, lower: %s ", old_pixels, bb_area, ratio, bb_w, bb_h, left, upper, right, lower)
+#				if self.debugPreprocessing:
+#					img.save("/tmp/img2gcode_1a_cropped.png")
+#
+#			else:
+#				self.log.debug("Cropping skipped. Not necessary.")
+#
+#
+#			self.profiler.stop('crop').start('remove_transparency')
+#
+#			# 2. remove transparency
+#			if (not self.is_inverted) and (img.mode == 'RGBA'):
+#				whitebg = Image.new('RGBA', (bb_w, bb_h), "white")
+#				img = Image.alpha_composite(whitebg, img)
+#
+#				if self.debugPreprocessing:
+#					img.save("/tmp/img2gcode_2_whitebg.png")
+#
+#			self.profiler.stop('remove_transparency').start('contrast')
 
 		# 3. contrast
 		if self.contrastFactor > 1.0:
@@ -821,13 +825,14 @@ class GC_Context():
 
 if __name__ == "__main__":
 	opts = optparse.OptionParser(usage="usage: %prog [options] <imagefile>")
-	opts.add_option("-x",   "--x-position", type="float", default="0", help="x position of the image on the working area", dest="x")
-	opts.add_option("-y",   "--y-position", type="float", default="0", help="y position of the image on the working area", dest="y")
-	opts.add_option("-w",   "--width", type="float", default=100, help="width of the image in mm", dest="width")
+	opts.add_option("-x",   "--x-position", type="float", default="0", help="x position of the image (corner top left) on the working area", dest="x")
+	opts.add_option("-y",   "--y-position", type="float", default="0", help="y position of the image (corner top left) on the working area", dest="y")
+	opts.add_option("-w",   "--width", type="float", default=-1, help="width of the image in mm. If omitted one pixel equals the beam diameter.", dest="width")
 	opts.add_option("",   "--height", type="float", default=-1, help="height of the image in mm. If omitted aspect ratio will be preserved.", dest="height")
 	opts.add_option("",   "--workingAreaWidth", type="float", default=500, help="max width in mm. (Default 500)", dest="waWidth")
 	opts.add_option("",   "--workingAreaHeight", type="float", default=390, help="max height in mm. (Default 390)", dest="waHeight")
 	opts.add_option("", "--beam-diameter", type="float", help="laser beam diameter, default 0.25mm", default=0.25, dest="beam_diameter")
+	opts.add_option("", "--backlash_x", type="float", help="precision compensation x axis, default 0.00mm", default=0.00, dest="backlash_x")
 	opts.add_option("-s", "--speed", type="float", help="engraving speed, default 1000mm/min", default=1000, dest="feedrate")
 	opts.add_option("",   "--img-intensity-white", type="int", default="0", help="intensity for white pixels, default 0", dest="intensity_white")
 	opts.add_option("",   "--img-intensity-black", type="int", default="1000", help="intensity for black pixels, default 1000", dest="intensity_black")
@@ -837,7 +842,8 @@ if __name__ == "__main__":
 	opts.add_option("-c", "--contrast", type="float", help="contrast adjustment: 0.0 => gray, 1.0 => unchanged, >1.0 => intensified", default=1.0, dest="contrast")
 	opts.add_option("", "--sharpening", type="float", help="image sharpening: 0.0 => blurred, 1.0 => unchanged, >1.0 => sharpened", default=1.0, dest="sharpening")
 	opts.add_option("", "--dithering", type="string", help="convert image to black and white pixels", default="false", dest="dithering")
-	opts.add_option("", "--no-headers", type="string", help="omits Mr Beam start and end sequences", default="false", dest="noheaders")
+	opts.add_option("", "--mode", type="string", help="engraving mode: {}, {}, {}".format(ImageProcessor.ENGRAVING_MODE_FAST, ImageProcessor.ENGRAVING_MODE_BASIC, ImageProcessor.ENGRAVING_MODE_DEFAULT), default=ImageProcessor.ENGRAVING_MODE_DEFAULT, dest="engraving_mode")
+	opts.add_option("", "--no-headers", action="store_true", default=False, help="omits Mr Beam start and end sequences", dest="noheaders")
 
 	(options, args) = opts.parse_args()
 	path = args[0]
@@ -850,11 +856,11 @@ if __name__ == "__main__":
 	with open (gcodefile, "w") as fh:
 		header = ""
 		footer = ""
-		if options.noheaders == "false":
+		if not options.noheaders:
 			# TODO get headers from machine_settings.py
 			header = '''
 $H
-G92X0Y0Z0
+G92X507Y390Z0
 G90
 M8
 G21
@@ -876,7 +882,8 @@ M2
 			workingAreaHeight = options.waHeight,
 			contrast = options.contrast,
 			sharpening = options.sharpening,
-			beam_diameter = 1.0, # for easy debugging.
+			beam_diameter = options.beam_diameter, # use 1.0 for easy debugging.
+			backlash_x = options.backlash_x,
 			#beam_diameter = options.beam_diameter,
 			intensity_black = options.intensity_black,
 			intensity_white = options.intensity_white,
@@ -885,7 +892,7 @@ M2
 			speed_black = options.speed_black,
 			speed_white = options.speed_white,
 			dithering = boolDither,
-			engraving_mode=ImageProcessor.ENGRAVING_MODE_FAST,
+			engraving_mode=options.engraving_mode,
 			pierce_time = options.pierce_time,
 			material = None
 		)
@@ -893,6 +900,7 @@ M2
 		lh = logging.StreamHandler(sys.stdout)
 		lh.setLevel(logging.DEBUG)
 		ip.log.addHandler(lh)
+		ip.profiler.log.addHandler(lh)
 
 		path = args[0]
 		print(options)
