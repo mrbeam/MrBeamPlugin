@@ -853,6 +853,21 @@ if __name__ == "__main__":
 		filename, _ = os.path.splitext(path)
 		gcodefile = filename + ".gco"
 
+	image = Image.open(path)
+	buffer = cStringIO.StringIO()
+	image.save(buffer, format="PNG")
+	img_str = base64.b64encode(buffer.getvalue())
+	datauri = "data:image/png;base64,"+img_str
+	orig_w, orig_h = image.size
+	if options.width < 0:
+		options.width = orig_w * options.beam_diameter
+
+	if options.height < 0:
+		ratio = orig_w / float(orig_h)
+		options.height = options.width / ratio
+
+
+
 	with open (gcodefile, "w") as fh:
 		header = ""
 		footer = ""
@@ -904,7 +919,7 @@ M2
 
 		path = args[0]
 		print(options)
-		ip.img_to_gcode(path, options.width, options.height, options.x, options.y, path)
+		ip.img_to_gcode(path, options.width, options.height, options.x, options.y, datauri)
 		#ip.dataUrl_to_gcode(base64img, options.width, options.height, options.x, options.y)
 
 		fh.write(footer)
