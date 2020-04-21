@@ -68,7 +68,7 @@ class LidHandler(object):
 			self._photo_creator = PhotoCreator(self._plugin,
                                                self._plugin_manager,
                                                imagePath,
-                                               debug=True)
+                                               debug=False)
 		else:
 			self._photo_creator = None
 		self._analytics_handler = self._plugin.analytics_handler
