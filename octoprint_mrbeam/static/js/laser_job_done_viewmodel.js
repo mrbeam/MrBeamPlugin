@@ -109,6 +109,7 @@ $(function() {
 			if(self.lastJob !== null){
 				self.cancel_btn();
 				self.files.startGcodeWithSafetyWarning(self.lastJob);
+				self.analytics.send_fontend_event('repeat_job', {})
 			} else {
 				console.error("Repeat job clicked, but self.lastJob is null.");
 			}
