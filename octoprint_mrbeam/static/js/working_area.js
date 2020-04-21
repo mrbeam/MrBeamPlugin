@@ -684,6 +684,7 @@ $(function(){
 				for (var i = 0; i < allElems.length; i++) {
 					var el = allElems[i];
 					if (window.getComputedStyle(el.node).display === 'none') {
+					// also check visibility:hidden
 						console.info("computed style display=none, removing element ", el);
 						el.remove();
 					}
