@@ -68,7 +68,7 @@ class LidHandler(object):
 			self._photo_creator = PhotoCreator(self._plugin,
                                                self._plugin_manager,
                                                imagePath,
-                                               debug=False)
+                                               debug=True)
 		else:
 			self._photo_creator = None
 		self._analytics_handler = self._plugin.analytics_handler
@@ -288,10 +288,11 @@ class PhotoCreator(object):
                            stopEvent=self.stopEvent,) as cam:
 				self.serve_pictures(cam)
 			if recurse_nb > 0:
-				self._analytics_handler.add_camera_session_details({'errors': exc.formatForAnalytics(exc.CAM_CONNRECOVER)})
-				pass
+				self._logger.info("Camera recovered")
+				self._analytics_handler.add_camera_session_details(exc.msgForAnalytics(exc.CAM_CONNRECOVER))
 		except exc.CameraConnectionException as e:
-			self._logger.exception(" %s, %s", e.__class__.__name__, e)
+			self._logger.exception(" %s, %s : %s" % (e.__class__.__name__, e, exc.msg(exc.CAM_CONN)),
+			                       analytics=exc.CAM_CONN)
 			if recurse_nb < MAX_PIC_THREAD_RETRIES:
 				self._logger.info("Restarting work() after some sleep")
 				self._plugin.user_notification_system.show_notifications(
@@ -302,13 +303,12 @@ class PhotoCreator(object):
 				if not self.stopEvent.wait(5.0):
 					self.work(recurse_nb=recurse_nb+1)
 			else:
-				self._logger.error("Recursive restart : too many times, displaying Error message.")
+				self._logger.exception(" %s, %s : Recursive restart : too many times, displaying Error message." % (e.__class__.__name__, e),
+				                       analytics=exc.CAM_CONN)
 				self._plugin.user_notification_system.show_notifications(
 					self._plugin.user_notification_system.get_notification(
 						notification_id='err_cam_conn_err',
 						replay=True))
-				self._analytics_handler.add_camera_session_details({'errors': exc.formatForAnalytics(exc.CAM_CONN,
-				                                                                                     count=MAX_PIC_THREAD_RETRIES)})
 			return
 		except Exception as e:
 			if e.__class__.__name__.startswith('PiCamera'):

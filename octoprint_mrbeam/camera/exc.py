@@ -8,15 +8,14 @@ except ImportError, OSError:
 CameraException = _Exc
 CameraConnectionException = _ConnErr
 
-(CAM_CONN,
- CAM_CONNRECOVER,
- ) = range(2)
+CAM_CONN = "err_cam_conn"
+CAM_CONNRECOVER = "cam_conn_recover"
 
 def msg(status):
-	return {CAM_CONN:        "Camera connection error",
+	return {CAM_CONN: "Camera connection error",
 	        CAM_CONNRECOVER: "Managed to recover from the previous camera error",
-            }.get(status, "Unknown status error")
+	        }.get(status, "Unknown status error")
 
-def formatForAnalytics(status, count=1):
-	return {status: {'msg': msg(status),
-	                 'count': count}}
+def msgForAnalytics(status):
+	return {'message': msg(status),
+	        'id': status}
