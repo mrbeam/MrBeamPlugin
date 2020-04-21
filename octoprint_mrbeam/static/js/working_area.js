@@ -683,8 +683,8 @@ $(function(){
 				console.log("found elements", allElems.length);
 				for (var i = 0; i < allElems.length; i++) {
 					var el = allElems[i];
+                    // also check visibility:hidden
 					if (window.getComputedStyle(el.node).display === 'none') {
-					// also check visibility:hidden
 						console.info("computed style display=none, removing element ", el);
 						el.remove();
 					}

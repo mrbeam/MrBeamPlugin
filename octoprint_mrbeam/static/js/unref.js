@@ -143,32 +143,5 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			return src_elem;
 		}
 	};
-	
-	/**
-	 * dereferences all class="..." attributes and replaces them with style="..."
-	 *
-	 * @returns {undefined}
-	 */
-	Element.prototype.unref_classes = function (classDefs = null) {
-		let elem = this;
-
-		// only works on elements with class attribute set
-		if(elem.attr('class') === ''){
-			console.log("Element does not have a class attribute set.");
-			return;
-		} else {
-			// parse classDefs
-			
-			// lookup
-			
-			// inject in style attribute
-			
-			// remove the class attribute
-			elem.attr('class', '');
-			
-		}
-
-
-	};
 });
 
