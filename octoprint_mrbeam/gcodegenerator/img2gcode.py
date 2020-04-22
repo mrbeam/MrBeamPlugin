@@ -74,7 +74,7 @@ class ImageProcessor:
 		# if True base64 image data urls embedded into the GCODE will be broken into short lines. If False it's one long line
 		self.MULTILINE_DATA_URLS = False
 
-		self.debug = True # general debug
+		self.debug = False # general debug
 		self.debugPreprocessing = False # write each step image to /tmp
 		# backlash compensation will be applied only on lines in negative axis direction
 		self.backlash_compensation_x = backlash_x
@@ -925,4 +925,3 @@ M2
 		fh.write(footer)
 
 	print("gcode written to " + gcodefile)
-
