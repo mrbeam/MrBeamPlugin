@@ -456,7 +456,7 @@ $(function(){
 				// analytics
 				var re = / beamOS:([0-9.]+) /;
 				var match = re.exec(gcode.substring(0, 1000));
-				var beamos_vers = match.length > 1 ? match[1] : null;
+				var beamos_vers = (match && match.length > 1) ? match[1] : null;
 				var analyticsData = {
 					id: previewId,
 					file_type: 'gco',
@@ -2019,13 +2019,15 @@ $(function(){
 		};
 
 		self.draw_gcode_img_placeholder = function(x,y,w,h,url, target){
-			if(url !== ""){
+			if(url !== "" && w > 0 && h > 0){
 				var p = snap.image(url,x,y,w,h).attr({
 					transform: 'matrix(1,0,0,-1,0,'+ String(h+y*2) +')',
 					filter: 'url(#gcimage_preview)'
 				});
-
+			} else {
+				console.info("Loaded GCode contains image but preview can't be shown ", x,y,w,h,url);
 			}
+			
 			snap.select(target).append(p);
 		};
 
