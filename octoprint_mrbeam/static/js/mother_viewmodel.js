@@ -1,3 +1,5 @@
+/* global _ */
+
 $(function () {
 
     function MotherViewModel(params) {
@@ -452,6 +454,65 @@ $(function () {
 
 
         // files.js viewmodel extensions
+		self.gcodefiles.selectedFiles = ko.observable("0 " + gettext("Files"));
+		self.gcodefiles.selectedFilesSize = ko.observable(0);
+		self.gcodefiles.selectedFilesTypes = ko.observable("");
+		self.gcodefiles.updateSelection = function(data, event){
+			event.currentTarget.classList.toggle('selected');
+			let items = $('#files .file_list_entry:has(.selection_box.selected)');
+			let str = items.length === 1 ? gettext("1 File") : items.length + " " + gettext("Files");
+			let totalSelectionSize = 0;
+			let types = {};
+			for (var i = 0; i < items.length; i++) {
+				var elem = items[i];
+				let data = ko.dataFor(elem);
+				totalSelectionSize += data.size;
+				let t;
+				if(data.type === 'recentjob'){
+					t = gettext('recent job');
+				} else {
+					t = gettext(_.last(data.typePath));
+				}
+				types[t] = (types[t] + 1) || 1;
+			}
+			let typeStr = _.map(types, function(val, key){ return(val + 'x\u00A0' + key); }).join(', '); // \u00A0 is a non breaking space.
+			self.gcodefiles.selectedFiles(str);
+			self.gcodefiles.selectedFilesTypes(typeStr);
+			self.gcodefiles.selectedFilesSize(totalSelectionSize);
+			if(items.length > 0){
+				$('#bulkActions').slideDown();
+			} else {
+				$('#bulkActions').slideUp();
+			}
+		}
+		self.gcodefiles.cancelSelection = function(){
+			$('#files .file_list_entry .selection_box.selected').removeClass('selected');
+			$('#bulkActions').slideUp();
+		}
+		self.gcodefiles.deleteSelection = function(){
+			let items = $('#files .file_list_entry:has(.selection_box.selected)');
+			for (var i = 0; i < items.length; i++) {
+				var elem = items[i];
+				let data = ko.dataFor(elem);
+				if(data.type === 'folder'){
+					self.gcodefiles.removeFolder(data);
+				}else{
+					self.gcodefiles.removeFile(data);
+				}
+			}
+			items.remove();
+			$('#bulkActions').slideUp();
+		}
+		
+		/**
+		 * gcodefiles viewmodel methods for folder support
+		 * changeFolder: ƒ (data)
+		 * navigateUp: ƒ ()
+		 * changeFolderByPath: ƒ (path)
+		 * showAddFolderDialog: ƒ ()
+		 * addFolder: ƒ ()
+		 * removeFolder: ƒ (folder, event)
+		 */
 
 		// fetches the right templates according to file type for knockouts foreach loop
         self.gcodefiles.templateFor = function (data) {
@@ -462,8 +523,8 @@ $(function () {
             }
         };
 
-		// TODO Mr Beam Kit legacy code ?
-        self.gcodefiles.startGcodeWithSafetyWarning = function (gcodeFile) {
+        // starts a single GCode file.
+		self.gcodefiles.startGcodeWithSafetyWarning = function (gcodeFile) {
             self.gcodefiles.loadFile(gcodeFile, false);
             if (self.readyToLaser.oneButton) {
                 self.readyToLaser.setGcodeFile(gcodeFile.path);

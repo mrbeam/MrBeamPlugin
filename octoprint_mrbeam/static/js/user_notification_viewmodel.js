@@ -34,8 +34,23 @@ $(function () {
                 knowledgebase: {
                     url: 'https://mr-beam.freshdesk.com/support/solutions/articles/43000557281-error-hardware-malfunction',
                 }
-            }
-        }
+            },
+            warn_cam_conn_err: {
+                title: gettext("Camera busy"),
+                text: gettext("The camera was stopped recently, it will take a few seconds to restart."),
+                type: 'info',
+                hide: true,
+            },
+            err_cam_conn_err: {
+                title: gettext("Camera Error"),
+                text: gettext("The camera has had a small issue, please restart your Mr Beam if you need to use the camera to continue with your work."),
+                type: 'error',
+                hide: false,
+                knowledgebase: {
+                    url: 'https://support.mr-beam.org/support/solutions/articles/43000570474-error-camera-error',
+                }
+            },
+        };
 
 
         self.onDataUpdaterPluginMessage = function (plugin, data) {
@@ -47,15 +62,15 @@ $(function () {
                 let nu_notifications = data['user_notification_system']['notifications'] || [];
 
                 for (let i = 0; i < nu_notifications.length; i++) {
-                    let pn_obj = self._getPnObj(nu_notifications[i])
+                    let pn_obj = self._getPnObj(nu_notifications[i]);
 
                     // find notification in screen
-                    let existing_notification = null
+                    let existing_notification = null;
                     for (let n = 0; n < PNotify.notices.length; n++) {
                         if (PNotify.notices[n].state != 'closed' &&
                             PNotify.notices[n].options &&
                             PNotify.notices[n].options.id == nu_notifications[i].notification_id) {
-                            existing_notification = PNotify.notices[n]
+                            existing_notification = PNotify.notices[n];
                             break;
                         }
                     }
@@ -76,7 +91,7 @@ $(function () {
                     type: notification_conf.type || 'info',
                     hide: notification_conf.hide === undefined ? true : notification_conf.hide,
                     delay: notification_conf.delay || 10 * 1000,
-                }
+                };
             if (notification_conf.notification_id in self._notification_templates) {
                 pn_obj = {...pn_obj, ...self._notification_templates[notification_conf.notification_id]}
             }
@@ -89,20 +104,20 @@ $(function () {
             }
 
             return pn_obj
-        }
+        };
 
         self._getKnowledgeBaseLink = function (kb_konf) {
-            let specific_url = 'url' in kb_konf
-            let kb_url = kb_konf.url || "https://mr-beam.org/support"
+            let specific_url = 'url' in kb_konf;
+            let kb_url = kb_konf.url || "https://mr-beam.org/support";
             let default_params = {
                 utm_medium: 'beamos',
                 utm_source: 'beamos',
                 utm_campaign: "notification",
                 version: BEAMOS_VERSION,
                 env: MRBEAM_ENV_LOCAL,
-            }
+            };
             // this merges two objects. If both objects have a property with the same name, then the second object property overwrites the first.
-            let kb_params = {...default_params, ...kb_konf.params}
+            let kb_params = {...default_params, ...kb_konf.params};
             kb_url = kb_url + '?' + $.param(kb_params);
             if (specific_url) {
                 return "<br /><br />" +
@@ -120,7 +135,7 @@ $(function () {
                             'closing_tag': '</strong></a>',
                         })
             }
-        }
+        };
 
         self._getErrorString = function (err) {
             if (err) {
@@ -131,7 +146,7 @@ $(function () {
 
         }
 
-    };
+    }
 
     // view model class, parameters for constructor, container to bind to
     OCTOPRINT_VIEWMODELS.push([
