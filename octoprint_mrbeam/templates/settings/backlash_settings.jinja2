@@ -7,12 +7,16 @@
             <div class="controls">
                 <input id="settings_backlash_compensation_x" type="number" min="-3" max="3" step="0.01" class="input-block-level" data-bind="value: settings.plugins.mrbeam.machine.backlash_compensation_x">
                 <br />
+				<p>
+                    {{ _('Precision adjustment to compensate motion effects on the precision.') }}<br/>
+                    {{ _('In case of blurry text engravings, decrease in steps of 0.1 until the result improves.') }}
+                </p>
             </div>
         </div>
     </form>
 
  
-	<div id="" class="scrollable" data-bind="">
+	<div id="" class="scrollable" data-bind="" style="display:none;">
         <div class='text'><strong>{{ _("Important") }}:</strong><br />
             {{ _("This calibration is for optimizing the alignment of the single lines of an engraving.\n\
 				It improves the engraving quality especially on fine structures like small text.\n\
