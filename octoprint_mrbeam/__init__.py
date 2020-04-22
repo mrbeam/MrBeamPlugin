@@ -2216,7 +2216,7 @@ def __plugin_load__():
 				        "plugin_mrbeam_analytics"],
 				settings=['plugin_mrbeam_about', 'plugin_softwareupdate', 'accesscontrol', 'plugin_mrbeam_maintenance',
 				          'plugin_netconnectd', 'plugin_findmymrbeam', 'plugin_mrbeam_conversion',
-				          'plugin_mrbeam_camera', 'plugin_mrbeam_custom_material', 'plugin_mrbeam_airfilter', 'plugin_mrbeam_analytics',
+				          'plugin_mrbeam_camera', 'plugin_mrbeam_backlash', 'plugin_mrbeam_custom_material', 'plugin_mrbeam_airfilter', 'plugin_mrbeam_analytics',
 				          'plugin_mrbeam_reminders', 'plugin_mrbeam_leds', 'logs', 'plugin_mrbeam_debug']
 			),
 			disabled=dict(
