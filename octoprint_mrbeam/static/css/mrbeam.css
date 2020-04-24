@@ -382,14 +382,14 @@ input[type="submit"].btn.btn-mini {
 .btn-link {
   border-color: transparent;
   cursor: pointer;
-  color: #0088cc;
+  color: #e25303;
   -webkit-border-radius: 0;
   -moz-border-radius: 0;
   border-radius: 0;
 }
 .btn-link:hover,
 .btn-link:focus {
-  color: #005580;
+  color: #a63e03;
   text-decoration: underline;
   background-color: transparent;
 }
@@ -1170,151 +1170,7 @@ ul.dropdown-menu li a {
   -moz-transform: scaleX(-1) scaleY(-1);
   transform: rotate(-90deg) scaleX(-1) scaleY(-1) translate(0%, -100%);
 }*/
-/** GCODE file manager */
 
-
-
-#files .gcode_files {
-  padding-right: 7px;
-}
-#files .gcode_files .entry {
-  padding: 12px;
-  line-height: 20px;
-  border-bottom: 0;
-  position: relative;
-  width: 25%;
-  float: left;
-  box-sizing: border-box;
-}
-
-@media only screen and (max-width : 1200px) {
-	#files .gcode_files .entry { width: 33%; }
-}
-
-@media only screen and (max-width : 979px) {
-	#files .gcode_files .entry { width: 50%; }
-}
-
-@media only screen and (max-width : 767px) {
-	#files .gcode_files .entry { width: 100%; }
-}
-
-
-#files .gcode_files .entry:hover {
-  background-color: #f5f5f5;
-}
-#files .gcode_files .entry .title {
-  text-overflow: ellipsis;
-  word-break: break-all;
-}
-
-#files .upload-buttons {
-  margin-top: 10px;
-}
-#files .form-search {
-  text-align: center;
-  margin-bottom: 5px !important;
-}
-
-#files .file_list_entry .title {
-  padding: .8em .8em 0.2em;
-  white-space: nowrap;
-  border-top: 1px dotted lightgray;
-
-}
-
-.title_shortened {
-	width: calc(100% - 1.2em);
-	overflow: hidden;
-	display: inline-block;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-#files .file_list_entry li.size,
-#files .file_list_entry li.uploaded {
-  font-size: x-small;
-  color: #383e42;
-  padding: 0px 20px;
-}
-
-.file_list_icon {
-  color: #999;
-  font-size: 3em;
-  display: block;
-  float: left;
-  margin-right: 12px;
-  min-width: 1.1em;
-}
-
-.file_list_entry_gcode {
-	color: #CCC;
-}
-
-
-
-/* file tab preview cards */
-.file_list_entry.icon_card,
-.file_list_entry.preview_card {
-	position: relative;
-	width: 100%;
-	box-shadow: rgba(0,0,0,.3) 0 0 9px 0;
-}
-
-#files .preview_card div.preview,
-#files .icon_card div.preview {
-	padding-top: 80%;
-	width: 100%;
-	cursor: pointer;
-}
-
-#files .preview_card div.preview {
-	background-position: center;
-	background-size: contain;
-	background-repeat: no-repeat;
-}
-
-#files .icon_card div.preview>i{
-	text-align: center;
-	font-size: 6rem;
-	color: #999;
-	height: 0;
-	position: absolute;
-	top: calc(50% - 6rem / 2);
-	left: 0;
-	width: 100%;
-}
-
-#files .preview.disabled {
-  opacity: 0.2;
-}
-
-#designlib #files .entry.files_template_model_svg,
-#designlib #files .entry.files_template_model_dxf,
-#designlib #files .entry.files_template_model_image,
-#designlib #files .entry.files_template_recentjob_svg,
-#designlib #files .entry.files_template_machinecode_gcode {
-	display:none;
-}
-#designlib.show_design #files .entry.files_template_model_svg,
-#designlib.show_design #files .entry.files_template_model_dxf,
-#designlib.show_design #files .entry.files_template_model_image,
-#designlib.show_recentjob #files .entry.files_template_recentjob_svg,
-#designlib.show_machinecode #files .entry.files_template_machinecode_gcode {
-	display: block;
-}
-
-#designlib #files_filter li.filter.design a i,
-#designlib #files_filter li.filter.machinecode a i,
-#designlib #files_filter li.filter.recentjob a i {
-	visibility:hidden;
-}
-
-#designlib.show_design #files_filter li.filter.design a i,
-#designlib.show_machinecode #files_filter li.filter.machinecode a i,
-#designlib.show_recentjob #files_filter li.filter.recentjob a i {
-	visibility:visible;
-}
 
 /** Control tab */
 #control {
@@ -2604,7 +2460,7 @@ input.search-query,
     display: none !important;
 }
 .env_dev .experimental_feature_dev {
-    display: initial;
+    display: inherit;
 }
 
 .env_prod .experimental_feature_beta {
@@ -2612,7 +2468,7 @@ input.search-query,
 }
 .env_dev .experimental_feature_beta,
 .env_beta .experimental_feature_beta {
-    display: initial;
+    display: inherit;
 }
 
 /* ----- online / offline ------- */

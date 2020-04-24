@@ -59,6 +59,13 @@
 											</div>
 											<div class="collapse" id="wa_view_settings_body">
 												<div class="accordion-inner">
+													<div data-bind="style: { display: camera.imgResolutionNoticeDisplay() }">
+													<span style="font-weight: bold">Low</span> Picture Quality
+														<span class="muted">
+															- Open the lid and keep your hands off the working area
+															for a few seconds to receive a higher resolution image
+														</span>
+													</div>
 													<div>
 														<label>
 															{{ _('Brightness') }}:
@@ -241,7 +248,7 @@
 														<div class="detail_information" >
 															<div class="local_transformation muted">
 																<i class="icon-move" title="{{ _('translation') }}"></i>
-																<input class="decent_input translation wide" type="text" value="0,0" data-bind="event: {
+																<input class="decent_input translation wide" type="text" value="0, 0" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualTranslate($data, event); },
 																			blur: function(d, event){ $root.svgManualTranslate($data, event); }} "/>
 																<i class="icon-repeat" title="{{ _('rotation') }}"></i>
@@ -546,7 +553,7 @@
 											viewBox: zoomViewBox(),
 											visibility: 'visible'
 										},
-										event: { mousewheel: wheel_zoom_wa, mousemove: mouse_drag_wa }
+										event: { wheel: wheel_zoom_wa, mousemove: mouse_drag_wa }
 									 "
 									 xmlns:mb="http://www.mr-beam.org/mbns">
 								<defs>
@@ -581,12 +588,13 @@
                                        transform="scale(1)"
                                        data-bind="attr: { transform: zObjectImgTransform() }">
                                         <image id="beamcam_image_svg"
-                                            xlink:href="/downloads/files/local/cam/beam-cam.jpg" x="0" y="0"
+                                            xlink:href="" x="0" y="0"
                                             data-bind="attr: {
                                                     width: workingAreaWidthMM(),
                                                     height: workingAreaHeightMM(),
-                                                    opacity: previewImgOpacity()
-                                                }" />
+                                                    opacity: previewImgOpacity(),
+                                                    'xlink:href': camera.timestampedImgUrl()
+                                               }" />
                                     </g>
 									<g id="scaleGroup" data-bind="attr: { transform: scaleMatrix() }">
 										<g id="placedGcodes" data-bind="visible: true || (state.isPrinting() && !state.isPaused()), attr: { transform: 'matrix(1,0,0,-1,0,'+workingAreaHeightMM()+')' }"></g>
@@ -614,17 +622,17 @@
                                             <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera. Try to close and reopen the lid.') }}</title>
                                         </circle>
 									</g>
-									<rect id="scanArea" x="0" y="0" width="0" height="0" ></rect>
-									<rect id="scanEventHandler" x="0" y="0" width="0" height="0" stroke="none" fill="none"
-										  data-bind="event: {mousedown: scanStart, mousemove: scanUpdate, mouseup: scanEnd}"></rect>
-
+{#									<rect id="scanArea" x="0" y="0" width="0" height="0" ></rect>#}
+{#									<rect id="scanEventHandler" x="0" y="0" width="0" height="0" stroke="none" fill="none"#}
+{#										  data-bind="event: {mousedown: scanStart, mousemove: scanUpdate, mouseup: scanEnd}"></rect>#}
+{##}
 								</svg>
 							</div>
                             <div id="working_area_footer">
                                 <div class="pull-right working_area_footer_text">Mr Beam Plugin: v{{ beamosVersionNumber }}</div>
                                 <div class="pull-right working_area_footer_text">{{ _('Serial') }}: {{ serial }}</div>
                                 <div class="pull-right working_area_footer_text">{{ _('Mr Beam Name') }}: {{ hostname }}</div>
-                                <div class="pull-right working_area_footer_text">© 2019 Mr Beam Lasers GmbH</div>
+                                <div class="pull-right working_area_footer_text">© 2020 Mr Beam Lasers GmbH</div>
                             </div>
 						</div>
 					</div>

@@ -265,6 +265,7 @@ class Converter():
 											workingAreaWidth = self.workingAreaWidth,
 											workingAreaHeight = self.workingAreaHeight,
 						                    beam_diameter = rasterParams['beam_diameter'],
+						                    backlash_x = _mrbeam_plugin_implementation._settings.get(["machine", "backlash_compensation_x"]),
 						                    overshoot_distance = 1,
 											intensity_black = rasterParams['intensity_black'],
 											intensity_white = rasterParams['intensity_white'],

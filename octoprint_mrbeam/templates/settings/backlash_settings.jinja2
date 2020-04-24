@@ -1,0 +1,58 @@
+<div id="settings_plugin_mrbeam_backlash">
+    <h3>{{ _('Precision Calibration') }}</h3>
+
+    <form class="form-horizontal">
+        <div class="control-group">
+            <label class="control-label" for="settings_backlash_compensation_x">{{ _('x Motion Compensation') }}</label>
+            <div class="controls">
+                <input id="settings_backlash_compensation_x" type="number" min="-3" max="3" step="0.01" class="input-block-level" data-bind="value: settings.plugins.mrbeam.machine.backlash_compensation_x">
+                <br />
+				<p>
+                    {{ _('Precision adjustment to compensate motion effects on the precision. In case of blurry text engravings, decrease in steps of 0.1 until the result improves.') }}
+                </p>
+            </div>
+        </div>
+    </form>
+
+ 
+	<div id="" class="scrollable" data-bind="" style="display:none;">
+        <div class='text'><strong>{{ _("Important") }}:</strong><br />
+            {{ _("This calibration is for optimizing the alignment of the single lines of an engraving.\n\
+				It improves the engraving quality especially on fine structures like small text.\n\
+				The calibration procedure takes approximately 15 minutes and requires to engrave a piece \n\
+				of cardboard with minimum 25mm width and 100mm height.\n\
+				") }}
+        </div>
+        <div>
+            <h5>{{ _("Steps to calibrate:") }}</h5>
+            <div class='text'>
+                <ul>
+                    <li>
+                        {{ _("The inside of your Mr Beam Lasercutter should be clean (See ####TODO... or the user manual for maintenance tips)<br/> 
+							Place your cardboard in the center of the working area<br/> 
+							Focus the laserhead to the height of the cardboard.") }}
+                    </li>
+                    <li>
+                        {{ _("Engrave this GCode file directly on cardboard") }} <a class='btn btn-primary'>{{ _("Start engraving") }}</a>
+                    </li>
+                    <li>
+                        {{ _("Check the engravings two columns and find the vertical position where: <br />
+							1. the total width of both columns is exactly 5mm<br />
+							2. the gap between the columns is exactly 1mm.") }}
+                    </li>
+                    <li>
+                        {{ _("Third step: Enter the value next to the found position in the field above named 'x Motion Compensation'") }}
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class='text show_only_online'>{{ _("For more information, please have a look at our article on %(opening_tag)sprecision calibration%(closing_tag)s.",
+                opening_tag='<a href="https://mr-beam.freshdesk.com/support/solutions/articles/TODO#####" target="_blank"><i class="icon-external-link"></i>&nbsp;',
+                closing_tag='</a>') }}</div>
+        <div class='text show_only_offline'>{{ _("For more information, please have a look at our article on %(opening_tag)sprecision calibration%(closing_tag)s.",
+                opening_tag='<a href="#" onclick="mrbeam.openOfflineKbUrl(\'TODO#####.pdf\')"><i class="icon-file-text"></i>&nbsp;',
+                closing_tag='</a>') }}</div>
+
+	</div>
+
+</div>
