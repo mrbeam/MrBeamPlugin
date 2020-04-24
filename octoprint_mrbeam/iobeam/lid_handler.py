@@ -3,7 +3,6 @@ import json
 import numpy as np
 import time
 import threading
-from math import sqrt
 from threading import Event
 import os
 import shutil
@@ -56,6 +55,7 @@ class LidHandler(object):
 		self._settings = plugin._settings
 		self._printer = plugin._printer
 		self._plugin_manager = plugin._plugin_manager
+		self._laserCutterProfile = plugin.laserCutterProfileManager.get_current_or_default()
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler",
 		                          logging.INFO)
 		self._lid_closed = True
@@ -71,6 +71,8 @@ class LidHandler(object):
                                                debug=False)
 		else:
 			self._photo_creator = None
+		self.refresh_pic_settings = Event() # TODO placeholder for when we delete PhotoCreator
+
 		self._analytics_handler = self._plugin.analytics_handler
 		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._subscribe)
 
@@ -165,10 +167,7 @@ class LidHandler(object):
 	def take_undistorted_picture(self,is_initial_calibration=False):
 		from flask import make_response, jsonify
 		if self._photo_creator is not None:
-			if is_initial_calibration:
-				self._photo_creator.is_initial_calibration = True
-			else:
-				self._photo_creator.set_undistorted_path()
+			self._photo_creator.is_initial_calibration = is_initial_calibration
 			self._startStopCamera("take_undistorted_picture_request")
 			# this will be accepted in the .done() method in frontend
 			resp_text = {'msg': gettext("Please make sure the lid of your Mr Beam is open and wait a little...")}
@@ -177,11 +176,25 @@ class LidHandler(object):
 			return make_response('Error, no photocreator active, maybe you are developing and dont have a cam?', 503)
 
 	def _start_photo_worker(self):
+		path_to_cam_params = self._settings.get(["cam", "lensCalibrationFile"])
+		path_to_pic_settings = self._settings.get(["cam", "correctionSettingsFile"])
+
+		mrb_volume = self._laserCutterProfile['volume']
+		out_pic_size = mrb_volume['width'], mrb_volume['depth']
+		self._logger.debug("Will send images with size %s", out_pic_size)
+
+		# load cam_params from file
+		cam_params = _getCamParams(path_to_cam_params)
+		self._logger.debug('Loaded cam_params: {}'.format(cam_params))
+
+		# load pic_settings json
+		pic_settings = _getPicSettings(path_to_pic_settings)
+		self._logger.debug('Loaded pic_settings: {}'.format(pic_settings))
 		if not self._photo_creator.active:
 			if self._photo_creator.stopping:
-				self._photo_creator.restart()
+				self._photo_creator.restart(pic_settings=pic_settings, cam_params=cam_params, out_pic_size=out_pic_size)
 			else:
-				self._photo_creator.start()
+				self._photo_creator.start(pic_settings=pic_settings, cam_params=cam_params, out_pic_size=out_pic_size)
 		else:
 			self._logger.info("Another PhotoCreator thread is already active! Not starting a new one.")
 
@@ -190,6 +203,15 @@ class LidHandler(object):
 			self._photo_creator.stop()
 			self._photo_creator.save_debug_images = False
 			self._photo_creator.undistorted_pic_path = None
+
+	def restart_worker(self):
+		raise NotImplementedError()
+		# if self._photo_creator:
+		# 	self._photo_creator.restart()
+
+	def refresh_settings(self):
+		# Let's the worker know to refresh the picture settings while running
+		self._photo_creator.refresh_pic_settings.set()
 
 	def compensate_for_obj_height(self, compensate=False):
 		if self._photo_creator is not None:
@@ -203,12 +225,12 @@ class PhotoCreator(object):
 		self.final_image_path = path
 		self._settings = _plugin._settings
 		self._analytics_handler = _plugin.analytics_handler
-		self._laserCutterProfile = _plugin.laserCutterProfileManager.get_current_or_default()
 		self.stopEvent = Event()
 		self.stopEvent.set()
 		self.activeFlag = Event()
 		self._pic_available = Event()
 		self._pic_available.clear()
+		self.refresh_pic_settings = Event()
 		self.zoomed_out = True
 		self.last_photo = 0
 		self.is_initial_calibration = False
@@ -233,7 +255,7 @@ class PhotoCreator(object):
 
 	@property
 	def active(self):
-		return self.activeFlag.isSet()
+		return not self.stopEvent.isSet()
 
 	@active.setter
 	def active(self, val):
@@ -241,7 +263,8 @@ class PhotoCreator(object):
 		if val: self.activeFlag.set()
 		else:   self.activeFlag.clear()
 
-	def start(self, blocking=True):
+
+	def start(self, pic_settings=None, cam_params=None, out_pic_size=None, blocking=True):
 		if self.active and not self.stopping:
 			self._logger.debug("PhotoCreator worker already running.")
 			return
@@ -250,7 +273,10 @@ class PhotoCreator(object):
 			self.stop(blocking)
 		self.stopEvent.clear()
 		self.active = True
-		self.worker = threading.Thread(target=self.work, name='Photo-Worker')
+		self.worker = threading.Thread(target=self.work, name='Photo-Worker',
+		                               kwargs={'pic_settings': pic_settings,
+		                                       'cam_params': cam_params,
+		                                       'out_pic_size': out_pic_size})
 		self.worker.daemon = True
 		self.worker.start()
 
@@ -265,12 +291,12 @@ class PhotoCreator(object):
 	def stopping(self):
 		return self.stopEvent.isSet()
 
-	def restart(self, blocking=True):
+	def restart(self, pic_settings=None, cam_params=None, out_pic_size=None, blocking=True):
 		if self.active:
 			self.stop(blocking)
-		self.start(blocking)
+		self.start(pic_settings=pic_settings, cam_params=cam_params, out_pic_size=out_pic_size, blocking=blocking)
 
-	def work(self, recurse_nb=0):
+	def work(self, pic_settings=None, cam_params=None, out_pic_size=None, recurse_nb=0):
 		if self.is_initial_calibration:
 			# TODO save marker colors
 			self.save_debug_images = True
@@ -286,7 +312,7 @@ class PhotoCreator(object):
                            # framerate=8,
                            resolution=octoprint_mrbeam.camera.LEGACY_STILL_RES,  # TODO camera.DEFAULT_STILL_RES,
                            stopEvent=self.stopEvent,) as cam:
-				self.serve_pictures(cam)
+				self.serve_pictures(cam, pic_settings=pic_settings, cam_params=cam_params, out_pic_size=out_pic_size)
 			if recurse_nb > 0:
 				self._logger.info("Camera recovered")
 				self._analytics_handler.add_camera_session_details(exc.msgForAnalytics(exc.CAM_CONNRECOVER))
@@ -317,7 +343,7 @@ class PhotoCreator(object):
 				self._logger.exception("Exception_while_preparing_camera_%s_%s", e.__class__.__name__, e)
 		self.stopEvent.set()
 
-	def serve_pictures(self, cam):
+	def serve_pictures(self, cam, pic_settings=None, cam_params=None, out_pic_size=None):
 		"""
 		Takes pictures, isolates the work area and serves it to the user at progressively better resolutions.
 		After a certain number of similar pictures, Mr Beam serves a better quality pictures
@@ -339,24 +365,6 @@ class PhotoCreator(object):
 
 		session_details = blank_session_details()
 		self._front_ready.set()
-		path_to_cam_params = self._settings.get(["cam", "lensCalibrationFile"])
-		path_to_pic_settings = self._settings.get(["cam", "correctionSettingsFile"])
-
-		mrb_volume = self._laserCutterProfile['volume']
-		out_pic_size = mrb_volume['width'], mrb_volume['depth']
-		self._logger.debug("Will send images with size %s", out_pic_size)
-
-		# load cam_params from file
-		cam_params = _getCamParams(path_to_cam_params)
-		self._logger.debug('Loaded cam_params: {}'.format(cam_params))
-
-		# load pic_settings json
-		pic_settings = _getPicSettings(path_to_pic_settings)
-		self._logger.debug('Loaded pic_settings: {}'.format(pic_settings))
-		if self.stopping: return
-		cam.start_preview()
-		self.stopEvent.wait(2)
-		if self.stopping: return
 		try:
 			cam.start()  # starts capture to the cam.worker
 		except exc.CameraConnectionException as e:
@@ -387,6 +395,12 @@ class PhotoCreator(object):
 		# The lid didn't open during waiting time
 		cam.async_capture()
 		while not self.stopping:
+			if self.refresh_pic_settings.isSet():
+				self.refresh_pic_settings.clear()
+				path_to_pic_settings = self._settings.get(["cam", "correctionSettingsFile"])
+				self._logger.info("Refreshing picture settings from %s" % path_to_pic_settings)
+				pic_settings = _getPicSettings(path_to_pic_settings)
+				prev=None # Forces to take a new picture
 			cam.wait()  # waits until the next picture is ready
 			if self.stopping: break
 			latest = cam.lastPic() # gets last picture given by cam.worker
@@ -434,18 +448,18 @@ class PhotoCreator(object):
 			else:
 				dist, mtx = None, None
 			workspaceCorners, markers, missed, err = prepareImage(input_image=latest,
-																  path_to_output_image=self.tmp_img_prepared,
-																  pic_settings=pic_settings,
-																  cam_dist=dist,
-																  cam_matrix=mtx,
-																  last_markers=markers,
-																  size=scaled_output_size,
-																  quality=quality,
-																  zoomed_out=self.zoomed_out,
-																  debug_out=self.save_debug_images,  # self.save_debug_images,
-																  undistorted=True,
-																  stopEvent=self.stopEvent,
-																  threads=4)
+			                                                      path_to_output_image=self.tmp_img_prepared,
+			                                                      pic_settings=pic_settings,
+			                                                      cam_dist=dist,
+			                                                      cam_matrix=mtx,
+			                                                      last_markers=markers,
+			                                                      size=scaled_output_size,
+			                                                      quality=quality,
+			                                                      zoomed_out=self.zoomed_out,
+			                                                      debug_out=self.save_debug_images,  # self.save_debug_images,
+			                                                      undistorted=True,
+			                                                      stopEvent=self.stopEvent,
+			                                                      threads=4)
 			if self.stopping: return False, None, None, None, None
 			success = workspaceCorners is not None
 			# Conform to the legacy result to be sent to frontend

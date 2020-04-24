@@ -1569,6 +1569,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		self._logger.debug('picSettings new to save: {}'.format(pic_settings))
 		self._save_profile(pic_settings_path, pic_settings)
+		self.lid_handler.refresh_settings()
 
 		return NO_CONTENT
 
