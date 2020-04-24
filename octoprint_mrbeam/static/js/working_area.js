@@ -2107,7 +2107,7 @@ $(function(){
 
 		self.check_sizes_and_placements = function(){
 			ko.utils.arrayForEach(self.placedDesigns(), function(design) {
-				if(design.type == 'model' || design.type == 'quicktext' || design.type == 'quickshape'){
+				if(design.type == 'model' || design.type == 'quicktext' || design.type == 'quickshape' || design.type == 'recentjob'){
 					var svg = snap.select('#' + design.previewId);
 					var misfitting = self.outsideWorkingArea(svg);
 					self._mark_as_misfit(design, misfitting, svg);
