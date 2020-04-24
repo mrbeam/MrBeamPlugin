@@ -128,10 +128,10 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		}
 
         // Quick fix: in some browsers the bbox is too tight, so we just add an extra 10% to all the sides, making the height and width 20% larger in total
-        bbox.x = bbox.x - bbox.width * 0.1;
-        bbox.y = bbox.y - bbox.height * 0.1;
-        bbox.w = bbox.w * 1.2;
-        bbox.h = bbox.h * 1.2;
+        bbox.x = bbox.x - bbox.width * 0.4;
+        bbox.y = bbox.y - bbox.height * 0.4;
+        bbox.w = bbox.w * 1.8;
+        bbox.h = bbox.h * 1.8;
 
 		console.info("enlarged renderBBox (in mm): " + bbox.w +'*'+bbox.h + " @ " + bbox.x + ',' + bbox.y);
 

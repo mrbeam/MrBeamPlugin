@@ -59,6 +59,13 @@
 											</div>
 											<div class="collapse" id="wa_view_settings_body">
 												<div class="accordion-inner">
+													<div data-bind="style: { display: camera.imgResolutionNoticeDisplay() }">
+													<span style="font-weight: bold">Low</span> Picture Quality
+														<span class="muted">
+															- Open the lid and keep your hands off the working area
+															for a few seconds to receive a higher resolution image
+														</span>
+													</div>
 													<div>
 														<label>
 															{{ _('Brightness') }}:
@@ -546,7 +553,7 @@
 											viewBox: zoomViewBox(),
 											visibility: 'visible'
 										},
-										event: { mousewheel: wheel_zoom_wa, mousemove: mouse_drag_wa }
+										event: { wheel: wheel_zoom_wa, mousemove: mouse_drag_wa }
 									 "
 									 xmlns:mb="http://www.mr-beam.org/mbns">
 								<defs>
@@ -625,7 +632,7 @@
                                 <div class="pull-right working_area_footer_text">Mr Beam Plugin: v{{ beamosVersionNumber }}</div>
                                 <div class="pull-right working_area_footer_text">{{ _('Serial') }}: {{ serial }}</div>
                                 <div class="pull-right working_area_footer_text">{{ _('Mr Beam Name') }}: {{ hostname }}</div>
-                                <div class="pull-right working_area_footer_text">© 2019 Mr Beam Lasers GmbH</div>
+                                <div class="pull-right working_area_footer_text">© 2020 Mr Beam Lasers GmbH</div>
                             </div>
 						</div>
 					</div>

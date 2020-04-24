@@ -318,6 +318,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				small_paths_first=True,
 				clip_working_area=True  # https://github.com/mrbeam/MrBeamPlugin/issues/134
 			),
+			machine = dict(
+				backlash_compensation_x = 0.0 # applied in img2gcode on lines in negative direction.
+			),
 			grbl_version_lastknown=None,
 			tour_auto_launch=True,
 			leds=dict(
@@ -346,6 +349,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				optimize_travel=self._settings.get(['gcode_nextgen', 'optimize_travel']),
 				small_paths_first=self._settings.get(['gcode_nextgen', 'small_paths_first']),
 				clip_working_area=self._settings.get(['gcode_nextgen', 'clip_working_area'])
+			),
+			machine=dict(
+				backlash_compensation_x=self._settings.get(['machine', 'backlash_compensation_x'])
 			),
 			software_update_branches=self.get_update_branch_info(),
 			_version=self._plugin_version,
@@ -388,6 +394,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				'gcode_nextgen']:
 				self._settings.set_boolean(["gcode_nextgen", "clip_working_area"],
 				                           data['gcode_nextgen']['clip_working_area'])
+			if "machine" in data and isinstance(data['machine'], collections.Iterable):
+				if "backlash_compensation_x" in data['machine']:
+					self._settings.set_float(["machine", "backlash_compensation_x"],
+				                           data['machine']['backlash_compensation_x'])
 			if "analyticsEnabled" in data:
 				self.analytics_handler.analytics_user_permission_change(analytics_enabled=data['analyticsEnabled'])
 			if "focusReminder" in data:
@@ -456,6 +466,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			    "js/ready_to_laser_viewmodel.js",
 			    "js/lib/screenfull.min.js",
 			    "js/settings/camera_calibration.js",
+			    # "js/settings/backlash_settings.js",
 			    "js/settings/leds.js",
 			    "js/path_magic.js",
 			    "js/lib/simplify.js",
@@ -479,6 +490,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			    "js/settings/custom_material.js",
 			    ],
 			css=["css/mrbeam.css",
+			     "css/backlash_settings.css",
 			     "css/tab_designlib.css",
 			     "css/tinyColorPicker.css",
 			     "css/svgtogcode.css",
@@ -605,6 +617,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		result = [
 			dict(type='settings', name=gettext("File Import Settings"), template='settings/svgtogcode_settings.jinja2', suffix="_conversion", custom_bindings=False),
 			dict(type='settings', name=gettext("Camera Calibration"), template='settings/camera_settings.jinja2', suffix="_camera", custom_bindings=True),
+			dict(type='settings', name=gettext("Precision Calibration"), template='settings/backlash_settings.jinja2', suffix="_backlash", custom_bindings=False),
 			dict(type='settings', name=gettext("Debug"), template='settings/debug_settings.jinja2', suffix="_debug", custom_bindings=False),
 			dict(type='settings', name=gettext("About This Mr Beam"), template='settings/about_settings.jinja2', suffix="_about", custom_bindings=False),
 			dict(type='settings', name=gettext("Analytics"), template='settings/analytics_settings.jinja2', suffix="_analytics", custom_bindings=False),
@@ -1880,7 +1893,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 					rtl_mode=self.onebutton_handler.is_ready_to_laser(),
 					pause_mode=self._printer.is_paused(),
 					cooling_mode=self.temperature_manager.is_cooling(),
-					dusting_mode=self.dust_manager.is_dust_mode,
+					dusting_mode=self.dust_manager.is_final_extraction_mode,
 					state=self._printer.get_state_string(),
 
 				)
@@ -2204,7 +2217,7 @@ def __plugin_load__():
 				        "plugin_mrbeam_analytics"],
 				settings=['plugin_mrbeam_about', 'plugin_softwareupdate', 'accesscontrol', 'plugin_mrbeam_maintenance',
 				          'plugin_netconnectd', 'plugin_findmymrbeam', 'plugin_mrbeam_conversion',
-				          'plugin_mrbeam_camera', 'plugin_mrbeam_custom_material', 'plugin_mrbeam_airfilter', 'plugin_mrbeam_analytics',
+				          'plugin_mrbeam_camera', 'plugin_mrbeam_backlash', 'plugin_mrbeam_custom_material', 'plugin_mrbeam_airfilter', 'plugin_mrbeam_analytics',
 				          'plugin_mrbeam_reminders', 'plugin_mrbeam_leds', 'logs', 'plugin_mrbeam_debug']
 			),
 			disabled=dict(

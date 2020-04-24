@@ -35,7 +35,7 @@ def analyticsHandler(plugin):
 
 class AnalyticsHandler(object):
 	QUEUE_MAXSIZE = 1000
-	ANALYTICS_LOG_VERSION = 10  # bumped in 0.5.5.1
+	ANALYTICS_LOG_VERSION = 11  # bumped in 0.6.7.1
 
 	def __init__(self, plugin):
 		self._plugin = plugin

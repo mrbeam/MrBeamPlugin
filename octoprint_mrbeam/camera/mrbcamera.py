@@ -2,9 +2,10 @@ from itertools import chain
 
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.camera import Camera
-
+from . import exc
 try:
 	from picamera import PiCamera
+	import picamera
 except OSError:
 	# TODO Teja : uninstall picamera on your device :D
 	raise ImportError("Could not import PiCamera")
@@ -12,6 +13,7 @@ except OSError:
 import time
 import threading
 import logging
+
 
 BRIGHTNESS_TOLERANCE = 80 # TODO Keep the brightness of the images tolerable
 
@@ -39,7 +41,7 @@ class LoopThread(threading.Thread):
 		self.running = threading.Event()
 		self.running.clear()
 		self.stopFlag = stopFlag
-		self._logger = logging.getLogger('octoprint.plugins.mrbeam.loopthread')
+		self._logger = mrb_logger('octoprint.plugins.mrbeam.loopthread', lvl=logging.INFO)
 		self.ret = None
 		self.t = target
 		self._logger.debug("Loopthread initialised")
@@ -50,7 +52,8 @@ class LoopThread(threading.Thread):
 		try:
 			threading.Thread.run(self)
 		except Exception as e:
-			self._logger.warning("mrbeam.loopthread : %s, %s", e.__class__.__name__, e)
+			self._logger.exception("mrbeam.loopthread : %s, %s", e.__class__.__name__, e)
+			raise
 
 	def _loop(self):
 		self.running.set()
@@ -58,9 +61,11 @@ class LoopThread(threading.Thread):
 			try:
 				self.ret = self.t(*self.__args, **self.__kw)
 			except Exception as e:
-				self._logger.error("ERROR %s, %s", e.__class__.__name__, e)
+				self._logger.exception(" %s, %s", e.__class__.__name__, e)
+				raise
 			self.running.clear()
-			self.running.wait()
+			while not self.stopFlag.isSet() and not self.running.isSet():
+				self.running.wait(.2)
 
 
 class MrbCamera(PiCamera, Camera):
@@ -169,6 +174,12 @@ class MrbCamera(PiCamera, Camera):
 			self.captureLoop.start()
 		else:
 			self._logger.debug("Camera already running or stopEvent set")
+
+	def stop(self, timeout=None):
+		if self.captureLoop.is_alive() and not self.stopEvent.isSet():
+			self.stopEvent.set()
+			self.captureLoop.running.clear()
+			self.captureLoop.join(timeout)
 
 	def async_capture(self, *args, **kw):
 		"""

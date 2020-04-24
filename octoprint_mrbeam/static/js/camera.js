@@ -53,6 +53,13 @@ $(function(){
             self.loadImage();
         };
 
+        // Image resolution notification //
+        self.imgResolution = ko.observable('Low');
+        self.imgResolutionNoticeDisplay = ko.computed(function () {
+            if (self.imgResolution() === 'Low') return 'inherit';
+            else return 'none';
+        });
+
 
         self.onDataUpdaterPluginMessage = function(plugin, data) {
             if (plugin !== "mrbeam" || !data) return;
@@ -109,6 +116,9 @@ $(function(){
                     // So as a quick hack, let's set firstImageLoaded to true already here
                     self.firstImageLoaded = true;
                 }
+                if (this.width > 1500 && this.height > 1000) self.imgResolution('High');
+                else self.imgResolution('Low');
+                // TODO respond to backend to tell we have loaded the picture
                 OctoPrint.simpleApiCommand("mrbeam", "on_camera_picture_transfer", {})
             });
             if (!self.firstImageLoaded) {
