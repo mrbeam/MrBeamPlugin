@@ -2,12 +2,28 @@
 <div style="position:relative;">
 	<svg id="calibration_svg" style="max-width: 80vh; border:1px solid lightgray" width="100%" height="100%" viewBox="0 0 512 384" data-bind="attr: {viewBox: calSvgViewBox()}">
 		<defs>
+            <symbol id="cross">
+                <path data-bind="attr: {d: svgCross()}" fill="none" />
+            </symbol>
 		</defs>
-		<image style="cursor:crosshair;" data-bind="attr: {href: calImgUrl(), width:calImgWidth(), height:calImgHeight() }, click: userClick" />
-		<circle id="click_NW" r="4" cx="-100" cy="-100" class="calibration_click_indicator" />
-		<circle id="click_SW" r="4" cx="-100" cy="-100" class="calibration_click_indicator" />
-		<circle id="click_SE" r="4" cx="-100" cy="-100" class="calibration_click_indicator" />
-		<circle id="click_NE" r="4" cx="-100" cy="-100" class="calibration_click_indicator" />
+        <g id="obj_height_scale">
+            <image style="cursor:crosshair;" data-bind="attr: {href: calImgUrl(), width:calImgWidth(), height:calImgHeight() }, click: userClick" />
+        </g>
+        <g id="corners" class="calibration_click_indicator"
+           data-bind="attr: { visibility: correctedMarkersVisibility() }">
+            <use id="click_NW" href="#cross" x="-100" y="-100" />
+            <use id="click_NE" href="#cross" x="-100" y="-100" />
+            <use id="click_SE" href="#cross" x="-100" y="-100" />
+            <use id="click_SW" href="#cross" x="-100" y="-100" />
+        </g>
+        <g id="cropped_view_corners" class="calibration_click_indicator"
+           transform="scale(1)"
+           data-bind="attr: { transform: zMarkersTransform(), visibility: croppedMarkersVisibility() }">
+		   <use href="#cross" stroke="blue" data-bind="attr: { x: -crossSize(),                         y: -crossSize() }" />
+		   <use href="#cross" stroke="blue" data-bind="attr: { x: calImgWidth()-crossSize(), y: -crossSize() }" />
+		   <use href="#cross" stroke="blue" data-bind="attr: { x: -crossSize(),                         y: calImgHeight()-crossSize() }" />
+		   <use href="#cross" stroke="blue" data-bind="attr: { x: calImgWidth()-crossSize(), y: calImgHeight()-crossSize() }" />
+        </g>
 	</svg>
 	<div>
 		<div>
@@ -19,6 +35,7 @@
 				<div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['NE'] }"><i class="icon-ok"></i> NE</div>
 				<div class="marker_found_indicator" data-bind="visible: !cal_img_ready()"><i class="icon-spinner icon-spin"></i> {{ _('detecting') }}</div>
 			</div>
+            <a class="muted" data-bind="href: calImgWidth()"> {{ _('Download this image') }}</a>
 		</div>
 		<div class="marker_selection_desc calibration_help" data-bind="visible: cal_img_ready() && !calibrationActive()">
 			<div>{{_('Click on the arrow head of the marker in the magnified picture.') }}<br/>

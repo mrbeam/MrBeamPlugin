@@ -1,5 +1,3 @@
-MAX_OBJECT_HEIGHT = 38; // in mm
-DEFAULT_MARGIN = MAX_OBJECT_HEIGHT / 582;
 MARKERS = ['NW', 'NE', 'SE', 'SW'];
 
 
@@ -25,10 +23,12 @@ $(function(){
 
         self.markersFound = ko.observable(new Map(MARKERS.map(elm => [elm, undefined])));
 
+        self.maxObjectHeight = 38; // in mm
+        self.defaultMargin = self.maxObjectHeight / 582;
         self.objectZ = ko.observable(0); // in mm
-        self.cornerMargin = ko.observable(DEFAULT_MARGIN / 2);
+        self.cornerMargin = ko.observable(self.defaultMargin / 2);
         self.imgHeightScale = ko.computed(function () {
-            return self.cornerMargin() * (1 - self.objectZ() / MAX_OBJECT_HEIGHT);
+            return self.cornerMargin() * (1 - self.objectZ() / self.maxObjectHeight);
         });
         // event listener callbacks //
 
