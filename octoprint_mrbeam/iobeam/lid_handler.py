@@ -63,6 +63,11 @@ class LidHandler(object):
 		self._is_slicing = False
 		self._client_opened = False
 
+		# REVIEW -- bind lidhandler.brightness_sensitivity to slider
+		self.brightness_sensitivity = 100
+		# REVIEW -- bind lidhandler.brightness_sensitivity_auto to checkbox
+		self.brightness_sensitivity_auto = True
+
 		if PICAMERA_AVAILABLE:
 			imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
 			self._photo_creator = PhotoCreator(self._plugin,
@@ -447,6 +452,8 @@ class PhotoCreator(object):
 				dist, mtx = cam_params[DIST_KEY], cam_params[MTX_KEY]
 			else:
 				dist, mtx = None, None
+			color = {}
+			marker_size = {}
 			workspaceCorners, markers, missed, err = prepareImage(input_image=latest,
 			                                                      path_to_output_image=self.tmp_img_prepared,
 			                                                      pic_settings=pic_settings,
@@ -459,6 +466,8 @@ class PhotoCreator(object):
 			                                                      debug_out=self.save_debug_images,  # self.save_debug_images,
 			                                                      undistorted=True,
 			                                                      stopEvent=self.stopEvent,
+									      marker_size=marker_size,
+									      color=color
 			                                                      threads=4)
 			if self.stopping: return False, None, None, None, None
 			success = workspaceCorners is not None
@@ -493,6 +502,8 @@ class PhotoCreator(object):
 	def _add_result_to_analytics(self,
                                  session_details,
                                  markers,
+				     colors={},
+				     marker_size={}
                                  increment_pic=False,
                                  colorspace='hsv',
                                  avg_colors=None,
@@ -595,8 +606,9 @@ def blank_session_details():
                     'std_pos': None,
                     # The following fields are unused for now
                     # 'colorspace': 'hsv',
-                    # 'avg_color_when_missed': [],
-                    # 'median_color_when_missed': []
+                    'avg_color': [],
+		    'median_color': [],
+		    'pix_size': []
                     }
 	session_details = {'num_pics': 0,
 	                   'markers': {'NW': copy.deepcopy(_init_marker),

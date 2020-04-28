@@ -35,7 +35,7 @@ HUE_BAND_UB = 200 # if value > 180 : loops back to 0
 # Minimum and Maximum number of pixels a marker should have
 # as seen on the edge detection masks
 # TODO make scalable with picture resolution
-MIN_MARKER_PIX = 700
+MIN_MARKER_PIX = 450
 MAX_MARKER_PIX = 1500
 
 # Height (mm) from the bottom of the work area to the camera lens.
@@ -75,6 +75,8 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
                  blur=7,
                  custom_pic_settings=None,
                  stopEvent=None,
+		 marker_size=None,
+		 color=None,
                  threads=-1):
 	# type: (Union[str, np.ndarray], basestring, np.ndarray, np.ndarray, Union[Mapping, basestring], Union[dict, None], tuple, int, bool, bool, bool, int, Union[None, Mapping], Union[None, Event], int) -> object
 	"""
@@ -291,19 +293,18 @@ def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d
 	ret, threshOtsuMask = cv2.threshold(greenBlur, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
 	blocksize = 11
 	gaussianMask = cv2.adaptiveThreshold(greenBlur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, blocksize, 2)
-	roiBlurThresh         =  cv2.bitwise_and( roiBlur, roiBlur, mask=cv2.bitwise_or(threshOtsuMask, gaussianMask))
+	roiBlurThresh =  cv2.bitwise_and( roiBlur, roiBlur, mask=cv2.bitwise_or(threshOtsuMask, gaussianMask))
 	debug_quad_path = debug_out_path.replace('.jpg', '{}.jpg'.format(quadrant))
-	for spot, center, start, stop in _get_white_spots(cv2.bitwise_or(threshOtsuMask, gaussianMask)):
+	for spot, center, start, stop, count in _get_white_spots(cv2.bitwise_or(threshOtsuMask, gaussianMask)):
 		spot.dtype = np.uint8
 		if visual_debug: cv2.imshow("{} : spot".format(quadrant), cv2.imdecode(np.fromiter(spot, dtype=np.uint8), cv2.IMREAD_GRAYSCALE)); cv2.waitKey(0)
 		if isMarkerMask(spot[start[0]:stop[0], start[1]:stop[1]]):
-			hue_vals = roiBlurThresh[:,:,0]
-			avg_hue = np.average([roiBlurThresh[pos] for pos in np.nonzero(cv2.bitwise_and(hue_vals, hue_vals, mask=spot))])
-			if HUE_BAND_LB <= avg_hue <= 180 or 0 <= avg_hue <= HUE_BAND_UB:
+			avg_hsv = np.average([roiBlurThresh[pos] for pos in np.nonzero(cv2.bitwise_and(roiBlurThresh, roiBlurThresh, mask=spot))], axis=(0,1))
+			if HUE_BAND_LB <= avg_hsv[0] <= 180 or 0 <= avg_hsv[0] <= HUE_BAND_UB:
 				y, x = np.round(center).astype("int")  # y, x
 				debug_roi = cv2.drawMarker(cv2.cvtColor(cv2.bitwise_or(threshOtsuMask, gaussianMask), cv2.COLOR_GRAY2BGR), (x, y), (0, 0, 255), cv2.MARKER_CROSS, line_type=4)
 				cv2.imwrite(debug_quad_path, debug_roi, params=[cv2.IMWRITE_JPEG_QUALITY, 100])
-				return dict(pos=center, )
+				return dict(pos=center, color=avg_hsv, pix_size=count)
 	# No marker found
 	cv2.imwrite(debug_quad_path, roiBlurThresh)
 	return None
@@ -518,14 +519,13 @@ def _get_white_spots(mask, min_pix=MIN_MARKER_PIX, max_pix=MAX_MARKER_PIX):
 	unique_labels, counts_elements = np.unique(labels, return_counts=True)
 	# The filter also filters out the black background
 	filtered_elm = filter(lambda (count, _): max_pix > count > min_pix, zip(counts_elements, unique_labels))
-	unique_labels = [label for _, label in sorted(filtered_elm)]
-	for label in unique_labels:
+	for count, label in sorted(filtered_elm, reverse=True):
 		bool_connected_spot = labels == label
 		# get the geometrical center of that blob
 		non_zeros = np.transpose(np.nonzero(bool_connected_spot))
 		start, stop = np.min(non_zeros, axis=0) , np.max(non_zeros, axis=0)
 		center = (start + stop) / 2
-		yield bool_connected_spot, center, start, stop
+		yield bool_connected_spot, center, start, stop, count
 
 def _debug_drawMarkers(raw_img, markers):
 	"""Draw the markers onto an image"""

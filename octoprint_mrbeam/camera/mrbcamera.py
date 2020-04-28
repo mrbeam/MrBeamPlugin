@@ -67,9 +67,18 @@ class LoopThread(threading.Thread):
 			while not self.stopFlag.isSet() and not self.running.isSet():
 				self.running.wait(.2)
 
+	def async_next(self, **kw):
+		self._logger.debug("captureLoop running %s, stopFlag %s",
+		                   self.running.isSet(),
+		                   self.stopFlag.isSet())
+		time.sleep(.1)
+
+		self.__kw.update(kw)
+		self.running.set()  # Asks the loop to continue running, see LoopThread
+
 
 class MrbCamera(PiCamera, Camera):
-	# TODO do stuff here, like the calibration algo
+
 	def __init__(self, worker, stopEvent=None, *args, **kwargs):
 		"""
 		Record pictures asynchronously in order to perform corrections
@@ -99,6 +108,62 @@ class MrbCamera(PiCamera, Camera):
 			args=(self.worker,),
 			kwargs={'format': 'jpeg'},)
 		# TODO load the default settings
+
+	def start(self):
+		if not self.captureLoop.isAlive() and not self.stopEvent.isSet():
+			self._logger.debug("capture loop not alive, starting now")
+			self.captureLoop.start()
+		else:
+			self._logger.debug("Camera already running or stopEvent set")
+
+	def stop(self, timeout=None):
+		if self.captureLoop.is_alive() and not self.stopEvent.isSet():
+			self.stopEvent.set()
+			self.captureLoop.running.clear()
+			self.captureLoop.join(timeout)
+
+	def async_capture(self, *args, **kw):
+		"""
+		Starts or signals the camera to start taking a new picture.
+		The new picture can be retrieved with MrbCamera.lastPic()
+		Wait for the picture to be taken with MrbCamera.wait()
+		:param args:
+		:type args:
+		:param kw:
+		:type kw:
+		:return:
+		:rtype:
+		"""
+		return self.captureLoop.async_next(*args, **kw)
+
+	def wait(self):
+		"""
+		Wait for the camera to be done capturing a picture. Blocking call.
+		It is ignored when stopEvent is set.
+		"""
+		while self.captureLoop.running.isSet() or self.worker.busy.isSet():
+			if self.stopEvent.isSet(): return
+			time.sleep(.02)
+		return
+
+	def lastPic(self):
+		"""Returns the last picture taken"""
+		return self.worker.latest
+
+	# def capture(self, *args, **kwargs):
+	# 	"""
+	# 	Take consecutive pictures in rapid succession.
+
+	# 	If arguments are given as lists, will take as many pictures as
+	# 	there are elements. Single values are applied for all pics, and
+	# 	shorter lists will be cycled through.
+	# 	"""
+	# 	zip_args = []
+	# 	max_len_arg = max(map(len, filter(lambda o: isinstance(o, Sized), chain(args, kwargs.values())))
+	# 	for a in args:
+
+
+	### Experimental & unused ###
 
 	def anti_rolling_shutter_banding(self):
 		"""mitigates the horizontal banding due to rolling shutter interaction with 50Hz/60Hz lights"""
@@ -130,7 +195,7 @@ class MrbCamera(PiCamera, Camera):
 
 		# Always takes the first picture with the auto calibrated mode
 		for i, img in enumerate(self.capture_continuous(self.worker, format='jpeg',
-														quality=100, use_video_port=True)):
+								quality=100, use_video_port=True)):
 			self._logger.info(
 				"sensor : ", self.sensor_mode, " iso : ", self.iso,
 				" gain : ", self.analog_gain, " digital gain : ", self.digital_gain,
@@ -167,49 +232,3 @@ class MrbCamera(PiCamera, Camera):
 				self.shutter_speed = int(autoShutterSpeed * lastDeltas[-1])
 				# Need to wait for the shutter speed to take effect ??
 				time.sleep(.5)  # self.shutter_speed / 10**6 * 10 # transition to next shutter speed
-
-	def start(self):
-		if not self.captureLoop.isAlive() and not self.stopEvent.isSet():
-			self._logger.debug("capture loop not alive, starting now")
-			self.captureLoop.start()
-		else:
-			self._logger.debug("Camera already running or stopEvent set")
-
-	def stop(self, timeout=None):
-		if self.captureLoop.is_alive() and not self.stopEvent.isSet():
-			self.stopEvent.set()
-			self.captureLoop.running.clear()
-			self.captureLoop.join(timeout)
-
-	def async_capture(self, *args, **kw):
-		"""
-		Starts or signals the camera to start taking a new picture.
-		The new picture can be retrieved with MrbCamera.lastPic()
-		Wait for the picture to be taken with MrbCamera.wait()
-		:param args:
-		:type args:
-		:param kw:
-		:type kw:
-		:return:
-		:rtype:
-		"""
-		self._logger.debug("captureLoop running %s, stopFlag %s, shutter speed %s",
-		                  self.captureLoop.running.isSet(),
-		                  self.captureLoop.stopFlag.isSet(),
-		                  self.shutter_speed)
-		time.sleep(.1)
-		self.captureLoop.running.set()  # Asks the loop to continue running, see LoopThread
-
-	def wait(self):
-		"""
-		Wait for the camera to be done capturing a picture. Blocking call.
-		It is ignored when stopEvent is set.
-		"""
-		while self.captureLoop.running.isSet() or self.worker.busy.isSet():
-			if self.stopEvent.isSet(): return
-			time.sleep(.02)
-		return
-
-	def lastPic(self):
-		"""Returns the last picture taken"""
-		return self.worker.latest
