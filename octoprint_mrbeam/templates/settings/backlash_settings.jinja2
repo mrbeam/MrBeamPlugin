@@ -1,7 +1,7 @@
 <div id="settings_plugin_mrbeam_backlash">
     <h3>{{ _('Precision Calibration') }}</h3>
 
-    <form class="form-horizontal">
+    <form class="form-horizontal" onkeydown="return event.key != 'Enter';">
         <div class="control-group">
             <label class="control-label" for="settings_backlash_compensation_x">{{ _('x Motion Compensation') }}</label>
             <div class="controls">

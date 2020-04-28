@@ -62,6 +62,9 @@ class LidHandler(object):
 		self._interlock_closed = True
 		self._is_slicing = False
 		self._client_opened = False
+		
+		# TODO: Axel
+		self.markerRecognitionMinPixel = self._settings.get(['cam', 'markerRecognitionMinPixel'])
 
 		if PICAMERA_AVAILABLE:
 			imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
