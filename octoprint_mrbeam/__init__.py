@@ -491,6 +491,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			    ],
 			css=["css/mrbeam.css",
 			     "css/backlash_settings.css",
+			     "css/tab_designlib.css",
 			     "css/tinyColorPicker.css",
 			     "css/svgtogcode.css",
 			     "css/ui_mods.css",
@@ -1568,6 +1569,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		self._logger.debug('picSettings new to save: {}'.format(pic_settings))
 		self._save_profile(pic_settings_path, pic_settings)
+		self.lid_handler.refresh_settings()
 
 		return NO_CONTENT
 
@@ -1891,7 +1893,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 					rtl_mode=self.onebutton_handler.is_ready_to_laser(),
 					pause_mode=self._printer.is_paused(),
 					cooling_mode=self.temperature_manager.is_cooling(),
-					dusting_mode=self.dust_manager.is_dust_mode,
+					dusting_mode=self.dust_manager.is_final_extraction_mode,
 					state=self._printer.get_state_string(),
 
 				)
@@ -2215,7 +2217,7 @@ def __plugin_load__():
 				        "plugin_mrbeam_analytics"],
 				settings=['plugin_mrbeam_about', 'plugin_softwareupdate', 'accesscontrol', 'plugin_mrbeam_maintenance',
 				          'plugin_netconnectd', 'plugin_findmymrbeam', 'plugin_mrbeam_conversion',
-				          'plugin_mrbeam_camera', 'plugin_mrbeam_custom_material', 'plugin_mrbeam_airfilter', 'plugin_mrbeam_analytics',
+				          'plugin_mrbeam_camera', 'plugin_mrbeam_backlash', 'plugin_mrbeam_custom_material', 'plugin_mrbeam_airfilter', 'plugin_mrbeam_analytics',
 				          'plugin_mrbeam_reminders', 'plugin_mrbeam_leds', 'logs', 'plugin_mrbeam_debug']
 			),
 			disabled=dict(

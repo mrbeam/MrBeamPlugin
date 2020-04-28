@@ -925,4 +925,3 @@ M2
 		fh.write(footer)
 
 	print("gcode written to " + gcodefile)
-
