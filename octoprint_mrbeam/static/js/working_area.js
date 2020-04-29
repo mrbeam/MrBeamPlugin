@@ -961,7 +961,8 @@ $(function(){
 				for (let i = 0; i < parts.length; i++) {
 	
 					const name = elem.name + "."+(i+1);
-					let file = {url: elem.url, origin: elem.origin, name: name, type: "split", refs:{download: elem.url}};
+					let tp = Array.prototype.concat(elem.typePath, 'split')
+					let file = {url: elem.url, origin: elem.origin, name: name, typePath: tp, type: "split", refs:{download: elem.url}};
 					const id = self.getEntryId();
 					const previewId = self.generateUniqueId(id, file);
 					let fragment = parts[i];
