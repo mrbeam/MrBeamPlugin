@@ -75,6 +75,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
                  blur=7,
                  custom_pic_settings=None,
                  stopEvent=None,
+		 min_pix_amount=MIN_MARKER_PIX,
                  threads=-1):
 	# type: (Union[str, np.ndarray], basestring, np.ndarray, np.ndarray, Union[Mapping, basestring], Union[dict, None], tuple, int, bool, bool, bool, int, Union[None, Mapping], Union[None, Event], int) -> object
 	"""
@@ -150,9 +151,10 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	dbg_markers = os.path.join(dirname(path_to_output_image), "debug", ".jpg")
 	_mkdir(dirname(dbg_markers))
 	outputPoints = _getColoredMarkerPositions(img,
-                                              debug_out_path=dbg_markers,
-                                              blur=blur,
-                                              threads=threads)
+                                                  debug_out_path=dbg_markers,
+                                                  blur=blur,
+	                                          threads=threads,
+	                                          min_pix=min_pix_amount)
 	markers = {}
 	# list of missed markers
 	missed = []
@@ -222,7 +224,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 
 	return workspaceCorners, markers, missed, err
 
-def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1):
+def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1, min_pix=MIN_MARKER_PIX):
 	"""Allows a multi-processing implementation of the marker detection algo. Up to 4 processes needed."""
 	outputPoints = {}
 	# check all 4 corners
@@ -239,7 +241,9 @@ def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1):
                                          args=(roi,),
                                          kwds=dict(debug_out_path=debug_out_path,
                                                    blur=blur,
-                                                   quadrant=qd)), pos)
+                                                   quadrant=qd,
+						   min_pix=min_pix)
+					 ), pos)
 		while not all(r.ready() for r, pos in results.values()):
 			time.sleep(.1)
 		p.close()
@@ -255,14 +259,16 @@ def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1):
 			# print("brightness of corner {} : {}".format(qd, brightness))
 			outputPoints[qd] = {'brightness': brightness}
 			outputPoints[qd] = _getColoredMarkerPosition(roi,
-                                                         debug_out_path=debug_out_path,
-                                                         blur=blur,
-                                                         quadrant=qd)
+                                                                     debug_out_path=debug_out_path,
+                                                                     blur=blur,
+								     quadrant=qd,
+								     min_pix=min_pix)
 			if outputPoints[qd] is not None:
 				outputPoints[qd]['pos'] += pos
 	return outputPoints
 
-def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d_min=8, d_max=30, visual_debug=False):
+def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d_min=8,
+			      d_max=30, visual_debug=False, min_pix=MIN_MARKER_PIX):
 	"""
 	Tries to find a single pink marker inside the image (or the Region of Interest).
 	It then outputs the information about found marker (for now, just its center position).
@@ -293,7 +299,9 @@ def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d
 	gaussianMask = cv2.adaptiveThreshold(greenBlur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, blocksize, 2)
 	roiBlurThresh         =  cv2.bitwise_and( roiBlur, roiBlur, mask=cv2.bitwise_or(threshOtsuMask, gaussianMask))
 	debug_quad_path = debug_out_path.replace('.jpg', '{}.jpg'.format(quadrant))
-	for spot, center, start, stop in _get_white_spots(cv2.bitwise_or(threshOtsuMask, gaussianMask)):
+	for spot, center, start, stop in _get_white_spots(cv2.bitwise_or(threshOtsuMask,
+									 gaussianMask),
+	                                                   min_pix=min_pix):
 		spot.dtype = np.uint8
 		if visual_debug: cv2.imshow("{} : spot".format(quadrant), cv2.imdecode(np.fromiter(spot, dtype=np.uint8), cv2.IMREAD_GRAYSCALE)); cv2.waitKey(0)
 		if isMarkerMask(spot[start[0]:stop[0], start[1]:stop[1]]):
