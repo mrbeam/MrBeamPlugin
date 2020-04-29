@@ -36,7 +36,7 @@ plugin_url = "https://github.com/mrbeam/MrBeamPlugin"
 plugin_license = "AGPLv3"
 
 # Any additional requirements besides OctoPrint should be listed here
-plugin_requires = ['webcolors', 'pillow', 'lxml', 'numpy==1.11.2', 'picamera']
+plugin_requires = ['webcolors', 'pillow', 'lxml', 'numpy==1.11.2', 'picamera', 'typing']
 
 ### --------------------------------------------------------------------------------------------------------------------
 ### More advanced options that you usually shouldn't have to touch follow after this point

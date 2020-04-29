@@ -12,7 +12,7 @@ from numpy.linalg import norm
 
 from octoprint_mrbeam.camera import RESOLUTIONS, QD_KEYS, PICAMERA_AVAILABLE
 import octoprint_mrbeam.camera as beamcam
-from octoprint_mrbeam.util import dict_merge, logme, debug_logger
+from octoprint_mrbeam.util import dict_merge, logme, debug_logger, logExceptions, logtime
 
 CALIB_MARKERS_KEY = 'calibMarkers'
 CORNERS_KEY = 'cornersFromImage'
@@ -35,7 +35,7 @@ HUE_BAND_UB = 200 # if value > 180 : loops back to 0
 # Minimum and Maximum number of pixels a marker should have
 # as seen on the edge detection masks
 # TODO make scalable with picture resolution
-MIN_MARKER_PIX = 450
+MIN_MARKER_PIX = 600
 MAX_MARKER_PIX = 1500
 
 # Height (mm) from the bottom of the work area to the camera lens.
@@ -61,6 +61,7 @@ class MbPicPrepError(Exception):
 	"""Something went wrong when undistorting and aligning the picture for the front-end"""
 	pass
 
+@logtime
 def prepareImage(input_image,  #: Union[str, np.ndarray],
                  path_to_output_image,  #: str,
                  pic_settings=None,  #: Map or str
@@ -75,8 +76,6 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
                  blur=7,
                  custom_pic_settings=None,
                  stopEvent=None,
-		 marker_size=None,
-		 color=None,
                  threads=-1):
 	# type: (Union[str, np.ndarray], basestring, np.ndarray, np.ndarray, Union[Mapping, basestring], Union[dict, None], tuple, int, bool, bool, bool, int, Union[None, Mapping], Union[None, Event], int) -> object
 	"""
@@ -105,6 +104,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	else:
 		logger.setLevel(logging.WARNING)
 
+	@logtime
 	def save_debug_img(img, name):
 		"""Saves the image in a folder along the given path"""
 		dbg_path = os.path.join(dirname(path_to_output_image), "debug", name + ".jpg")
@@ -121,14 +121,14 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 		if not isfile(input_image):
 			no_Image_error_String = 'Could not find a picture under path: <{}>'.format(input_image)
 			logger.error(no_Image_error_String)
-			return None, None, None, no_Image_error_String
+			return None, None, None, no_Image_error_String, {}
 
 		# load image
 		img = cv2.imread(input_image, cv2.IMREAD_COLOR) #BGR
 		if img is None:
 			err = 'Could_not_load_Image-_Please_check_Camera_and_-path_to_image'
 			logger.error(err)
-			return None, None, None, err
+			return None, None, None, err, {}
 	elif type(input_image) is np.ndarray:
 		logger.debug('Starting to prepare Image. \ninput: <{} shape arr> - output: <{}>\ncam dist : <{}>\ncam matrix: <{}>\noutput_img_size:{} - quality:{} - debug_out:{}'.format(
 				input_image.shape, path_to_output_image, cam_dist, cam_matrix,
@@ -146,7 +146,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	if debug_out or undistorted:
 		save_debug_img(img, "undistorted")
 
-	if stopEvent and stopEvent.isSet(): return None, None, None, STOP_EVENT_ERR
+	if stopEvent and stopEvent.isSet(): return None, None, None, STOP_EVENT_ERR, {}
 
 	# search markers on undistorted pic
 	dbg_markers = os.path.join(dirname(path_to_output_image), "debug", ".jpg")
@@ -171,7 +171,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	# if len(missed) > 1 and len(markers) == 4:  # elif # filter out None values
 	#     err = 'BAD_QUALITY:Too few markers (circles) recognized.'
 	#     logger.debug(err)
-	#     return None, markers, missed, err
+	#     return None, markers, missed, err, outputPoints
 	# elif len(missed) == 1 and len(markers) == 4:
 	if len(missed) > 1 and len(markers) == 4:
 		err = "Missed marker %s" % missed
@@ -179,9 +179,9 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	elif len(markers) < 4:
 		err = "Missed marker(s) %s, no(t enough) history to guess missing marker position(s)" % missed
 		logger.warning(err)
-		return None, markers, missed, err
+		return None, markers, missed, err, outputPoints
 
-	if stopEvent and stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR
+	if stopEvent and stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR, outputPoints
 
 	if debug_out: save_debug_img(_debug_drawMarkers(img, markers), "drawmarkers")
 
@@ -194,13 +194,13 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 		else:
 			_pic_settings = pic_settings
 	else:
-		return None, markers, missed, ERR_NEED_CALIB
+		return None, markers, missed, ERR_NEED_CALIB, outputPoints
 
 	for k in [CALIB_MARKERS_KEY, CORNERS_KEY]:
 		if not (k in _pic_settings and _isValidQdDict(_pic_settings[k])):
 			_pic_settings[k] = None
 			logger.warning(ERR_NEED_CALIB)
-			return None, markers, missed, ERR_NEED_CALIB
+			return None, markers, missed, ERR_NEED_CALIB, outputPoints
 	# get corners of working area
 	workspaceCorners = {qd: markers[qd] - _pic_settings[CALIB_MARKERS_KEY][qd][::-1] + _pic_settings[CORNERS_KEY][qd][::-1] for qd in QD_KEYS}
 	logger.debug("Workspace corners \nNW % 14s  NE % 14s\nSW % 14s  SE % 14s"
@@ -211,7 +211,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	warpedImg = _warpImgByCorners(img, workspaceCorners, zoomed_out)
 	if debug_out: save_debug_img(warpedImg, "colorwarp")
 
-	if stopEvent and stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR
+	if stopEvent and stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR, outputPoints
 
 	# resize and do NOT make greyscale, then save it
 	# cv2.imwrite(filename=path_to_output_image,
@@ -222,8 +222,9 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
                 img=cv2.cvtColor(cv2.resize(warpedImg, size), cv2.COLOR_BGR2GRAY),
                 params=[int(cv2.IMWRITE_JPEG_QUALITY), quality])
 
-	return workspaceCorners, markers, missed, err
+	return workspaceCorners, markers, missed, err, outputPoints
 
+@logtime
 def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1):
 	"""Allows a multi-processing implementation of the marker detection algo. Up to 4 processes needed."""
 	outputPoints = {}
@@ -264,6 +265,8 @@ def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1):
 				outputPoints[qd]['pos'] += pos
 	return outputPoints
 
+@logExceptions
+@logtime
 def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d_min=8, d_max=30, visual_debug=False):
 	"""
 	Tries to find a single pink marker inside the image (or the Region of Interest).
@@ -297,14 +300,21 @@ def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d
 	debug_quad_path = debug_out_path.replace('.jpg', '{}.jpg'.format(quadrant))
 	for spot, center, start, stop, count in _get_white_spots(cv2.bitwise_or(threshOtsuMask, gaussianMask)):
 		spot.dtype = np.uint8
-		if visual_debug: cv2.imshow("{} : spot".format(quadrant), cv2.imdecode(np.fromiter(spot, dtype=np.uint8), cv2.IMREAD_GRAYSCALE)); cv2.waitKey(0)
+		if visual_debug:
+			cv2.imshow("{} : spot".format(quadrant),
+				   cv2.imdecode(np.fromiter(spot, dtype=np.uint8),
+						cv2.IMREAD_GRAYSCALE))
+			cv2.waitKey(0)
 		if isMarkerMask(spot[start[0]:stop[0], start[1]:stop[1]]):
-			avg_hsv = np.average([roiBlurThresh[pos] for pos in np.nonzero(cv2.bitwise_and(roiBlurThresh, roiBlurThresh, mask=spot))], axis=(0,1))
+			hsv_roi = cv2.cvtColor(roiBlurThresh, cv2.COLOR_BGR2HSV)
+			avg_hsv = np.average(
+				[hsv_roi[pos] for pos in zip(*np.nonzero(spot))],
+				axis=0)
 			if HUE_BAND_LB <= avg_hsv[0] <= 180 or 0 <= avg_hsv[0] <= HUE_BAND_UB:
 				y, x = np.round(center).astype("int")  # y, x
 				debug_roi = cv2.drawMarker(cv2.cvtColor(cv2.bitwise_or(threshOtsuMask, gaussianMask), cv2.COLOR_GRAY2BGR), (x, y), (0, 0, 255), cv2.MARKER_CROSS, line_type=4)
 				cv2.imwrite(debug_quad_path, debug_roi, params=[cv2.IMWRITE_JPEG_QUALITY, 100])
-				return dict(pos=center, color=avg_hsv, pix_size=count)
+				return dict(pos=center, avg_color=avg_hsv, pix_size=count)
 	# No marker found
 	cv2.imwrite(debug_quad_path, roiBlurThresh)
 	return None
@@ -337,118 +347,7 @@ def isMarkerMask(mask, d_min=10, d_max=60, visual_debug=False):
 	# i.e. it didn't change after applying the mask
 	return np.all(marker == cv2.bitwise_and(marker_mask_tester, marker))
 
-def _get_hue_mask(hsv_roi, pixTrigAmount=MIN_MARKER_PIX):
-	#(hsv_roi: np.ndarray, bandsize=11, pixTrigAmount=500, pixTooMany=3000):
-	"""
-	Returns hue mask with dynamic hue range. Tries to find the right amount of pixels in a given hue window
-	not enough pixels have been found (less than PIXEL_THRESHOLD_UPPER)
-	Uses a local maxima finder (maximisePixCount) to get the optimal mask as given by
-	a generator (concatGen and _slidingHueMask)
-
-	:param hsv_roi: the roi in hsv format
-	:type hsv_roi:
-	:param bandsize:
-	:type bandsize:
-	:param pixTrigAmount:
-	:type pixTrigAmount:
-	:param pixTooMany:
-	:type pixTooMany:
-	:return: the best corresponding mask and the hsv window that created the mask
-	:rtype: Union[tuple[np.ndarray, tuple[numpy.ndarray]], tuple[NoneType]]
-	"""
-	# debugShow(hsv_roi, "_get_hue_mask")
-	def maximisePixCount(maskGenerator):
-		# TODO look for clusters of pixels
-		trigger = False
-		_mask = None
-		_bounds = None
-		_prev_mask = None
-		_prev_bounds = None
-		for mask, bounds in maskGenerator:
-			# debug_logger().debug("Bounds :\n%s\n%s" % bounds)
-			# debugShow(maskedImg, "maskedImg")
-			coloredPix = np.count_nonzero(mask) # # counts for each value of h s and v
-			if not trigger and coloredPix > pixTrigAmount:
-				# The mask has a minimum amount of pixels & the pixel count is increasing
-				trigger = True
-				_mask, _bounds = mask, bounds
-			elif trigger:
-				# Merge with previous masks to maximise the quality of the circle
-				_lb, _ub = np.asarray(_bounds).tolist()
-				lb, ub = np.asarray(bounds).tolist()
-				if _prev_mask is None:
-					# _mask cannot be None
-					ret_bounds = (np.asarray(map(min, zip(lb, _lb))), np.asarray(map( max, zip(_ub, ub))))
-					yield cv2.bitwise_or(_mask, mask), ret_bounds
-					trigger = False
-				else:
-					_prev_lb, _prev_ub = np.asarray(_prev_bounds).tolist()
-					ret_bounds = tuple(map(np.asarray, [map(min, zip(lb, _lb, _prev_lb)),
-														map(max, zip(ub, _ub, _prev_ub))]))
-					# the previous img
-					yield reduce(cv2.bitwise_or, (_prev_mask, _mask, mask)), ret_bounds
-					trigger = False
-			_mask, _bounds = mask, bounds
-			_prev_mask, _prev_bounds = _mask, _bounds
-		if trigger: yield _mask, _bounds
-		# else: print("No suitable mask found")
-
-	# itertools.chain does not chain generators
-	def concatGen(generators):
-		if len(generators) == 0:
-			return
-		else:
-			for elm in generators[0]:
-				yield elm
-			for elm in concatGen(generators[1:]):
-				yield elm
-
-	return maximisePixCount(concatGen([_slidingHueMask(hsv_roi, steps=4, sBound=(60, 255), vBound=(60, 255)),
-                                       # High light situaton : Markers always have a high value and broad variety of saturation
-                                       _slidingHueMask(hsv_roi, steps=3, sBound=(40, 255), vBound=(180, 255), ascending=False),
-                                       # dim light doesn't make the markers pop out as well :
-                                       _slidingHueMask(hsv_roi, steps=4, hBound=(110, 190), sBound=(40, 240), vBound=(40, 220)),
-                                       # Last hope
-                                       _slidingHueMask(hsv_roi, steps=4, hBound=(110, 200), sBound=(30, 255), vBound=(20, 255)),
-                                       ]))
-
-def _slidingHueMask(hsv_roi, steps, hBound=(HUE_BAND_LB, HUE_BAND_UB), sBound=(30, 255), vBound=(30, 255), ascending=True):
-	#(hsv_roi: np.ndarray, bandSize: int, sBound=(0, 255), vBound=(0, 255), dS=5, dV=4, ascending= True, refine=-1):
-	"""
-	Generates masks of the input image by thresholding the image hue inside a certain range.
-	That range is then slided around inside HUE_BAND_LB and HUE_BAND_UP. (wraps around when reaching
-	the maximum hue of 180 in order to be circular)
-	Slides with given number of steps
-	:returns
-	:rtype numpy.ndarray, tuple[np.ndarray]
-	"""
-	if ascending:
-		h1, h2 = min(hBound), max(hBound)
-	else:
-		h2, h1 = min(hBound), max(hBound)
-	bands = np.linspace(h1, h2, num=steps, endpoint=True)
-	for i, band in enumerate(bands[:-1]):
-		if ascending: l_i, u_i = i, i+1
-		else:         l_i, u_i = i+1, i
-		lb = np.array([bands[l_i], sBound[0], vBound[0]], np.uint8)
-		ub = np.array([bands[u_i], sBound[1], vBound[1]], np.uint8)
-		mask = _inRange(hsv_roi, lb, ub)
-		yield mask, (lb, ub)
-
-def _inRange(img, lb, ub, colortype='hsv'):
-	"""cv2.inRange wrapper that allows hue bounds to wrap around a the max value of 180"""
-	if colortype == 'hsv' and lb[0] <= 180 and ub[0] > 180:
-		__ub = copy(ub)
-		__ub[0] %= 180
-		_ub = np.array([180, ub[1], ub[2]], np.uint8)
-		_lb = np.array([0, lb[1], lb[2]], np.uint8)
-		lmask = cv2.inRange(img, lb, _ub)
-		rmask = cv2.inRange(img, _lb, __ub)
-		mask = cv2.bitwise_or(lmask, rmask)
-	else:
-		mask = cv2.inRange(img, lb, ub)
-	return mask
-
+@logtime
 def _undistortImage(img, dist, mtx):
 	"""Apply the camera calibration matrices to distort the picture back straight"""
 	h, w = img.shape[:2]
@@ -458,6 +357,7 @@ def _undistortImage(img, dist, mtx):
 	mapx, mapy = cv2.initUndistortRectifyMap(mtx, dist, None, newcameramtx, (w, h), 5)
 	return cv2.remap(img, mapx, mapy, cv2.INTER_LINEAR)
 
+@logtime
 def _warpImgByCorners(image, corners, zoomed_out=False):
 	"""
 	Warps the region delimited by the corners in order to straighten it.

@@ -64,7 +64,7 @@ class LidHandler(object):
 		self._client_opened = False
 
 		# REVIEW -- bind lidhandler.brightness_sensitivity to slider
-		self.brightness_sensitivity = 100
+		self.brightness_sensitivity = 0
 		# REVIEW -- bind lidhandler.brightness_sensitivity_auto to checkbox
 		self.brightness_sensitivity_auto = True
 
@@ -454,7 +454,8 @@ class PhotoCreator(object):
 				dist, mtx = None, None
 			color = {}
 			marker_size = {}
-			workspaceCorners, markers, missed, err = prepareImage(input_image=latest,
+			# NOTE -- prepareImage is bloat, TODO spill content here
+			workspaceCorners, markers, missed, err, analytics = prepareImage(input_image=latest,
 			                                                      path_to_output_image=self.tmp_img_prepared,
 			                                                      pic_settings=pic_settings,
 			                                                      cam_dist=dist,
@@ -466,8 +467,6 @@ class PhotoCreator(object):
 			                                                      debug_out=self.save_debug_images,  # self.save_debug_images,
 			                                                      undistorted=True,
 			                                                      stopEvent=self.stopEvent,
-									      marker_size=marker_size,
-									      color=color
 			                                                      threads=4)
 			if self.stopping: return False, None, None, None, None
 			success = workspaceCorners is not None
@@ -481,6 +480,8 @@ class PhotoCreator(object):
 								 'successful_correction': success,
 								 'undistorted_saved': True,
 								 'workspace_corner_ratio': float(MAX_OBJ_HEIGHT) / CAMERA_HEIGHT / 2,
+								 'median_color':color,
+								 'marker_px_size':marker_size,
 								 'error': err}
 			# Send result to fronted ASAP
 			if success:
@@ -488,11 +489,11 @@ class PhotoCreator(object):
 			else:
 				# Just tell front end that there was an error
 				self._send_frontend_picture_metadata(correction_result)
-
 			self._add_result_to_analytics(session_details,
 										  markers,
 										  increment_pic=True,
-										  error=err)
+										  error=err,
+			                              extra=analytics)
 		cam.stop_preview()
 		if session_details['num_pics'] > 0:
 			self._analytics_handler.add_camera_session_details(session_details)
@@ -500,16 +501,16 @@ class PhotoCreator(object):
 
 	# @logme(True)
 	def _add_result_to_analytics(self,
-                                 session_details,
-                                 markers,
+				     session_details,
+				     markers,
 				     colors={},
-				     marker_size={}
-                                 increment_pic=False,
-                                 colorspace='hsv',
-                                 avg_colors=None,
-                                 med_colors=None,
-                                 upload_speed=None,
-                                 error=None):
+				     marker_size={},
+				     increment_pic=False,
+				     colorspace='hsv',
+				     upload_speed=None,
+				     error=None,
+				     extra=None):
+		if extra is None: extra={}
 		assert(type(markers) is dict)
 		def add_to_stat(pos, avg, std, mass):
 			# gives a new avg value and approximate std when merging the new position value.
@@ -608,7 +609,7 @@ def blank_session_details():
                     # 'colorspace': 'hsv',
                     'avg_color': [],
 		    'median_color': [],
-		    'pix_size': []
+		    'marker_px_size': []
                     }
 	session_details = {'num_pics': 0,
 	                   'markers': {'NW': copy.deepcopy(_init_marker),
