@@ -62,9 +62,7 @@ class LidHandler(object):
 		self._interlock_closed = True
 		self._is_slicing = False
 		self._client_opened = False
-		
-		# TODO: Axel
-		self.markerRecognitionMinPixel = self._settings.get(['cam', 'markerRecognitionMinPixel'])
+
 
 		if PICAMERA_AVAILABLE:
 			imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
@@ -462,6 +460,7 @@ class PhotoCreator(object):
 			                                                      debug_out=self.save_debug_images,  # self.save_debug_images,
 			                                                      undistorted=True,
 			                                                      stopEvent=self.stopEvent,
+									      min_pix_amount=self._settings.get(['cam', 'markerRecognitionMinPixel']),
 			                                                      threads=4)
 			if self.stopping: return False, None, None, None, None
 			success = workspaceCorners is not None
