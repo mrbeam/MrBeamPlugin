@@ -63,6 +63,7 @@ class LidHandler(object):
 		self._is_slicing = False
 		self._client_opened = False
 
+
 		if PICAMERA_AVAILABLE:
 			imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
 			self._photo_creator = PhotoCreator(self._plugin,
@@ -459,6 +460,7 @@ class PhotoCreator(object):
 			                                                      debug_out=self.save_debug_images,  # self.save_debug_images,
 			                                                      undistorted=True,
 			                                                      stopEvent=self.stopEvent,
+									      min_pix_amount=self._settings.get(['cam', 'markerRecognitionMinPixel']),
 			                                                      threads=4)
 			if self.stopping: return False, None, None, None, None
 			success = workspaceCorners is not None
