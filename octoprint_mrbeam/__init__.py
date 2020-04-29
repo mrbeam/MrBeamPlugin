@@ -417,6 +417,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self._settings.set_int(["leds", "brightness"], data["leds"]["brightness"])
 			if "leds" in data and "fps" in data["leds"]:
 				self._settings.set_int(["leds", "fps"], data["leds"]["fps"])
+			# dev only
+			if self.is_dev_env() and "dev" in data and "design_store_email" in data['dev']:
+				self._settings.set(["dev", "design_store_email"], data['dev']["design_store_email"])
 		except Exception as e:
 			self._logger.exception("Exception in on_settings_save() ")
 			raise e
@@ -638,11 +641,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 			# disabled in appearance
 			# dict(type='settings', name="Serial Connection DEV", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings=False, replaces='serial')
-		]
-		# if not self.is_prod_env('local'):
-		# 	result.extend([
-		# 		dict(type='settings', name="DEV Machine Profiles", template='settings/lasercutterprofiles_settings.jinja2', suffix="_lasercutterprofiles", custom_bindings=False)
-		# 	])
+		 ]
+		if not self.is_prod_env('local'):
+			result.extend([
+				# dict(type='settings', name="DEV Machine Profiles", template='settings/lasercutterprofiles_settings.jinja2', suffix="_lasercutterprofiles", custom_bindings=False)
+				dict(type='settings', name="DEV Design Store", template='settings/dev_design_store_settings.jinja2', suffix="_design_store", custom_bindings=False)
+			])
 		result.extend(self.wizard_config.get_wizard_config_to_show())
 		return result
 
