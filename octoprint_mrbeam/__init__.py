@@ -1018,6 +1018,38 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	### Initial Camera Calibration - END ###
 
+
+	
+	@octoprint.plugin.BlueprintPlugin.route("/engrave_precision_calibration_pattern", methods=["GET"])
+	@restricted_access
+	def engraveBacklashCalibrationPattern(self):
+
+		gcfile = __builtin__.__package_path__+'/static/gcode/backlash_compensation_x@cardboard.gco'
+
+		# run gcode
+		# check serial connection
+		if self._printer is None or self._printer._comm is None:
+			return make_response("Laser: Serial not connected", 400)
+
+		if self._printer.get_state_id() == "LOCKED":
+			self._printer.home("xy")
+
+		seconds = 0
+		while self._printer.get_state_id() != "OPERATIONAL" and seconds <= 26:  # homing cycle 20sec worst case, rescue from home ~ 6 sec total (?)
+			time.sleep(1.0)  # wait a second
+			seconds += 1
+
+		# check if idle
+		if not self._printer.is_operational():
+			return make_response("Laser not idle", 403)
+
+		# select "file" and start
+		#self._printer._comm.selectGCode(gcode)
+		self._printer._comm.selectFile(gcfile)
+		self._printer._comm.startPrint()
+		return NO_CONTENT
+
+
 	# Laser cutter profiles
 	@octoprint.plugin.BlueprintPlugin.route("/profiles", methods=["GET"])
 	def laserCutterProfilesList(self):
