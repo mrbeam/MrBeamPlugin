@@ -634,10 +634,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			# disabled in appearance
 			# dict(type='settings', name="Serial Connection DEV", template='settings/serialconnection_settings.jinja2', suffix='_serialconnection', custom_bindings=False, replaces='serial')
 		]
-		if not self.is_prod_env('local'):
-			result.extend([
-				dict(type='settings', name="DEV Machine Profiles", template='settings/lasercutterprofiles_settings.jinja2', suffix="_lasercutterprofiles", custom_bindings=False)
-			])
+		# if not self.is_prod_env('local'):
+		# 	result.extend([
+		# 		dict(type='settings', name="DEV Machine Profiles", template='settings/lasercutterprofiles_settings.jinja2', suffix="_lasercutterprofiles", custom_bindings=False)
+		# 	])
 		result.extend(self.wizard_config.get_wizard_config_to_show())
 		return result
 
