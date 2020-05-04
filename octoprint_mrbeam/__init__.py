@@ -1044,9 +1044,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return make_response("Laser not idle", 403)
 
 		# select "file" and start
-		#self._printer._comm.selectGCode(gcode)
-		self._printer._comm.selectFile(gcfile)
-		self._printer._comm.startPrint()
+		self.onebutton_handler.unset_ready_to_laser()
+		with open(gcfile, 'r') as fh:
+			gcode = fh.read()
+			self._printer._comm.selectGCode(gcode)
+			#self._printer._comm.selectFile(gcfile, False) # only works inside "uploads" folder
+			self._printer._comm.startPrint()
+			
 		return NO_CONTENT
 
 
