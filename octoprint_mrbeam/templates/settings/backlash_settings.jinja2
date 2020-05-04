@@ -26,7 +26,7 @@
 				<ul>
 					<li>{{ _("Place your cardboard in the center of the working area.") }}</li>
 					<li>{{ _("Focus the laserhead to the height of the cardboard.") }}</li>
-					<li><a class='btn btn-primary' onclick="$.get('/plugin/mrbeam/engrave_precision_calibration_pattern');">{{ _("Start the test engraving") }}</a></li>
+					<li><a class='btn btn-primary' data-bind='click: engrave_calibration_pattern'>{{ _("Start the test engraving") }}</a></li>
 				</ul>
 				<a class='btn btn-default' onclick="document.getElementById('precision_calibration_steps').classList.toggle('pattern_engraved')">{{ _("Next") }} <i class='icon icon-arrow-right'></i></a>
             </div>
@@ -39,7 +39,7 @@
 					<li>
 						{{ _("Enter the line's number here: ") }}
 						<form onkeydown="return event.key != 'Enter';">
-							<input id="settings_backlash_compensation_x" type="number" min="-3" max="3" step="0.01" class="input-block-level" data-bind="value: settings.plugins.mrbeam.machine.backlash_compensation_x">
+							<input id="settings_backlash_compensation_x" type="number" min="-3" max="3" step="0.01" class="input-block-level" data-bind="value: backlash_compensation_x">
 						</form>
 					</li>
 				</ul>
