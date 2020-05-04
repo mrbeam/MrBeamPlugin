@@ -61,7 +61,9 @@ class MbPicPrepError(Exception):
 	"""Something went wrong when undistorting and aligning the picture for the front-end"""
 	pass
 
-@logtime
+
+@logExceptions
+#@logtime()
 def prepareImage(input_image,  #: Union[str, np.ndarray],
                  path_to_output_image,  #: str,
                  pic_settings=None,  #: Map or str

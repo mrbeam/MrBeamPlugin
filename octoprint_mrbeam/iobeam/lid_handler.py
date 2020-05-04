@@ -378,8 +378,8 @@ class PhotoCreator(object):
 		# Doubling the upscale factor will quadruple the image resolution while and
 		# multiply file size by around 2.8 (depending on image quality)
 		pic_qualities = [
-				[1 * DEFAULT_MM_TO_PX, LOW_QUALITY],
-				[4 * DEFAULT_MM_TO_PX, LOW_QUALITY]
+			[1 * DEFAULT_MM_TO_PX, LOW_QUALITY],
+			[4 * DEFAULT_MM_TO_PX, LOW_QUALITY]
 		]
 		pic_qual_index = 0
 		# Marker positions detected on the last loop

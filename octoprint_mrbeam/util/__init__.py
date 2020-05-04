@@ -27,15 +27,16 @@ def dict_merge(d1, d2, leaf_operation=None): # (d1: dict, d2: dict):
 	else:
 		return d2
 
-def logtime(f):
-	logger = debug_logger(f)
-	@wraps(f)
-	def timed_f(*args, **kw):
-		start = time.clock()
-		ret = f(*args, **kw)
-		logger.debug("Elapsed time : %f seconds", time.clock() - start)
-		return ret
-	return timed_f
+def logtime(logger=None):
+	def _logtime(f):
+		@wraps(f)
+		def timed_f(*args, **kw):
+			start = time.clock()
+			ret = f(*args, **kw)
+			debug_logger(f).debug("Elapsed time : %f seconds", time.clock() - start)
+			return ret
+		return timed_f
+	return _logtime
 
 def logExceptions(f):
 	logger = debug_logger(f)
