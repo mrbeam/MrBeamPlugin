@@ -310,6 +310,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				correctionTmpFile='{}/cam/last_markers.json'.format(settings().getBaseFolder('base')),
 				lensCalibrationFile='{}/cam/lens_correction_{}x{}.npz'.format(settings().getBaseFolder('base'), image_default_width, image_default_height),
 				saveCorrectionDebugImages=False,
+				markerRecognitionMinPixel = 700,
 			),
 			gcode_nextgen=dict(
 				enabled=True,
@@ -337,7 +338,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			terminal_show_checksums=self._settings.get(['terminal_show_checksums']),
 			analyticsEnabled=self._settings.get(['analyticsEnabled']),
 			cam=dict(frontendUrl=self._settings.get(['cam', 'frontendUrl']),
-			         previewOpacity=self._settings.get(['cam', 'previewOpacity'])),
+			         previewOpacity=self._settings.get(['cam', 'previewOpacity']),
+			         markerRecognitionMinPixel = self._settings.get(['cam', 'markerRecognitionMinPixel']),
+			         ),
 			dev=dict(
 				env=self.get_env(),
 				software_tier=self._settings.get(["dev", "software_tier"]),
@@ -380,6 +383,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			# self._logger.info("ANDYTEST on_settings_save() %s", data)
 			if "cam" in data and "previewOpacity" in data["cam"]:
 				self._settings.set_float(["cam", "previewOpacity"], data["cam"]["previewOpacity"])
+			if "cam" in data and "markerRecognitionMinPixel" in data["cam"]:
+				self._settings.set_int(["cam", "markerRecognitionMinPixel"], data["cam"]["markerRecognitionMinPixel"])
 			if "svgDPI" in data:
 				self._settings.set_int(["svgDPI"], data["svgDPI"])
 			if "dxfScale" in data:

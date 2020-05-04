@@ -63,11 +63,6 @@ class LidHandler(object):
 		self._is_slicing = False
 		self._client_opened = False
 
-		# REVIEW -- bind lidhandler.brightness_sensitivity to slider
-		self.brightness_sensitivity = 0
-		# REVIEW -- bind lidhandler.brightness_sensitivity_auto to checkbox
-		self.brightness_sensitivity_auto = True
-
 		if PICAMERA_AVAILABLE:
 			imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
 			self._photo_creator = PhotoCreator(self._plugin,
@@ -303,7 +298,6 @@ class PhotoCreator(object):
 
 	def work(self, pic_settings=None, cam_params=None, out_pic_size=None, recurse_nb=0):
 		if self.is_initial_calibration:
-			# TODO save marker colors
 			self.save_debug_images = True
 
 		if not PICAMERA_AVAILABLE:
@@ -455,45 +449,52 @@ class PhotoCreator(object):
 			color = {}
 			marker_size = {}
 			# NOTE -- prepareImage is bloat, TODO spill content here
-			workspaceCorners, markers, missed, err, analytics = prepareImage(input_image=latest,
-			                                                      path_to_output_image=self.tmp_img_prepared,
-			                                                      pic_settings=pic_settings,
-			                                                      cam_dist=dist,
-			                                                      cam_matrix=mtx,
-			                                                      last_markers=markers,
-			                                                      size=scaled_output_size,
-			                                                      quality=quality,
-			                                                      zoomed_out=self.zoomed_out,
-			                                                      debug_out=self.save_debug_images,  # self.save_debug_images,
-			                                                      undistorted=True,
-			                                                      stopEvent=self.stopEvent,
-			                                                      threads=4)
+			workspaceCorners, markers, missed, err, analytics = prepareImage(
+				input_image=latest,
+				path_to_output_image=self.tmp_img_prepared,
+				pic_settings=pic_settings,
+				cam_dist=dist,
+				cam_matrix=mtx,
+				last_markers=markers,
+				size=scaled_output_size,
+				quality=quality,
+				zoomed_out=self.zoomed_out,
+				debug_out=self.save_debug_images,  # self.save_debug_images,
+				undistorted=True,
+				stopEvent=self.stopEvent,
+				min_pix_amount=self._settings.get(['cam', 'markerRecognitionMinPixel']),
+				threads=4
+			)
 			if self.stopping: return False, None, None, None, None
 			success = workspaceCorners is not None
 			# Conform to the legacy result to be sent to frontend
-			correction_result = {'markers_found': list(filter(lambda q: q not in missed, QD_KEYS)),
-								 # {k: v.astype(int) for k, v in markers.items()},
-								 'markers_recognised': 4 - len(missed),
-								 'corners_calculated': None if workspaceCorners is None else list(workspaceCorners),
-								 # {k: v.astype(int) for k, v in workspaceCorners.items()},
-								 'markers_pos': {qd: pos.tolist() for qd, pos in markers.items()},
-								 'successful_correction': success,
-								 'undistorted_saved': True,
-								 'workspace_corner_ratio': float(MAX_OBJ_HEIGHT) / CAMERA_HEIGHT / 2,
-								 'median_color':color,
-								 'marker_px_size':marker_size,
-								 'error': err}
+			correction_result = {
+				'markers_found': list(filter(lambda q: q not in missed, QD_KEYS)),
+				# {k: v.astype(int) for k, v in markers.items()},
+				'markers_recognised': 4 - len(missed),
+				'corners_calculated': None if workspaceCorners is None else list(workspaceCorners),
+				# {k: v.astype(int) for k, v in workspaceCorners.items()},
+				'markers_pos': {qd: pos.tolist() for qd, pos in markers.items()},
+				'successful_correction': success,
+				'undistorted_saved': True,
+				'workspace_corner_ratio': float(MAX_OBJ_HEIGHT) / CAMERA_HEIGHT / 2,
+				'median_color':color,
+				'marker_px_size':marker_size,
+				'error': err,
+			}
 			# Send result to fronted ASAP
 			if success:
 				self._ready_to_send_pic(correction_result)
 			else:
 				# Just tell front end that there was an error
 				self._send_frontend_picture_metadata(correction_result)
-			self._add_result_to_analytics(session_details,
-										  markers,
-										  increment_pic=True,
-										  error=err,
-			                              extra=analytics)
+			self._add_result_to_analytics(
+				session_details,
+				markers,
+				increment_pic=True,
+				error=err,
+				extra=analytics
+			)
 		cam.stop_preview()
 		if session_details['num_pics'] > 0:
 			self._analytics_handler.add_camera_session_details(session_details)
@@ -532,9 +533,9 @@ class PhotoCreator(object):
 				if qd in markers.keys() and markers[qd] is not None:
 					_marker = np.asarray(markers[qd])
 					_n_avg, _n_std = add_to_stat(_marker,
-                                                 _s_marker['avg_pos'],
-                                                 _s_marker['std_pos'],
-                                                 _s_marker['found'])
+					                             _s_marker['avg_pos'],
+					                             _s_marker['std_pos'],
+					                             _s_marker['found'])
 					_s_marker['avg_pos'] = _n_avg.tolist()
 					_s_marker['std_pos'] = _n_std.tolist()
 					_s_marker['found'] += 1

@@ -76,6 +76,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
                  blur=7,
                  custom_pic_settings=None,
                  stopEvent=None,
+		 min_pix_amount=MIN_MARKER_PIX,
                  threads=-1):
 	# type: (Union[str, np.ndarray], basestring, np.ndarray, np.ndarray, Union[Mapping, basestring], Union[dict, None], tuple, int, bool, bool, bool, int, Union[None, Mapping], Union[None, Event], int) -> object
 	"""
@@ -104,7 +105,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	else:
 		logger.setLevel(logging.WARNING)
 
-	@logtime
+	#@logtime()
 	def save_debug_img(img, name):
 		"""Saves the image in a folder along the given path"""
 		dbg_path = os.path.join(dirname(path_to_output_image), "debug", name + ".jpg")
@@ -152,9 +153,10 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	dbg_markers = os.path.join(dirname(path_to_output_image), "debug", ".jpg")
 	_mkdir(dirname(dbg_markers))
 	outputPoints = _getColoredMarkerPositions(img,
-                                              debug_out_path=dbg_markers,
-                                              blur=blur,
-                                              threads=threads)
+	                                          debug_out_path=dbg_markers,
+	                                          blur=blur,
+	                                          threads=threads,
+	                                          min_pix=min_pix_amount)
 	markers = {}
 	# list of missed markers
 	missed = []
@@ -224,8 +226,8 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 
 	return workspaceCorners, markers, missed, err, outputPoints
 
-@logtime
-def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1):
+#@logtime()
+def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1, min_pix=MIN_MARKER_PIX):
 	"""Allows a multi-processing implementation of the marker detection algo. Up to 4 processes needed."""
 	outputPoints = {}
 	# check all 4 corners
@@ -242,7 +244,9 @@ def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1):
                                          args=(roi,),
                                          kwds=dict(debug_out_path=debug_out_path,
                                                    blur=blur,
-                                                   quadrant=qd)), pos)
+                                                   quadrant=qd,
+						   min_pix=min_pix)
+					 ), pos)
 		while not all(r.ready() for r, pos in results.values()):
 			time.sleep(.1)
 		p.close()
@@ -258,16 +262,19 @@ def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1):
 			# print("brightness of corner {} : {}".format(qd, brightness))
 			outputPoints[qd] = {'brightness': brightness}
 			outputPoints[qd] = _getColoredMarkerPosition(roi,
-                                                         debug_out_path=debug_out_path,
-                                                         blur=blur,
-                                                         quadrant=qd)
+                                                                     debug_out_path=debug_out_path,
+                                                                     blur=blur,
+								     quadrant=qd,
+								     min_pix=min_pix)
 			if outputPoints[qd] is not None:
 				outputPoints[qd]['pos'] += pos
 	return outputPoints
 
 @logExceptions
-@logtime
-def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d_min=8, d_max=30, visual_debug=False):
+#@logme(False, True)
+#@logtime()
+def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d_min=8,
+			      d_max=30, visual_debug=False, min_pix=MIN_MARKER_PIX):
 	"""
 	Tries to find a single pink marker inside the image (or the Region of Interest).
 	It then outputs the information about found marker (for now, just its center position).
@@ -298,7 +305,9 @@ def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d
 	gaussianMask = cv2.adaptiveThreshold(greenBlur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, blocksize, 2)
 	roiBlurThresh =  cv2.bitwise_and( roiBlur, roiBlur, mask=cv2.bitwise_or(threshOtsuMask, gaussianMask))
 	debug_quad_path = debug_out_path.replace('.jpg', '{}.jpg'.format(quadrant))
-	for spot, center, start, stop, count in _get_white_spots(cv2.bitwise_or(threshOtsuMask, gaussianMask)):
+	for spot, center, start, stop, count in _get_white_spots(cv2.bitwise_or(threshOtsuMask,
+									 gaussianMask),
+	                                                   min_pix=min_pix):
 		spot.dtype = np.uint8
 		if visual_debug:
 			cv2.imshow("{} : spot".format(quadrant),
@@ -347,7 +356,7 @@ def isMarkerMask(mask, d_min=10, d_max=60, visual_debug=False):
 	# i.e. it didn't change after applying the mask
 	return np.all(marker == cv2.bitwise_and(marker_mask_tester, marker))
 
-@logtime
+#@logtime()
 def _undistortImage(img, dist, mtx):
 	"""Apply the camera calibration matrices to distort the picture back straight"""
 	h, w = img.shape[:2]
@@ -357,7 +366,7 @@ def _undistortImage(img, dist, mtx):
 	mapx, mapy = cv2.initUndistortRectifyMap(mtx, dist, None, newcameramtx, (w, h), 5)
 	return cv2.remap(img, mapx, mapy, cv2.INTER_LINEAR)
 
-@logtime
+#@logtime()
 def _warpImgByCorners(image, corners, zoomed_out=False):
 	"""
 	Warps the region delimited by the corners in order to straighten it.
@@ -418,7 +427,8 @@ def _get_white_spots(mask, min_pix=MIN_MARKER_PIX, max_pix=MAX_MARKER_PIX):
 	lenLabels, labels = cv2.connectedComponents(mask)
 	unique_labels, counts_elements = np.unique(labels, return_counts=True)
 	# The filter also filters out the black background
-	filtered_elm = filter(lambda (count, _): max_pix > count > min_pix, zip(counts_elements, unique_labels))
+	_filter = lambda args : max_pix > args[0] > min_pix
+	filtered_elm = filter(_filter, zip(counts_elements, unique_labels))
 	for count, label in sorted(filtered_elm, reverse=True):
 		bool_connected_spot = labels == label
 		# get the geometrical center of that blob
