@@ -435,7 +435,7 @@ class PhotoCreator(object):
 					prev = latest
 					self._front_ready.set()
 				else:
-					time.sleep(1.5) # Let the raspberry breathe a bit (prevent overheating)
+					time.sleep(.8) # Let the raspberry breathe a bit (prevent overheating)
 					continue
 			# Get the desired scale and quality of the picture to serve
 			upscale_factor , quality = pic_qualities[pic_qual_index]
