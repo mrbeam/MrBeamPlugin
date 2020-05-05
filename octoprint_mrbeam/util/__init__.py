@@ -5,7 +5,6 @@ import logging
 import numpy as np
 import json
 from itertools import chain, repeat, cycle
-from typing import Iterable
 from functools import wraps
 from copy import copy
 
