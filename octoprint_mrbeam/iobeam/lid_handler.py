@@ -478,7 +478,7 @@ class PhotoCreator(object):
 				'successful_correction': success,
 				'undistorted_saved': True,
 				'workspace_corner_ratio': float(MAX_OBJ_HEIGHT) / CAMERA_HEIGHT / 2,
-				'median_color':color,
+				'avg_color':color,
 				'marker_px_size':marker_size,
 				'error': err,
 			}
@@ -609,7 +609,7 @@ def blank_session_details():
                     # The following fields are unused for now
                     # 'colorspace': 'hsv',
                     'avg_color': [],
-		    'median_color': [],
+		    #'median_color': [],
 		    'marker_px_size': []
                     }
 	session_details = {'num_pics': 0,
