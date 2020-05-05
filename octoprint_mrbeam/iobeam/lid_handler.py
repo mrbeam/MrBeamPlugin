@@ -497,6 +497,9 @@ class PhotoCreator(object):
 			)
 		cam.stop_preview()
 		if session_details['num_pics'] > 0:
+			session_details.update(
+				{'settings_min_marker_size': self._settings.get(['cam', 'markerRecognitionMinPixel'])}
+			)
 			self._analytics_handler.add_camera_session_details(session_details)
 		self._logger.debug("PhotoCreator_stopping")
 
@@ -606,5 +609,6 @@ def blank_session_details():
 	                               'SW': copy.deepcopy(_init_marker),
 	                               'NE': copy.deepcopy(_init_marker)},
 	                   'errors': {},
-                       'avg_upload_speed': None}
+	                   'avg_upload_speed': None,
+	                   'settings_min_marker_size': None}
 	return session_details
