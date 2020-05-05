@@ -478,8 +478,8 @@ class PhotoCreator(object):
 				'successful_correction': success,
 				'undistorted_saved': True,
 				'workspace_corner_ratio': float(MAX_OBJ_HEIGHT) / CAMERA_HEIGHT / 2,
-				'avg_color':color,
-				'marker_px_size':marker_size,
+				'avg_color': color,
+				'marker_px_size': marker_size,
 				'error': err,
 			}
 			# Send result to fronted ASAP
@@ -589,29 +589,17 @@ def blank_session_details():
 	"""
 	Add to these session details when taking the pictures.
 	Do not send back as-is (won't convert to JSON)
-	session_details = { 'markers': {'NW': {'missed': int,
-												   'found': int,
-												   'avg_pos': [float, float],
-												   'std_pos': float,
-												   'colorspace': str,
-												   'avg_color_when_missed': [[int, int, int], ...],
-												   'median_color_when_missed': [[int, int, int], ...]}
-									'SE': {...},
-									'SW': {...},
-									'NE': {...}},
-						'errors': list(dict),
-						'mean_upload_speed': int}
 	"""
-	_init_marker = {'missed':  0,
-                    'found':   0,
-                    'avg_pos': None,
-                    'std_pos': None,
-                    # The following fields are unused for now
-                    # 'colorspace': 'hsv',
-                    'avg_color': [],
-		    #'median_color': [],
-		    'marker_px_size': []
-                    }
+	_init_marker = {
+		'missed':  0,
+		'found':   0,
+		'avg_pos': None,
+		'std_pos': None,
+		# 'colorspace': 'hsv',
+		'avg_color': [],
+		#'median_color': [],
+		'marker_px_size': []
+	}
 	session_details = {'num_pics': 0,
 	                   'markers': {'NW': copy.deepcopy(_init_marker),
 	                               'SE': copy.deepcopy(_init_marker),
