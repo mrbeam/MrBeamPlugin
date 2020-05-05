@@ -311,7 +311,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				lensCalibrationFile='{}/cam/lens_correction_{}x{}.npz'.format(settings().getBaseFolder('base'), image_default_width, image_default_height),
 				saveCorrectionDebugImages=False,
 				markerRecognitionMinPixel = 700,
-				markerRecognitionAuto = False,
 			),
 			gcode_nextgen=dict(
 				enabled=True,
