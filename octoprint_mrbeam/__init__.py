@@ -954,6 +954,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# return same as the Simple Api Call
 		return self.take_undistorted_picture(is_initial_calibration=True)
 
+	@octoprint.plugin.BlueprintPlugin.route("/calibration_save_raw_pic", methods=["GET"])
+	def onCalibrationSaveRawPic(self):
+		return "testurl"
+		# return make_response("testurl", 200)
+
 	@octoprint.plugin.BlueprintPlugin.route("/send_calibration_markers", methods=["POST"])
 	# @firstrun_only_access #@maintenance_stick_only_access
 	def sendInitialCalibrationMarkers(self):
@@ -1390,6 +1395,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			on_camera_picture_transfer=[],
 			leds=[],
 			compensate_obj_height=[],
+			calibration_save_raw_pic=[],
 		)
 
 	def on_api_command(self, command, data):
@@ -1452,6 +1458,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self.set_leds_update(data)
 		elif command == "compensate_obj_height":
 			self.lid_handler.compensate_for_obj_height(bool(data))
+		elif command == "calibration_save_raw_pic":
+			# TODO save next raw image to the buffer
+			# TODO flash LEDs when raw img saved
+			return self.sendInitialCalibrationMarkers()
+
 		return NO_CONTENT
 
 	# TODO IRATXE: this does not properly work --> necessary for reviews

@@ -84,6 +84,8 @@ $(function () {
 			if (Object.keys(self.camera.markersFound()).length !== 4) return false;
 			return Object.values(self.camera.markersFound()).reduce((x,y) => x && y);
 		});
+
+		self.rawPics = ko.observable([])
 		self.markersFoundPosition = ko.observable({});
 
 		self.__format_point = function(p){
@@ -325,6 +327,35 @@ $(function () {
 			}
 		};
 
+		self.saveRawPic = function() {
+				$.ajax({
+					type: "GET",
+					url: '/plugin/mrbeam/calibration_save_raw_pic',
+					data: {},
+					success: self.saveRawPicSuccess,
+					error: self.saveRawPicError
+				});
+			// self.simpleApiCommand( "calibration_save_raw_pic",
+			// 					   {},
+			// 					   self.saveRawPicSuccess,
+			// 					   self.saveRawPicError);
+		}
+
+		self.saveRawPicSuccess = function(response) {
+			_tmp = self.rawPics()
+			_tmp.push(response['url'])
+			self.rawPics(_tmp)
+		}
+
+		self.saveRawPicError= function() {
+			new PNotify({
+				title: gettext("Failed to save the latest image."),
+				text: gettext("...and I have no clue why. Sorry."),
+				type: "warning",
+				hide: true
+			});
+		}
+
 		self.engrave_markers = function () {
 			var url = '/plugin/mrbeam/generate_calibration_markers_svg';
 			$.ajax({
@@ -406,24 +437,7 @@ $(function () {
 				}
 			};
 			console.log('Sending data:', data);
-			if (self.isInitialCalibration()) {
-				$.ajax({
-					url: "/plugin/mrbeam/send_calibration_markers",
-					type: "POST",
-					headers: {
-						"Accept": "application/json; charset=utf-8",
-						"Content-Type": "application/json; charset=utf-8"
-					},
-					data: JSON.stringify(data),
-					dataType: "json",
-					success: self.saveMarkersSuccess,
-					error: self.saveMarkersError
-				});
-			} else {
-				OctoPrint.simpleApiCommand("mrbeam", "camera_calibration_markers", data)
-						.done(self.saveMarkersSuccess)
-						.fail(self.saveMarkersError);
-			}
+			self.simpleApiCommand("camera_calibration_markers", data, self.saveMarkersSuccess, self.saveMarkersError);
 		};
 
 		self.saveMarkersSuccess = function (response) {
@@ -506,6 +520,28 @@ $(function () {
 				console.error('no element with id' + target_id);
 			}
 		};
+
+		self.simpleApiCommand = function(command, data, successCallback, errorCallback, type) {
+			if (self.isInitialCalibration()) {
+				$.ajax({
+					url: "/plugin/mrbeam/" + command,
+					type: type, // POST, GET
+					headers: {
+						"Accept": "application/json; charset=utf-8",
+						"Content-Type": "application/json; charset=utf-8"
+					},
+					data: JSON.stringify(data),
+					dataType: "json",
+					success: successCallback,
+					error: errorCallback
+				});
+			}
+			else {
+				OctoPrint.simpleApiCommand("mrbeam", command, data)
+						.done(successCallback)
+						.fail(errorCallback);
+			}
+		}
 
 	}
 
