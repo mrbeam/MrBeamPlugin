@@ -32,6 +32,8 @@ HUE_BAND_LB_KEY = 'hue_lower_bound'
 HUE_BAND_LB = 105
 HUE_BAND_UB = 200 # if value > 180 : loops back to 0
 
+SUCCESS_WRITE_RETVAL = 1
+
 # Minimum and Maximum number of pixels a marker should have
 # as seen on the edge detection masks
 # TODO make scalable with picture resolution
@@ -113,7 +115,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 		"""Saves the image in a folder along the given path"""
 		dbg_path = os.path.join(dirname(path_to_output_image), "debug", name + ".jpg")
 		_mkdir(dirname(dbg_path))
-		return cv2.imwrite(dbg_path, img) == 0
+		return cv2.imwrite(dbg_path, img) == SUCCESS_WRITE_RETVAL
 
 	err = None
 	savedPics = {'raw': False, 'lens_corrected': False, 'cropped': False}
@@ -226,7 +228,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	retval = cv2.imwrite(filename=path_to_output_image,
 	                     img=cv2.cvtColor(cv2.resize(warpedImg, size), cv2.COLOR_BGR2GRAY),
 	                     params=[int(cv2.IMWRITE_JPEG_QUALITY), quality])
-	if retval == 0: savedPics['cropped'] = True
+	if retval == SUCCESS_WRITE_RETVAL: savedPics['cropped'] = True
 
 	return workspaceCorners, markers, missed, err, outputPoints, savedPics
 
