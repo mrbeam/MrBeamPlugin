@@ -72,9 +72,10 @@ $(function () {
 		self.calSvgDx = ko.observable(0);
 		self.calSvgDy = ko.observable(0);
 		self.calSvgScale = ko.observable(1);
-		self.calibrationActive = ko.observable(false);
+		self.cornerCalibrationActive = ko.observable(false);
+		self.lensCalibrationActive = ko.observable(false);
 		self.currentResults = ko.observable({});
-		self.calibrationComplete = ko.computed(function(){
+		self.cornerCalibrationComplete = ko.computed(function(){
 			if (Object.keys(self.currentResults()).length !== 4) return false;
 			return Object.values(self.currentResults()).reduce((x,y) => x && y);
 		});
@@ -143,23 +144,29 @@ $(function () {
 		}
 
 
-		self.startCalibration = function () {
-			self.analytics.send_fontend_event('calibration_start', {});
+		self.startCornerCalibration = function () {
+			self.analytics.send_fontend_event('corner_calibration_start', {});
 			// self.currentResults({});
-			self.calibrationActive(true);
+			self.cornerCalibrationActive(true);
 			self.picType("lens_correction");
 			self.nextMarker();
 		};
 
+		self.startLensCalibration = function () {
+			self.analytics.send_fontend_event('lens_calibration_start', {});
+			self.picType("raw");
+			self.lensCalibrationActive(true);
+		};
+
 		self.nextMarker = function(){
 			self.currentMarker = (self.currentMarker + 1) % self.calibrationMarkers.length;
-			if(!self.calibrationComplete() && self.currentMarker === 0) self.currentMarker = 1;
+			if(!self.cornerCalibrationComplete() && self.currentMarker === 0) self.currentMarker = 1;
 			var nextStep = self.calibrationMarkers[self.currentMarker];
 			self._highlightStep(nextStep);
 		};
 		self.previousMarker = function(){
 			var i = self.currentMarker - 1;
-			if(!self.calibrationComplete() && i === 0) i = -1;
+			if(!self.cornerCalibrationComplete() && i === 0) i = -1;
 			if(i < 0) i = self.calibrationMarkers.length - 1;
 			self.currentMarker = i;
 			var nextStep = self.calibrationMarkers[self.currentMarker];
@@ -174,7 +181,7 @@ $(function () {
 					return;
 				}
 
-			// if(self.calibrationComplete() || !self.calibrationActive()) return;
+			// if(self.cornerCalibrationComplete() || !self.cornerCalibrationActive()) return;
 
 			// save current stepResult
 			var step = self.calibrationMarkers[self.currentMarker];
@@ -280,9 +287,12 @@ $(function () {
 
 			if ('beam_cam_new_image' in data) {
 				// update image
-				if (data['beam_cam_new_image']['undistorted_saved'] && ! self.calibrationActive()) {
+				if (data['beam_cam_new_image']['undistorted_saved'] && ! self.cornerCalibrationActive()) {
 					if (! ['raw', 'lens_correction', 'cropped'].includes(self.picType()))
-						self.picType('lens_correction');
+						if (self.isInitialCalibration())
+							self.picType('raw');
+						else
+							self.picType('lens_correction');
 					else
 						self.calImgUrl(self.camera.getTimestampedImageUrl(self.calImgUrl()));
 
@@ -301,7 +311,7 @@ $(function () {
 						['NW', 'NE', 'SE', 'SW'].forEach(function(m) {_tmp[m] = _tmp[m].reverse();} );
 						self.markersFoundPosition(_tmp)
 					}
-					else if(self.calibrationActive()){
+					else if(self.cornerCalibrationActive()){
 						console.log("Not all Markers found, are the pink circles obstructed?");
 						// As long as all the corners were not found, the camera will continue to take pictures
 						// self.loadUndistortedPicture();
@@ -383,7 +393,7 @@ $(function () {
 		};
 
 
-		self.saveCalibrationData = function () {
+		self.saveCornerCalibrationData = function () {
 			var data = {
 				result: {
 					newMarkers: self.markersFoundPosition(),
@@ -412,8 +422,8 @@ $(function () {
 		};
 
 		self.saveMarkersSuccess = function (response) {
-			self.calibrationActive(false);
-			self.analytics.send_fontend_event('calibration_finish', {});
+			self.cornerCalibrationActive(false);
+			self.analytics.send_fontend_event('cornerCalibration_finish', {});
 			new PNotify({
 				title: gettext("Camera Calibrated."),
 				text: gettext("Camera calibration was successful."),
@@ -425,7 +435,7 @@ $(function () {
 		};
 
 		self.saveMarkersError = function () {
-			self.calibrationActive(false);
+			self.cornerCalibrationActive(false);
 			new PNotify({
 				title: gettext("Couldn't send calibration data."),
 				text: gettext("...and I have no clue why. Sorry."),
@@ -433,11 +443,11 @@ $(function () {
 				hide: true
 			});
 			if(self.isInitialCalibration()) self.resetView();
-			else self.reset_calibration();
+			else self.reset_cornerCalibration();
 		};
 
 		self.abortCalibration = function () {
-			self.calibrationActive(false);
+			self.cornerCalibrationActive(false);
 			new PNotify({
 				title: gettext("Calibration cancelled."),
 				text: gettext("Feel free to restart"),

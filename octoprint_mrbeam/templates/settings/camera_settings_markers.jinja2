@@ -37,7 +37,21 @@
 			</div>
             <a class="muted" data-bind="attr: { href: calImgUrl() }"> {{ _('Download this image') }}</a>
 		</div>
-		<div class="marker_selection_desc calibration_help" data-bind="visible: cal_img_ready() && !calibrationActive()">
+		<div class="marker_selection_desc calibration_help"
+			 data-bind="visible: !cornerCalibrationActive() && !lensCalibrationActive()">
+			<div>
+				{{_('Have a calibration board ready.') }}<br/>
+				{{_('You should be able to print it from the provided link ...') }}<br/>
+				{{_('When started, you will have top take at least N pictures of the calibration board with the camera.')}}
+				{{_('We will tell you if we missed one of the calibration boards here.') }}<br/>
+			</div>
+			<div style="margin-top:1em;">
+				<button class="btn btn-default" data-bind="click: startLensCalibration, visible: isInitialCalibration()">
+					{{ _('Start Lens Calibration') }}</button>
+			</div>
+		</div>
+		<div class="marker_selection_desc calibration_help"
+			 data-bind="visible: cal_img_ready() && !cornerCalibrationActive() && !lensCalibrationActive()">
 			<div>{{_('Click on the arrow head of the marker in the magnified picture.') }}<br/>
 			{{_('Continue with the other markers as the picture changes.') }}<br/>
 			{{_('Once all arrowheads are marked the calibration is finished.')}}</div>
@@ -58,11 +72,12 @@
 				</div>
 			</div>
 			<div style="margin-top:1em;">
-				<button class="btn btn-default" data-bind="click: startCalibration">{{ _('Start Calibration') }}</button>
+				{# TODO do not show "start calibration button when no lens calibration was previously made #}
+				<button class="btn btn-default" data-bind="click: startCornerCalibration">{{ _('Start Calibration') }}</button>
 			</div>
 		</div>
 		<div class="marker_selection_desc calibration_summary">
-			<div data-bind="css: {complete: calibrationComplete()}">
+			<div data-bind="css: {complete: cornerCalibrationComplete()}">
 				<div id="calibration_picture_control" style="position: fixed;right: 0;top: 30vh;padding: 1em;border: 1px solid gray;" data-bind="visible: isInitialCalibration()">
 					Picture:<br />
 					<input type="radio" name="picture_type" value="raw" data-bind="checked: picType" /> Raw<br />
@@ -92,7 +107,7 @@
 
 					</div>
 				</div>
-				<div data-bind="visible: cal_img_ready() && calibrationActive()">
+				<div data-bind="visible: cal_img_ready() && cornerCalibrationActive()">
 					<div id="NW" class="cal-row"><div class="cal-arrow NW"></div> North West: <span data-bind="text: __format_point(currentResults()['NW'])"></span></div>
 					<div id="SW" class="cal-row"><div class="cal-arrow SW"></div> South West: <span data-bind="text: __format_point(currentResults()['SW'])"></span></div>
 					<div id="SE" class="cal-row"><div class="cal-arrow SE"></div> South East: <span data-bind="text: __format_point(currentResults()['SE'])"></span></div>
@@ -100,10 +115,10 @@
 				</div>
 			</div>
 			<div style="margin-top:1em;">
-				<button class="btn btn-default" data-bind="click: previousMarker, visible: calibrationActive()">{{ _('Previous') }}</button>
-				<button class="btn btn-default" data-bind="click: nextMarker, visible: calibrationActive()">{{ _('Next') }}</button>
-				<button class="btn btn-default" data-bind="click: saveCalibrationData, visible: calibrationComplete()">{{ _('Save Calibration') }}</button>
-				<button class="btn btn-warning" data-bind="click: abortCalibration, visible: calibrationActive()">{{ _('Cancel') }}</button>
+				<button class="btn btn-default" data-bind="click: previousMarker, visible: cornerCalibrationActive()">{{ _('Previous') }}</button>
+				<button class="btn btn-default" data-bind="click: nextMarker, visible: cornerCalibrationActive()">{{ _('Next') }}</button>
+				<button class="btn btn-default" data-bind="click: saveCornerCalibrationData, visible: cornerCalibrationComplete()">{{ _('Save Calibration') }}</button>
+				<button class="btn btn-warning" data-bind="click: abortCalibration, visible: cornerCalibrationActive()">{{ _('Cancel') }}</button>
 			</div>
 		</div>
 	</div>
