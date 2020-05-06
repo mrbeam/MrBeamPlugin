@@ -76,6 +76,8 @@ class LidHandler(object):
 		self._analytics_handler = self._plugin.analytics_handler
 		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._subscribe)
 
+		self.savedRawImages = []
+
 	def _subscribe(self, event, payload):
 		self._event_bus.subscribe(IoBeamEvents.LID_OPENED, self.onEvent)
 		self._event_bus.subscribe(IoBeamEvents.INTERLOCK_OPEN, self.onEvent)
@@ -217,6 +219,11 @@ class LidHandler(object):
 		if self._photo_creator is not None:
 			self._photo_creator.zoomed_out = compensate
 
+	def saveRawImg(self):
+		imgName= 'tmp_raw_img_%i.jpg' % len(self.savedRawImages)
+		# TODO debug/raw.jpg -> copy image over
+		self.savedRawImages.append(imgName)
+		return "/downloads/files/local/cam/debug/%s" % imgName
 
 class PhotoCreator(object):
 	def __init__(self, _plugin, _plugin_manager, path, debug=False):
