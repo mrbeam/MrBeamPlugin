@@ -37,6 +37,7 @@
 			</div>
             <a class="muted" data-bind="attr: { href: calImgUrl() }"> {{ _('Download this image') }}</a>
 		</div>
+		<!-- Lens calibration -->
 		<div class="marker_selection_desc calibration_help"
 			 data-bind="visible: !cornerCalibrationActive() && !lensCalibrationActive()">
 			<div>
@@ -50,6 +51,7 @@
 					{{ _('Start Lens Calibration') }}</button>
 			</div>
 		</div>
+		<!-- Corner calibration -->
 		<div class="marker_selection_desc calibration_help"
 			 data-bind="visible: cal_img_ready() && !cornerCalibrationActive() && !lensCalibrationActive()">
 			<div>{{_('Click on the arrow head of the marker in the magnified picture.') }}<br/>
@@ -65,7 +67,7 @@
 				<div class="collapse" id="reengrave_markers" style="display:inline-block;">
 					<div>
 						Intensity: <input id="initialcalibration_intensity" type="number" min="0" max="100" step="1" class="decent_input" value="50" />%,&nbsp;
-						Feedrate: <input id="initialcalibration_feedrate" type="number" min="100" max="3000" step="1" class="decent_input" value="800" />mm/min&nbsp; 
+						Feedrate: <input id="initialcalibration_feedrate" type="number" min="100" max="3000" step="1" class="decent_input" value="800" />mm/min&nbsp;
 						<span data-bind="visible: !interlocks_closed()" style="color: red; display: inline-block; padding: 0.8em"><i class="icon icon-warning-sign"></i> {{ _('Close the lid') }}</span>
 						<button class="btn btn-danger" data-bind="click: engrave_markers_without_gui, visible: isInitialCalibration() && interlocks_closed()"><i class="icon-fire"></i>&nbsp;{{ _('Engrave Markers') }}</button>
 					</div>
@@ -110,6 +112,7 @@
 
 					</div>
 				</div>
+				<!-- Corner calibration -->
 				<div data-bind="visible: cal_img_ready() && cornerCalibrationActive()">
 					<div id="NW" class="cal-row"><div class="cal-arrow NW"></div> North West: <span data-bind="text: __format_point(currentResults()['NW'])"></span></div>
 					<div id="SW" class="cal-row"><div class="cal-arrow SW"></div> South West: <span data-bind="text: __format_point(currentResults()['SW'])"></span></div>
@@ -118,10 +121,14 @@
 				</div>
 			</div>
 			<div style="margin-top:1em;">
+				<!-- Corner calibration -->
 				<button class="btn btn-default" data-bind="click: previousMarker, visible: cornerCalibrationActive()">{{ _('Previous') }}</button>
 				<button class="btn btn-default" data-bind="click: nextMarker, visible: cornerCalibrationActive()">{{ _('Next') }}</button>
 				<button class="btn btn-default" data-bind="click: saveCornerCalibrationData, visible: cornerCalibrationComplete()">{{ _('Save Calibration') }}</button>
-				<button class="btn btn-warning" data-bind="click: abortCalibration, visible: cornerCalibrationActive()">{{ _('Cancel') }}</button>
+				<!-- Lens calibration -->
+				<button class="btn btn-default" data-bind="click: saveRawPic, visible: lensCalibrationActive()">{{ _('Save Chessboard Picture') }}</button>
+				<!-- Cancel -->
+				<button class="btn btn-warning" data-bind="click: abortCalibration, visible: cornerCalibrationActive() || lensCalibrationActive()">{{ _('Cancel') }}</button>
 			</div>
 		</div>
 	</div>

@@ -453,6 +453,7 @@ $(function () {
 
 		self.abortCalibration = function () {
 			self.cornerCalibrationActive(false);
+			self.lensCalibrationActive(false);
 			new PNotify({
 				title: gettext("Calibration cancelled."),
 				text: gettext("Feel free to restart"),
