@@ -65,6 +65,7 @@ $(function () {
 					self.calImgUrl(self.staticURL);
 			}
 		});
+		self.availablePic = ko.observable({'raw': false, 'lens_correction': false, 'cropped': false, })
 		self.calImgUrl = ko.observable(self.staticURL);
 
 		self.calSvgOffX = ko.observable(0);
@@ -288,12 +289,16 @@ $(function () {
 			if ('beam_cam_new_image' in data) {
 				// update image
 				if (data['beam_cam_new_image']['undistorted_saved'] && ! self.cornerCalibrationActive()) {
-					if (! ['raw', 'lens_correction', 'cropped'].includes(self.picType()))
-						if (self.isInitialCalibration())
-							self.picType('raw');
-						else
-							self.picType('lens_correction');
-					else
+					var _d = data['beam_cam_new_image'];
+					self.availablePic(_d['available'])
+					if (! ['raw', 'lens_correction', 'cropped'].includes(self.picType())) {
+						for (_type of ['lens_correction', 'raw']) {
+							if (self.availablePic()[_type]) {
+								self.picType(_type);
+								break;
+							}
+						}
+					} else
 						self.calImgUrl(self.camera.getTimestampedImageUrl(self.calImgUrl()));
 
 					if (self.isInitialCalibration()) {

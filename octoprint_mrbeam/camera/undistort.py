@@ -75,6 +75,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
                  zoomed_out=False,
                  debug_out=False,
                  undistorted=False,
+                 saveRaw=False,
                  blur=7,
                  custom_pic_settings=None,
                  stopEvent=None,
@@ -112,9 +113,10 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 		"""Saves the image in a folder along the given path"""
 		dbg_path = os.path.join(dirname(path_to_output_image), "debug", name + ".jpg")
 		_mkdir(dirname(dbg_path))
-		cv2.imwrite(dbg_path, img)
+		return cv2.imwrite(dbg_path, img) == 0
 
 	err = None
+	savedPics = {'raw': False, 'lens_corrected': False, 'cropped': False}
 
 	if type(input_image) is str:
 		# check image path
@@ -124,14 +126,14 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 		if not isfile(input_image):
 			no_Image_error_String = 'Could not find a picture under path: <{}>'.format(input_image)
 			logger.error(no_Image_error_String)
-			return None, None, None, no_Image_error_String, {}
+			return None, None, None, no_Image_error_String, {}, savedPics
 
 		# load image
 		img = cv2.imread(input_image, cv2.IMREAD_COLOR) #BGR
 		if img is None:
 			err = 'Could_not_load_Image-_Please_check_Camera_and_-path_to_image'
 			logger.error(err)
-			return None, None, None, err, {}
+			return None, None, None, err, {}, savedPics
 	elif type(input_image) is np.ndarray:
 		logger.debug('Starting to prepare Image. \ninput: <{} shape arr> - output: <{}>\ncam dist : <{}>\ncam matrix: <{}>\noutput_img_size:{} - quality:{} - debug_out:{}'.format(
 				input_image.shape, path_to_output_image, cam_dist, cam_matrix,
@@ -140,16 +142,15 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	else:
 		raise ValueError("path_to_input_image-_in_camera_undistort_needs_to_be_a_path_(string)_or_a_numpy_array")
 
-	if debug_out: save_debug_img(img, "raw")
-
+	if debug_out or saveRaw:
+		savedPics['raw'] = save_debug_img(img, "raw")
 	if cam_dist is not None and cam_matrix is not None:
 		# undistort image with cam_params
 		img = _undistortImage(img, cam_dist, cam_matrix)
+		if debug_out or undistorted:
+			savedPics['lens_corrected'] = save_debug_img(img, "undistorted")
 
-	if debug_out or undistorted:
-		save_debug_img(img, "undistorted")
-
-	if stopEvent and stopEvent.isSet(): return None, None, None, STOP_EVENT_ERR, {}
+	if stopEvent and stopEvent.isSet(): return None, None, None, STOP_EVENT_ERR, {}, savedPics
 
 	# search markers on undistorted pic
 	dbg_markers = os.path.join(dirname(path_to_output_image), "debug", ".jpg")
@@ -175,7 +176,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	# if len(missed) > 1 and len(markers) == 4:  # elif # filter out None values
 	#     err = 'BAD_QUALITY:Too few markers (circles) recognized.'
 	#     logger.debug(err)
-	#     return None, markers, missed, err, outputPoints
+	#     return None, markers, missed, err, outputPoints, savedPics
 	# elif len(missed) == 1 and len(markers) == 4:
 	if len(missed) > 1 and len(markers) == 4:
 		err = "Missed marker %s" % missed
@@ -183,9 +184,9 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	elif len(markers) < 4:
 		err = "Missed marker(s) %s, no(t enough) history to guess missing marker position(s)" % missed
 		logger.warning(err)
-		return None, markers, missed, err, outputPoints
+		return None, markers, missed, err, outputPoints, savedPics
 
-	if stopEvent and stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR, outputPoints
+	if stopEvent and stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR, outputPoints, savedPics
 
 	if debug_out: save_debug_img(_debug_drawMarkers(img, markers), "drawmarkers")
 
@@ -198,13 +199,13 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 		else:
 			_pic_settings = pic_settings
 	else:
-		return None, markers, missed, ERR_NEED_CALIB, outputPoints
+		return None, markers, missed, ERR_NEED_CALIB, outputPoints, savedPics
 
 	for k in [CALIB_MARKERS_KEY, CORNERS_KEY]:
 		if not (k in _pic_settings and _isValidQdDict(_pic_settings[k])):
 			_pic_settings[k] = None
 			logger.warning(ERR_NEED_CALIB)
-			return None, markers, missed, ERR_NEED_CALIB, outputPoints
+			return None, markers, missed, ERR_NEED_CALIB, outputPoints, savedPics
 	# get corners of working area
 	workspaceCorners = {qd: markers[qd] - _pic_settings[CALIB_MARKERS_KEY][qd][::-1] + _pic_settings[CORNERS_KEY][qd][::-1] for qd in QD_KEYS}
 	logger.debug("Workspace corners \nNW % 14s  NE % 14s\nSW % 14s  SE % 14s"
@@ -215,18 +216,19 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	warpedImg = _warpImgByCorners(img, workspaceCorners, zoomed_out)
 	if debug_out: save_debug_img(warpedImg, "colorwarp")
 
-	if stopEvent and stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR, outputPoints
+	if stopEvent and stopEvent.isSet(): return None, markers, missed, STOP_EVENT_ERR, outputPoints, savedPics
 
 	# resize and do NOT make greyscale, then save it
 	# cv2.imwrite(filename=path_to_output_image,
 	#             img=cv2.resize(warpedImg, size),
 	#             params=[int(cv2.IMWRITE_JPEG_QUALITY), quality])
 	# resize and MAKE greyscale, then save it
-	cv2.imwrite(filename=path_to_output_image,
-                img=cv2.cvtColor(cv2.resize(warpedImg, size), cv2.COLOR_BGR2GRAY),
-                params=[int(cv2.IMWRITE_JPEG_QUALITY), quality])
+	retval = cv2.imwrite(filename=path_to_output_image,
+	                     img=cv2.cvtColor(cv2.resize(warpedImg, size), cv2.COLOR_BGR2GRAY),
+	                     params=[int(cv2.IMWRITE_JPEG_QUALITY), quality])
+	if retval == 0: savedPics['cropped'] = True
 
-	return workspaceCorners, markers, missed, err, outputPoints
+	return workspaceCorners, markers, missed, err, outputPoints, savedPics
 
 #@logtime()
 def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1, min_pix=MIN_MARKER_PIX):

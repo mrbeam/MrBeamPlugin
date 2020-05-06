@@ -449,7 +449,9 @@ class PhotoCreator(object):
 			color = {}
 			marker_size = {}
 			# NOTE -- prepareImage is bloat, TODO spill content here
-			workspaceCorners, markers, missed, err, analytics = prepareImage(
+			saveRaw = True
+			saveLensCorrected = True
+			workspaceCorners, markers, missed, err, analytics, savedPics = prepareImage(
 				input_image=latest,
 				path_to_output_image=self.tmp_img_prepared,
 				pic_settings=pic_settings,
@@ -460,7 +462,8 @@ class PhotoCreator(object):
 				quality=quality,
 				zoomed_out=self.zoomed_out,
 				debug_out=self.save_debug_images,  # self.save_debug_images,
-				undistorted=True,
+				undistorted=saveLensCorrected,
+				saveRaw=saveRaw,
 				stopEvent=self.stopEvent,
 				min_pix_amount=self._settings.get(['cam', 'markerRecognitionMinPixel']),
 				threads=4
@@ -481,6 +484,7 @@ class PhotoCreator(object):
 				'avg_color': color,
 				'marker_px_size': marker_size,
 				'error': err,
+				'available': savedPics
 			}
 			# Send result to fronted ASAP
 			if success:

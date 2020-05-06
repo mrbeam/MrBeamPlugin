@@ -80,9 +80,12 @@
 			<div data-bind="css: {complete: cornerCalibrationComplete()}">
 				<div id="calibration_picture_control" style="position: fixed;right: 0;top: 30vh;padding: 1em;border: 1px solid gray;" data-bind="visible: isInitialCalibration()">
 					Picture:<br />
-					<input type="radio" name="picture_type" value="raw" data-bind="checked: picType" /> Raw<br />
-					<input type="radio" name="picture_type" value="lens_correction" data-bind="checked: picType" /> Lens corrected<br />
-					<input type="radio" name="picture_type" value="cropped" data-bind="checked: picType" /> Cropped<br />
+					<input type="radio" name="picture_type" value="raw"
+						   data-bind="checked: picType, attr: { disabled: !availablePic()['raw'] }" /> Raw<br />
+					<input type="radio" name="picture_type" value="lens_correction"
+						   data-bind="checked: picType, attr: { disabled: !availablePic()['lens_correction'] }" /> Lens corrected<br />
+					<input type="radio" name="picture_type" value="cropped"
+						   data-bind="checked: picType, attr: { disabled: !availablePic()['cropped'] }" /> Cropped<br />
 					<br/>
 					Zoom: <span data-bind="text: calSvgScale" ></span> <br/>
 					<button class="btn-default" data-bind="click: smaller">-</button><button class="btn-default" data-bind="click: larger">+</button>
