@@ -342,9 +342,8 @@ $(function () {
 		}
 
 		self.saveRawPicSuccess = function(response) {
-			_tmp = self.rawPics()
-			_tmp.push(response['url'])
-			self.rawPics(_tmp)
+			var urlList = response.split(':');
+			self.rawPics(urlList)
 		}
 
 		self.saveRawPicError= function() {
@@ -354,6 +353,22 @@ $(function () {
 				type: "warning",
 				hide: true
 			});
+		}
+
+		self.rawPicSelectOptions = ko.computed(function() {
+			ret = []
+            for (let i = 0; i < self.rawPics().length; i++) {
+                let obj = {
+                    id: self.rawPics()[i],
+                    name: "Picture " + i
+                };
+                ret.push(obj);
+			}
+			return ret
+		})
+
+		self.raw_pic_selection_changed = function(val) {
+			console.log("Selected picture " + val)
 		}
 
 		self.engrave_markers = function () {
@@ -519,6 +534,10 @@ $(function () {
 			} else {
 				console.error('no element with id' + target_id);
 			}
+		};
+
+		self.runLensCalibration = function() {
+			return
 		};
 
 		self.simpleApiCommand = function(command, data, successCallback, errorCallback, type) {

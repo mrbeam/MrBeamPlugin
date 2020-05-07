@@ -28,7 +28,8 @@
 	<div>
 		<div>
 			<a class="accordion-toggle" data-bind="click:loadUndistortedPicture"><i class="icon-repeat"></i> {{ _('refresh') }}</a>
-			<div class="marker_selection_desc calibration_waiting_for_picture" >
+			<div class="marker_selection_desc calibration_waiting_for_picture"
+			     data-bind="visible: !lensCalibrationActive()">
 				<div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['NW'] }"><i class="icon-ok"></i> NW</div>
 				<div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['SW'] }"><i class="icon-ok"></i> SW</div>
 				<div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['SE'] }"><i class="icon-ok"></i> SE</div>
@@ -112,6 +113,12 @@
 
 					</div>
 				</div>
+				<!-- Lens calibration -->
+				<div data-bind="visible: lensCalibrationActive()">
+					<select id="raw_pic_select"
+							data-bind="options: rawPicSelectOptions(), optionsText: 'name', optionsValue: 'id', event: { change: raw_pic_selection_changed }"></select>
+
+				</div>
 				<!-- Corner calibration -->
 				<div data-bind="visible: cal_img_ready() && cornerCalibrationActive()">
 					<div id="NW" class="cal-row"><div class="cal-arrow NW"></div> North West: <span data-bind="text: __format_point(currentResults()['NW'])"></span></div>
@@ -127,6 +134,7 @@
 				<button class="btn btn-default" data-bind="click: saveCornerCalibrationData, visible: cornerCalibrationComplete()">{{ _('Save Calibration') }}</button>
 				<!-- Lens calibration -->
 				<button class="btn btn-default" data-bind="click: saveRawPic, visible: lensCalibrationActive()">{{ _('Save Chessboard Picture') }}</button>
+				<button class="btn btn-warning" data-bind="click: runLensCalibration, visible: lensCalibrationActive() && rawPics().length > 8">{{ _('Run Lens Calibration') }}</button>
 				<!-- Cancel -->
 				<button class="btn btn-warning" data-bind="click: abortCalibration, visible: cornerCalibrationActive() || lensCalibrationActive()">{{ _('Cancel') }}</button>
 			</div>

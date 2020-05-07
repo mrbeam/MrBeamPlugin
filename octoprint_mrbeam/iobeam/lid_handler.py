@@ -223,7 +223,7 @@ class LidHandler(object):
 		imgName= 'tmp_raw_img_%i.jpg' % len(self.savedRawImages)
 		# TODO debug/raw.jpg -> copy image over
 		self.savedRawImages.append(imgName)
-		return "/downloads/files/local/cam/debug/%s" % imgName
+		return self.savedRawImages
 
 class PhotoCreator(object):
 	def __init__(self, _plugin, _plugin_manager, path, debug=False):

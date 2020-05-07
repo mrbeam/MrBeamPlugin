@@ -956,7 +956,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	@octoprint.plugin.BlueprintPlugin.route("/calibration_save_raw_pic", methods=["GET"])
 	def onCalibrationSaveRawPic(self):
-		return self.lid_handler.saveRawImg()
+		return ':'.join(self.lid_handler.saveRawImg())
 		# return make_response("testurl", 200)
 
 	@octoprint.plugin.BlueprintPlugin.route("/send_calibration_markers", methods=["POST"])
