@@ -961,7 +961,8 @@ $(function(){
 				for (let i = 0; i < parts.length; i++) {
 	
 					const name = elem.name + "."+(i+1);
-					let file = {url: elem.url, origin: elem.origin, name: name, type: "split", refs:{download: elem.url}};
+					let tp = Array.prototype.concat(elem.typePath, 'split')
+					let file = {url: elem.url, origin: elem.origin, name: name, typePath: tp, type: "split", refs:{download: elem.url}};
 					const id = self.getEntryId();
 					const previewId = self.generateUniqueId(id, file);
 					let fragment = parts[i];
@@ -2107,7 +2108,7 @@ $(function(){
 
 		self.check_sizes_and_placements = function(){
 			ko.utils.arrayForEach(self.placedDesigns(), function(design) {
-				if(design.type == 'model' || design.type == 'quicktext' || design.type == 'quickshape'){
+				if(design.type == 'model' || design.type == 'quicktext' || design.type == 'quickshape' || design.type == 'recentjob'){
 					var svg = snap.select('#' + design.previewId);
 					var misfitting = self.outsideWorkingArea(svg);
 					self._mark_as_misfit(design, misfitting, svg);

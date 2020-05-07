@@ -608,7 +608,8 @@
 										<circle r="0.5" cy="0" cx="0" />
 										<path d="M-15,0H-5M15,0H5M0,15V5M0,-15V-5" />
 									</g>
-									<g id="camera_markers" fill="#ffffff" stroke="#ff00ff" stroke-width="5">
+									<g id="camera_markers" fill="#ffffff" stroke="#ff00ff" stroke-width="5"
+									   data-bind="attr: { class: camera.markerMissedClass() }">
                                         <circle id="markerNW" r="5" cx="7" cy="7">
                                             <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera. Try to close and reopen the lid.') }}</title>
                                         </circle>

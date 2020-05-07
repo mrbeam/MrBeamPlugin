@@ -60,6 +60,14 @@ $(function(){
             else return 'none';
         });
 
+        self.markerMissedClass = ko.computed(function() {
+            var ret = '';
+            MARKERS.forEach(function(m){
+                if (!(self.markersFound()[m] === undefined) && !self.markersFound()[m])
+                    ret = ret + ' marker' + m;
+            });
+            return ret;
+        })
 
         self.onDataUpdaterPluginMessage = function(plugin, data) {
             if (plugin !== "mrbeam" || !data) return;
@@ -69,10 +77,8 @@ $(function(){
                 MARKERS.forEach(function(m) {
                     if(mf.includes(m)) {
                         _markersFound[m] = true;
-                        self.cameraMarkerElem.removeClass('marker' + m);
                     } else {
                         _markersFound[m] = false;
-                        self.cameraMarkerElem.addClass('marker' + m);
                     }
                 });
                 self.markersFound(_markersFound);

@@ -14,7 +14,8 @@ $(function () {
         self.channel_display_names = {
             "PROD": gettext('Stable'),
             "BETA": gettext('Beta'),
-            "DEV": gettext('Develop')
+            "DEV": gettext('Develop'),
+            "DESIGN_STORE": "Design Store"
         };
 
         self.onAllBound = function () {
