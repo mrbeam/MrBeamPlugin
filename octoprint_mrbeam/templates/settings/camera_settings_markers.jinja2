@@ -54,7 +54,7 @@
 		</div>
 		<!-- Corner calibration -->
 		<div class="marker_selection_desc calibration_help"
-			 data-bind="visible: cal_img_ready() && !cornerCalibrationActive() && !lensCalibrationActive()">
+			 data-bind="visible: cal_img_ready() && !cornerCalibrationActive() && !lensCalibrationActive() && availablePic()['lens_correction']">
 			<div>{{_('Click on the arrow head of the marker in the magnified picture.') }}<br/>
 			{{_('Continue with the other markers as the picture changes.') }}<br/>
 			{{_('Once all arrowheads are marked the calibration is finished.')}}</div>
@@ -75,7 +75,6 @@
 				</div>
 			</div>
 			<div style="margin-top:1em;">
-				{# TODO do not show "start calibration button when no lens calibration was previously made #}
 				<button class="btn btn-default" data-bind="click: startCornerCalibration">{{ _('Start Calibration') }}</button>
 			</div>
 		</div>
