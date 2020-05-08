@@ -86,6 +86,7 @@ $(function () {
 		});
 
 		self.rawPics = ko.observable([])
+		self.lensCalibrationRunning = ko.observable(false);
 		self.markersFoundPosition = ko.observable({});
 
 		self.__format_point = function(p){
@@ -368,7 +369,17 @@ $(function () {
 		})
 
 		self.raw_pic_selection_changed = function(val) {
-			console.log("Selected picture " + val)
+			pic = $('#raw_pic_select :selected').text()
+			console.log("Selected picture -- " + pic)
+		}
+
+		self.runLensCalibration = function() {
+			self.lensCalibrationRunning(true);
+		};
+
+		self.lensCalibrationSuccess = function() {
+			self.lensCalibrationRunning(false);
+			self.lensCalibrationActive(false);
 		}
 
 		self.engrave_markers = function () {
@@ -513,8 +524,6 @@ $(function () {
 			self.loadUndistortedPicture(self.next);
 		};
 
-
-
 		self.next = function () {
 			var current = $('.calibration_step.active');
 			current.removeClass('active');
@@ -534,10 +543,6 @@ $(function () {
 			} else {
 				console.error('no element with id' + target_id);
 			}
-		};
-
-		self.runLensCalibration = function() {
-			return
 		};
 
 		self.simpleApiCommand = function(command, data, successCallback, errorCallback, type) {

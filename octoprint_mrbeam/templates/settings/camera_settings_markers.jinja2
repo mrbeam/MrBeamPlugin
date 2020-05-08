@@ -116,7 +116,7 @@
 				<div data-bind="visible: lensCalibrationActive()">
 					<select id="raw_pic_select"
 							data-bind="options: rawPicSelectOptions(), optionsText: 'name', optionsValue: 'id', event: { change: raw_pic_selection_changed }"></select>
-
+					<i class="icon-spinner icon-spin" data-bind="visible: lensCalibrationRunning"></i>
 				</div>
 				<!-- Corner calibration -->
 				<div data-bind="visible: cal_img_ready() && cornerCalibrationActive()">
