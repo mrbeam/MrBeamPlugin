@@ -86,6 +86,8 @@ $(function () {
 		});
 
 		self.rawPics = ko.observable([])
+		self.rawPicSelection = ko.observableArray([])
+
 		self.lensCalibrationRunning = ko.observable(false);
 		self.markersFoundPosition = ko.observable({});
 
@@ -233,6 +235,7 @@ $(function () {
 		self.onStartupComplete = function () {
 			if(self.isInitialCalibration()){
 				self.loadUndistortedPicture();
+				self.refreshPics();
 			}
 		};
 
@@ -333,7 +336,7 @@ $(function () {
 					type: "GET",
 					url: '/plugin/mrbeam/calibration_save_raw_pic',
 					data: {},
-					success: self.saveRawPicSuccess,
+					success: self.rawPicSuccess,
 					error: self.saveRawPicError
 				});
 			// self.simpleApiCommand( "calibration_save_raw_pic",
@@ -342,14 +345,33 @@ $(function () {
 			// 					   self.saveRawPicError);
 		}
 
-		self.saveRawPicSuccess = function(response) {
-			var urlList = response.split(':');
-			self.rawPics(urlList)
+		self.delRawPic = function() {
+			var id = this['id']
+			self.simpleApiCommand("calibration_delete_raw_pic",
+								  {name: id},
+								  self.refreshPics,
+								  self.delRawPicError,
+								  "POST");
 		}
 
-		self.saveRawPicError= function() {
+		self.refreshPics = function() {
+				$.ajax({
+					type: "GET",
+					url: '/plugin/mrbeam/calibration_get_raw_pic',
+					data: {},
+					success: self.rawPicSuccess,
+					error: self.getRawPicError
+				});
+		}
+
+		self.rawPicSuccess = function(response) {self.rawPics(response.split(':'))}
+		self.saveRawPicError = function() {self.rawPicError(gettext("Failed to save the latest image."))}
+		self.delRawPicError  = function() {self.rawPicError(gettext("Failed to delete the latest image."))}
+		self.getRawPicError  = function() {self.rawPicError(gettext("Failed to refresh the list of images."))}
+
+		self.rawPicError= function(err) {
 			new PNotify({
-				title: gettext("Failed to save the latest image."),
+				title: err,
 				text: gettext("...and I have no clue why. Sorry."),
 				type: "warning",
 				hide: true
@@ -357,21 +379,15 @@ $(function () {
 		}
 
 		self.rawPicSelectOptions = ko.computed(function() {
-			ret = []
+			self.rawPicSelection.removeAll()
+			if (self.rawPics().length == 1 && self.rawPics()[0] === "") return;
             for (let i = 0; i < self.rawPics().length; i++) {
-                let obj = {
+                self.rawPicSelection.push({
                     id: self.rawPics()[i],
                     name: "Picture " + i
-                };
-                ret.push(obj);
+                });
 			}
-			return ret
 		})
-
-		self.raw_pic_selection_changed = function(val) {
-			pic = $('#raw_pic_select :selected').text()
-			console.log("Selected picture -- " + pic)
-		}
 
 		self.runLensCalibration = function() {
 			self.lensCalibrationRunning(true);
@@ -492,15 +508,20 @@ $(function () {
 		};
 
 		self.abortCalibration = function () {
-			self.cornerCalibrationActive(false);
-			self.lensCalibrationActive(false);
-			new PNotify({
-				title: gettext("Calibration cancelled."),
-				text: gettext("Feel free to restart"),
-				type: "info",
-				hide: true
-			});
-			self.reset_calibration();
+			if (self.cornerCalibrationActive()) {
+				self.cornerCalibrationActive(false);
+				self.rawPics([])
+			}
+			if (self.lensCalibrationActive(false)) {
+					self.lensCalibrationActive(false);
+				new PNotify({
+					title: gettext("Calibration cancelled."),
+					text: gettext("Feel free to restart"),
+					type: "info",
+					hide: true
+				});
+				self.reset_corner_calibration();
+			}
 		};
 
 		self.resetView = function () {
@@ -511,7 +532,7 @@ $(function () {
 			self.currentMarker = 0;
 		};
 
-		self.reset_calibration = function () {
+		self.reset_corner_calibration = function () {
 			self.resetView();
 			self.markersFoundPosition({});
 			self.currentResults({});

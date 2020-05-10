@@ -26,7 +26,7 @@
         </g>
 	</svg>
 	<div>
-		<div>
+		<div style="margin-bottom:1em;">
 			<a class="accordion-toggle" data-bind="click:loadUndistortedPicture"><i class="icon-repeat"></i> {{ _('refresh') }}</a>
 			<div class="marker_selection_desc calibration_waiting_for_picture"
 			     data-bind="visible: !lensCalibrationActive()">
@@ -113,11 +113,20 @@
 					</div>
 				</div>
 				<!-- Lens calibration -->
-				<div data-bind="visible: lensCalibrationActive()">
-					<select id="raw_pic_select"
-							data-bind="options: rawPicSelectOptions(), optionsText: 'name', optionsValue: 'id', event: { change: raw_pic_selection_changed }"></select>
-					<i class="icon-spinner icon-spin" data-bind="visible: lensCalibrationRunning"></i>
+				<div data-bind="visible: lensCalibrationActive(), foreach: rawPicSelection">
+					<li style="list-style-type: none;">
+						<label style="display: inline;">
+							<button class="btn btn-default" data-bind="click: $parent.showRawPic">
+								<i class="icon-eye-open"></i>
+							</button>
+							<span data-bind="text: name" style="font-weight: bold;"></span>
+						</label>
+						<button class="btn btn-warning" data-bind="click: $parent.delRawPic">
+							<i  class="icon-trash"></i> {{ _('Remove') }}
+						</button>
+					</li>
 				</div>
+				<i class="icon-spinner icon-spin" data-bind="visible: lensCalibrationRunning"></i>
 				<!-- Corner calibration -->
 				<div data-bind="visible: cal_img_ready() && cornerCalibrationActive()">
 					<div id="NW" class="cal-row"><div class="cal-arrow NW"></div> North West: <span data-bind="text: __format_point(currentResults()['NW'])"></span></div>
@@ -130,12 +139,12 @@
 				<!-- Corner calibration -->
 				<button class="btn btn-default" data-bind="click: previousMarker, visible: cornerCalibrationActive()">{{ _('Previous') }}</button>
 				<button class="btn btn-default" data-bind="click: nextMarker, visible: cornerCalibrationActive()">{{ _('Next') }}</button>
-				<button class="btn btn-default" data-bind="click: saveCornerCalibrationData, visible: cornerCalibrationComplete()">{{ _('Save Calibration') }}</button>
+				<button class="btn btn-success" data-bind="click: saveCornerCalibrationData, visible: cornerCalibrationComplete()">{{ _('Save Calibration') }}</button>
 				<!-- Lens calibration -->
-				<button class="btn btn-default" data-bind="click: saveRawPic, visible: lensCalibrationActive()">{{ _('Save Chessboard Picture') }}</button>
-				<button class="btn btn-warning" data-bind="click: runLensCalibration, visible: lensCalibrationActive() && rawPics().length > 8">{{ _('Run Lens Calibration') }}</button>
+				<button class="btn btn-default" data-bind="click: saveRawPic, visible: lensCalibrationActive()">{{ _('Save new Chessboard Picture') }}</button>
+				<button class="btn btn-success" data-bind="click: runLensCalibration, visible: lensCalibrationActive() && rawPics().length > 8">{{ _('Run Lens Calibration') }}</button>
 				<!-- Cancel -->
-				<button class="btn btn-warning" data-bind="click: abortCalibration, visible: cornerCalibrationActive() || lensCalibrationActive()">{{ _('Cancel') }}</button>
+				<button class="btn btn-warning" data-bind="click: abortCalibration, visible: cornerCalibrationActive() || lensCalibrationActive()"><i class="icon-fixed-width icon-ban-circle"></i> {{ _('Cancel') }}</button>
 			</div>
 		</div>
 	</div>

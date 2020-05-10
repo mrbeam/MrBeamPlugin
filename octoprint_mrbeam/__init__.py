@@ -957,7 +957,25 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@octoprint.plugin.BlueprintPlugin.route("/calibration_save_raw_pic", methods=["GET"])
 	def onCalibrationSaveRawPic(self):
 		return ':'.join(self.lid_handler.saveRawImg())
-		# return make_response("testurl", 200)
+
+	@octoprint.plugin.BlueprintPlugin.route("/calibration_get_raw_pic", methods=["GET"])
+	def onCalibrationGetRawPic(self):
+		return ':'.join(self.lid_handler.getRawImg())
+
+	@octoprint.plugin.BlueprintPlugin.route("/calibration_delete_raw_pic", methods=["POST"])
+	def onCalibrationDelRawPic(self):
+		try:
+			json_data = request.json
+		except JSONBadRequest:
+			return make_response("Malformed JSON body in request", 400)
+
+		self._logger.debug("INITIAL camera_calibration_markers() data: {}".format(json_data))
+
+		if not "name" in json_data.keys():
+			return make_response("No profile included in request", 400)
+
+		self.lid_handler.delRawImg(json_data['name'])
+		return NO_CONTENT
 
 	@octoprint.plugin.BlueprintPlugin.route("/send_calibration_markers", methods=["POST"])
 	# @firstrun_only_access #@maintenance_stick_only_access

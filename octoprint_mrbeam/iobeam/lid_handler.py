@@ -219,10 +219,20 @@ class LidHandler(object):
 		if self._photo_creator is not None:
 			self._photo_creator.zoomed_out = compensate
 
+	def getRawImg(self):
+		return self.savedRawImages
+
 	def saveRawImg(self):
 		imgName= 'tmp_raw_img_%i.jpg' % len(self.savedRawImages)
 		# TODO debug/raw.jpg -> copy image over
+		# TODO careful when deleting pic + setting new name -> hash
 		self.savedRawImages.append(imgName)
+		return self.savedRawImages
+
+	def delRawImg(self, name):
+		self._logger.warning("Trying to delete : %s" % name)
+		# TODO debug/name -> Delete image
+		self.savedRawImages.remove(name)
 		return self.savedRawImages
 
 class PhotoCreator(object):
