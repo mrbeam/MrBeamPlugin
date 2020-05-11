@@ -59,8 +59,14 @@
 											</div>
 											<div class="collapse" id="wa_view_settings_body">
 												<div class="accordion-inner">
+                                                    <div>
+														<button type="button"
+{#															   style="width:80%;"#}
+															   class=""
+                                                               data-bind="click: camera.capture_img_for_analytics">Send image to Mr Beam</button>
+													</div>
 													<div data-bind="style: { display: camera.imgResolutionNoticeDisplay() }">
-													<span style="font-weight: bold">Low</span> Picture Quality
+													    <span style="font-weight: bold">Low</span> Picture Quality
 														<span class="muted">
 															- Open the lid and keep your hands off the working area
 															for a few seconds to receive a higher resolution image

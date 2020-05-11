@@ -1,13 +1,8 @@
 import argparse
 import textwrap
-from collections import Iterable, Mapping
-from copy import copy
+from collections import Mapping
 from threading import Event
-from types import NoneType
-# from typing import Union
-from itertools import chain
 from multiprocessing import Pool
-from fractions import Fraction
 from numpy.linalg import norm
 
 from octoprint_mrbeam.camera import RESOLUTIONS, QD_KEYS, PICAMERA_AVAILABLE
@@ -74,6 +69,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
                  quality=90,
                  zoomed_out=False,
                  debug_out=False,
+                 analytics_callback=None,
                  undistorted=False,
                  blur=7,
                  custom_pic_settings=None,
@@ -148,6 +144,8 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 
 	if debug_out or undistorted:
 		save_debug_img(img, "undistorted")
+	if analytics_callback:
+		analytics_callback(img)
 
 	if stopEvent and stopEvent.isSet(): return None, None, None, STOP_EVENT_ERR, {}
 

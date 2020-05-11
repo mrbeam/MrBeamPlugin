@@ -124,6 +124,10 @@ class LidHandler(object):
 		if self._photo_creator is not None:
 			self._photo_creator.send_pic_asap()
 
+	def capture_last_img_for_analytics(self):
+		if self._photo_creator:
+			self._photo_creator.capture_last_img_for_analytics()
+
 	def _printerStateChanged(self, event, payload):
 		if payload['state_string'] == 'Operational':
 			# TODO CHECK IF CLIENT IS CONNECTED FOR REAL, with PING METHOD OR SIMILAR
@@ -241,6 +245,9 @@ class PhotoCreator(object):
 		self._front_ready = Event()
 		self.last_correction_result = None
 		self.worker = None
+		self._capture_next_img_to_analytics = False
+		self._capture_img = None
+		
 		if debug:
 			self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator", logging.DEBUG)
 		else:
@@ -286,6 +293,7 @@ class PhotoCreator(object):
 		if blocking and self.worker is not None and self.worker.is_alive():
 			self.worker.join()
 		self.active = False
+		self._capture_img = None
 
 	@property
 	def stopping(self):
@@ -297,50 +305,54 @@ class PhotoCreator(object):
 		self.start(pic_settings=pic_settings, cam_params=cam_params, out_pic_size=out_pic_size, blocking=blocking)
 
 	def work(self, pic_settings=None, cam_params=None, out_pic_size=None, recurse_nb=0):
-		if self.is_initial_calibration:
-			self.save_debug_images = True
-
-		if not PICAMERA_AVAILABLE:
-			self._logger.warn("Camera disabled. Not all required modules could be loaded at startup. ")
-			self.stopEvent.set()
-			return
-
-		self._logger.debug("Starting the camera now.")
 		try:
-			with MrbCamera(octoprint_mrbeam.camera.MrbPicWorker(maxSize=2, debug=self.debug),
-                           # framerate=8,
-                           resolution=octoprint_mrbeam.camera.LEGACY_STILL_RES,  # TODO camera.DEFAULT_STILL_RES,
-                           stopEvent=self.stopEvent,) as cam:
-				self.serve_pictures(cam, pic_settings=pic_settings, cam_params=cam_params, out_pic_size=out_pic_size)
-			if recurse_nb > 0:
-				self._logger.info("Camera recovered")
-				self._analytics_handler.add_camera_session_details(exc.msgForAnalytics(exc.CAM_CONNRECOVER))
-		except exc.CameraConnectionException as e:
-			self._logger.warning(" %s, %s : %s" % (e.__class__.__name__, e, exc.msg(exc.CAM_CONN)),
-			                       analytics=exc.CAM_CONN)
-			if recurse_nb < MAX_PIC_THREAD_RETRIES:
-				self._logger.info("Restarting work() after some sleep")
-				self._plugin.user_notification_system.show_notifications(
-					self._plugin.user_notification_system.get_notification(
-						notification_id='warn_cam_conn_err',
-						replay=True))
-				self.stopEvent.clear()
-				if not self.stopEvent.wait(5.0):
-					self.work(recurse_nb=recurse_nb+1)
-			else:
-				self._logger.exception(" %s, %s : Recursive restart : too many times, displaying Error message." % (e.__class__.__name__, e),
+			if self.is_initial_calibration:
+				self.save_debug_images = True
+	
+			if not PICAMERA_AVAILABLE:
+				self._logger.warn("Camera disabled. Not all required modules could be loaded at startup. ")
+				self.stopEvent.set()
+				return
+	
+			self._logger.debug("Starting the camera now.")
+			try:
+				with MrbCamera(octoprint_mrbeam.camera.MrbPicWorker(maxSize=2, debug=self.debug),
+	                           # framerate=8,
+	                           resolution=octoprint_mrbeam.camera.LEGACY_STILL_RES,  # TODO camera.DEFAULT_STILL_RES,
+	                           stopEvent=self.stopEvent,) as cam:
+					self.serve_pictures(cam, pic_settings=pic_settings, cam_params=cam_params, out_pic_size=out_pic_size)
+				if recurse_nb > 0:
+					self._logger.info("Camera recovered")
+					self._analytics_handler.add_camera_session_details(exc.msgForAnalytics(exc.CAM_CONNRECOVER))
+			except exc.CameraConnectionException as e:
+				self._logger.warning(" %s, %s : %s" % (e.__class__.__name__, e, exc.msg(exc.CAM_CONN)),
 				                       analytics=exc.CAM_CONN)
-				self._plugin.user_notification_system.show_notifications(
-					self._plugin.user_notification_system.get_notification(
-						notification_id='err_cam_conn_err',
-						replay=True))
-			return
-		except Exception as e:
-			if e.__class__.__name__.startswith('PiCamera'):
-				self._logger.exception("PiCamera_Error_while_preparing_camera_%s_%s", e.__class__.__name__, e)
-			else:
-				self._logger.exception("Exception_while_preparing_camera_%s_%s", e.__class__.__name__, e)
-		self.stopEvent.set()
+				if recurse_nb < MAX_PIC_THREAD_RETRIES:
+					self._logger.info("Restarting work() after some sleep")
+					self._plugin.user_notification_system.show_notifications(
+						self._plugin.user_notification_system.get_notification(
+							notification_id='warn_cam_conn_err',
+							replay=True))
+					self.stopEvent.clear()
+					if not self.stopEvent.wait(5.0):
+						self.work(recurse_nb=recurse_nb+1)
+				else:
+					self._logger.exception(" %s, %s : Recursive restart : too many times, displaying Error message." % (e.__class__.__name__, e),
+					                       analytics=exc.CAM_CONN)
+					self._plugin.user_notification_system.show_notifications(
+						self._plugin.user_notification_system.get_notification(
+							notification_id='err_cam_conn_err',
+							replay=True))
+				return
+			except Exception as e:
+				if e.__class__.__name__.startswith('PiCamera'):
+					self._logger.exception("PiCamera_Error_while_preparing_camera_%s_%s", e.__class__.__name__, e)
+				else:
+					self._logger.exception("Exception_while_preparing_camera_%s_%s", e.__class__.__name__, e)
+			self.stopEvent.set()
+		except:
+			self._logger.exception("Exception in PhotoCreator thread: ")
+			
 
 	def serve_pictures(self, cam, pic_settings=None, cam_params=None, out_pic_size=None):
 		"""
@@ -460,6 +472,7 @@ class PhotoCreator(object):
 				quality=quality,
 				zoomed_out=self.zoomed_out,
 				debug_out=self.save_debug_images,  # self.save_debug_images,
+				analytics_callback=self.img_analytics_callback,
 				undistorted=True,
 				stopEvent=self.stopEvent,
 				min_pix_amount=self._settings.get(['cam', 'markerRecognitionMinPixel']),
@@ -553,7 +566,26 @@ class PhotoCreator(object):
 
 		except Exception as ex:
 			self._logger.exception('Exception_in-_save__s_for_analytics-_{}'.format(ex))
-
+	
+	def capture_last_img_for_analytics(self):
+		# self._capture_next_img_to_analytics = True
+		try:
+			if self._capture_img is not None:
+				tmp_copy = self._capture_img
+				self._capture_img = None
+				import cv2, base64
+				self._capture_next_img_to_analytics = False
+				retval, buffer = cv2.imencode('.jpg', tmp_copy, [int(cv2.IMWRITE_JPEG_QUALITY), 80])
+				jpg_as_text = base64.b64encode(buffer)
+				self._logger.info("ANDYTEST img (full - %s): %s", len(jpg_as_text), jpg_as_text)
+			else:
+				self._logger.info("ANDYTEST img: --")
+		except:
+			self._logger.exception("ANDYTEST img: EXCEPTION: ")
+	
+	def img_analytics_callback(self, img):
+		self._capture_img = img
+	
 	def _ready_to_send_pic(self, correction_result, force=False):
 		self.last_correction_result = correction_result
 		self._pic_available.set()
