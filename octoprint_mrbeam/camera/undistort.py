@@ -11,7 +11,7 @@ from fractions import Fraction
 from numpy.linalg import norm
 
 from octoprint_mrbeam.camera import RESOLUTIONS, QD_KEYS, PICAMERA_AVAILABLE
-import octoprint_mrbeam.camera as beamcam
+import octoprint_mrbeam.camera as camera
 from octoprint_mrbeam.util import dict_merge, logme, debug_logger, logExceptions, logtime
 
 CALIB_MARKERS_KEY = 'calibMarkers'
@@ -110,16 +110,11 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	else:
 		logger.setLevel(logging.WARNING)
 
-	#@logtime()
-	def save_debug_img(img, name):
-		"""Saves the image in a folder along the given path"""
-		dbg_path = os.path.join(dirname(path_to_output_image), "debug", name + ".jpg")
-		_mkdir(dirname(dbg_path))
-		return cv2.imwrite(dbg_path, img) == SUCCESS_WRITE_RETVAL
-
 	err = None
 	savedPics = {'raw': False, 'lens_corrected': False, 'cropped': False}
 
+	def save_debug_img(img, name):
+		camera.save_debug_img(img, name + ".jpg", folder=path.join(dirname(path_to_output_image), "debug"))
 	if type(input_image) is str:
 		# check image path
 		logger.debug('Starting to prepare Image. \ninput: <{}> - output: <{}>\ncam dist : <{}>\ncam matrix: <{}>\noutput_img_size:{} - quality:{} - debug_out:{}'.format(
@@ -144,8 +139,6 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	else:
 		raise ValueError("path_to_input_image-_in_camera_undistort_needs_to_be_a_path_(string)_or_a_numpy_array")
 
-	if debug_out or saveRaw:
-		savedPics['raw'] = save_debug_img(img, "raw")
 	if cam_dist is not None and cam_matrix is not None:
 		# undistort image with cam_params
 		img = _undistortImage(img, cam_dist, cam_matrix)
@@ -242,7 +235,7 @@ def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1, min
 		p = Pool(threads)
 		results = {}
 		brightness = None
-		for roi, pos, qd in beamcam.getRois(img):
+		for roi, pos, qd in camera.getRois(img):
 			brightness = np.average(roi)
 			# print("brightness of corner {} : {}".format(qd, brightness))
 			outputPoints[qd] = {'brightness': brightness} # Todo Ignore -> Tested in the MrbImgWorker
@@ -263,7 +256,7 @@ def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1, min
 		p.join()
 
 	else:
-		for roi, pos, qd in beamcam.getRois(img):
+		for roi, pos, qd in camera.getRois(img):
 			brightness = np.average(roi)
 			# print("brightness of corner {} : {}".format(qd, brightness))
 			outputPoints[qd] = {'brightness': brightness}

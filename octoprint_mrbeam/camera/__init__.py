@@ -6,10 +6,12 @@ from numpy.linalg import norm
 from itertools import chain
 from threading import Event
 from abc import ABCMeta, abstractmethod
+import os
+
 # Python 3 : use ABC instead of ABCMeta
+SUCCESS_WRITE_RETVAL = 1
 
-
-from octoprint_mrbeam.util import logtime
+from octoprint_mrbeam.util import logtime, logme
 
 try:
 	import picamera
@@ -269,3 +271,15 @@ def gaussBlurDiff(imageA, imageB, thresh=DIFF_TOLERANCE, blur=7, resize = 1):
 	images = np.asarray(images, dtype=np.int16) # No int overflow
 	diff = np.max(np.abs(np.diff(images, axis=0)))
 	return np.max(np.abs(np.diff(images, axis=0))) > thresh
+
+#@logtime()
+# @logme(True)
+def save_debug_img(img, path, folder=None):
+	"""Saves the image in a folder along the given path"""
+	if not folder:
+		folder = os.path.dirname(path)
+	else:
+		path = os.path.join(folder, path)
+	if folder and not os.path.exists(folder):
+		os.makedirs(folder)
+	return cv2.imwrite(path, img) == SUCCESS_WRITE_RETVAL

@@ -5,6 +5,7 @@ import time
 import threading
 from threading import Event
 import os
+from os import path
 import shutil
 import logging
 
@@ -14,7 +15,7 @@ from flask.ext.babel import gettext
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 # don't crash on a dev computer where you can't install picamera
-import octoprint_mrbeam.camera
+import octoprint_mrbeam.camera as camera
 from octoprint_mrbeam.camera import gaussBlurDiff, QD_KEYS, PICAMERA_AVAILABLE
 from octoprint_mrbeam.util import json_serialisor, logme
 import octoprint_mrbeam.camera.exc as exc
@@ -35,6 +36,7 @@ MAX_PIC_THREAD_RETRIES = 2
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrb_logger import mrb_logger
+import octoprint_mrbeam
 
 # singleton
 _instance = None
@@ -63,14 +65,19 @@ class LidHandler(object):
 		self._is_slicing = False
 		self._client_opened = False
 
+		self.force_taking_picture = Event()
+		self.force_taking_picture.clear()
+
+
 		if PICAMERA_AVAILABLE:
-			imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
+			self.imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
 			self._photo_creator = PhotoCreator(self._plugin,
                                                self._plugin_manager,
-                                               imagePath,
+                                               self.imagePath,
                                                debug=False)
 		else:
 			self._photo_creator = None
+			self.imagePath = None
 		self.refresh_pic_settings = Event() # TODO placeholder for when we delete PhotoCreator
 
 		self._analytics_handler = self._plugin.analytics_handler
@@ -224,16 +231,42 @@ class LidHandler(object):
 
 	def saveRawImg(self):
 		imgName= 'tmp_raw_img_%i.jpg' % len(self.savedRawImages)
+		self._logger.warning("Saving new picture %s" % imgName)
 		# TODO debug/raw.jpg -> copy image over
 		# TODO careful when deleting pic + setting new name -> hash
-		self.savedRawImages.append(imgName)
+		if self._photo_creator and \
+		   self._photo_creator.active and \
+		   not self._photo_creator.stopping:
+			self._photo_creator.saveRaw = imgName
+			self.takeNewPic()
+			self.savedRawImages.append(imgName)
 		return self.savedRawImages
 
+	@logme(True)
 	def delRawImg(self, name):
 		self._logger.warning("Trying to delete : %s" % name)
 		# TODO debug/name -> Delete image
-		self.savedRawImages.remove(name)
+		myPath  = path.join(path.dirname(self.imagePath),"debug",name)
+		try:
+			os.remove(myPath)
+		except OSError as e:
+			self._logger.warning("Error trying to delete file: %s\n%s, %s" % (myPath,e, e.msg))
+		finally:
+			self.savedRawImages.remove(name)
 		return self.savedRawImages
+
+	def takeNewPic(self):
+		"""Forces agent to take a new picture."""
+		if self.force_taking_picture.isSet():
+			self._logger.warning("Already analysing a picture, please wait")
+		else:
+			self._logger.warning("Force take new picture.")
+			if self._photo_creator and \
+			self._photo_creator.active and \
+			not self._photo_creator.stopping:
+				self._photo_creator.forceNewPic.set()
+
+
 
 class PhotoCreator(object):
 	def __init__(self, _plugin, _plugin_manager, path, debug=False):
@@ -256,8 +289,10 @@ class PhotoCreator(object):
 		self.undistorted_pic_path = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(['cam', 'localUndistImage'])
 		self.debug = debug
 		self._front_ready = Event()
+		self.forceNewPic = Event()
 		self.last_correction_result = None
 		self.worker = None
+		self.saveRaw = True
 		if debug:
 			self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator", logging.DEBUG)
 		else:
@@ -324,9 +359,9 @@ class PhotoCreator(object):
 
 		self._logger.debug("Starting the camera now.")
 		try:
-			with MrbCamera(octoprint_mrbeam.camera.MrbPicWorker(maxSize=2, debug=self.debug),
+			with MrbCamera(camera.MrbPicWorker(maxSize=2, debug=self.debug),
                            # framerate=8,
-                           resolution=octoprint_mrbeam.camera.LEGACY_STILL_RES,  # TODO camera.DEFAULT_STILL_RES,
+                           resolution=camera.LEGACY_STILL_RES,  # TODO camera.DEFAULT_STILL_RES,
                            stopEvent=self.stopEvent,) as cam:
 				self.serve_pictures(cam, pic_settings=pic_settings, cam_params=cam_params, out_pic_size=out_pic_size)
 			if recurse_nb > 0:
@@ -429,8 +464,22 @@ class PhotoCreator(object):
 			# TODO start capture with different brightness if we think we need it
 			#     TODO apply shutter speed adjustment from preliminary measurements
 
+			if self.saveRaw:
+				if isinstance(self.saveRaw, str):
+					if camera.save_debug_img(latest,
+								 self.saveRaw,
+								 folder=path.join(path.dirname(self.final_image_path),"debug")):
+						rawSaved = self.saveRaw
+					else: rawSaved = False
+				else:
+					rawSaved = camera.save_debug_img(latest,
+									 "raw.jpg",
+									 folder=path.join(path.dirname(self.final_image_path),"debug"))
+
 			# Compare previous image with the current one.
-			if prev is None or gaussBlurDiff(latest, prev, resize=.5):
+			if self.forceNewPic.isSet() or prev is None \
+			   or gaussBlurDiff(latest, prev, resize=.5):
+				self.forceNewPic.clear()
 				# The 2 images are different, try to work on this one.
 				prev = latest # no need to copy because latest should be immutable
 				nb_consecutive_similar_pics = 0
@@ -466,7 +515,6 @@ class PhotoCreator(object):
 			color = {}
 			marker_size = {}
 			# NOTE -- prepareImage is bloat, TODO spill content here
-			saveRaw = True
 			saveLensCorrected = True
 			workspaceCorners, markers, missed, err, analytics, savedPics = prepareImage(
 				input_image=latest,
@@ -480,7 +528,6 @@ class PhotoCreator(object):
 				zoomed_out=self.zoomed_out,
 				debug_out=self.save_debug_images,  # self.save_debug_images,
 				undistorted=saveLensCorrected,
-				saveRaw=saveRaw,
 				stopEvent=self.stopEvent,
 				min_pix_amount=self._settings.get(['cam', 'markerRecognitionMinPixel']),
 				threads=4
@@ -488,6 +535,7 @@ class PhotoCreator(object):
 			if self.stopping: return False, None, None, None, None
 			success = workspaceCorners is not None
 			# Conform to the legacy result to be sent to frontend
+			savedPics['raw'] = rawSaved
 			correction_result = {
 				'markers_found': list(filter(lambda q: q not in missed, QD_KEYS)),
 				# {k: v.astype(int) for k, v in markers.items()},
@@ -503,6 +551,9 @@ class PhotoCreator(object):
 				'error': err,
 				'available': savedPics
 			}
+			# revert to normal debug path
+			if isinstance(self.saveRaw, str) and self.saveRaw == savedPics['raw']:
+				self.saveRaw=True
 			# Send result to fronted ASAP
 			if success:
 				self._ready_to_send_pic(correction_result)
