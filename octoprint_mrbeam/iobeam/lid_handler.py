@@ -20,7 +20,7 @@ from octoprint_mrbeam.util import json_serialisor, logme
 import octoprint_mrbeam.camera.exc as exc
 if PICAMERA_AVAILABLE:
 	from octoprint_mrbeam.camera.mrbcamera import MrbCamera
-	from octoprint_mrbeam.camera.undistort import prepareImage, MAX_OBJ_HEIGHT, \
+	from octoprint_mrbeam.camera.undistort import prepareImage, convert_img_to_base64, MAX_OBJ_HEIGHT, \
 		CAMERA_HEIGHT, _getCamParams, _getPicSettings, DIST_KEY, MTX_KEY
 
 SIMILAR_PICS_BEFORE_UPSCALE = 1
@@ -245,7 +245,6 @@ class PhotoCreator(object):
 		self._front_ready = Event()
 		self.last_correction_result = None
 		self.worker = None
-		self._capture_next_img_to_analytics = False
 		self._capture_img = None
 		
 		if debug:
@@ -568,20 +567,22 @@ class PhotoCreator(object):
 			self._logger.exception('Exception_in-_save__s_for_analytics-_{}'.format(ex))
 	
 	def capture_last_img_for_analytics(self):
-		# self._capture_next_img_to_analytics = True
 		try:
 			if self._capture_img is not None:
 				tmp_copy = self._capture_img
 				self._capture_img = None
-				import cv2, base64
-				self._capture_next_img_to_analytics = False
-				retval, buffer = cv2.imencode('.jpg', tmp_copy, [int(cv2.IMWRITE_JPEG_QUALITY), 80])
-				jpg_as_text = base64.b64encode(buffer)
-				self._logger.info("ANDYTEST img (full - %s): %s", len(jpg_as_text), jpg_as_text)
+				tmp_copy = convert_img_to_base64(tmp_copy)
+				self._logger.info("capture_last_img_for_analytics() img len: %s - %s...", len(tmp_copy), tmp_copy[:100])
+				payload = {'base64': tmp_copy,
+				           'content_type': 'image/jpg',
+				           'metadata': {}, # these metadata are added as metadata in cloud storage
+				           }
+				self._analytics_handler.add_camera_image(payload)
+				self._analytics_handler.upload()
 			else:
-				self._logger.info("ANDYTEST img: --")
+				self._logger.info("capture_last_img_for_analytics() no image available")
 		except:
-			self._logger.exception("ANDYTEST img: EXCEPTION: ")
+			self._logger.exception("Exception in capture_last_img_for_analytics()")
 	
 	def img_analytics_callback(self, img):
 		self._capture_img = img
