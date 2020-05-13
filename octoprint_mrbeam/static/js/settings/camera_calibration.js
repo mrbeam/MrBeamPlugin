@@ -391,6 +391,22 @@ $(function () {
 
 		self.runLensCalibration = function() {
 			self.lensCalibrationRunning(true);
+			self.simpleApiCommand(
+				"camera_run_lens_calibration",
+				{},
+				function(){
+					new PNotify({
+						title: gettext("Calibration started"),
+						text: gettext("Please relax, this will take a little while.\nWe will let you know when we are done."),
+						type: "info",
+						hide: false})},
+				function(){
+					new PNotify({
+						title: gettext("Couldn't send calibration data."),
+						text: gettext("...and I have no clue why. Sorry."),
+						type: "warning",
+						hide: true})},
+				"POST");
 		};
 
 		self.lensCalibrationSuccess = function() {

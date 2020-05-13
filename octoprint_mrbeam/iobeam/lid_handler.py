@@ -17,6 +17,7 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 # don't crash on a dev computer where you can't install picamera
 import octoprint_mrbeam.camera as camera
 from octoprint_mrbeam.camera import gaussBlurDiff, QD_KEYS, PICAMERA_AVAILABLE
+from octoprint_mrbeam.camera.calibration import BoardDetectorDaemon
 from octoprint_mrbeam.util import json_serialisor, logme
 import octoprint_mrbeam.camera.exc as exc
 if PICAMERA_AVAILABLE:
@@ -72,9 +73,9 @@ class LidHandler(object):
 		if PICAMERA_AVAILABLE:
 			self.imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
 			self._photo_creator = PhotoCreator(self._plugin,
-                                               self._plugin_manager,
-                                               self.imagePath,
-                                               debug=False)
+			                                   self._plugin_manager,
+			                                   self.imagePath,
+			                                   debug=False)
 		else:
 			self._photo_creator = None
 			self.imagePath = None
@@ -84,6 +85,8 @@ class LidHandler(object):
 		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._subscribe)
 
 		self.savedRawImages = []
+		self.boardDetectorDaemon = BoardDetectorDaemon(self._settings.get(["cam", "lensCalibrationFile"]),
+							       runCalibrationAsap=True)
 
 	def _subscribe(self, event, payload):
 		self._event_bus.subscribe(IoBeamEvents.LID_OPENED, self.onEvent)
@@ -172,6 +175,9 @@ class LidHandler(object):
 		if self._photo_creator is not None:
 			self._logger.debug("shutdown() stopping _photo_creator")
 			self._end_photo_worker()
+		self.boardDetectorDaemon.stopAsap()
+		self._logger.debug("shutdown() stopping board detector daemon")
+		self.boardDetectorDaemon.join()
 
 	def take_undistorted_picture(self,is_initial_calibration=False):
 		from flask import make_response, jsonify
@@ -240,13 +246,13 @@ class LidHandler(object):
 			self._photo_creator.saveRaw = imgName
 			self.takeNewPic()
 			self.savedRawImages.append(imgName)
+		if not self.boardDetectorDaemon.is_alive():
+			self.boardDetectorDaemon.start()
 		return self.savedRawImages
 
 	@logme(True)
 	def delRawImg(self, name):
-		self._logger.warning("Trying to delete : %s" % name)
-		# TODO debug/name -> Delete image
-		myPath  = path.join(path.dirname(self.imagePath),"debug",name)
+		myPath  = path.join(self.debugFolder, "debug", name)
 		try:
 			os.remove(myPath)
 		except OSError as e:
@@ -266,6 +272,21 @@ class LidHandler(object):
 			not self._photo_creator.stopping:
 				self._photo_creator.forceNewPic.set()
 
+	def startLensCalibration(self):
+		if self.boardDetectorDaemon:
+			for name in self.savedRawImages:
+				self.boardDetectorDaemon.inputFiles.put(path.join(self.debugFolder, name))
+			if not self.boardDetectorDaemon.is_alive():
+				self._logger.info("Board detector not alive, starting now")
+				self.boardDetectorDaemon.start()
+			return True
+		else:
+			return False
+
+	@property
+	def debugFolder(self):
+		return path.join(path.dirname(self.imagePath),"debug")
+
 
 
 class PhotoCreator(object):
@@ -278,6 +299,8 @@ class PhotoCreator(object):
 		self.stopEvent = Event()
 		self.stopEvent.set()
 		self.activeFlag = Event()
+		self.pause = Event()
+		self.pause.clear()
 		self._pic_available = Event()
 		self._pic_available.clear()
 		self.refresh_pic_settings = Event()
@@ -314,7 +337,6 @@ class PhotoCreator(object):
 		# @type val: bool
 		if val: self.activeFlag.set()
 		else:   self.activeFlag.clear()
-
 
 	def start(self, pic_settings=None, cam_params=None, out_pic_size=None, blocking=True):
 		if self.active and not self.stopping:
@@ -446,6 +468,8 @@ class PhotoCreator(object):
 		# The lid didn't open during waiting time
 		cam.async_capture()
 		while not self.stopping:
+			while self.pause.isSet():
+				time.sleep(.5)
 			if self.refresh_pic_settings.isSet():
 				self.refresh_pic_settings.clear()
 				path_to_pic_settings = self._settings.get(["cam", "correctionSettingsFile"])

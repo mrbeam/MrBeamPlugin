@@ -38,16 +38,14 @@ def logtime(logger=None):
 	return _logtime
 
 def logExceptions(f):
-	logger = debug_logger(f)
 	@wraps(f)
 	def wrap(*args, **kw):
 		try:
 			return f(*args, **kw)
 		except Exception as e:
-			logger.exception("%s, %s" % (e.__class__.__name__, e))
+			debug_logger(f).exception("%s, %s" % (e.__class__.__name__, e))
 			raise
 	return wrap
-
 
 def json_serialisor(elm):
 	"""Attempts to return a serialisable element if the given one is not."""
