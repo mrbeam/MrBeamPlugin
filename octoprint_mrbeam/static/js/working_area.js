@@ -319,7 +319,7 @@ $(function(){
 					data: JSON.stringify({"command": "position", x:parseFloat(x.toFixed(2)), y:parseFloat(y.toFixed(2))})
 				});
 			} else {
-				console.warn("Move Laser command while machine state not idle: " + self.state.stateString());
+				console.warn("Move Laser to "+x+","+y+" command while machine state not idle: " + self.state.stateString());
 			}
 		};
 
