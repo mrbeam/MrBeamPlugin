@@ -84,9 +84,10 @@ class LidHandler(object):
 		self._analytics_handler = self._plugin.analytics_handler
 		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._subscribe)
 
-		self.savedRawImages = []
+		#self.savedRawImages = []
+		self.savedRawImages = ChessBoardCalibrationImages(self.updateFrontendCC)
 		self.boardDetectorDaemon = BoardDetectorDaemon(self._settings.get(["cam", "lensCalibrationFile"]),
-							       runCalibrationAsap=True)
+							       runCalibrationAsap=True, callback=self.savedRawImages.update)
 
 	def _subscribe(self, event, payload):
 		self._event_bus.subscribe(IoBeamEvents.LID_OPENED, self.onEvent)
@@ -233,9 +234,13 @@ class LidHandler(object):
 			self._photo_creator.zoomed_out = compensate
 
 	def getRawImg(self):
-		return self.savedRawImages
+		return self.savedRawImages.keys()
 
 	def saveRawImg(self):
+		# TODO
+		# data = dict(beam_cam_new_image=meta_data)
+		# self._plugin_manager.send_plugin_message("mrbeam", data)
+	
 		imgName= 'tmp_raw_img_%i.jpg' % len(self.savedRawImages)
 		self._logger.warning("Saving new picture %s" % imgName)
 		# TODO debug/raw.jpg -> copy image over
@@ -245,10 +250,10 @@ class LidHandler(object):
 		   not self._photo_creator.stopping:
 			self._photo_creator.saveRaw = imgName
 			self.takeNewPic()
-			self.savedRawImages.append(imgName)
+			self.savedRawImages.add(imgName)
 		if not self.boardDetectorDaemon.is_alive():
 			self.boardDetectorDaemon.start()
-		return self.savedRawImages
+		return self.savedRawImages.keys() # TODO necessary? Frontend update now happens via plugin message
 
 	@logme(True)
 	def delRawImg(self, name):
@@ -259,7 +264,7 @@ class LidHandler(object):
 			self._logger.warning("Error trying to delete file: %s\n%s, %s" % (myPath,e, e.msg))
 		finally:
 			self.savedRawImages.remove(name)
-		return self.savedRawImages
+		return self.savedRawImages.keys() # TODO necessary? Frontend update now happens via plugin message
 
 	def takeNewPic(self):
 		"""Forces agent to take a new picture."""
@@ -283,10 +288,66 @@ class LidHandler(object):
 		else:
 			return False
 
+	def updateFrontendCC(self, data):
+		self._plugin_manager.send_plugin_message("mrbeam", dict(chessboardCalibrationState=data))
+
 	@property
 	def debugFolder(self):
 		return path.join(path.dirname(self.imagePath),"debug")
 
+class ChessBoardCalibrationImages(object):
+	def __init__(self, changeCallback = None):
+		self.imageList = dict()
+		self.STATE_QUEUED = "queued"
+		self.STATE_PROCESSING = "processing"
+		self.STATE_SUCCESS = "success"
+		self.STATE_FAIL = "fail"
+		self.changeCallback = changeCallback
+		
+	def add(self, path):
+		self.imageList[path] = dict(tm_added=time.time(), state=self.STATE_QUEUED, tm_proc=None, tm_end=None)
+		if self.changeCallback != None:
+			self.changeCallback(self.imageList)
+
+	def remove(self, path):
+		self.imageList.pop(path, None) # deletes without key exist check
+		if self.changeCallback != None:
+			self.changeCallback(self.imageList)
+		
+	def update(self, path, newState):
+		d = self.imageList[path]
+		if d == None:
+			self._logger.error("Calibration image not found: {}", path)
+			return
+		
+		if newState == self.STATE_PROCESSING:
+			d.state = self.STATE_PROCESSING
+			d.tm_proc = time.time()
+		elif newState == self.STATE_SUCCESS:
+			d.state = self.STATE_SUCCESS
+			d.tm_end = time.time()
+		elif newState == self.STATE_FAIL:
+			d.state = self.STATE_FAIL
+			d.tm_end = time.time()
+		else:
+			self._logger.error("Not a valid state: {}", newState)
+			return
+			
+		self.imageList[path] = d
+		if self.changeCallback != None:
+			self.changeCallback(self.imageList)
+
+	def get(self, path):
+		return self.imageList[path]
+
+	def getAll(self):
+		return self.imageList
+	
+	def keys(self):
+		return self.imageList.keys() # TODO remove when obsolete
+
+	def __len__(self):
+		return len(self.imageList) # TODO remove when obsolete
 
 
 class PhotoCreator(object):

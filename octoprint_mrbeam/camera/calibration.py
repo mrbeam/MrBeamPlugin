@@ -190,6 +190,8 @@ def handleBoardPicture(image, count, expected_pattern):
 	else:
 		raise ValueError("Expected an image or a path to an image in inputFiles.")
 
+	if callback != None: callback(path, "processing") # TODO move above cv2.imgread(...)
+	
 	# if remote is not None:
 	# 	location = path.join(REMOTE_CALIBRATION_FOLDER, MY_HOSTNAME)
 	# 	remote_loc = remote + ":" + location
@@ -211,11 +213,17 @@ def handleBoardPicture(image, count, expected_pattern):
 	success, found_pattern = findBoard(gray, expected_pattern)
 
 	if success:
+		if callback != None: callback(path, "success")
 		# self.successfullFiles.put(path)
 		return expected_pattern, found_pattern
 	else:
+		if callback != None: callback(path, "fail")
 		# self.failedFiles.put(path)
 		return None, None
+	
+	#TODO: notify frontend
+	# callback of the lid_handler
+	
 
 def findBoard(image, pattern):
 	"""Finds the chessboard pattern of a given size in the image"""
