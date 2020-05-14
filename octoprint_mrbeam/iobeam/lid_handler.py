@@ -406,6 +406,8 @@ class PhotoCreator(object):
 			time.sleep(.2)
 		# The lid didn't open during waiting time
 		cam.async_capture()
+		i = 0
+		j = 0
 		while not self.stopping:
 			if self.refresh_pic_settings.isSet():
 				self.refresh_pic_settings.clear()
@@ -416,12 +418,9 @@ class PhotoCreator(object):
 			cam.wait()  # waits until the next picture is ready
 			if self.stopping: break
 			
-			# ANDY
+			# send image to analytics
 			if prev is not None and self._flag_send_img_to_analytics:
-				self._send_last_img_to_analytics(prev, markers, missed, analytics)
-			# else:
-			# 	self._logger.info("ANDYTEST NOT sending image: prev: %s, _flag_send_img_to_analytics: %s", None if prev is None else 'smth', self._flag_send_img_to_analytics)
-			
+				self._send_last_img_to_analytics(prev, 'user', markers, missed, analytics, force_upload=True)
 			
 			latest = cam.lastPic() # gets last picture given by cam.worker
 			cam.async_capture()  # starts capture with new settings
@@ -458,6 +457,7 @@ class PhotoCreator(object):
 				else:
 					time.sleep(.8) # Let the raspberry breathe a bit (prevent overheating)
 					continue
+			i += 1
 			# Get the desired scale and quality of the picture to serve
 			upscale_factor , quality = pic_qualities[pic_qual_index]
 			scaled_output_size = tuple(int(upscale_factor * i) for i in out_pic_size)
@@ -516,6 +516,14 @@ class PhotoCreator(object):
 				error=err,
 				extra=analytics
 			)
+			
+			# upload image to analytics if end is dev
+			if self._plugin.is_dev_env() and latest is not None and (
+						i <= 10 or
+						(i > 10 and i % 10 == 0)):
+					j += 1
+					self._send_last_img_to_analytics(latest, 'dev_auto', markers, missed, analytics, force_upload=(j%10==0))
+			
 		cam.stop_preview()
 		if session_details['num_pics'] > 0:
 			session_details.update(
@@ -578,22 +586,21 @@ class PhotoCreator(object):
 	def send_last_img_to_analytics(self):
 		self._flag_send_img_to_analytics = True
 		
-	def _send_last_img_to_analytics(self, img, markers, missed, analytics):
-		self._logger.info("ANDYTEST _send_last_img_to_analytics()")
-		# self._logger.info("ANDYTEST img: %s, markers: %s, missed: %s, err: %s, analytics: %s, marker_size: %s", img, markers, missed, err, analytics, marker_size)
+	def _send_last_img_to_analytics(self, img, trigger, markers, missed, analytics, force_upload=False):
 		self._flag_send_img_to_analytics = False
 		t = threading.Thread(target=self._send_last_img_to_analytics_threaded,
 							 name='send_last_img_to_analytics',
 							 kwargs={'img': img,
+									 'trigger': trigger,
 									 'markers': markers,
 									 'missed': missed,
-									 'analytics_data': analytics
+									 'analytics_data': analytics,
+									 'force_upload': force_upload,
 									 })
 		t.daemon = True
 		t.start()
 		
-		
-	def _send_last_img_to_analytics_threaded(self, img, markers, missed, analytics_data):
+	def _send_last_img_to_analytics_threaded(self, img, trigger, markers, missed, analytics_data, force_upload):
 		try:
 			if img is not None:
 				img_format = 'jpg'
@@ -616,16 +623,20 @@ class PhotoCreator(object):
 					
 				
 				payload = {'img_base64': img,
-				           'img_type': img_format,
-				           'distortion_matrix_base64': dist,
-				           'metadata': {
-					           'markers_found': ', '.join(markers.keys()),
-					           'markers_missed': ', '.join(missed),
-					           'analytics': analytics_str},
-				           }
-				self._logger.info("_send_last_img_to_analytics_threaded() img len: %s, metadata: %s", len(img), payload['metadata'])
+						   'img_type': img_format,
+						   'distortion_matrix_base64': dist,
+						   'trigger': trigger,
+						   'metadata': {
+							   'markers_found': ', '.join(markers.keys()),
+							   'markers_missed': ', '.join(missed),
+							   'analytics': analytics_str,
+							   'trigger': trigger},
+						   }
+				self._logger.info("_send_last_img_to_analytics_threaded() trigger: %s, img_base64 len: %s, force_upload: %s, metadata: %s",
+								  trigger, len(img), force_upload, payload['metadata'])
 				self._analytics_handler.add_camera_image(payload)
-				self._analytics_handler.upload()
+				if force_upload:
+					self._analytics_handler.upload()
 			else:
 				self._logger.info("_send_last_img_to_analytics_threaded() no image available")
 		except:
