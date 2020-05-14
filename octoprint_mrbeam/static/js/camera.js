@@ -143,8 +143,12 @@ $(function(){
                 result = self.croppedUrl;
             }
             if (result) {
-                result += (result.lastIndexOf("?") > -1) ? '&' : '?';
-                result += new Date().getTime();
+                if (result.match(/(\?|&)ts=/))
+                    result = result.replace(/(\?|&)ts=[0-9]*/, "$1ts=" + new Date().getTime())
+                else {
+                    result += (result.lastIndexOf("?") > -1) ? '&ts=' : '?ts='
+                    result += new Date().getTime();
+                }
             }
             return result;
         };
