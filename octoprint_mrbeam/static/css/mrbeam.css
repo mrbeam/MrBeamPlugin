@@ -2728,10 +2728,6 @@ input.search-query,
 /*
 * === COMPRESSOR and new LINE COLOR MAPPING ===
 */
-.compressor_range {
-    height: 5px !important;
-}
-
 .compressor_control {
     padding: 5px
 }
@@ -2748,10 +2744,6 @@ input.search-query,
     vertical-align: middle;
     border-radius: 50%;
     margin: 0 23px 0 24px;
-}
-
-.vector_mapping_slider {
-    height: 20px;
 }
 
 /*
@@ -2983,7 +2975,6 @@ div.hopscotch-bubble h3 {
 input#quick_shape_rect_radius,
 input#quick_shape_star_sharpness,
 input#quick_shape_heart_lr {
-    height: 5px;
     margin-top: 14px;
 }
 
@@ -2991,7 +2982,6 @@ input#img-preprocess-contrast,
 input#img-preprocess-brightness,
 input#img-preprocess-sharpen,
 input#img-preprocess-gamma {
-    height: 2px;
     margin: 13px 5px;
     width: 80% !important;
     float: right;
@@ -3024,7 +3014,6 @@ input#img-preprocess-gamma {
 }
 
 #preview-brightness {
-    height: 5px;
     margin-left: 5px;
     vertical-align: middle;
 }

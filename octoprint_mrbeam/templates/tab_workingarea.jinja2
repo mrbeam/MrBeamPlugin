@@ -91,7 +91,7 @@
 {#															   value="0" data-bind="value: previewImgOpacity, valueUpdate: 'input'">#}
                                                         <input id="preview-brightness" type="range" min="0" max="1" step="0.01"
                                                            style="width:80%;"
-                                                           class="conversion_range_slider"
+                                                           class="mrb_slider"
                                                            value="0" data-bind="value: previewImgOpacity, valueUpdate: 'input'">
 													</div>
 													<div>
@@ -397,14 +397,8 @@
                                                                         <div class="img-preprocess-cont">
                                                                             <i class="icon-adjust"
                                                                                title="{{ _('contrast') }}"></i>
-                                                                            {#                                                                            <input class="decent_input contrast img_adjust"#}
-                                                                            {#                                                                                   type="range" min="1" max="5"#}
-                                                                            {#                                                                                   value="1" step="0.05" data-bind="event: {#}
-                                                                            {#																							keyup: function(d, event){ $root.imgManualAdjust($data, event); },#}
-                                                                            {#																							input: function(d, event){ $root.imgManualAdjust($data, event); },#}
-                                                                            {#																							blur: function(d, event){ $root.imgManualAdjust($data, event); }} "/>#}
                                                                             <input id="img-preprocess-contrast"
-                                                                                   class="conversion_range_slider contrast"
+                                                                                   class="mrb_slider small"
                                                                                    type="range" min="1" max="5"
                                                                                    value="1" step="0.05" data-bind="event: {
 																							keyup: function(d, event){ $root.imgManualAdjust($data, event); },
@@ -415,7 +409,7 @@
                                                                             <i class="icon-sun"
                                                                                title="{{ _('brightness') }}"></i>
                                                                             <input id="img-preprocess-brightness"
-                                                                                   class="conversion_range_slider brightness"
+                                                                                   class="mrb_slider small"
                                                                                    type="range" min="-0.8" max="0.8"
                                                                                    value="0" step="0.05" data-bind="event: {
 																							keyup: function(d, event){ $root.imgManualAdjust($data, event); },
@@ -427,24 +421,25 @@
                                                                             <i class="icon-magic"
                                                                                title="{{ _('sharpen') }}"></i>
                                                                             <input id="img-preprocess-sharpen"
-                                                                                   class="conversion_range_slider sharpen"
+                                                                                   class="mrb_slider small"
                                                                                    type="range" min="0" max="40"
                                                                                    value="0" step="1" data-bind="event: {
 																							keyup: function(d, event){ $root.imgManualSharpen($data, event); },
 																							input: function(d, event){ $root.imgManualSharpen($data, event); },
 																							blur: function(d, event){ $root.imgManualSharpen($data, event); }} "/>
 																				<br/>
+                                                                        </div>
                                                                         <div class="img-preprocess-cont">
                                                                             <i class="" title="{{ _('gamma') }}">Γ</i>
                                                                             <input id="img-preprocess-gamma"
-                                                                                   class="conversion_range_slider gamma"
+                                                                                   class="mrb_slider small"
                                                                                    type="range" min="0.2" max="1.8"
                                                                                    value="1" step="0.05" data-bind="event: {
 																							keyup: function(d, event){ $root.imgManualAdjust($data, event); },
 																							input: function(d, event){ $root.imgManualAdjust($data, event); },
 																							blur: function(d, event){ $root.imgManualAdjust($data, event); }} "/>
                                                                         </div>
-                                                                    </div>
+
                                                                     <div class="img_crop_ui pull-right">
                                                                         <input class="decent_input crop_top img_adjust"
                                                                                style="grid-area: tc; align-self: start"
