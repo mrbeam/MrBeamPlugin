@@ -172,12 +172,14 @@ class LidHandler(object):
 					self._logger.debug('Camera not supposed to start now.' + status)
 
 	def shutdown(self):
+		self.logger.info("Shutting down")
+		self.boardDetectorDaemon.stopAsap()
+		if self.boardDetectorDaemon.started:
+			self._logger.info("shutdown() stopping board detector daemon")
+			self.boardDetectorDaemon.join()
 		if self._photo_creator is not None:
 			self._logger.debug("shutdown() stopping _photo_creator")
 			self._end_photo_worker()
-		self.boardDetectorDaemon.stopAsap()
-		self._logger.debug("shutdown() stopping board detector daemon")
-		self.boardDetectorDaemon.join()
 
 	def take_undistorted_picture(self,is_initial_calibration=False):
 		from flask import make_response, jsonify
@@ -246,6 +248,7 @@ class LidHandler(object):
 			self._photo_creator.saveRaw = imgName
 			self.takeNewPic()
 			self.savedRawImages.append(imgName)
+			self.boardDetectorDaemon.inputFiles.put(path.join(self.debugFolder, imgName))
 		if not self.boardDetectorDaemon.is_alive():
 			self.boardDetectorDaemon.start()
 		return self.savedRawImages
@@ -256,7 +259,7 @@ class LidHandler(object):
 		try:
 			os.remove(myPath)
 		except OSError as e:
-			self._logger.warning("Error trying to delete file: %s\n%s, %s" % (myPath,e, e.msg))
+			self._logger.warning("Error trying to delete file: %s\n%s, %s" % (myPath, e, e.msg))
 		finally:
 			self.savedRawImages.remove(name)
 		return self.savedRawImages
@@ -273,15 +276,14 @@ class LidHandler(object):
 				self._photo_creator.forceNewPic.set()
 
 	def startLensCalibration(self):
-		if self.boardDetectorDaemon:
-			for name in self.savedRawImages:
-				self.boardDetectorDaemon.inputFiles.put(path.join(self.debugFolder, name))
-			if not self.boardDetectorDaemon.is_alive():
-				self._logger.info("Board detector not alive, starting now")
-				self.boardDetectorDaemon.start()
-			return True
-		else:
-			return False
+		if not self.boardDetectorDaemon.is_alive() and not self.boardDetectorDaemon.stopping:
+			self._logger.info("Board detector not alive, starting now")
+			self.boardDetectorDaemon.start()
+
+		self.boardDetectorDaemon.startCalibrationWhenIdle = True
+		self.boardDetectorDaemon.procs = 4
+		self._logger.info("board detection now with %i cores" % self.boardDetectorDaemon.procs)
+		return True
 
 	@property
 	def debugFolder(self):

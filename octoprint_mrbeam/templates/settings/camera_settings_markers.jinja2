@@ -142,7 +142,7 @@
 				<button class="btn btn-success" data-bind="click: saveCornerCalibrationData, visible: cornerCalibrationComplete()">{{ _('Save Calibration') }}</button>
 				<!-- Lens calibration -->
 				<button class="btn btn-default" data-bind="click: saveRawPic, visible: lensCalibrationActive()">{{ _('Save new Chessboard Picture') }}</button>
-				<button class="btn btn-success" data-bind="click: runLensCalibration, visible: lensCalibrationActive() && rawPics().length > 8">{{ _('Run Lens Calibration') }}</button>
+				<button class="btn btn-success" data-bind="click: runLensCalibration, visible: lensCalibrationActive() && rawPics().length > 1">{{ _('Run Lens Calibration') }}</button>
 				<!-- Cancel -->
 				<button class="btn btn-warning" data-bind="click: abortCalibration, visible: cornerCalibrationActive() || lensCalibrationActive()"><i class="icon-fixed-width icon-ban-circle"></i> {{ _('Cancel') }}</button>
 			</div>
