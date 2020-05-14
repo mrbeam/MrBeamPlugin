@@ -213,6 +213,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		msg += ", model:{}".format(self.get_model_id())
 		msg += ", host:{}".format(self.getHostname())
 		msg += ", serial:{}".format(self.getSerialNum())
+		msg += ", prod_date:{}".format(self.get_production_date())
 		msg += ", software_tier:{}".format(self._settings.get(["dev", "software_tier"]))
 		msg += ", env:{}".format(self.get_env())
 		msg += ", beamOS-image:{}".format(self._octopi_info)
@@ -248,6 +249,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		            model=self.get_model_id(),
 		            host=self.getHostname(),
 		            serial=self._serial_num,
+		            productionn_date=self.get_production_date(),
 		            software_tier=self._settings.get(["dev", "software_tier"]),
 		            env=self.get_env(),
 		            beamOS_image=self._octopi_info,
@@ -1977,6 +1979,16 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if self._model_id is None:
 			self._model_id = self._get_val_from_device_info('model', default=self.MODEL_MRBEAM2)
 		return self._model_id
+	
+	def get_production_date(self):
+		"""
+		Gives you the device's production date as string
+		The value is soley read from device_info file (/etc/mrbeam)
+		and it's cached once read.
+		:return: production date
+		:rtype: String
+		"""
+		return self._get_val_from_device_info('production_date', default=None)
 
 	def getBranch(self):
 		"""
