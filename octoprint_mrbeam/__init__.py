@@ -59,6 +59,7 @@ from .analytics.uploader import AnalyticsFileUploader
 from octoprint.filemanager.destinations import FileDestinations
 from octoprint_mrbeam.util.material_csv_parser import parse_csv
 from octoprint_mrbeam.util.calibration_marker import CalibrationMarker
+from octoprint_mrbeam.camera.undistort import MIN_MARKER_PIX
 
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
 __builtin__._mrbeam_plugin_implementation = None
@@ -312,7 +313,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				correctionTmpFile='{}/cam/last_markers.json'.format(settings().getBaseFolder('base')),
 				lensCalibrationFile='{}/cam/lens_correction_{}x{}.npz'.format(settings().getBaseFolder('base'), image_default_width, image_default_height),
 				saveCorrectionDebugImages=False,
-				markerRecognitionMinPixel = 700,
+				markerRecognitionMinPixel = MIN_MARKER_PIX,
 			),
 			gcode_nextgen=dict(
 				enabled=True,
