@@ -4,7 +4,6 @@ from collections import Mapping
 from threading import Event
 from multiprocessing import Pool
 from numpy.linalg import norm
-import base64
 
 from octoprint_mrbeam.camera import RESOLUTIONS, QD_KEYS, PICAMERA_AVAILABLE
 import octoprint_mrbeam.camera as beamcam
@@ -70,7 +69,6 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
                  quality=90,
                  zoomed_out=False,
                  debug_out=False,
-                 analytics_callback=None,
                  undistorted=False,
                  blur=7,
                  custom_pic_settings=None,
@@ -145,8 +143,6 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 
 	if debug_out or undistorted:
 		save_debug_img(img, "undistorted")
-	if analytics_callback:
-		analytics_callback(img)
 
 	if stopEvent and stopEvent.isSet(): return None, None, None, STOP_EVENT_ERR, {}
 
@@ -356,10 +352,6 @@ def isMarkerMask(mask, d_min=10, d_max=60, visual_debug=False):
 	# Tests if the mask is completely inside the marker_mask_tester,
 	# i.e. it didn't change after applying the mask
 	return np.all(marker == cv2.bitwise_and(marker_mask_tester, marker))
-
-def convert_img_to_base64(img, quality=80):
-	retval, buffer = cv2.imencode('.jpg', img, [int(cv2.IMWRITE_JPEG_QUALITY), quality])
-	return base64.b64encode(buffer)
 
 #@logtime()
 def _undistortImage(img, dist, mtx):

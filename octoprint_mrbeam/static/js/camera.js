@@ -151,8 +151,8 @@ $(function(){
             return result;
         };
 
-        self.capture_img_for_analytics = function(){
-            OctoPrint.simpleApiCommand("mrbeam", "camera_caputre_for_analytics", {})
+        self.send_camera_image_to_analytics = function(){
+            OctoPrint.simpleApiCommand("mrbeam", "send_camera_image_to_analytics", {})
         };
     }
 
