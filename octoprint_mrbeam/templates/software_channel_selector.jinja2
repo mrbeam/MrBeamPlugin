@@ -2,7 +2,7 @@
 {% set mrbeamorg_downloads = _('https://mr-beam.org/en/downloads/') %}
 
 <div class="hide" id="software_channel_selector">
-    <h4 style="display: inline">{{ _('Software Channel') }}:</h4>
+    <h3 style="display: inline">{{ _('Software Channel') }}:</h3>
     <select id="software_channel_select" data-bind="value: selector, options: available_channels, optionsText: 'name', optionsValue: 'id', event: { change: selection_changed }"></select>
     <div id="settings_software_channel_descriptions" class="row">
         <div class="control-group span6 ">
