@@ -44,14 +44,14 @@ $(function () {
 					self.croppedMarkersVisibility('visible');
 					break;
 				case 'raw':
-					self.calImgUrl(self.camera.timestampedImgUrl(self.camera.rawUrl));
+					self.calImgUrl(self.camera.getTimestampedImageUrl(self.camera.rawUrl));
 					self.calImgWidth(2048);
 					self.calImgHeight(1536);
 					self.correctedMarkersVisibility('hidden')
 					self.croppedMarkersVisibility('hidden');
 					break;
 				case 'lens_correction':
-					self.calImgUrl(self.camera.timestampedImgUrl(self.camera.undistortedUrl));
+					self.calImgUrl(self.camera.getTimestampedImageUrl(self.camera.undistortedUrl));
 					self.calImgWidth(2048);
 					self.calImgHeight(1536);
 					self.correctedMarkersVisibility('visible')
