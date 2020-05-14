@@ -392,7 +392,7 @@ class PhotoCreator(object):
 				self._logger.info("Camera recovered")
 				self._analytics_handler.add_camera_session_details(exc.msgForAnalytics(exc.CAM_CONNRECOVER))
 		except exc.CameraConnectionException as e:
-			self._logger.exception(" %s, %s : %s" % (e.__class__.__name__, e, exc.msg(exc.CAM_CONN)),
+			self._logger.warning(" %s, %s : %s" % (e.__class__.__name__, e, exc.msg(exc.CAM_CONN)),
 			                       analytics=exc.CAM_CONN)
 			if recurse_nb < MAX_PIC_THREAD_RETRIES:
 				self._logger.info("Restarting work() after some sleep")

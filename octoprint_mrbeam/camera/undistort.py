@@ -37,7 +37,7 @@ SUCCESS_WRITE_RETVAL = 1
 # Minimum and Maximum number of pixels a marker should have
 # as seen on the edge detection masks
 # TODO make scalable with picture resolution
-MIN_MARKER_PIX = 600
+MIN_MARKER_PIX = 350
 MAX_MARKER_PIX = 1500
 
 # Height (mm) from the bottom of the work area to the camera lens.
