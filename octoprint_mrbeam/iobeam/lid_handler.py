@@ -172,7 +172,7 @@ class LidHandler(object):
 					self._logger.debug('Camera not supposed to start now.' + status)
 
 	def shutdown(self):
-		self.logger.info("Shutting down")
+		self._logger.info("Shutting down")
 		self.boardDetectorDaemon.stopAsap()
 		if self.boardDetectorDaemon.started:
 			self._logger.info("shutdown() stopping board detector daemon")
@@ -239,18 +239,20 @@ class LidHandler(object):
 
 	def saveRawImg(self):
 		imgName= 'tmp_raw_img_%i.jpg' % len(self.savedRawImages)
-		self._logger.warning("Saving new picture %s" % imgName)
 		# TODO debug/raw.jpg -> copy image over
 		# TODO careful when deleting pic + setting new name -> hash
 		if self._photo_creator and \
 		   self._photo_creator.active and \
 		   not self._photo_creator.stopping:
+			self._logger.warning("Saving new picture %s" % imgName)
 			self._photo_creator.saveRaw = imgName
 			self.takeNewPic()
 			self.savedRawImages.append(imgName)
-			self.boardDetectorDaemon.inputFiles.put(path.join(self.debugFolder, imgName))
-		if not self.boardDetectorDaemon.is_alive():
-			self.boardDetectorDaemon.start()
+			self.boardDetectorDaemon.add(path.join(self.debugFolder, imgName))
+			if not self.boardDetectorDaemon.is_alive():
+				self.boardDetectorDaemon.start()
+			else:
+				self.boardDetectorDaemon.waiting.clear()
 		return self.savedRawImages
 
 	@logme(True)
@@ -281,8 +283,7 @@ class LidHandler(object):
 			self.boardDetectorDaemon.start()
 
 		self.boardDetectorDaemon.startCalibrationWhenIdle = True
-		self.boardDetectorDaemon.procs = 4
-		self._logger.info("board detection now with %i cores" % self.boardDetectorDaemon.procs)
+		self.boardDetectorDaemon.scaleProcessors(4)
 		return True
 
 	@property

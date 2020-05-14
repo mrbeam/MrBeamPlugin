@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-from multiprocessing import Event, Pool, Process, Queue
+from multiprocessing import Event, Pool, Process, Queue, Value
 import logging
 import cv2
 import signal, os
 import numpy as np
 import time
 from octoprint_mrbeam.util import logtime, logExceptions
+import octoprint_mrbeam.camera as camera
 import queue
+from os import path
 
 CB_ROWS = 5
 CB_COLS = 6
@@ -28,7 +30,7 @@ MAX_PROCS = 4
 class BoardDetectorDaemon(Process):
 	"""Processes images of chessboards to calibrate the lens used to take the pictures."""
 
-	def __init__(self, output_calib, procs=1, callback=None, runCalibrationAsap=False):
+	def __init__(self, output_calib, image_size=camera.LEGACY_STILL_RES, procs=1, callback=None, runCalibrationAsap=False):
 		# runCalibrationAsap : run the lens calibration when we have enough pictures ready
 		self._logger = logging.getLogger(__name__ + '.' + self.__class__.__name__)
 		self._logger.setLevel(logging.DEBUG)
@@ -39,17 +41,17 @@ class BoardDetectorDaemon(Process):
 		# Arrays to store object points and image points from all the images.
 		self.objPoints = {}  # 3d point in real world space
 		self.imgPoints = {}  # 2d points in image plane.
-		self.image_size = None
+		self.image_size = image_size
 
 		# processor load
-		self.procs = procs
+		self.procs = Value('i', 2)
 
 		# Queues for I/O with the process
 		self.inputFiles = Queue()
-		self.inputChessSize = Queue()
 		self.successfullFiles = Queue()
 		self.failedFiles = Queue()
 		self.tasks = []
+		self.images = []
 
 		# Locks
 		self._started = Event()
@@ -87,7 +89,7 @@ class BoardDetectorDaemon(Process):
 
 	@property
 	def started(self):
-		self._started.is_set()
+		return self._started.is_set()
 
 	def pause(self):
 		self._logger.info("Pausing")
@@ -98,26 +100,36 @@ class BoardDetectorDaemon(Process):
 		return self._stop.is_set() or self._terminate.is_set()
 
 	def add(self, image, chessboardSize=(CB_ROWS, CB_COLS)): #, rough_location=None, remote=None):
-		self.inputFiles.put(image)
-		self.inputChessSize.put(chessboardSize)
+		self.inputFiles.put(
+			{'path': image,
+			 'chessboardSize': chessboardSize
+			})
+
+	def __getitem__(self, item):
+		if self.tasks[item].ready():
+			return self.tasks[item].get()
+		else: return False
 
 	@property
 	def startCalibrationWhenIdle(self):
-		self._startWhenIdle.is_set()
+		return self._startWhenIdle.is_set()
 
 	@startCalibrationWhenIdle.setter
 	def startCalibrationWhenIdle(self, value):
-		self._logger.debug("Start calibration when idle set.")
-		if value: self._startWhenIdle.set()
-		else: self._startWhenIdle.clear()
+		if value:
+			self._logger.debug("Start calibration when idle set.")
+			self._startWhenIdle.set()
+		else:
+			self._logger.debug("Start calibration when idle cleared.")
+			self._startWhenIdle.clear()
 
 	@property
 	def detectedBoards(self):
-		len(list(filter(lambda x: x.ready() and x.get()[1] is not None, self.tasks)))
+		return len(list(filter(lambda x: x.ready() and x.get()[1] is not None, self.tasks)))
 
 	def scaleProcessors(self, number):
-		self._logger.info("Changing to %i simultaneous processes" % number)
 		self.procs = number
+		self._logger.info("Changing to %i simultaneous processes" % self.procs)
 
 	# @logtime
 	# @logExceptions
@@ -135,16 +147,15 @@ class BoardDetectorDaemon(Process):
 			while not self._stop.is_set():
 				if self.waiting.is_set():
 					self._logger.debug("waiting to be restarted")
-					if self.startCalibrationWhenIdle \
-					   and self.detectedBoards > MIN_BOARDS_DETECTED:
+					if self.startCalibrationWhenIdle and self.detectedBoards >= MIN_BOARDS_DETECTED:
 						self._logger.warning("Start lens calibration.")
-						self.startCalibrationWhenIdle.clear()
+						self.startCalibrationWhenIdle = False
 						if self.runLensCalibration():
 							self._logger.warning("Lens calibration succesful")
 						else:
 							self._logger.error("Lens calibration failed")
-					elif self.detectedBoards > MIN_BOARDS_DETECTED:
-						self._logger.debug("Only %i / %i boards detected" % (self.detectedBoards , MIN_BOARDS_DETECTED))
+					elif self.detectedBoards < MIN_BOARDS_DETECTED:
+						self._logger.debug("Only %i boards detected yet, %i necessary" % (self.detectedBoards , MIN_BOARDS_DETECTED))
 
 					if self._stop.is_set():
 						self._logger.warning("STOP")
@@ -155,30 +166,31 @@ class BoardDetectorDaemon(Process):
 					continue
 				if len(list(filter(lambda x: not x.ready(), self.tasks))) < self.procs:
 					try :
-						img = self.inputFiles.get(timeout=.05)
+						_input = self.inputFiles.get(timeout=.1)
+						img, size = _input['path'], _input['chessboardSize']
 						count += 1
 					except queue.Empty:
 						self._logger.warning("no image?")
 						self.waiting.set()
-					try: expected_pattern = self.inputChessSize.get(timeout=.2)
-					except queue.Empty:
-						self._logger.debug("no chess size input given, uses default size")
-						expected_pattern = (CB_ROWS, CB_COLS)
+						continue
 					self._logger.warning("apply stuff async")
+					self.images.append(img)
 					self.tasks.append(pool.apply_async(handleBoardPicture,
-									(img, count, expected_pattern)))
+									(img, count, size)))
 				else:
 					if self._stop.wait(.2):
 						self._logger.warning("Stop signal intercepted")
 						pool.close()
 						break
-			self._logger.warning("Pool joining")
+					else:
+						self._logger.debug("Dicking around ; procs set to : %i " % self.procs)
+			self._logger.info("Pool joining")
 			pool.close()
 			if self._terminate.is_set():
-				self._logger("Pool terminating")
+				self._logger.warning("Pool terminating")
 				pool.terminate()
 			pool.join()
-			self._logger.warning("Pool exited")
+			self._logger.info("Pool exited")
 		except Exception as e:
 			self._logger.exception(str(e))
 
@@ -190,12 +202,14 @@ class BoardDetectorDaemon(Process):
 		"""
 		availableResults = list(filter(lambda _t: _t.ready(), self.tasks))
 		if len(availableResults) == 0: return None
+		objPoints = []
+		imgPoints = []
 		for t in availableResults:
 			expected_pattern, found_pattern = t.get()
 			if found_pattern is not None:
 				# TODO add ignored paths list provided by user choice in Front End
-				self.objPoints[path] = get_object_points(*expected_pattern)
-				self.imgPoints[path] = found_pattern
+				objPoints.append(get_object_points(*expected_pattern))
+				imgPoints.append(found_pattern)
 
 		if remote is not None:
 			raise NotImplementedError
@@ -207,8 +221,8 @@ class BoardDetectorDaemon(Process):
 			# if retval != 0:
 			# 	raise ValueError("Remote failed to calibrate my camera")
 		else:
-			ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(self.objPoints.values(),
-									   self.imgPoints.values(),
+			ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objPoints,
+									   imgPoints,
 									   self.image_size,
 									   None, None)
 			if ret == 0:
@@ -276,7 +290,7 @@ def findBoard(image, pattern):
 		image,
 		patternSize=pattern,
 		flags=cv2.CALIB_CB_ADAPTIVE_THRESH + cv2.CALIB_CB_NORMALIZE_IMAGE + cv2.CALIB_CB_FAST_CHECK)
-	# if self._stop.is_set(): return corners_found, corners
+	if not corners_found: return corners_found, corners
 	cornerSubPix = cv2.cornerSubPix(image, corners, (11, 11), (-1, -1), (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001))
 	return corners_found, cornerSubPix
 

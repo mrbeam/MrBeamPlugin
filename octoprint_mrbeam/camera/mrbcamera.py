@@ -48,12 +48,12 @@ class LoopThread(threading.Thread):
 		self.__args = args or ()
 		self.__kw = kwargs or {}
 
-	def run(self):
-		try:
-			threading.Thread.run(self)
-		except Exception as e:
-			self._logger.exception("mrbeam.loopthread : %s, %s", e.__class__.__name__, e)
-			raise
+	# def run(self):
+	# 	try:
+	# 		threading.Thread.run(self)
+	# 	except Exception as e:
+	# 		self._logger.exception("mrbeam.loopthread : %s, %s", e.__class__.__name__, e)
+	# 		raise
 
 	def _loop(self):
 		self.running.set()
