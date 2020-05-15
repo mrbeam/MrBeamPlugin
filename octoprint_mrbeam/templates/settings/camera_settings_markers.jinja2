@@ -125,6 +125,8 @@
 							<i  class="icon-trash"></i> {{ _('Remove') }}
 						</button>
 						<i class="icon-spinner icon-spin" data-bind="visible: pic.state == 'processing'"></i>
+						<i class="icon-ok" data-bind="visible: pic.state == 'success'"></i>
+						<i class="icon-remove" data-bind="visible: pic.state == 'fail'"></i>
 					</li>
 				</div>
 
