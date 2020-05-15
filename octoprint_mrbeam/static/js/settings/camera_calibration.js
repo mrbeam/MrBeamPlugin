@@ -297,8 +297,8 @@ $(function () {
 
 			if ('beam_cam_new_image' in data) {
 				// update image
-				if (data['beam_cam_new_image']['undistorted_saved'] && ! self.cornerCalibrationActive()) {
-					var _d = data['beam_cam_new_image'];
+				var _d = data['beam_cam_new_image'];
+				if (_d['undistorted_saved'] && ! self.cornerCalibrationActive()) {
 					self.availablePic(_d['available'])
 					if (! ['raw', 'lens_correction', 'cropped'].includes(self.picType())) {
 						for (_type of ['lens_correction', 'raw']) {

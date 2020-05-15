@@ -103,7 +103,7 @@ $(function(){
                 } else {
                     self.cornerMargin(0)
                 }
-                self.loadImage();
+                self.loadImage(self.croppedUrl);
             }
 
 			// If camera is not active (lid closed), all marker(NW|NE|SW|SE) classes should be removed.
@@ -112,11 +112,10 @@ $(function(){
 			}
         };
 
-        self.loadImage = function () {
-            var myImageUrl = self.getTimestampedImageUrl(self.croppedUrl);
+        self.loadImage = function (url) {
+            var myImageUrl = self.getTimestampedImageUrl(url);
             var img = $('<img>');
             img.load(function () {
-                self.timestampedImgUrl(myImageUrl);
                 if (window.mrbeam.browser.is_safari) {
                     // load() event seems not to fire in Safari.
                     // So as a quick hack, let's set firstImageLoaded to true already here

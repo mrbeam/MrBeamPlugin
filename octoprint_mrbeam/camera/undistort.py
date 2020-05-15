@@ -114,7 +114,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	savedPics = {'raw': False, 'lens_corrected': False, 'cropped': False}
 
 	def save_debug_img(img, name):
-		camera.save_debug_img(img, name + ".jpg", folder=path.join(dirname(path_to_output_image), "debug"))
+		return camera.save_debug_img(img, name + ".jpg", folder=path.join(dirname(path_to_output_image), "debug"))
 	if type(input_image) is str:
 		# check image path
 		logger.debug('Starting to prepare Image. \ninput: <{}> - output: <{}>\ncam dist : <{}>\ncam matrix: <{}>\noutput_img_size:{} - quality:{} - debug_out:{}'.format(

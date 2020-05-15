@@ -54,7 +54,7 @@
 		</div>
 		<!-- Corner calibration -->
 		<div class="marker_selection_desc calibration_help"
-			 data-bind="visible: cal_img_ready() && !cornerCalibrationActive() && !lensCalibrationActive() && availablePic()['lens_correction']">
+			 data-bind="visible: cal_img_ready() && !cornerCalibrationActive() && !lensCalibrationActive() && availablePic()['lens_corrected']">
 			<div>{{_('Click on the arrow head of the marker in the magnified picture.') }}<br/>
 			{{_('Continue with the other markers as the picture changes.') }}<br/>
 			{{_('Once all arrowheads are marked the calibration is finished.')}}</div>
@@ -85,7 +85,7 @@
 					<input type="radio" name="picture_type" value="raw"
 						   data-bind="checked: picType, attr: { disabled: !availablePic()['raw'] }" /> Raw<br />
 					<input type="radio" name="picture_type" value="lens_correction"
-						   data-bind="checked: picType, attr: { disabled: !availablePic()['lens_correction'] }" /> Lens corrected<br />
+						   data-bind="checked: picType, attr: { disabled: !availablePic()['lens_corrected'] }" /> Lens corrected<br />
 					<input type="radio" name="picture_type" value="cropped"
 						   data-bind="checked: picType, attr: { disabled: !availablePic()['cropped'] }" /> Cropped<br />
 					<br/>
