@@ -1,59 +1,60 @@
 /* global snap, ko, $, Snap, API_BASEURL, _, CONFIG_WEBCAM_STREAM, ADDITIONAL_VIEWMODELS, mina, BEAMOS_DISPLAY_VERSION, WorkingAreaHelper */
 
 MRBEAM_PX2MM_FACTOR_WITH_ZOOM = 1; // global available in this viewmodel and in snap plugins at the same time.
+
+// Render debugging utilities
 MRBEAM_DEBUG_RENDERING = true;
-if(MRBEAM_DEBUG_RENDERING){
-	function debugBase64(base64URL, target="", data=null) {
-		var dbg_link = "<a target='_blank' href='"+base64URL+"' onmouseover=' show_in_popup(\""+base64URL+"\"); '>Hover | Right click -> Open in new tab</a>"; // debug message, no need to translate
-		if(data){
-			dbg_link += "<br/>" + JSON.stringify(data);
-		}
-			new PNotify({
-				title: "render debug output " + target,
-				text: dbg_link,
-				type: "warn",
-				hide: false
-			});
+function debugBase64(base64URL, target="", data=null) {
+	var dbg_link = "<a target='_blank' href='"+base64URL+"' onmouseover=' show_in_popup(\""+base64URL+"\"); '>Hover | Right click -> Open in new tab</a>"; // debug message, no need to translate
+	if(data){
+		dbg_link += "<br/>" + JSON.stringify(data);
 	}
-	
-	function show_in_popup(dataurl) {
-		$('#debug_rendering_div').remove();
-		$('body').append("<div id='debug_rendering_div' style='position:fixed; top:0; left:0; border:1px solid red; background:center no-repeat; background-size: contain; background-color:aqua; width:50vw; height:50vh; z-index:999999; background-image:url(\""+dataurl+"\")' onclick=' $(this).remove(); '></div>")
-	}
-	
-	(function(console){
-		/**
-		 * Convenient storing large data objects (json, dataUri, base64 encoded images, ...) from the console.
-		 * 
-		 * @param {object} data to save (means download)
-		 * @param {string} filename used for download
-		 * @returns {undefined}
-		 */
-		console.save = function(data, filename){
-
-			if(!data) {
-				console.error('Console.save: No data')
-				return;
-			}
-
-			if(!filename) filename = 'console.json'
-
-			if(typeof data === "object"){
-				data = JSON.stringify(data, undefined, 4)
-			}
-
-			var blob = new Blob([data], {type: 'text/json'}),
-				e    = document.createEvent('MouseEvents'),
-				a    = document.createElement('a')
-
-			a.download = filename
-			a.href = window.URL.createObjectURL(blob)
-			a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':')
-			e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
-			a.dispatchEvent(e)
-		}
-	})(console)
+		new PNotify({
+			title: "render debug output " + target,
+			text: dbg_link,
+			type: "warn",
+			hide: false
+		});
 }
+
+function show_in_popup(dataurl) {
+	$('#debug_rendering_div').remove();
+	$('body').append("<div id='debug_rendering_div' style='position:fixed; top:0; left:0; border:1px solid red; background:center no-repeat; background-size: contain; background-color:aqua; width:50vw; height:50vh; z-index:999999; background-image:url(\""+dataurl+"\")' onclick=' $(this).remove(); '></div>")
+}
+
+(function(console){
+	/**
+	 * Convenient storing large data objects (json, dataUri, base64 encoded images, ...) from the console.
+	 * 
+	 * @param {object} data to save (means download)
+	 * @param {string} filename used for download
+	 * @returns {undefined}
+	 */
+	console.save = function(data, filename){
+
+		if(!data) {
+			console.error('Console.save: No data')
+			return;
+		}
+
+		if(!filename) filename = 'console.json'
+
+		if(typeof data === "object"){
+			data = JSON.stringify(data, undefined, 4)
+		}
+
+		var blob = new Blob([data], {type: 'text/json'}),
+			e    = document.createEvent('MouseEvents'),
+			a    = document.createElement('a')
+
+		a.download = filename
+		a.href = window.URL.createObjectURL(blob)
+		a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':')
+		e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
+		a.dispatchEvent(e)
+	}
+})(console)
+// End Render debugging utilities
 
 $(function(){
 
@@ -2243,7 +2244,7 @@ $(function(){
 					if (typeof callback === 'function') {
 						callback(svg);
 						if (MRBEAM_DEBUG_RENDERING) {
-							const data = {fillImg: '(' + w + ',' + h + '@' + x + ',' + y + ' mm)'}
+							const data = {width: w, height:h, x:x, y:y};
 							debugBase64(svg.toDataURL(), 'Step 3: SVG with fill rendering', data);
 						}
 					}
@@ -2252,12 +2253,7 @@ $(function(){
 
 				let renderBBoxMM = tmpSvg.getBBox(); // if #712 still fails, fetch this bbox earlier (getCompositionSvg()).
 				if(MRBEAM_DEBUG_RENDERING){
-////					var base64String = btoa(tmpSvg.innerSVG());
-//					var raw = tmpSvg.innerSVG();
-//					var svgString = raw.substr(raw.indexOf('<svg'));
-//					var dataUrl = 'data:image/svg+xml;base64, ' + btoa(svgString);
-					const bbStr = '(' + renderBBoxMM.width + ',' + renderBBoxMM.height + '@' + renderBBoxMM.x + ',' + renderBBoxMM.y + ' mm)' 
-					debugBase64(tmpSvg.toDataURL(), 'Step 1: SVG ready for canvas, renderBBox', bbStr);
+					debugBase64(tmpSvg.toDataURL(), 'Step 1: SVG ready for canvas, renderBBox', renderBBoxMM);
 				}
 				console.log("Rendering " + fillings.length + " filled elements.");
 				if(fillAreas){

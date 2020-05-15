@@ -150,6 +150,10 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		renderCanvas.id = "renderCanvas";
 		renderCanvas.width = bbox.w * pxPerMM;
 		renderCanvas.height = bbox.h * pxPerMM;
+		if(MRBEAM_DEBUG_RENDERING){
+			renderCanvas.style="position: fixed; bottom: 0; left: 0; width: 95vw; border: 1px solid red;";
+			renderCanvas.addEventListener('click', function(){ this.remove(); });
+		}
 		document.getElementsByTagName('body')[0].appendChild(renderCanvas);
 		var renderCanvasContext = renderCanvas.getContext('2d');
 		renderCanvasContext.fillStyle = 'white'; // avoids one backend rendering step (has to be disabled in the backend)
@@ -176,7 +180,9 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			if(typeof callback === 'function'){
 				callback(fillBitmap, bbox.x, bbox.y, bbox.w, bbox.h);
 			}
-			renderCanvas.remove();
+			if(!MRBEAM_DEBUG_RENDERING){
+				renderCanvas.remove();
+			}
 		};
 
 		// catch browsers without native svg support
