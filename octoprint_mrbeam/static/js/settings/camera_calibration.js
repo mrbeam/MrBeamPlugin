@@ -87,6 +87,9 @@ $(function () {
 
 		self.rawPics = ko.observable([])
 		self.rawPicSelection = ko.observableArray([])
+		// calibrationState is constantly refreshed by the backend
+		// as an immutable array that contains the whole state of the calibration
+		self.calibrationState = ko.observable({})
 
 		self.lensCalibrationRunning = ko.observable(false);
 		self.markersFoundPosition = ko.observable({});
@@ -308,10 +311,10 @@ $(function () {
 						self.calImgUrl(self.camera.getTimestampedImageUrl(self.calImgUrl()));
 
 					if (self.isInitialCalibration()) {
-						self.dbNWImgUrl('/downloads/files/local/cam/debug/NW.jpg' + '?' + new Date().getTime());
-						self.dbNEImgUrl('/downloads/files/local/cam/debug/NE.jpg' + '?' + new Date().getTime());
-						self.dbSWImgUrl('/downloads/files/local/cam/debug/SW.jpg' + '?' + new Date().getTime());
-						self.dbSEImgUrl('/downloads/files/local/cam/debug/SE.jpg' + '?' + new Date().getTime());
+						self.dbNWImgUrl('/downloads/files/local/cam/debug/NW.jpg' + '?ts=' + new Date().getTime());
+						self.dbNEImgUrl('/downloads/files/local/cam/debug/NE.jpg' + '?ts=' + new Date().getTime());
+						self.dbSWImgUrl('/downloads/files/local/cam/debug/SW.jpg' + '?ts=' + new Date().getTime());
+						self.dbSEImgUrl('/downloads/files/local/cam/debug/SE.jpg' + '?ts=' + new Date().getTime());
 					}
 
 					// check if all markers are found and image is good for calibration
@@ -329,6 +332,18 @@ $(function () {
 					}
 				}
 			}
+
+			if ('chessboardCalibrationState' in data) {
+				var _d = data['chessboardCalibrationState']
+				self.calibrationState(_d);
+				var arr = []
+				for (const [key, value] of Object.entries(_d.pictures)) {
+					arr.push({name: key, state: value.state})
+				}
+				self.rawPicSelection(arr)
+				self.lensCalibrationRunning(_d.lensCalibration == "processing");
+			}
+
 		};
 
 		self.saveRawPic = function() {

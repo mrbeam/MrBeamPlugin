@@ -15,11 +15,11 @@ from flask.ext.babel import gettext
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 # don't crash on a dev computer where you can't install picamera
-import octoprint_mrbeam.camera as camera
 from octoprint_mrbeam.camera import gaussBlurDiff, QD_KEYS, PICAMERA_AVAILABLE
 from octoprint_mrbeam.camera.calibration import BoardDetectorDaemon
 from octoprint_mrbeam.util import json_serialisor, logme
 import octoprint_mrbeam.camera.exc as exc
+import octoprint_mrbeam.camera as camera
 if PICAMERA_AVAILABLE:
 	from octoprint_mrbeam.camera.mrbcamera import MrbCamera
 	from octoprint_mrbeam.camera.undistort import prepareImage, MAX_OBJ_HEIGHT, \
@@ -84,9 +84,9 @@ class LidHandler(object):
 		self._analytics_handler = self._plugin.analytics_handler
 		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._subscribe)
 
-		self.savedRawImages = []
 		self.boardDetectorDaemon = BoardDetectorDaemon(self._settings.get(["cam", "lensCalibrationFile"]),
-							       runCalibrationAsap=True)
+							       runCalibrationAsap=True,
+							       stateChangeCallback=self.updateFrontendCC)
 
 	def _subscribe(self, event, payload):
 		self._event_bus.subscribe(IoBeamEvents.LID_OPENED, self.onEvent)
@@ -235,10 +235,14 @@ class LidHandler(object):
 			self._photo_creator.zoomed_out = compensate
 
 	def getRawImg(self):
-		return self.savedRawImages
+		return self.boardDetectorDaemon.state.keys()
 
 	def saveRawImg(self):
-		imgName= 'tmp_raw_img_%i.jpg' % len(self.savedRawImages)
+		# TODO
+		# data = dict(beam_cam_new_image=meta_data)
+		# self._plugin_manager.send_plugin_message("mrbeam", data)
+
+		imgName= 'tmp_raw_img_%i.jpg' % len(self.boardDetectorDaemon)
 		# TODO debug/raw.jpg -> copy image over
 		# TODO careful when deleting pic + setting new name -> hash
 		if self._photo_creator and \
@@ -247,24 +251,28 @@ class LidHandler(object):
 			self._logger.warning("Saving new picture %s" % imgName)
 			self._photo_creator.saveRaw = imgName
 			self.takeNewPic()
-			self.savedRawImages.append(imgName)
-			self.boardDetectorDaemon.add(path.join(self.debugFolder, imgName))
+			imgPath = path.join(self.debugFolder, imgName)
+			self.boardDetectorDaemon.add(imgPath)
 			if not self.boardDetectorDaemon.is_alive():
 				self.boardDetectorDaemon.start()
 			else:
 				self.boardDetectorDaemon.waiting.clear()
-		return self.savedRawImages
+		return self.boardDetectorDaemon.state.keys() # TODO necessary? Frontend update now happens via plugin message
 
 	@logme(True)
-	def delRawImg(self, name):
-		myPath  = path.join(self.debugFolder, "debug", name)
+	def delRawImg(self, path):
 		try:
-			os.remove(myPath)
+			os.remove(path)
 		except OSError as e:
-			self._logger.warning("Error trying to delete file: %s\n%s, %s" % (myPath, e, e.msg))
+			self._logger.warning("Error trying to delete file: %s\n%s, %s" % (path, e, e.msg))
 		finally:
-			self.savedRawImages.remove(name)
-		return self.savedRawImages
+			self.boardDetectorDaemon.state.remove(path)
+		return self.boardDetectorDaemon.state.keys() # TODO necessary? Frontend update now happens via plugin message
+
+	def ignoreCalibrationImage(self, path):
+		myPath  = path.join(self.debugFolder, "debug", path)
+		if myPath in self.boardDetectorDaemon.state.keys():
+			self.boardDetectorDaemon.state.ignore(path)
 
 	def takeNewPic(self):
 		"""Forces agent to take a new picture."""
@@ -286,11 +294,12 @@ class LidHandler(object):
 		self.boardDetectorDaemon.scaleProcessors(4)
 		return True
 
+	def updateFrontendCC(self, data):
+		self._plugin_manager.send_plugin_message("mrbeam", dict(chessboardCalibrationState=data))
+
 	@property
 	def debugFolder(self):
 		return path.join(path.dirname(self.imagePath),"debug")
-
-
 
 class PhotoCreator(object):
 	def __init__(self, _plugin, _plugin_manager, path, debug=False):

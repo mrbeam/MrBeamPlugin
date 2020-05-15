@@ -144,7 +144,7 @@ $(function(){
             }
             if (result) {
                 if (result.match(/(\?|&)ts=/))
-                    result = result.replace(/(\?|&)ts=[0-9]*/, "$1ts=" + new Date().getTime())
+                    result = result.replace(/(\?|&)ts=[0-9]+/, "$1ts=" + new Date().getTime())
                 else {
                     result += (result.lastIndexOf("?") > -1) ? '&ts=' : '?ts='
                     result += new Date().getTime();

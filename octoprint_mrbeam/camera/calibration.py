@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 from multiprocessing import Event, Pool, Process, Queue, Value
+from threading import Thread
 import logging
 import cv2
 import signal, os
 import numpy as np
 import time
-from octoprint_mrbeam.util import logtime, logExceptions
+from octoprint_mrbeam.util import logme, logtime, logExceptions
 import octoprint_mrbeam.camera as camera
 import queue
 from os import path
+import numpy as np
 
 CB_ROWS = 5
 CB_COLS = 6
@@ -21,20 +23,36 @@ BOARD_SIZE_MM = np.array([220, 190])
 MIN_BOARDS_DETECTED = 1
 MAX_PROCS = 4
 
+STATE_QUEUED = "queued"
+STATE_PROCESSING = "processing"
+STATE_SUCCESS = "success"
+STATE_FAIL = "fail"
+STATE_IGNORED = "ignored"
+STATE_PENDING = "pending"
+STATES = [STATE_QUEUED, STATE_PROCESSING, STATE_SUCCESS, STATE_FAIL, STATE_IGNORED, STATE_PENDING]
+
 # Remote connection for calibration
 # SSH_FILE = "/home/pi/.ssh/pi_id_rsa"
 # REMOTE_CALIBRATION_FOLDER = "/home/calibrationfiles/"
 # REMOTE_CALIBRATE_EXEC = path.join(REMOTE_CALIBRATION_FOLDER, "calibrate2.py")
 # MY_HOSTNAME = "MrBeam-8ae9"
 
-class BoardDetectorDaemon(Process):
+class BoardDetectorDaemon(Thread):
 	"""Processes images of chessboards to calibrate the lens used to take the pictures."""
 
-	def __init__(self, output_calib, image_size=camera.LEGACY_STILL_RES, procs=1, callback=None, runCalibrationAsap=False):
+	def __init__(self,
+		     output_calib,
+		     image_size=camera.LEGACY_STILL_RES,
+		     procs=1,
+		     stateChangeCallback=None,
+		     runCalibrationAsap=False):
 		# runCalibrationAsap : run the lens calibration when we have enough pictures ready
 		self._logger = logging.getLogger(__name__ + '.' + self.__class__.__name__)
 		self._logger.setLevel(logging.DEBUG)
 		self._logger.warning("Initiating the Board Detector Daemon")
+
+		# State of the detection & calibration
+		self.state = calibrationState(changeCallback=stateChangeCallback)
 
 		self.output_file = output_calib
 
@@ -47,9 +65,8 @@ class BoardDetectorDaemon(Process):
 		self.procs = Value('i', 2)
 
 		# Queues for I/O with the process
-		self.inputFiles = Queue()
-		self.successfullFiles = Queue()
-		self.failedFiles = Queue()
+		# self.inputFiles = Queue()
+		self.outputFiles = Queue()
 		self.tasks = []
 		self.images = []
 
@@ -66,12 +83,12 @@ class BoardDetectorDaemon(Process):
 		self._startWhenIdle = Event()
 		self._startWhenIdle.clear()
 
-		Process.__init__(self, target=self.processInputImages, name=self.__class__.__name__)
+		super(self.__class__, self).__init__(target=self.processInputImages, name=self.__class__.__name__)
 
 		# self.daemon = False
 		# catch SIGTERM used by Process.terminate()
-		signal.signal(signal.SIGTERM, self.stop)
-		signal.signal(signal.SIGINT, self.stop)
+		signal.signal(signal.SIGTERM, self.stopAsap)
+		signal.signal(signal.SIGINT, self.stopAsap)
 
 	def stop(self, signum=signal.SIGTERM, frame=None):
 		self._logger.info("Stopping")
@@ -100,15 +117,13 @@ class BoardDetectorDaemon(Process):
 		return self._stop.is_set() or self._terminate.is_set()
 
 	def add(self, image, chessboardSize=(CB_ROWS, CB_COLS)): #, rough_location=None, remote=None):
-		self.inputFiles.put(
-			{'path': image,
-			 'chessboardSize': chessboardSize
-			})
+		self.state.add(image, chessboardSize)
+
+	def __len__(self):
+		return len(self.state)
 
 	def __getitem__(self, item):
-		if self.tasks[item].ready():
-			return self.tasks[item].get()
-		else: return False
+		return self.state[item]
 
 	@property
 	def startCalibrationWhenIdle(self):
@@ -125,112 +140,89 @@ class BoardDetectorDaemon(Process):
 
 	@property
 	def detectedBoards(self):
-		return len(list(filter(lambda x: x.ready() and x.get()[1] is not None, self.tasks)))
+		# return len(list(filter(lambda x: x.ready() and x.get()[1] is not None, self.tasks)))
+		return len(list(filter(lambda x: x['state'] == STATE_SUCCESS, self.state.values())))
+
+	@property
+	def idle(self):
+		return all(pic['state'] != STATE_PROCESSING for pic in self.state.values())
 
 	def scaleProcessors(self, number):
 		self.procs = number
 		self._logger.info("Changing to %i simultaneous processes" % self.procs)
 
 	# @logtime
-	# @logExceptions
+	@logExceptions
 	def processInputImages(self):
-		try:
-			# state, callback=None, chessboardSize=(CB_COLS, CB_ROWS), rough_location=None, remote=None):
-			self._logger.warning("Starting the Board Detector Daemon")
-			if not self.inputFiles.empty():
-				self._logger.warning("Inputfiles not empty")
-				self.waiting.clear()
-			count = 0
-			self._logger.warning("Starting pool")
-			pool = Pool(MAX_PROCS)
-			self._logger.warning("Pool started - %i procs" % MAX_PROCS)
-			while not self._stop.is_set():
-				if self.waiting.is_set():
-					self._logger.debug("waiting to be restarted")
-					if self.startCalibrationWhenIdle and self.detectedBoards >= MIN_BOARDS_DETECTED:
-						self._logger.warning("Start lens calibration.")
-						self.startCalibrationWhenIdle = False
-						if self.runLensCalibration():
-							self._logger.warning("Lens calibration succesful")
-						else:
-							self._logger.error("Lens calibration failed")
-					elif self.detectedBoards < MIN_BOARDS_DETECTED:
-						self._logger.debug("Only %i boards detected yet, %i necessary" % (self.detectedBoards , MIN_BOARDS_DETECTED))
-
-					if self._stop.is_set():
-						self._logger.warning("STOP")
-						break
-					time.sleep(1)
-					# set the wait flags to signal the process to restart processing incoming files
-
-					continue
-				if len(list(filter(lambda x: not x.ready(), self.tasks))) < self.procs:
-					try :
-						_input = self.inputFiles.get(timeout=.1)
-						img, size = _input['path'], _input['chessboardSize']
-						count += 1
-					except queue.Empty:
-						self._logger.warning("no image?")
-						self.waiting.set()
-						continue
-					self._logger.warning("apply stuff async")
-					self.images.append(img)
-					self.tasks.append(pool.apply_async(handleBoardPicture,
-									(img, count, size)))
-				else:
-					if self._stop.wait(.2):
-						self._logger.warning("Stop signal intercepted")
-						pool.close()
-						break
-					else:
-						self._logger.debug("Dicking around ; procs set to : %i " % self.procs)
-			self._logger.info("Pool joining")
-			pool.close()
-			if self._terminate.is_set():
-				self._logger.warning("Pool terminating")
-				pool.terminate()
-			pool.join()
-			self._logger.info("Pool exited")
-		except Exception as e:
-			self._logger.exception(str(e))
-
-	def runLensCalibration(self, remote=None):
-		"""
-		None the distortion of the lens given the detected chessboards.
-		N.B. is supposed to run after the main process has been joined,
-		but can also run in parallel (only uses the available results)
-		"""
-		availableResults = list(filter(lambda _t: _t.ready(), self.tasks))
-		if len(availableResults) == 0: return None
-		objPoints = []
-		imgPoints = []
-		for t in availableResults:
-			expected_pattern, found_pattern = t.get()
-			if found_pattern is not None:
-				# TODO add ignored paths list provided by user choice in Front End
-				objPoints.append(get_object_points(*expected_pattern))
-				imgPoints.append(found_pattern)
-
-		if remote is not None:
-			raise NotImplementedError
-			# retval = call(["ssh", '-i', SSH_FILE, remote, "--", "python3", REMOTE_CALIBRATE_EXEC, "-f", MY_HOSTNAME , "SomeOtherInput" ])
-			# if retval == 0:
-			# 	remote_loc = remote + ":" + path.join(REMOTE_CALIBRATION_FOLDER, MY_HOSTNAME, "/lens_*.npz")
-			# 	retval = call(["scp", '-i', SSH_FILE, remote_loc, "~/.octoprint/cam/"])
-
-			# if retval != 0:
-			# 	raise ValueError("Remote failed to calibrate my camera")
-		else:
-			ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objPoints,
-									   imgPoints,
-									   self.image_size,
-									   None, None)
-			if ret == 0:
-				np.savez(self.output_file, mtx=mtx, dist=dist, rvecs=rvecs, tvecs=tvecs, ret=ret)
-				self._logger.info("File with camera parameters has been saved to {}".format(self.output_file))
-				return True
-			else:
-				return False
+		# try:
+		# state, callback=None, chessboardSize=(CB_COLS, CB_ROWS), rough_location=None, remote=None):
+		self._logger.warning("Starting the Board Detector Daemon")
+		if self.state.getPending():
+			self._logger.warning("Images waiting to be processed")
+			# self.waiting.clear()
+		count = 0
+		self._logger.warning("Starting pool")
+		pool = Pool(MAX_PROCS)
+		self._logger.warning("Pool started - %i procs" % MAX_PROCS)
+		lensCalibrationResults = None
+		loopcount = 0
+		ret = "ee"
+		while not self._stop.is_set():
+			loopcount += 1
+			if loopcount % 10 == 0 :
+				self._logger.info("Running...")
+				self.state.refresh()
+			if self.idle:
+				# self._logger.debug("waiting to be restarted")
+				if self.startCalibrationWhenIdle and self.detectedBoards >= MIN_BOARDS_DETECTED:
+					self._logger.warning("Start lens calibration.")
+					self.startCalibrationWhenIdle = False
+					availableResults = self.state.getSuccesses()
+					objPoints = []
+					imgPoints = []
+					for t in availableResults:
+						# TODO add ignored paths list provided by user choice in Front End (could be STATE_IGNORED)
+						objPoints.append(get_object_points(*t['board_size']))
+						imgPoints.append(t['found_pattern'])
+					self._logger.warning("len patterns : %i and %i " % (len(objPoints), len(imgPoints)))
+					args = (np.asarray(objPoints), np.asarray(imgPoints), self.state.imageSize) #, None, None)
+					# ret = cv2.calibrateCamera(*args)
+					# runLensCalibration,
+					lensCalibrationResults = pool.apply_async(runLensCalibration, args=args)
+					self.state.calibrationBusy()
+				elif self.detectedBoards < MIN_BOARDS_DETECTED:
+					self._logger.debug("Only %i boards detected yet, %i necessary" % (self.detectedBoards , MIN_BOARDS_DETECTED))
+				time.sleep(.1)
+				# set the wait flags to signal the process to restart processing incoming files
+			runningProcs = self.state.runningProcs() #len(list(filter(lambda x: not x.ready(), self.tasks)))
+			if runningProcs < self.procs and self.state.getPending():
+				path = self.state.getPending()
+				self.state.update(path, STATE_PROCESSING)
+				count += 1
+				self._logger.info("%i processes running, adding Process of image %s" % (runningProcs,
+													path))
+				self._logger.info("current state :\n%s" % self.state)
+				board_size = self.state[path]['board_size']
+				self.state.setWorker(path, pool.apply_async(handleBoardPicture,
+								            (path, count, board_size)))
+			if lensCalibrationResults and lensCalibrationResults.ready():
+			# if type(ret) is not str:
+				self._logger.warning("Lens calibration has given a result! ")
+				res = lensCalibrationResults.get()
+				# self._logger.warning(str(res))
+				self.state.updateCalibration(*res)
+				lensCalibrationResults = None
+			if self._stop.wait(.1): break
+		self._logger.warning("Stop signal intercepted")
+		self._logger.info("Pool joining")
+		pool.close()
+		if self._terminate.is_set():
+			self._logger.warning("Pool terminating")
+			pool.terminate()
+		pool.join()
+		self._logger.info("Pool exited")
+		# except Exception as e:
+		# 	self._logger.exception(str(e))
 
 
 def get_object_points(rows, cols):
@@ -240,9 +232,13 @@ def get_object_points(rows, cols):
                            0:rows * CB_SQUARE_SIZE:CB_SQUARE_SIZE].T.reshape(-1, 2)
     return objp
 
+def ee(*args, **kwargs):
+	return cv2.calibrateCamera(*args, **kwargs)
 # @logtime
+# @logme(True)
 # @logExceptions
-def handleBoardPicture(image, count, expected_pattern):
+def handleBoardPicture(image, count, board_size):
+	# logger = logging.getLogger()
 	# if self._stop.is_set(): return
 	if isinstance(image, str):
 		# self._logger.info("Detecting board in %s" % image)
@@ -257,6 +253,7 @@ def handleBoardPicture(image, count, expected_pattern):
 	else:
 		raise ValueError("Expected an image or a path to an image in inputFiles.")
 
+	# if callback != None: callback(path, STATE_PROCESSING)
 	# if remote is not None:
 	# 	location = path.join(REMOTE_CALIBRATION_FOLDER, MY_HOSTNAME)
 	# 	remote_loc = remote + ":" + location
@@ -274,15 +271,20 @@ def handleBoardPicture(image, count, expected_pattern):
 	# 	return
 
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-	success, found_pattern = findBoard(gray, expected_pattern)
+	success, found_pattern = findBoard(gray, board_size)
 
 	if success:
-		# self.successfullFiles.put(path)
-		return expected_pattern, found_pattern
+		# if callback != None: callback(path, STATE_SUCCESS, board_size=board_size, found_pattern=found_pattern)
+		return found_pattern
 	else:
-		# self.failedFiles.put(path)
-		return None, None
+		# if callback != None: callback(path, STATE_FAIL, board_size=board_size)
+		return None
 
+	#TODO: notify frontend
+	# callback of the lid_handler
+
+
+@logExceptions
 def findBoard(image, pattern):
 	"""Finds the chessboard pattern of a given size in the image"""
 	# TODO Add 8-way connected label filtering for small elements
@@ -294,5 +296,198 @@ def findBoard(image, pattern):
 	cornerSubPix = cv2.cornerSubPix(image, corners, (11, 11), (-1, -1), (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001))
 	return corners_found, cornerSubPix
 
-def _save_results(path, found_pattern, expected_pattern):
-	np.savez(path + ".npz", expected_pattern=expected_pattern, found_pattern=found_pattern)
+# @logExceptions
+def runLensCalibration(objPoints, imgPoints, imgRes):
+	"""
+	None the distortion of the lens given the detected chessboards.
+	N.B. is supposed to run after the main process has been joined,
+	but can also run in parallel (only uses the available results)
+	"""
+	# if remote is not None:
+	# 	raise NotImplementedError()
+	# 	# retval = call(["ssh", '-i', SSH_FILE, remote, "--", "python3", REMOTE_CALIBRATE_EXEC, "-f", MY_HOSTNAME , "SomeOtherInput" ])
+	# 	# if retval == 0:
+	# 	# 	remote_loc = remote + ":" + path.join(REMOTE_CALIBRATION_FOLDER, MY_HOSTNAME, "/lens_*.npz")
+	# 	# 	retval = call(["scp", '-i', SSH_FILE, remote_loc, "~/.octoprint/cam/"])
+
+	# 	# if retval != 0:
+	# 	# 	raise ValueError("Remote failed to calibrate my camera")
+	# else:
+	ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objPoints,
+								imgPoints,
+								imgRes,
+								None, None)
+	# if callback: callback()
+	if ret == 0:
+		return ret, mtx, dist, rvecs, tvecs
+	else:
+		return ret, mtx, dist, rvecs, tvecs
+
+
+class calibrationState(dict):
+	def __init__(self, imageSize=camera.LEGACY_STILL_RES, changeCallback=None, *args, **kw):
+		self._logger = logging.getLogger(__name__ + '.' + self.__class__.__name__)
+		self.changeCallback = changeCallback
+		self.imageSize=imageSize
+		self.lensCalibration = dict(state=STATE_PENDING)
+		super(self.__class__, self).__init__(*args, **kw)
+
+	def onChange(self):
+		returnState = dict(imageSize=self.imageSize,
+				   lensCalibration=self.lensCalibration['state'],
+				   pictures=self.clean())
+		self._logger.info("Changed state : \n%s" % returnState)
+		if self.changeCallback != None:
+			self.changeCallback(returnState)
+
+	def add(self, path, board_size=(CB_ROWS, CB_COLS)):
+		self[path] = dict(
+			tm_added=time.time(),
+			state=STATE_QUEUED,
+			tm_proc=None,
+			tm_end=None,
+			board_size=board_size
+		)
+		self.onChange()
+
+	def remove(self, path):
+		self.imageList.pop(path, None) # deletes without key exist check
+		self.onChange()
+
+	def ignore(self, path):
+		self[path].update(dict(state=STATE_IGNORED))
+		self.onChange()
+
+	def update(self, path, newState, **kw):
+		if newState in STATES:
+			self[path].update(dict(state = newState,
+					       tm_proc = time.time(),
+					       **kw))
+		else:
+			raise ValueError("Not a valid state: {}", newState)
+		self.onChange()
+
+	def updateCalibration(self, ret, mtx, dist, rvecs, tvecs):
+		if ret != 0.:
+			self.lensCalibration.update(dict(state=STATE_SUCCESS, mtx=mtx, dist=dist, rvecs=rvecs, tvecs=tvecs))
+		# elif state in STATES:
+		# 	self.lastLensCalibrationState = state
+		# else:
+		# 	raise ValueError("Not a valid state: {}", state)
+		self.onChange()
+
+	def calibrationBusy(self):
+		self.lensCalibration.update(dict(state=STATE_PROCESSING))
+
+
+	def refresh(self):
+		"Check if the worker is done with the board"
+		changed = False
+		for path, elm in self.items():
+			if elm['state'] == STATE_PROCESSING and 'worker' in elm.keys() and elm['worker'].ready():
+				calibrationState._updateFromWorker(elm)
+				changed = True
+
+		if changed:
+			self._logger.debug("something changed")
+			self.onChange()
+
+	def getSuccesses(self):
+		return list(filter(lambda _s: _s['state'] == STATE_SUCCESS, self.values()))
+
+	def getAll(self):
+		return self
+
+	def getPending(self):
+		for path, imgState in self.items():
+			if imgState['state'] == STATE_QUEUED: return path
+
+	def save(self, path):
+		np.savez(path + ".npz", **self[path])
+
+	def load(self, path):
+		self[path] = np.load(path + ".npz")
+		self.onChange()
+
+	def saveCalibration(self):
+		np.savez(self.output_file, **self.lensCalibration)
+
+	def loadCalibration(self, path):
+		self.lensCalibration = np.load(path + ".npz")
+		self.onChange()
+
+	def setWorker(self, path, poolResult):
+		self[path]['worker'] = poolResult
+
+	def runningProcs(self):
+		count = 0
+		changed = False
+		for elm in self.values():
+			if 'worker' in elm.keys() and not elm['worker'].ready():
+				count += 1
+			elif elm['state'] == STATE_PROCESSING and 'worker' in elm.keys():
+				calibrationState._updateFromWorker(elm)
+				changed = True
+		if changed: self.onChange()
+		return count
+
+	def clean(self):
+		"Allows to be pickled"
+		def _isClean(elm):
+			return type(elm) in [str, int, float]
+		def _clean(d):
+			if isinstance(d, dict):
+				ret = {}
+				for k, v in d.items():
+					res = _clean(v)
+					if res is not None: ret[k]=res
+				return ret
+			elif type(d) in [list, tuple]:
+				ret = []
+				for elm in d:
+					res = _clean(elm)
+					if res is not None:
+						ret.append(res)
+				return type(d)(ret)
+			else:
+				if _isClean(d): return d
+		return _clean(self)
+
+	@staticmethod
+	def _updateFromWorker(elm):
+		result = elm['worker'].get()
+		if result is None:
+			elm['state'] = STATE_FAIL
+		else:
+			elm['state'] = STATE_SUCCESS
+			elm['found_pattern'] = result
+
+if __name__ == "__main__":
+	import argparse, textwrap
+	parser = argparse.ArgumentParser(description="Detect the markers in the pictures provided or from the camera",
+									 formatter_class=argparse.RawDescriptionHelpFormatter,
+									 epilog=textwrap.dedent('''\
+	Find the chessboards in the .jpg pictures contained in given path and
+	calculate the lens distortion from given chessboards.
+
+	'''))
+	# parser.add_argument('outfolder', nargs='?',# type=argparse.FileType('w'),
+	#                     default='markers_out')
+	#
+	parser.add_argument('out_file', metavar = 'OUT')
+	parser.add_argument('images', metavar = 'IMG', nargs='+')
+
+	args = parser.parse_
+	b = BoardDetectorDaemon(args.out_file,
+				runCalibrationAsap=True)
+	for path in args.images:
+		b.add(path)
+	# Detect boards
+	if not b.is_alive():
+		b.start()
+	else:
+		b.waiting.clear()
+
+	# Start calibration
+	b.startCalibrationWhenIdle = True
+	b.scaleProcessors(4)
