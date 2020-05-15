@@ -117,14 +117,18 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	Element.prototype.renderPNG = function (wPT, hPT, wMM, hMM, pxPerMM, renderBBoxMM=null, callback=null) {
 		var elem = this;
 		//console.info("renderPNG paper width", elem.paper.attr('width'), wPT);
-		console.info("renderPNG: SVG " + wPT + '*' + hPT +" (pt) with viewBox " + wMM + '*' + hMM + ' (mm), rendering @ ' + pxPerMM + ' px/mm, cropping to bbox (mm): '+renderBBoxMM);
+		console.info("renderPNG: SVG " + wPT + '*' + hPT +" (pt) with viewBox " + wMM + '*' + hMM + ' (mm), rendering @ ' + pxPerMM + ' px/mm, cropping to bbox (mm): ', renderBBoxMM);
+
+		let bboxFromElem = elem.getBBox();
 
 		let bbox; // attention, this bbox uses viewBox coordinates (mm)
 		if(renderBBoxMM === null){
 			// warning: correct result depends upon all resources (img, fonts, ...) have to be fully loaded already.
 			bbox = elem.getBBox();
+			console.log("renderPNG(): fetched render bbox from element: ", bbox);
 		} else {
 			bbox = renderBBoxMM;
+			console.log("renderPNG(): got render bbox from caller: ", bbox, "(elem bbox is ", bboxFromElem, ")");
 		}
 
         // Quick fix: in some browsers the bbox is too tight, so we just add an extra 10% to all the sides, making the height and width 20% larger in total
@@ -135,7 +139,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 		console.info("enlarged renderBBox (in mm): " + bbox.w +'*'+bbox.h + " @ " + bbox.x + ',' + bbox.y);
 
-		// get svg as dataUrl
+		// get svg as dataUrl TODO: check snap's .toDataURL() function instead of a homebrew one.
 		var svgStr = elem.outerSVG();
         // on iOS (Safari and Chrome) embedded images are linked with NS1:href which doesn't work later on...
         svgStr = svgStr.replace(/NS1:href=/gi, 'xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href=');
@@ -156,10 +160,15 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		// render SVG image to the canvas once it loads.
 		source.onload = function () {
 
-			var srcScale = wPT / wMM; // canvas.drawImage refers to <svg> coordinates - not viewBox coordinates.
-
+			const srcScale = wPT / wMM; // canvas.drawImage refers to <svg> coordinates - not viewBox coordinates.
+			const cx = bbox.x * srcScale;
+			const cy = bbox.y * srcScale;
+			const cw = bbox.w * srcScale;
+			const ch = bbox.h * srcScale;
+			
 			// drawImage(source, src.x, src.y, src.width, src.height, dest.x, dest.y, dest.width, dest.height);
-			renderCanvasContext.drawImage(source, bbox.x * srcScale, bbox.y * srcScale, bbox.w * srcScale, bbox.h * srcScale, 0, 0, renderCanvas.width, renderCanvas.height);
+			console.log("rasterizing: " + cw +'*'+ch + " @ " + cx + ',' + cy + "(scale: "+srcScale+"+)");
+			renderCanvasContext.drawImage(source, cx, cy, cw, ch, 0, 0, renderCanvas.width, renderCanvas.height);
 
 			// place fill bitmap into svg
 			var fillBitmap = renderCanvas.toDataURL("image/png");
@@ -176,7 +185,6 @@ Snap.plugin(function (Snap, Element, Paper, global) {
             var len = getDataUriSize(svgDataUri, 'B');
             var msg = "Error during conversion: Loading SVG dataUri into image element failed. (dataUri.length: "+len+")";
             console.error(msg, e);
-            var error = "<p>" + gettext("The SVG file contains clipPath elements.<br/>clipPath is not supported yet and has been removed from file.") + "</p>";
 			new PNotify({
 				title: gettext("Conversion failed"),
 				text: msg,

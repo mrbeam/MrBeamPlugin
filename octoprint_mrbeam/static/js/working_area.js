@@ -1,16 +1,24 @@
 /* global snap, ko, $, Snap, API_BASEURL, _, CONFIG_WEBCAM_STREAM, ADDITIONAL_VIEWMODELS, mina, BEAMOS_DISPLAY_VERSION, WorkingAreaHelper */
 
 MRBEAM_PX2MM_FACTOR_WITH_ZOOM = 1; // global available in this viewmodel and in snap plugins at the same time.
-MRBEAM_DEBUG_RENDERING = false;
+MRBEAM_DEBUG_RENDERING = true;
 if(MRBEAM_DEBUG_RENDERING){
-	function debugBase64(base64URL, target="") {
-		var dbg_link = "<a target='_blank' href='"+base64URL+"'>Right click -> Open in new tab</a>"; // debug message, no need to translate
+	function debugBase64(base64URL, target="", data=null) {
+		var dbg_link = "<a target='_blank' href='"+base64URL+"' onmouseover=' show_in_popup(\""+base64URL+"\"); '>Hover | Right click -> Open in new tab</a>"; // debug message, no need to translate
+		if(data){
+			dbg_link += "<br/>" + JSON.stringify(data);
+		}
 			new PNotify({
 				title: "render debug output " + target,
 				text: dbg_link,
 				type: "warn",
 				hide: false
 			});
+	}
+	
+	function show_in_popup(dataurl) {
+		$('#debug_rendering_div').remove();
+		$('body').append("<div id='debug_rendering_div' style='position:fixed; top:0; left:0; border:1px solid red; background:center no-repeat; background-size: contain; background-color:aqua; width:50vw; height:50vh; z-index:999999; background-image:url(\""+dataurl+"\")' onclick=' $(this).remove(); '></div>")
 	}
 	
 	(function(console){
@@ -1842,6 +1850,10 @@ $(function(){
 			compSvg.attr(namespaces)
 			var attrs = {};
 			var content = compSvg.g(attrs);
+			
+			// TODO: here getBBox() should be reliably sized, but contains a lot of non renderable stuff.
+			let contentBBox = snap.select("#userContent").getBBox();
+			console.log("contentBBox", contentBBox);
 			var userContent = snap.select("#userContent").clone();
 			content.append(userContent);
 
@@ -1886,7 +1898,7 @@ $(function(){
 				let nsList = Object.keys(namespaces).map(key => `${key}="${namespaces[key]}"`).join(" ");
 				var svg = `
 <svg version="1.1" ${nsList} 
-  mb:beamOS_version="${BEAMOS_VERSION}" 
+  mb:beamOS_version="${BEAMOS_VERSION}" mb:browser="${navigator.userAgent}"
   width="${w}" height="${h}"  viewBox="${viewBox}" mb:gc_options="${gc_otions_str}">
 <defs/>
   ${svgStr}
@@ -2212,7 +2224,7 @@ $(function(){
 
 				var cb = function(result, x, y, w, h) {
 					if (MRBEAM_DEBUG_RENDERING) {
-						debugBase64(result, 'png_debug');
+						debugBase64(result, 'Step 2: Canvas result .png');
 					}
 
 					if(fillings.length > 0){
@@ -2230,20 +2242,25 @@ $(function(){
 					}
 					if (typeof callback === 'function') {
 						callback(svg);
+						if (MRBEAM_DEBUG_RENDERING) {
+							const data = {fillImg: '(' + w + ',' + h + '@' + x + ',' + y + ' mm)'}
+							debugBase64(svg.toDataURL(), 'Step 3: SVG with fill rendering', data);
+						}
 					}
 					self._cleanup_render_mess();
 				};
 
+				let renderBBoxMM = tmpSvg.getBBox(); // if #712 still fails, fetch this bbox earlier (getCompositionSvg()).
 				if(MRBEAM_DEBUG_RENDERING){
-//					var base64String = btoa(tmpSvg.innerSVG());
-					var raw = tmpSvg.innerSVG();
-					var svgString = raw.substr(raw.indexOf('<svg'));
-					var dataUrl = 'data:image/svg+xml;base64, ' + btoa(svgString);
-					debugBase64(dataUrl, 'svg_debug');
+////					var base64String = btoa(tmpSvg.innerSVG());
+//					var raw = tmpSvg.innerSVG();
+//					var svgString = raw.substr(raw.indexOf('<svg'));
+//					var dataUrl = 'data:image/svg+xml;base64, ' + btoa(svgString);
+					const bbStr = '(' + renderBBoxMM.width + ',' + renderBBoxMM.height + '@' + renderBBoxMM.x + ',' + renderBBoxMM.y + ' mm)' 
+					debugBase64(tmpSvg.toDataURL(), 'Step 1: SVG ready for canvas, renderBBox', bbStr);
 				}
 				console.log("Rendering " + fillings.length + " filled elements.");
 				if(fillAreas){
-					let renderBBoxMM = tmpSvg.getBBox(); // if #712 still fails, fetch this bbox earlier (getCompositionSvg()).
 					tmpSvg.renderPNG(svgWidthPT, svgHeightPT, wMM, hMM, pxPerMM, renderBBoxMM, cb);
 				} else {
 					cb(null)
