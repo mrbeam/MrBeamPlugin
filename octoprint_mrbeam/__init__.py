@@ -443,6 +443,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		assets = dict(
 
 			js=["js/helpers/quick_shape_helper.js",
+			    "js/helpers/debug_rendering_helper.js",
 			    "js/helpers/working_area_helper.js",
 			    "js/lib/jquery.tinycolorpicker.js",
 			    "js/lasercutterprofiles.js",

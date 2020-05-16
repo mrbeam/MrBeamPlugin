@@ -3,58 +3,7 @@
 MRBEAM_PX2MM_FACTOR_WITH_ZOOM = 1; // global available in this viewmodel and in snap plugins at the same time.
 
 // Render debugging utilities
-MRBEAM_DEBUG_RENDERING = true;
-function debugBase64(base64URL, target="", data=null) {
-	var dbg_link = "<a target='_blank' href='"+base64URL+"' onmouseover=' show_in_popup(\""+base64URL+"\"); '>Hover | Right click -> Open in new tab</a>"; // debug message, no need to translate
-	if(data){
-		dbg_link += "<br/>" + JSON.stringify(data);
-	}
-		new PNotify({
-			title: "render debug output " + target,
-			text: dbg_link,
-			type: "warn",
-			hide: false
-		});
-}
-
-function show_in_popup(dataurl) {
-	$('#debug_rendering_div').remove();
-	$('body').append("<div id='debug_rendering_div' style='position:fixed; top:0; left:0; border:1px solid red; background:center no-repeat; background-size: contain; background-color:aqua; width:50vw; height:50vh; z-index:999999; background-image:url(\""+dataurl+"\")' onclick=' $(this).remove(); '></div>")
-}
-
-(function(console){
-	/**
-	 * Convenient storing large data objects (json, dataUri, base64 encoded images, ...) from the console.
-	 * 
-	 * @param {object} data to save (means download)
-	 * @param {string} filename used for download
-	 * @returns {undefined}
-	 */
-	console.save = function(data, filename){
-
-		if(!data) {
-			console.error('Console.save: No data')
-			return;
-		}
-
-		if(!filename) filename = 'console.json'
-
-		if(typeof data === "object"){
-			data = JSON.stringify(data, undefined, 4)
-		}
-
-		var blob = new Blob([data], {type: 'text/json'}),
-			e    = document.createEvent('MouseEvents'),
-			a    = document.createElement('a')
-
-		a.download = filename
-		a.href = window.URL.createObjectURL(blob)
-		a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':')
-		e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
-		a.dispatchEvent(e)
-	}
-})(console)
-// End Render debugging utilities
+MRBEAM_DEBUG_RENDERING = false; // setting to true enables lots of visual debug tools. Can be changed during runtime. 
 
 $(function(){
 
@@ -1891,7 +1840,7 @@ $(function(){
 				var viewBox = "0 0 " + wMM + " " + hMM;
 
 				svgStr = WorkingAreaHelper.fix_svg_string(svgStr); // Firefox bug workaround.
-				var gc_otions_str = self.gc_options_as_string().replace('"', "'");
+				const gc_options_str = self.gc_options_as_string().replace(/"/g, "\"");
 
 				// ensure namespaces are present
 				namespaces['xmlns'] = "http://www.w3.org/2000/svg";
@@ -1899,8 +1848,8 @@ $(function(){
 				let nsList = Object.keys(namespaces).map(key => `${key}="${namespaces[key]}"`).join(" ");
 				var svg = `
 <svg version="1.1" ${nsList} 
-  mb:beamOS_version="${BEAMOS_VERSION}" mb:browser="${navigator.userAgent}"
-  width="${w}" height="${h}"  viewBox="${viewBox}" mb:gc_options="${gc_otions_str}">
+  mb:beamOS_version="${BEAMOS_VERSION}"
+  width="${w}" height="${h}"  viewBox="${viewBox}" mb:gc_options="${gc_options_str}">
 <defs/>
   ${svgStr}
 </svg>`;
@@ -1920,6 +1869,7 @@ $(function(){
 			for (var key in gc_options) {
 				res.push(key + ":" + gc_options[key]);
 			}
+			res.push('userAgent:'+navigator.userAgent.replace(/"/g,'\"'));
 			return res.join(", ");
 		};
 
