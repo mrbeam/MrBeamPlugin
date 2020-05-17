@@ -23,7 +23,7 @@ BOARD_SIZE_MM = np.array([220, 190])
 MIN_BOARDS_DETECTED = 1
 MAX_PROCS = 4
 
-STATE_PENDING_CAMERA = "camera is taking the picture"
+STATE_PENDING_CAMERA = "camera_processing"
 STATE_QUEUED = "queued"
 STATE_PROCESSING = "processing"
 STATE_SUCCESS = "success"
@@ -147,10 +147,11 @@ class BoardDetectorDaemon(Thread):
 
 	@property
 	def idle(self):
-		return all(pic['state'] != STATE_PROCESSING for pic in self.state.values())
+		return all(pic['state'] != STATE_PROCESSING for pic in self.state.values()) \
+			and self.state.lensCalibration['state'] != STATE_PROCESSING
 
 	def scaleProcessors(self, number):
-		self.procs = number
+		self.procs.value = number
 		self._logger.info("Changing to %i simultaneous processes" % self.procs)
 
 	# @logtime
@@ -171,8 +172,9 @@ class BoardDetectorDaemon(Thread):
 		ret = "ee"
 		while not self._stop.is_set():
 			loopcount += 1
-			if loopcount % 10 == 0 :
-				self._logger.info("Running...")
+			if loopcount % 20 == 0 :
+				self._logger.info("Running... %s procs running, stopsignal : %s" %
+						  (self.state.runningProcs(), self._stop.is_set()))
 				self.state.refresh()
 			if self.idle:
 				# self._logger.debug("waiting to be restarted")
@@ -197,12 +199,13 @@ class BoardDetectorDaemon(Thread):
 				time.sleep(.1)
 				# set the wait flags to signal the process to restart processing incoming files
 			runningProcs = self.state.runningProcs() #len(list(filter(lambda x: not x.ready(), self.tasks)))
-			if runningProcs < self.procs and self.state.getPending():
+			if runningProcs < self.procs.value and self.state.getPending():
 				path = self.state.getPending()
 				self.state.update(path, STATE_PROCESSING)
 				count += 1
-				self._logger.info("%i processes running, adding Process of image %s" % (runningProcs,
-													path))
+				self._logger.info("%i / %i processes running, adding Process of image %s" % (runningProcs,
+													     self.procs.value,
+													     path))
 				self._logger.info("current state :\n%s" % self.state)
 				board_size = self.state[path]['board_size']
 				self.state.setWorker(path, pool.apply_async(handleBoardPicture,
@@ -375,11 +378,15 @@ class calibrationState(dict):
 		# 	self.lastLensCalibrationState = state
 		# else:
 		# 	raise ValueError("Not a valid state: {}", state)
+		else:
+			self.lensCalibration.update(dict(state=STATE_FAIL))
 		self.onChange()
 
 	def calibrationBusy(self):
 		self.lensCalibration.update(dict(state=STATE_PROCESSING))
 
+	def calibrationRunning(self):
+		return self.lensCalibration['state'] == STATE_PROCESSING
 
 	def refresh(self):
 		"""Check if the worker is done with the board,

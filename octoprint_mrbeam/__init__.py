@@ -959,11 +959,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	@octoprint.plugin.BlueprintPlugin.route("/calibration_save_raw_pic", methods=["GET"])
 	def onCalibrationSaveRawPic(self):
-		return ':'.join(self.lid_handler.saveRawImg())
+		self.lid_handler.saveRawImg()
+		return NO_CONTENT
 
 	@octoprint.plugin.BlueprintPlugin.route("/calibration_get_raw_pic", methods=["GET"])
 	def onCalibrationGetRawPic(self):
-		return ':'.join(self.lid_handler.getRawImg())
+		self.lid_handler.getRawImg()
+		return NO_CONTENT
 
 	@octoprint.plugin.BlueprintPlugin.route("/calibration_delete_raw_pic", methods=["POST"])
 	def onCalibrationDelRawPic(self):

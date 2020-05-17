@@ -169,6 +169,7 @@ $(function () {
 			self.analytics.send_fontend_event('lens_calibration_start', {});
 			self.picType("raw");
 			self.lensCalibrationActive(true);
+			self.refreshPics()
 		};
 
 		self.nextMarker = function(){
@@ -368,6 +369,14 @@ $(function () {
 			// 					   self.saveRawPicError);
 		}
 
+		self.showRawPic = function() {
+			var path = this['name'];
+			var dl_path = path.replace("home/pi/.octoprint/uploads",
+									   "downloads/files/local")
+			self.picType("reserved");
+			self.calImgUrl(dl_path)
+		}
+
 		self.delRawPic = function() {
 			var id = this['id']
 			self.simpleApiCommand("calibration_delete_raw_pic",
@@ -411,6 +420,10 @@ $(function () {
                 });
 			}
 		})
+
+		self.cameraBusy = ko.computed(function() {
+			return self.rawPicSelection().some(elm => elm.state === "camera_processing")
+		});
 
 		self.runLensCalibration = function() {
 			self.lensCalibrationRunning(true);

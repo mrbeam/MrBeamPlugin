@@ -235,7 +235,7 @@ class LidHandler(object):
 			self._photo_creator.zoomed_out = compensate
 
 	def getRawImg(self):
-		return self.boardDetectorDaemon.state.keys()
+		self.boardDetectorDaemon.state.onChange()
 
 	def saveRawImg(self):
 		# TODO
@@ -249,15 +249,17 @@ class LidHandler(object):
 		   self._photo_creator.active and \
 		   not self._photo_creator.stopping:
 			self._logger.warning("Saving new picture %s" % imgName)
+			# take a new picture and save to the specific path
 			self._photo_creator.saveRaw = imgName
 			self.takeNewPic()
 			imgPath = path.join(self.debugFolder, imgName)
+			# Tell the boardDetector to listen for this file
 			self.boardDetectorDaemon.add(imgPath)
 			if not self.boardDetectorDaemon.is_alive():
 				self.boardDetectorDaemon.start()
 			else:
 				self.boardDetectorDaemon.waiting.clear()
-		return self.boardDetectorDaemon.state.keys() # TODO necessary? Frontend update now happens via plugin message
+		# return self.boardDetectorDaemon.state.keys() # TODO necessary? Frontend update now happens via plugin message
 
 	@logme(True)
 	def delRawImg(self, path):
