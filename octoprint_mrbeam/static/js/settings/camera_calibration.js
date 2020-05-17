@@ -12,6 +12,7 @@ $(function () {
 	function CameraCalibrationViewModel(parameters) {
 		var self = this;
 		window.mrbeam.viewModels['cameraCalibrationViewModel'] = self;
+		self.calibrationScreenShown = ko.observable(false)
 
 		self.staticURL = "/plugin/mrbeam/static/img/cam_calibration/calpic_wait.svg";
 
@@ -29,7 +30,7 @@ $(function () {
 
 		self.focusX = ko.observable(0);
 		self.focusY = ko.observable(0);
-		self.picType = ko.observable(""); // raw, lens_correction, cropped
+		self.picType = ko.observable(""); // raw, lens_corrected, cropped
 		self.correctedMarkersVisibility = ko.observable('hidden')
 		self.croppedMarkersVisibility = ko.observable('hidden');
 		self.calImgWidth = ko.observable(2048);
@@ -37,7 +38,10 @@ $(function () {
 		self.picType.subscribe(function (val) {
 			switch (val) {
 				case 'cropped':
-					self.calImgUrl(self.camera.timestampedImgUrl());
+					var croppedUrl = self.camera.timestampedImgUrl()
+					if (!croppedUrl)
+						croppedUrl = self.camera.getTimestampedImageUrl(self.camera.croppedUrl)
+					self.calImgUrl(croppedUrl);
 					self.calImgWidth(500);
 					self.calImgHeight(390);
 					self.correctedMarkersVisibility('hidden');
@@ -50,7 +54,7 @@ $(function () {
 					self.correctedMarkersVisibility('hidden')
 					self.croppedMarkersVisibility('hidden');
 					break;
-				case 'lens_correction':
+				case 'lens_corrected':
 					self.calImgUrl(self.camera.getTimestampedImageUrl(self.camera.undistortedUrl));
 					self.calImgWidth(2048);
 					self.calImgHeight(1536);
@@ -65,7 +69,7 @@ $(function () {
 					self.calImgUrl(self.staticURL);
 			}
 		});
-		self.availablePic = ko.observable({'raw': false, 'lens_correction': false, 'cropped': false, })
+		self.availablePic = ko.observable({'raw': false, 'lens_corrected': false, 'cropped': false, })
 		self.calImgUrl = ko.observable(self.staticURL);
 
 		self.calSvgOffX = ko.observable(0);
@@ -157,7 +161,7 @@ $(function () {
 			self.analytics.send_fontend_event('corner_calibration_start', {});
 			// self.currentResults({});
 			self.cornerCalibrationActive(true);
-			self.picType("lens_correction");
+			self.picType("lens_corrected");
 			self.nextMarker();
 		};
 
@@ -239,6 +243,7 @@ $(function () {
 			if(self.isInitialCalibration()){
 				self.loadUndistortedPicture();
 				self.refreshPics();
+				self.calibrationScreenShown(true)
 			}
 		};
 
@@ -290,6 +295,7 @@ $(function () {
 		self.onDataUpdaterPluginMessage = function (plugin, data) {
 			if (plugin !== "mrbeam" || !data)
 				return;
+			if (!self.calibrationScreenShown()) return;
 			if('mrb_state' in data){
 				self.interlocks_closed(data['mrb_state']['interlocks_closed']);
 				self.lid_fully_open(data['mrb_state']['lid_fully_open']);
@@ -299,16 +305,18 @@ $(function () {
 				// update image
 				var _d = data['beam_cam_new_image'];
 				if (_d['undistorted_saved'] && ! self.cornerCalibrationActive()) {
-					self.availablePic(_d['available'])
-					if (! ['raw', 'lens_correction', 'cropped'].includes(self.picType())) {
-						for (_type of ['lens_correction', 'raw']) {
-							if (self.availablePic()[_type]) {
-								self.picType(_type);
-								break;
+					if (_d['available']) {
+						self.availablePic(_d['available'])
+						if (! ['raw', 'lens_corrected', 'cropped'].includes(self.picType())) {
+							for (_type of ['lens_corrected', 'raw']) {
+								if (self.availablePic()[_type]) {
+									self.picType(_type);
+									break;
+								}
 							}
-						}
-					} else
-						self.calImgUrl(self.camera.getTimestampedImageUrl(self.calImgUrl()));
+						} else
+							self.calImgUrl(self.camera.getTimestampedImageUrl(self.calImgUrl()));
+					}
 
 					if (self.isInitialCalibration()) {
 						self.dbNWImgUrl('/downloads/files/local/cam/debug/NW.jpg' + '?ts=' + new Date().getTime());
@@ -379,7 +387,7 @@ $(function () {
 				});
 		}
 
-		self.rawPicSuccess = function(response) {self.rawPics(response.split(':'))}
+		self.rawPicSuccess = function(response) {} // {self.rawPics(response.split(':'))}
 		self.saveRawPicError = function() {self.rawPicError(gettext("Failed to save the latest image."))}
 		self.delRawPicError  = function() {self.rawPicError(gettext("Failed to delete the latest image."))}
 		self.getRawPicError  = function() {self.rawPicError(gettext("Failed to refresh the list of images."))}
@@ -423,11 +431,6 @@ $(function () {
 						hide: true})},
 				"POST");
 		};
-
-		self.lensCalibrationSuccess = function() {
-			self.lensCalibrationRunning(false);
-			self.lensCalibrationActive(false);
-		}
 
 		self.engrave_markers = function () {
 			var url = '/plugin/mrbeam/generate_calibration_markers_svg';
@@ -556,7 +559,7 @@ $(function () {
 		};
 
 		self.resetView = function () {
-			self.picType("lens_correction");
+			self.picType("lens_corrected");
 			self.focusX(0);
 			self.focusY(0);
 			self.calSvgScale(1);
@@ -574,6 +577,7 @@ $(function () {
 
 		self.continue_to_calibration = function () {
 			self.loadUndistortedPicture(self.next);
+			self.calibrationScreenShown(true)
 		};
 
 		self.next = function () {

@@ -23,6 +23,7 @@ BOARD_SIZE_MM = np.array([220, 190])
 MIN_BOARDS_DETECTED = 1
 MAX_PROCS = 4
 
+STATE_PENDING_CAMERA = "camera is taking the picture"
 STATE_QUEUED = "queued"
 STATE_PROCESSING = "processing"
 STATE_SUCCESS = "success"
@@ -116,8 +117,9 @@ class BoardDetectorDaemon(Thread):
 	def stopping(self):
 		return self._stop.is_set() or self._terminate.is_set()
 
-	def add(self, image, chessboardSize=(CB_ROWS, CB_COLS)): #, rough_location=None, remote=None):
-		self.state.add(image, chessboardSize)
+	def add(self, image, chessboardSize=(CB_ROWS, CB_COLS),
+	        state=STATE_PENDING_CAMERA ): #, rough_location=None, remote=None):
+		self.state.add(image, chessboardSize, state=state)
 
 	def __len__(self):
 		return len(self.state)
@@ -340,10 +342,10 @@ class calibrationState(dict):
 		if self.changeCallback != None:
 			self.changeCallback(returnState)
 
-	def add(self, path, board_size=(CB_ROWS, CB_COLS)):
+	def add(self, path, board_size=(CB_ROWS, CB_COLS), state=STATE_PENDING_CAMERA):
 		self[path] = dict(
 			tm_added=time.time(),
-			state=STATE_QUEUED,
+			state=state,
 			tm_proc=None,
 			tm_end=None,
 			board_size=board_size
@@ -355,17 +357,16 @@ class calibrationState(dict):
 		self.onChange()
 
 	def ignore(self, path):
-		self[path].update(dict(state=STATE_IGNORED))
-		self.onChange()
+		self.update(path, STATE_IGNORED)
 
 	def update(self, path, newState, **kw):
 		if newState in STATES:
 			self[path].update(dict(state = newState,
 					       tm_proc = time.time(),
 					       **kw))
+			self.onChange()
 		else:
 			raise ValueError("Not a valid state: {}", newState)
-		self.onChange()
 
 	def updateCalibration(self, ret, mtx, dist, rvecs, tvecs):
 		if ret != 0.:
@@ -381,13 +382,16 @@ class calibrationState(dict):
 
 
 	def refresh(self):
-		"Check if the worker is done with the board"
+		"""Check if the worker is done with the board,
+		 or if a pending image was taken and saved by the camera"""
 		changed = False
 		for path, elm in self.items():
 			if elm['state'] == STATE_PROCESSING and 'worker' in elm.keys() and elm['worker'].ready():
 				calibrationState._updateFromWorker(elm)
 				changed = True
-
+			if elm['state'] == STATE_PENDING_CAMERA and os.path.exists(path):
+				self.update(path, STATE_QUEUED)
+				changed = True
 		if changed:
 			self._logger.debug("something changed")
 			self.onChange()
