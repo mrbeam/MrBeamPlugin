@@ -50,7 +50,7 @@ $(function(){
             });
 
             // trigger initial loading of the image
-            self.loadImage();
+            self.loadImage(self.croppedUrl);
         };
 
         // Image resolution notification //
