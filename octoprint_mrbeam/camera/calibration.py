@@ -88,8 +88,8 @@ class BoardDetectorDaemon(Thread):
 
 		# self.daemon = False
 		# catch SIGTERM used by Process.terminate()
-		signal.signal(signal.SIGTERM, self.stopAsap)
-		signal.signal(signal.SIGINT, self.stopAsap)
+		# signal.signal(signal.SIGTERM, self.stopAsap)
+		# signal.signal(signal.SIGINT, self.stopAsap)
 
 	def stop(self, signum=signal.SIGTERM, frame=None):
 		self._logger.info("Stopping")
@@ -169,7 +169,6 @@ class BoardDetectorDaemon(Thread):
 		self._logger.warning("Pool started - %i procs" % MAX_PROCS)
 		lensCalibrationResults = None
 		loopcount = 0
-		ret = "ee"
 		while not self._stop.is_set():
 			loopcount += 1
 			if loopcount % 20 == 0 :
@@ -190,8 +189,6 @@ class BoardDetectorDaemon(Thread):
 						imgPoints.append(t['found_pattern'])
 					self._logger.warning("len patterns : %i and %i " % (len(objPoints), len(imgPoints)))
 					args = (np.asarray(objPoints), np.asarray(imgPoints), self.state.imageSize) #, None, None)
-					# ret = cv2.calibrateCamera(*args)
-					# runLensCalibration,
 					lensCalibrationResults = pool.apply_async(runLensCalibration, args=args)
 					self.state.calibrationBusy()
 				elif self.detectedBoards < MIN_BOARDS_DETECTED:
@@ -217,6 +214,7 @@ class BoardDetectorDaemon(Thread):
 				# self._logger.warning(str(res))
 				self.state.updateCalibration(*res)
 				lensCalibrationResults = None
+			# for res in self.
 			if self._stop.wait(.1): break
 		self._logger.warning("Stop signal intercepted")
 		self._logger.info("Pool joining")
