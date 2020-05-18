@@ -1,51 +1,9 @@
 /* global snap, ko, $, Snap, API_BASEURL, _, CONFIG_WEBCAM_STREAM, ADDITIONAL_VIEWMODELS, mina, BEAMOS_DISPLAY_VERSION, WorkingAreaHelper */
 
 MRBEAM_PX2MM_FACTOR_WITH_ZOOM = 1; // global available in this viewmodel and in snap plugins at the same time.
-MRBEAM_DEBUG_RENDERING = false;
-if(MRBEAM_DEBUG_RENDERING){
-	function debugBase64(base64URL, target="") {
-		var dbg_link = "<a target='_blank' href='"+base64URL+"'>Right click -> Open in new tab</a>"; // debug message, no need to translate
-			new PNotify({
-				title: "render debug output " + target,
-				text: dbg_link,
-				type: "warn",
-				hide: false
-			});
-	}
-	
-	(function(console){
-		/**
-		 * Convenient storing large data objects (json, dataUri, base64 encoded images, ...) from the console.
-		 * 
-		 * @param {object} data to save (means download)
-		 * @param {string} filename used for download
-		 * @returns {undefined}
-		 */
-		console.save = function(data, filename){
 
-			if(!data) {
-				console.error('Console.save: No data')
-				return;
-			}
-
-			if(!filename) filename = 'console.json'
-
-			if(typeof data === "object"){
-				data = JSON.stringify(data, undefined, 4)
-			}
-
-			var blob = new Blob([data], {type: 'text/json'}),
-				e    = document.createEvent('MouseEvents'),
-				a    = document.createElement('a')
-
-			a.download = filename
-			a.href = window.URL.createObjectURL(blob)
-			a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':')
-			e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
-			a.dispatchEvent(e)
-		}
-	})(console)
-}
+// Render debugging utilities
+MRBEAM_DEBUG_RENDERING = false; // setting to true enables lots of visual debug tools. Can be changed during runtime. 
 
 $(function(){
 
@@ -319,7 +277,7 @@ $(function(){
 					data: JSON.stringify({"command": "position", x:parseFloat(x.toFixed(2)), y:parseFloat(y.toFixed(2))})
 				});
 			} else {
-				console.warn("Move Laser command while machine state not idle: " + self.state.stateString());
+				console.warn("Move Laser to "+x+","+y+" command while machine state not idle: " + self.state.stateString());
 			}
 		};
 
@@ -1842,6 +1800,10 @@ $(function(){
 			compSvg.attr(namespaces)
 			var attrs = {};
 			var content = compSvg.g(attrs);
+			
+			// TODO: here getBBox() should be reliably sized, but contains a lot of non renderable stuff.
+			let contentBBox = snap.select("#userContent").getBBox();
+			console.log("contentBBox", contentBBox);
 			var userContent = snap.select("#userContent").clone();
 			content.append(userContent);
 
@@ -1878,7 +1840,7 @@ $(function(){
 				var viewBox = "0 0 " + wMM + " " + hMM;
 
 				svgStr = WorkingAreaHelper.fix_svg_string(svgStr); // Firefox bug workaround.
-				var gc_otions_str = self.gc_options_as_string().replace('"', "'");
+				const gc_options_str = self.gc_options_as_string().replace(/"/g, "\"");
 
 				// ensure namespaces are present
 				namespaces['xmlns'] = "http://www.w3.org/2000/svg";
@@ -1886,8 +1848,8 @@ $(function(){
 				let nsList = Object.keys(namespaces).map(key => `${key}="${namespaces[key]}"`).join(" ");
 				var svg = `
 <svg version="1.1" ${nsList} 
-  mb:beamOS_version="${BEAMOS_VERSION}" 
-  width="${w}" height="${h}"  viewBox="${viewBox}" mb:gc_options="${gc_otions_str}">
+  mb:beamOS_version="${BEAMOS_VERSION}"
+  width="${w}" height="${h}"  viewBox="${viewBox}" mb:gc_options="${gc_options_str}">
 <defs/>
   ${svgStr}
 </svg>`;
@@ -1907,6 +1869,7 @@ $(function(){
 			for (var key in gc_options) {
 				res.push(key + ":" + gc_options[key]);
 			}
+			res.push('userAgent:'+navigator.userAgent.replace(/"/g,'\"'));
 			return res.join(", ");
 		};
 
@@ -2212,7 +2175,7 @@ $(function(){
 
 				var cb = function(result, x, y, w, h) {
 					if (MRBEAM_DEBUG_RENDERING) {
-						debugBase64(result, 'png_debug');
+						debugBase64(result, 'Step 2: Canvas result .png');
 					}
 
 					if(fillings.length > 0){
@@ -2230,20 +2193,20 @@ $(function(){
 					}
 					if (typeof callback === 'function') {
 						callback(svg);
+						if (MRBEAM_DEBUG_RENDERING) {
+							const data = {width: w, height:h, x:x, y:y};
+							debugBase64(svg.toDataURL(), 'Step 3: SVG with fill rendering', data);
+						}
 					}
 					self._cleanup_render_mess();
 				};
 
+				let renderBBoxMM = tmpSvg.getBBox(); // if #712 still fails, fetch this bbox earlier (getCompositionSvg()).
 				if(MRBEAM_DEBUG_RENDERING){
-//					var base64String = btoa(tmpSvg.innerSVG());
-					var raw = tmpSvg.innerSVG();
-					var svgString = raw.substr(raw.indexOf('<svg'));
-					var dataUrl = 'data:image/svg+xml;base64, ' + btoa(svgString);
-					debugBase64(dataUrl, 'svg_debug');
+					debugBase64(tmpSvg.toDataURL(), 'Step 1: SVG ready for canvas, renderBBox', renderBBoxMM);
 				}
 				console.log("Rendering " + fillings.length + " filled elements.");
 				if(fillAreas){
-					let renderBBoxMM = tmpSvg.getBBox(); // if #712 still fails, fetch this bbox earlier (getCompositionSvg()).
 					tmpSvg.renderPNG(svgWidthPT, svgHeightPT, wMM, hMM, pxPerMM, renderBBoxMM, cb);
 				} else {
 					cb(null)
