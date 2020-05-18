@@ -60,6 +60,14 @@ $(function(){
             else return 'none';
         });
 
+        self.markerMissedClass = ko.computed(function() {
+            var ret = '';
+            MARKERS.forEach(function(m){
+                if (!(self.markersFound()[m] === undefined) && !self.markersFound()[m])
+                    ret = ret + ' marker' + m;
+            });
+            return ret;
+        })
 
         self.onDataUpdaterPluginMessage = function(plugin, data) {
             if (plugin !== "mrbeam" || !data) return;
@@ -69,10 +77,8 @@ $(function(){
                 MARKERS.forEach(function(m) {
                     if(mf.includes(m)) {
                         _markersFound[m] = true;
-                        self.cameraMarkerElem.removeClass('marker' + m);
                     } else {
                         _markersFound[m] = false;
-                        self.cameraMarkerElem.addClass('marker' + m);
                     }
                 });
                 self.markersFound(_markersFound);
@@ -137,8 +143,12 @@ $(function(){
                 result = self.croppedUrl;
             }
             if (result) {
-                result += (result.lastIndexOf("?") > -1) ? '&' : '?';
-                result += new Date().getTime();
+                if (result.match(/(\?|&)ts=/))
+                    result = result.replace(/(\?|&)ts=[0-9]*/, "$1ts=" + new Date().getTime())
+                else {
+                    result += (result.lastIndexOf("?") > -1) ? '&ts=' : '?ts='
+                    result += new Date().getTime();
+                }
             }
             return result;
         };
