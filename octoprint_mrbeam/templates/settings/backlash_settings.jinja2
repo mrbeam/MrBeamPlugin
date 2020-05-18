@@ -38,7 +38,7 @@
 					<li>{{ _("Look up the sharpest line on the engraving") }}</li>
 					<li>
 						{{ _("Enter the line's number (including sign) here: ") }}
-						<form onkeydown="return event.key != 'Enter';">
+						<form onkeydown="return event.key !== 'Enter';">
 							<input id="settings_backlash_compensation_x" type="number" min="-3" max="3" step="0.01" class="input-block-level" data-bind="value: backlash_compensation_x">
 						</form>
 					</li>
