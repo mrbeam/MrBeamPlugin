@@ -378,9 +378,8 @@ $(function () {
 		}
 
 		self.delRawPic = function() {
-			var id = this['id']
-			self.simpleApiCommand("calibration_delete_raw_pic",
-								  {name: id},
+			self.simpleApiCommand("calibration_del_pic",
+								  {name: this['name']},
 								  self.refreshPics,
 								  self.delRawPicError,
 								  "POST");
@@ -438,7 +437,7 @@ $(function () {
 						hide: false})},
 				function(){
 					new PNotify({
-						title: gettext("Couldn't send calibration data."),
+						title: gettext("Couldn't start the lens calibration."),
 						text: gettext("...and I have no clue why. Sorry."),
 						type: "warning",
 						hide: true})},

@@ -967,8 +967,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self.lid_handler.getRawImg()
 		return NO_CONTENT
 
-	@octoprint.plugin.BlueprintPlugin.route("/calibration_delete_raw_pic", methods=["POST"])
+	@octoprint.plugin.BlueprintPlugin.route("/calibration_del_pic", methods=["POST"])
 	def onCalibrationDelRawPic(self):
+		self._logger.debug("Command given : /calibration_del_pic")
 		try:
 			json_data = request.json
 		except JSONBadRequest:
@@ -983,7 +984,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return NO_CONTENT
 
 	@octoprint.plugin.BlueprintPlugin.route("/camera_run_lens_calibration", methods=["POST"])
-	def onCalibrationDelRawPic(self):
+	def onCalibrationRunLensDistort(self):
 		self._logger.debug("Command given : camera_run_lens_calibration")
 
 		self.lid_handler.startLensCalibration()

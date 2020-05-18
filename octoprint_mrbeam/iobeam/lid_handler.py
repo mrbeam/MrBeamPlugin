@@ -266,9 +266,9 @@ class LidHandler(object):
 		try:
 			os.remove(path)
 		except OSError as e:
-			self._logger.warning("Error trying to delete file: %s\n%s, %s" % (path, e, e.msg))
+			self._logger.warning("Error trying to delete file: %s\n%s" % (path, e))
 		finally:
-			self.boardDetectorDaemon.state.remove(path)
+			self.boardDetectorDaemon.remove(path)
 		return self.boardDetectorDaemon.state.keys() # TODO necessary? Frontend update now happens via plugin message
 
 	def ignoreCalibrationImage(self, path):
