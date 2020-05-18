@@ -402,11 +402,11 @@ var mrbeam = mrbeam || {};
       (rx ** 2 * ry ** 2 - rx ** 2 * y1_ ** 2 - ry ** 2 * x1_ ** 2) /
       (rx ** 2 * y1_ ** 2 + ry ** 2 * x1_ ** 2)
     ) * (fa === fs ? -1.0 : 1.0);
-	
-	// few times the 3 lines above return NaN. 
+
+	// few times the 3 lines above return NaN.
 	// When the ellipsis is a circle, the top of the fraction gets negative due rounding errors.
 	// In all my (Teja) observations, the negative number was supersmall (e.g. -#.#####e-16)
-	// Therefore this Hack was introduced, setting s to 0. 
+	// Therefore this Hack was introduced, setting s to 0.
 	// Otherwise the code does not fail - but returning only a straight line from start to end point.
 	if(isNaN(s)) s = 0; // HACK
 
@@ -724,6 +724,7 @@ var mrbeam = mrbeam || {};
 
   module.clip = function (paths, clip, tolerance) {
     ClipperLib.use_lines = true;
+    const pathCountBeforeClip = paths.length;
 
     var subj = toIntPaths(paths, tolerance);
     var clip = toIntPaths(clip, tolerance);
@@ -764,6 +765,10 @@ var mrbeam = mrbeam || {};
       clipped.push(path);
 
       polynode = polynode.GetNext();
+    }
+    const pathCountAfterClip = clipped.length;
+    if(pathCountAfterClip < pathCountBeforeClip){
+      console.info("clipped path: " + pathCountBeforeClip + " nodes => "+ pathCountAfterClip);
     }
 
     return clipped.reverse();

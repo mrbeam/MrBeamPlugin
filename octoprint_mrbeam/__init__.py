@@ -402,9 +402,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		assets = dict(
 
 			js=["js/helpers/quick_shape_helper.js",
-				"js/helpers/working_area_helper.js",
-				"js/lib/jquery.tinycolorpicker.js",
-				"js/lasercutterprofiles.js",
+			    "js/helpers/debug_rendering_helper.js",
+			    "js/helpers/working_area_helper.js",
+			    "js/lib/jquery.tinycolorpicker.js",
+			    "js/lasercutterprofiles.js",
 			    "js/mother_viewmodel.js",
 			    "js/mrbeam.js",
 			    "js/color_classifier.js",
@@ -904,7 +905,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def engraveCalibrationMarkers(self, intensity, feedrate):
 		profile = self.laserCutterProfileManager.get_current_or_default()
 		max_intensity = 1300 #TODO get magic numbers from profile
-		min_intensity = 0 
+		min_intensity = 0
 		min_feedrate = 100
 		max_feedrate = 3000
 		try:
@@ -912,27 +913,27 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			f = int(feedrate)
 		except ValueError:
 			return make_response("Invalid parameters", 400)
-		
+
 		# validate input
-		if(i < min_intensity or i > max_intensity or f < min_feedrate or f > max_feedrate): 
+		if(i < min_intensity or i > max_intensity or f < min_feedrate or f > max_feedrate):
 			return make_response("Invalid parameters", 400)
 		cm = CalibrationMarker(str(profile['volume']['width']), str(profile['volume']['depth']))
 		gcode = cm.getGCode(i, f)
-		
+
 		# run gcode
 		# check serial connection
 		if self._printer is None or self._printer._comm is None:
 			return make_response("Laser: Serial not connected", 400)
-		
+
 		if(self._printer.get_state_id() == "LOCKED"):
 			self._printer.home("xy")
-			
+
 		seconds = 0
 		while(self._printer.get_state_id() != "OPERATIONAL" and seconds <= 26): # homing cycle 20sec worst case, rescue from home ~ 6 sec total (?)
 			time.sleep(1.0) # wait a second
 			seconds += 1
-				
-		
+
+
 		# check if idle
 		if not self._printer.is_operational():
 			return make_response("Laser not idle", 403)
@@ -1464,7 +1465,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				}
 			self._plugin_manager.send_plugin_message("mrbeam", dict(beam_cam_new_image=meta_data))
 			return make_response("DEBUG MODE: Took dummy picture", 200)
-		
+
 		self._logger.debug("New undistorted image is requested. is_initial_calibration: %s", is_initial_calibration)
 		image_response = self.lid_handler.take_undistorted_picture(is_initial_calibration)
 		self._logger.debug("Image_Response: {}".format(image_response))
