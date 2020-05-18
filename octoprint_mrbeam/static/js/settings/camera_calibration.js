@@ -38,7 +38,7 @@ $(function () {
 		self.picType.subscribe(function (val) {
 			switch (val) {
 				case 'cropped':
-					var croppedUrl = self.camera.timestampedImgUrl()
+					var croppedUrl = self.camera.timestampedCroppedImgUrl()
 					if (!croppedUrl)
 						croppedUrl = self.camera.getTimestampedImageUrl(self.camera.croppedUrl)
 					self.calImgUrl(croppedUrl);

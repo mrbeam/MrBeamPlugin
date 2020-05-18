@@ -16,7 +16,7 @@ $(function(){
         self.rawUrl = '/downloads/files/local/cam/debug/raw.jpg'; // TODO get from settings
         self.undistortedUrl = '/downloads/files/local/cam/debug/undistorted.jpg'; // TODO get from settings
         self.croppedUrl = '/downloads/files/local/cam/beam-cam.jpg';
-        self.timestampedImgUrl = ko.observable("");
+        self.timestampedCroppedImgUrl = ko.observable("");
         self.webCamImageElem = undefined;
         self.isCamCalibrated = false;
         self.firstImageLoaded = false;
@@ -116,6 +116,7 @@ $(function(){
             var myImageUrl = self.getTimestampedImageUrl(url);
             var img = $('<img>');
             img.load(function () {
+                self.timestampedCroppedImgUrl(myImageUrl);
                 if (window.mrbeam.browser.is_safari) {
                     // load() event seems not to fire in Safari.
                     // So as a quick hack, let's set firstImageLoaded to true already here
@@ -128,7 +129,7 @@ $(function(){
             });
             if (!self.firstImageLoaded) {
                 img.error(function () {
-                    self.timestampedImgUrl(self.FALLBACK_IMAGE_URL);
+                    self.timestampedCroppedImgUrl(self.FALLBACK_IMAGE_URL);
                 });
             }
             img.attr({src: myImageUrl});
