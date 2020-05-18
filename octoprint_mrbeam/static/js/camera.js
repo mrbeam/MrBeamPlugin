@@ -62,6 +62,27 @@ $(function(){
             else return 'none';
         });
 
+        self.markerState = ko.computed(function() {
+            count = 0
+            MARKERS.forEach(function(m){
+                if (self.markersFound()[m] === true)
+                    count++
+            });
+            return count
+        })
+
+        self.markerStateGreen = ko.computed(function() {
+            return self.markerState() >= 4
+        })
+
+        self.markerStateYellow = ko.computed(function() {
+            return self.markerState() < 4 && self.markerState() >= 2
+        })
+
+        self.markerStateRed = ko.computed(function() {
+            return self.markerState() < 4 && self.markerState() <2
+        })
+
         self.markerMissedClass = ko.computed(function() {
             var ret = '';
             MARKERS.forEach(function(m){

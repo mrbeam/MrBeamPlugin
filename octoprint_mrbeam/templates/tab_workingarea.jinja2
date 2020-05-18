@@ -63,7 +63,8 @@
 														<button type="button"
 {#															   style="width:80%;"#}
 															   class=""
-                                                               data-bind="click: camera.send_camera_image_to_analytics">Send image to Mr Beam</button>
+                                                               data-bind="click: camera.send_camera_image_to_analytics,
+                                                                          visible: camera.markerStateYellow() || camera.markerStateRed() ">Send image to Mr Beam</button>
 													</div>
 													<div data-bind="style: { display: camera.imgResolutionNoticeDisplay() }">
 													    <span style="font-weight: bold">Low</span> Picture Quality
