@@ -88,8 +88,8 @@ class BoardDetectorDaemon(Thread):
 
 		# self.daemon = False
 		# catch SIGTERM used by Process.terminate()
-		# signal.signal(signal.SIGTERM, self.stopAsap)
-		# signal.signal(signal.SIGINT, self.stopAsap)
+		# signal.signal(signal.SIGTERM, signal.SIG_IGN) #self.stopAsap)
+		# signal.signal(signal.SIGINT, signal.SIG_IGN) #self.stopAsap)
 
 	def stop(self, signum=signal.SIGTERM, frame=None):
 		self._logger.info("Stopping")
@@ -152,7 +152,7 @@ class BoardDetectorDaemon(Thread):
 
 	def scaleProcessors(self, number):
 		self.procs.value = number
-		self._logger.info("Changing to %i simultaneous processes" % self.procs)
+		self._logger.info("Changing to %i simultaneous processes" % self.procs.value)
 
 	# @logtime
 	@logExceptions
@@ -165,15 +165,18 @@ class BoardDetectorDaemon(Thread):
 			# self.waiting.clear()
 		count = 0
 		self._logger.warning("Starting pool")
-		pool = Pool(MAX_PROCS)
+		# pool = Pool(MAX_PROCS)
+		runningProcs = []
+		resultQueue = Queue()
+		lensCalibrationProcQueue = Queue()
 		self._logger.warning("Pool started - %i procs" % MAX_PROCS)
-		lensCalibrationResults = None
+		lensCalibrationProc = None
 		loopcount = 0
 		while not self._stop.is_set():
 			loopcount += 1
 			if loopcount % 20 == 0 :
 				self._logger.info("Running... %s procs running, stopsignal : %s" %
-						  (self.state.runningProcs(), self._stop.is_set()))
+						  (len(runningProcs), self._stop.is_set()))
 				self.state.refresh()
 			if self.idle:
 				# self._logger.debug("waiting to be restarted")
@@ -189,40 +192,63 @@ class BoardDetectorDaemon(Thread):
 						imgPoints.append(t['found_pattern'])
 					self._logger.warning("len patterns : %i and %i " % (len(objPoints), len(imgPoints)))
 					args = (np.asarray(objPoints), np.asarray(imgPoints), self.state.imageSize) #, None, None)
-					lensCalibrationResults = pool.apply_async(runLensCalibration, args=args)
+					lensCalibrationProc.append(Process(target=runLensCalibration, args=args))
+					# lensCalibrationResults = pool.apply_async(runLensCalibration, args=args)
 					self.state.calibrationBusy()
 				elif self.detectedBoards < MIN_BOARDS_DETECTED:
 					self._logger.debug("Only %i boards detected yet, %i necessary" % (self.detectedBoards , MIN_BOARDS_DETECTED))
 				time.sleep(.1)
 				# set the wait flags to signal the process to restart processing incoming files
-			runningProcs = self.state.runningProcs() #len(list(filter(lambda x: not x.ready(), self.tasks)))
-			if runningProcs < self.procs.value and self.state.getPending():
+			# runningProcs = self.state.runningProcs() #len(list(filter(lambda x: not x.ready(), self.tasks)))
+			if len(runningProcs) < self.procs.value and self.state.getPending():
 				path = self.state.getPending()
 				self.state.update(path, STATE_PROCESSING)
 				count += 1
-				self._logger.info("%i / %i processes running, adding Process of image %s" % (runningProcs,
+				self._logger.info("%i / %i processes running, adding Process of image %s" % (len(runningProcs),
 													     self.procs.value,
 													     path))
 				self._logger.info("current state :\n%s" % self.state)
 				board_size = self.state[path]['board_size']
-				self.state.setWorker(path, pool.apply_async(handleBoardPicture,
-								            (path, count, board_size)))
-			if lensCalibrationResults and lensCalibrationResults.ready():
-			# if type(ret) is not str:
+				args = (path, count, board_size, resultQueue)
+				runningProcs.append(Process(target=handleBoardPicture, args=args))
+				runningProcs[-1].start()
+				# self.state.setWorker(path, pool.apply_async(handleBoardPicture,
+				# 				            ))
+			if not lensCalibrationProcQueue.empty():
+				# if type(ret) is not str:
 				self._logger.warning("Lens calibration has given a result! ")
-				res = lensCalibrationResults.get()
+				res = lensCalibrationProcQueue.get()
 				# self._logger.warning(str(res))
-				self.state.updateCalibration(*res)
-				lensCalibrationResults = None
-			# for res in self.
+				self.state.updateCalibration(**res)
+				# self.state.updateCalibration(*tuple(map(lambda x: res[x],
+				# 					['ret', 'mtx', 'dist', 'rvecs', 'tvecs'])
+				lensCalibrationProc.join()
+			if lensCalibrationProc and lensCalibrationProc.exitcode is not None:
+				self._logger.error("Something went wrong with the lens calibration process")
+
+			while not resultQueue.empty():
+				# Need to clean the queue before joining processes
+				r = resultQueue.get()
+				self.state.update(**r)
+			
+			for proc in runningProcs:
+				if proc.exitcode is not None:
+					if proc.exitcode < 0:
+						self._logger.error("Something went wrong with this process.")
+					else:
+						self._logger.debug("Process exited.")
+					runningProcs.remove(proc)
+
 			if self._stop.wait(.1): break
 		self._logger.warning("Stop signal intercepted")
-		self._logger.info("Pool joining")
-		pool.close()
+		resultQueue.close()
 		if self._terminate.is_set():
-			self._logger.warning("Pool terminating")
-			pool.terminate()
-		pool.join()
+			self._logger.warning("Terminating processes")
+			for proc in runningProcs:
+				proc.terminate()
+		self._logger.info("Joining processes")
+		for proc in runningProcs:
+			proc.join()
 		self._logger.info("Pool exited")
 		# except Exception as e:
 		# 	self._logger.exception(str(e))
@@ -235,12 +261,10 @@ def get_object_points(rows, cols):
                            0:rows * CB_SQUARE_SIZE:CB_SQUARE_SIZE].T.reshape(-1, 2)
     return objp
 
-def ee(*args, **kwargs):
-	return cv2.calibrateCamera(*args, **kwargs)
 # @logtime
 # @logme(True)
 # @logExceptions
-def handleBoardPicture(image, count, board_size):
+def handleBoardPicture(image, count, board_size, q_out=None):
 	# logger = logging.getLogger()
 	# if self._stop.is_set(): return
 	if isinstance(image, str):
@@ -275,6 +299,13 @@ def handleBoardPicture(image, count, board_size):
 
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 	success, found_pattern = findBoard(gray, board_size)
+	if q_out is not None:
+		q_out.put(dict(
+			path=path,
+			state=STATE_SUCCESS if success else STATE_FAIL,
+			board_size=board_size,
+			found_pattern=found_pattern
+		))
 
 	if success:
 		# if callback != None: callback(path, STATE_SUCCESS, board_size=board_size, found_pattern=found_pattern)
@@ -300,7 +331,7 @@ def findBoard(image, pattern):
 	return corners_found, cornerSubPix
 
 # @logExceptions
-def runLensCalibration(objPoints, imgPoints, imgRes):
+def runLensCalibration(objPoints, imgPoints, imgRes, q_out=None):
 	"""
 	None the distortion of the lens given the detected chessboards.
 	N.B. is supposed to run after the main process has been joined,
@@ -321,7 +352,10 @@ def runLensCalibration(objPoints, imgPoints, imgRes):
 								imgRes,
 								None, None)
 	# if callback: callback()
+	if q_out:
+		q_out.put(dict(ret=ret, mtx=mtx, dist=dist, rvecs=rvecs, tvecs=tvecs))
 	if ret == 0:
+		# TODO save to file here?
 		return ret, mtx, dist, rvecs, tvecs
 	else:
 		return ret, mtx, dist, rvecs, tvecs
@@ -360,14 +394,14 @@ class calibrationState(dict):
 	def ignore(self, path):
 		self.update(path, STATE_IGNORED)
 
-	def update(self, path, newState, **kw):
-		if newState in STATES:
-			self[path].update(dict(state = newState,
+	def update(self, path, state, **kw):
+		if state in STATES:
+			self[path].update(dict(state = state,
 					       tm_proc = time.time(),
 					       **kw))
 			self.onChange()
 		else:
-			raise ValueError("Not a valid state: {}", newState)
+			raise ValueError("Not a valid state: {}", state)
 
 	def updateCalibration(self, ret, mtx, dist, rvecs, tvecs):
 		if ret != 0.:
