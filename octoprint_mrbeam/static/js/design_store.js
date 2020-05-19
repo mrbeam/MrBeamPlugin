@@ -3,16 +3,15 @@ $(function () {
         let self = this;
         window.mrbeam.viewModels['designStore'] = self;
 
-        self.DESIGN_STORE_IFRAME_SRC = 'https://design-store-269610.appspot.com';  // Don't write a "/" at the end!!
+        //self.DESIGN_STORE_IFRAME_SRC = 'https://design-store-269610.appspot.com';  // Don't write a "/" at the end!!
+        self.DESIGN_STORE_IFRAME_SRC = 'http://localhost:8080';  // Don't write a "/" at the end!!
 
         self.loginState = params[0];
         self.navigation = params[1];
         self.analytics = params[2];
         self.settings = params[3];
 
-        // todo: should we do this before?
-        // @iratxe: what if the user is not logged in yet. You might want to to this also on onUserLoggedIn
-        self.onAllBound = function () {
+        self.onUserLoggedIn = function () {
             self.prepareDesignStoreTab();
         };
 
