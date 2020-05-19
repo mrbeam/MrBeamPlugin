@@ -48,6 +48,17 @@ class LedEventListener(CommandTrigger):
 	# MrBeam Events
 	LED_EVENTS[MrBeamEvents.SLICING_PROGRESS] = "mrbeam_ledstrips_cli SlicingProgress:{__progress}"
 	LED_EVENTS[MrBeamEvents.PRINT_PROGRESS] = "mrbeam_ledstrips_cli progress:{__progress}"
+
+	# Camera Calibration Screen Events
+	LED_EVENTS[MrBeamEvents.RAW_IMAGE_TAKING_START] = "mrbeam_ledstrips_cli blue"
+	LED_EVENTS[MrBeamEvents.RAW_IMAGE_TAKING_DONE]  = "mrbeam_ledstrips_cli ReadyToPrint" # TODO undo -> last state
+	LED_EVENTS[MrBeamEvents.LENS_CALIB_START]       = "mrbeam_ledstrips_cli blue"
+	LED_EVENTS[MrBeamEvents.LENS_CALIB_RUNNING]     = "mrbeam_ledstrips_cli yellow"
+	LED_EVENTS[MrBeamEvents.LENS_CALIB_DONE]        = "mrbeam_ledstrips_cli green"
+	LED_EVENTS[MrBeamEvents.LENS_CALIB_EXIT]        = "mrbeam_ledstrips_cli ClientOpened"
+
+
+
 	#Shutdown
 	LED_EVENTS[MrBeamEvents.SHUTDOWN_PREPARE_START] = "mrbeam_ledstrips_cli ShutdownPrepare"
 	LED_EVENTS[MrBeamEvents.SHUTDOWN_PREPARE_CANCEL] = "mrbeam_ledstrips_cli ShutdownPrepareCancel"
@@ -65,6 +76,7 @@ class LedEventListener(CommandTrigger):
 	COMMAND_SET_EDGEBRIGHTNESS =     "mrbeam_ledstrips_cli set:edge_brightness:{__brightness}"
 	COMMAND_SET_INSIDEBRIGHTNESS =   "mrbeam_ledstrips_cli set:inside_brightness:{__brightness}"
 	COMMAND_SET_FPS =                "mrbeam_ledstrips_cli set:fps:{__fps}"
+
 
 	def __init__(self, plugin):
 		CommandTrigger.__init__(self, plugin._printer)

@@ -967,6 +967,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self.lid_handler.getRawImg()
 		return NO_CONTENT
 
+	@octoprint.plugin.BlueprintPlugin.route("/calibration_lens_start", methods=["GET"])
+	def onLensCalibrationStart(self):
+		self.lid_handler.onLensCalibrationStart()
+		return NO_CONTENT
+
 	@octoprint.plugin.BlueprintPlugin.route("/calibration_del_pic", methods=["POST"])
 	def onCalibrationDelRawPic(self):
 		self._logger.debug("Command given : /calibration_del_pic")

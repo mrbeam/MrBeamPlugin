@@ -168,8 +168,13 @@ $(function () {
 		self.startLensCalibration = function () {
 			self.analytics.send_fontend_event('lens_calibration_start', {});
 			self.picType("raw");
+			self.simpleApiCommand("calibration_lens_start",
+								  {},
+								  self.refreshPics,
+								  self.getRawPicError,
+								  "GET");
 			self.lensCalibrationActive(true);
-			self.refreshPics()
+
 		};
 
 		self.nextMarker = function(){

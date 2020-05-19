@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
-from multiprocessing import Event, Pool, Process, Queue, Value
+from multiprocessing import Event, Process, Queue, Value
 from threading import Thread
 import logging
 import cv2
 import signal, os
 import numpy as np
 import time
-from octoprint_mrbeam.util import logme, logtime, logExceptions
 import octoprint_mrbeam.camera as camera
 import queue
 from os import path
 import numpy as np
+
+from octoprint_mrbeam.mrbeam_events import MrBeamEvents
+from octoprint_mrbeam.util import logme, logtime, logExceptions
 
 CB_ROWS = 5
 CB_COLS = 6
@@ -46,11 +48,13 @@ class BoardDetectorDaemon(Thread):
 		     image_size=camera.LEGACY_STILL_RES,
 		     procs=1,
 		     stateChangeCallback=None,
-		     runCalibrationAsap=False):
+		     runCalibrationAsap=False,
+	             event_bus=None):
 		# runCalibrationAsap : run the lens calibration when we have enough pictures ready
 		self._logger = logging.getLogger(__name__ + '.' + self.__class__.__name__)
 		self._logger.setLevel(logging.DEBUG)
 		self._logger.warning("Initiating the Board Detector Daemon")
+		self.event_bus = event_bus
 
 		# State of the detection & calibration
 		self.state = calibrationState(changeCallback=stateChangeCallback)
@@ -103,6 +107,8 @@ class BoardDetectorDaemon(Thread):
 
 	def start(self):
 		self._logger.info("Starting")
+		self.event_bus.fire(MrBeamEvents.LENS_CALIB_START)
+		self._logger.warning("EVENT LENS CALIBRATION STARTING")
 		self._started.set()
 		super(self.__class__, self).start()
 
@@ -163,15 +169,12 @@ class BoardDetectorDaemon(Thread):
 	# @logtime
 	@logExceptions
 	def processInputImages(self):
-		# try:
 		# state, callback=None, chessboardSize=(CB_COLS, CB_ROWS), rough_location=None, remote=None):
 		self._logger.warning("Starting the Board Detector Daemon")
 		if self.state.getPending():
 			self._logger.warning("Images waiting to be processed")
-			# self.waiting.clear()
 		count = 0
 		self._logger.warning("Starting pool")
-		# pool = Pool(MAX_PROCS)
 		runningProcs = {}
 		resultQueue = Queue()
 		lensCalibrationProcQueue = Queue()
@@ -183,13 +186,15 @@ class BoardDetectorDaemon(Thread):
 			if loopcount % 20 == 0 :
 				self._logger.info("Running... %s procs running, stopsignal : %s" %
 						  (len(runningProcs), self._stop.is_set()))
-				self.state.refresh()
+			if self.state.refresh(imgFoundCallback=self.event_bus.fire, args=(MrBeamEvents.RAW_IMAGE_TAKING_DONE,)):
+				self._logger.warning("EVENT RAW IMAGE TAKING DONE")
 			# if self.idle:
 			# self._logger.debug("waiting to be restarted")
 			if (self.state.lensCalibration['state'] == STATE_PENDING or self.startCalibrationWhenIdle) \
 			   and self.detectedBoards >= MIN_BOARDS_DETECTED:
 				self._logger.warning("Start lens calibration.")
 				self.startCalibrationWhenIdle = False
+
 				availableResults = self.state.getSuccesses()
 				objPoints = []
 				imgPoints = []
@@ -200,8 +205,9 @@ class BoardDetectorDaemon(Thread):
 				self._logger.warning("len patterns : %i and %i " % (len(objPoints), len(imgPoints)))
 				args = (np.asarray(objPoints), np.asarray(imgPoints), self.state.imageSize) #, None, None)
 				lensCalibrationProc = Process(target=runLensCalibration, args=args)
-				# lensCalibrationResults = pool.apply_async(runLensCalibration, args=args)
 				self.state.calibrationBusy()
+				self.event_bus.fire(MrBeamEvents.LENS_CALIB_RUNNING)
+				self._logger.warning("EVENT LENS CALIBRATION RUNNING")
 			elif self.idle and self.detectedBoards < MIN_BOARDS_DETECTED:
 				if loopcount % 20 == 0 :
 					self._logger.debug("Only %i boards detected yet, %i necessary" % (self.detectedBoards , MIN_BOARDS_DETECTED))
@@ -219,17 +225,15 @@ class BoardDetectorDaemon(Thread):
 				runningProcs[path] = Process(target=handleBoardPicture, args=args)
 				runningProcs[path].daemon = True
 				runningProcs[path].start()
-				# self.state.setWorker(path, pool.apply_async(handleBoardPicture,
-				# 				            ))
 			if not lensCalibrationProcQueue.empty():
-				# if type(ret) is not str:
 				self._logger.warning("Lens calibration has given a result! ")
 				res = lensCalibrationProcQueue.get()
-				# self._logger.warning(str(res))
 				self.state.updateCalibration(**res)
 				# self.state.updateCalibration(*tuple(map(lambda x: res[x],
 				# 					['ret', 'mtx', 'dist', 'rvecs', 'tvecs'])
 				lensCalibrationProc.join()
+				self.event_bus.fire(MrBeamEvents.LENS_CALIB_DONE)
+				self._logger.warning("EVENT LENS CALIBRATION DONE")
 			if lensCalibrationProc and lensCalibrationProc.exitcode is not None:
 				self._logger.error("Something went wrong with the lens calibration process")
 
@@ -246,18 +250,13 @@ class BoardDetectorDaemon(Thread):
 						self._logger.debug("Process exited for path %s." % path)
 					runningProcs.pop(path)
 			while not self.stopQueue.empty():
-				self._logger.warning("Getting path from killProc")
 				path = self.stopQueue.get()
 				if path in runningProcs.keys():
-					self._logger.warning("Killing process")
+					self._logger.warning("Killing process for path %s" % path)
 					runningProcs[path].terminate()
 					# termination might cause the pipe to break if it is in use by the process
-					self._logger.warning("Joining process")
 					runningProcs[path].join()
-					self._logger.warning("Murder successful")
 					runningProcs.pop(path)
-
-
 
 			if self._stop.wait(.1): break
 		self._logger.warning("Stop signal intercepted")
@@ -269,9 +268,8 @@ class BoardDetectorDaemon(Thread):
 		self._logger.info("Joining processes")
 		for path, proc in runningProcs.items():
 			proc.join()
-		self._logger.info("Pool exited")
-		# except Exception as e:
-		# 	self._logger.exception(str(e))
+		self.event_bus.fire(MrBeamEvents.LENS_CALIB_EXIT)
+		self._logger.info("Lens calibration exited")
 
 
 def get_object_points(rows, cols):
@@ -442,20 +440,21 @@ class calibrationState(dict):
 	def calibrationRunning(self):
 		return self.lensCalibration['state'] == STATE_PROCESSING
 
-	def refresh(self):
+	def refresh(self, imgFoundCallback=None, args=(), kwargs={}):
 		"""Check if the worker is done with the board,
 		 or if a pending image was taken and saved by the camera"""
 		changed = False
 		for path, elm in self.items():
-			if elm['state'] == STATE_PROCESSING and 'worker' in elm.keys() and elm['worker'].ready():
-				calibrationState._updateFromWorker(elm)
-				changed = True
 			if elm['state'] == STATE_PENDING_CAMERA and os.path.exists(path):
 				self.update(path, STATE_QUEUED)
 				changed = True
+				if imgFoundCallback is not None:
+					imgFoundCallback(*args, **kwargs)
+
 		if changed:
 			self._logger.debug("something changed")
 			self.onChange()
+		return changed
 
 	def getSuccesses(self):
 		return list(filter(lambda _s: _s['state'] == STATE_SUCCESS, self.values()))

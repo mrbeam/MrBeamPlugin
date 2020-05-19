@@ -43,6 +43,14 @@ class MrBeamEvents(object):
 
 	LASER_HEAD_READ             = "LaserHeadRead"
 
+	# Camera Calibration Screen Events
+	RAW_IMAGE_TAKING_START     = "RawImageTakingStart"
+	RAW_IMAGE_TAKING_DONE      = "RawImageTakingDone"
+	LENS_CALIB_START           = "lensCalibStart"
+	LENS_CALIB_RUNNING         = "lensCalibRunning"
+	LENS_CALIB_DONE            = "lensCalibDone"
+	LENS_CALIB_EXIT            = "lensCalibExit"
+
 	@classmethod
 	def register_with_octoprint(cls):
 		"""

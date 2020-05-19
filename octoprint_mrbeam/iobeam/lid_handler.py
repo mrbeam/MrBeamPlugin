@@ -65,6 +65,7 @@ class LidHandler(object):
 		self._interlock_closed = True
 		self._is_slicing = False
 		self._client_opened = False
+		self.lensCalibrationStarted = False
 
 		self.force_taking_picture = Event()
 		self.force_taking_picture.clear()
@@ -86,13 +87,15 @@ class LidHandler(object):
 
 		self.boardDetectorDaemon = BoardDetectorDaemon(self._settings.get(["cam", "lensCalibrationFile"]),
 							       runCalibrationAsap=True,
-							       stateChangeCallback=self.updateFrontendCC)
+							       stateChangeCallback=self.updateFrontendCC,
+		                                               event_bus = self._event_bus)
 
 	def _subscribe(self, event, payload):
 		self._event_bus.subscribe(IoBeamEvents.LID_OPENED, self.onEvent)
 		self._event_bus.subscribe(IoBeamEvents.INTERLOCK_OPEN, self.onEvent)
 		self._event_bus.subscribe(IoBeamEvents.INTERLOCK_CLOSED, self.onEvent)
 		self._event_bus.subscribe(IoBeamEvents.LID_CLOSED, self.onEvent)
+		self._event_bus.subscribe(IoBeamEvents.ONEBUTTON_RELEASED, self.onEvent)
 		self._event_bus.subscribe(OctoPrintEvents.CLIENT_OPENED, self.onEvent)
 		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self.onEvent)
 		self._event_bus.subscribe(OctoPrintEvents.CLIENT_CLOSED,self.onEvent)
@@ -127,6 +130,12 @@ class LidHandler(object):
 			self._startStopCamera(event)
 		elif event == OctoPrintEvents.SHUTDOWN:
 			self.shutdown()
+		elif event == IoBeamEvents.ONEBUTTON_RELEASED \
+		     and self.lensCalibrationStarted \
+		     and payload < 1.0:
+			self._logger.warning("onEvent() ONEBUTTON_RELEASED - payload : %s" % payload)
+			self.saveRawImg()
+			# TODO add LED EVENT
 
 	def is_lid_open(self):
 		return not self._lid_closed
@@ -234,13 +243,24 @@ class LidHandler(object):
 		if self._photo_creator is not None:
 			self._photo_creator.zoomed_out = compensate
 
+	def onLensCalibrationStart(self):
+		"""
+		When pressing the button 'start lens calibration'
+		Doesn't run the cv2 lens calibration at that point.
+		"""
+		self.getRawImg()
+		self.lensCalibrationStarted = True
+		self._logger.warning("Lens calibration Started : %s" % self.lensCalibrationStarted)
+
 	def getRawImg(self):
+		# Sends the current state to the front end
 		self.boardDetectorDaemon.state.onChange()
 
 	def saveRawImg(self):
 		# TODO
 		# data = dict(beam_cam_new_image=meta_data)
 		# self._plugin_manager.send_plugin_message("mrbeam", data)
+
 
 		imgName= 'tmp_raw_img_%i.jpg' % len(self.boardDetectorDaemon)
 		# TODO debug/raw.jpg -> copy image over
@@ -258,6 +278,8 @@ class LidHandler(object):
 			if not self.boardDetectorDaemon.is_alive():
 				self.boardDetectorDaemon.start()
 			else:
+				# doesn't conflict with the led event from board detector start
+				self._event_bus.fire(MrBeamEvents.RAW_IMAGE_TAKING_START)
 				self.boardDetectorDaemon.waiting.clear()
 		# return self.boardDetectorDaemon.state.keys() # TODO necessary? Frontend update now happens via plugin message
 
