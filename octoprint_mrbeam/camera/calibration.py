@@ -186,8 +186,7 @@ class BoardDetectorDaemon(Thread):
 			if loopcount % 20 == 0 :
 				self._logger.info("Running... %s procs running, stopsignal : %s" %
 						  (len(runningProcs), self._stop.is_set()))
-			if self.state.refresh(imgFoundCallback=self.event_bus.fire, args=(MrBeamEvents.RAW_IMAGE_TAKING_DONE,)):
-				self._logger.warning("EVENT RAW IMAGE TAKING DONE")
+			self.state.refresh(imgFoundCallback=self.event_bus.fire, args=(MrBeamEvents.RAW_IMAGE_TAKING_DONE,))
 			# if self.idle:
 			# self._logger.debug("waiting to be restarted")
 			if (self.state.lensCalibration['state'] == STATE_PENDING or self.startCalibrationWhenIdle) \
@@ -450,7 +449,8 @@ class calibrationState(dict):
 				changed = True
 				if imgFoundCallback is not None:
 					imgFoundCallback(*args, **kwargs)
-
+					self._logger.debug("CALLBACK : %s (*%s, **%s)" %
+							     (imgFoundCallback.__name__, args, kwargs))
 		if changed:
 			self._logger.debug("something changed")
 			self.onChange()
