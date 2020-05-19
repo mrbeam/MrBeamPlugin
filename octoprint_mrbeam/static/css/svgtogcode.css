@@ -517,12 +517,13 @@ svg g#camera_markers circle {
 	opacity: 0;
 }
 
+circle#marker_preview_pane,
 g#camera_markers.markerNE circle#markerNE,
 g#camera_markers.markerSE circle#markerSE,
 g#camera_markers.markerNW circle#markerNW,
 g#camera_markers.markerSW circle#markerSW {
 	opacity: 1;
-	animation: blinker 1s linear infinite;
+	animation: blinker 2s linear infinite;
 }
 
 @keyframes blinker {

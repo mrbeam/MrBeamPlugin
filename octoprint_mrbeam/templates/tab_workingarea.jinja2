@@ -59,12 +59,66 @@
 											</div>
 											<div class="collapse" id="wa_view_settings_body">
 												<div class="accordion-inner">
-                                                    <div>
-														<button type="button"
-{#															   style="width:80%;"#}
-															   class=""
-                                                               data-bind="click: camera.send_camera_image_to_analytics,
-                                                                          visible: camera.markerStateYellow() || camera.markerStateRed() ">Send image to Mr Beam</button>
+                                                    <div data-bind="visible: camera.cameraActive() && !camera.markerStateGreen()">
+
+                                                        <div>
+                                                            <svg width="25px" height="25px">
+                                                                <circle id="marker_preview_pane" r="8" cx="11" cy="11" fill="#ffffff" stroke="#ff00ff" stroke-width="4">
+                                                                    <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera. Try to close and reopen the lid.') }}</title>
+                                                                </circle>
+                                                            </svg>
+
+                                                            <span><strong>Imprecision Warning:</strong>
+                                                                Not all pink markers were recognized by the camera.
+                                                                Therefore the camera preview might be not fully precise.
+                                                                To improve precision please make sure that all pink circle markers
+                                                                within the working area of your Mr Beam are visible to the camera.
+                                                            </span>
+                                                        </div>
+
+                                                        <div>All markers visible? <a href="#" data-toggle="modal" data-target="#analytics_send_image_modal">Send image to Mr&nbsp;Beam</a></div>
+
+                                                        <div id="analytics_send_image_modal" class="modal hide fade" >
+                                                            <div class="modal-header">
+                                                                <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+                                                                <h3><i class="icon-camera"></i> {{ _('Send Camera Image to Mr&nbsp;Beam') }}</h3>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <div>
+                                                                    Help us improving the camera system by sending us this camera image which is currently shown in the working area preview for analysis.
+                                                                    This helps us to improve the camera system to handle even more different light conditions.
+                                                                </div>
+
+                                                                <div data-bind="visible: analytics.analyticsEnabled()">
+                                                                    <div>
+                                                                        Please send this image only if:
+                                                                        <ul>
+                                                                            <li>All four markers are visible (not covered by any material)</li>
+                                                                            <li>You agree that the image is sent to Mr Beam Lasers. Mr Beam may store and use this image to improve it's services. Mr Beam will not publish the image nor sell it to third parties. </li>
+                                                                        </ul>
+                                                                    </div>
+                                                                    <div>
+                                                                        If you're not connected to the Internet at the moment, the image will be sent once you're Mr Beam is online again.
+                                                                    </div>
+                                                                    <div>
+                                                                        Thank you!
+                                                                    </div>
+                                                                </div>
+                                                                <div data-bind="visible: !analytics.analyticsEnabled()">
+                                                                    Send Camera Image is part of Mr&nbsp;Beam Analytics which needs to be enabled to use this functionality.
+                                                                    Please go to <a href="#" data-dismiss="modal" data-toggle="tab" class="settings_analytics_link">Mr&nbsp;Beam Analytics</a> to enable it.
+                                                                </div>
+
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button class="btn" id="analytics_send_image_btn_cancel" data-dismiss="modal" aria-hidden="true">{{ _('Cancel') }}</button>
+                                                                <button class="btn btn-primary" id="analytics_send_image_btn_ok" data-dismiss="modal" aria-hidden="true"
+                                                                        data-bind="enable: analytics.analyticsEnabled(), click: camera.send_camera_image_to_analytics">{{ _('Send') }}</button>
+                                                            </div>
+                                                        </div>
+
+
+{#														<button type="button" data-bind="click: camera.send_camera_image_to_analytics">Send image to Mr Beam</button>#}
 													</div>
 													<div data-bind="style: { display: camera.imgResolutionNoticeDisplay() }">
 													    <span style="font-weight: bold">Low</span> Picture Quality
@@ -551,14 +605,13 @@
 							<div class="span8" style="position:relative">
 								{% include 'homing_overlay.jinja2' %}
 								<div id="zoomFactor" data-bind="text: zoom_factor_text"></div>
-								<svg id="area_preview" class="workingarea" visibility="hidden"
+								<svg id="area_preview" class="workingarea"
 									 data-bind="style: {
 											width: workingAreaWidthPx()+'px',
 											height: workingAreaHeightPx()+'px'
 										},
 										attr: {
 											viewBox: zoomViewBox(),
-											visibility: 'visible'
 										},
 										event: { wheel: wheel_zoom_wa, mousemove: mouse_drag_wa }
 									 "
@@ -616,7 +669,7 @@
 										<path d="M-15,0H-5M15,0H5M0,15V5M0,-15V-5" />
 									</g>
 									<g id="camera_markers" fill="#ffffff" stroke="#ff00ff" stroke-width="5"
-									   data-bind="attr: { class: camera.markerMissedClass() }">
+									   data-bind="visible: camera.cameraActive(), attr: { class: camera.markerMissedClass() }">
                                         <circle id="markerNW" r="5" cx="7" cy="7">
                                             <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera. Try to close and reopen the lid.') }}</title>
                                         </circle>

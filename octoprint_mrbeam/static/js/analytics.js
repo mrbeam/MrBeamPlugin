@@ -2,7 +2,12 @@ $(function () {
     function AnalyticsViewModel(params) {
         let self = this;
         window.mrbeam.viewModels['analyticsViewModel'] = self;
+        self.settings = params[0]
+
         self.window_load_ts=-1;
+
+        // Do not use before onStartupComplete!
+        self.analyticsEnabled = ko.observable(false)
 
         self.send_fontend_event = function (event, payload) {
             payload['ts'] = payload['ts'] || new Date().getTime();
@@ -29,7 +34,15 @@ $(function () {
             self.window_load_ts = new Date().getTime()
         });
 
-        self.onCurtainOpened = function () {
+        self.onAllBound = function() {
+            self._updateAnalyticsEnabledValue()
+        }
+
+        self.onEventSettingsUpdated = function() {
+            self._updateAnalyticsEnabledValue()
+        }
+
+        self.onCurtainOpening = function () {
             let now = new Date().getTime();
             let payload = {
                 window_load: (self.window_load_ts-INIT_TS_MS)/1000,
@@ -37,6 +50,10 @@ $(function () {
             };
             self.send_fontend_event('loading_dur', payload);
         };
+
+        self._updateAnalyticsEnabledValue = function(){
+            self.analyticsEnabled(self.settings.settings.plugins.mrbeam.analyticsEnabled())
+        }
     }
 
     // view model class, parameters for constructor, container to bind to
@@ -44,7 +61,7 @@ $(function () {
         AnalyticsViewModel,
 
         // e.g. loginStateViewModel, settingsViewModel, ...
-        [],
+        ['settingsViewModel'],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         []

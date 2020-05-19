@@ -8,7 +8,7 @@ $(function(){
         window.mrbeam.viewModels['cameraViewModel'] = self;
 
         self.settings = params[0];
-        self.cameraCalibration = params[1];
+        self.state = params[1];
 
         self.TAB_NAME_WORKING_AREA = '#workingarea';
         self.FALLBACK_IMAGE_URL = '/plugin/mrbeam/static/img/beam-cam-static.jpg';
@@ -22,6 +22,7 @@ $(function(){
         self.webCamImageElem = undefined;
         self.isCamCalibrated = false;
         self.firstImageLoaded = false;
+        self.countImagesLoaded = ko.observable(0);
 
         self.markersFound = ko.observable(new Map(MARKERS.map(elm => [elm, undefined])));
 
@@ -49,6 +50,7 @@ $(function(){
             // not working in Safari
             self.webCamImageElem.load(function(){
                 self.firstImageLoaded = true;
+                self.countImagesLoaded(self.countImagesLoaded()+1);
             });
 
             // trigger initial loading of the image
@@ -81,6 +83,14 @@ $(function(){
 
         self.markerStateRed = ko.computed(function() {
             return self.markerState() < 4 && self.markerState() <2
+        })
+
+        self.firstRealimageLoaded = ko.computed(function() {
+            return self.countImagesLoaded() >= 2;
+        })
+
+        self.cameraActive = ko.computed(function() {
+            return self.firstRealimageLoaded() && self.state.isOperational() && !self.state.isPrinting() && !self.state.isLocked();
         })
 
         self.markerMissedClass = ko.computed(function() {
@@ -144,6 +154,7 @@ $(function(){
                     // load() event seems not to fire in Safari.
                     // So as a quick hack, let's set firstImageLoaded to true already here
                     self.firstImageLoaded = true;
+                    self.countImagesLoaded(self.countImagesLoaded()+1);
                 }
                 if (this.width > 1500 && this.height > 1000) self.imgResolution('High');
                 else self.imgResolution('Low');
@@ -181,7 +192,7 @@ $(function(){
 
     // view model class, parameters for constructor, container to bind to
     ADDITIONAL_VIEWMODELS.push([CameraViewModel,
-		["settingsViewModel"],
+		["settingsViewModel", "printerStateViewModel"],
 		[] // nothing to bind.
 	]);
 

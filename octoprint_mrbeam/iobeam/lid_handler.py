@@ -406,6 +406,8 @@ class PhotoCreator(object):
 			time.sleep(.2)
 		# The lid didn't open during waiting time
 		cam.async_capture()
+		
+		prev_img_sent_to_analytics = False
 		i = 0
 		j = 0
 		while not self.stopping:
@@ -419,8 +421,9 @@ class PhotoCreator(object):
 			if self.stopping: break
 			
 			# send image to analytics
-			if prev is not None and self._flag_send_img_to_analytics:
-				self._send_last_img_to_analytics(prev, 'user', markers, missed, analytics, force_upload=True)
+			if prev is not None and self._flag_send_img_to_analytics and not prev_img_sent_to_analytics:
+				self._send_last_img_to_analytics(prev, 'user', markers, missed, analytics, force_upload=True, notify_user=True)
+				prev_img_sent_to_analytics = True
 			
 			latest = cam.lastPic() # gets last picture given by cam.worker
 			cam.async_capture()  # starts capture with new settings
@@ -458,6 +461,7 @@ class PhotoCreator(object):
 					time.sleep(.8) # Let the raspberry breathe a bit (prevent overheating)
 					continue
 			i += 1
+			prev_img_sent_to_analytics = False
 			# Get the desired scale and quality of the picture to serve
 			upscale_factor , quality = pic_qualities[pic_qual_index]
 			scaled_output_size = tuple(int(upscale_factor * i) for i in out_pic_size)
@@ -522,7 +526,7 @@ class PhotoCreator(object):
 						i <= 10 or
 						(i > 10 and i % 10 == 0)):
 					j += 1
-					self._send_last_img_to_analytics(latest, 'dev_auto', markers, missed, analytics, force_upload=(j%10==0))
+					self._send_last_img_to_analytics(latest, 'dev_auto', markers, missed, analytics, force_upload=(j%10==0), notify_user=False)
 			
 		cam.stop_preview()
 		if session_details['num_pics'] > 0:
@@ -586,7 +590,7 @@ class PhotoCreator(object):
 	def send_last_img_to_analytics(self):
 		self._flag_send_img_to_analytics = True
 		
-	def _send_last_img_to_analytics(self, img, trigger, markers, missed, analytics, force_upload=False):
+	def _send_last_img_to_analytics(self, img, trigger, markers, missed, analytics, force_upload=False, notify_user=False):
 		self._flag_send_img_to_analytics = False
 		t = threading.Thread(target=self._send_last_img_to_analytics_threaded,
 							 name='send_last_img_to_analytics',
@@ -596,11 +600,12 @@ class PhotoCreator(object):
 									 'missed': missed,
 									 'analytics_data': analytics,
 									 'force_upload': force_upload,
+									 'notify_user': notify_user,
 									 })
 		t.daemon = True
 		t.start()
 		
-	def _send_last_img_to_analytics_threaded(self, img, trigger, markers, missed, analytics_data, force_upload):
+	def _send_last_img_to_analytics_threaded(self, img, trigger, markers, missed, analytics_data, force_upload=False, notify_user=False):
 		try:
 			if img is not None:
 				img_format = 'jpg'
@@ -637,6 +642,11 @@ class PhotoCreator(object):
 				self._analytics_handler.add_camera_image(payload)
 				if force_upload:
 					self._analytics_handler.upload()
+					
+				if notify_user:
+					self._plugin.user_notification_system.show_notifications(
+						self._plugin.user_notification_system.get_notification(
+							notification_id='msg_cam_image_analytics_sent'))
 			else:
 				self._logger.info("_send_last_img_to_analytics_threaded() no image available")
 		except:
