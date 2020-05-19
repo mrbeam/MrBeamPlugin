@@ -375,6 +375,7 @@ def runLensCalibration(objPoints, imgPoints, imgRes, q_out=None):
 		q_out.put(dict(ret=ret, mtx=mtx, dist=dist, rvecs=rvecs, tvecs=tvecs))
 	if ret == 0:
 		# TODO save to file here?
+	
 		return ret, mtx, dist, rvecs, tvecs
 	else:
 		return ret, mtx, dist, rvecs, tvecs
@@ -440,8 +441,7 @@ class calibrationState(dict):
 		return self.lensCalibration['state'] == STATE_PROCESSING
 
 	def refresh(self, imgFoundCallback=None, args=(), kwargs={}):
-		"""Check if the worker is done with the board,
-		 or if a pending image was taken and saved by the camera"""
+		"""Check if a pending image was taken and saved by the camera"""
 		changed = False
 		for path, elm in self.items():
 			if elm['state'] == STATE_PENDING_CAMERA and os.path.exists(path):
@@ -480,21 +480,6 @@ class calibrationState(dict):
 		self.lensCalibration = np.load(path + ".npz")
 		self.onChange()
 
-	def setWorker(self, path, poolResult):
-		self[path]['worker'] = poolResult
-
-	def runningProcs(self):
-		count = 0
-		changed = False
-		for elm in self.values():
-			if 'worker' in elm.keys() and not elm['worker'].ready():
-				count += 1
-			elif elm['state'] == STATE_PROCESSING and 'worker' in elm.keys():
-				calibrationState._updateFromWorker(elm)
-				changed = True
-		if changed: self.onChange()
-		return count
-
 	def clean(self):
 		"Allows to be pickled"
 		def _isClean(elm):
@@ -516,15 +501,6 @@ class calibrationState(dict):
 			else:
 				if _isClean(d): return d
 		return _clean(self)
-
-	@staticmethod
-	def _updateFromWorker(elm):
-		result = elm['worker'].get()
-		if result is None:
-			elm['state'] = STATE_FAIL
-		else:
-			elm['state'] = STATE_SUCCESS
-			elm['found_pattern'] = result
 
 if __name__ == "__main__":
 	import argparse, textwrap
