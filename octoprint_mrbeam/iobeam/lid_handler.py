@@ -408,6 +408,7 @@ class PhotoCreator(object):
 		cam.async_capture()
 		
 		prev_img_sent_to_analytics = False
+		min_pix_amount = self._settings.get(['cam', 'markerRecognitionMinPixel'])
 		i = 0
 		j = 0
 		while not self.stopping:
@@ -422,7 +423,7 @@ class PhotoCreator(object):
 			
 			# send image to analytics
 			if prev is not None and self._flag_send_img_to_analytics and not prev_img_sent_to_analytics:
-				self._send_last_img_to_analytics(prev, 'user', markers, missed, analytics, force_upload=True, notify_user=True)
+				self._send_last_img_to_analytics(prev, 'user', markers, missed, min_pix_amount, analytics, force_upload=True, notify_user=True)
 				prev_img_sent_to_analytics = True
 			
 			latest = cam.lastPic() # gets last picture given by cam.worker
@@ -473,6 +474,7 @@ class PhotoCreator(object):
 				dist, mtx = None, None
 			color = {}
 			marker_size = {}
+			min_pix_amount = self._settings.get(['cam', 'markerRecognitionMinPixel'])
 			# NOTE -- prepareImage is bloat, TODO spill content here
 			workspaceCorners, markers, missed, err, analytics = prepareImage(
 				input_image=latest,
@@ -487,7 +489,7 @@ class PhotoCreator(object):
 				debug_out=self.save_debug_images,  # self.save_debug_images,
 				undistorted=True,
 				stopEvent=self.stopEvent,
-				min_pix_amount=self._settings.get(['cam', 'markerRecognitionMinPixel']),
+				min_pix_amount=min_pix_amount,
 				threads=4
 			)
 			if self.stopping: return False, None, None, None, None
@@ -526,7 +528,7 @@ class PhotoCreator(object):
 						i <= 10 or
 						(i > 10 and i % 10 == 0)):
 					j += 1
-					self._send_last_img_to_analytics(latest, 'dev_auto', markers, missed, analytics, force_upload=(j%10==0), notify_user=False)
+					self._send_last_img_to_analytics(latest, 'dev_auto', markers, missed, min_pix_amount, analytics, force_upload=(j%10==0), notify_user=False)
 			
 		cam.stop_preview()
 		if session_details['num_pics'] > 0:
@@ -590,7 +592,7 @@ class PhotoCreator(object):
 	def send_last_img_to_analytics(self):
 		self._flag_send_img_to_analytics = True
 		
-	def _send_last_img_to_analytics(self, img, trigger, markers, missed, analytics, force_upload=False, notify_user=False):
+	def _send_last_img_to_analytics(self, img, trigger, markers, missed, min_pix_amount, analytics, force_upload=False, notify_user=False):
 		self._flag_send_img_to_analytics = False
 		t = threading.Thread(target=self._send_last_img_to_analytics_threaded,
 							 name='send_last_img_to_analytics',
@@ -598,6 +600,7 @@ class PhotoCreator(object):
 									 'trigger': trigger,
 									 'markers': markers,
 									 'missed': missed,
+									 'min_pix_amount': min_pix_amount,
 									 'analytics_data': analytics,
 									 'force_upload': force_upload,
 									 'notify_user': notify_user,
@@ -605,7 +608,7 @@ class PhotoCreator(object):
 		t.daemon = True
 		t.start()
 		
-	def _send_last_img_to_analytics_threaded(self, img, trigger, markers, missed, analytics_data, force_upload=False, notify_user=False):
+	def _send_last_img_to_analytics_threaded(self, img, trigger, markers, missed, min_pix_amount, analytics_data, force_upload=False, notify_user=False):
 		try:
 			if img is not None:
 				img_format = 'jpg'
@@ -626,7 +629,6 @@ class PhotoCreator(object):
 				except:
 					self._logger.warn("_send_last_img_to_analytics_threaded() Can not read npz file: %s", path_to_cam_params)
 					
-				
 				payload = {'img_base64': img,
 						   'img_type': img_format,
 						   'distortion_matrix_base64': dist,
@@ -634,6 +636,7 @@ class PhotoCreator(object):
 						   'metadata': {
 							   'markers_found': ', '.join(markers.keys()),
 							   'markers_missed': ', '.join(missed),
+							   'min_pix_amount': min_pix_amount,
 							   'analytics': analytics_str,
 							   'trigger': trigger},
 						   }
