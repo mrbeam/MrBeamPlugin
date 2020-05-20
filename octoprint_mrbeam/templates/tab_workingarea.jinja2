@@ -268,6 +268,10 @@
 																<input class="decent_input scale" type="text" value="100%" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualScale($data, event); },
 																			blur: function(d, event){ $root.svgManualScale($data, event); }} "/>
+																<i class="icon-backward" title="{{ _('mirror') }}"></i>
+																<a href="#" data-bind="event: {
+																			click: function(d, event){ $root.svgManualMirror($data, event); }
+																		} ">{{ _('mirror') }}</a>
 																</br>
 																<i class="icon-th" title="{{ _('multiply') }}"></i>
 																<input class="decent_input multiply" type="text" value="1×1" data-bind="event: {

@@ -1152,6 +1152,15 @@ $(function(){
 				self.check_sizes_and_placements();
 			}
 		};
+		self.svgManualMirror = function(data, event) {
+			if (event.type === 'click') {
+				self.abortFreeTransforms();
+				var svg = snap.select('#'+data.previewId);
+				var mirror = !svg.data('mirror');
+				svg.ftManualTransform({mirror: mirror});
+				self.check_sizes_and_placements();
+			}
+		};
 		self.svgManualWidth = function(data, event) {
 			if (event.keyCode === 13 || event.type === 'blur') {
 				self.abortFreeTransforms();

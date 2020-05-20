@@ -261,11 +261,14 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 
 			// console.log("translate: ", this.data('tx'), this.data('ty'), 'rotate: ', this.data('angle'), 'scale: ', this.data('scale'));
 			var tstring = "t" + tx + "," + ty + this.ftGetInitialTransformMatrix().toTransformString() + "r" + angle + 'S' + this.data("scale" );
+			if(this.data('mirror')){
+				tstring = tstring + 'S-1,1';
+			} 
 			this.attr({ transform: tstring });
 			if(this.data("bbT")) this.ftHighlightBB(this.paper.select('#userContent'));
 			this.ftUpdateUnscale();
 			this.ftReportTransformation();
-			this.ftUpdateHandlesGroup();
+			this.ftUpdateHandlesGroup(this.data());
 			return this;
 		};
 
@@ -298,42 +301,68 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			if(params.scale !== undefined && !isNaN(params.scale)){
 				svg.data('scale', params.scale / svg.ftGetScale());
 			}
+			if(params.mirror !== undefined){
+				svg.data('mirror', params.mirror);
+			}
 			svg.ftStoreInitialTransformMatrix();
 			svg.ftUpdateTransform();
 
 			svg.ftAfterTransform(); // issue #295
         };
 
-		Element.prototype.ftUpdateHandlesGroup = function() {
+		Element.prototype.ftUpdateHandlesGroup = function(data) {
+			if(data){
 			var group = this;
-
-            group.parent().selectAll('#handlesGroup').forEach( function( el, i ) {
-                el.transform(group.transform().local.toString());
+			var t = group.transform().local.toString();
+			var tx = data.tx || 0;
+			var ty = data.ty || 0;
+			var angle = data.angle || 0;
+			var m = data.initialTransformMatrix ? data.initialTransformMatrix.toTransformString() : "";
+			
+			var tstring = "t" + tx + "," + ty + m + "r" + data.angle;
+		
+            group.parent().selectAll('#translateHull').forEach( function( el, i ) {
+                el.transform(t);
             });
-
             if(group.parent().select("#handlesGroup") !== null){
 			    group.parent().select("#handlesGroup").selectAll('.freeTransformHandle').forEach( function( el, i ) {
 				    var s = group.data('unscale') * ftOption.handleSize;
-				    el.transform(Snap.matrix(s,0,0,s,0,0));
+				    el.transform(Snap.matrix(ftOption.handleSize,0,0,ftOption.handleSize,data.tx,data.ty));
 			    });
             }
+		}
+//            group.parent().selectAll('#handlesGroup').forEach( function( el, i ) {
+//                el.transform(group.transform().local.toString());
+//            });
+
+//            if(group.parent().select("#handlesGroup") !== null){
+//			    group.parent().select("#handlesGroup").selectAll('.freeTransformHandle').forEach( function( el, i ) {
+//				    var s = group.data('unscale') * ftOption.handleSize;
+//				    el.transform(Snap.matrix(s,0,0,s,0,0));
+//			    });
+//            }
 		};
 
 		Element.prototype.ftHighlightBB = function() {
 			var rad = ftOption.handleRadius * ftOption.unscale;
-			if(this.data("bbT")) this.data("bbT").remove();
-			if(this.data("bb")) this.data("bb").remove();
 
 			// outer bbox
-			this.data("bb", this.paper.rect( rectObjFromBB(this.getBBox()) )
-				.attr({ id: 'bbox', fill: "none", stroke: 'gray', strokeWidth: ftOption.handleStrokeWidth, strokeDasharray: ftOption.handleStrokeDash })
-				.prependTo(this.paper.select('#userContent')));
-			//TODO make more efficiently
-			// this.data('bb');
+			if(this.data("bb")){
+				this.data("bb").attr(rectObjFromBB(this.getBBox()));
+			} else {
+				this.data("bb", this.paper.rect( rectObjFromBB(this.getBBox()) )
+					.attr({ id: 'bbox', fill: "none", stroke: 'gray', strokeWidth: ftOption.handleStrokeWidth, strokeDasharray: ftOption.handleStrokeDash })
+					.prependTo(this.paper.select('#userContent')));
+			}
+
 			// transformed bbox
-			this.data("bbT", this.paper.rect( rectObjFromBB(this.getBBox(1)) )
+			if(this.data("bbT")){
+				this.data("bbT").transform(this.transform().local.toString());
+			} else {
+				this.data("bbT", this.paper.rect( rectObjFromBB(this.getBBox(1)) )
 							.attr({ fill: "none", 'vector-effect': "non-scaling-stroke", stroke: ftOption.handleFill, strokeWidth: ftOption.handleStrokeWidth, strokeDasharray: ftOption.handleStrokeDashPreset.join(',') })
 							.transform( this.transform().local.toString() ) );
+			}
 			return this;
 		};
 
