@@ -96,6 +96,9 @@ $(function () {
 		self.calibrationState = ko.observable({})
 
 		self.lensCalibrationRunning = ko.observable(false);
+		self.lensCalibrationComplete = ko.computed(function(){
+			return ('lensCalibration' in self.calibrationState()) ? self.calibrationState().lensCalibration.state === "success" : false;
+		});
 		self.markersFoundPosition = ko.observable({});
 
 		self.__format_point = function(p){

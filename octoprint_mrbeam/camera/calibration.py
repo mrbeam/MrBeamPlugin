@@ -57,7 +57,7 @@ class BoardDetectorDaemon(Thread):
 		self.event_bus = event_bus
 
 		# State of the detection & calibration
-		self.state = calibrationState(changeCallback=stateChangeCallback)
+		self.state = calibrationState(changeCallback=stateChangeCallback, npzPath=output_calib)
 
 		self.output_file = output_calib
 
@@ -107,8 +107,6 @@ class BoardDetectorDaemon(Thread):
 
 	def start(self):
 		self._logger.info("Starting")
-		self.event_bus.fire(MrBeamEvents.LENS_CALIB_START)
-		self._logger.warning("EVENT LENS CALIBRATION STARTING")
 		self._started.set()
 		super(self.__class__, self).start()
 
@@ -171,10 +169,7 @@ class BoardDetectorDaemon(Thread):
 	def processInputImages(self):
 		# state, callback=None, chessboardSize=(CB_COLS, CB_ROWS), rough_location=None, remote=None):
 		self._logger.warning("Starting the Board Detector Daemon")
-		if self.state.getPending():
-			self._logger.warning("Images waiting to be processed")
 		count = 0
-		self._logger.warning("Starting pool")
 		runningProcs = {}
 		resultQueue = Queue()
 		lensCalibrationProcQueue = Queue()
@@ -202,8 +197,12 @@ class BoardDetectorDaemon(Thread):
 					objPoints.append(get_object_points(*t['board_size']))
 					imgPoints.append(t['found_pattern'])
 				self._logger.warning("len patterns : %i and %i " % (len(objPoints), len(imgPoints)))
-				args = (np.asarray(objPoints), np.asarray(imgPoints), self.state.imageSize) #, None, None)
+				args = (np.asarray(objPoints),
+					np.asarray(imgPoints),
+					self.state.imageSize,
+					lensCalibrationProcQueue)
 				lensCalibrationProc = Process(target=runLensCalibration, args=args)
+				lensCalibrationProc.start()
 				self.state.calibrationBusy()
 				self.event_bus.fire(MrBeamEvents.LENS_CALIB_RUNNING)
 				self._logger.warning("EVENT LENS CALIBRATION RUNNING")
@@ -233,7 +232,9 @@ class BoardDetectorDaemon(Thread):
 				lensCalibrationProc.join()
 				self.event_bus.fire(MrBeamEvents.LENS_CALIB_DONE)
 				self._logger.warning("EVENT LENS CALIBRATION DONE")
-			if lensCalibrationProc and lensCalibrationProc.exitcode is not None:
+			if lensCalibrationProc and \
+			   lensCalibrationProc.exitcode is not None and \
+			   lensCalibrationProc.exitcode != 0 :
 				self._logger.error("Something went wrong with the lens calibration process")
 
 			while not resultQueue.empty():
@@ -280,7 +281,7 @@ def get_object_points(rows, cols):
 
 # @logtime
 # @logme(True)
-# @logExceptions
+@logExceptions
 def handleBoardPicture(image, count, board_size, q_out=None):
 	# logger = logging.getLogger()
 	# if self._stop.is_set(): return
@@ -317,6 +318,9 @@ def handleBoardPicture(image, count, board_size, q_out=None):
 
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 	success, found_pattern = findBoard(gray, board_size)
+
+	drawnImg = cv2.drawChessboardCorners(img, board_size, found_pattern, success, )
+	cv2.imwrite(path, drawnImg)
 	if q_out is not None:
 		q_out.put(dict(
 			path=path,
@@ -324,7 +328,6 @@ def handleBoardPicture(image, count, board_size, q_out=None):
 			board_size=board_size,
 			found_pattern=found_pattern
 		))
-
 	if success:
 		# if callback != None: callback(path, STATE_SUCCESS, board_size=board_size, found_pattern=found_pattern)
 		return found_pattern
@@ -336,7 +339,7 @@ def handleBoardPicture(image, count, board_size, q_out=None):
 	# callback of the lid_handler
 
 
-@logExceptions
+# @logExceptions
 def findBoard(image, pattern):
 	"""Finds the chessboard pattern of a given size in the image"""
 	# TODO Add 8-way connected label filtering for small elements
@@ -348,7 +351,7 @@ def findBoard(image, pattern):
 	cornerSubPix = cv2.cornerSubPix(image, corners, (11, 11), (-1, -1), (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001))
 	return corners_found, cornerSubPix
 
-# @logExceptions
+@logExceptions
 def runLensCalibration(objPoints, imgPoints, imgRes, q_out=None):
 	"""
 	None the distortion of the lens given the detected chessboards.
@@ -382,11 +385,12 @@ def runLensCalibration(objPoints, imgPoints, imgRes, q_out=None):
 
 
 class calibrationState(dict):
-	def __init__(self, imageSize=camera.LEGACY_STILL_RES, changeCallback=None, *args, **kw):
+	def __init__(self, imageSize=camera.LEGACY_STILL_RES, changeCallback=None,  npzPath=None, *args, **kw):
 		self._logger = logging.getLogger(__name__ + '.' + self.__class__.__name__)
 		self.changeCallback = changeCallback
 		self.imageSize=imageSize
 		self.lensCalibration = dict(state=STATE_PENDING)
+		self.output_file =  npzPath
 		super(self.__class__, self).__init__(*args, **kw)
 
 	def onChange(self):
@@ -425,7 +429,8 @@ class calibrationState(dict):
 
 	def updateCalibration(self, ret, mtx, dist, rvecs, tvecs):
 		if ret != 0.:
-			self.lensCalibration.update(dict(state=STATE_SUCCESS, mtx=mtx, dist=dist, rvecs=rvecs, tvecs=tvecs))
+			self.lensCalibration.update(dict(state=STATE_SUCCESS, err=ret, mtx=mtx, dist=dist, rvecs=rvecs, tvecs=tvecs))
+			self.saveCalibration()
 		# elif state in STATES:
 		# 	self.lastLensCalibrationState = state
 		# else:

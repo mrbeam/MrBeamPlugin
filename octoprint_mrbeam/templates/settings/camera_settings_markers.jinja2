@@ -156,6 +156,10 @@
 							       enable: !lensCalibrationRunning()">
 					{{ _('Run Lens Calibration') }} <i class="icon-spinner icon-spin" data-bind="visible: lensCalibrationRunning"></i>
 				</button>
+				<button class="btn btn-warning"
+						data-bind="click: abortCalibration,
+							       visible: lensCalibrationActive() && lensCalibrationComplete()">
+					<i class="icon-fixed-width icon-ban-circle"></i> {{ _('Back') }}</button>
 				<!-- Cancel -->
 				<button class="btn btn-warning" data-bind="click: abortCalibration, visible: cornerCalibrationActive() || lensCalibrationActive()"><i class="icon-fixed-width icon-ban-circle"></i> {{ _('Cancel') }}</button>
 			</div>

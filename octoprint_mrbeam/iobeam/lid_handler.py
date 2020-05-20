@@ -250,6 +250,8 @@ class LidHandler(object):
 		"""
 		self.getRawImg()
 		self.lensCalibrationStarted = True
+		self._event_bus.fire(MrBeamEvents.LENS_CALIB_START)
+		self._logger.warning("EVENT LENS CALIBRATION STARTING")
 		self._logger.warning("Lens calibration Started : %s" % self.lensCalibrationStarted)
 
 	def getRawImg(self):
@@ -275,11 +277,10 @@ class LidHandler(object):
 			imgPath = path.join(self.debugFolder, imgName)
 			# Tell the boardDetector to listen for this file
 			self.boardDetectorDaemon.add(imgPath)
+			self._event_bus.fire(MrBeamEvents.RAW_IMAGE_TAKING_START)
 			if not self.boardDetectorDaemon.is_alive():
 				self.boardDetectorDaemon.start()
 			else:
-				# doesn't conflict with the led event from board detector start
-				self._event_bus.fire(MrBeamEvents.RAW_IMAGE_TAKING_START)
 				self.boardDetectorDaemon.waiting.clear()
 		# return self.boardDetectorDaemon.state.keys() # TODO necessary? Frontend update now happens via plugin message
 
