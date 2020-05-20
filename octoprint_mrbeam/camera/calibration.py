@@ -88,6 +88,7 @@ class BoardDetectorDaemon(Thread):
 		self._pause.clear()
 		self._startWhenIdle = Event()
 		self._startWhenIdle.clear()
+		self.path_inc = 0
 
 		super(self.__class__, self).__init__(target=self.processInputImages, name=self.__class__.__name__)
 
@@ -125,6 +126,7 @@ class BoardDetectorDaemon(Thread):
 	def add(self, image, chessboardSize=(CB_ROWS, CB_COLS),
 	        state=STATE_PENDING_CAMERA ): #, rough_location=None, remote=None):
 		self.state.add(image, chessboardSize, state=state)
+		self.path_inc += 1
 
 	def remove(self, path):
 		self._logger.warning("Removing path %s" % path)
@@ -136,6 +138,9 @@ class BoardDetectorDaemon(Thread):
 
 	def __getitem__(self, item):
 		return self.state[item]
+
+	def next_inc(self):
+		return self.path_inc
 
 	@property
 	def startCalibrationWhenIdle(self):

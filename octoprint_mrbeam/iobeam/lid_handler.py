@@ -264,7 +264,7 @@ class LidHandler(object):
 		# self._plugin_manager.send_plugin_message("mrbeam", data)
 
 
-		imgName= 'tmp_raw_img_%i.jpg' % len(self.boardDetectorDaemon)
+		imgName= 'tmp_raw_img_%i.jpg' % self.boardDetectorDaemon.next_inc()
 		# TODO debug/raw.jpg -> copy image over
 		# TODO careful when deleting pic + setting new name -> hash
 		if self._photo_creator and \
