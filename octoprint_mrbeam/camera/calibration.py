@@ -22,7 +22,7 @@ REFRESH_RATE_WAIT_CHECK = .2
 
 # Chessboard size in mm
 BOARD_SIZE_MM = np.array([220, 190])
-MIN_BOARDS_DETECTED = 1
+MIN_BOARDS_DETECTED = 8
 MAX_PROCS = 4
 
 STATE_PENDING_CAMERA = "camera_processing"

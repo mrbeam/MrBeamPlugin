@@ -152,7 +152,7 @@
 				</button>
 				<button class="btn btn-success"
 					    data-bind="click: runLensCalibration,
-							       visible: lensCalibrationActive() && rawPicSelection().length > 1,
+							       visible: lensCalibrationActive() && rawPicSelection().length > 8,
 							       enable: !lensCalibrationRunning()">
 					{{ _('Run Lens Calibration') }} <i class="icon-spinner icon-spin" data-bind="visible: lensCalibrationRunning"></i>
 				</button>
