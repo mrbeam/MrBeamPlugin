@@ -316,7 +316,8 @@ $(function () {
 				if (_d['undistorted_saved'] && ! self.cornerCalibrationActive()) {
 					if (_d['available']) {
 						self.availablePic(_d['available'])
-						if (! ['raw', 'lens_corrected', 'cropped'].includes(self.picType())) {
+						if (! ['raw', 'lens_corrected', 'cropped'].includes(self.picType())
+							&& ! self.lensCalibrationActive()) {
 							for (_type of ['lens_corrected', 'raw']) {
 								if (self.availablePic()[_type]) {
 									self.picType(_type);
@@ -360,7 +361,6 @@ $(function () {
 				self.rawPicSelection(arr)
 				self.lensCalibrationRunning(_d.lensCalibration == "processing");
 			}
-
 		};
 
 		self.saveRawPic = function() {
