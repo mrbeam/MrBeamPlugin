@@ -52,7 +52,7 @@
 
 										<div id="wa_view_settings" class="accordion-inner">
 											<div class="accordion-heading ">
-												<a href="#wa_view_settings_body" class="dropdown" data-toggle="collapse" aria-expanded="false">
+												<a id="wa_view_settings_toggle" href="#wa_view_settings_body" class="dropdown" data-toggle="collapse" aria-expanded="false">
 													<i class="icon-camera"></i> {{ _('Preview') }}:
 												</a>
 												<span class="caret" style="vertical-align: middle"></span>
@@ -62,21 +62,18 @@
                                                     <div data-bind="visible: camera.cameraActive() && !camera.markerStateGreen()">
 
                                                         <div>
-                                                            <svg width="25px" height="25px">
-                                                                <circle id="marker_preview_pane" r="8" cx="11" cy="11" fill="#ffffff" stroke="#ff00ff" stroke-width="4">
-                                                                    <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera. Try to close and reopen the lid.') }}</title>
-                                                                </circle>
-                                                            </svg>
-
-                                                            <span><strong>Imprecision Warning:</strong>
-                                                                Not all pink markers were recognized by the camera.
-                                                                Therefore the camera preview might be not fully precise.
-                                                                To improve precision please make sure that all pink circle markers
-                                                                within the working area of your Mr Beam are visible to the camera.
-                                                            </span>
+                                                            <p style="display: inline-block">
+                                                                <svg width="2.5ex" height="2.5ex" style="float: left;">
+                                                                    <circle id="marker_preview_pane" r="30%" cx="45%" cy="50%" fill="#ffffff" stroke="#ff00ff" stroke-width="17%">
+                                                                    </circle>
+                                                                </svg>
+                                                                <strong>Preview not accurate:</strong><br/>
+                                                                The preview camera image might not be completely accurate.
+                                                                Make sure that all four markers are visible.
+                                                                <a href="#" class="muted"><i class="icon-external-link"></i> More info</a><br/>
+                                                                <a href="#" data-toggle="modal" data-target="#analytics_send_image_modal"><i class="fa fa-heartbeat"></i> Send image to Mr&nbsp;Beam</a>
+                                                            </p>
                                                         </div>
-
-                                                        <div>All markers visible? <a href="#" data-toggle="modal" data-target="#analytics_send_image_modal">Send image to Mr&nbsp;Beam</a></div>
 
                                                         <div id="analytics_send_image_modal" class="modal hide fade" >
                                                             <div class="modal-header">
@@ -671,16 +668,16 @@
 									<g id="camera_markers" fill="#ffffff" stroke="#ff00ff" stroke-width="5"
 									   data-bind="visible: camera.cameraActive(), attr: { class: camera.markerMissedClass() }">
                                         <circle id="markerNW" r="5" cx="7" cy="7">
-                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera. Try to close and reopen the lid.') }}</title>
+                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera.') }}</title>
                                         </circle>
 										<circle id="markerNE" r="5" cx="-7" cy="7" data-bind="attr: {cx: workingAreaWidthMM()-7}" >
-                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera. Try to close and reopen the lid.') }}</title>
+                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera.') }}</title>
                                         </circle>
 										<circle id="markerSW" r="5" cx="7" cy="-7" data-bind="attr: {cy: workingAreaHeightMM()-7}" >
-                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera. Try to close and reopen the lid.') }}</title>
+                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera.') }}</title>
                                         </circle>
 										<circle id="markerSE" r="5" cx="-7" cy="-7" data-bind="attr: {cx: workingAreaWidthMM()-7, cy: workingAreaHeightMM()-7}" >
-                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera. Try to close and reopen the lid.') }}</title>
+                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera.') }}</title>
                                         </circle>
 									</g>
 {#									<rect id="scanArea" x="0" y="0" width="0" height="0" ></rect>#}
