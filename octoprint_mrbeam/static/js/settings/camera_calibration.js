@@ -452,6 +452,29 @@ $(function () {
 				"POST");
 		};
 
+		self.stopLensCalibration = function() {
+			self.simpleApiCommand(
+				"camera_stop_lens_calibration",
+				{},
+				function(){
+					new PNotify({
+						title: gettext("Lens Calibration stopped"),
+						// text: "",
+						type: "info",
+						hide: false});
+					self.lensCalibrationActive(false);
+					self.lensCalibrationRunning(false);
+				},
+				function(){
+					new PNotify({
+						title: gettext("Couldn't stop the lens calibration."),
+						text: gettext("...and I have no clue why. Sorry."),
+						type: "warning",
+						hide: true})},
+				"POST");
+
+		}
+
 		self.engrave_markers = function () {
 			var url = '/plugin/mrbeam/generate_calibration_markers_svg';
 			$.ajax({
@@ -565,16 +588,6 @@ $(function () {
 			if (self.cornerCalibrationActive()) {
 				self.cornerCalibrationActive(false);
 				self.rawPics([])
-			}
-			if (self.lensCalibrationActive(false)) {
-					self.lensCalibrationActive(false);
-				new PNotify({
-					title: gettext("Calibration cancelled."),
-					text: gettext("Feel free to restart"),
-					type: "info",
-					hide: true
-				});
-				self.reset_corner_calibration();
 			}
 		};
 

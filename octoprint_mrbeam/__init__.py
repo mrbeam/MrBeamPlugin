@@ -991,8 +991,13 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@octoprint.plugin.BlueprintPlugin.route("/camera_run_lens_calibration", methods=["POST"])
 	def onCalibrationRunLensDistort(self):
 		self._logger.debug("Command given : camera_run_lens_calibration")
-
 		self.lid_handler.startLensCalibration()
+		return NO_CONTENT
+
+	@octoprint.plugin.BlueprintPlugin.route("/camera_stop_lens_calibration", methods=["POST"])
+	def onCalibrationRunLensDistort(self):
+		self._logger.debug("Command given : camera_stop_lens_calibration")
+		self.lid_handler.stopLensCalibration()
 		return NO_CONTENT
 
 	@octoprint.plugin.BlueprintPlugin.route("/send_calibration_markers", methods=["POST"])

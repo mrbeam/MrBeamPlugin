@@ -294,6 +294,9 @@ class LidHandler(object):
 			self.boardDetectorDaemon.remove(path)
 		return self.boardDetectorDaemon.state.keys() # TODO necessary? Frontend update now happens via plugin message
 
+	def stopLensCalibration(self):
+		self.boardDetectorDaemon.stop()
+
 	def ignoreCalibrationImage(self, path):
 		myPath  = path.join(self.debugFolder, "debug", path)
 		if myPath in self.boardDetectorDaemon.state.keys():

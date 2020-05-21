@@ -163,7 +163,8 @@
 							       visible: lensCalibrationActive() && lensCalibrationComplete()">
 					<i class="icon-fixed-width icon-ban-circle"></i> {{ _('Back') }}</button>
 				<!-- Cancel -->
-				<button class="btn btn-warning" data-bind="click: abortCalibration, visible: cornerCalibrationActive() || lensCalibrationActive()"><i class="icon-fixed-width icon-ban-circle"></i> {{ _('Cancel') }}</button>
+				<button class="btn btn-warning" data-bind="click: abortCalibration, visible: cornerCalibrationActive()"><i class="icon-fixed-width icon-ban-circle"></i> {{ _('Cancel') }}</button>
+				<button class="btn btn-warning" data-bind="click: stopLensCalibration, visible: lensCalibrationActive()"><i class="icon-fixed-width icon-ban-circle"></i> {{ _('Stop Calibration') }}</button>
 			</div>
 		</div>
 	</div>
