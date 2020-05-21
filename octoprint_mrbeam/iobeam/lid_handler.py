@@ -296,7 +296,10 @@ class LidHandler(object):
 
 	def stopLensCalibration(self):
 		self.boardDetectorDaemon.stopAsap()
-		self.boardDetectorDaemon.join()
+		try:
+			self.boardDetectorDaemon.join()
+		except RuntimeError:
+			self._logger.debug("Board Detector wasn't started or had already exited.")
 		self.boardDetectorDaemon = BoardDetectorDaemon(self._settings.get(["cam", "lensCalibrationFile"]),
 							       runCalibrationAsap=True,
 							       stateChangeCallback=self.updateFrontendCC,
