@@ -556,7 +556,7 @@ $(function () {
 				}
 			};
 			console.log('Sending data:', data);
-			self.simpleApiCommand("camera_calibration_markers", data, self.saveMarkersSuccess, self.saveMarkersError);
+			self.simpleApiCommand("send_corner_calibration", data, self.saveMarkersSuccess, self.saveMarkersError, "POST");
 		};
 
 		self.saveMarkersSuccess = function (response) {
