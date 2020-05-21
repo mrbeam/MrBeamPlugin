@@ -627,6 +627,14 @@
                                             <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera. Try to close and reopen the lid.') }}</title>
                                         </circle>
 									</g>
+									<g id="mbtransformHandleGroup">
+										<rect id="translateHandle" x="0" y="0" width="0" height="0" ></rect>
+										<path id="scaleHandleNW" class="scaleHandle" d="M0,0v-8l-2,2 -6,-6 2,-2h-8v8l2,-2 6,6 -2,2z" />
+										<path id="scaleHandleNE" class="scaleHandle" d="M0,0v-8l2,2 6,-6 -2,-2h8v8l-2,-2 -6,6 2,2z" />
+										<path id="scaleHandleSE" class="scaleHandle" d="M0,0v8l2,-2 6,6-2,2h8v-8l-2,2-6,-6 2,-2z" />
+										<path id="scaleHandleSW" class="scaleHandle" d="M0,0v8l-2,-2 -6,6 2,2h-8v-8l2,2 6,-6 -2,-2z" />
+										<path id="rotHandle" d="M 0,8 C 4.5,8 8,4.5 8,0 H 3 C 3,1.7 1.6,3 0,3 0,3 0,3 0,3 0,3 0,3 -0.3,3 -1.9,2.8 -3,1.5 -3,-0.1 c 0,-1.6 1.4,-3 3,-3 v 1.7 L 4,-5.5 0,-9.6 V -8 c -4.5,0 -8,3.6 -8,8 0,4.5 3.6,8 8,8 z" />
+									</g>
 {#									<rect id="scanArea" x="0" y="0" width="0" height="0" ></rect>#}
 {#									<rect id="scanEventHandler" x="0" y="0" width="0" height="0" stroke="none" fill="none"#}
 {#										  data-bind="event: {mousedown: scanStart, mousemove: scanUpdate, mouseup: scanEnd}"></rect>#}

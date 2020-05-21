@@ -36,6 +36,7 @@ $(function(){
 		self.svgDPI = function(){return 90}; // initial value, gets overwritten by settings in onAllBound()
 		self.dxfScale =  function(){return 1}; // initial value, gets overwritten by settings in onAllBound()
 		self.previewImgOpacity = ko.observable(1);
+		// TODO coordGridColor in observable
 		self.previewImgOpacity.subscribe(function(newVal){
 			let col = newVal > 0.25 ? '#eeeeee':'#999999';
 			$('#coord_pattern_marker').attr('stroke', col);
@@ -1731,6 +1732,7 @@ $(function(){
 			$('#coordGrid').on('dblclick', function (event) {
 				self.move_laser({}, event);
 			});
+			snap.mbtransform_init();
 		};
 
 		self.draw_coord_grid = function(){
@@ -1748,7 +1750,8 @@ $(function(){
 				if(isNaN(yPatternOffset)){
 					yPatternOffset = 0;
 				}
-
+				
+				// TODO get stroke color from observable.
 				var marker = snap.path("M9,10h2M10,9v2").attr({
 					id: "coord_pattern_marker",
 					stroke: "#eeeeee",
@@ -1795,6 +1798,7 @@ $(function(){
 				var el = tip[i];
 				el.ftRemoveHandles();
 			}
+			snap.mbtransform.deactivate();
 			//self.check_sizes_and_placements();
 		};
 

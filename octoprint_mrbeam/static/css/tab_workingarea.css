@@ -163,3 +163,40 @@
     color: darkgrey;
     margin: 0 0 0 30px;
 }
+
+/*
+* === mbTransform styling ===
+*/
+#translateHandle {
+	fill: #00000033;
+	stroke: #00aaff;
+	stroke-width: 2;
+	stroke-dasharray: 5 5;
+}
+
+#scaleHandleNE, #scaleHandleNW, #scaleHandleSE, #scaleHandleSW, #rotHandle {
+	fill: #ffffff99;
+	stroke: #00aaff;
+	stroke-width: 2;	
+}
+
+#mbtransformHandleGroup { display:none; }
+#mbtransformHandleGroup.active { display: block; }
+#mbtransformHandleGroup.active.translate .scaleHandle,  
+#mbtransformHandleGroup.active.translate #rotHandle { 
+	display: none; 
+}
+
+#mbtransformHandleGroup.active.rotate .scaleHandle { display: none; }
+#mbtransformHandleGroup.active.rotate #rotHandle { display: block; }
+
+#mbtransformHandleGroup.active.scale .scaleHandle,
+#mbtransformHandleGroup.active.scale #rotHandle {
+	display: none;
+}  
+#mbtransformHandleGroup.active.scale.scaleHandleNE #scaleHandleNE,
+#mbtransformHandleGroup.active.scale.scaleHandleNW #scaleHandleNW,
+#mbtransformHandleGroup.active.scale.scaleHandleSW #scaleHandleSW,
+#mbtransformHandleGroup.active.scale.scaleHandleSE #scaleHandleSE { 
+	display: block; 
+}
