@@ -10,6 +10,7 @@ import octoprint_mrbeam.camera as camera
 import queue
 from os import path
 import numpy as np
+from copy import copy
 
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.util import logme, logtime, logExceptions
@@ -280,8 +281,11 @@ class BoardDetectorDaemon(Thread):
 def get_object_points(rows, cols):
     # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
     objp = np.zeros((rows * cols, 3), np.float32)
-    objp[:, :2] = np.mgrid[0:cols * CB_SQUARE_SIZE:CB_SQUARE_SIZE,
-                           0:rows * CB_SQUARE_SIZE:CB_SQUARE_SIZE].T.reshape(-1, 2)
+    grid = np.mgrid[0:rows * CB_SQUARE_SIZE:CB_SQUARE_SIZE,
+                    0:cols * CB_SQUARE_SIZE:CB_SQUARE_SIZE].T # .reshape(-1, 2)
+    grid_copy = copy(grid)
+    grid[:,:,0], grid[:,:,1] = grid_copy[:,:,1], grid_copy[:,:,0]
+    objp[:,:2] = grid.reshape(-1,2)
     return objp
 
 # @logtime
@@ -375,9 +379,9 @@ def runLensCalibration(objPoints, imgPoints, imgRes, q_out=None):
 	# else:
 	signal.signal(signal.SIGTERM, signal.SIG_DFL)
 	ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objPoints,
-								imgPoints,
-								imgRes,
-								None, None)
+	                                                   imgPoints,
+	                                                   imgRes,
+	                                                   None, None)
 	# if callback: callback()
 	if q_out:
 		q_out.put(dict(ret=ret, mtx=mtx, dist=dist, rvecs=rvecs, tvecs=tvecs))
