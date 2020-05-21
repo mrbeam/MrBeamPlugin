@@ -295,7 +295,12 @@ class LidHandler(object):
 		return self.boardDetectorDaemon.state.keys() # TODO necessary? Frontend update now happens via plugin message
 
 	def stopLensCalibration(self):
-		self.boardDetectorDaemon.stop()
+		self.boardDetectorDaemon.stopAsap()
+		self.boardDetectorDaemon.join()
+		self.boardDetectorDaemon = BoardDetectorDaemon(self._settings.get(["cam", "lensCalibrationFile"]),
+							       runCalibrationAsap=True,
+							       stateChangeCallback=self.updateFrontendCC,
+		                                               event_bus = self._event_bus)
 
 	def ignoreCalibrationImage(self, path):
 		myPath  = path.join(self.debugFolder, "debug", path)
