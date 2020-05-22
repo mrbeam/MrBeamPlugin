@@ -356,11 +356,30 @@ $(function () {
 				var _d = data['chessboardCalibrationState']
 				self.calibrationState(_d);
 				var arr = []
-				for (const [key, value] of Object.entries(_d.pictures)) {
-					arr.push({name: key, state: value.state})
+				// { '/home/pi/.octoprint/uploads/cam/debug/tmp_raw_img_4.jpg': {
+				//      state: "processing", 
+				//      tm_proc: 1590151819.735044, 
+				//      tm_added: 1590151819.674166, 
+				//      board_size: [5, 6]
+				//    }, ...
+				// }
+
+				for (const [path, value] of Object.entries(_d.pictures)) {
+					value.path = path;
+					value.url = path.replace("home/pi/.octoprint/uploads", "downloads/files/local");
+					arr.push(value);
 				}
-				self.rawPicSelection(arr)
-				self.lensCalibrationRunning(_d.lensCalibration == "processing");
+				for (var i = arr.length; i < 9; i++) {
+					arr.push({ 
+						path: null, 
+						url: '',
+						state: 'missing'
+					});
+					
+				}
+				
+				self.rawPicSelection(arr);
+				self.lensCalibrationRunning(_d.lensCalibration === "processing");
 			}
 		};
 
@@ -386,17 +405,10 @@ $(function () {
 			// 					   self.saveRawPicError);
 		}
 
-		self.showRawPic = function() {
-			var path = this['name'];
-			var dl_path = path.replace("home/pi/.octoprint/uploads",
-									   "downloads/files/local")
-			self.picType("reserved");
-			self.calImgUrl(dl_path)
-		}
 
 		self.delRawPic = function() {
 			self.simpleApiCommand("calibration_del_pic",
-								  {name: this['name']},
+								  {name: this['path']},
 								  self.refreshPics,
 								  self.delRawPicError,
 								  "POST");

@@ -759,6 +759,8 @@ li.material_entry span {
 
 svg#area_preview.overModalBG { z-index: 1051; }
 
+/** CAMERA CALIBRATION **/
+
 .calibration_manual.text {
     width: 48%;
 	margin-bottom: 2em;
@@ -863,3 +865,47 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	margin-right: 0.3em;
 }
 
+#lens_correction_image_list {
+	display: grid;
+	grid-template-columns: 1fr 1fr 1fr;
+	margin: 0;
+	width: 100%;
+}
+
+.lens_correction_image_thumb {
+	list-style-type: none;
+	background: top center no-repeat; 
+	background-size: contain;
+	background-color: #ddd;
+	padding-top: 70%;
+	margin: .5em;
+	position: relative;
+	
+}
+.lens_correction_image_thumb.zoom {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	background-color: black;
+	margin: 0;
+	background-size: 80%;
+	z-index: 999;
+}
+
+.lens_correction_image_thumb i.status_icon {
+	position: absolute;
+	font-size: 4em;
+	width: 100%;
+	top: calc( 50% - 2rem );
+	left: 0;
+	text-align: center;
+}
+
+#lens_calibration_take_pic {
+	color: #fff;
+	border-radius: 50%;
+	width: 4em;
+	height: 4em;
+	
+}

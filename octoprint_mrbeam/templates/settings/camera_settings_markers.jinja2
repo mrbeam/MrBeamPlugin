@@ -40,6 +40,7 @@
 			</div>
             <a class="muted" data-bind="attr: { href: calImgUrl() }"> {{ _('Download this image') }}</a>
 		</div>
+		
 		<!-- Lens calibration -->
 		<div class="marker_selection_desc calibration_help"
 			 data-bind="visible: !cornerCalibrationActive() && !lensCalibrationActive()">
@@ -56,6 +57,7 @@
 					{{ _('Start Lens Calibration') }}</button>
 			</div>
 		</div>
+		
 		<!-- Corner calibration -->
 		<div class="marker_selection_desc calibration_help"
 			 data-bind="visible: cal_img_ready() && !cornerCalibrationActive() && !lensCalibrationActive() && availablePic()['lens_corrected']">
@@ -116,28 +118,31 @@
 
 					</div>
 				</div>
-				<!-- Lens calibration -->
+				
 				<div data-bind="visible: lensCalibrationActive()">
-					<p>{{_('You need to detect at least 8 calibration boards before you can run the calibration process of the camera. The calibration process will automatically start when the minimum required boards are found.')}}</p>
-					<p>{{_('You can always take more pictures and restart the calibration later if you need. We encourage you to take at least 10 pictures in case some of them are bad.')}}</p>
-					<p>{{_('We encourage you to take at least 10 pictures in case some of them are bad.')}}</p>
-					<div data-bind="foreach: { data: rawPicSelection, as: 'pic' }">
-						<li style="list-style-type: none;">
-							<label style="display: inline;">
-								<button class="btn btn-default" data-bind="click: $parent.showRawPic">
-									<i class="icon-eye-open"></i>
+					<!-- Lens calibration -->
+					<button id="lens_calibration_take_pic" class="btn btn-success"
+							data-bind="click: saveRawPic,
+									   enable: !cameraBusy()">
+						<i class="icon icon-camera icon-2x"></i>
+					</button>
+					<ul id="lens_correction_image_list" data-bind="visible: lensCalibrationActive(), foreach: { data: rawPicSelection, as: 'pic' }">
+						<li class="lens_correction_image_thumb" data-bind="style: { backgroundImage: 'url('+pic.url+')' };" onclick="this.classList.remove('zoom')">
+							<div class="btn-group">
+								<button class="btn btn-default" onclick="this.parentElement.parentElement.classList.add('zoom'); event.stopPropagation();">
+									<i class="icon icon-search"></i>
 								</button>
-								Picture <span data-bind="text: $index" style="font-weight: bold;"></span>
-							</label>
-							<button class="btn btn-warning" data-bind="click: $parent.delRawPic">
-								<i  class="icon-trash"></i> {{ _('Remove') }}
-							</button>
-							<i class="icon-spinner icon-spin" data-bind="visible: pic.state == 'processing'"></i>
-							<i class="icon-ok" data-bind="visible: pic.state == 'success'"></i>
-							<i class="icon-remove" data-bind="visible: pic.state == 'fail'"></i>
+								<button class="btn btn-warning" data-bind="click: $parent.delRawPic">
+									<i  class="icon icon-trash"></i> {{ _('Remove') }}
+								</button>
+							</div>
+
+							<i class="status_icon icon icon-spinner icon-spin" data-bind="visible: pic.state === 'processing'"></i>
+							<i class="status_icon icon icon-ok" data-bind="visible: pic.state === 'success'"></i>
+							<i class="status_icon icon icon-remove" data-bind="visible: pic.state === 'fail'"></i>
+							<i class="status_icon icon icon-camera" data-bind="visible: pic.state === 'missing'"></i>
 						</li>
-					</div>
-					<p data-bind="visible: ! hasMinBoardsFound()">{{ _('The system hasn\'t detected enough chessboards yet. Please take more pictures or wait for the current ones to finish processing.')}}</p>
+					</ul>
 				</div>
 
 				<!-- Corner calibration -->
@@ -153,19 +158,6 @@
 				<button class="btn btn-default" data-bind="click: previousMarker, visible: cornerCalibrationActive()">{{ _('Previous') }}</button>
 				<button class="btn btn-default" data-bind="click: nextMarker, visible: cornerCalibrationActive()">{{ _('Next') }}</button>
 				<button class="btn btn-success" data-bind="click: saveCornerCalibrationData, visible: cornerCalibrationComplete() && cornerCalibrationActive()">{{ _('Save Calibration') }}</button>
-				<!-- Lens calibration -->
-				<button class="btn btn-default"
-					    data-bind="click: saveRawPic,
-							       visible: lensCalibrationActive(),
-				                   enable: !cameraBusy()">
-					{{ _('Save new Chessboard Picture') }}
-				</button>
-				<!-- <button class="btn btn-success"
-					 data-bind="click: runLensCalibration,
-					 visible: lensCalibrationActive() && rawPicSelection().length >= 10,
-					 enable: !lensCalibrationRunning() && hasMinBoardsFound()">
-					 {{ _('Run Lens Calibration again') }} <i class="icon-spinner icon-spin" data-bind="visible: lensCalibrationRunning"></i>
-					 </button> -->
 				<button class="btn btn-success"
 					    data-bind="click: stopLensCalibration
 							       visible: lensCalibrationActive() && rawPicSelection().length >= 10,
@@ -182,7 +174,7 @@
 			</div>
 		</div>
 	</div>
-    <div data-bind="visible: isInitialCalibration()">
+    <div data-bind="visible: isInitialCalibration() && !lensCalibrationActive() && cornerCalibrationActive()">
         <div>
             <img id="debug_NW_img" class="marker_debug_image" data-bind="attr: {src: dbNWImgUrl()}"/>
             <img id="debug_NE_img" class="marker_debug_image" data-bind="attr: {src: dbNEImgUrl()}"/>
