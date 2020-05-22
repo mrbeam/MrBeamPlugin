@@ -1,189 +1,213 @@
 
 <div style="position:relative;">
-	<svg id="calibration_svg" style="max-width: 80vh; border:1px solid lightgray" width="100%" height="100%" viewBox="0 0 512 384" data-bind="attr: {viewBox: calSvgViewBox()}">
-		<defs>
-            <symbol id="cross">
-                <path data-bind="attr: {d: svgCross()}" fill="none" />
-            </symbol>
-		</defs>
-        <g id="obj_height_scale">
-		<image style="cursor:crosshair;" 
-			   onerror="console.warn(event, this, 'reloading '+this.href); var src=this.href; this.href=''; setTimeout(function(){ this.href=src; }, 100); return false; " 
-			   data-bind="attr: {href: calImgUrl(), width:calImgWidth(), height:calImgHeight() }, click: userClick" />
-        </g>
-        <g id="corners" class="calibration_click_indicator"
-           data-bind="attr: { visibility: correctedMarkersVisibility() }">
-            <use id="click_NW" href="#cross" x="-100" y="-100" />
-            <use id="click_NE" href="#cross" x="-100" y="-100" />
-            <use id="click_SE" href="#cross" x="-100" y="-100" />
-            <use id="click_SW" href="#cross" x="-100" y="-100" />
-        </g>
-        <g id="cropped_view_corners" class="calibration_click_indicator"
-           transform="scale(1)"
-           data-bind="attr: { transform: zMarkersTransform(), visibility: croppedMarkersVisibility() }">
-		   <use href="#cross" stroke="blue" data-bind="attr: { x: -crossSize(),                         y: -crossSize() }" />
-		   <use href="#cross" stroke="blue" data-bind="attr: { x: calImgWidth()-crossSize(), y: -crossSize() }" />
-		   <use href="#cross" stroke="blue" data-bind="attr: { x: -crossSize(),                         y: calImgHeight()-crossSize() }" />
-		   <use href="#cross" stroke="blue" data-bind="attr: { x: calImgWidth()-crossSize(), y: calImgHeight()-crossSize() }" />
-        </g>
-	</svg>
-	<div>
-		<div style="margin-bottom:1em;">
-			<a class="accordion-toggle" data-bind="click:loadUndistortedPicture"><i class="icon-repeat"></i> {{ _('refresh') }}</a>
-			<div class="marker_selection_desc calibration_waiting_for_picture"
-			     data-bind="visible: !lensCalibrationActive()">
-				<div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['NW'] }"><i class="icon-ok"></i> NW</div>
-				<div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['SW'] }"><i class="icon-ok"></i> SW</div>
-				<div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['SE'] }"><i class="icon-ok"></i> SE</div>
-				<div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['NE'] }"><i class="icon-ok"></i> NE</div>
-				<div class="marker_found_indicator" data-bind="visible: !cal_img_ready()"><i class="icon-spinner icon-spin"></i> {{ _('detecting') }}</div>
-			</div>
-            <a class="muted" data-bind="attr: { href: calImgUrl() }"> {{ _('Download this image') }}</a>
-		</div>
-		
-		<!-- Lens calibration -->
-		<div class="marker_selection_desc calibration_help"
-			 data-bind="visible: !cornerCalibrationActive() && !lensCalibrationActive()">
-			<div>
-				{{_('Have a calibration board ready:') }}<br/>
-				<a href='/plugin/mrbeam/static/docs/calibration_chessboard_pattern.pdf' target='_blank'>{{_('Download this PDF and print it in original size.') }}</a><br/>
-				{{_('When started, you will have to take at least 10 pictures of the calibration board with the camera.')}}
-				{{_('We will tell you if we missed one of the calibration boards here.') }}<br/>
-				{{_('You can take more pictures and run the calibration again by pressing the green "Run lens Calibration" button.') }}<br/>
-				{{_('When you are done, you can exit this calibration screen using the "Stop Lens Calibration" button.') }}<br/>
-			</div>
-			<div style="margin-top:1em;">
-				<button class="btn btn-default" data-bind="click: startLensCalibration">
-					{{ _('Start Lens Calibration') }}</button>
-			</div>
-		</div>
-		
-		<!-- Corner calibration -->
-		<div class="marker_selection_desc calibration_help"
-			 data-bind="visible: cal_img_ready() && !cornerCalibrationActive() && !lensCalibrationActive() && availablePic()['lens_corrected']">
-			<div>{{_('Click on the arrow head of the marker in the magnified picture.') }}<br/>
-			{{_('Continue with the other markers as the picture changes.') }}<br/>
-			{{_('Once all arrowheads are marked the calibration is finished.')}}</div>
-			<div data-bind="visible: isInitialCalibration()">
-				{{_('No calibration arrows visible?')}}
-				<a href="#reengrave_markers" class="dropdown" data-toggle="collapse" aria-expanded="false">
-					{{_('Engrave again')}}
-				</a>
-				<span class="caret" style="vertical-align: middle"></span>
-				<br/>
-				<div class="collapse" id="reengrave_markers" style="display:inline-block;">
-					<div>
-						Intensity: <input id="initialcalibration_intensity" type="number" min="0" max="100" step="1" class="decent_input" value="50" />%,&nbsp;
-						Feedrate: <input id="initialcalibration_feedrate" type="number" min="100" max="3000" step="1" class="decent_input" value="800" />mm/min&nbsp;
-						<span data-bind="visible: !interlocks_closed()" style="color: red; display: inline-block; padding: 0.8em"><i class="icon icon-warning-sign"></i> {{ _('Close the lid') }}</span>
-						<button class="btn btn-danger" data-bind="click: engrave_markers_without_gui, visible: isInitialCalibration() && interlocks_closed()"><i class="icon-fire"></i>&nbsp;{{ _('Engrave Markers') }}</button>
-					</div>
-				</div>
-			</div>
-			<div style="margin-top:1em;">
-				<button class="btn btn-default" data-bind="click: startCornerCalibration">{{ _('Start Corner Calibration') }}</button>
-			</div>
-		</div>
-		<div class="marker_selection_desc calibration_summary">
-			<div data-bind="css: {complete: cornerCalibrationComplete()}">
-				<div id="calibration_picture_control" style="position: fixed;right: 0;top: 30vh;padding: 1em;border: 1px solid gray;" data-bind="visible: isInitialCalibration()">
-					Picture:<br />
-					<input type="radio" name="picture_type" value="raw"
-						   data-bind="checked: picType, attr: { disabled: !availablePic()['raw'] }" /> Raw<br />
-					<input type="radio" name="picture_type" value="lens_corrected"
-						   data-bind="checked: picType, attr: { disabled: !availablePic()['lens_corrected'] }" /> Lens corrected<br />
-					<input type="radio" name="picture_type" value="cropped"
-						   data-bind="checked: picType, attr: { disabled: !availablePic()['cropped'] }" /> Cropped<br />
-					<br/>
-					Zoom: <span data-bind="text: calSvgScale" ></span> <br/>
-					<button class="btn-default" data-bind="click: smaller">-</button><button class="btn-default" data-bind="click: larger">+</button>
-					<br />
-					Move:
-					<div>
-						<div class="btn-group">
-							<button class="btn-default" data-bind="click: move(-50,-50)">&#8598;</button>
-							<button class="btn-default" data-bind="click: move(0,-50)">&#8593;</button>
-							<button class="btn-default" data-bind="click: move(50,-50)">&#8599;</button>
-						</div><br/>
-						<div class="btn-group">
-							<button class="btn-default" data-bind="click: move(-50,0)">&#8592;</button>
-							<button class="btn-default" data-bind="click: resetMove">*</button>
-							<button class="btn-default" data-bind="click: move(50,0)">&#8594;</button>
-						</div><br/>
-						<div class="btn-group">
-							<button class="btn-default" data-bind="click: move(-50,50)">&#8601;</button>
-							<button class="btn-default" data-bind="click: move(0,50)">&#8595;</button>
-							<button class="btn-default" data-bind="click: move(50,50)">&#8600;</button>
-						</div>
-
-					</div>
-				</div>
-				
-				<div data-bind="visible: lensCalibrationActive()">
+			
+		<!-- Calibration Selector -->
+		<ul id="camera-calibration-tabs" class="nav nav-pills"> 
+			<li><a href="#tab_lens_calibration" data-toggle="tab" id="lenscal_tab_btn">{{ _('Lens Calibration') }}</a></li>
+			<li><a href="#tab_corner_calibration" data-toggle="tab" id="cornercal_tab_btn">{{ _('Corner Calibration') }}</a></li>
+		</ul>
+	
+		<div class="tabbable">
+			<div class="tab-content">
+				<div class="tab-pane" id="tab_lens_calibration">
+					
+					<div class="marker_selection_desc calibration_help" data-bind="visible:!lensCalibrationActive()">
+					   <div>
+						   {{_('Have a calibration board ready:') }}<br/>
+						   <a href='/plugin/mrbeam/static/docs/calibration_chessboard_pattern.pdf' target='_blank'>{{_('Download this PDF and print it in original size.') }}</a><br/>
+						   {{_('When started, you will have to take at least 10 pictures of the calibration board with the camera.')}}
+						   {{_('We will tell you if we missed one of the calibration boards here.') }}<br/>
+						   {{_('You can take more pictures and run the calibration again by pressing the green "Run lens Calibration" button.') }}<br/>
+						   {{_('When you are done, you can exit this calibration screen using the "Stop Lens Calibration" button.') }}<br/>
+					   </div>
+					   <div style="margin-top:1em;">
+						   <button class="btn btn-default" data-bind="click: startLensCalibration">
+							   {{ _('Start Lens Calibration') }}</button>
+					   </div>
+				   </div>	
+					
 					<!-- Lens calibration -->
-					<button id="lens_calibration_take_pic" class="btn btn-success"
-							data-bind="click: saveRawPic,
-									   enable: !cameraBusy()">
-						<i class="icon icon-camera icon-2x"></i>
-					</button>
-					<ul id="lens_correction_image_list" data-bind="visible: lensCalibrationActive(), foreach: { data: rawPicSelection, as: 'pic' }">
-						<li class="lens_correction_image_thumb" data-bind="style: { backgroundImage: 'url('+pic.url+')' };" onclick="this.classList.remove('zoom')">
-							<div class="btn-group">
-								<button class="btn btn-default" onclick="this.parentElement.parentElement.classList.add('zoom'); event.stopPropagation();">
-									<i class="icon icon-search"></i>
-								</button>
-								<button class="btn btn-warning" data-bind="click: $parent.delRawPic">
-									<i  class="icon icon-trash"></i> {{ _('Remove') }}
-								</button>
+					<div data-bind="visible: lensCalibrationActive()">
+
+						<button id="lens_calibration_take_pic" class="btn btn-primary" data-bind="click: saveRawPic, enable: !cameraBusy()">
+							<i class="icon icon-camera icon-2x"></i>
+						</button>
+						<button class="btn btn-success"
+									data-bind="click: runLensCalibration,
+											   visible: rawPicSelection().length >= 10,
+											   enable: !lensCalibrationRunning() && hasMinBoardsFound()">
+								{{ _('Run Lens Calibration again') }} <i class="icon-spinner icon-spin" data-bind="visible: lensCalibrationRunning"></i>
+						</button>
+						<button class="btn btn-warning"
+								data-bind="click: abortCalibration, visible: lensCalibrationActive() && lensCalibrationComplete()">
+							<i class="icon-fixed-width icon-ban-circle"></i> {{ _('Back') }}
+						</button>
+						<button class="btn btn-warning" data-bind="click: stopLensCalibration, visible: lensCalibrationActive()"><i class="icon-fixed-width icon-ban-circle"></i> {{ _('Stop Lens Calibration') }}</button>
+
+						<ul id="lens_correction_image_list" data-bind="visible: lensCalibrationActive(), foreach: { data: rawPicSelection, as: 'pic' }">
+							<li class="lens_correction_image_thumb" data-bind="style: { backgroundImage: 'url('+pic.url+')' };" onclick="this.classList.remove('zoom')">
+								<div class="btn-group">
+									<button class="btn btn-default" onclick="this.parentElement.parentElement.classList.add('zoom'); event.stopPropagation();">
+										<i class="icon icon-search"></i>
+									</button>
+									<button class="btn btn-warning" data-bind="click: $parent.delRawPic">
+										<i  class="icon icon-trash"></i> {{ _('Remove') }}
+									</button>
+								</div>
+
+								<i class="status_icon icon icon-spinner icon-spin" data-bind="visible: pic.state === 'processing'"></i>
+								<i class="status_icon icon icon-ok" data-bind="visible: pic.state === 'success'"></i>
+								<i class="status_icon icon icon-remove" data-bind="visible: pic.state === 'fail'"></i>
+								<i class="status_icon icon icon-camera" data-bind="visible: pic.state === 'missing'"></i>
+							</li>
+						</ul>
+					</div>
+					
+				</div>
+				<div class="tab-pane" id="tab_corner_calibration">
+					<svg id="calibration_svg" style="max-width: 60vh; border:1px solid lightgray" width="100%" height="100%" viewBox="0 0 512 384" data-bind="attr: {viewBox: calSvgViewBox()}">
+						<defs>
+							<symbol id="cross">
+								<path data-bind="attr: {d: svgCross()}" fill="none" />
+							</symbol>
+						</defs>
+						<g id="obj_height_scale">
+							<image style="cursor:crosshair;" 
+							   onerror="console.warn(event, this, 'reloading '+this.href); var src=this.href; this.href=''; setTimeout(function(){ this.href=src; }, 100); return false; " 
+							   data-bind="attr: {href: calImgUrl(), width:calImgWidth(), height:calImgHeight() }, click: userClick" />
+						</g>
+						<g id="corners" class="calibration_click_indicator" data-bind="attr: { visibility: correctedMarkersVisibility() }">
+							<use id="click_NW" href="#cross" x="-100" y="-100" />
+							<use id="click_NE" href="#cross" x="-100" y="-100" />
+							<use id="click_SE" href="#cross" x="-100" y="-100" />
+							<use id="click_SW" href="#cross" x="-100" y="-100" />
+						</g>
+						<g id="cropped_view_corners" class="calibration_click_indicator"
+						   transform="scale(1)"
+						   data-bind="attr: { transform: zMarkersTransform(), visibility: croppedMarkersVisibility() }">
+						   <use href="#cross" stroke="blue" data-bind="attr: { x: -crossSize(),                         y: -crossSize() }" />
+						   <use href="#cross" stroke="blue" data-bind="attr: { x: calImgWidth()-crossSize(), y: -crossSize() }" />
+						   <use href="#cross" stroke="blue" data-bind="attr: { x: -crossSize(),                         y: calImgHeight()-crossSize() }" />
+						   <use href="#cross" stroke="blue" data-bind="attr: { x: calImgWidth()-crossSize(), y: calImgHeight()-crossSize() }" />
+						</g>
+					</svg>
+					<div>
+						<div style="margin-bottom:1em;">
+							<a class="accordion-toggle" data-bind="click:loadUndistortedPicture"><i class="icon-repeat"></i> {{ _('refresh') }}</a>
+							<div class="marker_selection_desc calibration_waiting_for_picture" data-bind="visible: cornerCalibrationActive()">
+								<div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['NW'] }"><i class="icon-ok"></i> NW</div>
+								<div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['SW'] }"><i class="icon-ok"></i> SW</div>
+								<div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['SE'] }"><i class="icon-ok"></i> SE</div>
+								<div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['NE'] }"><i class="icon-ok"></i> NE</div>
+								<div class="marker_found_indicator" data-bind="visible: !cal_img_ready()"><i class="icon-spinner icon-spin"></i> {{ _('detecting') }}</div>
 							</div>
+							<a class="muted" data-bind="attr: { href: calImgUrl() }"> {{ _('Download this image') }}</a>
+						</div>
+					</div>
+					
+					<!-- Corner calibration -->
+					<div data-bind="visible: !cornerCalibrationActive()">
+						
+						<div class="marker_selection_desc calibration_help"
+							 data-bind="visible: cal_img_ready() && availablePic()['lens_corrected']">
 
-							<i class="status_icon icon icon-spinner icon-spin" data-bind="visible: pic.state === 'processing'"></i>
-							<i class="status_icon icon icon-ok" data-bind="visible: pic.state === 'success'"></i>
-							<i class="status_icon icon icon-remove" data-bind="visible: pic.state === 'fail'"></i>
-							<i class="status_icon icon icon-camera" data-bind="visible: pic.state === 'missing'"></i>
-						</li>
-					</ul>
-				</div>
+							<div>{{_('Click on the arrow head of the marker in the magnified picture.') }}<br/>
+								{{_('Continue with the other markers as the picture changes.') }}<br/>
+								{{_('Once all arrowheads are marked the calibration is finished.')}}</div>
+							<div data-bind="visible: isInitialCalibration()">
+								{{_('No calibration arrows visible?')}}
+								<a href="#reengrave_markers" class="dropdown" data-toggle="collapse" aria-expanded="false">
+									{{_('Engrave again')}}
+								</a>
+								<span class="caret" style="vertical-align: middle"></span>
+								<br/>
+								<div class="collapse" id="reengrave_markers" style="display:inline-block;">
+									<div>
+										Intensity: <input id="initialcalibration_intensity" type="number" min="0" max="100" step="1" class="decent_input" value="50" />%,&nbsp;
+										Feedrate: <input id="initialcalibration_feedrate" type="number" min="100" max="3000" step="1" class="decent_input" value="800" />mm/min&nbsp;
+										<span data-bind="visible: !interlocks_closed()" style="color: red; display: inline-block; padding: 0.8em"><i class="icon icon-warning-sign"></i> {{ _('Close the lid') }}</span>
+										<button class="btn btn-danger" data-bind="click: engrave_markers_without_gui, visible: isInitialCalibration() && interlocks_closed()"><i class="icon-fire"></i>&nbsp;{{ _('Engrave Markers') }}</button>
+									</div>
+								</div>
+							</div>
+							<div style="margin-top:1em;">
+								<button class="btn btn-default" data-bind="click: startCornerCalibration">{{ _('Start Corner Calibration') }}</button>
+							</div>
+						</div>
+						
+						<div id="corner_calibration_debug" data-bind="visible: isInitialCalibration() ">
+							<div>
+								<img id="debug_NW_img" class="marker_debug_image" data-bind="attr: {src: dbNWImgUrl()}"/>
+								<img id="debug_NE_img" class="marker_debug_image" data-bind="attr: {src: dbNEImgUrl()}"/>
+							</div>
+							<div>
+								<img id="debug_SW_img" class="marker_debug_image" data-bind="attr: {src: dbSWImgUrl()}"/>
+								<img id="debug_SE_img" class="marker_debug_image" data-bind="attr: {src: dbSEImgUrl()}"/>
+							</div>
+						</div>
+					</div>
+					<div data-bind="visible: cornerCalibrationActive()">
 
-				<!-- Corner calibration -->
-				<div data-bind="visible: cal_img_ready() && cornerCalibrationActive()">
-					<div id="NW" class="cal-row"><div class="cal-arrow NW"></div> North West: <span data-bind="text: __format_point(currentResults()['NW'])"></span></div>
-					<div id="SW" class="cal-row"><div class="cal-arrow SW"></div> South West: <span data-bind="text: __format_point(currentResults()['SW'])"></span></div>
-					<div id="SE" class="cal-row"><div class="cal-arrow SE"></div> South East: <span data-bind="text: __format_point(currentResults()['SE'])"></span></div>
-					<div id="NE" class="cal-row"><div class="cal-arrow NE"></div> North East: <span data-bind="text: __format_point(currentResults()['NE'])"></span></div>
+						<div class="marker_selection_desc calibration_summary">
+							<div data-bind="css: {complete: cornerCalibrationComplete()}">
+								<div id="calibration_picture_control" style="position: fixed;right: 0;top: 30vh;padding: 1em;border: 1px solid gray;" data-bind="visible: isInitialCalibration()">
+									Picture:<br />
+									<input type="radio" name="picture_type" value="raw"
+										   data-bind="checked: picType, attr: { disabled: !availablePic()['raw'] }" /> Raw<br />
+									<input type="radio" name="picture_type" value="lens_corrected"
+										   data-bind="checked: picType, attr: { disabled: !availablePic()['lens_corrected'] }" /> Lens corrected<br />
+									<input type="radio" name="picture_type" value="cropped"
+										   data-bind="checked: picType, attr: { disabled: !availablePic()['cropped'] }" /> Cropped<br />
+									<br/>
+									Zoom: <span data-bind="text: calSvgScale" ></span> <br/>
+									<button class="btn-default" data-bind="click: smaller">-</button><button class="btn-default" data-bind="click: larger">+</button>
+									<br />
+									Move:
+									<div>
+										<div class="btn-group">
+											<button class="btn-default" data-bind="click: move(-50,-50)">&#8598;</button>
+											<button class="btn-default" data-bind="click: move(0,-50)">&#8593;</button>
+											<button class="btn-default" data-bind="click: move(50,-50)">&#8599;</button>
+										</div><br/>
+										<div class="btn-group">
+											<button class="btn-default" data-bind="click: move(-50,0)">&#8592;</button>
+											<button class="btn-default" data-bind="click: resetMove">*</button>
+											<button class="btn-default" data-bind="click: move(50,0)">&#8594;</button>
+										</div><br/>
+										<div class="btn-group">
+											<button class="btn-default" data-bind="click: move(-50,50)">&#8601;</button>
+											<button class="btn-default" data-bind="click: move(0,50)">&#8595;</button>
+											<button class="btn-default" data-bind="click: move(50,50)">&#8600;</button>
+										</div>
+
+									</div>
+								</div>
+
+								<!-- Corner calibration -->
+								<div data-bind="visible: cal_img_ready() && cornerCalibrationActive()">
+									<div id="NW" class="cal-row"><div class="cal-arrow NW"></div> North West: <span data-bind="text: __format_point(currentResults()['NW'])"></span></div>
+									<div id="SW" class="cal-row"><div class="cal-arrow SW"></div> South West: <span data-bind="text: __format_point(currentResults()['SW'])"></span></div>
+									<div id="SE" class="cal-row"><div class="cal-arrow SE"></div> South East: <span data-bind="text: __format_point(currentResults()['SE'])"></span></div>
+									<div id="NE" class="cal-row"><div class="cal-arrow NE"></div> North East: <span data-bind="text: __format_point(currentResults()['NE'])"></span></div>
+								</div>
+							</div>
+							<div style="margin-top:1em;">
+								<!-- Corner calibration -->
+								<button class="btn btn-default" data-bind="click: previousMarker, visible: cornerCalibrationActive()">{{ _('Previous') }}</button>
+								<button class="btn btn-default" data-bind="click: nextMarker, visible: cornerCalibrationActive()">{{ _('Next') }}</button>
+								<button class="btn btn-success" data-bind="click: saveCornerCalibrationData, visible: cornerCalibrationComplete() && cornerCalibrationActive()">{{ _('Save Calibration') }}</button>
+
+
+
+								<!-- Cancel -->
+								<button class="btn btn-warning" data-bind="click: abortCalibration, visible: cornerCalibrationActive()"><i class="icon-fixed-width icon-ban-circle"></i> {{ _('Cancel') }}</button>
+							</div>
+						</div>
+						
+					</div>
+					
 				</div>
-			</div>
-			<div style="margin-top:1em;">
-				<!-- Corner calibration -->
-				<button class="btn btn-default" data-bind="click: previousMarker, visible: cornerCalibrationActive()">{{ _('Previous') }}</button>
-				<button class="btn btn-default" data-bind="click: nextMarker, visible: cornerCalibrationActive()">{{ _('Next') }}</button>
-				<button class="btn btn-success" data-bind="click: saveCornerCalibrationData, visible: cornerCalibrationComplete() && cornerCalibrationActive()">{{ _('Save Calibration') }}</button>
-				
-				
-				<button class="btn btn-success"
-					    data-bind="click: runLensCalibration,
-							       visible: lensCalibrationActive() && rawPicSelection().length >= 10,
-							       enable: !lensCalibrationRunning() && hasMinBoardsFound()">
-					{{ _('Run Lens Calibration again') }} <i class="icon-spinner icon-spin" data-bind="visible: lensCalibrationRunning"></i>
-				</button>
-				<button class="btn btn-warning"
-						data-bind="click: abortCalibration,
-							       visible: lensCalibrationActive() && lensCalibrationComplete()">
-					<i class="icon-fixed-width icon-ban-circle"></i> {{ _('Back') }}</button>
-				<!-- Cancel -->
-				<button class="btn btn-warning" data-bind="click: abortCalibration, visible: cornerCalibrationActive()"><i class="icon-fixed-width icon-ban-circle"></i> {{ _('Cancel') }}</button>
-				<button class="btn btn-warning" data-bind="click: stopLensCalibration, visible: lensCalibrationActive()"><i class="icon-fixed-width icon-ban-circle"></i> {{ _('Stop Lens Calibration') }}</button>
 			</div>
 		</div>
-	</div>
-    <div data-bind="visible: isInitialCalibration() && !lensCalibrationActive() && cornerCalibrationActive()">
-        <div>
-            <img id="debug_NW_img" class="marker_debug_image" data-bind="attr: {src: dbNWImgUrl()}"/>
-            <img id="debug_NE_img" class="marker_debug_image" data-bind="attr: {src: dbNEImgUrl()}"/>
-        </div>
-        <div>
-            <img id="debug_SW_img" class="marker_debug_image" data-bind="attr: {src: dbSWImgUrl()}"/>
-            <img id="debug_SE_img" class="marker_debug_image" data-bind="attr: {src: dbSEImgUrl()}"/>
-        </div>
-    </div>
+
 </div>
