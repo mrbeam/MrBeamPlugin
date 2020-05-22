@@ -118,7 +118,9 @@
 				</div>
 				<!-- Lens calibration -->
 				<div data-bind="visible: lensCalibrationActive()">
-					<p>{{_('You need to detect at least 8 calibration boards before you can run the calibration process of the camera. The calibration process will automatically start when the minimum required boards are found. You can always take more pictures and restart the calibration later if you need. We encourage you to take at least 10 pictures in case some of them are bad.')}}</p>
+					<p>{{_('You need to detect at least 8 calibration boards before you can run the calibration process of the camera. The calibration process will automatically start when the minimum required boards are found.')}}</p>
+					<p>{{_('You can always take more pictures and restart the calibration later if you need. We encourage you to take at least 10 pictures in case some of them are bad.')}}</p>
+					<p>{{_('We encourage you to take at least 10 pictures in case some of them are bad.')}}</p>
 					<div data-bind="foreach: { data: rawPicSelection, as: 'pic' }">
 						<li style="list-style-type: none;">
 							<label style="display: inline;">
@@ -135,6 +137,7 @@
 							<i class="icon-remove" data-bind="visible: pic.state == 'fail'"></i>
 						</li>
 					</div>
+					<p data-bind="visible: ! hasMinBoardsFound()">{{ _('The system hasn\'t detected enough chessboards yet. Please take more pictures or wait for the current ones to finish processing.')}}</p>
 				</div>
 
 				<!-- Corner calibration -->
