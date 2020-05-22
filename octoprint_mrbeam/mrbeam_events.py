@@ -46,10 +46,13 @@ class MrBeamEvents(object):
 	# Camera Calibration Screen Events
 	RAW_IMAGE_TAKING_START     = "RawImageTakingStart"
 	RAW_IMAGE_TAKING_DONE      = "RawImageTakingDone"
+	RAW_IMG_TAKING_LAST        = "lensCalibTakingLast"
 	LENS_CALIB_START           = "lensCalibStart"
+	LENS_CALIB_PROCESSING_BOARDS = "lensCalibProcessingBoards"
 	LENS_CALIB_RUNNING         = "lensCalibRunning"
 	LENS_CALIB_DONE            = "lensCalibDone"
 	LENS_CALIB_EXIT            = "lensCalibExit"
+	LENS_CALIB_FAIL            = "lensCalibFail"
 
 	@classmethod
 	def register_with_octoprint(cls):

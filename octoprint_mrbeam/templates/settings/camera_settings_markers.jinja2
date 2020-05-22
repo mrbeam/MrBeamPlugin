@@ -33,17 +33,19 @@
 							<i class="icon icon-camera icon-2x"></i>
 						</button>
 						<button class="btn btn-success"
-									data-bind="click: runLensCalibration,
+									data-bind="click: stopLensCalibration,
 											   visible: rawPicSelection().length >= 10,
 											   enable: !lensCalibrationRunning() && hasMinBoardsFound()">
 								{{ _('Run Lens Calibration again') }} <i class="icon-spinner icon-spin" data-bind="visible: lensCalibrationRunning"></i>
 						</button>
-						<button class="btn btn-warning"
+<!--						<button class="btn btn-warning"
 								data-bind="click: abortCalibration, visible: lensCalibrationActive() && lensCalibrationComplete()">
 							<i class="icon-fixed-width icon-ban-circle"></i> {{ _('Back') }}
-						</button>
-						<button class="btn btn-warning" data-bind="click: stopLensCalibration, visible: lensCalibrationActive()"><i class="icon-fixed-width icon-ban-circle"></i> {{ _('Stop Lens Calibration') }}</button>
+						</button>-->
+						<!--<button class="btn btn-warning" data-bind="click: stopLensCalibration, visible: lensCalibrationActive()"><i class="icon-fixed-width icon-ban-circle"></i> {{ _('Stop Lens Calibration') }}</button>-->
 
+						
+						
 						<ul id="lens_correction_image_list" data-bind="visible: lensCalibrationActive(), foreach: { data: rawPicSelection, as: 'pic' }">
 							<li class="lens_correction_image_thumb" data-bind="style: { backgroundImage: 'url('+pic.url+')' };" onclick="this.classList.remove('zoom')">
 								<div class="btn-group">
@@ -207,6 +209,13 @@
 					</div>
 					
 				</div>
+			</div>
+			<div style="margin-top:1em;">
+				<!-- Corner calibration -->
+				<button class="btn btn-default" data-bind="click: previousMarker, visible: cornerCalibrationActive()">{{ _('Previous') }}</button>
+				<button class="btn btn-default" data-bind="click: nextMarker, visible: cornerCalibrationActive()">{{ _('Next') }}</button>
+				<button class="btn btn-success" data-bind="click: saveCornerCalibrationData, visible: cornerCalibrationComplete() && cornerCalibrationActive()">{{ _('Save Calibration') }}</button>
+				<button class="btn btn-warning" data-bind="click: abortCalibration, visible: cornerCalibrationActive()"><i class="icon-fixed-width icon-ban-circle"></i> {{ _('Cancel') }}</button>
 			</div>
 		</div>
 
