@@ -7,6 +7,7 @@
 /* global OctoPrint, OCTOPRINT_VIEWMODELS */
 
 MARKERS = ['NW', 'NE', 'SE', 'SW'];
+MIN_BOARDS_FOR_CALIBRATION = 8
 
 $(function () {
 	function CameraCalibrationViewModel(parameters) {
@@ -362,6 +363,14 @@ $(function () {
 				self.lensCalibrationRunning(_d.lensCalibration == "processing");
 			}
 		};
+
+		self.boardsFound = ko.computed(function() {
+			return self.rawPicSelection().filter(elm => elm.state === "success").length
+		})
+
+		self.hasMinBoardsFound = ko.computed(function() {
+			return self.boardsFound() >= MIN_BOARDS_FOR_CALIBRATION
+		})
 
 		self.saveRawPic = function() {
 				$.ajax({
