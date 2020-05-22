@@ -7,6 +7,7 @@
 /* global OctoPrint, OCTOPRINT_VIEWMODELS */
 
 MARKERS = ['NW', 'NE', 'SE', 'SW'];
+MIN_BOARDS_FOR_CALIBRATION = 8
 
 $(function () {
 	function CameraCalibrationViewModel(parameters) {
@@ -316,7 +317,8 @@ $(function () {
 				if (_d['undistorted_saved'] && ! self.cornerCalibrationActive()) {
 					if (_d['available']) {
 						self.availablePic(_d['available'])
-						if (! ['raw', 'lens_corrected', 'cropped'].includes(self.picType())) {
+						if (! ['raw', 'lens_corrected', 'cropped'].includes(self.picType())
+							&& ! self.lensCalibrationActive()) {
 							for (_type of ['lens_corrected', 'raw']) {
 								if (self.availablePic()[_type]) {
 									self.picType(_type);
@@ -379,8 +381,15 @@ $(function () {
 				self.rawPicSelection(arr);
 				self.lensCalibrationRunning(_d.lensCalibration === "processing");
 			}
-
 		};
+
+		self.boardsFound = ko.computed(function() {
+			return self.rawPicSelection().filter(elm => elm.state === "success").length
+		})
+
+		self.hasMinBoardsFound = ko.computed(function() {
+			return self.boardsFound() >= MIN_BOARDS_FOR_CALIBRATION
+		})
 
 		self.saveRawPic = function() {
 				$.ajax({
@@ -471,6 +480,29 @@ $(function () {
 				"POST");
 		};
 
+		self.stopLensCalibration = function() {
+			self.simpleApiCommand(
+				"camera_stop_lens_calibration",
+				{},
+				function(){
+					new PNotify({
+						title: gettext("Lens Calibration stopped"),
+						// text: "",
+						type: "info",
+						hide: false});
+					self.lensCalibrationActive(false);
+					self.lensCalibrationRunning(false);
+				},
+				function(){
+					new PNotify({
+						title: gettext("Couldn't stop the lens calibration."),
+						text: gettext("...and I have no clue why. Sorry."),
+						type: "warning",
+						hide: true})},
+				"POST");
+
+		}
+
 		self.engrave_markers = function () {
 			var url = '/plugin/mrbeam/generate_calibration_markers_svg';
 			$.ajax({
@@ -552,7 +584,7 @@ $(function () {
 				}
 			};
 			console.log('Sending data:', data);
-			self.simpleApiCommand("camera_calibration_markers", data, self.saveMarkersSuccess, self.saveMarkersError);
+			self.simpleApiCommand("send_corner_calibration", data, self.saveMarkersSuccess, self.saveMarkersError, "POST");
 		};
 
 		self.saveMarkersSuccess = function (response) {
@@ -584,16 +616,6 @@ $(function () {
 			if (self.cornerCalibrationActive()) {
 				self.cornerCalibrationActive(false);
 				self.rawPics([])
-			}
-			if (self.lensCalibrationActive(false)) {
-					self.lensCalibrationActive(false);
-				new PNotify({
-					title: gettext("Calibration cancelled."),
-					text: gettext("Feel free to restart"),
-					type: "info",
-					hide: true
-				});
-				self.reset_corner_calibration();
 			}
 		};
 

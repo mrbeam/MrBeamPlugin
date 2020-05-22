@@ -980,8 +980,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		except JSONBadRequest:
 			return make_response("Malformed JSON body in request", 400)
 
-		self._logger.debug("INITIAL camera_calibration_markers() data: {}".format(json_data))
-
 		if not "name" in json_data.keys():
 			return make_response("No profile included in request", 400)
 
@@ -991,16 +989,20 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	@octoprint.plugin.BlueprintPlugin.route("/camera_run_lens_calibration", methods=["POST"])
 	def onCalibrationRunLensDistort(self):
 		self._logger.debug("Command given : camera_run_lens_calibration")
-
 		self.lid_handler.startLensCalibration()
 		return NO_CONTENT
 
-	@octoprint.plugin.BlueprintPlugin.route("/send_calibration_markers", methods=["POST"])
+	@octoprint.plugin.BlueprintPlugin.route("/camera_stop_lens_calibration", methods=["POST"])
+	def onCalibrationStopLensDistort(self):
+		self._logger.debug("Command given : camera_stop_lens_calibration")
+		self.lid_handler.stopLensCalibration()
+		return NO_CONTENT
+
+	@octoprint.plugin.BlueprintPlugin.route("/send_corner_calibration", methods=["POST"])
 	# @firstrun_only_access #@maintenance_stick_only_access
 	def sendInitialCalibrationMarkers(self):
 		if not "application/json" in request.headers["Content-Type"]:
 			return make_response("Expected content-type JSON", 400)
-
 		try:
 			json_data = request.json
 		except JSONBadRequest:
@@ -1612,11 +1614,15 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			newMarkers[qd] = data['result']['newMarkers'][qd]
 
 		pic_settings_path = self._settings.get(["cam", "correctionSettingsFile"])
-		pic_settings = self._load_profile(pic_settings_path)
+		try:
+			pic_settings = self._load_profile(pic_settings_path)
+		except IOError:
+			self._logger.debug("previous pic settings were not present")
+			pic_settings = {}
 
 		pic_settings['cornersFromImage'] = newCorners
 		pic_settings['calibMarkers'] = newMarkers
-		pic_settings['calibration_updated'] = True
+		pic_settings['calibration_updated'] = True # DEPRECATED but Necessary for legacy algo
 		pic_settings['hostname_KEY'] = self._hostname
 
 		self._logger.debug('picSettings new to save: {}'.format(pic_settings))
