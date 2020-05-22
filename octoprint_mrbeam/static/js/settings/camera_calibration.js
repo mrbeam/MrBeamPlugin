@@ -470,7 +470,7 @@ $(function () {
 						title: gettext("Lens Calibration stopped"),
 						// text: "",
 						type: "info",
-						hide: false});
+						hide: true});
 					self.lensCalibrationActive(false);
 					self.lensCalibrationRunning(false);
 				},

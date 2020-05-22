@@ -160,19 +160,25 @@
 				                   enable: !cameraBusy()">
 					{{ _('Save new Chessboard Picture') }}
 				</button>
+				<!-- <button class="btn btn-success"
+					 data-bind="click: runLensCalibration,
+					 visible: lensCalibrationActive() && rawPicSelection().length >= 10,
+					 enable: !lensCalibrationRunning() && hasMinBoardsFound()">
+					 {{ _('Run Lens Calibration again') }} <i class="icon-spinner icon-spin" data-bind="visible: lensCalibrationRunning"></i>
+					 </button> -->
 				<button class="btn btn-success"
-					    data-bind="click: runLensCalibration,
+					    data-bind="click: stopLensCalibration
 							       visible: lensCalibrationActive() && rawPicSelection().length >= 10,
 							       enable: !lensCalibrationRunning() && hasMinBoardsFound()">
-					{{ _('Run Lens Calibration again') }} <i class="icon-spinner icon-spin" data-bind="visible: lensCalibrationRunning"></i>
+					{{ _('Save Calibration and quit') }} <i class="icon-spinner icon-spin" data-bind="visible: lensCalibrationRunning"></i>
 				</button>
-				<button class="btn btn-warning"
-						data-bind="click: abortCalibration,
-							       visible: lensCalibrationActive() && lensCalibrationComplete()">
-					<i class="icon-fixed-width icon-ban-circle"></i> {{ _('Back') }}</button>
+				<!-- <button class="btn btn-warning"
+					 data-bind="click: abortCalibration,
+					 visible: lensCalibrationActive() && lensCalibrationComplete()">
+					 <i class="icon-fixed-width icon-ban-circle"></i> {{ _('Back') }}</button> -->
 				<!-- Cancel -->
 				<button class="btn btn-warning" data-bind="click: abortCalibration, visible: cornerCalibrationActive()"><i class="icon-fixed-width icon-ban-circle"></i> {{ _('Cancel') }}</button>
-				<button class="btn btn-warning" data-bind="click: stopLensCalibration, visible: lensCalibrationActive()"><i class="icon-fixed-width icon-ban-circle"></i> {{ _('Stop Lens Calibration') }}</button>
+				<!-- <button class="btn btn-warning" data-bind="click: stopLensCalibration, visible: lensCalibrationActive()"><i class="icon-fixed-width icon-ban-circle"></i> {{ _('Stop Lens Calibration') }}</button> -->
 			</div>
 		</div>
 	</div>

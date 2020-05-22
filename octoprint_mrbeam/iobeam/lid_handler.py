@@ -3,7 +3,7 @@ import json
 import numpy as np
 import time
 import threading
-from threading import Event
+from threading import Event, Timer
 import os
 from os import path
 import shutil
@@ -88,10 +88,12 @@ class LidHandler(object):
 		self._analytics_handler = self._plugin.analytics_handler
 		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._subscribe)
 
+		# TODO carefull if photocreator is None
 		self.boardDetectorDaemon = BoardDetectorDaemon(self._settings.get(["cam", "lensCalibrationFile"]),
 							       runCalibrationAsap=True,
 							       stateChangeCallback=self.updateFrontendCC,
-		                                               event_bus = self._event_bus)
+		                                               event_bus = self._event_bus,
+							       rawImgLock = self._photo_creator.rawLock)
 		self.removeAllTmpPictures() # clean up from the latest calibraton session
 
 	def _subscribe(self, event, payload):
@@ -279,16 +281,23 @@ class LidHandler(object):
 				os.remove(imgPath)
 			# Tell the boardDetector to listen for this file
 			self.boardDetectorDaemon.add(imgPath)
-			if picture_num_in_board_calib_session == 10:
-				self._event_bus.fire(MrBeamEvents.LENS_CALIB_START)
+			_s = self.boardDetectorDaemon.state
+			n = len(_s.getAllPending()) + len(_s.getSuccesses()) + len(_s.getProcessing())
+			if n + 1 >= 9:
+				self._event_bus.fire(MrBeamEvents.RAW_IMG_TAKING_LAST)
 			else:
 				self._event_bus.fire(MrBeamEvents.RAW_IMAGE_TAKING_START)
 			if not self.boardDetectorDaemon.is_alive():
 				self.boardDetectorDaemon.start()
 			else:
 				self.boardDetectorDaemon.waiting.clear()
-			if picture_num_in_board_calib_session == 10:
+			if n + 1 >= 9:
 				self.startLensCalibration()
+				# TODO If possible, ask the led cli to chain two LED states
+				t = Timer(1.2, self._event_bus.fire, args=(MrBeamEvents.LENS_CALIB_PROCESSING_BOARDS,))
+				t.start()
+
+
 		# return self.boardDetectorDaemon.state.keys() # TODO necessary? Frontend update now happens via plugin message
 
 	@logme(True)
@@ -381,6 +390,8 @@ class PhotoCreator(object):
 		self.last_correction_result = None
 		self.worker = None
 		self.saveRaw = True
+		self.rawLock = Event()
+		self.rawLock.clear()
 		if debug:
 			self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator", logging.DEBUG)
 		else:
@@ -539,8 +550,10 @@ class PhotoCreator(object):
 			if self.refresh_pic_settings.isSet():
 				self.refresh_pic_settings.clear()
 				path_to_pic_settings = self._settings.get(["cam", "correctionSettingsFile"])
+				path_to_lens_calib = self._settings.get(["cam", "lensCalibrationFile"])
 				self._logger.info("Refreshing picture settings from %s" % path_to_pic_settings)
 				pic_settings = _getPicSettings(path_to_pic_settings)
+				cam_params = _getCamParams(path_to_lens_calib)
 				prev=None # Forces to take a new picture
 			cam.wait()  # waits until the next picture is ready
 			if self.stopping: break
@@ -560,16 +573,20 @@ class PhotoCreator(object):
 				elif isinstance(self.saveRaw, str) and saveNext:
 					# FIXME Not perfect. This is the case during the lens calibration where
 					# a new raw picture is requested. Do the save during the next round.
+					self.rawLock.set()
 					if camera.save_debug_img(latest,
 								 self.saveRaw,
 								 folder=path.join(path.dirname(self.final_image_path),"debug")):
 						rawSaved = self.saveRaw
 					else: rawSaved = False
+					self.rawLock.clear()
 					saveNext = False
 				else:
+					self.rawLock.set()
 					rawSaved = camera.save_debug_img(latest,
 									 "raw.jpg",
 									 folder=path.join(path.dirname(self.final_image_path),"debug"))
+					self.rawLock.clear()
 
 			# Compare previous image with the current one.
 			if self.forceNewPic.isSet() or prev is None \

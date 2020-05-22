@@ -51,15 +51,17 @@ class BoardDetectorDaemon(Thread):
 		     procs=1,
 		     stateChangeCallback=None,
 		     runCalibrationAsap=False,
-	             event_bus=None):
+	             event_bus=None,
+		     rawImgLock=None):
 		# runCalibrationAsap : run the lens calibration when we have enough pictures ready
 		self._logger = logging.getLogger(__name__ + '.' + self.__class__.__name__)
 		self._logger.setLevel(logging.DEBUG)
 		self._logger.warning("Initiating the Board Detector Daemon")
 		self.event_bus = event_bus
+		self.rawImgLock = rawImgLock
 
 		# State of the detection & calibration
-		self.state = calibrationState(changeCallback=stateChangeCallback, npzPath=output_calib)
+		self.state = calibrationState(changeCallback=stateChangeCallback, npzPath=output_calib, rawImgLock=rawImgLock)
 
 		self.output_file = output_calib
 
@@ -164,7 +166,7 @@ class BoardDetectorDaemon(Thread):
 
 	@property
 	def idle(self):
-		return all(pic['state'] != STATE_PROCESSING for pic in self.state.values()) \
+		return all(pic['state'] in [STATE_FAIL, STATE_SUCCESS, STATE_IGNORED] for pic in self.state.values()) \
 			and self.state.lensCalibration['state'] != STATE_PROCESSING
 
 	def scaleProcessors(self, number):
@@ -183,6 +185,7 @@ class BoardDetectorDaemon(Thread):
 		self._logger.warning("Pool started - %i procs" % MAX_PROCS)
 		lensCalibrationProc = None
 		loopcount = 0
+		stateIdleAndNotEnoughGoodBoard = False
 		while not self._stop.is_set():
 			loopcount += 1
 			if loopcount % 20 == 0 :
@@ -213,9 +216,14 @@ class BoardDetectorDaemon(Thread):
 				self.state.calibrationBusy()
 				self.event_bus.fire(MrBeamEvents.LENS_CALIB_RUNNING)
 				self._logger.warning("EVENT LENS CALIBRATION RUNNING")
-			elif self.idle and self.detectedBoards < MIN_BOARDS_DETECTED:
+			elif len(self) >= 9 and self.idle and self.detectedBoards < MIN_BOARDS_DETECTED:
+				if not stateIdleAndNotEnoughGoodBoard:
+					stateIdleAndNotEnoughGoodBoard = True
+					self.event_bus.fire(MrBeamEvents.LENS_CALIB_FAIL)
 				if loopcount % 20 == 0 :
 					self._logger.debug("Only %i boards detected yet, %i necessary" % (self.detectedBoards , MIN_BOARDS_DETECTED))
+			if not self.idle or self.detectedBoards > MIN_BOARDS_DETECTED:
+				stateIdleAndNotEnoughGoodBoard = False
 			# runningProcs = self.state.runningProcs() #len(list(filter(lambda x: not x.ready(), self.tasks)))
 			if len(runningProcs.keys()) < self.procs.value and self.state.getPending():
 				path = self.state.getPending()
@@ -248,7 +256,9 @@ class BoardDetectorDaemon(Thread):
 				# Need to clean the queue before joining processes
 				r = resultQueue.get()
 				self.state.update(**r)
-			
+				if r['state'] == STATE_SUCCESS:
+					self.state.lensCalibration['state'] = STATE_PENDING
+
 			for path, proc in runningProcs.items():
 				if proc.exitcode is not None:
 					if proc.exitcode < 0:
@@ -395,12 +405,13 @@ def runLensCalibration(objPoints, imgPoints, imgRes, q_out=None):
 
 
 class calibrationState(dict):
-	def __init__(self, imageSize=camera.LEGACY_STILL_RES, changeCallback=None,  npzPath=None, *args, **kw):
+	def __init__(self, imageSize=camera.LEGACY_STILL_RES, changeCallback=None,  npzPath=None, rawImgLock=None, *args, **kw):
 		self._logger = logging.getLogger(__name__ + '.' + self.__class__.__name__)
 		self.changeCallback = changeCallback
 		self.imageSize=imageSize
 		self.lensCalibration = dict(state=STATE_PENDING)
 		self.output_file =  npzPath
+		self.rawImgLock = rawImgLock
 		super(self.__class__, self).__init__(*args, **kw)
 
 	def onChange(self):
@@ -460,6 +471,7 @@ class calibrationState(dict):
 		changed = False
 		for path, elm in self.items():
 			if elm['state'] == STATE_PENDING_CAMERA and os.path.exists(path):
+				if self.rawImgLock is not None: self.rawImgLock.wait()
 				self.update(path, STATE_QUEUED)
 				changed = True
 				if imgFoundCallback is not None:
@@ -480,6 +492,12 @@ class calibrationState(dict):
 	def getPending(self):
 		for path, imgState in self.items():
 			if imgState['state'] == STATE_QUEUED: return path
+
+	def getAllPending(self):
+		return list(map(lambda elm: elm[0], filter(lambda elm: elm[1]['state'] == STATE_QUEUED, self.items())))
+
+	def getProcessing(self):
+		return list(filter(lambda _s: _s['state'] == STATE_PROCESSING, self.values()))
 
 	def save(self, path):
 		np.savez(path + ".npz", **self[path])
