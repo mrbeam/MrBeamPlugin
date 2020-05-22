@@ -405,17 +405,10 @@ $(function () {
 			// 					   self.saveRawPicError);
 		}
 
-//		self.showRawPic = function() {
-//			var path = this['name'];
-//			var dl_path = path.replace("home/pi/.octoprint/uploads",
-//									   "downloads/files/local")
-//			self.picType("reserved");
-//			self.calImgUrl(dl_path)
-//		}
 
 		self.delRawPic = function() {
 			self.simpleApiCommand("calibration_del_pic",
-								  {name: this['name']},
+								  {name: this['path']},
 								  self.refreshPics,
 								  self.delRawPicError,
 								  "POST");

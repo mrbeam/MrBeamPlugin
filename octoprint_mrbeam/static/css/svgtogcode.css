@@ -890,6 +890,7 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	background-color: black;
 	margin: 0;
 	background-size: 80%;
+	z-index: 999;
 }
 
 .lens_correction_image_thumb i.status_icon {
