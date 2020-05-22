@@ -17,6 +17,7 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 # don't crash on a dev computer where you can't install picamera
 from octoprint_mrbeam.camera import gaussBlurDiff, QD_KEYS, PICAMERA_AVAILABLE
+from octoprint_mrbeam.camera import calibration as calibration
 from octoprint_mrbeam.camera.calibration import BoardDetectorDaemon
 from octoprint_mrbeam.util import json_serialisor, logme
 import octoprint_mrbeam.camera.exc as exc
@@ -345,6 +346,8 @@ class LidHandler(object):
 		return True
 
 	def updateFrontendCC(self, data):
+		if data['lensCalibration'] == calibration.STATE_SUCCESS:
+			self.refresh_settings()
 		self._plugin_manager.send_plugin_message("mrbeam", dict(chessboardCalibrationState=data))
 
 	@property
@@ -529,6 +532,7 @@ class PhotoCreator(object):
 			time.sleep(.2)
 		# The lid didn't open during waiting time
 		cam.async_capture()
+		saveNext = False # Lens calibration : save the next picture instead of this one
 		while not self.stopping:
 			while self.pause.isSet():
 				time.sleep(.5)
@@ -551,12 +555,17 @@ class PhotoCreator(object):
 			#     TODO apply shutter speed adjustment from preliminary measurements
 
 			if self.saveRaw:
-				if isinstance(self.saveRaw, str):
+				if isinstance(self.saveRaw, str) and not saveNext:
+					saveNext = True
+				elif isinstance(self.saveRaw, str) and saveNext:
+					# FIXME Not perfect. This is the case during the lens calibration where
+					# a new raw picture is requested. Do the save during the next round.
 					if camera.save_debug_img(latest,
 								 self.saveRaw,
 								 folder=path.join(path.dirname(self.final_image_path),"debug")):
 						rawSaved = self.saveRaw
 					else: rawSaved = False
+					saveNext = False
 				else:
 					rawSaved = camera.save_debug_img(latest,
 									 "raw.jpg",
