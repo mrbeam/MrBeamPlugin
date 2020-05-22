@@ -8,6 +8,7 @@ import os
 from os import path
 import shutil
 import logging
+import re
 
 from flask.ext.babel import gettext
 # from typing import Dict, Any, Union, Callable
@@ -33,6 +34,8 @@ DEFAULT_MM_TO_PX = 1 # How many pixels / mm is used for the output image
 
 SIMILAR_PICS_BEFORE_REFRESH = 20
 MAX_PIC_THREAD_RETRIES = 2
+
+TMP_RAW_FNAME = 'tmp_raw_img_{}.jpg'
 
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 from octoprint.events import Events as OctoPrintEvents
@@ -66,10 +69,9 @@ class LidHandler(object):
 		self._is_slicing = False
 		self._client_opened = False
 		self.lensCalibrationStarted = False
-
 		self.force_taking_picture = Event()
 		self.force_taking_picture.clear()
-
+		self.board_calibration_number_pics_taken_in_session = 0
 
 		if PICAMERA_AVAILABLE:
 			self.imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
@@ -89,6 +91,7 @@ class LidHandler(object):
 							       runCalibrationAsap=True,
 							       stateChangeCallback=self.updateFrontendCC,
 		                                               event_bus = self._event_bus)
+		self.removeAllTmpPictures() # clean up from the latest calibraton session
 
 	def _subscribe(self, event, payload):
 		self._event_bus.subscribe(IoBeamEvents.LID_OPENED, self.onEvent)
@@ -259,12 +262,8 @@ class LidHandler(object):
 		self.boardDetectorDaemon.state.onChange()
 
 	def saveRawImg(self):
-		# TODO
-		# data = dict(beam_cam_new_image=meta_data)
-		# self._plugin_manager.send_plugin_message("mrbeam", data)
-
-
-		imgName= 'tmp_raw_img_%i.jpg' % self.boardDetectorDaemon.next_inc()
+		picture_num_in_board_calib_session = self.boardDetectorDaemon.next_inc()
+		imgName= TMP_RAW_FNAME.format(picture_num_in_board_calib_session)
 		# TODO debug/raw.jpg -> copy image over
 		# TODO careful when deleting pic + setting new name -> hash
 		if self._photo_creator and \
@@ -275,13 +274,20 @@ class LidHandler(object):
 			self._photo_creator.saveRaw = imgName
 			self.takeNewPic()
 			imgPath = path.join(self.debugFolder, imgName)
+			if path.exists(imgPath):
+				os.remove(imgPath)
 			# Tell the boardDetector to listen for this file
 			self.boardDetectorDaemon.add(imgPath)
-			self._event_bus.fire(MrBeamEvents.RAW_IMAGE_TAKING_START)
+			if picture_num_in_board_calib_session == 10:
+				self._event_bus.fire(MrBeamEvents.LENS_CALIB_START)
+			else:
+				self._event_bus.fire(MrBeamEvents.RAW_IMAGE_TAKING_START)
 			if not self.boardDetectorDaemon.is_alive():
 				self.boardDetectorDaemon.start()
 			else:
 				self.boardDetectorDaemon.waiting.clear()
+			if picture_num_in_board_calib_session == 10:
+				self.startLensCalibration()
 		# return self.boardDetectorDaemon.state.keys() # TODO necessary? Frontend update now happens via plugin message
 
 	@logme(True)
@@ -294,6 +300,13 @@ class LidHandler(object):
 			self.boardDetectorDaemon.remove(path)
 		return self.boardDetectorDaemon.state.keys() # TODO necessary? Frontend update now happens via plugin message
 
+	def removeAllTmpPictures(self):
+		for filename in os.listdir(self.debugFolder):
+			if re.match(TMP_RAW_FNAME.format('[0-9]*'), filename):
+				my_path = path.join(self.debugFolder, filename)
+				self._logger.debug("Removing tmp calibration file %s" % my_path)
+				os.remove(my_path)
+
 	def stopLensCalibration(self):
 		self.boardDetectorDaemon.stopAsap()
 		try:
@@ -304,6 +317,7 @@ class LidHandler(object):
 							       runCalibrationAsap=True,
 							       stateChangeCallback=self.updateFrontendCC,
 		                                               event_bus = self._event_bus)
+		self.removeAllTmpPictures()
 
 	def ignoreCalibrationImage(self, path):
 		myPath  = path.join(self.debugFolder, "debug", path)

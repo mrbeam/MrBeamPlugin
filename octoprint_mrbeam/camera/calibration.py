@@ -34,6 +34,7 @@ STATE_FAIL = "fail"
 STATE_IGNORED = "ignored"
 STATE_PENDING = "pending"
 STATES = [STATE_QUEUED, STATE_PROCESSING, STATE_SUCCESS, STATE_FAIL, STATE_IGNORED, STATE_PENDING]
+TMP_PATH =  "/tmp/chess_img_{}.jpg"
 
 # Remote connection for calibration
 # SSH_FILE = "/home/pi/.ssh/pi_id_rsa"
@@ -304,7 +305,7 @@ def handleBoardPicture(image, count, board_size, q_out=None):
 	elif isinstance(image, np.ndarray):
 		# self._logger.info("Detecting board...")
 		img = image
-		path = "/tmp/chess_img_{}.jpg".format(count)
+		path = TMP_PATH.format(count)
 	else:
 		raise ValueError("Expected an image or a path to an image in inputFiles.")
 
