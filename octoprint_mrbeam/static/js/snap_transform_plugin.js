@@ -47,7 +47,9 @@
 			scaleHandleSWId: '#scaleHandleSW',
 			scaleHandleSEId: '#scaleHandleSE',
 			rotHandleId: '#rotHandle',
-			minTranslateHandleSize: 24
+			minTranslateHandleSize: 24,
+			
+			visualization: true // enables visual debugging: click points, angle, scale center, etc...
 		}
 
 		self.session = {};
@@ -59,6 +61,12 @@
 		self.translateStart = function( target, x, y, event ){ // x, y, dx, dy pixel coordinates according to <svg width="..." height="..." >
 			// hide scale & rotate handle
 			self.transformHandleGroup.node.classList.add('translate');
+			
+//			const pos = self._get_pointer_event_position_MM(event);
+//			self.session.translate.ox = pos.xMM;
+//			self.session.translate.oy = pos.yMM;
+			self.session.translate.cx = self.session.bbox.x + self.session.bbox.width/2;
+			self.session.translate.cy = self.session.bbox.y + self.session.bbox.height/2;;
 		}	
 
 		self.translateMove = function( target, dx, dy, x, y, event ){
@@ -73,15 +81,15 @@
 			// move translateHandle
 			self._sessionUpdate();
 
-			// apply transform to target elements via callback
-
 		}	
 
 		self.translateEnd = function( target, dx, dy, x, y){
+			
 			// show scale & rotate handle
 			self._alignHandlesToBB();
 			self.transformHandleGroup.node.classList.remove('translate');
 			self._sessionReset();
+			
 		}
 
 		self.rotateStart = function( target, x, y, event ){ // x, y, dx, dy pixel coordinates according to <svg width="..." height="..." >
@@ -95,48 +103,38 @@
 			self.session.rotate.ay = pos.yMM;
 			self.session.rotate.cx = self.session.bbox.x + self.session.bbox.width / 2;
 			self.session.rotate.cy = self.session.bbox.y + self.session.bbox.height / 2;
-			self.paper.selectAll('#debugRotCenter').remove();
-			self.paper.circle({cx: self.session.rotate.cx, cy: self.session.rotate.cy, r: 2, fill:'#ff0000', id:"debugRotCenter"});
-			self.paper.selectAll('#debugAngle').remove();
-			self.paper.path({d: 'M'+ self.session.rotate.cx+','+self.session.rotate.cy+'L'+pos.xMM+','+pos.yMM, stroke:'#f00000', id:"debugAngle"});
 		}	
 
 		self.rotateMove = function( target, dx, dy, x, y, event ){
-			// calculate viewbox coordinates incl. zoom & pan (mm)
-			const dxMM = self._convertToViewBoxUnits(dx);
-			const dyMM = self._convertToViewBoxUnits(dy);
-			const xMM = self._convertToViewBoxUnits(x);
-			const yMM = self._convertToViewBoxUnits(y);
 
+			const ax = self.session.rotate.ax;
+			const ay = self.session.rotate.ay;
+			const cx = self.session.rotate.cx;
+			const cy = self.session.rotate.cy;
+			
+			// calculate viewbox coordinates incl. zoom & pan (mm)
+			const bx = self.session.rotate.bx = ax + self._convertToViewBoxUnits(dx);
+			const by = self.session.rotate.bx = ay + self._convertToViewBoxUnits(dy);
+
+			// store session changes
 			//    b
 			//   /
 			//  /  \ r angle
 			// c----------a
-
-			var ax = self.session.rotate.ax;
-			var ay = self.session.rotate.ay;
-			var cx = self.session.rotate.cx;
-			var cy = self.session.rotate.cy;
-			var bx = ax + dxMM;
-			var by = ay + dyMM;
-
-			// store session changes
 			self.session.rotate.r = Snap.angle(bx, by, ax, ay, cx, cy);
 
 			// move translateHandle
 			self._sessionUpdate();
 
-			// apply transform to target elements via callback
-
-			self.paper.selectAll('#debugAngle2').remove();
-			self.paper.path({d: 'M'+ self.session.rotate.cx+','+self.session.rotate.cy+'L'+bx+','+by, stroke:'#f00000', id:"debugAngle2"});
 		}	
 
 		self.rotateEnd = function( target, dx, dy, x, y){
+			
 			// show scale & rotate handle
 			self._alignHandlesToBB();
 			self.transformHandleGroup.node.classList.remove('rotate');
 			self._sessionReset();
+			
 		}
 		
 		self.scaleStart = function( target, x, y, event ){ // x, y, dx, dy pixel coordinates according to <svg width="..." height="..." >
@@ -180,34 +178,29 @@
 					break;
 			}
 			
-			self.session.centerX = cx;
-			self.session.centerY = cy;
-			self.session.scaleRefX = self.session.bbox.width * self.session.originMatrix.a;
-			self.session.scaleRefY = self.session.bbox.height * self.session.originMatrix.d;
+			self.session.scale.cx = cx;
+			self.session.scale.cy = cy;
+			self.session.scale.refX = self.session.bbox.width * self.session.originMatrix.a;
+			self.session.scale.refY = self.session.bbox.height * self.session.originMatrix.d;
 			
-//			self.paper.selectAll('#debugCenter').remove();
-//			self.paper.circle({cx: self.session.centerX, cy: self.session.centerY, r: 2, fill:'#ff0000', id:"debugCenter"});
-//			self.paper.selectAll('#debugReference').remove();
-//			self.paper.path({d: 'M'+ self.session.centerX+','+self.session.centerY+'h'+(self.session.bbox.width*self.session.signX), stroke:'#f00000', id:"debugReference"});
 		}	
 
 		self.scaleMove = function( target, dx, dy, x, y, event ){
 			// convert to viewBox coordinates (mm)
 			const dxMM = self._convertToViewBoxUnits(dx);
 			const dyMM = self._convertToViewBoxUnits(dy);
-			const scaleX = (self.session.signX * dxMM + self.session.scaleRefX) / self.session.scaleRefX;
-			const scaleY = (self.session.signY * dyMM + self.session.scaleRefY) / self.session.scaleRefY;
+			const scaleX = (self.session.signX * dxMM + self.session.scale.refX) / self.session.scale.refX;
+			const scaleY = (self.session.signY * dyMM + self.session.scale.refY) / self.session.scale.refY;
 
 			// store session changes
 			self.session.scale.sx = scaleX;
 			self.session.scale.sy = scaleY;
-			self.session.scale.cx = self.session.centerX;
-			self.session.scale.cy = self.session.centerY;
+//			self.session.scale.cx = self.session.centerX;
+//			self.session.scale.cy = self.session.centerY;
 
 			// move translateHandle
 			self._sessionUpdate();
 
-			// apply transform to target elements via callback
 
 		}	
 
@@ -234,16 +227,86 @@
 			// SRT order, finally add former matrix
 			m.scale(sx, sy, cx, cy).rotate(rot, rcx, rcy).translate(dx, dy).add(self.session.originMatrix);
 			self.translateHandle.transform(m);
+			
+			if(self.config.visualization){
+				self._visualizeTransform();
+			}
+			
+			// apply transform to target elements via callback
+			// TODO
 		}
 		
 		self._sessionReset = function(){
+			self.paper.selectAll('.transformVis').remove();
 			self.session.translate = {dx: 0, dy:0};
 			self.session.scale = {sx: 1, sy: 1, dx: 0, dy: 0};
 			self.session.rotate = {r: 0, cx: 0, cy: 0};
 			self.session.originMatrix = self.translateHandle.transform().localMatrix;
 			self.session.bbox = self.translateHandle.getBBox();
+
+
 			console.info("Apply Transform: ", self.session.originMatrix.split());
+			
 		};
+		
+		self._visualizeTransform = function(){
+			
+			// translate
+			if(self.session.translate.dx !== 0 || self.session.translate.dy !== 0) {
+				self._visualizeTranslate();
+			}
+			if(self.session.rotate.r !== 0) {
+				self._visualizeRotate();
+			}
+			if(self.session.scale.sx !== 1) {
+				self._visualizeScaleX();
+			}
+			if(self.session.scale.sy !== 1) {
+				self._visualizeScaleY();
+			}
+		};
+
+		self._visualizeTranslate = function(){
+			self.paper.selectAll('#translateVisH, #translateVisV').remove(); // TODO more efficiency
+			const startXh = self.session.translate.cx;
+			const startYh = 10;
+			const startXv = 10;
+			const startYv = self.session.translate.cy;
+			self.paper.path({d: 'M'+ startXh+','+startYh+'v-5h'+self.session.translate.dx+'v5', class:'transformVis', id:"translateVisH"});
+			self.paper.path({d: 'M'+ startXv+','+startYv+'h-5v'+self.session.translate.dy+'h5', class:'transformVis', id:"translateVisV"});
+		};
+
+		self._visualizeRotate = function(){
+			const ax = self.session.rotate.ax;
+			const ay = self.session.rotate.ay;
+			const bx = self.session.rotate.bx;
+			const by = self.session.rotate.by;
+			const cx = self.session.rotate.cx;
+			const cy = self.session.rotate.cy;
+			self.paper.selectAll('#rotateVis').remove();  // TODO more efficiency
+			self.paper.path({d: 'M'+ ax+','+ay+'L'+cx+','+cy+'L'+bx+','+by, class:'transformVis', id:"rotateVis"});
+		};
+		
+		self._visualizeScaleX = function () {
+			const dist = 15;
+			const cx = self.session.scale.cx;
+			const d = cx <= self.session.bbox.x ? -dist : dist;
+			const cy = self.session.scale.cy + d;
+			
+			self.paper.selectAll('#scaleXVis').remove();
+			self.paper.path({d: 'M' + cx + ',' + cy + 'v-10h' + (self.session.scale.refX * self.session.scale.sx) + 'v10', class: 'transformVis', id: "scaleXVis"});
+		}
+		
+		self._visualizeScaleY = function () {
+			const dist = 15;
+			const cy = self.session.scale.cy;
+			const d = cy <= self.session.bbox.y ? -dist : dist;
+			const cx = self.session.scale.cx + d;
+			
+			self.paper.selectAll('#scaleYVis').remove();
+			self.paper.path({d: 'M' + cx + ',' + cy + 'h-10v' + (self.session.scale.refX * self.session.scale.sx) + 'h10', class: 'transformVis', id: "scaleYVis"});
+		}
+		
 
 		/**
 		 * @param {Snap.Element, Snap.Set, CSS-Selector} elements_to_transform
@@ -269,11 +332,14 @@
 			// get bounding box of selector
 			const bbox = self._getBBoxFromElementsWithMinSize(elements_to_transform);
 
-			self._alignHandlesToBB(bbox);
-
+			// store working area size in MM
+			self.session.paperBBox = self.paper.select('#coordGrid').getBBox();
+			
 			// set transform session origin
-			self._sessionReset();
 			self.session.bbox = bbox;
+
+			self._alignHandlesToBB(bbox);
+			self._sessionReset();
 
 			// attach drag handlers for translation
 			self.translateHandle.drag(

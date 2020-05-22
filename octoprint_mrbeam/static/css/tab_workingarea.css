@@ -200,3 +200,9 @@
 #mbtransformHandleGroup.active.scale.scaleHandleSE #scaleHandleSE { 
 	display: block; 
 }
+
+.transformVis {
+	fill: none;
+	stroke: #e25303;
+	stroke-width: 1;
+}
