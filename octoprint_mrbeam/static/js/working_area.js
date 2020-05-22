@@ -1,6 +1,7 @@
 /* global snap, ko, $, Snap, API_BASEURL, _, CONFIG_WEBCAM_STREAM, ADDITIONAL_VIEWMODELS, mina, BEAMOS_DISPLAY_VERSION, WorkingAreaHelper */
 
 MRBEAM_PX2MM_FACTOR_WITH_ZOOM = 1; // global available in this viewmodel and in snap plugins at the same time.
+MRBEAM_WORKINGAREA_PAN_MM = [0,0]; // global available in this viewmodel and in snap plugins at the same time.
 
 // Render debugging utilities
 MRBEAM_DEBUG_RENDERING = false; // setting to true enables lots of visual debug tools. Can be changed during runtime. 
@@ -101,6 +102,7 @@ $(function(){
 			var h = self.workingAreaHeightMM() * z;
 			var x = self.zoomOffX();
 			var y = self.zoomOffY();
+			MRBEAM_WORKINGAREA_PAN_MM = [x,y];
 			return [x, y, w, h].join(' ');
 		});
 

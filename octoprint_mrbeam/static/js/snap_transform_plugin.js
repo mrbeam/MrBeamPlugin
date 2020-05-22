@@ -85,20 +85,20 @@
 		}
 
 		self.rotateStart = function( target, x, y, event ){ // x, y, dx, dy pixel coordinates according to <svg width="..." height="..." >
-			const xMM = self._convertToViewBoxUnits(x);
-			const yMM = self._convertToViewBoxUnits(y);
+			
 			// hide scale & rotate handle
 			self.transformHandleGroup.node.classList.add('rotate');
-			console.log(event);
+
 			// rotation center
-			self.session.rotate.ax = xMM;
-			self.session.rotate.ay = yMM;
+			const pos = self._get_pointer_event_position_MM(event);
+			self.session.rotate.ax = pos.xMM;
+			self.session.rotate.ay = pos.yMM;
 			self.session.rotate.cx = self.session.bbox.x + self.session.bbox.width / 2;
 			self.session.rotate.cy = self.session.bbox.y + self.session.bbox.height / 2;
 			self.paper.selectAll('#debugRotCenter').remove();
 			self.paper.circle({cx: self.session.rotate.cx, cy: self.session.rotate.cy, r: 2, fill:'#ff0000', id:"debugRotCenter"});
 			self.paper.selectAll('#debugAngle').remove();
-			self.paper.path({d: 'M'+ self.session.rotate.cx+','+self.session.rotate.cy+'L'+xMM+','+yMM, stroke:'#f00000', id:"debugAngle"});
+			self.paper.path({d: 'M'+ self.session.rotate.cx+','+self.session.rotate.cy+'L'+pos.xMM+','+pos.yMM, stroke:'#f00000', id:"debugAngle"});
 		}	
 
 		self.rotateMove = function( target, dx, dy, x, y, event ){
@@ -121,16 +121,15 @@
 			var by = ay + dyMM;
 
 			// store session changes
-			self.session.rotate.r = Snap.angle(ax, ay, cx, cy, bx, by);
-//			self.session.rotate.r = Snap.angle(cx, cy, ax, ay, bx, by);
-//			self.session.rotate.r = Snap.angle(ax, ay, bx, by, cx, cy);
-			console.log(self.session.rotate.r);
+			self.session.rotate.r = Snap.angle(bx, by, ax, ay, cx, cy);
 
 			// move translateHandle
 			self._sessionUpdate();
 
 			// apply transform to target elements via callback
 
+			self.paper.selectAll('#debugAngle2').remove();
+			self.paper.path({d: 'M'+ self.session.rotate.cx+','+self.session.rotate.cy+'L'+bx+','+by, stroke:'#f00000', id:"debugAngle2"});
 		}	
 
 		self.rotateEnd = function( target, dx, dy, x, y){
@@ -141,10 +140,9 @@
 		}
 		
 		self.scaleStart = function( target, x, y, event ){ // x, y, dx, dy pixel coordinates according to <svg width="..." height="..." >
-			var usedHandle = this;
-//			console.log(usedHandle.node.id);
 			
 			// hide scale & rotate handle
+			var usedHandle = this;
 			const handleId = usedHandle.node.id;
 			self.transformHandleGroup.node.classList.add('scale', handleId);
 			
@@ -199,7 +197,6 @@
 			const dyMM = self._convertToViewBoxUnits(dy);
 			const scaleX = (self.session.signX * dxMM + self.session.scaleRefX) / self.session.scaleRefX;
 			const scaleY = (self.session.signY * dyMM + self.session.scaleRefY) / self.session.scaleRefY;
-//			console.log((scaleX*100).toFixed(1)+'%', dxMM*self.session.signX);
 
 			// store session changes
 			self.session.scale.sx = scaleX;
@@ -233,13 +230,10 @@
 			const rcx = self.session.rotate.cx;
 			const rcy = self.session.rotate.cy;
 			
-//			console.log("t", dx, dy, "s", sx, sy, "r", rot);
-			
 			var m = Snap.matrix();
 			// SRT order, finally add former matrix
 			m.scale(sx, sy, cx, cy).rotate(rot, rcx, rcy).translate(dx, dy).add(self.session.originMatrix);
 			self.translateHandle.transform(m);
-//			console.log("upd", m.toTransformString());
 		}
 		
 		self._sessionReset = function(){
@@ -248,7 +242,7 @@
 			self.session.rotate = {r: 0, cx: 0, cy: 0};
 			self.session.originMatrix = self.translateHandle.transform().localMatrix;
 			self.session.bbox = self.translateHandle.getBBox();
-			console.log("rst", self.session.originMatrix.split());
+			console.info("Apply Transform: ", self.session.originMatrix.split());
 		};
 
 		/**
@@ -329,6 +323,17 @@
 		self._convertToViewBoxUnits = function(val){
 			return val * MRBEAM_PX2MM_FACTOR_WITH_ZOOM;
 		};
+		
+		self._get_pointer_event_position_MM = function(event){
+			var targetBBox = self.paper.node.getBoundingClientRect();
+			const xPx = (event.clientX - targetBBox.left);
+			const yPx = (event.clientY - targetBBox.top);
+			const xPerc = xPx / targetBBox.width;
+			const yPerc = yPx / targetBBox.height;
+			const xMM = xPx * MRBEAM_PX2MM_FACTOR_WITH_ZOOM + MRBEAM_WORKINGAREA_PAN_MM[0];
+			const yMM = yPx * MRBEAM_PX2MM_FACTOR_WITH_ZOOM + MRBEAM_WORKINGAREA_PAN_MM[1];
+			return {xPx: xPx, yPx: yPx, xPerc: xPerc, yPerc: yPerc, xMM: xMM, yMM: yMM};
+		};
 
 		self._alignHandlesToBB = function(bbox){
 			if(bbox) {
@@ -368,7 +373,6 @@
 			let w = bb.width;
 			let h = bb.height;
 			return { x: x, y: y, width: w, height: h };
-	//		return bb;
 		}
 
 	});
