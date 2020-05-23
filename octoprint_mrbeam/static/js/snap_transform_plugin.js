@@ -108,9 +108,9 @@
 			self.transformHandleGroup.node.classList.add('rotate');
 
 			// rotation center
-			const pos = self._get_pointer_event_position_MM(event);
-			self.session.rotate.ax = pos.xMM;
-			self.session.rotate.ay = pos.yMM;
+			const handleMatrix = this.transform().localMatrix; // handle origin as first point
+			self.session.rotate.ax = handleMatrix.e;
+			self.session.rotate.ay = handleMatrix.f;
 			self.session.rotate.cx = self.session.bbox.cx;
 			self.session.rotate.cy = self.session.bbox.cy;
 		}	
@@ -220,6 +220,9 @@
 					break;
 			}
 			
+			const handleMatrix = this.transform().localMatrix;
+			self.session.scale.mx = handleMatrix.e;
+			self.session.scale.my = handleMatrix.f;
 			self.session.scale.cx = cx;
 			self.session.scale.cy = cy;
 			self.session.scale.refX = self.session.bbox.width * self.session.originMatrix.a;
@@ -229,27 +232,33 @@
 
 		self.scaleMove = function( target, dx, dy, x, y, event ){
 			// convert to viewBox coordinates (mm)
-			const pos = self._get_pointer_event_position_MM(event);
-			let scaleX = self.session.scale.signX * (pos.xMM - self.session.scale.cx) / self.session.scale.refX
-			let scaleY = self.session.scale.signY * (pos.yMM - self.session.scale.cy) / self.session.scale.refY;
+//			const pos = self._get_pointer_event_position_MM(event);
+//			let scaleX = self.session.scale.signX * (pos.xMM - self.session.scale.cx) / self.session.scale.refX
+//			let scaleY = self.session.scale.signY * (pos.yMM - self.session.scale.cy) / self.session.scale.refY;
+
+			const sss = self.session.scale;
+			const dxMM = self._convertToViewBoxUnits(dx);
+			const dyMM = self._convertToViewBoxUnits(dy);
+			let scaleX = sss.signX * (dxMM + sss.mx - sss.cx) / sss.refX
+			let scaleY = sss.signY * (dyMM + sss.my - sss.cy) / sss.refY;
 			console.log("scalex", scaleX.toFixed(2), "scaley", scaleY.toFixed(2));
-			if(self.session.scale.prop){
+			if(sss.prop){
 				const signX = Math.sign(scaleX);
 				const signY = Math.sign(scaleY);
 				if(Math.abs(scaleX) <  Math.abs(scaleY)) scaleY = signY * Math.abs(scaleX); // link the factors, keep the sign
 				else scaleX = signX * Math.abs(scaleY);
 			}
 			
-			if(self.session.scale.signX !== 0){
-				self.session.scale.sx = scaleX * self.session.originMatrix.a; // applies former scaleX factor
+			if(sss.signX !== 0){
+				sss.sx = scaleX * self.session.originMatrix.a; // applies former scaleX factor
 			} else {
-				self.session.scale.sx = 1;
+				sss.sx = 1;
 			}
 			
-			if(self.session.scale.signY !== 0){
-				self.session.scale.sy = scaleY * self.session.originMatrix.d; // applies former scaleY factor
+			if(sss.signY !== 0){
+				sss.sy = scaleY * self.session.originMatrix.d; // applies former scaleY factor
 			} else {
-				self.session.scale.sy = 1;
+				sss.sy = 1;
 			}
 
 			// move translateHandle
