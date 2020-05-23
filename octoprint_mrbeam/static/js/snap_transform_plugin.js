@@ -232,34 +232,37 @@
 
 		self.scaleMove = function( target, dx, dy, x, y, event ){
 			// convert to viewBox coordinates (mm)
-//			const pos = self._get_pointer_event_position_MM(event);
-//			let scaleX = self.session.scale.signX * (pos.xMM - self.session.scale.cx) / self.session.scale.refX
-//			let scaleY = self.session.scale.signY * (pos.yMM - self.session.scale.cy) / self.session.scale.refY;
-
-			const sss = self.session.scale;
 			const dxMM = self._convertToViewBoxUnits(dx);
 			const dyMM = self._convertToViewBoxUnits(dy);
+
+			const sss = self.session.scale;
 			let scaleX = sss.signX * (dxMM + sss.mx - sss.cx) / sss.refX
 			let scaleY = sss.signY * (dyMM + sss.my - sss.cy) / sss.refY;
-			console.log("scalex", scaleX.toFixed(2), "scaley", scaleY.toFixed(2));
-			if(sss.prop){
+			
+			if(sss.prop){ // link the factors (min abs value), keep the sign
+
+				let newSx = scaleX * self.session.originMatrix.a;
+				let newSy = scaleY * self.session.originMatrix.d;
 				const signX = Math.sign(scaleX);
 				const signY = Math.sign(scaleY);
-				if(Math.abs(scaleX) <  Math.abs(scaleY)) scaleY = signY * Math.abs(scaleX); // link the factors, keep the sign
-				else scaleX = signX * Math.abs(scaleY);
+				let formerScale;
+				console.log(newSx, newSy);
+				if(Math.abs(newSx) <  Math.abs(newSy)){
+					scaleY = signY * Math.abs(scaleX);
+					formerScale = self.session.originMatrix.a;
+				} else {
+					scaleX = signX * Math.abs(scaleY);
+					formerScale = self.session.originMatrix.d;
+				}
+				sss.sx = sss.sy = scaleX * formerScale;
+				
+			} else {
+				
+				sss.sx = (sss.signX !== 0) ?  scaleX * self.session.originMatrix.a : 1;
+				sss.sy = (sss.signY !== 0) ?  scaleY * self.session.originMatrix.d : 1;
+				
 			}
 			
-			if(sss.signX !== 0){
-				sss.sx = scaleX * self.session.originMatrix.a; // applies former scaleX factor
-			} else {
-				sss.sx = 1;
-			}
-			
-			if(sss.signY !== 0){
-				sss.sy = scaleY * self.session.originMatrix.d; // applies former scaleY factor
-			} else {
-				sss.sy = 1;
-			}
 
 			// move translateHandle
 			self._sessionUpdate();
@@ -293,6 +296,8 @@
 			if(self.config.visualization){
 				self._visualizeTransform();
 			}
+			
+			self.updateCounter++;
 			
 			// apply transform to target elements via callback
 			// TODO
@@ -435,9 +440,16 @@
 			}
 
 			self.transformHandleGroup.node.classList.add('active');
+			
+			self.updateCounter = 0;
+			self.updateFPS = setInterval(function(){
+				if(self.updateCounter > 0) console.log("updateFPS: ", self.updateCounter);
+				self.updateCounter = 0;
+			}, 1000)
 		};
 
 		self.deactivate = function(){
+			self.updateFPS = null;
 			self.transformHandleGroup.removeClass('active');
 
 			// remove drag handlers
@@ -460,21 +472,22 @@
 			return val * MRBEAM_PX2MM_FACTOR_WITH_ZOOM;
 		};
 		
-		self._get_pointer_event_position_MM = function(event){
-			var targetBBox = self.paper.node.getBoundingClientRect();
-			const xPx = (event.clientX - targetBBox.left);
-			const yPx = (event.clientY - targetBBox.top);
-			const xPerc = xPx / targetBBox.width;
-			const yPerc = yPx / targetBBox.height;
-			const xMM = xPx * MRBEAM_PX2MM_FACTOR_WITH_ZOOM + MRBEAM_WORKINGAREA_PAN_MM[0];
-			const yMM = yPx * MRBEAM_PX2MM_FACTOR_WITH_ZOOM + MRBEAM_WORKINGAREA_PAN_MM[1];
-			return {xPx: xPx, yPx: yPx, xPerc: xPerc, yPerc: yPerc, xMM: xMM, yMM: yMM};
-		};
+//		self._get_pointer_event_position_MM = function(event){
+//			var targetBBox = self.paper.node.getBoundingClientRect();
+//			const xPx = (event.clientX - targetBBox.left);
+//			const yPx = (event.clientY - targetBBox.top);
+//			const xPerc = xPx / targetBBox.width;
+//			const yPerc = yPx / targetBBox.height;
+//			const xMM = xPx * MRBEAM_PX2MM_FACTOR_WITH_ZOOM + MRBEAM_WORKINGAREA_PAN_MM[0];
+//			const yMM = yPx * MRBEAM_PX2MM_FACTOR_WITH_ZOOM + MRBEAM_WORKINGAREA_PAN_MM[1];
+//			return {xPx: xPx, yPx: yPx, xPerc: xPerc, yPerc: yPerc, xMM: xMM, yMM: yMM};
+//		};
 
 		self._alignHandlesToBB = function(bbox){
 			const gap = 1;
 			if(bbox) {
 				// resize translateHandle
+				self.translateHandle.transform('');
 				self.translateHandle.attr(bbox);
 			} else {
 				// just align every other handle
