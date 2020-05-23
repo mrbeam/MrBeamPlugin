@@ -187,20 +187,16 @@
 
 		self.scaleMove = function( target, dx, dy, x, y, event ){
 			// convert to viewBox coordinates (mm)
-			const dxMM = self._convertToViewBoxUnits(dx);
-			const dyMM = self._convertToViewBoxUnits(dy);
-			const scaleX = (self.session.signX * dxMM + self.session.scale.refX) / self.session.scale.refX;
-			const scaleY = (self.session.signY * dyMM + self.session.scale.refY) / self.session.scale.refY;
+			const pos = self._get_pointer_event_position_MM(event);
+			const scaleX = self.session.signX * (pos.xMM - self.session.scale.cx) / self.session.scale.refX
+			const scaleY = self.session.signY * (pos.yMM - self.session.scale.cy) / self.session.scale.refY;
 
 			// store session changes
-			self.session.scale.sx = scaleX;
-			self.session.scale.sy = scaleY;
-//			self.session.scale.cx = self.session.centerX;
-//			self.session.scale.cy = self.session.centerY;
+			self.session.scale.sx = scaleX * self.session.originMatrix.a; // applies former scale factor
+			self.session.scale.sy = scaleY * self.session.originMatrix.d;
 
 			// move translateHandle
 			self._sessionUpdate();
-
 
 		}	
 
@@ -304,7 +300,7 @@
 			const cx = self.session.scale.cx + d;
 			
 			self.paper.selectAll('#scaleYVis').remove();
-			self.paper.path({d: 'M' + cx + ',' + cy + 'h-10v' + (self.session.scale.refX * self.session.scale.sx) + 'h10', class: 'transformVis', id: "scaleYVis"});
+			self.paper.path({d: 'M' + cx + ',' + cy + 'h-10v' + (self.session.scale.refY * self.session.scale.sy) + 'h10', class: 'transformVis', id: "scaleYVis"});
 		}
 		
 
