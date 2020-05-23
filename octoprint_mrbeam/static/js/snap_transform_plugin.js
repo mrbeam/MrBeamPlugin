@@ -75,9 +75,6 @@
 			// hide scale & rotate handle
 			self.transformHandleGroup.node.classList.add('translate');
 			
-//			const pos = self._get_pointer_event_position_MM(event);
-//			self.session.translate.ox = pos.xMM;
-//			self.session.translate.oy = pos.yMM;
 			self.session.translate.cx = self.session.bbox.cx;
 			self.session.translate.cy = self.session.bbox.cy;
 		}	
@@ -166,48 +163,56 @@
 					cy = self.session.bbox.y; 
 					self.session.scale.signX = 1;
 					self.session.scale.signY = 1;
+					self.session.scale.prop = true;
 					break;
 				case 'SW':
 					cx = self.session.bbox.x2;
 					cy = self.session.bbox.y;
 					self.session.scale.signX = -1;
 					self.session.scale.signY = 1;
+					self.session.scale.prop = true;
 					break;
 				case 'NW':
 					cx = self.session.bbox.x2;
 					cy = self.session.bbox.y2;
 					self.session.scale.signX = -1;
 					self.session.scale.signY = -1;
+					self.session.scale.prop = true;
 					break;
 				case 'NE':
 					cx = self.session.bbox.x;
 					cy = self.session.bbox.y2;
 					self.session.scale.signX = 1;
 					self.session.scale.signY = -1;
+					self.session.scale.prop = true;
 					break;
 				case 'NN':
 					cx = self.session.bbox.cx;
 					cy = self.session.bbox.y2;
 					self.session.scale.signX = 0;
 					self.session.scale.signY = -1;
+					self.session.scale.prop = false;
 					break;
 				case 'EE':
 					cx = self.session.bbox.x;
 					cy = self.session.bbox.cy;
 					self.session.scale.signX = 1;
 					self.session.scale.signY = 0;
+					self.session.scale.prop = false;
 					break;
 				case 'SS':
 					cx = self.session.bbox.cx;
 					cy = self.session.bbox.y;
 					self.session.scale.signX = 0;
 					self.session.scale.signY = 1;
+					self.session.scale.prop = false;
 					break;
 				case 'WW':
 					cx = self.session.bbox.x2;
 					cy = self.session.bbox.cy;
 					self.session.scale.signX = -1;
 					self.session.scale.signY = 0;
+					self.session.scale.prop = false;
 					break;
 					
 				default:
@@ -225,16 +230,24 @@
 		self.scaleMove = function( target, dx, dy, x, y, event ){
 			// convert to viewBox coordinates (mm)
 			const pos = self._get_pointer_event_position_MM(event);
+			let scaleX = self.session.scale.signX * (pos.xMM - self.session.scale.cx) / self.session.scale.refX
+			let scaleY = self.session.scale.signY * (pos.yMM - self.session.scale.cy) / self.session.scale.refY;
+			console.log("scalex", scaleX.toFixed(2), "scaley", scaleY.toFixed(2));
+			if(self.session.scale.prop){
+				const signX = Math.sign(scaleX);
+				const signY = Math.sign(scaleY);
+				if(Math.abs(scaleX) <  Math.abs(scaleY)) scaleY = signY * Math.abs(scaleX); // link the factors, keep the sign
+				else scaleX = signX * Math.abs(scaleY);
+			}
+			
 			if(self.session.scale.signX !== 0){
-				const scaleX = self.session.scale.signX * (pos.xMM - self.session.scale.cx) / self.session.scale.refX
-				self.session.scale.sx = scaleX * self.session.originMatrix.a; // applies former scale factor
+				self.session.scale.sx = scaleX * self.session.originMatrix.a; // applies former scaleX factor
 			} else {
 				self.session.scale.sx = 1;
 			}
 			
 			if(self.session.scale.signY !== 0){
-				const scaleY = self.session.scale.signY * (pos.yMM - self.session.scale.cy) / self.session.scale.refY;
-				self.session.scale.sy = scaleY * self.session.originMatrix.d;
+				self.session.scale.sy = scaleY * self.session.originMatrix.d; // applies former scaleY factor
 			} else {
 				self.session.scale.sy = 1;
 			}
@@ -248,7 +261,7 @@
 			self._sessionReset();
 			// show scale & rotate handle
 			self._alignHandlesToBB();
-			self.transformHandleGroup.node.classList.remove('scale', 'scaleHandleNE', 'scaleHandleNW', 'scaleHandleSW', 'scaleHandleSE');
+			self.transformHandleGroup.node.classList.remove('scale', 'scaleHandleNE', 'scaleHandleNW', 'scaleHandleSW', 'scaleHandleSE', 'scaleHandleNN', 'scaleHandleEE', 'scaleHandleSS', 'scaleHandleWW');
 			
 		}	
 
