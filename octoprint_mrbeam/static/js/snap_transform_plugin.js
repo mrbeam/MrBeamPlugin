@@ -33,8 +33,17 @@
 			self.scaleHandleNW = paper.select(self.config.scaleHandleNWId);
 			self.scaleHandleSE = paper.select(self.config.scaleHandleSEId);
 			self.scaleHandleSW = paper.select(self.config.scaleHandleSWId);
+			self.scaleHandleN = paper.select(self.config.scaleHandleNId);
+			self.scaleHandleE = paper.select(self.config.scaleHandleEId);
+			self.scaleHandleS = paper.select(self.config.scaleHandleSId);
+			self.scaleHandleW = paper.select(self.config.scaleHandleWId);
 			self.rotHandle = paper.select(self.config.rotHandleId);
 			self.initialized = true;
+			self.translateXVis = paper.select('#translateXVis');
+			self.translateYVis = paper.select('#translateYVis');
+			self.scaleXVis = paper.select('#scaleXVis');
+			self.scaleYVis = paper.select('#scaleYVis');
+			self.rotateVis = paper.select('#rotateVis');
 			paper.mbtransform = self;
 		}
 
@@ -46,6 +55,10 @@
 			scaleHandleNWId: '#scaleHandleNW',
 			scaleHandleSWId: '#scaleHandleSW',
 			scaleHandleSEId: '#scaleHandleSE',
+			scaleHandleNId: '#scaleHandleNN',
+			scaleHandleEId: '#scaleHandleEE',
+			scaleHandleSId: '#scaleHandleSS',
+			scaleHandleWId: '#scaleHandleWW',
 			rotHandleId: '#rotHandle',
 			minTranslateHandleSize: 24,
 			
@@ -65,8 +78,8 @@
 //			const pos = self._get_pointer_event_position_MM(event);
 //			self.session.translate.ox = pos.xMM;
 //			self.session.translate.oy = pos.yMM;
-			self.session.translate.cx = self.session.bbox.x + self.session.bbox.width/2;
-			self.session.translate.cy = self.session.bbox.y + self.session.bbox.height/2;;
+			self.session.translate.cx = self.session.bbox.cx;
+			self.session.translate.cy = self.session.bbox.cy;
 		}	
 
 		self.translateMove = function( target, dx, dy, x, y, event ){
@@ -101,8 +114,8 @@
 			const pos = self._get_pointer_event_position_MM(event);
 			self.session.rotate.ax = pos.xMM;
 			self.session.rotate.ay = pos.yMM;
-			self.session.rotate.cx = self.session.bbox.x + self.session.bbox.width / 2;
-			self.session.rotate.cy = self.session.bbox.y + self.session.bbox.height / 2;
+			self.session.rotate.cx = self.session.bbox.cx;
+			self.session.rotate.cy = self.session.bbox.cy;
 		}	
 
 		self.rotateMove = function( target, dx, dy, x, y, event ){
@@ -114,7 +127,7 @@
 			
 			// calculate viewbox coordinates incl. zoom & pan (mm)
 			const bx = self.session.rotate.bx = ax + self._convertToViewBoxUnits(dx);
-			const by = self.session.rotate.bx = ay + self._convertToViewBoxUnits(dy);
+			const by = self.session.rotate.by = ay + self._convertToViewBoxUnits(dy);
 
 			// store session changes
 			//    b
@@ -145,32 +158,56 @@
 			self.transformHandleGroup.node.classList.add('scale', handleId);
 			
 			// determine scale center
-			var cx;
-			var cy;
+			let cx;
+			let cy;
 			switch (handleId.substr(-2)) {
 				case 'SE':
 					cx = self.session.bbox.x;
-					cy = self.session.bbox.y; //self.session.bbox.y;
-					self.session.signX = 1;
-					self.session.signY = 1;
+					cy = self.session.bbox.y; 
+					self.session.scale.signX = 1;
+					self.session.scale.signY = 1;
 					break;
 				case 'SW':
-					cx = self.session.bbox.x + self.session.bbox.width;
+					cx = self.session.bbox.x2;
 					cy = self.session.bbox.y;
-					self.session.signX = -1;
-					self.session.signY = 1;
+					self.session.scale.signX = -1;
+					self.session.scale.signY = 1;
 					break;
 				case 'NW':
-					cx = self.session.bbox.x + self.session.bbox.width;
-					cy = self.session.bbox.y + self.session.bbox.height;
-					self.session.signX = -1;
-					self.session.signY = -1;
+					cx = self.session.bbox.x2;
+					cy = self.session.bbox.y2;
+					self.session.scale.signX = -1;
+					self.session.scale.signY = -1;
 					break;
 				case 'NE':
 					cx = self.session.bbox.x;
-					cy = self.session.bbox.y + self.session.bbox.height;
-					self.session.signX = 1;
-					self.session.signY = -1;
+					cy = self.session.bbox.y2;
+					self.session.scale.signX = 1;
+					self.session.scale.signY = -1;
+					break;
+				case 'NN':
+					cx = self.session.bbox.cx;
+					cy = self.session.bbox.y2;
+					self.session.scale.signX = 0;
+					self.session.scale.signY = -1;
+					break;
+				case 'EE':
+					cx = self.session.bbox.x;
+					cy = self.session.bbox.cy;
+					self.session.scale.signX = 1;
+					self.session.scale.signY = 0;
+					break;
+				case 'SS':
+					cx = self.session.bbox.cx;
+					cy = self.session.bbox.y;
+					self.session.scale.signX = 0;
+					self.session.scale.signY = 1;
+					break;
+				case 'WW':
+					cx = self.session.bbox.x2;
+					cy = self.session.bbox.cy;
+					self.session.scale.signX = -1;
+					self.session.scale.signY = 0;
 					break;
 					
 				default:
@@ -188,12 +225,19 @@
 		self.scaleMove = function( target, dx, dy, x, y, event ){
 			// convert to viewBox coordinates (mm)
 			const pos = self._get_pointer_event_position_MM(event);
-			const scaleX = self.session.signX * (pos.xMM - self.session.scale.cx) / self.session.scale.refX
-			const scaleY = self.session.signY * (pos.yMM - self.session.scale.cy) / self.session.scale.refY;
-
-			// store session changes
-			self.session.scale.sx = scaleX * self.session.originMatrix.a; // applies former scale factor
-			self.session.scale.sy = scaleY * self.session.originMatrix.d;
+			if(self.session.scale.signX !== 0){
+				const scaleX = self.session.scale.signX * (pos.xMM - self.session.scale.cx) / self.session.scale.refX
+				self.session.scale.sx = scaleX * self.session.originMatrix.a; // applies former scale factor
+			} else {
+				self.session.scale.sx = 1;
+			}
+			
+			if(self.session.scale.signY !== 0){
+				const scaleY = self.session.scale.signY * (pos.yMM - self.session.scale.cy) / self.session.scale.refY;
+				self.session.scale.sy = scaleY * self.session.originMatrix.d;
+			} else {
+				self.session.scale.sy = 1;
+			}
 
 			// move translateHandle
 			self._sessionUpdate();
@@ -233,7 +277,7 @@
 		}
 		
 		self._sessionReset = function(){
-			self.paper.selectAll('.transformVis').remove();
+			self.paper.selectAll('.transformVis').attr({d:''});
 			self.session.translate = {dx: 0, dy:0};
 			self.session.scale = {sx: 1, sy: 1, dx: 0, dy: 0};
 			self.session.rotate = {r: 0, cx: 0, cy: 0};
@@ -268,8 +312,10 @@
 			const startYh = 10;
 			const startXv = 10;
 			const startYv = self.session.translate.cy;
-			self.paper.path({d: 'M'+ startXh+','+startYh+'v-5h'+self.session.translate.dx+'v5', class:'transformVis', id:"translateVisH"});
-			self.paper.path({d: 'M'+ startXv+','+startYv+'h-5v'+self.session.translate.dy+'h5', class:'transformVis', id:"translateVisV"});
+			const dX = 'M'+ startXh+','+startYh+'v-5h'+self.session.translate.dx+'v5';
+			const dY = 'M'+ startXv+','+startYv+'h-5v'+self.session.translate.dy+'h5';
+			self.translateXVis.attr('d', dX);
+			self.translateYVis.attr('d', dY);
 		};
 
 		self._visualizeRotate = function(){
@@ -279,8 +325,7 @@
 			const by = self.session.rotate.by;
 			const cx = self.session.rotate.cx;
 			const cy = self.session.rotate.cy;
-			self.paper.selectAll('#rotateVis').remove();  // TODO more efficiency
-			self.paper.path({d: 'M'+ ax+','+ay+'L'+cx+','+cy+'L'+bx+','+by, class:'transformVis', id:"rotateVis"});
+			self.rotateVis.attr('d', 'M'+ ax+','+ay+'L'+cx+','+cy+'L'+bx+','+by);
 		};
 		
 		self._visualizeScaleX = function () {
@@ -289,8 +334,7 @@
 			const d = cx <= self.session.bbox.x ? -dist : dist;
 			const cy = self.session.scale.cy + d;
 			
-			self.paper.selectAll('#scaleXVis').remove();
-			self.paper.path({d: 'M' + cx + ',' + cy + 'v-10h' + (self.session.scale.refX * self.session.scale.sx) + 'v10', class: 'transformVis', id: "scaleXVis"});
+			self.scaleXVis.attr('d', 'M' + cx + ',' + cy + 'v-10h' + (self.session.scale.refX * self.session.scale.sx) + 'v10');
 		}
 		
 		self._visualizeScaleY = function () {
@@ -299,11 +343,10 @@
 			const d = cy <= self.session.bbox.y ? -dist : dist;
 			const cx = self.session.scale.cx + d;
 			
-			self.paper.selectAll('#scaleYVis').remove();
-			self.paper.path({d: 'M' + cx + ',' + cy + 'h-10v' + (self.session.scale.refY * self.session.scale.sy) + 'h10', class: 'transformVis', id: "scaleYVis"});
+			self.scaleYVis.attr('d', 'M' + cx + ',' + cy + 'h-10v' + (self.session.scale.refY * self.session.scale.sy) + 'h10');
 		}
 		
-
+	
 		/**
 		 * @param {Snap.Element, Snap.Set, CSS-Selector} elements_to_transform
 		 * @param {function} transformMatrixCallback  
@@ -324,7 +367,7 @@
 					return;
 				}
 			}
-
+			
 			// get bounding box of selector
 			const bbox = self._getBBoxFromElementsWithMinSize(elements_to_transform);
 
@@ -350,7 +393,16 @@
 				self.rotateEnd.bind( self.rotHandle, elements_to_transform )
 			);
 	
-			const scaleHandles = [self.scaleHandleNE, self.scaleHandleNW, self.scaleHandleSW, self.scaleHandleSE];
+			const scaleHandles = [
+				self.scaleHandleNE, 
+				self.scaleHandleNW, 
+				self.scaleHandleSW, 
+				self.scaleHandleSE, 
+				self.scaleHandleN, 
+				self.scaleHandleE, 
+				self.scaleHandleS, 
+				self.scaleHandleW
+			];
 			for (var i = 0; i < scaleHandles.length; i++) {
 				var h = scaleHandles[i];
 				h.drag(
@@ -398,6 +450,7 @@
 		};
 
 		self._alignHandlesToBB = function(bbox){
+			const gap = 1;
 			if(bbox) {
 				// resize translateHandle
 				self.translateHandle.attr(bbox);
@@ -408,10 +461,15 @@
 
 			// align scaleHandles
 			self.scaleHandleNW.transform('t'+bbox.x+','+bbox.y);
-			self.scaleHandleSW.transform('t'+bbox.x+','+(bbox.y+bbox.height));
-			self.scaleHandleNE.transform('t'+(bbox.x+bbox.width)+','+bbox.y);
-			self.scaleHandleSE.transform('t'+(bbox.x+bbox.width)+','+(bbox.y+bbox.height));
-			self.rotHandle.transform('t'+(bbox.x+bbox.width+self.config.minTranslateHandleSize)+','+(bbox.y+bbox.height/2));
+			self.scaleHandleSW.transform('t'+bbox.x+','+bbox.y2);
+			self.scaleHandleNE.transform('t'+bbox.x2+','+bbox.y);
+			self.scaleHandleSE.transform('t'+bbox.x2+','+bbox.y2);
+			
+			self.scaleHandleN.transform('t'+bbox.cx +','+(bbox.y - gap));
+			self.scaleHandleE.transform('t'+(bbox.x2 + gap) +','+bbox.cy);
+			self.scaleHandleS.transform('t'+bbox.cx +','+(bbox.y2 + gap));
+			self.scaleHandleW.transform('t'+(bbox.x - gap) +','+bbox.cy);
+			self.rotHandle.transform('t'+(bbox.x2+self.config.minTranslateHandleSize)+','+bbox.cy);
 		};
 
 		self._getBBoxFromElementsWithMinSize = function(elements){
@@ -432,9 +490,13 @@
 			}
 			let x = bb.x;
 			let y = bb.y;
+			let x2 = bb.x + bb.width;
+			let y2 = bb.y + bb.height;
+			let cx = bb.x + bb.width/2;
+			let cy = bb.y + bb.height/2;
 			let w = bb.width;
 			let h = bb.height;
-			return { x: x, y: y, width: w, height: h };
+			return { x: x, y: y, cx: cx, cy: cy, x2: x2, y2: y2, width: w, height: h };
 		}
 
 	});

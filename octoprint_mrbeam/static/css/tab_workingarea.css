@@ -174,7 +174,7 @@
 	stroke-dasharray: 5 5;
 }
 
-#scaleHandleNE, #scaleHandleNW, #scaleHandleSE, #scaleHandleSW, #rotHandle {
+.scaleHandle, #rotHandle {
 	fill: #ffffff99;
 	stroke: #00aaff;
 	stroke-width: 2;	
@@ -194,10 +194,15 @@
 #mbtransformHandleGroup.active.scale #rotHandle {
 	display: none;
 }  
+
 #mbtransformHandleGroup.active.scale.scaleHandleNE #scaleHandleNE,
 #mbtransformHandleGroup.active.scale.scaleHandleNW #scaleHandleNW,
 #mbtransformHandleGroup.active.scale.scaleHandleSW #scaleHandleSW,
-#mbtransformHandleGroup.active.scale.scaleHandleSE #scaleHandleSE { 
+#mbtransformHandleGroup.active.scale.scaleHandleSE #scaleHandleSE,
+#mbtransformHandleGroup.active.scale.scaleHandleNN #scaleHandleNN,
+#mbtransformHandleGroup.active.scale.scaleHandleEE #scaleHandleEE,
+#mbtransformHandleGroup.active.scale.scaleHandleSS #scaleHandleSS,
+#mbtransformHandleGroup.active.scale.scaleHandleWW #scaleHandleWW { 
 	display: block; 
 }
 

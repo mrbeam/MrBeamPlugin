@@ -606,6 +606,13 @@
 										<rect id="coordGrid" x="0" y="0" width="0" height="0"
 											  stroke="none" fill="none"></rect>
 										<g id="userContent"></g>
+										<g id="mbtransformVisualization">
+											<path id="translateXVis" class="transformVis" />
+											<path id="translateYVis" class="transformVis" />
+											<path id="scaleXVis" class="transformVis" />
+											<path id="scaleYVis" class="transformVis" />
+											<path id="rotateVis" class="transformVis" />
+										</g>
 									</g>
 									<g id="crosshair" transform="matrix(1, 0, 0, 1, -20, -20)"
 									   data-bind="attr: { transform: scaleMatrixCrosshair()}">
@@ -629,10 +636,14 @@
 									</g>
 									<g id="mbtransformHandleGroup">
 										<rect id="translateHandle" x="0" y="0" width="0" height="0" ></rect>
-										<path id="scaleHandleNW" class="scaleHandle" d="M0,0v-8l-2,2 -6,-6 2,-2h-8v8l2,-2 6,6 -2,2z" />
-										<path id="scaleHandleNE" class="scaleHandle" d="M0,0v-8l2,2 6,-6 -2,-2h8v8l-2,-2 -6,6 2,2z" />
-										<path id="scaleHandleSE" class="scaleHandle" d="M0,0v8l2,-2 6,6-2,2h8v-8l-2,2-6,-6 2,-2z" />
-										<path id="scaleHandleSW" class="scaleHandle" d="M0,0v8l-2,-2 -6,6 2,2h-8v-8l2,2 6,-6 -2,-2z" />
+										<path id="scaleHandleNW" class="scaleHandle prop" d="M0,0v-8l-2,2 -6,-6 2,-2h-8v8l2,-2 6,6 -2,2z" />
+										<path id="scaleHandleNE" class="scaleHandle prop" d="M0,0v-8l2,2 6,-6 -2,-2h8v8l-2,-2 -6,6 2,2z" />
+										<path id="scaleHandleSE" class="scaleHandle prop" d="M0,0v8l2,-2 6,6-2,2h8v-8l-2,2-6,-6 2,-2z" />
+										<path id="scaleHandleSW" class="scaleHandle prop" d="M0,0v8l-2,-2 -6,6 2,2h-8v-8l2,2 6,-6 -2,-2z" />
+										<path id="scaleHandleNN" class="scaleHandle unprop" d="M0,0h3v-6h2l-6,-6 -6,6h2v6z" />
+										<path id="scaleHandleEE" class="scaleHandle unprop" d="M0,0v-3h6v-2l6,6 -6,6v-2h-6z" />
+										<path id="scaleHandleSS" class="scaleHandle unprop" d="M0,0h3v6h2l-6,6 -6,-6h2v-6z" />
+										<path id="scaleHandleWW" class="scaleHandle unprop" d="M0,0v3h-6v2l-6,-6 6,-6v2h6z" />
 										<path id="rotHandle" d="M 0,8 C 4.5,8 8,4.5 8,0 H 3 C 3,1.7 1.6,3 0,3 0,3 0,3 0,3 0,3 0,3 -0.3,3 -1.9,2.8 -3,1.5 -3,-0.1 c 0,-1.6 1.4,-3 3,-3 v 1.7 L 4,-5.5 0,-9.6 V -8 c -4.5,0 -8,3.6 -8,8 0,4.5 3.6,8 8,8 z" />
 									</g>
 {#									<rect id="scanArea" x="0" y="0" width="0" height="0" ></rect>#}
