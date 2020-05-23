@@ -471,7 +471,9 @@ class calibrationState(dict):
 		changed = False
 		for path, elm in self.items():
 			if elm['state'] == STATE_PENDING_CAMERA and os.path.exists(path):
-				if self.rawImgLock is not None: self.rawImgLock.wait()
+				if self.rawImgLock is not None:
+					self.rawImgLock.acquire()
+					self.rawImgLock.release()
 				self.update(path, STATE_QUEUED)
 				changed = True
 				if imgFoundCallback is not None:

@@ -390,8 +390,7 @@ class PhotoCreator(object):
 		self.last_correction_result = None
 		self.worker = None
 		self.saveRaw = True
-		self.rawLock = Event()
-		self.rawLock.clear()
+		self.rawLock = Lock()
 		if debug:
 			self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator", logging.DEBUG)
 		else:
@@ -573,20 +572,20 @@ class PhotoCreator(object):
 				elif isinstance(self.saveRaw, str) and saveNext:
 					# FIXME Not perfect. This is the case during the lens calibration where
 					# a new raw picture is requested. Do the save during the next round.
-					self.rawLock.set()
+					self.rawLock.acquire()
 					if camera.save_debug_img(latest,
 								 self.saveRaw,
 								 folder=path.join(path.dirname(self.final_image_path),"debug")):
 						rawSaved = self.saveRaw
 					else: rawSaved = False
-					self.rawLock.clear()
+					self.rawLock.release()
 					saveNext = False
 				else:
-					self.rawLock.set()
+					self.rawLock.acquire()
 					rawSaved = camera.save_debug_img(latest,
 									 "raw.jpg",
 									 folder=path.join(path.dirname(self.final_image_path),"debug"))
-					self.rawLock.clear()
+					self.rawLock.release()
 
 			# Compare previous image with the current one.
 			if self.forceNewPic.isSet() or prev is None \
