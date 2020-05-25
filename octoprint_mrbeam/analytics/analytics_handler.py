@@ -35,7 +35,7 @@ def analyticsHandler(plugin):
 
 class AnalyticsHandler(object):
 	QUEUE_MAXSIZE = 1000
-	ANALYTICS_LOG_VERSION = 12  # bumped in 0.6.8.1
+	ANALYTICS_LOG_VERSION = 13  # bumped in 0.6.9.1 for cam image upload
 
 	def __init__(self, plugin):
 		self._plugin = plugin
