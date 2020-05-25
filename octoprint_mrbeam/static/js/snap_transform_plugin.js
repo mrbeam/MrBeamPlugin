@@ -245,16 +245,21 @@
 				let newSy = scaleY * self.session.originMatrix.d;
 				const signX = Math.sign(scaleX);
 				const signY = Math.sign(scaleY);
+				const formerSignX = Math.sign(self.session.originMatrix.a);
+				const formerSignY = Math.sign(self.session.originMatrix.d);
 				let formerScale;
 				console.log(newSx, newSy);
 				if(Math.abs(newSx) <  Math.abs(newSy)){
 					scaleY = signY * Math.abs(scaleX);
-					formerScale = self.session.originMatrix.a;
+					formerScale = Math.abs(self.session.originMatrix.a);
+					console.log('A', signX, signY, self.session.originMatrix.a.toFixed(2), self.session.originMatrix.a.toFixed(2));
 				} else {
 					scaleX = signX * Math.abs(scaleY);
-					formerScale = self.session.originMatrix.d;
+					formerScale = Math.abs(self.session.originMatrix.d);
+					console.log('B', signX, signY,  self.session.originMatrix.a.toFixed(2), self.session.originMatrix.a.toFixed(2));
 				}
-				sss.sx = sss.sy = scaleX * formerScale;
+				sss.sx = scaleX * formerScale * formerSignX;
+				sss.sy = scaleY * formerScale * formerSignY; 
 				
 			} else {
 				
