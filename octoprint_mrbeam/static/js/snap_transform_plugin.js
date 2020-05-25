@@ -187,7 +187,7 @@
 					self.session.scale.prop = true;
 					break;
 				case 'NN':
-					cx = self.session.bbox.cx;
+					cx = self.session.bbox.x;
 					cy = self.session.bbox.y2;
 					self.session.scale.signX = 0;
 					self.session.scale.signY = -1;
@@ -195,13 +195,13 @@
 					break;
 				case 'EE':
 					cx = self.session.bbox.x;
-					cy = self.session.bbox.cy;
+					cy = self.session.bbox.y;
 					self.session.scale.signX = 1;
 					self.session.scale.signY = 0;
 					self.session.scale.prop = false;
 					break;
 				case 'SS':
-					cx = self.session.bbox.cx;
+					cx = self.session.bbox.x;
 					cy = self.session.bbox.y;
 					self.session.scale.signX = 0;
 					self.session.scale.signY = 1;
@@ -209,7 +209,7 @@
 					break;
 				case 'WW':
 					cx = self.session.bbox.x2;
-					cy = self.session.bbox.cy;
+					cy = self.session.bbox.y;
 					self.session.scale.signX = -1;
 					self.session.scale.signY = 0;
 					self.session.scale.prop = false;
@@ -360,17 +360,26 @@
 		};
 		
 		self._visualizeScale = function () {
-			const mouseX = self.session.scale.mx + self.session.scale.dxMM; 
-			const mouseY = self.session.scale.my + self.session.scale.dyMM; 
-			const dist = 15;
-			const cx = self.session.scale.cx;
-			const cy = self.session.scale.cy;
+			const gap = 15;
+			const dist = 10;
+			const sss = self.session.scale;
+			const mouseX = sss.mx + sss.dxMM; 
+			const mouseY = sss.my + sss.dyMM; 
+			const cx = sss.cx;
+			const cy = sss.cy;
 			const mirrorX = mouseY < cy ? 1 : -1;
 			const mirrorY = mouseX < cx ? 1 : -1;
 			
-			const attrDx = self.session.scale.sx !== 1 ? `M${cx},${cy}v${dist*mirrorX}H${mouseX}v${-dist*mirrorX}` : ''
+			let attrDx = '';
+			let attrDy = '';
+			if(sss.sx !== 1 && sss.signX !== 0 && sss.dominantAxis !== 'y'){ // show only if: axis is scaled && handle is scaling this axis && this axis is dominant in proportional scaling
+				attrDx = `M${cx},${cy}m0,${gap*mirrorX}v${dist*mirrorX}H${mouseX}v${-dist*mirrorX}`
+			} 
+			if(sss.sy !== 1 && sss.signY !== 0 && sss.dominantAxis !== 'x'){
+				attrDy = `M${cx},${cy}m${gap*mirrorY},0h${dist*mirrorY}V${mouseY}h${-dist*mirrorY}`
+			} 
+			
 			self.scaleXVis.attr('d', attrDx);
-			const attrDy = self.session.scale.sy !== 1 ? `M${cx},${cy}h${dist*mirrorY}V${mouseY}h${-dist*mirrorY}` : ''
 			self.scaleYVis.attr('d', attrDy);
 			
 		}
