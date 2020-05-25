@@ -3,6 +3,7 @@
 import requests
 import os
 import threading
+import time
 
 try:
 	from octoprint_mrbeam.mrb_logger import mrb_logger
@@ -40,6 +41,8 @@ class FileUploader:
 			succ=None,
 			err=None,
 			remote_name=None,
+			ts=-1,
+			duration=0,
 		)
 
 		self._start_uploader_thread()
@@ -59,6 +62,7 @@ class FileUploader:
 		try:
 			self._logger.debug("{} upload starting...".format(self.upload_type))
 			self.status['state'] = self.STATUS_INIT
+			self.status['ts'] = time.time()
 
 			try:
 				if self._file_exists():
@@ -79,6 +83,7 @@ class FileUploader:
 	def _successful_upload_end(self):
 		self.status['state'] = self.STATUS_DONE
 		self.status['succ'] = True
+		self.status['duration'] = time.time() - self.status['ts'] if self.status['ts'] >0 else -1
 
 		self._logger.info('{up_type} file upload successful! - Status: {status}'.format(
 			up_type=self.upload_type,
@@ -87,6 +92,7 @@ class FileUploader:
 	def _unsuccessful_upload_end(self, err, raise_except=True):
 		self.status['err'] = err
 		self.status['succ'] = False
+		self.status['duration'] = time.time() - self.status['ts'] if self.status['ts'] > 0 else -1
 
 		if raise_except:
 			self._logger.exception('{up_type} file upload was not successful: {err} - Status: {status}'.format(

@@ -1,13 +1,8 @@
 import argparse
 import textwrap
-from collections import Iterable, Mapping
-from copy import copy
+from collections import Mapping
 from threading import Event
-from types import NoneType
-# from typing import Union
-from itertools import chain
 from multiprocessing import Pool
-from fractions import Fraction
 from numpy.linalg import norm
 
 from octoprint_mrbeam.camera import RESOLUTIONS, QD_KEYS, PICAMERA_AVAILABLE

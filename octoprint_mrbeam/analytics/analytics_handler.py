@@ -35,7 +35,7 @@ def analyticsHandler(plugin):
 
 class AnalyticsHandler(object):
 	QUEUE_MAXSIZE = 1000
-	ANALYTICS_LOG_VERSION = 12  # bumped in 0.6.8.1
+	ANALYTICS_LOG_VERSION = 13  # bumped in 0.6.9.1 for cam image upload
 
 	def __init__(self, plugin):
 		self._plugin = plugin
@@ -117,6 +117,11 @@ class AnalyticsHandler(object):
 		return self._analytics_enabled and not self._support_mode
 
 	# -------- EXTERNALLY CALLED METHODS -------------------------------------------------------------------------------
+	def upload(self, delay=5.0):
+		# We have to wait until the last line is written before we upload
+		Timer(interval=delay, function=AnalyticsFileUploader.upload_now,
+		      args=[self._plugin, self._analytics_lock]).start()
+		
 	# INIT
 	def analytics_user_permission_change(self, analytics_enabled):
 		try:
@@ -283,6 +288,12 @@ class AnalyticsHandler(object):
 			self._add_log_event(ak.Log.Event.CAMERA, payload=session_details)
 		except Exception as e:
 			self._logger.exception('Exception during add_camera_session: {}'.format(e), analytics=True)
+	
+	def add_camera_image(self, payload):
+		try:
+			self._add_device_event(ak.Device.Event.CAMERA_IMAGE, payload=payload)
+		except Exception as e:
+			self._logger.exception('Exception during add_camera_image: {}'.format(e), analytics=True)
 
 	# IOBEAM_HANDLER
 	def add_iobeam_message_log(self, iobeam_version, message, from_plugin=False):
@@ -564,8 +575,7 @@ class AnalyticsHandler(object):
 		self._add_job_event(ak.Job.Event.LASERJOB_FINISHED, payload={ak.Job.STATUS: self._current_job_final_status})
 		self._cleanup_job()
 
-		# We have to wait until the 'laserjob_finished' line is written before we upload
-		Timer(interval=5.0, function=AnalyticsFileUploader.upload_now, args=[self._plugin, self._analytics_lock]).start()
+		self.upload() # delay of 5.0 s
 
 	def _event_job_time_estimated(self, event, payload):
 		self._current_job_time_estimation = payload['job_time_estimation']

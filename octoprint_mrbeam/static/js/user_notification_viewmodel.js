@@ -50,6 +50,11 @@ $(function () {
                     url: 'https://support.mr-beam.org/support/solutions/articles/43000557281-system-messages#cameraerror',
                 }
             },
+            msg_cam_image_analytics_sent: {
+                title: gettext("Thank you"),
+                text: gettext("The last image from your camera was submitted to Mr Beam and is going to be uploaded silently in the background."),
+                type: 'success',
+            },
         };
 
 

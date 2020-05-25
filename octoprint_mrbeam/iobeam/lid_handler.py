@@ -2,6 +2,8 @@ import copy
 import json
 import numpy as np
 import time
+import cv2
+import base64
 import threading
 from threading import Event
 import os
@@ -57,7 +59,7 @@ class LidHandler(object):
 		self._plugin_manager = plugin._plugin_manager
 		self._laserCutterProfile = plugin.laserCutterProfileManager.get_current_or_default()
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler",
-		                          logging.INFO)
+								  logging.INFO)
 		self._lid_closed = True
 		self._interlock_closed = True
 		self._is_slicing = False
@@ -66,9 +68,9 @@ class LidHandler(object):
 		if PICAMERA_AVAILABLE:
 			imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
 			self._photo_creator = PhotoCreator(self._plugin,
-                                               self._plugin_manager,
-                                               imagePath,
-                                               debug=False)
+											   self._plugin_manager,
+											   imagePath,
+											   debug=False)
 		else:
 			self._photo_creator = None
 		self.refresh_pic_settings = Event() # TODO placeholder for when we delete PhotoCreator
@@ -123,6 +125,10 @@ class LidHandler(object):
 		self._logger.debug("Front End finished downloading the picture")
 		if self._photo_creator is not None:
 			self._photo_creator.send_pic_asap()
+
+	def send_camera_image_to_analytics(self):
+		if self._photo_creator:
+			self._photo_creator.send_last_img_to_analytics()
 
 	def _printerStateChanged(self, event, payload):
 		if payload['state_string'] == 'Operational':
@@ -241,6 +247,8 @@ class PhotoCreator(object):
 		self._front_ready = Event()
 		self.last_correction_result = None
 		self.worker = None
+		self._flag_send_img_to_analytics = None
+		
 		if debug:
 			self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator", logging.DEBUG)
 		else:
@@ -274,9 +282,9 @@ class PhotoCreator(object):
 		self.stopEvent.clear()
 		self.active = True
 		self.worker = threading.Thread(target=self.work, name='Photo-Worker',
-		                               kwargs={'pic_settings': pic_settings,
-		                                       'cam_params': cam_params,
-		                                       'out_pic_size': out_pic_size})
+									   kwargs={'pic_settings': pic_settings,
+											   'cam_params': cam_params,
+											   'out_pic_size': out_pic_size})
 		self.worker.daemon = True
 		self.worker.start()
 
@@ -286,6 +294,7 @@ class PhotoCreator(object):
 		if blocking and self.worker is not None and self.worker.is_alive():
 			self.worker.join()
 		self.active = False
+		self._flag_send_img_to_analytics = None
 
 	@property
 	def stopping(self):
@@ -297,50 +306,54 @@ class PhotoCreator(object):
 		self.start(pic_settings=pic_settings, cam_params=cam_params, out_pic_size=out_pic_size, blocking=blocking)
 
 	def work(self, pic_settings=None, cam_params=None, out_pic_size=None, recurse_nb=0):
-		if self.is_initial_calibration:
-			self.save_debug_images = True
-
-		if not PICAMERA_AVAILABLE:
-			self._logger.warn("Camera disabled. Not all required modules could be loaded at startup. ")
-			self.stopEvent.set()
-			return
-
-		self._logger.debug("Starting the camera now.")
 		try:
-			with MrbCamera(octoprint_mrbeam.camera.MrbPicWorker(maxSize=2, debug=self.debug),
-                           # framerate=8,
-                           resolution=octoprint_mrbeam.camera.LEGACY_STILL_RES,  # TODO camera.DEFAULT_STILL_RES,
-                           stopEvent=self.stopEvent,) as cam:
-				self.serve_pictures(cam, pic_settings=pic_settings, cam_params=cam_params, out_pic_size=out_pic_size)
-			if recurse_nb > 0:
-				self._logger.info("Camera recovered")
-				self._analytics_handler.add_camera_session_details(exc.msgForAnalytics(exc.CAM_CONNRECOVER))
-		except exc.CameraConnectionException as e:
-			self._logger.warning(" %s, %s : %s" % (e.__class__.__name__, e, exc.msg(exc.CAM_CONN)),
-			                       analytics=exc.CAM_CONN)
-			if recurse_nb < MAX_PIC_THREAD_RETRIES:
-				self._logger.info("Restarting work() after some sleep")
-				self._plugin.user_notification_system.show_notifications(
-					self._plugin.user_notification_system.get_notification(
-						notification_id='warn_cam_conn_err',
-						replay=True))
-				self.stopEvent.clear()
-				if not self.stopEvent.wait(5.0):
-					self.work(recurse_nb=recurse_nb+1)
-			else:
-				self._logger.exception(" %s, %s : Recursive restart : too many times, displaying Error message." % (e.__class__.__name__, e),
-				                       analytics=exc.CAM_CONN)
-				self._plugin.user_notification_system.show_notifications(
-					self._plugin.user_notification_system.get_notification(
-						notification_id='err_cam_conn_err',
-						replay=True))
-			return
-		except Exception as e:
-			if e.__class__.__name__.startswith('PiCamera'):
-				self._logger.exception("PiCamera_Error_while_preparing_camera_%s_%s", e.__class__.__name__, e)
-			else:
-				self._logger.exception("Exception_while_preparing_camera_%s_%s", e.__class__.__name__, e)
-		self.stopEvent.set()
+			if self.is_initial_calibration:
+				self.save_debug_images = True
+	
+			if not PICAMERA_AVAILABLE:
+				self._logger.warn("Camera disabled. Not all required modules could be loaded at startup. ")
+				self.stopEvent.set()
+				return
+	
+			self._logger.debug("Starting the camera now.")
+			try:
+				with MrbCamera(octoprint_mrbeam.camera.MrbPicWorker(maxSize=2, debug=self.debug),
+							   # framerate=8,
+							   resolution=octoprint_mrbeam.camera.LEGACY_STILL_RES,  # TODO camera.DEFAULT_STILL_RES,
+							   stopEvent=self.stopEvent,) as cam:
+					self.serve_pictures(cam, pic_settings=pic_settings, cam_params=cam_params, out_pic_size=out_pic_size)
+				if recurse_nb > 0:
+					self._logger.info("Camera recovered")
+					self._analytics_handler.add_camera_session_details(exc.msgForAnalytics(exc.CAM_CONNRECOVER))
+			except exc.CameraConnectionException as e:
+				self._logger.warning(" %s, %s : %s" % (e.__class__.__name__, e, exc.msg(exc.CAM_CONN)),
+									   analytics=exc.CAM_CONN)
+				if recurse_nb < MAX_PIC_THREAD_RETRIES:
+					self._logger.info("Restarting work() after some sleep")
+					self._plugin.user_notification_system.show_notifications(
+						self._plugin.user_notification_system.get_notification(
+							notification_id='warn_cam_conn_err',
+							replay=True))
+					self.stopEvent.clear()
+					if not self.stopEvent.wait(5.0):
+						self.work(recurse_nb=recurse_nb+1)
+				else:
+					self._logger.exception(" %s, %s : Recursive restart : too many times, displaying Error message." % (e.__class__.__name__, e),
+										   analytics=exc.CAM_CONN)
+					self._plugin.user_notification_system.show_notifications(
+						self._plugin.user_notification_system.get_notification(
+							notification_id='err_cam_conn_err',
+							replay=True))
+				return
+			except Exception as e:
+				if e.__class__.__name__.startswith('PiCamera'):
+					self._logger.exception("PiCamera_Error_while_preparing_camera_%s_%s", e.__class__.__name__, e)
+				else:
+					self._logger.exception("Exception_while_preparing_camera_%s_%s", e.__class__.__name__, e)
+			self.stopEvent.set()
+		except:
+			self._logger.exception("Exception in PhotoCreator thread: ")
+			
 
 	def serve_pictures(self, cam, pic_settings=None, cam_params=None, out_pic_size=None):
 		"""
@@ -393,6 +406,11 @@ class PhotoCreator(object):
 			time.sleep(.2)
 		# The lid didn't open during waiting time
 		cam.async_capture()
+		
+		prev_img_sent_to_analytics = False
+		min_pix_amount = self._settings.get(['cam', 'markerRecognitionMinPixel'])
+		i = 0
+		j = 0
 		while not self.stopping:
 			if self.refresh_pic_settings.isSet():
 				self.refresh_pic_settings.clear()
@@ -402,6 +420,12 @@ class PhotoCreator(object):
 				prev=None # Forces to take a new picture
 			cam.wait()  # waits until the next picture is ready
 			if self.stopping: break
+			
+			# send image to analytics
+			if prev is not None and self._flag_send_img_to_analytics and not prev_img_sent_to_analytics:
+				self._send_last_img_to_analytics(prev, 'user', markers, missed, min_pix_amount, analytics, force_upload=True, notify_user=True)
+				prev_img_sent_to_analytics = True
+			
 			latest = cam.lastPic() # gets last picture given by cam.worker
 			cam.async_capture()  # starts capture with new settings
 			if latest is None:
@@ -437,6 +461,8 @@ class PhotoCreator(object):
 				else:
 					time.sleep(.8) # Let the raspberry breathe a bit (prevent overheating)
 					continue
+			i += 1
+			prev_img_sent_to_analytics = False
 			# Get the desired scale and quality of the picture to serve
 			upscale_factor , quality = pic_qualities[pic_qual_index]
 			scaled_output_size = tuple(int(upscale_factor * i) for i in out_pic_size)
@@ -448,6 +474,7 @@ class PhotoCreator(object):
 				dist, mtx = None, None
 			color = {}
 			marker_size = {}
+			min_pix_amount = self._settings.get(['cam', 'markerRecognitionMinPixel'])
 			# NOTE -- prepareImage is bloat, TODO spill content here
 			workspaceCorners, markers, missed, err, analytics = prepareImage(
 				input_image=latest,
@@ -462,7 +489,7 @@ class PhotoCreator(object):
 				debug_out=self.save_debug_images,  # self.save_debug_images,
 				undistorted=True,
 				stopEvent=self.stopEvent,
-				min_pix_amount=self._settings.get(['cam', 'markerRecognitionMinPixel']),
+				min_pix_amount=min_pix_amount,
 				threads=4
 			)
 			if self.stopping: return False, None, None, None, None
@@ -495,6 +522,16 @@ class PhotoCreator(object):
 				error=err,
 				extra=analytics
 			)
+			
+			# upload image to analytics if end is dev
+			if self._plugin.is_dev_env() and self._settings.get(['dev', 'automatic_camera_image_upload'])\
+					and latest is not None \
+					and (
+						i <= 10 or
+						(i > 10 and i % 10 == 0)):
+					j += 1
+					self._send_last_img_to_analytics(latest, 'dev_auto', markers, missed, min_pix_amount, analytics, force_upload=(j%10==0), notify_user=False)
+			
 		cam.stop_preview()
 		if session_details['num_pics'] > 0:
 			session_details.update(
@@ -505,15 +542,15 @@ class PhotoCreator(object):
 
 	# @logme(True)
 	def _add_result_to_analytics(self,
-				     session_details,
-				     markers,
-				     colors={},
-				     marker_size={},
-				     increment_pic=False,
-				     colorspace='hsv',
-				     upload_speed=None,
-				     error=None,
-				     extra=None):
+					 session_details,
+					 markers,
+					 colors={},
+					 marker_size={},
+					 increment_pic=False,
+					 colorspace='hsv',
+					 upload_speed=None,
+					 error=None,
+					 extra=None):
 		if extra is None: extra={}
 		assert(type(markers) is dict)
 		def add_to_stat(pos, avg, std, mass):
@@ -536,9 +573,9 @@ class PhotoCreator(object):
 				if qd in markers.keys() and markers[qd] is not None:
 					_marker = np.asarray(markers[qd])
 					_n_avg, _n_std = add_to_stat(_marker,
-					                             _s_marker['avg_pos'],
-					                             _s_marker['std_pos'],
-					                             _s_marker['found'])
+												 _s_marker['avg_pos'],
+												 _s_marker['std_pos'],
+												 _s_marker['found'])
 					_s_marker['avg_pos'] = _n_avg.tolist()
 					_s_marker['std_pos'] = _n_std.tolist()
 					_s_marker['found'] += 1
@@ -553,7 +590,73 @@ class PhotoCreator(object):
 
 		except Exception as ex:
 			self._logger.exception('Exception_in-_save__s_for_analytics-_{}'.format(ex))
-
+	
+	def send_last_img_to_analytics(self):
+		self._flag_send_img_to_analytics = True
+		
+	def _send_last_img_to_analytics(self, img, trigger, markers, missed, min_pix_amount, analytics, force_upload=False, notify_user=False):
+		self._flag_send_img_to_analytics = False
+		t = threading.Thread(target=self._send_last_img_to_analytics_threaded,
+							 name='send_last_img_to_analytics',
+							 kwargs={'img': img,
+									 'trigger': trigger,
+									 'markers': markers,
+									 'missed': missed,
+									 'min_pix_amount': min_pix_amount,
+									 'analytics_data': analytics,
+									 'force_upload': force_upload,
+									 'notify_user': notify_user,
+									 })
+		t.daemon = True
+		t.start()
+		
+	def _send_last_img_to_analytics_threaded(self, img, trigger, markers, missed, min_pix_amount, analytics_data, force_upload=False, notify_user=False):
+		try:
+			if img is not None:
+				img_format = 'jpg'
+				_, img = cv2.imencode('.{}'.format(img_format), img, [int(cv2.IMWRITE_JPEG_QUALITY), 80])
+				img = base64.b64encode(img)
+				
+				analytics_str = ''
+				try:
+					analytics_str = str(analytics_data)
+				except:
+					self._logger.warn("_send_last_img_to_analytics_threaded() Can not convert analytics_data to json: %s", analytics_data)
+				
+				dist = ''
+				path_to_cam_params = self._settings.get(["cam", "lensCalibrationFile"])
+				try:
+					with open(path_to_cam_params, 'r') as f:
+						dist = base64.b64encode(f.read())
+				except:
+					self._logger.warn("_send_last_img_to_analytics_threaded() Can not read npz file: %s", path_to_cam_params)
+					
+				payload = {'img_base64': img,
+						   'img_type': img_format,
+						   'distortion_matrix_base64': dist,
+						   'trigger': trigger,
+						   'metadata': {
+							   'markers_found': ', '.join(markers.keys()),
+							   'markers_missed': ', '.join(missed),
+							   'min_pix_amount': min_pix_amount,
+							   'analytics': analytics_str,
+							   'trigger': trigger},
+						   }
+				self._logger.info("_send_last_img_to_analytics_threaded() trigger: %s, img_base64 len: %s, force_upload: %s, metadata: %s",
+								  trigger, len(img), force_upload, payload['metadata'])
+				self._analytics_handler.add_camera_image(payload)
+				if force_upload:
+					self._analytics_handler.upload()
+					
+				if notify_user:
+					self._plugin.user_notification_system.show_notifications(
+						self._plugin.user_notification_system.get_notification(
+							notification_id='msg_cam_image_analytics_sent'))
+			else:
+				self._logger.info("_send_last_img_to_analytics_threaded() no image available")
+		except:
+			self._logger.exception("Exception in _send_last_img_to_analytics_threaded()")
+	
 	def _ready_to_send_pic(self, correction_result, force=False):
 		self.last_correction_result = correction_result
 		self._pic_available.set()
@@ -604,11 +707,11 @@ def blank_session_details():
 		'marker_px_size': []
 	}
 	session_details = {'num_pics': 0,
-	                   'markers': {'NW': copy.deepcopy(_init_marker),
-	                               'SE': copy.deepcopy(_init_marker),
-	                               'SW': copy.deepcopy(_init_marker),
-	                               'NE': copy.deepcopy(_init_marker)},
-	                   'errors': {},
-	                   'avg_upload_speed': None,
-	                   'settings_min_marker_size': None}
+					   'markers': {'NW': copy.deepcopy(_init_marker),
+								   'SE': copy.deepcopy(_init_marker),
+								   'SW': copy.deepcopy(_init_marker),
+								   'NE': copy.deepcopy(_init_marker)},
+					   'errors': {},
+					   'avg_upload_speed': None,
+					   'settings_min_marker_size': None}
 	return session_details

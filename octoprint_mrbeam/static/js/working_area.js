@@ -2038,6 +2038,13 @@ $(function(){
 			$('#quick_text_dialog').on('hidden', function(){
 				self._qt_dialogClose();
 			});
+
+			// opens preview pane on the left if hovered over one of the pink markers on the working area
+			$('#camera_markers circle').mouseenter(function(){
+                if (!$('#wa_view_settings_body').hasClass('in')) {
+                    $('#wa_view_settings_body').collapse('toggle');
+                }
+            });
 		};
 
 		self.onTabChange = function(current, prev){

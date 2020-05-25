@@ -286,7 +286,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				iobeam_disable_warnings=False,  # for development on non-MrBeam devices
 				suppress_migrations=False,  # for development on non-MrBeam devices
 				support_mode=False,
-				grbl_auto_update_enabled=True
+				grbl_auto_update_enabled=True,
+				automatic_camera_image_upload=True,  # only in env=DEV
 			),
 			laser_heads=dict(
 				filename='laser_heads.yaml'
@@ -1453,6 +1454,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			reset_gantry_usage=[],
 			material_settings=[],
 			on_camera_picture_transfer=[],
+			send_camera_image_to_analytics=[],
 			leds=[],
 			generate_backlash_compenation_pattern_gcode=[],
 			compensate_obj_height=[],
@@ -1505,7 +1507,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			# TODO select which Mr Beam version to parse the materials for
 			# TODO Select "Mr Beam II" laserhead for the DreamCut Ready variant
 			# TODO ANDY Load materials when the user logs in as well
-
 			try:
 				return make_response(jsonify(parse_csv(laserhead=self.get_model_id())), 200)  # TODO : Give parse_csv the right laserhead type
 			except Exception as err:
@@ -1513,6 +1514,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				return make_response(err.message, 500)
 		elif command == "on_camera_picture_transfer":
 			self.lid_handler.on_front_end_pic_received()
+		elif command == "send_camera_image_to_analytics":
+			self.lid_handler.send_camera_image_to_analytics()
 		elif command == "leds":
 			# if ("brightness" in data and isinstance(data["brightness"], (int))) or ("leds" in data and isinstance(data["fps"], (int))):
 			self.set_leds_update(data)
