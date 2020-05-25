@@ -285,7 +285,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				iobeam_disable_warnings=False,  # for development on non-MrBeam devices
 				suppress_migrations=False,  # for development on non-MrBeam devices
 				support_mode=False,
-				grbl_auto_update_enabled=True
+				grbl_auto_update_enabled=True,
+				automatic_camera_image_upload=True,  # only in env=DEV
 			),
 			laser_heads=dict(
 				filename='laser_heads.yaml'

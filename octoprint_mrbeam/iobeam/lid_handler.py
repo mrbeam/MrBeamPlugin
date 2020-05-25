@@ -524,7 +524,9 @@ class PhotoCreator(object):
 			)
 			
 			# upload image to analytics if end is dev
-			if self._plugin.is_dev_env() and latest is not None and (
+			if self._plugin.is_dev_env() and self._settings.get(['dev', 'automatic_camera_image_upload'])\
+					and latest is not None \
+					and (
 						i <= 10 or
 						(i > 10 and i % 10 == 0)):
 					j += 1
