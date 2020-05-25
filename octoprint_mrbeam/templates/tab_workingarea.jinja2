@@ -70,7 +70,7 @@
                                                                 <strong>Preview not accurate:</strong><br/>
                                                                 The preview camera image might not be completely accurate.
                                                                 Make sure that all four markers are visible.
-                                                                <a href="#" class="muted"><i class="icon-external-link"></i> More info</a><br/>
+                                                                <a href="#" style="font-size: 11px"><i class="icon-external-link"></i> More info</a><br/>
                                                                 <a href="#" data-toggle="modal" data-target="#analytics_send_image_modal"><i class="fa fa-heartbeat"></i> Send image to Mr&nbsp;Beam</a>
                                                             </p>
                                                         </div>
@@ -78,32 +78,34 @@
                                                         <div id="analytics_send_image_modal" class="modal hide fade" >
                                                             <div class="modal-header">
                                                                 <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
-                                                                <h3><i class="icon-camera"></i> {{ _('Send Camera Image to Mr&nbsp;Beam') }}</h3>
+                                                                <h3><i class="fa fa-heartbeat"></i> {{ _('Send image to Mr&nbsp;Beam') }}</h3>
                                                             </div>
                                                             <div class="modal-body">
                                                                 <div>
-                                                                    Help us improving the camera system by sending us this camera image which is currently shown in the working area preview for analysis.
-                                                                    This helps us to improve the camera system to handle even more different light conditions.
+                                                                    <p>Send the current image to Mr Beam Lasers for review.</p>
+                                                                    <p>This helps us to improve the camera system to work better in even more difficult conditions.</p>
                                                                 </div>
 
                                                                 <div data-bind="visible: analytics.analyticsEnabled()">
                                                                     <div>
-                                                                        Please send this image only if:
                                                                         <ul>
-                                                                            <li>All four markers are visible (not covered by any material)</li>
-                                                                            <li>You agree that the image is sent to Mr Beam Lasers. Mr Beam may store and use this image to improve it's services. Mr Beam will not publish the image nor sell it to third parties. </li>
+                                                                            <li>Mr Beam Lasers might store your image in it's camera training data set.</li>
+                                                                            <li>Please understand that Mr Beam Lasers can not send you any response regarding this image.</li>
+                                                                            <li>Mr Beam Lasers will not publish the image nor sell it to third parties.</li>
+                                                                            {% set privacy_policy = _('/plugin/mrbeam/static/docs/MrBeamAnalytics-PrivacyPolicy_en.pdf') %}
+                                                                            <li>{{ _("Your image is sent within the context of Mr Beam Analytics. (See %(open)sprivacy policy%(close)s.)", open='<a href="%s" target="_blank">' % privacy_policy, close='</a>')|safe }}</li>
+                                                                            <li>The upload of your image to Mr Beam's serves will happen in the background. If you're not online, the image will be uploaded next time you're online.</li>
                                                                         </ul>
                                                                     </div>
                                                                     <div>
-                                                                        If you're not connected to the Internet at the moment, the image will be sent once you're Mr Beam is online again.
-                                                                    </div>
-                                                                    <div>
-                                                                        Thank you!
+                                                                        <p>We appreciate your support. Thank you!</p>
                                                                     </div>
                                                                 </div>
                                                                 <div data-bind="visible: !analytics.analyticsEnabled()">
-                                                                    Send Camera Image is part of Mr&nbsp;Beam Analytics which needs to be enabled to use this functionality.
-                                                                    Please go to <a href="#" data-dismiss="modal" data-toggle="tab" class="settings_analytics_link">Mr&nbsp;Beam Analytics</a> to enable it.
+                                                                    <h5><i class="icon-warning-sign"></i> Activate Mr Beam Analytics:</h5>
+                                                                    <p>
+                                                                    This functionality is part of Mr&nbsp;Beam Analytics which needs to be enabled to use this functionality.
+                                                                    Please go to <a href="#" data-dismiss="modal" data-toggle="tab" class="settings_analytics_link">Mr&nbsp;Beam Analytics</a> to enable it.</p>
                                                                 </div>
 
                                                             </div>
