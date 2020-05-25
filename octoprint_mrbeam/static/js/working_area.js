@@ -37,10 +37,11 @@ $(function(){
 		self.svgDPI = function(){return 90}; // initial value, gets overwritten by settings in onAllBound()
 		self.dxfScale =  function(){return 1}; // initial value, gets overwritten by settings in onAllBound()
 		self.previewImgOpacity = ko.observable(1);
-		// TODO coordGridColor in observable
+
+		self.coord_pattern_marker_color = '#eeeeee';
 		self.previewImgOpacity.subscribe(function(newVal){
-			let col = newVal > 0.25 ? '#eeeeee':'#999999';
-			$('#coord_pattern_marker').attr('stroke', col);
+			self.coord_pattern_marker_color = newVal > 0.25 ? '#eeeeee':'#999999';
+			$('#coord_pattern_marker').attr('stroke', self.coord_pattern_marker_color);
 			if(newVal !== self.settings.settings.plugins.mrbeam.cam.previewOpacity()){
 				if (self.settings.savetimer !== undefined) {
 					clearTimeout(self.settings.savetimer);
@@ -54,6 +55,7 @@ $(function(){
 					}, 2000);
 			}
 		});
+		
 
 		self.workingAreaWidthMM = ko.computed(function(){
 			return self.profile.currentProfileData().volume.width();
@@ -1753,10 +1755,9 @@ $(function(){
 					yPatternOffset = 0;
 				}
 				
-				// TODO get stroke color from observable.
 				var marker = snap.path("M9,10h2M10,9v2").attr({
 					id: "coord_pattern_marker",
-					stroke: "#eeeeee",
+					stroke: self.coord_pattern_marker_color,
 					fill: "none", "stroke-width":"0.5"
 				});
 				//<path d="M8,10h4M10,8v4" stroke="#e25303" fill="none" stroke-width="0.5"></path>
