@@ -236,6 +236,9 @@
 			const dyMM = self._convertToViewBoxUnits(dy);
 
 			const sss = self.session.scale;
+			sss.dxMM = dxMM;
+			sss.dyMM = dyMM;
+			
 			let scaleX = sss.signX * (dxMM + sss.mx - sss.cx) / sss.refX
 			let scaleY = sss.signY * (dyMM + sss.my - sss.cy) / sss.refY;
 			
@@ -248,15 +251,14 @@
 				const formerSignX = Math.sign(self.session.originMatrix.a);
 				const formerSignY = Math.sign(self.session.originMatrix.d);
 				let formerScale;
-				console.log(newSx, newSy);
 				if(Math.abs(newSx) <  Math.abs(newSy)){
 					scaleY = signY * Math.abs(scaleX);
 					formerScale = Math.abs(self.session.originMatrix.a);
-					console.log('A', signX, signY, self.session.originMatrix.a.toFixed(2), self.session.originMatrix.a.toFixed(2));
+					sss.dominantAxis = 'x';
 				} else {
 					scaleX = signX * Math.abs(scaleY);
 					formerScale = Math.abs(self.session.originMatrix.d);
-					console.log('B', signX, signY,  self.session.originMatrix.a.toFixed(2), self.session.originMatrix.a.toFixed(2));
+					sss.dominantAxis = 'y';
 				}
 				sss.sx = scaleX * formerScale * formerSignX;
 				sss.sy = scaleY * formerScale * formerSignY; 
@@ -309,7 +311,7 @@
 		}
 		
 		self._sessionReset = function(){
-			self.paper.selectAll('.transformVis').attr({d:''});
+			//self.paper.selectAll('.transformVis').attr({d:''});
 			self.session.translate = {dx: 0, dy:0};
 			self.session.scale = {sx: 1, sy: 1, dx: 0, dy: 0};
 			self.session.rotate = {r: 0, cx: 0, cy: 0};
@@ -330,23 +332,20 @@
 			if(self.session.rotate.r !== 0) {
 				self._visualizeRotate();
 			}
-			if(self.session.scale.sx !== 1) {
-				self._visualizeScaleX();
+			if(self.session.scale.sx !== 1 || self.session.scale.sy !== 1) {
+				self._visualizeScale();
 			}
-			if(self.session.scale.sy !== 1) {
-				self._visualizeScaleY();
-			}
+
 		};
 
 		self._visualizeTranslate = function(){
-			self.paper.selectAll('#translateVisH, #translateVisV').remove(); // TODO more efficiency
 			const startXh = self.session.translate.cx;
 			const startYh = 10;
 			const startXv = 10;
 			const startYv = self.session.translate.cy;
 			const dX = 'M'+ startXh+','+startYh+'v-5h'+self.session.translate.dx+'v5';
-			const dY = 'M'+ startXv+','+startYv+'h-5v'+self.session.translate.dy+'h5';
 			self.translateXVis.attr('d', dX);
+			const dY = 'M'+ startXv+','+startYv+'h-5v'+self.session.translate.dy+'h5';
 			self.translateYVis.attr('d', dY);
 		};
 
@@ -360,23 +359,23 @@
 			self.rotateVis.attr('d', 'M'+ ax+','+ay+'L'+cx+','+cy+'L'+bx+','+by);
 		};
 		
-		self._visualizeScaleX = function () {
+		self._visualizeScale = function () {
+			const mouseX = self.session.scale.mx + self.session.scale.dxMM; 
+			const mouseY = self.session.scale.my + self.session.scale.dyMM; 
 			const dist = 15;
 			const cx = self.session.scale.cx;
-			const d = cx <= self.session.bbox.x ? -dist : dist;
-			const cy = self.session.scale.cy + d;
+			const cy = self.session.scale.cy;
+			const mirrorX = mouseY < cy ? 1 : -1;
+			const mirrorY = mouseX < cx ? 1 : -1;
 			
-			self.scaleXVis.attr('d', 'M' + cx + ',' + cy + 'v-10h' + (self.session.scale.refX * self.session.scale.sx) + 'v10');
+			const attrDx = self.session.scale.sx !== 1 ? `M${cx},${cy}v${dist*mirrorX}H${mouseX}v${-dist*mirrorX}` : ''
+			self.scaleXVis.attr('d', attrDx);
+			const attrDy = self.session.scale.sy !== 1 ? `M${cx},${cy}h${dist*mirrorY}V${mouseY}h${-dist*mirrorY}` : ''
+			self.scaleYVis.attr('d', attrDy);
+			
 		}
 		
-		self._visualizeScaleY = function () {
-			const dist = 15;
-			const cy = self.session.scale.cy;
-			const d = cy <= self.session.bbox.y ? -dist : dist;
-			const cx = self.session.scale.cx + d;
-			
-			self.scaleYVis.attr('d', 'M' + cx + ',' + cy + 'h-10v' + (self.session.scale.refY * self.session.scale.sy) + 'h10');
-		}
+
 		
 	
 		/**
@@ -465,12 +464,12 @@
 			self.session.bbox = null;
 
 			// reset handles
-			self.translateHandle.attr({x:0, y:0, width:0, height:0, transform: ''});
-			self.scaleHandleNW.transform('');
-			self.scaleHandleSW.transform('');
-			self.scaleHandleNE.transform('');
-			self.scaleHandleSE.transform('');
-			self.rotHandle.transform('');
+//			self.translateHandle.attr({x:0, y:0, width:0, height:0, transform: ''});
+//			self.scaleHandleNW.transform('');
+//			self.scaleHandleSW.transform('');
+//			self.scaleHandleNE.transform('');
+//			self.scaleHandleSE.transform('');
+//			self.rotHandle.transform('');
 		};
 
 		self._convertToViewBoxUnits = function(val){
