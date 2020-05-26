@@ -129,7 +129,7 @@ class BoardDetectorDaemon(Thread):
 
 	def add(self, image, chessboardSize=(CB_ROWS, CB_COLS),
 	        state=STATE_PENDING_CAMERA ): #, rough_location=None, remote=None):
-		self.state.add(image, chessboardSize, state=state)
+		self.state.add(image, chessboardSize, state=state, index=self.path_inc)
 		self.path_inc += 1
 
 	def remove(self, path):
@@ -338,6 +338,20 @@ def handleBoardPicture(image, count, board_size, q_out=None):
 
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 	success, found_pattern = findBoard(gray, board_size)
+	
+	center = None
+	bbox = None
+	try:
+		_c = np.average(found_pattern, axis=0)
+		center = (float(_c[0,0]), float(_c[0,1]))
+	except:
+		pass # TODO log this
+	
+	try:
+		bbox = (float(np.min(found_pattern[:,:,0])), float(np.max(found_pattern[:,:,0])),
+		        float(np.min(found_pattern[:,:,1])), float(np.max(found_pattern[:,:,1])))
+	except:
+		pass # TODO log this
 
 	drawnImg = cv2.drawChessboardCorners(img, board_size, found_pattern, success, )
 	cv2.imwrite(path, drawnImg)
@@ -346,7 +360,9 @@ def handleBoardPicture(image, count, board_size, q_out=None):
 			path=path,
 			state=STATE_SUCCESS if success else STATE_FAIL,
 			board_size=board_size,
-			found_pattern=found_pattern
+			found_pattern=found_pattern,
+			board_center=center,
+			board_bbox=bbox,
 		))
 	if success:
 		# if callback != None: callback(path, STATE_SUCCESS, board_size=board_size, found_pattern=found_pattern)
@@ -418,17 +434,18 @@ class calibrationState(dict):
 		returnState = dict(imageSize=self.imageSize,
 				   lensCalibration=self.lensCalibration['state'],
 				   pictures=self.clean())
-		self._logger.info("Changed state : \n%s" % returnState)
+		self._logger.info("Changed state returnState: \n%s", returnState)
 		if self.changeCallback != None:
 			self.changeCallback(returnState)
 
-	def add(self, path, board_size=(CB_ROWS, CB_COLS), state=STATE_PENDING_CAMERA):
+	def add(self, path, board_size=(CB_ROWS, CB_COLS), state=STATE_PENDING_CAMERA, index=-1):
 		self[path] = dict(
 			tm_added=time.time(),
 			state=state,
 			tm_proc=None,
 			tm_end=None,
-			board_size=board_size
+			board_size=board_size,
+			index=index,
 		)
 		self.onChange()
 
@@ -518,20 +535,21 @@ class calibrationState(dict):
 	def clean(self):
 		"Allows to be pickled"
 		def _isClean(elm):
-			return type(elm) in [str, int, float]
+			return type(elm) in [basestring, str, int, float, bool]
 		def _clean(d):
 			if isinstance(d, dict):
 				ret = {}
 				for k, v in d.items():
 					res = _clean(v)
-					if res is not None: ret[k]=res
+					# if res is not None: ret[k]=res
+					ret[k]=res
 				return ret
 			elif type(d) in [list, tuple]:
 				ret = []
 				for elm in d:
 					res = _clean(elm)
-					if res is not None:
-						ret.append(res)
+					# if res is not None:
+					ret.append(res)
 				return type(d)(ret)
 			else:
 				if _isClean(d): return d

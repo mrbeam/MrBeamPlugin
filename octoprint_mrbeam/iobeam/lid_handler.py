@@ -140,7 +140,7 @@ class LidHandler(object):
 		elif event == IoBeamEvents.ONEBUTTON_RELEASED \
 		     and self.lensCalibrationStarted \
 		     and payload < 5.0:
-			self._logger.warning("onEvent() ONEBUTTON_RELEASED - payload : %s" % payload)
+			self._logger.info("onEvent() ONEBUTTON_RELEASED - payload : %s" % payload)
 			self.saveRawImg()
 			# TODO add LED EVENT
 

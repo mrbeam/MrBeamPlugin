@@ -384,9 +384,14 @@ $(function () {
 						url: '',
 						state: 'missing'
 					});
-					
 				}
-				
+
+				arr.sort(function(l,r){
+				    return l.index < r.index ? -1 : 1;
+                });
+
+				console.log("TEJA_LOOK_HERE status update form server: ", arr)
+
 				self.rawPicSelection(arr);
 				self.lensCalibrationRunning(_d.lensCalibration === "processing");
 			}
