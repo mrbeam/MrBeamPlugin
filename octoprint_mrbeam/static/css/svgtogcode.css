@@ -952,3 +952,28 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	left: var(--dist_horizontal);
 	right: var(--dist_horizontal);
 }
+
+#qa_images li.example {
+	position: relative;
+	list-style:none; 
+	margin-bottom: 4px;
+}
+#qa_images li.example::after {
+	position: absolute;
+	right: 0.5rem;
+	top: 1rem;
+	font-size: 3rem;
+	font-family: FontAwesome3;
+	font-weight: normal;
+	font-style: normal;
+	text-decoration: inherit;
+	-webkit-font-smoothing: antialiased;
+}
+#qa_images li.example.good_example::after {
+	content: "\f00c";
+	color: #00d400;
+}
+#qa_images li.example.bad_example::after {
+	content: "\f00d";
+	color: red;
+}

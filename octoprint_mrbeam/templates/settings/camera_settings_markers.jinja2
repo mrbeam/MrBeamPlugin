@@ -212,32 +212,41 @@
 				</div>
 				<div class="tab-pane" id="tab_calibration_qa">
 					<div id="qa_images">
-						<div class="qa_img_wrapper">
-							<image data-bind="attr: {src: qa_pic_raw}" />
+						<div>
+							<div class="qa_img_wrapper">
+								<image data-bind="attr: {src: qa_pic_raw}" />
+							</div>
 						</div>
 						<div class="qa_text">
 							<h3>{{ _('Camera alignment') }}</h3>
 							<ul>
 								<li>{{ _('4 markers are visible.') }}</li>
 								<li>{{ _('Laserhead is not covering a marker.') }}</li>
-								<li>{{ _('') }}</li>
+								<li class="example good_example"><img src="/plugin/mrbeam/static/img/cam_calibration/camalignment_ok.jpg" /></li>
+								<li class="example bad_example"><img src="/plugin/mrbeam/static/img/cam_calibration/camalignment_marker_cropped.jpg" /></li>
+								<li class="example bad_example"><img src="/plugin/mrbeam/static/img/cam_calibration/camalignment_marker_covered.jpg" /></li>
 							</ul>
 						</div>
-						<div class="qa_img_wrapper">
-							<image data-bind="attr: {src: qa_pic_undistorted}" />
-							<div id="qa_undistorted_guides"></div>
+						<div>
+							<div class="qa_img_wrapper">
+								<image data-bind="attr: {src: qa_pic_undistorted}" />
+								<div id="qa_undistorted_guides"></div>
+							</div>
 						</div>
 						<div class="qa_text">
 							<h3>{{ _('Lens correction') }}</h3>
 							<ul>
 								<li>{{ _('4 markers are within the green rectangle') }}</li>
 								<li>{{ _('No black pixels are in the green rectangle') }}</li>
-								<li>{{ _('') }}</li>
+								<li class="example good_example"><img src="/plugin/mrbeam/static/img/cam_calibration/undistorted_ok.jpg" /></li>
+								<li class="example bad_example"><img src="/plugin/mrbeam/static/img/cam_calibration/undistorted_bad1.jpg" /></li>
 							</ul>
 						</div>
-						<div class="qa_img_wrapper">
-							<image data-bind="attr: {src: qa_pic_cropped}" />
-							<div id="qa_cropped_guides"></div>
+						<div>
+							<div class="qa_img_wrapper">
+								<image data-bind="attr: {src: qa_pic_cropped}" />
+								<div id="qa_cropped_guides"></div>
+							</div>
 						</div>
 						<div class="qa_text">
 							<h3>{{ _('Marker detection & cropping') }}</h3>
