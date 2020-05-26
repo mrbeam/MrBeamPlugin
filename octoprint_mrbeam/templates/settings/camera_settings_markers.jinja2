@@ -5,6 +5,7 @@
 		<ul id="camera-calibration-tabs" class="nav nav-pills"> 
 			<li><a href="#tab_lens_calibration" data-toggle="tab" id="lenscal_tab_btn">{{ _('Lens Calibration') }}</a></li>
 			<li><a href="#tab_corner_calibration" data-toggle="tab" id="cornercal_tab_btn">{{ _('Corner Calibration') }}</a></li>
+			<li><a href="#tab_calibration_qa" data-toggle="tab" id="qacal_tab_btn">{{ _('QA') }}</a></li>
 		</ul>
 	
 		<div class="tabbable">
@@ -209,6 +210,47 @@
 					</div>
 					
 				</div>
+				<div class="tab-pane" id="tab_calibration_qa">
+					<div id="qa_images">
+						<div class="qa_img_wrapper">
+							<image data-bind="attr: {src: qa_pic_raw}" />
+						</div>
+						<div class="qa_text">
+							<h3>{{ _('Camera alignment') }}</h3>
+							<ul>
+								<li>{{ _('4 markers are visible.') }}</li>
+								<li>{{ _('Laserhead is not covering a marker.') }}</li>
+								<li>{{ _('') }}</li>
+							</ul>
+						</div>
+						<div class="qa_img_wrapper">
+							<image data-bind="attr: {src: qa_pic_undistorted}" />
+							<div id="qa_undistorted_guides"></div>
+						</div>
+						<div class="qa_text">
+							<h3>{{ _('Lens correction') }}</h3>
+							<ul>
+								<li>{{ _('4 markers are within the green rectangle') }}</li>
+								<li>{{ _('No black pixels are in the green rectangle') }}</li>
+								<li>{{ _('') }}</li>
+							</ul>
+						</div>
+						<div class="qa_img_wrapper">
+							<image data-bind="attr: {src: qa_pic_cropped}" />
+							<div id="qa_cropped_guides"></div>
+						</div>
+						<div class="qa_text">
+							<h3>{{ _('Marker detection & cropping') }}</h3>
+							<ul>
+								<li>{{ _('Green rectangle is on the engraved rectangle') }}</li>
+								<li>{{ _('engraved rectangle egdes are straight and parallel to the green rectangle edges') }}</li>
+								<li>{{ _('') }}</li>
+							</ul>
+						</div>
+						
+					</div>
+				</div>
+
 			</div>
 			<div style="margin-top:1em;">
 				<!-- Corner calibration -->

@@ -909,3 +909,46 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	height: 4em;
 	
 }
+
+#qa_images h3 {
+	margin-top: 0;
+}
+
+#qa_images {
+	display: grid;
+	grid-template-columns: 2fr 1fr;
+	margin: 0;
+	width: 100%;
+	grid-row-gap: 1em;
+	grid-column-gap: 1em;
+
+}
+
+.qa_img_wrapper {
+	position: relative;
+}
+
+#qa_cropped_guides,
+#qa_undistorted_guides {
+	border: 1px solid #00ff00;
+	position: absolute;
+}
+
+
+#qa_undistorted_guides {
+	--dist_horizontal: 3%;
+	--dist_vertical: 3%;
+	top: var(--dist_vertical);
+	bottom: var(--dist_vertical);
+	left: var(--dist_horizontal);
+	right: var(--dist_horizontal);
+}
+
+#qa_cropped_guides {
+	--dist_horizontal: 20%;
+	--dist_vertical: 20%;
+	top: var(--dist_vertical);
+	bottom: var(--dist_vertical);
+	left: var(--dist_horizontal);
+	right: var(--dist_horizontal);
+}

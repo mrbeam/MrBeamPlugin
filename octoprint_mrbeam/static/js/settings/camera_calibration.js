@@ -31,6 +31,15 @@ $(function () {
 
 		self.focusX = ko.observable(0);
 		self.focusY = ko.observable(0);
+		self.qa_pic_raw = ko.computed(function(){
+			return self.camera.getTimestampedImageUrl(self.camera.rawUrl);
+		});
+		self.qa_pic_undistorted = ko.computed(function(){
+			return self.camera.getTimestampedImageUrl(self.camera.undistortedUrl);
+		});
+		self.qa_pic_cropped = ko.computed(function(){
+			return self.camera.getTimestampedImageUrl(self.camera.croppedUrl);
+		});
 		self.picType = ko.observable(""); // raw, lens_corrected, cropped
 		self.correctedMarkersVisibility = ko.observable('hidden')
 		self.croppedMarkersVisibility = ko.observable('hidden');
@@ -319,7 +328,7 @@ $(function () {
 						self.availablePic(_d['available'])
 						if (! ['raw', 'lens_corrected', 'cropped'].includes(self.picType())
 							&& ! self.lensCalibrationActive()) {
-							for (_type of ['lens_corrected', 'raw']) {
+							for (let _type of ['lens_corrected', 'raw']) {
 								if (self.availablePic()[_type]) {
 									self.picType(_type);
 									break;
@@ -339,7 +348,7 @@ $(function () {
 					// check if all markers are found and image is good for calibration
 					if (self.cal_img_ready()) {
 						// console.log("Remembering markers for Calibration", markers);
-						_tmp = data['beam_cam_new_image']['markers_pos'];
+						let _tmp = data['beam_cam_new_image']['markers_pos'];
 						//	i, j -> x, y conversion
 						['NW', 'NE', 'SE', 'SW'].forEach(function(m) {_tmp[m] = _tmp[m].reverse();} );
 						self.markersFoundPosition(_tmp)
