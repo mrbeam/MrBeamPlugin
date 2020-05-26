@@ -139,7 +139,7 @@ class LidHandler(object):
 			self.shutdown()
 		elif event == IoBeamEvents.ONEBUTTON_RELEASED \
 		     and self.lensCalibrationStarted \
-		     and payload < 1.0:
+		     and payload < 5.0:
 			self._logger.warning("onEvent() ONEBUTTON_RELEASED - payload : %s" % payload)
 			self.saveRawImg()
 			# TODO add LED EVENT
@@ -312,11 +312,12 @@ class LidHandler(object):
 		return self.boardDetectorDaemon.state.keys() # TODO necessary? Frontend update now happens via plugin message
 
 	def removeAllTmpPictures(self):
-		for filename in os.listdir(self.debugFolder):
-			if re.match(TMP_RAW_FNAME.format('[0-9]*'), filename):
-				my_path = path.join(self.debugFolder, filename)
-				self._logger.debug("Removing tmp calibration file %s" % my_path)
-				os.remove(my_path)
+		if os.path.isdir(self.debugFolder):
+			for filename in os.listdir(self.debugFolder):
+				if re.match(TMP_RAW_FNAME.format('[0-9]*'), filename):
+					my_path = path.join(self.debugFolder, filename)
+					self._logger.debug("Removing tmp calibration file %s" % my_path)
+					os.remove(my_path)
 
 	def stopLensCalibration(self):
 		self.boardDetectorDaemon.stopAsap()

@@ -957,6 +957,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# return same as the Simple Api Call
 		return self.take_undistorted_picture(is_initial_calibration=True)
 
+	@octoprint.plugin.BlueprintPlugin.route("/on_camera_picture_transfer", methods=["GET"])
+	def onCameraPictureTransfer(self):
+		self.lid_handler.on_front_end_pic_received()
+		return NO_CONTENT
+	
 	@octoprint.plugin.BlueprintPlugin.route("/calibration_save_raw_pic", methods=["GET"])
 	def onCalibrationSaveRawPic(self):
 		self.lid_handler.saveRawImg()

@@ -61,7 +61,7 @@ class LoopThread(threading.Thread):
 			try:
 				self.ret = self.t(*self.__args, **self.__kw)
 			except Exception as e:
-				self._logger.exception(" %s, %s", e.__class__.__name__, e)
+				self._logger.error("Handled exception in picamera: %s, %s", e.__class__.__name__, e)
 				raise
 			self.running.clear()
 			while not self.stopFlag.isSet() and not self.running.isSet():

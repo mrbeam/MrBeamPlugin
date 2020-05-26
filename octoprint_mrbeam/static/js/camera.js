@@ -124,8 +124,13 @@ $(function(){
                 }
                 if (this.width > 1500 && this.height > 1000) self.imgResolution('High');
                 else self.imgResolution('Low');
-                // TODO respond to backend to tell we have loaded the picture
-                OctoPrint.simpleApiCommand("mrbeam", "on_camera_picture_transfer", {})
+
+                // respond to backend to tell we have loaded the picture
+                if (INITIAL_CALIBRATION) {
+                    $.ajax({type: "GET", url: '/plugin/mrbeam/on_camera_picture_transfer'});
+                } else {
+                    OctoPrint.simpleApiCommand("mrbeam", "on_camera_picture_transfer", {})
+                }
             });
             if (!self.firstImageLoaded) {
                 img.error(function () {
