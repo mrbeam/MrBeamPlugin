@@ -1,13 +1,8 @@
 import argparse
 import textwrap
-from collections import Iterable, Mapping
-from copy import copy
+from collections import Mapping
 from threading import Event
-from types import NoneType
-# from typing import Union
-from itertools import chain
 from multiprocessing import Pool
-from fractions import Fraction
 from numpy.linalg import norm
 
 from octoprint_mrbeam.camera import RESOLUTIONS, QD_KEYS, PICAMERA_AVAILABLE
@@ -35,7 +30,7 @@ HUE_BAND_UB = 200 # if value > 180 : loops back to 0
 # Minimum and Maximum number of pixels a marker should have
 # as seen on the edge detection masks
 # TODO make scalable with picture resolution
-MIN_MARKER_PIX = 600
+MIN_MARKER_PIX = 350
 MAX_MARKER_PIX = 1500
 
 # Height (mm) from the bottom of the work area to the camera lens.

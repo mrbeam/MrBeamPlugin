@@ -121,10 +121,14 @@
 														<div class="file_list_entry preview_card" data-bind="attr: {mrb_name: name}">
 															<div class="selection_box"  data-bind="click: function(data, ev){$root.updateSelection($data, ev)}"><i class="icon icon-ok"></i></div>
 															<div class="preview" data-bind="
-																style: { 'background-image': 'url('+$root.downloadLink($data)+')' },
 																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeSVG($data); $('#wa_tab_btn').tab('show'); } },
 																css: {disabled: $root.workingArea.isPlaced($data)}
-																" ></div>
+																" >
+																<img class="lazy_loader" 
+																	 onload="this.parentElement.style.backgroundImage='url('+this.getAttribute('src')+')'; this.remove();"
+																	 onerror="this.style.display='none';"
+																	 loading="lazy" data-bind="attr: { 'src': $root.downloadLink($data) }" />
+															</div>
 															<div class="title dropdown dropup" >
 																<span class="title_shortened" data-bind="text: name, attr: {title: name}" ></span>
 																<a type="button" class="dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false">
@@ -149,10 +153,14 @@
 														<div class="file_list_entry preview_card recentjob" data-bind="attr: {mrb_name: name}">
 															<div class="selection_box"  data-bind="click: function(data, ev){$root.updateSelection($data, ev)}"><i class="icon icon-ok"></i></div>
 															<div class="preview" data-bind="
-																style: { 'background-image': 'url('+$root.downloadLink($data)+')' },
 																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeSVG($data); $('#wa_tab_btn').tab('show'); } },
 																css: {disabled: $root.workingArea.isPlaced($data)}
-																" ></div>
+																" >
+																<img class="lazy_loader" 
+																	 onload="this.parentElement.style.backgroundImage='url('+this.getAttribute('src')+')'; this.remove();"
+																	 onerror="this.style.display='none';"
+																	 loading="lazy" data-bind="attr: { 'src': $root.downloadLink($data) }" />
+															</div>
 															<div class="title dropdown dropup" >
 																<span class="title_shortened" data-bind="text: name, attr: {title: name}" ></span>
 																<a type="button" class="dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false">
@@ -204,10 +212,14 @@
 														<div class="file_list_entry preview_card" data-bind="attr: {mrb_name: name}">
 															<div class="selection_box"  data-bind="click: function(data, ev){$root.updateSelection($data, ev)}"><i class="icon icon-ok"></i></div>
 															<div class="preview" data-bind="
-																style: { 'background-image': 'url('+$root.downloadLink($data)+')' },
 																click: function() { if(!$root.workingArea.isPlaced($data)){ $root.workingArea.placeIMG($data); $('#wa_tab_btn').tab('show'); } },
 																css: {disabled: $root.workingArea.isPlaced($data)}
-																" ></div>
+																" >
+																<img class="lazy_loader" 
+																	 onload="this.parentElement.style.backgroundImage='url('+this.getAttribute('src')+')'; this.remove();"
+																	 onerror="this.style.display='none';"
+																	 loading="lazy" data-bind="attr: { 'src': $root.downloadLink($data) }" />
+															</div>
 															<div class="title dropdown dropup" >
 																<span class="title_shortened" data-bind="text: name, attr: {title: name}" ></span>
 																<a type="button" class="dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false">
