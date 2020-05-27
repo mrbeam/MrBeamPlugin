@@ -50,8 +50,8 @@ class LedEventListener(CommandTrigger):
 	LED_EVENTS[MrBeamEvents.PRINT_PROGRESS] = "mrbeam_ledstrips_cli progress:{__progress}"
 
 	# Camera Calibration Screen Events
-	LED_EVENTS[MrBeamEvents.RAW_IMAGE_TAKING_START] = "mrbeam_ledstrips_cli flash_blue:1:60"
-	# LED_EVENTS[MrBeamEvents.RAW_IMAGE_TAKING_DONE]  = "mrbeam_ledstrips_cli flash_blue:1" # flash_color:200:200:30:1:50" #color:200:200:30" # TODO undo -> last state
+	LED_EVENTS[MrBeamEvents.RAW_IMAGE_TAKING_START] = "mrbeam_ledstrips_cli flash_blue:1"
+	LED_EVENTS[MrBeamEvents.RAW_IMAGE_TAKING_DONE]  = "mrbeam_ledstrips_cli blue" # flash_color:200:200:30:1:50" #color:200:200:30" # TODO undo -> last state
 	LED_EVENTS[MrBeamEvents.RAW_IMG_TAKING_LAST]    = "mrbeam_ledstrips_cli flash_green:1:30"
 	LED_EVENTS[MrBeamEvents.LENS_CALIB_START]       = "mrbeam_ledstrips_cli blue"
 	LED_EVENTS[MrBeamEvents.LENS_CALIB_PROCESSING_BOARDS] = "mrbeam_ledstrips_cli flash_blue:3"

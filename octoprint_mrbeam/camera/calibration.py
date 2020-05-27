@@ -232,7 +232,7 @@ class BoardDetectorDaemon(Thread):
 				self._logger.info("%i / %i processes running, adding Process of image %s" % (len(runningProcs.keys()),
 													     self.procs.value,
 													     path))
-				self._logger.info("current state :\n%s" % self.state)
+				# self._logger.info("current state :\n%s" % self.state)
 				board_size = self.state[path]['board_size']
 				args = (path, count, board_size, resultQueue)
 				runningProcs[path] = Process(target=handleBoardPicture, args=args)

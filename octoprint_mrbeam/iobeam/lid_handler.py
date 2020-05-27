@@ -266,40 +266,49 @@ class LidHandler(object):
 		self.boardDetectorDaemon.state.onChange()
 
 	def saveRawImg(self):
-		picture_num_in_board_calib_session = self.boardDetectorDaemon.next_inc()
-		imgName= TMP_RAW_FNAME.format(picture_num_in_board_calib_session)
-		# TODO debug/raw.jpg -> copy image over
-		# TODO careful when deleting pic + setting new name -> hash
-		if self._photo_creator and \
-		   self._photo_creator.active and \
-		   not self._photo_creator.stopping:
-			self._logger.warning("Saving new picture %s" % imgName)
-			# take a new picture and save to the specific path
-			self._photo_creator.saveRaw = imgName
-			self.takeNewPic()
-			imgPath = path.join(self.debugFolder, imgName)
-			if path.exists(imgPath):
-				os.remove(imgPath)
-			# Tell the boardDetector to listen for this file
-			self.boardDetectorDaemon.add(imgPath)
-			_s = self.boardDetectorDaemon.state
-			n = len(_s.getAllPending()) + len(_s.getSuccesses()) + len(_s.getProcessing())
-			if n + 1 >= 9:
-				self._event_bus.fire(MrBeamEvents.RAW_IMG_TAKING_LAST)
-			else:
+		self._logger.info("ANDYTEST saveRawImg() starting thread")
+		t = threading.Thread(target=self._saveRawImgThreaded, name='_saveRawImgThreaded')
+		t.daemon = True
+		t.start()
+		
+	def _saveRawImgThreaded(self):
+		try:
+			self._logger.info("ANDYTEST _saveRawImgThreaded() thread started")
+			picture_num_in_board_calib_session = self.boardDetectorDaemon.next_inc()
+			imgName= TMP_RAW_FNAME.format(picture_num_in_board_calib_session)
+			# TODO debug/raw.jpg -> copy image over
+			# TODO careful when deleting pic + setting new name -> hash
+			if self._photo_creator and \
+			   self._photo_creator.active and \
+			   not self._photo_creator.stopping:
+				self._logger.warning("Saving new picture %s" % imgName)
 				self._event_bus.fire(MrBeamEvents.RAW_IMAGE_TAKING_START)
-			if not self.boardDetectorDaemon.is_alive():
-				self.boardDetectorDaemon.start()
-			else:
-				self.boardDetectorDaemon.waiting.clear()
-			if n + 1 >= 9:
-				self.startLensCalibration()
-				# TODO If possible, ask the led cli to chain two LED states
-				t = Timer(1.2, self._event_bus.fire, args=(MrBeamEvents.LENS_CALIB_PROCESSING_BOARDS,))
-				t.start()
+				# take a new picture and save to the specific path
+				self._photo_creator.saveRaw = imgName
+				self.takeNewPic()
+				imgPath = path.join(self.debugFolder, imgName)
+				if path.exists(imgPath):
+					os.remove(imgPath)
+				# Tell the boardDetector to listen for this file
+				self.boardDetectorDaemon.add(imgPath)
+				_s = self.boardDetectorDaemon.state
+				n = len(_s.getAllPending()) + len(_s.getSuccesses()) + len(_s.getProcessing())
+				if n + 1 >= 9:
+					self._event_bus.fire(MrBeamEvents.RAW_IMG_TAKING_LAST)
+				# else:
+				# 	self._event_bus.fire(MrBeamEvents.RAW_IMAGE_TAKING_START)
+				if not self.boardDetectorDaemon.is_alive():
+					self.boardDetectorDaemon.start()
+				else:
+					self.boardDetectorDaemon.waiting.clear()
+				if n + 1 >= 9:
+					self.startLensCalibration()
+					# TODO If possible, ask the led cli to chain two LED states
+					t = Timer(1.2, self._event_bus.fire, args=(MrBeamEvents.LENS_CALIB_PROCESSING_BOARDS,))
+					t.start()
+		except:
+			self._logger.exception("Exception in _saveRawImgThreaded(): ")
 
-
-		# return self.boardDetectorDaemon.state.keys() # TODO necessary? Frontend update now happens via plugin message
 
 	@logme(True)
 	def delRawImg(self, path):
