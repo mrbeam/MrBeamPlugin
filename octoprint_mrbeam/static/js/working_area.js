@@ -638,7 +638,7 @@ $(function(){
 
 				// remove hidden elements with "display:none" via a css class (svg fragment needs to be placed to use getComputedStyle())
 				let allElems = newSvg.selectAll('*[class]');
-				console.log("found elements", allElems.length);
+				// console.log("found elements", allElems.length);
 				for (var i = 0; i < allElems.length; i++) {
 					var el = allElems[i];
                     // also check visibility:hidden

@@ -898,7 +898,7 @@ $(function(){
 						});
 					});
 				} else {
-					console.log("Skipping vector job ("+1+"), invalid parameters.");
+					console.log("Skipping vector job ("+i+"), invalid parameters.");
 				}
 			});
 
