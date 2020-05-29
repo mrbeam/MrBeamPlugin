@@ -905,9 +905,16 @@ svg#area_preview.overModalBG { z-index: 1051; }
 #lens_calibration_take_pic {
 	color: #fff;
 	border-radius: 50%;
-	width: 4em;
-	height: 4em;
-	
+	width: 7em;
+	height: 7em;
+	display: inline-block;
+	margin-top: -150px;
+	margin-left: -20px;
+}
+
+#heatmap_container {
+	width: 75%;
+	display: inline-block;
 }
 
 #qa_images h3 {

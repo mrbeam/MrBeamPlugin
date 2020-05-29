@@ -33,11 +33,8 @@
 						<div>
 							<svg xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg"
 							   enable-background="new 0 0 211 141"
-							   viewBox="0 0 3100 2500"
-							   height="500" width="620"
-							   y="0px" x="0px"
-							   id="heatmap_container"
-							   version="1.1">
+							   viewBox="0 0 3100 2500" height="100%" width="100%" y="0px" x="0px"
+							   id="heatmap_container" version="1.1">
 							  <radialGradient
 								 gradientUnits="userSpaceOnUse"
 								 gradientTransform="matrix(1,0,0,0.9565,0,-7.4897)"
@@ -67,12 +64,13 @@
 								   y="562.65308" />
 							  </g>
 							  <g id="segment_group" transform="translate(500, 500)"></g>
+							  <path d="M2740,2040H3500" stroke="#0266cc" stroke-width="15px"></path>
 							</svg>
 
+							<button id="lens_calibration_take_pic" class="btn btn-primary" data-bind="click: saveRawPic, enable: !cameraBusy()">
+								<i class="icon icon-camera icon-3x"></i>
+							</button>
 						</div>
-						<button id="lens_calibration_take_pic" class="btn btn-primary" data-bind="click: saveRawPic, enable: !cameraBusy()">
-							<i class="icon icon-camera icon-2x"></i>
-						</button>
 						<button class="btn btn-success"
 									data-bind="click: stopLensCalibration,
 											   visible: rawPicSelection().length >= 10,
