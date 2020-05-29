@@ -212,3 +212,9 @@
 	stroke-width: 1;
 }
 
+g#mbtransformVisualization text {
+	font-family: DIN Pro, Roboto, Courier monospace;
+	font-size: 9px;
+	fill: #5555ff;
+	stroke: none;
+}

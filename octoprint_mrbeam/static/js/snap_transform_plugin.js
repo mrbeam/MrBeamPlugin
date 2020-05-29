@@ -44,6 +44,11 @@
 			self.scaleXVis = paper.select('#scaleXVis');
 			self.scaleYVis = paper.select('#scaleYVis');
 			self.rotateVis = paper.select('#rotateVis');
+			self.translateXText = paper.select('#translateXText');
+			self.translateYText = paper.select('#translateYText');
+			self.scaleXText = paper.select('#scaleXText');
+			self.scaleYText = paper.select('#scaleYText');
+			self.rotateText = paper.select('#rotateText');
 			paper.mbtransform = self;
 		}
 
@@ -347,6 +352,11 @@
 			self.translateXVis.attr('d', dX);
 			const dY = 'M'+ startXv+','+startYv+'h-5v'+self.session.translate.dy+'h5';
 			self.translateYVis.attr('d', dY);
+			
+			self.translateXText.node.textContent = self.session.translate.dx.toFixed(2);
+			self.translateXText.attr({x: startXh, y: startYh});
+			self.translateYText.node.textContent = self.session.translate.dy.toFixed(2);
+			self.translateYText.attr({x: startXv, y: startYv});
 		};
 
 		self._visualizeRotate = function(){
@@ -357,6 +367,9 @@
 			const cx = self.session.rotate.cx;
 			const cy = self.session.rotate.cy;
 			self.rotateVis.attr('d', 'M'+ ax+','+ay+'L'+cx+','+cy+'L'+bx+','+by);
+			
+			self.rotateText.node.textContent = self.session.rotate.r.toFixed(1) + '°';
+			self.rotateText.attr({x: ax , y: ay });
 		};
 		
 		self._visualizeScale = function () {
@@ -372,15 +385,24 @@
 			
 			let attrDx = '';
 			let attrDy = '';
+			let labelX = '';
+			let labelY = '';
 			if(sss.sx !== 1 && sss.signX !== 0 && sss.dominantAxis !== 'y'){ // show only if: axis is scaled && handle is scaling this axis && this axis is dominant in proportional scaling
 				attrDx = `M${cx},${cy}m0,${gap*mirrorX}v${dist*mirrorX}H${mouseX}v${-dist*mirrorX}`
+				labelX = mouseX.toFixed(1) + 'mm';
+				self.scaleXText.attr({x: mouseX/2, y: cy + gap * mirrorX });
 			} 
 			if(sss.sy !== 1 && sss.signY !== 0 && sss.dominantAxis !== 'x'){
 				attrDy = `M${cx},${cy}m${gap*mirrorY},0h${dist*mirrorY}V${mouseY}h${-dist*mirrorY}`
+				labelY = mouseY.toFixed(1) + 'mm';
+				self.scaleYText.attr({x: cx + gap * mirrorY, y: mouseY/2 });
 			} 
 			
 			self.scaleXVis.attr('d', attrDx);
 			self.scaleYVis.attr('d', attrDy);
+			
+			self.scaleXText.node.textContent = labelX;
+			self.scaleYText.node.textContent = labelY;
 			
 		}
 		
