@@ -363,6 +363,10 @@ $(function () {
 
 			if ('chessboardCalibrationState' in data) {
 				var _d = data['chessboardCalibrationState']
+				
+				const imgW = 2048; // get from backend
+				const imgH = 1536;
+				
 				self.calibrationState(_d);
 				var arr = []
 				// { '/home/pi/.octoprint/uploads/cam/debug/tmp_raw_img_4.jpg': {
@@ -376,8 +380,12 @@ $(function () {
 				for (const [path, value] of Object.entries(_d.pictures)) {
 					value.path = path;
 					value.url = path.replace("home/pi/.octoprint/uploads", "downloads/files/local");
+					
+					self.updateHeatmap(value.board_bbox, value.index);
 					arr.push(value);
 				}
+				// required to refress the heatmap
+				$('#heatmap_container').html($('#heatmap_container').html());
 				for (var i = arr.length; i < 9; i++) {
 					arr.push({ 
 						path: null, 
@@ -396,7 +404,26 @@ $(function () {
 				self.lensCalibrationRunning(_d.lensCalibration === "processing");
 			}
 		};
-
+	
+		self.updateHeatmap = function(bbox, index){
+			let heatmapGroup = $('#segment_group');
+			let heatmap = document.getElementById('heatmap_board'+index);
+			if(!bbox){
+				if(heatmap) heatmap.remove();
+			} else {
+				const x1 = bbox[0];
+				const x2 = bbox[1];
+				const y1 = bbox[2];
+				const y2 = bbox[3];
+				if(heatmap){
+					$(heatmap).attr({x: x1, y: y1, width: (x2-x1), height: (y2-y1)});
+				} else {
+					heatmapGroup.append(`<rect id="heatmap_board${index}" x="${x1}" y="${y1}" width="${(x2-x1)}" height="${(y2-y1)}" />`);
+				}
+			}
+			
+		}
+	
 		self.boardsFound = ko.computed(function() {
 			return self.rawPicSelection().filter(elm => elm.state === "success").length
 		})

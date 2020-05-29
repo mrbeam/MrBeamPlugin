@@ -977,3 +977,9 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	content: "\f00d";
 	color: red;
 }
+
+
+#segment_group rect {
+  fill: green;
+  fill-opacity: 0.3;
+}
