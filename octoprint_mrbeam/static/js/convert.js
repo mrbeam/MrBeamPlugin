@@ -1278,39 +1278,36 @@ $(function(){
 //			self.settings.settings.plugins.mrbeam.focusReminder(showFocusReminder);
 //			self.settings.saveall(); // fails on getOnlyChangedData
 
-		    let focusReminder = !self.dontRemindMeAgainChecked();
-            let data = {focusReminder: focusReminder};
-            OctoPrint.simpleApiCommand("mrbeam", "focus_reminder", data)
-                .done(function (response) {
-                    self.settings.requestData();
-                    console.log("simpleApiCall response for saving focus reminder state: ", response);
-                })
-                .fail(function (jqXHR, textStatus, errorThrown) {
-                    if (jqXHR.status == 401) {
-                        self.loginState.logout();
-                        new PNotify({
-                            title: gettext("Session expired"),
-                            text: gettext("Please login again to continue."),
-                            type: "warn",
-                            tag: "conversion_error",
-                            hide: false
-                        });
-                    } else {
+            if (self.dontRemindMeAgainChecked() == self.showFocusReminder()){
+                let focusReminder = !self.dontRemindMeAgainChecked();
+                self.showFocusReminder(focusReminder);
+                let data = {focusReminder: focusReminder};
+                OctoPrint.simpleApiCommand("mrbeam", "focus_reminder", data)
+                    .done(function (response) {
                         self.settings.requestData();
-                        console.error("Unable to save focus reminder state: ", data);
-                        new PNotify({
-                            title: gettext("Error while saving settings!"),
-                            text: _.sprintf(gettext("Unable to save your focus reminder state at the moment.%(br)sCheck connection to Mr Beam and try again."), {br: "<br/>"}),
-                            type: "error",
-                            hide: true
-                        });
-                    }
-                });
-        };
-
-		self.sendDontRemindToServer = function() {
-		    if (self.dontRemindMeAgainChecked()) {
-		        self.sendFocusReminderChoiceToServer();
+                        console.log("simpleApiCall response for saving focus reminder state: ", response);
+                    })
+                    .fail(function (jqXHR, textStatus, errorThrown) {
+                        if (jqXHR.status == 401) {
+                            self.loginState.logout();
+                            new PNotify({
+                                title: gettext("Session expired"),
+                                text: gettext("Please login again to continue."),
+                                type: "warn",
+                                tag: "conversion_error",
+                                hide: false
+                            });
+                        } else {
+                            self.settings.requestData();
+                            console.error("Unable to save focus reminder state: ", data);
+                            new PNotify({
+                                title: gettext("Error while saving settings!"),
+                                text: _.sprintf(gettext("Unable to save your focus reminder state at the moment.%(br)sCheck connection to Mr Beam and try again."), {br: "<br/>"}),
+                                type: "error",
+                                hide: true
+                            });
+                        }
+                    });
             }
         };
 
@@ -1571,6 +1568,11 @@ $(function(){
                 self.svg = undefined;
                 $("#dialog_vector_graphics_conversion").modal("hide");
             }
+        };
+
+		self.onEventSettingsUpdated = function(){
+		    self.showFocusReminder(self.settings.settings.plugins.mrbeam.focusReminder());
+		    self.dontRemindMeAgainChecked(!self.showFocusReminder())
         };
 
 		self.cancel_conversion = function(){

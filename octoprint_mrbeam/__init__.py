@@ -151,7 +151,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._octopi_info = self.get_octopi_info()
 		self._serial_num = self.getSerialNum()
 		self._model_id = self.get_model_id()
-		self.focusReminder = self._settings.get(['focusReminder'])
 
 		# listens to StartUp event to start counting boot time grace period
 		self._event_bus.subscribe(OctoPrintEvents.STARTUP, self._start_boot_grace_period_thread)
