@@ -54,9 +54,6 @@ $(function () {
                 return false;
             });
 
-
-            callXXXX()
-
             self.control.setCoordinateOrigin = function () {
                 self.control.sendCustomCommand({type: 'command', command: "G92 X0 Y0"});
             };
