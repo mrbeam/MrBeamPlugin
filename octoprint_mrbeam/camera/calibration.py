@@ -71,7 +71,7 @@ class BoardDetectorDaemon(Thread):
 		self.image_size = image_size
 
 		# processor load
-		self.procs = Value('i', 2)
+		self.procs = Value('i', 1)
 
 		# Queues for I/O with the process
 		# self.inputFiles = Queue()
@@ -171,7 +171,7 @@ class BoardDetectorDaemon(Thread):
 
 	def scaleProcessors(self, number):
 		self.procs.value = number
-		self._logger.info("Changing to %i simultaneous processes" % self.procs.value)
+		self._logger.info("Changing to %s simultaneous processes", self.procs.value)
 
 	# @logtime
 	@logExceptions

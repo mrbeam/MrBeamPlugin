@@ -180,7 +180,7 @@ $(function () {
 
 		self.startLensCalibration = function () {
 			self.analytics.send_fontend_event('lens_calibration_start', {});
-			self.picType("raw");
+			// self.picType("raw");
 			self.simpleApiCommand("calibration_lens_start",
 								  {},
 								  self.refreshPics,
@@ -326,16 +326,17 @@ $(function () {
 				if (_d['undistorted_saved'] && ! self.cornerCalibrationActive()) {
 					if (_d['available']) {
 						self.availablePic(_d['available'])
-						if (! ['raw', 'lens_corrected', 'cropped'].includes(self.picType())
-							&& ! self.lensCalibrationActive()) {
-							for (let _type of ['lens_corrected', 'raw']) {
-								if (self.availablePic()[_type]) {
-									self.picType(_type);
-									break;
-								}
-							}
-						} else
-							self.calImgUrl(self.camera.getTimestampedImageUrl(self.calImgUrl()));
+						// if (! ['raw', 'lens_corrected', 'cropped'].includes(self.picType())
+						// 	&& ! self.lensCalibrationActive()) {
+						// 	for (let _type of ['lens_corrected', 'raw']) {
+						// 		if (self.availablePic()[_type]) {
+						// 			self.picType(_type);
+						// 			break;
+						// 		}
+						// 	}
+						// } else {
+                        //     self.calImgUrl(self.camera.getTimestampedImageUrl(self.calImgUrl()));
+                        // }
 					}
 
 					if (self.isInitialCalibration()) {
