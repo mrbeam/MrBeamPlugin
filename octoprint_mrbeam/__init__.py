@@ -986,8 +986,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return make_response("Malformed JSON body in request", 400)
 
 		if not "name" in json_data.keys():
+			# TODO correct error message
 			return make_response("No profile included in request", 400)
 
+		# TODO catch file not exist error
 		self.lid_handler.delRawImg(json_data['name'])
 		return NO_CONTENT
 
@@ -1016,6 +1018,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self._logger.debug("INITIAL camera_calibration_markers() data: {}".format(json_data))
 
 		if not "result" in json_data or not all(k in json_data['result'] for k in ['newCorners', 'newMarkers']):
+			# TODO correct error message
 			return make_response("No profile included in request", 400)
 
 		self.camera_calibration_markers(json_data)
