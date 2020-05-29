@@ -3,8 +3,6 @@
 //    Drag, Scale & Rotate - a snapsvg.io plugin to free transform objects in an svg.
 //    Copyright (C) 2015  Teja Philipp <osd@tejaphilipp.de>
 //
-//    heavily inspired by http://svg.dabbles.info
-//
 //    This program is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU Affero General Public License as
 //    published by the Free Software Foundation, either version 3 of the
@@ -67,10 +65,10 @@
 			rotHandleId: '#rotHandle',
 			minTranslateHandleSize: 24,
 			
-			visualization: true // enables visual debugging: click points, angle, scale center, etc...
+			visualization: false // enables visual debugging: click points, angle, scale center, etc...
 		}
 
-		self.session = {};
+		self.session = {lastUpdate: 0};
 
 		/**
 		 * transform handler for translate, scale, rotate
@@ -290,26 +288,29 @@
 		}	
 
 		self._sessionUpdate = function(){
-			const dx = self.session.translate.dx;
-			const dy = self.session.translate.dy;
-			const sx = self.session.scale.sx;
-			const sy = self.session.scale.sy;
-			const cx = self.session.scale.cx;
-			const cy = self.session.scale.cy;
-			const rot = self.session.rotate.r;
-			const rcx = self.session.rotate.cx;
-			const rcy = self.session.rotate.cy;
-			
-			var m = Snap.matrix();
-			// SRT order, finally add former matrix
-			m.scale(sx, sy, cx, cy).rotate(rot, rcx, rcy).translate(dx, dy).add(self.session.originMatrix);
-			self.translateHandle.transform(m);
-			
-			if(self.config.visualization){
-				self._visualizeTransform();
+			if(Date.now() - self.session.lastUpdate > 25){ // reduce updates to 40 fps maximum
+				const dx = self.session.translate.dx;
+				const dy = self.session.translate.dy;
+				const sx = self.session.scale.sx;
+				const sy = self.session.scale.sy;
+				const cx = self.session.scale.cx;
+				const cy = self.session.scale.cy;
+				const rot = self.session.rotate.r;
+				const rcx = self.session.rotate.cx;
+				const rcy = self.session.rotate.cy;
+
+				var m = Snap.matrix();
+				// SRT order, finally add former matrix
+				m.scale(sx, sy, cx, cy).rotate(rot, rcx, rcy).translate(dx, dy).add(self.session.originMatrix);
+				self.translateHandle.transform(m);
+
+				if(self.config.visualization){
+					self._visualizeTransform();
+				}
+
+				self.updateCounter++;
+				self.session.lastUpdate = Date.now()
 			}
-			
-			self.updateCounter++;
 			
 			// apply transform to target elements via callback
 			// TODO
@@ -384,25 +385,31 @@
 			const mirrorY = mouseX < cx ? 1 : -1;
 			
 			let attrDx = '';
-			let attrDy = '';
 			let labelX = '';
-			let labelY = '';
 			if(sss.sx !== 1 && sss.signX !== 0 && sss.dominantAxis !== 'y'){ // show only if: axis is scaled && handle is scaling this axis && this axis is dominant in proportional scaling
+				if(cy < mouseY){ // show above
+					
+				} else { // show below
+					
+				}
 				attrDx = `M${cx},${cy}m0,${gap*mirrorX}v${dist*mirrorX}H${mouseX}v${-dist*mirrorX}`
 				labelX = mouseX.toFixed(1) + 'mm';
-				self.scaleXText.attr({x: mouseX/2, y: cy + gap * mirrorX });
+				self.scaleXText.attr({x: (cx + mouseX)/2, y: cy + gap * mirrorX });
 			} 
+			self.scaleXVis.attr('d', attrDx);
+			self.scaleXText.node.textContent = labelX;
+			
+			let attrDy = '';
+			let labelY = '';
 			if(sss.sy !== 1 && sss.signY !== 0 && sss.dominantAxis !== 'x'){
 				attrDy = `M${cx},${cy}m${gap*mirrorY},0h${dist*mirrorY}V${mouseY}h${-dist*mirrorY}`
 				labelY = mouseY.toFixed(1) + 'mm';
-				self.scaleYText.attr({x: cx + gap * mirrorY, y: mouseY/2 });
+				self.scaleYText.attr({x: cx + gap * mirrorY, y:  (cy + mouseY)/2 });
 			} 
-			
-			self.scaleXVis.attr('d', attrDx);
 			self.scaleYVis.attr('d', attrDy);
-			
-			self.scaleXText.node.textContent = labelX;
 			self.scaleYText.node.textContent = labelY;
+			
+			
 			
 		}
 		
