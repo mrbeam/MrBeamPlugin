@@ -60,6 +60,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 			var pathString = element.attr("d");
 			var segments = Snap.path.toAbsolute(pathString);
 
+<<<<<<< HEAD
 			// generate paths
 			var paths = mrbeam.path.parse(segments, tolerance);
 
@@ -80,7 +81,7 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 				];
 				var clip_tolerance = 0.1 * tolerance;
 
-				if (id.toLowerCase().indexOf('debug') !== -1 || id.toLowerCase().indexOf('andytest') !== -1) {
+				if (id && (id.toLowerCase().indexOf('debug') !== -1 || id.toLowerCase().indexOf('andytest') !== -1)) {
 					console.log("mrbeam.path.clip() id:'"+id+"'"
 						+", paths: " + mrbeam.path.pp_paths(paths)
 						+", clip:" + mrbeam.path.pp_paths(clip)
