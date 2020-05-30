@@ -119,15 +119,16 @@
 		}	
 
 		self.rotateMove = function( target, dx, dy, x, y, event ){
-
+			const dxMM = self._convertToViewBoxUnits(dx);
+			const dyMM = self._convertToViewBoxUnits(dy);
 			const ax = self.session.rotate.ax;
 			const ay = self.session.rotate.ay;
 			const cx = self.session.rotate.cx;
 			const cy = self.session.rotate.cy;
 			
 			// calculate viewbox coordinates incl. zoom & pan (mm)
-			const bx = self.session.rotate.bx = ax + self._convertToViewBoxUnits(dx);
-			const by = self.session.rotate.by = ay + self._convertToViewBoxUnits(dy);
+			const bx = self.session.rotate.bx = ax + dxMM;
+			const by = self.session.rotate.by = ay + dyMM;
 
 			// store session changes
 			//    b
@@ -137,6 +138,7 @@
 			self.session.rotate.r = Snap.angle(bx, by, ax, ay, cx, cy);
 
 			// move translateHandle
+//			this.transform(`translate(${dxMM}, ${dyMM})`)
 			self._sessionUpdate();
 
 		}	
@@ -274,15 +276,15 @@
 			}
 			
 
-			// move translateHandle
-			self._sessionUpdate();
+			// move scaleHandle
+			self._sessionUpdate(this);
 
 		}	
 
 		self.scaleEnd = function( target, dx, dy, x, y){
-			self._sessionReset();
-			// show scale & rotate handle
+			// show scale & rotate handles
 			self._alignHandlesToBB();
+			self._sessionReset();
 			self.transformHandleGroup.node.classList.remove('scale', 'scaleHandleNE', 'scaleHandleNW', 'scaleHandleSW', 'scaleHandleSE', 'scaleHandleNN', 'scaleHandleEE', 'scaleHandleSS', 'scaleHandleWW');
 			
 		}	
