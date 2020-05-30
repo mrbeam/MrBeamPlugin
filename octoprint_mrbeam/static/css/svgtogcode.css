@@ -990,3 +990,8 @@ svg#area_preview.overModalBG { z-index: 1051; }
   fill: green;
   fill-opacity: 0.3;
 }
+#segment_group rect.highlight {
+	fill-opacity: 0.5;
+	stroke: #00ff00;
+	stroke-width: 8px;
+}

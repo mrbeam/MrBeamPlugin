@@ -86,7 +86,10 @@
 						
 						
 						<ul id="lens_correction_image_list" data-bind="visible: lensCalibrationActive(), foreach: { data: rawPicSelection, as: 'pic' }">
-							<li class="lens_correction_image_thumb" data-bind="style: { backgroundImage: 'url('+pic.url+')' };" onclick="this.classList.remove('zoom')">
+							<li class="lens_correction_image_thumb" 
+								data-bind="	style: { backgroundImage: 'url('+pic.url+')' }, 
+											event:{ mouseover: $root.heatmap_highlight, mouseout: $root.heatmap_dehighlight }" 
+								onclick="this.classList.remove('zoom')">
 								<div class="btn-group">
 									<button class="btn btn-default" onclick="this.parentElement.parentElement.classList.add('zoom'); event.stopPropagation();">
 										<i class="icon icon-search"></i>

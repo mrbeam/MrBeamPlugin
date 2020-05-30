@@ -422,7 +422,15 @@ $(function () {
 					heatmapGroup.append(`<rect id="heatmap_board${index}" x="${x1}" y="${y1}" width="${(x2-x1)}" height="${(y2-y1)}" />`);
 				}
 			}
+		}
+		
+		self.heatmap_highlight = function(data){
+			$('#heatmap_board'+data.index).addClass('highlight');
 			
+		}
+		
+		self.heatmap_dehighlight = function(data){
+			$('#segment_group rect').removeClass('highlight');
 		}
 	
 		self.boardsFound = ko.computed(function() {
