@@ -354,6 +354,7 @@ def handleBoardPicture(image, count, board_size, q_out=None):
 		pass # TODO log this
 
 	drawnImg = cv2.drawChessboardCorners(img, board_size, found_pattern, success, )
+	height, width, _ = drawnImg.shape
 	cv2.imwrite(path, drawnImg)
 	if q_out is not None:
 		q_out.put(dict(
@@ -363,6 +364,8 @@ def handleBoardPicture(image, count, board_size, q_out=None):
 			found_pattern=found_pattern,
 			board_center=center,
 			board_bbox=bbox,
+			width=width,
+			height=height,
 		))
 	if success:
 		# if callback != None: callback(path, STATE_SUCCESS, board_size=board_size, found_pattern=found_pattern)
@@ -440,10 +443,10 @@ class calibrationState(dict):
 
 	def add(self, path, board_size=(CB_ROWS, CB_COLS), state=STATE_PENDING_CAMERA, index=-1):
 		self[path] = dict(
-			tm_added=time.time(),
+			tm_added=time.time(), # when picture was taken
 			state=state,
-			tm_proc=None,
-			tm_end=None,
+			tm_proc=None, # when processing started
+			tm_end=None, # when processing ended
 			board_size=board_size,
 			index=index,
 		)
@@ -458,9 +461,12 @@ class calibrationState(dict):
 
 	def update(self, path, state, **kw):
 		if state in STATES:
-			self[path].update(dict(state = state,
-					       tm_proc = time.time(),
-					       **kw))
+			_data = dict(state = state, **kw)
+			if(state == STATE_SUCCESS or state == STATE_FAIL):
+				_data["tm_end"] = time.time()
+			if(state == STATE_PROCESSING):
+				_data["tm_proc"] = time.time()
+			self[path].update(_data)
 			self.onChange()
 		else:
 			raise ValueError("Not a valid state: {}", state)

@@ -4,7 +4,7 @@
  * Author: Teja Philipp <teja@mr-beam.org>
  * License: AGPLv3
  */
-/* global OctoPrint, OCTOPRINT_VIEWMODELS */
+/* global OctoPrint, OCTOPRINT_VIEWMODELS, INITIAL_CALIBRATION */
 
 MARKERS = ['NW', 'NE', 'SE', 'SW'];
 MIN_BOARDS_FOR_CALIBRATION = 8
@@ -107,7 +107,7 @@ $(function () {
 
 		self.lensCalibrationRunning = ko.observable(false);
 		self.lensCalibrationComplete = ko.computed(function(){
-			return ('lensCalibration' in self.calibrationState()) ? self.calibrationState().lensCalibration.state === "success" : false;
+			return ('lensCalibration' in self.calibrationState()) ? self.calibrationState().lensCalibration === "success" : false;
 		});
 		self.markersFoundPosition = ko.observable({});
 
@@ -364,29 +364,31 @@ $(function () {
 
 			if ('chessboardCalibrationState' in data) {
 				var _d = data['chessboardCalibrationState']
-				
-				const imgW = 2048; // get from backend
-				const imgH = 1536;
-				
+								
 				self.calibrationState(_d);
 				var arr = []
 				// { '/home/pi/.octoprint/uploads/cam/debug/tmp_raw_img_4.jpg': {
 				//      state: "processing", 
 				//      tm_proc: 1590151819.735044, 
 				//      tm_added: 1590151819.674166, 
+				//      board_bbox: [767.5795288085938, 1302.0089111328125, 128.93748474121094, 578.4738159179688], // xmin, xmax, ymin, ymax
+				//      board_center: [1039.291259765625, 355.92547607421875], // cx, cy
+				//      found_pattern: null,
+				//      index: 2,
 				//      board_size: [5, 6]
 				//    }, ...
 				// }
 
 				for (const [path, value] of Object.entries(_d.pictures)) {
+
 					value.path = path;
 					value.url = path.replace("home/pi/.octoprint/uploads", "downloads/files/local");
-					
-					self.updateHeatmap(value.board_bbox, value.index);
+					value.processing_duration = value.tm_end !== null ? (value.tm_end - value.tm_proc).toFixed(1) + ' sec' : '?';
 					arr.push(value);
+					self.updateHeatmap(value.board_bbox, value.index);
+					
 				}
-				// required to refress the heatmap
-				$('#heatmap_container').html($('#heatmap_container').html());
+			
 				for (var i = arr.length; i < 9; i++) {
 					arr.push({ 
 						path: null, 
@@ -394,17 +396,20 @@ $(function () {
 						state: 'missing'
 					});
 				}
+				
+				// required to refresh the heatmap
+				$('#heatmap_container').html($('#heatmap_container').html());
 
 				arr.sort(function(l,r){
 				    return l.index < r.index ? -1 : 1;
                 });
 
-				console.log("TEJA_LOOK_HERE status update form server: ", arr)
-
+				console.log(arr);
 				self.rawPicSelection(arr);
 				self.lensCalibrationRunning(_d.lensCalibration === "processing");
 			}
 		};
+		
 	
 		self.updateHeatmap = function(bbox, index){
 			let heatmapGroup = $('#segment_group');
@@ -424,9 +429,12 @@ $(function () {
 			}
 		}
 		
+		self.reset_heatmap = function(){
+			$('#segment_group rect').remove();
+		}
+		
 		self.heatmap_highlight = function(data){
 			$('#heatmap_board'+data.index).addClass('highlight');
-			
 		}
 		
 		self.heatmap_dehighlight = function(data){
@@ -440,6 +448,10 @@ $(function () {
 		self.hasMinBoardsFound = ko.computed(function() {
 			return self.boardsFound() >= MIN_BOARDS_FOR_CALIBRATION
 		})
+		
+		self.boardsFoundString = ko.computed(function(){
+			return `${self.boardsFound()}/${MIN_BOARDS_FOR_CALIBRATION}`;
+		});
 
 		self.saveRawPic = function() {
 				$.ajax({
@@ -457,6 +469,7 @@ $(function () {
 
 
 		self.delRawPic = function() {
+			$('#heatmap_board'+this.index).remove(); // remove heatmap
 			self.simpleApiCommand("calibration_del_pic",
 								  {name: this['path']},
 								  self.refreshPics,
@@ -490,7 +503,7 @@ $(function () {
 
 		self.rawPicSelectOptions = ko.computed(function() {
 			self.rawPicSelection.removeAll()
-			if (self.rawPics().length == 1 && self.rawPics()[0] === "") return;
+			if (self.rawPics().length === 1 && self.rawPics()[0] === "") return;
             for (let i = 0; i < self.rawPics().length; i++) {
                 self.rawPicSelection.push({
                     id: self.rawPics()[i],
@@ -502,6 +515,12 @@ $(function () {
 		self.cameraBusy = ko.computed(function() {
 			return self.rawPicSelection().some(elm => elm.state === "camera_processing")
 		});
+
+		self.resetLensCalibration = function() {
+			self.lensCalibrationActive(false);
+			self.lensCalibrationRunning(false);
+			self.reset_heatmap();
+		};
 
 		self.runLensCalibration = function() {
 			self.lensCalibrationRunning(true);
@@ -533,8 +552,7 @@ $(function () {
 						// text: "",
 						type: "info",
 						hide: true});
-					self.lensCalibrationActive(false);
-					self.lensCalibrationRunning(false);
+					self.resetLensCalibration();
 				},
 				function(){
 					new PNotify({

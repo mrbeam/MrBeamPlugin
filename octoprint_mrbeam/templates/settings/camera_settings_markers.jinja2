@@ -3,8 +3,12 @@
 			
 		<!-- Calibration Selector -->
 		<ul id="camera-calibration-tabs" class="nav nav-pills"> 
-			<li><a href="#tab_lens_calibration" data-toggle="tab" id="lenscal_tab_btn">{{ _('Lens Calibration') }}</a></li>
-			<li><a href="#tab_corner_calibration" data-toggle="tab" id="cornercal_tab_btn">{{ _('Corner Calibration') }}</a></li>
+			<li><a href="#tab_lens_calibration" data-toggle="tab" id="lenscal_tab_btn">{{ _('Lens Calibration') }} 
+					<i class="icon icon-spinner icon-spin" data-bind="visible: lensCalibrationRunning()"></i>
+					<i class="icon icon-ok" data-bind="visible: lensCalibrationComplete()"></i>
+					<i class="icon icon-warning-sign" data-bind="visible: !lensCalibrationComplete()"></i>
+				</a></li>
+			<li><a href="#tab_corner_calibration" data-toggle="tab" id="cornercal_tab_btn" data-bind="enable: lensCalibrationComplete()">{{ _('Corner Calibration') }}</a></li>
 			<li><a href="#tab_calibration_qa" data-toggle="tab" id="qacal_tab_btn">{{ _('QA') }}</a></li>
 		</ul>
 	
@@ -67,16 +71,31 @@
 							  <path d="M2740,2040H3500" stroke="#0266cc" stroke-width="15px"></path>
 							</svg>
 
+
 							<button id="lens_calibration_take_pic" class="btn btn-primary" data-bind="click: saveRawPic, enable: !cameraBusy()">
 								<i class="icon icon-camera icon-3x"></i>
 							</button>
+							<button id="recalculate_lens_calibration_btn" class="btn btn-success"
+									alt="{{ _('Run Lens Calibration again') }}"
+										data-bind="click: stopLensCalibration,
+												   xvisible: rawPicSelection().length >= 9,
+												   enable: !lensCalibrationRunning() && hasMinBoardsFound()">
+
+								<span data-bind="text: boardsFoundString(), visible: lensCalibrationRunning()" style="font-size:1.5rem;"></span> 
+								<i class="icon icon-2x icon-spinner icon-spin" data-bind="visible: lensCalibrationRunning()"></i>
+								<i class="icon icon-3x icon-refresh" data-bind="visible: !lensCalibrationRunning()"></i>
+							</button>
+							
+							<div>
+								<button id="cancel_lens_calibration_btn" class="btn btn-warning"
+										alt="{{ _('Cancel lens calibration') }}"
+											data-bind="click: stopLensCalibration,
+													   visible: lensCalibrationRunning(),
+													   ">
+									<i class="icon icon-3x icon-remove" ></i>
+								</button>
+							</div>
 						</div>
-						<button class="btn btn-success"
-									data-bind="click: stopLensCalibration,
-											   visible: rawPicSelection().length >= 10,
-											   enable: !lensCalibrationRunning() && hasMinBoardsFound()">
-								{{ _('Run Lens Calibration again') }} <i class="icon-spinner icon-spin" data-bind="visible: lensCalibrationRunning"></i>
-						</button>
 <!--						<button class="btn btn-warning"
 								data-bind="click: abortCalibration, visible: lensCalibrationActive() && lensCalibrationComplete()">
 							<i class="icon-fixed-width icon-ban-circle"></i> {{ _('Back') }}
@@ -94,10 +113,13 @@
 									<button class="btn btn-default" onclick="this.parentElement.parentElement.classList.add('zoom'); event.stopPropagation();">
 										<i class="icon icon-search"></i>
 									</button>
-									<button class="btn btn-warning" data-bind="click: $parent.delRawPic">
+									<button class="btn btn-warning" data-bind="visible: (pic.path !== null), click: $parent.delRawPic">
 										<i  class="icon icon-trash"></i> {{ _('Remove') }}
 									</button>
 								</div>
+								<span class="chessboard_cal_duration pull-right">
+									<i  class="icon icon-time"></i> <span data-bind="text: pic.processing_duration"></span>
+								</span>
 
 								<i class="status_icon icon icon-spinner icon-spin" data-bind="visible: pic.state === 'processing'"></i>
 								<i class="status_icon icon icon-ok" style="color: #00ff00;" data-bind="visible: pic.state === 'success'"></i>
@@ -108,6 +130,9 @@
 					</div>
 					
 				</div>
+				
+	<!--====================================================================================================================-->			
+				
 				<div class="tab-pane" id="tab_corner_calibration">
 					<svg id="calibration_svg" style="max-width: 60vh; border:1px solid lightgray" width="100%" height="100%" viewBox="0 0 512 384" data-bind="attr: {viewBox: calSvgViewBox()}">
 						<defs>

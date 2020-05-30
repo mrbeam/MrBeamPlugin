@@ -902,6 +902,11 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	text-align: center;
 }
 
+#lens_correction_image_list .chessboard_cal_duration {
+  padding: 0.5em 0.5em 0.1em;
+  font-size: smaller;
+}
+
 #lens_calibration_take_pic {
 	color: #fff;
 	border-radius: 50%;
@@ -909,12 +914,42 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	height: 7em;
 	display: inline-block;
 	margin-top: -150px;
-	margin-left: -20px;
+	margin-left: -40px;
+	position: relative;
+	z-index: 1;
+}
+#lens_calibration_take_pic[disabled] {
+	opacity: 1;
+	background-color: #5985dd;
+}
+
+#recalculate_lens_calibration_btn {
+	margin-top: -3em;
+	width: 10em;
+	height: 7em;
+	border-top-right-radius: 3.5em;
+	border-bottom-right-radius: 3.5em;
+	padding-left: 4em;
+	display: inline-block;
+	margin-top: -150px;
+	margin-left: -50px;
+	z-index: 0;
+	position: relative;
 }
 
 #heatmap_container {
 	width: 75%;
 	display: inline-block;
+}
+
+#segment_group rect {
+  fill: green;
+  fill-opacity: 0.3;
+}
+#segment_group rect.highlight {
+	fill-opacity: 0.5;
+	stroke: #00ff00;
+	stroke-width: 8px;
 }
 
 #qa_images h3 {
@@ -986,12 +1021,3 @@ svg#area_preview.overModalBG { z-index: 1051; }
 }
 
 
-#segment_group rect {
-  fill: green;
-  fill-opacity: 0.3;
-}
-#segment_group rect.highlight {
-	fill-opacity: 0.5;
-	stroke: #00ff00;
-	stroke-width: 8px;
-}
