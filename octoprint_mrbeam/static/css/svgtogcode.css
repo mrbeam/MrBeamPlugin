@@ -903,8 +903,9 @@ svg#area_preview.overModalBG { z-index: 1051; }
 }
 
 #lens_correction_image_list .chessboard_cal_duration {
-  padding: 0.5em 0.5em 0.1em;
-  font-size: smaller;
+	padding: 0.5em 0.5em 0.1em;
+	font-size: 10px;
+	line-height: 12px;
 }
 
 #lens_calibration_take_pic {

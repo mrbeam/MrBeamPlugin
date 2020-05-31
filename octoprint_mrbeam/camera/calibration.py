@@ -19,7 +19,7 @@ CB_ROWS = 5
 CB_COLS = 6
 CB_SQUARE_SIZE = 30  # mm
 
-REFRESH_RATE_WAIT_CHECK = .2
+REFRESH_RATE_WAIT_CHECK = .2 # TODO: use OctoPrint.mrbeam/venv/lib/python2.7/site-packages/watchdog-0.8.3-py2.7.egg/watchdog/observers/fsevents.py
 
 # Chessboard size in mm
 BOARD_SIZE_MM = np.array([220, 190])
@@ -426,6 +426,7 @@ def runLensCalibration(objPoints, imgPoints, imgRes, q_out=None):
 class calibrationState(dict):
 	def __init__(self, imageSize=camera.LEGACY_STILL_RES, changeCallback=None,  npzPath=None, rawImgLock=None, *args, **kw):
 		self._logger = logging.getLogger(__name__ + '.' + self.__class__.__name__)
+		self._logger.setLevel(logging.DEBUG)
 		self.changeCallback = changeCallback
 		self.imageSize=imageSize
 		self.lensCalibration = dict(state=STATE_PENDING)
@@ -491,6 +492,7 @@ class calibrationState(dict):
 
 	def refresh(self, imgFoundCallback=None, args=(), kwargs={}):
 		"""Check if a pending image was taken and saved by the camera"""
+		self._logger.debug("### REFRESH ###")
 		changed = False
 		for path, elm in self.items():
 			if elm['state'] == STATE_PENDING_CAMERA and os.path.exists(path):

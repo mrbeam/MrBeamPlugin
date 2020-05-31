@@ -7,12 +7,20 @@
 /* global OctoPrint, OCTOPRINT_VIEWMODELS, INITIAL_CALIBRATION */
 
 MARKERS = ['NW', 'NE', 'SE', 'SW'];
-MIN_BOARDS_FOR_CALIBRATION = 8
+MIN_BOARDS_FOR_CALIBRATION = 8;
+MAX_BOARD_SCORE = 5;
 
 $(function () {
 	function CameraCalibrationViewModel(parameters) {
 		var self = this;
 		window.mrbeam.viewModels['cameraCalibrationViewModel'] = self;
+		self.settings = parameters[0];
+		self.workingArea = parameters[1];
+		self.conversion = parameters[2];
+		self.analytics = parameters[3];
+		self.loginState = parameters[4];
+		self.camera = self.workingArea.camera;
+
 		self.calibrationScreenShown = ko.observable(false)
 
 		self.staticURL = "/plugin/mrbeam/static/img/cam_calibration/calpic_wait.svg";
@@ -23,11 +31,6 @@ $(function () {
 		self.dbSEImgUrl = ko.observable("");
 		self.interlocks_closed = ko.observable(false);
 		self.lid_fully_open = ko.observable(false);
-
-		self.workingArea = parameters[1];
-		self.conversion = parameters[2];
-		self.analytics = parameters[3];
-		self.camera = self.workingArea.camera;
 
 		self.focusX = ko.observable(0);
 		self.focusY = ko.observable(0);
@@ -108,6 +111,30 @@ $(function () {
 		self.lensCalibrationRunning = ko.observable(false);
 		self.lensCalibrationComplete = ko.computed(function(){
 			return ('lensCalibration' in self.calibrationState()) ? self.calibrationState().lensCalibration === "success" : false;
+		});
+		self.boardsFound = ko.computed(function() {
+			return self.rawPicSelection().filter(elm => elm.state === "success").length
+		})
+
+		self.hasMinBoardsFound = ko.computed(function() {
+			return self.boardsFound() >= MIN_BOARDS_FOR_CALIBRATION
+		})
+		
+		self.boardsFoundString = ko.computed(function(){
+			return `${self.boardsFound()}/${MIN_BOARDS_FOR_CALIBRATION}`;
+		});
+	
+		self.lensCalibrationCoverageQuality = ko.observable(0);
+		self.lensCalibrationCoverageQualityStr = ko.computed(function(){
+			const totalScore = self.lensCalibrationCoverageQuality();
+			const maxScore = Math.max(MIN_BOARDS_FOR_CALIBRATION, self.boardsFound()) * MAX_BOARD_SCORE;
+			const percent = (totalScore / maxScore * 100);
+			console.log("lq update", percent);
+			const text = `Quality: ${percent.toFixed(0)}%`;
+			
+			// data-bind is complicated with inline svg -> direct manipulation.
+			document.getElementById('lensCalibrationCoverageText').innerHTML = text;
+			return text;
 		});
 		self.markersFoundPosition = ko.observable({});
 
@@ -379,6 +406,8 @@ $(function () {
 				//    }, ...
 				// }
 
+				let found_bboxes = [];
+				let total_score = 0;
 				for (const [path, value] of Object.entries(_d.pictures)) {
 
 					value.path = path;
@@ -386,8 +415,13 @@ $(function () {
 					value.processing_duration = value.tm_end !== null ? (value.tm_end - value.tm_proc).toFixed(1) + ' sec' : '?';
 					arr.push(value);
 					self.updateHeatmap(value.board_bbox, value.index);
-					
+					if(value.board_bbox){
+						value.score = self._calc_pic_score(value.board_bbox, found_bboxes);
+						total_score += value.score;
+						found_bboxes.push(value.board_bbox);
+					}
 				}
+				self.lensCalibrationCoverageQuality(total_score);
 			
 				for (var i = arr.length; i < 9; i++) {
 					arr.push({ 
@@ -410,6 +444,27 @@ $(function () {
 			}
 		};
 		
+		self._calc_pic_score = function(bbox, found_bboxes){
+			if(!bbox) return 0;
+			
+			let max_overlap = 0;
+			const area = (bbox[1] - bbox[0]) * (bbox[3] - bbox[2]);
+			for (var i = 0; i < found_bboxes.length; i++) {
+				var existing_bbox = found_bboxes[i];
+				max_overlap = Math.max(max_overlap, self._get_bbox_intersecting_area(bbox, existing_bbox));
+			}
+			const score = ((1 - (max_overlap / area)) * MAX_BOARD_SCORE);
+			return score;
+		};
+		
+		self._get_bbox_intersecting_area = function(bb1, bb2){
+			// precondition: bb = [xmin, xmax, ymin, ymax] with always _min < _max 
+			if(bb1[1] < bb2[0] || bb1[0] > bb2[1] ) return 0; // bboxes don't overlap on the x axis
+			if(bb1[3] < bb2[2] || bb1[2] > bb2[3] ) return 0; // bboxes don't overlap on the y axis
+			const dx =  Math.min(bb1[1], bb2[1]) - Math.max(bb1[0], bb2[0]);
+			const dy =  Math.min(bb1[3], bb2[3]) - Math.max(bb1[2], bb2[2]);
+			return dx*dy;
+		}
 	
 		self.updateHeatmap = function(bbox, index){
 			let heatmapGroup = $('#segment_group');
@@ -440,18 +495,6 @@ $(function () {
 		self.heatmap_dehighlight = function(data){
 			$('#segment_group rect').removeClass('highlight');
 		}
-	
-		self.boardsFound = ko.computed(function() {
-			return self.rawPicSelection().filter(elm => elm.state === "success").length
-		})
-
-		self.hasMinBoardsFound = ko.computed(function() {
-			return self.boardsFound() >= MIN_BOARDS_FOR_CALIBRATION
-		})
-		
-		self.boardsFoundString = ko.computed(function(){
-			return `${self.boardsFound()}/${MIN_BOARDS_FOR_CALIBRATION}`;
-		});
 
 		self.saveRawPic = function() {
 				$.ajax({
@@ -752,7 +795,7 @@ $(function () {
 		CameraCalibrationViewModel,
 
 		// e.g. loginStateViewModel, settingsViewModel, ...
-		["settingsViewModel", "workingAreaViewModel", "vectorConversionViewModel", "analyticsViewModel"],
+		["settingsViewModel", "workingAreaViewModel", "vectorConversionViewModel", "analyticsViewModel", "loginStateViewModel"],
 
 		// e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
 		["#settings_plugin_mrbeam_camera"]
