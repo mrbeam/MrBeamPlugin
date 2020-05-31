@@ -1,6 +1,8 @@
 $(function () {
     function AnalyticsViewModel(params) {
         let self = this;
+		self.loginState = params[0];
+		
         window.mrbeam.viewModels['analyticsViewModel'] = self;
         self.window_load_ts=-1;
 
@@ -11,18 +13,22 @@ $(function () {
         };
 
         self._send = function (event, payload) {
-            let data = {
-                event: event,
-                payload: payload || {}
-            };
+            if(self.loginState.isUser()){
+				let data = {
+					event: event,
+					payload: payload || {}
+				};
 
-            $.ajax({
-                url: "plugin/mrbeam/analytics",
-                type: "POST",
-                dataType: "json",
-                contentType: "application/json; charset=UTF-8",
-                data: JSON.stringify(data)
-            });
+				$.ajax({
+					url: "plugin/mrbeam/analytics",
+					type: "POST",
+					dataType: "json",
+					contentType: "application/json; charset=UTF-8",
+					data: JSON.stringify(data)
+				});
+			} else {
+				// TODO discuss if we want to store and send later?
+			}
         };
 
         $(window).load(function() {
@@ -44,7 +50,7 @@ $(function () {
         AnalyticsViewModel,
 
         // e.g. loginStateViewModel, settingsViewModel, ...
-        [],
+        ["loginStateViewModel"],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         []
