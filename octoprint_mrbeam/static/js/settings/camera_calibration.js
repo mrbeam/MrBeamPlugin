@@ -129,7 +129,6 @@ $(function () {
 			const totalScore = self.lensCalibrationCoverageQuality();
 			const maxScore = Math.max(MIN_BOARDS_FOR_CALIBRATION, self.boardsFound()) * MAX_BOARD_SCORE;
 			const percent = (totalScore / maxScore * 100);
-			console.log("lq update", percent);
 			const text = `Quality: ${percent.toFixed(0)}%`;
 			
 			// data-bind is complicated with inline svg -> direct manipulation.
@@ -438,7 +437,7 @@ $(function () {
 				    return l.index < r.index ? -1 : 1;
                 });
 
-				console.log(arr);
+//				console.log(arr);
 				self.rawPicSelection(arr);
 				self.lensCalibrationRunning(_d.lensCalibration === "processing");
 			}

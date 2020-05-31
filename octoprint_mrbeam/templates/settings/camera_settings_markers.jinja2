@@ -8,7 +8,7 @@
 					<i class="icon icon-ok" data-bind="visible: lensCalibrationComplete()"></i>
 					<i class="icon icon-warning-sign" data-bind="visible: !lensCalibrationComplete()"></i>
 				</a></li>
-			<li><a href="#tab_corner_calibration" data-toggle="tab" id="cornercal_tab_btn" data-bind="enable: lensCalibrationComplete()">{{ _('Corner Calibration') }}</a></li>
+			<li><a href="#tab_corner_calibration" data-toggle="tab" id="cornercal_tab_btn" >{{ _('Corner Calibration') }}</a></li>
 			<li><a href="#tab_calibration_qa" data-toggle="tab" id="qacal_tab_btn">{{ _('QA') }}</a></li>
 		</ul>
 	
@@ -34,7 +34,7 @@
 					<!-- Lens calibration -->
 					<div data-bind="visible: lensCalibrationActive()">
 
-						<div>
+						<div style='position:relative;'>
 							<svg id="heatmap_container" version="1.1" enable-background="new 0 0 211 141"
 							   viewBox="0 0 3100 2500" height="100%" width="100%" y="0px" x="0px">
 							  <radialGradient gradientUnits="userSpaceOnUse" gradientTransform="matrix(1,0,0,0.9565,0,-7.4897)"
@@ -63,34 +63,29 @@
 
 
 							<button id="lens_calibration_take_pic" class="btn btn-primary" data-bind="click: saveRawPic, enable: !cameraBusy()">
-								<i class="icon icon-camera icon-3x"></i>
+								<i class="icon icon-camera icon-2x"></i>
 							</button>
+<!-- TODO: Save and continue button. Ask Axel how the workflow is meant. -->
 							<button id="recalculate_lens_calibration_btn" class="btn btn-success"
 									alt="{{ _('Run Lens Calibration again') }}"
 										data-bind="click: stopLensCalibration,
-												   xvisible: rawPicSelection().length >= 9,
+												   visible: rawPicSelection().length >= 9,
 												   enable: !lensCalibrationRunning() && hasMinBoardsFound()">
 
 								<span data-bind="text: boardsFoundString(), visible: lensCalibrationRunning()" style="font-size:1.5rem;"></span> 
 								<i class="icon icon-2x icon-spinner icon-spin" data-bind="visible: lensCalibrationRunning()"></i>
-								<i class="icon icon-3x icon-refresh" data-bind="visible: !lensCalibrationRunning()"></i>
+								<i class="icon icon-2x icon-refresh" data-bind="visible: !lensCalibrationRunning()"></i>
 							</button>
 							
-							<div>
-								<button id="cancel_lens_calibration_btn" class="btn btn-warning"
-										alt="{{ _('Cancel lens calibration') }}"
-											data-bind="click: stopLensCalibration,
-													   visible: lensCalibrationRunning(),
-													   ">
-									<i class="icon icon-3x icon-remove" ></i>
-								</button>
-							</div>
+							<button id="cancel_lens_calibration_btn" class="btn btn-large btn-link"
+									alt="{{ _('Cancel lens calibration') }}"
+										data-bind="click: stopLensCalibration,
+												   visible: lensCalibrationActive(),
+												   ">
+								{{ _('Cancel') }}
+								<i class="icon icon-remove" ></i>
+							</button>
 						</div>
-<!--						<button class="btn btn-warning"
-								data-bind="click: abortCalibration, visible: lensCalibrationActive() && lensCalibrationComplete()">
-							<i class="icon-fixed-width icon-ban-circle"></i> {{ _('Back') }}
-						</button>-->
-						<!--<button class="btn btn-warning" data-bind="click: stopLensCalibration, visible: lensCalibrationActive()"><i class="icon-fixed-width icon-ban-circle"></i> {{ _('Stop Lens Calibration') }}</button>-->
 
 						
 						
@@ -130,6 +125,8 @@
 	<!--====================================================================================================================-->			
 				
 				<div class="tab-pane" id="tab_corner_calibration">
+
+					<!-- Corner calibration -->
 					<svg id="calibration_svg" style="max-width: 60vh; border:1px solid lightgray" width="100%" height="100%" viewBox="0 0 512 384" data-bind="attr: {viewBox: calSvgViewBox()}">
 						<defs>
 							<symbol id="cross">
@@ -170,7 +167,6 @@
 						</div>
 					</div>
 					
-					<!-- Corner calibration -->
 					<div data-bind="visible: !cornerCalibrationActive()">
 						
 						<div class="marker_selection_desc calibration_help"
@@ -248,7 +244,6 @@
 									</div>
 								</div>
 
-								<!-- Corner calibration -->
 								<div data-bind="visible: cal_img_ready() && cornerCalibrationActive()">
 									<div id="NW" class="cal-row"><div class="cal-arrow NW"></div> North West: <span data-bind="text: __format_point(currentResults()['NW'])"></span></div>
 									<div id="SW" class="cal-row"><div class="cal-arrow SW"></div> South West: <span data-bind="text: __format_point(currentResults()['SW'])"></span></div>
@@ -257,12 +252,9 @@
 								</div>
 							</div>
 							<div style="margin-top:1em;">
-								<!-- Corner calibration -->
 								<button class="btn btn-default" data-bind="click: previousMarker, visible: cornerCalibrationActive()">{{ _('Previous') }}</button>
 								<button class="btn btn-default" data-bind="click: nextMarker, visible: cornerCalibrationActive()">{{ _('Next') }}</button>
 								<button class="btn btn-success" data-bind="click: saveCornerCalibrationData, visible: cornerCalibrationComplete() && cornerCalibrationActive()">{{ _('Save Calibration') }}</button>
-
-
 
 								<!-- Cancel -->
 								<button class="btn btn-warning" data-bind="click: abortCalibration, visible: cornerCalibrationActive()"><i class="icon-fixed-width icon-ban-circle"></i> {{ _('Cancel') }}</button>
@@ -272,7 +264,9 @@
 					</div>
 					
 				</div>
+	
 				<div class="tab-pane" id="tab_calibration_qa">
+
 					<div id="qa_images">
 						<div>
 							<div class="qa_img_wrapper">
@@ -323,13 +317,13 @@
 				</div>
 
 			</div>
-			<div style="margin-top:1em;">
-				<!-- Corner calibration -->
+<!--			<div style="margin-top:1em;">
+				 Corner calibration 
 				<button class="btn btn-default" data-bind="click: previousMarker, visible: cornerCalibrationActive()">{{ _('Previous') }}</button>
 				<button class="btn btn-default" data-bind="click: nextMarker, visible: cornerCalibrationActive()">{{ _('Next') }}</button>
 				<button class="btn btn-success" data-bind="click: saveCornerCalibrationData, visible: cornerCalibrationComplete() && cornerCalibrationActive()">{{ _('Save Calibration') }}</button>
 				<button class="btn btn-warning" data-bind="click: abortCalibration, visible: cornerCalibrationActive()"><i class="icon-fixed-width icon-ban-circle"></i> {{ _('Cancel') }}</button>
-			</div>
+			</div>-->
 		</div>
 
 </div>

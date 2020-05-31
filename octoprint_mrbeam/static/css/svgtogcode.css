@@ -870,6 +870,8 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	grid-template-columns: 1fr 1fr 1fr;
 	margin: 0;
 	width: 100%;
+	max-height: 60vh;
+	overflow-y: scroll;
 }
 
 .lens_correction_image_thumb {
@@ -911,11 +913,11 @@ svg#area_preview.overModalBG { z-index: 1051; }
 #lens_calibration_take_pic {
 	color: #fff;
 	border-radius: 50%;
-	width: 7em;
-	height: 7em;
+	width: 5em;
+	height: 5em;
 	display: inline-block;
-	margin-top: -150px;
-	margin-left: -40px;
+	margin-top: -100px;
+	margin-left: -25px;
 	position: relative;
 	z-index: 1;
 }
@@ -926,20 +928,27 @@ svg#area_preview.overModalBG { z-index: 1051; }
 
 #recalculate_lens_calibration_btn {
 	margin-top: -3em;
-	width: 10em;
-	height: 7em;
-	border-top-right-radius: 3.5em;
-	border-bottom-right-radius: 3.5em;
+	width: 7em;
+	height: 5em;
+	border-top-right-radius: 2.5em;
+	border-bottom-right-radius: 2.5em;
 	padding-left: 4em;
 	display: inline-block;
-	margin-top: -150px;
-	margin-left: -50px;
+	margin-top: -100px;
+	margin-left: -40px;
 	z-index: 0;
 	position: relative;
 }
 
+#cancel_lens_calibration_btn {
+	position:absolute;
+	top:0;
+	right:0;
+	width: 4em;
+}
+
 #heatmap_container {
-	width: 75%;
+	width: 50%;
 	display: inline-block;
 }
 
