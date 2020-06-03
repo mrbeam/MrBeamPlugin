@@ -35,6 +35,7 @@ import sys
 import re
 from img_separator import ImageSeparator
 from profiler import Profiler
+from octoprint_mrbeam.mrb_logger import mrb_logger
 
 
 class ImageProcessor:
@@ -67,7 +68,7 @@ class ImageProcessor:
 	              eng_compressor = 100, # DreamCut.
 	              material = None):
 
-		self.log = logging.getLogger("octoprint.plugins.mrbeam.img2gcode")
+		self.log = mrb_logger("octoprint.plugins.mrbeam.img2gcode")
 		self.profiler = Profiler("img2gcode")
 		self.profiler.start('init')
 
@@ -716,29 +717,36 @@ class ImageProcessor:
 			return ""
 
 	def dataUrl_to_gcode(self, dataUrl, w,h, x,y, file_id):
+		gcode = ""
 		img = self._dataurl_to_img(dataUrl)
 
-		imgArray = self.img_prepare(img, w, h)
-		if self.MULTILINE_DATA_URLS:
-			file_id = re.sub("(.{160})", "\\1\n", dataUrl, 0, re.DOTALL) # newline after 160 chars for easy .gco handling in external viewers
-		else:
-			file_id = dataUrl
-		gcode = self.generate_gcode(imgArray, x, y, w, h, file_id)
+		if img:
+			imgArray = self.img_prepare(img, w, h)
+			if self.MULTILINE_DATA_URLS:
+				file_id = re.sub("(.{160})", "\\1\n", dataUrl, 0, re.DOTALL) # newline after 160 chars for easy .gco handling in external viewers
+			else:
+				file_id = dataUrl
+			gcode = self.generate_gcode(imgArray, x, y, w, h, file_id)
 		return gcode
 
 	def _dataurl_to_img(self, dataUrl):
 		if dataUrl is None:
 			self.log.info("ERROR: image is not base64 encoded")
-			return ""
+			return None
 
-		# get raw base64 data
-		# remove "data:image/png;base64," and add a "\n" in front to get proper base64 encoding
-		if dataUrl.startswith("data:"):
-			commaidx = dataUrl.find(',')
-			base64str = "\n" + dataUrl[commaidx:]
-
-		image_string = cStringIO.StringIO(base64.b64decode(base64str))
-		return Image.open(image_string)
+		try:
+			# get raw base64 data
+			# remove "data:image/png;base64," and add a "\n" in front to get proper base64 encoding
+			if dataUrl.startswith("data:"):
+				commaidx = dataUrl.find(',')
+				base64str = "\n" + dataUrl[commaidx:]
+	
+			image_string = cStringIO.StringIO(base64.b64decode(base64str))
+			return Image.open(image_string)
+		except:
+			self.log.exception("Exception in _dataurl_to_img() dataUrl length: %s, dataUrl (shortened): %s",
+			                   len(dataUrl), dataUrl[:100], analytics="_dataurl_to_img")
+			return None
 
 
 	def imgurl_to_gcode(self, url, w,h, x,y, file_id):
