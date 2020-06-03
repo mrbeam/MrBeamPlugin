@@ -8,12 +8,27 @@ $(function () {
 
         // Do not use before onStartupComplete!
         self.analyticsEnabled = ko.observable(false)
+        self.isStartupComplete = false
+        self.error_sqeuence = 0
 
         self.send_fontend_event = function (event, payload) {
+            if (self.isStartupComplete && !self.analyticsEnabled()) {
+                return {}
+            }
+
             payload['ts'] = payload['ts'] || new Date().getTime();
             payload['browser_time'] = new Date().toLocaleString('en-GB');  //GB so that we don't get AM/PM
             return self._send(event, payload);
         };
+
+        self.send_console_event = function (logData) {
+            if (logData.level == 'error' || logData.level == 'warn') {
+                logData.error_sqeuence = self.error_sqeuence++
+            }
+            // copies logData to not pollute console.everything
+            logData = {...logData}
+            self.send_fontend_event('console', logData);
+        }
 
         self._send = function (event, payload) {
             let data = {
@@ -21,7 +36,7 @@ $(function () {
                 payload: payload || {}
             };
 
-            $.ajax({
+            return $.ajax({
                 url: "plugin/mrbeam/analytics",
                 type: "POST",
                 dataType: "json",
@@ -36,6 +51,18 @@ $(function () {
 
         self.onAllBound = function() {
             self._updateAnalyticsEnabledValue()
+
+            console.everything.forEach(function (logData) {
+                if (logData.level == 'error' || logData.level == 'warn') {
+                    self.send_console_event(logData);
+                }
+            })
+            console.callbacks.error = self.send_console_event
+            console.callbacks.warn = self.send_console_event
+        }
+
+        self.onStartupComplete = function(){
+            self.isStartupComplete = true
         }
 
         self.onEventSettingsUpdated = function() {
