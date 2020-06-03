@@ -8,6 +8,7 @@ from numpy.linalg import norm
 from octoprint_mrbeam.camera import RESOLUTIONS, QD_KEYS, PICAMERA_AVAILABLE
 import octoprint_mrbeam.camera as beamcam
 from octoprint_mrbeam.util import dict_merge, logme, debug_logger, logExceptions, logtime
+from octoprint_mrbeam.mrb_logger import mrb_logger
 
 CALIB_MARKERS_KEY = 'calibMarkers'
 CORNERS_KEY = 'cornersFromImage'
@@ -95,7 +96,7 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 	:param stopEvent: used to exit gracefully
 	:param threads: number of threads to use for the marker detection. Set -1, 1, 2, 3 or 4. (recommended : 4, default: -1)
 	"""
-	logger = logging.getLogger('mrbeam.camera.undistort')
+	logger = mrb_logger("mrbeam.camera.undistort")
 	if debug_out:
 		logger.setLevel(logging.DEBUG)
 		logger.info("DEBUG enabled")

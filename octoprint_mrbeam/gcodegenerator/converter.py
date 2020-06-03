@@ -17,6 +17,8 @@ from profiler import Profiler
 from img2gcode import ImageProcessor
 from svg_util import get_path_d, _add_ns, unittouu
 
+from octoprint_mrbeam.mrb_logger import mrb_logger
+
 from lxml import etree
 
 class Converter():
@@ -51,7 +53,7 @@ class Converter():
 	_tempfile = "/tmp/_converter_output.tmp"
 
 	def __init__(self, params, model_path, workingAreaWidth = None, workingAreaHeight = None, min_required_disk_space=0):
-		self._log = logging.getLogger("octoprint.plugins.mrbeam.converter")
+		self._log = mrb_logger("octoprint.plugins.mrbeam.converter")
 		self.workingAreaWidth = workingAreaWidth
 		self.workingAreaHeight = workingAreaHeight
 		self.optimize_path_order = True

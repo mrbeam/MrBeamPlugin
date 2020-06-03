@@ -17,6 +17,8 @@ import numpy as np
 import os.path
 import glob
 
+from octoprint_mrbeam.mrb_logger import mrb_logger
+
 (cvMajor, cvMinor) = cv2.__version__.split('.')[:2]
 isCV2 = cvMajor == "2"
 isCV31 = cvMajor == "3" and cvMinor == "1"
@@ -26,7 +28,7 @@ class ImageSeparator():
 	MAX_OUTER_CONTOURS = 30
 
 	def __init__( self):
-		self.log = logging.getLogger("octoprint.plugins.mrbeam.img_separator")
+		self.log = mrb_logger("octoprint.plugins.mrbeam.img_separator")
 		self.img_debug_folder = "/tmp/separate_contours"
 
 		files = glob.glob(self.img_debug_folder+'/*')
