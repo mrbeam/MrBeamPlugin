@@ -108,7 +108,8 @@ $(function () {
 		// as an immutable array that contains the whole state of the calibration
 		self.calibrationState = ko.observable({})
 
-		self.lensCalibrationRunning = ko.observable(false);
+		self.lensCalibrationNpzFileTs = ko.observable(null);
+        self.lensCalibrationRunning = ko.observable(false);
 		self.lensCalibrationComplete = ko.computed(function(){
 			return ('lensCalibration' in self.calibrationState()) ? self.calibrationState().lensCalibration === "success" : false;
 		});
@@ -404,6 +405,10 @@ $(function () {
 				//      board_size: [5, 6]
 				//    }, ...
 				// }
+
+                if ('lensCalibrationNpzFileTs' in _d) {
+                    self.lensCalibrationNpzFileTs(_d.lensCalibrationNpzFileTs > 0 ? _d.lensCalibrationNpzFileTs*1000 : null)
+                }
 
 				let found_bboxes = [];
 				let total_score = 0;

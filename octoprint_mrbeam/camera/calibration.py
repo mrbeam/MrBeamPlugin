@@ -431,13 +431,16 @@ class calibrationState(dict):
 		self.imageSize=imageSize
 		self.lensCalibration = dict(state=STATE_PENDING)
 		self.output_file =  npzPath
+		self.output_file_ts = -1
 		self.rawImgLock = rawImgLock
+		self.setOutpuFileTimestamp()
 		super(self.__class__, self).__init__(*args, **kw)
 
 	def onChange(self):
 		returnState = dict(imageSize=self.imageSize,
-				   lensCalibration=self.lensCalibration['state'],
-				   pictures=self.clean())
+		                   lensCalibration=self.lensCalibration['state'],
+				           lensCalibrationNpzFileTs=self.output_file_ts,
+				           pictures=self.clean())
 		self._logger.info("Changed state returnState: \n%s", returnState)
 		if self.changeCallback != None:
 			self.changeCallback(returnState)
@@ -492,7 +495,7 @@ class calibrationState(dict):
 
 	def refresh(self, imgFoundCallback=None, args=(), kwargs={}):
 		"""Check if a pending image was taken and saved by the camera"""
-		self._logger.debug("### REFRESH ###")
+		# self._logger.debug("### REFRESH ###")
 		changed = False
 		for path, elm in self.items():
 			if elm['state'] == STATE_PENDING_CAMERA and os.path.exists(path):
@@ -525,18 +528,31 @@ class calibrationState(dict):
 
 	def getProcessing(self):
 		return list(filter(lambda _s: _s['state'] == STATE_PROCESSING, self.values()))
+	
+	def setOutpuFileTimestamp(self):
+		ts = -1
+		try:
+			ts = int(os.path.getmtime(self.output_file))
+		except:
+			pass
+		self.output_file_ts = ts
+		return ts
 
 	def save(self, path):
+		# TODO AXEL: is this used?
 		np.savez(path + ".npz", **self[path])
 
 	def load(self, path):
+		# TODO AXEL: is this used?
 		self[path] = np.load(path + ".npz")
 		self.onChange()
 
 	def saveCalibration(self):
 		np.savez(self.output_file, **self.lensCalibration)
+		self.setOutpuFileTimestamp()
 
 	def loadCalibration(self, path):
+		# TODO AXEL: is this used?
 		self.lensCalibration = np.load(path + ".npz")
 		self.onChange()
 
