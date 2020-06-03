@@ -31,6 +31,8 @@ class UsageHandler(object):
 		self.start_time_gantry = -1
 		self.start_time_compressor = -1
 
+		self._last_dust_value = None
+
 		analyticsfolder = os.path.join(self._settings.getBaseFolder("base"), self._settings.get(['analytics','folder']))
 		if not os.path.isdir(analyticsfolder):
 			os.makedirs(analyticsfolder)
@@ -93,8 +95,12 @@ class UsageHandler(object):
 		self.start_time_gantry = self._usage_data['gantry']['job_time']
 		self.start_time_compressor = self._usage_data['compressor']['job_time']
 
+		self._last_dust_value = None
+
 	def event_write(self, event, payload):
 		if self.start_time_total >= 0:
+			self._logger.info('################# payload: {}'.format(payload))
+			self._last_dust_value = payload.get('dust_value', 1)  # todo iratxe: no default value
 			self._set_time(payload['time'])
 
 	def event_stop(self, event, payload):
@@ -102,6 +108,7 @@ class UsageHandler(object):
 			self._usage_data['succ_jobs']['count'] = self._usage_data['succ_jobs']['count'] + 1
 
 		if self.start_time_total >= 0:
+			self._last_dust_value = payload.get('dust_value', 1)  # todo iratxe: no default value
 			self._set_time(payload['time'])
 			self.start_time_total = -1
 			self.start_time_laser_head = -1
@@ -113,10 +120,12 @@ class UsageHandler(object):
 
 	def _set_time(self, job_duration):
 		if job_duration is not None and job_duration > 0.0:
+			dust_factor = self._last_dust_value  # TODO IRATXE: do this mapping
 			self._usage_data['total']['job_time'] = self.start_time_total + job_duration
-			self._usage_data['laser_head'][self._laser_head_serial]['job_time'] = self.start_time_laser_head + job_duration
-			self._usage_data['prefilter']['job_time'] = self.start_time_prefilter + job_duration
-			self._usage_data['carbon_filter']['job_time'] = self.start_time_carbon_filter + job_duration
+			self._usage_data['laser_head'][self._laser_head_serial]['job_time'] = \
+				self.start_time_laser_head + job_duration * dust_factor
+			self._usage_data['prefilter']['job_time'] = self.start_time_prefilter + job_duration * dust_factor
+			self._usage_data['carbon_filter']['job_time'] = self.start_time_carbon_filter + job_duration * dust_factor
 			self._usage_data['gantry']['job_time'] = self.start_time_gantry + job_duration
 
 			if self._plugin.compressor_handler.has_compressor():

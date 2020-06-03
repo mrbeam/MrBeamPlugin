@@ -879,9 +879,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		srcFile = __builtin__.__package_path__+'/static/gcode/backlash_compensation_x@cardboard.gco'
 		with open(srcFile, 'r') as fh:
 			gcoString = fh.read()
-			
+
 			# TODO replace feedrates and intensity?
-			
+
 			destFile = "precision_calibration.gco"
 
 			class Wrapper(object):
@@ -898,7 +898,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._file_manager.add_file(FileDestinations.LOCAL, destFile, fileObj, links=None, allow_overwrite=True)
 			res = dict(calibration_pattern=destFile, target=FileDestinations.LOCAL)
 			return jsonify(res)
-	
+
 	# ~~ helpers
 
 	# helper method to write data to user settings
@@ -1047,7 +1047,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	### Initial Camera Calibration - END ###
 
 
-	
+
 #	@octoprint.plugin.BlueprintPlugin.route("/engrave_precision_calibration_pattern", methods=["GET"])
 #	@restricted_access
 #	def engraveBacklashCalibrationPattern(self):
@@ -1078,7 +1078,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 #			self._printer._comm.selectGCode(gcode)
 #			#self._printer._comm.selectFile(gcfile, False) # only works inside "uploads" folder
 #			self._printer._comm.startPrint()
-#			
+#
 #		return NO_CONTENT
 
 
@@ -1523,7 +1523,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				return make_response(resp, 200)
 			except Exception as err:
 				self._logger.exception(err.message)
-				return make_response(err.message, 500)	
+				return make_response(err.message, 500)
 		elif command == "compensate_obj_height":
 			self.lid_handler.compensate_for_obj_height(bool(data))
 		return NO_CONTENT
@@ -1866,6 +1866,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			               file_lines_read=lines_read,
 			               file_lines_remaining=lines_remaining,
 			               lines_recovered=lines_recovered,
+						   dust_value=self.dust_manager.get_mean_job_dust(),
 			               )
 			self._event_bus.fire(MrBeamEvents.PRINT_PROGRESS, payload)
 
@@ -2049,7 +2050,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if self._model_id is None:
 			self._model_id = self._get_val_from_device_info('model', default=self.MODEL_MRBEAM2)
 		return self._model_id
-	
+
 	def get_production_date(self):
 		"""
 		Gives you the device's production date as string
