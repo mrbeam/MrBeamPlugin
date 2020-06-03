@@ -81,7 +81,7 @@
 										<div id="files_list" style="height: calc(100vh - 100px); overflow-y: auto;">
 
 											<div class="only_folders clearfix">
-												<div class="gcode_files" data-bind="foreach: foldersOnlyList" >
+												<div id='onlyFoldersList' class="gcode_files" xxdata-bind="foreach: ABCfoldersOnlyList()" >
 													<div class="entry" data-bind="attr: { id: $root.getEntryId($data), mrb_name: name }, template: { name: $root.templateFor($data), data: $data }, css:$root.templateFor($data)"></div>
 												</div>
 											</div>
