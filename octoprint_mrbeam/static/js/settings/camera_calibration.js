@@ -7,7 +7,7 @@
 /* global OctoPrint, OCTOPRINT_VIEWMODELS, INITIAL_CALIBRATION */
 
 MARKERS = ['NW', 'NE', 'SE', 'SW'];
-MIN_BOARDS_FOR_CALIBRATION = 8;
+MIN_BOARDS_FOR_CALIBRATION = 9;
 MAX_BOARD_SCORE = 5;
 
 $(function () {
@@ -21,7 +21,8 @@ $(function () {
 		self.loginState = parameters[4];
 		self.camera = self.workingArea.camera;
 
-		self.calibrationScreenShown = ko.observable(false)
+		self.all_bound = ko.observable(false);
+		self.calibrationScreenShown = ko.observable(false);
 
 		self.staticURL = "/plugin/mrbeam/static/img/cam_calibration/calpic_wait.svg";
 
@@ -109,6 +110,16 @@ $(function () {
 		self.calibrationState = ko.observable({})
 
 		self.lensCalibrationNpzFileTs = ko.observable(null);
+		self.lensCalibrationNpzFileVerboseDate = ko.computed(function(){
+			const ts = self.lensCalibrationNpzFileTs();
+			if(ts !== null){
+				const d = new Date(ts);
+				const verbose = d.toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })
+				return `Using .npz created at ${verbose}`;
+			} else {
+				return 'No .npz file available';
+			}
+		});
         self.lensCalibrationRunning = ko.observable(false);
 		self.lensCalibrationComplete = ko.computed(function(){
 			return ('lensCalibration' in self.calibrationState()) ? self.calibrationState().lensCalibration === "success" : false;
@@ -130,13 +141,17 @@ $(function () {
 			const totalScore = self.lensCalibrationCoverageQuality();
 			const maxScore = Math.max(MIN_BOARDS_FOR_CALIBRATION, self.boardsFound()) * MAX_BOARD_SCORE;
 			const percent = (totalScore / maxScore * 100);
-			const text = `Quality: ${percent.toFixed(0)}%`;
+			const text = `Quality: ${percent.toFixed(0)}% (min 90%)`;
 			
 			// data-bind is complicated with inline svg -> direct manipulation.
 			document.getElementById('lensCalibrationCoverageText').innerHTML = text;
 			return text;
 		});
 		self.markersFoundPosition = ko.observable({});
+
+		self.onAllBound = function(){
+			self.all_bound(true);
+		};
 
 		self.__format_point = function(p){
 			if(typeof p === 'undefined') return '?,?';
@@ -215,6 +230,10 @@ $(function () {
 								  "GET");
 			self.lensCalibrationActive(true);
 
+		};
+		
+		self.lensCalibrationToggleQA = function (){
+			$('#lensCalibrationPhases').toggleClass('qa_active');
 		};
 
 		self.nextMarker = function(){

@@ -761,6 +761,15 @@ svg#area_preview.overModalBG { z-index: 1051; }
 
 /** CAMERA CALIBRATION **/
 
+.camera_calibration_tabs {
+	border-width: 1px;
+	padding: 1em;
+	height: 90vh;
+	overflow-y: auto;
+	padding-bottom: 0;
+	position: relative;
+}
+
 .calibration_manual.text {
     width: 48%;
 	margin-bottom: 2em;
@@ -910,6 +919,11 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	line-height: 12px;
 }
 
+#lensCalibrationPhases.qa_active #lensCalibrationPictureTaking, 
+#lensCalibrationPhases #lensCalibrationQA { display:none; }
+#lensCalibrationPhases.qa_active #lensCalibrationQA, 
+#lensCalibrationPhases #lensCalibrationPictureTaking { display:block; }
+
 #lens_calibration_take_pic {
 	color: #fff;
 	border-radius: 50%;
@@ -926,29 +940,24 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	background-color: #5985dd;
 }
 
-#recalculate_lens_calibration_btn {
-	margin-top: -3em;
-	width: 7em;
-	height: 5em;
-	border-top-right-radius: 2.5em;
-	border-bottom-right-radius: 2.5em;
-	padding-left: 4em;
-	display: inline-block;
-	margin-top: -100px;
-	margin-left: -40px;
-	z-index: 0;
-	position: relative;
+#lens_calibration_toggle_qa_btn {
+	position: absolute;
+	bottom: 40px;
+	right: 0;
 }
 
-#cancel_lens_calibration_btn {
-	position:absolute;
-	top:0;
-	right:0;
-	width: 4em;
+#recalculate_lens_calibration_btn {
+	height: 5em;
+	margin-bottom: 20px;
+	display: inline-block;
+	right: 0;
+	bottom: 0;
+	z-index: 0;
+	position: absolute;
 }
 
 #heatmap_container {
-	width: 50%;
+	width: 45%;
 	display: inline-block;
 }
 
@@ -962,11 +971,45 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	stroke-width: 8px;
 }
 
-#qa_images h3 {
+.qa_list_and_next {
+	border: 1px solid green;
+	border-radius: 8px;
+	padding: 1em 2em;
+	margin: 1em 0;
+	position: relative;
+	background-color: #fff;
+}
+
+.qa_list_and_next ul {
+	max-width: 60%;
+}
+
+.qa_list_and_next a.continue_btn {
+	position: absolute;
+	right: -1px;
+	bottom: -1px;
+	border: none;
+	border-radius: 8px 0px;
+}
+
+.qa_list_and_next .continue_btn.btn-group {
+	position: absolute;
+	bottom: -1px;
+	right: -1px;
+}
+.qa_list_and_next .continue_btn.btn-group .btn { position: relative; }
+.qa_list_and_next .continue_btn.btn-group .btn:first-child {
+	border-radius: 8px 0 0 0;
+}
+.qa_list_and_next .continue_btn.btn-group .btn:last-child {
+	border-radius: 0 0 8px 0;
+}
+
+.qa_images h3 {
 	margin-top: 0;
 }
 
-#qa_images {
+.qa_images {
 	display: grid;
 	grid-template-columns: 2fr 1fr;
 	margin: 0;
@@ -1005,12 +1048,13 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	right: var(--dist_horizontal);
 }
 
-#qa_images li.example {
+.qa_images li.example {
 	position: relative;
 	list-style:none; 
 	margin-bottom: 4px;
+	max-width: 200px;
 }
-#qa_images li.example::after {
+.qa_images li.example::after {
 	position: absolute;
 	right: 0.5rem;
 	top: 1rem;
@@ -1021,11 +1065,11 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	text-decoration: inherit;
 	-webkit-font-smoothing: antialiased;
 }
-#qa_images li.example.good_example::after {
+.qa_images li.example.good_example::after {
 	content: "\f00c";
 	color: #00d400;
 }
-#qa_images li.example.bad_example::after {
+.qa_images li.example.bad_example::after {
 	content: "\f00d";
 	color: red;
 }
