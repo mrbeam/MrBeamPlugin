@@ -96,7 +96,7 @@ class HwMalfunctionHandler(object):
 		text = '<br/>' + gettext(
 			"The bottom plate is not closed correctly. "
 			"Please make sure that the bottom is correctly mounted as described in the Mr Beam II user manual.") + \
-			self._get_knowledgebase_link(url='https://mr-beam.freshdesk.com/support/solutions/articles/43000557280')
+			self._get_knowledgebase_link(url='https://support.mr-beam.org/support/solutions/articles/43000557281-system-messages#bottomplate')
 		return dict(
 			title=gettext("Bottom Plate Error"),
 			text=text,
@@ -109,7 +109,7 @@ class HwMalfunctionHandler(object):
 		text = '<br/>' + gettext(
 			"Laser head unit not found. "
 			"Please make sure that the laser head unit is connected correctly.") + \
-			self._get_knowledgebase_link(url='https://mr-beam.freshdesk.com/support/solutions/articles/43000557279') + \
+			self._get_knowledgebase_link(url='https://support.mr-beam.org/support/solutions/articles/43000557281-system-messages#lhnotfound') + \
 			self._get_error_text(msg)
 		return dict(
 			title=gettext("No laser head unit found"),
@@ -122,7 +122,7 @@ class HwMalfunctionHandler(object):
 	def _get_notification_hardware_malfunction(self, msgs=[]):
 		text = '<br/>' + gettext(
 			'A possible hardware malfunction has been detected on this device. Please contact our support team immediately at:') + \
-			self._get_knowledgebase_link(url='https://mr-beam.freshdesk.com/support/solutions/articles/43000557281') + \
+			self._get_knowledgebase_link(url='https://support.mr-beam.org/support/solutions/articles/43000557281-system-messages#hwmalfunction') + \
 			self._get_error_text(msgs)
 		return dict(
 			title=gettext("Hardware malfunction"),
