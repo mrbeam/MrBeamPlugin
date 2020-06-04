@@ -100,24 +100,11 @@ Snap.plugin(function (Snap, Element, Paper, global) {
                 }
 
                 // generate gcode
-                var gcodeObj = mrbeam.path.gcode(paths, id, mb_meta[id]);
+                var gcode = mrbeam.path.gcode(paths, id, mb_meta[id]);
 
-                element.attr({
-                    "mb:gc": gcodeObj.gcode || " ",
-                    // start and end of path for easier sorting / way optimization
-                    "mb:start_x": gcodeObj.begin.x || "",
-                    "mb:start_y": gcodeObj.begin.y || "",
-                    "mb:end_x": gcodeObj.end.x || "",
-                    "mb:end_y": gcodeObj.end.y || ""
-                });
+                element.attr("mb:gc", gcode || " ");
             } catch (e) {
-                element.attr({
-                    "mb:gc": " ",
-                    "mb:start_x": "",
-                    "mb:start_y": "",
-                    "mb:end_x": "",
-                    "mb:end_y": ""
-                });
+                element.attr("mb:gc", " ");
                 console.error("Error in embed_gc(): ", e, " - No gcode for element: ", element);
                 // console.warn("Skipping element not yet rendered by the browser: (You might see an id and paper in your browser's dev tools, but it can't be read programmatically!)", element);
             }
