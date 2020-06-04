@@ -1,0 +1,63 @@
+<div id="settings_plugin_mrbeam_backlash">
+    <h3>{{ _('Precision Calibration') }}</h3>
+
+    <div class="scrollable" style="padding-bottom:2em; overflow-y: auto; height: calc(100vh - 150px);">
+
+        <div>
+            <div class='text'>
+                {{ _("This calibration is for optimizing the alignment of the single lines of an engraving.\n\
+                    It improves the engraving quality especially on fine structures like small text.\n\
+                    The calibration procedure takes approximately 15 minutes and requires to engrave a piece \n\
+                    of cardboard with minimum 25mm width and 100mm height.<br/>\n\
+                    To get the best calibration result your Mr Beam lasercutter should be clean and well maintained.") }}
+                    <p>
+                        <small>
+                            {{ _("For maintenance tips check the %(manual_opening_tag)suser manual%(link_closing_tag)s our %(kb_opening_tag)sknowledge base%(link_closing_tag)s and our %(yt_opening_tag)syoutube channel%(link_closing_tag)s.",
+                            manual_opening_tag='<a href="https://www.mr-beam.org/downloads/" target="_blank"><i class="icon-external-link"></i>&nbsp;',
+                            kb_opening_tag='<a href="https://support.mr-beam.org" target="_blank"><i class="icon-external-link"></i>&nbsp;',
+                            yt_opening_tag='<a href="https://www.youtube.com/c/mrbeamlasers" target="_blank"><i class="icon-external-link"></i>&nbsp;',
+                            link_closing_tag='</a>') }}
+                        </small>
+                    </p>
+            </div>
+
+            <div id='precision_calibration_steps'>
+                <div class='step_1'>
+                    <h4>{{ _("Engrave a Test Pattern") }}</h4>
+                    <div class="calibration_manual img" style="background-image:url(/plugin/mrbeam/static/img/precision_calibration/calpic_material_size.svg)"></div>
+                    <ul>
+                        <li>{{ _("Place your cardboard in the center of the working area.") }}</li>
+                        <li>{{ _("Focus the laserhead to the height of the cardboard.") }}</li>
+                        <li><a class='btn btn-primary' data-bind='click: engrave_calibration_pattern'>{{ _("Start the test engraving") }}</a></li>
+                    </ul>
+                    <a class='btn btn-default' onclick="document.getElementById('precision_calibration_steps').classList.toggle('pattern_engraved')">{{ _("Next") }} <i class='icon icon-arrow-right'></i></a>
+                </div>
+
+                <div class='step_2'>
+                    <h4>{{ _("Find the most precise line") }}</h4>
+                    <div class="calibration_manual img" style="background-image:url(/plugin/mrbeam/static/img/precision_calibration/calpic_result.svg)"></div>
+                    <ul>
+                        <li>{{ _("Look up the sharpest line on the engraving") }}</li>
+                        <li>
+                            {{ _("Enter the line's number (including sign) here: ") }}
+                            <form onkeydown="return event.key !== 'Enter';">
+                                <input id="settings_backlash_compensation_x" type="number" min="-3" max="3" step="0.01" class="input-block-level" data-bind="value: backlash_compensation_x">
+                            </form>
+                        </li>
+                    </ul>
+                    <a class='btn btn-default' onclick="document.getElementById('precision_calibration_steps').classList.toggle('pattern_engraved')">{{ _("OK") }} <i class='icon icon-ok'></i></a>
+                </div>
+
+            </div>
+            <div class='clearfix'></div>
+    <!--		<div class='text show_only_online'>{{ _("For more information, please have a look at our article on %(opening_tag)sprecision calibration%(closing_tag)s.",
+                    opening_tag='<a href="https://mr-beam.freshdesk.com/support/solutions/articles/TODO#####" target="_blank"><i class="icon-external-link"></i>&nbsp;',
+                    closing_tag='</a>') }}</div>
+            <div class='text show_only_offline'>{{ _("For more information, please have a look at our article on %(opening_tag)sprecision calibration%(closing_tag)s.",
+                    opening_tag='<a href="#" onclick="mrbeam.openOfflineKbUrl(\'TODO#####.pdf\')"><i class="icon-file-text"></i>&nbsp;',
+                    closing_tag='</a>') }}</div>-->
+
+        </div>
+
+	</div>
+</div>

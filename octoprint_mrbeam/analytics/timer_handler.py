@@ -190,24 +190,24 @@ class TimerHandler:
 		except Exception as e:
 			self._logger.exception('Exception during the _disk_space check: {}'.format(e))
 
-
 	def _software_versions_and_checksums(self):
 		try:
 			# must end with /
-			folders = {'mrbeam': {'src_path': '/home/pi/site-packages/octoprint_mrbeam/',},
-			           'iobeam': {'src_path': '/home/pi/dist-packages/iobeam/',},
-			           'findmymrbeam': {'src_path': '/home/pi/site-packages/octoprint_findmymrbeam/',},
-			           'netconnectd-daemon': {'src_path': '/home/pi/dist-packages/netconnectd/',},
-			           'netconnectd': {'src_path': '/home/pi/site-packages/octoprint_netconnectd/',},
-			           'mrb_hw_info': {'src_path': '/home/pi/dist-packages/mrb_hw_info/',},
-			           'mrbeam-ledstrips': {'src_path': '/home/pi/dist-packages/mrbeam_ledstrips/',},
-			           'octoprint': {'src_path': '/home/pi/site-packages/octoprint/',},
-			           '_dist-packages': {'src_path': '/home/pi/dist-packages/',},
-			           '_site-packages': {'src_path': '/home/pi/site-packages/',},
-			           }
+			folders = {
+				'mrbeam': {'src_path': '/home/pi/site-packages/octoprint_mrbeam/', },
+				'iobeam': {'src_path': '/home/pi/dist-packages/iobeam/', },
+				'findmymrbeam': {'src_path': '/home/pi/site-packages/octoprint_findmymrbeam/', },
+				'netconnectd-daemon': {'src_path': '/home/pi/dist-packages/netconnectd/', },
+				'netconnectd': {'src_path': '/home/pi/site-packages/octoprint_netconnectd/', },
+				'mrb_hw_info': {'src_path': '/home/pi/dist-packages/mrb_hw_info/', },
+				'mrbeam-ledstrips': {'src_path': '/home/pi/dist-packages/mrbeam_ledstrips/', },
+				'octoprint': {'src_path': '/home/pi/site-packages/octoprint/', },
+				'_dist-packages': {'src_path': '/home/pi/dist-packages/', },
+				'_site-packages': {'src_path': '/home/pi/site-packages/', },
+				}
 			sw_versions = self._get_software_versions()
 
-			if self._analytics_handler.analytics_enabled:
+			if self._analytics_handler.is_analytics_enabled():
 				for name, conf in folders.iteritems():
 					cmd = 'find "{folder}" -type f -exec md5sum {{}} \; | sort -k 2 | md5sum'.format(folder=conf.get('src_path'))
 					out, code = exec_cmd_output(cmd, shell=True)
@@ -220,7 +220,6 @@ class TimerHandler:
 			self._plugin.analytics_handler.add_software_versions(sw_versions)
 		except:
 			self._logger.exception("Exception in _software_versions_and_checksums(): ")
-
 
 	def _get_software_versions(self):
 		result = dict()
@@ -239,10 +238,8 @@ class TimerHandler:
 			self._logger.warn("_get_software_versions() Can't read software version from softwareupdate plugin.")
 		else:
 			for name, config in configured_checks.iteritems():
-				result[name] = dict(version=config.get('displayVersion', None),
-				                    commit_hash=config.get('current', None))
+				result[name] = dict(version=config.get('displayVersion', None), commit_hash=config.get('current', None))
 		return result
-
 
 	def _num_files(self):
 		try:

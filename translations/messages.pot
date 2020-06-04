@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-02-14 11:27+0100\n"
+"POT-Creation-Date: 2020-02-11 15:02+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -47,19 +47,16 @@ msgstr ""
 msgid "Hardware malfunction"
 msgstr ""
 
-#: octoprint_mrbeam/iobeam/hw_malfunction_handler.py:150
+#: octoprint_mrbeam/iobeam/hw_malfunction_handler.py:149
 #, python-format
 msgid ""
 "For more information check out this %(opening_tag)sKnowledge Base "
-"article%(closing_tag)sopening_tag<a href=\"{}\" "
-"target=\"_blank\"><strong>"
+"article%(closing_tag)s"
 msgstr ""
 
-#: octoprint_mrbeam/iobeam/hw_malfunction_handler.py:157
+#: octoprint_mrbeam/iobeam/hw_malfunction_handler.py:155
 #, python-format
-msgid ""
-"Browse our %(opening_tag)sKnowledge Base%(closing_tag)sopening_tag<a "
-"href=\"{}\" target=\"_blank\"><strong>"
+msgid "Browse our %(opening_tag)sKnowledge Base%(closing_tag)s"
 msgstr ""
 
 #: octoprint_mrbeam/iobeam/hw_malfunction_handler.py:163
@@ -95,7 +92,7 @@ msgstr ""
 msgid "Please contact Mr Beam support team and attach octoprint.log."
 msgstr ""
 
-#: octoprint_mrbeam/printing/comm_acc2.py:1309
+#: octoprint_mrbeam/printing/comm_acc2.py:1306
 msgid ""
 "The update of the internal component GRBL failed.{br}It is still save to "
 "use your Mr Beam II. However, if this error persists consider to contact "
@@ -103,7 +100,7 @@ msgid ""
 "team{closing_tag}.{br}{br}{strong_opening_tag}Error:{strong_closing_tag}{br}{error}"
 msgstr ""
 
-#: octoprint_mrbeam/printing/comm_acc2.py:1315
+#: octoprint_mrbeam/printing/comm_acc2.py:1314
 msgid "GRBL Update failed"
 msgstr ""
 
@@ -1078,24 +1075,12 @@ msgstr ""
 msgid "Heart"
 msgstr ""
 
-#: octoprint_mrbeam/static/js/working_area.js:869
-msgid "No different line colors found."
-msgstr ""
-
-#: octoprint_mrbeam/static/js/working_area.js:872
-msgid "No non-intersecting shapes found."
-msgstr ""
-
-#: octoprint_mrbeam/static/js/working_area.js:875
-msgid "Looks like a single path."
-msgstr ""
-
 #: octoprint_mrbeam/static/js/working_area.js:878
 msgid "Element not splittable with this method."
 msgstr ""
 
 #: octoprint_mrbeam/static/js/working_area.js:879
-msgid "Can't split this design."
+msgid "Can't split this design. "
 msgstr ""
 
 #: octoprint_mrbeam/static/js/working_area.js:1199

@@ -1,19 +1,15 @@
 
 <h3>{{ _("...and more!") }}</h3>
 
-<div>
-    <ul>
-        <li><strong>{{ _("Dreamcut support") }}: </strong>
-            {{ _('There is a new member in the Mr Beam family. Have you heard about our new Mr Beam dreamcut?')}}
-            {{ _('Make sure you check it out in <a href="https://www.mr-beam.org/en/dreamcut?/utm_source=beamos&utm_medium=beamos&utm_campaign=whatsnew_dialog" target="_blank">www.mr-beam.org</a>') }}
-        </li>
-        <li><strong>{{ _("Mr Beam software Guided Tour") }}: </strong>{{ _('This tour will guide new users through their first laser job. You can start it anytime from the menu:') }}</li>
-            <img style="width: 30%;" src="/plugin/mrbeam/static/img/whatsnew_dialog/guided_tour.png">
-        <li><strong>{{ _("Recent jobs") }}: </strong>{{ _('Mr Beam remembers your recent laser jobs. You can modify and reuse them from the design library.') }}</li>
-        <li>{{ _("The order of the cutting jobs is now always consistent with the order on the laser parameter screen.") }}</li>
-        <li>{{ _("Fixed a bug where in some cases the fan did not stop after a laser job.") }}</li>
-    </ul>
-</div>
-<div id="whatsnew_enjoy_this_experience">
-    {{ _("We hope you enjoy this new experience!") }}
+<div class="wizard-content">
+    <div>
+        <ul>
+            <li>{{ _("The laser head's position shown is now more consistent.") }}</li>
+            <li>{{ _("New mechanism to avoid dark edges in engravings.") }}</li>
+            <li>{{ _("Improved engraving order: the order of the different engravings was optimized.") }}</li>
+        </ul>
+    </div>
+    <div id="whatsnew_enjoy_this_experience">
+        {{ _("We hope you enjoy this new experience!") }}
+    </div>
 </div>

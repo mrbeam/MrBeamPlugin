@@ -14,6 +14,8 @@
         <link rel="apple-touch-icon" sizes="114x114" href="{{ url_for('plugin.mrbeam.static', filename='img/mrb114.png') }}">
         <link rel="apple-touch-icon" sizes="144x144" href="{{ url_for('plugin.mrbeam.static', filename='img/mrb144.png') }}">
 
+        {% include 'error_logging_script.jinja2' %}
+
         {#  Dirty to have this (== body elements) in the head section.
            Chrome ends head-tag and opens body-tag which means that all following is in the page's bodey instead of the head  #}
         {% include 'loading_overlay.jinja2' %}
@@ -32,7 +34,7 @@
         {% include 'software_channel_selector.jinja2' %}
 
     </head>
-    <body style="overflow: hidden;">
+    <body style="overflow: hidden;" class="env_prod online">
 		<div class="container-fluid octoprint-container">
 		<nav class="navbar navbar-default navbar-fixed-top" role="navigation" id="navbar" style="min-width:730px;">
 			<div class="">
@@ -89,11 +91,11 @@
 							<li><a href="http://find.mr-beam.org" target="_blank"><i class="icon-chevron-right"></i> {{ _('Find my Mr Beam') }}</a></li>
 							<li class="divider"></li>
                              {% if model in ["MRBEAM2", "MRBEAM2_DC_R1"] %}
-                                <li><a href="/plugin/mrbeam/static/docs/{{ _('QuickstartGuide_en.pdf') }}" target="_blank"><i class="icon-book"></i> {{ _('Quickstart Guide') }}</a></li>
-                                <li><a href="/plugin/mrbeam/static/docs/{{ _('UserManual_en.pdf') }}" target="_blank"><i class="icon-book"></i> {{ _('User Manual') }}</a></li>
+                                <li><a href="/plugin/mrbeamdoc/static/docs/{{ _('QuickstartGuide_en.pdf') }}" target="_blank"><i class="icon-book"></i> {{ _('Quickstart Guide') }}</a></li>
+                                <li><a href="/plugin/mrbeamdoc/static/docs/{{ _('UserManual_en.pdf') }}" target="_blank"><i class="icon-book"></i> {{ _('User Manual') }}</a></li>
                             {% else %}
-                                <li><a href="/plugin/mrbeam/static/docs/{{ _('QuickstartGuide_dreamcut_en.pdf') }}" target="_blank"><i class="icon-book"></i> {{ _('Quickstart Guide') }}</a></li>
-                                <li><a href="/plugin/mrbeam/static/docs/{{ _('UserManual_dreamcut_en.pdf') }}" target="_blank"><i class="icon-book"></i> {{ _('User Manual') }}</a></li>
+                                <li><a href="/plugin/mrbeamdoc/static/docs/{{ _('QuickstartGuide_dreamcut_en.pdf') }}" target="_blank"><i class="icon-book"></i> {{ _('Quickstart Guide') }}</a></li>
+                                <li><a href="/plugin/mrbeamdoc/static/docs/{{ _('UserManual_dreamcut_en.pdf') }}" target="_blank"><i class="icon-book"></i> {{ _('User Manual') }}</a></li>
                             {% endif %}
 							<li class="divider"></li>
 							<li><a href="#tour" id="tour_start_btn" data-bind="click: window.mrbeam.viewModels.tourViewModel.btn_startTour"><i class="icon-youtube-play"></i> {{ _('Take a Tour') }}</a></li>
@@ -161,6 +163,7 @@
 		<!-- Dialogs -->
         {#% include 'dialogs/settings.jinja2' %#}
         {% include 'dialogs/slicing.jinja2' %}
+        {% include 'dialogs/files.jinja2' %}
         {% include 'dialogs/wizard.jinja2' %}
 		{% include 'dialogs/usersettings.jinja2' %}
         {% include 'take_photo.jinja2' %}

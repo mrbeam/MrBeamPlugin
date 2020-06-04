@@ -1,4 +1,3 @@
-
 import os
 import yaml
 from octoprint_mrbeam.mrb_logger import mrb_logger
@@ -85,6 +84,12 @@ class Materials(object):
 			if res and count > 0:
 				res = self._save()
 		return res
+
+
+	def reset_all_custom_materials(self):
+		self._logger.info("Resetting all custom material settings!!!!")
+		self.custom_materials = {}
+		self._save(force=True)
 
 
 	def _load(self, force=False):

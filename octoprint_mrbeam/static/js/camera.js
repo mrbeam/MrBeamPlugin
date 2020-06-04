@@ -1,29 +1,45 @@
+MARKERS = ['NW', 'NE', 'SE', 'SW'];
+
+
 $(function(){
 
 	function CameraViewModel(params) {
         var self = this;
+        window.mrbeam.viewModels['cameraViewModel'] = self;
+
         self.settings = params[0];
-        self.cameraCalibration = params[1];
+        self.state = params[1];
 
         self.TAB_NAME_WORKING_AREA = '#workingarea';
         self.FALLBACK_IMAGE_URL = '/plugin/mrbeam/static/img/beam-cam-static.jpg';
 
-        self.camEnabled = undefined;
         self.needsCalibration = false;
 
-        self.imageUrl = undefined;
+        self.rawUrl = '/downloads/files/local/cam/debug/raw.jpg'; // TODO get from settings
+        self.undistortedUrl = '/downloads/files/local/cam/debug/undistorted.jpg'; // TODO get from settings
+        self.croppedUrl = '/downloads/files/local/cam/beam-cam.jpg';
+        self.timestampedImgUrl = ko.observable("");
         self.webCamImageElem = undefined;
         self.isCamCalibrated = false;
         self.firstImageLoaded = false;
+        self.countImagesLoaded = ko.observable(0);
 
+        self.markersFound = ko.observable(new Map(MARKERS.map(elm => [elm, undefined])));
+
+        self.maxObjectHeight = 38; // in mm
+        self.defaultMargin = self.maxObjectHeight / 582;
+        self.objectZ = ko.observable(0); // in mm
+        self.cornerMargin = ko.observable(self.defaultMargin / 2);
+        self.imgHeightScale = ko.computed(function () {
+            return self.cornerMargin() * (1 - self.objectZ() / self.maxObjectHeight);
+        });
         // event listener callbacks //
 
         self.onAllBound = function () {
             self.webCamImageElem = $("#beamcam_image_svg");
 			self.cameraMarkerElem = $("#camera_markers");
             // self.webCamImageElem.removeAttr('onerror');
-            self.camEnabled = self.settings.settings.plugins.mrbeam.cam.enabled();
-            self.imageUrl = self.settings.settings.plugins.mrbeam.cam.frontendUrl();
+            self.croppedUrl = self.settings.settings.plugins.mrbeam.cam.frontendUrl();
 
             if (window.mrbeam.browser.is_safari) {
                 // svg filters don't really work in safari: https://github.com/mrbeam/MrBeamPlugin/issues/586
@@ -34,33 +50,75 @@ $(function(){
             // not working in Safari
             self.webCamImageElem.load(function(){
                 self.firstImageLoaded = true;
+                self.countImagesLoaded(self.countImagesLoaded()+1);
             });
 
             // trigger initial loading of the image
             self.loadImage();
         };
 
+        // Image resolution notification //
+        self.imgResolution = ko.observable('Low');
+        self.imgResolutionNoticeDisplay = ko.computed(function () {
+            if (self.imgResolution() === 'Low') return 'inherit';
+            else return 'none';
+        });
+
+        self.markerState = ko.computed(function() {
+            count = 0
+            MARKERS.forEach(function(m){
+                if (self.markersFound()[m] === true)
+                    count++
+            });
+            return count
+        })
+
+        self.markerStateGreen = ko.computed(function() {
+            return self.markerState() >= 4
+        })
+
+        self.markerStateYellow = ko.computed(function() {
+            return self.markerState() < 4 && self.markerState() >= 2
+        })
+
+        self.markerStateRed = ko.computed(function() {
+            return self.markerState() < 4 && self.markerState() <2
+        })
+
+        self.firstRealimageLoaded = ko.computed(function() {
+            return self.countImagesLoaded() >= 2;
+        })
+
+        self.cameraActive = ko.computed(function() {
+            return self.firstRealimageLoaded() && self.state.isOperational() && !self.state.isPrinting() && !self.state.isLocked();
+        })
+
+        self.markerMissedClass = ko.computed(function() {
+            var ret = '';
+            MARKERS.forEach(function(m){
+                if (!(self.markersFound()[m] === undefined) && !self.markersFound()[m])
+                    ret = ret + ' marker' + m;
+            });
+            return ret;
+        })
 
         self.onDataUpdaterPluginMessage = function(plugin, data) {
             if (plugin !== "mrbeam" || !data) return;
             if ('beam_cam_new_image' in data) {
                 const mf = data['beam_cam_new_image']['markers_found'];
-				if(!data['beam_cam_new_image']['successful_correction']){
-					['NW', 'NE', 'SE', 'SW'].forEach(function(m) {
-						if(mf[m] !== undefined){
-							if(mf[m].recognized === true){
-							    self.cameraMarkerElem.removeClass('marker'+m);
-							} else {
-							    self.cameraMarkerElem.addClass('marker'+m);
-							}
-						}
-					});
-				}
+                _markersFound = {};
+                MARKERS.forEach(function(m) {
+                    if(mf.includes(m)) {
+                        _markersFound[m] = true;
+                    } else {
+                        _markersFound[m] = false;
+                    }
+                });
+                self.markersFound(_markersFound);
 
-
-                if(data['beam_cam_new_image']['error'] === undefined){
+                if (data['beam_cam_new_image']['error'] === undefined) {
                     self.needsCalibration = false;
-                }else if(data['beam_cam_new_image']['error'] === "NO_CALIBRATION: Marker Calibration Needed" && !self.needsCalibration){
+                } else if (data['beam_cam_new_image']['error'] === "NO_CALIBRATION: Marker Calibration Needed" && !self.needsCalibration) {
                     self.needsCalibration = true;
                     new PNotify({
                         title: gettext("Calibration needed"),
@@ -70,6 +128,14 @@ $(function(){
                         hide: false
                     });
                 }
+                if ('workspace_corner_ratio' in data['beam_cam_new_image']) {
+                    // workspace_corner_ratio should be a float
+                    // describing the fraction of the img where
+                    // the z=0 view starts.
+                    self.cornerMargin(data['beam_cam_new_image']['workspace_corner_ratio']);
+                } else {
+                    self.cornerMargin(0)
+                }
                 self.loadImage();
             }
 
@@ -77,44 +143,60 @@ $(function(){
 			if('interlocks_closed' in data && data.interlocks_closed === true){
 				self.cameraMarkerElem.attr('class', '');
 			}
-
         };
 
         self.loadImage = function () {
-            var myImageUrl = self.getTimestampedImageUrl();
+            var myImageUrl = self.getTimestampedImageUrl(self.croppedUrl);
             var img = $('<img>');
             img.load(function () {
-                self.webCamImageElem.attr('xlink:href', myImageUrl);
+                self.timestampedImgUrl(myImageUrl);
                 if (window.mrbeam.browser.is_safari) {
                     // load() event seems not to fire in Safari.
                     // So as a quick hack, let's set firstImageLoaded to true already here
                     self.firstImageLoaded = true;
+                    self.countImagesLoaded(self.countImagesLoaded()+1);
                 }
+                if (this.width > 1500 && this.height > 1000) self.imgResolution('High');
+                else self.imgResolution('Low');
+                // TODO respond to backend to tell we have loaded the picture
+                OctoPrint.simpleApiCommand("mrbeam", "on_camera_picture_transfer", {})
             });
             if (!self.firstImageLoaded) {
                 img.error(function () {
-                    self.webCamImageElem.attr("xlink:href", self.FALLBACK_IMAGE_URL);
+                    self.timestampedImgUrl(self.FALLBACK_IMAGE_URL);
                 });
             }
             img.attr({src: myImageUrl});
         };
 
-        self.getTimestampedImageUrl = function () {
+        self.getTimestampedImageUrl = function (url) {
             var result = undefined;
-            if (self.imageUrl) {
-                result = self.imageUrl;
-                result += (result.lastIndexOf("?") > -1) ? '&' : '?';
-                result += new Date().getTime();
+            if (url) {
+                result = url;
+            } else if (self.croppedUrl) {
+                result = self.croppedUrl;
+            }
+            if (result) {
+                if (result.match(/(\?|&)ts=/))
+                    result = result.replace(/(\?|&)ts=[0-9]*/, "$1ts=" + new Date().getTime())
+                else {
+                    result += (result.lastIndexOf("?") > -1) ? '&ts=' : '?ts='
+                    result += new Date().getTime();
+                }
             }
             return result;
         };
-    };
+
+        self.send_camera_image_to_analytics = function(){
+            OctoPrint.simpleApiCommand("mrbeam", "send_camera_image_to_analytics", {})
+        };
+    }
 
 
 
     // view model class, parameters for constructor, container to bind to
     ADDITIONAL_VIEWMODELS.push([CameraViewModel,
-		["settingsViewModel"],
+		["settingsViewModel", "printerStateViewModel"],
 		[] // nothing to bind.
 	]);
 

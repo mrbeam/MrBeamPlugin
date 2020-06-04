@@ -146,7 +146,7 @@ $(function () {
                     console.error("Unable to save review state: ", data);
                     new PNotify({
                         title: gettext("Error while saving review!"),
-                        text: _.sprintf(gettext("Unable to save your review at the moment.%(br)sCheck connection to Mr Beam II and try again."), {br: "<br/>"}),
+                        text: _.sprintf(gettext("Unable to save your review at the moment.%(br)sCheck connection to Mr Beam and try again."), {br: "<br/>"}),
                         type: "error",
                         hide: true
                     });

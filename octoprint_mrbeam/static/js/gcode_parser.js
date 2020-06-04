@@ -19,7 +19,7 @@ $(function() {
 			var model = [];
 			for (var i = 0; i < gcode_lines.length; i++) {
 				var l = gcode_lines[i];
-				if(l.match(/; ?Image/)) {
+				if(l.match(/; ?Image/) && !window.MRBEAM_DEBUG_RENDERING) {
 					withinPixelCode = true;
 					// ;Image: 24.71x18.58 @ 2.59,1.70|http://localhost:5000/serve/files/local/filename.png
 					var re = /; ?Image: ([-+]?[0-9]*\.?[0-9]+)x([-+]?[0-9]*\.?[0-9]+) @ ([-+]?[0-9]*\.?[0-9]+),([-+]?[0-9]*\.?[0-9]+)\|(.*)$/;

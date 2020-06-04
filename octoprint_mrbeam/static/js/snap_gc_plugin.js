@@ -32,76 +32,95 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		// TODO The selector only selects children elements of 'this'. It should work on the element itself as well.
 		this.selectAll("path").forEach(function (element) {
 
-			var id = element.attr('id');
+		    try {
+                var id = element.attr('id');
 
-			// calculate transformation matrix
-			var matrix = element.transform().totalMatrix;
+                // calculate transformation matrix
+                var matrix = element.transform().totalMatrix;
 
-			if (correctionMatrix !== undefined && correctionMatrix !== null) {
-				matrix = matrix.multLeft(correctionMatrix);
-			}
-
-			var xform = [
-				matrix.a, matrix.b,
-				matrix.c, matrix.d,
-				matrix.e, matrix.f
-			];
-
-			var norm = (x, y) => Math.sqrt(x ** 2 + y ** 2);
-
-			var scaleX = norm(matrix.a, matrix.b);
-			var scaleY = norm(matrix.c, matrix.d);
-
-			var scale = Math.max(scaleX, scaleY);
-
-			var tolerance = gc_options.precision / scale;
-
-			// parse path string
-			var pathString = element.attr("d");
-			var segments = Snap.path.toAbsolute(pathString);
-
-			// generate paths
-			var paths = mrbeam.path.parse(segments, tolerance);
-
-			// simplify polylines
-			paths = mrbeam.path.simplify(paths, tolerance);
-
-			// apply transformation matrix
-			paths = mrbeam.path.transform(paths, xform);
-
-			// clip working area borders - only if item is a misfit
-			if (gc_options.clip_working_area && element.hasClass('misfit')) {
-				var x = bounds[0];
-				var y = bounds[1];
-				var w = bounds[2] - bounds[0];
-				var h = bounds[3] - bounds[1];
-				var clip = [
-					mrbeam.path.rectangle(x, y, w, h)
-				];
-				var clip_tolerance = 0.1 * tolerance;
-
-				if (id.toLowerCase().indexOf('debug') !== -1 || id.toLowerCase().indexOf('andytest') !== -1) {
-					console.log("mrbeam.path.clip() id:'"+id+"'"
-						+", paths: " + mrbeam.path.pp_paths(paths)
-						+", clip:" + mrbeam.path.pp_paths(clip)
-						+", clip_tolerance:"+clip_tolerance
-							);
-				}
-				paths = mrbeam.path.clip(paths, clip, clip_tolerance);
-
-				if (mb_meta[id]) {
-				    mb_meta[id]['clip_working_area_clipped'] = true;
+                if (correctionMatrix !== undefined && correctionMatrix !== null) {
+                    matrix = matrix.multLeft(correctionMatrix);
                 }
-			} else {
-				if (mb_meta[id]) {
-                    mb_meta[id]['clip_working_area_clipped'] = false;
+
+                var xform = [
+                    matrix.a, matrix.b,
+                    matrix.c, matrix.d,
+                    matrix.e, matrix.f
+                ];
+
+                var norm = (x, y) => Math.sqrt(x ** 2 + y ** 2);
+
+                var scaleX = norm(matrix.a, matrix.b);
+                var scaleY = norm(matrix.c, matrix.d);
+
+                var scale = Math.max(scaleX, scaleY);
+
+                var tolerance = gc_options.precision / scale;
+
+                // parse path string
+                var pathString = element.attr("d");
+                var segments = Snap.path.toAbsolute(pathString);
+
+                // generate paths
+                var paths = mrbeam.path.parse(segments, tolerance);
+
+                // simplify polylines
+                paths = mrbeam.path.simplify(paths, tolerance);
+
+                // apply transformation matrix
+                paths = mrbeam.path.transform(paths, xform);
+
+                // clip working area borders - only if item is a misfit
+                if (gc_options.clip_working_area && element.hasClass('misfit')) {
+                    var x = bounds[0];
+                    var y = bounds[1];
+                    var w = bounds[2] - bounds[0];
+                    var h = bounds[3] - bounds[1];
+                    var clip = [
+                        mrbeam.path.rectangle(x, y, w, h)
+                    ];
+                    var clip_tolerance = 0.1 * tolerance;
+
+                    if (id && (id.toLowerCase().indexOf('debug') !== -1 || id.toLowerCase().indexOf('andytest') !== -1)) {
+                        console.log("mrbeam.path.clip() id:'" + id + "'"
+                            + ", paths: " + mrbeam.path.pp_paths(paths)
+                            + ", clip:" + mrbeam.path.pp_paths(clip)
+                            + ", clip_tolerance:" + clip_tolerance
+                        );
+                    }
+                    paths = mrbeam.path.clip(paths, clip, clip_tolerance);
+
+                    if (mb_meta[id]) {
+                        mb_meta[id]['clip_working_area_clipped'] = true;
+                    }
+                } else {
+                    if (mb_meta[id]) {
+                        mb_meta[id]['clip_working_area_clipped'] = false;
+                    }
                 }
-			}
 
-			// generate gcode
-			var gcode = mrbeam.path.gcode(paths, id, mb_meta[id]);
+                // generate gcode
+                var gcodeObj = mrbeam.path.gcode(paths, id, mb_meta[id]);
 
-			element.attr("mb:gc", gcode || " ");
+                element.attr({
+                    "mb:gc": gcodeObj.gcode || " ",
+                    // start and end of path for easier sorting / way optimization
+                    "mb:start_x": gcodeObj.begin.x || "",
+                    "mb:start_y": gcodeObj.begin.y || "",
+                    "mb:end_x": gcodeObj.end.x || "",
+                    "mb:end_y": gcodeObj.end.y || ""
+                });
+            } catch (e) {
+                element.attr({
+                    "mb:gc": " ",
+                    "mb:start_x": "",
+                    "mb:start_y": "",
+                    "mb:end_x": "",
+                    "mb:end_y": ""
+                });
+                console.error("Error in embed_gc(): ", e, " - No gcode for element: ", element);
+                // console.warn("Skipping element not yet rendered by the browser: (You might see an id and paper in your browser's dev tools, but it can't be read programmatically!)", element);
+            }
 		});
 	};
 

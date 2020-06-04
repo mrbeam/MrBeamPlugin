@@ -14,7 +14,8 @@ $(function () {
         self.channel_display_names = {
             "PROD": gettext('Stable'),
             "BETA": gettext('Beta'),
-            "DEV": gettext('Develop')
+            "DEV": gettext('Develop'),
+            "DESIGN_STORE": "Design Store"
         };
 
         self.onAllBound = function () {
@@ -23,6 +24,10 @@ $(function () {
             $('#settings_plugin_softwareupdate > h3').before(elem);
             $('#'+DOM_ELEMENT_TO_BIND_TO).show();
             $('#settings_plugin_softwareupdate > h3').hide();
+
+            // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
+            // remove warnings about OctoPrint unreleased version
+            $('#settings_plugin_softwareupdate .alert').remove()
 
             let channels = self.settings.settings.plugins.mrbeam.dev.software_tiers_available();
             for (let i = 0; i < channels.length; i++) {

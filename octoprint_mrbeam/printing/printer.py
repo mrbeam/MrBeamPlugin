@@ -80,9 +80,23 @@ class Laser(Printer):
 
 	def cancel_print(self):
 		"""
-		 Cancel the current printjob and do homing.
+		Cancel the current printjob and do homing.
 		"""
 		super(Laser, self).cancel_print()
+		time.sleep(0.5)
+		self.home(axes="wtf")
+		eventManager().fire(MrBeamEvents.PRINT_CANCELING_DONE)
+
+	def fail_print(self, error_msg=None):
+		"""
+		Cancel the current printjob (as it failed) and do homing.
+		"""
+		if self._comm is None:
+			return
+
+		# If we want the job to show as failed instead of cancelled, we have to mimic self._printer.cancel_print()
+		self._comm.cancelPrint(failed=True, error_msg=error_msg)
+
 		time.sleep(0.5)
 		self.home(axes="wtf")
 		eventManager().fire(MrBeamEvents.PRINT_CANCELING_DONE)

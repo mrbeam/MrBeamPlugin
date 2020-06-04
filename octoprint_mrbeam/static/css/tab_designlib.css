@@ -1,0 +1,269 @@
+/* 
+    Created on : Apr 7, 2020, 9:52:01 AM
+    Author     : teja
+*/
+
+/** GCODE file manager */
+
+
+
+#files .gcode_files {
+  padding-right: 7px;
+}
+#files .gcode_files .entry {
+  padding: 12px;
+  line-height: 20px;
+  border-bottom: 0;
+  position: relative;
+  width: 25%;
+  float: left;
+  box-sizing: border-box;
+}
+
+@media only screen and (max-width : 1200px) {
+	#files .gcode_files .entry { width: 33%; }
+}
+
+@media only screen and (max-width : 979px) {
+	#files .gcode_files .entry { width: 50%; }
+}
+
+@media only screen and (max-width : 767px) {
+	#files .gcode_files .entry { width: 100%; }
+}
+
+
+#files .gcode_files .entry:hover {
+  background-color: transparent; 
+  transform: scale(1.018);
+  transition: transform 0.3s ease;
+}
+#files .gcode_files .entry .title {
+  text-overflow: ellipsis;
+  word-break: break-all;
+}
+
+#files .upload-buttons {
+  margin-top: 10px;
+}
+#files .form-search {
+  text-align: center;
+  margin-bottom: 5px !important;
+}
+
+#files .file_list_entry .title {
+  padding: .8em .8em 0.2em;
+  white-space: nowrap;
+  border-top: 1px dotted lightgray;
+
+}
+
+.title_shortened {
+	width: calc(100% - 1.2em);
+	overflow: hidden;
+	display: inline-block;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* Selection of multiple items in the design library */
+
+#files .file_list_entry .selection_box {
+	position: absolute;
+	top: 12px;
+	right: 12px;
+	font-size: 30px;
+	width: 30px;
+	height: 30px;
+	background-color: white;
+	/*border: 2px solid #383e42;*/
+	border: 1.5px solid #e25303;
+	border-radius: 4px;
+	opacity:0;
+	transition: opacity 0.2s ease-in;
+	z-index: 999;
+}
+
+#files .file_list_entry:hover .selection_box,
+#files .file_list_entry .selection_box.selected { opacity: 1; }
+
+#files .selection_box i { display: none; }
+#files .selection_box.selected i { display: inline; }
+
+
+#bulkActions {
+	border: 1px solid #e25303;
+	padding: 2em;
+	border-radius: 3px;
+}
+
+#bulkActions .description {
+	text-align: center;
+	margin-bottom: 1em;
+}
+#bulkActions .description_head {
+	font-size: 1.5em;
+	margin-bottom: 0.5em;
+}
+.description_details {
+  color: #999;
+}
+
+#bulkActions .action_btns {
+	text-align: center;
+}
+
+/* End Selection of multiple items in the design library */
+
+#files .file_list_entry li.size,
+#files .file_list_entry li.uploaded {
+  font-size: x-small;
+  color: #383e42;
+  padding: 0px 20px;
+}
+
+.file_list_icon {
+  color: #999;
+  font-size: 3em;
+  display: block;
+  float: left;
+  margin-right: 12px;
+  min-width: 1.1em;
+}
+
+.file_list_entry_gcode {
+	color: #CCC;
+}
+
+
+
+/* file tab preview cards */
+.file_list_entry.icon_card,
+.file_list_entry.preview_card {
+	position: relative;
+	width: 100%;
+	box-shadow: rgba(0,0,0,.3) 0 0 9px 0;
+}
+
+#files .preview_card div.preview,
+#files .icon_card div.preview {
+	padding-top: 80%;
+	width: 100%;
+	cursor: pointer;
+}
+
+#files .preview_card div.preview {
+	background-position: center;
+	background-size: contain;
+	background-repeat: no-repeat;
+}
+
+#files .icon_card div.preview>i{
+	text-align: center;
+	font-size: 6rem;
+	color: #999;
+	height: 0;
+	position: absolute;
+	top: calc(50% - 6rem / 2);
+	left: 0;
+	width: 100%;
+}
+
+#files .preview.disabled {
+  opacity: 0.2;
+}
+
+#designlib #files .entry.files_template_model_svg,
+#designlib #files .entry.files_template_model_dxf,
+#designlib #files .entry.files_template_model_image,
+#designlib #files .entry.files_template_recentjob_svg,
+#designlib #files .entry.files_template_machinecode_gcode {
+	display:none;
+}
+#designlib.show_design #files .entry.files_template_model_svg,
+#designlib.show_design #files .entry.files_template_model_dxf,
+#designlib.show_design #files .entry.files_template_model_image,
+#designlib.show_recentjob #files .entry.files_template_recentjob_svg,
+#designlib.show_machinecode #files .entry.files_template_machinecode_gcode {
+	display: block;
+}
+
+#designlib #files_filter li.filter.design a i,
+#designlib #files_filter li.filter.machinecode a i,
+#designlib #files_filter li.filter.recentjob a i {
+	visibility:hidden;
+}
+
+#designlib.show_design #files_filter li.filter.design a i,
+#designlib.show_machinecode #files_filter li.filter.machinecode a i,
+#designlib.show_recentjob #files_filter li.filter.recentjob a i {
+	visibility:visible;
+}
+
+#files .preview_card div.preview,
+#files .icon_card div.preview {
+	padding-top: 80%; /* this is specifying the height */
+	height:0;
+	width: 100%;
+	cursor: pointer;
+}
+#files .preview_card div.preview{
+	background-image: url(/plugin/mrbeam/static/img/designlib_preview_dummy.svg);
+}
+
+#files .preview_card div.preview>img.lazy_loader {
+	height:0;
+	margin-top: -90%; /* triggers loading 10% earlier than scroll in */
+}
+
+#files .file_list_entry.folder {
+	background-image: url(/plugin/mrbeam/static/img/folder.svg);
+	background-repeat: no-repeat;
+	background-size: contain;
+	background-position: 50% 100%;
+	margin: 0 1.5em;
+	position: relative;
+}
+#files .file_list_entry.folder .preview {
+	padding-top: 55%;
+}
+
+#files .file_list_entry.folder .title,
+#files .file_list_entry.folder .title a.dropdown-toggle {
+	color:#fff;
+}
+
+
+#files .folder_navigation {
+	padding: 0em 3em 0em 2em;
+	/* border-bottom: lightgray 1px dotted; */
+	box-shadow: #999 0px 10px 15px -15px;
+}
+
+#files .folder_navigation > * {
+	padding: 0.5em 0 1em;
+}
+
+
+/* drop up menus */
+#files .file_list_entry ul.dropdown-menu {
+	z-index: 1000;
+}
+
+
+@keyframes highlightframes {
+	  0% { transform: rotate(0deg) }
+	  25% { transform: rotate(-3deg) }
+	  50% { transform: rotate(0deg) }
+	  75% { transform: rotate(3deg) }
+	  100% { transform: rotate(0deg) }
+}
+#files .gcode_files .entry.highlight { 
+	animation: highlightframes 0.2s 4 ease-in-out normal; 
+}
+
+/* Hack to hide our own special folders. Collateral damage: user can't create folders with those names' */
+#files .files_template_folder[mrb_name=cam], 
+#files .files_template_folder[mrb_name=local] {
+	display: none;
+}

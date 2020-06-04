@@ -1,0 +1,39 @@
+/* 
+    Created on : Apr 19, 2020, 9:21:19 PM
+    Author     : teja
+*/
+
+#settings_backlash_compensation_x {
+	width:5em;
+	margin-bottom: 0;
+}
+
+#precision_calibration_steps {
+	margin: 3em 0;
+	font-size: larger;
+}
+
+
+#precision_calibration_steps li {
+	margin: 1em 0;
+}
+
+#precision_calibration_steps div.step_1,
+#precision_calibration_steps.pattern_engraved div.step_2 { display: block; }
+#precision_calibration_steps.pattern_engraved div.step_1, 
+#precision_calibration_steps div.step_2 { display: none; }
+
+#precision_calibration_steps form {
+	display: inline;
+}
+#precision_calibration_steps a.btn.btn-default {
+	padding-left: 3em;
+	padding-right: 3em;
+	margin-top: 2em;
+	margin-left: calc( 48% + 3em );
+}
+
+#precision_calibration_steps div.calibration_manual.img {
+	float:left;
+	margin-right: 3em;
+}

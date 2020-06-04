@@ -6,15 +6,14 @@
  */
 /* global OctoPrint, OCTOPRINT_VIEWMODELS */
 
+MARKERS = ['NW', 'NE', 'SE', 'SW'];
+
 $(function () {
 	function CameraCalibrationViewModel(parameters) {
 		var self = this;
+		window.mrbeam.viewModels['cameraCalibrationViewModel'] = self;
 
 		self.staticURL = "/plugin/mrbeam/static/img/cam_calibration/calpic_wait.svg";
-		self.rawUrl = '/downloads/files/local/cam/beam-cam-tmp.jpg';
-		self.undistortedUrl = '/downloads/files/local/cam/undistorted.jpg';
-		self.croppedUrl = '/downloads/files/local/cam/beam-cam.jpg';
-		self.camImgPath = self.staticURL;
 
 		self.dbNWImgUrl = ko.observable("");
 		self.dbNEImgUrl = ko.observable("");
@@ -26,68 +25,72 @@ $(function () {
 		self.workingArea = parameters[1];
 		self.conversion = parameters[2];
 		self.analytics = parameters[3];
+		self.camera = self.workingArea.camera;
 
-		self.zoomIn = ko.observable(false);
 		self.focusX = ko.observable(0);
 		self.focusY = ko.observable(0);
 		self.picType = ko.observable(""); // raw, lens_correction, cropped
+		self.correctedMarkersVisibility = ko.observable('hidden')
+		self.croppedMarkersVisibility = ko.observable('hidden');
+		self.calImgWidth = ko.observable(2048);
+		self.calImgHeight = ko.observable(1536);
 		self.picType.subscribe(function (val) {
 			switch (val) {
 				case 'cropped':
-					self.camImgPath = self.croppedUrl;
+					self.calImgUrl(self.camera.timestampedImgUrl());
+					self.calImgWidth(500);
+					self.calImgHeight(390);
+					self.correctedMarkersVisibility('hidden');
+					self.croppedMarkersVisibility('visible');
 					break;
 				case 'raw':
-					self.camImgPath = self.rawUrl;
+					self.calImgUrl(self.camera.getTimestampedImageUrl(self.camera.rawUrl));
+					self.calImgWidth(2048);
+					self.calImgHeight(1536);
+					self.correctedMarkersVisibility('hidden')
+					self.croppedMarkersVisibility('hidden');
 					break;
 				case 'lens_correction':
-					self.camImgPath = self.undistortedUrl;
+					self.calImgUrl(self.camera.getTimestampedImageUrl(self.camera.undistortedUrl));
+					self.calImgWidth(2048);
+					self.calImgHeight(1536);
+					self.correctedMarkersVisibility('visible')
+					self.croppedMarkersVisibility('hidden');
 					break;
 				default:
-					self.camImgPath = self.staticURL;
+					self.calImgWidth(512);
+					self.calImgHeight(384);
+					self.correctedMarkersVisibility('hidden')
+					self.croppedMarkersVisibility('hidden');
+					self.calImgUrl(self.staticURL);
 			}
-			self.calImgUrl(self.camImgPath + "?" + new Date().getTime());
 		});
-		// todo get ImgUrl from Backend/Have it hardcoded but right
 		self.calImgUrl = ko.observable(self.staticURL);
 
-		self.calImgWidth = ko.observable(2048);
-		self.calImgHeight = ko.observable(1536);
 		self.calSvgOffX = ko.observable(0);
 		self.calSvgOffY = ko.observable(0);
 		self.calSvgDx = ko.observable(0);
 		self.calSvgDy = ko.observable(0);
-		self.calSvgScale = ko.observable(4);
+		self.calSvgScale = ko.observable(1);
 		self.calibrationActive = ko.observable(false);
 		self.currentResults = ko.observable({});
 		self.calibrationComplete = ko.computed(function(){
-			var markers = ['NW', 'NE', 'SW', 'SE'];
-			for (var i = 0; i < markers.length; i++) {
-				var k = markers[i];
-				var m = self.currentResults()[k];
-				if(typeof m === 'undefined' || isNaN(m.x) || isNaN(m.y)){
-					return false;
-				}
-			}
-			return true;
+			if (Object.keys(self.currentResults()).length !== 4) return false;
+			return Object.values(self.currentResults()).reduce((x,y) => x && y);
 		});
-		self.foundNW = ko.observable(false);
-		self.foundSW = ko.observable(false);
-		self.foundSE = ko.observable(false);
-		self.foundNE = ko.observable(false);
-
 		self.cal_img_ready = ko.computed(function () {
-//			console.log("cal_img_ready: ", self.foundNE() , self.foundNW() , self.foundSE() , self.foundSW());
-			return self.foundNE() && self.foundNW() && self.foundSE() && self.foundSW();
+			if (Object.keys(self.camera.markersFound()).length !== 4) return false;
+			return Object.values(self.camera.markersFound()).reduce((x,y) => x && y);
 		});
+		self.markersFoundPosition = ko.observable({});
 
 		self.__format_point = function(p){
 			if(typeof p === 'undefined') return '?,?';
 			else return p.x+','+p.y;
 		};
 
-
 		self.calSvgViewBox = ko.computed(function () {
-			var zoom = self.zoomIn() ? self.calSvgScale() : 1;
+			var zoom = self.calSvgScale();
 			var w = self.calImgWidth() / zoom;
 			var h = self.calImgHeight() / zoom;
 			var offX = Math.min(Math.max(self.focusX() - w / zoom, 0), self.calImgWidth() - w) + self.calSvgDx();
@@ -97,15 +100,30 @@ $(function () {
 			return [self.calSvgOffX(), self.calSvgOffY(), w, h].join(' ');
 		});
 		self.currentMarker = 0;
-		self.currentMarkersFound = {};
+
+		self.zMarkersTransform = ko.computed( function () {
+			// Like workArea.zObjectImgTransform(), but zooms
+			// out the markers instead of the image itself
+			if (self.picType() === 'cropped') {
+				var offset = [self.calImgWidth(), self.calImgHeight()].map(x=>x*self.camera.imgHeightScale())
+				return 'scale('+1/(1+2*self.camera.imgHeightScale())+') translate('+offset.join(' ')+')';
+			}
+			else return 'scale(1)';
+		});
+
 
 		self.calibrationMarkers = [
-			{name: 'start', desc: 'click to start', focus: [0, 0, false]},
-			{name: 'NW', desc: 'North West', focus: [0, 0, true]},
-			{name: 'SW', desc: 'North East', focus: [0, self.calImgHeight(), true]},
-			{name: 'SE', desc: 'South East', focus: [self.calImgWidth(), self.calImgHeight(), true]},
-			{name: 'NE', desc: 'South West', focus: [self.calImgWidth(), 0, true]}
+			{name: 'start', desc: 'click to start', focus: [0, 0, 1]},
+			{name: 'NW', desc: 'North West', focus: [0, 0, 4]},
+			{name: 'SW', desc: 'North East', focus: [0, self.calImgHeight(), 4]},
+			{name: 'SE', desc: 'South East', focus: [self.calImgWidth(), self.calImgHeight(), 4]},
+			{name: 'NE', desc: 'South West', focus: [self.calImgWidth(), 0, 4]}
 		];
+		self.crossSize = ko.observable(30);
+		self.svgCross = ko.computed(function () {
+			var s = self.crossSize()
+			return `M0,${s} h${2*s} M${s},0 v${2*s} z`
+		})
 
 		self.larger = function(){
 			var val = Math.min(self.calSvgScale() + 1, 10);
@@ -127,7 +145,7 @@ $(function () {
 
 		self.startCalibration = function () {
 			self.analytics.send_fontend_event('calibration_start', {});
-			self.currentResults({});
+			// self.currentResults({});
 			self.calibrationActive(true);
 			self.picType("lens_correction");
 			self.nextMarker();
@@ -167,19 +185,20 @@ $(function () {
 				var tmp = self.currentResults();
 				tmp[step.name] = {'x': x, 'y': y};
 				self.currentResults(tmp);
-				$('#click_'+step.name).attr({cx:x, cy:y});
+				$('#click_'+step.name).attr({'x':x-self.crossSize(), 'y':y-self.crossSize()});
 			}
 
 			if (self.currentMarker === 0) {
-				self.picType("");
-//				self.calImgUrl(self.staticURL);
-				$('#calibration_box').removeClass('up').removeClass('down');
+				// TODO do some zooming instead?
+				// self.picType("");
+				// self.calImgUrl(self.staticURL);
+				// $('#calibration_box').removeClass('up').removeClass('down');
 			}
 		};
 
 		self._getClickPos = function (ev) {
 
-			var bbox = ev.target.parentElement.getBoundingClientRect();
+			var bbox = ev.target.parentElement.parentElement.getBoundingClientRect();
 			var clickpos = {
 				xScreenPx: ev.clientX - bbox.left,
 				yScreenPx: ev.clientY - bbox.top
@@ -197,15 +216,18 @@ $(function () {
 			$('#'+step.name).addClass('active');
 			self.focusX(step.focus[0]);
 			self.focusY(step.focus[1]);
-			self.zoomIn(step.focus[2])
+			self.calSvgScale(step.focus[2])
 		}
 
 		self.onStartupComplete = function () {
-//            console.log("CameraCalibrationViewModel.onStartup()");
 			if(self.isInitialCalibration()){
 				self.loadUndistortedPicture();
 			}
 		};
+
+		self.onSettingsShown = function(){
+		    self.goto('#calibration_step_1');
+        }
 
 		self.loadUndistortedPicture = function (callback) {
 			var success_callback = function (data) {
@@ -252,52 +274,41 @@ $(function () {
 			if (plugin !== "mrbeam" || !data)
 				return;
 			if('mrb_state' in data){
-//				console.log('machine state', data['mrb_state']);
 				self.interlocks_closed(data['mrb_state']['interlocks_closed']);
-//				self.fan_connected(data['fan_connected']);
 				self.lid_fully_open(data['mrb_state']['lid_fully_open']);
-//				self.machine_state(data['state']);
-//				self.pause_mode(data['pause_mode']);
-//				self.file_lines_total(data['file_lines_total']);
-//				self.file_lines_read(data['file_lines_read']);
-//				console.log(data);
 			}
 
 			if ('beam_cam_new_image' in data) {
-				//console.log('New Image [NW,NE,SW,SE]:', data['beam_cam_new_image']);
-				// update markers
-				var markers = data['beam_cam_new_image']['markers_found'];
-				if(!self.calibrationActive()){
-					self.foundNW(markers['NW'] && markers['NW'].recognized);
-					self.foundNE(markers['NE'] && markers['NE'].recognized);
-					self.foundSW(markers['SW'] && markers['SW'].recognized);
-					self.foundSE(markers['SE'] && markers['SE'].recognized);
-					self.foundNW.notifySubscribers(); // somehow doesn't trigger automatically
-				}
 				// update image
-				if (data['beam_cam_new_image']['undistorted_saved']) {
-					self.calImgUrl(self.camImgPath + '?' + new Date().getTime());
+				if (data['beam_cam_new_image']['undistorted_saved'] && ! self.calibrationActive()) {
+					if (! ['raw', 'lens_correction', 'cropped'].includes(self.picType()))
+						self.picType('lens_correction');
+					else
+						self.calImgUrl(self.camera.getTimestampedImageUrl(self.calImgUrl()));
 
 					if (self.isInitialCalibration()) {
-						self.dbNWImgUrl('/downloads/files/local/cam/beam-cam-tmp2_debug_NW.jpg' + '?' + new Date().getTime());
-						self.dbNEImgUrl('/downloads/files/local/cam/beam-cam-tmp2_debug_NE.jpg' + '?' + new Date().getTime());
-						self.dbSWImgUrl('/downloads/files/local/cam/beam-cam-tmp2_debug_SW.jpg' + '?' + new Date().getTime());
-						self.dbSEImgUrl('/downloads/files/local/cam/beam-cam-tmp2_debug_SE.jpg' + '?' + new Date().getTime());
-
+						self.dbNWImgUrl('/downloads/files/local/cam/debug/NW.jpg' + '?' + new Date().getTime());
+						self.dbNEImgUrl('/downloads/files/local/cam/debug/NE.jpg' + '?' + new Date().getTime());
+						self.dbSWImgUrl('/downloads/files/local/cam/debug/SW.jpg' + '?' + new Date().getTime());
+						self.dbSEImgUrl('/downloads/files/local/cam/debug/SE.jpg' + '?' + new Date().getTime());
 					}
 
 					// check if all markers are found and image is good for calibration
 					if (self.cal_img_ready()) {
-						console.log("Remembering markers for Calibration", markers);
-						self.currentMarkersFound = markers;
-					} else {
-						console.log("Not all Markers found, fetching new Picture.")
-						self.loadUndistortedPicture();
+						// console.log("Remembering markers for Calibration", markers);
+						_tmp = data['beam_cam_new_image']['markers_pos'];
+						//	i, j -> x, y conversion
+						['NW', 'NE', 'SE', 'SW'].forEach(function(m) {_tmp[m] = _tmp[m].reverse();} );
+						self.markersFoundPosition(_tmp)
+					}
+					else if(self.calibrationActive()){
+						console.log("Not all Markers found, are the pink circles obstructed?");
+						// As long as all the corners were not found, the camera will continue to take pictures
+						// self.loadUndistortedPicture();
 					}
 				}
 			}
 		};
-
 
 		self.engrave_markers = function () {
 			var url = '/plugin/mrbeam/generate_calibration_markers_svg';
@@ -375,7 +386,7 @@ $(function () {
 		self.saveCalibrationData = function () {
 			var data = {
 				result: {
-					newMarkers: self.currentMarkersFound,
+					newMarkers: self.markersFoundPosition(),
 					newCorners: self.currentResults()
 				}
 			};
@@ -409,7 +420,8 @@ $(function () {
 				type: "success",
 				hide: true
 			});
-			self.reset_calibration();
+			if(self.isInitialCalibration()) self.resetView();
+			else self.goto('#calibration_step_1');
 		};
 
 		self.saveMarkersError = function () {
@@ -420,7 +432,8 @@ $(function () {
 				type: "warning",
 				hide: true
 			});
-			self.reset_calibration();
+			if(self.isInitialCalibration()) self.resetView();
+			else self.reset_calibration();
 		};
 
 		self.abortCalibration = function () {
@@ -434,24 +447,21 @@ $(function () {
 			self.reset_calibration();
 		};
 
-		self.reset_calibration = function () {
-			self.picType("");
+		self.resetView = function () {
+			self.picType("lens_correction");
 			self.focusX(0);
 			self.focusY(0);
-			self.zoomIn(false)
+			self.calSvgScale(1);
 			self.currentMarker = 0;
-			self.currentMarkersFound = {};
+		};
+
+		self.reset_calibration = function () {
+			self.resetView();
+			self.markersFoundPosition({});
 			self.currentResults({});
-			self.foundNW(false);
-			self.foundSW(false);
-			self.foundSE(false);
-			self.foundNE(false);
-			if (self.isInitialCalibration()) {
-				self.loadUndistortedPicture();
-			} else {
+			if (!self.isInitialCalibration())
 				self.goto('#calibration_step_1');
-			}
-			$('.calibration_click_indicator').attr({cx: -100, cy: -100});
+			$('.calibration_click_indicator').attr({'x': -100, 'y': -100});
 		};
 
 		self.continue_to_calibration = function () {
