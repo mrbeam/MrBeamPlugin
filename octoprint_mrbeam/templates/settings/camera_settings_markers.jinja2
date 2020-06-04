@@ -5,8 +5,7 @@
 		<ul id="camera-calibration-tabs" class="nav nav-tabs"> 
 			<li class="active"><a href="#tab_camera_alignment" data-toggle="tab" id="camalignment_tab_btn" >{{ _('Camera Alignment') }}</a></li>
 			<li><a href="#tab_lens_calibration" data-toggle="tab" id="lenscal_tab_btn">{{ _('Lens Calibration') }} 
-					<i class="icon icon-spinner icon-spin" data-bind="visible: lensCalibrationRunning()"></i>
-					<i class="icon icon-ok" data-bind="visible: lensCalibrationComplete()"></i>
+					<i class="icon icon-ok" data-bind="visible: lensCalibrationNpzFileTs"></i>
 					<i class="icon icon-warning-sign" data-bind="visible: !lensCalibrationComplete()"></i>
 				</a></li>
 			<li><a href="#tab_corner_calibration" data-toggle="tab" id="cornercal_tab_btn" >{{ _('Corner Calibration') }}</a></li>
