@@ -1866,7 +1866,6 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			               file_lines_read=lines_read,
 			               file_lines_remaining=lines_remaining,
 			               lines_recovered=lines_recovered,
-						   dust_value=self.dust_manager.get_mean_job_dust(),
 			               )
 			self._event_bus.fire(MrBeamEvents.PRINT_PROGRESS, payload)
 
