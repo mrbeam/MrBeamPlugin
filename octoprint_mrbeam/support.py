@@ -39,8 +39,6 @@ def set_support_user(plugin, support_mode):
 	Does nothing if firstRun is True
 	:param support_mode
 	"""
-	if plugin._settings.global_get(["server", "firstRun"]):
-		return
 
 	if support_mode:
 		_logger.info("Enabling support_mode for user: %s", USER_NAME)

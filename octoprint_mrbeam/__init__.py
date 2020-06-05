@@ -166,6 +166,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		# Enable or disable internal support user.
 		self.support_mode = set_support_mode(self)
+		self._fixEmptyUserManager()
 
 		self.laserCutterProfileManager = laserCutterProfileManager()
 
@@ -545,7 +546,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		# render_kwargs["templates"]["settings"]["entries"]["serial"][1]["template"] = "settings/serialconnection.jinja2"
 
 		wizard = render_kwargs["templates"] is not None and bool(render_kwargs["templates"]["wizard"]["order"])
-
+		
 		if render_kwargs["templates"]["wizard"]["entries"]:
 			if "firstrunstart" in render_kwargs["templates"]["wizard"]["entries"]:
 				render_kwargs["templates"]["wizard"]["entries"]["firstrunstart"][1]["template"] = "wizard/firstrun_start.jinja2"
@@ -555,6 +556,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		display_version_string = "{} on {}".format(self._plugin_version, self.getHostname())
 		if self._branch:
 			display_version_string = "{} ({} branch) on {}".format(self._plugin_version, self._branch, self.getHostname())
+
+		if self.support_mode:
+			firstRun = False
+			accesscontrol_active = False
+			wizard = False
 
 		render_kwargs.update(dict(
 			webcamStream=self._settings.get(["cam", "frontendUrl"]),
@@ -1994,6 +2000,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return currentJob["file"]["origin"], currentJob["file"]["name"]
 		else:
 			return None, None
+
+	def _fixEmptyUserManager(self):
+		if len(self._user_manager._users) <= 0 and (self._user_manager._customized or not self.isFirstRun()):
+			self._logger.debug("_fixEmptyUserManager")
+			self._user_manager._customized = False
+			self._settings.global_set(["server", "firstRun"], True)
 
 	def getHostname(self):
 		"""
