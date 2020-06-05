@@ -134,7 +134,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		self._boot_grace_period_counter = 0
 
-		self._time_ntp_synced = False
+		self._time_ntp_synced = None
 		self._time_ntp_check_count = 0
 		self._time_ntp_check_last_ts = 0.0
 		self._time_ntp_shift = 0.0
@@ -254,7 +254,11 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		            env=self.get_env(),
 		            beamOS_image=self._octopi_info,
 		            grbl_version_lastknown=self._settings.get(["grbl_version_lastknown"]),
-		            laserhead_serial=self.laserhead_handler.get_current_used_lh_data()['serial'])
+		            laserhead_serial=self.laserhead_handler.get_current_used_lh_data()['serial'],
+		            _state=dict(
+			            support_mode=self.support_mode,
+			            time_ntp_synced=self._time_ntp_synced,
+		            ))
 
 	##~~ SettingsPlugin mixin
 	def get_settings_version(self):

@@ -174,6 +174,7 @@ $(function () {
         self.settings = parameters[0];
         self.wizardacl = parameters[1];
         self.users = parameters[2];
+        self.loginState = parameters[3];
 
         // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
         self.settings.mrbeam = self;
@@ -239,6 +240,10 @@ $(function () {
             self.set_settings_analytics_links()
         }
 
+        self.onStartupComplete = function(){
+            self.presetLoginUser()
+        }
+
         self.onCurtainOpened = function(){
             self.showBrowserWarning()
             self.showBetaNotificaitons()
@@ -270,6 +275,9 @@ $(function () {
             }
         };
 
+        self.onUserLoggedOut = function(){
+            self.presetLoginUser()
+        }
 
         self.start_online_check_interval = function () {
             self.do_online_check();
@@ -388,6 +396,16 @@ $(function () {
             }
         }
 
+        self.presetLoginUser = function(){
+            if (MRBEAM_ENV_SUPPORT_MODE) {
+                self.loginState.loginUser('support'+String.fromCharCode(0x0040)+'mr-beam.org')
+                self.loginState.loginPass('a')
+            } else if (MRBEAM_ENV === 'DEV') {
+                self.loginState.loginUser('dev'+String.fromCharCode(0x0040)+'mr-beam.org')
+                self.loginState.loginPass('a')
+            }
+        }
+
     };
 
     // view model class, parameters for constructor, container to bind to
@@ -395,7 +413,7 @@ $(function () {
         MrbeamViewModel,
 
         // e.g. loginStateViewModel, settingsViewModel, ...
-        ["settingsViewModel", "wizardAclViewModel", "usersViewModel"],
+        ["settingsViewModel", "wizardAclViewModel", "usersViewModel", "loginStateViewModel"],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         [ /* ... */]
