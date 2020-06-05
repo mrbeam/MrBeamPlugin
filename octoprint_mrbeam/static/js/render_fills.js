@@ -121,10 +121,18 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		var bbox = elem.getBBox(); // attention, this bbox uses viewBox coordinates (mm)
 
         // Quick fix: in some browsers the bbox is too tight, so we just add an extra 10% to all the sides, making the height and width 20% larger in total
-        bbox.x = bbox.x - bbox.width * 0.1;
-        bbox.y = bbox.y - bbox.height * 0.1;
-        bbox.w = bbox.w * 1.2;
-        bbox.h = bbox.h * 1.2;
+        const enlargement_x = 0.4; // percentage of the width added to each side
+		const enlargement_y = 0.4; // percentage of the height added to each side
+		const x1 = Math.max(0, bbox.x - bbox.width * enlargement_x);
+		const x2 = Math.min(wMM, bbox.x2 + bbox.width * enlargement_x);
+		const w = x2 - x1;
+		const y1 = Math.max(0, bbox.y - bbox.height * enlargement_y);
+		const y2 = Math.min(wMM, bbox.y2 + bbox.height * enlargement_y);
+		const h = y2 - y1;
+		bbox.x = x1;
+        bbox.y = y1;
+        bbox.w = w;
+        bbox.h = h;
 
 		console.info("renderPNG BBOX (in mm) to render: " + bbox.w +'*'+bbox.h + " @ " + bbox.x + ',' + bbox.y);
 
@@ -149,10 +157,15 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		// render SVG image to the canvas once it loads.
 		source.onload = function () {
 
-			var srcScale = wPT / wMM; // canvas.drawImage refers to <svg> coordinates - not viewBox coordinates.
+			const srcScale = wPT / wMM; // canvas.drawImage refers to <svg> coordinates - not viewBox coordinates.
+			const cx = bbox.x * srcScale;
+			const cy = bbox.y * srcScale;
+			const cw = bbox.w * srcScale;
+			const ch = bbox.h * srcScale;
 
 			// drawImage(source, src.x, src.y, src.width, src.height, dest.x, dest.y, dest.width, dest.height);
-			renderCanvasContext.drawImage(source, bbox.x * srcScale, bbox.y * srcScale, bbox.w * srcScale, bbox.h * srcScale, 0, 0, renderCanvas.width, renderCanvas.height);
+            console.log("rasterizing: " + cw +'*'+ch + " @ " + cx + ',' + cy + "(scale: "+srcScale+"+)");
+			renderCanvasContext.drawImage(source, cx, cy, cw, ch, 0, 0, renderCanvas.width, renderCanvas.height);
 
 			// place fill bitmap into svg
 			var fillBitmap = renderCanvas.toDataURL("image/png");

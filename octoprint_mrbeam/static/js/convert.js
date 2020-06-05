@@ -811,7 +811,7 @@ $(function(){
 						});
 					});
 				} else {
-					console.log("Skipping vector job ("+1+"), invalid parameters.");
+					console.log("Skipping vector job ("+i+"), invalid parameters.");
 				}
 			});
 
@@ -1587,8 +1587,8 @@ $(function(){
 
                 if (val > 3000) {
                     $(this).val(3000)
-                } else if (val < 100 || val === "") {
-                    $(this).val(100)
+                } else if (val < 50 || val === "") {
+                    $(this).val(50)
                 }
             });
         };
