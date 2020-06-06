@@ -1,4 +1,5 @@
 import io
+import shutil
 from fractions import Fraction
 import cv2, logging
 import numpy as np
@@ -282,4 +283,9 @@ def save_debug_img(img, path, folder=None):
 		path = os.path.join(folder, path)
 	if folder and not os.path.exists(folder):
 		os.makedirs(folder)
-	return cv2.imwrite(path, img) == SUCCESS_WRITE_RETVAL
+	f1, f2 = os.path.splitext(path)
+	tmp_path = f1 + '_tmp' + f2
+	res = cv2.imwrite(tmp_path, img) == SUCCESS_WRITE_RETVAL
+	if res:
+		shutil.move(tmp_path, path)
+	return res

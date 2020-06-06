@@ -23,7 +23,7 @@ REFRESH_RATE_WAIT_CHECK = .2 # TODO: use OctoPrint.mrbeam/venv/lib/python2.7/sit
 
 # Chessboard size in mm
 BOARD_SIZE_MM = np.array([220, 190])
-MIN_BOARDS_DETECTED = 8
+MIN_BOARDS_DETECTED = 9
 MAX_PROCS = 4
 
 STATE_PENDING_CAMERA = "camera_processing"

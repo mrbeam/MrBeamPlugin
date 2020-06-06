@@ -588,7 +588,8 @@ class PhotoCreator(object):
 								 self.saveRaw,
 								 folder=path.join(path.dirname(self.final_image_path),"debug")):
 						rawSaved = self.saveRaw
-					else: rawSaved = False
+					else:
+						rawSaved = False
 					self.rawLock.release()
 					saveNext = False
 				else:
