@@ -60,6 +60,7 @@ from octoprint.filemanager.destinations import FileDestinations
 from octoprint_mrbeam.util.material_csv_parser import parse_csv
 from octoprint_mrbeam.util.calibration_marker import CalibrationMarker
 from octoprint_mrbeam.camera.undistort import MIN_MARKER_PIX
+from octoprint_mrbeam.util.uptime import get_uptime, get_uptime_human_readable
 
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
 __builtin__._mrbeam_plugin_implementation = None
@@ -246,6 +247,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		Mixin: octoprint.plugin.EnvironmentDetectionPlugin
 		:return: dict of environment data
 		"""
+		uptime = get_uptime()
 		return dict(version=self._plugin_version,
 		            model=self.get_model_id(),
 		            host=self.getHostname(),
@@ -259,6 +261,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		            _state=dict(
 			            support_mode=self.support_mode,
 			            time_ntp_synced=self._time_ntp_synced,
+			            uptime="{} ({})".format(get_uptime_human_readable(uptime), uptime),
 		            ))
 
 	##~~ SettingsPlugin mixin
