@@ -49,7 +49,7 @@ from octoprint_mrbeam.migrate import migrate
 from octoprint_mrbeam.os_health_care import os_health_care
 from octoprint_mrbeam.wizard_config import WizardConfig
 from octoprint_mrbeam.printing.profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
-from octoprint_mrbeam.software_update_information import get_update_information, switch_software_channel, software_channels_available, SW_UPDATE_TIER_PROD, SW_UPDATE_TIER_BETA
+from octoprint_mrbeam.software_update_information import get_update_information, switch_software_channel, software_channels_available, SW_UPDATE_TIER_PROD, SW_UPDATE_TIER_BETA, SW_UPDATE_TIER_DEV
 from octoprint_mrbeam.support import set_support_mode
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.cli import get_cli_commands
@@ -2181,6 +2181,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			chunks.append(self._settings.get(['beta_label']))
 		if self.is_beta_channel():
 			chunks.append('<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000507827" target="_blank">BETA</a>')
+		elif self.is_develop_channel():
+			chunks.append("develop")
 		if self.support_mode:
 			chunks.append("SUPPORT")
 
@@ -2252,6 +2254,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	def is_beta_channel(self):
 		return self._settings.get(["dev", "software_tier"]) == SW_UPDATE_TIER_BETA
+	
+	def is_develop_channel(self):
+		return self._settings.get(["dev", "software_tier"]) == SW_UPDATE_TIER_DEV
 
 	def is_mrbeam2(self):
 		return self._model_id == self.MODEL_MRBEAM2
