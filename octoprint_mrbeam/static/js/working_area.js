@@ -892,38 +892,38 @@ $(function(){
 			self.abortFreeTransforms();
 			let srcElem = snap.select('#'+elem.previewId);
 
-			let parts;
+			let split_result;
 			switch(method){
 				case 'stroke-color':
-					parts = srcElem.separate_by_stroke_colors();
-					if(parts.length <= 1) failReason = "Didn't find different stroke colors.";
+					split_result = srcElem.separate_by_stroke_colors();
+					if(split_result.parts.length <= 1) failReason = "Didn't find different stroke colors.";
 					break;
 				case 'non-intersecting': // TODO: provide cancel check and proper progress callback
-					parts = srcElem.separate_by_non_intersecting_bbox(null, function(n){ console.log("Separate non intersecting shapes: ", n); });
-					if(parts.length <= 1) failReason = "Didn't find different stroke colors.";
+					split_result = srcElem.separate_by_non_intersecting_bbox(null, function(n){ console.log("Separate non intersecting shapes: ", n); });
+					if(split_result.parts.length <= 1) failReason = "Didn't find different stroke colors.";
 					break;
 				case 'horizontally':
-					parts = srcElem.separate_horizontally();
-					if(parts.length <= 1) failReason = "Not enough native elements.";
+					split_result = srcElem.separate_horizontally();
+					if(split_result.parts.length <= 1) failReason = "Not enough native elements.";
 					break;
 				case 'vertically':
 				case 'divide':
 				default:
-					parts = srcElem.separate_vertically();
-					if(parts.length <= 1) failReason = "Not enough native elements.";
+					split_result = srcElem.separate_vertically();
+					if(split_result.parts.length <= 1) failReason = "Not enough native elements.";
 					break;
 			}
 
-			if(parts.length > 1){
+			if(split_result.parts.length > 1){
 				self.removeSVG(elem);
-				for (let i = 0; i < parts.length; i++) {
+				for (let i = 0; i < split_result.parts.length; i++) {
 	
 					const name = elem.name + "."+(i+1);
 					let tp = Array.prototype.concat(elem.typePath, 'split')
 					let file = {url: elem.url, origin: elem.origin, name: name, typePath: tp, type: "split", refs:{download: elem.url}};
 					const id = self.getEntryId();
 					const previewId = self.generateUniqueId(id, file);
-					let fragment = parts[i];
+					let fragment = split_result.parts[i];
 					fragment.clean_gc();
 					fragment.attr({id: previewId})
 
@@ -936,6 +936,14 @@ $(function(){
 					self.removeHighlight(file);
 					self._prepareAndInsertSVG(fragment, previewId, elem.origin, "");
 					self._listPlacedItem(file);
+				}
+				if(split_result.overflow){
+					new PNotify({
+						title: gettext("Limited split result."),
+						text: gettext(`Splitting this design would result in too many parts. Here are ${split_result.length} parts. You can split the last one again if necessary.`),
+						type: "info",
+						hide: true
+					});
 				}
 			} else {
 				let failReason = "";

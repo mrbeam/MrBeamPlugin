@@ -206,18 +206,38 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	Element.prototype.separate_by_ids = function(id_sets){
 		if(id_sets.length <= 1) return []; // avoids unnecessary cloning
 		
+		const max_results = 10;
 		const old_element = this;
+		const resulting_parts = Math.min(id_sets.length, max_results);
+		const overflow = id_sets.length > max_results;
+		if(overflow) console.log(`${id_sets.length} parts are too much. Limited split result to ${max_results}. `);
 		let parts = [];
-		for (let i = 0; i < id_sets.length; i++) {
+		for (let i = 0; i < resulting_parts; i++) {
+			console.log(`separate_by_ids ${i}/${resulting_parts}`);
 			const exclude_list = id_sets[i];
 			if(exclude_list.length > 0){
 				let n = old_element.clone();
-				n.remove_native_elements(exclude_list);
+//				n.remove_native_elements(exclude_list);
+				n.mark_native_elements(exclude_list, 'delete_me_marker');
+				let deletables = n.selectAll('.delete_me_marker');
+//				console.log("deleting elements: " + deletables.length);
+				deletables.remove();
+				
+				for (var j = 0; j < exclude_list.length; j++) {
+					var id = '#'+exclude_list[j];
+					old_element.selectAll(id).remove();
+//					console.log("removed id " + id);
+				}
 				parts.push(n);
 			}
 		}
-
-		return parts;
+		
+		
+		if(overflow) {
+			parts.push(old_element.clone());
+		}
+		
+		return {parts: parts, overflow: overflow};
 	};
 
 	/**
@@ -234,7 +254,30 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 		for (let i = 0; i < items.length; i++) {
 			let e = items[i];
 			if(exclude_mbids.indexOf(e.attr('mb:id')) < 0){
-				e.remove();
+//				e.remove();
+				e.addClass('deleteMe');
+			}
+		}
+		this.selectAll('.deleteMe').remove();
+	};
+	
+	/**
+	 * Marks native elements with a class name (rect, ellipse, circle, line, polyline, polygon, text, tspan, path) 
+	 * except an array of elements referenced by attribute 'mb:id' 
+	 * Doesn't support use, symbol (use unref.js to avoid problems)
+	 * 
+	 * @param {array} exclude_mbids Array of mbids which are excluded when removing native elements.
+	 * @param {string} class_name class name which will be added and used as a marker
+	 * 
+	 * @returns {undefined} 
+	 */
+	Element.prototype.mark_native_elements = function(exclude_mbids, class_name){
+		let items = this.selectAll("path, circle, rect, image, ellipse, line, polyline, polygon, text, tspan");
+		for (let i = 0; i < items.length; i++) {
+			let e = items[i];
+			if(exclude_mbids.indexOf(e.attr('mb:id')) < 0){
+//				e.remove();
+				e.addClass(class_name);
 			}
 		}
 	};
