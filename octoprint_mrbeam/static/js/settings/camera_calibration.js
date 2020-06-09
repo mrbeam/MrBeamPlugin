@@ -23,6 +23,7 @@ $(function () {
 
 		self.all_bound = ko.observable(false);
 		self.calibrationScreenShown = ko.observable(false);
+		self.waitingForRefresh = ko.observable(true)
 
 		self.staticURL = "/plugin/mrbeam/static/img/cam_calibration/calpic_wait.svg";
 
@@ -275,6 +276,7 @@ $(function () {
 				tmp[step.name] = {'x': x, 'y': y};
 				self.currentResults(tmp);
 				$('#click_'+step.name).attr({'x':x-self.crossSize(), 'y':y-self.crossSize()});
+				self.nextMarker()
 			}
 
 			if (self.currentMarker === 0) {
@@ -331,6 +333,7 @@ $(function () {
 				if (typeof callback === 'function')
 					callback(data);
 				else
+					self.waitingForRefresh(true)
 					console.log("Calibration picture requested.");
 			};
 			var error_callback = function (resp) {
@@ -385,12 +388,12 @@ $(function () {
 									break;
 								}
 							}
-						} else if (cornerCalibrationTabselected ) {
+						} else if (cornerCalibrationTabselected || self.waitingForRefresh()) {
                             self.calImgUrl(self.camera.getTimestampedImageUrl(self.calImgUrl()));
                         }
 					}
 
-					if (self.isInitialCalibration() && cornerCalibrationTabselected) {
+					if (self.isInitialCalibration() && (cornerCalibrationTabselected || self.waitingForRefresh())) {
 						self.dbNWImgUrl('/downloads/files/local/cam/debug/NW.jpg' + '?ts=' + new Date().getTime());
 						self.dbNEImgUrl('/downloads/files/local/cam/debug/NE.jpg' + '?ts=' + new Date().getTime());
 						self.dbSWImgUrl('/downloads/files/local/cam/debug/SW.jpg' + '?ts=' + new Date().getTime());
@@ -410,6 +413,7 @@ $(function () {
 						// As long as all the corners were not found, the camera will continue to take pictures
 						// self.loadUndistortedPicture();
 					}
+					self.waitingForRefresh(false)
 				}
 			}
 

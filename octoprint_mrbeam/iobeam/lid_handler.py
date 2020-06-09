@@ -271,7 +271,6 @@ class LidHandler(object):
 			   self._photo_creator.active and \
 			   not self._photo_creator.stopping:
 				self._logger.warning("Saving new picture %s" % imgName)
-				self._event_bus.fire(MrBeamEvents.RAW_IMAGE_TAKING_START)
 				# take a new picture and save to the specific path
 				self._photo_creator.saveRaw = imgName
 				self.takeNewPic()
@@ -281,16 +280,16 @@ class LidHandler(object):
 				# Tell the boardDetector to listen for this file
 				self.boardDetectorDaemon.add(imgPath)
 				_s = self.boardDetectorDaemon.state
-				n = len(_s.getAllPending()) + len(_s.getSuccesses()) + len(_s.getProcessing())
-				if n >= MIN_BOARDS_DETECTED:
+				n = len(_s.getAllPending()) + len(_s.getSuccesses()) + len(_s.getProcessing()) # Does not include STATE_PENDING_CAMERA
+				if n >= MIN_BOARDS_DETECTED - 1:
 					self._event_bus.fire(MrBeamEvents.RAW_IMG_TAKING_LAST)
-				# else:
-				# 	self._event_bus.fire(MrBeamEvents.RAW_IMAGE_TAKING_START)
+				else:
+					self._event_bus.fire(MrBeamEvents.RAW_IMAGE_TAKING_START)
 				if not self.boardDetectorDaemon.is_alive():
 					self.boardDetectorDaemon.start()
 				else:
 					self.boardDetectorDaemon.waiting.clear()
-				if n + 1 >= 9:
+				if n >= MIN_BOARDS_DETECTED - 1:
 					self.startLensCalibration()
 					# TODO If possible, ask the led cli to chain two LED states
 					t = Timer(1.2, self._event_bus.fire, args=(MrBeamEvents.LENS_CALIB_PROCESSING_BOARDS,))

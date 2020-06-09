@@ -220,7 +220,7 @@
 					<div>
 						<div style="margin-bottom:1em;">
 							<a class="accordion-toggle" data-bind="click:loadUndistortedPicture"><i class="icon-repeat"></i> {{ _('refresh') }}</a>
-							<div class="marker_selection_desc calibration_waiting_for_picture" data-bind="visible: cornerCalibrationActive()">
+							<div class="marker_selection_desc calibration_waiting_for_picture">
 								<div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['NW'] }"><i class="icon-ok"></i> NW</div>
 								<div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['SW'] }"><i class="icon-ok"></i> SW</div>
 								<div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['SE'] }"><i class="icon-ok"></i> SE</div>
@@ -231,7 +231,7 @@
 						</div>
 					</div>
 					
-					<div data-bind="visible: !cornerCalibrationActive()">
+					<div data-bind="visible: !cornerCalibrationActive()" width="100%">
 						
 						<div class="marker_selection_desc calibration_help"
 							 data-bind="visible: cal_img_ready() && availablePic()['lens_corrected']">
@@ -256,18 +256,34 @@
 								</div>
 							</div>
 							<div style="margin-top:1em;">
-								<button class="btn btn-default" data-bind="click: startCornerCalibration">{{ _('Start Corner Calibration') }}</button>
+								<button class="btn btn-default" data-bind="visible: !availablePic()['cropped'], click: startCornerCalibration">{{ _('Start Corner Calibration') }}</button>
 							</div>
 						</div>
-						
-						<div id="corner_calibration_debug" data-bind="visible: isInitialCalibration() ">
-							<div>
-								<img id="debug_NW_img" class="marker_debug_image" data-bind="attr: {src: dbNWImgUrl()}"/>
-								<img id="debug_NE_img" class="marker_debug_image" data-bind="attr: {src: dbNEImgUrl()}"/>
+						<div class="qa_list_and_next" data-bind="visible: availablePic()['cropped']">
+							<ul style="margin:0;">
+								<li>{{ _('The 4 arrows are aligned with the blue crosses') }}</li>
+							</ul>
+							<div class="continue_btn btn-group">
+								<a href="#" onclick="startCornerCalibration" class="btn continue_btn"
+									data-bind="click: startCornerCalibration">
+									<i class="icon icon-arrow-left"></i>
+									{{ _('Restart Corner Calibration') }}
+								</a>
+								<a href="#" class="btn btn-success continue_btn"
+									data-bind="click: function(){ $('#qacal_tab_btn').click() }">
+									<span style="font-size:1.2rem;">{{ _('Continue') }}<i class="icon icon-arrow-right"></i></span>
+								</a>
 							</div>
-							<div>
-								<img id="debug_SW_img" class="marker_debug_image" data-bind="attr: {src: dbSWImgUrl()}"/>
-								<img id="debug_SE_img" class="marker_debug_image" data-bind="attr: {src: dbSEImgUrl()}"/>
+
+							<div id="corner_calibration_debug" data-bind="visible: isInitialCalibration() ">
+								<div>
+									<img id="debug_NW_img" class="marker_debug_image" data-bind="attr: {src: dbNWImgUrl()}"/>
+									<img id="debug_NE_img" class="marker_debug_image" data-bind="attr: {src: dbNEImgUrl()}"/>
+								</div>
+								<div>
+									<img id="debug_SW_img" class="marker_debug_image" data-bind="attr: {src: dbSWImgUrl()}"/>
+									<img id="debug_SE_img" class="marker_debug_image" data-bind="attr: {src: dbSEImgUrl()}"/>
+								</div>
 							</div>
 						</div>
 					</div>
