@@ -253,19 +253,6 @@ $(function () {
 			self.gcodefiles.setFilter('design');
             self.files.listHelper.removeFilter('model');
             self.files.listHelper.changeSorting('upload');
-			
-//			self.files.foldersOnlyList = ko.dependentObservable(function() {
-			self.files.ABCfoldersOnlyList = ko.dependentObservable(function() {
-				var filter = function(data) { return data["type"] && data["type"] === "folder"; };
-				var sorter = function(a, b) { // sorts ascending
-					if (a["display"].toLowerCase() < b["display"].toLowerCase()) return -1;
-					if (a["display"].toLowerCase() > b["display"].toLowerCase()) return 1;
-					return 0;
-				}
-				let items = self.files.listHelper.allItems;
-				let folders = _.filter(items, filter);
-				return folders.sort(sorter);
-			});
         };
 
         self.removeLoadingOverlay = function(){
