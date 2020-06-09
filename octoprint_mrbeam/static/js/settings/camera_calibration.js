@@ -384,7 +384,7 @@ $(function () {
 									break;
 								}
 							}
-						} else {
+						} else if ($('.nav-tabs .active a').attr('id') === "cornercal_tab_btn") {
                             self.calImgUrl(self.camera.getTimestampedImageUrl(self.calImgUrl()));
                         }
 					}
