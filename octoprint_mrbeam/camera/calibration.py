@@ -539,21 +539,25 @@ class calibrationState(dict):
 		return ts
 
 	def save(self, path):
-		# TODO AXEL: is this used?
+		"""Save the results of the detected chessboard in given path"""
 		np.savez(path + ".npz", **self[path])
 
 	def load(self, path):
-		# TODO AXEL: is this used?
+		"""Load the results of the detected chessboard in given path"""
 		self[path] = np.load(path + ".npz")
 		self.onChange()
 
-	def saveCalibration(self):
-		np.savez(self.output_file, **self.lensCalibration)
+	def saveCalibration(self, path=None):
+		"""Load the calibration to path"""
+		np.savez(self.path or self.output_file, **self.lensCalibration)
 		self.setOutpuFileTimestamp()
 
-	def loadCalibration(self, path):
-		# TODO AXEL: is this used?
-		self.lensCalibration = np.load(path + ".npz")
+	def loadCalibration(self, path=None):
+		"""Load the calibration from path (defaults to self.lensCalibration default path)"""
+		if path is not None:
+			self.lensCalibration = np.load(path + ".npz")
+		else:
+			self.lensCalibration = np.load(self.output_file + ".npz")
 		self.onChange()
 
 	def clean(self):
