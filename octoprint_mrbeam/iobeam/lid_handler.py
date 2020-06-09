@@ -197,17 +197,6 @@ class LidHandler(object):
 			self._logger.debug("shutdown() stopping _photo_creator")
 			self._end_photo_worker()
 
-	def take_undistorted_picture(self,is_initial_calibration=False):
-		from flask import make_response, jsonify
-		if self._photo_creator is not None:
-			self._photo_creator.is_initial_calibration = is_initial_calibration
-			self._startStopCamera("take_undistorted_picture_request")
-			# this will be accepted in the .done() method in frontend
-			resp_text = {'msg': gettext("Please make sure the lid of your Mr Beam is open and wait a little...")}
-			return make_response(jsonify(resp_text), 200)
-		else:
-			return make_response('Error, no photocreator active, maybe you are developing and dont have a cam?', 503)
-
 	def _start_photo_worker(self):
 		path_to_cam_params = self._settings.get(["cam", "lensCalibrationFile"])
 		path_to_pic_settings = self._settings.get(["cam", "correctionSettingsFile"])
@@ -229,7 +218,7 @@ class LidHandler(object):
 			else:
 				self._photo_creator.start(pic_settings=pic_settings, cam_params=cam_params, out_pic_size=out_pic_size)
 		else:
-			self._logger.info("Another PhotoCreator thread is already active! Not starting a new one.")
+			self._logger.debug("Another PhotoCreator thread is already active! Not starting a new one.")
 
 	def _end_photo_worker(self):
 		if self._photo_creator is not None:
@@ -348,13 +337,17 @@ class LidHandler(object):
 	def takeNewPic(self):
 		"""Forces agent to take a new picture."""
 		if self.force_taking_picture.isSet():
-			self._logger.warning("Already analysing a picture, please wait")
+			self._logger.info("Already analysing a picture, please wait")
+			return False
 		else:
-			self._logger.warning("Force take new picture.")
 			if self._photo_creator and \
-			self._photo_creator.active and \
-			not self._photo_creator.stopping:
+			   self._photo_creator.active and \
+			   not self._photo_creator.stopping:
 				self._photo_creator.forceNewPic.set()
+				self._logger.info("Force take new picture.")
+				return True
+			else:
+				return False
 
 	def startLensCalibration(self):
 		if not self.boardDetectorDaemon.is_alive() and not self.boardDetectorDaemon.stopping:

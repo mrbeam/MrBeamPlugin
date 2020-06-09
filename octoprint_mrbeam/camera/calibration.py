@@ -433,11 +433,14 @@ class calibrationState(dict):
 		self._logger.setLevel(logging.DEBUG)
 		self.changeCallback = changeCallback
 		self.imageSize=imageSize
-		self.lensCalibration = dict(state=STATE_PENDING)
 		self.output_file =  npzPath
 		self.output_file_ts = -1
 		self.rawImgLock = rawImgLock
 		self.setOutpuFileTimestamp()
+		if os.path.isfile(self.output_file):
+			self.loadCalibration()
+		else:
+			self.lensCalibration = dict(state=STATE_PENDING)
 		super(self.__class__, self).__init__(*args, **kw)
 
 	def onChange(self):
@@ -558,10 +561,11 @@ class calibrationState(dict):
 
 	def loadCalibration(self, path=None):
 		"""Load the calibration from path (defaults to self.lensCalibration default path)"""
-		if path is not None:
-			self.lensCalibration = np.load(path + ".npz")
+		self.lensCalibration = dict(np.load(path or self.output_file))
+		if 'mtx' in self.lensCalibration.keys() and self.lensCalibration['mtx'] is not None:
+			self.lensCalibration['state'] = STATE_SUCCESS
 		else:
-			self.lensCalibration = np.load(self.output_file + ".npz")
+			self.lensCalibration['state'] = STATE_FAIL
 		self.onChange()
 
 	def clean(self):

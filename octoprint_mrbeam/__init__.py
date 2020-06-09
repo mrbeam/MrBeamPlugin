@@ -1567,8 +1567,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return NO_CONTENT
 
 	def take_undistorted_picture(self, is_initial_calibration):
+		from flask import make_response, jsonify
 		if os.environ['HOME'] == "/home/teja":
-			from flask import make_response
 			self._logger.debug("DEBUG MODE: Took dummy picture")
 			meta_data = {
 				"corners_calculated": {
@@ -1604,7 +1604,16 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return make_response("DEBUG MODE: Took dummy picture", 200)
 
 		self._logger.debug("New undistorted image is requested. is_initial_calibration: %s", is_initial_calibration)
-		image_response = self.lid_handler.take_undistorted_picture(is_initial_calibration)
+		self.lid_handler._photo_creator.is_initial_calibration = is_initial_calibration
+		self.lid_handler._startStopCamera("initial_calibration")
+		succ = self.lid_handler.takeNewPic()
+		if succ:
+			resp_text = {'msg': gettext("A new picture is being taken, please wait a little...")}
+			code = 200
+		else:
+			resp_text = {'msg': gettext("Either the camera is busy or the lid is not open.")}
+			code = 503
+		image_response = make_response(jsonify(resp_text), code)
 		self._logger.debug("Image_Response: {}".format(image_response))
 		return image_response
 
