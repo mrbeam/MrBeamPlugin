@@ -549,7 +549,7 @@ class calibrationState(dict):
 
 	def saveCalibration(self, path=None):
 		"""Load the calibration to path"""
-		np.savez(self.path or self.output_file, **self.lensCalibration)
+		np.savez(path or self.output_file, **self.lensCalibration)
 		self.setOutpuFileTimestamp()
 
 	def loadCalibration(self, path=None):
