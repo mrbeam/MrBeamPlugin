@@ -19,7 +19,7 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 # don't crash on a dev computer where you can't install picamera
 from octoprint_mrbeam.camera import gaussBlurDiff, QD_KEYS, PICAMERA_AVAILABLE
 from octoprint_mrbeam.camera import calibration as calibration
-from octoprint_mrbeam.camera.calibration import BoardDetectorDaemon
+from octoprint_mrbeam.camera.calibration import BoardDetectorDaemon, MIN_BOARDS_DETECTED
 from octoprint_mrbeam.util import json_serialisor, logme
 import octoprint_mrbeam.camera.exc as exc
 import octoprint_mrbeam.camera as camera
@@ -37,7 +37,7 @@ DEFAULT_MM_TO_PX = 1 # How many pixels / mm is used for the output image
 SIMILAR_PICS_BEFORE_REFRESH = 20
 MAX_PIC_THREAD_RETRIES = 2
 
-TMP_RAW_FNAME = 'tmp_raw_img_{}.jpg'
+TMP_RAW_FNAME = 'tmp_raw_img_{0:0>3}.jpg'
 
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 from octoprint.events import Events as OctoPrintEvents
@@ -293,7 +293,7 @@ class LidHandler(object):
 				self.boardDetectorDaemon.add(imgPath)
 				_s = self.boardDetectorDaemon.state
 				n = len(_s.getAllPending()) + len(_s.getSuccesses()) + len(_s.getProcessing())
-				if n + 1 >= 9:
+				if n >= MIN_BOARDS_DETECTED:
 					self._event_bus.fire(MrBeamEvents.RAW_IMG_TAKING_LAST)
 				# else:
 				# 	self._event_bus.fire(MrBeamEvents.RAW_IMAGE_TAKING_START)
