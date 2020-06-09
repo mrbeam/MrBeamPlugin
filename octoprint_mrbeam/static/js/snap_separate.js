@@ -98,7 +98,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	Element.prototype.separate_vertically = function () {
 		const old_element = this;
 		const bbox = old_element.getBBox();
-		const delimiter = bbox.cx;
+		const mat = old_element.transform().localMatrix.invert();
+		const delimiter = mat.x(bbox.cx, bbox.cy);
 		let native_elements = old_element.get_native_elements() 
 		
 		let left_right = {};
@@ -124,7 +125,8 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	Element.prototype.separate_horizontally = function () {
 		const old_element = this;
 		const bbox = old_element.getBBox();
-		const delimiter = bbox.cy;
+		const mat = old_element.transform().localMatrix.invert();
+		const delimiter = mat.y(bbox.cx, bbox.cy); // TODO: apply old elements matrix.
 		let native_elements = old_element.get_native_elements() 
 		
 		let above_below = {};
@@ -201,10 +203,10 @@ Snap.plugin(function (Snap, Element, Paper, global) {
 	 * 
 	 * @param {array^2} id_sets Array of Arrays with node ids. e.g.: [['path10', 'path11'],['path12','path13'],['rect20']]
 	 * 
-	 * @returns {array} svg snippets
+	 * @returns {object} keys: parts Array of svg snippets, overflow boolean indicating limitation by max_parts
 	 */
 	Element.prototype.separate_by_ids = function(id_sets){
-		if(id_sets.length <= 1) return []; // avoids unnecessary cloning
+		if(id_sets.length <= 1) return {parts: [], overflow: false}; // avoids unnecessary cloning
 		
 		const max_results = 10;
 		const old_element = this;
