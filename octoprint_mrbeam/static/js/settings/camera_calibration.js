@@ -220,6 +220,10 @@ $(function () {
 			self.nextMarker();
 		};
 
+		self.stopCornerCalibration = function () {
+			self.cornerCalibrationActive(false);
+		}
+
 		self.startLensCalibration = function () {
 			self.analytics.send_fontend_event('lens_calibration_start', {});
 			// self.picType("raw");
@@ -747,10 +751,10 @@ $(function () {
 				self.cornerCalibrationActive(false);
 				self.rawPics([])
 			}
+			self.resetView();
 		};
 
 		self.resetView = function () {
-			self.picType("lens_corrected");
 			self.focusX(0);
 			self.focusY(0);
 			self.calSvgScale(1);

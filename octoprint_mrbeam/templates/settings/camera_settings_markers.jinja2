@@ -4,11 +4,11 @@
 		<!-- Calibration Selector -->
 		<ul id="camera-calibration-tabs" class="nav nav-tabs"> 
 			<li class="active"><a href="#tab_camera_alignment" data-toggle="tab" id="camalignment_tab_btn" >{{ _('Camera Alignment') }}</a></li>
-			<li><a href="#tab_lens_calibration" data-toggle="tab" id="lenscal_tab_btn">{{ _('Lens Calibration') }} 
-					<i class="icon icon-ok" data-bind="visible: lensCalibrationNpzFileTs"></i>
+			<li><a href="#tab_lens_calibration" data-toggle="tab" id="lenscal_tab_btn" click="stopCornerCalibration">{{ _('Lens Calibration') }}
+					<i class="icon icon-ok" data-bind="visible: lensCalibrationNpzFileTs()"></i>
 					<i class="icon icon-warning-sign" data-bind="visible: !lensCalibrationComplete()"></i>
 				</a></li>
-			<li><a href="#tab_corner_calibration" data-toggle="tab" id="cornercal_tab_btn" >{{ _('Corner Calibration') }}</a></li>
+			<li><a href="#tab_corner_calibration" data-toggle="tab" id="cornercal_tab_btn" click="startCornerCalibration">{{ _('Corner Calibration') }}</a></li>
 			<li><a href="#tab_calibration_qa" data-toggle="tab" id="qacal_tab_btn">{{ _('QA') }}</a></li>
 		</ul>
 	
@@ -110,7 +110,7 @@
 										data-bind="click: lensCalibrationToggleQA,
 												   css: {'btn-success': lensCalibrationNpzFileTs, 'btn-default': !lensCalibrationNpzFileTs()},
 												   visible: rawPicSelection().length >= 9,
-												   enable: lensCalibrationNpzFileTs && hasMinBoardsFound()">
+												   enable: lensCalibrationNpzFileTs() && hasMinBoardsFound()">
 									<span style="font-size:1.5rem;">{{ _('Check result') }}</span> 
 									<i class="icon icon-2x icon-arrow-right" data-bind="visible: lensCalibrationNpzFileTs"></i>
 								</button>
@@ -318,23 +318,21 @@
 							<div style="margin-top:1em;">
 								<button class="btn btn-default" data-bind="click: previousMarker, visible: cornerCalibrationActive()">{{ _('Previous') }}</button>
 								<button class="btn btn-default" data-bind="click: nextMarker, visible: cornerCalibrationActive()">{{ _('Next') }}</button>
-								<!--<button class="btn btn-success" data-bind="click: saveCornerCalibrationData, visible: cornerCalibrationComplete() && cornerCalibrationActive()">{{ _('Save Calibration') }}</button>-->
+								<button class="btn btn-success" data-bind="click: saveCornerCalibrationData, visible: cornerCalibrationComplete() && cornerCalibrationActive()">{{ _('Save Calibration') }}</button>
+								<button class="btn btn-warning" data-bind="click: abortCalibration, visible: cornerCalibrationActive()"><i class="icon-fixed-width icon-ban-circle"></i> {{ _('Cancel') }}</button>
+							</div>
+							<!-- <h4>Checklist</h4>
+								 <div class="qa_list_and_next">
+								 <ul style="margin:0;">
+								 <li>{{ _('Green rectangle is on the engraved rectangle') }}</li>
+								 <li>{{ _('engraved rectangle egdes are straight and parallel to the green rectangle edges') }}</li>
+								 </ul>
+								 <div class="continue_btn btn-group">
+								 <button class="btn btn-warning" data-bind="click: abortCalibration, visible: cornerCalibrationActive()"><i class="icon-fixed-width icon-ban-circle"></i> {{ _('Cancel') }}</button>
+								 <button class="btn btn-success" data-bind="click: saveCornerCalibrationData, visible: cornerCalibrationComplete() && cornerCalibrationActive()">{{ _('Save Calibration') }}</button>
 
-								<!-- Cancel -->
-								<!--<button class="btn btn-warning" data-bind="click: abortCalibration, visible: cornerCalibrationActive()"><i class="icon-fixed-width icon-ban-circle"></i> {{ _('Cancel') }}</button>-->
-							</div>
-							<h4>Checklist</h4>
-							<div class="qa_list_and_next">
-								<ul style="margin:0;">
-									<li>{{ _('Green rectangle is on the engraved rectangle') }}</li>
-									<li>{{ _('engraved rectangle egdes are straight and parallel to the green rectangle edges') }}</li>
-								</ul>
-								<div class="continue_btn btn-group">
-									<button class="btn btn-warning" data-bind="click: abortCalibration, visible: cornerCalibrationActive()"><i class="icon-fixed-width icon-ban-circle"></i> {{ _('Cancel') }}</button>
-									<button class="btn btn-success" data-bind="click: saveCornerCalibrationData, visible: cornerCalibrationComplete() && cornerCalibrationActive()">{{ _('Save Calibration') }}</button>
-									
-								</div>
-							</div>
+								 </div>
+								 </div> -->
 						</div>
 						
 					</div>
