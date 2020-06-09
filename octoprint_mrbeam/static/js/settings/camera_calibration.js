@@ -417,7 +417,8 @@ $(function () {
 				//      state: "processing", 
 				//      tm_proc: 1590151819.735044, 
 				//      tm_added: 1590151819.674166, 
-				//      board_bbox: [767.5795288085938, 1302.0089111328125, 128.93748474121094, 578.4738159179688], // xmin, xmax, ymin, ymax
+				//      board_bbox: [[767.5795288085938, 128.93748474121094],
+				//                   [1302.0089111328125, 578.4738159179688]], // [xmin, ymin], [xmax, ymax]
 				//      board_center: [1039.291259765625, 355.92547607421875], // cx, cy
 				//      found_pattern: null,
 				//      index: 2,
@@ -432,18 +433,18 @@ $(function () {
 				let found_bboxes = [];
 				let total_score = 0;
 				for (const [path, value] of Object.entries(_d.pictures)) {
-
 					value.path = path;
 					value.url = path.replace("home/pi/.octoprint/uploads", "downloads/files/local");
 					value.processing_duration = value.tm_end !== null ? (value.tm_end - value.tm_proc).toFixed(1) + ' sec' : '?';
 					arr.push(value);
-					self.updateHeatmap(value.board_bbox, value.index);
 					if(value.board_bbox){
+						// TODO individual score should be attributed when all boxes are in the list
 						value.score = self._calc_pic_score(value.board_bbox, found_bboxes);
 						total_score += value.score;
 						found_bboxes.push(value.board_bbox);
 					}
 				}
+				self.updateHeatmap(_d.pictures);
 				self.lensCalibrationCoverageQuality(total_score);
 			
 				for (var i = arr.length; i < 9; i++) {
@@ -469,9 +470,10 @@ $(function () {
 		
 		self._calc_pic_score = function(bbox, found_bboxes){
 			if(!bbox) return 0;
-			
+			const [x1, y1] = bbox[0];
+			const [x2, y2] = bbox[1];
 			let max_overlap = 0;
-			const area = (bbox[1] - bbox[0]) * (bbox[3] - bbox[2]);
+			const area = (x2-x1) * (y2-y1);
 			for (var i = 0; i < found_bboxes.length; i++) {
 				var existing_bbox = found_bboxes[i];
 				max_overlap = Math.max(max_overlap, self._get_bbox_intersecting_area(bbox, existing_bbox));
@@ -481,30 +483,31 @@ $(function () {
 		};
 		
 		self._get_bbox_intersecting_area = function(bb1, bb2){
-			// precondition: bb = [xmin, xmax, ymin, ymax] with always _min < _max 
-			if(bb1[1] < bb2[0] || bb1[0] > bb2[1] ) return 0; // bboxes don't overlap on the x axis
-			if(bb1[3] < bb2[2] || bb1[2] > bb2[3] ) return 0; // bboxes don't overlap on the y axis
-			const dx =  Math.min(bb1[1], bb2[1]) - Math.max(bb1[0], bb2[0]);
-			const dy =  Math.min(bb1[3], bb2[3]) - Math.max(bb1[2], bb2[2]);
+			// precondition: bb = [[xmin, ymin], [xmax, ymax]] with always _min < _max
+			const [x11, y11] = bb1[0];
+			const [x21, y21] = bb1[1];
+			const [x12, y12] = bb2[0];
+			const [x22, y22] = bb2[1];
+			if(x21 < x12 || x11 > x22 ) return 0; // bboxes don't overlap on the x axis
+			if(y21 < y12 || y11 > y22 ) return 0; // bboxes don't overlap on the y axis
+			const dx =  Math.min(x21, x22) - Math.max(x11, x12);
+			const dy =  Math.min(y21, y22) - Math.max(y11, y12);
 			return dx*dy;
 		}
 	
-		self.updateHeatmap = function(bbox, index){
-			let heatmapGroup = $('#segment_group');
-			let heatmap = document.getElementById('heatmap_board'+index);
-			if(!bbox){
-				if(heatmap) heatmap.remove();
-			} else {
-				const x1 = bbox[0];
-				const x2 = bbox[1];
-				const y1 = bbox[2];
-				const y2 = bbox[3];
-				if(heatmap){
-					$(heatmap).attr({x: x1, y: y1, width: (x2-x1), height: (y2-y1)});
-				} else {
-					heatmapGroup.append(`<rect id="heatmap_board${index}" x="${x1}" y="${y1}" width="${(x2-x1)}" height="${(y2-y1)}" />`);
+		self.updateHeatmap = function(picturesState){
+			let boxes = []
+			for (const [path, value] of Object.entries(picturesState)) {
+				if (value.board_bbox) {
+					let fileName = path.split('/').reverse()[0]
+					const [x1, y1] = value.board_bbox[0];
+					const [x2, y2] = value.board_bbox[1];
+					boxes.push(`<rect id="heatmap_board${fileName}" x="${x1}" y="${y1}" width="${(x2-x1)}" height="${(y2-y1)}" />`);
 				}
 			}
+			let heatmapGroup = $('#segment_group');
+			heatmapGroup.empty()
+			heatmapGroup.append(boxes)
 		}
 		
 		self.reset_heatmap = function(){

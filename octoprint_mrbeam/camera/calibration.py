@@ -338,20 +338,27 @@ def handleBoardPicture(image, count, board_size, q_out=None):
 
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 	success, found_pattern = findBoard(gray, board_size)
+	_pattern = found_pattern.reshape(-1,2)
 	
 	center = None
 	bbox = None
 	try:
-		_c = np.average(found_pattern, axis=0)
-		center = (float(_c[0,0]), float(_c[0,1]))
+		if success:
+			_c = np.average(_pattern, axis=0).tolist()
+			center = tuple(_c)
+		else:
+			center = None
 	except:
-		pass # TODO log this
-	
+		center = None
+		# TODO log this
 	try:
-		bbox = (float(np.min(found_pattern[:,:,0])), float(np.max(found_pattern[:,:,0])),
-		        float(np.min(found_pattern[:,:,1])), float(np.max(found_pattern[:,:,1])))
+		if success:
+			bbox = (tuple(np.min(_pattern, axis=0)), tuple(np.max(_pattern, axis=0)))
+		else:
+			bbox = None
 	except:
-		pass # TODO log this
+		bbox = None
+		# TODO log this
 
 	drawnImg = cv2.drawChessboardCorners(img, board_size, found_pattern, success, )
 	height, width, _ = drawnImg.shape
@@ -373,9 +380,6 @@ def handleBoardPicture(image, count, board_size, q_out=None):
 	else:
 		# if callback != None: callback(path, STATE_FAIL, board_size=board_size)
 		return None
-
-	#TODO: notify frontend
-	# callback of the lid_handler
 
 
 # @logExceptions
@@ -564,6 +568,12 @@ class calibrationState(dict):
 		"Allows to be pickled"
 		def _isClean(elm):
 			return type(elm) in [basestring, str, int, float, bool]
+		def make_clean(elm):
+			if isinstance(elm, float) or type(elm) in [np.float32, np.float64, np.float16, np.double]:
+				return float(elm)
+			if isinstance(elm, int) or type(elm) in [np.int8, np.int16, np.int32, np.uint8, np.uint16, np.uint32]:
+				return int(elm)
+			else: return None
 		def _clean(d):
 			if isinstance(d, dict):
 				ret = {}
@@ -581,6 +591,7 @@ class calibrationState(dict):
 				return type(d)(ret)
 			else:
 				if _isClean(d): return d
+				else: return make_clean(d)
 		return _clean(self)
 
 if __name__ == "__main__":
