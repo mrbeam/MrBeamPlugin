@@ -372,24 +372,25 @@ $(function () {
 
 			if ('beam_cam_new_image' in data) {
 				// update image
+				var cornerCalibrationTabselected = $('.nav-tabs .active a').attr('id') === "cornercal_tab_btn"
 				var _d = data['beam_cam_new_image'];
 				if (_d['undistorted_saved'] && ! self.cornerCalibrationActive()) {
 					if (_d['available']) {
 						self.availablePic(_d['available'])
 						if (! ['raw', 'lens_corrected', 'cropped'].includes(self.picType())
 							&& ! self.lensCalibrationActive()) {
-							for (let _type of ['raw', 'lens_corrected', 'raw']) {
+							for (let _type of ['cropped', 'lens_corrected', 'raw']) {
 								if (self.availablePic()[_type]) {
 									self.picType(_type);
 									break;
 								}
 							}
-						} else if ($('.nav-tabs .active a').attr('id') === "cornercal_tab_btn") {
+						} else if (cornerCalibrationTabselected ) {
                             self.calImgUrl(self.camera.getTimestampedImageUrl(self.calImgUrl()));
                         }
 					}
 
-					if (self.isInitialCalibration()) {
+					if (self.isInitialCalibration() && cornerCalibrationTabselected) {
 						self.dbNWImgUrl('/downloads/files/local/cam/debug/NW.jpg' + '?ts=' + new Date().getTime());
 						self.dbNEImgUrl('/downloads/files/local/cam/debug/NE.jpg' + '?ts=' + new Date().getTime());
 						self.dbSWImgUrl('/downloads/files/local/cam/debug/SW.jpg' + '?ts=' + new Date().getTime());
