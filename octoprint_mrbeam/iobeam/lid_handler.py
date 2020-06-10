@@ -246,7 +246,8 @@ class LidHandler(object):
 		self._photo_creator.is_initial_calibration = True
 		self._start_photo_worker()
 		self.lensCalibrationStarted = True
-		self.boardDetectorDaemon.load_dir(self.debugFolder)
+		if self.boardDetectorDaemon.load_dir(self.debugFolder):
+			self._logger.info("Found pictures from previous session")
 		self._event_bus.fire(MrBeamEvents.LENS_CALIB_START)
 		self._logger.warning("EVENT LENS CALIBRATION STARTING")
 		self._logger.warning("Lens calibration Started : %s" % self.lensCalibrationStarted)

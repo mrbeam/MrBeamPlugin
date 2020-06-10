@@ -37,8 +37,8 @@ STATES = [STATE_QUEUED, STATE_PROCESSING, STATE_SUCCESS, STATE_FAIL, STATE_IGNOR
 TMP_PATH =  "/tmp/chess_img_{}.jpg"
 
 TMP_RAW_FNAME = 'tmp_raw_img_{0:0>3}.jpg'
-TMP_RAW_FNAME_RE =  'tmp_raw_img_[0-9]+.jpg'
-TMP_RAW_FNAME_RE_NPZ =  'tmp_raw_img_[0-9]+.jpg.npz'
+TMP_RAW_FNAME_RE =  'tmp_raw_img_[0-9]+.jpg$'
+TMP_RAW_FNAME_RE_NPZ =  'tmp_raw_img_[0-9]+.jpg.npz$'
 # Remote connection for calibration
 # SSH_FILE = "/home/pi/.ssh/pi_id_rsa"
 # REMOTE_CALIBRATION_FOLDER = "/home/calibrationfiles/"
@@ -137,12 +137,15 @@ class BoardDetectorDaemon(Thread):
 	def load_dir(self, path, chessboardSize=(CB_ROWS, CB_COLS)):
 		import re
 		dirlist = os.listdir(path)
+		found = False
 		for fname in dirlist:
-			if re.fullmatch(TMP_RAW_FNAME_RE, fname):
+			if re.match(TMP_RAW_FNAME_RE, fname):
+				found = True
 				fullpath = os.path.join(path, fname)
-				index = int(fname[re.search('[0-9]+', fname).span()])
+				index = int(fname[slice(*re.search('[0-9]+', fname).span())])
 				if self.path_inc <= index: self.path_inc = index + 1
 				self.add(fullpath, chessboardSize, STATE_QUEUED, index)
+		return found
 
 	def remove(self, path):
 		self._logger.warning("Removing path %s" % path)
@@ -473,12 +476,21 @@ class calibrationState(dict):
 			board_size=board_size,
 			index=index,
 		)
-		if path + ".npz" in os.listdir(os.path.dirname(path)):
-			self.load(path)
-		self.onChange()
+		dirlist = os.listdir(os.path.dirname(path))
+		if os.path.basename(path) + ".npz" in dirlist:
+			self._logger.debug("Found previous npz file for %s" % path)
+			self.load(path) # Triggers self.onChange()
+		else:
+			self.onChange()
 
 	def remove(self, path):
-		self.pop(path, None) # deletes without key exist check
+		if self.pop(path, None): # deletes without checking if the key exists
+			for f in [path, path+'.npz']:
+				if os.path.isfile(f):
+					try:
+						os.remove(f)
+					except OSError:
+						pass
 		self.onChange()
 
 	def ignore(self, path):
@@ -489,10 +501,11 @@ class calibrationState(dict):
 			_data = dict(state = state, **kw)
 			if(state == STATE_SUCCESS or state == STATE_FAIL):
 				_data["tm_end"] = time.time()
-				self.save(path)
 			if(state == STATE_PROCESSING):
 				_data["tm_proc"] = time.time()
 			self[path].update(_data)
+			if(state == STATE_SUCCESS or state == STATE_FAIL):
+				self.save(path)
 			self.onChange()
 		else:
 			raise ValueError("Not a valid state: {}", state)
@@ -566,7 +579,7 @@ class calibrationState(dict):
 
 	def load(self, path):
 		"""Load the results of the detected chessboard in given path"""
-		self[path] = np.load(path + ".npz")
+		self[path].update(dict(np.load(path + ".npz")))
 		self.onChange()
 
 	def saveCalibration(self, path=None):
@@ -592,6 +605,8 @@ class calibrationState(dict):
 				return float(elm)
 			if isinstance(elm, int) or type(elm) in [np.int8, np.int16, np.int32, np.uint8, np.uint16, np.uint32]:
 				return int(elm)
+			if isinstance(elm, np.ndarray):
+				return elm.tolist()
 			else: return None
 		def _clean(d):
 			if isinstance(d, dict):

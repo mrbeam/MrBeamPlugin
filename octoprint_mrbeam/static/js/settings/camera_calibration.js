@@ -524,6 +524,7 @@ $(function () {
 		}
 		
 		self.heatmap_highlight = function(data){
+			if ((!data.path) || data.state !== "success") return
 			let fileName = data.path.split('/').reverse()[0];
 			let id = 'heatmap_board'+fileName;
 			// $("#"+id).addClass('highlight'); // no idea why this doesn't work anymore
