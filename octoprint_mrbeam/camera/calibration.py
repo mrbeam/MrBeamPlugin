@@ -474,7 +474,7 @@ class calibrationState(dict):
 			index=index,
 		)
 		if path + ".npz" in os.listdir(os.path.dirname(path)):
-			self.state.loadCalibration(path)
+			self.load(path)
 		self.onChange()
 
 	def remove(self, path):
@@ -489,6 +489,7 @@ class calibrationState(dict):
 			_data = dict(state = state, **kw)
 			if(state == STATE_SUCCESS or state == STATE_FAIL):
 				_data["tm_end"] = time.time()
+				self.save(path)
 			if(state == STATE_PROCESSING):
 				_data["tm_proc"] = time.time()
 			self[path].update(_data)
