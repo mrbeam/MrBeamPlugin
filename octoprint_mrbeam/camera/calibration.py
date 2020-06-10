@@ -463,7 +463,7 @@ class calibrationState(dict):
 		                   lensCalibration=self.lensCalibration['state'],
 				           lensCalibrationNpzFileTs=self.output_file_ts,
 				           pictures=self.clean())
-		self._logger.info("Changed state returnState: \n%s", returnState)
+		self._logger.debug("State updated")
 		if self.changeCallback != None:
 			self.changeCallback(returnState)
 
