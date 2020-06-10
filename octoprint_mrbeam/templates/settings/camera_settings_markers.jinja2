@@ -5,10 +5,13 @@
 		<ul id="camera-calibration-tabs" class="nav nav-tabs"> 
 			<li class="active"><a href="#tab_camera_alignment" data-toggle="tab" id="camalignment_tab_btn" >{{ _('Camera Alignment') }}</a></li>
 			<li><a href="#tab_lens_calibration" data-toggle="tab" id="lenscal_tab_btn">{{ _('Lens Calibration') }}
-					<i class="icon icon-ok" data-bind="visible: lensCalibrationNpzFileTs()"></i>
-					<i class="icon icon-warning-sign" data-bind="visible: !lensCalibrationComplete()"></i>
+					<i class="icon icon-ok" data-bind="visible: lensCalibrationComplete()"></i>
+					<i class="icon icon-remove" data-bind="visible: !lensCalibrationComplete()"></i>
 				</a></li>
-			<li><a href="#tab_corner_calibration" data-toggle="tab" id="cornercal_tab_btn">{{ _('Corner Calibration') }}</a></li>
+			<li><a href="#tab_corner_calibration" data-toggle="tab" id="cornercal_tab_btn">{{ _('Corner Calibration') }}
+				<!-- <i class="icon icon-ok" data-bind="visible: cornerCalibrationComplete()"></i>
+					 <i class="icon icon-remove" data-bind="visible: !cornerCalibrationComplete()"></i> -->
+				</a></li>
 			<li><a href="#tab_calibration_qa" data-toggle="tab" id="qacal_tab_btn">{{ _('QA') }}</a></li>
 		</ul>
 	
@@ -20,7 +23,7 @@
 					<div class="qa_images">
 						<div>
 							<div class="qa_img_wrapper">
-								<image data-bind="attr: {src: qa_pic_raw}" />
+								<image data-bind="attr: {src: availablePicUrl()['raw']}" />
 							</div>
 							<a href="#" class="btn btn-link" data-bind="click:loadUndistortedPicture">
 								<i class="icon icon-refresh"></i>
@@ -120,7 +123,7 @@
 								<li class="lens_correction_image_thumb" 
 									data-bind="	style: { backgroundImage: pic.state !== 'camera_processing' ? 'url('+pic.url+')' : '' }, 
 												event:{ mouseover: $root.heatmap_highlight, mouseout: $root.heatmap_dehighlight }" 
-									onclick="this.classList.remove('zoom')">
+									onclick="this.classList.remove('zoom')"> <!-- toggle class messes with rm btn -->
 									<div class="btn-group">
 										<button class="btn btn-default" onclick="this.parentElement.parentElement.classList.add('zoom'); event.stopPropagation();">
 											<i class="icon icon-search"></i>
@@ -131,11 +134,11 @@
 									</div>
 									<span class="chessboard_cal_duration pull-right" data-bind="visible: pic.tm_end !== null">
 										<i class="icon icon-time"></i> <span data-bind="text: pic.processing_duration"></span><br />
-										<i data-bind="css: {'icon-star': pic.score >= 1, 'icon-star-empty': pic.score < 1}" class="icon"></i>
-										<i data-bind="css: {'icon-star': pic.score >= 2, 'icon-star-empty': pic.score < 2}" class="icon"></i>
-										<i data-bind="css: {'icon-star': pic.score >= 3, 'icon-star-empty': pic.score < 3}" class="icon"></i>
-										<i data-bind="css: {'icon-star': pic.score >= 4, 'icon-star-empty': pic.score < 4}" class="icon"></i>
-										<i data-bind="css: {'icon-star': pic.score >= 5, 'icon-star-empty': pic.score < 5}" class="icon"></i>
+										<!-- <i data-bind="css: {'icon-star': pic.score >= 1, 'icon-star-empty': pic.score < 1}" class="icon"></i>
+											 <i data-bind="css: {'icon-star': pic.score >= 2, 'icon-star-empty': pic.score < 2}" class="icon"></i>
+											 <i data-bind="css: {'icon-star': pic.score >= 3, 'icon-star-empty': pic.score < 3}" class="icon"></i>
+											 <i data-bind="css: {'icon-star': pic.score >= 4, 'icon-star-empty': pic.score < 4}" class="icon"></i>
+											 <i data-bind="css: {'icon-star': pic.score >= 5, 'icon-star-empty': pic.score < 5}" class="icon"></i> -->
 									</span>
 
 									<i class="status_icon icon icon-save" data-bind="visible: pic.state === 'camera_processing' || pic.state === 'pending'  || pic.state === 'queued' "></i>
@@ -150,7 +153,7 @@
 						<div id="lensCalibrationQA">
 							<div data-bind="visible: lensCalibrationNpzFileTs" class="qa_images">
 								<div class="qa_img_wrapper">
-									<image data-bind="attr: {src: qa_pic_undistorted}" />
+									<image data-bind="attr: {src: availablePicUrl()['lens_corrected']}" />
 									<div id="qa_undistorted_guides"></div>
 								</div>
 								<ul>
@@ -170,7 +173,7 @@
 									<a href="#" onclick="$('#lenscal_tab_btn').click()" class="btn continue_btn"
 										data-bind="click: lensCalibrationToggleQA">
 										<i class="icon icon-2x icon-arrow-left"></i>
-										<span style="font-size:1.5rem;">{{ _('Back') }}</span> 
+										<span style="font-size:1.5rem;">{{ _('Back') }}</span>
 									</a>
 									<a href="#" class="btn btn-success continue_btn"
 										data-bind="xclick: stopLensCalibration,
@@ -185,7 +188,7 @@
 					</div>
 					
 				</div>
-				
+
 	<!--====================================================================================================================-->			
 				
 				<div class="tab-pane" id="tab_corner_calibration">
@@ -264,9 +267,10 @@
 								<li>{{ _('The 4 arrows are aligned with the blue crosses') }}</li>
 							</ul>
 							<div class="continue_btn btn-group">
-								<a href="#" onclick="startCornerCalibration" class="btn continue_btn"
+								<!--  onclick="startCornerCalibration" -->
+								<a href="#" class="btn continue_btn"
 									data-bind="click: startCornerCalibration">
-									<i class="icon icon-arrow-left"></i>
+									<i class="icon icon-refresh"></i>
 									{{ _('Restart Corner Calibration') }}
 								</a>
 								<a href="#" class="btn btn-success continue_btn"
@@ -359,7 +363,7 @@
 					<div class="qa_images">
 						<div>
 							<div class="qa_img_wrapper">
-								<image data-bind="attr: {src: qa_pic_cropped}" />
+								<image data-bind="attr: {src: availablePicUrl()['cropped']}" />
 								<div id="qa_cropped_guides"></div>
 							</div>
 						</div>

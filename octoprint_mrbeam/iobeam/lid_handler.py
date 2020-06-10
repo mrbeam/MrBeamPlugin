@@ -142,7 +142,6 @@ class LidHandler(object):
 		     and payload < 5.0:
 			self._logger.info("onEvent() ONEBUTTON_RELEASED - payload : %s" % payload)
 			self.saveRawImg()
-			# TODO add LED EVENT
 
 	def is_lid_open(self):
 		return not self._lid_closed
@@ -245,6 +244,8 @@ class LidHandler(object):
 		Doesn't run the cv2 lens calibration at that point.
 		"""
 		self.getRawImg()
+		self._photo_creator.is_initial_calibration = True
+		self._start_photo_worker()
 		self.lensCalibrationStarted = True
 		self._event_bus.fire(MrBeamEvents.LENS_CALIB_START)
 		self._logger.warning("EVENT LENS CALIBRATION STARTING")
@@ -280,8 +281,9 @@ class LidHandler(object):
 				# Tell the boardDetector to listen for this file
 				self.boardDetectorDaemon.add(imgPath)
 				_s = self.boardDetectorDaemon.state
-				n = len(_s.getAllPending()) + len(_s.getSuccesses()) + len(_s.getProcessing()) # Does not include STATE_PENDING_CAMERA
-				if n >= MIN_BOARDS_DETECTED - 1:
+				# n = len(_s.getAllPending()) + len(_s.getSuccesses()) + len(_s.getProcessing()) # Does not include STATE_PENDING_CAMERA
+				# if n >= MIN_BOARDS_DETECTED - 1: # not suitable for waterott
+				if len(self.boardDetectorDaemon) >= MIN_BOARDS_DETECTED:
 					self._event_bus.fire(MrBeamEvents.RAW_IMG_TAKING_LAST)
 				else:
 					self._event_bus.fire(MrBeamEvents.RAW_IMAGE_TAKING_START)
@@ -289,7 +291,8 @@ class LidHandler(object):
 					self.boardDetectorDaemon.start()
 				else:
 					self.boardDetectorDaemon.waiting.clear()
-				if n >= MIN_BOARDS_DETECTED - 1:
+				# if n >= MIN_BOARDS_DETECTED - 1:
+				if len(self.boardDetectorDaemon) >= MIN_BOARDS_DETECTED:
 					self.startLensCalibration()
 					# TODO If possible, ask the led cli to chain two LED states
 					t = Timer(1.2, self._event_bus.fire, args=(MrBeamEvents.LENS_CALIB_PROCESSING_BOARDS,))
