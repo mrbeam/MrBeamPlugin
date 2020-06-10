@@ -36,6 +36,9 @@ STATE_PENDING = "pending"
 STATES = [STATE_QUEUED, STATE_PROCESSING, STATE_SUCCESS, STATE_FAIL, STATE_IGNORED, STATE_PENDING, STATE_PENDING_CAMERA]
 TMP_PATH =  "/tmp/chess_img_{}.jpg"
 
+TMP_RAW_FNAME = 'tmp_raw_img_{0:0>3}.jpg'
+TMP_RAW_FNAME_RE =  'tmp_raw_img_[0-9]+.jpg'
+TMP_RAW_FNAME_RE_NPZ =  'tmp_raw_img_[0-9]+.jpg.npz'
 # Remote connection for calibration
 # SSH_FILE = "/home/pi/.ssh/pi_id_rsa"
 # REMOTE_CALIBRATION_FOLDER = "/home/calibrationfiles/"
@@ -127,10 +130,19 @@ class BoardDetectorDaemon(Thread):
 	def stopping(self):
 		return self._stop.is_set() or self._terminate.is_set()
 
-	def add(self, image, chessboardSize=(CB_ROWS, CB_COLS),
-	        state=STATE_PENDING_CAMERA ): #, rough_location=None, remote=None):
-		self.state.add(image, chessboardSize, state=state, index=self.path_inc)
+	def add(self, image, chessboardSize=(CB_ROWS, CB_COLS), state=STATE_PENDING_CAMERA, index=None): #, rough_location=None, remote=None):
+		self.state.add(image, chessboardSize, state=state, index=index or self.path_inc)
 		self.path_inc += 1
+
+	def load_dir(self, path, chessboardSize=(CB_ROWS, CB_COLS)):
+		import re
+		dirlist = os.listdir(path)
+		for fname in dirlist:
+			if re.fullmatch(TMP_RAW_FNAME_RE, fname):
+				fullpath = os.path.join(path, fname)
+				index = int(fname[re.search('[0-9]+', fname).span()])
+				if self.path_inc <= index: self.path_inc = index + 1
+				self.add(fullpath, chessboardSize, STATE_QUEUED, index)
 
 	def remove(self, path):
 		self._logger.warning("Removing path %s" % path)
@@ -143,8 +155,8 @@ class BoardDetectorDaemon(Thread):
 	def __getitem__(self, item):
 		return self.state[item]
 
-	def next_inc(self):
-		return self.path_inc
+	def next_tmp_img_name(self):
+		return TMP_RAW_FNAME.format(self.path_inc)
 
 	@property
 	def startCalibrationWhenIdle(self):
@@ -461,6 +473,8 @@ class calibrationState(dict):
 			board_size=board_size,
 			index=index,
 		)
+		if path + ".npz" in os.listdir(os.path.dirname(path)):
+			self.state.loadCalibration(path)
 		self.onChange()
 
 	def remove(self, path):
