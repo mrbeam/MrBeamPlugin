@@ -219,14 +219,14 @@ $(function(){
 		};
 
 		self.getUsedColors = function (elem) {
-		    elem = !elem ? snap.select('#userContent') : (typeof elem == 'string' ? snap.select(elem) : elem)
+			elem = !elem ? snap.select('#userContent') : (typeof elem == 'string' ? snap.select(elem) : elem)
 			return self._getColorsOfSelector('.vector_outline', 'stroke', elem);
 		};
 
 		self.hasEngraveOnlyComponents = function(elem){
-		    elem = !elem ? snap.select('#userContent') : (typeof elem == 'string' ? snap.select(elem) : elem)
-		    return  elem.selectAll("image").length > 0 || self.hasFilledVectors(elem)
-        }
+			elem = !elem ? snap.select('#userContent') : (typeof elem == 'string' ? snap.select(elem) : elem)
+			return  elem.selectAll("image").length > 0 || self.hasFilledVectors(elem)
+		}
 
 		self._getColorsOfSelector = function(selector, color_attr = 'stroke', elem = null){
 			let root = elem === null ? snap : elem;
@@ -641,7 +641,7 @@ $(function(){
 				// console.log("found elements", allElems.length);
 				for (var i = 0; i < allElems.length; i++) {
 					var el = allElems[i];
-                    // also check visibility:hidden
+					// also check visibility:hidden
 					if (window.getComputedStyle(el.node).display === 'none') {
 						console.info("computed style display=none, removing element ", el);
 						el.remove();
@@ -896,21 +896,17 @@ $(function(){
 			switch(method){
 				case 'stroke-color':
 					split_result = srcElem.separate_by_stroke_colors();
-					if(split_result.parts.length <= 1) failReason = "Didn't find different stroke colors.";
 					break;
 				case 'non-intersecting': // TODO: provide cancel check and proper progress callback
 					split_result = srcElem.separate_by_non_intersecting_bbox(null, function(n){ console.log("Separate non intersecting shapes: ", n); });
-					if(split_result.parts.length <= 1) failReason = "Didn't find different stroke colors.";
 					break;
 				case 'horizontally':
 					split_result = srcElem.separate_horizontally();
-					if(split_result.parts.length <= 1) failReason = "Not enough native elements.";
 					break;
 				case 'vertically':
 				case 'divide':
 				default:
 					split_result = srcElem.separate_vertically();
-					if(split_result.parts.length <= 1) failReason = "Not enough native elements.";
 					break;
 			}
 
@@ -955,6 +951,8 @@ $(function(){
 						failReason = gettext("No non-intersecting shapes found.");
 						break;
 					case 'divide':
+					case 'horizontally':
+					case 'vertically':
 						failReason = gettext("Looks like a single path.");
 				}
 				new PNotify({
@@ -1127,19 +1125,19 @@ $(function(){
 			if (event.keyCode === 13 || event.type === 'blur') {
 				var svg = snap.select('#'+data.previewId);
 				var globalScale = self.scaleMatrix().a;
-                var nt = WorkingAreaHelper.splitStringToTwoValues(event.target.value)
-                if (nt) {
-                    var ntx = nt[0] / globalScale;
-                    var nty = (self.workingAreaHeightMM() - nt[1]) / globalScale;
+				var nt = WorkingAreaHelper.splitStringToTwoValues(event.target.value)
+				if (nt) {
+					var ntx = nt[0] / globalScale;
+					var nty = (self.workingAreaHeightMM() - nt[1]) / globalScale;
 
-                    self.abortFreeTransforms();
-                    svg.ftManualTransform({tx: ntx, ty: nty, diffType: 'absolute'});
-                    self.check_sizes_and_placements();
-                } else {
-                    // reset to previous value
-                    svg.ftUpdateTransform();
-			        svg.ftAfterTransform();
-                }
+					self.abortFreeTransforms();
+					svg.ftManualTransform({tx: ntx, ty: nty, diffType: 'absolute'});
+					self.check_sizes_and_placements();
+				} else {
+					// reset to previous value
+					svg.ftUpdateTransform();
+					svg.ftAfterTransform();
+				}
 			}
 		};
 		self.svgManualRotate = function(data, event) {
@@ -1385,19 +1383,19 @@ $(function(){
 				var previewId = self.generateUniqueId(id, file); // appends # if multiple times the same design is placed.
 				self._create_img_filter(previewId);
 				newImg.attr('data-serveurl', url);
-                if (!window.mrbeam.browser.is_safari) {
-                    // svg filters don't really work in safari: https://github.com/mrbeam/MrBeamPlugin/issues/586
-                    newImg.attr('filter', 'url(#' + self._get_img_filter_id(previewId) + ')');
-                }
+				if (!window.mrbeam.browser.is_safari) {
+					// svg filters don't really work in safari: https://github.com/mrbeam/MrBeamPlugin/issues/586
+					newImg.attr('filter', 'url(#' + self._get_img_filter_id(previewId) + ')');
+				}
 				var imgWrapper = snap.group().attr({
 					id: previewId,
 					'mb:id':self._normalize_mb_id(previewId),
 					class: 'userIMG',
 					'mb:origin': origin,
 				});
-                if (textMode) {
-                    imgWrapper.attr('style', "filter: url(#scan_text_mode)")
-                }
+				if (textMode) {
+					imgWrapper.attr('style', "filter: url(#scan_text_mode)")
+				}
 
 				imgWrapper.append(newImg);
 				// TODO use self._prepareAndInsertSVG()
@@ -1950,7 +1948,7 @@ $(function(){
 		}, self);
 
 		self.hasFilledVectors = function(elem){
-		    elem = !elem ? snap.selectAll('#userContent *') : (typeof elem == 'string' ? snap.select(elem) : elem.selectAll("*"))
+			elem = !elem ? snap.selectAll('#userContent *') : (typeof elem == 'string' ? snap.select(elem) : elem.selectAll("*"))
 			for (var i = 0; i < elem.length; i++) {
 				var e = elem[i];
 				if (["path", "circle", "ellipse", "rect", "line", "polyline", "polygon", "path"].indexOf(e.type) >= 0){
@@ -2049,10 +2047,10 @@ $(function(){
 
 			// opens preview pane on the left if hovered over one of the pink markers on the working area
 			$('#camera_markers circle').mouseenter(function(){
-                if (!$('#wa_view_settings_body').hasClass('in')) {
-                    $('#wa_view_settings_body').collapse('toggle');
-                }
-            });
+				if (!$('#wa_view_settings_body').hasClass('in')) {
+					$('#wa_view_settings_body').collapse('toggle');
+				}
+			});
 		};
 
 		self.onTabChange = function(current, prev){
@@ -2399,9 +2397,9 @@ $(function(){
 				};
 
 				self.currentQuickShapeFile.components.removeAll()
-                if (qs_params.stroke) {
-                    self.currentQuickShapeFile.components.push(qs_params.color)
-                }
+				if (qs_params.stroke) {
+					self.currentQuickShapeFile.components.push(qs_params.color)
+				}
 				self.currentQuickShapeFile.components_engrave(qs_params.fill)
 
 
@@ -2746,9 +2744,9 @@ $(function(){
 		};
 
 		self._qt_dialogClose = function() {
-            if(self.currentQuickTextAnalyticsData.text_length !== 0) {
-                self._analyticsQuickTextUpdate(self.currentQuickTextAnalyticsData);
-            }
+			if(self.currentQuickTextAnalyticsData.text_length !== 0) {
+				self._analyticsQuickTextUpdate(self.currentQuickTextAnalyticsData);
+			}
 		};
 
 		// ***********************************************************
