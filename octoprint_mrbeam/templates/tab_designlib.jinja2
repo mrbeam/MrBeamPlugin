@@ -80,11 +80,13 @@
 										</div>
 										<div id="files_list" style="height: calc(100vh - 100px); overflow-y: auto;">
 
+											<!-- ko allowBindings: false -->
 											<div class="only_folders clearfix">
-												<div class="gcode_files" data-bind="foreach: foldersOnlyList" >
+												<div id='onlyFoldersList' class="gcode_files" data-bind="foreach: foldersOnlyABCList()" >
 													<div class="entry" data-bind="attr: { id: $root.getEntryId($data), mrb_name: name }, template: { name: $root.templateFor($data), data: $data }, css:$root.templateFor($data)"></div>
 												</div>
 											</div>
+											<!-- /ko -->
 											<div class="only_files">
 												<div class="gcode_files" data-bind="foreach: filesOnlyList" >
 													<div class="entry" data-bind="attr: { id: $root.getEntryId($data) }, template: { name: $root.templateFor($data), data: $data }, css:$root.templateFor($data)"></div>
@@ -262,10 +264,6 @@
 																<ul class="dropdown-menu dropdown-menu-right" role="menu">
 																	<li>
 																		<a class="" data-bind="click: function() { if ($root.enableRemove($data)) { $root.removeFolder($data); } else { return; } }, css: {disabled: !$root.enableRemove($data)}"><i class="icon-trash" title="{{ _('Remove') }}"></i> {{ _('Remove') }}</a>
-																			<!-- data-bind="visible: $root.loginState.hasPermissionKo($root.access.permissions.FILES_DELETE), 
-																							click: function(data, event) { if ($root.enableRemove($data)) { $root.removeFolder($data, event); } else { return; } }, 
-																							css: {disabled: !$root.enableRemove($data)}"
-																			-->
 																	</li>
 																</ul>
 															</div>
