@@ -60,7 +60,7 @@ from octoprint.filemanager.destinations import FileDestinations
 from octoprint_mrbeam.util.material_csv_parser import parse_csv
 from octoprint_mrbeam.util.calibration_marker import CalibrationMarker
 from octoprint_mrbeam.camera.undistort import MIN_MARKER_PIX
-from octoprint_mrbeam.util.device_info import get_val_from_device_info
+from octoprint_mrbeam.util.device_info import deviceInfo
 
 # this is a easy&simple way to access the plugin and all injections everywhere within the plugin
 __builtin__._mrbeam_plugin_implementation = None
@@ -121,13 +121,14 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self.print_progress_last = -1
 		self.slicing_progress_last = -1
 		self._logger = mrb_logger("octoprint.plugins.mrbeam")
-		self._hostname = None
+		
+		self._device_info = deviceInfo(use_dummy_values=IS_X86)
+		self._hostname = None # see self.getHosetname()
 		self._serial_num = None
 		self._mac_addrs = dict()
 		self._model_id = None
-		self._device_info = dict()
 		self._grbl_version = None
-		self._device_series = get_val_from_device_info('device_series', is_x86=IS_X86)  # '2C'
+		self._device_series = self._device_info.get('device_series') # '2C'
 		self.called_hosts = []
 		self._current_user = None
 
@@ -1991,7 +1992,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		:return: String hostname
 		"""
 		if self._hostname is None:
-			hostname_dev_info = get_val_from_device_info('hostname', is_x86=IS_X86)
+			hostname_dev_info = self._device_info.get_hostname()
 			hostname_socket = None
 			try:
 				hostname_socket = socket.gethostname()
@@ -2029,7 +2030,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		:rtype: String
 		"""
 		if self._serial_num is None:
-			self._serial_num = get_val_from_device_info('serial', is_x86=IS_X86)
+			self._serial_num = self._device_info.get_serial()
 		return self._serial_num
 
 	def get_model_id(self):
@@ -2041,7 +2042,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		:rtype: String
 		"""
 		if self._model_id is None:
-			self._model_id = get_val_from_device_info('model', default=self.MODEL_MRBEAM2, is_x86=IS_X86)
+			self._model_id = self._device_info.get_model()
 		return self._model_id
 	
 	def get_production_date(self):
@@ -2052,7 +2053,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		:return: production date
 		:rtype: String
 		"""
-		return get_val_from_device_info('production_date', default=None, is_x86=IS_X86)
+		return self._device_info.get_production_date()
 
 	def getBranch(self):
 		"""
@@ -2083,7 +2084,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return self._plugin_version
 
 	def get_octopi_info(self):
-		return get_val_from_device_info('octopi', is_x86=IS_X86)
+		return self._device_info.get('octopi')
 
 	def isFirstRun(self):
 		return self._settings.global_get(["server", "firstRun"])
