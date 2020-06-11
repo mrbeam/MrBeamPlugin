@@ -396,9 +396,12 @@
 					<div class="qa_done_buttons">
                         <div><h4>Print Labels:</h4></div>
                         <div></div>
-                        <div><button class="btn">Device Label</button></div>
-                        <div><button class="btn">Box Label</button></div>
-                        <div><button class="btn">EAN Label</button></div>
+                        <div><button class="btn print_btn" data-bind="click: function(d, e){printLabel('deviceLabel', e)}">
+                            <i class="icon icon-print"></i><i class="icon icon-spinner icon-spin"></i> Device Label</button></div>
+                        <div><button class="btn print_btn" data-bind="click: function(d, e){printLabel('boxLabel', e)}">
+                            <i class="icon icon-print"></i><i class="icon icon-spinner icon-spin"></i> Box Label</button></div>
+                        <div><button class="btn print_btn" data-bind="click: function(d, e){printLabel('eanLabel', e)}">
+                            <i class="icon icon-print"></i><i class="icon icon-spinner icon-spin"></i> EAN Labels</button></div>
 					</div>
 				</div>
 

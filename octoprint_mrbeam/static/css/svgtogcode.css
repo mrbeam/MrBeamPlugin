@@ -1094,4 +1094,19 @@ svg#area_preview.overModalBG { z-index: 1051; }
     grid-template-columns: auto auto auto auto auto;
 }
 
+.print_btn i.icon-print {
+    display: inherit !important;
+}
+
+.print_btn:disabled i.icon-print {
+    display: none !important;
+}
+
+.print_btn i.icon-spinner {
+    display: none !important;
+}
+
+.print_btn:disabled i.icon-spinner {
+    display: inherit !important;
+}
 

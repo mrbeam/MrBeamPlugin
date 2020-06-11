@@ -9,21 +9,29 @@ from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
 
 
+_instance = None
+
+def labelPrinter(use_dummy_values=False):
+	global _instance
+	if _instance is None:
+		_instance = LabelPrinter(use_dummy_values=use_dummy_values)
+	return _instance
+
 
 class LabelPrinter(object):
 	COMMAND_RLPR = 'echo "{data}" | rlpr -q -H {ip}'
-
+	
 	PRINTER = dict(device_label_printer=dict(enabled=True,
-												ip="192.168.1.201"),
-					box_label_printer=dict(enabled=True,
-											ip="192.168.1.202"),
-					)
+	                                         ip="192.168.1.201"),
+	               box_label_printer=dict(enabled=True,
+	                                      ip="192.168.1.202"),
+	               )
 	EAN_NUMBERS = dict(
 		MRBEAM2=None,
 		MRBEAM2_DC_R1=None,
 		MRBEAM2_DC_R2=None,
 		MRBEAM2_DC=dict(single='4260625360156',
-						bundle='4260625360163'),
+		                bundle='4260625360163'),
 	)
 	
 	MRBEAM_2 = 'MRBEAM2'
@@ -31,26 +39,19 @@ class LabelPrinter(object):
 	MRBEAM_2_DC_R2 = 'MRBEAM2_DC_R2'
 	MRBEAM_2_DC = 'MRBEAM2_DC'
 	
-
+	
 	def __init__(self, use_dummy_values=False):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.camera.label_printer")
 		self._device_info = deviceInfo(use_dummy_values=use_dummy_values)
-
+	
 	def print_serial_label(self):
-		self._run_threaded(self._print_device_label)
+		return self._print_device_label()
 	
 	def print_box_label(self):
-		self._run_threaded(self._print_box_label)
+		return self._print_box_label()
 	
 	def print_ean_labels(self):
-		self._run_threaded(self._print_ean_labels)
-
-
-	def _run_threaded(self, my_target):
-		my_thread = threading.Thread(target=my_target, name="printer_thread")
-		my_thread.daemon = True
-		my_thread.start()
-		return my_thread
+		return self._print_ean_labels()
 
 	def _print_device_label(self):
 		try:
@@ -118,12 +119,20 @@ class LabelPrinter(object):
 		try:
 			ip = self.PRINTER['box_label_printer']['ip']
 			model = self._device_info.get_model()
+			ok = True
+			out = []
 			if model in self.EAN_NUMBERS and self.EAN_NUMBERS.get(model, None):
 				for prod_string, ean_num in self.EAN_NUMBERS.get(model, dict()).iteritems():
 					self._logger.info("Printing ean label '%s' to %s", prod_string, ip)
 					zpl = self._get_zpl_ean_label(prod_string, ean_num)
-					ok, output = self._print(ip, zpl)
-					self._log_print_result('ean label {}'.format(prod_string), ok, output, zpl)
+					_ok, _output = self._print(ip, zpl)
+					self._log_print_result('ean label {}'.format(prod_string), _ok, _output, zpl)
+					ok = ok and _ok
+					out.append("ean label 2: '{}'".format(_output))
+			else:
+				ok = False
+				out.append("No EAN numbers for model {}".format(model))
+			return ok, " | ".join(out)
 		except:
 			self._logger.exception("Exception is _print_ean_labels()")
 
@@ -182,6 +191,7 @@ class LabelPrinter(object):
 		if prod_date_str is None:
 			return ""
 		else:
+			prod_date_str = prod_date_str[:10]
 			return datetime.datetime.strptime(prod_date_str, '%Y-%m-%d').strftime('%b %Y')
 
 

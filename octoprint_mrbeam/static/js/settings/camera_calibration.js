@@ -82,8 +82,8 @@ $(function () {
 
 		self.calImgUrl = ko.computed(function() {
 			var settings = [['cropped', CROPPED_IMG_RES, 'hidden', 'visible'],
-			                ['lens_corrected', DEFAULT_IMG_RES, 'visible', 'hidden'],
-				            ['raw', DEFAULT_IMG_RES, 'hidden', 'hidden']]
+							['lens_corrected', DEFAULT_IMG_RES, 'visible', 'hidden'],
+							['raw', DEFAULT_IMG_RES, 'hidden', 'hidden']]
 			var applySetting = function(setting) {
 				_t = setting
 				self.calImgWidth(_t[1][0])
@@ -131,7 +131,7 @@ $(function () {
 				return 'No .npz file available';
 			}
 		});
-        self.lensCalibrationRunning = ko.observable(false);
+		self.lensCalibrationRunning = ko.observable(false);
 		self.lensCalibrationComplete = ko.computed(function(){
 			return ('lensCalibration' in self.calibrationState()) ? self.calibrationState().lensCalibration === "success" : false;
 		});
@@ -161,18 +161,18 @@ $(function () {
 		self.markersFoundPosition = ko.observable({});
 		self.markersFoundPositionCopy = null;
 
-        self.onStartupComplete = function () {
+		self.onStartupComplete = function () {
 			if(self.isInitialCalibration()){
 				self.loadUndistortedPicture();
 				self.refreshPics();
 				self.calibrationScreenShown(true)
-                self.startupComplete(true);
+				self.startupComplete(true);
 			}
 		};
 
 		self.onSettingsShown = function(){
-		    self.goto('#calibration_step_1');
-        }
+			self.goto('#calibration_step_1');
+		}
 
 		self.__format_point = function(p){
 			if(typeof p === 'undefined') return '?,?';
@@ -431,9 +431,9 @@ $(function () {
 				//    }, ...
 				// }
 
-                if ('lensCalibrationNpzFileTs' in _d) {
-                    self.lensCalibrationNpzFileTs(_d.lensCalibrationNpzFileTs > 0 ? _d.lensCalibrationNpzFileTs*1000 : null)
-                }
+				if ('lensCalibrationNpzFileTs' in _d) {
+					self.lensCalibrationNpzFileTs(_d.lensCalibrationNpzFileTs > 0 ? _d.lensCalibrationNpzFileTs*1000 : null)
+				}
 
 				let found_bboxes = [];
 				let total_score = 0;
@@ -465,8 +465,8 @@ $(function () {
 				$('#heatmap_container').html($('#heatmap_container').html());
 
 				arr.sort(function(l,r){
-				    return l.index < r.index ? -1 : 1;
-                });
+					return l.index < r.index ? -1 : 1;
+				});
 
 //				console.log(arr);
 				self.rawPicSelection(arr);
@@ -699,6 +699,33 @@ $(function () {
 			});
 		};
 
+		self.printLabel = function (labelType, event) {
+			let button = $(event.target)
+			let label = button.text().trim()
+			button.prop("disabled", true);
+			self.simpleApiCommand('print_label',
+				{labelType: labelType},
+				function () {
+					button.prop("disabled", false);
+					new PNotify({
+						title: gettext("Printed: ") + label,
+						type: "success",
+						hide: false
+					})
+				},
+				function (response) {
+					button.prop("disabled", false);
+					let data = response.responseJSON
+					new PNotify({
+						title: gettext("Print Error: ") + label,
+						text: data ? data.error : '',
+						type: "error",
+						hide: false
+					})
+				},
+				'POST')
+		}
+
 
 		self.isInitialCalibration = function () {
 			return (typeof INITIAL_CALIBRATION !== 'undefined' && INITIAL_CALIBRATION === true);
@@ -791,6 +818,8 @@ $(function () {
 		};
 
 		self.simpleApiCommand = function(command, data, successCallback, errorCallback, type) {
+			data = data || {}
+			data.command = command
 			if (self.isInitialCalibration()) {
 				$.ajax({
 					url: "/plugin/mrbeam/" + command,
