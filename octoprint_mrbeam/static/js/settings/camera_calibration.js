@@ -23,7 +23,7 @@ $(function () {
 		self.loginState = parameters[4];
 		self.camera = self.workingArea.camera;
 
-		self.all_bound = ko.observable(false);
+		self.startupComplete = ko.observable(false);
 		self.calibrationScreenShown = ko.observable(false);
 		self.waitingForRefresh = ko.observable(true)
 
@@ -161,9 +161,18 @@ $(function () {
 		self.markersFoundPosition = ko.observable({});
 		self.markersFoundPositionCopy = null;
 
-		self.onAllBound = function(){
-			self.all_bound(true);
+        self.onStartupComplete = function () {
+			if(self.isInitialCalibration()){
+				self.loadUndistortedPicture();
+				self.refreshPics();
+				self.calibrationScreenShown(true)
+                self.startupComplete(true);
+			}
 		};
+
+		self.onSettingsShown = function(){
+		    self.goto('#calibration_step_1');
+        }
 
 		self.__format_point = function(p){
 			if(typeof p === 'undefined') return '?,?';
@@ -319,18 +328,6 @@ $(function () {
 			self.focusY(step.focus[1]);
 			self.calSvgScale(step.focus[2])
 		}
-
-		self.onStartupComplete = function () {
-			if(self.isInitialCalibration()){
-				self.loadUndistortedPicture();
-				self.refreshPics();
-				self.calibrationScreenShown(true)
-			}
-		};
-
-		self.onSettingsShown = function(){
-		    self.goto('#calibration_step_1');
-        }
 
 		self.loadUndistortedPicture = function (callback) {
 			var success_callback = function (data) {
