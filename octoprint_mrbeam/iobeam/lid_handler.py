@@ -37,7 +37,6 @@ DEFAULT_MM_TO_PX = 1 # How many pixels / mm is used for the output image
 SIMILAR_PICS_BEFORE_REFRESH = 20
 MAX_PIC_THREAD_RETRIES = 2
 
-TMP_RAW_FNAME = 'tmp_raw_img_{0:0>3}.jpg'
 
 from octoprint_mrbeam.iobeam.iobeam_handler import IoBeamEvents
 from octoprint.events import Events as OctoPrintEvents
@@ -95,7 +94,7 @@ class LidHandler(object):
 							       stateChangeCallback=self.updateFrontendCC,
 		                                               event_bus = self._event_bus,
 							       rawImgLock = self._photo_creator.rawLock)
-		self.removeAllTmpPictures() # clean up from the latest calibraton session
+		# self.removeAllTmpPictures() # clean up from the latest calibraton session
 
 	def _subscribe(self, event, payload):
 		self._event_bus.subscribe(IoBeamEvents.LID_OPENED, self.onEvent)
@@ -142,7 +141,6 @@ class LidHandler(object):
 		     and payload < 5.0:
 			self._logger.info("onEvent() ONEBUTTON_RELEASED - payload : %s" % payload)
 			self.saveRawImg()
-			# TODO add LED EVENT
 
 	def is_lid_open(self):
 		return not self._lid_closed
@@ -245,7 +243,11 @@ class LidHandler(object):
 		Doesn't run the cv2 lens calibration at that point.
 		"""
 		self.getRawImg()
+		self._photo_creator.is_initial_calibration = True
+		self._start_photo_worker()
 		self.lensCalibrationStarted = True
+		if self.boardDetectorDaemon.load_dir(self.debugFolder):
+			self._logger.info("Found pictures from previous session")
 		self._event_bus.fire(MrBeamEvents.LENS_CALIB_START)
 		self._logger.warning("EVENT LENS CALIBRATION STARTING")
 		self._logger.warning("Lens calibration Started : %s" % self.lensCalibrationStarted)
@@ -261,10 +263,9 @@ class LidHandler(object):
 		t.start()
 		
 	def _saveRawImgThreaded(self):
+		imgName = self.boardDetectorDaemon.next_tmp_img_name()
 		try:
 			self._logger.info("ANDYTEST _saveRawImgThreaded() thread started")
-			picture_num_in_board_calib_session = self.boardDetectorDaemon.next_inc()
-			imgName= TMP_RAW_FNAME.format(picture_num_in_board_calib_session)
 			# TODO debug/raw.jpg -> copy image over
 			# TODO careful when deleting pic + setting new name -> hash
 			if self._photo_creator and \
@@ -275,13 +276,12 @@ class LidHandler(object):
 				self._photo_creator.saveRaw = imgName
 				self.takeNewPic()
 				imgPath = path.join(self.debugFolder, imgName)
-				if path.exists(imgPath):
-					os.remove(imgPath)
 				# Tell the boardDetector to listen for this file
 				self.boardDetectorDaemon.add(imgPath)
 				_s = self.boardDetectorDaemon.state
-				n = len(_s.getAllPending()) + len(_s.getSuccesses()) + len(_s.getProcessing()) # Does not include STATE_PENDING_CAMERA
-				if n >= MIN_BOARDS_DETECTED - 1:
+				# n = len(_s.getAllPending()) + len(_s.getSuccesses()) + len(_s.getProcessing()) # Does not include STATE_PENDING_CAMERA
+				# if n >= MIN_BOARDS_DETECTED - 1: # not suitable for waterott
+				if len(self.boardDetectorDaemon) >= MIN_BOARDS_DETECTED:
 					self._event_bus.fire(MrBeamEvents.RAW_IMG_TAKING_LAST)
 				else:
 					self._event_bus.fire(MrBeamEvents.RAW_IMAGE_TAKING_START)
@@ -289,7 +289,8 @@ class LidHandler(object):
 					self.boardDetectorDaemon.start()
 				else:
 					self.boardDetectorDaemon.waiting.clear()
-				if n >= MIN_BOARDS_DETECTED - 1:
+				# if n >= MIN_BOARDS_DETECTED - 1:
+				if len(self.boardDetectorDaemon) >= MIN_BOARDS_DETECTED:
 					self.startLensCalibration()
 					# TODO If possible, ask the led cli to chain two LED states
 					t = Timer(1.2, self._event_bus.fire, args=(MrBeamEvents.LENS_CALIB_PROCESSING_BOARDS,))
@@ -311,7 +312,7 @@ class LidHandler(object):
 	def removeAllTmpPictures(self):
 		if os.path.isdir(self.debugFolder):
 			for filename in os.listdir(self.debugFolder):
-				if re.match(TMP_RAW_FNAME.format('[0-9]*'), filename):
+				if re.match(calibration.TMP_RAW_FNAME_RE, filename):
 					my_path = path.join(self.debugFolder, filename)
 					self._logger.debug("Removing tmp calibration file %s" % my_path)
 					os.remove(my_path)
@@ -326,7 +327,7 @@ class LidHandler(object):
 							       runCalibrationAsap=True,
 							       stateChangeCallback=self.updateFrontendCC,
 		                                               event_bus = self._event_bus)
-		self.removeAllTmpPictures()
+		# self.removeAllTmpPictures()
 
 	def ignoreCalibrationImage(self, path):
 		myPath  = path.join(self.debugFolder, "debug", path)

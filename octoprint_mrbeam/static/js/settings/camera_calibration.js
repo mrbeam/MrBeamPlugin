@@ -9,6 +9,8 @@
 MARKERS = ['NW', 'NE', 'SE', 'SW'];
 MIN_BOARDS_FOR_CALIBRATION = 9;
 MAX_BOARD_SCORE = 5;
+DEFAULT_IMG_RES = [2048, 1536]
+CROPPED_IMG_RES = [500,390]
 
 $(function () {
 	function CameraCalibrationViewModel(parameters) {
@@ -48,44 +50,26 @@ $(function () {
 		self.picType = ko.observable(""); // raw, lens_corrected, cropped
 		self.correctedMarkersVisibility = ko.observable('hidden')
 		self.croppedMarkersVisibility = ko.observable('hidden');
-		self.calImgWidth = ko.observable(2048);
-		self.calImgHeight = ko.observable(1536);
-		self.picType.subscribe(function (val) {
-			switch (val) {
-				case 'cropped':
-					var croppedUrl = self.camera.timestampedCroppedImgUrl()
-					if (!croppedUrl)
-						croppedUrl = self.camera.getTimestampedImageUrl(self.camera.croppedUrl)
-					self.calImgUrl(croppedUrl);
-					self.calImgWidth(500);
-					self.calImgHeight(390);
-					self.correctedMarkersVisibility('hidden');
-					self.croppedMarkersVisibility('visible');
-					break;
-				case 'raw':
-					self.calImgUrl(self.camera.getTimestampedImageUrl(self.camera.rawUrl));
-					self.calImgWidth(2048);
-					self.calImgHeight(1536);
-					self.correctedMarkersVisibility('hidden')
-					self.croppedMarkersVisibility('hidden');
-					break;
-				case 'lens_corrected':
-					self.calImgUrl(self.camera.getTimestampedImageUrl(self.camera.undistortedUrl));
-					self.calImgWidth(2048);
-					self.calImgHeight(1536);
-					self.correctedMarkersVisibility('visible')
-					self.croppedMarkersVisibility('hidden');
-					break;
-				default:
-					self.calImgWidth(512);
-					self.calImgHeight(384);
-					self.correctedMarkersVisibility('hidden')
-					self.croppedMarkersVisibility('hidden');
-					self.calImgUrl(self.staticURL);
-			}
-		});
+		self.calImgWidth = ko.observable(DEFAULT_IMG_RES[0]);
+		self.calImgHeight = ko.observable(DEFAULT_IMG_RES[1]);
 		self.availablePic = ko.observable({'raw': false, 'lens_corrected': false, 'cropped': false, })
-		self.calImgUrl = ko.observable(self.staticURL);
+		self._availablePicUrl = ko.observable({'default': self.staticURL, 'raw': null, 'lens_corrected': null, 'cropped': null, })
+		self.availablePicUrl = ko.computed(function() {
+			var ret = self._availablePicUrl();
+			var before = _.clone(ret); // shallow copy
+			for (let _t of [['cropped', self.camera.croppedUrl],
+							['lens_corrected', self.camera.undistortedUrl],
+							['raw', self.camera.rawUrl]]) {
+				if (self.availablePic()[_t[0]])
+					ret[_t[0]] = self.camera.getTimestampedImageUrl(_t[1]);
+			}
+			self._availablePicUrl(ret)
+			var selectedTab = $('#camera-calibration-tabs .active a').attr('id')
+			if (selectedTab === 'lenscal_tab_btn')
+				return before
+			else
+				return ret
+		})
 
 		self.calSvgOffX = ko.observable(0);
 		self.calSvgOffY = ko.observable(0);
@@ -95,6 +79,33 @@ $(function () {
 		self.cornerCalibrationActive = ko.observable(false);
 		self.lensCalibrationActive = ko.observable(false);
 		self.currentResults = ko.observable({});
+
+		self.calImgUrl = ko.computed(function() {
+			var settings = [['cropped', CROPPED_IMG_RES, 'hidden', 'visible'],
+			                ['lens_corrected', DEFAULT_IMG_RES, 'visible', 'hidden'],
+				            ['raw', DEFAULT_IMG_RES, 'hidden', 'hidden']]
+			var applySetting = function(setting) {
+				_t = setting
+				self.calImgWidth(_t[1][0])
+				self.calImgHeight(_t[1][1])
+				self.correctedMarkersVisibility(_t[2])
+				self.croppedMarkersVisibility(_t[3])
+				return self.availablePicUrl()[_t[0]]
+			}
+			if (self.cornerCalibrationActive() && self.availablePic()['lens_corrected'])
+				return applySetting(settings[1])
+
+			for (let _t of settings) {
+				if (self.availablePic()[_t[0]])
+					return applySetting(_t)
+			}
+			self.calImgWidth(512);
+			self.calImgHeight(384);
+			self.correctedMarkersVisibility('hidden')
+			self.croppedMarkersVisibility('hidden');
+			return self.staticURL
+
+		});
 		self.cornerCalibrationComplete = ko.computed(function(){
 			if (Object.keys(self.currentResults()).length !== 4) return false;
 			return Object.values(self.currentResults()).reduce((x,y) => x && y);
@@ -104,7 +115,6 @@ $(function () {
 			return Object.values(self.camera.markersFound()).reduce((x,y) => x && y);
 		});
 
-		self.rawPics = ko.observable([])
 		self.rawPicSelection = ko.observableArray([])
 		// calibrationState is constantly refreshed by the backend
 		// as an immutable array that contains the whole state of the calibration
@@ -149,6 +159,7 @@ $(function () {
 			return text;
 		});
 		self.markersFoundPosition = ko.observable({});
+		self.markersFoundPositionCopy = null;
 
 		self.onAllBound = function(){
 			self.all_bound(true);
@@ -185,9 +196,9 @@ $(function () {
 		self.calibrationMarkers = [
 			{name: 'start', desc: 'click to start', focus: [0, 0, 1]},
 			{name: 'NW', desc: 'North West', focus: [0, 0, 4]},
-			{name: 'SW', desc: 'North East', focus: [0, self.calImgHeight(), 4]},
-			{name: 'SE', desc: 'South East', focus: [self.calImgWidth(), self.calImgHeight(), 4]},
-			{name: 'NE', desc: 'South West', focus: [self.calImgWidth(), 0, 4]}
+			{name: 'SW', desc: 'North East', focus: [0, DEFAULT_IMG_RES[1], 4]},
+			{name: 'SE', desc: 'South East', focus: [DEFAULT_IMG_RES[0], DEFAULT_IMG_RES[1], 4]},
+			{name: 'NE', desc: 'South West', focus: [DEFAULT_IMG_RES[0], 0, 4]}
 		];
 		self.crossSize = ko.observable(30);
 		self.svgCross = ko.computed(function () {
@@ -212,12 +223,12 @@ $(function () {
 			self.calSvgDy(0);
 		}
 
-
 		self.startCornerCalibration = function () {
 			self.analytics.send_fontend_event('corner_calibration_start', {});
 			// self.currentResults({});
 			self.cornerCalibrationActive(true);
 			self.picType("lens_corrected");
+			self.markersFoundPositionCopy = self.markersFoundPosition()
 			self.nextMarker();
 		};
 
@@ -234,7 +245,6 @@ $(function () {
 								  self.getRawPicError,
 								  "GET");
 			self.lensCalibrationActive(true);
-
 		};
 		
 		self.lensCalibrationToggleQA = function (){
@@ -375,25 +385,14 @@ $(function () {
 
 			if ('beam_cam_new_image' in data) {
 				// update image
-				var cornerCalibrationTabselected = $('.nav-tabs .active a').attr('id') === "cornercal_tab_btn"
+				var selectedTab = $('#camera-calibration-tabs .active a').attr('id')
 				var _d = data['beam_cam_new_image'];
-				if (_d['undistorted_saved'] && ! self.cornerCalibrationActive()) {
+				if (_d['undistorted_saved'] && !self.cornerCalibrationActive()) {
 					if (_d['available']) {
 						self.availablePic(_d['available'])
-						if (! ['raw', 'lens_corrected', 'cropped'].includes(self.picType())
-							&& ! self.lensCalibrationActive()) {
-							for (let _type of ['cropped', 'lens_corrected', 'raw']) {
-								if (self.availablePic()[_type]) {
-									self.picType(_type);
-									break;
-								}
-							}
-						} else if (cornerCalibrationTabselected || self.waitingForRefresh()) {
-                            self.calImgUrl(self.camera.getTimestampedImageUrl(self.calImgUrl()));
-                        }
 					}
 
-					if (self.isInitialCalibration() && (cornerCalibrationTabselected || self.waitingForRefresh())) {
+					if (self.isInitialCalibration() && (selectedTab === "cornercal_tab_btn" || self.waitingForRefresh())) {
 						self.dbNWImgUrl('/downloads/files/local/cam/debug/NW.jpg' + '?ts=' + new Date().getTime());
 						self.dbNEImgUrl('/downloads/files/local/cam/debug/NE.jpg' + '?ts=' + new Date().getTime());
 						self.dbSWImgUrl('/downloads/files/local/cam/debug/SW.jpg' + '?ts=' + new Date().getTime());
@@ -401,7 +400,7 @@ $(function () {
 					}
 
 					// check if all markers are found and image is good for calibration
-					if (self.cal_img_ready()) {
+					if (self.cal_img_ready() && !self.cornerCalibrationActive()) {
 						// console.log("Remembering markers for Calibration", markers);
 						let _tmp = data['beam_cam_new_image']['markers_pos'];
 						//	i, j -> x, y conversion
@@ -457,7 +456,8 @@ $(function () {
 				self.lensCalibrationCoverageQuality(total_score);
 			
 				for (var i = arr.length; i < 9; i++) {
-					arr.push({ 
+					arr.push({
+						index: i,
 						path: null, 
 						url: '',
 						state: 'missing'
@@ -524,7 +524,11 @@ $(function () {
 		}
 		
 		self.heatmap_highlight = function(data){
-			$('#heatmap_board'+data.index).addClass('highlight');
+			if ((!data.path) || data.state !== "success") return
+			let fileName = data.path.split('/').reverse()[0];
+			let id = 'heatmap_board'+fileName;
+			// $("#"+id).addClass('highlight'); // no idea why this doesn't work anymore
+			document.getElementById(id).classList.add('highlight')
 		}
 		
 		self.heatmap_dehighlight = function(data){
@@ -565,7 +569,7 @@ $(function () {
 				});
 		}
 
-		self.rawPicSuccess = function(response) {} // {self.rawPics(response.split(':'))}
+		self.rawPicSuccess = function(response) {}
 		self.saveRawPicError = function() {self.rawPicError(gettext("Failed to save the latest image."))}
 		self.delRawPicError  = function() {self.rawPicError(gettext("Failed to delete the latest image."))}
 		self.getRawPicError  = function() {self.rawPicError(gettext("Failed to refresh the list of images."))}
@@ -578,17 +582,6 @@ $(function () {
 				hide: true
 			});
 		}
-
-		self.rawPicSelectOptions = ko.computed(function() {
-			self.rawPicSelection.removeAll()
-			if (self.rawPics().length === 1 && self.rawPics()[0] === "") return;
-            for (let i = 0; i < self.rawPics().length; i++) {
-                self.rawPicSelection.push({
-                    id: self.rawPics()[i],
-                    name: "Picture " + i
-                });
-			}
-		})
 
 		self.cameraBusy = ko.computed(function() {
 			return self.rawPicSelection().some(elm => elm.state === "camera_processing")
@@ -718,7 +711,7 @@ $(function () {
 		self.saveCornerCalibrationData = function () {
 			var data = {
 				result: {
-					newMarkers: self.markersFoundPosition(),
+					newMarkers: self.markersFoundPositionCopy,
 					newCorners: self.currentResults()
 				}
 			};
@@ -754,7 +747,6 @@ $(function () {
 		self.abortCalibration = function () {
 			if (self.cornerCalibrationActive()) {
 				self.cornerCalibrationActive(false);
-				self.rawPics([])
 			}
 			self.resetView();
 		};
