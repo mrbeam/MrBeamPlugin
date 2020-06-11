@@ -96,6 +96,7 @@ def logme(input=False, output=False):
 	return decorator
 
 def debug_logger(function=None):
+	# TODO: AXEL should we use mrb_logger here?
 	if function is None:
 		logger = logging.getLogger("debug logger")
 	elif sys.version_info >= (3, 3):

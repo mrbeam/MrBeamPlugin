@@ -1,0 +1,143 @@
+<script lang="javascript" type="text/javascript">
+
+    if (console.everything === undefined) {
+        console.everything = [];
+        console.callbacks = {
+            debug: null,
+            log: null,
+            error: null,
+            warn: null,
+            trace: null,
+        }
+
+        console._logDataFromArgs = function(){
+            let c = console._getCaller(Array.from(arguments).join(' '))
+            if (c) {
+                // message is a stacktrace
+                return {
+                    "level": null,
+                    "msg": c.msg,
+                    "ts": Date.now(),
+                    "file": c ? c.file : null,
+                    "function": c? c.function: null,
+                    "line": c ? c.line : null,
+                    "col": c ? c.col : null,
+                    "stacktrace": c ? c.stacktrace : null,
+                    {#"rawStack": c ? c.rawStack : null,#}
+                }
+            }
+
+            let msg = []
+            for (let a of arguments) {
+                msg.push((typeof(a) === "object" && a !== null) ? JSON.stringify(a) : a)
+            }
+            c = console._getCaller()
+            return {
+                "level": null,
+                "msg": msg.join(' '),
+                "ts": Date.now(),
+                "file": c ? c.file : null,
+                "function": c? c.function: null,
+                "line": c ? c.line : null,
+                "col": c ? c.col : null,
+                "stacktrace": c ? c.stacktrace : null,
+                {#"rawStack": c ? c.rawStack : null,#}
+            }
+        }
+
+        console._STACK_FRAME_RE = /at (.*)\s?\(https?:\/+[^/]+\/*(\/.+):(\d+):(\d+)/
+        console._ERR_FILENAME = /https?:\/+[^/]+\/*(\/.+)/
+        console._getCaller = function(passedStack) {
+            try {
+                let stack = passedStack ? passedStack.split("\n") : (new Error()).stack.split("\n");
+                let rawStack = Array.from(stack)
+                let msg = stack.shift().trim()
+                let callerInfo = null
+                let stacktrace = []
+                let first = true
+                for(let frame of stack) {
+                    if (!frame.trim().startsWith('at console')) {
+                        if (first) {
+                            callerInfo = console._STACK_FRAME_RE.exec(frame);
+                        }
+                        stacktrace.push(frame.trim())
+                        first = false
+                    }
+                }
+                if (callerInfo) {
+                    return {
+                        function: callerInfo[1] || null,
+                        file: callerInfo[2] || null,
+                        line: callerInfo[3] || null,
+                        col: callerInfo[4] || null,
+                        msg: msg,
+                        stacktrace: stacktrace,
+                        {#rawStack: rawStack#}
+                    };
+                }
+                return null;
+            } catch (e) {
+                return null;
+            }
+          }
+
+        console.defaultLog = console.log.bind(console);
+        console.log = function(){
+            let data = console._logDataFromArgs.apply(null, arguments)
+            data.level = "log"
+            console.everything.push(data);
+            console.defaultLog.apply(console, arguments);
+            if (console.callbacks.log) {console.callbacks.log(data);}
+        }
+        console.defaultError = console.error.bind(console);
+        console.error = function(){
+            let data = console._logDataFromArgs.apply(null, arguments)
+            data.level = "error"
+            console.everything.push(data);
+            console.defaultError.apply(console, arguments);
+            if (console.callbacks.error) {console.callbacks.error(data);}
+        }
+        console.defaultWarn = console.warn.bind(console);
+        console.warn = function(){
+            let data = console._logDataFromArgs.apply(null, arguments)
+            data.level = "warn"
+            console.everything.push(data);
+            console.defaultWarn.apply(console, arguments);
+            if (console.callbacks.warn) {console.callbacks.warn(data);}
+        }
+        console.defaultDebug = console.debug.bind(console);
+        console.debug = function(){
+            let data = console._logDataFromArgs.apply(null, arguments)
+            data.level = "debug"
+            console.everything.push(data);
+            console.defaultDebug.apply(console, arguments);
+            if (console.callbacks.debug) {console.callbacks.debug(data);}
+        }
+        console.defaultTrace = console.trace.bind(console);
+        console.trace = function(){
+            let data = console._logDataFromArgs.apply(null, arguments)
+            data.level = "trace"
+            console.everything.push(data);
+            console.defaultTrace.apply(console, arguments);
+            if (console.callbacks.trace) {console.callbacks.trace(data);}
+        }
+    }
+
+    window.addEventListener('error', function(event) {
+        let m = console._ERR_FILENAME.exec(event.filename)
+        let filename = m ? m[1] : null
+        let data = {
+            "level":"error",
+            "msg": event.message,
+            "file": filename,
+            "function": "window.onerror",
+            "line": event.lineno,
+            "col": event.colno,
+            "ts": Date.now()
+        }
+        console.everything.push(data);
+        if (console.callbacks.error) {console.callbacks.error(data);}
+        return false;
+    })
+
+</script>

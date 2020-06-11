@@ -52,18 +52,79 @@
 
 										<div id="wa_view_settings" class="accordion-inner">
 											<div class="accordion-heading ">
-												<a href="#wa_view_settings_body" class="dropdown" data-toggle="collapse" aria-expanded="false">
+												<a id="wa_view_settings_toggle" href="#wa_view_settings_body" class="dropdown" data-toggle="collapse" aria-expanded="false">
 													<i class="icon-camera"></i> {{ _('Preview') }}:
 												</a>
 												<span class="caret" style="vertical-align: middle"></span>
 											</div>
 											<div class="collapse" id="wa_view_settings_body">
 												<div class="accordion-inner">
+                                                    <div data-bind="visible: camera.cameraActive() && !camera.markerStateGreen()">
+
+                                                        <div>
+                                                            <p style="display: inline-block">
+                                                                <svg width="2.5ex" height="2.5ex" style="float: left;">
+                                                                    <circle id="marker_preview_pane" r="30%" cx="45%" cy="50%" fill="#ffffff" stroke="#ff00ff" stroke-width="17%">
+                                                                    </circle>
+                                                                </svg>
+                                                                <strong>{{ _('Preview not accurate:') }}</strong><br/>
+                                                                {{ _('The preview camera image might not be completely accurate.
+                                                                Make sure that all four markers are visible.') }}
+                                                                <a href="https://support.mr-beam.org/support/solutions/articles/43000577720-message-preview-not-accurate-and-pink-circles-flashing-on-working-area" target="_blank" style="font-size: 11px"><i class="icon-external-link"></i> More info</a><br/>
+                                                                <a href="#" data-toggle="modal" data-target="#analytics_send_image_modal"><i class="fa fa-heartbeat"></i> Send image to Mr&nbsp;Beam</a>
+                                                            </p>
+                                                        </div>
+
+                                                        <div id="analytics_send_image_modal" class="modal hide fade" >
+                                                            <div class="modal-header">
+                                                                <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+                                                                <h3><i class="fa fa-heartbeat"></i> {{ _('Send image to Mr&nbsp;Beam') }}</h3>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <div>
+                                                                    <p> {{ _("Send the current image to Mr Beam Lasers for review.") }}</p>
+                                                                    <p> {{ _("This helps us to improve the camera system to work better in even more difficult conditions.") }}</p>
+                                                                </div>
+
+                                                                <div data-bind="visible: analytics.analyticsEnabled()">
+                                                                    <div>
+                                                                        <ul>
+                                                                            <li>{{ _("Mr Beam Lasers might store your image in it's camera training data set.") }}</li>
+                                                                            <li>{{ _("Please understand that Mr Beam Lasers can not send you any response regarding this image.") }}</li>
+                                                                            <li>{{ _("Mr Beam Lasers will not publish the image nor sell it to third parties.") }}</li>
+                                                                            {% set privacy_policy = _('/plugin/mrbeam/static/docs/MrBeamAnalytics-PrivacyPolicy_en.pdf') %}
+                                                                            <li>{{ _("Your image is sent within the context of Mr Beam Analytics. (See %(open)sprivacy policy%(close)s.)", open='<a href="%s" target="_blank">' % privacy_policy, close='</a>')|safe }}</li>
+                                                                            <li>{{ _("The upload of your image to Mr Beam's serves will happen in the background. If you're not online, the image will be uploaded next time you're online.") }}</li>
+                                                                        </ul>
+                                                                    </div>
+                                                                    <div>
+                                                                        <p>{{ _("We appreciate your support. Thank you!") }}</p>
+                                                                    </div>
+                                                                </div>
+                                                                <div data-bind="visible: !analytics.analyticsEnabled()">
+                                                                    <h5><i class="icon-warning-sign"></i> {{ _("Activate Mr Beam Analytics:") }}</h5>
+                                                                    <p>
+                                                                        {{ _("This functionality is part of Mr&nbsp;Beam Analytics which needs to be enabled to use this functionality.") }}
+                                                                        {{ _("Please go to %(open)sMr&nbsp;Beam Analytics%(close)s to enable it.", open='<a href="#" data-dismiss="modal" data-toggle="tab" class="settings_analytics_link">', close='</a>')|safe }}
+                                                                    </p>
+                                                                </div>
+
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button class="btn" id="analytics_send_image_btn_cancel" data-dismiss="modal" aria-hidden="true">{{ _('Cancel') }}</button>
+                                                                <button class="btn btn-primary" id="analytics_send_image_btn_ok" data-dismiss="modal" aria-hidden="true"
+                                                                        data-bind="enable: analytics.analyticsEnabled(), click: camera.send_camera_image_to_analytics">{{ _('Send') }}</button>
+                                                            </div>
+                                                        </div>
+
+
+{#														<button type="button" data-bind="click: camera.send_camera_image_to_analytics">Send image to Mr Beam</button>#}
+													</div>
 													<div data-bind="style: { display: camera.imgResolutionNoticeDisplay() }">
-													<span style="font-weight: bold">Low</span> Picture Quality
+													    <span style="font-weight: bold">{{ _('Low') }}</span> {{ _('Picture Quality') }}
 														<span class="muted">
-															- Open the lid and keep your hands off the working area
-															for a few seconds to receive a higher resolution image
+															{{ _('- Open the lid and keep your hands off the working area
+															for a few seconds to receive a higher resolution image') }}
 														</span>
 													</div>
 													<div>
@@ -548,14 +609,13 @@
 							<div class="span8" style="position:relative">
 								{% include 'homing_overlay.jinja2' %}
 								<div id="zoomFactor" data-bind="text: zoom_factor_text"></div>
-								<svg id="area_preview" class="workingarea" visibility="hidden"
+								<svg id="area_preview" class="workingarea"
 									 data-bind="style: {
 											width: workingAreaWidthPx()+'px',
 											height: workingAreaHeightPx()+'px'
 										},
 										attr: {
 											viewBox: zoomViewBox(),
-											visibility: 'visible'
 										},
 										event: { wheel: wheel_zoom_wa, mousemove: mouse_drag_wa }
 									 "
@@ -625,18 +685,18 @@
 										<path d="M-15,0H-5M15,0H5M0,15V5M0,-15V-5" />
 									</g>
 									<g id="camera_markers" fill="#ffffff" stroke="#ff00ff" stroke-width="5"
-									   data-bind="attr: { class: camera.markerMissedClass() }">
+									   data-bind="visible: camera.cameraActive(), attr: { class: camera.markerMissedClass() }">
                                         <circle id="markerNW" r="5" cx="7" cy="7">
-                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera. Try to close and reopen the lid.') }}</title>
+                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera.') }}</title>
                                         </circle>
 										<circle id="markerNE" r="5" cx="-7" cy="7" data-bind="attr: {cx: workingAreaWidthMM()-7}" >
-                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera. Try to close and reopen the lid.') }}</title>
+                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera.') }}</title>
                                         </circle>
 										<circle id="markerSW" r="5" cx="7" cy="-7" data-bind="attr: {cy: workingAreaHeightMM()-7}" >
-                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera. Try to close and reopen the lid.') }}</title>
+                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera.') }}</title>
                                         </circle>
 										<circle id="markerSE" r="5" cx="-7" cy="-7" data-bind="attr: {cx: workingAreaWidthMM()-7, cy: workingAreaHeightMM()-7}" >
-                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera. Try to close and reopen the lid.') }}</title>
+                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera.') }}</title>
                                         </circle>
 									</g>
 									<g id="mbtransformHandleGroup">
