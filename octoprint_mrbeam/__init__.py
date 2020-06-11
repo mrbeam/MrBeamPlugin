@@ -261,7 +261,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		            _state=dict(
 			            support_mode=self.support_mode,
 			            time_ntp_synced=self._time_ntp_synced,
-			            uptime="{} ({})".format(get_uptime_human_readable(uptime), uptime),
+			            uptime="{} ({:.2f}s)".format(get_uptime_human_readable(uptime), uptime),
+			            total_usage="{} ({:.2f}s)".format(
+				            self.usage_handler.get_duration_humanreadable(self.usage_handler.get_total_usage()),
+				            self.usage_handler.get_total_usage()),
 		            ))
 
 	##~~ SettingsPlugin mixin
