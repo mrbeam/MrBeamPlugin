@@ -11,7 +11,7 @@
     <h4><span style="font-weight: 200; padding-left: 12px;">Mr Beam</span> <span style="font-weight: 400;">Calibration Tool</span></h4>
 		<ul id="camera-calibration-tabs" class="nav nav-tabs"> 
 			<li class="active"><a href="#tab_camera_alignment" data-toggle="tab" id="camalignment_tab_btn" >{{ _('Camera Alignment') }}</a></li>
-			<li><a href="#tab_lens_calibration" data-toggle="tab" id="lenscal_tab_btn">{{ _('Lens Calibration') }}
+			<li><a href="#tab_lens_calibration" data-toggle="tab" id="lenscal_tab_btn" data-bind="click: startLensCalibration">{{ _('Lens Calibration') }}
 					<i class="icon icon-ok" data-bind="visible: lensCalibrationComplete()"></i>
 					<i class="icon icon-remove" data-bind="visible: !lensCalibrationComplete()"></i>
 				</a></li>
@@ -55,7 +55,7 @@
 							<li>{{ _('Some space below the workinng area visible.') }}</li>
 							<li>{{ _('Laserhead is not covering a marker.') }}</li>
 						</ul>
-						<a href="#" onclick="$('#lenscal_tab_btn').click()" data-bind="visible: qa_cameraalignment_image_loaded" class="btn btn-success continue_btn">
+						<a href="#" onclick="$('#lenscal_tab_btn').click()" data-bind="visible: qa_cameraalignment_image_loaded, click: startLensCalibration" class="btn btn-success continue_btn">
 							<span style="font-size:1.5rem;">{{ _('Yes') }}</span>
 							<i class="icon icon-2x icon-fixed-width icon-arrow-right"></i>
 						</a>
