@@ -16,9 +16,9 @@
 					<i class="icon icon-remove" data-bind="visible: !lensCalibrationComplete()"></i>
 				</a></li>
 			<li><a href="#tab_corner_calibration" data-toggle="tab" id="cornercal_tab_btn">{{ _('Corner Calibration') }}
-				<!-- <i class="icon icon-ok" data-bind="visible: cornerCalibrationComplete()"></i>
-					 <i class="icon icon-remove" data-bind="visible: !cornerCalibrationComplete()"></i> -->
-				</a></li>
+				<i class="icon icon-ok" data-bind="visible: cornerCalibrationComplete() || availablePic()['cropped']"></i>
+				<!-- <i class="icon icon-remove" data-bind="visible: !cornerCalibrationComplete()"></i> -->
+			</a></li>
 			<li><a href="#tab_calibration_qa" data-toggle="tab" id="qacal_tab_btn">{{ _('QA') }}</a></li>
 			<li><a href="#tab_done_print_labels" data-toggle="tab" id="done_tab_btn">{{ _('Labels') }}</a></li>
 		</ul>
@@ -272,6 +272,10 @@
                         <div style="margin-top:1em;">
                             <button class="btn btn-default" data-bind="visible: !availablePic()['cropped'], click: startCornerCalibration">{{ _('Start Corner Calibration') }}</button>
                         </div>
+						<div data-bind="visible: cornerCalibrationComplete() && !availablePic()['cropped']" style="color: rgb(226, 83, 3); font-size: 1.5em; left: 50%;">
+							<i class="icon icon-spinner icon-spin" style="font-weight: bold"></i>
+							<span>&nbsp; Waiting for a new picture...</span>
+						</div>
 						<div class="qa_list_and_next" data-bind="visible: availablePic()['cropped']">
                             <h4>Checklist:</h4>
 							<ul>
