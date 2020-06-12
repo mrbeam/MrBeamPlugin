@@ -550,7 +550,6 @@ $(function () {
 			// 					   self.saveRawPicError);
 		}
 
-
 		self.delRawPic = function() {
 			$('#heatmap_board'+this.index).remove(); // remove heatmap
 			self.simpleApiCommand("calibration_del_pic",
