@@ -978,10 +978,15 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	margin: 1em 0;
 	position: relative;
 	background-color: #fff;
+    font-size: 14pt;
 }
 
 .qa_list_and_next ul {
 	max-width: 60%;
+}
+
+.qa_list_and_next li {
+    line-height: 1.6em;
 }
 
 .qa_list_and_next a.continue_btn {
@@ -994,7 +999,7 @@ svg#area_preview.overModalBG { z-index: 1051; }
 
 .qa_list_and_next .continue_btn.btn-group {
 	position: absolute;
-	bottom: -1px;
+	bottom: 1px;
 	right: -1px;
 }
 .qa_list_and_next .continue_btn.btn-group .btn { position: relative; }

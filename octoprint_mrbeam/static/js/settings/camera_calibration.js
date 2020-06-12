@@ -47,6 +47,10 @@ $(function () {
 		self.qa_pic_cropped = ko.computed(function(){
 			return self.camera.getTimestampedImageUrl(self.camera.croppedUrl);
 		});
+		self.qa_cameraalignment_image_loaded = ko.observable(false);
+		$('#qa_cameraalignment_image').load(function(){
+		    self.qa_cameraalignment_image_loaded(true)
+        })
 		self.picType = ko.observable(""); // raw, lens_corrected, cropped
 		self.correctedMarkersVisibility = ko.observable('hidden')
 		self.croppedMarkersVisibility = ko.observable('hidden');
