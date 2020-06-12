@@ -53,6 +53,7 @@ class MrBeamEvents(object):
 	LENS_CALIB_DONE            = "lensCalibDone"
 	LENS_CALIB_EXIT            = "lensCalibExit"
 	LENS_CALIB_FAIL            = "lensCalibFail"
+	BLINK_PRINT_LABELS =       "blinkPrintLabels"
 
 	@classmethod
 	def register_with_octoprint(cls):

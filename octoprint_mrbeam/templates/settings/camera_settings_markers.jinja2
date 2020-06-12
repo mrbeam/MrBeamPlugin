@@ -1,13 +1,14 @@
 
 <div data-bind='visible: !startupComplete()' style="color: #e25303; font-size: 1.5em; position: absolute; top: 40%; left: 50%">
     <div style="position: relative; left: -50%;">
-        <i class="icon icon-spinner icon-spin" style="font-weight: bold;s"></i>
-        <span>&nbsp; loading...</span>
+        <i class="icon icon-spinner icon-spin" style="font-weight: bold;"></i>
+        <span style="font-weight: 200; padding-left: 12px;"> Mr Beam</span> <span style="font-weight: 400;">Calibration Tool</span>
     </div>
 </div>
 <div style="position:relative; display:none;" data-bind='visible: startupComplete'>
 
 		<!-- Calibration Selector -->
+    <h4><span style="font-weight: 200; padding-left: 12px;">Mr Beam</span> <span style="font-weight: 400;">Calibration Tool</span></h4>
 		<ul id="camera-calibration-tabs" class="nav nav-tabs"> 
 			<li class="active"><a href="#tab_camera_alignment" data-toggle="tab" id="camalignment_tab_btn" >{{ _('Camera Alignment') }}</a></li>
 			<li><a href="#tab_lens_calibration" data-toggle="tab" id="lenscal_tab_btn">{{ _('Lens Calibration') }}

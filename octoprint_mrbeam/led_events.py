@@ -59,6 +59,7 @@ class LedEventListener(CommandTrigger):
 	LED_EVENTS[MrBeamEvents.LENS_CALIB_DONE]        = "mrbeam_ledstrips_cli green"
 	LED_EVENTS[MrBeamEvents.LENS_CALIB_FAIL]        = "mrbeam_ledstrips_cli orange"
 	LED_EVENTS[MrBeamEvents.LENS_CALIB_EXIT]        = "mrbeam_ledstrips_cli ClientOpened"
+	LED_EVENTS[MrBeamEvents.BLINK_PRINT_LABELS]        = "mrbeam_ledstrips_cli upload:0:255:0" # switch to 'blink_green' in future
 
 
 

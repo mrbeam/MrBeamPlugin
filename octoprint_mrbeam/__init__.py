@@ -1035,6 +1035,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return response
 		
 		labelType = data.get('labelType', None)
+		blink = data.get('blink', None)
 		
 		lp = labelPrinter(use_dummy_values=IS_X86)
 		ok, out = None, None
@@ -1044,10 +1045,19 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			ok, out = lp.print_box_label()
 		elif labelType == 'eanLabel':
 			ok, out = lp.print_ean_labels()
+		elif labelType is None:
+			ok = True
+			pass # we might have a blink information i call
 		else:
 			ok = False
 			out = "Unknown label: {}".format(labelType)
 			self._logger.debug("printLabel() unknown labelType: %s ", labelType)
+			
+		if ok and blink:
+			self.fire_event(MrBeamEvents.BLINK_PRINT_LABELS)
+		elif blink is False:
+			self.fire_event(MrBeamEvents.LENS_CALIB_DONE)
+			
 		
 		res = dict(
 			labelType=labelType,

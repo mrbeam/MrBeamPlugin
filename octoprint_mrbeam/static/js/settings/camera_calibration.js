@@ -704,7 +704,8 @@ $(function () {
 			let label = button.text().trim()
 			button.prop("disabled", true);
 			self.simpleApiCommand('print_label',
-				{labelType: labelType},
+				{labelType: labelType,
+                        blink: true},
 				function () {
 					button.prop("disabled", false);
 					new PNotify({
