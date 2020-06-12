@@ -12,7 +12,9 @@ $(function () {
         self.settings = params[3];
 
         self.onUserLoggedIn = function () {
-            self.prepareDesignStoreTab();
+            if (window.mrbeam.isDev()) {
+                self.prepareDesignStoreTab();
+            }
         };
 
         self.prepareDesignStoreTab = function() {
