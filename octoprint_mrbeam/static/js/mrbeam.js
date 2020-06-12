@@ -133,7 +133,7 @@ mrbeam.openOfflineKbUrl = function (document, availableLanguages) {
  * @param locale - if set changes the global LOCALE param.
  *                 (Note that most content doesn't change right away, but offline_kb links do.)
  */
-mrbeam.debugSetOfflineState = function(locale){
+mrbeam.debugSetOfflineState = function (locale) {
     if (locale) {
         LOCALE = locale;
     }
@@ -158,6 +158,22 @@ mrbeam.isProd = function () {
     return MRBEAM_SW_TIER === 'PROD';
 };
 
+setInterval(function () {
+    (function ($) {
+        $.fn.inlineStyle = function (prop) {
+            return this.prop("style")[$.camelCase(prop)];
+        };
+    }(jQuery));
+    let modalElement = $(".modal-scrollable .modal.hide.fade");
+    if(modalElement[0]){
+        console.log("--------------Block is showing--------------");
+        if(modalElement.inlineStyle("display") === "none"){
+            console.log("--------------Block is none--------------");
+            $('body').removeClass('modal-open');
+            $('.modal-backdrop').remove();
+        }
+    }
+}, 1000);
 
 $(function () {
     // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
@@ -221,14 +237,14 @@ $(function () {
 
             // set env flag in body for experimental_feature_beta and  experimental_feature_dev
             if (mrbeam.isDev()) {
-             $('body').addClass('env_dev')
-             $('body').removeClass('env_prod')
+                $('body').addClass('env_dev')
+                $('body').removeClass('env_prod')
             } else if (mrbeam.isBeta()) {
-             $('body').addClass('env_beta')
-             $('body').removeClass('env_prod')
+                $('body').addClass('env_beta')
+                $('body').removeClass('env_prod')
             }
 
-            $(window).on("orientationchange",self.onOrientationchange);
+            $(window).on("orientationchange", self.onOrientationchange);
             self.setBodyScrollTop();
 
             // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
@@ -236,15 +252,15 @@ $(function () {
             $('#settings-usersDialogAddUser > div.modal-body > form > div:nth-child(1) > label').text(gettext('E-mail address'));
         };
 
-        self.onAllBound = function(){
+        self.onAllBound = function () {
             self.set_settings_analytics_links()
         }
 
-        self.onStartupComplete = function(){
+        self.onStartupComplete = function () {
             self.presetLoginUser()
         }
 
-        self.onCurtainOpened = function(){
+        self.onCurtainOpened = function () {
             self.showBrowserWarning()
             self.showBetaNotificaitons()
         }
@@ -275,16 +291,16 @@ $(function () {
             }
         };
 
-        self.onUserLoggedOut = function(){
+        self.onUserLoggedOut = function () {
             self.presetLoginUser()
         }
 
         self.start_online_check_interval = function () {
             self.do_online_check();
-            self._online_check_interval = setInterval(self.do_online_check, 60*1000);
+            self._online_check_interval = setInterval(self.do_online_check, 60 * 1000);
         };
 
-        self.debugSetOfflineState = function(offline) {
+        self.debugSetOfflineState = function (offline) {
             let online = typeof offline !== 'undefined' ? offline : false;
             clearInterval(self._online_check_interval)
             mrbeam.isOnline = online;
@@ -326,7 +342,7 @@ $(function () {
             }
         };
 
-        self.set_settings_analytics_links = function(){
+        self.set_settings_analytics_links = function () {
             $('.settings_analytics_link').on('click', function (event) {
                 // Prevent url change
                 event.preventDefault();
@@ -337,7 +353,7 @@ $(function () {
             })
         }
 
-        self.showBrowserWarning = function() {
+        self.showBrowserWarning = function () {
             console.log("Supported Browser: " + mrbeam.browser.is_supported);
             if (!mrbeam.browser.is_supported) {
                 new PNotify({
@@ -353,7 +369,7 @@ $(function () {
             }
         }
 
-        self.showBetaNotificaitons = function() {
+        self.showBetaNotificaitons = function () {
             if (mrbeam.isBeta() && !self.settings.settings.plugins.mrbeam.analyticsEnabled()) {
                 new PNotify({
                     title: gettext("Beta user: Please consider enabling Mr Beam analytics!"),
@@ -396,12 +412,12 @@ $(function () {
             }
         }
 
-        self.presetLoginUser = function(){
+        self.presetLoginUser = function () {
             if (MRBEAM_ENV_SUPPORT_MODE) {
-                self.loginState.loginUser('support'+String.fromCharCode(0x0040)+'mr-beam.org')
+                self.loginState.loginUser('support' + String.fromCharCode(0x0040) + 'mr-beam.org')
                 self.loginState.loginPass('a')
             } else if (MRBEAM_ENV === 'DEV') {
-                self.loginState.loginUser('dev'+String.fromCharCode(0x0040)+'mr-beam.org')
+                self.loginState.loginUser('dev' + String.fromCharCode(0x0040) + 'mr-beam.org')
                 self.loginState.loginPass('a')
             }
         }
