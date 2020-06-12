@@ -23,7 +23,6 @@ $(function () {
                 // When the iframe sends the discovery message, we respond with the user data.
                 function receiveMessagesFromDesignStoreIframe(event) {
                     if (event.origin === self.DESIGN_STORE_IFRAME_SRC) {
-                        console.log('## Plugin receiving ##  --  ' + event.data.event);
                         switch (event.data.event) {
                             case 'discovery':
                                 self.onDiscoveryReceived();
@@ -53,7 +52,6 @@ $(function () {
         };
 
         self.sendMessageToDesignStoreIframe = function (event, payload) {
-            console.log('## Plugin sending ##');
             let data = {
                 event: event,
                 payload: payload,
@@ -78,7 +76,6 @@ $(function () {
         };
 
         self.onTokenReceived = function (payload) {
-            console.log(payload.token);
             self.saveTokenInUserSettings(payload.token);
         };
 
