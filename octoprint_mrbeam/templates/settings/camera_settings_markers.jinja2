@@ -2,7 +2,7 @@
 <div data-bind='visible: !startupComplete()' style="color: #e25303; font-size: 1.5em; position: absolute; top: 40%; left: 50%">
     <div style="position: relative; left: -50%;">
         <i class="icon icon-spinner icon-spin" style="font-weight: bold;"></i>
-        <span style="font-weight: 200; padding-left: 12px;"> Mr Beam</span> <span style="font-weight: 400;">Calibration Tool</span>
+        <span style="font-weight: 200; padding-left: 12px;"> Mr&nbsp;Beam</span> <span style="font-weight: 400;">Calibration Tool</span>
     </div>
 </div>
 <div style="position:relative; display:none;" data-bind='visible: startupComplete'>
@@ -19,7 +19,7 @@
 				<i class="icon icon-ok" data-bind="visible: cornerCalibrationComplete() || availablePic()['cropped']"></i>
 				<!-- <i class="icon icon-remove" data-bind="visible: !cornerCalibrationComplete()"></i> -->
 			</a></li>
-			<li><a href="#tab_calibration_qa" data-toggle="tab" id="qacal_tab_btn">{{ _('QA') }}</a></li>
+			<li><a href="#tab_calibration_qa" data-toggle="tab" id="qacal_tab_btn">{{ _('Quality Check') }}</a></li>
 			<li><a href="#tab_done_print_labels" data-toggle="tab" id="done_tab_btn">{{ _('Labels') }}</a></li>
 		</ul>
 	
@@ -60,7 +60,7 @@
 					</div>
 
 					<div class="qa_list_and_next" data-bind="visible: qa_cameraalignment_image_loaded">
-					    <h4>Checklist</h4>
+					    <h4>{{ _('Checklist') }}</h4>
 						<ul>
 							<li>{{ _('4 markers are visible.') }}</li>
 							<li>{{ _('Full working area visible.') }}</li>
@@ -186,7 +186,7 @@
 							<div data-bind="text: lensCalibrationNpzFileVerboseDate"></div>
 							
 							<div class="qa_list_and_next">
-							    <h4>Checklist</h4>
+							    <h4>{{ _('Checklist') }}</h4>
 								<ul>
 									<li>{{ _('4 markers are within the green rectangle') }}</li>
 									<li>{{ _('No black pixels are in the green rectangle') }}</li>
@@ -282,14 +282,14 @@
 {#							</div>#}
 {#						</div>#}
                         <div style="margin-top:1em;">
-                            <button class="btn btn-default" data-bind="visible: !availablePic()['cropped'], click: startCornerCalibration">{{ _('Start Corner Calibration') }}</button>
+                            <button class="btn btn-default" data-bind="visible: !cornerCalibrationComplete() && !availablePic()['cropped'], click: startCornerCalibration">{{ _('Start Corner Calibration') }}</button>
                         </div>
-						<div data-bind="visible: cornerCalibrationComplete() && !availablePic()['cropped']" style="color: rgb(226, 83, 3); font-size: 1.5em; left: 50%;">
+						<div data-bind="visible: cornerCalibrationComplete() && !availablePic()['cropped']" >
 							<i class="icon icon-spinner icon-spin" style="font-weight: bold"></i>
-							<span>&nbsp; Waiting for a new picture...</span>
+							<span>&nbsp; {{  _('Loading image...') }}</span>
 						</div>
 						<div class="qa_list_and_next" data-bind="visible: availablePic()['cropped']">
-                            <h4>Checklist:</h4>
+                            <h4>{{ _('Checklist') }}:</h4>
 							<ul>
 								<li>{{ _('The 4 arrows are aligned with the blue crosses') }}</li>
 							</ul>
@@ -368,7 +368,7 @@
 								<button class="btn btn-warning" data-bind="click: abortCalibration, visible: cornerCalibrationActive()"><i class="icon-fixed-width icon-ban-circle"></i> {{ _('Cancel') }}</button>
 								<button class="btn btn-success" data-bind="click: saveCornerCalibrationData, visible: cornerCalibrationComplete() && cornerCalibrationActive()">{{ _('Save Calibration') }}</button>
 							</div>
-							<!-- <h4>Checklist</h4>
+							<!-- <h4>{{ _('Checklist') }}</h4>
 								 <div class="qa_list_and_next">
 								 <ul style="margin:0;">
 								 <li>{{ _('Green rectangle is on the engraved rectangle') }}</li>
@@ -396,37 +396,33 @@
 						</div>
 					</div>
 					<div class="qa_list_and_next">
-					    <h4>Checklist</h4>
+					    <h4>{{ _('Checklist') }}</h4>
 						<ul>
 							<li>{{ _('Green rectangle is on the engraved rectangle') }}</li>
 							<li>{{ _('engraved rectangle egdes are straight and parallel to the green rectangle edges') }}</li>
 						</ul>
-{#						<div class="continue_btn btn-group">#}
                             <a href="#" onclick="$('#done_tab_btn').click()" class="btn btn-success continue_btn">
                                 <span style="font-size:1.5rem;">{{ _('Yes') }}</span>
                                 <i class="icon icon-2x icon-fixed-width icon-arrow-right"></i>
                             </a>
-{#							<button class="btn btn-success" data-bind="click: function(){ $('#done_tab_btn').click() }">#}
-{#                                <i class="icon-fixed-width icon-ok"></i> {{ _('Continue') }}</button>#}
-{#						</div>#}
 					</div>
 				</div>
 
 				<div class="tab-pane" id="tab_done_print_labels">
                     <div>
                         <div class="qa_done_block">
-                            <i class="icon-ok-sign"></i> Done
+                            <i class="icon-ok-sign"></i> {{ _('Done') }}
                         </div>
                     </div>
 					<div class="qa_done_buttons">
-                        <div><h4>Print Labels:</h4></div>
+                        <div><h4>{{ _('Print Labels') }}:</h4></div>
                         <div></div>
                         <div><button class="btn print_btn" data-bind="click: function(d, e){printLabel('deviceLabel', e)}">
-                            <i class="icon icon-print"></i><i class="icon icon-spinner icon-spin"></i> Device Label</button></div>
+                            <i class="icon icon-print"></i><i class="icon icon-spinner icon-spin"></i> {{ _('Device Label') }}</button></div>
                         <div><button class="btn print_btn" data-bind="click: function(d, e){printLabel('boxLabel', e)}">
-                            <i class="icon icon-print"></i><i class="icon icon-spinner icon-spin"></i> Box Label</button></div>
+                            <i class="icon icon-print"></i><i class="icon icon-spinner icon-spin"></i> {{ _('Box Label') }}</button></div>
                         <div><button class="btn print_btn" data-bind="click: function(d, e){printLabel('eanLabel', e)}">
-                            <i class="icon icon-print"></i><i class="icon icon-spinner icon-spin"></i> EAN Labels</button></div>
+                            <i class="icon icon-print"></i><i class="icon icon-spinner icon-spin"></i> {{ _('EAN Labels') }}</button></div>
 					</div>
 				</div>
 
