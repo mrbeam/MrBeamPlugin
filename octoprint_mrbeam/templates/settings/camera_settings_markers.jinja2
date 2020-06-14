@@ -35,7 +35,7 @@
 							</div>
 							<a href="#" class="btn btn-link" data-bind="click:loadUndistortedPicture">
 								<i class="icon icon-refresh"></i>
-								<span style="xxfont-size:1.5rem;">{{ _('Refresh Picture') }}</span> 
+								<span>{{ _('Refresh picture') }}</span>
 							</a>
 						</div>
 						<div class="qa_text">
@@ -48,7 +48,7 @@
 					</div>
 
                     <div class="qa_list_and_next" style="border: 1px solid grey;" data-bind="visible: !qa_cameraalignment_image_loaded()">
-					    <h4>Wait for a camera image</h4>
+					    <h4>{{ _('Wait for a camera image') }}</h4>
 						<ul>
 							<li>{{ _('Is the lid open?') }}</li>
 							<li>{{ _('Red camera light visible?') }}</li>
@@ -244,7 +244,7 @@
 					</svg>
 					<div>
 						<div style="margin-bottom:1em;">
-							<a class="accordion-toggle" data-bind="click:loadUndistortedPicture"><i class="icon-repeat"></i> {{ _('refresh') }}</a>
+							<a class="accordion-toggle" data-bind="click:loadUndistortedPicture"><i class="icon icon-refresh"></i> {{ _('Refresh picture') }}</a>
 							<div class="marker_selection_desc calibration_waiting_for_picture">
 								<div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['NW'] }"><i class="icon-ok"></i> NW</div>
 								<div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['SW'] }"><i class="icon-ok"></i> SW</div>
@@ -323,18 +323,18 @@
 						<div class="marker_selection_desc calibration_summary">
 							<div data-bind="css: {complete: cornerCalibrationComplete()}">
 								<div id="calibration_picture_control" style="position: fixed;right: 0;top: 30vh;padding: 1em;border: 1px solid gray;" data-bind="visible: isInitialCalibration()">
-									Picture:<br />
+									{{ _('Picture') }}:<br />
 									<input type="radio" name="picture_type" value="raw"
-										   data-bind="checked: picType, attr: { disabled: !availablePic()['raw'] }" /> Raw<br />
+										   data-bind="checked: picType, attr: { disabled: !availablePic()['raw'] }" /> {{ _('Raw') }}<br />
 									<input type="radio" name="picture_type" value="lens_corrected"
-										   data-bind="checked: picType, attr: { disabled: !availablePic()['lens_corrected'] }" /> Lens corrected<br />
+										   data-bind="checked: picType, attr: { disabled: !availablePic()['lens_corrected'] }" /> {{ _('Lens corrected') }}<br />
 									<input type="radio" name="picture_type" value="cropped"
-										   data-bind="checked: picType, attr: { disabled: !availablePic()['cropped'] }" /> Cropped<br />
+										   data-bind="checked: picType, attr: { disabled: !availablePic()['cropped'] }" /> {{ _('Cropped') }}<br />
 									<br/>
-									Zoom: <span data-bind="text: calSvgScale" ></span> <br/>
+									{{ _('Zoom') }}: <span data-bind="text: calSvgScale" ></span> <br/>
 									<button class="btn-default" data-bind="click: smaller">-</button><button class="btn-default" data-bind="click: larger">+</button>
 									<br />
-									Move:
+									{{ _('Move') }}:
 									<div>
 										<div class="btn-group">
 											<button class="btn-default" data-bind="click: move(-50,-50)">&#8598;</button>

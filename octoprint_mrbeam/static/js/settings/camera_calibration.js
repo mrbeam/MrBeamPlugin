@@ -721,7 +721,7 @@ $(function () {
 					button.prop("disabled", false);
 					let data = response.responseJSON
 					new PNotify({
-						title: gettext("Print Error: ") + label,
+						title: gettext("Print Error") + ': ' + label,
 						text: data ? data.error : '',
 						type: "error",
 						hide: false
