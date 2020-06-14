@@ -1115,3 +1115,9 @@ svg#area_preview.overModalBG { z-index: 1051; }
     display: inherit !important;
 }
 
+#qa_cameraalignment_image {
+    width: 100%;
+    height: 360px;
+    background: url(/plugin/mrbeam/static/img/cam_calibration/calpic_wait.svg) center no-repeat;
+    background-size: cover;
+}
