@@ -84,31 +84,36 @@ $(function () {
 		self.lensCalibrationActive = ko.observable(false);
 		self.currentResults = ko.observable({});
 
-		self.calImgUrl = ko.computed(function() {
+		self.getImgUrl = function(type) {
 			var settings = [['cropped', CROPPED_IMG_RES, 'hidden', 'visible'],
 							['lens_corrected', DEFAULT_IMG_RES, 'visible', 'hidden'],
-							['raw', DEFAULT_IMG_RES, 'hidden', 'hidden']]
+							['raw', DEFAULT_IMG_RES, 'hidden', 'hidden'],
+							['default', [512, 384], 'hidden', 'hidden']]
 			var applySetting = function(setting) {
 				_t = setting
 				self.calImgWidth(_t[1][0])
 				self.calImgHeight(_t[1][1])
 				self.correctedMarkersVisibility(_t[2])
 				self.croppedMarkersVisibility(_t[3])
-				return self.availablePicUrl()[_t[0]]
+				if (_t[0] == 'default')
+					return self.staticURL
+				else
+					return self.availablePicUrl()[_t[0]]
 			}
-			if (self.cornerCalibrationActive() && self.availablePic()['lens_corrected'])
-				return applySetting(settings[1])
-
-			for (let _t of settings) {
-				if (self.availablePic()[_t[0]])
+			for (let _t of settings)
+				if ((type === undefined || _t[0] === type) && (self.availablePic()[_t[0]] || _t[0] === 'default'))
 					return applySetting(_t)
-			}
-			self.calImgWidth(512);
-			self.calImgHeight(384);
-			self.correctedMarkersVisibility('hidden')
-			self.croppedMarkersVisibility('hidden');
-			return self.staticURL
+			return applySetting('default')
+		};
+		self.calImgUrl = ko.computed(function() {
+			return self.getImgUrl()
+		});
 
+		self._cornerCalImgUrl = ko.observable("")
+		self.cornerCalImgUrl = ko.computed(function() {
+			if (!self.cornerCalibrationActive())
+				self._cornerCalImgUrl(self.getImgUrl())
+			return self._cornerCalImgUrl()
 		});
 		self.cornerCalibrationComplete = ko.computed(function(){
 			if (Object.keys(self.currentResults()).length !== 4) return false;
@@ -198,11 +203,8 @@ $(function () {
 		self.zMarkersTransform = ko.computed( function () {
 			// Like workArea.zObjectImgTransform(), but zooms
 			// out the markers instead of the image itself
-			if (self.picType() === 'cropped') {
-				var offset = [self.calImgWidth(), self.calImgHeight()].map(x=>x*self.camera.imgHeightScale())
-				return 'scale('+1/(1+2*self.camera.imgHeightScale())+') translate('+offset.join(' ')+')';
-			}
-			else return 'scale(1)';
+			var offset = [self.calImgWidth(), self.calImgHeight()].map(x=>x*self.camera.imgHeightScale())
+			return 'scale('+1/(1+2*self.camera.imgHeightScale())+') translate('+offset.join(' ')+')';
 		});
 
 
@@ -241,12 +243,14 @@ $(function () {
 			// self.currentResults({});
 			self.cornerCalibrationActive(true);
 			self.picType("lens_corrected");
+			self._cornerCalImgUrl(self.getImgUrl('lens_corrected'))
 			self.markersFoundPositionCopy = self.markersFoundPosition()
 			self.nextMarker();
 		};
 
 		self.stopCornerCalibration = function () {
 			self.cornerCalibrationActive(false);
+			self.cornerCalImgUrl(self.getImgUrl())
 		}
 
 		self.startLensCalibration = function () {
