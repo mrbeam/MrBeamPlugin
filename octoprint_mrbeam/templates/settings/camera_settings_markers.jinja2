@@ -244,14 +244,9 @@
 					</svg>
 					<div>
 						<div style="margin-bottom:1em;">
-<<<<<<< HEAD
 							<a class="accordion-toggle" data-bind="click:loadUndistortedPicture"><i class="icon icon-refresh"></i> {{ _('Refresh picture') }}</a>
-							<div class="marker_selection_desc calibration_waiting_for_picture">
-=======
-							<a class="accordion-toggle" data-bind="click:loadUndistortedPicture"><i class="icon-repeat"></i> {{ _('refresh') }}</a>
 							<div class="marker_selection_desc calibration_waiting_for_picture"
 							     data-bind="visible: !cornerCalibrationActive()">
->>>>>>> Fix corner calibration image display.
 								<div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['NW'] }"><i class="icon-ok"></i> NW</div>
 								<div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['SW'] }"><i class="icon-ok"></i> SW</div>
 								<div class="marker_found_indicator" data-bind="css: { active: camera.markersFound()['SE'] }"><i class="icon-ok"></i> SE</div>
