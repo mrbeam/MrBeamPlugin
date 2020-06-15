@@ -164,7 +164,8 @@ $(function () {
 			const text = `Quality: ${percent.toFixed(0)}% (min 90%)`;
 			
 			// data-bind is complicated with inline svg -> direct manipulation.
-			document.getElementById('lensCalibrationCoverageText').innerHTML = text;
+			// TODO Use an other measure of coverage quality
+			// document.getElementById('lensCalibrationCoverageText').innerHTML = text;
 			return text;
 		});
 		self.markersFoundPosition = ko.observable({});
