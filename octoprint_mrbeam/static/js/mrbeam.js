@@ -221,11 +221,16 @@ $(function () {
 
             // set env flag in body for experimental_feature_beta and  experimental_feature_dev
             if (mrbeam.isDev()) {
-             $('body').addClass('env_dev')
-             $('body').removeClass('env_prod')
+                $('body').addClass('env_dev')
+                $('body').removeClass('env_beta')
+                $('body').removeClass('env_prod')
             } else if (mrbeam.isBeta()) {
-             $('body').addClass('env_beta')
-             $('body').removeClass('env_prod')
+                $('body').addClass('env_beta')
+                $('body').removeClass('env_prod')
+            } else if (mrbeam.isProd()) {
+                $('body').addClass('env_prod')
+                $('body').removeClass('env_dev')
+                $('body').removeClass('env_beta')
             }
 
             $(window).on("orientationchange",self.onOrientationchange);
