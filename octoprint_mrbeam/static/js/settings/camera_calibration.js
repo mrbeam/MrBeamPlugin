@@ -207,7 +207,6 @@ $(function () {
 			return 'scale('+1/(1+2*self.camera.imgHeightScale())+') translate('+offset.join(' ')+')';
 		});
 
-
 		self.calibrationMarkers = [
 			{name: 'start', desc: 'click to start', focus: [0, 0, 1]},
 			{name: 'NW', desc: 'North West', focus: [0, 0, 4]},

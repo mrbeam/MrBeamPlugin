@@ -1028,7 +1028,6 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	position: relative;
 }
 
-#qa_cropped_guides,
 #qa_undistorted_guides {
 	border: 1px solid #00ff00;
 	position: absolute;
@@ -1038,15 +1037,6 @@ svg#area_preview.overModalBG { z-index: 1051; }
 #qa_undistorted_guides {
 	--dist_horizontal: 3%;
 	--dist_vertical: 3%;
-	top: var(--dist_vertical);
-	bottom: var(--dist_vertical);
-	left: var(--dist_horizontal);
-	right: var(--dist_horizontal);
-}
-
-#qa_cropped_guides {
-	--dist_horizontal: 20%;
-	--dist_vertical: 20%;
 	top: var(--dist_vertical);
 	bottom: var(--dist_vertical);
 	left: var(--dist_horizontal);

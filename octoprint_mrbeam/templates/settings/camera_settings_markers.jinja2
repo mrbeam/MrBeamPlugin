@@ -391,8 +391,18 @@
 					<div class="qa_images">
 						<div>
 							<div class="qa_img_wrapper">
-								<image data-bind="attr: {src: availablePicUrl()['cropped']}" />
-								<div id="qa_cropped_guides"></div>
+								<svg version="1.1"
+									 width="100%" height="100%" viewBox="0 0 512 384"
+									 data-bind="attr: {viewBox: calSvgViewBox()}">
+									<g data-bind="attr: { transform: workingArea.zObjectImgTransform()}">
+										<image data-bind="attr: {href: availablePicUrl()['cropped'],
+														  width:calImgWidth(), height:calImgHeight()}" />
+									</g>
+									<path d="M 398.5,300 L 101.5,300 L 101.5,90 L 398.5,90 L 398.5,300"
+									      style="fill:none;stroke:#4f2;stroke-width:0.5"/>
+
+								</svg>
+								<!-- <div id="qa_cropped_guides"></div> -->
 							</div>
 						</div>
 					</div>
