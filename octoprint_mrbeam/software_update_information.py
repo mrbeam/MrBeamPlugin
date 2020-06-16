@@ -134,18 +134,6 @@ def _set_info_mrbeam_plugin(self, tier):
 				pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
 				restart="octoprint")
 
-		if tier in [SW_UPDATE_TIER_DESIGN_STORE]:
-			sw_update_config[module_id] = dict(
-				displayName=SORT_UP_PREFIX + _get_display_name(self, name),
-				displayVersion=self._plugin_version,
-				type="github_commit",
-				user="mrbeam",
-				repo="MrBeamPlugin",
-				branch="f_design_store",
-				branch_default="f_design_store",
-				pip="https://github.com/mrbeam/MrBeamPlugin/archive/{target_version}.zip",
-				restart="octoprint")
-
 	except Exception as e:
 		_logger.exception('Exception during _set_info_mrbeam_plugin: {}'.format(e))
 
