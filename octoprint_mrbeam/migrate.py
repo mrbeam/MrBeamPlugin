@@ -30,6 +30,7 @@ class Migration(object):
 	VERSION_MOUNT_MANAGER_165                = '0.6.13.1'
 	VERSION_INITD_NETCONNECTD                = '0.5.5'
 	VERSION_DELETE_UPLOADED_STL_FILES        = '0.6.1'
+	VERSION_DISABLE_WIFI_POWER_MANAGEMENT 	 = '0.6.13.2'
 
 	# this is where we have files needed for migrations
 	MIGRATE_FILES_FOLDER     = 'files/migrate/'
@@ -115,6 +116,9 @@ class Migration(object):
 
 				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_DELETE_UPLOADED_STL_FILES, equal_ok=False):
 					self.delete_uploaded_stl_files()
+
+				if self.version_previous is None or self._compare_versions(self.version_previous, self.VERSION_DISABLE_WIFI_POWER_MANAGEMENT, equal_ok=False):
+					self.disable_wifi_power_management()
 
 				# migrations end
 
@@ -406,7 +410,6 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 
 		self.plugin._user_manager._save(force=True)
 
-
 	def update_etc_initd_netconnectd(self):
 		self._logger.info("update_etc_initd_netconnectd() ")
 		src = os.path.join(__package_path__, self.MIGRATE_FILES_FOLDER, 'etc_initd_netconnectd')
@@ -417,7 +420,10 @@ iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to 127.0.0.1:80
 		self._logger.info("delete_uploaded_stl_files() ")
 		exec_cmd("rm -f /home/pi/.octoprint/uploads/*.stl")
 
-
+	def disable_wifi_power_management(self):
+		self._logger.info("disable_wifi_power_management() ")
+		script = os.path.join(__package_path__, self.MIGRATE_FILES_FOLDER, 'wifi_power_management')
+		exec_cmd("sudo {script}".format(script=script))
 
 	##########################################################
 	#####             lasercutterProfiles                #####
