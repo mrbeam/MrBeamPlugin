@@ -222,16 +222,16 @@
 								<path data-bind="attr: {d: svgCross()}" fill="none" />
 							</symbol>
 						</defs>
-						<g id="obj_height_scale" style="cursor:crosshair;" data-bind="click: userClick, attr: {width:calImgWidth(), height:calImgHeight()}">
-							<image
+						<g id="obj_height_scale">
+							<image style="cursor:crosshair;" 
 							   onerror="console.warn(event, this, 'reloading '+this.href); var src=this.href; this.href=''; setTimeout(function(){ this.href=src; }, 100); return false; " 
-							   data-bind="attr: {href: cornerCalImgUrl() }" />
-							<g id="corners" class="calibration_click_indicator" data-bind="attr: { visibility: correctedMarkersVisibility() }">
-								<use id="click_NW" href="#cross" x="-100" y="-100" />
-								<use id="click_NE" href="#cross" x="-100" y="-100" />
-								<use id="click_SE" href="#cross" x="-100" y="-100" />
-								<use id="click_SW" href="#cross" x="-100" y="-100" />
-							</g>
+							   data-bind="attr: {href: cornerCalImgUrl(), width:calImgWidth(), height:calImgHeight() }, click: userClick" />
+						</g>
+						<g id="corners" class="calibration_click_indicator" data-bind="attr: { visibility: correctedMarkersVisibility() }">
+							<use id="click_NW" href="#cross" x="-100" y="-100" />
+							<use id="click_NE" href="#cross" x="-100" y="-100" />
+							<use id="click_SE" href="#cross" x="-100" y="-100" />
+							<use id="click_SW" href="#cross" x="-100" y="-100" />
 						</g>
 						<g id="cropped_view_corners" class="calibration_click_indicator"
 						   transform="scale(1)"
