@@ -303,7 +303,7 @@ $(function () {
 				tmp[step.name] = {'x': x, 'y': y};
 				self.currentResults(tmp);
 				$('#click_'+step.name).attr({'x':x-self.crossSize(), 'y':y-self.crossSize()});
-				self.nextMarker()
+				// self.nextMarker()
 			}
 
 			if (self.currentMarker === 0) {
