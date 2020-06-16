@@ -227,7 +227,10 @@
 							   onerror="console.warn(event, this, 'reloading '+this.href); var src=this.href; this.href=''; setTimeout(function(){ this.href=src; }, 100); return false; " 
 							   data-bind="attr: {href: cornerCalImgUrl(), width:calImgWidth(), height:calImgHeight() }, click: userClick" />
 						</g>
-						<g id="corners" class="calibration_click_indicator" data-bind="attr: { visibility: correctedMarkersVisibility() }">
+						<g id="corners"
+						   class="calibration_click_indicator"
+						   style="pointer-events: none;""
+						   data-bind="attr: { visibility: correctedMarkersVisibility() }">
 							<use id="click_NW" href="#cross" x="-100" y="-100" />
 							<use id="click_NE" href="#cross" x="-100" y="-100" />
 							<use id="click_SE" href="#cross" x="-100" y="-100" />
