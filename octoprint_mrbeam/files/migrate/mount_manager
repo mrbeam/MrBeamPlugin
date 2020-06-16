@@ -5,7 +5,7 @@
 # clear: if no usb stick plugged in, SELFCHECK_DIR will be deleted
 # if `df /` says that there is little space on disk left, mount_manager deletes all files in var/log and ~/.octoprint/logs
 
-VERSION="1.6.4"
+VERSION="1.6.5"
 APP_DIR=/root/mount_manager
 LOG_FILE="/var/log/mount_manager.log"
 MOUNT_DIR=/media/
@@ -166,7 +166,7 @@ done
 
 # clear
 if [ "$1" == "clear" ]; then
-    if [ ${#arr_media_mounted[@]} -eq 0 ] && [ ${#arr_media_unmounted[@]} -eq 0 ]; then
+    if [ ${#arr_media_mounted[@]} -eq 0 ]; then
         log_info "Clear: Deleting SELFCHECK_DIR ${SELFCHECK_DIR}"
         rm -rf $SELFCHECK_DIR
     fi

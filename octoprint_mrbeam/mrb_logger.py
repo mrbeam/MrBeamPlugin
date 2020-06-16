@@ -64,6 +64,9 @@ class MrbLogger(object):
 		kwargs['analytics'] = kwargs.get('analytics', True)
 		kwargs['exc_info'] = kwargs.get('exc_info', True)
 		self.log(logging.ERROR, msg, *args, **kwargs)
+		
+	def setLevel(self, *args, **kwargs):
+		self.logger.setLevel(*args, **kwargs)
 
 	def log(self, level, msg, *args, **kwargs):
 		"""

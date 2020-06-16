@@ -5,8 +5,10 @@ $(function(){
 
 	function CameraViewModel(params) {
         var self = this;
+        window.mrbeam.viewModels['cameraViewModel'] = self;
+
         self.settings = params[0];
-        self.cameraCalibration = params[1];
+        self.state = params[1];
 
         self.TAB_NAME_WORKING_AREA = '#workingarea';
         self.FALLBACK_IMAGE_URL = '/plugin/mrbeam/static/img/beam-cam-static.jpg';
@@ -20,6 +22,7 @@ $(function(){
         self.webCamImageElem = undefined;
         self.isCamCalibrated = false;
         self.firstImageLoaded = false;
+        self.countImagesLoaded = ko.observable(0);
 
         self.markersFound = ko.observable(new Map(MARKERS.map(elm => [elm, undefined])));
 
@@ -47,6 +50,7 @@ $(function(){
             // not working in Safari
             self.webCamImageElem.load(function(){
                 self.firstImageLoaded = true;
+                self.countImagesLoaded(self.countImagesLoaded()+1);
             });
 
             // trigger initial loading of the image
@@ -60,6 +64,43 @@ $(function(){
             else return 'none';
         });
 
+        self.markerState = ko.computed(function() {
+            count = 0
+            MARKERS.forEach(function(m){
+                if (self.markersFound()[m] === true)
+                    count++
+            });
+            return count
+        })
+
+        self.markerStateGreen = ko.computed(function() {
+            return self.markerState() >= 4
+        })
+
+        self.markerStateYellow = ko.computed(function() {
+            return self.markerState() < 4 && self.markerState() >= 2
+        })
+
+        self.markerStateRed = ko.computed(function() {
+            return self.markerState() < 4 && self.markerState() <2
+        })
+
+        self.firstRealimageLoaded = ko.computed(function() {
+            return self.countImagesLoaded() >= 2;
+        })
+
+        self.cameraActive = ko.computed(function() {
+            return self.firstRealimageLoaded() && self.state.isOperational() && !self.state.isPrinting() && !self.state.isLocked();
+        })
+
+        self.markerMissedClass = ko.computed(function() {
+            var ret = '';
+            MARKERS.forEach(function(m){
+                if (!(self.markersFound()[m] === undefined) && !self.markersFound()[m])
+                    ret = ret + ' marker' + m;
+            });
+            return ret;
+        })
 
         self.onDataUpdaterPluginMessage = function(plugin, data) {
             if (plugin !== "mrbeam" || !data) return;
@@ -69,10 +110,8 @@ $(function(){
                 MARKERS.forEach(function(m) {
                     if(mf.includes(m)) {
                         _markersFound[m] = true;
-                        self.cameraMarkerElem.removeClass('marker' + m);
                     } else {
                         _markersFound[m] = false;
-                        self.cameraMarkerElem.addClass('marker' + m);
                     }
                 });
                 self.markersFound(_markersFound);
@@ -115,6 +154,7 @@ $(function(){
                     // load() event seems not to fire in Safari.
                     // So as a quick hack, let's set firstImageLoaded to true already here
                     self.firstImageLoaded = true;
+                    self.countImagesLoaded(self.countImagesLoaded()+1);
                 }
                 if (this.width > 1500 && this.height > 1000) self.imgResolution('High');
                 else self.imgResolution('Low');
@@ -137,10 +177,18 @@ $(function(){
                 result = self.croppedUrl;
             }
             if (result) {
-                result += (result.lastIndexOf("?") > -1) ? '&' : '?';
-                result += new Date().getTime();
+                if (result.match(/(\?|&)ts=/))
+                    result = result.replace(/(\?|&)ts=[0-9]*/, "$1ts=" + new Date().getTime())
+                else {
+                    result += (result.lastIndexOf("?") > -1) ? '&ts=' : '?ts='
+                    result += new Date().getTime();
+                }
             }
             return result;
+        };
+
+        self.send_camera_image_to_analytics = function(){
+            OctoPrint.simpleApiCommand("mrbeam", "send_camera_image_to_analytics", {})
         };
     }
 
@@ -148,7 +196,7 @@ $(function(){
 
     // view model class, parameters for constructor, container to bind to
     ADDITIONAL_VIEWMODELS.push([CameraViewModel,
-		["settingsViewModel"],
+		["settingsViewModel", "printerStateViewModel"],
 		[] // nothing to bind.
 	]);
 

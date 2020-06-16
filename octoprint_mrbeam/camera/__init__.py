@@ -6,6 +6,7 @@ from numpy.linalg import norm
 from itertools import chain
 from threading import Event
 from abc import ABCMeta, abstractmethod
+from octoprint_mrbeam.mrb_logger import mrb_logger
 # Python 3 : use ABC instead of ABCMeta
 
 
@@ -78,7 +79,7 @@ class MrbPicWorker(object):
 		self.times = []  # exposure time values
 		self.adjust_brightness = []
 		self.busy = Event()
-		self._logger = logging.getLogger("mrbeam.camera.MrbPicWorker")
+		self._logger = mrb_logger("mrbeam.camera.MrbPicWorker")
 		if debug: self._logger.setLevel(logging.DEBUG)
 		else: self._logger.setLevel(logging.WARNING)
 
@@ -248,7 +249,7 @@ def get_same_size(imageA, imageB, upscale=True):
 	else:
 		return imageA, imageB
 
-# @logtime
+# @logtime()
 def gaussBlurDiff(imageA, imageB, thresh=DIFF_TOLERANCE, blur=7, resize = 1):
 	"""
 	Compares the two images by blurring them. If the strongest difference measured
@@ -256,11 +257,15 @@ def gaussBlurDiff(imageA, imageB, thresh=DIFF_TOLERANCE, blur=7, resize = 1):
 	the function returns True.
 	"""
 	assert(blur % 2 == 1)
-	images = [imageA, imageB]
+	if len(imageA.shape) == 3:
+		# if img is colored, only keep 1 color channel for comparison
+		A, B = (img[:,:,0] for img in (imageA, imageB))
+	else:
+		A, B = imageA, imageB
 	# Resize the images if need be
 	if resize != 1:
-		images = [cv2.resize(img, tuple(int(s * resize) for s in img.shape[:2])) for img in images]
-	images = list(get_same_size(*images, upscale=False))
+		A, B = [cv2.resize(img, tuple(int(s * resize) for s in img.shape[:2])) for img in [A,B]]
+	images = list(get_same_size(*(A,B), upscale=False))
 	images = [cv2.GaussianBlur(img, (blur, blur), 2 * blur) for img in images]
 	images = np.asarray(images, dtype=np.int16) # No int overflow
 	diff = np.max(np.abs(np.diff(images, axis=0)))

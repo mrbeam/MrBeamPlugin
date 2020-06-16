@@ -152,6 +152,7 @@ class IoBeamHandler(object):
 	DATASET_HW_MALFUNCTION =	   	 	"hardware_malfunction"
 	DATASET_I2C =           	   	 	"i2c"
 	DATASET_I2C_MONITORING =            "i2c_monitoring"
+	DATASET_REED_SWITCH =               "reed_switch"
 
 	def __init__(self, plugin):
 		self._plugin = plugin
@@ -410,7 +411,10 @@ class IoBeamHandler(object):
 						# Read MESSAGE_LENGTH_MAX bytes of data
 						data = None
 						try:
-							data = temp_buffer + self._my_socket.recv(self.MESSAGE_LENGTH_MAX)
+							sock_data =  self._my_socket.recv(self.MESSAGE_LENGTH_MAX)
+							if len(sock_data) > self.MESSAGE_LENGTH_MAX-6:
+								self._logger.warn("ANDYTEST sock_data: %s", len(sock_data))
+							data = temp_buffer + sock_data
 						except Exception as e:
 							# if self.dev_mode and e.message == "timed out":
 							# 	# self._logger.warn("Connection stale but MRBEAM_DEBUG enabled. Continuing....")
@@ -583,6 +587,8 @@ class IoBeamHandler(object):
 					err = self._handle_i2c(dataset)
 				elif name == self.DATASET_I2C_MONITORING:
 					err = self._handle_i2c_monitoring(dataset)
+				elif name == self.DATASET_REED_SWITCH:
+					err = self._handle_reed_switch(dataset)
 				elif name == self.MESSAGE_DEVICE_UNUSED:
 					pass
 				elif name == self.MESSAGE_ERROR:
@@ -681,6 +687,10 @@ class IoBeamHandler(object):
 					new_devices=dataset_data.get('new_devices', []))
 				self._analytics_handler.add_iobeam_i2c_monitoring(**params)
 		self._last_i2c_monitoring_dataset = dataset
+		
+	def _handle_reed_switch(self, dataset):
+		self.logger.info("reed_switch: %s", dataset)
+		return 0
 
 	def _handle_laser(self, dataset):
 		"""
@@ -725,7 +735,7 @@ class IoBeamHandler(object):
 			self._handle_steprun(dataset[self.MESSAGE_DEVICE_STEPRUN])
 		return 0
 
-	def _handle_onebutton(self, dataset):
+	def  _handle_onebutton(self, dataset):
 		"""
 		Handle onebtn dataset
 		:param dataset: onebtn dataset, e.g. {"state": "dn", "duration": "1.2"}

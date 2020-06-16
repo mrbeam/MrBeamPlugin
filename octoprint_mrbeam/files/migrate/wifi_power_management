@@ -1,0 +1,27 @@
+#!/bin/bash
+
+
+cat > /root/scripts/wireless_power_off << EOF
+#!/bin/sh -
+iwconfig wlan0 power off
+EOF
+
+
+cat > /etc/systemd/system/wireless_power_off.service << EOF
+[Unit]
+Description=Disable WiFi Power Management
+After=multi-user.target
+
+[Service]
+Type=idle
+ExecStart=/root/scripts/wireless_power_off
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+
+sudo chmod +x /root/scripts/wireless_power_off
+sudo chmod 644 /etc/systemd/system/wireless_power_off.service
+sudo systemctl daemon-reload
+sudo systemctl enable wireless_power_off.service

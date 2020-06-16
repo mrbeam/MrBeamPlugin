@@ -4,21 +4,50 @@ import time
 import logging
 import numpy as np
 import json
+from itertools import chain, repeat, cycle
+from functools import wraps
+from copy import copy
 
-def dict_merge(d1, d2): # (d1: dict, d2: dict):
-	for k, v in d1.items():
-		if k in d2 and isinstance(v, dict) and isinstance(d2[k], dict):
-			d2[k] = dict_merge(d1[k], d2[k])
-	return dict(chain(d1.items(), d2.items()))
+def dict_merge(d1, d2, leaf_operation=None): # (d1: dict, d2: dict):
+	"""Recursive dictionnary update.
+	Can associate an operation for superposing leaves."""
+	if isinstance(d1, dict) and isinstance(d2, dict):
+		out = copy(d1)
+		for k in set(chain(d1.keys(), d2.keys())):
+			if k in d2.keys() and k in d1.keys():
+				out[k] = dict_merge(d1[k], d2[k], leaf_operation)
+			elif k in d2.keys():
+				out[k] = d2[k]
+		return out
+	elif leaf_operation is not None:
+		ret = leaf_operation(d1, d2)
+		if ret is None: return d1
+		else: return ret
+	else:
+		return d2
 
-def logtime(f):
+def logtime(logger=None):
+	def _logtime(f):
+		@wraps(f)
+		def timed_f(*args, **kw):
+			start = time.clock()
+			ret = f(*args, **kw)
+			debug_logger(f).debug("Elapsed time : %f seconds", time.clock() - start)
+			return ret
+		return timed_f
+	return _logtime
+
+def logExceptions(f):
 	logger = debug_logger(f)
-	def timed_f(*args, **kw):
-		start = time.time()
-		ret = f(*args, **kw)
-		logger.debug("Elapsed time : %f seconds", time.time() - start)
-		return ret
-	return timed_f
+	@wraps(f)
+	def wrap(*args, **kw):
+		try:
+			return f(*args, **kw)
+		except Exception as e:
+			logger.exception("%s, %s" % (e.__class__.__name__, e))
+			raise
+	return wrap
+
 
 def json_serialisor(elm):
 	"""Attempts to return a serialisable element if the given one is not."""
@@ -57,6 +86,7 @@ def log_input(logger, *a, **kw):
 def logme(input=False, output=False):
 	def decorator(f):
 		logger = debug_logger(f)
+		@wraps(f)
 		def wrapped(*a, **kw):
 			if input: log_input(logger, *a, **kw)
 			ret = f(*a, **kw)
@@ -66,13 +96,16 @@ def logme(input=False, output=False):
 	return decorator
 
 def debug_logger(function=None):
+	# TODO: AXEL should we use mrb_logger here?
 	if function is None:
 		logger = logging.getLogger("debug logger")
 	elif sys.version_info >= (3, 3):
 		# Python version >= 3.3
 		logger = logging.getLogger(function.__qualname__)
 	else:
-		logger = logging.getLogger(function.__module__ + '.' + function.__name__)
+		if function.__module__ is None:
+			logger = logging.getLogger(function.__name__)
+		else:
+			logger = logging.getLogger(function.__module__ + '.' + function.__name__)
 	logger.setLevel(logging.DEBUG)
 	return logger
-

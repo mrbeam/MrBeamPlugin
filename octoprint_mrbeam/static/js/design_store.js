@@ -4,16 +4,17 @@ $(function () {
         window.mrbeam.viewModels['designStore'] = self;
 
         self.DESIGN_STORE_IFRAME_SRC = 'https://design-store-269610.appspot.com';  // Don't write a "/" at the end!!
+        //self.DESIGN_STORE_IFRAME_SRC = 'http://localhost:8080';
 
         self.loginState = params[0];
         self.navigation = params[1];
         self.analytics = params[2];
         self.settings = params[3];
 
-        // todo: should we do this before?
-        // @iratxe: what if the user is not logged in yet. You might want to to this also on onUserLoggedIn
-        self.onAllBound = function () {
-            self.prepareDesignStoreTab();
+        self.onUserLoggedIn = function () {
+            if (window.mrbeam.isDev()) {
+                self.prepareDesignStoreTab();
+            }
         };
 
         self.prepareDesignStoreTab = function() {
@@ -22,7 +23,6 @@ $(function () {
                 // When the iframe sends the discovery message, we respond with the user data.
                 function receiveMessagesFromDesignStoreIframe(event) {
                     if (event.origin === self.DESIGN_STORE_IFRAME_SRC) {
-                        console.log('## Plugin receiving ##  --  ' + event.data.event);
                         switch (event.data.event) {
                             case 'discovery':
                                 self.onDiscoveryReceived();
@@ -52,7 +52,6 @@ $(function () {
         };
 
         self.sendMessageToDesignStoreIframe = function (event, payload) {
-            console.log('## Plugin sending ##');
             let data = {
                 event: event,
                 payload: payload,
@@ -77,7 +76,6 @@ $(function () {
         };
 
         self.onTokenReceived = function (payload) {
-            console.log(payload.token);
             self.saveTokenInUserSettings(payload.token);
         };
 
