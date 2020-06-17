@@ -13,7 +13,7 @@ import numpy as np
 from copy import copy
 
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
-from octoprint_mrbeam.util import logme, logtime, logExceptions
+from octoprint_mrbeam.util import logme, logtime, logExceptions, makedirs
 
 CB_ROWS = 5
 CB_COLS = 6
@@ -584,6 +584,7 @@ class calibrationState(dict):
 
 	def saveCalibration(self, path=None):
 		"""Load the calibration to path"""
+		makedirs(path or self.output_file, parent=True)
 		np.savez(path or self.output_file, **self.lensCalibration)
 		self.setOutpuFileTimestamp()
 

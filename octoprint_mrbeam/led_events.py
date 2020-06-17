@@ -53,6 +53,7 @@ class LedEventListener(CommandTrigger):
 	LED_EVENTS[MrBeamEvents.RAW_IMAGE_TAKING_START] = "mrbeam_ledstrips_cli flash_blue:1"
 	LED_EVENTS[MrBeamEvents.RAW_IMAGE_TAKING_DONE]  = "mrbeam_ledstrips_cli blue" # flash_color:200:200:30:1:50" #color:200:200:30" # TODO undo -> last state
 	LED_EVENTS[MrBeamEvents.RAW_IMG_TAKING_LAST]    = "mrbeam_ledstrips_cli flash_green:1:30"
+	LED_EVENTS[MrBeamEvents.RAW_IMG_TAKING_FAIL]    = "mrbeam_ledstrips_cli flash_red:1:30"
 	LED_EVENTS[MrBeamEvents.LENS_CALIB_START]       = "mrbeam_ledstrips_cli lens_calibration" # dims interieur for better pictures
 	LED_EVENTS[MrBeamEvents.LENS_CALIB_PROCESSING_BOARDS] = "mrbeam_ledstrips_cli flash_blue:3"
 	LED_EVENTS[MrBeamEvents.LENS_CALIB_RUNNING]     = "mrbeam_ledstrips_cli flash_green:2"

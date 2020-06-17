@@ -7,6 +7,7 @@ import json
 from itertools import chain, repeat, cycle
 from functools import wraps
 from copy import copy
+import threading
 
 def dict_merge(d1, d2, leaf_operation=None): # (d1: dict, d2: dict):
 	"""Recursive dictionnary update.
@@ -106,3 +107,56 @@ def debug_logger(function=None):
 			logger = logging.getLogger(function.__module__ + '.' + function.__name__)
 	logger.setLevel(logging.DEBUG)
 	return logger
+
+# Threaded function snippet returning a callback when the function has finished
+# see https://gist.github.com/awesomebytes/0483e65e0884f05fb95e314c4f2b3db8
+# See https://stackoverflow.com/questions/14234547/threads-with-decorators
+def get_thread(callback=None, logname=None, daemon=False):
+	def wrapper(f):
+		# if logname:
+		# 	logger = logging.getLogger(logname)
+		# else:
+		# 	logger = debug_logger(f)
+		@wraps(f)
+		def run(*a, **kw):
+			if callback is not None:
+				@logExceptions
+				@wraps(f)
+				def do_callback():
+					# try:
+					callback(f(*a, **kw))
+					# except Exception as e:
+					# 	logger.exception("E")
+
+				t = threading.Thread(target=do_callback, args=a, kwargs=kw)
+			else:
+				t = threading.Thread(target=f, args=a, kwargs=kw)
+			if daemon:
+				t.daemon = True
+			t.start()
+			return t
+		return run
+	return wrapper
+
+def makedirs(path, parent=False, *a, **kw):
+	"""
+	Same as os.makedirs but doesn't throw exception if dir exists
+	@param parentif: bool create the parent directory for the path given and not the full path
+	                 (avoids having to use os.path.dirname)
+	Python >= 3.5 see mkdir(parents=True, exist_ok=True)
+	See https://stackoverflow.com/questions/600268/mkdir-p-functionality-in-python
+	"""
+	from os.path import dirname, isdir
+	from os import makedirs
+	import errno
+	if parent:
+		_p = dirname(path)
+	else:
+		_p = path
+	try:
+		makedirs(_p, *a, **kw)
+	except OSError as exc:
+		if exc.errno == errno.EEXIST and isdir(_p):
+			pass
+		else:
+			raise

@@ -47,6 +47,7 @@ class MrBeamEvents(object):
 	RAW_IMAGE_TAKING_START     = "RawImageTakingStart"
 	RAW_IMAGE_TAKING_DONE      = "RawImageTakingDone"
 	RAW_IMG_TAKING_LAST        = "lensCalibTakingLast"
+	RAW_IMG_TAKING_FAIL        = "lensCalibTakingFail"
 	LENS_CALIB_START           = "lensCalibStart"
 	LENS_CALIB_PROCESSING_BOARDS = "lensCalibProcessingBoards"
 	LENS_CALIB_RUNNING         = "lensCalibRunning"

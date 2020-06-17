@@ -20,7 +20,7 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.camera import gaussBlurDiff, QD_KEYS, PICAMERA_AVAILABLE
 from octoprint_mrbeam.camera import calibration as calibration
 from octoprint_mrbeam.camera.calibration import BoardDetectorDaemon, MIN_BOARDS_DETECTED
-from octoprint_mrbeam.util import json_serialisor, logme
+from octoprint_mrbeam.util import json_serialisor, logme, get_thread
 import octoprint_mrbeam.camera.exc as exc
 import octoprint_mrbeam.camera as camera
 if PICAMERA_AVAILABLE:
@@ -73,6 +73,7 @@ class LidHandler(object):
 		self.force_taking_picture = Event()
 		self.force_taking_picture.clear()
 		self.board_calibration_number_pics_taken_in_session = 0
+		self.saveRawImgThread = None
 
 		if PICAMERA_AVAILABLE:
 			self.imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
@@ -140,7 +141,10 @@ class LidHandler(object):
 		     and self.lensCalibrationStarted \
 		     and payload < 5.0:
 			self._logger.info("onEvent() ONEBUTTON_RELEASED - payload : %s" % payload)
-			self.saveRawImg()
+			if self.saveRawImgThread is not None and self.saveRawImgThread.is_alive():
+				self._logger.info("save Img Thread still alive, ignoring request")
+			else:
+				self.saveRawImgThread = get_thread(daemon=True)(self.saveRawImg)()
 
 	def is_lid_open(self):
 		return not self._lid_closed
@@ -258,47 +262,44 @@ class LidHandler(object):
 		self.boardDetectorDaemon.state.onChange()
 
 	def saveRawImg(self):
-		self._logger.info("ANDYTEST saveRawImg() starting thread")
-		t = threading.Thread(target=self._saveRawImgThreaded, name='_saveRawImgThreaded')
-		t.daemon = True
-		t.start()
-		
-	def _saveRawImgThreaded(self):
 		imgName = self.boardDetectorDaemon.next_tmp_img_name()
-		try:
-			self._logger.info("ANDYTEST _saveRawImgThreaded() thread started")
-			# TODO debug/raw.jpg -> copy image over
-			# TODO careful when deleting pic + setting new name -> hash
-			if self._photo_creator and \
-			   self._photo_creator.active and \
-			   not self._photo_creator.stopping:
-				self._logger.warning("Saving new picture %s" % imgName)
-				# take a new picture and save to the specific path
-				self._photo_creator.saveRaw = imgName
-				self.takeNewPic()
-				imgPath = path.join(self.debugFolder, imgName)
-				# Tell the boardDetector to listen for this file
-				self.boardDetectorDaemon.add(imgPath)
-				_s = self.boardDetectorDaemon.state
-				# n = len(_s.getAllPending()) + len(_s.getSuccesses()) + len(_s.getProcessing()) # Does not include STATE_PENDING_CAMERA
-				# if n >= MIN_BOARDS_DETECTED - 1: # not suitable for waterott
-				if len(self.boardDetectorDaemon) >= MIN_BOARDS_DETECTED:
-					self._event_bus.fire(MrBeamEvents.RAW_IMG_TAKING_LAST)
-				else:
-					self._event_bus.fire(MrBeamEvents.RAW_IMAGE_TAKING_START)
-				if not self.boardDetectorDaemon.is_alive():
-					self.boardDetectorDaemon.start()
-				else:
-					self.boardDetectorDaemon.waiting.clear()
-				# if n >= MIN_BOARDS_DETECTED - 1:
-				if len(self.boardDetectorDaemon) >= MIN_BOARDS_DETECTED:
-					self.startLensCalibration()
-					# TODO If possible, ask the led cli to chain two LED states
-					t = Timer(1.2, self._event_bus.fire, args=(MrBeamEvents.LENS_CALIB_PROCESSING_BOARDS,))
-					t.start()
-		except:
-			self._logger.exception("Exception in _saveRawImgThreaded(): ")
-
+		# TODO debug/raw.jpg -> copy image over
+		# TODO careful when deleting pic + setting new name -> hash
+		if self._photo_creator and \
+			self._photo_creator.active and \
+			not self._photo_creator.stopping:
+			self._logger.warning("Saving new picture %s" % imgName)
+			# take a new picture and save to the specific path
+			self._photo_creator.saveRaw = imgName
+			if len(self.boardDetectorDaemon) - 1 == MIN_BOARDS_DETECTED:
+				self._event_bus.fire(MrBeamEvents.RAW_IMG_TAKING_LAST)
+			elif len(self.boardDetectorDaemon) >= MIN_BOARDS_DETECTED:
+				# TODO Only fail for Waterott
+				self._event_bus.fire(MrBeamEvents.RAW_IMG_TAKING_FAIL)
+				self._logger.info("Ignoring this picture")
+				return
+			else:
+				self._event_bus.fire(MrBeamEvents.RAW_IMAGE_TAKING_START)
+			self.takeNewPic()
+			imgPath = path.join(self.debugFolder, imgName)
+			# Tell the boardDetector to listen for this file
+			self.boardDetectorDaemon.add(imgPath)
+			_s = self.boardDetectorDaemon.state
+			# n = len(_s.getAllPending()) + len(_s.getSuccesses()) + len(_s.getProcessing()) # Does not include STATE_PENDING_CAMERA
+			# if n >= MIN_BOARDS_DETECTED - 1: # not suitable for waterott
+			if not self.boardDetectorDaemon.is_alive():
+				self.boardDetectorDaemon.start()
+			else:
+				self.boardDetectorDaemon.waiting.clear()
+			# if n >= MIN_BOARDS_DETECTED - 1:
+			if len(self.boardDetectorDaemon) >= MIN_BOARDS_DETECTED:
+				self.startLensCalibration()
+				# TODO If possible, ask the led cli to chain two LED states
+				t = Timer(1.2, self._event_bus.fire, args=(MrBeamEvents.LENS_CALIB_PROCESSING_BOARDS,))
+				t.start()
+		# except:
+		# 	self._logger.exception("Exception in _saveRawImgThreaded(): ")
+		# self._logger.info("ANDYTEST _saveRawImgThreaded() thread started")
 
 	@logme(True)
 	def delRawImg(self, path):
