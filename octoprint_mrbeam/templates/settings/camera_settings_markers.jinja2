@@ -221,14 +221,14 @@
 							<symbol id="cross">
 								<path data-bind="attr: {d: svgCross()}" fill="none" />
 							</symbol>
-							<filter id="contrast">
-								<!-- Also used for te final qa -->
-								<feComponentTransfer>
-								<feFuncR type="linear" slope="2" intercept="-0.1"/>
-								<feFuncG type="linear" slope="2" intercept="-0.1"/>
-								<feFuncB type="linear" slope="2" intercept="-0.1"/>
-								</feComponentTransfer>
-							</filter>
+							<!-- Also used for the final qa -->
+							<!-- <filter id="contrast">
+								 <feComponentTransfer>
+								 <feFuncR type="linear" slope="2" intercept="-0.1"/>
+								 <feFuncG type="linear" slope="2" intercept="-0.1"/>
+								 <feFuncB type="linear" slope="2" intercept="-0.1"/>
+								 </feComponentTransfer>
+								 </filter> -->
 						</defs>
 						<g id="obj_height_scale">
 							<image style="cursor:crosshair;filter:url(#contrast)"
