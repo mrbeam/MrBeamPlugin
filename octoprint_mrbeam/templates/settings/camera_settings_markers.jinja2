@@ -221,10 +221,18 @@
 							<symbol id="cross">
 								<path data-bind="attr: {d: svgCross()}" fill="none" />
 							</symbol>
+							<filter id="contrast">
+								<!-- Also used for te final qa -->
+								<feComponentTransfer>
+								<feFuncR type="linear" slope="2" intercept="-0.1"/>
+								<feFuncG type="linear" slope="2" intercept="-0.1"/>
+								<feFuncB type="linear" slope="2" intercept="-0.1"/>
+								</feComponentTransfer>
+							</filter>
 						</defs>
 						<g id="obj_height_scale">
-							<image style="cursor:crosshair;" 
-							   onerror="console.warn(event, this, 'reloading '+this.href); var src=this.href; this.href=''; setTimeout(function(){ this.href=src; }, 100); return false; " 
+							<image style="cursor:crosshair;filter:url(#contrast)"
+							   onerror="console.warn(event, this, 'reloading '+this.href); var src=this.href; this.href=''; setTimeout(function(){ this.href=src; }, 100); return false;"
 							   data-bind="attr: {href: cornerCalImgUrl(), width:calImgWidth(), height:calImgHeight() }, click: userClick" />
 						</g>
 						<g id="corners"
@@ -397,8 +405,19 @@
 								<svg version="1.1"
 									 width="100%" height="100%" viewBox="0 0 512 384"
 									 data-bind="attr: {viewBox: calSvgViewBox()}">
+									<defs>
+										<filter id="contrast2">
+											<!-- Also used for the corner calibration QA -->
+											<feComponentTransfer>
+											<feFuncR type="linear" slope="2" intercept="-0.1"/>
+											<feFuncG type="linear" slope="2" intercept="-0.1"/>
+											<feFuncB type="linear" slope="2" intercept="-0.1"/>
+											</feComponentTransfer>
+										</filter>
+									</defs>
 									<g data-bind="attr: { transform: workingArea.zObjectImgTransform()}">
-										<image data-bind="attr: {href: availablePicUrl()['cropped'],
+										<image style="filter: url(#contrast2)"
+											   data-bind="attr: {href: availablePicUrl()['cropped'],
 														  width:calImgWidth(), height:calImgHeight()}" />
 									</g>
 									<path d="M 398.5,300 L 101.5,300 L 101.5,90 L 398.5,90 L 398.5,300"
