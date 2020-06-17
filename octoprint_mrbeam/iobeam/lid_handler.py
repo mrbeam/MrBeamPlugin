@@ -20,7 +20,7 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.camera import gaussBlurDiff, QD_KEYS, PICAMERA_AVAILABLE
 from octoprint_mrbeam.camera import calibration as calibration
 from octoprint_mrbeam.camera.calibration import BoardDetectorDaemon, MIN_BOARDS_DETECTED
-from octoprint_mrbeam.util import json_serialisor, logme, get_thread
+from octoprint_mrbeam.util import json_serialisor, logme, get_thread, makedirs
 import octoprint_mrbeam.camera.exc as exc
 import octoprint_mrbeam.camera as camera
 if PICAMERA_AVAILABLE:
@@ -77,6 +77,7 @@ class LidHandler(object):
 
 		if PICAMERA_AVAILABLE:
 			self.imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
+			makedirs(self.imagePath, parent=True)
 			self._photo_creator = PhotoCreator(self._plugin,
 			                                   self._plugin_manager,
 			                                   self.imagePath,
