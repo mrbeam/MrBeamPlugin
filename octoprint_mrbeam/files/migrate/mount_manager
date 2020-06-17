@@ -5,12 +5,14 @@
 # clear: if no usb stick plugged in, SELFCHECK_DIR will be deleted
 # if `df /` says that there is little space on disk left, mount_manager deletes all files in var/log and ~/.octoprint/logs
 
-VERSION="1.6.5"
+VERSION="1.6.6"
 APP_DIR=/root/mount_manager
 LOG_FILE="/var/log/mount_manager.log"
 MOUNT_DIR=/media/
 
 OCTOPRINT_LOG="/home/pi/.octoprint/logs/octoprint.log"
+MRBEAM_PLUGIN_DIR="/home/pi/oprint/lib/python2.7/site-packages/octoprint_mrbeam"
+MRBEAM_PLUGIN_SHADOWED_DIR="/home/pi/oprint/lib/python2.7/site-packages/_octoprint_mrbeam_shadowed"
 
 SIG_DIR="/mrbeam"
 SIG_FILE_PATTERN="mrbeam*.sig"
@@ -167,8 +169,17 @@ done
 # clear
 if [ "$1" == "clear" ]; then
     if [ ${#arr_media_mounted[@]} -eq 0 ]; then
-        log_info "Clear: Deleting SELFCHECK_DIR ${SELFCHECK_DIR}"
+        log_info "Clear: Deleting SELFCHECK_DIR ${SELFCHECK_DIR}" "${OCTOPRINT_LOG}"
         rm -rf $SELFCHECK_DIR
+
+        # clean up if we shadowed our Plugin with a version from usb stick
+        if [ -d ${MRBEAM_PLUGIN_SHADOWED_DIR} ]; then
+            log_info "Shadowed MrBeam Plugin: Cleaning up... Moving ${MRBEAM_PLUGIN_SHADOWED_DIR} to ${MRBEAM_PLUGIN_DIR}" "${OCTOPRINT_LOG}"
+            rm -rf "${MRBEAM_PLUGIN_DIR}"
+            mv ${MRBEAM_PLUGIN_SHADOWED_DIR} "${MRBEAM_PLUGIN_DIR}"
+       else
+            log_info "Shadowed MrBeam Plugin: nothing to do" "${OCTOPRINT_LOG}"
+        fi
     fi
 fi
 
