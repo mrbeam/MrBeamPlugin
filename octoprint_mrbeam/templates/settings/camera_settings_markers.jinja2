@@ -402,8 +402,8 @@
 														  width:calImgWidth(), height:calImgHeight()}" />
 									</g>
 									<path d="M 398.5,300 L 101.5,300 L 101.5,90 L 398.5,90 L 398.5,300"
-									      style="fill:none;stroke:#4f2;stroke-width:0.5"/>
-
+									      data-bind="attr: {style: 'fill:none; stroke:#4f2; opacity: 0.6;stroke-width: ' + (2 * 1 * calImgWidth() / 500)}"/>
+									                           <!-- 2 * tolerance * imgWidth / work_area_width -->
 								</svg>
 							</div>
 						</div>
@@ -417,7 +417,7 @@
 					<div class="qa_list_and_next">
 					    <h4>{{ _('Checklist') }}</h4>
 						<ul>
-							<li>{{ _('Green rectangle is on the engraved rectangle') }}</li>
+							<li>{{ _('The engraved rectangle is inside the green outline') }}</li>
 							<li>{{ _('engraved rectangle egdes are straight and parallel to the green rectangle edges') }}</li>
 						</ul>
                             <a href="#" onclick="$('#done_tab_btn').click()" class="btn btn-success continue_btn">
