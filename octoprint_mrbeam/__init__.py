@@ -50,7 +50,7 @@ from octoprint_mrbeam.os_health_care import os_health_care
 from octoprint_mrbeam.wizard_config import WizardConfig
 from octoprint_mrbeam.printing.profile import laserCutterProfileManager, InvalidProfileError, CouldNotOverwriteError, Profile
 from octoprint_mrbeam.software_update_information import get_update_information, switch_software_channel, software_channels_available, SW_UPDATE_TIER_PROD, SW_UPDATE_TIER_BETA
-from octoprint_mrbeam.support import set_support_mode
+from octoprint_mrbeam.support import set_support_mode, set_calibration_tool_mode
 from octoprint_mrbeam.util.cmd_exec import exec_cmd, exec_cmd_output
 from octoprint_mrbeam.cli import get_cli_commands
 from .materials import materials
@@ -168,6 +168,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		# Enable or disable internal support user.
 		self.support_mode = set_support_mode(self)
+		self.calibration_tool_mode = set_calibration_tool_mode(self)
 
 		self.laserCutterProfileManager = laserCutterProfileManager()
 
@@ -256,7 +257,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 					env=self.get_env(),
 					beamOS_image=self._octopi_info,
 					grbl_version_lastknown=self._settings.get(["grbl_version_lastknown"]),
-					laserhead_serial=self.laserhead_handler.get_current_used_lh_data()['serial'])
+ 					laserhead_serial=self.laserhead_handler.get_current_used_lh_data()['serial'],
+		            _state=dict(
+			            calibration_tool_mode=self.calibration_tool_mode,
+		            ))
 
 	##~~ SettingsPlugin mixin
 	def get_settings_version(self):
@@ -287,6 +291,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				iobeam_disable_warnings=False,  # for development on non-MrBeam devices
 				suppress_migrations=False,  # for development on non-MrBeam devices
 				support_mode=False,
+				calibration_tool_mode=False,
 				grbl_auto_update_enabled=True
 			),
 			laser_heads=dict(
@@ -1852,6 +1857,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if payload is None or not isinstance(payload, collections.Iterable) or not 'log' in payload or payload['log']:
 			self._logger.info("on_event() %s: %s", event, payload)
 
+		if event == MrBeamEvents.BOOT_GRACE_PERIOD_END:
+			if self.calibration_tool_mode:
+				self.lid_handler.onLensCalibrationStart()
+
 		if event == OctoPrintEvents.ERROR:
 			analytics = payload.get('analytics', True)
 			if analytics:
@@ -2148,6 +2157,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				self._start_boot_grace_period_thread()
 			else:
 				self._logger.debug("BOOT_GRACE_PERIOD ended")
+				self.fire_event(MrBeamEvents.BOOT_GRACE_PERIOD_END)
 		except:
 			self._logger.exception("Exception in _callback_boot_grace_period_thread()")
 
