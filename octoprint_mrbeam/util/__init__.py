@@ -108,10 +108,13 @@ def debug_logger(function=None):
 	logger.setLevel(logging.DEBUG)
 	return logger
 
-# Threaded function snippet returning a callback when the function has finished
-# see https://gist.github.com/awesomebytes/0483e65e0884f05fb95e314c4f2b3db8
-# See https://stackoverflow.com/questions/14234547/threads-with-decorators
 def get_thread(callback=None, logname=None, daemon=False):
+	"""
+	returns a function that threads an other function and running a callback if provided.
+	Returns the started thread object.
+	see https://gist.github.com/awesomebytes/0483e65e0884f05fb95e314c4f2b3db8
+	See https://stackoverflow.com/questions/14234547/threads-with-decorators
+	"""
 	def wrapper(f):
 		# if logname:
 		# 	logger = logging.getLogger(logname)
