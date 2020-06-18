@@ -78,6 +78,7 @@ class LidHandler(object):
 		if PICAMERA_AVAILABLE:
 			self.imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
 			makedirs(self.imagePath, parent=True)
+			makedirs(self.debugFolder)
 			self._photo_creator = PhotoCreator(self._plugin,
 			                                   self._plugin_manager,
 			                                   self.imagePath,
