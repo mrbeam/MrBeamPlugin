@@ -4,6 +4,7 @@ from octoprint.events import Events as OctoPrintEvents
 
 class MrBeamEvents(object):
 	MRB_PLUGIN_INITIALIZED	   = 'MrbPluginInitialized'
+	BOOT_GRACE_PERIOD_END	   = 'BootGracePeriodEnd'
 
 	PRINT_PROGRESS             = "PrintProgress"
 	SLICING_PROGRESS           = "SlicingProgress"
