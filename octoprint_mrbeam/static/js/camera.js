@@ -63,7 +63,7 @@ $(function(){
         self.markerMissedClass = ko.computed(function() {
             var ret = '';
             MARKERS.forEach(function(m){
-                if (!(self.markersFound()[m] === undefined) && !self.markersFound()[m])
+                if ((self.markersFound()[m] !== undefined) && !self.markersFound()[m])
                     ret = ret + ' marker' + m;
             });
             return ret;

@@ -65,7 +65,8 @@ $(function () {
 							['lens_corrected', self.camera.undistortedUrl],
 							['raw', self.camera.rawUrl]]) {
 				if (self.availablePic()[_t[0]])
-					ret[_t[0]] = self.camera.getTimestampedImageUrl(_t[1]);
+					ret[_t[0]] = (_t[0] === 'cropped')? self.camera.timestampedCroppedImgUrl()
+					                                  : self.camera.getTimestampedImageUrl(_t[1]);
 			}
 			self._availablePicUrl(ret)
 			var selectedTab = $('#camera-calibration-tabs .active a').attr('id')
@@ -101,7 +102,7 @@ $(function () {
 					return self.availablePicUrl()[_t[0]]
 			}
 			for (let _t of settings)
-				if ((type === undefined || _t[0] === type) && (self.availablePic()[_t[0]] || _t[0] === 'default'))
+				if ((type === undefined || _t[0] === type) && (_t[0] === 'default' || self.availablePic()[_t[0]]))
 					return applySetting(_t)
 			return applySetting('default')
 		};
@@ -382,11 +383,6 @@ $(function () {
 		self.onDataUpdaterPluginMessage = function (plugin, data) {
 			if (plugin !== "mrbeam" || !data)
 				return;
-			if (!self.calibrationScreenShown()) return;
-			if('mrb_state' in data){
-				self.interlocks_closed(data['mrb_state']['interlocks_closed']);
-				self.lid_fully_open(data['mrb_state']['lid_fully_open']);
-			}
 
 			if ('beam_cam_new_image' in data) {
 				// update image
@@ -396,6 +392,7 @@ $(function () {
 					if (_d['available']) {
 						self.availablePic(_d['available'])
 					}
+					if (!self.calibrationScreenShown()) return;
 
 					if (self.isInitialCalibration() && (selectedTab === "cornercal_tab_btn" || self.waitingForRefresh())) {
 						self.dbNWImgUrl('/downloads/files/local/cam/debug/NW.jpg' + '?ts=' + new Date().getTime());
@@ -419,6 +416,11 @@ $(function () {
 					}
 					self.waitingForRefresh(false)
 				}
+			}
+			if (!self.calibrationScreenShown()) return;
+			if('mrb_state' in data){
+				self.interlocks_closed(data['mrb_state']['interlocks_closed']);
+				self.lid_fully_open(data['mrb_state']['lid_fully_open']);
 			}
 
 			if ('chessboardCalibrationState' in data) {
@@ -773,7 +775,7 @@ $(function () {
 				hide: true
 			});
 			if(self.isInitialCalibration()) self.resetView();
-			else self.reset_cornerCalibration();
+			else self.reset_corner_calibration();
 		};
 
 		self.abortCalibration = function () {
@@ -800,7 +802,9 @@ $(function () {
 		};
 
 		self.continue_to_calibration = function () {
-			self.loadUndistortedPicture(self.next);
+			// self.loadUndistortedPicture(self.next);
+			// simply show the calibration screen, showing the latest cropped img
+			self.next()
 			self.calibrationScreenShown(true)
 		};
 

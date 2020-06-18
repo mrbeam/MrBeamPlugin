@@ -178,14 +178,14 @@ class LidHandler(object):
 			if event in (IoBeamEvents.LID_CLOSED, OctoPrintEvents.SLICING_STARTED, OctoPrintEvents.CLIENT_CLOSED):
 				self._logger.info('Camera stopping' + status)
 				self._end_photo_worker()
+			elif event == "initial_calibration":
+				# See self._photo_creator.is_initial_calibration if it used from /plugin/mrbeam/calibration
+				self._logger.info('Camera starting: initial_calibration. event: {}'.format(event))
+				self._start_photo_worker()
 			else:
 				# TODO get the states from _printer or the global state, instead of having local state as well!
 				if self._client_opened and not self._is_slicing and not self._interlock_closed and not self._printer.is_locked():
 					self._logger.info('Camera starting' + status)
-					self._start_photo_worker()
-				elif self._photo_creator.is_initial_calibration:
-					# camera is in first init mode
-					self._logger.info('Camera starting: initial_calibration. event: {}'.format(event))
 					self._start_photo_worker()
 				else:
 					self._logger.debug('Camera not supposed to start now.' + status)

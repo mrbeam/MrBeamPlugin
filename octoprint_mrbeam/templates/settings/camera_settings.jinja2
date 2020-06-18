@@ -48,7 +48,7 @@
 	</div>
 
 
-	<div id="calibration_step_2" class="calibration_step active scrollable" data-bind="visible: !isInitialCalibration()">
+	<div id="calibration_step_2" class="calibration_step scrollable" data-bind="visible: !isInitialCalibration()">
         <h3>{{ _('Camera Calibration') }}</h3>
 		<div class='calibration_manual img' style='background-image:url(/plugin/mrbeam/static/img/cam_calibration/calpic_material_size.svg)'></div>
 		<div class='calibration_manual text'>{{_('Please put a material like cardboard inside your Mr Beam that it covers the whole working area.')}}</div>
@@ -76,7 +76,7 @@
 
 	<div id="calibration_step_4" class="calibration_step">
 		<div class="calibration_manual" data-bind="css:{ text: !cornerCalibrationActive() }">
-			{% include 'settings/camera_settings_markers.jinja2' %}
+			{% include 'settings/camera_corner_calibration.jinja2' %}
 		</div>
 	</div>
 </div>
