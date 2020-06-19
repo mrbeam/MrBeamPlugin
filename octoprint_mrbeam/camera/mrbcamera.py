@@ -45,8 +45,8 @@ class LoopThread(threading.Thread):
 		self.ret = None
 		self.t = target
 		self._logger.debug("Loopthread initialised")
-		self.__args = args or ()
-		self.__kw = kwargs or {}
+		self.__args = args if args is not None else ()
+		self.__kw = kwargs if kwargs is not None else {}
 
 	# def run(self):
 	# 	try:
@@ -104,7 +104,7 @@ class MrbCamera(PiCamera, Camera):
 		self.worker = worker
 		self.captureLoop = LoopThread(
 			target=self.capture,
-			stopFlag=stopEvent,
+			stopFlag=self.stopEvent,
 			args=(self.worker,),
 			kwargs={'format': 'jpeg'},)
 		# TODO load the default settings

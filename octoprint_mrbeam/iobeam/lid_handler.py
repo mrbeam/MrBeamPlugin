@@ -467,7 +467,8 @@ class PhotoCreator(object):
 
 		self._logger.debug("Starting the camera now.")
 		try:
-			with MrbCamera(camera.MrbPicWorker(maxSize=2, debug=self.debug),
+			camera_worker = camera.MrbPicWorker(maxSize=2, debug=self.debug)
+			with MrbCamera(camera_worker,
                            # framerate=8,
                            resolution=camera.LEGACY_STILL_RES,  # TODO camera.DEFAULT_STILL_RES,
                            stopEvent=self.stopEvent,) as cam:
@@ -522,6 +523,8 @@ class PhotoCreator(object):
 		:rtype: NoneType
 		"""
 
+		cam.start_preview()
+		cam.wait_recording(1.5) # like sleep but looks out for io errors
 		session_details = blank_session_details()
 		self._front_ready.set()
 		try:
