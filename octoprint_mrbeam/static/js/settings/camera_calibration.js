@@ -85,27 +85,48 @@ $(function () {
 		self.lensCalibrationActive = ko.observable(false);
 		self.currentResults = ko.observable({});
 
-		self.getImgUrl = function(type) {
+		self.applySetting = function(picType) {
+			// TODO with a dictionnary
 			var settings = [['cropped', CROPPED_IMG_RES, 'hidden', 'visible'],
 							['lens_corrected', DEFAULT_IMG_RES, 'visible', 'hidden'],
 							['raw', DEFAULT_IMG_RES, 'hidden', 'hidden'],
 							['default', [512, 384], 'hidden', 'hidden']]
-			var applySetting = function(setting) {
-				_t = setting
-				self.calImgWidth(_t[1][0])
-				self.calImgHeight(_t[1][1])
-				self.correctedMarkersVisibility(_t[2])
-				self.croppedMarkersVisibility(_t[3])
-				if (_t[0] == 'default')
-					return self.staticURL
-				else
-					return self.availablePicUrl()[_t[0]]
-			}
 			for (let _t of settings)
-				if ((type === undefined || _t[0] === type) && (_t[0] === 'default' || self.availablePic()[_t[0]]))
-					return applySetting(_t)
-			return applySetting('default')
+				if (_t[0] === picType) {
+					self.calImgWidth(_t[1][0])
+					self.calImgHeight(_t[1][1])
+					self.correctedMarkersVisibility(_t[2])
+					self.croppedMarkersVisibility(_t[3])
+					return
+				}
+			new PNotify({
+				title: gettext("Error"),
+				text: "Something went wrong (applySettings)",
+				type: 'error',
+				hide: true
+			});
+		}
+
+		self.getImgUrl = function(type) {
+			if (type !== undefined) {
+					self.applySetting(type)
+					if (type == 'default')
+						return self.staticURL
+					else
+						return self.availablePicUrl()[type]
+			}
+			for (let _t of ['cropped', 'lens_corrected', 'raw', 'default'])
+				if (_t === 'default' || self.availablePic()[_t]){
+					self.applySetting(_t)
+					if (_t == 'default')
+						return self.staticURL
+					else
+						return self.availablePicUrl()[_t]
+				}
+			self.applySetting('default')
+			return self.staticURL // precaution
 		};
+
 		self.calImgUrl = ko.computed(function() {
 			return self.getImgUrl()
 		});
@@ -244,6 +265,7 @@ $(function () {
 			// self.currentResults({});
 			self.cornerCalibrationActive(true);
 			self.picType("lens_corrected");
+			// self.applySetting('lens_corrected')
 			self._cornerCalImgUrl(self.getImgUrl('lens_corrected'))
 			self.markersFoundPositionCopy = self.markersFoundPosition()
 			self.nextMarker();
@@ -251,7 +273,7 @@ $(function () {
 
 		self.stopCornerCalibration = function () {
 			self.cornerCalibrationActive(false);
-			self.cornerCalImgUrl(self.getImgUrl())
+			self.cornerCalImgUrl() // trigger refresh
 		}
 
 		self.startLensCalibration = function () {
