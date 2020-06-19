@@ -113,6 +113,7 @@ class LidHandler(object):
 		self._event_bus.subscribe(OctoPrintEvents.SLICING_FAILED,self._onSlicingEvent)
 		self._event_bus.subscribe(OctoPrintEvents.SLICING_CANCELLED, self._onSlicingEvent)
 		self._event_bus.subscribe(OctoPrintEvents.PRINTER_STATE_CHANGED,self._printerStateChanged)
+		self._event_bus.subscribe(OctoPrintEvents.LENS_CALIB_START,self._startStopCamera)
 
 	def onEvent(self, event, payload):
 		self._logger.debug("onEvent() event: %s, payload: %s", event, payload)
@@ -179,13 +180,14 @@ class LidHandler(object):
 			if event in (IoBeamEvents.LID_CLOSED, OctoPrintEvents.SLICING_STARTED, OctoPrintEvents.CLIENT_CLOSED):
 				self._logger.info('Camera stopping' + status)
 				self._end_photo_worker()
-			elif event == "initial_calibration":
+			elif event in ["initial_calibration", MrBeamEvents.LENS_CALIB_START]:
 				# See self._photo_creator.is_initial_calibration if it used from /plugin/mrbeam/calibration
 				self._logger.info('Camera starting: initial_calibration. event: {}'.format(event))
 				self._start_photo_worker()
 			else:
 				# TODO get the states from _printer or the global state, instead of having local state as well!
-				if self._client_opened and not self._is_slicing and not self._interlock_closed and not self._printer.is_locked():
+				if self._plugin.calibration_tool_mode or \
+				   (self._client_opened and not self._is_slicing and not self._interlock_closed and not self._printer.is_locked()):
 					self._logger.info('Camera starting' + status)
 					self._start_photo_worker()
 				else:
