@@ -74,6 +74,7 @@ class LidHandler(object):
 		self.force_taking_picture.clear()
 		self.board_calibration_number_pics_taken_in_session = 0
 		self.saveRawImgThread = None
+		self.first_calibration = False
 
 		if PICAMERA_AVAILABLE:
 			self.imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
@@ -181,11 +182,13 @@ class LidHandler(object):
 				self._end_photo_worker()
 			elif event == "initial_calibration":
 				# See self._photo_creator.is_initial_calibration if it used from /plugin/mrbeam/calibration
+				self.first_calibration = True
 				self._logger.info('Camera starting: initial_calibration. event: {}'.format(event))
 				self._start_photo_worker()
 			else:
 				# TODO get the states from _printer or the global state, instead of having local state as well!
-				if self._client_opened and not self._is_slicing and not self._interlock_closed and not self._printer.is_locked():
+				if self._client_opened and (self.first_calibration or \
+				   not (self._is_slicing or self._interlock_closed or self._printer.is_locked())):
 					self._logger.info('Camera starting' + status)
 					self._start_photo_worker()
 				else:
