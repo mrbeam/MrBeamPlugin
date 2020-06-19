@@ -1,3 +1,20 @@
+/* start of fonts */
+@font-face {
+    font-family: 'RobotoFont';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('../fonts/Roboto/Regular/RobotoRegular.woff2') format('woff2')
+}
+@font-face {
+    font-family: 'RobotoFont';
+    font-style: normal;
+    font-weight: 900;
+    font-display: swap;
+    src: url('../fonts/Roboto/Black/RobotoBlack.woff2') format('woff2')
+}
+/* end of fonts */
+
 a {
     color: #e25303;
 }
@@ -2957,7 +2974,7 @@ textarea,
 .navbar-search .search-query,
 div.hopscotch-bubble .hopscotch-content,
 div.hopscotch-bubble h3 {
-    font-family: Roboto;
+    font-family: 'RobotoFont', sans-serif;
 }
 
 /*App font family*/
