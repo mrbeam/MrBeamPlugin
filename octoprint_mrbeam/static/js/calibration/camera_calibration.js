@@ -25,7 +25,7 @@ $(function () {
 		self.calibrationScreenShown = ko.observable(false);
 		self.waitingForRefresh = ko.observable(true)
 
-		self.staticURL = "/plugin/mrbeam/static/img/cam_calibration/calpic_wait.svg"; // todo iratxe: constant?
+		self.staticURL = "/plugin/mrbeam/static/img/calibration/calpic_wait.svg"; // todo iratxe: constant?
 
 		self.dbNWImgUrl = ko.observable("");
 		self.dbNEImgUrl = ko.observable("");

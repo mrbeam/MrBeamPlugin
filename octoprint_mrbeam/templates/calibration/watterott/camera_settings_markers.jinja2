@@ -9,7 +9,7 @@
 
 		<!-- Calibration Selector -->
     <h4><span style="font-weight: 200; padding-left: 12px;">Mr Beam</span> <span style="font-weight: 400;">Calibration Tool</span></h4>
-		<ul id="camera-calibration-tabs" class="nav nav-tabs"> 
+		<ul id="camera-calibration-tabs" class="nav nav-tabs">
 			<li class="active"><a href="#tab_camera_alignment" data-toggle="tab" id="camalignment_tab_btn" >{{ _('Camera Alignment') }}</a></li>
 			<li><a href="#tab_lens_calibration" data-toggle="tab" id="lenscal_tab_btn" data-bind="click: startLensCalibration">{{ _('Lens Calibration') }}
 					<i class="icon icon-ok" data-bind="visible: lensCalibrationComplete()"></i>
@@ -22,10 +22,10 @@
 			<li><a href="#tab_calibration_qa" data-toggle="tab" id="qacal_tab_btn">{{ _('Quality Check') }}</a></li>
 			<li><a href="#tab_done_print_labels" data-toggle="tab" id="done_tab_btn">{{ _('Labels') }}</a></li>
 		</ul>
-	
+
 		<div class="tabbable">
 			<div class="tab-content camera_calibration_tabs">
-				
+
 				<div class="tab-pane active" id="tab_camera_alignment">
 					<h3>{{ _('Camera alignment') }}</h3>
 					<div class="qa_images">
@@ -40,9 +40,9 @@
 						</div>
 						<div class="qa_text">
 							<ul>
-								<li class="example good_example"><img src="/plugin/mrbeam/static/img/cam_calibration/camalignment_ok.jpg" /></li>
-								<li class="example bad_example"><img src="/plugin/mrbeam/static/img/cam_calibration/camalignment_marker_cropped.jpg" /></li>
-								<li class="example bad_example"><img src="/plugin/mrbeam/static/img/cam_calibration/camalignment_bottom_cropped.jpg" /></li>
+								<li class="example good_example"><img src="/plugin/mrbeam/static/img/calibration/camalignment_ok.jpg" /></li>
+								<li class="example bad_example"><img src="/plugin/mrbeam/static/img/calibration/camalignment_marker_cropped.jpg" /></li>
+								<li class="example bad_example"><img src="/plugin/mrbeam/static/img/calibration/camalignment_bottom_cropped.jpg" /></li>
 							</ul>
 						</div>
 					</div>
@@ -73,11 +73,7 @@
 						</a>
 					</div>
 				</div>
-				
-				
-				
 				<div class="tab-pane" id="tab_lens_calibration">
-					
 					<div class="marker_selection_desc calibration_help" data-bind="visible:!lensCalibrationActive()">
 {#					   <div>#}
 {#						   {{_('Have a calibration board ready:') }}<br/>#}
@@ -91,11 +87,11 @@
 						   <button class="btn btn-default" data-bind="click: startLensCalibration">
 							   {{ _('Start Lens Calibration') }}</button>
 					   </div>
-				   </div>	
-					
+				   </div>
+
 					<!-- Lens calibration -->
 					<div id="lensCalibrationPhases" data-bind="visible: lensCalibrationActive()">
-						
+
 						<div id="lensCalibrationPictureTaking">
 							<div style='position:relative;'>
 								<svg id="heatmap_container" version="1.1" enable-background="new 0 0 211 141"
@@ -131,20 +127,20 @@
 
 
 
-								<button id="lens_calibration_toggle_qa_btn" class="btn pull-right" 
+								<button id="lens_calibration_toggle_qa_btn" class="btn pull-right"
 										data-bind="click: lensCalibrationToggleQA,
 												   css: {'btn-success': lensCalibrationNpzFileTs, 'btn-default': !lensCalibrationNpzFileTs()},
 												   visible: rawPicSelection().length >= 9,
 												   enable: lensCalibrationNpzFileTs() && hasMinBoardsFound()">
-									<span style="font-size:1.5rem;">{{ _('Check result') }}</span> 
+									<span style="font-size:1.5rem;">{{ _('Check result') }}</span>
 									<i class="icon icon-2x icon-fixed-width icon-arrow-right" data-bind="visible: lensCalibrationNpzFileTs"></i>
 								</button>
 							</div>
 
 							<ul id="lens_correction_image_list" data-bind="visible: lensCalibrationActive(), foreach: { data: rawPicSelection, as: 'pic' }">
-								<li class="lens_correction_image_thumb" 
+								<li class="lens_correction_image_thumb"
 									data-bind="	style: { backgroundImage: pic.state !== 'camera_processing' ? 'url('+pic.url+'?'+pic.state+')' : '' },
-												event:{ mouseover: $root.heatmap_highlight, mouseout: $root.heatmap_dehighlight }" 
+												event:{ mouseover: $root.heatmap_highlight, mouseout: $root.heatmap_dehighlight }"
 									onclick="this.classList.remove('zoom')"> <!-- toggle class messes with rm btn -->
 									<div class="btn-group">
 										<button class="btn btn-default" onclick="this.parentElement.parentElement.classList.add('zoom'); event.stopPropagation();">
@@ -171,7 +167,7 @@
 								</li>
 							</ul>
 						</div>
-							
+
 						<div id="lensCalibrationQA">
 							<div data-bind="visible: lensCalibrationNpzFileTs" class="qa_images">
 								<div class="qa_img_wrapper">
@@ -179,12 +175,12 @@
 									<div id="qa_undistorted_guides"></div>
 								</div>
 								<ul>
-									<li class="example good_example"><img src="/plugin/mrbeam/static/img/cam_calibration/undistorted_ok.jpg" /></li>
-									<li class="example bad_example"><img src="/plugin/mrbeam/static/img/cam_calibration/undistorted_bad1.jpg" /></li>
+									<li class="example good_example"><img src="/plugin/mrbeam/static/img/calibration/undistorted_ok.jpg" /></li>
+									<li class="example bad_example"><img src="/plugin/mrbeam/static/img/calibration/undistorted_bad1.jpg" /></li>
 								</ul>
 							</div>
 							<div data-bind="text: lensCalibrationNpzFileVerboseDate"></div>
-							
+
 							<div class="qa_list_and_next">
 							    <h4>{{ _('Checklist') }}</h4>
 								<ul>
@@ -208,11 +204,11 @@
 							</div>
 						</div>
 					</div>
-					
+
 				</div>
 
-	<!--====================================================================================================================-->			
-				
+	<!--====================================================================================================================-->
+
 				<div class="tab-pane" id="tab_corner_calibration">
 
 					<!-- Corner calibration -->
@@ -268,9 +264,9 @@
 							<a class="muted" data-bind="attr: { href: calImgUrl() }"> {{ _('Download this image') }}</a>
 						</div>
 					</div>
-					
+
 					<div data-bind="visible: !cornerCalibrationActive()" width="100%">
-						
+
 {#						<div class="marker_selection_desc calibration_help"#}
 {#							 data-bind="visible: cal_img_ready() && availablePic()['lens_corrected']">#}
 {##}
@@ -394,11 +390,11 @@
 								 </div>
 								 </div> -->
 						</div>
-						
+
 					</div>
-					
+
 				</div>
-	
+
 				<div class="tab-pane" id="tab_calibration_qa">
 					<div class="qa_images">
 						<div>
@@ -428,10 +424,10 @@
 							</div>
 						</div>
 						<ul>
-							<li class="example bad_example"><img src="/plugin/mrbeam/static/img/cam_calibration/qa_final_rectangle_bad1.jpg" /></li>
-							<li class="example bad_example"><img src="/plugin/mrbeam/static/img/cam_calibration/qa_final_rectangle_bad2.jpg" /></li>
-							<li class="example bad_example"><img src="/plugin/mrbeam/static/img/cam_calibration/qa_final_rectangle_bad3.jpg" /></li>
-							<li class="example good_example"><img src="/plugin/mrbeam/static/img/cam_calibration/qa_final_rectangle_good.jpg" /></li>
+							<li class="example bad_example"><img src="/plugin/mrbeam/static/img/calibration/qa_final_rectangle_bad1.jpg" /></li>
+							<li class="example bad_example"><img src="/plugin/mrbeam/static/img/calibration/qa_final_rectangle_bad2.jpg" /></li>
+							<li class="example bad_example"><img src="/plugin/mrbeam/static/img/calibration/qa_final_rectangle_bad3.jpg" /></li>
+							<li class="example good_example"><img src="/plugin/mrbeam/static/img/calibration/qa_final_rectangle_good.jpg" /></li>
 						</ul>
 					</div>
 					<div class="qa_list_and_next">

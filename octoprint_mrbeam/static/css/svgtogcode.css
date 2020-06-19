@@ -885,13 +885,13 @@ svg#area_preview.overModalBG { z-index: 1051; }
 
 .lens_correction_image_thumb {
 	list-style-type: none;
-	background: top center no-repeat; 
+	background: top center no-repeat;
 	background-size: contain;
 	background-color: #ddd;
 	padding-top: 70%;
 	margin: .5em;
 	position: relative;
-	
+
 }
 .lens_correction_image_thumb.zoom {
 	position: fixed;
@@ -919,9 +919,9 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	line-height: 12px;
 }
 
-#lensCalibrationPhases.qa_active #lensCalibrationPictureTaking, 
+#lensCalibrationPhases.qa_active #lensCalibrationPictureTaking,
 #lensCalibrationPhases #lensCalibrationQA { display:none; }
-#lensCalibrationPhases.qa_active #lensCalibrationQA, 
+#lensCalibrationPhases.qa_active #lensCalibrationQA,
 #lensCalibrationPhases #lensCalibrationPictureTaking { display:block; }
 
 #lens_calibration_take_pic {
@@ -1045,7 +1045,7 @@ svg#area_preview.overModalBG { z-index: 1051; }
 
 .qa_images li.example {
 	position: relative;
-	list-style:none; 
+	list-style:none;
 	margin-bottom: 4px;
 	max-width: 200px;
 }
@@ -1108,6 +1108,6 @@ svg#area_preview.overModalBG { z-index: 1051; }
 #qa_cameraalignment_image {
     width: 100%;
     height: 360px;
-    background: url(/plugin/mrbeam/static/img/cam_calibration/calpic_wait.svg) center no-repeat;
+    background: url(/plugin/mrbeam/static/img/calibration/calpic_wait.svg) center no-repeat;
     background-size: cover;
 }
