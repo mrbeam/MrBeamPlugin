@@ -267,16 +267,14 @@ class LidHandler(object):
 		self.boardDetectorDaemon.state.onChange()
 
 	def saveRawImg(self):
-		imgName = self.boardDetectorDaemon.next_tmp_img_name()
 		# TODO debug/raw.jpg -> copy image over
 		# TODO careful when deleting pic + setting new name -> hash
 		if self._photo_creator and \
 			self._photo_creator.active and \
 			not self._photo_creator.stopping:
-			self._logger.warning("Saving new picture %s" % imgName)
 			# take a new picture and save to the specific path
-			self._photo_creator.saveRaw = imgName
 			if len(self.boardDetectorDaemon) - 1 == MIN_BOARDS_DETECTED:
+				self._logger.info("Last picture to be taken")
 				self._event_bus.fire(MrBeamEvents.RAW_IMG_TAKING_LAST)
 			elif len(self.boardDetectorDaemon) >= MIN_BOARDS_DETECTED:
 				# TODO Only fail for Waterott
@@ -285,6 +283,9 @@ class LidHandler(object):
 				return
 			else:
 				self._event_bus.fire(MrBeamEvents.RAW_IMAGE_TAKING_START)
+			imgName = self.boardDetectorDaemon.next_tmp_img_name()
+			self._photo_creator.saveRaw = imgName
+			self._logger.warning("Saving new picture %s" % imgName)
 			self.takeNewPic()
 			imgPath = path.join(self.debugFolder, imgName)
 			# Tell the boardDetector to listen for this file
