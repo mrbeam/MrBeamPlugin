@@ -122,7 +122,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		self.print_progress_last = -1
 		self.slicing_progress_last = -1
 		self._logger = mrb_logger("octoprint.plugins.mrbeam")
-		
+
 		self._device_info = deviceInfo(use_dummy_values=IS_X86)
 		self._hostname = None # see self.getHosetname()
 		self._serial_num = None
@@ -479,7 +479,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 				"js/lasersaftey_viewmodel.js",
 				"js/ready_to_laser_viewmodel.js",
 				"js/lib/screenfull.min.js",
-				"js/settings/camera_calibration.js",
+				"js/calibration/camera_calibration.js",
 				# "js/settings/backlash_settings.js",
 				"js/settings/leds.js",
 				"js/path_magic.js",
@@ -948,7 +948,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 gcodeMobileThreshold=0,  # legacy
 							 )
 
-		r = make_response(render_template("initial_calibration.jinja2", **render_kwargs))
+		r = make_response(render_template("calibration/initial_calibration.jinja2", **render_kwargs))
 
 		r = add_non_caching_response_headers(r)
 		return r
@@ -967,7 +967,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 	def onCameraPictureTransfer(self):
 		self.lid_handler.on_front_end_pic_received()
 		return NO_CONTENT
-	
+
 	@octoprint.plugin.BlueprintPlugin.route("/calibration_save_raw_pic", methods=["GET"])
 	def onCalibrationSaveRawPic(self):
 		self.lid_handler.saveRawImg()
@@ -1029,7 +1029,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		self.camera_calibration_markers(json_data)
 		return NO_CONTENT
-	
+
 	@octoprint.plugin.BlueprintPlugin.route("/print_label", methods=["POST"])
 	def printLabel(self):
 		valid_commands = {
@@ -1038,10 +1038,10 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		command, data, response = get_json_command_from_request(request, valid_commands)
 		if response is not None:
 			return response
-		
+
 		labelType = data.get('labelType', None)
 		blink = data.get('blink', None)
-		
+
 		lp = labelPrinter(use_dummy_values=IS_X86)
 		ok, out = None, None
 		if labelType == 'deviceLabel':
@@ -1057,20 +1057,20 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			ok = False
 			out = "Unknown label: {}".format(labelType)
 			self._logger.debug("printLabel() unknown labelType: %s ", labelType)
-			
+
 		if ok and blink:
 			self.fire_event(MrBeamEvents.BLINK_PRINT_LABELS)
 		elif blink is False:
 			self.fire_event(MrBeamEvents.LENS_CALIB_DONE)
-			
-		
+
+
 		res = dict(
 			labelType=labelType,
 			success=ok,
 			error=out,
 		)
 		return make_response(jsonify(res), 200 if ok else 502)
-		
+
 
 	@octoprint.plugin.BlueprintPlugin.route("/engrave_calibration_markers/<string:intensity>/<string:feedrate>", methods=["GET"])
 	# @firstrun_only_access #@maintenance_stick_only_access
@@ -2096,7 +2096,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		if self._model_id is None:
 			self._model_id = self._device_info.get_model()
 		return self._model_id
-	
+
 	def get_production_date(self):
 		"""
 		Gives you the device's production date as string

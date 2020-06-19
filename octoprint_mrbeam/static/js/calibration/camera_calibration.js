@@ -6,47 +6,36 @@
  */
 /* global OctoPrint, OCTOPRINT_VIEWMODELS, INITIAL_CALIBRATION */
 
-MARKERS = ['NW', 'NE', 'SE', 'SW'];
-MIN_BOARDS_FOR_CALIBRATION = 9;
-MAX_BOARD_SCORE = 5;
-DEFAULT_IMG_RES = [2048, 1536]
-CROPPED_IMG_RES = [500,390]
+const MARKERS = ['NW', 'NE', 'SE', 'SW'];
+const MIN_BOARDS_FOR_CALIBRATION = 9;
+const MAX_BOARD_SCORE = 5;
+const DEFAULT_IMG_RES = [2048, 1536]
+const CROPPED_IMG_RES = [500,390]
 
 $(function () {
 	function CameraCalibrationViewModel(parameters) {
 		var self = this;
 		window.mrbeam.viewModels['cameraCalibrationViewModel'] = self;
-		self.settings = parameters[0];
-		self.workingArea = parameters[1];
-		self.conversion = parameters[2];
-		self.analytics = parameters[3];
-		self.loginState = parameters[4];
+		self.workingArea = parameters[0];
+		self.conversion = parameters[1];
+		self.analytics = parameters[2];
 		self.camera = self.workingArea.camera;
 
 		self.startupComplete = ko.observable(false);
 		self.calibrationScreenShown = ko.observable(false);
 		self.waitingForRefresh = ko.observable(true)
 
-		self.staticURL = "/plugin/mrbeam/static/img/cam_calibration/calpic_wait.svg";
+		self.staticURL = "/plugin/mrbeam/static/img/cam_calibration/calpic_wait.svg"; // todo iratxe: constant?
 
 		self.dbNWImgUrl = ko.observable("");
 		self.dbNEImgUrl = ko.observable("");
 		self.dbSWImgUrl = ko.observable("");
 		self.dbSEImgUrl = ko.observable("");
-		self.interlocks_closed = ko.observable(false);
-		self.lid_fully_open = ko.observable(false);
+		self.interlocks_closed = ko.observable(false);  // todo iratxe: do we need this?
 
 		self.focusX = ko.observable(0);
 		self.focusY = ko.observable(0);
-		self.qa_pic_raw = ko.computed(function(){
-			return self.camera.getTimestampedImageUrl(self.camera.rawUrl);
-		});
-		self.qa_pic_undistorted = ko.computed(function(){
-			return self.camera.getTimestampedImageUrl(self.camera.undistortedUrl);
-		});
-		self.qa_pic_cropped = ko.computed(function(){
-			return self.camera.getTimestampedImageUrl(self.camera.croppedUrl);
-		});
+
 		self.qa_cameraalignment_image_loaded = ko.observable(false);
 		$('#qa_cameraalignment_image').load(function(){
 		    self.qa_cameraalignment_image_loaded(true)
@@ -58,6 +47,7 @@ $(function () {
 		self.calImgHeight = ko.observable(DEFAULT_IMG_RES[1]);
 		self.availablePic = ko.observable({'raw': false, 'lens_corrected': false, 'cropped': false, })
 		self._availablePicUrl = ko.observable({'default': self.staticURL, 'raw': null, 'lens_corrected': null, 'cropped': null, })
+
 		self.availablePicUrl = ko.computed(function() {
 			var ret = self._availablePicUrl();
 			var before = _.clone(ret); // shallow copy
@@ -91,12 +81,12 @@ $(function () {
 							['raw', DEFAULT_IMG_RES, 'hidden', 'hidden'],
 							['default', [512, 384], 'hidden', 'hidden']]
 			var applySetting = function(setting) {
-				_t = setting
+				let _t = setting
 				self.calImgWidth(_t[1][0])
 				self.calImgHeight(_t[1][1])
 				self.correctedMarkersVisibility(_t[2])
 				self.croppedMarkersVisibility(_t[3])
-				if (_t[0] == 'default')
+				if (_t[0] === 'default')
 					return self.staticURL
 				else
 					return self.availablePicUrl()[_t[0]]
@@ -141,7 +131,6 @@ $(function () {
 				return 'No .npz file available';
 			}
 		});
-		self.lensCalibrationRunning = ko.observable(false);
 		self.lensCalibrationComplete = ko.computed(function(){
 			return ('lensCalibration' in self.calibrationState()) ? self.calibrationState().lensCalibration === "success" : false;
 		});
@@ -152,23 +141,7 @@ $(function () {
 		self.hasMinBoardsFound = ko.computed(function() {
 			return self.boardsFound() >= MIN_BOARDS_FOR_CALIBRATION
 		})
-		
-		self.boardsFoundString = ko.computed(function(){
-			return `${self.boardsFound()}/${MIN_BOARDS_FOR_CALIBRATION}`;
-		});
-	
-		self.lensCalibrationCoverageQuality = ko.observable(0);
-		self.lensCalibrationCoverageQualityStr = ko.computed(function(){
-			const totalScore = self.lensCalibrationCoverageQuality();
-			const maxScore = Math.max(MIN_BOARDS_FOR_CALIBRATION, self.boardsFound()) * MAX_BOARD_SCORE;
-			const percent = (totalScore / maxScore * 100);
-			const text = `Quality: ${percent.toFixed(0)}% (min 90%)`;
-			
-			// data-bind is complicated with inline svg -> direct manipulation.
-			// TODO Use an other measure of coverage quality
-			// document.getElementById('lensCalibrationCoverageText').innerHTML = text;
-			return text;
-		});
+
 		self.markersFoundPosition = ko.observable({});
 		self.markersFoundPositionCopy = null;
 
@@ -264,7 +237,7 @@ $(function () {
 								  "GET");
 			self.lensCalibrationActive(true);
 		};
-		
+
 		self.lensCalibrationToggleQA = function (){
 			$('#lensCalibrationPhases').toggleClass('qa_active');
 		};
@@ -309,6 +282,7 @@ $(function () {
 
 			if (self.currentMarker === 0) {
 				// TODO do some zooming instead?
+                // TODO IRATXE can I just remove this?
 				// self.picType("");
 				// self.calImgUrl(self.staticURL);
 				// $('#calibration_box').removeClass('up').removeClass('down');
@@ -348,9 +322,10 @@ $(function () {
 				});
 				if (typeof callback === 'function')
 					callback(data);
-				else
-					self.waitingForRefresh(true)
-					console.log("Calibration picture requested.");
+				else {
+                    self.waitingForRefresh(true)
+                    console.log("Calibration picture requested.");
+                }
 			};
 			var error_callback = function (resp) {
 				new PNotify({
@@ -384,6 +359,10 @@ $(function () {
 			if (plugin !== "mrbeam" || !data)
 				return;
 
+			if (!self.calibrationScreenShown()) {
+			    return;
+            }
+
 			if ('beam_cam_new_image' in data) {
 				// update image
 				var selectedTab = $('#camera-calibration-tabs .active a').attr('id')
@@ -392,7 +371,6 @@ $(function () {
 					if (_d['available']) {
 						self.availablePic(_d['available'])
 					}
-					if (!self.calibrationScreenShown()) return;
 
 					if (self.isInitialCalibration() && (selectedTab === "cornercal_tab_btn" || self.waitingForRefresh())) {
 						self.dbNWImgUrl('/downloads/files/local/cam/debug/NW.jpg' + '?ts=' + new Date().getTime());
@@ -417,21 +395,20 @@ $(function () {
 					self.waitingForRefresh(false)
 				}
 			}
-			if (!self.calibrationScreenShown()) return;
+			// TODO IRATXE do we need this?
 			if('mrb_state' in data){
 				self.interlocks_closed(data['mrb_state']['interlocks_closed']);
-				self.lid_fully_open(data['mrb_state']['lid_fully_open']);
 			}
 
 			if ('chessboardCalibrationState' in data) {
 				var _d = data['chessboardCalibrationState']
-								
+
 				self.calibrationState(_d);
 				var arr = []
 				// { '/home/pi/.octoprint/uploads/cam/debug/tmp_raw_img_4.jpg': {
-				//      state: "processing", 
-				//      tm_proc: 1590151819.735044, 
-				//      tm_added: 1590151819.674166, 
+				//      state: "processing",
+				//      tm_proc: 1590151819.735044,
+				//      tm_added: 1590151819.674166,
 				//      board_bbox: [[767.5795288085938, 128.93748474121094],
 				//                   [1302.0089111328125, 578.4738159179688]], // [xmin, ymin], [xmax, ymax]
 				//      board_center: [1039.291259765625, 355.92547607421875], // cx, cy
@@ -460,17 +437,16 @@ $(function () {
 					}
 				}
 				self.updateHeatmap(_d.pictures);
-				self.lensCalibrationCoverageQuality(total_score);
-			
+
 				for (var i = arr.length; i < 9; i++) {
 					arr.push({
 						index: i,
-						path: null, 
+						path: null,
 						url: '',
 						state: 'missing'
 					});
 				}
-				
+
 				// required to refresh the heatmap
 				$('#heatmap_container').html($('#heatmap_container').html());
 
@@ -480,10 +456,9 @@ $(function () {
 
 //				console.log(arr);
 				self.rawPicSelection(arr);
-				self.lensCalibrationRunning(_d.lensCalibration === "processing");
 			}
 		};
-		
+
 		self._calc_pic_score = function(bbox, found_bboxes){
 			if(!bbox) return 0;
 			const [x1, y1] = bbox[0];
@@ -497,7 +472,7 @@ $(function () {
 			const score = ((1 - (max_overlap / area)) * MAX_BOARD_SCORE);
 			return score;
 		};
-		
+
 		self._get_bbox_intersecting_area = function(bb1, bb2){
 			// precondition: bb = [[xmin, ymin], [xmax, ymax]] with always _min < _max
 			const [x11, y11] = bb1[0];
@@ -510,7 +485,7 @@ $(function () {
 			const dy =  Math.min(y21, y22) - Math.max(y11, y12);
 			return dx*dy;
 		}
-	
+
 		self.updateHeatmap = function(picturesState){
 			let boxes = []
 			for (const [path, value] of Object.entries(picturesState)) {
@@ -525,11 +500,11 @@ $(function () {
 			heatmapGroup.empty()
 			heatmapGroup.append(boxes)
 		}
-		
+
 		self.reset_heatmap = function(){
 			$('#segment_group rect').remove();
 		}
-		
+
 		self.heatmap_highlight = function(data){
 			if ((!data.path) || data.state !== "success") return
 			let fileName = data.path.split('/').reverse()[0];
@@ -537,7 +512,7 @@ $(function () {
 			// $("#"+id).addClass('highlight'); // no idea why this doesn't work anymore
 			document.getElementById(id).classList.add('highlight')
 		}
-		
+
 		self.heatmap_dehighlight = function(data){
 			$('#segment_group rect').removeClass('highlight');
 		}
@@ -595,12 +570,10 @@ $(function () {
 
 		self.resetLensCalibration = function() {
 			self.lensCalibrationActive(false);
-			self.lensCalibrationRunning(false);
 			self.reset_heatmap();
 		};
 
 		self.runLensCalibration = function() {
-			self.lensCalibrationRunning(true);
 			self.simpleApiCommand(
 				"camera_run_lens_calibration",
 				{},
@@ -755,7 +728,7 @@ $(function () {
 
 		self.saveMarkersSuccess = function (response) {
 			self.cornerCalibrationActive(false);
-			self.analytics.send_fontend_event('cornerCalibration_finish', {});
+			self.analytics.send_fontend_event('corner_calibration_finish', {});
 			new PNotify({
 				title: gettext("Camera Calibrated."),
 				text: gettext("Camera calibration was successful."),
@@ -860,7 +833,7 @@ $(function () {
 		CameraCalibrationViewModel,
 
 		// e.g. loginStateViewModel, settingsViewModel, ...
-		["settingsViewModel", "workingAreaViewModel", "vectorConversionViewModel", "analyticsViewModel", "loginStateViewModel"],
+		["workingAreaViewModel", "vectorConversionViewModel", "analyticsViewModel"],
 
 		// e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
 		["#settings_plugin_mrbeam_camera"]
