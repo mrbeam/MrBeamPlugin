@@ -948,7 +948,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 							 gcodeMobileThreshold=0,  # legacy
 							 )
 
-		r = make_response(render_template("calibration/initial_calibration.jinja2", **render_kwargs))
+		r = make_response(render_template("calibration/watterott/calibration_tool.jinja2", **render_kwargs))
 
 		r = add_non_caching_response_headers(r)
 		return r
