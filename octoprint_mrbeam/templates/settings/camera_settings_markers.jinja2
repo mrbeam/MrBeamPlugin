@@ -17,6 +17,7 @@
 				</a></li>
 			<li><a href="#tab_corner_calibration" data-toggle="tab" id="cornercal_tab_btn">{{ _('Corner Calibration') }}
 				<i class="icon icon-ok" data-bind="visible: cornerCalibrationComplete() || availablePic()['cropped']"></i>
+				<i class="icon icon-refresh" data-bind="visible: indicateRestartCornerCalibration"></i>
 				<!-- <i class="icon icon-remove" data-bind="visible: !cornerCalibrationComplete()"></i> -->
 			</a></li>
 			<li><a href="#tab_calibration_qa" data-toggle="tab" id="qacal_tab_btn">{{ _('Quality Check') }}</a></li>

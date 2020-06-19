@@ -84,6 +84,7 @@ $(function () {
 		self.cornerCalibrationActive = ko.observable(false);
 		self.lensCalibrationActive = ko.observable(false);
 		self.currentResults = ko.observable({});
+		self.indicateRestartCornerCalibration = ko.observable(false)
 
 		self.applySetting = function(picType) {
 			// TODO with a dictionnary
@@ -502,6 +503,10 @@ $(function () {
 
 //				console.log(arr);
 				self.rawPicSelection(arr);
+				if (self.lensCalibrationRunning() && _d.lensCalibration === "success") {
+					// Finished running the calibration
+					self.indicateRestartCornerCalibration(true)
+				}
 				self.lensCalibrationRunning(_d.lensCalibration === "processing");
 			}
 		};
@@ -784,6 +789,7 @@ $(function () {
 				type: "success",
 				hide: true
 			});
+			self.indicateRestartCornerCalibration(false)
 			if(self.isInitialCalibration()) self.resetView();
 			else self.goto('#calibration_step_1');
 		};
