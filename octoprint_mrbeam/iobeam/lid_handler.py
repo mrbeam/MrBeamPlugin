@@ -167,7 +167,7 @@ class LidHandler(object):
 		self._is_slicing = (event == OctoPrintEvents.SLICING_STARTED)
 		self._startStopCamera(event)
 
-	def _startStopCamera(self, event):
+	def _startStopCamera(self, event, payload=None):
 		if self._photo_creator is not None:
 			status = ' - event: {}\nclient_opened {}, is_slicing: {}\nlid_closed: {}, printer.is_locked(): {}, save_debug_images: {}'.format(
 						event,
