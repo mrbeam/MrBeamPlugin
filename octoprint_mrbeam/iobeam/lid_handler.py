@@ -272,7 +272,7 @@ class LidHandler(object):
 			self._photo_creator.active and \
 			not self._photo_creator.stopping:
 			# take a new picture and save to the specific path
-			if len(self.boardDetectorDaemon) - 1 == MIN_BOARDS_DETECTED:
+			if len(self.boardDetectorDaemon) == MIN_BOARDS_DETECTED - 1:
 				self._logger.info("Last picture to be taken")
 				self._event_bus.fire(MrBeamEvents.RAW_IMG_TAKING_LAST)
 			elif len(self.boardDetectorDaemon) >= MIN_BOARDS_DETECTED:
@@ -524,7 +524,7 @@ class PhotoCreator(object):
 		"""
 
 		cam.start_preview()
-		cam.wait_recording(1.5) # like sleep but looks out for io errors
+		time.sleep(1.5) # Wait for camera warmup and prevent capture just after starting camera.
 		session_details = blank_session_details()
 		self._front_ready.set()
 		try:
