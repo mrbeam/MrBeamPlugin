@@ -69,7 +69,7 @@
             </a>
         </div>
 
-        <div id="corner_calibration_debug" data-bind="visible: isInitialCalibration() ">
+        <div id="corner_calibration_debug" data-bind="visible: window.mrbeam.isWatterottMode() ">
             <div>
                 <img id="debug_NW_img" class="marker_debug_image" data-bind="attr: {src: dbNWImgUrl()}"/>
                 <img id="debug_NE_img" class="marker_debug_image" data-bind="attr: {src: dbNEImgUrl()}"/>
@@ -85,7 +85,7 @@
 
     <div class="marker_selection_desc calibration_summary">
         <div data-bind="css: {complete: cornerCalibrationComplete()}">
-            <div id="calibration_picture_control" style="position: fixed;right: 0;top: 30vh;padding: 1em;border: 1px solid gray;" data-bind="visible: isInitialCalibration()">
+            <div id="calibration_picture_control" style="position: fixed;right: 0;top: 30vh;padding: 1em;border: 1px solid gray;" data-bind="visible: window.mrbeam.isWatterottMode()">
                 {{ _('Picture') }}:<br />
                 <input type="radio" name="picture_type" value="raw"
                        data-bind="checked: picType, attr: { disabled: !availablePic()['raw'] }" /> {{ _('Raw') }}<br />

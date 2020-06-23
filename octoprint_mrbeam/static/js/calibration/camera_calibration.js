@@ -11,6 +11,8 @@ const MIN_BOARDS_FOR_CALIBRATION = 9;
 const MAX_BOARD_SCORE = 5;
 const DEFAULT_IMG_RES = [2048, 1536]
 const CROPPED_IMG_RES = [500,390]
+const LOADING_IMG_RES = [512, 384]
+const STATIC_URL = "/plugin/mrbeam/static/img/calibration/calpic_wait.svg";
 
 $(function () {
 	function CameraCalibrationViewModel(parameters) {
@@ -19,34 +21,23 @@ $(function () {
 		self.workingArea = parameters[0];
 		self.conversion = parameters[1];
 		self.analytics = parameters[2];
-		self.camera = self.workingArea.camera;
+		self.camera = parameters[3];
+
+		// calibrationState is constantly refreshed by the backend
+		// as an immutable array that contains the whole state of the calibration
+		self.calibrationState = ko.observable({})
 
 		self.startupComplete = ko.observable(false);
 		self.calibrationScreenShown = ko.observable(false);
 		self.waitingForRefresh = ko.observable(true)
 
-		self.staticURL = "/plugin/mrbeam/static/img/calibration/calpic_wait.svg"; // todo iratxe: constant?
-
-		self.dbNWImgUrl = ko.observable("");
-		self.dbNEImgUrl = ko.observable("");
-		self.dbSWImgUrl = ko.observable("");
-		self.dbSEImgUrl = ko.observable("");
-		self.interlocks_closed = ko.observable(false);  // todo iratxe: do we need this?
-
 		self.focusX = ko.observable(0);
 		self.focusY = ko.observable(0);
 
-		self.qa_cameraalignment_image_loaded = ko.observable(false);
-		$('#qa_cameraalignment_image').load(function(){
-		    self.qa_cameraalignment_image_loaded(true)
-        })
-		self.picType = ko.observable(""); // raw, lens_corrected, cropped
-		self.correctedMarkersVisibility = ko.observable('hidden')
-		self.croppedMarkersVisibility = ko.observable('hidden');
 		self.calImgWidth = ko.observable(DEFAULT_IMG_RES[0]);
 		self.calImgHeight = ko.observable(DEFAULT_IMG_RES[1]);
 		self.availablePic = ko.observable({'raw': false, 'lens_corrected': false, 'cropped': false, })
-		self._availablePicUrl = ko.observable({'default': self.staticURL, 'raw': null, 'lens_corrected': null, 'cropped': null, })
+		self._availablePicUrl = ko.observable({'default': STATIC_URL, 'raw': null, 'lens_corrected': null, 'cropped': null, })
 
 		self.availablePicUrl = ko.computed(function() {
 			var ret = self._availablePicUrl();
@@ -71,98 +62,6 @@ $(function () {
 		self.calSvgDx = ko.observable(0);
 		self.calSvgDy = ko.observable(0);
 		self.calSvgScale = ko.observable(1);
-		self.cornerCalibrationActive = ko.observable(false);
-		self.lensCalibrationActive = ko.observable(false);
-		self.currentResults = ko.observable({});
-
-		self.getImgUrl = function(type) {
-			var settings = [['cropped', CROPPED_IMG_RES, 'hidden', 'visible'],
-							['lens_corrected', DEFAULT_IMG_RES, 'visible', 'hidden'],
-							['raw', DEFAULT_IMG_RES, 'hidden', 'hidden'],
-							['default', [512, 384], 'hidden', 'hidden']]
-			var applySetting = function(setting) {
-				let _t = setting
-				self.calImgWidth(_t[1][0])
-				self.calImgHeight(_t[1][1])
-				self.correctedMarkersVisibility(_t[2])
-				self.croppedMarkersVisibility(_t[3])
-				if (_t[0] === 'default')
-					return self.staticURL
-				else
-					return self.availablePicUrl()[_t[0]]
-			}
-			for (let _t of settings)
-				if ((type === undefined || _t[0] === type) && (_t[0] === 'default' || self.availablePic()[_t[0]]))
-					return applySetting(_t)
-			return applySetting('default')
-		};
-		self.calImgUrl = ko.computed(function() {
-			return self.getImgUrl()
-		});
-
-		self._cornerCalImgUrl = ko.observable("")
-		self.cornerCalImgUrl = ko.computed(function() {
-			if (!self.cornerCalibrationActive())
-				self._cornerCalImgUrl(self.getImgUrl())
-			return self._cornerCalImgUrl()
-		});
-		self.cornerCalibrationComplete = ko.computed(function(){
-			if (Object.keys(self.currentResults()).length !== 4) return false;
-			return Object.values(self.currentResults()).reduce((x,y) => x && y);
-		});
-		self.cal_img_ready = ko.computed(function () {
-			if (Object.keys(self.camera.markersFound()).length !== 4) return false;
-			return Object.values(self.camera.markersFound()).reduce((x,y) => x && y);
-		});
-
-		self.rawPicSelection = ko.observableArray([])
-		// calibrationState is constantly refreshed by the backend
-		// as an immutable array that contains the whole state of the calibration
-		self.calibrationState = ko.observable({})
-
-		self.lensCalibrationNpzFileTs = ko.observable(null);
-		self.lensCalibrationNpzFileVerboseDate = ko.computed(function(){
-			const ts = self.lensCalibrationNpzFileTs();
-			if(ts !== null){
-				const d = new Date(ts);
-				const verbose = d.toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })
-				return `Using .npz created at ${verbose}`;
-			} else {
-				return 'No .npz file available';
-			}
-		});
-		self.lensCalibrationComplete = ko.computed(function(){
-			return ('lensCalibration' in self.calibrationState()) ? self.calibrationState().lensCalibration === "success" : false;
-		});
-		self.boardsFound = ko.computed(function() {
-			return self.rawPicSelection().filter(elm => elm.state === "success").length
-		})
-
-		self.hasMinBoardsFound = ko.computed(function() {
-			return self.boardsFound() >= MIN_BOARDS_FOR_CALIBRATION
-		})
-
-		self.markersFoundPosition = ko.observable({});
-		self.markersFoundPositionCopy = null;
-
-		self.onStartupComplete = function () {
-			if(self.isInitialCalibration()){
-				self.loadUndistortedPicture();
-				self.refreshPics();
-				self.calibrationScreenShown(true)
-				self.startupComplete(true);
-			}
-		};
-
-		self.onSettingsShown = function(){
-			self.goto('#calibration_step_1');
-		}
-
-		self.__format_point = function(p){
-			if(typeof p === 'undefined') return '?,?';
-			else return p.x+','+p.y;
-		};
-
 		self.calSvgViewBox = ko.computed(function () {
 			var zoom = self.calSvgScale();
 			var w = self.calImgWidth() / zoom;
@@ -173,7 +72,86 @@ $(function () {
 			self.calSvgOffY(offY);
 			return [self.calSvgOffX(), self.calSvgOffY(), w, h].join(' ');
 		});
+
 		self.currentMarker = 0;
+		self.calibrationMarkers = [
+			{name: 'start', desc: 'click to start', focus: [0, 0, 1]},
+			{name: 'NW', desc: 'North West', focus: [0, 0, 4]},
+			{name: 'SW', desc: 'North East', focus: [0, DEFAULT_IMG_RES[1], 4]},
+			{name: 'SE', desc: 'South East', focus: [DEFAULT_IMG_RES[0], DEFAULT_IMG_RES[1], 4]},
+			{name: 'NE', desc: 'South West', focus: [DEFAULT_IMG_RES[0], 0, 4]}
+		];
+
+		// ---------------- CAMERA ALIGNMENT ----------------
+		self.qa_cameraalignment_image_loaded = ko.observable(false);
+		$('#qa_cameraalignment_image').load(function(){
+		    self.qa_cameraalignment_image_loaded(true)
+        })
+
+		// ---------------- CORNER CALIBRATION ----------------
+        self.cornerCalibrationActive = ko.observable(false);
+		self.currentResults = ko.observable({});
+
+        self.dbNWImgUrl = ko.observable("");
+		self.dbNEImgUrl = ko.observable("");
+		self.dbSWImgUrl = ko.observable("");
+		self.dbSEImgUrl = ko.observable("");
+
+		self.picType = ko.observable(""); // raw, lens_corrected, cropped
+		self.correctedMarkersVisibility = ko.observable('hidden')
+		self.croppedMarkersVisibility = ko.observable('hidden');
+
+		self._cornerCalImgUrl = ko.observable("")
+        self.markersFoundPosition = ko.observable({});
+		self.markersFoundPositionCopy = null;
+
+		self.crossSize = ko.observable(30);
+		self.svgCross = ko.computed(function () {
+			var s = self.crossSize()
+			return `M0,${s} h${2*s} M${s},0 v${2*s} z`
+		})
+
+		self.cornerCalImgUrl = ko.computed(function() {
+			if (!self.cornerCalibrationActive())
+				self._cornerCalImgUrl(self.getImgUrl())
+			return self._cornerCalImgUrl()
+		});
+
+		self.cornerCalibrationComplete = ko.computed(function(){
+			if (Object.keys(self.currentResults()).length !== 4) return false;
+			return Object.values(self.currentResults()).reduce((x,y) => x && y);
+		});
+
+		self.cal_img_ready = ko.computed(function () {
+			if (Object.keys(self.camera.markersFound()).length !== 4) return false;
+			return Object.values(self.camera.markersFound()).reduce((x,y) => x && y);
+		})
+
+		self.getImgUrl = function(type) {
+			var settings = [['cropped', CROPPED_IMG_RES, 'hidden', 'visible'],
+							['lens_corrected', DEFAULT_IMG_RES, 'visible', 'hidden'],
+							['raw', DEFAULT_IMG_RES, 'hidden', 'hidden'],
+							['default', LOADING_IMG_RES, 'hidden', 'hidden']]
+			var applySetting = function(setting) {
+				let _t = setting
+				self.calImgWidth(_t[1][0])
+				self.calImgHeight(_t[1][1])
+				self.correctedMarkersVisibility(_t[2])
+				self.croppedMarkersVisibility(_t[3])
+				if (_t[0] === 'default')
+					return STATIC_URL
+				else
+					return self.availablePicUrl()[_t[0]]
+			}
+			for (let _t of settings)
+				if ((type === undefined || _t[0] === type) && (_t[0] === 'default' || self.availablePic()[_t[0]]))
+					return applySetting(_t)
+			return applySetting('default')
+		};
+
+		self.calImgUrl = ko.computed(function() {
+			return self.getImgUrl()
+		});
 
 		self.zMarkersTransform = ko.computed( function () {
 			// Like workArea.zObjectImgTransform(), but zooms
@@ -182,18 +160,57 @@ $(function () {
 			return 'scale('+1/(1+2*self.camera.imgHeightScale())+') translate('+offset.join(' ')+')';
 		});
 
-		self.calibrationMarkers = [
-			{name: 'start', desc: 'click to start', focus: [0, 0, 1]},
-			{name: 'NW', desc: 'North West', focus: [0, 0, 4]},
-			{name: 'SW', desc: 'North East', focus: [0, DEFAULT_IMG_RES[1], 4]},
-			{name: 'SE', desc: 'South East', focus: [DEFAULT_IMG_RES[0], DEFAULT_IMG_RES[1], 4]},
-			{name: 'NE', desc: 'South West', focus: [DEFAULT_IMG_RES[0], 0, 4]}
-		];
-		self.crossSize = ko.observable(30);
-		self.svgCross = ko.computed(function () {
-			var s = self.crossSize()
-			return `M0,${s} h${2*s} M${s},0 v${2*s} z`
+        // ---------------- LENS CALIBRATION ----------------
+        self.lensCalibrationActive = ko.observable(false);
+		self.rawPicSelection = ko.observableArray([])
+        self.lensCalibrationNpzFileTs = ko.observable(null);
+
+		self.cameraBusy = ko.computed(function() {
+			return self.rawPicSelection().some(elm => elm.state === "camera_processing")
+		});
+
+		self.lensCalibrationNpzFileVerboseDate = ko.computed(function(){
+			const ts = self.lensCalibrationNpzFileTs();
+			if(ts !== null){
+				const d = new Date(ts);
+				const verbose = d.toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })
+				return `Using .npz created at ${verbose}`;
+			} else {
+				return 'No .npz file available';
+			}
+		});
+
+        self.lensCalibrationComplete = ko.computed(function(){
+			return ('lensCalibration' in self.calibrationState()) ? self.calibrationState().lensCalibration === "success" : false;
+		});
+
+        self.boardsFound = ko.computed(function() {
+			return self.rawPicSelection().filter(elm => elm.state === "success").length
 		})
+
+		self.hasMinBoardsFound = ko.computed(function() {
+			return self.boardsFound() >= MIN_BOARDS_FOR_CALIBRATION
+		})
+
+        // ------------------------------------------------
+
+		self.onStartupComplete = function () {
+			if(window.mrbeam.isWatterottMode()){
+				self.loadUndistortedPicture();
+				self.refreshPics();
+			}
+			self.calibrationScreenShown(true)
+            self.startupComplete(true);
+		};
+
+		self.onSettingsShown = function(){
+			self.goto('#calibration_step_1');
+		}
+
+		self.__format_point = function(p){
+			if(typeof p === 'undefined') return '?,?';
+			else return p.x+','+p.y;
+		};
 
 		self.larger = function(){
 			var val = Math.min(self.calSvgScale() + 1, 10);
@@ -260,7 +277,7 @@ $(function () {
 		self.userClick = function (vm, ev) {
 			// check if picture is loaded
 			if(window.location.href.indexOf('localhost') === -1)
-				if(self.calImgUrl() === self.staticURL){
+				if(self.calImgUrl() === STATIC_URL){
 					console.log("Please wait until camera image is loaded...");
 					return;
 				}
@@ -278,14 +295,6 @@ $(function () {
 				self.currentResults(tmp);
 				$('#click_'+step.name).attr({'x':x-self.crossSize(), 'y':y-self.crossSize()});
 				// self.nextMarker()
-			}
-
-			if (self.currentMarker === 0) {
-				// TODO do some zooming instead?
-                // TODO IRATXE can I just remove this?
-				// self.picType("");
-				// self.calImgUrl(self.staticURL);
-				// $('#calibration_box').removeClass('up').removeClass('down');
 			}
 		};
 
@@ -337,21 +346,12 @@ $(function () {
 				if (typeof callback === 'function')
 					callback(resp);
 			};
-			if (self.isInitialCalibration()) {
-				// only accessible during initial calibration
-				$.ajax({
-					type: "GET",
-					url: '/plugin/mrbeam/take_undistorted_picture',
-					data: {},
-					success: success_callback,
-					error: error_callback
-				});
-			} else {
-				// requires user to be logged in
-				OctoPrint.simpleApiCommand("mrbeam", "take_undistorted_picture", {})
-						.done(success_callback)
-						.fail(error_callback);
-			}
+            self.simpleApiCommand(
+                "take_undistorted_picture",
+                {},
+                success_callback,
+                error_callback
+            )
 		};
 
 
@@ -372,7 +372,7 @@ $(function () {
 						self.availablePic(_d['available'])
 					}
 
-					if (self.isInitialCalibration() && (selectedTab === "cornercal_tab_btn" || self.waitingForRefresh())) {
+					if (window.mrbeam.isWatterottMode() && (selectedTab === "cornercal_tab_btn" || self.waitingForRefresh())) {
 						self.dbNWImgUrl('/downloads/files/local/cam/debug/NW.jpg' + '?ts=' + new Date().getTime());
 						self.dbNEImgUrl('/downloads/files/local/cam/debug/NE.jpg' + '?ts=' + new Date().getTime());
 						self.dbSWImgUrl('/downloads/files/local/cam/debug/SW.jpg' + '?ts=' + new Date().getTime());
@@ -394,10 +394,6 @@ $(function () {
 					}
 					self.waitingForRefresh(false)
 				}
-			}
-			// TODO IRATXE do we need this?
-			if('mrb_state' in data){
-				self.interlocks_closed(data['mrb_state']['interlocks_closed']);
 			}
 
 			if ('chessboardCalibrationState' in data) {
@@ -518,36 +514,33 @@ $(function () {
 		}
 
 		self.saveRawPic = function() {
-				$.ajax({
-					type: "GET",
-					url: '/plugin/mrbeam/calibration_save_raw_pic',
-					data: {},
-					success: self.rawPicSuccess,
-					error: self.saveRawPicError
-				});
-			// self.simpleApiCommand( "calibration_save_raw_pic",
-			// 					   {},
-			// 					   self.saveRawPicSuccess,
-			// 					   self.saveRawPicError);
+            self.simpleApiCommand(
+                "calibration_save_raw_pic",
+                {},
+                self.rawPicSuccess,
+                self.saveRawPicError
+            );
 		}
 
 		self.delRawPic = function() {
 			$('#heatmap_board'+this.index).remove(); // remove heatmap
-			self.simpleApiCommand("calibration_del_pic",
-								  {name: this['path']},
-								  self.refreshPics,
-								  self.delRawPicError,
-								  "POST");
+			self.simpleApiCommand(
+			    "calibration_del_pic",
+                {name: this['path']},
+                self.refreshPics,
+                self.delRawPicError,
+                "POST"
+            );
 		}
 
 		self.refreshPics = function() {
-				$.ajax({
-					type: "GET",
-					url: '/plugin/mrbeam/calibration_get_raw_pic',
-					data: {},
-					success: self.rawPicSuccess,
-					error: self.getRawPicError
-				});
+            self.simpleApiCommand(
+                "calibration_get_raw_pic",
+                {},
+                self.rawPicSuccess,
+                self.getRawPicError,
+                "GET"
+            )
 		}
 
 		self.rawPicSuccess = function(response) {}
@@ -563,10 +556,6 @@ $(function () {
 				hide: true
 			});
 		}
-
-		self.cameraBusy = ko.computed(function() {
-			return self.rawPicSelection().some(elm => elm.state === "camera_processing")
-		});
 
 		self.resetLensCalibration = function() {
 			self.lensCalibrationActive(false);
@@ -615,61 +604,61 @@ $(function () {
 		}
 
 		self.engrave_markers = function () {
-			var url = '/plugin/mrbeam/generate_calibration_markers_svg';
-			$.ajax({
-				type: "GET",
-				url: url,
-				data: {},
-				success: function (data) {
-					console.log("generated_markers_svg", data);
-					var fileObj = {
-						"date": Math.floor(Date.now() / 1000),
-						"name": "CalibrationMarkers.svg",
-						"origin": "local",
-						"path": "CalibrationMarkers.svg",
-						"refs": {
-							"download": "/downloads/files/local/CalibrationMarkers.svg",
-							"resource": "/api/files/local/CalibrationMarkers.svg"
-						},
-						"size": 594,
-						"type": "model",
-						"typePath": [
-							"model",
-							"svg"
-						]
-					};
-					//clear workingArea from previous designs
-					self.workingArea.clear();
-					// put it on the working area
-					self.workingArea.placeSVG(fileObj, function () {
-						// start conversion
-						self.conversion.show_conversion_dialog();
-					});
-				},
-				error: function (jqXHR, textStatus, errorThrown) {
-					new PNotify({
-						title: gettext("Error"),
-						text: _.sprintf(gettext("Calibration failed.<br><br>Error:<br/>%(code)s %(status)s - %(errorThrown)s"), {code: jqXHR.status, status: textStatus, errorThrown: errorThrown}),
-						type: "error",
-						hide: false
-					})
-				}
-			});
+		    let success_callback = function (data) {
+				console.log("generated_markers_svg", data);
+                let fileObj = {
+                    "date": Math.floor(Date.now() / 1000),
+                    "name": "CalibrationMarkers.svg",
+                    "origin": "local",
+                    "path": "CalibrationMarkers.svg",
+                    "refs": {
+                        "download": "/downloads/files/local/CalibrationMarkers.svg",
+                        "resource": "/api/files/local/CalibrationMarkers.svg"
+                    },
+                    "size": 594,
+                    "type": "model",
+                    "typePath": [
+                        "model",
+                        "svg"
+                    ]
+                };
+                //clear workingArea from previous designs
+                self.workingArea.clear();
+                // put it on the working area
+                self.workingArea.placeSVG(fileObj, function () {
+                    // start conversion
+                    self.conversion.show_conversion_dialog();
+                });
+			};
+		    let error_callback = function (jqXHR, textStatus, errorThrown) {
+				new PNotify({
+                    title: gettext("Error"),
+                    text: _.sprintf(gettext("Calibration failed.<br><br>Error:<br/>%(code)s %(status)s - %(errorThrown)s"), {code: jqXHR.status, status: textStatus, errorThrown: errorThrown}),
+                    type: "error",
+                    hide: false
+                })
+			};
+
+		    self.simpleApiCommand(
+		        "generate_calibration_markers_svg",
+                {},
+                success_callback,
+                error_callback,
+                "GET"
+            )
 		};
 
 		self.engrave_markers_without_gui = function () {
 			var intensity = $('#initialcalibration_intensity').val()
 			var feedrate = $('#initialcalibration_feedrate').val()
-			var url = "/plugin/mrbeam/engrave_calibration_markers/" + intensity + "/" + feedrate
-			$.ajax({
-				type: "GET",
-				url: url,
-				data: {},
-				success: function (data) {
+            self.simpleApiCommand(
+                "engrave_calibration_markers/" + intensity + "/" + feedrate,
+                {},
+                function (data) {
 					console.log("Success", url, data);
 
 				},
-				error: function (jqXHR, textStatus, errorThrown) {
+                function (jqXHR, textStatus, errorThrown) {
 					new PNotify({
 						title: gettext("Error"),
 						text: _.sprintf(gettext("Marker engraving failed: <br>%(errmsg)s<br>Error:<br/>%(code)s %(status)s - %(errorThrown)s"),
@@ -678,7 +667,7 @@ $(function () {
 						hide: false
 					})
 				}
-			});
+            )
 		};
 
 		self.printLabel = function (labelType, event) {
@@ -709,12 +698,6 @@ $(function () {
 				'POST')
 		}
 
-
-		self.isInitialCalibration = function () {
-			return (typeof INITIAL_CALIBRATION !== 'undefined' && INITIAL_CALIBRATION === true);
-		};
-
-
 		self.saveCornerCalibrationData = function () {
 			var data = {
 				result: {
@@ -735,7 +718,7 @@ $(function () {
 				type: "success",
 				hide: true
 			});
-			if(self.isInitialCalibration()) self.resetView();
+			if(window.mrbeam.isWatterottMode()) self.resetView();
 			else self.goto('#calibration_step_1');
 		};
 
@@ -747,7 +730,7 @@ $(function () {
 				type: "warning",
 				hide: true
 			});
-			if(self.isInitialCalibration()) self.resetView();
+			if(window.mrbeam.isWatterottMode()) self.resetView();
 			else self.reset_corner_calibration();
 		};
 
@@ -769,7 +752,7 @@ $(function () {
 			self.resetView();
 			self.markersFoundPosition({});
 			self.currentResults({});
-			if (!self.isInitialCalibration())
+			if (!window.mrbeam.isWatterottMode())
 				self.goto('#calibration_step_1');
 			$('.calibration_click_indicator').attr({'x': -100, 'y': -100});
 		};
@@ -805,7 +788,7 @@ $(function () {
 		self.simpleApiCommand = function(command, data, successCallback, errorCallback, type) {
 			data = data || {}
 			data.command = command
-			if (self.isInitialCalibration()) {
+			if (window.mrbeam.isWatterottMode()) {
 				$.ajax({
 					url: "/plugin/mrbeam/" + command,
 					type: type, // POST, GET
@@ -833,7 +816,7 @@ $(function () {
 		CameraCalibrationViewModel,
 
 		// e.g. loginStateViewModel, settingsViewModel, ...
-		["workingAreaViewModel", "vectorConversionViewModel", "analyticsViewModel"],
+		["workingAreaViewModel", "vectorConversionViewModel", "analyticsViewModel", "cameraViewModel"],
 
 		// e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
 		["#settings_plugin_mrbeam_camera"]
