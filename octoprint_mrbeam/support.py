@@ -52,8 +52,6 @@ def set_calibration_tool_mode(plugin):
 	except Exception as e:
 		_logger.exception("Error while checking calibration tool mode")
 
-	set_support_user(plugin, mode_enabled)
-
 	return mode_enabled
 
 
