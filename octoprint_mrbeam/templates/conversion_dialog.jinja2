@@ -274,7 +274,7 @@
                                     <div class="controls range-control">
                                         <div id="engraving_compressor" class="compressor_control">
                                             <span class="compressor_min_max_label">min</span>
-                                            <input class="conversion_range_slider compressor_range" type="range" min="0" max="3" data-bind="value: engravingCompressor, event: {change: flag_customized_material}"/>
+                                            <input class="mrb_slider" type="range" min="0" max="3" data-bind="value: engravingCompressor, event: {change: flag_customized_material}"/>
                                             <span class="compressor_min_max_label">max</span>
                                         </div>
                                     </div>
@@ -395,7 +395,7 @@
                                     <div class="controls range-control">
                                         <div class="compressor_control">
                                             <span class="compressor_min_max_label">min</span>
-                                            <input class="conversion_range_slider compressor_range" type="range" min="0" max="3" value="3" data-bind="event: {change: flag_customized_material}"/>
+                                            <input class="mrb_slider" type="range" min="0" max="3" value="3" data-bind="event: {change: flag_customized_material}"/>
                                             <span class="compressor_min_max_label">max</span>
                                         </div>
                                     </div>
@@ -450,7 +450,7 @@
 		</div>
 
         <a href="#" class="btn" aria-hidden="true"
-		   data-bind="click: $root.cancel_conversion(), visible: !slicing_in_progress()">{{ _('Cancel') }}</a>
+		   data-bind="click: $root.cancel_conversion(), visible: !slicing_in_progress()">{{ _('Back') }}</a>
         <a href="#"  class="btn btn-primary" id="start_job_btn"
 		   data-bind="click: function() { if ($root.enableConvertButton()) { $root.convert() } },
 					enabled: enableConvertButton,

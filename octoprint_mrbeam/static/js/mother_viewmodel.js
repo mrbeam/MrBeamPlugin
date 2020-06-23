@@ -253,6 +253,9 @@ $(function () {
 			self.gcodefiles.setFilter('design');
             self.files.listHelper.removeFilter('model');
             self.files.listHelper.changeSorting('upload');
+
+            $("#design_lib_sort_upload_radio").prop("checked", true);
+            $("#design_lib_filter_design_radio").prop("checked", true);
         };
 
         self.removeLoadingOverlay = function(){
