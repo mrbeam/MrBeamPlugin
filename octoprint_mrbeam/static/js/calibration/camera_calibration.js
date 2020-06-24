@@ -111,28 +111,12 @@ $(function () {
 			return `M0,${s} h${2*s} M${s},0 v${2*s} z`
 		})
 
-		self.cornerCalImgUrl = ko.computed(function() {
-			if (!self.cornerCalibrationActive())
-				self._cornerCalImgUrl(self.getImgUrl())
-			return self._cornerCalImgUrl()
-		});
-
-		self.cornerCalibrationComplete = ko.computed(function(){
-			if (Object.keys(self.currentResults()).length !== 4) return false;
-			return Object.values(self.currentResults()).reduce((x,y) => x && y);
-		});
-
-		self.cal_img_ready = ko.computed(function () {
-			if (Object.keys(self.camera.markersFound()).length !== 4) return false;
-			return Object.values(self.camera.markersFound()).reduce((x,y) => x && y);
-		})
-
-		self.getImgUrl = function(type) {
-			var settings = [['cropped', CROPPED_IMG_RES, 'hidden', 'visible'],
+        self.getImgUrl = function(type) {
+			let settings = [['cropped', CROPPED_IMG_RES, 'hidden', 'visible'],
 							['lens_corrected', DEFAULT_IMG_RES, 'visible', 'hidden'],
 							['raw', DEFAULT_IMG_RES, 'hidden', 'hidden'],
 							['default', LOADING_IMG_RES, 'hidden', 'hidden']]
-			var applySetting = function(setting) {
+			let applySetting = function(setting) {
 				let _t = setting
 				self.calImgWidth(_t[1][0])
 				self.calImgHeight(_t[1][1])
@@ -148,6 +132,22 @@ $(function () {
 					return applySetting(_t)
 			return applySetting('default')
 		};
+
+		self.cornerCalImgUrl = ko.computed(function() {
+			if (!self.cornerCalibrationActive())
+				self._cornerCalImgUrl(self.getImgUrl())
+			return self._cornerCalImgUrl()
+		});
+
+		self.cornerCalibrationComplete = ko.computed(function(){
+			if (Object.keys(self.currentResults()).length !== 4) return false;
+			return Object.values(self.currentResults()).reduce((x,y) => x && y);
+		});
+
+		self.cal_img_ready = ko.computed(function () {
+			if (Object.keys(self.camera.markersFound()).length !== 4) return false;
+			return Object.values(self.camera.markersFound()).reduce((x,y) => x && y);
+		})
 
 		self.calImgUrl = ko.computed(function() {
 			return self.getImgUrl()
