@@ -3,53 +3,100 @@
 
 
 import datetime
-import threading
+from octoprint.server.util.flask import get_json_command_from_request
 from octoprint_mrbeam.util.device_info import deviceInfo
 from octoprint_mrbeam.mrb_logger import mrb_logger
 from octoprint_mrbeam.util.cmd_exec import exec_cmd_output
+from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 
 _instance = None
 
-def labelPrinter(use_dummy_values=False):
+
+def labelPrinter(plugin, use_dummy_values=False):
 	global _instance
 	if _instance is None:
-		_instance = LabelPrinter(use_dummy_values=use_dummy_values)
+		_instance = LabelPrinter(plugin, use_dummy_values=use_dummy_values)
 	return _instance
 
 
 class LabelPrinter(object):
 	COMMAND_RLPR = 'echo "{data}" | rlpr -q -H {ip}'
-	
-	PRINTER = dict(device_label_printer=dict(enabled=True,
-	                                         ip="192.168.1.201"),
-	               box_label_printer=dict(enabled=True,
-	                                      ip="192.168.1.202"),
-	               )
+
+	PRINTER = dict(
+		device_label_printer=dict(
+			enabled=True,
+			ip="192.168.1.201"
+		),
+		box_label_printer=dict(
+			enabled=True,
+			ip="192.168.1.202"
+		),
+	)
 	EAN_NUMBERS = dict(
 		MRBEAM2=None,
 		MRBEAM2_DC_R1=None,
 		MRBEAM2_DC_R2=None,
-		MRBEAM2_DC=dict(single='4260625360156',
-		                bundle='4260625360163'),
+		MRBEAM2_DC=dict(
+			single='4260625360156',
+			bundle='4260625360163'
+		),
 	)
-	
+
 	MRBEAM_2 = 'MRBEAM2'
 	MRBEAM_2_DC_R1 = 'MRBEAM2_DC_R1'
 	MRBEAM_2_DC_R2 = 'MRBEAM2_DC_R2'
 	MRBEAM_2_DC = 'MRBEAM2_DC'
-	
-	
-	def __init__(self, use_dummy_values=False):
+
+	def __init__(self, plugin, use_dummy_values=False):
+		self._plugin = plugin
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.camera.label_printer")
 		self._device_info = deviceInfo(use_dummy_values=use_dummy_values)
-	
+
+	def print_label(self, request):
+		valid_commands = {
+			"print_label": ['labelType']
+		}
+		command, data, response = get_json_command_from_request(request, valid_commands)
+		if response is not None:
+			return response
+
+		label_type = data.get('labelType', None)
+		blink = data.get('blink', None)
+
+		ok, out = None, None
+		if label_type == 'deviceLabel':
+			ok, out = self.print_serial_label()
+		elif label_type == 'boxLabel':
+			ok, out = self.print_box_label()
+		elif label_type == 'eanLabel':
+			ok, out = self.print_ean_labels()
+		elif label_type is None:
+			ok = True
+		else:
+			ok = False
+			out = "Unknown label: {}".format(label_type)
+			self._logger.debug("printLabel() unknown labelType: %s ", label_type)
+
+		if ok and blink:
+			self._plugin.fire_event(MrBeamEvents.BLINK_PRINT_LABELS)
+		elif blink is False:
+			self._plugin.fire_event(MrBeamEvents.LENS_CALIB_DONE)
+
+		res = dict(
+			labelType=label_type,
+			success=ok,
+			error=out,
+		)
+
+		return res
+
 	def print_serial_label(self):
 		return self._print_device_label()
-	
+
 	def print_box_label(self):
 		return self._print_box_label()
-	
+
 	def print_ean_labels(self):
 		return self._print_ean_labels()
 
@@ -114,7 +161,6 @@ class LabelPrinter(object):
 				   model=self._get_model_abbrev(),
 				   prod_date=self._get_production_date_formatted())
 
-
 	def _print_ean_labels(self):
 		try:
 			ip = self.PRINTER['box_label_printer']['ip']
@@ -152,7 +198,6 @@ class LabelPrinter(object):
 				   model=self._get_model_abbrev(),
 				   ean_num=ean_num)
 
-
 	def _print(self, ip, data):
 		'''
 		pritns data to printer at IP using rlpr
@@ -163,7 +208,6 @@ class LabelPrinter(object):
 		cmd = self.COMMAND_RLPR.format(ip=ip, data=data)
 		out, code = exec_cmd_output(cmd, log_cmd=False, shell=True)
 		return (code == 0), out
-
 
 	def _log_print_result(self, name, ok, output, payload=None):
 		msg = "Print of {}: ok:{}, output: '{}'".format(name, ok, output)
@@ -181,7 +225,7 @@ class LabelPrinter(object):
 		elif self._device_info.get_model() in (self.MRBEAM_2_DC):
 			model = "DC"
 		return model
-	
+
 	def _get_production_date_formatted(self):
 		"""
 		Converts production_date from "2020-06-10" to "Jun 2020"

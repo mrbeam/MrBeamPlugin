@@ -1032,45 +1032,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 	@octoprint.plugin.BlueprintPlugin.route("/print_label", methods=["POST"])
 	def printLabel(self):
-		valid_commands = {
-			"print_label": ['labelType']
-		}
-		command, data, response = get_json_command_from_request(request, valid_commands)
-		if response is not None:
-			return response
-
-		labelType = data.get('labelType', None)
-		blink = data.get('blink', None)
-
-		lp = labelPrinter(use_dummy_values=IS_X86)
-		ok, out = None, None
-		if labelType == 'deviceLabel':
-			ok, out = lp.print_serial_label()
-		elif labelType == 'boxLabel':
-			ok, out = lp.print_box_label()
-		elif labelType == 'eanLabel':
-			ok, out = lp.print_ean_labels()
-		elif labelType is None:
-			ok = True
-			pass # we might have a blink information i call
-		else:
-			ok = False
-			out = "Unknown label: {}".format(labelType)
-			self._logger.debug("printLabel() unknown labelType: %s ", labelType)
-
-		if ok and blink:
-			self.fire_event(MrBeamEvents.BLINK_PRINT_LABELS)
-		elif blink is False:
-			self.fire_event(MrBeamEvents.LENS_CALIB_DONE)
-
-
-		res = dict(
-			labelType=labelType,
-			success=ok,
-			error=out,
-		)
-		return make_response(jsonify(res), 200 if ok else 502)
-
+		res = labelPrinter(self, use_dummy_values=IS_X86).print_label(request)
+		return make_response(jsonify(res), 200 if res['success'] else 502)
 
 	@octoprint.plugin.BlueprintPlugin.route("/engrave_calibration_markers/<string:intensity>/<string:feedrate>", methods=["GET"])
 	# @firstrun_only_access #@maintenance_stick_only_access
