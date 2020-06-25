@@ -2859,10 +2859,19 @@ input.search-query,
     opacity: 0.8;
 }
 
+#save_material_form .material-img.controls{
+    position: relative;
+    display: inline-block;
+    margin-left: 10px;
+    width: auto;
+}
+
 #custom_material_image_edit {
+    right: 0;
+    bottom: 0;
+    padding: 0 9px 1px 0;
+    text-align: right;
     position: absolute;
-    top: 125px;
-    transform: translate(-105%);
     font-size: 1.5em;
     color: white;
     opacity: 0.8;
@@ -3153,3 +3162,11 @@ button#terminal-send {
 }
 
 /*Terminal button*/
+
+/*User Settings API Key button*/
+
+#usersettings_access a.btn.add-on {
+    border-radius: 6px;
+}
+
+/*User Settings API Key button*/
