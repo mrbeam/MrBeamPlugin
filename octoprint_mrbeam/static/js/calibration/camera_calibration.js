@@ -548,6 +548,7 @@ $(function () {
 		self.delRawPicError  = function() {self.rawPicError(gettext("Failed to delete the latest image."))}
 		self.getRawPicError  = function() {self.rawPicError(gettext("Failed to refresh the list of images."))}
 
+		// TODO review PNotify messages in all file
 		self.rawPicError= function(err) {
 			new PNotify({
 				title: err,
@@ -730,6 +731,8 @@ $(function () {
 				type: "warning",
 				hide: true
 			});
+
+			// TODO could this logic go inside of self.reset_corner_calibration?
 			if(window.mrbeam.isWatterottMode()) self.resetView();
 			else self.reset_corner_calibration();
 		};
@@ -748,6 +751,7 @@ $(function () {
 			self.currentMarker = 0;
 		};
 
+		// TODO could this be combined with resetView?
 		self.reset_corner_calibration = function () {
 			self.resetView();
 			self.markersFoundPosition({});
