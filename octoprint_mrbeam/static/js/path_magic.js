@@ -694,8 +694,8 @@ var mrbeam = mrbeam || {};
 
   module.gcode = function (paths, id, mb_meta) {
     var commands = [];
-	let first_point = null;
-	let last_point = null;
+	let first_point = {};
+	let last_point = {};
 
     mb_meta = mb_meta || {};
     var meta_str = "";
@@ -732,6 +732,7 @@ var mrbeam = mrbeam || {};
 
   module.clip = function (paths, clip, tolerance) {
     ClipperLib.use_lines = true;
+    const pathCountBeforeClip = paths.length;  
 
     var subj = toIntPaths(paths, tolerance);
     var clip = toIntPaths(clip, tolerance);
@@ -772,6 +773,10 @@ var mrbeam = mrbeam || {};
       clipped.push(path);
 
       polynode = polynode.GetNext();
+    }
+    const pathCountAfterClip = clipped.length;
+    if(pathCountAfterClip < pathCountBeforeClip){
+      console.info("clipped path: " + pathCountBeforeClip + " nodes => "+ pathCountAfterClip);
     }
 
     return clipped.reverse();

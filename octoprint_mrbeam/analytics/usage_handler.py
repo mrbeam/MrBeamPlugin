@@ -59,13 +59,13 @@ class UsageHandler(object):
 		self._subscribe()
 
 	def log_usage(self):
-		self._logger.info("Usage: total: {}, pre-filter: {}, main filter: {}, current laser head: {}, mechanics: {}, compressor: {} - {}".format(
-			self._get_duration_humanreadable(self._usage_data['total']['job_time']),
-			self._get_duration_humanreadable(self._usage_data['prefilter']['job_time']),
-			self._get_duration_humanreadable(self._usage_data['carbon_filter']['job_time']),
-			self._get_duration_humanreadable(self._usage_data['laser_head'][self._laser_head_serial]['job_time']),
-			self._get_duration_humanreadable(self._usage_data['compressor']['job_time']),
-			self._get_duration_humanreadable(self._usage_data['gantry']['job_time']),
+		self._logger.info("Usage: total_usage: {}, pre-filter: {}, main filter: {}, current laser head: {}, mechanics: {}, compressor: {} - {}".format(
+			self.get_duration_humanreadable(self._usage_data['total']['job_time']),
+			self.get_duration_humanreadable(self._usage_data['prefilter']['job_time']),
+			self.get_duration_humanreadable(self._usage_data['carbon_filter']['job_time']),
+			self.get_duration_humanreadable(self._usage_data['laser_head'][self._laser_head_serial]['job_time']),
+			self.get_duration_humanreadable(self._usage_data['compressor']['job_time']),
+			self.get_duration_humanreadable(self._usage_data['gantry']['job_time']),
 			self._usage_data))
 
 	def _subscribe(self):
@@ -376,7 +376,7 @@ class UsageHandler(object):
 		        and len(data['total']) > 0 \
 		        and 'job_time' in data['total'])
 
-	def _get_duration_humanreadable(self, seconds):
+	def get_duration_humanreadable(self, seconds):
 		seconds = seconds if seconds else 0
 		m, s = divmod(seconds, 60)
 		h, m = divmod(m, 60)

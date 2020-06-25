@@ -1,51 +1,9 @@
 /* global snap, ko, $, Snap, API_BASEURL, _, CONFIG_WEBCAM_STREAM, ADDITIONAL_VIEWMODELS, mina, BEAMOS_DISPLAY_VERSION, WorkingAreaHelper */
 
 MRBEAM_PX2MM_FACTOR_WITH_ZOOM = 1; // global available in this viewmodel and in snap plugins at the same time.
-MRBEAM_DEBUG_RENDERING = false;
-if(MRBEAM_DEBUG_RENDERING){
-	function debugBase64(base64URL, target="") {
-		var dbg_link = "<a target='_blank' href='"+base64URL+"'>Right click -> Open in new tab</a>"; // debug message, no need to translate
-			new PNotify({
-				title: "render debug output " + target,
-				text: dbg_link,
-				type: "warn",
-				hide: false
-			});
-	}
-	
-	(function(console){
-		/**
-		 * Convenient storing large data objects (json, dataUri, base64 encoded images, ...) from the console.
-		 * 
-		 * @param {object} data to save (means download)
-		 * @param {string} filename used for download
-		 * @returns {undefined}
-		 */
-		console.save = function(data, filename){
 
-			if(!data) {
-				console.error('Console.save: No data')
-				return;
-			}
-
-			if(!filename) filename = 'console.json'
-
-			if(typeof data === "object"){
-				data = JSON.stringify(data, undefined, 4)
-			}
-
-			var blob = new Blob([data], {type: 'text/json'}),
-				e    = document.createEvent('MouseEvents'),
-				a    = document.createElement('a')
-
-			a.download = filename
-			a.href = window.URL.createObjectURL(blob)
-			a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':')
-			e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
-			a.dispatchEvent(e)
-		}
-	})(console)
-}
+// Render debugging utilities
+MRBEAM_DEBUG_RENDERING = false; // setting to true enables lots of visual debug tools. Can be changed during runtime. 
 
 $(function(){
 
@@ -261,14 +219,14 @@ $(function(){
 		};
 
 		self.getUsedColors = function (elem) {
-		    elem = !elem ? snap.select('#userContent') : (typeof elem == 'string' ? snap.select(elem) : elem)
+			elem = !elem ? snap.select('#userContent') : (typeof elem == 'string' ? snap.select(elem) : elem)
 			return self._getColorsOfSelector('.vector_outline', 'stroke', elem);
 		};
 
 		self.hasEngraveOnlyComponents = function(elem){
-		    elem = !elem ? snap.select('#userContent') : (typeof elem == 'string' ? snap.select(elem) : elem)
-		    return  elem.selectAll("image").length > 0 || self.hasFilledVectors(elem)
-        }
+			elem = !elem ? snap.select('#userContent') : (typeof elem == 'string' ? snap.select(elem) : elem)
+			return  elem.selectAll("image").length > 0 || self.hasFilledVectors(elem)
+		}
 
 		self._getColorsOfSelector = function(selector, color_attr = 'stroke', elem = null){
 			let root = elem === null ? snap : elem;
@@ -319,7 +277,7 @@ $(function(){
 					data: JSON.stringify({"command": "position", x:parseFloat(x.toFixed(2)), y:parseFloat(y.toFixed(2))})
 				});
 			} else {
-				console.warn("Move Laser command while machine state not idle: " + self.state.stateString());
+				console.warn("Move Laser to "+x+","+y+" command while machine state not idle: " + self.state.stateString());
 			}
 		};
 
@@ -680,10 +638,10 @@ $(function(){
 
 				// remove hidden elements with "display:none" via a css class (svg fragment needs to be placed to use getComputedStyle())
 				let allElems = newSvg.selectAll('*[class]');
-				console.log("found elements", allElems.length);
+				// console.log("found elements", allElems.length);
 				for (var i = 0; i < allElems.length; i++) {
 					var el = allElems[i];
-                    // also check visibility:hidden
+					// also check visibility:hidden
 					if (window.getComputedStyle(el.node).display === 'none') {
 						console.info("computed style display=none, removing element ", el);
 						el.remove();
@@ -934,38 +892,34 @@ $(function(){
 			self.abortFreeTransforms();
 			let srcElem = snap.select('#'+elem.previewId);
 
-			let parts;
+			let split_result;
 			switch(method){
 				case 'stroke-color':
-					parts = srcElem.separate_by_stroke_colors();
-					if(parts.length <= 1) failReason = "Didn't find different stroke colors.";
+					split_result = srcElem.separate_by_stroke_colors();
 					break;
 				case 'non-intersecting': // TODO: provide cancel check and proper progress callback
-					parts = srcElem.separate_by_non_intersecting_bbox(null, function(n){ console.log("Separate non intersecting shapes: ", n); });
-					if(parts.length <= 1) failReason = "Didn't find different stroke colors.";
+					split_result = srcElem.separate_by_non_intersecting_bbox(null, function(n){ console.log("Separate non intersecting shapes: ", n); });
 					break;
 				case 'horizontally':
-					parts = srcElem.separate_horizontally();
-					if(parts.length <= 1) failReason = "Not enough native elements.";
+					split_result = srcElem.separate_horizontally();
 					break;
 				case 'vertically':
 				case 'divide':
 				default:
-					parts = srcElem.separate_vertically();
-					if(parts.length <= 1) failReason = "Not enough native elements.";
+					split_result = srcElem.separate_vertically();
 					break;
 			}
 
-			if(parts.length > 1){
+			if(split_result.parts.length > 1){
 				self.removeSVG(elem);
-				for (let i = 0; i < parts.length; i++) {
+				for (let i = 0; i < split_result.parts.length; i++) {
 	
 					const name = elem.name + "."+(i+1);
 					let tp = Array.prototype.concat(elem.typePath, 'split')
 					let file = {url: elem.url, origin: elem.origin, name: name, typePath: tp, type: "split", refs:{download: elem.url}};
 					const id = self.getEntryId();
 					const previewId = self.generateUniqueId(id, file);
-					let fragment = parts[i];
+					let fragment = split_result.parts[i];
 					fragment.clean_gc();
 					fragment.attr({id: previewId})
 
@@ -979,6 +933,14 @@ $(function(){
 					self._prepareAndInsertSVG(fragment, previewId, elem.origin, "");
 					self._listPlacedItem(file);
 				}
+				if(split_result.overflow){
+					new PNotify({
+						title: gettext("Limited split result."),
+						text: gettext(`Splitting this design would result in too many parts. Here are ${split_result.length} parts. You can split the last one again if necessary.`),
+						type: "info",
+						hide: true
+					});
+				}
 			} else {
 				let failReason = "";
 				switch (method) {
@@ -989,6 +951,8 @@ $(function(){
 						failReason = gettext("No non-intersecting shapes found.");
 						break;
 					case 'divide':
+					case 'horizontally':
+					case 'vertically':
 						failReason = gettext("Looks like a single path.");
 				}
 				new PNotify({
@@ -1161,19 +1125,19 @@ $(function(){
 			if (event.keyCode === 13 || event.type === 'blur') {
 				var svg = snap.select('#'+data.previewId);
 				var globalScale = self.scaleMatrix().a;
-                var nt = WorkingAreaHelper.splitStringToTwoValues(event.target.value)
-                if (nt) {
-                    var ntx = nt[0] / globalScale;
-                    var nty = (self.workingAreaHeightMM() - nt[1]) / globalScale;
+				var nt = WorkingAreaHelper.splitStringToTwoValues(event.target.value)
+				if (nt) {
+					var ntx = nt[0] / globalScale;
+					var nty = (self.workingAreaHeightMM() - nt[1]) / globalScale;
 
-                    self.abortFreeTransforms();
-                    svg.ftManualTransform({tx: ntx, ty: nty, diffType: 'absolute'});
-                    self.check_sizes_and_placements();
-                } else {
-                    // reset to previous value
-                    svg.ftUpdateTransform();
-			        svg.ftAfterTransform();
-                }
+					self.abortFreeTransforms();
+					svg.ftManualTransform({tx: ntx, ty: nty, diffType: 'absolute'});
+					self.check_sizes_and_placements();
+				} else {
+					// reset to previous value
+					svg.ftUpdateTransform();
+					svg.ftAfterTransform();
+				}
 			}
 		};
 		self.svgManualRotate = function(data, event) {
@@ -1419,19 +1383,19 @@ $(function(){
 				var previewId = self.generateUniqueId(id, file); // appends # if multiple times the same design is placed.
 				self._create_img_filter(previewId);
 				newImg.attr('data-serveurl', url);
-                if (!window.mrbeam.browser.is_safari) {
-                    // svg filters don't really work in safari: https://github.com/mrbeam/MrBeamPlugin/issues/586
-                    newImg.attr('filter', 'url(#' + self._get_img_filter_id(previewId) + ')');
-                }
+				if (!window.mrbeam.browser.is_safari) {
+					// svg filters don't really work in safari: https://github.com/mrbeam/MrBeamPlugin/issues/586
+					newImg.attr('filter', 'url(#' + self._get_img_filter_id(previewId) + ')');
+				}
 				var imgWrapper = snap.group().attr({
 					id: previewId,
 					'mb:id':self._normalize_mb_id(previewId),
 					class: 'userIMG',
 					'mb:origin': origin,
 				});
-                if (textMode) {
-                    imgWrapper.attr('style', "filter: url(#scan_text_mode)")
-                }
+				if (textMode) {
+					imgWrapper.attr('style', "filter: url(#scan_text_mode)")
+				}
 
 				imgWrapper.append(newImg);
 				// TODO use self._prepareAndInsertSVG()
@@ -1842,6 +1806,10 @@ $(function(){
 			compSvg.attr(namespaces)
 			var attrs = {};
 			var content = compSvg.g(attrs);
+			
+			// TODO: here getBBox() should be reliably sized, but contains a lot of non renderable stuff.
+			let contentBBox = snap.select("#userContent").getBBox();
+			console.log("contentBBox", contentBBox);
 			var userContent = snap.select("#userContent").clone();
 			content.append(userContent);
 
@@ -1878,7 +1846,7 @@ $(function(){
 				var viewBox = "0 0 " + wMM + " " + hMM;
 
 				svgStr = WorkingAreaHelper.fix_svg_string(svgStr); // Firefox bug workaround.
-				var gc_otions_str = self.gc_options_as_string().replace('"', "'");
+				const gc_options_str = self.gc_options_as_string().replace(/"/g, "\"");
 
 				// ensure namespaces are present
 				namespaces['xmlns'] = "http://www.w3.org/2000/svg";
@@ -1886,8 +1854,8 @@ $(function(){
 				let nsList = Object.keys(namespaces).map(key => `${key}="${namespaces[key]}"`).join(" ");
 				var svg = `
 <svg version="1.1" ${nsList} 
-  mb:beamOS_version="${BEAMOS_VERSION}" 
-  width="${w}" height="${h}"  viewBox="${viewBox}" mb:gc_options="${gc_otions_str}">
+  mb:beamOS_version="${BEAMOS_VERSION}"
+  width="${w}" height="${h}"  viewBox="${viewBox}" mb:gc_options="${gc_options_str}">
 <defs/>
   ${svgStr}
 </svg>`;
@@ -1907,6 +1875,7 @@ $(function(){
 			for (var key in gc_options) {
 				res.push(key + ":" + gc_options[key]);
 			}
+			res.push('userAgent:'+navigator.userAgent.replace(/"/g,'\"'));
 			return res.join(", ");
 		};
 
@@ -1979,7 +1948,7 @@ $(function(){
 		}, self);
 
 		self.hasFilledVectors = function(elem){
-		    elem = !elem ? snap.selectAll('#userContent *') : (typeof elem == 'string' ? snap.select(elem) : elem.selectAll("*"))
+			elem = !elem ? snap.selectAll('#userContent *') : (typeof elem == 'string' ? snap.select(elem) : elem.selectAll("*"))
 			for (var i = 0; i < elem.length; i++) {
 				var e = elem[i];
 				if (["path", "circle", "ellipse", "rect", "line", "polyline", "polygon", "path"].indexOf(e.type) >= 0){
@@ -2074,6 +2043,13 @@ $(function(){
 			});
 			$('#quick_text_dialog').on('hidden', function(){
 				self._qt_dialogClose();
+			});
+
+			// opens preview pane on the left if hovered over one of the pink markers on the working area
+			$('#camera_markers circle').mouseenter(function(){
+				if (!$('#wa_view_settings_body').hasClass('in')) {
+					$('#wa_view_settings_body').collapse('toggle');
+				}
 			});
 		};
 
@@ -2212,7 +2188,7 @@ $(function(){
 
 				var cb = function(result, x, y, w, h) {
 					if (MRBEAM_DEBUG_RENDERING) {
-						debugBase64(result, 'png_debug');
+						debugBase64(result, 'Step 2: Canvas result .png');
 					}
 
 					if(fillings.length > 0){
@@ -2230,20 +2206,20 @@ $(function(){
 					}
 					if (typeof callback === 'function') {
 						callback(svg);
+						if (MRBEAM_DEBUG_RENDERING) {
+							const data = {width: w, height:h, x:x, y:y};
+							debugBase64(svg.toDataURL(), 'Step 3: SVG with fill rendering', data);
+						}
 					}
 					self._cleanup_render_mess();
 				};
 
+				let renderBBoxMM = tmpSvg.getBBox(); // if #712 still fails, fetch this bbox earlier (getCompositionSvg()).
 				if(MRBEAM_DEBUG_RENDERING){
-//					var base64String = btoa(tmpSvg.innerSVG());
-					var raw = tmpSvg.innerSVG();
-					var svgString = raw.substr(raw.indexOf('<svg'));
-					var dataUrl = 'data:image/svg+xml;base64, ' + btoa(svgString);
-					debugBase64(dataUrl, 'svg_debug');
+					debugBase64(tmpSvg.toDataURL(), 'Step 1: SVG ready for canvas, renderBBox', renderBBoxMM);
 				}
 				console.log("Rendering " + fillings.length + " filled elements.");
 				if(fillAreas){
-					let renderBBoxMM = tmpSvg.getBBox(); // if #712 still fails, fetch this bbox earlier (getCompositionSvg()).
 					tmpSvg.renderPNG(svgWidthPT, svgHeightPT, wMM, hMM, pxPerMM, renderBBoxMM, cb);
 				} else {
 					cb(null)
@@ -2421,9 +2397,9 @@ $(function(){
 				};
 
 				self.currentQuickShapeFile.components.removeAll()
-                if (qs_params.stroke) {
-                    self.currentQuickShapeFile.components.push(qs_params.color)
-                }
+				if (qs_params.stroke) {
+					self.currentQuickShapeFile.components.push(qs_params.color)
+				}
 				self.currentQuickShapeFile.components_engrave(qs_params.fill)
 
 
@@ -2768,9 +2744,9 @@ $(function(){
 		};
 
 		self._qt_dialogClose = function() {
-            if(self.currentQuickTextAnalyticsData.text_length !== 0) {
-                self._analyticsQuickTextUpdate(self.currentQuickTextAnalyticsData);
-            }
+			if(self.currentQuickTextAnalyticsData.text_length !== 0) {
+				self._analyticsQuickTextUpdate(self.currentQuickTextAnalyticsData);
+			}
 		};
 
 		// ***********************************************************

@@ -178,6 +178,7 @@ $(function () {
         self.settings = parameters[0];
         self.wizardacl = parameters[1];
         self.users = parameters[2];
+        self.loginState = parameters[3];
 
         // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
         self.settings.mrbeam = self;
@@ -224,11 +225,16 @@ $(function () {
 
             // set env flag in body for experimental_feature_beta and  experimental_feature_dev
             if (mrbeam.isDev()) {
-             $('body').addClass('env_dev')
-             $('body').removeClass('env_prod')
+                $('body').addClass('env_dev')
+                $('body').removeClass('env_beta')
+                $('body').removeClass('env_prod')
             } else if (mrbeam.isBeta()) {
-             $('body').addClass('env_beta')
-             $('body').removeClass('env_prod')
+                $('body').addClass('env_beta')
+                $('body').removeClass('env_prod')
+            } else if (mrbeam.isProd()) {
+                $('body').addClass('env_prod')
+                $('body').removeClass('env_dev')
+                $('body').removeClass('env_beta')
             }
 
             $(window).on("orientationchange",self.onOrientationchange);
@@ -237,110 +243,20 @@ $(function () {
             // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS
             // Change "Username" label in Settings > Access Control > Add user
             $('#settings-usersDialogAddUser > div.modal-body > form > div:nth-child(1) > label').text(gettext('E-mail address'));
-
-
-
         };
 
-        self.onStartupComplete = function () {
-            // self.set_offline_links();
-            console.log("Supported Browser: " + mrbeam.browser.is_supported);
-            if (!mrbeam.browser.is_supported) {
-                new PNotify({
-                    title: gettext("Browser not supported."),
-                    text: _.sprintf(gettext("Mr Beam makes use of latest web technologies which are not fully supported by your browser.%(br)sPlease use the latest version of%(br)s%(open)sGoogle Chrome%(close)s for Mr Beam."), {
-                        br: "<br/>",
-                        open: '<a href=\'http://www.google.de/chrome/\' target=\'_blank\'>',
-                        close: '</a>'
-                    }),
-                    type: 'warn',
-                    hide: false
-                });
-            }
+        self.onAllBound = function(){
+            self.set_settings_analytics_links()
+        }
 
-            if (mrbeam.isBeta() && !self.settings.settings.plugins.mrbeam.analyticsEnabled()) {
-                new PNotify({
-                    title: gettext("Beta user: Please consider enabling Mr Beam analytics!"),
-                    text: _.sprintf(gettext("As you are currently in our Beta channel, you would help us " +
-                        "tremendously sharing%(br)sthe laser job insights, so we can improve%(br)san overall experience " +
-                        "working with the%(br)s Mr Beam. Thank you!%(br)s%(open)sGo to analytics settings%(close)s"),
-                        {
-                            open: '<a href=\'#\' data-toggle="tab" id="settings_analytics_link" style="font-weight:bold">',
-                            close: '</a>',
-                            br: '<br>'
-                        }),
-                    type: 'warn',
-                    hide: false
-                });
+        self.onStartupComplete = function(){
+            self.presetLoginUser()
+        }
 
-                $('#settings_analytics_link').on('click', function (event) {
-                    // Prevent url change
-                    event.preventDefault();
-                    // Open the "Settings" menu
-                    $("#settings_tab_btn").tab('show');
-                    // Go to the "Analytics" tab
-                    $('[data-toggle="tab"][href="#settings_plugin_mrbeam_analytics"]').trigger('click');
-                    // Close notification
-                    $('[title="Close"]')[0].click();
-                })
-            }
-
-            if (mrbeam.isBeta()) {
-                new PNotify({
-                    title: gettext("You're using Mr Beam's beta software channel. "),
-                    text: _.sprintf(gettext("Find out%(br)s%(link1_open)swhat's new in the beta channel.%(link1_close)s%(br)s%(br)s" +
-                        "Should you experience any issues you can always switch back to our stable channel in the software update settings.%(br)s%(br)s " +
-                        "Please don't forget to%(br)s%(link2_open)stell us about your experience%(link2_close)s."),
-                        {
-                            br: '</br>',
-                            link1_open: '<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000507827" target="_blank"><i class="fa fa-external-link" aria-hidden="true"></i> ',
-                            link1_close: '</a>',
-                            link2_open: '<a href="https://www.mr-beam.org/ticket" target="_blank"><i class="fa fa-external-link" aria-hidden="true"></i> ',
-                            link2_close: '</a>'
-                        }),
-                    type: 'info',
-                    hide: true
-                });
-
-            }
-        };
-
-        // removed this, seems to be better without. needs testing
-        //
-        // self.setScrollModeForTouchDevices = function(){
-        //     // from https://stackoverflow.com/a/14244680/2631798
-        //     var selScrollable = '.scrollable';
-        //     // Uses document because document will be topmost level in bubbling
-        //     $(document).on('touchmove',function(e){
-        //       e.preventDefault();
-        //     });
-        //     // Uses body because jQuery on events are called off of the element they are
-        //     // added to, so bubbling would not work if we used document instead.
-        //     $('body').on('touchstart', selScrollable, function(e) {
-        //       if (e.currentTarget.scrollTop === 0) {
-        //         e.currentTarget.scrollTop = 1;
-        //       } else if (e.currentTarget.scrollHeight === e.currentTarget.scrollTop + e.currentTarget.offsetHeight) {
-        //         e.currentTarget.scrollTop -= 1;
-        //       }
-        //     });
-        //     // Stops preventDefault from being called on document if it sees a scrollable div
-        //     $('body').on('touchmove', selScrollable, function(e) {
-        //         // Only block default if internal div contents are large enough to scroll
-        //         // Warning: scrollHeight support is not universal. (https://stackoverflow.com/a/15033226/40352)
-        //         if($(this)[0].scrollHeight > $(this).innerHeight() || $(this).scrollTop() > 0) {
-        //             e.stopPropagation();
-        //         }
-        //     });
-        //
-        //     // Still, somethime body scrolls... this fixes it in a very brutal way.
-        //     $('body').on('touchend', function(e) {
-        //         if ($('body').scrollTop() != 0) {
-        //             $('body').scrollTop(0);
-        //             console.log("Scroll on body happened. Hard Corrected.");
-        //         }
-        //     });
-        // };
-
+        self.onCurtainOpened = function(){
+            self.showBrowserWarning()
+            self.showBetaNotificaitons()
+        }
 
         self.onOrientationchange = function () {
             self.setBodyScrollTop();
@@ -368,6 +284,9 @@ $(function () {
             }
         };
 
+        self.onUserLoggedOut = function(){
+            self.presetLoginUser()
+        }
 
         self.start_online_check_interval = function () {
             self.do_online_check();
@@ -416,6 +335,86 @@ $(function () {
             }
         };
 
+        self.set_settings_analytics_links = function(){
+            $('.settings_analytics_link').on('click', function (event) {
+                // Prevent url change
+                event.preventDefault();
+                // Open the "Settings" menu
+                $("#settings_tab_btn").tab('show');
+                // Go to the "Analytics" tab
+                $('[data-toggle="tab"][href="#settings_plugin_mrbeam_analytics"]').trigger('click');
+            })
+        }
+
+        self.showBrowserWarning = function() {
+            console.log("Supported Browser: " + mrbeam.browser.is_supported);
+            if (!mrbeam.browser.is_supported) {
+                new PNotify({
+                    title: gettext("Browser not supported."),
+                    text: _.sprintf(gettext("Mr Beam makes use of latest web technologies which might not be fully supported by your browser.%(br)sPlease use the latest version of%(br)s%(open)sGoogle Chrome%(close)s for Mr Beam."), {
+                        br: "<br/>",
+                        open: '<a href=\'https://www.google.com/chrome/\' target=\'_blank\'>',
+                        close: '</a>'
+                    }),
+                    type: 'warn',
+                    hide: false
+                });
+            }
+        }
+
+        self.showBetaNotificaitons = function() {
+            if (mrbeam.isBeta() && !self.settings.settings.plugins.mrbeam.analyticsEnabled()) {
+                new PNotify({
+                    title: gettext("Beta user: Please consider enabling Mr Beam analytics!"),
+                    text: _.sprintf(gettext("As you are currently in our Beta channel, you would help us " +
+                        "tremendously sharing%(br)sthe laser job insights, so we can improve%(br)san overall experience " +
+                        "working with the%(br)s Mr Beam. Thank you!%(br)s%(open)sGo to analytics settings%(close)s"),
+                        {
+                            open: '<a href=\'#\' data-toggle="tab" id="beta_notification_analytics_link" class="settings_analytics_link" style="font-weight:bold">',
+                            close: '</a>',
+                            br: '<br>'
+                        }),
+                    type: 'warn',
+                    hide: false
+                });
+
+                self.set_settings_analytics_links()
+                $('#beta_notification_analytics_link').one('click', function (event) {
+                    // Close notification
+                    $('[title="Close"]')[0].click();
+                })
+            }
+
+            if (mrbeam.isBeta()) {
+                new PNotify({
+                    title: gettext("You're using Mr Beam's beta software channel. "),
+                    text: _.sprintf(gettext("Find out%(br)s%(link1_open)swhat's new in the beta channel.%(link1_close)s%(br)s%(br)s" +
+                        "Should you experience any issues you can always switch back to our stable channel in the software update settings.%(br)s%(br)s " +
+                        "Please don't forget to%(br)s%(link2_open)stell us about your experience%(link2_close)s."),
+                        {
+                            br: '</br>',
+                            link1_open: '<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000507827" target="_blank"><i class="fa fa-external-link" aria-hidden="true"></i> ',
+                            link1_close: '</a>',
+                            link2_open: '<a href="https://www.mr-beam.org/ticket" target="_blank"><i class="fa fa-external-link" aria-hidden="true"></i> ',
+                            link2_close: '</a>'
+                        }),
+                    type: 'info',
+                    hide: true
+                });
+
+            }
+        }
+
+        self.presetLoginUser = function(){
+            if (MRBEAM_ENV_SUPPORT_MODE) {
+                self.loginState.loginUser('support'+String.fromCharCode(0x0040)+'mr-beam.org')
+                self.loginState.loginPass('a')
+            } else if (MRBEAM_ENV === 'DEV') {
+                self.loginState.loginUser('dev'+String.fromCharCode(0x0040)+'mr-beam.org')
+                self.loginState.loginPass('a')
+            }
+        }
+
     };
 
     // view model class, parameters for constructor, container to bind to
@@ -423,7 +422,7 @@ $(function () {
         MrbeamViewModel,
 
         // e.g. loginStateViewModel, settingsViewModel, ...
-        ["settingsViewModel", "wizardAclViewModel", "usersViewModel"],
+        ["settingsViewModel", "wizardAclViewModel", "usersViewModel", "loginStateViewModel"],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         [ /* ... */]
