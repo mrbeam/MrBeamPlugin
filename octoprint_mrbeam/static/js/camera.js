@@ -65,24 +65,23 @@ $(function(){
         });
 
         self.markerState = ko.computed(function() {
-            count = 0
-            MARKERS.forEach(function(m){
-                if (self.markersFound()[m] === true)
-                    count++
-            });
-            return count
+            // Returns the number of markers found
+            if (MARKERS.reduce((prev, key) => prev || self.markersFound()[key] === undefined, false))
+                return undefined
+            return MARKERS.reduce((prev_val, key) => prev_val + self.markersFound()[key], 0)
         })
 
-        self.markerStateGreen = ko.computed(function() {
-            return self.markerState() >= 4
-        })
-
-        self.markerStateYellow = ko.computed(function() {
-            return self.markerState() < 4 && self.markerState() >= 2
-        })
-
-        self.markerStateRed = ko.computed(function() {
-            return self.markerState() < 4 && self.markerState() <2
+        self.markerStateColor = ko.computed(function() {
+            if (self.markerState() === undefined)
+                return undefined
+            else if (self.markerState() >= 4)
+                return 'green'
+            else if (2 <= self.markerState() < 4)
+                return 'yellow'
+            else if (self.markerState() < 2)
+                return 'red'
+            else
+                return undefined
         })
 
         self.firstRealimageLoaded = ko.computed(function() {

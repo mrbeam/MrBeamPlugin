@@ -564,15 +564,11 @@ class PhotoCreator(object):
 			time.sleep(.2)
 		# The lid didn't open during waiting time
 		cam.async_capture()
-<<<<<<< HEAD
 		saveNext = False # Lens calibration : save the next picture instead of this one
-=======
-
 		prev_img_sent_to_analytics = False
 		min_pix_amount = self._settings.get(['cam', 'markerRecognitionMinPixel'])
-		i = 0
-		j = 0
->>>>>>> develop
+		loop_counter = 0
+		count_sent_pictures_analytics = 0
 		while not self.stopping:
 			while self.pause.isSet():
 				time.sleep(.5)
@@ -589,7 +585,9 @@ class PhotoCreator(object):
 
 			# send image to analytics
 			if prev is not None and self._flag_send_img_to_analytics and not prev_img_sent_to_analytics:
-				self._send_last_img_to_analytics(prev, 'user', markers, missed, min_pix_amount, analytics, force_upload=True, notify_user=True)
+				self._send_last_img_to_analytics(prev, 'user', markers, missed,
+								 min_pix_amount, analytics,
+								 force_upload=True, notify_user=True)
 				prev_img_sent_to_analytics = True
 
 			latest = cam.lastPic() # gets last picture given by cam.worker
@@ -651,7 +649,7 @@ class PhotoCreator(object):
 				else:
 					time.sleep(.8) # Let the raspberry breathe a bit (prevent overheating)
 					continue
-			i += 1
+			loop_counter += 1
 			prev_img_sent_to_analytics = False
 			# Get the desired scale and quality of the picture to serve
 			upscale_factor , quality = pic_qualities[pic_qual_index]
@@ -719,14 +717,18 @@ class PhotoCreator(object):
 				extra=analytics
 			)
 
-			# upload image to analytics if end is dev
+			# upload image to analytics if env is dev
 			if self._plugin.is_dev_env() and self._settings.get(['dev', 'automatic_camera_image_upload'])\
 					and latest is not None \
-					and (
-						i <= 10 or
-						(i > 10 and i % 10 == 0)):
-					j += 1
-					self._send_last_img_to_analytics(latest, 'dev_auto', markers, missed, min_pix_amount, analytics, force_upload=(j%10==0), notify_user=False)
+					and (loop_counter <= 10 \
+					or  (loop_counter > 10 and loop_counter % 10 == 0)):
+				count_sent_pictures_analytics += 1
+				self._send_last_img_to_analytics(latest, 'dev_auto',
+								 markers, missed,
+								 min_pix_amount,
+								 analytics,
+								 force_upload=(count_sent_pictures_analytics%10==0),
+								 notify_user=False)
 
 		cam.stop_preview()
 		if session_details['num_pics'] > 0:
