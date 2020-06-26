@@ -80,6 +80,7 @@ class LidHandler(object):
 		if PICAMERA_AVAILABLE:
 			self.imagePath = self._settings.getBaseFolder("uploads") + '/' + self._settings.get(["cam", "localFilePath"])
 			makedirs(self.imagePath, parent=True)
+			makedirs(self.debugFolder)
 			self._photo_creator = PhotoCreator(self._plugin,
 			                                   self._plugin_manager,
 			                                   self.imagePath,
@@ -114,6 +115,7 @@ class LidHandler(object):
 		self._event_bus.subscribe(OctoPrintEvents.SLICING_FAILED,self._onSlicingEvent)
 		self._event_bus.subscribe(OctoPrintEvents.SLICING_CANCELLED, self._onSlicingEvent)
 		self._event_bus.subscribe(OctoPrintEvents.PRINTER_STATE_CHANGED,self._printerStateChanged)
+		self._event_bus.subscribe(OctoPrintEvents.LENS_CALIB_START,self._startStopCamera)
 
 	def onEvent(self, event, payload):
 		self._logger.debug("onEvent() event: %s, payload: %s", event, payload)
@@ -171,7 +173,7 @@ class LidHandler(object):
 		self._is_slicing = (event == OctoPrintEvents.SLICING_STARTED)
 		self._startStopCamera(event)
 
-	def _startStopCamera(self, event):
+	def _startStopCamera(self, event, payload=None):
 		if self._photo_creator is not None:
 			status = ' - event: {}\nclient_opened {}, is_slicing: {}\nlid_closed: {}, printer.is_locked(): {}, save_debug_images: {}'.format(
 						event,
@@ -184,13 +186,14 @@ class LidHandler(object):
 			if event in (IoBeamEvents.LID_CLOSED, OctoPrintEvents.SLICING_STARTED, OctoPrintEvents.CLIENT_CLOSED):
 				self._logger.info('Camera stopping' + status)
 				self._end_photo_worker()
-			elif event == "initial_calibration":
+			elif event in ["initial_calibration", MrBeamEvents.LENS_CALIB_START]:
 				# See self._photo_creator.is_initial_calibration if it used from /plugin/mrbeam/calibration
 				self._logger.info('Camera starting: initial_calibration. event: {}'.format(event))
 				self._start_photo_worker()
 			else:
 				# TODO get the states from _printer or the global state, instead of having local state as well!
-				if self._client_opened and not self._is_slicing and not self._interlock_closed and not self._printer.is_locked():
+				if self._plugin.calibration_tool_mode or \
+				   (self._client_opened and not self._is_slicing and not self._interlock_closed and not self._printer.is_locked()):
 					self._logger.info('Camera starting' + status)
 					self._start_photo_worker()
 				else:
@@ -269,16 +272,14 @@ class LidHandler(object):
 		self.boardDetectorDaemon.state.onChange()
 
 	def saveRawImg(self):
-		imgName = self.boardDetectorDaemon.next_tmp_img_name()
 		# TODO debug/raw.jpg -> copy image over
 		# TODO careful when deleting pic + setting new name -> hash
 		if self._photo_creator and \
 			self._photo_creator.active and \
 			not self._photo_creator.stopping:
-			self._logger.warning("Saving new picture %s" % imgName)
 			# take a new picture and save to the specific path
-			self._photo_creator.saveRaw = imgName
-			if len(self.boardDetectorDaemon) - 1 == MIN_BOARDS_DETECTED:
+			if len(self.boardDetectorDaemon) == MIN_BOARDS_DETECTED - 1:
+				self._logger.info("Last picture to be taken")
 				self._event_bus.fire(MrBeamEvents.RAW_IMG_TAKING_LAST)
 			elif len(self.boardDetectorDaemon) >= MIN_BOARDS_DETECTED:
 				# TODO Only fail for Waterott
@@ -287,6 +288,9 @@ class LidHandler(object):
 				return
 			else:
 				self._event_bus.fire(MrBeamEvents.RAW_IMAGE_TAKING_START)
+			imgName = self.boardDetectorDaemon.next_tmp_img_name()
+			self._photo_creator.saveRaw = imgName
+			self._logger.warning("Saving new picture %s" % imgName)
 			self.takeNewPic()
 			imgPath = path.join(self.debugFolder, imgName)
 			# Tell the boardDetector to listen for this file
@@ -472,43 +476,41 @@ class PhotoCreator(object):
 				return
 
 			self._logger.debug("Starting the camera now.")
-			try:
-				with MrbCamera(octoprint_mrbeam.camera.MrbPicWorker(maxSize=2, debug=self.debug),
-							   # framerate=8,
-							   resolution=octoprint_mrbeam.camera.LEGACY_STILL_RES,  # TODO camera.DEFAULT_STILL_RES,
-							   stopEvent=self.stopEvent,) as cam:
-					self.serve_pictures(cam, pic_settings=pic_settings, cam_params=cam_params, out_pic_size=out_pic_size)
-				if recurse_nb > 0:
-					self._logger.info("Camera recovered")
-					self._analytics_handler.add_camera_session_details(exc.msgForAnalytics(exc.CAM_CONNRECOVER))
-			except exc.CameraConnectionException as e:
-				self._logger.warning(" %s, %s : %s" % (e.__class__.__name__, e, exc.msg(exc.CAM_CONN)),
-									   analytics=exc.CAM_CONN)
-				if recurse_nb < MAX_PIC_THREAD_RETRIES:
-					self._logger.info("Restarting work() after some sleep")
-					self._plugin.user_notification_system.show_notifications(
-						self._plugin.user_notification_system.get_notification(
-							notification_id='warn_cam_conn_err',
-							replay=True))
-					self.stopEvent.clear()
-					if not self.stopEvent.wait(5.0):
-						self.work(recurse_nb=recurse_nb+1)
-				else:
-					self._logger.exception(" %s, %s : Recursive restart : too many times, displaying Error message." % (e.__class__.__name__, e),
-										   analytics=exc.CAM_CONN)
-					self._plugin.user_notification_system.show_notifications(
-						self._plugin.user_notification_system.get_notification(
-							notification_id='err_cam_conn_err',
-							replay=True))
-				return
-			except Exception as e:
-				if e.__class__.__name__.startswith('PiCamera'):
-					self._logger.exception("PiCamera_Error_while_preparing_camera_%s_%s", e.__class__.__name__, e)
-				else:
-					self._logger.exception("Exception_while_preparing_camera_%s_%s", e.__class__.__name__, e)
-			self.stopEvent.set()
-		except:
-			self._logger.exception("Exception in PhotoCreator thread: ")
+			camera_worker = camera.MrbPicWorker(maxSize=2, debug=self.debug)
+			with MrbCamera(camera_worker,
+                           # framerate=8,
+                           resolution=camera.LEGACY_STILL_RES,  # TODO camera.DEFAULT_STILL_RES,
+                           stopEvent=self.stopEvent,) as cam:
+				self.serve_pictures(cam, pic_settings=pic_settings, cam_params=cam_params, out_pic_size=out_pic_size)
+			if recurse_nb > 0:
+				self._logger.info("Camera recovered")
+				self._analytics_handler.add_camera_session_details(exc.msgForAnalytics(exc.CAM_CONNRECOVER))
+		except exc.CameraConnectionException as e:
+			self._logger.warning(" %s, %s : %s" % (e.__class__.__name__, e, exc.msg(exc.CAM_CONN)),
+			                       analytics=exc.CAM_CONN)
+			if recurse_nb < MAX_PIC_THREAD_RETRIES:
+				self._logger.info("Restarting work() after some sleep")
+				self._plugin.user_notification_system.show_notifications(
+					self._plugin.user_notification_system.get_notification(
+						notification_id='warn_cam_conn_err',
+						replay=True))
+				self.stopEvent.clear()
+				if not self.stopEvent.wait(5.0):
+					self.work(recurse_nb=recurse_nb+1)
+			else:
+				self._logger.exception(" %s, %s : Recursive restart : too many times, displaying Error message." % (e.__class__.__name__, e),
+				                       analytics=exc.CAM_CONN)
+				self._plugin.user_notification_system.show_notifications(
+					self._plugin.user_notification_system.get_notification(
+						notification_id='err_cam_conn_err',
+						replay=True))
+			return
+		except Exception as e:
+			if e.__class__.__name__.startswith('PiCamera'):
+				self._logger.exception("PiCamera_Error_while_preparing_camera_%s_%s", e.__class__.__name__, e)
+			else:
+				self._logger.exception("Exception_while_preparing_camera_%s_%s", e.__class__.__name__, e)
+		self.stopEvent.set()
 
 	def serve_pictures(self, cam, pic_settings=None, cam_params=None, out_pic_size=None):
 		"""

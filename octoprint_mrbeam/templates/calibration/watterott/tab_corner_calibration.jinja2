@@ -45,7 +45,10 @@
 
 <div data-bind="visible: !cornerCalibrationActive()" width="100%">
     <div style="margin-top:1em;">
-        <button class="btn btn-default" data-bind="visible: !cornerCalibrationComplete() && !availablePic()['cropped'], click: startCornerCalibration">{{ _('Start Corner Calibration') }}</button>
+        <button class="btn btn-default"
+                data-bind="visible: cal_img_ready() && !cornerCalibrationComplete() && !availablePic()['cropped'], click: startCornerCalibration">
+            {{ _('Start Corner Calibration') }}
+        </button>
     </div>
     <div data-bind="visible: cornerCalibrationComplete() && !availablePic()['cropped']" >
         <i class="icon icon-spinner icon-spin" style="font-weight: bold"></i>

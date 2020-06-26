@@ -91,18 +91,41 @@ $(function () {
 		// ---------------- CORNER CALIBRATION ----------------
         self.cornerCalibrationActive = ko.observable(false);
 		self.currentResults = ko.observable({});
+		self.indicateRestartCornerCalibration = ko.observable(false)
 
-        self.dbNWImgUrl = ko.observable("");
+		self.applySetting = function(picType) {
+			// TODO with a dictionnary
+			var settings = [['cropped', CROPPED_IMG_RES, 'hidden', 'visible'],
+			                ['lens_corrected', DEFAULT_IMG_RES, 'visible', 'hidden'],
+			                ['raw', DEFAULT_IMG_RES, 'hidden', 'hidden'],
+			                ['default', LOADING_IMG_RES, 'hidden', 'hidden']]
+			for (let _t of settings)
+				if (_t[0] === picType) {
+					self.calImgWidth(_t[1][0])
+					self.calImgHeight(_t[1][1])
+					self.correctedMarkersVisibility(_t[2])
+					self.croppedMarkersVisibility(_t[3])
+					return
+				}
+			new PNotify({
+				title: gettext("Error"),
+				text: "Something went wrong (applySettings)",
+				type: 'error',
+				hide: true
+			});
+		};
+
+    self.dbNWImgUrl = ko.observable("");
 		self.dbNEImgUrl = ko.observable("");
 		self.dbSWImgUrl = ko.observable("");
 		self.dbSEImgUrl = ko.observable("");
 
 		self.picType = ko.observable(""); // raw, lens_corrected, cropped
-		self.correctedMarkersVisibility = ko.observable('hidden')
+		self.correctedMarkersVisibility = ko.observable('hidden');
 		self.croppedMarkersVisibility = ko.observable('hidden');
 
-		self._cornerCalImgUrl = ko.observable("")
-        self.markersFoundPosition = ko.observable({});
+		self._cornerCalImgUrl = ko.observable("");
+		self.markersFoundPosition = ko.observable({});
 		self.markersFoundPositionCopy = null;
 
 		self.crossSize = ko.observable(30);
@@ -111,26 +134,24 @@ $(function () {
 			return `M0,${s} h${2*s} M${s},0 v${2*s} z`
 		})
 
-        self.getImgUrl = function(type) {
-			let settings = [['cropped', CROPPED_IMG_RES, 'hidden', 'visible'],
-							['lens_corrected', DEFAULT_IMG_RES, 'visible', 'hidden'],
-							['raw', DEFAULT_IMG_RES, 'hidden', 'hidden'],
-							['default', LOADING_IMG_RES, 'hidden', 'hidden']]
-			let applySetting = function(setting) {
-				let _t = setting
-				self.calImgWidth(_t[1][0])
-				self.calImgHeight(_t[1][1])
-				self.correctedMarkersVisibility(_t[2])
-				self.croppedMarkersVisibility(_t[3])
-				if (_t[0] === 'default')
-					return STATIC_URL
-				else
-					return self.availablePicUrl()[_t[0]]
+		self.getImgUrl = function(type) {
+			if (type !== undefined) {
+					self.applySetting(type)
+					if (type == 'default')
+						return self.staticURL
+					else
+						return self.availablePicUrl()[type]
 			}
-			for (let _t of settings)
-				if ((type === undefined || _t[0] === type) && (_t[0] === 'default' || self.availablePic()[_t[0]]))
-					return applySetting(_t)
-			return applySetting('default')
+			for (let _t of ['cropped', 'lens_corrected', 'raw', 'default'])
+				if (_t === 'default' || self.availablePic()[_t]){
+					self.applySetting(_t)
+					if (_t == 'default')
+						return self.staticURL
+					else
+						return self.availablePicUrl()[_t]
+				}
+			self.applySetting('default')
+			return self.staticURL // precaution
 		};
 
 		self.cornerCalImgUrl = ko.computed(function() {
@@ -149,9 +170,7 @@ $(function () {
 			return Object.values(self.camera.markersFound()).reduce((x,y) => x && y);
 		})
 
-		self.calImgUrl = ko.computed(function() {
-			return self.getImgUrl()
-		});
+		self.calImgUrl = ko.computed(self.getImgUrl);
 
 		self.zMarkersTransform = ko.computed( function () {
 			// Like workArea.zObjectImgTransform(), but zooms
@@ -180,11 +199,11 @@ $(function () {
 			}
 		});
 
-        self.lensCalibrationComplete = ko.computed(function(){
+		self.lensCalibrationComplete = ko.computed(function(){
 			return ('lensCalibration' in self.calibrationState()) ? self.calibrationState().lensCalibration === "success" : false;
 		});
 
-        self.boardsFound = ko.computed(function() {
+		self.boardsFound = ko.computed(function() {
 			return self.rawPicSelection().filter(elm => elm.state === "success").length
 		})
 
@@ -234,6 +253,7 @@ $(function () {
 			// self.currentResults({});
 			self.cornerCalibrationActive(true);
 			self.picType("lens_corrected");
+			// self.applySetting('lens_corrected')
 			self._cornerCalImgUrl(self.getImgUrl('lens_corrected'))
 			self.markersFoundPositionCopy = self.markersFoundPosition()
 			self.nextMarker();
@@ -241,7 +261,7 @@ $(function () {
 
 		self.stopCornerCalibration = function () {
 			self.cornerCalibrationActive(false);
-			self.cornerCalImgUrl(self.getImgUrl())
+			self.cornerCalImgUrl() // trigger refresh
 		}
 
 		self.startLensCalibration = function () {
@@ -445,12 +465,10 @@ $(function () {
 
 				// required to refresh the heatmap
 				$('#heatmap_container').html($('#heatmap_container').html());
-
 				arr.sort(function(l,r){
 					return l.index < r.index ? -1 : 1;
 				});
 
-//				console.log(arr);
 				self.rawPicSelection(arr);
 			}
 		};

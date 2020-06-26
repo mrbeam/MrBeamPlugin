@@ -1969,6 +1969,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		if event == MrBeamEvents.BOOT_GRACE_PERIOD_END:
 			if self.calibration_tool_mode:
+				self._printer.home('Homing before starting calibration tool')
 				self.lid_handler.onLensCalibrationStart()
 
 		if event == OctoPrintEvents.ERROR:
