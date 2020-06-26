@@ -931,14 +931,10 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	width: 5em;
 	height: 5em;
 	display: inline-block;
-	margin-top: -100px;
-	margin-left: -25px;
+	margin-top: -75px;
+	margin-left: -5px;
 	position: relative;
 	z-index: 1;
-}
-#lens_calibration_take_pic[disabled] {
-	opacity: 1;
-	background-color: #5985dd;
 }
 
 #lens_calibration_toggle_qa_btn {

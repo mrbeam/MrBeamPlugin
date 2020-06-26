@@ -32,7 +32,7 @@
                    width="1731.795" height="1407.0836" x="1018.6564" y="562.65308" />
               </g>
               <g id="segment_group" transform="translate(340, 250),scale(1.1, 1.2)"></g>
-              <path d="M2740,2040H3500" stroke="#0266cc" stroke-width="15px"></path>
+              <path d="M2740,2040H3500" stroke="#e25303" stroke-width="15px"></path>
               <!-- <text id='lensCalibrationCoverageText' x="350" y="2360" style="font-size: 150px;"></text> -->
             </svg>
 
@@ -59,10 +59,10 @@
                             event:{ mouseover: $root.heatmap_highlight, mouseout: $root.heatmap_dehighlight }"
                 onclick="this.classList.remove('zoom')"> <!-- toggle class messes with rm btn -->
                 <div class="btn-group">
-                    <button class="btn btn-default" onclick="this.parentElement.parentElement.classList.add('zoom'); event.stopPropagation();">
+                    <button class="btn btn-mini btn-default" onclick="this.parentElement.parentElement.classList.add('zoom'); event.stopPropagation();">
                         <i class="icon icon-search"></i>
                     </button>
-                    <button class="btn btn-danger" data-bind="visible: (pic.path !== null), click: $parent.delRawPic">
+                    <button class="btn btn-mini btn-danger" data-bind="visible: (pic.path !== null), click: $parent.delRawPic">
                         <i  class="icon icon-trash"></i>
                     </button>
                 </div>
