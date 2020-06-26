@@ -302,8 +302,6 @@ $(function () {
 					return;
 				}
 
-			// if(self.cornerCalibrationComplete() || !self.cornerCalibrationActive()) return;
-
 			// save current stepResult
 			var step = self.calibrationMarkers[self.currentMarker];
 			if (self.currentMarker > 0) {
@@ -319,7 +317,6 @@ $(function () {
 		};
 
 		self._getClickPos = function (ev) {
-
 			var bbox = ev.target.parentElement.parentElement.getBoundingClientRect();
 			var clickpos = {
 				xScreenPx: ev.clientX - bbox.left,
@@ -750,15 +747,13 @@ $(function () {
 				hide: true
 			});
 
-			// TODO could this logic go inside of self.reset_corner_calibration?
-			if(window.mrbeam.isWatterottMode()) self.resetView();
-			else self.reset_corner_calibration();
+			self.resetView();
+			if(!window.mrbeam.isWatterottMode())
+				self.goto('#calibration_step_1');
 		};
 
 		self.abortCalibration = function () {
-			if (self.cornerCalibrationActive()) {
-				self.cornerCalibrationActive(false);
-			}
+			self.cornerCalibrationActive(false);
 			self.resetView();
 		};
 

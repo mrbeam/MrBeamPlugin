@@ -301,8 +301,8 @@ def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d
 	roiBlurThresh =  cv2.bitwise_and( roiBlur, roiBlur, mask=cv2.bitwise_or(threshOtsuMask, gaussianMask))
 	debug_quad_path = debug_out_path.replace('.jpg', '{}.jpg'.format(quadrant))
 	for spot, center, start, stop, count in _get_white_spots(cv2.bitwise_or(threshOtsuMask,
-									 gaussianMask),
-	                                                   min_pix=min_pix):
+	                                                                        gaussianMask),
+	                                                         min_pix=min_pix):
 		spot.dtype = np.uint8
 		if visual_debug:
 			cv2.imshow("{} : spot".format(quadrant),

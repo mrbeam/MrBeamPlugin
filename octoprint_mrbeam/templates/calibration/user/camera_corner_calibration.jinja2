@@ -10,6 +10,7 @@
             <image style="cursor:crosshair;" data-bind="attr: {href: cornerCalImgUrl(), width:calImgWidth(), height:calImgHeight() }, click: userClick" />
         </g>
         <g id="corners" class="calibration_click_indicator"
+           style="pointer-events: none;"
            data-bind="attr: { visibility: correctedMarkersVisibility() }">
             <use id="click_NW" href="#cross" x="-100" y="-100" />
             <use id="click_NE" href="#cross" x="-100" y="-100" />
@@ -86,11 +87,19 @@
 					<div id="NE" class="cal-row"><div class="cal-arrow NE"></div> North East: <span data-bind="text: __format_point(currentResults()['NE'])"></span></div>
 				</div>
 			</div>
-			<div style="margin-top:1em;">
-				<button class="btn btn-default" data-bind="click: previousMarker, visible: cornerCalibrationActive()">{{ _('Previous') }}</button>
-				<button class="btn btn-default" data-bind="click: nextMarker, visible: cornerCalibrationActive()">{{ _('Next') }}</button>
-				<button class="btn btn-default" data-bind="click: saveCornerCalibrationData, visible: cornerCalibrationComplete()">{{ _('Save Calibration') }}</button>
-				<button class="btn btn-warning" data-bind="click: abortCalibration, visible: cornerCalibrationActive()">{{ _('Cancel') }}</button>
+			<div style="margin-top:1em;" data-bind="visible: cornerCalibrationActive()">
+          <button class="btn btn-default"
+                  data-bind="click: previousMarker">
+              {{ _('Previous') }}</button>
+          <button class="btn btn-default"
+                  data-bind="click: nextMarker">
+              {{ _('Next') }}</button>
+          <button class="btn btn-default"
+                  data-bind="click: saveCornerCalibrationData, visible: cornerCalibrationComplete()">
+              {{ _('Save Calibration') }}</button>
+          <button class="btn btn-warning"
+                  data-bind="click: abortCalibration">
+              {{ _('Cancel') }}</button>
 			</div>
 		</div>
 	</div>
