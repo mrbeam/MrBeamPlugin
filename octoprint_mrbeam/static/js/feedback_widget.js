@@ -34,7 +34,7 @@ $(function () {
 
         self.onCurtainOpened = function () {
             self.isCurtainOpen = true;
-            if (typeof window.FreshworksWidget == "function") {
+            if (window.FreshworksWidget) {
                 self.showWidget();
             }
         };
@@ -64,6 +64,17 @@ $(function () {
                 });
                 window.FreshworksWidget('disable', 'ticketForm',
                     ['custom_fields.cf_serial', 'custom_fields.cf_software_version','custom_fields.cf_software_channel']);
+                window.FreshworksWidget("setLabels", {
+                  'de': {
+                    banner: "Help & Support",
+                    launcher: "Support",
+                    contact_form: {
+                      title: "Help & Support",
+                      submit: "Send feedback",
+                      confirmation: "Thank you for your feedback.",
+                    }
+                  }
+                });
                 window.FreshworksWidget('show', 'launcher');
                 console.log("FreshWidget: Shown")
             } catch (e) {
