@@ -898,7 +898,7 @@ $(function(){
 						});
 					});
 				} else {
-					console.log("Skipping vector job ("+1+"), invalid parameters.");
+					console.log("Skipping vector job ("+i+"), invalid parameters.");
 				}
 			});
 
@@ -1278,39 +1278,36 @@ $(function(){
 //			self.settings.settings.plugins.mrbeam.focusReminder(showFocusReminder);
 //			self.settings.saveall(); // fails on getOnlyChangedData
 
-		    let focusReminder = !self.dontRemindMeAgainChecked();
-            let data = {focusReminder: focusReminder};
-            OctoPrint.simpleApiCommand("mrbeam", "focus_reminder", data)
-                .done(function (response) {
-                    self.settings.requestData();
-                    console.log("simpleApiCall response for saving focus reminder state: ", response);
-                })
-                .fail(function (jqXHR, textStatus, errorThrown) {
-                    if (jqXHR.status == 401) {
-                        self.loginState.logout();
-                        new PNotify({
-                            title: gettext("Session expired"),
-                            text: gettext("Please login again to continue."),
-                            type: "warn",
-                            tag: "conversion_error",
-                            hide: false
-                        });
-                    } else {
+            if (self.dontRemindMeAgainChecked() == self.showFocusReminder()){
+                let focusReminder = !self.dontRemindMeAgainChecked();
+                self.showFocusReminder(focusReminder);
+                let data = {focusReminder: focusReminder};
+                OctoPrint.simpleApiCommand("mrbeam", "focus_reminder", data)
+                    .done(function (response) {
                         self.settings.requestData();
-                        console.error("Unable to save focus reminder state: ", data);
-                        new PNotify({
-                            title: gettext("Error while saving settings!"),
-                            text: _.sprintf(gettext("Unable to save your focus reminder state at the moment.%(br)sCheck connection to Mr Beam and try again."), {br: "<br/>"}),
-                            type: "error",
-                            hide: true
-                        });
-                    }
-                });
-        };
-
-		self.sendDontRemindToServer = function() {
-		    if (self.dontRemindMeAgainChecked()) {
-		        self.sendFocusReminderChoiceToServer();
+                        console.log("simpleApiCall response for saving focus reminder state: ", response);
+                    })
+                    .fail(function (jqXHR, textStatus, errorThrown) {
+                        if (jqXHR.status == 401) {
+                            self.loginState.logout();
+                            new PNotify({
+                                title: gettext("Session expired"),
+                                text: gettext("Please login again to continue."),
+                                type: "warn",
+                                tag: "conversion_error",
+                                hide: false
+                            });
+                        } else {
+                            self.settings.requestData();
+                            console.error("Unable to save focus reminder state: ", data);
+                            new PNotify({
+                                title: gettext("Error while saving settings!"),
+                                text: _.sprintf(gettext("Unable to save your focus reminder state at the moment.%(br)sCheck connection to Mr Beam and try again."), {br: "<br/>"}),
+                                type: "error",
+                                hide: true
+                            });
+                        }
+                    });
             }
         };
 
@@ -1573,6 +1570,11 @@ $(function(){
             }
         };
 
+		self.onEventSettingsUpdated = function(){
+		    self.showFocusReminder(self.settings.settings.plugins.mrbeam.focusReminder());
+		    self.dontRemindMeAgainChecked(!self.showFocusReminder())
+        };
+
 		self.cancel_conversion = function(){
 			if(self.slicing_in_progress()){
 				// TODO cancel slicing at the backend properly
@@ -1656,7 +1658,7 @@ $(function(){
 
                         let outer = '<div id="' + slider_id + '_out"></div>';
                         let color_circle = '<div class="vector_mapping_color_circle" style="background:' + hex + '"/></div>';
-                        let slider = '<input id="'+slider_id+'" class="svgtogcode_grayscale conversion_range_slider vector_mapping_slider" type="range" min="0" max="255" value="'+val+'" /></div>';
+                        let slider = '<input id="'+slider_id+'" class="svgtogcode_grayscale mrb_slider conversion_range_slider" type="range" min="0" max="255" value="'+val+'" /></div>';
 
                         line_mapping_container.append(outer);
                         $('#' + slider_id + '_out').append(color_circle);
@@ -1685,8 +1687,8 @@ $(function(){
 
                 if (val > 3000) {
                     $(this).val(3000)
-                } else if (val < 100 || val === "") {
-                    $(this).val(100)
+                } else if (val < 50 || val === "") {
+                    $(this).val(50)
                 }
             });
         };

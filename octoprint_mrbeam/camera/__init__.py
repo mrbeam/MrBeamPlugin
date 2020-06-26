@@ -8,6 +8,8 @@ from itertools import chain
 from threading import Event
 from abc import ABCMeta, abstractmethod
 import os
+from octoprint_mrbeam.mrb_logger import mrb_logger
+# Python 3 : use ABC instead of ABCMeta
 
 # Python 3 : use ABC instead of ABCMeta
 SUCCESS_WRITE_RETVAL = 1
@@ -81,7 +83,7 @@ class MrbPicWorker(object):
 		self.times = []  # exposure time values
 		self.adjust_brightness = []
 		self.busy = Event()
-		self._logger = logging.getLogger("mrbeam.camera.MrbPicWorker")
+		self._logger = mrb_logger("mrbeam.camera.MrbPicWorker")
 		if debug: self._logger.setLevel(logging.DEBUG)
 		else: self._logger.setLevel(logging.WARNING)
 

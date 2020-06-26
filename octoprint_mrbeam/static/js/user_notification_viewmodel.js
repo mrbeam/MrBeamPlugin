@@ -14,7 +14,7 @@ $(function () {
                 type: 'error',
                 hide: false,
                 knowledgebase: {
-                    url: 'https://mr-beam.freshdesk.com/support/solutions/articles/43000557279-error-laser-head-unit-not-found',
+                    url: 'https://support.mr-beam.org/support/solutions/articles/43000557281-system-messages#lhnotfound',
                 }
             },
             err_bottom_open: {
@@ -23,7 +23,7 @@ $(function () {
                 type: 'error',
                 hide: false,
                 knowledgebase: {
-                    url: 'https://mr-beam.freshdesk.com/support/solutions/articles/43000557280-error-bottom-plate-error',
+                    url: 'https://support.mr-beam.org/support/solutions/articles/43000557281-system-messages#bottomplate',
                 }
             },
             err_hardware_malfunction: {
@@ -32,7 +32,7 @@ $(function () {
                 type: 'error',
                 hide: false,
                 knowledgebase: {
-                    url: 'https://mr-beam.freshdesk.com/support/solutions/articles/43000557281-error-hardware-malfunction',
+                    url: 'https://support.mr-beam.org/support/solutions/articles/43000557281-system-messages#hwmalfunction',
                 }
             },
             warn_cam_conn_err: {
@@ -47,8 +47,13 @@ $(function () {
                 type: 'error',
                 hide: false,
                 knowledgebase: {
-                    url: 'https://support.mr-beam.org/support/solutions/articles/43000570474-error-camera-error',
+                    url: 'https://support.mr-beam.org/support/solutions/articles/43000557281-system-messages#cameraerror',
                 }
+            },
+            msg_cam_image_analytics_sent: {
+                title: gettext("Thank you"),
+                text: gettext("The last image from your camera was submitted to Mr Beam and is going to be uploaded silently in the background."),
+                type: 'success',
             },
         };
 

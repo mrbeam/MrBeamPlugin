@@ -2,7 +2,7 @@
 					<div class="container-fluid">
 						<div class="row-fluid">
 							<div class="span4 accordion full-col" style="margin-bottom:0;">
-
+                                <div id="workingarea_left">
 								<div id="state_accordion">
 									<div class="accordion-heading" id="mrb_state_header">
 										<div class="accordion-toggle"><i class="icon-info-sign"></i> {{ _('State') }}:</div>
@@ -26,44 +26,119 @@
 													{{ _('Timelapse') }}: <strong data-bind="text: timelapseString"></strong><br>
 													{{ _('Approx. Total Job Time') }}: <strong data-bind="text: state.estimatedPrintTimeString"></strong><br>
 													-->
-													<div data-bind="visible: state.isPrinting() || state.isPaused()">
+                                    <div data-bind="visible: state.isPrinting() || state.isPaused()">
 
-														<div>
-															<div id="job_printtime">{{ _('Laser Time:') }} <strong data-bind="text: state.printTimeString"></strong>&nbsp;/ <span data-bind="text: readyToLaser.estimated_duration"></span></div>
-														</div>
-														<div class="progress progress-striped active">
-															<div class="bar" id="job_progressBar" data-bind="style: { width: state.progressString() + '%' }">&nbsp;{{ _('Processed') }} :  <strong data-bind="text: state.byteString"></strong></div>
-														</div>
+                                        <div>
+                                            <div id="job_printtime">{{ _('Laser Time:') }} <strong
+                                                    data-bind="text: state.printTimeString"></strong>&nbsp;/ <span
+                                                    data-bind="text: readyToLaser.estimated_duration"></span></div>
+                                        </div>
+                                        <div class="progress progress-striped active">
+                                            <div class="bar" id="job_progressBar"
+                                                 data-bind="style: { width: state.progressString() + '%' }">
+                                                &nbsp;{{ _('Processed') }} : <strong
+                                                    data-bind="text: state.byteString"></strong></div>
+                                        </div>
 
-													</div>
-													<!--                                {{ _('Print Time') }}: <strong data-bind="text: printTimeString"></strong><br>
+                                    </div>
+                                    <!--                                {{ _('Print Time') }}: <strong data-bind="text: printTimeString"></strong><br>
 																					{{ _('Print Time Left') }}: <strong data-bind="text: printTimeLeftString"></strong><br>-->
 
 
 													<div class="row-fluid print-control btn-group" style="display: none;" data-bind="visible: loginState.isUser">
-														<button class="btn btn-danger span6" data-bind="click: conversion.show_conversion_dialog, enable: state.isOperational() && state.isReady() && !state.isPrinting() && !state.isPaused() && loginState.isUser() && !workingArea.working_area_empty(), attr: {title: state.titlePrintButton}" id="job_print">
-															<i class="icon-white icon-fire" data-bind="css: { 'wobble': state.isPrinting()}"></i> <span>{{ _('Laser') }}</span>
-														</button>
-														<button class="btn span6" id="job_pause" data-bind="click: state.pause, enable: state.isOperational() && (state.isPrinting() || state.isPaused()) && loginState.isUser(), css: {active: state.isPaused()}, attr: {title: state.titlePauseButton}"><i data-bind="css: {'icon-pause': !state.isPaused(), 'icon-play': state.isPaused()}"></i> <span data-bind="visible: !state.isPaused()">{{ _('Pause') }}</span><span data-bind="visible: state.isPaused()">{{ _('Resume') }}</span></button>
-													</div>
+														<button id="laser_button" class="btn btn-danger span6"
+                                                                data-bind="click: conversion.show_conversion_dialog, enable: state.isOperational() && state.isReady() && !state.isPrinting() && !state.isPaused() && loginState.isUser() && !workingArea.working_area_empty(), attr: {title: state.titlePrintButton}"
+                                                                id="job_print">
+                                                            <i class="icon-white icon-fire"
+                                                               data-bind="css: { 'wobble': state.isPrinting()}"></i>
+                                                            <span>{{ _('Laser') }}</span>
+                                                        </button>
+                                                        <button class="btn span6" id="job_pause"
+                                                                data-bind="click: state.pause, enable: state.isOperational() && (state.isPrinting() || state.isPaused()) && loginState.isUser(), css: {active: state.isPaused()}, attr: {title: state.titlePauseButton}">
+                                                            <i data-bind="css: {'icon-pause': !state.isPaused(), 'icon-play': state.isPaused()}"></i>
+                                                            <span data-bind="visible: !state.isPaused()">{{ _('Pause') }}</span>
+                                                            <span data-bind="visible: state.isPaused()">{{ _('Resume') }}</span>
+                                                        </button>
+                                                    </div>
 												</div>
 											</div>
 										</div>
 
 										<div id="wa_view_settings" class="accordion-inner">
 											<div class="accordion-heading ">
-												<a href="#wa_view_settings_body" class="dropdown" data-toggle="collapse" aria-expanded="false">
+												<a id="wa_view_settings_toggle" href="#wa_view_settings_body" class="dropdown" data-toggle="collapse" aria-expanded="false">
 													<i class="icon-camera"></i> {{ _('Preview') }}:
 												</a>
 												<span class="caret" style="vertical-align: middle"></span>
 											</div>
 											<div class="collapse" id="wa_view_settings_body">
 												<div class="accordion-inner">
+                                                    <div data-bind="visible: camera.cameraActive() && camera.markerStateColor() !== 'green'">
+
+                                                        <div>
+                                                            <p style="display: inline-block">
+                                                                <svg width="2.5ex" height="2.5ex" style="float: left;">
+                                                                    <circle id="marker_preview_pane" r="30%" cx="45%" cy="50%" fill="#ffffff" stroke="#ff00ff" stroke-width="17%">
+                                                                    </circle>
+                                                                </svg>
+                                                                <strong>{{ _('Preview not accurate:') }}</strong><br/>
+                                                                {{ _('The preview camera image might not be completely accurate.
+                                                                Make sure that all four markers are visible.') }}
+                                                                <a href="https://support.mr-beam.org/support/solutions/articles/43000577720-message-preview-not-accurate-and-pink-circles-flashing-on-working-area" target="_blank" style="font-size: 11px"><i class="icon-external-link"></i> More info</a><br/>
+                                                                <a href="#" data-toggle="modal" data-target="#analytics_send_image_modal"><i class="fa fa-heartbeat"></i> Send image to Mr&nbsp;Beam</a>
+                                                            </p>
+                                                        </div>
+
+                                                        <div id="analytics_send_image_modal" class="modal hide fade" >
+                                                            <div class="modal-header">
+                                                                <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+                                                                <h3><i class="fa fa-heartbeat"></i> {{ _('Send image to Mr&nbsp;Beam') }}</h3>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <div>
+                                                                    <p> {{ _("Send the current image to Mr Beam Lasers for review.") }}</p>
+                                                                    <p> {{ _("This helps us to improve the camera system to work better in even more difficult conditions.") }}</p>
+                                                                </div>
+
+                                                                <div data-bind="visible: analytics.analyticsEnabled()">
+                                                                    <div>
+                                                                        <ul>
+                                                                            <li>{{ _("Mr Beam Lasers might store your image in it's camera training data set.") }}</li>
+                                                                            <li>{{ _("Please understand that Mr Beam Lasers can not send you any response regarding this image.") }}</li>
+                                                                            <li>{{ _("Mr Beam Lasers will not publish the image nor sell it to third parties.") }}</li>
+                                                                            {% set privacy_policy = _('/plugin/mrbeam/static/docs/MrBeamAnalytics-PrivacyPolicy_en.pdf') %}
+                                                                            <li>{{ _("Your image is sent within the context of Mr Beam Analytics. (See %(open)sprivacy policy%(close)s.)", open='<a href="%s" target="_blank">' % privacy_policy, close='</a>')|safe }}</li>
+                                                                            <li>{{ _("The upload of your image to Mr Beam's serves will happen in the background. If you're not online, the image will be uploaded next time you're online.") }}</li>
+                                                                        </ul>
+                                                                    </div>
+                                                                    <div>
+                                                                        <p>{{ _("We appreciate your support. Thank you!") }}</p>
+                                                                    </div>
+                                                                </div>
+                                                                <div data-bind="visible: !analytics.analyticsEnabled()">
+                                                                    <h5><i class="icon-warning-sign"></i> {{ _("Activate Mr Beam Analytics:") }}</h5>
+                                                                    <p>
+                                                                        {{ _("This functionality is part of Mr&nbsp;Beam Analytics which needs to be enabled to use this functionality.") }}
+                                                                        {{ _("Please go to %(open)sMr&nbsp;Beam Analytics%(close)s to enable it.", open='<a href="#" data-dismiss="modal" data-toggle="tab" class="settings_analytics_link">', close='</a>')|safe }}
+                                                                    </p>
+                                                                </div>
+
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button class="btn" id="analytics_send_image_btn_cancel" data-dismiss="modal" aria-hidden="true">{{ _('Cancel') }}</button>
+                                                                <button class="btn btn-primary" id="analytics_send_image_btn_ok" data-dismiss="modal" aria-hidden="true"
+                                                                        data-bind="enable: analytics.analyticsEnabled(), click: camera.send_camera_image_to_analytics">{{ _('Send') }}</button>
+                                                            </div>
+                                                        </div>
+
+
+{#														<button type="button" data-bind="click: camera.send_camera_image_to_analytics">Send image to Mr Beam</button>#}
+													</div>
 													<div data-bind="style: { display: camera.imgResolutionNoticeDisplay() }">
-													<span style="font-weight: bold">Low</span> Picture Quality
+													    <span style="font-weight: bold">{{ _('Low') }}</span> {{ _('Picture Quality') }}
 														<span class="muted">
-															- Open the lid and keep your hands off the working area
-															for a few seconds to receive a higher resolution image
+															{{ _('- Open the lid and keep your hands off the working area
+															for a few seconds to receive a higher resolution image') }}
 														</span>
 													</div>
 													<div>
@@ -71,10 +146,14 @@
 															{{ _('Brightness') }}:
 														</label>
 														<i class="icon-adjust"></i>
-														<input type="range" min="0" max="1" step="0.01"
-															   style="width:80%;"
-															   class="decent_input img_adjust"
-															   value="0" data-bind="value: previewImgOpacity, valueUpdate: 'input'">
+{#														<input type="range" min="0" max="1" step="0.01"#}
+{#															   style="width:80%;"#}
+{#															   class="decent_input img_adjust"#}
+{#															   value="0" data-bind="value: previewImgOpacity, valueUpdate: 'input'">#}
+                                                        <input id="preview-brightness" type="range" min="0" max="1" step="0.01"
+                                                           style="width:80%;"
+                                                           class="mrb_slider"
+                                                           value="0" data-bind="value: previewImgOpacity, valueUpdate: 'input'">
 													</div>
 													<div>
 														<label>
@@ -85,7 +164,7 @@
 																	style: { 'padding-bottom': (100 * hwRatio())+'%' },
 																	event: { mousewheel: wheel_zoom_monitor }
 																 ">
-																<div data-bind="style: {
+                                                <div data-bind="style: {
 																		width: (100*zoom())+'%',
 																		'padding-bottom': (100*zoom()*hwRatio())+'%',
 																		left: (zoomOffX() / workingAreaWidthMM() * 100) + '%',
@@ -251,31 +330,33 @@
 																<input class="decent_input translation wide" type="text" value="0, 0" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualTranslate($data, event); },
 																			blur: function(d, event){ $root.svgManualTranslate($data, event); }} "/>
-																<i class="icon-repeat" title="{{ _('rotation') }}"></i>
-																<input class="decent_input rotation" type="text" value="0°" data-bind="event: {
+                                                <i class="icon-repeat" title="{{ _('rotation') }}"></i>
+                                                <input class="decent_input rotation" type="text" value="0°" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualRotate($data, event); },
 																			blur: function(d, event){ $root.svgManualRotate($data, event); }} "/>
-																</br>
-																<i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>
-																<input class="decent_input horizontal" type="text" value="? mm" data-bind="event: {
+                                                </br>
+                                                <i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>
+                                                <input class="decent_input horizontal" type="text" value="? mm"
+                                                       data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualWidth($data, event); },
 																			blur: function(d, event){ $root.svgManualWidth($data, event); }} "/>
-																<i class="icon-resize-vertical" title="{{ _('vertical') }}"></i>
-																<input class="decent_input vertical" type="text" value="? mm" data-bind="event: {
+                                                <i class="icon-resize-vertical" title="{{ _('vertical') }}"></i>
+                                                <input class="decent_input vertical" type="text" value="? mm"
+                                                       data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualHeight($data, event); },
 																			blur: function(d, event){ $root.svgManualHeight($data, event); }} "/>
-																<i class="icon-resize-full" title="{{ _('scale') }}"></i>
-																<input class="decent_input scale" type="text" value="100%" data-bind="event: {
+                                                <i class="icon-resize-full" title="{{ _('scale') }}"></i>
+                                                <input class="decent_input scale" type="text" value="100%" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualScale($data, event); },
 																			blur: function(d, event){ $root.svgManualScale($data, event); }} "/>
-																</br>
-																<i class="icon-th" title="{{ _('multiply') }}"></i>
-																<input class="decent_input multiply" type="text" value="1×1" data-bind="event: {
+                                                </br>
+                                                <i class="icon-th" title="{{ _('multiply') }}"></i>
+                                                <input class="decent_input multiply" type="text" value="1×1" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualMultiply($data, event); },
 																			blur: function(d, event){ $root.svgManualMultiply($data, event); }} "/>
 
-																<i class="icon-copy" title="{{ _('duplicate') }}"></i>
-																<a href="#" data-bind="event: {
+                                                <i class="icon-copy" title="{{ _('duplicate') }}"></i>
+                                                <a href="#" data-bind="event: {
 																			click: function(d, event){ $root.duplicateSVG($data, event); }
 																		} ">{{ _('duplicate') }}</a>
 																<div class='dropdown pull-right experimental_feature_beta' style='display:inline-block;' >
@@ -302,7 +383,7 @@
 
 															</div>
 															<div class="misfit_warning">
-																<i class="icon-warning-sign" title="{{ _('exceeds working area') }}"></i>&nbsp;
+																<i class="icon-warning-sign" title="{{ _('exceeds working area') }}"></i>
 																<span>{{ _('Design exceeds the working area.') }}</span>
 																<a href="#" name="working_area_tab_make_it_fit" data-bind="click: function(){ $root.fitSVG($data) } ">{{ _('Make it fit') }}</a>
 															</div>
@@ -310,163 +391,217 @@
 													</div>
 												</script>
 
-												<script type="text/html" id="wa_template_model_img">
-													<div class="file_list_entry" data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
-                                                        <div class="pull-left wa_used_color" style="background-image: url('/plugin/mrbeam/static/img/img_and_fills2.svg')"></div>
-														<div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
-														<div class="btn-group action-buttons pull-right">
-															<div class="btn btn-mini" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
-															<div class="btn btn-mini remove-design-btn" data-bind="click: function() { $root.removeIMG($data); }"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
-														</div>
-														<div class="detail_information" >
-															<div class="local_transformation muted">
-																<i class="icon-move" title="{{ _('translation') }}"></i>
-																<input class="decent_input translation wide" type="text" value="0,0" data-bind="event: {
-																			keyup: function(d, event){ $root.svgManualTranslate($data, event); },
-																			blur: function(d, event){ $root.svgManualTranslate($data, event); }} "/>
-																<i class="icon-repeat" title="{{ _('rotation') }}"></i>
-																<input class="decent_input rotation" type="text" value="0°" data-bind="event: {
+                                <script type="text/html" id="wa_template_model_img">
+                                    <div class="file_list_entry" data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
+                                        <div class="pull-left wa_used_color" style="background-image: url('/plugin/mrbeam/static/img/img_and_fills2.svg')"></div>
+                                        <div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
+                                        <div class="btn-group action-buttons pull-right">
+                                            <div class="btn btn-mini" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
+                                            <div class="btn btn-mini remove-design-btn" data-bind="click: function() { $root.removeIMG($data); }"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
+                                        </div>
+                                        <div class="detail_information" >
+                                            <div class="local_transformation muted">
+                                                <i class="icon-move" title="{{ _('translation') }}"></i>
+                                                <input class="decent_input translation wide" type="text" value="0,0" data-bind="event: {
+                                                            keyup: function(d, event){ $root.svgManualTranslate($data, event); },
+                                                            blur: function(d, event){ $root.svgManualTranslate($data, event); }} "/>
+                                                <i class="icon-repeat" title="{{ _('rotation') }}"></i>
+                                                <input class="decent_input rotation" type="text" value="0°" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualRotate($data, event); },
 																			blur: function(d, event){ $root.svgManualRotate($data, event); }} "/>
-																</br>
-																<i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>
-																<input class="decent_input horizontal" type="text" value="? mm" data-bind="event: {
+                                                </br>
+                                                <i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>
+                                                <input class="decent_input horizontal" type="text" value="? mm"
+                                                       data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualWidth($data, event); },
 																			blur: function(d, event){ $root.svgManualWidth($data, event); }} "/>
-																<i class="icon-resize-vertical" title="{{ _('vertical') }}"></i>
-																<input class="decent_input vertical" type="text" value="? mm" data-bind="event: {
+                                                <i class="icon-resize-vertical" title="{{ _('vertical') }}"></i>
+                                                <input class="decent_input vertical" type="text" value="? mm"
+                                                       data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualHeight($data, event); },
 																			blur: function(d, event){ $root.svgManualHeight($data, event); }} "/>
-																<i class="icon-resize-full" title="{{ _('scale') }}"></i>
-																<input class="decent_input scale" type="text" value="100%" data-bind="event: {
+                                                <i class="icon-resize-full" title="{{ _('scale') }}"></i>
+                                                <input class="decent_input scale" type="text" value="100%" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualScale($data, event); },
 																			blur: function(d, event){ $root.svgManualScale($data, event); }} "/>
-																</br>
-																<i class="icon-th" title="{{ _('multiply') }}"></i>
-																<input class="decent_input multiply" type="text" value="1×1" data-bind="event: {
+                                                </br>
+                                                <i class="icon-th" title="{{ _('multiply') }}"></i>
+                                                <input class="decent_input multiply" type="text" value="1×1" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualMultiply($data, event); },
 																			blur: function(d, event){ $root.svgManualMultiply($data, event); }} "/>
-                                                                <i class="icon-copy" title="{{ _('duplicate') }}"></i>
-																<a href="#" data-bind="event: {
+                                                <i class="icon-copy" title="{{ _('duplicate') }}"></i>
+                                                <a href="#" data-bind="event: {
 																			click: function(d, event){ $root.duplicateSVG($data, event); }
 																		} ">{{ _('duplicate') }}</a>
 
-{#                                                               We disabled image processing options for Safari: svg filters don't really work in safari: https://github.com/mrbeam/MrBeamPlugin/issues/586 #}
-                                                                <div class="accordion md-accordion working_area_image_preprocessing" data-bind="visible: !window.mrbeam.browser.is_safari">
-                                                                  <div class="card">
-                                                                    <div class="card-header working_area_image_preprocessing_heading">
-                                                                      <div class="mb-0 working_area_image_preprocessing_link">
-                                                                        <button class="btn btn-link collapsed image-preprocessing-collapsible" type="button" data-toggle="collapse" data-bind="attr: { 'data-target': '#preprocessing_sliders_' + $data.id }"
-                                                                                aria-expanded="true" aria-controls="collapseOne">
-                                                                            {{ _('Image Preprocessing') }}
-                                                                        </button>
-                                                                      </div>
-                                                                    </div>
-                                                                    <div class="collapse working_area_image_preprocessing_sliders" data-bind="attr: { id: 'preprocessing_sliders_' + $data.id }">
-                                                                      <div class="card-body">
-{#                                                                      # We disabled image processing options for Safari: svg filters don't really work in safari: https://github.com/mrbeam/MrBeamPlugin/issues/586 #}
-                                                                        <div data-bind="visible: !window.mrbeam.browser.is_safari">
-																			<div class="img_adjust_ui pull-left">
-																				<i class="icon-adjust" title="{{ _('contrast') }}"></i>
-																				<input class="decent_input contrast img_adjust" type="range" min="1" max="5" value="1" step="0.05" data-bind="event: {
+                                                {#                                                               We disabled image processing options for Safari: svg filters don't really work in safari: https://github.com/mrbeam/MrBeamPlugin/issues/586 #}
+                                                <div class="accordion md-accordion working_area_image_preprocessing"
+                                                     data-bind="visible: !window.mrbeam.browser.is_safari">
+                                                    <div class="card">
+                                                        <div class="card-header working_area_image_preprocessing_heading">
+                                                            <div class="mb-0 working_area_image_preprocessing_link">
+                                                                <button class="btn-link collapsed image-preprocessing-collapsible"
+                                                                        type="button" data-toggle="collapse"
+                                                                        data-bind="attr: { 'data-target': '#preprocessing_sliders_' + $data.id }"
+                                                                        aria-expanded="true"
+                                                                        aria-controls="collapseOne">
+                                                                    {{ _('Image Preprocessing') }}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <div class="collapse working_area_image_preprocessing_sliders"
+                                                             data-bind="attr: { id: 'preprocessing_sliders_' + $data.id }">
+                                                            <div class="card-body">
+                                                                {#                                                                      # We disabled image processing options for Safari: svg filters don't really work in safari: https://github.com/mrbeam/MrBeamPlugin/issues/586 #}
+                                                                <div data-bind="visible: !window.mrbeam.browser.is_safari">
+                                                                    <div class="img_adjust_ui pull-left">
+                                                                        <div class="img-preprocess-cont">
+                                                                            <i class="icon-adjust"
+                                                                               title="{{ _('contrast') }}"></i>
+                                                                            <input id="img-preprocess-contrast"
+                                                                                   class="mrb_slider small"
+                                                                                   type="range" min="1" max="5"
+                                                                                   value="1" step="0.05" data-bind="event: {
 																							keyup: function(d, event){ $root.imgManualAdjust($data, event); },
 																							input: function(d, event){ $root.imgManualAdjust($data, event); },
 																							blur: function(d, event){ $root.imgManualAdjust($data, event); }} "/>
-																				<br/>
-																				<i class="icon-sun" title="{{ _('brightness') }}"></i>
-																				<input class="decent_input brightness img_adjust" type="range" min="-0.8" max="0.8" value="0" step="0.05" data-bind="event: {
+                                                                        </div>
+                                                                        <div class="img-preprocess-cont">
+                                                                            <i class="icon-sun"
+                                                                               title="{{ _('brightness') }}"></i>
+                                                                            <input id="img-preprocess-brightness"
+                                                                                   class="mrb_slider small"
+                                                                                   type="range" min="-0.8" max="0.8"
+                                                                                   value="0" step="0.05" data-bind="event: {
 																							keyup: function(d, event){ $root.imgManualAdjust($data, event); },
 																							input: function(d, event){ $root.imgManualAdjust($data, event); },
 																							blur: function(d, event){ $root.imgManualAdjust($data, event); }} "/>
-																				</br>
-																				<i class="icon-magic" title="{{ _('sharpen') }}"></i>
-																				<input class="decent_input sharpen img_adjust" type="range" min="0" max="40" value="0" step="1" data-bind="event: {
+                                                                            </br>
+                                                                        </div>
+                                                                        <div class="img-preprocess-cont">
+                                                                            <i class="icon-magic"
+                                                                               title="{{ _('sharpen') }}"></i>
+                                                                            <input id="img-preprocess-sharpen"
+                                                                                   class="mrb_slider small"
+                                                                                   type="range" min="0" max="40"
+                                                                                   value="0" step="1" data-bind="event: {
 																							keyup: function(d, event){ $root.imgManualSharpen($data, event); },
 																							input: function(d, event){ $root.imgManualSharpen($data, event); },
 																							blur: function(d, event){ $root.imgManualSharpen($data, event); }} "/>
 																				<br/>
-																				<i class="" title="{{ _('gamma') }}">Γ</i>
-																				<input class="decent_input gamma img_adjust" type="range" min="0.2" max="1.8" value="1" step="0.05" data-bind="event: {
+                                                                        </div>
+                                                                        <div class="img-preprocess-cont">
+                                                                            <i class="" title="{{ _('gamma') }}">Γ</i>
+                                                                            <input id="img-preprocess-gamma"
+                                                                                   class="mrb_slider small"
+                                                                                   type="range" min="0.2" max="1.8"
+                                                                                   value="1" step="0.05" data-bind="event: {
 																							keyup: function(d, event){ $root.imgManualAdjust($data, event); },
 																							input: function(d, event){ $root.imgManualAdjust($data, event); },
 																							blur: function(d, event){ $root.imgManualAdjust($data, event); }} "/>
-																			</div>
-																			<div class="img_crop_ui pull-right">
-																				<input class="decent_input crop_top img_adjust" style="grid-area: tc; align-self: start" type="number" min="0" max="99" value="0" step="0.5" data-bind="event: {
+                                                                        </div>
+
+                                                                    <div class="img_crop_ui pull-right">
+                                                                        <input class="decent_input crop_top img_adjust"
+                                                                               style="grid-area: tc; align-self: start"
+                                                                               type="number" min="0" max="99" value="0"
+                                                                               step="0.5" data-bind="event: {
 																							keyup: function(d, event){ $root.imgManualCrop($data, event); },
 																							input: function(d, event){ $root.imgManualCrop($data, event); },
 																							blur: function(d, event){ $root.imgManualCrop($data, event); }} "/>
-																				<input class="decent_input crop_left img_adjust" style="grid-area: cl;" type="number" min="0" max="99" value="0" step="0.5" data-bind="event: {
+                                                                        <input class="decent_input crop_left img_adjust"
+                                                                               style="grid-area: cl;" type="number"
+                                                                               min="0" max="99" value="0" step="0.5"
+                                                                               data-bind="event: {
 																							keyup: function(d, event){ $root.imgManualCrop($data, event); },
 																							input: function(d, event){ $root.imgManualCrop($data, event); },
 																							blur: function(d, event){ $root.imgManualCrop($data, event); }} "/>
-																				<div style='grid-area:cc'><i class="icon icon-crop" title="{{ _('crop') }}"></i></div>
-																				<input class="decent_input crop_right img_adjust" style="grid-area: cr;" type="number" min="0" max="99" value="0" step="0.5" data-bind="event: {
+                                                                        <div style='grid-area:cc'><i
+                                                                                class="icon icon-crop"
+                                                                                title="{{ _('crop') }}"></i></div>
+                                                                        <input class="decent_input crop_right img_adjust"
+                                                                               style="grid-area: cr;" type="number"
+                                                                               min="0" max="99" value="0" step="0.5"
+                                                                               data-bind="event: {
 																							keyup: function(d, event){ $root.imgManualCrop($data, event); },
 																							input: function(d, event){ $root.imgManualCrop($data, event); },
 																							blur: function(d, event){ $root.imgManualCrop($data, event); }} "/>
-																				<input class="decent_input crop_bottom img_adjust" style="grid-area: bc; align-self: end" type="number" min="0" max="99" value="0" step="0.5" data-bind="event: {
+                                                                        <input class="decent_input crop_bottom img_adjust"
+                                                                               style="grid-area: bc; align-self: end"
+                                                                               type="number" min="0" max="99" value="0"
+                                                                               step="0.5" data-bind="event: {
 																							keyup: function(d, event){ $root.imgManualCrop($data, event); },
 																							input: function(d, event){ $root.imgManualCrop($data, event); },
 																							blur: function(d, event){ $root.imgManualCrop($data, event); }} "/>
 
-																			</div>
-                                                                        </div>
-                                                                        <div data-bind="visible: window.mrbeam.browser.is_safari">
-                                                                            <p>This feature is currently not available on iOS or Safari.</p>
-                                                                        </div>
-                                                                      </div>
                                                                     </div>
-                                                                  </div>
                                                                 </div>
-															<div class="misfit_warning" >
-																<i class="icon-warning-sign" title="{{ _('exceeds working area') }}"></i>&nbsp;
-																<span>{{ _('Design exceeds the working area.') }}</span>
-																<a href="#" name="working_area_tab_make_it_fit" data-bind="click: function(){ $root.fitSVG($data) } ">{{ _('Make it fit') }}</a>
-															</div>
-														</div>
-													</div>
-												</script>
-
-												<script type="text/html" id="wa_template_quicktext">
-													<div class="file_list_entry" data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
-                                                        <div class="pull-left wa_used_color" style="background-image: url('/plugin/mrbeam/static/img/img_and_fills2.svg')"></div>
-														<div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
-														<div class="btn-group action-buttons pull-right">
-															<div class="btn btn-mini" data-bind="click: function() { $root.editQuickText($data); }"><i class="icon-edit" title="{{ _('Edit') }}"></i></div>
-															<div class="btn btn-mini" data-bind="click: function() { $root.toggleTransformHandles($data); }"><i class="icon-move" title="{{ _('Transform') }}"></i></div>
-															<div class="btn btn-mini remove-design-btn" data-bind="click: function() { $root.removeSVG($data); }"><i class="icon-remove" title="{{ _('Remove') }}"></i></div>
-														</div>
-														<div class="detail_information" >
-															<div class="local_transformation muted">
-																<i class="icon-move" title="{{ _('translation') }}"></i>
-																<input class="decent_input translation wide" type="text" value="0,0" data-bind="event: {
+                                                                <div data-bind="visible: window.mrbeam.browser.is_safari">
+                                                                    <p>This feature is currently not available on iOS or
+                                                                        Safari.</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="misfit_warning">
+                                                    <i class="icon-warning-sign"
+                                                       title="{{ _('exceeds working area') }}"></i>&nbsp;
+                                                    <span>{{ _('Design exceeds the working area.') }}</span>
+                                                    <a href="#" name="working_area_tab_make_it_fit"
+                                                       data-bind="click: function(){ $root.fitSVG($data) } ">{{ _('Make it fit') }}</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                </script>
+                                <script type="text/html" id="wa_template_quicktext">
+                                    <div class="file_list_entry"
+                                         data-bind="event: {mouseover: $root.highlightDesign, mouseout: $root.removeHighlight }">
+                                        <div class="title pull-left" data-bind="text: name, attr: {title: name}"></div>
+                                        <div class="btn-group action-buttons pull-right">
+                                            <div class="btn btn-mini"
+                                                 data-bind="click: function() { $root.editQuickText($data); }"><i
+                                                    class="icon-edit" title="{{ _('Edit') }}"></i></div>
+                                            <div class="btn btn-mini"
+                                                 data-bind="click: function() { $root.toggleTransformHandles($data); }">
+                                                <i class="icon-move" title="{{ _('Transform') }}"></i></div>
+                                            <div class="btn btn-mini remove-design-btn"
+                                                 data-bind="click: function() { $root.removeSVG($data); }"><i
+                                                    class="icon-remove" title="{{ _('Remove') }}"></i></div>
+                                        </div>
+                                        <div class="detail_information">
+                                            <div class="local_transformation muted">
+                                                <i class="icon-move" title="{{ _('translation') }}"></i>
+                                                <input class="decent_input translation wide" type="text" value="0,0"
+                                                       data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualTranslate($data, event); },
 																			blur: function(d, event){ $root.svgManualTranslate($data, event); }} "/>
-																<i class="icon-repeat" title="{{ _('rotation') }}"></i>
-																<input class="decent_input rotation" type="text" value="0°" data-bind="event: {
+                                                <i class="icon-repeat" title="{{ _('rotation') }}"></i>
+                                                <input class="decent_input rotation" type="text" value="0°" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualRotate($data, event); },
 																			blur: function(d, event){ $root.svgManualRotate($data, event); }} "/>
-																</br>
-																<i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>
-																<input class="decent_input horizontal" type="text" value="? mm" data-bind="event: {
+                                                </br>
+                                                <i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>
+                                                <input class="decent_input horizontal" type="text" value="? mm"
+                                                       data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualWidth($data, event); },
 																			blur: function(d, event){ $root.svgManualWidth($data, event); }} "/>
-																<i class="icon-resize-vertical" title="{{ _('vertical') }}"></i>
-																<input class="decent_input vertical" type="text" value="? mm" data-bind="event: {
+                                                <i class="icon-resize-vertical" title="{{ _('vertical') }}"></i>
+                                                <input class="decent_input vertical" type="text" value="? mm"
+                                                       data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualHeight($data, event); },
 																			blur: function(d, event){ $root.svgManualHeight($data, event); }} "/>
-																<i class="icon-resize-full" title="{{ _('scale') }}"></i>
-																<input class="decent_input scale" type="text" value="100%" data-bind="event: {
+                                                <i class="icon-resize-full" title="{{ _('scale') }}"></i>
+                                                <input class="decent_input scale" type="text" value="100%" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualScale($data, event); },
 																			blur: function(d, event){ $root.svgManualScale($data, event); }} "/>
-																</br>
-																<i class="icon-th" title="{{ _('multiply') }}"></i>
-																<input class="decent_input multiply" type="text" value="1×1" data-bind="event: {
+                                                </br>
+                                                <i class="icon-th" title="{{ _('multiply') }}"></i>
+                                                <input class="decent_input multiply" type="text" value="1×1" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualMultiply($data, event); },
 																			blur: function(d, event){ $root.svgManualMultiply($data, event); }} "/>
-                                                                <i class="icon-copy" title="{{ _('duplicate') }}"></i>
-																<a href="#" data-bind="event: {
+                                                <i class="icon-copy" title="{{ _('duplicate') }}"></i>
+                                                <a href="#" data-bind="event: {
 																			click: function(d, event){ $root.duplicateSVG($data, event); }
 																		} ">{{ _('duplicate') }}</a>
 
@@ -496,30 +631,32 @@
 																<input class="decent_input translation wide" type="text" value="0,0" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualTranslate($data, event); },
 																			blur: function(d, event){ $root.svgManualTranslate($data, event); }} "/>
-																<i class="icon-repeat" title="{{ _('rotation') }}"></i>
-																<input class="decent_input rotation" type="text" value="0°" data-bind="event: {
+                                                <i class="icon-repeat" title="{{ _('rotation') }}"></i>
+                                                <input class="decent_input rotation" type="text" value="0°" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualRotate($data, event); },
 																			blur: function(d, event){ $root.svgManualRotate($data, event); }} "/>
-																</br>
-																<i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>
-																<input class="decent_input horizontal" type="text" value="? mm" data-bind="event: {
+                                                </br>
+                                                <i class="icon-resize-horizontal" title="{{ _('horizontal') }}"></i>
+                                                <input class="decent_input horizontal" type="text" value="? mm"
+                                                       data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualWidth($data, event); },
 																			blur: function(d, event){ $root.svgManualWidth($data, event); }} "/>
-																<i class="icon-resize-vertical" title="{{ _('vertical') }}"></i>
-																<input class="decent_input vertical" type="text" value="? mm" data-bind="event: {
+                                                <i class="icon-resize-vertical" title="{{ _('vertical') }}"></i>
+                                                <input class="decent_input vertical" type="text" value="? mm"
+                                                       data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualHeight($data, event); },
 																			blur: function(d, event){ $root.svgManualHeight($data, event); }} "/>
-																<i class="icon-resize-full" title="{{ _('scale') }}"></i>
-																<input class="decent_input scale" type="text" value="100%" data-bind="event: {
+                                                <i class="icon-resize-full" title="{{ _('scale') }}"></i>
+                                                <input class="decent_input scale" type="text" value="100%" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualScale($data, event); },
 																			blur: function(d, event){ $root.svgManualScale($data, event); }} "/>
-																</br>
-																<i class="icon-th" title="{{ _('multiply') }}"></i>
-																<input class="decent_input multiply" type="text" value="1×1" data-bind="event: {
+                                                </br>
+                                                <i class="icon-th" title="{{ _('multiply') }}"></i>
+                                                <input class="decent_input multiply" type="text" value="1×1" data-bind="event: {
 																			keyup: function(d, event){ $root.svgManualMultiply($data, event); },
 																			blur: function(d, event){ $root.svgManualMultiply($data, event); }} "/>
-                                                                <i class="icon-copy" title="{{ _('duplicate') }}"></i>
-																<a href="#" data-bind="event: {
+                                                <i class="icon-copy" title="{{ _('duplicate') }}"></i>
+                                                <a href="#" data-bind="event: {
 																			click: function(d, event){ $root.duplicateSVG($data, event); }
 																		} ">{{ _('duplicate') }}</a>
 
@@ -537,6 +674,7 @@
 									</div>
 								</div>
 							</div>
+                            </div>
 
 							<!--  end sidebar  -->
 
@@ -544,14 +682,13 @@
 							<div class="span8" style="position:relative">
 								{% include 'homing_overlay.jinja2' %}
 								<div id="zoomFactor" data-bind="text: zoom_factor_text"></div>
-								<svg id="area_preview" class="workingarea" visibility="hidden"
+								<svg id="area_preview" class="workingarea"
 									 data-bind="style: {
 											width: workingAreaWidthPx()+'px',
 											height: workingAreaHeightPx()+'px'
 										},
 										attr: {
 											viewBox: zoomViewBox(),
-											visibility: 'visible'
 										},
 										event: { wheel: wheel_zoom_wa, mousemove: mouse_drag_wa }
 									 "
@@ -609,18 +746,18 @@
 										<path d="M-15,0H-5M15,0H5M0,15V5M0,-15V-5" />
 									</g>
 									<g id="camera_markers" fill="#ffffff" stroke="#ff00ff" stroke-width="5"
-									   data-bind="attr: { class: camera.markerMissedClass() }">
+									   data-bind="visible: camera.cameraActive(), attr: { class: camera.markerMissedClass() }">
                                         <circle id="markerNW" r="5" cx="7" cy="7">
-                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera. Try to close and reopen the lid.') }}</title>
+                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera.') }}</title>
                                         </circle>
 										<circle id="markerNE" r="5" cx="-7" cy="7" data-bind="attr: {cx: workingAreaWidthMM()-7}" >
-                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera. Try to close and reopen the lid.') }}</title>
+                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera.') }}</title>
                                         </circle>
 										<circle id="markerSW" r="5" cx="7" cy="-7" data-bind="attr: {cy: workingAreaHeightMM()-7}" >
-                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera. Try to close and reopen the lid.') }}</title>
+                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera.') }}</title>
                                         </circle>
 										<circle id="markerSE" r="5" cx="-7" cy="-7" data-bind="attr: {cx: workingAreaWidthMM()-7, cy: workingAreaHeightMM()-7}" >
-                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera. Try to close and reopen the lid.') }}</title>
+                                            <title>{{ _('The system can not find the pink marker in the device in this corner of the workin area. Please make sure that it is visible for the camera.') }}</title>
                                         </circle>
 									</g>
 {#									<rect id="scanArea" x="0" y="0" width="0" height="0" ></rect>#}

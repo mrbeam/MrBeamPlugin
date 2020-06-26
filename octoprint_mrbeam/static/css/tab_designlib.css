@@ -202,9 +202,18 @@
 
 #files .preview_card div.preview,
 #files .icon_card div.preview {
-	padding-top: 80%;
+	padding-top: 80%; /* this is specifying the height */
+	height:0;
 	width: 100%;
 	cursor: pointer;
+}
+#files .preview_card div.preview{
+	background-image: url(/plugin/mrbeam/static/img/designlib_preview_dummy.svg);
+}
+
+#files .preview_card div.preview>img.lazy_loader {
+	height:0;
+	margin-top: -90%; /* triggers loading 10% earlier than scroll in */
 }
 
 #files .file_list_entry.folder {

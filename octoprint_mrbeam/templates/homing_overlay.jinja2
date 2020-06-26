@@ -51,9 +51,7 @@
                             {{ _('Then do a homing cycle so that your Mr&nbsp;Beam knows its current position.') }}<br/>
                         </div>
 						<div style='text-align: center; padding:.5em;'>
-							<div class='btn-group'>
-								<button class="btn btn-default" id="homing_overlay_homing_btn" data-bind="enable: state.isLocked() && loginState.isUser(), click: function() { OctoPrint.printer.home(['x', 'y']) }"><i class="icon-home"></i> {{ _('Homing Cycle') }}</button>
-							</div>
+                            <button class="btn btn-default" id="homing_overlay_homing_btn" data-bind="enable: state.isLocked() && loginState.isUser(), click: function() { OctoPrint.printer.home(['x', 'y']) }"><i class="icon-home"></i> {{ _('Homing Cycle') }}</button>
 						</div>
 					</div>
                 </div>

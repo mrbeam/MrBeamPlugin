@@ -118,6 +118,7 @@ $(function() {
 
         self.showDialog = function() {
             if (!$('#lasersafety_overlay').hasClass('in')) {
+                // KS
                 $('#lasersafety_overlay').modal("show");
             }
         }

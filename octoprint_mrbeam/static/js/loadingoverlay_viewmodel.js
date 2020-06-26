@@ -49,17 +49,24 @@ $(function() {
 
         self.removeLoadingOverlay = function(){
             $('body').addClass('loading_step8');
+            callViewModels(self.allViewModels, 'onCurtainOpening');
+
             $('body').addClass('run_loading_overlay_animation');
             if (self.showAnimation) {
                 setTimeout(function () {
                     $('#loading_overlay').fadeOut();
                     self.resetLoadingSteps();
+                    setTimeout(function () {
+                        callViewModels(self.allViewModels, 'onCurtainOpened');
+                    }, 500)
                 }, 3000);
             } else {
                 $('#loading_overlay').fadeOut();
                 self.resetLoadingSteps();
+                setTimeout(function () {
+                    callViewModels(self.allViewModels, 'onCurtainOpened');
+                }, 500)
             }
-            callViewModels(self.allViewModels, 'onCurtainOpened');
         };
 
         self.skipClick = function(){
