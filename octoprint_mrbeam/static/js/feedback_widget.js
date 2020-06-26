@@ -66,12 +66,12 @@ $(function () {
                     ['custom_fields.cf_serial', 'custom_fields.cf_software_version','custom_fields.cf_software_channel']);
                 window.FreshworksWidget("setLabels", {
                   'de': {
-                    banner: "Help & Support",
+                    banner: "Hilfe & Support",
                     launcher: "Support",
                     contact_form: {
-                      title: "Help & Support",
-                      submit: "Send feedback",
-                      confirmation: "Thank you for your feedback.",
+                      title: "Hilfe & Support",
+                      submit: "Nachricht abschicken",
+                      confirmation: "Danke für Deine Nachricht.",
                     }
                   }
 
