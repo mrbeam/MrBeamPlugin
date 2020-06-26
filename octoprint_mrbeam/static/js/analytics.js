@@ -3,7 +3,6 @@ $(function () {
         let self = this;
         window.mrbeam.viewModels['analyticsViewModel'] = self;
         self.settings = params[0]
-        self.loginState = params[1];
 
         self.window_load_ts=-1;
 
@@ -32,22 +31,18 @@ $(function () {
         }
 
         self._send = function (event, payload) {
-            if(self.loginState.isUser()){
-				let data = {
-					event: event,
-					payload: payload || {}
-				};
+            let data = {
+                event: event,
+                payload: payload || {}
+            };
 
-				$.ajax({
-					url: "plugin/mrbeam/analytics",
-					type: "POST",
-					dataType: "json",
-					contentType: "application/json; charset=UTF-8",
-					data: JSON.stringify(data)
-				});
-			} else {
-				// TODO discuss if we want to store and send later?
-			}
+            $.ajax({
+                url: "plugin/mrbeam/analytics",
+                type: "POST",
+                dataType: "json",
+                contentType: "application/json; charset=UTF-8",
+                data: JSON.stringify(data)
+            });
         };
 
         $(window).load(function() {
@@ -57,13 +52,16 @@ $(function () {
         self.onAllBound = function() {
             self._updateAnalyticsEnabledValue()
 
-            console.everything.forEach(function (logData) {
-                if (logData.level == 'error' || logData.level == 'warn') {
-                    self.send_console_event(logData);
-                }
-            })
-            console.callbacks.error = self.send_console_event
-            console.callbacks.warn = self.send_console_event
+            if (console.everything) {
+                console.everything.forEach(function (logData) {
+                    if (logData.level == 'error' || logData.level == 'warn') {
+                        self.send_console_event(logData);
+                    }
+                })
+
+                console.callbacks.error = self.send_console_event
+                console.callbacks.warn = self.send_console_event
+            }
         }
 
         self.onStartupComplete = function(){
@@ -93,7 +91,7 @@ $(function () {
         AnalyticsViewModel,
 
         // e.g. loginStateViewModel, settingsViewModel, ...
-        ['settingsViewModel', "loginStateViewModel"],
+        ['settingsViewModel'],
 
         // e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
         []
