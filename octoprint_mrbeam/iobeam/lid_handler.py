@@ -532,7 +532,7 @@ class PhotoCreator(object):
 
 		cam.start_preview()
 		time.sleep(1.5) # camera warmup + prevent quick switch to pic capture
-	
+
 		session_details = blank_session_details()
 		self._front_ready.set()
 		try:
