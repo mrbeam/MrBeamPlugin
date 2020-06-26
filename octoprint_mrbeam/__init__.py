@@ -1073,7 +1073,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		self._logger.debug("INITIAL camera_calibration_markers() data: {}".format(json_data))
 
-		if not "result" in json_data or not all(k in json_data['result'] for k in ['newCorners', 'newMarkers']):
+		if not "result" in json_data or not all(k in json_data['result'].keys() for k in ['newCorners', 'newMarkers']):
 			# TODO correct error message
 			return make_response("No profile included in request", 400)
 
@@ -1571,7 +1571,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			intensity=["value"],
 			passes=["value"],
 			lasersafety_confirmation=[],
-			camera_calibration_markers=["result"],
+			send_corner_calibration=["result"],
 			ready_to_laser=[],
 			cli_event=["event"],
 			custom_materials=[],
@@ -1611,7 +1611,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return self.custom_materials(data)
 		elif command == "ready_to_laser":
 			return self.ready_to_laser(data)
-		elif command == "camera_calibration_markers":
+		elif command == "send_corner_calibration":
 			return self.camera_calibration_markers(data)
 		elif command == "take_undistorted_picture":
 			# see also takeUndistortedPictureForInitialCalibration() which is a BluePrint route
