@@ -74,8 +74,24 @@ $(function () {
                       confirmation: "Thank you for your feedback.",
                     }
                   }
+
                 });
-                window.FreshworksWidget('show', 'launcher');
+                $( "body" ).prepend( "<div id=\"freshwidget-button\" " +
+                    "data-html2canvas-ignore=\"true\" " +
+                    "class=\"freshwidget-button fd-btn-left\" " +
+                    "style=\"display: none; top: 90%;\"><a href=\"javascript:void(0)\" " +
+                    "class=\"freshwidget-theme\" style=\"color: rgb(226, 83, 3); " +
+                    "background-color: white; border-color: rgb(226, 83, 3);\">Support</a></div>" );
+
+                $("#freshwidget-button").click(function() {
+                  var clicks = $(this).data('clicks');
+                  if (clicks) {
+                      FreshworksWidget('close');
+                  } else {
+                      FreshworksWidget('open');
+                  }
+                  $(this).data("clicks", !clicks);
+                });
                 console.log("FreshWidget: Shown")
             } catch (e) {
                 console.log("FreshWidget: Could not be initialized")
