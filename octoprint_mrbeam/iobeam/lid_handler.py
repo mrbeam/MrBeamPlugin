@@ -532,7 +532,7 @@ class PhotoCreator(object):
 
 		cam.start_preview()
 		time.sleep(1.5) # camera warmup + prevent quick switch to pic capture
-	
+
 		session_details = blank_session_details()
 		self._front_ready.set()
 		try:
@@ -564,15 +564,12 @@ class PhotoCreator(object):
 			time.sleep(.2)
 		# The lid didn't open during waiting time
 		cam.async_capture()
-<<<<<<< HEAD
 		saveNext = False # Lens calibration : save the next picture instead of this one
-=======
 
 		prev_img_sent_to_analytics = False
 		min_pix_amount = self._settings.get(['cam', 'markerRecognitionMinPixel'])
 		i = 0
 		j = 0
->>>>>>> develop
 		while not self.stopping:
 			while self.pause.isSet():
 				time.sleep(.5)
