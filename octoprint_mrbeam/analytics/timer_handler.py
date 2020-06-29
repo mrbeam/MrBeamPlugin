@@ -41,7 +41,12 @@ class TimerHandler:
 			self._timers.append(Timer(self.IP_ADDRESSES_TIMER, self._ip_addresses))
 			self._timers.append(Timer(self.SELF_CHECK_TIMER, self._http_self_check))
 			self._timers.append(Timer(self.INTERNET_CONNECTION_TIMER, self._internet_connection))
-			# self._timers.append(Timer(self.SW_AND_CHECKSUMS_TIMER, self._software_versions_and_checksums))
+			if not (self._plugin._settings.get(['dev', 'support_mode']) or \
+			        self._plugin.calibration_tool_mode):
+				self._logger.warning("do the update you silly willy")
+				self._timers.append(Timer(self.SW_AND_CHECKSUMS_TIMER, self._software_versions_and_checksums))
+			else:
+				self._logger.warning("DON'T do the update you silly willy")
 			self._timers.append(Timer(self.FILE_CROP_TIMER, self._crop_analytics_file_if_too_big))
 
 			for timer in self._timers:
