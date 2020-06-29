@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: Mr_Beam 0.1.61\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2020-06-29 15:40+0200\n"
-"PO-Revision-Date: 2020-06-29 17:15+0200\n"
+"PO-Revision-Date: 2020-06-29 18:00+0200\n"
 "Last-Translator: Andy Werner <andy@mr-beam.org>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -3749,7 +3749,7 @@ msgstr "Erkennung"
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/user/camera_corner_calibration.jinja2:39
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/watterott/tab_corner_calibration.jinja2:42
 msgid "Download this image"
-msgstr ""
+msgstr "Dieses Bild herunterladen"
 
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/user/camera_corner_calibration.jinja2:42
 msgid "Click on the arrow head of the marker in the magnified picture."
@@ -3797,24 +3797,26 @@ msgstr "Qualitäts-Check"
 
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/watterott/calibration_tool.jinja2:51
 msgid "Labels"
-msgstr ""
+msgstr "Labels"
 
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/watterott/tab_calibration_qa.jinja2:36
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/watterott/tab_camera_alignment.jinja2:34
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/watterott/tab_corner_calibration.jinja2:58
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/watterott/tab_lens_calibration.jinja2:96
 msgid "Checklist"
-msgstr ""
+msgstr "Checkliste"
 
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/watterott/tab_calibration_qa.jinja2:38
 msgid "The engraved rectangle is inside the green outline"
-msgstr ""
+msgstr "Das grüne Rechteck befindet sich auf dem gravierten Rechteck"
 
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/watterott/tab_calibration_qa.jinja2:39
 msgid ""
 "engraved rectangle egdes are straight and parallel to the green rectangle "
 "edges"
 msgstr ""
+"Die gravierten Rechteckkanten sind gerade und parallel zu den grünen "
+"Rechteckkanten"
 
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/watterott/tab_calibration_qa.jinja2:42
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/watterott/tab_camera_alignment.jinja2:28
@@ -3837,7 +3839,7 @@ msgstr "Bild aktualisieren"
 
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/watterott/tab_camera_alignment.jinja2:22
 msgid "Wait for a camera image"
-msgstr ""
+msgstr "Warten auf ein Kamerabild"
 
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/watterott/tab_camera_alignment.jinja2:24
 msgid "Is the lid open?"
@@ -3845,11 +3847,11 @@ msgstr "Ist der Deckel offen?"
 
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/watterott/tab_camera_alignment.jinja2:25
 msgid "Red camera light visible?"
-msgstr ""
+msgstr "Rotes Kameralicht sichtbar?"
 
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/watterott/tab_camera_alignment.jinja2:36
 msgid "4 markers are visible."
-msgstr ""
+msgstr "4 Markierungen sind sichtbar."
 
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/watterott/tab_camera_alignment.jinja2:37
 msgid "Full working area visible."
@@ -3861,7 +3863,7 @@ msgstr "Etwas Platz unterhalb des Arbeitsbereichs ist sichtbar."
 
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/watterott/tab_camera_alignment.jinja2:39
 msgid "Laserhead is not covering a marker."
-msgstr ""
+msgstr "Der Laserkopf verdeckt keine Markierung."
 
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/watterott/tab_corner_calibration.jinja2:50
 msgid "Start Corner Calibration"
@@ -3873,27 +3875,27 @@ msgstr "Bild laden..."
 
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/watterott/tab_corner_calibration.jinja2:60
 msgid "The 4 arrows are aligned with the blue crosses"
-msgstr ""
+msgstr "Die 4 Pfeile sind mit den blauen Kreuze ausgerichtet"
 
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/watterott/tab_corner_calibration.jinja2:92
 msgid "Picture"
-msgstr ""
+msgstr "Bild"
 
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/watterott/tab_corner_calibration.jinja2:94
 msgid "Raw"
-msgstr ""
+msgstr "Unverarbeitet"
 
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/watterott/tab_corner_calibration.jinja2:96
 msgid "Lens corrected"
-msgstr ""
+msgstr "Linsenkalibriert"
 
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/watterott/tab_corner_calibration.jinja2:98
 msgid "Cropped"
-msgstr ""
+msgstr "Zugeschnitten"
 
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/watterott/tab_corner_calibration.jinja2:103
 msgid "Move"
-msgstr ""
+msgstr "Bewegen"
 
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/watterott/tab_done_print_labels.jinja2:7
 msgid "Print Labels"
@@ -3901,15 +3903,15 @@ msgstr "Label drucken"
 
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/watterott/tab_done_print_labels.jinja2:10
 msgid "Device Label"
-msgstr ""
+msgstr "Geräte-Label"
 
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/watterott/tab_done_print_labels.jinja2:12
 msgid "Box Label"
-msgstr ""
+msgstr "Schachtel-Label"
 
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/watterott/tab_done_print_labels.jinja2:14
 msgid "EAN Labels"
-msgstr ""
+msgstr "EAN Labels"
 
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/watterott/tab_lens_calibration.jinja2:4
 msgid "Start Lens Calibration"
@@ -3917,15 +3919,15 @@ msgstr "Linsenkalibrierung starten"
 
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/watterott/tab_lens_calibration.jinja2:51
 msgid "Check result"
-msgstr ""
+msgstr "Ergebnis prüfen"
 
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/watterott/tab_lens_calibration.jinja2:98
 msgid "4 markers are within the green rectangle"
-msgstr ""
+msgstr "4 Markierungen sind innerhalb des grünen Rechtecks"
 
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/calibration/watterott/tab_lens_calibration.jinja2:99
 msgid "No black pixels are in the green rectangle"
-msgstr ""
+msgstr "Keine schwarzen Pixel befinden sich im grünen Rechteck"
 
 #: /home/axel/mrbeam/plugin/octoprint_mrbeam/templates/settings/about_settings.jinja2:14
 msgid "Serial number"
