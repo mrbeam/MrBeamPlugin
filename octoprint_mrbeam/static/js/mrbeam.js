@@ -158,6 +158,10 @@ mrbeam.isProd = function () {
     return MRBEAM_SW_TIER === 'PROD';
 };
 
+mrbeam.isWatterottMode = function () {
+    return INITIAL_CALIBRATION === true;
+}
+
 
 $(function () {
     // MR_BEAM_OCTOPRINT_PRIVATE_API_ACCESS

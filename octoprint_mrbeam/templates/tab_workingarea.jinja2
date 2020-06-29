@@ -73,7 +73,7 @@
 											</div>
 											<div class="collapse" id="wa_view_settings_body">
 												<div class="accordion-inner">
-                                                    <div data-bind="visible: camera.cameraActive() && !camera.markerStateGreen()">
+                                                    <div data-bind="visible: camera.cameraActive() && camera.markerStateColor() !== 'green'">
 
                                                         <div>
                                                             <p style="display: inline-block">
@@ -730,7 +730,7 @@
                                                     width: workingAreaWidthMM(),
                                                     height: workingAreaHeightMM(),
                                                     opacity: previewImgOpacity(),
-                                                    'xlink:href': camera.timestampedImgUrl()
+                                                    'xlink:href': camera.timestampedCroppedImgUrl()
                                                }" />
                                     </g>
 									<g id="scaleGroup" data-bind="attr: { transform: scaleMatrix() }">

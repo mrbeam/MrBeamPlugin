@@ -45,15 +45,15 @@ class LoopThread(threading.Thread):
 		self.ret = None
 		self.t = target
 		self._logger.debug("Loopthread initialised")
-		self.__args = args or ()
-		self.__kw = kwargs or {}
+		self.__args = args if args is not None else ()
+		self.__kw = kwargs if kwargs is not None else {}
 
-	def run(self):
-		try:
-			threading.Thread.run(self)
-		except Exception as e:
-			self._logger.exception("mrbeam.loopthread : %s, %s", e.__class__.__name__, e)
-			raise
+	# def run(self):
+	# 	try:
+	# 		threading.Thread.run(self)
+	# 	except Exception as e:
+	# 		self._logger.exception("mrbeam.loopthread : %s, %s", e.__class__.__name__, e)
+	# 		raise
 
 	def _loop(self):
 		self.running.set()
@@ -61,7 +61,7 @@ class LoopThread(threading.Thread):
 			try:
 				self.ret = self.t(*self.__args, **self.__kw)
 			except Exception as e:
-				self._logger.exception(" %s, %s", e.__class__.__name__, e)
+				self._logger.error("Handled exception in picamera: %s, %s", e.__class__.__name__, e)
 				raise
 			self.running.clear()
 			while not self.stopFlag.isSet() and not self.running.isSet():
@@ -104,7 +104,7 @@ class MrbCamera(PiCamera, Camera):
 		self.worker = worker
 		self.captureLoop = LoopThread(
 			target=self.capture,
-			stopFlag=stopEvent,
+			stopFlag=self.stopEvent,
 			args=(self.worker,),
 			kwargs={'format': 'jpeg'},)
 		# TODO load the default settings
