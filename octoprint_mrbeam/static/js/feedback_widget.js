@@ -64,6 +64,7 @@ $(function () {
                 });
                 window.FreshworksWidget('disable', 'ticketForm',
                     ['custom_fields.cf_serial', 'custom_fields.cf_software_version','custom_fields.cf_software_channel']);
+                window.FreshworksWidget('hide', 'ticketForm', ['name']);
                 window.FreshworksWidget("setLabels", {
                   'de': {
                     banner: "Hilfe & Support",
