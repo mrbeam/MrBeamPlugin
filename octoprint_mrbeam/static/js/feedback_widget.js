@@ -85,13 +85,11 @@ $(function () {
                     "background-color: white; border-color: rgb(226, 83, 3);\">Support</a></div>" );
 
                 $("#freshwidget-button").click(function() {
-                  var clicks = $(this).data('clicks');
-                  if (clicks) {
+                  if ($("#freshworks-frame-wrapper")[0]) {
                       FreshworksWidget('close');
                   } else {
                       FreshworksWidget('open');
                   }
-                  $(this).data("clicks", !clicks);
                 });
                 console.log("FreshWidget: Shown")
             } catch (e) {
