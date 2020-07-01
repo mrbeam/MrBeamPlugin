@@ -180,7 +180,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 
 		self.analytics_handler = analyticsHandler(self)
 		self.user_notification_system = user_notification_system(self)
-		# self.review_handler = reviewHandler(self)  TODO IRATXE: disabled for now
+		self.review_handler = reviewHandler(self)  # TODO IRATXE: disabled for now
 		self.onebutton_handler = oneButtonHandler(self)
 		self.interlock_handler = interLockHandler(self)
 		self.lid_handler = lidHandler(self)
@@ -510,7 +510,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			    "js/material_settings.js",
 			    "js/analytics.js",
 			    "js/maintenance.js",
-			    # "js/review.js",  TODO IRATXE: disabled for now
+			    "js/review.js",  # TODO IRATXE: disabled for now
 			    "js/util.js",
 			    "js/user_notification_viewmodel.js",
 			    "js/lib/load-image.all.min.js",  # to load custom material images
@@ -1568,8 +1568,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		elif command == "focus_reminder":
 			return self.focus_reminder(data)
 		# TODO IRATXE: disabled for now
-		# elif command == "review_data":
-		# 	return self.review_handler.save_review_data(data)
+		elif command == "review_data":
+			return self.review_handler.save_review_data(data)
 		elif command == "reset_prefilter_usage":
 			return self.usage_handler.reset_prefilter_usage()
 		elif command == "reset_carbon_filter_usage":
@@ -1607,15 +1607,22 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		return NO_CONTENT
 
 	# TODO IRATXE: this does not properly work --> necessary for reviews
-	# def get_user_name(self):
-	# 	from flask.ext.login import current_user
-	#
-	# 	# Looks like current_user sometimes does not work, so we save it and the next time if there's no information
-	# 	# we just use the last saved user.
-	# 	if current_user and not current_user.is_anonymous():
-	# 		self._current_user = current_user.get_name()
-	#
-	# 	return self._current_user
+	def get_user_name(self):
+		from flask.ext.login import current_user
+		# from flask_login import current_user todo iratxe try
+		# TODO IRATXE this doesn't work properly
+		self._logger.info('################# CURRENT USER')
+		self._logger.info('current user: '.format(current_user._get_current_object()))
+		self._logger.info(type(current_user._get_current_object()))
+		self._logger.info(current_user.get_name())
+		self._logger.info(current_user.name)
+
+		# Looks like current_user sometimes does not work, so we save it and the next time if there's no information
+		# we just use the last saved user.
+		if current_user is not None and not current_user.is_anonymous():
+			self._current_user = current_user.get_name()
+
+		return self._current_user
 
 	def analytics_init(self, data):
 		if 'analyticsInitialConsent' in data:

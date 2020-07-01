@@ -19,7 +19,8 @@ $(function () {
 
         // TODO IRATXE: handle the first use case (review does not exist in the user settings)
         self.shouldAskForReview = ko.computed(function(){
-            if (self.loginState.currentUser() && self.loginState.currentUser().active) {
+            if (self.loginState.currentUser() && self.loginState.currentUser().active
+                && self.loginState.currentUser().settings.mrbeam.review) {
                 let numSuccJobs = self.loginState.currentUser().settings.mrbeam.review.num_succ_jobs;
                 let reviewGiven = self.loginState.currentUser().settings.mrbeam.review.given;
 
