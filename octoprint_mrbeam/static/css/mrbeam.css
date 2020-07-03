@@ -2859,10 +2859,19 @@ input.search-query,
     opacity: 0.8;
 }
 
+#save_material_form .material-img.controls{
+    position: relative;
+    display: inline-block;
+    margin-left: 10px;
+    width: auto;
+}
+
 #custom_material_image_edit {
+    right: 0;
+    bottom: 0;
+    padding: 0 9px 1px 0;
+    text-align: right;
     position: absolute;
-    top: 125px;
-    transform: translate(-105%);
     font-size: 1.5em;
     color: white;
     opacity: 0.8;
@@ -3055,9 +3064,6 @@ input#img-preprocess-gamma {
     text-align: right;
 }
 
-#settings_plugin_mrbeam_camera .btn {
-    margin: 0 3px 8px 3px;
-}
 
 /*Setting buttons*/
 
@@ -3218,4 +3224,52 @@ button#terminal-send {
     transform: translate(-50%) !important;
     animation: slideupleft 0.3s ease !important;
 }
+
 /*FreshDesk button*/
+
+/*User Settings API Key button*/
+
+#usersettings_access a.btn.add-on {
+    border-radius: 6px;
+}
+
+/*User Settings API Key button*/
+
+/*Design Store*/
+
+#designstore #design_store_iframe{
+    width: 100%;
+    height: 90vh;
+    overflow: hidden;
+    display: none
+}
+#designstore #design_store_offline_placeholder .no-internet-connection-section{
+    position: absolute;
+    top: 50%; transform: translateY(-55%);
+    display: block;
+}
+#designstore #design_store_offline_placeholder .no-internet-connection-section .no-internet-icon img{
+    position: absolute;
+    top: 50%;
+    transform: translateY(-80%);
+    padding: 0 5%;
+}
+#designstore #design_store_offline_placeholder .no-internet-connection-section .no-internet-content{
+    text-align: center;
+    font-size: 20px;
+    padding: 0 60px;
+}
+#designstore #design_store_offline_placeholder .no-internet-connection-section .no-internet-content h4{
+    font-size: 20px;
+    margin-bottom: 40px;
+    line-height: 30px;
+    text-transform: uppercase;
+}
+#designstore #design_store_offline_placeholder .no-internet-connection-section .no-internet-content p{
+    margin-bottom: 30px;
+}
+#designstore #design_store_offline_placeholder .no-internet-connection-section .no-internet-content .btn.refresh-connection{
+    margin-top: 45px;
+}
+
+/*Design Store*/

@@ -1,0 +1,15 @@
+<div>
+    <div class="qa_done_block">
+        <i class="icon-ok-sign"></i> {{ _('Done') }}
+    </div>
+</div>
+<div class="qa_done_buttons">
+    <div><h4>{{ _('Print Labels') }}:</h4></div>
+    <div></div>
+    <div><button class="btn print_btn" data-bind="click: function(d, e){printLabel('deviceLabel', e)}">
+        <i class="icon icon-print"></i><i class="icon icon-spinner icon-spin"></i> {{ _('Device Label') }}</button></div>
+    <div><button class="btn print_btn" data-bind="click: function(d, e){printLabel('boxLabel', e)}">
+        <i class="icon icon-print"></i><i class="icon icon-spinner icon-spin"></i> {{ _('Box Label') }}</button></div>
+    <div><button class="btn print_btn" data-bind="click: function(d, e){printLabel('eanLabel', e)}">
+        <i class="icon icon-print"></i><i class="icon icon-spinner icon-spin"></i> {{ _('EAN Labels') }}</button></div>
+</div>
