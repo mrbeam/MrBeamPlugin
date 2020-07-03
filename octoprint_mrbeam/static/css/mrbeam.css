@@ -3160,6 +3160,73 @@ button#terminal-send {
 
 /*Terminal button*/
 
+/*FreshDesk button*/
+
+.freshwidget-theme {
+    text-shadow: rgba(0,0,0,.2),-1px,-1px,1px;
+    padding: 8px 16px;
+    background-color: #015453;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    outline: 0;
+}
+.fd-btn-left a {
+    left: -2px;
+}
+.freshwidget-button a {
+    position: fixed;
+    white-space: nowrap;
+    outline: 0;
+}
+.fd-btn-left a.freshwidget-theme, .fd-btn-top a.freshwidget-theme {
+    -moz-border-radius-bottomleft: 6px;
+    -webkit-border-bottom-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+    -moz-border-radius-bottomright: 6px;
+    -webkit-border-bottom-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+    -webkit-box-shadow: 0 0 10px rgba(0,0,0,.1), inset 0 -1px 0 rgba(0,0,0,.08), inset 0 -2px 0 rgba(255,255,255,.7), inset 0 9px 29px rgba(0,0,0,.1);
+    -moz-box-shadow: 0 0 10px rgba(0,0,0,.1),inset 0 -1px 0 rgba(0,0,0,.08),inset 0 -2px 0 rgba(255,255,255,.7),inset 0 9px 29px rgba(0,0,0,.1);
+    box-shadow: 0 0 10px rgba(0,0,0,.1), inset 0 -1px 0 rgba(0,0,0,.08), inset 0 -2px 0 rgba(255,255,255,.7), inset 0 9px 29px rgba(0,0,0,.1);
+}
+.fd-btn-left a.freshwidget-theme {
+    transform: rotate(-90deg);
+    transform-origin: top left;
+    -moz-transform: rotate(-90deg);
+    -moz-transform-origin: top left;
+    -webkit-transform: rotate(-90deg);
+    -webkit-transform-origin: top left;
+    -o-transform: rotate(-90deg);
+    -o-transform-origin: top left;
+    filter: progid: DXImageTransform.Microsoft.BasicImage(rotation=3);
+}
+.freshwidget-button {
+    position: fixed;
+    display: block!important;
+    width: 0;
+    height: 0;
+    z-index: 90000;
+    margin: 0;
+    outline: 0;
+}
+.freshwidget-theme:hover {
+    color: #f3f3f3;
+}
+.freshwidget-button a:hover, .freshwidget-theme {
+    text-decoration: none;
+}
+.fd-btn-left a:hover {
+    left: 0;
+}
+#freshworks-frame-wrapper {
+    left: 50% !important;
+    transform: translate(-50%) !important;
+    animation: slideupleft 0.3s ease !important;
+}
+
+/*FreshDesk button*/
+
 /*User Settings API Key button*/
 
 #usersettings_access a.btn.add-on {
@@ -3169,6 +3236,7 @@ button#terminal-send {
 /*User Settings API Key button*/
 
 /*Design Store*/
+
 #designstore #design_store_iframe{
     width: 100%;
     height: 90vh;
@@ -3205,6 +3273,3 @@ button#terminal-send {
 }
 
 /*Design Store*/
-
-
-
