@@ -25,7 +25,7 @@ $(function () {
             }).done(function (script, textStatus) {
                 window.FreshworksWidget('hide', 'launcher');
                 if (self.isCurtainOpen) {
-                    self.onCurtainOpened();
+                    self.showWidget();
                 }
             }).fail(function (jqxhr, settings, exception) {
                 console.log("FreshWidget: not available");
