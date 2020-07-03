@@ -1,0 +1,116 @@
+<div class="marker_selection_desc calibration_help" data-bind="visible:!lensCalibrationActive()">
+   <div style="margin-top:1em;">
+       <button class="btn btn-default" data-bind="click: startLensCalibration">
+           {{ _('Start Lens Calibration') }}</button>
+   </div>
+</div>
+
+<!-- Lens calibration -->
+<div id="lensCalibrationPhases" data-bind="visible: lensCalibrationActive()">
+
+    <div id="lensCalibrationPictureTaking">
+        <div style='position:relative;'>
+            <svg id="heatmap_container" version="1.1" enable-background="new 0 0 211 141"
+               viewBox="0 0 3100 2500" height="100%" width="100%" y="0px" x="0px">
+              <radialGradient gradientUnits="userSpaceOnUse" gradientTransform="matrix(1,0,0,0.9565,0,-7.4897)"
+                 r="91.003799" cy="81.540604" cx="105.5" id="SVGID_1_">
+                <stop id="stop2" style="stop-color:#FFFFFF" offset="0.291" />
+                <stop id="stop4" style="stop-color:#E6E6E6" offset="1" />
+              </radialGradient>
+              <rect height="2499.3801" width="3099.2346" x="0"
+                 style="fill:#f2f2f2;stroke-width:16.13587761" y="0.61995518" />
+              <g transform="translate(-388,-43.574219)"
+                 id="g879">
+                <path id="polygon9"
+                   d="m 585.47308,330.57446 51.08796,52.78368 0.28863,1760.33376 -53.41506,54.1367 27.61853,30.7213 53.77585,-50.4024 H 3166.7861 l 53.7758,50.4385 27.6366,-30.9378 -53.397,-53.9743 0.3427,-1760.17145 51.1601,-52.5672 -26.5542,-27.11342 -51.7554,52.33269 H 664.26976 l -52.08013,-52.31465 z"
+                   style="fill:#ffffff;stroke:#010202;stroke-width:18.03953362;stroke-linejoin:round;stroke-miterlimit:10" />
+                <path id="line39"
+                   d="m 966.01703,2022.3941 52.63937,-52.6574 m 1731.7953,-1407.08362 52.6572,-52.63939 m 0,1512.38041 -52.6572,-52.6574 M 1018.6564,562.65308 966.01703,510.01369 m 52.63937,52.63939 H 2750.4517 V 1969.7367 H 1018.6564 Z M 874.9174,355.19844 V 2177.1914 M 2949.4638,355.19844 V 2177.1914 m 182.3977,-96.1147 a 44.413331,44.413331 0 0 1 -44.4133,44.4134 44.413331,44.413331 0 0 1 -44.4133,-44.4134 44.413331,44.413331 0 0 1 44.4133,-44.4133 44.413331,44.413331 0 0 1 44.4133,44.4133 z M 664.26976,353.39447 m 0,0 m 2530.53194,1790.27943 -28.0156,34.4736 m 1.2086,-1821.99298 27.1495,27.34795 M 636.84969,2143.6919 l 27.9793,34.4556 m -0.55923,-1821.99298 -27.70878,27.2036"
+                   style="fill:none;stroke:#000000;stroke-width:13.52965069;stroke-linecap:round;stroke-miterlimit:10" />
+                <rect id="rect976"
+                   style="opacity:1;vector-effect:none;fill:#b3b3b3;fill-opacity:1;stroke:none;stroke-width:12.61347008;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
+                   width="1731.795" height="1407.0836" x="1018.6564" y="562.65308" />
+              </g>
+              <g id="segment_group" transform="translate(340, 250),scale(1.1, 1.2)"></g>
+              <path d="M2740,2040H3500" stroke="#e25303" stroke-width="15px"></path>
+              <!-- <text id='lensCalibrationCoverageText' x="350" y="2360" style="font-size: 150px;"></text> -->
+            </svg>
+
+
+            <button id="lens_calibration_take_pic" class="btn btn-primary" data-bind="click: saveRawPic, enable: !cameraBusy()">
+                <i class="icon icon-camera icon-2x"></i>
+            </button>
+
+
+
+            <button id="lens_calibration_toggle_qa_btn" class="btn pull-right"
+                    data-bind="click: lensCalibrationToggleQA,
+                               css: {'btn-success': lensCalibrationNpzFileTs, 'btn-default': !lensCalibrationNpzFileTs()},
+                               visible: rawPicSelection().length >= 9,
+                               enable: lensCalibrationNpzFileTs() && hasMinBoardsFound()">
+                <span style="font-size:1.5rem;">{{ _('Check result') }}</span>
+                <i class="icon icon-2x icon-fixed-width icon-arrow-right" data-bind="visible: lensCalibrationNpzFileTs"></i>
+            </button>
+        </div>
+
+        <ul id="lens_correction_image_list" data-bind="visible: lensCalibrationActive(), foreach: { data: rawPicSelection, as: 'pic' }">
+            <li class="lens_correction_image_thumb"
+                data-bind="	style: { backgroundImage: pic.state !== 'camera_processing' ? 'url('+pic.url+'?'+pic.state+')' : '' },
+                            event:{ mouseover: $root.heatmap_highlight, mouseout: $root.heatmap_dehighlight }"
+                onclick="this.classList.remove('zoom')"> <!-- toggle class messes with rm btn -->
+                <div class="btn-group">
+                    <button class="btn btn-mini btn-default" onclick="this.parentElement.parentElement.classList.add('zoom'); event.stopPropagation();">
+                        <i class="icon icon-search"></i>
+                    </button>
+                    <button class="btn btn-mini btn-danger" data-bind="visible: (pic.path !== null), click: $parent.delRawPic">
+                        <i  class="icon icon-trash"></i>
+                    </button>
+                </div>
+                <span class="chessboard_cal_duration pull-right" data-bind="visible: pic.tm_end !== null">
+                    <i class="icon icon-time"></i> <span data-bind="text: pic.processing_duration"></span><br />
+                </span>
+
+                <i class="status_icon icon icon-save" data-bind="visible: pic.state === 'camera_processing' || pic.state === 'pending'  || pic.state === 'queued' "></i>
+                <i class="status_icon icon icon-spinner icon-spin" data-bind="visible: pic.state === 'processing'"></i>
+                <i class="status_icon icon icon-ok" style="color: #00ff00;" data-bind="visible: pic.state === 'success'"></i>
+                <i class="status_icon icon icon-remove" style="color: #ff0000;" data-bind="visible: pic.state === 'fail'"></i>
+                <i class="status_icon icon icon-camera" data-bind="visible: pic.state === 'missing'"></i>
+            </li>
+        </ul>
+    </div>
+
+    <div id="lensCalibrationQA">
+        <div data-bind="visible: lensCalibrationNpzFileTs" class="qa_images">
+            <div class="qa_img_wrapper">
+                <image data-bind="attr: {src: availablePicUrl()['lens_corrected']}" />
+                <div id="qa_undistorted_guides"></div>
+            </div>
+            <ul>
+                <li class="example good_example"><img src="/plugin/mrbeam/static/img/calibration/undistorted_ok.jpg" /></li>
+                <li class="example bad_example"><img src="/plugin/mrbeam/static/img/calibration/undistorted_bad1.jpg" /></li>
+            </ul>
+        </div>
+        <div data-bind="text: lensCalibrationNpzFileVerboseDate"></div>
+
+        <div class="qa_list_and_next">
+            <h4>{{ _('Checklist') }}</h4>
+            <ul>
+                <li>{{ _('4 markers are within the green rectangle') }}</li>
+                <li>{{ _('No black pixels are in the green rectangle') }}</li>
+            </ul>
+            <div class="continue_btn btn-group">
+                <a href="#" onclick="$('#lenscal_tab_btn').click()" class="btn continue_btn"
+                    data-bind="click: lensCalibrationToggleQA">
+                    <i class="icon icon-2x icon-fixed-width icon-arrow-left"></i>
+                </a>
+                <a href="#" class="btn btn-success continue_btn"
+                    data-bind="xclick: stopLensCalibration,
+                                click: function(){ $('#cornercal_tab_btn').click() },
+                                enable: lensCalibrationNpzFileTs && hasMinBoardsFound()">
+                    <span style="font-size:1.5rem;">{{ _('Yes') }}</span>
+                    <i class="icon icon-2x icon-fixed-width icon-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
