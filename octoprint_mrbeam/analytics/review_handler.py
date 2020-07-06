@@ -2,7 +2,6 @@ import os
 import json
 
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
-from octoprint.events import Events as OctoPrintEvents
 from uploader import ReviewFileUploader
 from threading import Lock
 
@@ -41,21 +40,11 @@ class ReviewHandler:
 		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
 
 	def _on_mrbeam_plugin_initialized(self, event, payload):
-		self._subscribe()
-
 		ReviewFileUploader.upload_now(self._plugin, self._review_lock)
-
-	def _subscribe(self):
-		self._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self._event_print_done)
-
-	def _event_print_done(self, event, payload):
-		num_successful_jobs_user = self._plugin.getUserSetting(self._plugin.get_user_name(), ['review', 'num_succ_jobs'], -1) + 1
-		self._plugin.setUserSetting(self._plugin.get_user_name(), ['review', 'num_succ_jobs'], num_successful_jobs_user)
 
 	def save_review_data(self, data):
 		self._write_review_to_file(data)
-
-		self._plugin.setUserSetting(self._plugin.get_user_name(), ['review', 'given'], data['dontShowAgain'])
+		self._settings.set_boolean(['review', 'given'], data['dontShowAgain'])
 
 		ReviewFileUploader.upload_now(self._plugin, self._review_lock)
 

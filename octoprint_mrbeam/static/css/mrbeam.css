@@ -2766,56 +2766,53 @@ input.search-query,
 /*
 * === USER RATING ===
 */
-/* rating stars
- * http://jsfiddle.net/ttyYD/1/
-*/
 #rating_block {
-    margin: 20px 0;
+    margin: auto;
+    width: 80%;
 }
 
 .rating {
     unicode-bidi: bidi-override;
-    direction: rtl;
     font-size: 50px;
     display: flex;
     justify-content: center;
     margin: 35px 0 20px 0;
 }
 
-.rating span.star {
-    font-family: FontAwesome;
-    font-weight: normal;
-    font-style: normal;
+.rating button {
+    font-size: 14px;
+    white-space: nowrap;
+    vertical-align: middle;
     display: inline-block;
-}
-
-.rating span.star:hover {
+    background: none;
+    box-shadow: none;
     cursor: pointer;
+    text-align: center;
+    font-weight: 500;
+    border-radius: 100%;
+    outline: none;
+    margin: 0 1px;
+    width: 35px;
+    height: 35px;
+    border: 3px solid #eee;
+    transform: scale(1);
+
+    transition:
+        background 0.2s ease-in,
+        color 0.2s ease-in,
+        border-color 0.2s ease-in,
+        transform 0.2s cubic-bezier(0.5, 2, 0.5, 0.75);
 }
 
-.rating span.star:before {
-    content: "\f006";
-    padding: 20px 8px;
-    color: #f8d453;
-}
-
-.rating span.star:hover:before, .rating span.star:hover ~ span.star:before {
-    content: "\f005";
-    color: #f8d453;
-}
-
-.rating span.star.filled:before {
-    color: #f8d453;
-    content: "\f005";
-}
-
-.rating span.star.disabled {
-    pointer-events: none;
-}
+.rating button.rating-hover {
+    background: #e25303;
+    color: white;
+    border-color: rgba(244,67,54, 0.05);
+    transform: scale(1.05);
+ }
 
 .review_title {
-    display: flex;
-    justify-content: center;
+    text-align: center;
 }
 
 .review_hidden_part {
