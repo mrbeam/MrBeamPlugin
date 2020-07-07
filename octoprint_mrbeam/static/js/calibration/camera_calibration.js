@@ -6,7 +6,7 @@
  */
 /* global OctoPrint, OCTOPRINT_VIEWMODELS, INITIAL_CALIBRATION */
 
-const MARKERS = ['NW', 'NE', 'SE', 'SW'];
+// const MARKERS = ['NW', 'NE', 'SE', 'SW'];
 const MIN_BOARDS_FOR_CALIBRATION = 9;
 const MAX_BOARD_SCORE = 5;
 const DEFAULT_IMG_RES = [2048, 1536]
