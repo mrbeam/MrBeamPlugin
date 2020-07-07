@@ -773,15 +773,25 @@ class IoBeamHandler(object):
 		:param dataset: interlock dataset, e.g. {"0": "cl", "1": "cl", ...}
 		:return: error count
 		"""
+		name = {
+			'0': 'Lid Right',
+			'1': 'Lid Left',
+			'2': 'Bottom Left',
+			'3': 'Bottom Right',
+		}
 		if isinstance(dataset, dict):
 			before_state = self.open_interlocks()
 			for lock_id, lock_state in dataset.iteritems():
 				self._logger.debug("_handle_interlock() dataset: %s, lock_id: %s, lock_state: %s, before_state: %s", dataset, lock_id, lock_state, before_state)
 
-				if lock_id is not None and lock_state == self.MESSAGE_ACTION_INTERLOCK_OPEN:
-					self._interlocks[lock_id] = True
-				elif lock_id is not None and lock_state == self.MESSAGE_ACTION_INTERLOCK_CLOSED:
-					self._interlocks.pop(lock_id, None)
+				if lock_id is not None:
+					lock_name = name[lock_id]
+					if lock_state == self.MESSAGE_ACTION_INTERLOCK_OPEN:
+						self._interlocks[lock_name] = True
+					elif lock_state == self.MESSAGE_ACTION_INTERLOCK_CLOSED:
+						self._interlocks.pop(lock_name, None)
+					else:
+						return self._handle_invalid_message(dataset)
 				else:
 					return self._handle_invalid_message(dataset)
 
