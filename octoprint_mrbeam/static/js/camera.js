@@ -1,4 +1,4 @@
-MARKERS = ['NW', 'NE', 'SE', 'SW'];
+const MARKERS = ['NW', 'NE', 'SE', 'SW'];
 
 
 $(function(){
