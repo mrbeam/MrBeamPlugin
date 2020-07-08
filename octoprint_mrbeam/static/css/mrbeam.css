@@ -3273,3 +3273,8 @@ button#terminal-send {
 }
 
 /*Design Store*/
+
+/*Support Standalone*/
+#support_overlay > div.modal-body.scrollable > table {
+    margin: 20px auto;
+}
