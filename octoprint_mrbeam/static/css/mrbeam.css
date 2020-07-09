@@ -2913,8 +2913,9 @@ input.search-query,
 }
 
 
-/*Settings Menu items*/
+/*Settings and burger Menu items*/
 
+#burger_menu ul.dropdown-menu,
 #settings_dialog #settings_dialog_menu ul {
     padding-right: 0;
     padding-left: 0;
@@ -2926,15 +2927,23 @@ input.search-query,
     border-bottom: 1px solid rgba(0, 0, 0, 0.4);
 }
 
+#burger_menu ul.dropdown-menu li.divider{
+    margin-top:0;
+    margin-bottom: 0;
+}
+
+#burger_menu ul.dropdown-menu li:last-child,
 #settings_dialog #settings_dialog_menu ul li:last-child {
     border-bottom: none;
 }
 
+#burger_menu ul.dropdown-menu li.active,
 #settings_dialog #settings_dialog_menu ul li.active {
     border-bottom: none;
     margin-bottom: 1px;
 }
 
+#burger_menu ul.dropdown-menu li.active:hover,
 #settings_dialog #settings_dialog_menu ul li.active:hover {
     border-bottom: none;
     margin-bottom: 1px;
@@ -2945,33 +2954,55 @@ input.search-query,
     margin-bottom: 1px;
 }
 
+#burger_menu ul.dropdown-menu li a{
+    color: rgba(0, 0, 0, 0.4);
+    border-radius: 3px;
+    padding: 9px 20px;
+}
+
+#burger_menu ul.dropdown-menu li a i {
+    margin-right: 5px;
+}
+
 #settings_dialog #settings_dialog_menu ul li a {
     color: rgba(0, 0, 0, 0.4);
     border-radius: 3px;
     padding: 6px 15px;
 }
 
+#burger_menu ul.dropdown-menu li a:hover,
+#burger_menu ul.dropdown-menu li a:focus,
 #settings_dialog #settings_dialog_menu ul li a:hover {
     background-color: #E25303;
     color: #ffffff;
     border-bottom: none;
+    outline: none;
 }
 
+#burger_menu ul.dropdown-menu li>a:hover,
+#burger_menu ul.dropdown-menu li>a:focus,
+#burger_menu ul.dropdown-menu:hover>a{
+ background-image: none;
+}
+
+#burger_menu ul.dropdown-menu li.active a,
 #settings_dialog #settings_dialog_menu ul li.active a {
     color: #ffffff;
     background-color: #E25303;
 }
 
+#burger_menu ul.dropdown-menu li.active a:hover,
 #settings_dialog #settings_dialog_menu ul li.active a:hover {
     background-color: #E25303;
 }
 
+#burger_menu ul.dropdown-menu .prev,
 #settings_dialog #settings_dialog_menu ul .prev {
     border-bottom: none;
     margin-bottom: 1px;
 }
 
-/*Settings Menu items*/
+/*Settings and burger Menu items*/
 
 /*App font family*/
 
