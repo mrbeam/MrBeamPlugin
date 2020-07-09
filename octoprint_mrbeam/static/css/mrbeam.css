@@ -3221,7 +3221,8 @@ button#terminal-send {
 }
 #freshworks-frame-wrapper {
     left: 50% !important;
-    transform: translate(-50%) !important;
+    top: 50% !important;
+    transform: translate(-50%,-50%) !important;
     animation: slideupleft 0.3s ease !important;
 }
 
