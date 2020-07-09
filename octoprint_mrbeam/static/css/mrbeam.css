@@ -2981,7 +2981,9 @@ input.search-query,
 
 #burger_menu ul.dropdown-menu li>a:hover,
 #burger_menu ul.dropdown-menu li>a:focus,
-#burger_menu ul.dropdown-menu:hover>a{
+#burger_menu ul.dropdown-menu:hover>a,
+#burger_menu ul.dropdown-menu .active>a,
+#burger_menu ul.dropdown-menu .active>a:hover {
  background-image: none;
 }
 
