@@ -2459,6 +2459,10 @@ input.search-query,
     width: 300px;
 }
 
+.progressive-control-and-label {
+    width: 370px;
+}
+
 .material-control-and-label {
     max-width: 210px;
 }

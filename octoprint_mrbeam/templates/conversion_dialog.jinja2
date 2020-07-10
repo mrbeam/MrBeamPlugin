@@ -403,11 +403,25 @@
                             </div>
 
                             <div class="control-group">
-                                <div class="cutting-control-and-label" data-toggle="tooltip" data-placement="right"
-                                      title="{{ _('Indicates the number of times the laser will run over the design to cut it. Increase the number of passes if the material does not get cut.') }}">
+                                <div data-toggle="tooltip" data-placement="right"
+                                     data-bind="css: showExpertSettings() == true ? 'progressive-control-and-label' : 'cutting-control-and-label'"
+                                     title="<b>{{ _('Indicates the number of times the laser will run over the design to cut it. ') }}</b>
+                                            {{ _('Increase the number of passes if the material does not get cut.') }}<br>
+                                            <ul>
+                                            <li>{{ _('Progressive cut (activate in advanced settings):') }}
+                                            {{ _('Slows down the laser head progressively in every cut.
+                                            Depending on the design, this might save time by making it possible to reduce passes, and can also reduce burn marks.') }}
+                                            </li></ul>">
                                     <label class="control-label">{{ _('Passes') }}</label>
-                                    <div class="controls"><input data-bind="event: {change: flag_customized_material}" class="param_passes img_intensity_input" type="number" min="1" max="10" value="1" />&nbsp;&times;&nbsp;&nbsp;
-                                        <span class="experimental_feature_beta" style="display: inline-block"><label data-bind="visible: showExpertSettings"><input type="checkbox" class="param_progressive"/>{{ _('progressive') }}</label></span></div>
+                                    <div class="controls">
+                                        <input data-bind="event: {change: flag_customized_material}" class="param_passes img_intensity_input" type="number" min="1" max="10" value="1" />&nbsp;&times;&nbsp;&nbsp;
+                                        <span style="display: inline-block">
+                                            <label data-bind="visible: showExpertSettings">
+                                                <input data-bind="event: {change: flag_customized_material}" type="checkbox" class="param_progressive"/>
+                                                {{ _('progressive') }}
+                                            </label>
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
 
