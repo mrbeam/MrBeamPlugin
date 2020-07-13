@@ -19,16 +19,15 @@ from flask.ext.babel import gettext
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 
 # don't crash on a dev computer where you can't install picamera
-from octoprint_mrbeam.camera import gaussBlurDiff, QD_KEYS, PICAMERA_AVAILABLE
+from octoprint_mrbeam.camera import gaussBlurDiff, QD_KEYS, PICAMERA_AVAILABLE, MrbPicWorker, LEGACY_STILL_RES, save_debug_img
 from octoprint_mrbeam.camera import calibration as calibration
-from octoprint_mrbeam.camera.calibration import BoardDetectorDaemon, MIN_BOARDS_DETECTED
-from octoprint_mrbeam.util import json_serialisor, logme, get_thread, makedirs
-import octoprint_mrbeam.camera.exc as exc
-import octoprint_mrbeam.camera as camera
+from octoprint_mrbeam.camera import exc as exc
 if PICAMERA_AVAILABLE:
 	from octoprint_mrbeam.camera.mrbcamera import MrbCamera
 	from octoprint_mrbeam.camera.undistort import prepareImage, MAX_OBJ_HEIGHT, \
 		CAMERA_HEIGHT, _getCamParams, _getPicSettings, DIST_KEY, MTX_KEY
+from octoprint_mrbeam.camera.calibration import BoardDetectorDaemon, MIN_BOARDS_DETECTED
+from octoprint_mrbeam.util import json_serialisor, logme, get_thread, makedirs
 
 SIMILAR_PICS_BEFORE_UPSCALE = 1
 LOW_QUALITY = 65 # low JPEG quality for compressing bigger pictures
@@ -476,12 +475,15 @@ class PhotoCreator(object):
 				return
 
 			self._logger.debug("Starting the camera now.")
-			camera_worker = camera.MrbPicWorker(maxSize=2, debug=self.debug)
+			camera_worker = MrbPicWorker(maxSize=2, debug=self.debug)
 			with MrbCamera(camera_worker,
-                           # framerate=8,
-                           resolution=camera.LEGACY_STILL_RES,  # TODO camera.DEFAULT_STILL_RES,
+                           framerate=0.8,
+                           resolution=LEGACY_STILL_RES,  # TODO camera.DEFAULT_STILL_RES,
                            stopEvent=self.stopEvent,) as cam:
-				self.serve_pictures(cam, pic_settings=pic_settings, cam_params=cam_params, out_pic_size=out_pic_size)
+				try:
+					self.serve_pictures(cam, pic_settings=pic_settings, cam_params=cam_params, out_pic_size=out_pic_size)
+				except exc.CameraConnectionException:
+					cam.close()
 			if recurse_nb > 0:
 				self._logger.info("Camera recovered")
 				self._analytics_handler.add_camera_session_details(exc.msgForAnalytics(exc.CAM_CONNRECOVER))
@@ -599,8 +601,8 @@ class PhotoCreator(object):
 				self._logger.info("The last picture is empty")
 				continue
 			if self.stopping: break  # check if still active...
-			# TODO start capture with different brightness if we think we need it
-			#     TODO apply shutter speed adjustment from preliminary measurements
+
+			cam.compensate_shutter_speed(latest) # Change exposure if needed
 
 			if self.saveRaw:
 				if isinstance(self.saveRaw, str) and not saveNext:
@@ -609,7 +611,7 @@ class PhotoCreator(object):
 					# FIXME Not perfect. This is the case during the lens calibration where
 					# a new raw picture is requested. Do the save during the next round.
 					self.rawLock.acquire()
-					if camera.save_debug_img(latest,
+					if save_debug_img(latest,
 								 self.saveRaw,
 								 folder=path.join(path.dirname(self.final_image_path),"debug")):
 						rawSaved = self.saveRaw
@@ -619,7 +621,7 @@ class PhotoCreator(object):
 					saveNext = False
 				else:
 					self.rawLock.acquire()
-					rawSaved = camera.save_debug_img(latest,
+					rawSaved = save_debug_img(latest,
 									 "raw.jpg",
 									 folder=path.join(path.dirname(self.final_image_path),"debug"))
 					self.rawLock.release()
@@ -651,6 +653,7 @@ class PhotoCreator(object):
 				else:
 					time.sleep(.8) # Let the raspberry breathe a bit (prevent overheating)
 					continue
+
 			loop_counter += 1
 			prev_img_sent_to_analytics = False
 			# Get the desired scale and quality of the picture to serve
@@ -768,7 +771,7 @@ class PhotoCreator(object):
 		_s = session_details
 		try:
 			if increment_pic: _s['num_pics'] += 1
-			for qd in octoprint_mrbeam.camera.QD_KEYS:
+			for qd in QD_KEYS:
 				_s_marker = _s['markers'][qd]
 				if qd in markers.keys() and markers[qd] is not None:
 					_marker = np.asarray(markers[qd])
