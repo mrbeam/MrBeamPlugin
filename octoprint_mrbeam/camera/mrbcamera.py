@@ -190,7 +190,7 @@ class MrbCamera(PiCamera, Camera):
 		brightness = self.worker.avg_roi_brightness
 		_minb, _maxb = min(brightness.values()), max(brightness.values())
 		compensate = 1
-		self._logger.info("Brightnesses: \nMin %s  Max %s\nCurrent %s" % (min_bright, max_bright, brightness))
+		self._logger.debug("Brightnesses: \nMin %s  Max %s\nCurrent %s" % (min_bright, max_bright, brightness))
 		if  _minb < min_bright and _maxb > max_bright:
 			self._logger.info("Outside brightness bounds.")
 			compensate = float(max_bright) / _maxb
@@ -211,9 +211,7 @@ class MrbCamera(PiCamera, Camera):
 			self.shutter_speed = self.exposure_speed
 		elif self.shutter_speed == 0:
 			self.shutter_speed = DEFAULT_SHUTTER_SPEED
-		self._logger.info("Applying compensation alpha : %s to shutter speed: %s" % (compensate, self.shutter_speed))
 		self.shutter_speed = int(self.shutter_speed * compensate)
-		self._logger.info("result shutter speed: %s" % self.shutter_speed)
 
 	def apply_best_shutter_speed(self):
 		"""
