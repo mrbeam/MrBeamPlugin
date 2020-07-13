@@ -11,7 +11,6 @@ import os
 from octoprint_mrbeam.mrb_logger import mrb_logger
 # Python 3 : use ABC instead of ABCMeta
 
-# Python 3 : use ABC instead of ABCMeta
 SUCCESS_WRITE_RETVAL = 1
 
 from octoprint_mrbeam.util import logtime, logme
@@ -197,7 +196,6 @@ def brightness(img):
 		# Colored RGB or BGR (*Do Not* use HSV images with this function)
 		# create brightness with euclidean norm
 
-		# return np.quantile(norm(img, axis=2), .9) / np.sqrt(3)
 		pix2pix_brightness = norm(img, axis=2) / np.sqrt(3)
 		percentile = np.percentile(pix2pix_brightness, q=80)
 		# quantile = np.quantile(pix2pix_brightness, q=0.8) # numpy.__version__ > 1.15.0

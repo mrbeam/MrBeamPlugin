@@ -14,7 +14,7 @@ import time
 import threading
 import logging
 
-DEFAULT_SHUTTER_SPEED = 2 * 10**5 # (microseconds)
+DEFAULT_SHUTTER_SPEED = int(1.5 * 10**5) # (microseconds)
 
 
 class LoopThread(threading.Thread):
@@ -105,7 +105,6 @@ class MrbCamera(PiCamera, Camera):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.util.camera.mrbcamera", lvl=logging.INFO)
 		self.busy = threading.Event()
 		self.worker = worker
-		# self.apply_best_shutter_speed()
 		self.captureLoop = LoopThread(
 			target=self.capture,
 			stopFlag=self.stopEvent,
@@ -179,39 +178,34 @@ class MrbCamera(PiCamera, Camera):
 
 	def compensate_shutter_speed(self, img):
 		from octoprint_mrbeam.camera import TARGET_AVG_ROI_BRIGHTNESS, BRIGHTNESS_TOLERANCE
-		self._logger.info(
-			"sensor : "+ str(self.sensor_mode)+
-			"\n iso : "+ str(self.iso)+
-			"\n gain : "+ str(self.analog_gain)+
-			"\n digital gain : "+ str(self.digital_gain)+
-			"\n brightness : "+ str(self.worker.avg_roi_brightness)+
-			"\n exposure_speed : "+ str(self.exposure_speed))
-		# print(self.framerate_delta)
-		# out.times.append(1 / (self.framerate + self.framerate_delta))
-		# Then change the shutter speed
-
-		# TODO is shutter speed setting for this img set at i - 1 or i - 2 ?
-
-		# The MrbPicWorker already does the brightness measurements in the picture corners for us
+		# self._logger.info(
+		# 	"sensor : "+ str(self.sensor_mode)+
+		# 	"\n iso : "+ str(self.iso)+
+		# 	"\n gain : "+ str(self.analog_gain)+
+		# 	"\n digital gain : "+ str(self.digital_gain)+
+		# 	"\n brightness : "+ str(self.worker.avg_roi_brightness)+
+		# 	"\n exposure_speed : "+ str(self.exposure_speed))
 		min_bright = TARGET_AVG_ROI_BRIGHTNESS - BRIGHTNESS_TOLERANCE
 		max_bright = TARGET_AVG_ROI_BRIGHTNESS + BRIGHTNESS_TOLERANCE
-		# smoothe = 1.4/2
 		brightness = self.worker.avg_roi_brightness
 		_minb, _maxb = min(brightness.values()), max(brightness.values())
 		compensate = 1
 		self._logger.info("Brightnesses: \nMin %s  Max %s\nCurrent %s" % (min_bright, max_bright, brightness))
 		if  _minb < min_bright and _maxb > max_bright:
-			self._logger.info("Outside brightness bound.")
+			self._logger.info("Outside brightness bounds.")
 			compensate = float(max_bright) / _maxb
 		elif _minb >= min_bright and _maxb > max_bright:
-			self._logger.info("Over compensated")
+			self._logger.debug("Brghtness over compensated")
 			compensate = float(max_bright) / _maxb
 		elif _minb < min_bright and _maxb <= max_bright:
-			self._logger.info("Under compensated")
+			self._logger.debug("Brightness under compensated")
 			compensate = float(min_bright) / _minb
 		else:
-			self._logger.info("Well compensated")
 			return
+		# change the speed of compensation
+		#     smoothe > 1 : aggressive, smoothe < 1 : slow
+		#     /!\ Can add instability in the case of smoothe > 1
+		# smoothe = 1.4/2
 		# compensate = compensate ** smoothe
 		if self.shutter_speed == 0 and self.exposure_speed > 0:
 			self.shutter_speed = self.exposure_speed
@@ -221,9 +215,9 @@ class MrbCamera(PiCamera, Camera):
 		self.shutter_speed = int(self.shutter_speed * compensate)
 		self._logger.info("result shutter speed: %s" % self.shutter_speed)
 
-	def apply_best_shutter_speed(self, shutterSpeedMultDelta=2, shutterSpeedDeltas=None):
+	def apply_best_shutter_speed(self):
 		"""
-		Applies to the camera the best shutter speed to detect all the markers
+		Use the corners of the image to do the auto-brightness adjustment.
 		:param fpsAvgDelta:
 		:param shutterSpeedDeltas:
 		:return:
@@ -232,42 +226,12 @@ class MrbCamera(PiCamera, Camera):
 		time.sleep(1)
 		autoShutterSpeed = self.exposure_speed
 		self.exposure_mode = 'off'
-		# Capture at the given cam fps and resolution
-
 		self._logger.info("exposure_speed: %s" % self.exposure_speed)
 		self.shutter_speed = autoShutterSpeed + 1
-		lastDeltas = [1]  # List of shutter speed offsets used (1 = 1 * normal shutter speed)
-		# if shutterSpeedDeltas is None: # Creates default behavior
-		# 	construct fpsDeltas from fpsAvgDelta
-		# 	Go for 3 pics around the given average
-		# 	shutterSpeedDeltas = [shutterSpeedMultDelta ** i for i in [-2, 1, ]]  # new shutter speed = shutterSpeedDelta * auto_shutter_speed
 
 		# Always takes the first picture with the auto calibrated mode
 		for i, img in enumerate(self.capture_continuous(self.worker, format='jpeg',
 								quality=100, use_video_port=True)):
 			if i % 2 == 1: continue # The values set are only applied for the following picture
 			self.compensate_shutter_speed(img)
-			# time.sleep(.4)
 			if i > 13: break
-			# elif not self.worker.allCornersCovered():
-			# 	# TODO take darker or brighter pic
-			# 	for qd, brightnessDiff in self.worker.detectedBrightness[-1].items():
-			# 		if qd in chain(self.worker.good_corner_bright):
-			# 			# ignore if a previous picture managed to capture it well
-			# 			pass
-			# 		else:
-			# 			# add a new delta brightness
-			# 			delta = int(shutterSpeedMultDelta ** (brightnessDiff // BRIGHTNESS_TOLERANCE)) * lastDeltas[-1]
-			# 			if delta not in shutterSpeedDeltas or delta not in lastDeltas:
-			# 				shutterSpeedDeltas.append(delta)
-
-			# if len(shutterSpeedDeltas) == 0:
-			# 	print("This last image was good enough")
-			# 	break
-			# elif len(shutterSpeedDeltas) > 0:
-			# 	# remember the previous shutter speeds
-			# 	lastDeltas.append(int(autoShutterSpeed * shutterSpeedDeltas.pop()))
-			# 	# Set shutter speed for the next pic
-			# 	self.shutter_speed = int(autoShutterSpeed * lastDeltas[-1])
-			# 	# Need to wait for the shutter speed to take effect ??
-			# 	time.sleep(.5)  # self.shutter_speed / 10**6 * 10 # transition to next shutter speed
