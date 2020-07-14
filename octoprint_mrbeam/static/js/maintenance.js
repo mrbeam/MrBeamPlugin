@@ -11,7 +11,7 @@ $(function () {
         self.LASER_HEAD = gettext('laser head');
         self.GANTRY = gettext('mechanics');
         self.PREFILTER_LIFESPAN = 50;
-        self.CARBON_FILTER_LIFESPAN = 400;
+        self.CARBON_FILTER_LIFESPAN = 300;
         self.LASER_HEAD_LIFESPAN = 100;
         self.GANTRY_LIFESPAN = 100;
         self.WARN_IF_USED_PERCENT = 100;
