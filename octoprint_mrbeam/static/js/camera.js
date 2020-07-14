@@ -117,7 +117,7 @@ $(function(){
 
                 if (data['beam_cam_new_image']['error'] === undefined) {
                     self.needsCalibration = false;
-                } else if (data['beam_cam_new_image']['error'] === "NO_CALIBRATION: Marker Calibration Needed" && !self.needsCalibration) {
+                } else if (data['beam_cam_new_image']['error'] === "Camera_calibration_is_needed" && !self.needsCalibration) {
                     self.needsCalibration = true;
                     new PNotify({
                         title: gettext("Calibration needed"),
