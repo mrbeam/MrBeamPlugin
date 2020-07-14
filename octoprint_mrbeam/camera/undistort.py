@@ -517,7 +517,11 @@ def _isValidQdDict(qdDict):
 	if type(qdDict) is not dict:
 		result = False
 	else:
-		result = all(qd in qdDict and len(qdDict[qd]) == 2 for qd in QD_KEYS)
+		result = all(qd in qdDict and \
+			     len(qdDict[qd]) == 2 and \
+			     all(not x is None for x in qdDict[qd]) \
+			     for qd in QD_KEYS)
+
 	return result
 
 if __name__ == "__main__":
