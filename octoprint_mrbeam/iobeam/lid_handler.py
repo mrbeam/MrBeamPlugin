@@ -482,8 +482,9 @@ class PhotoCreator(object):
                            stopEvent=self.stopEvent,) as cam:
 				try:
 					self.serve_pictures(cam, pic_settings=pic_settings, cam_params=cam_params, out_pic_size=out_pic_size)
-				except exc.CameraConnectionException:
+				except Exception:
 					cam.close()
+					raise
 			if recurse_nb > 0:
 				self._logger.info("Camera recovered")
 				self._analytics_handler.add_camera_session_details(exc.msgForAnalytics(exc.CAM_CONNRECOVER))
