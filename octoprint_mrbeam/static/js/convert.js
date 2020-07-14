@@ -664,8 +664,6 @@ $(function(){
 			var vector_jobs = $('.job_row_vector');
 			for (var i = 0; i < vector_jobs.length; i++) {
 				var job = vector_jobs[i];
-				console.log('################## P WHATEVER THIS IS')
-				console.log(p)
 				$(job).find('.param_intensity').val(p.cut_i);
 				$(job).find('.param_feedrate').val(p.cut_f);
 				$(job).find('.param_passes').val(p.cut_p || 0);
