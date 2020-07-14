@@ -16,10 +16,10 @@ def usageHandler(plugin):
 
 
 class UsageHandler(object):
-	MAX_DUST_FACTOR = 2.0
-	MIN_DUST_FACTOR = 0.1
+	MAX_DUST_FACTOR = 1.0
+	MIN_DUST_FACTOR = 0.5
 	MAX_DUST_VALUE = 0.5
-	MIN_DUST_VALUE = 0.1
+	MIN_DUST_VALUE = 0.2
 
 	def __init__(self, plugin):
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.analytics.usage")
