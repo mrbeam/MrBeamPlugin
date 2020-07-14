@@ -3,48 +3,110 @@
 
     <div id="calibration_step_1" class="calibration_step active scrollable" data-bind="visible: !window.mrbeam.isWatterottMode()">
 		<h3>{{ _('Camera Calibration') }}</h3>
-        <div class='calibration_manual text'><strong>{{ _("Important") }}:</strong><br />
+        <p>
             {{ _("Your Mr Beam's camera is factory calibrated by default, so there is normally no need to calibrate the camera.") }}
-        </div>
-        <div>
-            <h5>{{ _("A new calibration of the camera is only necessary if:") }}</h5>
-            <div class='calibration_manual text'>
-                <ul>
-                    <li>
-                        {{ _("One of the pink markings has been changed.<br/ >
-                        (For example, if the mark was peeled off and glued in again.)") }}
-                    </li>
-                    <li>
-                        {{ _("You notice a larger deviation between the screen position on the adjusted<br />
-                        (black-and-white image) and the laser result.") }}
-                    </li>
-                </ul>
+        </p>
+{#        <div>#}
+{#            {{ _("A new calibration of the camera is only necessary if:") }}#}
+{#            <div>#}
+{#                <ul>#}
+{#                    <li>#}
+{#                        {{ _("One of the pink markings has been changed. (For example, if the mark was peeled off and glued in again.)") }}#}
+{#                    </li>#}
+{#                    <li>#}
+{#                        {{ _("You notice a larger deviation between the screen position on the adjusted (black-and-white image) and the laser result.") }}#}
+{#                    </li>#}
+{#                </ul>#}
+{#            </div>#}
+{#        </div>#}
+
+        <div class="accordion md-accordion">
+          <div class="card">
+            <div class="card-header" id="settings_camera_calibration_status_header">
+              <div>
+                <button class="btn-link collapsed camera-status-collapsible requirement"
+                        data-bind="css: readyToLaser.lid_fully_open() == true ? 'requirement-met' : 'requirement-not-met'"
+                        type="button" data-toggle="collapse" data-target="#settings_camera_calibration_status"
+                        aria-expanded="true" aria-controls="collapseOne">
+                    Camera status
+                </button>
+              </div>
             </div>
+            <div id="settings_camera_calibration_status" class="collapse" aria-labelledby="settings_camera_calibration_status_header">
+              <div class="card-body">
+                  <table class="camera-status-images" data-bind="visible: availablePicUrl()['raw']">
+                      <tr>
+                          <td><img data-bind="attr: {src: availablePicUrl()['raw']}"/></td>
+                          <td><img data-bind="attr: {src: availablePicUrl()['lens_corrected']}"/></td>
+                          <td><img data-bind="attr: {src: availablePicUrl()['cropped']}"/></td>
+                      </tr>
+                      <tr>
+                          <td><strong>{{ _('Raw') }}</strong></td>
+                          <td><strong>{{ _('Corrected') }}</strong></td>
+                          <td><strong>{{ _('Cropped') }}</strong></td>
+                      </tr>
+                      <tr>
+                          <td>{{ _('First picture') }}</td>
+                          <td>{{ _('After lens calibration') }}</td>
+                          <td>{{ _('Final, as shown in the working area') }}</td>
+                      </tr>
+                  </table>
+                  <div data-bind="visible: !availablePicUrl()['raw']">
+                      <p>The camera is not able to take new pictures. Please check the following:</p>
+                  </div>
+                  <ul class="camera-requirements">
+                      <li class="requirement" data-bind="css: readyToLaser.lid_fully_open() == true ? 'requirement-met' : 'requirement-not-met'">
+                          {{ _('The lid is open') }}</li>
+{#                      <li data-bind="css: mrbeam.mrb_state.state() == 'Operational' ? 'requirement-met' : 'requirement-not-met'">#}
+{#                          {{ _('The laser head is in the homing position') }}</li>#}
+                      <li class="requirement" data-bind="css: state.isOperational() ==  true ? 'requirement-met' : 'requirement-not-met'">
+                          {{ _('Mr Beam is operational (no running laser jobs, homed)') }}</li>
+                      <li class="requirement" data-bind="css: camera.markerState() == 4 ? 'requirement-met' : 'requirement-not-met'">
+                          {{ _('The 4 markers are recognized') }}</li>
+                  </ul>
+              </div>
+            </div>
+              <div class="camera-calibrations">
+                  <div class="rounded_container calibration-container">
+                      <div class="rounded_container_title">LENS CALIBRATION</div>
+                      <hr class="rounded_container_hr">
+                      <p>The lens calibration is made to remove the fish-eye effect from the picture. Only do this if you think that your camera precision is bad, specially in the corners.</p>
+                      <button class="btn btn-default">{{ _('Start') }}</button>
+                  </div>
+                  <div class="rounded_container calibration-container">
+                      <div class="rounded_container_title">CORNER CALIBRATION</div>
+                      <hr class="rounded_container_hr">
+                      <p>The corner calibration uses the pink markers to calibrate the camera. Use this in case one of the markers has been changed or if there is a large deviation between the screen position and the laser result.</p>
+                      <button class="btn btn-default">{{ _('Start') }}</button>
+                  </div>
+              </div>
+          </div>
         </div>
-        <div class='calibration_manual text show_only_online'>{{ _("For more information, please have a look at our article on %(opening_tag)scamera calibration%(closing_tag)s.",
-                opening_tag='<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000065908-camera-calibration" target="_blank"><i class="icon-external-link"></i>&nbsp;',
-                closing_tag='</a>') }}</div>
-        <div class='calibration_manual text show_only_offline'>{{ _("For more information, please have a look at our article on %(opening_tag)scamera calibration%(closing_tag)s.",
-                opening_tag='<a href="#" onclick="mrbeam.openOfflineKbUrl(\'43000065908_camer_calibration.pdf\')"><i class="icon-file-text"></i>&nbsp;',
-                closing_tag='</a>') }}</div>
 
-        <div class='calibration_manual text show_only_online'>{{ _("Positioning with the Mr Beam camera is simple and fairly accurate,
-        but there can be deviations of up to +/- 5mm. If a laser job needs to be positioned very accurately,
-        we recommend using %(opening_tag)smanual positioning%(closing_tag)s.",
-                opening_tag='<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000065874-manual-positioning" target="_blank"><i class="icon-external-link"></i>&nbsp;',
-                closing_tag='</a>') }}</div>
-        <div class='calibration_manual text show_only_offline'>{{ _("Positioning with the Mr Beam camera is simple and fairly accurate,
-        but there can be deviations of up to +/- 5mm. If a laser job needs to be positioned very accurately,
-        we recommend using %(opening_tag)smanual positioning%(closing_tag)s.",
-                opening_tag='<a href="#" onclick="mrbeam.openOfflineKbUrl(\'43000065874_manual_positioning.pdf\')"><i class="icon-external-link"></i>&nbsp;',
-                closing_tag='</a>') }}</div>
-
+{#        <div class='calibration_manual text show_only_online'>{{ _("For more information, please have a look at our article on %(opening_tag)scamera calibration%(closing_tag)s.",#}
+{#                opening_tag='<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000065908-camera-calibration" target="_blank"><i class="icon-external-link"></i>&nbsp;',#}
+{#                closing_tag='</a>') }}</div>#}
+{#        <div class='calibration_manual text show_only_offline'>{{ _("For more information, please have a look at our article on %(opening_tag)scamera calibration%(closing_tag)s.",#}
+{#                opening_tag='<a href="#" onclick="mrbeam.openOfflineKbUrl(\'43000065908_camer_calibration.pdf\')"><i class="icon-file-text"></i>&nbsp;',#}
+{#                closing_tag='</a>') }}</div>#}
+{##}
+{#        <div class='calibration_manual text show_only_online'>{{ _("Positioning with the Mr Beam camera is simple and fairly accurate,#}
+{#        but there can be deviations of up to +/- 5mm. If a laser job needs to be positioned very accurately,#}
+{#        we recommend using %(opening_tag)smanual positioning%(closing_tag)s.",#}
+{#                opening_tag='<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000065874-manual-positioning" target="_blank"><i class="icon-external-link"></i>&nbsp;',#}
+{#                closing_tag='</a>') }}</div>#}
+{#        <div class='calibration_manual text show_only_offline'>{{ _("Positioning with the Mr Beam camera is simple and fairly accurate,#}
+{#        but there can be deviations of up to +/- 5mm. If a laser job needs to be positioned very accurately,#}
+{#        we recommend using %(opening_tag)smanual positioning%(closing_tag)s.",#}
+{#                opening_tag='<a href="#" onclick="mrbeam.openOfflineKbUrl(\'43000065874_manual_positioning.pdf\')"><i class="icon-external-link"></i>&nbsp;',#}
+{#                closing_tag='</a>') }}</div>#}
+{#
         <div class='calibration_manual text'>
             {{ _("The following instructions will guide you step by step through the recalibration of your camera:") }}
-        </div>
-        <div>
+        </div>#}
+{#        <div>
 			<button class="btn btn-default" data-bind="click: next">{{ _('Continue') }}</button>
-		</div>
+		</div>#}
 	</div>
 
 

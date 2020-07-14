@@ -771,10 +771,87 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	position: relative;
 }
 
-.calibration_manual.text {
-    width: 48%;
-	margin-bottom: 2em;
+#settings_camera_calibration_status_header > div > button.camera-status-collapsible {
+    outline: transparent;
+    text-decoration: none;
+    color: #333;
+    padding: 0;
+    white-space: nowrap;
+	font-weight: bolder;
+	font-size: 1.2em;
 }
+
+#settings_camera_calibration_status_header > div > button.collapsed.camera-status-collapsible:before {
+  font-family: FontAwesome;
+  content: "\f078";
+  /*padding-right: 5px;*/
+}
+
+#settings_camera_calibration_status_header > div > button.camera-status-collapsible:before {
+	content: "\f077";
+	font-family: FontAwesome;
+}
+
+/*.calibration_manual.text {*/
+/*    width: 48%;*/
+/*	margin-bottom: 2em;*/
+/*}*/
+
+.camera-status-images {
+	width: 90%;
+    text-align: center;
+    border-collapse: separate;
+    border-spacing: 20px 0;
+}
+
+.requirement::after {
+	font-family: FontAwesome3;
+	-webkit-font-smoothing: antialiased;
+	margin-left: 5px;
+}
+
+.requirement.requirement-met::after {
+	content: "\f00c";
+	color: #00d400;
+}
+
+.requirement.requirement-not-met::after {
+	content: "\f00d";
+	color: red;
+}
+
+.camera-calibrations {
+    display: grid;
+    grid-gap: 10px;
+    grid-template-columns: 1fr 1fr;
+	width: 95%;
+	margin: 15px 0 0 5px;
+}
+
+.camera-calibrations .calibration-container {
+	padding: 10px 15px;
+    margin: 0 4% 0 0;
+	position: relative;
+}
+
+.calibration-container .rounded_container_title {
+	margin-top: 0;
+}
+
+.calibration-container .rounded_container_hr {
+	margin: 10px -15px;
+}
+
+.calibration-container p {
+	margin-bottom: 50px;
+}
+
+.calibration-container button {
+	position: absolute;
+	bottom: 10px;
+	right: 10px;
+}
+
 .calibration_manual.img {
     width: 48%;
     padding-top: 32%;
