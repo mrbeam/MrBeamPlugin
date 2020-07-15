@@ -584,6 +584,9 @@ class AnalyticsHandler(object):
 		if self._current_job_id:
 			payload = {
 				ak.Job.Duration.ESTIMATION: int(round(self._current_job_time_estimation)),
+				ak.Job.Duration.CALC_DURATION_TOTAL: payload['calc_duration_total'],
+				ak.Job.Duration.CALC_DURATION_WOKE: payload['calc_duration_woke'],
+				ak.Job.Duration.CALC_LINES: payload['calc_lines'],
 			}
 			self._add_job_event(ak.Job.Event.JOB_TIME_ESTIMATED, payload=payload)
 
