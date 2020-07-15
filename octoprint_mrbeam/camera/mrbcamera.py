@@ -192,7 +192,7 @@ class MrbCamera(PiCamera, Camera):
 		compensate = 1
 		self._logger.debug("Brightnesses: \nMin %s  Max %s\nCurrent %s" % (min_bright, max_bright, brightness))
 		if  _minb < min_bright and _maxb > max_bright:
-			self._logger.info("Outside brightness bounds.")
+			self._logger.debug("Outside brightness bounds.")
 			compensate = float(max_bright) / _maxb
 		elif _minb >= min_bright and _maxb > max_bright:
 			self._logger.debug("Brghtness over compensated")
