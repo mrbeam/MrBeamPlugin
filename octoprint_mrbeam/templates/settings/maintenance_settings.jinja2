@@ -27,7 +27,7 @@
                     </div>
                 </td>
                 <td class="maintenance-counter-column">
-                    <h3><span data-bind="text: prefilterUsageHours, style: {color: prefilterShowWarning()? '#e25303' : ''}"></span><span data-bind="text: prefilterLifespanHours"></span></h3>
+                    <h3><span data-bind="text: prefilterPercent() + ' %', style: {color: prefilterShowWarning()? '#e25303' : ''}"></span></h3>
                 </td>
                 <td class="maintenance-reset-column">
                     <button class="btn maintenance-reset-btn" data-bind="click: resetPrefilterUsage">{{ _('Reset') }}</button>
@@ -54,7 +54,7 @@
                     </div>
                 </td>
                 <td class="maintenance-counter-column">
-                    <h3><span data-bind="text: carbonFilterUsageHours, style: {color: carbonFilterShowWarning()? '#e25303' : ''}"></span><span data-bind="text: carbonFilterLifespanHours"></span></h3>
+                    <h3><span data-bind="text: carbonFilterPercent() + ' %', style: {color: carbonFilterShowWarning()? '#e25303' : ''}"></span></h3>
                 </td>
                 <td class="maintenance-reset-column">
                     <button class="btn maintenance-reset-btn" data-bind="click: resetCarbonFilterUsage">{{ _('Reset') }}</button>
@@ -87,7 +87,7 @@
                     </div>
                 </td>
                 <td class="maintenance-counter-column">
-                    <h3><span data-bind="text: laserHeadUsageHours, style: {color: laserHeadShowWarning()? '#e25303' : ''}"></span><span data-bind="text: laserHeadLifespanHours"></span></h3>
+                    <h3><span data-bind="text: laserHeadPercent() + ' %', style: {color: laserHeadShowWarning()? '#e25303' : ''}"></span></h3>
                 </td>
                 <td class="maintenance-reset-column">
                     <button class="btn maintenance-reset-btn" data-bind="click: resetLaserHeadUsage">{{ _('Reset') }}</button>
@@ -114,7 +114,7 @@
                     </div>
                 </td>
                 <td class="maintenance-counter-column">
-                    <h3><span data-bind="text: gantryUsageHours, style: {color: gantryShowWarning()? '#e25303' : ''}"></span><span data-bind="text: gantryLifespanHours"></span></h3>
+                    <h3><span data-bind="text: gantryPercent() + ' %', style: {color: gantryShowWarning()? '#e25303' : ''}"></span></h3>
                 </td>
                 <td class="maintenance-reset-column">
                     <button class="btn maintenance-reset-btn" data-bind="click: resetGantryUsage">{{ _('Reset') }}</button>
