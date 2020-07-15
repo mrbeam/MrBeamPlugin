@@ -139,9 +139,7 @@ class DustManager(object):
 			self._dust = args['dust']
 
 			if self._printer.is_printing():
-				self._logger.info('############## DUST DATA: {}'.format(self._dust))
 				self._job_dust_values.append(self._dust)
-				self._logger.info('#### job dust values: {}'.format(self._job_dust_values))
 		else:
 			err = True
 		if args['rpm'] is not None:
