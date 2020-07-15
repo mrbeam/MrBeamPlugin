@@ -412,6 +412,8 @@ class IoBeamHandler(object):
 						data = None
 						try:
 							sock_data =  self._my_socket.recv(self.MESSAGE_LENGTH_MAX)
+							if len(temp_buffer) > 0:
+								self._logger.warn("ANDYTEST temp_buffer: %s", len(temp_buffer))
 							if len(sock_data) > self.MESSAGE_LENGTH_MAX-6:
 								self._logger.warn("ANDYTEST sock_data: %s", len(sock_data))
 							data = temp_buffer + sock_data
@@ -420,8 +422,7 @@ class IoBeamHandler(object):
 							# 	# self._logger.warn("Connection stale but MRBEAM_DEBUG enabled. Continuing....")
 							# 	continue
 							# else:
-							self._logger.warn("Exception while sockect.recv(): %s - Resetting connection...", e)
-							self._logger.warn("Warning continuation %s ", e.message)
+							self._logger.warn("Exception while sockect.recv(): %s (message: %s) - Resetting connection...", e, e.message)
 							break
 
 						if not data:
