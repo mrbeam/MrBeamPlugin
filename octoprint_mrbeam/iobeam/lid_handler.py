@@ -825,7 +825,7 @@ class PhotoCreator(object):
 				try:
 					analytics_str = str(analytics_data)
 				except:
-					self._logger.warn("_send_last_img_to_analytics_threaded() Can not convert analytics_data to json: %s", analytics_data)
+					self._logger.warning("_send_last_img_to_analytics_threaded() Can not convert analytics_data to json: %s", analytics_data)
 
 				dist = ''
 				path_to_cam_params = self._settings.get(["cam", "lensCalibrationFile"])
@@ -833,7 +833,7 @@ class PhotoCreator(object):
 					with open(path_to_cam_params, 'r') as f:
 						dist = base64.b64encode(f.read())
 				except:
-					self._logger.warn("_send_last_img_to_analytics_threaded() Can not read npz file: %s", path_to_cam_params)
+					self._logger.warning("_send_last_img_to_analytics_threaded() Can not read npz file: %s", path_to_cam_params)
 
 				payload = {'img_base64': img,
 						   'img_type': img_format,
@@ -846,7 +846,7 @@ class PhotoCreator(object):
 							   'analytics': analytics_str,
 							   'trigger': trigger},
 						   }
-				self._logger.info("_send_last_img_to_analytics_threaded() trigger: %s, img_base64 len: %s, force_upload: %s, metadata: %s",
+				self._logger.debug("_send_last_img_to_analytics_threaded() trigger: %s, img_base64 len: %s, force_upload: %s, metadata: %s",
 								  trigger, len(img), force_upload, payload['metadata'])
 				self._analytics_handler.add_camera_image(payload)
 				if force_upload:
