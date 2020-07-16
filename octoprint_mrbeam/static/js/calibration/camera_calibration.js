@@ -14,6 +14,13 @@ const CROPPED_IMG_RES = [500,390]
 const LOADING_IMG_RES = [512, 384]
 const STATIC_URL = "/plugin/mrbeam/static/img/calibration/calpic_wait.svg";
 
+const CUSTOMER_CAMERA_VIEWS = {
+    'settings': '#camera_settings_view',
+    'lens': '#lens_calibration_view',
+    'corner': '#corner_calibration_view',
+    'test_calibration': '#test_calibration_view',
+}
+
 $(function () {
 	function CameraCalibrationViewModel(parameters) {
 		var self = this;
@@ -225,7 +232,8 @@ $(function () {
 		};
 
 		self.onSettingsShown = function(){
-			self.goto('#calibration_step_1');
+			// self.goto('#camera_settings_view');
+            self.resetUserView()
 		}
 
 		self.__format_point = function(p){
@@ -736,8 +744,7 @@ $(function () {
 				type: "success",
 				hide: true
 			});
-			if(window.mrbeam.isWatterottMode()) self.resetView();
-			else self.goto('#calibration_step_1');
+			self.resetView();
 		};
 
 		self.saveMarkersError = function () {
@@ -750,8 +757,6 @@ $(function () {
 			});
 
 			self.resetView();
-			if(!window.mrbeam.isWatterottMode())
-				self.goto('#calibration_step_1');
 		};
 
 		self.abortCalibration = function () {
@@ -764,45 +769,61 @@ $(function () {
 			self.focusY(0);
 			self.calSvgScale(1);
 			self.currentMarker = 0;
+
+			self.resetUserView()
 		};
 
 		// TODO could this be combined with resetView?
-		self.reset_corner_calibration = function () {
-			self.resetView();
-			self.markersFoundPosition({});
-			self.currentResults({});
-			if (!window.mrbeam.isWatterottMode())
-				self.goto('#calibration_step_1');
-			$('.calibration_click_indicator').attr({'x': -100, 'y': -100});
-		};
+        // TODO IRATXE --> This isn't used?
+		// self.reset_corner_calibration = function () {
+		// 	self.resetView();
+		// 	self.markersFoundPosition({});
+		// 	self.currentResults({});
+		// 	$('.calibration_click_indicator').attr({'x': -100, 'y': -100});
+		// };
 
-		self.continue_to_calibration = function () {
-			// self.loadUndistortedPicture(self.next);
-			// simply show the calibration screen, showing the latest cropped img
-			self.next()
-			self.calibrationScreenShown(true)
-		};
+        // TODO IRATXE: might not be necessary anymore
+		// self.continue_to_calibration = function () {
+		// 	// self.loadUndistortedPicture(self.next);
+		// 	// simply show the calibration screen, showing the latest cropped img
+		// 	self.next()
+		// 	self.calibrationScreenShown(true)
+		// };
 
-		self.next = function () {
-			var current = $('.calibration_step.active');
-			current.removeClass('active');
-			var next = current.next('.calibration_step');
-			if (next.length === 0) {
-				next = $('#calibration_step_1');
-			}
+		// self.next = function () {
+		// 	var current = $('.calibration_step.active');
+		// 	current.removeClass('active');
+		// 	var next = current.next('.calibration_step');
+		// 	if (next.length === 0) {
+		// 		next = $('#camera_settings_view');
+		// 	}
+        //
+		// 	next.addClass('active');
+		// };
+        //
+		// self.goto = function (target_id) {
+		// 	var el = $(target_id);
+		// 	if (el) {
+		// 		$('.calibration_step.active').removeClass('active');
+		// 		$(target_id).addClass('active');
+		// 	} else {
+		// 		console.error('no element with id' + target_id);
+		// 	}
+		// };
 
-			next.addClass('active');
-		};
+        self.changeUserView = function(toView) {
+            Object.entries(CUSTOMER_CAMERA_VIEWS).forEach(([view_name,view_id]) => {
+                if (view_name === toView) {
+                    $(view_id).show()
+                } else {
+                    $(view_id).hide()
+                }
+            })
+        }
 
-		self.goto = function (target_id) {
-			var el = $(target_id);
-			if (el) {
-				$('.calibration_step.active').removeClass('active');
-				$(target_id).addClass('active');
-			} else {
-				console.error('no element with id' + target_id);
-			}
-		};
+        self.resetUserView = function() {
+            self.changeUserView('settings')
+        }
 
 		self.simpleApiCommand = function(command, data, successCallback, errorCallback, type) {
 			data = data || {}
