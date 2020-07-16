@@ -250,7 +250,7 @@
                 _mrb_loading_overlay_step_ts = Date.now()
                 document.getElementById('loading_overlay_error').style.display = "none"
             } else if (_mrb_loading_overlay_step > 0 && _mrb_loading_overlay_step < 8 && Date.now() - _mrb_loading_overlay_step_ts > timeout) {
-                let specific_message = _get_mrb_loading_overlay_gemnerate_error_message()
+                let specific_message = _get_mrb_loading_overlay_generate_error_message()
                 if (specific_message) {
                     document.getElementById('loading_overlay_error_specific').insertAdjacentHTML('beforeend', specific_message);
                     document.getElementById('loading_overlay_error_specific').style.display = "inherit"
@@ -280,7 +280,7 @@
                 setTimeout(_mrb_loading_overlay_blocked_check, 2000)
             }
         }
-        function _get_mrb_loading_overlay_gemnerate_error_message(){
+        function _get_mrb_loading_overlay_generate_error_message(){
             let result = ""
             if (console.everything) {
                 console.everything.forEach(function (logData) {
