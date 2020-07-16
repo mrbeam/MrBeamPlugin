@@ -690,7 +690,7 @@ class IoBeamHandler(object):
 		self._last_i2c_monitoring_dataset = dataset
 		
 	def _handle_reed_switch(self, dataset):
-		self.logger.info("reed_switch: %s", dataset)
+		self._logger.info("reed_switch: %s", dataset)
 		return 0
 
 	def _handle_laser(self, dataset):
