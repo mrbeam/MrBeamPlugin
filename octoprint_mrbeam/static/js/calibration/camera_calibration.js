@@ -22,6 +22,7 @@ $(function () {
 		self.conversion = parameters[1];
 		self.analytics = parameters[2];
 		self.camera = parameters[3];
+		self.laserViewmodel = parameters[4]; // Only used to show mrb state for Debug info
 
 		// calibrationState is constantly refreshed by the backend
 		// as an immutable array that contains the whole state of the calibration
@@ -377,8 +378,13 @@ $(function () {
 				return;
 
 			if (!self.calibrationScreenShown()) {
-			    return;
-            }
+				return;
+      }
+
+			if ('mrb_state' in data && data['mrb_state']) {
+				window.mrbeam.mrb_state = data['mrb_state'];
+				self.laserViewmodel.updateSettingsAbout()
+			}
 
 			if ('beam_cam_new_image' in data) {
 				// update image
@@ -833,7 +839,7 @@ $(function () {
 		CameraCalibrationViewModel,
 
 		// e.g. loginStateViewModel, settingsViewModel, ...
-		["workingAreaViewModel", "vectorConversionViewModel", "analyticsViewModel", "cameraViewModel"],
+		["workingAreaViewModel", "vectorConversionViewModel", "analyticsViewModel", "cameraViewModel", "readyToLaserViewModel"],
 
 		// e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
 		["#settings_plugin_mrbeam_camera"]

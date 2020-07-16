@@ -122,6 +122,7 @@ class LidHandler(object):
 			self._logger.debug("onEvent() LID_OPENED")
 			self._lid_closed = False
 			self._startStopCamera(event)
+			self.send_mrb_state()
 		if event == IoBeamEvents.INTERLOCK_OPEN:
 			self._logger.debug("onEvent() INTERLOCK_OPEN")
 			self._interlock_closed = False
@@ -132,6 +133,7 @@ class LidHandler(object):
 			self._logger.debug("onEvent() LID_CLOSED")
 			self._lid_closed = True
 			self._startStopCamera(event)
+			self.send_mrb_state()
 		elif event == OctoPrintEvents.CLIENT_OPENED:
 			self._logger.debug("onEvent() CLIENT_OPENED sending client lidClosed: %s", self._lid_closed)
 			self._client_opened = True
@@ -374,6 +376,11 @@ class LidHandler(object):
 		if data['lensCalibration'] == calibration.STATE_SUCCESS:
 			self.refresh_settings()
 		self._plugin_manager.send_plugin_message("mrbeam", dict(chessboardCalibrationState=data))
+
+	def send_mrb_state(self):
+		self._plugin_manager.send_plugin_message("mrbeam", dict(
+			mrb_state=self._plugin.get_mrb_state()))
+
 
 	@property
 	def debugFolder(self):
