@@ -4,7 +4,6 @@ $(function() {
 
         self.loginStateViewModel = parameters[0];
         self.wizard = parameters[1];
-        self.settings = parameters[2];
 
         self.userCreated = false;
 
@@ -152,29 +151,9 @@ $(function() {
                 "pass2": self.confirmedPassword()
                 };
 
-                console.log('#### SETTING REVIEW ASK TO TRUE??????????')
-
                 // We only try to send it once, otherwise it gives an error because the user already exists
                 if (!self.userCreated) {
                     self._sendData(data);
-
-                    // Set the ask for review flag to true, this way only new users will be asked for a review
-                    // TODO IRATXE REMOVE
-                    console.log('#### SETTING REVIEW ASK TO TRUE')
-                    let review_settings = {
-                        review: {
-                            ask: true,
-                            given: false    // todo iratxe: do we want to reset this as well?
-                        }
-                    };
-
-                    self.settings.settings.plugins.mrbeam.review.ask(true)
-                    self.settings.savetimer = setTimeout(function () {
-                        self.settings.saveData(review_settings, function(){
-                            console.log("Saved ask for review flag", self.settings.settings.plugins.mrbeam.review.ask());
-                            self.settings.savetimer = undefined;
-                        });
-                    }, 2000);
                 }
                 return true;
 
@@ -210,7 +189,7 @@ $(function() {
 
     OCTOPRINT_VIEWMODELS.push([
         WizardAclViewModel,
-        ["loginStateViewModel", "wizardWhatsnewViewModel", "settingsViewModel"],
+        ["loginStateViewModel", "wizardWhatsnewViewModel"],
         "#wizard_plugin_corewizard_acl"
     ]);
 });
