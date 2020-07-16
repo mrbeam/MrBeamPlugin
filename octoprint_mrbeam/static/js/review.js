@@ -53,16 +53,6 @@ $(function () {
 
             setTimeout(function () {
                 // The short jobs are always estimated 60s, so has to be more
-                // TODO IRATXE REMOVE THIS LOGGING
-                console.log('#### SHOULD ASK FOR REVIEW?? ' + self.shouldAskForReview())
-                console.log(self.settings.settings.plugins.mrbeam.usage.totalUsage())
-                console.log(self.settings.settings.plugins.mrbeam.review.ask())
-                console.log(self.settings.settings.plugins.mrbeam.review.given())
-                console.log(self.settings.settings.plugins.mrbeam.usage.totalUsage() >= 10
-                    && self.settings.settings.plugins.mrbeam.review.ask()
-                    && !self.settings.settings.plugins.mrbeam.review.given()
-                    && !self.justGaveReview())
-
                 if (self.shouldAskForReview() && self.jobTimeEstimation() >= 61) {
                     self.showReviewDialog(true);
                     self.reviewDialog.modal("show");
@@ -150,7 +140,7 @@ $(function () {
                 ts: new Date().getTime(),
                 env: MRBEAM_ENV_LOCAL,
                 sw_tier: MRBEAM_SW_TIER,
-                username: self.loginState.username(),
+                snr: MRBEAM_SERIAL,
                 number: self.REVIEW_NUMBER
             };
 

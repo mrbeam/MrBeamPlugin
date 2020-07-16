@@ -724,6 +724,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			self._settings.global_set_boolean(["accessControl", "enabled"], True)
 			self._user_manager.enable()
 			self._user_manager.addUser(data["user"], data["pass1"], True, ["user", "admin"], overwrite=True)
+
+			# We activate the flag to ask for a review for new users
+			self._settings.set_boolean(['review', 'ask'], True)
 		else:
 			return make_response("Unable to interprete request", 400)
 

@@ -45,6 +45,7 @@ class ReviewHandler:
 	def save_review_data(self, data):
 		self._write_review_to_file(data)
 		self._settings.set_boolean(['review', 'given'], data['dontShowAgain'])
+		self._settings.save()  # This is necessary because without it the value is not saved
 
 		ReviewFileUploader.upload_now(self._plugin, self._review_lock)
 
