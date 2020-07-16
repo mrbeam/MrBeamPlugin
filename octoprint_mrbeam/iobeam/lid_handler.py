@@ -489,7 +489,7 @@ class PhotoCreator(object):
 				self._logger.info("Camera recovered")
 				self._analytics_handler.add_camera_session_details(exc.msgForAnalytics(exc.CAM_CONNRECOVER))
 		except exc.CameraConnectionException as e:
-			self._logger.warning(" %s, %s : %s" % (e.__class__.__name__, e, exc.msg(exc.CAM_CONN)),
+			self._logger.warning(" %s : %s" % (e.__class__.__name__, exc.msg(exc.CAM_CONN)),
 			                       analytics=exc.CAM_CONN)
 			if recurse_nb < MAX_PIC_THREAD_RETRIES:
 				self._logger.info("Restarting work() after some sleep")
@@ -498,10 +498,10 @@ class PhotoCreator(object):
 						notification_id='warn_cam_conn_err',
 						replay=True))
 				self.stopEvent.clear()
-				if not self.stopEvent.wait(5.0):
+				if not self.stopEvent.wait(2.0):
 					self.work(recurse_nb=recurse_nb+1)
 			else:
-				self._logger.exception(" %s, %s : Recursive restart : too many times, displaying Error message." % (e.__class__.__name__, e),
+				self._logger.error(" %s : Recursive restart : too many times, displaying Error message.\n%s, %s" % (exc.msg(exc.CAM_CONN), e.__class__.__name__, e),
 				                       analytics=exc.CAM_CONN)
 				self._plugin.user_notification_system.show_notifications(
 					self._plugin.user_notification_system.get_notification(
