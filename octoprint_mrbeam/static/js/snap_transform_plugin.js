@@ -78,8 +78,8 @@
 			// hide scale & rotate handle
 			self.transformHandleGroup.node.classList.add('translate');
 			
-			self.session.translate.cx = self.session.bbox.cx;
-			self.session.translate.cy = self.session.bbox.cy;
+			self.session.translate.cx = self.session.bb.cx;
+			self.session.translate.cy = self.session.bb.cy;
 		}	
 
 		self.translateMove = function( target, dx, dy, x, y, event ){
@@ -114,8 +114,12 @@
 			const handleMatrix = this.transform().localMatrix; // handle origin as first point
 			self.session.rotate.ax = handleMatrix.e;
 			self.session.rotate.ay = handleMatrix.f;
-			self.session.rotate.cx = self.session.bbox.cx;
-			self.session.rotate.cy = self.session.bbox.cy;
+			self.session.rotate.cx = self.session.bb.cx;
+			self.session.rotate.cy = self.session.bb.cy;
+			self.session.rotate.ocx = self.session.bboxWithoutTransform.cx;
+			self.session.rotate.ocy = self.session.bboxWithoutTransform.cy;
+			self.session.originInvert = self.session.originMatrix.invert(); // TODO move to session Start instead of scale/rotate start
+
 		}	
 
 		self.rotateMove = function( target, dx, dy, x, y, event ){
@@ -125,6 +129,9 @@
 			const ay = self.session.rotate.ay;
 			const cx = self.session.rotate.cx;
 			const cy = self.session.rotate.cy;
+			
+			snap.select('#scaleCenter').attr({cx: cx, cy: cy});
+
 			
 			// calculate viewbox coordinates incl. zoom & pan (mm)
 			const bx = self.session.rotate.bx = ax + dxMM;
@@ -155,66 +162,56 @@
 		self.scaleStart = function( target, x, y, event ){ // x, y, dx, dy pixel coordinates according to <svg width="..." height="..." >
 			
 			// hide scale & rotate handle
-			var usedHandle = this;
+			const usedHandle = this;
 			const handleId = usedHandle.node.id;
 			self.transformHandleGroup.node.classList.add('scale', handleId);
 			
-			// determine scale center
-			let cx;
-			let cy;
+			let scaleCenterHandle;
 			switch (handleId.substr(-2)) {
 				case 'SE':
-					cx = self.session.bbox.x;
-					cy = self.session.bbox.y; 
+					scaleCenterHandle = self.scaleHandleNW;
 					self.session.scale.signX = 1;
 					self.session.scale.signY = 1;
 					self.session.scale.prop = true;
 					break;
 				case 'SW':
-					cx = self.session.bbox.x2;
-					cy = self.session.bbox.y;
+					scaleCenterHandle = self.scaleHandleNE;
 					self.session.scale.signX = -1;
 					self.session.scale.signY = 1;
 					self.session.scale.prop = true;
 					break;
 				case 'NW':
-					cx = self.session.bbox.x2;
-					cy = self.session.bbox.y2;
+					scaleCenterHandle = self.scaleHandleSE;
 					self.session.scale.signX = -1;
 					self.session.scale.signY = -1;
 					self.session.scale.prop = true;
 					break;
 				case 'NE':
-					cx = self.session.bbox.x;
-					cy = self.session.bbox.y2;
+					scaleCenterHandle = self.scaleHandleSW;
 					self.session.scale.signX = 1;
 					self.session.scale.signY = -1;
 					self.session.scale.prop = true;
 					break;
 				case 'NN':
-					cx = self.session.bbox.x;
-					cy = self.session.bbox.y2;
+					scaleCenterHandle = self.scaleHandleS;
 					self.session.scale.signX = 0;
 					self.session.scale.signY = -1;
 					self.session.scale.prop = false;
 					break;
 				case 'EE':
-					cx = self.session.bbox.x;
-					cy = self.session.bbox.y;
+					scaleCenterHandle = self.scaleHandleW;
 					self.session.scale.signX = 1;
 					self.session.scale.signY = 0;
 					self.session.scale.prop = false;
 					break;
 				case 'SS':
-					cx = self.session.bbox.x;
-					cy = self.session.bbox.y;
+					scaleCenterHandle = self.scaleHandleN;
 					self.session.scale.signX = 0;
 					self.session.scale.signY = 1;
 					self.session.scale.prop = false;
 					break;
 				case 'WW':
-					cx = self.session.bbox.x2;
-					cy = self.session.bbox.y;
+					scaleCenterHandle = self.scaleHandleE;
 					self.session.scale.signX = -1;
 					self.session.scale.signY = 0;
 					self.session.scale.prop = false;
@@ -225,18 +222,38 @@
 					break;
 			}
 			
+			
 			const handleMatrix = this.transform().localMatrix;
+			// translation of the scaling handle
 			self.session.scale.mx = handleMatrix.e;
 			self.session.scale.my = handleMatrix.f;
-			self.session.scale.cx = cx;
-			self.session.scale.cy = cy;
-			self.session.scale.refX = self.session.bbox.width * self.session.originMatrix.a;
-			self.session.scale.refY = self.session.bbox.height * self.session.originMatrix.d;
+			
+			self.session.originInvert = self.session.originMatrix.invert();
+			
+			// scaling center
+			const scm = scaleCenterHandle.transform().localMatrix
+			self.session.scale.tcx = scm.e;
+			self.session.scale.tcy = scm.f;
+			self.session.scale.cx = self.session.originInvert.x(scm.e, scm.f);
+			self.session.scale.cy = self.session.originInvert.y(scm.e, scm.f);
+//			self.session.scale.cx = cx; //self.session.originMatrix.x(cx, cy);
+//			self.session.scale.cy = cy; //self.session.originMatrix.y(cx, cy);
+			
+			// reference width & height for current session needs former transformation to be applied
+			const bbNT = self.session.bboxWithoutTransform;
+			self.session.scale.refX = bbNT.width; // * self.session.originTransform.scalex;
+			self.session.scale.refY = bbNT.height; // * self.session.originTransform.scaley;
+			
+
 			
 		}	
 
 		self.scaleMove = function( target, dx, dy, x, y, event ){
 			// convert to viewBox coordinates (mm)
+//			const [dxMM, dyMM] = self._convertToViewBoxUnitsWithTransform(dx, dy);
+//			const currentRotation = self.session.originTransform.rotate;
+//			const radians = currentRotation * Math.PI / 180;
+			
 			const dxMM = self._convertToViewBoxUnits(dx);
 			const dyMM = self._convertToViewBoxUnits(dy);
 
@@ -244,25 +261,36 @@
 			sss.dxMM = dxMM;
 			sss.dyMM = dyMM;
 			
-			let scaleX = sss.signX * (dxMM + sss.mx - sss.cx) / sss.refX
-			let scaleY = sss.signY * (dyMM + sss.my - sss.cy) / sss.refY;
+			
+			// mouse position transformed the same way like the handles to calculate scaling distances within rotated coordinate system
+			const rotatedMouseX = self.session.originInvert.x(dxMM + sss.mx, dyMM + sss.my);
+			const rotatedMouseY = self.session.originInvert.y(dxMM + sss.mx, dyMM + sss.my);
+			
+			snap.select('#rotatedMouse').attr({cx: rotatedMouseX, cy:rotatedMouseY});
+			snap.select('#scaleCenter').attr({cx: sss.cx, cy:sss.cy});
+			
+			const distX = (rotatedMouseX - sss.cx);
+			const distY = (rotatedMouseY - sss.cy);
+			
+			let scaleX = sss.signX * distX / sss.refX
+			let scaleY = sss.signY * distY / sss.refY;
 			
 			if(sss.prop){ // link the factors (min abs value), keep the sign
 
-				let newSx = scaleX * self.session.originMatrix.a;
-				let newSy = scaleY * self.session.originMatrix.d;
+				let newSx = scaleX * self.session.originTransform.scalex;
+				let newSy = scaleY * self.session.originTransform.scaley;
 				const signX = Math.sign(scaleX);
 				const signY = Math.sign(scaleY);
-				const formerSignX = Math.sign(self.session.originMatrix.a);
-				const formerSignY = Math.sign(self.session.originMatrix.d);
+				const formerSignX = Math.sign(self.session.originTransform.scalex);
+				const formerSignY = Math.sign(self.session.originTransform.scaley);
 				let formerScale;
 				if(Math.abs(newSx) <  Math.abs(newSy)){
 					scaleY = signY * Math.abs(scaleX);
-					formerScale = Math.abs(self.session.originMatrix.a);
+					formerScale = Math.abs(self.session.originTransform.scalex);
 					sss.dominantAxis = 'x';
 				} else {
 					scaleX = signX * Math.abs(scaleY);
-					formerScale = Math.abs(self.session.originMatrix.d);
+					formerScale = Math.abs(self.session.originTransform.scaley);
 					sss.dominantAxis = 'y';
 				}
 				sss.sx = scaleX * formerScale * formerSignX;
@@ -270,8 +298,8 @@
 				
 			} else {
 				
-				sss.sx = (sss.signX !== 0) ?  scaleX * self.session.originMatrix.a : 1;
-				sss.sy = (sss.signY !== 0) ?  scaleY * self.session.originMatrix.d : 1;
+				sss.sx = (sss.signX !== 0) ?  scaleX * self.session.originTransform.scalex : 1;
+				sss.sy = (sss.signY !== 0) ?  scaleY * self.session.originTransform.scaley : 1;
 				
 			}
 			
@@ -291,19 +319,35 @@
 
 		self._sessionUpdate = function(){
 			if(Date.now() - self.session.lastUpdate > 25){ // reduce updates to 40 fps maximum
+				
 				const dx = self.session.translate.dx;
 				const dy = self.session.translate.dy;
 				const sx = self.session.scale.sx;
 				const sy = self.session.scale.sy;
 				const cx = self.session.scale.cx;
 				const cy = self.session.scale.cy;
-				const rot = self.session.rotate.r;
-				const rcx = self.session.rotate.cx;
-				const rcy = self.session.rotate.cy;
+				const degree = self.session.rotate.r;
+				
+				
+				// false. does not respect rotated translations
+//				const rcx = self.session.rotate.cx - self.session.originMatrix.e;
+//				const rcy = self.session.rotate.cy - self.session.originMatrix.f;
+//				console.log("rcx", rcx, '=', self.session.rotate.cx, '-', self.session.originMatrix.e);
 
-				var m = Snap.matrix();
-				// SRT order, finally add former matrix
-				m.scale(sx, sy, cx, cy).rotate(rot, rcx, rcy).translate(dx, dy).add(self.session.originMatrix);
+				const rcx = self.session.rotate.ocx;
+				const rcy = self.session.rotate.ocy;
+				console.log("rcx", rcx, '=', self.session.rotate.ocx);
+				
+
+				console.info("S", sx.toFixed(2), sy.toFixed(2), "R", degree.toFixed(2)+'°', "T", dx, dy );
+
+				let m = Snap.matrix();
+				// SRT order, alipplied on former matrix
+				m.add(self.session.originMatrix);
+			
+				m.scale(sx, sy, cx, cy).rotate(degree, rcx, rcy);
+				m.e += dx; // apply transformation manually as Matrix.transform() applys rotation and scaling (https://github.com/adobe-webplatform/Snap.svg/blob/master/src/matrix.js#L136)
+				m.f += dy;
 				self.translateHandle.transform(m);
 
 				if(self.config.visualization){
@@ -312,6 +356,10 @@
 
 				self.updateCounter++;
 				self.session.lastUpdate = Date.now()
+
+	//			debug stuff
+//				const dm = Snap.matrix().translate(self.session.scale.tcx, self.session.scale.tcy).rotate(self.session.originTransform.rotate);
+//				snap.select('#scaleAxes').transform(dm);
 			}
 			
 			// apply transform to target elements via callback
@@ -324,7 +372,9 @@
 			self.session.scale = {sx: 1, sy: 1, dx: 0, dy: 0};
 			self.session.rotate = {r: 0, cx: 0, cy: 0};
 			self.session.originMatrix = self.translateHandle.transform().localMatrix;
-			self.session.bbox = self.translateHandle.getBBox();
+			self.session.originTransform = self.session.originMatrix.split();
+			self.session.bb = self.translateHandle.getBBox();
+			self.session.bboxWithoutTransform = self.translateHandle.getBBox(true);
 
 
 			console.info("Apply Transform: ", self.session.originMatrix.split());
@@ -440,15 +490,15 @@
 			}
 			
 			// get bounding box of selector
-			const bbox = self._getBBoxFromElementsWithMinSize(elements_to_transform);
+			const selection_bbox = self._getBBoxFromElementsWithMinSize(elements_to_transform);
 
 			// store working area size in MM
 			self.session.paperBBox = self.paper.select('#coordGrid').getBBox();
 			
 			// set transform session origin
-			self.session.bbox = bbox;
+			self.session.bb = selection_bbox;
 
-			self._alignHandlesToBB(bbox);
+			self._alignHandlesToBB(selection_bbox);
 			self._sessionReset();
 
 			// attach drag handlers for translation
@@ -487,7 +537,7 @@
 			
 			self.updateCounter = 0;
 			self.updateFPS = setInterval(function(){
-				if(self.updateCounter > 0) console.log("updateFPS: ", self.updateCounter);
+//				if(self.updateCounter > 0) console.log("updateFPS: ", self.updateCounter);
 				self.updateCounter = 0;
 			}, 1000)
 		};
@@ -501,7 +551,7 @@
 
 			// reset transform session origin
 			self.session.originMatrix = null;
-			self.session.bbox = null;
+			self.session.bb = null;
 
 			// reset handles
 //			self.translateHandle.attr({x:0, y:0, width:0, height:0, transform: ''});
@@ -516,6 +566,18 @@
 			return val * MRBEAM_PX2MM_FACTOR_WITH_ZOOM;
 		};
 		
+		self._convertToViewBoxUnitsWithTransform = function(dx, dy){
+			const rotation = self.session.originMatrix.split().rotate;
+			
+			console.log("rotation", rotation, self.session.rotate.r);
+			const mat = Snap.matrix().rotate(rotation);
+			const dxMM = dx * MRBEAM_PX2MM_FACTOR_WITH_ZOOM;
+			const dyMM = dy * MRBEAM_PX2MM_FACTOR_WITH_ZOOM;
+			const transformedX = mat.x(dx, dy);
+			const transformedY = mat.y(dx, dy);
+			return [transformedX, transformedY];
+		};
+		
 //		self._get_pointer_event_position_MM = function(event){
 //			var targetBBox = self.paper.node.getBoundingClientRect();
 //			const xPx = (event.clientX - targetBBox.left);
@@ -527,28 +589,43 @@
 //			return {xPx: xPx, yPx: yPx, xPerc: xPerc, yPerc: yPerc, xMM: xMM, yMM: yMM};
 //		};
 
-		self._alignHandlesToBB = function(bbox){
+		self._alignHandlesToBB = function(bbox_to_wrap){
 			const gap = 1;
-			if(bbox) {
+			if(bbox_to_wrap) {
 				// resize translateHandle
 				self.translateHandle.transform('');
-				self.translateHandle.attr(bbox);
+				self.translateHandle.attr(bbox_to_wrap);
 			} else {
 				// just align every other handle
-				bbox = self.translateHandle.getBBox();
+				bbox_to_wrap = self.translateHandle.getBBox(true);
 			}
+			const lm = self.translateHandle.transform().localMatrix;
+			const verbose = lm.split();
+			const unscaleMat = Snap.matrix().scale(1/verbose.scalex, 1/verbose.scaley)
 
-			// align scaleHandles
-			self.scaleHandleNW.transform('t'+bbox.x+','+bbox.y);
-			self.scaleHandleSW.transform('t'+bbox.x+','+bbox.y2);
-			self.scaleHandleNE.transform('t'+bbox.x2+','+bbox.y);
-			self.scaleHandleSE.transform('t'+bbox.x2+','+bbox.y2);
+			// align scaleHandles to rotated BBox
+			self.scaleHandleNW.transform(lm.clone().translate(bbox_to_wrap.x, bbox_to_wrap.y).add(unscaleMat));
+			self.scaleHandleSW.transform(lm.clone().translate(bbox_to_wrap.x, bbox_to_wrap.y2).add(unscaleMat));
+			self.scaleHandleNE.transform(lm.clone().translate(bbox_to_wrap.x2, bbox_to_wrap.y).add(unscaleMat));
+			self.scaleHandleSE.transform(lm.clone().translate(bbox_to_wrap.x2, bbox_to_wrap.y2).add(unscaleMat));
 			
-			self.scaleHandleN.transform('t'+bbox.cx +','+(bbox.y - gap));
-			self.scaleHandleE.transform('t'+(bbox.x2 + gap) +','+bbox.cy);
-			self.scaleHandleS.transform('t'+bbox.cx +','+(bbox.y2 + gap));
-			self.scaleHandleW.transform('t'+(bbox.x - gap) +','+bbox.cy);
-			self.rotHandle.transform('t'+(bbox.x2+self.config.minTranslateHandleSize)+','+bbox.cy);
+			self.scaleHandleN.transform(lm.clone().translate(bbox_to_wrap.cx, (bbox_to_wrap.y - gap)).add(unscaleMat));
+			self.scaleHandleE.transform(lm.clone().translate((bbox_to_wrap.x2 + gap), bbox_to_wrap.cy).add(unscaleMat));
+			self.scaleHandleS.transform(lm.clone().translate(bbox_to_wrap.cx, (bbox_to_wrap.y2 + gap)).add(unscaleMat));
+			self.scaleHandleW.transform(lm.clone().translate((bbox_to_wrap.x - gap), bbox_to_wrap.cy).add(unscaleMat));
+			self.rotHandle.transform(lm.clone().translate((bbox_to_wrap.x2+self.config.minTranslateHandleSize), bbox_to_wrap.cy).add(unscaleMat));
+			
+			// align scaleHandles to outerBBox
+//			self.scaleHandleNW.transform('t'+bbox_to_wrap.x+','+bbox_to_wrap.y);
+//			self.scaleHandleSW.transform('t'+bbox_to_wrap.x+','+bbox_to_wrap.y2);
+//			self.scaleHandleNE.transform('t'+bbox_to_wrap.x2+','+bbox_to_wrap.y);
+//			self.scaleHandleSE.transform('t'+bbox_to_wrap.x2+','+bbox_to_wrap.y2);
+//			
+//			self.scaleHandleN.transform('t'+bbox_to_wrap.cx +','+(bbox_to_wrap.y - gap));
+//			self.scaleHandleE.transform('t'+(bbox_to_wrap.x2 + gap) +','+bbox_to_wrap.cy);
+//			self.scaleHandleS.transform('t'+bbox_to_wrap.cx +','+(bbox_to_wrap.y2 + gap));
+//			self.scaleHandleW.transform('t'+(bbox_to_wrap.x - gap) +','+bbox_to_wrap.cy);
+//			self.rotHandle.transform('t'+(bbox_to_wrap.x2+self.config.minTranslateHandleSize)+','+bbox_to_wrap.cy);
 		};
 
 		self._getBBoxFromElementsWithMinSize = function(elements){
