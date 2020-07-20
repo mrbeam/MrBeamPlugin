@@ -794,10 +794,11 @@ class PhotoCreator(object):
 					_s_marker['avg_pos'] = _n_avg.tolist()
 					_s_marker['std_pos'] = _n_std.tolist()
 					_s_marker['found'] += 1
-					# Color : Avg hue value
-					_s_marker['avg_color'] = updt(_s_marker['avg_color'], extra[qd]['avg_hsv'], weights=[tot_pics, 1], axis=0)
-					# Size of the marker (surface area in pixels)
-					_s_marker['marker_px_size'] = updt(_s_marker['marker_px_size'], extra[qd]['pix_size'], weights=[tot_pics, 1])
+					if all(k in _s_marker.keys() for k in ['avg_hsv', 'pix_size']):
+						# Color : Avg hue value
+						_s_marker['avg_color'] = updt(_s_marker['avg_color'], extra[qd]['avg_hsv'], weights=[tot_pics, 1], axis=0)
+						# Size of the marker (surface area in pixels)
+						_s_marker['marker_px_size'] = updt(_s_marker['marker_px_size'], extra[qd]['pix_size'], weights=[tot_pics, 1])
 				else:
 					_s_marker['missed'] += 1
 

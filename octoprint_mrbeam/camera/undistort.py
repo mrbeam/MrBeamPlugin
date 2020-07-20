@@ -225,9 +225,6 @@ def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1, min
 		results = {}
 		brightness = None
 		for roi, pos, qd in camera.getRois(img):
-			brightness = np.average(roi)
-			# print("brightness of corner {} : {}".format(qd, brightness))
-			outputPoints[qd] = {'brightness': brightness} # Todo Ignore -> Tested in the MrbImgWorker
 			results[qd] = (p.apply_async(_getColoredMarkerPosition,
                                          args=(roi,),
                                          kwds=dict(debug_out_path=debug_out_path,
@@ -246,9 +243,6 @@ def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1, min
 
 	else:
 		for roi, pos, qd in camera.getRois(img):
-			brightness = np.average(roi)
-			# print("brightness of corner {} : {}".format(qd, brightness))
-			outputPoints[qd] = {'brightness': brightness}
 			outputPoints[qd] = _getColoredMarkerPosition(roi,
                                                                      debug_out_path=debug_out_path,
                                                                      blur=blur,
