@@ -27,7 +27,7 @@ if PICAMERA_AVAILABLE:
 	from octoprint_mrbeam.camera.undistort import prepareImage, MAX_OBJ_HEIGHT, \
 		CAMERA_HEIGHT, _getCamParams, _getPicSettings, DIST_KEY, MTX_KEY
 from octoprint_mrbeam.camera.calibration import BoardDetectorDaemon, MIN_BOARDS_DETECTED
-from octoprint_mrbeam.util import json_serialisor, logme, get_thread, makedirs
+from octoprint_mrbeam.util import dict_merge, json_serialisor, logme, get_thread, makedirs
 
 SIMILAR_PICS_BEFORE_UPSCALE = 1
 LOW_QUALITY = 65 # low JPEG quality for compressing bigger pictures
@@ -53,7 +53,6 @@ def lidHandler(plugin):
 	if _instance is None:
 		_instance = LidHandler(plugin)
 	return _instance
-
 
 # This guy handles lid Events
 class LidHandler(object):
@@ -570,7 +569,6 @@ class PhotoCreator(object):
 		# The lid didn't open during waiting time
 		cam.async_capture()
 		saveNext = False # Lens calibration : save the next picture instead of this one
-		prev_img_sent_to_analytics = False
 		min_pix_amount = self._settings.get(['cam', 'markerRecognitionMinPixel'])
 		loop_counter = 0
 		count_sent_pictures_analytics = 0
@@ -588,13 +586,6 @@ class PhotoCreator(object):
 			cam.wait()  # waits until the next picture is ready
 			if self.stopping: break
 
-			# send image to analytics
-			if prev is not None and self._flag_send_img_to_analytics and not prev_img_sent_to_analytics:
-				self._send_last_img_to_analytics(prev, 'user', markers, missed,
-								 min_pix_amount, analytics,
-								 force_upload=True, notify_user=True)
-				prev_img_sent_to_analytics = True
-
 			latest = cam.lastPic() # gets last picture given by cam.worker
 			cam.async_capture()  # starts capture with new settings
 			if latest is None:
@@ -604,6 +595,8 @@ class PhotoCreator(object):
 			if self.stopping: break  # check if still active...
 
 			cam.compensate_shutter_speed(latest) # Change exposure if needed
+			curr_shutter_speed = cam.exposure_speed
+			curr_brightness = copy.deepcopy(cam.worker.avg_roi_brightness)
 
 			if self.saveRaw:
 				if isinstance(self.saveRaw, str) and not saveNext:
@@ -612,9 +605,10 @@ class PhotoCreator(object):
 					# FIXME Not perfect. This is the case during the lens calibration where
 					# a new raw picture is requested. Do the save during the next round.
 					self.rawLock.acquire()
-					if save_debug_img(latest,
-								 self.saveRaw,
-								 folder=path.join(path.dirname(self.final_image_path),"debug")):
+					if save_debug_img(
+							latest,
+							self.saveRaw,
+							folder=path.join(path.dirname(self.final_image_path),"debug")):
 						rawSaved = self.saveRaw
 					else:
 						rawSaved = False
@@ -656,7 +650,6 @@ class PhotoCreator(object):
 					continue
 
 			loop_counter += 1
-			prev_img_sent_to_analytics = False
 			# Get the desired scale and quality of the picture to serve
 			upscale_factor , quality = pic_qualities[pic_qual_index]
 			scaled_output_size = tuple(int(upscale_factor * i) for i in out_pic_size)
@@ -715,6 +708,11 @@ class PhotoCreator(object):
 			else:
 				# Just tell front end that there was an error
 				self._send_frontend_picture_metadata(correction_result)
+
+			analytics = dict_merge(analytics, dict(
+				{qd: {'brightness': val} for qd, val in curr_brightness.items()},
+				avg_shutter_speed = curr_shutter_speed,
+			))
 			self._add_result_to_analytics(
 				session_details,
 				markers,
@@ -745,16 +743,17 @@ class PhotoCreator(object):
 		self._logger.debug("PhotoCreator_stopping")
 
 	# @logme(True)
-	def _add_result_to_analytics(self,
-					 session_details,
-					 markers,
-					 colors={},
-					 marker_size={},
-					 increment_pic=False,
-					 colorspace='hsv',
-					 upload_speed=None,
-					 error=None,
-					 extra=None):
+	def _add_result_to_analytics(
+			self,
+			session_details,
+			markers,
+			colors={},
+			marker_size={},
+			increment_pic=False,
+			colorspace='hsv',
+			upload_speed=None,
+			error=None,
+			extra=None):
 		if extra is None: extra={}
 		assert(type(markers) is dict)
 		def add_to_stat(pos, avg, std, mass):
@@ -769,29 +768,51 @@ class PhotoCreator(object):
 				_new_std = np.zeros(2, dtype=float)
 			return _new_avg, _new_std
 
+		# @logme(True, True)
+		def updt(val_prev, val_new, func=np.average, **kw):
+			# necessary to phrase it that way if val_prev is a numpy array
+			if isinstance(val_prev, np.ndarray) or val_prev or val_prev == 0 :
+				return func([val_prev, val_new], **kw)
+			else:
+				return copy.deepcopy(val_new)
+
 		_s = session_details
 		try:
 			if increment_pic: _s['num_pics'] += 1
+			tot_pics = _s['num_pics']
 			for qd in QD_KEYS:
 				_s_marker = _s['markers'][qd]
 				if qd in markers.keys() and markers[qd] is not None:
 					_marker = np.asarray(markers[qd])
-					_n_avg, _n_std = add_to_stat(_marker,
-												 _s_marker['avg_pos'],
-												 _s_marker['std_pos'],
-												 _s_marker['found'])
+					# Position : Avg & Std Deviation
+					_n_avg, _n_std = add_to_stat(
+						_marker,
+						_s_marker['avg_pos'],
+						_s_marker['std_pos'],
+						_s_marker['found']
+					)
 					_s_marker['avg_pos'] = _n_avg.tolist()
 					_s_marker['std_pos'] = _n_std.tolist()
 					_s_marker['found'] += 1
+					# Color : Avg hue value
+					_s_marker['avg_color'] = updt(_s_marker['avg_color'], extra[qd]['avg_hsv'], weights=[tot_pics, 1], axis=0)
+					# Size of the marker (surface area in pixels)
+					_s_marker['marker_px_size'] = updt(_s_marker['marker_px_size'], extra[qd]['pix_size'], weights=[tot_pics, 1])
 				else:
 					_s_marker['missed'] += 1
+
+				# Brightness : Avg & Min, Max
+				_s_marker['avg_brightness'] = updt(_s_marker['avg_brightness'], extra[qd]['brightness'], weights=[tot_pics, 1])
+				_s_marker['min_brightness'] = updt(_s_marker['min_brightness'], extra[qd]['brightness'], func = np.min)
+				_s_marker['max_brightness'] = updt(_s_marker['max_brightness'], extra[qd]['brightness'], func = np.max)
+
 			if error:
 				error = error.replace(".","-").replace(",","-")
 				if error in _s['errors']:
 					_s['errors'][error] += 1
 				else:
 					_s['errors'][error] = 1
-
+			_s['avg_shutter_speed'] = updt(_s['avg_shutter_speed'], extra['avg_shutter_speed'], weights=[tot_pics, 1])
 		except Exception as ex:
 			self._logger.exception('Exception_in-_save__s_for_analytics-_{}'.format(ex))
 
@@ -907,15 +928,25 @@ def blank_session_details():
 		'std_pos': None,
 		# 'colorspace': 'hsv',
 		'avg_color': [],
+		'avg_brightness': None,
+		'min_brightness': None,
+		'max_brightness': None,
 		#'median_color': [],
 		'marker_px_size': []
 	}
-	session_details = {'num_pics': 0,
-					   'markers': {'NW': copy.deepcopy(_init_marker),
-								   'SE': copy.deepcopy(_init_marker),
-								   'SW': copy.deepcopy(_init_marker),
-								   'NE': copy.deepcopy(_init_marker)},
-					   'errors': {},
-					   'avg_upload_speed': None,
-					   'settings_min_marker_size': None}
+	session_details = {
+		'num_pics': 0,
+		'num_success_pics': 0,
+		'num_all_markers_detected': 0,
+		'markers': {
+			'NW': copy.deepcopy(_init_marker),
+			'SE': copy.deepcopy(_init_marker),
+			'SW': copy.deepcopy(_init_marker),
+			'NE': copy.deepcopy(_init_marker),
+		},
+		'errors': {},
+		'avg_shutter_speed': None,
+		'avg_upload_speed': None,
+		'settings_min_marker_size': None,
+	}
 	return session_details
