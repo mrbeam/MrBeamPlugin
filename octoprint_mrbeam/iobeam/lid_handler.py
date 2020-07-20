@@ -920,6 +920,102 @@ def blank_session_details():
 	"""
 	Add to these session details when taking the pictures.
 	Do not send back as-is (won't convert to JSON)
+	example analytics output:
+	{
+	"num_pics": 8,
+	"num_success_pics": 0,
+	"errors": {},
+	"num_all_markers_detected": 0,
+	"avg_upload_speed": null,
+	"settings_min_marker_size": null,
+	"avg_shutter_speed": 75870.666666666672,
+	"markers": {
+		"SW": {
+			"avg_color": [
+			153.83132956630604,
+			96.65563641216431,
+			157.33211938180796
+			],
+			"avg_pos": [
+			1415.0,
+			191.375
+			],
+			"missed": 0,
+			"max_brightness": 222.36003612238798,
+			"avg_brightness": 191.76418726204039,
+			"min_brightness": 132.54071417672597,
+			"found": 8,
+			"std_pos": [
+			0.0,
+			0.14498973996560857
+			],
+			"marker_px_size": 852.88888888888891
+		},
+		"NE": {
+			"avg_color": [
+			145.245669380652,
+			107.38059013940135,
+			87.4850645317796
+			],
+			"avg_pos": [
+			218.875,
+			1952.875
+			],
+			"missed": 0,
+			"max_brightness": 133.5580481163187,
+			"avg_brightness": 103.754267896564,
+			"min_brightness": 61.796808673120474,
+			"found": 8,
+			"std_pos": [
+			0.09077978610301556,
+			0.09077978610301436
+			],
+			"marker_px_size": 872.77777777777783
+		},
+		"SE": {
+			"avg_color": [
+			151.05255352255705,
+			92.30664293555843,
+			176.65584827724854
+			],
+			"avg_pos": [
+			1385.125,
+			1983.0
+			],
+			"missed": 0,
+			"max_brightness": 236.57588634316892,
+			"avg_brightness": 210.56778508779132,
+			"min_brightness": 154.62930727850451,
+			"found": 8,
+			"std_pos": [
+			0.109375,
+			0.0
+			],
+			"marker_px_size": 934.66666666666663
+		},
+		"NW": {
+			"avg_color": [
+			132.75216912060495,
+			113.9216832961036,
+			75.47599677659782
+			],
+			"avg_pos": [
+			267.375,
+			151.125
+			],
+			"missed": 0,
+			"max_brightness": 112.99359963534337,
+			"avg_brightness": 85.321787444997511,
+			"min_brightness": 46.601849096959924,
+			"found": 8,
+			"std_pos": [
+			0.15655504520228197,
+			0.10683497845024859
+			],
+			"marker_px_size": 887.0
+		}
+	},
+	}
 	"""
 	_init_marker = {
 		'missed':  0,
