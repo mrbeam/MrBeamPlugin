@@ -283,6 +283,8 @@ $(function () {
 								  self.getRawPicError,
 								  "GET");
 			self.lensCalibrationActive(true);
+
+			self.changeUserView('lens')
 		};
 
 		self.lensCalibrationToggleQA = function (){
@@ -471,7 +473,7 @@ $(function () {
 				}
 
 				// required to refresh the heatmap
-				$('#heatmap_container').html($('#heatmap_container').html());
+				$('.heatmap_container').html($('.heatmap_container').html());
 				arr.sort(function(l,r){
 					return l.index < r.index ? -1 : 1;
 				});
@@ -772,15 +774,6 @@ $(function () {
 
 			self.resetUserView()
 		};
-
-		// TODO could this be combined with resetView?
-        // TODO IRATXE --> This isn't used?
-		// self.reset_corner_calibration = function () {
-		// 	self.resetView();
-		// 	self.markersFoundPosition({});
-		// 	self.currentResults({});
-		// 	$('.calibration_click_indicator').attr({'x': -100, 'y': -100});
-		// };
 
         // TODO IRATXE: might not be necessary anymore
 		// self.continue_to_calibration = function () {
