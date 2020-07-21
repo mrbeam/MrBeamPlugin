@@ -1591,6 +1591,12 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			generate_backlash_compenation_pattern_gcode=[],
 			compensate_obj_height=[],
 			calibration_save_raw_pic=[],
+			calibration_lens_start=[],
+			calibration_get_raw_pic=[],
+			calibration_del_pic=[],
+			camera_run_lens_calibration=[],
+			camera_stop_lens_calibration=[],
+			engrave_calibration_markers=["intensity", "feedrate"],
 		)
 
 	def on_api_command(self, command, data):
@@ -1665,7 +1671,19 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		elif command == "calibration_save_raw_pic":
 			# TODO save next raw image to the buffer
 			# TODO flash LEDs when raw img saved
-			return self.sendInitialCalibrationMarkers()
+			return self.onCalibrationSaveRawPic()
+		elif command == "calibration_lens_start":
+			return self.onLensCalibrationStart()
+		elif command == "calibration_get_raw_pic":
+			return self.onCalibrationGetRawPic()
+		elif command == "calibration_del_pic":
+			return self.onCalibrationDelRawPic()
+		elif command == "camera_run_lens_calibration":
+			return self.onCalibrationRunLensDistort()
+		elif command == "camera_stop_lens_calibration":
+			return self.onCalibrationStopLensDistort()
+		elif command == "engrave_calibration_markers/<string:intensity>/<string:feedrate>":
+			return self.engraveCalibrationMarkers()
 
 		return NO_CONTENT
 
