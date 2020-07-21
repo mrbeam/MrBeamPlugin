@@ -162,13 +162,6 @@ def prepareImage(input_image,  #: Union[str, np.ndarray],
 			missed.append(qd)
 		else:
 			markers[qd] = val['pos']
-	# check if picture should be thrown away
-	# if less then 3 markers are found
-	# if len(missed) > 1 and len(markers) == 4:  # elif # filter out None values
-	#     err = 'BAD_QUALITY:Too few markers (circles) recognized.'
-	#     logger.debug(err)
-	#     return None, markers, missed, err, outputPoints, savedPics
-	# elif len(missed) == 1 and len(markers) == 4:
 	if len(missed) > 1 and len(markers) == 4:
 		err = "Missed marker %s" % missed
 		logger.warning(err)
@@ -232,9 +225,6 @@ def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1, min
 		results = {}
 		brightness = None
 		for roi, pos, qd in camera.getRois(img):
-			brightness = np.average(roi)
-			# print("brightness of corner {} : {}".format(qd, brightness))
-			outputPoints[qd] = {'brightness': brightness} # Todo Ignore -> Tested in the MrbImgWorker
 			results[qd] = (p.apply_async(_getColoredMarkerPosition,
                                          args=(roi,),
                                          kwds=dict(debug_out_path=debug_out_path,
@@ -253,9 +243,6 @@ def _getColoredMarkerPositions(img, debug_out_path=None, blur=5, threads=-1, min
 
 	else:
 		for roi, pos, qd in camera.getRois(img):
-			brightness = np.average(roi)
-			# print("brightness of corner {} : {}".format(qd, brightness))
-			outputPoints[qd] = {'brightness': brightness}
 			outputPoints[qd] = _getColoredMarkerPosition(roi,
                                                                      debug_out_path=debug_out_path,
                                                                      blur=blur,
@@ -318,7 +305,7 @@ def _getColoredMarkerPosition(roi, debug_out_path=None, blur=5, quadrant=None, d
 				y, x = np.round(center).astype("int")  # y, x
 				debug_roi = cv2.drawMarker(cv2.cvtColor(cv2.bitwise_or(threshOtsuMask, gaussianMask), cv2.COLOR_GRAY2BGR), (x, y), (0, 0, 255), cv2.MARKER_CROSS, line_type=4)
 				cv2.imwrite(debug_quad_path, debug_roi, params=[cv2.IMWRITE_JPEG_QUALITY, 100])
-				return dict(pos=center, avg_color=avg_hsv, pix_size=count)
+				return dict(pos=center, avg_hsv=avg_hsv, pix_size=count)
 	# No marker found
 	cv2.imwrite(debug_quad_path, roiBlurThresh)
 	return None
