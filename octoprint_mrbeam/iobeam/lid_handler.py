@@ -414,6 +414,7 @@ class PhotoCreator(object):
 		self.saveRaw = True
 		self.rawLock = Lock()
 		self._flag_send_img_to_analytics = None
+		self.last_markers = None
 
 		if debug:
 			self._logger = mrb_logger("octoprint.plugins.mrbeam.iobeam.lidhandler.PhotoCreator", logging.DEBUG)
@@ -564,8 +565,6 @@ class PhotoCreator(object):
 			[4 * DEFAULT_MM_TO_PX, LOW_QUALITY]
 		]
 		pic_qual_index = 0
-		# Marker positions detected on the last loop
-		markers = None
 		# waste the first picture : doesn't matter how long we wait to warm up, the colors will be off.
 		cam.wait()
 		while self._plugin.lid_handler._lid_closed:
@@ -671,13 +670,13 @@ class PhotoCreator(object):
 			min_pix_amount = self._settings.get(['cam', 'markerRecognitionMinPixel'])
 			# NOTE -- prepareImage is bloat, TODO spill content here
 			saveLensCorrected = True
-			workspaceCorners, markers, missed, err, analytics, savedPics = prepareImage(
+			workspaceCorners, self.last_markers, missed, err, analytics, savedPics = prepareImage(
 				input_image=latest,
 				path_to_output_image=self.tmp_img_prepared,
 				pic_settings=pic_settings,
 				cam_dist=dist,
 				cam_matrix=mtx,
-				last_markers=markers,
+				last_markers=self.last_markers,
 				size=scaled_output_size,
 				quality=quality,
 				zoomed_out=self.zoomed_out,
@@ -697,7 +696,7 @@ class PhotoCreator(object):
 				'markers_recognised': 4 - len(missed),
 				'corners_calculated': None if workspaceCorners is None else list(workspaceCorners),
 				# {k: v.astype(int) for k, v in workspaceCorners.items()},
-				'markers_pos': {qd: pos.tolist() for qd, pos in markers.items()},
+				'markers_pos': {qd: pos.tolist() for qd, pos in self.last_markers.items()},
 				'successful_correction': success,
 				'undistorted_saved': True,
 				'workspace_corner_ratio': float(MAX_OBJ_HEIGHT) / CAMERA_HEIGHT / 2,
@@ -723,7 +722,6 @@ class PhotoCreator(object):
 			))
 			self._add_result_to_analytics(
 				session_details,
-				markers,
 				increment_pic=True,
 				error=err,
 				extra=analytics
@@ -736,7 +734,7 @@ class PhotoCreator(object):
 					or  (loop_counter > 10 and loop_counter % 10 == 0)):
 				count_sent_pictures_analytics += 1
 				self._send_last_img_to_analytics(latest, 'dev_auto',
-								 markers, missed,
+								 self.last_markers, missed,
 								 min_pix_amount,
 								 analytics,
 								 force_upload=(count_sent_pictures_analytics%10==0),
@@ -754,7 +752,6 @@ class PhotoCreator(object):
 	def _add_result_to_analytics(
 			self,
 			session_details,
-			markers,
 			colors={},
 			marker_size={},
 			increment_pic=False,
@@ -763,7 +760,6 @@ class PhotoCreator(object):
 			error=None,
 			extra=None):
 		if extra is None: extra={}
-		assert(type(markers) is dict)
 		def add_to_stat(pos, avg, std, mass):
 			# gives a new avg value and approximate std when merging the new position value.
 			# mass is the weight given to the previous avg and std.
@@ -790,8 +786,8 @@ class PhotoCreator(object):
 			tot_pics = _s['num_pics']
 			for qd in QD_KEYS:
 				_s_marker = _s['markers'][qd]
-				if qd in markers.keys() and markers[qd] is not None:
-					_marker = np.asarray(markers[qd])
+				if qd in self.last_markers.keys() and self.last_markers[qd] is not None:
+					_marker = np.asarray(self.last_markers[qd])
 					# Position : Avg & Std Deviation
 					_n_avg, _n_std = add_to_stat(
 						_marker,
