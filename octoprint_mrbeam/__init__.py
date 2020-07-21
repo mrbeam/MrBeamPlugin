@@ -1284,9 +1284,9 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 		else:
 			return jsonify(dict(profile=self._convert_profile(saved_profile)))
 
-	@octoprint.plugin.BlueprintPlugin.route("/generate_calibration_markers_svg", methods=["GET"])
-	@restricted_access
 	def generateCalibrationMarkersSvg(self):
+		"""Used from the calibration screen to engrave the calibration markers"""
+		# TODO mv this func to other file
 		profile = self.laserCutterProfileManager.get_current_or_default()
 		cm = CalibrationMarker(str(profile['volume']['width']), str(profile['volume']['depth']))
 		svg = cm.getSvg()
@@ -1596,7 +1596,7 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			calibration_del_pic=[],
 			camera_run_lens_calibration=[],
 			camera_stop_lens_calibration=[],
-			engrave_calibration_markers=["intensity", "feedrate"],
+			generate_calibration_markers_svg=[],
 		)
 
 	def on_api_command(self, command, data):
@@ -1682,8 +1682,8 @@ class MrBeamPlugin(octoprint.plugin.SettingsPlugin,
 			return self.onCalibrationRunLensDistort()
 		elif command == "camera_stop_lens_calibration":
 			return self.onCalibrationStopLensDistort()
-		elif command == "engrave_calibration_markers/<string:intensity>/<string:feedrate>":
-			return self.engraveCalibrationMarkers()
+		elif command == "generate_calibration_markers_svg":
+			return self.generateCalibrationMarkersSvg()  # TODO move this func to other file
 
 		return NO_CONTENT
 
