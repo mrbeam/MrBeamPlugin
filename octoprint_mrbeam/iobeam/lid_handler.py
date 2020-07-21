@@ -712,6 +712,7 @@ class PhotoCreator(object):
 			analytics = dict_merge(analytics, dict(
 				{qd: {'brightness': val} for qd, val in curr_brightness.items()},
 				avg_shutter_speed = curr_shutter_speed,
+				success=success,
 			))
 			self._add_result_to_analytics(
 				session_details,
@@ -806,7 +807,8 @@ class PhotoCreator(object):
 				_s_marker['avg_brightness'] = updt(_s_marker['avg_brightness'], extra[qd]['brightness'], weights=[tot_pics, 1])
 				_s_marker['min_brightness'] = updt(_s_marker['min_brightness'], extra[qd]['brightness'], func = np.min)
 				_s_marker['max_brightness'] = updt(_s_marker['max_brightness'], extra[qd]['brightness'], func = np.max)
-
+			if extra['success']:
+				_s['num_success_pics'] += 1
 			if error:
 				error = error.replace(".","-").replace(",","-")
 				if error in _s['errors']:
