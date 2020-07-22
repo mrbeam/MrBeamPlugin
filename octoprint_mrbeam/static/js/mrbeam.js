@@ -394,100 +394,56 @@ $(function () {
                 self.loginState.loginUser('dev'+String.fromCharCode(0x0040)+'mr-beam.org')
                 self.loginState.loginPass('a')
             }
-        }
+        };
 
-        //-----------------------------------------
-
-        setInterval(function (i = 0) {
-            (function ($) {
-                $.fn.inlineStyle = function (prop) {
-                    return this.prop("style")[$.camelCase(prop)];
-                };
-            }(jQuery));
-            let modalElement = $(".modal-scrollable");
-            let modalInnerElement = modalElement.find(".modal.hide.fade");
-            let backDrop = $('.modal-backdrop');
-
-            modalElement.each(function() {
-                if(!$(this)[0].hasChildNodes() && modalElement.length === 1){
-                    console.log("--------------------------- FIRST CONDITION ---------------------------");
-                    $('body').removeClass('modal-open');
-                    backDrop.remove();
-                    $(this)[0].remove();
-                }else if(!$(this)[0].hasChildNodes() && modalElement.length > 1 && $(this).next().hasClass("modal-backdrop")){
-                    console.log("--------------------------- SECOND CONDITION ---------------------------");
-                    $(this).next().remove();
-                    $(this)[0].remove();
-                }else if($(this)[0].hasChildNodes() && modalElement.length === 1 && modalInnerElement.inlineStyle("display") === "none"){
-                    console.log("--------------------------- THIRD CONDITION ---------------------------");
-                    document.body.append(modalInnerElement[0]);
+        // Backdrop Temporary Solution - start
+        // Todo: should be removed once OctoPrint is updated
+        const targetNode = document.body;
+        const config = {
+            childList: true,
+            attributes: false,
+            characterData: false,
+            subtree: false,
+            attributeOldValue: false,
+            characterDataOldValue: false
+        };
+        const mutationCallback = function(mutationsList, observer) {
+            for(let mutation of mutationsList) {
+                if (mutation.type === 'childList') {
+                    (function ($) {
+                        $.fn.inlineStyle = function (prop) {
+                            return this.prop("style")[$.camelCase(prop)];
+                        };
+                    }(jQuery));
+                    let modalElement = $(".modal-scrollable");
+                    let backDrop = $('.modal-backdrop');
+                    if(modalElement.length !== 0){
+                        modalElement.each(function() {
+                        if(!$(this)[0].hasChildNodes() && modalElement.length === 1){
+                            $('body').removeClass('modal-open');
+                            backDrop.remove();
+                            $(this)[0].remove();
+                        } else if(!$(this)[0].hasChildNodes() && modalElement.length > 1 && $(this).next().hasClass("modal-backdrop")){
+                            $(this).next().remove();
+                            $(this)[0].remove();
+                        } else if($(this)[0].hasChildNodes() && modalElement.length === 1 && $(this).find(".modal.hide.fade").inlineStyle("display") === "none"){
+                            setTimeout(() => {
+                                if($(this).find(".modal.hide.fade").hasClass("modal") && $(this).find(".modal.hide.fade").inlineStyle("display") === "none") {
+                                    document.body.append($(this).find(".modal.hide.fade")[0]);
+                                }
+                            }, 500);
+                        }
+                    });
+                    } else if(modalElement.length === 0 && backDrop.length !== 0){
+                        backDrop.remove();
+                    }
                 }
-            });
-
-            // if (modalInnerElement[0] && modalInnerElement.inlineStyle("display") === "block") {
-            //     i = 0;
-            //     console.log("limit");
-            //     console.log(i);
-            //     console.log("--------------Modal and Block are showing => all is normal--------------");
-            // } else if(modalInnerElement[0] && modalInnerElement.inlineStyle("display") === "none") {
-            //     //-----------------------------------------
-            //     i++;
-            //     console.log("limit");
-            //     console.log(i);
-            //     if(i === 10){
-            //         console.log("!!!!!!!!!!!!!!!!!!!!!Modal is showing BUT Block is not => ISSUE!!!!!!!!!!!!!!!!!!!!!");
-            //         // $('body').removeClass('modal-open');
-            //         // $('.modal-backdrop').remove();
-            //         // $(modalInnerElement).append('body');
-            //         // $(".modal-scrollable").remove();
-            //     }
-            //     // Select the node that will be observed for mutations
-            //     const targetNode = document.getElementsByClassName('modal-scrollable')[0];
-            //
-            //     // Options for the observer (which mutations to observe)
-            //     const config = { attributes: true, childList: true, subtree: true };
-            //
-            //     // Callback function to execute when mutations are observed
-            //     const callback = function(mutationsList, observer) {
-            //         // Use traditional 'for loops' for IE 11
-            //         for(let mutation of mutationsList) {
-            //             if (mutation.type === 'childList') {
-            //                 console.log('A child node has been added or removed.');
-            //                 if(mutation.removedNodes){
-            //                     console.log('A child node has been removed.');
-            //                     observer.disconnect();
-            //                 }else if(modalInnerElement[0]){
-            //                     console.log("!!!!!!!!!!!!!!!!!!!!!Modal is showing BUT Block is not => ISSUE!!!!!!!!!!!!!!!!!!!!!");
-            //                     // $('body').removeClass('modal-open');
-            //                     // $('.modal-backdrop').remove();
-            //                     // $(modalInnerElement).append('body');
-            //                     // $(".modal-scrollable").remove();
-            //                 }
-            //             }
-            //             // else if (mutation.type === 'attributes') {
-            //             //     console.log('The ' + mutation.attributeName + ' attribute was modified.');
-            //             // }
-            //         }
-            //     };
-            //
-            //     // Create an observer instance linked to the callback function
-            //     const observer = new MutationObserver(callback);
-            //
-            //     // Start observing the target node for configured mutations
-            //     observer.observe(targetNode, config);
-            //
-            //     // Later, you can stop observing
-            //     // observer.disconnect();
-            //
-            //     setTimeout(function () {
-            //         observer.disconnect();
-            //     }, 3000);
-            // }
-        }, 1000);
-
-        //-----------------------------------------
-
-    };
+            }
+        };
+        const observer = new MutationObserver(mutationCallback);
+        observer.observe(targetNode, config);
+        // Backdrop Temporary Solution - end
+    }
 
     // view model class, parameters for constructor, container to bind to
     OCTOPRINT_VIEWMODELS.push([
