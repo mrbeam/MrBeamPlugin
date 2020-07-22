@@ -398,8 +398,8 @@ $(function () {
 
         // Backdrop Temporary Solution - start
         // Todo: should be removed once OctoPrint is updated
-        const targetNode = document.body;
-        const config = {
+        const mutationTargetNode = document.body;
+        const mutationConfig = {
             childList: true,
             attributes: false,
             characterData: false,
@@ -441,7 +441,7 @@ $(function () {
             }
         };
         const observer = new MutationObserver(mutationCallback);
-        observer.observe(targetNode, config);
+        observer.observe(mutationTargetNode, mutationConfig);
         // Backdrop Temporary Solution - end
     }
 
