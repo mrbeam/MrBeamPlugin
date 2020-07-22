@@ -7,6 +7,7 @@ The
 """
 
 import re
+import time
 from math import hypot
 from octoprint.events import Events as OctoPrintEvents
 from octoprint_mrbeam.mrbeam_events import MrBeamEvents
@@ -26,6 +27,7 @@ class JobTimeEstimation:
 		self._logger = mrb_logger("octoprint.plugins.mrbeam.job_time_estimation")
 
 		self._last_estimation = -1
+		self._meta = dict()
 
 		self._event_bus.subscribe(MrBeamEvents.MRB_PLUGIN_INITIALIZED, self._on_mrbeam_plugin_initialized)
 
@@ -80,7 +82,7 @@ class JobTimeEstimation:
 			path = self._settings.getBaseFolder("uploads")
 			gcode_file = '{path}/{file}'.format(file=file_name, path=path)
 
-			self._last_estimation = self.estimate_job_duration(gcode_file)
+			self._last_estimation, self._meta = self.estimate_job_duration(gcode_file)
 			self._send_estimate_to_frontend()
 		except:
 			self._logger.exception("Error when calculating the job duration estimation")
@@ -89,6 +91,9 @@ class JobTimeEstimation:
 		try:
 			payload = dict()
 			payload['job_time_estimation'] = self._last_estimation
+			payload['calc_duration_total'] = self._meta.get('calc_duration_total', -1)
+			payload['calc_duration_woke'] = self._meta.get('calc_duration_woke', -1)
+			payload['calc_lines'] = self._meta.get('calc_lines', -1)
 			self._plugin.fire_event(MrBeamEvents.JOB_TIME_ESTIMATED, payload)
 		except:
 			self._logger.exception("Error when sending JobTimeEstimated event.")
@@ -210,7 +215,7 @@ class JobTimeEstimation:
 
 		return total_duration
 
-	def estimate_job_duration(self, gcode_file):
+	def estimate_job_duration(self, gcode_file, do_sleep=True):
 		"""Read a gcode file and calculate what will be the total duration of the job.
 		Reads the G0 and G1 commands to extract the coordinates and the F commands to get the feed rates.
 
@@ -229,8 +234,13 @@ class JobTimeEstimation:
 			max_feedrate = 5000
 
 			total_duration = 0
+			calc_lines = 0
+			start_all_ts = time.time()
+			start_wake_ts = time.time()
+			calc_duration_woke = 0
 
 			for line in content:
+				calc_lines += 1
 				first_char = line[0]
 				if first_char == 'G':
 					command = line[1:]
@@ -267,9 +277,24 @@ class JobTimeEstimation:
 						duration = self.distance(x, y, old_x, old_y) / feedrate * 60
 						total_duration += duration
 
+					# prevent JTE from pulling to hard on the CPU if the user already started the job
+					if do_sleep and calc_lines % 100 == 0:
+						calc_duration_woke += time.time() - start_wake_ts
+						sleep_time = 0.002
+						# if self._plugin._printer.is_printing():
+						# 	sleep_time = 0.004
+						time.sleep(sleep_time)
+						start_wake_ts = time.time()
+
 				elif first_char == 'F':
 					feedrate = float(re.findall(FIND_FEEDRATE, line)[0])
 
 		total_duration_rounded = self.round_total_duration(total_duration)
+		calc_duration_woke += time.time() - start_wake_ts
+		calc_duration_total = time.time() - start_all_ts
 
-		return total_duration_rounded
+		return total_duration_rounded, dict(
+			calc_duration_woke = calc_duration_woke,
+			calc_duration_total = calc_duration_total,
+			calc_lines = calc_lines
+		)

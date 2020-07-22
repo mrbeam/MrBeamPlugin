@@ -4,6 +4,7 @@ from octoprint.events import Events as OctoPrintEvents
 
 class MrBeamEvents(object):
 	MRB_PLUGIN_INITIALIZED	   = 'MrbPluginInitialized'
+	BOOT_GRACE_PERIOD_END	   = 'BootGracePeriodEnd'
 
 	PRINT_PROGRESS             = "PrintProgress"
 	SLICING_PROGRESS           = "SlicingProgress"
@@ -42,6 +43,19 @@ class MrBeamEvents(object):
 	HARDWARE_MALFUNCTION       = "HardwareMalfunction"
 
 	LASER_HEAD_READ             = "LaserHeadRead"
+
+	# Camera Calibration Screen Events
+	RAW_IMAGE_TAKING_START     = "RawImageTakingStart"
+	RAW_IMAGE_TAKING_DONE      = "RawImageTakingDone"
+	RAW_IMG_TAKING_LAST        = "lensCalibTakingLast"
+	RAW_IMG_TAKING_FAIL        = "lensCalibTakingFail"
+	LENS_CALIB_START           = "lensCalibStart"
+	LENS_CALIB_PROCESSING_BOARDS = "lensCalibProcessingBoards"
+	LENS_CALIB_RUNNING         = "lensCalibRunning"
+	LENS_CALIB_DONE            = "lensCalibDone"
+	LENS_CALIB_EXIT            = "lensCalibExit"
+	LENS_CALIB_FAIL            = "lensCalibFail"
+	BLINK_PRINT_LABELS =       "blinkPrintLabels"
 
 	@classmethod
 	def register_with_octoprint(cls):

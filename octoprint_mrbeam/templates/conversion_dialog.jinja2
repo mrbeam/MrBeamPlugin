@@ -99,7 +99,7 @@
 							<form class="form-horizontal" style="margin:0" onsubmit="event.preventDefault();">
                                 <div class="control-group">
 									<label class="control-label" for="custom_material_image"> {{ _('Material Image') }}</label>
-									<div class="controls">
+									<div class="controls material-img">
                                         <input type="file" id="custom_material_file_input" style="display: none"/>
                                         <input id="custom_material_image" type="image" alt=""
                                                data-bind="attr: {src: save_custom_material_image}"
@@ -274,7 +274,7 @@
                                     <div class="controls range-control">
                                         <div id="engraving_compressor" class="compressor_control">
                                             <span class="compressor_min_max_label">min</span>
-                                            <input class="conversion_range_slider compressor_range" type="range" min="0" max="3" data-bind="value: engravingCompressor, event: {change: flag_customized_material}"/>
+                                            <input class="mrb_slider" type="range" min="0" max="3" data-bind="value: engravingCompressor, event: {change: flag_customized_material}"/>
                                             <span class="compressor_min_max_label">max</span>
                                         </div>
                                     </div>
@@ -395,7 +395,7 @@
                                     <div class="controls range-control">
                                         <div class="compressor_control">
                                             <span class="compressor_min_max_label">min</span>
-                                            <input class="conversion_range_slider compressor_range" type="range" min="0" max="3" value="3" data-bind="event: {change: flag_customized_material}"/>
+                                            <input class="mrb_slider" type="range" min="0" max="3" value="3" data-bind="event: {change: flag_customized_material}"/>
                                             <span class="compressor_min_max_label">max</span>
                                         </div>
                                     </div>
@@ -403,11 +403,25 @@
                             </div>
 
                             <div class="control-group">
-                                <div class="cutting-control-and-label" data-toggle="tooltip" data-placement="right"
-                                      title="{{ _('Indicates the number of times the laser will run over the design to cut it. Increase the number of passes if the material does not get cut.') }}">
+                                <div data-toggle="tooltip" data-placement="right"
+                                     data-bind="css: showExpertSettings() == true ? 'progressive-control-and-label' : 'cutting-control-and-label'"
+                                     title="<b>{{ _('Indicates the number of times the laser will run over the design to cut it. ') }}</b>
+                                            {{ _('Increase the number of passes if the material does not get cut.') }}<br>
+                                            <ul>
+                                            <li>{{ _('Progressive cut (activate in advanced settings):') }}
+                                            {{ _('Slows down the laser head progressively in every cut.
+                                            Depending on the design, this might save time by making it possible to reduce passes, and can also reduce burn marks.') }}
+                                            </li></ul>">
                                     <label class="control-label">{{ _('Passes') }}</label>
-                                    <div class="controls"><input data-bind="event: {change: flag_customized_material}" class="param_passes img_intensity_input" type="number" min="1" max="10" value="1" />&nbsp;&times;&nbsp;&nbsp;
-                                        <span class="experimental_feature_beta" style="display: inline-block"><label data-bind="visible: showExpertSettings"><input type="checkbox" class="param_progressive"/>{{ _('progressive') }}</label></span></div>
+                                    <div class="controls">
+                                        <input data-bind="event: {change: flag_customized_material}" class="param_passes img_intensity_input" type="number" min="1" max="10" value="1" />&nbsp;&times;&nbsp;&nbsp;
+                                        <span style="display: inline-block">
+                                            <label data-bind="visible: showExpertSettings">
+                                                <input data-bind="event: {change: flag_customized_material}" type="checkbox" class="param_progressive"/>
+                                                {{ _('progressive') }}
+                                            </label>
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
 
@@ -450,7 +464,7 @@
 		</div>
 
         <a href="#" class="btn" aria-hidden="true"
-		   data-bind="click: $root.cancel_conversion(), visible: !slicing_in_progress()">{{ _('Cancel') }}</a>
+		   data-bind="click: $root.cancel_conversion(), visible: !slicing_in_progress()">{{ _('Back') }}</a>
         <a href="#"  class="btn btn-primary" id="start_job_btn"
 		   data-bind="click: function() { if ($root.enableConvertButton()) { $root.convert() } },
 					enabled: enableConvertButton,

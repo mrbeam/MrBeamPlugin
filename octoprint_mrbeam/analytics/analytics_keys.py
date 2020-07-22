@@ -77,6 +77,9 @@ class AnalyticsKeys:
 		class Duration:
 			CURRENT = 'dur'
 			ESTIMATION = 'dur_est'
+			CALC_DURATION_TOTAL = 'calc_duration_total'
+			CALC_DURATION_WOKE = 'calc_duration_woke'
+			CALC_LINES = 'calc_lines'
 
 		class Progress:
 			PERCENT = 'p'

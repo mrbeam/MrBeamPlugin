@@ -21,6 +21,7 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from analytics_keys import AnalyticsKeys as ak
 from timer_handler import TimerHandler
 from uploader import AnalyticsFileUploader
+from octoprint_mrbeam.util.uptime import get_uptime
 
 # singleton
 _instance = None
@@ -35,7 +36,7 @@ def analyticsHandler(plugin):
 
 class AnalyticsHandler(object):
 	QUEUE_MAXSIZE = 1000
-	ANALYTICS_LOG_VERSION = 14  # bumped in 0.6.10.1 for frontend console logs
+	ANALYTICS_LOG_VERSION = 15  # bumped in 0.6.13.3 for MORE camera anaytics
 
 	def __init__(self, plugin):
 		self._plugin = plugin
@@ -583,6 +584,9 @@ class AnalyticsHandler(object):
 		if self._current_job_id:
 			payload = {
 				ak.Job.Duration.ESTIMATION: int(round(self._current_job_time_estimation)),
+				ak.Job.Duration.CALC_DURATION_TOTAL: payload['calc_duration_total'],
+				ak.Job.Duration.CALC_DURATION_WOKE: payload['calc_duration_woke'],
+				ak.Job.Duration.CALC_LINES: payload['calc_lines'],
 			}
 			self._add_job_event(ak.Job.Event.JOB_TIME_ESTIMATED, payload=payload)
 
@@ -645,7 +649,7 @@ class AnalyticsHandler(object):
 				ak.Header.VERSION_MRBEAM_PLUGIN: self._plugin_version,
 				ak.Header.SOFTWARE_TIER: self._settings.get(["dev", "software_tier"]),
 				ak.Header.DATA: data,
-				ak.Header.UPTIME: self._get_uptime(),
+				ak.Header.UPTIME: get_uptime(),
 				ak.Header.MODEL: self._plugin.get_model_id(),
 			}
 
@@ -723,17 +727,6 @@ class AnalyticsHandler(object):
 		self._cleanup_job()
 		self._current_job_id = 'j_{}_{}'.format(self._snr, time.time())
 		self._add_job_event(ak.Job.Event.LASERJOB_STARTED)
-
-	# http://planzero.org/blog/2012/01/26/system_uptime_in_python,_a_better_way
-	def _get_uptime(self):
-		try:
-			with open('/proc/uptime', 'r') as f:
-				uptime = float(f.readline().split()[0])
-			return uptime
-
-		except Exception as e:
-			self._logger.exception('Exception during _get_uptime: {}'.format(e), analytics=False)
-			return None
 
 	# -------- WRITER THREAD (queue --> analytics file) ----------------------------------------------------------------
 	def _write_queue_to_analytics_file(self):

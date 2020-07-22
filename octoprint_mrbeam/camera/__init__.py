@@ -1,4 +1,5 @@
 import io
+import shutil
 from fractions import Fraction
 import cv2, logging
 import numpy as np
@@ -6,10 +7,13 @@ from numpy.linalg import norm
 from itertools import chain
 from threading import Event
 from abc import ABCMeta, abstractmethod
+import os
+from octoprint_mrbeam.mrb_logger import mrb_logger
 # Python 3 : use ABC instead of ABCMeta
 
+SUCCESS_WRITE_RETVAL = 1
 
-from octoprint_mrbeam.util import logtime
+from octoprint_mrbeam.util import logtime, logme
 
 try:
 	import picamera
@@ -34,7 +38,7 @@ NW,NE,SW,SE = N+W, N+E, S+W, S+E
 QD_KEYS = [NW,NE,SW,SE]
 
 # Size of the corner search area
-RATIO_W, RATIO_H = Fraction(1, 8), Fraction(1, 4)
+RATIO_W, RATIO_H = Fraction(1, 6), Fraction(1, 4)
 # Padding distance from the edges of the image (The markers are never pressed against the border)
 OFFSET_W, OFFSET_H = Fraction(0, 36), Fraction(0, 20)
 
@@ -44,6 +48,9 @@ DEFAULT_STILL_RES = RESOLUTIONS['2592x1944']  # Be careful : Resolutions accepte
 # threshold; 2 consecutive pictures need to have a minimum difference
 # before being undistorted and served
 DIFF_TOLERANCE = 50
+
+TARGET_AVG_ROI_BRIGHTNESS = 170
+BRIGHTNESS_TOLERANCE = 40 # TODO Keep the brightness of the images tolerable
 
 class Camera:
 	__metaclass__ = ABCMeta
@@ -72,13 +79,12 @@ class MrbPicWorker(object):
 		self.buffers = [io.BytesIO() for _ in range(maxSize)]
 		self.bufferIndex = 0
 		self.latest = None
-		self.good_corner_bright = []
+		self.avg_roi_brightness = {}
 		assert(maxSize > 0)
 		self._maxSize = maxSize
 		self.times = []  # exposure time values
-		self.adjust_brightness = []
 		self.busy = Event()
-		self._logger = logging.getLogger("mrbeam.camera.MrbPicWorker")
+		self._logger = mrb_logger("mrbeam.camera.MrbPicWorker")
 		if debug: self._logger.setLevel(logging.DEBUG)
 		else: self._logger.setLevel(logging.WARNING)
 
@@ -93,12 +99,7 @@ class MrbPicWorker(object):
 		self.bufferIndex = (self.bufferIndex + 1) % self._maxSize
 		self.currentBuf().seek(0)
 		self.currentBuf().truncate()
-		if len(self.good_corner_bright) > self._maxSize:
-			del self.good_corner_bright[0]
-			del self.adjust_brightness[0]
-		bright_adjust, goodRois = brightness_result(self.latest)
-		self.good_corner_bright.append(goodRois)
-		self.adjust_brightness.append(bright_adjust)
+		self.avg_roi_brightness = brightness_result(self.latest)
 		# TODO adjust camera shutter speed with these brightness measurements
 		self.busy.clear()
 
@@ -113,21 +114,6 @@ class MrbPicWorker(object):
 		# Add the buffer to the currently selected buffer
 		self.busy.set()
 		self.currentBuf().write(buf)
-
-	def allCornersCovered(self):
-		"""Tells if the buffered pictures cumulatively offer a good brightness for each corner"""
-		# Unused atm
-		return all(qd in chain(self.good_corner_bright) for qd in QD_KEYS)
-
-	def bestImg(self, targetAvg=128):
-		# Unused atm
-		bestIndex = -1
-		bestDist = -1
-		for i, img in enumerate(self.images):
-			if bestDist == -1 or abs(np.average(img) - targetAvg) < bestDist:
-				bestDist = abs(np.average(img) - targetAvg)
-				bestIndex = i
-		return bestIndex, self.images[bestIndex]
 
 	def saveImg(self, path, n=1):
 		"""Saves the last image or the n-th last buffer"""
@@ -148,15 +134,7 @@ def brightness_result(pic):
 	:return: a list that of the corners that are fine
 	:rtype: Tuple(map, list)
 	"""
-	bright_adjust = {}
-	goodRois = []
-	for roi, _, pole in getRois(pic):
-		brightness = goodBrightness(roi)
-		if brightness == 0:
-			goodRois.append(pole)
-		else:
-			bright_adjust.update({pole: brightness})
-	return bright_adjust, goodRois
+	return {qd: brightness(roi) for roi, _, qd in getRois(pic)}
 
 def getRois(img, ratioW=RATIO_W, ratioH=RATIO_H,  offsetW=OFFSET_W, offsetH=OFFSET_H): #(img: np.ndarray, ratioW: int=RATIO_W, ratioH: int=RATIO_H,):
 	"""
@@ -205,29 +183,26 @@ def _roiSlice(img, pole, ratioW=RATIO_W, ratioH=RATIO_H,  offsetW=OFFSET_W, offs
 	_vert, _horiz = pole # assumes the poles are written NW = 'NW' etc...
 	return borders[_vert], borders[_horiz]
 
-def goodBrightness(img, targetAvg=128, tolerance=80):
+def brightness(img):
 	"""
 	Determines of the image brightness is - within a tolerance margin - close
 	to a target brightness.
 	:param img: Input image
 	:type img: numpy.ndarray
-	:param targetAvg: The target brightness level
-	:type targetAvg: Positive int
-	:returns: 0 if the brightness is inside the tolerance margins or the offset brightness if not
+	:returns: brightness of the image
 	:rtype int
 	"""
 	if len(img.shape) == 3:
 		# Colored RGB or BGR (*Do Not* use HSV images with this function)
 		# create brightness with euclidean norm
-		brightness = np.average(norm(img, axis=0))
+
+		pix2pix_brightness = norm(img, axis=2) / np.sqrt(3)
+		percentile = np.percentile(pix2pix_brightness, q=80)
+		# quantile = np.quantile(pix2pix_brightness, q=0.8) # numpy.__version__ > 1.15.0
+		return np.average(pix2pix_brightness[pix2pix_brightness > percentile])
 	else:
 		# Grayscale
-		brightness = np.average(img)
-
-	if abs(brightness - targetAvg) < tolerance:
-		return 0
-	else:
-		return brightness - targetAvg
+		return np.average(img)
 
 def get_same_size(imageA, imageB, upscale=True):
 	"""
@@ -269,3 +244,20 @@ def gaussBlurDiff(imageA, imageB, thresh=DIFF_TOLERANCE, blur=7, resize = 1):
 	images = np.asarray(images, dtype=np.int16) # No int overflow
 	diff = np.max(np.abs(np.diff(images, axis=0)))
 	return np.max(np.abs(np.diff(images, axis=0))) > thresh
+
+#@logtime()
+# @logme(True)
+def save_debug_img(img, path, folder=None):
+	"""Saves the image in a folder along the given path"""
+	if not folder:
+		folder = os.path.dirname(path)
+	else:
+		path = os.path.join(folder, path)
+	if folder and not os.path.exists(folder):
+		os.makedirs(folder)
+	f1, f2 = os.path.splitext(path)
+	tmp_path = f1 + '_tmp' + f2
+	res = cv2.imwrite(tmp_path, img) == SUCCESS_WRITE_RETVAL
+	if res:
+		shutil.move(tmp_path, path)
+	return res
