@@ -1,0 +1,40 @@
+<div class="qa_images">
+<div>
+    <div class="qa_img_wrapper">
+        <svg version="1.1"
+             width="100%" height="100%" viewBox="0 0 512 384"
+             data-bind="attr: {viewBox: calSvgViewBox()}">
+            <defs>
+                <filter id="contrast2">
+                    <!-- Also used for the corner calibration QA -->
+                    <feComponentTransfer>
+                    <feFuncR type="linear" slope="2" intercept="-0.1"/>
+                    <feFuncG type="linear" slope="2" intercept="-0.1"/>
+                    <feFuncB type="linear" slope="2" intercept="-0.1"/>
+                    </feComponentTransfer>
+                </filter>
+            </defs>
+            <g data-bind="attr: { transform: workingArea.zObjectImgTransform()}">
+                <image style="filter: url(#contrast2)"
+                       data-bind="attr: {href: availablePicUrl()['cropped'],
+                                  width:calImgWidth(), height:calImgHeight()}" />
+            </g>
+            <path d="M 398.5,300 L 101.5,300 L 101.5,90 L 398.5,90 L 398.5,300"
+                  data-bind="attr: {style: 'fill:none; stroke:#4f2; opacity: 0.6;stroke-width: ' + (2 * 1 * calImgWidth() / 500)}"/>
+                                       <!-- 2 * tolerance * imgWidth / work_area_width -->
+        </svg>
+    </div>
+</div>
+<ul>
+    <li class="example bad_example"><img src="/plugin/mrbeam/static/img/calibration/qa_final_rectangle_bad1.jpg" /></li>
+    <li class="example bad_example"><img src="/plugin/mrbeam/static/img/calibration/qa_final_rectangle_bad2.jpg" /></li>
+    <li class="example bad_example"><img src="/plugin/mrbeam/static/img/calibration/qa_final_rectangle_bad3.jpg" /></li>
+    <li class="example good_example"><img src="/plugin/mrbeam/static/img/calibration/qa_final_rectangle_good.jpg" /></li>
+</ul>
+</div>
+<div>{{ _('Checklist') }}</div>
+<ul>
+    <li>{{ _('The engraved rectangle is inside the green outline') }}</li>
+    <li>{{ _('engraved rectangle egdes are straight and parallel to the green rectangle edges') }}</li>
+</ul>
+

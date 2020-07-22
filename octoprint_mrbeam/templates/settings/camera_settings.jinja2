@@ -17,7 +17,7 @@
 {#                    </li>#}
 {#                </ul>#}
 {#            </div>#}
-{#        </div>#}dataType
+{#        </div>#}
 
         <div class="accordion md-accordion">
           <div class="card">
@@ -66,20 +66,6 @@
                   </ul>
               </div>
             </div>
-              <div class="camera-calibrations">
-                  <div class="rounded_container calibration-container">
-                      <div class="rounded_container_title">{{ _('LENS CALIBRATION') }}</div>
-                      <hr class="rounded_container_hr">
-                      <p>{{ _('The lens calibration is made to remove the fish-eye effect from the picture. Only do this if you think that your camera precision is bad, specially in the corners.') }}</p>
-                      <button class="btn btn-default" data-bind="click: startLensCalibration">{{ _('Start') }}</button>
-                  </div>
-                  <div class="rounded_container calibration-container">
-                      <div class="rounded_container_title">{{ _('CORNER CALIBRATION') }}</div>
-                      <hr class="rounded_container_hr">
-                      <p>{{ _('The corner calibration uses the pink markers to calibrate the camera. Use this in case one of the markers has been changed or if there is a large deviation between the screen position and the laser result.') }}</p>
-                      <button class="btn btn-default" data-bind="click: changeUserView('corner')">{{ _('Start') }}</button>
-                  </div>
-              </div>
           </div>
         </div>
 
@@ -107,10 +93,45 @@
 {#        <div>
 			<button class="btn btn-default" data-bind="click: next">{{ _('Continue') }}</button>
 		</div>#}
+
+    <div class="accordion md-accordion">
+      <div class="card">
+        <div class="card-header" id="settings_camera_calibration_qa_header">
+          <div>
+            <button class="btn-link collapsed camera-status-collapsible requirement"
+                    type="button" data-toggle="collapse" data-target="#settings_camera_calibration_qa"
+                    aria-expanded="true" aria-controls="collapseOne">
+                {{ _('Calibration quality') }}
+            </button>
+          </div>
+        </div>
+        <div id="settings_camera_calibration_qa" class="collapse" aria-labelledby="settings_camera_calibration_qa_header">
+          <div class="card-body">
+              {% include 'calibration/user/view_calibration_qa.jinja2' %}
+          </div>
+        </div>
+          <div class="camera-calibrations">
+              <div class="rounded_container calibration-container">
+                  <div class="rounded_container_title">{{ _('LENS CALIBRATION') }}</div>
+                  <hr class="rounded_container_hr">
+                  <p>{{ _('The lens calibration is made to remove the fish-eye effect from the picture. Only do this if you think that your camera precision is bad, specially in the corners.') }}</p>
+                  <button class="btn btn-default" data-bind="click: startLensCalibration">{{ _('Start') }}</button>
+              </div>
+              <div class="rounded_container calibration-container">
+                  <div class="rounded_container_title">{{ _('CORNER CALIBRATION') }}</div>
+                  <hr class="rounded_container_hr">
+                  <p>{{ _('The corner calibration uses the pink markers to calibrate the camera. Use this in case one of the markers has been changed or if there is a large deviation between the screen position and the laser result.') }}</p>
+                  <button class="btn btn-default" data-bind="click: changeUserView('corner')">{{ _('Start') }}</button>
+              </div>
+          </div>
+      </div>
+    </div>
 	</div>
 
+
+
     <div id="test_calibration_view" class="scrollable">
-        TEST TEST TEST CALIBRATIOOOOOON
+{#        {% include 'calibration/user/view_calibration_qa.jinja2' %}#}
     </div>
 
     <div id="lens_calibration_view" class="scrollable">
