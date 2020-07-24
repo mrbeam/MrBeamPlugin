@@ -18,7 +18,6 @@ const CUSTOMER_CAMERA_VIEWS = {
     'settings': '#camera_settings_view',
     'lens': '#lens_calibration_view',
     'corner': '#corner_calibration_view',
-    'test_calibration': '#test_calibration_view',
 }
 
 $(function () {
@@ -90,6 +89,13 @@ $(function () {
 			{name: 'SE', desc: 'South East', focus: [DEFAULT_IMG_RES[0], DEFAULT_IMG_RES[1], 4]},
 			{name: 'NE', desc: 'South West', focus: [DEFAULT_IMG_RES[0], 0, 4]}
 		];
+
+		self.cameraStateOk = ko.computed(function () {
+			return self.readyToLaser.lid_fully_open()
+                && self.state.isOperational()
+                && self.state.isOperational()   // todo iratxe: this should be isHomed or similar
+                && self.camera.markerState() === 4;
+		})
 
 		// ---------------- CAMERA ALIGNMENT ----------------
 		self.qa_cameraalignment_image_loaded = ko.observable(false);
@@ -229,11 +235,15 @@ $(function () {
 			}
 			self.calibrationScreenShown(true)
             self.startupComplete(true);
+
+			$('#settings_plugin_mrbeam_camera_link').click(function(){
+                self.abortCalibration()
+            });
 		};
 
 		self.onSettingsShown = function(){
 			// self.goto('#camera_settings_view');
-            self.resetUserView()
+            self.abortCalibration()
 		}
 
 		self.__format_point = function(p){
@@ -305,6 +315,11 @@ $(function () {
 			var nextStep = self.calibrationMarkers[self.currentMarker];
 			self._highlightStep(nextStep);
 		};
+
+		self.goToMarker = function(markerNum) {
+		    self.currentMarker = markerNum;
+		    self._highlightStep(self.calibrationMarkers[markerNum])
+        }
 
 		self.userClick = function (vm, ev) {
 			// check if picture is loaded

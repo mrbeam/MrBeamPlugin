@@ -771,31 +771,13 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	position: relative;
 }
 
-#settings_camera_calibration_status_header > div > button.camera-status-collapsible {
-    outline: transparent;
-    text-decoration: none;
-    color: #333;
-    padding: 0;
-    white-space: nowrap;
-	font-weight: bolder;
-	font-size: 1.2em;
-}
-
-#settings_camera_calibration_status_header > div > button.collapsed.camera-status-collapsible:before {
-  font-family: FontAwesome;
-  content: "\f078";
-  /*padding-right: 5px;*/
-}
-
-#settings_camera_calibration_status_header > div > button.camera-status-collapsible:before {
-	content: "\f077";
-	font-family: FontAwesome;
-}
-
 /*.calibration_manual.text {*/
 /*    width: 48%;*/
 /*	margin-bottom: 2em;*/
 /*}*/
+.camera-settings-section {
+	margin-bottom: 30px;
+}
 
 .camera-status-images {
 	width: 90%;
@@ -850,6 +832,39 @@ svg#area_preview.overModalBG { z-index: 1051; }
 	position: absolute;
 	bottom: 10px;
 	right: 10px;
+}
+
+.camera-calibration-title {
+	margin: 2px 0 6px 2px;
+}
+
+.camera-calibration-title .btn {
+    border-radius: 100%;
+    padding: 10px 10px;
+    min-width: auto;
+}
+
+.camera-calibration-title .btn img {
+    width: 20px;
+}
+
+.camera-calibration-title span {
+    vertical-align: bottom;
+    font-size: 24.5px;
+    line-height: 40px;
+    margin: 10px 0 10px 5px;
+    font-family: inherit;
+    font-weight: bold;
+    color: inherit;
+    text-rendering: optimizelegibility;
+}
+
+.camera-calibration-steps > li {
+	margin-bottom: 15px;
+}
+
+.camera-calibration-steps > li > button {
+	margin-top: 5px;
 }
 
 .calibration_manual.img {
