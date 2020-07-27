@@ -40,19 +40,11 @@
                 <li class="requirement"
                     data-bind="css: camera.markerState() == 4 ? 'requirement-met' : 'requirement-not-met'">
                     {{ _("The 4 markers are recognized.") }}</li>
-                <ul>
-                    <li>{{ _("Make sure there is a good lighting???") }}</li>
-                </ul>
+{#                <ul>#}
+{#                    <li>{{ _("Make sure there is a good lighting???") }}</li>#}
+{#                </ul>#}
             </ul>
         </div>
-
-        {#        <div class='calibration_manual text show_only_online'>{{ _("For more information, please have a look at our article on %(opening_tag)scamera calibration%(closing_tag)s.",#}
-        {#                opening_tag='<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000065908-camera-calibration" target="_blank"><i class="icon-external-link"></i>&nbsp;',#}
-        {#                closing_tag='</a>') }}</div>#}
-        {#        <div class='calibration_manual text show_only_offline'>{{ _("For more information, please have a look at our article on %(opening_tag)scamera calibration%(closing_tag)s.",#}
-        {#                opening_tag='<a href="#" onclick="mrbeam.openOfflineKbUrl(\'43000065908_camer_calibration.pdf\')"><i class="icon-file-text"></i>&nbsp;',#}
-        {#                closing_tag='</a>') }}</div>#}
-        {##}
         {#        <div class='calibration_manual text show_only_online'>{{ _("Positioning with the Mr Beam camera is simple and fairly accurate,#}
         {#        but there can be deviations of up to +/- 5mm. If a laser job needs to be positioned very accurately,#}
         {#        we recommend using %(opening_tag)smanual positioning%(closing_tag)s.",#}
@@ -118,37 +110,4 @@
     <div id="corner_calibration_view" class="scrollable">
         {% include 'calibration/user/view_corner_calibration.jinja2' %}
     </div>
-
-
-    {#	<div id="calibration_step_2" class="scrollable" data-bind="visible: !window.mrbeam.isWatterottMode()">#}
-    {#        <h3>{{ _('Camera Calibration') }}</h3>#}
-    {#		<div class='calibration_manual img' style='background-image:url(/plugin/mrbeam/static/img/calibration/calpic_material_size.svg)'></div>#}
-    {#		<div class='calibration_manual text'>{{_('Please put a material like cardboard inside your Mr Beam that it covers the whole working area.')}}</div>#}
-    {#		<div class='calibration_manual img' style='background-image:url(/plugin/mrbeam/static/img/calibration/calpic_close_lid.svg)'></div>#}
-    {#		<div class='calibration_manual text'>{{_('Close the lid. Mr Beam will start engraving the calibration markers on the cardboard.')}}</div>#}
-    {#		<div class='calibration_manual text'>{{_('Do not touch the engraved material. The camera will now take a picture of the engraving.') }}</div>#}
-    {#		<div>#}
-    {#			<button class="btn btn-primary" data-bind="click: engrave_markers">{{ _('Engrave Calibration Markers') }}</button>#}
-    {#			<button class="btn btn-default" data-bind="click: next">{{ _('Continue') }}</button>#}
-    {#		</div>#}
-    {#	</div>#}
-    {##}
-    {##}
-    {#	<div id="calibration_step_3" class="scrollable" data-bind="visible: !window.mrbeam.isWatterottMode()" style="overflow-y: auto; height: calc(100vh - 100px);">#}
-    {#        <h3>{{ _('Camera Calibration') }}</h3>#}
-    {#		<div class='calibration_manual img' style='background-image:url(/plugin/mrbeam/static/img/calibration/calpic_open_lid.svg)'></div>#}
-    {#		<div class='calibration_manual text'>{{_('Wait until the engraving is finished and Mr Beam illuminates green. Open the safety lid again') }}</div>#}
-    {#		<div class='calibration_manual img' style='background-image:url(/plugin/mrbeam/static/img/calibration/calpic_dont_touch.svg)'></div>#}
-    {#		<div class='calibration_manual text'>{{_('Do not touch the engraved material. The camera will now take a picture of the engraving.') }}</div>#}
-    {#		<div>#}
-    {#			<button class="btn btn-default" data-bind="click: continue_to_calibration">{{ _('Continue') }}</button>#}
-    {#		</div>#}
-    {#	</div>#}
-    {##}
-    {##}
-    {#	<div id="calibration_step_4" class="">#}
-    {#		<div class="calibration_manual" data-bind="css:{ text: !cornerCalibrationActive() }">#}
-    {#			{% include 'calibration/user/view_corner_calibration.jinja2' %}#}
-    {#		</div>#}
-    {#	</div>#}
 </div>

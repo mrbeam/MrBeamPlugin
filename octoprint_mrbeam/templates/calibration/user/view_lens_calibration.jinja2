@@ -1,8 +1,31 @@
 <!-- Lens calibration -->
-<div id="lensCalibrationPhases" data-bind="visible: lensCalibrationActive()">
+<div>
+    <div class="camera-calibration-title">
+        <button class="btn" data-bind="click: abortCalibration">
+            <img src="plugin/mrbeam/static/img/back_arrow.svg" alt="">
+        </button>
+        <span>{{ _('Lens Calibration') }}</span>
+    </div>
 
-    <div id="lensCalibrationPictureTaking">
-        <div style='position:relative;'>
+    <p>{{ _('The precision of the camera system is dictated by how much lens distortion you will find. Also called \'Fish-eye effect\', this distortion is usually corrected during the assembly of your Mr Beam.') }}</p>
+    <p>{{ _('You may want to do that calibration step again if you are dissatisfied with the precision of the camera and a new calibration of the corners does not make it better.
+    Keep in mind that it is unlikely that you will arrive to a better precision than 1mm accross the whole surface of the image.') }}</p>
+
+    <h4>{{ _('Steps') }}</h4>
+    <ol class="camera-calibration-steps">
+        <li>{{ _('Download and print %(opening_tag)sthis chessboard%(closing_tag)s. If you print it on a regular sheet of paper, then please make sure to keep it flat against another surface (e.g. a flat piece of wood or foam board).',
+            opening_tag='<a href="/plugin/mrbeam/static/docs/calibration_chessboard_pattern.pdf" target="_blank">',
+            closing_tag='</a>') }}
+        </li>
+        <li>{{ _('Place it inside your Mr Beam.') }}</li>
+        <li>{{ _('Repeat the following until you have at least 9 pictures available (more pictures will increase your chances for higher precision):') }}
+            <ul>
+                <li>{{ _('Press the orange picture button or the button on your Mr Beam to take a picture of the chessboard: the orange button will turn gray and the device will flash in blue.') }}</li>
+                <li>{{ _('Wait for the flash to stop or for the button to turn orange again.') }}</li>
+                <li>{{ _('Move the chessboard to a new position.') }}</li>
+            </ul>
+            <div id="lensCalibrationPictureTaking" style="width: 70%">
+        <div>
             <svg id="heatmap_container" version="1.1" enable-background="new 0 0 211 141"
                viewBox="0 0 3100 2500" height="100%" width="100%" y="0px" x="0px">
               <radialGradient gradientUnits="userSpaceOnUse" gradientTransform="matrix(1,0,0,0.9565,0,-7.4897)"
@@ -26,24 +49,20 @@
               </g>
               <g id="segment_group" transform="translate(340, 250),scale(1.1, 1.2)"></g>
               <path d="M2740,2040H3500" stroke="#e25303" stroke-width="15px"></path>
-              <!-- <text id='lensCalibrationCoverageText' x="350" y="2360" style="font-size: 150px;"></text> -->
             </svg>
-
 
             <button id="lens_calibration_take_pic" class="btn btn-primary" data-bind="click: saveRawPic, enable: !cameraBusy()">
                 <i class="icon icon-camera icon-2x"></i>
             </button>
 
-
-
-            <button id="lens_calibration_toggle_qa_btn" class="btn pull-right"
-                    data-bind="click: lensCalibrationToggleQA,
-                               css: {'btn-success': lensCalibrationNpzFileTs, 'btn-default': !lensCalibrationNpzFileTs()},
-                               visible: rawPicSelection().length >= 9,
-                               enable: lensCalibrationNpzFileTs() && hasMinBoardsFound()">
-                <span style="font-size:1.5rem;">{{ _('Check result') }}</span>
-                <i class="icon icon-2x icon-fixed-width icon-arrow-right" data-bind="visible: lensCalibrationNpzFileTs"></i>
-            </button>
+{#            <button id="lens_calibration_toggle_qa_btn" class="btn pull-right"#}
+{#                    data-bind="click: lensCalibrationToggleQA,#}
+{#                               css: {'btn-success': lensCalibrationNpzFileTs, 'btn-default': !lensCalibrationNpzFileTs()},#}
+{#                               visible: rawPicSelection().length >= 9,#}
+{#                               enable: lensCalibrationNpzFileTs() && hasMinBoardsFound()">#}
+{#                <span style="font-size:1.5rem;">{{ _('Check result') }}</span>#}
+{#                <i class="icon icon-2x icon-fixed-width icon-arrow-right" data-bind="visible: lensCalibrationNpzFileTs"></i>#}
+{#            </button>#}
         </div>
 
         <ul id="lens_correction_image_list" data-bind="visible: lensCalibrationActive(), foreach: { data: rawPicSelection, as: 'pic' }">
@@ -71,8 +90,34 @@
             </li>
         </ul>
     </div>
+        </li>
+        <li>{{ _('Use the grid of pictures to verify that you did not obstruct the view of the chessboard when you took a picture of it. Use the red bin icon to delete any picture that is problematic or takes more than 2 minutes to detect the chessboard. The progress of the detection is shown as either:') }}
+            <ul>
+                <li>{{ _('Checkmark: the chessboard was found.') }}</li>
+                <li>{{ _('Spinner: it is looking for a chessboard.') }}</li>
+                <li>{{ _('FloppyDisk: the image will be processed at a later date.') }}</li>
+                <li>{{ _('Cross: the chessboard was not detected.') }}</li>
+            </ul>
+        </li>
+        <li>{{ _('When there are more than 9 successfully detected chessboards the device will flash in green. You can check the result of the calibration by clicking on this button:') }}<br>
+            <button class="btn btn-primary" data-bind="click: lensCalibrationToggleQA,
+                               enable: lensCalibrationNpzFileTs() && hasMinBoardsFound()">
+                {{ _('Check result') }}
+            </button>
+        </li>
+    </ol>
 
-    <div id="lensCalibrationQA">
+{#    <div>#}
+{#        {{ _('Notes:') }}#}
+{#        <ul>#}
+{#           <li>{{ _('If dissatisfied, please repeat steps 3 to 6 until you feel like you have a good calibration of the lens.') }}</li>#}
+{#           <li>{{ _('You can make verify that the system didn\'t misdetect a chessboard by using the zoom icon on each of the pictures. You should see a colourful pattern with crosses at each intersection between the squares on the chessboard. If not, please tell the system to ignore that picture by deleting it. It will automatically generate a new distortion matrix based on the updated image list.') }}</li>#}
+{#        </ul>#}
+{#    </div>#}
+
+
+
+    <div id="lensCalibrationQA" style="display: none">
         <div data-bind="visible: lensCalibrationNpzFileTs" class="qa_images">
             <div class="qa_img_wrapper">
                 <img data-bind="attr: {src: availablePicUrl()['lens_corrected']}"/>

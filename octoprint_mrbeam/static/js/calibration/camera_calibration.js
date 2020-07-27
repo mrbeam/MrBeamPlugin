@@ -776,6 +776,8 @@ $(function () {
 			self.resetView();
 		};
 
+		// todo iratxe: should we abort the corner calibration as well?
+        // for now I call this when going back from the lens calibration...
 		self.abortCalibration = function () {
 			self.cornerCalibrationActive(false);
 			self.resetView();
