@@ -38,6 +38,12 @@
         <div class="modal-body">
             <img src="/plugin/mrbeam/static/img/cooling.jpg">
             <h5 >{{ _('Mr Beam needs a short break to cool down. We\'ll continue the laser job as soon as possible. There\'s nothing you need to do at the moment.') }}</h5>
+            <small class='muted show_only_online'>{{ _("For more information, please have a look at our article on %(opening_tag)scooling pauses%(closing_tag)s.",
+                opening_tag='<a href="https://support.mr-beam.org/support/solutions/articles/43000586688-laser-head-constantly-pauses-for-cooling" target="_blank"><i class="icon-external-link"></i>&nbsp;',
+                closing_tag='</a>') }}</small>
+            <small class='muted show_only_offline'>{{ _("For more information, please have a look at our article on %(opening_tag)scooling pauses%(closing_tag)s.",
+                opening_tag='<a href="#" onclick="mrbeam.openOfflineKbUrl(\'43000586688_cooling_pause.pdf\')"><i class="icon-file-text"></i>&nbsp;',
+                closing_tag='</a>') }}</small>
         </div>
         <div class="modal-footer">
             <a class="btn pull-left" data-bind='click: cancel_btn' aria-hidden="true">{{ _('Cancel Laser Job') }}</a>
