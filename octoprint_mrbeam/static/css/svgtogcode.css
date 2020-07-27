@@ -784,6 +784,17 @@ svg#area_preview.overModalBG { z-index: 1051; }
     text-align: center;
     border-collapse: separate;
     border-spacing: 20px 0;
+	margin-bottom: 15px;
+}
+
+.camera-status-images td {
+	position: relative;
+}
+
+.camera-status-images .fa-download {
+	position: absolute;
+    bottom: 4%;
+    right: 4%;
 }
 
 .requirement::after {

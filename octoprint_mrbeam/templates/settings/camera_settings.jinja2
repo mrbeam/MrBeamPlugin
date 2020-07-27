@@ -9,13 +9,22 @@
             </h4>
             <table class="camera-status-images" data-bind="visible: availablePicUrl()['raw']">
                 <tr>
-                    <td><img data-bind="attr: {src: availablePicUrl()['raw']}"/></td>
-                    <td><img data-bind="attr: {src: availablePicUrl()['lens_corrected']}"/></td>
-                    <td><img data-bind="attr: {src: availablePicUrl()['cropped']}"/></td>
+                    <td>
+                        <img data-bind="attr: {src: availablePicUrl()['raw']}"/>
+                        <a data-bind="attr: { href: availablePicUrl()['raw'] }"><i class="fa fa-download" aria-hidden="true"></i></a>
+                    </td>
+                    <td>
+                        <img data-bind="attr: {src: availablePicUrl()['lens_corrected']}"/>
+                        <a data-bind="attr: { href: availablePicUrl()['lens_corrected'] }"><i class="fa fa-download" aria-hidden="true"></i></a>
+                    </td>
+                    <td>
+                        <img data-bind="attr: {src: availablePicUrl()['cropped']}"/>
+                        <a data-bind="attr: { href: availablePicUrl()['cropped'] }"><i class="fa fa-download" aria-hidden="true"></i></a>
+                    </td>
                 </tr>
                 <tr>
                     <td><strong>{{ _("Raw") }}</strong></td>
-                    <td><strong>{{ _("Corrected") }}</strong></td>
+                    <td><strong>{{ _("Undistorted") }}</strong></td>
                     <td><strong>{{ _("Cropped") }}</strong></td>
                 </tr>
                 <tr>
