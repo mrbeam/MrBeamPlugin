@@ -44,8 +44,15 @@
                     data-bind="css: state.isOperational() ==  true ? 'requirement-met' : 'requirement-not-met'">
                     {{ _("Mr Beam is operational.") }}</li>
                 <li class="requirement"
-                    data-bind="css: state.isOperational() ==  true ? 'requirement-met' : 'requirement-not-met'">
+                    data-bind="css: isHomed() ==  true ? 'requirement-met' : 'requirement-not-met'">
                     {{ _("The leaser head is in the homing position.") }}</li>
+                <ul data-bind="visible: !isHomed()">
+                    <li>
+                        <button class="btn-link" data-bind="click: control.sendHomeCommand()">
+                            {{ _("Home now") }}
+                        </button>
+                    </li>
+                </ul>
                 <li class="requirement"
                     data-bind="css: camera.markerState() == 4 ? 'requirement-met' : 'requirement-not-met'">
                     {{ _("The 4 markers are recognized.") }}</li>

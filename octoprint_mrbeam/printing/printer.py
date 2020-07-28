@@ -5,7 +5,9 @@ from octoprint_mrbeam.mrbeam_events import MrBeamEvents
 from octoprint_mrbeam.printing import comm_acc2 as comm
 from octoprint_mrbeam.mrb_logger import mrb_logger
 
+
 class Laser(Printer):
+	HOMING_POSITION = [-1.0, -1.0, 0]
 
 	def __init__(self, fileManager, analysisQueue, printerProfileManager):
 		Printer.__init__(self, fileManager, analysisQueue, printerProfileManager)
@@ -77,6 +79,9 @@ class Laser(Printer):
 		self._comm.rescue_from_home_pos()
 		command = "G92X{x}Y{y}Z{z}".format(**params)
 		self.commands(["$H", command, "G90", "G21"])
+
+	def is_homed(self):
+		return self._stateMonitor._machinePosition == self.HOMING_POSITION
 
 	def cancel_print(self):
 		"""
@@ -170,6 +175,8 @@ class Laser(Printer):
 	# position update callbacks
 	def on_comm_pos_update(self, MPos, WPos):
 		self._add_position_data(MPos, WPos)
+
+		self._logger.info('############ MPOS: {} / WPOS: {}'.format(MPos, WPos))
 
 	# progress update callbacks
 	def on_comm_progress(self):

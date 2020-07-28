@@ -30,6 +30,7 @@ $(function () {
 		self.camera = parameters[3];
 		self.state = parameters[4]; // isOperational
 		self.readyToLaser = parameters[5]; // lid_fully_open
+        self.control = parameters[6]; // sendHomeCommand
 
 		// calibrationState is constantly refreshed by the backend
 		// as an immutable array that contains the whole state of the calibration
@@ -37,7 +38,8 @@ $(function () {
 
 		self.startupComplete = ko.observable(false);
 		self.calibrationScreenShown = ko.observable(false);
-		self.waitingForRefresh = ko.observable(true)
+		self.waitingForRefresh = ko.observable(true);
+        self.isHomed = ko.observable(false);
 
 		self.focusX = ko.observable(0);
 		self.focusY = ko.observable(0);
@@ -93,7 +95,7 @@ $(function () {
 		self.cameraStateOk = ko.computed(function () {
 			return self.readyToLaser.lid_fully_open()
                 && self.state.isOperational()
-                && self.state.isOperational()   // todo iratxe: this should be isHomed or similar
+                && self.isHomed()  // todo iratxe: this should be isHomed or similar
                 && self.camera.markerState() === 4;
 		})
 
@@ -245,6 +247,20 @@ $(function () {
 			// self.goto('#camera_settings_view');
             self.abortCalibration()
 		}
+
+		self.fromCurrentData = function(payload) {
+            self._fromData(payload);
+        };
+
+        self._fromData = function(payload, event) {
+            if (!payload || !'mrb_state' in payload || !payload['mrb_state']) {
+                return;
+            }
+            let mrb_state = payload['mrb_state'];
+            if (mrb_state) {
+                self.isHomed(mrb_state['is_homed']);
+            }
+        };
 
 		self.__format_point = function(p){
 			if(typeof p === 'undefined') return '?,?';
@@ -867,7 +883,7 @@ $(function () {
 
 		// e.g. loginStateViewModel, settingsViewModel, ...
 		["workingAreaViewModel", "vectorConversionViewModel", "analyticsViewModel", "cameraViewModel",
-            "printerStateViewModel", "readyToLaserViewModel"],
+            "printerStateViewModel", "readyToLaserViewModel", "controlViewModel"],
 
 		// e.g. #settings_plugin_mrbeam, #tab_plugin_mrbeam, ...
 		["#settings_plugin_mrbeam_camera"]
