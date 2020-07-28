@@ -176,8 +176,6 @@ class Laser(Printer):
 	def on_comm_pos_update(self, MPos, WPos):
 		self._add_position_data(MPos, WPos)
 
-		self._logger.info('############ MPOS: {} / WPOS: {}'.format(MPos, WPos))
-
 	# progress update callbacks
 	def on_comm_progress(self):
 		self._updateProgressData(self._comm.getPrintProgress(), self._comm.getPrintFilepos(), self._comm.getPrintTime(), self._comm.getCleanedPrintTime())

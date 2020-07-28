@@ -4,22 +4,29 @@
         <h3>{{ _("Camera") }}</h3>
 
         <div class="camera-settings-section">
-            <h4 class="requirement" data-bind="css: cameraStateOk() == true ? 'requirement-met' : 'requirement-not-met'">
+            <h4 class="requirement"
+                data-bind="css: cameraStateOk() == true ? 'requirement-met' : 'requirement-not-met'">
                 {{ _("Status") }}
             </h4>
             <table class="camera-status-images" data-bind="visible: availablePicUrl()['raw']">
                 <tr>
                     <td>
                         <img data-bind="attr: {src: availablePicUrl()['raw']}"/>
-                        <a data-bind="attr: { href: availablePicUrl()['raw'] }"><i class="fa fa-download" aria-hidden="true"></i></a>
+                        <a data-bind="attr: { href: availablePicUrl()['raw'] }">
+                            <i class="fa fa-download" aria-hidden="true"></i>
+                        </a>
                     </td>
                     <td>
                         <img data-bind="attr: {src: availablePicUrl()['lens_corrected']}"/>
-                        <a data-bind="attr: { href: availablePicUrl()['lens_corrected'] }"><i class="fa fa-download" aria-hidden="true"></i></a>
+                        <a data-bind="attr: { href: availablePicUrl()['lens_corrected'] }">
+                            <i class="fa fa-download" aria-hidden="true"></i>
+                        </a>
                     </td>
                     <td>
                         <img data-bind="attr: {src: availablePicUrl()['cropped']}"/>
-                        <a data-bind="attr: { href: availablePicUrl()['cropped'] }"><i class="fa fa-download" aria-hidden="true"></i></a>
+                        <a data-bind="attr: { href: availablePicUrl()['cropped'] }">
+                            <i class="fa fa-download" aria-hidden="true"></i>
+                        </a>
                     </td>
                 </tr>
                 <tr>
@@ -33,6 +40,7 @@
                     <td>{{ _("Final, as shown in the working area") }}</td>
                 </tr>
             </table>
+
             <div data-bind="visible: !availablePicUrl()['raw']">
                 <p>{{ _("The camera is not able to take new pictures. Please check the following:") }}</p>
             </div>
@@ -56,17 +64,14 @@
                 <li class="requirement"
                     data-bind="css: camera.markerState() == 4 ? 'requirement-met' : 'requirement-not-met'">
                     {{ _("The 4 markers are recognized.") }}</li>
-{#                <ul>#}
-{#                    <li>{{ _("Make sure there is a good lighting???") }}</li>#}
-{#                </ul>#}
             </ul>
 
-            <div class='calibration_manual text show_only_online'>
+            <div class='show_only_online'>
                 {{ _("Do you have problems with the camera? Check out our %(opening_tag)stroubleshooting guide%(closing_tag)s.",
                 opening_tag='<a href="https://support.mr-beam.org/support/solutions/articles/43000582595-trouble-shooting-how-to-solve-problems-with-the-camera-" target="_blank"><i class="icon-external-link"></i>&nbsp;',
                 closing_tag='</a>') }}
             </div>
-            <div class='calibration_manual text show_only_offline'>
+            <div class='show_only_offline'>
                 {{ _("Do you have problems with the camera? Check out our %(opening_tag)stroubleshooting guide%(closing_tag)s.",
                 opening_tag='<a href="#" onclick="mrbeam.openOfflineKbUrl(\'43000582595_camera_troubleshooting\')"><i class="icon-external-link"></i>&nbsp;',
                 closing_tag='</a>') }}
@@ -102,11 +107,11 @@
                     </ul>
                 </div>
             </div>
-            <div class='calibration_manual text show_only_online'>{{ _("For more information, please have a look at our article on %(opening_tag)scamera calibration%(closing_tag)s.",
+            <div class='show_only_online'>{{ _("For more information, please have a look at our article on %(opening_tag)scamera calibration%(closing_tag)s.",
                 opening_tag='<a href="https://mr-beam.freshdesk.com/support/solutions/articles/43000065908-camera-calibration" target="_blank"><i class="icon-external-link"></i>&nbsp;',
                 closing_tag='</a>') }}
             </div>
-            <div class='calibration_manual text show_only_offline'>{{ _("For more information, please have a look at our article on %(opening_tag)scamera calibration%(closing_tag)s.",
+            <div class='show_only_offline'>{{ _("For more information, please have a look at our article on %(opening_tag)scamera calibration%(closing_tag)s.",
                 opening_tag='<a href="#" onclick="mrbeam.openOfflineKbUrl(\'43000065908_camer_calibration.pdf\')"><i class="icon-file-text"></i>&nbsp;',
                 closing_tag='</a>') }}
             </div>
