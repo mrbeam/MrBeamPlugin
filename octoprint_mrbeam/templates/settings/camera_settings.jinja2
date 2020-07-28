@@ -60,6 +60,18 @@
 {#                    <li>{{ _("Make sure there is a good lighting???") }}</li>#}
 {#                </ul>#}
             </ul>
+
+            <div class='calibration_manual text show_only_online'>
+                {{ _("Do you have problems with the camera? Check out our %(opening_tag)stroubleshooting guide%(closing_tag)s.",
+                opening_tag='<a href="https://support.mr-beam.org/support/solutions/articles/43000582595-trouble-shooting-how-to-solve-problems-with-the-camera-" target="_blank"><i class="icon-external-link"></i>&nbsp;',
+                closing_tag='</a>') }}
+            </div>
+            <div class='calibration_manual text show_only_offline'>
+                {{ _("Do you have problems with the camera? Check out our %(opening_tag)stroubleshooting guide%(closing_tag)s.",
+                opening_tag='<a href="#" onclick="mrbeam.openOfflineKbUrl(\'43000582595_camera_troubleshooting\')"><i class="icon-external-link"></i>&nbsp;',
+                closing_tag='</a>') }}
+            </div>
+
         </div>
         {#        <div class='calibration_manual text show_only_online'>{{ _("Positioning with the Mr Beam camera is simple and fairly accurate,#}
         {#        but there can be deviations of up to +/- 5mm. If a laser job needs to be positioned very accurately,#}
