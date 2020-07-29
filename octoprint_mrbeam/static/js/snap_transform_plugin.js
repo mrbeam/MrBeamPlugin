@@ -1,7 +1,7 @@
 /* global Snap */
 
 //    Drag, Scale & Rotate - a snapsvg.io plugin to free transform objects in an svg.
-//    Copyright (C) 2015  Teja Philipp <osd@tejaphilipp.de>
+//    Copyright (C) 2020  Teja Philipp <osd@tejaphilipp.de>
 //
 //    This program is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU Affero General Public License as
@@ -122,30 +122,47 @@
 
 			// rotation center
 			const handleMatrix = this.transform().localMatrix; // handle origin as first point
+			// TODO compensate click position on rotateHandle
 			self.session.rotate.ax = handleMatrix.e;
 			self.session.rotate.ay = handleMatrix.f;
 			self.session.rotate.ocx = self.session.bb.cx;
 			self.session.rotate.ocy = self.session.bb.cy;
-			self.session.rotate.cx = self.session.bboxWithoutTransform.cx;
-			self.session.rotate.cy = self.session.bboxWithoutTransform.cy;
 			
-			snap.select('#transformCenter').attr({transform: `translate(${self.session.rotate.cx},${self.session.rotate.cy})`});
+			// invert Translate Matrix
+			const _cx = self.session.translate._mInv.x(self.session.rotate.ocx, self.session.rotate.ocy);
+			const _cy = self.session.translate._mInv.y(self.session.rotate.ocx, self.session.rotate.ocy);
+			// invert Rotate Matrix
+			const rcx = self.session.rotate._mInv.x(_cx, _cy);
+			const rcy = self.session.rotate._mInv.y(_cx, _cy);
+			self.session.rotate.cx = rcx;
+			self.session.rotate.cy = rcy;
+			
+			// Matrix to unrotate the mouse movement dxMM,dyMM 
+			self.session.rotate._unrotateM = Snap.matrix().rotate(-self.session.rotate._alpha)
+			
+			self.session.rotate.vcx = self.session.bboxWithoutTransform.cx;
+			self.session.rotate.vcy = self.session.bboxWithoutTransform.cy;
+			
+			// TODO move code to visualization
 			snap.select('#transformCenterAbsolute').attr({transform: `translate(${self.session.rotate.ocx},${self.session.rotate.ocy})`});
-
 		}	
 
 		self.rotateMove = function( target, dx, dy, x, y, event ){
+			// calculate viewbox coordinates incl. zoom & pan (mm)
 			const dxMM = self._convertToViewBoxUnits(dx);
 			const dyMM = self._convertToViewBoxUnits(dy);
+			// transform mouse movement into virgin (=unrotated) coord space
+			const rdx = self.session.rotate._unrotateM.x(dxMM, dyMM);
+			const rdy = self.session.rotate._unrotateM.y(dxMM, dyMM);
+			
 			const ax = self.session.rotate.ax;
 			const ay = self.session.rotate.ay;
 			const cx = self.session.rotate.cx;
 			const cy = self.session.rotate.cy;
 
-			
 			// calculate viewbox coordinates incl. zoom & pan (mm)
-			const bx = self.session.rotate.bx = ax + dxMM;
-			const by = self.session.rotate.by = ay + dyMM;
+			const bx = self.session.rotate.bx = ax + rdx;
+			const by = self.session.rotate.by = ay + rdy;
 
 			// store session delta angle
 			//    b
@@ -154,8 +171,11 @@
 			// c----------a
 			self.session.rotate.alpha = Snap.angle(bx, by, ax, ay, cx, cy);
 
-			self._sessionUpdate();
+			snap.debugPoint('A', ax, ay, '#e25303');
+			snap.debugPoint('B', bx, by, '#e25303');
+			snap.debugPoint('C', cx, cy, '#e25303');
 
+			self._sessionUpdate();
 		}	
 
 		self.rotateEnd = function( target, dx, dy, x, y){
@@ -337,9 +357,9 @@
 			const tmpSM = self.scaleGroup.transform().localMatrix;
 			const tmpRM = self.rotateGroup.transform().localMatrix;
 			const tmpTM = self.translateGroup.transform().localMatrix;
-			self.session.scale = {sx: 1, sy: 1, _m:tmpSM};
-			self.session.rotate = {alpha: 0, cx: 0, cy: 0, _m:tmpRM};
-			self.session.translate = {dx: 0, dy:0, _m:tmpTM};
+			self.session.scale = {sx: 1, sy: 1, _m:tmpSM, _mInv:tmpSM.invert()};
+			self.session.rotate = {alpha: 0, cx: 0, cy: 0, _m:tmpRM, _mInv:tmpRM.invert(), _alpha:tmp.rotate};
+			self.session.translate = {dx: 0, dy:0, _m:tmpTM, _mInv:tmpTM.invert()};
 			
 			self.session.type = calledBy;
 			self.session.originMatrix = self.translateHandle.transform().totalMatrix;
@@ -372,15 +392,19 @@
 				// Rotate
 				if (self.session.type === 'rotate') {
 					const alpha = self.session.rotate.alpha + self.session.rotate._alpha;
+					
 					const rcx = self.session.rotate.cx;
 					const rcy = self.session.rotate.cy;
-//					const matRotate = Snap.matrix().rotate(alpha, rcx, rcy);
+					
+					snap.select('#debugRotateCenter').transform(`t${rcx},${rcy}`); // TODO: move to visualization or remove
+
+					//const matRotate = Snap.matrix().rotate(alpha, rcx, rcy);
 					const matRotate = self.session.rotate._m.clone().rotate(self.session.rotate.alpha, rcx, rcy);
 					self.rotateGroup.transform(matRotate);
 					
 					const combinedM = self.session.tmpM.clone().multLeft(
 							Snap.matrix().rotate(self.session.rotate.alpha, self.session.rotate.ocx, self.session.rotate.ocy)
-						);
+						); // TODO: wrong. rotation is applied before scaling.
 					self.translateHandle2.transform(combinedM);
 				}
 
@@ -399,8 +423,7 @@
 
 				let m = Snap.matrix();
 				// SRT order, alipplied on former matrix
-//				// wrong !!! m.add(self.session.originMatrix);
-			
+		
 //				m.scale(sx, sy, scx, scy).rotate(degree, rcx, rcy);
 //				m.e += dx; // apply transformation manually as Matrix.translate() applys rotation and scaling (https://github.com/adobe-webplatform/Snap.svg/blob/master/src/matrix.js#L136)
 //				m.f += dy;
@@ -423,6 +446,7 @@
 		}
 		
 		self._sessionEnd = function(){
+			snap.debugCleanup();
 			//self.paper.selectAll('.transformVis').attr({d:''});
 
 
@@ -441,6 +465,7 @@
 				self.deactivate();
 			}
 
+			self.translateHandle2.transform('');
 			
 			if(!elements_to_transform){
 				console.warn("Nothing to transform. Element was ", elements_to_transform);
@@ -732,6 +757,53 @@
 		
 
 
+	});
+
+})();
+
+/******
+ * Visual Debug plugin 
+ *****/
+(function() {
+	Snap.plugin(function (Snap, Element, Paper, global) {
+
+		Paper.prototype.debugPoint = function(label, x, y, color="#ff00ff"){
+			const paper = this;
+			
+			if(!label){
+				console.error("debugPoint needs a label!");
+				return;
+			}
+			
+			const id = `_dbg_${label}`;
+			
+			if(isNaN(x) || isNaN(y)){
+				console.error("Unable to draw debug point '${label}' at (${x},${y})");
+				paper.selectAll('#'+label).remove();
+			}
+			
+			// check if exists
+			let pointEl = paper.select('#'+id);
+			if(!pointEl) {
+				const pointMarker = paper.path({
+					d:"M0,0m-2,0h4m-2,-2v4",
+					stroke:color, 
+					strokeWidth: 1,
+					fill:"none"
+				});
+				const pointLabel = paper.text({x:0, y:0, text:label, fill:color});
+				pointEl = paper.group(pointMarker, pointLabel);
+				pointEl.attr({id: id, class:'_dbg_'}); 
+			}
+			pointEl.transform(`translate(${x},${y})`);
+			
+			return pointEl;
+		}
+		
+		Paper.prototype.debugCleanup = function(){
+			this.selectAll('._dbg_').remove();
+		};
+		
 	});
 
 })();
