@@ -140,7 +140,7 @@ class UsageHandler(object):
 
 				ntp_details = dict(
 					time_shift=self._plugin._time_ntp_shift,
-					job_duration_before=job_duration,
+					job_duration_before=job_duration_before,
 					job_duration_after=job_duration,
 				)
 				self._analytics_handler.add_job_ntp_sync_details(ntp_details)
