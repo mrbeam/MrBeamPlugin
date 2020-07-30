@@ -133,13 +133,17 @@ class UsageHandler(object):
 	def _set_time(self, job_duration):
 		if job_duration is not None and job_duration > 0.0:
 
-			self._logger.info('############### SET TIME!!')
-			self._logger.info('############### - synced at beginning: {}'.format(self.start_ntp_synced))
-			self._logger.info('############### - synced now: {}'.format(self._plugin._time_ntp_synced))
-			self._logger.info('############### - job duration (before): {}'.format(job_duration))
+			# If it wasn't ntp synced at the beginning of the job, but it is now, we subtract the time shift
 			if self.start_ntp_synced != self._plugin._time_ntp_synced:
+				job_duration_before = job_duration
 				job_duration -= self._plugin._time_ntp_shift
-				self._logger.info('############### - job duration (after): {}'.format(job_duration))
+
+				ntp_details = dict(
+					time_shift=self._plugin._time_ntp_shift,
+					job_duration_before=job_duration,
+					job_duration_after=job_duration,
+				)
+				self._analytics_handler.add_job_ntp_sync_details(ntp_details)
 
 			dust_factor = self._calculate_dust_factor()
 			self._usage_data['total']['job_time'] = self.start_time_total + job_duration
