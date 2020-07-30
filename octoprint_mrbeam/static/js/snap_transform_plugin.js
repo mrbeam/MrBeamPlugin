@@ -799,7 +799,7 @@
 			if(!self.isEnabled) return;
 			
 			if(!label){
-				console.error("debugPoint needs a label!");
+				console.error("debug.point needs a label!");
 				return;
 			}
 			
@@ -807,7 +807,7 @@
 			
 			if(isNaN(x) || isNaN(y)){
 				console.error("Unable to draw debug point '${label}' at (${x},${y})");
-				self.paper.selectAll('#'+label).remove();
+				self.paper.selectAll('#'+id).remove();
 			}
 			
 			// check if exists
@@ -827,6 +827,41 @@
 			
 			return pointEl;
 		}
+		
+		self.line = function(label, x1, y1, x2, y2, color='#ff00ff'){
+			if (!self.isEnabled)
+				return;
+
+			if (!label) {
+				console.error("debug.line needs a label!");
+				return;
+			}
+
+			const id = `_dbg_${label}`;
+
+			if (isNaN(x1) || isNaN(y1) || isNaN(x2) || isNaN(y2)) {
+				console.error("Unable to draw debug line '${label}' at (${x1},${y1} -> ${x2},${y2})");
+				self.paper.selectAll('#' + id).remove();
+			}
+
+			// check if exists
+			let lineEl = self.paper.select('#' + id);
+			const sx = x2-x1;
+			const sy = y2-y1;
+			if (!lineEl) {
+				const line = self.paper.path({
+					d: "M0,0l1,1",
+					stroke: color,
+					strokeWidth: 1,
+					fill: "none",
+				});
+				const pointLabel = self.paper.text({x: 0, y: 0, text: label, fill: color, style: 'font-size:8px; font-family:monospace; transform:translate(2px,-2px); vector-effect:non-scaling-stroke;'});
+				lineEl = self.paper.group(line, pointLabel);
+				lineEl.attr({id: id, class: '_dbg_'});
+			} 
+			lineEl.select('path').transform(`scale(${sx},${sy})`);
+			lineEl.transform(`translate(${x1},${y1})`);
+		};
 		
 		// TODO: line / vector
 		
