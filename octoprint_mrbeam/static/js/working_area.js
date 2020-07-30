@@ -1743,6 +1743,7 @@ $(function(){
 				self.move_laser({}, event);
 			});
 			snap.mbtransform_init();
+			snap.debug_init();
 		};
 
 		self.draw_coord_grid = function(){

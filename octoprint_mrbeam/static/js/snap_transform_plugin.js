@@ -143,8 +143,6 @@
 			self.session.rotate.vcx = self.session.bboxWithoutTransform.cx;
 			self.session.rotate.vcy = self.session.bboxWithoutTransform.cy;
 			
-			// TODO move code to visualization
-			snap.select('#transformCenterAbsolute').attr({transform: `translate(${self.session.rotate.ocx},${self.session.rotate.ocy})`});
 		}	
 
 		self.rotateMove = function( target, dx, dy, x, y, event ){
@@ -171,9 +169,9 @@
 			// c----------a
 			self.session.rotate.alpha = Snap.angle(bx, by, ax, ay, cx, cy);
 
-			snap.debugPoint('A', ax, ay, '#e25303');
-			snap.debugPoint('B', bx, by, '#e25303');
-			snap.debugPoint('C', cx, cy, '#e25303');
+			self.paper.debug.point('A', ax, ay, '#e25303');
+			self.paper.debug.point('B', bx, by, '#e25303');
+			self.paper.debug.point('C', cx, cy, '#e25303');
 
 			self._sessionUpdate();
 		}	
@@ -207,26 +205,26 @@
 					break;
 				case 'SW':
 					scaleCenterHandle = self.scaleHandleNE;
-					self.session.scale.signX = -1;
+					self.session.scale.signX = 1;
 					self.session.scale.signY = 1;
 					self.session.scale.prop = true;
 					break;
 				case 'NW':
 					scaleCenterHandle = self.scaleHandleSE;
-					self.session.scale.signX = -1;
-					self.session.scale.signY = -1;
+					self.session.scale.signX = 1;
+					self.session.scale.signY = 1;
 					self.session.scale.prop = true;
 					break;
 				case 'NE':
 					scaleCenterHandle = self.scaleHandleSW;
 					self.session.scale.signX = 1;
-					self.session.scale.signY = -1;
+					self.session.scale.signY = 1;
 					self.session.scale.prop = true;
 					break;
 				case 'NN':
 					scaleCenterHandle = self.scaleHandleS;
 					self.session.scale.signX = 0;
-					self.session.scale.signY = -1;
+					self.session.scale.signY = 1;
 					self.session.scale.prop = false;
 					break;
 				case 'EE':
@@ -243,7 +241,7 @@
 					break;
 				case 'WW':
 					scaleCenterHandle = self.scaleHandleE;
-					self.session.scale.signX = -1;
+					self.session.scale.signX = 1;
 					self.session.scale.signY = 0;
 					self.session.scale.prop = false;
 					break;
@@ -260,7 +258,7 @@
 			self.session.scale.my = handleMatrix.f;
 						
 			// scaling center (position of the opposite handle, virgin coord space)
-			const scm = scaleCenterHandle.transform();
+			const scm = scaleCenterHandle.transform(); 
 			self.session.scale.cx = scm.localMatrix.e; 
 			self.session.scale.cy = scm.localMatrix.f;
 			
@@ -275,8 +273,9 @@
 			// matrix for transforming mouse moves into rotated coord space
 			self.session.scale.mouseMatrix = Snap.matrix().rotate( -self.session.originTransform.rotate );
 			
-			snap.select('#transformCenter').attr({transform: `translate(${self.session.scale.cx},${self.session.scale.cy})`});
-			snap.select('#transformCenterAbsolute').attr({transform: `translate(${self.session.scale.tcx},${self.session.scale.tcy})`});
+			self.paper.debug.point('ctr', self.session.scale.cx, self.session.scale.cy, '#e25303'); // TODO disable / remove
+			self.paper.debug.point('absCtr', self.session.scale.tcx, self.session.scale.tcy, '#00aaff'); // TODO disable / remove
+			
 
 			console.log("scale session:", self.session.scale);
 		}	
@@ -294,7 +293,7 @@
 			const rotatedMouseX = self.session.scale.mouseMatrix.x(dxMM, dyMM)+ sss.mx;
 			const rotatedMouseY = self.session.scale.mouseMatrix.y(dxMM, dyMM)+ sss.my;
 			
-			snap.select('#rotatedMouse').attr({cx: rotatedMouseX, cy:rotatedMouseY}); // Debug only
+			self.paper.debug.point('rotMouse', rotatedMouseX, rotatedMouseY)
 
 			const distX = (rotatedMouseX - sss.cx);
 			const distY = (rotatedMouseY - sss.cy);
@@ -331,7 +330,7 @@
 				
 			}
 			
-			console.log("Scale", sss.sx.toFixed(2), sss.sy.toFixed(2));
+//			console.log("Scale", sss.sx.toFixed(2), sss.sy.toFixed(2));
 
 			// move scaleHandle
 			self._sessionUpdate(this);
@@ -347,6 +346,9 @@
 		}	
 
 		self._sessionInit = function(calledBy){
+			self.paper.debug.enable(); // TODO remove
+			self.paper.debug.cleanup();
+			
 			// remember current scale factors, rotation and translation
 			const tmp = self.translateHandle.transform().totalMatrix.split();
 			console.log("sessionInit", calledBy, tmp);
@@ -377,8 +379,8 @@
 				
 				// Scale
 				if(self.session.type === 'scale'){
-					const scx = self.session.scale.cx;
-					const scy = self.session.scale.cy;
+					const scx = self.session.scale.tcx;
+					const scy = self.session.scale.tcy;
 //					const matScale = Snap.matrix().scale(sx, sy, scx, scy);
 					const matScale = self.session.scale._m.clone().scale(self.session.scale.sx, self.session.scale.sy, scx, scy);
 					self.scaleGroup.transform(matScale);
@@ -396,7 +398,7 @@
 					const rcx = self.session.rotate.cx;
 					const rcy = self.session.rotate.cy;
 					
-					snap.select('#debugRotateCenter').transform(`t${rcx},${rcy}`); // TODO: move to visualization or remove
+					self.paper.select('#debugRotateCenter').transform(`t${rcx},${rcy}`); // TODO: move to visualization or remove
 
 					//const matRotate = Snap.matrix().rotate(alpha, rcx, rcy);
 					const matRotate = self.session.rotate._m.clone().rotate(self.session.rotate.alpha, rcx, rcy);
@@ -438,7 +440,7 @@
 
 	//			debug stuff
 //				const dm = Snap.matrix().translate(self.session.scale.tcx, self.session.scale.tcy).rotate(self.session.originTransform.rotate);
-//				snap.select('#scaleAxes').transform(dm);
+//				self.paper.select('#scaleAxes').transform(dm);
 			}
 			
 			// apply transform to target elements via callback
@@ -446,7 +448,7 @@
 		}
 		
 		self._sessionEnd = function(){
-			snap.debugCleanup();
+//			self.paper.debug.cleanup();
 			//self.paper.selectAll('.transformVis').attr({d:''});
 
 
@@ -767,8 +769,28 @@
 (function() {
 	Snap.plugin(function (Snap, Element, Paper, global) {
 
-		Paper.prototype.debugPoint = function(label, x, y, color="#ff00ff"){
-			const paper = this;
+		var self = {};
+
+		Paper.prototype.debug_init = function(){
+			var paper = this;
+			self.paper = paper;
+			self.isEnabled = false;
+			
+			paper.debug = self;
+			self.initialized = true;
+		}
+		
+		
+		self.enable = function(){
+			self.isEnabled = true;
+		}
+		self.disable = function(){
+			self.isEnabled = false;
+		}
+		
+		self.point = function(label, x, y, color="#ff00ff"){
+			// TODO parent, implicit label
+			if(!self.isEnabled) return;
 			
 			if(!label){
 				console.error("debugPoint needs a label!");
@@ -779,20 +801,20 @@
 			
 			if(isNaN(x) || isNaN(y)){
 				console.error("Unable to draw debug point '${label}' at (${x},${y})");
-				paper.selectAll('#'+label).remove();
+				self.paper.selectAll('#'+label).remove();
 			}
 			
 			// check if exists
-			let pointEl = paper.select('#'+id);
+			let pointEl = self.paper.select('#'+id);
 			if(!pointEl) {
-				const pointMarker = paper.path({
+				const pointMarker = self.paper.path({
 					d:"M0,0m-2,0h4m-2,-2v4",
 					stroke:color, 
 					strokeWidth: 1,
 					fill:"none"
 				});
-				const pointLabel = paper.text({x:0, y:0, text:label, fill:color});
-				pointEl = paper.group(pointMarker, pointLabel);
+				const pointLabel = self.paper.text({x:0, y:0, text:label, fill:color, style:'font-size:8px; font-family:monospace; transform:translate(2px,-2px);'});
+				pointEl = self.paper.group(pointMarker, pointLabel);
 				pointEl.attr({id: id, class:'_dbg_'}); 
 			}
 			pointEl.transform(`translate(${x},${y})`);
@@ -800,8 +822,10 @@
 			return pointEl;
 		}
 		
-		Paper.prototype.debugCleanup = function(){
-			this.selectAll('._dbg_').remove();
+		// TODO: line / vector
+		
+		self.cleanup = function(){
+			self.paper.selectAll('._dbg_').remove();
 		};
 		
 	});
