@@ -667,11 +667,14 @@
 											  stroke="none" fill="none"></rect>
 										<g id="userContent"></g>
 										<g id="mbtransformVisualization">
-											<path id="translateXVis" class="transformVis" />
-											<path id="translateYVis" class="transformVis" />
+											<path id="translateXVis" class="transformVis" d="M0,0v-5h1v5" />
+											<path id="translateYVis" class="transformVis" d='M0,0h-5v1h5' />
 											<path id="scaleXVis" class="transformVis" />
 											<path id="scaleYVis" class="transformVis" />
-											<path id="rotateVis" class="transformVis" />
+											<g id="rotateVis">
+												<path class="transformVis" d="M0,0m-2,0h4m-2,-2v4M35,0h10"/>
+												<path id="rotateVisAngle" class="transformVis" d="M35,0h10" />
+											</g>
 											<text id="translateXText"></text>
 											<text id="translateYText"></text>
 											<text id="scaleXText"></text>
@@ -702,13 +705,13 @@
 									<g id="mbtransformHandleGroup">
 										<rect id="translateHandle_2" x="0" y="0" width="0" height="0" ></rect>
 										<g id="mbtransformTranslateGroup">
-											<path id="_dbg_t" d="M0,0m-2,0h4m-2,-2v4"  stroke="#FF0000" stroke-width="1" fill="none" />
+											<!--<path id="_dbg_t" d="M0,0m-2,0h4m-2,-2v4"  stroke="#FF0000" stroke-width="1" fill="none" />-->
 											<g id="mbtransformRotateGroup">
 												<path id="debugRotateCenter" d="M0,0m-2,0h4m-2,-2v4"  stroke="#000000" stroke-width="1" fill="none" />
-												<path id="_dbg_r" d="M0,0m-2,0h4m-2,-2v4"  stroke="#FF0000" stroke-width="1" fill="none" />
+												<!--<path id="_dbg_r" d="M0,0m-2,0h4m-2,-2v4"  stroke="#FF0000" stroke-width="1" fill="none" />-->
 
 												<g id="mbtransformScaleGroup">
-													<path id="_dbg_s" d="M0,0m-2,0h4m-2,-2v4"  stroke="#00FF00" stroke-width="1" fill="none" />
+													<!--<path id="_dbg_s" d="M0,0m-2,0h4m-2,-2v4"  stroke="#00FF00" stroke-width="1" fill="none" />-->
 													<rect id="translateHandle" x="0" y="0" width="0" height="0" ></rect>
 												</g>
 												<path id="scaleHandleNW" class="scaleHandle prop" d="M0,0v-8l-2,2 -6,-6 2,-2h-8v8l2,-2 6,6 -2,2z" />
@@ -723,7 +726,6 @@
 											</g>
 										</g>
 									</g>
-									<path id="scaleAxes" d="M0,0m-100,0h200m-100,-100v200" stroke="#00aa00" stroke-width="1" fill="none" />
 									<rect id="selection_bbox" x="0" y="0" width="0" height="0" fill="#00000077"></rect>
 {#									<rect id="scanArea" x="0" y="0" width="0" height="0" ></rect>#}
 {#									<rect id="scanEventHandler" x="0" y="0" width="0" height="0" stroke="none" fill="none"#}
@@ -732,11 +734,10 @@
 								</svg>
 							</div>
                             <div id="working_area_footer">
-                                <div id="mbtransformdebug" class="pull-right working_area_footer_text"></div>
-                                <!--div class="pull-right working_area_footer_text">Mr Beam Plugin: v{{ beamosVersionNumber }}</div>
+                                <div class="pull-right working_area_footer_text">Mr Beam Plugin: v{{ beamosVersionNumber }}</div>
                                 <div class="pull-right working_area_footer_text">{{ _('Serial') }}: {{ serial }}</div>
                                 <div class="pull-right working_area_footer_text">{{ _('Mr Beam Name') }}: {{ hostname }}</div>
-                                <div class="pull-right working_area_footer_text">© 2020 Mr Beam Lasers GmbH</div-->
+                                <div class="pull-right working_area_footer_text">© 2020 Mr Beam Lasers GmbH</div>
                             </div>
 						</div>
 					</div>

@@ -25,31 +25,33 @@
 		Paper.prototype.mbtransform_init = function(){
 			var paper = this;
 			self.paper = paper;
-			self.transformHandleGroup = paper.select(self.config.transformHandleGroupId);
+			self.transformHandleGroup = paper.select('#mbtransformHandleGroup');
 			self.scaleGroup = paper.select('#mbtransformScaleGroup');
 			self.rotateGroup = paper.select('#mbtransformRotateGroup');
 			self.translateGroup = paper.select('#mbtransformTranslateGroup');
-			self.translateHandle = paper.select(self.config.translateHandleId);
+			self.translateHandle = paper.select('#translateHandle');
 			self.translateHandle2 = paper.select('#translateHandle_2');
-			self.scaleHandleNE = paper.select(self.config.scaleHandleNEId);
-			self.scaleHandleNW = paper.select(self.config.scaleHandleNWId);
-			self.scaleHandleSE = paper.select(self.config.scaleHandleSEId);
-			self.scaleHandleSW = paper.select(self.config.scaleHandleSWId);
-			self.scaleHandleN = paper.select(self.config.scaleHandleNId);
-			self.scaleHandleE = paper.select(self.config.scaleHandleEId);
-			self.scaleHandleS = paper.select(self.config.scaleHandleSId);
-			self.scaleHandleW = paper.select(self.config.scaleHandleWId);
-			self.rotHandle = paper.select(self.config.rotHandleId);
+			self.scaleHandleNE = paper.select('#scaleHandleNE');
+			self.scaleHandleNW = paper.select('#scaleHandleNW');
+			self.scaleHandleSE = paper.select('#scaleHandleSE');
+			self.scaleHandleSW = paper.select('#scaleHandleSW');
+			self.scaleHandleN = paper.select('#scaleHandleNN');
+			self.scaleHandleE = paper.select('#scaleHandleEE');
+			self.scaleHandleS = paper.select('#scaleHandleSS');
+			self.scaleHandleW = paper.select('#scaleHandleWW');
+			self.rotHandle = paper.select('#rotHandle');
 			self.translateXVis = paper.select('#translateXVis');
 			self.translateYVis = paper.select('#translateYVis');
 			self.scaleXVis = paper.select('#scaleXVis');
 			self.scaleYVis = paper.select('#scaleYVis');
 			self.rotateVis = paper.select('#rotateVis');
+			self.rotateVisAngle = paper.select('#rotateVisAngle');
 			self.translateXText = paper.select('#translateXText');
 			self.translateYText = paper.select('#translateYText');
 			self.scaleXText = paper.select('#scaleXText');
 			self.scaleYText = paper.select('#scaleYText');
 			self.rotateText = paper.select('#rotateText');
+			self.transformVisualization = paper.select('#mbtransformVisualization');
 			paper.mbtransform = self;
 			
 			self.initialized = true;
@@ -57,20 +59,8 @@
 
 		self.initialized = false;
 		self.config = {
-			transformHandleGroupId: '#mbtransformHandleGroup',
-			translateHandleId: '#translateHandle',
-			scaleHandleNEId: '#scaleHandleNE',
-			scaleHandleNWId: '#scaleHandleNW',
-			scaleHandleSWId: '#scaleHandleSW',
-			scaleHandleSEId: '#scaleHandleSE',
-			scaleHandleNId: '#scaleHandleNN',
-			scaleHandleEId: '#scaleHandleEE',
-			scaleHandleSId: '#scaleHandleSS',
-			scaleHandleWId: '#scaleHandleWW',
-			rotHandleId: '#rotHandle',
 			minTranslateHandleSize: 24,
-			
-			visualization: false // enables visual debugging: click points, angle, scale center, etc...
+			visualization: true // enables visual debugging: click points, angle, scale center, etc...
 		}
 
 		self.session = {lastUpdate: 0};
@@ -352,8 +342,7 @@
 			
 			// remember current scale factors, rotation and translation
 			const tmp = self.translateHandle.transform().totalMatrix.split();
-			console.log("sessionInit", calledBy, tmp);
-			$('#mbtransformdebug').text("S" + tmp.scalex.toFixed(2)+ ',' + tmp.scaley.toFixed(2) + " R" + tmp.rotate.toFixed(2)+'° T' + tmp.dx.toFixed(2)+',' + tmp.dy.toFixed(2));
+			console.debug("sessionInit", calledBy, tmp);
 			
 			self.session.tmpM = self.translateHandle2.transform().localMatrix; // TODO
 			
@@ -376,18 +365,12 @@
 		}
 		
 		self._sessionUpdate = function(){
-			if(Date.now() - self.session.lastUpdate > 25){ // reduce updates to 40 fps maximum
+			if(Date.now() - self.session.lastUpdate > 40){ // 40ms -> reduces updates to 25 fps maximum
 				
 				// Scale
 				if(self.session.type === 'scale'){
 					const scx = self.session.scale.vcx;
 					const scy = self.session.scale.vcy;
-					
-					self.paper.debug.point('s', self.session.scale.vcx, self.session.scale.vcy);
-//					self.paper.debug.point('r', self.session.scale.tcx, self.session.scale.tcy);
-//					self.paper.debug.point('t', self.session.scale.tcx, self.session.scale.tcy);
-					
-//					const matScale = Snap.matrix().scale(sx, sy, scx, scy);
 					const matScale = self.session.scale._m.clone().scale(self.session.scale.sx, self.session.scale.sy, scx, scy);
 					self.scaleGroup.transform(matScale);
 					
@@ -420,7 +403,6 @@
 				if (self.session.type === 'translate') {
 					const tx = self.session.translate.dx + self.session.translate._dx;
 					const ty = self.session.translate.dy + self.session.translate._dy;
-//					const matTranslate = Snap.matrix().translate(tx, ty);
 					const matTranslate = self.session.translate._m.clone().translate(self.session.translate.dx, self.session.translate.dy);
 					self.translateGroup.transform(matTranslate);
 					
@@ -429,24 +411,13 @@
 				}
 //				console.info("S", sx.toFixed(2), sy.toFixed(2), "R", alpha.toFixed(2)+'°', "T", tx.toFixed(2), ty.toFixed(2) );
 
-				let m = Snap.matrix();
-				// SRT order, alipplied on former matrix
-		
-//				m.scale(sx, sy, scx, scy).rotate(degree, rcx, rcy);
-//				m.e += dx; // apply transformation manually as Matrix.translate() applys rotation and scaling (https://github.com/adobe-webplatform/Snap.svg/blob/master/src/matrix.js#L136)
-//				m.f += dy;
-//				self.translateHandle.transform(m);
-
 				if(self.config.visualization){
 					self._visualizeTransform();
 				}
 
 				self.updateCounter++;
-				self.session.lastUpdate = Date.now()
+				self.session.lastUpdate = Date.now();
 
-	//			debug stuff
-//				const dm = Snap.matrix().translate(self.session.scale.tcx, self.session.scale.tcy).rotate(self.session.originTransform.rotate);
-//				self.paper.select('#scaleAxes').transform(dm);
 			}
 			
 			// apply transform to target elements via callback
@@ -539,6 +510,7 @@
 			}
 
 			self.transformHandleGroup.node.classList.add('active');
+			self.transformVisualization.node.classList.add('active');
 			
 			self.updateCounter = 0;
 			self.updateFPS = setInterval(function(){
@@ -550,6 +522,7 @@
 		self.deactivate = function(){
 			self.updateFPS = null;
 			self.transformHandleGroup.removeClass('active');
+			self.transformVisualization.removeClass('active');
 
 			// remove drag handlers
 			self.translateHandle.undrag();
@@ -699,28 +672,29 @@
 			const startYh = 10;
 			const startXv = 10;
 			const startYv = self.session.translate.cy;
-			const dX = 'M'+ startXh+','+startYh+'v-5h'+self.session.translate.dx+'v5';
-			self.translateXVis.attr('d', dX);
-			const dY = 'M'+ startXv+','+startYv+'h-5v'+self.session.translate.dy+'h5';
-			self.translateYVis.attr('d', dY);
+			const mdx = Snap.matrix().translate(startXh, startYh).scale(self.session.translate.dx, 1);
+			self.translateXVis.transform(mdx);
+			const mdy = Snap.matrix().translate(startXv, startYv).scale(1, self.session.translate.dy);
+			self.translateYVis.transform(mdy);
 			
 			self.translateXText.node.textContent = self.session.translate.dx.toFixed(2);
-			self.translateXText.attr({x: startXh, y: startYh});
+			self.translateXText.transform(Snap.matrix(1,0,0,1,startXh, startYh+7));
 			self.translateYText.node.textContent = self.session.translate.dy.toFixed(2);
-			self.translateYText.attr({x: startXv, y: startYv});
+			self.translateYText.transform(Snap.matrix(1,0,0,1,startXv+8, startYv).rotate(-90));
 		};
 
 		self._visualizeRotate = function(){
-			const ax = self.session.rotate.ax;
-			const ay = self.session.rotate.ay;
-			const bx = self.session.rotate.bx;
-			const by = self.session.rotate.by;
-			const cx = self.session.rotate.cx;
-			const cy = self.session.rotate.cy;
-			self.rotateVis.attr('d', 'M'+ ax+','+ay+'L'+cx+','+cy+'L'+bx+','+by);
+			const cx = self.session.rotate.ocx;
+			const cy = self.session.rotate.ocy;
+			const a = self.session.rotate.alpha;
 			
-			self.rotateText.node.textContent = self.session.rotate.alpha.toFixed(1) + '°';
-			self.rotateText.attr({x: ax , y: ay });
+			const visM = Snap.matrix(1,0,0,1,cx, cy).rotate(self.session.rotate._alpha);
+			const visT = Snap.matrix(1,0,0,1,cx, cy).rotate(self.session.rotate._alpha).translate(6,0);
+			self.rotateVis.transform(visM);
+			self.rotateVisAngle.transform(Snap.matrix().rotate(self.session.rotate.alpha));
+			const angleText = a < 180 ? a : a - 360;
+			self.rotateText.node.textContent = ` ${angleText.toFixed(1)} °`;
+			self.rotateText.transform(visT);
 		};
 		
 		self._visualizeScale = function () {
@@ -757,13 +731,9 @@
 				self.scaleYText.attr({x: cx + gap * mirrorY, y:  (cy + mouseY)/2 });
 			} 
 			self.scaleYVis.attr('d', attrDy);
-			self.scaleYText.node.textContent = labelY;
-			
-			
+			self.scaleYText.node.textContent = labelY;	
 			
 		}
-		
-
 
 	});
 
@@ -829,6 +799,7 @@
 		}
 		
 		self.line = function(label, x1, y1, x2, y2, color='#ff00ff'){
+			// TODO parent, implicit label
 			if (!self.isEnabled)
 				return;
 
@@ -863,7 +834,7 @@
 			lineEl.transform(`translate(${x1},${y1})`);
 		};
 		
-		// TODO: line / vector
+		// TODO: coord grid, path, circle
 		
 		self.cleanup = function(){
 			self.paper.selectAll('._dbg_').remove();

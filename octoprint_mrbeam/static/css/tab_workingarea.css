@@ -212,6 +212,13 @@
 	display: block; 
 }
 
+#mbtransformVisualization {
+	display:none;
+}
+#mbtransformVisualization.active {
+	display:block;
+}
+
 .transformVis {
 	fill: none;
 	stroke: #5555ff;
