@@ -265,6 +265,8 @@
 			// additionally get scaling center in absolute coord space
 			self.session.scale.tcx = scm.totalMatrix.e;
 			self.session.scale.tcy = scm.totalMatrix.f;
+			self.session.scale.vcx = self.session.originInvert.x(scm.totalMatrix.e, scm.totalMatrix.f);
+			self.session.scale.vcy = self.session.originInvert.y(scm.totalMatrix.e, scm.totalMatrix.f);
 			
 			// reference width & height for current session needs former transformation to be applied
 			self.session.scale.refX = self.session.scale.mx - self.session.scale.cx;
@@ -276,7 +278,6 @@
 			self.paper.debug.point('ctr', self.session.scale.cx, self.session.scale.cy, '#e25303'); // TODO disable / remove
 			self.paper.debug.point('absCtr', self.session.scale.tcx, self.session.scale.tcy, '#00aaff'); // TODO disable / remove
 			
-
 			console.log("scale session:", self.session.scale);
 		}	
 
@@ -379,8 +380,13 @@
 				
 				// Scale
 				if(self.session.type === 'scale'){
-					const scx = self.session.scale.tcx;
-					const scy = self.session.scale.tcy;
+					const scx = self.session.scale.vcx;
+					const scy = self.session.scale.vcy;
+					
+					self.paper.debug.point('s', self.session.scale.vcx, self.session.scale.vcy);
+//					self.paper.debug.point('r', self.session.scale.tcx, self.session.scale.tcy);
+//					self.paper.debug.point('t', self.session.scale.tcx, self.session.scale.tcy);
+					
 //					const matScale = Snap.matrix().scale(sx, sy, scx, scy);
 					const matScale = self.session.scale._m.clone().scale(self.session.scale.sx, self.session.scale.sy, scx, scy);
 					self.scaleGroup.transform(matScale);
