@@ -153,6 +153,7 @@ class IoBeamHandler(object):
 	DATASET_I2C =           	   	 	"i2c"
 	DATASET_I2C_MONITORING =            "i2c_monitoring"
 	DATASET_REED_SWITCH =               "reed_switch"
+	DATASET_ANALYTICS =                 "analytics"
 
 	def __init__(self, plugin):
 		self._plugin = plugin
@@ -241,6 +242,13 @@ class IoBeamHandler(object):
 		succ = self._send_command(command)
 		self._logger.info("send_compressor_command(): succ: %s, command: %s",succ, command)
 		return succ, command['request_id']
+
+	def send_analytics_request(self, *args, **kwargs):
+		"""
+		Requests a analytics dataset from iobeam
+		:return: True if the command was sent sucessfull (does not mean it was sucessfully executed)
+		"""
+		return self._send_command(self.get_request_msg([self.DATASET_ANALYTICS]))
 
 	def _send_command(self, command):
 		"""
@@ -357,6 +365,10 @@ class IoBeamHandler(object):
 
 	def _subscribe(self):
 		self._event_bus.subscribe(OctoPrintEvents.SHUTDOWN, self.shutdown)
+		self._event_bus.subscribe(OctoPrintEvents.PRINT_DONE, self.send_analytics_request)
+		self._event_bus.subscribe(OctoPrintEvents.PRINT_FAILED, self.send_analytics_request)
+		self._event_bus.subscribe(OctoPrintEvents.PRINT_CANCELLED, self.send_analytics_request)
+		self._event_bus.subscribe(OctoPrintEvents.ERROR, self.send_analytics_request)
 
 	def _initWorker(self, socket_file=None):
 		self._logger.debug("initializing worker thread")
@@ -590,6 +602,8 @@ class IoBeamHandler(object):
 					err = self._handle_i2c_monitoring(dataset)
 				elif name == self.DATASET_REED_SWITCH:
 					err = self._handle_reed_switch(dataset)
+				elif name == self.DATASET_ANALYTICS:
+					err = self._handle_analytics_dataset(dataset)
 				elif name == self.MESSAGE_DEVICE_UNUSED:
 					pass
 				elif name == self.MESSAGE_ERROR:
@@ -874,6 +888,9 @@ class IoBeamHandler(object):
 
 	def _handle_i2c(self, dataset):
 		self._logger.info("i2c_state: %s", dataset)
+
+	def _handle_analytics_dataset(self, dataset):
+		self._logger.info("analytics dataset: %s", dataset)
 
 	def _handle_debug(self, dataset):
 		"""
